@@ -19905,5 +19905,30 @@
     "full2026Qualified": false,
     "evidence": "docs/upgrade-2026-pa-care-documentary-identity-work.md",
     "releaseReady": false
+  },
+  "nov05Ohio2026VAResidentCreditDraft": {
+    "paths": 11,
+    "genuineInitialRed": {
+      "failed": 13,
+      "passed": 58
+    },
+    "newFinalCases": 74,
+    "focusedPassed": 362,
+    "focusedFiles": 9,
+    "independentReplayPassed": 362,
+    "distinctControlsPassed": 40,
+    "authorMembersVerified": 32,
+    "reviewMembersVerified": 13,
+    "currentSourcePinsVerified": 11,
+    "taxAuthority": [
+      "ORC5747.05",
+      "ORC5747.98",
+      "OAC5703-7-03"
+    ],
+    "worksheetContinuity": "2025 ITRC provisional; final2026 worksheet and human review pending",
+    "full2026Registered": false,
+    "filingEligible": false,
+    "evidence": "docs/upgrade-2026-ohio-va-resident-credit-draft-work.md",
+    "releaseReady": false
   }
 }

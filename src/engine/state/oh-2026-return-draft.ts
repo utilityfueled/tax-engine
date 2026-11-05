@@ -6,12 +6,13 @@ import { OHIO_2026_BASELINE } from '@/models/ohio-2026-baseline.js';
 import { AuditTrail } from '@/utils/audit.js';
 import { roundDollar } from '@/utils/decimal.js';
 import { calculateOhio2026Baseline } from './oh-2026-baseline.js';
+import { calculateOhio2026ResidentCredit } from './oh-2026-resident-credit.js';
 import { calculateOhioITNRC } from './oh-it-nrc.js';
 import { readOhio2026OrdinarySource, type Ohio2026OrdinaryContext } from './oh-2026-ordinary-source.js';
 
 export interface Ohio2026ReturnDraftResult {
   taxYear: 2026;
-  ruleVersion: 'oh-2026-ordinary-employee-draft-v1' | 'oh-2026-pa-reciprocal-employee-draft-v1';
+  ruleVersion: 'oh-2026-ordinary-employee-draft-v1' | 'oh-2026-pa-reciprocal-employee-draft-v1' | 'oh-2026-va-resident-credit-employee-draft-v1';
   baselineRuleVersion: string;
   calculationStatus: 'incomplete';
   reviewStatus: 'independent-review-pending';
@@ -57,7 +58,11 @@ export function calculateOhio2026ReturnDraft(input: TaxYearInput, sources: unkno
   const nrc = reciprocal ? { line19: new Decimal(0), line20: new Decimal(0), lines: [] } : calculateOhioITNRC({ taxYear: 2026, filingStatus: actual.filingStatus,
     federalAgi, ohioAgi, taxRemainingBeforeResidencyCredits: baseline.taxAfterJointCredit,
     residencyFacts: actual.residency });
-  const incomeTax = baseline.taxAfterJointCredit.minus(nrc.line20);
+  const taxAfterNrc = baseline.taxAfterJointCredit.minus(nrc.line20);
+  const resident = actual.residentCreditIncome === undefined ? undefined : calculateOhio2026ResidentCredit({
+    ohioAgi, taxAvailable: taxAfterNrc, virginiaIncome: actual.residentCreditIncome, virginiaTaxPaid: actual.residentCreditTaxPaid ?? '',
+  });
+  const incomeTax = taxAfterNrc.minus(resident?.credit ?? '0');
   const withholding = new Decimal(actual.withholding);
   if (withholding.lt(incomeTax)) throw new Error('Ohio2026 ordinary actual sources: actual withholding coverage requires its separate payment method');
   const underpaymentPenalty = new Decimal(0), latePaymentInterest = new Decimal(0), amountDue = new Decimal(0);
@@ -70,7 +75,7 @@ export function calculateOhio2026ReturnDraft(input: TaxYearInput, sources: unkno
     ['personal-credit', 'Personal exemption credit', personalExemptionCredit, 'min(tax,20*actual eligible count) only if statutory MAGI less exemptions<30000; RC5747.022'],
     ['joint-credit', 'Joint filing credit after personal credit', baseline.jointFilingCredit, 'Actual each-owner qualifying wages, corrected MAGI and remaining-tax tier/cap; RC5747.05(E)'],
     ['earned-income-credit', 'Actual zero earned income credit', earnedIncomeCredit, 'Complete no-qualifying-child sources and AGI at or above indexed2026 phaseout; no unavailable credit default'],
-    ['income-tax', 'Income tax after actual NRC', incomeTax, 'Tax after preceding statutory credits minus actual source NRC; RC5747.98'],
+    ['income-tax', resident ? 'Income tax after actual NRC and resident credit' : 'Income tax after actual NRC', incomeTax, resident ? 'Tax after preceding statutory credits minus actual source NRC and resident credit; RC5747.98' : 'Tax after preceding statutory credits minus actual source NRC; RC5747.98'],
     ['withholding', 'Actual Ohio compensation withholding', withholding, 'Sum only admitted original OH state rows once, then round whole-dollar total; RC5747.08(H)'],
     ['underpayment-penalty', 'No current installment underpayment', underpaymentPenalty, 'Actual equal-quarter compensation withholding covers current liability; RC5747.09; other payment methods unsupported'],
     ['late-interest', 'No unpaid tax or late payment interest', latePaymentInterest, 'Complete ordinary timely chronology and no unpaid tax; no unknown date default'],
@@ -79,13 +84,13 @@ export function calculateOhio2026ReturnDraft(input: TaxYearInput, sources: unkno
   ] as const) audit.record('OH2026 enacted ordinary draft', line, label, value, formula);
   return { taxYear: 2026, ruleVersion: context.methodId, baselineRuleVersion: OHIO_2026_BASELINE.metadata.ruleVersion,
     calculationStatus: 'incomplete', reviewStatus: 'independent-review-pending', filingQualified: false,
-    sourceCommitment: context.sourceCommitment, federalAgi, ohioAgi, ...(reciprocal ? { reciprocalWageExclusion: new Decimal(actual.reciprocalWageExclusion ?? '0'), residentCredit: new Decimal(0) } : {}), exemptions: baseline.exemptions,
+    sourceCommitment: context.sourceCommitment, federalAgi, ohioAgi, ...(reciprocal ? { reciprocalWageExclusion: new Decimal(actual.reciprocalWageExclusion ?? '0'), residentCredit: new Decimal(0) } : {}), ...(resident ? { residentCredit: resident.credit } : {}), exemptions: baseline.exemptions,
     taxBeforeCredits: baseline.totalTax, personalExemptionCredit, jointFilingCredit: baseline.jointFilingCredit, earnedIncomeCredit,
     nonresidentRatio: nrc.line19, nonresidentCredit: nrc.line20, incomeTax, withholding, underpaymentPenalty, latePaymentInterest, amountDue, refund,
     limitations: [
       'Finite single/MFJ current ordinary employee cohort only; no dependents or EITC-qualifying children, under65 adults, no other state adjustments or credit sources.',
-      reciprocal ? 'Finite single full-year PA ordinary employee reciprocal compensation only; mixed, other-domicile, part-year, joint and specialized compensation remain separate methods.' : 'Actual no taxing-school-district residence and no other-state tax on Ohio-resident income; reciprocal and specialized income methods remain separate.',
+      resident ? 'Finite single full-year Ohio employee credit for completed paid2026 VA763 liability; Virginia tax calculation, unsettled accounts and other jurisdictions require separate methods.' : reciprocal ? 'Finite single full-year PA ordinary employee reciprocal compensation only; mixed, other-domicile, part-year, joint and specialized compensation remain separate methods.' : 'Actual no taxing-school-district residence and no other-state tax on Ohio-resident income; reciprocal and specialized income methods remain separate.',
       'Ordinary first Ohio return with equal-quarter withholding covering liability; other payments, prior returns/carries, penalties and balance elections require separate current methods.',
       'Final2026 form identity/numbering, independent human review, complete selected-state scope and filing qualification remain unavailable.',
-    ], lines: [...baseline.lines, ...nrc.lines, ...audit.getLines()] };
+    ], lines: [...baseline.lines, ...nrc.lines, ...(resident?.lines ?? []), ...audit.getLines()] };
 }

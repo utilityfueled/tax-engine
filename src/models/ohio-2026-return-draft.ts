@@ -1,6 +1,7 @@
 /** Spec: state/oh-2026-return-draft.yaml. No zero or confirmation defaults. */
 import { z } from 'zod';
 import { OhioReciprocalWageSourcesSchema } from './ohio-reciprocal-wage-sources.js';
+import { Ohio2026ResidentCreditSourcesSchema } from './ohio-2026-resident-credit-sources.js';
 import { W2StateLocalSourcesSchema } from './w2-state-local.js';
 export const Ohio2026OrdinaryStateSchema = W2StateLocalSourcesSchema.shape.stateRows.element.shape.state.exclude(['']);
 const reference = z.string().trim().min(1);
@@ -35,4 +36,15 @@ export const Ohio2026PaReciprocalSourcesSchema = Ohio2026OrdinarySourcesSchema.e
   reciprocalWageSources: OhioReciprocalWageSourcesSchema.extend({
     sourceTaxYear: z.literal(2026), payrollRows: OhioReciprocalWageSourcesSchema.shape.payrollRows.max(366),
   }),
+}).strict();
+
+/** Distinct paid Virginia originals; incompatible no-other-tax confirmations cannot coexist. */
+export const Ohio2026VaResidentCreditSourcesSchema = Ohio2026OrdinarySourcesSchema.omit({
+  noOtherOhioCreditSourcesConfirmed: true,
+  noOtherStateTaxOnOhioResidentIncomeConfirmed: true,
+}).extend({
+  methodId: z.literal('oh-2026-va-resident-credit-employee-draft-v1'),
+  noOtherStateTaxBeyondDocumentedVirginiaConfirmed: z.literal(true),
+  noOtherOhioCreditBeyondDocumentedResidentCreditConfirmed: z.literal(true),
+  residentCreditSources: Ohio2026ResidentCreditSourcesSchema,
 }).strict();

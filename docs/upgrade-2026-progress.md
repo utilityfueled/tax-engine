@@ -3319,3 +3319,13 @@ native entry, explicit capture and separate confirmation. Author235 and distinct
 controls pass; root verifies all eight source pins and both evidence packages.
 See [the source ledger](upgrade-2026-pa-care-documentary-identity-work.md). Actual
 care paper and broader2026/release qualification remain continuing work.
+
+
+### November5 UTC: source-bound Ohio2026 paid Virginia draft
+
+The finite explicit draft composes actual VA net paid after complete original
+return/account/payment reconciliation. Spec-first RED,362 focused controls and40
+distinct source/Decimal controls pass. ROOT verifies32author/13review members and
+all11source pins; see [the draft ledger](upgrade-2026-ohio-va-resident-credit-draft-work.md).
+Historical worksheet continuity stays provisional; full2026/public forms, broader
+cohorts, human and release qualification remain open.

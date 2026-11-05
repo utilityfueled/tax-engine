@@ -1,4 +1,4 @@
-import { calculateOhio2026OrdinarySource, calculateOhio2026PaReciprocalEmployeeSource } from "./oh-2026-ordinary-source.js";
+import { calculateOhio2026OrdinarySource, calculateOhio2026PaReciprocalEmployeeSource, calculateOhio2026VaResidentCreditEmployeeSource } from "./oh-2026-ordinary-source.js";
 import { calculateOhio2026ReturnDraft, type Ohio2026ReturnDraftResult } from "./oh-2026-return-draft.js";
 import {
   buildOhioResidentReturnInput,
@@ -36,6 +36,8 @@ export function calculateOhio2026ReturnDraftFromSources(input: { taxInput: TaxYe
   const method = input.sources !== null && typeof input.sources === 'object' && 'methodId' in input.sources ? input.sources.methodId : undefined;
   const context = method === 'oh-2026-pa-reciprocal-employee-draft-v1'
     ? calculateOhio2026PaReciprocalEmployeeSource(input.taxInput, input.sources)
-    : calculateOhio2026OrdinarySource(input.taxInput, input.sources);
+    : method === 'oh-2026-va-resident-credit-employee-draft-v1'
+      ? calculateOhio2026VaResidentCreditEmployeeSource(input.taxInput, input.sources)
+      : calculateOhio2026OrdinarySource(input.taxInput, input.sources);
   return calculateOhio2026ReturnDraft(input.taxInput, input.sources, context);
 }
