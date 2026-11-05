@@ -6,6 +6,7 @@ import path from 'node:path';
 import { setTimeout as pause } from 'node:timers/promises';
 import { fileURLToPath, URL } from 'node:url';
 import { performance } from 'node:perf_hooks';
+import { nativeAdmission, createNativeInspector } from './native-browser-runtime-provenance.mjs';
 const auditedDirs = ['src', 'apps/web/src', 'apps/web/tests', 'tests/fixtures', 'packages/engine/src', 'packages/contracts/src'];
 const auditedFiles = ['apps/web/playwright.config.ts', 'apps/web/package.json', 'packages/engine/package.json', 'packages/contracts/package.json', 'pnpm-lock.yaml'];
 const scopes = ['filled-return', 'provider', 'business-expense-analysis', 'self-employment-income-analysis'];
@@ -347,9 +348,14 @@ export async function main(args, { root = fileURLToPath(new URL('../', import.me
     await verifyAudit(root, audit);
     need(!parentEnv.PLAYWRIGHT_USE_DEV_SERVER, 'Production browser suite requires production runtime');
     const external = parentEnv.PLAYWRIGHT_DISABLE_WEBSERVER === 'true';
-    if (external)
+    const native = nativeAdmission(parentEnv, external);
+    if (native) {
+        const deadlines = parsed.args.flatMap((a, i) => a === '--timeout' ? [parsed.args[i + 1]] : a.startsWith('--timeout=') ? [a.slice(10)] : []);
+        need(deadlines.length === 1 && deadlines[0] === '30000', 'Native container requires explicit unchanged 30000ms deadline');
+    }
+    if (external && !native)
         need(parentEnv.GITHUB_ACTIONS === 'true' && parentEnv.PLAYWRIGHT_BASE_URL === 'http://127.0.0.1:3109' && parentEnv.CANDIDATE_IMAGE_ID?.match(/^sha256:[a-f0-9]{64}$/u), 'External runtime must be exact job-owned container');
-    else
+    else if (!external)
         need(!parentEnv.PLAYWRIGHT_BASE_URL || parentEnv.PLAYWRIGHT_BASE_URL === 'http://127.0.0.1:3099', 'Managed browser URL changed');
     const env = { ...environment(parentEnv), PLAYWRIGHT_BASE_URL: external ? 'http://127.0.0.1:3109' : 'http://127.0.0.1:3099' };
     const out = path.join(app, 'test-results', `rate-window-${Date.now()}-${process.pid}`);
@@ -414,10 +420,11 @@ export async function main(args, { root = fileURLToPath(new URL('../', import.me
             }
             need(ready, 'Owned production server not ready');
         }
-        const inspectExternal = async () => { const p = launch('docker', ['inspect', '--format', '{{.Id}} {{.Image}} {{.State.Running}} {{index .Config.Labels "org.opencontainers.image.revision"}}', 'tax-engine-browser-ci'], { cwd: root, env }); const r = await p.closed; need(!r.ioError && !r.signal && r.exit === 0, 'External container inspection failed'); return containerProof(r.stdout, parentEnv.CANDIDATE_IMAGE_ID, parentEnv.GITHUB_SHA); };
+        const inspectDocker = async () => { const p = launch('docker', ['inspect', '--format', '{{.Id}} {{.Image}} {{.State.Running}} {{index .Config.Labels "org.opencontainers.image.revision"}}', 'tax-engine-browser-ci'], { cwd: root, env }); const r = await p.closed; need(!r.ioError && !r.signal && r.exit === 0, 'External container inspection failed'); return containerProof(r.stdout, parentEnv.CANDIDATE_IMAGE_ID, parentEnv.GITHUB_SHA); };
+        const inspectExternal = native ? await createNativeInspector({root, env: parentEnv, signal: cancellation.signal}) : inspectDocker;
         if (external)
             externalProof = await inspectExternal();
-        await save('source-build.json', { source: before, build: compiled, externalImageId: external ? parentEnv.CANDIDATE_IMAGE_ID : null, externalProof, ownedServerPid: server?.child.pid ?? null });
+        await save('source-build.json', { source: before, build: compiled, externalImageId: native ? externalProof.imageId : external ? parentEnv.CANDIDATE_IMAGE_ID : null, externalProof, ownedServerPid: server?.child.pid ?? null });
         const identity = async () => { need(!interrupted, 'Interrupted run'); await verifyAudit(root, audit); need(equal(await snapshot(root, sourceDirs, sourceFiles), before), 'Source drift'); if (!external) {
             const current = await buildSnapshot(root);
             const changed = [...new Set([...Object.keys(compiled.immutable), ...Object.keys(current.immutable)])].filter(name => compiled.immutable[name] !== current.immutable[name]);

@@ -8652,6 +8652,26 @@
       ]
     },
     {
+      "key": "federal/native-browser-runtime-provenance",
+      "jurisdiction": "federal",
+      "taxYear": null,
+      "sourceAuthority": "Dockerfile; scripts/run-browser-tests.mjs; reviewed operator-owned native relay controller",
+      "specPath": "spec/federal/native-browser-runtime-provenance.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/navigation-scroll-boundary",
       "jurisdiction": "federal",
       "taxYear": 2025,

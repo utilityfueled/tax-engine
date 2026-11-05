@@ -21376,6 +21376,35 @@
     "cleanup": "SOURCE_PREPARATION_ONLY_NOT_EXECUTED",
     "automaticRetryQualified": false,
     "hostedQualified": false,
-    "ledger": "docs/upgrade-2026-isolated-outage-renewal-work.md"
+    "ledger": "docs/upgrade-2026-isolated-outage-renewal-work.md",
+    "oneDayRetentionApproval": "RECEIVED_AFTER_BRANCH_UNAVAILABLE_NOT_APPLIED"
+  },
+  "nov05NativeBrowserRuntimeProvenance": {
+    "status": "SOURCE_AND_MANAGED_REGRESSION_PASS_NATIVE_UNQUALIFIED",
+    "focusedPassed": 153,
+    "focusedFiles": 5,
+    "metadataPassed": 895,
+    "distinctReplayed": 152,
+    "distinctAdditional": 11,
+    "actualManagedCases": 2,
+    "deadlineMs": 30000,
+    "desktopMs": 9999,
+    "mobileMs": 9113,
+    "retries": 0,
+    "skips": 0,
+    "ownedServerClosed": true,
+    "sourceDrift": [],
+    "actualCollection": 582,
+    "originalHostedSkips": 5,
+    "auditedSources": 1798,
+    "auditContracts": 149,
+    "nativeInterfaceExercised": false,
+    "imageBuildProvenanceQualified": false,
+    "newVMGrant": false,
+    "inventoryTotal": 905,
+    "supportedUnchanged": 68,
+    "mainManifest": "2c162ced084b8996fe069e3677d48a74ba2ed2ff3efe739053734f00db679dba",
+    "runtimeManifest": "3aeebeff7a97a7d85a32ec6c57d9b934f3c6105b20615e5f5f1df46fc8054c4b",
+    "ledger": "docs/upgrade-2026-native-browser-runtime-provenance-work.md"
   }
 }
