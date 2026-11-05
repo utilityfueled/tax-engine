@@ -3273,3 +3273,12 @@ The sticky navigation and interview ticker no longer cover native source
 controls. Focused desktop/mobile geometry, keyboard, resize and privacy checks
 pass2/2. The unchanged original journeys pass both mobile cases while both
 desktop cases still time out at30seconds. See [the bounded browser ledger](upgrade-2026-navigation-scroll-boundary-work.md). Full browser qualification remains open.
+
+### November5 UTC: source-qualified Ohio2026 reciprocal draft
+
+The finite PA employee draft excludes actual qualifying reciprocal compensation
+and refunds actual OH withholding without duplicate credits. Spec-first RED,
+224 focused/historical tests and35 independent controls pass; ROOT verifies42
+frozen members and8 source pins. See [the draft ledger](upgrade-2026-ohio-pa-reciprocal-2026-draft-work.md).
+Broader selected-state software, public2026/final forms, human and distribution
+qualification remain open.

@@ -1,5 +1,6 @@
 /** Spec: state/oh-2026-return-draft.yaml. No zero or confirmation defaults. */
 import { z } from 'zod';
+import { OhioReciprocalWageSourcesSchema } from './ohio-reciprocal-wage-sources.js';
 import { W2StateLocalSourcesSchema } from './w2-state-local.js';
 export const Ohio2026OrdinaryStateSchema = W2StateLocalSourcesSchema.shape.stateRows.element.shape.state.exclude(['']);
 const reference = z.string().trim().min(1);
@@ -27,3 +28,11 @@ export const Ohio2026OrdinarySourcesSchema = z.object({
   }).strict()).min(1).max(20),
 }).strict();
 export type Ohio2026OrdinarySources = z.infer<typeof Ohio2026OrdinarySourcesSchema>;
+
+/** Separate current documentary method; ordinary packets keep their strict schema. */
+export const Ohio2026PaReciprocalSourcesSchema = Ohio2026OrdinarySourcesSchema.extend({
+  methodId: z.literal('oh-2026-pa-reciprocal-employee-draft-v1'),
+  reciprocalWageSources: OhioReciprocalWageSourcesSchema.extend({
+    sourceTaxYear: z.literal(2026), payrollRows: OhioReciprocalWageSourcesSchema.shape.payrollRows.max(366),
+  }),
+}).strict();

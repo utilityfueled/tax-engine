@@ -11,7 +11,7 @@ import { readOhio2026OrdinarySource, type Ohio2026OrdinaryContext } from './oh-2
 
 export interface Ohio2026ReturnDraftResult {
   taxYear: 2026;
-  ruleVersion: 'oh-2026-ordinary-employee-draft-v1';
+  ruleVersion: 'oh-2026-ordinary-employee-draft-v1' | 'oh-2026-pa-reciprocal-employee-draft-v1';
   baselineRuleVersion: string;
   calculationStatus: 'incomplete';
   reviewStatus: 'independent-review-pending';
@@ -19,6 +19,8 @@ export interface Ohio2026ReturnDraftResult {
   sourceCommitment: string;
   federalAgi: Decimal;
   ohioAgi: Decimal;
+  reciprocalWageExclusion?: Decimal;
+  residentCredit?: Decimal;
   exemptions: Decimal;
   taxBeforeCredits: Decimal;
   personalExemptionCredit: Decimal;
@@ -39,7 +41,9 @@ export interface Ohio2026ReturnDraftResult {
 export function calculateOhio2026ReturnDraft(input: TaxYearInput, sources: unknown, context: Ohio2026OrdinaryContext): Ohio2026ReturnDraftResult {
   const actual = readOhio2026OrdinarySource(context, input, sources);
   const federalAgi = new Decimal(actual.federalAgi);
-  const baselineInput = { taxYear: 2026, filingStatus: actual.filingStatus, ohioAdjustedGrossIncome: federalAgi,
+  const reciprocal = actual.reciprocalWageExclusion !== undefined;
+  const ohioAgi = federalAgi.minus(actual.reciprocalWageExclusion ?? '0');
+  const baselineInput = { taxYear: 2026, filingStatus: actual.filingStatus, ohioAdjustedGrossIncome: ohioAgi,
     businessIncomeDeduction: '0', qualifyingCapitalGainsAndPayrollDeduction: '0', taxableBusinessIncome: '0',
     eligibleExemptions: actual.eligibleExemptions, primaryQualifyingIncome: actual.primaryQualifyingIncome,
     ...(actual.spouseQualifyingIncome === undefined ? {} : { spouseQualifyingIncome: actual.spouseQualifyingIncome }) };
@@ -50,8 +54,8 @@ export function calculateOhio2026ReturnDraft(input: TaxYearInput, sources: unkno
   // Source admission establishes zero EITC using actual no-child facts and the
   // indexed2026 cutoff, rather than defaulting an unavailable federal result.
   const earnedIncomeCredit = new Decimal(0);
-  const nrc = calculateOhioITNRC({ taxYear: 2026, filingStatus: actual.filingStatus,
-    federalAgi, ohioAgi: federalAgi, taxRemainingBeforeResidencyCredits: baseline.taxAfterJointCredit,
+  const nrc = reciprocal ? { line19: new Decimal(0), line20: new Decimal(0), lines: [] } : calculateOhioITNRC({ taxYear: 2026, filingStatus: actual.filingStatus,
+    federalAgi, ohioAgi, taxRemainingBeforeResidencyCredits: baseline.taxAfterJointCredit,
     residencyFacts: actual.residency });
   const incomeTax = baseline.taxAfterJointCredit.minus(nrc.line20);
   const withholding = new Decimal(actual.withholding);
@@ -59,8 +63,10 @@ export function calculateOhio2026ReturnDraft(input: TaxYearInput, sources: unkno
   const underpaymentPenalty = new Decimal(0), latePaymentInterest = new Decimal(0), amountDue = new Decimal(0);
   const refund = roundDollar(withholding.minus(incomeTax));
   const audit = new AuditTrail();
+  if (reciprocal) audit.record('OH2026 enacted PA reciprocal draft', 'reciprocal-exclusion', 'Actual reciprocal compensation excluded once', federalAgi,
+    'Current complete full-year PA ordinary employee originals; RC5747.05(A)(2). Ohio AGI0; excluded compensation creates neither NRC nor resident credit. No final2026 form qualification.');
   for (const [line, label, value, formula] of [
-    ['AGI', 'Actual completed wage-only federal and Ohio AGI', federalAgi, 'Round sum current source-qualified ordinary W2 wages; no other actual sources admitted'],
+    ['AGI', reciprocal ? 'Actual completed wage-only federal AGI before reciprocal exclusion' : 'Actual completed wage-only federal and Ohio AGI', federalAgi, 'Round sum current source-qualified ordinary W2 wages; no other actual sources admitted'],
     ['personal-credit', 'Personal exemption credit', personalExemptionCredit, 'min(tax,20*actual eligible count) only if statutory MAGI less exemptions<30000; RC5747.022'],
     ['joint-credit', 'Joint filing credit after personal credit', baseline.jointFilingCredit, 'Actual each-owner qualifying wages, corrected MAGI and remaining-tax tier/cap; RC5747.05(E)'],
     ['earned-income-credit', 'Actual zero earned income credit', earnedIncomeCredit, 'Complete no-qualifying-child sources and AGI at or above indexed2026 phaseout; no unavailable credit default'],
@@ -71,14 +77,14 @@ export function calculateOhio2026ReturnDraft(input: TaxYearInput, sources: unkno
     ['amount-due', 'No remaining amount due', amountDue, 'Source-qualified withholding covers current income tax; no other liability admitted'],
     ['refund', 'Actual ordinary overpayment', refund, 'Whole-dollar withholding minus income tax, with source-established zero other balance/elections'],
   ] as const) audit.record('OH2026 enacted ordinary draft', line, label, value, formula);
-  return { taxYear: 2026, ruleVersion: 'oh-2026-ordinary-employee-draft-v1', baselineRuleVersion: OHIO_2026_BASELINE.metadata.ruleVersion,
+  return { taxYear: 2026, ruleVersion: context.methodId, baselineRuleVersion: OHIO_2026_BASELINE.metadata.ruleVersion,
     calculationStatus: 'incomplete', reviewStatus: 'independent-review-pending', filingQualified: false,
-    sourceCommitment: context.sourceCommitment, federalAgi, ohioAgi: new Decimal(federalAgi), exemptions: baseline.exemptions,
+    sourceCommitment: context.sourceCommitment, federalAgi, ohioAgi, ...(reciprocal ? { reciprocalWageExclusion: new Decimal(actual.reciprocalWageExclusion ?? '0'), residentCredit: new Decimal(0) } : {}), exemptions: baseline.exemptions,
     taxBeforeCredits: baseline.totalTax, personalExemptionCredit, jointFilingCredit: baseline.jointFilingCredit, earnedIncomeCredit,
     nonresidentRatio: nrc.line19, nonresidentCredit: nrc.line20, incomeTax, withholding, underpaymentPenalty, latePaymentInterest, amountDue, refund,
     limitations: [
       'Finite single/MFJ current ordinary employee cohort only; no dependents or EITC-qualifying children, under65 adults, no other state adjustments or credit sources.',
-      'Actual no taxing-school-district residence and no other-state tax on Ohio-resident income; reciprocal and specialized income methods remain separate.',
+      reciprocal ? 'Finite single full-year PA ordinary employee reciprocal compensation only; mixed, other-domicile, part-year, joint and specialized compensation remain separate methods.' : 'Actual no taxing-school-district residence and no other-state tax on Ohio-resident income; reciprocal and specialized income methods remain separate.',
       'Ordinary first Ohio return with equal-quarter withholding covering liability; other payments, prior returns/carries, penalties and balance elections require separate current methods.',
       'Final2026 form identity/numbering, independent human review, complete selected-state scope and filing qualification remain unavailable.',
     ], lines: [...baseline.lines, ...nrc.lines, ...audit.getLines()] };

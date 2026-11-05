@@ -19812,5 +19812,20 @@
     "authorManifestSHA256": "e139b37ec9eee21252b03a2b23a7b546b8217b69ecda6dd8a4d70fae368a77ce",
     "ledger": "docs/upgrade-2026-navigation-scroll-boundary-work.md",
     "fullBrowserQualified": false
+  },
+  "nov05Ohio2026PAReciprocalDraft": {
+    "status": "finite_actual_source_draft_pass_broader_software_pending",
+    "checks": {
+      "focusedPassed": 224,
+      "focusedFiles": 7,
+      "distinctControlsPassed": 35,
+      "rootManifestMembersVerified": 42,
+      "rootCurrentSourcePinsVerified": 8
+    },
+    "authorManifestSHA256": "b5d4fc9aa4dab71d36a8ea84c3be0c990a2c70ccf87bcb92f66f07f76048f3cd",
+    "independentManifestSHA256": "d0905ecdf518af1068e90681f7b7c21729e29406224a6f348c8f7d6052f213b9",
+    "ledger": "docs/upgrade-2026-ohio-pa-reciprocal-2026-draft-work.md",
+    "filingEligible": false,
+    "humanReview": false
   }
 }

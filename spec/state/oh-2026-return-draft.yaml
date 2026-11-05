@@ -10,6 +10,8 @@ sources:
   - "https://codes.ohio.gov/ohio-revised-code/section-5747.98"
   - "https://codes.ohio.gov/ohio-revised-code/section-5747.09"
   - "https://www.irs.gov/pub/irs-drop/rp-25-32.pdf"
+  - "https://codes.ohio.gov/ohio-administrative-code/rule-5703-7-03"
+  - "https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/forms/ohio_individual/individual/2025/it1040-booklet.pdf"
 notes: |
   Sources refreshed 2026-11-05; implementation remains a labeled internal draft.
   This is a minimum first complete arithmetic/source cohort, not the entire
@@ -56,3 +58,15 @@ lines:
     description: "Preserve all qualification boundaries"
     formula: "Return labeled draft taxYear2026 with independent current provenance, incomplete calculation and review status, filingQualified=false, no official2026 form/export qualification. Preserve historical numeric outputs and public unknown/unsupported gates; full selected-state completion stays false until remaining factual branches, human review, forms and operational evidence pass."
     testRef: "tests/engine/state/oh-2026-return-draft.test.ts::keeps filing and historical gates intact"
+  - line: "pa-reciprocal-current-sources"
+    description: "Separately qualify actual2026 full-year Pennsylvania employee originals"
+    formula: "Require an explicit oh-2026-pa-reciprocal-employee-draft-v1 packet, current original taxpayer/W2/domicile/employer/service/payroll evidence, single primary full-year PA nonresident, one ordinary C-corporation employer and all wages for actual OH employee services. Reconcile complete unique current-year service/pay dates, W2 cash and actual OH withholding. Current reciprocal originals in residency and source packet must match exactly and bind every unchanged input/source. Preserve all ordinary original-family, age, EITC, school, other-credit and timely withholding-only payment gates. Direct ordinary qualifier still rejects reciprocity. Unknown mixed/PY/MFJ/non-PA/special compensation remains unsupported."
+    testRef: "tests/engine/state/oh-2026-reciprocal-return-draft.test.ts::qualifies only complete current PA employee originals"
+  - line: "pa-reciprocal-refund"
+    description: "Refund actual Ohio compensation withholding without duplicate relief"
+    formula: "RC5747.05(A)(2) compensation reciprocity and historical2025 ScheduleAdjustments reciprocal-wage treatment applied as a labeled2026 statutory draft: federalAGI=roundDollar(actual complete W2 wages); exclusion=the same source-qualified compensation; OhioAGI=federalAGI-exclusion=0. Actual known-zero other sources and complete no-child federal EITC facts imply zero Ohio taxable income and tax/credits, NRC0/resident-credit0 (never reuse excluded wages), refund=roundDollar(sum actual OH state compensation withholding). School/municipal/other-state withholding never enters the Ohio refund. Do not fabricate a federal return or final2026 form lines; current draft filing/review gates remain closed."
+    testRef: "tests/engine/state/oh-2026-reciprocal-return-draft.test.ts::refunds only actual OH withholding on source-qualified reciprocal wages"
+  - line: "pa-reciprocal-commitment"
+    description: "Preserve current original commitments, historical behavior and closed gates"
+    formula: "Opaque current source context binds untouched original input and complete packet; missing, stale, copied or forged contexts reject. Provenance-only original changes require requalification and a changed source commitment even at equal cash. Existing ordinary outputs and historical2025 source methods/year guards remain unchanged; all final2026 forms/public year/filing activation and full selected-state completion remain false."
+    testRef: "tests/engine/state/oh-2026-reciprocal-return-draft.test.ts::rejects stale and forged reciprocal contexts without changing historical gates"
