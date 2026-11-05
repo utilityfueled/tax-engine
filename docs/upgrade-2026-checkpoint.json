@@ -20630,5 +20630,24 @@
     "whole2026": "gated",
     "filingEligible": false,
     "qualifiedHumanReview": "pending"
+  },
+  "nov05SSAV3LiveDevelopmentSmoke": {
+    "status": "actual_development_only",
+    "requests": 12,
+    "capabilityProbes": 3,
+    "caseAnswers": 9,
+    "requiredMoneyFieldsCorrect": 36,
+    "maximumUsd": "0.81",
+    "actualCostUsd": "0.02051895",
+    "newUnknownMaximumUsd": "0",
+    "cumulativeKnownUsd": "0.26282160",
+    "oldUnknownMaximumUsd": "0.022384",
+    "cumulativeWithReserveUsd": "0.28520560",
+    "actualManifest": "14ddb1f70135835a47235fb81a43936f0d02a1638ddb5acf67ad66ac78255d3c",
+    "recordedResultReviewManifest": "344b0c654042d4962329feecf59675b62668346c5eab6948b679552ba385a400",
+    "rootReviewManifest": "5b51678ff09a3c5107b6eed6403646a89b1b16f4bf3a9a26c57da09020015674",
+    "metadataQualified": false,
+    "humanReview": "pending",
+    "productionPromotion": false
   }
 }
