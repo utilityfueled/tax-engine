@@ -20094,5 +20094,31 @@
     ],
     "readinessQualified": false,
     "ledger": "docs/upgrade-2026-isolated-bootstrap-hold.md"
+  },
+  "nov05PassengerAutoIndexedLimits": {
+    "status": "published-table-correction-only",
+    "placementYears": [
+      2025,
+      2026
+    ],
+    "publishedCellsChecked": 16,
+    "mainGenuineNumericRed": 2,
+    "mainFocusedPassed": 198,
+    "independentApiPassed": 14,
+    "specReferences": 8340,
+    "types": "pass",
+    "inventory": "generated and checked; one unsupported entry added",
+    "repositoryLint": "pass; 121 existing fixture warnings unchanged; changed product/new test zero warnings",
+    "candidateManifestSHA256": "583fea6bd02d3de1eb10953c8081ab58e78093f81854fc1b153bc00a250deb50",
+    "independentManifestSHA256": "2a138759adbae1bf745d7d7d443d0809471c787e9d700e9c3f68a2ca75cc642f",
+    "remainingGaps": [
+      "business-use cap proration",
+      "combined179/bonus/regular cap allocation",
+      "historic-year limits and source-complete history",
+      "changed use, ADS, recapture, unrecovered basis and disposition",
+      "current full integration, final forms and qualified human review"
+    ],
+    "filingQualified": false,
+    "ledger": "docs/upgrade-2026-passenger-auto-indexed-limits-work.md"
   }
 }

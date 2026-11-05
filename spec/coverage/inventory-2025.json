@@ -10133,6 +10133,26 @@
       ]
     },
     {
+      "key": "federal/section-280f-indexed-limits",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://www.irs.gov/irb/2025-11_IRB; https://www.irs.gov/pub/irs-drop/rp-26-15.pdf",
+      "specPath": "spec/federal/section-280f-indexed-limits.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/selected-charitable-carryover",
       "jurisdiction": "federal",
       "taxYear": null,

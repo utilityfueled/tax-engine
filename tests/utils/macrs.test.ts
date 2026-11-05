@@ -685,8 +685,8 @@ describe("computeListedPropertyDepreciation", () => {
       2025,
     );
     expect(result).not.toBeNull();
-    // Tentative: 20% × $80K = $16,000; cap $12,400
-    expect(result!.depreciation.toNumber()).toBe(12400);
+    // Tentative: 20% × $80K = $16,000; cap $12,200 (Rev. Proc. 2025-16).
+    expect(result!.depreciation.toNumber()).toBe(12200);
   });
 
   it("passenger auto — 60% business use reduces before cap comparison", () => {

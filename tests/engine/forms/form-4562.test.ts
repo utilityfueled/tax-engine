@@ -467,7 +467,7 @@ describe("Form 4562 mid-quarter convention auto-detection", () => {
 // ---------------------------------------------------------------------------
 
 describe("Part V listed property — computeListedPropertyDepreciation", () => {
-  it("passenger automobile year-1 capped at $12,400 without bonus (§280F)", () => {
+  it("passenger automobile year-1 capped at $12,200 without bonus (§280F)", () => {
     const result = computeListedPropertyDepreciation(
       {
         costBasis: "60000",
@@ -483,14 +483,14 @@ describe("Part V listed property — computeListedPropertyDepreciation", () => {
     expect(result).not.toBeNull();
     // 200DB half-year year 1: 20% of $60K = $12,000
     // Business use 100%: $12,000
-    // §280F cap without bonus: $12,400
-    // Depreciation = min($12,000, $12,400) = $12,000
+    // §280F cap without bonus: $12,200
+    // Depreciation = min($12,000, $12,200) = $12,000
     expect(result!.depreciation.toNumber()).toBe(12000);
-    expect(result!.section280FCap!.toNumber()).toBe(12400);
+    expect(result!.section280FCap!.toNumber()).toBe(12200);
     expect(result!.qualifiesForMacrs).toBe(true);
   });
 
-  it("passenger automobile year-1 capped at $12,400 when tentative exceeds cap", () => {
+  it("passenger automobile year-1 capped at $12,200 when tentative exceeds cap", () => {
     const result = computeListedPropertyDepreciation(
       {
         costBasis: "80000",
@@ -505,13 +505,13 @@ describe("Part V listed property — computeListedPropertyDepreciation", () => {
 
     expect(result).not.toBeNull();
     // 200DB half-year year 1: 20% of $80K = $16,000
-    // §280F cap without bonus: $12,400
-    // Depreciation = min($16,000, $12,400) = $12,400
-    expect(result!.depreciation.toNumber()).toBe(12400);
+    // §280F cap without bonus: $12,200
+    // Depreciation = min($16,000, $12,200) = $12,200
+    expect(result!.depreciation.toNumber()).toBe(12200);
     expect(result!.tentativeDepreciation.toNumber()).toBe(16000);
   });
 
-  it("passenger automobile year-1 with bonus uses higher $20,400 cap", () => {
+  it("passenger automobile year-1 with bonus uses higher $20,200 cap", () => {
     const result = computeListedPropertyDepreciation(
       {
         costBasis: "80000",
@@ -527,13 +527,13 @@ describe("Part V listed property — computeListedPropertyDepreciation", () => {
 
     expect(result).not.toBeNull();
     // 200DB half-year year 1: 20% of $80K = $16,000
-    // §280F cap with bonus: $20,400
-    // Depreciation = min($16,000, $20,400) = $16,000
+    // §280F cap with bonus: $20,200
+    // Depreciation = min($16,000, $20,200) = $16,000
     expect(result!.depreciation.toNumber()).toBe(16000);
-    expect(result!.section280FCap!.toNumber()).toBe(20400);
+    expect(result!.section280FCap!.toNumber()).toBe(20200);
   });
 
-  it("passenger automobile year-2 cap is $19,800", () => {
+  it("passenger automobile year-2 cap is $19,600", () => {
     const result = computeListedPropertyDepreciation(
       {
         costBasis: "80000",
@@ -548,14 +548,14 @@ describe("Part V listed property — computeListedPropertyDepreciation", () => {
 
     expect(result).not.toBeNull();
     // 200DB half-year year 2: 32% of $80K = $25,600
-    // §280F year-2 cap: $19,800
-    // Depreciation = min($25,600, $19,800) = $19,800
-    expect(result!.depreciation.toNumber()).toBe(19800);
-    expect(result!.section280FCap!.toNumber()).toBe(19800);
+    // §280F year-2 cap: $19,600
+    // Depreciation = min($25,600, $19,600) = $19,600
+    expect(result!.depreciation.toNumber()).toBe(19600);
+    expect(result!.section280FCap!.toNumber()).toBe(19600);
     expect(result!.recoveryYear).toBe(2);
   });
 
-  it("passenger automobile year-3 cap is $11,900", () => {
+  it("passenger automobile year-3 cap is $11,800", () => {
     const result = computeListedPropertyDepreciation(
       {
         costBasis: "80000",
@@ -570,12 +570,12 @@ describe("Part V listed property — computeListedPropertyDepreciation", () => {
 
     expect(result).not.toBeNull();
     // 200DB half-year year 3: 19.20% of $80K = $15,360
-    // §280F year-3 cap: $11,900
-    expect(result!.depreciation.toNumber()).toBe(11900);
-    expect(result!.section280FCap!.toNumber()).toBe(11900);
+    // §280F year-3 cap: $11,800
+    expect(result!.depreciation.toNumber()).toBe(11800);
+    expect(result!.section280FCap!.toNumber()).toBe(11800);
   });
 
-  it("passenger automobile year-4+ cap is $7,160", () => {
+  it("passenger automobile year-4+ cap is $7,060", () => {
     const result = computeListedPropertyDepreciation(
       {
         costBasis: "80000",
@@ -590,9 +590,9 @@ describe("Part V listed property — computeListedPropertyDepreciation", () => {
 
     expect(result).not.toBeNull();
     // 200DB half-year year 4: 11.52% of $80K = $9,216
-    // §280F year-4+ cap: $7,160
-    expect(result!.depreciation.toNumber()).toBe(7160);
-    expect(result!.section280FCap!.toNumber()).toBe(7160);
+    // §280F year-4+ cap: $7,060
+    expect(result!.depreciation.toNumber()).toBe(7060);
+    expect(result!.section280FCap!.toNumber()).toBe(7060);
   });
 
   it("passenger automobile year-5 also uses the year-4+ cap", () => {
@@ -610,9 +610,9 @@ describe("Part V listed property — computeListedPropertyDepreciation", () => {
 
     expect(result).not.toBeNull();
     // 200DB half-year year 5: 11.52% of $80K = $9,216
-    // §280F year-4+ cap: $7,160
-    expect(result!.depreciation.toNumber()).toBe(7160);
-    expect(result!.section280FCap!.toNumber()).toBe(7160);
+    // §280F year-4+ cap: $7,060
+    expect(result!.depreciation.toNumber()).toBe(7060);
+    expect(result!.section280FCap!.toNumber()).toBe(7060);
   });
 
   it("business-use percentage reduces depreciation before §280F cap", () => {
@@ -631,8 +631,8 @@ describe("Part V listed property — computeListedPropertyDepreciation", () => {
     expect(result).not.toBeNull();
     // 200DB half-year year 1: 20% of $60K = $12,000
     // × 75% business use = $9,000
-    // §280F cap: $12,400
-    // Depreciation = min($9,000, $12,400) = $9,000
+    // §280F cap: $12,200
+    // Depreciation = min($9,000, $12,200) = $9,000
     expect(result!.depreciation.toNumber()).toBe(9000);
     expect(result!.tentativeDepreciation.toNumber()).toBe(9000);
     expect(result!.businessUsePercentage.toNumber()).toBe(75);
@@ -655,8 +655,8 @@ describe("Part V listed property — computeListedPropertyDepreciation", () => {
     expect(result).not.toBeNull();
     // ADS SL half-year year 1: 10% of $40K = $4,000
     // × 50% business use = $2,000
-    // §280F cap: $12,400
-    // Depreciation = min($2,000, $12,400) = $2,000
+    // §280F cap: $12,200
+    // Depreciation = min($2,000, $12,200) = $2,000
     expect(result!.depreciation.toNumber()).toBe(2000);
     expect(result!.qualifiesForMacrs).toBe(false);
     expect(result!.method).toBe("SL");
@@ -678,7 +678,7 @@ describe("Part V listed property — computeListedPropertyDepreciation", () => {
     expect(result).not.toBeNull();
     // 200DB half-year year 1: 20% of $40K = $8,000
     // × 51% business use = $4,080
-    // §280F cap: $12,400
+    // §280F cap: $12,200
     expect(result!.depreciation.toNumber()).toBe(4080);
     expect(result!.qualifiesForMacrs).toBe(true);
     expect(result!.method).toBe("200DB");
@@ -794,9 +794,9 @@ describe("Part V listed property — computeListedPropertyAggregation", () => {
     );
 
     expect(agg.results).toHaveLength(2);
-    // Auto 1: min($16,000, $12,400) = $12,400
+    // Auto 1: min($16,000, $12,200) = $12,200
     // Camera: $15K × 20% × 80% = $2,400
-    expect(agg.totalDepreciation.toNumber()).toBe(12400 + 2400);
+    expect(agg.totalDepreciation.toNumber()).toBe(12200 + 2400);
   });
 
   it("skips non-listed-property assets", () => {
@@ -836,7 +836,7 @@ describe("Part V listed property — Form 4562 integration", () => {
 
     // Regular: 14.29% of $10K = $1,429
     expect(result.line19.toNumber()).toBe(1429);
-    // Listed auto: min(20% of $60K = $12,000, $12,400) = $12,000
+    // Listed auto: min(20% of $60K = $12,000, $12,200) = $12,000
     expect(result.line21.toNumber()).toBe(12000);
     // Total: $1,429 + $12,000
     expect(result.line22.toNumber()).toBe(1429 + 12000);
@@ -867,7 +867,7 @@ describe("Part V listed property — Form 4562 integration", () => {
     expect(result.line17.toNumber()).toBe(0);
     expect(result.line19.toNumber()).toBe(0);
     expect(result.line20.toNumber()).toBe(0);
-    // 200DB year 1: 20% of $50K × 80% = $8,000; cap $12,400 → $8,000
+    // 200DB year 1: 20% of $50K × 80% = $8,000; cap $12,200 → $8,000
     expect(result.line21.toNumber()).toBe(8000);
     expect(result.line22.toNumber()).toBe(8000);
   });
@@ -896,7 +896,7 @@ describe("Part V listed property — Form 4562 integration", () => {
     expect(result.midQuarterRequired).toBe(true);
     // Regular Q1 mid-quarter: 35% of $3K = $1,050 → Line 19
     expect(result.line19.toNumber()).toBe(1050);
-    // Listed auto Q4 mid-quarter: 5% of $7K = $350 → cap $12,400 → $350 → Line 21
+    // Listed auto Q4 mid-quarter: 5% of $7K = $350 → cap $12,200 → $350 → Line 21
     expect(result.line21.toNumber()).toBe(350);
   });
 
@@ -980,7 +980,7 @@ describe("Part V listed property — Form 4562 integration", () => {
     expect(result.line12.toNumber()).toBe(5000);
     // Office equip: 14.29% of $3K = $429 → Line 19
     expect(result.line19.toNumber()).toBe(429);
-    // Van: 20% of $45K = $9,000 × 70% = $6,300 → cap $12,400 → $6,300
+    // Van: 20% of $45K = $9,000 × 70% = $6,300 → cap $12,200 → $6,300
     // Camera: 20% of $8K = $1,600 × 90% = $1,440 → no cap → $1,440
     // Line 21 = $6,300 + $1,440 = $7,740
     expect(result.line21.toNumber()).toBe(7740);

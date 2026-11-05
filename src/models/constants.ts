@@ -1811,12 +1811,20 @@ export const MACRS_GDS_SL_MID_QUARTER: Record<number, Record<number, Decimal[]>>
  * `withoutBonus[0]` is the year-1 limit without bonus depreciation.
  * Years 2+ are the same regardless of bonus election.
  *
- * Reference: Rev. Proc. 2024-13, §5.01 (2025 tax year limits).
+ * Reference: Rev. Proc. 2025-16 §4.01 Tables 1/2 and Rev. Proc. 2026-15
+ * §4.01 Tables 1/2 (printed page 7), retrieved November 5, 2026.
+ * The key is the original placed-in-service year, not the current return year.
+ * These are 100%-use maxima; table availability does not prove eligibility,
+ * source-complete basis/history, or the combined §179/bonus/regular deduction.
  */
 export const SECTION_280F_LIMITS: Record<number, { withBonus: Decimal[]; withoutBonus: Decimal[] }> = {
   2025: {
-    withBonus:    [d("20400"), d("19800"), d("11900"), d("7160")],
-    withoutBonus: [d("12400"), d("19800"), d("11900"), d("7160")],
+    withBonus:    [d("20200"), d("19600"), d("11800"), d("7060")],
+    withoutBonus: [d("12200"), d("19600"), d("11800"), d("7060")],
+  },
+  2026: {
+    withBonus:    [d("20300"), d("19800"), d("11900"), d("7160")],
+    withoutBonus: [d("12300"), d("19800"), d("11900"), d("7160")],
   },
 };
 
