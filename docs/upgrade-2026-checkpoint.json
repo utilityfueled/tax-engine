@@ -19393,5 +19393,25 @@
     "advisoryRiskAccepted": false,
     "runtimeQualified": false,
     "next": "PROFILE_AND_REDUCE_CURRENT_RENDER_REPLAY_WITHOUT_STALE_VALIDATION"
+  },
+  "nov04NoLoginBootstrapV3": {
+    "ledger": "docs/upgrade-2026-isolated-outage-provisioning-work.md",
+    "status": "PASS_NOLOGIN_BOOTSTRAP_METADATA_ONLY",
+    "actualReceiptSHA256": "ae4c6ecda16bdbc3dd49c72340abc2973f964aa05013a4a370bccd7f5194a54d",
+    "independentSourceReceiptSHA256": "8038501fb01c6393df97030153a75bb755dccde7d7c23b2612dc70651e8a7765",
+    "ordinaryQueries": 305,
+    "cleanupQueries": 9,
+    "rows": 82126,
+    "rowJSONBytes": 14230997,
+    "elapsedMs": 44091,
+    "roleNOLOGINConfirmed": true,
+    "databaseOwner": "neondb_owner",
+    "passwordCreated": false,
+    "loginEnabled": false,
+    "privacyQualified": false,
+    "actualRestrictedPrivilegeReviewPending": false,
+    "next": "SEPARATE_REVIEWED_SYNTHETIC_CREDENTIAL_ADMISSION",
+    "independentActualReceiptSHA256": "28e22439e23abbf172304a317e883f6fefa1a13970f1b48ffc08091fbc27ff12",
+    "poststatePinsSHA256": "35c04765d56dee2de517dba69b1ba5447a7dc053883d7228139cf1157c94e6fe"
   }
 }

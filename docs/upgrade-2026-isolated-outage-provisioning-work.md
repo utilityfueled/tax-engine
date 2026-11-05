@@ -13,8 +13,8 @@ was subsequently approved.
 
 | Component | Actual result | Next gate |
 | --- | --- | --- |
-| Vercel | Separate `tax-engine-outage-8487` project created; Preview-only deployment/billing/rate-prefix settings and four auth/Stripe bindings saved. CLI sign-in expressly approved. No deployment yet. | App database/role, webhook/origin configuration, exact-source build and runtime checks. |
-| Neon | Separate free project and schema-only `qa-outage-8487` branch created; integration connected to Preview only. Read-only direct connection proves empty application catalogs, absent target role/database, TLS1.3 with certificate/hostname verification, and SCRAM-SHA-256-PLUS with validated server proof. | Strict bootstrap refuses provider-maintenance PUBLIC CONNECT. No app role/database is durably created; a later temporary role transaction and rollback diagnostic are recorded below. Migrations remain unexecuted. |
+| Vercel | Separate `tax-engine-outage-8487` project created; Preview-only deployment/billing/rate-prefix settings and four auth/Stripe bindings saved. CLI sign-in expressly approved. No deployment yet. | App credential, migrations, webhook/origin configuration, exact-source build and runtime checks. |
+| Neon | Separate free project and schema-only `qa-outage-8487` branch created; integration connected to Preview only. Read-only direct connection proves empty application catalogs, absent target role/database, TLS1.3 with certificate/hostname verification, and SCRAM-SHA-256-PLUS with validated server proof. | The original literal-exclusive bootstrap remains failed. Later V3 commits only a restricted NOLOGIN role, administrator-owned synthetic DB and scoped ACLs after the separately reviewed rollback diagnostic. Credential admission, migrations and broader privacy qualification remain open. |
 | Stripe | New isolated sandbox identity verified. Two synthetic Starter/Plus products and monthly test prices created; four catalog POSTs in twelve total requests. Key remains private and Preview-only. | No customer, trial, webhook or charge endpoints invoked by this bootstrap. Automatic failed delivery/retry and exact reconciliation remain untested. |
 | Redis | The original unused cache was deleted. A separately approved replacement now exists in iad1 with auto-upgrade/eviction off. Its provider UI verifies Budget: $20; the pre-budget display showed zero commands and $0.00. | The owner approved the separate credential grant; the cache is now connected only to the isolated project’s Preview with Sensitive enabled and Production/Development excluded. Retain the $1 actual-spend limit and 240-request ceiling before rehearsal; no outage qualification follows from provisioning. |
 
@@ -166,3 +166,39 @@ this result authorizes no setup retry or model/release promotion.
 - Diagnostic source manifest: `0504ca317295a0fbcc134f679a8ff6f2721ab0e88889c0dcad9f0f3a1fbea224`.
 - Independent source-review receipt: `b99494bc2054edc3b8d685c48546aea35649e762bafe221a9a9ef0d939ff1f2a`.
 - Actual diagnostic receipt: `47c8120ce5021889db546cf56bb49d67fa1ee5647d9897584b5c42fa869235b9`.
+
+## Observed creator edge and committed NOLOGIN setup
+
+Independent review identifies exactly one prior mismatch: the creator membership
+records cloud_admin as grantor, rather than the assumed neondb_owner. The role
+has no outgoing membership or elevated attributes; all original roles and edges
+match. The successor requires that exact single reverse administrator-in-app
+edge, including ADMIN=true/INHERIT=false/SET=false, and retains every other
+privilege, old-catalog, transport, deadline and partial-failure guard. It saves
+safe observations before assertions. No general provider default is inferred.
+
+V3 source review passes40author Node,14author Python and3distinct independent
+save-boundary controls. The one actual execution then completes
+`PASS_NOLOGIN_BOOTSTRAP_METADATA_ONLY`, with closed launcher exit0 and verified
+receipt binding. It commits only the new restricted NOLOGIN role, administrator-
+owned synthetic database and that database's scoped schema/database ACLs. Four
+complete metadata/effective-privilege maps are retained. No password, LOGIN,
+application migration or deployment occurs.
+
+Actual accounting is305ordinary queries/9cleanup rollbacks/82,126rows/
+14,230,997row-JSON bytes/44,091ms. The100-query preflight and205-query later
+phase are included, each within its original bounds. All broad privacy,
+app-role qualification, literal CONNECT, template0 and provider-hop flags remain
+false. Independent actual review verifies the restricted role, exact newDB
+connect-only/public-schema CREATE+USAGE rights, secret-column denials and old
+inventory/ACL equality. Exact poststate fingerprints are frozen. A separately
+reviewed credential helper remains required before the synthetic functional
+rehearsal proceeds.
+
+- Independent actual diagnostic review: `a06e8b3cd816ad7f8e929f679ccffe483d0ece36a1b0c609cfa8d46ff45e8fca`.
+- V3 source manifest: `b024ea7f5993ba34f44d50c81bb71de03004109f0d4f0a41ea9b4e175ae82bb9`.
+- Independent V3 source-review receipt: `8038501fb01c6393df97030153a75bb755dccde7d7c23b2612dc70651e8a7765`.
+- Actual V3 receipt: `ae4c6ecda16bdbc3dd49c72340abc2973f964aa05013a4a370bccd7f5194a54d`.
+
+- Independent actual V3 review: `28e22439e23abbf172304a317e883f6fefa1a13970f1b48ffc08091fbc27ff12`.
+- Exact poststate pins: `35c04765d56dee2de517dba69b1ba5447a7dc053883d7228139cf1157c94e6fe`.

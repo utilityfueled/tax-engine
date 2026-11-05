@@ -3113,3 +3113,13 @@ Actual traces separate cumulative field-entry time from later teardown frames.
 See [the remote ledger](upgrade-2026-045-remote-verification-work.md). Same-state
 preview profiling continues; no performance patch or image qualification is
 claimed by this evidence package.
+
+### November 4: restricted isolated NOLOGIN setup completed
+
+The measured creator-edge grantor difference now has independent interpretation
+and a narrowly bound successor. V3 passes40Node/14Python/3distinct independent
+controls, then one actual305-query/nine-rollback execution creates only the
+restricted NOLOGIN role, administrator-owned synthetic DB and scoped ACLs.
+No password, LOGIN, migration or deployment occurs; all broader privacy/provider
+flags remain false. Independent actual review verifies bounded privilege and
+unchanged old-state evidence; disabled credential helper preparation continues. See [the provisioning ledger](upgrade-2026-isolated-outage-provisioning-work.md).
