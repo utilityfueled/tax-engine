@@ -3287,6 +3287,11 @@ export const Form8829Schema = z.object({
 
 /** Actual source records; blanks remain unknown until the Schedule C source calculator validates them. */
 export const ScheduleCSourceFactsSchema = z.object({
+  depreciation:z.object({sourceTaxYear:z.number().int().optional(),sourceReference:z.string().optional(),sourceFactsConfirmed:z.boolean().nullable().optional(),
+    fullCalendarYearConfirmed:z.boolean().nullable().optional(),allAssetsForThisBusinessConfirmed:z.boolean().nullable().optional(),noOtherActivityAssetsConfirmed:z.boolean().nullable().optional(),noOtherDepreciationOrAmortizationConfirmed:z.boolean().nullable().optional(),notDeductedElsewhereConfirmed:z.boolean().nullable().optional(),
+    originalBusiness:z.record(z.string(),z.unknown()).optional(),
+    rows:z.array(z.object({assetIndex:z.number().int().optional(),assetReference:z.string().optional(),accountHolder:z.enum(["primary","spouse"]).optional(),bonusZeroTreatment:z.enum(["not_eligible","elected_out"]).optional(),bonusTreatmentSourceReference:z.string().optional(),originalAsset:z.record(z.string(),z.unknown()).optional()}).strict()).optional(),
+  }).strict().optional(),
   amortization:z.object({sourceTaxYear:z.number().int().optional(),sourceReference:z.string().optional(),sourceFactsConfirmed:z.boolean().nullable().optional(),
     fullCalendarYearConfirmed:z.boolean().nullable().optional(),allAssetsForThisScheduleCConfirmed:z.boolean().nullable().optional(),notDeductedElsewhereConfirmed:z.boolean().nullable().optional(),
     remainingOtherExpenses:z.string().optional(),remainingOtherExpenseSourceReference:z.string().optional(),

@@ -1,3 +1,4 @@
+import {guidedMacrsFactErrors,guidedMacrsDisplayAmount,type GuidedMacrsAssetsDraft} from "./guided-macrs-assets";
 import { actualCompensationSourceYear, compensationReportingErrors } from "./guided-compensation-reporting";
 import Decimal from "decimal.js";
 import type { FilingStatus, NecEntryData, SelfEmploymentSectionData, StateReturnData, W2EntryData } from "./guided-interview-flow";
@@ -7,6 +8,8 @@ import { amountError, hasEnteredAmount } from "./guided-required-facts";
 import type {ScheduleCSourceFacts} from "@/models/inputs";
 
 export interface BusinessSourceData {
+  depreciationMethod?: "manual" | "assets";
+  macrsAssets?: GuidedMacrsAssetsDraft;
   businessInterest?: string;
   scheduleCSourceFacts?: ScheduleCSourceFacts;
   accountHolder?: "primary" | "spouse" | "joint" | "";
@@ -62,6 +65,7 @@ export function businessFactErrors(data: SelfEmploymentSectionData | undefined, 
   const errors: Record<string, string> = {};
   if (!hasBusinessSourceData(data) || !data) return errors;
   const facts = data.businessFacts ?? {};
+  Object.assign(errors,guidedMacrsFactErrors(facts,returnYear));
   if (!["primary", "spouse"].includes(facts.accountHolder ?? "") || (facts.accountHolder === "spouse" && filingStatus !== "mfj")) errors.businessOwner = "Identify the actual owner. Joint ownership requires separate business and self-employment calculations.";
   if (!facts.activityDescription?.trim()) errors.businessActivity = "Describe the actual business activity.";
   if (!/^\d{6}$/.test(facts.businessCode ?? "")) errors.businessCode = "Enter the actual six-digit principal business activity code.";
@@ -99,7 +103,7 @@ export function businessFactErrors(data: SelfEmploymentSectionData | undefined, 
   const receipts = [data.manualGrossReceipts, ...data.necEntries.filter(isStartedNec).map(entry => entry.nonemployeeCompensation)];
   const businessIncome = [...receipts, facts.otherIncome];
   const incomeReductions = [facts.returnsAndAllowances, facts.costOfGoodsSold];
-  const expenseAmounts = [...expenseCategories.filter(field => field !== "meals").map(field => data.expenses[field]), facts.contractLabor, facts.depreciation, facts.legalAndProfessional, ...(facts.businessInterest===undefined?[]:[facts.businessInterest]), ...(facts.scheduleCSourceFacts?.ordinaryExpenses?.rows?.map(row=>row.amount)??[])];
+  const expenseAmounts = [...expenseCategories.filter(field => field !== "meals").map(field => data.expenses[field]), facts.contractLabor, facts.depreciationMethod==='assets'?guidedMacrsDisplayAmount(facts):facts.depreciation, facts.legalAndProfessional, ...(facts.businessInterest===undefined?[]:[facts.businessInterest]), ...(facts.scheduleCSourceFacts?.ordinaryExpenses?.rows?.map(row=>row.amount)??[])];
   if ([...businessIncome, ...incomeReductions, ...expenseAmounts, data.expenses.meals].every(value => !amountError(value, "business amount"))) {
     const total = (values: Array<string | undefined>) => values.reduce((sum, value) => sum.plus(parseGuidedCurrency(value)), new Decimal(0));
     const tentative = total(businessIncome).minus(total(incomeReductions)).minus(total(expenseAmounts)).minus(parseGuidedCurrency(data.expenses.meals).times("0.5").toDecimalPlaces(0, Decimal.ROUND_HALF_UP));

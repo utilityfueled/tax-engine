@@ -4,15 +4,15 @@ import {sha256} from '@noble/hashes/sha2.js';
 import {bytesToHex} from '@noble/hashes/utils.js';
 import type {ScheduleCResult} from './schedule-c.js';
 import type {TaxYearInput,ScheduleCSourceFacts} from '@/models/inputs.js';
-import {AmortizableAssetSchema} from '@/models/inputs.js';
+import {AmortizableAssetSchema,DepreciableAssetSchema} from '@/models/inputs.js';
 import {calculateForm4562} from '@/engine/forms/form-4562.js';
 import {AuditTrail} from '@/utils/audit.js';
 import {d} from '@/utils/decimal.js';
 
 const ordinary = ['commissionsAndFees','rentOnBusinessProperty','repairsAndMaintenance','taxes','wages','bankCharges','duesAndPublications','freight','laundryAndCleaning','managementFees','postage','telephone'] as const;
 const special = ['pensionAndProfitSharing','amortization','depletion','badDebts','startupCostsDirectExpense','idcsAmortization','idcsCurrentExpensing','section179Expense'] as const;
-type SourceBusiness = {accountHolder?:'primary'|'spouse'; businessName?:string;ein?:string;otherExpenseDescription?:string;accountingMethod?:'cash'|'accrual';sourceFacts?:ScheduleCSourceFacts;expenses?:object};
-type SourceInput = {taxpayer:Pick<TaxYearInput['taxpayer'],'taxYear'|'filingStatus'|'primary'|'spouse'|'address'>;scheduleK1?:Array<{excessBusinessInterest?:string}>;form2555?:unknown;form4562?:TaxYearInput['form4562'];dependentCareBenefits?:TaxYearInput['dependentCareBenefits'];w2s?:unknown;form3800?:{currentYearCredits?:string;passiveActivityCredits?:string}};
+type SourceBusiness = {principalBusinessActivity?:string;businessCode?:string;accountHolder?:'primary'|'spouse'; businessName?:string;ein?:string;otherExpenseDescription?:string;accountingMethod?:'cash'|'accrual';sourceFacts?:ScheduleCSourceFacts;expenses?:object};
+type SourceInput = {rentalProperties?:unknown[];scheduleF?:unknown;royaltyPropertySources?:unknown;taxpayer:Pick<TaxYearInput['taxpayer'],'taxYear'|'filingStatus'|'primary'|'spouse'|'address'>;scheduleK1?:Array<{excessBusinessInterest?:string}>;form2555?:unknown;form4562?:TaxYearInput['form4562'];dependentCareBenefits?:TaxYearInput['dependentCareBenefits'];w2s?:unknown;form3800?:{currentYearCredits?:string;passiveActivityCredits?:string}};
 
 /** Validate the original records; split metadata never becomes a second expense. */
 export function calculateScheduleCSourceFacts(input:SourceInput,business:SourceBusiness|undefined,saved?:ScheduleCResult){
@@ -23,6 +23,7 @@ export function calculateScheduleCSourceFacts(input:SourceInput,business:SourceB
  const exp=(business?.expenses??{}) as Partial<Record<string,string>>, proof=business?.sourceFacts;
  for(const field of special)if(!d(exp[field]).isZero())fail(`${field} requires its separate supported federal source method`);
  for(const field of ['businessInterest',...ordinary])if(!d(exp[field]).isFinite()||d(exp[field]).lt(0))fail(`${field} is not a nonnegative current expense`);
+ if(input.form4562?.assets?.some(asset=>asset.basisSources!==undefined)&&!proof?.depreciation)fail('documented depreciation assets require actual Schedule C owner and activity attribution');
  const amortizationTotal=input.form4562?calculateForm4562(input.form4562,input.taxpayer.taxYear).line44:d(0);
  const interestTotal=d(exp.businessInterest),ordinaryTotal=ordinary.reduce((s,k)=>s.plus(d(exp[k])),d(0));
  if(!proof){if(amortizationTotal.gt(0))fail('positive Form4562 amortization requires actual Schedule C asset attribution sources');if(saved?.lines.some(row=>row.line==='actual-source-commitment'))fail('saved original source proof was removed');if(!interestTotal.isZero()||!ordinaryTotal.isZero())fail('positive interest or classified ordinary expenses require complete actual sources');return undefined;}
@@ -69,6 +70,37 @@ export function calculateScheduleCSourceFacts(input:SourceInput,business:SourceB
   if(d(exp.wages).gt(0)&&(d(input.form3800?.currentYearCredits).gt(0)||d(input.form3800?.passiveActivityCredits).gt(0)))fail('employee wages with business credit reductions require a separate source method');
  }
 
+
+ const depreciation=proof.depreciation;
+ if(depreciation){
+  const p=depreciation;truth(p.sourceFactsConfirmed,'depreciation original source facts');ref(p.sourceReference,'complete asset inventory');
+  for(const key of ['fullCalendarYearConfirmed','allAssetsForThisBusinessConfirmed','noOtherActivityAssetsConfirmed','noOtherDepreciationOrAmortizationConfirmed','notDeductedElsewhereConfirmed'] as const)truth(p[key],key);
+  if(p.sourceTaxYear!==input.taxpayer.taxYear||input.form4562?.taxYear!==input.taxpayer.taxYear)fail('actual depreciation source year is unknown or different');
+  if(input.rentalProperties?.length||input.scheduleF||input.royaltyPropertySources)fail('other activities require a separate combined convention method');
+  if(business.accountingMethod!=='cash')fail('finite actual asset sources require a cash business');
+  const actualBusiness={accountHolder:business.accountHolder,principalBusinessActivity:business.principalBusinessActivity,businessCode:business.businessCode,businessName:business.businessName,ein:business.ein,accountingMethod:business.accountingMethod,ownerName:proof.ownerName,businessSourceReference:proof.sourceReference};
+  const ordered=(v:unknown):unknown=>Array.isArray(v)?v.map(ordered):v!==null&&typeof v==='object'?Object.fromEntries(Object.entries(v).sort(([a],[b])=>a<b?-1:a>b?1:0).map(([k,x])=>[k,ordered(x)])):v;
+  if(!p.originalBusiness||JSON.stringify(ordered(p.originalBusiness))!==JSON.stringify(ordered(actualBusiness)))fail('actual depreciation owner or business original changed');
+  if(!business.principalBusinessActivity?.trim()||!/^\d{6}$/.test(business.businessCode??''))fail('actual depreciation business identity is incomplete');
+  const form=input.form4562,assets=form?.assets,rows=p.rows;
+  if(!assets?.length||rows?.length!==assets.length)return fail('complete unique original depreciation asset coverage is required');
+  if(form?.amortizableAssets?.length)fail('amortization requires its separate actual method');
+  for(const key of ['section179ExpenseDeduction','specialDepreciationAllowance'] as const){if(form?.[key]===undefined||!amount(form[key],key).isZero())fail('actual zero section179 and bonus are required');}
+  for(const key of ['section179ElectedCost','section179CarryoverFromPriorYear','section179CarryoverToNextYear','section168f1Depreciation','otherDepreciation','macrsPre2025AssetsDepreciation','macrsCurrentYearGdsDepreciation','macrsCurrentYearAdsDepreciation','listedPropertyDepreciation','currentYearAmortization','priorYearAmortization'] as const)if(form?.[key]!==undefined&&!amount(form[key],key).isZero())fail('other depreciation worksheet amounts require a separate method');
+  if(exp.depreciation===undefined||!amount(exp.depreciation,'separate scalar depreciation').isZero())fail('actual assets and scalar depreciation cannot both be deducted');
+  const seen=new Set<number>(),refs=new Set<string>();
+  for(const row of rows){
+   const index=row.assetIndex;if(index===undefined||!Number.isInteger(index)||index<0||index>=assets.length||seen.has(index))return fail('original asset index is missing or duplicated');seen.add(index);
+   ref(row.assetReference,'unique asset reference');if(refs.has(row.assetReference!))fail('original asset reference is duplicated');refs.add(row.assetReference!);
+   ref(row.bonusTreatmentSourceReference,'actual zero-bonus treatment');if(!['not_eligible','elected_out'].includes(row.bonusZeroTreatment??''))fail('actual zero-bonus classification or election-out record is missing');
+   if(row.accountHolder!==business.accountHolder)fail('actual depreciation owner attribution changed');
+   const actual=DepreciableAssetSchema.strict().safeParse(assets[index]),original=DepreciableAssetSchema.strict().safeParse(row.originalAsset);
+   if(!actual.success||!original.success||JSON.stringify(ordered(actual.data))!==JSON.stringify(ordered(original.data)))return fail('actual depreciation original asset snapshot is missing or different');
+   const a=actual.data,b=a.basisSources;
+   if(!b||b.sourceReference!==row.assetReference||b.sourceTaxYear!==input.taxpayer.taxYear||a.isListedProperty!==false||a.isPassengerAutomobile!==false||a.disposedDuringYear!==false||a.method!=='200DB'||!['3','5','7','10'].includes(a.recoveryPeriod)||a.convention!==undefined||a.firstYearBonusEligible!==false||Number(a.placedInServiceDate.slice(0,4))!==input.taxpayer.taxYear)return fail('asset requires a separate supported source method');
+   if(!amount(b.section179BusinessDeduction,'asset zero179').isZero()||!amount(b.bonusBusinessDeduction,'asset zero bonus').isZero())fail('positive section179 or bonus requires its eligibility and election method');
+  }
+ }
  const amortization=proof.amortization;
  if(amortization||amortizationTotal.gt(0)){
   if(!amortization)return fail('positive Form4562 amortization requires actual Schedule C asset sources');const p=amortization;

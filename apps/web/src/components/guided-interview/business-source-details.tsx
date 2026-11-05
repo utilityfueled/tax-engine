@@ -1,10 +1,19 @@
 "use client";
 import { businessSourceAmounts, type BusinessSourceData } from "@/lib/guided-business-facts";
 import { BooleanFact, TextFact } from "./fact-fields";
+import { MacrsAssetDetails } from "./macrs-asset-details";
 import { CurrencyField } from "./currency-field";
+import { guidedSourceValuesChanged } from "@/lib/guided-source-confirmation";
 
 export function BusinessSourceDetails({ data = {}, onChange }: { data?: BusinessSourceData; onChange: (data: BusinessSourceData) => void }) {
-  const patch = (next: Partial<BusinessSourceData>) => onChange({ ...data, ...next, ...(data.scheduleCSourceFacts && !('scheduleCSourceFacts' in next) && Object.keys(next).some(key=>!['incomeReconciled','expensesReconciled'].includes(key))?{scheduleCSourceFacts:{...data.scheduleCSourceFacts,sourceFactsConfirmed:null}}:{}) });
+  const patch = (next: Partial<BusinessSourceData>) => {
+    const values = (facts: BusinessSourceData) => ({ ...facts, incomeReconciled: undefined, expensesReconciled: undefined });
+    const changed = guidedSourceValuesChanged(values(data), values({ ...data, ...next }));
+    onChange({ ...data, ...next,
+      ...(changed && data.macrsAssets && !('macrsAssets' in next) ? { macrsAssets: { ...data.macrsAssets, sourceFactsConfirmed: null } } : {}),
+      ...(changed && data.scheduleCSourceFacts && !('scheduleCSourceFacts' in next) ? { scheduleCSourceFacts: { ...data.scheduleCSourceFacts, sourceFactsConfirmed: null } } : {}),
+    });
+  };
   const source=data.scheduleCSourceFacts;
   const sourcePatch=(path:string[],value:unknown)=>{const next=structuredClone(source??{});let node=next as Record<string,unknown>;for(const key of path.slice(0,-1)){if(node[key]===undefined)node[key]={};node=node[key] as Record<string,unknown>;}node[path[path.length-1]]=value;if(path.join('.')!=='sourceFactsConfirmed')next.sourceFactsConfirmed=null;patch({scheduleCSourceFacts:next,...(path.join('.')==='sourceFactsConfirmed'?{}:{expensesReconciled:null})});};
   const text=(label:string,path:string[],value:string|undefined)=><TextFact key={path.join('.')} label={label} value={value??''} onChange={v=>sourcePatch(path,v)}/>;
@@ -22,6 +31,7 @@ export function BusinessSourceDetails({ data = {}, onChange }: { data?: Business
     <TextFact label="Business EIN, if issued" value={data.ein ?? ""} onChange={ein => patch({ ein })} />
     <label className="guided-field"><span className="guided-field-label">Actual accounting method</span><select className="guided-input" value={data.accountingMethod ?? ""} onChange={event => patch({ accountingMethod: event.target.value as BusinessSourceData["accountingMethod"] })}><option value="">Not answered</option><option value="cash">Cash</option><option value="accrual">Accrual</option></select></label>
     <BooleanFact label="Do all amounts in this section belong to this one business and owner?" value={data.singleBusinessConfirmed} onChange={singleBusinessConfirmed => patch({ singleBusinessConfirmed })} />
+    {data.depreciationMethod==='assets'?<><MacrsAssetDetails facts={data} onChange={macrsAssets=>patch({macrsAssets,expensesReconciled:null})}/><button type="button" onClick={()=>patch({depreciationMethod:'manual',expensesReconciled:null})}>Use completed manual depreciation worksheet</button></>:<button type="button" onClick={()=>patch({depreciationMethod:'assets',macrsAssets:{...data.macrsAssets,sourceFactsConfirmed:null},expensesReconciled:null})}>Use actual first-year asset records</button>}
     {businessSourceAmounts.map(([field, label]) => <CurrencyField key={field} label={label} value={data[field] ?? ""} onChange={value => patch({ [field]: value, expensesReconciled: null, ...(field === "returnsAndAllowances" || field === "costOfGoodsSold" || field === "otherIncome" ? { incomeReconciled: null } : {}) })} />)}
 
     {source ? <fieldset className="guided-fieldset"><legend>Actual Schedule C source records</legend>

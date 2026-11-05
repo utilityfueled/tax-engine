@@ -1,3 +1,4 @@
+import {buildGuidedMacrsAssets} from "./guided-macrs-assets";
 import {reconcileGuidedRetirementWithholding}from "./guided-retirement-withholding-reconciliation";
 import { W2Schema } from "@/models/inputs";
 import { calculateW2StateLocalSources, type W2StateLocalSourceContext } from "@/engine/forms/w2-state-local";
@@ -781,6 +782,10 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState): GuidedTaxIn
   const w2s = buildW2Inputs(w2Data?.entries);
   const necs = buildNecInputs(seData?.necEntries);
   const scheduleC = buildScheduleCInput(seData?.necEntries, seData?.manualGrossReceipts, seData?.expenses, seData?.qbiMateriallyParticipated, seData?.businessFacts);
+  let actualMacrs:ReturnType<typeof buildGuidedMacrsAssets>;
+  try{actualMacrs=buildGuidedMacrsAssets(seData?.businessFacts,state.taxYear,!!rentalData?.entries?.length||!!sectionData["income-royalties"]);}catch{return null;}
+  if(actualMacrs&&scheduleC){scheduleC.sourceFacts={...scheduleC.sourceFacts,depreciation:actualMacrs.depreciation};}
+
   const form1099Int = buildInterestInputs(investData?.interestEntries, state.taxYear);
   const form1099OID = buildOidInputs(investData?.oidEntries, segmentation.filingStatus, state.taxYear, stateCode);
   const form1099Div = buildDividendInputs(investData?.dividendEntries, state.taxYear);
@@ -888,6 +893,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState): GuidedTaxIn
     form7206: healthInsurance,
     form1099Nec: necs,
     scheduleC: scheduleC ?? undefined,
+    form4562:actualMacrs?.form4562,
     form1099Int,
     form8814: buildGuidedChildElections(investData?.childElections, state.taxYear),
     qofDispositionFacts: buildGuidedQofFacts(investData?.qofDispositionFacts, state.taxYear),

@@ -20153,5 +20153,49 @@
     },
     "releaseQualified": false,
     "ledger": "docs/upgrade-2026-navigation-resize-work.md"
+  },
+  "nov05NativeFirstYearMACRSSources": {
+    "status": "finite-original-bound-source-path-implemented",
+    "years": [
+      2025,
+      2026
+    ],
+    "classes": [
+      3,
+      5,
+      7,
+      10
+    ],
+    "actualBrowserYears": [
+      2025
+    ],
+    "baselineGenuineRed": 2,
+    "authorFocusedPassed": 33,
+    "distinctAdditionalPassed": 12,
+    "checkoutFocusedPassed": 44,
+    "browser": {
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0,
+      "flaky": 0,
+      "retries": 0,
+      "workers": 2,
+      "seconds": 38.692,
+      "sourceDrift": []
+    },
+    "types": "root/contracts/web pass; extra broad fixture check retains baseline TS2352",
+    "specReferences": 8346,
+    "inventory": {
+      "oldEntriesUnchanged": 872,
+      "total": 873,
+      "newStatus": "unsupported"
+    },
+    "lint": "repository normal policy pass; scoped candidate147 warnings/0errors; no suppression",
+    "authorManifestSHA256": "f4fe1e6d0ff45773cbecd3e9b7ca7f6cb93f4346b6b32aeb5a0296d06805c757",
+    "independentManifestSHA256": "1b3347dee82d3fe0b00e023d9be8acd9d5c7587d379e15f548a69483420612cf",
+    "checkoutManifestSHA256": "17a452bcdcc9a794fa32928529b028ab30974b51692e109c992572d2f8dc6571",
+    "currentGlobalChecks": "pending new source integration",
+    "filingQualified": false,
+    "ledger": "docs/upgrade-2026-macrs-native-source-work.md"
   }
 }

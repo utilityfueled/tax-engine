@@ -1734,9 +1734,10 @@ export function updateSectionData(
   const hsaSourcesChanged = ["income-w2", "personal-info"].includes(sectionId) && adjustments?.hsaAccounts;
   const sourceValuesChanged = guidedSourceValuesChanged(state.sectionData[sectionId as keyof SectionDataMap], data);
   const nextBusiness = sectionId === "income-self-employment" ? data as SelfEmploymentSectionData : state.sectionData["income-self-employment"];
-  const scheduleCValues=(value:SelfEmploymentSectionData|undefined)=>value?{...value,businessFacts:value.businessFacts?{...value.businessFacts,incomeReconciled:undefined,expensesReconciled:undefined}:undefined}:value;
+  const scheduleCValues=(value:SelfEmploymentSectionData|undefined)=>value?{...value,businessFacts:value.businessFacts?{...value.businessFacts,incomeReconciled:undefined,expensesReconciled:undefined,macrsAssets:value.businessFacts.macrsAssets?{...value.businessFacts.macrsAssets,sourceFactsConfirmed:undefined,originalBusiness:undefined,originalCollection:undefined}:undefined}:undefined}:value;
   const scheduleCValuesChanged=sectionId==='income-self-employment'?guidedSourceValuesChanged(scheduleCValues(state.sectionData['income-self-employment']),scheduleCValues(nextBusiness)):sourceValuesChanged;
   const scheduleCSourcesChanged=scheduleCValuesChanged && ["personal-info","income-self-employment","adjustments","credits"].includes(sectionId) && nextBusiness?.businessFacts?.scheduleCSourceFacts;
+  const macrsSourcesChanged=scheduleCValuesChanged && ["personal-info","income-self-employment","income-rental","income-royalties","adjustments","credits"].includes(sectionId) && nextBusiness?.businessFacts?.macrsAssets;
   const nextPersonal = sectionId === "personal-info" ? data as PersonalInfoData : state.sectionData["personal-info"];
   const eicClaimantSourcesChanged = sourceValuesChanged && sectionId === "personal-info" && nextPersonal?.eicClaimantEligibility;
   const eicSeparatedSourcesChanged = sourceValuesChanged && sectionId === "personal-info" && nextPersonal?.eicSeparatedSpouseSources;
@@ -1855,7 +1856,7 @@ export function updateSectionData(
       [sectionId]: data,
       ...((invalidatedOhioStateReturn ?? invalidatedPAStateReturn) ? { "state-return": invalidatedOhioStateReturn ?? invalidatedPAStateReturn } : {}),
       ...(invalidatedW2 ? { "income-w2": invalidatedW2 } : {}),
-      ...(scheduleCSourcesChanged && nextBusiness ? {"income-self-employment":{...nextBusiness,businessFacts:{...nextBusiness.businessFacts,scheduleCSourceFacts:{...scheduleCSourcesChanged,sourceFactsConfirmed:null}}}}:{}),
+      ...((scheduleCSourcesChanged || macrsSourcesChanged) && nextBusiness ? {"income-self-employment":{...nextBusiness,businessFacts:{...nextBusiness.businessFacts,...(scheduleCSourcesChanged?{scheduleCSourceFacts:{...scheduleCSourcesChanged,sourceFactsConfirmed:null}}:{}),...(macrsSourcesChanged?{macrsAssets:{...macrsSourcesChanged,sourceFactsConfirmed:null}}:{})}}}:{}),
       ...(royaltySourcesChanged ? { "income-royalties": invalidateRoyaltySources(royaltySourcesChanged) } : {}),
       ...((eicClaimantSourcesChanged || eicSeparatedSourcesChanged || eicHistorySourcesChanged || eicCurrentSourcesChanged) && nextPersonal ? { "personal-info": { ...nextPersonal,
         ...(eicClaimantSourcesChanged ? { eicClaimantEligibility: { ...eicClaimantSourcesChanged, sourceFactsConfirmed: null } } : {}),

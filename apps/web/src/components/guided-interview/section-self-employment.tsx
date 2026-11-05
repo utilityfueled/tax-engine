@@ -1,4 +1,5 @@
 "use client";
+import {guidedMacrsDisplayAmount} from "@/lib/guided-macrs-assets";
 import { formatGuidedDollars, parseGuidedDisplayAmount } from "@/lib/guided-currency";
 
 import { useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
@@ -350,6 +351,7 @@ export function SectionSelfEmployment({
     if (next.necEntries !== undefined || next.manualGrossReceipts !== undefined || next.expenses !== undefined) {
       value.businessFacts = {
         ...value.businessFacts,
+        ...(value.businessFacts?.macrsAssets?{macrsAssets:{...value.businessFacts.macrsAssets,sourceFactsConfirmed:null}}:{}),
         ...(value.businessFacts?.scheduleCSourceFacts?{scheduleCSourceFacts:{...value.businessFacts.scheduleCSourceFacts,sourceFactsConfirmed:null}}:{}),
         ...(next.necEntries !== undefined || next.manualGrossReceipts !== undefined ? { incomeReconciled: null } : {}),
         ...(next.expenses !== undefined ? { expensesReconciled: null } : {}),
@@ -640,7 +642,7 @@ export function SectionSelfEmployment({
   const necIncome = sumKnownBusinessAmounts(currentEntries.filter(isStartedNec).map(entry => entry.nonemployeeCompensation));
   const manualIncome = sumKnownBusinessAmounts([manualGrossReceipts]);
   const totalIncome = necIncome !== null && manualIncome !== null ? necIncome.plus(manualIncome) : null;
-  const totalExpenses = sumKnownBusinessAmounts([...Object.values(currentExpenses), businessFacts?.contractLabor, businessFacts?.depreciation, businessFacts?.legalAndProfessional, ...(businessFacts?.businessInterest===undefined?[]:[businessFacts.businessInterest]), ...(businessFacts?.scheduleCSourceFacts?.ordinaryExpenses?.rows?.map(row=>row.amount)??[])]);
+  const totalExpenses = sumKnownBusinessAmounts([...Object.values(currentExpenses), businessFacts?.contractLabor, businessFacts?.depreciationMethod==='assets'?guidedMacrsDisplayAmount(businessFacts):businessFacts?.depreciation, businessFacts?.legalAndProfessional, ...(businessFacts?.businessInterest===undefined?[]:[businessFacts.businessInterest]), ...(businessFacts?.scheduleCSourceFacts?.ordinaryExpenses?.rows?.map(row=>row.amount)??[])]);
   const sourceAmount = (value: ReturnType<typeof sumKnownBusinessAmounts>) => value === null ? "Unknown — review source amounts" : `$${formatSuggestedAmount(value.toFixed())}`;
   const suggestedTotals = summarizeBankStatementSuggestionsByCategory(currentAnalyses);
   const suggestedIncomeTotal = summarizeSelfEmploymentIncomeSuggestions(currentIncomeAnalyses);
