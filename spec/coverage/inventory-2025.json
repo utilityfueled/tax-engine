@@ -16338,6 +16338,25 @@
       ]
     },
     {
+      "key": "state/pa-ordinary-local-w2-boundary",
+      "jurisdiction": "state",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.irs.gov/pub/irs-prior/iw2w3--2025.pdf",
+      "specPath": "spec/state/pa-ordinary-local-w2-boundary.yaml",
+      "enginePath": "src/engine/state/pa-ordinary-local-w2-boundary.ts",
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "state/pa-ordinary-native-currency",
       "jurisdiction": "state",
       "taxYear": 2025,

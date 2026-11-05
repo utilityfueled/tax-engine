@@ -20505,5 +20505,20 @@
     "nativeQualified": false,
     "filingQualified": false,
     "ledger": "docs/upgrade-2026-pa-married-payments-work.md"
+  },
+  "nov05PASingleLocalW2Sources": {
+    "status": "finite_2025_reported_local_rows_verified",
+    "baseline": "6454304f",
+    "checkoutTests": 231,
+    "checkoutFiles": 8,
+    "inventoryTests": 66,
+    "distinctTests": 193,
+    "mainManifest": "1ef1d6f26dbf875ac8b9d597a7307a1bc276b1a81ff0855a8e8ccae084011b59",
+    "staticChecks": "types3/spec/inventory/builds2/lint pass",
+    "inventoryEntries": 880,
+    "priorEntriesUnchanged": 879,
+    "supportedUnchanged": 68,
+    "localTaxOrFilingQualified": false,
+    "ledger": "docs/upgrade-2026-pa-local-w2-source-work.md"
   }
 }

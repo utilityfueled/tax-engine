@@ -15,6 +15,7 @@ export type {PAOrdinaryReturnCompletionSources} from '@/models/pa-ordinary-retur
 import {sha256} from '@noble/hashes/sha2.js';
 import {bytesToHex} from '@noble/hashes/utils.js';
 import {calculateW2StateLocalSources} from '@/engine/forms/w2-state-local.js';
+import {mapPAOrdinaryLocalW2Boundary,type PAOrdinaryReportedLocalW2Row} from './pa-ordinary-local-w2-boundary.js';
 import type {TaxYearInput} from '@/models/inputs.js';
 import {PAResidencySourcesSchema} from '@/models/pa-residency.js';
 import type {CalculatedLine} from '@/models/outputs.js';
@@ -42,7 +43,7 @@ export interface PAOrdinaryReturnResult {
  scheduleDC?:ScheduleDCResult;pa40:PA40Result;scheduleA:PAScheduleAResult;scheduleB:PAScheduleBResult;scheduleC?:PAScheduleCResult;scheduleD?:PAScheduleDResult;scheduleE?:PAScheduleEResult;scheduleSP:ScheduleSPResult;rev1630:REV1630Result;workingCredit:PAWorkingPennsylvaniansTaxCreditResult;
  wptcProcessing:{stage:'department-processing-reference';credit:Decimal;creditAppliedToTaxDue:Decimal;remainingTaxDueBeforePenalties:Decimal;additionalOverpaymentBeforePenalties:Decimal};
  refundDisposition:{refund:Decimal;nextYearCredit:Decimal;donations:Array<{code:string;amount:Decimal}>};
- penaltyCode:'E'|'L'|'B'|null;localBoundary:{status:'separate_return_required';jurisdictions:Array<{name:string;sourceReference:string}>};
+ penaltyCode:'E'|'L'|'B'|null;localBoundary:{status:'separate_return_required';jurisdictions:Array<{name:string;sourceReference:string}>;reportedW2LocalRows?:PAOrdinaryReportedLocalW2Row[]};
  readiness:{formStatus:'actual_2025_review_only'|'draft_2026_review_only';filingEligible:false;blockers:string[]};lines:CalculatedLine[];
 }
 const CreditMoney=Decimal.clone({precision:100,rounding:Decimal.ROUND_HALF_UP});
@@ -52,7 +53,7 @@ function money(value:unknown):Decimal{if(typeof value!=='string'||!/^\d+(\.\d+)?
 function stable(value:unknown):string{if(Array.isArray(value))return '['+value.map(stable).join(',')+']';if(value&&typeof value==='object')return '{'+Object.entries(value).filter(([,v])=>v!==undefined).sort(([a],[b])=>a.localeCompare(b)).map(([k,v])=>JSON.stringify(k)+':'+stable(v)).join(',')+'}';return JSON.stringify(value)??'null';}
 const ssn=(value:string)=>value.replace(/\D/g,'');
 const name=(value:string)=>value.trim().replace(/\s+/g,' ').toUpperCase();
-function completeCreditSources(input:TaxYearInput,sources:PAOrdinaryReturnCompletionSources,asOf:string,ordinaryRaw:unknown):PAResidentCreditSourcesResult|undefined{
+function completeCreditSources(input:TaxYearInput,sources:PAOrdinaryReturnCompletionSources,asOf:string,ordinaryRaw:unknown):{residentCredit:PAResidentCreditSourcesResult|undefined;reportedW2LocalRows:PAOrdinaryReportedLocalW2Row[]}{
  const t=input.taxpayer.primary,y=input.taxpayer.taxYear;
  if(sources.sourceTaxYear!==y||sources.sourceFactsConfirmed!==true||stable(sources.owner)!==stable({firstName:t.firstName,lastName:t.lastName,ssn:t.ssn}))fail('confirm complete actual owner/year sources');ref(sources.sourceReference);
  if(stable(sources.originalFederalSources)!==stable(snapshotPAOrdinaryReturnOriginals(input)))fail('completion original snapshot is stale; reconfirm actual original sources');
@@ -105,7 +106,6 @@ function completeCreditSources(input:TaxYearInput,sources:PAOrdinaryReturnComple
   const actualRows=actualW2Rows[index];
   if(actualRows!==undefined){
    if(actualRows.stateRows.some(row=>row.state!=='PA'&&row.withheld.gt(0)&&!residentCredit?.perState.some(claim=>claim.state===row.state)))fail('actual positive other-state withholding requires its source-qualified credit/refund successor');
-   if(actualRows.localRows.some(row=>row.withheld.gt(0)))fail('actual local Box19 withholding requires its separate reconciliation successor');
   }else if(w.state&&w.state!=='PA'&&money(w.stateTaxWithheld).gt(0)&&!residentCredit?.perState.some(claim=>claim.state===w.state))fail('actual other-state withholding requires its source-qualified credit successor');
  }
  for(const b of input.form1099Int)if(b.state&&b.state!=='PA'&&money(b.stateWithheld).gt(0))fail('actual other-state bank withholding requires its credit successor');
@@ -118,7 +118,8 @@ function completeCreditSources(input:TaxYearInput,sources:PAOrdinaryReturnComple
  // Actual care/benefit originals are replayed against the fresh federal result below.
  const nrk=sources.nrk1;ref(nrk.sourceReference);if(nrk.status!=='none_received'||nrk.allReceivedStatementsReviewedConfirmed!==true||nrk.originalStatements.length)fail('actual NRK1 statement credit sources are unknown or need their successor');
  const local=sources.local;ref(local.sourceReference);if(local.status!=='separate_return_required'||local.allResidentAndWorkJurisdictionsReviewedConfirmed!==true||!local.jurisdictions.length)fail('actual complete local obligation sources are unknown');const localNames=new Set<string>();for(const row of local.jurisdictions){ref(row.name);ref(row.sourceReference);if(row.returnRequired!==true||localNames.has(name(row.name)))fail('actual local jurisdiction obligation is unknown or duplicate');localNames.add(name(row.name));}
- const relief=sources.lateFilingRelief;ref(relief.sourceReference);if(relief.status!=='no_actual_relief_records'||relief.allActualReliefSourcesReviewedConfirmed!==true||relief.originalAgencyRelief.length)fail('actual late-filing relief records require their separate source method'); return residentCredit;
+ const reportedW2LocalRows=mapPAOrdinaryLocalW2Boundary(input,actualW2Rows,local.jurisdictions);
+ const relief=sources.lateFilingRelief;ref(relief.sourceReference);if(relief.status!=='no_actual_relief_records'||relief.allActualReliefSourcesReviewedConfirmed!==true||relief.originalAgencyRelief.length)fail('actual late-filing relief records require their separate source method'); return {residentCredit,reportedW2LocalRows};
 }
 export function calculatePAOrdinaryReturn(input:TaxYearInput,ordinaryRaw:unknown,completionRaw:unknown):PAOrdinaryReturnResult{
  const Money=Decimal.clone({precision:ordinarySourcePrecision(input,ordinaryRaw,completionRaw),rounding:Decimal.ROUND_HALF_UP});
@@ -126,7 +127,7 @@ export function calculatePAOrdinaryReturn(input:TaxYearInput,ordinaryRaw:unknown
  const zeroFloor=(value:Decimal):Decimal=>publicOrdinaryMoney(Money.max(value,0));
  const parsed=PAOrdinaryReturnCompletionSourcesSchema.safeParse(completionRaw);if(!parsed.success)return fail('complete actual completion source shape is unknown or unsupported');const sources=parsed.data;
  const p=calculatePAOrdinaryReturnFacts(input,ordinaryRaw),year=p.taxYear;
- const residentCredit=completeCreditSources(input,sources,p.timing.asOfDate,ordinaryRaw);
+ const {residentCredit,reportedW2LocalRows}=completeCreditSources(input,sources,p.timing.asOfDate,ordinaryRaw);
  if(p.timing.date<`${year+1}-01-01`)return fail('an original annual filing cannot predate the end of its actual tax year');
  const income=calculatePAResidencySources(input,(input as TaxYearInput&{paResidencySources?:unknown}).paResidencySources);
  const federal=calculateFederalTax(input);
@@ -157,6 +158,7 @@ export function calculatePAOrdinaryReturn(input:TaxYearInput,ordinaryRaw:unknown
  const applied=Decimal.min(workingCredit.credit,pa40.taxDue);
  const commitment=bytesToHex(sha256(new TextEncoder().encode(stable({version:'pa-ordinary-return-v1',ordinarySourceCommitment:p.sourceCommitment,completion:sources}))));
  const audit=new AuditTrail();audit.record('PA-Ordinary-Return','source','Complete ordinary source commitment',zero,'SHA256 binds unchanged canonical/PA originals and actual complete eligibility sources',{sourceCommitment:commitment});
+ for(const row of reportedW2LocalRows)audit.record('PA-Ordinary-Return',`reported-local-${row.originalIndex}-${row.printedRow}`,'Actual reported local withholding; separate local return required',row.withheld,'Actual original W2 local row only; excluded from PA withholding credit',{originalIndex:String(row.originalIndex),printedRow:String(row.printedRow),accountHolder:row.accountHolder});
  if(residentCredit)audit.merge(residentCredit.lines);
  const pendingBusinessAccounts=(input.paResidencySources?.businesses??[]).flatMap(b=>b.pendingNYAccountSources===undefined?[]:[calculatePABusinessPendingAccountSources(input,b.pendingNYAccountSources,p.timing.asOfDate)]);
  const pendingOIDOHAccount=sources.otherStateTaxes.pendingOIDOHSources===undefined?undefined:calculatePAOIDPendingOHAccount(input,sources.otherStateTaxes.pendingOIDOHSources,p.timing.asOfDate);
@@ -164,5 +166,5 @@ export function calculatePAOrdinaryReturn(input:TaxYearInput,ordinaryRaw:unknown
  if(scheduleDC)audit.merge(scheduleDC.lines);
  audit.merge(income.lines);audit.merge(p.lines);audit.merge(scheduleSP.lines);audit.merge(rev1630.lines);audit.merge(workingCredit.lines);audit.merge(pa40.lines);
  const blockers=['review-only-not-qualified-for-filing','separate-local-return-required',...(year===2026?['final-2026-forms-unqualified']:[]),...(workingCredit.credit.gt(0)?['filed-federal1040-copy-required-for-department-processing']:[])];
- return {taxYear:year,sourceCommitment:commitment,methodVersion:'pa-ordinary-return-v1',residencyStatus:income.residencyStatus,filingChoice:p.paFilingChoice,schoolDistrictCode:income.schoolDistrictCode,dependentChildren:p.spDependentChildren,timingStatus:p.timing.kind as 'filed'|'expected',...(income.employeeSources?{employeeSources:income.employeeSources}:{}),...(residentCredit?{residentCreditSources:residentCredit}:{}),...(pendingBusinessAccounts.length?{pendingBusinessAccounts}:{}),...(pendingOIDOHAccount?{pendingOIDOHAccount}:{}),...(scheduleDC?{scheduleDC}:{}),pa40,scheduleA:income.scheduleA,scheduleB:income.scheduleB,...(income.scheduleC?{scheduleC:income.scheduleC}:{}),...(income.scheduleD?{scheduleD:income.scheduleD}:{}),...(income.royaltySources?.scheduleE?{scheduleE:income.royaltySources.scheduleE}:{}),scheduleSP,rev1630,workingCredit,wptcProcessing:{stage:'department-processing-reference',credit:workingCredit.credit,creditAppliedToTaxDue:applied,remainingTaxDueBeforePenalties:zeroFloor(localMoney(pa40.taxDue).minus(applied)),additionalOverpaymentBeforePenalties:zeroFloor(localMoney(workingCredit.credit).minus(pa40.taxDue))},refundDisposition:{refund:p.refundRequested,nextYearCredit:p.nextYearCreditRequested,donations:p.donations},penaltyCode:rev1630.totalInterest.gt(0)?latePenalty.gt(0)?'B':'E':latePenalty.gt(0)?'L':null,localBoundary:{status:'separate_return_required',jurisdictions:sources.local.jurisdictions.map(row=>({name:row.name,sourceReference:row.sourceReference}))},readiness:{formStatus:year===2026?'draft_2026_review_only':'actual_2025_review_only',filingEligible:false,blockers},lines:audit.getLines()};
+ return {taxYear:year,sourceCommitment:commitment,methodVersion:'pa-ordinary-return-v1',residencyStatus:income.residencyStatus,filingChoice:p.paFilingChoice,schoolDistrictCode:income.schoolDistrictCode,dependentChildren:p.spDependentChildren,timingStatus:p.timing.kind as 'filed'|'expected',...(income.employeeSources?{employeeSources:income.employeeSources}:{}),...(residentCredit?{residentCreditSources:residentCredit}:{}),...(pendingBusinessAccounts.length?{pendingBusinessAccounts}:{}),...(pendingOIDOHAccount?{pendingOIDOHAccount}:{}),...(scheduleDC?{scheduleDC}:{}),pa40,scheduleA:income.scheduleA,scheduleB:income.scheduleB,...(income.scheduleC?{scheduleC:income.scheduleC}:{}),...(income.scheduleD?{scheduleD:income.scheduleD}:{}),...(income.royaltySources?.scheduleE?{scheduleE:income.royaltySources.scheduleE}:{}),scheduleSP,rev1630,workingCredit,wptcProcessing:{stage:'department-processing-reference',credit:workingCredit.credit,creditAppliedToTaxDue:applied,remainingTaxDueBeforePenalties:zeroFloor(localMoney(pa40.taxDue).minus(applied)),additionalOverpaymentBeforePenalties:zeroFloor(localMoney(workingCredit.credit).minus(pa40.taxDue))},refundDisposition:{refund:p.refundRequested,nextYearCredit:p.nextYearCreditRequested,donations:p.donations},penaltyCode:rev1630.totalInterest.gt(0)?latePenalty.gt(0)?'B':'E':latePenalty.gt(0)?'L':null,localBoundary:{status:'separate_return_required',jurisdictions:sources.local.jurisdictions.map(row=>({name:row.name,sourceReference:row.sourceReference})),...(reportedW2LocalRows.length?{reportedW2LocalRows}:{})},readiness:{formStatus:year===2026?'draft_2026_review_only':'actual_2025_review_only',filingEligible:false,blockers},lines:audit.getLines()};
 }
