@@ -80,8 +80,8 @@ for path in json.loads(sys.argv[1]):
  for t in texts:assert t.count('FOR REVIEW ONLY - NOT FOR FILING')==1
  allstrings+=strings+texts
  results.append({'path':path,'pages':texts,'objects':len(seen),'sizes':[[float(p.mediabox.width),float(p.mediabox.height)] for p in r.pages]})
-text='\n'.join(allstrings)
-for value in json.loads(sys.argv[2]):assert value.lower() not in text.lower(),value
+text='\n'.join(allstrings).lower()
+for value in json.loads(sys.argv[2]):assert value.lower() not in text,value
 print(json.dumps(results))
 `;
 it('saves private static mixed review pages with actual canonical appearances',async()=>{

@@ -21,7 +21,7 @@ lines:
     testRef: "tests/pdf/pa-married-mixed-residency-paper.test.ts::rejects stale forged and altered mixed results before template IO"
   - line: "physical-private-review"
     description: Redacted saved official review pages preserve actual selected appearance, geometry and private identifier exclusion.
-    formula: "Pinned 2025 templates only; flattened static review copies contain no active widget, AcroForm, JavaScript or original identifier/provenance in any saved object; each page has review-only watermark. Public dispatcher retains actual original-bound federal companion pages for mixed positiveSP."
+    formula: "Pinned 2025 templates only; flattened static review copies contain no active widget, AcroForm, JavaScript or original identifier/provenance in any saved object; each page has review-only watermark. Inspection retains the complete trailer and indexed/embedded object graph plus every page text; normalize this full concatenated text once per inspector invocation, then compare every individually normalized private marker without truncation or cross-document cache. Public dispatcher retains actual original-bound federal companion pages for mixed positiveSP."
     testRef: "tests/pdf/pa-married-mixed-residency-paper.test.ts::saves private static mixed review pages with actual canonical appearances"
   - line: "resident-parity-and-year-gates"
     description: Existing no-packet J/M resident paper remains unchanged; no final2026 or filing qualification.

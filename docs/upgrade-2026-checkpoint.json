@@ -21583,5 +21583,22 @@
     "filingEnabled": false,
     "humanReviewQualified": false,
     "releaseReady": false
+  },
+  "nov05PaPdfInspection": {
+    "status": "focused-package-passed-full-current-gates-pending",
+    "ledger": "docs/upgrade-2026-pa-pdf-inspection-work.md",
+    "focusedPassed": 21,
+    "focusedFiles": 2,
+    "deadlineMsUnchanged": 5000,
+    "workersUnchanged": 2,
+    "mainStaticMixedCaseMs": 2096,
+    "savedPDFs": 50,
+    "savedPages": 98,
+    "sameOutputJSON": true,
+    "pairedMutationVerdicts": 16,
+    "productionMapperChanged": false,
+    "privacyAssertionsChanged": false,
+    "sourceManifest": "5892006cd50c5820cfd1573cc098fdc5f4ec3622e00eff5787f4e425f417f1a1",
+    "readinessChanged": false
   }
 }
