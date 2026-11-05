@@ -21659,5 +21659,32 @@
     "browserExecutedByPackage": false,
     "humanReview": false,
     "filingQualified": false
+  },
+  "nov05PaPdfSubprocessBoundary": {
+    "status": "implemented_focused_checks_pass_full_global_pending",
+    "sourceBaseline": "c2b6dfacc031817fe137e952ff013f7a6226a58f",
+    "changedTest": "tests/pdf/pa-ordinary-source-pdf.test.ts",
+    "timeoutMs": 4000,
+    "killSignal": "SIGKILL",
+    "existingFrameworkDeadlineMs": 5000,
+    "assertionsScriptsInputsUnchanged": true,
+    "actualOriginalStallCause": "unknown",
+    "candidateEvidenceManifest": "cd3b54ccaca82e669047b626cae0fba23b98322721e6ea5a2104b36439989019",
+    "mainChecks": {
+      "focusedTestsPassed": 11,
+      "typecheck": true,
+      "specValidate": true,
+      "inventoryCheck": true,
+      "scopedLint": true
+    },
+    "priorGlobal": {
+      "staticChecksPassed": 9,
+      "unitFilesCompleted": 1932,
+      "unitFilesTotal": 1933,
+      "status": "closed_incomplete",
+      "coverageExecuted": false,
+      "browserExecuted": false
+    },
+    "readinessPromotion": false
   }
 }
