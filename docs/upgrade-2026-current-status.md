@@ -11,6 +11,8 @@ crosswalk into the append-only history. Earlier checklist entries and checkpoint
 named revisions. The [execution brief](upgrade-2026-execution-brief.md) remains
 the completion contract. **The upgrade is not release-ready.**
 
+The prospective [SSA source-box safeguard](upgrade-2026-ai-ssa-grounding-work.md) passes925 focused/spec-reference tests plus all package static checks. Historical provider runs remain unchanged; full source integration must be refreshed after this change.
+
 The later [guided render performance experiment](upgrade-2026-guided-render-experiment-work.md)
 is rejected after its final unchanged browser comparison yields successor9PASS/1timeout
 against baseline10PASS. All seven experimental paths are archived and restored/removed;

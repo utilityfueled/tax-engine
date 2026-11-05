@@ -48,7 +48,7 @@ describe("AI-Document-Classification-Contract", () => {
     expect(providerEvalBindingManifest.find(b => b.task === "document-classification")?.schema).toEqual(schema());
     expect(validateProviderEvalOutput(fixture, { ...payload, sourceIds: fixture.sourceIds })).toMatchObject({ applicationSchemaValid: true, normalizationStatus: "bound", output: { fields: { documentType: "w2c" } } });
     expect(AI_TASKS["document-classification"]).toMatchObject({ promptVersion: "document-classification/3", schemaVersion: "document-classification/3" });
-    expect(AI_APPLICATION_BINDING_VERSION).toBe("source-proposals/2");
+    expect(AI_APPLICATION_BINDING_VERSION).toBe("source-proposals/3");
   });
   it("keeps the vocabulary immutable descriptive and independent from application support", () => {
     expect(AI_DOCUMENT_CLASSIFICATION_SCOPE).toEqual({ purpose: "descriptive-only", appliesSourceFacts: false, confirmsTaxpayerFacts: false, establishesCalculationSupport: false, establishesTaxYear: false, filingEligible: false });

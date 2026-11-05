@@ -1,10 +1,11 @@
 import Decimal from "decimal.js";
 import { z } from "zod";
+import { validateIncomeSourceBox } from "./ai-income-source-box-grounding";
 import { AI_TASKS, type AiTask } from "./ai-task-registry";
 import { documentClassificationSchema, documentExpenseSchema, documentIncomeSchema, documentSummarySchema,
   workspaceHelpSchema, workspaceSummarySchema, unsupportedRouteSchema, complexReconciliationSchema, documentSuggestionSchema } from "./ai-application-schemas";
 const Money = Decimal.clone({ precision: 80 });
-export const AI_APPLICATION_BINDING_VERSION = "source-proposals/2";
+export const AI_APPLICATION_BINDING_VERSION = "source-proposals/3";
 export const AI_APPLICATION_INSTRUCTIONS = [
   "Return only the actual task JSON schema, with disposition answer or abstain and supplied sourceIds.",
   "For document-classification, select the exact canonical documentType ID from the supplied schema; its label explains the meaning; keep the readable title separate. Use unknown only with abstain, and abstain only with unknown. A recognized unsupported form or other-document is descriptive and never establishes calculation support, a tax year or confirmed facts.",
@@ -12,6 +13,7 @@ export const AI_APPLICATION_INSTRUCTIONS = [
   "A known fact requires sourceId and sourceQuote copied verbatim from that source. Preserve signed amounts as decimal strings, zero as zero and unknown as null.",
   "Known text values must appear literally in their source quote; never infer a yes/no answer, count or identity. Use null when the literal text is absent.",
   "Do not derive amounts or resolve ambiguous dates. Date facts use a source-stated ISO date; otherwise leave the fact unknown.",
+  "For a source explicitly identified as SSA-1099, use grossBenefits for box 3, repaidBenefits for box 4, netBenefits for box 5 and withholding for box 6. Known money needs the numbered box and printed amount in its literal quote. Unclear, missing or unsupported box layouts remain unknown; never calculate a missing net benefit.",
   "Do not turn wages, retirement distributions, transfers or a form's box totals into Schedule C receipt suggestions. Suggestions require explicit self-employment receipt evidence.",
   "For expenses, preserve source facts separately from debit suggestions; refunds and transfers are not new deductible purchases.",
   "All business purpose remains unconfirmed. Use needs-review or not-business only, never confirmed deductible business use.",
@@ -96,6 +98,7 @@ export function parseApplicationTaskOutput(task: AiTask, payload: unknown, conte
       }
       if (!fact.sourceQuote || !source.text.includes(fact.sourceQuote)) throw new Error("Known fact requires a literal source quote.");
       if (fact.kind === "money" && !hasMoney(fact.sourceQuote, fact.value)) throw new Error("Monetary fact differs from its source.");
+      if (task === "income-extraction") validateIncomeSourceBox(source.text, fact.name, fact.kind, fact.value, fact.sourceQuote);
       if (fact.kind === "date" && (!z.iso.date().safeParse(fact.value).success || !fact.sourceQuote.includes(fact.value))) throw new Error("Date is not unambiguously stated in its source.");
       if (fact.kind === "text" && (!fact.value.trim() || !fact.sourceQuote.includes(fact.value))) throw new Error("Text fact is not literally stated in its source.");
     }

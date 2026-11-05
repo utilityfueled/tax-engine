@@ -45,7 +45,7 @@ export const AI_TASKS: Readonly<Record<AiTask, AiTaskPolicy>> = Object.freeze({
   "interview-wording": policy("interview-wording", "luna-high", 4096),
   "unsupported-route": policy("unsupported-route", "luna-high", 4096),
   "document-classification": policy("document-classification", "luna-high", 4096, { requiresUserConfirmation: true, maxEscalations: 1, promptVersion: "document-classification/3", schemaVersion: "document-classification/3" }),
-  "income-extraction": policy("income-extraction", "luna-high", 8192, { requiresUserConfirmation: true, maxEscalations: 1 }),
+  "income-extraction": policy("income-extraction", "luna-high", 8192, { requiresUserConfirmation: true, maxEscalations: 1, promptVersion: "income-extraction/3", schemaVersion: "income-extraction/3" }),
   "expense-categorization": policy("expense-categorization", "luna-high", 8192, { requiresUserConfirmation: true, maxEscalations: 1 }),
   "tax-explanation": policy("tax-explanation", "sol-low", 8192, { requiresVerifiedTaxContext: true, maxEscalations: 1, promptVersion: "tax-explanation/3", schemaVersion: "tax-explanation/3" }),
   "complex-reconciliation": policy("complex-reconciliation", "sol-high", 16384,

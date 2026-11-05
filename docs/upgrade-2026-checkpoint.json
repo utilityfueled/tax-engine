@@ -20466,5 +20466,27 @@
     "ledger": "docs/upgrade-2026-portable-browser-work.md",
     "distinctReviewManifest": "90e5537a20b99cacd2d152db9c2a8722e090395ef84d5753c06dc9de9220f5e6",
     "postcloseCompiledHashManifest": "3df314e68634737af0bc5913fb13a5585e7d26d46f26093763327db90e16cd4c"
+  },
+  "nov05SSASourceBoxGrounding": {
+    "status": "finite_source_contract_verified_current_global_pending",
+    "baseline": "80af163d",
+    "checkoutTests": 925,
+    "checkoutFiles": 16,
+    "inventoryTests": 66,
+    "authorTests": 120,
+    "distinctTests": 163,
+    "specReferences": 8375,
+    "staticChecks": "models/types3/spec/inventory/builds2/lint pass; original stale inventory failure retained",
+    "inventoryEntries": 878,
+    "priorEntriesUnchanged": 877,
+    "supportedUnchanged": 68,
+    "manifest": "c16aa235faafd2cfb5028a21a77bb40e58de641baade57f981c9a67732151472",
+    "sourcePins": 4610,
+    "sourceDrift": [],
+    "paidCalls": 0,
+    "historicalProviderResultsUnchanged": true,
+    "humanQualified": false,
+    "modelPromotionEnabled": false,
+    "ledger": "docs/upgrade-2026-ai-ssa-grounding-work.md"
   }
 }

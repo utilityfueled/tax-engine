@@ -24,7 +24,7 @@ function historicalEntry() {
     independentReview: { method: "human", reviewer: "synthetic-unit-only-not-human-review", grounded: true, qualityAccepted: true, piiLeak: false },
     attempts: [{ profileId: "baseline-gpt-5-mini", startedAt: before, usage: { inputTokens: 100, outputTokens: 100 } }],
     measurement: { runPurpose: "qualification", planDigest: "0".repeat(64), corpusDigest: providerEvalCorpusDigest(), fixtureDigest: providerEvalFixtureDigest(fixture), bindingVersion: PROVIDER_EVAL_BINDING_VERSION,
-      promptVersion: "income-extraction/2", schemaVersion: "income-extraction/2", normalizationStatus: "bound", applicationOutput: payload, privacyFailure: false, responseReference: "test-only", reportedModel: "gpt-5-mini-2025-08-07" } };
+      promptVersion: "income-extraction/3", schemaVersion: "income-extraction/3", normalizationStatus: "bound", applicationOutput: payload, privacyFailure: false, responseReference: "test-only", reportedModel: "gpt-5-mini-2025-08-07" } };
   return { fixture, entry };
 }
 describe("dated public provider sources", () => {

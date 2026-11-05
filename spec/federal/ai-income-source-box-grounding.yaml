@@ -1,0 +1,39 @@
+form: "AI-Income-Source-Box-Grounding"
+fullName: "Finite SSA-1099 proposal-to-source-box grounding"
+taxYear: 2026
+reference: "https://www.irs.gov/pub/irs-pdf/p915.pdf (2025), Appendix pages20-22, source-box definitions only"
+notes: |
+  Prospective software grounding contract, not independent tax-law or filing qualification.
+  Known SSA-1099 monetary proposals require the actual cited source's unique numbered
+  source box. grossBenefits maps to3, repaidBenefits to4, netBenefits to5 and withholding
+  to6. These form semantics are independent of provider/model and expected values.
+  This finite parser accepts an explicit box number followed immediately by one signed
+  amount, not an arbitrary OCR layout. Missing, mixed SSA/RRB or recognized different tax-form identities, duplicated, conflicting or
+  unsupported known fields/box layouts fail validation; null is unknown, never guessed0.
+  No net benefit calculation, fact confirmation, golden/corpus mutation or promotion.
+  Version the prospective application binding and income policy; retain original runs.
+lines:
+  - line: "semantic-box"
+    description: "A literal amount from another SSA box cannot establish the named fact"
+    formula: "For known money in an explicitly identified single SSA-1099 source, require the monetary kind for a known canonical SSA field and bind its name to the unique source box and compare the printed signed amount with Decimal and require its numbered amount anchor in the literal source quote; reject ambiguity or unsupported shape"
+    testRef: "tests/engine/ai-income-source-box-grounding.test.ts::rejects a named SSA fact copied from another real source box"
+  - line: "unknown-zero"
+    description: "Keep zero and unknown distinct without deriving benefits"
+    formula: "Printed zero in the proper unique box is accepted exactly; null stays null even when a source box is absent; no subtraction supplies an absent net-benefit amount"
+    testRef: "tests/engine/ai-income-source-box-grounding.test.ts::preserves printed zero unknowns and exact signed cents without arithmetic inference"
+  - line: "actual-caller"
+    description: "The real document executor enforces source semantics before accepting output"
+    formula: "Shared application grounding rejects swapped money in actual adapter callback; known usage remains accounted once; production stays disabled"
+    testRef: "tests/apps/web/document-ai-ssa-source-box.test.ts::rejects swapped SSA boxes through the actual document adapter and records its failed usage once"
+  - line: "eval-caller"
+    description: "The evaluation caller shares the prospective application boundary"
+    formula: "Actual eval validator rejects swapped known SSA fields using source text rather than expected values, preserves failed output/cost metadata, and does not rewrite any historical run"
+    testRef: "tests/engine/ai-income-source-box-grounding.test.ts::rejects swapped SSA values in the actual evaluation caller without consulting golden amounts"
+  - line: "single-form-boundary"
+    description: "A recognized second tax form cannot lend its numbered box to SSA"
+    formula: "Before known SSA monetary grounding, reject a second recognized SSA/RRB, W2 family,1098/1099,1042-S,5498,3921/3922 or explicit Form-number identity; do not reinterpret its box as SSA; retain finite activation and null unknowns"
+    testRef: "tests/engine/ai-income-source-box-grounding.test.ts::rejects explicitly mixed tax form boundaries before accepting SSA facts"
+  - line: "numeric-identity"
+    description: "A supported printed amount cannot be mistaken for a document identity"
+    formula: "Recognized-form matches wholly inside a validated single printed amount span belong to that amount; markers outside those spans remain form identities and mixed forms still deny; preserve exact signed Decimal comparison"
+    testRef: "tests/engine/ai-income-source-box-grounding.test.ts::does not mistake exact boxed amounts for source form identities"

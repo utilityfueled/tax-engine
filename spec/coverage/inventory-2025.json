@@ -103,6 +103,26 @@
       ]
     },
     {
+      "key": "federal/ai-income-source-box-grounding",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://www.irs.gov/pub/irs-pdf/p915.pdf (2025), Appendix pages20-22, source-box definitions only",
+      "specPath": "spec/federal/ai-income-source-box-grounding.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/ai-provider-refresh",
       "jurisdiction": "federal",
       "taxYear": 2026,

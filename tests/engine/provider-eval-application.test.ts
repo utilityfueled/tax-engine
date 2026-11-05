@@ -30,7 +30,7 @@ describe("actual application evaluation", () => {
     const entry: ProviderModelLiveEvalEntry = { profileId: "luna-high", fixtureId: f.id, fixtureVersion: 1, repeat: 1, elapsedMs: 1,
       applicationSchemaValid: true, output: result.output, independentReview: { method: "human", reviewer: "unit-test-only", grounded: true, qualityAccepted: true, piiLeak: false },
       attempts: [{ profileId: "luna-high", startedAt: at, usage: { inputTokens: 100, outputTokens: 100 } }],
-      measurement: { runPurpose: "qualification", ...provenance(f), bindingVersion: PROVIDER_EVAL_BINDING_VERSION, promptVersion: "income-extraction/2", schemaVersion: "income-extraction/2", normalizationStatus: "bound", applicationOutput: {}, privacyFailure: false, responseReference: "test-only", reportedModel: "gpt-6-luna" } };
+      measurement: { runPurpose: "qualification", ...provenance(f), bindingVersion: PROVIDER_EVAL_BINDING_VERSION, promptVersion: "income-extraction/3", schemaVersion: "income-extraction/3", normalizationStatus: "bound", applicationOutput: {}, privacyFailure: false, responseReference: "test-only", reportedModel: "gpt-6-luna" } };
     expect(scoreProviderEvalEntry(entry, f)).toMatchObject({ accepted: false, schemaValid: false });
     if (!entry.measurement) throw new Error("Missing measurement.");
     entry.measurement.applicationOutput = income();
@@ -53,7 +53,7 @@ describe("actual application evaluation", () => {
     const entry: ProviderModelLiveEvalEntry = { profileId: "luna-high", fixtureId: f.id, fixtureVersion: 1, repeat: 1, elapsedMs: 1,
       applicationSchemaValid: true, output: result.output, independentReview: { method: "human", reviewer: "unit-test-only-not-real-review", grounded: true, qualityAccepted: true, piiLeak: false },
       attempts: [{ profileId: "luna-high", startedAt: at, usage: { inputTokens: 100, outputTokens: 100 } }],
-      measurement: { runPurpose: "qualification", ...provenance(f), bindingVersion: PROVIDER_EVAL_BINDING_VERSION, promptVersion: "income-extraction/2", schemaVersion: "income-extraction/2", normalizationStatus: "bound", applicationOutput: income(), privacyFailure: false, responseReference: "test-only", reportedModel: "gpt-6-luna" } };
+      measurement: { runPurpose: "qualification", ...provenance(f), bindingVersion: PROVIDER_EVAL_BINDING_VERSION, promptVersion: "income-extraction/3", schemaVersion: "income-extraction/3", normalizationStatus: "bound", applicationOutput: income(), privacyFailure: false, responseReference: "test-only", reportedModel: "gpt-6-luna" } };
     if (!entry.measurement) throw new Error("Missing test measurement.");
     expect(scoreProviderEvalEntry(entry, f)).toMatchObject({ accepted: true, actualCostUsd: "0.00006" });
     for (const reportedModel of [null, "a-different-provider-model", "gpt-6-luna-unverified-snapshot", "gpt-6-luna-2026-10-25"]) {
