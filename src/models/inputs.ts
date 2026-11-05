@@ -1,3 +1,4 @@
+import { RRTAPayrollSourcesSchema } from "./rrta-payroll-sources.js";
 import { MortgageInsurancePrepaidSourcesSchema } from "./mortgage-insurance-prepaid-sources.js";
 import {PassengerAutoParentSourcesSchema} from './passenger-auto-parent-sources.js';
 import {calculateScheduleCPassengerSources} from '@/engine/schedules/schedule-c-passenger-first-year-sources.js';
@@ -6354,6 +6355,7 @@ export const TaxYearInputSchema = z.object({
   form8915F: Form8915FSchema.optional(),
   taxableRefundWorksheet: TaxableRefundWorksheetSchema.optional(),
   taxableStateRefundRecoveries: TaxableStateRefundRecoveriesSchema.optional(),
+  rrtaPayrollSources: RRTAPayrollSourcesSchema.optional(),
   form8824: z.array(Form8824Schema).default([]),
   cryptoIncome: CryptoIncomeInputSchema.optional(),
   stateReturns: z.object({

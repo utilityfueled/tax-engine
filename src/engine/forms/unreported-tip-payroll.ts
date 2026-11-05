@@ -3,10 +3,12 @@ import type { TaxYearInput, Form4137Input } from "@/models/inputs.js";
 import type { YearConstants } from "@/models/constants.js";
 import { d, sum } from "@/utils/decimal.js";
 import { calculateForm4137, type Form4137Result } from "./form-4137.js";
+import { calculateRRTAPayrollSources } from "./rrta-payroll-sources.js";
 
 type Owner = "primary" | "spouse";
 export function calculateUnreportedTipPayroll(input: TaxYearInput, constants: YearConstants) {
   if (constants.taxYear !== input.taxpayer.taxYear) throw new Error("Tip payroll constants must match the actual return year.");
+  const rrtaSources = calculateRRTAPayrollSources(input, constants);
   if (input.form4137 && input.form4137ByOwner) throw new Error("Use one actual Form4137 source representation; duplicate summaries are unsupported.");
   const joint = input.taxpayer.filingStatus === "married_filing_jointly";
   const records: Form4137Input[] = input.form4137 ? [input.form4137] : [];
@@ -32,7 +34,7 @@ export function calculateUnreportedTipPayroll(input: TaxYearInput, constants: Ye
     if (actual && w2s.some(({w2})=>w2.socialSecurityWages === undefined || w2.socialSecurityTips === undefined)) throw new Error("Actual Form4137 requires known W2 payroll Boxes3 and7, including zero.");
     // This source amount is Tier1 Social Security compensation, not Medicare
     // compensation. Do not silently create Form8959's distinct RRTA base.
-    if (actual && d(record.sourceFacts?.railroadRetirementCompensation).gt(0)) throw new Error("Actual RRTA tips payroll requires the separate Medicare compensation source worksheet before return integration.");
+    if (actual && d(record.sourceFacts?.railroadRetirementCompensation).gt(0) && !rrtaSources) throw new Error("Actual RRTA tips payroll requires the separate Medicare compensation source worksheet before return integration.");
     const result = calculateForm4137(record,constants,{
       socialSecurityWagesAndTipsAlreadyReported:sum(...w2s.map(({w2})=>d(w2.socialSecurityWages))),
       socialSecurityTipsAlreadyReported:sum(...w2s.map(({w2})=>d(w2.socialSecurityTips))),

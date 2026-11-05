@@ -1,0 +1,43 @@
+form: "RRTA and nonrailroad tip payroll"
+fullName: "Original-bound ordinary railroad compensation with separately reported nonrailroad tips"
+taxYear: 2026
+reference: "https://www.irs.gov/instructions/i8959"
+notes: |
+  IRS Form4137 lines6-13, Form8959 lines14-18 and23-24, and IRC224.
+  Finite ordinary W2 railroad employees with original compensation and no
+  dependents, CT2, corrections, combined excess SocialSecurity/Tier1 withholding,
+  Form8919 or unsupported payroll adjustments. Railroad-covered tips stay denied.
+  This source method does not qualify a complete2026 return, forms or filing.
+lines:
+  - line: "original-payroll-custody"
+    description: "Retain actual original taxpayer, W2 and Form4137 facts"
+    formula: "Complete original-bound source packet, exact owner/year/employer/W2 and tip-form snapshots; mandatory separately sourced Tier1 SocialSecurity and Medicare compensation and Additional Medicare withholding; missing is never zero"
+    testRef: "tests/engine/forms/rrta-tip-payroll.test.ts::requires exact original RRTA and tip records before payroll"
+  - line: "4137-8"
+    description: "Integrate separately sourced RRTA SocialSecurity compensation"
+    formula: "Per owner existing Form4137line8 = W2Boxes3+7 + min(actual Tier1 SocialSecurity compensation, actual year SocialSecurity wagebase); original Form4137 RRTA amount must reconcile; preserve existing lines9-13 and railroad-tip denial"
+    testRef: "tests/engine/forms/rrta-tip-payroll.test.ts::admits actual RRTA compensation with nonrailroad unreported tips"
+  - line: "8959-14-17"
+    description: "Separately tax actual RRTA Medicare compensation"
+    formula: "Line14 = round(sum actual same-household Tier1 Medicare compensation); line15 filing-status threshold; line16=max(0,line14-line15); line17=round(line16*.009); do not combine with wage or SE threshold"
+    testRef: "tests/engine/forms/rrta-tip-payroll.test.ts::uses separate RRTA Medicare threshold and actual withholding"
+  - line: "8959-18-24"
+    description: "Transfer RRTA tax and actual additional withholding once"
+    formula: "Line18=existing wage line7+SE line13+RRTA line17; summary totalEarnings includes wage+SE+actualRRTA and excessOverThreshold sums each independently determined excess; line23=round(actual original RRTA Additional Medicare withholding); line24=existing wage withholding credit+line23; regular railroad taxes never become Additional Medicare credit; ordinary W2 payroll subtracts wage-only line22, never RRTA line23"
+    testRef: "tests/engine/federal-rrta-tip-payroll.test.ts::transfers separate RRTA Additional Medicare tax and credit once"
+  - line: "224-unreported-nonrailroad-tips"
+    description: "Use actual qualified nonrailroad tips without waiving payroll tax"
+    formula: "Existing source-bound employee Form4137column1c/max-employer method, qualification/25000cap/MAGI reduction and owner rules remain unchanged; tips add income and payroll tax before the below-AGI deduction"
+    testRef: "tests/engine/federal-rrta-tip-payroll.test.ts::deducts source-qualified nonrailroad tips without changing payroll liability"
+  - line: "finite-exclusions"
+    description: "Deny unsupported payroll history and combined excess-tax cohorts"
+    formula: "Reject unknown confirmations, railroad-covered tips, CT2/corrections/other payroll adjustments, unknown or positive self-employment, dependents, Form8919, repeated same-owner railroad employer or owner compensation plus reported SS wages/tips above the annual wage base; no guessed excess-Tier1 credit"
+    testRef: "tests/engine/forms/rrta-tip-payroll.test.ts::retains unsupported payroll and unknown-source denials"
+  - line: "year-gates"
+    description: "Retain actual year and public calculation qualification"
+    formula: "Only actual2025/2026 source and same-year constants; published2025 source formulas plus enacted2026 rules do not authorize public2026 constants/forms/filing"
+    testRef: "tests/engine/federal-rrta-tip-payroll.test.ts::retains actual public2026 refusal and year currentness"
+  - line: "historical-paper-boundary"
+    description: "Retain unavailable RRTA paper qualification before I/O"
+    formula: "Presence of original RRTA payroll sources or calculated RRTA audit lines14-17/23 must reject direct Form8959 mapping before template loading and the public review packet before any Form1040 or output I/O; existing nonRRTA mappings remain unchanged; source calculation is not paper qualification"
+    testRef: "tests/pdf/rrta-tip-payroll-export-guard.test.ts::denies original RRTA packet before any public packet output"

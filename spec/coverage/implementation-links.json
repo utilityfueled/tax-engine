@@ -1409,6 +1409,15 @@
       "note": "Actual preceding-return ordinary QBI records supply the separate incoming carry for the same individual or joint couple, including known zero and unknown active character. Original-source review validates the historical8995 and private appendix; supplied NOL histories still reconcile. Pending interview sections, changed filing units, final2026 forms, filing, staging and independent human qualification remain separate."
     },
     {
+      "key": "federal/rrta-tip-payroll",
+      "enginePath": "src/engine/forms/rrta-payroll-sources.ts",
+      "testRefs": [
+        "tests/engine/forms/rrta-tip-payroll.test.ts::requires exact original RRTA and tip records before payroll",
+        "tests/engine/forms/rrta-tip-payroll.test.ts::admits actual RRTA compensation with nonrailroad unreported tips"
+      ],
+      "note": "The original-bound helper supplies the finite RRTA payroll source proof used by Form4137 and Form8959. Actual historical and indexed-test-only 2026 calculations are traced here; RRTA PDF output is explicitly denied, and this link establishes no filing, human review, full 2026 or paper qualification."
+    },
+    {
       "key": "federal/savings-bond-reissue-return",
       "enginePath": "src/engine/federal.ts",
       "packetPath": "src/pdf/mappings/2025/fill-form-8815.ts",

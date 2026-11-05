@@ -4104,7 +4104,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     bonaFidePuertoRicoResident: input.childTaxCredit?.bonaFidePuertoRicoResident,
     payrollTaxes: sum(...input.w2s.map(w2 => d(w2.socialSecurityWithheld).plus(d(w2.medicareWithheld))))
       .plus(form8959.lines.find(line => line.line === "7")?.value ?? new Decimal(0))
-      .minus(form8959.withholdingCredit)
+      .minus(form8959.lines.find(line => line.line === "22")?.value ?? new Decimal(0))
       .plus((form8959.lines.find(line => line.line === "13")?.value ?? new Decimal(0)).div(2)),
     additionalPayrollTaxes: sum(schedSE.deductibleHalf, tipPayroll.tax, form8919?.line13 ?? new Decimal(0)),
     earnedIncomeCredit: eic,

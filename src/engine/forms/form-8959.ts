@@ -2,7 +2,8 @@
  * Form 8959 — Additional Medicare Tax
  * Spec: spec/federal/form-8959.yaml
  *
- * 0.9% additional tax on Medicare wages + SE earnings exceeding threshold.
+ * 0.9% additional tax on Medicare wages/SE and separately on actual RRTA
+ * Medicare compensation. RRTA source method: spec/federal/rrta-tip-payroll.yaml.
  * Threshold: $200K single/HoH/QSS, $250K MFJ, $125K MFS.
  */
 
@@ -14,6 +15,7 @@ import { d, zeroFloor, roundDollar, sum } from "@/utils/decimal.js";
 import { AuditTrail } from "@/utils/audit.js";
 import { calculateUnreportedTipPayroll } from "./unreported-tip-payroll.js";
 import { calculateForm8919 } from "./form-8919.js";
+import { calculateRRTAPayrollSources } from "./rrta-payroll-sources.js";
 
 export interface Form8959Result {
   medicareWages: Decimal; // Line 1
@@ -36,6 +38,9 @@ export function calculateForm8959(
   constants: YearConstants
 ): Form8959Result {
   const audit = new AuditTrail();
+  const rrta = calculateRRTAPayrollSources(input, constants);
+  if (rrta && !selfEmploymentEarnings.isZero()) throw new Error("RRTA self-employment earnings require a separately supported payroll method.");
+  if (rrta && filingStatus !== input.taxpayer.filingStatus) throw new Error("RRTA filing status must match the actual household.");
   const rate = constants.additionalMedicareTax.rate;
   const threshold = constants.additionalMedicareTax.threshold[filingStatus];
 
@@ -83,11 +88,20 @@ export function calculateForm8959(
     ["12", "SE earnings over threshold", seExcess, "max(0, line 8 - line 11)"],
     ["13", "Additional Medicare Tax on self-employment", seTax, "round(line 12 × 0.009)"],
   ] as const) audit.record("Form 8959", line, description, value, formula);
-  const totalEarnings = wageBase.plus(effectiveSE);
-  const excessOverThreshold = wageExcess.plus(seExcess);
-  const additionalMedicareTax = wageTax.plus(seTax);
+  const rrtaCompensation = rrta ? roundDollar(rrta.medicareCompensation) : new Decimal(0);
+  const rrtaExcess = zeroFloor(rrtaCompensation.minus(threshold));
+  const rrtaTax = rrta ? roundDollar(rrtaExcess.times(rate)) : new Decimal(0);
+  const totalEarnings = wageBase.plus(effectiveSE).plus(rrtaCompensation);
+  const excessOverThreshold = wageExcess.plus(seExcess).plus(rrtaExcess);
+  if (rrta) for (const [line,description,value,formula] of [
+    ["14","Original RRTA Medicare compensation",rrtaCompensation,"Rounded actual original W2 Box14 Tier1 Medicare compensation, separately sourced"],
+    ["15","RRTA threshold",threshold,"Actual filing-status threshold; independent of wage and SE compensation"],
+    ["16","RRTA compensation over threshold",rrtaExcess,"max(0, line14-line15)"],
+    ["17","Additional Medicare Tax on RRTA compensation",rrtaTax,"round(line16*.009)"],
+  ] as const) audit.record("Form 8959",line,description,value,formula);
+  const additionalMedicareTax = wageTax.plus(seTax).plus(rrtaTax);
   audit.record("Form 8959", "18", "Additional Medicare Tax", additionalMedicareTax,
-    "Lines 7 + 13 (each separately rounded at 0.009); no RRTA compensation supplied");
+    rrta ? "Lines7+13+17, each separately rounded at .009" : "Lines 7 + 13 (each separately rounded at 0.009); no RRTA compensation supplied");
 
   // Part V: Employers withhold Additional Medicare Tax
   // on wages over $200K regardless of filing status. Credit for excess withholding.
@@ -99,12 +113,15 @@ export function calculateForm8959(
   const roundedMedicareWithheld = roundDollar(totalMedicareWithheld);
   const roundedMedicareWages = roundDollar(medicareWages);
   const expectedRegularMedicare = roundDollar(roundedMedicareWages.times(regularMedicareRate));
-  const withholdingCredit = zeroFloor(roundedMedicareWithheld.minus(expectedRegularMedicare));
+  const wageWithholdingCredit = zeroFloor(roundedMedicareWithheld.minus(expectedRegularMedicare));
+  const rrtaWithholdingCredit = rrta ? roundDollar(rrta.additionalMedicareWithheld) : new Decimal(0);
+  const withholdingCredit = wageWithholdingCredit.plus(rrtaWithholdingCredit);
   audit.record("Form 8959", "19", "Medicare withholding", roundedMedicareWithheld, "Rounded sum W-2 box 6");
   audit.record("Form 8959", "20", "Medicare wages for withholding reconciliation", roundedMedicareWages, "Rounded sum W-2 box 5");
   audit.record("Form 8959", "21", "Regular Medicare withholding", expectedRegularMedicare, "Line 20 × 1.45%, rounded dollars");
-  audit.record("Form 8959", "22", "Additional Medicare withholding on wages", withholdingCredit, "max(0, line 19 - line 21)");
-  audit.record("Form 8959", "24", "Additional Medicare withholding credit", withholdingCredit, "Supported non-RRTA line 22 → Form 1040 line 25c");
+  audit.record("Form 8959", "22", "Additional Medicare withholding on wages", wageWithholdingCredit, "max(0, line 19 - line 21)");
+  if (rrta) audit.record("Form 8959", "23", "Actual RRTA Additional Medicare withholding", rrtaWithholdingCredit, "Rounded actual original W2 Box14 Additional Medicare withholding only");
+  audit.record("Form 8959", "24", "Additional Medicare withholding credit", withholdingCredit, rrta ? "Lines22+23 to Form1040line25c, actual RRTA withholding once" : "Supported non-RRTA line 22 → Form 1040 line 25c");
 
   return {
     medicareWages,

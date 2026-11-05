@@ -458,6 +458,9 @@ export async function fillReturn(
   options: FillReturnOptions,
 ): Promise<FillReturnResult> {
   assertPdfExportAllowed(input.taxpayer.taxYear, result.taxYear, options.purpose);
+  if (input.rrtaPayrollSources !== undefined || result.form8959?.lines.some(line => ["14", "15", "16", "17", "23"].includes(line.line))) {
+    throw new Error("RRTA review PDF mapping is unavailable; actual sources require a separately qualified projection.");
+  }
   const form2210Review=options.form2210Review??(requiresForm2210ScheduleAiReview(input,result)&&hasForm2210OriginalIdentity(input)?prepareForm2210Review(input):undefined);
   if(form2210Review)form2210ReviewOriginalInput(input,result,form2210Review);
   let form2210ReviewArtifact:SavedForm2210Review|undefined;

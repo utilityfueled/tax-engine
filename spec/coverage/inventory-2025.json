@@ -9550,6 +9550,51 @@
       ]
     },
     {
+      "key": "federal/rrta-payroll-sources",
+      "jurisdiction": "federal",
+      "taxYear": null,
+      "sourceAuthority": null,
+      "specPath": null,
+      "enginePath": "src/engine/forms/rrta-payroll-sources.ts",
+      "packetPath": null,
+      "specExists": false,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": false,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing spec coverage",
+        "Missing packet generation or inclusion rule",
+        "Missing complete spec-linked regression coverage",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "federal/rrta-tip-payroll",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://www.irs.gov/instructions/i8959",
+      "specPath": "spec/federal/rrta-tip-payroll.yaml",
+      "enginePath": "src/engine/forms/rrta-payroll-sources.ts",
+      "packetPath": null,
+      "implementationTestRefs": [
+        "tests/engine/forms/rrta-tip-payroll.test.ts::requires exact original RRTA and tip records before payroll",
+        "tests/engine/forms/rrta-tip-payroll.test.ts::admits actual RRTA compensation with nonrailroad unreported tips"
+      ],
+      "implementationNote": "The original-bound helper supplies the finite RRTA payroll source proof used by Form4137 and Form8959. Actual historical and indexed-test-only 2026 calculations are traced here; RRTA PDF output is explicitly denied, and this link establishes no filing, human review, full 2026 or paper qualification.",
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/rule-packs",
       "jurisdiction": "federal",
       "taxYear": 2026,

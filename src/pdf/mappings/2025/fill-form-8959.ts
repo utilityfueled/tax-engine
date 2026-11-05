@@ -79,6 +79,9 @@ export async function fillForm8959(
   blankPdfPath: string,
 ): Promise<PDFDocument> {
   assertPdfExportAllowed(input.taxpayer.taxYear, result.taxYear);
+  if (input.rrtaPayrollSources !== undefined || result.form8959?.lines.some(line => ["14", "15", "16", "17", "23"].includes(line.line))) {
+    throw new Error("RRTA review PDF mapping is unavailable; actual sources require a separately qualified projection.");
+  }
   const doc = await loadReviewTemplate(blankPdfPath, 2025);
   const form = doc.getForm();
   const F = FIELDS;

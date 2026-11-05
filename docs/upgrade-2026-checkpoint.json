@@ -21406,5 +21406,33 @@
     "mainManifest": "2c162ced084b8996fe069e3677d48a74ba2ed2ff3efe739053734f00db679dba",
     "runtimeManifest": "3aeebeff7a97a7d85a32ec6c57d9b934f3c6105b20615e5f5f1df46fc8054c4b",
     "ledger": "docs/upgrade-2026-native-browser-runtime-provenance-work.md"
+  },
+  "nov05RRTATipPayroll": {
+    "status": "FINITE_ORIGINAL_BOUND_PAYROLL_PASS_PAPER_UNQUALIFIED",
+    "mainTests": 264,
+    "mainFiles": 16,
+    "distinctTests": 277,
+    "distinctFiles": 17,
+    "distinctAdditional": 13,
+    "metadataTests": 896,
+    "allTypesBuildsSpecInventoryLintPassed": true,
+    "lintErrors": 0,
+    "existingLintWarnings": 11863,
+    "sourceAuditControls": 76,
+    "sourceAuditChangedHashes": 9,
+    "auditedSources": 1801,
+    "auditContracts": 149,
+    "declaredCases": 582,
+    "nonhashBudgetsChanged": false,
+    "inventoryTotal": 907,
+    "supportedUnchanged": 68,
+    "rrtaPDFAllowed": false,
+    "public2026Allowed": false,
+    "humanReviewQualified": false,
+    "initialInventoryExpectationFailurePreserved": true,
+    "staticManifest": "36913d6ee65fc637363c5885625afc5aa36201587521ad9e668bd39e40b02ef7",
+    "distinctManifest": "dd71c05f03f33f3b1d68221d4a601a140548671fecab05085c3b7480232cf3e3",
+    "sourceAuditManifest": "cc833fedc43c318b81d40d2bd43216cba20a04c46c47e1b29aced86d87609fc0",
+    "ledger": "docs/upgrade-2026-rrta-tip-payroll-work.md"
   }
 }
