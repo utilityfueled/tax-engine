@@ -8,6 +8,12 @@ crosswalk into the append-only history. Earlier checklist entries and checkpoint
 named revisions. The [execution brief](upgrade-2026-execution-brief.md) remains
 the completion contract. **The upgrade is not release-ready.**
 
+The later [guided render performance experiment](upgrade-2026-guided-render-experiment-work.md)
+is rejected after its final unchanged browser comparison yields successor9PASS/1timeout
+against baseline10PASS. All seven experimental paths are archived and restored/removed;
+the previously verified application source remains unchanged. Its bounded PDF and CPU
+observations do not qualify the outstanding container/native browser gates.
+
 | Package | Verified evidence | Remaining work |
 | --- | --- | --- |
 | Coverage and dependencies | Exact045fbedb local unit and coverage each pass25,244 tests/1,854files with zero failures/skips, including53 assertions in all six real PostgreSQL files on each run. Coverage is91.81% statements/87.54% branches/90.69% functions/95.03% lines at unchanged gates. All eight remaining checks pass, including both builds. Lint retains11,715warnings/0errors with no semantic additions or removals against the retainedb254 baseline. Exact045 remote push/PR CI also passes25,244unit and25,244coverage assertions; priora4ac/b254 evidence remains separately attributed. See [the local verification ledger](upgrade-2026-045-full-local-verification-work.md). | The earlier local a4ac run stopped on an unbounded synchronous PDF stdin reader after1,852 files; no coverage followed. Test-only8487 uses the existing bounded file-stdin helper; the original3cases and full local checks now pass without application-product changes. Final hosted/native/browser artifact qualification, package/security owner decisions and human/final-form gates remain open. The earlier f09 cancelled coverage result stays historical. |
