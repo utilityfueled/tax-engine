@@ -21092,5 +21092,31 @@
     "sourceReviewManifest": "ce9696979a2ebc5ceae89af8f1c24dcfeec7ba9ee563c20dcdc3f9ca364606b5",
     "mainManifest": "c14f7c0e6050788a5fd9eb52052f2f6d3cf21385641953932382c3bf9d3135ae",
     "browserRuntime": false
+  },
+  "nov05C2cGlobalVerification": {
+    "status": "LOCAL_MANAGED_GLOBAL_PASS_REMOTE_FAILURES_OPEN",
+    "sourceHead": "c2c7af69fb44999644ab520cd37dbed75b7c5386",
+    "unitTests": 26466,
+    "unitFiles": 1913,
+    "coverageTests": 26466,
+    "coverage": {
+      "statements": 91.83,
+      "branches": 87.64,
+      "functions": 90.85,
+      "lines": 95.1
+    },
+    "sourcePins": 5301,
+    "sourceDrift": false,
+    "browser": {
+      "cases": 580,
+      "failed": 0,
+      "originalHostedSkips": 5,
+      "batches": 8,
+      "cleanup": true
+    },
+    "manifest": "0c827c0848be984d9851c38a1a8148d4660486314af91013db48001af3d94ddb",
+    "remoteWebRun": "42080868458",
+    "remoteFailuresResolved": false,
+    "ledger": "docs/upgrade-2026-c2c-global-verification-work.md"
   }
 }
