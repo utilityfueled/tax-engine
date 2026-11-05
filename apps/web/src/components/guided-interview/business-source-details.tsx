@@ -1,15 +1,18 @@
 "use client";
 import { businessSourceAmounts, type BusinessSourceData } from "@/lib/guided-business-facts";
 import { BooleanFact, TextFact } from "./fact-fields";
+import {PassengerSourceDetails} from "./passenger-source-details";
+import type {GuidedPassengerDraft} from "@/lib/guided-passenger-sources";
 import { MacrsAssetDetails } from "./macrs-asset-details";
 import { CurrencyField } from "./currency-field";
 import { guidedSourceValuesChanged } from "@/lib/guided-source-confirmation";
 
-export function BusinessSourceDetails({ data = {}, onChange }: { data?: BusinessSourceData; onChange: (data: BusinessSourceData) => void }) {
+export function BusinessSourceDetails({ data = {}, onChange, onCapturePassenger }: { data?: BusinessSourceData; onChange: (data: BusinessSourceData) => void; onCapturePassenger?:(facts:BusinessSourceData)=>GuidedPassengerDraft }) {
   const patch = (next: Partial<BusinessSourceData>) => {
-    const values = (facts: BusinessSourceData) => ({ ...facts, incomeReconciled: undefined, expensesReconciled: undefined });
+    const values = (facts: BusinessSourceData) => ({ ...facts, incomeReconciled: undefined, expensesReconciled: undefined, passengerSources:facts.passengerSources?{...facts.passengerSources,sourceFactsConfirmed:undefined,originalInput:undefined,originalDraft:undefined}:undefined });
     const changed = guidedSourceValuesChanged(values(data), values({ ...data, ...next }));
     onChange({ ...data, ...next,
+      ...(changed && data.passengerSources && !('passengerSources' in next) ? {passengerSources:{...data.passengerSources,sourceFactsConfirmed:null}} : {}),
       ...(changed && data.macrsAssets && !('macrsAssets' in next) ? { macrsAssets: { ...data.macrsAssets, sourceFactsConfirmed: null } } : {}),
       ...(changed && data.scheduleCSourceFacts && !('scheduleCSourceFacts' in next) ? { scheduleCSourceFacts: { ...data.scheduleCSourceFacts, sourceFactsConfirmed: null } } : {}),
     });
@@ -31,7 +34,13 @@ export function BusinessSourceDetails({ data = {}, onChange }: { data?: Business
     <TextFact label="Business EIN, if issued" value={data.ein ?? ""} onChange={ein => patch({ ein })} />
     <label className="guided-field"><span className="guided-field-label">Actual accounting method</span><select className="guided-input" value={data.accountingMethod ?? ""} onChange={event => patch({ accountingMethod: event.target.value as BusinessSourceData["accountingMethod"] })}><option value="">Not answered</option><option value="cash">Cash</option><option value="accrual">Accrual</option></select></label>
     <BooleanFact label="Do all amounts in this section belong to this one business and owner?" value={data.singleBusinessConfirmed} onChange={singleBusinessConfirmed => patch({ singleBusinessConfirmed })} />
-    {data.depreciationMethod==='assets'?<><MacrsAssetDetails facts={data} onChange={macrsAssets=>patch({macrsAssets,expensesReconciled:null})}/><button type="button" onClick={()=>patch({depreciationMethod:'manual',expensesReconciled:null})}>Use completed manual depreciation worksheet</button></>:<button type="button" onClick={()=>patch({depreciationMethod:'assets',macrsAssets:{...data.macrsAssets,sourceFactsConfirmed:null},expensesReconciled:null})}>Use actual first-year asset records</button>}
+    <label className="guided-field"><span className="guided-field-label">Depreciation source method</span><select className="guided-input" value={data.depreciationMethod??''} onChange={e=>patch({depreciationMethod:e.target.value as BusinessSourceData['depreciationMethod'],expensesReconciled:null})}><option value="">Not answered</option><option value="manual">Completed manual worksheet</option><option value="assets">Ordinary first-year asset records</option><option value="passenger">One documented 2026 passenger car</option></select></label>
+    {data.depreciationMethod==='assets'?<button type="button" onClick={()=>patch({depreciationMethod:'manual',expensesReconciled:null})}>Use completed manual depreciation worksheet</button>:<button type="button" onClick={()=>patch({depreciationMethod:'assets',macrsAssets:{...data.macrsAssets,sourceFactsConfirmed:null},expensesReconciled:null})}>Use actual first-year asset records</button>}
+    {data.depreciationMethod==='assets'?<MacrsAssetDetails facts={data} onChange={macrsAssets=>patch({macrsAssets,expensesReconciled:null})}/>:null}
+    {data.depreciationMethod==='passenger'?<PassengerSourceDetails draft={data.passengerSources} onChange={passengerSources=>patch({passengerSources,expensesReconciled:passengerSources.sourceFactsConfirmed===true?data.expensesReconciled:null})} onCapture={()=>{if(!onCapturePassenger)throw new Error('Current interview context required');return onCapturePassenger(data);}}/>:null}
+    {data.passengerSources&&data.depreciationMethod!=='passenger'?<p role="alert">Passenger records remain saved and require their passenger method or explicit removal.</p>:null}
+    {data.passengerSources?<button type="button" onClick={()=>patch({passengerSources:undefined,expensesReconciled:null})}>Remove passenger documentary records</button>:null}
+    {data.macrsAssets&&data.depreciationMethod==='passenger'?<><p role="alert">The ordinary asset inventory remains saved. Reconcile the competing method before passenger capture.</p><button type="button" onClick={()=>patch({macrsAssets:undefined,expensesReconciled:null})}>Remove ordinary asset inventory after source review</button></>:null}
     {businessSourceAmounts.map(([field, label]) => <CurrencyField key={field} label={label} value={data[field] ?? ""} onChange={value => patch({ [field]: value, expensesReconciled: null, ...(field === "returnsAndAllowances" || field === "costOfGoodsSold" || field === "otherIncome" ? { incomeReconciled: null } : {}) })} />)}
 
     {source ? <fieldset className="guided-fieldset"><legend>Actual Schedule C source records</legend>

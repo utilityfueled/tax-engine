@@ -1,3 +1,4 @@
+import {buildGuidedPassengerForm,bindGuidedPassengerInput,type GuidedPassengerDraft} from './guided-passenger-sources';
 import {buildGuidedMacrsAssets} from "./guided-macrs-assets";
 import {reconcileGuidedRetirementWithholding}from "./guided-retirement-withholding-reconciliation";
 import { W2Schema } from "@/models/inputs";
@@ -706,7 +707,15 @@ export function buildGuidedW2SourceContext(state: GuidedFlowState): W2StateLocal
   } catch { return null; }
 }
 
-export function buildTaxInputFromGuidedData(state: GuidedFlowState): GuidedTaxInputSources | null {
+/** Only the ordinary build returns a tax input; explicit capture returns a source draft. */
+export function buildTaxInputFromGuidedData(state:GuidedFlowState):GuidedTaxInputSources|null{return buildGuidedSourceInput(state);}
+export function captureGuidedPassengerSources(state:GuidedFlowState):GuidedPassengerDraft{
+ const raw=buildGuidedSourceInput(state,true),facts=state.sectionData['income-self-employment']?.businessFacts;
+ if(!raw||facts?.depreciationMethod!=='passenger')throw new Error('Complete and reconcile the actual passenger, business and return sources before capture.');
+ const captureInput=structuredClone(raw);if(captureInput.scheduleC?.sourceFacts)delete captureInput.scheduleC.sourceFacts.passengerFirstYear;
+ const bound=bindGuidedPassengerInput(captureInput,facts,true);if(!bound)throw new Error('Actual passenger sources required');return bound.draft;
+}
+function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false): GuidedTaxInputSources | null {
   const { segmentation, sectionData } = state;
 
   if (!segmentation.filingStatus || !Number.isInteger(state.taxYear) || state.taxYear == null) return null;
@@ -783,7 +792,8 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState): GuidedTaxIn
   const necs = buildNecInputs(seData?.necEntries);
   const scheduleC = buildScheduleCInput(seData?.necEntries, seData?.manualGrossReceipts, seData?.expenses, seData?.qbiMateriallyParticipated, seData?.businessFacts);
   let actualMacrs:ReturnType<typeof buildGuidedMacrsAssets>;
-  try{actualMacrs=buildGuidedMacrsAssets(seData?.businessFacts,state.taxYear,!!rentalData?.entries?.length||!!sectionData["income-royalties"]);}catch{return null;}
+  let passengerForm:ReturnType<typeof buildGuidedPassengerForm>;
+  try{actualMacrs=buildGuidedMacrsAssets(seData?.businessFacts,state.taxYear,!!rentalData?.entries?.length||!!sectionData["income-royalties"]);passengerForm=buildGuidedPassengerForm(seData?.businessFacts,state.taxYear);}catch{return null;}
   if(actualMacrs&&scheduleC){scheduleC.sourceFacts={...scheduleC.sourceFacts,depreciation:actualMacrs.depreciation};}
 
   const form1099Int = buildInterestInputs(investData?.interestEntries, state.taxYear);
@@ -893,7 +903,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState): GuidedTaxIn
     form7206: healthInsurance,
     form1099Nec: necs,
     scheduleC: scheduleC ?? undefined,
-    form4562:actualMacrs?.form4562,
+    form4562:actualMacrs?.form4562 ?? passengerForm,
     form1099Int,
     form8814: buildGuidedChildElections(investData?.childElections, state.taxYear),
     qofDispositionFacts: buildGuidedQofFacts(investData?.qofDispositionFacts, state.taxYear),
@@ -955,6 +965,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState): GuidedTaxIn
         ? paymentAdjustments
         : undefined,
   };
+  if(seData?.businessFacts?.depreciationMethod==='passenger'||seData?.businessFacts?.passengerSources){try{const bound=bindGuidedPassengerInput(input,seData.businessFacts,capturePassenger);if(!bound)return null;Object.assign(input,bound.input);}catch(error){if(capturePassenger)throw error;return null;}}
   if(input.scheduleC?.sourceFacts || input.scheduleC?.expenses?.businessInterest){try{calculateScheduleCSourceFacts(input as Parameters<typeof calculateScheduleCSourceFacts>[0],input.scheduleC);}catch{return null;}}
   if (input.w2s.some(entry => entry.stateLocalSources !== undefined)) {
     try {

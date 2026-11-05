@@ -533,6 +533,7 @@ function SectionContent({
       return (
         <SectionSelfEmployment
           workspace={workspace}
+          flowState={state}
           necEntries={necEntries}
           manualGrossReceipts={manualGrossReceipts}
           expenses={expenses}

@@ -105,6 +105,8 @@ export function confirmGuidedMacrsCollection(d:GuidedMacrsAssetsDraft,f:Business
   const c=collection(d,f);return {...d,originalBusiness:structuredClone(c.business),originalCollection:structuredClone(c.original),sourceFactsConfirmed:true};
 }
 export function buildGuidedMacrsAssets(f:BusinessSourceData|undefined,returnYear:number|null|undefined,otherActivityPresent=false):{form4562:Form4562Input;depreciation:NonNullable<ScheduleCSourceFacts['depreciation']>;total:Decimal}|undefined {
+  if(f?.depreciationMethod==='passenger'){if(f.macrsAssets)fail('competing ordinary asset and passenger methods require separate review');return undefined;}
+  if(f?.passengerSources)fail('supplied passenger records require their explicit passenger method');
   if(f?.depreciationMethod==='manual'||(!f?.depreciationMethod&&!f?.macrsAssets))return undefined;
   if(f?.depreciationMethod!=='assets')fail('the actual depreciation method is unknown');
   const d=f.macrsAssets;if(!d)fail('actual asset inventory is unknown');

@@ -20520,5 +20520,25 @@
     "supportedUnchanged": 68,
     "localTaxOrFilingQualified": false,
     "ledger": "docs/upgrade-2026-pa-local-w2-source-work.md"
+  },
+  "nov05NativePassengerCollector": {
+    "status": "finite_native_source_collector_verified_real_browser_pending",
+    "baseline": "8b9eb78f",
+    "checkoutTests": 191,
+    "checkoutFiles": 9,
+    "inventoryTests": 66,
+    "strictReferenceTests": 808,
+    "specReferences": 8392,
+    "distinctAdditionalTests": 7,
+    "mainManifest": "b164ae80e187e54030f9a63dad1cb6c440cc59dcf297179724a15a8b6b793de7",
+    "strictManifest": "195467a46ac4be765d26c46ff6061fe8d0e46a6e0c6ccf1fb82302ec8fb93fef",
+    "initialSpecHoldRetained": true,
+    "staticChecks": "types3/spec/inventory/builds2/lint pass",
+    "inventoryEntries": 881,
+    "priorEntriesUnchanged": 880,
+    "supportedUnchanged": 68,
+    "whole2026Qualified": false,
+    "filingQualified": false,
+    "ledger": "docs/upgrade-2026-native-passenger-source-work.md"
   }
 }

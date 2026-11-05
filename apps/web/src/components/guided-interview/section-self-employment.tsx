@@ -1,4 +1,7 @@
 "use client";
+import {guidedPassengerDisplayAmount} from "@/lib/guided-passenger-sources";
+import {captureGuidedPassengerSources} from "@/lib/guided-interview-bridge";
+import type {GuidedFlowState} from "@/lib/guided-interview-flow";
 import {guidedMacrsDisplayAmount} from "@/lib/guided-macrs-assets";
 import { formatGuidedDollars, parseGuidedDisplayAmount } from "@/lib/guided-currency";
 
@@ -215,6 +218,7 @@ function isActionableBusinessSuggestion(
 
 export function SectionSelfEmployment({
   workspace,
+  flowState,
   necEntries,
   manualGrossReceipts,
   expenses,
@@ -225,6 +229,7 @@ export function SectionSelfEmployment({
   onSectionChange,
 }: {
   workspace: ReturnWorkspaceRecord;
+  flowState?:GuidedFlowState;
   necEntries: NecEntryData[];
   manualGrossReceipts: string;
   expenses: ScheduleCExpenseData;
@@ -351,6 +356,7 @@ export function SectionSelfEmployment({
     if (next.necEntries !== undefined || next.manualGrossReceipts !== undefined || next.expenses !== undefined) {
       value.businessFacts = {
         ...value.businessFacts,
+        ...(value.businessFacts?.passengerSources?{passengerSources:{...value.businessFacts.passengerSources,sourceFactsConfirmed:null}}:{}),
         ...(value.businessFacts?.macrsAssets?{macrsAssets:{...value.businessFacts.macrsAssets,sourceFactsConfirmed:null}}:{}),
         ...(value.businessFacts?.scheduleCSourceFacts?{scheduleCSourceFacts:{...value.businessFacts.scheduleCSourceFacts,sourceFactsConfirmed:null}}:{}),
         ...(next.necEntries !== undefined || next.manualGrossReceipts !== undefined ? { incomeReconciled: null } : {}),
@@ -642,7 +648,7 @@ export function SectionSelfEmployment({
   const necIncome = sumKnownBusinessAmounts(currentEntries.filter(isStartedNec).map(entry => entry.nonemployeeCompensation));
   const manualIncome = sumKnownBusinessAmounts([manualGrossReceipts]);
   const totalIncome = necIncome !== null && manualIncome !== null ? necIncome.plus(manualIncome) : null;
-  const totalExpenses = sumKnownBusinessAmounts([...Object.values(currentExpenses), businessFacts?.contractLabor, businessFacts?.depreciationMethod==='assets'?guidedMacrsDisplayAmount(businessFacts):businessFacts?.depreciation, businessFacts?.legalAndProfessional, ...(businessFacts?.businessInterest===undefined?[]:[businessFacts.businessInterest]), ...(businessFacts?.scheduleCSourceFacts?.ordinaryExpenses?.rows?.map(row=>row.amount)??[])]);
+  const totalExpenses = sumKnownBusinessAmounts([...Object.values(currentExpenses), businessFacts?.contractLabor, businessFacts?.depreciationMethod==='assets'?guidedMacrsDisplayAmount(businessFacts):businessFacts?.depreciationMethod==='passenger'?guidedPassengerDisplayAmount(businessFacts):businessFacts?.depreciation, businessFacts?.legalAndProfessional, ...(businessFacts?.businessInterest===undefined?[]:[businessFacts.businessInterest]), ...(businessFacts?.scheduleCSourceFacts?.ordinaryExpenses?.rows?.map(row=>row.amount)??[])]);
   const sourceAmount = (value: ReturnType<typeof sumKnownBusinessAmounts>) => value === null ? "Unknown — review source amounts" : `$${formatSuggestedAmount(value.toFixed())}`;
   const suggestedTotals = summarizeBankStatementSuggestionsByCategory(currentAnalyses);
   const suggestedIncomeTotal = summarizeSelfEmploymentIncomeSuggestions(currentIncomeAnalyses);
@@ -971,7 +977,7 @@ export function SectionSelfEmployment({
           </div>
         </div>
 
-        <BusinessSourceDetails data={businessFacts} onChange={value => commitSection({ businessFacts: value })} />
+        <BusinessSourceDetails data={businessFacts} onChange={value => commitSection({ businessFacts: value })} onCapturePassenger={facts=>{if(!flowState)throw new Error('Current complete interview required');return captureGuidedPassengerSources({...flowState,sectionData:{...flowState.sectionData,'income-self-employment':{...latestSection.current.value,businessFacts:facts}}});}} />
         <details className="guided-expand" style={{ marginTop: "16px" }}>
           <summary className="guided-expand-trigger">Schedule C — Business Expenses</summary>
           <BooleanFact label="Did you materially participate in this business under the section 469 rules?" value={qbiMateriallyParticipated} onChange={(value) => commitSection({ qbiMateriallyParticipated: value })} />

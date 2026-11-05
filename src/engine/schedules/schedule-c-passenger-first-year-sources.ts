@@ -1,6 +1,6 @@
 /** Spec: spec/federal/schedule-c-passenger-first-year-sources.yaml. No native, paper or filing qualification. */
 import Decimal from 'decimal.js';
-import {PassengerAutoParentSourcesSchema,PASSENGER_PARENT_ALLOWED_EXPENSES,PASSENGER_PARENT_EXPENSE_KEYS} from '@/models/passenger-auto-parent-sources.js';
+import {PASSENGER_PARENT_EMPTY_ARRAYS,PassengerAutoParentSourcesSchema,PassengerNativeContextSchema,PASSENGER_NATIVE_CONTEXT_KEYS,PASSENGER_PARENT_ALLOWED_EXPENSES,PASSENGER_PARENT_EXPENSE_KEYS} from '@/models/passenger-auto-parent-sources.js';
 import {calculatePassengerFirstYear} from '@/engine/forms/form-4562-passenger-first-year.js';
 import type {Form4562Input} from '@/models/inputs.js';
 import type {ScheduleCResult} from './schedule-c.js';
@@ -19,7 +19,7 @@ const equal=(a:unknown,b:unknown)=>JSON.stringify(stable(a))===JSON.stringify(st
 // All canonical default arrays must be present, actually reviewed and empty here.
 // New optional or unclassified canonical source surfaces fail closed rather than
 // becoming a silently ignored second active-business income source.
-const EMPTY_ARRAYS=['w2s','form1099Int','form1099Div','form1099B','form1099DA','form1099Misc','form1099G','form1099OID','formW2G','form1099K','form1099C','form1099Q','scheduleK1','scheduleK1Form1041','form1098','form1098E','form1095A','donations','rentalProperties','savingsBondRedemptions','form6252','form8814','homeSales','form8824'] as const;
+const EMPTY_ARRAYS=PASSENGER_PARENT_EMPTY_ARRAYS;
 const ACTIVE_KEYS=new Set<string>(['taxpayer','scheduleC','form4562','form1099Nec',...EMPTY_ARRAYS]);
 export function calculateScheduleCPassengerSources(input:unknown,business:unknown){
  const i=record(input),b=business===undefined?undefined:record(business),form=i.form4562===undefined?undefined:record(i.form4562);
@@ -33,7 +33,14 @@ export function calculateScheduleCPassengerSources(input:unknown,business:unknow
  if(!parsed.success)return fail('complete documentary amounts and classifications required');
  const p=parsed.data;
  if(p.confirmed!==true)return fail('original sources must be actually confirmed');
- for(const [key,value] of Object.entries(i))if(value!==undefined&&!ACTIVE_KEYS.has(key))fail('other or unclassified canonical source requires its separate income method');
+ const nativeKeys=new Set<string>(PASSENGER_NATIVE_CONTEXT_KEYS);
+ const native=Object.fromEntries(Object.entries(i).filter(([key,value])=>value!==undefined&&nativeKeys.has(key)));
+ if((p.originalNativeContext!==undefined)!==(p.nativeOtherSources!==undefined))fail('native context requires its complete original reviewed-none inventories');
+ if(p.originalNativeContext!==undefined){
+  const current=PassengerNativeContextSchema.safeParse(native);
+  if(!current.success||!equal(native,p.originalNativeContext))fail('native deduction or other source context is incompatible, unknown or changed');
+ }else if(Object.keys(native).length)fail('native source context needs its explicit original binding');
+ for(const [key,value] of Object.entries(i))if(value!==undefined&&!ACTIVE_KEYS.has(key)&&!(p.originalNativeContext!==undefined&&nativeKeys.has(key)))fail('other or unclassified canonical source requires its separate income method');
  for(const key of EMPTY_ARRAYS)if(!Array.isArray(i[key])||i[key].length!==0)fail('complete reviewed no-other-income canonical context required');
  if(!Array.isArray(i.form1099Nec))return fail('complete original NEC inventory required');
  const taxpayer=record(i.taxpayer);

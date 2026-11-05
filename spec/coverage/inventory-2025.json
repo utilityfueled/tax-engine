@@ -8790,6 +8790,26 @@
       "knownGaps": []
     },
     {
+      "key": "federal/passenger-native-source-collector",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": null,
+      "specPath": "spec/federal/passenger-native-source-collector.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/passive-income-ordering",
       "jurisdiction": "federal",
       "taxYear": 2025,
