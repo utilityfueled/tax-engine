@@ -4,31 +4,31 @@ taxYear: 2026
 reference: https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40sp.pdf
 notes: Actual original-source entry for the separately tested married composer. The full2026 federal rule-pack and new child/care review-paper denials remain unchanged.
 lines:
-  - line: blank-child
+  - line: "blank-child"
     description: Collect actual child source proof without assumed facts
     formula: New child rows start with unknown original index, relationship, federal claim, custody and confirmation. Select an actual current child and record its source reference and relationship. Explicit whole-household confirmation captures only the selected current original dependent after all actual proofs are provided; it does not invent answers, source years or a supported nonchild relationship.
-    testRef: tests/apps/web/pa-married-dependent-care-native.test.tsx::native married child and care fields start unknown and retain original proofs
-  - line: native-current-care
+    testRef: "tests/apps/web/pa-married-dependent-care-native.test.tsx::native married child and care fields start unknown and retain original proofs"
+  - line: "native-current-care"
     description: Enter complete actual care metadata and separately owned payer assignments
     formula: Collect actual care source status, complete payment/employer-benefit review, original document metadata, explicit source-linked primary or spouse payer, current federal-care snapshot and all receipt/provider/person links. Capture and confirmation remain separate explicit actions. Do not fill year, amounts, payer, identity or dates from assumptions. Complete native entry reaches the real married public calculation with the literal refund oracle; no JSON textarea, hidden result or mocked federal state.
-    testRef: tests/apps/web/pa-married-dependent-care-native.test.tsx::native blank child and care collection reaches the actual married public return
-  - line: invalidation
+    testRef: "tests/apps/web/pa-married-dependent-care-native.test.tsx::native blank child and care collection reaches the actual married public return"
+  - line: "invalidation"
     description: Each actual source edit requires explicit review again
     formula: Child proof, receipt payer or document metadata edits revoke whole-household confirmation. Care original-document or payer changes also revoke nested care collection confirmation. Care source confirmation action may confirm its own reviewed receipt collection, but never the whole household. Read/build reject stale current child/care originals and retain prior snapshots without mutation. Formatting-only exact amount blur remains a no-op.
-    testRef: tests/apps/web/pa-married-dependent-care-native.test.tsx::native married child and payer edits revoke current confirmation without recapturing originals
-  - line: year-paper
+    testRef: "tests/apps/web/pa-married-dependent-care-native.test.tsx::native married child and payer edits revoke current confirmation without recapturing originals"
+  - line: "year-paper"
     description: Native completeness does not override calculation or paper readiness
     formula: Native confirmed2025 synthetic facts exercise actual source composition. Actual2026 sources remain collected without inferring public calculation, final form, filing, or unsupported married paper qualification. All existing whole-state validation and readiness gates remain intact.
-    testRef: tests/apps/web/pa-married-dependent-care-native.test.tsx::native married child confirmation preserves current year and paper gates
-  - line: metadata-invalidation
+    testRef: "tests/apps/web/pa-married-dependent-care-native.test.tsx::native married child confirmation preserves current year and paper gates"
+  - line: "metadata-invalidation"
     description: Preserve exact blur and revoke actual original metadata edits
     formula: Formatting-only blur makes no parent update. Original care metadata changes revoke both confirmations and retain the existing federal-care snapshot.
-    testRef: tests/apps/web/pa-married-dependent-care-native.test.tsx::native married care blur is a no-op but original metadata changes revoke both confirmations
-  - line: retained-metadata
+    testRef: "tests/apps/web/pa-married-dependent-care-native.test.tsx::native married care blur is a no-op but original metadata changes revoke both confirmations"
+  - line: "retained-metadata"
     description: Retain unknown actual original metadata visibly
     formula: Retained malformed document metadata remains visible without coercion or replacement and cannot establish a confirmed household.
-    testRef: tests/apps/web/pa-married-dependent-care-native.test.tsx::native married retained unknown document metadata is visible and never silently replaced
-  - line: fresh-originals
+    testRef: "tests/apps/web/pa-married-dependent-care-native.test.tsx::native married retained unknown document metadata is visible and never silently replaced"
+  - line: "fresh-originals"
     description: Revalidate actual current originals on each read
     formula: Build rejects changed current child or provider originals without recapturing or mutating saved snapshots.
-    testRef: tests/apps/web/pa-married-dependent-care-native.test.tsx::native married build rejects externally changed originals without recapturing them
+    testRef: "tests/apps/web/pa-married-dependent-care-native.test.tsx::native married build rejects externally changed originals without recapturing them"

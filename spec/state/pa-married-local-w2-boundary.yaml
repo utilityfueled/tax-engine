@@ -4,23 +4,23 @@ taxYear: 2026
 reference: https://www.irs.gov/instructions/iw2w3
 notes: IRS2026 boxes15through20 keep state and local rows separate. PA2025 PA40 instructions Line13 credits actual Pennsylvania tax withheld. This source boundary introduces no local liability, rate, refund, payment-settlement or 2026 federal rule-pack assumption.
 lines:
-  - line: actual-local-rows
+  - line: "actual-local-rows"
     description: Preserve actual original local rows without a PA credit
     formula: Admit local W2 rows only after the existing complete current-original row validator. Bind each reported locality to an explicitly reviewed separate-return jurisdiction. Preserve owner, original index, printed position and exact actual amounts. State withholding uses PA state rows alone; local withholding is never added to PA credit or wage income.
-    testRef: tests/engine/state/pa-married-local-w2-boundary.test.ts::married actual local W2 rows preserve separate J and M state arithmetic
-  - line: multiple-rows
+    testRef: "tests/engine/state/pa-married-local-w2-boundary.test.ts::married actual local W2 rows preserve separate J and M state arithmetic"
+  - line: "multiple-rows"
     description: Keep all actual rows without double counting their scalar projection
     formula: Preserve each actual printed local row once, including exact cents and an explicit original blank locality with known zero amounts. Existing legacy first-row scalar reconciliation remains mandatory. Local wages may overlap between separately reported jurisdictions and are never extra federal income.
-    testRef: tests/engine/state/pa-married-local-w2-boundary.test.ts::married actual local W2 boundary retains complete multiple rows and explicit blank zero
-  - line: actual-boundaries
+    testRef: "tests/engine/state/pa-married-local-w2-boundary.test.ts::married actual local W2 boundary retains complete multiple rows and explicit blank zero"
+  - line: "actual-boundaries"
     description: Reject unknown local proofs and preserve existing original validation
     formula: Reject unproved positive legacy scalars, stale or unconfirmed row originals, wrong owner or year, unknown/contradictory scalar disposition, missing/unknown separate jurisdiction and positive blank locality. No matching alias or obligation is inferred. Keep duplicate-row and other-state rejection.
-    testRef: tests/engine/state/pa-married-local-w2-boundary.test.ts::married local W2 boundary rejects incomplete actual proofs %s
-  - line: private-source-identity
+    testRef: "tests/engine/state/pa-married-local-w2-boundary.test.ts::married local W2 boundary rejects incomplete actual proofs %s"
+  - line: "private-source-identity"
     description: Revalidate without leaking local source identity into audit
     formula: Exact actual local amounts remain private source-bound result rows; changing original local facts requires explicit snapshot review. Audit exposes only amounts and numeric owner/index/printed-row references, never locality labels, source references or private taxpayer identifiers. The source commitment binds every original local value.
-    testRef: tests/engine/state/pa-married-local-w2-boundary.test.ts::married actual local W2 boundary preserves original identity and private audit
-  - line: readiness
+    testRef: "tests/engine/state/pa-married-local-w2-boundary.test.ts::married actual local W2 boundary preserves original identity and private audit"
+  - line: "readiness"
     description: Source admission does not qualify local return or current year
     formula: Positive actual local wages/withholding require their separately qualified physical paper successor. Existing paper child/care guard and full2026 federal rule-pack denial remain; localBoundary remains separate_return_required and filingEligible false. No local payment settlement or local form qualification is returned.
-    testRef: tests/engine/state/pa-married-local-w2-boundary.test.ts::married actual local W2 boundary retains year and paper restrictions
+    testRef: "tests/engine/state/pa-married-local-w2-boundary.test.ts::married actual local W2 boundary retains year and paper restrictions"

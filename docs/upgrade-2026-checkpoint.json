@@ -19848,5 +19848,23 @@
     "ledger": "docs/upgrade-2026-pa-married-child-local-paper-work.md",
     "filingEligible": false,
     "humanReview": false
+  },
+  "nov05CurrentUnitRepairs": {
+    "baseCommit": "955cbbf2f72e85a4b0d165462103309e78d5ca57",
+    "priorCompleteUnit": {
+      "passed": 25456,
+      "failed": 4,
+      "skipped": 0,
+      "sourceDrift": 0
+    },
+    "finalFocused": {
+      "passed": 821,
+      "files": 4,
+      "failed": 0
+    },
+    "distinctControls": 10,
+    "scope": "quote-only YAML parity, rendered nav semantic assertion, current conditional PA care disclosure; Ohio title suffixes in separate resident-credit package",
+    "evidence": "docs/upgrade-2026-current-unit-repairs-work.md",
+    "releaseReady": false
   }
 }

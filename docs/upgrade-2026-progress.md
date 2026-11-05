@@ -3291,3 +3291,12 @@ guard; final132tests, distinct28denials and18PDF/34page privacy audit pass.
 ROOT verifies401 frozen members and10source pins. See [the physical/privacy
 ledger](upgrade-2026-pa-married-child-local-paper-work.md). Care, broader cohorts,
 public2026/final forms, human and release qualification remain open.
+
+
+### November5 UTC: current unit and source-reference repairs
+
+Final821 focused controls and10 distinct controls pass after the retained
+25,456PASS/4FAIL complete unit run. Spec data and tax/source gates are preserved;
+see [the repair ledger](upgrade-2026-current-unit-repairs-work.md). The separate
+Ohio2026 resident-credit package carries the exact parameterized-title repairs.
+Successor full-suite/coverage and release qualification remain required.

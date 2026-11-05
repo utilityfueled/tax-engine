@@ -60,3 +60,7 @@ lines:
     description: Complete visible source controls from blank J and M drafts
     formula: Enter actual choice, both full-calendar owner facts, each original indexed wage and dated payroll, every known-none SP and account source, all coverage, separate local boundary, preparation timing and actual per-return refund elections through rendered inputs. Only explicit final confirmation captures current originals. Both actual J and separately owned M then reach calculatePAReturn with the frozen sharedSP13001 literals; no initial saved packet, hidden JSON, mocked calculation or default source facts.
     testRef: "tests/apps/web/pa-married-ordinary-native.test.tsx::PA married native blank-to-confirm actual %s collection reaches existing public API"
+  - line: "current-confirmation-disclosure"
+    description: Native confirmation describes the current supported paper boundary
+    formula: "Successful original-source confirmation says supported PA40 and Schedule SP review pages require current source validation. It does not deny already-qualified child review pages or promise qualification for all households. When actual care sources are attached, retain an explicit care-paper denial until its separately reviewed successor. Filing and separate local returns remain unqualified."
+    testRef: "tests/apps/web/pa-married-workspace-review.test.ts::PA married review disclosure follows actual supported route and keeps filing closed"
