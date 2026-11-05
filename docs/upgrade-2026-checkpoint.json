@@ -20386,5 +20386,32 @@
     ],
     "filingEnabled": false,
     "modelPromotionEnabled": false
+  },
+  "nov05FourCaseDevelopmentSmoke": {
+    "status": "actual_smoke_cost_reconciled_quality_not_qualified",
+    "runId": "nov05-four-case-development-smoke",
+    "trackedBaseline": "a0c98b12000a2fc185fe77e572496abe22842e08",
+    "executionSourceBinding": "60 exact evaluation source hashes unchanged; browser edits uncommitted",
+    "actualManifest": "5a3690052df2b7bf98e53324f06070f600aa5822fbe3142363908576b2468e8d",
+    "reviewManifest": "8dcdac164435a72741ebde271f69c49746723e0ac23f830514392e8c4985e7cf",
+    "requests": 39,
+    "journalRows": 79,
+    "schemaValidCases": "36/36",
+    "lunaStrictLiteralAndCriticalCorrect": "12/12",
+    "solStrictLiteralAndCriticalCorrect": "12/12",
+    "baselineSourceBound": "2/12; both false-positive SSA field assignments",
+    "baselineStrictLiteral": "5/12",
+    "baselineCriticalCorrect": "0/12",
+    "newCalculatedUSD": "0.06966185",
+    "newUnknownUsage": 0,
+    "cumulativeKnownUSD": "0.24230265",
+    "priorUnknownReserveUSD": "0.022384",
+    "knownPlusReserveUSD": "0.26468665",
+    "invoiceReconciled": false,
+    "humanReviewSupplied": false,
+    "heldOutConsumed": false,
+    "modelPromotionEnabled": false,
+    "filingEnabled": false,
+    "ledger": "docs/upgrade-2026-ai-four-case-smoke-work.md"
   }
 }
