@@ -444,11 +444,11 @@ describe("MACRS depreciation computation", () => {
         ], 2025)).toBe(false);
       });
 
-      it("assets with explicit convention override are excluded from the test", () => {
+      it("assets with explicit convention remain subject to the statutory test", () => {
         expect(isMidQuarterRequired([
           { costBasis: "10000", placedInServiceDate: "2025-03", recoveryPeriod: "5" },
           { costBasis: "50000", placedInServiceDate: "2025-10", recoveryPeriod: "5", convention: "halfYear" },
-        ], 2025)).toBe(false);
+        ], 2025)).toBe(true);
       });
 
       it("empty assets returns false", () => {

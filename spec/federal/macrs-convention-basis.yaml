@@ -1,0 +1,27 @@
+form: "MACRS-Convention-Basis"
+fullName: "Calendar-year MACRS mandatory mid-quarter basis test"
+taxYear: 2026
+reference: "https://www.irs.gov/publications/p946; https://uscode.house.gov/us/usc/119-120/t26/s168/"
+notes: |
+  Official Publication 946 (2025), retrieved November 5, 2026: chapter 1
+  Excepted Property and chapter 4 Which Convention Applies / mid-quarter caution.
+  The non-indexed convention rule applies to the modeled full calendar year.
+  This correction does not qualify short tax years, unknown dispositions,
+  later-year disposition quarter/month arithmetic, or final 2026 forms.
+lines:
+  - line: "mandatory-test"
+    description: "An explicit asset convention cannot exempt its eligible basis"
+    formula: "Include all current-year modeled MACRS personal property despite an explicit convention; if Q4 basis times 100 exceeds total basis times 40, the aggregate mandatory mid-quarter convention overrides current-year personal-property half-year choices, including listed property. Preserve prior-year conventions."
+    testRef: "tests/utils/macrs-convention-basis.test.ts::includes explicit convention basis and applies the mandatory aggregate convention"
+  - line: "business-basis"
+    description: "Exclude the personal-use part of basis from the 40 percent test"
+    formula: "For the original-bound actual basis source path, derive gross basis times actual business-use percentage, then subtract the actual business-only section179 allocation before bonus. Use that pre-bonus amount in the 40 percent test; use the separately derived after-bonus amount for regular depreciation. Never multiply an already business-allocated section179 deduction by business use again. All amounts, including actual zero, must be documented. Legacy costBasis arithmetic remains a compatibility path and is explicitly unqualified; its partial-use interpretation cannot establish source-complete basis. Never round basis or threshold ratios to whole dollars."
+    testRef: "tests/utils/macrs-asset-basis-sources.test.ts::keeps bonus out of the strict mid-quarter test and uses it in regular depreciation"
+  - line: "same-year-disposal"
+    description: "Property placed and disposed in the same year cannot generate depreciation"
+    formula: "When disposedDuringYear is explicitly true and placedInServiceYear equals taxYear, exclude from numerator and denominator and return no asset deduction for ordinary or listed property. Do not infer this fact when missing."
+    testRef: "tests/utils/macrs-convention-basis.test.ts::excludes explicitly known same-year dispositions from basis and deductions"
+  - line: "prior-listed-convention"
+    description: "An aggregate convention is restricted to assets newly placed in service"
+    formula: "Ignore the current-year convention override for every prior-year ordinary or listed asset, including explicit and default half-year conventions and ADS. A new current-year Q4 trigger cannot change the original recovery table of a prior-year asset."
+    testRef: "tests/utils/macrs-convention-basis.test.ts::preserves prior-year listed conventions when new assets trigger mid-quarter"

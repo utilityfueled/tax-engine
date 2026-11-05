@@ -7,6 +7,7 @@ import {PAMarriedOrdinarySourcesSchema} from './pa-married-ordinary-sources.js';
  */
 
 import { z } from "zod";
+import { MACRSAssetBasisSourcesSchema, resolveMACRSAssetBasisSources } from "./macrs-asset-basis-sources.js";
 import { W2StateLocalSourcesSchema } from "./w2-state-local.js";
 import { OhioResidencyFactsSchema } from "./ohio-residency.js";
 import { OhioPaymentFactsSchema } from "./ohio-payments.js";
@@ -3099,6 +3100,8 @@ export const Form8919Schema = z.object({
 
 /** A depreciable asset for per-asset MACRS depreciation computation. */
 export const DepreciableAssetSchema = z.object({
+  /** Optional original-bound actual basis; absence remains legacy/unqualified. */
+  basisSources: MACRSAssetBasisSourcesSchema.optional(),
   /** Descriptive name (e.g., "Office computer", "Rental building") */
   description: z.string().optional(),
   /** Depreciable cost basis after any section 179 election */
@@ -3135,6 +3138,13 @@ export const DepreciableAssetSchema = z.object({
   /** Cumulative ADS straight-line depreciation that would have been allowed in all
    *  prior years. Required when section280FRecaptureTriggered is true. */
   cumulativePriorAdsDeductions: optionalDecimal,
+}).superRefine((asset, ctx) => {
+  if (asset.basisSources === undefined) return;
+  try {
+    resolveMACRSAssetBasisSources(asset, asset.basisSources.sourceTaxYear);
+  } catch {
+    ctx.addIssue({ code: "custom", path: ["basisSources"], message: "Actual MACRS basis sources are incomplete, contradictory or unsupported" });
+  }
 });
 
 /** An amortizable asset for per-asset Part VI amortization computation. */

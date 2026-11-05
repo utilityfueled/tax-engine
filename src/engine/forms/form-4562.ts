@@ -15,6 +15,7 @@ import type { Form4562Input, AmortizableAsset } from "@/models/inputs.js";
 import type { CalculatedLine } from "@/models/outputs.js";
 import { AuditTrail } from "@/utils/audit.js";
 import { d, roundDollar } from "@/utils/decimal.js";
+import { resolveMACRSAssetBasisSources, type MACRSBasisSourceAmounts } from "@/models/macrs-asset-basis-sources.js";
 import {
   computeAggregateDepreciation,
   type AssetDepreciationResult,
@@ -71,6 +72,15 @@ export interface Form4562Result {
 }
 
 const ZERO = new Decimal(0);
+function basisAuditInputs(basis?: MACRSBasisSourceAmounts): Record<string, Decimal> {
+  return basis ? {
+    "Gross basis": basis.grossCostBasis,
+    "Business basis": basis.businessBasis,
+    "Actual section179": basis.section179BusinessDeduction,
+    "Actual bonus": basis.bonusBusinessDeduction,
+    "Remaining business MACRS basis": basis.regularMacrsBasis,
+  } : {};
+}
 const DEFAULT_TAX_YEAR = 2025;
 // Pub946 (2025), What's New for2026; RevProc2025-32 section4.24.
 // Immutable source values; creating local Decimals avoids mutable shared money.
@@ -192,6 +202,27 @@ export function calculateForm4562(input: Form4562Input, ownerTaxYear?: number): 
   let assetResults: AssetDepreciationResult[] = [];
   let listedPropertyResults: ListedPropertyResult[] = [];
   let midQuarterRequired = false;
+  const hasDocumentedAssetBasis = input.assets?.some(asset => asset.basisSources !== undefined) === true;
+
+  if (hasDocumentedAssetBasis) {
+    const fail: (detail: string) => never = detail => { throw new Error(`Form4562 asset basis allocation: ${detail}`); };
+    let actualSection179 = ZERO;
+    let actualBonus = ZERO;
+    for (const asset of input.assets ?? []) {
+      const source = resolveMACRSAssetBasisSources(asset, taxYear);
+      if (!source) fail('every asset requires its complete first-year source packet');
+      if (asset.isListedProperty && (source.section179BusinessDeduction.gt(0) || source.bonusBusinessDeduction.gt(0))) {
+        fail('listed section179 and bonus require the separate Part V allocation method');
+      }
+      actualSection179 = actualSection179.plus(source.section179BusinessDeduction);
+      actualBonus = actualBonus.plus(source.bonusBusinessDeduction);
+    }
+    if (input.section179ExpenseDeduction !== undefined && d(input.section179ExpenseDeduction).lt(0)) fail('negative section179 deduction');
+    if (d(input.specialDepreciationAllowance).lt(0)) fail('negative bonus deduction');
+    if (!actualSection179.eq(line12) || !actualBonus.eq(line14)) {
+      fail('actual per-asset section179 and bonus must reconcile to form lines12 and14');
+    }
+  }
 
   if (input.assets && input.assets.length > 0) {
     const agg = computeAggregateDepreciation(input.assets, taxYear);
@@ -202,7 +233,7 @@ export function calculateForm4562(input: Form4562Input, ownerTaxYear?: number): 
     midQuarterRequired = agg.midQuarterRequired;
     listedPropertyResults = agg.listedProperty.results;
     // Line 21: when assets include listed property, compute from Part V instead of validated total
-    if (agg.listedProperty.results.length > 0) {
+    if (agg.listedProperty.results.length > 0 || (hasDocumentedAssetBasis && input.assets.some(asset => asset.isListedProperty))) {
       line21 = agg.listedProperty.totalDepreciation;
     }
   } else {
@@ -362,7 +393,8 @@ export function calculateForm4562(input: Form4562Input, ownerTaxYear?: number): 
       : "Validated line 20 column (g) total",
   );
 
-  const hasComputedListedProperty = listedPropertyResults.length > 0;
+  const hasComputedListedProperty = listedPropertyResults.length > 0
+    || (hasDocumentedAssetBasis && input.assets?.some(asset => asset.isListedProperty) === true);
   audit.record(
     "Form 4562", "21", "Listed property depreciation", line21,
     hasComputedListedProperty
@@ -410,12 +442,15 @@ export function calculateForm4562(input: Form4562Input, ownerTaxYear?: number): 
       "Form 4562", "asset",
       `${ar.description || "Asset"} (${ar.recoveryPeriod}-yr ${ar.method} ${ar.convention}, year ${ar.recoveryYear})`,
       ar.depreciation,
-      `${ar.percentage}% of $${ar.costBasis} cost basis`,
+      ar.basisSourceAmounts
+        ? "Remaining business MACRS basis × table percentage (business use already allocated)"
+        : `${ar.percentage}% of $${ar.costBasis} cost basis`,
       {
         "Cost basis": ar.costBasis,
         "Recovery period": new Decimal(ar.recoveryPeriod),
         "Recovery year": new Decimal(ar.recoveryYear),
         "Percentage": ar.percentage,
+        ...basisAuditInputs(ar.basisSourceAmounts),
       },
     );
   }
@@ -432,11 +467,14 @@ export function calculateForm4562(input: Form4562Input, ownerTaxYear?: number): 
       lp.depreciation,
       lp.section280FCap
         ? `min(tentative $${lp.tentativeDepreciation}, §280F cap $${lp.section280FCap})`
-        : `$${lp.costBasis} × table % × ${lp.businessUsePercentage}% business use`,
+        : lp.basisSourceAmounts
+          ? "Remaining business MACRS basis × table percentage (business use already allocated)"
+          : `$${lp.costBasis} × table % × ${lp.businessUsePercentage}% business use`,
       {
         "Cost basis": lp.costBasis,
         "Business use %": lp.businessUsePercentage,
         "Tentative depreciation": lp.tentativeDepreciation,
+        ...basisAuditInputs(lp.basisSourceAmounts),
         ...(lp.section280FCap ? { "§280F annual cap": lp.section280FCap } : {}),
       },
     );
