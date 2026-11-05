@@ -26,6 +26,10 @@ function stable(value: unknown): unknown {
   return value;
 }
 function digest(value: unknown): string { return bytesToHex(sha256(new TextEncoder().encode(JSON.stringify(stable(value))))); }
+/** Spec: state/oh-school-source-material-equality.yaml. Durable commitments keep SHA256. */
+function sameSourceMaterial(left: unknown, right: unknown): boolean {
+  return JSON.stringify(stable(left)) === JSON.stringify(stable(right));
+}
 function sourceOriginals(input: TaxYearInput) {
   const { ohioResidency: _r, ohioPayments: _p, ohioSchoolDistrict: _s, ohioReturnHeaderSources: _header, ...original } = input;
   return original;
@@ -89,13 +93,13 @@ export function buildOhioSchoolDistrictSource(input: TaxYearInput, federal: TaxR
   const birth = actualDate(sourceOwner.dateOfBirth);
   if (birth > '2025-12-31' || birth <= '1960-12-31') fail('actual age65/senior or invalid birth date needs its separate cohort');
   const original = sourceOriginals(input);
-  if (digest(facts.originalFederalSources) !== digest(original)) fail('current private original snapshot is missing or changed');
+  if (!sameSourceMaterial(facts.originalFederalSources, original)) fail('current private original snapshot is missing or changed');
   const residency = OhioResidencyFactsSchema.safeParse(input.ohioResidency);
   if (!residency.success || !input.ohioPayments) fail('independent actual Ohio residency and IT1040 payment sources are required');
   const resident = residency.data;
   if (resident.taxYear !== 2025 || resident.schoolDistrictStatus !== 'actual_district_sources_required'
       || resident.allFederalSourcesIncludedConfirmed !== true || resident.noBusinessIncomeConfirmed !== true
-      || digest(resident.originalFederalSources) !== digest(original)) fail('current actual Ohio full-residency source confirmation/snapshot differs');
+      || !sameSourceMaterial(resident.originalFederalSources, original)) fail('current actual Ohio full-residency source confirmation/snapshot differs');
   const owner = resident.owners[0], partYear = facts.partYearWageSources;
   if (resident.owners.length !== 1 || !owner || owner.accountHolder !== 'primary'
       || owner.status !== (partYear ? 'part_year_resident' : 'full_year_resident')) fail('actual source method must match the primary Ohio residency status');
@@ -174,8 +178,8 @@ export function buildOhioSchoolDistrictSource(input: TaxYearInput, federal: TaxR
           || districtPeriod.from !== home.from || districtPeriod.through !== home.through
           || districtPeriod.districtCode !== (home.domicileState === 'OH' ? '0302' : '9999')) fail('complete actual physical-home, Ohio domicile and school calendars differ');
     }
-    if (facts.residence.periods.length !== 2 || !homes[0] || digest(homes[0].originalAddress) !== digest(facts.residence.originalAddress)
-        || digest(homes[0].originalAddress) !== digest(facts.residence.lookup.originalAddress)) fail('actual Ohio home and independent lookup originals differ');
+    if (facts.residence.periods.length !== 2 || !homes[0] || !sameSourceMaterial(homes[0].originalAddress, facts.residence.originalAddress)
+        || !sameSourceMaterial(homes[0].originalAddress, facts.residence.lookup.originalAddress)) fail('actual Ohio home and independent lookup originals differ');
     const w2 = input.w2s[0];
     if (!w2?.stateLocalSources) fail('actual current part-year W2 originals required');
     const seenIds = new Set<string>(), seenReferences = new Set<string>();
@@ -238,7 +242,7 @@ export function buildOhioSchoolDistrictSource(input: TaxYearInput, federal: TaxR
     }
   }
   const fresh = calculateFederalTax(input);
-  if (digest(redactReviewIdentifiers(fresh)) !== digest(redactReviewIdentifiers(federal))) fail('saved federal result is stale, not the fresh current original calculation');
+  if (!sameSourceMaterial(redactReviewIdentifiers(fresh), redactReviewIdentifiers(federal))) fail('saved federal result is stale, not the fresh current original calculation');
   const wages = actualWages.toDecimalPlaces(0, Decimal.ROUND_HALF_UP);
   if (!fresh.totalWages.eq(wages) || !fresh.agi.eq(wages) || !fresh.adjustmentsToIncome.isZero()) fail('actual ordinary compensation and fresh federal income do not reconcile; other income/adjustments need their source method');
   if (!new Exact(ohio.federalAgi).eq(fresh.agi) || ohio.exemptions !== 1 + input.taxpayer.dependents.length || ohio.isSenior === true) fail('actual Ohio input contradicts current original income/age/owner');
@@ -250,7 +254,7 @@ export function buildOhioSchoolDistrictSource(input: TaxYearInput, federal: TaxR
   if (actualDate(account.asOfDate) !== asOf || account.taxYear !== 2025 || actualSsn(account.accountSsn) !== actualSsn(person.ssn)
       || normalized(account.accountName) !== normalized(`${person.firstName} ${person.lastName}`)) fail('actual SD account owner/year/as-of records contradict current sources');
   const lookup = facts.residence.lookup;
-  if (!partYear && (digest(facts.residence.originalAddress) !== digest(input.taxpayer.address) || digest(lookup.originalAddress) !== digest(input.taxpayer.address)
+  if (!partYear && (!sameSourceMaterial(facts.residence.originalAddress, input.taxpayer.address) || !sameSourceMaterial(lookup.originalAddress, input.taxpayer.address)
       || normalized(input.taxpayer.address.state) !== 'OH')) fail('actual private residence/lookup address differs from current originals');
   if (lookup.taxYear !== 2025 || actualDate(lookup.lookupDate) > asOf || lookup.districtCode !== '0302' || normalized(lookup.districtName) !== 'HILLSDALE LSD') fail('actual year-specific official district lookup does not match the finite verified district');
   const metadata = lookupOhioSchoolDistrictMetadata(2025, '0302');

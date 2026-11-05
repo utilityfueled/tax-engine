@@ -1,0 +1,33 @@
+form: "Ohio school-source transient material comparison"
+fullName: "Complete current school-source replay with unchanged durable commitments"
+taxYear: 2025
+reference: "spec/state/oh-sd-100-sources.yaml"
+notes: |
+  Implementation-equivalence repair grounded in the retained actual desktop CPU trace.
+  Every source guard, fresh federal calculation, exact Decimal formula, public gate and
+  returned SHA256 commitment remains unchanged. Only transient equality compares the
+  complete existing stable JSON material directly: Decimal exact string, object key
+  sorting with localeCompare, omitted undefined object values, preserved array order,
+  and unchanged JSON null/string/Unicode representations. No cache or retained replay.
+  Baseline compatibility hashes include all audits and durable commitments; they are
+  unchanged-source compatibility oracles, not independent tax-law expectations.
+  Fictional fixture monetary oracles remain separately authored in existing source specs.
+  The actual unchanged-budget desktop failures are performance RED; algebraic parity
+  tests must already pass the unchanged source. No timing/hash-call-count assertions.
+lines:
+  - line: "full-output-parity"
+    description: "Complete source, federal, adapted state, payment and calculated result parity"
+    formula: "Exact unchanged-source JSON SHA256 and original literal fixture results; input and original captures remain immutable"
+    testRef: "tests/engine/state/oh-school-source-material-equality.test.ts::preserves complete school baseline and commitments for %s"
+  - line: "normalization"
+    description: "Existing canonical material equivalences and exact representations"
+    formula: "Identical canonical JSON remains identical across object order, omitted undefined children, exact Decimal strings and JSON array-null representation"
+    testRef: "tests/engine/state/oh-school-source-material-equality.test.ts::preserves full current material normalization for %s"
+  - line: "current-source-guards"
+    description: "Every complete private source and fresh federal result remains required"
+    formula: "Reject changed school/residency captures, same-money identity/provenance, array order, null, Unicode and full federal audit; preserve full-year and part-year address checks"
+    testRef: "tests/engine/state/oh-school-source-material-equality.test.ts::rejects changed current school material for %s"
+  - line: "prepared-context"
+    description: "Private original context stays bound to complete originals and results"
+    formula: "Raw and redacted current contexts resolve identically; forged, changed-original and changed-federal contexts fail without recapture"
+    testRef: "tests/engine/state/oh-school-source-material-equality.test.ts::preserves school original context integrity for %s"

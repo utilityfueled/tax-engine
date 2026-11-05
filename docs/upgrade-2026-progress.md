@@ -3300,3 +3300,13 @@ Final821 focused controls and10 distinct controls pass after the retained
 see [the repair ledger](upgrade-2026-current-unit-repairs-work.md). The separate
 Ohio2026 resident-credit package carries the exact parameterized-title repairs.
 Successor full-suite/coverage and release qualification remain required.
+
+
+### November5 UTC: unchanged-budget Ohio school journeys pass
+
+Seven transient full-material comparisons preserve every original guard and
+durable hash. Author434 and distinct18 controls pass; all four original strict
+desktop/mobile school browser journeys now pass with no source drift. See
+[the comparison ledger](upgrade-2026-oh-school-source-material-work.md). Broader
+global/distribution/staging/human/final2026 qualification remains open. The
+unit/disclosure repair7bd9ca6e is pushed separately.

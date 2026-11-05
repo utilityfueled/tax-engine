@@ -19866,5 +19866,21 @@
     "scope": "quote-only YAML parity, rendered nav semantic assertion, current conditional PA care disclosure; Ohio title suffixes in separate resident-credit package",
     "evidence": "docs/upgrade-2026-current-unit-repairs-work.md",
     "releaseReady": false
+  },
+  "nov05OhioSchoolMaterialEquality": {
+    "baseCommit": "7bd9ca6e",
+    "paths": 3,
+    "focusedPassed": 434,
+    "distinctPassed": 18,
+    "strictOriginalBrowserPassed": 4,
+    "testDeadlineMs": 30000,
+    "retries": 0,
+    "actualWorkers": 1,
+    "buildAndBrowserSeconds": 132.06413162499666,
+    "sourceFilesPinned": 5122,
+    "sourceDrift": 0,
+    "durableHashAndGuardsUnchanged": true,
+    "evidence": "docs/upgrade-2026-oh-school-source-material-work.md",
+    "releaseReady": false
   }
 }
