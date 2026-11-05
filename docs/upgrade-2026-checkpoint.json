@@ -20649,5 +20649,26 @@
     "metadataQualified": false,
     "humanReview": "pending",
     "productionPromotion": false
+  },
+  "nov05Ohio2026BusinessDraft": {
+    "status": "finite2026_single_NR_PY_draft_PASS_incomplete",
+    "baseline": "08ca95fd",
+    "focusedPass": 332,
+    "focusedFiles": 9,
+    "authorPass": 150,
+    "distinctPass": 176,
+    "inventoryControls": 66,
+    "authorManifest": "da5fb98ba86e1201cb71b2b0e4676dd2ebe9c46632f292b6281db33316d9ef2e",
+    "distinctManifest": "7f9086aa04bca829dc9eb1ad43897aece421a09d1428e9b1618276e3c4c53f33",
+    "mainManifest": "47019556778b013a801214827a1646231be03dbe37d7412d77b2f30a67acd14c",
+    "metadataManifest": "d50304190124526960e814666136fea6c4e741171e1fad67e5daf8a2da82a467",
+    "sourcePins": 4645,
+    "priorInventoryEntriesUnchanged": 886,
+    "inventoryTotal": 887,
+    "supportedCount": 68,
+    "unknownSettlementFields": 7,
+    "filingQualified": false,
+    "fullFederal2026": "gated",
+    "qualifiedHumanReview": "pending"
   }
 }

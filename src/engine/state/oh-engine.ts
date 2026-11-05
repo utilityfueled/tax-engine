@@ -1,3 +1,4 @@
+import { calculateOhio2026BusinessDraft, type Ohio2026BusinessDraftResult } from './oh-2026-business-draft.js';
 import { calculateOhio2026OrdinarySource, calculateOhio2026PaReciprocalEmployeeSource, calculateOhio2026VaResidentCreditEmployeeSource } from "./oh-2026-ordinary-source.js";
 import { calculateOhio2026ReturnDraft, type Ohio2026ReturnDraftResult } from "./oh-2026-return-draft.js";
 import {
@@ -32,8 +33,13 @@ export function calculateOhioResidentReturnFromFederal(
 /** Explicit finite2026 draft; never fabricates a full federal return or opens filing.
  * Spec: state/oh-2026-return-draft.yaml. Historical FromFederal is unchanged.
  */
-export function calculateOhio2026ReturnDraftFromSources(input: { taxInput: TaxYearInput; sources: unknown }): Ohio2026ReturnDraftResult {
+export type Ohio2026DraftFromSourcesResult<T> = T extends { employmentOriginals: unknown }
+  ? Ohio2026ReturnDraftResult : T extends { methodId: 'oh-2026-canonical-business-draft-v1' }
+    ? Ohio2026BusinessDraftResult : Ohio2026ReturnDraftResult | Ohio2026BusinessDraftResult;
+export function calculateOhio2026ReturnDraftFromSources<T>(input: { taxInput: TaxYearInput; sources: T }): Ohio2026DraftFromSourcesResult<T>;
+export function calculateOhio2026ReturnDraftFromSources(input: { taxInput: TaxYearInput; sources: unknown }): Ohio2026ReturnDraftResult | Ohio2026BusinessDraftResult {
   const method = input.sources !== null && typeof input.sources === 'object' && 'methodId' in input.sources ? input.sources.methodId : undefined;
+  if (method === 'oh-2026-canonical-business-draft-v1') return calculateOhio2026BusinessDraft(input.taxInput, input.sources);
   const context = method === 'oh-2026-pa-reciprocal-employee-draft-v1'
     ? calculateOhio2026PaReciprocalEmployeeSource(input.taxInput, input.sources)
     : method === 'oh-2026-va-resident-credit-employee-draft-v1'
