@@ -21501,5 +21501,31 @@
     "reviewManifest": "c01377ef32b82b83da87bc1f00dba83f69aa8ee5a3c7aae064bd84849be9bd6e",
     "sourceAuditManifest": "01ed6baae49d13758b9e23f0f8901227d470ab7dd6fc7479a6f0f2c32044484d",
     "ledger": "docs/upgrade-2026-ohio-school-guided-metadata-work.md"
+  },
+  "nov05OhioSchoolNativeBrowser": {
+    "status": "local synthetic PASS; broader qualification open",
+    "ledger": "docs/upgrade-2026-ohio-school-native-browser-work.md",
+    "cases": 2,
+    "durationsMs": [
+      7224,
+      6829
+    ],
+    "timeoutMs": 30000,
+    "retries": 0,
+    "skipped": 0,
+    "protectedRequests": 0,
+    "geometryIssues": 0,
+    "ownedServerClosed": true,
+    "focusedTests": 263,
+    "metadataTests": 898,
+    "actualCollection": 584,
+    "old582RowsExactlyUnchanged": true,
+    "originalHostedSkips": 5,
+    "contracts": 150,
+    "auditedSources": 1803,
+    "inventory": 909,
+    "supportedInventory": 68,
+    "actualManifest": "eaee2d7d2702db7eb5b509a4b9363b2fe4d96270d315f25621bc5c899d401b05",
+    "releaseReady": false
   }
 }

@@ -564,6 +564,7 @@
     "apps/web/tests/net-operating-loss-joint-pools.spec.ts": "e85896e0c9308e65e5d952dc65aafaf969ac441c22dc8565621528ad07666cb4",
     "apps/web/tests/nonitemized-allowable-carry.spec.ts": "773d240c9c36e8fa67641c6abc40c151e215525565c3b2c844af405731812950",
     "apps/web/tests/nonitemized-charity.spec.ts": "f92935fafb3ea8e0a2faec532425d942f7dc2cdc197e1136cccd2e81a1e1c88b",
+    "apps/web/tests/oh-2026-school-native.spec.ts": "5ece43d0a270c76e7764a6da3606b3c19ffdf426869963f20f057a4b74403a5c",
     "apps/web/tests/oh-business-native.spec.ts": "bcf82f4f4f09152e8d61af7cf7ebc9460fc12c4ab0b9beeff23be55828949e56",
     "apps/web/tests/oh-business-part-year-native.spec.ts": "d8229c7fc2777381283f080b6093326e37874b8218cb7ab4156819bfd57cd366",
     "apps/web/tests/oh-reciprocal-native.spec.ts": "c6d2afe90c48e2b1c565d0218c1cc533f63e72033fd162b118057e7489689b32",
@@ -1697,6 +1698,7 @@
     "tests/fixtures/oh-2026-business-draft.ts": "b04d40f515e992f9874bc4aff86ae1b293825adebd9c08428be47463bc1b1db1",
     "tests/fixtures/oh-2026-ordinary-return.ts": "53522e77591c9e2aab8dfd822dcd3c80a43243f24d365f39f72654cf48b52de5",
     "tests/fixtures/oh-2026-pa-reciprocal-return.ts": "d56cc058829303757b03b10ce2372f0d383e10461d6ae8442108aa766e257d13",
+    "tests/fixtures/oh-2026-school-native-browser.ts": "8fdf448057a09b8b3f5fd591ad7713ef9c70316850e3f13fd5eac57fd3aeeaa0",
     "tests/fixtures/oh-2026-va-resident-credit-return.ts": "eff52fdfcd7197e869e89711f2e945aae6f00e7b71960a2d8f0260b6dbcfdf50",
     "tests/fixtures/oh-business-apportionment.ts": "eb69ad365875442e32de28bf3779b88635f4d487256960f0b21f27ebf36e080f",
     "tests/fixtures/oh-business-native-browser.ts": "d81591e2854a9054112dcc7de5c1400a37f50c986c189d7ee29401185ce290ab",
@@ -3805,6 +3807,16 @@
       "skippedTitles": []
     },
     "guided-pa-married-mixed-residency.spec.ts": {
+      "caseCount": 2,
+      "bounds": {
+        "filled-return": 0,
+        "provider": 0,
+        "business-expense-analysis": 0,
+        "self-employment-income-analysis": 0
+      },
+      "skippedTitles": []
+    },
+    "oh-2026-school-native.spec.ts": {
       "caseCount": 2,
       "bounds": {
         "filled-return": 0,

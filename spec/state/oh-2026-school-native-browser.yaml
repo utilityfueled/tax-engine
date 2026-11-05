@@ -1,0 +1,29 @@
+form: "OH2026-earned-school-native-browser"
+taxYear: 2026
+status: "prospective-browser-source-only"
+reference: "https://codes.ohio.gov/ohio-revised-code/section-5748.01"
+notes: |
+  Two prospective desktop/mobile journeys. Existing finite single-primary,
+  under65 full-year earned-district original-source cohort only. Original30s,
+  zero retries, four protected request bounds0; no full2026 return or paper.
+lines:
+  - line: "visible-original-intake"
+    description: "Enter actual independent school originals through native controls"
+    formula: "Only unrelated current household/W2 originals may be seeded once before entry. Domicile, category amounts, Finder, payroll and local classification start absent/blank; no target sources, results, confirmation or snapshots may be seeded. Explicitly capture existing household and canonical originals first; then enter every target school original through visible controls before source confirmation."
+    testRef: "apps/web/tests/oh-2026-school-native.spec.ts::collects current original school facts visibly without inventing a2026 settlement"
+  - line: "documentary-cash"
+    description: "Keep withholding independent of computed rates and unknown settlement"
+    formula: "Original payroll50000 and original W2local withholding625.25 project exactly for Hillsdale0302 earned annualrate0.0125. Rate times wages625 is not actual withholding or qualified liability; all liability/payments/refund/penalty/interest stay null and filingQualifiedfalse."
+    testRef: "apps/web/tests/oh-2026-school-native.spec.ts::collects current original school facts visibly without inventing a2026 settlement"
+  - line: "current-original-confirmation"
+    description: "Preserve explicit capture and source invalidation"
+    formula: "Exact normalized primitive no-op retains source and captured snapshots. Same-cash payroll-reference change revokes current confirmation but retains old originals. Reconfirmation captures only entered source facts; no read or reload can manufacture new source confirmation."
+    testRef: "apps/web/tests/oh-2026-school-native.spec.ts::collects current original school facts visibly without inventing a2026 settlement"
+  - line: "unknown-and-separate-method"
+    description: "Reject unknown cash and unsupported source classifications"
+    formula: "Unknown optional-category cash remains blank through reload and prevents confirmation; actual explicit0 restores only that fact. Traditional district and municipal local-row methods remain denied rather than silently accepted as earned school originals."
+    testRef: "apps/web/tests/oh-2026-school-native.spec.ts::collects current original school facts visibly without inventing a2026 settlement"
+  - line: "local-private-and-year-gates"
+    description: "Keep local facts private and final-year output unavailable"
+    formula: "All4 protected request scopes remain0, formatted/compact syntheticSSN/EIN and every private original-reference prefix absent from request URL/body, no Finder submission, console/page errors, downloads or horizontal overflow. Exact entered facts survive reopen; actual public2026 calculation and review/filing mapping still refuse."
+    testRef: "apps/web/tests/oh-2026-school-native.spec.ts::collects current original school facts visibly without inventing a2026 settlement"
