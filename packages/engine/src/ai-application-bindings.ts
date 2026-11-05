@@ -4,9 +4,10 @@ import { AI_TASKS, type AiTask } from "./ai-task-registry";
 import { documentClassificationSchema, documentExpenseSchema, documentIncomeSchema, documentSummarySchema,
   workspaceHelpSchema, workspaceSummarySchema, unsupportedRouteSchema, complexReconciliationSchema, documentSuggestionSchema } from "./ai-application-schemas";
 const Money = Decimal.clone({ precision: 80 });
-export const AI_APPLICATION_BINDING_VERSION = "source-proposals/1";
+export const AI_APPLICATION_BINDING_VERSION = "source-proposals/2";
 export const AI_APPLICATION_INSTRUCTIONS = [
   "Return only the actual task JSON schema, with disposition answer or abstain and supplied sourceIds.",
+  "For document-classification, select the exact canonical documentType ID from the supplied schema; its label explains the meaning; keep the readable title separate. Use unknown only with abstain, and abstain only with unknown. A recognized unsupported form or other-document is descriptive and never establishes calculation support, a tax year or confirmed facts.",
   "Every source fact is an unconfirmed proposal. Use its requested name and kind when supplied, otherwise a concise stable field name.",
   "A known fact requires sourceId and sourceQuote copied verbatim from that source. Preserve signed amounts as decimal strings, zero as zero and unknown as null.",
   "Known text values must appear literally in their source quote; never infer a yes/no answer, count or identity. Use null when the literal text is absent.",
@@ -75,6 +76,12 @@ export function parseApplicationTaskOutput(task: AiTask, payload: unknown, conte
   if (AI_TASKS[task].requiresVerifiedTaxContext && !validateApplicationTaxContext(tax)) throw new Error("Verified source and audit context is required.");
   const permitted = new Set([...context.sources.map(source => source.id), ...(tax?.excerpts.map(item => item.id) ?? []), ...(tax?.auditEntries.map(item => item.id) ?? [])]);
   if (value.sourceIds.some(id => !permitted.has(id)) || new Set(value.sourceIds).size !== value.sourceIds.length) throw new Error("Invalid source citation.");
+  if (task === "document-classification") {
+    const classification = documentClassificationSchema.parse(value);
+    if ((classification.documentType === "unknown") !== (classification.disposition === "abstain")) {
+      throw new Error("Unknown document classification requires abstain, and abstain requires unknown.");
+    }
+  }
   if (/ready (?:to|for) (?:download|fil(?:e|ing))|filing[- ]ready|guaranteed (?:refund|deduction)/i.test(JSON.stringify(value))) throw new Error("Invented readiness claim.");
   if ("facts" in value) {
     if (new Set(value.facts.map(fact => fact.name)).size !== value.facts.length) throw new Error("Duplicate source fact.");

@@ -19957,5 +19957,24 @@
     "contractFinding": "canonical w2c label undisclosed; prospective repair pending, frozen results unchanged",
     "evidence": "docs/upgrade-2026-openai-development-smoke-work.md",
     "releaseReady": false
+  },
+  "nov05AiClassificationCanonicalContract": {
+    "status": "implemented-and-independently-software-reviewed",
+    "ledger": "docs/upgrade-2026-ai-classification-contract-work.md",
+    "genuineRed": {
+      "failed": 7,
+      "passed": 1
+    },
+    "focusedTests": 155,
+    "focusedFiles": 14,
+    "distinctControls": 18,
+    "newSpecReferences": 5,
+    "lintWarnings": 0,
+    "providerTypes": "PASS",
+    "historicalResultsUnchanged": true,
+    "providerRequests": 0,
+    "qualifiedHumanReview": false,
+    "modelPromotion": false,
+    "completion": false
   }
 }

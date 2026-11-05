@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { AI_DOCUMENT_CLASSIFICATION_IDS, AI_DOCUMENT_CLASSIFICATION_DESCRIPTION } from "./ai-document-classification-catalog";
 /** Actual application contracts. Evaluation must not substitute a sidecar schema. */
 const shortText = z.string().max(2000);
 const sourceId = z.string().min(1).max(200);
@@ -20,7 +21,7 @@ export const documentIncomeSchema = z.strictObject({ ...envelope, label: shortTe
 export const documentExpenseSchema = z.strictObject({ ...envelope, label: shortText, institution: shortText, statementPeriod: shortText, summary: shortText,
   facts, reviewCategory: z.enum(["needs-review", "not-business"]).nullable(),
   suggestions: z.array(documentSuggestionSchema.extend({ suggestedCategory: categories, suggestedBusinessUse: z.boolean() })).max(150) });
-export const documentClassificationSchema = z.strictObject({ ...envelope, title: shortText, documentType: shortText, summary: shortText,
+export const documentClassificationSchema = z.strictObject({ ...envelope, title: shortText, documentType: z.enum(AI_DOCUMENT_CLASSIFICATION_IDS).describe(AI_DOCUMENT_CLASSIFICATION_DESCRIPTION), summary: shortText,
   suggestedNextStep: shortText, relevantTaxTopics: z.array(shortText).max(20), bankStatementLike: z.boolean() });
 export const documentSummarySchema = z.strictObject({ ...envelope, summary: z.string().trim().min(1).max(2000) });
 export const workspaceSummarySchema = documentSummarySchema;

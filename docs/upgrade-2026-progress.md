@@ -3339,3 +3339,5 @@ Independent chain/Decimal review and13offline controls pass; grounding/privacy
 guard failures and an undisclosed classification taxonomy remain qualification
 failures. See [the actual-run ledger](upgrade-2026-openai-development-smoke-work.md).
 No held-out/human qualification or model promotion occurred.
+
+- November5: [prospective AI classification contract](upgrade-2026-ai-classification-contract-work.md) publishes exact descriptive IDs and labels in the real shared schema. Genuine7FAIL/1PASS precedes155focusedPASS and18distinct controls; original smoke failures remain unchanged. No provider run, human qualification or model promotion.

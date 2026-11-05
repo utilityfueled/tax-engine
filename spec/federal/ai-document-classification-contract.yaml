@@ -1,0 +1,32 @@
+form: "AI-Document-Classification-Contract"
+fullName: "Prospective canonical descriptive document classification"
+taxYear: 2026
+reference: "https://www.irs.gov/forms-pubs/about-form-w-2-c; https://www.irs.gov/forms-instructions; packages/contracts/src/index.ts; sample-documents/registry.json"
+notes: |
+  IDs are application vocabulary, not IRS legal classifications or calculation support.
+  Existing deterministic upload kinds and official form titles establish the vocabulary;
+  a descriptive fallback preserves unlisted documents. A classification never applies
+  facts, confirms ownership, enables a return, or establishes a supported tax year.
+  The new contract applies prospectively. Frozen prior requests, outputs, expected
+  values and literal exact-match scores are never converted or rescored.
+lines:
+  - line: "published-vocabulary"
+    description: "The actual provider schema communicates canonical document IDs and labels"
+    formula: "Require canonical IDs including w2c for Form W-2c; descriptions distinguish ordinary, corrected, blank, combined and unlisted documents. Freeform titles remain separate from the ID."
+    testRef: "tests/engine/ai-document-classification-contract.test.ts::publishes the canonical corrected-form ID in the actual task schema"
+  - line: "no-legacy-coercion"
+    description: "Historical freeform classifications cannot masquerade as new canonical IDs"
+    formula: "Reject titles, case variants, padded strings, invented identifiers and extra properties; do not trim, alias, lowercase or rewrite existing records."
+    testRef: "tests/engine/ai-document-classification-contract.test.ts::rejects freeform historical labels without retrospective normalization"
+  - line: "unknown-abstention"
+    description: "Unidentified documents abstain while identified unlisted documents remain descriptive"
+    formula: "unknown requires abstain; abstain requires unknown; a recognized but unsupported form or other-document may answer descriptively without applying facts or claiming support."
+    testRef: "tests/engine/ai-document-classification-contract.test.ts::keeps unknown and recognized descriptive classifications distinct"
+  - line: "shared-request"
+    description: "Application and evaluation share one versioned canonical contract"
+    formula: "Bump document-classification prompt and schema versions and application binding version; publish the same vocabulary to both callers without expected answers or human-review sidecars. Old plans become stale rather than being rescored."
+    testRef: "tests/engine/ai-document-classification-contract.test.ts::binds the prospective vocabulary to shared requests without leaking golden answers"
+  - line: "real-caller"
+    description: "The actual document executor enforces the prospective contract"
+    formula: "Retain source citations, strict privacy, readiness rejection, default production denial and confirmation requirements; rejected canonical output remains billed once with no automatic retry."
+    testRef: "tests/apps/web/ai-document-classification-contract.test.ts::sends the canonical schema through the actual document executor"
