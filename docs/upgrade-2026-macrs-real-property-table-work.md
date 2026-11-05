@@ -1,0 +1,9 @@
+# Residential depreciation table correction
+
+All twelve residential rental depreciation columns previously contained29 entries totaling103.627%. They now reproduce all342 nonblank cells and six blank terminal cells of [Publication946(2025), AppendixA TableA6, printed page73](https://www.irs.gov/pub/irs-pdf/p946.pdf), retrieved November5,2026. January–June finish in recovery year28; July–December finish in29. Every published column sums exactly100.000%; percentages were not normalized. Nonresidential tables and vehicle limits are unchanged by this package.
+
+The spec and actual-API failing tests preceded implementation:3FAIL. Corrected affected suites pass216tests/6files; final table/utility check97/2. All342 source cells and12 exact column sums pass a separate Python Decimal comparison. Root read the official page and complete diff, verified44 frozen members/four source pins, and passed8 distinct API boundary/rounding controls plus all12 lengths/sums/input/global-configuration checks. Root types, new scoped zero-warning lint,3 new spec references and strict global796 references pass. Existing77 old test non-null warnings remain unchanged. Initial source DNS, test-command and receipt-command failures are preserved in private evidence.
+
+Author evidence: `nov05-macrs-real-property-tables-implementation`, manifest345d65f75a72fab65b426235af5be1d9119fe5d534796ab681ae33bd64186a45. Root evidence: `nov05-macrs-a6-root-review`. The corrected January year29 assertion now verifies zero/beyond recovery; the new tests separately verify actual year28.
+
+This corrects table transcription and recovery duration. Actual business/ownership basis, section179/bonus allocations, allowed-or-allowable history, dispositions, listed limits, short years, final2026 forms, filing and qualified human review remain separate required work. The unrelated in-progress convention/basis candidate is excluded from this commit.

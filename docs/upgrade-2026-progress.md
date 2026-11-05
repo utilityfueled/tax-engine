@@ -3348,3 +3348,5 @@ No held-out/human qualification or model promotion occurred.
 ### November5: published-source inventory traceability
 
 The exact published ddee2c3 source plus explicit metadata now records866 inventory entries, including8new entries and4accurate own-spec engine links. No pre-existing entry or supported count changed (68); the4new linked entries remain partial and AI stays outside the unchanged engine-path contract. Generate/check and5,145published Git-blob comparisons pass; two initial temporary-export symlink-byte failures and their correction are retained. Unaccepted in-progress MACRS/year work is excluded. This is traceability evidence, not complete facts, qualified forms, human review or filing readiness. Private frozen evidence: nov05-published-head-inventory-links manifest ef8a8aa49d0703b8a5250833f08811f11a48bd4c2533e738b79bdd333f8b068b.
+
+- November5: [residential MACRS table correction](upgrade-2026-macrs-real-property-table-work.md) reproduces342published cells and correct28/29year boundaries; genuine3RED precedes216affectedPASS, independent8literal controls and12column checks. Basis/history/disposition/cap/final-form and human gates remain open.

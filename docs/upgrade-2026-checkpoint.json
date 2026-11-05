@@ -20008,5 +20008,20 @@
     "inProgressTaxWorkExcluded": true,
     "manifestSHA256": "ef8a8aa49d0703b8a5250833f08811f11a48bd4c2533e738b79bdd333f8b068b",
     "readinessQualified": false
+  },
+  "nov05ResidentialMACRSTable": {
+    "authorManifestSHA256": "345d65f75a72fab65b426235af5be1d9119fe5d534796ab681ae33bd64186a45",
+    "source": "IRS Pub946(2025) AppendixA TableA6 page73",
+    "publishedNonblankCells": 342,
+    "blankCells": 6,
+    "redFailures": 3,
+    "focusedPassed": 216,
+    "focusedFiles": 6,
+    "distinctRootLiteralControls": 8,
+    "columnChecks": 12,
+    "outsideTableUnchanged": true,
+    "basisDispositionHistoryQualified": false,
+    "professionalReview": false,
+    "readinessQualified": false
   }
 }

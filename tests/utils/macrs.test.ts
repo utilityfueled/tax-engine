@@ -157,13 +157,14 @@ describe("MACRS depreciation computation", () => {
       expect(result!.recoveryYear).toBe(6);
     });
 
-    it("placed in January year 29 (final) - 1.970%", () => {
+    it("placed in January year 29 is beyond the published recovery schedule", () => {
       const result = computeAssetDepreciation(
         { costBasis: "275000", placedInServiceDate: "1997-01", recoveryPeriod: "27.5" },
         2025,
       );
-      expect(result!.depreciation.toNumber()).toBe(5418);
+      expect(result!.depreciation.toNumber()).toBe(0);
       expect(result!.recoveryYear).toBe(29);
+      expect(result?.fullyDepreciated).toBe(true);
     });
 
     it("placed in January year 30 - fully depreciated", () => {
