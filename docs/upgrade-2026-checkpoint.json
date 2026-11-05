@@ -20610,5 +20610,25 @@
     "initialSandboxBindHoldRetained": true,
     "fullCurrentUnitCoverage": "pending",
     "hostedNativeQualification": false
+  },
+  "nov05PAMarriedPaymentNative": {
+    "status": "finite2025_native_PASS_not_qualified",
+    "baseline": "8dacb6a6",
+    "focusedPass": 96,
+    "focusedFiles": 6,
+    "distinctPass": 106,
+    "inventoryControls": 66,
+    "authorManifest": "84781954df81e3924b3058f8105d4ac17c673c1c53cc4ae8bd6f8496f2c95aec",
+    "distinctManifest": "68619cb622e7a7723b218a50292e547484330639517e6476a53f78f000e5c4b4",
+    "mainManifest": "e926a71e800b77d1688daba749b289f2fa48f7481bbf8ebc405fa3055ebde633",
+    "sourcePins": 4640,
+    "inventoryTotal": 886,
+    "priorEntriesUnchanged": 885,
+    "supportedCount": 68,
+    "staticChecks": "PASS",
+    "actualBrowser": "pending",
+    "whole2026": "gated",
+    "filingEligible": false,
+    "qualifiedHumanReview": "pending"
   }
 }
