@@ -20565,5 +20565,28 @@
     "ordinaryOrFinal2026Qualified": false,
     "filingQualified": false,
     "ledger": "docs/upgrade-2026-ohio-school-2026-source-work.md"
+  },
+  "nov05MiddayAdvisoryRefresh": {
+    "status": "fresh_targeted_sources_no_new_actionable_fixed_version",
+    "sourceBaseline": "f0da6d75",
+    "retrievalUTC": "2026-11-05T12:50/12:54Z",
+    "audits": {
+      "productionDependencies": 426,
+      "allDependencies": 522,
+      "findings": 0,
+      "bothExitCode": 0
+    },
+    "nextVersion": "16.4.5",
+    "nextExactAdvisoryBodiesUnchanged": 7,
+    "node26Latest": "26.13.0",
+    "nodeHighFixNotice": "on or shortly after 2026-11-11",
+    "debianHighTablesUnchanged": 18,
+    "currentImageIdsOpenUnaccepted": 80,
+    "ownerConfirmationPending": true,
+    "imageExpiryUnchanged": "2026-11-07 or before qualification",
+    "nextInvestigationDeadlineElapsed": true,
+    "newImageScan": false,
+    "mainManifest": "64ca35c22580f21b6532b5171f512211213eafb1aafa9bd2d66ba1e27d57a26a",
+    "ledger": "docs/upgrade-2026-advisory-midday-refresh-work.md"
   }
 }
