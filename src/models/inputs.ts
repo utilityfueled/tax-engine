@@ -1,3 +1,5 @@
+import {PassengerAutoParentSourcesSchema} from './passenger-auto-parent-sources.js';
+import {calculateScheduleCPassengerSources} from '@/engine/schedules/schedule-c-passenger-first-year-sources.js';
 import { OhioReturnHeaderSourcesSchema } from './ohio-return-header-sources.js';
 import { OhioSchoolDistrictFactsSchema } from './ohio-school-district.js';
 import {PAMarriedOrdinarySourcesSchema} from './pa-married-ordinary-sources.js';
@@ -3297,6 +3299,7 @@ export const Form8829Schema = z.object({
 
 /** Actual source records; blanks remain unknown until the Schedule C source calculator validates them. */
 export const ScheduleCSourceFactsSchema = z.object({
+  passengerFirstYear:PassengerAutoParentSourcesSchema.optional(),
   depreciation:z.object({sourceTaxYear:z.number().int().optional(),sourceReference:z.string().optional(),sourceFactsConfirmed:z.boolean().nullable().optional(),
     fullCalendarYearConfirmed:z.boolean().nullable().optional(),allAssetsForThisBusinessConfirmed:z.boolean().nullable().optional(),noOtherActivityAssetsConfirmed:z.boolean().nullable().optional(),noOtherDepreciationOrAmortizationConfirmed:z.boolean().nullable().optional(),notDeductedElsewhereConfirmed:z.boolean().nullable().optional(),
     originalBusiness:z.record(z.string(),z.unknown()).optional(),
@@ -6313,8 +6316,9 @@ export const TaxYearInputSchema = z.object({
   }).optional(),
 }).superRefine((value, ctx) => {
   // Do not silently consume or ignore standalone passenger facts in a full return.
-  if (value.form4562?.passengerFirstYearSources !== undefined) {
-    ctx.addIssue({ code: "custom", path: ["form4562", "passengerFirstYearSources"], message: "Standalone passenger worksheet requires a separate canonical owner/activity bridge" });
+  if (value.form4562?.passengerFirstYearSources !== undefined || value.scheduleC?.sourceFacts?.passengerFirstYear !== undefined) {
+    try { calculateScheduleCPassengerSources(value,value.scheduleC); }
+    catch { ctx.addIssue({ code: "custom", path: ["form4562", "passengerFirstYearSources"], message: "Passenger worksheet requires complete actual Schedule C parent and income sources" }); }
   }
   value.rentalProperties.forEach((property, index) => {
     if (property.form4562?.passengerFirstYearSources !== undefined) ctx.addIssue({ code: "custom", path: ["rentalProperties", index, "form4562", "passengerFirstYearSources"], message: "Standalone passenger worksheet requires a separate rental owner/activity bridge" });

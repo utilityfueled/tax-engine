@@ -1,8 +1,9 @@
+import {calculateScheduleCPassengerSources,assertScheduleCPassengerResult} from './schedule-c-passenger-first-year-sources.js';
 /** Spec: federal/schedule-c.yaml, actual ordinary cash expense and address sources. */
 import Decimal from 'decimal.js';
 import {sha256} from '@noble/hashes/sha2.js';
 import {bytesToHex} from '@noble/hashes/utils.js';
-import type {ScheduleCResult} from './schedule-c.js';
+import {calculateScheduleC,type ScheduleCResult,type ScheduleCInput} from './schedule-c.js';
 import type {TaxYearInput,ScheduleCSourceFacts} from '@/models/inputs.js';
 import {AmortizableAssetSchema,DepreciableAssetSchema} from '@/models/inputs.js';
 import {calculateForm4562} from '@/engine/forms/form-4562.js';
@@ -17,7 +18,7 @@ type SourceInput = {rentalProperties?:unknown[];scheduleF?:unknown;royaltyProper
 /** Validate the original records; split metadata never becomes a second expense. */
 export function calculateScheduleCSourceFacts(input:SourceInput,business:SourceBusiness|undefined,saved?:ScheduleCResult){
  const fail=(detail:string):never=>{throw new Error(`Schedule C actual source expense method: ${detail}`);};
- if(input.form4562?.passengerFirstYearSources!==undefined)fail('standalone passenger worksheet requires canonical owner/activity linkage');
+ const passenger=calculateScheduleCPassengerSources(input,business);
  const amount=(value:string|undefined,label:string)=>{if(typeof value!=='string'||!value.trim())return fail(`${label} is unknown`);if(!/^-?(?:\d+|\d{1,3}(?:,\d{3})+)(?:\.\d+)?$/.test(value.trim()))return fail(`${label} is invalid`);let n:Decimal;try{n=new Decimal(value.trim().replace(/,/g,''));}catch{return fail(`${label} is invalid`);}if(!n.isFinite()||n.lt(0))return fail(`${label} must be finite and nonnegative`);return n;};
  const ref=(value:string|undefined,label:string)=>{if(!value?.trim())fail(`${label} source reference is unknown`);};
  const truth=(value:boolean|null|undefined,label:string)=>{if(value!==true)fail(`${label} must be actually confirmed`);};
@@ -151,6 +152,30 @@ export function calculateScheduleCSourceFacts(input:SourceInput,business:SourceB
   for(const [label,key] of [['Commissions and fees','commissionsAndFees'],['Rent of business property','rentOnBusinessProperty'],['Repairs and maintenance','repairsAndMaintenance'],['Taxes and licenses','taxes'],['Wages','wages']] as const)if(!saved.expenseBreakdown[label]?.eq(rowAmounts[key]??d(0)))fail('saved source expense breakdown is stale');
   if(!saved.expenseBreakdown['Other expenses']?.eq(d(exp.otherExpenses).plus(partV))||(interest&&!saved.expenseBreakdown['Business interest']?.eq(interestTotal)))fail('saved interest or remaining other expense is stale');
  }
- const audit=new AuditTrail();audit.record('Sched C','actual-source-commitment','Actual expense and business address original source commitment',d(0),'Exact original source reconciliation; structured personal identifiers normalized for permitted review redaction',{'Original source commitment':commitment});
- return {mortgage,vehicle,other,interestTotal,rowAmounts,partV,amortizationTotal,address,commitment,lines:audit.getLines()};
+ if(passenger&&saved){
+  assertScheduleCPassengerResult(passenger,saved,commitment);
+  // Bounded replay: this one fresh call has no saved result, so its source
+  // validation cannot enter this branch again. Use the actual calculator,
+  // not a parallel set of financial or audit formulas.
+  const fresh=calculateScheduleC(input as TaxYearInput,business as ScheduleCInput);
+  const projection=(value:unknown):unknown=>{
+   if(Decimal.isDecimal(value))return {kind:'decimal',value:value.toString()};
+   if(value===undefined)return {kind:'undefined'};
+   if(value===null)return {kind:'null'};
+   if(Array.isArray(value))return {kind:'array',items:value.map(projection)};
+   if(typeof value==='object'){
+    if(Object.getPrototypeOf(value)!==Object.prototype)fail('saved passenger projection must use actual result records');
+    return {kind:'object',entries:Object.entries(value).sort(([a],[b])=>a<b?-1:a>b?1:0).map(([key,item])=>[key,projection(item)])};
+   }
+   if(typeof value==='number'&&!Number.isFinite(value)||!['string','boolean','number'].includes(typeof value))fail('saved passenger projection has an invalid value');
+   return {kind:typeof value,value};
+  };
+  if(JSON.stringify(projection(fresh))!==JSON.stringify(projection(saved)))fail('saved passenger financial result and complete allocation/audit projection is stale');
+ }
+ const audit=new AuditTrail();
+ if(passenger){
+  for(const [line,value] of [['passenger-parent-pre-depreciation',passenger.preDepreciationProfit],['passenger-parent-non179',passenger.non179],['passenger-parent-income-limit',passenger.incomeLimit]] as const)audit.record('Sched C',line,'Source-bound passenger parent income',value,'Actual cash service profit less bonus and regular depreciation; section179 excluded from income limit');
+ }
+ audit.record('Sched C','actual-source-commitment','Actual expense and business address original source commitment',d(0),'Exact original source reconciliation; structured personal identifiers normalized for permitted review redaction',{'Original source commitment':commitment});
+ return {mortgage,vehicle,other,interestTotal,rowAmounts,partV,amortizationTotal,address,commitment,passenger,lines:audit.getLines()};
 }

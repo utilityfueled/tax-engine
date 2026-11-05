@@ -20361,5 +20361,30 @@
     "hostedQualified": false,
     "humanCorpusReviewed": false,
     "modelPromotionEnabled": false
+  },
+  "nov05PassengerScheduleCParent": {
+    "status": "finite_engine_package_verified_not_release_qualified",
+    "trackedBaseline": "a0c98b12000a2fc185fe77e572496abe22842e08",
+    "authorManifest": "2c4e13647bf73e0051119f09b86460ddb2cb9c0feff2a15b2fe7ae3def1c5cdf",
+    "independentManifest": "3973d744749b217f7181884eb44218c5a0802a679702bf2e5b94d5020bb3f629",
+    "privateTests": 369,
+    "distinctTests": 50,
+    "currentFocusedTests": 427,
+    "currentFocusedFiles": 14,
+    "currentFocusedBrowserInfrastructureTests": 58,
+    "inventorySpecTests": 66,
+    "staticChecks": "types3/spec/builds2/lint pass; initial stale inventory retained, regenerated/check pass",
+    "inventoryEntries": 877,
+    "priorEntriesUnchanged": 876,
+    "supportedEntriesUnchanged": 68,
+    "ledger": "docs/upgrade-2026-passenger-parent-work.md",
+    "remaining": [
+      "current full unit/coverage/browser",
+      "native collection and physical/final2026 forms",
+      "broader cohorts and independent qualified human review",
+      "hosted/self-hosted release qualification"
+    ],
+    "filingEnabled": false,
+    "modelPromotionEnabled": false
   }
 }

@@ -9692,6 +9692,25 @@
       ]
     },
     {
+      "key": "federal/schedule-c-passenger-first-year-sources",
+      "jurisdiction": "federal",
+      "taxYear": null,
+      "sourceAuthority": null,
+      "specPath": "spec/federal/schedule-c-passenger-first-year-sources.yaml",
+      "enginePath": "src/engine/schedules/schedule-c-passenger-first-year-sources.ts",
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/schedule-c-source-facts",
       "jurisdiction": "federal",
       "taxYear": null,

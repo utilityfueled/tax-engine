@@ -3,8 +3,9 @@
 The standalone 2026 Form 4562 worksheet now reconciles actual passenger-car
 originals, allowed section 179, documented bonus treatment and regular
 depreciation under the combined business-use ceiling. Listed amounts reach
-Part V and the total once. Canonical returns and Schedule C/E continue to reject
-this packet until a separate owner/activity bridge is implemented and reviewed.
+Part V and the total once. That standalone revision rejected canonical returns and Schedule C/E. The later
+[finite original-bound parent bridge](upgrade-2026-passenger-parent-work.md)
+adds a separately reviewed single-business method; broader cohorts remain denied.
 
 The finite cohort requires one new domestic 2026-model car, January–September
 placement, ordinary owned active sole-proprietor business, actual expenses,
@@ -52,7 +53,7 @@ Evidence directories under `.local/upgrade-evidence/`:
 | `nov05-passenger-traceability-rename-independent` | `7d3c77e990c80e02e431cf8bc4290ffa98b1e9f7261cf7c823c896edd580b88f` |
 
 Actual checkout receipts are in `nov05-passenger-first-year-combined-main`.
-Full current-source unit/coverage/browser checks, canonical owner linkage,
+Full current-source unit/coverage/browser checks, broader canonical owner linkage,
 physical final 2026 forms, native collection, qualified human review and
 hosted/self-hosted release qualification remain open. Filing and model promotion
 remain disabled.

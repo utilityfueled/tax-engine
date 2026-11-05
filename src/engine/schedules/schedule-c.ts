@@ -1,3 +1,4 @@
+import {assertScheduleCPassengerResult} from './schedule-c-passenger-first-year-sources.js';
 /**
  * Schedule C — Profit or Loss From Business (Sole Proprietorship)
  * Spec: spec/federal/schedule-c.yaml
@@ -10,7 +11,7 @@ import Decimal from "decimal.js";
 import {calculateScheduleCSourceFacts} from "./schedule-c-source-facts.js";
 import type { Form8829Input, TaxYearInput, ScheduleCSourceFacts } from "@/models/inputs.js";
 import type { CalculatedLine } from "@/models/outputs.js";
-import { d, min, roundDollar } from "@/utils/decimal.js";
+import { d as legacyAmount, min, roundDollar } from "@/utils/decimal.js";
 import { AuditTrail } from "@/utils/audit.js";
 import type { Form4562Result } from "@/engine/forms/form-4562.js";
 import { calculateForm4562 } from "@/engine/forms/form-4562.js";
@@ -103,12 +104,18 @@ export function calculateScheduleC(
 ): ScheduleCResult {
   const audit = new AuditTrail();
   const sources = calculateScheduleCSourceFacts(input, scheduleCInput);
+  // Only the admitted documentary passenger path needs the100-character exact
+  // projection. Keep historical caller precision/behavior for all other inputs.
+  const Exact = sources?.passenger ? Decimal.clone({precision:256,rounding:Decimal.ROUND_HALF_UP}) : undefined;
+  const d = (value:Parameters<typeof legacyAmount>[0]):Decimal => Exact
+    ? new Exact(value === undefined || value === null || value === '' ? 0 : value)
+    : legacyAmount(value);
   if(sources) audit.merge(sources.lines);
 
   // Line 1: Gross receipts
   const necTotal = input.form1099Nec.reduce(
     (acc, f) => acc.plus(d(f.nonemployeeCompensation)),
-    new Decimal(0)
+    d(0)
   );
   const grossReceipts = scheduleCInput?.grossReceipts
     ? d(scheduleCInput.grossReceipts)
@@ -146,7 +153,7 @@ export function calculateScheduleC(
     return val;
   };
 
-  let totalExpenses = new Decimal(0);
+  let totalExpenses = d(0);
   totalExpenses = totalExpenses.plus(addExpense("8", "Advertising", expenses.advertising));
   totalExpenses = totalExpenses.plus(addExpense("9", "Car and truck", expenses.carAndTruck));
   totalExpenses = totalExpenses.plus(addExpense("10", "Commissions and fees", expenses.commissionsAndFees));
@@ -205,7 +212,7 @@ export function calculateScheduleC(
   audit.record("Sched C", "29", "Tentative profit or loss", tentativeProfit, "Line 7 - Line 28");
 
   // Line 30: Home office deduction
-  let homeOfficeDeduction = new Decimal(0);
+  let homeOfficeDeduction = d(0);
   if (scheduleCInput?.homeOffice) {
     const ho = scheduleCInput.homeOffice;
     if (ho.method === "simplified") {
@@ -216,7 +223,7 @@ export function calculateScheduleC(
       );
       // Simplified method cannot create a loss
       if (tentativeProfit.lessThanOrEqualTo(0)) {
-        homeOfficeDeduction = new Decimal(0);
+        homeOfficeDeduction = d(0);
       } else {
         homeOfficeDeduction = min(homeOfficeDeduction, tentativeProfit);
       }
@@ -242,7 +249,7 @@ export function calculateScheduleC(
   const netProfit = tentativeProfit.minus(homeOfficeDeduction);
   audit.record("Sched C", "31", "Net profit or loss", netProfit, "Line 29 - Line 30");
 
-  return {
+  const result:ScheduleCResult = {
     grossReceipts,
     returnsAndAllowances,
     netReceipts,
@@ -259,4 +266,6 @@ export function calculateScheduleC(
     form4562,
     lines: audit.getLines(),
   };
+  if(sources?.passenger)assertScheduleCPassengerResult(sources.passenger,result,sources.commitment);
+  return result;
 }

@@ -1,3 +1,4 @@
+import {calculateScheduleCPassengerSources} from './schedule-c-passenger-first-year-sources.js';
 /**
  * Schedule E — Supplemental Income and Loss
  * Spec: spec/federal/schedule-e.yaml
@@ -290,8 +291,9 @@ function applyAtRiskLimitation(
   };
 }
 
-export function calculateScheduleE(input: Pick<TaxYearInput, 'scheduleK1' | 'rentalProperties' | 'form1099Misc'> & Partial<Pick<TaxYearInput, 'k1CharitableSources' | 'qbiLossSources' | 'royaltyPropertySources' | 'form4562'>> & { taxpayer?: K1CharitableReturnInput['taxpayer'] }, completedCharitable?: K1CharitableReturnResult): ScheduleEResult {
-  if (input.form4562?.passengerFirstYearSources !== undefined || input.rentalProperties?.some(property => property.form4562?.passengerFirstYearSources !== undefined)) throw new Error('Standalone passenger worksheet requires Schedule E canonical owner/activity linkage');
+export function calculateScheduleE(input: Pick<TaxYearInput, 'scheduleK1' | 'rentalProperties' | 'form1099Misc'> & Partial<Pick<TaxYearInput, 'k1CharitableSources' | 'qbiLossSources' | 'royaltyPropertySources' | 'form4562' | 'scheduleC'>> & {[contextField:string]:unknown} & { taxpayer?: K1CharitableReturnInput['taxpayer'] }, completedCharitable?: K1CharitableReturnResult): ScheduleEResult {
+  if (input.rentalProperties?.some(property => property.form4562?.passengerFirstYearSources !== undefined)) throw new Error('Passenger worksheet requires separate rental owner/activity linkage');
+  calculateScheduleCPassengerSources(input,input.scheduleC);
   if (input.k1CharitableSources && !input.taxpayer) throw new Error('K1 charitable ScheduleE requires the actual taxpayer context');
   const charitable = input.k1CharitableSources ? completedCharitable ?? calculateK1CharitableReturnSources({ ...input, taxpayer: input.taxpayer! }) : undefined;
   const audit = new AuditTrail();
