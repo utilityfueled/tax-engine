@@ -19433,5 +19433,27 @@
     "savedFirstPairPairedPages": 292,
     "applicationChangeRetained": false,
     "broaderQualification": false
+  },
+  "nov04IsolatedCredentialFailureAndReconciliation": {
+    "status": "FAILED_CREDENTIAL_ATTEMPT_CURRENT_NOLOGIN_METADATA_ONLY",
+    "ledger": "docs/upgrade-2026-isolated-outage-provisioning-work.md",
+    "failedReceiptSHA256": "18610e56c5d8ef47b1ab2f5442a1d626adfa864bc1ccbbaf1782d81056303089",
+    "failureStage": "password-login-commit",
+    "sqlstate": "XX000",
+    "providerContractMiss": "Prehashed inputs unsupported by current Neon role docs; ROOT and independent reviewer missed before actual attempt. Prior helper must not be retried.",
+    "readonlyReceiptSHA256": "2b512e3a868d2ee49c69e6c7509b30101bdd8a792abd474b62917f725ffc0c06",
+    "independentActualReviewSHA256": "a1f32a0641e91a890d0584228424fc65dc7153463c952803822065f233197cd0",
+    "observedPoststatePinsSHA256": "11057968b64ae6b702bb7a9cb168ab57942f580b0fc500de5bc9de8a0c19d00c",
+    "currentRoleLoginFlag": false,
+    "originalCommitOutcomeUnknown": true,
+    "passwordStateQualified": false,
+    "appAuthenticationPerformed": false,
+    "previewEnvironmentInstalled": false,
+    "broadPrivacyQualified": false,
+    "readonlyQueries": 152,
+    "readonlyCleanupRollbacks": 4,
+    "readonlyRows": 52936,
+    "readonlyRowJSONBytes": 8945187,
+    "next": "SEPARATE_SUPPORTED_CREDENTIAL_PATH_PRIVATE_INPUT_LOGGING_ADMISSION_AND_REVIEW"
   }
 }

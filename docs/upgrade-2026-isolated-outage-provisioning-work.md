@@ -202,3 +202,64 @@ rehearsal proceeds.
 
 - Independent actual V3 review: `28e22439e23abbf172304a317e883f6fefa1a13970f1b48ffc08091fbc27ff12`.
 - Exact poststate pins: `35c04765d56dee2de517dba69b1ba5447a7dc053883d7228139cf1157c94e6fe`.
+
+## Credential COMMIT failure and read-only reconciliation
+
+The separately reviewed credential helper generates one private synthetic app
+credential after fresh restricted-state checks. Its client-derived SCRAM
+verifier is bound to a transaction-local setting and used by a fixed internal
+ALTER ROLE; plaintext is not sent in that attempt's SQL. Password and LOGIN
+operations return, but COMMIT returns SQLSTATE `XX000` without confirmation.
+The one actual attempt ends `FAIL_PARTIAL_OR_UNKNOWN_APP_LOGIN_NO_RETRY`.
+All five sessions subsequently return ROLLBACK and close, but that cannot
+establish the attempted COMMIT's outcome or external authentication state.
+No app authentication, Preview installation, deployment or retry follows.
+The private generated credential remains preserved without disclosure.
+
+Actual failed-attempt accounting is198ordinary queries/five cleanup rollbacks,
+66,120rows/11,172,044row-JSON bytes/27,771ms. The receipt distinguishes attempted
+mutations from confirmed effects and retains `serverOutcomeUnknown=true`.
+Its false password/LOGIN confirmation fields are not evidence of actual absence.
+
+ROOT's subsequent primary-source recheck identifies a missed provider contract:
+[Neon's role documentation](https://neon.com/docs/manage/roles), updated October3,
+requires unhashed password input and excludes hashed inputs. ROOT and the
+independent source reviewer missed this before execution. The prehashed path is
+incompatible with that documented contract and must not be repeated. This
+compatibility defect alone does not prove the cause of the observed SQLSTATE.
+Public upstream role-forwarding source also documents possible transaction abort
+after forwarding; its deployed version and the actual external outcome remain
+unqualified. No forwarding bypass or privilege expansion is proposed.
+
+A new, independently reviewed, strictly read-only helper then completes once.
+It compares all four exact database/catalog/effective-privilege maps against V3,
+permitting only an explicitly observed consistent app LOGIN boolean. All four
+observations show **NOLOGIN**, with every original inventory/proof digest matching
+the V3 restricted state. App OID40960, DB OID40962, the single creator reverse
+membership and scoped ACLs remain unchanged. It reads no app credential file,
+password field or business data and performs no authentication or mutation.
+
+The read-only operation returns152ordinary queries/four cleanup rollbacks,
+52,936rows/8,945,187row-JSON bytes/21,538ms; all four sessions roll back and close.
+Distinct saved-evidence review recomputes all eight map digests, exact counters,
+transport and authority/launcher bindings. The result establishes only current
+logical metadata. Password state, the original COMMIT and provider/proxy
+authentication state remain unknown. All broad privacy, app-readiness, CONNECT,
+template0 and internal-hop qualification flags stay false.
+
+Retained SHA256 bindings (private evidence remains ignored):
+
+- Failed credential source manifest: `c742468789149b63bca8b218ce018800917c847032a5f356ffaa449a753127d9`.
+- Actual failed credential receipt: `18610e56c5d8ef47b1ab2f5442a1d626adfa864bc1ccbbaf1782d81056303089`.
+- Independent historical compatibility correction: `762a4f3330c1481214d7ff1d40608c6796d117c8fb7a8907f6bd7ae26d43daa6`.
+- Read-only source manifest: `200369e474a935c0c54ceb43c11869505585810bcd2d5e067801ca93c7e65f52`.
+- Independent read-only source review: `23397c14ab6d964739945b2e8212288bb3100ab4f7f8d76f158449e5f238dc6b`.
+- Actual read-only receipt: `2b512e3a868d2ee49c69e6c7509b30101bdd8a792abd474b62917f725ffc0c06`.
+- Independent saved-actual review: `a1f32a0641e91a890d0584228424fc65dc7153463c952803822065f233197cd0`.
+- Observed metadata pins: `11057968b64ae6b702bb7a9cb168ab57942f580b0fc500de5bc9de8a0c19d00c`.
+
+A provider-supported credential path still needs a separate source proposal,
+private-input/logging admission, independent review and exact authority. Current
+NOLOGIN metadata does not justify overwriting the retained credential, assuming
+password rollback or repeating the old helper. The actual isolated outage,
+automatic Stripe retry and deployed qualification criteria remain open.

@@ -4,6 +4,8 @@ Current source, verification and remaining work are summarized in the
 [November 4 continuation](upgrade-2026-current-status.md). Historical results
 below apply to their named revisions.
 
+- November4–5: the [isolated credential attempt](upgrade-2026-isolated-outage-provisioning-work.md) fails at COMMIT/XX000; its prehashed input conflicts with current Neon documentation and must not be retried. New read-only152-query/four-rollback reconciliation and distinct saved-evidence review confirm unchanged restricted NOLOGIN metadata. Password/original external COMMIT state remain unknown; no app authentication, environment install or deployment is claimed.
+
 - November4–5: the [guided render performance experiment](upgrade-2026-guided-render-experiment-work.md) is rejected and archived: final unchanged two-worker successor9PASS/1timeout versus baseline10PASS. All seven experimental paths are restored/removed after complete source/patch preservation; unrelated changes remain. ROOT verifies2,180evidence files and independently audits the first pair's16PDFs/292paired pages. No application change or browser/readiness improvement is claimed.
 
 - November4: [public source refresh](upgrade-2026-public-source-refresh-20261104.md) independently verifies44 retained responses (36HTTP200/8HTTP404). Seven advisory API failures remain unresolved; alternate official fields retain their conflicts. IRS1040 remains2025; C/R2026 and Ohio2025 bytes unchanged. No risk acceptance, deadline extension, provider-account qualification or readiness promotion.

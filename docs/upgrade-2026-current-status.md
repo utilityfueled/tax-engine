@@ -57,6 +57,14 @@ No production deployment, main merge, force push, filing activation or model
 promotion is authorized by these results. Versioned artifact publication remains
 subject to its qualification and authorization requirements.
 
+The later isolated credential attempt fails at COMMIT with `XX000`. A fresh
+independently reviewed read-only reconciliation confirms the app remains NOLOGIN
+and every restricted map matches, while password and original external COMMIT
+state remain unknown. The failed prehashed path conflicts with Neon's documented
+unhashed-input requirement, missed in its original source review, and is prohibited
+from retry. A separately supported private credential path remains required;
+[all failure and reconciliation evidence is retained](upgrade-2026-isolated-outage-provisioning-work.md).
+
 The guided-flow source-comparison successor now changes application bytes after
 8487: it reuses an identical PA dependency comparison only when both records
 lack all three PA packets. Current-main505focused controls, all eight
