@@ -46,8 +46,11 @@ adds canonical original-policy allocation for the finite2026 FHA/private cohort.
 Distinct263/current218focused plus881metadata checks and all package static/build
 checks pass. The [native original collector](upgrade-2026-mortgage-insurance-native-work.md)
 now passes distinct170/current281focused plus882metadata checks and all package
-static/build checks. Actual browser and current full integration remain pending;
-whole2026 and filing gates stay closed.
+static/build checks. The [actual original-premium browser](upgrade-2026-mortgage-insurance-native-browser-work.md)
+now passes two selected desktop/mobile cases without retries. Actual580collection
+preserves all578previous IDs/deadlines/statuses; four protected scopes stayzero
+and the owned server closes with unchanged source/build. Current full integration
+remains pending; whole2026 and filing gates stay closed.
 
 The [full-federal prepaid insurance tests](upgrade-2026-mortgage-insurance-prepaid-return-work.md)
 verify existing SALT, charity, QBI and section68 composition with actual original

@@ -20838,7 +20838,7 @@
     "inventoryTotal": 891,
     "priorEntriesUnchanged": 890,
     "supportedCount": 68,
-    "browser": "separate_active_successor",
+    "browser": "selected2PASS_full580runtime_pending",
     "whole2026": "gated",
     "filingEligible": false,
     "savedCurrentnessManifest": "afba951a30515305525fc3154ba3cdc8b9fba5df828cfb029b3e7d03d640e524"
@@ -20865,5 +20865,47 @@
     "whole2026": "gated",
     "filingEligible": false,
     "savedCurrentnessManifest": "e3804a014108562d8b46003396de6084035e10599a2cf6034831ee18135112a9"
+  },
+  "nov05MortgageInsuranceNativeBrowser": {
+    "status": "selected_local_2PASS_not_full580_qualified",
+    "baselineCommit": "8bb563af",
+    "actualPassed": 2,
+    "failed": 0,
+    "skipped": 0,
+    "retries": 0,
+    "collection": 580,
+    "priorExact": 578,
+    "deadlineMs": 90000,
+    "durationsMs": [
+      2557,
+      1965
+    ],
+    "configuredWorkers": 2,
+    "activeWorkers": 1,
+    "protectedScopeCounts": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "sourcePins": 4638,
+    "compiledPaths": 321,
+    "ownedServerClosed": true,
+    "focusedPass": 138,
+    "metadataPass": 942,
+    "inventoryTotal": 893,
+    "priorEntriesUnchanged": 892,
+    "supportedCount": 68,
+    "auditSourceFiles": 1785,
+    "retainedContracts": 147,
+    "authorManifest": "0cdca9e36999ae23df12acb1421b4ab537fadadf5fb056d3db6dd694e348b249",
+    "distinctSourceManifest": "5ecf65244a086ed66d907bfc5080e204fc980876adca86498c70dabe8ab7a769",
+    "budgetReviewManifest": "8ed809f70ff22018b958149dad4ceea376da59789f861828fd0204e24c7f4a62",
+    "mainManifest": "a71e37ab981c5d8cd9f993814ee5481f73f81fda3f41fac2d5c3c5ec726ecf26",
+    "actualManifest": "a2efd2b17e7b3b32de8022033720b5e048ba0a59f8a9b9cc0e8f2d27269930cb",
+    "fullCurrentRuntime": "pending",
+    "whole2026": "gated",
+    "filingEligible": false,
+    "savedEvidenceReviewManifest": "1b7b888d7494ad126f3fd99905602028e4e0e853af323010856c04e830239169"
   }
 }

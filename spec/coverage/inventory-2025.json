@@ -6058,6 +6058,26 @@
       ]
     },
     {
+      "key": "federal/guided-mortgage-insurance-prepaid-browser",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://www.ecfr.gov/current/title-26/section-1.163-11",
+      "specPath": "spec/federal/guided-mortgage-insurance-prepaid-browser.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/guided-mortgage-points-history",
       "jurisdiction": "federal",
       "taxYear": 2026,

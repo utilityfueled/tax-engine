@@ -1,0 +1,15 @@
+form: "Guided-Mortgage-Insurance-Prepaid-Browser"
+taxYear: 2026
+status: "prospective-native-lifecycle-only"
+reference: "https://www.ecfr.gov/current/title-26/section-1.163-11"
+filingQualified: false
+notes: |
+  Browser validation of the finite current-original intake only. No new monetary
+  rule, inferred original fact, full2026 calculation, final form or filing gate.
+lines:
+  - line: "visible-original-capture"
+    formula: "Seed only unrelated completed identity and ordinary mortgage sources before entry. Select actual2026 in the existing native year control; enter all insurance method, annual qualification and original premium facts through visible inputs/selects. Capture explicitly, renew entry and annual worksheet confirmations, then separately confirm retained originals. No target original, annual premium scalar or computed result is seeded. Save/reload and exact no-op blur preserve the complete snapshot and confirmation."
+    testRef: "apps/web/tests/mortgage-insurance-prepaid-native.spec.ts::enters original premiums visibly and preserves current capture while stale and unknown facts remain blocked"
+  - line: "unknown-zero-source-and-year-gates"
+    formula: "An explicit zero premium cannot fill an unknown history answer; native capture must fail and retain the old original through reload. Restore actual supplied facts through controls and recapture explicitly. A same-money source-reference edit revokes source/entry/annual confirmations without silently replacing the snapshot; reconfirming the parent alone cannot admit it. The actual saved bridge, federal and export policies keep full2026 unavailable; advanced UI has no review/filled PDF actions. Both viewports observe all four protected scopes at zero, no private-marker request body, no download or page error, and bounded visible control geometry."
+    testRef: "apps/web/tests/mortgage-insurance-prepaid-native.spec.ts::enters original premiums visibly and preserves current capture while stale and unknown facts remain blocked"
