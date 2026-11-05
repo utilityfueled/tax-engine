@@ -3127,3 +3127,14 @@ restricted NOLOGIN role, administrator-owned synthetic DB and scoped ACLs.
 No password, LOGIN, migration or deployment occurs; all broader privacy/provider
 flags remain false. Independent actual review verifies bounded privilege and
 unchanged old-state evidence; disabled credential helper preparation continues. See [the provisioning ledger](upgrade-2026-isolated-outage-provisioning-work.md).
+
+### November 5 UTC: isolated supported app authentication
+
+A boolean-only check establishes catalog password absence and NOLOGIN with four
+exact maps. The actual receipt catches a membership-fixture defect in the first
+disabled successor. Corrected immutable V2 passes41ROOT/47distinct Node and15Python
+controls, then one actual353-query/nine-rollback operation confirms its password/
+LOGIN COMMIT and app authentication. All ten sessions close. Separate actual
+review recomputes nine hashes and exact119,058rows/20,117,436bytes. Historical
+failed COMMIT uncertainty remains. Preview installation, deployment and actual
+outage/retry qualification continue; see [the provisioning ledger](upgrade-2026-isolated-outage-provisioning-work.md).

@@ -65,6 +65,14 @@ unhashed-input requirement, missed in its original source review, and is prohibi
 from retry. A separately supported private credential path remains required;
 [all failure and reconciliation evidence is retained](upgrade-2026-isolated-outage-provisioning-work.md).
 
+The November5UTC supported successor now confirms a fresh isolated app password/
+LOGIN COMMIT and actual verified-TLS/SCRAM-PLUS app authentication. The actual
+boolean-only prerequisite and four exact maps pass; its first membership-fixture
+defect is preserved and corrected in immutable V2. All ten connections close,
+and distinct actual review verifies353queries/nine rollbacks and all nine hashes.
+The historical failed COMMIT remains unknown. Preview installation, deployment,
+outage/retry and all broader qualification gates remain open; see the same ledger.
+
 The guided-flow source-comparison successor now changes application bytes after
 8487: it reuses an identical PA dependency comparison only when both records
 lack all three PA packets. Current-main505focused controls, all eight

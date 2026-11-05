@@ -263,3 +263,50 @@ private-input/logging admission, independent review and exact authority. Current
 NOLOGIN metadata does not justify overwriting the retained credential, assuming
 password rollback or repeating the old helper. The actual isolated outage,
 automatic Stripe retry and deployed qualification criteria remain open.
+
+## November 5 UTC: supported isolated app authentication
+
+A new read-only observation checks effective column permissions and only the
+exact role's catalog password-presence boolean. It reads no password/verifier.
+The result is strictly false, with NOLOGIN and all four original maps unchanged;
+permission failure would be unavailable, never absence. Actual accounting is154
+ordinary queries/four rollbacks/52,938rows/8,945,319bytes/21,401ms. All four
+connections close with verified frontend TLS1.3 and SCRAM-SHA-256-PLUS.
+
+The supported successor uses a fresh random32-byte hex password, exclusive private
+credential file, bound transaction-local setting and fixed scoped DO/ALTER ROLE,
+one COMMIT, full metadata checks and actual app authentication. The old prehashed
+helper/private artifact remain unchanged. The [official Neon SDK source](https://github.com/neondatabase/neon-pkgs/blob/31ed7870e186a09b90997c4bcb3f6a7117a43112/packages/sdk/src/project/role-access.ts)
+supports plaintext provisioning. The provider receives plaintext and the server constructs
+a password-bearing utility statement; logging, forwarding and internal-hop
+encryption remain unqualified. Client SQL literals, argv, receipts and public
+files contain no plaintext credential. An absolute provider-internal no-plaintext/
+logging requirement was an added engineering interpretation, not a user/repo rule.
+
+The first disabled successor compares the producer's app-specific membership
+projection to all13 global rows, and its fake fixture repeats that wrong shape.
+The actual receipt catches this before credential generation. Preserved V1 stays
+HOLD. Immutable V2 uses the exact original per-database role-related projection,
+retaining every edge/flag and whole-map check. ROOT41Node/15Python and distinct
+47Node/15Python controls pass, including actual-receipt regressions.
+
+One actual operation now passes353ordinary queries/nine rollback cleanups,
+119,058rows/20,117,436bytes/48,056ms. Its COMMIT returns; all nine metadata hashes
+match with only the intended LOGIN bit change. The restricted app authenticates
+in its synthetic database with verified frontend TLS1.3, SCRAM-PLUS and server
+final validation. All ten connections close. Distinct saved review recomputes
+every stage hash, row/byte total and source/authority/launcher binding; one
+positive and24negative controls pass without opening credential contents or
+contacting the database.
+
+The new operation is confirmed; the historical failed COMMIT remains unknown.
+Broad privacy/CONNECT/provider-hop/release gates stay false. No Preview variable
+installation, deployment, migration, actual outage or automatic retry occurs in
+this package. Private evidence remains ignored; SHA256 bindings are:
+
+- Actual boolean observation: `ac24fbaaedb8481cf1d222e551ca20b172f5f8c4669037182bd3701731313af2`.
+- Supported V2 source: `09e9fb29772387940b6639b21b0187f85f47e4f1cf664a610aa8c6c4e9bc1a53`.
+- Distinct source review: `907527ce6c23fc8ad3be7b8a7a3bb66ac420075b54db0d8745a3835400cd1c56`.
+- Actual app authentication: `39a5d7510d0c54ceae95f2111176c70d8df0dc7b6b2b924c918033c148e77812`.
+- Distinct actual review: `9856815caa817a3009ce6ea7474271d1254a77b59f71d35b32b51b3f81e0139b`.
+- Poststate pins: `06d8ae42212d46fc302b6ad2dc4675c6e58b7fe9285e108622806a4bff9feeb7`.
