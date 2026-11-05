@@ -3329,3 +3329,13 @@ distinct source/Decimal controls pass. ROOT verifies32author/13review members an
 all11source pins; see [the draft ledger](upgrade-2026-ohio-va-resident-credit-draft-work.md).
 Historical worksheet continuity stays provisional; full2026/public forms, broader
 cohorts, human and release qualification remain open.
+
+
+### November5 UTC: real bounded OpenAI development comparison
+
+Actual synthetic runs stop safely on one unknown-usage attempt after108requests.
+Known total including the earlier probe is0.14832625USD, with0.022384USD reserved.
+Independent chain/Decimal review and13offline controls pass; grounding/privacy
+guard failures and an undisclosed classification taxonomy remain qualification
+failures. See [the actual-run ledger](upgrade-2026-openai-development-smoke-work.md).
+No held-out/human qualification or model promotion occurred.

@@ -19930,5 +19930,32 @@
     "filingEligible": false,
     "evidence": "docs/upgrade-2026-ohio-va-resident-credit-draft-work.md",
     "releaseReady": false
+  },
+  "nov05ActualOpenAIDevelopmentSmoke": {
+    "planDigest": "7fc65427c7a788d4e6849e6dd31817859cabe7516c20b2493089b7c070b8e0dc",
+    "journalSHA256": "5c6d22f203775c5b9cf8a2872282eb8e0846c258701f57695ced5bda43d631fa",
+    "requestsDispatched": 108,
+    "requestsPlannedMaximum": 111,
+    "knownUsageResults": 107,
+    "unknownUsageResults": 1,
+    "knownComparisonProviderCostUsd": "0.14829345",
+    "knownTotalIncludingPriorCapabilityUsd": "0.14832625",
+    "unknownMaximumUsd": "0.022384",
+    "knownPlusReserveUsd": "0.17071025",
+    "comparisonMaximumUsd": "4.90",
+    "initialGlobalMaximumUsd": "5",
+    "userAuthorizationCeilingUsd": "140",
+    "stoppedReason": "unknown-usage",
+    "unknownAttempt": "baseline-gpt-5-mini:case-explain-payments-balance:3",
+    "developmentCases": 12,
+    "repeats": 3,
+    "heldOutCases": 0,
+    "independentOfflineControlsPassed": 13,
+    "independentHumanCasesReviewed": 0,
+    "qualification": false,
+    "productionPromotion": false,
+    "contractFinding": "canonical w2c label undisclosed; prospective repair pending, frozen results unchanged",
+    "evidence": "docs/upgrade-2026-openai-development-smoke-work.md",
+    "releaseReady": false
   }
 }
