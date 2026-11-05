@@ -21475,5 +21475,31 @@
     "mainManifest": "4c4181b36fcc3a67857b347293958b5d7f5fd001b3c50392631c01922c3e5b4b",
     "distinctManifest": "4b2ee4dd67e711a3af3c9908439f0c7b4771b1a0bde895ed18827b17ac477c73",
     "ledger": "docs/upgrade-2026-native-browser-runtime-provenance-work.md"
+  },
+  "nov05Ohio2026SchoolGuidedMetadata": {
+    "status": "ACTUAL_GUIDED_SOURCE_ADMISSION_PASS_BROWSER_PENDING",
+    "genuineInitialFailed": 2,
+    "genuineInitialPassed": 2,
+    "mainPassed": 187,
+    "mainFiles": 6,
+    "distinctRootReplayed": 187,
+    "metadataPassed": 897,
+    "allStaticPassed": true,
+    "formulaChanges": false,
+    "completeOriginalsPreserved": true,
+    "cashCompensation": "50000",
+    "cashWithholding": "625.25",
+    "settlementsKnown": false,
+    "filingQualified": false,
+    "inventoryTotal": 908,
+    "supportedUnchanged": 68,
+    "auditedSources": 1801,
+    "contractsUnchanged": 149,
+    "casesUnchanged": 582,
+    "auditControls": 76,
+    "mainManifest": "2ce41d9db3fd6d2ca6bd96f9a6374adb297f554b9bb1cf3b57f45c1f8c1da5e0",
+    "reviewManifest": "c01377ef32b82b83da87bc1f00dba83f69aa8ee5a3c7aae064bd84849be9bd6e",
+    "sourceAuditManifest": "01ed6baae49d13758b9e23f0f8901227d470ab7dd6fc7479a6f0f2c32044484d",
+    "ledger": "docs/upgrade-2026-ohio-school-guided-metadata-work.md"
   }
 }

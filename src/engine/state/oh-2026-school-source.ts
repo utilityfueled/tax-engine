@@ -87,10 +87,10 @@ export function calculateOhio2026SchoolSource(input: TaxYearInput, raw: unknown)
     const district = lookupOhio2026SchoolDistrict(2026, r.districtCode);
     if (!district || district.taxBase !== 'earned' || f.districtCode !== district.code || f.districtName !== district.name || f.rate !== district.rate || f.taxBase !== district.taxBase)
         fail('actual Finder identity rate and earned base must match annual2026 authority');
-    const emptyArrays = new Set(['form1099Int', 'form1099Div', 'form1099B', 'form1099Nec', 'form1099Misc', 'scheduleK1', 'form1098', 'form1095A', 'donations', 'form1099DA', 'form1099G', 'form1099OID', 'formW2G', 'form1099K', 'form1099C', 'form1099Q', 'scheduleK1Form1041', 'form1098E', 'rentalProperties', 'savingsBondRedemptions', 'form6252', 'form8814', 'homeSales', 'form8824']);
+    const emptyArrays = new Set(['form1099Int', 'form1099Div', 'form1099B', 'form1099Nec', 'form1099Misc', 'scheduleK1', 'form1098', 'form1095A', 'donations', 'form1099DA', 'form1099G', 'form1099OID', 'formW2G', 'form1099K', 'form1099C', 'form1099Q', 'scheduleK1Form1041', 'form1098E', 'rentalProperties', 'savingsBondRedemptions', 'form6252', 'form8814', 'homeSales', 'form8824', 'form1099R', 'formSSA1099', 'formRRB1099']);
     const allowed = new Set(['taxpayer', 'w2s', 'standardDeductionFacts', 'ohioResidency', 'ohioPayments']);
     for (const [key, value] of Object.entries(input))
-        if (value !== undefined && !allowed.has(key) && !(emptyArrays.has(key) && Array.isArray(value) && value.length === 0))
+        if (value !== undefined && !allowed.has(key) && !(key === 'deductionElection' && value === 'standard') && !(emptyArrays.has(key) && Array.isArray(value) && value.length === 0))
             fail('other retained income or adjustment originals require their separate method even at zero');
     if (!facts.allFederalSourcesIncludedConfirmed || !facts.noBusinessIncomeConfirmed || facts.businessSources || facts.reciprocalWageSources || facts.residentCreditSources || facts.schoolDistrictStatus !== 'actual_district_sources_required' || facts.owners.length !== 1)
         fail('complete actual ordinary school residence required; other source methods excluded');
