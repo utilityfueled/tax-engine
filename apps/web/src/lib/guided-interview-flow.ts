@@ -1,3 +1,6 @@
+import {invalidateMortgagePrepaid} from './guided-mortgage-insurance-prepaid';
+import {buildGuidedMortgageInputs} from './guided-mortgage-worksheet';
+import {calculateMortgageInsurancePrepaid} from '@/engine/forms/mortgage-insurance-prepaid';
 import {buildGuidedOhioReturnHeaderSources,type OhioReturnHeaderDraft} from './guided-ohio-return-header-sources';
 import {buildGuidedOhioReciprocalWages,type OhioReciprocalWagesDraft} from './guided-oh-reciprocal-wages';
 import {ohioBusinessActualValues,invalidateOhioBusiness} from './guided-ohio-business-facts';
@@ -276,13 +279,24 @@ export function computeDeductionComparison(
   const standardAmount = getStandardDeductionAmount(filingStatus, taxYear);
   const data = deductions ?? emptyDeductionData;
 
+  const originalAllocations = new Map<MortgageEntryData,string>();
+  if(data.mortgageEntries?.some(entry=>entry.insuranceAllocationMethod==='current-original-prepaid')) {
+    if(taxYear!==2026 || !filingStatus)throw new Error('Confirm the actual 2026 context and original premium sources before comparison.');
+    const sources=buildGuidedMortgageInputs(data,taxYear,filingStatus);
+    const status={single:'single',mfj:'married_filing_jointly',mfs:'married_filing_separately',hoh:'head_of_household',qss:'qualifying_surviving_spouse'} as const;
+    for(const entry of data.mortgageEntries)if(entry.insuranceAllocationMethod==='current-original-prepaid') {
+      const allocated=calculateMortgageInsurancePrepaid({...sources,form1099Misc:sources.form1099Misc??[],taxpayer:{taxYear,filingStatus:status[filingStatus]}},`${entry.lender.trim()}:${entry.accountReference?.trim()??''}`);
+      originalAllocations.set(entry,allocated.allocatedPremium.toFixed());
+    }
+  }
+
   const fields: string[] = [
     data.medicalExpenses,
     data.stateLocalTaxes,
     data.realEstateTaxes,
     data.personalPropertyTaxes ?? "",
     data.mortgageInterest,
-    ...(data.mortgageEntries ?? []).flatMap(entry => [entry.pointsPaid ?? "", entry.propertyTaxPaid ?? "", ...(taxYear === 2026 && entry.hasMortgageInsuranceAllocation === true ? [entry.insurancePremiumsAllocableToYear ?? ""] : [])]),
+    ...(data.mortgageEntries ?? []).flatMap(entry => [entry.pointsPaid ?? "", entry.propertyTaxPaid ?? "", ...(taxYear === 2026 && entry.hasMortgageInsuranceAllocation === true ? [originalAllocations.get(entry) ?? entry.insurancePremiumsAllocableToYear ?? ""] : [])]),
     data.charitableContributions,
     data.casualtyLosses,
     ...(data.investmentInterestExpense !== undefined || data.gamblingLosses !== undefined || data.gamblingExpenses !== undefined
@@ -1878,7 +1892,7 @@ export function updateSectionData(
         ...(charitableCarryoverChanged ? { charitableCarryoverSources: { ...charitableCarryoverChanged, sourceFactsConfirmed: null,
           ...(charitableCarryoverChanged.filingUnitHistory ? { filingUnitHistory: { ...charitableCarryoverChanged.filingUnitHistory, sourceFactsConfirmed: null } } : {}),
         } } : {}),
-        ...(mortgageSourcesChanged ? { mortgageEntries: mortgageSourcesChanged.mortgageEntries?.map(entry => ({ ...entry, sourceFactsConfirmed: null })), ...(mortgageSourcesChanged.mortgageWorksheet ? { mortgageWorksheet: { ...mortgageSourcesChanged.mortgageWorksheet, sourceFactsConfirmed: null } } : {}) } : {}),
+        ...(mortgageSourcesChanged ? { mortgageEntries: mortgageSourcesChanged.mortgageEntries?.map(entry => ({ ...entry, sourceFactsConfirmed: null, ...(entry.insurancePrepaid ? {insurancePrepaid:invalidateMortgagePrepaid(entry.insurancePrepaid)} : {}) })), ...(mortgageSourcesChanged.mortgageWorksheet ? { mortgageWorksheet: { ...mortgageSourcesChanged.mortgageWorksheet, sourceFactsConfirmed: null } } : {}) } : {}),
         ...(investmentInterestSourcesChanged ? { investmentInterestSources: Object.fromEntries(Object.entries(investmentInterestSourcesChanged).map(([key, worksheet]) => [key, worksheet ? { ...worksheet, sourceFactsConfirmed: null, ...(worksheet.childIncomeSources ? { childIncomeSources: { ...worksheet.childIncomeSources, sourceFactsConfirmed: null } } : {}) } : worksheet])) } : {}),
       } } : {}),
       ...((ohioInterestChanged || stateOriginalsChanged) && ohioStateReturn ? { "state-return": {

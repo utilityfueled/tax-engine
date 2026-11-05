@@ -1,5 +1,5 @@
 /** Spec: spec/federal/mortgage-insurance-prepaid.yaml; 26CFR1.163-11. */
-import type { TaxYearInput } from '@/models/inputs.js';
+import type { HomeMortgageInterestInput } from './home-mortgage-interest.js';
 import { MortgageInsurancePrepaidSourcesSchema } from '@/models/mortgage-insurance-prepaid-sources.js';
 import { calculateHomeMortgageInterest } from './home-mortgage-interest.js';
 import { AuditTrail } from '@/utils/audit.js';
@@ -13,7 +13,7 @@ function actualDate(value: string, label: string): string {
   return value;
 }
 /** No side effects; validates the actual complete parent rather than a caller-supplied verification flag. */
-export function calculateMortgageInsurancePrepaid(input: TaxYearInput, form1098SourceId: string) {
+export function calculateMortgageInsurancePrepaid(input: HomeMortgageInterestInput, form1098SourceId: string) {
   if (input.taxpayer.taxYear !== 2026) throw new Error('Original prepaid mortgage insurance supports the finite current2026 method only');
   const forms = input.form1098.filter(form => form.sourceId === form1098SourceId);
   if (!form1098SourceId.trim() || forms.length !== 1) throw new Error('Prepaid mortgage insurance requires one unique actual Form1098 source');

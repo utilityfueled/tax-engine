@@ -1,0 +1,18 @@
+form: "Guided current-original prepaid mortgage insurance"
+taxYear: 2026
+irsReference: "https://www.ecfr.gov/current/title-26/section-1.163-11"
+reviewStatus: "engineering-review-pending"
+filingQualified: false
+lines:
+  - line: "actual-original-entry"
+    formula: "Offer explicit manual annual versus current-original prepaid methods. For the latter collect actual original premium, payment/insurance dates, stated term, FHA/private determination and every actual negative history. Never create annual amount, dates, provider, zero or confirmation from Box5 or mortgage term. Existing actual account/year/primary payer/use/closing/security/obligation remain required."
+    testRef: "tests/guided-interview/guided-mortgage-insurance-prepaid.test.ts::forwards complete actual originals without inventing a manual annual allocation"
+  - line: "visible-controls"
+    formula: "Existing mortgage screen exposes the selected method and visible original premium/month/term facts only for current2026 originals. Actual source facts remain unresolved until entered and explicitly captured/confirmed. Historical/manual route remains unchanged."
+    testRef: "tests/apps/web/mortgage-insurance-prepaid-native.test.tsx::offers the current original prepaid method through actual mortgage controls"
+  - line: "current-original-replay"
+    formula: "Capture source originals explicitly into an immutable snapshot, then compare current entry plus complete actual canonical mortgage parent and current year/status on every source projection. Original/edit/provenance changes revoke source, entry and worksheet confirmations; never rewrite old originals silently. Explicit recapture is separate from confirm."
+    testRef: "tests/guided-interview/guided-mortgage-insurance-prepaid.test.ts::rejects stale captured originals after same-cash source and parent edits"
+  - line: "saved-recovery"
+    formula: "Save/load/encrypted recovery retain original facts, draft unknowns and method. Old workspaces stay manual/unverified without inferred originals. Cross-year/identity changes cannot restore qualification from an old confirmation. No sensitive request traffic or review output is created by capture."
+    testRef: "tests/apps/web/mortgage-insurance-prepaid-recovery.test.ts::preserves source snapshots and unknowns through saved and recovery boundaries"

@@ -1,6 +1,8 @@
 "use client";
+import { MortgageInsurancePrepaidFields } from './mortgage-insurance-prepaid-fields';
+import { invalidateMortgagePrepaid } from '@/lib/guided-mortgage-insurance-prepaid';
 
-import { type DeductionData, type DonationEntryData, type MortgageEntryData, emptyDonationEntry, emptyMortgageEntry } from "@/lib/guided-interview-flow";
+import { type DeductionData, type DonationEntryData, type MortgageEntryData, type FilingStatus, emptyDonationEntry, emptyMortgageEntry } from "@/lib/guided-interview-flow";
 import { sumGuidedDisplayAmounts } from "@/lib/guided-currency";
 import { CurrencyField } from "./currency-field";
 import { MortgageSourceFields } from "./mortgage-source-fields";
@@ -16,7 +18,7 @@ function BooleanFact({ label, value, onChange }: { label: string; value: boolean
   return <label className="guided-field"><span className="guided-field-label">{label}</span><select className="guided-input" value={value == null ? "" : String(value)} onChange={(event) => onChange(event.target.value === "" ? null : event.target.value === "true")}><option value="">Confirm from your records</option><option value="true">Yes</option><option value="false">No</option></select></label>;
 }
 
-export function DeductionSourceDetails({ data, onChange, includeMortgages = true, includeDonations = true }: { data: DeductionData; onChange: (data: DeductionData) => void; includeMortgages?: boolean; includeDonations?: boolean }) {
+export function DeductionSourceDetails({ data, onChange, includeMortgages = true, includeDonations = true, taxYear, filingStatus }: { taxYear?:number|null;filingStatus?:FilingStatus|null;data: DeductionData; onChange: (data: DeductionData) => void; includeMortgages?: boolean; includeDonations?: boolean }) {
   // An old aggregate is preserved as the amount needing source details. No other
   // fact is inferred, and merely rendering does not rewrite the saved workspace.
   const mortgages = data.mortgageEntries ?? (data.mortgageInterest.trim() ? [{ ...emptyMortgageEntry, mortgageInterest: data.mortgageInterest }] : []);
@@ -24,7 +26,7 @@ export function DeductionSourceDetails({ data, onChange, includeMortgages = true
   function setMortgages(entries: MortgageEntryData[]) {
     const known = entries.length > 0 && entries.every(entry => !amountError(entry.mortgageInterest, "mortgage interest"));
     const changed = guidedSourceValuesChanged(data.mortgageEntries, entries);
-    onChange({ ...data, mortgageEntries: entries, mortgageInterest: known ? sumGuidedDisplayAmounts(entries.map(entry => entry.mortgageInterest)).toFixed() : "",
+    onChange({ ...data, mortgageEntries: changed ? entries.map(entry=>entry.insurancePrepaid?{...entry,sourceFactsConfirmed:null,insurancePrepaid:invalidateMortgagePrepaid(entry.insurancePrepaid)}:entry) : entries, mortgageInterest: known ? sumGuidedDisplayAmounts(entries.map(entry => entry.mortgageInterest)).toFixed() : "",
       ...(changed && data.mortgageWorksheet ? { mortgageWorksheet: { ...data.mortgageWorksheet, sourceFactsConfirmed: null } } : {}) });
   }
   function setDonations(entries: DonationEntryData[]) {
@@ -37,15 +39,24 @@ export function DeductionSourceDetails({ data, onChange, includeMortgages = true
     {includeMortgages && <>
     <h4>Mortgage interest — Form 1098</h4>
     <p className="guided-hint">Copy each lender&apos;s actual amounts and origination date. Leave an unknown fact blank; it must be resolved before calculating.</p>
-    <MortgageWorksheetDetails data={data.mortgageWorksheet} onChange={mortgageWorksheet => onChange({ ...data, mortgageWorksheet })} />
+    <MortgageWorksheetDetails data={data.mortgageWorksheet} onChange={mortgageWorksheet => {
+      const changed=guidedSourceValuesChanged(data.mortgageWorksheet,mortgageWorksheet);
+      onChange({...data,mortgageWorksheet,...(changed?{mortgageEntries:data.mortgageEntries?.map(entry=>entry.insurancePrepaid?{...entry,sourceFactsConfirmed:null,insurancePrepaid:invalidateMortgagePrepaid(entry.insurancePrepaid)}:entry)}:{})});
+    }} />
     {mortgages.map((entry, index) => {
-      const update = (change: Partial<MortgageEntryData>) => setMortgages(mortgages.map((item, i) => i === index ? { ...item, sourceFactsConfirmed: null, ...change } : item));
+      const update = (change: Partial<MortgageEntryData>) => setMortgages(mortgages.map((item, i) => {
+        if(i!==index)return item;
+        const next={...item,...change};
+        if (!guidedSourceValuesChanged(item,next)) return next;
+        return {...next,sourceFactsConfirmed:('sourceFactsConfirmed' in change ? change.sourceFactsConfirmed : null),...(next.insurancePrepaid ? {insurancePrepaid:invalidateMortgagePrepaid(next.insurancePrepaid)} : {})};
+      }));
       return <fieldset className="guided-fieldset" key={index}><legend>Mortgage #{index + 1}</legend><div className="guided-form-grid">
         <TextFact label="Mortgage lender" value={entry.lender} onChange={(lender) => update({ lender })} />
         <CurrencyField label="Home mortgage interest" value={entry.mortgageInterest} onChange={(mortgageInterest) => update({ mortgageInterest })} required />
         <CurrencyField label="Outstanding mortgage principal (Box 2)" value={entry.outstandingPrincipal} onChange={(outstandingPrincipal) => update({ outstandingPrincipal })} required />
         <TextFact label="Mortgage origination date (Box 3)" value={entry.originationDate} type="date" onChange={(originationDate) => update({ originationDate })} />
         <MortgageSourceFields entry={entry} onChange={update} />
+        {entry.insuranceAllocationMethod === 'current-original-prepaid' && <MortgageInsurancePrepaidFields data={data} index={index} taxYear={taxYear} filingStatus={filingStatus} onChange={insurancePrepaid=>update({insurancePrepaid})}/>}
       </div><button type="button" className="utility-button" onClick={() => setMortgages(mortgages.filter((_, i) => i !== index))}>Remove mortgage #{index + 1}</button></fieldset>;
     })}
     <button type="button" className="utility-button" onClick={() => setMortgages([...mortgages, { ...emptyMortgageEntry }])}>Add mortgage</button>

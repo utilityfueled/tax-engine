@@ -44,7 +44,10 @@ mixed sources. Native intake, mixed paper and broader qualification remain open.
 The [prepaid mortgage-insurance source package](upgrade-2026-mortgage-insurance-prepaid-work.md)
 adds canonical original-policy allocation for the finite2026 FHA/private cohort.
 Distinct263/current218focused plus881metadata checks and all package static/build
-checks pass. Native intake remains active; whole2026 and filing gates stay closed.
+checks pass. The [native original collector](upgrade-2026-mortgage-insurance-native-work.md)
+now passes distinct170/current281focused plus882metadata checks and all package
+static/build checks. Actual browser and current full integration remain pending;
+whole2026 and filing gates stay closed.
 
 The [isolated hosted baseline](upgrade-2026-isolated-two-account-baseline-work.md)
 now has two synthetic accounts/trials and verified owned subscription/event rows.

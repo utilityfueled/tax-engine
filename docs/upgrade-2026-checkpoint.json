@@ -20820,5 +20820,27 @@
     "costCsvObtained": false,
     "newPaidCalls": 0,
     "modelPromotion": false
+  },
+  "nov05MortgageInsuranceNative": {
+    "status": "finite2026_native_source_PASS_not_qualified",
+    "baselineCommit": "8781c0f593741759d8c9464b1f708b7fa90317f8",
+    "focusedPass": 281,
+    "focusedFiles": 12,
+    "metadataPass": 882,
+    "metadataFiles": 4,
+    "authorPass": 146,
+    "distinctPass": 170,
+    "distinctFiles": 10,
+    "authorManifest": "2895ce3562544558b2ad62e99180bba898e9628368b298643f9eb507bb87f833",
+    "distinctManifest": "afbf6215e0867af82a6f2d7c94e358bd1996815f4d923c8a7f8e51ad9d442398",
+    "mainManifest": "779235feddacbf84ba22e6e0f83d9d00c8159b572cd061bd4aa086a7941ede06",
+    "sourcePins": 4664,
+    "inventoryTotal": 891,
+    "priorEntriesUnchanged": 890,
+    "supportedCount": 68,
+    "browser": "separate_active_successor",
+    "whole2026": "gated",
+    "filingEligible": false,
+    "savedCurrentnessManifest": "afba951a30515305525fc3154ba3cdc8b9fba5df828cfb029b3e7d03d640e524"
   }
 }

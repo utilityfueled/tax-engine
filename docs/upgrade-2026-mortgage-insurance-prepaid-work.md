@@ -55,6 +55,8 @@ saved currentness review
 That reviewer authored the candidate; independent product review is the separate
 native engineering packet above.
 
-Native original intake is a separate active package. Full-year 2026 calculation,
+The separate [native original intake package](upgrade-2026-mortgage-insurance-native-work.md)
+now passes focused source/DOM/recovery and static checks; actual browser and
+current full integration remain separate. Full-year 2026 calculation,
 filing, physical exports, human review and hosted/self-hosted qualification
 remain gated. These focused checks are not a new full-suite or release pass.

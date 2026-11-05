@@ -112,10 +112,10 @@ export function SectionDeductions({
         </fieldset>
 
         {current.method === "nonitemized" && <p className="guided-hint">This choice claims no standard or itemized deduction. Confirm why the standard deduction is unavailable in your personal information, then enter actual current charitable sources below.</p>}
-        {current.method !== "itemized" && taxYear === 2026 && <DeductionSourceDetails data={current} onChange={onDataChange} includeMortgages={false} />}
+        {current.method !== "itemized" && taxYear === 2026 && <DeductionSourceDetails taxYear={taxYear} filingStatus={filingStatus} data={current} onChange={onDataChange} includeMortgages={false} />}
         {current.method !== "itemized" && <details className="guided-expand"><summary className="guided-expand-trigger">Earlier-year mortgage refunds and recoveries</summary><div className="guided-expand-body">
           <p className="guided-hint">An earlier-year refund can create taxable income even when you do not itemize this year. Enter the original records and completed tax-benefit worksheet here.</p>
-          <DeductionSourceDetails data={current} onChange={onDataChange} includeDonations={false} />
+          <DeductionSourceDetails taxYear={taxYear} filingStatus={filingStatus} data={current} onChange={onDataChange} includeDonations={false} />
         </div></details>}
 
         <CurrencyField label="Gambling winnings not already reported on an entered W-2G" hint="Enter actual winnings regardless of deduction method. Enter 0 only when known to be zero." value={current.gamblingWinnings ?? ""} onChange={(value) => update("gamblingWinnings", value)} />
@@ -154,7 +154,7 @@ export function SectionDeductions({
               <CurrencyField label="Personal property taxes" hint="Only the annual tax based on property value, such as the value-based part of vehicle registration." value={current.personalPropertyTaxes ?? ""} onChange={(value) => update("personalPropertyTaxes", value)} />
             </div>
 
-            <DeductionSourceDetails data={current} onChange={onDataChange} />
+            <DeductionSourceDetails taxYear={taxYear} filingStatus={filingStatus} data={current} onChange={onDataChange} />
 
             <details className="guided-expand">
               <summary className="guided-expand-trigger">Less common itemized deductions</summary>

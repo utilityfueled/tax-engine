@@ -19,7 +19,11 @@ export const mortgagePointFacts = {
   pointsFullDeductionElected: "Do you elect to deduct these qualifying points in full this year?",
 } as const;
 
+import { mortgagePrepaidSource, type GuidedMortgageInsurancePrepaidData } from './guided-mortgage-insurance-prepaid';
+
 export type MortgageSourceData = {
+  insuranceAllocationMethod?: '' | 'manual-annual' | 'current-original-prepaid';
+  insurancePrepaid?: GuidedMortgageInsurancePrepaidData;
   sourceTaxYear?: string;
   accountReference?: string;
   accountHolder?: "" | "primary" | "spouse" | "joint";
@@ -134,6 +138,7 @@ export function mortgageFactErrors(entries: MortgageEntryData[], taxYear?: numbe
       if (!year || !entry.originationDate.startsWith(`${year}-`)) error("points-year", "Prior-loan points need their actual amortization history; only qualifying current-year purchase points are supported here.");
       for (const field of Object.keys(mortgagePointFacts) as (keyof typeof mortgagePointFacts)[]) if (entry[field] !== true) error(field, "Confirm every full-deduction purchase-points condition. Other points require an amortization or allocation worksheet.");
     }
+    if (entry.insuranceAllocationMethod === 'current-original-prepaid' && (year !== 2026 || entry.hasMortgageInsuranceAllocation !== true)) error('insurance-method', 'Reconcile the saved original prepaid method with actual 2026 insurance evaluation.');
     if (year === 2026) {
       if (typeof entry.hasMortgageInsuranceAllocation !== "boolean") error("insurance-review", "Confirm whether current or prepaid mortgage insurance premiums need evaluation for this year.");
       if (entry.hasMortgageInsuranceAllocation === false && validAmount("mortgageInsurancePremiums") && parseGuidedCurrency(entry.mortgageInsurancePremiums).gt(0)) error("insurance-review", "Positive Box 5 premiums require the actual contract and annual allocation facts.");
@@ -142,8 +147,14 @@ export function mortgageFactErrors(entries: MortgageEntryData[], taxYear?: numbe
         if (entry.insuranceAllocationTaxYear !== entry.sourceTaxYear) error("insurance-year", "Enter the actual insurance allocation year matching this return.");
         if (!isActualDate(entry.insuranceContractIssueDate) || entry.insuranceContractIssueDate! > `${year}-12-31`) error("insurance-contract", "Enter the actual mortgage-insurance contract issue date.");
         for (const field of ["insuranceQualifiedProvider", "insuranceAcquisitionDebt", "insuranceQualifiedResidence"] as const) if (typeof entry[field] !== "boolean") error(field, "Confirm the actual insurance provider, acquisition-debt and qualified-residence facts.");
-        const message = amountError(entry.insurancePremiumsAllocableToYear, "insurance premiums allocable to this tax year after any prepaid-premium allocation");
-        if (message) error("insurance-allocation", message);
+        if (entry.insuranceAllocationMethod === 'current-original-prepaid') {
+          try { mortgagePrepaidSource(entry); } catch (cause) { error('insurance-originals', cause instanceof Error ? cause.message : 'Complete the actual original premium facts.'); }
+          if (entry.insurancePremiumsAllocableToYear?.trim()) { const message = amountError(entry.insurancePremiumsAllocableToYear, 'saved annual mortgage insurance allocation'); if (message) error('insurance-allocation', message); }
+        } else {
+          if (entry.insuranceAllocationMethod !== undefined && entry.insuranceAllocationMethod !== 'manual-annual') error('insurance-method', 'Choose the actual insurance allocation method.');
+          const message = amountError(entry.insurancePremiumsAllocableToYear, "insurance premiums allocable to this tax year after any prepaid-premium allocation");
+          if (message) error("insurance-allocation", message);
+        }
       }
     }
     if (entry.sourceFactsConfirmed !== true) error("confirmation", "Confirm the complete mortgage statement and qualification facts after the last edit.");
