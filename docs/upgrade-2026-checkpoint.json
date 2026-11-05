@@ -21355,5 +21355,27 @@
     "filingQualified": false,
     "humanTaxReview": false,
     "ledger": "docs/upgrade-2026-taxable-state-refund-recoveries-work.md"
+  },
+  "nov05IsolatedOutageExpiredBranch": {
+    "status": "ACTUAL_BRANCH_NOT_FOUND_REHEARSAL_UNQUALIFIED",
+    "historicalManualAttempts": 140,
+    "approvedHistoricalCeiling": 240,
+    "lastActualAttemptManualCalls": 40,
+    "lastAttemptRoleMutations": 0,
+    "lastAttemptStripePosts": 0,
+    "nineteenDrainObservations": "two application connections each; held before fault",
+    "existingBranchExtensionApplicable": false,
+    "ttlConfirmationSubmitted": false,
+    "replacementCreated": false,
+    "v7ProposedCeiling": 295,
+    "v7CeilingApproved": false,
+    "additionalPreviewBuildsApproved": false,
+    "v7ReplayTests": 177,
+    "rootDistinctControls": 12,
+    "v7RuntimeApproved": false,
+    "cleanup": "SOURCE_PREPARATION_ONLY_NOT_EXECUTED",
+    "automaticRetryQualified": false,
+    "hostedQualified": false,
+    "ledger": "docs/upgrade-2026-isolated-outage-renewal-work.md"
   }
 }
