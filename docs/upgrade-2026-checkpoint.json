@@ -20254,5 +20254,31 @@
     "parentActivityGainFormsQualified": false,
     "filingQualified": false,
     "ledger": "docs/upgrade-2026-macrs-ordinary-disposition-work.md"
+  },
+  "nov05A6MACRSFullIntegration": {
+    "sourceCommit": "a6c70671f1fa176d0197d1defa25c8775d217202",
+    "status": "11 local checks passed; actual browser and distribution qualification pending",
+    "trackedPins": 5179,
+    "unit": {
+      "tests": 25788,
+      "files": 1886,
+      "reportedSkips": 0
+    },
+    "coverage": {
+      "tests": 25788,
+      "files": 1886,
+      "statements": "91.84",
+      "branches": "87.62",
+      "functions": "90.80",
+      "lines": "95.09",
+      "thresholdsUnchanged": true
+    },
+    "realPostgreSQLControls": 53,
+    "sourceDrift": [],
+    "manifestSHA256": "a75217141fc2a8308681a653f5499e949790a7f785c61ce0833e6a4fcc21adb0",
+    "ledger": "docs/upgrade-2026-a6-macrs-integration-work.md",
+    "hostedQualified": false,
+    "selfHostedQualified": false,
+    "filingQualified": false
   }
 }
