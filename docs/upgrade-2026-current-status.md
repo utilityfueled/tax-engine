@@ -46,6 +46,11 @@ adds canonical original-policy allocation for the finite2026 FHA/private cohort.
 Distinct263/current218focused plus881metadata checks and all package static/build
 checks pass. Native intake remains active; whole2026 and filing gates stay closed.
 
+The [isolated hosted baseline](upgrade-2026-isolated-two-account-baseline-work.md)
+now has two synthetic accounts/trials and verified owned subscription/event rows.
+Actual operations bind deployed480ca19d; failed-delivery automatic retry and
+outages remain untested, and later code is not qualified by this result.
+
 The later [guided render performance experiment](upgrade-2026-guided-render-experiment-work.md)
 is rejected after its final unchanged browser comparison yields successor9PASS/1timeout
 against baseline10PASS. All seven experimental paths are archived and restored/removed;

@@ -20784,5 +20784,24 @@
     "whole2026": "gated",
     "filingEligible": false,
     "savedCurrentnessManifest": "8d9965f80ae72ee0be8615f500e7bc83cdd1f05f71ed2d4376916608776d7f2f"
+  },
+  "nov05IsolatedTwoAccountBaseline": {
+    "status": "finite_baseline_PASS_outage_pending",
+    "sourceCommit": "480ca19d06a68032fce8fa08255e9f9c9e2c1e88",
+    "deploymentId": "dpl_65RJyinbWH7vuzvod5gdcjFPbnBz",
+    "syntheticActors": 2,
+    "distinctTrials": 2,
+    "createRequests": 11,
+    "baselineRequests": 8,
+    "ownedSubscriptions": 2,
+    "distinctEventReceipts": 2,
+    "receiptCountsEachOne": true,
+    "savedCreateBaselineReview": "4d4137f1287c372e368e2219287b1dfc4646e6eb869644650e44d93c65e2f25b",
+    "savedInspectReview": "9ae6eed408b42d73e98da87f00fa2fc4d6a9322667bf50e6457483c1e162343c",
+    "duplicateOrAutomaticRetryExercised": false,
+    "outageQualified": false,
+    "laterSourceQualified": false,
+    "productionChanged": false,
+    "releaseReady": false
   }
 }

@@ -34,11 +34,13 @@ source controls and eight independent saved-evidence consistency checks pass.
 These engineering checks do not establish authentic signed delivery, duplicate
 or automatic-retry behavior, exact billing effects, outages or recovery.
 
-No synthetic account or trial has been created in this isolated project yet.
-The separate signup/session access grant is pending, and the disabled account
-helper has concrete admission/recovery corrections under implementation. Those
-are blockers for the next operation, not successful staging evidence. Native,
-current-source distribution and release qualification remain open.
+The subsequently approved signup/session phase now creates two synthetic
+accounts and two distinct no-payment-method sandbox trials. Their baseline
+metadata updates and scoped read-only database inspection pass. See the
+[two-account baseline ledger](upgrade-2026-isolated-two-account-baseline-work.md)
+for exact scope and independent saved-evidence review. Automatic failed-delivery
+retries, dependency outages, current-source distribution and release
+qualification remain open.
 
 Private evidence SHA256 bindings:
 
