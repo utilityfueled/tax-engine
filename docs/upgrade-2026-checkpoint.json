@@ -20488,5 +20488,22 @@
     "humanQualified": false,
     "modelPromotionEnabled": false,
     "ledger": "docs/upgrade-2026-ai-ssa-grounding-work.md"
+  },
+  "nov05PAMarriedPaymentComposition": {
+    "status": "finite_2025_individual_accounts_verified",
+    "baseline": "d074824e",
+    "checkoutTests": 326,
+    "checkoutFiles": 6,
+    "inventoryTests": 66,
+    "distinctTests": 350,
+    "mainManifest": "0fd505180b61f98355ca5791d8e4ebb74b1c75af823f435b4c12aaf061680aeb",
+    "initialInventoryAndRootAssumptionFailuresRetained": true,
+    "staticChecks": "types3/spec/inventory/builds2/lint pass",
+    "inventoryEntries": 879,
+    "priorEntriesUnchanged": 878,
+    "supportedUnchanged": 68,
+    "nativeQualified": false,
+    "filingQualified": false,
+    "ledger": "docs/upgrade-2026-pa-married-payments-work.md"
   }
 }

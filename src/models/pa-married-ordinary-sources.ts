@@ -1,5 +1,6 @@
 /** Private actual two-owner sources. Draft unknowns never default to tax facts. */
 import {z} from 'zod';
+import {PAMarriedPaymentSourcesSchema} from './pa-married-payment-sources.js';
 import {PAOrdinaryReturnFactsSchema} from './pa-ordinary-return-facts.js';
 import {PAOrdinaryReturnCompletionSourcesSchema} from './pa-ordinary-return-completion.js';
 const answer=z.boolean().nullable(),year=z.number().int().nullable();
@@ -14,6 +15,7 @@ const person=z.object({accountHolder:owner,originalTaxpayer:identity,sourceRefer
 }).strict();
 const wage=z.object({originalIndex:z.number().int().nullable(),sourceTaxYear:year,accountHolder:owner,sourceReference:z.string(),sourceFactsConfirmed:answer,original,originalRecipientSsn:z.string(),currentUncorrectedNonvoidOriginalConfirmed:answer,allOriginalBoxesKnownConfirmed:answer,ordinaryCashCompensationOnlyConfirmed:answer,noPAFederalCompensationDifferencesConfirmed:answer,payroll:z.array(z.object({sourceReference:z.string(),paidOn:z.string(),serviceFrom:z.string(),serviceThrough:z.string(),grossCompensation:z.string(),paServicesCompensation:z.string(),outsidePAServicesCompensation:z.string()}).strict())}).strict();
 export const PAMarriedOrdinarySourcesSchema=z.object({sourceTaxYear:year,sourceReference:z.string(),sourceFactsConfirmed:answer,originalFederalSources:original,filingMode:z.enum(['','J','M']),owners:z.array(person),wages:z.array(wage),
+ paymentSources:PAMarriedPaymentSourcesSchema.optional(),
  dependentChildren:PAOrdinaryReturnFactsSchema.shape.filing.shape.dependentChildren.optional(),allDependentSourcesReviewedConfirmed:answer.optional(),
  care:PAOrdinaryReturnCompletionSourcesSchema.shape.care.extend({payerAssignments:z.array(z.object({sourceReference:z.string(),accountHolder:owner}).strict())}).strict().optional(),
  coverage:z.object({sourceReference:z.string(),allOtherIncomeClassesKnownNoneConfirmed:answer,allEmployeeExpensesAndOtherDeductionsKnownNoneConfirmed:answer,allOtherStateTaxesKnownNoneConfirmed:answer,allRestrictedCreditsKnownNoneConfirmed:answer,allCareExpensesAndEmployerBenefitsKnownNoneConfirmed:answer,allNrkStatementsKnownNoneConfirmed:answer,allUseTaxPurchasesKnownNoneConfirmed:answer,allAgencyReliefKnownNoneConfirmed:answer,allDependentSourcesKnownNoneConfirmed:answer,localJurisdictions:z.array(z.object({name:z.string(),sourceReference:z.string(),separateReturnRequired:answer}).strict())}).strict(),

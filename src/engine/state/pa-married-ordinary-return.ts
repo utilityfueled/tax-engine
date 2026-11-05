@@ -16,6 +16,7 @@ import {calculateREV1630,type REV1630Result} from './pa-rev-1630.js';
 import {calculatePAWorkingPennsylvaniansTaxCredit,type PAWorkingPennsylvaniansTaxCreditResult} from './pa-working-pennsylvanians-tax-credit.js';
 import {calculatePAMarriedDependentSources,calculatePAMarriedCareSources} from './pa-married-dependent-care-sources.js';
 import {mapPAMarriedLocalW2Boundary,type PAMarriedReportedLocalW2Row} from './pa-married-local-w2-boundary.js';
+import {calculatePAMarriedPaymentSources} from './pa-married-payment-sources.js';
 import type {ScheduleDCResult} from './pa-schedule-dc.js';
 type Owner='primary'|'spouse';
 type ReturnOwner=Owner|'joint';
@@ -80,7 +81,7 @@ export function calculatePAMarriedOrdinaryReturn(input:TaxYearInput,raw:unknown)
   const r=row.residency;ref(r.sourceReference);
   if(r.factsConfirmed!==true||r.domicileState!=='PA'||day(r.domicileFrom)!==start||day(r.domicileThrough)!==end||day(r.paAbodeFrom)!==start||day(r.paAbodeThrough)!==end||r.actualDaysInPA===null||r.actualDaysInPA<=30||r.actualDaysInPA>daysInYear||!/^\d{5}$/u.test(r.dec31SchoolDistrictCode)||r.dec31SchoolDistrictCode==='99999'||!r.dec31SchoolDistrictName.trim())return fail('actual full-year PA domicile/abode/day/school sources are incomplete; mixed residency needs its successor');
   const pay=row.payments;ref(pay.sourceReference);ref(pay.priorReturnSourceReference);
-  if(pay.allCurrentPaymentsReviewedConfirmed!==true||pay.estimatedPaymentsStatus!=='known_none'||pay.extensionPaymentsStatus!=='known_none'||pay.priorCreditStatus!=='known_none'||pay.originalReceipts.length||!['no_return','not_used','actual_return'].includes(pay.priorReturnStatus))return fail('actual complete payment history unknown or requires original account/transfer successor');
+  if(sources.paymentSources===undefined&&(pay.allCurrentPaymentsReviewedConfirmed!==true||pay.estimatedPaymentsStatus!=='known_none'||pay.extensionPaymentsStatus!=='known_none'||pay.priorCreditStatus!=='known_none'||pay.originalReceipts.length||!['no_return','not_used','actual_return'].includes(pay.priorReturnStatus)))return fail('actual complete payment history unknown or requires original account/transfer successor');
   owners.set(tag,row);
  }
  const primary=owners.get('primary'),spouse=owners.get('spouse');if(!primary||!spouse)return fail('both actual owner source packets required');
@@ -98,7 +99,8 @@ export function calculatePAMarriedOrdinaryReturn(input:TaxYearInput,raw:unknown)
  // Legacy scalar state overrides are not actual married return source proof.
  if(input.paResidentReturn!==undefined||input.paNonresidentReturn!==undefined)return fail('retained legacy PA scalar requires its actual married-source reconciliation');
  const timing=sources.timing;ref(timing.sourceReference);const asOf=day(timing.asOfDate),filing=day(timing.filingDate);
- if(asOf<end||filing<`${y+1}-01-01`||filing>`${y+1}-04-15`||timing.returnKind!=='original'||timing.filingExtension!=='none'||timing.paymentExtension!=='none'||(timing.kind!=='filed'&&timing.kind!=='expected')||(timing.kind==='filed'?filing>asOf:filing<asOf))return fail('actual or expected timely original filing sources are incomplete; other dated method unavailable');
+ if(asOf<end||filing<`${y+1}-01-01`||filing>`${y+1}-04-15`||timing.returnKind!=='original'||(timing.filingExtension!=='none'&&!(sources.paymentSources!==undefined&&timing.filingExtension==='actual_extension'))||timing.paymentExtension!=='none'||(timing.kind!=='filed'&&timing.kind!=='expected')||(timing.kind==='filed'?filing>asOf:filing<asOf))return fail('actual or expected timely original filing sources are incomplete; other dated method unavailable');
+ const paymentAccounts=sources.paymentSources===undefined?undefined:calculatePAMarriedPaymentSources(input,sources);
  const aggregates=new Map<Owner,{raw:Decimal;wh:Decimal;paServices:Decimal;sp:Decimal}>([['primary',{raw:zero(),wh:zero(),paServices:zero(),sp:zero()}],['spouse',{raw:zero(),wh:zero(),paServices:zero(),sp:zero()}]]);
  const aggregate=(tag:Owner)=>{const a=aggregates.get(tag);if(!a)return fail('actual owner aggregate missing');return a;};
  if(!Array.isArray(input.w2s)||!input.w2s.length||sources.wages.length!==input.w2s.length)return fail('complete W2 source coverage, including known zero, is required');
@@ -138,10 +140,11 @@ export function calculatePAMarriedOrdinaryReturn(input:TaxYearInput,raw:unknown)
  const jointSp=mode==='J'?roundDollar(rawTotal).plus(roundDollar(sum([...aggregates.values()].map(a=>a.sp)))):sum((['primary','spouse'] as const).map(tag=>reportedComp(tag).plus(roundDollar(ownerTotals(tag).sp))));
  const returns:PAMarriedOrdinaryReturnProjection[]=[];
  for(const tag of tags){const own=tag==='joint'?{raw:rawTotal,wh:sum([...aggregates.values()].map(a=>a.wh)),sp:sum([...aggregates.values()].map(a=>a.sp)),paServices:sum([...aggregates.values()].map(a=>a.paServices))}:ownerTotals(tag);const compensation=roundDollar(own.raw),withheld=roundDollar(own.wh);
-  const base:PA40Input={taxYear:y,compensation,unreimbursedExpenses:zero(),interest:zero(),dividends:zero(),netBusinessIncome:zero(),netGainOrLoss:zero(),netRentalIncome:zero(),estateTrustIncome:zero(),gamblingIncome:zero(),otherDeductions:zero(),taxForgivenessEligibilityIncome:jointSp,useTax:zero(),stateWithholding:withheld,creditFromPriorYear:zero(),estimatedPayments:zero(),extensionPayment:zero(),nonresidentTaxWithheld:zero(),refundableCredits:zero(),taxForgivenessCredit:zero(),residentCredit:zero(),otherCredits:zero(),underpaymentPenalty:zero(),lateFilingOrPaymentPenalty:zero(),latePaymentInterest:zero()};
+  const payments=tag==='joint'?undefined:paymentAccounts?.get(tag);
+  const base:PA40Input={taxYear:y,compensation,unreimbursedExpenses:zero(),interest:zero(),dividends:zero(),netBusinessIncome:zero(),netGainOrLoss:zero(),netRentalIncome:zero(),estateTrustIncome:zero(),gamblingIncome:zero(),otherDeductions:zero(),taxForgivenessEligibilityIncome:jointSp,useTax:zero(),stateWithholding:withheld,creditFromPriorYear:payments?.creditFromPriorYear??zero(),estimatedPayments:payments?.estimatedPayments??zero(),extensionPayment:payments?.extensionPayment??zero(),nonresidentTaxWithheld:zero(),refundableCredits:zero(),taxForgivenessCredit:zero(),residentCredit:zero(),otherCredits:zero(),underpaymentPenalty:zero(),lateFilingOrPaymentPenalty:zero(),latePaymentInterest:zero()};
   const before=calculatePA40(base),ownExtra=tag==='joint'?jointSp.minus(compensation):roundDollar(ownerTotals(tag).sp);
   const sp=calculateScheduleSP({taxYear:y,filingCategory:'married',dependents:dependentCount,paTaxableIncome:before.totalPATaxableIncome,nontaxableIncome:ownExtra,additionalEligibilityIncome:tag==='joint'?zero():jointSp.minus(before.totalPATaxableIncome).minus(ownExtra),taxLiability:before.taxLiability,taxPaidToOtherStates:zero()});
-  const rev=calculateREV1630({taxYear:y,taxLiability:before.taxLiability,withholdingAndCredits:new Money(before.stateWithholding).plus(sp.taxForgivenessCredit).plus(scheduleDC?.credit??zero()),quarterlyEstimatedPayments:[zero(),zero(),zero(),zero()]});
+  const rev=calculateREV1630({taxYear:y,taxLiability:before.taxLiability,withholdingAndCredits:new Money(before.stateWithholding).plus(sp.taxForgivenessCredit).plus(scheduleDC?.credit??zero()),quarterlyEstimatedPayments:payments?.quarterlyEstimatedPayments??[zero(),zero(),zero(),zero()]});
   // The prior100percentSP exemption is independent of filing history. This
   // packet has no prior eligibility worksheet: no_return cannot establish false.
   if(rev.penaltyRequired)return fail('actual prior exemption/forgiveness eligibility source history is required before a positive penalty; prior-SP worksheet successor unavailable');
