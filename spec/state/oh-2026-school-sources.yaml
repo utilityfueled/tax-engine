@@ -1,0 +1,30 @@
+form: OH-2026-school-source-projection
+fullName: "Annual catalog and independent actual2026 earned-district source proof"
+irsReference: "https://codes.ohio.gov/ohio-revised-code/section-5748.01"
+taxYear: 2026
+status: standalone-source-only-unqualified
+sources:
+  - https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/employer_withholding/2025-2026%20NYP%20Updates/School_Districts_2026.pdf
+  - https://codes.ohio.gov/ohio-revised-code/section-5748.01
+  - https://codes.ohio.gov/ohio-revised-code/section-5748.02
+lines:
+  - line: "annual-catalog"
+    description: 'Rev3/26 annual214 taxing districts,68earned and146traditional; code/rate/base valid only2026. Unknown or expired lookup is absent, never a no-tax residence conclusion.'
+    formula: 'Exact annual authority; no guessed future levy end dates.'
+    testRef: "tests/engine/state/oh-2026-school-catalog.test.ts::matches the complete independent annual authority census"
+  - line: "actual-source"
+    description: 'Separate single primary full-year under65 ordinary W2 earned-district source projection. Actual2026 Finder/address/district and complete owner/original W2/payroll/residence evidence; at most one actual school row per W2 with reconciled ordinary wages, no municipal/unresolved rows, duplicate originals or other income.'
+    formula: 'Sum exact ordinary wages received while full-year resident; sum complete classified original school withholding once; retain raw cents. No liability multiplication or final-form rounding rule inferred.'
+    testRef: "tests/engine/state/oh-2026-school-source.test.ts::projects actual resident wages and withholding without inventing school liability"
+  - line: "current-originals"
+    description: 'Opaque source context binds the exact current original input and supplied source packet. Owner/year/address/source/cash edits invalidate; cloned contexts cannot qualify.'
+    formula: 'Fresh validation before issuing context; SHA256 current original/source commitment, WeakMap identity and exact replay digest.'
+    testRef: "tests/engine/state/oh-2026-school-source.test.ts::revokes changed sources and rejects forged contexts"
+  - line: "unknown-financials"
+    description: 'Liability, payments, refund, penalty and late interest remain unknown/null. No 2026 final SD100, year gate, ordinary return composer, filing, paper, PY/NR/traditional/SE/native qualification.'
+    formula: 'No inferred zero and no transplantation of2025 final instructions; school proof cannot qualify an ordinary-return no-school assertion.'
+    testRef: "tests/engine/state/oh-2026-school-source.test.ts::leaves the ordinary and final return gates closed"
+  - line: "printed-locality"
+    description: "Actual printed school identity must reconcile with actual residence/Finder and annual district"
+    formula: "After validating each complete retained W2 original, admit only the exact district code, official district name, code plus name or name plus code, with case and whitespace normalization. A code-less printed name must be unique across the entire annual catalog; ambiguous names require a separate original-bound employer method. Other school codes, municipal text, blank or ambiguous labels deny pending a separate original-bound method; caller classification alone cannot override the printed original. No municipal tax or school liability inferred."
+    testRef: "tests/engine/state/oh-2026-school-source.test.ts::rejects an actual printed locality contradicting the claimed school district: %s"

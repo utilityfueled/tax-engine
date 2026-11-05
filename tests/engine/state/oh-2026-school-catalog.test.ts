@@ -1,0 +1,8 @@
+// Spec: spec/state/oh-2026-school-sources.yaml.
+import { expect, it } from 'vitest';
+import { OHIO_2026_SCHOOL_CATALOG, lookupOhio2026SchoolDistrict } from '@/engine/state/oh-2026-school-catalog.js';
+it('matches the complete independent annual authority census', () => { expect(OHIO_2026_SCHOOL_CATALOG).toHaveLength(214); expect(OHIO_2026_SCHOOL_CATALOG.filter(r => r.taxBase === 'earned')).toHaveLength(68); expect(new Set(OHIO_2026_SCHOOL_CATALOG.map(r => r.code)).size).toBe(214); });
+it.each([['0505', '0.0100', 'earned'], ['1402', '0.0100', 'earned'], ['2514', '0.0075', 'earned'], ['3204', '0.0100', 'earned'], ['7407', '0.0075', 'earned'], ['8303', '0.0100', 'earned'], ['5505', '0.0200', 'earned'], ['5402', '0.0100', 'traditional'], ['8701', '0.0125', 'traditional'], ['0203', '0.0050', 'traditional'], ['1103', '0.0150', 'traditional'], ['0302', '0.0125', 'earned'], ['1701', '0.0150', 'traditional'], ['6303', '0.0125', 'traditional']] as const)('retains official2026 code/rate/base %s', (code, rate, taxBase) => expect(lookupOhio2026SchoolDistrict(2026, code)).toMatchObject({ code, rate, taxBase }));
+it.each(['1505', '8603', '0501', '9999', '302', ' 0302', '0302x'])('unknown/expired/malformed is absent, not a no-tax residency proof: %s', code => expect(lookupOhio2026SchoolDistrict(2026, code)).toBeNull());
+it.each([2025, 2027, NaN])('never extends annual authority to another year: %s', year => expect(lookupOhio2026SchoolDistrict(year, '0302')).toBeNull());
+it('returns immutable catalog entries', () => { expect(Object.isFrozen(OHIO_2026_SCHOOL_CATALOG)).toBe(true); expect(Object.isFrozen(OHIO_2026_SCHOOL_CATALOG[0])).toBe(true); });

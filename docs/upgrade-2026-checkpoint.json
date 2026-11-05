@@ -20540,5 +20540,30 @@
     "whole2026Qualified": false,
     "filingQualified": false,
     "ledger": "docs/upgrade-2026-native-passenger-source-work.md"
+  },
+  "nov05Ohio2026SchoolSources": {
+    "status": "annual_catalog_and_finite_source_only_verified",
+    "baseline": "f957012d",
+    "annualDistricts": 214,
+    "earnedDistricts": 68,
+    "traditionalDistricts": 146,
+    "checkoutTests": 1074,
+    "checkoutFiles": 7,
+    "strictReferenceTestsIncluded": 809,
+    "inventoryTests": 66,
+    "authorTests": 265,
+    "distinctTests": 390,
+    "mainManifest": "75d6bae2606bdd09ab06e52317880e94b6d4699499603614ee4054a7423ca22e",
+    "initialSourceAndMetadataHoldsRetained": true,
+    "rootInventoryAssumptionCorrectionRetained": true,
+    "staticChecks": "types3/spec/inventory/builds2/lint pass",
+    "inventoryEntries": 884,
+    "priorEntriesUnchanged": 881,
+    "newUnsupportedEntries": 3,
+    "supportedUnchanged": 68,
+    "liabilityPaymentsRefundPenaltyInterest": "null",
+    "ordinaryOrFinal2026Qualified": false,
+    "filingQualified": false,
+    "ledger": "docs/upgrade-2026-ohio-school-2026-source-work.md"
   }
 }
