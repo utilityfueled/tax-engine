@@ -21035,5 +21035,19 @@
       "human qualification pending"
     ],
     "ledger": "docs/upgrade-2026-provider-late-refresh-work.md"
+  },
+  "nov05ExactDailyAICostExport": {
+    "status": "OBSERVED_AGGREGATE_NOT_REQUEST_OR_INVOICE_SETTLEMENT",
+    "observedAtUTC": "2026-11-05T17:46:57Z",
+    "costUSD": "0.26282160",
+    "aggregateResidualUSD": "0",
+    "reserveUSD": "0.022384",
+    "conservativeExposureUSD": "0.28520560",
+    "newPaidCalls": 0,
+    "requestLevelResolved": false,
+    "finalInvoice": false,
+    "rootManifest": "a3ac9f1b43018b452cd8bb106e66c43ba9a816f6bd69da4766c5d26b3f221ec9",
+    "independentManifest": "0e23988d019d96bfc7150cd70d98fec6755666011431a4564dfa671f4a6d967c",
+    "ledger": "docs/upgrade-2026-ai-exact-daily-cost-work.md"
   }
 }
