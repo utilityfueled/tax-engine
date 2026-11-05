@@ -3186,3 +3186,12 @@ downloaded PDFs match prior bytes; five IRS legal/instruction pages and the PA
 index match prior visible text. SSA's direct 403 and two form-index/candidate
 404s remain explicit; an alternate official SSA read confirms the unchanged 2026
 base. No product or filing change. See [the source ledger](upgrade-2026-tax-source-refresh-20261105.md).
+
+### November 5 UTC: malformed currency symbols stay visible
+
+The shared currency control distinguishes raw absence from malformed symbols
+removed by its cleaner. Genuine 12-failure RED becomes 52 passing tests; 93
+adjacent controls, scoped static checks and independent review pass, including
+17 distinct helper controls. Cleaner, grammar and Decimal arithmetic are unchanged.
+Final global/browser qualification follows the separate PA wrapper package; see
+[the grammar ledger](upgrade-2026-currency-symbol-grammar-work.md).

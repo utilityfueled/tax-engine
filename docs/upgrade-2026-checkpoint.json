@@ -19628,5 +19628,26 @@
     "filingQualificationChanged": false,
     "humanReviewPerformed": false,
     "manifestSHA256": "6f6ec1954f2e5340e1b9859b5abe9f21e916b096a575f973661e2eb028c477b7"
+  },
+  "nov05SharedCurrencySymbolGrammar": {
+    "status": "focused-and-independent-review-pass-global-pending",
+    "ledger": "docs/upgrade-2026-currency-symbol-grammar-work.md",
+    "red": {
+      "failed": 12,
+      "passed": 40
+    },
+    "green": {
+      "passed": 52
+    },
+    "adjacent": {
+      "passed": 93,
+      "files": 4,
+      "skipped": 0
+    },
+    "independentHelperControls": 17,
+    "authorManifestSHA256": "7115bce2e89183a90488c35ef83115a93b91a60adf2f767cdeb21bb2a4f3e66f",
+    "independentManifestSHA256": "9bfdb881c3b4f9a78a9ef1534d3ebc6708052d399d6dd74a8f23d7eb13d83d66",
+    "taxCalculationChanges": false,
+    "releaseReady": false
   }
 }

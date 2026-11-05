@@ -1,0 +1,24 @@
+form: "Shared native currency input grammar"
+fullName: "Preserve malformed symbolic input across blur without treating it as unknown"
+taxYear: 2025
+reference: "apps/web/src/components/guided-interview/currency-field.tsx"
+notes: |
+  UI grammar and display behavior only; no tax law, monetary arithmetic,
+  rounding or canonical money schema changes. Optional absence is the actual
+  raw empty/whitespace string. Nonempty symbols do not become absence merely
+  because the cleaner removes commas and one leading dollar sign. Existing
+  decimal syntax, optional dollar decoration, grouping and negative policy
+  remain unchanged. parseCurrencyInput stays a cleaner, not a validator.
+lines:
+  - line: "malformed-symbol-display"
+    formula: "Nonempty malformed symbol strings remain exact on formatting, including dollar-only, comma-only, combined dollar/comma and outer whitespace."
+    testRef: "tests/guided-interview/currency-field.test.ts::preserves malformed symbol input %s rather than erasing it"
+  - line: "malformed-symbol-validation"
+    formula: "Nonempty malformed symbol strings are invalid whether or not signed amounts are allowed."
+    testRef: "tests/guided-interview/currency-field.test.ts::rejects malformed symbols %s even when the cleaner returns empty"
+  - line: "native-symbol-blur"
+    formula: "Actual controlled native input and blur retain literal malformed strings, emit no empty replacement, and expose the invalid input error."
+    testRef: "tests/guided-interview/currency-field.test.ts::native blur retains malformed symbols %s and reports invalidity"
+  - line: "actual-whitespace-unknown"
+    formula: "Actual whitespace remains optional unknown and native blur normalizes it to empty without an invalid-input error. Existing zero, decimal precision, grouping and signed policies remain governed by existing cases."
+    testRef: "tests/guided-interview/currency-field.test.ts::native whitespace blur remains optional empty input"

@@ -23,7 +23,7 @@ export function parseCurrencyInput(raw: string): string {
  */
 export function formatCurrencyDisplay(value: string): string {
   const cleaned = parseCurrencyInput(value);
-  if (cleaned === "") return "";
+  if (value.trim() === "") return "";
 
   if (!isDecimalInput(value)) return value;
 
@@ -42,7 +42,7 @@ export function formatCurrencyDisplay(value: string): string {
  */
 export function isValidCurrencyValue(value: string, allowNegative = false): boolean {
   const cleaned = parseCurrencyInput(value);
-  if (cleaned === "") return true; // empty is valid (optional field)
+  if (value.trim() === "") return true; // actual empty input is optional
   return isDecimalInput(value) && new Decimal(cleaned).isFinite() && (allowNegative || new Decimal(cleaned).gte(0));
 }
 

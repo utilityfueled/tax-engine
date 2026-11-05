@@ -1,5 +1,10 @@
+// @vitest-environment jsdom
+// Spec: spec/federal/guided-currency-input-grammar.yaml.
 import { describe, it, expect } from "vitest";
+import { createElement, act, useState } from "react";
+import { mountGuidedPanel } from "../apps/web/guided-panel-dom";
 import {
+  CurrencyField,
   parseCurrencyInput,
   formatCurrencyDisplay,
   isValidCurrencyValue,
@@ -159,5 +164,71 @@ describe("isValidCurrencyValue", () => {
 
   it("returns true for very large numbers", () => {
     expect(isValidCurrencyValue("999999999")).toBe(true);
+  });
+});
+
+const malformedSymbols = ["$", ",", "$,", "  $,  "];
+
+describe("raw currency absence and malformed symbols", () => {
+  it.each(malformedSymbols)("preserves malformed symbol input %s rather than erasing it", value => {
+    expect(formatCurrencyDisplay(value)).toBe(value);
+    // The cleaner intentionally remains separate from grammar validation.
+    expect(parseCurrencyInput(value)).toBe("");
+  });
+
+  it.each(malformedSymbols)("rejects malformed symbols %s even when the cleaner returns empty", value => {
+    expect(isValidCurrencyValue(value)).toBe(false);
+    expect(isValidCurrencyValue(value, true)).toBe(false);
+  });
+
+  it.each(malformedSymbols)("native blur retains malformed symbols %s and reports invalidity", async value => {
+    const writes: string[] = [];
+    function Harness() {
+      const [current, setCurrent] = useState("");
+      return createElement(CurrencyField, {
+        label: "Actual amount",
+        value: current,
+        onChange: (next: string) => { writes.push(next); setCurrent(next); },
+      });
+    }
+    const panel = await mountGuidedPanel(createElement(Harness));
+    try {
+      const field = panel.control("Actual amount");
+      await act(async () => field.dispatchEvent(new FocusEvent("focusin", { bubbles: true })));
+      await panel.change("Actual amount", value);
+      await act(async () => field.dispatchEvent(new FocusEvent("focusout", { bubbles: true })));
+      expect(field.value).toBe(value);
+      expect(writes).toEqual([value]);
+      expect(field.getAttribute("aria-invalid")).toBe("true");
+      expect(panel.container.querySelector('[role="alert"]')?.textContent).toBe("Enter a valid dollar amount");
+    } finally {
+      await panel.dispose();
+    }
+  });
+
+  it("native whitespace blur remains optional empty input", async () => {
+    const writes: string[] = [];
+    function Harness() {
+      const [current, setCurrent] = useState("");
+      return createElement(CurrencyField, {
+        label: "Actual amount",
+        value: current,
+        onChange: (next: string) => { writes.push(next); setCurrent(next); },
+      });
+    }
+    const panel = await mountGuidedPanel(createElement(Harness));
+    try {
+      const field = panel.control("Actual amount");
+      await act(async () => field.dispatchEvent(new FocusEvent("focusin", { bubbles: true })));
+      await panel.change("Actual amount", "  ");
+      await act(async () => field.dispatchEvent(new FocusEvent("focusout", { bubbles: true })));
+      expect(field.value).toBe("");
+      expect(writes).toEqual(["  ", ""]);
+      expect(field.hasAttribute("aria-invalid")).toBe(false);
+      expect(panel.container.querySelector('[role="alert"]')).toBeNull();
+      expect(isValidCurrencyValue("  ")).toBe(true);
+    } finally {
+      await panel.dispose();
+    }
   });
 });

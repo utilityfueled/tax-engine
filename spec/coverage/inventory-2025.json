@@ -5319,6 +5319,26 @@
       ]
     },
     {
+      "key": "federal/guided-currency-input-grammar",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "apps/web/src/components/guided-interview/currency-field.tsx",
+      "specPath": "spec/federal/guided-currency-input-grammar.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/guided-current-capital-origin",
       "jurisdiction": "federal",
       "taxYear": null,
