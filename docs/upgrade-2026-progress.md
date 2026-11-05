@@ -3250,3 +3250,11 @@ actual FY/PY/NR allocations through a revalidated opaque context. Final281 tests
 22 distinct controls and nine independent Decimal oracles pass with scoped
 static checks. Public full2026/final forms/filing remain closed; broader Ohio
 software continues. See [the draft ledger](upgrade-2026-ohio-ordinary-2026-draft-work.md).
+
+### November5 UTC: Ohio guided dependency work preserves source rules
+
+Inactive business/credit projections now run lazily behind the existing current
+child guard;128 parity/adjacent controls and scoped static checks pass. The
+actual strict four still time out; no browser gate is claimed. See [the scheduling
+ledger](upgrade-2026-oh-guided-dependency-work.md). A separate observed sticky-nav
+obstruction is under source-first product correction.

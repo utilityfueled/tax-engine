@@ -19757,5 +19757,22 @@
     "ledger": "docs/upgrade-2026-ohio-ordinary-2026-draft-work.md",
     "filingEligible": false,
     "humanReview": false
+  },
+  "nov05OhioGuidedDependencyScheduling": {
+    "status": "source_parity_pass_strict_browser_four_fail",
+    "checks": {
+      "parityAndAdjacentPassed": 128,
+      "files": 6,
+      "browserPassed": 0,
+      "browserFailed": 4,
+      "browserTimeoutMilliseconds": 30000,
+      "browserRetries": 0,
+      "browserWorkers": 2,
+      "sourceChangedDuringBrowserRun": false
+    },
+    "ledger": "docs/upgrade-2026-oh-guided-dependency-work.md",
+    "strictLogSHA256": "2eb5b2385e11efd17277b923eddf6cfb7ac1b7d96db56ca055e308223ece2325",
+    "independentManifestSHA256": "7cafe6b1b3b7a93046da9ec1e8b110a10a7e0440b89b3e78b78c95153b2316a1",
+    "browserQualified": false
   }
 }

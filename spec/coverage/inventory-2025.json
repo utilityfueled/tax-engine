@@ -13117,6 +13117,26 @@
       ]
     },
     {
+      "key": "state/oh-guided-absent-dependencies",
+      "jurisdiction": "state",
+      "taxYear": 2026,
+      "sourceAuthority": "docs/upgrade-2026-execution-brief.md",
+      "specPath": "spec/state/oh-guided-absent-dependencies.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "state/oh-header-school-native-independent",
       "jurisdiction": "state",
       "taxYear": 2025,
