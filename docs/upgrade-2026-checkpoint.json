@@ -20907,5 +20907,33 @@
     "whole2026": "gated",
     "filingEligible": false,
     "savedEvidenceReviewManifest": "1b7b888d7494ad126f3fd99905602028e4e0e853af323010856c04e830239169"
+  },
+  "nov05Form172CurrentMortgageInsurance": {
+    "status": "finite2026_original_mainhome_source_PASS_not_qualified",
+    "baselineCommit": "e3751fde",
+    "genuineRed": 2,
+    "initialPass": 6,
+    "authorPass": 149,
+    "distinctPass": 164,
+    "distinctFiles": 21,
+    "focusedPass": 153,
+    "focusedFiles": 20,
+    "metadataPass": 885,
+    "metadataFiles": 4,
+    "sourcePins": 4673,
+    "specReferences": 8436,
+    "inventoryTotal": 894,
+    "priorEntriesUnchanged": 893,
+    "supportedCount": 68,
+    "regularNol": "80000",
+    "alternativeNol": "65880",
+    "investmentOriginNol": "0",
+    "authorManifest": "f3a4a16a4c2da448a0c5a55b40dd423e819736a7bb87d05b03b67e60267112fd",
+    "distinctManifest": "2cbf34090cd24cf5afc35b972c70f49249e3bd31859cacc773d47acd4a5c2d4d",
+    "mainManifest": "c02d1e47b0bf8998a6745c76f4d4dcd5d6bfefa8a8910d8b921eca5e4542e5d8",
+    "browserMetadata": "separate_two_path_review_successor",
+    "qualifiedProfessionalReview": "pending",
+    "whole2026": "gated",
+    "filingEligible": false
   }
 }

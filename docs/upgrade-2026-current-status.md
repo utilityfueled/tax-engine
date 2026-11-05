@@ -58,6 +58,13 @@ sources: distinct92/current82 plus883metadata and package checks pass. No
 calculator change or public 2026 gate opening is included. Exact current IRS
 endpoints still show the 2025 final and an explicitly draft 2026 tax table.
 
+The [current Form172 insurance source method](upgrade-2026-form172-current-mortgage-insurance-work.md)
+now classifies finite actual original main-home PMI independently in regular and
+AMT loss origins. Genuine2RED precedes author149/distinct164/current153 plus885
+metadata checks; all package checks pass with4673pins unchanged. Other insurance
+methods, professional review and final2026 qualification remain open. The public
+2026 rule pack still rejects; browser hash metadata is separately reviewed.
+
 The [isolated hosted baseline](upgrade-2026-isolated-two-account-baseline-work.md)
 now has two synthetic accounts/trials and verified owned subscription/event rows.
 Actual operations bind deployed480ca19d; failed-delivery automatic retry and

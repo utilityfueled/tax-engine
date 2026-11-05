@@ -80,10 +80,29 @@ export function calculateForm172ItemizedSources(input: TaxYearInput, context: {
   if (taxSource.length !== 1 || (!fresh.salesTaxElected && !taxSource[0].value.isZero())) {
     throw new Error("Form172 state/local income-tax business and nonbusiness classification requires actual source attribution");
   }
-  if ([fresh.foreignIncomeTaxDeduction, fresh.mortgageInsurancePremiums, fresh.casualtyLossDeduction,
+  if ([fresh.foreignIncomeTaxDeduction, fresh.casualtyLossDeduction,
     fresh.otherItemizedDeductions].some(value => !value.isZero()) || (!fresh.charitablePriorYearUsed.isZero()
       && charity?.sourceKind !== 'prior' && charity?.sourceKind !== 'complete_histories')) {
     throw new Error("Form172 other itemized deduction classifications require their separate regular and AMT source methods");
+  }
+  // IRC172(d)(4) classifies personal qualified premiums as nonbusiness;
+  // IRC56(b)(1)(B),(e) retains only independently qualified housing costs.
+  // The canonical ScheduleA pass already validates every original and its
+  // annual allocation; bind its insured loan's actual main-residence use here.
+  // Manual annual/second-home methods require their own AMT source treatment.
+  if (fresh.mortgageInsurancePremiums.gt(0)) {
+    const insured = input.form1098.filter(form => form.mortgageInsuranceQualification !== undefined);
+    if (year !== 2026 || !fresh.mortgageWorksheet.sourceFactsVerified
+      || !input.mortgageInterestWorksheet || insured.length === 0) {
+      throw new Error("Form172 positive mortgage insurance requires actual current original principal-residence and AMT sources");
+    }
+    for (const form of insured) {
+      const original = form.mortgageInsuranceQualification?.prepaidSources;
+      const loan = input.mortgageInterestWorksheet.loans.find(row => row.sourceId === original?.mortgageLoanSourceId);
+      if (!original || !loan || loan.form1098SourceId !== form.sourceId || loan.homeUse !== "main") {
+        throw new Error("Form172 mortgage insurance requires actual original principal-residence sources; other AMT dwelling methods remain separate");
+      }
+    }
   }
   const mortgage = fresh.mortgageInterest.plus(fresh.mortgageWorksheet.deductiblePoints);
   if (mortgage.gt(0)) {
@@ -117,7 +136,7 @@ export function calculateForm172ItemizedSources(input: TaxYearInput, context: {
       throw new Error("Form172 itemized source lines must reconcile before limitation");
     }
   }
-  const regular = sum(fresh.medicalDeduction, fresh.saltDeduction, mortgage, fresh.investmentInterestDeduction, fresh.charitableTotal);
+  const regular = sum(fresh.medicalDeduction, fresh.saltDeduction, mortgage, fresh.mortgageInsurancePremiums, fresh.investmentInterestDeduction, fresh.charitableTotal);
   if (!regular.eq(fresh.totalItemized)) throw new Error("Form172 ordinary itemized source components do not reconcile");
   const alternativeLimit = charity?.sourceKind === 'complete_histories' ? createCharitableNolOriginLimit(input, 'alternative')
     : charity?.sourceKind === 'prior' ? createPriorCharitableNolLimit(input, 'alternative', charity.alternativeQualifiedValue) : undefined;
@@ -126,13 +145,13 @@ export function calculateForm172ItemizedSources(input: TaxYearInput, context: {
     cryptoCharitableAmounts: input.cryptoIncome?.donations.length
       ? calculateCryptoDonations(input.cryptoIncome.donations, year).contributionAmounts : undefined,
   }).charitableTotal : fresh.charitableTotal;
-  const alternative = sum(fresh.medicalDeduction, mortgage, alternativeInterest?.deductibleAmount ?? d("0"), alternativeCharity);
+  const alternative = sum(fresh.medicalDeduction, mortgage, fresh.mortgageInsurancePremiums, alternativeInterest?.deductibleAmount ?? d("0"), alternativeCharity);
   const investment = fresh.investmentInterestDeduction;
   const audit = new AuditTrail();
   audit.record("Current Form172 itemized sources", "regular", "Regular nonbusiness itemized deductions", regular,
-    "Actual medical, personal taxes, principal-residence interest/points, ordinary investment interest and selected current charity");
+    "Actual medical, personal taxes, principal-residence interest/points and source-qualified current insurance, ordinary investment interest and selected current charity");
   audit.record("Current Form172 itemized sources", "alternative", "Alternative nonbusiness itemized deductions", alternative,
-    "Same regular-AGI medical/current charity and verified principal-residence costs plus separate AMT investment interest; personal taxes excluded");
+    "Same regular-AGI medical/current charity and verified principal-residence interest/points and current insurance plus separate AMT investment interest; personal taxes excluded");
   audit.record("Current Form172 itemized sources", "investment", "Investment-origin itemized deductions", investment,
     "Actual allowed ordinary investment interest; active nontrading business and personal costs excluded");
   return { regular, alternative, investment, lines: audit.getLines() };
