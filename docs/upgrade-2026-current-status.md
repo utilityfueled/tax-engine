@@ -49,6 +49,12 @@ now passes distinct170/current281focused plus882metadata checks and all package
 static/build checks. Actual browser and current full integration remain pending;
 whole2026 and filing gates stay closed.
 
+The [full-federal prepaid insurance tests](upgrade-2026-mortgage-insurance-prepaid-return-work.md)
+verify existing SALT, charity, QBI and section68 composition with actual original
+sources: distinct92/current82 plus883metadata and package checks pass. No
+calculator change or public 2026 gate opening is included. Exact current IRS
+endpoints still show the 2025 final and an explicitly draft 2026 tax table.
+
 The [isolated hosted baseline](upgrade-2026-isolated-two-account-baseline-work.md)
 now has two synthetic accounts/trials and verified owned subscription/event rows.
 Actual operations bind deployed480ca19d; failed-delivery automatic retry and

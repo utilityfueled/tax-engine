@@ -20842,5 +20842,28 @@
     "whole2026": "gated",
     "filingEligible": false,
     "savedCurrentnessManifest": "afba951a30515305525fc3154ba3cdc8b9fba5df828cfb029b3e7d03d640e524"
+  },
+  "nov05MortgageInsurancePrepaidReturn": {
+    "status": "verification_only_finite2026_PASS_not_qualified",
+    "baselineCommit": "e124082a208c9065949a4df0f7a61a55c6578acd",
+    "calculatorChanged": false,
+    "genuineRed": false,
+    "focusedPass": 82,
+    "focusedFiles": 3,
+    "metadataPass": 883,
+    "metadataFiles": 4,
+    "distinctPass": 92,
+    "distinctFiles": 4,
+    "specReferences": 8431,
+    "sourcePins": 4667,
+    "inventoryTotal": 892,
+    "priorEntriesUnchanged": 891,
+    "supportedCount": 68,
+    "authorManifest": "5c5b62054d2e07bbdc3a9427d12ccf94e6c3746da7432cfa5ee08a648fdd9439",
+    "distinctManifest": "dc66b2fe87f818d7315b9206c40b0f5f2040bb6793ea8fac10e9df02daa745c4",
+    "mainManifest": "c0fb6be09066a52053c4cbccceebcc3b8e17eac2684029af691940e801b10161",
+    "whole2026": "gated",
+    "filingEligible": false,
+    "savedCurrentnessManifest": "e3804a014108562d8b46003396de6084035e10599a2cf6034831ee18135112a9"
   }
 }
