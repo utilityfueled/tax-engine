@@ -20280,5 +20280,18 @@
     "hostedQualified": false,
     "selfHostedQualified": false,
     "filingQualified": false
+  },
+  "nov05ProviderAccessCurrentHandoff": {
+    "status": "received-and-actual-OpenAI-runs-completed",
+    "additionalOpenAIKeyNeeded": false,
+    "testingAuthorization": "strictly below 140 USD",
+    "knownCalculatedProviderCostUsd": "0.16451210",
+    "unresolvedUsageReserveUsd": "0.022384",
+    "knownPlusReserveUsd": "0.18689610",
+    "invoiceReconciled": false,
+    "independentHumanCorpusReview": false,
+    "googleAccessAvailable": false,
+    "modelPromotionEnabled": false,
+    "ledger": "docs/upgrade-2026-classification-live-smoke-work.md"
   }
 }
