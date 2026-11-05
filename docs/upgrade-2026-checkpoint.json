@@ -21358,7 +21358,7 @@
   },
   "nov05IsolatedOutageExpiredBranch": {
     "status": "ACTUAL_BRANCH_NOT_FOUND_REHEARSAL_UNQUALIFIED",
-    "historicalManualAttempts": 140,
+    "historicalManualAttempts": 156,
     "approvedHistoricalCeiling": 240,
     "lastActualAttemptManualCalls": 40,
     "lastAttemptRoleMutations": 0,
@@ -21373,7 +21373,7 @@
     "v7ReplayTests": 177,
     "rootDistinctControls": 12,
     "v7RuntimeApproved": false,
-    "cleanup": "SOURCE_PREPARATION_ONLY_NOT_EXECUTED",
+    "cleanup": "ACTUAL_ENDPOINT_DISABLED_TWO_ORIGINAL_TRIALS_CANCELED",
     "automaticRetryQualified": false,
     "hostedQualified": false,
     "ledger": "docs/upgrade-2026-isolated-outage-renewal-work.md",
@@ -21434,5 +21434,27 @@
     "distinctManifest": "dd71c05f03f33f3b1d68221d4a601a140548671fecab05085c3b7480232cf3e3",
     "sourceAuditManifest": "cc833fedc43c318b81d40d2bd43216cba20a04c46c47e1b29aced86d87609fc0",
     "ledger": "docs/upgrade-2026-rrta-tip-payroll-work.md"
+  },
+  "nov05IsolatedStripeCleanup": {
+    "status": "ACTUAL_ORIGINAL_ENDPOINT_DISABLED_TWO_TRIALS_CANCELED",
+    "requests": 16,
+    "getRequests": 13,
+    "mutations": 3,
+    "cumulativeManualAttempts": 156,
+    "approvedCeiling": 240,
+    "writeOutcomeUnknown": false,
+    "automaticReplay": false,
+    "invoiceNow": false,
+    "prorate": false,
+    "testOnly": true,
+    "stagingTokenRetained": true,
+    "childStdoutBytes": 0,
+    "childStderrBytes": 0,
+    "providerRetryTerminationQualified": false,
+    "outageQualified": false,
+    "actualManifest": "4e4cf7eb087d8f3e422d3dfaeb97d8eaa683d7305ebb2ec72ef02a8045bf634c",
+    "actualReceiptSHA256": "f0e49e4bf61d7e36691ee6581a308f3882b8a8cfa29d1d7ca824606fc67922fe",
+    "rootReviewManifest": "3e40323dac8f897b6474eab18f8d11fe34ace1bb7a6a580809bdf2e82c85e748",
+    "ledger": "docs/upgrade-2026-isolated-outage-renewal-work.md"
   }
 }
