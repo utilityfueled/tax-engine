@@ -6,9 +6,11 @@ notes: |
   No tax law, rounding or canonical source schema change. Native CurrencyField
   blur formats thousands with commas; only monetary callbacks in the ordinary
   panel remove UI currency decoration before retaining canonical source strings.
-  The existing parseCurrencyInput helper performs string operations, not Number
-  or floating-point arithmetic. Blank stays blank, zero stays explicit, invalid
-  text is not converted to zero, and edits still clear source confirmation.
+  The local callback admits only valid native currency syntax before using the
+  existing string cleaner; malformed literals remain literal. Whitespace-only
+  input remains unknown, zero stays explicit, and no monetary arithmetic changes.
+  Exact normalized string identity skips a write; different strings and changed
+  provenance still clear source confirmation, even for numerically equal cash.
   Textual references and strict canonical monetary admission remain unchanged.
 lines:
   - line: "blur-confirmation"
@@ -20,3 +22,18 @@ lines:
   - line: "unknown-and-zero"
     formula: "Blank remains unknown and cannot confirm; explicit zero remains0; invalid text remains invalid; monetary source references retain literal commas."
     testRef: "tests/apps/web/pa-ordinary-native-currency.test.tsx::native currency retains unknown zero and invalid facts without editing references"
+  - line: "confirmed-blur-noop"
+    formula: "Admitted formatting that normalizes to the exact stored string emits no parent update and retains the same confirmed original-bound packet."
+    testRef: "tests/apps/web/pa-ordinary-native-currency.test.tsx::ordinary currency unchanged blur preserves confirmed actual sources"
+  - line: "malformed-source-literal"
+    formula: "Malformed grouping and currency tokens remain literal after actual input and blur, cannot confirm, and can still be deliberately cleared to unknown."
+    testRef: "tests/apps/web/pa-ordinary-native-currency.test.tsx::ordinary currency preserves malformed actual amount %s"
+  - line: "exact-source-edit"
+    formula: "A different normalized amount string clears confirmation once and retains originals, including an equal-cash different lexeme."
+    testRef: "tests/apps/web/pa-ordinary-native-currency.test.tsx::ordinary currency still revokes actual source change %s"
+  - line: "actual-source-provenance"
+    formula: "A changed source reference clears confirmation with unchanged money and retained original federal proof."
+    testRef: "tests/apps/web/pa-ordinary-native-currency.test.tsx::ordinary currency source provenance edit still revokes confirmation"
+  - line: "admitted-decoration"
+    formula: "Leading dollar decoration and valid grouping normalize once; blank, whitespace and explicit zero retain their distinct original-source meanings."
+    testRef: "tests/apps/web/pa-ordinary-native-currency.test.tsx::ordinary currency retains intended decoration and unknown semantics %s"

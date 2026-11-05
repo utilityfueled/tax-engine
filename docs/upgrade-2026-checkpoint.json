@@ -19649,5 +19649,24 @@
     "independentManifestSHA256": "9bfdb881c3b4f9a78a9ef1534d3ebc6708052d399d6dd74a8f23d7eb13d83d66",
     "taxCalculationChanges": false,
     "releaseReady": false
+  },
+  "nov05PACurrencySourceIntegrity": {
+    "status": "focused-and-independent-review-pass-global-pending",
+    "ledger": "docs/upgrade-2026-pa-currency-source-integrity-work.md",
+    "dependsOnSharedCurrencyCommit": "9a93611c",
+    "red": {
+      "failed": 12,
+      "passed": 32
+    },
+    "green": {
+      "passed": 117,
+      "files": 7
+    },
+    "independentCallbackControls": 17,
+    "authorManifestSHA256": "5707d0b09387cfe94847b0904d156ba59fb785165e295d1093171afffcebc642",
+    "independentManifestSHA256": "0af0e555dbdef7fd70a735355ef2e322927031714f4ff612408acbd224755ea0",
+    "extraScopedTestTypecheck": "18 baseline-equivalent fixture diagnostics; not a passing check",
+    "combinedRequiredStatic": "types3/spec8222refs/inventory and builds2 PASS; full lint/unit/coverage/browser pending",
+    "releaseReady": false
   }
 }

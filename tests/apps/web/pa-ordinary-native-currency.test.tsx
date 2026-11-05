@@ -1,25 +1,30 @@
 // @vitest-environment jsdom
 // Spec: spec/state/pa-ordinary-native-currency.yaml.
 import React,{act,useState} from 'react';
-import {expect,it} from 'vitest';
+import {afterEach,expect,it,vi} from 'vitest';
 import {PAOrdinaryReturnDetails} from '@/components/guided-interview/pa-ordinary-return-details';
+import {confirmGuidedPAOrdinaryReturnFacts,buildGuidedPAOrdinaryReturnFacts} from '@/lib/guided-pa-ordinary-return-facts';
 import {calculatePAOrdinaryReturnFacts} from '@/engine/state/pa-ordinary-return-facts';
 import {PAOrdinaryReturnFactsSchema,type PAOrdinaryReturnFacts} from '@/models/pa-ordinary-return-facts';
 import {nativeMIRoyaltyFixture} from '../../fixtures/guided-pa-royalty-native';
 import {mountGuidedPanel} from './guided-panel-dom';
 const confirm='Confirm all actual PA return sources after the last edit';
+afterEach(()=>vi.unstubAllGlobals());
 async function mount(initial:PAOrdinaryReturnFacts){
- const {input}=nativeMIRoyaltyFixture(true);let latest=initial;
- function Harness(){const[d,set]=useState(initial);return <PAOrdinaryReturnDetails originalInput={input} data={d} onChange={next=>{if(!next)throw Error('Expected retained draft');latest=next;set(next);}}/>;}
+ const {input}=nativeMIRoyaltyFixture(true);let latest=initial,writes=0;
+ function Harness(){const[d,set]=useState(initial);return <PAOrdinaryReturnDetails originalInput={input} data={d} onChange={next=>{if(!next)throw Error('Expected retained draft');latest=next;writes++;set(next);}}/>;}
+ vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);
  const panel=await mountGuidedPanel(<Harness/>);
- return {panel,input,draft:()=>latest};
+ return {panel,input,draft:()=>latest,writes:()=>writes};
 }
 async function enterAndBlur(h:Awaited<ReturnType<typeof mount>>,label:string,value:string){
  const field=h.panel.control(label);await act(async()=>field.dispatchEvent(new FocusEvent('focusin',{bubbles:true})));
  await h.panel.change(label,value);await act(async()=>field.dispatchEvent(new FocusEvent('focusout',{bubbles:true})));
 }
 it('native blurred6475 confirms actual ordinary sources without weakening canonical money',async()=>{
- const f=nativeMIRoyaltyFixture(true),before=structuredClone(f.facts),h=await mount(f.facts);
+ const f=nativeMIRoyaltyFixture(true),before=structuredClone(f.facts),initial=structuredClone(f.facts);
+ initial.timing.remainingTaxPayment.amountAppliedToTax='6474';
+ const h=await mount(confirmGuidedPAOrdinaryReturnFacts(f.input,initial));
  try{
   await enterAndBlur(h,'Actual or expected amount applied to tax','6475');
   expect(h.draft().sourceFactsConfirmed).toBeNull();
@@ -89,5 +94,65 @@ it('native currency retains unknown zero and invalid facts without editing refer
   await h.panel.click(confirm);expect(h.draft().sourceFactsConfirmed).toBeNull();
   await h.panel.change('Remaining-tax payment original source reference','Private, exact original reference');
   expect(h.draft().timing.remainingTaxPayment.sourceReference).toBe('Private, exact original reference');
+ }finally{await h.panel.dispose();}
+});
+
+const actualAmount='Actual or expected amount applied to tax';
+async function mountConfirmedCurrency(){
+ const f=nativeMIRoyaltyFixture(true),confirmed=confirmGuidedPAOrdinaryReturnFacts(f.input,f.facts);
+ const packet=buildGuidedPAOrdinaryReturnFacts(f.input,confirmed),h=await mount(confirmed);
+ return {h,confirmed,packet};
+}
+async function blurActualAmount(h:Awaited<ReturnType<typeof mount>>){
+ const field=h.panel.control(actualAmount);
+ await act(async()=>field.dispatchEvent(new FocusEvent('focusin',{bubbles:true})));
+ await act(async()=>field.dispatchEvent(new FocusEvent('focusout',{bubbles:true})));
+}
+it('ordinary currency unchanged blur preserves confirmed actual sources',async()=>{
+ const {h,confirmed,packet}=await mountConfirmedCurrency(),before=structuredClone(confirmed);
+ try{
+  await blurActualAmount(h);expect(h.writes()).toBe(0);expect(h.draft()).toBe(confirmed);
+  expect(h.draft()).toEqual(before);expect(h.draft().sourceFactsConfirmed).toBe(true);
+  expect(buildGuidedPAOrdinaryReturnFacts(h.input,h.draft())).toEqual(packet);
+ }finally{await h.panel.dispose();}
+});
+it.each([['real primitive change','6476'],['equal cash different exact lexeme','6475.00']])('ordinary currency still revokes actual source change %s',async(_kind,value)=>{
+ const {h,confirmed}=await mountConfirmedCurrency(),before=structuredClone(confirmed);
+ try{
+  await enterAndBlur(h,actualAmount,value);expect(h.writes()).toBe(1);
+  expect(h.draft().timing.remainingTaxPayment.amountAppliedToTax).toBe(value);expect(h.draft().sourceFactsConfirmed).toBeNull();
+  expect(h.draft().originalFederalSources).toEqual(before.originalFederalSources);
+  expect(()=>buildGuidedPAOrdinaryReturnFacts(h.input,h.draft())).toThrow(/confirm complete actual sources/);
+  expect(confirmed).toEqual(before);
+ }finally{await h.panel.dispose();}
+});
+it.each(['1,0','1,,0','12,34','$1,0','$',',','$,','not-an-amount'])('ordinary currency preserves malformed actual amount %s',async raw=>{
+ const {h,confirmed}=await mountConfirmedCurrency(),before=structuredClone(confirmed);
+ try{
+  await enterAndBlur(h,actualAmount,raw);
+  expect(h.draft().timing.remainingTaxPayment.amountAppliedToTax).toBe(raw);expect(h.panel.control(actualAmount).getAttribute('aria-invalid')).toBe('true');
+  expect(h.draft().sourceFactsConfirmed).toBeNull();await h.panel.click(confirm);expect(h.draft().sourceFactsConfirmed).toBeNull();
+  expect(h.draft().originalFederalSources).toEqual(before.originalFederalSources);
+  await enterAndBlur(h,actualAmount,'');expect(h.draft().timing.remainingTaxPayment.amountAppliedToTax).toBe('');
+  await h.panel.click(confirm);expect(h.draft().sourceFactsConfirmed).toBeNull();expect(confirmed).toEqual(before);
+ }finally{await h.panel.dispose();}
+});
+it('ordinary currency source provenance edit still revokes confirmation',async()=>{
+ const {h,confirmed}=await mountConfirmedCurrency(),before=structuredClone(confirmed);
+ try{
+  await h.panel.change('PA return original source reference','Different actual source provenance');expect(h.writes()).toBe(1);
+  expect(h.draft().sourceReference).toBe('Different actual source provenance');expect(h.draft().timing.remainingTaxPayment).toEqual(before.timing.remainingTaxPayment);
+  expect(h.draft().sourceFactsConfirmed).toBeNull();expect(h.draft().originalFederalSources).toEqual(before.originalFederalSources);
+  expect(()=>buildGuidedPAOrdinaryReturnFacts(h.input,h.draft())).toThrow(/confirm complete actual sources/);
+ }finally{await h.panel.dispose();}
+});
+it.each([[' $1,234.50 ','1234.50'],['1,234.50','1234.50'],['',''],['   ',''],['0','0']])('ordinary currency retains intended decoration and unknown semantics %s',async(raw,expected)=>{
+ const {h,confirmed}=await mountConfirmedCurrency(),before=structuredClone(confirmed);
+ try{
+  await enterAndBlur(h,actualAmount,raw);expect(h.writes()).toBe(1);
+  expect(h.draft().timing.remainingTaxPayment.amountAppliedToTax).toBe(expected);expect(h.draft().sourceFactsConfirmed).toBeNull();
+  expect(h.draft().originalFederalSources).toEqual(before.originalFederalSources);
+  if(expected===''){await h.panel.click(confirm);expect(h.draft().sourceFactsConfirmed).toBeNull();}
+  expect(confirmed).toEqual(before);
  }finally{await h.panel.dispose();}
 });

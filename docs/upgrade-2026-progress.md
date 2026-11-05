@@ -3195,3 +3195,13 @@ adjacent controls, scoped static checks and independent review pass, including
 17 distinct helper controls. Cleaner, grammar and Decimal arithmetic are unchanged.
 Final global/browser qualification follows the separate PA wrapper package; see
 [the grammar ledger](upgrade-2026-currency-symbol-grammar-work.md).
+
+### November 5 UTC: PA malformed currency cannot become a different fact
+
+The ordinary wrapper validates syntax before cleaning decoration and skips only
+exact unchanged strings. Malformed grouping remains invalid; real amount/lexeme
+and provenance changes still revoke confirmation. Actual DOM RED12/PASS32 becomes
+117 passing focused controls; required combined types/spec/inventory/builds pass
+and distinct engineering review passes. Eighteen additional fixture typing errors
+remain baseline-equivalent, not a passing combined check. Global/browser gates
+continue; see [the source-integrity ledger](upgrade-2026-pa-currency-source-integrity-work.md).

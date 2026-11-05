@@ -124,3 +124,11 @@ The [November 5 tax-source refresh](upgrade-2026-tax-source-refresh-20261105.md)
 checks 20 official endpoints with no new scoped law or final-form change. All 11
 PDFs match prior bytes. The incomplete final 2026 packet and qualified human review
 remain external gates; retrieval success alone does not qualify a form.
+
+The separate [shared currency grammar repair](upgrade-2026-currency-symbol-grammar-work.md)
+and [PA source-integrity repair](upgrade-2026-pa-currency-source-integrity-work.md)
+retain malformed symbols/grouping and preserve confirmation only for exact no-op
+strings. Focused controls and independent engineering reviews pass. Combined
+required types, spec/inventory and both builds pass; current full unit, coverage,
+lint and browser qualification continue. Earlier exact-source results are not
+relabeled as validation of these later fixes.
