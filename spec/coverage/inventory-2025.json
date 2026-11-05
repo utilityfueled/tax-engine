@@ -13442,6 +13442,33 @@
       ]
     },
     {
+      "key": "state/oh-2026-actual-balance-payment",
+      "jurisdiction": "state",
+      "taxYear": 2026,
+      "sourceAuthority": "https://codes.ohio.gov/ohio-revised-code/section-5747.09",
+      "specPath": "spec/state/oh-2026-actual-balance-payment.yaml",
+      "enginePath": "src/engine/state/oh-2026-payment-source.ts",
+      "packetPath": null,
+      "implementationTestRefs": [
+        "tests/engine/state/oh-2026-actual-balance-payment.test.ts::rejects unknown contradictory or unsupported actual payment %s",
+        "tests/engine/state/oh-2026-actual-balance-payment.test.ts::admits actual timely balance at statutory boundary %s",
+        "tests/engine/state/oh-2026-actual-balance-payment.test.ts::reports source-qualified return and paid account separately for %s",
+        "tests/engine/state/oh-2026-actual-balance-payment.test.ts::binds exact current originals and keeps payment private identifiers off results",
+        "tests/engine/state/oh-2026-actual-balance-payment.test.ts::preserves withholding-only fields and unsupported year gates"
+      ],
+      "implementationNote": "The finite original-bound timely small-balance employee method is exercised through this source helper. This association adds no packet, independent human review, public2026 filing qualification or broader payment-method support.",
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "state/oh-2026-baseline",
       "jurisdiction": "state",
       "taxYear": 2026,
@@ -13506,6 +13533,27 @@
       "sourceAuthority": null,
       "specPath": null,
       "enginePath": "src/engine/state/oh-2026-ordinary-source.ts",
+      "packetPath": null,
+      "specExists": false,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": false,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing spec coverage",
+        "Missing packet generation or inclusion rule",
+        "Missing complete spec-linked regression coverage",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "state/oh-2026-payment-source",
+      "jurisdiction": "state",
+      "taxYear": null,
+      "sourceAuthority": null,
+      "specPath": null,
+      "enginePath": "src/engine/state/oh-2026-payment-source.ts",
       "packetPath": null,
       "specExists": false,
       "engineExists": true,

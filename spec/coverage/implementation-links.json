@@ -1606,6 +1606,18 @@
       "note": "The named method is exercised through this shared engine module by this specification's own regression references. No additional packet or filing support is claimed. This association neither changes scenario exclusions nor establishes independent human review."
     },
     {
+      "key": "state/oh-2026-actual-balance-payment",
+      "enginePath": "src/engine/state/oh-2026-payment-source.ts",
+      "testRefs": [
+        "tests/engine/state/oh-2026-actual-balance-payment.test.ts::rejects unknown contradictory or unsupported actual payment %s",
+        "tests/engine/state/oh-2026-actual-balance-payment.test.ts::admits actual timely balance at statutory boundary %s",
+        "tests/engine/state/oh-2026-actual-balance-payment.test.ts::reports source-qualified return and paid account separately for %s",
+        "tests/engine/state/oh-2026-actual-balance-payment.test.ts::binds exact current originals and keeps payment private identifiers off results",
+        "tests/engine/state/oh-2026-actual-balance-payment.test.ts::preserves withholding-only fields and unsupported year gates"
+      ],
+      "note": "The finite original-bound timely small-balance employee method is exercised through this source helper. This association adds no packet, independent human review, public2026 filing qualification or broader payment-method support."
+    },
+    {
       "key": "state/oh-2026-resident-credit-draft",
       "enginePath": "src/engine/state/oh-2026-resident-credit.ts",
       "testRefs": [

@@ -48,3 +48,12 @@ export const Ohio2026VaResidentCreditSourcesSchema = Ohio2026OrdinarySourcesSche
   noOtherOhioCreditBeyondDocumentedResidentCreditConfirmed: z.literal(true),
   residentCreditSources: Ohio2026ResidentCreditSourcesSchema,
 }).strict();
+
+/** Spec: state/oh-2026-actual-balance-payment.yaml. Documentary reported-balance projection, not a tax credit or external account observation. */
+export interface Ohio2026ActualBalancePaymentProjection {
+  methodVersion: 'oh-2026-actual-timely-small-balance-v1';
+  status: 'actual_paid_on_time';
+  actualPaymentDate: string;
+  actualBalancePaymentApplied: import('decimal.js').default;
+  outstandingTaxBalance: import('decimal.js').default;
+}

@@ -1,5 +1,6 @@
 /** Spec: state/oh-2026-return-draft.yaml. Finite current employee originals only. */
 import Decimal from 'decimal.js';
+import {validateOhio2026ActualBalancePaymentSources} from './oh-2026-payment-source.js';
 import { sha256 } from '@noble/hashes/sha2.js';
 import { bytesToHex } from '@noble/hashes/utils.js';
 import { TaxpayerSchema, W2Schema, StandardDeductionFactsSchema, type TaxYearInput } from '@/models/inputs.js';
@@ -37,6 +38,8 @@ interface Projection {
   filingStatus: 'single' | 'married_filing_jointly';
   federalAgi: string; reciprocalWageExclusion?: string; residentCreditIncome?: string; residentCreditTaxPaid?: string; withholding: string; eligibleExemptions: number;
   primaryQualifyingIncome: string; spouseQualifyingIncome?: string;
+  actualBalancePayment?: true;
+  originalWithholding?: string;
   residency: OhioResidencyFacts;
 }
 export interface Ohio2026OrdinaryContext {
@@ -163,11 +166,17 @@ function qualifyEmployee(input: TaxYearInput, raw: unknown, reciprocal?: Ohio202
   day(valuationDate); day(timing.asOfDate);
   if (timing.asOfDate < '2027-01-01' || timing.asOfDate > '2027-04-15' || valuationDate < '2027-01-01' || valuationDate > '2027-04-15'
     || timing.kind === 'filed' && valuationDate > timing.asOfDate || timing.kind === 'expected' && valuationDate < timing.asOfDate) fail('actual timely current filing chronology required');
+  const actualBalancePayment = payments.remainingTaxPayment.status === 'actual_payment';
+  if (actualBalancePayment) {
+    if (reciprocal || residentCredit) fail('actual small balance payment needs the ordinary employee method');
+    validateOhio2026ActualBalancePaymentSources(input);
+  } else {
   if (payments.paymentRows.length || payments.priorReturn.status !== 'no_return' || payments.priorCreditCarryforward.status !== 'none' || payments.remainingTaxPayment.status !== 'no_remaining_tax'
     || !cash(payments.balanceFacts.useTax).isZero() || !cash(payments.balanceFacts.outgoingCarryforward).isZero() || !cash(payments.balanceFacts.donations).isZero()) fail('actual ordinary withholding-only coverage and zero balance elections required');
+  }
   const currentDigest = digest({ input, sources: raw });
   const context: Ohio2026OrdinaryContext = Object.freeze({ methodId: reciprocal ? 'oh-2026-pa-reciprocal-employee-draft-v1' : residentCredit ? 'oh-2026-va-resident-credit-employee-draft-v1' : 'oh-2026-ordinary-employee-draft-v1', sourceCommitment: currentDigest });
-  contexts.set(context, { currentDigest, projection: { filingStatus: filingStatus as Projection['filingStatus'], federalAgi: federalAgi.toFixed(), ...(reciprocal ? { reciprocalWageExclusion: federalAgi.toFixed() } : {}), ...(paidResident ? { residentCreditIncome: paidResident.income, residentCreditTaxPaid: paidResident.taxPaid } : {}), withholding: roundDollar(withholding).toFixed(), eligibleExemptions: holders.length,
+  contexts.set(context, { currentDigest, projection: { ...(actualBalancePayment ? {actualBalancePayment: true as const, originalWithholding: withholding.toFixed()} : {}), filingStatus: filingStatus as Projection['filingStatus'], federalAgi: federalAgi.toFixed(), ...(reciprocal ? { reciprocalWageExclusion: federalAgi.toFixed() } : {}), ...(paidResident ? { residentCreditIncome: paidResident.income, residentCreditTaxPaid: paidResident.taxPaid } : {}), withholding: roundDollar(withholding).toFixed(), eligibleExemptions: holders.length,
     primaryQualifyingIncome: wageTotals.primary.toFixed(), ...(filingStatus === 'married_filing_jointly' ? { spouseQualifyingIncome: wageTotals.spouse.toFixed() } : {}), residency: structuredClone(facts) } });
   return context;
 }

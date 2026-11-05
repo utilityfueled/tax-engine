@@ -21615,5 +21615,49 @@
     "primaryManifest": "41ccbd13a443881b35f051674c9a5fcc0b9d6e9b7da52480a03e76abde70b18a",
     "distinctManifest": "2e3694b9b64a3356b364348f375f4c3edee8607ec36dadb2f6697148bbdf1d21",
     "readinessChanged": false
+  },
+  "nov05Ohio2026ActualBalancePayment": {
+    "status": "finite_current_main_package_pass",
+    "workLedger": "docs/upgrade-2026-ohio-actual-balance-payment-work.md",
+    "authorManifest": "61a4dcf9ff2ee902a7e81f980901fc312ca16a2ce7cf639b2317ed1e9063c698",
+    "distinctManifest": "fad515c22bad50a6c49b6c2b5b9226cb152b775e8684732c16482e2ab0e20ed0",
+    "mainManifest": "b6ab7ac6f189c11747d351f395b2e7b265990cc5b30cdc33567b8855357173d2",
+    "mainAffected": {
+      "tests": 387,
+      "files": 12
+    },
+    "mainMetadata": {
+      "tests": 905,
+      "files": 4
+    },
+    "staticChecksPassed": [
+      "types",
+      "contracts",
+      "web-types",
+      "spec",
+      "inventory",
+      "build",
+      "web-build",
+      "lint",
+      "strict-owned-lint"
+    ],
+    "sourceAudit": {
+      "changedHashes": 5,
+      "hashes": 1807,
+      "contracts": 150,
+      "cases": 584,
+      "otherFieldsUnchanged": true
+    },
+    "inventory": {
+      "entries": 912,
+      "oldRowsUnchanged": 910,
+      "supported": 68
+    },
+    "dualThreshold": "Conservative raw/reported <=500 admission; no controlling statutory rounding opinion",
+    "accountStatus": "Documentary receipt arithmetic, not independently observed external settlement",
+    "fullCurrentGlobal": false,
+    "browserExecutedByPackage": false,
+    "humanReview": false,
+    "filingQualified": false
   }
 }
