@@ -7,6 +7,7 @@ import type {TaxReturnResult} from '@/models/outputs.js';
 import {calculateFederalTax} from '@/engine/federal.js';
 import {calculatePAMarriedOrdinaryReturn,type PAMarriedOrdinaryReturnProjection,type PAMarriedOrdinaryReturnResult} from '@/engine/state/pa-married-ordinary-return.js';
 import {isPAMarriedOrdinaryReturnResult} from '@/engine/state/pa-return-result.js';
+import {projectPACareOwnedPaper,assertPACarePublicDisplayPrivacy,type PACareOwnedPaper} from './pa-care-review-facts.js';
 import {redactReviewIdentifiers} from './redact-review-identifiers.js';
 import {assertPdfExportAllowed} from './export-policy.js';
 
@@ -36,12 +37,14 @@ const sameActualResult=(a:unknown,b:unknown)=>isDeepStrictEqual(comparable(a),co
 export function preparePAMarriedReturnReview(input:TaxYearInput):PreparedPAMarriedReturnReview{
  assertPdfExportAllowed(input.taxpayer.taxYear,input.taxpayer.taxYear);
  if(!TaxYearInputSchema.safeParse(input).success||!input.paMarriedOrdinarySources)fail('complete original canonical household packet is required');
- // Care needs its own identifier-kind and physical Schedule DC qualification.
- if(input.dependentCare!==undefined||input.dependentCareBenefits!==undefined||input.paMarriedOrdinarySources.care!==undefined)fail('actual care paper requires its separately reviewed projection successor');
+ // Actual care admission additionally requires its reviewed documentary projection.
+ const careRequested=input.dependentCare!==undefined||input.dependentCareBenefits!==undefined||input.paMarriedOrdinarySources.care!==undefined;
+ if(careRequested&&!input.paMarriedOrdinarySources.care?.careSources?.paperIdentitySources)fail('actual care paper requires its documentary identity projection successor');
  const original=structuredClone(input),expected=calculatePAMarriedOrdinaryReturn(original,original.paMarriedOrdinarySources);
  if(expected.returns.some(row=>row.scheduleSP.dependents!==original.taxpayer.dependents.length))fail('actual child count differs from original-bound Schedule SP');
  if(original.taxpayer.dependents.length>9&&expected.returns.some(row=>row.scheduleSP.taxForgivenessCredit.gt(0)))fail('more than nine claimed SP children require a reviewed continuation projection');
  const federal=calculateFederalTax(original);
+ if(careRequested){const dc=expected.returns.length===1?expected.returns[0]?.scheduleDC:undefined,source=original.paMarriedOrdinarySources?.care?.careSources;if(!dc||!source)fail('actual care paper requires its supported joint source method');projectPACareOwnedPaper(original,source,dc,federal);}
  if(!expected.federal.earnedIncomeCredit.isZero()||expected.returns.some(row=>!row.workingCredit.credit.isZero()||!row.rev1630.totalInterest.isZero()||!row.pa40.refundableCredits.isZero()))fail('actual positive working credit or penalty needs its separately reviewed paper successor');
  const token=Object.freeze({[brand]:true as const});
  contexts.set(token,{original,expected,federal,originalDigest:digest(original),redactedDigest:digest(redactReviewIdentifiers(original))});return token;
@@ -69,7 +72,7 @@ function safeText(original:TaxYearInput):(value:string)=>string{
 export interface PAMarriedOwnedPaper{
  accountHolder:'joint'|'primary'|'spouse';taxpayer:TaxYearInput['taxpayer'];projection:PAMarriedOrdinaryReturnProjection;
  children:ReadonlyArray<{name:string;age:number;relationship:string}>;
- schoolName:string;spColumns:{A?:{compensation:string;gifts:string};B?:{compensation:string;gifts:string};C?:{compensation:string;gifts:string}};
+ care?:PACareOwnedPaper;schoolName:string;spColumns:{A?:{compensation:string;gifts:string};B?:{compensation:string;gifts:string};C?:{compensation:string;gifts:string}};
 }
 
 /** No original recapture or source confirmation occurs on read. */
@@ -104,7 +107,9 @@ export function resolvePAMarriedReturnReview(input:TaxYearInput,result:TaxReturn
   const values=(which:'primary'|'spouse')=>({compensation:owner(which).reportedCompensation.toFixed(0),gifts:owner(which).spOtherIncome.toFixed(0)});
   const spColumns:PAMarriedOwnedPaper['spColumns']=tag==='joint'?{A:{compensation:projection.pa40.totalPATaxableIncome.toFixed(0),gifts:projection.scheduleSP.nontaxableIncome.toFixed(0)}}:
    {B:values(tag),C:values(tag==='primary'?'spouse':'primary')};
-  return {accountHolder:tag,taxpayer,projection,children,schoolName:text(projection.schoolDistrictName),spColumns};
+  const source=original.paMarriedOrdinarySources?.care?.careSources;
+  const care=projection.scheduleDC&&source?projectPACareOwnedPaper(original,source,projection.scheduleDC,saved.federal):undefined;
+  return {accountHolder:tag,taxpayer,projection,children,...(care?{care}:{}),schoolName:text(projection.schoolDistrictName),spColumns};
  });
 }
 
@@ -115,6 +120,7 @@ export function assertPAMarriedPublicDisplayPrivacy(input:TaxYearInput,result:Ta
  resolvePAMarriedReturnReview(input,result,token);
  const saved=contexts.get(token);if(!saved)fail('actual original prepared context is required');
  const original=saved.original,text=safeText(original),taxpayer=original.taxpayer;
+ if(original.dependentCare)assertPACarePublicDisplayPrivacy(original);
  const person=(row:TaxYearInput['taxpayer']['primary'])=>[row.firstName,row.lastName,...(row.occupation!==undefined?[row.occupation]:[])];
  const display=[...person(taxpayer.primary),...(taxpayer.spouse?person(taxpayer.spouse):[]),...Object.values(taxpayer.address),...taxpayer.dependents.flatMap(child=>[child.firstName,child.lastName,child.relationship])];
  if(display.some(value=>typeof value==='string'&&text(value)!==value))fail('private original identifier in federal display requires a separately qualified display projection');

@@ -11,7 +11,7 @@ notes: |
   distinctly but do not invent a PA provider oval or admit paper. Provider kinds
   cannot be inferred from punctuation, digit count or names. Global federal TIN
   semantics, existing actual-care calculations, historical absence compatibility,
-  full2026 unavailable rulepack and all official paper/filing gates remain intact.
+  full2026 unavailable rulepack and all filing gates remain intact. Stage2 official2025 care paper may separately admit a complete original-bound parent context; the documentary validator itself never qualifies paper.
   Source-only identity validation is not care eligibility or a renderer authority.
 lines:
   - line: "optional-identity"
@@ -42,5 +42,5 @@ lines:
     formula: Existing documentary snapshots and unknown answers remain visible through mount and serialization; capture or removal is an explicit action, never a factual default.
     testRef: "tests/apps/web/pa-care-paper-identity-native.test.tsx::native unchanged blur preserves identity confirmation and retained unknowns"
   - line: "year-paper"
-    formula: Documentary facts may be collected for2026; this does not unlock the full2026 return, existing care paper denial or filing eligibility.
+    formula: Documentary facts may be collected for2026; this does not unlock the full2026 return or filing eligibility. The separate original-bound2025 review successor may admit complete SSN/FEIN facts; providerITIN and incomplete documentary facts remain denied, and documentary validator readiness flags remainfalse.
     testRef: "tests/engine/state/pa-care-paper-sources.test.ts::identity collection preserves current year and paper gates"

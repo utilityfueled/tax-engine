@@ -1,3 +1,6 @@
+import {isDeepStrictEqual} from 'node:util';
+import {redactReviewIdentifiers} from './redact-review-identifiers.js';
+import {fillPACareOfficialReview} from './mappings/2025/fill-pa-care-official-review.js';
 import {hasForm2210OriginalIdentity,prepareForm2210Review,form2210ReviewOriginalInput,requiresForm2210ScheduleAiReview,recordSavedForm2210Review,type PreparedForm2210Review,type SavedForm2210Review} from './form-2210-review-context.js';
 import {fillForm2210} from './mappings/2025/fill-form-2210.js';
 import {isPAMarriedOrdinaryReturnResult} from '@/engine/state/pa-return-result.js';
@@ -459,6 +462,7 @@ export async function fillReturn(
   if(form2210Review)form2210ReviewOriginalInput(input,result,form2210Review);
   let form2210ReviewArtifact:SavedForm2210Review|undefined;
   const paMarriedReview=options.paMarriedReview;
+  let paOrdinaryCareOfficial=false;
   const marriedRequested=input.paMarriedOrdinarySources!==undefined||isPAMarriedOrdinaryReturnResult(result.stateReturns?.pennsylvania)||paMarriedReview!==undefined;
   if(marriedRequested){
     if(!input.paMarriedOrdinarySources||!isPAMarriedOrdinaryReturnResult(result.stateReturns?.pennsylvania)||!paMarriedReview)throw Error('Actual married PA originals, owned result and original prepared review context are required.');
@@ -481,12 +485,15 @@ export async function fillReturn(
   if (!paMarriedReview && result.stateReturns?.pennsylvania){
     if(isPAOrdinaryReturnResult(result.stateReturns.pennsylvania)||input.paOrdinaryReturnFacts!==undefined||input.paOrdinaryReturnCompletionSources!==undefined||options.paOrdinaryReview!==undefined){
       if(options.paWorkingCreditReview!==undefined)throw new Error("PA ordinary result requires its actual ordinary prepared context");
-      assertPAOrdinaryReturnReview(input,result,options.paOrdinaryReview);
+      paOrdinaryCareOfficial=assertPAOrdinaryReturnReview(input,result,options.paOrdinaryReview).care!==undefined;
     }else{
       if(options.paOrdinaryReview!==undefined)throw new Error("PA ordinary prepared context cannot qualify a legacy result");
       assertPAWorkingCreditReview(input,result,options.paWorkingCreditReview);
     }
   }
+  // Public care companions use canonical structured redaction; retained originals
+  // remain private in the prepared context and are never rewritten here.
+  if((marriedRequested||isPAOrdinaryReturnResult(result.stateReturns?.pennsylvania))&&input.dependentCare!==undefined&&!isDeepStrictEqual(input,redactReviewIdentifiers(input)))throw Error('Public official care review requires redacted render input');
   const eicReview = hasEicReviewSources(input) || result.scheduleEIC?.form8862 || options.eicReview
     ? options.eicReview ?? prepareEicReview(input) : undefined;
   const actualEicChildren = eicReview ? eicReviewChildren(eicReviewOriginalSourceInput(input, result, eicReview)) : undefined;
@@ -1532,11 +1539,13 @@ export async function fillReturn(
       && hasPAScheduleDC(result.stateReturns.pennsylvania)
       && shouldIncludePAScheduleDCReferenceSummary(result.stateReturns.pennsylvania.scheduleDC)
     ) {
-      const outputPathPAScheduleDC = await fillPAScheduleDCReference(
-        result.stateReturns.pennsylvania.scheduleDC,
-        outputDir,
-      );
-      filledForms.push(outputPathPAScheduleDC);
+      if(paOrdinaryCareOfficial){
+        if(!options.paOrdinaryReview)throw Error('Official care paper requires its original prepared ordinary context');
+        const doc=await fillPACareOfficialReview(input,result,join(blankFormsDir,'pa-schedule-dc.pdf'),{kind:'ordinary',prepared:options.paOrdinaryReview});
+        const path=join(outputDir,'pa-ordinary-dc-review.pdf');await savePacketPdf(doc,path);filledForms.push(path);
+      }else{
+        const outputPathPAScheduleDC=await fillPAScheduleDCReference(result.stateReturns.pennsylvania.scheduleDC,outputDir);filledForms.push(outputPathPAScheduleDC);
+      }
     }
 
     if (

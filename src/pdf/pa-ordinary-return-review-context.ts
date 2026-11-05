@@ -1,5 +1,7 @@
 /** Actual ordinary source review; opaque prepared tokens never originate from render facts. */
 import Decimal from 'decimal.js';
+import {calculateFederalTax} from '@/engine/federal.js';
+import {projectPACareOwnedPaper,assertPACarePublicDisplayPrivacy,type PACareOwnedPaper} from './pa-care-review-facts.js';
 import {createHash} from 'node:crypto';
 import {isDeepStrictEqual} from 'node:util';
 import {TaxYearInputSchema,type TaxYearInput} from '@/models/inputs.js';
@@ -11,7 +13,7 @@ import {ordinarySourcePrecision} from '@/engine/state/pa-ordinary-source-precisi
 import {redactReviewIdentifiers} from './redact-review-identifiers.js';
 const brand=Symbol('actual prepared PA ordinary return review');
 export interface PreparedPAOrdinaryReturnReview {readonly [brand]:true}
-interface Context {original:TaxYearInput;originalDigest:string;redactedDigest:string;expected:PAOrdinaryReturnResult;residentCredit?:PAOrdinaryResidentCreditRenderFacts;scheduleD?:PAOrdinaryScheduleDRenderFacts}
+interface Context {original:TaxYearInput;originalDigest:string;redactedDigest:string;expected:PAOrdinaryReturnResult;care?:PACareOwnedPaper;federal?:TaxReturnResult;residentCredit?:PAOrdinaryResidentCreditRenderFacts;scheduleD?:PAOrdinaryScheduleDRenderFacts}
 const contexts=new WeakMap<PreparedPAOrdinaryReturnReview,Context>();
 const digest=(value:unknown)=>createHash('sha256').update(JSON.stringify(value)).digest('hex');
 const fail=(detail:string):never=>{throw new Error('PA ordinary PDF source review: '+detail);};
@@ -102,10 +104,14 @@ export function preparePAOrdinaryReturnReview(input:TaxYearInput):PreparedPAOrdi
  const original=structuredClone(input),expected=calculatePAOrdinaryReturn(original,original.paOrdinaryReturnFacts,original.paOrdinaryReturnCompletionSources);
  if(expected.refundDisposition.donations.length>5)return fail('more than five original donation elections require their physical continuation method');
  const residentCredit=actualResidentCreditPaper(original,expected),scheduleD=actualDigitalPaper(original,expected);
- const token:PreparedPAOrdinaryReturnReview=Object.freeze({[brand]:true as const});contexts.set(token,{original,expected,...(residentCredit?{residentCredit}:{}),...(scheduleD?{scheduleD}:{}),originalDigest:digest(original),redactedDigest:digest(redactReviewIdentifiers(original))});return token;
+ const source=original.paOrdinaryReturnCompletionSources?.care.careSources;
+ const federal=expected.scheduleDC?calculateFederalTax(original):undefined;
+ const care=source&&source.paperIdentitySources&&federal&&expected.scheduleDC?projectPACareOwnedPaper(original,source,expected.scheduleDC,federal):undefined;
+ if(source?.paperIdentitySources&&!care)fail('actual care paper requires supported complete care source credit');
+ const token:PreparedPAOrdinaryReturnReview=Object.freeze({[brand]:true as const});contexts.set(token,{original,expected,...(care?{care}:{}),...(federal?{federal}:{}),...(residentCredit?{residentCredit}:{}),...(scheduleD?{scheduleD}:{}),originalDigest:digest(original),redactedDigest:digest(redactReviewIdentifiers(original))});return token;
 }
 export interface PAOrdinaryReviewRenderFacts{
- filingStatus:'S'|'F';finalReturnReason:string;dependentChildren:number;residentCredit?:PAOrdinaryResidentCreditRenderFacts;scheduleD?:PAOrdinaryScheduleDRenderFacts;
+ care?:PACareOwnedPaper;filingStatus:'S'|'F';finalReturnReason:string;dependentChildren:number;residentCredit?:PAOrdinaryResidentCreditRenderFacts;scheduleD?:PAOrdinaryScheduleDRenderFacts;
  residency:{status:'resident'|'part_year'|'nonresident';schoolCode:string;schoolDistrictName:string;from?:string;through?:string};
  requestedRefund:string;nextYearCredit:string;donations:Array<{code:string;amount:string}>;
 }
@@ -116,9 +122,18 @@ export function assertPAOrdinaryReturnReview(input:TaxYearInput,result:TaxReturn
  const actual=digest(input);if(actual!==context.originalDigest&&actual!==context.redactedDigest)return fail('actual original sources changed after preparation');
  if(!isDeepStrictEqual(saved,context.expected))return fail('retained actual result does not reconcile with the complete original source calculation');
  const original=context.original,facts=PAOrdinaryReturnFactsSchema.parse(original.paOrdinaryReturnFacts),residency=PAResidencySourcesSchema.parse(original.paResidencySources),expected=context.expected;
+ let care:PACareOwnedPaper|undefined;
+ if(context.federal){
+  const {stateReturns:_callerStates,...callerFederal}=result,{stateReturns:_savedStates,...savedFederal}=context.federal??{};
+  if(!isDeepStrictEqual(callerFederal,savedFederal))fail('actual federal result differs from original care result');
+  const fresh=calculatePAOrdinaryReturn(original,original.paOrdinaryReturnFacts,original.paOrdinaryReturnCompletionSources),freshFederal=calculateFederalTax(original),source=original.paOrdinaryReturnCompletionSources?.care.careSources;
+  if(!source||!fresh.scheduleDC||!isDeepStrictEqual(fresh,expected)||!isDeepStrictEqual(freshFederal,context.federal))return fail('retained original care replay differs');
+  assertPACarePublicDisplayPrivacy(original);
+  if(source.paperIdentitySources)care=projectPACareOwnedPaper(original,source,fresh.scheduleDC,freshFederal);
+ }
  const redactSourceText=privateSourceTextRedactor(original);
  const period=expected.residencyStatus==='part_year'?residency.residency.domicilePeriods.find(p=>p.state==='PA'):undefined;
- return {...(context.residentCredit?{residentCredit:structuredClone(context.residentCredit)}:{}),...(context.scheduleD?{scheduleD:structuredClone(context.scheduleD)}:{}),filingStatus:expected.filingChoice,finalReturnReason:redactSourceText(facts.filing.finalReturnReason),dependentChildren:expected.dependentChildren,
+ return {...(care?{care}:{}),...(context.residentCredit?{residentCredit:structuredClone(context.residentCredit)}:{}),...(context.scheduleD?{scheduleD:structuredClone(context.scheduleD)}:{}),filingStatus:expected.filingChoice,finalReturnReason:redactSourceText(facts.filing.finalReturnReason),dependentChildren:expected.dependentChildren,
  residency:{status:expected.residencyStatus,schoolCode:expected.schoolDistrictCode,schoolDistrictName:redactSourceText(residency.residency.schoolDistrictName),...(period?{from:period.from,through:period.through}:{})},
  requestedRefund:expected.refundDisposition.refund.toFixed(0),nextYearCredit:expected.refundDisposition.nextYearCredit.toFixed(0),donations:expected.refundDisposition.donations.map(row=>({code:row.code,amount:row.amount.toFixed(0)}))};
 }

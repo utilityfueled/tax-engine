@@ -1,0 +1,56 @@
+form: "PA-Actual-Care-Official-Review"
+fullName: "Original-bound PA2025 Schedule DC and public care companions"
+taxYear: 2025
+reference: "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40dc.pdf"
+notes: |
+  Official04-25 DC source hash6abbe9cbaf97a405392191dbe311bead6bcbde876faa8f6349aad2fe9a3cd795.
+  Exact original factual eligibility/cash calculations remain authoritative. Full-year
+  single and cohabitingJ current-care source methods only; known-zero129/prior-year
+  credit, actual W2 earned income and under13 full-year dependents. No tax algorithm
+  change. Final2026/filing/unsupported residencies and broader care methods remain gated.
+  Only actual source form page1 is copied; the blank second page and instructions
+  are excluded. The whole source has82 get_fields entries, page1 has84widgets and
+  74unique canonical names. Provider/person identity types require documentary sources.
+  ProviderITIN has no admitted PA oval. PersonATIN selects SSN per instructions.
+  Printed label/instructions use federal2441line9a, not field529 tooltip Schedule3line2.
+  Existing PA2026 frozen2022 percentages must never use enhanced federal credit.
+lines:
+  - line: "actual-public"
+    formula: "Replay retained originals and exact complete state/federal result, then emit actual federal2441,1040Schedule3,PA40 and one officialDC review. One-person3000 at20%=600; two-person7000 capped6000=1200; lesser-spouse1000 at20%=200. Legacy single absent-documentary source remains an honest reference."
+    testRef: "tests/pdf/pa-actual-care-official-review.test.ts::actual care public packet includes official DC and required federal companions %s"
+  - line: "display-privacy"
+    formula: "Before any template/output IO compare all original household/provider/person display strings against original-bound private identifiers, receipt numbers and source references with case/separator variants; reject unsafe originals without rewriting canonical facts or result/token commitments."
+    testRef: "tests/pdf/pa-actual-care-official-review.test.ts::actual source private care displays reject public emission before IO %s"
+  - line: "federal-binding"
+    formula: "Official care context binds the complete actual original federal result, not just state totals or user credit scalar; reject caller federal/result changes before template IO."
+    testRef: "tests/pdf/pa-actual-care-official-review.test.ts::ordinary care federal mutation rejects before missing template IO"
+  - line: "header-provider"
+    formula: "Render actual claimant/spouse names, actual provider name/address/paid amount with documentary SSN/FEIN oval, and no cohabitingJ separated exception. All personal/provider identifiers remain empty. ProviderITIN/special statuses or more5providers require a separately qualified successor."
+    testRef: "tests/pdf/pa-actual-care-official-review.test.ts::official DC physical cells and source ovals preserve documentary facts %s %s"
+  - line: "person"
+    formula: "Render every counted original qualifying person first/last DOB relationship and qualified expense, including actual second zero-expense person; SSN/ITIN ovals follow documentary kind and ATIN uses SSN. No >5row truncation or >4federal companion overflow."
+    testRef: "tests/pdf/pa-actual-care-official-review.test.ts::official DC physical cells and source ovals preserve documentary facts %s %s"
+  - line: "1"
+    formula: "Line1 counts actual source-qualified people, not positive-expense rows; reconcile exact fresh ScheduleDC qualifyingPersons."
+    testRef: "tests/pdf/pa-actual-care-official-review.test.ts::actual care public packet includes official DC and required federal companions %s"
+  - line: "2"
+    formula: "2025 line2 equals actual validated ScheduleDC credit under federal2441line9a/PA limits, carried once toPA40line23 and reconciled to payments/refund. Preserve original cents until reporting and never recompute from rounded paper rows."
+    testRef: "tests/pdf/pa-actual-care-official-review.test.ts::actual care public packet includes official DC and required federal companions %s"
+  - line: "physical"
+    formula: "New static source-only page retains physical source text/rectangles/selected oval appearances, no instructions/buttons/active forms/scripts/embedded files/hidden identifiers; saved whole-object/decoded-stream privacy and readable fit must hold in both global modes, with one review notice. Never truncate unfit facts."
+    testRef: "tests/pdf/pa-actual-care-official-review.test.ts::official DC physical cells and source ovals preserve documentary facts %s %s"
+  - line: "source-gates"
+    formula: "Reject incomplete/stale documentary facts, copied contexts, altered private originals/results, providerITIN, wrong source revision and physical overflow; preserve actual2026 and filing denials and no-care historical assertions."
+    testRef: "tests/pdf/pa-actual-care-official-review.test.ts::actual care retains unsupported stale year and filing boundaries"
+  - line: "single-display-privacy"
+    formula: "Optional source-qualified single care official route also rejects provider/person embedded private identifiers and receipt markers before any public emission; legacy reference behavior does not authorize unsafe official companions."
+    testRef: "tests/pdf/pa-actual-care-official-review.test.ts::actual single private care displays reject public emission before IO %s"
+  - line: "legacy-care-privacy"
+    formula: "Absence of optional documentary identity metadata retains the honest reference method, never exempts actual care federal replay or public display privacy. Reject unredacted public official-care input before IO without mutating originals."
+    testRef: "tests/pdf/pa-actual-care-official-review.test.ts::legacy actual care cannot bypass privacy or federal binding by omitting documentary metadata"
+  - line: "public-redaction"
+    formula: "Public actual-care dispatch, including the documentary-absent reference route, requires the canonical redacted render input; original identifiers remain private in the opaque context, never silently rewritten."
+    testRef: "tests/pdf/pa-actual-care-official-review.test.ts::unredacted actual care public input rejects before IO %s"
+  - line: "reported-cents"
+    formula: "Retain exact original cents throughout statutory care calculation; round printed row amounts only for reporting. Decimal2997.50 at20%=599.50→600;2997.49 at20%=599.498→599;3000.49 cap3000→600. Refund elections are explicit original facts."
+    testRef: "tests/pdf/pa-actual-care-official-review.test.ts::actual cents credit and original refund reconcile independently %s %s"

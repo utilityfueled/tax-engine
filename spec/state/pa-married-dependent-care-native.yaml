@@ -32,3 +32,7 @@ lines:
     description: Revalidate actual current originals on each read
     formula: Build rejects changed current child or provider originals without recapturing or mutating saved snapshots.
     testRef: "tests/apps/web/pa-married-dependent-care-native.test.tsx::native married build rejects externally changed originals without recapturing them"
+  - line: "paper-disclosure"
+    description: Source confirmation cannot imply automatic paper qualification
+    formula: Actual married care confirmation explains the additional current documentary identity, calculation and mapping requirements for finite review pages; filing and separate local returns remain unqualified. No readiness or calculation changes occur from this status text.
+    testRef: "tests/apps/web/pa-married-dependent-care-native.test.tsx::native care confirmation discloses current documentary review gates"

@@ -3341,3 +3341,5 @@ failures. See [the actual-run ledger](upgrade-2026-openai-development-smoke-work
 No held-out/human qualification or model promotion occurred.
 
 - November5: [prospective AI classification contract](upgrade-2026-ai-classification-contract-work.md) publishes exact descriptive IDs and labels in the real shared schema. Genuine7FAIL/1PASS precedes155focusedPASS and18distinct controls; original smoke failures remain unchanged. No provider run, human qualification or model promotion.
+
+- November5: [actual PA care official review](upgrade-2026-pa-actual-care-official-review-work.md) adds original-bound2025 DC/federal companions and fixes reproduced public privacy/federal-binding defects, including legacy metadata-absent care. Focused913+936PASS; independent21public controls and30PDF/54page strict auditPASS. Filing/full2026/broader cohorts remain gated.

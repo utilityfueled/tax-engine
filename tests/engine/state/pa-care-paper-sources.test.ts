@@ -47,7 +47,11 @@ it.each(['missingYear','unknownKind','missingOriginal','staleReference'] as cons
 
 it('identity collection preserves current year and paper gates',()=>{
   const f=actual();
-  expect(()=>preparePAMarriedReturnReview({...f.input,paMarriedOrdinarySources:f.sources})).toThrow(/care.*paper|care.*projection/i);
+  // Stage2 separately qualifies the complete2025 parent context, not this identity validator.
+  expect(validatePACarePaperIdentitySources(f.input,f.care).officialPaperQualified).toBe(false);
+  expect(()=>preparePAMarriedReturnReview({...f.input,paMarriedOrdinarySources:f.sources})).not.toThrow();
+  const incomplete=actual();incomplete.care.paperIdentitySources.providers[0].originalAvailableConfirmed=false;
+  expect(()=>preparePAMarriedReturnReview({...incomplete.input,paMarriedOrdinarySources:incomplete.sources})).toThrow(/identity|documentary|source/i);
   const future=actual(2026);
   expect(buildGuidedPACareSources(future.input,future.care)).toEqual(future.care);
   expect(()=>calculatePAMarriedOrdinaryReturn(future.input,future.sources)).toThrow(/2026.*rule pack.*incomplete/i);
@@ -61,7 +65,8 @@ it.each(['ssn','fein','itin'] as const)('documentary identifier kinds remain exp
   expect(r.providerKindsSupportedBy2025DC).toBe(kind!=='itin');
   expect(r.officialPaperQualified).toBe(false);
   expect(r.filingEligible).toBe(false);
-  expect(()=>preparePAMarriedReturnReview({...f.input,paMarriedOrdinarySources:f.sources})).toThrow(/care.*paper|care.*projection/i);
+  if(kind==='itin')expect(()=>preparePAMarriedReturnReview({...f.input,paMarriedOrdinarySources:f.sources})).toThrow(/provider ITIN|oval/i);
+  else expect(()=>preparePAMarriedReturnReview({...f.input,paMarriedOrdinarySources:f.sources})).not.toThrow();
   expect(confirmGuidedPACarePaperIdentitySources(f.input,f.care).paperIdentitySources?.providers[0].identifierKind).toBe(kind);
   expect(f.input).toEqual(before);
 });

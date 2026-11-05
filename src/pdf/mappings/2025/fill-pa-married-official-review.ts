@@ -6,6 +6,7 @@ import {PDFDocument,PDFDict,PDFName,PDFObjectCopier,PDFRef,PDFStream,StandardFon
 import type {TaxYearInput} from '@/models/inputs.js';
 import type {TaxReturnResult} from '@/models/outputs.js';
 import {resolvePAMarriedReturnReview,type PreparedPAMarriedReturnReview,type PAMarriedOwnedPaper} from '@/pdf/pa-married-return-review-context.js';
+import {fillPACareOfficialReview} from './fill-pa-care-official-review.js';
 import {markReviewPdf} from '@/pdf/export-policy.js';
 import {projectPA40DiagnosticFields,PA_40_FIELDS as F} from './fill-pa-40.js';
 
@@ -92,7 +93,7 @@ async function spReview(directory:string,paper:PAMarriedOwnedPaper):Promise<PDFD
  return staticCopy(doc,[0,1],'Pennsylvania 2025 actual owned Schedule SP review');
 }
 
-export interface PAMarriedReviewDocument{filename:string;accountHolder:PAMarriedOwnedPaper['accountHolder'];kind:'pa40'|'sp';doc:PDFDocument}
+export interface PAMarriedReviewDocument{filename:string;accountHolder:PAMarriedOwnedPaper['accountHolder'];kind:'pa40'|'sp'|'dc';doc:PDFDocument}
 /** Private source replay precedes template I/O; this never enables packet/filing routes. */
 export async function fillPAMarriedOfficialReview(input:TaxYearInput,result:TaxReturnResult,blankFormsDir:string,prepared:PreparedPAMarriedReturnReview):Promise<PAMarriedReviewDocument[]>{
  const papers=resolvePAMarriedReturnReview(input,result,prepared),outputs:PAMarriedReviewDocument[]=[];
@@ -107,6 +108,7 @@ export async function fillPAMarriedOfficialReview(input:TaxYearInput,result:TaxR
   }
   await doc.getForm().updateFieldAppearances(await doc.embedFont(StandardFonts.Helvetica));flatten(doc);
   outputs.push({filename:`pa-${paper.accountHolder}-40-review.pdf`,accountHolder:paper.accountHolder,kind:'pa40',doc:await staticCopy(doc,[0,1],'Pennsylvania 2025 actual owned PA40 review')});
+  if(paper.care)outputs.push({filename:`pa-${paper.accountHolder}-dc-review.pdf`,accountHolder:paper.accountHolder,kind:'dc',doc:await fillPACareOfficialReview(input,result,join(blankFormsDir,'pa-schedule-dc.pdf'),{kind:'married',prepared})});
   if(hasSP)outputs.push({filename:`pa-${paper.accountHolder}-sp-review.pdf`,accountHolder:paper.accountHolder,kind:'sp',doc:await spReview(blankFormsDir,paper)});
  }
  return outputs;

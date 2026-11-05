@@ -19976,5 +19976,25 @@
     "qualifiedHumanReview": false,
     "modelPromotion": false,
     "completion": false
+  },
+  "nov05PaActualCareOfficialReview": {
+    "status": "implemented-and-independently-software-reviewed",
+    "ledger": "docs/upgrade-2026-pa-actual-care-official-review-work.md",
+    "ownedPaths": 15,
+    "focusedPdfSpecTests": 913,
+    "focusedNativeSourceSpecTests": 936,
+    "distinctPublicControls": 21,
+    "independentSavedPdfs": 30,
+    "independentSavedPages": 54,
+    "authorSavedPhysicalPdfs": 60,
+    "actualRasterFirstPages": 9,
+    "newSpecRefs": 13,
+    "rootTypes": "PASS",
+    "webTypes": "PASS",
+    "scopedLintWarnings": 0,
+    "qualifiedHumanReview": false,
+    "filingEnabled": false,
+    "full2026Enabled": false,
+    "completion": false
   }
 }
