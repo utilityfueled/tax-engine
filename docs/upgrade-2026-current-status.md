@@ -29,6 +29,12 @@ merge tree matching `7d93fd67`. Both full browser jobs fail before cases at sour
 audit; all 80 advisory IDs remain unaccepted. Distinct saved-evidence review also
 reconstructs the current full unit/coverage counters without rerunning workloads.
 
+The [later security/CI record](upgrade-2026-late-security-ci-refresh-work.md)
+retains46fresh primary GETs with no new actionable patch and80unaccepted image
+advisory IDs. Actual earlier8781 image smoke/recovery/scan evidence is separately
+bound to its full merge tree; both browser jobs failed before cases. New branch
+commits require their own full verification and release evidence.
+
 The [separate PA payment browser package](upgrade-2026-pa-payment-native-browser-work.md)
 passes two selected desktop/mobile journeys with zero retries/skips and no protected
 requests. Full collection now578 preserves all576 previous cases. The initial

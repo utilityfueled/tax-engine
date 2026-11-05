@@ -20963,5 +20963,30 @@
     "knownPlusReserveUsd": "0.28520560",
     "qualifiedHumanReview": "pending",
     "promotion": false
+  },
+  "nov05LateSecurityCIRefresh": {
+    "status": "bounded_primary_and_historical_artifact_evidence_not_release",
+    "primaryGets": 46,
+    "primaryManifest": "d6a77590c6f98e6812d2268797791c17e22060534ac4137392a53ccd264a92fe",
+    "sourcePins": 9,
+    "newActionablePatch": false,
+    "unacceptedImageAdvisoryIds": 80,
+    "imageMatches": 181,
+    "imageCriticalMatches": 0,
+    "advisoryOwner": "pending",
+    "expiry": "2026-11-07 or before qualification",
+    "snapshotHead": "8bb563af",
+    "webRun": 42060762468,
+    "webStatus": "failure_generic_precase_cause_unproven",
+    "ciRun": 42060762567,
+    "ciStatus": "inprogress_2026-11-05T16:33Z",
+    "historicalArtifactHead": "8781c0f5",
+    "artifactDigest": "24aaa990a14569fa6c74e2296c2e3a4994fc6661354b45022e1cca334f63189a",
+    "artifactMembers": 14,
+    "imageId": "sha256:c90d610f3b2fc1eb8b620a4a4682270b3ec59ad1d9a4bcb3e40f0d83cee81ab5",
+    "distinctArtifactManifest": "314bf42a62c7328567ea9969e7246448651ce50ba2bca5420ae9506464f9c871",
+    "correctionManifest": "501073a5ec1996657904c2f3d2689a0e38b805b23aaec6a24cb63b95aa38f402",
+    "currentHeadQualified": false,
+    "humanSecurityReview": "pending"
   }
 }
