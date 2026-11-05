@@ -19775,5 +19775,22 @@
     "strictLogSHA256": "2eb5b2385e11efd17277b923eddf6cfb7ac1b7d96db56ca055e308223ece2325",
     "independentManifestSHA256": "7cafe6b1b3b7a93046da9ec1e8b110a10a7e0440b89b3e78b78c95153b2316a1",
     "browserQualified": false
+  },
+  "nov05IsolatedAllURLProtection": {
+    "status": "actual_protection_readback_pass_bootstrap_not_yet_submitted",
+    "userApprovalReference": "call_63b350efe3904427b0a41f9ce827b53f",
+    "projectId": "prj_1Adt63vTTGTcz9r0fwZeGztadk8a",
+    "ssoProtectionDeploymentType": "all",
+    "connectorPatchInvocations": 1,
+    "changedReturnedProjectKeys": [
+      "updatedAt",
+      "ssoProtection"
+    ],
+    "defaultDomainUnchanged": true,
+    "previewEnvironmentMetadataRows": 13,
+    "previewMetadataBeforeAfterEqual": true,
+    "additionalBuildsSubmitted": 0,
+    "ledger": "docs/upgrade-2026-isolated-bootstrap-hold.md",
+    "receiptSHA256": "9eb1d7b07a87f2173bb335d4e806bf1af46c6a2889aa0acb9b056cc1b30c305a"
   }
 }

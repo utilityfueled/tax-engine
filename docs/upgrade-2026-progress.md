@@ -3258,3 +3258,11 @@ child guard;128 parity/adjacent controls and scoped static checks pass. The
 actual strict four still time out; no browser gate is claimed. See [the scheduling
 ledger](upgrade-2026-oh-guided-dependency-work.md). A separate observed sticky-nav
 obstruction is under source-first product correction.
+
+### November5 UTC: approved isolated all-URL protection verified
+
+The user approves a protected isolated Production bootstrap and two Preview
+builds. One connector protection change and fresh readback confirm all URLs
+protected, the sole default domain unchanged and13 Preview-only metadata rows
+unchanged. No additional deployment yet; fresh bootstrap admission follows. See
+[the updated isolated ledger](upgrade-2026-isolated-bootstrap-hold.md).

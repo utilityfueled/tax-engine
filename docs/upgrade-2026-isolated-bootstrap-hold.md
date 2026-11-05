@@ -39,3 +39,22 @@ Private evidence: `nov05-isolated-first-deployment-production-incident`,
 `nov05-vercel-first-deployment-target-independent`,
 `nov05-isolated-production-bootstrap-candidate-v2`, and
 `nov05-isolated-bootstrap-protection-permission`.
+
+## Approved protection successor — November5 UTC
+
+The user subsequently approved one protected isolated Production bootstrap and
+up to two Preview builds (call_63b350efe3904427b0a41f9ce827b53f). The purpose-built
+connector performs one scoped protection PATCH, then independent GETs confirm
+`ssoProtection.deploymentType=all`. The returned project projection changes only
+the protection and update timestamp. The sole isolated default domain is
+unchanged; normal CLI non-decrypted metadata confirms all13 Preview-only entries
+are identical before and after. No credential value is printed or saved by these
+checks. The connector's environment-list403 is retained; the approved normal CLI
+read supplies that bounded metadata evidence.
+
+Private evidence: `.local/upgrade-evidence/nov05-isolated-protection-root-current/`.
+This protection readback does not establish HTTP/application qualification or a
+successful bootstrap. The earlier canceled deployment remains canceled and its
+incorrect original target intent remains preserved. At this record no additional
+deployment has been submitted; the reviewed exact480 bootstrap still needs fresh
+source/project/target checks. No existing production project is changed.
