@@ -8810,6 +8810,26 @@
       ]
     },
     {
+      "key": "federal/passenger-native-source-collector-browser",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://www.irs.gov/instructions/i4562",
+      "specPath": "spec/federal/passenger-native-source-collector-browser.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/passive-income-ordering",
       "jurisdiction": "federal",
       "taxYear": 2025,

@@ -13,6 +13,16 @@ the completion contract. **The upgrade is not release-ready.**
 
 The prospective [SSA source-box safeguard](upgrade-2026-ai-ssa-grounding-work.md) passes925 focused/spec-reference tests plus all package static checks. Historical provider runs remain unchanged; full source integration must be refreshed after this change.
 
+Subsequent reviewed commits add separate PA payment composition (`6454304f`),
+single PA local W-2 originals (`8b9eb78f`), native passenger originals
+(`f957012d`) and source-only 2026 Ohio school records (`f0da6d75`). Their package
+checks pass; they do not refresh the full unit/coverage result above. The
+[passenger browser successor](upgrade-2026-passenger-native-browser-work.md)
+passes two selected desktop/mobile cases, with 576 now collected. Full current
+runtime remains pending. The [midday advisory refresh](upgrade-2026-advisory-midday-refresh-work.md)
+(`6a5da878`) finds zero package audit findings but leaves image findings,
+Next metadata conflicts and ownership/expiry requirements open.
+
 The later [guided render performance experiment](upgrade-2026-guided-render-experiment-work.md)
 is rejected after its final unchanged browser comparison yields successor9PASS/1timeout
 against baseline10PASS. All seven experimental paths are archived and restored/removed;

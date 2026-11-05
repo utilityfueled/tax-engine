@@ -52,6 +52,7 @@ Author V1 `2b22b23b5d83b19cc374a5c4fe6d752c4f9eadf36db173e4a35ff9af93f02e72`;
 spec V2 `277e479281910a8e11c5c040dcce43d9e12ddf7e3de4746d95a712ab56e487dd`;
 distinct V2 `827d697ac7871fd4463f5e406a516e98114452aaf9fc1591bf8ba59eea23b89a`.
 
-Real desktop/mobile browser, current full unit/coverage, physical/final forms,
-professional human review and hosted/self-host artifact qualification remain
-open. Filing and model promotion stay disabled.
+The later [actual desktop/mobile interview](upgrade-2026-passenger-native-browser-work.md)
+passes both selected browser cases. Current full unit/coverage and full-browser,
+physical/final forms, professional human review and hosted/self-host artifact
+qualification remain open. Filing and model promotion stay disabled.

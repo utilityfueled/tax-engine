@@ -20588,5 +20588,27 @@
     "newImageScan": false,
     "mainManifest": "64ca35c22580f21b6532b5171f512211213eafb1aafa9bd2d66ba1e27d57a26a",
     "ledger": "docs/upgrade-2026-advisory-midday-refresh-work.md"
+  },
+  "nov05PassengerNativeBrowser": {
+    "status": "selected2_PASS_full576_pending",
+    "staticManifest": "d5258129cc8482c94d58241c9bcd3a5ceb66dff7868e69c9e9fa9a489db2c437",
+    "actualManifest": "a23aebb6bcabb66938d21b8709c8e5567ed1008efb97d1192c5d37ed2a4d7323",
+    "distinctManifest": "d886e70d01e5fcd8a028748f2446604b6ecf6c39c708748ef6abdf5438e6bc00",
+    "staticTests": 934,
+    "actualPass": 2,
+    "collection": 576,
+    "retries": 0,
+    "configuredWorkers": 2,
+    "activeWorkers": 1,
+    "deadlineMs": 90000,
+    "durationsMs": [
+      3087,
+      3553
+    ],
+    "sourcePins": 4602,
+    "immutableCompiledPaths": 321,
+    "initialSandboxBindHoldRetained": true,
+    "fullCurrentUnitCoverage": "pending",
+    "hostedNativeQualification": false
   }
 }

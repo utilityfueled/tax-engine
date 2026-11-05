@@ -1,0 +1,18 @@
+form: "Native-Passenger-Source-Collector-Browser"
+taxYear: 2026
+status: "prospective-finite-native-lifecycle-only"
+reference: "https://www.irs.gov/instructions/i4562"
+notes: |
+  Browser verification of already specified documentary handoff only. No new tax
+  rule, computed source election, qualified federal return or export permission.
+  Ordinary desktop and 100-percent bonus mobile retain independent literal
+  Schedule C results3775/4775; source capture does not qualify whole2026 returns.
+lines:
+  - line: "actual-native-save-reopen"
+    description: "Actual documentary entry from blank and persistent capture"
+    formula: "Seed unrelated complete personal/business originals only; select passenger method and enter every documentary primitive via real native input/select controls, including explicit zero and false records and explicit null class-election branch. Capture originals only with the actual button after business reviews. Preserve capture and all original snapshots through native save/reload and a no-op currency blur."
+    testRef: "apps/web/tests/passenger-native-source-collector.spec.ts::enters passenger originals saves reopens and revokes stale proof while 2026 remains blocked"
+  - line: "stale-and-year-gates"
+    description: "Equal-money evidence edit, actual finite arithmetic and closed exports"
+    formula: "Read the saved actual flow through the real bridge and canonical schema, assert independent literal ordinary3775 or bonus4775 and Form4562 9225/15225, and require actual federal calculation and review/filing policy denial. A source-reference edit revokes confirmation, retains prior originals and makes the bridge unknown. Advanced native workspace shows unsupported2026 and no filled/review PDF actions. Observe zero filled-return, provider and both analysis requests; never change rate limits or runner budgets."
+    testRef: "apps/web/tests/passenger-native-source-collector.spec.ts::enters passenger originals saves reopens and revokes stale proof while 2026 remains blocked"
