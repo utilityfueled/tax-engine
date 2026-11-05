@@ -169,10 +169,41 @@ export async function createNativeInspector({root, env, signal}, io = actualIo) 
     const bytes = await io.read(proofPath,maxProof);
     need(bytes.length <= maxProof && hash('sha256',bytes) === proofSha256, 'Native operator sidecar binding changed');
     const p = JSON.parse(bytes.toString('utf8'));
-    need(same(Object.keys(p).sort(),['commit','commitBody','containerId','enabled','imageId','inventory','operation','socket','tree','version'].sort()) && p.version === 1 && p.enabled === true && /^[a-f0-9]{32}$/u.test(p.operation) && path.basename(parent) === `tax-ze-${p.operation}` && hex40.test(p.commit) && hex40.test(p.tree) && hex64.test(p.containerId) && hex64.test(p.imageId), 'Invalid native operator binding');
+    need(same(Object.keys(p).sort(),['commit','commitBody','containerId','enabled','imageId','inventory','operation','socket','tree','version',...(Object.hasOwn(p,'supplemental')?['supplemental']:[])].sort()) && p.version === 1 && p.enabled === true && /^[a-f0-9]{32}$/u.test(p.operation) && path.basename(parent) === `tax-ze-${p.operation}` && hex40.test(p.commit) && hex40.test(p.tree) && hex64.test(p.containerId) && hex64.test(p.imageId), 'Invalid native operator binding');
     need(typeof p.commitBody === 'string' && Buffer.byteLength(p.commitBody) <= 65536 && p.commitBody.startsWith(`tree ${p.tree}\n`) && gitObject('commit',Buffer.from(p.commitBody)) === p.commit && sourceTree(p.inventory) === p.tree, 'Native Git source binding changed');
     need(same(Object.keys(p.socket).sort(),['dev','ino','uid','mode','nlink'].sort()) && Object.values(p.socket).every(integer), 'Invalid native socket binding');
     const socketParent = `/private/tmp/tax-ze-${p.operation}`, socketPath = `${socketParent}/api.sock`;
+    // Supplementary official PDFs are not Git objects. The operator must separately
+    // establish fetch-origin evidence; this only binds exact declared bytes to the
+    // actual tracked registry and preserves the complete tracked Git tree.
+    const supplementalFiles = [];
+    if (Object.hasOwn(p,'supplemental')) {
+        const extra = p.supplemental;
+        need(extra && same(Object.keys(extra).sort(),['files','registrySha256']) && hex64.test(extra.registrySha256) && Array.isArray(extra.files) && extra.files.length > 0 && extra.files.length <= 32, 'Invalid native supplemental inventory');
+        const registryPath = 'sample-documents/registry.json';
+        const registryEntry = p.inventory.find(entry => entry.path === registryPath);
+        need(registryEntry && registryEntry.mode === '100644' && registryEntry.bytes > 0 && registryEntry.bytes <= maxBody, 'Missing tracked native fixture registry');
+        await noSymlinkParents(path.join(root,'sample-documents'),io);
+        const registryStat = await io.lstat(path.join(root,registryPath));
+        need(registryStat.isFile() && !registryStat.isSymbolicLink() && registryStat.uid === uid && registryStat.nlink === 1 && (registryStat.mode & 0o777) === 0o644, 'Unsafe native fixture registry');
+        const registryBytes = await io.read(path.join(root,registryPath),maxBody);
+        need(registryBytes.length === registryEntry.bytes && gitObject('blob',registryBytes) === registryEntry.oid && hash('sha256',registryBytes) === extra.registrySha256, 'Native fixture registry binding changed');
+        const registry = JSON.parse(registryBytes.toString('utf8'));
+        need(Array.isArray(registry) && registry.length > 0 && registry.length <= 32 && registry.length === extra.files.length, 'Incomplete native supplemental inventory');
+        const rows = new Map();
+        for (const row of registry) {
+            need(row && typeof row.id === 'string' && /^[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(row.id) && row.id.length <= 100 && !rows.has(row.id) && typeof row.downloadUrl === 'string' && /^https:\/\/www\.irs\.gov\/pub\/irs-(?:pdf|prior)\/[a-z0-9-]+\.pdf$/u.test(row.downloadUrl), 'Unsupported native fixture registry entry');
+            rows.set(row.id,row.downloadUrl);
+        }
+        let total = 0, previousId = '';
+        for (const row of extra.files) {
+            need(row && same(Object.keys(row).sort(),['bytes','id','originUrl','sha256']) && typeof row.id === 'string' && row.id > previousId && rows.has(row.id) && row.originUrl === rows.get(row.id) && integer(row.bytes) && row.bytes > 0 && row.bytes <= 16 * 1024 * 1024 && hex64.test(row.sha256), 'Invalid native fixture binding');
+            previousId = row.id; total += row.bytes;
+            need(total <= 64 * 1024 * 1024, 'Native fixture bytes exceed bound');
+            supplementalFiles.push({path:`sample-documents/downloads/${row.id}.pdf`,bytes:row.bytes,sha256:row.sha256});
+        }
+        need(new Set(supplementalFiles.map(row=>row.path)).size === registry.length, 'Duplicate native fixture binding');
+    }
     const proofIdentity = metadata(proofStat), directoryIdentity = metadata(parentStat), rootIdentity = metadata(rootStat);
     let initialSocketParent = null;
     const custody = async () => {
@@ -185,7 +216,7 @@ export async function createNativeInspector({root, env, signal}, io = actualIo) 
         need(same(metadata(d),initialSocketParent) && s.isSocket() && !s.isSymbolicLink() && s.uid === uid && (s.mode & 0o777) === 0o600 && s.nlink === 1 && same(metadata(s),p.socket), 'Native relay identity changed');
         const current = await io.lstat(proofPath);
         need(current.isFile() && !current.isSymbolicLink() && same(metadata(current),proofIdentity) && hash('sha256',await io.read(proofPath,maxProof)) === proofSha256, 'Native operator sidecar changed');
-        need(same(await census(root,io),p.inventory.map(v=>v.path)), 'Native tracked source census changed');
+        need(same(await census(root,io),[...p.inventory.map(v=>v.path),...supplementalFiles.map(v=>v.path)].sort()), 'Native tracked source census changed');
         for (const entry of p.inventory) {
             need(!signal?.aborted, 'Native inspection cancelled');
             const file = path.join(root,entry.path), s = await io.lstat(file);
@@ -201,6 +232,15 @@ export async function createNativeInspector({root, env, signal}, io = actualIo) 
                 content = await io.read(file,Math.min(64*1024*1024,entry.bytes));
             }
             need(content.length === entry.bytes && gitObject('blob',content) === entry.oid, 'Native tracked source bytes changed');
+        }
+        for (const entry of supplementalFiles) {
+            need(!signal?.aborted, 'Native inspection cancelled');
+            const file = path.join(root,entry.path);
+            await noSymlinkParents(path.dirname(file),io);
+            const s = await io.lstat(file);
+            need(s.isFile() && !s.isSymbolicLink() && s.uid === uid && s.nlink === 1 && (s.mode & 0o777) === 0o644, 'Unsafe native fixture file');
+            const content = await io.read(file,entry.bytes);
+            need(content.length === entry.bytes && hash('sha256',content) === entry.sha256, 'Native fixture bytes changed');
         }
     };
     const inspect = async () => {

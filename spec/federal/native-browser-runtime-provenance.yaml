@@ -14,3 +14,6 @@ lines:
   - line: "fail-closed"
     formula: "Reject missing, changed, ambiguous, unsafe or unbounded source/socket/API fields; destroy in-flight requests on abort, timeout, error or excess body; never mutate or stop the externally owned runtime."
     testRef: "tests/scripts/native-browser-runtime-provenance.test.ts::aborts and bounds only fixed read-only transport routes"
+  - line: "registered-supplemental-fixtures"
+    formula: "Keep Git tree exclusively tracked; optional exact sidecar supplemental inventory binds the tracked registry hash and complete official IRS PDF IDs/origins/lengths/hashes. Include only fixed registry downloads in every source census and before/after owned nofollow content check. Reject unknown/missing/mutated files and unsafe metadata; declaration alone is not independently verified fetch origin or operator authorization."
+    testRef: "tests/scripts/native-browser-runtime-provenance.test.ts::admits exact registry-bound official fixtures without changing Git tree"

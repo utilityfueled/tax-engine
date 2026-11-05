@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { createHash } from 'node:crypto';
+import { readFileSync } from 'node:fs';
 
 const state = vi.hoisted(() => ({ collections: 0 }));
 vi.mock('node:child_process', () => ({spawn: () => {state.collections++; throw Error('COLLECTION_BOUNDARY');}}));
@@ -71,7 +72,7 @@ function fixture() {
     lstat:async(name:string)=> name===socket?stat('socket',socketMode,socketInode):name.endsWith('native-browser-provenance.json')?stat('file',0o100600,4):name.endsWith('/a.txt')?stat('file',sourceMode,5,sourceUid):stat('directory',0o40700),
     read:async(name:string,limit:number)=>{const b=name.endsWith('/a.txt')?Buffer.from(file):proof;if(b.length>limit)throw Error('bounded');return b;},
     readlink:async():Promise<string>=>{throw Error('unexpected symlink');},
-    readdir:async()=>[{name:'a.txt',isDirectory:()=>false,isFile:()=>true,isSymbolicLink:()=>false},...(extra?[{name:'unexpected.txt',isDirectory:()=>false,isFile:()=>true,isSymbolicLink:()=>false}]:[])],
+    readdir:async(_name='')=>[{name:'a.txt',isDirectory:()=>false,isFile:()=>true,isSymbolicLink:()=>false},...(extra?[{name:'unexpected.txt',isDirectory:()=>false,isFile:()=>true,isSymbolicLink:()=>false}]:[])],
     get:async(_socket:string,kind:string,_id:string,_signal?:AbortSignal)=>{calls.push(kind);return kind==='containers'?container:image;},
   };
   const env={...native,TAX_ENGINE_NATIVE_BROWSER_PROOF_SHA256:digest('sha256',proof)};
@@ -211,4 +212,86 @@ describe('native operational provenance — fail-closed transport',()=>{
     [`/private/tmp/tax-ze-${'a'.repeat(32)}/api.sock`,'exec','c'.repeat(64)],
     [`/private/tmp/tax-ze-${'a'.repeat(32)}/api.sock`,'images','../foreign'],
   ])('rejects arbitrary routing before transport',async(socket,kind,identity)=>{const f=transportFixture();expect(()=>relayJson(socket,kind,identity,undefined,f.send)).toThrow();expect(f.requests).toHaveLength(0);});
+});
+
+
+function supplementalFixture(registryRows=[{id:'irs-w2-2025',downloadUrl:'https://www.irs.gov/pub/irs-prior/fw2--2025.pdf'}]) {
+  const f=fixture();
+  const registry=Buffer.from(JSON.stringify(registryRows));
+  const records=registryRows.map(row=>({id:row.id,originUrl:row.downloadUrl,bytes:Buffer.byteLength(`%PDF-1.7\nSynthetic ${row.id}\n`),sha256:digest('sha256',`%PDF-1.7\nSynthetic ${row.id}\n`)})).sort((a,b)=>a.id<b.id?-1:1);
+  const supplemental={registrySha256:digest('sha256',registry),files:records};
+  f.p.inventory.push({path:'sample-documents/registry.json',mode:'100644',bytes:registry.length,oid:object('blob',registry.toString())});
+  f.p.tree=sourceTree(f.p.inventory);f.p.commitBody=f.p.commitBody.replace(/^tree [a-f0-9]{40}/u,`tree ${f.p.tree}`);f.p.commit=object('commit',f.p.commitBody);
+  f.image.Config.Labels['org.opencontainers.image.revision']=f.p.commit;f.container.Config.Labels['org.opencontainers.image.revision']=f.p.commit;
+  Object.assign(f.p,{supplemental});
+  const files=new Map<string,Buffer<ArrayBuffer>>([['a.txt',Buffer.from('hello')],['sample-documents/registry.json',registry],...registryRows.map(row=>[`sample-documents/downloads/${row.id}.pdf`,Buffer.from(`%PDF-1.7\nSynthetic ${row.id}\n`)] as [string,Buffer<ArrayBuffer>])]);
+  let mode=0o100644,owner=501,links=1;
+  const oldStat=f.io.lstat,oldRead=f.io.read;
+  f.io.lstat=async name=>{
+    if(name.startsWith(f.args.root+'/') && files.has(name.slice(f.args.root.length+1)))return {dev:1,ino:10,uid:owner,mode,nlink:links,isDirectory:()=>false,isFile:()=>true,isSymbolicLink:()=>false,isSocket:()=>false};
+    return oldStat(name);
+  };
+  f.io.read=async(name,limit)=>{const bytes=files.get(name.slice(f.args.root.length+1));if(bytes){if(bytes.length>limit)throw Error('bounded');return bytes;}return oldRead(name,limit);};
+  f.io.readdir=async(name='')=>{
+    const dir=name===f.args.root?'':name.slice(f.args.root.length+1), prefix=dir?dir+'/':'';
+    const children=new Map<string,boolean>();
+    for(const file of files.keys())if(file.startsWith(prefix)){const tail=file.slice(prefix.length),parts=tail.split('/');children.set(parts[0],parts.length>1);}
+    return [...children].map(([name,directory])=>({name,isDirectory:()=>directory,isFile:()=>!directory,isSymbolicLink:()=>false}));
+  };
+  f.rebind();return {f,files,supplemental,set mode(v:number){mode=v;},set owner(v:number){owner=v;},set links(v:number){links=v;}};
+}
+
+describe('native provenance — spec registered-supplemental-fixtures',()=>{
+  it('admits exact registry-bound official fixtures without changing Git tree',async()=>{
+    const {f}=supplementalFixture(),tree=f.p.tree;
+    const inspect=await createNativeInspector(f.args,f.io);expect(await inspect()).toMatchObject({tree,commit:f.p.commit});expect(sourceTree(f.p.inventory)).toBe(tree);expect(f.calls).toEqual(['containers','images']);
+  });
+});
+
+
+describe('native registered fixture boundaries',()=>{
+  it('supports every actual tracked registry ID with exact separately bound synthetic fixture bytes',async()=>{
+    const registry=JSON.parse(readFileSync('sample-documents/registry.json','utf8')) as Array<{id:string;downloadUrl:string}>;
+    expect(registry).toHaveLength(15);const {f}=supplementalFixture(registry);const inspect=await createNativeInspector(f.args,f.io);expect(await inspect()).toMatchObject({tree:f.p.tree});
+  });
+  it.each(['absent-declaration','missing','extra','bytes','late-bytes','owner','mode','links','symlink','parent','registry','hash','origin','zero','too-large','unknown-key','unknown-record-key','traversal','duplicate','incomplete'])('denies %s fixture proof',async kind=>{
+    const x=supplementalFixture(),{f}=x,leaf='sample-documents/downloads/irs-w2-2025.pdf';
+    switch(kind){
+      case 'absent-declaration':delete (f.p as typeof f.p & {supplemental?:unknown}).supplemental;break;
+      case 'missing':x.files.delete(leaf);break;
+      case 'extra':x.files.set('sample-documents/downloads/unregistered.pdf',Buffer.from('extra'));break;
+      case 'bytes':x.files.set(leaf,Buffer.from('corrupted'));break;
+      case 'late-bytes':{const get=f.io.get;f.io.get=async(...a)=>{const result=await get(...a);x.files.set(leaf,Buffer.from('corrupted'));return result;};break;}
+      case 'owner':x.owner=0;break;
+      case 'mode':x.mode=0o100666;break;
+      case 'links':x.links=2;break;
+      case 'symlink':{const old=f.io.lstat;f.io.lstat=async name=>{const stat=await old(name);return name.endsWith(leaf)?{...stat,isFile:()=>false,isSymbolicLink:()=>true}:stat;};break;}
+      case 'parent':f.io.realpath=async name=>name.endsWith('/downloads')?'/foreign':name;break;
+      case 'registry':x.files.set('sample-documents/registry.json',Buffer.from('[]'));break;
+      case 'hash':x.supplemental.registrySha256='0'.repeat(64);break;
+      case 'origin':x.supplemental.files[0].originUrl='https://evil.invalid/file.pdf';break;
+      case 'zero':x.supplemental.files[0].bytes=0;break;
+      case 'too-large':x.supplemental.files[0].bytes=16*1024*1024+1;break;
+      case 'unknown-key':Object.assign(x.supplemental,{allowExtra:true});break;
+      case 'unknown-record-key':Object.assign(x.supplemental.files[0],{path:'/foreign'});break;
+      case 'traversal':x.supplemental.files[0].id='../foreign';break;
+      case 'duplicate':x.supplemental.files.push({...x.supplemental.files[0]});break;
+      case 'incomplete':x.supplemental.files=[];break;
+    }
+    f.rebind();await expect((async()=>{const inspect=await createNativeInspector(f.args,f.io);return inspect();})()).rejects.toThrow();
+  });
+});
+
+
+describe('native supplemental registry and size boundaries',()=>{
+  it.each(['foreign-origin','query','path','duplicate-id','count','total'])('denies %s even when operator declaration and tracked registry agree',async kind=>{
+    const rows=Array.from({length:kind==='count'?33:kind==='total'?5:1},(_,n)=>({id:`irs-test-${n}`,downloadUrl:`https://www.irs.gov/pub/irs-pdf/f${n}.pdf`}));
+    if(kind==='foreign-origin')rows[0].downloadUrl='https://evil.invalid/pub/irs-pdf/f0.pdf';
+    if(kind==='query')rows[0].downloadUrl+='?token=not-permitted';
+    if(kind==='path')rows[0].id='../escape';
+    if(kind==='duplicate-id')rows.push({...rows[0]});
+    const {f,supplemental}=supplementalFixture(rows);
+    if(kind==='total')for(const row of supplemental.files)row.bytes=16*1024*1024;
+    f.rebind();await expect(createNativeInspector(f.args,f.io)).rejects.toThrow();expect(f.calls).toEqual([]);
+  });
 });

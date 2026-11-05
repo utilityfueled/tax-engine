@@ -21456,5 +21456,24 @@
     "actualReceiptSHA256": "f0e49e4bf61d7e36691ee6581a308f3882b8a8cfa29d1d7ca824606fc67922fe",
     "rootReviewManifest": "3e40323dac8f897b6474eab18f8d11fe34ace1bb7a6a580809bdf2e82c85e748",
     "ledger": "docs/upgrade-2026-isolated-outage-renewal-work.md"
+  },
+  "nov05NativeBrowserSampleProvenance": {
+    "status": "FINITE_SUPPLEMENTAL_SOURCE_CONTRACT_PASS_NO_NATIVE_RUNTIME",
+    "authorTests": 180,
+    "distinctAdditional": 16,
+    "mainTests": 181,
+    "metadataTests": 896,
+    "currentRegistryIds": 15,
+    "fixtureBytes": "SYNTHETIC_ONLY_IN_SOURCE_TESTS",
+    "originRetrievalQualified": false,
+    "nativeRuntimeExercised": false,
+    "inventoryUnchanged": 907,
+    "supportedUnchanged": 68,
+    "contractsUnchanged": 149,
+    "casesUnchanged": 582,
+    "runnerChanged": false,
+    "mainManifest": "4c4181b36fcc3a67857b347293958b5d7f5fd001b3c50392631c01922c3e5b4b",
+    "distinctManifest": "4b2ee4dd67e711a3af3c9908439f0c7b4771b1a0bde895ed18827b17ac477c73",
+    "ledger": "docs/upgrade-2026-native-browser-runtime-provenance-work.md"
   }
 }
