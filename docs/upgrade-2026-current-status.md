@@ -1,9 +1,9 @@
 # Current 2026 upgrade continuation
 
 Updated November 5 UTC, 2026, on `upgrade/2026-baseline`. The last full local
-verification binds `a6c70671f1fa176d0197d1defa25c8775d217202`;
-[all 11 checks pass](upgrade-2026-a6-macrs-integration-work.md), including
-25,788 tests and 87.62% branch coverage. Exact
+verification binds `88f517cc987628e8f0b314fe2fcd3e621b97af18`;
+[all 11 checks pass](upgrade-2026-passenger-integration-work.md), including
+25,806 tests and 87.63% branch coverage. Exact
 hosted/native artifacts still require qualification. This is the current
 crosswalk into the append-only history. Earlier checklist entries and checkpoint root values describe their
 named revisions. The [execution brief](upgrade-2026-execution-brief.md) remains

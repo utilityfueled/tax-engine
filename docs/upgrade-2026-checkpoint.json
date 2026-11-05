@@ -20314,5 +20314,30 @@
     "humanReviewed": false,
     "hostedQualified": false,
     "selfHostedQualified": false
+  },
+  "nov05PassengerFullIntegration": {
+    "sourceCommit": "88f517cc987628e8f0b314fe2fcd3e621b97af18",
+    "status": "11current-source local checks PASS; browser/remote/artifact qualification open",
+    "trackedPins": 5187,
+    "sourceDrift": [],
+    "unitAndCoverage": {
+      "testsEach": 25806,
+      "filesEach": 1888,
+      "reportedSkips": 0,
+      "realPGControlsEach": 53
+    },
+    "coverage": {
+      "statements": "91.84",
+      "branches": "87.63",
+      "functions": "90.81",
+      "lines": "95.10",
+      "gatesUnchanged": true
+    },
+    "manifestSHA256": "fa0579718b357610ffc1af838528fba5b4e4fdab784a69dd519d4129bf5f7a8a",
+    "ledger": "docs/upgrade-2026-passenger-integration-work.md",
+    "browserQualified": false,
+    "hostedQualified": false,
+    "selfHostedQualified": false,
+    "filingQualified": false
   }
 }
