@@ -3242,3 +3242,11 @@ exact amounts outside PA state credits and federal income. Spec-first failures,
 338 focused tests, scoped static checks and14 distinct engineering controls are
 recorded in [the source ledger](upgrade-2026-pa-married-local-w2-work.md).
 Positive-local paper, child/care paper and full2026 qualification remain closed.
+
+### November5 UTC: finite Ohio2026 actual-source draft
+
+An explicit draft entry point now derives ordinary single/joint W2 income and
+actual FY/PY/NR allocations through a revalidated opaque context. Final281 tests,
+22 distinct controls and nine independent Decimal oracles pass with scoped
+static checks. Public full2026/final forms/filing remain closed; broader Ohio
+software continues. See [the draft ledger](upgrade-2026-ohio-ordinary-2026-draft-work.md).
