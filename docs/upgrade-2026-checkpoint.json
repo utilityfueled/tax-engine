@@ -19725,5 +19725,21 @@
     "furtherStartAuthorized": false,
     "receiptSha256": "34a9e934741be486fff8e4bebdd11c0f903525333cf7b75dafd021a24f0d7918",
     "ledger": "docs/upgrade-2026-native-image-import-hold.md"
+  },
+  "nov05PAMarriedLocalW2": {
+    "status": "finite_source_boundary_pass_paper_and_2026_still_closed",
+    "checks": {
+      "focusedPassed": 338,
+      "focusedFiles": 12,
+      "distinctControlsPassed": 14,
+      "rootManifestMembersVerified": 44,
+      "rootCurrentSourcePinsVerified": 5,
+      "oldFixtureTypeDiagnostics": 12
+    },
+    "authorManifestSHA256": "f616fb8b9898e546c5b583ef160a20a9631d29f941d5df1dd91908868141eb66",
+    "independentManifestSHA256": "1cdfb0c3290f3bdec4c64d21825d76db98eb30cc960a99b1e97f5cfb68097eb3",
+    "ledger": "docs/upgrade-2026-pa-married-local-w2-work.md",
+    "filingEligible": false,
+    "humanReview": false
   }
 }

@@ -39,7 +39,9 @@ export function preparePAMarriedReturnReview(input:TaxYearInput):PreparedPAMarri
  // Existing married paper projection prints zero dependent rows. Calculation
  // admission cannot silently qualify that projection for a new household.
  if(input.taxpayer.dependents.length)fail('actual dependent child paper requires its separately reviewed projection successor');
- const original=structuredClone(input),expected=calculatePAMarriedOrdinaryReturn(original,original.paMarriedOrdinarySources),federal=calculateFederalTax(original);
+ const original=structuredClone(input),expected=calculatePAMarriedOrdinaryReturn(original,original.paMarriedOrdinarySources);
+ if(expected.localBoundary.reportedW2LocalRows?.some(row=>row.wages.gt(0)||row.withheld.gt(0)))fail('actual local W2 paper requires its separately reviewed projection successor');
+ const federal=calculateFederalTax(original);
  if(!expected.federal.earnedIncomeCredit.isZero()||expected.returns.some(row=>!row.workingCredit.credit.isZero()||!row.rev1630.totalInterest.isZero()||!row.pa40.refundableCredits.isZero()))fail('actual positive working credit or penalty needs its separately reviewed paper successor');
  const token=Object.freeze({[brand]:true as const});
  contexts.set(token,{original,expected,federal,originalDigest:digest(original),redactedDigest:digest(redactReviewIdentifiers(original))});return token;

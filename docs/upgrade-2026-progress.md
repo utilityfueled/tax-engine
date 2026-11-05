@@ -3234,3 +3234,11 @@ The exact480 ARM64 image passes strictarchivecontent checks and actual durable
 restart/independentimport. Installation then stops on blockedaddon observer
 records before smoke/browser/recovery/scan. Final safetyPASS; total2starts2stops
 consumed, no furtherstart under originalgrant. See [the actual native ledger](upgrade-2026-native-image-import-hold.md).
+
+### November5 UTC: actual married PA local W2 rows
+
+Complete original local rows now retain actual owner and jurisdiction links with
+exact amounts outside PA state credits and federal income. Spec-first failures,
+338 focused tests, scoped static checks and14 distinct engineering controls are
+recorded in [the source ledger](upgrade-2026-pa-married-local-w2-work.md).
+Positive-local paper, child/care paper and full2026 qualification remain closed.
