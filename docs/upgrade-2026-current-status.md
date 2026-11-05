@@ -23,6 +23,12 @@ runtime remains pending. The [midday advisory refresh](upgrade-2026-advisory-mid
 (`6a5da878`) finds zero package audit findings but leaves image findings,
 Next metadata conflicts and ownership/expiry requirements open.
 
+The [current CI image record](upgrade-2026-7d93-remote-image-work.md) verifies
+smoke, six isolated recovery phases and immutable SBOM/scan binding for the
+merge tree matching `7d93fd67`. Both full browser jobs fail before cases at source
+audit; all 80 advisory IDs remain unaccepted. Distinct saved-evidence review also
+reconstructs the current full unit/coverage counters without rerunning workloads.
+
 The later [guided render performance experiment](upgrade-2026-guided-render-experiment-work.md)
 is rejected after its final unchanged browser comparison yields successor9PASS/1timeout
 against baseline10PASS. All seven experimental paths are archived and restored/removed;

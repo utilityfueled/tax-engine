@@ -20697,5 +20697,25 @@
     "manifest": "07b1eb3a80dbd987b0c8956c6f8bfa055e4a656355c094f666851e5565e6f56f",
     "ledger": "docs/upgrade-2026-7d93-global-verification-work.md",
     "releaseReady": false
+  },
+  "nov05Current7dRemoteImage": {
+    "status": "bounded_smoke_recovery_SBOM_scan_PASS_full_browsers_FAIL",
+    "branchHead": "7d93fd67ff8d4cc2bce8eb0a120e0b893903ec9d",
+    "imageSource": "96608e6baa71c251b7e2b84b33dbfe9bef69d941",
+    "sameFullTree": "b11af6276f520a967cffe5845ff1eb2fc514c866",
+    "workflowRun": 42037462052,
+    "artifactId": 13420595161,
+    "imageId": "sha256:076e5a250f84e05a25aeb53d1509657ff8bb1b14ee2c1cfb4a98e4660c18d639",
+    "platform": "linux/amd64",
+    "rootSavedChecks": 30,
+    "distinctSavedChecks": 41,
+    "imageManifest": "2827a7fdc3d442a088f3ca78ac4e97b335aec69fe2496d0f0b925b0eb115c6b2",
+    "distinctManifest": "75a0d4f1215ee051411561320710150e98cd8303e7a8016dddb66f2a78c63728",
+    "scanMatches": 181,
+    "advisoryIds": 80,
+    "highMatches": 61,
+    "criticalMatches": 0,
+    "ownerAcceptance": false,
+    "releaseReady": false
   }
 }
