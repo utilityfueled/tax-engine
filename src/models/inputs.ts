@@ -7,6 +7,7 @@ import {PAMarriedOrdinarySourcesSchema} from './pa-married-ordinary-sources.js';
  */
 
 import { z } from "zod";
+import {PassengerFirstYearSourcesSchema} from "./passenger-auto-first-year-sources.js";
 import { MACRSAssetBasisSourcesSchema, resolveMACRSAssetBasisSources } from "./macrs-asset-basis-sources.js";
 import { MACRSDispositionSourcesSchema, resolveMACRSDispositionSources } from "./macrs-disposition-sources.js";
 import { W2StateLocalSourcesSchema } from "./w2-state-local.js";
@@ -3174,6 +3175,8 @@ export const AmortizableAssetSchema = z.object({
 });
 
 export const Form4562Schema = z.object({
+  /** Standalone worksheet only; canonical owner/activity attribution remains denied. */
+  passengerFirstYearSources: PassengerFirstYearSourcesSchema.optional(),
   /** Tax year for computing per-asset depreciation (defaults to 2025) */
   taxYear: z.number().optional(),
   /** Per-asset detail — when provided, the engine computes Lines 17, 19, 20 from assets */
@@ -6309,6 +6312,13 @@ export const TaxYearInputSchema = z.object({
     illinois: IllinoisStateReturnInputSchema.optional(),
   }).optional(),
 }).superRefine((value, ctx) => {
+  // Do not silently consume or ignore standalone passenger facts in a full return.
+  if (value.form4562?.passengerFirstYearSources !== undefined) {
+    ctx.addIssue({ code: "custom", path: ["form4562", "passengerFirstYearSources"], message: "Standalone passenger worksheet requires a separate canonical owner/activity bridge" });
+  }
+  value.rentalProperties.forEach((property, index) => {
+    if (property.form4562?.passengerFirstYearSources !== undefined) ctx.addIssue({ code: "custom", path: ["rentalProperties", index, "form4562", "passengerFirstYearSources"], message: "Standalone passenger worksheet requires a separate rental owner/activity bridge" });
+  });
   if (value.form4137 !== undefined && value.form4137ByOwner !== undefined) {
     ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["form4137ByOwner"], message: "Use either form4137 or form4137ByOwner, not both" });
   }

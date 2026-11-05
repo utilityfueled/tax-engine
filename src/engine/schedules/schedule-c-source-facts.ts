@@ -17,6 +17,7 @@ type SourceInput = {rentalProperties?:unknown[];scheduleF?:unknown;royaltyProper
 /** Validate the original records; split metadata never becomes a second expense. */
 export function calculateScheduleCSourceFacts(input:SourceInput,business:SourceBusiness|undefined,saved?:ScheduleCResult){
  const fail=(detail:string):never=>{throw new Error(`Schedule C actual source expense method: ${detail}`);};
+ if(input.form4562?.passengerFirstYearSources!==undefined)fail('standalone passenger worksheet requires canonical owner/activity linkage');
  const amount=(value:string|undefined,label:string)=>{if(typeof value!=='string'||!value.trim())return fail(`${label} is unknown`);if(!/^-?(?:\d+|\d{1,3}(?:,\d{3})+)(?:\.\d+)?$/.test(value.trim()))return fail(`${label} is invalid`);let n:Decimal;try{n=new Decimal(value.trim().replace(/,/g,''));}catch{return fail(`${label} is invalid`);}if(!n.isFinite()||n.lt(0))return fail(`${label} must be finite and nonnegative`);return n;};
  const ref=(value:string|undefined,label:string)=>{if(!value?.trim())fail(`${label} source reference is unknown`);};
  const truth=(value:boolean|null|undefined,label:string)=>{if(value!==true)fail(`${label} must be actually confirmed`);};

@@ -20293,5 +20293,26 @@
     "googleAccessAvailable": false,
     "modelPromotionEnabled": false,
     "ledger": "docs/upgrade-2026-classification-live-smoke-work.md"
+  },
+  "nov05PassengerFirstYearCombined": {
+    "baselineCommit": "96e3fbea",
+    "status": "finite standalone worksheet package passed; canonical owner/activity qualification denied",
+    "mainRed": 17,
+    "mainGreen": 399,
+    "mainFiles": 16,
+    "packageChecksPassed": 8,
+    "distinctV2Controls": 19,
+    "metadataControls": 827,
+    "inventory": {
+      "total": 876,
+      "oldEntriesUnchanged": 875,
+      "supportedUnchanged": 68
+    },
+    "mainManifestSHA256": "74878ad7cb96d3f88c9cbefae14c36ebac75c0b7759295386d39c37ac9122922",
+    "ledger": "docs/upgrade-2026-passenger-first-year-work.md",
+    "filingQualified": false,
+    "humanReviewed": false,
+    "hostedQualified": false,
+    "selfHostedQualified": false
   }
 }

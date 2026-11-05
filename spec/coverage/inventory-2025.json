@@ -3727,6 +3727,25 @@
       ]
     },
     {
+      "key": "federal/form-4562-passenger-first-year",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://www.irs.gov/publications/p946",
+      "specPath": "spec/federal/form-4562-passenger-first-year.yaml",
+      "enginePath": "src/engine/forms/form-4562-passenger-first-year.ts",
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/form-461",
       "jurisdiction": "federal",
       "taxYear": 2026,

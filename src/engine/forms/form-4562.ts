@@ -11,6 +11,7 @@
  */
 
 import Decimal from "decimal.js";
+import {calculatePassengerFirstYear} from "./form-4562-passenger-first-year.js";
 import type { Form4562Input, AmortizableAsset } from "@/models/inputs.js";
 import type { CalculatedLine } from "@/models/outputs.js";
 import { AuditTrail } from "@/utils/audit.js";
@@ -36,6 +37,13 @@ export interface AmortizationResultItem {
 }
 
 export interface Form4562Result {
+  /** Present only for the standalone source-bound passenger worksheet. */
+  line7?: Decimal;
+  line25?: Decimal;
+  line28?: Decimal;
+  line29?: Decimal;
+  /** Numeric current-year worksheet only, never a future basis ledger or owner qualification. */
+  passengerFirstYearWorksheet?: Record<string, Decimal>;
   line1: Decimal;
   line2: Decimal;
   line3: Decimal;
@@ -167,6 +175,11 @@ export function calculateForm4562(input: Form4562Input, ownerTaxYear?: number): 
   }
   const taxYear = ownerTaxYear ?? input.taxYear ?? DEFAULT_TAX_YEAR;
   if (taxYear !== 2025 && taxYear !== 2026) throw new Error('Unsupported Form4562 tax year');
+  if (input.passengerFirstYearSources !== undefined) return calculatePassengerFirstYear(input, taxYear);
+  if (input.assets?.some(asset => asset.isPassengerAutomobile === true)
+    && [input.section179ExpenseDeduction, input.section179ElectedCost, input.section179CarryoverFromPriorYear, input.specialDepreciationAllowance].some(value => d(value).gt(0))) {
+    throw new Error('Standalone passenger original sources are required for positive section179 or bonus composition');
+  }
   const defaults = SECTION_179_DEFAULTS[taxYear];
   const audit = new AuditTrail();
 

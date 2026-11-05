@@ -944,7 +944,7 @@ describe("Part V listed property — Form 4562 integration", () => {
   });
 
   it("Form 4562 realistic scenario — self-employed with business vehicle and equipment", () => {
-    const result = calculateForm4562({
+    const input: Parameters<typeof calculateForm4562>[0] = {
       taxYear: 2025,
       section179TotalCost: "5000",
       section179ElectedCost: "5000",
@@ -974,20 +974,11 @@ describe("Part V listed property — Form 4562 integration", () => {
           description: "Camera equipment",
         },
       ],
-    });
+    };
 
-    // Section 179: $5,000
-    expect(result.line12.toNumber()).toBe(5000);
-    // Office equip: 14.29% of $3K = $429 → Line 19
-    expect(result.line19.toNumber()).toBe(429);
-    // Van: 20% of $45K = $9,000 × 70% = $6,300 → cap $12,200 → $6,300
-    // Camera: 20% of $8K = $1,600 × 90% = $1,440 → no cap → $1,440
-    // Line 21 = $6,300 + $1,440 = $7,740
-    expect(result.line21.toNumber()).toBe(7740);
-    // Total: $5,000 + $429 + $7,740 = $13,169
-    expect(result.line22.toNumber()).toBe(5000 + 429 + 7740);
-
-    expect(result.listedPropertyResults).toHaveLength(2);
+    const before = JSON.stringify(input);
+    expect(() => calculateForm4562(input)).toThrow(/passenger.*original sources/i);
+    expect(JSON.stringify(input)).toBe(before);
   });
 });
 
