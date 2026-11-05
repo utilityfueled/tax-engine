@@ -21017,5 +21017,23 @@
       "hosted/native",
       "human/final2026/AI qualification"
     ]
+  },
+  "nov05GoogleRESTPrimaryReference": {
+    "status": "documented-rest-fields-source-supported-live-compatibility-unqualified",
+    "discoveryRevision": "20261105",
+    "primaryBodies": 4,
+    "boundedChecksPassed": 27,
+    "applicationPinsUnchanged": 4,
+    "manifestSHA256": "ff07b6b63d026ed865b176420df789fa5c40cba2f36ffc790c80624f73f9f805",
+    "actualGoogleCalls": 0,
+    "inferenceSpend": "0",
+    "promotionEnabled": false,
+    "limitations": [
+      "responseJsonSchema description ambiguity",
+      "public proto version drift",
+      "actual project/schema/usage/latency/privacy unverified",
+      "human qualification pending"
+    ],
+    "ledger": "docs/upgrade-2026-provider-late-refresh-work.md"
   }
 }

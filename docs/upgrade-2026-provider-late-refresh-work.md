@@ -42,3 +42,14 @@ Frozen62-member primary/source packet:
 Its retained raw bodies, retrieval receipts, extraction code and51checks provide
 the bounded evidence. This is a public-document refresh, not route qualification
 or upgrade completion.
+
+## Follow-up: concrete generateContent REST references
+
+A separate November 5 primary-document retrieval narrows the guide limitation above.
+The public [v1beta Discovery document](https://generativelanguage.googleapis.com/$discovery/rest?version=v1beta), revision 20261105, and the migrated [generateContent reference](https://aistudio.google.com/api-reference/generate-content) explicitly document `thinkingConfig.includeThoughts`, `thinkingLevel: HIGH` and the token-usage fields used by the adapter. The [selected model page](https://aistudio.google.com/docs/models/gemini-3.8-flash) documents High thinking, structured outputs and caching. These references establish field names and documented capabilities; they do not establish access in the selected project or acceptance of an actual request.
+
+`responseJsonSchema` exists in Discovery and the reference, but its description is self-referential. The separately deprecated `_responseJsonSchema` and newer `responseFormat` fields remain distinct. The retrieved [official protobuf](https://github.com/googleapis/googleapis/blob/master/google/ai/generativelanguage/v1beta/generative_service.proto) corroborates JSON names but lacks newer fields present in Discovery. Its moving revision is pinned by retrieved bytes, without claiming an immutable commit. Full schema compatibility still needs a real provider run.
+
+The references distinguish prompt, cached input, candidate and thought token counts. This supports the existing no-tools accounting projection; optional or missing actual usage still cannot be inferred. `includeThoughts: false` controls returned thoughts and does not imply free internal thinking. No transport, pricing, admission or promotion setting changed.
+
+All 27 bounded source-extraction checks pass; all four application source pins remain unchanged. Four primary bodies and initial retrieval failures are retained in `nov05-google-generate-content-rest-reference`, 18-member manifest `ff07b6b63d026ed865b176420df789fa5c40cba2f36ffc790c80624f73f9f805`. There were no authenticated model calls, credentials or inference charges. Actual Google access, complete schemas and usage, privacy entitlement, latency, independent human review and model qualification remain open.
