@@ -28,6 +28,8 @@ below apply to their named revisions.
 
 - November5: [separate spouse PA residency](upgrade-2026-pa-married-residency-work.md) preserves actual MFJ and worldwide SP income while composing original resident/nonresident or one-move part-year payroll. Two genuine V1 presence contradictions are repaired spec-first; distinct240 and current298focused/880metadata tests plus all package checks pass. Resident-only paper denies mixed sources; native/mixed paper/broader/human/final2026 gates remain open.
 
+- November5: [actual prepaid mortgage-insurance sources](upgrade-2026-mortgage-insurance-prepaid-work.md) allocate current2026 FHA/private originals through the canonical mortgage parent without guessing Box5 or annual amounts. Two genuine parent-balance failures are closed; distinct263/current218focused+881metadata checks and all package static/build gates pass. Manual behavior/full2026 gates remain; native intake and broader/human/filing qualification stay open.
+
 ## Active continuation — November 3, 2026
 
 - [x] Prepared a fixedf09 [independent tax-review packet](upgrade-2026-independent-review-packet-20261104.md), delivery manifest binding1519public synthetic/spec/ledger files and ten empty decision records. Distinct engineering review verifies every binding and confirms no human approval. Reviewer assignment, independently derived professional expectations and signed disposition remain external requirements; no external message or readiness promotion occurred.

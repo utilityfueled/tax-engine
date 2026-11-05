@@ -1,3 +1,4 @@
+import { calculateMortgageInsurancePrepaid } from "../forms/mortgage-insurance-prepaid.js";
 /**
  * Schedule A — Itemized Deductions
  * Spec: spec/federal/schedule-a.yaml
@@ -248,6 +249,7 @@ export function calculateScheduleA(
     new Decimal(0)
   );
   let mortgageInsurancePremiums = ZERO;
+  if (input.taxpayer.taxYear !== 2026 && input.form1098.some(form => form.mortgageInsuranceQualification?.prepaidSources !== undefined)) throw new Error("Original prepaid mortgage insurance sources require tax year2026");
   if (input.taxpayer.taxYear === 2026) {
     let eligiblePremiums = ZERO;
     for (const mortgage of input.form1098) {
@@ -258,7 +260,11 @@ export function calculateScheduleA(
         if (reported.gt(0)) throw new Error("Mortgage insurance qualification and current-year allocation are unknown");
         continue;
       }
-      const allocated = d(facts.premiumsAllocableToYear);
+      const originalAllocation = facts.prepaidSources === undefined ? undefined
+        : calculateMortgageInsurancePrepaid({ ...input, taxpayer: { ...input.taxpayer, filingStatus } }, mortgage.sourceId ?? "");
+      if (originalAllocation) audit.merge(originalAllocation.lines);
+      if (!originalAllocation && facts.premiumsAllocableToYear === undefined) throw new Error("Manual mortgage insurance annual allocation is unknown");
+      const allocated = originalAllocation?.allocatedPremium ?? d(facts.premiumsAllocableToYear);
       if (!allocated.isFinite() || allocated.lt(0)) throw new Error("Allocated mortgage insurance premiums must be finite and nonnegative");
       if (facts.allocationTaxYear !== input.taxpayer.taxYear) throw new Error("Mortgage insurance allocation tax year does not match return");
       const issued = new Date(`${facts.contractIssueDate}T00:00:00Z`);
@@ -271,7 +277,7 @@ export function calculateScheduleA(
     const retainedFraction = zeroFloor(new Decimal(1).minus(steps.times("0.10")));
     mortgageInsurancePremiums = roundDollar(eligiblePremiums.times(retainedFraction));
     audit.record("Sched A", "8d", "Qualified mortgage insurance premiums", mortgageInsurancePremiums,
-      "Explicit current-year allocations, reduced 10% per complete or partial AGI step", { eligiblePremiums, steps, retainedFraction });
+      "Current-year allocations from actual originals or entered substantiated allocations, reduced 10% per complete or partial AGI step", { eligiblePremiums, steps, retainedFraction });
   } else {
     audit.record("Sched A", "8d", "Reserved for future use", mortgageInsurancePremiums,
       reportedMortgageInsurancePremiums.greaterThan(0)

@@ -8433,6 +8433,25 @@
       ]
     },
     {
+      "key": "federal/mortgage-insurance-prepaid",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://www.ecfr.gov/current/title-26/section-1.163-11",
+      "specPath": "spec/federal/mortgage-insurance-prepaid.yaml",
+      "enginePath": "src/engine/forms/mortgage-insurance-prepaid.ts",
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/navigation-scroll-boundary",
       "jurisdiction": "federal",
       "taxYear": 2025,

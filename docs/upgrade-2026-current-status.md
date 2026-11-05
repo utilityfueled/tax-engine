@@ -41,6 +41,11 @@ altering federal MFJ or worldwide SP income. Distinct240/current298focused and
 880metadata tests pass with package checks; resident-only paper denies these
 mixed sources. Native intake, mixed paper and broader qualification remain open.
 
+The [prepaid mortgage-insurance source package](upgrade-2026-mortgage-insurance-prepaid-work.md)
+adds canonical original-policy allocation for the finite2026 FHA/private cohort.
+Distinct263/current218focused plus881metadata checks and all package static/build
+checks pass. Native intake remains active; whole2026 and filing gates stay closed.
+
 The later [guided render performance experiment](upgrade-2026-guided-render-experiment-work.md)
 is rejected after its final unchanged browser comparison yields successor9PASS/1timeout
 against baseline10PASS. All seven experimental paths are archived and restored/removed;

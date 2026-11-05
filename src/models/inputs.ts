@@ -1,3 +1,4 @@
+import { MortgageInsurancePrepaidSourcesSchema } from "./mortgage-insurance-prepaid-sources.js";
 import {PassengerAutoParentSourcesSchema} from './passenger-auto-parent-sources.js';
 import {calculateScheduleCPassengerSources} from '@/engine/schedules/schedule-c-passenger-first-year-sources.js';
 import { OhioReturnHeaderSourcesSchema } from './ohio-return-header-sources.js';
@@ -2536,6 +2537,7 @@ export const Form1098Schema = z.preprocess(value => {
   taxYear: z.number().int().optional(),
   sourceFactsComplete: z.boolean().optional(),
   lender: z.string(),
+  loanAccountReference: z.string().optional(),
   mortgageInterestReceived: decimal, // Box 1
   outstandingMortgagePrincipal: decimal, // Box 2
   mortgageOriginationDate: z.string().optional(),
@@ -2547,8 +2549,9 @@ export const Form1098Schema = z.preprocess(value => {
     qualifiedProvider: z.boolean(),
     acquisitionDebt: z.boolean(),
     qualifiedResidence: z.boolean(),
-    premiumsAllocableToYear: decimal,
-  }).optional(),
+    premiumsAllocableToYear: optionalDecimalInput,
+    prepaidSources: MortgageInsurancePrepaidSourcesSchema.optional(),
+  }).refine(facts => facts.prepaidSources !== undefined || facts.premiumsAllocableToYear !== undefined, "Manual mortgage insurance requires an actual annual allocation").optional(),
   pointsPaid: optionalDecimal, // Box 6
   propertyTax: optionalDecimal,
 }));
@@ -2571,7 +2574,7 @@ const MortgagePointsSchema = z.discriminatedUnion("method", [
 export const MortgageInterestWorksheetSchema = z.object({
   sourceTaxYear:z.number().int(),sourceReference:z.string().min(1),sourceFactsConfirmed:z.boolean(),allHomeDebtIncluded:z.boolean(),
   loans:z.array(z.object({
-    sourceId:z.string().min(1),form1098SourceId:z.string().min(1).optional(),lenderName:z.string().min(1),lenderAddress:z.string().optional(),lenderTaxId:z.string().optional(),
+    sourceId:z.string().min(1),form1098SourceId:z.string().min(1).optional(),loanAccountReference:z.string().optional(),lenderName:z.string().min(1),lenderAddress:z.string().optional(),lenderTaxId:z.string().optional(),
     accountHolder:z.enum(["primary","spouse","joint"]),homeId:z.string().min(1),homeUse:z.enum(["main","second","other"]),
     qualifiedResidence:z.boolean(),securedDebt:z.boolean(),ownershipInterest:z.boolean(),obligationToRepay:z.boolean(),
     originationDate:z.string(),loanType:z.enum(["original","refinanced_mixed"]),acquisitionUse:z.boolean(),currentYearInterestOnly:z.boolean(),

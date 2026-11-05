@@ -20765,5 +20765,24 @@
     "nativeCalendarIntakeQualified": false,
     "filingEligible": false,
     "whole2026": "gated"
+  },
+  "nov05MortgageInsurancePrepaid": {
+    "status": "finite2026_source_PASS_not_qualified",
+    "focusedPass": 218,
+    "focusedFiles": 6,
+    "distinctPass": 263,
+    "distinctFiles": 9,
+    "metadataPass": 881,
+    "authorManifest": "ca628d433ae05f96c61b69fc136e213a7ac848f08184eb9093d8c33cbeaed4df",
+    "distinctManifest": "40bb200e516b4a94ac86ca83e3fba20be13cecd3fe0df7b6bf7fc37d7aff8645",
+    "mainManifest": "a4dd2e29dfbaf85e66837c70a0c854b48d46485f4dff0b37fd3fb68f771bffb0",
+    "sourcePins": 4657,
+    "inventoryTotal": 890,
+    "priorEntriesUnchanged": 889,
+    "supportedCount": 68,
+    "nativeOriginalIntake": "active_separate_package",
+    "whole2026": "gated",
+    "filingEligible": false,
+    "savedCurrentnessManifest": "8d9965f80ae72ee0be8615f500e7bc83cdd1f05f71ed2d4376916608776d7f2f"
   }
 }
