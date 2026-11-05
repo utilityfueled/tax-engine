@@ -3343,3 +3343,8 @@ No held-out/human qualification or model promotion occurred.
 - November5: [prospective AI classification contract](upgrade-2026-ai-classification-contract-work.md) publishes exact descriptive IDs and labels in the real shared schema. Genuine7FAIL/1PASS precedes155focusedPASS and18distinct controls; original smoke failures remain unchanged. No provider run, human qualification or model promotion.
 
 - November5: [actual PA care official review](upgrade-2026-pa-actual-care-official-review-work.md) adds original-bound2025 DC/federal companions and fixes reproduced public privacy/federal-binding defects, including legacy metadata-absent care. Focused913+936PASS; independent21public controls and30PDF/54page strict auditPASS. Filing/full2026/broader cohorts remain gated.
+
+
+### November5: published-source inventory traceability
+
+The exact published ddee2c3 source plus explicit metadata now records866 inventory entries, including8new entries and4accurate own-spec engine links. No pre-existing entry or supported count changed (68); the4new linked entries remain partial and AI stays outside the unchanged engine-path contract. Generate/check and5,145published Git-blob comparisons pass; two initial temporary-export symlink-byte failures and their correction are retained. Unaccepted in-progress MACRS/year work is excluded. This is traceability evidence, not complete facts, qualified forms, human review or filing readiness. Private frozen evidence: nov05-published-head-inventory-links manifest ef8a8aa49d0703b8a5250833f08811f11a48bd4c2533e738b79bdd333f8b068b.

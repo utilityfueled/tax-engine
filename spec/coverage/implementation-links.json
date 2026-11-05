@@ -1597,6 +1597,49 @@
       "note": "The named method is exercised through this shared engine module by this specification's own regression references. No additional packet or filing support is claimed. This association neither changes scenario exclusions nor establishes independent human review."
     },
     {
+      "key": "state/oh-2026-resident-credit-draft",
+      "enginePath": "src/engine/state/oh-2026-resident-credit.ts",
+      "testRefs": [
+        "tests/engine/state/oh-2026-resident-credit-draft.test.ts::applies independent literal2026 paid-credit and settlement accounts %s",
+        "tests/engine/state/oh-2026-resident-credit-draft.test.ts::rejects unsettled contradictory or unavailable paid-account originals: %s",
+        "tests/engine/state/oh-2026-resident-credit-draft.test.ts::binds current originals privately and preserves historical and filing gates"
+      ],
+      "note": "Links the enacted-law 2026 Ohio resident-credit draft calculation and its own-spec actual-original settlement/binding regressions. Composition separately requires oh-2026-resident-credit-source.ts and oh-2026-ordinary-source.ts; the historical worksheet rounding continuity remains provisional. No final 2026 form, packet, complete 2026 return, legal review or filing qualification is claimed."
+    },
+    {
+      "key": "state/oh-school-source-material-equality",
+      "enginePath": "src/engine/state/oh-sd-100-sources.ts",
+      "testRefs": [
+        "tests/engine/state/oh-school-source-material-equality.test.ts::preserves complete school baseline and commitments for %s",
+        "tests/engine/state/oh-school-source-material-equality.test.ts::preserves full current material normalization for %s",
+        "tests/engine/state/oh-school-source-material-equality.test.ts::rejects changed current school material for %s",
+        "tests/engine/state/oh-school-source-material-equality.test.ts::preserves school original context integrity for %s"
+      ],
+      "note": "Links the transient complete-material equality implementation and its own-spec compatibility/source-integrity regressions. Existing source guards and durable SHA256 commitments remain required. Compatibility hashes are unchanged-source oracles, not independent tax-law qualification; this entry supplies no packet or filing readiness."
+    },
+    {
+      "key": "state/pa-actual-care-official-review",
+      "enginePath": "src/engine/state/pa-married-ordinary-return.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-pa-care-official-review.ts",
+      "testRefs": [
+        "tests/pdf/pa-actual-care-official-review.test.ts::actual care public packet includes official DC and required federal companions %s",
+        "tests/pdf/pa-actual-care-official-review.test.ts::official DC physical cells and source ovals preserve documentary facts %s %s",
+        "tests/pdf/pa-actual-care-official-review.test.ts::actual care retains unsupported stale year and filing boundaries",
+        "tests/pdf/pa-actual-care-official-review.test.ts::legacy actual care cannot bypass privacy or federal binding by omitting documentary metadata"
+      ],
+      "note": "Links the actual joint PA care return calculation and the original-bound static 2025 Schedule DC review renderer exercised through public fillReturn. Single care separately uses pa-ordinary-return.ts; both review contexts replay actual federal/state originals. The finite documentary, privacy, source-revision and physical-fit gates remain required. This is a redacted review packet, not filing or e-file qualification, final 2026 forms or a qualified human review."
+    },
+    {
+      "key": "state/pa-care-paper-identity",
+      "enginePath": "src/engine/state/pa-care-paper-sources.ts",
+      "testRefs": [
+        "tests/engine/state/pa-care-paper-sources.test.ts::identity projection rejects incomplete stale and contradictory originals %s",
+        "tests/engine/state/pa-care-paper-sources.test.ts::documentary identifier kinds remain explicit and never qualify paper %s",
+        "tests/engine/state/pa-care-paper-sources.test.ts::identity collection preserves current year and paper gates"
+      ],
+      "note": "Links only the pure documentary provider/person identity-source validator and its own-spec source/kind/gate regressions. It returns officialPaperQualified=false and filingEligible=false; optional collection and guided/native tests do not themselves admit a paper packet. The separate original-bound 2025 actual-care review successor has its own inventory entry; no 2026 or filing qualification is claimed."
+    },
+    {
       "key": "state/pa-source-precision",
       "enginePath": "src/engine/state/pa-residency-sources.ts",
       "testRefs": [

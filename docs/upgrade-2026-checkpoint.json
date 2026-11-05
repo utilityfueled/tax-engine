@@ -19996,5 +19996,17 @@
     "filingEnabled": false,
     "full2026Enabled": false,
     "completion": false
+  },
+  "nov05PublishedInventoryTraceability": {
+    "sourceCommit": "ddee2c3a626c800ecd0d628337ecd8aa253456e6",
+    "entries": 866,
+    "newEntries": 8,
+    "preExistingEntryChanges": 0,
+    "newExplicitLinks": 4,
+    "supportedEntries": 68,
+    "checks": "exact published export generator/freshness and5145Gitblob comparisons PASS",
+    "inProgressTaxWorkExcluded": true,
+    "manifestSHA256": "ef8a8aa49d0703b8a5250833f08811f11a48bd4c2533e738b79bdd333f8b068b",
+    "readinessQualified": false
   }
 }
