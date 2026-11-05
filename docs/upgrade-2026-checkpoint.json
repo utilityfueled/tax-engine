@@ -21239,5 +21239,24 @@
     "actualRuntimeManifest": "b3dd4e6c5136a757bfbf801cb925945cfde2a34e0604311ceda0879d6224c506",
     "containerRemoteQualified": false,
     "ledger": "docs/upgrade-2026-guided-navigation-scroll-work.md"
+  },
+  "nov05VercelFunctionsDependency": {
+    "status": "INSTALLED_PINNED_DEPENDENCY_PASS_RUNTIME_PENDING",
+    "version": "3.10.6",
+    "addedVersions": 17,
+    "existingVersionsChanged": 0,
+    "productionAuditEntries": 447,
+    "allAuditEntries": 539,
+    "auditFindings": 0,
+    "focusedTests": 76,
+    "typechecks": "all3PASS",
+    "builds": "bothPASS",
+    "lintErrors": 0,
+    "lintWarnings": 11863,
+    "auditHashChanges": 2,
+    "sourceAuditPass": true,
+    "manifest": "47963467f028e612b24e5fe56be12b0782840cd5c8234c05bc80eac39d4445e6",
+    "ledger": "docs/upgrade-2026-vercel-functions-dependency-work.md",
+    "hostedQualified": false
   }
 }
