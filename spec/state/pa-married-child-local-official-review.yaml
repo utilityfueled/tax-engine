@@ -1,0 +1,38 @@
+form: PA-Married-Child-Local-Official-Review
+fullName: Original-bound actual child and local-W2 Pennsylvania review paper
+taxYear: 2025
+reference: https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40sp.pdf
+notes: |
+  Successor only for actual dependent children without care and actual complete local W2 rows.
+  Official2025 SP SHA256 cf8c6d0b819f90fa56993f0647895e7e4000e36e42607c36a6a89d9170d82a5b; eight source pages, only physical1/2 emitted.
+  Official2025 PA40 SHA256 fcd7648601f3ce5a7a258be49c54aa1c604e1c61c1fe9175351451ac6087d8b3.
+  SP SectionII requires child name, age, relationship and count; review redacts all SSN cells.
+  More than nine children require additional schedules. This first physical scope explicitly refuses overflow rather than truncating.
+  Separate spouses report the same children and combined eligibility with claimant/partner ColumnB/C ownership preserved.
+  Adult/adopted/foster/different-last-name children require federal1040 pages1/2, preserved by public dispatch for one/two-child fixtures. Nine-row tests qualify static SP geometry only; complete public packets with more than four dependents retain the federal attachment denial.
+  This is static redacted review paper only; care ScheduleDC and final2026 forms remain unavailable.
+lines:
+  - line: child-context
+    description: Private current original-derived child paper projection
+    formula: Fresh original-bound married calculation validates every dependent source. Privately derive first/last name, age on December31 and actual proven natural/adopted/step/grand/foster relationship in canonical dependent order. Require every current ScheduleSP count equals actual qualified rows. Keep identifiers and original snapshots out of public paper projection; apply original-marker free-text redaction to every child display name. For a claimed SP refuse more than9 rows before template IO. Preserve full original/result replay and stale/forged-token checks.
+    testRef: "tests/pdf/pa-married-child-local-official-review.test.ts::actual child paper preserves literal J and M projections $name"
+  - line: child-physical
+    description: Authored physical SectionII rows and PA40 transfer
+    formula: On each positive-SP return author all actual child name/age/relationship values in independently inventoried original source rectangles1012through1046 (three nonidentifier fields per child). Never author SSN cells1015through1047. Write actual count in SP-dependents1048 and PA40Line19b; use the existing actual monetary totals and claimant/partner ordering. NoSP means no SP companion and blank PA40Line19b/20/21, without gratuitous child rendering. Reject text unable to fit at minimum6point rather than clip or silently shorten. Output every page once marked review-only and no form/action graph.
+    testRef: "tests/pdf/pa-married-child-local-official-review.test.ts::actual child paper preserves literal J and M projections $name"
+  - line: local-boundary
+    description: Positive local W2 sources do not become state cash
+    formula: Complete actual local W2 boundary rows remain separate local-return obligations. Render only unchanged actual PA40/SP monetary projection; local wages/withholding/source labels never become a PA payment or repeated income. For both J/M actual no-local versus positive-local originals require exact saved page text and72dpiRGB equality. Keep underlying local rows and source commitments privately source-bound, never infer local settled payment or local tax liability.
+    testRef: "tests/pdf/pa-married-child-local-official-review.test.ts::positive local W2 paper matches actual state-only physical pages $mode"
+  - line: denied-cohorts
+    description: Care, year, overflow and current-state boundaries stay enforced
+    formula: This child successor never admits actual dependentCare/benefit inputs, care source packets or positive federal2441/PA23 care credit; ScheduleDC needs a separate provider identifier kind and official template qualification. Keep2026 paper unavailable and filing ineligible; retain positive EIC/working-credit/penalty gates. No caller scalar or original recapture; equal cash with changed child provenance/name/original is stale. More than9 claimedSP children and text overflow refuse explicitly before emission.
+    testRef: "tests/pdf/pa-married-child-local-official-review.test.ts::child local paper retains unsupported and stale boundaries"
+  - line: federal-companion
+    description: Preserve required federal1040 companion and attachment boundary
+    formula: Public review dispatch retains the original unchanged household federal1040 pages1/2 alongside each owned state projection. Actual one/two-child J/M packets contain all current claimed children with identifiers redacted. Nine-row staticSP qualification does not qualify federal attachments; more than four dependent public packets remain denied.
+    testRef: "tests/pdf/pa-married-child-local-official-review.test.ts::public child review includes unchanged federal companion $name"
+  - line: public-display-privacy
+    description: Original-derived public household display privacy preflight
+    formula: Before any template or output IO, freshly validate the original married token/result and compare actual household federal display strings against original-bound private-marker redaction. If a parent/child name, relationship, occupation or address display contains a retained original identifier (including alphabetic source-marker case variants), refuse the public packet until its separate safe federal display projection is qualified. Never rewrite caller canonical facts, reprepare source confirmations, ignore EIC token digests or emit partially unsafe companions. Ordinary marker-free public packets stay supported; private-marker PA-only child displays remain safely redacted.
+    testRef: "tests/pdf/pa-married-child-local-official-review.test.ts::public child packet refuses private original display before emission $field"

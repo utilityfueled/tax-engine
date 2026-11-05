@@ -1,7 +1,7 @@
 import {hasForm2210OriginalIdentity,prepareForm2210Review,form2210ReviewOriginalInput,requiresForm2210ScheduleAiReview,recordSavedForm2210Review,type PreparedForm2210Review,type SavedForm2210Review} from './form-2210-review-context.js';
 import {fillForm2210} from './mappings/2025/fill-form-2210.js';
 import {isPAMarriedOrdinaryReturnResult} from '@/engine/state/pa-return-result.js';
-import {resolvePAMarriedReturnReview,type PreparedPAMarriedReturnReview} from './pa-married-return-review-context.js';
+import {assertPAMarriedPublicDisplayPrivacy,type PreparedPAMarriedReturnReview} from './pa-married-return-review-context.js';
 import {fillPAMarriedOfficialReview} from './mappings/2025/fill-pa-married-official-review.js';
 import {fillPAOrdinaryScheduleD} from "./mappings/2025/fill-pa-ordinary-schedule-d.js";
 import {fillPAOrdinaryScheduleGL} from "./mappings/2025/fill-pa-ordinary-schedule-gl.js";
@@ -464,7 +464,7 @@ export async function fillReturn(
     if(!input.paMarriedOrdinarySources||!isPAMarriedOrdinaryReturnResult(result.stateReturns?.pennsylvania)||!paMarriedReview)throw Error('Actual married PA originals, owned result and original prepared review context are required.');
     if(options.paOrdinaryReview!==undefined||options.paWorkingCreditReview!==undefined||options.paRoyaltyReview!==undefined)throw Error('Married PA context cannot be replaced or mixed with a legacy scalar review context.');
     // Validate complete actual household and exact owned results before template/file I/O.
-    resolvePAMarriedReturnReview(input,result,paMarriedReview);
+    assertPAMarriedPublicDisplayPrivacy(input,result,paMarriedReview);
   }
   assertScheduleRSourceConsistency(input, result);
   const scheduleCSources=calculateScheduleCReviewSource(input,result.scheduleC);

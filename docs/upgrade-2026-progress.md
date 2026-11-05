@@ -3282,3 +3282,12 @@ and refunds actual OH withholding without duplicate credits. Spec-first RED,
 frozen members and8 source pins. See [the draft ledger](upgrade-2026-ohio-pa-reciprocal-2026-draft-work.md).
 Broader selected-state software, public2026/final forms, human and distribution
 qualification remain open.
+
+### November5 UTC: PA actual child/local review paper and privacy preflight
+
+Original-bound child rows and counts now reach2025 PA40/SP review paper while
+local cash stays separate. Actual privacy RED drives a pre-I/O public display
+guard; final132tests, distinct28denials and18PDF/34page privacy audit pass.
+ROOT verifies401 frozen members and10source pins. See [the physical/privacy
+ledger](upgrade-2026-pa-married-child-local-paper-work.md). Care, broader cohorts,
+public2026/final forms, human and release qualification remain open.

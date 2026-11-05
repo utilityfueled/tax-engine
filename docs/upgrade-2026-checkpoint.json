@@ -19827,5 +19827,26 @@
     "ledger": "docs/upgrade-2026-ohio-pa-reciprocal-2026-draft-work.md",
     "filingEligible": false,
     "humanReview": false
+  },
+  "nov05PAMarriedChildLocalPaper": {
+    "status": "finite_2025_review_pass_original_privacy_hold_retained",
+    "checks": {
+      "focusedPassed": 132,
+      "focusedFiles": 7,
+      "independentControlGroups": 18,
+      "independentPreIODenials": 28,
+      "independentSavedPDFs": 18,
+      "independentSavedPages": 34,
+      "authorPhysicalPDFs": 69,
+      "authorPhysicalPages": 134,
+      "rootManifestMembersVerified": 401,
+      "rootCurrentSourcePinsVerified": 10,
+      "baselineFixtureTypeDiagnostics": 12
+    },
+    "authorManifestSHA256": "277c7099088951c9a4060ce5d2d6a13bc4286009eb2c337e96af2ceb1e7d8557",
+    "independentManifestSHA256": "f075f660d1665e0d4edf632d39f20af1de4eef6e9594aadf23a26abdd51e4338",
+    "ledger": "docs/upgrade-2026-pa-married-child-local-paper-work.md",
+    "filingEligible": false,
+    "humanReview": false
   }
 }

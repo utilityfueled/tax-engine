@@ -50,6 +50,6 @@ lines:
     formula: Changing either spouse, child, receipt payer, raw amount, date, source reference, care original or confirmation invalidates the snapshot or commitment. Key order alone does not. Do not auto-confirm imported source facts, mutate inputs or leak child/provider identifiers into numeric audit lines.
     testRef: tests/engine/state/pa-married-dependent-care.test.ts::invalidates stale household proofs without audit leakage
   - line: paper-boundary
-    description: Existing zero-dependent review filler must not emit new unsupported paper
-    formula: Until the independently checked married SP child rows/count and DC attachments successor is implemented, prepared married paper review must reject new dependent/care cohorts explicitly. Existing credit/penalty paper guards remain unchanged; the new child guard also excludes this child-care cohort. Final2026 export/filing and all existing readiness gates remain denied. Later supported review paper must project actual count/rows rather than hardcodedzero and retain private original replay.
-    testRef: tests/pdf/pa-married-dependent-care-boundary.test.ts::rejects new child and care paper until its reviewed projection exists
+    description: Qualified no-care child paper is separate from unqualified care attachments
+    formula: The separately specified pa-married-child-local-official-review successor admits actual no-care dependent SP rows/count with original replay and qualified physical mapping. Actual care inputs and care source packets still require a separately qualified ScheduleDC attachment successor and remain denied. Existing credit/penalty, final2026 export/filing and all readiness gates remain unchanged. More than four public federal dependents retain the existing attachment denial.
+    testRef: tests/pdf/pa-married-dependent-care-boundary.test.ts::admits qualified no-care child paper while retaining care projection denial
