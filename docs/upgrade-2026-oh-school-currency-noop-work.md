@@ -43,3 +43,12 @@ receipt is retained separately and supplies no product validation. No performanc
 or CI-deadline claim follows from this correctness repair. Historical remote
 failures, final distributions, staging, qualified human review, final 2026 forms
 and the remaining execution-brief gates stay open.
+
+## Superseding actual checks, November5 UTC
+
+The previously running frozen-source coverage completes with25253tests/1855files,
+zero failures/skips including53 real PostgreSQL assertions. Branches87.54% at
+unchanged85gate; statements91.81/functions90.69/lines95.03. Later shared/PA
+changes have separate combined builds and failed browser evidence in the
+[current browser ledger](upgrade-2026-c25-local-browser-work.md); these older
+coverage results are not relabeled as final-source qualification.

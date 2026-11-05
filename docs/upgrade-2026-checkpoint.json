@@ -19668,5 +19668,21 @@
     "extraScopedTestTypecheck": "18 baseline-equivalent fixture diagnostics; not a passing check",
     "combinedRequiredStatic": "types3/spec8222refs/inventory and builds2 PASS; full lint/unit/coverage/browser pending",
     "releaseReady": false
+  },
+  "nov05C25LocalStrictBrowser": {
+    "sourceCommit": "c25fdb6b309d8258c9a5315da512bd87dfb3fdeb",
+    "status": "FAIL",
+    "passed": 561,
+    "failed": 4,
+    "hostedOnlySkipped": 5,
+    "elapsedSeconds": 1359.465,
+    "timeoutMs": 30000,
+    "retries": 0,
+    "workers": 2,
+    "logSHA256": "2bb49ba12afddc50f1fc0baf01e5ad0cde264333d6829176e824b99fbdf6967f",
+    "failedCohort": "Ohio part-year school native lifecycle: both widths and payment cases",
+    "combinedUnitCoverage": "not-run",
+    "ledger": "docs/upgrade-2026-c25-local-browser-work.md",
+    "releaseReady": false
   }
 }

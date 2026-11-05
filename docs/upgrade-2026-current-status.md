@@ -132,3 +132,12 @@ strings. Focused controls and independent engineering reviews pass. Combined
 required types, spec/inventory and both builds pass; current full unit, coverage,
 lint and browser qualification continue. Earlier exact-source results are not
 relabeled as validation of these later fixes.
+
+### November5 UTC: current strict local browser closes with four failures
+
+c25 combined types/spec/inventory/builds/lint pass; actual strict managed browser
+finishes561PASS/4FAIL/5hostedSKIP. Four Ohio part-year school journeys time out
+near full-return navigation; later export/deletion assertions remain unpassed.
+All traces and gates are retained. Earlier school-no-op coverage passes87.54%
+branches, but final combined full unit/coverage remain pending. See [the actual
+browser ledger](upgrade-2026-c25-local-browser-work.md).
