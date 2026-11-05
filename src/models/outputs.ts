@@ -328,6 +328,7 @@ export interface TaxReturnResult {
   form8915F?: import("@/engine/forms/form-8915-f.js").Form8915FResult;
   form1099G?: import("@/engine/forms/form-1099-g.js").Form1099GResult;
   taxableRefundWorksheet?: import("@/engine/forms/taxable-refund-worksheet.js").TaxableRefundWorksheetResult;
+  taxableStateRefundRecoveries?: import("@/engine/forms/taxable-state-refund-recoveries.js").TaxableStateRefundRecoveriesResult;
   /** State and local general sales tax deduction worksheet result */
   salesTaxDeduction?: import("@/engine/forms/state-sales-tax-deduction-worksheet.js").SalesTaxDeductionResult;
   /** Form 1098-E student loan interest aggregation summary */

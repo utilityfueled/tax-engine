@@ -21333,5 +21333,27 @@
     "hostedQualified": false,
     "nativeImageQualified": false,
     "ledger": "docs/upgrade-2026-pa-married-mixed-native-browser-work.md"
+  },
+  "nov05TaxableStateRefundRecoveries": {
+    "status": "FINITE_ENGINE_INTEGRATION_PASS",
+    "mainTests": 123,
+    "mainFiles": 10,
+    "distinctTests": 140,
+    "distinctNewControls": 17,
+    "metadataTests": 894,
+    "inventoryTotal": 904,
+    "inventoryStatus": "partial",
+    "supportedUnchanged": 68,
+    "allTypesBuildsSpecInventoryLint": "PASS",
+    "lintWarnings": 11863,
+    "mainManifest": "e6e96d34b0742e3aa126312b52a8dc582dec5b9dc645b12cadbffbadb58b334a",
+    "distinctManifest": "151641556039701cd6a2b5017d5b69507a2119f535db183af0da2c3f2a94d8dc",
+    "sourceAuditManifest": "242a9f5ae3a6891f4e5cf246a3639f7ff4fa6a3be6be89b518d25a4d2d34c187",
+    "auditedSources": 1798,
+    "contractsUnchanged": 149,
+    "casesUnchanged": 582,
+    "filingQualified": false,
+    "humanTaxReview": false,
+    "ledger": "docs/upgrade-2026-taxable-state-refund-recoveries-work.md"
   }
 }

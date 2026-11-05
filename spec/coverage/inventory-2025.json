@@ -10885,6 +10885,25 @@
       ]
     },
     {
+      "key": "federal/taxable-state-refund-recoveries",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://www.irs.gov/publications/p525#en_US_2025_publink1000229426",
+      "specPath": "spec/federal/taxable-state-refund-recoveries.yaml",
+      "enginePath": "src/engine/forms/taxable-state-refund-recoveries.ts",
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/unreported-tip-payroll",
       "jurisdiction": "federal",
       "taxYear": null,

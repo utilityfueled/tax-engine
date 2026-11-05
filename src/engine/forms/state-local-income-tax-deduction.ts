@@ -2,6 +2,7 @@
 import Decimal from "decimal.js";
 import { calculateW2StateLocalSources } from "./w2-state-local.js";
 import { calculateForm1099G } from "./form-1099-g.js";
+import {calculateTaxableStateRefundRecoveries} from "./taxable-state-refund-recoveries.js";
 import { calculateForm1099OID } from "./form-1099-oid.js";
 import type { TaxYearInput } from "@/models/inputs.js";
 import type { CalculatedLine } from "@/models/outputs.js";
@@ -69,10 +70,12 @@ export function calculateStateLocalIncomeTaxDeduction(input: TaxYearInput): Stat
   if (deductedElsewhere.gt(nonW2Withholding)) throw new Error("Another-schedule tax deduction exceeds actual non-W2 withholding");
   const statePaymentsInYear = calculateStateTaxPaymentsInYear(input);
   const additionalPayments = actualAmount(input.scheduleA?.additionalStateLocalIncomeTaxes, "Additional income-tax payments");
+  if ((input.form1099G ?? []).some(source => source.refundPaymentBasis !== undefined) && !input.taxableStateRefundRecoveries) throw new Error("Refund original allocation requires a complete source recovery collection");
+  const recoveries = input.taxableStateRefundRecoveries ? calculateTaxableStateRefundRecoveries(input) : undefined;
   const currentRefundSources = (input.form1099G ?? []).filter(source => source.refundExpenseTaxYear === input.taxpayer.taxYear
     && Decimal.max(d(source.stateOrLocalTaxRefund), d(source.stateLocalIncomeTaxRefund)).gt(0));
   const government = calculateForm1099G(currentRefundSources, input.taxpayer.taxYear, input.taxpayer.filingStatus);
-  const currentYearRefunds = sum(...government.refundSources.filter(source => source.refundExpenseTaxYear === input.taxpayer.taxYear).map(source => source.amount));
+  const currentYearRefunds = recoveries?.currentYearRefund ?? sum(...government.refundSources.filter(source => source.refundExpenseTaxYear === input.taxpayer.taxYear).map(source => source.amount));
   const payments = sum(w2StateWithholding, w2LocalWithholding, nonW2Withholding, statePaymentsInYear, additionalPayments).minus(deductedElsewhere);
   if (currentYearRefunds.gt(payments)) throw new Error("Actual same-year income-tax refunds exceed known current-year payments");
   const total = payments.minus(currentYearRefunds);

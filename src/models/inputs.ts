@@ -669,6 +669,16 @@ export const Form1099GSchema = z.preprocess((value) => {
   stateOrLocalTaxRefund: optionalDecimal, // Box 2 (OH and generic path)
   refundTaxYear: z.number().optional(), // Box 3: state return year, not necessarily the payment year
   refundExpenseTaxYear: z.number().int().min(1900).optional(), // Actual year the refunded tax was paid/deducted
+  /** Actual complete dated payment basis for one income-tax refund; no inferred Box3 payment year. */
+  refundPaymentBasis: z.object({
+    sourceReference: z.string().optional(), sourceFactsConfirmed: z.boolean().optional(),
+    allPaymentsForStateReturnIncludedConfirmed: z.boolean().optional(),
+    receivedDate: z.string().optional(), state: z.string().optional(),
+    payments: z.array(z.object({
+      sourceReference: z.string().optional(), datePaid: z.string().optional(), amount: optionalDecimalInput,
+      currentYearPayment: z.object({ collection: z.enum(["estimatedTaxPayments", "extensionPayments"]), index: z.number().int().nonnegative() }).strict().optional(),
+    }).strict()).optional(),
+  }).strict().optional(),
   federalWithheld: optionalDecimal, // Box 4
   rtaaPayments: optionalDecimalInput, // Box 5
   taxableGrants: optionalDecimalInput, // Box 6
@@ -4559,6 +4569,37 @@ export const TaxableRefundWorksheetSchema = z.object({
 });
 export type TaxableRefundWorksheetInput = z.infer<typeof TaxableRefundWorksheetSchema>;
 
+/** Finite Pub525 original-sourced recovery collection. Unknown facts are not negative answers. */
+export const TaxableStateRefundYearSchema = z.object({
+  sourceReference: z.string().optional(), sourceFactsConfirmed: z.boolean().optional(),
+  priorTaxYear: z.number().int().optional(), priorYearFilingStatus: FilingStatusSchema.optional(),
+  priorYearPrimarySsn: z.string().optional(), priorYearSpouseSsn: z.string().optional(),
+  priorYearItemized: z.boolean().optional(), priorYearStateLocalTaxElection: z.enum(["income", "sales"]).optional(),
+  priorYearItemizedTotal: optionalDecimalInput, priorYearStandardDeduction: optionalDecimalInput,
+  priorYearStateLocalTaxesPaid: optionalDecimalInput, priorYearPropertyTaxesPaid: optionalDecimalInput,
+  priorYearAlternativeGeneralSalesTaxDeduction: optionalDecimalInput, priorYearSaltMagi: optionalDecimalInput,
+  priorYearSaltDeduction: optionalDecimalInput, priorYearOtherItemizedDeductions: optionalDecimalInput,
+  priorYearAdjustedGrossIncome: optionalDecimalInput, priorYearTaxableIncome: optionalDecimalInput,
+  priorYearAdditionalDeductions: optionalDecimalInput,
+  priorYearHadAMT: z.boolean().optional(), priorYearHadUnusedTaxCredits: z.boolean().optional(),
+  priorYearHadTaxCredits: z.boolean().optional(), priorYearUsedSpecialTaxComputation: z.boolean().optional(), priorYearUsedPreferentialTaxWorksheet: z.boolean().optional(),
+  priorYearWasDependent: z.boolean().optional(), priorYearNonresidentAlien: z.boolean().optional(),
+  priorYearHadCarryoverBenefits: z.boolean().optional(), priorYearHadOtherRecoveries: z.boolean().optional(),
+  priorYearHadEarlierRefunds: z.boolean().optional(), priorYearBlind: z.boolean().optional(),
+  priorYearDeceased: z.boolean().optional(), priorYearMandatoryItemization: z.boolean().optional(),
+  communityPropertyAllocationRequired: z.boolean().optional(),
+}).strict();
+export const TaxableStateRefundRecoveriesSchema = z.object({
+  methodVersion: z.literal("state-income-tax-recoveries-v1").optional(),
+  sourceTaxYear: z.number().int().optional(), sourceReference: z.string().optional(),
+  sourceFactsConfirmed: z.boolean().optional(), allRefundSourcesIncludedConfirmed: z.boolean().optional(),
+  originalTaxpayer: TaxpayerSchema.optional(),
+  sourceOriginals: z.array(z.object({sourceId: z.string().optional(), original: Form1099GSchema.optional()}).strict()).optional(),
+  years: z.array(TaxableStateRefundYearSchema).optional(),
+}).strict();
+export type TaxableStateRefundRecoveriesInput = z.infer<typeof TaxableStateRefundRecoveriesSchema>;
+export type TaxableStateRefundYearInput = z.infer<typeof TaxableStateRefundYearSchema>;
+
 /**
  * Schedule J — Income Averaging for Farmers and Fishermen (IRC §1301)
  *
@@ -6312,6 +6353,7 @@ export const TaxYearInputSchema = z.object({
   homeSales: z.array(HomeSaleSchema).default([]),
   form8915F: Form8915FSchema.optional(),
   taxableRefundWorksheet: TaxableRefundWorksheetSchema.optional(),
+  taxableStateRefundRecoveries: TaxableStateRefundRecoveriesSchema.optional(),
   form8824: z.array(Form8824Schema).default([]),
   cryptoIncome: CryptoIncomeInputSchema.optional(),
   stateReturns: z.object({

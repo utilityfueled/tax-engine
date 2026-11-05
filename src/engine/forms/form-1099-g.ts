@@ -55,6 +55,47 @@ function text(value: string | undefined, label: string): string {
   return value.trim();
 }
 
+/** Exact-cent original-payment allocation; no residual is silently assigned to a year. */
+function allocateRefund(form: Form1099G, refund: Decimal, taxYear: number): Array<{year:number; amount:Decimal}> {
+  const basis = form.refundPaymentBasis;
+  if (!basis || form.refundExpenseTaxYear !== undefined) throw new Error("Refund payment basis and scalar expense year are mutually exclusive.");
+  if (basis.sourceFactsConfirmed !== true || basis.allPaymentsForStateReturnIncludedConfirmed !== true) throw new Error("Refund requires complete confirmed original payment basis.");
+  text(basis.sourceReference, "refund payment-basis reference");
+  const date = (value: string | undefined) => {
+    if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value) || !Number.isFinite(Date.parse(value+"T00:00:00Z")) || new Date(value+"T00:00:00Z").toISOString().slice(0,10)!==value) throw new Error("Refund requires an actual valid payment or receipt date.");
+    return value;
+  };
+  const received = date(basis.receivedDate);
+  if (Number(received.slice(0,4)) !== taxYear || !/^[A-Z]{2}$/.test(basis.state ?? "")) throw new Error("Refund receipt year and actual payment state must reconcile.");
+  if (!basis.payments?.length || basis.payments.length > 100) throw new Error("Refund requires its bounded complete original payment inventory.");
+  const Exact = Decimal.clone({precision:80});
+  const cents = (value: string | undefined, label:string) => {
+    const number = amount(value,label);
+    if (value === undefined || !/^\d{1,12}(?:\.\d{1,2})?$/.test(value)) throw new Error("Refund payment allocation requires bounded exact-cent amounts.");
+    return new Exact(number.toString()).times(100);
+  };
+  const refundCents = cents(refund.toString(), "refund cents");
+  const years = new Map<number, Decimal>();
+  const refs = new Set<string>();
+  for (const payment of basis.payments) {
+    const ref = text(payment.sourceReference, "original payment reference");
+    if(refs.has(ref)) throw new Error("Refund repeats an original payment identity.");
+    refs.add(ref);
+    const paid = date(payment.datePaid), year = Number(paid.slice(0,4));
+    if (![2024,2025,2026].includes(year) || year > taxYear || paid > received) throw new Error("Refund payment year/date is outside the supported actual cohort.");
+    const paidCents = cents(payment.amount,"original payment amount");
+    years.set(year, (years.get(year) ?? new Exact(0)).plus(paidCents));
+  }
+  const total = [...years.values()].reduce((a,b)=>a.plus(b),new Exact(0));
+  if (refundCents.gt(total)) throw new Error("Refund exceeds its actual complete original payment basis.");
+  return [...years].sort(([a],[b])=>a-b).map(([year,value])=>{
+    const numerator = refundCents.times(value);
+    if (total.isZero()) return {year,amount:new Decimal(0)};
+    if (!numerator.mod(total).isZero()) throw new Error("Refund pro-rata allocation produces fractional cents; a separately supported allocation method is required.");
+    return {year,amount:new Decimal(numerator.div(total).div(100).toString())};
+  });
+}
+
 export function calculateForm1099G(forms: Form1099G[], taxYear = 2025, filingStatus?: TaxYearInput["taxpayer"]["filingStatus"]): Form1099GResult {
   if (![2022, 2023, 2024, 2025, 2026].includes(taxYear)) throw new Error(`Form1099G source worksheet does not support tax year ${taxYear}.`);
   const audit = new AuditTrail();
@@ -64,7 +105,7 @@ export function calculateForm1099G(forms: Form1099G[], taxYear = 2025, filingSta
   const refundSources: Form1099GResult["refundSources"] = [];
   const stateWithholding: Form1099GResult["stateWithholding"] = [];
   for (const [index, form] of forms.entries()) {
-    const sourceFields = ["sourceId", "refundExpenseTaxYear", "accountReference", "taxYear", "sourceFormRevision", "sourceFactsConfirmed", "actualReceiptConfirmed", "additionalWorksheetRequired", "programType", "rtaaPayments", "taxableGrants", "grantIncomeCategory", "agriculturePayments", "tradeOrBusinessRefund", "marketGain", "familyLeaveBenefits", "familyLeaveProgramType", "currentYearRepaid", "priorYearRepaid", "unemploymentReceivedBeforeRepayment", "box1IncludesCurrentYearRepayment", "repaymentSourceReference", "unrecoveredAfterTaxContributions", "contributionProgramId", "contributionHistoryReference", "contributionBalanceReconciled", "allProgramPaymentsIncluded", "stateTaxReporting", "statePayerId"] as const;
+    const sourceFields = ["sourceId", "refundPaymentBasis", "refundExpenseTaxYear", "accountReference", "taxYear", "sourceFormRevision", "sourceFactsConfirmed", "actualReceiptConfirmed", "additionalWorksheetRequired", "programType", "rtaaPayments", "taxableGrants", "grantIncomeCategory", "agriculturePayments", "tradeOrBusinessRefund", "marketGain", "familyLeaveBenefits", "familyLeaveProgramType", "currentYearRepaid", "priorYearRepaid", "unemploymentReceivedBeforeRepayment", "box1IncludesCurrentYearRepayment", "repaymentSourceReference", "unrecoveredAfterTaxContributions", "contributionProgramId", "contributionHistoryReference", "contributionBalanceReconciled", "allProgramPaymentsIncluded", "stateTaxReporting", "statePayerId"] as const;
     const verified = taxYear === 2026 || sourceFields.some(field => form[field] !== undefined);
     if (verified && taxYear < 2025) throw new Error("Actual Form1099G source worksheets are unavailable for this historical year; do not relabel the source.");
     const sourceId = verified ? text(form.sourceId, "source identity") : `legacy-${index + 1}`;
@@ -119,7 +160,14 @@ export function calculateForm1099G(forms: Form1099G[], taxYear = 2025, filingSta
       const refund = amount(form.stateOrLocalTaxRefund, "Box2 refund"), alias = amount(form.stateLocalIncomeTaxRefund, "legacy Box2 refund alias");
       if (refund.gt(0) && alias.gt(0) && !refund.eq(alias)) throw new Error("Form1099G refund aliases do not reconcile.");
       const refundAmount = Decimal.max(refund, alias);
-      if (refundAmount.gt(0)) {
+      if (form.refundPaymentBasis !== undefined) {
+        if (!Number.isInteger(form.refundTaxYear) || form.refundTaxYear === undefined || form.refundTaxYear < 1900 || form.refundTaxYear > taxYear) throw new Error("Form1099G requires the actual Box3 state-return year.");
+        if (form.tradeOrBusinessRefund !== false) throw new Error("Refund payment basis only supports nonbusiness income-tax recoveries.");
+        for (const row of allocateRefund(form, refundAmount, taxYear)) {
+          refundSources.push({sourceId, accountHolder:form.accountHolder, amount:row.amount, refundTaxYear:form.refundTaxYear, refundExpenseTaxYear:row.year});
+          record(`2:${row.year}`, `Actual refund allocated to payment year ${row.year}`, row.amount, "Original Box2 × complete actual payments in year / complete original payments; exact cents only");
+        }
+      } else if (refundAmount.gt(0)) {
         if (!Number.isInteger(form.refundTaxYear) || form.refundTaxYear === undefined || form.refundTaxYear < 1900 || form.refundTaxYear > taxYear) throw new Error("Form1099G requires the actual refund origin year.");
         if (!Number.isInteger(form.refundExpenseTaxYear) || form.refundExpenseTaxYear === undefined || form.refundExpenseTaxYear < 1900 || form.refundExpenseTaxYear > taxYear) throw new Error("Form1099G requires the actual refunded expense year, separately from Box3.");
         if (form.tradeOrBusinessRefund) throw new Error("Form1099G business refund requires its separate business tax-benefit worksheet.");

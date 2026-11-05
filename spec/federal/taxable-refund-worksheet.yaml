@@ -153,3 +153,5 @@ edge_cases:
   - description: Itemized exactly equal to standard deduction
     result: No tax benefit from itemizing → refund not taxable
     test: itemized $14,600 with $14,600 standard → Line 6 = 0 → taxableRefund = 0
+
+# The separate original-sourced multi-year method is specified in taxable-state-refund-recoveries.yaml; this legacy single-year worksheet and its mixed-year guard are unchanged.

@@ -182,6 +182,7 @@ import { calculateMarketplaceNonspecifiedStop } from "./forms/marketplace-nonspe
 import { calculateScheduleJ } from "./forms/schedule-j.js";
 import { calculateForm8915F, type Form8915FResult } from "./forms/form-8915-f.js";
 import { calculateTaxableRefundWorksheet, type TaxableRefundWorksheetResult } from "./forms/taxable-refund-worksheet.js";
+import {calculateTaxableStateRefundRecoveries, type TaxableStateRefundRecoveriesResult} from "./forms/taxable-state-refund-recoveries.js";
 import { calculateStudentLoanInterestDeduction } from "./forms/student-loan-interest.js";
 import { calculateNetOperatingLossReturn, type NetOperatingLossReturnResult, type NolIncomeContext, type NolAlternativeIncomeContext } from "./forms/net-operating-loss-return.js";
 import { calculateQbiEblNol } from "./forms/qbi-ebl-nol.js";
@@ -1826,14 +1827,22 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     return { stateLocalIncomeTaxRefund: Decimal.max(current, legacy).toString(), refundTaxYear: form.refundTaxYear, refundExpenseTaxYear: form.refundExpenseTaxYear };
   }).filter(form => (form.refundExpenseTaxYear ?? form.refundTaxYear) !== year);
   if (form1099G.refundSources.some(source => source.refundExpenseTaxYear < year && source.amount.gt(0))
-    && !input.taxableRefundWorksheet) {
+    && !input.taxableRefundWorksheet && !input.taxableStateRefundRecoveries) {
     throw new Error("Actual prior-year refund requires its historical tax-benefit worksheet");
   }
 
+  if ((input.form1099G ?? []).some(form => form.refundPaymentBasis !== undefined) && !input.taxableStateRefundRecoveries) {
+    throw new Error("Actual refund payment-basis allocations require their complete original recovery collection");
+  }
   // ── Taxable Refund Worksheet (Schedule 1 Line 1) ──
   let taxableRefundWorksheetResult: TaxableRefundWorksheetResult | undefined;
   let taxableStateRefund: Decimal | undefined;
-  if (input.taxableRefundWorksheet) {
+  let taxableStateRefundRecoveriesResult: TaxableStateRefundRecoveriesResult | undefined;
+  if (input.taxableStateRefundRecoveries) {
+    taxableStateRefundRecoveriesResult = calculateTaxableStateRefundRecoveries(input);
+    taxableStateRefund = taxableStateRefundRecoveriesResult.taxableRefund;
+    audit.merge(taxableStateRefundRecoveriesResult.lines);
+  } else if (input.taxableRefundWorksheet) {
     taxableRefundWorksheetResult = calculateTaxableRefundWorksheet(
       historicalRefundForms,
       input.taxableRefundWorksheet,
@@ -5024,6 +5033,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     studentLoanInterestWorksheet: studentLoanInterestWorksheetResult,
     form1099G: (input.form1099G ?? []).length ? form1099G : undefined,
     taxableRefundWorksheet: taxableRefundWorksheetResult,
+    taxableStateRefundRecoveries: taxableStateRefundRecoveriesResult,
     salesTaxDeduction: salesTaxResult,
     scheduleK1Form1041Summary: k1Form1041Summary,
 
