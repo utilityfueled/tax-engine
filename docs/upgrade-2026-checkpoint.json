@@ -21165,5 +21165,33 @@
     "humanQualification": false,
     "final2026Qualification": false,
     "ledger": "docs/upgrade-2026-pa-married-residency-native-work.md"
+  },
+  "nov05PAMarriedMixedPaper": {
+    "status": "FINITE2025_ORIGINAL_BOUND_REVIEW_PAPER_PASS",
+    "sourcePaths": 7,
+    "affectedTests": 311,
+    "affectedFiles": 10,
+    "distinctAuthorReplay": 238,
+    "distinctAddedTests": 13,
+    "metadataTests": 890,
+    "specLines": 8457,
+    "inventoryTotal": 899,
+    "supportedUnchanged": 68,
+    "typechecks": "all3PASS",
+    "builds": "bothPASS",
+    "savedReviewPDFs": 38,
+    "savedReviewPages": 74,
+    "renderedPDFs": 18,
+    "renderedPages": 36,
+    "visuallyInspectedPages": 6,
+    "privateMarkersScanned": 58,
+    "observedLeaks": 0,
+    "mainManifest": "d7da06ff5c520aefc37a9dae682272d190822c2cf55c7f478adebbdd812c2948",
+    "distinctManifest": "e6522375890919dcd61aca0d80041127211d909a50e8297d5d8a9ba9fad7ae0c",
+    "sourceAuditManifest": "a76ac724aa0a06761fb280ccfd65225ab47a910e0dcbcf37e2eb871f1cb1dde2",
+    "humanTaxReview": false,
+    "final2026Qualification": false,
+    "filingEligible": false,
+    "ledger": "docs/upgrade-2026-pa-married-mixed-paper-work.md"
   }
 }

@@ -37,7 +37,6 @@ const sameActualResult=(a:unknown,b:unknown)=>isDeepStrictEqual(comparable(a),co
 export function preparePAMarriedReturnReview(input:TaxYearInput):PreparedPAMarriedReturnReview{
  assertPdfExportAllowed(input.taxpayer.taxYear,input.taxpayer.taxYear);
  if(!TaxYearInputSchema.safeParse(input).success||!input.paMarriedOrdinarySources)fail('complete original canonical household packet is required');
- if(input.paMarriedOrdinarySources.residencySources!==undefined)fail('mixed residency requires its separately reviewed original-bound paper projection');
  // Actual care admission additionally requires its reviewed documentary projection.
  const careRequested=input.dependentCare!==undefined||input.dependentCareBenefits!==undefined||input.paMarriedOrdinarySources.care!==undefined;
  if(careRequested&&!input.paMarriedOrdinarySources.care?.careSources?.paperIdentitySources)fail('actual care paper requires its documentary identity projection successor');
@@ -73,7 +72,9 @@ function safeText(original:TaxYearInput):(value:string)=>string{
 export interface PAMarriedOwnedPaper{
  accountHolder:'joint'|'primary'|'spouse';taxpayer:TaxYearInput['taxpayer'];projection:PAMarriedOrdinaryReturnProjection;
  children:ReadonlyArray<{name:string;age:number;relationship:string}>;
- care?:PACareOwnedPaper;schoolName:string;spColumns:{A?:{compensation:string;gifts:string};B?:{compensation:string;gifts:string};C?:{compensation:string;gifts:string}};
+ care?:PACareOwnedPaper;schoolName:string;
+ residency:{status:'resident'|'nonresident'|'part_year';schoolCode:string;schoolDistrictName:string;from?:string;through?:string};
+ spColumns:{A?:{compensation:string;gifts:string;nonPAIncome:string};B?:{compensation:string;gifts:string;nonPAIncome:string};C?:{compensation:string;gifts:string;nonPAIncome:string}};
 }
 
 /** No original recapture or source confirmation occurs on read. */
@@ -105,12 +106,33 @@ export function resolvePAMarriedReturnReview(input:TaxYearInput,result:TaxReturn
   const tag=projection.accountHolder,first=tag==='spouse'?people.spouse:people.primary,partner=tag==='spouse'?people.primary:people.spouse;
   if(!first||!partner)fail('actual claimant and partner identities required');
   const taxpayer={...redacted,dependents:redacted.dependents.map(child=>({...child,firstName:text(child.firstName),lastName:text(child.lastName)})),primary:scrubPerson(first),spouse:scrubPerson(partner),address:{...redacted.address,street:text(redacted.address.street),city:text(redacted.address.city),...(redacted.address.apt!==undefined?{apt:text(redacted.address.apt)}:{})}};
-  const values=(which:'primary'|'spouse')=>({compensation:owner(which).reportedCompensation.toFixed(0),gifts:owner(which).spOtherIncome.toFixed(0)});
-  const spColumns:PAMarriedOwnedPaper['spColumns']=tag==='joint'?{A:{compensation:projection.pa40.totalPATaxableIncome.toFixed(0),gifts:projection.scheduleSP.nontaxableIncome.toFixed(0)}}:
+  // The full source replay above validates every current original W2 and owner.
+  // SP6 is excluded actual cash, not a guessed fraction or a balancing scalar.
+  const Cash=Decimal.clone({precision:256,rounding:Decimal.ROUND_HALF_UP});
+  const values=(which:'primary'|'spouse')=>{
+   const actualOwner=owner(which),worldwide=sources.wages.filter(row=>row.accountHolder===which).reduce((total,row)=>{
+    const index=row.originalIndex;if(index===null||!Number.isInteger(index))fail('actual original wage index is missing');
+    const wage=original.w2s[index];if(!wage||wage.accountHolder!==which)fail('actual original wage owner is inconsistent');
+    return total.plus(new Cash(wage.wages));
+   },new Cash(0));
+   const excluded=worldwide.minus(new Cash(actualOwner.rawCompensation.toString()));
+   if(excluded.lt(0)||!sources.residencySources&&!excluded.isZero())fail('actual excluded worldwide compensation is inconsistent');
+   return {compensation:actualOwner.reportedCompensation.toFixed(0),gifts:actualOwner.spOtherIncome.toFixed(0),nonPAIncome:excluded.toDecimalPlaces(0,Cash.ROUND_HALF_UP).toFixed(0)};
+  };
+  const spColumns:PAMarriedOwnedPaper['spColumns']=tag==='joint'?{A:{compensation:projection.pa40.totalPATaxableIncome.toFixed(0),gifts:projection.scheduleSP.nontaxableIncome.toFixed(0),nonPAIncome:'0'}}:
    {B:values(tag),C:values(tag==='primary'?'spouse':'primary')};
+  if(sources.residencySources&&projection.scheduleSP.taxForgivenessCredit.gt(0)){
+   const total=Object.values(spColumns).reduce((sum,column)=>sum.plus(column.compensation).plus(column.gifts).plus(column.nonPAIncome),new Cash(0));
+   if(!total.eq(projection.scheduleSP.eligibilityIncome))fail('actual separately rounded SP lines need their reviewed rounding successor');
+  }
+  const actualResidency=projection.residency;
+  if(sources.residencySources&&(!actualResidency||tag==='joint'))fail('actual separate owner residency projection is missing');
+  const period=actualResidency?.residentPeriods;
+  if(actualResidency?.status==='part_year'&&period?.length!==1)fail('actual single part-year resident interval is required');
+  const residency:PAMarriedOwnedPaper['residency']={status:actualResidency?.status??'resident',schoolCode:projection.schoolDistrictCode,schoolDistrictName:text(projection.schoolDistrictName),...(actualResidency?.status==='part_year'?{from:period?.[0]?.from,through:period?.[0]?.through}:{})};
   const source=original.paMarriedOrdinarySources?.care?.careSources;
   const care=projection.scheduleDC&&source?projectPACareOwnedPaper(original,source,projection.scheduleDC,saved.federal):undefined;
-  return {accountHolder:tag,taxpayer,projection,children,...(care?{care}:{}),schoolName:text(projection.schoolDistrictName),spColumns};
+  return {accountHolder:tag,taxpayer,projection,children,...(care?{care}:{}),schoolName:text(projection.schoolDistrictName),residency,spColumns};
  });
 }
 

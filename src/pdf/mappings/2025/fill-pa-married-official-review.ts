@@ -84,7 +84,7 @@ async function spReview(directory:string,paper:PAMarriedOwnedPaper):Promise<PDFD
  const joint=paper.accountHolder==='joint';status('SP-joint','J3a',joint);status('SP-separate','M3b',!joint);status('SP-certification','Mcertification',!joint);
  for(const [column,amounts]of Object.entries(paper.spColumns)){
   if(!amounts)continue;
-  for(let line=1;line<=10;line++)text(`SP-${line}-${column}`,line===1?amounts.compensation:line===5?amounts.gifts:'0');
+  for(let line=1;line<=10;line++)text(`SP-${line}-${column}`,line===1?amounts.compensation:line===5?amounts.gifts:line===6?amounts.nonPAIncome:'0');
  }
  const column=joint?'A':'BC',sp=paper.projection.scheduleSP;
  text(`SP-11-${column}`,sp.eligibilityIncome.toFixed(0));
@@ -99,7 +99,7 @@ export async function fillPAMarriedOfficialReview(input:TaxYearInput,result:TaxR
  const papers=resolvePAMarriedReturnReview(input,result,prepared),outputs:PAMarriedReviewDocument[]=[];
  for(const paper of papers){
   const p=paper.projection,hasSP=p.scheduleSP.taxForgivenessCredit.gt(0),doc=await originalTemplate(blankFormsDir,'pa-40.pdf');
-  await projectPA40DiagnosticFields(doc,paper.taxpayer,p,{filingStatus:p.filingChoice,...(hasSP?{taxForgivenessCategory:'married' as const}:{}),dependentChildren:paper.children.length,residency:{status:'resident',schoolCode:p.schoolDistrictCode,schoolDistrictName:paper.schoolName},requestedRefund:p.refundDisposition.refund.toFixed(0),nextYearCredit:p.refundDisposition.nextYearCredit.toFixed(0),donations:p.refundDisposition.donations.map(row=>({code:row.code,amount:row.amount.toFixed(0)}))});
+  await projectPA40DiagnosticFields(doc,paper.taxpayer,p,{filingStatus:p.filingChoice,...(hasSP?{taxForgivenessCategory:'married' as const}:{}),dependentChildren:paper.children.length,residency:paper.residency,requestedRefund:p.refundDisposition.refund.toFixed(0),nextYearCredit:p.refundDisposition.nextYearCredit.toFixed(0),donations:p.refundDisposition.donations.map(row=>({code:row.code,amount:row.amount.toFixed(0)}))});
   if(!hasSP)for(const name of [F.line20,F.line21,F.dependents])doc.getForm().getTextField(name).setText('');
   // These are explicitly confirmed actual zero elections/overpayments, not missing facts.
   for(const [name,value]of Object.entries({[F.line29]:p.pa40.netOverpayment.toFixed(0),[F.line30]:p.refundDisposition.refund.toFixed(0),[F.line31]:p.refundDisposition.nextYearCredit.toFixed(0)}))doc.getForm().getTextField(name).setText(value);

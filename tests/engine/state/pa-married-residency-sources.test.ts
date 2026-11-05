@@ -2,7 +2,9 @@ import {describe,it,expect} from 'vitest';
 import {calculatePAMarriedOrdinaryReturn} from '@/engine/state/pa-married-ordinary-return.js';
 import {paMarriedMixedResidencyFixture} from '../../fixtures/pa-married-residency-sources.js';
 import {marriedOriginals} from '../../fixtures/pa-married-ordinary-return.js';
-import {preparePAMarriedReturnReview} from '@/pdf/pa-married-return-review-context.js';
+import {calculateFederalTax} from '@/engine/federal.js';
+import {redactReviewIdentifiers} from '@/pdf/redact-review-identifiers.js';
+import {preparePAMarriedReturnReview,resolvePAMarriedReturnReview} from '@/pdf/pa-married-return-review-context.js';
 import {PAMarriedOrdinarySourcesSchema} from '@/models/pa-married-ordinary-sources.js';
 import {calculatePAReturn} from '@/engine/state/pa-orchestrator.js';
 describe('PA married actual separate residency sources',()=>{
@@ -53,10 +55,13 @@ describe('PA married actual separate residency sources',()=>{
   const f=paMarriedMixedResidencyFixture();f.sources.residencySources.owners[1].allActualPayrollLocationsReviewedNoConvenienceAllocationConfirmed=false;
   expect(()=>calculatePAMarriedOrdinaryReturn(f.input,f.sources)).toThrow(/employer|required|location/);
  });
- it('denies resident-only paper for otherwise valid mixed sources',()=>{
+ it('requires actual original-bound mixed paper and retains unavailable year gates',()=>{
   const f=paMarriedMixedResidencyFixture();f.input.paMarriedOrdinarySources=PAMarriedOrdinarySourcesSchema.parse(f.sources);
   expect(calculatePAMarriedOrdinaryReturn(f.input,f.sources).returns).toHaveLength(2);
-  expect(()=>preparePAMarriedReturnReview(f.input)).toThrow(/mixed|residency|paper/i);
+  const token=preparePAMarriedReturnReview(f.input),married=calculatePAMarriedOrdinaryReturn(f.input,f.sources),result={...calculateFederalTax(f.input),stateReturns:{pennsylvania:married}};
+  expect(resolvePAMarriedReturnReview(redactReviewIdentifiers(f.input),result,token).map(row=>row.projection.residency?.status)).toEqual(['resident','nonresident']);
+  expect(()=>resolvePAMarriedReturnReview(redactReviewIdentifiers(f.input),result,{}as typeof token)).toThrow(/context|prepared/);
+  f.input.taxpayer.taxYear=2026;expect(()=>preparePAMarriedReturnReview(f.input)).toThrow(/2026|year/);
  });
  it('reaches the actual canonical Pennsylvania dispatcher without scalar overrides',()=>{
   const f=paMarriedMixedResidencyFixture();f.input.paMarriedOrdinarySources=PAMarriedOrdinarySourcesSchema.parse(f.sources);

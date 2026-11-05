@@ -24,9 +24,9 @@ lines:
     formula: "Reject stale or malformed sources, competing confirmed legacy residency, missing/duplicate owners, unknown days, payroll crossing domicile boundaries and contradictory printed PA wages."
     testRef: "tests/engine/state/pa-married-residency-sources.test.ts::rejects stale and incomplete actual mixed-residency sources"
   - line: "export-and-year-gates"
-    description: This is a source composition calculation only. Existing resident-only paper must not render a mixed-residency result.
-    formula: "Reject mixed-residency public paper preparation; preserve actual full federal year gate, review-only status, no filing qualification and all old no-packet J/M paths."
-    testRef: "tests/engine/state/pa-married-residency-sources.test.ts::denies resident-only paper for otherwise valid mixed sources"
+    description: This is a source composition calculation only. Mixed review paper additionally requires its original-bound reviewed owner residency, dates, school and worldwide SP projection.
+    formula: "Require prepared original-bound mixed paper context; deny forged or stale sources before IO. Preserve actual full federal year gate, review-only status, no filing qualification and all old no-packet J/M paths."
+    testRef: "tests/engine/state/pa-married-residency-sources.test.ts::requires actual original-bound mixed paper and retains unavailable year gates"
   - line: "actual-presence-consistency"
     description: Original physical-presence facts cannot contradict Pennsylvania services or an actual new Pennsylvania domicile.
     formula: "A positive actual PA-service cash row requires more than zero actual PA presence days in the same proved domicile period containing its entire service/payment window. A part-year PA domicile period requires actual positive PA presence as well as confirmed abandonment/new-domicile facts. Never infer days, prorate cash or invent a payroll allocation; retain zero-presence nonresident periods when actual PA-service cash is zero."
