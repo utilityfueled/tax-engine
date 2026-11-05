@@ -20988,5 +20988,34 @@
     "correctionManifest": "501073a5ec1996657904c2f3d2689a0e38b805b23aaec6a24cb63b95aa38f402",
     "currentHeadQualified": false,
     "humanSecurityReview": "pending"
+  },
+  "nov05GuidedLoanReferenceVerification": {
+    "status": "finite-strict-expectation-repair-verified-global-rerun-required",
+    "baseline": "7bcc8c8a60f02b6c203ae38ce217cae5e9dbe0d5",
+    "originalUnitAndCoverageEach": {
+      "passedTests": 26452,
+      "failedTests": 1,
+      "files": 1911,
+      "postgresPassed": 53,
+      "sourceMembersUnchanged": 5293,
+      "currentCoveragePercentageQualified": false
+    },
+    "productChanges": false,
+    "focused": {
+      "passedTests": 62,
+      "files": 3
+    },
+    "specLines": 8437,
+    "relevantChecksPassed": 4,
+    "inventoryRegenerated": false,
+    "evidenceManifestSHA256": "ec7ed7ed32c42429787618214f3c654795906fcf45711a31f9796b94637aaab1",
+    "distinctManifestSHA256": "fac48f882b261ff0fc2d087a58b8a348f157b559caf29672b27527c9584914c6",
+    "ledger": "docs/upgrade-2026-guided-loan-reference-verification-work.md",
+    "remaining": [
+      "full-current-unit-and-coverage",
+      "full-browser",
+      "hosted/native",
+      "human/final2026/AI qualification"
+    ]
   }
 }

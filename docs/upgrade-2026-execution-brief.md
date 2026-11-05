@@ -272,3 +272,7 @@ The actual public web-cwd ENOENT is resolved by forwarding the workspace's exist
 ### November 3: finite resident-credit official review routing
 
 The source-bound2025 resident/Virginia employee review now reaches the public dispatcher with an explicit versioned template root. Main2missing-companion RED then41PASS, and17root controls10RED/7PASS then combined58PASS, precede all12tail checks passing. Distinct fresh-main15PDF/26page/all1233-cell strict/privacy review now passes with exact text15/RGB26 parity to approved prior outputs; older private and narrow-root receipts remain separately bounded. See [the resident-credit ledger](upgrade-2026-oh-resident-credit-official-review-work.md). Native/browser/distribution/global/staging/provider/human/final2026 and release gates remain open.
+
+### November5: strict actual loan-reference assertions
+
+Full 7bcc unit and coverage runs each retain 26,452 passing tests and one failure from an old strict expected object omitting the actual supplied loan reference. All 53 real local PostgreSQL cases pass in each run, and 5,293 source pins stay exact. The reviewed test/spec correction preserves exact equality and adds same-amount provenance and unknown-reference guards. Main verification passes 62 tests in 3 files, all 8,437 spec lines, inventory and scoped lint. Product behavior, gates and deadlines are unchanged; another full current-source global run remains required. See [the verification ledger](upgrade-2026-guided-loan-reference-verification-work.md).

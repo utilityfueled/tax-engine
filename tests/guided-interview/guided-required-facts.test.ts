@@ -30,10 +30,21 @@ describe("required guided source facts", () => {
   });
   it("preserves actual mortgage principal and donation classification", () => {
     const data = { ...emptyDeductionData, method: "itemized" as const, mortgageInterest: "123.45", mortgageEntries: [mortgage], mortgageWorksheet: { ...completeMortgageWorksheet }, charitableContributions: "12.34", donationEntries: [donation] };
-    expect(buildForm1098Inputs(data, 2025, "single")).toEqual([{ sourceId: "Actual Bank:synthetic-loan-1", taxYear: 2025, sourceFactsComplete: true, lender: "Actual Bank", mortgageInterestReceived: "123.45", outstandingMortgagePrincipal: "0", mortgageOriginationDate: "2016-06-05", refundOfOverpaidInterest: "0", mortgageInsurancePremiums: "0", pointsPaid: "0", propertyTax: "0" }]);
+    expect(buildForm1098Inputs(data, 2025, "single")).toEqual([{ sourceId: "Actual Bank:synthetic-loan-1", taxYear: 2025, sourceFactsComplete: true, lender: "Actual Bank", loanAccountReference: "synthetic-loan-1", mortgageInterestReceived: "123.45", outstandingMortgagePrincipal: "0", mortgageOriginationDate: "2016-06-05", refundOfOverpaidInterest: "0", mortgageInsurancePremiums: "0", pointsPaid: "0", propertyTax: "0" }]);
     expect(buildDonationsInput(data)[0]).toMatchObject({ organization: "Actual Charity", type: "cash", amount: "12.34", dateOfDonation: "2025-02-28", isPrivateFoundation: false });
     expect(() => buildForm1098Inputs({ ...data, mortgageEntries: [{ ...mortgage, outstandingPrincipal: "" }] }, 2025, "single")).toThrow(/principal/i);
     expect(() => buildDonationsInput({ ...data, donationEntries: [{ ...donation, type: "property", costBasis: "" }] })).toThrow(/basis|classification/i);
+  });
+  it("preserves actual loan identity independently of unchanged source amounts", () => {
+    const data = { ...emptyDeductionData, method: "itemized" as const, mortgageInterest: "123.45", mortgageEntries: [mortgage], mortgageWorksheet: { ...completeMortgageWorksheet } };
+    const original = buildForm1098Inputs(data, 2025, "single")[0];
+    const changed = buildForm1098Inputs({ ...data, mortgageEntries: [{ ...mortgage, accountReference: "actual-loan-2" }] }, 2025, "single")[0];
+    expect(changed).toEqual({ ...original, sourceId: "Actual Bank:actual-loan-2", loanAccountReference: "actual-loan-2" });
+    expect(original.loanAccountReference).toBe("synthetic-loan-1");
+    for (const accountReference of ["", "   "]) {
+      expect(() => buildForm1098Inputs({ ...data, mortgageEntries: [{ ...mortgage, accountReference }] }, 2025, "single")).toThrow(/reference/i);
+    }
+    expect(mortgage.accountReference).toBe("synthetic-loan-1");
   });
   it("rejects impossible and conflicting source dates", () => {
     for (const date of ["", "2025-02-29", "2026-02-28"]) {
