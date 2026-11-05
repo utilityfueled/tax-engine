@@ -3142,3 +3142,12 @@ outage/retry qualification continue; see [the provisioning ledger](upgrade-2026-
 ### November5 UTC: exact480 terminal browser diagnosis
 
 Both remote480 Web runs fail: managed563/2/fiveSKIP(PR),562/3/fiveSKIP(push); container542/23/fiveSKIP(PR),550/15/fiveSKIP(push). Independent evidence retains all43failed cases/48attempts and binds the PR merge to the exact head tree. ROOT verifies30frozen members and replays four complete logs. Static/unit/coverage CI passes; no product fix, rerun, deadline change or image qualification follows. See [the browser ledger](upgrade-2026-480-remote-browser-work.md).
+
+### November 5 UTC: restricted isolated Preview configuration
+
+Corrected installer V2 passes 55 ROOT controls and55 distinct replays plus27 added
+checks; one actual sensitive Preview-only app-key install passes metadata review.
+The unused Neon project connection is removed: exactly 16 aliases disappear while
+all 13 retained Preview entries preserve their metadata. Earlier failed installer,
+DELETE and unavailable read observations remain retained. Deployment, connectivity,
+outage and automatic retry are still unqualified; see [the provisioning ledger](upgrade-2026-isolated-outage-provisioning-work.md).

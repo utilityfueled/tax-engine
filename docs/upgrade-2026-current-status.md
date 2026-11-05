@@ -95,3 +95,10 @@ The independently reviewed NOLOGIN bootstrap V2 now retains one actual failure: 
 ### Exact480 terminal browser evidence
 
 Both exact480 Web runs now finish with managed563/2FAIL/fiveSKIP(PR) and562/3FAIL/fiveSKIP(push), plus container542/23FAIL/fiveSKIP(PR) and550/15FAIL/fiveSKIP(push). These supersede earlier pending480 observations while retaining prior045 results as historical. All43failed cases/48failed attempts are preserved. Static/unit/coverage CI passes; large current runtime artifacts remain unqualified. See [the current browser ledger](upgrade-2026-480-remote-browser-work.md). No causal performance or stable tax defect is established, and no test gate changes.
+
+The isolated app's restricted connection is now installed Sensitive/Preview only.
+Project-only removal of the unused Neon integration connection leaves exactly 13
+Preview variables and removes 16 aliases, with distinct saved metadata review.
+No database deletion is requested. Actual stored-value equality, deployed app
+connectivity, outage and automatic Stripe retry remain unqualified. See [the
+provisioning ledger](upgrade-2026-isolated-outage-provisioning-work.md).

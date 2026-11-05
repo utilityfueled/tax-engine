@@ -310,3 +310,31 @@ this package. Private evidence remains ignored; SHA256 bindings are:
 - Actual app authentication: `39a5d7510d0c54ceae95f2111176c70d8df0dc7b6b2b924c918033c148e77812`.
 - Distinct actual review: `9856815caa817a3009ce6ea7474271d1254a77b59f71d35b32b51b3f81e0139b`.
 - Poststate pins: `06d8ae42212d46fc302b6ad2dc4675c6e58b7fe9285e108622806a4bff9feeb7`.
+
+## November 5 UTC: restricted Preview configuration
+
+The restricted app connection is installed as one sensitive Preview-only variable.
+The first installer proposal is retained as HOLD: its fake HTTP fixture accepted
+a response shape that differs from the official API's HTTP 201 wrapper. Corrected
+V2 passes 55 ROOT offline checks, plus 55 replays and 27 independent controls. Its
+single actual install completes with two GETs and one POST in the reviewed client
+instrumentation. Distinct saved review passes one positive and 41 negative checks;
+this is metadata evidence, without a stored-secret equality or app-connectivity claim.
+
+The Neon integration had also installed 16 unused aliases. The scoped per-variable
+DELETE attempt returns 1 with no classified cause and zero changes. Vercel's
+project-only connection removal then removes those aliases. A fresh successful
+read and independent saved comparison confirm exactly 16 absent and all 13 other
+entries unchanged, Preview-only, including the restricted app URL, Redis and
+Stripe settings. The first unavailable post-removal read remains retained. No
+database deletion, production change, deployment or actual outage is performed.
+The historical failed credential COMMIT remains unknown.
+
+Evidence SHA256 bindings:
+
+- Installer V2 source: `29d25c33f8ca0fa6c10bcf074c23fd77596dda98c5c69e3f57661471ad08f780`.
+- Distinct source review: `a45480f3efd110aefcacc5eb3196c60628862462aec17f7dbf8fe9e975277ab4`.
+- Actual install: `d988e43a777ba9b6dde4d081603cc874a2db02dd39e75ebd4aa741a07e90b1fb`.
+- Distinct actual install review: `0ed3fd8dd57b8ef5192d9d9e343bfde17da63a5e88065d9a74b0ea22156fee27`.
+- Post-removal metadata: `400433699cb1b36976b6eab0e390ab2feae8b85eb10f265ec290c90bb584849d`.
+- Distinct configuration review: `8b028a319e99ea97b0a302215c9e39dc71cd1b92e4457be7da92d48f917b3db5`.

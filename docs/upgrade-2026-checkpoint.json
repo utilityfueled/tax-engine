@@ -19523,5 +19523,24 @@
     "currentRawRuntimeArtifactsQualified": false,
     "browserReadinessQualified": false,
     "ledger": "docs/upgrade-2026-480-remote-browser-work.md"
+  },
+  "nov05IsolatedPreviewRestrictedConfiguration": {
+    "status": "PASS_METADATA_ONLY_NOT_HOSTED_QUALIFICATION",
+    "restrictedPreviewInstallReceiptSHA256": "d988e43a777ba9b6dde4d081603cc874a2db02dd39e75ebd4aa741a07e90b1fb",
+    "installerSourceManifestSHA256": "29d25c33f8ca0fa6c10bcf074c23fd77596dda98c5c69e3f57661471ad08f780",
+    "installerIndependentSourceManifestSHA256": "a45480f3efd110aefcacc5eb3196c60628862462aec17f7dbf8fe9e975277ab4",
+    "installerIndependentActualManifestSHA256": "0ed3fd8dd57b8ef5192d9d9e343bfde17da63a5e88065d9a74b0ea22156fee27",
+    "postDisconnectReceiptSHA256": "400433699cb1b36976b6eab0e390ab2feae8b85eb10f265ec290c90bb584849d",
+    "configurationIndependentManifestSHA256": "8b028a319e99ea97b0a302215c9e39dc71cd1b92e4457be7da92d48f917b3db5",
+    "removedNeonAliases": 16,
+    "preservedPreviewEntries": 13,
+    "allPreservedMetadataUnchanged": true,
+    "firstDeleteAttempt": "HOLD_UNCLASSIFIED_ZERO_CHANGES",
+    "firstPostRead": "UNAVAILABLE_RETAINED",
+    "appSecretEqualityVerified": false,
+    "appConnectivityQualified": false,
+    "deploymentPerformed": false,
+    "databaseDeletionRequested": false,
+    "ledger": "docs/upgrade-2026-isolated-outage-provisioning-work.md"
   }
 }
