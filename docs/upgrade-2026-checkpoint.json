@@ -21686,5 +21686,39 @@
       "browserExecuted": false
     },
     "readinessPromotion": false
+  },
+  "nov05ReplacementDatabaseBootstrap": {
+    "status": "first_four_database_phases_pass_metadata_hold",
+    "sourceCommitForApprovedPreviews": "fe1d14620f3f93f8ef7111e01a20fdada612bab9",
+    "phaseOperations": {
+      "catalog": 108,
+      "bootstrap": 325,
+      "presence": 162,
+      "login": 372
+    },
+    "retainedHistoricalOperations": 156,
+    "consoleBookkeepingUnits": 12,
+    "normalMetadataAttempts": 3,
+    "cumulativeOperations": 1138,
+    "operationCeiling": 1793,
+    "originalWorkerManifest": "d08d92d8d1315afc3bb2fbc786b5f529cd0efc27bb980071f359731412db2e1f",
+    "historicalReceiptSourceAuthorityUnchanged": true,
+    "originalCatalogNaturalExit": "unknown_later_recorded_pid_absent",
+    "bootstrapPresenceLoginNaturalExit": 0,
+    "metadataV2": {
+      "childClosed": true,
+      "exitCode": 1,
+      "readOnlyProjectGet": "attempted_unknown_or_failed",
+      "envGetAttempted": false,
+      "cause": "unknown",
+      "automaticReissueAllowed": false
+    },
+    "environmentWriteExecuted": false,
+    "previewBuildExecuted": false,
+    "outageExecuted": false,
+    "automaticStripeRetryQualified": false,
+    "internalProviderHopEncryptionQualified": false,
+    "humanReview": false,
+    "releaseQualified": false
   }
 }
