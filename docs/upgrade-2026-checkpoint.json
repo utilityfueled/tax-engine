@@ -19542,5 +19542,32 @@
     "deploymentPerformed": false,
     "databaseDeletionRequested": false,
     "ledger": "docs/upgrade-2026-isolated-outage-provisioning-work.md"
+  },
+  "nov05PrimarySecurityRefresh": {
+    "status": "REFRESH_COMPLETE_NO_ACCEPTANCE",
+    "packageAuditExit": 0,
+    "packageAuditFindings": {
+      "info": 0,
+      "low": 0,
+      "moderate": 0,
+      "high": 0,
+      "critical": 0
+    },
+    "packageAuditSHA256": "5a53e55cf00fe12cf2baa62be93e62a01b390225c1294be768cb4472b14a3b2a",
+    "primaryManifestSHA256": "ffb281c4927bcc19fca792edb77f78ada9b94d2365d1d363fd00b3818541f2cf",
+    "rootFrozenMembersVerified": 90,
+    "primaryGETs": 42,
+    "nextConflictsUnresolved": 7,
+    "nextDeadlineElapsed": true,
+    "nextDeadlineExtended": false,
+    "highImageIDsRefreshed": 18,
+    "all80FreshlyScanned": false,
+    "imageOwnerDecisionsAccepted": false,
+    "nodePendingRelease": "2026-11-11 or shortly after; HIGH; latest26.13.0",
+    "nodePatchAvailableInRetrievedIndex": false,
+    "runtimeExploitabilityQualified": false,
+    "humanSecurityAcceptance": false,
+    "dependencyChanges": false,
+    "ledger": "docs/upgrade-2026-security-refresh-20261105.md"
   }
 }

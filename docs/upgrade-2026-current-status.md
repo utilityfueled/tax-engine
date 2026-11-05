@@ -102,3 +102,9 @@ Preview variables and removes 16 aliases, with distinct saved metadata review.
 No database deletion is requested. Actual stored-value equality, deployed app
 connectivity, outage and automatic Stripe retry remain unqualified. See [the
 provisioning ledger](upgrade-2026-isolated-outage-provisioning-work.md).
+
+The [November 5 security refresh](upgrade-2026-security-refresh-20261105.md)
+records a fresh zero-finding package audit alongside unresolved Next metadata
+conflicts, unchanged vulnerable trixie High records and Node's pending November
+11 security release. No risk is accepted and the elapsed Next deadline remains
+elapsed. Final-image and independent human security qualification stay open.

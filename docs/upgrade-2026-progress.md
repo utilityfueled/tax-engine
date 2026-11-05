@@ -3151,3 +3151,12 @@ The unused Neon project connection is removed: exactly 16 aliases disappear whil
 all 13 retained Preview entries preserve their metadata. Earlier failed installer,
 DELETE and unavailable read observations remain retained. Deployment, connectivity,
 outage and automatic retry are still unqualified; see [the provisioning ledger](upgrade-2026-isolated-outage-provisioning-work.md).
+
+### November 5 UTC: current primary security and package audit
+
+Fresh package audit returns zero findings. The seven Next metadata conflicts and
+18 registered High Debian records remain unresolved; no trixie fix is supplied.
+Node announces a pending HIGH security release for November 11 or shortly after,
+with no newer 26.x patch in the retrieved index. Existing elapsed deadlines and
+all unaccepted image IDs stay explicit. No dependency or gate changes. See [the
+security refresh](upgrade-2026-security-refresh-20261105.md).
