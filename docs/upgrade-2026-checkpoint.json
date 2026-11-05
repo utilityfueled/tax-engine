@@ -21049,5 +21049,35 @@
     "rootManifest": "a3ac9f1b43018b452cd8bb106e66c43ba9a816f6bd69da4766c5d26b3f221ec9",
     "independentManifest": "0e23988d019d96bfc7150cd70d98fec6755666011431a4564dfa671f4a6d967c",
     "ledger": "docs/upgrade-2026-ai-exact-daily-cost-work.md"
+  },
+  "nov05AdoptionOtherAdopterHistory": {
+    "status": "FINITE_DOCUMENTARY_ENGINEERING_PASS_NOT_FILING_QUALIFIED",
+    "taxYears": [
+      2025,
+      2026
+    ],
+    "affectedTests": 106,
+    "affectedFiles": 9,
+    "metadataTests": 887,
+    "specLines": 8446,
+    "nonDocumentSourcePins": 4678,
+    "typechecks": "all3PASS",
+    "builds": "bothPASS",
+    "lintErrors": 0,
+    "lintWarnings": 11863,
+    "inventory": {
+      "total": 896,
+      "priorUnchanged": 894,
+      "supported": 68,
+      "newStatus": "unsupported"
+    },
+    "mainManifest": "99f34f5bbbf04567a5dca50cab7235e98d320e728237c61d493d87cd127e147c",
+    "taxIndependentTests": 123,
+    "callerIndependentTests": 35,
+    "retainedInitialMainFailure": "one TS2345 missing guided limit; exit2",
+    "fullCurrentGlobalPending": true,
+    "humanTaxReviewPending": true,
+    "final2026Qualification": false,
+    "ledger": "docs/upgrade-2026-adoption-other-adopter-history-work.md"
   }
 }

@@ -9,6 +9,7 @@ export interface AdoptionSourceTaxpayer { primary: Identity; spouse?: Identity }
 interface PriorBenefitsInput {
   taxYear: number; filingStatus: FilingStatus; eligibilityConfirmed?: boolean;
   sourceTaxpayer?: AdoptionSourceTaxpayer; children: Form8839Child[];
+  maxExclusionPerChild: Decimal;
 }
 function amount(value: string | undefined, label: string): Decimal {
   if (value === undefined || !/^\d+(\.\d+)?$/.test(value)) throw new Error(`Historical adoption ${label} requires an actual nonnegative amount`);
@@ -23,8 +24,73 @@ function text(value: string | undefined, label: string): string {
 const name = (value: string) => value.trim().replace(/\s+/g, " ").toLocaleLowerCase("en-US");
 const tin = (value: string) => value.replaceAll("-", "");
 
+/** This finite source method deliberately excludes shared credit/history inference. */
+function agreedHistoricalLimit(input: PriorBenefitsInput, child: Form8839Child): Decimal {
+  const history = child.priorYearForeignBenefitHistory, agreement = history?.otherAdopterAgreement;
+  if (!agreement || input.filingStatus !== "single" || input.children.length !== 1 || input.sourceTaxpayer?.spouse
+    || agreement.sourceTaxYear !== input.taxYear || agreement.sourceFactsConfirmed !== true || agreement.bothAdoptersAgreed !== true
+    || agreement.allAdoptersIncluded !== true || agreement.creditExpenseHistoryConfirmed !== true || agreement.allOtherAdopterBenefitsIncluded !== true) {
+    throw new Error("Shared historical adoption requires its complete actual single-filer two-adopter agreement");
+  }
+  text(agreement.sourceReference, "shared agreement reference");
+  const owner = input.sourceTaxpayer?.primary, otherId = tin(text(agreement.otherAdopterIdentifyingNumber, "other adopter identity"));
+  const otherName = name(text(agreement.otherAdopterName, "other adopter name"));
+  if (!owner || name(text(agreement.taxpayerNameOnAgreement, "agreement taxpayer name")) !== name(`${owner.firstName} ${owner.lastName}`)
+    || agreement.taxpayerIdentifyingNumberLast4 !== tin(owner.ssn).slice(-4)
+    || tin(owner.ssn) === tin(child.childIdentifyingNumber ?? "")
+    || !/^\d{9}$/.test(otherId) || otherId === tin(owner.ssn) || otherId === tin(child.childIdentifyingNumber ?? "")
+    || name(text(agreement.childNameOnAgreement, "agreement child name")) !== name(`${child.childFirstName} ${child.childLastName}`)
+    || agreement.childIdentifyingNumberLast4 !== tin(child.childIdentifyingNumber ?? "").slice(-4)) {
+    throw new Error("Shared historical adoption agreement owner, outside adopter or child identity conflicts");
+  }
+  // Bounded cents/record census keeps all existing Decimal20 operations exact.
+  // This is a finite admission boundary, never normalization of source values.
+  const cash = (value: string | undefined, label: string) => {
+    if (value === undefined || !/^\d{1,10}(\.\d{1,2})?$/.test(value)) throw new Error(`Shared historical adoption ${label} requires bounded actual cents`);
+    return amount(value, label);
+  };
+  for (const [value, label] of [
+    [agreement.taxpayerQualifiedCreditExpenses, "own credit expenses"], [agreement.otherAdopterQualifiedCreditExpenses, "outside credit expenses"],
+    [agreement.taxpayerPriorCreditsClaimed, "own prior credits"], [agreement.otherAdopterPriorCreditsClaimed, "outside prior credits"],
+    [agreement.otherAdopterPriorExclusionLimitUsed, "outside prior exclusions"], [agreement.otherAdopterCurrentBenefits, "outside current benefits"],
+    [child.qualifiedExpenses, "child credit expenses"], [child.priorYearCreditsClaimed, "child prior credits"],
+  ] as const) if (!cash(value, label).isZero()) throw new Error("Shared historical adoption positive credit or outside current-benefit history requires its separate source method");
+  if (!Array.isArray(child.expensesByYear) || child.expensesByYear.some(row => !cash(row.amount, "dated own credit expenses").isZero())) {
+    throw new Error("Shared historical adoption requires actual complete zero dated credit expenses");
+  }
+  const ownLimit = cash(agreement.taxpayerExclusionLimit, "agreed own limit"), otherLimit = cash(agreement.otherAdopterExclusionLimit, "agreed outside limit");
+  const expectedMaximum = input.taxYear === 2026 ? "17670" : "17280";
+  if (!input.maxExclusionPerChild.eq(expectedMaximum) || !ownLimit.isInteger() || !otherLimit.isInteger()
+    || !ownLimit.plus(otherLimit).eq(input.maxExclusionPerChild)) throw new Error("Shared historical adoption requires actual whole-dollar shares totaling the current indexed limit");
+  cash(child.employerBenefits, "own current benefits");
+  if (!cash(child.priorYearForeignBenefits, "own prior benefits").gt(0) || !history?.records?.length || history.records.length > 16) {
+    throw new Error("Shared historical adoption requires actual positive own prior benefits and bounded originals");
+  }
+  for (const record of history.records) { cash(record.originalEmployerBenefits, "own original benefits"); cash(record.benefitsAllocatedToChild, "own allocation"); }
+  if (!agreement.records?.length || agreement.records.length > 16) throw new Error("Shared historical adoption requires actual outside prior benefit originals");
+  const ids = new Set(history.records.map(record => record.sourceId)), originals = new Set<string>();
+  let total = new Decimal(0);
+  for (const record of agreement.records) {
+    const id = text(record.sourceId, "outside source identity"), employer = text(record.employerName, "outside employer"), ein = tin(text(record.employerEin, "outside employer EIN"));
+    const key = `${record.taxYear}:${ein}`;
+    if (ids.has(id) || originals.has(key)) throw new Error("Shared historical adoption duplicate outside source or original statement");
+    ids.add(id); originals.add(key);
+    if (!Number.isInteger(record.taxYear) || (record.taxYear ?? 0) < 1997 || (record.taxYear ?? input.taxYear) >= input.taxYear
+      || !/^\d{9}$/.test(ein) || !employer || name(text(record.recipientName, "outside recipient")) !== otherName
+      || record.recipientTaxpayerIdLast4 !== otherId.slice(-4) || record.allocatedBenefitsIncludedInPriorIncome !== true || record.employerPlanQualified !== true) {
+      throw new Error("Shared historical adoption outside original year, recipient, income or plan facts conflict");
+    }
+    const original = cash(record.originalEmployerBenefits, "outside original benefits"), allocated = cash(record.benefitsAllocatedToChild, "outside child allocation");
+    if (allocated.gt(original)) throw new Error("Shared historical adoption outside allocation exceeds its original");
+    total = total.plus(allocated);
+  }
+  if (!total.gt(0)) throw new Error("Shared historical adoption requires actual positive outside benefits, not an invented recipient");
+  return ownLimit;
+}
+export interface ResolvedPriorAdoptionBenefits { priorBenefits: Decimal; agreedExclusionLimit?: Decimal }
+
 /** No income calculation or invented tax context; each result preserves source cents. */
-export function resolveForm8839PriorBenefits(input: PriorBenefitsInput): (Decimal | undefined)[] {
+export function resolveForm8839PriorBenefits(input: PriorBenefitsInput): (ResolvedPriorAdoptionBenefits | undefined)[] {
   const originals = new Map<string, { snapshot: string; total: Decimal; allocated: Decimal }>();
   const originalKeys = new Map<string, string>();
   const children = new Set<string>();
@@ -43,7 +109,9 @@ export function resolveForm8839PriorBenefits(input: PriorBenefitsInput): (Decima
       throw new Error("Historical adoption requires confirmed actual source year, unchanged membership and complete prior benefit records");
     }
     text(history.sourceReference, "history reference");
-    if (history.otherAdopterReceivedBenefits !== false) throw new Error("Historical adoption other-adopter sharing requires its actual agreed exclusion limit");
+    if (typeof history.otherAdopterReceivedBenefits !== "boolean" || (history.otherAdopterReceivedBenefits === false && history.otherAdopterAgreement !== undefined)) {
+      throw new Error("Historical adoption other-adopter sharing requires consistent actual agreement facts");
+    }
     if (history.priorExclusionHistoryConfirmed !== true || !amount(history.priorExclusionLimitUsed, "prior exclusion usage").isZero()
       || !amount(child.priorYearExclusionsClaimed, "child prior exclusion usage").isZero()) {
       throw new Error("Historical foreign adoption requires confirmed actual zero prior exclusion limit usage before current finality");
@@ -92,6 +160,7 @@ export function resolveForm8839PriorBenefits(input: PriorBenefitsInput): (Decima
     });
     const total = sum(...allocated);
     if (prior === undefined || !prior.eq(total)) throw new Error("Historical adoption prior benefit amount must reconcile exactly to actual child source allocations");
-    return total;
+    const agreedExclusionLimit = history.otherAdopterReceivedBenefits ? agreedHistoricalLimit(input, child) : undefined;
+    return { priorBenefits: total, ...(agreedExclusionLimit === undefined ? {} : { agreedExclusionLimit }) };
   });
 }

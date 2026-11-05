@@ -119,10 +119,13 @@ export function calculateForm8839(params: Form8839Params): Form8839Result {
   if (!exclusionMagi.isFinite()) throw new Error("Invalid adoption exclusion MAGI");
   const exclusionFraction = fraction(exclusionMagi);
   const priorBenefitSources = resolveForm8839PriorBenefits({ taxYear, filingStatus,
-    eligibilityConfirmed: params.eligibilityConfirmed, sourceTaxpayer: params.sourceTaxpayer, children });
-  const historicalWorksheet = priorBenefitSources.some(value => value !== undefined && value.gt(0));
+    eligibilityConfirmed: params.eligibilityConfirmed, sourceTaxpayer: params.sourceTaxpayer, children, maxExclusionPerChild: maxCredit });
+  if (priorBenefitSources.some(value => value?.agreedExclusionLimit !== undefined) && params.carryforwards?.some(row => !row.amount.isZero())) {
+    throw new Error("Shared historical adoption requires its separate actual positive credit carryforward method");
+  }
+  const historicalWorksheet = priorBenefitSources.some(value => value !== undefined && value.priorBenefits.gt(0));
   if (historicalWorksheet && params.exclusionMagi === undefined) throw new Error("Historical adoption requires the actual exclusion MAGI worksheet");
-  const priorYearEmployerBenefits = roundDollar(sum(...priorBenefitSources.map(value => value ?? ZERO)));
+  const priorYearEmployerBenefits = roundDollar(sum(...priorBenefitSources.map(value => value?.priorBenefits ?? ZERO)));
   const currentEmployerBenefits = roundDollar(sum(...children.map(child => nonnegative(d(child.employerBenefits), "employer benefits"))));
   let totalEmployerBenefits = ZERO;
 
@@ -130,7 +133,7 @@ export function calculateForm8839(params: Form8839Params): Form8839Result {
     const childName = child.childName || `Child ${index + 1}`;
     const priorCredits = roundDollar(nonnegative(d(child.priorYearCreditsClaimed), "prior credit limit usage"));
     const priorExclusions = roundDollar(nonnegative(d(child.priorYearExclusionsClaimed), "prior exclusion limit usage"));
-    const priorBenefits = priorBenefitSources[index] ?? ZERO;
+    const priorBenefits = priorBenefitSources[index]?.priorBenefits ?? ZERO;
     const childHistoryWorksheet = priorBenefits.gt(0);
     const rawBenefits = nonnegative(d(child.employerBenefits), "employer benefits").plus(priorBenefits);
     const benefits = roundDollar(rawBenefits);
@@ -165,7 +168,7 @@ export function calculateForm8839(params: Form8839Params): Form8839Result {
     }
     expenses = roundDollar(expenses);
     const remainingCredit = zeroFloor(maxCredit.minus(priorCredits));
-    const exclusionLimit = childHistoryWorksheet ? Decimal.min(benefits, maxCredit) : maxCredit;
+    const exclusionLimit = childHistoryWorksheet ? Decimal.min(benefits, priorBenefitSources[index]?.agreedExclusionLimit ?? maxCredit) : maxCredit;
     const remainingExclusion = zeroFloor(exclusionLimit.minus(priorExclusions));
     const claimAllowed = eligible && !(child.isForeignAdoption && !finalized);
     const tentativeCredit = claimAllowed ? Decimal.min(special ? maxCredit : expenses, maxCredit) : ZERO;
@@ -173,7 +176,7 @@ export function calculateForm8839(params: Form8839Params): Form8839Result {
     // Credit and exclusion have independent lifetime limits. Expenses are already unreimbursed.
     const planEligible = child.employerPlanQualified !== false;
     const specialExclusion = special && child.employerPlanQualified === true;
-    const tentativeExclusion = claimAllowed && planEligible ? Decimal.min(specialExclusion ? maxCredit : benefits, maxCredit) : ZERO;
+    const tentativeExclusion = claimAllowed && planEligible ? Decimal.min(specialExclusion ? maxCredit : benefits, exclusionLimit) : ZERO;
     const netExclusion = claimAllowed && planEligible ? Decimal.min(specialExclusion ? remainingExclusion : benefits, remainingExclusion) : ZERO;
     const reduction = roundDollar(netCredit.times(phaseOutFraction));
     const creditAfterPhaseOut = roundDollar(zeroFloor(netCredit.minus(reduction)));
@@ -194,7 +197,7 @@ export function calculateForm8839(params: Form8839Params): Form8839Result {
       audit.record("Form 8839", `prior-benefits-source-child-${index + 1}`, "Original current and prior benefit amounts", rawBenefits,
         "Exact original source amounts before worksheet line rounding", { currentBenefits: d(child.employerBenefits), priorBenefits });
       for (const [line, description, value] of [
-        ["1", "All current and prior benefits", benefits], ["2", "Finality-year limit", maxCredit],
+        ["1", "All current and prior benefits", benefits], ["2", "Finality-year limit", priorBenefitSources[index]?.agreedExclusionLimit ?? maxCredit],
         ["3", "History-specific exclusion limit", exclusionLimit],
       ] as const) audit.record("Form 8839", `prior-benefits-${line}-child-${index + 1}`, description, value, "Exclusion of Prior Year Benefits Worksheet");
     }

@@ -1,0 +1,50 @@
+form: "Form 8839 Shared Historical Exclusion"
+fullName: "Actual two-adopter agreed historical foreign-benefit limit"
+taxYear: 2026
+irsReference: "https://www.irs.gov/instructions/i8839; https://www.irs.gov/pub/irs-drop/rp-25-32.pdf"
+notes: |
+  Final2025 Instructions Exclusion of Prior Year Benefits Worksheet line2 expressly
+  permits an agreed division between two recipients other than joint spouses.
+  Worksheet3=min(own current+prior benefits, actual agreed line2), then physical
+  Form8839 line20=0, line21=worksheet3 and line22=own current+prior benefits.
+  Existing PartIII MAGI phaseout and historical worksheet4-9 remain unchanged.
+  RP2025-32 section4.18 supplies2026 cap17670 and265080/305080 phaseout;
+  final2025 cap17280. This source method does not qualify final2026 forms or
+  change public2026 readiness. The inherited signed worksheet9 transfer retains
+  its separate existing reporting-interpretation/professional-review boundary.
+  Finite source cohort: one foreign child finalized current2025/2026, single
+  filer, unchanged membership, complete own prior records and actual separately
+  documented agreement with one outside adopter. Both parties' actual whole-dollar
+  shares sum exactly to the current cap; no50:50/pro-rata/remainder is invented.
+  Both actual credit-expense and prior-credit histories must be confirmed zero;
+  positive or unknown credit sharing requires its separate source method.
+  Outside prior-benefit originals prove the distinct recipient's positive receipt,
+  qualified plans, prior income inclusion and zero prior exclusions. Current
+  outside benefits must be explicitly zero for this finite historical cohort.
+  Source cents remain exact and bounded; private agreement identities are never
+  emitted in calculation audit. Ordinary no-other-adopter outputs stay unchanged.
+lines:
+  - line: "agreement"
+    description: "Actual shared limit sources"
+    formula: "Require explicit complete confirmed agreement and exact current-year/child/own/outside identities; two whole-dollar shares sum exactly to indexed maximum"
+    testRef: "tests/engine/forms/form-8839-other-adopter-history.test.ts::uses an actual agreed historical exclusion without treating outside benefits as own income"
+  - line: "3"
+    description: "Per-child historical limit"
+    formula: "Form19=min(rounded own current+prior benefits, agreed own limit); Form20=0; Form21=Form19; Form22 preserves own benefits only"
+    testRef: "tests/engine/forms/form-8839-other-adopter-history.test.ts::preserves source cents and applies line rounding with actual zero or full shares"
+  - line: "phaseout"
+    description: "Current exclusion phaseout and transfer"
+    formula: "Apply unchanged actual PartIII MAGI to agreed own limit, round reduction; worksheet9=max(allowed exclusion-rounded current benefits,0); Form31=max(own benefits-allowed exclusion-rounded prior benefits,0)"
+    testRef: "tests/engine/forms/form-8839-other-adopter-history.test.ts::applies actual finality-year phaseout and keeps taxable current benefits separate"
+  - line: "source-guard"
+    description: "Unknowns and conflicting originals"
+    formula: "Missing/false confirmations, stale owner/child/year, duplicate or conflicting employer originals, amount mismatch, unknownzero and unsupported credit/history compositions reject before monetary output"
+    testRef: "tests/engine/forms/form-8839-other-adopter-history.test.ts::rejects incomplete contradictory or unsupported shared historical facts"
+  - line: "canonical"
+    description: "Real canonical and public boundary"
+    formula: "Canonical schema retains actual agreement; real2025 federal calculation consumes signed source adjustment once; public2026 remains gated and inputs/audit remain private and unchanged"
+    testRef: "tests/engine/forms/form-8839-other-adopter-history.test.ts::retains canonical sources and transfers the actual signed adjustment once without opening 2026"
+  - line: "reporting-limit"
+    description: "Consistent actual agreed worksheet and tentative exclusion limits"
+    formula: "Historical worksheet2 records actual agreed own share (ordinary history retains indexed maximum); returned tentativeExclusion and aggregate total apply the same actual exclusionLimit as physical19 before prior usage and MAGI; final allowed exclusion and signed income calculation are unchanged"
+    testRef: "tests/engine/forms/form-8839-other-adopter-history.test.ts::keeps actual agreed limits consistent in documentary audit and returned totals"

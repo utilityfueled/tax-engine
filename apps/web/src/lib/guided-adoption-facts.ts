@@ -1,6 +1,8 @@
 import type { FilingStatus, PersonalInfoData } from "./guided-interview-flow";
 import { parseGuidedCurrency } from "./guided-currency";
 import { Form8839ChildSchema } from "@/models/inputs";
+import { getConstants } from "@/models/constants";
+import { FEDERAL_2026_CONSTANTS } from "@/models/federal-2026-indexed";
 import { resolveForm8839PriorBenefits } from "@/engine/forms/form-8839-prior-benefits";
 import { buildGuidedAdoptionHistory, type AdoptionPriorBenefitHistoryData } from "./guided-adoption-prior-benefits";
 
@@ -33,6 +35,7 @@ export function adoptionFactErrors(data: AdoptionCreditData | undefined, taxYear
   const errors: Record<string, string> = {};
   if (!data?.children.length) return errors;
   const currentYear = taxYear ?? 0;
+  if (taxYear !== 2025 && taxYear !== 2026) errors.adoptionTaxYear = "Select the actual supported 2025 or 2026 adoption return year";
   if (typeof data.eligibilityConfirmed !== "boolean") errors.adoptionEligibility = "Confirm actual adoption credit and exclusion eligibility";
   if (filingStatus === "mfs" && data.eligibilityConfirmed !== false) errors.adoptionMfs = "Married-filing-separately adoption exceptions need a separately reviewed worksheet";
   for (const field of ["foreignEarnedIncomeExclusion", "foreignHousingExclusion", "possessionIncomeExclusion"] as const) if (!actualAmount(data[field])) errors[`adoption-${field}`] = "Enter each actual adoption MAGI adjustment, including zero";
@@ -73,7 +76,7 @@ export function adoptionFactErrors(data: AdoptionCreditData | undefined, taxYear
       if (!filingStatus) throw new Error("Confirm the actual filing status for historical adoption sources");
       const statuses = { single: "single", mfj: "married_filing_jointly", mfs: "married_filing_separately", hoh: "head_of_household", qss: "qualifying_surviving_spouse" } as const;
       const middleInitial = personal?.middleName?.replace(/[^A-Za-z]/g, "").charAt(0).toUpperCase();
-      resolveForm8839PriorBenefits({ taxYear: currentYear, filingStatus: statuses[filingStatus], eligibilityConfirmed: data.eligibilityConfirmed ?? undefined,
+      resolveForm8839PriorBenefits({ taxYear: currentYear, maxExclusionPerChild: (currentYear === 2026 ? FEDERAL_2026_CONSTANTS : getConstants(currentYear)).adoptionCredit.maxCreditPerChild, filingStatus: statuses[filingStatus], eligibilityConfirmed: data.eligibilityConfirmed ?? undefined,
         sourceTaxpayer: personal ? { primary: { firstName: [personal.firstName.trim(), middleInitial].filter(Boolean).join(" "), lastName: personal.lastName, ssn: personal.ssn },
           ...(filingStatus === "mfj" && personal.spouse ? { spouse: personal.spouse } : {}) } : undefined,
         children: mapAdoptionChildren(data).map(child => Form8839ChildSchema.parse(child)) });

@@ -4504,6 +4504,26 @@
       ]
     },
     {
+      "key": "federal/form-8839-other-adopter-history",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://www.irs.gov/instructions/i8839; https://www.irs.gov/pub/irs-drop/rp-25-32.pdf",
+      "specPath": "spec/federal/form-8839-other-adopter-history.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/form-8839-prior-benefits",
       "jurisdiction": "federal",
       "taxYear": 2026,
@@ -5303,6 +5323,26 @@
       "taxYear": 2026,
       "sourceAuthority": "https://www.irs.gov/instructions/i8839",
       "specPath": "spec/federal/guided-adoption-prior-benefits.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "federal/guided-adoption-shared-limit",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://www.irs.gov/instructions/i8839; https://www.irs.gov/pub/irs-drop/rp-25-32.pdf",
+      "specPath": "spec/federal/guided-adoption-shared-limit.yaml",
       "enginePath": null,
       "packetPath": null,
       "specExists": true,
