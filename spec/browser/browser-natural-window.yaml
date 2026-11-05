@@ -1,0 +1,28 @@
+form: "Browser-Natural-Window"
+taxYear: 2025
+status: "verification-contract"
+reference: "https://nodejs.org/api/timers.html#scheduling-timers"
+notes: |
+  Orchestration only. Timer callbacks are not exact clock witnesses; fractional
+  requests may be truncated by Node. Keep every natural window at least61000ms
+  on BOTH monotonic and wall clocks, without application requests or test retries.
+  At most8 sleeps and62000ms total requested delay per gap. These bound scheduled
+  waiting, not event-loop latency; existing cancellation remains authoritative.
+  Actual CI outcome is retained separately without unrecorded causal clock claims.
+lines:
+  - line: "fractional-and-early-wake"
+    description: "Re-observe rather than treating one completed timer as expiration"
+    formula: "Request max(1,ceil(max(61000-monotonicElapsed,61000-wallElapsed))) milliseconds while either interval is below61000. Re-read both clocks after each wake; invoke each batch only after both intervals independently qualify."
+    testRef: "tests/scripts/browser-natural-window.test.ts::rechecks a timer that wakes before both natural clocks expire"
+  - line: "bounded-clock-failure"
+    description: "Unknown, frozen, repeated early and backward clocks fail closed"
+    formula: "Validate each supplied clock as a finite nonnegative number no greater than MAX_SAFE_INTEGER; neither may move backward. Reject before a ninth sleep or cumulative requested delay above62000ms. Every failure preserves cleanup and starts no unqualified batch."
+    testRef: "tests/scripts/browser-natural-window.test.ts::bounds repeated early wakes without invoking a batch"
+  - line: "source-runtime-custody"
+    description: "Every extra wait preserves current source and live owned runtime admission"
+    formula: "Retain original identity/alive guards before waiting and execution and after receipt. Recheck identity/alive before further waits; source drift, stopped runtime or aborted sleep stops execution and retains normal owned cleanup."
+    testRef: "tests/scripts/browser-natural-window.test.ts::checks current source and runtime before waiting again"
+  - line: "close-and-original-contract"
+    description: "Each new gap starts at the actual prior batch close"
+    formula: "Record actual observed start and close, never infer a passed batch from a timer; preserve exact membership, no retries, attempt/deadline reconciliation, assertions, rate scope weights, two configured workers, skips and owned/external cleanup semantics."
+    testRef: "tests/scripts/browser-natural-window.test.ts::starts the next complete gap at the prior batch close"

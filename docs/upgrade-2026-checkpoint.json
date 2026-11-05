@@ -21193,5 +21193,25 @@
     "final2026Qualification": false,
     "filingEligible": false,
     "ledger": "docs/upgrade-2026-pa-married-mixed-paper-work.md"
+  },
+  "nov05BrowserNaturalWindow": {
+    "status": "BOUNDED_SOURCE_FAKE_CLOCK_PASS_ACTUAL_REMOTE_PENDING",
+    "minimumMonoMs": 61000,
+    "minimumWallMs": 61000,
+    "maxSleeps": 8,
+    "maxRequestedSleepMs": 62000,
+    "newTests": 17,
+    "distinctTests": 50,
+    "mainFocusedTests": 76,
+    "metadataTests": 891,
+    "specLines": 8461,
+    "inventoryTotal": 900,
+    "supportedUnchanged": 68,
+    "typechecks": "all3PASS",
+    "builds": "bothPASS",
+    "mainManifest": "6e80597a292c159b8116433a7c5dcad98664e095b57ade0dcf6bafecbf712414",
+    "actualCICauseEstablished": false,
+    "postChangeBrowser": false,
+    "ledger": "docs/upgrade-2026-browser-natural-window-work.md"
   }
 }

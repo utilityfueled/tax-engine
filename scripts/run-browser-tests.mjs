@@ -142,24 +142,49 @@ export function reconcile(report, expected, audit, exit) {
     need((exit === 0) === (failed === 0), 'Exit/result mismatch');
     return { rows: got, failed, skipped };
 }
+function windowClock(value, previous) {
+    need(value && ['mono', 'wall'].every(key => Number.isFinite(value[key]) && value[key] >= 0 && value[key] <= Number.MAX_SAFE_INTEGER), 'Invalid natural-window clock');
+    const clock = { mono: value.mono, wall: value.wall };
+    need(!previous || (clock.mono >= previous.mono && clock.wall >= previous.wall), 'Natural-window clock moved backward');
+    return clock;
+}
+async function naturalWindow(io, prior) {
+    let clock = windowClock(io.now(), prior);
+    let sleeps = 0, requested = 0;
+    const expired = () => clock.mono - prior.mono >= 61000 && clock.wall - prior.wall >= 61000;
+    while (!expired()) {
+        if (sleeps) {
+            await io.identity();
+            need(io.alive(), 'Runtime unavailable');
+            clock = windowClock(io.now(), clock);
+            if (expired())
+                break;
+        }
+        // A resolved timer is not proof that either clock reached its deadline.
+        const delay = Math.max(1, Math.ceil(Math.max(61000 - (clock.mono - prior.mono), 61000 - (clock.wall - prior.wall))));
+        need(sleeps < 8 && requested + delay <= 62000, 'Natural window wait budget exhausted');
+        sleeps++;
+        requested += delay;
+        await io.sleep(delay);
+        clock = windowClock(io.now(), clock);
+    }
+    return clock;
+}
 /** Process/clock collaborators permit offline tests; actual entry supplies only owned real operations. */
 export async function runSchedule({ batches, expected, audit, io }) {
-    let prior = io.now();
+    let prior;
     const outcomes = [];
     let error = null;
     try {
+        prior = windowClock(io.now());
         for (let i = 0; i < batches.length; i++) {
             await io.identity();
             need(io.alive(), 'Runtime unavailable');
-            const elapsed = io.now().mono - prior.mono;
-            if (elapsed < 61000)
-                await io.sleep(61000 - elapsed);
-            const start = io.now();
-            need(start.mono - prior.mono >= 61000 && start.wall - prior.wall >= 61000, 'Natural window did not expire');
+            const start = await naturalWindow(io, prior);
             await io.identity();
             need(io.alive(), 'Runtime unavailable');
             const child = await io.run(batches[i], i);
-            prior = io.now();
+            prior = windowClock(io.now(), start);
             const result = reconcile(child.report, batches[i].rows, audit, child.exit);
             outcomes.push(result);
             await io.record({ batch: i + 1, start, close: prior, bounds: batches[i].bounds, result });
