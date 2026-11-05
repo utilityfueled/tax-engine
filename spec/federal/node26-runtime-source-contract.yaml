@@ -13,6 +13,11 @@ notes: |
   Node25+ no longer bundles Corepack. Bootstrap only existing pnpm10.34.8 from
   published SHA512-verified tarball with lifecycle scripts disabled. Keep lock,
   TS5.9.3, Decimal10.6.0, pdf-lib1.17.1 and Node24 compatibility types unchanged.
+  The Node26 package preserved historical lock d199e2344fa6cf61402330f216e3f7ccf6bc9b5e7a568670b29a9fe27dc8c23f.
+  Subsequent separately reviewed Vercel Functions dependency commit1fef5041 adds
+  only its web importer and17 package/snapshot entries, retaining every old entry.
+  Bind current approved lock268026058217dd84aee4e9b1c691fa1bac7d3049e6cb68d7fd16ef3af7a76dea;
+  future dependency changes require their own source review and exact successor.
   Official trixie recipe installs libatomic1; both actual architectures still
   require native linkage, package/layer proof, recovery and fresh scan evidence.
 lines:
@@ -32,7 +37,7 @@ lines:
     formula: "Actual runner must report exact26.13.0 and8.12.2, retain libatomic1 and original non-root/layer/full-package/apt-removal proof."
     testRef: "tests/runtime/node26-runtime-source-contract.test.ts::retains source guards for actual runtime identity and Linux dependency proof"
   - line: "frozen-dependencies"
-    formula: "Root engine change and web engines addition must not alter frozen lockfile content."
+    formula: "Root engine change and web engines addition preserved historical lock; separately reviewed dependency successor1fef5041 supplies the current exact frozen lock. Do not accept arbitrary lock drift."
     testRef: "tests/runtime/node26-runtime-source-contract.test.ts::preserves the reviewed dependency lock exactly"
   - line: "operational-docs"
     formula: "Current setup documentation names26.13.0/26; historical Node24 evidence remains unchanged rather than rewritten."

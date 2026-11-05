@@ -4,6 +4,8 @@ Current source, verification and remaining work are summarized in the
 [November 4 continuation](upgrade-2026-current-status.md). Historical results
 below apply to their named revisions.
 
+- November5: the [Node 26 lock-contract successor](upgrade-2026-node26-lock-successor-work.md) binds the exact separately reviewed dependency lock while retaining its historical hash. Seven focused tests pass; original full local/remote failures and PA timing gap remain retained. No thresholds or readiness gates change.
+
 - November5: [portable browser request windows](upgrade-2026-portable-browser-work.md) complete the full 574-case managed suite: 569 passes, five original hosted skips, zero failures/retries, eight natural windows, unchanged source/build and confirmed server closure. The prior 111-case build-drift failure and root saved-checker timeout assumption remain retained. Container, actual hosted/native and release gates remain open.
 
 - November5: [parent/source integration](upgrade-2026-parent-integration-work.md) passes25,965 unit and coverage tests/1,892files with87.59% branches at unchanged gates and no reported skips/source drift. It binds19bedea9 plus six reviewed uncommitted browser paths; the original inventory failure is retained before ordinary regeneration/check success. The separate full managed browser successor later passes 569 cases with five original hosted skips.

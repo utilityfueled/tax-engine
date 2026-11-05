@@ -21527,5 +21527,21 @@
     "supportedInventory": 68,
     "actualManifest": "eaee2d7d2702db7eb5b509a4b9363b2fe4d96270d315f25621bc5c899d401b05",
     "releaseReady": false
+  },
+  "nov05Node26ReviewedLockSuccessor": {
+    "status": "focused-and-package-static-passed-full-successor-pending",
+    "baseCommit": "6393455dcdb319b049e42960ed907ca3c2d75860",
+    "ledger": "docs/upgrade-2026-node26-lock-successor-work.md",
+    "focusedPassed": 7,
+    "packageChecks": [
+      "typecheck",
+      "spec:validate",
+      "spec:inventory:check",
+      "lint"
+    ],
+    "approvedLockSHA256": "268026058217dd84aee4e9b1c691fa1bac7d3049e6cb68d7fd16ef3af7a76dea",
+    "originalGlobalManifest": "34faf1e5aacfdbfa091df8b9131519b32ba606ef862e9eb95b32cf6a19b49821",
+    "paFiveSecondFailureRemains": true,
+    "readinessChanged": false
   }
 }
