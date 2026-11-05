@@ -14891,6 +14891,26 @@
       ]
     },
     {
+      "key": "state/pa-married-dependent-care-native",
+      "jurisdiction": "state",
+      "taxYear": 2026,
+      "sourceAuthority": "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40sp.pdf",
+      "specPath": "spec/state/pa-married-dependent-care-native.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "state/pa-married-dependent-care-sources",
       "jurisdiction": "state",
       "taxYear": null,
