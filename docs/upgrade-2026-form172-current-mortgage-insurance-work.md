@@ -74,3 +74,12 @@ Frozen manifests:
 Root authored this four-path change. The distinct reviewer authored the earlier
 native collector and disclosed that relationship. No independent professional
 tax approval, final2026 form qualification, filing or model promotion is claimed.
+
+The separate browser metadata successor reviews exactly the changed pure helper
+and the new, previously absent fictional fixture. Actual source audit now accepts
+1,786 files; all148 file contracts/580 cases, scopes, quotas, skips and deadlines
+remain exact. Distinct15prospective/16adopted-source controls pass, and root58
+orchestration/cache tests plus actual public source-audit verification pass.
+No new browser runtime or collection is claimed. Distinct manifest
+cfc32ca93c8ac8c5a9e57b946b7d4e18cab29246f02681eb5d199d09ed1e00b7;
+root metadata manifest ddd01f2df53e800f73c42943a6778faf0ef039b94d8d2121cd04ec3a94ff8148.

@@ -20931,7 +20931,17 @@
     "authorManifest": "f3a4a16a4c2da448a0c5a55b40dd423e819736a7bb87d05b03b67e60267112fd",
     "distinctManifest": "2cbf34090cd24cf5afc35b972c70f49249e3bd31859cacc773d47acd4a5c2d4d",
     "mainManifest": "c02d1e47b0bf8998a6745c76f4d4dcd5d6bfefa8a8910d8b921eca5e4542e5d8",
-    "browserMetadata": "separate_two_path_review_successor",
+    "browserMetadata": {
+      "status": "reviewed_hash_only_successor_PASS_runtime_pending",
+      "sourceFiles": 1786,
+      "caseContracts": 148,
+      "cases": 580,
+      "deltaPaths": 2,
+      "orchestratorTests": 58,
+      "distinctManifest": "cfc32ca93c8ac8c5a9e57b946b7d4e18cab29246f02681eb5d199d09ed1e00b7",
+      "mainManifest": "ddd01f2df53e800f73c42943a6778faf0ef039b94d8d2121cd04ec3a94ff8148",
+      "limitsChanged": false
+    },
     "qualifiedProfessionalReview": "pending",
     "whole2026": "gated",
     "filingEligible": false
