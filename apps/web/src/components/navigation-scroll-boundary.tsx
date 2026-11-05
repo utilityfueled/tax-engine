@@ -15,10 +15,21 @@ export function NavigationScrollBoundary({ children }: { children: ReactNode }) 
     const previous = style.getPropertyValue(property);
     const priority = style.getPropertyPriority(property);
     let ownedValue = "";
+    let measuredHeight: number | undefined;
+    let active = true;
     const measure = () => {
-      ownedValue = `${Math.ceil(node.getBoundingClientRect().height)}px`;
+      if (!active) return;
+      const height = Math.ceil(node.getBoundingClientRect().height);
+      const previousHeight = measuredHeight;
+      measuredHeight = height;
+      ownedValue = `${height}px`;
       if (style.getPropertyValue(property) !== ownedValue) {
         style.setProperty(property, ownedValue);
+      }
+      // A native scroll may have used the old inset before resize delivery.
+      // Retain the content's position below the header when its height changes.
+      if (previousHeight !== undefined && previousHeight !== height && window.scrollY > 0) {
+        window.scrollBy({ top: previousHeight - height, behavior: "instant" });
       }
     };
     measure();
@@ -28,6 +39,7 @@ export function NavigationScrollBoundary({ children }: { children: ReactNode }) 
     observer.observe(node);
 
     return () => {
+      active = false;
       observer.disconnect();
       window.removeEventListener("resize", measure);
       if (style.getPropertyValue(property) === ownedValue && !style.getPropertyPriority(property)) {

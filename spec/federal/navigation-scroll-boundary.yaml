@@ -11,6 +11,9 @@ notes: |
   estimate cannot cover native source controls; ticker contents and collapse
   controls, sticky main navigation and other phase behavior remain intact.
 lines:
+  - line: "resize-retained-position"
+    formula: "When an already scrolled viewport changes the rendered navigation height, preserve content's offset below that navigation, including a native scroll that occurs before resize delivery. Initial measurement, unchanged height, page top and unmounted callbacks cause no corrective scroll."
+    testRef: "tests/apps/web/navigation-scroll-boundary.test.tsx::preserves the native target gutter when resize delivery follows native scrolling"
   - line: "native-scroll-hit"
     formula: "At desktop and mobile widths, scrolling an actual guided source control to block start leaves its action point and focus gutter below the sticky navigation, with elementFromPoint reaching that control."
     testRef: "apps/web/tests/navigation-scroll-boundary.spec.ts::keeps actual guided controls below navigation across scroll focus and resize"

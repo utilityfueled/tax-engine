@@ -20120,5 +20120,38 @@
     ],
     "filingQualified": false,
     "ledger": "docs/upgrade-2026-passenger-auto-indexed-limits-work.md"
+  },
+  "nov05NavigationResizeCorrection": {
+    "status": "finite-browser-correction-verified",
+    "genuineRed": [
+      "95px target instead of125px",
+      "disposed observer reclaims150px instead of restored44px"
+    ],
+    "focusedPassed": 8,
+    "distinctReviewPassed": 12,
+    "browser": {
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0,
+      "flaky": 0,
+      "retries": 0,
+      "workers": 2,
+      "sourceDrift": [],
+      "seconds": 29.104
+    },
+    "types": "pass",
+    "strictScopedLint": "pass",
+    "spec": "pass",
+    "inventory": "pass",
+    "rootManifestSHA256": "7f1be9760d89c6ca90d095a78b487ab6409431376addc7f08b41ad845bb28211",
+    "independentManifestSHA256": "7e0a333ce0ae2baa1cc2f54a29574a198ff73b3fc1e122a3d0a3871a145a81cd",
+    "priorFullBrowser": {
+      "passed": 560,
+      "failed": 7,
+      "hostedSkipped": 5,
+      "retainedUnchanged": true
+    },
+    "releaseQualified": false,
+    "ledger": "docs/upgrade-2026-navigation-resize-work.md"
   }
 }
