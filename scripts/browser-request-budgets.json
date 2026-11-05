@@ -463,7 +463,7 @@
     "apps/web/tests/guided-annual-loan-interest-fixture.ts": "90d97d8dd09dbea2f69aa682125dedf33c8ad3f9ba05e9d1468ec0b68ac53ea7",
     "apps/web/tests/guided-annual-loan-interest.spec.ts": "f9ef74470207022d9b48ce1589990f97be6cea0f3adf729f0bf02988c2da0bd6",
     "apps/web/tests/guided-cash-assistance.spec.ts": "b1c5214ae742a0386b8aee85813ff72741ce67939a4b29cc3950173ade9d5087",
-    "apps/web/tests/guided-chapter-13-and-gift.spec.ts": "2edb6cc8a74bd868a62111e4c41e8bfa96d7ccce2a417214d4fc976361b17710",
+    "apps/web/tests/guided-chapter-13-and-gift.spec.ts": "a62c4a399e4ec166c070bec268451f09a09dc9fbc9488fc7f97cd212ad224557",
     "apps/web/tests/guided-charitable-carryover.spec.ts": "084a34ad97528407124f4d97133a5ba4ef3a8e332f269f12448444429fa51012",
     "apps/web/tests/guided-child-election.spec.ts": "449cd320a219a189db6875a2275e4d808b67f8ca4b18bd6708dba8562e172f8b",
     "apps/web/tests/guided-cod-nol.spec.ts": "219a63974fb059cd603eb99a15a6ffbb29e80c9e5bdf580fd012fa2c0273e0d3",
@@ -495,13 +495,13 @@
     "apps/web/tests/guided-ira-basis.spec.ts": "f92c0f2385ac54a740a711c5fbc6f956ea866924c8f49aacc46cc4e5bb8658ed",
     "apps/web/tests/guided-k1-qbi-sources.spec.ts": "adff60863d7905e43ccbfe234703108252d1c0e0a32d97558cece4b69d8809c8",
     "apps/web/tests/guided-marketplace-actual-cash.spec.ts": "e643d870b6876be6b22981030b249daf175daeaef5945a73efcb547b1fb1edc0",
-    "apps/web/tests/guided-marketplace-actual-paid.spec.ts": "0d73079f441bd249f2d2fa10fae13d1f2b936474a5634f59ee88fb09a1a7bbaa",
+    "apps/web/tests/guided-marketplace-actual-paid.spec.ts": "1d4cb151327951045c6a8e13617c9703bdc606d0aadce80262b63b17e3c65240",
     "apps/web/tests/guided-marketplace-business-credit-method.spec.ts": "1caa6182b3426715b5fb6dac05805347e6606d560d27186b8c2b0884d231636b",
     "apps/web/tests/guided-marketplace-full-repayment.spec.ts": "114b1b10ef07a5825c802702eab112df9c82f549500b645e839d1a74eb482882",
     "apps/web/tests/guided-marketplace-marriage-health.spec.ts": "6813dbbcfec53fa8047041f14b49e3389385d92439ef132bc0980f1fdc4e80af",
     "apps/web/tests/guided-marketplace-negative-limit.spec.ts": "4f9cde363fb891ae10338b3a0189369d5f716e54cd2bb8a799e0a4c7398b36ae",
     "apps/web/tests/guided-marketplace-nonspecified-stop.spec.ts": "42ce33386e10bbfcce454f725bca71f980632d5b72a54758b9f115449660c4da",
-    "apps/web/tests/guided-marketplace-other-return-cash.spec.ts": "70a292fc6b751b2396e43e6085f7cea6d9d76b5b04f3f9cb35b4299490b9be9e",
+    "apps/web/tests/guided-marketplace-other-return-cash.spec.ts": "c5a745f142920244b808b15c091731575d3f159fc0c5647b104991bcb76c8708",
     "apps/web/tests/guided-marketplace-outside-person.spec.ts": "8892355b69576ba1b9735162387f70905c4d42234873a222d182802b70d37e34",
     "apps/web/tests/guided-marketplace-reported-repayment.spec.ts": "4bebcceca263f280095dfb6055c300fca1b79682fb89c2cc03887d2d8b7a1a24",
     "apps/web/tests/guided-marketplace-shared-marriage-health.spec.ts": "1d18762685e67042ebaa531df60a3c0fe79a5b1cab2e7ac99dae7614ff9a6e8d",
@@ -2621,9 +2621,9 @@
         "self-employment-income-analysis": 0
       },
       "requestSourceLines": [
-        120,
-        121,
-        137
+        118,
+        119,
+        135
       ],
       "reviewBasis": "Reviewed fixed actual download action and helper invocation sites; expected400 filing POSTs included; conservative per-file bound applies to every registered case",
       "skippedTitles": []
@@ -2697,9 +2697,9 @@
         "self-employment-income-analysis": 0
       },
       "requestSourceLines": [
-        104,
-        105,
-        120
+        102,
+        103,
+        118
       ],
       "reviewBasis": "Reviewed fixed actual download action and helper invocation sites; expected400 filing POSTs included; conservative per-file bound applies to every registered case",
       "skippedTitles": []

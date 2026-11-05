@@ -25,7 +25,6 @@ async function seed(page: Page, segmentation: object, sectionData: object) {
 for (const viewport of [{ width: 1280, height: 900 }, { width: 390, height: 844 }]) {
   test.describe(`New source fields at ${viewport.width}px`, () => {
     test('collects chapter 13 facts through edits and reload', async ({ page }) => {
-      test.setTimeout(90_000);
       await page.setViewportSize(viewport);
       const prior = structuredClone(actualGuidedNolSources), original = prior.vintages?.[0]; if (!original || !prior.alternativeTax) throw new Error('Missing synthetic loss sources');
       const first = { ...original, originalLoss: '100000', openingCarryforward: '100000', section1411OriginalLoss: '0', history: [] };
@@ -50,7 +49,6 @@ for (const viewport of [{ width: 1280, height: 900 }, { width: 390, height: 844 
     });
 
     test('collects gift lot facts through edits and reload', async ({ page }) => {
-      test.setTimeout(90_000);
       await page.setViewportSize(viewport);
       await seed(page, { filingStatus: 'single', incomeTypes: ['w2-wages', 'investments'], lifeEvents: [], stateCode: null },
         { 'personal-info': personal, 'income-w2': { entries: [w2] }, 'income-investments': { interestEntries: [], dividendEntries: [], brokerageEntries: [], digitalAssetEntries: [actualGuidedDigitalAsset()] } });

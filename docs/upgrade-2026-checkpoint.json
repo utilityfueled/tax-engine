@@ -21118,5 +21118,28 @@
     "remoteWebRun": "42080868458",
     "remoteFailuresResolved": false,
     "ledger": "docs/upgrade-2026-c2c-global-verification-work.md"
+  },
+  "nov05BrowserTimeoutInheritance": {
+    "status": "FINITE_STATIC_AND_ACTUAL_LOCAL30S_PASS_NOT_CONTAINER",
+    "ordinaryOverridesRemoved": 4,
+    "affectedBrowserCases": 8,
+    "actualTimeoutMs": 30000,
+    "actualRetries": 0,
+    "actualSkips": 0,
+    "sourceDrift": false,
+    "correctedFocusedTests": 59,
+    "metadataTests": 888,
+    "specLines": 8447,
+    "inventoryTotal": 897,
+    "supportedInventoryUnchanged": 68,
+    "typechecks": "all3PASS",
+    "builds": "bothPASS",
+    "lintErrors": 0,
+    "lintWarnings": 11863,
+    "mainManifest": "0e7ead9ee9c1ea4adadfc4bf8dee2b9bc2d769a88847f2450435d2b3e819a892",
+    "actualFollowupManifest": "e76cc1b4c3b5ab5dbff8b74a771df52068bb64ddbcd54392c825283868f5a162",
+    "containerLifecycleResolved": false,
+    "managedTimerResolved": false,
+    "ledger": "docs/upgrade-2026-browser-timeout-inheritance-work.md"
   }
 }
