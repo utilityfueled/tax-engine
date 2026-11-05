@@ -163,7 +163,7 @@ function collectForm4562ReferenceActivities(input: TaxYearInput): Form4562Refere
   const activities: Form4562ReferenceActivitySource[] = [];
 
   if (input.scheduleC && input.form4562) {
-    const result = calculateForm4562(input.form4562);
+    const result = calculateForm4562(input.form4562, input.taxpayer.taxYear);
     const activityName = input.scheduleC.businessName
       ? `Schedule C: ${input.scheduleC.businessName}`
       : "Schedule C activity";
@@ -185,7 +185,7 @@ function collectForm4562ReferenceActivities(input: TaxYearInput): Form4562Refere
       continue;
     }
 
-    const result = calculateForm4562(property.form4562);
+    const result = calculateForm4562(property.form4562, input.taxpayer.taxYear);
     activities.push({
       activityLabel: `Rental property: ${property.description}`,
       downstreamBridgeLabel: "Schedule E depreciation bridge from Form 4562 lines 14-21",

@@ -134,7 +134,7 @@ export function calculateScheduleC(
   // ── Expenses (Lines 8-27) ────────────────────────────
   const expenses = scheduleCInput?.expenses ?? {};
   const expenseBreakdown: Record<string, Decimal> = {};
-  const form4562 = input.form4562 ? calculateForm4562(input.form4562) : undefined;
+  const form4562 = input.form4562 ? calculateForm4562(input.form4562, input.taxpayer.taxYear) : undefined;
   if (form4562) {
     audit.merge(form4562.lines);
   }

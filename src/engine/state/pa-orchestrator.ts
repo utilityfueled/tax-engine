@@ -978,7 +978,7 @@ function getPAClass4Owner(accountHolder?: PAClass4Owner): PAClass4Owner {
 
 /** Actual PA-only source projection; no federal deduction or whole-return qualification. */
 function assertPAAmortizationSource(input:TaxYearInput):void{
-  if(input.scheduleC?.sourceFacts?.amortization&&input.form4562&&calculateForm4562(input.form4562).line44.gt(0))throw new Error('PA amortization requires actual independent PA business basis and source method; federal Section197 is not a PA allowance');
+  if(input.scheduleC?.sourceFacts?.amortization&&input.form4562&&calculateForm4562(input.form4562,input.taxpayer.taxYear).line44.gt(0))throw new Error('PA amortization requires actual independent PA business basis and source method; federal Section197 is not a PA allowance');
 }
 export function calculatePAScheduleCNetIncome(input: TaxYearInput): Decimal {
   assertPAAmortizationSource(input);

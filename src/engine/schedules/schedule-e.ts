@@ -309,7 +309,7 @@ export function calculateScheduleE(input: Pick<TaxYearInput, 'scheduleK1' | 'ren
       ? d(prop.ownershipPercentage).dividedBy(100)
       : new Decimal(1);
     const rents = d(prop.rents).times(ownershipPct);
-    const form4562 = prop.form4562 ? calculateForm4562(prop.form4562) : undefined;
+    const form4562 = prop.form4562 ? calculateForm4562(prop.form4562, input.taxpayer?.taxYear) : undefined;
     const supportedForm4562Depreciation = form4562
       ? sum(
         form4562.line14,

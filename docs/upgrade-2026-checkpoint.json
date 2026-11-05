@@ -20023,5 +20023,20 @@
     "basisDispositionHistoryQualified": false,
     "professionalReview": false,
     "readinessQualified": false
+  },
+  "nov05Form4562OwnerYear": {
+    "authorManifestSHA256": "23130384dd16ce716d5932dcb1ea17de3ef1f68479a56af980f9cc5d974729db",
+    "independentManifestSHA256": "8a736e8e5d240833e0868e9bd077fa4a87e0af6026e9f222e900a736f33c8098",
+    "finalIndependentManifestSHA256": "f97c164381cc179b6cc5cadda584060fd35fbedeee35f2a40cf2dfdc685e69f6",
+    "focusedPassed": 243,
+    "adjacentPassed": 45,
+    "distinctControlsPassed": 31,
+    "rootSpecTestsPassed": 6,
+    "canonicalAbsenceAndZeroPreserved": true,
+    "allSixParentCallsBound": true,
+    "checks": "root/web types, scoped test types, six spec refs, new lint scope PASS; three pre-existing ScheduleE warnings unchanged",
+    "fullForm4562Qualified": false,
+    "filingEnabled": false,
+    "completion": false
   }
 }

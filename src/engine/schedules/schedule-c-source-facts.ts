@@ -23,7 +23,7 @@ export function calculateScheduleCSourceFacts(input:SourceInput,business:SourceB
  const exp=(business?.expenses??{}) as Partial<Record<string,string>>, proof=business?.sourceFacts;
  for(const field of special)if(!d(exp[field]).isZero())fail(`${field} requires its separate supported federal source method`);
  for(const field of ['businessInterest',...ordinary])if(!d(exp[field]).isFinite()||d(exp[field]).lt(0))fail(`${field} is not a nonnegative current expense`);
- const amortizationTotal=input.form4562?calculateForm4562(input.form4562).line44:d(0);
+ const amortizationTotal=input.form4562?calculateForm4562(input.form4562,input.taxpayer.taxYear).line44:d(0);
  const interestTotal=d(exp.businessInterest),ordinaryTotal=ordinary.reduce((s,k)=>s.plus(d(exp[k])),d(0));
  if(!proof){if(amortizationTotal.gt(0))fail('positive Form4562 amortization requires actual Schedule C asset attribution sources');if(saved?.lines.some(row=>row.line==='actual-source-commitment'))fail('saved original source proof was removed');if(!interestTotal.isZero()||!ordinaryTotal.isZero())fail('positive interest or classified ordinary expenses require complete actual sources');return undefined;}
  if(d(exp.otherExpenses).gt(0)&&!business?.otherExpenseDescription?.trim())fail('actual remaining other-expense description is unknown');

@@ -71,9 +71,13 @@ export interface Form4562Result {
 }
 
 const ZERO = new Decimal(0);
-const SECTION_179_LIMIT_2025 = new Decimal(2500000);
-const SECTION_179_PHASEOUT_THRESHOLD_2025 = new Decimal(4000000);
 const DEFAULT_TAX_YEAR = 2025;
+// Pub946 (2025), What's New for2026; RevProc2025-32 section4.24.
+// Immutable source values; creating local Decimals avoids mutable shared money.
+const SECTION_179_DEFAULTS = Object.freeze({
+  2025: Object.freeze({ maximum: '2500000', threshold: '4000000' }),
+  2026: Object.freeze({ maximum: '2560000', threshold: '4090000' }),
+});
 
 /** Default amortization periods in months by IRC code section. */
 const AMORTIZATION_DEFAULTS: Record<string, number> = {
@@ -143,14 +147,19 @@ function computeAssetAmortization(
   };
 }
 
-export function calculateForm4562(input: Form4562Input): Form4562Result {
+export function calculateForm4562(input: Form4562Input, ownerTaxYear?: number): Form4562Result {
+  if (ownerTaxYear !== undefined && input.taxYear !== undefined && ownerTaxYear !== input.taxYear) {
+    throw new Error('Form4562 year conflicts with the actual owner tax year');
+  }
+  const taxYear = ownerTaxYear ?? input.taxYear ?? DEFAULT_TAX_YEAR;
+  if (taxYear !== 2025 && taxYear !== 2026) throw new Error('Unsupported Form4562 tax year');
+  const defaults = SECTION_179_DEFAULTS[taxYear];
   const audit = new AuditTrail();
-  const taxYear = input.taxYear ?? DEFAULT_TAX_YEAR;
 
   // --- Part I: Section 179 (unchanged) ---
-  const line1 = Decimal.max(ZERO, d(input.section179MaximumDeduction ?? SECTION_179_LIMIT_2025));
+  const line1 = Decimal.max(ZERO, d(input.section179MaximumDeduction ?? defaults.maximum));
   const line2 = Decimal.max(ZERO, d(input.section179TotalCost));
-  const line3 = Decimal.max(ZERO, d(input.section179ThresholdCost ?? SECTION_179_PHASEOUT_THRESHOLD_2025));
+  const line3 = Decimal.max(ZERO, d(input.section179ThresholdCost ?? defaults.threshold));
   const line4 = Decimal.max(ZERO, line2.minus(line3));
   const line5 = Decimal.max(ZERO, line1.minus(line4));
   const line8 = Decimal.max(ZERO, d(input.section179ElectedCost));
@@ -282,7 +291,7 @@ export function calculateForm4562(input: Form4562Input): Form4562Result {
     "Form 4562", "1", "Maximum section 179 deduction limit", line1,
     input.section179MaximumDeduction !== undefined
       ? "Validated line 1 override"
-      : "2025 statutory section 179 maximum deduction",
+      : `${taxYear} statutory section 179 maximum deduction`,
     { "Validated line 1 override": d(input.section179MaximumDeduction) },
   );
   audit.record("Form 4562", "2", "Total cost of section 179 property placed in service", line2, "Validated line 2 total");
@@ -290,7 +299,7 @@ export function calculateForm4562(input: Form4562Input): Form4562Result {
     "Form 4562", "3", "Section 179 threshold cost before reducing the annual limit", line3,
     input.section179ThresholdCost !== undefined
       ? "Validated line 3 override"
-      : "2025 statutory section 179 threshold cost",
+      : `${taxYear} statutory section 179 threshold cost`,
     { "Validated line 3 override": d(input.section179ThresholdCost) },
   );
   audit.record("Form 4562", "4", "Reduction in the section 179 limit", line4, "Line 2 - Line 3, floored at $0", {
@@ -303,7 +312,7 @@ export function calculateForm4562(input: Form4562Input): Form4562Result {
   audit.record("Form 4562", "9", "Tentative section 179 deduction", line9, "Smaller of Line 5 or Line 8", {
     "Line 5": line5, "Line 8": line8,
   });
-  audit.record("Form 4562", "10", "Carryover of disallowed section 179 deduction from 2024", line10, "Validated prior-year carryover");
+  audit.record("Form 4562", "10", `Carryover of disallowed section 179 deduction from ${taxYear - 1}`, line10, "Validated prior-year carryover");
   audit.record("Form 4562", "11", "Business income limitation", line11, "Validated line 11 amount limited to Line 5", {
     "Validated line 11 amount": d(input.section179BusinessIncomeLimit), "Line 5": line5,
   });
@@ -318,7 +327,7 @@ export function calculateForm4562(input: Form4562Input): Form4562Result {
     },
   );
   audit.record(
-    "Form 4562", "13", "Carryover of disallowed deduction to 2026", line13,
+    "Form 4562", "13", `Carryover of disallowed deduction to ${taxYear + 1}`, line13,
     directLine13Override !== undefined
       ? "Validated direct line 13 override"
       : "Line 9 + Line 10 - Line 12, floored at $0",
