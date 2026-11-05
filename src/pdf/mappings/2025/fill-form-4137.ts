@@ -1,3 +1,4 @@
+import {requiresRRTAPayrollReview,rrtaPayrollReviewOriginalInput,rrtaPayrollReviewDisplayInput,type PreparedRRTAPayrollReview} from '../../rrta-payroll-review-context.js';
 import { assertPdfExportAllowed, markReviewPdf } from "../../export-policy.js";
 /**
  * PDF filler for IRS Form 4137 — Social Security and Medicare Tax on Unreported Tip Income.
@@ -195,11 +196,14 @@ async function appendOwner(target:PDFDocument,source:PDFDocument,owner:string) {
   for(const [,ref] of roots)target.getForm().acroForm.addField(copier.copy(ref));
   for(const page of source.getPages()) {const ref=copier.copy(page.ref),node=target.context.lookup(ref);if(!(node instanceof PDFPageLeaf))throw new Error("Invalid copied Form4137 page");target.addPage(PDFPage.of(node,ref,target));}
 }
-export async function fillForm4137(input: TaxYearInput,result: TaxReturnResult,blankPdfPath: string):Promise<PDFDocument> {
+export async function fillForm4137(input: TaxYearInput,result: TaxReturnResult,blankPdfPath: string,rrtaPayrollReview?:PreparedRRTAPayrollReview):Promise<PDFDocument> {
   assertPdfExportAllowed(input.taxpayer.taxYear,result.taxYear);
-  const forms=assertForm4137ReviewSource(input,result);
-  const doc=await loadReviewTemplate(blankPdfPath,2025);await fillIndividual(doc,input,forms[0]);
-  for(const item of forms.slice(1)) {const other=await loadReviewTemplate(blankPdfPath,2025);await fillIndividual(other,input,item);await appendOwner(doc,other,item.accountHolder ?? "unknown");}
+  const rrta=requiresRRTAPayrollReview(input,result)||rrtaPayrollReview!==undefined;
+  const original=rrta?rrtaPayrollReviewOriginalInput(input,result,rrtaPayrollReview):input;
+  const display=rrta?rrtaPayrollReviewDisplayInput(input,result,rrtaPayrollReview):input;
+  const forms=assertForm4137ReviewSource(original,result);
+  const doc=await loadReviewTemplate(blankPdfPath,2025);await fillIndividual(doc,display,forms[0]);
+  for(const item of forms.slice(1)) {const other=await loadReviewTemplate(blankPdfPath,2025);await fillIndividual(other,display,item);await appendOwner(doc,other,item.accountHolder ?? "unknown");}
   await markReviewPdf(doc);
   return doc;
 }

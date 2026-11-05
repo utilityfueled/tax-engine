@@ -21558,5 +21558,30 @@
     "distinctManifest": "a4e4beeec0bcfe39b124c77ea486059e8832b9667d0b96689e1e82167cfe24bf",
     "nativeExecutionPerformed": false,
     "readinessChanged": false
+  },
+  "nov05RRTAReviewPaper": {
+    "status": "finite-2025-api-review-only-package-checks-passed",
+    "ledger": "docs/upgrade-2026-rrta-review-paper-work.md",
+    "focusedPassed": 92,
+    "focusedFiles": 7,
+    "metadataPassed": 1106,
+    "metadataFiles": 14,
+    "distinctPassed": 96,
+    "distinctFiles": 8,
+    "actualDistinctPDFs": 29,
+    "actualDistinctPages": 47,
+    "actualDistinctLogicalObjects": 4675,
+    "inventoryEntries": 910,
+    "inventorySupportedUnchanged": 68,
+    "browserAuditSources": 1805,
+    "browserAuditContractsUnchanged": 150,
+    "browserAuditCasesUnchanged": 584,
+    "browserAuditExactSourceDeltas": 5,
+    "ordinaryBNConfirmedAbsenceRequired": true,
+    "unknownFactsPreserved": true,
+    "uiEnabled": false,
+    "filingEnabled": false,
+    "humanReviewQualified": false,
+    "releaseReady": false
   }
 }

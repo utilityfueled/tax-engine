@@ -1,3 +1,4 @@
+import {requiresRRTAPayrollReview,rrtaPayrollReviewDisplayInput,type PreparedRRTAPayrollReview} from '../../rrta-payroll-review-context.js';
 import { assertPdfExportAllowed } from "../../export-policy.js";
 /**
  * PDF filler for IRS Form 8959 — Additional Medicare Tax.
@@ -15,6 +16,7 @@ import {
   loadReviewTemplate,
   setTextField,
   setCurrencyField,
+  formatCurrency,
 } from "../../pdf-utils.js";
 
 // ─── PDF Field Name Helpers ────────────────────────────────────────────────
@@ -77,16 +79,30 @@ export async function fillForm8959(
   input: TaxYearInput,
   result: TaxReturnResult,
   blankPdfPath: string,
+  rrtaPayrollReview?:PreparedRRTAPayrollReview,
 ): Promise<PDFDocument> {
   assertPdfExportAllowed(input.taxpayer.taxYear, result.taxYear);
-  if (input.rrtaPayrollSources !== undefined || result.form8959?.lines.some(line => ["14", "15", "16", "17", "23"].includes(line.line))) {
-    throw new Error("RRTA review PDF mapping is unavailable; actual sources require a separately qualified projection.");
-  }
+  const rrta=requiresRRTAPayrollReview(input,result)||rrtaPayrollReview!==undefined;
+  const display=rrta?rrtaPayrollReviewDisplayInput(input,result,rrtaPayrollReview):input;
   const doc = await loadReviewTemplate(blankPdfPath, 2025);
   const form = doc.getForm();
   const F = FIELDS;
   const f8959 = result.form8959;
 
+  if(rrta){
+    setTextField(form,F.name,display.taxpayer.spouse?`${display.taxpayer.primary.firstName} ${display.taxpayer.primary.lastName} & ${display.taxpayer.spouse.firstName} ${display.taxpayer.spouse.lastName}`:`${display.taxpayer.primary.firstName} ${display.taxpayer.primary.lastName}`);
+    setTextField(form,F.ssn,'');
+    if(!f8959)throw Error('RRTA review requires its original-bound Form8959 result');
+    for(let line=1;line<=24;line++){
+      // The qualified source method has no self-employment income: official
+      // instructions skip PartII. No Form8919 is admitted by this method.
+      if(line>=8&&line<=13||line===3)continue;
+      const entries=f8959.lines.filter(row=>row.form==='Form 8959'&&row.line===String(line));
+      if(entries.length!==1||!entries[0].value.isFinite())throw Error('RRTA review requires each original-bound Form8959 audit line exactly once');
+      setTextField(form,F[`line${line}` as keyof typeof F],entries[0].value.isZero()?'0':formatCurrency(entries[0].value));
+    }
+    return doc;
+  }
   // ── Header ──
   const name = input.taxpayer.spouse
     ? `${input.taxpayer.primary.firstName} ${input.taxpayer.primary.lastName} & ${input.taxpayer.spouse.firstName} ${input.taxpayer.spouse.lastName}`

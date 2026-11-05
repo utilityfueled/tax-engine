@@ -1,3 +1,5 @@
+import {requiresRRTAPayrollReview,rrtaPayrollReviewOriginalInput,type PreparedRRTAPayrollReview} from './rrta-payroll-review-context.js';
+export {prepareRRTAPayrollReview} from './rrta-payroll-review-context.js';
 import {isDeepStrictEqual} from 'node:util';
 import {redactReviewIdentifiers} from './redact-review-identifiers.js';
 import {fillPACareOfficialReview} from './mappings/2025/fill-pa-care-official-review.js';
@@ -422,6 +424,8 @@ export interface FillReturnOptions {
   qbiLossReview?: PreparedQbiLossReview;
   /** Prepared from complete actual originals before display redaction. */
   form2210Review?:PreparedForm2210Review;
+  /** Actual original RRTA payroll and complete federal replay, before redaction. */
+  rrtaPayrollReview?:PreparedRRTAPayrollReview;
   scheduleEReview?: PreparedScheduleEReview;
   paRoyaltyReview?: PreparedPARoyaltyReview;
   /** Actual WPTC originals checked before render-only identifier redaction. */
@@ -458,9 +462,10 @@ export async function fillReturn(
   options: FillReturnOptions,
 ): Promise<FillReturnResult> {
   assertPdfExportAllowed(input.taxpayer.taxYear, result.taxYear, options.purpose);
-  if (input.rrtaPayrollSources !== undefined || result.form8959?.lines.some(line => ["14", "15", "16", "17", "23"].includes(line.line))) {
-    throw new Error("RRTA review PDF mapping is unavailable; actual sources require a separately qualified projection.");
-  }
+  const rrtaRequested=requiresRRTAPayrollReview(input,result)||options.rrtaPayrollReview!==undefined;
+  const rrtaOriginal=rrtaRequested?rrtaPayrollReviewOriginalInput(input,result,options.rrtaPayrollReview):undefined;
+  // Validate actual companion sources before any output/template operation.
+  if(rrtaOriginal)assertForm4137ReviewSource(rrtaOriginal,result);
   const form2210Review=options.form2210Review??(requiresForm2210ScheduleAiReview(input,result)&&hasForm2210OriginalIdentity(input)?prepareForm2210Review(input):undefined);
   if(form2210Review)form2210ReviewOriginalInput(input,result,form2210Review);
   let form2210ReviewArtifact:SavedForm2210Review|undefined;
@@ -716,9 +721,9 @@ export async function fillReturn(
   }
 
   // ── Form 8959 (if applicable — Additional Medicare Tax) ──
-  if (result.form8959 && result.form8959.additionalMedicareTax.gt(0)) {
+  if (result.form8959 && (result.form8959.additionalMedicareTax.gt(0)||rrtaRequested)) {
     const f8959Path = join(blankFormsDir, "f8959.pdf");
-    const doc8959 = await fillForm8959(input, result, f8959Path);
+    const doc8959 = await fillForm8959(input, result, f8959Path,options.rrtaPayrollReview);
     if (flatten) await flattenForm(doc8959.getForm());
     const outputPath8959 = join(outputDir, "f8959-filled.pdf");
     await savePacketPdf(doc8959, outputPath8959);
@@ -736,10 +741,10 @@ export async function fillReturn(
   }
 
   // ── Form 4137 (if applicable — Social Security and Medicare Tax on Unreported Tips) ──
-  const tipForms = assertForm4137ReviewSource(input, result);
+  const tipForms = assertForm4137ReviewSource(rrtaOriginal??input, result);
   if (tipForms.some(form => form.sourceFactsVerified || form.line13.gt(0))) {
     const f4137Path = join(blankFormsDir, "f4137.pdf");
-    const doc4137 = await fillForm4137(input, result, f4137Path);
+    const doc4137 = await fillForm4137(input, result, f4137Path,options.rrtaPayrollReview);
     if (flatten) await flattenForm(doc4137.getForm());
     const outputPath4137 = join(outputDir, "f4137-filled.pdf");
     await savePacketPdf(doc4137, outputPath4137);

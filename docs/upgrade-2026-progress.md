@@ -4,6 +4,8 @@ Current source, verification and remaining work are summarized in the
 [November 4 continuation](upgrade-2026-current-status.md). Historical results
 below apply to their named revisions.
 
+- November5: [original-bound 2025 railroad review PDFs](upgrade-2026-rrta-review-paper-work.md) preserve separate wage/RRTA lines and withholding, private-original replay, explicit ordinary B/N absence facts and redacted identifiers. Main 92 focused/1,106 metadata checks and all package static checks pass; inventory adds one unsupported slice, with 68 supported unchanged. Human, final-2026, filing and distribution qualification remain open.
+
 - November5: the [native official-sample correction](upgrade-2026-native-official-sample-size-work.md) admits the actual 27,347,185-byte IRS publication under a 32 MiB per-file limit while preserving the 64 MiB aggregate and complete custody checks. Main 140 focused checks pass; actual native build/browser/recovery/scan remain required.
 
 - November5: the [Node 26 lock-contract successor](upgrade-2026-node26-lock-successor-work.md) binds the exact separately reviewed dependency lock while retaining its historical hash. Seven focused tests pass; original full local/remote failures and PA timing gap remain retained. No thresholds or readiness gates change.
