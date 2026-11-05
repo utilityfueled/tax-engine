@@ -1,0 +1,18 @@
+form: PA-Care-Native-Currency
+fullName: Preserve exact original care amounts across native currency events
+taxYear: 2026
+reference: https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax/child-and-dependent-care-credit
+notes: Local original-source input semantics only; no tax formula, rounding or shared parser change.
+lines:
+  - line: unchanged-blur
+    description: Currency decoration does not revoke unchanged actual care sources
+    formula: For both actual receipt amount and original receipt amount, normalize only syntactically valid currency decoration and call the parent only when the resulting exact primitive differs from the stored value. Formatting-only blur produces zero parent writes and preserves source confirmation. Equal cash with a different exact lexeme remains an actual source edit.
+    testRef: tests/apps/web/pa-care-native-currency.test.tsx::care currency unchanged blur preserves exact source confirmation %s
+  - line: malformed
+    description: Invalid facts must remain visible for source validation
+    formula: Preserve malformed grouping, bare dollar symbols and invalid text literally through change and blur, with invalid presentation and source confirmation revoked. Blank remains unknown, zero remains explicit zero. Do not let the permissive shared cleaner turn malformed1,0 into a confirmed10 or bare dollar into blank.
+    testRef: tests/apps/web/pa-care-native-currency.test.tsx::care currency preserves invalid literal across change and blur %s
+  - line: real-edit
+    description: Exact original amount and reference changes still revoke confirmation
+    formula: Real amount changes, equal cash with different source lexeme and original provenance edits revoke confirmation while retaining the original snapshot for explicit review. Rendering/read must never recapture or confirm sources.
+    testRef: tests/apps/web/pa-care-native-currency.test.tsx::care currency retains real exact source edits and unknown versus zero
