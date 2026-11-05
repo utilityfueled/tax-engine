@@ -12,13 +12,20 @@ if (probe.error || probe.status !== 0) {
   process.exit(1);
 }
 const browser = process.argv[2] === "--browser";
-const args = browser
-  ? [path.join(root, "apps", "web", "node_modules", "@playwright", "test", "cli.js"), "test", ...process.argv.slice(3)]
-  : [path.join(root, "node_modules", "vitest", "vitest.mjs"), ...process.argv.slice(2)];
-const result = spawnSync(process.execPath, args, {
-  cwd: browser ? path.join(root, "apps", "web") : root,
-  env: { ...process.env, TAX_ENGINE_PDF_TEST_PYTHON: python },
-  stdio: "inherit"
-});
-if (result.error) throw result.error;
-process.exit(result.status ?? 1);
+if (browser) {
+  try {
+    const { main } = await import("./run-browser-tests.mjs");
+    process.exitCode = await main(process.argv.slice(3), { parentEnv: { ...process.env, TAX_ENGINE_PDF_TEST_PYTHON: python } });
+  } catch {
+    console.error("Browser orchestration failed; inspect the source audit and prerequisites.");
+    process.exitCode = 1;
+  }
+} else {
+  const result = spawnSync(process.execPath, [path.join(root, "node_modules", "vitest", "vitest.mjs"), ...process.argv.slice(2)], {
+    cwd: root,
+    env: { ...process.env, TAX_ENGINE_PDF_TEST_PYTHON: python },
+    stdio: "inherit"
+  });
+  if (result.error) throw result.error;
+  process.exit(result.status ?? 1);
+}

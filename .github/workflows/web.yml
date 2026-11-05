@@ -52,7 +52,7 @@ jobs:
       - run: pnpm sample-docs:fetch
       - run: pnpm test:web
       - uses: actions/upload-artifact@v4
-        if: failure()
+        if: always()
         with:
           name: browser-failures
           path: |
@@ -153,6 +153,7 @@ jobs:
           exit 1
       - name: Browser flows against the actual runtime image
         env:
+          CANDIDATE_IMAGE_ID: ${{ steps.candidate.outputs.image_id }}
           PLAYWRIGHT_DISABLE_WEBSERVER: "true"
           PLAYWRIGHT_BASE_URL: http://127.0.0.1:3109
         run: pnpm test:web --retries=0 --timeout=30000 --trace=retain-on-failure

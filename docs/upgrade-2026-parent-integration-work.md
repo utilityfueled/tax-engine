@@ -36,9 +36,10 @@ inventory/spec tests pass. The original failed check remains retained in
 aggregate receipt is not relabeled as a successful run. See the
 [parent implementation ledger](upgrade-2026-passenger-parent-work.md).
 
-The full managed `pnpm test:web --retries=0` successor is running separately.
-It must close with exact collection/once-only union, source/build identity,
-request-window and cleanup evidence before a browser pass can be claimed.
+The separate full managed `pnpm test:web --retries=0` successor now closes with
+569 passes, five original hosted-only skips and zero failures/retries. Its
+[source/build, exact collection and cleanup evidence](upgrade-2026-portable-browser-work.md)
+is preserved separately from these full unit/coverage receipts.
 The earlier run's 111 successful cases followed by build-cache drift remain
 a failed full run. Hosted-only browser skips cannot establish hosted readiness.
 All final-image, remote-CI, hosted/native, independent-human, final-form and

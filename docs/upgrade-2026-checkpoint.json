@@ -20435,5 +20435,36 @@
     "browserQualified": false,
     "hostedNativeQualified": false,
     "ledger": "docs/upgrade-2026-parent-integration-work.md"
+  },
+  "nov05PortableBrowserManagedSuccessor": {
+    "status": "full_managed_browser_pass_original_hosted_skips",
+    "trackedTaxBaseline": "19bedea9a16c815e7a2fdc9ca92f14bade9ae30d",
+    "command": [
+      "pnpm",
+      "test:web",
+      "--retries=0"
+    ],
+    "cases": 574,
+    "passed": 569,
+    "originalHostedSkipped": 5,
+    "failed": 0,
+    "retries": 0,
+    "workers": 2,
+    "windows": 8,
+    "elapsedSeconds": "1638.250331291987",
+    "sourcePaths": 4574,
+    "sourceDrift": [],
+    "immutableCompiledPaths": 321,
+    "cacheObservations": 24,
+    "ownedServerClosed": true,
+    "manifest": "5ecb1fe0bedb1e5e203d66e4249723f6d56160559d0940606dfa3779e44bfca7",
+    "manifestMembers": 1226,
+    "priorFailedRunRetained": true,
+    "rootCheckerSetupFailureRetained": true,
+    "containerQualified": false,
+    "actualHostedQualified": false,
+    "ledger": "docs/upgrade-2026-portable-browser-work.md",
+    "distinctReviewManifest": "90e5537a20b99cacd2d152db9c2a8722e090395ef84d5753c06dc9de9220f5e6",
+    "postcloseCompiledHashManifest": "3df314e68634737af0bc5913fb13a5585e7d26d46f26093763327db90e16cd4c"
   }
 }

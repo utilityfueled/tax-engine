@@ -1,11 +1,11 @@
 # Current 2026 upgrade continuation
 
 Updated November 5 UTC, 2026, on `upgrade/2026-baseline`. The latest full unit and coverage runs bind tax baseline
-`19bedea9a16c815e7a2fdc9ca92f14bade9ae30d` plus six reviewed, uncommitted
-browser-runner paths: [25,965 tests and 87.59% branch coverage pass](upgrade-2026-parent-integration-work.md),
+`19bedea9a16c815e7a2fdc9ca92f14bade9ae30d` plus six reviewed
+browser-runner paths (uncommitted at measurement): [25,965 tests and 87.59% branch coverage pass](upgrade-2026-parent-integration-work.md),
 with no reported skips or source drift. Parent static/build checks pass after
 ordinary inventory regeneration; the first stale-inventory failure is retained.
-The full browser successor is running separately. Exact
+The [full managed browser successor](upgrade-2026-portable-browser-work.md) passes 569 cases with five original hosted skips and zero failures/retries. Exact
 hosted/native artifacts still require qualification. This is the current
 crosswalk into the append-only history. Earlier checklist entries and checkpoint root values describe their
 named revisions. The [execution brief](upgrade-2026-execution-brief.md) remains
