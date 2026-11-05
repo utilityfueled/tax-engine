@@ -3138,3 +3138,7 @@ LOGIN COMMIT and app authentication. All ten sessions close. Separate actual
 review recomputes nine hashes and exact119,058rows/20,117,436bytes. Historical
 failed COMMIT uncertainty remains. Preview installation, deployment and actual
 outage/retry qualification continue; see [the provisioning ledger](upgrade-2026-isolated-outage-provisioning-work.md).
+
+### November5 UTC: exact480 terminal browser diagnosis
+
+Both remote480 Web runs fail: managed563/2/fiveSKIP(PR),562/3/fiveSKIP(push); container542/23/fiveSKIP(PR),550/15/fiveSKIP(push). Independent evidence retains all43failed cases/48attempts and binds the PR merge to the exact head tree. ROOT verifies30frozen members and replays four complete logs. Static/unit/coverage CI passes; no product fix, rerun, deadline change or image qualification follows. See [the browser ledger](upgrade-2026-480-remote-browser-work.md).

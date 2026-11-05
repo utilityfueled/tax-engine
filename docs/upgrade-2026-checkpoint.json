@@ -19483,5 +19483,45 @@
       "actual isolated outages and automatic Stripe retry",
       "all independent human, final-form, provider-access and final-artifact gates"
     ]
+  },
+  "nov05Exact480RemoteBrowserDiagnosis": {
+    "source": "480ca19d06a68032fce8fa08255e9f9c9e2c1e88",
+    "tree": "23ce0702ef035135db208eba6621f2f3dcbdb4bd",
+    "prCheckout": "12873d2b3f3ec40519bc10bf34d04f20e2cf41cb",
+    "prTreeIdentical": true,
+    "PRWebRun": 41943493646,
+    "pushWebRun": 41943484869,
+    "managedPR": {
+      "passed": 563,
+      "failed": 2,
+      "skipped": 5
+    },
+    "managedPush": {
+      "passed": 562,
+      "failed": 3,
+      "skipped": 5
+    },
+    "containerPR": {
+      "passed": 542,
+      "failed": 23,
+      "skipped": 5
+    },
+    "containerPush": {
+      "passed": 550,
+      "failed": 15,
+      "skipped": 5
+    },
+    "failedCasesRetained": 43,
+    "failedAttemptsRetained": 48,
+    "allFailedAttemptsWholeTestDeadline": true,
+    "staticUnitCoverageCIPass": true,
+    "independentManifestSHA256": "998dd61fcad6e153bd3346db6f99725f00f5019fa174895c7cf3ef4331d65ec0",
+    "rootFrozenMemberPinsVerified": 30,
+    "rootLogReplayPass": true,
+    "productChanges": false,
+    "causalDiagnosisQualified": false,
+    "currentRawRuntimeArtifactsQualified": false,
+    "browserReadinessQualified": false,
+    "ledger": "docs/upgrade-2026-480-remote-browser-work.md"
   }
 }

@@ -1,6 +1,6 @@
 # Current 2026 upgrade continuation
 
-Updated November 4, 2026, on `upgrade/2026-baseline`. The last full local
+Updated November 5 UTC, 2026, on `upgrade/2026-baseline`. The last full local
 verification binds `045fbedbdfbe612cb3caa28956fa7228bb3df320`, including the
 [comparison successor](upgrade-2026-pa-dependency-comparison-work.md). Exact
 hosted/native artifacts still require qualification. This is the current
@@ -91,3 +91,7 @@ every same-image native gate remains open. The old candidate's zero-byte layer r
 are diagnosed but not repaired. [Current native ledger](upgrade-2026-8487-native-build-export-work.md).
 
 The independently reviewed NOLOGIN bootstrap V2 now retains one actual failure: fresh catalog comparison passes, then role metadata validation stops before COMMIT and cleanup ROLLBACK returns. No database-create attempt, password or LOGIN occurs. The separate rollback-only diagnostic now captures safe metadata and passes fresh before/after catalog reconciliation, including target absence; independent review identifies only the reverse creator-edge grantor mismatch. A narrowly bound V3 now commits the restricted NOLOGIN role, administrator-owned new database and scoped ACLs with305queries/nine rollbacks. Independent actual privilege review passes its narrow checks; separate credential admission continues; broad privacy and hosted qualification remain false. See [the provisioning ledger](upgrade-2026-isolated-outage-provisioning-work.md).
+
+### Exact480 terminal browser evidence
+
+Both exact480 Web runs now finish with managed563/2FAIL/fiveSKIP(PR) and562/3FAIL/fiveSKIP(push), plus container542/23FAIL/fiveSKIP(PR) and550/15FAIL/fiveSKIP(push). These supersede earlier pending480 observations while retaining prior045 results as historical. All43failed cases/48failed attempts are preserved. Static/unit/coverage CI passes; large current runtime artifacts remain unqualified. See [the current browser ledger](upgrade-2026-480-remote-browser-work.md). No causal performance or stable tax defect is established, and no test gate changes.
