@@ -19882,5 +19882,28 @@
     "durableHashAndGuardsUnchanged": true,
     "evidence": "docs/upgrade-2026-oh-school-source-material-work.md",
     "releaseReady": false
+  },
+  "nov05PACareDocumentaryIdentity": {
+    "paths": 8,
+    "genuineRed": {
+      "failed": 4,
+      "passed": 4
+    },
+    "focusedPassed": 235,
+    "files": 12,
+    "newCases": 55,
+    "distinctPassed": 13,
+    "verifiedAuthorEvidenceMembers": 32,
+    "verifiedIndependentEvidenceMembers": 8,
+    "currentSourcePinsVerified": 8,
+    "rootAndWebTypes": "PASS",
+    "scopedLintWarnings": 0,
+    "newSpecRefs": 10,
+    "strictGlobalSpecRefs": 791,
+    "officialPaperQualified": false,
+    "filingEligible": false,
+    "full2026Qualified": false,
+    "evidence": "docs/upgrade-2026-pa-care-documentary-identity-work.md",
+    "releaseReady": false
   }
 }

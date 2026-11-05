@@ -3310,3 +3310,12 @@ desktop/mobile school browser journeys now pass with no source drift. See
 [the comparison ledger](upgrade-2026-oh-school-source-material-work.md). Broader
 global/distribution/staging/human/final2026 qualification remains open. The
 unit/disclosure repair7bd9ca6e is pushed separately.
+
+
+### November5 UTC: explicit PA care documentary identities
+
+Actual provider/person identifier kinds and retained original snapshots now have
+native entry, explicit capture and separate confirmation. Author235 and distinct13
+controls pass; root verifies all eight source pins and both evidence packages.
+See [the source ledger](upgrade-2026-pa-care-documentary-identity-work.md). Actual
+care paper and broader2026/release qualification remain continuing work.
