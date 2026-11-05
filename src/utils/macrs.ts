@@ -423,7 +423,7 @@ export function computeListedPropertyDepreciation(
       const limitTable = isFirstYearBonus ? limits.withBonus : limits.withoutBonus;
       // Year 1-3 use indices 0-2; year 4+ use index 3
       const capIndex = Math.min(recoveryYear - 1, limitTable.length - 1);
-      section280FCap = limitTable[capIndex];
+      section280FCap = roundDollar(limitTable[capIndex].times(businessUseRatio));
       depreciation = Decimal.min(tentativeDepreciation, section280FCap);
     }
   }

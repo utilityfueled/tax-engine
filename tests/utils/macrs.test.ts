@@ -702,8 +702,8 @@ describe("computeListedPropertyDepreciation", () => {
       2025,
     );
     expect(result).not.toBeNull();
-    // Tentative: 20% × $80K × 60% = $9,600; cap $12,400 → $9,600
-    expect(result!.depreciation.toNumber()).toBe(9600);
+    // Tentative: 20% × $80K ×60%=$9,600; adjusted2025 cap $12,200×60%=$7,320.
+    expect(result!.depreciation.toNumber()).toBe(7320);
   });
 
   it("≤50% business use forces ADS SL for passenger auto", () => {

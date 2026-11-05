@@ -20197,5 +20197,28 @@
     "currentGlobalChecks": "pending new source integration",
     "filingQualified": false,
     "ledger": "docs/upgrade-2026-macrs-native-source-work.md"
+  },
+  "nov05PassengerAutoBusinessUse": {
+    "status": "annual-use-cap-correction-only",
+    "checkoutGenuineRed": 2,
+    "checkoutFocusedPassed": 203,
+    "checkoutDistinctFiles": 9,
+    "additionalIndependentPassed": 18,
+    "specReferences": 8348,
+    "inventory": {
+      "oldEntriesUnchanged": 873,
+      "total": 874,
+      "newStatus": "unsupported"
+    },
+    "types": "pass",
+    "repositoryLint": "pass",
+    "strictProductNewTestLint": "pass",
+    "authorManifestSHA256": "cfa70c51cd5fb5be64297594f485ffe48051cc7d9c4d1e154da33d433d0fe352",
+    "independentManifestSHA256": "e2a7ec7840bafea6f93dee748860ce4a200555b91ceef6d34f331f0bc58c02d8",
+    "checkoutManifestSHA256": "a2c8646c2dd8f6170161272f20272b45c4ab1ac732f43e42b5e6158119456c69",
+    "legacyQualification": "legacy_unqualified",
+    "combinedDeductionsAndHistoryQualified": false,
+    "filingQualified": false,
+    "ledger": "docs/upgrade-2026-passenger-auto-business-use-work.md"
   }
 }

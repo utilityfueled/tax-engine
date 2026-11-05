@@ -1,0 +1,17 @@
+form: "Section-280F-Business-Use"
+fullName: "Passenger automobile maximum adjusted for actual annual use"
+taxYear: 2026
+reference: "https://www.irs.gov/publications/p946"
+notes: |
+  Publication946 chapter5, Maximum Depreciation Deduction caution and passenger
+  automobile worksheet lines7-9; retrieved November5,2026. Annual business use
+  reduces the original placement-year annual maximum. This finite correction
+  retains legacy_unqualified and does not establish eligibility, qualified use,
+  short-year allocation, combined179/bonus/regular allocation or history.
+lines:
+  - line: "annual-use-adjustment"
+    formula: "Adjusted annual maximum = roundDollar(original placement-year and recovery-year table maximum * actual annual business-use percentage /100). Regular deduction is the lesser of tentative regular depreciation and adjusted maximum. Use Decimal; retain existing nearest-dollar convention. Missing use retains only existing legacy compatibility, not qualification."
+    testRef: "tests/utils/section-280f-business-use.test.ts::reduces the passenger maximum by actual annual business use"
+  - line: "compatibility-and-nonbinding"
+    formula: "Known zero use produces zero adjusted cap and deduction;100percent and non-passenger behavior remain unchanged. A tentative deduction below the cap remains unchanged. Preserve input, source qualification status and original placement-year selection."
+    testRef: "tests/utils/section-280f-business-use.test.ts::preserves nonbinding amounts original placement year and legacy status"
