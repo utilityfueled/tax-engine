@@ -1,0 +1,28 @@
+form: "Ohio school district native currency confirmation"
+fullName: "Preserve confirmed actual school sources across presentation-only currency blur"
+taxYear: 2025
+reference: "https://tax.ohio.gov/individual/school-district-income-tax"
+notes: |
+  UI source-confirmation behavior only; no tax law, calculation, rounding,
+  source schema or validation change. CurrencyField may add grouping commas on
+  blur. The school monetary callback first uses its existing string normalizer.
+  If that normalized string exactly equals the currently stored primitive,
+  emit no parent update and retain the entire confirmed draft and its originals.
+  This comparison is exact string identity, never equality of monetary amounts.
+  A different normalized primitive or original source reference still revokes
+  confirmation immediately, including equal-cash records with different
+  lexemes or provenance. Blank, explicit zero and malformed text retain their
+  existing distinct meanings. Every consumer revalidates actual current sources.
+lines:
+  - line: "confirmed-presentation-noop"
+    formula: "An actual focus and blur of an unchanged canonical monetary string emits zero parent writes and preserves the exact original-bound full-year or part-year school packet."
+    testRef: "tests/apps/web/oh-school-district-currency-noop.test.tsx::school currency blur preserves exact confirmed %s sources without a parent write"
+  - line: "actual-source-change"
+    formula: "A changed normalized monetary primitive, including a numerically equal different lexeme, emits a parent update and clears sourceFactsConfirmed. Original snapshots are preserved."
+    testRef: "tests/apps/web/oh-school-district-currency-noop.test.tsx::school currency still revokes confirmation for %s"
+  - line: "provenance-change"
+    formula: "Changing an original source reference while cash stays equal clears confirmation and retains that exact source text; no cash-equality shortcut is permitted."
+    testRef: "tests/apps/web/oh-school-district-currency-noop.test.tsx::same cash with changed source provenance still requires explicit confirmation"
+  - line: "unknown-zero-malformed"
+    formula: "Blank remains unknown, explicit zero remains 0 and malformed input stays literal. Real changes revoke confirmation and do not refresh originals."
+    testRef: "tests/apps/web/oh-school-district-currency-noop.test.tsx::school currency retains %s without inventing source facts"

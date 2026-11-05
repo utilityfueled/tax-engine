@@ -3168,3 +3168,13 @@ scoped Decimal pricing rows match. Mini's December shutdown and Gemini's January
 increase remain represented. No route change or live provider result is claimed;
 account access, actual usage/privacy and human-reviewed evaluation remain open.
 See [the AI ledger](upgrade-2026-ai-work.md).
+
+### November 5 UTC: school currency presentation preserves confirmation
+
+An unchanged normalized monetary string now emits no false source edit on blur.
+Actual amounts, different lexemes and changed provenance still revoke confirmation.
+Spec-first actual DOM tests fail four controls before the fix; all eight then pass.
+The 151 focused tests,
+25,253 full unit tests including 53 PostgreSQL assertions, static checks and distinct
+source review pass. Coverage/build/browser qualification remains pending; no
+performance claim follows. See [the UI ledger](upgrade-2026-oh-school-currency-noop-work.md).

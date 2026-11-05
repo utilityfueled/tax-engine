@@ -113,3 +113,9 @@ The November 5 [provider documentation refresh](upgrade-2026-ai-work.md) finds
 no new mismatch in exact model IDs, configured efforts or six scoped price rows.
 Documented listings do not establish account access or live qualification. The
 $5 budget, zero observed live evaluation spend and disabled promotion remain.
+
+The November 5 Ohio school currency repair preserves source confirmation across
+presentation-only blur using exact normalized string identity. It passes 151 focused
+and 25,253 full-unit controls, all static checks and independent source review.
+Coverage is running; new-source builds/browser and all remaining qualification
+gates remain open. See [the UI ledger](upgrade-2026-oh-school-currency-noop-work.md).

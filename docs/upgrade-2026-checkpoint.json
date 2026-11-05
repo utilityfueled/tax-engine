@@ -19586,5 +19586,30 @@
     "modelPromotionEnabled": false,
     "productChanges": false,
     "ledger": "docs/upgrade-2026-ai-work.md"
+  },
+  "nov05OhioSchoolCurrencyNoop": {
+    "status": "bounded-ui-correctness-verified-global-qualification-pending",
+    "ledger": "docs/upgrade-2026-oh-school-currency-noop-work.md",
+    "authorManifestSHA256": "816856fa6a8ff33b21aab7c699d236dc302c1d555d6b5e650ee13fee457d8117",
+    "independentReviewManifestSHA256": "7615d56499eaaa5e89d90a3051c8faea37cbafc995f9dc8d40f64db060c33cfb",
+    "red": {
+      "failed": 4,
+      "passed": 4
+    },
+    "focused": {
+      "passed": 151,
+      "files": 7
+    },
+    "unit": {
+      "passed": 25253,
+      "files": 1855,
+      "failed": 0,
+      "skipped": 0,
+      "realPostgreSQLAssertions": 53
+    },
+    "static": "types3/spec/inventory/lint pass; initial stale inventory retained, regenerated only new unsupported UI entry",
+    "coverage": "running",
+    "buildsAndBrowser": "pending",
+    "releaseReady": false
   }
 }

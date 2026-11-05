@@ -13874,6 +13874,26 @@
       "knownGaps": []
     },
     {
+      "key": "state/oh-school-district-currency-noop",
+      "jurisdiction": "state",
+      "taxYear": 2025,
+      "sourceAuthority": "https://tax.ohio.gov/individual/school-district-income-tax",
+      "specPath": "spec/state/oh-school-district-currency-noop.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "state/oh-school-district-lookup",
       "jurisdiction": "state",
       "taxYear": 2025,
