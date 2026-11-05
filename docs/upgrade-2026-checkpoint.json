@@ -19569,5 +19569,22 @@
     "humanSecurityAcceptance": false,
     "dependencyChanges": false,
     "ledger": "docs/upgrade-2026-security-refresh-20261105.md"
+  },
+  "nov05ProviderPrimaryRefresh": {
+    "status": "OFFICIAL_DOCS_COMPARISON_ONLY",
+    "primaryPages": 12,
+    "scopedDecimalPriceRowsMatched": 6,
+    "modelOrEffortMismatchFound": false,
+    "manifestSHA256": "c5291a127830023c17056cf55b1cb4f9125df7d92091ea75fc625fd4271b1059",
+    "rootFrozenMembersVerified": 45,
+    "reportSHA256": "31b76a0fd219d5014c0fe2d1e34cc0f995bebe3c2835a4bd56c525d114bd011f",
+    "actualAccountAvailabilityQualified": false,
+    "privacySettingsQualified": false,
+    "actualEvaluationSpendUSD": "0",
+    "liveSpendAuthorizationUSD": "5",
+    "independentHumanEvaluationQualified": false,
+    "modelPromotionEnabled": false,
+    "productChanges": false,
+    "ledger": "docs/upgrade-2026-ai-work.md"
   }
 }

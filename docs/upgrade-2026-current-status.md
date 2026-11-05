@@ -108,3 +108,8 @@ records a fresh zero-finding package audit alongside unresolved Next metadata
 conflicts, unchanged vulnerable trixie High records and Node's pending November
 11 security release. No risk is accepted and the elapsed Next deadline remains
 elapsed. Final-image and independent human security qualification stay open.
+
+The November 5 [provider documentation refresh](upgrade-2026-ai-work.md) finds
+no new mismatch in exact model IDs, configured efforts or six scoped price rows.
+Documented listings do not establish account access or live qualification. The
+$5 budget, zero observed live evaluation spend and disabled promotion remain.

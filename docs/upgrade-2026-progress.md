@@ -3160,3 +3160,11 @@ Node announces a pending HIGH security release for November 11 or shortly after,
 with no newer 26.x patch in the retrieved index. Existing elapsed deadlines and
 all unaccepted image IDs stay explicit. No dependency or gate changes. See [the
 security refresh](upgrade-2026-security-refresh-20261105.md).
+
+### November 5 UTC: current provider documentation comparison
+
+Twelve official pages still list the exact configured models/capabilities; six
+scoped Decimal pricing rows match. Mini's December shutdown and Gemini's January
+increase remain represented. No route change or live provider result is claimed;
+account access, actual usage/privacy and human-reviewed evaluation remain open.
+See [the AI ledger](upgrade-2026-ai-work.md).

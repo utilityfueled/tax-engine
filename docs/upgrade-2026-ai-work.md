@@ -281,3 +281,35 @@ drafts and repeated held-out results; authenticated staging Stripe/account/DB
 failure, restore and rollback evidence; and explicit owner approval before any
 model rollout. Local PostgreSQL/concurrency, synthetic transport, privacy and
 browser checks are recorded separately above. They do not replace those results.
+
+## November 5 UTC: official provider documentation refresh
+
+Twelve current primary pages list the exact configured candidate and comparison
+model IDs and their selected efforts/structured-output support. Decimal comparison
+of six scoped standard-text ledger rows finds no new mismatch. The January 1
+Gemini 3.8 Flash increase and GPT-5 mini's December 11 shutdown remain as coded.
+The comparison baseline's documented minimal effort does not restore the removed
+legacy production default or authorize provider switching.
+
+[OpenAI pricing](https://developers.openai.com/api/docs/pricing) and
+[Google pricing](https://aistudio.google.com/docs/pricing) retain the represented
+cache/storage, reasoning-output, long-context and regional conditions. The code's
+October 24 historical effective boundary is not established as the provider's
+original publication date by this retrieval. Task caps fit the published limits;
+that does not establish observed schema quality, latency or usable reasoning output.
+See [OpenAI lifecycle notices](https://developers.openai.com/api/docs/deprecations)
+for the comparison model's shutdown.
+
+This is a documentation comparison, not actual account/quota/region availability,
+privacy settings, real usage/cost reconciliation or AI evaluation. No credential,
+inference request, spending, route change or promotion occurs. The approved live
+budget remains $5 and observed live evaluation spend remains zero. Required
+independent human labels/review and actual provider access remain missing.
+
+ROOT reads the complete report and verifies all 45 frozen evidence members.
+Initial sandbox fetch failures and a corrected HTML-extraction assertion remain
+retained. Source SHA256 bindings:
+
+- Refresh manifest: `c5291a127830023c17056cf55b1cb4f9125df7d92091ea75fc625fd4271b1059`.
+- Report: `31b76a0fd219d5014c0fe2d1e34cc0f995bebe3c2835a4bd56c525d114bd011f`.
+- Price comparison: `8cc92eaf21108da1205982b3e59207c27adb56bd36a8be0b7b5c632fbb313e9d`.
