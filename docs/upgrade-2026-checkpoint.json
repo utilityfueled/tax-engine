@@ -19767,7 +19767,8 @@
       "browserFailed": 4,
       "browserTimeoutMilliseconds": 30000,
       "browserRetries": 0,
-      "browserWorkers": 2,
+      "configuredMaximumBrowserWorkers": 2,
+      "observedBrowserWorkers": 1,
       "sourceChangedDuringBrowserRun": false
     },
     "ledger": "docs/upgrade-2026-oh-guided-dependency-work.md",

@@ -21,8 +21,8 @@ Distinct engineering source review finds no actionable defect. Root verifies its
 11 manifest members and all four current source pins.
 
 Actual current-source managed production build plus the four affected Chromium
-journeys finishes4FAIL at the unchanged30-second deadline, zero retries and two
-workers. Three reach the filing-denial request after actual review download;
+journeys finishes4FAIL at the unchanged30-second deadline and zero retries.
+The configured maximum is two workers; the actual log reports one active worker. Three reach the filing-denial request after actual review download;
 one mobile case stops at final header confirmation. Later assertions remain
 unpassed. No browser gate, assertion, privacy check or deadline is relaxed.
 Trace analysis and a separate product layout follow-up continue.
