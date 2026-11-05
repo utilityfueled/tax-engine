@@ -19792,5 +19792,25 @@
     "additionalBuildsSubmitted": 0,
     "ledger": "docs/upgrade-2026-isolated-bootstrap-hold.md",
     "receiptSHA256": "9eb1d7b07a87f2173bb335d4e806bf1af46c6a2889aa0acb9b056cc1b30c305a"
+  },
+  "nov05NavigationScrollBoundary": {
+    "status": "focused_geometry_pass_original_desktop_performance_pending",
+    "ownedSourcePaths": 5,
+    "checks": {
+      "focusedBrowserPassed": 2,
+      "originalMobilePassed": 2,
+      "originalDesktopFailed": 2,
+      "timeoutMilliseconds": 30000,
+      "retries": 0,
+      "configuredMaximumWorkers": 2,
+      "observedWorkers": 1,
+      "webTypes": true,
+      "scopedLintWarnings": 0,
+      "specReferences": 4,
+      "rootReviewedManifestMembers": 190
+    },
+    "authorManifestSHA256": "e139b37ec9eee21252b03a2b23a7b546b8217b69ecda6dd8a4d70fae368a77ce",
+    "ledger": "docs/upgrade-2026-navigation-scroll-boundary-work.md",
+    "fullBrowserQualified": false
   }
 }

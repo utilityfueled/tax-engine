@@ -8234,6 +8234,26 @@
       ]
     },
     {
+      "key": "federal/navigation-scroll-boundary",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.w3.org/TR/css-scroll-snap-1/ sections 4.2 and 5.1",
+      "specPath": "spec/federal/navigation-scroll-boundary.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/net-operating-loss",
       "jurisdiction": "federal",
       "taxYear": 2025,

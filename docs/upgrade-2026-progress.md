@@ -3266,3 +3266,10 @@ builds. One connector protection change and fresh readback confirm all URLs
 protected, the sole default domain unchanged and13 Preview-only metadata rows
 unchanged. No additional deployment yet; fresh bootstrap admission follows. See
 [the updated isolated ledger](upgrade-2026-isolated-bootstrap-hold.md).
+
+### November5 UTC: native navigation geometry passes
+
+The sticky navigation and interview ticker no longer cover native source
+controls. Focused desktop/mobile geometry, keyboard, resize and privacy checks
+pass2/2. The unchanged original journeys pass both mobile cases while both
+desktop cases still time out at30seconds. See [the bounded browser ledger](upgrade-2026-navigation-scroll-boundary-work.md). Full browser qualification remains open.

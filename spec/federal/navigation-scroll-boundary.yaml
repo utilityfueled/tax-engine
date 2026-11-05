@@ -1,0 +1,25 @@
+form: "Native navigation scroll boundary"
+fullName: "Keep actual guided controls visible below the sticky navigation"
+taxYear: 2025
+reference: "https://www.w3.org/TR/css-scroll-snap-1/ sections 4.2 and 5.1"
+notes: |
+  Browser presentation only. No tax formula, facts, confirmation, privacy,
+  authentication, filing, provider, retry or timeout change. Root-element
+  scroll-padding applies to the viewport; navigation height follows actual
+  rendered layout, including mobile wrapping, without moving server auth.
+  During the source interview the refund ticker stays in document flow so its
+  estimate cannot cover native source controls; ticker contents and collapse
+  controls, sticky main navigation and other phase behavior remain intact.
+lines:
+  - line: "native-scroll-hit"
+    formula: "At desktop and mobile widths, scrolling an actual guided source control to block start leaves its action point and focus gutter below the sticky navigation, with elementFromPoint reaching that control."
+    testRef: "apps/web/tests/navigation-scroll-boundary.spec.ts::keeps actual guided controls below navigation across scroll focus and resize"
+  - line: "keyboard-resize"
+    formula: "Native keyboard focus order and ordinary pointer actions remain usable after viewport changes alter navigation height; geometry remains within the viewport and horizontal overflow is absent."
+    testRef: "apps/web/tests/navigation-scroll-boundary.spec.ts::keeps actual guided controls below navigation across scroll focus and resize"
+  - line: "facts-privacy-preserved"
+    formula: "Scrolling, focus and resize preserve the saved synthetic source state, create no provider requests or outbound private source data, and produce no page or console error."
+    testRef: "apps/web/tests/navigation-scroll-boundary.spec.ts::keeps actual guided controls below navigation across scroll focus and resize"
+  - line: "source-entry-obstruction"
+    formula: "The actual interview refund ticker stays in normal document flow, retaining all estimates and collapse controls while native scroll/focus targets remain unobscured."
+    testRef: "apps/web/tests/navigation-scroll-boundary.spec.ts::keeps actual guided controls below navigation across scroll focus and resize"

@@ -68,6 +68,11 @@
   outline-offset: 2px;
 }
 
+/* The root scrollport excludes the actual sticky navigation plus a focus gutter. */
+html {
+  scroll-padding-block-start: calc(var(--site-nav-height, 0px) + 8px);
+}
+
 html,
 body {
   margin: 0;
@@ -1820,6 +1825,11 @@ body {
   top: 0;
   z-index: 10;
   min-width: 0;
+}
+
+/* Source controls must scroll without the estimate covering their action points. */
+.guided-interview-phase .guided-refund-ticker-sticky {
+  position: static;
 }
 
 /* Full separate-owner panels must scroll without covering the source interview. */
