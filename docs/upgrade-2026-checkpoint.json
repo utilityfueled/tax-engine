@@ -21543,5 +21543,20 @@
     "originalGlobalManifest": "34faf1e5aacfdbfa091df8b9131519b32ba606ef862e9eb95b32cf6a19b49821",
     "paFiveSecondFailureRemains": true,
     "readinessChanged": false
+  },
+  "nov05NativeOfficialSampleSize": {
+    "status": "focused-and-package-static-passed-runtime-pending",
+    "ledger": "docs/upgrade-2026-native-official-sample-size-work.md",
+    "focusedPassed": 140,
+    "focusedFiles": 3,
+    "actualOfficialPDFs": 15,
+    "actualTotalBytes": 39785215,
+    "actualMaximumBytes": 27347185,
+    "nativePerFileBytes": 33554432,
+    "aggregateBytesUnchanged": 67108864,
+    "applicationUploadLimitsChanged": false,
+    "distinctManifest": "a4e4beeec0bcfe39b124c77ea486059e8832b9667d0b96689e1e82167cfe24bf",
+    "nativeExecutionPerformed": false,
+    "readinessChanged": false
   }
 }

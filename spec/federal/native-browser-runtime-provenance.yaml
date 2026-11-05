@@ -17,3 +17,6 @@ lines:
   - line: "registered-supplemental-fixtures"
     formula: "Keep Git tree exclusively tracked; optional exact sidecar supplemental inventory binds the tracked registry hash and complete official IRS PDF IDs/origins/lengths/hashes. Include only fixed registry downloads in every source census and before/after owned nofollow content check. Reject unknown/missing/mutated files and unsafe metadata; declaration alone is not independently verified fetch origin or operator authorization."
     testRef: "tests/scripts/native-browser-runtime-provenance.test.ts::admits exact registry-bound official fixtures without changing Git tree"
+  - line: "actual-large-official-fixture"
+    formula: "Accept complete official registry PDFs through32MiB per file: fresh2026-11-05 IRS Publication4491 is27347185bytes and all15samples total39785215bytes. Preserve64MiB aggregate,32entry bound, complete hash/length/origin/custody checks and1MiB registry/API limits. Reject per-file32MiB+1 before transport; no upload or taxpayer-data limit changes."
+    testRef: "tests/scripts/native-browser-runtime-provenance.test.ts::admits complete large registered PDF bytes through32MiB without weakening aggregate or custody checks"

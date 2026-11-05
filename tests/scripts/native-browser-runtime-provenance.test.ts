@@ -271,7 +271,7 @@ describe('native registered fixture boundaries',()=>{
       case 'hash':x.supplemental.registrySha256='0'.repeat(64);break;
       case 'origin':x.supplemental.files[0].originUrl='https://evil.invalid/file.pdf';break;
       case 'zero':x.supplemental.files[0].bytes=0;break;
-      case 'too-large':x.supplemental.files[0].bytes=16*1024*1024+1;break;
+      case 'too-large':x.supplemental.files[0].bytes=32*1024*1024+1;break;
       case 'unknown-key':Object.assign(x.supplemental,{allowExtra:true});break;
       case 'unknown-record-key':Object.assign(x.supplemental.files[0],{path:'/foreign'});break;
       case 'traversal':x.supplemental.files[0].id='../foreign';break;
@@ -293,5 +293,21 @@ describe('native supplemental registry and size boundaries',()=>{
     const {f,supplemental}=supplementalFixture(rows);
     if(kind==='total')for(const row of supplemental.files)row.bytes=16*1024*1024;
     f.rebind();await expect(createNativeInspector(f.args,f.io)).rejects.toThrow();expect(f.calls).toEqual([]);
+  });
+});
+
+// Spec: actual-large-official-fixture. Synthetic complete bytes at actual observed
+// IRS4491 length and both engineering boundaries; no taxpayer/PDF upload limit.
+describe('actual official publication size compatibility',()=>{
+  it('admits complete large registered PDF bytes through32MiB without weakening aggregate or custody checks',async()=>{
+    for(const length of [16*1024*1024+1,27347185,32*1024*1024]){
+      const {f,files,supplemental}=supplementalFixture([{id:'irs-publication-4491-2025',downloadUrl:'https://www.irs.gov/pub/irs-pdf/p4491.pdf'}]);
+      const body=Buffer.alloc(length,32);body.write('%PDF-1.7\nSynthetic boundary bytes\n');
+      files.set('sample-documents/downloads/irs-publication-4491-2025.pdf',body);
+      supplemental.files[0].bytes=length;supplemental.files[0].sha256=digest('sha256',body);f.rebind();
+      const inspect=await createNativeInspector(f.args,f.io);expect(await inspect()).toMatchObject({tree:f.p.tree,commit:f.p.commit});expect(f.calls).toEqual(['containers','images']);
+      const prior=f.io.get;f.io.get=async(...args)=>{const result=await prior(...args);body[length-1]=33;return result;};
+      await expect(inspect()).rejects.toThrow('Native fixture bytes changed');
+    }
   });
 });

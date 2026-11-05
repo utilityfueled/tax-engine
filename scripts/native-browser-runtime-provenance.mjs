@@ -197,7 +197,7 @@ export async function createNativeInspector({root, env, signal}, io = actualIo) 
         }
         let total = 0, previousId = '';
         for (const row of extra.files) {
-            need(row && same(Object.keys(row).sort(),['bytes','id','originUrl','sha256']) && typeof row.id === 'string' && row.id > previousId && rows.has(row.id) && row.originUrl === rows.get(row.id) && integer(row.bytes) && row.bytes > 0 && row.bytes <= 16 * 1024 * 1024 && hex64.test(row.sha256), 'Invalid native fixture binding');
+            need(row && same(Object.keys(row).sort(),['bytes','id','originUrl','sha256']) && typeof row.id === 'string' && row.id > previousId && rows.has(row.id) && row.originUrl === rows.get(row.id) && integer(row.bytes) && row.bytes > 0 && row.bytes <= 32 * 1024 * 1024 && hex64.test(row.sha256), 'Invalid native fixture binding');
             previousId = row.id; total += row.bytes;
             need(total <= 64 * 1024 * 1024, 'Native fixture bytes exceed bound');
             supplementalFiles.push({path:`sample-documents/downloads/${row.id}.pdf`,bytes:row.bytes,sha256:row.sha256});

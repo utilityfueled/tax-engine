@@ -4,6 +4,8 @@ Current source, verification and remaining work are summarized in the
 [November 4 continuation](upgrade-2026-current-status.md). Historical results
 below apply to their named revisions.
 
+- November5: the [native official-sample correction](upgrade-2026-native-official-sample-size-work.md) admits the actual 27,347,185-byte IRS publication under a 32 MiB per-file limit while preserving the 64 MiB aggregate and complete custody checks. Main 140 focused checks pass; actual native build/browser/recovery/scan remain required.
+
 - November5: the [Node 26 lock-contract successor](upgrade-2026-node26-lock-successor-work.md) binds the exact separately reviewed dependency lock while retaining its historical hash. Seven focused tests pass; original full local/remote failures and PA timing gap remain retained. No thresholds or readiness gates change.
 
 - November5: [portable browser request windows](upgrade-2026-portable-browser-work.md) complete the full 574-case managed suite: 569 passes, five original hosted skips, zero failures/retries, eight natural windows, unchanged source/build and confirmed server closure. The prior 111-case build-drift failure and root saved-checker timeout assumption remain retained. Container, actual hosted/native and release gates remain open.
