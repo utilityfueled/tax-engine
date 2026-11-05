@@ -19611,5 +19611,22 @@
     "coverage": "running",
     "buildsAndBrowser": "pending",
     "releaseReady": false
+  },
+  "nov05OfficialTaxSourceRefresh": {
+    "status": "bounded-refresh-no-new-law-or-final-form-evidence",
+    "ledger": "docs/upgrade-2026-tax-source-refresh-20261105.md",
+    "sources": "docs/upgrade-2026-tax-source-refresh-20261105.json",
+    "officialURLs": 20,
+    "directHTTP": {
+      "200": 17,
+      "403": 1,
+      "404": 2
+    },
+    "all11PDFsUnchanged": true,
+    "irsVisibleTextComparisonsUnchanged": 5,
+    "productChanges": false,
+    "filingQualificationChanged": false,
+    "humanReviewPerformed": false,
+    "manifestSHA256": "6f6ec1954f2e5340e1b9859b5abe9f21e916b096a575f973661e2eb028c477b7"
   }
 }

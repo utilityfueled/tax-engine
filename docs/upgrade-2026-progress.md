@@ -3178,3 +3178,11 @@ The 151 focused tests,
 25,253 full unit tests including 53 PostgreSQL assertions, static checks and distinct
 source review pass. Coverage/build/browser qualification remains pending; no
 performance claim follows. See [the UI ledger](upgrade-2026-oh-school-currency-noop-work.md).
+
+### November 5 UTC: official tax sources refreshed
+
+Twenty official URLs yield no new scoped law or final-form evidence. All 11
+downloaded PDFs match prior bytes; five IRS legal/instruction pages and the PA
+index match prior visible text. SSA's direct 403 and two form-index/candidate
+404s remain explicit; an alternate official SSA read confirms the unchanged 2026
+base. No product or filing change. See [the source ledger](upgrade-2026-tax-source-refresh-20261105.md).

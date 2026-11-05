@@ -119,3 +119,8 @@ presentation-only blur using exact normalized string identity. It passes 151 foc
 and 25,253 full-unit controls, all static checks and independent source review.
 Coverage is running; new-source builds/browser and all remaining qualification
 gates remain open. See [the UI ledger](upgrade-2026-oh-school-currency-noop-work.md).
+
+The [November 5 tax-source refresh](upgrade-2026-tax-source-refresh-20261105.md)
+checks 20 official endpoints with no new scoped law or final-form change. All 11
+PDFs match prior bytes. The incomplete final 2026 packet and qualified human review
+remain external gates; retrieval success alone does not qualify a form.
