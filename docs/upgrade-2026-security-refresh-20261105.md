@@ -1,9 +1,10 @@
 # November 5 security refresh
 
-This is a source/advisory refresh against the retained 16.4.5 dependency lock,
-not an image scan or release qualification. No package, test or readiness gate
-changes. The lockfile SHA256 remains
-`d199e2344fa6cf61402330f216e3f7ccf6bc9b5e7a568670b29a9fe27dc8c23f`.
+The initial source/advisory refresh below used the 16.4.5 dependency lock with
+SHA256 `d199e2344fa6cf61402330f216e3f7ccf6bc9b5e7a568670b29a9fe27dc8c23f`.
+It was not an image scan or release qualification and changed no gate. The table
+records that initial snapshot; the later recheck and separately reviewed lock
+successor are recorded at the end.
 
 | Check | Observed result | Remaining requirement |
 | --- | --- | --- |
@@ -43,3 +44,32 @@ Private evidence SHA256 bindings:
 - Primary refresh manifest: `ffb281c4927bcc19fca792edb77f78ada9b94d2365d1d363fd00b3818541f2cf`.
 - Source refresh report: `a323d05313b2d84bd117ff81bacfffaa65afe13fd38e40dea10e4e0db002c955`.
 - Fresh package audit: `5a53e55cf00fe12cf2baa62be93e62a01b390225c1294be768cb4472b14a3b2a`.
+
+## Later November 5 metadata recheck
+
+A separate primary-page recheck at 21:40 UTC again found the 16.4.5 release listing
+all seven fixes while individual advisory affected/patched fields remained
+inconsistent. The retained page extracts support that observation. A separate
+bounded unauthenticated API attempt stopped with an observed 404 and saved no
+successful API records; it does not establish eight successful API responses.
+
+The 407 application/config files in that bounded literal scan remain byte-identical
+at public commit `fe1d1462`. No named feature literal matched. This is neither
+exhaustive static analysis nor runtime reachability proof; the configured Sentry
+tunnel and external proxy/framing questions remain open. No new image scan or
+package audit is claimed by this later observation.
+
+The lock hash above belongs to the earlier refresh. The separately reviewed
+dependency commit `1fef5041` now has whole-lock SHA256
+`268026058217dd84aee4e9b1c691fa1bac7d3049e6cb68d7fd16ef3af7a76dea`.
+[The exact successor ledger](upgrade-2026-node26-lock-successor-work.md) records
+that change; it does not clear image or upstream metadata findings.
+
+The November 4 19:30 UTC advisory deadline remains elapsed, without extension or
+risk acceptance. Codex owns the engineering investigation; an accountable human
+security disposition and current runtime/image evidence remain required before
+qualification. The later primary packet manifest is
+`41ccbd13a443881b35f051674c9a5fcc0b9d6e9b7da52480a03e76abde70b18a`;
+the distinct finite engineering review is
+`2e3694b9b64a3356b364348f375f4c3edee8607ec36dadb2f6697148bbdf1d21`.
+Neither is independent human security approval.

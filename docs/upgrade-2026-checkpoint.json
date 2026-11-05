@@ -21600,5 +21600,20 @@
     "privacyAssertionsChanged": false,
     "sourceManifest": "5892006cd50c5820cfd1573cc098fdc5f4ec3622e00eff5787f4e425f417f1a1",
     "readinessChanged": false
+  },
+  "nov05NextAdvisoryRecheck": {
+    "status": "metadata-conflicts-open-deadline-elapsed",
+    "ledger": "docs/upgrade-2026-security-refresh-20261105.md",
+    "primaryPageObservationAt": "2026-11-05T21:40:55.586604+00:00",
+    "sourcePinsRechecked": 407,
+    "sourceHeadRechecked": "fe1d14620f3f93f8ef7111e01a20fdada612bab9",
+    "featureScanScope": "bounded-literal-patterns-only",
+    "newSuccessfulAPIRecords": 0,
+    "newImageScan": false,
+    "riskAccepted": false,
+    "deadlineExtended": false,
+    "primaryManifest": "41ccbd13a443881b35f051674c9a5fcc0b9d6e9b7da52480a03e76abde70b18a",
+    "distinctManifest": "2e3694b9b64a3356b364348f375f4c3edee8607ec36dadb2f6697148bbdf1d21",
+    "readinessChanged": false
   }
 }
