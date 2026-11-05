@@ -3227,3 +3227,10 @@ protection mutation. See [the incident and permission boundary](upgrade-2026-iso
 Commit6899feeb adds actual child/care source reconciliation. Author406 and
 distinct30 controls pass; child/care paper and public2026 gates remain closed.
 See [the calculation ledger](upgrade-2026-pa-married-dependent-care-work.md).
+
+### November5 UTC: native image imported; installation observer hold
+
+The exact480 ARM64 image passes strictarchivecontent checks and actual durable
+restart/independentimport. Installation then stops on blockedaddon observer
+records before smoke/browser/recovery/scan. Final safetyPASS; total2starts2stops
+consumed, no furtherstart under originalgrant. See [the actual native ledger](upgrade-2026-native-image-import-hold.md).

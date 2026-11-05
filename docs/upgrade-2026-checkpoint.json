@@ -19704,5 +19704,26 @@
     "full2026PublicReturnQualified": false,
     "childCarePaperQualified": false,
     "ledger": "docs/upgrade-2026-pa-married-dependent-care-work.md"
+  },
+  "nov05NativeImageImportHold": {
+    "sourceCommit": "480ca19d06a68032fce8fa08255e9f9c9e2c1e88",
+    "nativeBuildPassed": true,
+    "canonicalArchiveStrictChecksPassed": true,
+    "durableRestartAndIndependentImportPassed": true,
+    "sourceCensus": {
+      "regularFiles": 5056,
+      "literalLinks": 6
+    },
+    "rehearsalStatus": "HOLD_CONTINUATION",
+    "failurePhase": "install-smoke",
+    "failureReason": "observer fault/unknown record",
+    "smokeBrowserRecoveryScanPassed": false,
+    "totalStarts": 2,
+    "totalStops": 2,
+    "finalSafetyPassed": true,
+    "finishedWithinOriginalAuthorization": true,
+    "furtherStartAuthorized": false,
+    "receiptSha256": "34a9e934741be486fff8e4bebdd11c0f903525333cf7b75dafd021a24f0d7918",
+    "ledger": "docs/upgrade-2026-native-image-import-hold.md"
   }
 }
