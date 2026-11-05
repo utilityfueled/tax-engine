@@ -1,3 +1,4 @@
+import {TaxYearInputSchema} from '@/models/inputs';
 import Decimal from 'decimal.js';
 // Spec: spec/state/oh-2026-school-sources.yaml. Source projection only, no final2026 SD100 claim.
 import { expect, it } from 'vitest';
@@ -88,3 +89,11 @@ it('requires a printed code when the exact school name is ambiguous in the annua
   const p=ohio2026SchoolFixture(),w=current(p.input.w2s[0]);p.sources.residence.districtCode='1204';Object.assign(p.sources.residence.finder,{districtCode:'1204',districtName:'Northwestern LSD',rate:'0.0100'});current(current(p.sources.w2Sources[0]).localRows[0]).districtCode='1204';w.localityName='Northwestern LSD';current(current(w.stateLocalSources).localRows[0]).localityName=w.localityName;rebindOhio2026School(p);expect(()=>run(p)).toThrow(/printed locality/);
   w.localityName='1204 Northwestern LSD';current(current(w.stateLocalSources).localRows[0]).localityName=w.localityName;rebindOhio2026School(p);expect(readOhio2026SchoolSource(run(p),p.input,p.sources)).toMatchObject({districtCode:'1204',schoolWithholding:'625.25',taxLiability:null});
 });
+
+const canonicalDefaultArrays=['form1099DA','form1099G','form1099OID','formW2G','form1099K','form1099C','form1099Q','scheduleK1Form1041','form1098E','rentalProperties','savingsBondRedemptions','form6252','form8814','homeSales','form8824']as const;
+function parsedCanonical(){const p=ohio2026SchoolFixture();p.input=TaxYearInputSchema.parse(p.input);rebindOhio2026School(p);return p;}
+it('admits actual schema-parsed originals without stripping canonical default arrays',()=>{const p=parsedCanonical(),before=JSON.stringify(p);for(const key of canonicalDefaultArrays){expect(p.input[key]).toEqual([]);expect(TaxYearInputSchema.shape[key].safeParse(undefined)).toMatchObject({success:true,data:[]});}expect(readOhio2026SchoolSource(run(p),p.input,p.sources)).toMatchObject({residentCompensation:'50000',schoolWithholding:'625.25',taxLiability:null,filingQualified:false});expect(JSON.stringify(p)).toBe(before);});
+it.each(canonicalDefaultArrays)('admits named canonical array only when empty: %s',key=>{const p=ohio2026SchoolFixture();Reflect.set(p.input,key,[]);rebindOhio2026School(p);expect(readOhio2026SchoolSource(run(p),p.input,p.sources).residentCompensation).toBe('50000');});
+it.each(canonicalDefaultArrays)('rejects a nonempty retained canonical source array: %s',key=>{const p=parsedCanonical();Reflect.set(p.input,key,[{amount:'0',sourceReference:'ACTUAL-NONEMPTY-UNSUPPORTED'}]);rebindOhio2026School(p);expect(()=>run(p)).toThrow(/other retained/);});
+it.each(canonicalDefaultArrays)('rejects null or nonarray source values at named canonical keys: %s',key=>{for(const value of [null,{},'',0]){const p=parsedCanonical();Reflect.set(p.input,key,value);rebindOhio2026School(p);expect(()=>run(p)).toThrow(/other retained/);}});
+it('rejects unknown empty arrays rather than inferring harmless source types',()=>{const p=parsedCanonical();Reflect.set(p.input,'unknownFutureIncomeOriginals',[]);rebindOhio2026School(p);expect(()=>run(p)).toThrow(/other retained/);});

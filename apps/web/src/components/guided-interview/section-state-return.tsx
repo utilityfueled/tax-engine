@@ -13,6 +13,7 @@ import {emptyOhioResidencyDraft} from "@/lib/guided-ohio-residency-facts";
 import { OhioPaymentDetails } from "./ohio-payment-details";
 import {OhioReciprocalWagesDetails} from "./ohio-reciprocal-wages-details";
 import {OhioSchoolDistrictDetails} from "./ohio-school-district-details";
+import {Ohio2026SchoolSourceDetails} from "./ohio-2026-school-source-details";
 import { PAResidencyDetails } from "./pa-residency-details";
 import {PAOrdinaryDigitalDetails} from "./pa-ordinary-digital-details";
 import {PAPersonalDebtForeignDetails} from "./pa-personal-debt-foreign-details";
@@ -247,6 +248,7 @@ export function SectionStateReturn({
             onChange={residentCreditSources=>onDataChange({...current,ohioResidency:{...structuredClone(current.ohioResidency??emptyOhioResidencyDraft),residentCreditSources}})}/>
           <OhioReturnHeaderDetails originalInput={originalInput??null} taxYear={taxYear} data={current.ohioReturnHeaderSources} ohioResidency={current.ohioResidency} ohioPayments={current.ohioPayments} ohioSchoolDistrict={current.ohioSchoolDistrict} onChange={ohioReturnHeaderSources=>onDataChange({...current,ohioReturnHeaderSources})}/>
           <OhioReciprocalWagesDetails originalInput={originalInput??null} taxYear={taxYear} data={current.ohioReciprocalWages} ohioResidency={current.ohioResidency} ohioPayments={current.ohioPayments} onChange={ohioReciprocalWages=>onDataChange({...current,ohioReciprocalWages})}/>
+          {(taxYear===2026||current.ohio2026SchoolSources!==undefined)&&<Ohio2026SchoolSourceDetails originalInput={originalInput??null} data={current.ohio2026SchoolSources} onChange={ohio2026SchoolSources=>onDataChange({...current,ohio2026SchoolSources})}/>}
           {(current.ohioResidency?.schoolDistrictStatus==='actual_district_sources_required'||current.ohioSchoolDistrict)&&<OhioSchoolDistrictDetails originalInput={originalInput??null} taxYear={taxYear} data={current.ohioSchoolDistrict} ohioResidency={current.ohioResidency} ohioPayments={current.ohioPayments} onChange={ohioSchoolDistrict=>onDataChange({...current,ohioSchoolDistrict})}/>}
 
         </>}

@@ -1,0 +1,31 @@
+form: "OH-2026-school-native-source"
+taxYear: 2026
+status: "source-only-unqualified"
+irsReference: "https://codes.ohio.gov/ohio-revised-code/section-5748.01"
+notes: |
+  Existing annual2026 catalog and standalone actual-source method only. Native
+  collection does not qualify an ordinary return, final SD100, filing or paper.
+  Liability, payments, refund, underpayment penalty and late interest stay null.
+  Single primary under65 full-year ordinary W2 earned district only; traditional,
+  PY, NR, joint, SE and special compensation retain their separate method guards.
+lines:
+  - line: "actual-native-entry"
+    description: "Provide selected2026 controls without treating2025 confirmation as a new source method"
+    formula: "Mount a separate2026 source collector; every year/date/identity/district/rate/cash primitive starts unknown. All nine category amounts and actual reference fields must be recorded; no inferred zero, default district or copying current W2 totals into payroll originals."
+    testRef: "tests/apps/web/oh-2026-school-native.test.tsx::offers a separate2026 source entry through the actual state section"
+  - line: "explicit-retained-originals"
+    description: "Capture current owner and canonical input only through a separate explicit action"
+    formula: "Capture current actual owner/home/base originals, then final confirmation validates actual entered domicile/Finder/employment/printed-local sources and retains the full assembled canonical input and exact entered source facts. A saved true flag alone cannot confirm changed source provenance. Reading never captures new originals. Existing canonical Ohio roots require explicit reconciliation."
+    testRef: "tests/apps/web/guided-oh-2026-school-native.test.ts::requires separate capture and current exact source confirmation"
+  - line: "current-null-projection"
+    description: "Use existing opaque source proof and preserve unknown financial settlement"
+    formula: "Replay actual source API;50000 wages/625.25 actual school withholding project exactly, with annual earned base/rate, null school liability/payments/refund/penalty/interest and filingQualifiedfalse. Do not invoke full federal tax or bypass final2026 guards."
+    testRef: "tests/apps/web/guided-oh-2026-school-native.test.ts::projects documentary amounts with every settlement field unknown"
+  - line: "native-invalidation"
+    description: "Keep exact no-op and revoke edited original provenance"
+    formula: "An exact stored primitive no-op emits no write; any material source or parent change revokes or fails current confirmation, retaining original snapshots. Equal-money replacement references remain different source facts."
+    testRef: "tests/apps/web/oh-2026-school-native.test.tsx::retains a no-op and revokes same-cash provenance without recapturing originals"
+  - line: "private-save-recovery"
+    description: "Persist entered originals through real workspace and encrypted recovery boundaries"
+    formula: "Save/reload complete and incomplete drafts without creating proof from missing booleans or cash. Encrypted recovery retains private originals; public source projection contains no private identifiers. Full return and paper remain unavailable."
+    testRef: "tests/apps/web/oh-2026-school-native-saved.test.ts::roundtrips entered school originals without converting unknown facts into zero"

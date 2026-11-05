@@ -28,3 +28,7 @@ lines:
     description: "Actual printed school identity must reconcile with actual residence/Finder and annual district"
     formula: "After validating each complete retained W2 original, admit only the exact district code, official district name, code plus name or name plus code, with case and whitespace normalization. A code-less printed name must be unique across the entire annual catalog; ambiguous names require a separate original-bound employer method. Other school codes, municipal text, blank or ambiguous labels deny pending a separate original-bound method; caller classification alone cannot override the printed original. No municipal tax or school liability inferred."
     testRef: "tests/engine/state/oh-2026-school-source.test.ts::rejects an actual printed locality contradicting the claimed school district: %s"
+  - line: "canonical-empty-schema-arrays"
+    description: "Admit only explicit named empty array defaults inserted by actual canonical parsing"
+    formula: "TaxYearInputSchema adds named empty source-array defaults. Preserve every key in captured originals; permit these known names only when the actual value is an array of length0. Nonempty arrays, null/scalar/object values and unknown keys remain unsupported even if their apparent total is zero. No category, income, wage or liability fact is inferred from an absent or empty source inventory."
+    testRef: "tests/engine/state/oh-2026-school-source.test.ts::admits actual schema-parsed originals without stripping canonical default arrays"

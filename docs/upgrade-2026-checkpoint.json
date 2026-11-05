@@ -21283,5 +21283,31 @@
     "deployedDrainQualified": false,
     "productionDeployed": false,
     "ledger": "docs/upgrade-2026-hosted-pool-lifecycle-work.md"
+  },
+  "nov05Ohio2026SchoolNative": {
+    "status": "FINITE_SOURCE_NATIVE_PASS_ACTUAL_BROWSER_PENDING",
+    "ownedPaths": 12,
+    "mainTests": 256,
+    "mainTestFiles": 8,
+    "distinctTests": 283,
+    "distinctNewControls": 27,
+    "metadataTests": 893,
+    "specLines": 8476,
+    "inventoryTotal": 903,
+    "supportedUnchanged": 68,
+    "typechecks": "all3PASS",
+    "builds": "bothPASS",
+    "lintErrors": 0,
+    "lintWarnings": 11863,
+    "mainManifest": "129cd6f4e4afbdfb54f46244b1657be421a17b7c4ba92a9757529e4a60f2de0e",
+    "distinctManifest": "14c52f80e70fb3152a75e56e0fd3a0e9c4c7d49c8769c164f2d5b3e2e7713e7a",
+    "sourceAuditManifest": "5e42d0cb980b309a6761d9061cc21d2662548740eb2aea7f56f5ad5d09d89fdb",
+    "sourceAuditHashChanges": 6,
+    "contractsUnchanged": 148,
+    "casesUnchanged": 580,
+    "actualBrowserQualified": false,
+    "filingQualified": false,
+    "settlementFields": "null",
+    "ledger": "docs/upgrade-2026-ohio-school-2026-native-work.md"
   }
 }
