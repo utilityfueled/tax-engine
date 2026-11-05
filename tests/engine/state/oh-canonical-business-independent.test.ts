@@ -51,7 +51,7 @@ const cases2026=oracle2026.flatMap(row=>(['nonresident','part_year_resident'] as
 it.each(cases2026)('draft-closed source2026 %s %s',(profit,status,row)=>{
  const p=canonicalOhioBusinessFixture(2026,profit,status),before=JSON.stringify(p);
  const v=readOhioCanonicalBusinessSource(calculateOhioCanonicalBusinessSource({taxInput:p.input,residencyFacts:p.facts,draft2026:true}),p.facts,row[2]);
- const base=calculateOhio2026Baseline({taxYear:2026,filingStatus:'single',ohioAdjustedGrossIncome:v.ohioAgi,businessIncomeDeduction:v.worksheet.businessIncomeDeduction,taxableBusinessIncome:v.worksheet.businessIncomeBeforeDeductionCap.minus(v.worksheet.businessIncomeDeduction),eligibleExemptions:1,precedingCredits:'0',primaryQualifyingIncome:'0'});
+ const base=calculateOhio2026Baseline({taxYear:2026,filingStatus:'single',ohioAdjustedGrossIncome:v.ohioAgi,businessIncomeDeduction:v.worksheet.businessIncomeDeduction,qualifyingCapitalGainsAndPayrollDeduction:'0',taxableBusinessIncome:v.worksheet.businessIncomeBeforeDeductionCap.minus(v.worksheet.businessIncomeDeduction),eligibleExemptions:1,precedingCredits:'0',primaryQualifyingIncome:'0'});
  const context=calculateOhioCanonicalBusinessSource({taxInput:p.input,residencyFacts:p.facts,draft2026:true});
  const n=calculateOhioITNRC({taxYear:2026,filingStatus:'single',federalAgi:v.federalAgi,ohioAgi:v.ohioAgi,taxRemainingBeforeResidencyCredits:base.totalTax,residencyFacts:p.facts,businessSource:context});
  expect([v.deductibleHalf.toFixed(),v.federalAgi.toFixed(),v.worksheet.businessIncomeDeduction.toFixed(),v.ohioAgi.toFixed(),v.worksheet.columnC.toFixed(),n.line5.toFixed(),base.totalTax.toFixed(),n.line19.toFixed(4),n.line20.toFixed(),base.totalTax.minus(n.line20).toFixed()]).toEqual(row.slice(1));

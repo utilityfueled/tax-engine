@@ -3,18 +3,24 @@ fullName: "Isolated statutory rate, exemption and joint-filing calculation candi
 taxYear: 2026
 irsReference: "https://codes.ohio.gov/ohio-revised-code/section-5747.02/9-30-2025"
 sources:
+  - "https://codes.ohio.gov/ohio-revised-code/section-5747.01"
+  - "https://codes.ohio.gov/ohio-revised-code/section-5701.11"
   - "https://codes.ohio.gov/ohio-revised-code/section-5747.025/9-30-2025"
   - "https://codes.ohio.gov/ohio-revised-code/section-5747.05/9-30-2025"
   - "https://www.lsc.ohio.gov/assets/legislation/136/hb96/en0/files/hb96-tax-comparison-document-as-enacted-136th-general-assembly.pdf"
   - "https://dam.assets.ohio.gov/image/upload/v1767095693/tax.ohio.gov/forms/ohio_individual/individual/2025/it1040-booklet.pdf"
 notes: |
-  Sources retrieved 2026-10-25. HB96 effective September 30, 2025;
+  Sources refreshed 2026-11-05. HB96 effective September 30, 2025;
   RC5747.02(A)(3)(c)/(4), 5747.025(A)-(C), 5747.05(E), and uncodified
   section757.120 (LSC enacted comparison printed page8). Indexing is suspended
   for 2025 and 2026; retain the published 2025 indexed exemption amounts on
   booklet page17, not the older unindexed amounts printed in the statute.
   The codified MAGI ceiling is exclusive, despite the LSC prose saying or less.
   Monetary calculations use Decimal and printed amounts round half-up to dollars.
+  SB9 effective March 5, 2026 updates the conformity date. RC5747.01(II)
+  requires the actual completed A34 qualifying capital-gains/payroll deduction
+  in MAGI as well as A28 BID. This scalar candidate does not establish either
+  deduction's source eligibility. A35 is not a MAGI addback under (II).
 
   This isolated component takes actual completed Ohio income, deduction,
   eligible exemption count, qualifying-income and preceding-credit amounts.
@@ -29,7 +35,7 @@ lines:
     testRef: "tests/engine/state/oh-2026-baseline.test.ts::retains independent immutable provenance and closed historical registries"
   - line: "exemptions"
     description: "Actual MAGI and enacted exemption ceiling"
-    formula: "MAGI=actual OhioAGI+actual business-income deduction. If MAGI>=500000, exemption=0; otherwise each actual eligible exemption is2400 at MAGI<=40000,2150 at<=80000,1900 above. The input is the completed eligible-person count; eligibility is not derived here. Section5747.025(B) zeroes only the claimable individual's exemption, so an independently eligible joint spouse remains in the count."
+    formula: "MAGI=actual OhioAGI+actual business-income deduction+actual A34 qualifying capital-gains/payroll deduction. If MAGI>=500000, exemption=0; otherwise each actual eligible exemption is2400 at MAGI<=40000,2150 at<=80000,1900 above. The input is the completed eligible-person count; eligibility is not derived here. Section5747.025(B) zeroes only the claimable individual's exemption, so an independently eligible joint spouse remains in the count."
     testRef: "tests/engine/state/oh-2026-baseline.test.ts::uses actual MAGI at every indexed exemption boundary"
   - line: "joint-exemption"
     description: "Retain an independently eligible spouse's exemption"

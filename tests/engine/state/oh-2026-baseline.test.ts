@@ -8,17 +8,17 @@ import { calculateOhioIT1040, OH_IT_1040_CONSTANTS } from "@/engine/state/oh-it-
 
 const facts = (changes: Partial<Ohio2026BaselineInput> = {}): Ohio2026BaselineInput => ({
   taxYear: 2026, filingStatus: "single", ohioAdjustedGrossIncome: "60000",
-  businessIncomeDeduction: "0", taxableBusinessIncome: "0", eligibleExemptions: 1,
+  businessIncomeDeduction: "0", qualifyingCapitalGainsAndPayrollDeduction: "0", taxableBusinessIncome: "0", eligibleExemptions: 1,
   precedingCredits: "0", primaryQualifyingIncome: "60000",
   ...changes,
 });
 
 describe("Ohio enacted 2026 baseline candidate", () => {
   it("retains independent immutable provenance and closed historical registries", () => {
-    expect(OHIO_2026_BASELINE.metadata).toMatchObject({ taxYear: 2026, ruleVersion: "oh-2026.1-baseline-draft", calculationStatus: "incomplete", reviewStatus: "independent-review-pending", filingQualified: false });
-    expect(OHIO_2026_BASELINE.metadata.sources.length).toBe(5);
+    expect(OHIO_2026_BASELINE.metadata).toMatchObject({ taxYear: 2026, ruleVersion: "oh-2026.2-baseline-draft", calculationStatus: "incomplete", reviewStatus: "independent-review-pending", filingQualified: false });
+    expect(OHIO_2026_BASELINE.metadata.sources.length).toBe(7);
     for (const source of OHIO_2026_BASELINE.metadata.sources) {
-      expect(source.retrievedAt).toBe("2026-10-25");
+      expect(source.retrievedAt).toBe("2026-11-05");
       expect(source.section).not.toBe(""); expect(source.revision).not.toBe("");
     }
     expect(Object.isFrozen(OHIO_2026_BASELINE)).toBe(true);

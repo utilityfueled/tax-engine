@@ -18,7 +18,7 @@ it.each(cases)('derives actual2026 ordinary business under explicit draft method
   expect(value.worksheet.columnC.toFixed()).toBe(packet.expected.sectionIII18);
   expect(value.worksheet.ohioBusinessAfterDeduction.toFixed()).toBe(packet.expected.sectionI5);
   const base = calculateOhio2026Baseline({ taxYear: 2026, filingStatus: 'single', ohioAdjustedGrossIncome: value.ohioAgi,
-    businessIncomeDeduction: value.worksheet.businessIncomeDeduction, taxableBusinessIncome: value.worksheet.businessIncomeBeforeDeductionCap.minus(value.worksheet.businessIncomeDeduction),
+    businessIncomeDeduction: value.worksheet.businessIncomeDeduction, qualifyingCapitalGainsAndPayrollDeduction: '0', taxableBusinessIncome: value.worksheet.businessIncomeBeforeDeductionCap.minus(value.worksheet.businessIncomeDeduction),
     eligibleExemptions: 1, precedingCredits: '0', primaryQualifyingIncome: '0' });
   expect(base.totalTax.toFixed()).toBe(packet.expected.taxBeforeNRC);
   const nrc = calculateOhioITNRC({ taxYear: 2026, filingStatus: 'single', federalAgi: value.federalAgi, ohioAgi: value.ohioAgi,

@@ -12,6 +12,8 @@ export interface Ohio2026BaselineInput {
   /** Actual completed Ohio AGI after conformity adjustments and business deduction. */
   ohioAdjustedGrossIncome: Decimal | string;
   businessIncomeDeduction: Decimal | string;
+  /** Actual completed R.C.5747.01(A)(34) deduction, including known zero. */
+  qualifyingCapitalGainsAndPayrollDeduction: Decimal | string;
   taxableBusinessIncome: Decimal | string;
   /** Completed eligible-person count, after each person's actual dependency tests. */
   eligibleExemptions: number;
@@ -52,12 +54,13 @@ export function calculateOhio2026Baseline(input: Ohio2026BaselineInput): Ohio202
   if (!Number.isSafeInteger(input.eligibleExemptions) || input.eligibleExemptions < 0) throw new Error("Ohio baseline requires the actual completed eligible exemption count.");
   const agi = actual(input.ohioAdjustedGrossIncome, "Ohio AGI");
   const deduction = actual(input.businessIncomeDeduction, "business-income deduction", true);
+  const capitalGainsAndPayrollDeduction = actual(input.qualifyingCapitalGainsAndPayrollDeduction, "qualifying capital-gains and payroll deduction", true);
   const businessIncome = actual(input.taxableBusinessIncome, "taxable business income", true);
   const precedingCredits = actual(input.precedingCredits, "preceding credits", true);
   const primaryIncome = actual(input.primaryQualifyingIncome, "primary qualifying income");
   const spouseIncome = input.filingStatus === "married_filing_jointly" || input.spouseQualifyingIncome !== undefined
     ? actual(input.spouseQualifyingIncome, "spouse qualifying income") : undefined;
-  const magi = agi.plus(deduction);
+  const magi = agi.plus(deduction).plus(capitalGainsAndPayrollDeduction);
   const exemptionTier = rules.exemptionTiers.find(row => row.maximumMagi === null || magi.lte(row.maximumMagi));
   if (!exemptionTier) throw new Error("Ohio baseline exemption rule data is incomplete.");
   const exemptionPerPerson = magi.lt(rules.exemptionMagiLimit) ? exemptionTier.amount : d("0");
@@ -84,7 +87,7 @@ export function calculateOhio2026Baseline(input: Ohio2026BaselineInput): Ohio202
   const taxAfterJointCredit = taxAfterPrecedingCredits.minus(jointFilingCredit);
   const audit = new AuditTrail();
   for (const [line, description, amount, formula] of [
-    ["MAGI", "Actual modified Ohio AGI", magi, "Actual Ohio AGI plus actual business-income deduction"],
+    ["MAGI", "Actual modified Ohio AGI", magi, "Actual Ohio AGI plus actual A28 business-income deduction plus actual A34 qualifying capital-gains/payroll deduction; RC5747.01(II)"],
     ["4", "Eligible Ohio exemptions", exemptions, "2026 actual-MAGI ceiling and suspended indexed tiers times actual eligible count"],
     ["6", "Business income after unused exemptions", taxableBusinessIncomeAfterExemptions, "max(0,business income-max(0,exemptions-(Ohio AGI-business income))); RC5747.02(A)(4)(b)"],
     ["7", "Taxable nonbusiness income", taxableNonbusinessIncome, "max(0, Ohio AGI - exemptions - taxable business income)"],

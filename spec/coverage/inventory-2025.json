@@ -12820,6 +12820,26 @@
       ]
     },
     {
+      "key": "state/oh-2026-magi-successor",
+      "jurisdiction": "state",
+      "taxYear": 2026,
+      "sourceAuthority": "https://codes.ohio.gov/ohio-revised-code/section-5747.01",
+      "specPath": "spec/state/oh-2026-magi-successor.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "state/oh-business-native-browser",
       "jurisdiction": "state",
       "taxYear": 2025,

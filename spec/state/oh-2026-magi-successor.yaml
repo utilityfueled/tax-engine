@@ -1,0 +1,31 @@
+form: "Ohio 2026 statutory MAGI successor"
+fullName: "Actual completed qualifying capital-gains and payroll deduction in Ohio MAGI"
+taxYear: 2026
+irsReference: "https://codes.ohio.gov/ohio-revised-code/section-5747.01"
+sources:
+  - "https://codes.ohio.gov/ohio-revised-code/section-5747.025"
+  - "https://codes.ohio.gov/ohio-revised-code/section-5747.05"
+notes: |
+  Sources retrieved 2026-11-05. SB9 effective March 5, 2026.
+  Section5747.01(II) requires OhioAGI + A28 BID + A34 qualifying capital-gains/
+  payroll deduction. A34 is a required actual completed exact amount, including
+  known zero; this scalar candidate does not qualify the underlying deduction.
+  A35 venture-company deduction is NOT an additional MAGI addback in (II).
+  No public registry, final form, filing, review or source-admissibility gate opens.
+lines:
+  - line: "magi-A34"
+    description: "Add the completed actual A34 deduction to MAGI once"
+    formula: "MAGI=OhioAGI+BID+qualifyingCapitalGainsAndPayrollDeduction; the A34 amount is already in OhioAGI and is added back only for statutory MAGI; do not subtract it a second time from OhioAGI"
+    testRef: "tests/engine/state/oh-2026-magi-successor.test.ts::uses the actual A34 deduction at the exemption ceiling"
+  - line: "magi-joint"
+    description: "Apply the same actual MAGI to joint eligibility"
+    formula: "MFJ at OhioAGI490000 plus actual A34 10000 has MAGI500000, no exemptions, tax13091 and no joint credit even when each spouse has qualifying income>=500"
+    testRef: "tests/engine/state/oh-2026-magi-successor.test.ts::uses the same corrected MAGI for the joint ceiling"
+  - line: "magi-tiers"
+    description: "Correct the indexed exemption tier without changing OhioAGI"
+    formula: "OhioAGI39000 plus actual A34 2000 gives MAGI41000, one exemption2150; OhioAGI and nonbusiness base do not increase by the addback"
+    testRef: "tests/engine/state/oh-2026-magi-successor.test.ts::uses MAGI only for the exemption tier and preserves OhioAGI"
+  - line: "actual-required"
+    description: "Unknown A34 cannot become known zero"
+    formula: "Require a finite exact nonnegative Decimal/string actual A34 amount; reject omitted, undefined, null, number, empty, NaN, infinity, or negative; explicit zero retains all existing finite draft results"
+    testRef: "tests/engine/state/oh-2026-magi-successor.test.ts::requires the completed actual A34 amount including explicit zero"
