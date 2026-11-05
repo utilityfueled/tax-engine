@@ -26,6 +26,8 @@ below apply to their named revisions.
 
 - November5: [separate PA payment browser entry](upgrade-2026-pa-payment-native-browser-work.md) passes desktop/mobile2/2 without retries or skips; all four protected scopes remain zero. Actual full collection578 preserves all576 prior contracts. Static32+937 controls and package checks pass. The initial source-drift HOLD and restored four-path projection incident remain retained; full runtime/distribution/human/final2026 gates remain open.
 
+- November5: [separate spouse PA residency](upgrade-2026-pa-married-residency-work.md) preserves actual MFJ and worldwide SP income while composing original resident/nonresident or one-move part-year payroll. Two genuine V1 presence contradictions are repaired spec-first; distinct240 and current298focused/880metadata tests plus all package checks pass. Resident-only paper denies mixed sources; native/mixed paper/broader/human/final2026 gates remain open.
+
 ## Active continuation — November 3, 2026
 
 - [x] Prepared a fixedf09 [independent tax-review packet](upgrade-2026-independent-review-packet-20261104.md), delivery manifest binding1519public synthetic/spec/ledger files and ten empty decision records. Distinct engineering review verifies every binding and confirms no human approval. Reviewer assignment, independently derived professional expectations and signed disposition remain external requirements; no external message or readiness promotion occurred.

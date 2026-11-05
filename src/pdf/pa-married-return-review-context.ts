@@ -37,6 +37,7 @@ const sameActualResult=(a:unknown,b:unknown)=>isDeepStrictEqual(comparable(a),co
 export function preparePAMarriedReturnReview(input:TaxYearInput):PreparedPAMarriedReturnReview{
  assertPdfExportAllowed(input.taxpayer.taxYear,input.taxpayer.taxYear);
  if(!TaxYearInputSchema.safeParse(input).success||!input.paMarriedOrdinarySources)fail('complete original canonical household packet is required');
+ if(input.paMarriedOrdinarySources.residencySources!==undefined)fail('mixed residency requires its separately reviewed original-bound paper projection');
  // Actual care admission additionally requires its reviewed documentary projection.
  const careRequested=input.dependentCare!==undefined||input.dependentCareBenefits!==undefined||input.paMarriedOrdinarySources.care!==undefined;
  if(careRequested&&!input.paMarriedOrdinarySources.care?.careSources?.paperIdentitySources)fail('actual care paper requires its documentary identity projection successor');

@@ -1,5 +1,6 @@
 /** Private actual two-owner sources. Draft unknowns never default to tax facts. */
 import {z} from 'zod';
+import {PAMarriedResidencySourcesSchema} from './pa-married-residency-sources.js';
 import {PAMarriedPaymentSourcesSchema} from './pa-married-payment-sources.js';
 import {PAOrdinaryReturnFactsSchema} from './pa-ordinary-return-facts.js';
 import {PAOrdinaryReturnCompletionSourcesSchema} from './pa-ordinary-return-completion.js';
@@ -15,6 +16,7 @@ const person=z.object({accountHolder:owner,originalTaxpayer:identity,sourceRefer
 }).strict();
 const wage=z.object({originalIndex:z.number().int().nullable(),sourceTaxYear:year,accountHolder:owner,sourceReference:z.string(),sourceFactsConfirmed:answer,original,originalRecipientSsn:z.string(),currentUncorrectedNonvoidOriginalConfirmed:answer,allOriginalBoxesKnownConfirmed:answer,ordinaryCashCompensationOnlyConfirmed:answer,noPAFederalCompensationDifferencesConfirmed:answer,payroll:z.array(z.object({sourceReference:z.string(),paidOn:z.string(),serviceFrom:z.string(),serviceThrough:z.string(),grossCompensation:z.string(),paServicesCompensation:z.string(),outsidePAServicesCompensation:z.string()}).strict())}).strict();
 export const PAMarriedOrdinarySourcesSchema=z.object({sourceTaxYear:year,sourceReference:z.string(),sourceFactsConfirmed:answer,originalFederalSources:original,filingMode:z.enum(['','J','M']),owners:z.array(person),wages:z.array(wage),
+ residencySources:PAMarriedResidencySourcesSchema.optional(),
  paymentSources:PAMarriedPaymentSourcesSchema.optional(),
  dependentChildren:PAOrdinaryReturnFactsSchema.shape.filing.shape.dependentChildren.optional(),allDependentSourcesReviewedConfirmed:answer.optional(),
  care:PAOrdinaryReturnCompletionSourcesSchema.shape.care.extend({payerAssignments:z.array(z.object({sourceReference:z.string(),accountHolder:owner}).strict())}).strict().optional(),

@@ -35,6 +35,12 @@ requests. Full collection now578 preserves all576 previous cases. The initial
 source-drift HOLD and four-path projection restoration are retained; the clean
 rebuild passes with unchanged source/build and owned-server closure.
 
+The [finite mixed-spouse PA source method](upgrade-2026-pa-married-residency-work.md)
+adds actual separate calendars and dated resident/nonresident payroll without
+altering federal MFJ or worldwide SP income. Distinct240/current298focused and
+880metadata tests pass with package checks; resident-only paper denies these
+mixed sources. Native intake, mixed paper and broader qualification remain open.
+
 The later [guided render performance experiment](upgrade-2026-guided-render-experiment-work.md)
 is rejected after its final unchanged browser comparison yields successor9PASS/1timeout
 against baseline10PASS. All seven experimental paths are archived and restored/removed;

@@ -20746,5 +20746,24 @@
     "actualManifest": "5d8de80ec52a3564bf6bedb3132aa165f61de827c9a7b2e0ef11744816ee2de1",
     "distinctManifest": "afaaed19e88191b4f5d6f5e79039c5eb390ae8dbe6885bd1500c1b05f8ef95c1",
     "releaseReady": false
+  },
+  "nov05PAMarriedResidencySources": {
+    "status": "finite2025_source_PASS_not_qualified",
+    "focusedPass": 298,
+    "focusedFiles": 9,
+    "distinctPass": 240,
+    "metadataPass": 880,
+    "authorManifest": "24283cc261628f737d8b6629f53b6369e65e229c863a7994c3cc76abcf3785fa",
+    "distinctManifest": "acacff1ebeedf959663d80250dcc7c73db6e48dc04a0f85fcd0f2e9bf2a2bdaa",
+    "mainManifest": "008ef52ee93f276b55ff17b5170c96554b57c85cc49d6a6e7b940abe4cfe37ee",
+    "integrationReviewManifest": "90d9460372fda73270113a483fe3ca8f2a7a0b29fbcea0dd69fd9722a45d68b2",
+    "sourcePins": 4653,
+    "priorInventoryUnchanged": 888,
+    "inventoryTotal": 889,
+    "supportedCount": 68,
+    "mixedPaperQualified": false,
+    "nativeCalendarIntakeQualified": false,
+    "filingEligible": false,
+    "whole2026": "gated"
   }
 }
