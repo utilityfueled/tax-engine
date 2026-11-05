@@ -21213,5 +21213,31 @@
     "actualCICauseEstablished": false,
     "postChangeBrowser": false,
     "ledger": "docs/upgrade-2026-browser-natural-window-work.md"
+  },
+  "nov05GuidedNavigationScroll": {
+    "status": "FINITE_NAVIGATION_AND_ACTUAL_LOCAL_LIFECYCLE30S_PASS",
+    "runtimeEffectsChanged": 2,
+    "mainFocusedTests": 9,
+    "distinctTests": 11,
+    "metadataTests": 892,
+    "specLines": 8463,
+    "inventoryTotal": 901,
+    "supportedUnchanged": 68,
+    "typechecks": "all3PASS",
+    "builds": "bothPASS",
+    "actualBrowserCases": 2,
+    "actualTimeoutMs": 30000,
+    "actualDurationsMs": [
+      10317,
+      9239
+    ],
+    "actualRetries": 0,
+    "actualSkips": 0,
+    "sourceDrift": false,
+    "ownedServerClosed": true,
+    "mainManifest": "36caa15f381181e8df3751fa18253850453112a0a0808db96ca3dde1b89b8e69",
+    "actualRuntimeManifest": "b3dd4e6c5136a757bfbf801cb925945cfde2a34e0604311ceda0879d6224c506",
+    "containerRemoteQualified": false,
+    "ledger": "docs/upgrade-2026-guided-navigation-scroll-work.md"
   }
 }

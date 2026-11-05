@@ -1,0 +1,20 @@
+form: "Guided navigation"
+fullName: "Stable viewport at the start of a newly selected interview section"
+taxYear: 2026
+notes: |
+  Navigation behavior only. Moving to an actual different setup step or interview
+  section places the viewport at the existing top-zero destination immediately,
+  preventing a still-running smooth scroll from moving controls during interaction.
+  Initial render, same-section navigation and field edits do not initiate a scroll.
+  Existing setup focus delivery, route, facts, confirmations and animation remain.
+  DOM checks establish behavior only; original browser deadlines, keyboard, privacy,
+  geometry and crypto assertions still require separate actual browser verification.
+lines:
+  - line: "setup-step"
+    description: "Navigate actual setup steps without leaving a pending smooth scroll"
+    formula: "A different setup step immediately reaches top zero; actual answers survive forward/back transitions and the existing deferred focus remains on the setup container with preventScroll. Both motion preferences use a stable destination."
+    testRef: "tests/apps/web/guided-navigation-scroll.test.tsx::setup navigation reaches its destination without pending movement and retains real answers and focus"
+  - line: "interview-section"
+    description: "Navigate actual saved interview sections without moving the next control"
+    formula: "Different selected sections immediately reach top zero; the actual selected section and saved facts agree. Initial render, clicking the current section and editing a current field do not scroll or replace focused controls. Rapid separate section actions leave no pending smooth movement."
+    testRef: "tests/apps/web/guided-navigation-scroll.test.tsx::interview navigation retains source state and focused controls at an immediate stable destination"

@@ -861,7 +861,8 @@ function InterviewPhase({
     if (prevSectionIndex.current !== state.currentSectionIndex) {
       prevSectionIndex.current = state.currentSectionIndex;
       setSkipPromptOpen(false);
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      // Start the new section at a stable viewport before its controls are used.
+      window.scrollTo({ top: 0, behavior: "instant" });
     }
   }, [state.currentSectionIndex]);
 
