@@ -19684,5 +19684,25 @@
     "combinedUnitCoverage": "not-run",
     "ledger": "docs/upgrade-2026-c25-local-browser-work.md",
     "releaseReady": false
+  },
+  "nov05IsolatedBootstrapHold": {
+    "status": "blocked_pending_explicit_isolated_bootstrap_permission",
+    "sourceCommit": "480ca19d06a68032fce8fa08255e9f9c9e2c1e88",
+    "explicitPreviewActuallyProduction": true,
+    "unexpectedDeploymentConfirmedCanceled": true,
+    "existingProductionApplicationTouched": false,
+    "subsequentSubmissions": 0,
+    "rehearsalTrafficStarted": false,
+    "protectionMutationPerformed": false,
+    "ledger": "docs/upgrade-2026-isolated-bootstrap-hold.md"
+  },
+  "nov05PAMarriedDependentCare": {
+    "commit": "6899feeb",
+    "focusedPassed": 406,
+    "independentEngineeringControlsPassed": 30,
+    "qualifiedHumanReview": false,
+    "full2026PublicReturnQualified": false,
+    "childCarePaperQualified": false,
+    "ledger": "docs/upgrade-2026-pa-married-dependent-care-work.md"
   }
 }

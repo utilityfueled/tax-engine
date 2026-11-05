@@ -3214,3 +3214,16 @@ near full-return navigation; later export/deletion assertions remain unpassed.
 All traces and gates are retained. Earlier school-no-op coverage passes87.54%
 branches, but final combined full unit/coverage remain pending. See [the actual
 browser ledger](upgrade-2026-c25-local-browser-work.md).
+
+### November5 UTC: isolated hosted bootstrap remains blocked
+
+The first explicitPreview submission was classifiedProduction by Vercel, then
+canceled and confirmedCANCELED. No rehearsal traffic followed. A protected
+isolated Productionbootstrap exception is pending; no second submission or
+protection mutation. See [the incident and permission boundary](upgrade-2026-isolated-bootstrap-hold.md).
+
+### November5 UTC: PA married child and current care calculation
+
+Commit6899feeb adds actual child/care source reconciliation. Author406 and
+distinct30 controls pass; child/care paper and public2026 gates remain closed.
+See [the calculation ledger](upgrade-2026-pa-married-dependent-care-work.md).
