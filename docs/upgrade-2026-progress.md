@@ -24,6 +24,8 @@ below apply to their named revisions.
 
 - November4: later [native candidate inventory](upgrade-2026-8487-native-build-export-work.md) admits three exact empty volatile directories and passes final safety, then stops on Podman125/readlink at exact candidate inspection. Distinct74+26 source controls pass; no archive, deletion, export or qualification follows.
 
+- November5: [separate PA payment browser entry](upgrade-2026-pa-payment-native-browser-work.md) passes desktop/mobile2/2 without retries or skips; all four protected scopes remain zero. Actual full collection578 preserves all576 prior contracts. Static32+937 controls and package checks pass. The initial source-drift HOLD and restored four-path projection incident remain retained; full runtime/distribution/human/final2026 gates remain open.
+
 ## Active continuation — November 3, 2026
 
 - [x] Prepared a fixedf09 [independent tax-review packet](upgrade-2026-independent-review-packet-20261104.md), delivery manifest binding1519public synthetic/spec/ledger files and ten empty decision records. Distinct engineering review verifies every binding and confirms no human approval. Reviewer assignment, independently derived professional expectations and signed disposition remain external requirements; no external message or readiness promotion occurred.

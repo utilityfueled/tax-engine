@@ -29,6 +29,12 @@ merge tree matching `7d93fd67`. Both full browser jobs fail before cases at sour
 audit; all 80 advisory IDs remain unaccepted. Distinct saved-evidence review also
 reconstructs the current full unit/coverage counters without rerunning workloads.
 
+The [separate PA payment browser package](upgrade-2026-pa-payment-native-browser-work.md)
+passes two selected desktop/mobile journeys with zero retries/skips and no protected
+requests. Full collection now578 preserves all576 previous cases. The initial
+source-drift HOLD and four-path projection restoration are retained; the clean
+rebuild passes with unchanged source/build and owned-server closure.
+
 The later [guided render performance experiment](upgrade-2026-guided-render-experiment-work.md)
 is rejected after its final unchanged browser comparison yields successor9PASS/1timeout
 against baseline10PASS. All seven experimental paths are archived and restored/removed;

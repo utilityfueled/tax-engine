@@ -1,0 +1,26 @@
+form: "PA married payment native browser lifecycle"
+year: 2025
+status: "prospective browser regression"
+notes: |
+  Separate-M actual individual account and receipt originals only. Existing payment
+  formulas and source/readiness guards remain unchanged. Seed unrelated complete
+  guided household sources before payment entry only; no target source injection.
+  Normal90s browser budget,2 configured workers and explicit--retries=0 qualification
+  stay unchanged. No PDF/upload/provider request, filing or2026 qualification.
+lines:
+  - line: "visible-payment-originals"
+    description: "Originate complete actual accounts and receipt inventories visibly"
+    formula: "At1280px and390px, start target paymentSources absent and owner receipt snapshots empty with unknown payment statuses. Enter account identity/year/completeness/posted rows, separate receipt originals/installments and prior-election originals through visible controls; no post-entry storage writes."
+    testRef: "apps/web/tests/pa-married-payment-native.spec.ts::originates separate payment accounts and preserves current owned refunds through reopen and source edit"
+  - line: "explicit-capture-and-confirm"
+    description: "Keep account inventory, retained originals and confirmation actions distinct"
+    formula: "No source edit infers owner originals or totals. Capture each reviewed original receipt inventory explicitly, confirm payment sources then household separately; actual source bridge and composer independently return primary credit51/estimates200/extension76/refund327 and spouse credit0/estimates80/extension0/refund80."
+    testRef: "apps/web/tests/pa-married-payment-native.spec.ts::originates separate payment accounts and preserves current owned refunds through reopen and source edit"
+  - line: "saved-noop-invalidation"
+    description: "Preserve exact saved originals and revoke stale same-cash provenance"
+    formula: "Focus and blur an unchanged amount without revocation; reload and reopen exact actual captured sources. Editing one receipt source reference revokes child and parent confirmations while retaining captured owner and federal snapshots. Reconfirm through real controls; no saved result or original injection."
+    testRef: "apps/web/tests/pa-married-payment-native.spec.ts::originates separate payment accounts and preserves current owned refunds through reopen and source edit"
+  - line: "private-zero-request-boundary"
+    description: "Observe every protected action and private outgoing body"
+    formula: "No filled-return,provider,business-expense-analysis or self-employment-income-analysis request per case; no PDF/upload action. Assert the common fictional-browser-payment-private- prefix covers every entered owner-review, prior-return, timing, disposition, remaining-payment and account/receipt source reference in outgoing bodies/URLs, alongside both owner SSN formats and every receipt confirmation number, no page errors, and visible controls remain within each viewport."
+    testRef: "apps/web/tests/pa-married-payment-native.spec.ts::originates separate payment accounts and preserves current owned refunds through reopen and source edit"

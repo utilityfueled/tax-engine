@@ -20717,5 +20717,34 @@
     "criticalMatches": 0,
     "ownerAcceptance": false,
     "releaseReady": false
+  },
+  "nov05PAPaymentNativeBrowser": {
+    "status": "selected2_PASS_full578_pending",
+    "mainStaticTests": 969,
+    "actualPass": 2,
+    "collection": 578,
+    "retries": 0,
+    "skips": 0,
+    "deadlineMs": 90000,
+    "durationsMs": [
+      6198,
+      6829
+    ],
+    "sourcePins": 4616,
+    "immutableCompiledPaths": 321,
+    "compiledBytes": 42420977,
+    "protectedScopesEach": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "ownedServerClosed": true,
+    "initialSourceDriftHoldRetained": true,
+    "projectionIncidentRestored": true,
+    "staticManifest": "c1627647cc6cea94de110f0720c5555e7da524f7e11a7e34950bb781fe699f1d",
+    "actualManifest": "5d8de80ec52a3564bf6bedb3132aa165f61de827c9a7b2e0ef11744816ee2de1",
+    "distinctManifest": "afaaed19e88191b4f5d6f5e79039c5eb390ae8dbe6885bd1500c1b05f8ef95c1",
+    "releaseReady": false
   }
 }
