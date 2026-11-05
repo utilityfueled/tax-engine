@@ -20071,5 +20071,28 @@
     "qualifiedHumanReview": false,
     "productionPromotion": false,
     "wordingFinding": "Baseline Mini repeat2 requests full image/transcript without redaction qualifier; no actual image sent"
+  },
+  "nov05IsolatedReadyPreviewAndWebhook": {
+    "status": "protected-preview-ready-and-existing-sandbox-webhook-url-updated",
+    "sourceCommit": "480ca19d06a68032fce8fa08255e9f9c9e2c1e88",
+    "previewBuildsConsumed": 2,
+    "remainingAuthorizedPreviewBuilds": 0,
+    "previewReceiptSHA256": "d93754659f62454964595bd94722dd3cf7e0b8bbcbae05b5781f84f78d00df0f",
+    "urlUpdateReceiptSHA256": "6d4628de8379a47fcad9d228b824598031b99c3e24a28e8485e710d66eb7df88",
+    "updaterSourceControlsPassed": 86,
+    "distinctSavedEvidenceChecksPassed": 8,
+    "urlPostAttempts": 1,
+    "getAttempts": 3,
+    "retry": false,
+    "signingSecretReadOrRotated": false,
+    "signedDeliveryQualified": false,
+    "accountTrialsCreated": false,
+    "nextBlockers": [
+      "pending narrow signup/session access grant",
+      "account helper admission and conservative capture-outcome corrections",
+      "actual signed delivery, duplicates, exact billing, automatic retry and outage/recovery rehearsal"
+    ],
+    "readinessQualified": false,
+    "ledger": "docs/upgrade-2026-isolated-bootstrap-hold.md"
   }
 }

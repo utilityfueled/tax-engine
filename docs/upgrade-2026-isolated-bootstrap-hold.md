@@ -1,4 +1,55 @@
-# Isolated hosted rehearsal: bootstrap blocked
+# Isolated hosted rehearsal: protected Preview ready
+
+## Current observed state — November 5 UTC
+
+The authorized isolated bootstrap and both authorized Preview builds now exist.
+The final Preview reports READY with a present null target (Preview), the exact
+approved public source `480ca19d06a68032fce8fa08255e9f9c9e2c1e88`, and unchanged
+all-URL authentication, domains, bootstrap and earlier Preview. Fourteen app
+environment metadata entries are Preview only, including the sensitive webhook
+signing-secret entry. This verifies metadata, not secret-value equality or
+application functionality. No additional build is authorized by this grant.
+
+The first final-Preview attempt recorded zero deployment negotiations. Read-only
+diagnosis reproduced the installed CLI inheriting a different default team;
+the original raw error was discarded, so it is not reconstructed as evidence.
+Its failed receipt and read-only reconciliation remain intact. A successor binds the same
+authorized team in the CLI request; 96 author and four distinct controls pass.
+The actual successor performs one deployment command, two negotiations after an
+explicit missing-files response, one upload and one accepted deployment. Five
+unauthenticated host checks observe the authentication redirect without sending
+credentials or following redirects. Existing production is untouched.
+
+The existing isolated Stripe sandbox webhook now points to that final Preview.
+One URL-only POST and three GETs verify the same endpoint, account, events, API
+version, description, metadata and enabled test-mode status. Full private URLs
+are compared in memory; neither the access token nor raw provider responses are
+saved or printed. The signing secret is neither read nor rotated. The actual
+worker exits zero with zero stdout/stderr and a bounded safe projection.
+
+The updater's first review catches an invented fixture field absent from actual
+deployment evidence. Its genuine failure is retained. The corrected successor
+validates the original Preview through its exact retained history record; 86
+source controls and eight independent saved-evidence consistency checks pass.
+These engineering checks do not establish authentic signed delivery, duplicate
+or automatic-retry behavior, exact billing effects, outages or recovery.
+
+No synthetic account or trial has been created in this isolated project yet.
+The separate signup/session access grant is pending, and the disabled account
+helper has concrete admission/recovery corrections under implementation. Those
+are blockers for the next operation, not successful staging evidence. Native,
+current-source distribution and release qualification remain open.
+
+Private evidence SHA256 bindings:
+
+- Final Preview source manifest: `9ddc0773eb6e6579f05fd639b3db45209c4bb42782caf9facaccc593eb809bba`.
+- Actual READY receipt: `d93754659f62454964595bd94722dd3cf7e0b8bbcbae05b5781f84f78d00df0f`.
+- Actual deployment evidence: `1352436fb920ce1ead350c73bae4443ead103539a6c1d1e3f3939ad7b67f4ce4`.
+- URL updater source manifest: `f5df188f6e6ba60c96b201f771e8fa3b0fb9ca8e0784dad8a03492999fb67b52`.
+- Actual URL update receipt: `6d4628de8379a47fcad9d228b824598031b99c3e24a28e8485e710d66eb7df88`.
+- Distinct actual consistency manifest: `0458fb4ab554d8bc1a043cd9bc6dbd8c56c941316aaf7f0f4959e0a6ef0f19e6`.
+
+## Historical canceled first deployment and original hold
 
 The approved isolated project received one explicit Preview CLI submission of
 public commit `480ca19d06a68032fce8fa08255e9f9c9e2c1e88`. Vercel classified that
