@@ -21079,5 +21079,18 @@
     "humanTaxReviewPending": true,
     "final2026Qualification": false,
     "ledger": "docs/upgrade-2026-adoption-other-adopter-history-work.md"
+  },
+  "nov05AdoptionBrowserAudit": {
+    "status": "SOURCE_AUDIT_AND58_CONTROLS_PASS_NOT_BROWSER_RUNTIME",
+    "taxCommit": "2c773f18",
+    "sourceFiles": 1787,
+    "sourceHashDeltas": 5,
+    "caseContracts": 148,
+    "declaredCases": 580,
+    "allNonHashFieldsUnchanged": true,
+    "tests": 58,
+    "sourceReviewManifest": "ce9696979a2ebc5ceae89af8f1c24dcfeec7ba9ee563c20dcdc3f9ca364606b5",
+    "mainManifest": "c14f7c0e6050788a5fd9eb52052f2f6d3cf21385641953932382c3bf9d3135ae",
+    "browserRuntime": false
   }
 }

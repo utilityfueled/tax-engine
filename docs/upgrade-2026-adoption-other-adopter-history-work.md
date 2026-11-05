@@ -38,3 +38,7 @@ Private evidence under `.local/upgrade-evidence/`:
 | `nov05-adoption-guided-main-successor` | `99f34f5bbbf04567a5dca50cab7235e98d320e728237c61d493d87cd127e147c` |
 
 The original author/HOLD evidence and reviewer harness failures remain unchanged. Engineering review does not replace qualified human tax review, including the inherited signed historical-benefit interpretation. Broader taxpayer/source methods, native agreement entry, final 2026 forms, physical exports, current global/distribution and hosted qualification remain open. Filing and model promotion remain disabled.
+
+## Separate browser audit successor
+
+After tax commit `2c773f18` was pushed, the separately reviewed hash-only source audit changed exactly four existing hashes and added one fictional unit-fixture hash. Actual current snapshot/verifyAudit passes with 1,787 sources; all 148 contracts/580 declared cases, request quotas, skips, deadlines, retries and worker policy remain unchanged. The existing orchestration/cache controls pass 58 tests. No new browser collection or runtime result is claimed. Source review manifest: `ce9696979a2ebc5ceae89af8f1c24dcfeec7ba9ee563c20dcdc3f9ca364606b5`; root main evidence: `c14f7c0e6050788a5fd9eb52052f2f6d3cf21385641953932382c3bf9d3135ae`.
