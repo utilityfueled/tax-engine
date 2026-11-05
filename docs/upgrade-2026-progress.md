@@ -4,6 +4,8 @@ Current source, verification and remaining work are summarized in the
 [November 4 continuation](upgrade-2026-current-status.md). Historical results
 below apply to their named revisions.
 
+- November5: [parent/source integration](upgrade-2026-parent-integration-work.md) passes25,965 unit and coverage tests/1,892files with87.59% branches at unchanged gates and no reported skips/source drift. It binds19bedea9 plus six reviewed uncommitted browser paths; the original inventory failure is retained before ordinary regeneration/check success. The full paced browser run is still separate and in progress.
+
 - November5: [actual four-case AI smoke](upgrade-2026-ai-four-case-smoke-work.md) completes39requests,36schema-valid proposals and exact0.06966185USD. Independent saved-artifact review verifies journal identities and costs; candidate24/24 critical-correct and baseline0/12 remain small development results, with two false-positive SSA bindings preserved. Known usage plus the earlier reserve totals0.26468665USD; human/held-out/privacy qualification and promotion stay blocked.
 
 - November5: the [finite passenger Schedule C parent](upgrade-2026-passenger-parent-work.md) binds actual original owner/activity/receipts/expenses to the completed worksheet once. Spec-first failures precede369 private/50 distinct and427 current focused checks; eight static/build checks pass after ordinary inventory regeneration,66 inventory/spec controls pass. Saved-result mutation failures are retained; full integrated and all broader qualification gates remain open.

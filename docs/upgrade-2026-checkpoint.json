@@ -20413,5 +20413,27 @@
     "modelPromotionEnabled": false,
     "filingEnabled": false,
     "ledger": "docs/upgrade-2026-ai-four-case-smoke-work.md"
+  },
+  "nov05ParentGlobalIntegration": {
+    "status": "unit_coverage_pass_browser_running",
+    "taxBaseline": "19bedea9a16c815e7a2fdc9ca92f14bade9ae30d",
+    "uncommittedBrowserPaths": 6,
+    "unitTests": 25965,
+    "coverageTests": 25965,
+    "testFiles": 1892,
+    "reportedSkips": 0,
+    "sourceDrift": [],
+    "coveragePercent": {
+      "statements": "91.82",
+      "branches": "87.59",
+      "functions": "90.82",
+      "lines": "95.09"
+    },
+    "rawManifest": "e3186dcb0a0c55586ba11340f74ddb4444c1570e1cee954b9facafae8d14865e",
+    "initialInventoryFailureRetained": true,
+    "inventoryRegeneratedAndChecked": true,
+    "browserQualified": false,
+    "hostedNativeQualified": false,
+    "ledger": "docs/upgrade-2026-parent-integration-work.md"
   }
 }
