@@ -21309,5 +21309,29 @@
     "filingQualified": false,
     "settlementFields": "null",
     "ledger": "docs/upgrade-2026-ohio-school-2026-native-work.md"
+  },
+  "nov05PaMixedNativeBrowser": {
+    "status": "FINITE_SOURCE_LOCAL_BROWSER_PASS",
+    "actualCases": 2,
+    "durationsMs": [
+      7508,
+      9574
+    ],
+    "deadlineMs": 30000,
+    "retries": 0,
+    "skips": 0,
+    "controls": 76,
+    "all13Checks": "PASS",
+    "prior580CaseProjectionsUnchanged": true,
+    "collectedCases": 582,
+    "originalHostedSkips": 5,
+    "auditedSources": 1796,
+    "contracts": 149,
+    "manifest": "a9d9e9e4c586ede0997b9d4d7d24323cb704108a72c735d5f589dec657ee4314",
+    "manifestMembers": 64,
+    "filingQualified": false,
+    "hostedQualified": false,
+    "nativeImageQualified": false,
+    "ledger": "docs/upgrade-2026-pa-married-mixed-native-browser-work.md"
   }
 }

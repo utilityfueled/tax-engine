@@ -1,0 +1,13 @@
+# Actual separate Pennsylvania residency sources in the browser
+
+The finite 2025 married household has two actual browser journeys: a nonresident spouse at 1280px and a part-year spouse at 390px. The sole before-entry setup supplies the existing household and W-2 originals. Both calendar and payroll collections begin empty; every target fact is entered through native controls, captured explicitly and confirmed separately. Reopening preserves originals; a same-cash payroll reference edit revokes both confirmations and the stale result until explicit reconfirmation.
+
+Both current-main cases pass with the explicit 30-second deadline, zero retries and no skips: 7,508ms and 9,574ms. Each checks literal separately owned tax/payment results, unknown/zero distinctions, source equality and denied filing. Actual request capture observes zero protected calculation/provider/analysis requests and zero downloads; private SSN, formatted/compact EIN and source-reference markers are asserted absent. Geometry reports no horizontal violations at either width; both screenshots were visually inspected.
+
+The initial privacy-predicate review failure is retained: two EIN checks were missing from the predicate, without an observed leak. The successor adds all actual formatted and compact EIN markers while preserving every prior marker and browser behavior. The separate 25-control review passes; this is engineering review, not qualified human tax review.
+
+Current-main verification passes 76 orchestration controls, scoped browser types, all three project typechecks, spec/inventory, both builds and lint (zero errors; 11,863 pre-existing warnings). Actual collection grows from 580 to 582; all prior 580 case identity/deadline/status projections and five original hosted skips remain exact. The source audit adds only two reviewed files and one two-case zero-request contract: 1,796 sources, 149 contracts. No old hash, budget, assertion, retry, skip or deadline changes.
+
+Frozen local evidence: `.local/upgrade-evidence/nov05-pa-mixed-native-browser-main-plan`, 64 members, manifest `a9d9e9e4c586ede0997b9d4d7d24323cb704108a72c735d5f589dec657ee4314`. It contains actual collection before/after, source pins, all 13 checks, runtime receipts, geometry, screenshots and cleanup. Author V2 manifest `317935e605258fbbcc4fe58def099354d52d1a6788a1ea35095ca5e5c3cf7296`; distinct review `480358d9abc1086f19b2eaf55fdb042e45add9ad18c2057987c377bcec27e16e`.
+
+This source-only journey does not qualify PDF companions, full upload/recovery, remote CI, hosted or native artifacts, broader cohorts, final 2026 forms, human review or release. Existing 2026 and filing gates remain closed. Ohio native source commit 3cd40607 is pushed separately.

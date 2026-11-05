@@ -523,6 +523,7 @@
     "apps/web/tests/guided-no-advance-overlap.spec.ts": "1debbf316ce2c1a10a246b3a5c86b96798ad52bc8149742fd4a52497fbcdebc7",
     "apps/web/tests/guided-ordinary-education-expenses.spec.ts": "134a1ea2ed95e43029cfc721395f89391b6b4b52b4b471c7b2626e3f817d141d",
     "apps/web/tests/guided-overlapping-policies.spec.ts": "d7b320911e6dcfdb3ca2d69222ebb550820bbabca8030956e633840be788ecb6",
+    "apps/web/tests/guided-pa-married-mixed-residency.spec.ts": "c6a8c667f3e373886e68f07475925670be566cfcf07ae576dc32e2c2830e0650",
     "apps/web/tests/guided-private-activity-sources.spec.ts": "5e4c7c17de28702b6c12ada123a9915b9252861cec7fe9a34f43b3671f48452f",
     "apps/web/tests/guided-qsbs-sources.spec.ts": "7a87f7caca53e13fbfaa81ad35cc28cf278e4bc629333d3445a0af75f860144d",
     "apps/web/tests/guided-rental-carry-sources.spec.ts": "204b4d60a1f4df5847fdc4d6e2dcec41be1780d40d2bf535e84ffaecb3191110",
@@ -1735,6 +1736,7 @@
     "tests/fixtures/pa-employee-main-independent.ts": "a0027f821bcd1b4b3565036830899a4d05ad260175203b58deedf35d495b818a",
     "tests/fixtures/pa-married-child-local-official-review.ts": "e93acf696b6d971c8214c3f4573b02020c287220d756fce12168ac02a7b32a7a",
     "tests/fixtures/pa-married-dependent-care.ts": "4b17d6c2ae8219d82dc6ddd538027a7c1bcc0e021cbf9bd6eff0946f081b0a91",
+    "tests/fixtures/pa-married-mixed-residency-native-browser.ts": "24c4cdbeda1fe4de061ec8b5295c743902cab8c5307f17b557ba96d5b1d7b737",
     "tests/fixtures/pa-married-mixed-residency-paper.ts": "3f123e3fdf74a162457e26a0a342c115432732f9e2de8b1f9f5eea3d88939821",
     "tests/fixtures/pa-married-native-public.ts": "fb1f81b1fdf5a668ea71b459ad55d371cca853bd1f90c34022211ef09363662f",
     "tests/fixtures/pa-married-official-review.ts": "d99e2d2880ed2b0b70b6e0e29c7a8e174251e2e27ac9b4a5bf6a4320cf14cbf8",
@@ -3788,6 +3790,16 @@
       "skippedTitles": []
     },
     "mortgage-insurance-prepaid-native.spec.ts": {
+      "caseCount": 2,
+      "bounds": {
+        "filled-return": 0,
+        "provider": 0,
+        "business-expense-analysis": 0,
+        "self-employment-income-analysis": 0
+      },
+      "skippedTitles": []
+    },
+    "guided-pa-married-mixed-residency.spec.ts": {
       "caseCount": 2,
       "bounds": {
         "filled-return": 0,
