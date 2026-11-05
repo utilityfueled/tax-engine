@@ -2,6 +2,7 @@
 /** Spec: state/pa-married-native-public.yaml. Actual sources, no calculated defaults. */
 import {useState} from 'react';
 import {PACompletionOriginalRecordSchema} from '@/models/pa-ordinary-return-completion';
+import {PAMarriedResidencyDetails} from './pa-married-residency-details';
 import {PAMarriedPaymentDetails} from './pa-married-payment-details';
 import {PACareSourcesDetails} from './pa-care-sources-details';
 import type {TaxYearInput} from '@/models/inputs';
@@ -40,6 +41,7 @@ export function PAMarriedOrdinaryDetails({originalInput,data,onChange}:{original
  {(['estimatedPaymentsStatus','extensionPaymentsStatus','priorCreditStatus','priorReturnStatus']as const).map((key,i)=>field(prefix+' actual '+['estimated payment history','extension payment history','prior credit history','prior return history'][i],['owners',index,'payments',key],row.payments[key],choices(key==='priorReturnStatus'?['no_return','not_used','actual_return']:key==='priorCreditStatus'?['known_none','actual_credit']:['known_none','actual_receipts'])))}{text(prefix+' prior return original source reference',['owners',index,'payments','priorReturnSourceReference'],row.payments.priorReturnSourceReference)}
  {row.payments.originalReceipts.length>0&&<p>Retained actual payment originals remain saved. Reconcile them with the separate account records below.</p>}
  <button type="button" onClick={()=>set(['owners'],d.owners.filter((_,i)=>i!==index))}>Remove {prefix} actual household sources</button></>}</section>;})}
+ <PAMarriedResidencyDetails originalInput={originalInput} data={d} onChange={next=>{onChange(next);setStatus('');}}/>
  <h4>Original current W2 and actual payroll</h4><p>Choose each original index and actual recipient. Confirmation captures the current original; it does not fill compensation or service dates.</p>
  {d.wages.map((row,index)=>{const p:Path=['wages',index],prefix=`Wage ${index+1}`;return <fieldset key={index}><legend>{prefix}</legend>{field(prefix+' actual original index',[...p,'originalIndex'],row.originalIndex,undefined,true)}{field(prefix+' actual source tax year',[...p,'sourceTaxYear'],row.sourceTaxYear,undefined,true)}{field(prefix+' actual owner',[...p,'accountHolder'],row.accountHolder,choices(['primary','spouse']))}{text(prefix+' original source reference',[...p,'sourceReference'],row.sourceReference)}
  {(['currentUncorrectedNonvoidOriginalConfirmed','allOriginalBoxesKnownConfirmed','ordinaryCashCompensationOnlyConfirmed','noPAFederalCompensationDifferencesConfirmed','sourceFactsConfirmed']as const).map((key,i)=>bool(prefix+' '+['actual current uncorrected nonvoid original checked','actual original boxes all known','actual ordinary cash compensation only','actual no PA federal compensation differences','actual source records checked'][i],[...p,key],row[key]))}

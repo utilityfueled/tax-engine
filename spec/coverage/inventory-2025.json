@@ -15992,6 +15992,26 @@
       ]
     },
     {
+      "key": "state/pa-married-residency-native",
+      "jurisdiction": "state",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.pacodeandbulletin.gov/secure/pacode/data/061/chapter117/s117.2.html",
+      "specPath": "spec/state/pa-married-residency-native.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "state/pa-married-residency-sources",
       "jurisdiction": "state",
       "taxYear": 2025,

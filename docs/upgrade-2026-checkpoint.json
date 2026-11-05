@@ -21141,5 +21141,29 @@
     "containerLifecycleResolved": false,
     "managedTimerResolved": false,
     "ledger": "docs/upgrade-2026-browser-timeout-inheritance-work.md"
+  },
+  "nov05PAMarriedResidencyNative": {
+    "status": "FINITE2025_NATIVE_SOURCE_INTAKE_PASS_NOT_FILING_QUALIFIED",
+    "taxYear": 2025,
+    "sourcePaths": 9,
+    "affectedTests": 141,
+    "affectedFiles": 8,
+    "rootDistinctTests": 48,
+    "metadataTests": 889,
+    "specLines": 8451,
+    "inventoryTotal": 898,
+    "supportedUnchanged": 68,
+    "typechecks": "all3PASS",
+    "builds": "bothPASS",
+    "mainManifest": "541baf63a627ab5809f2c4526a9fcf15c1ed3a4bbba062184b5ff13b17eac814",
+    "sourceAuditDistinctManifest": "c37acf97e11ec964bbda098e9648267eda8d10f35f627b1f3fc9245cd676b5f0",
+    "sourceAuditMainManifest": "cf5803584d0b12473312b158d8ad96e65556717f7030a3171194e2b75afa0261",
+    "sourceAuditFiles": 1790,
+    "caseContractsUnchanged": 148,
+    "declaredCasesUnchanged": 580,
+    "browserRuntime": false,
+    "humanQualification": false,
+    "final2026Qualification": false,
+    "ledger": "docs/upgrade-2026-pa-married-residency-native-work.md"
   }
 }
