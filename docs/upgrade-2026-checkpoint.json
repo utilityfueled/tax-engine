@@ -20053,5 +20053,23 @@
     "fullIntegration": "running; earlier sandbox loopback-denied run failed, preserved",
     "filingQualified": false,
     "qualifiedHumanReview": false
+  },
+  "nov05ClassificationProspectiveLiveSmoke": {
+    "source": "docs/upgrade-2026-classification-live-smoke-work.md",
+    "planDigest": "925ac6628dc57c4e1ce9c7d06de88597610a89e139540b1763673817f55c1234",
+    "actualRequests": 12,
+    "exactSchemaValidCaseOutputs": "9/9",
+    "knownProviderUsd": "0.01618585",
+    "newUnknownMaximumUsd": "0",
+    "cumulativeKnownUsd": "0.16451210",
+    "previousUnresolvedReserveUsd": "0.022384",
+    "cumulativeKnownPlusReserveUsd": "0.18689610",
+    "sourceIndependentControls": 27,
+    "actualIndependentManifest": "de18007d1b7596f3d72a0984dc090acd9cb5763d3147f6e0f2c17e169e2cb76b",
+    "historicalResultsUnchanged": true,
+    "heldOut": false,
+    "qualifiedHumanReview": false,
+    "productionPromotion": false,
+    "wordingFinding": "Baseline Mini repeat2 requests full image/transcript without redaction qualifier; no actual image sent"
   }
 }
