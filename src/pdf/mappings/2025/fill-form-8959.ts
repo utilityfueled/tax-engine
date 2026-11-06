@@ -116,25 +116,36 @@ export async function fillForm8959(
     else setCurrencyField(form, field, value);
   };
 
-  // ── Part I: Additional Medicare Tax on Medicare Wages ──
-  setCurrencyField(form, F.line1, f8959.medicareWages);
-  setCurrencyField(form, F.line2, f8959.unreportedTips);
-  setCurrencyField(form, F.line3, f8959.form8919Wages);
-
-  // Line 4: Sum of lines 1-3 (wages only, not SE)
   const line4 = f8959.medicareWages.plus(f8959.unreportedTips).plus(f8959.form8919Wages);
-  setCurrencyField(form, F.line4, line4);
+  // Official instructions skip wage-only PartsI/V for actual positive pureSE.
+  const originalMedicareWagesKnownZero = input.w2s.every(w2 =>
+    typeof w2.medicareWages === "string" && /^\d+(\.\d+)?$/.test(w2.medicareWages) &&
+    new Decimal(w2.medicareWages).isZero());
+  const pureSelfEmploymentOnly = result.scheduleSE?.netSEEarnings.gt(0) === true &&
+    f8959.selfEmploymentEarnings.gt(0) && line4.isZero() && originalMedicareWagesKnownZero &&
+    input.form4137 === undefined && input.form4137ByOwner === undefined && input.form8919 === undefined &&
+    f8959.withholdingCredit.isZero();
+  if (!pureSelfEmploymentOnly) {
+    // ── Part I: Additional Medicare Tax on Medicare Wages ──
+    setCurrencyField(form, F.line1, f8959.medicareWages);
+    setCurrencyField(form, F.line2, f8959.unreportedTips);
+    setCurrencyField(form, F.line3, f8959.form8919Wages);
 
-  // Line 5: Filing status threshold
-  setCurrencyField(form, F.line5, f8959.threshold);
+    // Line 4: Sum of lines 1-3 (wages only, not SE)
+    setCurrencyField(form, F.line4, line4);
 
-  // Line 6: Excess wages over threshold
-  const line6 = zeroFloor(line4.minus(f8959.threshold));
-  setRequiredZeroCurrency(F.line6, line6);
+    // Line 5: Filing status threshold
+    setCurrencyField(form, F.line5, f8959.threshold);
 
-  // Line 7: Additional Medicare Tax on wages
-  const line7 = roundDollar(line6.times(ADDITIONAL_MEDICARE_RATE));
-  setCurrencyField(form, F.line7, line7);
+    // Line 6: Excess wages over threshold
+    const line6 = zeroFloor(line4.minus(f8959.threshold));
+    setRequiredZeroCurrency(F.line6, line6);
+
+    // Line 7: Additional Medicare Tax on wages
+    const line7 = roundDollar(line6.times(ADDITIONAL_MEDICARE_RATE));
+    setCurrencyField(form, F.line7, line7);
+
+  }
 
   // Official instructions skip PartII only when existing originals establish no SE.
   const knownNoSelfEmployment = result.scheduleSE?.netSEEarnings.isZero() === true &&
@@ -170,21 +181,24 @@ export async function fillForm8959(
   // Line 18 = Line 7 + Line 13 + Line 17 (RRTA = 0)
   setCurrencyField(form, F.line18, f8959.additionalMedicareTax);
 
-  // ── Part V: Withholding Reconciliation ──
-  const totalMedicareWithheld = input.w2s.reduce(
-    (acc, w2) => acc.plus(d(w2.medicareWithheld)),
-    new Decimal(0),
-  );
-  setCurrencyField(form, F.line19, totalMedicareWithheld);
-  setCurrencyField(form, F.line20, f8959.medicareWages);
+  if (!pureSelfEmploymentOnly) {
+    // ── Part V: Withholding Reconciliation ──
+    const totalMedicareWithheld = input.w2s.reduce(
+      (acc, w2) => acc.plus(d(w2.medicareWithheld)),
+      new Decimal(0),
+    );
+    setCurrencyField(form, F.line19, totalMedicareWithheld);
+    setCurrencyField(form, F.line20, f8959.medicareWages);
 
-  const regularMedicare = roundDollar(f8959.medicareWages.times(REGULAR_MEDICARE_RATE));
-  setCurrencyField(form, F.line21, regularMedicare);
+    const regularMedicare = roundDollar(f8959.medicareWages.times(REGULAR_MEDICARE_RATE));
+    setCurrencyField(form, F.line21, regularMedicare);
 
-  setRequiredZeroCurrency(F.line22, f8959.withholdingCredit);
+    setRequiredZeroCurrency(F.line22, f8959.withholdingCredit);
 
-  // Line 24 = Line 22 + Line 23 (RRTA withholding = 0)
-  setCurrencyField(form, F.line24, f8959.withholdingCredit);
+    // Line 24 = Line 22 + Line 23 (RRTA withholding = 0)
+    setCurrencyField(form, F.line24, f8959.withholdingCredit);
+
+  }
 
   return doc;
 }

@@ -22734,5 +22734,19 @@
     "specReferences": 3,
     "remoteRuntimeQualification": "pending",
     "ledger": "docs/upgrade-2026-w2-validation-cost-work.md"
+  },
+  "nov06PureSelfEmploymentPhysicalReview": {
+    "status": "finite-historical-mapper-agent-reviewed-local-tests-passed",
+    "taxYear": 2025,
+    "mainTestsPassed": 137,
+    "mainTestFiles": 6,
+    "specReferences": 4,
+    "independentTestsPassed": 149,
+    "independentNewControls": 12,
+    "savedComponents": 2,
+    "savedPages": 2,
+    "originalCanonicalTaxUnchanged": true,
+    "humanAnd2026FilingQualified": false,
+    "ledger": "docs/upgrade-2026-form-8959-self-employment-applicability-work.md"
   }
 }

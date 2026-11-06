@@ -3753,3 +3753,8 @@ The [export correction](upgrade-2026-form-8959-review-selection-work.md) include
 ### November 6: W-2 guard avoids an unused source digest
 
 The [W-2 validation change](upgrade-2026-w2-validation-cost-work.md) preserves every original check, encoded input, failure and actual consumer commitment while omitting a digest discarded by the federal guard. Distinct58 tests in9files pass, including10 independent controls and a genuine original-API failure; current34 tests in7files,3 spec references and inventory checks pass. No Linux/browser performance or tax/readiness qualification is inferred.
+
+
+### November 6: pure self-employment review part applicability
+
+The [historical Form8959 mapper](upgrade-2026-form-8959-self-employment-applicability-work.md) now leaves inapplicable wage/withholding parts blank for original-bound positive self-employment with verified absent Medicare wages. Genuine public failures precede the correction; current137 tests in6files,4 spec references and inventory checks pass. Distinct149-test review includes12 independent cases and checks both saved PDFs, their fields/appearances/privacy and full-page renders. Raw positive cents remain distinct from zero; canonical tax, RRTA mapping and2026/filing gates remain unchanged.
