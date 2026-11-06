@@ -3680,3 +3680,16 @@ reserve stays held, with 0.28520560 USD known plus reserved; no finality, zero
 failed-attempt usage or model qualification is inferred. See [the accounting
 ledger](upgrade-2026-ai-closed-day-cost-work.md). No new paid call, credential
 change, reserve release or human review occurred.
+
+
+### November 6: current Linux image evidence independently reconciled
+
+Exact cecb image/source/SBOM/scan and six recorded Compose recovery phases pass
+saved-artifact reconciliation. The actual container browser remains 573/14/5;
+all fourteen failures retain their original 30-second deadline, while managed
+587/0/5 and both RRTA cases pass. The 81 advisory IDs match the current register
+exactly and remain unaccepted. Distinct trace wall accounting establishes no
+safe shared optimization; a separate opt-in profiling proposal continues.
+See [the current runtime ledger](upgrade-2026-cecb-runtime-evidence.md). Current
+cecb hosted/native supplements await their specific authorizations; no service
+or VM execution, final-form/human approval or release claim is added here.

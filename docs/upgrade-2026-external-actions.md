@@ -96,32 +96,36 @@ The earlier remaining-Preview row now has additional exact-source evidence: READ
 
 ### November 6: current execution and remaining runtime authority
 
-Exact6e15 local verification passes all12 checks, including27,083 unit and
-coverage cases,87.67% branches against the unchanged85% gate and585 browser
-passes with5original hosted skips. The separate managed-browser job retains
-one failed encrypted-output assertion; authenticated artifact inspection finds
-the name token only inside ciphertext and verifies exact recovered facts and
-original bytes. The [reviewed correction](upgrade-2026-encrypted-recovery-evidence-work.md)
-now passes both actual local journeys at explicit30000ms; the old failed run
-is not reclassified as passed. The [actual6e15image](upgrade-2026-6e15-runtime-evidence.md)
-retains27browserfailures despite successful recovery/SBOM/scan steps.
+Exact cecb passes all twelve local checks and six remote CI jobs. The managed
+browser passes 587 cases with five original hosted skips. The actual Linux
+image passes 573, fails fourteen original 30-second case deadlines and retains
+five original hosted skips. Both RRTA cases pass; image/source/SBOM/scan and
+six-phase recovery bindings pass distinct saved-artifact reconciliation. The
+[exact runtime ledger](upgrade-2026-cecb-runtime-evidence.md) preserves those
+limits. Trace accounting has not established a safe fix. The bounded profiling
+proposal continues independently; historical failed runs stay failed.
 
-The isolated hosted replacement has consumed1203 of1793 operations and both
+The isolated hosted replacement has consumed 1203 of 1793 operations and both
 original Preview build slots. Its read-only inspection closed with a validation
-HOLD; no actual outage, automatic retry or successful durable baseline follows
-from that observation. The fixed-predicate two-operation diagnostic and one
-additional Preview build with184 bounded operations await their specific
-supplemental authorizations. The earlier6e15source proposal needs reconciliation
-with the final current source before execution. They do not require another API key or
-mailbox setup. Original failures, credentials and counters remain preserved.
+HOLD; no actual outage, automatic retry or successful durable baseline follows.
+A combined current-cecb supplement awaits authorization: two fixed-predicate
+read-only diagnostic operations, one additional protected Preview build and 184
+bounded operations (186 additional, projected total 1389). The reviewed current
+source stage is ready; it needs no new API key or mailbox setup. No action under
+this supplement has occurred. Original failures, credentials and counters stay
+preserved.
 
-The native rehearsal also needs fresh authority for the reviewed stopped test
-VM's persistent80→384GiB growth and a fourth bounded boot/normal-stop pair.
-Historical boot grants are consumed. The prepared6e15 proposal is now held for
-final-source reconciliation while current PA browser and diagnostic test
-changes finish. No resize or boot has occurred under that proposal.
+The native current-cecb V13 controller, concrete bindings and root reviews are
+complete. Its replacement proposal awaits explicit authority for only
+`tax-native-ns-20261105` to grow persistently from 80 to 384 GiB and make one
+fourth bounded boot/normal-stop pair, sharing 270 minutes including cleanup.
+Earlier boot grants are consumed. Fresh stopped-state custody and actual
+post-boot capacity remain mandatory. No resize or boot has occurred under this
+proposal; permission to stop the default VM does not supply those new grants.
+Later documentation-only commits do not change either selected cecb source.
 
 The independent human tax, AI-case and security/privacy reviews remain
-unassigned. Final provider settlement or authoritative cost-status for the 0.022384 USD AI reserve, complete
-final2026 forms and artifact-specific hosted/native qualification also remain
-open. Passing agent reviews or local checks cannot supply those external facts.
+unassigned. Final provider settlement or authoritative cost-status for the
+0.022384 USD AI reserve, complete final 2026 forms, advisory ownership/acceptance
+and artifact-specific hosted/native qualification remain open. Passing agent
+reviews or local checks cannot supply those external facts.

@@ -22514,7 +22514,7 @@
       "inspector4000Failures": 0,
       "rrtaPaperCasesPassed": 2,
       "causeEstablished": false,
-      "artifactReviewComplete": false
+      "artifactReviewComplete": true
     },
     "pdfPrerequisites": {
       "python": "3.14.6",
@@ -22550,5 +22550,45 @@
     "modelPromotion": false,
     "authorManifestSHA256": "d5cbcd36e6924ed27ca573b9b87b6c300db82e3554f2b6f65851f33580ad8436",
     "distinctManifestSHA256": "c9fd00c0896b3f21ed0fba50929fcfc7e06c6faf795ff8ce00dddd3976a17646"
+  },
+  "nov06CecbCurrentImageReconciliation": {
+    "status": "saved_image_bindings_recovery_scan_reconciled_browser_failed_advisories_unaccepted",
+    "ledger": "docs/upgrade-2026-cecb-runtime-evidence.md",
+    "sourceHead": "cecb99444f63aca4ad8cc4411675c0fa2cf630de",
+    "sourceTree": "94ec345bb3f5cca1fc348560fd15ba0008f80c24",
+    "image": "sha256:b7c01ffc1847a871dda3f3a3afa63fc668a402e101ec9be8843067a338cba13f",
+    "platform": "linux/amd64",
+    "artifact": 13498605138,
+    "artifactBytes": 613368942,
+    "artifactSHA256": "1301653391cd0e45a87469bd45d083609e33dd9996c175169c8876082911a142",
+    "sbomComponents": 2883,
+    "scanMatches": 182,
+    "scanIDs": 81,
+    "highMatches": 62,
+    "highIDs": 19,
+    "reportedFixedMatches": 0,
+    "currentRegisterPerIDDifferences": 0,
+    "composePhasesPassed": 6,
+    "smokePassed": true,
+    "distinctManifestSHA256": "8b0d8490141d8447ee7665e002faada783bd27b55259b049ac2f518b7bbae12d",
+    "browserResults": {
+      "passed": 573,
+      "failed": 14,
+      "originalSkips": 5,
+      "failedStatus": 7,
+      "timedOutStatus": 7,
+      "caseDeadlineMS": 30000,
+      "retry": 0,
+      "configuredWorkers": 2
+    },
+    "completedExactOneNativeSnapshots": 2634,
+    "traceCauseEstablished": false,
+    "profilingExecuted": false,
+    "imageQualified": false,
+    "advisoryAcceptance": false,
+    "nativeRuntimeQualified": false,
+    "hostedRuntimeQualified": false,
+    "humanApproval": false,
+    "releaseReady": false
   }
 }
