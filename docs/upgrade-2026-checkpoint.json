@@ -22165,5 +22165,25 @@
     "filingQualified": false,
     "final2026FormsQualified": false,
     "precedingCommit": "965017bad3a11673221e2c04fc508350faf5534d"
+  },
+  "nov06IsolatedHostedV11InspectionHold": {
+    "status": "CLOSED_HOLD_RESULT_VALIDATION_UNKNOWN_PREDICATE",
+    "deployedSource": "fe1d14620f3f93f8ef7111e01a20fdada612bab9",
+    "admissionExit": 0,
+    "actualChildExit": 1,
+    "naturalClose": true,
+    "returnedReadOnlyOperations": 2,
+    "databaseMutations": 0,
+    "cumulativeOperations": 1203,
+    "inspectionUsed": 9,
+    "inspectionCap": 9,
+    "normalUsed": 14,
+    "journalRows": 2127,
+    "journalSHA256": "121b4543396e44db6142da141a45304f920f5c7f212a4f84dba259e8db4a35b9",
+    "privateEvidenceManifest": "4e22f92afcd650834416dcee8101a9c144e5340f486b2816d5194d6adae4076a",
+    "automaticRetryAllowed": false,
+    "faultExecuted": false,
+    "furtherDiagnosticNeedsSupplementalAuthority": true,
+    "ledger": "docs/upgrade-2026-isolated-hosted-replacement-evidence.md"
   }
 }

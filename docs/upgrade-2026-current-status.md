@@ -1,6 +1,7 @@
 # Current 2026 upgrade continuation
 
-Current crosswalk, November 6 UTC: PA prior-history `7788a750`, Ohio earned-school
+Current crosswalk, November 6 UTC: PA 2026 state-only draft `b4d6f00d`,
+PA prior-history `7788a750`, Ohio earned-school
 draft `4fb4ccf2`, native control inspection `6787fa88` and railroad paper originals
 `7a562763` are committed and pushed with their separate package checks. The
 [latest complete local baseline](upgrade-2026-d510-runtime-evidence.md) binds
@@ -12,10 +13,12 @@ pass locally; that does not replace a fresh container run.
 
 The [isolated hosted replacement](upgrade-2026-isolated-hosted-replacement-evidence.md)
 has two synthetic no-card trials and a successful baseline submission. Its
-read-only inspection stops safely at 1,201 of 1,793 operations; no fault has run.
-The corrected complete SQL passes 14 real local database checks. A separately
-reviewed two-operation continuation, outage/restoration and automatic retry
-remain in progress. Its deployed `fe1d1462` source is distinct from the current branch.
+read-only continuation connects and returns its query, then fails result validation
+and closes normally at 1,203 of 1,793 operations. All nine inspection operations
+are consumed; the exact failing predicate is unknown because raw rows/errors were
+discarded. No fault has run. A separately reviewed, explicitly authorized safe
+predicate diagnostic is needed before outage/restoration and automatic retry.
+Its deployed `fe1d1462` source is distinct from the current branch.
 
 The [provider refresh](upgrade-2026-provider-refresh-20261106.md) makes no paid
 call or promotion. The [security refresh](upgrade-2026-security-refresh-20261105.md)

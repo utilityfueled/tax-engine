@@ -12,11 +12,12 @@ below retain their original evidence boundaries.
   test inspection `6787fa88` are pushed with their separate evidence ledgers.
 - [x] Fresh provider documents and full/production registry audits are recorded;
   advisory conflicts and the unresolved usage reserve remain open.
-- [ ] Finish the isolated hosted read-only continuation within its remaining two
-  inspection operations, then approved outage/restoration, automatic Stripe retry
-  and cleanup. Preserve the actual 1,201-operation HOLD and all failed attempts.
-- [ ] Complete the bounded source-derived 2026 PA ordinary draft dependency work
-  and all other remaining source methods in the execution brief.
+- [!] The isolated hosted continuation returned both operations but failed result
+  validation at 1,203 cumulative; inspection is exhausted at nine operations.
+  Preserve both HOLDs. Prepare a safe predicate diagnostic and obtain its specific
+  supplemental authority before further inspection; outage/retry remains blocked.
+- [x] PA 2026 finite state-only draft `b4d6f00d`: 156 tests and all package checks
+  pass. Broader state methods, final forms and human qualification remain open.
 - [ ] Run all twelve checks on final combined source and obtain fresh remote
   container/browser and native recovery/image evidence. Historical d510 container
   failures are not cleared by later local selected cases.

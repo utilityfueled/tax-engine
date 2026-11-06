@@ -48,8 +48,24 @@ Private evidence is retained under `nov06-hosted-endpoint-v10-root-actual`,
 in `.local/upgrade-evidence/`.
 Credentials, access tokens and synthetic session contents are excluded.
 
-A separately reviewed read-only continuation must preserve the old HOLD and fit
-the remaining two inspection operations. Database outage/restoration, automatic
-Stripe retry, exact durable billing effects and cleanup remain unexecuted at
-this observation. No hosted security, recovery or release qualification follows
-from the successful setup phases.
+The separately reviewed V11 continuation then passes complete admission-only
+validation without a service connection. Actual execution returns its one
+read-only app connection and single combined SQL query, then fails result
+validation. The child closes naturally with exit 1 in 2.50 seconds. No raw row
+contents or exception were saved, so the exact failed predicate is unknown.
+This is neither a SQL-query failure nor a successful durable baseline.
+
+The current journal has 2,127 rows and 1,203 cumulative operations, including
+all nine allowed inspection operations; normal operations remain 14. Its SHA256
+is `121b4543396e44db6142da141a45304f920f5c7f212a4f84dba259e8db4a35b9`.
+Both original HOLDs remain immutable. No mutation, Stripe request or fault
+occurs in this continuation. Private natural-close and source records are in
+`nov06-hosted-inspect-v11-root-actual`; its eight-member manifest is
+`4e22f92afcd650834416dcee8101a9c144e5340f486b2816d5194d6adae4076a`.
+
+A diagnostic that returns only fixed predicate booleans and count classes is
+being prepared for separate review and explicit supplemental operations
+authority. Exhausted inspection operations will not be reassigned or reset.
+Database outage/restoration, automatic Stripe retry, exact durable billing
+effects and cleanup remain unexecuted. No hosted security, recovery or release
+qualification follows from the successful setup phases.

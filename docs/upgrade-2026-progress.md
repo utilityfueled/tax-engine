@@ -3567,3 +3567,8 @@ The exactfe1d1462 protected Preview completes endpoint4/create11/baseline8 reque
 ### November6: finite PA 2026 state-only ordinary draft
 
 The separately typed `calculatePA2026OrdinaryDraft` reuses actual FY/PY/NR originals and state composition while proving only no-care and high-income EIC-zero dependencies. The old full-federal/ordinary/PDF/filing gates remain unchanged. Main156/8, independent13 plus author29, types3/builds2/spec8580/inventory926/lint/audit1830+153 and exact590-case default/strict collection pass. All924old inventory rows and68supported statuses remain exact; both new inferred rows stay conservatively unsupported pending a separate traceability link. No browser case executed. See [the finite draft ledger](upgrade-2026-pa-2026-ordinary-draft-work.md). Human review, full2026 federal/annual forms and filing qualification remain open.
+
+
+### November6: hosted read-only continuation preserves validation HOLD
+
+The separately reviewed V11 continuation returns its read-only connection and combined SQL query, then fails result validation and closes naturally1. All9 inspection operations are now consumed, cumulative1203/1793; normal14 unchanged. No mutation, raw rows/errors, fault or successful durable-baseline claim. Both original HOLDs remain immutable. A fixed-boolean predicate diagnostic is being prepared for independent review and supplemental authority. See [the hosted ledger](upgrade-2026-isolated-hosted-replacement-evidence.md). Other packages continue.
