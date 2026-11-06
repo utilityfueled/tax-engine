@@ -22049,5 +22049,25 @@
     "filingQualified": false,
     "final2026FormsQualified": false,
     "precedingCommit": "4fb4ccf29f957c7e31ba556dd6cc3c2eb8222059"
+  },
+  "nov06SecurityRefresh": {
+    "status": "REGISTRY_ZERO_PRIMARY_METADATA_CONFLICTS_OPEN",
+    "atUTC": "2026-11-06T05:42Z",
+    "lockSha256": "268026058217dd84aee4e9b1c691fa1bac7d3049e6cb68d7fd16ef3af7a76dea",
+    "officialRequests": 10,
+    "HTTP200": 10,
+    "registryAuditAll": 539,
+    "registryAuditProduction": 447,
+    "registryFindings": 0,
+    "finiteSourceChecksPassed": 18,
+    "finiteConsistencyChecksFailed": 1,
+    "failure": "Producer response describes seven issues but contains six literal GHSA IDs; all seven separate repository APIs return200",
+    "latestNode26": "26.13.0",
+    "imageScanPerformed": false,
+    "riskAccepted": false,
+    "deadlineExtended": false,
+    "manifestSha256": "699f7a59475700005599d39a89aeaf7c21c9d097a02873a52c9fa8f37a1e172b",
+    "ledger": "docs/upgrade-2026-security-refresh-20261105.md",
+    "precedingCommit": "7788a750"
   }
 }

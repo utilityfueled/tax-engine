@@ -3547,3 +3547,8 @@ The finite2026 single full-year earned-school employee method now composes actua
 ### November6: actual PA married prior-year originals
 
 The finite2025 separate-M ordinary method now validates paired actual2024 PA-40/SP originals, explicit zero/unknown facts and current captured provenance. Main181/6 and the label-preservation replay pass; independent source review adds19 controls. Types3/builds2/spec8576/inventory924/lint/audit1828+153 and unchanged590-case default/strict collection pass. All923old inventory rows and68supported statuses remain exact; the new row is partial. See [the package ledger](upgrade-2026-pa-married-prior-history-work.md). No new actual browser/PDF, global, professional or filing qualification follows; preceding4fb4ccf2 is pushed.
+
+
+### November6: current advisory source recheck
+
+Full539 and production447 registry audits report zero findings. Ten official public requests return200; seven advisory APIs retain conflicting patched/affected fields, and the producer response describes seven issues but includes only six literal identifiers. The expected-seven consistency check remains failed alongside18 passing finite checks. Latest26 remains26.13.0 and the Nov11HIGH advance notice remains open. See [the current security follow-up](upgrade-2026-security-refresh-20261105.md). No image scan, deadline extension or risk acceptance occurred; PA7788a750 is pushed.

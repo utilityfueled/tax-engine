@@ -1,5 +1,32 @@
 # November 5 security refresh
 
+Current follow-up: on November 6 at 05:42 UTC, both registry audits again exit
+zero, across 539 full and 447 production dependency entries. Ten direct official
+requests return HTTP 200: the seven exact Next repository advisory APIs and the
+Next release, Next advance and Node advance notices. The current lock remains
+`268026058217dd84aee4e9b1c691fa1bac7d3049e6cb68d7fd16ef3af7a76dea`.
+
+The retrieved Next release response recommends 16.4.5 and describes seven
+issues, but contains only six literal GHSA identifiers: the shared-shell section
+omits `GHSA-vvgp-ww4w-46vf`. The separate API record for that identifier returns
+successfully. An expected-seven-identifiers consistency check therefore fails;
+18 other finite source/audit checks pass. This does not establish withdrawal,
+remediation or a newly changed advisory. All seven API records retain Medium
+severity, their affected/patched-field conflicts remain, and the producer's
+cache disclosure section still says High. The earlier snapshots below retain
+their original observations.
+
+The fresh Node index still lists 26.13.0 as latest in 26.x, and the advance notice
+still announces HIGH fixes on or shortly after November 11. No newer patch,
+current image scan, deadline extension or risk acceptance is established here.
+Accountable human security disposition and current image evidence remain open.
+Raw public responses, exact audit results, the failed consistency check and
+visible producer extracts are retained in
+`.local/upgrade-evidence/nov06-root-security-refresh/`; provider and Node index
+receipts are in `nov06-root-public-provider-refresh/`.
+The 19-member frozen security manifest SHA256 is
+`699f7a59475700005599d39a89aeaf7c21c9d097a02873a52c9fa8f37a1e172b`.
+
 The initial source/advisory refresh below used the 16.4.5 dependency lock with
 SHA256 `d199e2344fa6cf61402330f216e3f7ccf6bc9b5e7a568670b29a9fe27dc8c23f`.
 It was not an image scan or release qualification and changed no gate. The table
