@@ -3707,3 +3707,17 @@ The profiling implementation and other qualification work continue separately.
 ### November 6: reviewed optional browser sampling
 
 The [default-off diagnostic](upgrade-2026-browser-cpu-diagnostics-work.md) preserves all592 original contracts and strict30s deadlines on14 retained Linux failures. A genuine inventory privacy RED is corrected before runtime; distinct16 controls and current98 focused/inventory checks pass, along with types3, scoped fixture types, builds2, strict owned lint and8,603 spec references. The original stale generated inventory failure remains retained before ordinary regeneration/check success. Actual592/592/14 list-only collection launches no browser. The separate manual CI action never supersedes the original failure; full new-source verification and actual diagnostic observations remain open. No application calculation, filing/model or readiness gate changes.
+
+
+### November 6: local ef7 passes; remote browser failures retained
+
+The exact ef7 local closure passes27,167 unit tests,87.67% branch coverage and
+587 browser cases with five original hosted skips. Both remote CI runs pass
+all six jobs, while PR managed has two4s saved-PDF failures and its strict
+container has19 failures. The separate manual managed run passes, but its
+strict container has25 failures. Optional14-case sampling yields seven usable
+profiles and seven fixed unavailable records; it never replaces the original
+failure. Independent manifests, source/image custody, exact outcomes and scope
+limits are recorded in [the execution ledger](upgrade-2026-browser-cpu-diagnostics-work.md).
+The failed strict browser gate, hosted/native qualification and human/form/AI
+review gates remain open. Separate implementation continues from this evidence.

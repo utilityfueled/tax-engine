@@ -45,3 +45,61 @@ The working checkout passes 74 focused/adjacent tests and 24 inventory controls,
 The reviewed workflow now exposes a default-false manual input and forwards explicit enabled/original-failure inputs to the action. Its original command, 90-minute job deadline, assertions, retries and request protections remain unchanged. Only the dedicated sanitized directory is added to artifact uploads. Full new-source unit/coverage/browser results and actual opt-in CI observations remain pending; the previous actual container failure is retained. This package establishes no timing improvement, completed distribution qualification or readiness promotion.
 
 ROOT preserves the original request audit’s UTF8 review text instead of the private serializer’s equivalent Unicode escape, and refreshes only its required raw-byte binding in the case manifest. The integrated audit SHA256 is `5738917f2cd4449185251ee32ae669a6b767ef20d89807fb518d47728770f383`; the four import source hashes are its only semantic changes. The 74 focused controls and fresh 592/592/14 collection proof pass again after that metadata correction, with the first results retained.
+
+
+## Exact ef7 execution and original failures
+
+Source `ef7cbac53ff5d28a04f7a694527d8900d5420e89`, tree
+`1186753e894b446e3634a2bb16d24a8e1338d2be`, completed the remaining local
+checks without source drift: model-ledger check, lint, 27,167 unit tests in
+1,953 files, coverage and the full managed browser suite. Coverage is91.82%
+statements/87.67% branches/90.91% functions/95.13% lines; the85% branch gate
+remains unchanged. The actual local browser result is587 passed, zero failed
+and five original hosted skips across592 cases, one attempt and zero retries.
+All5,480 source pins and4,773 runtime pins reconcile. The owned local server
+closure is recorded. Together with the earlier types/build/spec/inventory
+checks, the required local checks pass; this does not qualify skipped hosting
+or either remote distribution. Independent local-closure manifest is
+`461faad0c699cfcd9f66b7c10fe578de5f26a04200dbec31681df04a51a0027d`.
+
+Both exact-source GitHub CI runs pass all six jobs: push42218687142 and
+PR42218695445. Browser outcomes remain separate. PR Web42218695111 fails:
+managed592 cases/two RRTA saved-PDF inspector failures/five original skips;
+strict container592 cases/19 failures/five original skips. Its failures are
+18 original30s test timeouts and one original4s saved-PDF scanner timeout.
+Manual Web42218738783 has managed592/zero failures/five skips, but its separate
+strict container has562 passed/25 failed/five skips:23 original30s test
+timeouts and two original4s scanner timeouts. The manual managed pass does not
+erase the PR failures or establish their cause. The ordinary push browser run
+was cancelled by the existing concurrency policy.
+
+The manual optional sampling step executes and fails separately, preserving
+`originalFailureSuperseded=false`. All14 selected cases fail, eight timed out
+and six failed. Seven profiles pass the independent strict schema/privacy,
+source/image/case/tree/sample/weight reader; seven contain only fixed
+invalid-profile unavailable records. The dedicated artifact has18 approved
+JSON members,618,508 bytes and SHA256
+`67f04bd1bd51e162c592e435f73355909f1b65eca4580c0637843a713fa57ce4`.
+It binds the exact ef7 linux/amd64 image
+`2efaa4c5500b35b4d6fe5cc656f30f8225e74bfbe10553cdad9a3e31358c4564`.
+No complete container archive, raw CDP profile, URL, document or identifier was
+needed for this review. Sampling upload, SBOM/scan/source checks and the
+workflow's owned-container removal complete successfully. These are saved
+workflow cleanup observations, not an independent live process-absence probe.
+
+Accepted current-page-isolate weights total50,966,788 microseconds:
+18,478,994 public JavaScript,13,029,969 idle,12,404,686 program,1,153,298 GC
+and5,899,841 other. Spans range2.279–27.362 seconds. These are sampling wall
+intervals, not processCPU or complete test durations. Exact local public-chunk
+hash matches map recorded locations to the pinned SHA256 implementation,
+actual W2/Ohio source serialization and Decimal. This identifies executed work;
+it does not establish repeated equivalent inputs or a timeout cause. The
+browser sampler does not measure the separate Python scanner.
+
+Independent remote manifest is
+`437d51a3a319a8b419eab968bb8541e5c416f8b398dc6ffdd31653bae59348f4`
+(49 members), and the exact generated-location follow-up is
+`9d69e298675ef0fe00270f263d7910b576e876037aabc007097cb358319de52f`
+(three members). ROOT rehashes both and reads the complete reports. Source
+qualification remains failed. Bounded private scanner and validation changes
+are under separate review; none is counted as a remote performance fix here.
