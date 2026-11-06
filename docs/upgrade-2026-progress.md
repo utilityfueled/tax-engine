@@ -3643,3 +3643,13 @@ checks pass; four action buttons receive the existing larger button style after
 screenshot review, followed by three passing checks and viewed final layouts.
 No target facts are seeded and2026 output stays gated. See [the browser ledger](upgrade-2026-pa-2026-childless-eic-browser-work.md).
 Final combined/runtime, hosted/native, human and final-form gates remain open.
+
+### November6: bounded RRTA timing evidence
+
+Optional source-free entered-phase diagnostics preserve the original4s privacy
+inspector and every verdict/limit. Distinct escaped-key failures remain retained;
+the narrow correction passes52author+7distinct controls and52main tests. Seven
+main non-browser checks pass. An initial sandbox bind denial starts no cases;
+the permission-enabled follow-up passes both actual journeys at30s/0retries.
+See [the diagnostics ledger](upgrade-2026-rrta-phase-diagnostics-work.md).
+No Linux timeout cause or final qualification is claimed; combined checks follow.

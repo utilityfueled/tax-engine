@@ -2,11 +2,36 @@
 Every surface is strict except source-position-proven fractional cm/Tm operands
 in actual page content or Do-referenced Form XObjects. Not a general PII claim.
 """
-import io,json,re,sys,os,stat,hashlib
+import io,json,re,sys,os,stat,hashlib,time
 from decimal import Decimal
+# Optional source-free evidence only. Unsupported/broken FD disables diagnostics.
+_PHASE_NAMES=('module_started','imports_ready','inspection_entered','content_contexts','operand_strings','raw_graph','page_text','complete')
+_phase_enabled=__name__=='__main__' and sys.argv[-1:]==['--phase-fd3']
+_phase_seq=0;_phase_bytes=0;_phase_wall=0;_phase_cpu=0
+if _phase_enabled:
+ sys.argv.pop()
+ try:
+  os.set_blocking(3,False);_phase_wall=time.monotonic_ns();_phase_cpu=time.process_time_ns()
+ except Exception:_phase_enabled=False
+def _phase(name):
+ global _phase_enabled,_phase_seq,_phase_bytes
+ if not _phase_enabled:return
+ try:
+  if _phase_seq>=8 or name!=_PHASE_NAMES[_phase_seq]:raise ValueError()
+  wall=(time.monotonic_ns()-_phase_wall)//1000;cpu=(time.process_time_ns()-_phase_cpu)//1000
+  if not (type(wall) is int and type(cpu) is int and 0<=wall<=10000000 and 0<=cpu<=10000000):raise ValueError()
+  payload=(json.dumps({'v':1,'seq':_phase_seq,'phase':name,'wallUs':wall,'cpuUs':cpu},separators=(',',':'))+'\n').encode('ascii')
+  if len(payload)>256 or _phase_bytes+len(payload)>2048:raise ValueError()
+  _phase_bytes+=len(payload)
+  if os.write(3,payload)!=len(payload):raise ValueError()
+  _phase_seq+=1
+ except Exception:_phase_enabled=False
+_phase('module_started')
 from pypdf import PdfReader
 from pypdf.generic import (ContentStream,IndirectObject,DictionaryObject,ArrayObject,StreamObject,TextStringObject,ByteStringObject,NameObject,NumberObject,FloatObject,read_object,create_string_object)
 from pypdf._utils import read_non_whitespace,read_until_regex
+
+_phase('imports_ready')
 
 class Deny(Exception):pass
 MAX_PDF=32*1024*1024
@@ -59,6 +84,7 @@ def parse_content(data,reader):
  return ops,spans
 
 def inspect(raw,markers):
+ _phase('inspection_entered')
  require(type(raw) is bytes and 0<len(raw)<=MAX_PDF and raw.startswith(b'%PDF-'),'pdf-input')
  require(type(markers) is list and 0<len(markers)<=128 and len(set(markers))==len(markers) and all(type(m) is str and 0<len(m)<=512 for m in markers),'markers-input')
  reader=PdfReader(io.BytesIO(raw),strict=True);require(not reader.is_encrypted,'encrypted-pdf');require(0<len(reader.pages)<=100,'page-limit')
@@ -149,6 +175,7 @@ def inspect(raw,markers):
     require(isinstance(target,StreamObject),'Do-type')
     if target.get('/Subtype')=='/Form':content_group([child],target.get('/Resources',resources),depth+1)
   visiting.remove(groupkey)
+ _phase('content_contexts')
  for page in reader.pages:
   contents=resolved(page.raw_get('/Contents')) if '/Contents' in page else []
   if not isinstance(contents,(ArrayObject,list)):contents=[contents]
@@ -160,6 +187,7 @@ def inspect(raw,markers):
   elif isinstance(a,(ArrayObject,list)):
    for x in a:argscan(x)
   elif isinstance(a,IndirectObject):raise Deny('content-reference')
+ _phase('operand_strings')
  for ops in groups:
   for args,op in ops:argscan(args)
  def visit(v,label):
@@ -184,13 +212,16 @@ def inspect(raw,markers):
   elif isinstance(v,ArrayObject):
    for x in v:visit(x,label)
   elif isinstance(v,(NumberObject,FloatObject)):scan_string(v)
+ _phase('raw_graph')
  scan_bytes(raw,'raw-file')
  visit(reader.trailer,'trailer')
  for gen,objects in reader.xref.items():
   for num in objects:
    if num:visit(IndirectObject(num,gen,reader),'xref')
  for num in reader.xref_objStm:visit(IndirectObject(num,0,reader),'object-stream')
+ _phase('page_text')
  for page in reader.pages:scan_string(page.extract_text())
+ _phase('complete')
  return {'schemaVersion':1,'status':'PASS','sha256':hashlib.sha256(raw).hexdigest(),'bytes':len(raw),'pages':len(reader.pages),'markersChecked':len(markers),'geometrySubstringExemptions':len(exemptions),'scope':'full-graph-typed-content'}
 
 def main():

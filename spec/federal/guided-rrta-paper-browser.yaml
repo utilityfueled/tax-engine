@@ -27,3 +27,22 @@ lines:
   - line: "saved-pdf-safe-child-failure-categories"
     formula: "Fail-closed child outcomes expose only a fixed safe category for timeout, spawn error, signal, exit, stderr, output, JSON or projection inconsistency; never raw error/code/stream/identifier content. Original4s deadline,64KiB bound, exact input hashes/pages/marker counts/scope and all privacy predicates remain."
     testRef: "tests/pdf/rrta-saved-review-privacy-efficiency.test.ts::classifies bounded child failure %s without raw data"
+
+  - line: "saved-pdf-optional-phase-telemetry"
+    description: "Bounded source-free entered-phase evidence for the existing4s inspector"
+    formula: |
+      Optional FD3 carries at most8 fixed ordered major-phase records/2048bytes.
+      Each contains only version/ordinal/fixed phase/nonnegative integer cumulative
+      wall and processCPU microseconds. No document/source/marker/error data.
+      Strict whole-payload parsing rejects unknown/truncated/oversize/malformed
+      telemetry without changing the original child verdict. Failure-only output
+      is a reconstructed whitelist with original safe failure category; no raw
+      output fallback. Preserve4000ms/65536B/env and original8 success fields.
+      Nine privacy/main ASTs unchanged; only six outer inspect stage calls.
+      Unsupported FD/writes disable optional diagnostics; no retry. Shared pipe
+      flooding remains an original process error, never ignored as success.
+    testRef: "tests/pdf/rrta-saved-review-privacy-efficiency.test.ts::records safe phase evidence on the original timeout without forwarding raw child data"
+
+  - line: "saved-pdf-telemetry-literal-wire-grammar"
+    formula: "Reject every backslash escape in optional telemetry before JSON decoding. The supported fixed ASCII writer has no escaped keys/values; escaped duplicate keys are malformed, never a valid diagnostic prefix. Preserve original timeout/privacy verdict and no raw output."
+    testRef: "tests/pdf/rrta-saved-review-privacy-efficiency.test.ts::rejects escaped duplicate diagnostic keys through the actual failure wrapper: %s"

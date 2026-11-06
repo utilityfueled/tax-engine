@@ -49,11 +49,33 @@ export function privacyFailure(request:{url:string;method:string;body:string},or
 export interface SavedReviewPrivacyInspection {
  schemaVersion:1;status:'PASS';sha256:string;bytes:number;pages:number;markersChecked:number;geometrySubstringExemptions:number;scope:'full-graph-typed-content';
 }
+const savedPrivacyPhases=['module_started','imports_ready','inspection_entered','content_contexts','operand_strings','raw_graph','page_text','complete']as const;
+export interface SavedPrivacyPhase {v:1;seq:number;phase:typeof savedPrivacyPhases[number];wallUs:number;cpuUs:number;}
+/** Untrusted diagnostic bytes never participate in the privacy verdict. */
+export function parseSavedPrivacyPhases(raw:unknown):SavedPrivacyPhase[]|null{
+ if(Buffer.isBuffer(raw))raw=raw.toString('utf8');
+ if(typeof raw!=='string'||!raw.length||Buffer.byteLength(raw,'utf8')>2048||!/^[\x20-\x7e\n]+$/u.test(raw)||raw.includes('\\')||!raw.endsWith('\n'))return null;
+ const lines=raw.slice(0,-1).split('\n');if(!lines.length||lines.length>8)return null;const result:SavedPrivacyPhase[]=[];
+ for(const[lineIndex,line]of lines.entries()){
+  if(Buffer.byteLength(line,'utf8')>256||(line.match(/"(?:v|seq|phase|wallUs|cpuUs)"\s*:/gu)?.length??0)!==5)return null;
+  let parsed:unknown;try{parsed=JSON.parse(line);}catch{return null;}
+  if(!parsed||typeof parsed!=='object'||Array.isArray(parsed))return null;const v=parsed as Record<string,unknown>,keys=['v','seq','phase','wallUs','cpuUs'];
+  if(Object.keys(v).length!==keys.length||keys.some(k=>!Object.hasOwn(v,k))||v.v!==1||v.seq!==lineIndex||v.phase!==savedPrivacyPhases[lineIndex])return null;
+  if(!Number.isSafeInteger(v.wallUs)||!Number.isSafeInteger(v.cpuUs)||(v.wallUs as number)<0||(v.cpuUs as number)<0||(v.wallUs as number)>10000000||(v.cpuUs as number)>10000000)return null;
+  const previous=result.at(-1);if(previous&&((v.wallUs as number)<previous.wallUs||(v.cpuUs as number)<previous.cpuUs))return null;
+  result.push({v:1,seq:lineIndex,phase:v.phase as typeof savedPrivacyPhases[number],wallUs:v.wallUs as number,cpuUs:v.cpuUs as number});
+ }
+ return result;
+}
 /** Fixed saved-byte inspector. Child output never supplies trusted bytes, scope or source facts. */
 export function inspectSavedPrivacy(path:string,identifiers:readonly string[],expected:{sha256:string;bytes:number;pages:number}):SavedReviewPrivacyInspection{
- const fail=(category:'timeout'|'spawn'|'signal'|'exit'|'stderr'|'output'|'json'|'projection')=>new Error(`Bounded saved-PDF privacy inspection failed [${category}]`);
+ const began=process.hrtime.bigint();let child:SpawnSyncReturns<string>|undefined;
+ const fail=(category:'timeout'|'spawn'|'signal'|'exit'|'stderr'|'output'|'json'|'projection')=>{
+  try{const phases=parseSavedPrivacyPhases(child?.output?.[3]),elapsed=Number((process.hrtime.bigint()-began)/1000n),parentWallUs=Number.isSafeInteger(elapsed)&&elapsed>=0&&elapsed<=10000000?elapsed:null;console.info('RRTA_PDF_PHASE '+JSON.stringify({schemaVersion:1,status:phases?'VALID_PREFIX':'UNAVAILABLE',category,parentWallUs,phases:phases??[]}));}catch{/* Optional diagnostics never forward errors or change the verdict. */}
+  return new Error(`Bounded saved-PDF privacy inspection failed [${category}]`);
+ };
  const env:NodeJS.ProcessEnv={};for(const key of ['PATH','SystemRoot','WINDIR','TMPDIR','TMP','TEMP','LANG','LC_ALL'])if(process.env[key]!==undefined)env[key]=process.env[key];
- let child:SpawnSyncReturns<string>;try{child=spawnSync(process.env.TAX_ENGINE_PDF_TEST_PYTHON??'python3',['-I','-B',fileURLToPath(new URL('./rrta-paper-review-privacy.py',import.meta.url)),path],{input:JSON.stringify(identifiers),encoding:'utf8',timeout:4000,maxBuffer:65536,env,stdio:['pipe','pipe','pipe']});}catch{throw fail('spawn');}
+ try{child=spawnSync(process.env.TAX_ENGINE_PDF_TEST_PYTHON??'python3',['-I','-B',fileURLToPath(new URL('./rrta-paper-review-privacy.py',import.meta.url)),path,'--phase-fd3'],{input:JSON.stringify(identifiers),encoding:'utf8',timeout:4000,maxBuffer:65536,env,stdio:['pipe','pipe','pipe','pipe']});}catch{throw fail('spawn');}
  if(child.error)throw fail((child.error as NodeJS.ErrnoException).code==='ETIMEDOUT'?'timeout':'spawn');
  if(child.signal!==null)throw fail('signal');
  if(child.status!==0)throw fail('exit');

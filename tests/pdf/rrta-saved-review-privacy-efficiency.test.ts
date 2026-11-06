@@ -2,8 +2,11 @@
 import {afterEach,describe,expect,it,vi} from 'vitest';
 import {spawnSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
+import {mkdtemp,writeFile,rm} from 'node:fs/promises';
+import {tmpdir} from 'node:os';
+import {join} from 'node:path';
 import {PDFDocument,PDFHexString,PDFName} from 'pdf-lib';
-import {inspectSavedPrivacy} from '../../apps/web/tests/helpers/rrta-paper-review-fixture';
+import {inspectSavedPrivacy,parseSavedPrivacyPhases} from '../../apps/web/tests/helpers/rrta-paper-review-fixture';
 vi.mock('node:child_process',async importOriginal=>({...await importOriginal<typeof import('node:child_process')>(),spawnSync:vi.fn()}));
 afterEach(()=>vi.mocked(spawnSync).mockReset());
 const expected={sha256:'a'.repeat(64),bytes:100,pages:4};
@@ -67,4 +70,71 @@ describe('Spec guided-rrta-paper-browser bounded parser reuse and safe categorie
  it('retains cycle denial for repeated identical syntax',async()=>{expect((await runProbe({pdf:await sample(true,undefined,true),markers:['111111111'],inspections:1})).results).toEqual(['DENY:content-cycle']);});
  it('revalidates missing Do resources independently for identical parser bytes',async()=>{expect((await runProbe({pdf:await sample('missing'),markers:['111111111'],inspections:1})).results).toEqual(['DENY:Do-resource']);});
  it('revalidates each resource context despite repeated identical operator bytes',async()=>{const r=await runProbe({pdf:await sample(true),markers:['111111111'],inspections:1});expect(r.results).toEqual(['DENY:private-marker']);});
+});
+
+it('records safe phase evidence on the original timeout without forwarding raw child data',()=>{
+ const info=vi.spyOn(console,'info').mockImplementation(()=>{});
+ try{
+  const phases=JSON.stringify({v:1,seq:0,phase:'module_started',wallUs:0,cpuUs:0})+'\n';
+  vi.mocked(spawnSync).mockReturnValue(child({error:Object.assign(new Error(privateSentinel),{code:'ETIMEDOUT'}),output:[null,privateSentinel,privateSentinel,phases]}));
+  expect(()=>inspectSavedPrivacy('synthetic-unused.pdf',['111111111'],expected)).toThrow('Bounded saved-PDF privacy inspection failed [timeout]');
+  expect(info).toHaveBeenCalledOnce();const line=String(info.mock.calls[0]?.[0]);expect(line).not.toContain(privateSentinel);expect(line.startsWith('RRTA_PDF_PHASE ')).toBe(true);const record=JSON.parse(line.slice('RRTA_PDF_PHASE '.length));expect(record).toMatchObject({schemaVersion:1,status:'VALID_PREFIX',category:'timeout',phases:[{v:1,seq:0,phase:'module_started',wallUs:0,cpuUs:0}]});
+  const opts=vi.mocked(spawnSync).mock.calls[0]?.[2]as{timeout:number;maxBuffer:number;stdio:string[]};expect(opts.timeout).toBe(4000);expect(opts.maxBuffer).toBe(65536);expect(opts.stdio).toEqual(['pipe','pipe','pipe','pipe']);
+ }finally{info.mockRestore();}
+});
+
+/** Spec: federal/guided-rrta-paper-browser.yaml#saved-pdf-optional-phase-telemetry. */
+const phaseNames=['module_started','imports_ready','inspection_entered','content_contexts','operand_strings','raw_graph','page_text','complete'];
+const phaseRows=phaseNames.map((phase,seq)=>({v:1,seq,phase,wallUs:seq*20,cpuUs:seq*10}));
+const wire=(rows:unknown[]=phaseRows)=>rows.map(row=>JSON.stringify(row)).join('\n')+'\n';
+it('accepts only complete bounded ordered diagnostic prefixes',()=>{
+ for(let i=1;i<=8;i++){const rows=phaseRows.slice(0,i);expect(parseSavedPrivacyPhases(wire(rows))).toEqual(rows);expect(parseSavedPrivacyPhases(Buffer.from(wire(rows)))).toEqual(rows);}
+});
+it('rejects malformed telemetry wholly rather than forwarding a valid prefix',()=>{
+ const[first,second]=phaseRows;if(!first||!second)throw Error('Synthetic phase fixture missing');
+ const invalid:unknown[]=[undefined,null,{},Buffer.from([255]),'',wire().slice(0,-1),wire()+'truncated',wire()+'\n',' '.repeat(2049),wire([...phaseRows,first]),wire([first,first]),wire([second]),wire([{...first,extra:privateSentinel}]),wire([{...first,phase:privateSentinel}]),wire([{...first,v:2}]),wire([{...first,seq:0.5}]),wire([{...first,wallUs:-1}]),wire([{...first,cpuUs:0.5}]),wire([{...first,cpuUs:10000001}]),wire([{...first,wallUs:Infinity}]),wire([{...first,wallUs:NaN}]),wire([{...first,wallUs:2},{...second,wallUs:1}]),wire([{...first,cpuUs:2},{...second,cpuUs:1}]),wire([first])+privateSentinel+'\n',wire([{...first,phase:'é'}]),'{"v":1,"v":1,"seq":0,"phase":"module_started","wallUs":0,"cpuUs":0}\n'];
+ for(const raw of invalid)expect(parseSavedPrivacyPhases(raw)).toBeNull();
+});
+it('keeps malformed or absent diagnostic bytes nonverdict and success silent',()=>{
+ const info=vi.spyOn(console,'info').mockImplementation(()=>{});
+ try{for(const raw of [undefined,privateSentinel,wire()+'broken']){
+  vi.mocked(spawnSync).mockReturnValue(child({output:[null,null,null,raw]}));expect(inspectSavedPrivacy('synthetic-unused.pdf',['111111111'],expected)).toEqual(good);expect(info).not.toHaveBeenCalled();
+  vi.mocked(spawnSync).mockReturnValue(child({status:2,output:[null,privateSentinel,privateSentinel,raw]}));expect(()=>inspectSavedPrivacy('synthetic-unused.pdf',['111111111'],expected)).toThrow('Bounded saved-PDF privacy inspection failed [exit]');
+  const line=String(info.mock.calls.at(-1)?.[0]);expect(line).not.toContain(privateSentinel);expect(JSON.parse(line.slice('RRTA_PDF_PHASE '.length))).toMatchObject({status:'UNAVAILABLE',category:'exit',phases:[]});info.mockClear();
+ }}finally{info.mockRestore();}
+});
+it('retains child error authority even with complete valid telemetry and failed logging',()=>{
+ const info=vi.spyOn(console,'info').mockImplementation(()=>{throw Error(privateSentinel);});
+ try{vi.mocked(spawnSync).mockReturnValue(child({error:Object.assign(Error(privateSentinel),{code:'ENOBUFS'}),output:[null,null,null,wire()]}));expect(()=>inspectSavedPrivacy('synthetic-unused.pdf',['111111111'],expected)).toThrow('Bounded saved-PDF privacy inspection failed [spawn]');}finally{info.mockRestore();}
+});
+it('emits only fixed phase evidence through FD3 while standalone and missing FD preserve results',async()=>{
+ const real=await vi.importActual<typeof import('node:child_process')>('node:child_process'),dir=await mkdtemp(join(tmpdir(),'rrta-phase-'));
+ try{const path=join(dir,'synthetic.pdf');await writeFile(path,Buffer.from(await sample(),'base64'));
+  const options={input:JSON.stringify(['111111111']),encoding:'utf8' as const,timeout:4000,maxBuffer:65536,env:{PATH:process.env.PATH??'/usr/bin:/bin'}};
+  const enabled=real.spawnSync(python,['-I','-B',pySource,path,'--phase-fd3'],{...options,stdio:['pipe','pipe','pipe','pipe']});expect(enabled.error).toBeUndefined();expect(enabled.status).toBe(0);expect(enabled.stderr).toBe('');
+  const rows=parseSavedPrivacyPhases(enabled.output[3]);expect(rows?.map(row=>row.phase)).toEqual(phaseNames);expect(Object.keys(JSON.parse(enabled.stdout))).toHaveLength(8);expect(JSON.stringify(rows)).not.toContain('111111111');
+  for(const args of [[pySource,path],[pySource,path,'--phase-fd3']]){const disabled=real.spawnSync(python,['-I','-B',...args],options);expect(disabled.error).toBeUndefined();expect(disabled.status).toBe(0);expect(disabled.stderr).toBe('');expect(JSON.parse(disabled.stdout)).toEqual(JSON.parse(enabled.stdout));}
+  const noFlag=real.spawnSync(python,['-I','-B',pySource,path],{...options,stdio:['pipe','pipe','pipe','pipe']});expect(noFlag.error).toBeUndefined();expect(noFlag.status).toBe(0);expect(noFlag.output[3]).toBe('');
+ }finally{await rm(dir,{recursive:true,force:true});}
+});
+
+/** Spec: federal/guided-rrta-paper-browser.yaml#saved-pdf-telemetry-literal-wire-grammar. */
+it.each([
+ ['version','{"\\u0076":"'+privateSentinel+'","v":1,"seq":0,"phase":"module_started","wallUs":0,"cpuUs":0}\n'],
+ ['phase','{"v":1,"seq":0,"\\u0070hase":"'+privateSentinel+'","phase":"module_started","wallUs":0,"cpuUs":0}\n'],
+])('rejects escaped duplicate diagnostic keys through the actual failure wrapper: %s',(_name,raw)=>{
+ const info=vi.spyOn(console,'info').mockImplementation(()=>{});
+ try{vi.mocked(spawnSync).mockReturnValue(child({error:Object.assign(Error(privateSentinel),{code:'ETIMEDOUT'}),output:[null,privateSentinel,privateSentinel,raw]}));
+  expect(()=>inspectSavedPrivacy('synthetic-unused.pdf',['111111111'],expected)).toThrow('Bounded saved-PDF privacy inspection failed [timeout]');
+  expect(info).toHaveBeenCalledOnce();const line=String(info.mock.calls[0]?.[0]);expect(line).not.toContain(privateSentinel);expect(JSON.parse(line.slice('RRTA_PDF_PHASE '.length))).toMatchObject({status:'UNAVAILABLE',category:'timeout',phases:[]});expect(parseSavedPrivacyPhases(raw)).toBeNull();
+ }finally{info.mockRestore();}
+});
+it('rejects all escaped wire spellings including an otherwise known phase enum',()=>{
+ const escaped=[String.raw`{"v":1,"seq":0,"phase":"module\u005fstarted","wallUs":0,"cpuUs":0}`,String.raw`{"\u0076":1,"seq":0,"phase":"module_started","wallUs":0,"cpuUs":0}`,String.raw`{"v":1,"seq":0,"phase":"module_started","wallUs":0,"cpuUs":0,"extra":"\\"}`];
+ for(const raw of escaped)expect(parseSavedPrivacyPhases(raw+'\n')).toBeNull();
+});
+it('retains supported ASCII spaces and safe integer values without changing numeric grammar',()=>{
+ const raw=' { "v" : 1.0, "seq" : -0, "phase" : "module_started", "wallUs" : 1e2, "cpuUs" : 1.0 } \n';
+ expect(parseSavedPrivacyPhases(raw)).toEqual([{v:1,seq:0,phase:'module_started',wallUs:100,cpuUs:1}]);
+ for(const n of [-1,0.5,10000001,Number.MAX_SAFE_INTEGER])expect(parseSavedPrivacyPhases(wire([{...phaseRows[0],wallUs:n}]))).toBeNull();
 });

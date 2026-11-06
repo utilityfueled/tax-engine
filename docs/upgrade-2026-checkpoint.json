@@ -22392,7 +22392,7 @@
     "sourcePins": 5465,
     "actualFollowupPassed": 2,
     "actualFollowupSeconds": 6.0,
-    "ownedServerClosed": 60479,
+    "ownedServerClosed": true,
     "screenshotsViewed": [
       "1280",
       "390"
@@ -22415,6 +22415,45 @@
     "oldInventoryRowsExact": 928,
     "supportedRowsUnchanged": 68,
     "filingEnabled": false,
-    "humanApproval": false
+    "humanApproval": false,
+    "ownedServerPID": 60479,
+    "commit": "9473cb76781eca7002cc64cbe7608aeb48b191a2"
+  },
+  "nov06RRTAPhaseDiagnostics": {
+    "status": "implemented_focused_and_actual_browser_verified_pending_combined_remote",
+    "sourceBase": "9473cb76781eca7002cc64cbe7608aeb48b191a2",
+    "ledger": "docs/upgrade-2026-rrta-phase-diagnostics-work.md",
+    "authorMembersVerified": 49,
+    "distinctMembersVerified": 67,
+    "mainNonbrowserChecksPassed": 7,
+    "mainFocusedTestsPassed": 52,
+    "browserInitialBindDenied": true,
+    "initialStartedCases": 0,
+    "browserFollowupPassed": 2,
+    "browserSeconds": 9.0,
+    "sourcePins": 5466,
+    "sourceDrift": [],
+    "ownedServerPID": 65353,
+    "ownedServerClosed": true,
+    "sourceAuditOnlyTwoExistingHashesChanged": [
+      "apps/web/tests/helpers/rrta-paper-review-fixture.ts",
+      "apps/web/tests/helpers/rrta-paper-review-privacy.py"
+    ],
+    "contractsUnchanged": 154,
+    "casesUnchanged": 592,
+    "inventoryUnchanged": true,
+    "linuxTimeoutCauseEstablished": false,
+    "authorFocusedPassed": 52,
+    "distinctFocusedPassed": 59,
+    "historicalActualFailuresPreserved": true,
+    "specLines": 8595,
+    "browserTimeoutMS": 30000,
+    "inspectorTimeoutMSUnchanged": 4000,
+    "configuredWorkers": 2,
+    "actualWorkers": 1,
+    "retries": 0,
+    "skips": 0,
+    "monetaryCalculationChanged": false,
+    "finalRuntimeQualified": false
   }
 }
