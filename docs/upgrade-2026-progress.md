@@ -3589,3 +3589,17 @@ parser calls646→193 and all measured visits stay exact. Nine static checks and
 both actual desktop/mobile journeys pass with original limits and closed server.
 See [the inspector ledger](upgrade-2026-rrta-inspector-efficiency-work.md). Remote
 cause/successor qualification and human/final2026/staging gates remain open.
+
+
+### November6: actual b1 Linux image and primary advisory evidence
+
+All12 local b1 checks pass (27,065 tests/1,948 files;87.67% branches), and remote
+CI passes. The separate Web workflow fails: managed2RRTA cases and actual image
+27cases remain unsuccessful. Real six-phase Compose migration/recovery/rollback,
+smoke, immutable source binding,2,883-component SBOM and scan complete; that does
+not qualify the failed browser cohort. The current amd64 image contains81IDs/
+182matches, including newCVE-2026-76844. All81 primary trixie rows are retained;
+none reports a fixed version. Owner acceptance and overdue recheck remain open.
+See [the exact-source runtime ledger](upgrade-2026-b1-runtime-evidence.md) and
+[current advisory register](upgrade-2026-image-advisories-20261106.json).
+RRTA successor fb37032b is separately committed and pushed; it needs fresh runs.
