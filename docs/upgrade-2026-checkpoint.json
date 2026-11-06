@@ -23054,5 +23054,38 @@
     "currentFullSuccessorRequired": true,
     "releaseReady": false,
     "ledger": "docs/upgrade-2026-combined-browser-audit-work.md"
+  },
+  "nov06NonitemizerSolePriorVerification": {
+    "status": "focused-passed-full-successor-required",
+    "sourceBaseline": "032b329d13d37012b37334f2f97893eaf35f379a",
+    "baselineUnit": {
+      "passed": 27332,
+      "failed": 1,
+      "skipped": 0
+    },
+    "runtimeChanged": false,
+    "specFirst": true,
+    "focused": {
+      "passed": 15,
+      "files": 4,
+      "elapsedSeconds": "2.532359208",
+      "retry": false
+    },
+    "checks": [
+      "engine types",
+      "8665 spec references",
+      "inventory generation/check",
+      "scoped lint zero errors/warnings"
+    ],
+    "independentReview": {
+      "verdict": "clear finite source/software review",
+      "manifestSha256": "a39a21d650b7fe42a94964a71f621c0715e6e53667e9babe619a9f64c3921d44",
+      "evidence": "nov06-nonitemizer-prior-only-independent",
+      "humanReview": false
+    },
+    "evidence": "nov06-nonitemizer-prior-only-main",
+    "ledger": "docs/upgrade-2026-nonitemizer-prior-only-verification.md",
+    "readiness": false,
+    "conditionalNativeActivated": false
   }
 }

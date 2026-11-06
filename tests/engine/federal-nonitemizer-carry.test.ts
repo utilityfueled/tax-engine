@@ -37,12 +37,35 @@ it('retains prior use without increasing the current cash deduction', () => {
   expect(() => calculateFederalTax(input)).toThrow(/floor.*prior|prior.*floor/i);
   expect(JSON.stringify(input)).toBe(before);
   const onlyPrior = nonitemizerCarryFixture('0', [{ taxYear: 2025, amount: '5000' }]);
-  expect(() => calculateFederalTax(onlyPrior)).toThrow(/floor.*prior|prior.*floor/i);
   onlyPrior.w2s[0].wages='0'; onlyPrior.w2s[0].federalWithheld='0';
   const priorResult = calculateFederalTax(onlyPrior);
   expect(priorResult.nonitemizerCharitableDeduction?.toFixed()).toBe('0');
   expect(priorResult.scheduleA?.charitableTreatment?.priorTreatedAsPaid.toFixed()).toBe('0');
   expect(priorResult.carryforwards.charitableContributionsByYear.map(row=>[row.taxYear,row.amount.toFixed()])).toEqual([[2025,'5000']]);
+});
+
+it('consumes the sole prior source without a current deduction or new vintage', () => {
+  const input = nonitemizerCarryFixture('0', [{ taxYear: 2025, amount: '5000' }]);
+  const before = JSON.stringify(input), result = calculateFederalTax(input);
+  const treatment = result.scheduleA?.charitableTreatment;
+  if (!treatment) throw new Error('Missing actual sole-prior treatment');
+  expect(result.scheduleA?.nonitemizedCharitableCarryover?.method).toBe('2026_nonitemized_ordinary_categories');
+  expect(result.allLines.filter(row => row.form === 'Charitable Determined Floor' && row.line === 'cash_60')
+    .map(row => [row.value.toFixed(), row.inputs['Prior floor disallowed']?.toString()])).toEqual([['4950', '50']]);
+  expect(result.deductionUsed).toBe('nonitemized');
+  expect(result.nonitemizerCharitableDeduction?.toFixed()).toBe('0');
+  expect(result.deductionAmount.toFixed()).toBe('0');
+  expect([treatment.deduction, treatment.priorDeduction, treatment.priorTreatedAsPaid].map(value => value.toFixed()))
+    .toEqual(['0', '0', '5000']);
+  expect(treatment.detail.map(row => [row.taxYear, row.sourceId, row.category, row.medium,
+    row.amountAvailable.toFixed(), row.treatedAsPaid?.toFixed(), row.amountUsed.toFixed(),
+    row.amountRemaining.toFixed(), row.amountExpired.toFixed()]))
+    .toEqual([[2025, 'actual-cash-2025', 'cash_60', 'cash', '5000', '5000', '0', '0', '0']]);
+  expect(treatment.carryforwards).toEqual([]);
+  expect(result.carryforwards.charitableContributions.toFixed()).toBe('0');
+  expect(result.carryforwards.charitableContributionsByYear).toEqual([]);
+  expect(result.taxableIncome.toFixed()).toBe('10000');
+  expect(JSON.stringify(input)).toBe(before);
 });
 
 it('rejects unverified candidate carry and unsupported selection changes', () => {

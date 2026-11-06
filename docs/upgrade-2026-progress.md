@@ -3909,3 +3909,14 @@ and its new exact fictional fixture key. All 1,835 previous keys remain, now
 Distinct review, actual stale refusal/new admission and 51 protocol controls
 pass. See the [audit ledger](upgrade-2026-combined-browser-audit-work.md).
 Combined verification and exact distribution rehearsals remain required.
+
+
+### November6: canonical sole-prior nonitemizer assertion
+
+Full032b unit27332PASS/1FAIL identifies one old blanket refusal. Spec-first
+correction preserves mixed-source refusal and zero-base history while asserting
+exact5000 consumption, zero selected deduction/carry, audit4950/floor50 and
+unchanged taxable10000. Focused15/4, types, spec8665, inventory and strict lint
+pass; two new-test access-path failures remain retained. See [the verification
+ledger](upgrade-2026-nonitemizer-prior-only-verification.md). Coverage was
+interrupted and browser never started; full successor/distribution gates remain.
