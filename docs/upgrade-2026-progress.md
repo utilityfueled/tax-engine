@@ -3552,3 +3552,8 @@ The finite2025 separate-M ordinary method now validates paired actual2024 PA-40/
 ### November6: current advisory source recheck
 
 Full539 and production447 registry audits report zero findings. Ten official public requests return200; seven advisory APIs retain conflicting patched/affected fields, and the producer response describes seven issues but includes only six literal identifiers. The expected-seven consistency check remains failed alongside18 passing finite checks. Latest26 remains26.13.0 and the Nov11HIGH advance notice remains open. See [the current security follow-up](upgrade-2026-security-refresh-20261105.md). No image scan, deadline extension or risk acceptance occurred; PA7788a750 is pushed.
+
+
+### November6: candidate provider documents refreshed
+
+Seven official public responses return200 and16 source checks pass for current model capabilities/prices, January Gemini pricing, cache/context/regional charges and Node index. No authenticated or paid provider request occurred. Known usage0.26282160USD plus0.022384USD held reserve remains0.28520560USD; human case review, held-out repeats and exact settlement remain open. See [the provider ledger](upgrade-2026-provider-refresh-20261106.md). Promotion remains disabled.

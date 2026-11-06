@@ -22069,5 +22069,22 @@
     "manifestSha256": "699f7a59475700005599d39a89aeaf7c21c9d097a02873a52c9fa8f37a1e172b",
     "ledger": "docs/upgrade-2026-security-refresh-20261105.md",
     "precedingCommit": "7788a750"
+  },
+  "nov06ProviderRefresh": {
+    "status": "PUBLIC_DOCUMENTS_REFRESHED_NOT_MODEL_QUALIFICATION",
+    "atUTC": "2026-11-06T05:41Z",
+    "officialRequests": 7,
+    "HTTP200": 7,
+    "finiteSourceChecks": 16,
+    "sourceChecksPassed": 16,
+    "authenticatedProviderCalls": 0,
+    "evaluationCalls": 0,
+    "knownReportedCostUSD": "0.26282160",
+    "heldUnreconciledTimeoutUSD": "0.022384",
+    "reportedPlusReservedUSD": "0.28520560",
+    "promotionEnabled": false,
+    "manifestSha256": "dfc485d032ba1ee4c91639ae2df9b355e9008ede17894d6d5d6773d40d2630ea",
+    "ledger": "docs/upgrade-2026-provider-refresh-20261106.md",
+    "precedingCommit": "5ea1266b"
   }
 }
