@@ -21871,5 +21871,39 @@
     "fullCurrentGlobalPassed": false,
     "filingQualified": false,
     "releaseQualified": false
+  },
+  "nov06D510BaselineRuntimeEvidence": {
+    "sourceCommit": "d5109917e2f0699aa08bd4fcb4c2dbc42716e106",
+    "localRequiredChecksPassed": 12,
+    "unitTests": 26917,
+    "unitFiles": 1941,
+    "branchCoveragePercent": "87.66",
+    "branchThresholdPercent": 85,
+    "remoteCI": "PASS_6_JOBS",
+    "remoteSelfHost": {
+      "pass": 583,
+      "originalSkip": 5
+    },
+    "remoteContainer": {
+      "pass": 561,
+      "timedOut": 22,
+      "originalSkip": 5,
+      "ordinaryTimeoutMs": 30000,
+      "workers": 2,
+      "retries": 0
+    },
+    "image": "sha256:5c4635fcb7eaa8a862fd40d52137381a41e131d5c37428f9ed44999cd7bf50f5",
+    "sixPhaseSyntheticRecovery": "PASS",
+    "scanMatches": 181,
+    "scanIDs": 80,
+    "highMatches": 61,
+    "highIDs": 18,
+    "fixedVersions": [],
+    "riskAccepted": false,
+    "independentArtifactManifest": "21befe4fcef342cdd8ddad95a961e3cfbd5cd5c59826bd2a02e8c7fa6186e357",
+    "independentTraceManifest": "5ca8a39e790f9795e66b5697477f9f118aba7b8e9d250eb387b1833bdb616781",
+    "laterSourceQualified": false,
+    "releaseQualified": false,
+    "document": "docs/upgrade-2026-d510-runtime-evidence.md"
   }
 }

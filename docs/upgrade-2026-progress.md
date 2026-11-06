@@ -3525,3 +3525,5 @@ spec/inventory, lint and builds pass. Collection588 preserves all584old rows and
 150old contracts; inventory919 preserves916old rows and68supported statuses.
 See [the browser ledger](upgrade-2026-payroll-refund-browser-work.md). Full current
 global/remote/runtime checks and external qualification remain open.
+
+- November6 UTC: [d510 baseline/runtime evidence](upgrade-2026-d510-runtime-evidence.md) records all12 local checks,26,917tests/1,941files and87.66%branches at unchanged85%gate. RemoteCI6jobs/selfhost583+5skip pass; exact source-bound container561pass/22timeouts/5skip remains failed. Sixphase recovery/rollback and image/SBOM binding pass; scan181matches/80IDs includes61Highmatches/18HighIDs, nofixedversions or acceptance. ROOT verifies124artifact+44trace members. Later application/hosted/native/human/AI/final-form qualification remains open.
