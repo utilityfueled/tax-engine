@@ -57,6 +57,13 @@ The [human review packet](upgrade-2026-human-tax-review-packet.md) now includes
 the later COD, charitable and marketplace endpoints without recording a human
 opinion. Current full and distribution qualifications remain open.
 
+The later prior-floor audit binding retains all 1,835 previous keys and adds its
+exact fictional fixture, now 1,836 keys, with two calculation hash replacements.
+Distinct review, actual admission and 51 protocol controls pass; action contracts,
+request budgets, cases, skips and deadlines are unchanged. Tax `047eb40a` is
+pushed. The final combined source is being frozen for all twelve checks and the
+separately authorized distribution rehearsals.
+
 Fresh [official Next advisory metadata](upgrade-2026-next-1645-security-work.md)
 now resolves the seven affected/patched-range contradictions: installed16.4.5
 is patched. The mfr8 severity disagreement remains conservatively High; image

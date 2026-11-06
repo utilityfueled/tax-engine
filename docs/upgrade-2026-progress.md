@@ -3899,3 +3899,13 @@ failures remain retained; the exact D500 result and ambiguous attribution guards
 stay unchanged. Independent software review passes the same 72 tests and 15 distinct controls. See the
 [tax ledger](upgrade-2026-charitable-prior-floor-no-excess.md). Full combined,
 distribution, final-form and qualified human gates remain open.
+
+
+### November 6: exact prior-floor browser source binding
+
+The pushed tax package `047eb40a` is bound by two reviewed source-hash replacements
+and its new exact fictional fixture key. All 1,835 previous keys remain, now
+1,836; all 154 contracts, 592 cases, five skips and nonhash controls are unchanged.
+Distinct review, actual stale refusal/new admission and 51 protocol controls
+pass. See the [audit ledger](upgrade-2026-combined-browser-audit-work.md).
+Combined verification and exact distribution rehearsals remain required.

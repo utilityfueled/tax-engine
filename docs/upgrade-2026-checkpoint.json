@@ -23036,5 +23036,23 @@
     "independentDistinctControls": 15,
     "independentReplayPassed": 72,
     "independentManifestSha256": "49c7a7bf33a574d2ae492647cfc9bd28e81f6196547e69311a085966f440e574"
+  },
+  "nov06PriorFloorBrowserSourceAudit": {
+    "status": "REVIEWED_HASH_ONLY_SUCCESSOR_ADOPTED",
+    "taxCommit": "047eb40a411b7fc13c1e15beb06c0e28447e3ae2",
+    "existingReplacements": 2,
+    "newFixtureKeys": 1,
+    "priorKeysRetained": 1835,
+    "currentKeys": 1836,
+    "contracts": 154,
+    "declaredCases": 592,
+    "originalSkips": 5,
+    "nonHashFieldsUnchanged": true,
+    "protocolTestsPassed": 51,
+    "protocolTestFiles": 3,
+    "independentManifestSha256": "3380a244abc617bd1cee58208b66cb8c36d91d743d8d609c1d3854b9c6d771d4",
+    "currentFullSuccessorRequired": true,
+    "releaseReady": false,
+    "ledger": "docs/upgrade-2026-combined-browser-audit-work.md"
   }
 }

@@ -9,3 +9,27 @@ Actual MAIN's original audit first rejects the precise source delta; the candida
 Remote Web run42273994853 at72addca7 has successful web build, successful actual image recovery, then managed/container browser orchestration failures before cases. The generic remote error does not identify its unique cause; the immutable source audit independently would deny the two stale hashes. Recovery verifies encrypted export/import, original document bytes, unknown year/exact cents and deletion, separately from browser qualification. Its candidate image is10f0a851431503aeea13e5c8d4ee3a394d557b730c69b04474a2a73910347879 onlinux/amd64. Producer logs record182 scan matches across279 packages; the full artifact has not been independently reopened here and no image advisory is accepted.
 
 Health8e54457d is committed and pushed. Current full unit/coverage/browser and exact hosted/native image qualification remain required; no new browser or recovery execution, timeout change, filing/model promotion, production deployment or release-ready claim is made by this hash reconciliation.
+
+
+## Prior-floor source successor
+
+Tax commit `047eb40a` is pushed. Its separately reviewed two calculation/selected
+proof files change two existing audit hashes; its new fictional original fixture
+adds one key. All 1,835 prior keys remain, for 1,836 total. The independent
+four-member review manifest is
+`3380a244abc617bd1cee58208b66cb8c36d91d743d8d609c1d3854b9c6d771d4`
+in `.local/upgrade-evidence/nov06-prior-floor-browser-audit-independent`.
+ROOT read the full report and rehashed every member. Full inverse and actual
+current source snapshot agree. All 154 action contracts, 592 declarations, five
+original skips and every nonhash request/deadline field remain exact. The
+changes add local arithmetic and internal proof reconciliation, with no new
+UI, request or persistence action.
+
+The stale guard actually rejects and the candidate passes its unchanged source
+predicate. Main protocol controls pass 51 tests across three files with no retry,
+TERM or remaining process group. Actual MAIN audit admission also passes. No
+browser/network/runtime qualification or speed claim follows from these local
+predicates. The final combined checks and exact hosted/native artifacts remain
+required. Source evidence is in
+`.local/upgrade-evidence/nov06-prior-floor-browser-audit-source`; MAIN checks are
+in `.local/upgrade-evidence/nov06-prior-floor-browser-audit-main`.
