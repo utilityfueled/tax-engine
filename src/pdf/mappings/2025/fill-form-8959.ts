@@ -111,6 +111,10 @@ export async function fillForm8959(
   setTextField(form, F.ssn, input.taxpayer.primary.ssn.replace(/-/g, ""));
 
   if (!f8959) return doc;
+  const setRequiredZeroCurrency = (field: string, value: Decimal) => {
+    if (value.isZero()) setTextField(form, field, "0");
+    else setCurrencyField(form, field, value);
+  };
 
   // ── Part I: Additional Medicare Tax on Medicare Wages ──
   setCurrencyField(form, F.line1, f8959.medicareWages);
@@ -126,30 +130,39 @@ export async function fillForm8959(
 
   // Line 6: Excess wages over threshold
   const line6 = zeroFloor(line4.minus(f8959.threshold));
-  setCurrencyField(form, F.line6, line6);
+  setRequiredZeroCurrency(F.line6, line6);
 
   // Line 7: Additional Medicare Tax on wages
   const line7 = roundDollar(line6.times(ADDITIONAL_MEDICARE_RATE));
   setCurrencyField(form, F.line7, line7);
 
-  // ── Part II: Additional Medicare Tax on Self-Employment Income ──
-  setCurrencyField(form, F.line8, f8959.selfEmploymentEarnings);
-  setCurrencyField(form, F.line9, f8959.threshold);
+  // Official instructions skip PartII only when existing originals establish no SE.
+  const knownNoSelfEmployment = result.scheduleSE?.netSEEarnings.isZero() === true &&
+    f8959.selfEmploymentEarnings.isZero();
+  if (!knownNoSelfEmployment) {
+    // ── Part II: Additional Medicare Tax on Self-Employment Income ──
+    // Printed line8 requires zero for an actual SE loss, not merely missing income.
+    if (f8959.selfEmploymentEarnings.isZero() && result.scheduleSE?.netSEEarnings.lt(0)) {
+      setTextField(form, F.line8, "0");
+    } else setCurrencyField(form, F.line8, f8959.selfEmploymentEarnings);
+    setCurrencyField(form, F.line9, f8959.threshold);
 
-  // Line 10: Amount from line 4
-  setCurrencyField(form, F.line10, line4);
+    // Line 10: Amount from line 4
+    setCurrencyField(form, F.line10, line4);
 
-  // Line 11: Remaining threshold after wages (threshold - wages, zero floor)
-  const line11 = zeroFloor(f8959.threshold.minus(line4));
-  setCurrencyField(form, F.line11, line11);
+    // Line 11: Remaining threshold after wages (threshold - wages, zero floor)
+    const line11 = zeroFloor(f8959.threshold.minus(line4));
+    setRequiredZeroCurrency(F.line11, line11);
 
-  // Line 12: SE income subject to additional tax
-  const line12 = zeroFloor(f8959.selfEmploymentEarnings.minus(line11));
-  setCurrencyField(form, F.line12, line12);
+    // Line 12: SE income subject to additional tax
+    const line12 = zeroFloor(f8959.selfEmploymentEarnings.minus(line11));
+    setRequiredZeroCurrency(F.line12, line12);
 
-  // Line 13: Additional Medicare Tax on SE
-  const line13 = roundDollar(line12.times(ADDITIONAL_MEDICARE_RATE));
-  setCurrencyField(form, F.line13, line13);
+    // Line 13: Additional Medicare Tax on SE
+    const line13 = roundDollar(line12.times(ADDITIONAL_MEDICARE_RATE));
+    setCurrencyField(form, F.line13, line13);
+
+  }
 
   // ── Part III: RRTA (not modeled — leave blank) ──
 
@@ -168,7 +181,7 @@ export async function fillForm8959(
   const regularMedicare = roundDollar(f8959.medicareWages.times(REGULAR_MEDICARE_RATE));
   setCurrencyField(form, F.line21, regularMedicare);
 
-  setCurrencyField(form, F.line22, f8959.withholdingCredit);
+  setRequiredZeroCurrency(F.line22, f8959.withholdingCredit);
 
   // Line 24 = Line 22 + Line 23 (RRTA withholding = 0)
   setCurrencyField(form, F.line24, f8959.withholdingCredit);

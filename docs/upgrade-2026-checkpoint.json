@@ -22705,5 +22705,23 @@
     "independentControls": 25,
     "humanSecurityReview": "not-supplied",
     "ledger": "docs/upgrade-2026-education-review-result-binding-work.md"
+  },
+  "nov06EducationHistoricalExport": {
+    "status": "bounded-six-wage-scenario-export-review-passed",
+    "taxYear": 2025,
+    "testsPassed": 350,
+    "testFiles": 25,
+    "specReferences": 8,
+    "independentSoftwareTests": 74,
+    "independentSoftwareFiles": 4,
+    "independentSavedChecks": 32504,
+    "savedComponents": 51,
+    "savedPages": 102,
+    "allPagesRenderedAndViewed": true,
+    "officialStaticStreams": 8,
+    "staticStreamInstances": 45,
+    "pureSEApplicability": "separate-investigation",
+    "humanAnd2026FilingQualified": false,
+    "ledger": "docs/upgrade-2026-form-8959-review-selection-work.md"
   }
 }

@@ -1,0 +1,23 @@
+form: "Schedule 2 historical review routing"
+fullName: "Route existing supported canonical audit values to the actual 2025 physical lines"
+taxYear: 2025
+irsReference: "https://www.irs.gov/pub/irs-pdf/f1040s2.pdf"
+notes: |
+  Applies only to the historical 2025 template. Existing cross-year export gates
+  remain unchanged; no 2026 physical export or filing qualification is granted.
+  Engineering mapping correction only; unchanged Schedule2 calculation and year
+  gates. Official 2025 printed1b/1c are transferred vehicle repayments,1z their
+  additions subtotal,8 Form5329,13 uncollected W2tax,18 only17a-17z subtotal,
+  and21 total other taxes. Line18 must not duplicate the entire PartII total.
+  Use exactly one typed canonical Sched2 audit value for each newly routed line;
+  missing, wrong-form, duplicate, nonfinite or negative values deny before template
+  I/O rather than infer zero. No unsupported line obtains an invented value.
+lines:
+  - line: "supported-routing"
+    description: "Preserve literal canonical route for1b/1c/1z/8/13/18 and unchanged totals"
+    formula: "1b=canonical1b;1c=canonical1c;1z=canonical1z;8=canonical8;13=canonical13;18=canonical18, each exact unique Sched2 audit entry. Existing3=partITotal and21=totalAdditionalTaxes retained. Education720/870 goes8, not18. HSA17c/17d sum goes18."
+    testRef: "tests/pdf/schedule-2-review-routing.test.ts::maps the supported canonical physical lines without conflating line18 and PartII"
+  - line: "audit-admission"
+    description: "Deny unavailable or ambiguous new line routes before any template I/O"
+    formula: "For each required canonical route, exact form and line identify one finite nonnegative Decimal value. Missing, duplicate, wrong-form, NaN, Infinity or negative denies before absent template access; all zero remains a valid explicit canonical value."
+    testRef: "tests/pdf/schedule-2-review-routing.test.ts::rejects malformed canonical route before template access: %s"

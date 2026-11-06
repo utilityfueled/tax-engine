@@ -206,7 +206,7 @@ describe("Form 8959 PDF fill — MFJ complex filer", () => {
     const f8959 = result.form8959!;
     const expected = formatCurrency(f8959.withholdingCredit);
     if (expected === "") {
-      expect(getFieldText(doc, FORM_8959_FIELDS.line22)).toBeUndefined();
+      expect(getFieldText(doc, FORM_8959_FIELDS.line22)).toBe("0");
     } else {
       expect(getFieldText(doc, FORM_8959_FIELDS.line22)).toBe(expected);
     }

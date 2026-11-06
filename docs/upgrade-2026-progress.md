@@ -3743,3 +3743,8 @@ The [education method](upgrade-2026-education-mixed-interest-work.md) now handle
 ### November 6: annual-interest review binds the full result
 
 The [security change](upgrade-2026-education-review-result-binding-work.md) rejects a changed complete calculation before template access, preserving exact original and identifier-redacted review results. Genuine desired failures and independent25-control review are retained; current99 tests in15files,3 spec references and inventory checks pass. Implementation commit `fb938c8e` remains separate from the tax calculation. This adds no final-form or human-review qualification.
+
+
+### November 6: historical education export components corrected
+
+The [export correction](upgrade-2026-form-8959-review-selection-work.md) includes the existing Medicare withholding-credit component and routes supported Schedule2 audit values to their printed2025 lines. Current350 tests in25files,8 spec links and inventory checks pass. Independent review reopens51PDFs/102pages with32,504 checks and completes visual review; the prior failed artifacts remain immutable. Three spec year labels now match2025. Pure-SE applicability, final2026 forms and human gates remain separate.

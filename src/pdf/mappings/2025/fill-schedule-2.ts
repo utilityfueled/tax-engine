@@ -7,6 +7,7 @@ import { assertPdfExportAllowed } from "../../export-policy.js";
  */
 
 import { PDFDocument } from "pdf-lib";
+import Decimal from "decimal.js";
 import type { TaxReturnResult } from "@/models/outputs.js";
 import type { TaxYearInput } from "@/models/inputs.js";
 import {
@@ -96,10 +97,23 @@ export async function fillSchedule2(
   blankPdfPath: string,
 ): Promise<PDFDocument> {
   assertPdfExportAllowed(input.taxpayer.taxYear, result.taxYear);
+  const s2 = result.schedule2;
+  const canonicalLine = (line: string): Decimal => {
+    const entries = s2?.lines.filter(entry => entry.form === "Sched 2" && entry.line === line) ?? [];
+    const entry = entries[0];
+    if (entries.length !== 1 || !entry || !Decimal.isDecimal(entry.value) ||
+      !entry.value.isFinite() || entry.value.lt(0)) {
+      throw new Error(`Schedule 2 canonical line ${line} must have one finite nonnegative audit value.`);
+    }
+    return entry.value;
+  };
+  const routed = s2 ? {
+    line1b: canonicalLine("1b"), line1c: canonicalLine("1c"), line1z: canonicalLine("1z"),
+    line8: canonicalLine("8"), line13: canonicalLine("13"), line18: canonicalLine("18"),
+  } : null;
   const doc = await loadReviewTemplate(blankPdfPath, 2025);
   const fields = createPdfFieldBatch(doc.getForm());
   const F = FIELDS;
-  const s2 = result.schedule2;
 
   // ── Header ──
   const name = input.taxpayer.spouse
@@ -108,11 +122,13 @@ export async function fillSchedule2(
   fields.setText(F.name, name);
   fields.setText(F.ssn, input.taxpayer.primary.ssn.replace(/-/g, ""));
 
-  if (!s2) { fields.apply(); return doc; }
+  if (!s2 || !routed) { fields.apply(); return doc; }
 
   // ── Part I: Tax ──
   fields.setCurrency(F.line1a, s2.excessAPTCRepayment);
-  fields.setCurrency(F.line1z, s2.excessAPTCRepayment); // 1z = sum of 1a-1y
+  fields.setCurrency(F.line1b, routed.line1b);
+  fields.setCurrency(F.line1c, routed.line1c);
+  fields.setCurrency(F.line1z, routed.line1z);
   fields.setCurrency(F.line2, s2.amt);
   fields.setCurrency(F.line3, s2.partITotal);
 
@@ -121,6 +137,8 @@ export async function fillSchedule2(
   fields.setCurrency(F.line5, s2.unreportedSSTax);
   fields.setCurrency(F.line6, s2.form8919Tax);
   fields.setCurrency(F.line7, s2.unreportedSSTax.plus(s2.form8919Tax));
+  fields.setCurrency(F.line8, routed.line8);
+  fields.setCurrency(F.line13, routed.line13);
   fields.setCurrency(F.line11, s2.additionalMedicareTax);
   fields.setCurrency(F.line12, s2.niitTax);
   fields.setCurrency(F.line9, s2.householdEmploymentTax);
@@ -129,7 +147,7 @@ export async function fillSchedule2(
   fields.setCurrency(F.line17c, s2.hsaAdditionalTax);
   fields.setCurrency(F.line17d, s2.hsaRecaptureTax);
 
-  fields.setCurrency(F.line18, s2.partIITotal);
+  fields.setCurrency(F.line18, routed.line18);
   fields.setCurrency(F.line21, s2.totalAdditionalTaxes);
 
   fields.apply();

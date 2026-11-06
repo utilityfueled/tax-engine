@@ -1,0 +1,23 @@
+form: "Form 8959 review component selection"
+fullName: "Include the existing historical component for tax, withholding credit and filing thresholds"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i8959"
+notes: |
+  Applies only to the historical 2025 template. Existing cross-year export gates
+  remain unchanged; no 2026 physical export or filing qualification is granted.
+  Physical 2025 review output only. No tax calculation, model, rounding, source,
+  redaction, eligibility or 2026 filing gate changes. Current 2025 instructions
+  Who Must File includes any single W2 Box5 over200000, or Medicare wages/tips
+  plus nonnegative SE earnings over the status threshold; RRTA remains separate.
+  A withholding credit can require the form despite zero Additional Medicare Tax.
+  Original raw Box5 decimals retain threshold tails; no source amount is rounded
+  or altered for the selection comparison. Existing canonical tax stays unchanged.
+lines:
+  - line: "withholding-credit"
+    description: "Attach the zero-tax form supporting the existing withholding credit"
+    formula: "Existing positive tax or positive withholdingCredit or existing validated RRTA request includes Form8959. Actual50000 wages/1232.50 withheld gives printed19=1233,21=725,22=24=508 and1040line25c508."
+    testRef: "tests/pdf/form-8959-review-selection.test.ts::includes the zero-tax component supporting the original withholding credit"
+  - line: "who-must-file"
+    description: "Include raw original threshold crossings even if canonical tax rounds to zero"
+    formula: "Any original single W2 Medicare wage>200000 OR exact sum original Medicare wages + existing canonical tips +8919 wages +nonnegative SE earnings >canonical filing threshold includes the existing component. Equality without credit/tax remains excluded; local Decimal precision preserves every source digit."
+    testRef: "tests/pdf/form-8959-review-selection.test.ts::selects the component at the independently derived original threshold: %s"

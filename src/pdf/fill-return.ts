@@ -721,7 +721,24 @@ export async function fillReturn(
   }
 
   // ── Form 8959 (if applicable — Additional Medicare Tax) ──
-  if (result.form8959 && (result.form8959.additionalMedicareTax.gt(0)||rrtaRequested)) {
+  // Selection preserves exact original Box5 threshold tails; canonical tax remains unchanged.
+  const medicareSources = input.w2s.map(w2 => new Decimal(w2.medicareWages));
+  const medicareSelectionAmounts = result.form8959 ? [
+    ...medicareSources, result.form8959.unreportedTips, result.form8959.form8919Wages,
+    Decimal.max(0, result.form8959.selfEmploymentEarnings), result.form8959.threshold,
+  ] : [];
+  const selectionIntegers = Math.max(1, ...medicareSelectionAmounts.map(value => value.e + 1));
+  const selectionFractions = Math.max(0, ...medicareSelectionAmounts.map(value => value.decimalPlaces()));
+  const SelectionDecimal = Decimal.clone({ precision: Math.max(50,
+    selectionIntegers + selectionFractions + String(medicareSelectionAmounts.length).length + 4) });
+  const originalCombinedMedicare = medicareSelectionAmounts.slice(0, -1)
+    .reduce((total, value) => total.plus(value.toFixed()), new SelectionDecimal(0));
+  const medicareThresholdRequiresForm = result.form8959 && (
+    medicareSources.some(value => value.gt(200000)) ||
+    originalCombinedMedicare.gt(result.form8959.threshold.toFixed())
+  );
+  if (result.form8959 && (result.form8959.additionalMedicareTax.gt(0) ||
+    result.form8959.withholdingCredit.gt(0) || rrtaRequested || medicareThresholdRequiresForm)) {
     const f8959Path = join(blankFormsDir, "f8959.pdf");
     const doc8959 = await fillForm8959(input, result, f8959Path,options.rrtaPayrollReview);
     if (flatten) await flattenForm(doc8959.getForm());
