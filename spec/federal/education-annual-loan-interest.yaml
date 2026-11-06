@@ -84,7 +84,7 @@ lines:
   - line: "mixed-source-guards"
     description: "Require complete current originals and separately qualified tuition"
     formula: "Any missing or contradictory year/owner/qualification, duplicate/missing originals, source reduction, transfer, other borrower or unsupported expense composition rejects without mutating input. A known false tuition is ordinary zero-cost qualification, not unknown."
-    testRef: "tests/engine/education-annual-loan-interest.test.ts::rejects unsupported mixed-interest originals"
+    testRef: "tests/engine/education-annual-loan-interest.test.ts::rejects unsupported mixed-interest originals: %s"
   - line: "mixed-exact-reporting"
     description: "Carry actual interest attribution through rational final rounding"
     formula: "G3,E1,I1,T1: exclusion2/3,interest reduction1/3,netinterest2/3; at2025singleMAGI88750 final deduction exactly1/2 reports1, immediately above reports0. Independent2026 pure APIs retain700, full2026return remains denied."

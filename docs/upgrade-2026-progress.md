@@ -3758,3 +3758,23 @@ The [W-2 validation change](upgrade-2026-w2-validation-cost-work.md) preserves e
 ### November 6: pure self-employment review part applicability
 
 The [historical Form8959 mapper](upgrade-2026-form-8959-self-employment-applicability-work.md) now leaves inapplicable wage/withholding parts blank for original-bound positive self-employment with verified absent Medicare wages. Genuine public failures precede the correction; current137 tests in6files,4 spec references and inventory checks pass. Distinct149-test review includes12 independent cases and checks both saved PDFs, their fields/appearances/privacy and full-page renders. Raw positive cents remain distinct from zero; canonical tax, RRTA mapping and2026/filing gates remain unchanged.
+
+### November 6: exact education spec test reference
+
+The full d68b4fcf check run preserved one strict test-reference failure in each
+of unit and coverage: 27,275 passed and one failed. Its other ten checks passed,
+including the managed browser run with 587 passes and the five original hosted
+skips; all 5,496 source pins stayed unchanged and the owned server closed. This
+is local managed evidence with the original runtime timeout overrides, not a
+strict 30-second image qualification or hosted-readiness result.
+
+The independently reviewed repair adds only the existing parameterized title's
+literal `: %s` suffix to the education annual loan-interest YAML test reference.
+The test, strict validator, formulas, audit, quotas and inventory remain
+unchanged. Main's 895 focused tests, full spec validation and inventory check
+pass. Original failed logs remain in
+`.local/upgrade-evidence/nov06-current-combined-global`; the reviewed repair and
+main checks are in `nov06-current-spec-testref-independent` and
+`nov06-spec-pointer-main-integration`. A fresh complete check run and new
+source-bound distribution evidence are still required. No filing, model or
+readiness gate changes.
