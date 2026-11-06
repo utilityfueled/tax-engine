@@ -34,6 +34,13 @@ The [recovery observation package](upgrade-2026-rehearsal-navigation-observation
 passes15 main and seven distinct pure controls. Its exact runner inverse keeps
 recovery actions and gates unchanged; no new actual rehearsal is claimed.
 
+The [historical binding-owner full repayment method](upgrade-2026-marketplace-binding-owner-full-repayment.md)
+passes40 affected cases with types3/spec8657/inventory/build. Each actual owner
+limit and the final zero-credit/full-repayment proof comes from original sources;
+partial and capped methods remain outside this endpoint. Eighteen lint warnings
+are disclosed, seven introduced. Independent saved-PDF review keeps its strict
+raw numeric-stream marker HOLD explicit. Human and full successor gates stay open.
+
 Fresh [official Next advisory metadata](upgrade-2026-next-1645-security-work.md)
 now resolves the seven affected/patched-range contradictions: installed16.4.5
 is patched. The mfr8 severity disagreement remains conservatively High; image

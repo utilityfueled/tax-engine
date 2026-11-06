@@ -22966,5 +22966,33 @@
     "sourceBoundQualificationPending": true,
     "releaseReady": false,
     "ledger": "docs/upgrade-2026-rehearsal-navigation-observations.md"
+  },
+  "nov06HealthBindingOwnerFullRepayment": {
+    "status": "SOURCE_SOFTWARE_REVIEW_PASS_STRICT_RAW_PRIVACY_HOLD",
+    "scope": "finite2025oppositeOwnerCFBindingLimitsZeroPTCFullAPTCRepayment",
+    "baselineFailures": 4,
+    "targetedPassed": 40,
+    "targetedFiles": 15,
+    "types3": true,
+    "specLines": 8657,
+    "inventoryCheck": true,
+    "engineBuild": true,
+    "lintErrors": 0,
+    "lintWarnings": 18,
+    "lintNewWarnings": 7,
+    "strictOwnedTestNewDiagnostics": 0,
+    "strictOwnedTestInheritedDiagnostics": 11,
+    "savedMainPDFs": 13,
+    "strictRawPrivacyGate": "HOLD_NUMERIC_AP_COINCIDENCES",
+    "humanTaxReview": false,
+    "fullCurrentSuccessorRequired": true,
+    "releaseReady": false,
+    "ledger": "docs/upgrade-2026-marketplace-binding-owner-full-repayment.md",
+    "independentPassed": 32,
+    "independentFiles": 4,
+    "independentDistinctControls": 18,
+    "savedMainPages": 29,
+    "savedMainWidgetAssertions": 2863,
+    "independentManifestSha256": "f10566c8b5ac789c8ba253658d05a1b5b9170b6342065c4c0f85bf183461e211"
   }
 }

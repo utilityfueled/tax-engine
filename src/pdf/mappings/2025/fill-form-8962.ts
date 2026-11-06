@@ -1,4 +1,5 @@
 import Decimal from "decimal.js";
+import { hasBindingOwnerFullRepaymentSources } from "@/engine/forms/marketplace-full-advance-repayment.js";
 import { roundDollar } from "@/utils/decimal.js";
 import { assertPdfExportAllowed, markReviewPdf } from "../../export-policy.js";
 import { mkdir, writeFile } from "fs/promises";
@@ -540,7 +541,8 @@ async function fillForm8962SourceReview(input: TaxYearInput, result: TaxReturnRe
   prepared?: PreparedPremiumTaxCreditReview): Promise<PDFDocument> {
   assertPdfExportAllowed(input.taxpayer.taxYear, result.taxYear);
   const summary = buildForm8962ReferenceSummary(input.form1095A, result, { input, prepared });
-  if ((!summary.allocations?.length && !summary.marriage && !result.form7206?.coverageFamilyAllocations?.length) || !result.form8962) throw new Error('Form8962 physical review requires actual allocation, marriage or coverage-family sources');
+  if ((!summary.allocations?.length && !summary.marriage && !result.form7206?.coverageFamilyAllocations?.length
+    && !(hasBindingOwnerFullRepaymentSources(input) && result.marketplaceFullRepaymentHealth)) || !result.form8962) throw new Error('Form8962 physical review requires actual allocation, marriage, coverage-family or finite binding-owner full-repayment sources');
   const values = new Map(summary.lines.map(row => [row.line, row.value]));
   const doc = await loadReviewTemplate(blankPdfPath, 2025), form = doc.getForm(), F = FORM_8962_FIELDS;
   const mappedFields = createPdfFieldBatch(form);
@@ -595,5 +597,12 @@ export async function fillForm8962Marriage(input: TaxYearInput, result: TaxRetur
 export async function fillForm8962CoverageFamily(input: TaxYearInput, result: TaxReturnResult, blankPdfPath: string,
   prepared?: PreparedPremiumTaxCreditReview): Promise<PDFDocument> {
   if (!result.form7206?.coverageFamilyAllocations?.length) throw new Error('Form8962 physical review requires actual coverage-family sources');
+  return fillForm8962SourceReview(input, result, blankPdfPath, prepared);
+}
+
+/** Same historical map, admitted only by the original-bound completed method. */
+export async function fillForm8962BindingOwnerFullRepayment(input: TaxYearInput, result: TaxReturnResult, blankPdfPath: string,
+  prepared?: PreparedPremiumTaxCreditReview): Promise<PDFDocument> {
+  if (!hasBindingOwnerFullRepaymentSources(input) || !result.marketplaceFullRepaymentHealth) throw new Error('Form8962 physical review requires actual finite binding-owner full-repayment sources');
   return fillForm8962SourceReview(input, result, blankPdfPath, prepared);
 }

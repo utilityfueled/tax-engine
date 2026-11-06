@@ -5,7 +5,7 @@ import { calculateMarketplaceActualPaidSources } from "./forms/marketplace-actua
 import { calculateMarketplaceActualCashSources, calculateMarketplaceActualCashHealth } from './forms/marketplace-actual-cash-health.js';
 import { calculateMarketplaceCoverageFamilySources } from "./forms/marketplace-coverage-family-sources.js";
 import { calculateMarketplaceReportedRepaymentPayment, type MarketplaceReportedRepaymentPayment } from "./forms/marketplace-reported-repayment-payment.js";
-import { calculateMarketplaceFullAdvanceRepayment } from "./forms/marketplace-full-advance-repayment.js";
+import { calculateMarketplaceFullAdvanceRepayment, hasBindingOwnerFullRepaymentSources } from "./forms/marketplace-full-advance-repayment.js";
 import { calculateBrokerageWithholding } from "./forms/form-1099-b-withholding.js";
 import { calculateForm1099DASources } from "./forms/form-1099-da-sources.js";
 import { normalizeDigitalAssetCapitalInput } from "./forms/digital-asset-capital-input.js";
@@ -271,12 +271,15 @@ function calculateFederalTaxForSources(input: TaxYearInput): TaxReturnResult {
     result.allLines.push(...result.marketplaceActualCashHealth.lines);
     return result;
   }
-  if (familySources?.some(plan => plan.months.some(row => row.ownNoncoverageAdvance.gt(0)))) {
+  const bindingOwnerFullRepayment = hasBindingOwnerFullRepaymentSources(input);
+  if (bindingOwnerFullRepayment || familySources?.some(plan => plan.months.some(row => row.ownNoncoverageAdvance.gt(0)))) {
     // This is an internal ordinary-premium candidate, never an entered credit
     // or repayment. Acceptance depends on the completed actual final return.
     const result = calculateFederalTaxWithNol(input, { stage: "full-repayment" });
-    const exactAdvances = sum(...familySources.flatMap(plan => plan.months.map(row => row.ownAdvance)));
-    if (result.form8962 && !exactAdvances.eq(result.form8962.advancePTCTotal)) {
+    const exactAdvances = bindingOwnerFullRepayment
+      ? sum(...input.form1095A.flatMap(policy => policy.monthlyPremiums.map(row => d(row.advancePremiumTaxCredit))))
+      : sum(...familySources!.flatMap(plan => plan.months.map(row => row.ownAdvance)));
+    if (!bindingOwnerFullRepayment && result.form8962 && !exactAdvances.eq(result.form8962.advancePTCTotal)) {
       const reportedPayment = calculateMarketplaceReportedRepaymentPayment(input, result, "candidate");
       const paidResult = calculateFederalTaxWithNol(input, { stage: "full-repayment", reportedPayment });
       paidResult.marketplaceReportedRepaymentHealth = calculateMarketplaceReportedRepaymentPayment(input, paidResult);

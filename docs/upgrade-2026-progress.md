@@ -3863,3 +3863,15 @@ browser-global qualification and its failed original are retained. No actual
 recovery run, retry, cause or readiness claim is made. See
 [the observation ledger](upgrade-2026-rehearsal-navigation-observations.md);
 source-bound distribution and security gates remain open.
+
+
+### November6: source-bound binding-owner full advance repayment
+
+The finite historical2025 opposite-owner C/F method now derives each actually
+binding business limit and proves zero final credit and repayment of every
+original advance. Main4genuine guard failures precede40/15PASS, types3/spec8657,
+inventory/build and zero lint errors with18 disclosed warnings. The two actual
+owner7206 outputs and historical8962 companion are retained in13 saved PDFs.
+Independent review is recorded in [the health ledger](upgrade-2026-marketplace-binding-owner-full-repayment.md);
+the strict raw numeric-stream marker hold, qualified human review, broader
+partial/capped methods and current global/distribution qualification remain open.

@@ -8249,6 +8249,26 @@
       ]
     },
     {
+      "key": "federal/marketplace-binding-owner-full-repayment",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.ecfr.gov/current/title-26/section-1.162(l)-1",
+      "specPath": "spec/federal/marketplace-binding-owner-full-repayment.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/marketplace-business-credit-method",
       "jurisdiction": "federal",
       "taxYear": 2026,

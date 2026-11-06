@@ -1,0 +1,64 @@
+form: "Historical Marketplace binding-owner full repayment"
+fullName: "2025 ordinary same-owner earned-income limits with independently established full APTC repayment"
+taxYear: 2025
+irsReference: "https://www.ecfr.gov/current/title-26/section-1.162(l)-1"
+notes: |
+  Source-first finite method: IRC162(l)(2)(A), Reg1.162(l)-1(a)(1)-(3),
+  Reg1.36B-4, RevProc2014-41 sections3/5.02/5.03 and 2025 Pub974/i8962.
+  Actual MFJ two-owner ordinary domestic C/F sources, identical twelve eligible
+  months, one specified policy per owner, full advances equal eligible premiums,
+  actual zero other funding/cash and no coupled income or adjustment method.
+  At least one actual owner earned-income limit must bind. Reuse canonical
+  C/F/SE calculations to establish that prerequisite from originals before
+  routing; do not relabel a nonbinding method or accept an entered limit.
+  Preserve every original policy/payment/person/business identity and amount.
+  For fixed pre-health income B, M is the sum of the ordinary Form7206
+  per-business reported min(P_i,L_i), and Hmin=B-M. Require
+  Hmin>=4*FPL and independently completed canonical zero PTC/netPTC plus exact
+  source APTC=reportedAPTC=excessAPTC=repayment. Income above400 alone is not
+  enough in2025. Both Reg1.162(l)-1 source limits then equal each P_i; each
+  allowable deduction is min(P_i,L_i). Never transfer a spouse's capacity.
+  Reject positive credit, cap/partial repayment, source-cent differences,
+  incomplete original facts and other unresolved owner-attribution methods.
+  The new route accepts only the two actual opposite-owner C/F plans, each
+  with one original policy and twelve identical fully eligible source months.
+  Actual current receipts must equal original premium and APTC with explicit
+  zero owner/other cash and tax-free funding. Other income/adjustment source
+  packets remain outside this finite route; absence does not create payment
+  zeroes. The completed result must independently reconcile fixed B-M to
+  both ordinary AGI and canonical8962 household income. The canonical return
+  wrapper supplies its independently derived taxpayer MAGI even though the
+  general Form8962Result type represents the lower-level calculator; require
+  that actual property to be a finite Decimal before comparing, never assert
+  it through a type cast or replace it with household MAGI.
+  This is a proposed source-complete return-engine cohort, not a new guide farm
+  collector, a human tax qualification or permission to open2026 readiness.
+lines:
+  - line: "primary-binding"
+    description: "Same-owner limit survives the spouse's high income"
+    formula: "C1000/F160000: owner SE halves71/11304, capacities929/148696; deduction929+3000=3929; AGI145696; contribution12384; benchmark8400; PTC0; repayment9000."
+    testRef: "tests/engine/federal-marketplace-binding-owner-full-repayment.test.ts::keeps the primary owner's own capacity in the independently full repayment case"
+  - line: "spouse-binding"
+    description: "Opposite source owner cannot inherit the primary's capacity"
+    formula: "C160000/F1000: capacities148696/929; deduction6000+929=6929; AGI142696; contribution12129; PTC0; repayment9000."
+    testRef: "tests/engine/federal-marketplace-binding-owner-full-repayment.test.ts::keeps the spouse's own capacity in the independently full repayment case"
+  - line: "source-order"
+    description: "Plan order is not an attribution rule"
+    formula: "Reverse only the original plans, preserving all linked policy and business IDs. The two independently derived owner amounts and joint health transfer stay unchanged."
+    testRef: "tests/engine/federal-marketplace-binding-owner-full-repayment.test.ts::preserves actual owner outcomes when original plan order is reversed: %s"
+  - line: "retained-boundaries"
+    description: "Positive credit and unresolved cap facts remain outside this method"
+    formula: "C1000/F100000 has hypothetical maximum3929 and PTC756, so it cannot enter the zero-credit method. Low-income capped records and missing or duplicate actual owner/month records remain rejected; absence is not actual zero. The retained C5000/F20000 binding-owner original lacks the new high-minimum-income/full-repayment proof and keeps its established owner-earned-income method rejection contract."
+    testRef: "tests/engine/federal-marketplace-binding-owner-full-repayment.test.ts::rejects unresolved or incomplete original facts: %s"
+  - line: "private-review-source"
+    description: "The actual final ordinary calculation and original income remain privately bound"
+    formula: "Admit this same source-proved finite full-repayment cohort to the existing prepared8962/7206 context. Recompute from complete original income, retain actual original and identifier-redacted source digests, and reject a forged token, changed original identity or stale financial result before template I/O. Do not admit an entered credit or repayment scalar."
+    testRef: "tests/pdf/marketplace-binding-owner-full-repayment-review.test.ts::binds the complete ordinary owner originals and canonical result in the private review context"
+  - line: "physical-review"
+    description: "The same actual health and repayment amounts reach both historical review forms"
+    formula: "For the original primary-binding household, actual saved7206 forms report (premium, own limit, deduction)=(6000,929,929) and(3000,148696,3000). The physical8962 reports final credit0, advances9000 and repayment9000. Use existing historical2025 templates and private original context; no2026 output admission or new mapping formula."
+    testRef: "tests/pdf/marketplace-binding-owner-full-repayment-physical.test.ts::saves both actual owner7206 forms and the full-repayment8962 review form"
+  - line: "existing-nonbinding"
+    description: "A previously supported nonbinding two-owner method is not relabeled"
+    formula: "C160000/F160000 with the same original premiums has separate SE halves11304/11304 and owner capacities148696/148696. Neither owner binds. Preserve the existing Marketplace method, health9000 and AGI288392; do not route this source into the new binding-owner branch."
+    testRef: "tests/engine/federal-marketplace-binding-owner-full-repayment.test.ts::preserves the already supported method when neither actual owner limit binds"
