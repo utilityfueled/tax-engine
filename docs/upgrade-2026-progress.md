@@ -3801,3 +3801,8 @@ filing, model promotion, final-form or human-review gate changes.
 ### November 6: bounded PA-40 field resolution
 
 The [PA mapper change](upgrade-2026-pa40-field-batch-work.md) reuses two short-lived existing field batches and removes28 full field-tree traversals on the complete fixture. Genuine original and intermediate donation failures precede correction; author/main78tests and independent7controls pass. Main types3, specs, unchanged inventory, strict owned lint and both builds pass. All18PDFs/36pages preserve every field/status and decoded stream; complete bytes differ only in metadata dates. Malformed partial-state differences are explicit. No remote timeout fix, new tax/visual qualification or readiness claim; final integrated checks remain required.
+
+
+### November 6: bounded saved-PDF name verdicts and audit pins
+
+The [RRTA inspector change](upgrade-2026-rrta-name-verdict-work.md) preserves all privacy checks while reusing successful exact NameObject checks within one inspection. Genuine public RED precedes main60/3PASS and independent14 controls; both saved PDFs preserve identical original4s results. Full name checks fall21,718→409, without a reliable overall runtime or remote-fix claim. Two reviewed audit hashes change; every request/deadline/declaration remains exact. Package specs, inventory, types3, lint and actual audit admission pass; the corrected inventory-command setup failure is retained. Full integrated and remote qualification remain required.

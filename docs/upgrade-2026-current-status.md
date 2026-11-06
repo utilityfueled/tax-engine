@@ -6,7 +6,7 @@ Current crosswalk, November 6 UTC: the reviewed education composition
 Form 8959 applicability `42d358a6` are committed and pushed separately. Each
 package passes its relevant checks and distinct agent review; the linked
 [progress ledger](upgrade-2026-progress.md) records scope and saved evidence.
-The subsequent [PA-40 mapper batch](upgrade-2026-pa40-field-batch-work.md) passes
+The [bounded RRTA name checks](upgrade-2026-rrta-name-verdict-work.md) and two source-audit pins pass focused/static checks and independent review, with no remote timeout-fix claim. The subsequent [PA-40 mapper batch](upgrade-2026-pa40-field-batch-work.md) passes
 its focused/static checks and independent review; a new full integrated run is
 required for that change. The exact `9283c5f1` source passes all twelve local checks: 27,276
 unit tests, 87.68% branch coverage against the unchanged 85% gate, and 587
@@ -21,20 +21,18 @@ limit, managed RRTA paper cases exceed their 4-second child limit, and the
 container browser has 573 passes, 14 strict 30-second failures and five original
 hosted skips. The exact image, SBOM, scan and six recovery-phase bindings pass
 saved-artifact reconciliation. All 81 advisory IDs match the morning register
-and remain open and unaccepted. Isolated PDF work-reduction experiments are not
-yet adopted or qualified as remote fixes.
+and remain open and unaccepted. The PA mapper and name-check work reductions are adopted with package checks; neither is qualified as a remote timeout fix. The later `760b6b0d` Web jobs fail before cases on the stale PA audit pin, now separately corrected.
 
 The isolated hosted replacement has consumed 1,207 of 1,793 operations. The
 approved two-operation timeout recheck closed naturally with all thirty original
 predicates passing, including the exact statement and lock timeouts. It qualifies
 only the existing historical-event snapshot; current-source baseline delivery,
 outage and automatic retry remain unproved. The original failed diagnostic and
-all counters remain retained. The third Preview build is still unused; a reviewed
-exact-9283 source replacement is awaiting its specific authorization.
+all counters remain retained. The third Preview build is still unused; the exact-9283 source replacement is authorized, but its Preview phase failed before a recorded deployment request. The owned child closed naturally; no retry or successful third build is claimed.
 
 The native test VM's persistent 80→384 GiB growth and fourth boot/normal-stop
 pair remain unconsumed. An exact-9283 selector and binding constructor have
-source review; the source replacement awaits authorization. Fresh custody,
+source review; the exact-9283 source replacement is authorized; execution still waits for local PostgreSQL tests and fresh checks. Fresh custody,
 host/guest capacity and original 270-minute cleanup/resource limits still govern.
 Neither native execution nor source-only review is qualification evidence.
 

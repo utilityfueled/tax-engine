@@ -22835,5 +22835,25 @@
     "finalIntegratedVerificationPending": true,
     "taxAndReadinessGatesUnchanged": true,
     "documentation": "docs/upgrade-2026-pa40-field-batch-work.md"
+  },
+  "nov06RrtaNameVerdictReuse": {
+    "baseCommit": "760b6b0dd6b78dc898adfffb66fde2e62229183c",
+    "scannerSHA256": "c96790a2aa6d17ffe041dc75bfde40e2e5584defc3c836552f1d607049a99885",
+    "auditSHA256": "99c966ae8497dabc60de005a13aca3600d579c8beafd2d9860c5e2734ceb7aa3",
+    "authorManifestSHA256": "0f72407afe542102804e7eba4be78141f01ab691a6e9416fb57531993d739592",
+    "independentManifestSHA256": "a8615593af7ac3f144c52ad05e5e70ca5fcd6efc2bc49624b6c0b6519bb3855a",
+    "focusedPassed": 60,
+    "focusedFiles": 3,
+    "distinctControlsPassed": 14,
+    "savedPDFsCompared": 2,
+    "fullNameChecksBefore": 21718,
+    "fullNameChecksAfter": 409,
+    "auditExistingHashesChanged": 2,
+    "allOtherBudgetBytesUnchanged": true,
+    "original4sLimitUnchanged": true,
+    "reliableOverallSpeedupEstablished": false,
+    "remoteTimeoutFixQualified": false,
+    "fullIntegratedRunPending": true,
+    "documentation": "docs/upgrade-2026-rrta-name-verdict-work.md"
   }
 }

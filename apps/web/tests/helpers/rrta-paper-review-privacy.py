@@ -40,6 +40,9 @@ PARSE_CACHE_BYTES=8*1024*1024
 PARSE_CACHE_ENTRIES=4096
 # Successful context-free operand verdicts only; entries never cross inspect calls.
 OPERAND_CACHE_ENTRIES=4096
+# Exact immutable NameObject success only, local to each inspect marker closure.
+NAME_CACHE_ENTRIES=4096
+NAME_CACHE_MAX_CHARS=512
 NUM=re.compile(rb'[+-]?(?:\d+(?:\.\d*)?|\.\d+)\Z')
 FRAC=re.compile(rb'[+-]?(?:\d+\.\d*|\.\d+)\Z')
 # PDF-defined content operators only. BI consumes its whole ID/EI image using
@@ -100,7 +103,7 @@ def inspect(raw,markers):
   ascii_numeric=m.encode('ascii') if m.isascii() and m.isdecimal() else None
   compiled.append((variants,ascii_numeric,Decimal(m) if ascii_numeric is not None else None))
  known={};parsed={};active=set();visiting=set();exemptions=set();seenrefs=set();seenobjects=set();decoded_total=0
- parse_cache={};parse_cache_bytes=0
+ parse_cache={};parse_cache_bytes=0;names_scanned=set()
  def scan_bytes(data,label,spans=()):
   for mi,(variants,ascii_numeric,numeric_value) in enumerate(compiled):
    for pattern in variants:
@@ -115,11 +118,14 @@ def inspect(raw,markers):
      else:raise Deny('private-marker')
  def scan_string(value):
   s=str(value)
+  if type(value) is NameObject and s in names_scanned:return
   require(not any(m in s for m in markers),'private-marker')
   if isinstance(value,TextStringObject):
    try:scan_bytes(value.original_bytes,'string')
    except AttributeError:pass
   elif isinstance(value,ByteStringObject):scan_bytes(bytes(value),'byte-string')
+  # No strings, original bytes or subclasses share this successful verdict.
+  if type(value) is NameObject and len(s)<=NAME_CACHE_MAX_CHARS and len(names_scanned)<NAME_CACHE_ENTRIES:names_scanned.add(s)
  def scan_stream_strings(data):
   # Preserve every historical regex-selected decoded stream string, including
   # unknown/unreachable streams. Decode PDF string bytes without parser logging:
