@@ -21769,5 +21769,21 @@
     "remote6a5cBrowserFailures": 25,
     "remote6a5cScan": "CANCELED_UNQUALIFIED",
     "releaseQualified": false
+  },
+  "nov05EveningDependencyRefresh": {
+    "sourceCommit": "6a5c86961ddf39eac7bf525e3efd1a37b478abf2",
+    "evidenceManifestSHA256": "2c91ed07d029f28b7ae5769a2c940e4f720ba2f9d64d66e83e81c4e8ae5215b4",
+    "membersVerified": 54,
+    "checksPassed": 47,
+    "productionAuditEntries": 447,
+    "fullAuditEntries": 539,
+    "registryFindings": 0,
+    "advisoryMetadataConflicts": 7,
+    "imageAdvisoriesOpen": 80,
+    "imageRescanned": false,
+    "riskAccepted": false,
+    "deadlineExtended": false,
+    "qualification": false,
+    "document": "docs/upgrade-2026-security-refresh-20261105.md"
   }
 }

@@ -73,3 +73,39 @@ qualification. The later primary packet manifest is
 the distinct finite engineering review is
 `2e3694b9b64a3356b364348f375f4c3edee8607ec36dadb2f6697148bbdf1d21`.
 Neither is independent human security approval.
+
+## Evening refresh at November 6, 00:20 UTC
+
+Fresh production and full registry audits both exit zero, with no findings across
+447 and 539 dependency entries respectively. They use the current successor lock
+`268026058217dd84aee4e9b1c691fa1bac7d3049e6cb68d7fd16ef3af7a76dea`,
+Node 26.13.0 and pnpm 10.34.8. These counts describe the audit response, rather
+than unique packages or runtime image findings.
+
+Thirty bounded official public requests retain 27 successful responses. Three
+initial npm requests returned 406 because of an Accept-header error; corrected
+JSON requests returned 200. The seven exact repository advisory API bodies and
+their producer pages were successfully retrieved in this packet. All seven
+affected/patched metadata conflicts remain, including producer High versus API
+Medium for GHSA-mfr8-8qww-v76h. The earlier unsuccessful API attempt remains
+historical evidence; it is not rewritten by these later successful requests.
+
+The [Next release](https://github.com/vercel/next.js/releases/tag/v16.4.5) still
+recommends the installed 16.4.5. The [Node distribution index](https://nodejs.org/dist/index.json)
+still lists 26.13.0 as the latest 26.x release; the
+[November security notice](https://nodejs.org/en/blog/vulnerability/november-2026-security-releases)
+still announces HIGH fixes on or shortly after November 11. No newer applicable
+patch is established by this retrieval.
+
+All 47 finite checks pass. ROOT rehashes the 54-member evidence packet and reads
+its report and actual audit receipts. Manifest SHA256:
+`2c91ed07d029f28b7ae5769a2c940e4f720ba2f9d64d66e83e81c4e8ae5215b4`.
+Its source baseline is `6a5c8696`; no dependency, lock or security control changes
+follow from this refresh. The later application commits have separate checks.
+
+The elapsed November 4 deadline remains elapsed. All 80 historical image IDs
+remain open and unaccepted; this packet contains no new image scan. Codex owns
+engineering follow-up, while accountable human security disposition and exact
+current-image evidence remain required before qualification. The subsequent
+6a5c container scan was canceled before a final result, as recorded in the
+[container evidence ledger](upgrade-2026-container-job-evidence-work.md).
