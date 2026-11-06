@@ -21985,5 +21985,28 @@
     "collection": 590,
     "containerQualified": false,
     "precedingCommit": "7a562763"
+  },
+  "nov06OhioEarnedSchoolDraft": {
+    "status": "PASS_FINITE_EIGHT_PATH_EARNED_SCHOOL_DRAFT_MAIN",
+    "focusedTests": 540,
+    "files": 14,
+    "independentTests": 63,
+    "newPublicTests": 39,
+    "packageChecks": 12,
+    "sourceAudit": 1825,
+    "contracts": 153,
+    "collection": 590,
+    "collectionOldRowsExact": true,
+    "inventory": {
+      "rows": 923,
+      "old922Exact": true,
+      "supported": 68,
+      "newStatus": "partial"
+    },
+    "initialAuditOmittedFixtureFailureRetained": true,
+    "final2026FormsQualified": false,
+    "humanReview": false,
+    "filingQualified": false,
+    "precedingCommit": "6787fa88"
   }
 }

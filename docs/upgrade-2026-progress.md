@@ -3537,3 +3537,8 @@ Actual2025 paper year/reference/Box12B-N absence and confirmation are now separa
 ### November6: current native control inspection
 
 Eight test helpers now share a read-only exact-one control snapshot, preserving real actions and all existing limits. Main25 focused controls/types3/spec/inventory/lint/audit1822+153 and590-case collection parity pass. Actual24 desktop/mobile affected cases pass30s/2workers/0retry/0skip, all source pins stable and owned server closed. See [the verification ledger](upgrade-2026-native-control-snapshot-work.md). The previous container22 timeouts require a fresh actual run; other qualification gates remain open. Railroad paper7a562763 is pushed.
+
+
+### November6: separate Ohio earned-school draft accounts
+
+The finite2026 single full-year earned-school employee method now composes actual school and state originals with separate withholding and explicit whole-dollar reporting. Main540/14 and distinct63 cases pass; types3/builds2/spec/inventory/lint/audit1825+153 and590-case collection pass. The audit's actual missing-fixture failure is retained and corrected with its exact reviewed hash. See [the state ledger](upgrade-2026-ohio-earned-school-draft-work.md). Newinventory923/68supported preserves922oldrows; final2026/human/filing/distribution gates remain open. Browser6787fa88 is pushed.

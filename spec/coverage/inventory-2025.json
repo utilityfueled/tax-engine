@@ -13707,6 +13707,25 @@
       ]
     },
     {
+      "key": "state/oh-2026-earned-school-draft",
+      "jurisdiction": "state",
+      "taxYear": 2026,
+      "sourceAuthority": "https://codes.ohio.gov/ohio-revised-code/section-5748.01/1-1-2026",
+      "specPath": "spec/state/oh-2026-earned-school-draft.yaml",
+      "enginePath": "src/engine/state/oh-2026-earned-school-draft.ts",
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "state/oh-2026-magi-successor",
       "jurisdiction": "state",
       "taxYear": 2026,

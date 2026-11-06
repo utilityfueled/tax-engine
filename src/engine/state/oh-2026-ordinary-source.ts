@@ -1,3 +1,5 @@
+import {Ohio2026EarnedSchoolDraftSourcesSchema} from '@/models/ohio-2026-earned-school-draft.js';
+import {calculateOhio2026SchoolSource,readOhio2026SchoolSource,type Ohio2026SchoolSourceContext} from './oh-2026-school-source.js';
 /** Spec: state/oh-2026-return-draft.yaml. Finite current employee originals only. */
 import Decimal from 'decimal.js';
 import {validateOhio2026ActualBalancePaymentSources} from './oh-2026-payment-source.js';
@@ -43,7 +45,7 @@ interface Projection {
   residency: OhioResidencyFacts;
 }
 export interface Ohio2026OrdinaryContext {
-  readonly methodId: 'oh-2026-ordinary-employee-draft-v1' | 'oh-2026-pa-reciprocal-employee-draft-v1' | 'oh-2026-va-resident-credit-employee-draft-v1';
+  readonly methodId: 'oh-2026-ordinary-employee-draft-v1' | 'oh-2026-pa-reciprocal-employee-draft-v1' | 'oh-2026-va-resident-credit-employee-draft-v1' | 'oh-2026-earned-school-employee-draft-v1';
   readonly sourceCommitment: string;
 }
 const contexts = new WeakMap<Ohio2026OrdinaryContext, { currentDigest: string; projection: Projection }>();
@@ -64,15 +66,23 @@ export function calculateOhio2026PaReciprocalEmployeeSource(input: TaxYearInput,
 export function calculateOhio2026VaResidentCreditEmployeeSource(input: TaxYearInput, raw: unknown): Ohio2026OrdinaryContext {
   return qualifyEmployee(input, raw, undefined, calculateOhio2026ResidentCreditSource(input, raw));
 }
-function qualifyEmployee(input: TaxYearInput, raw: unknown, reciprocal?: Ohio2026ReciprocalWageContext, residentCredit?: Ohio2026ResidentCreditSourceContext): Ohio2026OrdinaryContext {
+/** Distinct actual school proof; never manufactures an ordinary no-school packet. */
+export function calculateOhio2026EarnedSchoolEmployeeSource(input:TaxYearInput,raw:unknown):Ohio2026OrdinaryContext {
+ const parsed=Ohio2026EarnedSchoolDraftSourcesSchema.safeParse(raw);
+ if(!parsed.success)fail('complete distinct earned-school parent packet required');
+ const school=calculateOhio2026SchoolSource(input,parsed.data.schoolSources);
+ return qualifyEmployee(input,raw,undefined,undefined,school);
+}
+function qualifyEmployee(input: TaxYearInput, raw: unknown, reciprocal?: Ohio2026ReciprocalWageContext, residentCredit?: Ohio2026ResidentCreditSourceContext, school?:Ohio2026SchoolSourceContext): Ohio2026OrdinaryContext {
   if (reciprocal) readOhio2026ReciprocalWageSource(reciprocal, input, raw);
   const paidResident = residentCredit ? readOhio2026ResidentCreditSource(residentCredit, input, raw) : undefined;
   if (reciprocal && residentCredit) fail('reciprocal and resident credit methods cannot overlap');
-  const parsed = reciprocal ? Ohio2026PaReciprocalSourcesSchema.safeParse(raw) : residentCredit ? Ohio2026VaResidentCreditSourcesSchema.safeParse(raw) : Ohio2026OrdinarySourcesSchema.safeParse(raw);
+  const parsed = school ? Ohio2026EarnedSchoolDraftSourcesSchema.safeParse(raw) : reciprocal ? Ohio2026PaReciprocalSourcesSchema.safeParse(raw) : residentCredit ? Ohio2026VaResidentCreditSourcesSchema.safeParse(raw) : Ohio2026OrdinarySourcesSchema.safeParse(raw);
   const resident = OhioResidencyFactsSchema.safeParse(input.ohioResidency);
   const payment = OhioPaymentFactsSchema.safeParse(input.ohioPayments);
   if (!parsed.success || !resident.success || !payment.success) fail('complete confirmed current source packets required');
   const source = parsed.data, facts = resident.data, payments = payment.data;
+  if(school){const whole=Ohio2026EarnedSchoolDraftSourcesSchema.parse(raw);readOhio2026SchoolSource(school,input,whole.schoolSources);if(digest(whole.employmentOriginals)!==digest(whole.schoolSources.employmentOriginals))fail('school and state actual employment originals differ');}
   const taxpayer = TaxpayerSchema.strict().safeParse(input.taxpayer);
   const standard = StandardDeductionFactsSchema.strict().safeParse(input.standardDeductionFacts);
   if (!taxpayer.success || !standard.success || input.taxpayer.taxYear !== 2026 || facts.taxYear !== 2026 || payments.taxYear !== 2026) fail('actual current2026 taxpayer and source year required');
@@ -102,12 +112,13 @@ function qualifyEmployee(input: TaxYearInput, raw: unknown, reciprocal?: Ohio202
   const allowed = new Set(['taxpayer', 'w2s', 'standardDeductionFacts', 'ohioResidency', 'ohioPayments']);
   for (const [key, value] of Object.entries(input)) {
     if (value === undefined || allowed.has(key)) continue;
+    if(school)continue; // The current opaque school proof has independently checked every original key.
     if (emptyArrays.has(key) && Array.isArray(value) && value.length === 0) continue;
     fail('retained other originals require their separate actual method even at zero');
   }
   if (!Array.isArray(input.w2s) || !input.w2s.length || input.w2s.length > 20 || source.employmentOriginals.length !== input.w2s.length) fail('complete bounded current W2 and employment inventory required');
   if (facts.allFederalSourcesIncludedConfirmed !== true || facts.noBusinessIncomeConfirmed !== true || facts.businessSources || !reciprocal && facts.reciprocalWageSources || facts.residentCreditSources
-    || facts.schoolDistrictStatus !== 'no_ohio_taxing_district_residency') fail('business reciprocal resident-credit or school sources require their separate method');
+    || (school ? facts.schoolDistrictStatus !== 'actual_district_sources_required' : facts.schoolDistrictStatus !== 'no_ohio_taxing_district_residency')) fail('business reciprocal resident-credit or school sources require their separate method');
   if (facts.owners.length !== holders.length || new Set(facts.owners.map(o => o.accountHolder)).size !== holders.length || holders.some(h => !facts.owners.some(o => o.accountHolder === h))) fail('complete actual current residency owners required');
   if (facts.owners.some(owner => owner.periods.some(period => !Ohio2026OrdinaryStateSchema.safeParse(period.domicileState).success))) fail('actual domestic domicile state required');
   const wageTotals = { primary: new Decimal(0), spouse: new Decimal(0) };
@@ -122,7 +133,7 @@ function qualifyEmployee(input: TaxYearInput, raw: unknown, reciprocal?: Ohio202
     const owner = facts.owners.find(o => o.accountHolder === employment.accountHolder);
     if (!owner || !/^\d{9}$/.test(tin(w2.employer.ein)) || tin(employment.employerTin) !== tin(w2.employer.ein) || identity(employment.employerName) !== identity(w2.employer.name)) fail('actual current employer identity differs');
     const actual = calculateW2StateLocalSources(input, index, w2.stateLocalSources);
-    if (actual.localRows.length || !cash(w2.localTaxWithheld).isZero() || !cash(w2.localWages).isZero()
+    if ((!school && (actual.localRows.length || !cash(w2.localTaxWithheld).isZero() || !cash(w2.localWages).isZero()))
       || actual.stateRows.some(row => row.state !== 'OH' && !(residentCredit && row.state === 'VA') && !row.withheld.isZero())) fail('local school or other-state tax source requires its separate method');
     withholding = withholding.plus(actual.stateRows.filter(row => row.state === 'OH').reduce((sum, row) => sum.plus(row.withheld), new Decimal(0)));
     for (const key of ['socialSecurityTips', 'allocatedTips', 'box10DependentCareBenefits', 'box12CodeW', 'box12CodeD', 'box12CodeE', 'box12CodeF', 'box12CodeG', 'box12CodeH', 'box12CodeS', 'box12CodeAA', 'box12CodeBB', 'box12CodeEE', 'box12CodeT'] as const) if (!cash(w2[key]).isZero()) fail('actual nonspecial W2 boxes including known zero required');
@@ -175,7 +186,7 @@ function qualifyEmployee(input: TaxYearInput, raw: unknown, reciprocal?: Ohio202
     || !cash(payments.balanceFacts.useTax).isZero() || !cash(payments.balanceFacts.outgoingCarryforward).isZero() || !cash(payments.balanceFacts.donations).isZero()) fail('actual ordinary withholding-only coverage and zero balance elections required');
   }
   const currentDigest = digest({ input, sources: raw });
-  const context: Ohio2026OrdinaryContext = Object.freeze({ methodId: reciprocal ? 'oh-2026-pa-reciprocal-employee-draft-v1' : residentCredit ? 'oh-2026-va-resident-credit-employee-draft-v1' : 'oh-2026-ordinary-employee-draft-v1', sourceCommitment: currentDigest });
+  const context: Ohio2026OrdinaryContext = Object.freeze({ methodId: school ? 'oh-2026-earned-school-employee-draft-v1' : reciprocal ? 'oh-2026-pa-reciprocal-employee-draft-v1' : residentCredit ? 'oh-2026-va-resident-credit-employee-draft-v1' : 'oh-2026-ordinary-employee-draft-v1', sourceCommitment: currentDigest });
   contexts.set(context, { currentDigest, projection: { ...(actualBalancePayment ? {actualBalancePayment: true as const, originalWithholding: withholding.toFixed()} : {}), filingStatus: filingStatus as Projection['filingStatus'], federalAgi: federalAgi.toFixed(), ...(reciprocal ? { reciprocalWageExclusion: federalAgi.toFixed() } : {}), ...(paidResident ? { residentCreditIncome: paidResident.income, residentCreditTaxPaid: paidResident.taxPaid } : {}), withholding: roundDollar(withholding).toFixed(), eligibleExemptions: holders.length,
     primaryQualifyingIncome: wageTotals.primary.toFixed(), ...(filingStatus === 'married_filing_jointly' ? { spouseQualifyingIncome: wageTotals.spouse.toFixed() } : {}), residency: structuredClone(facts) } });
   return context;

@@ -14,7 +14,7 @@ import { readOhio2026OrdinarySource, type Ohio2026OrdinaryContext } from './oh-2
 
 export interface Ohio2026ReturnDraftResult {
   taxYear: 2026;
-  ruleVersion: 'oh-2026-ordinary-employee-draft-v1' | 'oh-2026-pa-reciprocal-employee-draft-v1' | 'oh-2026-va-resident-credit-employee-draft-v1';
+  ruleVersion: 'oh-2026-ordinary-employee-draft-v1' | 'oh-2026-pa-reciprocal-employee-draft-v1' | 'oh-2026-va-resident-credit-employee-draft-v1' | 'oh-2026-earned-school-employee-draft-v1';
   baselineRuleVersion: string;
   calculationStatus: 'incomplete';
   reviewStatus: 'independent-review-pending';
@@ -97,7 +97,7 @@ export function calculateOhio2026ReturnDraft(input: TaxYearInput, sources: unkno
     nonresidentRatio: nrc.line19, nonresidentCredit: nrc.line20, incomeTax, withholding, underpaymentPenalty, latePaymentInterest, amountDue, refund,
     limitations: [
       'Finite single/MFJ current ordinary employee cohort only; no dependents or EITC-qualifying children, under65 adults, no other state adjustments or credit sources.',
-      resident ? 'Finite single full-year Ohio employee credit for completed paid2026 VA763 liability; Virginia tax calculation, unsettled accounts and other jurisdictions require separate methods.' : reciprocal ? 'Finite single full-year PA ordinary employee reciprocal compensation only; mixed, other-domicile, part-year, joint and specialized compensation remain separate methods.' : 'Actual no taxing-school-district residence and no other-state tax on Ohio-resident income; reciprocal and specialized income methods remain separate.',
+      context.methodId==='oh-2026-earned-school-employee-draft-v1' ? 'Actual independently source-qualified earned-school residence; school liability and payments remain separate from IT1040 in the distinct parent composition.' : resident ? 'Finite single full-year Ohio employee credit for completed paid2026 VA763 liability; Virginia tax calculation, unsettled accounts and other jurisdictions require separate methods.' : reciprocal ? 'Finite single full-year PA ordinary employee reciprocal compensation only; mixed, other-domicile, part-year, joint and specialized compensation remain separate methods.' : 'Actual no taxing-school-district residence and no other-state tax on Ohio-resident income; reciprocal and specialized income methods remain separate.',
       actualBalancePayment ? 'Finite first Ohio return with documentary timely actual balance at most500 under both raw and reported admission limits; outstanding balance is receipt arithmetic, not an external account observation. Other payment methods remain unavailable.' : 'Ordinary first Ohio return with equal-quarter withholding covering liability; other payments, prior returns/carries, penalties and balance elections require separate current methods.',
       'Final2026 form identity/numbering, independent human review, complete selected-state scope and filing qualification remain unavailable.',
     ], lines: [...baseline.lines, ...nrc.lines, ...(resident?.lines ?? []), ...audit.getLines()] };
