@@ -54,7 +54,7 @@ lines:
     testRef: "tests/engine/forms/nonitemized-charitable-categories.test.ts::binds current sources and separate actual history before computing carry"
   - line: "prior-capital-conflict"
     description: "Do not conflate prior capital treated-paid and post-B deductible amounts"
-    formula: "When positive tentative priorC plus current C reserved before B exceeds C's final post-B ceiling, reject. Base100000,G10000,priorC40000,B30000 is unresolved; G10000,priorC10000,B5000 has determined percentage use10000 but unresolved final priorC floor; adding currentD500 absorbs that floor and preserves the10000 use. Keep input unchanged."
+    formula: "When positive tentative priorC plus current C reserved before B exceeds C's final post-B ceiling, reject. Base100000,G10000,priorC40000,B30000 remains unresolved. The separate charitable-prior-floor-no-excess method admits G10000,priorC10000,B5000: original2025 treated10000, otherwise-deductible prior9500 after unique500floor, selected nonitemized itemized-deduction0, carry0. This is distinct from current170(p) cash deduction. Adding currentD500 still absorbs that floor and preserves the10000 use. Keep input unchanged."
     testRef: "tests/engine/forms/nonitemized-charitable-categories.test.ts::retains the exact amended-offset prior-capital boundary"
   - line: "canonical"
     description: "Transfer the selected ledger independently from standard entitlement and current deduction"

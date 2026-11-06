@@ -18,6 +18,11 @@ notes: |
   Admit a positive category floor only when its pre-floor prior treated-paid
   amount is exactly zero. That makes every disallowed contribution in that
   category current-year, without inventing a priority within a category.
+  The separate finite charitable-prior-floor-no-excess.yaml endpoint now also
+  admits a sole fully treated prior source in a hit category with no current
+  allowance, no surviving percentage excess and no NOL context. It preserves
+  original treated-paid consumption and deducts only the post-floor portion;
+  no current or old carry is created. All other prior attribution remains guarded.
   A zero floor needs no vintage allocation. For B, the existing exact medium
   method must determine both the current allowance and carry; partial mixed
   cash/noncash attribution remains guarded. The prior-C treated-paid versus
@@ -41,8 +46,8 @@ lines:
     formula: "Base100000/currentG10000/priorA5000/currentC20000/currentBcash40000/currentD1000 gives pre G10000/A5000/B25000/C10000/D0. Itemized49500; current Bcarry15000/Ccarry10500/Dcarry1000, also15000/10500/1000 without itemization."
     testRef: "tests/engine/forms/charitable-determined-floor.test.ts::preserves shared capacities and current percentage versus floor carry"
   - line: "floor-boundary"
-    description: "Keep prior-vintage and partial-medium attribution unresolved when the floor reaches it"
-    formula: "Base100000/currentG10000/priorC5000/currentD500 absorbs the entire floor in currentD; priorC use5000 unchanged and no floor-only carry. D499.99 requires rejection because .01 reaches priorC. Current+prior allowed same category and partial current B cash/noncash also reject; no caller attribution choice."
+    description: "Preserve the exact current boundary and the separate sole-prior no-excess endpoint"
+    formula: "Base100000/currentG10000/priorC5000/currentD500 absorbs the entire floor in currentD; priorC use5000 unchanged and no floor-only carry. The separate no-excess method gives D499.99 prior treated5000, prior deduction4999.99 and total14999.99, carry0. Current+prior allowed same category and partial current B cash/noncash still reject; no caller attribution choice."
     testRef: "tests/engine/forms/charitable-determined-floor.test.ts::requires every positive floor hit to have a determined current origin and medium"
   - line: "exact-fifo-expiry"
     description: "Conserve original history and exact values when the floor is zero or current-only"

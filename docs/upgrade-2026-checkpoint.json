@@ -23013,5 +23013,28 @@
     "currentFullSuccessorRequired": true,
     "releaseReady": false,
     "ledger": "docs/upgrade-2026-combined-browser-audit-work.md"
+  },
+  "nov06CharitablePriorFloorNoExcess": {
+    "status": "FINITE_SOURCE_AND_SOFTWARE_REVIEW_PASS",
+    "baselinePassed": 2,
+    "baselineFailures": 5,
+    "affectedPassed": 72,
+    "affectedFiles": 19,
+    "types3": true,
+    "specLines": 8664,
+    "inventoryCheck": true,
+    "engineBuild": true,
+    "lintErrors": 0,
+    "lintWarnings": 0,
+    "privateOwnedTestNewDiagnostics": 0,
+    "privateOwnedTestInheritedDiagnostics": 11,
+    "independentHumanReview": false,
+    "fullCurrentSuccessorRequired": true,
+    "releaseReady": false,
+    "ledger": "docs/upgrade-2026-charitable-prior-floor-no-excess.md",
+    "independentTotalPassed": 87,
+    "independentDistinctControls": 15,
+    "independentReplayPassed": 72,
+    "independentManifestSha256": "49c7a7bf33a574d2ae492647cfc9bd28e81f6196547e69311a085966f440e574"
   }
 }

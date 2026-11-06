@@ -33,7 +33,9 @@ it('requires every positive floor hit to have a determined current origin and me
   const exact=calculate(input,context('10000','0','0','0','500'));
   expect(exact.totalDeduction.toFixed()).toBe('15000');expect(exact.priorDeduction.toFixed()).toBe('5000');expect(exact.carryforwards).toEqual([]);
   const below=fixture('10000','0','0','0','499.99',[{taxYear:2025,category:'capital_gain_30',amount:'5000'}]);
-  expect(()=>calculate(below,context('10000','0','0','0','499.99'))).toThrow(/floor.*prior|prior.*floor/i);
+  const belowResult=calculate(below,context('10000','0','0','0','499.99'));
+  expect([belowResult.priorTreatedAsPaid,belowResult.priorDeduction,belowResult.totalDeduction].map(value=>value.toFixed())).toEqual(['5000','4999.99','14999.99']);
+  expect(belowResult.carryforwards).toEqual([]);
   const same=fixture('0','0','0','10000','0',[{taxYear:2025,category:'capital_gain_30',amount:'5000'}]);
   expect(()=>calculate(same,context('0','0','0','10000','0'))).toThrow(/floor.*prior|prior.*floor/i);
   const mixed=fixture('0','0','1000','0','0',[{taxYear:2025,category:'cash_60',amount:'1000'}]);

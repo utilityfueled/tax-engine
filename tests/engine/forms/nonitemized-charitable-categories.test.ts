@@ -99,7 +99,13 @@ it('retains the exact amended-offset prior-capital boundary',()=>{
   const priorOnly=fixture('10000','0','5000','0','0',[{taxYear:2025,category:'capital_gain_30',amount:'10000'}]);
   const percentage=calculateCharitableCategoryUse(priorOnly,context('10000','0','5000','0','0'));
   expect(percentage.priorTreatedAsPaid.toFixed()).toBe('10000');
-  expect(()=>calculate(priorOnly,context('10000','0','5000','0','0'))).toThrow(/floor.*prior|prior.*floor/i);
+  const priorBefore=JSON.stringify(priorOnly),noExcess=calculate(priorOnly,context('10000','0','5000','0','0'));
+  expect([noExcess.priorTreatedAsPaid,noExcess.priorDeduction,noExcess.totalDeduction].map(value=>value.toFixed())).toEqual(['10000','0','0']);
+  expect(noExcess.detail.map(row=>[row.taxYear,row.treatedAsPaid.toFixed(),row.amountUsed.toFixed(),row.amountRemaining.toFixed(),row.amountExpired.toFixed()])).toEqual([[2025,'10000','0','0','0']]);
+  expect(noExcess.lines.find(line=>line.form==='Charitable Determined Floor'&&line.line==='capital_gain_30')).toMatchObject({
+    value:d('9500'),inputs:{'Original source':'synthetic-vintage-1','Contribution year':'2025','Prior treated as paid':d('10000'),'Prior floor disallowed':d('500')},
+  });
+  expect(noExcess.carryforwards).toEqual([]);expect(JSON.stringify(priorOnly)).toBe(priorBefore);
   const supported=calculate(fixture('10000','0','5000','0','500',[{taxYear:2025,category:'capital_gain_30',amount:'10000'}]),context('10000','0','5000','0','500'));
   expect(supported.priorTreatedAsPaid.toFixed()).toBe('10000');expect(supported.carryforwards).toEqual([]);
 });

@@ -1,0 +1,63 @@
+form: "Charitable Prior Floor Without Surviving Excess"
+fullName: "A sole prior source in a floor-hit category with complete percentage consumption"
+taxYear: 2026
+irsReference: "https://uscode.house.gov/us/usc/119-136/t26/s170/"
+retrievedAt: "2026-11-06"
+reviewStatus: "agent-source-and-software-reviewed-human-review-pending"
+notes: |
+  Source-derived finite endpoint, not a matching published numerical example.
+  IRC170(b)(1)(I) applies the 0.5% floor in D,C,B,E,A,G order. A prior
+  contribution treated as paid in the current year is not exempt merely because
+  its original receipt predates2026. IRC170(d)(1)(C) permits additional floor
+  carry only when an excess carries without the floor. Final regulation
+  1.170A-10(b)(2),(c)(2) distinguishes amount treated as paid from deduction
+  and reduces the original available excess by treated-paid use. Current
+  before prior and oldest original year first remain unchanged. Sources:
+  https://www.ecfr.gov/current/title-26/section-1.170A-10 ; final2025 Pub526
+  https://www.irs.gov/publications/p526 ; PL119-21 section70425.
+  Admit a positive prior floor only when the hit category has no allowed current
+  contribution and exactly one positive prior source, without pooled filing-unit
+  ownership. That source's entire opening is treated as paid, with no expired or
+  remaining portion. The complete percentage ledger must have no surviving
+  current or prior excess and no NOL-origin-limit context. No entered allocation,
+  treated-paid amount, current deductible amount, or new contribution year is
+  accepted. No original clock is restarted. Other original expiry is preserved.
+  Competing current/prior contributions in the hit category, multiple positive
+  prior vintages there, partial prior consumption, surviving percentage excess,
+  pooled ownership and NOL-linked floor attribution retain existing rejection.
+  This does not resolve which old/new vintage could retain floor where excess
+  survives. Treating the prior floor as permanently exempt, or carrying it solely
+  because it reduces the deduction, are contrary alternatives for this finite
+  endpoint: neither follows the amended floor and conditional carry provisions.
+  Itemized prior deduction is treated-paid use less the noncarryable prior floor;
+  standard/explicit nonitemized prior deduction stays zero. Current170(p) remains
+  separate. The2026 production and PDF gates stay closed.
+lines:
+  - line: "sole-prior-floor"
+    description: "Consume the actual original prior amount and retain only its deductible portion"
+    formula: "Original2025 public long-term stock35000/base100000 gives30000 deduction and5000 excess. Current2026 base100000/G10000/priorC5000/D0: floor500 entirely priorC; treated5000, deductible4500, total14500, carry0. No new vintage."
+    testRef: "tests/engine/forms/charitable-prior-floor-no-excess.test.ts::applies the floor to one fully consumed original without creating a new vintage"
+  - line: "exact-boundary"
+    description: "Keep Decimal cents and the original current-D500 boundary"
+    formula: "Same original, D499.99/500/500.01: prior floor.01/0/0; prior deductible4999.99/5000/5000; total14999.99/15000/15000.01. No intermediate dollar rounding or floor-only carry."
+    testRef: "tests/engine/forms/charitable-prior-floor-no-excess.test.ts::preserves the exact current-floor boundary without rounding or re-aging"
+  - line: "original-expiry"
+    description: "Keep actual intervening use and old expired sources independent"
+    formula: "Original2021 Cexcess7000 with actual2022 treated2000 and2023-25 zero use leaves5000 in its final2026 year. It is fully treated,4500 deductible,0 expired/remaining. A separate actual2020 source expires untouched. Source order cannot select the floor source."
+    testRef: "tests/engine/forms/charitable-prior-floor-no-excess.test.ts::preserves actual annual consumption and original expiration independently"
+  - line: "unresolved-boundaries"
+    description: "Keep the separate attribution methods closed"
+    formula: "Current+prior same category, two positive prior vintages in the hit category, any surviving current/prior percentage excess and a partially treated final-year source reject. Original absence, stale owner/year, incomplete history and NOL inputs reject."
+    testRef: "tests/engine/forms/charitable-prior-floor-no-excess.test.ts::retains unresolved allocation and incomplete-source guards"
+  - line: "selected-deduction"
+    description: "Preserve actual prior deductible use through canonical selection"
+    formula: "At base100000/G10000/priorC5000/D0, itemized charity14500 and prior deduction4500; automatic standard/explicit nonitemized prior deduction0, current170(p)1000. All methods consume5000 and carry0. The lower selected prior deduction never recreates500 of original carry."
+    testRef: "tests/engine/federal-charitable-prior-floor-no-excess.test.ts::selects the actual prior deductible amount independently of treated-paid consumption"
+  - line: "selected-source-proof"
+    description: "Reject missing or altered internal prior-floor evidence"
+    formula: "Selected itemized treatment requires matching source digest, original identity/monetary rows and no closing carry; changed amountUsed, treatedAsPaid, sourceId, floor total or closing carry rejects. No result scalar establishes source eligibility."
+    testRef: "tests/engine/federal-charitable-prior-floor-no-excess.test.ts::rejects stale or altered selected prior-floor evidence"
+  - line: "production-gate"
+    description: "Retain the real2026 readiness boundary"
+    formula: "Draft constants in canonical arithmetic tests are a private test-only substitution; actual production getConstants(2026) continues to reject."
+    testRef: "tests/engine/federal-charitable-prior-floor-no-excess.test.ts::keeps actual2026 production constants closed"

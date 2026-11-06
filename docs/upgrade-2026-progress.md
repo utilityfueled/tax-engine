@@ -3886,3 +3886,16 @@ new source admission and51/3 protocol controls pass. See
 [the audit ledger](upgrade-2026-combined-browser-audit-work.md). Health8e54457d is
 pushed; remote72 recovery passes but both browser jobs stop before cases. Current
 full and exact distribution qualifications remain open.
+
+
+### November 6: sole-prior charitable floor without surviving excess
+
+The finite method now separates original treated-paid consumption from the
+post-floor deductible amount when one fully consumed prior source uniquely
+bears the floor. It creates no carry or new vintage. Current-main two passes
+and five genuine guard failures precede 72 affected passes, types3, spec8664,
+inventory, zero-error/zero-warning lint and engine build. Both old blanket-denial
+failures remain retained; the exact D500 result and ambiguous attribution guards
+stay unchanged. Independent software review passes the same 72 tests and 15 distinct controls. See the
+[tax ledger](upgrade-2026-charitable-prior-floor-no-excess.md). Full combined,
+distribution, final-form and qualified human gates remain open.

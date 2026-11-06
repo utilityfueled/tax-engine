@@ -230,3 +230,29 @@ accepted or rejected. A broad signature without year/scenario/source boundaries
 is insufficient. After corrections, engineers must follow the spec-first workflow
 and obtain the applicable independent retest and final-form review; release gates
 remain closed until their own evidence and authorization requirements pass.
+
+
+## November6 bounded source addendum, still unreviewed by a tax professional
+
+The original November2 preparation above remains historical and unchanged. Later
+engineering deliveries below need their own qualified review; no human opinion,
+filing permission or blanket method approval is recorded here. Supply their exact
+commits, original synthetic source packets, law observations, genuine regressions,
+independent agent findings and retained failure history to the professional.
+
+| Delivered source | Specific review, with limits |
+| --- | --- |
+| COD full-pool endpoint, `3cef70a1`; [ledger](upgrade-2026-cod-full-pool-exhaustion-work.md) | Check independent regular/AMT current-use and modified-absorption pools, terminal exhaustion, and overlap as reconciliation only. Partial, charitable and multiple-vintage cases remain outside this endpoint. |
+| Charitable total-excess endpoint, `c9ae4af2`; [ledger](upgrade-2026-charity-total-exhaustion-work.md) | Check exact source conservation proving complete current excess exhaustion. The positive canonical case is2025; the initially proposed2026 oracle was wrong and its partial-attribution refusal remains. No proportional or list-order method is enabled. |
+| Binding-owner full advance repayment, `8e54457d`; [ledger](upgrade-2026-marketplace-binding-owner-full-repayment.md) | Check separate original-linked C/F earned-income limits and independently completed zero-credit/full-repayment proof. Income above400% alone is insufficient in2025. Partial/capped owner attribution remains unresolved. Saved-field/visual engineering checks pass while the strict decoded raw-marker scan keeps a separate numeric-operand HOLD. |
+
+These finite endpoints do not resolve the broader questions in the original table.
+The subsequently integrated [prior-floor endpoint](upgrade-2026-charitable-prior-floor-no-excess.md)
+also needs review: a sole fully consumed original and no surviving percentage
+excess permit a uniquely attributable floor to reduce the deduction without
+restoring consumed carry. Review the original 2025 receipt, actual annual
+history, all four 2026 cent boundaries and the separate nonitemized treatment.
+Competing origins, surviving excess and NOL-linked attribution remain refused.
+Before review begins, pin the actual supplied source. Qualified review must distinguish original carry consumed
+as paid from deduction claimed, preserve original years, and assess the complete
+ordinary method rather than treating a passed endpoint as general approval.

@@ -47,6 +47,16 @@ all154 contracts/592 cases/five skips and every request/deadline control. Existi
 protocol controls pass51/3. Later remote72 recovery passes; managed and container
 browser jobs stop before cases, so source-bound browser qualification is still open.
 
+The [sole-prior charitable floor endpoint](upgrade-2026-charitable-prior-floor-no-excess.md)
+passes 72 affected tests after five genuine baseline guard failures. Exact
+consumption, deductible use and original years remain distinct; unresolved
+competing-origin and surviving-excess methods stay denied. Product types,
+spec8664, inventory, lint and build pass. Independent software review passes
+87 tests, including 15 distinct controls.
+The [human review packet](upgrade-2026-human-tax-review-packet.md) now includes
+the later COD, charitable and marketplace endpoints without recording a human
+opinion. Current full and distribution qualifications remain open.
+
 Fresh [official Next advisory metadata](upgrade-2026-next-1645-security-work.md)
 now resolves the seven affected/patched-range contradictions: installed16.4.5
 is patched. The mfr8 severity disagreement remains conservatively High; image
