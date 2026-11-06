@@ -22748,5 +22748,67 @@
     "originalCanonicalTaxUnchanged": true,
     "humanAnd2026FilingQualified": false,
     "ledger": "docs/upgrade-2026-form-8959-self-employment-applicability-work.md"
+  },
+  "nov06Exact9283RuntimeClosure": {
+    "sourceHead": "9283c5f16ebc4398fac99037ce3e24552a0fcfd9",
+    "sourceTree": "ea57af954ed54a93268531fed0b3ef03d70722a5",
+    "localRequiredChecksPassed": 12,
+    "localSourcePins": 5496,
+    "unitPassed": 27276,
+    "unitFiles": 1957,
+    "unitFailures": 0,
+    "unitReportedSkips": 0,
+    "branchCoverage": "87.68",
+    "unchangedBranchGate": "85",
+    "localBrowser": {
+      "passed": 587,
+      "failed": 0,
+      "originalHostedSkips": 5,
+      "cases": 592,
+      "batches": 8,
+      "retries": 0,
+      "ownedServerClosed": true
+    },
+    "remoteCI": {
+      "run": 42245440042,
+      "unitPassed": 27275,
+      "unitFailed": 1,
+      "unitFailure": "Original PA mixed-paper 5-second timeout",
+      "coveragePassed": true,
+      "staticPassed": true
+    },
+    "remoteWeb": {
+      "run": 42245440028,
+      "buildPassed": true,
+      "managed": {
+        "passed": 585,
+        "failed": 2,
+        "originalHostedSkips": 5,
+        "failure": "Original RRTA privacy-child 4-second timeouts"
+      },
+      "container": {
+        "passed": 573,
+        "failed": 14,
+        "originalHostedSkips": 5,
+        "deadlineMs": 30000
+      }
+    },
+    "image": "sha256:665ce4df020db0b865db34230f9b8d92a2b87ae314b22c70b00b09937f184908",
+    "imagePlatform": "linux/amd64",
+    "imageSourceAndSbomAndScanDerivedBindingsPassed": true,
+    "recoveryPhasesPassed": 6,
+    "scanMatches": 182,
+    "scanAdvisoryIds": 81,
+    "scanPackages": 279,
+    "scanRiskAcceptance": false,
+    "hostedTimeoutRecheckOriginalPredicatesPassed": 30,
+    "hostedTimeoutRecheckHistoricalSnapshotOnly": true,
+    "hostedCumulativeOperations": 1207,
+    "hostedOperationMaximum": 1793,
+    "hostedCurrentSourceExecution": false,
+    "nativeCurrentSourceExecution": false,
+    "allOriginalFailuresRetained": true,
+    "releaseReady": false,
+    "documentation": "docs/upgrade-2026-9283-runtime-evidence.md"
   }
 }

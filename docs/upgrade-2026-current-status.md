@@ -6,33 +6,35 @@ Current crosswalk, November 6 UTC: the reviewed education composition
 Form 8959 applicability `42d358a6` are committed and pushed separately. Each
 package passes its relevant checks and distinct agent review; the linked
 [progress ledger](upgrade-2026-progress.md) records scope and saved evidence.
-A combined current-source run remains required. No package changes filing,
-model-promotion or human-review gates.
+The exact `9283c5f1` source now passes all twelve local checks: 27,276
+unit tests, 87.68% branch coverage against the unchanged 85% gate, and 587
+managed browser passes with five original hosted skips. All 5,496 source pins
+remained unchanged and the owned browser server closed. The original sandbox
+failures and canceled coverage attempt remain retained. See the
+[current runtime ledger](upgrade-2026-9283-runtime-evidence.md).
 
-The previous exact-cecb baseline passes all twelve local checks: 27,143 tests
-and 87.67% branch coverage against the unchanged 85% gate, plus 587 managed
-browser passes and five original hosted skips. Its six remote CI jobs pass.
-The actual Linux image retains 573 passes, 14 strict 30-second failures and five
-hosted skips. Image/source/SBOM/scan and six recovery-phase bindings pass
-saved-evidence reconciliation; the [runtime ledger](upgrade-2026-cecb-runtime-evidence.md)
-retains those limits. These results do not qualify the later application source.
+Remote results for the same Git tree remain distinct: coverage, types, builds,
+spec and lint pass; one PA mixed-paper unit case exceeds its original 5-second
+limit, managed RRTA paper cases exceed their 4-second child limit, and the
+container browser has 573 passes, 14 strict 30-second failures and five original
+hosted skips. The exact image, SBOM, scan and six recovery-phase bindings pass
+saved-artifact reconciliation. All 81 advisory IDs match the morning register
+and remain open and unaccepted. Isolated PDF work-reduction experiments are not
+yet adopted or qualified as remote fixes.
 
-The isolated hosted replacement has consumed 1,205 of 1,793 operations. The
-approved two-operation predicate diagnostic closed naturally without a signal:
-all predicates except exact statement and lock timeouts passed, but the original
-validation still failed. No successful original-ID snapshot, outage or automatic
-retry is established. A one-line fixed-options adapter candidate passes
-independent source review and replay of 13 offline serializer/strict-validator
-controls; actual deployed cause and a hosted correction remain unproved. Its
-separate two-operation recheck is being prepared, preserving all counters and
-failures. The approved third Preview build is still unconsumed; its exact-cecb
-source needs a reviewed current-source binding before execution.
+The isolated hosted replacement has consumed 1,207 of 1,793 operations. The
+approved two-operation timeout recheck closed naturally with all thirty original
+predicates passing, including the exact statement and lock timeouts. It qualifies
+only the existing historical-event snapshot; current-source baseline delivery,
+outage and automatic retry remain unproved. The original failed diagnostic and
+all counters remain retained. The third Preview build is still unused; a reviewed
+exact-9283 source replacement is awaiting its specific authorization.
 
-The approved native V13 scope covers the test VM's persistent 80→384 GiB growth
-and one fourth boot/normal-stop pair within 270 minutes. Neither resize nor boot
-has occurred. A current-source selector successor is being prepared before
-consuming that single attempt. Fresh stopped-state custody, host/guest capacity,
-cleanup and the original process/resource limits remain required.
+The native test VM's persistent 80→384 GiB growth and fourth boot/normal-stop
+pair remain unconsumed. An exact-9283 selector and binding constructor have
+source review; the source replacement awaits authorization. Fresh custody,
+host/guest capacity and original 270-minute cleanup/resource limits still govern.
+Neither native execution nor source-only review is qualification evidence.
 
 [Provider source observations](upgrade-2026-provider-refresh-20261106.md) do not
 make paid calls or qualify models. Known provider usage remains 0.26282160 USD,

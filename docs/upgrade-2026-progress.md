@@ -3778,3 +3778,21 @@ main checks are in `nov06-current-spec-testref-independent` and
 `nov06-spec-pointer-main-integration`. A fresh complete check run and new
 source-bound distribution evidence are still required. No filing, model or
 readiness gate changes.
+
+
+### November 6: exact 9283 local closure and remote/runtime reconciliation
+
+All twelve local checks pass on unchanged `9283c5f1`: 27,276 tests,
+87.68% branches against 85%, and 587 browser passes with five original hosted
+skips. The original sandbox failures and canceled coverage remain retained.
+Remote coverage/static checks pass, but the original PA 5s, RRTA 4s and fourteen
+strict-container 30s timeouts remain failures. The immutable current image has
+verified source/SBOM/scan and six successful recovery phases; its 81 advisory IDs
+remain unaccepted. See [the source-bound runtime ledger](upgrade-2026-9283-runtime-evidence.md).
+
+The authorized two-operation staging timeout recheck closes naturally and passes
+all thirty original predicates, reaching 1,207/1,793 operations. This verifies
+the historical snapshot only; it establishes no current-source delivery, outage
+or automatic retry. Current-source hosted/native supplements remain unexecuted
+and await their exact-source authorizations. No production, provider spend,
+filing, model promotion, final-form or human-review gate changes.
