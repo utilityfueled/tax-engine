@@ -3624,3 +3624,14 @@ Production crypto stays unchanged. Author19/distinct28 and main8checks pass;
 both actual desktop/mobile journeys pass explicit30s/0retry with closed server.
 The old6e15failure remains failed. See [the recovery evidence ledger](upgrade-2026-encrypted-recovery-evidence-work.md).
 PA8ec7a6f3 is pushed; current global/remote/image/hosted/native/human gates remain.
+
+
+### November6: exact6e15 runtime outcomes remain separate
+
+All12local checks pass27,083/1,949 and87.67%branches; managed browser uses
+its unchanged90sdefault and passes585+5originalskips. RemoteCI6jobs pass,
+managed browser584/1/5 fails the separately diagnosed ciphertext assertion,
+and actual image558/27/5 remains unqualified. Sixphase recovery and immutable
+SBOM/scan binding pass;182matches/81IDs remain unchanged/open. No30smanaged
+global or imageprivacy verdict is inferred. See [the runtime ledger](upgrade-2026-6e15-runtime-evidence.md)
+and [remaining external actions](upgrade-2026-external-actions.md).

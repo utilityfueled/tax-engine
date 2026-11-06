@@ -22340,6 +22340,45 @@
     "contractsUnchanged": 153,
     "inventoryRows": 928,
     "supportedRowsUnchanged": 68,
-    "finalRuntimeQualified": false
+    "finalRuntimeQualified": false,
+    "commit": "c1766777a025e36a603fe0c9f2f8cc6407a58ec3"
+  },
+  "nov06SixE15CurrentRuntime": {
+    "sourceHead": "6e15b4fea86eafc2f2b0bb19aed692448ad37e1e",
+    "sourceTree": "adf9ce90d0e9892dee6ba4d83c146e7f9e944f7a",
+    "ledger": "docs/upgrade-2026-6e15-runtime-evidence.md",
+    "localChecksPassed": 12,
+    "localUnitPassed": 27083,
+    "localUnitFiles": 1949,
+    "localBranchCoverage": 87.67,
+    "unchangedBranchGate": 85,
+    "localBrowserPassed": 585,
+    "localBrowserOriginalSkips": 5,
+    "localManagedNormalCollectionTimeoutMS": 90000,
+    "strict30000LocalGlobalClaim": false,
+    "remoteCISixJobsPassed": true,
+    "remoteManaged": {
+      "passed": 584,
+      "failed": 1,
+      "skipped": 5,
+      "originalFailurePreserved": true
+    },
+    "image": {
+      "artifact": 13490224603,
+      "sha256": "f6d3e50ed5bf1cf6821292dd69aa8977f21d2a72088fa9f3c7480db76051c43f",
+      "passed": 558,
+      "failed": 27,
+      "skipped": 5,
+      "caseDeadlineFailures": 25,
+      "inspectorTimeoutFailures": 2,
+      "privacyVerdictReturnedByTimedOutInspectors": false,
+      "composePhasesPassed": 6,
+      "scanMatches": 182,
+      "scanIDs": 81,
+      "perIDRegisterDifferences": 0,
+      "qualified": false
+    },
+    "laterSourceQualifiedByThisEvidence": false,
+    "causeEstablished": false
   }
 }
