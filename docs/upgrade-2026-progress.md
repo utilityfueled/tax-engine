@@ -3806,3 +3806,15 @@ The [PA mapper change](upgrade-2026-pa40-field-batch-work.md) reuses two short-l
 ### November 6: bounded saved-PDF name verdicts and audit pins
 
 The [RRTA inspector change](upgrade-2026-rrta-name-verdict-work.md) preserves all privacy checks while reusing successful exact NameObject checks within one inspection. Genuine public RED precedes main60/3PASS and independent14 controls; both saved PDFs preserve identical original4s results. Full name checks fall21,718→409, without a reliable overall runtime or remote-fix claim. Two reviewed audit hashes change; every request/deadline/declaration remains exact. Package specs, inventory, types3, lint and actual audit admission pass; the corrected inventory-command setup failure is retained. Full integrated and remote qualification remain required.
+
+
+### November 6: exact 4ee5 local and remote closure
+
+All twelve local checks pass: 27,284 engine tests, 87.68% branches and 587 browser
+passes with five original skips, no source drift and owned server closed. Remote
+unit/coverage/static/build and managed browsers also pass. Container recovery
+fails its unchanged upgrade heading deadline before browser cases; saved image,
+SBOM and scan bindings reconcile but its 81 advisory IDs remain unaccepted. The
+approved native disk growth passes; controller admission stops before boot. See
+[the runtime ledger](upgrade-2026-4ee5-runtime-evidence.md). No replay or readiness
+claim; exact-source staging/native, human, final-form and AI gates remain open.

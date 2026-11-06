@@ -1,49 +1,37 @@
 # Current 2026 upgrade continuation
 
-Current crosswalk, November 6 UTC: the reviewed education composition
-`1591838e`, complete-result review binding `fb938c8e`, historical export routing
-`218512a8`, W-2 validation work reduction `ce5f8768`, and pure self-employment
-Form 8959 applicability `42d358a6` are committed and pushed separately. Each
-package passes its relevant checks and distinct agent review; the linked
-[progress ledger](upgrade-2026-progress.md) records scope and saved evidence.
-The [bounded RRTA name checks](upgrade-2026-rrta-name-verdict-work.md) and two source-audit pins pass focused/static checks and independent review, with no remote timeout-fix claim. The subsequent [PA-40 mapper batch](upgrade-2026-pa40-field-batch-work.md) passes
-its focused/static checks and independent review; a new full integrated run is
-required for that change. The exact `9283c5f1` source passes all twelve local checks: 27,276
-unit tests, 87.68% branch coverage against the unchanged 85% gate, and 587
-managed browser passes with five original hosted skips. All 5,496 source pins
-remained unchanged and the owned browser server closed. The original sandbox
-failures and canceled coverage attempt remain retained. See the
-[current runtime ledger](upgrade-2026-9283-runtime-evidence.md).
+Current crosswalk, November 6 UTC: exact `4ee5e082` passes all twelve local
+checks and the remote unit, coverage, static/build and managed browser jobs.
+Each engine run passes 27,284 tests in 1,959 files; branches are 87.68% against
+85%. Local and remote managed browsers each pass 587 cases with five original
+hosted skips. The owned local server is closed. See the
+[current runtime ledger](upgrade-2026-4ee5-runtime-evidence.md).
 
-Remote results for the same Git tree remain distinct: coverage, types, builds,
-spec and lint pass; one PA mixed-paper unit case exceeds its original 5-second
-limit, managed RRTA paper cases exceed their 4-second child limit, and the
-container browser has 573 passes, 14 strict 30-second failures and five original
-hosted skips. The exact image, SBOM, scan and six recovery-phase bindings pass
-saved-artifact reconciliation. All 81 advisory IDs match the morning register
-and remain open and unaccepted. The PA mapper and name-check work reductions are adopted with package checks; neither is qualified as a remote timeout fix. The later `760b6b0d` Web jobs fail before cases on the stale PA audit pin, now separately corrected.
+The container recovery job fails the unchanged 30-second upgrade heading
+assertion, before its browser suite runs. Exact source/tree/image/SBOM/scan
+bindings reconcile; all 81 image advisory IDs remain open and unaccepted.
+Cumulative static-network failures are evidence for further diagnosis, not a
+confirmed root cause. No retry, timeout or readiness gate was weakened.
 
-The isolated hosted replacement has consumed 1,207 of 1,793 operations. The
-approved two-operation timeout recheck closed naturally with all thirty original
-predicates passing, including the exact statement and lock timeouts. It qualifies
-only the existing historical-event snapshot; current-source baseline delivery,
-outage and automatic retry remain unproved. The original failed diagnostic and
-all counters remain retained. The third Preview build is still unused; the exact-9283 source replacement is authorized, but its Preview phase failed before a recorded deployment request. The owned child closed naturally; no retry or successful third build is claimed.
+The isolated hosted counter remains 1,207/1,793. Exact-9283 Preview admission
+failed before a recorded deployment request; no successful third build or
+reissue is claimed. The native test disk was enlarged once from 80 to 384 GiB
+while stopped, with preserved other-machine metadata. The constructor passed;
+the controller stopped at admission before runtime/boot, and is not replayed.
+Source-only diagnosis continues. Both distribution qualification gates stay open.
 
-The native test VM's persistent 80→384 GiB growth and fourth boot/normal-stop
-pair remain unconsumed. An exact-9283 selector and binding constructor have
-source review; the exact-9283 source replacement is authorized; execution still waits for local PostgreSQL tests and fresh checks. Fresh custody,
-host/guest capacity and original 270-minute cleanup/resource limits still govern.
-Neither native execution nor source-only review is qualification evidence.
+The separately reviewed [PA field batch](upgrade-2026-pa40-field-batch-work.md)
+and [RRTA name verdict reuse](upgrade-2026-rrta-name-verdict-work.md) are included
+in the passing 4ee5 checks. Earlier source-specific results below remain historical.
+New tax endpoint packages are still private and under review, with their original
+failed oracles and harness attempts retained; no adoption is implied here.
 
 [Provider source observations](upgrade-2026-provider-refresh-20261106.md) do not
-make paid calls or qualify models. Known provider usage remains 0.26282160 USD,
-with 0.022384 USD held for unresolved settlement (combined 0.28520560 USD). No new
-API key is needed. All 81 image advisory IDs remain open and unaccepted; human
-tax, AI-case and security/privacy review, complete final 2026 forms and
-artifact-specific hosted/native qualification remain open. The
-[execution brief](upgrade-2026-execution-brief.md) retains every completion
-criterion; the upgrade is not release-ready.
+qualify models. Known usage remains 0.26282160 USD plus 0.022384 USD held for
+unresolved settlement, combined 0.28520560 USD. Final 2026 forms, independent
+human tax/AI/security review, and source-bound hosted/native qualification remain
+open. The [execution brief](upgrade-2026-execution-brief.md) retains every
+completion criterion; release, filing and model promotion remain disabled.
 
 ## Earlier source-specific continuation records
 

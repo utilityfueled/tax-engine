@@ -22855,5 +22855,33 @@
     "remoteTimeoutFixQualified": false,
     "fullIntegratedRunPending": true,
     "documentation": "docs/upgrade-2026-rrta-name-verdict-work.md"
+  },
+  "nov06Exact4ee5RuntimeClosure": {
+    "sourceHead": "4ee5e082969c5847059b8518eb3d36c0572f24dd",
+    "sourceTree": "fe0ada96f852add31e10eb898a2fc9aef6f3bcf7",
+    "all12LocalPassed": true,
+    "unitPassed": 27284,
+    "unitFiles": 1959,
+    "coverageBranch": 87.68,
+    "branchGate": 85,
+    "managedBrowserPassed": 587,
+    "originalSkipped": 5,
+    "sourceDrift": false,
+    "ownedServerClosed": true,
+    "remoteCI": 42263199065,
+    "remoteWeb": 42263199091,
+    "remoteUnitCoverageManagedPassed": true,
+    "containerRecovery": "FAIL_ORIGINAL_30S_UPGRADE_HEADING",
+    "containerBrowser": "NOT_RUN",
+    "imageAdvisories": 81,
+    "advisoriesAccepted": false,
+    "nativeStoppedDiskGiB": 384,
+    "nativeResizeAttempts": 1,
+    "nativeController": "ADMISSION_HOLD_BEFORE_RUNTIME_NO_REPLAY",
+    "nativeNewBoots": 0,
+    "hostedOperations": 1207,
+    "hostedOperationCeiling": 1793,
+    "releaseReady": false,
+    "ledger": "docs/upgrade-2026-4ee5-runtime-evidence.md"
   }
 }
