@@ -21720,5 +21720,19 @@
     "internalProviderHopEncryptionQualified": false,
     "humanReview": false,
     "releaseQualified": false
+  },
+  "nov05ScheduleSEPhysicalCandidate": {
+    "status": "PHYSICAL_CANDIDATE_ONLY_EXPORT_DENIED",
+    "sourceSha256": "a42f5a19c0e84a966a49b5f4ca021d3f49c4fda2e087da0b00bf2003525f8655",
+    "mainManifest": "ef9f3ddbca4735d957a5480e6e4de788f6307f86b85bfd79245cae61ad937e3b",
+    "focusedTestsPassed": 75,
+    "metadataControlsPassed": 849,
+    "supportedInventory": 68,
+    "inventoryTotal": 913,
+    "browserCasesUnchanged": 584,
+    "sourceAuditHashes": 1809,
+    "humanReview": false,
+    "exportQualified": false,
+    "releaseQualified": false
   }
 }
