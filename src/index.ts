@@ -325,3 +325,6 @@ export type {
 export type { NJStateConfig } from "./engine/state/nj-1040-adapter.js";
 export type { NJ1040Input, NJ1040Result } from "./engine/state/nj-1040.js";
 export type { NJ1040HWInput, NJ1040HWResult } from "./engine/state/nj-1040-hw.js";
+
+// Separately typed state-only draft; full federal and paper gates remain unchanged.
+export {calculatePA2026OrdinaryDraft,type PA2026OrdinaryDraftResult} from './engine/state/pa-ordinary-return.js';

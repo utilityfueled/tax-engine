@@ -3562,3 +3562,8 @@ Seven official public responses return200 and16 source checks pass for current m
 ### November6: isolated hosted baseline and safe inspection stop
 
 The exactfe1d1462 protected Preview completes endpoint4/create11/baseline8 requests with two synthetic no-card trials. Read-only inspect stops naturally after7 attempts and returned rollback; cumulative1201/1793, no fault or inspection mutation. OriginalHOLD remains unchanged. Old emitted SQL fails6 namespace controls; actual local successor passes14, including complete combined original-row SQL and rollback absence. See [the hosted evidence ledger](upgrade-2026-isolated-hosted-replacement-evidence.md). The proposed two-operation continuation and actual outage/retry/recovery remain pending, with current-source qualification open.
+
+
+### November6: finite PA 2026 state-only ordinary draft
+
+The separately typed `calculatePA2026OrdinaryDraft` reuses actual FY/PY/NR originals and state composition while proving only no-care and high-income EIC-zero dependencies. The old full-federal/ordinary/PDF/filing gates remain unchanged. Main156/8, independent13 plus author29, types3/builds2/spec8580/inventory926/lint/audit1830+153 and exact590-case default/strict collection pass. All924old inventory rows and68supported statuses remain exact; both new inferred rows stay conservatively unsupported pending a separate traceability link. No browser case executed. See [the finite draft ledger](upgrade-2026-pa-2026-ordinary-draft-work.md). Human review, full2026 federal/annual forms and filing qualification remain open.

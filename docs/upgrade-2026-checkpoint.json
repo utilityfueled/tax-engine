@@ -22121,5 +22121,49 @@
     "currentMainQualified": false,
     "ledger": "docs/upgrade-2026-isolated-hosted-replacement-evidence.md",
     "precedingCommit": "fefa9019"
+  },
+  "nov06PA2026OrdinaryDraft": {
+    "status": "PASS_FINITE_STATE_ONLY_2026_ORDINARY_DRAFT_MAIN",
+    "evidence": "nov06-pa-2026-ordinary-draft-main-integration",
+    "authorManifestSHA256": "03fbbc874e9c4ae29652c2ed0ce843bd3cc1836082d6d486335514301f51d690",
+    "distinctRootManifestSHA256": "edcd26fc811bba3eb5e5cd560af8e915c1fdde1e9e4bc0b05bd7cf993c9becae",
+    "ownedCandidatePaths": 6,
+    "focusedTests": 156,
+    "focusedFiles": 8,
+    "authorTests": 29,
+    "additionalDistinctControls": 13,
+    "genuineOldApiRed": 3,
+    "productTypeChecks": 3,
+    "builds": 2,
+    "packageChecks": 12,
+    "specLines": 8580,
+    "lint": {
+      "errors": 0,
+      "existingWarnings": 11863
+    },
+    "sourceAudit": 1830,
+    "changedRuntimeHashes": 2,
+    "addedAuditedHashes": 2,
+    "contracts": 153,
+    "collection": 590,
+    "all590PriorRowsExactBothModes": true,
+    "existingSkipped": 5,
+    "browserCasesExecuted": 0,
+    "inventory": {
+      "rows": 926,
+      "old924Exact": true,
+      "supported": 68,
+      "newInferredRows": "unsupported"
+    },
+    "stateOnlyLibraryExport": true,
+    "combinedGuidedPreviewAdded": false,
+    "fullFederal2026AdmissionChanged": false,
+    "actualBrowserQualified": false,
+    "actualPDFQualified": false,
+    "fullCurrentGlobalQualified": false,
+    "humanReview": false,
+    "filingQualified": false,
+    "final2026FormsQualified": false,
+    "precedingCommit": "965017bad3a11673221e2c04fc508350faf5534d"
   }
 }

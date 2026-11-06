@@ -1,0 +1,55 @@
+form: "PA-2026-Ordinary-Draft"
+fullName: "Source-bound 2026 ordinary Pennsylvania draft without a full federal return"
+taxYear: 2026
+reference: "https://www.legis.state.pa.us/WU01/LI/LI/US/HTM/1971/0/0002..HTM#19710002u302s"
+notes: |
+  Finite state-only draft for single living unmarried owners in each actual
+  FY/PY/NR class, complete ordinary cash W2 originals and source payroll only.
+  No original document, missing amount, date, eligibility answer or election is
+  inferred. Existing canonical ordinary and full federal APIs keep their gates.
+  Enacted sections302/303/304, 61PaCode121.8, final2026REV413(I), Act45/2025
+  ArticleXVI-W.2 and IRS RevProc2025-32 section4.06 support this finite method.
+  Final2026 annual mappings, filing and full-year qualification remain denied.
+lines:
+  - line: "dependency-proof"
+    description: "Actual wage-only originals independently establish the limited credit dependencies"
+    formula: |
+      Require selected2026 single living owner, complete actual PA source packets,
+      current original W2 coverage, explicit no other classes/adjustments and
+      no care payments/employer benefits; deny every retained unsupported source.
+      Exact ordinary federal W2 earned wages must be strictly greater than70244,
+      the largest official2026 completed EITC phaseout across all four child counts
+      and both joint/nonjoint tables. Thus federal EITC and WPTC are exactlyzero
+      regardless of unknown EIC child count; never infer EIC children from PA/SP
+      dependent count, synthesize a federal result, or alias2025 constants.
+    testRef: "tests/engine/state/pa-2026-ordinary-draft.test.ts::PA2026 draft composes all actual residency sources without full federal admission"
+  - line: "state-composition"
+    description: "Reuse current PA source derivation and ordinary arithmetic"
+    formula: |
+      Replay complete actual originals, residency, payroll dates/source amounts,
+      worldwideSP, source-linked credits/payment/use-tax/local obligations through
+      the existing ordinary composer. This first draft requires no other income,
+      expenses/benefits, reciprocal or specialized packet, and reported PA withholding
+      at least fresh PA40 tax. Known zero retained; absence never establishes zero.
+      Preserve existing per-class roundDollar then PA40 roundDollar(x*0.0307),
+      SP statutory unchanged nominal thresholds, one payment disposition, and all
+      original source-currentness/owner/year/duplicate/source-precision guards.
+      REV1630 zero net tax exits before unsourced2027 interest is needed.
+    testRef: "tests/engine/state/pa-2026-ordinary-draft.test.ts::PA2026 draft preserves exact cents known zero and complete withholding"
+  - line: "source-currentness"
+    description: "Existing actual guided captures bind unchanged originals without creating confirmation"
+    formula: |
+      Actual guided capture/build APIs must accept current complete2026 originals;
+      reference-only, lexical-money, owner, date or source edits invalidate retained
+      confirmation until explicit new capture/reconfirmation. Unknown care/credit
+      scope and unsupported retained originals deny even when their nominal tax
+      result would be zero. No fake completed federal return or trusted client flag.
+    testRef: "tests/engine/state/pa-2026-ordinary-draft.test.ts::PA2026 draft preserves actual guided source capture and stale original denial"
+  - line: "readiness"
+    description: "Separately typed state-only draft does not qualify full federal or paper filing"
+    formula: |
+      Return an explicit state-only draft kind and limited dependency proof, never
+      TaxReturnResult or a fake full PA orchestrator result. Existing full federal,
+      ordinary2026 default API, guided combined preview, prepared PDF and filing
+      guards remain unchanged. Existing2025 normal composition stays unchanged.
+    testRef: "tests/engine/state/pa-2026-ordinary-draft.test.ts::PA2026 draft retains actual public federal ordinary and PDF gates"
