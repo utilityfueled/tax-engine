@@ -21785,5 +21785,32 @@
     "deadlineExtended": false,
     "qualification": false,
     "document": "docs/upgrade-2026-security-refresh-20261105.md"
+  },
+  "nov05NativeRefundPaymentYearsComposition": {
+    "scope": "Finite 2025 single owner, one actual 2024 refund history; original payment years and RRTA compatibility",
+    "authorManifestSHA256": "c09ebb2c89c7f1a4a80df0632b6b40a8afa85fe537c9ea3c3985ee521c5e2f4a",
+    "compositionAuthorManifestSHA256": "d7017ae4ae851224b886b46d52f84cdc764b7b7c26d33c8c41353e756bd496e5",
+    "compositionDistinctManifestSHA256": "691263c99874c7729a2810096c2a83e0cf2d311693995fd1c2367108c73ebdf8",
+    "rootReviewManifestSHA256": "7a3094c04e9b43863849b076fddacd418035d4f710c1eb913e8e85d2d473003f",
+    "mainManifestSHA256": "3e25bc177ec7de9c0ed5294fb343763621663b49b5da334ade38b239c55bf769",
+    "focusedTests": 152,
+    "focusedFiles": 21,
+    "metadataTests": 852,
+    "metadataFiles": 2,
+    "all12PackageChecks": "PASS",
+    "distinctCompositionTests": 59,
+    "rootCompositionTests": 54,
+    "auditDistinctControls": 16,
+    "auditedSources": 1814,
+    "browserContracts": 150,
+    "declaredCases": 584,
+    "newBrowserExecuted": false,
+    "previousInventoryRowsUnchanged": 914,
+    "inventoryEntries": 916,
+    "inventorySupported": 68,
+    "canonicalTaxArithmeticChanged": false,
+    "filingQualified": false,
+    "humanTaxReviewComplete": false,
+    "document": "docs/upgrade-2026-guided-refund-payment-years-work.md"
   }
 }

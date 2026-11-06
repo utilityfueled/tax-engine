@@ -6598,6 +6598,26 @@
       ]
     },
     {
+      "key": "federal/guided-source-capture-composition",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.irs.gov/instructions/i8959",
+      "specPath": "spec/federal/guided-source-capture-composition.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/guided-student-loan",
       "jurisdiction": "federal",
       "taxYear": 2026,
@@ -6623,6 +6643,26 @@
       "taxYear": 2025,
       "sourceAuthority": "https://www.irs.gov/instructions/i1040gi; https://www.irs.gov/publications/p525",
       "specPath": "spec/federal/guided-tax-refund.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "federal/guided-tax-refund-payment-years",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.irs.gov/publications/p525#en_US_2025_publink1000229426",
+      "specPath": "spec/federal/guided-tax-refund-payment-years.yaml",
       "enginePath": null,
       "packetPath": null,
       "specExists": true,

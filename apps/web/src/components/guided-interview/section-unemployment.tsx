@@ -1,12 +1,13 @@
 "use client";
 
 import { RetroShell } from "@/components/retro-shell";
-import { type UnemploymentData, emptyUnemploymentData } from "@/lib/guided-interview-flow";
+import { type GuidedFlowState, type UnemploymentData, emptyUnemploymentData } from "@/lib/guided-interview-flow";
 import { emptyUnemploymentEntry, unemploymentEntries, withUnemploymentEntries, type UnemploymentEntryData } from "@/lib/guided-unemployment-facts";
 import { GovernmentPaymentSourceFields } from "./government-payment-source-fields";
+import { TaxRefundRecoveryDetails } from "./tax-refund-recovery-details";
 import { TaxRefundSourceDetails } from "./tax-refund-source-details";
 
-export function SectionUnemployment({ data, onDataChange }: { data: UnemploymentData | undefined; onDataChange: (data: UnemploymentData) => void }) {
+export function SectionUnemployment({ data, state, onDataChange }: { state?: GuidedFlowState; data: UnemploymentData | undefined; onDataChange: (data: UnemploymentData) => void }) {
   const current = data ?? emptyUnemploymentData;
   const savedEntries = unemploymentEntries(current);
   const entries = savedEntries.length ? savedEntries : [{ ...emptyUnemploymentEntry }];
@@ -19,6 +20,7 @@ export function SectionUnemployment({ data, onDataChange }: { data: Unemployment
       <div className="guided-form-grid"><GovernmentPaymentSourceFields entry={entry} onChange={change => updateEntry(index, "priorYearRepaid" in change ? { ...change, priorRepaymentConfirmed: null } : change)} /></div>
     </div>)}</div>
     <button type="button" className="utility-button" onClick={() => onDataChange(withUnemploymentEntries(current, [...entries, { ...emptyUnemploymentEntry }]))}>Add government statement</button>
+    <TaxRefundRecoveryDetails data={current} state={state} onChange={onDataChange} />
     <TaxRefundSourceDetails data={current.taxRefund} entries={entries} onChange={taxRefund => onDataChange({ ...current, taxRefund })} />
     <p className="guided-hint">Missing source amounts stay unknown; enter zero only when confirmed. Repayments and contribution balances need matching source records. Income-tax refunds use the historical worksheet. Earlier-year repayments need the earlier return figures. Farm payments, medical leave and private programs need their separate worksheets. State withholding belongs to the source state, which may differ from your address.</p>
   </div></RetroShell>;

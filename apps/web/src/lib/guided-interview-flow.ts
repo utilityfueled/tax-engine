@@ -1,4 +1,5 @@
 import {rrtaDraftValues} from './guided-rrta-payroll-sources';
+import { guidedRefundRecoveryDraftErrors } from "./guided-tax-refund-recoveries";
 import {ohio2026SchoolActualValues,type Ohio2026SchoolDraft} from './guided-ohio-2026-school-sources';
 import {invalidateMortgagePrepaid} from './guided-mortgage-insurance-prepaid';
 import {buildGuidedMortgageInputs} from './guided-mortgage-worksheet';
@@ -1752,7 +1753,12 @@ export function updateSectionData(
   // A newly retained RRTA snapshot is custody metadata, not a new deduction fact.
   // Every entered row, owner, year, amount, eligibility answer and reference remains compared.
   const rrtaDocumentaryValues=(value:unknown)=>{if(!value||typeof value!=='object'||!('rrtaPayrollSources' in value))return value;const section=value as AdditionalDeductionsData;return {...section,rrtaPayrollSources:section.rrtaPayrollSources?{...section.rrtaPayrollSources,capturedOriginal:undefined}:undefined};};
-  const sourceValuesChanged = guidedSourceValuesChanged(sectionId==='additional-deductions'?rrtaDocumentaryValues(state.sectionData[sectionId]):state.sectionData[sectionId as keyof SectionDataMap],sectionId==='additional-deductions'?rrtaDocumentaryValues(data):data);
+  // Refund snapshots preserve custody; adding them is not a source edit.
+  // The existing generic comparison ignores only confirmation fields; every
+  // entered refund/payment/history fact remains included here.
+  const refundDocumentaryValues=(value:unknown)=>{if(!value||typeof value!=='object'||!('refundRecoveries' in value))return value;const section=value as UnemploymentData;return {...section,refundRecoveries:section.refundRecoveries?{...section.refundRecoveries,originalSources:undefined,originalDraft:undefined}:undefined};};
+  const documentaryValues=(value:unknown)=>sectionId==='additional-deductions'?rrtaDocumentaryValues(value):sectionId==='income-unemployment'?refundDocumentaryValues(value):value;
+  const sourceValuesChanged = guidedSourceValuesChanged(documentaryValues(state.sectionData[sectionId as keyof SectionDataMap]),documentaryValues(data));
   const nextBusiness = sectionId === "income-self-employment" ? data as SelfEmploymentSectionData : state.sectionData["income-self-employment"];
   const scheduleCValues=(value:SelfEmploymentSectionData|undefined)=>value?{...value,businessFacts:value.businessFacts?{...value.businessFacts,incomeReconciled:undefined,expensesReconciled:undefined,passengerSources:value.businessFacts.passengerSources?{...value.businessFacts.passengerSources,sourceFactsConfirmed:undefined,originalInput:undefined,originalDraft:undefined}:undefined,macrsAssets:value.businessFacts.macrsAssets?{...value.businessFacts.macrsAssets,sourceFactsConfirmed:undefined,originalBusiness:undefined,originalCollection:undefined}:undefined}:undefined}:value;
   const scheduleCValuesChanged=sectionId==='income-self-employment'?guidedSourceValuesChanged(scheduleCValues(state.sectionData['income-self-employment']),scheduleCValues(nextBusiness)):sourceValuesChanged;
@@ -1766,6 +1772,7 @@ export function updateSectionData(
   const eicHistorySourcesChanged = sectionId === "personal-info" && nextPersonal?.eicDisallowanceHistory
     && eicHistorySourceValuesChanged(state.sectionData["personal-info"], nextPersonal) ? nextPersonal.eicDisallowanceHistory : undefined;
   const nextGovernment = sectionId === "income-unemployment" ? data as UnemploymentData : state.sectionData["income-unemployment"];
+  const recoverySourcesChanged = sourceValuesChanged && ["personal-info", "income-unemployment", "deductions", "payments", "state-return"].includes(sectionId) && nextGovernment?.refundRecoveries;
   const refundSourcesChanged = sourceValuesChanged && ["personal-info", "income-unemployment", "deductions"].includes(sectionId) && nextGovernment?.taxRefund;
   const nextRetirement = sectionId === "income-retirement" ? data as SectionDataMap["income-retirement"] : state.sectionData["income-retirement"];
   const iraBasisSourcesChanged = sourceValuesChanged && ["income-retirement", "personal-info", "adjustments"].includes(sectionId) && nextRetirement?.basisSources;
@@ -1893,7 +1900,7 @@ export function updateSectionData(
         ...(eicHistorySourcesChanged ? { eicDisallowanceHistory: invalidateEicHistorySources(eicHistorySourcesChanged) } : {}),
         ...(eicCurrentSourcesChanged ? { eicRecertificationSources: { ...eicCurrentSourcesChanged, sourceFactsConfirmed: null } } : {}),
       } } : {}),
-      ...(refundSourcesChanged && nextGovernment ? { "income-unemployment": { ...nextGovernment, taxRefund: { ...refundSourcesChanged, sourceFactsConfirmed: null } } } : {}),
+      ...((refundSourcesChanged || recoverySourcesChanged) && nextGovernment ? { "income-unemployment": { ...nextGovernment, ...(refundSourcesChanged ? {taxRefund: { ...refundSourcesChanged, sourceFactsConfirmed: null }}:{}), ...(recoverySourcesChanged ? {refundRecoveries: {...recoverySourcesChanged,sourceFactsConfirmed:null}}:{}) } } : {}),
       ...(iraBasisSourcesChanged && nextRetirement ? { "income-retirement": { ...nextRetirement, basisSources: { ...iraBasisSourcesChanged, sourceFactsConfirmed: null } } } : {}),
       ...(rentalCarrySourcesChanged && nextRentals ? { "income-rental": { ...nextRentals, entries: nextRentals.entries.map(entry => entry.priorLossSources ? { ...entry, priorLossSources: { ...entry.priorLossSources, sourceFactsConfirmed: null } } : entry) } } : {}),
       ...(estimatedTaxSourcesChanged && nextPayments ? { payments: { ...nextPayments, estimatedTaxFacts: { ...estimatedTaxSourcesChanged, sourceFactsConfirmed: null } } } : {}),
@@ -2269,7 +2276,7 @@ function validateSocialSecuritySection(data: SocialSecurityData | undefined, sta
 
 function validateUnemploymentSection(data: UnemploymentData | undefined, state: GuidedFlowState): SectionValidationResult {
   if (!unemploymentEntries(data).some(isStartedUnemployment)) return EMPTY_SECTION("government payment info");
-  return validateRequiredFacts(unemploymentFactErrors(data, state.segmentation.filingStatus, state.taxYear, state.sectionData["personal-info"], state.sectionData["state-return"], state.sectionData.deductions));
+  return validateRequiredFacts({...unemploymentFactErrors(data, state.segmentation.filingStatus, state.taxYear, state.sectionData["personal-info"], state.sectionData["state-return"], state.sectionData.deductions), ...guidedRefundRecoveryDraftErrors(state)});
 }
 
 function validateDeductionsSection(data: DeductionData | undefined, taxYear?: number | null, sourceErrors: Record<string, string> = {}, filingStatus?: FilingStatus | null, spouse?: unknown): SectionValidationResult {

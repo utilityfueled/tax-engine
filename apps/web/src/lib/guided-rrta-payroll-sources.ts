@@ -21,7 +21,17 @@ export const emptyGuidedRRTA=():GuidedRRTADraft=>({sourceTaxYear:'',sourceRefere
 function ordered(value:unknown):unknown{if(Array.isArray(value))return value.map(ordered);if(value!==null&&typeof value==='object')return Object.fromEntries(Object.entries(value).filter(([,v])=>v!==undefined).sort(([a],[b])=>a.localeCompare(b)).map(([k,v])=>[k,ordered(v)]));return value;}
 function exact(value:unknown){return JSON.stringify(ordered(value));}
 export function rrtaDraftValues(draft:GuidedRRTADraft){const{capturedOriginal:_original,sourceFactsConfirmed:_confirmed,...facts}=draft;return exact(facts);}
-export function rrtaParentValues(state:GuidedFlowState){const additional=state.sectionData['additional-deductions'];return exact({taxYear:state.taxYear,segmentation:state.segmentation,sectionData:{...state.sectionData,'additional-deductions':additional?{...additional,rrtaPayrollSources:undefined}:undefined}});}
+export function rrtaParentValues(state:GuidedFlowState){
+ const additional=state.sectionData['additional-deductions'],government=state.sectionData['income-unemployment'];
+ // Only the refund collection's saved custody and group confirmation are not
+ // documentary source facts. Its entries, history, lexical values, references,
+ // source-row confirmations and every other section remain bound exactly.
+ const refund=government?.refundRecoveries;
+ return exact({taxYear:state.taxYear,segmentation:state.segmentation,sectionData:{...state.sectionData,
+  'additional-deductions':additional?{...additional,rrtaPayrollSources:undefined}:undefined,
+  'income-unemployment':government&&refund?{...government,refundRecoveries:{...refund,originalSources:undefined,originalDraft:undefined,sourceFactsConfirmed:undefined}}:government,
+ }});
+}
 export function updateGuidedRRTA(previous:GuidedRRTADraft,next:GuidedRRTADraft):GuidedRRTADraft{return rrtaDraftValues(previous)===rrtaDraftValues(next)?next:{...next,sourceFactsConfirmed:null};}
 function sourcePacket(raw:unknown,draft:GuidedRRTADraft){
  const input=TaxYearInputSchema.parse(raw);

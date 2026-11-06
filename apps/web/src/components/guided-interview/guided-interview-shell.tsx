@@ -625,6 +625,7 @@ function SectionContent({
     case "income-unemployment":
       return (
         <SectionUnemployment
+          state={state}
           data={getSectionData(state, "income-unemployment")}
           onDataChange={(data: UnemploymentData) =>
             onStateChange(updateSectionData(state, "income-unemployment", data))

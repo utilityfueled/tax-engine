@@ -1,3 +1,4 @@
+import { buildGuidedRefundPaymentBasis } from "./guided-tax-refund-recoveries";
 import { Form1099GSchema } from "@/models/inputs";
 import { parseGuidedCurrency } from "./guided-currency";
 import { amountError, hasEnteredAmount } from "./guided-required-facts";
@@ -25,6 +26,7 @@ export function buildGovernmentPaymentSourceRecords(entries: UnemploymentEntryDa
     stateOrLocalTaxRefund: money(entry.stateOrLocalTaxRefund, "Box 2 refund"),
     ...(entry.refundTaxYear?.trim() ? { refundTaxYear: Number(entry.refundTaxYear) } : {}),
     ...(entry.refundExpenseTaxYear?.trim() ? { refundExpenseTaxYear: Number(entry.refundExpenseTaxYear) } : {}),
+    ...(entry.refundPaymentBasis ? {refundPaymentBasis:buildGuidedRefundPaymentBasis(entry.refundPaymentBasis)} : {}),
     rtaaPayments: money(entry.rtaaPayments, "Box 5 RTAA"), taxableGrants: money(entry.taxableGrants, "Box 6 taxable grants"),
     grantIncomeCategory: entry.grantIncomeCategory || undefined, agriculturePayments: money(entry.agriculturePayments, "Box 7 agriculture"),
     tradeOrBusinessRefund: entry.tradeOrBusinessRefund ?? undefined, marketGain: money(entry.marketGain, "Box 9 market gain"),

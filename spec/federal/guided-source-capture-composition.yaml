@@ -1,0 +1,31 @@
+form: "Native source capture composition"
+fullName: "Explicit RRTA and mixed-payment-year refund documentary composition"
+taxYear: 2025
+reference: "https://www.irs.gov/instructions/i8959"
+notes: |
+  Intake composition only. Reuse actual ordinary-w2-rrta-v1 and state-income-tax-
+  recoveries-v1 canonical proofs, Publication525(2025) Example28 and existing
+  RRTA original-source guards. No new calculation, cohort, year, filing, PDF or
+  readiness qualification. Capture never emits an ordinary tax input or stores
+  another collector's confirmation. Ordinary output replays BOTH actual proofs.
+lines:
+  - line: "documentary-capture"
+    description: "Each explicit capture validates documentary originals independently"
+    formula: "Either capture order accepts complete actual documentary originals without requiring another collector's saved snapshot or collection confirmation; actual common input and present canonical source proofs still validate. Returned own draft is unconfirmed, immutable and source-bound; no public ordinary-input bypass."
+    testRef: "tests/guided-interview/guided-source-capture-composition.test.ts::captures both documentary collections in either order and requires both ordinary confirmations"
+  - line: "metadata-currentness"
+    description: "Named custody and confirmation metadata do not recurse"
+    formula: "RRTA parent/flow comparison excludes only refund originalSources/originalDraft and refund collection sourceFactsConfirmed confirmation metadata; every financial, eligibility, owner, year, lexical source and reference field remains exact. Capture/reconfirm metadata alone preserves current proofs."
+    testRef: "tests/guided-interview/guided-source-capture-composition.test.ts::preserves RRTA currentness across refund-only custody and confirmation changes"
+  - line: "source-edits"
+    description: "Actual edits require explicit original recapture and confirmation"
+    formula: "Same-cash provenance and monetary/eligibility edits remain invalidating. Retain previous originals unchanged; forged confirmation cannot repair stale proof. Both capture orders can explicitly recover after source edits; no-op and local JSON reload preserve valid proofs."
+    testRef: "tests/guided-interview/guided-source-capture-composition.test.ts::recovers in either order after real source edits while forged confirmation stays denied"
+  - line: "canonical-guards"
+    description: "Unknown and unsupported facts remain denied"
+    formula: "Validate actual current common originals and present RRTA/refund canonical documentary proof before capture. Unknown differs from zero; no eligibility/reference/identity default. Ordinary input always requires exact retained originals and collection confirmations; combined canonical input uses one existing refund JSON-wire shape before either proof, retaining actual guided snapshots/unknowns/lexemes; neither canonical exact-original guard is weakened. Existing independent and legacy routes remain unchanged."
+    testRef: "tests/guided-interview/guided-source-capture-composition.test.ts::denies invalid actual facts in either present collector without changing the input"
+  - line: "literal-replay"
+    description: "Unchanged canonical arithmetic supplies independent literal results"
+    formula: "Publication525 Example28 remains400*3000/4000=300 taxable historical,100 current reduction and900 current deduction. Actual RRTA Additional Medicare270/withholding270 and nonrailroad tip Form4137Medicare15 remain canonical results; no intake arithmetic or floating-point money."
+    testRef: "tests/guided-interview/guided-source-capture-composition.test.ts::replays independent refund and RRTA literal outputs from the final combined input"

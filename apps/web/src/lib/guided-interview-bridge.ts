@@ -77,6 +77,7 @@ import { businessFactErrors, hasBusinessSourceData, isStartedNec, sumKnownBusine
 import { isStartedRental, rentalFactErrors, rentalExpenseFields } from "./guided-rental-facts";
 import { buildGuidedRentalCarryovers } from "./guided-rental-carry-sources";
 import { paRentalAmountFields } from "./guided-pa-rental-facts";
+import { bindGuidedRefundRecoveryInput, captureGuidedRefundRecoveryOriginals } from "./guided-tax-refund-recoveries";
 import { isStartedUnemployment, unemploymentEntries, unemploymentFactErrors, governmentSourceTotal } from "./guided-unemployment-facts";
 import { buildGuidedTaxRefund } from "./guided-tax-refund";
 import { buildGovernmentPaymentSourceRecords } from "./guided-government-payment-inputs";
@@ -717,14 +718,43 @@ export function captureGuidedPassengerSources(state:GuidedFlowState):GuidedPasse
  const captureInput=structuredClone(raw);if(captureInput.scheduleC?.sourceFacts)delete captureInput.scheduleC.sourceFacts.passengerFirstYear;
  const bound=bindGuidedPassengerInput(captureInput,facts,true);if(!bound)throw new Error('Actual passenger sources required');return bound.draft;
 }
+/** Documentary proof only, private to the two explicit capture actions.
+ * No saved confirmation is needed to validate original facts. Both canonical
+ * proofs run before returning only the requested draft; ordinary emission below
+ * still requires both user confirmations and exact retained originals.
+ */
+function captureCombinedPayrollAndRefundOriginals(state:GuidedFlowState){
+ const rrta=state.sectionData['additional-deductions']?.rrtaPayrollSources;
+ const government=state.sectionData['income-unemployment'];
+ if(!rrta||!government?.refundRecoveries)throw Error('Both actual documentary collections are required.');
+ const raw=buildGuidedSourceInput(state,false,true,true);
+ if(!raw)throw Error('Complete actual household, payroll, government and payment originals before capture.');
+ const payroll=captureGuidedRRTA(raw,rrta,rrtaParentValues(state));
+ const refund=captureGuidedRefundRecoveryOriginals(raw,state);
+ // This ephemeral canonical validation does not confirm the guided collection:
+ // the unchanged binder checks the actual history/payment packet and calculator.
+ // Neither this state nor the other collector's snapshot escapes this function.
+ const documentaryValidationState:GuidedFlowState={...state,sectionData:{...state.sectionData,
+  'income-unemployment':{...government,refundRecoveries:{...government.refundRecoveries,...refund,sourceFactsConfirmed:true}},
+ }};
+ bindGuidedRefundRecoveryInput(raw,documentaryValidationState);
+ return {payroll,refund};
+}
 /** Explicit capture returns documentary sources, not an ordinary input or readiness result. */
 export function captureGuidedRRTAPayrollSources(state:GuidedFlowState):GuidedRRTADraft{
  const draft=state.sectionData['additional-deductions']?.rrtaPayrollSources;
  if(!draft)throw Error('Enter actual RRTA original sources first.');
+ if(state.sectionData['income-unemployment']?.refundRecoveries)return captureCombinedPayrollAndRefundOriginals(state).payroll;
  const raw=buildGuidedSourceInput(state,false,true);if(!raw)throw Error('Complete actual native household, payroll and tip originals before RRTA capture.');
  return captureGuidedRRTA(raw,draft,rrtaParentValues(state));
 }
-function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,captureRRTA=false): GuidedTaxInputSources | null {
+export function captureGuidedRefundRecoverySources(state:GuidedFlowState){
+ if(state.sectionData['additional-deductions']?.rrtaPayrollSources&&state.sectionData['income-unemployment']?.refundRecoveries)return captureCombinedPayrollAndRefundOriginals(state).refund;
+ const raw=buildGuidedSourceInput(state,false,false,true);
+ if(!raw)throw new Error("Complete and confirm the actual household, government statements, deductions and payment originals before capture.");
+ return captureGuidedRefundRecoveryOriginals(raw,state);
+}
+function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,captureRRTA=false,captureRefund=false): GuidedTaxInputSources | null {
   const { segmentation, sectionData } = state;
 
   if (!segmentation.filingStatus || !Number.isInteger(state.taxYear) || state.taxYear == null) return null;
@@ -866,7 +896,7 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
   const currentCapitalCarry = form172?.capitalSources?.priorCapitalLosses;
 
   const healthInsurance = buildHealthInsuranceInput(adjustmentData?.healthInsuranceFacts, segmentation.filingStatus, state.taxYear, adjustmentData?.selfEmployedHealthInsurance);
-  const input: GuidedTaxInputSources = {
+  let input: GuidedTaxInputSources = {
     taxpayer: {
       taxYear: state.taxYear,
       filingStatus: mapFilingStatus(segmentation.filingStatus),
@@ -938,7 +968,7 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
     socialSecurityFacts: formSSA1099.length + formRRB1099.length ? { puertoRicoIncomeExclusion: toDecimalString(socialSecurityData?.puertoRicoIncomeExclusion), americanSamoaIncomeExclusion: toDecimalString(socialSecurityData?.americanSamoaIncomeExclusion), sourceFactsConfirmed: socialSecurityData?.sourceFactsConfirmed ?? undefined } : undefined,
     socialSecurityLumpSumElection: formSSA1099.length + formRRB1099.length ? buildSocialSecurityElectionInput(socialSecurityData) : undefined,
     form1099G,
-    taxableRefundWorksheet: buildGuidedTaxRefund(unemploymentData?.taxRefund, unemploymentEntries(unemploymentData).filter(isStartedUnemployment), state.taxYear, segmentation.filingStatus, personalInfo, deductionData),
+    taxableRefundWorksheet: unemploymentData?.refundRecoveries ? undefined : buildGuidedTaxRefund(unemploymentData?.taxRefund, unemploymentEntries(unemploymentData).filter(isStartedUnemployment), state.taxYear, segmentation.filingStatus, personalInfo, deductionData),
     rentalProperties,
     scheduleA,
     ...mortgageInputs,
@@ -984,7 +1014,13 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
       context.w2s.forEach((entry, index) => { if (entry.stateLocalSources !== undefined) calculateW2StateLocalSources(context, index, entry.stateLocalSources); });
     } catch { return null; }
   }
+  // Both exact-original proofs must observe the same canonical key inventory.
+  // Refund custody already uses this JSON wire boundary; applying it once before
+  // either combined proof avoids rewriting one packet's taxpayer/W2 originals.
+  // Actual guided fields and retained raw snapshots are never rewritten here.
+  if(sectionData['additional-deductions']?.rrtaPayrollSources&&unemploymentData?.refundRecoveries)input=JSON.parse(JSON.stringify(input)) as GuidedTaxInputSources;
   if(sectionData['additional-deductions']?.rrtaPayrollSources&&!captureRRTA){try{input.rrtaPayrollSources=bindGuidedRRTA(input,sectionData['additional-deductions'].rrtaPayrollSources,rrtaParentValues(state));}catch{return null;}}
+  if(unemploymentData?.refundRecoveries && !captureRefund){try{const bound=bindGuidedRefundRecoveryInput(input,state);return {...input,taxpayer:{...bound.taxpayer,stateResidency:bound.taxpayer.stateResidency},form1099G:bound.form1099G,adjustments:bound.adjustments,taxableStateRefundRecoveries:bound.taxableStateRefundRecoveries};}catch{return null;}}
   return input;
 }
 
@@ -1122,7 +1158,7 @@ export function buildGuidedFactAnswers(
   const governmentEntries = unemploymentEntries(unemplData).filter(isStartedUnemployment);
   if (governmentEntries.length) {
     const total = governmentSourceTotal(governmentEntries, "compensation");
-    const complete = Object.keys(unemploymentFactErrors(unemplData, state.segmentation.filingStatus, state.taxYear, state.sectionData["personal-info"], state.sectionData["state-return"], state.sectionData.deductions)).length === 0;
+    const complete = (Object.keys(unemploymentFactErrors(unemplData, state.segmentation.filingStatus, state.taxYear, state.sectionData["personal-info"], state.sectionData["state-return"], state.sectionData.deductions)).length + (unemplData?.refundRecoveries && buildTaxInputFromGuidedData(state)===null ? 1 : 0)) === 0;
     answers.push({ factId: "government-payments-review", answerText: total === null ? "Government-payment source records entered; amounts and ownership need review." : `${governmentEntries.length} government-payment source record(s) ${complete ? "confirmed" : "entered; source facts need review"}. Original unemployment compensation: $${fmtNum(total)}.` });
   }
 
@@ -1288,7 +1324,7 @@ export function buildGuidedSyntheticDocuments(
       size: 0,
       uploadedAt: now,
       kind: "1099-g",
-      coverage: Object.keys(unemploymentFactErrors(unemplData, state.segmentation.filingStatus, state.taxYear, state.sectionData["personal-info"], state.sectionData["state-return"], state.sectionData.deductions)).length ? "partially-supported" : "supported",
+      coverage: (Object.keys(unemploymentFactErrors(unemplData, state.segmentation.filingStatus, state.taxYear, state.sectionData["personal-info"], state.sectionData["state-return"], state.sectionData.deductions)).length + (unemplData?.refundRecoveries && buildTaxInputFromGuidedData(state)===null ? 1 : 0)) ? "partially-supported" : "supported",
       label: "1099-G (guided interview)",
       notes: "Entered via guided interview.",
       matchedFixtureId: null,

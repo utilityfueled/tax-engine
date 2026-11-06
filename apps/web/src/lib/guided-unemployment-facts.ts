@@ -1,4 +1,5 @@
 import Decimal from "decimal.js";
+import type { GuidedRefundPaymentBasisData, GuidedRefundRecoveriesData } from "./guided-tax-refund-recoveries";
 import { calculateForm1099G } from "@/engine/forms/form-1099-g";
 import { buildGovernmentPaymentSourceRecords } from "./guided-government-payment-inputs";
 import { parseGuidedCurrency } from "./guided-currency";
@@ -21,6 +22,7 @@ export interface UnemploymentEntryData {
   stateOrLocalTaxRefund?: string;
   refundTaxYear?: string;
   refundExpenseTaxYear?: string;
+  refundPaymentBasis?: GuidedRefundPaymentBasisData;
   rtaaPayments?: string;
   taxableGrants?: string;
   grantIncomeCategory?: "nonbusiness" | "business" | "farm" | "";
@@ -53,7 +55,7 @@ export interface UnemploymentEntryData {
   statePayerId?: string;
   stateWithheld?: string;
 }
-export interface UnemploymentSourceData { entries?: UnemploymentEntryData[]; taxRefund?: GuidedTaxRefundData; }
+export interface UnemploymentSourceData { entries?: UnemploymentEntryData[]; taxRefund?: GuidedTaxRefundData; refundRecoveries?: GuidedRefundRecoveriesData; }
 export const emptyUnemploymentEntry: UnemploymentEntryData = { compensation: "", federalWithheld: "" };
 export const governmentOtherAmounts = [
   ["stateOrLocalTaxRefund", "State or local tax refund, credit or offset (Box 2)"],
@@ -80,7 +82,7 @@ export function governmentSourceTotal(entries: UnemploymentEntryData[], field: "
 }
 export function withUnemploymentEntries(data: UnemploymentData, entries: UnemploymentEntryData[]): UnemploymentData {
   const started = entries.some(isStartedUnemployment);
-  return { ...data, entries, ...(data.taxRefund && guidedSourceValuesChanged(data.entries, entries) ? { taxRefund: { ...data.taxRefund, sourceFactsConfirmed: null } } : {}), compensation: started ? governmentSourceTotal(entries, "compensation")?.toFixed() ?? "" : "", federalWithheld: started ? governmentSourceTotal(entries, "federalWithheld")?.toFixed() ?? "" : "" };
+  return { ...data, entries, ...(data.refundRecoveries && guidedSourceValuesChanged(data.entries, entries) ? { refundRecoveries: { ...data.refundRecoveries, sourceFactsConfirmed: null } } : {}), ...(data.taxRefund && guidedSourceValuesChanged(data.entries, entries) ? { taxRefund: { ...data.taxRefund, sourceFactsConfirmed: null } } : {}), compensation: started ? governmentSourceTotal(entries, "compensation")?.toFixed() ?? "" : "", federalWithheld: started ? governmentSourceTotal(entries, "federalWithheld")?.toFixed() ?? "" : "" };
 }
 export function unemploymentFactErrors(data: UnemploymentData | undefined, filingStatus?: FilingStatus | null, taxYear?: number | null, personalInfo?: PersonalInfoData, stateData?: StateReturnData, otherRecoveries?: RefundRecoveryContext): Record<string, string> {
   const errors: Record<string, string> = {};
@@ -141,7 +143,9 @@ export function unemploymentFactErrors(data: UnemploymentData | undefined, filin
     const total = governmentSourceTotal(entries, field);
     if (amountError(data[field], field) || total === null || !total.eq(parseGuidedCurrency(data[field]))) errors[`government-total-${field}`] = "Reconcile the saved total with the actual government-payment source records.";
   }
-  Object.assign(errors, guidedTaxRefundErrors(data?.taxRefund, entries, taxYear, filingStatus, personalInfo, otherRecoveries));
+  if(data?.refundRecoveries && data.taxRefund) errors["government-refund-method"]="Keep the payment-year collection separate from the legacy single-year worksheet.";
+  if(entries.some(entry=>entry.refundPaymentBasis) && !data?.refundRecoveries) errors["government-refund-method"]="Complete the explicit payment-year recovery collection before using dated payment originals.";
+  if(!data?.refundRecoveries) Object.assign(errors, guidedTaxRefundErrors(data?.taxRefund, entries, taxYear, filingStatus, personalInfo, otherRecoveries));
   if (entries.length && Object.keys(errors).length === 0) {
     try {
       const forms = buildGovernmentPaymentSourceRecords(entries);

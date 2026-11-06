@@ -1,0 +1,215 @@
+{
+  "phase": "interview",
+  "taxYear": 2025,
+  "segmentation": {
+    "filingStatus": "single",
+    "incomeTypes": [
+      "w2-wages",
+      "unemployment"
+    ],
+    "lifeEvents": [],
+    "stateCode": "PA"
+  },
+  "currentSectionIndex": 0,
+  "completedSections": [],
+  "sectionData": {
+    "deductions": {
+      "method": "automatic",
+      "medicalExpenses": "",
+      "stateLocalTaxes": "",
+      "realEstateTaxes": "",
+      "mortgageInterest": "",
+      "charitableContributions": "",
+      "casualtyLosses": "",
+      "otherItemized": "",
+      "nonW2IncomeTaxesDeductedElsewhere": "0"
+    },
+    "personal-info": {
+      "dateOfBirth": "1990-02-15",
+      "usResidencyMonths": "12",
+      "stateResidency": "full-year",
+      "firstName": "Jordan",
+      "middleName": "",
+      "lastName": "Example",
+      "ssn": "111-22-3333",
+      "addressLine1": "42 Example Road",
+      "addressLine2": "",
+      "city": "Columbus",
+      "state": "OH",
+      "zip": "43215",
+      "dependentCount": "0",
+      "dependents": [],
+      "standardDeductionFacts": {
+        "primaryBlind": false,
+        "spouseBlind": false,
+        "primaryCanBeClaimedAsDependent": false,
+        "spouseCanBeClaimedAsDependent": false,
+        "primaryDeceased": false,
+        "spouseDeceased": false,
+        "dualStatusAlien": false,
+        "nonresidentAlien": false,
+        "shortTaxYear": false,
+        "spouseItemizes": false,
+        "claimSpouseAdditionalDeduction": false
+      },
+      "livedWithSpouseAtAnyTimeDuringYear": true,
+      "employmentValidSsnIssuedByDueDate": true,
+      "tinIssuedByDueDate": true,
+      "childTaxCredit": {
+        "bonaFidePuertoRicoResident": false,
+        "puertoRicoExcludedIncome": "0",
+        "form4563ExcludedIncome": "0"
+      },
+      "spouse": {
+        "firstName": "Taylor",
+        "lastName": "Example",
+        "ssn": "222-33-4444",
+        "dateOfBirth": "1992-09-10",
+        "usResidencyMonths": "12",
+        "employmentValidSsnIssuedByDueDate": true,
+        "tinIssuedByDueDate": true
+      }
+    },
+    "income-w2": {
+      "entries": [
+        {
+          "accountHolder": "primary",
+          "stateTaxReporting": "none",
+          "state": "",
+          "employerName": "Synthetic Employer",
+          "employerEin": "12-3456789",
+          "wages": "50000",
+          "federalWithheld": "0",
+          "socialSecurityWages": "0",
+          "socialSecurityTips": "0",
+          "socialSecurityWithheld": "0",
+          "medicareWages": "0",
+          "medicareWithheld": "0",
+          "stateWages": "",
+          "stateWithheld": "",
+          "aiSuggestedFields": {},
+          "box10DependentCareBenefits": "0",
+          "box12CodeW": "0"
+        }
+      ]
+    },
+    "state-return": {
+      "stateEstimatedPayments": [
+        {
+          "state": "PA",
+          "date": "2025-01-15",
+          "amount": "1000"
+        }
+      ],
+      "additionalStateWithholding": ""
+    },
+    "income-unemployment": {
+      "compensation": "",
+      "federalWithheld": "",
+      "entries": [
+        {
+          "sourceTaxYear": "2025",
+          "sourceFormRevision": "2024-03",
+          "payer": "Actual State Agency",
+          "payerTin": "12-3456789",
+          "accountReference": "synthetic-government-source",
+          "accountHolder": "primary",
+          "recipientTaxIdLast4": "3333",
+          "programType": "other-government",
+          "compensation": "0",
+          "federalWithheld": "0",
+          "stateOrLocalTaxRefund": "400",
+          "rtaaPayments": "0",
+          "taxableGrants": "0",
+          "agriculturePayments": "0",
+          "marketGain": "0",
+          "tradeOrBusinessRefund": false,
+          "currentYearRepaid": "0",
+          "priorYearRepaid": "0",
+          "unrecoveredAfterTaxContributions": "0",
+          "actualReceiptConfirmed": true,
+          "additionalWorksheetRequired": false,
+          "sourceFactsConfirmed": true,
+          "stateTaxReporting": "none",
+          "refundTaxYear": "2024",
+          "refundExpenseTaxYear": "",
+          "refundPaymentBasis": {
+            "sourceReference": "FixtureOnly original complete payment ledger",
+            "receivedDate": "2025-09-20",
+            "state": "PA",
+            "sourceFactsConfirmed": true,
+            "allPaymentsForStateReturnIncludedConfirmed": true,
+            "payments": [
+              {
+                "sourceReference": "FixtureOnly March original",
+                "datePaid": "2024-03-15",
+                "amount": "1000",
+                "currentYearStatePaymentConfirmed": false
+              },
+              {
+                "sourceReference": "FixtureOnly June original",
+                "datePaid": "2024-06-15",
+                "amount": "1000",
+                "currentYearStatePaymentConfirmed": false
+              },
+              {
+                "sourceReference": "FixtureOnly September original",
+                "datePaid": "2024-09-15",
+                "amount": "1000",
+                "currentYearStatePaymentConfirmed": false
+              },
+              {
+                "sourceReference": "FixtureOnly January original",
+                "datePaid": "2025-01-15",
+                "amount": "1000",
+                "currentYearStatePaymentConfirmed": true
+              }
+            ]
+          }
+        }
+      ],
+      "refundRecoveries": {
+        "sourceTaxYear": "2025",
+        "sourceReference": "FixtureOnly original recovery collection",
+        "allRefundSourcesIncludedConfirmed": true,
+        "sourceFactsConfirmed": null,
+        "years": [
+          {
+            "sourceReference": "Original federal2024 return and ScheduleA",
+            "sourceFactsConfirmed": true,
+            "priorTaxYear": "2024",
+            "priorYearFilingStatus": "single",
+            "priorYearPrimarySsn": "111-22-3333",
+            "priorYearItemized": true,
+            "priorYearItemizedTotal": "20000",
+            "priorYearStandardDeduction": "14600",
+            "priorYearStateLocalTaxesPaid": "4000",
+            "priorYearPropertyTaxesPaid": "0",
+            "priorYearAlternativeGeneralSalesTaxDeduction": "0",
+            "priorYearSaltDeduction": "4000",
+            "priorYearOtherItemizedDeductions": "16000",
+            "priorYearStateLocalTaxElection": "income",
+            "priorYearAdjustedGrossIncome": "60000",
+            "priorYearTaxableIncome": "40000",
+            "priorYearAdditionalDeductions": "0",
+            "priorYearHadTaxCredits": false,
+            "priorYearUsedSpecialTaxComputation": false,
+            "priorYearHadAMT": false,
+            "priorYearHadUnusedTaxCredits": false,
+            "priorYearUsedPreferentialTaxWorksheet": false,
+            "priorYearWasDependent": false,
+            "priorYearNonresidentAlien": false,
+            "priorYearHadCarryoverBenefits": false,
+            "priorYearHadOtherRecoveries": false,
+            "priorYearHadEarlierRefunds": false,
+            "priorYearBlind": false,
+            "priorYearDeceased": false,
+            "priorYearMandatoryItemization": false,
+            "communityPropertyAllocationRequired": false
+          }
+        ]
+      }
+    }
+  },
+  "factsVersion": 2
+}
