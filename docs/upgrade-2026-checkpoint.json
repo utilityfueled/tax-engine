@@ -22590,5 +22590,18 @@
     "hostedRuntimeQualified": false,
     "humanApproval": false,
     "releaseReady": false
+  },
+  "nov06MixedTipsPrimaryRefresh": {
+    "status": "no_controlling_final_reduced_mixed_allocation_located_not_absence_proof",
+    "ledger": "docs/upgrade-2026-mixed-tips-method-decision.md",
+    "observedAtUTC": "2026-11-06T11:57:26Z",
+    "primarySourcesInspected": 5,
+    "form1040InstructionsYear": 2025,
+    "form8995AInstructionsYear": 2025,
+    "form8995Instructions2026Draft": true,
+    "newCalculation": false,
+    "qualifiedHumanInterpretation": false,
+    "existingUnsupportedBranchImplemented": false,
+    "releaseReady": false
   }
 }

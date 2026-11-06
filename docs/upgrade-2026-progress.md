@@ -3693,3 +3693,13 @@ safe shared optimization; a separate opt-in profiling proposal continues.
 See [the current runtime ledger](upgrade-2026-cecb-runtime-evidence.md). Current
 cecb hosted/native supplements await their specific authorizations; no service
 or VM execution, final-form/human approval or release claim is added here.
+
+
+### November 6: mixed-tip allocation authority refreshed
+
+Fresh IRS, statutory and final-regulation review still locates no controlling
+employee/business attribution after the shared tip cap or MAGI reduction.
+Current 1040/8995-A instructions remain 2025 and 2026 Form 8995 instructions
+remain draft. This is an unresolved internal derivation obligation; no guard is
+counted as implementation and no split is invented. See [the source decision](upgrade-2026-mixed-tips-method-decision.md).
+The profiling implementation and other qualification work continue separately.
