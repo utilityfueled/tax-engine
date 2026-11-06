@@ -13,7 +13,7 @@ import { promisify } from "node:util";
 import { PDFDocument, StandardFonts } from "pdf-lib";
 import { ensureHostedAppSchema, getHostedServerDatabase } from "../apps/web/src/lib/hosted-server-db.ts";
 import { resolveLocalContainerRuntime } from "./local-container-runtime.mjs";
-import { createRehearsalBrowserDiagnostics } from "./rehearsal-browser-diagnostics.mjs";
+import { collectRehearsalPageState, createRehearsalBrowserDiagnostics } from "./rehearsal-browser-diagnostics.mjs";
 
 // Run with node --import tsx. This creates its own local-only Compose project,
 // database volume and browser profile. It never connects to DATABASE_URL or
@@ -61,7 +61,8 @@ async function unusedPort() {
 const webPort = await unusedPort();
 const pgPort = await unusedPort();
 const origin = `http://127.0.0.1:${webPort}`;
-const browserDiagnostics = createRehearsalBrowserDiagnostics(origin);
+const browserDiagnostics = createRehearsalBrowserDiagnostics(origin, { isMainFrame: frame => Boolean(page) && frame === page.mainFrame() });
+browserDiagnostics.setPhase(phase);
 const databaseUrl = `postgresql://ai_test@127.0.0.1:${pgPort}/postgres`;
 const composeEnv = { ...process.env, WEB_PORT: `127.0.0.1:${webPort}`, POSTGRES_PORT: String(pgPort) };
 const composeArgs = ["compose", "--project-name", project, "--env-file", path.join(root, ".env.docker.example"),
@@ -130,6 +131,7 @@ try {
   evidence.candidateDigest = candidate.Id;
   await configure(previousImage, candidate.Architecture);
   phase = "start-previous";
+  browserDiagnostics.setPhase(phase);
   attemptedStart = true;
   console.log(`${project}: start previous image and isolated database`);
   await compose("up", "--detach", "--no-build", "--wait", "--wait-timeout", "120");
@@ -151,6 +153,8 @@ try {
   browser = await chromium.launchPersistentContext(path.join(work, "browser"), { headless: true, baseURL: origin });
   page = await browser.newPage();
   page.setDefaultTimeout(15_000);
+  page.on("request", browserDiagnostics.requestStarted);
+  page.on("framenavigated", browserDiagnostics.frameCommitted);
   page.on("pageerror", browserDiagnostics.pageError);
   page.on("requestfailed", browserDiagnostics.requestFailed);
   page.on("response", browserDiagnostics.response);
@@ -159,7 +163,7 @@ try {
   const pdf = await PDFDocument.create();
   pdf.addPage().drawText("Synthetic source for release recovery only", { font: await pdf.embedFont(StandardFonts.Helvetica), size: 12 });
   const originalBytes = Buffer.from(await pdf.save());
-  await page.goto("/");
+  browserDiagnostics.navigationResponse(await page.goto("/"));
   await page.evaluate(() => globalThis.localStorage.setItem("tax-engine:guided-mode", "false"));
   await page.getByRole("button", { name: /start your tax return/i }).click();
   await expect(page).toHaveURL(/\/returns\/(?!new)[a-z0-9-]+/i);
@@ -174,8 +178,9 @@ try {
   await page.evaluate(({ id, originalFlow }) => globalThis.localStorage.setItem(`tax-engine.guided-flow-state.v1:${id}`, originalFlow), { id, originalFlow });
   const verify = async (label, expectedImage) => {
     phase = label;
+    browserDiagnostics.setPhase(phase);
     await ready();
-    await page.goto(`/returns/${id}?local=1`);
+    browserDiagnostics.navigationResponse(await page.goto(`/returns/${id}?local=1`));
     // The first page after a recreated container can pass 5s on a slow runner. Browser suites here allow 30s.
     await expect(page.getByRole("heading", { name: `Tax Return ${id}`, exact: true })).toBeVisible({ timeout: 30_000 });
     assert.equal(await page.evaluate(id => globalThis.localStorage.getItem(`tax-engine.guided-flow-state.v1:${id}`), id), originalFlow);
@@ -204,15 +209,18 @@ try {
   };
   await verify("previous", previous.Id);
   phase = "start-upgrade";
+  browserDiagnostics.setPhase(phase);
   await configure(candidateImage, candidate.Architecture);
   await compose("up", "--detach", "--no-build", "--no-deps", "--force-recreate", "web");
   await verify("upgrade", candidate.Id);
   phase = "restart-database";
+  browserDiagnostics.setPhase(phase);
   await compose("stop", "postgres");
   await assert.rejects(databaseSnapshot());
   await compose("up", "--detach", "--no-build", "--wait", "--wait-timeout", "120", "postgres");
   await verify("database-restart", candidate.Id);
   phase = "restore-database";
+  browserDiagnostics.setPhase(phase);
   // Exercise actual application migration/dump/restore in another unique schema
   // on this disposable Compose database, leaving the persistent sentinel intact.
   const restoreOutput = await command(["--import", "tsx", "scripts/rehearse-hosted-recovery.ts"], process.execPath,
@@ -221,16 +229,19 @@ try {
   assert.equal(evidence.databaseRecovery.result, "passed");
   await verify("database-dump-restore", candidate.Id);
   phase = "start-rollback";
+  browserDiagnostics.setPhase(phase);
   await configure(previousImage, candidate.Architecture);
   await compose("up", "--detach", "--no-build", "--no-deps", "--force-recreate", "web");
   await verify("rollback", previous.Id);
   phase = "start-re-upgrade";
+  browserDiagnostics.setPhase(phase);
   await configure(candidateImage, candidate.Architecture);
   await compose("up", "--detach", "--no-build", "--no-deps", "--force-recreate", "web");
   await verify("re-upgrade", candidate.Id);
 
   phase = "browser-backup-restore-delete";
-  await page.goto("/");
+  browserDiagnostics.setPhase(phase);
+  browserDiagnostics.navigationResponse(await page.goto("/"));
   const card = page.getByRole("listitem").filter({ hasText: `Tax Return ${id}` });
   await card.getByText("Back up this return", { exact: true }).click();
   await card.getByLabel("Backup password (at least 12 characters)").fill("synthetic-release-password");
@@ -279,7 +290,7 @@ try {
   await page.reload();
   assert.equal(await page.evaluate(id => globalThis.localStorage.getItem(`tax-engine.guided-flow-state.v1:${id}`), recoveredId), originalFlow);
   assert.deepEqual(Buffer.from(await documentBytes(page, recoveredId)), originalBytes);
-  await page.goto("/");
+  browserDiagnostics.navigationResponse(await page.goto("/"));
   await page.getByRole("button", { name: `Delete tax return ${recoveredId}`, exact: true }).click();
   await expect(page.getByRole("listitem").filter({ hasText: `Tax Return ${recoveredId}` })).toHaveCount(0);
   assert.equal(await documentBytes(page, recoveredId), null);
@@ -296,11 +307,7 @@ try {
   let pageState = { available: false };
   if (page) {
     try {
-      pageState = await Promise.race([page.evaluate(() => ({ available: true,
-        readyState: globalThis.document.readyState,
-        hasHeading: Boolean(globalThis.document.querySelector("h1")),
-        loadingReturn: globalThis.document.body?.textContent?.includes("Loading your return...") ?? false,
-      })), delay(2_000, { available: false, timedOut: true })]);
+      pageState = await Promise.race([page.evaluate(collectRehearsalPageState), delay(2_000, { available: false, timedOut: true })]);
     } catch { /* A closed page must not replace the original rehearsal failure. */ }
   }
   console.error(JSON.stringify({ ...evidence, result: "failed", failedPhase: phase,

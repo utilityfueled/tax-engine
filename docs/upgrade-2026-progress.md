@@ -3852,3 +3852,14 @@ proposed2026 positive oracle was wrong; its partial-attribution refusal remains.
 All failed oracles/setup attempts and one reviewed lint warning are retained.
 See [the charity ledger](upgrade-2026-charity-total-exhaustion-work.md); partial
 methods, full successor checks, human and final-form qualifications remain open.
+
+
+### November 6: bounded recovery navigation observations
+
+Main four genuine missing-observation failures precede15 helper passes and
+types3/spec/inventory/lint/build closure. Distinct7 controls and a full runner
+inverse preserve actions, assertions, time limits and cleanup. A lint-only
+browser-global qualification and its failed original are retained. No actual
+recovery run, retry, cause or readiness claim is made. See
+[the observation ledger](upgrade-2026-rehearsal-navigation-observations.md);
+source-bound distribution and security gates remain open.

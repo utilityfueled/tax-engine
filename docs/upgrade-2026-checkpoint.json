@@ -22948,5 +22948,23 @@
     "humanReviewPending": true,
     "releaseReady": false,
     "ledger": "docs/upgrade-2026-charity-total-exhaustion-work.md"
+  },
+  "nov06RecoveryNavigationObservations": {
+    "baseCommit": "c9ae4af2",
+    "mainBaselineBehavioralFailures": 4,
+    "mainHelperPassed": 15,
+    "independentPureControlsPassed": 7,
+    "types3": true,
+    "engineBuild": true,
+    "ownedLintErrors": 0,
+    "ownedLintWarnings": 0,
+    "initialLintFailureRetained": true,
+    "globalThisQualificationOnly": true,
+    "operationalRunnerInverseExact": true,
+    "newRequestsOrRetries": false,
+    "actualRecoveryRunPerformed": false,
+    "sourceBoundQualificationPending": true,
+    "releaseReady": false,
+    "ledger": "docs/upgrade-2026-rehearsal-navigation-observations.md"
   }
 }

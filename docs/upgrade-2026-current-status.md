@@ -30,6 +30,10 @@ also passes 27 affected and six independent controls; its correct positive case
 is historical2025, while the2026 partial case stays denied. Other endpoint work
 remains private; failed oracles and harness attempts are retained.
 
+The [recovery observation package](upgrade-2026-rehearsal-navigation-observations.md)
+passes15 main and seven distinct pure controls. Its exact runner inverse keeps
+recovery actions and gates unchanged; no new actual rehearsal is claimed.
+
 Fresh [official Next advisory metadata](upgrade-2026-next-1645-security-work.md)
 now resolves the seven affected/patched-range contradictions: installed16.4.5
 is patched. The mfr8 severity disagreement remains conservatively High; image

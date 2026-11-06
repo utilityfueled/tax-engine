@@ -1,0 +1,37 @@
+form: "Synthetic self-host upgrade navigation observations"
+taxYear: 2025
+irsReference: "https://playwright.dev/docs/navigations"
+notes: |
+  Engineering observations only; no tax calculation or qualification change.
+  Preserve all rehearsal requests, actions, assertions, original30s heading,
+  existing2s failed-page snapshot race, original failure and cleanup. No retry,
+  reload, new HTTP request, CDP, cache bypass, network topology or service change.
+  Keep100 error-event cap. Record fixed request-start/completion phases separately;
+  observing an upgrade failure must not retrospectively assign old events to it.
+  Observe main-document request sequence and frame commit sequence independently.
+  A sequence is an observed ordering aid, not proof of an underlying CDP loader.
+  Existing goto responses expose only status, known cache-policy flags and
+  service-worker boolean. No raw headers, request URLs, query, IDs or messages.
+  The existing failure snapshot may hash at most100 same-origin public static
+  assets from bounded scripts/links/resource entries. ResourceTiming initiator
+  types are categories, never a script stack. Do not infer cache hits from size0.
+  No HTML, body, storage, source code, credentials, IDs or arbitrary field names.
+  Native getEntriesByType materializes the browser's resource list before our
+  scan bound; this is not a hard peak-memory bound. Extra snapshot errors return
+  a fixed unavailable observation and never replace the original failure.
+lines:
+  - line: "phase"
+    formula: "Capture request-start and event-time phase from a fixed enumeration independently. Keep missing start metadata unknown, not the current failed phase."
+    testRef: "tests/scripts/rehearsal-browser-observation.test.ts::attributes existing error observations to both actual request and completion phases"
+  - line: "document-order"
+    formula: "Observe main-document requests and actual frame commits with separate bounded integer counters. A subresource emitted across a phase boundary keeps its dispatch generation."
+    testRef: "tests/scripts/rehearsal-browser-observation.test.ts::keeps main-document request order separate from frame-commit order"
+  - line: "privacy-and-bounds"
+    formula: "Unknown phases/categories become fixed unavailable/other values. Preserve100 error cap and bound retained request metadata1000, navigation response records20, static assets100, scans100 per source, path2048characters. Hash only same-origin /_next/static/ paths; never retain queries, fragments, raw URLs, DOM text or arbitrary errors."
+    testRef: "tests/scripts/rehearsal-browser-observation.test.ts::keeps unknown phase and request material out of saved observations"
+  - line: "response"
+    formula: "Observe only already-returned goto responses; no follow-up request. Keep absent/invalid cache policies unknown, never normalize them to proven noncacheability. Existing success responses in the error observer remain untouched."
+    testRef: "tests/scripts/rehearsal-browser-observation.test.ts::projects the existing navigation response without another request or raw header"
+  - line: "page-snapshot"
+    formula: "Within the unchanged existing2s failure evaluation, report bounded current-document static script/link membership and ResourceTiming initiator categories as SHA256 path keys. The loader/HTML source version remains unproved."
+    testRef: "tests/scripts/rehearsal-browser-observation.test.ts::hashes only current-document public static asset dependencies and fixed initiator categories"
