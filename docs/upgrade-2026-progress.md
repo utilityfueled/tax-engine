@@ -3572,3 +3572,8 @@ The separately typed `calculatePA2026OrdinaryDraft` reuses actual FY/PY/NR origi
 ### November6: hosted read-only continuation preserves validation HOLD
 
 The separately reviewed V11 continuation returns its read-only connection and combined SQL query, then fails result validation and closes naturally1. All9 inspection operations are now consumed, cumulative1203/1793; normal14 unchanged. No mutation, raw rows/errors, fault or successful durable-baseline claim. Both original HOLDs remain immutable. A fixed-boolean predicate diagnostic is being prepared for independent review and supplemental authority. See [the hosted ledger](upgrade-2026-isolated-hosted-replacement-evidence.md). Other packages continue.
+
+
+### November6: official Node image rebuild pinned separately
+
+The same Node26.13.0 official multiarch index is refreshed in both Docker stages, CI preload and smoke proof. Actual old/new ARM64 layer/package reconstruction identifies APT/libapt3.0.4 security fix and tzdata2026f; all36 registered runtime vulnerable versions and80unaccepted IDs remain unchanged. Spec/test first gives2RED then7PASS; spec/inventory/lint/syntax and distinct source review pass. Lock/platform/assertions/timeouts remain unchanged. New application-image/runtime/SBOM/scan/recovery qualification remains required. See [the dependency ledger](upgrade-2026-node-base-refresh-20261106.md).

@@ -88,7 +88,7 @@ try {
   // The exact filesystem-layer prefix proves shared base contents; a tag alone does not.
   const runnerBaseReference = readFileSync(new URL("../Dockerfile", import.meta.url), "utf8")
     .match(/^FROM (\S+) AS runner$/mu)?.[1];
-  assert.equal(runnerBaseReference, "node:26.13.0-trixie-slim@sha256:e4db4c914bf8ad241bd24804fc25d272d89bad97e68cdc8a1414862790a02c39", "Use the shipped fixed runner base for the package proof.");
+  assert.equal(runnerBaseReference, "node:26.13.0-trixie-slim@sha256:5adad64f9a1fca2d51972caa65983634c8a774eb300d72b20f7f2a0f60368072", "Use the shipped fixed runner base for the package proof.");
   const baseline = JSON.parse(docker("image", "inspect", runnerBaseReference))[0];
   const candidate = JSON.parse(docker("image", "inspect", metadata.Image))[0];
   assert.equal(candidate.Id, metadata.Image);

@@ -22185,5 +22185,30 @@
     "faultExecuted": false,
     "furtherDiagnosticNeedsSupplementalAuthority": true,
     "ledger": "docs/upgrade-2026-isolated-hosted-replacement-evidence.md"
+  },
+  "nov06OfficialNodeBaseRefresh": {
+    "status": "SOURCE_PIN_REFRESH_CHECKS_PASS_RUNTIME_UNQUALIFIED",
+    "oldIndex": "e4db4c914bf8ad241bd24804fc25d272d89bad97e68cdc8a1414862790a02c39",
+    "newIndex": "5adad64f9a1fca2d51972caa65983634c8a774eb300d72b20f7f2a0f60368072",
+    "nodeVersion": "26.13.0",
+    "lockSHA256": "268026058217dd84aee4e9b1c691fa1bac7d3049e6cb68d7fd16ef3af7a76dea",
+    "oldNewARM64LayersVerified": 8,
+    "installedPackagesEach": 80,
+    "changedPackages": [
+      "apt",
+      "libapt-pkg7.0",
+      "tzdata"
+    ],
+    "APTBuildBaseFix": "CVE-2026-109518",
+    "registeredRuntimeVulnerableVersionsChanged": 0,
+    "runtimeAdvisoryIDsStillUnaccepted": 80,
+    "highIDsStillOpen": 18,
+    "sourceTestRed": 2,
+    "sourceTestGreen": 7,
+    "independentManifest": "cbbd91a1d5dbf509cfebb7836f8060c711668b346c2ce8855805461e02c9e25a",
+    "newImageQualified": false,
+    "newScanQualified": false,
+    "ownerAcceptance": false,
+    "ledger": "docs/upgrade-2026-node-base-refresh-20261106.md"
   }
 }

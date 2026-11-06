@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import { createHash } from "node:crypto";
 // spec/federal/node26-runtime-source-contract.yaml; source-only controls.
 const read = (name: string) => readFileSync(resolve(process.cwd(), name), "utf8");
-const base = "node:26.13.0-trixie-slim@sha256:e4db4c914bf8ad241bd24804fc25d272d89bad97e68cdc8a1414862790a02c39";
+const base = "node:26.13.0-trixie-slim@sha256:5adad64f9a1fca2d51972caa65983634c8a774eb300d72b20f7f2a0f60368072";
 const integrity = "sha512-9ieo6XE0Ov5J39D2PQKCNCAd+oMdXLWIcz4eX42ya/FpiaMhYatcG02zsf28NzFgYGtbieAC323RmoWt+R/FqA==";
 describe("Node 26 runtime source contract", () => {
   it("declares Node 26 at both deployable package roots without changing retained pins", () => {
