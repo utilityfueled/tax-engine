@@ -36,3 +36,56 @@ it('preserves actual lender links without entering an annual computed reduction'
     expect(required(loadGuidedFlowState(localStorage, id)).sectionData.credits?.educationDistributions?.forms?.[0]?.fields.earnings).toBe('3001');
   } finally { localStorage.clear(); }
 });
+
+// Spec: education-annual-loan-interest.yaml mixed-guided-currentness.
+it('reconfirms actual mixed-purpose originals through saved reload', () => {
+  const { state, data } = actualGuidedAnnualLoanInterest(), id = 'mixed-interest-originals';
+  data.expenses?.push({ id: 'actual-separate-tuition', beneficiaryId: 'educator', category: 'postsecondary_tuition', amount: '5000',
+    paidDate: '2025-09-01', qualificationConfirmed: true, refundedAmount: '0', taxFreeAssistance: '0', educationCreditAmount: '0', otherTaxBenefitAmount: '0' });
+  const amount = (value: typeof state) => calculateFederalTax(TaxYearInputSchema.parse(required(buildTaxInputFromGuidedData(value)))).agi.toFixed();
+  try {
+    saveGuidedFlowState(localStorage, id, state);
+    let loaded = required(loadGuidedFlowState(localStorage, id));
+    expect(amount(loaded)).toBe('56500');
+    expect(loaded.sectionData.credits?.educationDistributions?.expenses?.[1]?.amount).toBe('5000');
+    expect(loaded.sectionData.adjustments?.studentLoanFacts?.loans?.[0]?.qtpTaxFreeEarningsUsedForInterest).toBe('');
+    const credits = structuredClone(required(loaded.sectionData.credits));
+    required(credits.educationDistributions?.expenses?.[1]).amount = '6000';
+    loaded = updateSectionData(loaded, 'credits', credits);
+    expect(loaded.sectionData.credits?.educationDistributions?.sourceFactsConfirmed).toBeNull();
+    expect(loaded.sectionData.adjustments?.studentLoanFacts?.sourceFactsConfirmed).toBeNull();
+    expect(buildTaxInputFromGuidedData(loaded)).toBeNull();
+    saveGuidedFlowState(localStorage, id, loaded); loaded = required(loadGuidedFlowState(localStorage, id));
+    expect(loaded.sectionData.credits?.educationDistributions?.expenses?.[1]?.amount).toBe('6000');
+    loaded = updateSectionData(loaded, 'credits', { ...required(loaded.sectionData.credits), educationDistributions: {
+      ...required(loaded.sectionData.credits?.educationDistributions), sourceFactsConfirmed: true } });
+    expect(buildTaxInputFromGuidedData(loaded)).toBeNull();
+    loaded = updateSectionData(loaded, 'adjustments', { ...required(loaded.sectionData.adjustments), studentLoanFacts: {
+      ...required(loaded.sectionData.adjustments?.studentLoanFacts), sourceFactsConfirmed: true } });
+    expect(amount(loaded)).toBe('56200');
+    saveGuidedFlowState(localStorage, id, loaded); loaded = required(loadGuidedFlowState(localStorage, id));
+    expect(amount(loaded)).toBe('56200');
+    expect(loaded.sectionData.adjustments?.studentLoanFacts?.loans?.[0]?.qtpTaxFreeEarningsUsedForInterest).toBe('');
+    const unknown = structuredClone(required(loaded.sectionData.credits));
+    required(unknown.educationDistributions?.expenses?.[1]).qualificationConfirmed = null;
+    loaded = updateSectionData(loaded, 'credits', unknown);
+    expect(buildTaxInputFromGuidedData(loaded)).toBeNull();
+    saveGuidedFlowState(localStorage, id, loaded);
+    expect(required(loadGuidedFlowState(localStorage, id)).sectionData.credits?.educationDistributions?.expenses?.[1]?.qualificationConfirmed).toBeNull();
+  } finally { localStorage.clear(); }
+});
+
+// Spec: education-annual-loan-interest.yaml mixed-guided-currentness.
+it('revokes mixed-interest confirmation on equal-cash lexical original changes', () => {
+  const { state, data } = actualGuidedAnnualLoanInterest();
+  data.expenses?.push({ id: 'actual-separate-tuition', beneficiaryId: 'educator', category: 'postsecondary_tuition', amount: '5000',
+    paidDate: '2025-09-01', qualificationConfirmed: true, refundedAmount: '0', taxFreeAssistance: '0', educationCreditAmount: '0', otherTaxBenefitAmount: '0' });
+  expect(calculateFederalTax(TaxYearInputSchema.parse(required(buildTaxInputFromGuidedData(state)))).agi.toFixed()).toBe('56500');
+  const credits = structuredClone(required(state.sectionData.credits));
+  required(credits.educationDistributions?.expenses?.[1]).amount = '5000.00';
+  const edited = updateSectionData(state, 'credits', credits);
+  expect(edited.sectionData.credits?.educationDistributions?.sourceFactsConfirmed).toBeNull();
+  expect(edited.sectionData.adjustments?.studentLoanFacts?.sourceFactsConfirmed).toBeNull();
+  expect(buildTaxInputFromGuidedData(edited)).toBeNull();
+  expect(edited.sectionData.credits?.educationDistributions?.expenses?.[1]?.amount).toBe('5000.00');
+});

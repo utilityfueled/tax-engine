@@ -3733,3 +3733,8 @@ is byte-identical, lint has zero warnings/errors, and scoped types preserve one
 exact pre-existing fixture diagnostic. All six same-saved-PDF comparison runs
 pass with identical projections; local timing ranges overlap. Actual Linux
 success and final combined qualification remain open.
+
+
+### November 6: finite tuition and loan-interest composition
+
+The [education method](upgrade-2026-education-mixed-interest-work.md) now handles one complete nonbinding annual cash tuition/interest composition using exact Decimal ratios. The genuine failing tests precede implementation; independent source review and current88 tests in15files pass, with18 spec references and inventory checks. The original PDF findings remain preserved and require the separately reviewed security/export changes. Rule versions2025.224 and2026.222 remain unqualified for filing; broader allocations and human/final-form gates remain open.

@@ -182,13 +182,20 @@ export function calculateAnnualCashQtpPools(forms: readonly Form1099Q[], facts: 
       qualified = qualified.plus(D.max(0, new D(capacity).minus(prepaid)));
     }
     const gross = total(cash.map(form => money(form.grossDistribution, 'cash gross')));
+    // The mixed-purpose counterfactual is linear only before either cap binds.
+    // Never silently clamp a new mixed pool into the sole-interest method.
+    const mixedInterest = expenses.filter(row => categorySources.get(row.id)?.annualInterestWithTuition);
+    if (mixedInterest.length && (gross.lte(0) || qualified.gt(gross)))
+      throw new Error('Annual cash QTP mixed-purpose interest attribution requires nonbinding actual qualified costs');
     qualified = D.min(gross, qualified);
     for (const expense of expenses.filter(row => categorySources.get(row.id)?.annualInterestOnly)) {
-      // The sole positive qualified receipt is actual interest. Removing it
-      // leaves Q=0, so every excluded annual earnings dollar is attributable
-      // to that interest without a per-account expense allocation.
+      // A sole interest receipt keeps its delivered lifetime-capped Q.
+      // With nonbinding tuition, removing the loan leaves tuition qualified:
+      // E*(T+I)/G - E*T/G = E*I/G, never E*(T+I)/G for interest.
+      const interestCost = categorySources.get(expense.id)?.annualInterestWithTuition
+        ? money(expense.studentLoanInterestAmount, 'actual interest-only receipt') : qualified;
       const earnings = total(cash.map(form => D.max(0, money(form.earnings, 'cash earnings', true))));
-      result.loanInterest.set(expense.id, { numerator: earnings.times(qualified), denominator: gross.isZero() ? new D(1) : gross });
+      result.loanInterest.set(expense.id, { numerator: earnings.times(interestCost), denominator: gross.isZero() ? new D(1) : gross });
     }
     const beforeCredit = D.min(gross, qualified.plus(credits));
     const pool: AnnualCashQtpPool = { beneficiaryId, sourceIds: cash.map(form => form.sourceId ?? ''), qualifiedExpenses: qualified,

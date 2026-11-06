@@ -12,6 +12,8 @@ export interface AnnualEducationCategorySource {
   borrowerRemaining?: Decimal;
   /** Calculated source cohort, never a user-entered allocation or election. */
   annualInterestOnly?: true;
+  /** One unreduced tuition receipt beside interest; its borrower/distribution caps do not bind. */
+  annualInterestWithTuition?: true;
 }
 
 /** Validate receipts, not a user-entered exclusion or a chosen cash account split. */
@@ -96,6 +98,7 @@ export function readAnnualEducationCategorySources(forms: readonly Form1099Q[], 
     }
     let borrowerRemaining: Decimal | undefined;
     let annualInterestOnly: true | undefined;
+    let annualInterestWithTuition: true | undefined;
     if (expense.category === 'student_loan') {
       const related = answer(expense.beneficiaryOrSibling, 'loan borrower relationship');
       const interest = money(expense.studentLoanInterestAmount, 'student-loan interest');
@@ -112,10 +115,32 @@ export function readAnnualEducationCategorySources(forms: readonly Form1099Q[], 
           && row.qualificationConfirmed !== false && money(row.amount, 'other receipt').minus(money(row.refundedAmount, 'other refund'))
             .minus(money(row.taxFreeAssistance, 'other assistance')).minus(money(row.educationCreditAmount, 'other credit'))
             .minus(money(row.otherTaxBenefitAmount, 'other benefit')).gt(0));
-        if (!interest.eq(cost) || !available.eq(cost) || otherPositiveCost
-          || group.some(form => form.accountType !== '529' || form.distributionMedium !== 'cash'))
-          throw new Error('Annual cash QTP mixed-purpose loan interest requires its separate annual earnings attribution method');
-        annualInterestOnly = true;
+        if (otherPositiveCost) {
+          // IRC221(e)(1): without loan treatment the tuition remains qualified.
+          // Admit only the independently determined nonbinding composition;
+          // no priority, principal/interest split or new source allocation.
+          const tuition = facts.expenses?.find(row => row.id !== expense.id && row.beneficiaryId === expense.beneficiaryId);
+          const empty = (rows: unknown) => Array.isArray(rows) && rows.length === 0;
+          if (!interest.eq(cost) || !available.eq(cost) || remaining.lt(cost)
+            || forms.length !== 2 || cash.length !== 2 || group.length !== 2 || facts.expenses?.length !== 2
+            || facts.loanBorrowers?.length !== 1 || !tuition || tuition.category !== 'postsecondary_tuition'
+            || tuition.qualificationConfirmed !== true || !money(tuition.amount, 'tuition').gt(0)
+            || [tuition.refundedAmount, tuition.taxFreeAssistance, tuition.educationCreditAmount, tuition.otherTaxBenefitAmount]
+              .some(value => !money(value, 'tuition reduction').isZero())
+            || ![facts.coverdellAccounts, facts.inKindBenefits, facts.roomBoardPeriods, facts.roomBoardPeriodExpenses,
+              facts.roomBoardEsaAllocations, facts.penaltyExceptions, facts.expenseRefunds].every(empty)
+            || cash.some(form => money(form.earnings, 'original cash earnings').lt(0)))
+            throw new Error('Annual cash QTP mixed-purpose loan interest requires its separate nonbinding attribution method');
+          actualDate(tuition.paidDate, 'tuition paid');
+          cash.forEach(form => actualDate(form.distributionDate, 'cash distribution'));
+          annualInterestOnly = true;
+          annualInterestWithTuition = true;
+        } else if (remaining.gt(0)) {
+          if (!interest.eq(cost) || !available.eq(cost)
+            || group.some(form => form.accountType !== '529' || form.distributionMedium !== 'cash'))
+            throw new Error('Annual cash QTP mixed-purpose loan interest requires its separate annual earnings attribution method');
+          annualInterestOnly = true;
+        }
       }
       eligible &&= related;
     }
@@ -131,7 +156,7 @@ export function readAnnualEducationCategorySources(forms: readonly Form1099Q[], 
       eligible = dated[0] === true;
     }
     result.set(expense.id, { available, qualified: eligible ? available : new D(0), k12: expense.category.startsWith('k12_'),
-      ...(expense.category === 'student_loan' ? { borrowerId: expense.borrowerId, borrowerRemaining, ...(annualInterestOnly ? { annualInterestOnly } : {}) } : {}) });
+      ...(expense.category === 'student_loan' ? { borrowerId: expense.borrowerId, borrowerRemaining, ...(annualInterestOnly ? { annualInterestOnly } : {}), ...(annualInterestWithTuition ? { annualInterestWithTuition } : {}) } : {}) });
   }
   return result;
 }

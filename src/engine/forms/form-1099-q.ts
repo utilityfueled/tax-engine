@@ -1048,7 +1048,7 @@ function calculateSourceDistributions(forms: Form1099Q[], summary: QualifiedEduc
       : interestClaimedElsewhere.plus(taxFreeEarningsUsedForInterest).gt(interestPaid);
     if (claimExceedsInterest) throw new Error("Form1099Q loan interest claimed for deduction includes tax-free QTP earnings");
     audit.record("Form1099-Q", `loan-expense:${expense.id}:loan-interest-reduction`, "Tax-free QTP earnings used for this loan expense's interest", taxFreeEarningsUsedForInterest,
-      annualInterestOnlyReporting ? "Actual interest-only annual cash pool: total original earnings times qualified interest over annual gross; exact ratio carried to the lender deduction"
+      annualInterestOnlyReporting ? "Actual interest-only receipt in annual cash pool: total original earnings times qualified interest over annual gross; exact ratio carried to the lender deduction"
         : "Actual interest allocation times source earnings ratio, after loan and distribution limits",
       { "Actual interest paid": interestPaid, "Interest claimed before deduction phase-out": interestClaimedElsewhere,
         ...(annualInterestOnlyReporting ? { "Exact annual interest exclusion numerator": annualInterestOnlyReporting.numerator, "Exact annual cash denominator": annualInterestOnlyReporting.denominator } : {}) });

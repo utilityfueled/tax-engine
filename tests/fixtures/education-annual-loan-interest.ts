@@ -15,3 +15,14 @@ export function annualLoanInterestFixture(interest = '1000') {
   fixture.input.studentLoanInterestFacts = lender;
   return { ...fixture, lender, loan };
 }
+
+/** Separate fictional tuition original beside an actual interest-only loan receipt. */
+export function mixedAnnualLoanInterestFixture(interest = '1000', tuitionAmount = '5000') {
+  const fixture = annualLoanInterestFixture(interest);
+  const tuition = { id: 'actual-separate-tuition', beneficiaryId: fixture.expense.beneficiaryId,
+    category: 'postsecondary_tuition' as const, amount: tuitionAmount, paidDate: '2025-09-01',
+    qualificationConfirmed: true, refundedAmount: '0', taxFreeAssistance: '0',
+    educationCreditAmount: '0', otherTaxBenefitAmount: '0' };
+  fixture.facts.expenses?.push(tuition);
+  return { ...fixture, tuition };
+}
