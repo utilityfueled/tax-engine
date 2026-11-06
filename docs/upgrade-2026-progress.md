@@ -3840,3 +3840,15 @@ charitable, multi-vintage and unproved cases remain refused. Main genuine guard
 RED precedes93/10PASS, types3/spec/inventory/strictlint/build; distinct3controls
 pass. Human review and full successor qualification remain open. See
 [the tax ledger](upgrade-2026-cod-full-pool-exhaustion-work.md).
+
+
+### November 6: exact total charitable-excess endpoint
+
+Complete direct-current excess is now reduced only when exact source conservation
+and the independently calculated NOL benefit prove that every original excess
+is exhausted. Corrected2025 canonical2guardRED precedes17focused/27affectedPASS,
+types3/spec8645/inventory/strict28/lint/build and distinct6PASS. The originally
+proposed2026 positive oracle was wrong; its partial-attribution refusal remains.
+All failed oracles/setup attempts and one reviewed lint warning are retained.
+See [the charity ledger](upgrade-2026-charity-total-exhaustion-work.md); partial
+methods, full successor checks, human and final-form qualifications remain open.

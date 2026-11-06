@@ -22925,5 +22925,28 @@
     "humanTaxReviewPending": true,
     "releaseReady": false,
     "ledger": "docs/upgrade-2026-cod-full-pool-exhaustion-work.md"
+  },
+  "nov06CharityTotalExcessEndpoint": {
+    "baseCommit": "3cef70a1",
+    "runtimeSHA256": "6e728001b684d6785af012cad5e19e067cb47cae34d3842f69f50f1187591d2d",
+    "mainBaselineGuardFailures": 2,
+    "mainFocusedPassed": 17,
+    "mainAffectedPassed": 27,
+    "mainAffectedFiles": 6,
+    "independentControlsPassed": 6,
+    "specLines": 8645,
+    "strictSpecTestsPassed": 28,
+    "newInventoryEntry": "unsupported2026_refusal",
+    "ownedLintErrors": 0,
+    "ownedLintWarnings": 1,
+    "types3": true,
+    "engineBuild": true,
+    "positiveCanonicalYear": 2025,
+    "original2026Oracle": "WRONG_RETAINED_FAILED",
+    "original2026Case": "PARTIAL_ATTRIBUTION_REFUSED",
+    "fullSuccessorPending": true,
+    "humanReviewPending": true,
+    "releaseReady": false,
+    "ledger": "docs/upgrade-2026-charity-total-exhaustion-work.md"
   }
 }

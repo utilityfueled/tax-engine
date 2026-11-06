@@ -1,5 +1,5 @@
 form: "Determined charitable NOL origins"
-fullName: "Original-source charitable carry with zero or uniquely attributable succeeding NOL benefit"
+fullName: "Original-source charitable carry with zero, unique, or completely exhausted direct-current NOL benefit"
 taxYear: 2025
 irsReference: "https://www.irs.gov/instructions/i172"
 retrievedAt: "2026-10-26"
@@ -13,10 +13,10 @@ notes: |
   original prior vintage remains a separate source. Normal percentage use,
   original expiry and the current deduction are not an entered allocation.
   One internal comparison removes all normal-year carry excess simultaneously.
-  A zero aggregate benefit requires no attribution. A positive benefit is
-  admitted only when exactly one eligible original source has excess; a
-  positive benefit with multiple excess origins remains an explicit method
-  boundary. No marginal replay order, pro-rata allocation or new vintage is
+  A zero aggregate benefit requires no attribution. A positive benefit with one eligible original excess retains its delivered
+  method. The separately specified exact full-exhaustion endpoint admits
+  multiple direct current public sources only after raw source conservation;
+  every partial multiple-origin benefit remains an explicit method boundary. No marginal replay order, pro-rata allocation or new vintage is
   inferred. The regulation's public-before-other order remains in the ordinary
   category calculation, but does not supply an unstated within-category order.
   Original regular and AMT histories are independently complete and validated,
@@ -51,7 +51,7 @@ lines:
     testRef: "tests/engine/forms/charitable-determined-nol.test.ts::preserves all original excess when the simultaneous NOL benefit is zero"
   - line: "positive-multiple"
     description: "Reject a positive aggregate benefit requiring an unstated attribution"
-    formula: "If more than one eligible origin has positive normal excess and actual succeedingNOL exceeds the simultaneous comparison, reject before publishing any per-origin carry. Original source order cannot select which origin loses carry."
+    formula: "Except for the separately source-proven exact full-exhaustion endpoint, if more than one eligible origin has positive normal excess and actual succeedingNOL exceeds the simultaneous comparison, reject before publishing any per-origin carry. Original source order cannot select which origin loses carry."
     testRef: "tests/engine/forms/charitable-determined-nol.test.ts::rejects positive multiple-origin attribution and contradictory comparisons"
   - line: "exact-values"
     description: "Preserve exact original amounts before reported line rounding"
@@ -125,3 +125,31 @@ lines:
     description: "Retain original valuation and entity basis in the sole current section170 excess"
     formula: "Actual currentA10000 plus cryptoC60000 and K1FMV80000/basis40000/availablebasis20000 gives section170C120000 and separate entitybasis suspension20000. NOLD48000/AGI52000/charity25600 is unchanged by the larger original excess; C104400 minus11520 leaves92880, independentAMTC104400. Both entity types preserve actual originals and count each source once."
     testRef: "tests/engine/federal-charitable-determined-nol.test.ts::retains original entity basis and crypto value in one current excess category"
+
+  - line: "exhausted-current-excess"
+    description: "Conserve every original when aggregate NOL benefit consumes all eligible excess"
+    formula: "Complete direct current public receipts with independently complete charitable histories: a positive multiple-origin benefit may be admitted only when exact source conservation and benefit == sum(all tentative excess) prove each reduction equals its own excess. No epsilon, >= shortcut, marginal replay, source order, proportional split or prior-vintage rule. Partial multiple-origin benefit remains denied. In the 2025 helper cohort, A80000/C60000 at normalbase60000 has excess50000/60000; actual succeedingNOL150000 minus comparison40000 equals110000, so each carry becomes0. The separately versioned charitable-total-excess-conservation-2026.yaml entry retains the amended-2026 example as a partial-attribution refusal, not a positive endpoint."
+    testRef: "tests/engine/forms/charitable-determined-nol.test.ts::consumes every direct current excess at the exact aggregate endpoint without choosing an order"
+
+  - line: "endpoint-source-proof"
+    description: "Require exact direct-current source conservation before complete exhaustion"
+    formula: "Only new endpoint: independently validate all histories first; direct current public receipts and no K1/crypto/prior ledger rows must reconcile by category to their full raw amount/basis valuation and to normalUse+notCarried+tentativeExcess+expired under invocation-local precision. Exact total tentative excess must equal independently computed integer NOL benefit. Preserve all existing zero/unique admissions. Deny partial/over endpoint, a one-cent or deep raw tail, other-recipient allocation and prior-vintage attribution. Both ledgers retain their independent inputs."
+    testRef: "tests/engine/forms/charitable-determined-nol.test.ts::consumes every direct current excess at the exact aggregate endpoint without choosing an order"
+  - line: "endpoint-exact-boundaries"
+    description: "Reject equality invented by rounding or source loss"
+    formula: "A80000/C60000 at normalbase60000 has exact excess50000/60000. Actual succeedingNOL150000 and comparison40000 imply full110000. Comparison40001 or39999 and rawC60000.01 or60000+1e-40 do not prove equality; reject the new branch."
+    testRef: "tests/engine/forms/charitable-determined-nol.test.ts::denies partial and over-endpoint benefits and preserves raw tails before any new full-exhaustion admission"
+  - line: "endpoint-remaining-methods"
+    description: "Keep source methods without a full exact proof separate"
+    formula: "Positive multiple-origin reductions involving actual prior vintages or other-recipient allocation remain rejected. This endpoint does not establish a partial allocation rule or widen current floor-vintage/medium eligibility."
+    testRef: "tests/engine/forms/charitable-determined-nol.test.ts::does not infer new full-exhaustion support for prior vintage or other-recipient allocation"
+
+  - line: "endpoint-private-source-binding"
+    description: "Retain opaque original and full-result review binding for complete exhaustion"
+    formula: "Actual2025 original2017NOL100000 is fully deducted under172(a)(2)(A), giving AGI0/currentcharity0. Its normal original excess30000 is fully reduced and existing original/redacted-input charitable context checks pass; there is no asserted positive2026 branch. Equal-money changed recipient, changedAGI and changed per-origin reduction deny through the unchanged full-result context before output. No prepared source is serialized and no physical2026 output is qualified."
+    testRef: "tests/engine/federal-charitable-determined-nol-2026.test.ts::binds exhausted source and result in the original charitable review context"
+
+  - line: "endpoint-canonical-2025"
+    description: "Separate the full original pre2018 deduction from modified succeeding carry"
+    formula: "2025 wages100000/original2017NOL100000/directA20000+C10000:172(a)(2)(A) deducts100000, giving AGI0/currentcharity0 and exact excess20000/10000. Modified pre-NOL charity30000 leaves modifiedincome70000/absorption70000/carry30000; removing all excess gives charity0/income100000/absorption100000/carry0. Benefit30000 equals all excess, each origin fully reduced; independent known-zeroATNOL preserves its30000 charitycarry. The earlier asserted deduction70000/AGI30000 was an author oracle error retained as FAILED evidence."
+    testRef: "tests/engine/federal-charitable-determined-nol-2026.test.ts::exhausts all2025 current excess at the actual full pre2018 deduction endpoint"

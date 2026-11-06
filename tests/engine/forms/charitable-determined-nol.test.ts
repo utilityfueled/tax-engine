@@ -85,3 +85,35 @@ it('keeps exact origin cents and rejects stale balanced source changes', () => {
   const reordered=calculateDeterminedCharitableNol({ input:reverse,ledger:'regular',normalContributionBase:d('52000'),normalDeductionUsed:'itemized',nolCarryforward:d('52000'),computeCarryover:()=>d('40480') });
   expect(reordered.carryforward.toFixed()).toBe('32880.49');
 });
+
+it('consumes every direct current excess at the exact aggregate endpoint without choosing an order',()=>{
+  for(const reversed of [false,true]) for(const ledger of ['regular','alternative'] as const) {
+    const input=charitableNolOriginsInput();input.donations[0].amount='80000';input.donations[0].costBasis='80000';
+    if(reversed)input.donations.reverse();const before=structuredClone(input);
+    const result=calculateDeterminedCharitableNol({input,ledger,normalContributionBase:d('60000'),normalDeductionUsed:'itemized',
+      nolCarryforward:d('150000'),computeCarryover:()=>d('40000')});
+    expect(result.method).toBe('fully_exhausted_direct_current_excess');
+    expect(result.rows.map(row=>[row.category,row.tentativeExcess.toFixed(),row.reduction.toFixed(),row.carryforward.toFixed()]))
+      .toEqual([['noncash_50','50000','50000','0'],['capital_gain_30','60000','60000','0']]);
+    expect([result.reduction.toFixed(),result.carryforward.toFixed()]).toEqual(['110000','0']);expect(input).toEqual(before);
+  }
+});
+it('denies partial and over-endpoint benefits and preserves raw tails before any new full-exhaustion admission',()=>{
+  const base=charitableNolOriginsInput();base.donations[0].amount='80000';base.donations[0].costBasis='80000';
+  for(const comparison of ['40001','39999']) expect(()=>calculateDeterminedCharitableNol({input:base,ledger:'regular',
+    normalContributionBase:d('60000'),normalDeductionUsed:'itemized',nolCarryforward:d('150000'),computeCarryover:()=>d(comparison)})).toThrow(/multiple.*excess/);
+  for(const amount of ['60000.01','60000.0000000000000000000000000000000000000001']) {
+    const input=structuredClone(base);input.donations[1].amount=amount;
+    expect(()=>calculateDeterminedCharitableNol({input,ledger:'regular',normalContributionBase:d('60000'),normalDeductionUsed:'itemized',
+      nolCarryforward:d('150000'),computeCarryover:()=>d('40000')})).toThrow(/multiple.*excess/);
+  }
+});
+it('does not infer new full-exhaustion support for prior vintage or other-recipient allocation',()=>{
+  const prior=charitableNolOriginsInput({prior:true});prior.donations[0].amount='80000';prior.donations[0].costBasis='80000';
+  expect(()=>calculateDeterminedCharitableNol({input:prior,ledger:'regular',normalContributionBase:d('60000'),normalDeductionUsed:'itemized',
+    nolCarryforward:d('150000'),computeCarryover:()=>d('40000')})).toThrow(/multiple.*excess/);
+  const other=charitableNolOriginsInput();other.donations[0].amount='80000';other.donations[0].costBasis='80000';
+  other.donations[1].recipientCategory='other-thirty-percent';
+  expect(()=>calculateDeterminedCharitableNol({input:other,ledger:'regular',normalContributionBase:d('60000'),normalDeductionUsed:'itemized',
+    nolCarryforward:d('150000'),computeCarryover:()=>d('40000')})).toThrow(/multiple.*excess/);
+});

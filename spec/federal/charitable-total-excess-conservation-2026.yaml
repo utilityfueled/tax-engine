@@ -1,0 +1,34 @@
+form: "Complete current charitable excess exhaustion"
+fullName: "2026 original-source charitable NOL benefit at the exact total-excess endpoint"
+taxYear: 2026
+irsReference: "https://uscode.house.gov/us/usc/119-136/t26/s170/"
+retrievedAt: "2026-11-06"
+sources:
+  - url: "https://uscode.house.gov/us/usc/119-136/t26/s170/"
+    section: "170(b)(1)(I), (d)(1)(B)-(C): current floor and aggregate excess reduction"
+    retrieved: "2026-11-06"
+  - url: "https://uscode.house.gov/us/usc/119-136/t26/s172/"
+    section: "172(a), (b)(2), (d): original pre-2018 loss use and modified succeeding carry"
+    retrieved: "2026-11-06"
+  - url: "https://www.ecfr.gov/current/title-26/section-1.170A-10"
+    section: "1.170A-10(d)(1): aggregate charitable excess reduction; no invented within-group partial order"
+    retrieved: "2026-11-06"
+  - url: "https://www.irs.gov/instructions/i172"
+    section: "Line 26 refiguring and succeeding NOL preservation; revision December 2024 does not supply the amended 2026 floor"
+    retrieved: "2026-11-06"
+notes: |
+  This explicit 2026 entry retains the failed proposed positive endpoint as the
+  correct partial-attribution refusal. IRC172(a)(2)(A) deducts the entire actual
+  pre2018 carry, separately from modified absorption under172(b)(2). The original
+  proposed NOLD70000/AGI30000 oracle was wrong, not a demonstrated engine defect.
+  No guard is weakened to force that result. The new runtime endpoint is generic
+  and has a genuine2025 canonical consumer, specified in the2025 entry; this
+  document makes no new positive2026 endpoint or physical/filing readiness claim.
+  Primary-derived arithmetic is not a matching published example, independent
+  human tax-law qualification or formal verification. Existing internal constants
+  tests preserve their test-only seam and all production2026 gates.
+lines:
+  - line: "amended-floor-partial-refusal"
+    description: "Keep partial multiple-origin attribution denied after the actual full pre2018 deduction"
+    formula: "Wages100000; documented original2017NOL100000 and complete2018-2025 no-use history; directA20000/basis20000+C10500/basis5000.172(a)(2)(A) permits deduction100000, so AGI0/normalcharity0 and all30500 is excess. Modified contribution base100000 gives charity30500-floor500=30000; modified taxableincome70000/absorption70000/succeedingcarry30000. Removing all excess gives comparisoncarry0. Benefit30000<totalexcess30500, so no exact endpoint exists for these originals; retain the existing partial multiple-origin attribution refusal before canonical output. No invented per-origin split."
+    testRef: "tests/engine/federal-charitable-determined-nol-2026.test.ts::retains2026 partial attribution when the amended floor prevents complete exhaustion"

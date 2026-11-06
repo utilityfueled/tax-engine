@@ -713,6 +713,26 @@
       ]
     },
     {
+      "key": "federal/charitable-total-excess-conservation-2026",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://uscode.house.gov/us/usc/119-136/t26/s170/",
+      "specPath": "spec/federal/charitable-total-excess-conservation-2026.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/child-credit-eligibility",
       "jurisdiction": "federal",
       "taxYear": null,

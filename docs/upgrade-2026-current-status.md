@@ -25,8 +25,10 @@ and [RRTA name verdict reuse](upgrade-2026-rrta-name-verdict-work.md) are includ
 in the passing 4ee5 checks. Earlier source-specific results below remain historical.
 The [complete COD loss-pool endpoint](upgrade-2026-cod-full-pool-exhaustion-work.md)
 is adopted with 93 affected passes and three independent controls. Later tax
-source changes require a new integrated run. Other endpoint work remains private;
-original failed oracles and harness attempts are retained.
+source changes require a new integrated run. The [charitable full-excess endpoint](upgrade-2026-charity-total-exhaustion-work.md)
+also passes 27 affected and six independent controls; its correct positive case
+is historical2025, while the2026 partial case stays denied. Other endpoint work
+remains private; failed oracles and harness attempts are retained.
 
 Fresh [official Next advisory metadata](upgrade-2026-next-1645-security-work.md)
 now resolves the seven affected/patched-range contradictions: installed16.4.5
