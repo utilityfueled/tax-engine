@@ -21734,5 +21734,16 @@
     "humanReview": false,
     "exportQualified": false,
     "releaseQualified": false
+  },
+  "nov05PAPrivateMarkerLowerOnce": {
+    "status": "FINITE_COST_REDUCTION",
+    "mainManifest": "de939cb4631b55013e764f75bf288d4c63efbe9999494131311775a5c6bbf350",
+    "testsPassed": 42,
+    "files": 2,
+    "deadlineMillisecondsUnchanged": 5000,
+    "actionAuditHashes": 1809,
+    "budgetChanged": false,
+    "remoteMixedResidencyTimeoutResolved": false,
+    "releaseQualified": false
   }
 }

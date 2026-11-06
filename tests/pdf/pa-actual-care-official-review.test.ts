@@ -96,8 +96,9 @@ for path in cfg['paths']:
  texts=[p.extract_text() or '' for p in r.pages]
  for t in texts:assert t.count('FOR REVIEW ONLY - NOT FOR FILING')==1
  raw='\n'.join(strings+texts)+open(path,'rb').read().decode('latin1','ignore')
+ lower=raw.lower()
  for marker in cfg['private']:
-  assert marker.lower() not in raw.lower(), 'private marker in saved object graph'
+  assert marker.lower() not in lower, 'private marker in saved object graph'
   if re.fullmatch(r'[-.()\s\d]+',marker) and len(re.sub(r'\D','',marker))>=4:assert not re.search(r'[-.()\s]*'.join(re.sub(r'\D','',marker)),raw),'separated private marker'
  dc=path.endswith('-dc-review.pdf')
  if dc:
