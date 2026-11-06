@@ -1,0 +1,34 @@
+form: "schedule-r final 2026 physical candidate"
+fullName: "Final 2026 schedule-r physical field source contract"
+taxYear: 2026
+reference: "https://www.irs.gov/pub/irs-pdf/f1040sr.pdf"
+revision: "Created 4/21/26; final annual source, not export-qualified"
+retrievedAt: "2026-11-01"
+notes: |
+  No tax calculation or export route is enabled. This candidate stays absent from
+  all public/review/filing registries. Final2026 instructions are available and
+  published worksheet cases are exercised in isolation; complete-data return
+  scenario qualification and independent human review remain pending.
+lines:
+  - line: "revision"
+    description: "Pin the actual final year and source hash"
+    formula: "SHA256 945275e6be3cc7353a3faf165ddd7ccb79e3c8a43abe6678d4c47f8207594cb5; two source pages; 27 leaf widgets. Never reuse 2025 bytes or enable readiness."
+    testRef: "tests/pdf/schedule-r-2026-candidate.test.ts::pins the exact source and keeps every export gate closed"
+  - line: "physical-locations"
+    description: "Bind every source field to its printed line and actual page rectangle"
+    formula: "Require a bijection between the 27 candidate leaves and all physical widgets. Compare field type, page and all four original rectangle coordinates against the separately retained source contract. Group nodes are not fillable fields."
+    testRef: "tests/pdf/schedule-r-2026-candidate.test.ts::maps every leaf to its original physical location"
+  - line: "saved-values"
+    description: "Reopen a field diagnostic and verify values and appearances"
+    formula: "Use explicit diagnostic strings, not calculated tax facts. Retain interactive values and checkbox states after saving; require nonempty appearances and review notices. No SSN is inferred or copied from a return."
+    testRef: "tests/pdf/schedule-r-2026-candidate.test.ts::retains every diagnostic value and appearance after save"
+  - line: "agi-cross-reference"
+    description: "Retain the new printed AGI cross-reference without changing calculations"
+    formula: "Line14 references Form1040 line11b in 2026, not 2025 line11a. This physical map takes no input or result and performs no tax calculation."
+    testRef: "tests/pdf/schedule-r-2026-candidate.test.ts::retains the 2026 AGI reference contract"
+
+  - line: "published-worksheets"
+    description: "Project final2026 published worksheet values through isolated final physical map"
+    formula: "Actual core line11 and printed14-22 retain identity on saved/reopened candidate: mixed-age box6 and final2026 Jesse box2. This is not an admitted full2026 return or public export."
+    irsRef: "Final2026 Schedule R and current2026 instructions, Initial Amounts Example1 and Jesse Example1"
+    testRef: "tests/pdf/schedule-r-2026-candidate.test.ts::retains isolated published worksheet amounts in final2026 physical cells (%j)"

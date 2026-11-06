@@ -7,10 +7,13 @@
  */
 
 import Decimal from "decimal.js";
+import { calculateForm1099OID } from "../forms/form-1099-oid.js";
 import type { TaxYearInput } from "@/models/inputs.js";
 import type { CalculatedLine } from "@/models/outputs.js";
 import { d, zeroFloor } from "@/utils/decimal.js";
 import { AuditTrail } from "@/utils/audit.js";
+import { calculateSavingsBondStatementSources } from "../forms/savings-bond-statement-sources.js";
+import { reportSavingsBondRatios, sumSavingsBondRatios } from "@/utils/savings-bond-ratios.js";
 
 export interface InterestPayer {
   name: string;
@@ -26,6 +29,7 @@ export interface ScheduleBResult {
   /** Part I */
   interestPayers: InterestPayer[];
   totalInterest: Decimal; // Line 2
+  previouslyReportedSavingsBondInterest: Decimal; // Actual prior interest included in current Box 3
   savingsBondExclusion: Decimal; // Line 3
   taxableInterest: Decimal; // Line 4 → 1040 Line 2b
 
@@ -46,6 +50,10 @@ export interface ScheduleBResult {
 
 export function calculateScheduleB(input: TaxYearInput, savingsBondExclusionOverride?: Decimal): ScheduleBResult {
   const audit = new AuditTrail();
+  // Validates actual current transfer/redemption sources; income still enters
+  // exclusively through the original statements below.
+  const reissueSources = calculateSavingsBondStatementSources(input);
+  const exactEducatorBondSources = input.adjustments?.educatorExpenseSources?.some(source => source.savingsBondReductionMethod === "return_sources") === true;
 
   // ── Part I: Interest ──────────────────────────────────
 
@@ -53,12 +61,35 @@ export function calculateScheduleB(input: TaxYearInput, savingsBondExclusionOver
 
   // 1099-INT sources
   for (const form of input.form1099Int) {
-    const amount = d(form.interestIncome);
+    const box1Interest = d(form.interestIncome);
+    const box3Interest = d(form.usSavingsBondInterest);
+    const amount = reissueSources || exactEducatorBondSources ? sumSavingsBondRatios([box1Interest, box3Interest]
+      .map(numerator => ({ numerator, denominator: new Decimal(1) }))).numerator : box1Interest.plus(box3Interest);
     interestPayers.push({
       name: form.payer,
       amount,
     });
-    audit.record("Sched B", "1", `Interest payer - ${form.payer}`, amount, "1099-INT Box 1");
+    audit.record("Sched B", "1", `Interest payer - ${form.payer}`, amount,
+      "1099-INT Box 1 + separately reported Box 3", {
+        "1099-INT Box 1": box1Interest,
+        "1099-INT Box 3": box3Interest,
+      });
+  }
+
+  const previouslyReportedSavingsBondInterest = d(input.form8815?.priorYearInterestIncludedInCurrentStatements);
+  const reportedTreasuryInterest = input.form1099Int.reduce((total, form) => total.plus(d(form.usSavingsBondInterest)), new Decimal(0));
+  if (!previouslyReportedSavingsBondInterest.isFinite() || previouslyReportedSavingsBondInterest.isNegative()
+    || previouslyReportedSavingsBondInterest.gt(reportedTreasuryInterest)) {
+    throw new Error("Previously reported interest adjustment must be finite, nonnegative and no greater than current Box 3 interest");
+  }
+  if (previouslyReportedSavingsBondInterest.gt(0)) {
+    if (input.form8815?.sourceFactsConfirmed !== true || input.form8815.currentStatementReconciliationConfirmed !== true
+      || !input.savingsBondRedemptions?.length) {
+      throw new Error("Previously reported interest requires actual reconciled bond and statement sources");
+    }
+    interestPayers.push({ name: "U.S. savings bond interest previously reported", amount: previouslyReportedSavingsBondInterest.negated() });
+    audit.record("Sched B", "1-prior-interest", "Previously reported savings bond interest", previouslyReportedSavingsBondInterest.negated(),
+      "Subtract only actual prior interest confirmed as included in current Treasury statements");
   }
 
   // K-1 interest income (Box 5 — partnerships/S-corps)
@@ -91,41 +122,15 @@ export function calculateScheduleB(input: TaxYearInput, savingsBondExclusionOver
     }
   }
 
-  // 1099-OID sources: net OID (Box 1 − acquisition premium) + other periodic interest (Box 2 − bond premium)
-  for (const form of (input.form1099OID ?? [])) {
-    const grossOID = d(form.originalIssueDiscount);
-    const acqPremium = Decimal.min(d(form.acquisitionPremium), grossOID);
-    const netOID = grossOID.minus(acqPremium);
-    if (netOID.greaterThan(0)) {
-      interestPayers.push({
-        name: `${form.payer} (OID)`,
-        amount: netOID,
-      });
-      audit.record(
-        "Sched B",
-        "1",
-        `Interest payer - ${form.payer} (OID)`,
-        netOID,
-        "Form 1099-OID Box 1 - min(Box 1, Box 6 acquisition premium)"
-      );
-    }
-    // Box 2: Other periodic interest, reduced by bond premium (Box 11) under §171
-    const otherInterest = d(form.otherPeriodicInterest);
-    const premium = Decimal.min(d(form.bondPremium), otherInterest);
-    const netOtherInterest = otherInterest.minus(premium);
-    if (netOtherInterest.greaterThan(0)) {
-      interestPayers.push({
-        name: `${form.payer} (interest)`,
-        amount: netOtherInterest,
-      });
-      audit.record(
-        "Sched B",
-        "1",
-        `Interest payer - ${form.payer} (interest)`,
-        netOtherInterest,
-        "Form 1099-OID Box 2 - min(Box 2, Box 11 bond premium)"
-      );
-    }
+  // One recipient-classified amount per actual OID source. Box8 is separate
+  // Treasury OID; tax-exempt Box11/coupons never become taxable by position.
+  const oid = calculateForm1099OID(input.form1099OID ?? [], input.taxpayer.taxYear);
+  for (const source of oid.sources) {
+    if (source.taxableInterest.isZero()) continue;
+    interestPayers.push({ name: `${source.payer} (OID)`, amount: source.taxableInterest });
+    audit.record("Sched B", "1", `Interest payer - ${source.payer} (OID)`, source.taxableInterest,
+      source.sourceFactsVerified ? "Actual recipient-classified OID and stated interest after elections and matching source adjustments" : "Unverified historical OID and interest aliases after legacy netting",
+      { "Source ID": source.sourceId, "Treasury interest": source.treasuryInterest });
   }
 
   audit.record(
@@ -137,7 +142,7 @@ export function calculateScheduleB(input: TaxYearInput, savingsBondExclusionOver
   );
 
   // Line 2: Total interest
-  const totalInterest = interestPayers.reduce(
+  const totalInterest = reissueSources || exactEducatorBondSources ? reportSavingsBondRatios(interestPayers.map(payer => ({ numerator: payer.amount, denominator: new Decimal(1) }))) : interestPayers.reduce(
     (acc, p) => acc.plus(p.amount),
     new Decimal(0)
   );
@@ -269,6 +274,7 @@ export function calculateScheduleB(input: TaxYearInput, savingsBondExclusionOver
     hasForeignTrust;
 
   return {
+    previouslyReportedSavingsBondInterest,
     interestPayers,
     totalInterest,
     savingsBondExclusion,

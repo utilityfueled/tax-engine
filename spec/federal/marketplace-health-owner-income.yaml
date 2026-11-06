@@ -1,0 +1,58 @@
+form: "Publication 974 owner earned-income limits"
+fullName: "Separate owner limits through the actual Marketplace health calculation"
+taxYear: 2026
+irsReference: "https://www.irs.gov/pub/irs-drop/rp-14-41.pdf"
+notes: |
+  Refreshed2026-10-25: IRC162(l)(2)(A); Reg1.162(l)-1(a);
+  RevProc2014-41 sections3,5.02 and5.03; Pub974 WorksheetW and
+  Simplified Step3; Reg1.6013-4(b); Reg1.199A-3(b)(1)(vi).
+  Each taxpayer's earned-income limit applies at both the initial maximum
+  and the subsequent premium-minus-credit stage. Joint filing does not
+  transfer one taxpayer's unused business income to the other taxpayer.
+  For2026, excess advances are fully repaid and do not introduce a shared
+  capped repayment amount. For2025 this extension requires zero actual
+  advances attributable to specified premiums. Existing nonbinding-owner
+  cases retain their completed historical maximum and cap guard.
+  Derive the joint maximum as sum_owner min(owner premiums, max(0, owner
+  remaining earned income)); derive the final deduction as sum_owner
+  min(sum owner net premiums after allocated Step2 credit, same owner limit).
+  Published Pub974 enrollment-premium credit allocation precedes this cap;
+  the downstream199A gross-income ratio applies only within one owner.
+  Do not copy the initial owner deduction into final ordered replays.
+  These numerical controls are derived examples, not published IRS oracles.
+  Original cents remain exact; the joint Schedule1 transfer rounds once.
+  Binding2025 repayment attribution remains a separate internal method.
+  Actual2026 full-return and filing qualification gates stay closed.
+lines:
+  - line: "owner-limit"
+    description: "Apply the actual owner limit to both initial and final stages"
+    formula: "Initial owner deduction=min(owner specified premiums,max(0,owner remaining earned income)); final=min(sum owner premiums after calculated allocated credit,max(0,owner remaining earned income)). Sum only completed owner amounts; no spouse income borrowing."
+    testRef: "tests/engine/forms/marketplace-health-owner-income.test.ts::limits each owner independently before and after the actual credit"
+  - line: "source-boundary"
+    description: "Preserve signed loss, exact cents and the historical capped method boundary"
+    formula: "Zero-floor each owner's combined remaining income independently. Retain actual cents and order-independent source identity. Positive2025 attributable advances with a binding owner income limit require the separate capped-repayment method; current2026 advances do not introduce such a cap."
+    testRef: "tests/engine/forms/marketplace-health-owner-income.test.ts::keeps owner losses and historical advances separate without changing source cents"
+  - line: "2025"
+    description: "Use owner limits throughout zero-advance2025 W and final replays"
+    formula: "ActualC1000/F50000 and premiums6000/3000 produce ownerSE halves71/3533, Wmaximum3929, Step1income43467, PTC7322, finalhealth1488 and AGI45908/PTC7041. WithC5000, primarySEhalf354, maximum7646 and finalhealth1678/AGI49435/PTC6601."
+    testRef: "tests/engine/federal-marketplace-health-owner-income.test.ts::applies zero-advance2025 owner limits to the joint credit and separate QBI"
+  - line: "2026"
+    description: "Retain independently limited owner amounts and full advance repayment"
+    formula: "Isolated2026 same1000/50000 sources yield maximum3929, Step1income43467, PTC5453, finalhealth2111 and AGI45285/PTC5176. Zero and full9000APTC leave the deduction unchanged; full advances repay3824. C5000 changes maximum7646 and finalhealth3547/AGI47566/PTC4842."
+    testRef: "tests/engine/federal-marketplace-health-owner-income-2026.test.ts::refigures binding and nonbinding final owner deductions with actual2026 advances"
+  - line: "ordinary"
+    description: "Preserve separate actual owner deductions when no credit is available"
+    formula: "Actual2026 C1000/F100000 and the same premiums give ownerSE halves71/7065, ordinaryhealth3929, AGI89935, noPTC and full9000 repayment. Ordinary and renewed-eligibility methods reuse the same independently limited maximum and actual owner sources."
+    testRef: "tests/engine/federal-marketplace-health-owner-income-2026.test.ts::keeps ordinary no-credit deductions on the actual limited owners"
+  - line: "ordered"
+    description: "Recompute each owner after the actual ordered IRA deduction"
+    formula: "Actual2025 C1000/F50000 with spouse IRA7000 retains IRA MAGI45908 and deduction7000; updated Step2 PTC7992 yields owner health672/336, joint1008, finalAGI39388/PTC7738. Initial owner maximum929 must not replace the smaller final672."
+    testRef: "tests/engine/federal-marketplace-health-owner-income.test.ts::recomputes limited owners after the actual ordered spouse IRA"
+  - line: "reentry"
+    description: "Reuse separate owner limits when ordinary refiguring renews eligibility"
+    formula: "Isolated2026 C1000/F157096, premiums6000/12000, benchmark18000, family4 and spouseIRA7500 produce SE halves71/11099 and net146926. Owner maximum12929; interimhealth9826 gives IRA4470 and actual129527 above128600. Ordinary health12929 gives IRA5630 and income128367; alternative credit5215 then ownerhealth929/8523, total9452. Fresh final IRA4330 gives income133144 and no finalPTC."
+    testRef: "tests/engine/federal-marketplace-health-owner-income-2026.test.ts::retains owner limits through renewed eligibility and the final actual refigure"
+  - line: "review"
+    description: "Recompute binding-owner review amounts from the original sources"
+    formula: "Saved7206 owner rows must reproduce actual final source-derived owner limit and deduction, retain the joint transfer once, and reject stale source or retained deduction amounts."
+    testRef: "tests/pdf/form7206-health-owner-income-review.test.ts::binds the review owner deduction to its actual earned-income limit"

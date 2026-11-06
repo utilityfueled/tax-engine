@@ -1,0 +1,307 @@
+# Hosting and recovery implementation evidence
+
+## Browser recovery — 2026-10-24
+
+The saved-returns screen now provides encrypted backup and restore. The versioned
+payload preserves the raw guided answers (including private identifiers, explicit
+zero and unknown or absent tax year), workspace facts, and original document
+bytes. Restore creates a new local return and clears derived previews. Redacted
+review bundles are still separate and cannot be used for recovery.
+
+Encryption uses Web Crypto AES-256-GCM, a random 96-bit IV, and a random 128-bit
+salt with PBKDF2-SHA256 at 600,000 iterations. The format/version is authenticated.
+Passwords are not saved or sent to a provider. Source files have SHA-256 integrity
+checks inside the authenticated payload. Missing originals prevent backup;
+unavailable durable IndexedDB prevents import from reporting success. Payloads
+are limited to 64 MiB, with a 96 MiB encrypted-input limit. Import verifies before
+writing and rolls back partial writes on quota, cancellation or storage failure.
+
+Deleting a return, resetting it, or removing an upload now also deletes the
+corresponding original bytes. Cache keys use an unambiguous pair; legacy keys are
+accepted only when stored ownership matches. Failed localStorage writes invalidate
+the in-memory workspace cache.
+
+Verification:
+
+- 18 recovery and document-cache unit tests exercise encryption randomness,
+  tampering/wrong password, source integrity, missing files, legacy year retention,
+  zero/large exact strings, scoped deletion, cancellation and storage rollback.
+- Final focused integration run: 75/75 across recovery, cache, persistence and
+  workspace storage. Concurrent taxpayer-facts work corrected incomplete W-2
+  fixtures; their tax expectations were preserved.
+- Chromium production-build test passes and exercises upload, encrypted download, deletion,
+  reload, wrong-password rejection, restore as a new return, exact guided-answer
+  retention, reopening and byte-for-byte original-file recovery.
+- Local evidence logs live under `.local/upgrade-evidence/recovery-*`. These are
+  synthetic local checks, not hosted staging or independent security approval.
+
+Remaining: independent security/privacy review, cross-browser/target-platform
+rehearsal, hosted account recovery/isolation/outage/billing/migration/restore and
+final release-image qualification. No hosted staging credentials or authority
+have been supplied in this execution.
+
+## Document-request privacy regression — 2026-10-24
+
+Ten new synthetic regressions first failed because labelled names without a
+second detectable identifier could pass through redaction. The multiline stop
+condition matched every letter without regard to case. Inline colon-separated,
+mixed-case and accented names also escaped the original uppercase patterns.
+
+Header redaction now handles these names and complete labelled mailing blocks,
+while preserving transaction dates, amounts and financial field boundaries.
+The provider guard separately rejects unredacted labelled names before the task
+executor runs. Tokens remain scoped to one document. Verification: 213 tests in
+seven privacy, document, provider-adapter and detection suites; web typecheck and
+scoped lint pass. This is a synthetic regression result, not a claim that regex
+redaction proves absence of all possible identifiers or an independent privacy
+approval. The independent review and representative PII evaluation remain open.
+
+## Hosted shell allowlist — 2026-10-24
+
+Six new regressions first reproduced full local records being sent by the browser
+and private filenames/free text/unknown fields surviving server filtering. Hosted
+saves now validate and serialize only the metadata allowlist before any request.
+PostgreSQL independently repeats that validation. Labels, prompts and event
+messages come from the application catalog; filenames, answers, amounts, extra
+properties, source keys, previews and structured facts remain on the device.
+Local records are unchanged. Unknown/missing source years are preserved, and
+malformed metadata fails without echoing private values.
+
+Legacy PostgreSQL reads also apply the allowlist. This does **not** erase private
+values from pre-existing rows or backups: a separately authorized and rehearsed
+data migration/backup-retention procedure is still required for an existing host.
+
+Verification: 127 focused privacy/persistence/security/recovery tests; a further
+51-test run includes four real disposable-PostgreSQL cases proving stored JSONB
+contents, same-ID tenant isolation for read/list/upsert/delete, safe legacy reads,
+and retention of the previous row on rejected updates. Web types and scoped lint
+pass. The database tests use a uniquely named temporary schema, never a normal
+or staging `DATABASE_URL`. These results do not establish hosted staging readiness.
+
+## Browser document-analysis transport
+
+Income and expense analysis now share the same local preparation boundary:
+extract/redact text on the device, reject empty or still-identifying text, and
+send random upload names instead of original filenames. Responses must identify
+one unique upload; original filenames are restored only in the local result.
+This prevents a private filename from bypassing text redaction and prevents a
+duplicate or unrelated response from becoming another upload's facts. Raw files
+remain absent from these requests.
+
+Eight regressions first failed. All 44 focused transport, parser and grounded
+document-task tests now pass, including both analysis flows, local parse errors,
+invalid formats, server failures, repeated response IDs and unknown response IDs.
+Web typecheck and scoped lint pass. No live model/provider request was made.
+## Billing failure boundaries — 2026-10-24
+
+Subscription checkout, AI-credit checkout and portal routes now contain auth,
+protection, database and provider failures inside a generic 503 response with
+`no-store` and a five-second retry hint. They never return upstream exception
+messages. Workspace IDs require strings before inspection; null and malformed
+values reject before payment work. Preview redirects use URL query parameters
+and preserve existing queries/fragments.
+
+Eleven initial regressions failed before implementation. The final focused run
+passes 126 tests across billing, authentication/security and the new boundary
+suite; web typecheck and scoped ESLint pass. Tests exercise account-bound Stripe
+request construction through a mock of the web workspace's exact installed SDK,
+entitlements, duplicate subscription prevention, malformed input, dependency
+outages and self-host bypass. These are synthetic dependency tests, not live
+Stripe, Redis, hosted authentication or staging evidence. Evidence logs:
+`.local/upgrade-evidence/billing-boundaries-{red,green,types}.log`.
+
+## Legacy metadata migration and actual database restoration — 2026-10-25
+
+An explicit operator command now defaults to a count-only dry run and applies
+allowlist cleanup transactionally. Invalid rows, identity mismatches and bounded
+size failures abort without partial updates. Commit uncertainty is reported
+without asserting rollback. Existing backup/WAL retention remains an operator
+responsibility. [Procedure and limitations](hosted-metadata-migration.md).
+
+Fourteen focused migration/store tests pass against disposable PostgreSQL 16,
+including two-owner isolation, failed-row rollback, source-year preservation and
+connection/commit failures. A separate actual `pg_dump`/`pg_restore` run passed
+across nine application tables: billing events and purchases, exact fractional
+provider costs, reservations, account/reminder metadata and two same-ID tenant
+workspaces all survived. The restored legacy fields required cleanup again,
+which was verified idempotent. Web types and scoped lint pass. This is local
+synthetic evidence, not staging authorization or hosted auth recovery proof.
+
+## Cancellable document-analysis transport
+
+Both income and expense analysis accept an `AbortSignal`, reject cancellation
+before parsing or transmission, pass the signal to fetch, and reject late fetch
+or JSON results. Cancelling while PDF extraction is pending releases the caller
+immediately and consumes its eventual result without sending it. This does not
+claim that the PDF parser itself terminates immediately. Guided controls are
+being wired separately by the facts package.
+
+Numeric extraction no longer rounds sub-cent values or accepts negative numbers
+that the equivalent string parser rejects. Actual source zero survives explicit
+application to an empty field. Refunds/transfers that cannot be represented by
+these nonnegative suggestion contracts still require separate source review;
+this change does not qualify refund extraction or invent netting rules.
+Ten initial cancellation/amount regressions failed. Forty-three focused tests,
+web types and scoped lint pass. Tests use synthetic local extraction and mocked
+fetch; no live provider cancellation or billing-settlement claim is made.
+
+## Document and review-PDF request boundaries — 2026-10-25
+
+The document routes reject an entire malformed batch rather than silently dropping
+records. They require unique opaque upload identifiers, accept redacted text only,
+and cap batch count, per-document text and request bytes. Both analysis routes
+and review-PDF generation use shared hosted protection, return 503 on unavailable
+protection and 429 only for actual quota rejection, and set private/no-store on
+success and errors. Auth/render/analysis exceptions no longer expose upstream
+messages. Aborted requests cannot publish a late analysis or PDF result.
+
+Thirty-one initial regressions failed. The expanded focused run passes 89 tests
+across request boundaries, PDF generation, hosted guards and browser transport;
+web types and scoped lint pass (no errors). PDF fixtures now identify their actual
+W-2 owner/state via the separately owned taxpayer-facts package. Deterministic
+analysis still has no model charge; candidates remain unqualified. These are
+local synthetic tests and dependency-failure mocks, not hosted staging evidence.
+Logs: `.local/upgrade-evidence/document-routes-{red,green,types}.log`.
+
+## Recovery UI cancellation — 2026-10-25
+
+Four interaction regressions reproduced late archive downloads/restored-return
+links after cancellation, and an export continuing after switching returns.
+Recovery now checks its abort signal after lazy loading and after asynchronous
+archive work. Return changes/unmount abort the old operation; its completion
+cannot clear a newer operation's state or expose its result. Passwords are cleared
+on completion and return changes. Core recovery still performs its separate
+transactional import/rollback checks.
+
+All 33 focused UI/core recovery tests pass, including encrypted export/import,
+wrong-password/storage failures, file clearing, return changes and late completion.
+Web types and scoped lint pass (eight existing-style test non-null warnings, zero
+errors). Evidence: `.local/upgrade-evidence/recovery-ui-{red,green}.log`. UI tests
+use synthetic dependency stubs; core crypto/storage and previously recorded
+Chromium evidence remain separate from external security approval.
+
+## Request-stream lifetime — 2026-10-25
+
+Seven new regressions exposed streams remaining open after size/deadline failures,
+ignored disconnects and JSON media-type prefix lookalikes. Bounded reads now
+cancel their reader on size overflow, timeout or disconnect, release locks and
+listeners, and check UTF-8 byte size in the non-stream fallback. Content-Type
+must have the exact application/json media type; charset parameters still work.
+Errors remain generic and caller disconnects return499 without private reasons.
+
+All150 focused body/input/rate-limit/document-boundary tests pass; web types and
+scoped lint pass. Evidence: `.local/upgrade-evidence/body-lifecycle-{red,green,types}.log`.
+These are in-process synthetic streams, not a staging reverse-proxy load test.
+
+## Saved-return lifecycle — 2026-10-25
+
+Two DOM regressions reproduced an old storage-mode response replacing the current
+return list and overlapping deletion requests. The list now discards asynchronous
+results after a mode change or unmount, clears stale state on mode changes, and
+serializes deletion while preserving the remaining records and local recovery
+links. Sixteen new interaction cases also cover empty storage, guided shells,
+expansion, unknown timestamps, source counts, notices and recoverable failures.
+The status-copy fixture now supplies actual W-2 facts instead of relying on blank
+payroll fields being interpreted as confirmed zero.
+
+The combined saved-return/status/persistence/recovery run passes 61 tests. Web
+types and scoped lint pass. Evidence: `.local/upgrade-evidence/recent-workspaces-green.log`
+and `.local/upgrade-evidence/ui-package-types.log`. These are local DOM/storage
+tests, not multi-tenant staging evidence.
+
+## Qualified AI credit sales and billing display — 2026-10-25
+
+Extra-credit checkout and its button now require the actual production workspace
+executor configuration, a fully rolled-out current summary route, valid independent
+qualification evidence, a cohort secret and credentials for that selected provider.
+The gate follows the executor's first matching route and credential precedence;
+duplicate later approvals, limited rollouts, previous-only evidence, request
+flags and evaluation mode cannot enable purchases. The shipped configuration has
+no rollout, so purchases remain disabled. No model was promoted or live request made.
+
+Public plan/account copy now says AI is awaiting qualification and accurately
+describes hosted metadata versus browser-local facts, files and downloads.
+Existing recorded balances remain visible without implying service availability.
+Credit display divides cents with Decimal, preserving exact large integer values.
+Synthetic approved fixtures keep payment adapter/failure paths exercised without
+enabling production evidence or payment activity.
+
+The final combined run passes 316 tests across 17 suites, including saved-return
+and recovery checks. Contract/web types and scoped lint pass (zero errors, four
+test non-null warnings). Evidence: `.local/upgrade-evidence/ui-sales-final-green.log`
+and `ui-sales-final-lint.log`. Two additional red regressions reproduced missing
+provider credentials and duplicate-route approval; both are now green. Required
+independent human evaluation, account capability verification, live-budget
+authorization and staging reconciliation remain external release requirements.
+
+## Workspace-provider HTTP boundaries — 2026-10-25
+
+All provider-workspace responses now carry private/no-store headers, including
+denials, rate limits and failures. Authentication and shared-limiter exceptions
+return a generic availability error. Cancellation is checked before work and
+between limiter, body, authentication, entitlement, provider and balance reads;
+a disconnected caller cannot receive late output or trigger the next operation.
+Already incurred provider usage remains subject to the existing accounting path.
+
+Nineteen regressions failed before the change. All 104 focused provider/security/
+document-route tests now pass, as do web types, scoped lint and diff checks.
+Logs: `.local/upgrade-evidence/provider-route-boundaries-{red,green,types}.log`.
+These are synthetic in-process failure/cancellation checks. No production route
+was enabled, no live provider was contacted, and staging evidence remains absent.
+## Runtime configuration cleanup — 2026-10-25
+
+Removed unused GPT-5 Mini and Gemini 3 Flash Preview model defaults from the
+example environments and Compose service. The examples now state that keys alone
+cannot enable a provider: the reviewed task rollout controls availability, and
+self-hosting works without keys. The actual production executor remains gated.
+
+Validation: 65 environment/security and workspace-provider tests passed; the
+checked-in example passed `podman compose --env-file .env.docker.example config`.
+Evidence: `.local/upgrade-evidence/runtime-env-defaults.log` and
+`runtime-compose-config.yaml`. No services started and no provider requests made.
+
+## Committed-image Compose recovery rehearsal — 2026-10-25
+
+The new `scripts/rehearse-self-host-release.mjs` creates a uniquely named local
+Compose project, loopback-only ports, a private browser profile and a disposable
+PostgreSQL volume. It uses synthetic records and clears provider/payment/telemetry
+credentials. Cleanup removes only its own resources. The strengthened container
+smoke also verifies a read-only root, uid 1001, actual Docker health status,
+versioned templates and absence of package tools/provider keys.
+
+The exact tracked commit `da3e0fc5e51184418f29e16f98faecd13d3ddbb3` built for
+linux/arm64 in Docker image format as
+`sha256:c018a5100f6553355472519c05694d4cd54a40e974abef62431d5e9eaafe6598`.
+Smoke passed with Node 24.22.1, all 41 templates, assets and self-host authentication.
+The Compose rehearsal passed previous-image startup, upgrade, database stop/restart,
+actual nine-table pg_dump/restore, rollback and re-upgrade. Checksums confirmed
+unchanged two-owner records, exact `0.0000006` provider cost, unknown year, explicit
+zero, large exact cents and original document bytes throughout. Encrypted browser
+backup, deletion/reload, restore under a new ID, reopening and final deletion passed;
+no synthetic private identifiers or source-file payload appeared in network requests.
+
+This is local synthetic evidence. Tables were initialized with the current schema;
+the previous web image used browser-local facts. Historical hosted-schema downgrade,
+authentication recovery and staging security are **not** established by this run.
+The candidate predates newer implementation commits and must be rebuilt for final
+qualification. Both scripts pass syntax checks, scoped ESLint and diff checks.
+[Recorded digests, hashes and limits](upgrade-2026-self-host-rehearsal.json).
+
+The image SBOM was scanned with refreshed Grype data: 157 matches, 67 distinct
+advisories, zero critical and zero npm matches. The package/version findings are
+identical to the earlier register; no available fixed-version matches were reported.
+Unresolved findings keep their release-maintainer owner role, pending confirmation
+and 2026-11-07 review deadline. The local amd64 build reached Next.js compilation
+but the QEMU process crashed with signal 11 (exit139). This is a failed emulated
+build, not amd64 qualification. Native amd64 CI and final-code reruns continue.
+
+
+An independent agent review found four harness evidence/safety gaps. The rerun
+now pins a verified local Docker socket or loopback Podman VM before mutations,
+keeps request observations from before upload, checks wrong-password and altered
+ciphertext rejection without restored records, and attempts every cleanup step
+even after another cleanup fails. All six persistence phases and encrypted
+recovery passed again. Privacy evidence covers raw synthetic markers in 407
+observed URLs/request bodies; it does not prove absence of encoded or binary PII.
+Twelve endpoint-boundary tests pass after failing before the helper existed.
+The agent review is separate from the still-required independent human review.

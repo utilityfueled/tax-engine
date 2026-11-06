@@ -1,0 +1,76 @@
+form: "Form 2210-F and estimated-tax waiver requests"
+fullName: "Underpayment of estimated tax by farmers and fishers, and waiver requests"
+taxYear: 2025
+supportedTaxYears: [2025, 2026]
+irsReference: "https://www.irs.gov/pub/irs-pdf/i2210f.pdf"
+sourceRetrievedAt: "2026-10-31"
+notes: |
+  Form 2210-F (2025), Instructions for Form 2210-F (2025) and Instructions for Form 2210
+  (2025), Waiver of Penalty. https://www.irs.gov/pub/irs-pdf/f2210f.pdf
+  Applies when at least two-thirds of gross income for either year is from farming or
+  fishing, confirmed as a fact. Line7 uses the printed 0.667. Line11 is the smaller of
+  line7 and line10, with no 110% rule. A missing or short prior return uses line7.
+  One due date: January15. Days run from that date to the payment date or April15.
+  Filing and paying by March2 2026 (March1 2027) removes the penalty.
+  The form has one payment date, so an underpayment needing two late payments rejects
+  rather than choosing a method. 2026 needs an unpublished rate and rejects when a
+  penalty would accrue. No Form 2210-F PDF map exists.
+  Waivers: a retirement, disability, casualty, disaster or unusual-circumstance reason
+  and a statement reference are required. A full request (Form 2210 box A) reports no
+  penalty. A partial request (box B, or Form 2210-F box A) subtracts the requested
+  amount. The IRS decides, so the packet warns that this is only a request.
+  Federally declared disasters stay rejected, because the IRS applies that relief itself.
+  The same source gates as Form 2210 apply. The March date needs payments that reach the
+  tax, and any claimed full-payment date must reach total tax due on the return. A prior year with no liability but not resident all year uses line7.
+  Not modeled: section1062 farmland elections and Form 4136 fuel credits on line4.
+sources:
+  - "https://www.irs.gov/pub/irs-pdf/f2210f.pdf"
+  - "https://www.irs.gov/pub/irs-pdf/i2210f.pdf"
+  - "https://www.irs.gov/instructions/i2210"
+lines:
+  - line: "required-payment"
+    description: "Use two-thirds of current tax or prior tax"
+    formula: "Line3 30000, withholding5000, prior18000: line7 20010, line11 18000. Payments by January15 8000: line12 13000, line13 5000. No prior return: line11 20010, line13 7010."
+    irsRef: "Form2210-F lines1-13"
+    testRef: "tests/engine/forms/form-2210-f.test.ts::figures the required payment and underpayment"
+  - line: "penalty"
+    description: "Count days from January15"
+    formula: "Line13 5000 paid2026-03-20: 64 days, exact61.37, penalty61. Paid2026-03-03: 47 days, penalty45. Unpaid: 90 days, exact86.30, penalty86."
+    irsRef: "Form2210-F lines14-16"
+    testRef: "tests/engine/forms/form-2210-f.test.ts::counts days from January 15 to payment or April 15"
+  - line: "exceptions"
+    description: "Apply each exception on both sides"
+    formula: "Line6 below1000, line9 below1000, line8 at least line11, and full-year no prior tax owe nothing. Filed and paid2026-03-02 owes nothing; 2026-03-03 owes the penalty. Line9 exactly1000 is not excepted."
+    irsRef: "Instructions for Form2210-F, Exceptions to the Penalty"
+    testRef: "tests/engine/forms/form-2210-f.test.ts::applies each exception on both sides"
+  - line: "unknown"
+    description: "Reject unknown or unsupported facts"
+    formula: "An unconfirmed two-thirds test, two late payments needed, and a 2026 penalty with no published rate reject."
+    irsRef: "Original-source contract"
+    testRef: "tests/engine/forms/form-2210-f.test.ts::rejects unknown farmer facts and unpublished rates"
+  - line: "waiver"
+    description: "Record a waiver request without treating it as granted"
+    formula: "Partial 30 on penalty86 reports56 with penaltyBeforeWaiver86. Full reports0. A reason and statement reference are required, and a partial amount cannot exceed the penalty. Form2210 is required and box A or B is marked."
+    irsRef: "Instructions for Form2210, Waiver of Penalty"
+    testRef: "tests/engine/forms/form-2210-f.test.ts::records waiver requests without treating them as granted"
+  - line: "guide"
+    description: "Collect farmer and waiver facts without defaults"
+    formula: "Farmers confirm the two-thirds test. Waivers need a kind, reason and statement reference. Blank stays unknown."
+    irsRef: "Form2210-F Part I"
+    testRef: "tests/guided-interview/guided-estimated-tax-schedule-ai.test.ts::collects farmer and waiver facts without defaults"
+  - line: "year-2026"
+    description: "Use the 2027 date and hold back an unpublished rate"
+    formula: "A 2026 return filed and paid2027-03-01 owes nothing. 2027-03-02 needs an unpublished rate and rejects. Joint status changes with line10 below line7 require the form."
+    irsRef: "Form2210-F Part I box B; dates follow the 2025 pattern and final 2026 forms must confirm them"
+    testRef: "tests/engine/forms/form-2210-f.test.ts::keeps a 2026 farmer penalty out until its rate is published"
+  - line: "return-flow"
+    description: "Carry a waiver request through Form 1040"
+    formula: "A partial request lowers line38 and amount owed by the requested amount, and a full request reports0. penaltyBeforeWaiver is retained, Form2210 is required and readiness stays partial."
+    irsRef: "Instructions for Form2210, Waiver of Penalty"
+    testRef: "tests/engine/federal-form-2210-waiver.test.ts::carries a waiver request through Form 1040 without treating it as granted"
+  - line: "full-payment-total-tax"
+    description: "Test a claimed full payment against total tax due"
+    formula: "Payments through the claimed date plus withholding must reach Form1040 line24 less refundable credits, including taxes outside Form2210 line2. The return rounds to whole dollars, so payments must reach the smaller of the exact and rounded balance."
+    irsRef: "Form2210-F instructions: file and pay the tax due by March2"
+    testRef: "tests/engine/federal-form-2210-waiver.test.ts::tests a claimed full payment against total tax due"
+

@@ -580,7 +580,7 @@ describe("Schedule E - K-1 guaranteed payments flow to SE and Schedule E", () =>
         partnershipName: "Service Partnership LLP",
         ordinaryIncome: "0",
         guaranteedPayments: "60000",
-        selfEmploymentEarnings: "0",
+        selfEmploymentEarnings: "60000", // Actual Box14A includes these service payments.
         isPassiveActivity: false,
       }],
     };
@@ -615,7 +615,7 @@ describe("Schedule E - K-1 guaranteed payments flow to SE and Schedule E", () =>
         partnershipName: "Active LLP",
         ordinaryIncome: "40000",
         guaranteedPayments: "30000",
-        selfEmploymentEarnings: "40000",
+        selfEmploymentEarnings: "70000", // Actual Box14A includes ordinary income plus service payments.
         isPassiveActivity: false,
       }],
     };
@@ -625,7 +625,7 @@ describe("Schedule E - K-1 guaranteed payments flow to SE and Schedule E", () =>
     // Schedule E Part II: ordinary + guaranteed = $70K nonpassive
     expect(schedE.partnerships[0].nonpassiveIncome.toNumber()).toBe(70000);
 
-    // Schedule SE: selfEmploymentEarnings ($40K) + guaranteedPayments ($30K) = $70K
+    // Schedule SE: actual Box14A is $70K; Box4 payments are not added again.
     expect(federal.scheduleSE.netNonfarmProfit.toNumber()).toBe(70000);
     expect(federal.scheduleSE.totalSETax.toNumber()).toBeGreaterThan(0);
   });
@@ -848,7 +848,7 @@ describe("Schedule E - very high rental income without precision issues", () => 
 // ═══════════════════════════════════════════════════════════
 
 describe("Schedule E - royalty income from K-1 netRentalIncome and 1099-MISC", () => {
-  it("K-1 royalties field flows into Part II totalPartnershipIncome", () => {
+  it("K-1 portfolio royalties stay in Part I outside totalPartnershipIncome", () => {
     const input: TaxYearInput = {
       ...simpleW2Fixture,
       scheduleK1: [{
@@ -860,9 +860,11 @@ describe("Schedule E - royalty income from K-1 netRentalIncome and 1099-MISC", (
       }],
     };
     const result = calculateScheduleE(input);
-    // K-1 royalties included in totalK1Income, nonpassive
-    expect(result.partnerships[0].nonpassiveIncome.toNumber()).toBe(45000);
-    expect(result.totalPartnershipIncome.toNumber()).toBe(45000);
+    // Partner K-1 Box7 belongs on Schedule E Part I line4.
+    expect(result.partnerships[0].nonpassiveIncome.toNumber()).toBe(0);
+    expect(result.totalPartnershipIncome.toNumber()).toBe(0);
+    expect(result.totalRentalIncome.toFixed()).toBe("45000");
+    expect(result.totalSupplementalIncome.toFixed()).toBe("45000");
   });
 
   it("1099-MISC royalties only (no rental properties): Line 4 = Line 26", () => {
@@ -894,9 +896,11 @@ describe("Schedule E - royalty income from K-1 netRentalIncome and 1099-MISC", (
       }],
     };
     const result = calculateScheduleE(input);
-    // K-1 total = ordinary 10K + royalties 30K = 40K nonpassive
-    expect(result.partnerships[0].nonpassiveIncome.toNumber()).toBe(40000);
-    expect(result.totalPartnershipIncome.toNumber()).toBe(40000);
+    // Ordinary 10K remains in Part II; royalty 30K remains in Part I.
+    expect(result.partnerships[0].nonpassiveIncome.toNumber()).toBe(10000);
+    expect(result.totalPartnershipIncome.toNumber()).toBe(10000);
+    expect(result.totalRentalIncome.toFixed()).toBe("30000");
+    expect(result.totalSupplementalIncome.toFixed()).toBe("40000");
   });
 });
 
@@ -946,9 +950,12 @@ describe("Schedule E - totalSupplementalIncome flows through federal pipeline to
     };
     const federal = calculateFederalTax(input);
     // Rental net: 10K - 37K = -27K
-    // W-2 $85K + rental loss -$27K = $58K total income
+    // Pub925 special allowance permits25000;2000of the27000source loss is suspended.
+    // W2 85000 minus25000allowed=60000on both1040lines9and11.
     expect(federal.scheduleE.totalRentalIncome.toNumber()).toBe(-27000);
-    expect(federal.totalIncome.toNumber()).toBe(58000);
+    expect(federal.totalIncome.toNumber()).toBe(60000);
+    expect(federal.otherIncome.toNumber()).toBe(-25000);
+    expect(federal.agi.toNumber()).toBe(60000);
   });
 
   it("combined rental, K-1, and royalty income all reflected in federal Line 9", () => {

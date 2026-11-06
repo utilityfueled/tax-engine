@@ -1,3 +1,5 @@
+import type { Form2555Result } from "@/engine/forms/form-2555.js";
+import { resolveForm2555WorksheetAddback } from "@/engine/forms/form-2555-worksheet-source.js";
 /**
  * Schedule 1 — Additional Income and Adjustments to Income
  * Spec: spec/federal/schedule-1.yaml
@@ -21,11 +23,25 @@ import { calculateForm1099SA, mergeForm1099SAIntoForm8889Input } from "@/engine/
 import { calculateForm1099R } from "@/engine/forms/form-1099-r.js";
 import { calculateForm4797, type Form4797Result } from "@/engine/forms/form-4797.js";
 import { calculateSocialSecurityBenefitsWorksheet } from "@/engine/forms/social-security-benefits-worksheet.js";
-import { calculateIraDeduction } from "@/engine/forms/ira-deduction-worksheet.js";
+import { calculateIraReturnWorksheet } from "@/engine/forms/ira-return-worksheet.js";
+import { calculateForm1099G, type Form1099GResult } from "@/engine/forms/form-1099-g.js";
 import { calculateForm1099C } from "@/engine/forms/form-1099-c.js";
+import { calculateForm5329Hsa, type Form5329HsaResult } from "@/engine/forms/form-5329-hsa.js";
+import { calculateEducatorExpensesDeduction } from "@/engine/forms/educator-expenses.js";
+import type { EducatorBondSourceContext } from "@/engine/forms/educator-bond-sources.js";
 import { calculateForm3903, type Form3903Result } from "@/engine/forms/form-3903.js";
 
 export interface Schedule1Input {
+  /** Internal exact ownership, independently reconciled to the completed Form8815 by the caller. */
+  educatorBondSources?: EducatorBondSourceContext;
+  /** Completed canonical return amount after actual source and MAGI coordination. */
+  studentLoanDeductionOverride?: Decimal;
+  /** Complete return MAGI for the explicitly unverified historical source path. */
+  studentLoanModifiedAgi?: Decimal;
+  /** Completed canonical return worksheet; prevents recomputation from a partial income subset. */
+  iraDeductionOverride?: Decimal;
+  /** Actual complete Pub590-A MAGI for standalone source-confirmed worksheet use. */
+  iraModifiedAgi?: Decimal;
   /** Schedule C net profit (Line 31) */
   schedCNetProfit?: Decimal;
   /** Schedule F net farm profit (Line 34) */
@@ -52,7 +68,10 @@ export interface Schedule1Input {
   gamblingIncome?: Decimal;
   /** NOL deduction computed by the federal engine (IRC §172, limited to 80% of pre-NOL taxable income) */
   nolDeduction?: Decimal;
-  /** Form 2555 housing deduction for self-employed (Schedule 1 Line 24d) */
+  /** Net Form2555line45, entered as negative Schedule1line8d. */
+  form2555IncomeReduction?: Decimal;
+  form2555Source?: Form2555Result;
+  /** Form 2555 housing deduction for self-employed (Schedule 1 Line 24j) */
   form2555HousingDeduction?: Decimal;
   /** Pre-computed SE health insurance deduction from the Pub 535 worksheet (bypasses manual cap logic) */
   seHealthInsurance?: Decimal;
@@ -66,12 +85,15 @@ export interface Schedule1Result {
   supplementalIncome: Decimal; // Line 5
   farmIncome: Decimal; // Line 6
   unemploymentCompensation: Decimal; // Line 7
+  governmentPayments: Form1099GResult; // Actual program/source reconciliation
   capitalGainLoss: Decimal; // Form 1040 Line 7 passthrough
   alimonyReceived: Decimal; // Line 2a
   nolDeduction: Decimal; // Line 8a (negative in other income)
   gamblingIncome: Decimal; // Line 8b
   cancelledDebtIncome: Decimal; // Line 8c
+  foreignIncomeExclusion: Decimal; // Positive net Form2555line45, negative on8d
   hsaTaxableDistributions: Decimal; // Line 8f
+  totalOtherIncome: Decimal; // Line 9
   totalAdditionalIncome: Decimal; // Line 10
 
   // Part II
@@ -93,58 +115,17 @@ export interface Schedule1Result {
   lines: CalculatedLine[];
   form8889?: Form8889Result;
   form8889ByOwner?: Partial<Record<Form8889Input["accountOwner"], Form8889Result>>;
+  form5329HsaByOwner?: Partial<Record<"primary" | "spouse", Form5329HsaResult>>;
+  hsaReliefEarnings: Decimal;
+  hsaExcessEmployerIncome: Decimal;
   hsaAdditionalTax: Decimal;
   hsaRecaptureTax: Decimal;
 }
 
 const MAX_STUDENT_LOAN_DEDUCTION = new Decimal(2500);
-const MAX_EDUCATOR_EXPENSES = new Decimal(300);
 const DEFAULT_DOCUMENT_ONLY_HSA_COVERAGE = Array.from({ length: 12 }, () => "none") as Form8889Input["coverageByMonth"];
 const ZERO = new Decimal(0);
 
-function calculateEducatorExpensesDeduction(
-  adjustments: TaxYearInput["adjustments"],
-  filingStatus: TaxYearInput["taxpayer"]["filingStatus"]
-): {
-  amount: Decimal;
-  formula: string;
-  inputs: Record<string, Decimal | string>;
-} {
-  const aggregateEducatorExpenses = d(adjustments?.educatorExpenses);
-  const primaryEducatorExpenses = d(adjustments?.primaryEducatorExpenses);
-  const spouseEducatorExpenses = d(adjustments?.spouseEducatorExpenses);
-  const hasSplitEducatorExpenses =
-    primaryEducatorExpenses.greaterThan(0) || spouseEducatorExpenses.greaterThan(0);
-
-  if (hasSplitEducatorExpenses) {
-    const allowedPrimaryEducatorExpenses = min(primaryEducatorExpenses, MAX_EDUCATOR_EXPENSES);
-    const allowedSpouseEducatorExpenses = filingStatus === "married_filing_jointly"
-      ? min(spouseEducatorExpenses, MAX_EDUCATOR_EXPENSES)
-      : ZERO;
-
-    return {
-      amount: allowedPrimaryEducatorExpenses.plus(allowedSpouseEducatorExpenses),
-      formula: filingStatus === "married_filing_jointly"
-        ? "min(primary educator expenses, $300) + min(spouse educator expenses, $300)"
-        : "min(primary educator expenses, $300)",
-      inputs: {
-        "Primary educator expenses entered": primaryEducatorExpenses,
-        "Primary educator expenses allowed": allowedPrimaryEducatorExpenses,
-        "Spouse educator expenses entered": spouseEducatorExpenses,
-        "Spouse educator expenses allowed": allowedSpouseEducatorExpenses,
-        "Ignored aggregate educator expenses fallback": aggregateEducatorExpenses,
-      },
-    };
-  }
-
-  return {
-    amount: min(aggregateEducatorExpenses, MAX_EDUCATOR_EXPENSES),
-    formula: `min(${aggregateEducatorExpenses}, $300)`,
-    inputs: {
-      "Aggregate educator expenses entered": aggregateEducatorExpenses,
-    },
-  };
-}
 
 function normalizeForm8889InputWithDocumentSupport(
   input: Form8889Input | undefined,
@@ -330,15 +311,16 @@ export function calculateSchedule1(
   const farmIncome = extra?.schedFNetProfit ?? new Decimal(0);
   audit.record("Sched 1", "6", "Farm income or loss", farmIncome, "Schedule F Line 34");
 
-  // Line 7: Unemployment compensation (Form 1099-G Box 1)
-  const form1099Gs = input.form1099G ?? [];
-  const unemploymentCompensation = sum(
-    ...form1099Gs.map((f) => d(f.unemploymentCompensation))
-  );
+  const governmentPayments = calculateForm1099G(input.form1099G ?? [], input.taxpayer.taxYear, filingStatus);
+  audit.merge(governmentPayments.lines);
+  const unemploymentCompensation = governmentPayments.taxableUnemployment;
   audit.record("Sched 1", "7", "Unemployment compensation", unemploymentCompensation,
-    form1099Gs.length > 0
-      ? `Sum of ${form1099Gs.length} Form 1099-G Box 1 amount(s)`
-      : "No Form 1099-G unemployment compensation reported");
+    "Actual government receipts less current-year repayments and nondeductible contribution recovery",
+    { "Current-year benefits repaid": governmentPayments.currentYearRepaid });
+  audit.record("Sched 1", "7-repaid", "Current-year unemployment repaid", governmentPayments.currentYearRepaid,
+    "Actual source repayment amount; retained even when Box1 already reflects it");
+  audit.record("Sched 1", "8z", "Other government income", governmentPayments.otherIncome,
+    "Actual RTAA, nonbusiness taxable grants and state family-leave benefits; not self-employment income");
 
   const capitalGainLoss = extra?.capitalGainLoss ?? new Decimal(0);
 
@@ -390,13 +372,10 @@ export function calculateSchedule1(
           input.w2s
         ),
     } satisfies Partial<Record<Form8889Input["accountOwner"], Form8889Input | undefined>>;
-  const form8889 = extra?.hsaDeduction === undefined && normalizedForm8889
+  let form8889 = extra?.hsaDeduction === undefined && normalizedForm8889
     ? calculateForm8889(input.taxpayer, normalizedForm8889, constants)
     : undefined;
   let form8889ByOwner: Partial<Record<Form8889Input["accountOwner"], Form8889Result>> | undefined;
-  if (form8889) {
-    audit.merge(form8889.lines);
-  }
 
   if (extra?.hsaDeduction === undefined && normalizedExplicitForm8889ByOwner !== undefined) {
     const primaryExplicitResult = normalizedExplicitForm8889ByOwner.primary
@@ -411,12 +390,10 @@ export function calculateSchedule1(
 
       if (primaryExplicitResult) {
         form8889ByOwner.primary = primaryExplicitResult;
-        audit.merge(primaryExplicitResult.lines);
       }
 
       if (spouseExplicitResult) {
         form8889ByOwner.spouse = spouseExplicitResult;
-        audit.merge(spouseExplicitResult.lines);
       }
     }
   }
@@ -453,14 +430,66 @@ export function calculateSchedule1(
       form8889ByOwner ??= {};
       if (primaryResult && form8889ByOwner.primary === undefined) {
         form8889ByOwner.primary = primaryResult;
-        audit.merge(primaryResult.lines);
       }
       if (spouseResult && form8889ByOwner.spouse === undefined) {
         form8889ByOwner.spouse = spouseResult;
-        audit.merge(spouseResult.lines);
       }
     }
   }
+  let form5329HsaByOwner: Partial<Record<"primary" | "spouse", Form5329HsaResult>> | undefined;
+  if (input.form5329HsaByOwner !== undefined) {
+    for (const source of input.form1099SA ?? []) {
+      if (source.accountType !== "hsa") continue;
+      if (source.accountHolder === undefined) throw new Error("Form5329 HSA requires an actual owner for each Form1099-SA source");
+      if (source.distributionCode !== "2") continue;
+      if (source.earningsOnExcessContributions === undefined) {
+        throw new Error("Form5329 HSA timely corrections require actual Form1099-SA Box2 earnings, including known zero");
+      }
+      const sourceGross = d(source.grossDistribution);
+      const sourceEarnings = d(source.earningsOnExcessContributions);
+      if (!sourceGross.isFinite() || sourceGross.lt(0) || !sourceEarnings.isFinite() || sourceEarnings.lt(0) || sourceEarnings.gt(sourceGross)) {
+        throw new Error("Form5329 HSA actual Form1099-SA Box2 earnings must be within its gross Box1 distribution");
+      }
+    }
+    if (extra?.hsaDeduction !== undefined) throw new Error("Actual owner HSA5329 sources cannot use an aggregate HSA deduction override");
+    const aggregateHsa = input.form5329;
+    if (aggregateHsa && Object.entries(aggregateHsa).some(([key, value]) =>
+      (/^hsa|^supportedHsa/.test(key)) && typeof value === "string" && !d(value).isZero())) {
+      throw new Error("Aggregate HSA5329 amounts cannot accompany separate owner sources");
+    }
+    form5329HsaByOwner = {};
+    for (const owner of ["primary", "spouse"] as const) {
+      const facts = input.form5329HsaByOwner[owner];
+      const mainOwner = normalizedForm8889?.accountOwner === owner;
+      const ownerResult = mainOwner ? form8889 : form8889ByOwner?.[owner];
+      if (facts && owner === "spouse" && (input.taxpayer.spouse === undefined || filingStatus !== "married_filing_jointly")) {
+        throw new Error("Form5329 HSA spouse sources require an actual joint-return spouse");
+      }
+      if (!facts && ownerResult) throw new Error(`Form5329 HSA ${owner} actual sources are required`);
+      if (!facts) continue;
+      if (!ownerResult) throw new Error(`Form5329 HSA ${owner} requires its actual Form8889 source worksheet`);
+      const sourceResult = calculateForm5329Hsa({ taxYear: input.taxpayer.taxYear, owner, facts, form8889: ownerResult });
+      form5329HsaByOwner[owner] = sourceResult;
+      if (mainOwner) form8889 = sourceResult.correctedForm8889;
+      else {
+        form8889ByOwner ??= {};
+        form8889ByOwner[owner] = sourceResult.correctedForm8889;
+      }
+      audit.merge(sourceResult.lines);
+    }
+    if (Object.keys(form5329HsaByOwner).length === 0) throw new Error("Form5329 HSA actual owner sources cannot be empty");
+  } else if (input.taxpayer.taxYear >= 2026) {
+    const actualResults = [form8889, ...Object.values(form8889ByOwner ?? {})].filter((value): value is Form8889Result => value !== undefined);
+    if (d(input.form5329?.hsaPriorYearExcessContributions).gt(0)
+      || d(input.form5329?.hsaCurrentYearExcessContributions).gt(0)
+      || actualResults.some(value => value.line2.plus(value.line11).gt(value.line8))) {
+      throw new Error("Form5329 HSA excess requires actual separate owner sources for2026");
+    }
+  }
+  if (form8889) audit.merge(form8889.lines);
+  for (const ownerResult of Object.values(form8889ByOwner ?? {})) if (ownerResult) audit.merge(ownerResult.lines);
+  const hsaReliefEarnings = sum(...Object.values(form5329HsaByOwner ?? {}).map(value => value?.reliefEarnings ?? d("0")));
+  const hsaExcessEmployerIncome = sum(...Object.values(form5329HsaByOwner ?? {}).map(value => value?.taxableExcessEmployerContributions ?? d("0")));
   const ownerForm8889Results = form8889ByOwner
     ? (Object.values(form8889ByOwner).filter((result): result is Form8889Result => result !== undefined))
     : [];
@@ -499,23 +528,21 @@ export function calculateSchedule1(
       { "Available NOL deducted": nolDeduction });
   }
 
+  const foreignIncomeExclusion = extra?.form2555IncomeReduction ?? new Decimal(0);
+  resolveForm2555WorksheetAddback(foreignIncomeExclusion, extra?.form2555Source?.housingDeduction ?? new Decimal(0), extra?.form2555Source, input.taxpayer.taxYear);
+  if (extra?.form2555IncomeReduction !== undefined) {
+    audit.record("Sched 1", "8d", "Foreign earned income and housing exclusion", foreignIncomeExclusion.negated(), "Negative net Form2555line45; gross wages remain on1040line1z");
+  }
+  const totalOtherIncome = sum(gamblingIncome, cancelledDebtIncome, hsaTaxableDistributions, governmentPayments.otherIncome)
+    .minus(nolDeduction).minus(foreignIncomeExclusion);
+  audit.record("Sched 1", "9", "Total other income", totalOtherIncome,
+    "Sum Lines 8a through 8z, including signed NOL and foreign exclusions");
   const totalAdditionalIncome = sum(
-    taxableRefunds,
-    businessIncome,
-    otherGainsOrLosses,
-    supplementalIncome,
-    farmIncome,
-    unemploymentCompensation,
-    capitalGainLoss,
-    alimonyReceived,
-    gamblingIncome,
-    cancelledDebtIncome,
-    hsaTaxableDistributions
-  ).minus(nolDeduction);
+    taxableRefunds, alimonyReceived, businessIncome, otherGainsOrLosses,
+    supplementalIncome, farmIncome, unemploymentCompensation, totalOtherIncome
+  );
   audit.record("Sched 1", "10", "Total additional income", totalAdditionalIncome,
-    nolDeduction.greaterThan(0)
-      ? "Sum Lines 1-9 minus Line 8a NOL deduction → 1040 Line 8"
-      : "Sum Lines 1-9 → 1040 Line 8");
+    "Sum Lines 1 through 7 plus Line 9 → 1040 Line 8; Schedule D remains on 1040 Line 7");
 
   // ── Part II: Adjustments to Income ────────────────────
 
@@ -588,12 +615,14 @@ export function calculateSchedule1(
   // profit you earned from the trade or business under which the insurance plan was
   // established (reduced by any deductions you claim on Schedule 1, lines 15 and 16)."
   // Cap = max(0, net_profit - deductible_SE_tax - SE_retirement_contributions)
+  if (input.form7206 && extra?.seHealthInsurance === undefined) throw new Error("Actual Form7206 requires completed canonical income context before Schedule1.");
+  if (input.taxpayer.taxYear >= 2026 && !input.form7206 && (d(adjustments?.selfEmployedHealthInsurance).gt(0) || (extra?.seHealthInsurance?.gt(0) ?? false))) throw new Error("2026 SE health insurance requires actual Form7206 source facts.");
   let seHealthInsurance: Decimal;
   if (extra?.seHealthInsurance !== undefined) {
     // Pre-computed from the Pub 535 Self-Employed Health Insurance Deduction Worksheet
     seHealthInsurance = extra.seHealthInsurance;
     audit.record("Sched 1", "17", "SE health insurance", seHealthInsurance,
-      "Computed from Self-Employed Health Insurance Deduction Worksheet (Pub 535)");
+      input.form7206 ? "Completed actual Form7206 business deductions, transferred once" : "Computed from Self-Employed Health Insurance Deduction Worksheet (Pub 535)");
   } else {
     const seHealthInsuranceRaw = d(adjustments?.selfEmployedHealthInsurance);
     if (extra?.schedCNetProfit !== undefined) {
@@ -617,7 +646,7 @@ export function calculateSchedule1(
   const archerMSADeduction = d(adjustments?.archerMSADeduction);
   audit.record("Sched 1", "23", "Archer MSA deduction", archerMSADeduction, "Validated manual Archer MSA deduction input");
 
-  const educatorExpensesDeduction = calculateEducatorExpensesDeduction(adjustments, filingStatus);
+  const educatorExpensesDeduction = calculateEducatorExpensesDeduction(adjustments, filingStatus, input.taxpayer.taxYear, extra?.educatorBondSources);
   const educatorExpenses = educatorExpensesDeduction.amount;
   audit.record(
     "Sched 1",
@@ -628,13 +657,15 @@ export function calculateSchedule1(
     educatorExpensesDeduction.inputs
   );
 
-  const otherAdjustmentsTotal = d(adjustments?.otherAdjustmentsTotal);
+  const form2555HousingDeduction = extra?.form2555HousingDeduction ?? new Decimal(0);
+  const otherAdjustmentsTotal = d(adjustments?.otherAdjustmentsTotal).plus(form2555HousingDeduction);
   audit.record(
     "Sched 1",
     "25",
     "Total other adjustments",
     otherAdjustmentsTotal,
-    "Supported manual total of other Schedule 1 Part II adjustments reported on Lines 24a through 24z"
+    "Other actual Lines 24a through 24z amounts plus Form2555 housing deduction on Line24j",
+    { "Other actual adjustment sources": d(adjustments?.otherAdjustmentsTotal), "Form2555 housing deduction": form2555HousingDeduction }
   );
 
   const earlyWithdrawalPenalty = extra?.earlyWithdrawalPenalty ?? d(adjustments?.earlyWithdrawalPenalty);
@@ -664,6 +695,7 @@ export function calculateSchedule1(
   );
   const magiOtherIncome = sum(
     magiMiscOtherIncome,
+    governmentPayments.otherIncome,
     taxableRefunds,
     unemploymentCompensation,
     alimonyReceived,
@@ -695,75 +727,28 @@ export function calculateSchedule1(
     archerMSADeduction,
     educatorExpenses,
     otherAdjustmentsTotal
-  );
+  ).minus(form2555HousingDeduction); // Pub590-A/Pub970 MAGI adds housing deduction back.
 
   let iraDeduction: Decimal;
-  if (input.iraDeductionWorksheet) {
-    const ws = input.iraDeductionWorksheet;
-    // IRA MAGI per Pub 590-A: AGI before IRA deduction plus student loan
-    // interest add-back equals total income minus adjustments excluding both
-    // IRA and student loan. Social Security taxable benefits are excluded
-    // because they depend on the IRA deduction (circular); for the typical
-    // working-age taxpayer subject to IRA phase-out this is negligible.
-    const iraMagi = sum(
-      magiWages,
-      magiInterest,
-      magiDividends,
-      form1099R.iraTaxable,
-      form1099R.pensionTaxable,
-      capitalGainLoss,
-      businessIncome,
-      supplementalIncome,
-      farmIncome,
-      magiOtherIncome
-    ).minus(adjustmentsExcludingIraAndStudentLoan);
-
-    const primaryResult = calculateIraDeduction({
-      filingStatus,
-      taxYear: input.taxpayer.taxYear,
-      magi: iraMagi,
-      contributions: ws.primaryContributions,
-      isActiveParticipant: ws.primaryIsActiveParticipant,
-      isSpouseActiveParticipant: ws.spouseIsActiveParticipant ?? false,
-      age50OrOlder: ws.primaryAge50OrOlder ?? false,
-      livedWithSpouseAtAnyTimeDuringYear: input.taxpayer.livedWithSpouseAtAnyTimeDuringYear,
-    });
-    audit.merge(primaryResult.lines);
-
-    let spouseIraDeduction = ZERO;
-    const isMfjForIra = filingStatus === "married_filing_jointly";
-    if (isMfjForIra && d(ws.spouseContributions).greaterThan(0)) {
-      const spouseResult = calculateIraDeduction({
-        filingStatus,
-        taxYear: input.taxpayer.taxYear,
-        magi: iraMagi,
-        contributions: d(ws.spouseContributions),
-        isActiveParticipant: ws.spouseIsActiveParticipant ?? false,
-        isSpouseActiveParticipant: ws.primaryIsActiveParticipant,
-        age50OrOlder: ws.spouseAge50OrOlder ?? false,
-        livedWithSpouseAtAnyTimeDuringYear: input.taxpayer.livedWithSpouseAtAnyTimeDuringYear,
-      });
-      audit.merge(spouseResult.lines);
-      spouseIraDeduction = spouseResult.deductibleAmount;
-    }
-
-    iraDeduction = primaryResult.deductibleAmount.plus(spouseIraDeduction);
-    audit.record("Sched 1", "20", "IRA deduction", iraDeduction,
-      isMfjForIra && spouseIraDeduction.greaterThan(0)
-        ? "Primary + Spouse IRA deduction from Pub 590-A worksheet"
-        : "IRA deduction from Pub 590-A worksheet",
-      {
-        "IRA MAGI": iraMagi,
-        "Primary contributions": d(ws.primaryContributions),
-        "Primary deductible": primaryResult.deductibleAmount,
-        "Primary active participant": ws.primaryIsActiveParticipant ? "Yes" : "No",
-        ...(isMfjForIra && spouseIraDeduction.greaterThan(0) ? {
-          "Spouse contributions": d(ws.spouseContributions),
-          "Spouse deductible": spouseIraDeduction,
-          "Spouse active participant": (ws.spouseIsActiveParticipant ?? false) ? "Yes" : "No",
-        } : {}),
-      }
-    );
+  if (extra?.iraDeductionOverride !== undefined) {
+    iraDeduction = extra.iraDeductionOverride;
+    if (!iraDeduction.isFinite() || iraDeduction.lt(0)) throw new Error("IRA completed deduction must be finite and nonnegative");
+    audit.record("Sched 1","20","IRA deduction",iraDeduction,"Canonical completed Publication590-A return worksheet");
+  } else if (input.iraDeductionWorksheet) {
+    // Standalone legacy preview only. Source-confirmed/current calculations
+    // require complete return MAGI supplied explicitly by the caller.
+    const legacyMagiBase = sum(magiWages,magiInterest,magiDividends,form1099R.iraTaxable,form1099R.pensionTaxable,
+      capitalGainLoss,businessIncome,supplementalIncome,farmIncome,magiOtherIncome).minus(adjustmentsExcludingIraAndStudentLoan);
+    const legacyBenefits = socialSecurityBenefitsGross.gt(0) ? calculateSocialSecurityBenefitsWorksheet({
+      filingStatus,benefitsReceived:socialSecurityBenefitsGross,otherIncome:legacyMagiBase,taxExemptInterest:magiTaxExemptInterest,
+      livedWithSpouseAtAnyTimeDuringYear:input.taxpayer.livedWithSpouseAtAnyTimeDuringYear,
+    }).taxableBenefits : ZERO;
+    const result = calculateIraReturnWorksheet(input,extra?.iraModifiedAgi ?? legacyMagiBase.plus(legacyBenefits),extra?.iraModifiedAgi !== undefined);
+    audit.merge(result.primary.lines);
+    if (result.spouse) audit.merge(result.spouse.lines);
+    iraDeduction = result.totalDeduction;
+    audit.record("Sched 1","20","IRA deduction",iraDeduction,
+      extra?.iraModifiedAgi === undefined ? "Historical standalone preview from available income; complete MAGI sources unverified" : "Completed Pub590-A actual modified AGI worksheet");
   } else {
     iraDeduction = d(adjustments?.iraDeduction);
     audit.record("Sched 1", "20", "IRA deduction", iraDeduction, "Subject to plan participation/income limits");
@@ -771,105 +756,119 @@ export function calculateSchedule1(
 
   // ── Line 21: Student loan interest ────────────────────────────────
   const studentLoanRaw = d(adjustments?.studentLoanInterest);
-  const adjustmentsExcludingStudentLoan = adjustmentsExcludingIraAndStudentLoan.plus(iraDeduction);
-  const socialSecurityBenefitsTaxable = socialSecurityBenefitsGross.greaterThan(0)
-    ? calculateSocialSecurityBenefitsWorksheet({
-      filingStatus,
-      benefitsReceived: socialSecurityBenefitsGross,
-      otherIncome: sum(
-        magiWages,
-        magiInterest,
-        magiDividends,
-        form1099R.iraTaxable,
-        form1099R.pensionTaxable,
-        capitalGainLoss,
-        businessIncome,
-        supplementalIncome,
-        farmIncome,
-        magiOtherIncome
-      ),
-      taxExemptInterest: magiTaxExemptInterest,
-      livedWithSpouseAtAnyTimeDuringYear: input.taxpayer.livedWithSpouseAtAnyTimeDuringYear,
-      adjustments: {
-        businessExpenseAdjustments,
-        hsaDeduction,
-        armedForcesMovingExpenses,
-        seDeduction,
-        seRetirementContributions,
-        seHealthInsurance,
-        earlyWithdrawalPenalty,
-        alimonyPaid,
-        iraDeduction,
-        archerMSADeduction,
-        educatorExpenses,
-        otherAdjustmentsTotal,
-        studentLoanInterest: ZERO,
-      },
-    }).taxableBenefits
-    : ZERO;
-  const supportedStudentLoanModifiedAgi = sum(
-    magiWages,
-    magiInterest,
-    magiDividends,
-    form1099R.iraTaxable,
-    form1099R.pensionTaxable,
-    socialSecurityBenefitsTaxable,
-    capitalGainLoss,
-    businessIncome,
-    supplementalIncome,
-    farmIncome,
-    magiOtherIncome
-  ).minus(adjustmentsExcludingStudentLoan);
-  const {
-    deduction: studentLoanInterest,
-    phaseOutRatio: studentLoanPhaseOutRatio,
-    phaseOutStart: studentLoanPhaseOutStart,
-    phaseOutEnd: studentLoanPhaseOutEnd,
-  } = calculateStudentLoanInterestDeduction(
-    studentLoanRaw,
-    filingStatus,
-    supportedStudentLoanModifiedAgi,
-    constants
-  );
-  const studentLoanCappedInterest = min(
-    Decimal.max(ZERO, studentLoanRaw),
-    MAX_STUDENT_LOAN_DEDUCTION
-  );
-  const studentLoanWorksheetDeductionBeforeRounding = studentLoanPhaseOutRatio.isZero()
-    ? studentLoanCappedInterest
-    : Decimal.max(
-      ZERO,
-      studentLoanCappedInterest.minus(studentLoanCappedInterest.times(studentLoanPhaseOutRatio))
-    );
-  audit.record(
-    "Sched 1",
-    "21",
-    "Student loan interest",
-    studentLoanInterest,
-    filingStatus === "married_filing_separately"
-      ? "No deduction allowed for married filing separately"
-      : studentLoanPhaseOutRatio.isZero()
-      ? `Smaller of qualified interest paid or $2,500 because supported modified AGI does not exceed the 2025 phase-out threshold`
-      : studentLoanInterest.isZero()
-      ? "Reduced to $0 because supported modified AGI reaches the 2025 phase-out ceiling"
-      : "Qualified interest paid reduced by the 2025 modified-AGI phase-out worksheet",
-    {
-      "Qualified student loan interest paid": studentLoanRaw,
-      "Capped student loan interest before phase-out": studentLoanCappedInterest,
-      "Supported modified AGI before student loan deduction": supportedStudentLoanModifiedAgi,
-      "2025 phase-out threshold": studentLoanPhaseOutStart,
-      "2025 phase-out ceiling": studentLoanPhaseOutEnd,
-      "Phase-out ratio": studentLoanPhaseOutRatio,
-      "Worksheet deduction before whole-dollar rounding": studentLoanWorksheetDeductionBeforeRounding,
+  let studentLoanInterest: Decimal;
+  if (extra?.studentLoanDeductionOverride !== undefined) {
+    studentLoanInterest = extra.studentLoanDeductionOverride;
+    if (!studentLoanInterest.isFinite() || studentLoanInterest.lt(0) || studentLoanInterest.gt(MAX_STUDENT_LOAN_DEDUCTION)) {
+      throw new Error("Completed student-loan deduction must be finite and within its statutory limit");
     }
-  );
+    audit.record("Sched 1", "21", "Student loan interest", studentLoanInterest,
+      "Canonical completed return source and Publication970 MAGI worksheet");
+  } else {
+    if (input.studentLoanInterestFacts || (input.taxpayer.taxYear >= 2026 && studentLoanRaw.gt(0))) {
+      throw new Error("Student-loan actual source calculation requires a completed canonical return deduction");
+    }
+    const adjustmentsExcludingStudentLoan = adjustmentsExcludingIraAndStudentLoan.plus(iraDeduction);
+    const socialSecurityBenefitsTaxable = socialSecurityBenefitsGross.greaterThan(0)
+      ? calculateSocialSecurityBenefitsWorksheet({
+        filingStatus,
+        benefitsReceived: socialSecurityBenefitsGross,
+        otherIncome: sum(
+          magiWages,
+          magiInterest,
+          magiDividends,
+          form1099R.iraTaxable,
+          form1099R.pensionTaxable,
+          capitalGainLoss,
+          businessIncome,
+          supplementalIncome,
+          farmIncome,
+          magiOtherIncome
+        ),
+        taxExemptInterest: magiTaxExemptInterest,
+        livedWithSpouseAtAnyTimeDuringYear: input.taxpayer.livedWithSpouseAtAnyTimeDuringYear,
+        adjustments: {
+          businessExpenseAdjustments,
+          hsaDeduction,
+          armedForcesMovingExpenses,
+          seDeduction,
+          seRetirementContributions,
+          seHealthInsurance,
+          earlyWithdrawalPenalty,
+          alimonyPaid,
+          iraDeduction,
+          archerMSADeduction,
+          educatorExpenses,
+          otherAdjustmentsTotal,
+          studentLoanInterest: ZERO,
+        },
+      }).taxableBenefits
+      : ZERO;
+    const supportedStudentLoanModifiedAgi = extra?.studentLoanModifiedAgi ?? sum(
+      magiWages,
+      magiInterest,
+      magiDividends,
+      form1099R.iraTaxable,
+      form1099R.pensionTaxable,
+      socialSecurityBenefitsTaxable,
+      capitalGainLoss,
+      businessIncome,
+      supplementalIncome,
+      farmIncome,
+      magiOtherIncome
+    ).minus(adjustmentsExcludingStudentLoan);
+    if (!supportedStudentLoanModifiedAgi.isFinite()) throw new Error("Complete student-loan modified AGI must be finite");
+    const {
+      deduction: legacyStudentLoanInterest,
+      phaseOutRatio: studentLoanPhaseOutRatio,
+      phaseOutStart: studentLoanPhaseOutStart,
+      phaseOutEnd: studentLoanPhaseOutEnd,
+    } = calculateStudentLoanInterestDeduction(
+      studentLoanRaw,
+      filingStatus,
+      supportedStudentLoanModifiedAgi,
+      constants
+    );
+    studentLoanInterest = legacyStudentLoanInterest;
+    const studentLoanCappedInterest = min(
+      Decimal.max(ZERO, studentLoanRaw),
+      MAX_STUDENT_LOAN_DEDUCTION
+    );
+    const studentLoanWorksheetDeductionBeforeRounding = studentLoanPhaseOutRatio.isZero()
+      ? studentLoanCappedInterest
+      : Decimal.max(
+        ZERO,
+        studentLoanCappedInterest.minus(studentLoanCappedInterest.times(studentLoanPhaseOutRatio))
+      );
+    audit.record(
+      "Sched 1",
+      "21",
+      "Student loan interest",
+      studentLoanInterest,
+      filingStatus === "married_filing_separately"
+        ? "No deduction allowed for married filing separately"
+        : studentLoanPhaseOutRatio.isZero()
+        ? `Smaller of qualified interest paid or $2,500 because supported modified AGI does not exceed the 2025 phase-out threshold`
+        : studentLoanInterest.isZero()
+        ? "Reduced to $0 because supported modified AGI reaches the 2025 phase-out ceiling"
+        : "Qualified interest paid reduced by the 2025 modified-AGI phase-out worksheet",
+      {
+        "Qualified student loan interest paid": studentLoanRaw,
+        "Capped student loan interest before phase-out": studentLoanCappedInterest,
+        "Supported modified AGI before student loan deduction": supportedStudentLoanModifiedAgi,
+        "2025 phase-out threshold": studentLoanPhaseOutStart,
+        "2025 phase-out ceiling": studentLoanPhaseOutEnd,
+        "Phase-out ratio": studentLoanPhaseOutRatio,
+        "Worksheet deduction before whole-dollar rounding": studentLoanWorksheetDeductionBeforeRounding,
+      }
+    );
+  }
 
-  // Form 2555 housing deduction (self-employed only) — Schedule 1 Line 24d
-  const form2555HousingDeduction = extra?.form2555HousingDeduction ?? new Decimal(0);
+  // Form 2555 housing deduction (self-employed only) — included in Line25 above.
   if (form2555HousingDeduction.greaterThan(0)) {
-    audit.record("Sched 1", "24d", "Form 2555 housing deduction",
+    audit.record("Sched 1", "24j", "Form 2555 housing deduction",
       form2555HousingDeduction,
-      "Self-employed foreign housing deduction from Form 2555 Part VI");
+      "Self-employed foreign housing deduction from Form2555 PartIX line50");
   }
 
   const totalAdjustments = sum(
@@ -885,8 +884,7 @@ export function calculateSchedule1(
     educatorExpenses,
     otherAdjustmentsTotal,
     earlyWithdrawalPenalty,
-    alimonyPaid,
-    form2555HousingDeduction
+    alimonyPaid
   );
   audit.record("Sched 1", "26", "Total adjustments", totalAdjustments, "Sum Lines 11-25 → 1040 Line 10");
 
@@ -897,12 +895,15 @@ export function calculateSchedule1(
     supplementalIncome,
     farmIncome,
     unemploymentCompensation,
+    governmentPayments,
     capitalGainLoss,
     alimonyReceived,
     nolDeduction,
     gamblingIncome,
     cancelledDebtIncome,
+    foreignIncomeExclusion,
     hsaTaxableDistributions,
+    totalOtherIncome,
     totalAdditionalIncome,
     businessExpenseAdjustments,
     hsaDeduction,
@@ -921,6 +922,9 @@ export function calculateSchedule1(
     lines: audit.getLines(),
     form8889,
     form8889ByOwner,
+    form5329HsaByOwner,
+    hsaReliefEarnings,
+    hsaExcessEmployerIncome,
     hsaAdditionalTax,
     hsaRecaptureTax,
   };

@@ -1,0 +1,53 @@
+form: "Form1099Q in-kind tuition credit coordination"
+fullName: "Actual prepaid tuition split between education credit and QTP exclusion"
+taxYear: 2026
+irsReference: "https://uscode.house.gov/us/usc/119-118/t26/s529/"
+sources:
+  - "https://www.irs.gov/publications/p970"
+  - "https://www.irs.gov/instructions/i1099q"
+  - "https://www.irs.gov/irb/2025-45_IRB"
+notes: |
+  Refreshed October25,2026. Section529(c)(3)(A), (B)(i)/(ii)/(iv)/(v)
+  treats actual prepaid benefits as distributions and reduces qualified expenses
+  by actual education-credit expenses. Pub970 chapter7 supplies earnings-ratio
+  arithmetic and the credit-only additional-tax exception. Box1 includes actual
+  in-kind tuition credits; original Boxes2/3 remain the reported earnings/basis.
+  This is a documented statutory/instruction interpretation. The numerical
+  in-kind cases are derived, not published IRS examples or human qualification.
+  Support is bounded to actual qualifying postsecondary tuition and an explicit
+  credit allocation. Each pair must conserve benefit cost as QTP expense plus
+  credit expense. No benefit, source earnings, election or current credit is
+  inferred. Other partial assistance/category/ESA methods remain separate.
+lines:
+  - line: "credit-split"
+    description: "Reduce the actual benefit allocation by actual credit expense"
+    formula: "Actual benefit4000, earnings800 and basis3200; actual tuition4000, credit expense1000, QTP allocation3000 give600 excluded earnings and200 taxable; all200 are credit-only exception earnings and additional tax0. Original benefit4000 is retained. Full credit4000 yields0 excluded,800 taxable and800 exception; known zero credit retains800 excluded. Actual1002.50/1002.51 credit expenses produce600/599 excluded earnings at the whole-dollar boundary."
+    testRef: "tests/engine/forms/form-1099-q-in-kind-credit.test.ts::coordinates actual tuition credits with the reported in-kind distribution"
+  - line: "remaining-cost"
+    description: "Preserve separate cash allocation after the actual benefit split"
+    formula: "Actual tuition8000, prepaid benefit4000 split3000QTP/1000credit, cash4000 with1000earnings: remaining cash capacity4000, excluded earnings600+1000, taxable200. A cent over allocation or source mismatch rejects; source order changes no result."
+    testRef: "tests/engine/forms/form-1099-q-in-kind-credit.test.ts::retains cash capacity after an actual credit-reduced benefit"
+  - line: "source-boundaries"
+    description: "Require actual eligible tuition and an exact benefit split"
+    formula: "Unknown or false qualification, unsupported positive-credit categories, missing or contradictory source allocation, excessive credit and changed source year reject; no arbitrary partial benefit allocation is accepted. Canonical positive credit must match one actually allowed credit student."
+    testRef: "tests/engine/forms/form-1099-q-in-kind-credit.test.ts::rejects invented or inconsistent benefit credit allocations"
+  - line: "canonical-owner"
+    description: "Use final excluded earnings in actual recipient educator deduction"
+    formula: "Wages50000 plus200 taxable tuition earnings less the actual year educator cap:300 in2025 gives49900AGI;350 in2026 gives49850AGI per RevProc2025-32 section4.12; actual1000LLC tuition produces200credit. Educator expense1000 is reduced by verified600excluded earnings then statutory cap;0,800or4000 declared exclusion rejects. Both source years retain their existing gates."
+    testRef: "tests/engine/education-in-kind-credit-return.test.ts::coordinates tuition credit income and actual educator exclusion once"
+  - line: "guided-preservation"
+    description: "Preserve actual credit split through existing fact collection"
+    formula: "Guided sources retain gross benefit4000, QTP allocation3000 and credit expense1000 as separate facts; no deduction or credit calculation is accepted as source evidence; missing original benefit blocks the bridge."
+    testRef: "tests/guided-interview/guided-education-distributions.test.ts::preserves a source-bound in-kind tuition credit split"
+  - line: "reference-binding"
+    description: "Bind original benefit and allocation sources to the review audit"
+    formula: "Require per-pair QTP allocation and credit amount to equal their recorded audit, qualified allocated costs to reconcile to source AQEE, and expense remaining after the credit-reduced benefit to match the source audit. Changed balanced source splits, amounts or missing audits reject before output."
+    testRef: "tests/pdf/form-1099-q-in-kind-credit-summary.test.ts::binds the actual credit split and remaining expense to its source audit"
+  - line: "saved-reference"
+    description: "Show actual benefit and credit split without private source identifiers"
+    formula: "Saved2025 review PDF shows gross4000, credit expense1000, QTP allocation3000, excluded600, taxable200 and no additional tax; every page retains review notice and private source references and taxpayer IDs remain absent. Draft2026 physical export remains unavailable."
+    testRef: "tests/pdf/form-1099-q-in-kind-credit-summary.test.ts::reopens the saved tuition credit reference with exact amounts and privacy notices"
+  - line: "canonical-recipient-identity"
+    description: "Bind the designated beneficiary to the actual return recipient"
+    formula: "Section529(c)(3)(B)(iv) makes the actual designated beneficiary the in-kind recipient. Before own-return income filtering, normalize the actual beneficiary tax ID and reconcile primary/spouse/outside labels to actual return identities. Unknown IDs and contradictory owner labels reject even without educator sources. A different beneficiary remains outside; no private tax ID enters the output audit."
+    testRef: "tests/engine/education-in-kind-credit-return.test.ts::binds in-kind recipients to actual return identities before routing income"

@@ -1,4 +1,6 @@
 /**
+ * Generic credit-source fixtures below use fictional nonreciprocal NY/DE.
+ * All monetary/packet/readiness assertions remain unchanged.
  * Spec: spec/state/pa-schedule-g-l.yaml
  */
 
@@ -56,12 +58,12 @@ describe("Pennsylvania Schedule G-L packet reference summary", () => {
   it("buildPAScheduleGLReferenceSummary keeps the packet artifact reference-only for supported resident credits paid to other states", () => {
     const taxInput = makePennsylvaniaResidentReturn([
       {
-        stateCode: "NJ",
+        stateCode: "NY",
         incomeTaxableByBothStates: "50000",
         taxPaidToOtherState: "2000",
       },
       {
-        stateCode: "NY",
+        stateCode: "DE",
         incomeTaxableByBothStates: "30000",
         taxPaidToOtherState: "500",
       },
@@ -72,7 +74,7 @@ describe("Pennsylvania Schedule G-L packet reference summary", () => {
     expect(summary.title).toBe("Pennsylvania Schedule G-L Resident Credit Reference Summary");
     expect(summary.warningLabel).toBe("REFERENCE SUMMARY ONLY");
     expect(summary.perStateRows).toContainEqual({
-      stateCode: "NJ",
+      stateCode: "NY",
       incomeTaxableByBothStates: "50000",
       taxPaidToOtherState: "2000",
       paTaxOnSharedIncome: "1535",
@@ -94,7 +96,7 @@ describe("Pennsylvania Schedule G-L packet reference summary", () => {
     try {
       const taxInput = makePennsylvaniaResidentReturn([
         {
-          stateCode: "NJ",
+          stateCode: "NY",
           incomeTaxableByBothStates: "50000",
           taxPaidToOtherState: "2000",
         },
@@ -130,7 +132,7 @@ describe("Pennsylvania Schedule G-L packet reference summary", () => {
     try {
       const taxInput = makePennsylvaniaResidentReturn([
         {
-          stateCode: "NJ",
+          stateCode: "NY",
           incomeTaxableByBothStates: "0",
           taxPaidToOtherState: "2000",
         },

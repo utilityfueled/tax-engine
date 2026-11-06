@@ -16,6 +16,7 @@
  * R.C. 5748.01–5748.06.
  */
 
+import { calculateOhioSDResidentIncome, type OhioSDResidentIncomeInput } from './oh-sd-100-resident-income.js';
 import Decimal from "decimal.js";
 import {
   lookupOhioSchoolDistrictMetadata,
@@ -39,6 +40,8 @@ export const SD_SENIOR_CITIZEN_CREDIT = OHIO_TAX_CONSTANTS[2025].sd100.seniorCit
 export type SchoolDistrictTaxType = "traditional" | "earned_income";
 
 export interface SchoolDistrictEntry {
+  /** Complete specifically identified resident worksheet sources, independently replayed. */
+  residentIncomeSources?: OhioSDResidentIncomeInput;
   /** 4-digit school district number. Optional when districtName can be uniquely resolved. */
   districtNumber?: string;
   /** Tax type for this district. Optional when official lookup is available. */
@@ -276,13 +279,27 @@ function computeEarnedIncomeDistrict(
     { "Line 29": line29, "Line 30": line30 },
   );
 
-  // Line 32 — Prorated MAGI
-  const line32 = zeroFloor(roundDollar(magi.times(residencyFactor)));
+  // Source-specific resident MAGI cannot be replaced by a day-prorated scalar.
+  const sources = entry.residentIncomeSources;
+  let residentIncome;
+  if (sources) {
+    if (sources.taxYear !== 2025 || sources.districtCode !== entry.districtNumber || sources.filingStatus !== 'single'
+        || sources.wages.method !== 'specific' || sources.selfEmployment.method !== 'specific'
+        || sources.magiComponents.some(component => component.allocation.method !== 'specific') || !d(sources.annualMAGI).eq(magi)) {
+      throw new Error('Ohio SD actual resident worksheet source year/district/annual income or method differs');
+    }
+    residentIncome = calculateOhioSDResidentIncome(sources);
+    if (!residentIncome.residencyFactor.eq(residencyFactor) || !residentIncome.line29.eq(line29) || !residentIncome.line30.eq(line30)) {
+      throw new Error('Ohio SD actual resident worksheet calendar/wage/SE sources differ');
+    }
+  }
+  // Line 32 — Legacy proration, or replayed specifically identified resident MAGI.
+  const line32 = residentIncome?.line32 ?? zeroFloor(roundDollar(magi.times(residencyFactor)));
   audit.record(
     "OH-SD-100", `${prefix}/32`,
     `MAGI portion (district ${entry.districtNumber})`,
     line32,
-    "max(0, Line 3 × residency factor)",
+    residentIncome ? "Specifically identified resident MAGI, replayed complete resident worksheet sources" : "max(0, Line 3 × residency factor)",
     { "Line 3": magi, "Residency factor": residencyFactor },
   );
 
@@ -358,6 +375,10 @@ function resolveSchoolDistrictEntry(
     throw new Error(
       `Ohio SD 100 school district entry must provide districtNumber or a uniquely matching official districtName for tax year ${taxYear}.`,
     );
+  }
+
+  if (entry.residentIncomeSources && (taxYear !== 2025 || entry.residentIncomeSources.taxYear !== taxYear || (entry.taxType ?? entry.taxBase ?? officialMetadata?.taxType) !== 'earned_income')) {
+    throw new Error('Ohio SD actual resident worksheet is available only for its matching2025 earned-income source method');
   }
 
   const residencyFactor = validateResidencyFactor(

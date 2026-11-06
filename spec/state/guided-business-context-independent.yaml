@@ -1,0 +1,29 @@
+form: "Guided Business Explicit Source Authority Independent"
+fullName: "Authoritative separate source argument and immutable canonical originals"
+taxYear: 2025
+reference: "https://www.pacodeandbulletin.gov/secure/pacode/data/061/chapter111/s111.4.html"
+notes: |
+  Technical contract audit, no new tax law. V1 three conflicting-attached MUST-deny
+  hypotheses are preserved unrun and withdrawn: engine source commitment explicitly
+  excludes collector input.paResidencySources and binds rawSources; existing source
+  self-reference test asserts that exclusion. Confirm and read builders pass their separate
+  actual draft argument. A valid explicit source is authoritative; another attached collector
+  copy is not an independent canonical original. Explicit confirmation replacement is allowed.
+  Canonical federal original changes still reject and read does not mutate either copy.
+  Actual contradictions IN rawSources still reject. No old authored oracle is changed.
+lines:
+  - line: "bare"
+    formula: "Bare canonical input + actual separately supplied source preserve PA rawWH.1 and business0."
+    testRef: "tests/guided-interview/guided-business-context-independent.test.ts::independent bare pending read preserves both arguments and exact cents"
+  - line: "equal"
+    formula: "Equal attached source and explicit source replay without source or input mutation."
+    testRef: "tests/guided-interview/guided-business-context-independent.test.ts::independent matching attached pending read preserves both copies"
+  - line: "authoritative-source"
+    formula: "Exclude only input collector copy from commitment; validate explicit separate rawSources even when attached collector has different balance/year/domicile. Actual federal originals stay bound, outputWH.1 and commitment unchanged; neither representation mutates."
+    testRef: "tests/guided-interview/guided-business-context-independent.test.ts::independent explicit source is authoritative over attached collector copy %s"
+  - line: "actual-contradiction"
+    formula: "Actual explicit source account.19 vs remittance.20, sourceyear2026 vs2025 and NYdomicile vs documented nonNY method each rejects; attached valid collector cannot repair invalid actual source."
+    testRef: "tests/guided-interview/guided-business-context-independent.test.ts::independent authoritative source itself rejects contradictory facts %s"
+  - line: "replacement-action"
+    formula: "Explicit confirmation may validate a new actual2025 draft over old attached2026 collector; candidate only is returned, saved input and supplied originals unchanged."
+    testRef: "tests/guided-interview/guided-business-context-independent.test.ts::independent explicit confirmation validates replacement without mutating retained input"

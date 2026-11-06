@@ -1,0 +1,125 @@
+{
+  "status": "UNASSIGNED_EMPTY_TEMPLATE_NOT_ATTESTATION",
+  "reviewer": null,
+  "qualifications": null,
+  "independence": null,
+  "reviewedCommit": null,
+  "treeSHA": null,
+  "deliveredManifestSHA256": null,
+  "reviewDateUTC": null,
+  "decisions": [
+    {
+      "scenarioId": "federal2025-baseline",
+      "scopeAccepted": null,
+      "authorityRevisions": [],
+      "originalFactHashes": [],
+      "independentExpectationsHash": null,
+      "findings": [],
+      "decision": "PENDING",
+      "conditionsForReReview": [],
+      "signedReference": null
+    },
+    {
+      "scenarioId": "federal2026-enacted-law",
+      "scopeAccepted": null,
+      "authorityRevisions": [],
+      "originalFactHashes": [],
+      "independentExpectationsHash": null,
+      "findings": [],
+      "decision": "PENDING",
+      "conditionsForReReview": [],
+      "signedReference": null
+    },
+    {
+      "scenarioId": "pa-ordinary-single",
+      "scopeAccepted": null,
+      "authorityRevisions": [],
+      "originalFactHashes": [],
+      "independentExpectationsHash": null,
+      "findings": [],
+      "decision": "PENDING",
+      "conditionsForReReview": [],
+      "signedReference": null
+    },
+    {
+      "scenarioId": "pa-married-j-m",
+      "scopeAccepted": null,
+      "authorityRevisions": [],
+      "originalFactHashes": [],
+      "independentExpectationsHash": null,
+      "findings": [],
+      "decision": "PENDING",
+      "conditionsForReReview": [],
+      "signedReference": null
+    },
+    {
+      "scenarioId": "pa-care",
+      "scopeAccepted": null,
+      "authorityRevisions": [],
+      "originalFactHashes": [],
+      "independentExpectationsHash": null,
+      "findings": [],
+      "decision": "PENDING",
+      "conditionsForReReview": [],
+      "signedReference": null
+    },
+    {
+      "scenarioId": "pa-royalty-debt-interest",
+      "scopeAccepted": null,
+      "authorityRevisions": [],
+      "originalFactHashes": [],
+      "independentExpectationsHash": null,
+      "findings": [],
+      "decision": "PENDING",
+      "conditionsForReReview": [],
+      "signedReference": null
+    },
+    {
+      "scenarioId": "oh-reciprocal-employee",
+      "scopeAccepted": null,
+      "authorityRevisions": [],
+      "originalFactHashes": [],
+      "independentExpectationsHash": null,
+      "findings": [],
+      "decision": "PENDING",
+      "conditionsForReReview": [],
+      "signedReference": null
+    },
+    {
+      "scenarioId": "oh-resident-va-credit",
+      "scopeAccepted": null,
+      "authorityRevisions": [],
+      "originalFactHashes": [],
+      "independentExpectationsHash": null,
+      "findings": [],
+      "decision": "PENDING",
+      "conditionsForReReview": [],
+      "signedReference": null
+    },
+    {
+      "scenarioId": "oh-business-nr-py-july212",
+      "scopeAccepted": null,
+      "authorityRevisions": [],
+      "originalFactHashes": [],
+      "independentExpectationsHash": null,
+      "findings": [],
+      "decision": "PENDING",
+      "conditionsForReReview": [],
+      "signedReference": null
+    },
+    {
+      "scenarioId": "oh-hillsdale0302",
+      "scopeAccepted": null,
+      "authorityRevisions": [],
+      "originalFactHashes": [],
+      "independentExpectationsHash": null,
+      "findings": [],
+      "decision": "PENDING",
+      "conditionsForReReview": [],
+      "signedReference": null
+    }
+  ],
+  "filingOrReleaseAuthorization": false,
+  "sourceSnapshotCommit": "f09a3dd7ad2f3a12f02a8d50efd0da01050033e6",
+  "sourceSnapshotTree": "45488b161876873cbbed6091e79ee24a2317954c"
+}

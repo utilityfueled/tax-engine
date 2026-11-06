@@ -1,0 +1,34 @@
+form: "Hosted-Database-Selected-TLS-Policy"
+fullName: "The actual PostgreSQL client preserves explicitly selected verified TLS"
+taxYear: 2026
+reference: "https://node-postgres.com/features/ssl; https://www.postgresql.org/docs/16/libpq-ssl.html"
+notes: |
+  Source-first security contract, not a tax calculation. Existing Pool options are
+  not effective Client options: installed pg reparses connectionString after SSL.
+  Preserve current verified-TLS selection for psdb.cloud and require/verify-ca/
+  verify-full. A selected contract cannot be disabled or have certificate/hostname
+  validation removed by URL SSL parameters, libpq compatibility or duplicate keys.
+  Fail closed in config AND actual runtime before Pool allocation or certificate
+  filesystem reads. Diagnostics are static and exclude URL, host and credentials.
+  This bounded repair does not impose TLS on previously unselected generic remote
+  URLs. A separate all-remote hosted-production/Preview policy remains internal work.
+  Preserve custom CA/client certificate contents, system root normalization, cache,
+  deadlines, isolated Preview selection and explicit development/test loopback.
+  Actual deployment encryption/certificate/connectivity is not established here.
+lines:
+  - line: "effective-client"
+    description: "Positive existing selected TLS survives installed Client parsing"
+    formula: "Construct the real pg Client from actual returned Pool options without connect; SSL is enabled, rejectUnauthorized is not false, and checkServerIdentity is not replaced. Preserve canonical URL and runtime cache/deadlines."
+    testRef: "tests/apps/web/hosted-database-tls-policy.test.ts::retains actual verified client TLS and deadlines for %s"
+  - line: "custom-certificates"
+    description: "Explicit synthetic CA and client certificate settings are lossless"
+    formula: "Actual pg parser retains authored CA/cert/key text with verify-full; no network connection; synthetic temporary files only, cleaned in finally."
+    testRef: "tests/apps/web/hosted-database-tls-policy.test.ts::preserves explicit synthetic custom CA and client certificate semantics"
+  - line: "existing-nonselected"
+    description: "Local and self-host contracts remain unchanged"
+    formula: "Unselected development/test loopback remains admitted without invented TLS; self-host runtime remains disabled. This does not qualify arbitrary hosted remote plaintext."
+    testRef: "tests/apps/web/hosted-database-tls-policy.test.ts::preserves explicit %s loopback without selecting a new TLS contract"
+  - line: "selected-downgrade"
+    description: "Known selected-TLS URL downgrades block before allocation or secret reads"
+    formula: "Both hosted production and isolated Preview reject selected psdb disable/no-verify/ssl=0/ssl=no-verify, require+libpq-compat, verify-ca+libpq-compat, and effective-last duplicate downgrade cases. Config blocked AND runtime rejects with a source-specific sanitized TLS configuration error; runtime cache unchanged, no connect or private certificate path read."
+    testRef: "tests/apps/web/hosted-database-tls-policy.test.ts::blocks selected verification downgrade %s in %s before I/O"

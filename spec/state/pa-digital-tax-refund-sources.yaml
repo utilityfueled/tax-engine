@@ -1,0 +1,59 @@
+form: "PA original VA digital tax fully refunded sources"
+fullName: "Finite2025 source proof for actually received full VA digital withholding refund"
+taxYear: 2025
+reference: "https://www.pacodeandbulletin.gov/secure/pacode/data/061/chapter111/s111.4.html"
+notes: |
+  PA Code111.4(b) disallows credit on tax determined overpaid and then refunded.
+  VA Code58.1-499 requires special written application for refunds below1;
+  a whole-dollar filed return cannot stand in for exact sub-dollar agency
+  award/payment originals. This method replays independently supplied actual
+  finaltax0/receivedfullrefund/netpaid0/unpaid0/outstanding0; it never computes
+  VA liability, infers zero from WH, or assumes a pending refund was received.
+  Finite2025 single primary full-year PA ordinary digital sources, VA only.
+  Complete owner/year/asof snapshots bind every current positive VA DA original
+  once, exact WH receipts, original filed return, full account, application,
+  agency award, posting and bank receipt. No other VA income/credits/payments/
+  assessments, mixed wage-credit packet or alternate foreign class is admitted.
+  Unknown facts, stale records and missing originals stay blocked. Other-state
+  bank/OID/MISC/W2 and local guards are unchanged. No2026 promotion or review.
+lines:
+  - line: "zero-credit"
+    description: "Actual refunded tax gives no PA credit or extra PA withholding"
+    formula: "OriginalVAWH.30−receivedrefund.30=0; finalVA0; PAcredit0, coveredforeignWH.30 retained."
+    testRef: "tests/engine/state/pa-digital-tax-refund-sources.test.ts::actual full VA refund admits no PA credit and retains original cents"
+  - line: "private"
+    description: "Replay binds private originals without mutating or leaking them"
+    formula: "Hash current Federal/PA/facts/source originals; expose digest and nonprivate monetary lines only."
+    testRef: "tests/engine/state/pa-digital-tax-refund-sources.test.ts::refund replay is read-only and public audit excludes private originals"
+  - line: "known"
+    description: "Every final source confirmation is independently known"
+    formula: "Any unknown source flag, owner/year, coverage, zero liability or account fact rejects."
+    testRef: "tests/engine/state/pa-digital-tax-refund-sources.test.ts::missing unknown or mismatched actual source facts cannot establish a refund"
+  - line: "snapshots"
+    description: "Current originals cannot silently follow source edits"
+    formula: "Federal/residency/facts/DA changes reject until explicit source re-confirmation."
+    testRef: "tests/engine/state/pa-digital-tax-refund-sources.test.ts::every actual source snapshot remains bound to current facts"
+  - line: "actual-receipt"
+    description: "Request or agency award alone never means money was received"
+    formula: "Require actual received date/reference and complete matching posted refund before asof."
+    testRef: "tests/engine/state/pa-digital-tax-refund-sources.test.ts::refunds must actually be received and reconcile dated originals"
+  - line: "sub-dollar"
+    description: "Sub-dollar refund requires special written application and matching agency award"
+    formula: "Filedwhole0, actualWH.30; application.30/award.30/received.30 reconcile; missing evidence rejects."
+    testRef: "tests/engine/state/pa-digital-tax-refund-sources.test.ts::sub-dollar refund needs its actual special application and agency determination"
+  - line: "coverage"
+    description: "All retained VA originals are covered exactly once"
+    formula: "Indices, original identities, exact WH and per-original dated remittances cannot duplicate or omit current VA originals."
+    testRef: "tests/engine/state/pa-digital-tax-refund-sources.test.ts::every positive VA digital withholding original is reconciled exactly once"
+  - line: "rounding"
+    description: "Reported VA form whole dollars remain separate from exact account cents"
+    formula: "Actual.30 reports0;.50 reports1;1.49 reports1;1.50 reports2 while exact refund remains original amount."
+    testRef: "tests/engine/state/pa-digital-tax-refund-sources.test.ts::reported whole dollars never replace exact refund originals"
+  - line: "precision"
+    description: "Adaptive Decimal scale preserves mixed source precision"
+    formula: "Retained0.3 plus separate0.000000000000000000000000000001 retains every original digit."
+    testRef: "tests/engine/state/pa-digital-tax-refund-sources.test.ts::source precision does not discard tiny original withholding receipts"
+  - line: "confirmation"
+    description: "Only explicit confirmation replaces source snapshots"
+    formula: "Read builder rejects stale originals and leaves them unchanged; explicit source action validates fresh snapshots."
+    testRef: "tests/engine/state/pa-digital-tax-refund-sources.test.ts::explicit confirmation alone binds refund sources after an actual source edit"

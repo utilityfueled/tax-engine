@@ -8,6 +8,7 @@
  */
 
 import Decimal from "decimal.js";
+import { calculateQBIMinimumDeduction } from "./qbi-minimum-deduction.js";
 import type { CalculatedLine } from "@/models/outputs.js";
 import { zeroFloor, min, sum, roundDollar } from "@/utils/decimal.js";
 import { AuditTrail } from "@/utils/audit.js";
@@ -15,9 +16,13 @@ import { AuditTrail } from "@/utils/audit.js";
 export interface QBISource {
   name: string;
   qbi: Decimal;
+  /** Actual section 469(h) participation, independent of QBI trade qualification. */
+  materiallyParticipated?: boolean;
 }
 
 export interface Form8995Input {
+  taxYear?: number;
+  priorYearActiveQBILoss?: Decimal;
   /** QBI from each qualified trade/business */
   qbiSources: QBISource[];
   /** Qualified REIT dividends (1099-DIV Box 5 + K-1 Section 199A statement) */
@@ -127,9 +132,13 @@ export function calculateForm8995(input: Form8995Input): Form8995Result {
     `max(0, ${taxableIncomeBeforeQBI} - ${netCapitalGainAmount}) × 20%`);
 
   // Line 15: QBI deduction = min(combined component, income limitation)
-  const qbiDeduction = min(combinedComponent, incomeLimitation);
+  const ordinaryDeduction = min(combinedComponent, incomeLimitation);
+  const minimum = calculateQBIMinimumDeduction({ taxYear: input.taxYear ?? 2025, ordinaryDeduction,
+    sources: input.qbiSources, priorYearQBILoss: input.priorYearQBILoss, priorYearActiveQBILoss: input.priorYearActiveQBILoss });
+  audit.merge(minimum.lines);
+  const qbiDeduction = minimum.deduction;
   audit.record("Form 8995", "15", "Section 199A deduction", qbiDeduction,
-    `min($${combinedComponent} combined component, $${incomeLimitation} income limit)`);
+    `Ordinary min($${combinedComponent} combined component, $${incomeLimitation} income limit), subject to any applicable section 199A(i) minimum`);
 
   // Line 16: QBI loss carryforward (if total QBI is negative)
   const qbiLossCarryforward = totalQBI.lessThan(0) ? totalQBI.abs() : new Decimal(0);

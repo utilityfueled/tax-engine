@@ -1,0 +1,31 @@
+// Spec: spec/federal/form-1099-q-distinct-in-kind-assistance.yaml.
+import { expect, it } from 'vitest';
+import { buildTaxInputFromGuidedData } from '@/lib/guided-interview-bridge';
+import { buildEducationDistributionInputs } from '@/lib/guided-education-distributions';
+import { updateSectionData } from '@/lib/guided-interview-flow';
+import { calculateFederalTax } from '@/engine/federal';
+import { TaxYearInputSchema } from '@/models/inputs';
+import { actualGuidedDistinctInKind } from '../fixtures/guided-distinct-in-kind';
+it('retains distinct actual tuition sources through the guided bridge', () => {
+  const { state, data } = actualGuidedDistinctInKind(), before = JSON.stringify(state);
+  const built = buildTaxInputFromGuidedData(state);
+  expect(built).not.toBeNull();
+  const input = TaxYearInputSchema.parse(built), result = calculateFederalTax(input);
+  expect(input.form1099Q.map(row => [row.sourceId,row.grossDistribution,row.earnings])).toEqual([['prepaid','4000','800'],['second-prepaid','6000','900']]);
+  expect(input.qualifiedEducationExpenses?.sourceFacts?.expenses?.map(row => row.taxFreeAssistance)).toEqual(['1000','1500']);
+  expect([result.agi,result.form1099Q!.netPenalty].map(value => value.toFixed())).toEqual(['50425','43']);
+  expect(JSON.stringify(state)).toBe(before);
+  const edited = structuredClone(data);
+  edited.expenses![1]!.taxFreeAssistance = '1600'; edited.allocations![1]!.amount = '4400';
+  const changed = updateSectionData(state,'credits',{...state.sectionData.credits!,educationDistributions:edited});
+  expect(changed.sectionData.credits?.educationDistributions?.sourceFactsConfirmed).toBeNull();
+  expect(buildTaxInputFromGuidedData(changed)).toBeNull();
+  const confirmed = updateSectionData(changed,'credits',{...changed.sectionData.credits!,educationDistributions:{...edited,sourceFactsConfirmed:true}});
+  expect(confirmed.sectionData.credits?.educationDistributions?.sourceFactsConfirmed).toBe(true);
+  expect(calculateFederalTax(TaxYearInputSchema.parse(buildTaxInputFromGuidedData(confirmed))).agi.toFixed()).toBe('50440');
+  data.expenses![1]!.taxFreeAssistance = '';
+  expect(() => buildEducationDistributionInputs(data,2025,'single')).toThrow(/actual|assistance/);
+  expect(buildTaxInputFromGuidedData(state)).toBeNull();
+  data.expenses![1]!.taxFreeAssistance = '1500'; data.sourceFactsConfirmed = false;
+  expect(buildTaxInputFromGuidedData(state)).toBeNull();
+});

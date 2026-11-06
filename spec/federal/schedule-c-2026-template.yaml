@@ -1,0 +1,32 @@
+form: "schedule-c final 2026 physical candidate"
+fullName: "Final 2026 schedule-c physical field source contract"
+taxYear: 2026
+reference: "https://www.irs.gov/pub/irs-pdf/f1040sc.pdf"
+revision: "Created 5/15/26; final annual source, not export-qualified"
+retrievedAt: "2026-11-01"
+notes: |
+  No tax calculation or export route is enabled. This candidate stays absent from
+  all public/review/filing registries. Final instruction, complete-data scenario
+  qualification and independent human review remain pending.
+lines:
+  - line: "revision"
+    description: "Pin the actual final year and source hash"
+    formula: "SHA256 cc44e7d1150e54d991835814c1191f60a32617730ca9e50e6f532b51293a86b4; two source pages; 109 leaf widgets. Never reuse 2025 bytes or enable readiness."
+    testRef: "tests/pdf/schedule-c-2026-candidate.test.ts::pins the exact source and keeps every export gate closed"
+  - line: "physical-locations"
+    description: "Bind every source field to its printed line and actual page rectangle"
+    formula: "Require a bijection between the 109 candidate leaves and all physical widgets. Compare field type, page and all four original rectangle coordinates against the separately retained source contract. Group nodes are not fillable fields."
+    testRef: "tests/pdf/schedule-c-2026-candidate.test.ts::maps every leaf to its original physical location"
+  - line: "saved-values"
+    description: "Reopen a field diagnostic and verify values and appearances"
+    formula: "Use explicit diagnostic strings, not calculated tax facts. Retain interactive values and checkbox states after saving; require nonempty appearances and review notices. No SSN is inferred or copied from a return."
+    testRef: "tests/pdf/schedule-c-2026-candidate.test.ts::retains every diagnostic value and appearance after save"
+  - line: "new-interest-and-address"
+    description: "Keep vehicle interest and other interest distinct on the new printed lines"
+    formula: "Line16b vehicle-loan interest uses f1_29; line16c other interest uses f1_31 under Lines8-16c_ReadOrder. No old line16b alias. Street, apartment, city, state and ZIP have distinct widgets. A separate internal actual-source projector covers the bounded source-qualified cash expense cohort; all wider tax qualification and export gates remain pending."
+    testRef: "tests/pdf/schedule-c-2026-candidate.test.ts::keeps new interest and address fields distinct"
+
+  - line: "actual-source-projection"
+    description: "Isolated actual source values for final2026 business address and interest split"
+    formula: "Source-qualified canonical aggregate interest splits into actual16a mortgage/16b vehicle/16c other and split address fields. Copy canonical source values only after actual source binding and row reconciliation. This internal candidate projection does not register any review/filing export or enable2026."
+    testRef: "tests/pdf/schedule-c-source-facts.test.ts::projects actual 2026 sources to split fields with every export gate closed"

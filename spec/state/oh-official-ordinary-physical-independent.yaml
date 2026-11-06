@@ -1,0 +1,28 @@
+form: "Ohio actual ordinary official physical independent review"
+taxYear: 2025
+reference: https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/forms/ohio_individual/individual/2025/it1040-booklet.pdf
+notes: |
+  Independent source-first controls before product inspection. Actual fictional
+  full-year VA nonresident single primary, federal wage100000/federalWH10000,
+  Ohio services20000/OhioWH1000 in second original state row. No filing or 2026
+  qualification. Booklet printed15 county blank/school9999; printed18 brackets;
+  printed NRC19 four decimals without rounding. Raw field19 MaxLen5 supports
+  .8000 without changing mathematical ratio. Seven physical pages must receive
+  review notices and retain no private identifiers or interactive/action state.
+lines:
+  - line: "literal-source"
+    description: Independent original arithmetic and original raw cents/rows
+    formula: roundDollar(342+(98100-26050)*.0275)=2323; roundDollar(2323*.8000)=1858; tax465 and actual requested refund1000-465=535.
+    testRef: "tests/pdf/oh-official-ordinary-physical-independent.test.ts::independent Ohio paper retains original source and literal tax/refund arithmetic"
+  - line: "actual-saved"
+    description: Four actual official review companions with seven physical pages
+    formula: Exact IT1040 pages1-2, NRC SectionI page1, Credits pages1-2, Withholding pages1-2; no interactive fields/actions/private originals, every page one review notice. Every expected numeric cell is checked from painted saved Form XObject text at exact original official rectangles, including mandatory page2 L7a98100. PDFium bounded text and renders independently cross-check saved bytes. Selected Single and primary Nonresident check appearances must be painted in normalized actual printed rectangles; inverted Single source Y coordinates must not displace its mark into the heading.
+    testRef: "tests/pdf/oh-official-ordinary-physical-independent.test.ts::independent Ohio paper reopens seven privacy-preserving official pages"
+  - line: "source-denials"
+    description: Genuine original context cannot authorize changed source or stale money
+    formula: Old genuine context with changed equal-dollar employer, recipient, actual state row or source reference, stale federal AGI, absent or fabricated context rejects before output directory creation.
+    testRef: "tests/pdf/oh-official-ordinary-physical-independent.test.ts::independent Ohio paper denies before I/O %s"
+  - line: "conditional-original-refund"
+    description: Original return refund branch does not populate inapplicable amount-due cells
+    formula: Official IT1040 page2 labels18 Amended return only and directs if19 greater than13 skip to23. Actual original19=1000 greater than13=465 therefore physical18/20/21/22 remain blank; source/engine zero values and final requested535 remain unchanged.
+    testRef: "tests/pdf/oh-official-ordinary-physical-independent.test.ts::independent Ohio paper reopens seven privacy-preserving official pages"

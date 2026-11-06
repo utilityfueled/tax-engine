@@ -229,10 +229,10 @@ describe("Form 2441", () => {
   });
 
   // ── Audit trail: all line IDs present ────────────────────
-  it("audit trail contains exactly lines 3, 4, 8, and 9 and no extras", () => {
+  it("audit trail contains all supported printed lines and the historical line9 alias", () => {
     const result = calculateForm2441(make());
     const lineIds = result.lines.map((l) => l.line);
-    expect(lineIds).toEqual(["3", "4", "8", "9"]);
+    expect(lineIds).toEqual(["3", "4", "5", "6", "7", "8", "9", "9a"]);
   });
 
   it("audit trail line values match returned result fields", () => {
@@ -244,7 +244,9 @@ describe("Form 2441", () => {
     }));
     const byLine = Object.fromEntries(result.lines.map((l) => [l.line, l.value]));
     expect(byLine["3"]).toEqual(result.qualifyingExpenses);
-    expect(byLine["4"]).toEqual(result.earnedIncomeLimit);
+    expect(byLine["4"].toString()).toBe("30000");
+    expect(byLine["5"].toString()).toBe("30000");
+    expect(byLine["6"]).toEqual(result.earnedIncomeLimit);
     expect(byLine["8"]).toEqual(result.creditPercentage);
     expect(byLine["9"]).toEqual(result.credit);
   });
@@ -395,8 +397,9 @@ describe("Form 2441", () => {
 
     const line4 = result.lines.find((l) => l.line === "4")!;
     expect(line4.form).toBe("Form 2441");
-    expect(line4.description).toBe("Earned income limit");
-    expect(line4.value.toNumber()).toBe(3000);
+    expect(line4.description).toBe("Taxpayer earned income");
+    expect(line4.value.toNumber()).toBe(30000);
+    expect(result.lines.find(line => line.line === "6")?.value.toNumber()).toBe(3000);
 
     const line8 = result.lines.find((l) => l.line === "8")!;
     expect(line8.form).toBe("Form 2441");
@@ -640,4 +643,67 @@ describe("Form 2441", () => {
     expect(line9.value.toNumber()).toBe(990);
     expect(line9.value).toEqual(result.credit);
   });
+});
+
+// Spec: spec/federal/form-2441.yaml validation2026; IRC 21(a)(2), (c), (d).
+describe("Form 2441 2026", () => {
+  const current = (overrides: Partial<Form2441Input> = {}): Form2441Input => make({
+    taxYear: 2026, filingStatus: "single", eligibilityConfirmed: true,
+    excludedDependentCareBenefits: d("0"), priorYearExpenseCredit: d("0"), ...overrides,
+  });
+
+  it("2026 rates follow both statutory phase-downs", () => {
+    for (const [agi, nonjoint, joint] of [
+      ["15000", "0.50", "0.50"], ["15000.01", "0.49", "0.49"],
+      ["43000", "0.36", "0.36"], ["43001", "0.35", "0.35"],
+      ["75000", "0.35", "0.35"], ["75001", "0.34", "0.35"],
+      ["103000", "0.21", "0.35"], ["103001", "0.20", "0.35"],
+      ["150000", "0.20", "0.35"], ["150001", "0.20", "0.34"],
+      ["154000", "0.20", "0.34"], ["154001", "0.20", "0.33"],
+      ["206000", "0.20", "0.21"], ["206001", "0.20", "0.20"],
+    ]) {
+      expect(calculateForm2441(current({ agi: d(agi) })).creditPercentage.toString()).toBe(d(nonjoint).toString());
+      expect(calculateForm2441(current({ agi: d(agi), filingStatus: "married_filing_jointly", spouseEarnedIncome: d("60000") })).creditPercentage.toString()).toBe(d(joint).toString());
+    }
+    expect(calculateForm2441(make({ taxYear: 2025, agi: d("15000") })).credit.toString()).toBe("1050");
+    expect(calculateForm2441(current({ agi: d("15000") })).credit.toString()).toBe("1500");
+  });
+
+  it("2026 requires confirmed facts and separate spouse income", () => {
+    for (const override of [
+      { filingStatus: undefined }, { eligibilityConfirmed: undefined },
+      { excludedDependentCareBenefits: undefined },
+      { filingStatus: "married_filing_jointly" as const, spouseEarnedIncome: undefined },
+      { taxYear: 2027 },
+    ]) expect(() => calculateForm2441(current(override))).toThrow();
+    const joint = calculateForm2441(current({ filingStatus: "married_filing_jointly", spouseEarnedIncome: d("1000"), agi: d("15000") }));
+    expect(joint.credit.toString()).toBe("500");
+    expect(calculateForm2441(current({ filingStatus: "married_filing_separately" })).credit.toString()).toBe("0");
+  });
+
+  it("2026 reduces expenses and cap by excluded benefits", () => {
+    const remaining = calculateForm2441(current({ careExpenses: d("4500"), qualifyingIndividuals: 2,
+      excludedDependentCareBenefits: d("3000"), agi: d("15000") }));
+    expect(remaining.qualifyingExpenses.toString()).toBe("1500");
+    expect(remaining.credit.toString()).toBe("750");
+    expect(calculateForm2441(current({ excludedDependentCareBenefits: d("7500") })).credit.toString()).toBe("0");
+    expect(calculateForm2441(current({ earnedIncome: d("-100") })).credit.toString()).toBe("0");
+    expect(calculateForm2441(current({ qualifyingIndividuals: 0 })).credit.toString()).toBe("0");
+    expect(calculateForm2441(current({ eligibilityConfirmed: false })).credit.toString()).toBe("0");
+    for (const overrides of [{careExpenses: d("-1")}, {careExpenses: d("Infinity")}, {earnedIncome: d("NaN")}, {spouseEarnedIncome: d("Infinity")}, {agi: d("NaN")}]) {
+      expect(() => calculateForm2441(current(overrides))).toThrow();
+    }
+    expect(() => calculateForm2441(current({ excludedDependentCareBenefits: d("-1") }))).toThrow();
+  });
+});
+
+// Spec: spec/federal/form-2441.yaml lines 10–11.
+it("care credit preserves tentative amount and applies actual tax limit", () => {
+  const result = calculateForm2441(make({agi:d("15000"),taxLiabilityLimit:d("123")}));
+  expect(result.credit.toString()).toBe("123");
+  expect(result.lines.find(line=>line.line==="9")?.value.toString()).toBe("1050");
+  expect(result.lines.find(line=>line.line==="10")?.value.toString()).toBe("123");
+  expect(result.lines.find(line=>line.line==="11")?.value.toString()).toBe("123");
+  expect(calculateForm2441(make({taxLiabilityLimit:d("0")})).credit.toString()).toBe("0");
+  for(const amount of ["-1","NaN","Infinity"]) expect(()=>calculateForm2441(make({taxLiabilityLimit:d(amount)}))).toThrow();
 });

@@ -9,7 +9,7 @@ import { calculateForm8959 } from "@/engine/forms/form-8959.js";
 import { calculateForm8960, type Form8960Input } from "@/engine/forms/form-8960.js";
 import { calculateFederalTax } from "@/engine/federal.js";
 import { getConstants, type FilingStatus } from "@/models/constants.js";
-import { simpleW2Fixture } from "../fixtures/simple-w2.js";
+import { simpleW2Fixture, complexMFJFixture } from "../fixtures/simple-w2.js";
 import type { TaxYearInput } from "@/models/inputs.js";
 
 const d = (n: number | string) => new Decimal(n);
@@ -575,7 +575,7 @@ describe("MFJ exact $250K boundary - wages at threshold + investment income abov
   it("wages exactly at $250K MFJ threshold: zero Additional Medicare Tax", () => {
     const fixture: TaxYearInput = {
       ...simpleW2Fixture,
-      taxpayer: { ...simpleW2Fixture.taxpayer, filingStatus: "married_filing_jointly" },
+      taxpayer: { ...simpleW2Fixture.taxpayer, filingStatus: "married_filing_jointly", spouse: complexMFJFixture.taxpayer.spouse },
       w2s: [{
         ...simpleW2Fixture.w2s[0],
         wages: "250000",
@@ -1001,7 +1001,7 @@ describe("Combined NIIT + Additional Medicare as share of total tax at high inco
   it("combined surtax ($4,390) is material share of total tax for high-income MFJ filer", () => {
     const fixture: TaxYearInput = {
       ...simpleW2Fixture,
-      taxpayer: { ...simpleW2Fixture.taxpayer, filingStatus: "married_filing_jointly" },
+      taxpayer: { ...simpleW2Fixture.taxpayer, filingStatus: "married_filing_jointly", spouse: complexMFJFixture.taxpayer.spouse },
       w2s: [{
         ...simpleW2Fixture.w2s[0],
         wages: "400000",
@@ -1142,7 +1142,8 @@ describe("Audit trail includes Form 8959 and Form 8960 entries in federal pipeli
       (l) => l.form === "Form 8960" && l.line === "17"
     );
     expect(line8960).toBeDefined();
-    expect(line8960!.description).toBe("Net Investment Income Tax");
+    expect(line8960?.description).toBe("Net investment income tax");
+    expect(line8960?.value.toFixed()).toBe("760");
   });
 
   it("Form 8959 line 1 audit entry records medicare wages", () => {
@@ -1154,12 +1155,19 @@ describe("Audit trail includes Form 8959 and Form 8960 entries in federal pipeli
     expect(medicareWagesLine!.description).toBe("Medicare wages from W-2s");
   });
 
-  it("Form 8960 line 8 audit entry records net investment income", () => {
+  it("Form 8960 lines 8 and 12 separately record total and net investment income", () => {
     const federal = calculateFederalTax(highIncomeSingleFixture);
-    const niiLine = federal.allLines.find(
+    const totalLine = federal.allLines.find(
       (l) => l.form === "Form 8960" && l.line === "8"
     );
+    const niiLine = federal.allLines.find(
+      (l) => l.form === "Form 8960" && l.line === "12"
+    );
+    expect(totalLine).toBeDefined();
+    expect(totalLine?.description).toBe("Total investment income");
+    expect(totalLine?.value.toFixed()).toBe("20000");
     expect(niiLine).toBeDefined();
-    expect(niiLine!.description).toBe("Net investment income");
+    expect(niiLine?.description).toBe("Net investment income");
+    expect(niiLine?.value.toFixed()).toBe("20000");
   });
 });

@@ -23,7 +23,7 @@ function getFieldText(doc: PDFDocument, fieldName: string): string | undefined {
   return undefined;
 }
 
-const BLANK_8880 = "forms/blank/f8880.pdf";
+const BLANK_8880 = "forms/blank/2025/f8880.pdf";
 const F = FORM_8880_FIELDS;
 
 // ─── Fixture 1: Single filer, IRA contributions, low AGI (50% rate) ────────

@@ -6,10 +6,18 @@ import type {
   WorkspaceStructuredFactRecord
 } from "@tax-engine/contracts";
 import {
-  buildWorkspaceEngineInput,
+  buildWorkspaceEngineInput as calculateWorkspace,
   buildWorkspaceStructuredFacts
 } from "@tax-engine/engine";
 import { calculateFederalTax } from "@/engine/federal.js";
+import { workspaceTaxpayerFixture } from "../helpers/workspace-taxpayer";
+
+import { qualifiedWorkspaceLoanContext, workspaceScenarioContext } from "../helpers/workspace-calculation-context";
+
+function buildWorkspaceEngineInput(...args: Parameters<typeof calculateWorkspace>) {
+  const taxpayer = args[3];
+  return calculateWorkspace(...args.slice(0, 4) as [typeof args[0], typeof args[1], typeof args[2], typeof args[3]], args[4] ?? (taxpayer ? workspaceScenarioContext(args[2] ?? [], taxpayer) : undefined));
+}
 
 function createDocument(
   overrides: Partial<WorkspaceDocumentRecord>
@@ -584,45 +592,32 @@ function createPremiumTaxCreditSeededReturn(
 }
 
 describe("workspace engine input", () => {
-  it("builds taxable-interest preview input from confirmed Form 1099-OID fixture facts", () => {
+  it("requires explicit taxpayer facts and matching year instead of manufacturing a preview identity", () => {
+    const documents = [createInterestDocument({})];
+    const facts = buildWorkspaceStructuredFacts(documents, createInterestSeededReturn({}));
+    const summary = createInterestReturnSummary({});
+    expect(buildWorkspaceEngineInput(documents, summary, facts)).toBeNull();
+    const taxpayer = workspaceTaxpayerFixture();
+    expect(buildWorkspaceEngineInput(documents, summary, facts, { ...taxpayer, taxYear: 2026 })).toBeNull();
+    expect(buildWorkspaceEngineInput(documents, summary, facts, { ...taxpayer, primary: { ...taxpayer.primary, dateOfBirth: "" } })).toBeNull();
+    expect(buildWorkspaceEngineInput(documents, summary, facts, { ...taxpayer, filingStatus: "married_filing_jointly" })).toBeNull();
+    expect(buildWorkspaceEngineInput(documents, summary, facts, taxpayer)).toBeNull();
+    expect(facts.some(fact => fact.machineValue?.entryKind === "1099-oid-summary")).toBe(true);
+  });
+  it("blocks unqualified legacy financial input from confirmed Form 1099-OID fixture facts", () => {
     const documents = [createInterestDocument({})];
     const structuredFacts = buildWorkspaceStructuredFacts(documents, createInterestSeededReturn({}));
 
     const previewInput = buildWorkspaceEngineInput(
       documents,
       createInterestReturnSummary({}),
-      structuredFacts
+      structuredFacts,
+      workspaceTaxpayerFixture()
     );
 
-    expect(previewInput).not.toBeNull();
-    expect(previewInput?.taxInput.form1099Int).toEqual([]);
-    expect(previewInput?.taxInput.form1099OID).toEqual([
-      {
-        payer: "Official fixture OID issuer",
-        originalIssueDiscount: "1200",
-        otherPeriodicInterest: "400",
-        earlyWithdrawalPenalty: "25",
-        federalWithheld: "40",
-        acquisitionPremium: "200",
-        treasuryOID: "0",
-        bondPremium: "100",
-        taxExemptBondPremium: "0",
-        taxExemptOID: "0",
-      }
-    ]);
-    expect(previewInput?.assumptions).toContain(
-      "The confirmed 2025 Form 1099-OID upload contributes $1,300 of taxable interest with $40 of withholding and $25 of early-withdrawal penalty."
-    );
-    expect(previewInput?.assumptions).toContain(
-      "This interest preview nets any confirmed Form 1099-OID acquisition premium and bond premium adjustments before Schedule B is recomputed."
-    );
-    expect(previewInput?.sourceDocumentIds).toEqual(["doc-1099oid"]);
-    expect(previewInput?.sourceFixtureIds).toEqual(["irs-1099-oid-2025"]);
-    expect(previewInput?.sourceFactIdsByItemId["interest-income"]).toEqual([
-      "taxable-interest:document-detected",
-      "taxable-interest:fixture-oid-interest-income",
-      "taxable-interest:interview-answer"
-    ]);
+    expect(previewInput).toBeNull();
+    expect(structuredFacts.some(fact => fact.machineValue)).toBe(true);
+    // This legacy summary lacks actual source qualification; it remains evidence.
   });
 
   it("builds government-payments preview input from confirmed Form 1099-G fixture facts", () => {
@@ -635,7 +630,8 @@ describe("workspace engine input", () => {
     const previewInput = buildWorkspaceEngineInput(
       documents,
       createGovernmentPaymentsReturnSummary({}),
-      structuredFacts
+      structuredFacts,
+      workspaceTaxpayerFixture()
     );
 
     expect(previewInput).not.toBeNull();
@@ -649,12 +645,7 @@ describe("workspace engine input", () => {
         state: "CA"
       })
     ]);
-    expect(previewInput?.assumptions).toContain(
-      "The confirmed 2025 Form 1099-G upload contributes $6,200 of unemployment compensation, $1,100 of state or local income tax refunds, and $620 of federal withholding."
-    );
-    expect(previewInput?.assumptions).toContain(
-      "This government-payments preview leaves the prior-year state-refund tax-benefit worksheet manual, so uploaded Form 1099-G Box 2 amounts stay non-taxable until prior-year itemized-deduction context is confirmed."
-    );
+    expect(previewInput?.assumptions).toEqual(["This preview uses the supplied complete, reviewed return facts. Each selected original document record is reconciled to its actual calculation source; abbreviated summaries do not supply missing eligibility, identity, dates or amounts."]);
     expect(previewInput?.sourceDocumentIds).toEqual(["doc-1099g"]);
     expect(previewInput?.sourceFixtureIds).toEqual(["irs-1099-g-2025"]);
     expect(previewInput?.sourceFactIdsByItemId["government-payments"]).toEqual([
@@ -664,7 +655,7 @@ describe("workspace engine input", () => {
     ]);
   });
 
-  it("builds premium-tax-credit preview input from confirmed Form 1095-A fixture facts", () => {
+  it("blocks unqualified legacy financial input from confirmed Form 1095-A fixture facts", () => {
     const documents = [createPremiumTaxCreditDocument({})];
     const structuredFacts = buildWorkspaceStructuredFacts(
       documents,
@@ -674,45 +665,24 @@ describe("workspace engine input", () => {
     const previewInput = buildWorkspaceEngineInput(
       documents,
       createPremiumTaxCreditReturnSummary({}),
-      structuredFacts
+      structuredFacts,
+      workspaceTaxpayerFixture()
     );
 
-    expect(previewInput).not.toBeNull();
-    expect(previewInput?.taxInput.form1095A).toEqual([
-      {
-        marketplace: "Official fixture Health Insurance Marketplace",
-        policyNumber: "OFFICIAL-ACA-2025",
-        monthlyPremiums: Array.from({ length: 12 }, (_, index) => ({
-          month: index + 1,
-          enrolleePremium: "600",
-          slcsp: "650",
-          advancePremiumTaxCredit: "500"
-        }))
-      }
-    ]);
-    expect(previewInput?.assumptions).toContain(
-      "The confirmed 2025 Form 1095-A upload contributes $7,200 of marketplace enrollment premiums, $7,800 of SLCSP premiums, and $6,000 of advance premium tax credit."
-    );
-    expect(previewInput?.assumptions).toContain(
-      "This premium tax credit preview still depends on the workspace's confirmed filing status, household income, and dependent roster because Form 8962 reconciles the uploaded policy amounts against household MAGI and tax family size."
-    );
-    expect(previewInput?.sourceDocumentIds).toEqual(["doc-1095a"]);
-    expect(previewInput?.sourceFixtureIds).toEqual(["irs-1095-a-2025"]);
-    expect(previewInput?.sourceFactIdsByItemId["premium-tax-credit"]).toEqual([
-      "premium-tax-credit-review:document-detected",
-      "premium-tax-credit-review:fixture-premium-tax-credit-review",
-      "premium-tax-credit-review:interview-answer"
-    ]);
+    expect(previewInput).toBeNull();
+    expect(structuredFacts.some(fact => fact.machineValue)).toBe(true);
+    // This legacy summary lacks actual source qualification; it remains evidence.
   });
 
-  it("does not fabricate primary ownership for retirement distributions when fixture facts do not identify an owner", () => {
+  it("uses the separately supplied actual retirement owner without changing missing source ownership", () => {
     const documents = [createDocument({})];
     const structuredFacts = buildWorkspaceStructuredFacts(documents, createSeededReturn({}));
 
     const previewInput = buildWorkspaceEngineInput(
       documents,
       createReturnSummary({}),
-      structuredFacts
+      structuredFacts,
+      workspaceTaxpayerFixture()
     );
 
     expect(previewInput).not.toBeNull();
@@ -726,7 +696,8 @@ describe("workspace engine input", () => {
       iraSepSimple: true,
       taxableAmountNotDetermined: false,
     });
-    expect(previewInput?.taxInput.form1099R?.[0]?.accountHolder).toBeUndefined();
+    expect(previewInput?.taxInput.form1099R?.[0]?.accountHolder).toBe("primary");
+    expect(structuredFacts.find(fact => fact.machineValue?.entryKind === "1099-r-summary")?.machineValue).not.toHaveProperty("accountHolder");
   });
 
   it("preserves explicit retirement account-owner metadata when structured facts provide it", () => {
@@ -759,7 +730,8 @@ describe("workspace engine input", () => {
     const previewInput = buildWorkspaceEngineInput(
       documents,
       createReturnSummary({}),
-      structuredFacts
+      structuredFacts,
+      workspaceTaxpayerFixture()
     );
 
     expect(previewInput).not.toBeNull();
@@ -818,7 +790,8 @@ describe("workspace engine input", () => {
     const previewInput = buildWorkspaceEngineInput(
       documents,
       createReturnSummary({}),
-      structuredFacts
+      structuredFacts,
+      workspaceTaxpayerFixture()
     );
 
     expect(previewInput).not.toBeNull();
@@ -834,9 +807,7 @@ describe("workspace engine input", () => {
         rothContributionOrConversionMadeBefore2021: true,
       })
     ]));
-    expect(previewInput?.assumptions).toContain(
-      "Confirmed Roth-qualified or pre-2021 Roth contribution history metadata from the upload is applied before the final retirement taxable lines are recomputed."
-    );
+    expect(previewInput?.assumptions).toEqual(["This preview uses the supplied complete, reviewed return facts. Each selected original document record is reconciled to its actual calculation source; abbreviated summaries do not supply missing eligibility, identity, dates or amounts."]);
   });
 
   it("preserves Box 2b and Box 5 retirement metadata when structured facts provide them", () => {
@@ -869,25 +840,13 @@ describe("workspace engine input", () => {
     const previewInput = buildWorkspaceEngineInput(
       documents,
       createReturnSummary({}),
-      structuredFacts
+      structuredFacts,
+      workspaceTaxpayerFixture()
     );
 
-    expect(previewInput).not.toBeNull();
-    expect(previewInput?.taxInput.form1099R).toEqual([
-      expect.objectContaining({
-        payer: "Box 2b pension payer",
-        grossDistribution: "12000",
-        federalWithheld: "300",
-        distributionCode: "7",
-        iraSepSimple: false,
-        taxableAmountNotDetermined: true,
-        employeeContributions: "2000",
-      })
-    ]);
-    expect(previewInput?.taxInput.form1099R?.[0]?.taxableAmount).toBeUndefined();
-    expect(previewInput?.assumptions).toContain(
-      "The confirmed 2025 Form 1099-R upload contributes $12,000 of gross retirement distributions, statement-reported taxable amount not determined, and $300 of withholding."
-    );
+    expect(previewInput).toBeNull();
+    expect(structuredFacts[0]?.machineValue).toMatchObject({ taxableAmountNotDetermined: true, employeeContributions: "2000" });
+    expect(structuredFacts[0]?.machineValue).not.toHaveProperty("taxableAmount");
   });
 
   it("preserves qualified charitable distribution retirement metadata when structured facts provide it", () => {
@@ -920,7 +879,8 @@ describe("workspace engine input", () => {
     const previewInput = buildWorkspaceEngineInput(
       documents,
       createReturnSummary({}),
-      structuredFacts
+      structuredFacts,
+      workspaceTaxpayerFixture()
     );
 
     expect(previewInput).not.toBeNull();
@@ -930,9 +890,7 @@ describe("workspace engine input", () => {
         qualifiedCharitableDistribution: "7000",
       })
     ]));
-    expect(previewInput?.assumptions).toContain(
-      "Confirmed qualified charitable distribution metadata from the upload is applied before the final retirement taxable lines are recomputed."
-    );
+    expect(previewInput?.assumptions).toEqual(["This preview uses the supplied complete, reviewed return facts. Each selected original document record is reconciled to its actual calculation source; abbreviated summaries do not supply missing eligibility, identity, dates or amounts."]);
   });
 
   it("preserves Simplified Method and retired public safety officer retirement metadata through workspace recompute", () => {
@@ -970,7 +928,8 @@ describe("workspace engine input", () => {
     const previewInput = buildWorkspaceEngineInput(
       documents,
       createReturnSummary({}),
-      structuredFacts
+      structuredFacts,
+      workspaceTaxpayerFixture()
     );
 
     expect(previewInput).not.toBeNull();
@@ -986,12 +945,7 @@ describe("workspace engine input", () => {
         retiredPublicSafetyOfficerInsurancePremiums: "1500",
       })
     ]));
-    expect(previewInput?.assumptions).toContain(
-      "Confirmed Simplified Method pension-basis metadata from the upload is applied before the final retirement taxable lines are recomputed."
-    );
-    expect(previewInput?.assumptions).toContain(
-      "Confirmed retired public safety officer insurance-premium metadata from the upload is applied before the final retirement taxable lines are recomputed."
-    );
+    expect(previewInput?.assumptions).toEqual(["This preview uses the supplied complete, reviewed return facts. Each selected original document record is reconciled to its actual calculation source; abbreviated summaries do not supply missing eligibility, identity, dates or amounts."]);
 
     const result = calculateFederalTax(previewInput!.taxInput);
     const line5b = result.allLines.find((line) => line.form === "1040" && line.line === "5b");
@@ -1077,7 +1031,8 @@ describe("workspace engine input", () => {
     const previewInput = buildWorkspaceEngineInput(
       documents,
       createReturnSummary({}),
-      structuredFacts
+      structuredFacts,
+      workspaceTaxpayerFixture()
     );
 
     expect(previewInput).not.toBeNull();
@@ -1096,9 +1051,7 @@ describe("workspace engine input", () => {
         excessContributionReturnedWithoutEarnings: true,
       })
     ]));
-    expect(previewInput?.assumptions).toContain(
-      "Confirmed Roth conversion, rollover, and corrective-distribution metadata from the upload is applied before Form 8606 defaults and the final retirement taxable lines are recomputed."
-    );
+    expect(previewInput?.assumptions).toEqual(["This preview uses the supplied complete, reviewed return facts. Each selected original document record is reconciled to its actual calculation source; abbreviated summaries do not supply missing eligibility, identity, dates or amounts."]);
   });
 
   it("preserves Form 5329 retirement metadata when structured facts provide it", () => {
@@ -1177,7 +1130,8 @@ describe("workspace engine input", () => {
     const previewInput = buildWorkspaceEngineInput(
       documents,
       createReturnSummary({}),
-      structuredFacts
+      structuredFacts,
+      workspaceTaxpayerFixture()
     );
 
     expect(previewInput).not.toBeNull();
@@ -1197,9 +1151,7 @@ describe("workspace engine input", () => {
         terminalIllnessExceptionApplies: true,
       })
     ]));
-    expect(previewInput?.assumptions).toContain(
-      "Confirmed retirement distribution-date, early-distribution exception, and eligible governmental 457(b) metadata from the upload is applied before Form 5329 defaults and the final retirement taxable lines are recomputed."
-    );
+    expect(previewInput?.assumptions).toEqual(["This preview uses the supplied complete, reviewed return facts. Each selected original document record is reconciled to its actual calculation source; abbreviated summaries do not supply missing eligibility, identity, dates or amounts."]);
   });
 
   it("excludes retirement statements flagged as prior-year-only from the current-year preview input", () => {
@@ -1232,14 +1184,13 @@ describe("workspace engine input", () => {
     const previewInput = buildWorkspaceEngineInput(
       documents,
       createReturnSummary({}),
-      structuredFacts
+      structuredFacts,
+      workspaceTaxpayerFixture()
     );
 
     expect(previewInput).not.toBeNull();
     expect(previewInput?.taxInput.form1099R).toEqual([]);
-    expect(previewInput?.assumptions).toContain(
-      "The confirmed 2025 Form 1099-R upload was marked as not belonging on the current-year return, so no retirement distributions were included in this preview."
-    );
+    expect(previewInput?.assumptions).toEqual(["This preview uses the supplied complete, reviewed return facts. Each selected original document record is reconciled to its actual calculation source; abbreviated summaries do not supply missing eligibility, identity, dates or amounts."]);
     expect(previewInput?.sourceFactIdsByItemId["retirement-distributions"]).toEqual([
       "retirement-distribution-review:prior-year-only"
     ]);
@@ -1255,7 +1206,8 @@ describe("workspace engine input", () => {
     const previewInput = buildWorkspaceEngineInput(
       documents,
       createSocialSecurityReturnSummary({}),
-      structuredFacts
+      structuredFacts,
+      workspaceTaxpayerFixture()
     );
 
     expect(previewInput).not.toBeNull();
@@ -1266,9 +1218,7 @@ describe("workspace engine input", () => {
         federalWithheld: "1500"
       }
     ]);
-    expect(previewInput?.assumptions).toContain(
-      "The confirmed 2025 Form SSA-1099 upload contributes $60,000 of net Social Security benefits and $1,500 of withholding."
-    );
+    expect(previewInput?.assumptions).toEqual(["This preview uses the supplied complete, reviewed return facts. Each selected original document record is reconciled to its actual calculation source; abbreviated summaries do not supply missing eligibility, identity, dates or amounts."]);
     expect(previewInput?.sourceDocumentIds).toEqual(["doc-ssa1099"]);
     expect(previewInput?.sourceFixtureIds).toEqual(["irs-ssa-1099-2025"]);
     expect(previewInput?.sourceFactIdsByItemId["social-security-benefits"]).toEqual([
@@ -1276,6 +1226,21 @@ describe("workspace engine input", () => {
       "social-security-benefits-review:fixture-social-security-benefits",
       "social-security-benefits-review:interview-answer"
     ]);
+  });
+
+  it("preserves actual student loan source metadata without reversing legacy Box2", () => {
+    const documents = [createStudentLoanDocument({})];
+    const structuredFacts = buildWorkspaceStructuredFacts(documents, createStudentLoanSeededReturn({}));
+    const fact = structuredFacts.find(row => row.machineValue?.entryKind === "1098-e-summary");
+    expect(fact?.machineValue?.entryKind).toBe("1098-e-summary");
+    if (!fact || fact.machineValue?.entryKind !== "1098-e-summary") throw new Error("Missing test source");
+    fact.machineValue = { ...fact.machineValue, sourceId: "lender-statement", taxYear: 2025, borrowerId: "actual-borrower", accountHolder: "primary", box2ExcludesOriginationFeesOrCapitalizedInterest: false };
+    const preview = buildWorkspaceEngineInput(documents, createStudentLoanReturnSummary({}), structuredFacts, workspaceTaxpayerFixture(), qualifiedWorkspaceLoanContext(structuredFacts, workspaceTaxpayerFixture()));
+    expect(preview?.taxInput.form1098E[0]).toMatchObject({ sourceId: "lender-statement", taxYear: 2025, borrowerId: "actual-borrower", accountHolder: "primary", box2ExcludesOriginationFeesOrCapitalizedInterest: false, includesOriginationFeesOrCapitalizedInterest: true });
+    delete fact.machineValue.box2ExcludesOriginationFeesOrCapitalizedInterest;
+    const legacy = buildWorkspaceEngineInput(documents, createStudentLoanReturnSummary({}), structuredFacts, workspaceTaxpayerFixture());
+    expect(legacy).toBeNull();
+    expect(fact.machineValue.box2ExcludesOriginationFeesOrCapitalizedInterest).toBeUndefined();
   });
 
   it("builds student loan interest preview input from confirmed Form 1098-E fixture facts", () => {
@@ -1288,26 +1253,21 @@ describe("workspace engine input", () => {
     const previewInput = buildWorkspaceEngineInput(
       documents,
       createStudentLoanReturnSummary({}),
-      structuredFacts
+      structuredFacts,
+      workspaceTaxpayerFixture(),
+      qualifiedWorkspaceLoanContext(structuredFacts, workspaceTaxpayerFixture())
     );
 
     expect(previewInput).not.toBeNull();
-    expect(previewInput?.taxInput.form1098E).toEqual([
+    expect(previewInput?.taxInput.form1098E).toMatchObject([
       {
+        sourceId: "actual-loan-statement:0", taxYear: 2025, borrowerId: "actual-primary-borrower", accountHolder: "primary", box2ExcludesOriginationFeesOrCapitalizedInterest: false,
         lender: "Official fixture loan servicer",
         studentLoanInterestReceived: "2100",
         includesOriginationFeesOrCapitalizedInterest: true
       }
     ]);
-    expect(previewInput?.assumptions).toContain(
-      "The confirmed 2025 Form 1098-E upload contributes $2,100 of student loan interest."
-    );
-    expect(previewInput?.assumptions).toContain(
-      "This student loan preview keeps any uploaded capitalized-interest indicator attached to Form 1098-E before Schedule 1 Line 21 is recomputed."
-    );
-    expect(previewInput?.assumptions).toContain(
-      "This student loan preview assumes no additional below-threshold interest needs manual entry beyond the uploaded statements."
-    );
+    expect(previewInput?.assumptions).toEqual(["This preview uses the supplied complete, reviewed return facts. Each selected original document record is reconciled to its actual calculation source; abbreviated summaries do not supply missing eligibility, identity, dates or amounts."]);
     expect(previewInput?.sourceDocumentIds).toEqual(["doc-1098e"]);
     expect(previewInput?.sourceFixtureIds).toEqual(["irs-1098-e-2025"]);
     expect(previewInput?.sourceFactIdsByItemId["student-loan-interest"]).toEqual([
@@ -1345,7 +1305,8 @@ describe("workspace engine input", () => {
     const previewInput = buildWorkspaceEngineInput(
       documents,
       createHsaReturnSummary({}),
-      structuredFacts
+      structuredFacts,
+      { ...workspaceTaxpayerFixture(), filingStatus: "married_filing_jointly", spouse: { firstName: "Jordan", lastName: "Example", ssn: "900-70-0002", dateOfBirth: "1991-02-02" } }
     );
 
     expect(previewInput).not.toBeNull();
@@ -1373,6 +1334,7 @@ describe("workspace engine input", () => {
           grossDistribution: "11000",
           distributionCode: "4",
           accountType: "hsa",
+          accountHolder: "primary",
           beneficiaryRole: "estate",
           deathDistributionTiming: "year_of_death",
           fmvOnDateOfDeath: "6000",
@@ -1383,7 +1345,8 @@ describe("workspace engine input", () => {
     const previewInput = buildWorkspaceEngineInput(
       documents,
       createHsaReturnSummary({}),
-      structuredFacts
+      structuredFacts,
+      workspaceTaxpayerFixture()
     );
 
     expect(previewInput).not.toBeNull();
@@ -1393,16 +1356,12 @@ describe("workspace engine input", () => {
       grossDistribution: "11000",
       distributionCode: "4",
       accountType: "hsa",
+      accountHolder: "primary",
       beneficiaryRole: "estate",
       deathDistributionTiming: "year_of_death",
       fmvOnDateOfDeath: "6000",
     });
-    expect(previewInput?.assumptions).toContain(
-      "Confirmed Form 1099-SA death-distribution metadata uses $6,000 of date-of-death fair market value on Form 8889 and routes $5,000 of post-death earnings to other income."
-    );
-    expect(previewInput?.assumptions).toContain(
-      "This HSA preview still leaves rollover and medical-expense offsets manual unless they are separately confirmed in the workspace ledger."
-    );
+    expect(previewInput?.assumptions).toEqual(["This preview uses the supplied complete, reviewed return facts. Each selected original document record is reconciled to its actual calculation source; abbreviated summaries do not supply missing eligibility, identity, dates or amounts."]);
   });
 
   it("preserves HSA death-distribution timing metadata when structured facts provide it", () => {
@@ -1425,6 +1384,7 @@ describe("workspace engine input", () => {
           grossDistribution: "9000",
           distributionCode: "6",
           accountType: "hsa",
+          accountHolder: "primary",
           beneficiaryRole: "other_beneficiary",
           deathDistributionTiming: "after_year_of_death",
           fmvOnDateOfDeath: "6200",
@@ -1435,7 +1395,8 @@ describe("workspace engine input", () => {
     const previewInput = buildWorkspaceEngineInput(
       documents,
       createHsaReturnSummary({}),
-      structuredFacts
+      structuredFacts,
+      workspaceTaxpayerFixture()
     );
 
     expect(previewInput?.taxInput.form1099SA?.[0]).toMatchObject({
@@ -1468,6 +1429,7 @@ describe("workspace engine input", () => {
           earningsOnExcessContributions: "60",
           distributionCode: "2",
           accountType: "hsa",
+          accountHolder: "primary",
         }
       }
     ];
@@ -1475,7 +1437,8 @@ describe("workspace engine input", () => {
     const previewInput = buildWorkspaceEngineInput(
       documents,
       createHsaReturnSummary({}),
-      structuredFacts
+      structuredFacts,
+      workspaceTaxpayerFixture()
     );
 
     expect(previewInput).not.toBeNull();
@@ -1486,17 +1449,13 @@ describe("workspace engine input", () => {
         earningsOnExcessContributions: "60",
         distributionCode: "2",
         accountType: "hsa",
+        accountHolder: "primary",
       }
     ]);
-    expect(previewInput?.assumptions).toContain(
-      "Confirmed Form 1099-SA Box 2 earnings on returned excess contributions add $60 of other income."
-    );
-    expect(previewInput?.assumptions).toContain(
-      "This HSA preview still leaves rollover and medical-expense offsets manual unless they are separately confirmed in the workspace ledger."
-    );
+    expect(previewInput?.assumptions).toEqual(["This preview uses the supplied complete, reviewed return facts. Each selected original document record is reconciled to its actual calculation source; abbreviated summaries do not supply missing eligibility, identity, dates or amounts."]);
   });
 
-  it("uses confirmed HSA rollover and qualified medical-expense facts to prefill Form 8889 preview input", () => {
+  it("reconciles confirmed HSA rollover and medical expenses with the actual Form 8889 context", () => {
     const documents = [createHsaDocument({})];
     const structuredFacts: WorkspaceStructuredFactRecord[] = [
       {
@@ -1516,6 +1475,7 @@ describe("workspace engine input", () => {
           grossDistribution: "2400",
           distributionCode: "1",
           accountType: "hsa",
+          accountHolder: "primary",
           rolloverDistributions: "400",
           qualifiedMedicalExpenses: "1500",
         }
@@ -1525,7 +1485,8 @@ describe("workspace engine input", () => {
     const previewInput = buildWorkspaceEngineInput(
       documents,
       createHsaReturnSummary({}),
-      structuredFacts
+      structuredFacts,
+      workspaceTaxpayerFixture()
     );
 
     expect(previewInput).not.toBeNull();
@@ -1533,27 +1494,19 @@ describe("workspace engine input", () => {
       {
         payer: "HSA Bank",
         grossDistribution: "2400",
-        earningsOnExcessContributions: "0",
         distributionCode: "1",
         accountType: "hsa",
+        accountHolder: "primary",
       }
     ]);
     expect(previewInput?.taxInput.form8889).toMatchObject({
       rolloverDistributions: "400",
       qualifiedMedicalExpenses: "1500",
     });
-    expect(previewInput?.assumptions).toContain(
-      "Confirmed HSA rollover review excludes $400 of distributions on Form 8889 Line 14b."
-    );
-    expect(previewInput?.assumptions).toContain(
-      "Confirmed qualified medical-expense review applies $1,500 on Form 8889 Line 15."
-    );
-    expect(previewInput?.assumptions).not.toContain(
-      "This HSA preview still leaves rollover and medical-expense offsets manual unless they are separately confirmed in the workspace ledger."
-    );
+    expect(previewInput?.assumptions).toEqual(["This preview uses the supplied complete, reviewed return facts. Each selected original document record is reconciled to its actual calculation source; abbreviated summaries do not supply missing eligibility, identity, dates or amounts."]);
   });
 
-  it("uses confirmed decedent medical expenses to prefill the beneficiary-only Form 8889 Line 15 branch", () => {
+  it("reconciles confirmed decedent medical expenses with the beneficiary Form 8889 context", () => {
     const documents = [createHsaDocument({})];
     const structuredFacts: WorkspaceStructuredFactRecord[] = [
       {
@@ -1573,6 +1526,7 @@ describe("workspace engine input", () => {
           grossDistribution: "5300",
           distributionCode: "6",
           accountType: "hsa",
+          accountHolder: "primary",
           beneficiaryRole: "other_beneficiary",
           deathDistributionTiming: "after_year_of_death",
           fmvOnDateOfDeath: "5000",
@@ -1584,7 +1538,8 @@ describe("workspace engine input", () => {
     const previewInput = buildWorkspaceEngineInput(
       documents,
       createHsaReturnSummary({}),
-      structuredFacts
+      structuredFacts,
+      workspaceTaxpayerFixture()
     );
 
     expect(previewInput).not.toBeNull();
@@ -1592,9 +1547,9 @@ describe("workspace engine input", () => {
       {
         payer: "Inherited HSA Bank",
         grossDistribution: "5300",
-        earningsOnExcessContributions: "0",
         distributionCode: "6",
         accountType: "hsa",
+        accountHolder: "primary",
         beneficiaryRole: "other_beneficiary",
         deathDistributionTiming: "after_year_of_death",
         fmvOnDateOfDeath: "5000",
@@ -1603,18 +1558,10 @@ describe("workspace engine input", () => {
     expect(previewInput?.taxInput.form8889).toMatchObject({
       decedentQualifiedMedicalExpensesPaidWithinOneYearAfterDeath: "1200",
     });
-    expect(previewInput?.assumptions).toContain(
-      "Confirmed Form 1099-SA death-distribution metadata uses $5,000 of date-of-death fair market value on Form 8889 and routes $300 of post-death earnings to other income."
-    );
-    expect(previewInput?.assumptions).toContain(
-      "Confirmed decedent medical-expense review applies $1,200 on the beneficiary-only Form 8889 Line 15 branch."
-    );
-    expect(previewInput?.assumptions).toContain(
-      "This HSA preview still leaves rollover offsets manual unless they are separately confirmed in the workspace ledger."
-    );
+    expect(previewInput?.assumptions).toEqual(["This preview uses the supplied complete, reviewed return facts. Each selected original document record is reconciled to its actual calculation source; abbreviated summaries do not supply missing eligibility, identity, dates or amounts."]);
   });
 
-  it("describes disability and prohibited-transaction HSA metadata in the preview assumptions", () => {
+  it("preserves disability and prohibited-transaction HSA metadata in the actual context", () => {
     const documents = [createHsaDocument({})];
     const structuredFacts: WorkspaceStructuredFactRecord[] = [
       {
@@ -1634,6 +1581,7 @@ describe("workspace engine input", () => {
           grossDistribution: "900",
           distributionCode: "3",
           accountType: "hsa",
+          accountHolder: "primary",
         }
       },
       {
@@ -1653,6 +1601,7 @@ describe("workspace engine input", () => {
           grossDistribution: "2400",
           distributionCode: "5",
           accountType: "hsa",
+          accountHolder: "primary",
         }
       }
     ];
@@ -1660,16 +1609,12 @@ describe("workspace engine input", () => {
     const previewInput = buildWorkspaceEngineInput(
       documents,
       createHsaReturnSummary({}),
-      structuredFacts
+      structuredFacts,
+      workspaceTaxpayerFixture()
     );
 
     expect(previewInput).not.toBeNull();
-    expect(previewInput?.assumptions).toContain(
-      "Confirmed Form 1099-SA disability coding automatically exempts $900 from the HSA 20% additional-tax base before any remaining manual exception inputs."
-    );
-    expect(previewInput?.assumptions).toContain(
-      "Confirmed Form 1099-SA prohibited-transaction coding keeps $2,400 of deemed distributions out of the qualified medical-expense offset path."
-    );
+    expect(previewInput?.assumptions).toEqual(["This preview uses the supplied complete, reviewed return facts. Each selected original document record is reconciled to its actual calculation source; abbreviated summaries do not supply missing eligibility, identity, dates or amounts."]);
   });
 
   it("preserves W-2 Box 12 code W owner metadata for mixed-owner HSA preview recomputes", () => {
@@ -1696,10 +1641,15 @@ describe("workspace engine input", () => {
         questionId: null,
         updatedAt: "2026-03-18T00:00:00.000Z",
         machineValue: {
-          entryKind: "w2-summary",
+          entryKind: "w2-summary", box10DependentCareBenefits: "0", stateTaxReporting: "none",
           employerName: "Primary Employer",
           employerEin: "12-3456789",
           wages: "65000",
+          socialSecurityWages: "65000",
+          socialSecurityTips: "0.10",
+          socialSecurityWithheld: "4030",
+          medicareWages: "65000",
+          medicareWithheld: "942.50",
           federalWithheld: "7000",
           box12CodeW: "500",
           accountHolder: "primary",
@@ -1717,10 +1667,15 @@ describe("workspace engine input", () => {
         questionId: null,
         updatedAt: "2026-03-18T00:00:00.000Z",
         machineValue: {
-          entryKind: "w2-summary",
+          entryKind: "w2-summary", box10DependentCareBenefits: "0", stateTaxReporting: "none",
           employerName: "Spouse Employer",
           employerEin: "98-7654321",
           wages: "42000",
+          socialSecurityWages: "42000",
+          socialSecurityTips: "0",
+          socialSecurityWithheld: "2604",
+          medicareWages: "42000",
+          medicareWithheld: "609",
           federalWithheld: "4500",
           box12CodeW: "900",
           accountHolder: "spouse",
@@ -1731,7 +1686,7 @@ describe("workspace engine input", () => {
     const previewInput = buildWorkspaceEngineInput(
       documents,
       createWagesReturnSummary({
-        taxYearState: "multiple",
+        taxYearState: "single",
         items: [
           {
             id: "wages-and-withholding",
@@ -1745,9 +1700,11 @@ describe("workspace engine input", () => {
           }
         ]
       }),
-      structuredFacts
+      structuredFacts,
+      { ...workspaceTaxpayerFixture(), filingStatus: "married_filing_jointly", spouse: { firstName: "Jordan", lastName: "Example", ssn: "900-70-0002", dateOfBirth: "1991-02-02" } }
     );
 
+    expect(previewInput?.taxInput.w2s.map(w2 => w2.socialSecurityTips)).toEqual(["0.10", "0"]);
     expect(previewInput).not.toBeNull();
     expect(previewInput?.taxInput.w2s).toEqual(expect.arrayContaining([
       expect.objectContaining({
@@ -1803,7 +1760,7 @@ describe("workspace engine input", () => {
         questionId: null,
         updatedAt: "2026-03-28T00:00:00.000Z",
         machineValue: {
-          entryKind: "w2-summary",
+          entryKind: "w2-summary", socialSecurityTips: "0", box10DependentCareBenefits: "0", stateTaxReporting: "single", state: "NY",
           employerName: "Uploaded Employer",
           employerEin: "12-3456789",
           wages: "107175.28",
@@ -1835,7 +1792,8 @@ describe("workspace engine input", () => {
           }
         ]
       }),
-      structuredFacts
+      structuredFacts,
+      workspaceTaxpayerFixture()
     );
 
     expect(previewInput?.taxInput.w2s).toEqual([
@@ -1851,4 +1809,35 @@ describe("workspace engine input", () => {
       })
     ]);
   });
+});
+
+// Spec: spec/federal/guided-input.yaml, hsa-actual-owner-sources
+function hsaSourceFact(id: string, source: Record<string, unknown>): WorkspaceStructuredFactRecord {
+  return { id, factId: "hsa-distribution-review", label: "Actual HSA source", kind: "fixture-derived", value: "Explicit synthetic source facts", sourceType: "official-fixture", confidence: "high", sourceDocumentIds: ["doc-1099sa"], questionId: null, updatedAt: "2026-10-25T00:00:00.000Z", machineValue: { entryKind: "1099-sa-summary", payer: "Actual HSA custodian", grossDistribution: "2400.10", earningsOnExcessContributions: "0", distributionCode: "1", accountType: "hsa", ...source } as WorkspaceStructuredFactRecord["machineValue"] };
+}
+it("requires actual HSA ownership independently of surviving spouse relationship", () => {
+  const preview = (source: Record<string, unknown>) => buildWorkspaceEngineInput([createHsaDocument({})], createHsaReturnSummary({}), [hsaSourceFact("actual", source)], workspaceTaxpayerFixture());
+  expect(preview({})).toBeNull();
+  expect(preview({ beneficiaryRole: "surviving_spouse" })).toBeNull();
+  expect(preview({ beneficiaryRole: "surviving_spouse", accountHolder: "primary" })?.taxInput.form1099SA?.[0]).toMatchObject({ accountHolder: "primary", grossDistribution: "2400.10" });
+  expect(preview({ accountHolder: "spouse" })).toBeNull();
+  expect(preview({ accountHolder: "primary", distributionCode: "unknown" })).toBeNull();
+  expect(preview({ accountHolder: "primary", grossDistribution: "" })).toBeNull();
+});
+it("does not turn partially confirmed HSA owner offsets into complete totals", () => {
+  const preview = buildWorkspaceEngineInput([createHsaDocument({})], createHsaReturnSummary({}), [
+    hsaSourceFact("one", { accountHolder: "primary", rolloverDistributions: "0", qualifiedMedicalExpenses: "100.10" }),
+    hsaSourceFact("two", { accountHolder: "primary", rolloverDistributions: "0" }),
+  ], workspaceTaxpayerFixture());
+  expect(preview).toBeNull();
+});
+it("preserves complete HSA offsets separately for each actual return owner", () => {
+  const taxpayer = { ...workspaceTaxpayerFixture(), filingStatus: "married_filing_jointly" as const, spouse: { firstName: "Pat", lastName: "Example", ssn: "987-65-4321", dateOfBirth: "1959-01-01" } };
+  const preview = buildWorkspaceEngineInput([createHsaDocument({})], createHsaReturnSummary({}), [
+    hsaSourceFact("primary", { accountHolder: "primary", rolloverDistributions: "0", qualifiedMedicalExpenses: "100.10" }),
+    hsaSourceFact("spouse", { accountHolder: "spouse", beneficiaryRole: "surviving_spouse", rolloverDistributions: "0.20", qualifiedMedicalExpenses: "200.30" }),
+  ], taxpayer);
+  expect(preview?.taxInput.form8889).toBeUndefined();
+  expect(preview?.taxInput.form8889ByOwner?.primary).toMatchObject({ accountOwner: "primary", rolloverDistributions: "0", qualifiedMedicalExpenses: "100.1" });
+  expect(preview?.taxInput.form8889ByOwner?.spouse).toMatchObject({ accountOwner: "spouse", rolloverDistributions: "0.2", qualifiedMedicalExpenses: "200.3" });
 });

@@ -114,44 +114,25 @@ describe("SE health insurance worksheet packet reference summary", () => {
     ]);
   });
 
-  it("fillReturn includes the SE health insurance worksheet reference summary only when worksheet inputs are present", async () => {
-    const outputDirWithWorksheet = await makeOutputDir();
-    const outputDirWithoutWorksheet = await makeOutputDir();
-
+  it.each([["included", true], ["omitted", false]] as const)("fillReturn includes the SE health insurance worksheet reference summary only when worksheet inputs are present: %s", async (_scenario, included) => {
+    const worksheetFixture = makeWorksheetFixture();
+    const input = included ? worksheetFixture : { ...worksheetFixture, seHealthInsuranceWorksheet: undefined };
+    const outputDir = await makeOutputDir();
     try {
-      const worksheetFixture = makeWorksheetFixture();
-      const resultWithWorksheet = calculateFederalTax(worksheetFixture);
-      const withWorksheetPacket = await fillReturn(worksheetFixture, resultWithWorksheet, {
-        blankFormsDir: "forms/blank",
-        outputDir: outputDirWithWorksheet,
-      });
+      const result = calculateFederalTax(input);
+      const packet = await fillReturn(input, result, { blankFormsDir: "forms/blank", outputDir });
 
-      const referencePath = withWorksheetPacket.filledForms.find((path) => (
-        path.endsWith(SE_HEALTH_INSURANCE_WORKSHEET_REFERENCE_FILENAME)
-      ));
-      expect(referencePath).toBeDefined();
-      await access(referencePath!);
-      const pdfBytes = await readFile(referencePath!);
-      expect(pdfBytes.length).toBeGreaterThan(0);
-
-      const noWorksheetFixture = {
-        ...worksheetFixture,
-        seHealthInsuranceWorksheet: undefined,
-      };
-      const resultWithoutWorksheet = calculateFederalTax(noWorksheetFixture);
-      const withoutWorksheetPacket = await fillReturn(noWorksheetFixture, resultWithoutWorksheet, {
-        blankFormsDir: "forms/blank",
-        outputDir: outputDirWithoutWorksheet,
-      });
-
-      expect(
-        withoutWorksheetPacket.filledForms.some((path) => (
-          path.endsWith(SE_HEALTH_INSURANCE_WORKSHEET_REFERENCE_FILENAME)
-        )),
-      ).toBe(false);
+      if (included) {
+        const referencePath = packet.filledForms.find((path) => path.endsWith(SE_HEALTH_INSURANCE_WORKSHEET_REFERENCE_FILENAME));
+        expect(referencePath).toBeDefined();
+        await access(referencePath!);
+        const pdfBytes = await readFile(referencePath!);
+        expect(pdfBytes.length).toBeGreaterThan(0);
+      } else {
+        expect(packet.filledForms.some((path) => path.endsWith(SE_HEALTH_INSURANCE_WORKSHEET_REFERENCE_FILENAME))).toBe(false);
+      }
     } finally {
-      await rm(outputDirWithWorksheet, { recursive: true, force: true });
-      await rm(outputDirWithoutWorksheet, { recursive: true, force: true });
+      await rm(outputDir, { recursive: true, force: true });
     }
   });
 });

@@ -1,3 +1,8 @@
+import {calculatePAMarriedOrdinaryReturn,type PAMarriedOrdinaryReturnResult} from './pa-married-ordinary-return.js';
+import {calculateForm4562} from '@/engine/forms/form-4562.js';
+import { assertClaimOfRightStateMethod } from "@/engine/forms/claim-of-right.js";
+import { assertQofStateMethod } from "@/engine/forms/qof-inclusion.js";
+import { calculatePARoyaltyPropertySources } from "./pa-royalty-property-sources.js";
 /**
  * Pennsylvania Personal Income Tax Return Orchestrator
  * Spec: spec/state/pa-orchestrator.yaml
@@ -7,10 +12,18 @@
  */
 
 import Decimal from "decimal.js";
-import { d, sum, zeroFloor } from "@/utils/decimal.js";
+import {sha256} from "@noble/hashes/sha2.js";
+import {bytesToHex} from "@noble/hashes/utils.js";
+import { calculateDigitalAssetStateSources } from "./digital-asset-sources.js";
+import { calculatePARentalIncomeExpenses, type PARentalIncomeExpensesResult } from "@/engine/state/pa-rental-income-expenses.js";
+import { calculatePAOIDSources, type PAOIDSourcesResult } from "@/engine/state/pa-oid-sources.js";
+import { calculatePARentalClassification, type PARentalClassificationResult } from "@/engine/state/pa-rental-classification.js";
+import { roundDollar, d, sum, zeroFloor } from "@/utils/decimal.js";
 import type {
   Form1099R,
   PAPassThroughStatement,
+  PAScheduleA,
+  RentalProperty,
   ScheduleK1,
   TaxYearInput,
 } from "@/models/inputs.js";
@@ -152,7 +165,7 @@ export interface PAOrchestratorOverrides {
     | "federalScheduleK1Interest"
     | "usGovernmentInterest"
     | "paPassThroughInterest"
-  >;
+  > & { oidSources?: PAScheduleA["oidSources"] };
   /** Detailed Schedule B adjustments and supplemental lines */
   scheduleB?: Omit<
     PAScheduleBInput,
@@ -190,6 +203,8 @@ export interface PAOrchestratorOverrides {
   extensionPayment?: Decimal;
   /** Estimated tax payments */
   estimatedPayments?: Decimal;
+  /** Reconciled PA source withholding entered separately from the document arrays. */
+  additionalStateWithholding?: Decimal;
   /** Nonresident tax withheld from PA Schedule(s) NRK-1 */
   nonresidentTaxWithheld?: Decimal;
   /** Schedule SP-includable nontaxable income, excluding Social Security and similar exempt retirement benefits */
@@ -246,6 +261,26 @@ const PA_SCHEDULE_SP_MARRIED_DEPENDENT_FILING_ERROR =
 // Result
 // ---------------------------------------------------------------------------
 
+/** Processing reference only: paper PA-40 and actual Department disbursement are separate. */
+export interface PAWorkingCreditProcessingReference {
+  stage: "department-processing-reference";
+  credit: Decimal;
+  creditAppliedToTaxDue: Decimal;
+  remainingTaxDueBeforePenalties: Decimal;
+  additionalOverpaymentBeforePenalties: Decimal;
+}
+/** Keep raw original identities private; only this versioned commitment is returned. */
+function workingCreditSourceCommitment(input: TaxYearInput): string {
+  const canonical = (value: unknown): unknown => {
+    if (Array.isArray(value)) return value.map(canonical);
+    if (value !== null && typeof value === "object") return Object.fromEntries(
+      Object.entries(value).sort(([left], [right]) => left.localeCompare(right)).map(([key, child]) => [key, canonical(child)]),
+    );
+    return value;
+  };
+  return bytesToHex(sha256(new TextEncoder().encode(JSON.stringify({version:"pa-wptc-actual-v1",taxYear:input.taxpayer.taxYear,original:canonical(input)}))));
+}
+
 export interface PAOrchestratorResult {
   pa40: PA40Result;
   scheduleSP: ScheduleSPResult;
@@ -258,6 +293,10 @@ export interface PAOrchestratorResult {
   scheduleT?: PAScheduleTResult;
   /** Schedule A result for PA interest income */
   scheduleA?: PAScheduleAResult;
+  /** Source-linked PA OID adjustments and withholding. */
+  oidSources?: PAOIDSourcesResult;
+  rentalClassifications: PARentalClassificationResult[];
+  rentalIncomeWorksheets: PARentalIncomeExpensesResult[];
   /** Schedule B result for PA dividend income */
   scheduleB?: PAScheduleBResult;
   /** Schedule F result for PA farm income */
@@ -274,6 +313,9 @@ export interface PAOrchestratorResult {
   scheduleDC?: ScheduleDCResult;
   /** Working Pennsylvanians Tax Credit result (only present for tax year 2025+) */
   workingPennsylvaniansTaxCredit?: PAWorkingPennsylvaniansTaxCreditResult;
+  /** WPTC-specific original binding, not qualification of unrelated PA totals. */
+  workingCreditSourceCommitment?: string;
+  workingCreditProcessing?: PAWorkingCreditProcessingReference;
   /** Schedule OC result (only present when scheduleOC input is provided) */
   scheduleOC?: ScheduleOCResult;
   /** Schedule SD result (only present when scheduleSD input is provided) */
@@ -418,6 +460,7 @@ function resolvePAResidentOverrides(
 
   if (resolved.scheduleA === undefined && residentReturn.scheduleA) {
     resolved.scheduleA = {
+      oidSources: residentReturn.scheduleA.oidSources,
       additionAdjustments: toPAAdjustmentEntries<PAScheduleAAdjustmentEntry>(
         residentReturn.scheduleA.additionAdjustments,
       ),
@@ -839,7 +882,7 @@ function map1099KRental(input: TaxYearInput): Decimal {
 /** Federal interest baseline for PA Schedule A Line 1 */
 function mapFederalInterestIncome(input: TaxYearInput): Decimal {
   return input.form1099Int.reduce(
-    (acc, f) => acc.plus(d(f.interestIncome)),
+    (acc, f) => acc.plus(d(f.interestIncome)).plus(d(f.usSavingsBondInterest)),
     new Decimal(0),
   );
 }
@@ -921,32 +964,6 @@ function mapCapitalGainDistributions(input: TaxYearInput): Decimal {
   );
 }
 
-function calculateRentalPropertyNetIncome(property: TaxYearInput["rentalProperties"][number]): Decimal {
-  return d(property.rents).minus(sum(
-    d(property.advertising),
-    d(property.autoTravel),
-    d(property.cleaning),
-    d(property.commissions),
-    d(property.insurance),
-    d(property.legalProfessional),
-    d(property.managementFees),
-    d(property.mortgageInterest),
-    d(property.otherInterest),
-    d(property.repairs),
-    d(property.supplies),
-    d(property.taxes),
-    d(property.utilities),
-    d(property.depreciation),
-    d(property.otherExpenses),
-  ));
-}
-
-function isSupportedShortTermRentalBusinessProperty(
-  property: TaxYearInput["rentalProperties"][number],
-): boolean {
-  return property.rentalDays > 0 && property.rentalDays < 30;
-}
-
 type PAClass4Owner = "primary" | "spouse";
 
 interface PAClass4IncomeByOwner {
@@ -959,7 +976,12 @@ function getPAClass4Owner(accountHolder?: PAClass4Owner): PAClass4Owner {
   return accountHolder === "spouse" ? "spouse" : "primary";
 }
 
-function calculatePAScheduleCNetIncome(input: TaxYearInput): Decimal {
+/** Actual PA-only source projection; no federal deduction or whole-return qualification. */
+function assertPAAmortizationSource(input:TaxYearInput):void{
+  if(input.scheduleC?.sourceFacts?.amortization&&input.form4562&&calculateForm4562(input.form4562,input.taxpayer.taxYear).line44.gt(0))throw new Error('PA amortization requires actual independent PA business basis and source method; federal Section197 is not a PA allowance');
+}
+export function calculatePAScheduleCNetIncome(input: TaxYearInput): Decimal {
+  assertPAAmortizationSource(input);
   if (!input.scheduleC) {
     return new Decimal(0);
   }
@@ -1028,6 +1050,7 @@ function mapBusinessIncomeByOwner(
   options: {
     scheduleF?: PAScheduleFResult;
     scheduleRK1?: PAScheduleRK1Result;
+    businessRentals?: ReadonlySet<RentalProperty>;
   } = {},
 ): PAClass4IncomeByOwner {
   let primary = new Decimal(0);
@@ -1076,11 +1099,11 @@ function mapBusinessIncomeByOwner(
     }
   }
 
-  // Supported short-term rentals currently lack an owner tag in the validated
-  // input model, so they remain in the primary-filer bucket.
+  // Apply the actual ownership share and owner before separate Class4 limits.
+  // Legacy unconfirmed ownerless previews retain their historical bucket.
   for (const property of input.rentalProperties) {
-    if (isSupportedShortTermRentalBusinessProperty(property)) {
-      addAmount(calculateRentalPropertyNetIncome(property));
+    if (options.businessRentals?.has(property)) {
+      addAmount(calculatePARentalIncomeExpenses(property, input.taxpayer.taxYear).netIncome, property.accountHolder === "spouse" ? "spouse" : "primary");
     }
   }
 
@@ -1103,14 +1126,17 @@ function mapBusinessIncomeByOwner(
 function calculateResidentPAScheduleE(
   input: TaxYearInput,
   additionalScheduleK1: readonly ScheduleK1[] = [],
+  businessRentals: ReadonlySet<RentalProperty> = new Set(),
 ) {
   return calculatePAScheduleE({
     taxYear: input.taxpayer.taxYear,
     filingStatus: input.taxpayer.filingStatus,
     rentalProperties: input.rentalProperties.filter(
-      (property) => !isSupportedShortTermRentalBusinessProperty(property),
+      (property) => !businessRentals.has(property),
     ),
     form1099Misc: input.form1099Misc,
+    taxpayer: input.taxpayer,
+    royaltyPropertySources: input.royaltyPropertySources,
     scheduleK1: [...input.scheduleK1, ...additionalScheduleK1],
   });
 }
@@ -1139,7 +1165,7 @@ function mapExcludedHomeSaleGainForScheduleSP(input: TaxYearInput): Decimal {
   if (input.homeSales.length === 0) return new Decimal(0);
   const taxYear = input.taxpayer.taxYear;
   const constants = TAX_CONSTANTS[taxYear];
-  if (!constants) return new Decimal(0);
+  if (!constants) throw new Error(`Home-sale exclusion rules are unavailable for tax year ${taxYear}.`);
 
   const result = calculateHomeSales(
     input.homeSales,
@@ -1156,7 +1182,7 @@ function mapExcludedHomeSaleGainForScheduleSP(input: TaxYearInput): Decimal {
 
 /**
  * US government obligation interest exempt from PA tax.
- * 1099-INT Box 3 (usSavingsBondInterest) is included in Box 1 but exempt for PA.
+ * 1099-INT Box 3 is separate from Box 1 and exempt from PA income tax.
  * Reference: 72 Pa.C.S. § 7303(a)(2)
  */
 function mapUSGovExemptInterest(input: TaxYearInput): Decimal {
@@ -1166,75 +1192,21 @@ function mapUSGovExemptInterest(input: TaxYearInput): Decimal {
   );
 }
 
-/** PA state withholding from all sources */
+/** PA-40 line13: actual source state is required for every nonzero withholding. */
 function mapStateWithholding(input: TaxYearInput): Decimal {
-  let total = new Decimal(0);
-
-  // W-2 Box 17 (PA state)
-  for (const w2 of input.w2s) {
-    const paState = w2.state?.toUpperCase();
-    if (paState && paState !== "PA") continue;
-    total = total.plus(d(w2.stateTaxWithheld));
-  }
-
-  // W-2G Box 13 (PA state)
-  for (const w2g of input.formW2G) {
-    const paState = w2g.state?.toUpperCase();
-    if (paState && paState !== "PA") continue;
-    total = total.plus(d(w2g.stateWithheld));
-  }
-
-  // 1099-G Box 11 (PA state)
-  for (const g of input.form1099G) {
-    const paState = g.state?.toUpperCase();
-    if (paState && paState !== "PA") continue;
-    total = total.plus(d(g.stateWithheld));
-  }
-
-  // 1099-K Box 8 (PA state)
-  for (const k of input.form1099K) {
-    const paState = k.state?.toUpperCase();
-    if (paState && paState !== "PA") continue;
-    total = total.plus(d(k.stateWithheld));
-  }
-
-  // 1099-R Box 12 (PA state)
-  const forms1099R = input.form1099R ?? [];
-  for (const r of forms1099R) {
-    const paState = r.state?.toUpperCase();
-    if (paState && paState !== "PA") continue;
-    total = total.plus(d(r.stateWithheld));
-  }
-
-  // 1099-INT Box 13 (PA state)
-  for (const int1099 of input.form1099Int) {
-    const paState = int1099.state?.toUpperCase();
-    if (paState && paState !== "PA") continue;
-    total = total.plus(d(int1099.stateWithheld));
-  }
-
-  // 1099-DIV Box 14 (PA state)
-  for (const div of input.form1099Div) {
-    const paState = div.state?.toUpperCase();
-    if (paState && paState !== "PA") continue;
-    total = total.plus(d(div.stateWithheld));
-  }
-
-  // 1099-MISC Box 16 (PA state)
-  for (const misc of input.form1099Misc) {
-    const paState = misc.state?.toUpperCase();
-    if (paState && paState !== "PA") continue;
-    total = total.plus(d(misc.stateWithheld));
-  }
-
-  // 1099-NEC Box 5 (PA state)
-  for (const nec of input.form1099Nec) {
-    const paState = nec.state?.toUpperCase();
-    if (paState && paState !== "PA") continue;
-    total = total.plus(d(nec.stateWithheld));
-  }
-
-  return total;
+  const sourceRows = [
+    ...input.w2s.map(source => ({ state: source.state, amount: source.stateTaxWithheld })),
+    ...[...input.formW2G, ...input.form1099G, ...input.form1099K, ...(input.form1099R ?? []),
+      ...input.form1099Int, ...input.form1099Div, ...input.form1099Misc,
+      ...input.form1099Nec, ...(input.form1099B ?? [])].map(source => ({ state: source.state, amount: source.stateWithheld })),
+  ];
+  return sourceRows.reduce((total, row) => {
+    const amount = d(row.amount);
+    if (!amount.isFinite() || amount.isNegative()) throw new Error("PA source withholding must be finite and nonnegative.");
+    const actualState = row.state?.trim().toUpperCase();
+    if (!amount.isZero() && !/^[A-Z]{2}$/.test(actualState ?? "")) throw new Error("PA withholding needs the actual source state for every nonzero statement amount.");
+    return actualState === "PA" ? total.plus(amount) : total;
+  }, new Decimal(0));
 }
 
 /** Local EIT withholding from W-2 Box 19 */
@@ -1515,10 +1487,24 @@ function buildScheduleEK1FromPAPassThroughStatement(statement: PAPassThroughStat
   } as ScheduleK1;
 }
 
+/** Spec: qof-deferred-gain-inclusion.yaml state. */
 export function calculatePAReturn(
   input: TaxYearInput,
   overrides: PAOrchestratorOverrides = {},
-): PAOrchestratorResult {
+): PAOrchestratorResult | PAMarriedOrdinaryReturnResult {
+  // Canonical household sources are resolved before any legacy scalar fallback.
+  if(input.paMarriedOrdinarySources!==undefined){
+    if(Object.keys(overrides).length)throw new Error('Actual married PA household sources cannot be overridden by legacy scalars.');
+    if(input.taxpayer.taxYear!==2025)throw new Error('Public married PA review currently requires actual2025 qualified sources; final2026 public admission remains unavailable.');
+    return calculatePAMarriedOrdinaryReturn(input,input.paMarriedOrdinarySources);
+  }
+  assertPAAmortizationSource(input);
+  assertQofStateMethod(input, "Pennsylvania");
+  assertClaimOfRightStateMethod(input, "Pennsylvania");
+  if (input.royaltyPropertySources !== undefined) {
+    calculatePARoyaltyPropertySources(input);
+  }
+  const digitalCapitalInput = calculateDigitalAssetStateSources(input, "PA");
   const taxYear = input.taxpayer.taxYear;
   const ZERO = new Decimal(0);
   const hasFederalConstantsForYear = TAX_CONSTANTS[taxYear] !== undefined;
@@ -1556,6 +1542,14 @@ export function calculatePAReturn(
     const hasRawSupportedScheduleODeductions = adjustments?.archerMSADeduction !== undefined
       || adjustments?.hsaDeduction !== undefined
       || adjustments?.studentLoanInterest !== undefined;
+
+    // PA-only expense sources do not require a speculative federal calculation
+    // when no federal-dependent Schedule O deduction/default is requested.
+    if (!resolvedOverrides.scheduleO && !hasRawSupportedScheduleODeductions
+      && input.form8889 === undefined && input.form8889ByOwner === undefined
+      && input.studentLoanInterestFacts === undefined && (input.form1098E ?? []).length === 0) {
+      return undefined;
+    }
 
     if (!hasFederalConstantsForYear) {
       if (!resolvedOverrides.scheduleO && !hasRawSupportedScheduleODeductions) {
@@ -1685,22 +1679,33 @@ export function calculatePAReturn(
     .plus(mapUnreportedTips(input))
     .plus(mapUncollectedWages(input));
 
-  const usGovExemptInterest = mapUSGovExemptInterest(input);
+  const oidSources = calculatePAOIDSources(input.form1099OID ?? [], resolvedOverrides.scheduleA?.oidSources, taxYear);
+  const usGovExemptInterest = mapUSGovExemptInterest(input).plus(oidSources.usGovernmentInterest);
+  const federalSavingsBondExclusion = input.savingsBondRedemptions.length > 0
+    ? getFederalResult().form8815?.excludableSavingsBondInterest ?? ZERO
+    : ZERO;
+  const previouslyReportedBondInterest = input.savingsBondRedemptions.length > 0
+    ? getFederalResult().scheduleB?.previouslyReportedSavingsBondInterest ?? ZERO
+    : ZERO;
   const fullFederalScheduleK1Interest = mapFederalScheduleK1Interest(input);
   const paPassThroughInterestForScheduleA = mapFederalScheduleK1Interest(heuristicK1Input)
     .plus(scheduleRK1?.totalInterestIncome ?? ZERO);
   const scheduleAInput: PAScheduleAInput = {
     taxYear,
-    federalInterestIncome: mapFederalInterestIncome(input).plus(fullFederalScheduleK1Interest),
-    taxExemptInterest: mapTaxExemptInterestIncludedInFederalReturn(input),
-    additionAdjustments: resolvedOverrides.scheduleA?.additionAdjustments,
+    federalInterestIncome: mapFederalInterestIncome(input).plus(fullFederalScheduleK1Interest)
+      .minus(previouslyReportedBondInterest).minus(federalSavingsBondExclusion).plus(oidSources.federalTaxableInterest),
+    taxExemptInterest: mapTaxExemptInterestIncludedInFederalReturn(input).plus(oidSources.federalTaxExemptInterest),
+    additionAdjustments: [...resolvedOverrides.scheduleA?.additionAdjustments ?? [],
+      ...(oidSources.federalPremiumAddback.isZero() ? [] : [{ description: "OID federal bond premium amortization", amount: oidSources.federalPremiumAddback }])],
     federalScheduleK1Interest: fullFederalScheduleK1Interest,
     paObligationInterest: resolvedOverrides.scheduleA?.paObligationInterest
-      ?? mapPADirectObligationInterest(input),
-    usGovernmentInterest: usGovExemptInterest,
-    reductionAdjustments: resolvedOverrides.scheduleA?.reductionAdjustments,
+      ?? mapPADirectObligationInterest(input).plus(oidSources.paDirectObligationInterest),
+    usGovernmentInterest: zeroFloor(usGovExemptInterest.minus(previouslyReportedBondInterest)
+      .minus(federalSavingsBondExclusion)),
+    reductionAdjustments: [...resolvedOverrides.scheduleA?.reductionAdjustments ?? [],
+      ...(oidSources.paPremiumReduction.isZero() ? [] : [{ description: "OID PA bond premium amortization", amount: oidSources.paPremiumReduction }])],
     forfeitedInterestPenalty: resolvedOverrides.scheduleA?.forfeitedInterestPenalty
-      ?? mapSupportedPAForfeitedInterestPenalty(input),
+      ?? mapSupportedPAForfeitedInterestPenalty(input).plus(oidSources.forfeitedInterestPenalty),
     annuityAndEndowmentDistributions: (resolvedOverrides.scheduleA?.annuityAndEndowmentDistributions ?? ZERO)
       .plus(retirement.codeDPairedInterest),
     charitableGiftAnnuityIncome: resolvedOverrides.scheduleA?.charitableGiftAnnuityIncome,
@@ -1738,15 +1743,19 @@ export function calculatePAReturn(
   const scheduleB = calculatePAScheduleB(scheduleBInput);
   const dividends = scheduleB.line12;
   const scheduleF = calculatePAFarmSchedule(input);
+  const rentalClassifications = input.rentalProperties.map(property => calculatePARentalClassification(property, taxYear));
+  const rentalIncomeWorksheets = input.rentalProperties.map(property => calculatePARentalIncomeExpenses(property, taxYear));
+  const businessRentals = new Set(input.rentalProperties.filter((_, index) => rentalClassifications[index].isBusiness));
   const class4BusinessIncome = mapBusinessIncomeByOwner(input, heuristicK1Input, {
     scheduleF,
     scheduleRK1,
+    businessRentals,
   });
   const netBusinessIncome = class4BusinessIncome.reportable;
   const scheduleD = calculatePAScheduleD({
     taxYear,
     filingStatus: input.taxpayer.filingStatus,
-    form1099B: input.form1099B,
+    form1099B: digitalCapitalInput.form1099B,
     scheduleK1: heuristicK1Input.scheduleK1,
     paPassThroughStatements,
     homeSales: input.homeSales,
@@ -1755,7 +1764,7 @@ export function calculatePAReturn(
     ...resolvedOverrides.scheduleD,
   });
   const netGainOrLoss = scheduleD.reportableNetGainOrLoss;
-  const scheduleE = calculateResidentPAScheduleE(heuristicK1Input, scheduleERK1Statements);
+  const scheduleE = calculateResidentPAScheduleE(heuristicK1Input, scheduleERK1Statements, businessRentals);
   const netRentalIncome = scheduleE.reportableNetRentalRoyaltyIncome.plus(map1099KRental(input));
   let scheduleJ: ScheduleJResult | undefined;
   const scheduleRK1EstateTrustIncome = scheduleRK1?.totalEstateTrustIncome ?? ZERO;
@@ -1795,7 +1804,11 @@ export function calculatePAReturn(
   const paLotteryExempt = scheduleT?.exemptPALotteryNoncashWinnings ?? ZERO;
   const excludedHomeSaleGainForScheduleSP = mapExcludedHomeSaleGainForScheduleSP(input);
 
-  const stateWithholding = mapStateWithholding(input);
+  const additionalStateWithholding = resolvedOverrides.additionalStateWithholding ?? ZERO;
+  if (!additionalStateWithholding.isFinite() || additionalStateWithholding.isNegative()) {
+    throw new Error("Additional PA withholding must be a finite nonnegative actual source amount.");
+  }
+  const stateWithholding = mapStateWithholding(digitalCapitalInput).plus(oidSources.stateWithholding).plus(additionalStateWithholding);
 
   // -------------------------------------------------------------------------
   // Step 1b: Schedule UE — Unreimbursed Employee Business Expenses
@@ -1937,9 +1950,8 @@ export function calculatePAReturn(
     .plus(usGovExemptInterest)
     .plus(excludedHomeSaleGainForScheduleSP)
     .plus(paLotteryExempt);
-  const taxPaidToOtherStates = sum(
-    ...effectiveOtherStateCredits.map((credit) => credit.taxPaidToOtherState),
-  );
+  // 2025 Schedule SP Section IV Line 13 carries PA-40 Line 22 after G-L caps.
+  const taxPaidToOtherStates = roundDollar(scheduleGL.totalCredit);
   const filingCategory = mapFilingCategory(input.taxpayer, resolvedOverrides);
   const additionalEligibilityIncome = (resolvedOverrides.additionalEligibilityIncome ?? ZERO).plus(
     filingCategory === "married"
@@ -1986,7 +1998,7 @@ export function calculatePAReturn(
 
   let scheduleDC: ScheduleDCResult | undefined;
   let workingPennsylvaniansTaxCredit: PAWorkingPennsylvaniansTaxCreditResult | undefined;
-  let refundableCreditsAmount = ZERO;
+  const refundableCreditsAmount = ZERO;
   let scheduleDCCreditAmount = ZERO;
 
   if (input.dependentCare) {
@@ -2008,7 +2020,8 @@ export function calculatePAReturn(
       isClaimedAsDependentOnAnotherFederalReturn:
         resolvedOverrides.isClaimedAsDependentOnAnotherFederalReturn,
     });
-    refundableCreditsAmount = refundableCreditsAmount.plus(workingPennsylvaniansTaxCredit.credit);
+    // DOR FAQ4255: 2025 paper PA-40 is unchanged; the Department adds WPTC
+    // during processing. Never insert the credit into printed paper totals.
   }
 
   const allowedOtherCreditsAmount = calculatePA40AllowedOtherCredits({
@@ -2038,10 +2051,13 @@ export function calculatePAReturn(
     const rev1630Input: REV1630Input = {
       taxYear,
       taxLiability: firstPass.taxLiability,
-      withholdingAndCredits: stateWithholding
-        .plus(scheduleSP.taxForgivenessCredit)
-        .plus(scheduleGL.totalCredit)
-        .plus(allowedOtherCreditsAmount),
+      // Actual reported PA-40 Lines13/17/21/22/23; each line rounds once.
+      // Payment-only lines and separate WPTC processing are not Line2 credits.
+      withholdingAndCredits: roundDollar(stateWithholding)
+        .plus(roundDollar(nonresidentTaxWithheld))
+        .plus(roundDollar(scheduleSP.taxForgivenessCredit))
+        .plus(roundDollar(scheduleGL.totalCredit))
+        .plus(roundDollar(finalOtherCreditsAmount)),
       quarterlyEstimatedPayments: normalizedQuarterlyEstimatedPayments,
       priorYear100PercentForgiveness: resolvedOverrides.priorYear100PercentForgiveness,
       priorYearPATaxableIncome: resolvedOverrides.priorYearPATaxableIncome,
@@ -2068,6 +2084,14 @@ export function calculatePAReturn(
   };
 
   const pa40 = calculatePA40(finalPA40Input);
+  const workingCreditProcessing: PAWorkingCreditProcessingReference | undefined = workingPennsylvaniansTaxCredit === undefined ? undefined : {
+    stage: "department-processing-reference",
+    credit: workingPennsylvaniansTaxCredit.credit,
+    creditAppliedToTaxDue: Decimal.min(workingPennsylvaniansTaxCredit.credit, pa40.taxDue),
+    remainingTaxDueBeforePenalties: zeroFloor(pa40.taxDue.minus(workingPennsylvaniansTaxCredit.credit)),
+    additionalOverpaymentBeforePenalties: zeroFloor(workingPennsylvaniansTaxCredit.credit.minus(pa40.taxDue)),
+  };
+
 
   // -------------------------------------------------------------------------
   // Step 7: Schedule SD (if school district inputs are provided)
@@ -2122,6 +2146,9 @@ export function calculatePAReturn(
     scheduleJ,
     scheduleT,
     scheduleA,
+    oidSources: input.form1099OID?.length ? oidSources : undefined,
+    rentalClassifications,
+    rentalIncomeWorksheets,
     scheduleB,
     scheduleF,
     scheduleD,
@@ -2130,6 +2157,8 @@ export function calculatePAReturn(
     scheduleO,
     scheduleDC,
     workingPennsylvaniansTaxCredit,
+    workingCreditSourceCommitment: workingPennsylvaniansTaxCredit === undefined ? undefined : workingCreditSourceCommitment(input),
+    workingCreditProcessing,
     scheduleOC: scheduleOCResult,
     scheduleSD,
     localEIT,

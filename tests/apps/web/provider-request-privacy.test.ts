@@ -2,6 +2,26 @@ import { describe, expect, it } from "vitest";
 import { containsUnsafeDirectIdentifier } from "../../../apps/web/src/lib/provider-request-privacy";
 
 describe("provider request privacy guard", () => {
+  it.each([
+    "Account holder\nMaría-José Nuñez", "Recipient Name: Anne-Marie O'Neil",
+    "Card Member CASEY SAMPLE", "Taxpayer Name: Casey Sample", "Spouse Name: Casey Sample",
+  ])("rejects labelled names even when there are no other identifiers: %s", (value) => {
+    expect(containsUnsafeDirectIdentifier(value)).toBe(true);
+  });
+
+  it("accepts redaction tokens and traverses nested cyclic data without losing checks", () => {
+    const safe: Record<string, unknown> = { value: [null, true, 2026, "Account holder\n[person-name-1]"] };
+    safe.self = safe;
+    expect(containsUnsafeDirectIdentifier(safe)).toBe(false);
+    safe.nested = { details: ["Account holder\nMaría-José Nuñez"] };
+    expect(containsUnsafeDirectIdentifier(safe)).toBe(true);
+  });
+
+  it("checks card checksums without classifying arbitrary grouped invoice numbers as cards", () => {
+    expect(containsUnsafeDirectIdentifier("Card 4111 1111 1111 1111")).toBe(true);
+    expect(containsUnsafeDirectIdentifier("Invoice 4111 1111 1111 1112")).toBe(false);
+  });
+
   it("detects raw person names in common provider-facing request contexts", () => {
     expect(containsUnsafeDirectIdentifier({
       requestId: "provider-workspace:workspace-jane-doe:2026-03-12T00:00:00.000Z",

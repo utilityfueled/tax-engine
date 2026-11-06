@@ -1,0 +1,15 @@
+form: "PA actual completed Michigan copyright withholding settlement"
+taxYear: 2025
+reference: "https://www.michigan.gov/taxes/rep-legal/rab/rabhtml/2020/revenue-administrative-bulletin-2020-24"
+sourceRetrieved: "2026-11-03"
+notes: "Finite completed imported MI account, not an MI calculator or filing qualification. Current actual copyright/original binding, zero MI utilization and explicit agency reconciliation of printed stateIncome12000.25 required. Legal claim availability does not establish payment."
+lines:
+  - line: "source-control-1"
+    formula: "actualWH80.20 -> filedW/MI1040withholding80; separately submitted full80.20 claim +agencyaward80.20 +actuallyreceived80.20 +completeaccount all0 -> PAcredit0. Only80 received denies, no inferred.20 writeoff. Original PAincome211000/tax6478 and corrected210900/tax6475 remain."
+    testRef: "tests/engine/state/pa-royalty-tax-refund-sources.test.ts::composes actual complete MI refund evidence without inventing a resident credit"
+  - line: "source-control-2"
+    formula: "actualWH80.20 -> filedW/MI1040withholding80; separately submitted full80.20 claim +agencyaward80.20 +actuallyreceived80.20 +completeaccount all0 -> PAcredit0. Only80 received denies, no inferred.20 writeoff. Original PAincome211000/tax6478 and corrected210900/tax6475 remain."
+    testRef: "tests/engine/state/pa-royalty-tax-refund-sources.test.ts::keeps original printed MI boxes distinct from separately evidenced exact cash refund"
+  - line: "source-control-3"
+    formula: "actualWH80.20 -> filedW/MI1040withholding80; separately submitted full80.20 claim +agencyaward80.20 +actuallyreceived80.20 +completeaccount all0 -> PAcredit0. Only80 received denies, no inferred.20 writeoff. Original PAincome211000/tax6478 and corrected210900/tax6475 remain."
+    testRef: "tests/engine/state/pa-royalty-tax-refund-sources.test.ts::rejects incomplete or contradictory actual MI settlement: %s"

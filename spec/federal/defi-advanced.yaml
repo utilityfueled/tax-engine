@@ -182,8 +182,8 @@ lines:
   - line: "donation-short-term"
     description: "Crypto donation held ≤1 year — basis deduction"
     formula: |
-      Donating crypto held ≤1 year: deduction limited to cost basis.
-      Appreciation is not deductible.
+      Donating crypto held ≤1 year: tentative deduction is the lesser of FMV
+      and cost basis, before Schedule A category limits. Appreciation is not deductible.
     irsRef: "IRC §170(e)(1)(A)"
     testRef: "tests/engine/forms/crypto-lot-matching.test.ts::Short-term crypto donation deducts basis only"
 

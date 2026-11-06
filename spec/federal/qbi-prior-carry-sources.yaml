@@ -1,0 +1,93 @@
+form: "Prior ordinary QBI source"
+fullName: "Actual preceding-return ordinary QBI carry for the same taxpayer or joint couple"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i8995"
+notes: |
+  Form8995 lines3 and16 and ScheduleC(Form8995-A) lines2 and6 carry the
+  ordinary net qualified loss into the next year's calculation. A loss still
+  suspended by basis, at-risk, passive or461 rules is tracked separately.
+  The existing calculation remains unchanged; this source method identifies the
+  actual preceding return, people, original form and recorded amount. An actual
+  completed prior-return known-zero record admits only zero. Missing prior facts
+  never establish absence of ordinary loss, even with complete suspended histories.
+  A direct sameFilingUnit source allows the same individual on two nonjoint returns,
+  or the same two actual people on two joint returns. The actual prior filing
+  status is recorded. Original printed primary/spouse roles are retained; reversal
+  within the same joint couple does not allocate a new ownership share. No change
+  between joint and nonjoint units, changed couple, or deceased-owner allocation
+  is derived. Existing NOL-timeline records remain supported. Any supplied regular
+  or AMT timeline is reconciled to the relevant prior and current actual identities.
+  This is required for the complete K1/qualified-loss source route with actual
+  activities or qualified EBL histories, including current zero QBI. A deliberately
+  supplied record validates without current activities. Legacy raw K1 inputs without
+  the complete source packet retain their distinct API contract; this does not
+  claim complete facts for that legacy route. Optional active character remains
+  unknown unless independently recorded. No2026 readiness or human qualification
+  follows. Literal controls below are derived from actual synthetic source facts,
+  not a published matching IRS example.
+lines:
+  - line: "direct-source"
+    description: "Require a recorded ordinary prior carry independently of suspended histories"
+    formula: "Complete current K1 activities or actual qualified EBL histories require a confirmed preceding-year source record with form, reference, return identity, actual printed people, prior filing status and continuity confirmation. Missing amount, unknown or false confirmation, or the source packet's absence rejects. Actual0 remains0."
+    irsRef: "Form8995 lines3,16; Form8995-A ScheduleC lines2,6; separate suspended-loss records"
+    testRef: "tests/engine/forms/qbi-prior-carry-ordinary.test.ts::requires actual ordinary carry for complete K1 sources without inventing zero"
+  - line: "positive-negative-zero"
+    description: "Use the actual carry once with positive negative or zero current QBI"
+    formula: "Same-couple MFJ wages100000 plus actual ordinary S-corp income/QBI100000 with no other business/SE adjustments gives QBI93000 and deduction18600 after actual prior7000; prior0 gives20000. Both taxable caps are nonbinding. Actual fully allowed current loss5000 plus prior7000 gives12000 ordinary closing carry. Current qualified amount0 retains prior7000. Suspended basis/risk/passive amounts are not added again."
+    irsRef: "Form8995 lines2-5,16; Form8995-A ScheduleC lines2-6"
+    testRef: "tests/engine/forms/qbi-prior-carry-ordinary.test.ts::combines recorded ordinary carries with positive negative and zero current QBI"
+  - line: "actual-owner"
+    description: "Validate the original filing unit without deriving changed-owner shares"
+    formula: "Match normalized actual original names and ID suffixes to the current individual or unordered joint pair. Preserve original printed roles. Wrong year, changed person, duplicate joint identity, false continuity, missing status, prior joint/current nonjoint or its converse rejects, including an entered0. The previous form's actual whole-dollar loss magnitude must reconcile to canonical priorYear."
+    irsRef: "Form8995 carry recordkeeping; actual prior/current return identity"
+    testRef: "tests/engine/forms/qbi-prior-carry-ordinary.test.ts::binds original status people and year without allocating a different filing unit"
+  - line: "known-timeline"
+    description: "Reconcile direct source with every supplied relevant NOL timeline"
+    formula: "A direct record does not bypass supplied NOL people or returns. Validate each supplied timeline's current unit; require the preceding original's year, filing status and people to agree, and the regular original ID to identify the record. Contradictory regular or AMT actual ownership/status rejects. Existing records without direct attachment continue through the original NOL route."
+    irsRef: "Actual source agreement; independent regular and AMT original histories"
+    testRef: "tests/engine/forms/qbi-prior-carry-ordinary.test.ts::reconciles supplied NOL identities while preserving the existing timeline route"
+  - line: "active-presence"
+    description: "Preserve independent unknown and recorded active character"
+    formula: "Absent active amount and reference remain absent. Actual0 with independent reference remains0. Reference-only, negative, fractional filed amount, excessive active amount or mismatching canonical active presence rejects. Current participation or EBL fraction supplies no ordinary active history."
+    irsRef: "Original ordinary loss character and existing active-QBI source contract"
+    testRef: "tests/engine/forms/qbi-prior-carry-ordinary.test.ts::keeps active character unknown until its separate source is recorded"
+  - line: "legacy-boundary"
+    description: "Keep the complete source method separate from legacy raw K1 input"
+    formula: "The complete source route may not assume prior0 when a current activity has zero QBI. Legacy raw ScheduleK1 inputs without qbiLossSources remain accepted under their existing input contract. A supplied standalone record validates even when no current K1 exists."
+    irsRef: "Source completeness boundary; no calculation override"
+    testRef: "tests/engine/forms/qbi-prior-carry-ordinary.test.ts::preserves legacy raw inputs while validating deliberately supplied records"
+  - line: "actual-guide"
+    description: "Reach the actual prior record without an unrelated NOL history"
+    formula: "The existing qualified-loss guide accepts direct prior identity/status/amount sources, derives the canonical prior balance from them, and preserves other capital/passive carry facts. No NOLtimeline or entered current deduction is required. Legacy saved source packets remain incomplete until the original record is entered."
+    irsRef: "Form8995 lines3,16; source-bound guided return"
+    testRef: "tests/guided-interview/guided-prior-qbi-ordinary.test.ts::bridges actual ordinary prior carry without an NOL history"
+  - line: "confirmation"
+    description: "Invalidate actual source edits and current household changes"
+    formula: "Changing any ordinary prior source fact, continuity fact or current household/year/status revokes original source confirmation. Explicit reconfirmation is required after an actual correction. Blank source amounts stay unknown and actual0 stays0; optional active absence is preserved."
+    irsRef: "Actual source edit and identity binding"
+    testRef: "tests/guided-interview/guided-prior-qbi-ordinary.test.ts::preserves unknown values and invalidates source edits and changed households"
+  - line: "source-panel"
+    description: "Collect direct original filing-unit facts in the existing ordinary carry fieldset"
+    formula: "Offer direct same-taxpayer source facts separately from the established NOL-linked route. Prior status and continuity are actual entries, with no inferred confirmation. Removing or clearing them blocks completion. Original amount changes revoke confirmation and may be reconfirmed without copying a current calculated value."
+    irsRef: "Actual source collector contract"
+    testRef: "tests/apps/web/prior-qbi-ordinary-interactions.test.tsx::collects the direct prior return and retains source invalidation"
+  - line: "review-binding"
+    description: "Reject stale same-money source replacements before output"
+    formula: "Private review context binds the actual ordinary record and canonical result. Same amount with a replaced reference, person or year, omitted original or forged line3/line16 rejects before template I/O. The reference shows validated form/year/amount and active unknown; no original reference or personal suffix is printed."
+    irsRef: "Form8995 records and review-only output binding"
+    testRef: "tests/pdf/prior-qbi-ordinary-review.test.ts::binds the direct original ordinary carry before saved review output"
+  - line: "actual-workspace"
+    description: "Export calculated ordinary carry from actual complete guided sources"
+    formula: "Actual guide records with no NOL timeline retain prior7000 and ordinary S-corp QBI100000; the saved Form8995 reports prior7000 and deduction18600, with the same independent active unknown. Missing prior record blocks export."
+    irsRef: "Form8995 lines3,15,16; review-only original-source output"
+    testRef: "tests/apps/web/workspace-prior-qbi-ordinary.test.ts::exports actual ordinary carry from the standalone guided source"
+  - line: "production"
+    description: "Save reload and download actual original facts through the full guide"
+    formula: "At desktop and mobile widths, clear the prior amount to unknown, enter actual0 then7000, reconfirm, reload saved originals and download the review packet. No NOL setup choice is added to admit the ordinary source. All calculation/privacy/readiness assertions remain enabled."
+    irsRef: "Original-source guide and review-only download contract"
+    testRef: "apps/web/tests/prior-qbi-ordinary.spec.ts::retains actual ordinary prior sources without NOL setup through review download"
+  - line: "historical-packet"
+    description: "Preserve saved missing records and explicitly distinguish new synthetic complete sources"
+    formula: "The retained historical capital-guide JSON has no ordinary carry record and rejects through the complete source route. A separate new synthetic fixture adds its actual preceding Form8995 zero record with identity/status/confirmation; removing that sole addition reproduces the retained original exactly. Existing direct-charity originals without qbiLossSources remain outside this complete-QBI-source requirement."
+    irsRef: "Actual source completeness; no migration from missing to zero"
+    testRef: "tests/apps/web/guided-k1-passive-capital.test.ts::keeps the historical missing ordinary carry unknown until separately recorded"

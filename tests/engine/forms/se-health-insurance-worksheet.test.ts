@@ -53,8 +53,8 @@ describe("SE Health Insurance Worksheet line-by-line", () => {
       netProfit: "100000",
     }, constants);
 
-    // 2025 limit for age 41-50: $890
-    expect(result.longTermCarePremiumsAllowed.toNumber()).toBe(890);
+    // 2025 limit for age 41-50: $900
+    expect(result.longTermCarePremiumsAllowed.toNumber()).toBe(900);
   });
 
   it("Line 2 - LTC premiums capped by age (age 51-60)", () => {
@@ -67,8 +67,8 @@ describe("SE Health Insurance Worksheet line-by-line", () => {
       netProfit: "100000",
     }, constants);
 
-    // 2025 limit for age 51-60: $1,790
-    expect(result.longTermCarePremiumsAllowed.toNumber()).toBe(1790);
+    // 2025 limit for age 51-60: $1,800
+    expect(result.longTermCarePremiumsAllowed.toNumber()).toBe(1800);
   });
 
   it("Line 2 - LTC premiums capped by age (age 61-70)", () => {
@@ -81,8 +81,8 @@ describe("SE Health Insurance Worksheet line-by-line", () => {
       netProfit: "100000",
     }, constants);
 
-    // 2025 limit for age 61-70: $4,770
-    expect(result.longTermCarePremiumsAllowed.toNumber()).toBe(4770);
+    // 2025 limit for age 61-70: $4,810
+    expect(result.longTermCarePremiumsAllowed.toNumber()).toBe(4810);
   });
 
   it("Line 2 - LTC premiums capped by age (age 71+)", () => {
@@ -95,8 +95,8 @@ describe("SE Health Insurance Worksheet line-by-line", () => {
       netProfit: "100000",
     }, constants);
 
-    // 2025 limit for age 71+: $5,960
-    expect(result.longTermCarePremiumsAllowed.toNumber()).toBe(5960);
+    // 2025 limit for age 71+: $6,020
+    expect(result.longTermCarePremiumsAllowed.toNumber()).toBe(6020);
   });
 
   it("Line 2 - LTC premiums under age limit pass through fully", () => {
@@ -118,14 +118,14 @@ describe("SE Health Insurance Worksheet line-by-line", () => {
       medicalDentalPremiums: "0",
       longTermCareCoverages: [
         { premiumsPaid: "1000", attainedAge: 35 },  // capped at 480
-        { premiumsPaid: "2000", attainedAge: 55 },  // capped at 1790
+        { premiumsPaid: "2000", attainedAge: 55 },  // capped at 1800
       ],
       eligibleMonths: 12,
       netProfit: "100000",
     }, constants);
 
-    // 480 + 1790 = 2270
-    expect(result.longTermCarePremiumsAllowed.toNumber()).toBe(2270);
+    // 480 + 1800 = 2280
+    expect(result.longTermCarePremiumsAllowed.toNumber()).toBe(2280);
   });
 
   it("Line 3 - Medicare premiums (Part B + Part D + Medigap)", () => {
@@ -401,7 +401,7 @@ describe("SE Health Insurance Worksheet edge cases", () => {
       netProfit: "100000",
     }, constants);
 
-    expect(result.longTermCarePremiumsAllowed.toNumber()).toBe(890);
+    expect(result.longTermCarePremiumsAllowed.toNumber()).toBe(900);
   });
 
   it("LTC age boundary: age 50 uses age41to50 limit", () => {
@@ -412,7 +412,7 @@ describe("SE Health Insurance Worksheet edge cases", () => {
       netProfit: "100000",
     }, constants);
 
-    expect(result.longTermCarePremiumsAllowed.toNumber()).toBe(890);
+    expect(result.longTermCarePremiumsAllowed.toNumber()).toBe(900);
   });
 
   it("LTC age boundary: age 51 uses age51to60 limit", () => {
@@ -423,7 +423,7 @@ describe("SE Health Insurance Worksheet edge cases", () => {
       netProfit: "100000",
     }, constants);
 
-    expect(result.longTermCarePremiumsAllowed.toNumber()).toBe(1790);
+    expect(result.longTermCarePremiumsAllowed.toNumber()).toBe(1800);
   });
 
   it("LTC age boundary: age 60 uses age51to60 limit", () => {
@@ -434,7 +434,7 @@ describe("SE Health Insurance Worksheet edge cases", () => {
       netProfit: "100000",
     }, constants);
 
-    expect(result.longTermCarePremiumsAllowed.toNumber()).toBe(1790);
+    expect(result.longTermCarePremiumsAllowed.toNumber()).toBe(1800);
   });
 
   it("LTC age boundary: age 61 uses age61to70 limit", () => {
@@ -445,7 +445,7 @@ describe("SE Health Insurance Worksheet edge cases", () => {
       netProfit: "100000",
     }, constants);
 
-    expect(result.longTermCarePremiumsAllowed.toNumber()).toBe(4770);
+    expect(result.longTermCarePremiumsAllowed.toNumber()).toBe(4810);
   });
 
   it("LTC age boundary: age 70 uses age61to70 limit", () => {
@@ -456,7 +456,7 @@ describe("SE Health Insurance Worksheet edge cases", () => {
       netProfit: "100000",
     }, constants);
 
-    expect(result.longTermCarePremiumsAllowed.toNumber()).toBe(4770);
+    expect(result.longTermCarePremiumsAllowed.toNumber()).toBe(4810);
   });
 
   it("LTC age boundary: age 71 uses age71OrOlder limit", () => {
@@ -467,7 +467,8 @@ describe("SE Health Insurance Worksheet edge cases", () => {
       netProfit: "100000",
     }, constants);
 
-    expect(result.longTermCarePremiumsAllowed.toNumber()).toBe(5960);
+    // The unchanged 6,000 actual cost is below the published 6,020 cap.
+    expect(result.longTermCarePremiumsAllowed.toNumber()).toBe(6000);
   });
 
   it("Zero premiums produces zero deduction", () => {
@@ -551,8 +552,8 @@ describe("SE Health Insurance Worksheet realistic scenarios", () => {
     const result = calculateSEHealthInsuranceWorksheet({
       medicalDentalPremiums: "0",
       longTermCareCoverages: [
-        { premiumsPaid: "5500", attainedAge: 68 }, // capped at 4770
-        { premiumsPaid: "5500", attainedAge: 66 }, // capped at 4770
+        { premiumsPaid: "5500", attainedAge: 68 }, // capped at 4810
+        { premiumsPaid: "5500", attainedAge: 66 }, // capped at 4810
       ],
       medicarePartBPremiums: "4176", // $174.70/mo × 2 spouses × 12
       medicarePartDPremiums: "720",  // $30/mo × 2 × 12
@@ -562,15 +563,15 @@ describe("SE Health Insurance Worksheet realistic scenarios", () => {
       deductibleSETax: "3533",
     }, constants);
 
-    // LTC: 4770 + 4770 = 9540
+    // LTC: 4810 + 4810 = 9620
     // Medicare: 4176 + 720 + 6000 = 10896
-    // Total = 0 + 9540 + 10896 = 20436
+    // Total = 0 + 9620 + 10896 = 20516
     // Earned income limit = 50000 - 3533 = 46467
-    // Deduction = min(20436, 46467) = 20436
-    expect(result.longTermCarePremiumsAllowed.toNumber()).toBe(9540);
+    // Deduction = min(20516, 46467) = 20516
+    expect(result.longTermCarePremiumsAllowed.toNumber()).toBe(9620);
     expect(result.medicarePremiums.toNumber()).toBe(10896);
-    expect(result.totalPremiums.toNumber()).toBe(20436);
-    expect(result.deductibleAmount.toNumber()).toBe(20436);
+    expect(result.totalPremiums.toNumber()).toBe(20516);
+    expect(result.deductibleAmount.toNumber()).toBe(20516);
   });
 
   it("Business loss: all premiums become excess for Schedule A", () => {
@@ -606,7 +607,7 @@ describe("SE Health Insurance Worksheet realistic scenarios", () => {
     const result = calculateSEHealthInsuranceWorksheet({
       medicalDentalPremiums: "7200",
       longTermCareCoverages: [
-        { premiumsPaid: "2000", attainedAge: 52 }, // capped at 1790
+        { premiumsPaid: "2000", attainedAge: 52 }, // capped at 1800
       ],
       medicarePartBPremiums: "0",
       medicarePartDPremiums: "0",
@@ -617,13 +618,13 @@ describe("SE Health Insurance Worksheet realistic scenarios", () => {
       seRetirementContributions: "5000",
     }, constants);
 
-    // Total premiums = 7200 + 1790 + 1800 = 10790
-    // Prorated = 10790 × (9/12) = 8093 (rounded)
+    // Total premiums = 7200 + 1800 + 1800 = 10800
+    // Prorated = 10800 × (9/12) = 8100 (rounded)
     // Earned income limit = 60000 - 4240 - 5000 = 50760
-    // Deduction = min(8093, 50760) = 8093
-    expect(result.totalPremiums.toNumber()).toBe(10790);
-    expect(result.proratedPremiums.toNumber()).toBe(8093);
-    expect(result.deductibleAmount.toNumber()).toBe(8093);
+    // Deduction = min(8100, 50760) = 8100
+    expect(result.totalPremiums.toNumber()).toBe(10800);
+    expect(result.proratedPremiums.toNumber()).toBe(8100);
+    expect(result.deductibleAmount.toNumber()).toBe(8100);
   });
 });
 

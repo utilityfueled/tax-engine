@@ -1,0 +1,42 @@
+form: "Guided mortgage source worksheet"
+fullName: "Actual Publication 936 sources and Form 1098 reconciliation"
+taxYear: 2026
+irsReference: "https://www.irs.gov/publications/p936"
+notes: |
+  Refreshed 2026-10-25. Publication 936 permits the highest annual balance or an
+  actual lender average; Box 2 alone establishes neither. The ordinary guided
+  original acquisition-debt path supplies actual payment shares and exclusions,
+  source-year completeness, and points conditions to the canonical worksheet.
+  Unrepresented refinancing/category history and recovery worksheets remain
+  explicit unsupported source paths, never presumed zero.
+lines:
+  - line: "source-conservation"
+    description: "Reconcile actual original statement and payment sources"
+    formula: "Preserve Form 1098 year and source identity. Taxpayer interest plus other-return interest must equal Box 1; taxpayer-allocable points plus other-return points must equal Box 6. Every supplied amount is finite nonnegative Decimal, and missing differs from explicit zero."
+    irsRef: "Publication 936 Part I; Form 1098 instructions Boxes 1-6"
+    testRef: "tests/guided-interview/guided-mortgage-worksheet.test.ts::preserves actual mortgage sources and rejects unknown or conflicting payment shares"
+  - line: "complete-debt-method"
+    description: "Use actual selected balance method and complete debt history"
+    formula: "Require actual return year, all-home-debt completeness, source reference and confirmation, plus explicit confirmation of no prior-year recoveries for this ordinary path. Highest annual balance or lender average drives the canonical debt limit; never substitute Box 2 or silently reject a fully supported loan merely for exceeding the statutory limit."
+    irsRef: "Publication 936 Part II Average Mortgage Balance and Table 1"
+    testRef: "tests/guided-interview/guided-mortgage-worksheet.test.ts::applies the canonical debt limit to actual highest balances and lender averages"
+  - line: "points-and-cutoff"
+    description: "Collect actual payment date, use and transition facts"
+    formula: "Qualifying current-year purchase/build points require actual payment date and all conditions; origination date does not stand in for payment date. A potentially eligible 2017-2018 binding contract requires its actual status and, when applicable, dates before classification."
+    irsRef: "Publication 936 Points; Home acquisition debt limit transition"
+    testRef: "tests/guided-interview/guided-mortgage-worksheet.test.ts::requires actual points timing and binding contract facts without guessing"
+  - line: "guided-ui"
+    description: "Collect source shares, method and completeness without automatic defaults"
+    formula: "Controls begin unknown. Preserve exact amounts and zero, and invalidate source confirmation after substantive changes. Keep old records visible and incomplete until actual newly-required facts are supplied."
+    irsRef: "Publication 936 source worksheet requirements"
+    testRef: "tests/apps/web/mortgage-worksheet-interactions.test.tsx::collects actual mortgage worksheet facts and invalidates changed sources"
+  - line: "full-return"
+    description: "Forward the reconciled worksheet into the canonical return"
+    formula: "The full guided return includes original statements and the actual mortgage worksheet once. The selected year's canonical debt limit reduces only this return's eligible share, including qualifying seller-paid buyer points when all actual conditions are met."
+    irsRef: "Publication 936 Points paid by the seller; Table 1; Schedule A line 8a"
+    testRef: "tests/guided-interview/guided-mortgage-worksheet.test.ts::uses the actual source worksheet in the full return and retains seller-paid buyer points"
+  - line: "saved-recovery"
+    description: "Do not discard a known recovery when changing the deduction election"
+    formula: "A saved positive earlier-year refund or known recovery remains a required tax-benefit source even when this year's deduction election is standard. The unsupported ordinary path must reject it instead of silently dropping possible taxable income."
+    irsRef: "Publication 936 Refunds of interest; Publication 525 Recoveries"
+    testRef: "tests/guided-interview/guided-mortgage-worksheet.test.ts::retains known prior-year recovery requirements after changing the deduction election"

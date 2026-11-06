@@ -1,0 +1,31 @@
+form: OH-REVIEW-TEMPLATE-ROOT
+taxYear: 2025
+description: Explicit versioned template roots for existing Ohio experimental review exports
+sources:
+  - Existing workspace resolveBlankFormsDir and resolveReviewTemplateDirectory contracts; no new tax law or source revision
+  - Actual production Playwright webServer.cwd is apps/web; official assets remain repository forms/blank/2025
+lines:
+  - line: "actual-web-cwd"
+    description: Existing public review download uses the same resolved root for federal and Ohio physical companions
+    formula: "With actual complete native reciprocal originals, workspace year derived by the existing real guided documents/fact-answer sync from actual flow2025, and cwd apps/web, buildWorkspaceFilledReturnDownload emits the existing source-required official companions and actual saved PDF. Source packets, original identifiers, money, filing/readiness restrictions and private context are unchanged. No fabricated fallback or disabled physical method."
+    testRef: "tests/apps/web/oh-review-template-root.test.ts::actual public Ohio review under web cwd retains required physical companions"
+  - line: "explicit-root-and-year"
+    description: One supplied root is propagated through the public reference helper
+    formula: "forms/blank and forms/blank/2025 select the same exact 2025 sources without a double year suffix; no arbitrary current-directory asset search inside physical loaders. Existing root-default callers remain compatible. Reciprocal positive cash emits five official files; known zero emits four, preserving Schedule W omission."
+    testRef: "tests/apps/web/oh-review-template-root.test.ts::explicit public Ohio root under web cwd %s %s"
+  - line: "root-default-compatibility"
+    description: Existing public API calls preserve repository-root behavior
+    formula: "The old five-argument public reference call retains exact source-required official companions with original packets immutable."
+    testRef: "tests/apps/web/oh-review-template-root.test.ts::default public Ohio root remains compatible %s"
+  - line: "school-root"
+    description: The same root reaches the existing school district physical companion
+    formula: "Actual Hillsdale 0302 source cohort under apps/web uses the explicit same 2025 root and emits SD100 plus withholding physical review; source dollars and school source context are unchanged."
+    testRef: "tests/apps/web/oh-review-template-root.test.ts::explicit school physical root under web cwd %s"
+  - line: "assets-before-output"
+    description: Direct physical loaders fail closed on missing or changed exact official sources
+    formula: "Explicit empty or tampered source directories deny before direct physical output mkdir/write, never search another root or silently omit required companions. Exact published SHA256 and page/widget qualification remain mandatory. Existing public reference helper may create its own temporary summaries first; workspace cleans those in finally."
+    testRef: "tests/apps/web/oh-review-template-root.test.ts::direct physical template denial before output %s %s"
+  - line: "source-before-assets"
+    description: Explicit asset roots cannot bypass opaque source replay
+    formula: "A current original changed after context preparation rejects before asset/output I/O even with a nonexistent explicit asset root. No recapture, scalar replacement or readiness promotion."
+    testRef: "tests/apps/web/oh-review-template-root.test.ts::current source denial precedes explicit asset access %s"

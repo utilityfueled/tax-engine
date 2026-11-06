@@ -852,9 +852,8 @@ describe("Rental - passive income offsets passive loss before $25K allowance app
 // ═══════════════════════════════════════════════════════════
 
 describe("Rental - $25K allowance phase-out precise boundaries ($100K-$150K)", () => {
-  it("AGI = $100,001 yields $24,999 allowance (phase-out begins at $100K+$1)", () => {
-    // Phase-out: ($100,001 - $100,000) × 0.5 = $0.50, rounded to $1
-    // Allowance: $25,000 - $1 = $24,999
+  it("AGI = $100,001 rounds the printed allowance capacity to $25,000", () => {
+    // Official lines7-8: (150000 - 100001) × 0.5 = 24999.50 → 25000.
     const result = calculateForm8582({
       activities: [
         {
@@ -868,8 +867,8 @@ describe("Rental - $25K allowance phase-out precise boundaries ($100K-$150K)", (
       agi: new Decimal(100001),
       filingStatus: "single",
     });
-    expect(result.rentalAllowance.toNumber()).toBe(24999);
-    expect(result.suspendedLoss.toNumber()).toBe(1);
+    expect(result.rentalAllowance.toNumber()).toBe(25000);
+    expect(result.suspendedLoss.toNumber()).toBe(0);
   });
 
   it("AGI = $125K yields $12,500 allowance (midpoint of phase-out range)", () => {
@@ -894,10 +893,7 @@ describe("Rental - $25K allowance phase-out precise boundaries ($100K-$150K)", (
   });
 
   it("AGI = $149,999 yields $1 allowance (just below full phase-out)", () => {
-    // Phase-out: ($149,999 - $100,000) × 0.5 = $24,999.50, rounded to $25,000
-    // Allowance: $25,000 - $25,000 = $0 ... or $24,999?
-    // roundDollar rounds to nearest dollar: $24,999.50 → $25,000
-    // Allowance: max(0, $25,000 - $25,000) = $0
+    // Official lines7-8: (150000 - 149999) × 0.5 = 0.50 → 1.
     const result = calculateForm8582({
       activities: [
         {
@@ -911,11 +907,8 @@ describe("Rental - $25K allowance phase-out precise boundaries ($100K-$150K)", (
       agi: new Decimal(149999),
       filingStatus: "single",
     });
-    // With roundDollar, (49999 × 0.5) = 24999.50 → rounds to 25000 → allowance = 0
-    // OR if truncated: 24999 → allowance = 1
-    // The implementation uses roundDollar which rounds to nearest: 24999.5 → 25000
-    expect(result.rentalAllowance.toNumber()).toBe(0);
-    expect(result.suspendedLoss.toNumber()).toBe(10000);
+    expect(result.rentalAllowance.toNumber()).toBe(1);
+    expect(result.suspendedLoss.toNumber()).toBe(9999);
   });
 });
 
@@ -1167,7 +1160,7 @@ describe("Rental - K-1 passive income fully absorbs rental loss", () => {
     expect(result.combinedLoss.toNumber()).toBe(0);
     expect(result.rentalAllowance.toNumber()).toBe(0);
     expect(result.suspendedLoss.toNumber()).toBe(0);
-    expect(result.allowedLoss.toNumber()).toBe(0);
+    expect(result.allowedLoss.toNumber()).toBe(18000); // Line3 allows the full actual loss.
   });
 
   it("K-1 passive income partially absorbs rental + K-1 passive losses via federal pipeline", () => {
@@ -1387,15 +1380,11 @@ describe("Rental - AGI phase-out points tested through full federal pipeline", (
       }],
     };
     const federal = calculateFederalTax(fixture);
-    // MAGI = $120K → phase-out = ($120K - $100K) × 50% = $10K
-    // baseAllowance = min($25K, $20K rental loss) = $20K
-    // rentalAllowance = $20K - $10K = $10K
-    // $20K loss - $10K allowed = $10K suspended
+    // Official line8 capacity = (150000 - 120000) × 50% = 15000.
+    // Line9 = min(20000 actual loss, 15000 capacity), leaving 5000 suspended.
     expect(federal.carryforwards.suspendedPassiveLosses.length).toBe(1);
-    expect(federal.carryforwards.suspendedPassiveLosses[0].amount.toNumber()).toBe(10000);
-    // AGI corrected: preliminary $100K + $10K suspended = $110K
-    // Per IRS, only the allowed $10K rental loss should be in AGI (not the full $20K)
-    expect(federal.agi.toNumber()).toBe(110000);
+    expect(federal.carryforwards.suspendedPassiveLosses[0].amount.toNumber()).toBe(5000);
+    expect(federal.agi.toNumber()).toBe(105000);
   });
 
   it("AGI at $125K but MAGI at $150K: $25K rental loss fully suspended", () => {
@@ -1784,9 +1773,8 @@ describe("Rental - audit trail records all Schedule E Part I lines for each prop
     expect(line41!.value.toNumber()).toBe(10000);
   });
 
-  it("Form 8582 audit trail records rental allowance (Line 7) and suspended loss (Line 10)", () => {
-    // Loss $20K, AGI $110K → base = min($25K, $20K) = $20K; phase-out = (110K-100K)×0.5 = $5K
-    // Allowance = $20K - $5K = $15K; suspended = $20K - $15K = $5K
+  it("Form 8582 audit trail records official Line 9 and separate suspended loss", () => {
+    // Line8 capacity20000, line4 loss20000: line9 allows20000; no suspended loss.
     const result = calculateForm8582({
       activities: [
         {
@@ -1800,15 +1788,10 @@ describe("Rental - audit trail records all Schedule E Part I lines for each prop
       agi: new Decimal(110000),
       filingStatus: "single",
     });
-    // Form 8582 Line 7: rental allowance = min($25K, $20K loss) - 50%×(110K-100K) = $20K - $5K = $15K
-    const line7 = result.lines.find((l) => l.form === "Form 8582" && l.line === "7");
-    expect(line7).toBeDefined();
-    expect(line7!.value.toNumber()).toBe(15000);
-
-    // Form 8582 Line 10: suspended loss = $20K total - $15K allowed = $5K
-    const line10 = result.lines.find((l) => l.form === "Form 8582" && l.line === "10");
-    expect(line10).toBeDefined();
-    expect(line10!.value.toNumber()).toBe(5000);
+    const line9 = result.lines.find((l) => l.form === "Form 8582" && l.line === "9");
+    expect(line9?.value.toNumber()).toBe(20000);
+    const suspended = result.lines.find((l) => l.form === "Form 8582" && l.line === "suspended");
+    expect(suspended?.value.toNumber()).toBe(0);
   });
 });
 

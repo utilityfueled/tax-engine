@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Decimal from "decimal.js";
 import { publicHostedPlanCatalog, type HostedPlanId } from "@tax-engine/contracts";
 import type { HostedAiBudgetSnapshot } from "@/lib/hosted-ai-usage-db";
 import type { HostedBillingWebhookStatus } from "@/lib/hosted-billing-state";
@@ -34,7 +35,8 @@ export function BillingPagePanel({
   aiBudget,
   aiTopUpPriceCents,
   aiTopUpCreditCents,
-  aiTopUpEnabled
+  aiTopUpEnabled,
+  aiHelperAvailable
 }: {
   currentPlanId: HostedPlanId | null;
   currentStatus: HostedBillingWebhookStatus | null;
@@ -44,6 +46,7 @@ export function BillingPagePanel({
   aiTopUpPriceCents: number;
   aiTopUpCreditCents: number;
   aiTopUpEnabled: boolean;
+  aiHelperAvailable: boolean;
 }) {
   const [pendingPlan, setPendingPlan] = useState<HostedPlanId | null>(null);
   const [portalPending, setPortalPending] = useState(false);
@@ -152,7 +155,7 @@ export function BillingPagePanel({
   }
 
   function formatUsd(cents: number) {
-    return `$${(cents / 100).toFixed(2)}`;
+    return `$${new Decimal(cents).div(100).toFixed(2)}`;
   }
 
   return (
@@ -164,8 +167,9 @@ export function BillingPagePanel({
         </div>
         <h1 className="panel-title" id="billing-status-heading">Hosted Plans</h1>
         <p className="panel-text">
-          Starter unlocks hosted workspace sync, the paid AI helper, and privacy-safe workspace shells. Plus adds reminder and planning workflow tools. Paid plans buy hosted software features only, not tax advice, tax preparation, or professional review.
+          Starter includes hosted accounts and privacy-safe workspace shells. Features and their availability are listed below. Paid plans cover hosted software features.
         </p>
+        {!aiHelperAvailable ? <p className="answer-note" role="status">AI helper is unavailable while qualification is pending. Extra AI credit purchases are disabled.</p> : null}
         <div className="summary-grid section-heading">
           <article className="summary-stat">
             <p className="summary-label">current plan</p>
@@ -202,9 +206,11 @@ export function BillingPagePanel({
               </article>
             </div>
             <p className="panel-text">
-              Your active plan includes up to {formatUsd(aiBudget.includedBudgetCents)} of AI helper usage each billing cycle. Extra AI credit packs stay available after purchase until they are consumed.
+              {aiHelperAvailable
+                ? `Your active plan includes up to ${formatUsd(aiBudget.includedBudgetCents)} of AI helper usage each billing cycle. Extra AI credit packs stay available after purchase until they are consumed.`
+                : "These are recorded credit balances. They do not indicate that paid AI processing is available."}
             </p>
-            {aiTopUpEnabled ? (
+            {aiHelperAvailable && aiTopUpEnabled ? (
               <div className="inline-actions section-heading">
                 <button
                   type="button"

@@ -68,6 +68,11 @@
   outline-offset: 2px;
 }
 
+/* The root scrollport excludes the actual sticky navigation plus a focus gutter. */
+html {
+  scroll-padding-block-start: calc(var(--site-nav-height, 0px) + 8px);
+}
+
 html,
 body {
   margin: 0;
@@ -1096,10 +1101,10 @@ body {
   line-height: 1.4;
 }
 
-.confidence-validated {
-  background: rgba(18, 113, 91, 0.18);
-  color: var(--success);
-  border-color: var(--success);
+.confidence-dedicated {
+  background: rgba(102, 112, 133, 0.14);
+  color: var(--muted);
+  border-color: var(--muted);
 }
 
 .confidence-best-effort {
@@ -1820,6 +1825,16 @@ body {
   top: 0;
   z-index: 10;
   min-width: 0;
+}
+
+/* Source controls must scroll without the estimate covering their action points. */
+.guided-interview-phase .guided-refund-ticker-sticky {
+  position: static;
+}
+
+/* Full separate-owner panels must scroll without covering the source interview. */
+.guided-refund-ticker-sticky.guided-refund-ticker-separate {
+  position: static;
 }
 
 .guided-ticker-toolbar {

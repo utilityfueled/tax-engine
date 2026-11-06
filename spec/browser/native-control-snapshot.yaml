@@ -1,0 +1,26 @@
+form: "Native-Control-Snapshot"
+taxYear: 2025
+status: "verification-contract"
+reference: "Installed Playwright 1.64.1 Locator and expect.poll implementation; exact source pins in private verification evidence"
+notes: |
+  Browser test infrastructure only. A count-and-tag DOM snapshot reduces successful
+  read-only protocol work; it does not establish browser actionability or timing
+  qualification. All real locator actions, target facts, assertions, protected
+  request limits, overall deadlines, workers and retry contracts stay intact.
+lines:
+  - line: "exact-current-control"
+    description: "Poll a current locator snapshot before acting"
+    formula: "Each attempt reads all currently matching nodes in one evaluateAll call, returning count and tagName only for exactly one match. Use the existing default 5000ms expect.poll deadline with no cache across calls. Zero or multiple matches cannot reach an action; locator actions re-resolve the current control."
+    testRef: "tests/apps/web/native-control-snapshot.test.ts::requires exactly one current match before actions"
+  - line: "real-action-order"
+    description: "Preserve every real select or fill and Tab"
+    formula: "After the exact-one assertion, SELECT uses unchanged selectOption(value). Every other tag uses unchanged fill(value) followed by press(Tab); rejected actions propagate and do not advance. Do not create element handles, mutate DOM, seed facts or cache nodes."
+    testRef: "tests/apps/web/native-control-snapshot.test.ts::preserves ordered real actions and re-resolves replacements"
+  - line: "independent-school-label"
+    description: "Keep the separate school duplicate-label assertion"
+    formula: "The school helper awaits both the current-control snapshot and its original exact duplicate-label count assertion before any input action. No other source outside imports and these eight entry helper bodies changes."
+    testRef: "tests/apps/web/native-control-snapshot.test.ts::preserves the independent school label assertion"
+  - line: "protocol-efficiency-boundary"
+    description: "Count actual installed read-only protocol composition"
+    formula: "For a stable existing match, replace original count assertion plus Locator.evaluate element resolution, evaluation and disposal (four protocol calls) with one evalOnSelectorAll protocol call. Preserve default polling intervals and the 5000ms assertion bound; client polling and server polling differ for dynamic counts. No elapsed container pass is inferred."
+    testRef: "tests/apps/web/native-control-snapshot.test.ts::uses one read-only protocol snapshot per successful entry"

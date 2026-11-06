@@ -1,0 +1,42 @@
+form: "MACRS-Ordinary-Disposition"
+fullName: "Original-bound nonterminal ordinary MACRS disposal"
+taxYear: 2026
+reference: "https://www.irs.gov/publications/p946; https://www.ecfr.gov/current/title-26/section-1.168(d)-1"
+notes: |
+  Finite full-calendar GDS plain purchase, constant 100 percent ownership/business
+  use only. Actual original convention/election/basis/history records mandatory.
+  No section179/bonus or other basis adjustment; personal 200DB 3/5/7/10-year
+  HY/MQ and real 27.5/39-year SL/MM, ordinary full disposal only. Recovery year
+  2 through penultimate table year only. 39-year PIS before1994 is denied pending
+  actual transition facts. First/terminal/listed/ADS/changed-use/
+  partial/short-year histories remain explicitly unsupported, not zero.
+  This supplies depreciation only, never Form4797 gain, whole return or filing.
+lines:
+  - line: "actual-source-history"
+    description: "Bind actual originals, valid full dates and contiguous history"
+    formula: "Require exact original asset snapshot, source tax year/disposition year, chronological valid calendar dates, documentary original convention/basis/elections, explicit known0 deductions/adjustments, known whole-dollar-per-year historical return rounding, constant full ownership, no system/method changes, and 100 percent use/ownership. Every PIS-year through preceding-year history record must match full annual table depreciation, actual claimed=allowed, and known0 179/bonus. Sum actual history and reconcile explicit opening adjusted basis and legacy cumulative prior depreciation. Reject duplicate activity+asset documentary identities before summation. Reject stale, missing, unsupported or mixed packets before zero/scalar/aggregate shortcuts. Retain legacy nondisposal compatibility as unqualified."
+    testRef: "tests/models/macrs-disposition-sources.test.ts::requires actual source facts without changing legacy nondisposal data"
+  - line: "nonterminal-disposition-fraction"
+    description: "Apply original convention and actual disposal timing once"
+    formula: "Exact annual = original MACRS basis * published table percentage /100. HY fraction=1/2. MQ disposition Q1/Q2/Q3/Q4 fractions=1/8,3/8,5/8,7/8. MM fraction=(actual disposal month-0.5)/12. Cap exact annual*fraction to reconciled opening adjusted basis, then round nearest dollar once. Preserve annual percentage and exact pre-round fraction audit. Published 10000/Q4 December2022/April2025 ->513; 100000/July2023 residential/March2025 ->757.50 ->758."
+    testRef: "tests/utils/macrs-ordinary-disposition.test.ts::reproduces the published quarter and residential disposal examples"
+  - line: "single-round-and-blockers"
+    description: "Single rounding and no source/history bypass"
+    formula: "10005.20*19.20%*1/2=960.4992 ->960, never round annual first to1921 then halve to961. Missing disposal sources, first/terminal recovery, wrong dates/year, unknown history or unsupported property throw explicitly, including aggregate/listed entrypoints. No original source or canonical amount is rewritten."
+    testRef: "tests/utils/macrs-ordinary-disposition.test.ts::rounds once and refuses unsupported or incomplete disposition paths"
+  - line: "explicit-form-owner-year-audit"
+    description: "Require actual Form4562 owner year and private-safe disposal audit"
+    formula: "Any asserted disposal or packet requires explicit ownerTaxYear or input.taxYear; never select historical default2025 for source admission. Preserve conflict rejection. Add safe money/date/fraction/status audit only, without original references, identity or asset description; keep parent activity/Form4797 linkage unqualified. Mixed first-year source and prior-year disposal packets remain unsupported."
+    testRef: "tests/utils/macrs-ordinary-disposition.test.ts::requires an explicit form owner year and emits no documentary identity in audit"
+  - line: "legacy-same-year-exclusion"
+    description: "Preserve explicitly known legacy same-year no-depreciation only"
+    formula: "With no supplied disposal packet, explicit disposedDuringYear=true and known PIS year equal to actual caller tax year retain existing null/exclusion. This proves only no depreciation, not date/gain/history or source-complete readiness. Any supplied malformed packet is validated before exclusion and a new packet's first year remains unsupported. Prior-year missing-source approximation throws."
+    testRef: "tests/utils/macrs-convention-basis.test.ts::excludes explicitly known same-year dispositions from basis and deductions"
+  - line: "validate-before-listed-skip"
+    description: "No supplied source packet may evade validation on a nonlisted row"
+    formula: "Listed-property aggregation validates every supplied ordinary disposition packet before deciding a row is nonlisted or contributes zero. Malformed or incomplete packets throw rather than silently disappear; valid nonlisted rows remain excluded from the listed sum without mutation."
+    testRef: "tests/utils/macrs-ordinary-disposition.test.ts::validates ordinary disposition packets before nonlisted aggregation exclusion"
+  - line: "nonresidential-transition-facts"
+    description: "Conservatively deny unresolved pre1994 39-year recovery periods"
+    formula: "Pub946 GDS recovery table footnote4 specifies31.5 years before May13,1993, and can extend that period before January1,1994 for preMay13 binding contract or construction. This finite packet captures no such transition facts, so reject every supplied39-year packet with actual PIS before1994. Do not invent absence of a contract or construction. Post1993 exact ordinary history remains eligible; historical metadataabsent legacy shape is unchanged/unqualified."
+    testRef: "tests/models/macrs-disposition-sources.test.ts::requires separate transition facts for every pre1994 39-year building"

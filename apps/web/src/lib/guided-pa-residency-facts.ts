@@ -1,0 +1,69 @@
+import type { TaxYearInput } from "@/models/inputs";
+import { PAResidencySourcesSchema, type PAResidencySources } from "@/models/pa-residency";
+import { calculatePAResidencySources } from "@/engine/state/pa-residency-sources";
+
+/** Empty draft only; no source amount/year/answer is inferred from the current return. */
+export function emptyGuidedPAResidencySources(): PAResidencySources {
+  return {
+    sourceTaxYear: null, sourceReference: "", sourceFactsConfirmed: null,
+    owner: { accountHolder: "" },
+    residency: { status: "", sourceReference: "", factsConfirmed: null, domicilePeriods: [],
+      paPermanentAbodePeriods: [], outsidePAPermanentAbodePeriods: [],
+      moveAbandonmentNewDomicileAndPresenceConfirmed: null,
+      dec31PrincipalResidenceState: "", schoolDistrictCode: "", schoolDistrictName: "" },
+    wages: [], interest: [], otherPAIncomeClassesConfirmedNone: null, otherPAAdjustmentsConfirmedNone: null,
+  };
+}
+
+export function updateGuidedPAResidencySources(data: PAResidencySources, patch: Partial<PAResidencySources>): PAResidencySources {
+  return { ...data, ...patch, sourceFactsConfirmed: null };
+}
+
+/** Only an explicit user confirmation may replace the privately retained originals. */
+export function confirmGuidedPAResidencySources(input: TaxYearInput, draft: unknown): PAResidencySources {
+  const data = PAResidencySourcesSchema.parse(draft);
+  const owner = data.owner.accountHolder === "primary" ? input.taxpayer.primary
+    : data.owner.accountHolder === "spouse" ? input.taxpayer.spouse : undefined;
+  if (!owner) throw new Error("PA residency sources require the actual selected taxpayer owner");
+  let royaltySources = data.royaltySources;
+  if (royaltySources !== undefined) {
+    const currentProperties = input.royaltyPropertySources;
+    if (currentProperties === undefined) throw new Error("PA residency sources require actual current royalty property originals");
+    royaltySources = { ...royaltySources, originalPropertySources: structuredClone(currentProperties),
+      originals: royaltySources.originals.map(row => {
+        const original = input.form1099Misc[row.originalIndex];
+        if (original === undefined) throw new Error("PA residency sources require each actual current royalty statement original");
+        return { ...row, original: structuredClone(original) };
+      }),
+    };
+  }
+  const candidate: PAResidencySources = {
+    ...data, sourceFactsConfirmed: true,
+    owner: { accountHolder: data.owner.accountHolder,
+      originalTaxpayer: { firstName: owner.firstName, lastName: owner.lastName, ssn: owner.ssn } },
+    ...(royaltySources === undefined ? {} : { royaltySources }),
+    ...(data.employeeSources === undefined ? {} : { employeeSources: {
+      ...data.employeeSources,
+      owner: { accountHolder: data.employeeSources.owner.accountHolder, ...(data.employeeSources.owner.accountHolder === data.owner.accountHolder ? { originalTaxpayer: { firstName: owner.firstName, lastName: owner.lastName, ssn: owner.ssn } } : {}) },
+      employers: data.employeeSources.employers.map(row => ({ ...row, originalW2: row.originalIndex === null ? undefined : structuredClone(input.w2s[row.originalIndex]) })),
+    } }),
+    ...(data.brokerageSources===undefined?{}:{brokerageSources:{...data.brokerageSources,
+      owner:{accountHolder:data.brokerageSources.owner.accountHolder,...(data.brokerageSources.owner.accountHolder===data.owner.accountHolder?{originalTaxpayer:{firstName:owner.firstName,lastName:owner.lastName,ssn:owner.ssn}}:{})},
+      statements:data.brokerageSources.statements.map(row=>({...row,original:row.originalIndex===null?undefined:structuredClone(input.form1099B[row.originalIndex]),transactions:row.transactions.map(transaction=>({...transaction,originalTransaction:row.originalIndex===null||transaction.transactionIndex===null?undefined:structuredClone(input.form1099B[row.originalIndex]?.transactions[transaction.transactionIndex])}))})),
+      withholdingOriginals:data.brokerageSources.withholdingOriginals.map(row=>({...row,original:row.originalIndex===null?undefined:structuredClone((row.form==='1099-B'?input.form1099B:row.form==='1099-DIV'?input.form1099Div:input.form1099Int)[row.originalIndex])})),
+    }}),
+    wages: data.wages.map(row => ({ ...row, original: row.originalIndex === null ? undefined : structuredClone(input.w2s[row.originalIndex]) })),
+    interest: data.interest.map(row => ({ ...row, original: row.originalIndex === null ? undefined : structuredClone(input.form1099Int[row.originalIndex]) })),
+    ...(data.dividends===undefined?{}:{dividends:data.dividends.map(row=>({...row,original:row.originalIndex===null?undefined:structuredClone(input.form1099Div[row.originalIndex])}))}),
+    ...(data.businesses===undefined?{}:{businesses:data.businesses.map(row=>({...row,originalScheduleC:input.scheduleC===undefined?undefined:structuredClone(input.scheduleC),necOriginals:row.necOriginals.map(original=>({...original,original:original.originalIndex===null?undefined:structuredClone(input.form1099Nec[original.originalIndex])}))}))}),
+  };
+  calculatePAResidencySources(input, candidate);
+  return candidate;
+}
+
+/** Replays actual current originals; an old confirmation never follows source edits automatically. */
+export function buildGuidedPAResidencySources(input: TaxYearInput, draft: unknown): PAResidencySources {
+  const data = PAResidencySourcesSchema.parse(draft);
+  calculatePAResidencySources(input, data);
+  return data;
+}

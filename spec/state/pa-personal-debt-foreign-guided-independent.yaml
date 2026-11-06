@@ -1,0 +1,46 @@
+form: "PA Debt Foreign Guided Independent Review"
+fullName: "Distinct native control source entry and confirmation boundary review"
+taxYear: 2025
+status: "independent-internal-review-no-filing-qualification"
+reference: "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/taxlawpoliciesbulletinsnotices/taxbulletins/pit/documents/pit_bulletin_2009-02.pdf"
+notes: |
+  UI source capture only; no new legal interpretation or arithmetic.
+  Native real SectionStateReturn mounts, no product handler mocks. New blank rows
+  receive explicitly fictional source records through native controls, no auto defaults.
+  Immutable author27 and all8 products remain unchanged. Literal2025 taxes3070/2241/184
+  and separately complete-source overpayments930/1759/3816 preserve earlier source oracles.
+  Prior reciprocal snapshot is an explicitly older fictional packet, not asserted current;
+  all source edits must revoke it. No human, browser, PDF or filing approval is implied.
+lines:
+  - line: "complete-entry"
+    description: "All actual finite source facts can be entered through native controls"
+    formula: "Blank start -> choose original/owner/year -> full charges, ten qualifications and five record references -> foreign original/country/USD receipts -> explicit confirmation. All3 income/completion source results retain literal tax3070/2241/184 and overpayment930/1759/3816, filingfalse. No fixture injection into draft fields."
+    testRef: "tests/apps/web/pa-personal-debt-foreign-guided-independent.test.tsx::independent native blank to complete source entry composes literal all3 return: %s"
+  - line: "invalidation"
+    description: "Nested native edits invalidate both child groups and both enclosing bindings"
+    formula: "Account, principal, property answer, owner, payment date and country edits clear debt/bank sourceFactsConfirmed plus residency and prior reciprocity; actual retained originals remain exact."
+    testRef: "tests/apps/web/pa-personal-debt-foreign-guided-independent.test.tsx::independent native edit revokes both children parent and retained reciprocity: %s"
+  - line: "zero"
+    description: "An explicit actual zero receipt is different from an unanswered receipt"
+    formula: "Adding a receipt leaves amount blank and cannot confirm. With explicitly fictional complete USD0 source receipt alongside actual100 receipt, total100 reconciles and zero remains string0."
+    testRef: "tests/apps/web/pa-personal-debt-foreign-guided-independent.test.tsx::independent explicit zero tax receipt stays distinct from new unknown receipt"
+  - line: "pending-save"
+    description: "Incomplete records survive JSON save and real dispose/remount without confirming"
+    formula: "Null year and unknown amount string persist; stored snapshot retained, read rejects until actual complete evidence/explicit confirmation."
+    testRef: "tests/apps/web/pa-personal-debt-foreign-guided-independent.test.tsx::independent incomplete native edits survive JSON dispose and remount without confirming"
+  - line: "context"
+    description: "No current original context means no source confirmation"
+    formula: "Actual UI reports missing current originals and state remains unchanged; no owner/year/original refresh."
+    testRef: "tests/apps/web/pa-personal-debt-foreign-guided-independent.test.tsx::independent actual UI cannot confirm without current original context"
+  - line: "privacy"
+    description: "Private snapshots are not displayed as raw JSON or full owner identifier"
+    formula: "Real panel has no JSON textarea/raw original object and no primary SSN in rendered text; private form source references are editable by their owner as designed."
+    testRef: "tests/apps/web/pa-personal-debt-foreign-guided-independent.test.tsx::independent actual UI does not render retained full SSN or raw original JSON"
+  - line: "stale"
+    description: "Current owner edits do not silently rebind retained evidence"
+    formula: "Read and explicit confirm reject old owner, draft unchanged. Equal-money original changes also remain stale on read."
+    testRef: "tests/apps/web/pa-personal-debt-foreign-guided-independent.test.tsx::independent owner edit cannot refresh retained confirmation on read"
+  - line: "coverage"
+    description: "Deleting a draft source never asserts canonical original absence"
+    formula: "Required1099C remains entered and missing source coverage cannot confirm. Removal revokes parent/reciprocity but does not delete original records."
+    testRef: "tests/apps/web/pa-personal-debt-foreign-guided-independent.test.tsx::independent removing a required source row cannot confirm source absence"

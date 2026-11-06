@@ -1,0 +1,34 @@
+# Historical education method decisions
+
+**Current queue, October 26:** [the source reconciliation](upgrade-2026-education-method-queue.md) supersedes the older unfinished-route descriptions below. Actual ESA, assistance, shared room/board and annual ordinary cash packages are delivered. Ordinary receipt composition, existing-category annual cash limits and bounded bond history/rational reporting remain internal implementation. Only the precisely identified competing-source interpretations remain separate; guards are not completion.
+
+Source review: 2026-10-25. These boundaries do not qualify a tax year, filing
+artifact or human review. Missing source facts must be supplied from actual
+records; an approval cannot substitute for a tax calculation method.
+
+| Method | Current evidence and remaining action |
+| --- | --- |
+| Joint community-property bond income | **Implemented and verified in efbbb6a.** Pub550 assigns half of community bond interest to each spouse. The separate bounded branch requires actual community status throughout accrual, unchanged ownership, and reconciled owner prior reporting. This does not resolve a reduced final exclusion shared by two owners. |
+| Reduced joint bond exclusion | **Interpretation requires qualified tax review.** Pub550 establishes actual income ownership; IRC135/Form8815 reduce the joint exclusion for expenses and MAGI. The inspected sources do not prescribe attribution of that reduced amount to individual educators under62(d)(2). Obtain the controlling allocation and rounding method, then implement/test it. No discretionary split is accepted. Full exclusion and sole actual income ownership are implemented in195f018. |
+| In-kind QTP source ordering | **Implemented in the current bounded package.** Section529(c)(3)(B)(i)/(ii) excludes actual qualifying benefits and subtracts those costs before cash distributions use remaining expenses. Actual benefit-to-expense/source links, dates, recipient, eligibility and Box1 totals are required. Full eligible benefits consume their actual cost before cash/ESA use remaining expenses; known fully ineligible benefits remain taxable. The guided intake and reference audit preserve these facts. Actual qualifying postsecondary tuition split between an education credit and QTP exclusion is implemented in the [credit-coordination package](upgrade-2026-in-kind-credit-work.md). Actual single-beneficiary room-and-board school limits are implemented in `c864287`, with original student identity and private review binding. Other partial assistance/category combinations and ESA elections still require distinct source methods; no election is chosen for the taxpayer. |
+| Prepaid/in-kind QTP educator reduction | **Implemented for fully qualified actual benefits; independent agent review passes.** IRC62(d)(2) and529(c)(3)(A)/(B)(i)/(iv), read with Schedule1line11 and the historical Pub529 earnings explanation, support reducing the actual recipient educator's expenses by verified excluded earnings. Gross benefit and returned basis are not substituted. Separate-owner, zero-earnings, exact source and rounding controls pass. This is a documented statutory/instruction interpretation, not a published numerical oracle or independent human qualification. The subsequent [credit-coordination package](upgrade-2026-in-kind-credit-work.md) uses final credit-reduced excluded earnings and reconciles actual recipient identity before income routing; other partial methods remain separate. See `upgrade-2026-educator-in-kind-work.md`. |
+| Broader Coverdell code6 | **Interpretation and separate source routing remain.** Section530(e) incorporates rules similar to408(e)(2)/(4), but the instructions do not explain the interaction of positive education expenses with a deemed event, partial pledge basis ordering, or later income after account termination. Qualified review must resolve each method; implementation then needs actual event/value/basis/activity facts and owner routing. The whole-account, actual-zero-expense, no-later-activity method is implemented in4421801. |
+
+Current IRS/official sources:
+
+- [Pub550, Table1-2 and ownership transfers](https://www.irs.gov/publications/p550), [IRC135](https://uscode.house.gov/us/usc/119-118/t26/s135/), [Form8815](https://www.irs.gov/pub/irs-pdf/f8815.pdf), [IRC62(d)(2)](https://uscode.house.gov/us/usc/119-118/t26/s62/).
+- [IRC529(c)](https://uscode.house.gov/us/usc/119-118/t26/s529/), [final2025 Schedule1line11 instructions](https://www.irs.gov/instructions/i1040gi), [Pub529 educator expenses](https://www.irs.gov/publications/p529), [Form1099-Q instructions, Boxes1-3](https://www.irs.gov/instructions/i1099q), [Pub970 chapters6/7](https://www.irs.gov/publications/p970). Pub529's12/2020 text corroborates cash earnings treatment; it is not a current eligibility source.
+- [IRC530(d)/(e)](https://uscode.house.gov/us/usc/119-118/t26/s530/), [official IRC408](https://www.govinfo.gov/content/pkg/USCODE-2024-title26/html/USCODE-2024-title26-subtitleA-chap1-subchapD-partI-subpartA-sec408.htm), [Reg1.408-4(d)](https://www.ecfr.gov/current/title-26/chapter-I/subchapter-A/part-1/section-1.408-4), [Form1099-Q code6](https://www.irs.gov/instructions/i1099q). IRA-only administrative guidance corroborates the event but does not establish a Coverdell expense-exclusion method.
+
+Transfers/reissues, changed community-property history and unresolved source
+rounding require their actual historical records and a distinct calculation;
+the unchanged-ownership branch cannot infer them. Independent human tax
+qualification remains separate from these unimplemented methods and the agent
+source/software reviews already recorded in the work ledger.
+
+The room-and-board extension passes 200 tests in 27 files, both types, 4,860
+spec references, scoped lint and production build. Separate agent rereview passes
+73 cases including unchanged duplicate-student and stale-rendering-taxpayer
+probes. Exact sources and both corrected findings are recorded in
+[the package ledger](upgrade-2026-in-kind-room-board-work.md). Other reductions
+and shared source groups remain separate methods, not completed guards.

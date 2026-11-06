@@ -10,8 +10,10 @@
  * - PA-40 payment and settlement assembly
  */
 
+import { assertClaimOfRightStateMethod } from "@/engine/forms/claim-of-right.js";
+import { assertQofStateMethod } from "@/engine/forms/qof-inclusion.js";
 import Decimal from "decimal.js";
-import { d, sum } from "@/utils/decimal.js";
+import { d, roundDollar, sum } from "@/utils/decimal.js";
 import type { TaxYearInput } from "@/models/inputs.js";
 import { calculatePA40, type PA40Input, type PA40Result } from "@/engine/state/pa-40.js";
 import {
@@ -585,6 +587,12 @@ export function calculatePANonresidentReturn(
   input: TaxYearInput,
   overrides: PANonresidentOrchestratorOverrides = {},
 ): PANonresidentOrchestratorResult {
+  // Spec: form-1099-da-state-rows unsupported-residency. No gain sourcing is inferred.
+  if (input.form1099DA?.some(form => form.stateTaxReporting === 'multiple' || form.stateWithholding !== undefined)) {
+    throw new Error('Pennsylvania two-state digital-asset nonresident or part-year residency requires its separate actual source method');
+  }
+  assertQofStateMethod(input, "Pennsylvania");
+  assertClaimOfRightStateMethod(input, "Pennsylvania");
   const taxYear = input.taxpayer.taxYear;
   const resolved = resolvePANonresidentOverrides(input, overrides);
 
@@ -694,9 +702,8 @@ export function calculatePANonresidentReturn(
     filingCategory === "married" ? (resolved.spouseEligibilityIncome ?? ZERO) : ZERO,
   );
   const nontaxableIncome = deriveReciprocalStateNontaxableIncome(input, resolved);
-  const taxPaidToOtherStates = sum(
-    ...effectiveOtherStateCredits.map((entry) => entry.taxPaidToOtherState),
-  );
+  // 2025 Schedule SP Section IV Line 13 carries PA-40 Line 22 after G-L caps.
+  const taxPaidToOtherStates = roundDollar(scheduleGL.totalCredit);
   const scheduleSP = calculateScheduleSP({
     taxYear,
     filingCategory,

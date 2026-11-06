@@ -10,19 +10,31 @@ notes: |
   - Any financial interest in or signature authority over a foreign financial account (Part III)
 
 lines:
+  - line: "prior-interest-source"
+    description: "Deduct actual previously reported interest included in current Treasury statements"
+    formula: "Subtract confirmed priorYearInterestIncludedInCurrentStatements once on the line1 subtotal; preserve gross original Box3 and reject an adjustment above it. Verified Form8815 then reconciles its source history and remaining current interest."
+    irsRef: "ScheduleB instructions, US savings bond interest; Form8815 line6 worksheet"
+    testRef: "tests/engine/federal-bond-source-integration.test.ts::reconciles previously reported interest once before the current exclusion"
+  - line: "box3-source"
+    description: "Include Treasury and savings-bond interest separately reported in Box 3"
+    formula: "1099-INT listed interest = Box 1 + Box 3; apply any separately calculated Form 8815 exclusion only on Schedule B line 3"
+    irsRef: "https://www.irs.gov/instructions/i1099int#en_US_202401_publink1000275377"
+    notes: "Box 3 is expressly excluded from Box 1 on Form 1099-INT. Preserve both original source amounts, including for state exemptions; never subtract Box 3 from Box 1 or assume Box 1 already includes it."
+    testRef: "tests/engine/schedules/schedule-b.test.ts::includes separate Box 3 interest before the savings bond exclusion"
   # ── Part I: Interest ─────────────────────────────────────
   - line: "1"
     description: "List each payer's name and interest amount"
-    formula: "Enumerate each 1099-INT Box 1 amount, each net Form 1099-OID interest amount after Box 6 acquisition-premium and Box 11 bond-premium offsets, each Schedule K-1 Box 5 interest amount, and each Schedule K-1 (Form 1041) Box 1 interest amount"
+    formula: "Enumerate each 1099-INT Box 1 plus Box 3 amount, each source-classified Form 1099-OID taxable amount after actual recipient adjustments and elections, each Schedule K-1 Box 5 interest amount, and each Schedule K-1 (Form 1041) Box 1 interest amount"
     irsRef: "Schedule B Instructions, Part I"
     inputs:
       - "1099-INT Box 1 (each payer)"
+      - "1099-INT Box 3 (each payer; separately reported from Box 1)"
       - "1099-OID Box 1 net of Box 6 acquisition premium (each payer)"
-      - "1099-OID Box 2 net of Box 11 bond premium (each payer)"
+      - "1099-OID Box 2 net of Box 10 bond premium (each payer)"
       - "K-1 Box 5 (each partnership)"
       - "K-1 (Form 1041) Box 1 (each estate or trust)"
       - "Seller-financed mortgage interest received"
-    notes: "The audit trail should preserve payer-level listed amounts, including separate net OID and net stated-interest entries when the same Form 1099-OID contributes both components."
+    notes: "The audit trail should preserve payer-level listed amounts, using one reconciled taxable amount per OID instrument and retaining its source-calculator audit separately."
     edgeCases:
       - "Nominee interest — received on behalf of another"
       - "OID (Original Issue Discount) adjustments"
@@ -41,8 +53,8 @@ lines:
     irsRef: "Schedule B Instructions, Line 3"
     notes: "Must file Form 8815 to claim. Subject to income phase-out."
     edgeCases:
-      - "MFJ AGI phase-out: $154,800–$184,800 (2025)"
-      - "Single AGI phase-out: $100,800–$115,800 (2025)"
+      - "MFJ MAGI phase-out: $149,250–$179,250 (2025)"
+      - "Single MAGI phase-out: $99,500–$114,500 (2025)"
       - "Bond must be used for qualified higher education expenses"
     testRef: "tests/engine/schedules/schedule-b.test.ts::Schedule B Line 3 - savings bond exclusion (Form 8815)"
 
@@ -99,3 +111,8 @@ lines:
     irsRef: "Schedule B Instructions, Part III Line 8"
     notes: "If yes, may need Forms 3520 and 3520-A"
     testRef: "tests/engine/schedules/schedule-b.test.ts::Schedule B Line 8 - foreign trust indicator from K-1"
+
+  - line: "oid-return-sources"
+    description: "Verified OID source routing"
+    formula: "Use source calculator taxableInterest exactly once; municipal coupon/OID stays exempt, separately reported Treasury OID is taxable, and actual source withholding, penalties and private-activity preference keep their own destinations."
+    testRef: "tests/engine/federal-oid-source-integration.test.ts::routes verified OID amounts to their actual federal lines once"

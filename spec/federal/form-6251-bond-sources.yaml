@@ -1,0 +1,50 @@
+form: "Form 6251 parent bond source worksheet"
+fullName: "Actual Form 1099-INT and Form 1099-DIV private activity preferences"
+taxYear: 2026
+irsReference: "https://www.irs.gov/instructions/i6251"
+sources:
+  - url: "https://www.irs.gov/instructions/i6251"
+    section: "Final 2025 instructions, line 2g"
+    retrieved: "2026-10-25"
+  - url: "https://www.irs.gov/instructions/i1099int"
+    section: "January 2024 continuous-use instructions, boxes 8, 9 and 13"
+    retrieved: "2026-10-25"
+  - url: "https://www.irs.gov/instructions/i1099div"
+    section: "January 2024 continuous-use instructions, boxes 12 and 13"
+    retrieved: "2026-10-25"
+  - url: "https://uscode.house.gov/us/usc/119-118/t26/s57/"
+    section: "IRC 57(a)(5)(A)-(B), tax-exempt interest and exempt-interest dividends"
+    retrieved: "2026-10-25"
+reviewStatus: "Source implementation in progress; independent human review and final 2026 form qualification pending"
+notes: |
+  Applies to historical 2025 and the isolated 2026 candidate. This does not
+  enable a year or qualify a filing form. INT box 9 is included in box 8;
+  DIV box 13 is included in box 12. Never add either preference box again to
+  regular exempt income. Positive exempt interest requires its actual preference
+  box, including actual zero; omission is unknown. Positive preferences require
+  actual recipient amounts, return year, source ID, owner and otherwise allowable
+  deduction. Statutory bond exceptions must already be reflected in reported
+  boxes. DIV box 13 already reflects fund expenses; INT premium may already be
+  netted. No inferred or duplicate expense deduction is permitted. A deduction
+  payment alone does not establish its allowance. Keep cents with Decimal.
+lines:
+  - line: "actual-sources"
+    description: "Required actual preference boxes and source reconciliation"
+    formula: "Require finite nonnegative preference <= actual exempt interest; positive preference requires matching year, actual owner, unique source ID and confirmed recipient amounts. Unknown preference on positive exempt interest rejects."
+    testRef: "tests/engine/forms/form-6251-bond-sources.test.ts::rejects unknown conflicting duplicate and stale parent preference sources"
+  - line: "net-source-preference"
+    description: "Actual parent preference with source-level evidence"
+    formula: "Retain signed actual INT9 or DIV13 less actual otherwise allowable deduction; positive deduction requires its source reference and allowance/nonduplication confirmation"
+    testRef: "tests/engine/forms/form-6251-bond-sources.test.ts::nets actual source preferences and deductions without adding exempt income twice"
+  - line: "aggregate-parent-preference"
+    description: "One parent preference floor independent of statement grouping"
+    formula: "max(0, sum actual parent INT9 and DIV13 plus separately reconciled parent OID preference minus sum otherwise allowable deductions). Do not floor each source record or permit duplicate instrument-specific premium deductions. Child preferences are computed separately."
+    testRef: "tests/engine/forms/form-6251-bond-sources.test.ts::keeps parent preference invariant when actual amounts are split across statements"
+  - line: "return-transfer"
+    description: "Single transfer into parent AMT alongside OID and elected child sources"
+    formula: "Transfer aggregate parent preference including reconciled OID once, plus separately computed child preferences, to Form6251 line2g; regular1040line2a unchanged"
+    testRef: "tests/engine/federal-parent-amt-sources.test.ts::transfers parent preference boxes once without changing regular exempt income"
+  - line: "review-field"
+    description: "Audited preference copied to physical review field"
+    formula: "Existing review Form6251 line2g uses the unique canonical audited preference"
+    testRef: "tests/engine/federal-parent-amt-sources.test.ts::prints the actual parent preference in the Form6251 review field"

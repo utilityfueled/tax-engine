@@ -4,6 +4,20 @@ taxYear: 2025
 irsReference: "https://www.irs.gov/instructions/i1040sca"
 
 lines:
+  - line: "5a-source-withholding"
+    description: "Include actual non-W2 withholding once without another-schedule duplication"
+    formula: "W2 state/local + actual INT/DIV/B/DA/NEC/MISC/G/K/W2G state withholding +1099R state/local withholding + in-year state payments/applied credits + separate additional income-tax payments minus actual non-W2 withholding deducted on other schedules.1099R state aliases count once; contradictory positive aliases reject."
+    irsRef: "ScheduleA instructions line5a, State and Local Income Taxes"
+    notes: "2026 positive non-W2 withholding requires actual nonW2IncomeTaxesDeductedElsewhere, including known0; unknown cannot become a confirmedzero. This contract covers modeled source withholding only."
+    testRef: "tests/engine/forms/state-local-income-tax-deduction.test.ts::includes modeled source withholding once and reconciles other-schedule deductions"
+  - line: "5a-source-comparison"
+    description: "Compare sales tax against the same complete income-tax deduction"
+    formula: "Use the identical source-based income-tax calculation for ScheduleAline5a and the sales-tax auto-comparison. An unconditional general-sales-tax election does not claim or require an unused income-tax deduction calculation."
+    testRef: "tests/engine/forms/state-local-income-tax-deduction.test.ts::uses all actual withholding in the sales-tax comparison"
+  - line: "5a-source-unknown"
+    description: "Preserve unknown and contradictory withholding allocation facts"
+    formula: "Reject nonfinite/negative payments, another-schedule deduction exceeding source withholding, incompatible1099R aliases, and missing2026 deduction allocation"
+    testRef: "tests/engine/forms/state-local-income-tax-deduction.test.ts::rejects unknown or contradictory withholding allocation facts"
   - line: "1"
     description: "Medical and dental expenses"
     formula: "Total unreimbursed medical/dental expenses"
@@ -12,19 +26,30 @@ lines:
 
   - line: "4"
     description: "Medical deduction (AGI threshold)"
-    formula: "Line 1 - (7.5% × AGI), floor at 0"
+    formula: "max(0, Line 1 - round(7.5% × max(0, AGI))); a negative AGI cannot increase the deduction beyond actual paid expenses"
     irsRef: "Schedule A Instructions, Line 4"
-    notes: "Only the amount exceeding 7.5% of AGI is deductible"
+    notes: "IRC213(a) allows expenses paid, limited by the AGI percentage. The nonnegative threshold follows that paid-expense ceiling; signed return AGI is preserved. This negative-AGI conclusion is derived from the statute and Pub502, not a published IRS numerical example."
     edgeCases:
       - "7.5% threshold applies to all filers"
       - "No deduction if expenses under threshold"
       - "Deduction cannot be negative"
     testRef: "tests/engine/schedules/schedule-a.test.ts::Schedule A Line 4 - medical deduction exceeds 7.5% AGI"
 
+  - line: "4-negative-agi"
+    description: "Negative AGI does not create medical expenses"
+    formula: "At negative or zero AGI, actual medical expenses0 give deduction0 and actual expenses5000 give deduction5000; the positive-AGI percentage remains unchanged."
+    irsRef: "IRC213(a); Pub502 How Much of the Expenses Can You Deduct?; source refreshed2026-10-25"
+    testRef: "tests/engine/schedules/schedule-a-medical-source-limit.test.ts::never deducts more medical expenses than actually paid at negative AGI"
+
+  - line: "4-negative-agi-review"
+    description: "Review PDF uses the same nonnegative medical threshold"
+    formula: "Retain signed actual AGI on2; map nonnegative threshold3 and actual capped deduction4."
+    testRef: "tests/pdf/schedule-a-medical-source-limit.test.ts::preserves signed AGI without a negative medical threshold in the review form"
+
   - line: "5a"
     description: "State and local income taxes OR general sales taxes"
     formula: |
-      Income tax path: Sum of W-2 Box 17 (state) + W-2 Box 19 (local) + state estimated tax payments.
+      Income tax path: Actual W2 and modeled non-W2 state/local withholding, less any non-W2 withholding deducted on other schedules, plus separate additional payments, state estimated/extension payments made during the calendar return year and immediately prior-year state credits applied to this year.
       Sales tax path: IRS Optional State Sales Tax Table amount (by AGI, state, exemptions, local rate)
         + actual sales tax on specific large purchases (vehicles, boats, etc.).
       When autoCompare is enabled, use whichever is larger.
@@ -32,7 +57,8 @@ lines:
     inputs:
       - "W-2 Box 17 (state tax withheld)"
       - "W-2 Box 19 (local tax withheld)"
-      - "State estimated tax payments (input.adjustments.estimatedTaxPayments where type='state')"
+      - "Modeled non-W2 state/local withholding and actual amount already deducted on other schedules"
+      - "State estimated/extension payment records with actual date in the calendar return year; next-January installment excluded even if for the same state return"
       - "salesTaxDeduction.state (for IRS table lookup)"
       - "salesTaxDeduction.localSalesTaxRate"
       - "salesTaxDeduction.specificPurchaseSalesTax (motor vehicles, boats, etc.)"
@@ -48,75 +74,71 @@ lines:
       - "autoCompare automatically selects the larger of income tax or sales tax"
       - "Local rate is capped at the state rate per IRS instructions"
       - "States without general sales tax (AK, DE, MT, NH, OR) produce $0"
-      - "MFS SALT cap ($5,000) applies to whichever method is elected"
+      - "MFS SALT limit ($20,000 maximum; $5,000 floor) applies to whichever method is elected"
       - "Sales tax on specific purchases is added to the table/actual amount"
       - "State tax refunds may be taxable if itemized prior year (see Taxable Refund Worksheet)"
     testRef: "tests/engine/forms/state-sales-tax-deduction-worksheet.test.ts::Sales tax worksheet — table method"
 
   - line: "5b"
-    description: "State and local personal property taxes"
-    formula: "Vehicle registration fees, etc."
-    irsRef: "Schedule A Instructions, Line 5b"
-    notes: "Passed via ScheduleAInput.personalPropertyTaxes"
-    testRef: "tests/engine/schedules/schedule-a.test.ts::Schedule A Line 5b - personal property taxes"
+    description: "State and local real estate taxes"
+    formula: "Sum of eligible Form 1098 property tax amounts"
+    irsRef: "2025 Schedule A Instructions, Line 5b"
+    testRef: "tests/regression/obbba-2025.test.ts::2025 SALT audit follows the published line numbers"
 
   - line: "5c"
-    description: "Real estate taxes"
-    formula: "Sum of Form 1098 property tax amounts"
-    irsRef: "Schedule A Instructions, Line 5c"
-    inputs:
-      - "Form 1098 property tax field"
-    testRef: "tests/engine/schedules/schedule-a.test.ts::Schedule A Line 5d - SALT capped at $10K"
+    description: "State and local personal property taxes"
+    formula: "Eligible annually assessed value-based personal property taxes"
+    irsRef: "2025 Schedule A Instructions, Line 5c"
+    testRef: "tests/regression/obbba-2025.test.ts::2025 SALT audit follows the published line numbers"
 
   - line: "5d"
-    description: "Total SALT deduction"
-    formula: "min(Line 5a + 5b + 5c, $10,000)"
-    irsRef: "Schedule A Instructions, Line 5d"
-    notes: "SALT cap is $10,000 ($5,000 MFS). Cap was set by TCJA 2017."
+    description: "State and local taxes before limitation"
+    formula: "Line 5a + Line 5b + Line 5c"
+    irsRef: "2025 Schedule A, Line 5d"
+    testRef: "tests/regression/obbba-2025.test.ts::2025 SALT audit follows the published line numbers"
+
+  - line: "5e"
+    description: "State and local tax deduction after MAGI limitation"
+    formula: |
+      MAGI = AGI + excluded Puerto Rico income + Form 2555 lines 45 and 50
+        + Form 4563 line 15.
+      Threshold = $500,000 ($250,000 MFS).
+      Worksheet line 7 = roundDollar(max(0, MAGI - threshold) * 0.30).
+      Worksheet line 9 = max($10,000, $40,000 - line 7).
+      Limit = line 9 (HALF of line 9 for MFS).
+      Line 5e = roundDollar(min(line 5d, limit)).
+    irsRef: "2025 Schedule A Instructions, State and Local Tax Deduction Worksheet, lines 1-10; IRC 164(b)(6) as amended by P.L. 119-21"
+    notes: |
+      Retrieved 2026-10-24; rule version 2025.2; independent review pending.
+      MFS halves the result AFTER the 30% reduction and $10,000 floor.
+      Thus the MFS maximum is $20,000 and floor $5,000.
+      Sum source amounts using Decimal before rounding a reported line.
+      No filing qualification is inferred from these regression fixtures.
     edgeCases:
-      - "MFS filers: cap is $5,000"
-      - "Pre-TCJA marriages grandfathered (no longer applicable)"
-    testRef: "tests/utils/tax-math.test.ts::SALT deduction capped at $10,000"
+      - "$20,000 paid with $100,000 AGI is fully deductible"
+      - "MAGI at, below, and above each filing-status threshold"
+      - "Foreign exclusions and housing deduction are added back to AGI"
+      - "MFS MAGI $300,000 gives a $12,500 limit"
+      - "High-MAGI floors, zero taxes, cents, and all filing statuses"
+    testRef: "tests/regression/obbba-2025.test.ts::2025 SALT independent worksheet fixtures"
 
   - line: "8a"
-    description: "Home mortgage interest and points (Form 1098)"
-    formula: |
-      AGGREGATE all Form 1098 entries:
-        1. Separate by origination date: grandfathered (pre-12/16/2017) vs post-TCJA
-        2. Grandfathered limited = min(total grandfathered principal, $1M / $500K MFS)
-        3. Post-TCJA room = max(0, $750K/$375K MFS - grandfathered limited)
-        4. Post-TCJA limited = min(total post-TCJA principal, post-TCJA room)
-        5. Total limited = grandfathered limited + post-TCJA limited
-        6. Total principal = sum of all outstanding principals
-        7. If total principal > total limited: ratio = total limited / total principal
-           deductible = roundDollar(total interest × ratio)
-        8. If total principal ≤ total limited: deductible = total interest
-      For 2025, Form 1098 Box 3 refunds of overpaid interest are NOT netted
-      against line 8a; the Schedule A instructions direct taxpayers to review
-      Schedule 1 line 8z separately instead. Per IRS Pub 936 Home Mortgage
-      Interest Deduction Worksheet, the limit is applied to the COMBINED
-      balance of all mortgages, not per-mortgage.
-    irsRef: "Schedule A Instructions, Line 8a; Pub 936; IRC §163(h)(3)(B)(ii)"
-    inputs:
-      - "Form 1098 Box 1 (mortgage interest)"
-      - "Form 1098 Box 2 (outstanding principal)"
-    edgeCases:
-      - "Debt over $750,000 ($375,000 MFS): interest deduction prorated — IRC §163(h)(3)(B)(ii)"
-      - "Pre-12/15/2017 mortgages: $1M limit ($500K MFS)"
-      - "Multiple mortgages: AGGREGATE principal for limit (not per-mortgage) — IRS Pub 936 worksheet"
-      - "MFS limit is half of standard limit per IRC §163(h)(3)(B)(ii): $375K post-TCJA, $500K pre-TCJA"
-      - "Mixed origination dates: grandfathered debt gets priority up to $1M, post-TCJA fills remaining room under $750K"
-      - "Two $500K post-TCJA mortgages: combined $1M > $750K → ratio 75%, each mortgage prorated"
-      - "For 2025, Form 1098 Box 3 refund of overpaid interest is not subtracted on line 8a"
-    testRef: "tests/edge-cases/schedule-a-edge-cases.test.ts::Schedule A - multiple mortgages aggregate debt limit (IRS Pub 936)"
+    description: "Qualified interest and points reported on current Form1098"
+    formula: "Actual Pub936 source worksheet line8a; correct debt categories/average balances, Table1 ratio rounded3decimals, current-year qualified points, no prior-year Box4 refund netting. Historical aggregate amounts remain unverified."
+    irsRef: "ScheduleA8a; Pub936 Table1 and points; detailed spec home-mortgage-interest.yaml"
+    testRef: "tests/engine/schedules/schedule-a.test.ts::Schedule A Line 8a - reported points paid on purchase of principal residence"
+
+  - line: "8b"
+    description: "Qualified home mortgage interest not reported on Form1098"
+    formula: "Actual unreported interest after Pub936 limitations; actual lender identity retained"
+    irsRef: "ScheduleA8b; Pub936"
+    testRef: "tests/engine/forms/home-mortgage-interest.test.ts::routes actual reported and unreported amounts into canonical ScheduleA lines"
 
   - line: "8c"
-    description: "Points paid on purchase of principal residence"
-    formula: "Sum of Form 1098 Box 6 (points paid)"
-    irsRef: "Schedule A Instructions, Line 8c"
-    inputs:
-      - "Form 1098 Box 6 (points paid)"
-    testRef: "tests/engine/schedules/schedule-a.test.ts::Schedule A Line 8c - points paid on purchase of principal residence"
+    description: "Qualified points not reported on current Form1098"
+    formula: "Actual unreported points/current amortization after applicable source qualification and Table1 ratio; current Box6 points enter8a instead"
+    irsRef: "ScheduleA8c; Pub936 Points"
+    testRef: "tests/engine/forms/home-mortgage-interest.test.ts::implements the published ratable points example and actual current purchase qualification"
 
   - line: "8d"
     description: "Reserved for future use"
@@ -143,7 +165,7 @@ lines:
     edgeCases:
       - "Zero when no investment interest input is provided"
       - "Form 4952 limits deduction to net investment income"
-    testRef: "tests/engine/forms/form-4952.test.ts::Form 4952 Line 5 - deduction limited to net investment income"
+    testRef: "tests/engine/forms/form-4952.test.ts::Form 4952 Line 8 - deduction limited to net investment income"
 
   - line: "15"
     description: "Casualty and theft losses"
@@ -160,53 +182,39 @@ lines:
       - "Net casualty gains go to Form 8949, not Schedule A"
     testRef: "tests/engine/forms/form-4684.test.ts::Form 4684 aggregate - deductible loss flows to Schedule A Line 15"
 
+  - line: "11"
+    description: "Current gifts by cash or check"
+    formula: "Round the completed current-cash deduction after applicable category limits and floors; exclude actual prior-year use. Original source cents and exact computational category amounts remain separate."
+    irsRef: "Final2025 ScheduleA line11; i1040 Rounding Off to Whole Dollars; Pub526"
+    testRef: "tests/engine/schedules/schedule-a-charity-reporting.test.ts::reports current and prior charity groups separately after exact computation"
+
   - line: "12"
-    description: "Gifts to charity (cash)"
-    formula: "min(totalCash + carryforward, 60% AGI - totalNonCashAllowed)"
-    irsRef: "IRC §170(b)(1)(G); Schedule A Instructions, Line 12; Pub 526"
-    notes: |
-      Per IRC §170(b)(1)(G), cash contributions to 50% organizations are limited to
-      60% of AGI MINUS property contributions already allowed under (A)/(C).
-      Cash can exceed the 50% overall limit only to the extent the 60% headroom
-      is not consumed by non-cash property deductions.
-    edgeCases:
-      - "Cash-only: limited to 60% of AGI (no reduction)"
-      - "Cash + non-cash: cash reduced by non-cash property allowed"
-      - "Effective maximum total deduction (all categories) is 60% of AGI"
-      - "Carryforward from prior year added to current cash before stacking limit"
-      - "K-1 Box 13 Code A pass-through cash charitable aggregates with personal cash donations"
-    testRef: "tests/engine/schedules/schedule-a.test.ts::Schedule A Line 12 - cash charitable"
+    description: "Current gifts other than cash or check"
+    formula: "Round the completed current-noncash deduction after applicable qualification, basis, category limits and floors; prior-year use belongs on13."
+    irsRef: "Final2025 ScheduleA line12; Pub526; IRC170(b)(1)(A),(C),(D)"
+    testRef: "tests/engine/schedules/schedule-a-charity-reporting.test.ts::reports current and prior charity groups separately after exact computation"
 
   - line: "13"
-    description: "Gifts to charity (non-cash)"
-    formula: "FMV of donated non-cash property, limited by contribution category: long-term capital gain property donated to a supported public charity is limited to 30% of AGI, long-term capital gain property validated as donated to a second-category/private foundation is limited to the smallest of 20% of AGI, the remaining 30%-bucket headroom after the supported 30% capital-gain-property bucket, and the remaining 50%-bucket headroom after the supported 60%, 50%, and 30% buckets already deducted, and other non-cash property is limited to 50% of AGI"
-    irsRef: "Schedule A Instructions, Line 13; Pub. 526 (2025), Limit Based on 20% of AGI and How To Figure Your Deduction When Limits Apply; IRC §170(b)(1)(A),(C)"
-    notes: |
-      Per IRC §170(b)(1)(A), total contributions to 50% organizations (excluding
-      cash under (G)) are limited to 50% of AGI. Capital gain property has a 30%
-      sub-limit under (C). Other non-cash property gets the remaining 50% capacity
-      after capital gain property is allocated. Total non-cash cannot exceed 50% AGI.
-      Long-term capital gain property donated to a validated private foundation uses the 20% AGI limit branch.
-    edgeCases:
-      - "Appreciated stock: deduct FMV, no capital gains"
-      - "Long-term capital gain property: limited to 30% of AGI"
-      - "Long-term capital gain property donated to a validated private foundation uses the 20% AGI limit branch"
-      - "Short-term gain property: limited to cost basis"
-      - "Other non-cash only: limited to 50% of AGI"
-      - "Both LTCG + other: LTCG limited to 30%, other limited to remaining 50% capacity"
-      - "K-1 Box 13 Code B pass-through capital gain property aggregates with personal appreciated-property donations (30% limit)"
-      - "K-1 Box 13 Code C pass-through capital gain property aggregates with personal private-foundation donations (20% limit)"
-    testRef: "tests/engine/schedules/schedule-a.test.ts::Schedule A Line 13 - private-foundation LTCG property uses the 20% AGI limit"
+    description: "Actual prior-year charitable carry used"
+    formula: "Round the sum of allowed prior-year category/vintage amounts separately from current contributions. This reporting line does not establish a missing category or originating year."
+    irsRef: "Final2025 ScheduleA line13; Pub526 Carryovers; IRC170(d)"
+    testRef: "tests/engine/schedules/schedule-a-charity-reporting.test.ts::reports current and prior charity groups separately after exact computation"
+
+  - line: "14"
+    description: "Reported charitable deduction subtotal"
+    formula: "Reported11+12+13. Preserve exact source/category amounts before completing each line; do not replace the sum of completed lines with a rounded combined exact subtotal."
+    irsRef: "Final2025 ScheduleA line14; i1040 Rounding Off to Whole Dollars"
+    testRef: "tests/engine/schedules/schedule-a-charity-reporting.test.ts::rounds each completed charity line without changing original source cents"
 
   - line: "17"
     description: "Total itemized deductions"
-    formula: "Line 4 + 5d + 8a + 8c + 9 + 12 + 13 + 15 + 28"
+    formula: "Line4+7+10+14+15+16; charitable14 is the sum of reported11–13"
     irsRef: "Schedule A Instructions, Line 17"
     testRef: "tests/engine/schedules/schedule-a.test.ts::Schedule A Line 17 - total itemized deductions"
 
   - line: "carryforward"
     description: "Charitable contribution carryforward to next year (IRC §170(d))"
-    formula: "max(0, totalRawCash + priorCarryforward - deductibleCash) + max(0, totalRawNonCash - deductibleNonCash)"
+    formula: "Sum exact current category excess and each sourced prior vintage's remaining amount after actual treated-paid absorption and fifth-year expiry; preserve original category, medium and year."
     irsRef: "IRC §170(d)(1); Pub 526, Carryovers"
     notes: |
       Excess charitable contributions that exceed the AGI-based limits carry
@@ -215,12 +223,11 @@ lines:
       ScheduleAResult.charitableCarryforward and FederalTaxResult.carryforwards.
       The carryforward includes unused prior-year amounts that could not be
       absorbed in the current year.
-      When per-year carryforward entries are provided, the engine uses FIFO
-      ordering (oldest year first) and expires entries older than 5 years from
-      the current tax year. This matches the expected carryforward treatment in IRS Pub 526's
-      5-year carryover rule. When only a single aggregate carryforward is
-      provided (legacy mode), it is treated as originating in the prior year
-      for backward compatibility. The per-year remaining carryforward is
+      Complete actual per-year source histories use FIFO ordering within each
+      category. The fifth succeeding year is the final usable year, and its
+      unused remainder expires after that year's capacity is applied. This matches IRS Pub 526's
+      5-year carryover rule. A positive legacy aggregate or unclassified year list requires the separate
+      actual category/origin/history packet; its age and category are never inferred. The per-year remaining carryforward is
       returned alongside the aggregate amount so multi-year returns can track
       vintage expiration correctly.
     edgeCases:
@@ -232,5 +239,32 @@ lines:
       - "Carryforward entries older than 5 years expire and are not available for deduction"
       - "Partial use of a vintage year carries the remainder into the next year"
       - "Current-year excess creates a new carryforward vintage for the current tax year"
-      - "Legacy single aggregate carryforward is treated as prior-year vintage for backward compatibility"
+      - "A legacy aggregate requires the actual source packet before its original vintage can be used"
     testRef: "tests/engine/schedules/schedule-a.test.ts::Schedule A - Charitable Carryforward"
+
+  - line: "5a-payment-year"
+    description: "State income tax deductions use payment calendar year"
+    formula: "Sum actual state estimated and extension records paid Jan1-Dec31 of return year, plus state credits explicitly applied from immediately prior-year return; exclude federal records and other calendar years. Invalid or unknown dates/amounts reject. Sales-tax auto-comparison uses the same sum."
+    irsRef: "https://www.irs.gov/instructions/i1040sca"
+    testRef: "tests/engine/forms/state-tax-payment-year.test.ts::deducts state payments by actual calendar year and preserves applied prior credits"
+
+  - line: "16-oid-premium"
+    description: "Allowable excess bond premium"
+    formula: "Add source-calculated allowable section171 excess premium to Schedule A line16 with gambling deductions, retaining unused premium carry separately. Identify audit values by both form and line; another worksheet line16 is not the Schedule A total. Count actual OID state withholding once on line5a."
+    irsRef: "Publication550 Bond premium amortization more than interest; ScheduleA line16"
+    testRef: "tests/engine/federal-oid-source-integration.test.ts::deducts only allowable excess premium and preserves its carry"
+
+  - line: "16-reviewed-oid-map"
+    description: "Audited other-itemized review mapping"
+    formula: "Copy unique reconciled line16 audit and actual deduction descriptions; no omitted or recomputed premium deduction."
+    testRef: "tests/engine/federal-oid-source-integration.test.ts::maps the audited excess premium into the review form line16"
+
+  - line: "16-tips-ordinary-loss"
+    description: "Allowable inflation-indexed debt ordinary loss"
+    formula: "Add actual source-calculated ordinary loss once to other itemized deductions; do not reduce gross interest or AGI again and do not deduct the separate carry."
+    irsRef: "https://www.irs.gov/instructions/i1040sca (Other Itemized Deductions, line16)"
+    testRef: "tests/engine/federal-oid-source-integration.test.ts::routes allowable TIPS ordinary loss to itemized deductions and preserves its carry"
+  - line: "16-tips-review-map"
+    description: "Audited TIPS deduction in reference Schedule A"
+    formula: "Copy unique reconciled line16 and identify actual TIPS ordinary loss in the description."
+    testRef: "tests/engine/federal-oid-source-integration.test.ts::maps actual TIPS loss and NIIT modification to the review forms"

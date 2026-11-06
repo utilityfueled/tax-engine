@@ -1,3 +1,5 @@
+import { useTemporaryPdfOutput } from "./temporary-output.js";
+const testOutputDir = useTemporaryPdfOutput();
 /**
  * Tests for Form 1040 PDF filling.
  * Verifies that engine results are correctly mapped to PDF form fields.
@@ -37,7 +39,7 @@ function isChecked(doc: PDFDocument, fieldName: string): boolean {
   return false;
 }
 
-const BLANK_PDF = "forms/blank/f1040.pdf";
+const BLANK_PDF = "forms/blank/2025/f1040.pdf";
 
 // ─── Format Utility Tests ──────────────────────────────────────────────────
 
@@ -209,7 +211,7 @@ describe("fillReturn orchestrator", () => {
     const result = calculateFederalTax(simpleW2Fixture);
     const { filledForms } = await fillReturn(simpleW2Fixture, result, {
       blankFormsDir: "forms/blank",
-      outputDir: "forms/filled",
+      outputDir: testOutputDir,
     });
     expect(filledForms.length).toBeGreaterThanOrEqual(1);
     expect(filledForms[0]).toContain("f1040-filled.pdf");

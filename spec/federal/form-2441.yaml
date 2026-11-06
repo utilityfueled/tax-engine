@@ -1,23 +1,51 @@
 form: "Form 2441"
 fullName: "Child and Dependent Care Expenses"
-taxYear: 2025
+taxYear: 2026
 irsReference: "https://www.irs.gov/instructions/i2441"
 
 notes: |
   Form 2441 calculates the credit for child and dependent care expenses.
-  Credit percentage ranges from 20% to 35% based on AGI.
+  2025 credit percentage is 20%-35%; 2026 is 20%-50% under amended IRC 21(a)(2).
+  This is a calculation specification, not qualification of a draft 2026 PDF.
+  Source refreshed 2026-10-25: https://uscode.house.gov/us/usc/119-118/t26/s21/
+  2026 instructions corroboration (draft, not for filing): https://www.irs.gov/pub/irs-dft/i2441--dft.pdf
+  2026 requires confirmed qualifying-person/provider/work-related-expense eligibility, actual
+  taxpayer earned income, separately determined spouse earned income for MFJ, and explicit
+  section 129 excluded benefits, including an explicit zero. Unknown facts reject computation; known ineligibility yields zero.
+  Expense/benefit amounts are finite and nonnegative; earned-income losses are allowed
+  and floored at zero only when limiting the credit.
+  Earned-income inputs must already reflect applicable foreign exclusions and section 164(f),
+  and any monthly student/incapable-of-self-care deemed-income rules. Part III exclusion
+  calculation uses the dedicated actual dependentCareBenefits source contract when supplied.
+  Prior-year expenses paid this year require a separately completed worksheet;
+  the legacy excluded-benefit input is actual deducted/excluded benefits, never inferred from W-2 box 10.
   Maximum qualifying expenses: $3,000 for one qualifying individual,
   $6,000 for two or more.
 
 businessRuleValidation:
   - rule: "packet-inclusion-supported-credit"
     description: "Inventory support counts this form as business-rule validated only when regression coverage proves the emitted packet attaches the official Form 2441 PDF only for supported dependent-care-credit scenarios that compute a positive credit and suppresses the form when the credit is unsupported or not allowed."
-    testRef: "tests/pdf/fill-form-2441.test.ts::fillReturn attaches Form 2441 only for supported credit-bearing scenarios"
+    testRef: "tests/pdf/fill-form-2441.test.ts::fillReturn attaches Form 2441 only for supported credit-bearing scenarios: %s"
 
 lines:
+  - line: "part-iii-handoff"
+    description: "Validated Part III expense base without a second benefit subtraction"
+    formula: "Recalculate confirmed actual Part III facts for the requested year/status; line3 takes line31. Preserve gross paid expenses separately. Actual person count and any legacy benefit amount must reconcile. Part III and Part II earned-income worksheets remain separate."
+    irsRef: "Form2441 line3, PartIII lines27-31, Publication503 expense coordination"
+    testRef: "tests/engine/forms/form-2441-benefits-handoff.test.ts::uses validated line31 and preserves gross expense evidence without a second subtraction"
+  - line: "part-iii-prior-credit"
+    description: "A fully exhausted current expense cap does not erase actual Worksheet A credit"
+    formula: "line31=0 can coexist with actual prior-year line9b; apply line10 to line9a+line9b"
+    irsRef: "Form2441 line29 exception and lines9b-11"
+    testRef: "tests/engine/forms/form-2441-benefits-handoff.test.ts::preserves the separate prior-year worksheet when benefits exhaust the current expense cap"
+  - line: "part-iii-mfs"
+    description: "Actual living-apart source facts permit the considered-unmarried credit path"
+    formula: "MFS eligibility requires all three actual PartIII living-apart facts and separate credit eligibility; otherwise current credit is zero"
+    irsRef: "Form2441 instructions Married Persons Filing Separately; IRC21(e)(4)"
+    testRef: "tests/engine/forms/form-2441-benefits-handoff.test.ts::applies the actual living-apart facts without treating all separate returns as eligible"
   - line: "3"
     description: "Qualifying expenses"
-    formula: "Lesser of actual expenses or $3,000/$6,000 limit"
+    formula: "With actual PartIII facts: validated line31. Legacy path: min(max(0, gross qualified expenses - excluded/deducted benefits), max(0, $3,000/$6,000 - benefits)); zero without credit eligibility or a qualifying individual"
     irsRef: "Form 2441 Instructions, Line 3"
     edgeCases:
       - "One qualifying individual: max $3,000"
@@ -25,9 +53,11 @@ lines:
     testRef: "tests/engine/forms/form-2441.test.ts::Form 2441 Line 3 - qualifying expenses capped at $3K for one"
 
   - line: "4"
-    description: "Earned income limit"
+    description: "Taxpayer earned income; separate from the line 6 limit"
     formula: |
-      Lesser of qualifying expenses or earned income (lower-earning spouse for MFJ).
+      Actual taxpayer worksheet earned income, including permitted signed losses.
+      The minimum of expenses and separate spouse incomes belongs on line 6.
+      For 2026 MFJ, combined household income is not a substitute for separate earned-income facts.
       Earned income = wages (Form 1040 Line 1z) + SE earned income.
       SE earned income = Schedule SE Line 3 (net SE earnings, pre-0.9235 multiplier)
       minus Schedule 1 Line 15 (deductible half of SE tax).
@@ -42,10 +72,26 @@ lines:
       - "SE losses reduce earned income base (not floored at zero)"
     testRef: "tests/engine/forms/form-2441.test.ts::Form 2441 Line 4 - earned income limit applied"
 
+  - line: "5"
+    description: "Separate spouse earned income for MFJ; otherwise line 4"
+    formula: "Actual spouse worksheet income for MFJ; line 4 for other filing statuses. Historical combined-income adapters are explicitly unverified and cannot populate individual-income PDF fields."
+    testRef: "tests/engine/forms/form-2441-audit-source.test.ts::care audit preserves separate earned incomes and tentative credit"
+  - line: "6"
+    description: "Earned-income-limited qualifying expenses"
+    formula: "max(0,min(line 3,line 4,line 5))"
+    testRef: "tests/engine/forms/form-2441-audit-source.test.ts::care audit preserves separate earned incomes and tentative credit"
+  - line: "7"
+    description: "Actual AGI"
+    formula: "Form 1040 line 11a; signed amount, never a reconstructed income proxy"
+    testRef: "tests/engine/forms/form-2441-audit-source.test.ts::care audit preserves separate earned incomes and tentative credit"
+
   - line: "8"
     description: "Credit percentage"
     formula: |
-      35% minus 1% for each $2,000 (or fraction thereof) of AGI over $15,000, floor at 20%.
+      2025: 35% minus 1% for each $2,000 (or fraction thereof) of AGI over $15,000, floor at 20%.
+      2026: max(35%, 50% - ceil(max(0, AGI - 15000)/2000)*1%), then reduce
+      by ceil(max(0, AGI - 75000)/2000)*1% for nonjoint returns, or
+      ceil(max(0, AGI - 150000)/4000)*1% for joint returns, floor 20%.
       IRS instructions: "Divide the result by $2,000. If the result isn't a whole number,
       round it to the next higher whole number." This means ceiling (round UP), not floor.
       IRS Pub 503 table confirms: $15,001–$17,000 → 34%, $17,001–$19,000 → 33%, etc.
@@ -61,9 +107,33 @@ lines:
 
   - line: "9"
     description: "Dependent care credit"
-    formula: "Line 4 × Line 8 percentage"
+    formula: "Historical audit alias of line 9a: roundDollar(line 6 × line 8); retained for old audit consumers"
     irsRef: "Form 2441 Instructions, Line 9"
     testRef: "tests/engine/forms/form-2441.test.ts::Form 2441 Line 9 - credit amount calculated correctly"
+
+  - line: "9a"
+    description: "Current-year tentative credit before the tax-liability limit"
+    formula: "roundDollar(line 6 × line 8); do not substitute the tax-limited line 11"
+    testRef: "tests/engine/forms/form-2441-audit-source.test.ts::care audit preserves separate earned incomes and tentative credit"
+  - line: "9b"
+    description: "Actual prior-year expense worksheet credit"
+    formula: "Explicit completed Worksheet A credit, including known zero. Unknown remains absent in historical review output; 2026 requires an actual amount. This input does not compute or qualify the historical worksheet."
+    testRef: "tests/engine/forms/form-2441-audit-source.test.ts::care prior-year amount preserves unknown and exact zero"
+  - line: "9c"
+    description: "Tentative credit including actual prior-year worksheet credit"
+    formula: "line 9a + roundDollar(line 9b); absent from the printed review form when line 9b is unknown"
+    testRef: "tests/engine/forms/form-2441-audit-source.test.ts::care audit preserves separate earned incomes and tentative credit"
+
+  - line: "10"
+    description: "Nonrefundable credit tax-liability limit"
+    formula: "Actual Form 1040 line 18 minus foreign tax credit, floored at zero; no inferred tax balance in federal integration."
+    irsRef: "Form 2441 credit limit worksheet"
+    testRef: "tests/engine/forms/form-2441.test.ts::care credit preserves tentative amount and applies actual tax limit"
+  - line: "11"
+    description: "Allowed dependent care credit"
+    formula: "min(line 9c,line 10); unused credit is not refundable and has no carryforward. Historical omission of prior-year facts retains the old current-year-only computation, explicitly unverified for complete export."
+    irsRef: "Form 2441 line 11"
+    testRef: "tests/engine/forms/form-2441.test.ts::care credit preserves tentative amount and applies actual tax limit"
 
 edgeCases:
   - description: "Zero expenses yields zero credit"
@@ -78,3 +148,34 @@ edgeCases:
     testRef: "tests/engine/forms/form-2441.test.ts::Form 2441 Line 3 - qualifying expenses capped at $6K for two+"
   - description: "MFS filers cannot claim dependent care credit"
     notes: "IRC §21(e)(2) — MFS restriction enforced in federal.ts orchestrator"
+
+validation2026:
+  - rule: "source-record-review-continuations"
+    description: "Printed PartsI/II copy actual source records, put the three largest payments/expenses on the form, and retain every remaining row and due-diligence statement on review continuation pages. Correct physical continuation boxes; explicit household and over12 disability answers. Preserve render-only identifier redaction."
+    testRef: "tests/pdf/fill-form-2441-source.test.ts::Form2441 review preserves provider and person source records with continuations"
+  - rule: "actual-care-source-records"
+    description: "Collect actual provider names, addresses, identification status, household-employment answers and payments; qualifying-person names, IDs, disability answers and individually allocated expenses; actual prior-year credit and deemed-income/benefit answers. Retain unknown and zero. Reconcile person expenses to gross eligible expenses less excluded benefits with Decimal; provider payments may exceed but must cover those expenses. Prior-only claims cannot disappear because current expenses are zero."
+    testRef: "tests/guided-interview/guided-care-source-facts.test.ts::preserves actual care source records and prior-year credit"
+  - rule: "review-pdf-audited-values"
+    description: "2025 review mapping copies finite unique printed audit amounts, including tentative credit and actual credit limit; missing prior-year and unverified per-spouse incomes stay blank. Reject duplicate, missing or contradictory audit data."
+    testRef: "tests/pdf/fill-form-2441-source.test.ts::Form2441 review prints audited income and tentative credit"
+  - rule: "official-printed-audit-lines"
+    description: "Refreshed 2026-10-25 against final 2025 Form2441 created 2025-03-18, page1 lines4-11 and instructions line9b. Copy unique finite audited values; reject scalar/source contradictions. Preserve unknown prior-year and separate-income facts in review output. No final2026 mapping is qualified."
+    sources:
+      - "https://www.irs.gov/pub/irs-pdf/f2441.pdf"
+      - "https://www.irs.gov/instructions/i2441"
+    testRef: "tests/engine/forms/form-2441-audit-source.test.ts::care audit preserves separate earned incomes and tentative credit"
+  - rule: "explicit-year-and-eligibility"
+    description: "Reject unsupported years, missing filing status/eligibility/excluded-benefit facts, and missing MFJ spouse income; MFS has no ordinary credit."
+    testRef: "tests/engine/forms/form-2441.test.ts::2026 requires confirmed facts and separate spouse income"
+  - rule: "two-stage-rate"
+    description: "Both sides of the two 2026 step-downs, joint and nonjoint, preserve 2025 rates."
+    testRef: "tests/engine/forms/form-2441.test.ts::2026 rates follow both statutory phase-downs"
+  - rule: "benefits-income-and-zero-floors"
+    description: "Benefits reduce both the statutory cap and gross expenses; loss income cannot create a negative credit."
+    testRef: "tests/engine/forms/form-2441.test.ts::2026 reduces expenses and cap by excluded benefits"
+
+  - line: "2026-federal-facts"
+    description: "Federal integration preserves actual per-spouse earned income and exclusions"
+    formula: "For 2026 require explicit taxpayer earned income, spouse earned income for joint returns, excluded dependent-care benefits and eligibility. Forward return year and filing status. Never use combined household wages as either spouse's limit; explicit zero is preserved. Legacy 2025 omission retains the historical adapter path."
+    testRef: "tests/engine/federal-care-2026.test.ts::2026 dependent-care facts integration"

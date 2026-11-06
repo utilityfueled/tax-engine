@@ -1,0 +1,119 @@
+{
+  "schemaVersion": 1,
+  "sourceCommit": "018f7a610499c96600a49f2a627ba44c11452148",
+  "observedAt": "2026-10-28T14:02:00.946864+00:00",
+  "releaseReady": false,
+  "scope": "Exact018f7a61 synthetic remote CI through educator reissue and actual-paid health delivery. Excludes subsequent joint NOL, positive-other-return health and remaining internal packages. No staging, production or human qualification.",
+  "runs": {
+    "ci": 40478588460,
+    "web": 40478588402
+  },
+  "ciConclusion": "success",
+  "webConclusion": "success",
+  "unit": {
+    "job": 122103023780,
+    "passed": 19646,
+    "files": 1429,
+    "workers": 1,
+    "seconds": "1576.64",
+    "attempt": 1
+  },
+  "coverage": {
+    "job": 122103023578,
+    "passed": 19646,
+    "files": 1429,
+    "workers": 1,
+    "seconds": "1424.03",
+    "attempt": 1,
+    "percentages": {
+      "statements": "91.89",
+      "branches": "86.97",
+      "functions": "90.74",
+      "lines": "94.62"
+    },
+    "thresholds": {
+      "statements": 90,
+      "branches": 85,
+      "functions": 90,
+      "lines": 90
+    },
+    "allUnchangedThresholdsPassed": true,
+    "independentlyRecountedFromArtifact": true,
+    "counters": {
+      "statements": {
+        "covered": 62499,
+        "total": 68015
+      },
+      "branches": {
+        "covered": 55073,
+        "total": 63322
+      },
+      "functions": {
+        "covered": 12140,
+        "total": 13378
+      },
+      "lines": {
+        "covered": 52433,
+        "total": 55409
+      }
+    },
+    "sourceFiles": 952,
+    "artifact": {
+      "id": 12722119966,
+      "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40478588460/artifacts/12722119966",
+      "archive": {
+        "path": ".local/upgrade-evidence/018f7a61-coverage-artifact.zip",
+        "sha256": "bcb5e8dd9fcc133d960687eb6af0b4db8fc519f54f68227761d9b7b77dbc829b"
+      },
+      "bytes": 9083454,
+      "entries": 988,
+      "raw": {
+        "path": ".local/upgrade-evidence/018f7a61-coverage-artifact/coverage-final.json",
+        "sha256": "9c1e78123370c4f31bbb0362ba5bb65d5395535ba6914d3045c2e49bfb0f2c0f"
+      }
+    }
+  },
+  "selfHostBrowser": {
+    "job": 122103200027,
+    "passed": 508,
+    "hostedSkipped": 5,
+    "configuredRetries": 1,
+    "reportedFlaky": 0,
+    "duration": "24.3m"
+  },
+  "staticAndBuild": "All root/contracts/web type, lint, spec/inventory and root/web build jobs passed.",
+  "container": {
+    "job": 122103200296,
+    "result": "passed",
+    "evidence": "docs/upgrade-2026-runtime-018f7a61.json",
+    "scope": "Native amd64 image, six synthetic recovery phases,508 browser passes, five hosted-only skips, SBOM and scan"
+  },
+  "jobStatuses": {
+    "ci": {
+      "path": ".local/upgrade-evidence/018f7a61-ci-jobs.json",
+      "sha256": "630bd8a8dbeac0c6b9da625a11cc2e1d7ddf18dd20e4c3419f476b701dd85f1d"
+    },
+    "web": {
+      "path": ".local/upgrade-evidence/018f7a61-web-jobs.json",
+      "sha256": "64d28613c8d62fe5914d62ceb8f8314099915e15fa174c4e547e439ae12a54ed"
+    }
+  },
+  "logs": {
+    "unit": {
+      "path": ".local/upgrade-evidence/018f7a61-unit-log.log",
+      "sha256": "5796cbb92b5778915a74dd948bc7169821bcc68322e8706d9514795c48feb518"
+    },
+    "coverage": {
+      "path": ".local/upgrade-evidence/018f7a61-coverage-log.log",
+      "sha256": "896e1fc1aceaeb3566ce4cc97ae6615a9cc9c2270108922836c6f5d3dca56e4c"
+    },
+    "browser": {
+      "path": ".local/upgrade-evidence/018f7a61-browser-log.log",
+      "sha256": "a6d4711b01898580d2a7136c2e89c0f0338bd38e123f0f949b067f3927b92468"
+    },
+    "runtime": {
+      "path": ".local/upgrade-evidence/018f7a61-runtime-log.log",
+      "sha256": "d53e7023692448d0e07546e1174bd992714fd7704fd6691b2dee12753ddfd142"
+    }
+  }
+}

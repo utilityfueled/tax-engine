@@ -27,7 +27,7 @@ function getFieldText(doc: PDFDocument, fieldName: string): string | undefined {
   return undefined;
 }
 
-const BLANK_2441 = "forms/blank/f2441.pdf";
+const BLANK_2441 = "forms/blank/2025/f2441.pdf";
 const F = FORM_2441_FIELDS;
 
 async function makeOutputDir() {
@@ -90,6 +90,7 @@ const singleOneChildFixture: TaxYearInput = {
   dependentCare: {
     expenses: "5000",
     qualifyingIndividuals: 1,
+    priorYearExpenseCredit: "0", primaryEarnedIncome: "75000",
   },
 };
 
@@ -175,6 +176,7 @@ const mfjTwoChildrenFixture: TaxYearInput = {
   dependentCare: {
     expenses: "10000",
     qualifyingIndividuals: 2,
+    priorYearExpenseCredit: "0", primaryEarnedIncome: "90000", spouseEarnedIncome: "60000",
   },
 };
 
@@ -298,45 +300,30 @@ describe("Form 2441 PDF fill — MFJ with two qualifying children", () => {
 });
 
 describe("Form 2441 packet inclusion", () => {
-  it("fillReturn attaches Form 2441 only for supported credit-bearing scenarios", async () => {
+  it.each([["included", true], ["omitted", false]] as const)("fillReturn attaches Form 2441 only for supported credit-bearing scenarios: %s", async (_scenario, included) => {
+    const input: TaxYearInput = included ? singleOneChildFixture : {
+      ...singleOneChildFixture,
+      taxpayer: {
+        ...singleOneChildFixture.taxpayer,
+        filingStatus: "married_filing_separately",
+        spouse: { firstName: "Alex", lastName: "Santos", ssn: "444-55-6666", dateOfBirth: "1989-08-01" },
+      },
+    };
     const outputDir = await makeOutputDir();
-
     try {
-      const supportedResult = calculateFederalTax(singleOneChildFixture);
-      const supportedPacket = await fillReturn(singleOneChildFixture, supportedResult, {
-        blankFormsDir: "forms/blank",
-        outputDir,
-      });
-
-      const supportedPath = supportedPacket.filledForms.find((path) => path.endsWith("f2441-filled.pdf"));
-
-      expect(supportedResult.form2441?.credit.toNumber()).toBeGreaterThan(0);
-      expect(supportedPath).toBeDefined();
-      await access(supportedPath!);
-      const pdfBytes = await readFile(supportedPath!);
-      expect(pdfBytes.length).toBeGreaterThan(0);
-
-      const mfsFixture: TaxYearInput = {
-        ...singleOneChildFixture,
-        taxpayer: {
-          ...singleOneChildFixture.taxpayer,
-          filingStatus: "married_filing_separately",
-          spouse: {
-            firstName: "Alex",
-            lastName: "Santos",
-            ssn: "444-55-6666",
-            dateOfBirth: "1989-08-01",
-          },
-        },
-      };
-      const mfsResult = calculateFederalTax(mfsFixture);
-      const suppressedPacket = await fillReturn(mfsFixture, mfsResult, {
-        blankFormsDir: "forms/blank",
-        outputDir,
-      });
-
-      expect(mfsResult.form2441).toBeUndefined();
-      expect(suppressedPacket.filledForms.some((path) => path.endsWith("f2441-filled.pdf"))).toBe(false);
+      const result = calculateFederalTax(input);
+      const packet = await fillReturn(input, result, { blankFormsDir: "forms/blank", outputDir });
+      if (included) expect(result.form2441?.credit.toNumber()).toBeGreaterThan(0);
+      else expect(result.form2441).toBeUndefined();
+      if (included) {
+        const referencePath = packet.filledForms.find((path) => path.endsWith("f2441-filled.pdf"));
+        expect(referencePath).toBeDefined();
+        await access(referencePath!);
+        const pdfBytes = await readFile(referencePath!);
+        expect(pdfBytes.length).toBeGreaterThan(0);
+      } else {
+        expect(packet.filledForms.some((path) => path.endsWith("f2441-filled.pdf"))).toBe(false);
+      }
     } finally {
       await rm(outputDir, { recursive: true, force: true });
     }

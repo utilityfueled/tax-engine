@@ -1,0 +1,44 @@
+form: "K1 QBI Loss Return"
+fullName: "Canonical ordinary K-1 current and suspended section199A character"
+taxYear: 2025
+irsReference: "https://www.irs.gov/irb/2020-29_IRB"
+retrievedAt: "2026-10-25"
+notes: |
+  Reg1.199A-3(b)(1)(iv), T.D.9899 Example1 and i8995 suspended-loss
+  worksheets control this actual-source path. Current basis and at-risk
+  allowances come from ScheduleE's existing calculations; passive allowance
+  comes from the original-index canonical8582 row. Original loss ratios stay
+  exact through each source computation. Each reported transfer rounds once.
+  Prior qualified loss is separate from current QBI and carries its fixed
+  originating character. Source histories are not current deduction inputs.
+  Unsupported mixed-origin positive461 allocation remains an explicit method
+  boundary; no unprovided cross-activity allocation is assumed.
+lines:
+  - line: "current-at-risk"
+    description: "Replace raw current K-1 QBI with calculated allowable character"
+    formula: "Original ordinary loss100000/QBI loss80000, basis100000 and calculated6198 allowance60000 produce allowed current negative QBI48000 and a distinct465 carry40000/32000, with AGI reduced60000. This is the regulatory Example1 arithmetic applied to actual current-year source records."
+    testRef: "tests/engine/federal-k1-qbi-loss-sources.test.ts::uses canonical at-risk allowance instead of the unadjusted K1 QBI statement"
+  - line: "basis"
+    description: "Preserve the basis and at-risk suspension provisions separately"
+    formula: "Original ordinary100000/qualified80000, actual basis75000 and at-risk60000 produce basis carry25000/20000, at-risk carry15000/12000 and allowed QBI48000. Neither carry is an ordinary or AMT NOL or a current199A loss carry."
+    testRef: "tests/engine/federal-k1-qbi-loss-sources.test.ts::keeps basis and at-risk character separate without changing their regular losses"
+  - line: "prior-passive"
+    description: "Use original-index passive allowance and preserve FIFO prior transfer"
+    formula: "Current ordinary10000/qualified8000 loss, actual prior20000/16000 loss and other passive income25000 produce prior qualified release16000 plus current qualified loss4000, total199A negative20000; remaining469 current5000/4000. Existing passive-income transfer remains25000-25000=0."
+    testRef: "tests/engine/federal-k1-qbi-loss-sources.test.ts::separates released prior passive character from current K1 loss"
+  - line: "stale-context"
+    description: "Reconcile original source with canonical intermediate records"
+    formula: "Original Form6198 ordinary line must match basis-adjusted current income/loss; changed source, missing history and contradictory original snapshots reject before any raw K1 amount can become actual QBI."
+    testRef: "tests/engine/federal-k1-qbi-loss-sources.test.ts::rejects stale source worksheets before they enter current QBI"
+  - line: "current-ebl"
+    description: "Re-limit the sole current loss pool by actual Form461"
+    formula: "Actual ordinary loss330000/QBI264000 and sufficient basis/risk with no other business loss produce2025Form461 addback17000, final current qualified loss313000*.8=250400 and separate461 character17000/13600. AGI is-313000; the regular EBL NOL remains17000, distinct from199A current loss carry250400."
+    testRef: "tests/engine/federal-k1-qbi-loss-sources.test.ts::derives unique current K1 loss character after canonical Form461"
+  - line: "ebl-pool"
+    description: "Reconcile all calculated business amounts before re-limitation"
+    formula: "Positive business amounts may offset one known loss pool; an additional negative ScheduleC/other business pool, nonbusiness classification or unsupported supplemental source requires its separate allocation method. No net difference or entered allocation substitutes for the original canonical sources."
+    testRef: "tests/engine/federal-k1-qbi-loss-sources.test.ts::conserves positive offsets and rejects an additional loss pool"
+  - line: "origin-sstb"
+    description: "Fix newly suspended qualified character using originating income"
+    formula: "2025single wages300000 less allowed business loss60000 less15750standard gives224250 before199A. Applicable SSTB fraction1-(224250-197300)/50000=.461; current48000 qualified loss becomes22128 and new465 qualified carry32000*.461=14752. Earlier qualified history is not requalified using current SSTB status."
+    testRef: "tests/engine/federal-k1-qbi-loss-sources.test.ts::fixes current suspended SSTB character without requalifying prior losses"

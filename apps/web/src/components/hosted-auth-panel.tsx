@@ -204,6 +204,8 @@ export function HostedAuthPanel({
           </div>
         </form>
 
+        {mode === "sign-in" ? <Link href="/account/recover" className="utility-button workspace-link">Forgot your password?</Link> : null}
+
         {error ? (
           <p className="answer-note" role="alert">
             {error}

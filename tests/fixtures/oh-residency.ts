@@ -1,0 +1,7 @@
+/** Actual synthetic worksheet originals; no calculation output used. */
+export const ohioNrcCategories = ['wages', 'capitalGains', 'rentsRoyalties', 'gambling', 'interestDividends', 'pensions', 'unemployment', 'otherIncome', 'federalAdjustments'] as const;
+export function ohioResidencyOwner(accountHolder: 'primary' | 'spouse' = 'primary', status: 'full_year_resident' | 'part_year_resident' | 'nonresident' = 'nonresident') {
+    const periods = status === 'full_year_resident' ? [{ from: '2025-01-01', to: '2025-12-31', domicileState: 'OH' }] : status === 'part_year_resident' ? [{ from: '2025-01-01', to: '2025-06-30', domicileState: 'VA' }, { from: '2025-07-01', to: '2025-12-31', domicileState: 'OH' }] : [{ from: '2025-01-01', to: '2025-12-31', domicileState: 'VA' }];
+    return { accountHolder, status, sourceReference: 'Synthetic actual owner domicile originals ' + accountHolder, periods, amounts: Object.fromEntries(ohioNrcCategories.map(category => [category, { federalAmount: '0', residentAmount: '0', nonresidentOhioAmount: '0', sourceReference: 'Synthetic actual ' + category + ' original ' + accountHolder }])), stateAdditions: [], stateDeductions: [] };
+}
+export function ohioResidencyFacts() { return { taxYear: 2025, sourceReference: 'Synthetic actual Ohio NRC original worksheet', sourceFactsConfirmed: true as const, allFederalSourcesIncludedConfirmed: true as const, noBusinessIncomeConfirmed: true as const, schoolDistrictStatus: 'no_ohio_taxing_district_residency' as const, owners: [ohioResidencyOwner()] }; }

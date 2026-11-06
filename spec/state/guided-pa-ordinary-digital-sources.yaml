@@ -1,0 +1,27 @@
+form: "Guided PA Ordinary Actual Digital Capital Sources"
+fullName: Explicit original-bound digital capital classification in the real PA state panel
+taxYear: 2025
+sources:
+  - url: "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40d.pdf"
+    section: "Actual PA adjusted basis and digital-asset question; no federal-basis inference"
+    retrieved: "2026-11-03"
+notes: |
+  The existing DA collector owns statement and transaction facts. This companion
+  source panel records explicit class completeness and actual remittance review.
+  It does not default year, income, residency, payment or basis. Original copies
+  are refreshed only on explicit source confirmation. Every edit revokes both
+  this confirmation and the containing residency confirmation; ordinary facts
+  and completion subsequently require their existing current-original replay.
+lines:
+  - line: "reachable"
+    description: Actual whole PA panel exposes the classification collector
+    formula: The real state panel renders actual original DA class records without a JSON textarea or monetary override.
+    testRef: "tests/apps/web/guided-pa-ordinary-digital-panel.test.tsx::actual PA panel exposes original digital class sources"
+  - line: "unknown"
+    description: New classification starts with unknown facts
+    formula: Explicit start creates unknown year and answers with source-index rows only. No copied original snapshot exists until explicit confirmation.
+    testRef: "tests/apps/web/guided-pa-ordinary-digital-panel.test.tsx::explicit start preserves unknown year answers and private originals"
+  - line: "confirm-edit"
+    description: Actual current original binding and revoked confirmation
+    formula: Explicit confirmed source review copies current DA original once. A later reference edit clears class and parent confirmation without changing actual DA originals or the retained snapshot.
+    testRef: "tests/apps/web/guided-pa-ordinary-digital-panel.test.tsx::explicit confirmation binds originals and later edits revoke it"

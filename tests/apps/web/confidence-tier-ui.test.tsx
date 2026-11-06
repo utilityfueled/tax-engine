@@ -42,13 +42,13 @@ function getClassName(node: unknown): string {
 }
 
 describe("ConfidenceBadge component", () => {
-  it("renders validated badge with green styling for PA", () => {
+  it("renders an unqualified badge with neutral styling for PA", () => {
     const tree = ConfidenceBadge({ stateCode: "PA" });
     const text = collectText(tree).join(" ");
     const className = getClassName(tree);
 
-    expect(text).toContain("Verified");
-    expect(className).toContain("confidence-validated");
+    expect(text).toContain("unqualified");
+    expect(className).toContain("confidence-dedicated");
     expect(className).toContain("confidence-badge");
   });
 
@@ -66,15 +66,15 @@ describe("ConfidenceBadge component", () => {
     const text = collectText(tree).join(" ");
     const className = getClassName(tree);
 
-    expect(text).toContain("No state income tax");
+    expect(text).toContain("No general income tax");
     expect(className).toContain("confidence-not-applicable");
   });
 
-  it("renders correct badge for each validated state", () => {
+  it("renders correct badge for each dedicated state", () => {
     for (const code of ["CA", "NY", "NJ", "IL", "PA", "OH"]) {
       const tree = ConfidenceBadge({ stateCode: code });
       const className = getClassName(tree);
-      expect(className).toContain("confidence-validated");
+      expect(className).toContain("confidence-dedicated");
     }
   });
 });
@@ -85,13 +85,13 @@ describe("StateReturnPanel component", () => {
     expect(tree).toBeNull();
   });
 
-  it("renders panel with state name and description for a validated state", () => {
+  it("renders panel with state name and description for a dedicated state", () => {
     const tree = StateReturnPanel({ stateCodes: ["PA"] });
     const text = collectText(tree).join(" ");
 
     expect(tree).not.toBeNull();
     expect(text).toContain("Pennsylvania");
-    expect(text).toContain("fully verified");
+    expect(text).toContain("not qualified for filing");
     expect(text).not.toContain("Draft Estimate");
   });
 
@@ -101,7 +101,7 @@ describe("StateReturnPanel component", () => {
 
     expect(tree).not.toBeNull();
     expect(text).toContain("Georgia");
-    expect(text).toContain("Draft estimate");
+    expect(text).toContain("Experimental estimate");
     expect(text).toContain("Draft Estimate");
     expect(text).toContain("published tax rates");
     expect(text).toContain("additional credits");
@@ -124,8 +124,8 @@ describe("StateReturnPanel component", () => {
     expect(text).toContain("California");
     expect(text).toContain("Georgia");
     expect(text).toContain("Florida");
-    expect(text).toContain("fully verified");
-    expect(text).toContain("Draft estimate");
+    expect(text).toContain("not qualified for filing");
+    expect(text).toContain("Experimental estimate");
     expect(text).toContain("does not levy");
   });
 
@@ -170,7 +170,7 @@ describe("DisclaimerBanner component", () => {
     expect(text).toContain("standard deductions");
   });
 
-  it("returns null for validated states", () => {
+  it("returns null for dedicated states", () => {
     const tree = DisclaimerBanner({ stateCode: "PA" });
     expect(tree).toBeNull();
   });

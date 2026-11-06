@@ -1,0 +1,36 @@
+form: "Guided Adoption Prior Benefits"
+fullName: "Actual prior foreign-adoption employer-benefit records"
+taxYear: 2026
+irsReference: "https://www.irs.gov/instructions/i8839"
+notes: |
+  Collect original benefit-year sources for the finality-year historical worksheet.
+  Use the shared facts-only resolver with actual household identity, never a fake
+  income or tax-limit context. Preserve old saved adoption records and unknown
+  answers. Existing year and filing gates remain closed where applicable.
+  The signed transfer and rounding interpretation are documented separately in
+  form-8839-prior-benefits.yaml and form-8839-prior-benefits-return.yaml.
+lines:
+  - line: "sources"
+    description: "Original history bound to actual household"
+    formula: "Map exact source strings, actual benefit years, original benefits and child allocations to the shared resolver with actual taxpayer identity"
+    testRef: "tests/guided-interview/guided-adoption-prior-benefits.test.ts::binds exact prior benefit sources without invented calculation context"
+  - line: "unknown"
+    description: "Known zero and false remain different from missing"
+    formula: "Require actual historical fields and reject incomplete, mismatched or unsupported sources while retaining entered records"
+    testRef: "tests/guided-interview/guided-adoption-prior-benefits.test.ts::preserves old records and rejects missing or contradictory history"
+  - line: "confirmation"
+    description: "Reconfirm after substantive source changes"
+    formula: "History, child, household, payroll and income changes revoke history confirmation; confirmation-only edits preserve it"
+    testRef: "tests/guided-interview/guided-adoption-prior-benefits.test.ts::revokes historical confirmation after source and household edits"
+  - line: "preview"
+    description: "Source-complete full return preview"
+    formula: "Actual current2000 and prior8000 on100000wages produce92000AGI; incomplete history emits no financial preview"
+    testRef: "tests/guided-interview/guided-adoption-prior-benefits.test.ts::carries actual historical benefits through canonical preview once"
+  - line: "controls"
+    description: "Blank historical source controls"
+    formula: "New packet and original records start without source years, amounts or affirmative confirmations"
+    testRef: "tests/apps/web/adoption-prior-benefit-interactions.test.tsx::collects actual adoption history without defaulting source facts"
+  - line: "persistence"
+    description: "Local persistence and private original sources"
+    formula: "Preserve source cents, missing amounts and explicit answers across reload at desktop and mobile sizes without posting private source records"
+    testRef: "apps/web/tests/guided-adoption-prior-benefits.spec.ts::preserves actual historical adoption benefit records"

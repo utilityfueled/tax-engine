@@ -1,0 +1,25 @@
+form: "Workspace original digital-asset sources"
+taxYear: "2025 review; actual2026 source contract remains closed to public calculation"
+irsReference: "https://www.irs.gov/pub/irs-prior/i1099da--2025.pdf"
+notes: |
+  An extracted1099DA is an original digital-asset statement, not1099B.
+  Original reported basis/date stay distinct from completed taxpayer records.
+  A complete reviewed return context may resolve unknown fields in an extracted
+  individual transaction without changing its original evidence. Summary-only
+  records cannot establish individual dates, basis or a complete disposition set.
+lines:
+  - line: "extract"
+    description: "Preserve actual digital document type and original reported values"
+    formula: "Extract only labeled or actual row values, including any signed statement gain, retain missing fields, and identify summary evidence separately"
+    irsRef: "Final2025 Form1099DA original boxes1b/1c/1d/1e/1f/1g and recipient basis instructions"
+    testRef: "tests/engine/workspace-digital-asset-sources.test.ts::preserves digital source type and only original reported amounts"
+  - line: "complete-context"
+    description: "Bind every original individual source to actual completed DA facts"
+    formula: "Actual source collection=form1099DA; reconcile original transaction and statement facts before canonical calculation"
+    irsRef: "Form8949 G/H/J/K and i1099DA noncovered basis records"
+    testRef: "tests/engine/workspace-digital-asset-sources.test.ts::calculates a complete original DA context without replacing source evidence"
+  - line: "unknown"
+    description: "Reject summary, stale, missing or unbound incomplete source facts"
+    formula: "No financial preview from a summary or from any incomplete modeled DA source, including unselected records"
+    irsRef: "Form8949 individual disposition and original basis record requirements"
+    testRef: "tests/engine/workspace-digital-asset-sources.test.ts::rejects sparse summaries contradictory sources and unbound incomplete DA facts"

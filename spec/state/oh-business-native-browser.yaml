@@ -1,0 +1,72 @@
+form: "Actual Ohio ordinary business native browser lifecycle"
+taxYear: 2025
+reference: "https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/forms/ohio_individual/individual/2025/itnrc.pdf"
+notes: |
+  Four actual production-managed Chromium journeys: NR/PY at1280x900 and390x844.
+  Source-first successor to independently reviewed native11 manifestd8b7434c and
+  peer58423b45; exact209f666c baseline. New browser/fixture/spec/ledger only.
+  Final2025NRC I/II/III, booklet printed26-27/35-39 and RC5747.21/5733.05.
+  Prior independent Decimal derivation69850ca4: C400000; SE32549; halfSE16275;
+  AGI383725; BID250000; OhioAGI133725; exemption1900; taxable131825;
+  Ohio tax3955; property.5, excluded knownzero payroll, sales.25 ->.3125;
+  annual Ohio apportioned business125000, NRCI5=0, ratio1, credit3955, remaining0.
+  PY actual OHJan1-Jun30/VAJul1-Dec31; December actual receipt and personal
+  half-SE deduction originals outside actual OHperiod, NRC14zero; no dayproration.
+  Only initial storage seed supplies unrelated actual fictional federal, domicile
+  and payment records. Business root and parent/native state completion absent.
+  No post-edit storage/source recapture; all business origination/confirmation
+  and changed source restoration occur via actual visible controls.
+  Normal Download Review PDF and same-origin actual response/download required.
+  Current source path supports reference summaries, not qualified Ohio business
+  official forms. Expected200 review/PDF, actual original saved bytes inspected
+  strictly for reference figures, no fields/widgets and removed SSNs/private
+  source references; rendered pages reviewed separately before qualification.
+  Filing purpose remains400. No external services, production, funds, final2026,
+  human interpretation or official business physical/filing qualification.
+  Source-first read-only privacy sampling proposal: use installed Playwright1.64.1
+  normalization on BOTH actual textContent and expected literal markers: remove
+  U+200B/U+00AD, trim and collapse whitespace; preserve case-sensitive substring
+  matching and each individual negative assertion. Null/missing-node reads cannot
+  satisfy the automatic poll. Original money, entry, blur, geometry and deadlines
+  remain unchanged. Literal zero-width, soft-hyphen, repeated-whitespace and
+  missing-node cases are pinned before the proposed helper; runtime not performed.
+  Same-package navigation setup: center-scroll the exact existing progress
+  element before its unchanged ordinary click. Keep all viewport/hit/containment
+  assertions, source/money/privacy expectations and original deadlines/retries.
+lines:
+  - line: "blank-origin"
+    label: "No business proof before actual native entry"
+    formula: "Absent businessSources; actual source year/property/payroll/rent/invoice/deduction fields blank and boolean assurances unknown; blank confirmation cannot create captures or state estimate."
+    testRef: "apps/web/tests/oh-business-native.spec.ts::originates actual business sources and preserves canonical NRC through edits and reopen"
+  - line: "entered-and-confirmed"
+    label: "Actual original records and separate confirmations"
+    formula: "Enter actual400000 C receipts/100000 Ohio purchaser-benefit,10000/20000 beginning/end property, knownzero rent/payroll and dated16275 personal deduction. Explicit child confirmation captures current C; explicit parent confirmation produces current OHstate0 without duplicating federal400000income."
+    testRef: "apps/web/tests/oh-business-native.spec.ts::originates actual business sources and preserves canonical NRC through edits and reopen"
+  - line: "identity-invalidation"
+    label: "Equal-cash source replacement preserves old evidence pending confirmation"
+    formula: "Edit actual invoice original document ID only; child and parent lose confirmation, saved old source packet/current-C originals unchanged; state estimate disappears until actual child+parent reconfirmation."
+    testRef: "apps/web/tests/oh-business-native.spec.ts::originates actual business sources and preserves canonical NRC through edits and reopen"
+  - line: "zero-versus-unknown"
+    label: "Saved blank payroll is not a known zero"
+    formula: "Clear actual Ohio payroll0 to blank; no current state estimate, original captures unchanged. Reload keeps blank and invalid state. User restores actual0 and explicitly confirms child+parent; source and cash results recover without recapture on read."
+    testRef: "apps/web/tests/oh-business-native.spec.ts::originates actual business sources and preserves canonical NRC through edits and reopen"
+  - line: "geometry-and-privacy"
+    label: "Actual phase usability and local private sources"
+    formula: "Capture initial blank, actual validation, entered, confirmed, review, identity pending, saved unknown, reconfirmed, reopened and export phases. Panel/labels/controls/buttons remain horizontally contained and selected anchors usable at both widths. No source IDs/SSN/private references in unrelated requests or public state display."
+    testRef: "apps/web/tests/oh-business-native.spec.ts::originates actual business sources and preserves canonical NRC through edits and reopen"
+  - line: "actual-reference-download"
+    label: "Actual experimental reference output remains distinct from filing"
+    formula: "Normal ReviewPDF button POST purpose review returns200 PDF with reference IT1040/NRC/adjustments/business/credits companions; saved exact response and browser download agree. OhioIT1040 reference lines1=383725,2b=250000,3=133725,8c=3955,9=3955,10=0; NRC16=133725,19=1,20=3955. Strict parse empty fields/no widgets/no SSN/private-original references. Explicit filing request400 and no second download. Reopen retains exact actual source packet."
+    testRef: "apps/web/tests/oh-business-native.spec.ts::originates actual business sources and preserves canonical NRC through edits and reopen"
+  - line: "bounded-native-validation"
+    label: "Blank actual-source errors give usable next steps"
+    formula: "Actual schema validation remains strict. Blank or malformed business fields show concise instructions to complete actual fields and confirmations from records, leave unknown answers blank and use zero only when known. The alert stays usable within desktop/mobile geometry; schema JSON is not shown. Other source-guard error messages are preserved."
+    testRef: "apps/web/tests/oh-business-native.spec.ts::originates actual business sources and preserves canonical NRC through edits and reopen"
+  - line: "draft-currency-spelling"
+    label: "Saved native grouping remains separate from canonical money"
+    formula: "Existing currency fields format on blur and save exact grouped draft strings: property10,000/20,000, gross400,000, Ohio receipt100,000 and personal deduction16,275. Explicit capture retains exact normalized source strings10000/20000/400000/100000/16275. Only raw spelling differs; entered cash, numerical oracles, current source identities and all lifecycle/PDF guards remain unchanged."
+    testRef: "apps/web/tests/oh-business-native.spec.ts::originates actual business sources and preserves canonical NRC through edits and reopen"
+  - line: "relative-current-state-summary"
+    label: "Actual current state summary has one correctly scoped identity"
+    formula: "Within the actual active State Return section, locate the breakdown using relative exact Ohio (OH) text without requiring the outer interview section again inside its child. Confirmed sources require exactly one summary with unchanged tax0/payments0/result emdash and privacy assertions; missing or invalid sources require zero such summaries. No first-match or visibility fallback."
+    testRef: "apps/web/tests/oh-business-native.spec.ts::originates actual business sources and preserves canonical NRC through edits and reopen"

@@ -1,0 +1,70 @@
+form: "Ohio canonical ordinary Schedule C NRC sources"
+taxYear: 2025
+reference: "https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/forms/ohio_individual/individual/2025/itnrc-fi.pdf"
+notes: |
+  Source-first successor to independently reviewed ordinary II/III worksheet790ec31e.
+  Final2025 NRC and booklet printed26-27/36-39; RC5747.21(B),5733.05(B)(2),
+  5747.20(A),(B)(6),(C),5747.02(A)(4); current official BID FAQ8-11.
+  Explicitly fictional current primary/single2025 or2026 C-services originals.
+  Public2026 federal/Ohio registries remain closed. The isolated2026 helper
+  uses explicit draft ScheduleC/SE constants and the existing Ohio2026baseline,
+  never a mocked or fabricated full federal result. No final2026 form/year qualification or filing/model promotion. Existing
+  standalone model/helper/spec/tests and historical scalar methods stay intact.
+  All money uses Decimal; exact six-place factors only, bounded existing cents.
+  No generic ledger, bare federalAGI/BID/NRC/factor override or saved result is
+  authority. Actual current C owner/year and full original snapshot reconcile.
+  PY personal federal deduction allocation requires dated identified actual
+  paid/accrued originals; source timing is never inferred from year-end filing,
+  property/sales factor, a calendar ratio, or a bare residentAmount scalar.
+  Positive fixtures independently state all revenue and linked annual personal
+  deduction accruing outside the actual Ohio-resident period, with complete
+  dated source records. Other timing interpretations remain guarded.
+lines:
+  - line: "current-originals"
+    label: "Canonical complete C source"
+    formula: "Fresh current C original and owner/year plus actual factor and dated personal deduction records; derive gross/net/payroll/rent from current federal originals/result, never caller projections."
+    testRef: "tests/engine/state/oh-canonical-business-sources.test.ts::rejects incomplete or contradictory actual canonical business sources %s"
+  - line: "II22A"
+    label: "Full federal business income"
+    formula: "Current C line31 once, separately from nonbusiness Schedule1 amounts; full C minus current owner halfSE reconciles fresh federalAGI in first C-only cohort."
+    testRef: "tests/engine/state/oh-canonical-business-sources.test.ts::matches actual canonical single-owner NRC business in %s with %s %s sources"
+  - line: "III4"
+    label: "Exact annual apportionment"
+    formula: "Actual property10000/20000=.5, actual payroll0/0 removes20weight; purchaser-benefit sales.25 with property/sales weights.25/.75 gives.3125. No PY calendar reduction or resident receipt add-on."
+    testRef: "tests/engine/state/oh-canonical-business-sources.test.ts::matches actual canonical single-owner NRC business in %s with %s %s sources"
+  - line: "BID11-13"
+    label: "Actual federal AGI capped business deduction"
+    formula: "line11=max(0,min(current Cnet,current fresh federalAGI));line13=min(line11,250000single); no second halfSE reduction of C before apportionment."
+    testRef: "tests/engine/state/oh-canonical-business-sources.test.ts::matches actual canonical single-owner NRC business in %s with %s %s sources"
+  - line: "I5-6"
+    label: "Business feeds canonical NRC"
+    formula: "I5=II24=max(0,III18-BID) for positiveIII18, retain signed nonpositive; I6=III22, known0 only with current source depreciation confirmations."
+    testRef: "tests/engine/state/oh-canonical-business-sources.test.ts::matches actual canonical single-owner NRC business in %s with %s %s sources"
+  - line: "I14"
+    label: "Actual resident federal deduction"
+    formula: "Reconcile complete dated personal deduction originals to fresh owner halfSE; include only actual resident paid/accrued amounts. Initial explicit source record places whole deduction outside Ohio period, yielding0 for both NR/PY. Unknown timing is not0."
+    testRef: "tests/engine/state/oh-canonical-business-sources.test.ts::rejects incomplete or contradictory actual canonical business sources %s"
+  - line: "I19-20"
+    label: "Independent canonical NRC"
+    formula: "Whole-dollar OhioAGI less max(0,I5+other actual Ohio allocation); truncate nonresident fraction4places and multiply current preceding tax, round nearest dollar. 2025millionC:AGI975691,BID250000,OhioAGI725691,I5=62500,tax21771,ratio.9138,NRC19894,remaining1877.2026:AGI975170,OhioAGI725170,tax21755,NRC19880,remaining1875."
+    testRef: "tests/engine/state/oh-canonical-business-sources.test.ts::matches actual canonical single-owner NRC business in %s with %s %s sources"
+  - line: "current-source-commitment"
+    label: "No stale original or mutable public source"
+    formula: "Equal-money current source replacement requires exact current snapshot; valid rebind changes digest. Derivation does not mutate callers, infer missing facts or globally configure Decimal."
+    testRef: "tests/engine/state/oh-canonical-business-sources.test.ts::binds equal-money business identity replacements without mutating source originals"
+  - line: "existing-api-red"
+    label: "Existing API admits actual source methods only"
+    formula: "Complete original C-only source positive must traverse current federal-to-Ohio API; failure is recorded before product, not substituted by missing module diagnostics. Old unsupported raw C remains rejected."
+    testRef: "tests/engine/state/oh-canonical-business-sources.test.ts::preserves the original existing-shape unsupported C guard without invented business proof"
+  - line: "unhandled-methods"
+    label: "Unhandled source methods remain guarded"
+    formula: "No spouse/mixed owner, fullresident business classification, NEC/other business, local/SD/resident-credit, specialindustry, alternative factor or depreciation-history inference is admitted."
+    testRef: "tests/engine/state/oh-canonical-business-sources.test.ts::rejects incomplete or contradictory actual canonical business sources %s"
+  - line: "draft2026-internal"
+    label: "Explicit draft source-only2026 arithmetic and closed public API"
+    formula: "Actual C plus explicitFEDERAL_2026_CONSTANTS ScheduleSE derive ownerhalfSE and AGI, existing Ohio2026baseline derives3percent business tax/exemption500000gate. NRC uses actual raw source facts; public calculateFederalTax remains unavailable. No full draft federal result or registry override."
+    testRef: "tests/engine/state/oh-canonical-business-2026-draft.test.ts::derives actual2026 ordinary business under explicit draft methods with %s %s sources"
+  - line: "retained-family-scope"
+    label: "No unhandled original is suppressed by zero or cancelling source amounts"
+    formula: "This finite actual C-only method rejects every retained SSA1099, RRB1099, 1099SA/C/Q, 4797, home sale, 6252, 6781, 8814, 8824 and savings-bond original before full or draft derivation. Actual zero, negative and net-zero totals do not establish their separate source ownership, timing or Ohio classification. Preserve every original; never drop or net it away to admit this cohort. Public2026 denial remains unchanged."
+    testRef: "tests/engine/state/oh-canonical-business-sources.test.ts::rejects retained unhandled %s original even with source amount %s in the explicit draft"

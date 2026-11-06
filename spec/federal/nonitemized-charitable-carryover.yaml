@@ -1,0 +1,62 @@
+form: "Nonitemized Charitable Carry"
+fullName: "2026 ordinary public-cash carryovers under an actual nonitemized selection"
+taxYear: 2026
+irsReference: "https://uscode.house.gov/us/usc/119-120/t26/s170/"
+retrievedAt: "2026-10-25"
+reviewStatus: "independent-review-pending"
+notes: |
+  Corrected2026 carry premise: nonitemized-allowable-charitable-carry.yaml
+  applies IRC63(e)(1) and170(d)(1)(C) before actual deduction selection.
+  Prior no-floor-selection expectations remain historical evidence only.
+  IRC170(b)(1)(G)(ii) carries the excess above the applicable percentage
+  limit, consistently with170(d)(1). Reg1.170A-10(a)(2),(b)(2) preserves
+  percentage carry creation and treated-paid use in standard-deduction years.
+  IRC170(p) separately computes the current-cash nonitemizer deduction without
+  G(ii),I or d(1). The current deduction cap does not create a carry of every
+  otherwise undeducted dollar. This bounded implementation requires explicit
+  standard/nonitemized selection and complete actual cash_60 history, including
+  an explicit empty packet. IRC63(e)(1) retains otherwise-allowable carry,
+  including proven current floor under170(d)(1)(C). Applying the
+  statutory carry rule to nonitemizers ineligible for the standard deduction is
+  a derived source interpretation, not a published numeric example. Pub6196
+  confirms their current170(p) eligibility; it does not publish carry arithmetic.
+  Itemized/automatic prior-source floor allocation, mixed categories and NOL
+  coordination remain separate methods. Original histories and year gates stay
+  intact. Source references: Reg1.170A-10; final2025 Pub526 Carryovers; Pub6196.
+lines:
+  - line: "current-excess"
+    description: "Current public cash percentage excess remains exact"
+    formula: "C=max(0,contributionBase)*0.60; currentWithinLimit=min(currentPublicCash,C); percentageExcess=currentPublicCash-currentWithinLimit. Base10000.49,cash9000.99 gives capacity6000.294, percentage excess3000.696 and ordinary carry3050.69845 after eligible50.00245floor; no early dollar rounding."
+    testRef: "tests/engine/forms/nonitemized-charitable-carryover.test.ts::preserves exact percentage excess separately from the current deduction cap"
+  - line: "prior-use"
+    description: "Current contributions precede actual prior cash vintages"
+    formula: "Remaining capacity=max(0,C-currentPublicCash). Consume actual eligible prior cash_60 balances by original contribution year, oldest first. TreatedAsPaid reduces a vintage but is not a current deduction under170(p). The percentage ledger at base10000,current2000,prior5000 gives use4000 and remaining1000, but the actual positive floor reaches that prior category, so final carry rejects pending original-vintage attribution. An actual zero floor preserves the original no-use balance."
+    testRef: "tests/engine/forms/nonitemized-charitable-carryover.test.ts::uses actual prior capacity without treating it as current deductible cash"
+  - line: "expiry"
+    description: "Original fifth-year expiration and FIFO conservation"
+    formula: "A vintage may use capacity through contributionYear+5. Older vintages expire without use; fifth-year remainder expires after current use. For2026 base10000/current5700 and2020:100,2021:400,2024:200, percentage treated-paid300,expired200 and remaining200 conserve opening700; final positive floor reaches priorG and rejects. A zero-base control expires2020/2021 balances without use and keeps2024amount200."
+    testRef: "tests/engine/forms/nonitemized-charitable-carryover.test.ts::conserves FIFO use and expiration at the original fifth year"
+  - line: "source-boundary"
+    description: "Require actual complete cash history and a supported selection"
+    formula: "Missing/contradictory source identity, year, confirmation or history rejects. Positive noncash/private categories and prior categories outside cash_60 require another method. Automatic/itemized choice, wrong year and actual NOL sources reject. Known zero remains zero; no source is manufactured."
+    testRef: "tests/engine/forms/nonitemized-charitable-carryover.test.ts::preserves missing sources and rejects unimplemented category and loss methods"
+  - line: "canonical"
+    description: "Transfer the selected carry independently of standard entitlement"
+    formula: "For actual2026 base10000/current9000, explicit nonitemized with standard entitlement0 yields current170(p)1000 and carry3050; explicit standard yields its actual standard amount, current170(p)1000 and the same carry3050, including the otherwise-allowable current floor. Selected ScheduleA charity lines remain0; no itemized charity claim is made."
+    testRef: "tests/engine/federal-nonitemizer-carry.test.ts::separates actual nonitemizer carry from the itemized floor and standard entitlement"
+  - line: "canonical-prior"
+    description: "Preserve prior use and source amounts in final return output"
+    formula: "Base10000/current2000/prior5000 retains its actual source records but final calculation rejects: same-category current/prior allocation and surviving1000 excess are outside the sole-prior no-excess method. Source-only intake and actual zero-floor cases remain distinct."
+    testRef: "tests/engine/federal-nonitemizer-carry.test.ts::retains prior use without increasing the current cash deduction"
+  - line: "canonical-sole-prior"
+    description: "A fully consumed sole prior cash source creates neither a current deduction nor a new carry"
+    formula: "Under the separate charitable-prior-floor-no-excess.yaml method,2026 base10000/current0/prior2025cash5000 has capacity6000, treated-paid5000, floor50 and hypothetical itemized prior deduction4950. Explicit nonitemized selection claims current170(p)0 and actual prior deduction0; its prior source is fully consumed and no percentage excess or floor carry survives. Taxable income stays10000. The original input remains unchanged. This is a derived application of IRC170(b)(1)(I),170(d)(1)(C),170(p),63(e)(1) and Reg1.170A-10(b)(2), not a published numeric example or qualified human opinion."
+    testRef: "tests/engine/federal-nonitemizer-carry.test.ts::consumes the sole prior source without a current deduction or new vintage"
+  - line: "unverified-carry"
+    description: "Require the complete otherwise-allowable source method for final carry"
+    formula: "A2026 standard/nonitemized result with positive unverified candidate carry rejects without the complete supported source method, including an automatic switch after the itemized limitation. Itemized and automatic prior-history methods remain guarded."
+    testRef: "tests/engine/federal-nonitemizer-carry.test.ts::rejects unverified candidate carry and unsupported selection changes"
+  - line: "guided-and-gates"
+    description: "Preserve actual collected histories and closed calculation/export gates"
+    formula: "The existing collector forwards actual2026 history, exact current cash and explicit selection; unknown confirmation still blocks source input. Unmocked2026 calculation and PDF export remain closed. State input receives unchanged federal AGI and preview retains the calculated federal amounts only in test-enabled canonical coverage."
+    testRef: "tests/guided-interview/guided-nonitemizer-carry.test.ts::preserves actual cash history while keeping the real year and export gates closed"

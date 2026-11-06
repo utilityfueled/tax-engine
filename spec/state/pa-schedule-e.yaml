@@ -4,6 +4,11 @@ taxYear: 2025
 reference: "https://www.pa.gov/agencies/revenue/forms-and-publications/pa-personal-income-tax-guide/net-income-loss-from-rents,-royalties,-copyrights-and-patents"
 
 notes: |
+  The historical audit IDs1-6 below are internal summary entries, not the
+  printed PA40E SectionII line numbers. Actual property worksheets use their
+  own physical-line audit. Direct royalty sources follow
+  spec/state/pa-royalty-property-sources.yaml and add their separately computed
+  owner net once; actual PA expense categories and rounding never use federal net.
   Pennsylvania Schedule E computes Class 6 income for rents, royalties,
   copyrights, and patents. The Pennsylvania Personal Income Tax Guide states:
     - Allowable expenses include ordinary and necessary costs of producing,
@@ -33,6 +38,50 @@ packetRules:
     whenever this reference summary is attached.
 
 businessRuleValidation:
+  - rule: "actual-pa-property-income-expenses"
+    description: |
+      Source refreshed2026-10-25: final2025 PA40E instructions, pages1-5,
+      SectionII lines1 and3-21; PA PIT Guide Allowable Expenses and Depreciation.
+      Confirmed sources and2026 calculations require a separate actual PA
+      property worksheet with matching year, reference, all amounts including
+      zero, rental-use-only amounts before ownership allocation, and confirmation
+      that PA rules were applied. Never substitute federal ScheduleE expenses.
+      Deduct no personal costs, owner labor, capital improvements or income taxes.
+      PA travel meals and prepaid-interest treatment can differ from federal.
+      PA depreciation excludes federal bonus depreciation and uses straight-line
+      when PA/federal bases differ; a positive supplied amount needs its actual
+      PA depreciation worksheet reference. This source-entry path does not
+      independently calculate asset basis or certify those source worksheets.
+      Multiply each actual income/expense category by ownershipPercentage/100,
+      then round each printed line to nearest dollar, with .50 rounded up.
+      Line19 sums rounded expense lines3-18. Line20 is positive income; line21
+      is positive loss; signed net is line20 minus line21. Both Class4 and Class6
+      consume the same PA calculation. Direct real-estate rentals have line2
+      royalties and line17 depletion zero; mineral/royalty expenses require
+      separate source worksheets. Personal-use costs must already be removed
+      using a referenced actual allocation; the federal guided personal-use
+      limitation remains unresolved and must not be bypassed.
+      Historical unconfirmed2025 records keep their explicitly unverified
+      preview interpretation. This does not qualify their state filing export.
+    testRef: "tests/engine/state/pa-rental-income-expenses.test.ts::uses independent PA amounts and rounds each allocated printed line"
+  - rule: "pa-property-worksheet-integrity"
+    description: "Reject wrong-year, incomplete, unconfirmed, negative/nonfinite and already allocated sources, missing positive depreciation/other-expense evidence and missing personal-use allocation. Preserve unknown and actual zero in guided entry; edits revoke confirmation."
+    testRef: "tests/engine/state/pa-rental-income-expenses.test.ts::refuses missing and inconsistent PA worksheet sources"
+  - rule: "guided-pa-property-worksheet"
+    description: "Actual PA amounts and source year are entered separately from federal amounts. Blanks stay unknown, zero is retained, and worksheet edits invalidate current source confirmation. A saved PA worksheet does not enable unsupported federal personal-use calculation."
+    testRef: "tests/apps/web/pa-rental-expense-interactions.test.tsx::collects actual PA income and expenses without copying federal values"
+  - rule: "actual-property-share-and-owner"
+    description: |
+      Refreshed2026-10-25: final2025 PA40 ScheduleE SectionII linea and line25
+      require actual taxpayer/spouse ownership and separate income/loss totals.
+      https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40e.pdf
+      Guided input amounts are whole-property amounts. Multiply rents and each
+      expense once by actual ownershipPercentage/100 using Decimal before owner
+      aggregation. Confirmed records require actual primary/spouse and positive
+      share no greater than100; joint interests require separate allocation.
+      Preserve old unconfirmed preview assumptions without treating them as facts
+      or qualifying those legacy records for filing.
+    testRef: "tests/engine/state/pa-rental-source-allocation.test.ts::PA applies actual property shares once before separate spouse loss limits"
   - rule: "pa-schedule-e-reference-packet"
     description: "Inventory support counts the Pennsylvania Schedule E packet path as validated only when fillReturn emits `pa-schedule-e-reference.pdf` whenever supported resident Schedule E activity is present."
     testRef: "tests/pdf/fill-pa-schedule-e.test.ts::fillReturn includes the Pennsylvania Schedule E reference summary when the resident return includes supported rental activity"

@@ -1,0 +1,41 @@
+form: "Ohio source-qualified review method disclosures"
+fullName: "Truthful 2025 school and header review copy without filing promotion"
+taxYear: 2025
+reference: "https://tax.ohio.gov/individual/resources/school-district-income-tax"
+notes: |
+  Copy only. Existing independently reviewed source methods control availability.
+  Full-year Hillsdale0302 and separately qualified212OH153VA specific payroll
+  admit experimental SD100/school withholding review copies only. The PY method
+  requires actual Ashland/Hillsdale header originals; no-header remains omitted.
+  Full-year and212-day ordinary-business headers use Columbus2503/Franklin;
+  PY payroll uses Hillsdale0302/Ashland. No inferred jurisdiction or all-method
+  qualification. Other scenarios require their separate supported source method.
+  This package changes no arithmetic/source validation/privacy/readiness/year gates.
+  Actual UI school/source/header/state-review/final-review and public support
+  slots must agree. Existing full-year browser money/privacy checks are retained;
+  only its obsolete physical-unavailable text assertion changes after genuine RED.
+lines:
+  - line: "source-boundary"
+    description: "Existing independently supplied PY header proves the distinct jurisdiction"
+    formula: "Existing actual header API reports ASHL/0302/part_year_resident and212days from retained source originals, not mailing inference."
+    testRef: "tests/apps/web/oh-review-method-disclosures.test.tsx::Ohio copy source precondition retains the actual Ashland Hillsdale212 method"
+  - line: "school-native"
+    description: "School source panel qualifies experimental paper review narrowly"
+    formula: "Full-year0302 or212OH153VA specific payroll only; PY header required; broader/incomplete paper unavailable; filing unavailable; unknown/zero/year warnings retained."
+    testRef: "tests/apps/web/oh-review-method-disclosures.test.tsx::Ohio school source copy distinguishes qualified review and unavailable broader methods %s"
+  - line: "header-native"
+    description: "Header source panel distinguishes actual jurisdictions"
+    formula: "Columbus2503/Franklin full-year and212-business versus Hillsdale0302/Ashland212-payroll; actual documents/no lookup inference, experimental only, filing unavailable."
+    testRef: "tests/apps/web/oh-review-method-disclosures.test.tsx::Ohio header source copy distinguishes actual business and payroll jurisdictions"
+  - line: "state-review"
+    description: "Actual state preview displays current qualified review limits"
+    formula: "School amounts remain1000tax/1100withheld/100refund separate from IT1040; truthful review-only availability appears in the school region."
+    testRef: "tests/apps/web/oh-review-method-disclosures.test.tsx::Ohio state review copy retains actual school amounts and source-qualified paper limits"
+  - line: "final-review"
+    description: "Actual final summary displays the same limits"
+    formula: "Same qualified experimental review scope and filing denial, actual school amounts/unknown privacy behavior unchanged."
+    testRef: "tests/apps/web/oh-review-method-disclosures.test.tsx::Ohio final review copy retains actual school amounts and source-qualified paper limits"
+  - line: "public-support"
+    description: "Public 2025 support accurately bounds PY paper"
+    formula: "Only qualified212OH153VA payroll with actual Ashland/Hillsdale header; no-header/other methods unavailable;2025filing and all2026 rows remain unavailable."
+    testRef: "tests/apps/web/oh-review-method-disclosures.test.tsx::Ohio public support discloses the finite payroll paper method without year or filing promotion"

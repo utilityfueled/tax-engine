@@ -1,0 +1,46 @@
+form: "Guided Schedule D sources"
+fullName: "Actual long-term asset and reported special-gain intake"
+taxYear: 2026
+irsReference: "https://www.irs.gov/instructions/i1040sd"
+sources:
+  - url: "https://www.irs.gov/instructions/i1040sd"
+    section: "Lines18/19 original collectible and unrecaptured1250 sources and loss netting"
+    retrieved: "2026-10-25"
+  - url: "https://www.irs.gov/instructions/i8814"
+    section: "Capital distributions and actual child income character"
+    retrieved: "2026-10-25"
+  - url: "https://www.irs.gov/publications/p550"
+    section: "Child Alaska Permanent Fund dividend investment-income example"
+    retrieved: "2026-10-25"
+notes: |
+  The interview collects actual original source values and classifications;
+  canonical ScheduleD source binding and tax calculation remain authoritative.
+  Known ordinary classification is distinct from missing classification. Source
+  captures copy only facts already entered, never unknown year, owner or zero.
+  Missing special methods remain explicit software boundaries; no readiness or
+  professional qualification claim is made by this collector.
+lines:
+  - line: "child-netting"
+    description: "Pass actual child special character and capital loss sources"
+    formula: "Actual child4000interest/6000capital with1000collectibles/20001250 and parent1000shortloss yieldsD18=0,D19=1190,netcapital3380; source amounts unchanged"
+    testRef: "tests/guided-interview/guided-schedule-d-sources.test.ts::routes actual child special gains and signed carry sources through canonical netting"
+  - line: "asset-classification"
+    description: "Original asset classification and source capture"
+    formula: "Require actual ordinary or collectible classification for long-term assets; snapshot only supplied original cents/year/owner; reconcile every actual asset and DIV source once"
+    testRef: "tests/guided-interview/guided-schedule-d-sources.test.ts::captures only supplied sources and rejects stale missing duplicate and unknown facts"
+  - line: "alaska-character"
+    description: "Actual positive child Alaska dividends"
+    formula: "4000childinterest+2000actualAlaskaordinarydividends yields3300reportedordinaryincome ofwhich1100Alaska and2200investment; actual subsets conserve source totals"
+    testRef: "tests/guided-interview/guided-schedule-d-sources.test.ts::preserves positive Alaska character and rejects conflicting special subsets"
+  - line: "confirmation"
+    description: "Invalidate changed source reviews without metadata cycles"
+    formula: "Household or investment changes revoke special-source confirmation and preserve source snapshots; confirmation-only edits do not invalidate independent child confirmation"
+    testRef: "tests/guided-interview/guided-schedule-d-sources.test.ts::revokes stale source confirmation while preserving actual records and confirmation-only changes"
+  - line: "controls"
+    description: "Source controls preserve blank false signed values and exact cents"
+    formula: "Actual source snapshot action copies known records only; year/owner/ref and classifier controls stay editable; unknown/zero remain distinct after edit and removal"
+    testRef: "tests/apps/web/schedule-d-source-interactions.test.tsx::collects source classifications and exact original capital records"
+  - line: "ownership-and-methods"
+    description: "Actual joint identity and unsupported source methods"
+    formula: "Joint sources require the actual spouse identity; unknown AMT answers, positive carry losses, source-year mismatches and unsupported property facts cannot become zeros"
+    testRef: "tests/guided-interview/guided-schedule-d-sources.test.ts::binds joint identities and preserves unsupported source method answers"

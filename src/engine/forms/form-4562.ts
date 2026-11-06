@@ -11,10 +11,12 @@
  */
 
 import Decimal from "decimal.js";
+import {calculatePassengerFirstYear} from "./form-4562-passenger-first-year.js";
 import type { Form4562Input, AmortizableAsset } from "@/models/inputs.js";
 import type { CalculatedLine } from "@/models/outputs.js";
 import { AuditTrail } from "@/utils/audit.js";
 import { d, roundDollar } from "@/utils/decimal.js";
+import { resolveMACRSAssetBasisSources, type MACRSBasisSourceAmounts } from "@/models/macrs-asset-basis-sources.js";
 import {
   computeAggregateDepreciation,
   type AssetDepreciationResult,
@@ -35,6 +37,13 @@ export interface AmortizationResultItem {
 }
 
 export interface Form4562Result {
+  /** Present only for the standalone source-bound passenger worksheet. */
+  line7?: Decimal;
+  line25?: Decimal;
+  line28?: Decimal;
+  line29?: Decimal;
+  /** Numeric current-year worksheet only, never a future basis ledger or owner qualification. */
+  passengerFirstYearWorksheet?: Record<string, Decimal>;
   line1: Decimal;
   line2: Decimal;
   line3: Decimal;
@@ -71,9 +80,22 @@ export interface Form4562Result {
 }
 
 const ZERO = new Decimal(0);
-const SECTION_179_LIMIT_2025 = new Decimal(2500000);
-const SECTION_179_PHASEOUT_THRESHOLD_2025 = new Decimal(4000000);
+function basisAuditInputs(basis?: MACRSBasisSourceAmounts): Record<string, Decimal> {
+  return basis ? {
+    "Gross basis": basis.grossCostBasis,
+    "Business basis": basis.businessBasis,
+    "Actual section179": basis.section179BusinessDeduction,
+    "Actual bonus": basis.bonusBusinessDeduction,
+    "Remaining business MACRS basis": basis.regularMacrsBasis,
+  } : {};
+}
 const DEFAULT_TAX_YEAR = 2025;
+// Pub946 (2025), What's New for2026; RevProc2025-32 section4.24.
+// Immutable source values; creating local Decimals avoids mutable shared money.
+const SECTION_179_DEFAULTS = Object.freeze({
+  2025: Object.freeze({ maximum: '2500000', threshold: '4000000' }),
+  2026: Object.freeze({ maximum: '2560000', threshold: '4090000' }),
+});
 
 /** Default amortization periods in months by IRC code section. */
 const AMORTIZATION_DEFAULTS: Record<string, number> = {
@@ -125,8 +147,9 @@ function computeAssetAmortization(
 
   if (months === 0) return null;
 
-  const monthlyAmount = amount.dividedBy(periodMonths);
-  const deduction = roundDollar(monthlyAmount.times(months));
+  // Preserve exact half-dollar boundaries before final reporting round.
+  // Dividing first can turn 18015 / 180 * 6 into 600.49999999999999998.
+  const deduction = roundDollar(amount.times(months).dividedBy(periodMonths));
 
   return {
     description: asset.description || `§${section} intangible`,
@@ -142,14 +165,28 @@ function computeAssetAmortization(
   };
 }
 
-export function calculateForm4562(input: Form4562Input): Form4562Result {
+export function calculateForm4562(input: Form4562Input, ownerTaxYear?: number): Form4562Result {
+  if (ownerTaxYear !== undefined && input.taxYear !== undefined && ownerTaxYear !== input.taxYear) {
+    throw new Error('Form4562 year conflicts with the actual owner tax year');
+  }
+  if (input.assets?.some(asset => asset.disposedDuringYear === true || asset.dispositionSources !== undefined)
+      && ownerTaxYear === undefined && input.taxYear === undefined) {
+    throw new Error("Form4562 disposal requires an explicit actual owner tax year");
+  }
+  const taxYear = ownerTaxYear ?? input.taxYear ?? DEFAULT_TAX_YEAR;
+  if (taxYear !== 2025 && taxYear !== 2026) throw new Error('Unsupported Form4562 tax year');
+  if (input.passengerFirstYearSources !== undefined) return calculatePassengerFirstYear(input, taxYear);
+  if (input.assets?.some(asset => asset.isPassengerAutomobile === true)
+    && [input.section179ExpenseDeduction, input.section179ElectedCost, input.section179CarryoverFromPriorYear, input.specialDepreciationAllowance].some(value => d(value).gt(0))) {
+    throw new Error('Standalone passenger original sources are required for positive section179 or bonus composition');
+  }
+  const defaults = SECTION_179_DEFAULTS[taxYear];
   const audit = new AuditTrail();
-  const taxYear = input.taxYear ?? DEFAULT_TAX_YEAR;
 
   // --- Part I: Section 179 (unchanged) ---
-  const line1 = Decimal.max(ZERO, d(input.section179MaximumDeduction ?? SECTION_179_LIMIT_2025));
+  const line1 = Decimal.max(ZERO, d(input.section179MaximumDeduction ?? defaults.maximum));
   const line2 = Decimal.max(ZERO, d(input.section179TotalCost));
-  const line3 = Decimal.max(ZERO, d(input.section179ThresholdCost ?? SECTION_179_PHASEOUT_THRESHOLD_2025));
+  const line3 = Decimal.max(ZERO, d(input.section179ThresholdCost ?? defaults.threshold));
   const line4 = Decimal.max(ZERO, line2.minus(line3));
   const line5 = Decimal.max(ZERO, line1.minus(line4));
   const line8 = Decimal.max(ZERO, d(input.section179ElectedCost));
@@ -182,6 +219,27 @@ export function calculateForm4562(input: Form4562Input): Form4562Result {
   let assetResults: AssetDepreciationResult[] = [];
   let listedPropertyResults: ListedPropertyResult[] = [];
   let midQuarterRequired = false;
+  const hasDocumentedAssetBasis = input.assets?.some(asset => asset.basisSources !== undefined) === true;
+
+  if (hasDocumentedAssetBasis) {
+    const fail: (detail: string) => never = detail => { throw new Error(`Form4562 asset basis allocation: ${detail}`); };
+    let actualSection179 = ZERO;
+    let actualBonus = ZERO;
+    for (const asset of input.assets ?? []) {
+      const source = resolveMACRSAssetBasisSources(asset, taxYear);
+      if (!source) fail('every asset requires its complete first-year source packet');
+      if (asset.isListedProperty && (source.section179BusinessDeduction.gt(0) || source.bonusBusinessDeduction.gt(0))) {
+        fail('listed section179 and bonus require the separate Part V allocation method');
+      }
+      actualSection179 = actualSection179.plus(source.section179BusinessDeduction);
+      actualBonus = actualBonus.plus(source.bonusBusinessDeduction);
+    }
+    if (input.section179ExpenseDeduction !== undefined && d(input.section179ExpenseDeduction).lt(0)) fail('negative section179 deduction');
+    if (d(input.specialDepreciationAllowance).lt(0)) fail('negative bonus deduction');
+    if (!actualSection179.eq(line12) || !actualBonus.eq(line14)) {
+      fail('actual per-asset section179 and bonus must reconcile to form lines12 and14');
+    }
+  }
 
   if (input.assets && input.assets.length > 0) {
     const agg = computeAggregateDepreciation(input.assets, taxYear);
@@ -192,7 +250,7 @@ export function calculateForm4562(input: Form4562Input): Form4562Result {
     midQuarterRequired = agg.midQuarterRequired;
     listedPropertyResults = agg.listedProperty.results;
     // Line 21: when assets include listed property, compute from Part V instead of validated total
-    if (agg.listedProperty.results.length > 0) {
+    if (agg.listedProperty.results.length > 0 || (hasDocumentedAssetBasis && input.assets.some(asset => asset.isListedProperty))) {
       line21 = agg.listedProperty.totalDepreciation;
     }
   } else {
@@ -281,7 +339,7 @@ export function calculateForm4562(input: Form4562Input): Form4562Result {
     "Form 4562", "1", "Maximum section 179 deduction limit", line1,
     input.section179MaximumDeduction !== undefined
       ? "Validated line 1 override"
-      : "2025 statutory section 179 maximum deduction",
+      : `${taxYear} statutory section 179 maximum deduction`,
     { "Validated line 1 override": d(input.section179MaximumDeduction) },
   );
   audit.record("Form 4562", "2", "Total cost of section 179 property placed in service", line2, "Validated line 2 total");
@@ -289,7 +347,7 @@ export function calculateForm4562(input: Form4562Input): Form4562Result {
     "Form 4562", "3", "Section 179 threshold cost before reducing the annual limit", line3,
     input.section179ThresholdCost !== undefined
       ? "Validated line 3 override"
-      : "2025 statutory section 179 threshold cost",
+      : `${taxYear} statutory section 179 threshold cost`,
     { "Validated line 3 override": d(input.section179ThresholdCost) },
   );
   audit.record("Form 4562", "4", "Reduction in the section 179 limit", line4, "Line 2 - Line 3, floored at $0", {
@@ -302,7 +360,7 @@ export function calculateForm4562(input: Form4562Input): Form4562Result {
   audit.record("Form 4562", "9", "Tentative section 179 deduction", line9, "Smaller of Line 5 or Line 8", {
     "Line 5": line5, "Line 8": line8,
   });
-  audit.record("Form 4562", "10", "Carryover of disallowed section 179 deduction from 2024", line10, "Validated prior-year carryover");
+  audit.record("Form 4562", "10", `Carryover of disallowed section 179 deduction from ${taxYear - 1}`, line10, "Validated prior-year carryover");
   audit.record("Form 4562", "11", "Business income limitation", line11, "Validated line 11 amount limited to Line 5", {
     "Validated line 11 amount": d(input.section179BusinessIncomeLimit), "Line 5": line5,
   });
@@ -317,7 +375,7 @@ export function calculateForm4562(input: Form4562Input): Form4562Result {
     },
   );
   audit.record(
-    "Form 4562", "13", "Carryover of disallowed deduction to 2026", line13,
+    "Form 4562", "13", `Carryover of disallowed deduction to ${taxYear + 1}`, line13,
     directLine13Override !== undefined
       ? "Validated direct line 13 override"
       : "Line 9 + Line 10 - Line 12, floored at $0",
@@ -352,7 +410,8 @@ export function calculateForm4562(input: Form4562Input): Form4562Result {
       : "Validated line 20 column (g) total",
   );
 
-  const hasComputedListedProperty = listedPropertyResults.length > 0;
+  const hasComputedListedProperty = listedPropertyResults.length > 0
+    || (hasDocumentedAssetBasis && input.assets?.some(asset => asset.isListedProperty) === true);
   audit.record(
     "Form 4562", "21", "Listed property depreciation", line21,
     hasComputedListedProperty
@@ -396,16 +455,33 @@ export function calculateForm4562(input: Form4562Input): Form4562Result {
 
   // Per-asset depreciation audit trail entries
   for (const ar of assetResults) {
+    if (ar.dispositionAudit) {
+      const detail = ar.dispositionAudit;
+      audit.record("Form 4562", "asset", "Ordinary nonterminal disposal depreciation", ar.depreciation,
+        "min(original MACRS basis × annual percentage × disposition numerator / denominator, opening adjusted basis), rounded once",
+        { "Disposition source status": ar.dispositionSourceStatus ?? "unqualified",
+          "Actual disposition date": detail.dispositionDate,
+          "Original MACRS basis": ar.costBasis, "Annual table percentage": detail.annualPercentage,
+          "Disposition numerator": detail.fractionNumerator, "Disposition denominator": detail.fractionDenominator,
+          "Prior allowed or allowable": detail.priorAllowedOrAllowable,
+          "Opening adjusted basis": detail.openingAdjustedBasis,
+          "Uncapped current deduction": detail.uncappedDepreciation,
+          "Current deduction before rounding": detail.preRoundDepreciation });
+      continue;
+    }
     audit.record(
       "Form 4562", "asset",
       `${ar.description || "Asset"} (${ar.recoveryPeriod}-yr ${ar.method} ${ar.convention}, year ${ar.recoveryYear})`,
       ar.depreciation,
-      `${ar.percentage}% of $${ar.costBasis} cost basis`,
+      ar.basisSourceAmounts
+        ? "Remaining business MACRS basis × table percentage (business use already allocated)"
+        : `${ar.percentage}% of $${ar.costBasis} cost basis`,
       {
         "Cost basis": ar.costBasis,
         "Recovery period": new Decimal(ar.recoveryPeriod),
         "Recovery year": new Decimal(ar.recoveryYear),
         "Percentage": ar.percentage,
+        ...basisAuditInputs(ar.basisSourceAmounts),
       },
     );
   }
@@ -422,11 +498,14 @@ export function calculateForm4562(input: Form4562Input): Form4562Result {
       lp.depreciation,
       lp.section280FCap
         ? `min(tentative $${lp.tentativeDepreciation}, §280F cap $${lp.section280FCap})`
-        : `$${lp.costBasis} × table % × ${lp.businessUsePercentage}% business use`,
+        : lp.basisSourceAmounts
+          ? "Remaining business MACRS basis × table percentage (business use already allocated)"
+          : `$${lp.costBasis} × table % × ${lp.businessUsePercentage}% business use`,
       {
         "Cost basis": lp.costBasis,
         "Business use %": lp.businessUsePercentage,
         "Tentative depreciation": lp.tentativeDepreciation,
+        ...basisAuditInputs(lp.basisSourceAmounts),
         ...(lp.section280FCap ? { "§280F annual cap": lp.section280FCap } : {}),
       },
     );

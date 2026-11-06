@@ -1,0 +1,33 @@
+form: "PA-Married-Prior-History"
+fullName: Actual paired original married prior PA40 and Schedule SP relief
+taxYear: 2025
+reference: "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_rev-1630.pdf"
+notes: |
+  Final2025 REV1630 MOD04-25 before-you-begin and Exception1; final2024
+  PA40SP MOD03-24 sectionsI/III/IV and Table2. Private source method only;
+  no asserted exemption, inferred prior income, positive dated interest,
+  current2026/public filing or PDF readiness change. Current2025 M ordinary
+  fullresident same-spouse, prior2024 actual separate M fullresident originals.
+  Both prior spouses alive/cohabiting entire year, neither claimed dependent,
+  no prior dependent children or nonzero SP2-10/resident credit in this cohort.
+lines:
+  - line: "originals"
+    description: Complete original prior ownership and paired eligibility columns
+    formula: Require both independently entered prior PA40/SP owner and spouse identities,2024 calendar year, actual filed date no later than current asOf, complete original worldwide columns1-10 and explicit confirmations. Every zero is entered. Each spouse column equals the counterpart taxpayer column; line1 equals its original PA40 income. Unknown, duplicate, stale or unsupported facts deny even if current withholding otherwise covers tax.
+    testRef: "tests/engine/state/pa-married-prior-history.test.ts::PA married prior history rejects unknown and contradictory originals %s"
+  - line: "SP11-16"
+    description: Independently replay actual prior married Schedule SP
+    formula: Whole-dollar taxpayer plus spouse columns1-10 form shared11. Recalculate2024 married0-child SP using13000 base and250 steps, retaining original tax12 and knownzero resident13;14=12-13,15=percentage/100,16=roundDollar(14*15). Reconcile every printed line and PA40 tax=roundDollar(line9*.0307) and original21 credit. First positive100percent relief uses8000+5000=13000; taxes246/154 and credits246/154. Do not turn absent prior SP or no_return into ineligibility.
+    testRef: "tests/engine/state/pa-married-prior-history.test.ts::PA married prior history applies actual prior100percent SP through public dispatch"
+  - line: "REV1630-12"
+    description: Actual prior-year tax exception with unchanged current chronology
+    formula: Pass each source-validated original prior income and forgiveness to existing REV1630. For prior incomes30000/20000 taxes921/614 and original credits0, current annual withholding924/616 allocated by existing quarterly rules meets all prior25/50/75/100percent thresholds; current1535/921 liabilities give611/305 principal and0 interest. The primary uses actual quarterly Exception1; spouse net305 exits at the338 threshold before prior-tax comparison. Annual equality alone never establishes timely quarterly payment. Unexcepted positive interest still denies.
+    testRef: "tests/engine/state/pa-married-prior-history.test.ts::PA married prior history applies the actual quarterly prior-tax exception"
+  - line: "capture"
+    description: Explicit immutable child capture and separate parent confirmation
+    formula: Empty native originals contain unknown values, not actual zero/year/status defaults. Capture clones entered originals and complete current source-fact projection only on user action. Confirm child using actual backend without confirming parent. Every entered fact/reference edit retains originals and invalidates both; current input or parent fact changes must fail the snapshot. Exclude only known captured metadata/confirmation flags from the parent projection to prevent circular confirmation.
+    testRef: "tests/engine/state/pa-married-prior-history.test.ts::PA married prior history captures and confirms sources without a parent cycle"
+  - line: "privacy-boundaries"
+    description: Preserve originals, audit privacy and existing year/method refusals
+    formula: Preserve old no-history refusal and no-packet numeric parity. Bind raw prior originals in whole household commitment; expose no private identities or references in audit. No source or input mutation, detached captured originals, same-money provenance changes or2026/J/mixed-residency/dependent/unsupported prior facts admitted.
+    testRef: "tests/engine/state/pa-married-prior-history.test.ts::PA married prior history preserves originals privacy and absent-history gates"

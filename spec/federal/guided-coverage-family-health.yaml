@@ -1,0 +1,34 @@
+form: "Guided coverage-family health sources"
+fullName: "Actual monthly people, benchmark and original policy collection"
+taxYear: 2025
+irsReference: "https://www.irs.gov/publications/p974"
+notes: |
+  Uses the separately specified coverage-family premium calculation. Copy only
+  actual original policy facts. Membership, payment allocation, benchmark sources
+  and confirmations remain independent; blank is not false or zero. The same
+  saved record is reachable before adjustments validation and from Credits.
+lines:
+  - line: "capture"
+    description: "Copy actual originals without manufactured monthly answers"
+    formula: "Copy linked original policy snapshots, actual year and source months. Person links, membership answers, references, benchmark amounts and confirmations remain unknown until entered. Preserve exact original cents."
+    testRef: "tests/guided-interview/guided-coverage-family-health.test.ts::copies original family records without inferring membership or benchmarks"
+  - line: "transfer"
+    description: "Normalize and bind independent family sources once"
+    formula: "Normalize numeric source strings with Decimal, preserve false/zero/blank distinctions, and validate using actual household and original policies without hypothetical income. PartIV allocation consumes the same independent family proof. Canonical signed Step3 transfers once."
+    testRef: "tests/guided-interview/guided-coverage-family-health.test.ts::transfers ordinary and shared family sources without replacing enrollment premiums"
+  - line: "invalidation"
+    description: "Reject unknown source facts and revoke confirmations on edits"
+    formula: "Known false membership differs from an unknown answer. Own family, payment, household and policy edits invalidate nested family and root health confirmations without deleting actual values. Confirmation-only changes do not manufacture other confirmations."
+    testRef: "tests/guided-interview/guided-coverage-family-health.test.ts::retains exact facts and invalidates family confirmation after consumed edits"
+  - line: "controls"
+    description: "Editable family source controls"
+    formula: "Expose actual person links, monthly full-coverage and other-MEC answers, separate benchmark amounts, member identities and source references. No specified premium, PTC or current deduction input is accepted."
+    testRef: "tests/apps/web/coverage-family-health-interactions.test.tsx::collects exact monthly family facts and revokes nested confirmations"
+  - line: "reachability"
+    description: "Complete actual originals and family sources before Continue"
+    formula: "The adjustments shell exposes original recipient and covered-person controls plus the family worksheet before blocked health validation. Reconfirmation uses the same saved health and Marketplace records; credits receives that same context for actual shared-policy derivation."
+    testRef: "tests/apps/web/coverage-family-health-interactions.test.tsx::reaches original people and family confirmations before adjustments Continue"
+  - line: "browser"
+    description: "Production desktop and mobile source persistence"
+    formula: "Edit the actual monthly benchmark, preserve all original full premiums and independently paid shares, restore all affected confirmations and reload. An unknown membership answer disables calculation. Original identifiers and references remain in local saved sources, absent from outbound request payloads."
+    testRef: "apps/web/tests/guided-coverage-family-health.spec.ts::preserves actual family benchmarks and independent original policies"

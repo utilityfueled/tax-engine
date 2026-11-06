@@ -25,9 +25,13 @@ import {
   buildWorkspaceStructuredFacts
 } from "@tax-engine/engine";
 import {
+  clearGuidedFlowState,
+  loadGuidedFlowState,
   summarizeFlowCompletion,
   type GuidedFlowState
 } from "./guided-interview-flow";
+import { reconcileWorkspaceGuidedState } from "./workspace-guided-state";
+import { getLocalRecoveryStorageKey } from "./workspace-local-recovery";
 
 // The preview helper is cached so refresh calls can avoid repeating the
 // dynamic import work when a caller explicitly asks for a recomputed preview.
@@ -59,6 +63,7 @@ interface UploadableFile {
   name: string;
   size: number;
   detectedDocument?: {
+    taxYear?: number | null;
     kind: WorkspaceDocumentRecord["kind"];
     coverage: WorkspaceDocumentRecord["coverage"];
     label: string;
@@ -109,7 +114,13 @@ interface StoredGuidedCompletionLike {
   needsReviewSectionCount?: unknown;
 }
 
-const STORAGE_KEY = "tax-engine.return-workspaces.v1";
+export const WORKSPACE_STORAGE_KEY = "tax-engine.return-workspaces.v1";
+const STORAGE_KEY = WORKSPACE_STORAGE_KEY;
+
+/** Invalidate derived records after a recovery import or another storage writer. */
+export function invalidateWorkspaceStorageCache(storage: Storage) {
+  storageCache.delete(storage);
+}
 
 // In-memory cache keyed by Storage instance. Avoids re-parsing the full JSON
 // blob (+ hydrating every workspace) on every read within the same page
@@ -158,6 +169,7 @@ const workspaceAuditEventKinds: WorkspaceAuditEventKind[] = [
   "workspace-created",
   "documents-ingested",
   "document-removed",
+  "document-year-confirmed",
   "workspace-cleared",
   "interview-answered",
   "interview-reopened"
@@ -238,8 +250,14 @@ function loadStorage(storage: Storage): StorageShape {
 }
 
 function saveStorage(storage: Storage, data: StorageShape) {
-  storageCache.set(storage, data);
-  storage.setItem(STORAGE_KEY, JSON.stringify(data));
+  try {
+    storage.setItem(STORAGE_KEY, JSON.stringify(data));
+    storageCache.set(storage, data);
+  } catch (error) {
+    // Callers may have mutated a cached record before the durable write failed.
+    storageCache.delete(storage);
+    throw error;
+  }
 }
 
 function createChecklist(
@@ -476,6 +494,10 @@ function computeSummary(documents: WorkspaceDocumentRecord[], seededReturn: Seed
 }
 
 function extractTaxYearHints(document: WorkspaceDocumentRecord) {
+  if (document.taxYear !== undefined) {
+    return Number.isInteger(document.taxYear) && document.taxYear !== null
+      && document.taxYear >= 1900 && document.taxYear <= 2100 ? [document.taxYear] : [];
+  }
   const matchedFixture = document.matchedFixtureId
     ? officialFixtureCatalog.find((fixture) => fixture.id === document.matchedFixtureId) ?? null
     : null;
@@ -484,10 +506,9 @@ function extractTaxYearHints(document: WorkspaceDocumentRecord) {
     return [matchedFixture.taxYearHint];
   }
 
-  const matches = `${document.name} ${document.label}`.match(/\b20\d{2}\b/g) ?? [];
-  return matches
-    .map((value) => Number.parseInt(value, 10))
-    .filter((value, index, values) => Number.isInteger(value) && values.indexOf(value) === index);
+  // A legacy filename is not evidence of the form's tax year. Keep it unknown
+  // until source text or the taxpayer establishes it explicitly.
+  return [];
 }
 
 function normalizeDocumentIdentityValue(value: string | null | undefined) {
@@ -1026,6 +1047,10 @@ function hydrateWorkspaceRecord(workspaceId: string, workspace: ReturnWorkspaceR
 
           return [{
             ...normalized,
+            ...(normalized.taxYear === undefined ? {} : {
+              taxYear: typeof normalized.taxYear === "number" && Number.isInteger(normalized.taxYear)
+                && normalized.taxYear >= 1900 && normalized.taxYear <= 2100 ? normalized.taxYear : null,
+            }),
             blobStorageKey: typeof normalized.blobStorageKey === "string" ? normalized.blobStorageKey : null,
             seededFactIds: normalized.seededFactIds.filter((factId): factId is SeededFactId => seededFactOrder.includes(factId)),
             detectedFacts: normalizeDetectedFacts(normalized.detectedFacts)
@@ -1046,7 +1071,7 @@ function hydrateWorkspaceRecord(workspaceId: string, workspace: ReturnWorkspaceR
     : "local-browser";
   const guidedCompletion = normalizeGuidedCompletion(workspace.guidedCompletion);
 
-  return buildWorkspace(
+  const hydrated = buildWorkspace(
     workspaceId,
     documents,
     createdAt,
@@ -1056,6 +1081,15 @@ function hydrateWorkspaceRecord(workspaceId: string, workspace: ReturnWorkspaceR
     storageMode,
     guidedCompletion
   );
+  const savedYear = workspace.returnSummary?.targetTaxYear;
+  if (hydrated.returnSummary.targetTaxYear === null && Number.isInteger(savedYear)
+    && savedYear !== null && savedYear >= 1900 && savedYear <= 2100
+    && documents.some((document) => document.taxYear === undefined)) {
+    // Preserve the saved return selection separately from unknown source facts.
+    // taxYearState remains unknown, so this does not authorize calculation.
+    return { ...hydrated, returnSummary: { ...hydrated.returnSummary, targetTaxYear: savedYear } };
+  }
+  return hydrated;
 }
 
 function matchFixture(fileName: string): FixtureMatch | null {
@@ -1108,6 +1142,7 @@ function classifyUploadedDocument(file: UploadableFile, usedIds: Set<string>): W
 
     return {
       id: buildUniqueDocumentId(baseId, usedIds),
+      taxYear: matchedFixture.taxYearHint,
       name: file.name,
       size: file.size,
       uploadedAt: new Date().toISOString(),
@@ -1126,6 +1161,7 @@ function classifyUploadedDocument(file: UploadableFile, usedIds: Set<string>): W
 
     return {
       id: buildUniqueDocumentId(baseId, usedIds),
+      taxYear: file.detectedDocument.taxYear ?? null,
       name: file.name,
       size: file.size,
       uploadedAt: new Date().toISOString(),
@@ -1143,6 +1179,7 @@ function classifyUploadedDocument(file: UploadableFile, usedIds: Set<string>): W
 
   return {
     id: buildUniqueDocumentId(baseId, usedIds),
+    taxYear: null,
     name: file.name,
     size: file.size,
     uploadedAt: new Date().toISOString(),
@@ -1190,7 +1227,7 @@ export function ensureWorkspace(storage: Storage, workspaceId: string) {
   const existing = data.workspaces[workspaceId];
 
   if (existing) {
-    return existing;
+    return reconcileWorkspaceGuidedState(existing, loadGuidedFlowState(storage, workspaceId));
   }
 
   const workspace = createWorkspace(workspaceId);
@@ -1202,13 +1239,14 @@ export function ensureWorkspace(storage: Storage, workspaceId: string) {
 export function getWorkspace(storage: Storage, workspaceId: string) {
   const data = loadStorage(storage);
 
-  return data.workspaces[workspaceId] ?? null;
+  const workspace = data.workspaces[workspaceId];
+  return workspace ? reconcileWorkspaceGuidedState(workspace, loadGuidedFlowState(storage, workspaceId)) : null;
 }
 
 export function listWorkspaces(storage: Storage) {
   const data = loadStorage(storage);
 
-  return Object.values(data.workspaces).sort((left, right) =>
+  return Object.values(data.workspaces).map(workspace => reconcileWorkspaceGuidedState(workspace, loadGuidedFlowState(storage, workspace.id))).sort((left, right) =>
     right.updatedAt.localeCompare(left.updatedAt)
   );
 }
@@ -1303,16 +1341,50 @@ export function removeDocument(storage: Storage, workspaceId: string, documentId
   return nextWorkspace;
 }
 
+export function confirmWorkspaceDocumentTaxYear(
+  workspace: ReturnWorkspaceRecord,
+  documentId: string,
+  taxYear: number | null
+): ReturnWorkspaceRecord {
+  if (taxYear !== null && (!Number.isInteger(taxYear) || taxYear < 1900 || taxYear > 2100)) {
+    throw new Error("Enter the actual four-digit document year.");
+  }
+  const document = workspace.documents.find((entry) => entry.id === documentId);
+  if (!document) throw new Error("The source document is no longer available.");
+  const fixtureYear = officialFixtureCatalog.find((entry) => entry.id === document.matchedFixtureId)?.taxYearHint;
+  if (fixtureYear != null && taxYear !== fixtureYear) throw new Error("An official sample's year cannot be changed.");
+  if (document.taxYear === taxYear) return workspace;
+  const occurredAt = new Date().toISOString();
+  const questions = workspace.seededReturn.interviewQuestions.map((question) =>
+    question.sourceDocumentIds.includes(documentId)
+      ? { ...question, status: "pending" as const, answerText: null, answeredAt: null }
+      : question
+  );
+  const auditTrail = appendAuditTrailEvent(workspace.auditTrail, {
+    occurredAt,
+    kind: "document-year-confirmed",
+    message: taxYear === null ? `Marked ${document.label} tax year as unknown.` : `Confirmed ${document.label} tax year as ${taxYear}.`,
+    documentIds: [documentId], questionId: null, answerText: null,
+  });
+  return buildWorkspace(workspace.id,
+    workspace.documents.map((entry) => entry.id === documentId ? { ...entry, taxYear } : entry),
+    workspace.createdAt, questions, occurredAt, auditTrail, workspace.storageMode,
+    workspace.guidedCompletion ?? null);
+}
+
 export function clearWorkspaceRecord(workspace: ReturnWorkspaceRecord) {
   const occurredAt = new Date().toISOString();
   const resetLabel = workspace.storageMode === "hosted-postgres"
     ? "Reset return on server"
     : "Reset local return";
-  const auditTrail = appendAuditTrailEvent(workspace.auditTrail, {
+  const history = workspace.auditTrail.map((event) => ({ ...event,
+    message: "Prior return activity (details cleared on reset).", documentIds: [], answerText: null,
+  }));
+  const auditTrail = appendAuditTrailEvent(history, {
     occurredAt,
     kind: "workspace-cleared",
     message: `${resetLabel} and removed ${workspace.documents.length} document(s).`,
-    documentIds: workspace.documents.map((document) => document.id),
+    documentIds: [],
     questionId: null,
     answerText: null
   });
@@ -1332,10 +1404,16 @@ export function clearWorkspace(storage: Storage, workspaceId: string) {
   const data = loadStorage(storage);
   const current = data.workspaces[workspaceId] ?? createWorkspace(workspaceId);
   const nextWorkspace = clearWorkspaceRecord(current);
+  clearWorkspaceGuidedData(storage, workspaceId);
 
   data.workspaces[workspaceId] = nextWorkspace;
   saveStorage(storage, data);
   return nextWorkspace;
+}
+
+export function clearWorkspaceGuidedData(storage: Storage, workspaceId: string) {
+  clearGuidedFlowState(storage, workspaceId);
+  storage.removeItem(`tax-engine:guided-mode:${workspaceId}`);
 }
 
 function updateInterviewQuestionStateInWorkspace(
@@ -1444,10 +1522,10 @@ export function reopenInterviewQuestion(storage: Storage, workspaceId: string, q
 
 export function saveWorkspaceSnapshot(storage: Storage, workspace: ReturnWorkspaceRecord) {
   const data = loadStorage(storage);
-  const nextWorkspace = hydrateWorkspaceRecord(workspace.id, {
+  const nextWorkspace = reconcileWorkspaceGuidedState(hydrateWorkspaceRecord(workspace.id, {
     ...workspace,
     storageMode: "local-browser"
-  });
+  }), loadGuidedFlowState(storage, workspace.id));
 
   data.workspaces[nextWorkspace.id] = nextWorkspace;
   saveStorage(storage, data);
@@ -1509,11 +1587,13 @@ export function syncGuidedFlowToWorkspace(
     }
   }
 
-  return result;
+  return reconcileWorkspaceGuidedState(result, guidedFlowState);
 }
 
 export function deleteWorkspace(storage: Storage, workspaceId: string) {
   const data = loadStorage(storage);
+  clearWorkspaceGuidedData(storage, workspaceId);
+  storage.removeItem(getLocalRecoveryStorageKey(workspaceId));
 
   if (!data.workspaces[workspaceId]) {
     return listWorkspaces(storage);
@@ -1521,7 +1601,7 @@ export function deleteWorkspace(storage: Storage, workspaceId: string) {
 
   delete data.workspaces[workspaceId];
   saveStorage(storage, data);
-  return Object.values(data.workspaces).sort((left, right) =>
+  return Object.values(data.workspaces).map(workspace => reconcileWorkspaceGuidedState(workspace, loadGuidedFlowState(storage, workspace.id))).sort((left, right) =>
     right.updatedAt.localeCompare(left.updatedAt)
   );
 }
@@ -1533,12 +1613,16 @@ export function deleteWorkspace(storage: Storage, workspaceId: string) {
  * original workspace unchanged if the preview is not applicable.
  */
 export async function refreshWorkspaceEnginePreview(
-  workspace: ReturnWorkspaceRecord
+  workspace: ReturnWorkspaceRecord,
+  taxpayer?: import("@/models/inputs").Taxpayer,
+  context?: import("@tax-engine/engine").WorkspaceEngineCalculationContext
 ): Promise<ReturnWorkspaceRecord> {
   const enginePreview = await lazyBuildWorkspaceEnginePreview(
     workspace.documents,
     workspace.returnSummary,
-    workspace.structuredFacts
+    workspace.structuredFacts,
+    taxpayer,
+    context
   );
   if (enginePreview === workspace.enginePreview) return workspace;
   return { ...workspace, enginePreview };

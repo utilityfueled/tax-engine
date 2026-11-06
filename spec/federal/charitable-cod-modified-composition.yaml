@@ -1,0 +1,110 @@
+form: "Charitable COD modified composition"
+fullName: "Determined equal reductions of actual and charitable-comparison NOLs"
+taxYear: 2025
+irsReference: "https://www.irs.gov/publications/p4681"
+notes: |
+  Sources refreshed2026-10-27: IRC108(b)(2)(A),(b)(3),(b)(4),
+  Reg1.108-7(b), IRC172(b)(2), Reg1.172-5(a)(2), IRC170(d)(1)(B),
+  Reg1.170A-10(d)(1), Form172 instructions line26, Reg1.55-1 and56(d).
+  https://uscode.house.gov/us/usc/119-118/t26/s108/
+  https://www.govinfo.gov/content/pkg/CFR-2025-title26-vol2/pdf/CFR-2025-title26-vol2-sec1-108-7.pdf
+  https://uscode.house.gov/us/usc/119-118/t26/s172/
+  https://www.ecfr.gov/current/title-26/section-1.172-5
+  https://uscode.house.gov/us/usc/119-118/t26/s170/
+  https://www.ecfr.gov/current/title-26/section-1.170A-10
+  https://www.irs.gov/instructions/i172
+  https://www.ecfr.gov/current/title-26/section-1.55-1
+  https://uscode.house.gov/us/usc/119-118/t26/s56/
+  This is a bounded derived composition, not a published IRS numerical example.
+  Preserve opening available B, actual current taxable-income use U, modified
+  absorption A, charitable-comparison absorption Ac and COD reduction R as
+  distinct amounts. Current deductions and current tax never change. The108
+  waterfall uses current loss first and old B-U oldest-first. In this cohort,
+  its same R must fit both B-A and B-Ac for every reduced vintage. Subtract R
+  from each modified residual before final-year expiry; the pre/post difference
+  and original zero-or-unique charitable benefit must reconcile exactly.
+  An unavailable loss is never revived. A COD reduction that exceeds either
+  modified residual needs a separately derived exhaustion method; neither
+  a zero floor nor a restored charitable carry is assumed here. Later108
+  attributes, current EBL origins, joint/community COD ownership, positive
+  benefit across multiple excess gift origins and unresolved floors remain
+  separate. No inputs for computed deductions, reductions or closing carries.
+  Existing original debt, insolvency, independent regular/AMT/1411 histories,
+  direct gifts and actual prior charitable histories are retained unchanged.
+  Full2026 readiness and human/form/e-file qualification remain closed.
+lines:
+  - line: "positive"
+    description: "Apply the same determined COD vector after a unique charitable benefit"
+    formula: "Original wages110000, activeC−40000, interest30000, personal taxes20000, currentA1000, prior regularC50000 and AMTC5000, oldNOL100000 each give regular39200 current claim, AGI60800, charity19240, normal carry60800/comparison51392, benefit9408 and charitycarry22352. Independent AMTclaim84600/carry15400. Actual insolvencyCOD5000 leaves regular55800/comparison46392 and AMT10400; current tax and charity9408/22352 stay unchanged."
+    irsRef: "IRC108(b)(4); Reg1.108-7(b); IRC170(d)(1)(B); Reg1.170A-10(d)(1)"
+    testRef: "tests/engine/federal-charitable-cod-modified.test.ts::preserves a unique charitable benefit when the same COD fits both loss comparisons"
+  - line: "modified"
+    description: "Preserve actual claims and distinct modified absorption in each system"
+    formula: "Add actual capital loss3000 to those originals. Regular pre-NOLAGI97000, actual limit46900→claim37520; modified limit49000→absorption39200. FinalAGI59480/charity18844, retained priorC17844 gives comparison modified61156→absorption48925/carry51075. Benefit9725 and charity22431. Actual AMTI91000→claim81900, modified94000→absorption84600. COD5000 leaves regular55800/comparison46075 and AMT10400; finalAMTI9100. No additional deduction arises from the1680/2700 modified-use differences."
+    irsRef: "IRC172(b)(2); Reg1.172-5(a)(2); IRC56(d); Reg1.55-1"
+    testRef: "tests/engine/federal-charitable-cod-modified.test.ts::keeps modified absorption separate from current use before the determined reduction"
+  - line: "noncharitable"
+    description: "Compose an actual modified-income difference without a charitable comparison"
+    formula: "Wages100000/capital loss3000/standard15750 and two100000 vintages: regular claim65000, modified absorption67400, pre-CODcarry132600; AMTclaim87300, absorption90000, pre-CODcarry110000. COD5000 leaves127600/105000. Original claim, source year, original1411 ratio and all current tax remain unchanged."
+    irsRef: "IRC108(b)(4); IRC172(b)(2); IRC56(d)"
+    testRef: "tests/engine/federal-charitable-cod-modified.test.ts::conserves ordinary modified-use differences without creating a charity result"
+  - line: "capacity"
+    description: "Preserve the precise exhaustion boundary and both original-source ledgers"
+    formula: "Equal-reduction composition requires per-original capacity in both modified vectors, not only a sufficient aggregate. Missing comparison, altered deduction/source/absorption or unequal benefit rejects; actual debt cents round once and unknown debt/election/history never becomes zero."
+    irsRef: "IRC108(b)(2)(A)/(4); IRC172(b)(2); IRC170(d)(1)(B)"
+    testRef: "tests/engine/federal-charitable-cod-modified.test.ts::retains source and exhaustion boundaries without inventing a charitable revival"
+  - line: "original-vectors"
+    description: "Conserve the two complete original loss vectors at the exact comparison boundary"
+    formula: "With original AMT loss1000000, regularCOD51392 exactly exhausts the regular comparison and leaves normal9408, preserving benefit9408. COD51393 exceeds the original comparison capacity and rejects. Matched original openings, actual deductions, absorption, expiry and totals are required. Reordering original histories does not alter FIFO or source ownership."
+    irsRef: "IRC108(b)(4); IRC172(b)(2); Reg1.170A-10(d)(1)"
+    testRef: "tests/engine/federal-charitable-cod-modified.test.ts::requires complete identical originals and preserves the exact comparison capacity"
+  - line: "actual-guide"
+    description: "Reach the determined composition from actual debt and independent prior histories"
+    formula: "The existing original debt, insolvency, regular/AMT NOL, original gift and independent charity history collectors reach the same39200 deduction,60800 AGI,9408 benefit and55800/10400 closing balances. Clearing a known-zero debt box, confirmation or either history blocks; source edits preserve originals and require actual reconfirmation. No computed carry field is collected."
+    irsRef: "Original Form1099C/insolvency records; IRC108(b)(4); IRC170(d)(1)(B)"
+    testRef: "tests/guided-interview/guided-charitable-cod-modified.test.ts::preserves actual source records through guided composition and reconfirmation"
+  - line: "review"
+    description: "Display original current-use and modified-loss amounts with the unchanged charity comparison"
+    formula: "The capital-loss original prints regular current use37520, modified absorption39200,108pool62480, modified residual60800, COD5000 and remaining55800; comparison51075→46075 preserves9725. Independent AMT current81900, modified84600,108pool18100, modified15400 and remaining10400. Source tax and each distinct pool must reconcile."
+    irsRef: "Form9826; Form172 PartII; actual original source review"
+    testRef: "tests/pdf/charitable-cod-modified-review.test.ts::shows distinct actual use modified absorption and comparison after the same reduction"
+  - line: "private-context"
+    description: "Bind actual original income debt and both charitable comparisons before any PDF write"
+    formula: "Altered original wages/debt/charity history or changed normal/comparison capacity, absorption or resulting benefit rejects even with an equal aggregate and stale token. A source-only result is not a completed return."
+    irsRef: "Form9826; retained original source and separate current tax"
+    testRef: "tests/pdf/charitable-cod-modified-review.test.ts::rejects stale originals and altered compared loss vectors before output"
+  - line: "source-panel"
+    description: "Edit actual debt sources alongside both independent loss and charitable histories"
+    formula: "The actual panel changes original debt5000 to5001, clearing debt, insolvency, regular/AMT/current-loss and charitable confirmations. Each actual confirmation can be entered independently; the final canonical carry is55799/10399 with unchanged39200 current deduction and9408 charitable benefit. Clearing an original zero remains unknown after save."
+    irsRef: "Original debt and independently confirmed history records"
+    testRef: "tests/apps/web/charitable-cod-modified-interactions.test.tsx::reconfirms actual debt and both histories through the existing source panels"
+  - line: "workspace"
+    description: "Save a private review from actual guided sources with independent closing vectors"
+    formula: "Actual guided originals produce regular current deduction39200 and AMT84600, unchanged charitable difference9408 and final55800/10400. The completed fictional payment packet separately records a full-year single prior return, prior tax3000/AGI100000, no withholding or dated payments, regular installments and no early-return exception; the existing Form2210 method derives99 penalty from current tax2351, rather than qualifying the earlier source-free historical estimate. Both review statements retain source provenance and every page remains review-only."
+    irsRef: "Form9826; Form172 PartII; private original-source context"
+    testRef: "tests/apps/web/workspace-charitable-cod-modified.test.ts::exports actual guided charitable and COD sources with separate closing vectors"
+  - line: "section-navigation"
+    description: "Reach the later actual regular charitable confirmation after a source edit"
+    formula: "An actual debt edit revokes both independent charity confirmations. After reconfirming only the sources collected in Adjustments, its real Continue control reaches Deductions without setting or accepting the later regular confirmation. Saved preview and strict source builders remain incomplete until that independent answer is true. False and missing answers remain unknown or unconfirmed, and the final source-derived amounts are unchanged."
+    irsRef: "Original debt and independently confirmed history records; complete-return source boundary"
+    testRef: "tests/apps/web/charitable-cod-modified-interactions.test.tsx::reaches the later regular charitable confirmation without confirming it during navigation"
+  - line: "saved-unconfirmed"
+    description: "Keep saved review output closed before the later confirmation"
+    formula: "A saved packet with regular charitable confirmation false, null or absent cannot produce a review PDF, even when every Adjustment source has been separately reconfirmed. Navigation permission is not complete-return source validation."
+    irsRef: "Complete original-source review boundary"
+    testRef: "tests/apps/web/workspace-charitable-cod-modified.test.ts::rejects saved unconfirmed regular charity before review output"
+  - line: "navigation-boundaries"
+    description: "Defer only the later original history without accepting missing Adjustments facts"
+    formula: "False, absent or unconfirmed later regular charity may be reached through valid Adjustments, but fails Deductions and the strict bridge. Missing AMT history, wrong source year, unknown debt boxes and revoked current-loss sources still block Adjustments. No source or confirmation changes merely by validation."
+    irsRef: "Independent original-source ownership and complete-return validation"
+    testRef: "tests/guided-interview/guided-charitable-cod-modified.test.ts::defers only later regular charity while keeping adjustment sources mandatory"
+  - line: "browser"
+    description: "Preserve actual debt edits and confirmations across desktop mobile save reload and download"
+    formula: "Both1280 and390px actual panels keep original Box3 zero and known false bankruptcy distinct from unknown. A debt edit revokes linked confirmations, actual reconfirmation restores calculation, saved sources reload exactly, and downloaded review shows55799/10399 after5001 COD without sending sources outside the explicit same-origin export."
+    irsRef: "Original source collection and review-only export"
+    testRef: "apps/web/tests/charitable-cod-modified.spec.ts::preserves determined charitable COD sources through save reload and review"
+  - line: "navigation-own-history"
+    description: "Require the current section's actual AMT charity history even with empty prior NOL histories"
+    formula: "Explicitly empty regular and AMT NOL histories, no debt, and actual current/prior charity do not establish an empty AMT charitable history. Missing or unconfirmed AMT charity facts keep Adjustments partial and strict construction blocked. An actual complete AMT packet allows navigation to a missing or unconfirmed later regular packet without confirming it. Validation preserves all entered records."
+    irsRef: "Independent original-source ownership and complete-return validation"
+    testRef: "tests/guided-interview/guided-charitable-cod-modified.test.ts::requires the owned AMT charity history when the actual NOL histories are empty"

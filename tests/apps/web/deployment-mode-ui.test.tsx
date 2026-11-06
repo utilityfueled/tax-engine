@@ -1,4 +1,8 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+
+vi.mock("../../../apps/web/node_modules/next/headers.js", () => ({
+  headers: async () => new Headers()
+}));
 import HomePage from "../../../apps/web/src/app/page";
 import { buildWorkspaceHref, RecentWorkspacesPanel } from "../../../apps/web/src/components/recent-workspaces-panel";
 import { StartWorkspaceButton } from "../../../apps/web/src/components/start-workspace-button";

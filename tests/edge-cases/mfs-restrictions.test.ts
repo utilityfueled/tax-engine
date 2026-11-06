@@ -1,3 +1,4 @@
+import { qsbsFullExclusionFundInput } from "../fixtures/section-1202.js";
 /**
  * Edge case tests for Married Filing Separately restrictions.
  * MFS filers face numerous penalties: lower SALT cap, no education credits,
@@ -27,7 +28,7 @@ const d = (n: number | string) => new Decimal(n);
 const c = getConstants(2025);
 
 describe("MFS Restrictions — SALT", () => {
-  it("MFS SALT cap is $5,000 (half of normal $10K)", () => {
+  it("2025 MFS SALT allows $14,000 below the $20K limit", () => {
     const input: TaxYearInput = {
       ...simpleW2Fixture,
       taxpayer: { ...simpleW2Fixture.taxpayer, filingStatus: "married_filing_separately" },
@@ -46,8 +47,7 @@ describe("MFS Restrictions — SALT", () => {
       }],
     };
     const result = calculateScheduleA(input, d(100000), "married_filing_separately", c);
-    // Total SALT = $8K + $6K = $14K → capped at $5K for MFS
-    expect(result.saltDeduction.toNumber()).toBe(5000);
+    expect(result.saltDeduction.toNumber()).toBe(14000);
   });
 });
 
@@ -343,11 +343,11 @@ describe("MFS Restrictions — Student Loan Interest + Education Credits Combine
 });
 
 describe("MFS Restrictions — SALT Cap Reduces Itemized Deductions vs Single", () => {
-  it("MFS $5K SALT cap yields lower total itemized than single's $10K cap on same income", () => {
+  it("MFS $20K SALT cap yields lower total itemized than single's $40K cap on same income", () => {
     const sharedInputBase = {
       w2s: [{
         ...simpleW2Fixture.w2s[0],
-        stateTaxWithheld: "8000",
+        stateTaxWithheld: "40000",
       }],
       form1098: [{
         lender: "Bank",
@@ -375,16 +375,13 @@ describe("MFS Restrictions — SALT Cap Reduces Itemized Deductions vs Single", 
     const mfsResult = calculateScheduleA(mfsInput, agi, "married_filing_separately", c);
     const singleResult = calculateScheduleA(singleInput, agi, "single", c);
 
-    // MFS SALT = min($8K + $5K = $13K, $5K cap) = $5,000
-    expect(mfsResult.saltDeduction.toNumber()).toBe(5000);
-    // Single SALT = min($13K, $10K cap) = $10,000
-    expect(singleResult.saltDeduction.toNumber()).toBe(10000);
-    // MFS mortgage limited: $400K > $375K MFS limit → $12K × (375/400) = $11,250
-    expect(mfsResult.mortgageInterest.toNumber()).toBe(11250);
-    // Single mortgage: $400K < $750K → full $12K
+    expect(mfsResult.saltDeduction.toNumber()).toBe(20000);
+    expect(singleResult.saltDeduction.toNumber()).toBe(40000);
+    // Pub. 936 Table 1 line 14 rounds 375,000 / 400,000 to .938 before
+    // line 15 multiplies the unchanged 12,000 interest source.
+    expect(mfsResult.mortgageInterest.toNumber()).toBe(11256);
     expect(singleResult.mortgageInterest.toNumber()).toBe(12000);
-    // MFS total itemized is $5K (SALT) + $750 (mortgage) = $5,750 less than single's
-    expect(singleResult.totalItemized.minus(mfsResult.totalItemized).toNumber()).toBe(5750);
+    expect(singleResult.totalItemized.minus(mfsResult.totalItemized).toNumber()).toBe(20744);
   });
 });
 
@@ -529,7 +526,7 @@ describe("MFS Restrictions — Lower Tax Thresholds", () => {
   });
 });
 
-describe("MFS Restrictions — SALT Cap $5K With Itemized Deductions", () => {
+describe("MFS Restrictions — 2025 SALT With Itemized Deductions", () => {
   it("MFS SALT cap at exactly $5,000 total SALT passes through uncapped (Sched A Line 5d)", () => {
     const input: TaxYearInput = {
       ...simpleW2Fixture,
@@ -553,7 +550,7 @@ describe("MFS Restrictions — SALT Cap $5K With Itemized Deductions", () => {
     expect(result.saltDeduction.toNumber()).toBe(5000);
   });
 
-  it("MFS SALT cap at $5,001 total SALT is capped to $5,000 (Sched A Line 5d)", () => {
+  it("2025 Schedule A Line 5e allows MFS taxes of $5,001 below the limit", () => {
     const input: TaxYearInput = {
       ...simpleW2Fixture,
       taxpayer: { ...simpleW2Fixture.taxpayer, filingStatus: "married_filing_separately" },
@@ -572,8 +569,7 @@ describe("MFS Restrictions — SALT Cap $5K With Itemized Deductions", () => {
       }],
     };
     const result = calculateScheduleA(input, d(100000), "married_filing_separately", c);
-    // Total SALT = $3,001 + $2K = $5,001 → capped at $5K for MFS
-    expect(result.saltDeduction.toNumber()).toBe(5000);
+    expect(result.saltDeduction.toNumber()).toBe(5001);
   });
 });
 
@@ -759,7 +755,6 @@ describe("MFS Restrictions — CTC Phase-Out at $200K (Same as Single)", () => {
   });
 
   it("MFS CTC fully available at $199,000 AGI, begins phasing out at $200K (Form 8812 Line 12)", () => {
-    // Below threshold: full $2K CTC for one child
     const belowResult = calculateForm8812({
       qualifyingChildren: 1,
       otherDependents: 0,
@@ -768,9 +763,8 @@ describe("MFS Restrictions — CTC Phase-Out at $200K (Same as Single)", () => {
       taxLiability: d(50000),
       filingStatus: "married_filing_separately",
     }, c);
-    expect(belowResult.ctcBeforeLimitation.toNumber()).toBe(2000);
+    expect(belowResult.ctcBeforeLimitation.toNumber()).toBe(2200);
 
-    // At $201,000: AGI excess = $1,000 → ceil($1K/$1K) × $50 = $50 reduction
     const aboveResult = calculateForm8812({
       qualifyingChildren: 1,
       otherDependents: 0,
@@ -779,7 +773,7 @@ describe("MFS Restrictions — CTC Phase-Out at $200K (Same as Single)", () => {
       taxLiability: d(50000),
       filingStatus: "married_filing_separately",
     }, c);
-    expect(aboveResult.ctcBeforeLimitation.toNumber()).toBe(1950);
+    expect(aboveResult.ctcBeforeLimitation.toNumber()).toBe(2150);
   });
 });
 
@@ -951,48 +945,37 @@ describe("MFS Restrictions — Bracket Compression at Various Income Levels", ()
 });
 
 describe("MFS Restrictions — PTC Eligibility", () => {
-  it("MFS filer is treated like single for PTC repayment caps (Form 8962 Table 5)", () => {
+  it("MFS filer uses the other-status PTC repayment cap with no credit absent an exception", () => {
     // Build a scenario with APTC > PTC to trigger repayment
     const result = calculateForm8962({
       taxFamilySize: 1,
       modifiedAGI: d(40000),
       filingStatus: "married_filing_separately",
       form1095A: [{
-        marketplaceId: "MP-001",
-        monthlyPremiums: Array.from({ length: 12 }, () => ({
+        marketplace: "Synthetic Marketplace",
+        policyNumber: "SYNTHETIC-MP-001",
+        monthlyPremiums: Array.from({ length: 12 }, (_, index) => ({
+          month: index+1,
           enrolleePremium: "400",
           slcsp: "500",
           advancePremiumTaxCredit: "450", // APTC exceeds actual PTC
         })),
       }],
     });
-    // Total APTC = $5,400; MFS treated like single for repayment cap
+    // Official2025 Table5:40,000/15,060=265% FPL; MFS is "any other
+    // filing status", so cap1950. With no separated-spouse exception PTC is0.
     expect(result.advancePTCTotal.toNumber()).toBe(5400);
-    // Verify result has a capped repayment (single/MFS use same column)
-    expect(result.excessAPTCRepayment.toNumber()).toBeGreaterThanOrEqual(0);
+    expect(result.ptcAllowed.toString()).toBe("0");
+    expect(result.fplPercentageForTable.toString()).toBe("265");
+    expect(result.repaymentCap?.toString()).toBe("1950");
+    expect(result.excessAPTCRepayment.toString()).toBe("1950");
   });
 });
 
 describe("MFS Restrictions — QSBS Section 1202 Exclusion Cap", () => {
   it("MFS QSBS exclusion cap is $5M (half of $10M for other statuses)", () => {
-    // Create input with a large §1202 gain
-    const input: TaxYearInput = {
-      ...simpleW2Fixture,
-      taxpayer: { ...simpleW2Fixture.taxpayer, filingStatus: "married_filing_separately" },
-      form1099Div: [{
-        payer: "QSBS Fund",
-        ordinaryDividends: "0",
-        qualifiedDividends: "0",
-        totalCapitalGainDistributions: "0",
-        section1250Gain: "0",
-        section1202Gain: "7000000", // $7M §1202 gain
-        collectiblesGain: "0",
-        nondividendDistributions: "0",
-        federalWithheld: "0",
-        foreignTaxPaid: "0",
-        exemptInterestDividends: "0",
-      }],
-    };
+    const input = qsbsFullExclusionFundInput("7000000");
+    input.taxpayer.filingStatus = "married_filing_separately";
     const mfsResult = calculateScheduleD(input, "married_filing_separately", c);
     // MFS cap = $5M; $7M gain → exclusion capped at $5M
     expect(mfsResult.section1202Exclusion.toNumber()).toBe(5000000);

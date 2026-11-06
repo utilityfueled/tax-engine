@@ -1,0 +1,73 @@
+form: "Actual Marketplace health cash payments"
+fullName: "Independent actual paid shares with zero advances and zero completed credit"
+taxYear: 2025
+irsReference: "https://www.ecfr.gov/current/title-26/section-1.162(l)-1"
+notes: |
+  Refreshed 2026-10-26: IRC162(l), 26CFR1.162(l)-1(a)(1)-(3), Pub974
+  Specified/Nonspecified Premiums, Rev. Proc. 2014-41 sections3-4
+  (https://www.irs.gov/irb/2014-33_IRB), and final i7206.
+  This is a derived sufficient zero-credit case, not a published numeric example.
+  PartIV and the actual coverage-family SLCSP allocation determine premium pools;
+  neither supplies an actual payment. Preserve the full policy, all other-payer
+  cash, and exact owner/business cash separately. With every actual advance zero
+  and the completed return's credit zero, the specified limit is S. Actual paid
+  coverage-family cash at or below S, and actual paid noncoverage-family cash at
+  or below N, can enter ordinary7206 without credit or repayment attribution.
+  Require each component bound; a total bound cannot silently reclassify a
+  coverage-family excess as nonspecified. Apply actual ordinary person, payer,
+  employer-month and own-business limits. Recalculate the entire return at that
+  deduction, then accept only actual final C=0, A=0 and R=0. No entered tax amount
+  or pre-deduction credit establishes acceptance. Same-source equal payments
+  retain the existing method. Positive credit/advances, owner-paid outside-family
+  persons, marriage composition and cash above a component pool remain separately
+  determined methods; these bounds are applicability limits, not legal denials.
+  No production2026 gate or tax/form qualification changes.
+lines:
+  - line: "actual-payment"
+    description: "Actual paid cash remains independent from allocated premiums"
+    formula: "Full original monthly1250, actual coverage-family300 plus noncoverage150, other-payer800, and zero advances yields5400 annual eligible cash. The independently derived pools remain10000 specified and5000 nonspecified. An actual Situation3 original1875 with benchmark1000/500 retains the same1250 tax-family allocation and5400 cash, with other-payer1425; no agreement or payment percentage is invented."
+    testRef: "tests/engine/federal-marketplace-actual-cash.test.ts::deducts actual cash once while preserving independently allocated policy amounts"
+  - line: "component-bounds"
+    description: "Actual component cash must fit its independently derived premium pool"
+    formula: "At monthly1250 and benchmark1000/500, specified pool is exact1250*2/3. Actual coverage cash833.34 is outside this method even when total cash remains1250; no rounding or nonspecified residual supplies the difference. Missing original advance, duplicate person, or unreconciled receipt rejects."
+    testRef: "tests/engine/federal-marketplace-actual-cash.test.ts::requires exact component bounds and complete independent payment sources"
+  - line: "final-credit"
+    description: "A completed actual return proves zero credit after the deduction"
+    formula: "Recompute canonical claims at actual ordinary7206, then require verified final Form8962 credit, advances and repayment all0 with one matching line24/25/29 audit. Positive final credit requires its separate payment attribution method."
+    testRef: "tests/engine/federal-marketplace-actual-cash.test.ts::rejects a positive final credit without substituting the allocated premium for cash"
+  - line: "own-income"
+    description: "Actual cash does not borrow another owner's earnings"
+    formula: "Annual cash5400 on ScheduleC5000, with actual spouse wages300000, gives own earned limit4646 after actual353.50 rounded SE half354, and health4646. Source cash remains5400; spouse wages only affect the actual joint credit computation."
+    testRef: "tests/engine/federal-marketplace-actual-cash.test.ts::retains each actual own business limit and source cents"
+  - line: "intake"
+    description: "Actual payment inputs remain independent of source allocation"
+    formula: "Existing original cash, other-payer and person fields accept this source-complete method without inventing an allocation choice. Preserve missing amounts as unknown, revoke confirmation after edits, and leave final credit proof to canonical calculation. A source-complete positive-credit record still rejects there."
+    testRef: "tests/guided-interview/guided-marketplace-actual-cash.test.ts::reaches actual cash independently of PartIV and retains unknowns and confirmation"
+  - line: "review"
+    description: "Physical deduction and private original payment proof"
+    formula: "Actual ordinary Form7206lines1/14=5400, Form8962lines24/25=0 and line29 blank under the equal-credit/advance instruction (computed repayment remains0); preserve full1875 monthly original and450 owner cash independently. Render only redacted sources, bind actual cash proof and both audit containers before I/O, reject stale original receipts and removed or altered proof."
+    testRef: "tests/pdf/marketplace-actual-cash-review.test.ts::prints actual cash separately from allocated pools with private source binding"
+  - line: "workspace"
+    description: "The guided workspace exports actual payments through its private original context"
+    formula: "The actual saved guide downloads a flattened review retaining full original premiums, actual cash and independently derived tax-family pool. No identifiers are restored, and each page retains the review notice."
+    testRef: "tests/apps/web/workspace-marketplace-actual-cash.test.ts::downloads the actual cash payment review without replacing original policies"
+  - line: "qualification"
+    description: "Separate actual owners and partial-year sources keep their own cash and limits"
+    formula: "Primary cash5400 plus spouse cash5400 with spouse farm5000 gives5400+4646=10046 once; reversing source order preserves return. Actual July-December coverage yields2700 cash. An actual disqualifying employer offer yields0 health even when finalcredit remains0."
+    testRef: "tests/engine/federal-marketplace-actual-cash.test.ts::preserves separate owners partial coverage and actual health qualifications"
+  - line: "proof"
+    description: "A retained result cannot replace the completed final credit proof"
+    formula: "Unknown/positive advances, altered finalcredit or duplicate finalcredit audit cannot establish this method. Current return context must independently bind original income and payment sources before output."
+    testRef: "tests/engine/federal-marketplace-actual-cash.test.ts::rejects changed and duplicated completed credit proof"
+  - line: "indexed2026"
+    description: "Isolated indexed2026 uses the same actual payment and final credit conditions"
+    formula: "The isolated2026 calculation with actual zero advances, original family premium15000 and actualcash5400 claims5400 only when finalcredit is0; actual lower income producing a credit rejects. Production2026 readiness is unchanged."
+    testRef: "tests/engine/federal-marketplace-actual-cash-2026.test.ts::requires an actual zero final2026 credit after the cash deduction"
+  - line: "ordinary-controls"
+    description: "The full interview exposes original payments and source reconfirmation"
+    formula: "The original policy, payment and person fields remain editable before Continue. Changing consumed sources revokes health and Marketplace confirmations; actual no-advance benchmark confirmations remain independent. Reconfirmation retains gross1875, cash450 and other-person1425."
+    testRef: "tests/apps/web/marketplace-actual-cash-interactions.test.tsx::reaches actual cash sources and independent reconfirmation in the full interview"
+  - line: "browser"
+    description: "Production desktop and mobile preserve actual cash and independent allocation"
+    formula: "Original ordinary1250/shared1875 and actual450 cash produce final AGI279665 from business300000 less SE14935 and health5400. A separately sourced benchmark change does not replace the cash; actual confirmation and unknown MEC controls persist through reload. Private source identifiers remain local."
+    testRef: "apps/web/tests/guided-marketplace-actual-cash.spec.ts::preserves actual payments independently of policy allocation after edits and reload"

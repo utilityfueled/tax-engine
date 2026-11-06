@@ -1,4 +1,9 @@
 "use client";
+import {guidedPassengerDisplayAmount} from "@/lib/guided-passenger-sources";
+import {captureGuidedPassengerSources} from "@/lib/guided-interview-bridge";
+import type {GuidedFlowState} from "@/lib/guided-interview-flow";
+import {guidedMacrsDisplayAmount} from "@/lib/guided-macrs-assets";
+import { formatGuidedDollars, parseGuidedDisplayAmount } from "@/lib/guided-currency";
 
 import { useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
 import type { ReturnWorkspaceRecord } from "@tax-engine/contracts";
@@ -30,31 +35,31 @@ import {
 } from "@/lib/workspace-document-file-cache";
 import { isGuidedSyntheticDocument } from "@/lib/workspace-status-copy";
 import { CurrencyField } from "./currency-field";
+import { CompensationReportingFields } from "./compensation-reporting-fields";
+import { BooleanFact, TextFact } from "./fact-fields";
+import { BusinessSourceDetails } from "./business-source-details";
+import { DocumentSourceFacts } from "./document-source-facts";
+import { isStartedNec, sumKnownBusinessAmounts, type BusinessSourceData } from "@/lib/guided-business-facts";
 
 function toCurrencyInput(value: string | undefined) {
-  if (!value) {
-    return "";
-  }
-
-  const normalized = value.trim();
-  return normalized === "0" ? "" : normalized;
+  return value?.trim() ?? "";
 }
 
 function hasNecEntryContent(entry: NecEntryData) {
-  return Boolean(
-    entry.payerName.trim()
-    || entry.payerTin.trim()
-    || entry.nonemployeeCompensation.trim()
-    || entry.federalWithheld.trim()
-  );
+  return isStartedNec(entry);
 }
 
 function buildNecEntryFromSuggestion(suggestion: NecDocumentSuggestion): NecEntryData {
   return {
     payerName: suggestion.summary.payer,
-    payerTin: "",
+    payerTin: suggestion.summary.payerTin ?? "",
+    accountHolder: suggestion.summary.accountHolder,
     nonemployeeCompensation: toCurrencyInput(suggestion.summary.nonemployeeCompensation),
     federalWithheld: toCurrencyInput(suggestion.summary.federalWithheld),
+    stateTaxReporting: suggestion.summary.stateTaxReporting,
+    state: suggestion.summary.state,
+    stateIncome: suggestion.summary.stateIncome,
+    stateWithheld: suggestion.summary.stateWithheld,
   };
 }
 
@@ -91,7 +96,7 @@ function NecCard({
 }: {
   index: number;
   entry: NecEntryData;
-  onUpdate: (field: keyof NecEntryData, value: string) => void;
+  onUpdate: (field: keyof NecEntryData, value: string | string[] | undefined) => void;
   onRemove: () => void;
   removable: boolean;
 }) {
@@ -147,16 +152,23 @@ function NecCard({
         />
         <CurrencyField
           label="Box 4 — Federal income tax withheld"
-          hint="Usually $0 for 1099-NEC, but check your form."
+          hint="Enter the actual amount, including zero. A blank is unknown."
           value={entry.federalWithheld}
           onChange={(v) => onUpdate("federalWithheld", v)}
         />
       </div>
+      <CompensationReportingFields data={entry} kind="nec" onChange={patch => { for (const [field, value] of Object.entries(patch)) onUpdate(field as keyof NecEntryData, value); }} />
+      <label className="guided-field"><span className="guided-field-label">Actual 1099-NEC recipient</span><select className="guided-input" value={entry.accountHolder ?? ""} onChange={event => onUpdate("accountHolder", event.target.value)}><option value="">Not answered</option><option value="primary">Primary taxpayer</option><option value="spouse">Spouse on a joint return</option></select></label>
+      <label className="guided-field"><span className="guided-field-label">State reporting on this 1099-NEC</span><select className="guided-input" value={entry.stateTaxReporting ?? ""} onChange={event => onUpdate("stateTaxReporting", event.target.value)}><option value="">Not answered</option><option value="none">No state section reported</option><option value="single">One state reported</option><option value="multiple">Multiple states requiring allocation</option></select></label>
+      <TextFact label="Box 6 actual source state" value={entry.state ?? ""} onChange={value => onUpdate("state", value.toUpperCase())} />
+      <CurrencyField label="Box 5 state income tax withheld" value={entry.stateWithheld ?? ""} onChange={value => onUpdate("stateWithheld", value)} />
+      <CurrencyField label="Box 7 state income" value={entry.stateIncome ?? ""} onChange={value => onUpdate("stateIncome", value)} />
     </div>
   );
 }
 
 const expenseFields: { field: keyof ScheduleCExpenseData; label: string; hint?: string }[] = [
+  { field: "employeeBenefitPrograms", label: "Employee-benefit programs (Schedule C line 14)", hint: "Use the actual expense already reported, including any dependent-care plan deduction. Required when reconciling business care benefits." },
   { field: "advertising", label: "Advertising" },
   { field: "carAndTruck", label: "Car & truck expenses", hint: "Business use of your vehicle" },
   { field: "insurance", label: "Insurance (business)", hint: "Not health insurance — that goes under Adjustments" },
@@ -176,22 +188,15 @@ const maxIncomeSuggestionSteps = 100;
 const maxExpenseSuggestionSteps = 150;
 
 function formatSuggestedAmount(value: string) {
-  return Number(value).toLocaleString("en-US", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
-}
-
-function parseSuggestionAmount(value: string) {
-  const numeric = Number(value.replace(/,/g, ""));
-  return Number.isFinite(numeric) ? numeric : 0;
+  const amount = parseGuidedDisplayAmount(value);
+  return amount.isFinite() ? formatGuidedDollars(amount) : "—";
 }
 
 function compareSuggestionPriority(
   left: { suggestion: { amount: string; date?: string } },
   right: { suggestion: { amount: string; date?: string } },
 ) {
-  const amountDifference = parseSuggestionAmount(right.suggestion.amount) - parseSuggestionAmount(left.suggestion.amount);
+  const amountDifference = parseGuidedDisplayAmount(right.suggestion.amount).comparedTo(parseGuidedDisplayAmount(left.suggestion.amount));
   if (amountDifference !== 0) {
     return amountDifference;
   }
@@ -213,25 +218,33 @@ function isActionableBusinessSuggestion(
 
 export function SectionSelfEmployment({
   workspace,
+  flowState,
   necEntries,
   manualGrossReceipts,
   expenses,
   bankStatementAnalyses,
   incomeDocumentAnalyses,
+  qbiMateriallyParticipated,
+  businessFacts,
   onSectionChange,
 }: {
   workspace: ReturnWorkspaceRecord;
+  flowState?:GuidedFlowState;
   necEntries: NecEntryData[];
   manualGrossReceipts: string;
   expenses: ScheduleCExpenseData;
   bankStatementAnalyses: ScheduleCBankStatementAnalysis[];
   incomeDocumentAnalyses: SelfEmploymentIncomeDocumentAnalysis[];
+  qbiMateriallyParticipated?: boolean | null;
+  businessFacts?: BusinessSourceData;
   onSectionChange: (next: {
     necEntries: NecEntryData[];
     manualGrossReceipts: string;
     expenses: ScheduleCExpenseData;
     bankStatementAnalyses: ScheduleCBankStatementAnalysis[];
     incomeDocumentAnalyses: SelfEmploymentIncomeDocumentAnalysis[];
+    qbiMateriallyParticipated?: boolean | null;
+    businessFacts?: BusinessSourceData;
   }) => void;
 }) {
   const currentEntries = necEntries.length > 0 ? necEntries : [emptyNecEntry];
@@ -244,6 +257,10 @@ export function SectionSelfEmployment({
   const [analysisMessage, setAnalysisMessage] = useState<string | null>(null);
   const [incomeAnalysisPending, setIncomeAnalysisPending] = useState(false);
   const [incomeAnalysisMessage, setIncomeAnalysisMessage] = useState<string | null>(null);
+  const [aiReviewAllowed, setAiReviewAllowed] = useState(false);
+  const reviewJobs = useRef<Partial<Record<"income" | "expense", { controller: AbortController; workspaceId: string }>>>({});
+  const latestSection = useRef({ workspaceId: workspace.id, aiReviewAllowed, onSectionChange, value: { necEntries: currentEntries, manualGrossReceipts, expenses: currentExpenses, bankStatementAnalyses: currentAnalyses, incomeDocumentAnalyses: currentIncomeAnalyses, qbiMateriallyParticipated, businessFacts } });
+  latestSection.current = { workspaceId: workspace.id, aiReviewAllowed, onSectionChange, value: { necEntries: currentEntries, manualGrossReceipts, expenses: currentExpenses, bankStatementAnalyses: currentAnalyses, incomeDocumentAnalyses: currentIncomeAnalyses, qbiMateriallyParticipated, businessFacts } };
   const [cachedAttachedIncomeDocumentIds, setCachedAttachedIncomeDocumentIds] = useState<Set<string>>(new Set());
   const [selectedAttachedIncomeDocumentIds, setSelectedAttachedIncomeDocumentIds] = useState<string[]>(
     [],
@@ -262,6 +279,38 @@ export function SectionSelfEmployment({
     () => filterAttachedIncomeReviewDocuments(workspace.documents, cachedAttachedIncomeDocumentIds),
     [workspace.documents, cachedAttachedIncomeDocumentIds],
   );
+
+  useEffect(() => {
+    setAiReviewAllowed(false);
+    setAnalysisPending(false);
+    setIncomeAnalysisPending(false);
+    setAnalysisMessage(null);
+    setIncomeAnalysisMessage(null);
+    setCurrentIncomeSuggestionIndex(0);
+    setCurrentExpenseSuggestionIndex(0);
+    return () => {
+      reviewJobs.current.income?.controller.abort();
+      reviewJobs.current.expense?.controller.abort();
+      reviewJobs.current = {};
+    };
+  }, [workspace.id]);
+
+  function cancelReview(kind: "income" | "expense") {
+    reviewJobs.current[kind]?.controller.abort();
+    delete reviewJobs.current[kind];
+    if (kind === "income") { setIncomeAnalysisPending(false); setIncomeAnalysisMessage("Income review cancelled."); }
+    else { setAnalysisPending(false); setAnalysisMessage("Expense review cancelled."); }
+  }
+  function startReview(kind: "income" | "expense") {
+    if (!latestSection.current.aiReviewAllowed) return undefined;
+    reviewJobs.current[kind]?.controller.abort();
+    const job = { controller: new AbortController(), workspaceId: workspace.id };
+    reviewJobs.current[kind] = job;
+    return job;
+  }
+  function ownsReview(kind: "income" | "expense", job: { controller: AbortController; workspaceId: string }) {
+    return !job.controller.signal.aborted && reviewJobs.current[kind] === job && latestSection.current.workspaceId === job.workspaceId && latestSection.current.aiReviewAllowed;
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -300,17 +349,25 @@ export function SectionSelfEmployment({
     expenses: ScheduleCExpenseData;
     bankStatementAnalyses: ScheduleCBankStatementAnalysis[];
     incomeDocumentAnalyses: SelfEmploymentIncomeDocumentAnalysis[];
+    qbiMateriallyParticipated?: boolean | null;
+    businessFacts?: BusinessSourceData;
   }>) {
-    onSectionChange({
-      necEntries: next.necEntries ?? currentEntries,
-      manualGrossReceipts: next.manualGrossReceipts ?? manualGrossReceipts,
-      expenses: next.expenses ?? currentExpenses,
-      bankStatementAnalyses: next.bankStatementAnalyses ?? currentAnalyses,
-      incomeDocumentAnalyses: next.incomeDocumentAnalyses ?? currentIncomeAnalyses,
-    });
+    const value = { ...latestSection.current.value, ...next };
+    if (next.necEntries !== undefined || next.manualGrossReceipts !== undefined || next.expenses !== undefined) {
+      value.businessFacts = {
+        ...value.businessFacts,
+        ...(value.businessFacts?.passengerSources?{passengerSources:{...value.businessFacts.passengerSources,sourceFactsConfirmed:null}}:{}),
+        ...(value.businessFacts?.macrsAssets?{macrsAssets:{...value.businessFacts.macrsAssets,sourceFactsConfirmed:null}}:{}),
+        ...(value.businessFacts?.scheduleCSourceFacts?{scheduleCSourceFacts:{...value.businessFacts.scheduleCSourceFacts,sourceFactsConfirmed:null}}:{}),
+        ...(next.necEntries !== undefined || next.manualGrossReceipts !== undefined ? { incomeReconciled: null } : {}),
+        ...(next.expenses !== undefined ? { expensesReconciled: null } : {}),
+      };
+    }
+    latestSection.current.value = value;
+    latestSection.current.onSectionChange(value);
   }
 
-  function updateEntry(index: number, field: keyof NecEntryData, value: string) {
+  function updateEntry(index: number, field: keyof NecEntryData, value: string | string[] | undefined) {
     const next = currentEntries.map((entry, i) =>
       i === index ? { ...entry, [field]: value } : entry
     );
@@ -387,7 +444,7 @@ export function SectionSelfEmployment({
       expenses: {
         ...currentExpenses,
         [targetCategory]: addAmountToExpenseValue(
-          currentExpenses[targetCategory],
+          currentExpenses[targetCategory] ?? "",
           suggestion.amount,
         ),
       },
@@ -444,6 +501,7 @@ export function SectionSelfEmployment({
   }
 
   async function reviewSelectedAttachedIncomeDocuments() {
+    if (!latestSection.current.aiReviewAllowed) return;
     const selectedDocuments = attachedIncomeReviewDocuments.filter((document) =>
       selectedAttachedIncomeDocumentIds.includes(document.id),
     );
@@ -452,6 +510,9 @@ export function SectionSelfEmployment({
       setIncomeAnalysisMessage("Select at least one attached paystub or invoice first.");
       return;
     }
+
+    const job = startReview("income");
+    if (!job) return;
 
     setIncomeAnalysisPending(true);
     setIncomeAnalysisMessage(null);
@@ -462,6 +523,7 @@ export function SectionSelfEmployment({
 
       for (const document of selectedDocuments) {
         const file = await getCachedWorkspaceDocumentFile(workspace.id, document.id);
+        if (!ownsReview("income", job)) return;
         if (file) {
           files.push(file);
         } else {
@@ -478,10 +540,11 @@ export function SectionSelfEmployment({
         return;
       }
 
-      const analyses = await analyzeSelfEmploymentIncomeDocuments(files);
+      const analyses = await analyzeSelfEmploymentIncomeDocuments(files, { signal: job.controller.signal });
+      if (!ownsReview("income", job)) return;
       commitSection({
         incomeDocumentAnalyses: [
-          ...currentIncomeAnalyses,
+          ...latestSection.current.value.incomeDocumentAnalyses,
           ...analyses.map((analysis, index) => ({
             ...analysis,
             id: `${analysis.id}-${Date.now()}-${index}`,
@@ -495,13 +558,14 @@ export function SectionSelfEmployment({
           : `Reviewed ${files.length} attached income document${files.length === 1 ? "" : "s"} with AI.`,
       );
     } catch (error) {
+      if (!ownsReview("income", job)) return;
       setIncomeAnalysisMessage(
         error instanceof Error
           ? error.message
           : "Could not analyze the selected attached documents.",
       );
     } finally {
-      setIncomeAnalysisPending(false);
+      if (ownsReview("income", job)) { delete reviewJobs.current.income; setIncomeAnalysisPending(false); }
     }
   }
 
@@ -512,15 +576,18 @@ export function SectionSelfEmployment({
     if (files.length === 0) {
       return;
     }
+    const job = startReview("income");
+    if (!job) return;
 
     setIncomeAnalysisPending(true);
     setIncomeAnalysisMessage(null);
 
     try {
-      const analyses = await analyzeSelfEmploymentIncomeDocuments(files);
+      const analyses = await analyzeSelfEmploymentIncomeDocuments(files, { signal: job.controller.signal });
+      if (!ownsReview("income", job)) return;
       commitSection({
         incomeDocumentAnalyses: [
-          ...currentIncomeAnalyses,
+          ...latestSection.current.value.incomeDocumentAnalyses,
           ...analyses.map((analysis, index) => ({
             ...analysis,
             id: `${analysis.id}-${Date.now()}-${index}`,
@@ -529,13 +596,14 @@ export function SectionSelfEmployment({
       });
       setIncomeAnalysisMessage(`Reviewed ${files.length} income document${files.length === 1 ? "" : "s"} with AI.`);
     } catch (error) {
+      if (!ownsReview("income", job)) return;
       setIncomeAnalysisMessage(
         error instanceof Error
           ? error.message
           : "Could not analyze the uploaded paystubs or invoices.",
       );
     } finally {
-      setIncomeAnalysisPending(false);
+      if (ownsReview("income", job)) { delete reviewJobs.current.income; setIncomeAnalysisPending(false); }
     }
   }
 
@@ -546,15 +614,18 @@ export function SectionSelfEmployment({
     if (files.length === 0) {
       return;
     }
+    const job = startReview("expense");
+    if (!job) return;
 
     setAnalysisPending(true);
     setAnalysisMessage(null);
 
     try {
-      const analyses = await analyzeBusinessExpenseStatements(files);
+      const analyses = await analyzeBusinessExpenseStatements(files, { signal: job.controller.signal });
+      if (!ownsReview("expense", job)) return;
       commitSection({
         bankStatementAnalyses: [
-          ...currentAnalyses,
+          ...latestSection.current.value.bankStatementAnalyses,
           ...analyses.map((analysis, index) => ({
             ...analysis,
             id: `${analysis.id}-${Date.now()}-${index}`,
@@ -563,30 +634,22 @@ export function SectionSelfEmployment({
       });
       setAnalysisMessage(`Reviewed ${files.length} statement${files.length === 1 ? "" : "s"} with AI.`);
     } catch (error) {
+      if (!ownsReview("expense", job)) return;
       setAnalysisMessage(
         error instanceof Error
           ? error.message
           : "Could not analyze the uploaded statement.",
       );
     } finally {
-      setAnalysisPending(false);
+      if (ownsReview("expense", job)) { delete reviewJobs.current.expense; setAnalysisPending(false); }
     }
   }
 
-  const necIncome = currentEntries.reduce((sum, entry) => {
-    const val = Number(entry.nonemployeeCompensation);
-    return sum + (Number.isNaN(val) ? 0 : val);
-  }, 0);
-  const manualIncomeValue = Number(manualGrossReceipts.replace(/,/g, ""));
-  const manualIncome = Number.isNaN(manualIncomeValue) ? 0 : manualIncomeValue;
-  const totalIncome = necIncome + manualIncome;
-
-  const totalExpenses = Object.values(currentExpenses).reduce((sum, val) => {
-    const num = Number(val);
-    return sum + (Number.isNaN(num) ? 0 : num);
-  }, 0);
-
-  const netProfit = totalIncome - totalExpenses;
+  const necIncome = sumKnownBusinessAmounts(currentEntries.filter(isStartedNec).map(entry => entry.nonemployeeCompensation));
+  const manualIncome = sumKnownBusinessAmounts([manualGrossReceipts]);
+  const totalIncome = necIncome !== null && manualIncome !== null ? necIncome.plus(manualIncome) : null;
+  const totalExpenses = sumKnownBusinessAmounts([...Object.values(currentExpenses), businessFacts?.contractLabor, businessFacts?.depreciationMethod==='assets'?guidedMacrsDisplayAmount(businessFacts):businessFacts?.depreciationMethod==='passenger'?guidedPassengerDisplayAmount(businessFacts):businessFacts?.depreciation, businessFacts?.legalAndProfessional, ...(businessFacts?.businessInterest===undefined?[]:[businessFacts.businessInterest]), ...(businessFacts?.scheduleCSourceFacts?.ordinaryExpenses?.rows?.map(row=>row.amount)??[])]);
+  const sourceAmount = (value: ReturnType<typeof sumKnownBusinessAmounts>) => value === null ? "Unknown — review source amounts" : `$${formatSuggestedAmount(value.toFixed())}`;
   const suggestedTotals = summarizeBankStatementSuggestionsByCategory(currentAnalyses);
   const suggestedIncomeTotal = summarizeSelfEmploymentIncomeSuggestions(currentIncomeAnalyses);
   const allIncomeSuggestionSteps = currentIncomeAnalyses.flatMap((analysis) => (
@@ -625,6 +688,15 @@ export function SectionSelfEmployment({
           without a 1099. Then we&apos;ll capture your business expenses for Schedule C.
           The difference is your net self-employment income.
         </p>
+        <label className="guided-field">
+          <span><input type="checkbox" aria-label="Allow AI review of selected business documents" checked={aiReviewAllowed} onChange={(event) => {
+            const allowed = event.target.checked;
+            setAiReviewAllowed(allowed);
+            latestSection.current.aiReviewAllowed = allowed;
+            if (!allowed) { cancelReview("income"); cancelReview("expense"); }
+          }} /> Allow AI review of selected business documents</span>
+          <span className="guided-field-hint">When you request a review, locally redacted document text is sent for AI analysis. Suggestions require your acceptance. This permission resets when you leave this section or change returns.</span>
+        </label>
 
         <div className="guided-w2-card">
           <CurrencyField
@@ -651,7 +723,7 @@ export function SectionSelfEmployment({
                 type="button"
                 className="utility-button utility-button-small guided-doc-upload-button"
                 onClick={() => incomeUploadInputRef.current?.click()}
-                disabled={incomeAnalysisPending}
+                disabled={incomeAnalysisPending || !aiReviewAllowed}
               >
                 {incomeAnalysisPending ? "Analyzing..." : "Upload paystubs or invoices"}
               </button>
@@ -662,7 +734,9 @@ export function SectionSelfEmployment({
                 accept="application/pdf"
                 multiple
                 onChange={handleIncomeDocumentUpload}
+                disabled={!aiReviewAllowed || incomeAnalysisPending}
               />
+              {incomeAnalysisPending && <button type="button" className="utility-button" onClick={() => cancelReview("income")}>Cancel income review</button>}
             </div>
           </div>
 
@@ -713,7 +787,7 @@ export function SectionSelfEmployment({
                   type="button"
                   className="utility-button utility-button-small guided-doc-upload-button"
                   onClick={() => void reviewSelectedAttachedIncomeDocuments()}
-                  disabled={incomeAnalysisPending || selectedAttachedIncomeDocumentIds.length === 0}
+                  disabled={!aiReviewAllowed || incomeAnalysisPending || selectedAttachedIncomeDocumentIds.length === 0}
                 >
                   {incomeAnalysisPending ? "Analyzing attached docs..." : "Review selected attached docs"}
                 </button>
@@ -729,6 +803,7 @@ export function SectionSelfEmployment({
 
           {currentIncomeAnalyses.length > 0 ? (
             <div className="guided-bank-analysis-stack" style={{ marginTop: "12px" }}>
+              {currentIncomeAnalyses.map(analysis => <DocumentSourceFacts key={analysis.id} label={analysis.label} facts={analysis.sourceFacts} />)}
               <div className="guided-bank-analysis-summary">
                 <div className="guided-bank-analysis-total">
                   <span className="guided-bank-analysis-total-label">Suggested additional income</span>
@@ -845,7 +920,7 @@ export function SectionSelfEmployment({
                           {[suggestion.summary.payer, `$${formatSuggestedAmount(suggestion.summary.nonemployeeCompensation)}`].join(" · ")}
                         </p>
                         <p className="guided-hint">
-                          {Number(suggestion.summary.federalWithheld) > 0
+                          {!suggestion.summary.federalWithheld?.trim() ? "Federal withholding is unknown; check the actual form." : parseGuidedDisplayAmount(suggestion.summary.federalWithheld).gt(0)
                             ? `Federal withholding $${formatSuggestedAmount(suggestion.summary.federalWithheld)} is available too.`
                             : "No federal withholding detected on this attached 1099-NEC."}
                         </p>
@@ -890,25 +965,28 @@ export function SectionSelfEmployment({
         <div className="guided-review-card" style={{ marginTop: "16px" }}>
           <div className="guided-review-row">
             <span className="guided-review-label">Total 1099-NEC income</span>
-            <span className="guided-review-value">{`$${formatSuggestedAmount(String(necIncome))}`}</span>
+            <span className="guided-review-value">{sourceAmount(necIncome)}</span>
           </div>
           <div className="guided-review-row">
             <span className="guided-review-label">Other business income</span>
-            <span className="guided-review-value">{`$${formatSuggestedAmount(String(manualIncome))}`}</span>
+            <span className="guided-review-value">{sourceAmount(manualIncome)}</span>
           </div>
           <div className="guided-review-row guided-review-row-total">
             <span className="guided-review-label">Total gross receipts</span>
-            <span className="guided-review-value">{`$${formatSuggestedAmount(String(totalIncome))}`}</span>
+            <span className="guided-review-value">{sourceAmount(totalIncome)}</span>
           </div>
         </div>
 
+        <BusinessSourceDetails data={businessFacts} onChange={value => commitSection({ businessFacts: value })} onCapturePassenger={facts=>{if(!flowState)throw new Error('Current complete interview required');return captureGuidedPassengerSources({...flowState,sectionData:{...flowState.sectionData,'income-self-employment':{...latestSection.current.value,businessFacts:facts}}});}} />
         <details className="guided-expand" style={{ marginTop: "16px" }}>
           <summary className="guided-expand-trigger">Schedule C — Business Expenses</summary>
+          <BooleanFact label="Did you materially participate in this business under the section 469 rules?" value={qbiMateriallyParticipated} onChange={(value) => commitSection({ qbiMateriallyParticipated: value })} />
+          <p className="guided-hint">This actual participation answer is used when testing the 2026 minimum QBI deduction. Owning a business alone does not establish material participation.</p>
           <div className="guided-expand-body">
             <p className="guided-hint">
               Enter your business expenses by category. Only include amounts that are
-              ordinary and necessary for your business. Leave categories at $0 if they
-              don&apos;t apply.
+              ordinary and necessary for your business. Enter an actual zero for categories
+              you have checked and that do not apply; a blank remains unknown.
             </p>
 
             <div className="guided-doc-helper" style={{ marginBottom: "16px" }}>
@@ -928,7 +1006,7 @@ export function SectionSelfEmployment({
                   type="button"
                   className="utility-button utility-button-small guided-doc-upload-button"
                   onClick={() => uploadInputRef.current?.click()}
-                  disabled={analysisPending}
+                  disabled={analysisPending || !aiReviewAllowed}
                 >
                   {analysisPending ? "Analyzing..." : "Upload bank statements"}
                 </button>
@@ -936,10 +1014,12 @@ export function SectionSelfEmployment({
                   ref={uploadInputRef}
                   className="guided-doc-upload-input"
                   type="file"
-                  accept="application/pdf,image/*"
+                  accept="application/pdf"
                   multiple
                   onChange={handleStatementUpload}
+                  disabled={!aiReviewAllowed || analysisPending}
                 />
+                {analysisPending && <button type="button" className="utility-button" onClick={() => cancelReview("expense")}>Cancel expense review</button>}
               </div>
             </div>
 
@@ -951,6 +1031,7 @@ export function SectionSelfEmployment({
 
             {currentAnalyses.length > 0 ? (
               <div className="guided-bank-analysis-stack">
+                {currentAnalyses.map(analysis => <DocumentSourceFacts key={analysis.id} label={analysis.label} facts={analysis.sourceFacts} />)}
                 {suggestedTotals.length > 0 ? (
                   <div className="guided-bank-analysis-summary">
                     {suggestedTotals.map((entry) => (
@@ -1071,7 +1152,7 @@ export function SectionSelfEmployment({
                   key={ef.field}
                   label={ef.label}
                   hint={ef.hint}
-                  value={currentExpenses[ef.field]}
+                  value={currentExpenses[ef.field] ?? ""}
                   onChange={(v) => updateExpense(ef.field, v)}
                 />
               ))}
@@ -1079,28 +1160,11 @@ export function SectionSelfEmployment({
           </div>
         </details>
 
-        {(totalIncome > 0 || totalExpenses > 0) && (
-          <div className="guided-ticker-grid" style={{ marginTop: "16px" }}>
-            <div className="guided-ticker-item">
-              <span className="guided-ticker-label">Gross Income</span>
-              <strong className="guided-ticker-value">
-                ${totalIncome.toLocaleString("en-US", { minimumFractionDigits: 0 })}
-              </strong>
-            </div>
-            <div className="guided-ticker-item">
-              <span className="guided-ticker-label">Total Expenses</span>
-              <strong className="guided-ticker-value">
-                ${totalExpenses.toLocaleString("en-US", { minimumFractionDigits: 0 })}
-              </strong>
-            </div>
-            <div className={`guided-ticker-item ${netProfit >= 0 ? "" : "guided-ticker-negative"}`}>
-              <span className="guided-ticker-label">Net Profit</span>
-              <strong className="guided-ticker-value">
-                ${netProfit.toLocaleString("en-US", { minimumFractionDigits: 0 })}
-              </strong>
-            </div>
-          </div>
-        )}
+        <div className="guided-ticker-grid" style={{ marginTop: "16px" }}>
+          <div className="guided-ticker-item"><span className="guided-ticker-label">Entered gross receipts</span><strong className="guided-ticker-value">{sourceAmount(totalIncome)}</strong></div>
+          <div className="guided-ticker-item"><span className="guided-ticker-label">Entered expense amounts before tax limits</span><strong className="guided-ticker-value">{sourceAmount(totalExpenses)}</strong></div>
+        </div>
+
       </div>
     </RetroShell>
   );

@@ -1,0 +1,115 @@
+form: "Ohio SD 100 actual original sources"
+fullName: "Finite 2025 canonical earned-income school-district return source replay"
+taxYear: 2025
+reference: "https://dam.assets.ohio.gov/image/upload/v1767095693/tax.ohio.gov/forms/ohio_individual/individual/2025/it1040-booklet.pdf"
+notes: |
+  Source-first contract frozen before any product or application output. Official
+  2025 instructions printed pages6,47,51,57-59 and actual SD100/SDWH bundle read.
+  Booklet SHA256931b21e7484ba96e561cf2346d8a7d2a8005bd990724b5903c9a90acede5f50e.
+  SD100 bundle SHA256bed0ccb75c98db61e066699b972773cd388f0656c96f5615f668e56f40843ec0.
+  R.C.5748.01 and5747.021 historical2025 editions govern the earned-income base.
+  First cohort: original2025 calendar single primary under65; full365-day Ohio
+  residence in one official verified earned-income district; actual ordinaryW2
+  originals only. Both separate IT1040 and SD1002210 penalties must derive zero.
+  Optional combined2210 is lawful but positive/combined allocation is a successor.
+  Only separately verified2025 Hillsdale LSD0302 earned-income .0125 is admitted
+  initially; old official complete-rate CSV404 is not a refreshed rate catalog.
+  No business/SE, other income, special wages, traditional/PY/joint/multiple
+  district method, late balance, relief or amendment is qualified here. No2026
+  public, physical-form, filing, municipal or human-review promotion follows.
+  Strict canonical root ohioSchoolDistrict retains year/current owner/current
+  private originals. Its residence has originalAddress, complete dated periods
+  and independently supplied Finder/source lookup evidence for that address/year.
+  Box20 never establishes residence. Source coverage binds every originalW2 and
+  every local printed row, separately classifying school_district, municipal or
+  unresolved. Actual box14 school reporting must explicitly be none for this
+  finite method. Hidden nonW2 local originals/unknown source answers block.
+  Payment records are typed SD100 originals with account name/SSN/year/type/date/
+  exact amount/confirmation. A complete as-of agency account reconciles actual
+  estimates credited and prior credit applied. No-return is distinct from an
+  actual filed2024 original including line8/19/elected20; prior carry needs both retained election and actual
+  current availability/application. No requested refund becomes paid cash/carry.
+  Actual expected/filed endpoint and no_remaining_tax coverage are supplied facts,
+  never inferred from computed overpayment. Outgoing carry is an actual timely
+  election <= overpayment; computed refund is not a received refund.
+  Original snapshots exclude exactly ohioResidency/ohioPayments/ohioSchoolDistrict,
+  retaining all other current originals. Explicit fixture rebinding is source
+  authoring only, never a production read/confirmation operation. No auto-refresh.
+  Raw cents remain exact; accepted first printed controls use whole dollars.
+  Precision changes require a separate admitted failure, not an invented cap.
+  Model shape is pinned by the separately authored fixture contract. Production
+  helper API buildOhioSchoolDistrictSource(input, freshFederal, actualOhioInput)
+  returns methodVersion, sourceDigest, residentIncome, sdWithholding,
+  estimatedPayments, estimatedPaymentSchedule, priorYearTaxLiability?,
+  priorYearTimelyFiled, creditCarryforward, district and redacted audit lines.
+  Existing adapter is the actual canonical entry point; it must replay all three
+  independently confirmed packets and reject all unbound school scalar overlays.
+lines:
+  - line: "canonical-admission"
+    description: "Canonical root and current source API"
+    formula: "Strict optional root survives canonical parse; full current source packet replays through the existing Ohio adapter and return without overlay"
+    testRef: "tests/engine/state/oh-sd-100-sources.test.ts::OH SD canonical preserves actual district sources in the canonical schema"
+  - line: "source-sanity"
+    description: "Independent synthetic original sanity"
+    formula: "Actual current W2 wages80000, OhioWH3000, separate SDWH1100; existing W2 validator and fresh federal wages agree before any district output"
+    testRef: "tests/engine/state/oh-sd-100-sources.test.ts::OH SD baseline validates explicit original rows before district calculation"
+  - line: "29-33"
+    description: "Actual full-year earned-income worksheet"
+    formula: "29=80000 actual resident compensation;30=0 actual no-SE;31=max(0,29+30)=80000;32=actual OhioMAGI80000 for365days;33=min(31,32)=80000"
+    testRef: "tests/engine/state/oh-sd-100-sources.test.ts::OH SD canonical computes independently derived Hillsdale tax and refund"
+  - line: "35-38"
+    description: "Earned district tax and senior credit"
+    formula: "Official0302 rate.0125;35=round(80000*.0125)=1000;36=0 actual age<65;37=1000;38=1000;6=0;7=8=1000"
+    testRef: "tests/engine/state/oh-sd-100-sources.test.ts::OH SD canonical computes independently derived Hillsdale tax and refund"
+  - line: "9-21"
+    description: "Separate actual district payments and refund"
+    formula: "9=0 independently supported2210;10=1000;11=1100 actualSDWH;12=0;13=15=1100;14=16=17=18=20=0;19=21=100"
+    testRef: "tests/engine/state/oh-sd-100-sources.test.ts::OH SD canonical computes independently derived Hillsdale tax and refund"
+  - line: "quarterly-estimates"
+    description: "Actual source-dated quarterly coverage"
+    formula: "SDWH600 plus100 on04-15/06-16/09-15/01-15 => line12=400,total1000; cumulative250/500/750/1000 >= current90%225/450/675/900, independently zero2210; later cash cannot cure missing earlier required coverage. Separate actualSDWH0 plus four250 receipts supplies250/500/750/1000 >=225/450/675/900"
+    testRef: "tests/engine/state/oh-sd-100-sources.test.ts::OH SD canonical uses four actual SD receipts on their actual quarter dates"
+  - line: "outgoing-election"
+    description: "Actual outgoing election versus computed cash refund"
+    formula: "Timely original election25 <= overpayment100;20=25,21=75; no received cash asserted"
+    testRef: "tests/engine/state/oh-sd-100-sources.test.ts::OH SD canonical applies an explicit outgoing election without inventing received cash"
+  - line: "prior-history"
+    description: "Actual prior return, no-return and credit availability"
+    formula: "No-return never becomes prior zero-tax safe harbor; actual prior timely line8 and current available elected credit reconcile, once in first installment"
+    testRef: "tests/engine/state/oh-sd-100-sources.test.ts::OH SD helper preserves actual no-return versus a filed zero-tax return"
+  - line: "local-rows"
+    description: "Validated actual W2 local rows, municipal separation"
+    formula: "Each current indexed W2 owner/year/original and all printed local rows replay once; municipal R0302 amount50 contributes0 to SD/ITWH; unused legacy scalars cannot replace originals"
+    testRef: "tests/engine/state/oh-sd-100-sources.test.ts::OH SD canonical separates municipal cash in either actual local row order %s"
+  - line: "finite-cohort"
+    description: "Unknown and unsupported current source methods"
+    formula: "Current2025 single full-year W2-only actual classification; unknown source/year/owner/address/lookup/calendar/box14/all-source facts reject without zero inference"
+    testRef: "tests/engine/state/oh-sd-100-sources.test.ts::OH SD helper rejects unknown or contradictory actual source %s"
+  - line: "cash-identity"
+    description: "Semantic cash identities and distinct tax accounts"
+    formula: "Reject renamed/case/whitespace duplicated receipt identity within current/prior account or shared IT/SD cash; exact account totals and applied originals required"
+    testRef: "tests/engine/state/oh-sd-100-sources.test.ts::OH SD helper rejects duplicate or contradictory cash original %s"
+  - line: "source-integrity"
+    description: "Current originals, fresh result and private audit"
+    formula: "All current private originals affect commitment; stale result/originals rejected; no read-refresh/mutation; audit only digest/year/method, no raw source identity/reference"
+    testRef: "tests/engine/state/oh-sd-100-sources.test.ts::OH SD helper binds changed private originals without leaking them into audit"
+  - line: "overlay"
+    description: "No caller-generated district amounts/rates/factors"
+    formula: "Canonical SD packet forbids schoolDistricts and all sd payment/prior/penalty/rate/factor overlays; old no-SD callers preserved"
+    testRef: "tests/engine/state/oh-sd-100-sources.test.ts::OH SD canonical rejects unbound district overlays %s"
+  - line: "known-zero"
+    description: "Known actual zero and no local rows"
+    formula: "ActualSDWH0 or explicit complete no-local-row original is distinguished from unknown amount; four actual timely250 receipts => estimated1000/tax1000/refund0; no fake zero from omitted source"
+    testRef: "tests/engine/state/oh-sd-100-sources.test.ts::OH SD canonical distinguishes actual zero from explicitly absent local rows %s"
+  - line: "multiple-originals"
+    description: "Actual complete distinct W2 originals"
+    formula: "Two genuinely distinct40000 originals aggregate80000wages,3000OHWH and1100SDWH exactly once; duplicate economic original cannot substitute for second source"
+    testRef: "tests/engine/state/oh-sd-100-sources.test.ts::OH SD canonical aggregates separately identified actual W2 originals once"
+  - line: "prior-election-reconciliation"
+    description: "Filed prior overpayment is not guessed"
+    formula: "Actual prior elected20 <= actual prior19; current available credit <= actual election; original prior owner/year/twelve-month dates agree; current applied credit reconciles agency account"
+    testRef: "tests/engine/state/oh-sd-100-sources.test.ts::OH SD helper rejects duplicate or contradictory cash original %s"
+  - line: "retained-nonwage-originals"
+    description: "Reject unsupported retained families before ordinary-W2 derivation"
+    formula: "Presence of form4797 or form6781, or any homeSales/form6252/form8814/form8824/savingsBondRedemptions record, requires its own current source method even when zero, net-zero, federally excluded or below a federal election threshold. Schema admission and unchanged federal AGI never establish W2-only qualification. Reject before fresh federal recomputation or downstream age/election rules, retaining all originals/snapshots."
+    testRef: "tests/engine/state/oh-sd-100-sources.test.ts::OH SD helper rejects retained source family before downstream derivation %s"

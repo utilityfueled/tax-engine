@@ -1,0 +1,127 @@
+form: "Ohio source-bound212-day ordinary business return header"
+fullName: "Distinct2025 sole Ohio majority-year location and current ordinaryC physical review variant"
+taxYear: 2025
+reference: "https://dam.assets.ohio.gov/image/upload/v1767095693/tax.ohio.gov/forms/ohio_individual/individual/2025/it1040-booklet.pdf"
+notes: |
+  Source-first control package only; products remain immutable322f0221 before
+  genuine RED. Separate fictional212-day OH/153-day VA originals, not changed
+  old181-day snapshots. Booklet printed15 county/district majority-year rule is
+  satisfied directly by one Franklin/Columbus2503 Ohio residence Jan1–Jul31.
+  Printed16 PY field expressly asks state other than Ohio; sole other state VA
+  occupies all153 outside days. VA is not asserted majority of all365 days.
+  This is not a general multi-jurisdiction selector or an interpretation of the
+  old181-day county ambiguity. Old PY4 official9pages stays unchanged/no header.
+  New separately authored cash invoice Dec15 and complete personal deduction
+  accrual Dec31 both lie in actual VA period Aug1–Dec31. No212/365 proration,
+  inferred date, copied W2, invented original or read-time snapshot recapture.
+  Annual actual property10000/20000 and purchaser-benefit sales.25, payroll0/0,
+  statutory reweights.25/0/.75 produce.3125 independent of owner calendar.
+  Existing source-qualified tax math is untouched.100k/400k are independent
+  evidence cases, not an amount allowlist or all-admitted financial qualification.
+  Use current real confirm business→residency→payment→header APIs. Every capture
+  comes from explicit action before read. Header-only namespace is not federal
+  income: exclude only it from canonical-business federal snapshot comparison,
+  retaining actual header/source commitment and separate header validation.
+  No real federal fields may be dropped; no generic omit or source rebinding.
+  Model/native helpers/collector/bridge/flow remain unchanged unless a separately
+  reviewed actual source-contract failure proves an additional required change.
+  Review-only actual IT1040/NRC/BUS/ADJ/Credits5files11pages; no filing/final2026
+  readiness promotion. New physical method needs current complete header and
+  all existing zero-tax/payment/unsupported-family/masking-provenance guards.
+  Actual Finder/county evidence in synthetic tests is FICTIONAL stipulated
+  documentary fact, not a live lookup. Booklet exact2503 row is independent
+  official inventory, not geography verification. Existing ordinaryW2 resident
+  header365days and resident-credit677 remain separately unchanged.
+lines:
+  - line: "independent-current-baseline"
+    description: "New actual sources first, before header admission"
+    formula: "2025singleprimary C100000→SE14129/half7065/AGI92935/BID92935/OHAGI0/tax0/NRC0; C400000→SE32549/half16275/AGI383725/BID250000/OHAGI133725/exemption1900/taxable131825/tax3955/NRC3955/after0. Fresh no-header canonical source replay first."
+    testRef: "tests/engine/state/oh-business-part-year-header.test.ts::July business independent no-header current source preconditions"
+  - line: "new-calendar-originals"
+    description: "Distinct dated documentary family"
+    formula: "Jan1–Jul31 OH212days plus Aug1–Dec31 VA153days covers365; actual Dec15 invoice and Dec31 halfSE source uniquely VA; source rows separately authored/currentC captured only by explicit confirmation."
+    testRef: "tests/engine/state/oh-business-part-year-header.test.ts::July business separately authored originals retain actual212-day dates and identities"
+  - line: "header-is-not-federal"
+    description: "Source namespace consistency"
+    formula: "Adding independently current actual header retains canonical business source money; header stays in complete source commitment and is validated separately. Only header excluded from federal-original comparison, never current C or actual owner/source facts."
+    testRef: "tests/engine/state/oh-business-part-year-header.test.ts::July business header namespace preserves current canonical money %s"
+  - line: "current-federal-guards"
+    description: "Same-money facts cannot be refreshed by state header"
+    formula: "Changed actual currentC identity, primary identity, dated invoice original or original halfSE document rejects existing source commitments; real fields cannot join header namespace omission. Input and captured originals immutable."
+    testRef: "tests/engine/state/oh-business-part-year-header.test.ts::July business keeps actual same-money source changes significant %s"
+  - line: "safe-factual-projection"
+    description: "Only current actual majority-year header"
+    formula: "Method oh-2025-py-business-header-212-v1 for supported actual212-day single-primary ordinaryC with source-complete header projects FRAN/2503/part_year_resident and212days; private commitment distinct from safe header/audit. All owner/year/Finder/county/official row/current dependencies replay before projection."
+    testRef: "tests/engine/state/oh-business-part-year-header.test.ts::July business existing header API projects separately sourced212-day jurisdiction %s"
+  - line: "header-source-guards"
+    description: "Retained inconsistency is not silent omission"
+    formula: "Reject wrong year/owner/identity, gapped/overlap/different parent calendar, unsupported coherent county/district, unknown/taxing district, invalid date/official row/hash/page, missing/stale federal/parent/payment and false confirmation. No mutation or capture during a read."
+    testRef: "tests/engine/state/oh-business-part-year-header.test.ts::July business factual header rejects retained source conflict %s"
+  - line: "native-unknown"
+    description: "Blank actual header starts unknown"
+    formula: "Add creates only empty/null entered sources; failed blank confirm cannot capture current business/federal/payment originals or invent2503/county."
+    testRef: "tests/apps/web/guided-ohio-business-part-year-header.test.tsx::July business native blank confirmation preserves actual unknowns"
+  - line: "native-current-confirm"
+    description: "Existing actual fields, explicit capture only"
+    formula: "Visible actual native fields reach source-complete212-day confirmation; one actual rendered panel, no packet textarea/provider transfer; confirm captures current complete business/residency/payment once, pure build/reopen retains exact originals."
+    testRef: "tests/apps/web/guided-ohio-business-part-year-header.test.tsx::July business native actual source entry confirms current212-day originals"
+  - line: "native-stale-reopen"
+    description: "Same-cell source edit cannot retain confirmation"
+    formula: "Actual same-jurisdiction Finder source-reference edit clears sourceFactsConfirmed while retaining old confirmed pair/snapshots; JSON save/reopen remains stale, explicit reconfirm updates only on action. No remount capture."
+    testRef: "tests/apps/web/guided-ohio-business-part-year-header.test.tsx::July business native same-cell edit remains stale through JSON reopen until reconfirmed"
+  - line: "native-reads"
+    description: "Read never replaces actual evidence"
+    formula: "Mounted existing panel emits no update when reading/remounting current confirmed input. Pending saved unknowns remain unchanged."
+    testRef: "tests/apps/web/guided-ohio-business-part-year-header.test.tsx::July business native remount never captures current originals"
+  - line: "native-dependencies"
+    description: "Complete current source parents required"
+    formula: "Missing business child, unconfirmed parent/payment, naked confirmation, changed paired source or changed currentC denies old header without changing retained originals."
+    testRef: "tests/apps/web/guided-ohio-business-part-year-header.test.tsx::July business native read rejects stale actual dependencies %s"
+  - line: "source-only-cell-map"
+    description: "Independent blank coordinates and literal financial/header expectations"
+    formula: "390 printed cells per case on pinned2025 blanks: new actual identity/address/header and NRC dates01 01 25/07 31 25; other monetary sources independently derived. PY-only NRC PartB10a/b through13a/b are known0;14a is actual federalhalfSE7065/16275,14b actual residenthalfSE0,15b0. NR-only blank PartB is not a PY source oracle. PY /2 and single /1 selected; resident/NR/nonresident-presumption alternatives Off; preserve correct AP zero ink and.25/0/.75 strikes."
+    testRef: "tests/pdf/oh-business-part-year-header.test.ts::July business literal physical matrix keeps780 source-derived cells and exact dates"
+  - line: "actual-public-output"
+    description: "Complete new finite review companions"
+    formula: "Existing public API consumes completeRAW optional context or redacted plus current original token; emits exact5official11pages with actual FRAN/2503/PY/VA and no source transfer. No full-year NR9999 substitution."
+    testRef: "tests/pdf/oh-business-part-year-header.test.ts::July business existing public review emits actual212-day companions %s"
+  - line: "actual-saved-cells"
+    description: "Saved bytes, not projection-only evidence"
+    formula: "Inspect all390 saved physical cells each case, every grouped status/weight strike and every page notice; strict allobjects/decodedstrings/streams/xref/privacy/actions/fields; no actualSSN/EIN/header address/private source captures or references leak. Immutable originals."
+    testRef: "tests/pdf/oh-business-part-year-header.test.ts::July business saved physical cells and private source boundaries %s"
+  - line: "bad-context-no-io"
+    description: "Fail closed before assets/output"
+    formula: "Malformed/stale header, forged/serialized context, stale federal result, samecashinvoice/privateoriginal mismatch reject before template lookup, output-directory creation or provider transfer; explicit validRAW optional context retained."
+    testRef: "tests/pdf/oh-business-part-year-header.test.ts::July business public source conflicts deny before output %s"
+  - line: "preserve-old-methods"
+    description: "Old financial/header packages unchanged"
+    formula: "Old181-day PY no-header emits4official9pages and noIT1040; NR5 remains; existing ordinaryW2 resident header365days/RC677 stays. New212 header absence cannot borrow unsupported header or enable filing/final2026."
+    testRef: "tests/pdf/oh-business-part-year-header.test.ts::July business old181-day no-header public companions remain unchanged"
+  - line: "no-unbound-header"
+    description: "Unqualified variants do not broaden physical method"
+    formula: "New212-day source without header remains no officialbusiness physical method; supplied old181-day header stays unqualified, preserving source records. Positive remainingtax1m/other source families still separate."
+    testRef: "tests/engine/state/oh-business-part-year-header.test.ts::July business old181-day header is not reinterpreted"
+  - line: "preserve-resident-w2"
+    description: "Unchanged original resident factual method and financial677"
+    formula: "Existing independently source-complete fullresident W2 method still365days/FRAN2503 and OHrefund677; new business calendar branch cannot reinterpret or replace it."
+    testRef: "tests/pdf/oh-business-part-year-header.test.ts::July business fullresident original header and refund677 stay unchanged"
+  - line: "no-header-new-family"
+    description: "Header requirement belongs only to new physical variant"
+    formula: "Complete actual212-day business originals without header stay valid financial sources but do not produce this finite official business physical packet; preserve actual facts and zero cash."
+    testRef: "tests/pdf/oh-business-part-year-header.test.ts::July business212-day source without header stays physically unsupported"
+  - line: "private-source-commitment"
+    description: "Equal printed header does not erase source identity"
+    formula: "Separately supplied valid Finder references with identical jurisdiction produce distinct private commitments, same safe header and immutable originals; stale confirmation remains denied."
+    testRef: "tests/engine/state/oh-business-part-year-header.test.ts::July business separately valid equal-cell originals retain distinct commitments"
+  - line: "private-original-source-precondition"
+    description: "Actual known private description authored before captures"
+    formula: "NEW212 raw descriptions CONSULTING 900-74-0421 and CONSULTING 900740421 each fit actual MaxLen35; supplied before currentC building and real business/residency/payment/header confirmations. Require current RAW source preparation, AGI92935/after-credit0, exact description and original immutability. Never stale-source rejection as rendering privacy proof."
+    testRef: "tests/pdf/oh-business-part-year-header.test.ts::July business212 private provenance RAW description source preconditions"
+  - line: "private-original-provenance"
+    description: "Missing recovered masking provenance cannot expose known SSN"
+    formula: "Each actual formatted/compact description with redacted-noToken or token-prepared-FROM-redacted accepts only exact current header-original/owner-identity pre-I/O denial, exact5 safe references without official output, or actual masked official plus references, requiring exactly CONSULTING [REDACTED] at the pinned NRC3bn appearance rectangle rather than arbitrary packet text. Strict every saved object/decoded stream/content/page: no known SSN/private capture, no fields/actions, one review notice, no provider and immutable originals/display. Record actual route, never call legitimate pre-I/O denial a rendered/masked NRC. Preserve completeRAW optional context and redacted+RAW-token positives."
+    testRef: "tests/pdf/oh-business-part-year-header.test.ts::July business212 private provenance remains private %s"
+  - line: "complete-blank-status-appearance"
+    description: "All additional actual unchecked state widgets"
+    formula: "Source-pinned33 blank AP widgets in retained IT1040/NRC pages complement unchanged8 grouped checks: spouse domicile, primary/spouse nonresident-presumption, amendment/NOL/deceased/dependent/extension/preparer and20 K1 statuses remain unselected. At each exact original rect require no painted On ink, including widgets with no explicit Off resource. Original8 selected/Off assertions and780 text/financial cells unchanged."
+    testRef: "tests/pdf/oh-business-part-year-header.test.ts::July business saved additional33 blank statuses remain unselected %s"

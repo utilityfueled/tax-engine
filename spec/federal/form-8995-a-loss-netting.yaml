@@ -1,0 +1,33 @@
+form: "Form 8995-A Schedule C Loss Netting"
+fullName: "Qualified current business amounts before prior-loss allocation"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i8995a"
+notes: |
+  Schedule A line11 feeds Schedule C column(a), so current SSTB qualification
+  precedes the loss pool. Prior qualified losses already retain origin character.
+  Schedule C column(c) floors each business at zero; a negative business is not
+  subtracted again from the final component. Wages/UBIA are zero when netQBI is0.
+  Deterministic largest remainders preserve whole-dollar printed allocation totals
+  with original-order ties; this is a software rounding choice, not an ownership
+  allocation method. The existing separate PTP method is outside this slice.
+lines:
+  - line: "A-before-C"
+    description: "Apply current SSTB percentage before netting actual prior qualified losses"
+    formula: "Qualified current amount=round(sourceQBI*current applicable SSTB percentage); prior qualified amount is never phased again"
+    irsRef: "Schedule A(Form8995-A)line11; Schedule C line2 includes released suspended qualified losses"
+    testRef: "tests/engine/forms/form-8995-a-loss-netting.test.ts::qualifies current SSTB income before applying a prior qualified loss"
+  - line: "C-1c"
+    description: "Offset current qualified losses once"
+    formula: "Qualified current losses plus prior loss offset positive qualified amounts proportionately; only nonnegative remaining amounts enter PartII"
+    irsRef: "Schedule C(Form8995-A)lines1-6; instructions column(c)"
+    testRef: "tests/engine/forms/form-8995-a-loss-netting.test.ts::nets current losses once and excludes unqualified SSTB loss from the pool"
+  - line: "C-carry"
+    description: "Retain qualified loss carry and zero unavailable wage/base amounts"
+    formula: "Carry=max0(total qualified losses-total qualified positive income); netzero businesses have zero adjusted W2 wages and UBIA"
+    irsRef: "Schedule C line6 and column(c) note; Form8995-A lines4/7"
+    testRef: "tests/engine/forms/form-8995-a-loss-netting.test.ts::preserves only the remaining qualified loss and zeros exhausted business limits"
+  - line: "C-rounding"
+    description: "Conserve the actual allowed loss across whole-dollar allocations"
+    formula: "Proportional exact allocations floor then assign remaining dollars by descending fractional remainder with original order ties; never exceed business qualified income"
+    irsRef: "Schedule C column(b) proportional allocation; implementation rounding conserves printed total"
+    testRef: "tests/engine/forms/form-8995-a-loss-netting.test.ts::conserves rounded loss allocation with stable ties and business limits"

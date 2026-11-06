@@ -6,9 +6,15 @@ import { access, mkdtemp, readFile, rm } from "fs/promises";
 import { tmpdir } from "os";
 import { join } from "path";
 import { describe, expect, it } from "vitest";
+import Decimal from "decimal.js";
+import { PDFDocument, PDFArray, PDFRawStream, decodePDFRawStream } from "pdf-lib";
+import { REVIEW_PDF_NOTICE } from "@/pdf/export-policy.js";
+import { calculateForm8815 } from "@/engine/forms/form-8815.js";
+import { SavingsBondRedemptionSchema, Form8815Schema } from "@/models/inputs.js";
 import { calculateFederalTax } from "@/engine/federal.js";
 import {
   buildForm8815ReferenceSummary,
+  fillForm8815Reference,
   FORM_8815_REFERENCE_FILENAME,
 } from "@/pdf/fill-form-8815.js";
 import { fillReturn } from "@/pdf/fill-return.js";
@@ -16,6 +22,21 @@ import { simpleW2Fixture } from "../fixtures/simple-w2.js";
 
 async function makeOutputDir() {
   return mkdtemp(join(tmpdir(), "tax-engine-8815-"));
+}
+
+function sourceResult(count = 1, taxYear = 2025) {
+  const redemptions = Array.from({length:count}, (_, index) => SavingsBondRedemptionSchema.parse({
+    sourceId: `bond-${index}`, proceeds:"10000", bondType:"paper_ee", issueDate:"2005-01-01",
+    redemptionDate:`${taxYear}-06-15`, ownerDateOfBirth:"1980-12-31", registeredOwner:"taxpayer",
+    ownershipConfirmed:true, faceValue:"16000", priorYearInterestReported:"500",
+  }));
+  const facts = Form8815Schema.parse({sourceFactsConfirmed:true, currentStatementReconciliationConfirmed:true, priorYearInterestIncludedInCurrentStatements:"0", educationExpenses:[{
+    sourceId:"college-A", beneficiaryName:"Synthetic Student", relationship:"dependent", dependentClaimed:true,
+    institutionName:"Synthetic College", institutionAddress:"1 College Road, Example, NY10001", expenseType:"tuition_and_required_fees",
+    paidTaxYear:taxYear, amountPaid:"10000", qualificationConfirmed:true, coordinationConfirmed:true,
+    directInstitutionBenefits:"0", educationCreditExpenses:"0", taxFreeDistributionExpenses:"0", beneficiaryBenefits:"2000",
+  }]});
+  return {redemptions, result:calculateForm8815(redemptions, new Decimal("50000"), "single", {taxYear, facts})};
 }
 
 describe("Form 8815 packet reference summary", () => {
@@ -37,102 +58,23 @@ describe("Form 8815 packet reference summary", () => {
     };
 
     const result = calculateFederalTax(savingsBondFixture);
+    if (!result.form8815) throw new Error("Expected Form 8815 result");
     const summary = buildForm8815ReferenceSummary(
       savingsBondFixture.savingsBondRedemptions,
-      result.form8815!,
+      result.form8815,
     );
 
     expect(summary.title).toBe("Form 8815 Savings Bond Interest Reference Summary");
     expect(summary.warningLabel).toBe("REFERENCE SUMMARY ONLY");
     expect(summary.redemptionCount).toBe(2);
-    expect(summary.redemptions).toEqual([
-      {
-        redemptionNumber: 1,
-        proceeds: "10000",
-        interest: "500",
-        qualifiedExpenses: "5000",
-      },
-      {
-        redemptionNumber: 2,
-        proceeds: "5000",
-        interest: "250",
-        qualifiedExpenses: "2500",
-      },
+    expect(summary.introduction).toContain("unverified historical");
+    expect(summary.redemptions.map(row => ({proceeds: row.proceeds, interest: row.interest}))).toEqual([
+      {proceeds: "10000", interest: "500"}, {proceeds: "5000", interest: "250"},
     ]);
-    expect(summary.lines).toEqual([
-      {
-        line: "2",
-        description: "Qualified higher education expenses",
-        value: "7500",
-        formula: "Tuition + fees, reduced by scholarships",
-      },
-      {
-        line: "3",
-        description: "Total bond proceeds",
-        value: "15000",
-        formula: "Principal + interest from redeemed bonds",
-      },
-      {
-        line: "4",
-        description: "Interest included in proceeds",
-        value: "750",
-        formula: "Interest earned on redeemed bonds",
-      },
-      {
-        line: "5",
-        description: "Expenses-to-proceeds ratio",
-        value: "0.5",
-        formula: "min(1, 7500 / 15000)",
-      },
-      {
-        line: "6",
-        description: "Excludable interest before phase-out",
-        value: "375",
-        formula: "750 x 0.5",
-      },
-      {
-        line: "7",
-        description: "Modified AGI",
-        value: "85000",
-        formula: "AGI for phase-out purposes",
-      },
-      {
-        line: "8",
-        description: "Phase-out threshold",
-        value: "99500",
-        formula: "single threshold",
-      },
-      {
-        line: "9",
-        description: "Excess over threshold",
-        value: "0",
-        formula: "max(0, 85000 - 99500)",
-      },
-      {
-        line: "10",
-        description: "Phase-out range",
-        value: "15000",
-        formula: "single phase-out range",
-      },
-      {
-        line: "11",
-        description: "Phase-out ratio",
-        value: "0",
-        formula: "min(1, 0 / 15000)",
-      },
-      {
-        line: "12",
-        description: "Phase-out reduction",
-        value: "0",
-        formula: "375 x 0",
-      },
-      {
-        line: "13",
-        description: "Excludable savings bond interest",
-        value: "375",
-        formula: "375 - 0 -> Schedule B Line 3",
-      },
-    ]);
+    expect(summary.lines.map(line => line.line)).toEqual(Array.from({length:13}, (_, index) => String(index+2)));
+    expect(Object.fromEntries(summary.lines.map(line => [line.line, line.value]))).toEqual({
+      "2":"7500", "3":"0", "4":"7500", "5":"15000", "6":"750", "7":"0.5", "8":"375", "9":"85000", "10":"99500", "11":"0", "12":"0", "13":"0", "14":"375",
+    });
     expect(summary.totals).toEqual([
       {
         label: "Schedule B Line 3 exclusion",
@@ -165,8 +107,9 @@ describe("Form 8815 packet reference summary", () => {
       const referencePath = filledForms.find((path) => path.endsWith(FORM_8815_REFERENCE_FILENAME));
 
       expect(referencePath).toBeDefined();
-      await access(referencePath!);
-      const pdfBytes = await readFile(referencePath!);
+      if (!referencePath) throw new Error("Expected Form 8815 reference path");
+      await access(referencePath);
+      const pdfBytes = await readFile(referencePath);
       expect(pdfBytes.length).toBeGreaterThan(0);
     } finally {
       await rm(outputDir, { recursive: true, force: true });
@@ -201,4 +144,47 @@ describe("Form 8815 packet reference summary", () => {
       await rm(outputDir, { recursive: true, force: true });
     }
   });
+  it("Form8815 reference rejects mismatched years incomplete audits and inconsistent totals", () => {
+    const {redemptions, result} = sourceResult();
+    const summary = () => buildForm8815ReferenceSummary(redemptions, result);
+    expect(summary().lines.find(line => line.line === "14")?.value).toBe("1200");
+    const year2026 = sourceResult(1, 2026);
+    expect(() => buildForm8815ReferenceSummary(year2026.redemptions, year2026.result)).toThrow(/year|2026|mapping/i);
+    const finalLine = result.lines.find(line => line.line === "14");
+    if (!finalLine) throw new Error("Expected final exclusion audit");
+    const invalid = [
+      result.lines.filter(line => line.line !== "14"),
+      result.lines.map(line => line.line === "14" ? {...line, form:"Other Form"} : line),
+      [...result.lines, finalLine],
+      result.lines.map(line => line.line === "4" ? {...line, value:new Decimal(NaN)} : line),
+      result.lines.filter(line => line.line !== "6-worksheet-7"),
+    ];
+    for (const lines of invalid) expect(() => buildForm8815ReferenceSummary(redemptions, {...result, lines})).toThrow(/audit|line|finite|missing|duplicate/i);
+    expect(() => buildForm8815ReferenceSummary(redemptions, {...result, totalProceeds:new Decimal("1")})).toThrow(/reconcile|inconsistent/i);
+    expect(() => buildForm8815ReferenceSummary([], result)).toThrow(/source|redemption/i);
+  });
+
+  it("Form8815 source summary preserves worksheet amounts and every-page review warnings", async () => {
+    const outputDir = await makeOutputDir();
+    try {
+      const {redemptions, result} = sourceResult(12);
+      const summary = buildForm8815ReferenceSummary(redemptions, result);
+      expect(summary.introduction).toContain("actual source");
+      expect(summary.redemptions[0]).toMatchObject({proceeds:"10000", interest:"1500", principal:"8000"});
+      expect(summary.lines.find(line => line.line === "6-worksheet-7")?.value).toBe("6000");
+      expect(summary.lines.find(line => line.line === "2")?.value).toBe("10000");
+      expect(summary.lines.find(line => line.line === "4")?.value).toBe("8000");
+      const path = await fillForm8815Reference(redemptions, result, outputDir);
+      const pdf = await PDFDocument.load(await readFile(path));
+      expect(pdf.getPageCount()).toBeGreaterThan(1);
+      const noticeHex = Buffer.from(REVIEW_PDF_NOTICE).toString("hex").toUpperCase();
+      for (const page of pdf.getPages()) {
+        const contents = page.node.Contents();
+        const streams = contents instanceof PDFArray ? contents.asArray() : [contents];
+        const content = streams.map(value => pdf.context.lookup(value)).filter((value):value is PDFRawStream => value instanceof PDFRawStream).map(stream => Buffer.from(decodePDFRawStream(stream).decode()).toString()).join(" ");
+        expect(content).toContain(noticeHex);
+      }
+    } finally { await rm(outputDir, {recursive:true, force:true}); }
+  });
+
 });

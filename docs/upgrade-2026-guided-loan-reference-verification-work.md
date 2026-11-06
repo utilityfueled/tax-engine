@@ -1,0 +1,9 @@
+# Strict guided loan-reference verification
+
+The earlier full 7bcc unit and coverage runs each finished with26,452 passing tests and one failing strict expected object, across1,911 files. The expected mortgage source omitted its actual supplied loan account reference. Both failures are retained; all 53 real local PostgreSQL cases pass, with zero reported skips. The 5,293-member source freeze stayed exact. Failed coverage emitted no fresh raw report, so this evidence supplies no current coverage percentage or passing global gate.
+
+The correction retains exact equality for all eleven earlier fields and adds the actual twelfth field. A new case verifies that a same-amount loan-reference edit changes both canonical identity fields, rejects blank/whitespace references, and preserves the original input. The spec entry precedes the test correction. Product calculations, collected facts, privacy/readiness gates, coverage thresholds and deadlines are unchanged.
+
+Distinct source review passes (relationship to the earlier native collector disclosed). Actual main `pnpm test` passes 62 tests in 3 files; `pnpm spec:validate` passes 8,437 lines without missing/broken references; `pnpm spec:inventory:check` passes without inventory regeneration; scoped ESLint passes. Full current-source unit/coverage, full browser, hosted/native, qualified human and final 2026 form qualification remain required.
+
+Private evidence: `nov05-guided-loan-reference-expectation-root`, manifest `ec7ed7ed32c42429787618214f3c654795906fcf45711a31f9796b94637aaab1`. Distinct source review: `nov05-guided-loan-reference-expectation-independent`, manifest `fac48f882b261ff0fc2d087a58b8a348f157b559caf29672b27527c9584914c6`. Original failed global run: `nov05-current-pmi-global-integration`, manifest `459a25934d53dcefe2489142b838514d3c74039ad5f3650ef8484e423810c513`. No paid provider or deployment calls were made by these test runners.

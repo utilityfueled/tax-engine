@@ -1,0 +1,38 @@
+form: "Ohio School District Native Browser"
+fullName: "Actual2025 finite Hillsdale source origination through production browser"
+taxYear: 2025
+reference: "https://dam.assets.ohio.gov/image/upload/v1767095693/tax.ohio.gov/forms/ohio_individual/individual/2025/it1040-booklet.pdf"
+notes: |
+  Source-first browser successor on exact0a5c06bd. Reviewed singleunder65 full365
+  resident ordinaryW2 Hillsdale0302 earnedincome cohort only. Official2025 booklet
+  refreshed November3: printed51 rate.0125 E; printed47 schoolBox19 separatefrom
+  IT1040; printed56-58 independent domicile/Finder, earnedincome and SD11/12.
+  No new model/core/rate/PDF/product. Schoolroot absent initially. All unrelated
+  actual originals explicitly fictional complete testrecords from reviewedfixture.
+  Initial StateReturn route may use completed prior unrelated sections, but not
+  a completed SD sourcepacket or injected confirmedschoolroot. Every SD fact is
+  entered through visible controls; only explicit finalconfirmation bindssources.
+  Browserplugin unavailable; normal production-managed Playwright workflow.
+  Desktop1280x900/mobile390x844, normal timeout/retries unchanged. No current
+  actual agencylookup, filing, livecashrefund, public2026 or humanqualification.
+lines:
+  - line: "native-school-origination"
+    description: "Absent school packet stays unknown until complete visible review"
+    formula: "No ohioSchoolDistrict in initial savedStateReturn; Add starts blankyear/owner/district/money/status and no snapshot. Enter independently supplied actualowner/residence/Finder/income/W2rowclassification/completeSDaccount/prior/timing/election fields visibly, never JSON. Blank confirmation keeps schoolreview absent; complete explicitconfirmation yields raworiginalboundpacket."
+    testRef: "apps/web/tests/oh-school-district-native.spec.ts::originates actual school sources and preserves separate cash through reconfirmation and reopen"
+  - line: "literal-results"
+    description: "Do not mix separate school and Ohio income tax cash"
+    formula: "80000*.0125=1000 schooltax; SDWH1100 plus actualestimates0/priorcredit0 =>payments1100, overpayment100, actualoutgoingcarry0 gives calculatedrefund100/owed0. IT1040payments3000 stays separate, never4100. Calculatedrefund is not receivedcash."
+    testRef: "apps/web/tests/oh-school-district-native.spec.ts::originates actual school sources and preserves separate cash through reconfirmation and reopen"
+  - line: "same-cash-source-identity"
+    description: "Actual account source identity edit requires explicit re-review"
+    formula: "Edit actual schoolagencyaccount reference while sameowner/year/WH1100/accountestimates0/prior0/election0 retained. Confirmationheader clears, oldfederaloriginalsnapshot remains, schoolresult becomes unavailable while federal80000 stays. No read refresh; explicitreconfirmation after reconciliation restores unchanged1000/1100/100."
+    testRef: "apps/web/tests/oh-school-district-native.spec.ts::originates actual school sources and preserves separate cash through reconfirmation and reopen"
+  - line: "saved-unknown-and-zero"
+    description: "Saved pending sources retain unknown distinctly from explicit zero"
+    formula: "Clear actualoutgoingelection only; schoolresult unavailable; reopen retains emptyunknown, accountactualestimated0/prior0 and alltypedrecords unchanged. No sourceconfirmation on read. Explicitly reenter independently supplied actual0 then confirm restores100. Reopen confirmedpacket exact, originalW2/local/ITrecords immutable."
+    testRef: "apps/web/tests/oh-school-district-native.spec.ts::originates actual school sources and preserves separate cash through reconfirmation and reopen"
+  - line: "public-privacy-and-gates"
+    description: "Safe separate publicreview and honest physical/source boundaries"
+    formula: "No rawschoolowner/address/SSN/reference/snapshot in publicSDreview; privatecontrols remain local and password SSNs. Requests URL/body exclude actualprivatepacket/original/recordsecrets. No textarea, erroroverlay, consoleerror, horizontaloverflow or automaticFinderrequest. Current finite physical/unavailable filingdisclosure remains, no download/filing promotion; PDFphysical successor separate. Screenshot unknown/confirmed/pending/reopened in bothviewports."
+    testRef: "apps/web/tests/oh-school-district-native.spec.ts::originates actual school sources and preserves separate cash through reconfirmation and reopen"

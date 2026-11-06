@@ -1022,12 +1022,12 @@ describe("Form 1116 - simplified election threshold boundary", () => {
     expect(isSimplifiedEligible(fixture, "married_filing_jointly")).toBe(false);
   });
 
-  it("QSS: $600 threshold (same as MFJ)", () => {
+  it("QSS uses the exact $300 threshold and only MFJ uses $600", () => {
     const fixture: TaxYearInput = {
       ...simpleW2Fixture,
       form1099Div: [makeForeignDiv({
         ordinaryDividends: "20000",
-        foreignTaxPaid: "600",
+        foreignTaxPaid: "300",
       })],
     };
     expect(isSimplifiedEligible(fixture, "qualifying_surviving_spouse")).toBe(true);
@@ -1035,10 +1035,12 @@ describe("Form 1116 - simplified election threshold boundary", () => {
       ...fixture,
       form1099Div: [makeForeignDiv({
         ordinaryDividends: "20000",
-        foreignTaxPaid: "601",
+        foreignTaxPaid: "300.01",
       })],
     };
     expect(isSimplifiedEligible(over, "qualifying_surviving_spouse")).toBe(false);
+    expect(isSimplifiedEligible({ ...fixture, form1099Div: [makeForeignDiv({ foreignTaxPaid: "600" })] }, "married_filing_jointly")).toBe(true);
+    expect(isSimplifiedEligible({ ...fixture, form1099Div: [makeForeignDiv({ foreignTaxPaid: "600.01" })] }, "married_filing_jointly")).toBe(false);
   });
 
   it("HoH: $300 threshold (same as single)", () => {

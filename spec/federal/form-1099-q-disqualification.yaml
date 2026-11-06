@@ -1,0 +1,58 @@
+form: "Form1099-Q whole-account disqualification"
+fullName: "Bounded Coverdell January1 deemed-distribution calculation"
+taxYear: 2026
+irsReference: "https://www.irs.gov/instructions/i1099q"
+sources:
+  - "https://uscode.house.gov/us/usc/119-124/t26/s530/"
+  - "https://www.govinfo.gov/content/pkg/USCODE-2024-title26/html/USCODE-2024-title26-subtitleA-chap1-subchapD-partI-subpartA-sec408.htm"
+  - "https://www.govinfo.gov/content/pkg/USCODE-2024-title26/html/USCODE-2024-title26-subtitleA-chap1-subchapB-partII-sec72.htm"
+  - "https://www.ecfr.gov/current/title-26/chapter-I/subchapter-A/part-1/section-1.408-4"
+  - "https://www.irs.gov/publications/p590a"
+notes: |
+  Spec-first bounded method, refreshed2026-10-25 and independently reviewed
+  by the parent agent against the listed official sources. Section530(e)
+  applies rules similar to408(e)(2). Reg1.408-4(d)(1) fixes the whole-account
+  deemed-distribution date and value at January1. Sections530(d)(1) and72
+  retain actual investment recovery; Publication590-A corroborates the analogous
+  full-account gain over basis. This branch does not decide whether530(d)(2)
+  can shelter a disqualification distribution: it requires an explicit actual
+  zero total qualified-education-expense amount, including QTP contributions
+  under530(b)(2)(B), and no conflicting beneficiary education, QTP or credit
+  ledger facts. An empty allocation list alone is insufficient.
+  Actual verified absence of
+  later income/gain/loss activity is required, not inferred from missing forms.
+  Positive later activity, pledges, basis losses and expense-allocation cases
+  remain separately blocked. No filing or human qualification is conferred.
+lines:
+  - line: "source-boundary"
+    description: "Require actual account termination and later-activity facts"
+    formula: "Known whole-account code6 event; actual January1 value and basis; Box1 equality; actual Decimal total beneficiary qualified expenses including QTP contributions equals zero; actual no-post-January1 income/gain/loss confirmation and source reference. No other source for the terminated account, no conflicting beneficiary expense/QTP/credit ledger facts, and no claimed penalty exception."
+    testRef: "tests/engine/forms/form-1099-q-disqualification.test.ts::rejects missing or conflicting disqualification boundaries"
+  - line: "basis-recovery"
+    description: "Recover actual January1 basis without the ordinary year-end worksheet"
+    formula: "For nonnegative basis no greater than actual January1 value, exact distributed earnings=value-basis; recovered basis=actual basis; taxable earnings=roundDollar(exact distributed earnings); no education exclusion or rollover."
+    testRef: "tests/engine/forms/form-1099-q-disqualification.test.ts::calculates the source-bounded whole-account deemed distribution"
+  - line: "recipient-tax"
+    description: "Retain actual recipient ownership and additional tax"
+    formula: "Report only current-return recipients through existing Form1099Q taxableEarnings and actual owner Form5329 PartsII5–8; no exception is inferred; other-recipient income remains outside this return."
+    testRef: "tests/engine/forms/form-1099-q-disqualification.test.ts::retains actual recipient ownership and exact taxable rounding"
+  - line: "unresolved-methods"
+    description: "Keep unsupported legal or later-income methods explicit"
+    formula: "Pledged portions, positive or unknown subsequent income, duplicated account events, basis exceeding value, education/credit allocations and additional-tax exceptions reject until their own source-backed method is implemented. No manual taxable override or approval flag."
+    testRef: "tests/engine/forms/form-1099-q-disqualification.test.ts::keeps unresolved disqualification and pledged-account methods blocked"
+  - line: "return-routing"
+    description: "Route bounded deemed earnings and owner tax once"
+    formula: "Pass actual source-year facts through federal calculation; own-recipient taxable earnings enter Schedule1line8z once and actual owner additional tax enters Form5329PartII once. Other-recipient income and tax do not enter this return."
+    testRef: "tests/engine/federal-education-distribution.test.ts::routes bounded whole-account disqualification once for actual recipients"
+  - line: "actual-intake"
+    description: "Collect the bounded method's actual source facts"
+    formula: "Require a typed actual total including QTP contributions, explicit no-subsequent-income/gain/loss confirmation and source reference; blanks stay unknown. Actual record edits invalidate statement and ledger confirmation."
+    testRef: "tests/apps/web/education-disqualification-interactions.test.tsx::collects actual zero expense and later-activity facts before calculating"
+  - line: "credit-identity"
+    description: "Do not treat missing credit-student identity as a different beneficiary"
+    formula: "Any positive AOC/LLC expense conflicts with the zero-expense boundary when either actual beneficiary or student identifier is missing/invalid, or when they match. Positive expenses for a known different student remain separate."
+    testRef: "tests/engine/forms/form-1099-q-disqualification.test.ts::rejects unresolved credit-student identities without blocking known other beneficiaries"
+  - line: "reference-summary"
+    description: "Render the actual January1 calculation and source boundary"
+    formula: "Reference PDF requires the specific disqualification audit and matching source fields; retain exact earnings/basis cents, use the audited whole-dollar taxable amount, and reject missing audit, changed method or conflicting expense/activity facts. It remains a visibly marked review reference."
+    testRef: "tests/pdf/form-1099-q-disqualification-summary.test.ts::requires actual disqualification facts and audit in the reference summary"

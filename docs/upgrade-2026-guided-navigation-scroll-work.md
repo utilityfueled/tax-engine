@@ -1,0 +1,11 @@
+# Stable interview navigation
+
+Actual setup-step and interview-section changes now reach their existing top-zero destination immediately, keeping the newly selected controls stable. Exactly two effects change smooth scroll to instant scroll; their selection guards, setup deferred preventScroll focus, CSS transitions, progress-strip scrolling, validation, facts and original browser assertions remain intact.
+
+Saved c2c traces record repeated actionability waits while controls move. This is wait-class evidence, not proof that the effects caused every delay or a predicted time saving. Four genuine actual-component failures preceded the correction; four new and five adjacent cases pass. Separate review adds two controls for StrictMode, keyboard navigation, blocked/ignored actions, focus, resumed sections and same-index rendering:11 total pass.
+
+Main passes9 focused and892 metadata tests, all three type checks,8,463 spec lines, inventory901 (68 supported unchanged), both builds and lint. The exact two-source hash successor preserves all1,791 audited sources,148 contracts/580 declared cases and every nonhash field.
+
+Actual original `complete-local-lifecycle.spec.ts` passes both desktop1280 and mobile390 cases at30000ms, retry0/no skip, with all upload, confirmation, calculation, physical-PDF, reopening, encrypted backup, deletion, wrong-password, restoration, final deletion, privacy and keyboard assertions unchanged. Durations are10,317ms and9,239ms on this local run. The configured worker limit stays two; the single file uses one active worker. Source pins, one natural window and cleanup pass. This is local production-server evidence, not a comparative benchmark or container/remote result. Original CI failures remain retained.
+
+Frozen evidence: author29 `ae356041d65cda8d038e365ad28bf1936bafee01f5213028464b5ca8609954ab`; separate diagnosis12 `787522f670e417528ab2464b964251e2aae569174f4cafcf4d581447551bb367`; distinct16 `38a50f4e1a46f1575979b6b11fc4fe30c00dbf344282065b60cfb0425d8e3f3f`; main31 `36caa15f381181e8df3751fa18253850453112a0a0808db96ca3dde1b89b8e69`; actual runtime44 `b3dd4e6c5136a757bfbf801cb925945cfde2a34e0604311ceda0879d6224c506`. Human/security/tax/final2026 and current hosted/native/container qualification remain separate gates.

@@ -105,20 +105,15 @@ describe("Capital gains tax - stacking method", () => {
     expect(result.tax.lessThan(allOrdinary)).toBe(true);
   });
 
-  it("QDCG worksheet - §1250 within 15% bracket gets 15% rate (not 25%)", () => {
-    // $150K taxable, $20K LTCG of which $10K is §1250 (depreciation recapture)
-    // Per IRS Schedule D Tax Worksheet: ALL gains stack for 0%/15% first.
-    // 25% is a MAXIMUM rate — gains within 15% bracket get 15%.
-    // Ordinary portion = $130K. Stack $20K on $130K.
-    // $130K < $533,400 (15% threshold) → room = $403K → all $20K at 15%
-    // preferentialTax = $20K × 15% = $3,000
+  it("Schedule D worksheet - section1250 uses ordinary24percent before its cap", () => {
+    // Official21=140000; tax44=26447. Regular10000 gain at15%=1500.
     const result = calculateCapitalGainsTax(d(150000), d(0), d(20000), "single", constants, {
       section1250Gain: d(10000),
     });
     const withoutSection1250 = calculateCapitalGainsTax(d(150000), d(0), d(20000), "single", constants);
-    // Same tax: §1250 within 15% bracket gets 15%, same as regular LTCG
-    expect(result.preferentialTax.toNumber()).toBe(3000);
-    expect(result.preferentialTax.toNumber()).toBe(withoutSection1250.preferentialTax.toNumber());
+    expect(result.preferentialTax.toNumber()).toBe(1500);
+    expect(result.tax.toNumber()).toBe(27947);
+    expect(result.tax.minus(withoutSection1250.tax).toNumber()).toBe(900);
   });
 
   it("QDCG worksheet - §1250 above 15% threshold gets 25% rate", () => {
@@ -133,14 +128,13 @@ describe("Capital gains tax - stacking method", () => {
     expect(result.preferentialTax.toNumber()).toBe(19830);
   });
 
-  it("QDCG worksheet - collectibles within 15% bracket gets 15% rate (not 28%)", () => {
-    // $150K taxable, $15K LTCG of which $5K is collectibles
-    // All gains in 15% bracket → collectibles get 15%, not 28%
-    // preferentialTax = $15K × 15% = $2,250
+  it("Schedule D worksheet - collectibles uses ordinary24percent before its cap", () => {
+    // Official21=140000,44=26447; only regular10000 gain gets15percent.
     const result = calculateCapitalGainsTax(d(150000), d(0), d(15000), "single", constants, {
       collectiblesGain: d(5000),
     });
-    expect(result.preferentialTax.toNumber()).toBe(2250);
+    expect(result.preferentialTax.toNumber()).toBe(1500);
+    expect(result.tax.toNumber()).toBe(27947);
   });
 
   it("QDCG worksheet - collectibles above 15% threshold gets 28% rate", () => {
@@ -154,26 +148,24 @@ describe("Capital gains tax - stacking method", () => {
     expect(result.preferentialTax.toNumber()).toBe(19930);
   });
 
-  it("QDCG worksheet - combined §1250 + collectibles within 15% bracket", () => {
-    // $200K taxable, $30K LTCG: $8K §1250, $5K collectibles, $17K regular
-    // All gains in 15% bracket → all at 15%
-    // preferentialTax = $30K × 15% = $4,500
+  it("Schedule D worksheet - combined special gains below24percent ceiling", () => {
+    // Official21=183000,44=36767; regular17000*15%=2550.
     const result = calculateCapitalGainsTax(d(200000), d(0), d(30000), "single", constants, {
       section1250Gain: d(8000),
       collectiblesGain: d(5000),
     });
-    expect(result.preferentialTax.toNumber()).toBe(4500);
+    expect(result.preferentialTax.toNumber()).toBe(2550);
+    expect(result.tax.toNumber()).toBe(39317);
   });
 
-  it("QDCG worksheet - special gains capped at remaining above 15% threshold", () => {
-    // $200K taxable, $5K LTCG, §1250 $10K, collectibles $3K (exceed LTCG)
-    // All gains in 15% bracket → all at 15%
-    // preferentialTax = $5K × 15% = $750
+  it("Schedule D worksheet - special gains respect net gain and24percent ceiling", () => {
+    // Netgain5000;21=197300,44=40199;39=2700 taxed25%=675.
     const result = calculateCapitalGainsTax(d(200000), d(0), d(5000), "single", constants, {
       section1250Gain: d(10000),
       collectiblesGain: d(3000),
     });
-    expect(result.preferentialTax.toNumber()).toBe(750);
+    expect(result.preferentialTax.toNumber()).toBe(675);
+    expect(result.tax.toNumber()).toBe(40874);
   });
 
   it("QDCG worksheet - zero ordinary income, all LTCG in 0% bracket", () => {
@@ -211,26 +203,21 @@ describe("Capital gains tax - stacking method", () => {
     expect(result.preferentialTax.toNumber()).toBe(0);
   });
 
-  it("QDCG worksheet - §1250 in 0% bracket produces zero preferential tax", () => {
-    // Single, $30K taxable, $10K LTCG all from §1250
-    // Per IRS: stack $10K on $20K ordinary → room at 0% = $28,350 → all at 0%
-    // ordinaryTax($20K) = $2,162, preferentialTax = $0
-    // Total = $2,162 (QDCG method is better than all-ordinary $3,362)
+  it("Schedule D worksheet - low-income section1250 remains ordinary-rate income", () => {
+    // Official21=30000; published single30000-30050 row3365.
     const result = calculateCapitalGainsTax(d(30000), d(0), d(10000), "single", constants, {
       section1250Gain: d(10000),
     });
-    expect(result.tax.toNumber()).toBe(2162);
+    expect(result.tax.toNumber()).toBe(3365);
     expect(result.preferentialTax.toNumber()).toBe(0);
   });
 
-  it("QDCG worksheet - collectibles in 0% bracket produces zero preferential tax", () => {
-    // Single, $30K taxable, $10K LTCG all from collectibles
-    // Per IRS: stack $10K on $20K → all at 0%
-    // ordinaryTax($20K) = $2,162, preferentialTax = $0 → total = $2,162
+  it("Schedule D worksheet - low-income collectibles remains ordinary-rate income", () => {
+    // Official21=30000; published single30000-30050 row3365.
     const result = calculateCapitalGainsTax(d(30000), d(0), d(10000), "single", constants, {
       collectiblesGain: d(10000),
     });
-    expect(result.tax.toNumber()).toBe(2162);
+    expect(result.tax.toNumber()).toBe(3365);
     expect(result.preferentialTax.toNumber()).toBe(0);
   });
 
@@ -246,28 +233,22 @@ describe("Capital gains tax - stacking method", () => {
     expect(result.preferentialTax.greaterThan(0)).toBe(true);
   });
 
-  it("QDCG worksheet - §1250 entirely in 0% bracket (all LTCG, no ordinary)", () => {
-    // Single, $20K taxable from $20K LTCG (all §1250), no ordinary income
-    // Stack $20K on $0 → 0% threshold = $48,350 → all at 0%
-    // ordinaryTax = $0, preferentialTax = $0 → total = $0
+  it("Schedule D worksheet - all section1250 income still uses ordinary-rate table", () => {
+    // Official21=20000; published single20000-20050 row2165.
     const result = calculateCapitalGainsTax(d(20000), d(0), d(20000), "single", constants, {
       section1250Gain: d(20000),
     });
-    expect(result.tax.toNumber()).toBe(0);
+    expect(result.tax.toNumber()).toBe(2165);
     expect(result.preferentialTax.toNumber()).toBe(0);
-    expect(result.ordinaryTax.toNumber()).toBe(0);
+    expect(result.ordinaryTax.toNumber()).toBe(2165);
   });
 
-  it("QDCG worksheet - §1250 spanning 15% threshold (partial 15%, partial 25%)", () => {
-    // Single, $600K taxable, $100K LTCG ($80K §1250, $20K regular)
-    // Ordinary = $500K. Stack $100K on $500K.
-    // Room at 15% = $533,400 - $500K = $33,400 → at15 = $33,400
-    // Remaining = $66,600. §1250 = min($80K, $66,600) = $66,600 at 25%.
-    // 20% remainder = $0. preferentialTax = $5,010 + $16,650 = $21,660
+  it("Schedule D worksheet - section1250 cap applies independently of15percent threshold", () => {
+    // Regular20000*15%=3000; full1250amount80000*25%=20000.
     const result = calculateCapitalGainsTax(d(600000), d(0), d(100000), "single", constants, {
       section1250Gain: d(80000),
     });
-    expect(result.preferentialTax.toNumber()).toBe(21660);
+    expect(result.preferentialTax.toNumber()).toBe(23000);
   });
 
   it("QDCG worksheet - mixed §1250 + collectibles above 15% threshold", () => {
@@ -460,36 +441,46 @@ describe("Additional Medicare Tax", () => {
 // ═══════════════════════════════════════════════════════════
 
 describe("Child Tax Credit", () => {
-  it("CTC - $2,000 per qualifying child", () => {
+  it("CTC - $2,200 per qualifying child", () => {
     const result = calculateChildTaxCredit(2, 0, d(100000), "married_filing_jointly", constants);
-    expect(result.total.toNumber()).toBe(4000);
-    expect(result.ctc.toNumber()).toBe(4000);
+    // 2025 worksheet: child credit 4400 + ODC 0 = 4400.
+    // 2025 worksheet: child credit 4400 + ODC 0 = 4400.
+    expect(result.total.toNumber()).toBe(4400);
+    expect(result.ctc.toNumber()).toBe(4400);
     expect(result.odc.toNumber()).toBe(0);
   });
 
   it("CTC - phase-out above threshold", () => {
-    // MFJ threshold: $400,000. AGI: $420,000. Excess: $20,000
-    // Reduction: ceil(20) × $50 = $1,000
-    // Credit: $2,000 - $1,000 = $1,000
+
+
+
     const result = calculateChildTaxCredit(1, 0, d(420000), "married_filing_jointly", constants);
-    expect(result.total.toNumber()).toBe(1000);
+    // 2025 worksheet: child credit 1200 + ODC 0 = 1200.
+    // 2025 worksheet: child credit 1200 + ODC 0 = 1200.
+    expect(result.total.toNumber()).toBe(1200);
   });
 
   it("CTC - fully phased out at high AGI", () => {
-    // 1 child: $2,000 credit. Phased out at $40,000 over threshold
-    // Reduction: 40 × $50 = $2,000. Credit: $0
-    const result = calculateChildTaxCredit(1, 0, d(440000), "married_filing_jointly", constants);
+
+
+    const result = calculateChildTaxCredit(1, 0, d(444000), "married_filing_jointly", constants);
+    // 2025 worksheet: child credit 0 + ODC 0 = 0.
+    // 2025 worksheet: child credit 0 + ODC 0 = 0.
     expect(result.total.toNumber()).toBe(0);
   });
 
   it("CTC - zero children means zero credit", () => {
     const result = calculateChildTaxCredit(0, 0, d(50000), "single", constants);
+    // 2025 worksheet: child credit 0 + ODC 0 = 0.
+    // 2025 worksheet: child credit 0 + ODC 0 = 0.
     expect(result.total.toNumber()).toBe(0);
   });
 
   it("CTC - single filer threshold is $200,000", () => {
     const result = calculateChildTaxCredit(1, 0, d(190000), "single", constants);
-    expect(result.total.toNumber()).toBe(2000);
+    // 2025 worksheet: child credit 2200 + ODC 0 = 2200.
+    // 2025 worksheet: child credit 2200 + ODC 0 = 2200.
+    expect(result.total.toNumber()).toBe(2200);
 
     const reduced = calculateChildTaxCredit(1, 0, d(220000), "single", constants);
     expect(reduced.total.lessThan(d(2000))).toBe(true);
@@ -499,31 +490,39 @@ describe("Child Tax Credit", () => {
     const result = calculateChildTaxCredit(0, 2, d(100000), "single", constants);
     expect(result.ctc.toNumber()).toBe(0);
     expect(result.odc.toNumber()).toBe(1000);
+    // 2025 worksheet: child credit 0 + ODC 1000 = 1000.
+    // 2025 worksheet: child credit 0 + ODC 1000 = 1000.
     expect(result.total.toNumber()).toBe(1000);
   });
 
   it("CTC + ODC combined", () => {
-    // 2 CTC children ($4K) + 1 ODC dependent ($500) = $4,500
+
     const result = calculateChildTaxCredit(2, 1, d(100000), "married_filing_jointly", constants);
-    expect(result.ctc.toNumber()).toBe(4000);
+    expect(result.ctc.toNumber()).toBe(4400);
     expect(result.odc.toNumber()).toBe(500);
-    expect(result.total.toNumber()).toBe(4500);
+    // 2025 worksheet: child credit 4400 + ODC 500 = 4900.
+    // 2025 worksheet: child credit 4400 + ODC 500 = 4900.
+    expect(result.total.toNumber()).toBe(4900);
   });
 
   it("ODC - phase-out reduces CTC first then ODC", () => {
-    // 1 CTC child ($2K) + 1 ODC ($500) = $2,500 max
-    // AGI $430K, MFJ threshold $400K, excess $30K → reduction 30 × $50 = $1,500
-    // CTC: $2K - $1,500 = $500. ODC: $500 (untouched)
+
+
+
     const result = calculateChildTaxCredit(1, 1, d(430000), "married_filing_jointly", constants);
-    expect(result.ctc.toNumber()).toBe(500);
+    expect(result.ctc.toNumber()).toBe(700);
     expect(result.odc.toNumber()).toBe(500);
-    expect(result.total.toNumber()).toBe(1000);
+    // 2025 worksheet: child credit 700 + ODC 500 = 1200.
+    // 2025 worksheet: child credit 700 + ODC 500 = 1200.
+    expect(result.total.toNumber()).toBe(1200);
   });
 
   it("ODC - fully phased out at very high AGI", () => {
-    // 1 CTC child ($2K) + 1 ODC ($500) = $2,500 max
-    // AGI $450K, excess $50K → reduction 50 × $50 = $2,500
-    const result = calculateChildTaxCredit(1, 1, d(450000), "married_filing_jointly", constants);
+
+
+    const result = calculateChildTaxCredit(1, 1, d(454000), "married_filing_jointly", constants);
+    // 2025 worksheet: child credit 0 + ODC 0 = 0.
+    // 2025 worksheet: child credit 0 + ODC 0 = 0.
     expect(result.total.toNumber()).toBe(0);
   });
 });
@@ -560,18 +559,18 @@ describe("Mortgage interest deduction", () => {
   it("Mortgage interest - pre-TCJA mortgage over $1M is prorated", () => {
     // $1.2M principal, pre-12/15/2017 → $1M limit → ratio 1M/1.2M
     const deductible = calculateDeductibleMortgageInterest(d(48000), d(1200000), constants, "2016-01-15");
-    expect(deductible.toNumber()).toBe(40000); // 48000 × (1M / 1.2M)
+    expect(deductible.toNumber()).toBe(39984); //48000*0.833, Table1line14 rounded to3decimal places
   });
 
   it("Mortgage interest - post-TCJA uses $750K limit", () => {
     // $900K principal, post-12/15/2017 → $750K limit → prorated
     const deductible = calculateDeductibleMortgageInterest(d(36000), d(900000), constants, "2020-03-01");
-    expect(deductible.toNumber()).toBe(30000); // 36000 × (750K / 900K)
+    expect(deductible.toNumber()).toBe(29988); //36000*0.833, Table1line14 rounded to3decimal places
   });
 
   it("Mortgage interest - no origination date defaults to post-TCJA", () => {
     const deductible = calculateDeductibleMortgageInterest(d(36000), d(900000), constants);
-    expect(deductible.toNumber()).toBe(30000);
+    expect(deductible.toNumber()).toBe(29988);
   });
 });
 
@@ -581,18 +580,18 @@ describe("Mortgage interest deduction", () => {
 // ═══════════════════════════════════════════════════════════
 
 describe("SALT deduction", () => {
-  it("SALT deduction capped at $10,000", () => {
-    const deduction = calculateSALTDeduction(d(8000), d(6000), constants);
-    expect(deduction.toNumber()).toBe(10000);
+  it("SALT deduction capped at $40,000", () => {
+    const deduction = calculateSALTDeduction(d(38000), d(6000), constants, d(100000), "single");
+    expect(deduction.toNumber()).toBe(40000);
   });
 
   it("SALT deduction - under cap gets full amount", () => {
-    const deduction = calculateSALTDeduction(d(3000), d(4000), constants);
+    const deduction = calculateSALTDeduction(d(3000), d(4000), constants, d(100000), "single");
     expect(deduction.toNumber()).toBe(7000);
   });
 
   it("SALT deduction - zero taxes", () => {
-    const deduction = calculateSALTDeduction(d(0), d(0), constants);
+    const deduction = calculateSALTDeduction(d(0), d(0), constants, d(100000), "single");
     expect(deduction.toNumber()).toBe(0);
   });
 });

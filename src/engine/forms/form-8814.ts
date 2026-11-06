@@ -32,7 +32,7 @@ export interface Form8814Result {
   otherIncomeToReport: Decimal;
   /** Line 15: Tax on first $2,700 tier → Form 1040 Line 16 */
   tax: Decimal;
-  /** Child's tax-exempt interest to add to parent's Line 2a */
+  /** Child's line1b; retained for the dependent worksheet, not parent1040line2a */
   taxExemptInterest: Decimal;
   /** Whether the form applies (child income > amountNotTaxed and < maximum) */
   applies: boolean;
@@ -51,7 +51,7 @@ export interface AggregatedForm8814 {
   totalOtherIncome: Decimal;
   /** Total tax from all children → Form 1040 Line 16 */
   totalTax: Decimal;
-  /** Total tax-exempt interest from all children → parent's Line 2a */
+  /** Child tax-exempt interest retained separately for actual dependent/source worksheets */
   totalTaxExemptInterest: Decimal;
   /** Individual results per child */
   children: Form8814Result[];
@@ -129,12 +129,12 @@ export function calculateForm8814(
 
     if (hasPreferentialItems) {
       // Line 7: Qualified dividend ratio
-      const line7 = line4.isZero() ? ZERO : line2b.dividedBy(line4).toDecimalPlaces(4, Decimal.ROUND_DOWN);
-      audit.record("Form 8814", "7", "Qualified dividend ratio", line7, "Line 2b / Line 4");
+      const line7 = line2b.dividedBy(line4).toDecimalPlaces(6, Decimal.ROUND_HALF_UP);
+      audit.record("Form 8814", "7", "Qualified dividend ratio", line7, "Line 2b / Line 4; rounded to six decimal places");
 
       // Line 8: Capital gain distribution ratio
-      const line8 = line4.isZero() ? ZERO : line3.dividedBy(line4).toDecimalPlaces(4, Decimal.ROUND_DOWN);
-      audit.record("Form 8814", "8", "Capital gain distribution ratio", line8, "Line 3 / Line 4");
+      const line8 = line3.dividedBy(line4).toDecimalPlaces(6, Decimal.ROUND_HALF_UP);
+      audit.record("Form 8814", "8", "Capital gain distribution ratio", line8, "Line 3 / Line 4; rounded to six decimal places");
 
       // Line 9: Qualified dividends to report
       qualifiedDividendsToReport = roundDollar(line6.times(line7));
@@ -151,7 +151,9 @@ export function calculateForm8814(
       audit.record("Form 8814", "11", "Sum of preferential-rate items", line11, "Line 9 + Line 10");
 
       // Line 12: Other income at ordinary rates
-      otherIncomeToReport = zeroFloor(line6.minus(line11));
+      // Line12 has no zero-floor instruction. Separate whole-dollar transfers
+      // can leave a negative rounding remainder, which must not create income.
+      otherIncomeToReport = line6.minus(line11);
       audit.record("Form 8814", "12", "Other interest/dividend income at ordinary rates",
         otherIncomeToReport, "Line 6 - Line 11 → Schedule 1 Line 8z");
     } else {

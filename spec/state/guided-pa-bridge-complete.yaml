@@ -1,0 +1,81 @@
+form: "Guided PA bridge complete payment sources"
+fullName: "Explicit fictional current-owner2025 counterparts preserve original PA payment assertions"
+taxYear: 2025
+reference: "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40in.pdf"
+notes: |
+  New fictional Jane Doe PA full-year originals are independently stated, never
+  actual user records or production defaults. W2 Acme Corp wages60000, federal
+  withholding8000 and PA withholding2000 retain the predecessor exact amounts.
+  Complete source-only state-return records are required even without generic
+  payment entries; literal absence/empty prior flows remain explicit negatives.
+  Tax60000*.0307=1842; actual withholding2000 gives refund158. Two actual PA2025
+  estimate receipts1000 on April15/June15 make4000 payments/refund2158. Each
+  saved generic ledger row must reconcile one actual current-owner receipt.
+  Example Pension1099R actual PA withholding500 is NOT another W2/INT source.
+  A separately fictional employer eligible pension original/gross5000/zero
+  contributions/code7/actual retirement after plan age65 requires its actual PA
+  source-qualified method. It is not inferred exempt from federal code alone.
+  Positive2500 payment and658 refund remain pending until that real method and
+  saved-ledger single-count reconciliation exist. No generic ledger authority,
+  invented no-source proof, removed guards or weakened source/readiness gates.
+  The new qualified-retirement source proposal is not yet a supported product
+  schema or human tax opinion. Original all4 positive money/assertions retained.
+lines:
+  - line: "source-only"
+    description: "Complete sources without generic payment entries preserve PA preview"
+    formula: "Actual W2 PA2000, wages60000 => tax1842/payments2000/refund158."
+    testRef: "tests/guided-interview/guided-pa-bridge-complete.test.ts::complete PA sources without generic state payment entries retain actual2000"
+  - line: "estimates"
+    description: "Two distinct actual2025 PA receipts add exactly2000 once"
+    formula: "April15 1000 plusJune15 1000 => totalpayments4000/refund2158, versus base158."
+    testRef: "tests/guided-interview/guided-pa-bridge-complete.test.ts::actual dated PA receipt originals produce the complete positive estimated-payment preview"
+  - line: "pension"
+    description: "Real Example Pension1099R requires finite original-bound PA successor"
+    formula: "Actual2000W2 plus500Box14 PA payment =>2500 once; source-qualified exempt pension5000 leaves tax1842/refund658."
+    testRef: "tests/guided-interview/guided-pa-bridge-complete.test.ts::actual Example Pension1099R source produces positive2500 without replacing the original payer or form"
+  - line: "empty-ledger"
+    description: "Explicit complete sources agree with explicit empty generic ledger"
+    formula: "Source-only and emptygeneric source counterpart both report refund158/payments2000."
+    testRef: "tests/guided-interview/guided-pa-bridge-complete.test.ts::complete source-only and empty generic payment counterparts agree"
+  - line: "reads"
+    description: "Reads do not fill unknowns or replace source confirmations"
+    formula: "Serialize private state before and after preview; exact source records remain unchanged."
+    testRef: "tests/guided-interview/guided-pa-bridge-complete.test.ts::reading complete receipts never changes actual source data"
+  - line: "receipt-binding"
+    description: "Actual receipt identity year amount and dates remain binding"
+    formula: "Unknown/mismatched receipt owner/year/date/amount or generic unmatched row must reject, not use a guessed zero."
+    testRef: "tests/guided-interview/guided-pa-bridge-complete.test.ts::actual receipt edits cannot be rebound by a saved generic ledger"
+  - line: "old-absence"
+    description: "Original literal-absent and raw-empty state-return sources remain incomplete"
+    formula: "All original Jane60000/8000/2000 sources remain raw; federal available but no PA preview."
+    testRef: "tests/guided-interview/guided-interview-bridge.test.ts::keeps the original absent and empty PA source flows incomplete"
+  - line: "existing-source-only"
+    description: "Original positive assertion body and money remain unchanged on explicit source counterparts"
+    formula: "Preserve original all assertions; complete sources provide actual authority. Pension positive pending actual method, never changed to denial."
+    testRef: "tests/guided-interview/guided-interview-bridge.test.ts::computes state preview without generic state payment entries"
+  - line: "existing-additional"
+    description: "Original positive assertion body and money remain unchanged on explicit source counterparts"
+    formula: "Preserve original all assertions; complete sources provide actual authority. Pension positive pending actual method, never changed to denial."
+    testRef: "tests/guided-interview/guided-interview-bridge.test.ts::includes additional state withholding from state-return section"
+  - line: "existing-estimates"
+    description: "Original positive assertion body and money remain unchanged on explicit source counterparts"
+    formula: "Preserve original all assertions; complete sources provide actual authority. Pension positive pending actual method, never changed to denial."
+    testRef: "tests/guided-interview/guided-interview-bridge.test.ts::includes state estimated payments in the preview calculation"
+  - line: "existing-empty"
+    description: "Original positive assertion body and money remain unchanged on explicit source counterparts"
+    formula: "Preserve original all assertions; complete sources provide actual authority. Pension positive pending actual method, never changed to denial."
+    testRef: "tests/guided-interview/guided-interview-bridge.test.ts::empty state return data does not change the state preview"
+  - line: "itemized-single-count"
+    description: "The same actual500 retirement withholding is one PA payment and one federal SALT source"
+    formula: "ActualR500+W22000=2500 PA/federalSALT; matched generic500 is retained as evidence but additionalScheduleA payments0. No double count3000."
+    testRef: "tests/guided-interview/guided-pa-bridge-complete.test.ts::itemized federal and PA payments count actual Pension500 once despite its matching saved ledger"
+  - line: "unmatched-additional"
+    description: "Unknown unmatched and ambiguous saved500 claims cannot authorize real withholding"
+    formula: "Unknown or different payer/year/state/amount and duplicate saved1099R rows reject rather than drop or fabricate a source."
+    testRef: "tests/guided-interview/guided-pa-bridge-complete.test.ts::unmatched or ambiguous saved Pension claims cannot override the actual source"
+
+# Diagnostic-only fixture successor: actual pension withholding500 is accompanied
+# by independently explicit zero deducted on other schedules (not a product
+# default). Actual June15 receipt remains June15, before publishedJune16 due date.
+# Unsupported estimate/pension packets use strict typed current snapshots, not
+# confirmation helpers that would assert accepted coverage before the method.

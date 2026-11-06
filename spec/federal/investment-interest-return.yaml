@@ -1,0 +1,33 @@
+form: "Investment Interest Return Integration"
+fullName: "Actual Form4952 deduction and preferential-income election in the federal return"
+taxYear: 2026
+irsReference: "https://www.irs.gov/instructions/i1040sd"
+retrievedAt: "2026-10-25"
+notes: |
+  Source-confirmed Form4952 amounts are completed combined amounts, including
+  K1 sources exactly once. Historical direct-only inputs retain unverified
+  automatic K1 interest/income aggregation. Box20B is informational until actual
+  deductible expenses are established; misc itemized deductions are excluded.
+  Positive4952line4g invokes ScheduleD Tax Worksheet. Keep1040line3a unchanged.
+  Actual or IRS-default capital-gain allocation determines lines4/8; the balance
+  reduces preferential dividends. Foreign capital-gain excess uses post-election
+  ScheduleDline10, reducing lines9 and6, without rewriting actual election lines.
+  ScheduleJ/Form8615 election coordination and the separate AMT4952 source
+  worksheet remain separately bounded; no current-source approval is inferred.
+lines:
+  - line: "source"
+    description: "Completed actual source amounts are consumed once"
+    formula: "Use source-confirmed Form4952 unchanged with return year; never add already-included K1 amounts twice"
+    testRef: "tests/engine/federal-investment-interest.test.ts::uses actual combined sources once and preserves source year and missingness"
+  - line: "election"
+    description: "Ordinary taxation of elected preferential income"
+    formula: "ScheduleD Tax Worksheet3=4952line4g;4=actual Elec allocation or IRS default;6 and9 retain only unelected preferential income"
+    testRef: "tests/engine/federal-investment-interest.test.ts::routes actual dividend and capital gain elections through the tax worksheet"
+  - line: "foreign"
+    description: "Foreign capital gain excess after actual election"
+    formula: "max(0,ScheduleD Tax Worksheet10 before excess -1040line15); reduce9 first then6, retaining original election source audits"
+    testRef: "tests/engine/federal-investment-interest.test.ts::applies foreign capital gain excess after the investment income election"
+  - line: "expense"
+    description: "Only actually deductible investment expenses reduce net income"
+    formula: "Do not automatically include K1Box20B; actual allowable total is provided on source-confirmed4952line5"
+    testRef: "tests/engine/federal.test.ts::K-1 Box 20 Code B requires actual deductible expense classification"

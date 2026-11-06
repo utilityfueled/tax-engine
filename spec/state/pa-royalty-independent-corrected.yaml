@@ -1,0 +1,8 @@
+form: "Independent repaired PA royalty identity boundary"
+taxYear: 2025
+reference: "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40e.pdf"
+notes: "Adjacent identity controls only, no additional tax scope. Known actual payerTIN required; duplicates normalize insignificant account/receipt formatting, raw sources retained."
+lines:
+  - line: "identity"
+    formula: "Unknown payerTIN cannot be manufactured; same known payerTIN/normalized account/year/owner cannot multiply originalgross, and a formatted copy of one actual receipt cannot multiply expense."
+    testRef: "tests/engine/state/pa-royalty-independent-corrected.test.ts::repaired royalty identity boundary: %s"

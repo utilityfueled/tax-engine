@@ -1,0 +1,25 @@
+form: "Form8959-SelfEmployment-Applicability"
+fullName: "Historical ordinary pure self-employment review part applicability"
+taxYear: 2025
+reference: "https://www.irs.gov/instructions/i8959"
+notes: |
+  Physical2025 review only; no tax formula or2026 export qualification change.
+  Current2025 instructions PartI: no Medicare wages means skipI; PartV: no
+  Medicare wages or RRTA means leaveV blank. The narrow new branch requires
+  existing actual ScheduleSE positive net earnings, canonical positive effective
+  SE, and all canonical wage components1/2/3 exactlyzero. The preexisting RRTA
+  source/context branch is unchanged. Missing ScheduleSE does not establish the
+  new predicate. Existing six wage scenarios retain their physical values.
+lines:
+  - line: "pure-se-parts"
+    formula: "For admitted actual positive pureSE, leaveI1-7 andV19-24 blank; preserveII8=canonical effectiveSE,9=threshold,10=existing wage sum,11=max(0,threshold-wages),12=max(0,SE-line11),13=rounded(.009*line12),18=canonical tax. No new forcedzero10: printed10 has no explicit zero wording. Existing applicable required zeros remain."
+    testRef: "tests/pdf/form-8959-self-employment-applicability.test.ts::leaves inapplicable wage and withholding parts blank in actual pureSE public output: %s"
+  - line: "reported-threshold-selection"
+    formula: "Retain existing public selection by reported canonical ScheduleSE6, not raw gross receipts. Actual ScheduleC216568 gives roundedSE200001: positive excess1 yields roundedtax0 but form remains required. Gross216567 yieldsSE200000 and no form. Monetary expected values use Decimal and original literal amounts; no source fact is invented."
+    testRef: "tests/pdf/form-8959-self-employment-applicability.test.ts::keeps pureSE threshold selection based on actual existing ScheduleSE rather than gross receipts: %s"
+  - line: "preservation"
+    formula: "The existing RRTA branch, missingScheduleSE behavior, actual wage parts and known-noSE skip remain unchanged; no canonical result or original is mutated."
+    testRef: "tests/pdf/form-8959-self-employment-applicability.test.ts::preserves wage parts and missingScheduleSE compatibility"
+  - line: "raw-original-absence"
+    formula: "Rounded canonical wagezero is insufficient to prove no original Medicare wages: actual Box5 .01 still retainsI/V. The finite skip additionally requires every original Box5 to be an explicit finite nonnegative zero, no Form4137/owner or8919 representation, and canonical withholdingcreditzero. Missing Box5 preserves the previous public refusal and direct-mapper output. Verified zero is distinct from missing; no discarded source rounding or aggregate rewrite."
+    testRef: "tests/pdf/form-8959-self-employment-applicability.test.ts::requires actual original Medicare absence rather than rounded wagezero: %s"

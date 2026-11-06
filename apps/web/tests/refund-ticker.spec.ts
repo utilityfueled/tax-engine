@@ -1,3 +1,4 @@
+import { fillRequiredTaxpayerFacts, fillRequiredW2Facts, reachFilingStatus } from "./guided-fixtures";
 import { expect, test } from "@playwright/test";
 
 /**
@@ -21,9 +22,11 @@ async function completeSegmentation(
 ) {
   const { filingStatus = "single", incomeTypes = ["w-2 wages"] } = options;
 
-  await expect(page.getByText(/let's figure out your tax situation/i)).toBeVisible({ timeout: 10000 });
+  await expect(page.getByText(/let's tailor your return/i)).toBeVisible({ timeout: 10000 });
 
+  await reachFilingStatus(page);
   await page.getByRole("radio", { name: new RegExp(filingStatus, "i") }).click();
+  await page.getByRole("button", { name: "Continue" }).click();
   await expect(page.getByText(/what types of income/i)).toBeVisible({ timeout: 5000 });
 
   for (const type of incomeTypes) {
@@ -44,11 +47,14 @@ async function completeSegmentation(
 async function createReturn(page: import("@playwright/test").Page) {
   await page.goto("/");
   await page.getByRole("button", { name: /start your tax return/i }).click();
-  await expect(page).toHaveURL(/\/returns\/[a-z0-9-]+/i);
+  await expect(page).toHaveURL(/\/returns\/(?!new(?:[/?#]|$))[a-z0-9-]+/i);
 }
 
 /** Skip a section by clicking Continue and then Skip if prompted. */
 async function skipSection(page: import("@playwright/test").Page) {
+  if (await page.getByRole("heading", { name: /^about you$/i }).isVisible()) {
+    await fillRequiredTaxpayerFacts(page);
+  }
   await page.getByRole("button", { name: "Continue" }).click();
   const skipBtn = page.getByRole("button", { name: /skip this section/i });
   if (await skipBtn.isVisible({ timeout: 1000 }).catch(() => false)) {
@@ -57,6 +63,30 @@ async function skipSection(page: import("@playwright/test").Page) {
 }
 
 test.describe("Refund ticker — initial state", () => {
+  test("an unavailable year clears a previously calculated estimate", async ({ page }) => {
+    await createReturn(page);
+    await completeSegmentation(page);
+    await fillRequiredTaxpayerFacts(page);
+    const hero = page.locator(".guided-ticker-value-hero").first();
+    await expect(hero).toHaveText("$0");
+    await page.getByRole("combobox", { name: "Tax year for this interview", exact: true }).selectOption("2026");
+    await expect(page.getByText(/2026 rules and filing forms are not yet qualified/i)).toBeVisible();
+    await expect(hero).toHaveText("Enter more info for an estimate");
+    await page.reload();
+    await expect(page.getByRole("combobox", { name: "Tax year for this interview", exact: true })).toHaveValue("2026");
+    await expect(hero).toHaveText("Enter more info for an estimate");
+  });
+
+  test("removing a required birth date clears the estimate", async ({ page }) => {
+    await createReturn(page);
+    await completeSegmentation(page);
+    await fillRequiredTaxpayerFacts(page);
+    const hero = page.locator(".guided-ticker-value-hero").first();
+    await expect(hero).toHaveText("$0");
+    await page.getByLabel("Your date of birth", { exact: true }).fill("");
+    await expect(hero).toHaveText("Enter more info for an estimate");
+  });
+
   test("ticker shows Live Ticker title after segmentation", async ({ page }) => {
     await createReturn(page);
     await completeSegmentation(page);
@@ -64,12 +94,10 @@ test.describe("Refund ticker — initial state", () => {
     // The ticker should be visible with the "Live Ticker" title
     await expect(page.getByText("Live Ticker")).toBeVisible();
 
-    // After segmentation the engine computes a preview (even with zero data),
-    // so the ticker shows a dollar amount rather than a placeholder.
+    // Missing taxpayer facts must not produce a calculation.
     const heroValue = page.locator(".guided-ticker-value-hero").first();
     await expect(heroValue).toBeVisible();
-    const heroText = await heroValue.innerText();
-    expect(heroText).toMatch(/^\$/);
+    await expect(heroValue).toHaveText("Enter more info for an estimate");
   });
 
   test("ticker shows section progress", async ({ page }) => {
@@ -81,13 +109,14 @@ test.describe("Refund ticker — initial state", () => {
     await expect(page.locator(".guided-ticker-item").filter({ hasText: /progress/i })).toBeVisible();
   });
 
-  test("ticker shows Total Income as $0 before data entry", async ({ page }) => {
+  test("ticker waits for complete taxpayer facts before showing income", async ({ page }) => {
     await createReturn(page);
     await completeSegmentation(page);
 
-    // Engine produces metrics even with zero data, so Total Income is visible at $0
+    // No calculation is available until required facts and the year are confirmed.
     const totalIncomeItem = page.locator(".guided-ticker-item").filter({ hasText: /total income/i });
-    await expect(totalIncomeItem).toBeVisible({ timeout: 10000 });
+    await expect(totalIncomeItem).toHaveCount(0);
+    await fillRequiredTaxpayerFacts(page);
     await expect(totalIncomeItem.locator(".guided-ticker-value")).toHaveText("$0");
   });
 });
@@ -97,9 +126,9 @@ test.describe("Refund ticker — value updates", () => {
     await createReturn(page);
     await completeSegmentation(page);
 
-    // After segmentation the engine produces metrics, so the hero already shows a dollar amount
+    // Required facts are still unknown immediately after segmentation.
     const heroValue = page.locator(".guided-ticker-value-hero").first();
-    await expect(heroValue).toBeVisible();
+    await expect(heroValue).toHaveText("Enter more info for an estimate");
     const heroBefore = await heroValue.innerText();
 
     // Skip personal info
@@ -110,6 +139,7 @@ test.describe("Refund ticker — value updates", () => {
     const wagesInput = page.locator("input.guided-input-currency").first();
     await wagesInput.fill("75000");
     await wagesInput.blur();
+    await fillRequiredW2Facts(page);
 
     // Wait for the ticker to update with new values
     await expect(async () => {
@@ -117,8 +147,13 @@ test.describe("Refund ticker — value updates", () => {
       expect(heroAfter).not.toBe(heroBefore);
     }).toPass({ timeout: 10000 });
 
-    const heroText = await heroValue.innerText();
-    expect(heroText).toMatch(/^\$/);
+    // IRS 2025 Tax Table: $75,000 wages - $15,750 standard deduction gives
+    // $59,250 taxable income; the single $59,250–$59,300 row is $7,955.
+    // This unverified historical preview also shows the regular Form 2210
+    // estimate: four $1,790 installments × 7% × 971 combined days / 365 = $333.
+    // No prior-year safe harbor or waiver has been supplied by this fixture.
+    await expect(heroValue).toHaveText("$8,288");
+    await expect(page.getByText("Estimated Balance Due", { exact: true })).toBeVisible();
   });
 
   test("ticker shows total income after entering W-2 wages", async ({ page }) => {
@@ -133,6 +168,7 @@ test.describe("Refund ticker — value updates", () => {
     const wagesInput = page.locator("input.guided-input-currency").first();
     await wagesInput.fill("80000");
     await wagesInput.blur();
+    await fillRequiredW2Facts(page);
 
     // Ticker should show total income after computation
     const totalIncomeItem = page.locator(".guided-ticker-item").filter({ hasText: /total income/i });
@@ -152,6 +188,7 @@ test.describe("Refund ticker — value updates", () => {
     const wagesInput = page.locator("input.guided-input-currency").first();
     await wagesInput.fill("75000");
     await wagesInput.blur();
+    await fillRequiredW2Facts(page);
 
     // Wait for ticker to compute
     const totalIncomeItem = page.locator(".guided-ticker-item").filter({ hasText: /total income/i });
@@ -185,6 +222,7 @@ test.describe("Refund ticker — breakdown", () => {
     const wagesInput = page.locator("input.guided-input-currency").first();
     await wagesInput.fill("75000");
     await wagesInput.blur();
+    await fillRequiredW2Facts(page);
 
     const fedWithheldInput = page.locator("input.guided-input-currency").nth(1);
     await fedWithheldInput.fill("12000");
@@ -196,6 +234,7 @@ test.describe("Refund ticker — breakdown", () => {
   });
 
   test("clicking ticker hero expands breakdown with Show details hint", async ({ page }) => {
+    await page.getByRole("button", { name: "Expand Ticker", exact: true }).click();
     // Breakdown should be collapsed initially
     await expect(page.getByText("Show details")).toBeVisible();
     await expect(page.locator(".guided-ticker-breakdown")).not.toBeVisible();
@@ -210,6 +249,7 @@ test.describe("Refund ticker — breakdown", () => {
   });
 
   test("breakdown shows all detail rows", async ({ page }) => {
+    await page.getByRole("button", { name: "Expand Ticker", exact: true }).click();
     // Expand breakdown
     const heroItem = page.locator(".guided-ticker-clickable").first();
     await heroItem.click();
@@ -230,6 +270,7 @@ test.describe("Refund ticker — breakdown", () => {
   });
 
   test("clicking ticker hero again collapses breakdown", async ({ page }) => {
+    await page.getByRole("button", { name: "Expand Ticker", exact: true }).click();
     // Expand
     const heroItem = page.locator(".guided-ticker-clickable").first();
     await heroItem.click();
@@ -242,6 +283,7 @@ test.describe("Refund ticker — breakdown", () => {
   });
 
   test("breakdown is keyboard accessible via Enter key", async ({ page }) => {
+    await page.getByRole("button", { name: "Expand Ticker", exact: true }).click();
     const heroItem = page.locator(".guided-ticker-clickable").first();
 
     // Focus and press Enter
@@ -249,13 +291,24 @@ test.describe("Refund ticker — breakdown", () => {
     await page.keyboard.press("Enter");
 
     await expect(page.locator(".guided-ticker-breakdown")).toBeVisible();
+    await expect(page.getByText(/w-2 #1/i)).toBeVisible();
 
     // Press Enter again to collapse
     await page.keyboard.press("Enter");
     await expect(page.locator(".guided-ticker-breakdown")).not.toBeVisible();
+    await expect(page.getByText(/w-2 #1/i)).toBeVisible();
+  });
+
+  test("native ticker button handles Enter without advancing the interview", async ({ page }) => {
+    await page.getByRole("button", { name: "Expand Ticker", exact: true }).focus();
+    await page.keyboard.press("Enter");
+    await expect(page.getByRole("button", { name: "Minimize Ticker", exact: true })).toBeVisible();
+    await expect(page.getByText(/w-2 #1/i)).toBeVisible();
+    await expect(page.getByRole("button", { name: /skip this section/i })).not.toBeVisible();
   });
 
   test("breakdown is keyboard accessible via Space key", async ({ page }) => {
+    await page.getByRole("button", { name: "Expand Ticker", exact: true }).click();
     const heroItem = page.locator(".guided-ticker-clickable").first();
 
     await heroItem.focus();
@@ -265,6 +318,7 @@ test.describe("Refund ticker — breakdown", () => {
   });
 
   test("Escape key collapses expanded breakdown", async ({ page }) => {
+    await page.getByRole("button", { name: "Expand Ticker", exact: true }).click();
     const heroItem = page.locator(".guided-ticker-clickable").first();
 
     // Expand via click
@@ -275,9 +329,11 @@ test.describe("Refund ticker — breakdown", () => {
     await heroItem.focus();
     await page.keyboard.press("Escape");
     await expect(page.locator(".guided-ticker-breakdown")).not.toBeVisible();
+    await expect(page.getByText(/w-2 #1/i)).toBeVisible();
   });
 
   test("hero item has correct aria-expanded attribute", async ({ page }) => {
+    await page.getByRole("button", { name: "Expand Ticker", exact: true }).click();
     const heroItem = page.locator(".guided-ticker-clickable").first();
 
     // Initially collapsed
@@ -298,7 +354,9 @@ test.describe("Refund ticker — interactive after segmentation", () => {
     await createReturn(page);
     await completeSegmentation(page);
 
-    // The engine computes metrics right after segmentation, so the hero is interactive
+    await fillRequiredTaxpayerFacts(page);
+    await page.getByRole("button", { name: "Expand Ticker", exact: true }).click();
+    // Complete facts make the expanded hero interactive.
     const heroItem = page.locator(".guided-ticker-item-hero").first();
     await expect(heroItem).toBeVisible();
 
@@ -310,7 +368,9 @@ test.describe("Refund ticker — interactive after segmentation", () => {
     await createReturn(page);
     await completeSegmentation(page);
 
-    // Metrics are available, so the expand/collapse hint is shown
+    await fillRequiredTaxpayerFacts(page);
+    await page.getByRole("button", { name: "Expand Ticker", exact: true }).click();
+    // Complete facts make the detail controls available.
     await expect(page.getByText("Show details")).toBeVisible();
   });
 });
@@ -327,6 +387,7 @@ test.describe("Refund ticker — persists across sections", () => {
     const wagesInput = page.locator("input.guided-input-currency").first();
     await wagesInput.fill("65000");
     await wagesInput.blur();
+    await fillRequiredW2Facts(page);
 
     // Wait for ticker to show values
     const totalIncomeItem = page.locator(".guided-ticker-item").filter({ hasText: /total income/i });
@@ -386,6 +447,7 @@ test.describe("Refund ticker — persists across sections", () => {
     const wagesInput = page.locator("input.guided-input-currency").first();
     await wagesInput.fill("50000");
     await wagesInput.blur();
+    await fillRequiredW2Facts(page);
 
     // Wait for ticker to show total income
     const totalIncomeItem = page.locator(".guided-ticker-item").filter({ hasText: /total income/i });

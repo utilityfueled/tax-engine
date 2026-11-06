@@ -1,0 +1,39 @@
+form: "OH 2026 ordinary business draft"
+year: 2026
+taxYear: 2026
+reference: "https://codes.ohio.gov/ohio-revised-code/section-5747.02"
+status: incomplete
+filingQualified: false
+sources:
+  - https://codes.ohio.gov/ohio-revised-code/section-5747.01
+  - https://codes.ohio.gov/ohio-revised-code/section-5747.02
+  - https://codes.ohio.gov/ohio-revised-code/section-5747.025
+  - https://codes.ohio.gov/ohio-revised-code/section-5747.022
+  - https://codes.ohio.gov/ohio-revised-code/section-5747.05
+  - https://codes.ohio.gov/ohio-revised-code/section-5747.21
+  - https://codes.ohio.gov/ohio-revised-code/section-5747.71
+  - https://www.irs.gov/irb/2025-45_IRB
+  - https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/forms/ohio_individual/individual/2025/1040-bundle.pdf
+  - https://www.lsc.ohio.gov/assets/legislation/136/hb96/en0/files/hb96-tax-comparison-document-as-enacted-136th-general-assembly.pdf
+  - https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/forms/ohio_individual/individual/2025/itnrc-fi.pdf
+lines:
+  - line: "source-dispatch"
+    description: "Complete original admission and current dispatcher integration"
+    formula: "Current single primary NR/PY ordinary cash-service C with all34 expense classifications explicitly known zero and actual dated deduction originals; mandatory original-bound no-other-adjustment/A34/credit assertions. Recompute C/SE, exact existing factor rules; unknown is not zero."
+    testRef: "tests/engine/state/oh-2026-business-draft.test.ts::dispatches actual current $row.0 $status originals"
+  - line: "business-tax"
+    description: "Enacted2026 business deduction and tax with actual eligibility proof"
+    formula: "BID=min(250000,max(0,min(netC,federalAGI))); MAGI=OhioAGI+BID+actual known-zero A34; actual eligible single exemption count; 2026 no-child completed EIC cutoff19540; no-child AGI cutoff proves zero EIC. Single joint credit zero; personal exemption credit statutory threshold. Business tax round(max(0,taxableBusiness-unusedExemptions)*.03)."
+    testRef: "tests/engine/state/oh-2026-business-draft.test.ts::dispatches actual current $row.0 $status originals"
+  - line: "nrc"
+    description: "Actual domicile-date deduction allocation and truncated nonresident ratio"
+    formula: "Actual original source and resident half-SE allocation; existing NRC line19=min(1,max(0,OhioAGI-OhioIncome)/OhioAGI), truncate4 decimals; line20=round(actual preceding tax*line19). Published2025 form is structural source, not a qualified2026 form."
+    testRef: "tests/engine/state/oh-2026-business-draft.test.ts::allocates an actual PY personal deduction from its original domicile date"
+  - line: "unknown-financials"
+    description: "Explicitly incomplete financial settlement and protected gates"
+    formula: "Withholding, payments, school financials, underpayment, late interest, due and refund remain null. No final return, filing, native, full federal or form qualification."
+    testRef: "tests/engine/state/oh-2026-business-draft.test.ts::keeps every unimplemented financial field null, never zero"
+  - line: "source-category-reconciliation"
+    description: "Every actual source category must reconcile, not merely its offsetting total"
+    formula: "The completed finite current C-only source review proves no other federal income categories. Pass expected categories to the existing NRC validator; opposing invented wages and capital loss cannot cancel into admissibility."
+    testRef: "tests/engine/state/oh-2026-business-draft.test.ts::rejects opposing nonexistent federal source categories even when their total cancels"

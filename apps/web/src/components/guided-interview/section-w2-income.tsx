@@ -1,4 +1,10 @@
 "use client";
+import type { W2StateLocalSourceContext } from "@/engine/forms/w2-state-local";
+import { W2_SOURCE_BOX12_FIELDS } from "@/lib/guided-w2-facts";
+import { buildW2Inputs } from "@/lib/guided-interview-bridge";
+import { W2StateLocalDetails } from "./w2-state-local-details";
+
+import { formatGuidedCurrency } from "@/lib/guided-currency";
 
 import { useEffect, useId, useMemo, useRef, useState, type ChangeEvent } from "react";
 import type {
@@ -25,13 +31,19 @@ import {
 import { getCachedWorkspaceDocumentFile, hasCachedWorkspaceDocumentFile } from "@/lib/workspace-document-file-cache";
 import { detectUploadedDocumentFromFile } from "@/lib/uploaded-document-detection";
 import { CurrencyField } from "./currency-field";
+import { CompensationReportingFields } from "./compensation-reporting-fields";
 
 const confirmableFields: W2SuggestedField[] = [
+  "accountHolder",
+  "state",
   "employerName",
   "employerEin",
   "wages",
   "federalWithheld",
   "socialSecurityWages",
+  "socialSecurityTips",
+  "box10DependentCareBenefits",
+  "box12CodeW",
   "socialSecurityWithheld",
   "medicareWages",
   "medicareWithheld",
@@ -40,12 +52,7 @@ const confirmableFields: W2SuggestedField[] = [
 ];
 
 function toCurrencyInput(value: string | undefined) {
-  if (!value) {
-    return "";
-  }
-
-  const normalized = value.trim();
-  return normalized === "0" ? "" : normalized;
+  return value?.trim() ?? "";
 }
 
 function applySuggestionToEntry(
@@ -59,11 +66,16 @@ function applySuggestionToEntry(
   };
 
   const suggestedValues: Partial<Record<W2SuggestedField, string>> = {
+    accountHolder: suggestion.summary.accountHolder,
+    state: suggestion.summary.state,
     employerName: suggestion.summary.employerName || "",
     employerEin: suggestion.summary.employerEin || "",
     wages: toCurrencyInput(suggestion.summary.wages),
     federalWithheld: toCurrencyInput(suggestion.summary.federalWithheld),
     socialSecurityWages: toCurrencyInput(suggestion.summary.socialSecurityWages),
+    socialSecurityTips: toCurrencyInput(suggestion.summary.socialSecurityTips),
+    box10DependentCareBenefits: toCurrencyInput(suggestion.summary.box10DependentCareBenefits),
+    box12CodeW: toCurrencyInput(suggestion.summary.box12CodeW),
     socialSecurityWithheld: toCurrencyInput(suggestion.summary.socialSecurityWithheld),
     medicareWages: toCurrencyInput(suggestion.summary.medicareWages),
     medicareWithheld: toCurrencyInput(suggestion.summary.medicareWithheld),
@@ -77,7 +89,7 @@ function applySuggestionToEntry(
       continue;
     }
 
-    nextEntry[field] = suggestedValue;
+    Object.assign(nextEntry, { [field]: suggestedValue });
     nextAiSuggestedFields[field] = {
       sourceLabel: suggestion.documentLabel,
       sourceType: suggestion.sourceType,
@@ -257,10 +269,12 @@ function W2Card({
   onRemove,
   removable,
   availableSuggestions,
+  originalInput, originalIndex, onSourcesChange,
 }: {
+  originalInput: W2StateLocalSourceContext | null; originalIndex: number; onSourcesChange: (sources: W2EntryData["stateLocalSources"]) => void;
   index: number;
   entry: W2EntryData;
-  onUpdate: (field: keyof W2EntryData, value: string) => void;
+  onUpdate: (field: keyof W2EntryData, value: string | string[] | undefined) => void;
   onConfirmField: (field: W2SuggestedField) => void;
   onConfirmAllFields: () => void;
   onApplySuggestion: (suggestion: W2DocumentSuggestion) => void;
@@ -418,7 +432,7 @@ function W2Card({
                     <p className="guided-doc-helper-meta">IRS sample values for testing only.</p>
                   ) : null}
                   <p className="guided-doc-helper-meta">
-                    {suggestion.summary.employerName} · Box 1 ${Number(suggestion.summary.wages).toLocaleString()} · Box 2 ${Number(suggestion.summary.federalWithheld).toLocaleString()}
+                    {suggestion.summary.employerName} · Box 1 {formatGuidedCurrency(suggestion.summary.wages)} · Box 2 {formatGuidedCurrency(suggestion.summary.federalWithheld)}
                   </p>
                 </div>
                 <button
@@ -443,6 +457,13 @@ function W2Card({
 
       <div className="guided-form-grid">
         <label className="guided-field">
+          <span className="guided-field-label">W-2 recipient</span>
+          <select className="guided-select" value={entry.accountHolder ?? ""} onChange={(event) => onUpdate("accountHolder", event.target.value)}>
+            <option value="">Not answered</option><option value="primary">Primary taxpayer</option><option value="spouse">Spouse on a joint return</option>
+          </select>
+          <SuggestedFieldNotice suggestion={entry.aiSuggestedFields?.accountHolder} availableSuggestions={availableSuggestions} onConfirm={() => onConfirmField("accountHolder")} />
+        </label>
+        <label className="guided-field">
           <span className="guided-field-label">Employer name</span>
           <input
             type="text"
@@ -458,7 +479,7 @@ function W2Card({
           />
         </label>
         <label className="guided-field">
-          <span className="guided-field-label">Employer EIN (optional)</span>
+          <span className="guided-field-label">Employer EIN (Box b)</span>
           <input
             type="text"
             className={`guided-input${entry.aiSuggestedFields?.employerEin?.status === "pending-confirmation" ? " guided-input-ai-pending" : entry.aiSuggestedFields?.employerEin?.status === "confirmed" ? " guided-input-ai-confirmed" : ""}`}
@@ -517,6 +538,7 @@ function W2Card({
       <details className="guided-expand">
         <summary className="guided-expand-trigger">More W-2 boxes</summary>
         <div className="guided-expand-body">
+          <p className="guided-hint">Enter the actual payroll boxes, including 0 where the source confirms zero. An empty field remains unknown.</p>
           <div className="guided-form-grid">
             <CurrencyField
               label="Box 3 — Social Security wages"
@@ -589,6 +611,38 @@ function W2Card({
               )}
             />
           </div>
+          <CurrencyField
+            label="Box 7 — Social Security tips"
+            hint="Enter the actual amount. A blank saved value is unknown; enter 0 only after checking the source."
+            value={entry.socialSecurityTips ?? ""}
+            onChange={value => onUpdate("socialSecurityTips", value)}
+            fieldClassName={entry.aiSuggestedFields?.socialSecurityTips?.status === "pending-confirmation" ? "guided-field-ai-pending" : entry.aiSuggestedFields?.socialSecurityTips?.status === "confirmed" ? "guided-field-ai-confirmed" : undefined}
+            footer={<SuggestedFieldNotice suggestion={entry.aiSuggestedFields?.socialSecurityTips} availableSuggestions={availableSuggestions} onConfirm={() => onConfirmField("socialSecurityTips")} />}
+          />
+      <CompensationReportingFields data={entry} kind="w2" onChange={patch => { for (const [field, value] of Object.entries(patch)) onUpdate(field as keyof W2EntryData, value); }} />
+          <CurrencyField label="Box 8 — Allocated tips" hint="Enter the actual reported amount. Unknown stays blank; checked zero remains zero." value={entry.allocatedTips ?? ""} onChange={value => onUpdate("allocatedTips", value)} />
+          <CurrencyField label="Box 10 — Dependent-care benefits"
+            hint="Check the actual W-2. Enter 0 only if no benefits are reported. Positive amounts need the benefit details in Tax Credits."
+            value={entry.box10DependentCareBenefits ?? ""} onChange={value => onUpdate("box10DependentCareBenefits", value)}
+            fieldClassName={entry.aiSuggestedFields?.box10DependentCareBenefits?.status === "pending-confirmation" ? "guided-field-ai-pending" : entry.aiSuggestedFields?.box10DependentCareBenefits?.status === "confirmed" ? "guided-field-ai-confirmed" : undefined}
+            footer={<SuggestedFieldNotice suggestion={entry.aiSuggestedFields?.box10DependentCareBenefits} availableSuggestions={availableSuggestions} onConfirm={() => onConfirmField("box10DependentCareBenefits")} />} />
+          <CurrencyField label="Box 12 code W — Employer HSA contributions" hint="Include cafeteria-plan contributions. Enter actual zero if no code W is reported; HSA employer worksheet reconciliation requires this source amount." value={entry.box12CodeW ?? ""} onChange={value => onUpdate("box12CodeW", value)}
+            fieldClassName={entry.aiSuggestedFields?.box12CodeW?.status === "pending-confirmation" ? "guided-field-ai-pending" : entry.aiSuggestedFields?.box12CodeW?.status === "confirmed" ? "guided-field-ai-confirmed" : undefined}
+            footer={<SuggestedFieldNotice suggestion={entry.aiSuggestedFields?.box12CodeW} availableSuggestions={availableSuggestions} onConfirm={() => onConfirmField("box12CodeW")} />} />
+          <div className="guided-form-grid">
+            <label className="guided-field">
+              <span className="guided-field-label">State reporting on this W-2</span>
+              <select className="guided-select" value={entry.stateTaxReporting ?? ""} onChange={(event) => onUpdate("stateTaxReporting", event.target.value)}>
+                <option value="">Not answered</option><option value="none">No state section reported</option><option value="single">One state reported</option><option value="multiple">Multiple states reported</option>
+              </select>
+              <small>Use the actual form. Enter multiple printed rows in the original-source collector below.</small>
+            </label>
+            <label className="guided-field">
+              <span className="guided-field-label">Box 15 — State</span>
+              <input className="guided-input" value={entry.state ?? ""} onChange={(event) => onUpdate("state", event.target.value.toUpperCase())} maxLength={2} placeholder="Actual two-letter state" />
+              <SuggestedFieldNotice suggestion={entry.aiSuggestedFields?.state} availableSuggestions={availableSuggestions} onConfirm={() => onConfirmField("state")} />
+            </label>
+          </div>
           <div className="guided-form-grid">
             <CurrencyField
               label="Box 16 — State wages"
@@ -625,18 +679,29 @@ function W2Card({
               )}
             />
           </div>
+          <CurrencyField label="Box 18 — Local wages (first entered row)" value={entry.localWages ?? ""} onChange={value => onUpdate("localWages", value)} />
+          <CurrencyField label="Box 19 — Local tax withheld (first entered row)" value={entry.localTaxWithheld ?? ""} onChange={value => onUpdate("localTaxWithheld", value)} />
+          <label className="guided-field"><span className="guided-field-label">Box 20 — Locality name (first entered row)</span><input className="guided-input" value={entry.localityName ?? ""} onChange={event => onUpdate("localityName", event.target.value)} /></label>
         </div>
       </details>
+      {entry.stateLocalSources !== undefined && <fieldset className="guided-card"><legend>Actual original Box 12 amounts</legend>
+        <p className="guided-hint">Check each modeled code against this original. Enter actual zero only after checking that code; an empty amount remains unknown. These amounts are source facts and are not deducted again from Box 1 wages. Other codes or special reporting still require their actual method.</p>
+        {W2_SOURCE_BOX12_FIELDS.filter(key => key !== "box12CodeW").map(key => <CurrencyField key={key} label={`Actual Box 12 code ${key.slice(9)}`} value={entry[key] ?? ""} onChange={value => onUpdate(key, value)} />)}
+        <p className="guided-hint">Also complete the actual code W and Box 8 fields above before confirming this original.</p>
+      </fieldset>}
+      <W2StateLocalDetails originalInput={originalInput} originalIndex={originalIndex} data={entry.stateLocalSources} onChange={onSourcesChange} />
     </div>
   );
 }
 
 export function SectionW2Income({
+  originalInput = null,
   entries,
   workspace,
   onUploadDocuments,
   onEntriesChange,
 }: {
+  originalInput?: W2StateLocalSourceContext | null;
   entries: W2EntryData[];
   workspace: ReturnWorkspaceRecord;
   onUploadDocuments?: (files: File[]) => Promise<string>;
@@ -648,6 +713,10 @@ export function SectionW2Income({
     [workspace.documents, workspace.structuredFacts]
   );
   const [attachedSuggestionCandidates, setAttachedSuggestionCandidates] = useState<W2DocumentSuggestion[]>([]);
+  const attachedSuggestionWorkspaceId = useRef(workspace.id);
+  const attachedReviewToken = useRef(0);
+  const activeWorkspaceId = useRef(workspace.id);
+  activeWorkspaceId.current = workspace.id;
   const [cachedAttachedDocumentIds, setCachedAttachedDocumentIds] = useState<Set<string>>(new Set());
   const [selectedAttachedDocumentIds, setSelectedAttachedDocumentIds] = useState<string[]>([]);
   const [attachedReviewPending, setAttachedReviewPending] = useState(false);
@@ -678,12 +747,18 @@ export function SectionW2Income({
       suggestionsByDocumentId.set(suggestion.documentId, suggestion);
     }
 
-    for (const suggestion of attachedSuggestionCandidates) {
-      suggestionsByDocumentId.set(suggestion.documentId, suggestion);
-    }
+    if (attachedSuggestionWorkspaceId.current === workspace.id) for (const suggestion of attachedSuggestionCandidates) suggestionsByDocumentId.set(suggestion.documentId, suggestion);
 
     return Array.from(suggestionsByDocumentId.values());
-  }, [attachedSuggestionCandidates, workspaceSuggestions]);
+  }, [attachedSuggestionCandidates, workspaceSuggestions, workspace.id]);
+
+  useEffect(() => {
+    attachedReviewToken.current += 1;
+    setAttachedSuggestionCandidates([]);
+    setAttachedReviewMessage(null);
+    setAttachedReviewPending(false);
+    return () => { attachedReviewToken.current += 1; };
+  }, [workspace.id]);
 
   useEffect(() => {
     let cancelled = false;
@@ -716,9 +791,9 @@ export function SectionW2Income({
     });
   }, [attachedReviewDocuments]);
 
-  function updateEntry(index: number, field: keyof W2EntryData, value: string) {
+  function updateEntry(index: number, field: keyof W2EntryData, value: string | string[] | undefined) {
     const next = current.map((entry, i) =>
-      i === index ? { ...clearSuggestedField(entry, field), [field]: value } : entry
+      i === index ? { ...clearSuggestedField(entry, field), [field]: value, ...(entry.stateLocalSources && entry[field] !== value ? { stateLocalSources: { ...entry.stateLocalSources, sourceFactsConfirmed: null } } : {}) } : entry
     );
     onEntriesChange(next);
   }
@@ -765,6 +840,9 @@ export function SectionW2Income({
 
     setAttachedReviewPending(true);
     setAttachedReviewMessage(null);
+    const token = ++attachedReviewToken.current;
+    const sourceWorkspaceId = workspace.id;
+    const isCurrent = () => attachedReviewToken.current === token && activeWorkspaceId.current === sourceWorkspaceId;
 
     try {
       const nextSuggestions: W2DocumentSuggestion[] = [];
@@ -773,6 +851,7 @@ export function SectionW2Income({
 
       for (const document of selectedDocuments) {
         const file = await getCachedWorkspaceDocumentFile(workspace.id, document.id);
+        if (!isCurrent()) return;
 
         if (!file) {
           missingDocumentLabels.push(document.label || document.name);
@@ -780,6 +859,7 @@ export function SectionW2Income({
         }
 
         const detectedDocument = await detectUploadedDocumentFromFile(file);
+        if (!isCurrent()) return;
         const suggestion = buildUploadedW2Suggestion(document, detectedDocument);
 
         if (suggestion) {
@@ -789,6 +869,7 @@ export function SectionW2Income({
         }
       }
 
+      attachedSuggestionWorkspaceId.current = sourceWorkspaceId;
       setAttachedSuggestionCandidates((currentSuggestions) => {
         const suggestionsByDocumentId = new Map(
           currentSuggestions.map((suggestion) => [suggestion.documentId, suggestion]),
@@ -817,13 +898,14 @@ export function SectionW2Income({
           : `Detected W-2 values from ${nextSuggestions.length} attached PDF${nextSuggestions.length === 1 ? "" : "s"}.`,
       );
     } catch (error) {
+      if (!isCurrent()) return;
       setAttachedReviewMessage(
         error instanceof Error
           ? error.message
           : "Could not review the selected attached PDFs.",
       );
     } finally {
-      setAttachedReviewPending(false);
+      if (isCurrent()) setAttachedReviewPending(false);
     }
   }
 
@@ -897,6 +979,7 @@ export function SectionW2Income({
               >
                 {attachedReviewPending ? "Checking attached PDFs..." : "Try selected attached PDFs"}
               </button>
+              {attachedReviewPending && <button type="button" className="utility-button utility-button-small" onClick={() => { attachedReviewToken.current += 1; setAttachedReviewPending(false); setAttachedReviewMessage("Local W-2 detection cancelled."); }}>Cancel W-2 detection</button>}
             </div>
           </div>
         ) : null}
@@ -921,6 +1004,9 @@ export function SectionW2Income({
               onRemove={() => removeEntry(index)}
               removable={current.length > 1}
               availableSuggestions={suggestions}
+              originalInput={originalInput}
+              originalIndex={buildW2Inputs(current.slice(0, index)).length}
+              onSourcesChange={stateLocalSources => onEntriesChange(current.map((row, i) => i === index ? { ...row, stateLocalSources } : row))}
             />
           ))}
         </div>

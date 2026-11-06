@@ -1,0 +1,38 @@
+form: "Ohio2026 paid Virginia resident-credit draft"
+fullName: "Current-source ordinary full-year Ohio employee credit for settled Virginia tax"
+taxYear: 2026
+reference: "https://codes.ohio.gov/ohio-revised-code/section-5747.05"
+sources:
+  - "https://codes.ohio.gov/ohio-administrative-code/rule-5703-7-03"
+  - "https://codes.ohio.gov/ohio-revised-code/section-5747.98"
+  - "https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/forms/ohio_individual/individual/2025/it1040-booklet.pdf"
+  - "https://tax.virginia.gov/sites/default/files/inline-files/virginia-tax-electronic-payment-guide.pdf"
+notes: |
+  Source-first2026 statutory draft, not a final2026 IT RC or VA calculator.
+  ORC5747.05(B),(C),(D),(F),5747.98 and OAC5703-7-03 refreshed2026-11-05.
+  Historical2025 IT RC rounding/worksheet continuity remains explicitly provisional:
+  whole-dollar column amounts, ratio truncate4, attribution whole-dollar rounding.
+  Filed original VA763 and completed paid account are actual supplied originals,
+  never a computed or fabricated Virginia return. Synthetic fixtures are labeled.
+  Current raw residentCreditSources field does not widen historical2025 residency
+  field, historical source/scalar/numeric/audit behavior, central2026 year registry,
+  full federal calculation, final form identity/export, filing or human review gates.
+lines:
+  - line: "current-paid-source"
+    formula: "Explicit current2026 single primary under65 no-dependent ordinary C-corporation employee, full OH year, one original W2 with exact OH/VA state rows and no locals/school/other sources. Match actual original identity/employer/year/W2/current complete source snapshots and contiguous unique annual service/payment rows; derive same VA compensation and reconcile both specialized and common payroll. All other Ohio credits, tax adjustments, business, reciprocal and nonresident amounts are source-qualified absent, never inferred. Ordinary existing qualifier keeps rejecting this separate method."
+    testRef: "tests/engine/state/oh-2026-resident-credit-draft.test.ts::qualifies only complete current paid Virginia originals: %s"
+  - line: "filed-and-settled"
+    formula: "Original2026 VA763 single annual filed return, actual net income-tax liability after nonpayment credits, agency completed account, all applied withholding/estimate/balance receipts and completed refunds must reconcile exact cents. VA income equals actual service/W2 wages; Ohio resident wages include that same income exactly once. VA W2 withholding is not tax paid: payments minus refunds must equal net liability, with unpaid/unapplied/outgoing/other-tax/penalty/interest all explicitly0 and no pending refund changes. Match owner/year/state/period and actual filing<=statement<=OH asOf; validate all amounts/dates before known-zero shortcuts."
+    testRef: "tests/engine/state/oh-2026-resident-credit-draft.test.ts::rejects unsettled contradictory or unavailable paid-account originals: %s"
+  - line: "actual-transactions"
+    formula: "Keep normalized receipt ID/reference uniqueness and exact sum-before-rounding. Provided settled ACH-credit originals apply only to positive balance receipts: exact current taxpayer/VA/2026-12-31/income-tax-balance/amount and numeric15 trace match bank settlement and applied agency posting; posting date/account reference/posting identity reconcile. Any supplied partial/contradictory pair rejects. Repeated kind/date/amount requires every colliding payment to have distinct valid bank trace AND posting identity, and trace/posting reuse anywhere rejects. No generic filing/provider confirmation substitutes for cash."
+    testRef: "tests/engine/state/oh-2026-resident-credit-draft.test.ts::reconciles distinct settled remittances and exact cents before rounding"
+  - line: "statutory-lesser-of"
+    formula: "A=roundDollar(actual VA same-income wages) and B=roundDollar(actual net liability paid), using0columnA when paid0. Ratio=min(1,truncate4(A/actual OHAGI)); available=remaining Ohio tax after preceding credits then NRC; cap=roundDollar(ratio*available); residentCredit=min(B,cap). Positive paid tax requires positive same income. VA20035/OHAGI100000/tax2313 gives truncate4(.20035)=.2003 and cap463, whereas rounded ratio would incorrectly produce464. Validate paired positivity on original cents before whole-dollar column rounding; valid positive cents can round to0. One state's receipts sum exactly before single rounding, no per-receipt or rounded-ratio inflation. Full-yearOH proves NRC0; no reciprocal/NRC overlap. Separate2026 audit labels never claim final printed2026 lines."
+    testRef: "tests/engine/state/oh-2026-resident-credit-draft.test.ts::applies independent literal2026 paid-credit and settlement accounts %s"
+  - line: "earlier-credit-order"
+    formula: "AGI30000/exemption2400 gives Ohio tax375, personal20 before resident credit, available355; VA15000/paid500=>ratio.5/cap178/credit178/incomeTax177/refund823 on OHWH1000. AGI28000/VA14000/paid300 proves actual Ohio tax0 but still validates complete source evidence before credit0. No gross-tax cap or unknown-zero shortcut."
+    testRef: "tests/engine/state/oh-2026-resident-credit-draft.test.ts::applies independent literal2026 paid-credit and settlement accounts %s"
+  - line: "binding-privacy-and-gates"
+    formula: "Current opaque source context binds unchanged complete input/raw originals; fabricated/copied/stale contexts and changed direct projections reject. Same-money provenance changes alter digest, no inputs or Decimal global precision mutate. Audit exposes amounts/digest only, no SSN/EIN/address/trace/posting/rawreferences. Result is2026 incomplete/reviewpending/filingfalse, never changes historical2025 behavior or opens central2026 federal/state constants."
+    testRef: "tests/engine/state/oh-2026-resident-credit-draft.test.ts::binds current originals privately and preserves historical and filing gates"

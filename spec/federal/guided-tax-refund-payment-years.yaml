@@ -1,0 +1,37 @@
+form: "Native mixed-payment-year state refund recovery"
+fullName: "Actual 2025 single-owner payment-basis intake for existing recovery API"
+taxYear: 2025
+reference: "https://www.irs.gov/publications/p525#en_US_2025_publink1000229426"
+notes: |
+  Intake only for the existing canonical recovery method. Publication525 (2025)
+  Example28 allocates400 into300 historical and100 current, reducing1000 to900.
+  Native scope is a2025 single under65 owner and actual2024 ordinary history;
+  other canonical cohorts remain backend-only. No engine formula, final2026,
+  paper qualification or public filing gate changes. Legacy worksheet stays
+  separate and mutually exclusive. No original date/year/owner/amount/history
+  or negative answer is inferred; capture is explicit and immutable.
+lines:
+  - line: "canonical-handoff"
+    description: "Collect actual complete dated payment basis and historical return"
+    formula: "Preserve every original1099G/payment/reference/history field and bind actual existing current-year state estimated payment uniquely by state/date/exactamount. Hand off taxableStateRefundRecoveries and refundPaymentBasis, never a fabricated taxable total or legacy scalar expense year."
+    testRef: "tests/guided-interview/guided-tax-refund-payment-years.test.ts::hands actual mixed-payment originals to the canonical recovery API"
+  - line: "literal-transfers"
+    description: "Replay existing Example28 routes using independent literals"
+    formula: "400 *3000 /4000 =300 historical;400 *1000 /4000 =100 current;1000 -100 =900 current income-tax deduction. Canonical engine supplies results; native collector supplies no arithmetic."
+    testRef: "tests/guided-interview/guided-tax-refund-payment-years.test.ts::retains independent300 taxable and100 current with900 state payment deduction"
+  - line: "unknown-and-boundaries"
+    description: "Deny missing facts and unsupported methods"
+    formula: "Every source/date/payment/identity/zero/election/history exclusion remains explicit. Unknown and conflicting scalar/basis/legacy packets, wrong owners/year, unlinked current payments, duplicate identities and fractional-cent allocations deny without discarding facts."
+    testRef: "tests/guided-interview/guided-tax-refund-payment-years.test.ts::denies unknown conflicting and outside-cohort refund facts"
+  - line: "visible-intake"
+    description: "Capture and confirm through actual native controls"
+    formula: "User explicitly enters basis/history, captures originals and confirms after the last edit. Same-cash provenance edits revoke confirmation; exact no-op does not. Immutable originals are never silently recopied."
+    testRef: "tests/apps/web/tax-refund-payment-years-interactions.test.tsx::collects payment-year originals explicitly and revokes provenance edits"
+  - line: "saved-recovery"
+    description: "Preserve drafts and source-bound confirmation through local recovery"
+    formula: "Round-trip the actual saved guided state, retaining blanks/null/explicit zero and immutable captured snapshots. Replaying stale household/current-payment/original references cannot restore confirmation or calculate."
+    testRef: "tests/apps/web/workspace-tax-refund-payment-years.test.ts::retains unknown zero and original snapshots through recovery"
+  - line: "partial-source-status"
+    description: "Incomplete or inconsistent recovery remains visibly partial"
+    formula: "A new recovery collection is not a confirmed government source while canonical current-source replay fails. This narrow route preserves existing source status for callers without the new collection."
+    testRef: "tests/guided-interview/guided-tax-refund-payment-years.test.ts::keeps unconfirmed or inconsistent recovery records visibly partial"

@@ -1,0 +1,8 @@
+form: "Independent finite PA royalty class review"
+taxYear: 2025
+reference: "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40e.pdf"
+notes: "Distinct reviewer controls from ScheduleE per-category rows and 61PaCode121.21. No MI settlement, human qualification or final2026 approval. Same economic source or receipt cannot be multiplied by formatting; genuinely distinct payerTIN originals stay distinct."
+lines:
+  - line: "independent"
+    formula: "Round actual gross and each conserved expense category once; keep current full original/property/receipt binding, exhaustive disjoint coverage, canonical history and privacy; stable public Decimal and unchanged global settings."
+    testRef: "tests/engine/state/pa-royalty-independent.test.ts::independent PA royalty source case: %s"

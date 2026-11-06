@@ -1,0 +1,79 @@
+form: "EIC investment income from child elections"
+fullName: "Publication 596 Worksheet 1 lines 2 and 4 and Worksheet 2"
+taxYear: 2025
+irsReference: "https://www.irs.gov/publications/p596"
+retrievedAt: "2026-10-26"
+notes: |
+  Worksheet 1 adds each elected child's Form8814 line1b to the parent's exempt
+  interest. It also includes child line12 ordinary income separately from the
+  preferential income already transferred to the parent's dividend/capital lines.
+  For Alaska dividends, apply Worksheet2 to each child: divide actual Alaska
+  dividends by taxable interest plus nonqualified dividends, retain six decimal
+  places, multiply by child line12 and round the dollar allocation. Subtract
+  that allocation from line12. Do not substitute the NIIT/4952 allocation, which
+  starts from different rounded lines. With no Alaska dividends, use line12
+  directly, including a signed preferential-allocation remainder. Existing
+  election, income-character, identity and exempt-interest validations continue.
+  This completes these two components only; other Worksheet1 methods and final
+  2026 qualification remain separate work.
+lines:
+  - line: "ordinary"
+    description: "Include actual child ordinary income in the investment ceiling"
+    formula: "Child taxable interest10000 produces line12 7300; parent interest4650 yields11950, while4650.01 exceeds the 2025 ceiling. Wages2000 yield credit155 only at the ceiling."
+    testRef: "tests/engine/eic-child-investment-income.test.ts::includes child ordinary income on both sides of the investment ceiling"
+  - line: "exempt"
+    description: "Include child exempt interest without adding it to parent Form1040"
+    formula: "Child line1b11950.01 disqualifies even with child line12 zero. The parent's own Form1040line2a remains zero."
+    testRef: "tests/engine/eic-child-investment-income.test.ts::includes child exempt interest only in the required EIC component"
+  - line: "alaska"
+    description: "Use the separate EIC Alaska worksheet and its rounded starting amount"
+    formula: "Child interest500, ordinary dividends6000 including qualified5000 and Alaska999, and capital distributions2000 give line12 1023. Ratio999/1500=.666000; rounded Alaska allocation681 leaves342. Parent interest6831 gives11950 total investment;6831.01 disqualifies."
+    testRef: "tests/engine/eic-child-investment-income.test.ts::uses Worksheet2 child line12 rather than the NIIT allocation"
+  - line: "signed-remainder"
+    description: "Conserve the signed child allocation and known zero sources"
+    formula: "Child qualified dividends1350.50 and capital distributions1350.50 produce parent preferential income2 and line12 -1. With parent interest11949, actual investment income11950 permits credit155."
+    testRef: "tests/engine/eic-child-investment-income.test.ts::preserves a signed child remainder and an explicit zero transfer"
+  - line: "multiple-children"
+    description: "Sum each child's ordinary and exempt components exactly once"
+    formula: "Child A ordinary investment2200 and exempt100 plus child B ordinary300 and exempt200 total2800. Parent interest9150 gives11950; preserve sources through save and reopen."
+    testRef: "tests/engine/eic-child-investment-income.test.ts::aggregates distinct child worksheets once without leaking identities"
+  - line: "worksheet2-1"
+    description: "Child Alaska worksheet line 1"
+    formula: "Actual child Form8814line2a ordinary dividends"
+    testRef: "tests/engine/eic-child-investment-income.test.ts::uses Worksheet2 child line12 rather than the NIIT allocation"
+  - line: "worksheet2-2"
+    description: "Child Alaska worksheet line 2"
+    formula: "Actual child Form8814line2b qualified dividends"
+    testRef: "tests/engine/eic-child-investment-income.test.ts::uses Worksheet2 child line12 rather than the NIIT allocation"
+  - line: "worksheet2-3"
+    description: "Child Alaska worksheet line 3"
+    formula: "Line1 minus line2"
+    testRef: "tests/engine/eic-child-investment-income.test.ts::uses Worksheet2 child line12 rather than the NIIT allocation"
+  - line: "worksheet2-4"
+    description: "Child Alaska worksheet line 4"
+    formula: "Actual child Form8814line1a taxable interest"
+    testRef: "tests/engine/eic-child-investment-income.test.ts::uses Worksheet2 child line12 rather than the NIIT allocation"
+  - line: "worksheet2-5"
+    description: "Child Alaska worksheet line 5"
+    formula: "Line3 plus line4"
+    testRef: "tests/engine/eic-child-investment-income.test.ts::uses Worksheet2 child line12 rather than the NIIT allocation"
+  - line: "worksheet2-6"
+    description: "Child Alaska worksheet line 6"
+    formula: "Actual Alaska dividend subset of nonqualified dividends"
+    testRef: "tests/engine/eic-child-investment-income.test.ts::uses Worksheet2 child line12 rather than the NIIT allocation"
+  - line: "worksheet2-7"
+    description: "Child Alaska worksheet line 7"
+    formula: "Line6 divided by line5 rounded to six decimal places; used only when Alaska is positive"
+    testRef: "tests/engine/eic-child-investment-income.test.ts::uses Worksheet2 child line12 rather than the NIIT allocation"
+  - line: "worksheet2-8"
+    description: "Child Alaska worksheet line 8"
+    formula: "Calculated Form8814line12 including its signed rounding remainder"
+    testRef: "tests/engine/eic-child-investment-income.test.ts::uses Worksheet2 child line12 rather than the NIIT allocation"
+  - line: "worksheet2-9"
+    description: "Child Alaska worksheet line 9"
+    formula: "Round to nearest dollar line7 times line8"
+    testRef: "tests/engine/eic-child-investment-income.test.ts::uses Worksheet2 child line12 rather than the NIIT allocation"
+  - line: "worksheet2-10"
+    description: "Child Alaska worksheet line 10"
+    formula: "Line8 minus line9; sum across children for Worksheet1line4"
+    testRef: "tests/engine/eic-child-investment-income.test.ts::uses Worksheet2 child line12 rather than the NIIT allocation"

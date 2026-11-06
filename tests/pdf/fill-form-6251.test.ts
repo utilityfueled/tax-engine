@@ -24,7 +24,7 @@ function getFieldText(doc: PDFDocument, fieldName: string): string | undefined {
   return undefined;
 }
 
-const BLANK_6251 = "forms/blank/f6251.pdf";
+const BLANK_6251 = "forms/blank/2025/f6251.pdf";
 
 // ─── Form 6251 — Complex MFJ filer ─────────────────────────────────────────
 

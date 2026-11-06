@@ -1,0 +1,47 @@
+form: "PA Royalty Native Independent Review"
+fullName: "Independent source-first native MI history and settlement collection controls"
+taxYear: 2025
+reference: "https://www.legislature.mi.gov/Laws/MCL?objectName=mcl-206-110"
+notes: |
+  UI/source composition review only; unchanged C/core law is not independently
+  human-qualified. Before-output literal originals remain federal211000.5/210900.5,
+  filed211001/current210901, originallegal49.25/current149.25, PA6478/6475;
+  MIprinted80, actualcash80.20, net0/PAcredit0. Source confirmations never originate
+  historical filing, agency awards, cash receipts or amendment determinations.
+lines:
+  - line: "unknown"
+    formula: "Absent canonical source creates only unknown private draft; no filed/current/agency facts, zeroes or correction choice inferred."
+    testRef: "tests/guided-interview/pa-royalty-native-collection-independent.test.ts::independent native MI unknown draft preserves missing originals"
+  - line: "capture"
+    formula: "Explicit separate historical capture retains independent raw49.25 originals, never current149.25; immutable capture does not change current/historical source states."
+    testRef: "tests/guided-interview/pa-royalty-native-collection-independent.test.ts::independent historical capture binds raw filed originals without current cloning"
+  - line: "selection"
+    formula: "Unknown/current/unreviewed/missing separate original selection cannot originate historical facts."
+    testRef: "tests/guided-interview/pa-royalty-native-collection-independent.test.ts::independent historical capture rejects invalid selection %s"
+  - line: "pair"
+    formula: "Pending or stale child draft/packet cannot disappear during parent canonical projection. Read does not confirm or refresh any historical/current original."
+    testRef: "tests/guided-interview/pa-royalty-native-collection-independent.test.ts::independent canonical projection rejects changed child original %s"
+  - line: "correction"
+    formula: "Actual corrected49.25-to149.25 sources preserve historical211001/agency80.20; missing actual history, copyright use, correction review or received cash denies."
+    testRef: "tests/guided-interview/pa-royalty-native-collection-independent.test.ts::independent native correction rejects incomplete actual evidence %s"
+  - line: "native-absent"
+    formula: "Actual native absent-packet action creates unknown source draft; preserves unrelated digital/resident-credit sources; no JSON editor or source-default inference."
+    testRef: "tests/apps/web/pa-royalty-native-independent.test.tsx::independent absent MI native action preserves unrelated source drafts"
+  - line: "native-selection"
+    formula: "Actual native historical capture requires known current workspace and separate stored original; current-only or unknown workspace remains unavailable. Copyright use is independently entered, not selected/current copied."
+    testRef: "tests/apps/web/pa-royalty-native-independent.test.tsx::independent native history selection preserves unknown filed use and immutable originals"
+  - line: "native-confirmation"
+    formula: "Actual native source edits invalidate child packet/draft and parent confirmation, retaining original history and other source records."
+    testRef: "tests/apps/web/pa-royalty-native-independent.test.tsx::independent native factual edit invalidates both source levels %s"
+  - line: "shell"
+    formula: "Actual shell workspace identity passes through actual state section to native historical chooser. Separate original option appears; current option is excluded, not guessed."
+    testRef: "tests/apps/web/pa-royalty-native-independent.test.tsx::independent actual shell forwards current workspace to historical original chooser"
+  - line: "money-replay"
+    formula: "Unchanged replay preserves independent historical211001/current210901 and legal49.25/149.25, MIprinted80/exact80.20 and zero net tax/PAcredit without side effects."
+    testRef: "tests/guided-interview/pa-royalty-native-collection-independent.test.ts::independent unchanged native replay retains all prior monetary originals"
+  - line: "unknown-workspace"
+    formula: "Unknown current workspace cannot choose or capture local historical originals."
+    testRef: "tests/apps/web/pa-royalty-native-independent.test.tsx::independent unknown current workspace cannot select historical originals"
+  - line: "state-seam"
+    formula: "Actual state section forwards the actual current workspace identity to the separate-original native chooser; no name or URL guess."
+    testRef: "tests/apps/web/pa-royalty-native-independent.test.tsx::independent actual state section forwards current workspace to historical original chooser"

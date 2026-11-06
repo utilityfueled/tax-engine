@@ -11,6 +11,49 @@ purpose: |
   reduced the prior-year deduction.
 
 lines:
+  - line: "prior_tax_election"
+    description: Actual prior general sales-tax election excludes the income-tax refund
+    formula: if priorYearItemized and priorYearStateLocalTaxElection = sales, taxable income-tax refund = 0; preserve the original refund and actual itemization election
+    reference: https://www.irs.gov/instructions/i1040gi — Schedule 1 line 1, Taxable Refunds, Credits, or Offsets of State and Local Income Taxes; IRC 111
+    note: |
+      The IRS states that none of an income-tax refund is taxable when the
+      taxpayer elected general sales taxes instead of income taxes. An omitted
+      election remains omitted for historical compatibility; it is not inferred
+      as income or sales. This is distinct from the alternative-sales-tax cap
+      when income taxes actually were deducted. Year/source consistency still
+      applies before the zero-income transfer.
+    testRef: "tests/engine/forms/taxable-refund-sales-election.test.ts::preserves an actual sales election and excludes the income-tax refund"
+  - line: "sales_election_transfer"
+    description: Transfer the actual sales-election zero once without changing itemization facts
+    formula: Schedule 1 line 1 receives zero from the actual elected-sales-tax recovery worksheet
+    testRef: "tests/engine/forms/taxable-refund-sales-election.test.ts::retains actual itemization and the sales election through the full return"
+  - line: "election_source_boundary"
+    description: Preserve absent historical election and validate the original recovery year
+    formula: omitted election remains unknown; source deduction years must match even when the final amount is zero
+    testRef: "tests/engine/forms/taxable-refund-sales-election.test.ts::preserves omitted election compatibility and rejects mismatched recovery years"
+  - line: "origin_year"
+    description: Explicit origin year controls the historical SALT limitation
+    formula: require actual deduction priorTaxYear in 2018..2026 and priorTaxYear < receipt year; explicit refundExpenseTaxYear must match. Only historical unverified inputs may use Box3 as the former compatibility origin.
+    reference: IRC 111; Publication 525 (2025), Recoveries for 2 or more years; IRC 164(b)(6)
+    note: |
+      Box3 state-return year and actual expense/deduction year are distinct.
+      Verified source refunds retain both; payments and refunds in the same year
+      reduce the current deduction under Publication525.
+      Never assume the refund relates to the immediately preceding year. One
+      worksheet supports one origin year. Mixed-year refunds require separate
+      worksheets and are rejected until that orchestration is implemented.
+      For 2018-2024 the limit is 10000 (5000 MFS). For 2025 the pre-MFS limit
+      is max(10000, 40000 - 30% * max(0, priorYearSaltMagi - threshold)), where
+      threshold is 500000 (250000 MFS); divide the result by two for MFS.
+      For 2026 use 40400 and threshold 505000 (252500 MFS). Round to whole
+      dollars after the MFS division. MAGI is required for 2025 and 2026.
+      Positive refunds after itemization require actual historical income taxes
+      and property taxes, including an explicit zero when none were paid. Missing
+      cap facts reject instead of becoming zero. MAGI may be negative but must be
+      finite; refund and deduction/payment amounts must be nonnegative.
+      Sources refreshed 2026-10-24; independently reviewed expectations pending.
+    testRef: "tests/engine/forms/taxable-refund-years.test.ts::Taxable refunds retain their origin year"
+
   - line: "1"
     description: Total state/local income tax refunds from Form(s) 1099-G Box 2
     formula: sum(form1099G[].stateLocalIncomeTaxRefund)
@@ -110,3 +153,5 @@ edge_cases:
   - description: Itemized exactly equal to standard deduction
     result: No tax benefit from itemizing → refund not taxable
     test: itemized $14,600 with $14,600 standard → Line 6 = 0 → taxableRefund = 0
+
+# The separate original-sourced multi-year method is specified in taxable-state-refund-recoveries.yaml; this legacy single-year worksheet and its mixed-year guard are unchanged.

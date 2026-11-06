@@ -1,16 +1,55 @@
+import { RRTAPayrollSourcesSchema } from "./rrta-payroll-sources.js";
+import { MortgageInsurancePrepaidSourcesSchema } from "./mortgage-insurance-prepaid-sources.js";
+import {PassengerAutoParentSourcesSchema} from './passenger-auto-parent-sources.js';
+import {calculateScheduleCPassengerSources} from '@/engine/schedules/schedule-c-passenger-first-year-sources.js';
+import { OhioReturnHeaderSourcesSchema } from './ohio-return-header-sources.js';
+import { OhioSchoolDistrictFactsSchema } from './ohio-school-district.js';
+import {PAMarriedOrdinarySourcesSchema} from './pa-married-ordinary-sources.js';
 /**
  * Zod schemas for all tax input documents.
  * Each schema validates the JSON input files in data/input/.
  */
 
 import { z } from "zod";
+import {PassengerFirstYearSourcesSchema} from "./passenger-auto-first-year-sources.js";
+import { MACRSAssetBasisSourcesSchema, resolveMACRSAssetBasisSources } from "./macrs-asset-basis-sources.js";
+import { MACRSDispositionSourcesSchema, resolveMACRSDispositionSources } from "./macrs-disposition-sources.js";
+import { W2StateLocalSourcesSchema } from "./w2-state-local.js";
+import { OhioResidencyFactsSchema } from "./ohio-residency.js";
+import { OhioPaymentFactsSchema } from "./ohio-payments.js";
+import { PAResidencySourcesSchema } from "./pa-residency.js";
+import { PAReciprocitySourcesSchema } from "./pa-reciprocity.js";
+import { PAOrdinaryReturnFactsSchema } from "./pa-ordinary-return-facts.js";
+import { PAOrdinaryReturnCompletionSourcesSchema } from "./pa-ordinary-return-completion.js";
+import { FilingUnitHistorySchema } from "./filing-unit-sources.js";
+import { NolFilingUnitOriginSchema, NolFilingUnitUseSchema, NolNewMarriageCurrentSourcesSchema, NolSameCoupleJointHistorySchema } from "./net-operating-loss-filing-unit.js";
+import { SavingsBondReissueSourcesSchema } from "./savings-bond-reissue-sources.js";
+import { EducationRoomBoardPeriodSchema, EducationRoomBoardPeriodExpenseSchema, EducationRoomBoardEsaAllocationSchema, EducationRoomBoardPriorUseSchema, EducationRoomBoardPriorUseExpenseSchema } from "@/models/education-room-board-periods.js";
+import { VehicleRefinancingSourcesSchema } from "@/models/vehicle-refinancing-sources.js";
+import { QofInvestmentSourceSchema } from "@/models/qof-investment-sources.js";
 import { getNYIT201ResidentConstants } from "@/models/constants.js";
 import { d } from "@/utils/decimal.js";
+import { Form982NolSourcesSchema } from "@/models/cod-nol-sources.js";
+import { Form982AttributeSourcesSchema } from "@/models/cod-attribute-sources.js";
+import { IraBasisSourcesSchema } from "@/models/ira-basis-sources.js";
+import { CharitableCarryoverSourcesSchema } from "@/models/charitable-carryover-sources.js";
+import { AdoptionPriorBenefitHistorySchema } from "@/models/adoption-prior-benefits.js";
+import { Form8962SharedPolicySchema, MarketplaceCoveredIndividualSchema } from "@/models/form-8962-shared-policy.js";
+import { MarketplaceCoverageFamilySchema } from "@/models/marketplace-coverage-family.js";
+import { Form8962MarriageSourcesSchema } from "@/models/form-8962-marriage.js";
+import { K1CharitableReturnSourcesSchema } from "@/models/k1-charitable-return-sources.js";
+import { QbiLossSourcesSchema } from "@/models/qbi-loss-sources.js";
+import { EicSeparatedSpouseSourcesSchema } from "@/models/eic-separated-spouse-sources.js";
+import { RoyaltyPropertySourcesSchema } from "@/models/royalty-property-sources.js";
+import { EicDisallowanceSourcesSchema } from "@/models/eic-disallowance-sources.js";
+import { Form8862SourcesSchema } from "@/models/form-8862-sources.js";
 
 // Custom Zod type for decimal strings (validated as numbers, stored as strings for Decimal.js)
 const decimal = z.string().regex(/^-?\d+(\.\d+)?$/, "Must be a decimal number");
 const optionalDecimal = decimal.optional().default("0");
 const optionalDecimalInput = decimal.optional();
+const reportedTipOrOvertimeAmount = decimal.pipe(z.string().refine(value => d(value).isFinite() && d(value).gte(0), "Reported amount must be finite and nonnegative"));
+const reportedTippedOccupationCodes = z.array(z.string().regex(/^\d{3}$/)).max(2).refine(codes => new Set(codes).size === codes.length, "Duplicate reported occupation code");
 const ROTH_CODE_WITHOUT_COMPANIONS = new Set(["Q", "T"]);
 const CODE_J_ALLOWED_COMPANIONS = new Set(["8", "P", "S"]);
 const CODE_Y_ALLOWED_COMPANIONS = new Set(["4", "7", "K"]);
@@ -31,6 +70,9 @@ export const DependentSchema = z.object({
   dateOfBirth: z.string(), // YYYY-MM-DD
   monthsLivedWithYou: z.number().int().min(0).max(12),
   qualifiesForCTC: z.boolean(),
+  /** Timely employment-valid child SSN, or documented born-and-died exception. */
+  ctcSsnEligible: z.boolean().optional(),
+  odcTinEligible: z.boolean().optional(),
   qualifiesForODC: z.boolean().optional().default(false),
   qualifiesForEIC: z.boolean().optional().default(false),
 });
@@ -39,12 +81,16 @@ export const TaxpayerSchema = z.object({
   taxYear: z.number().int(),
   filingStatus: FilingStatusSchema,
   livedWithSpouseAtAnyTimeDuringYear: z.boolean().optional(),
+  stateResidency: z.enum(["full-year", "part-year", "nonresident"]).optional(),
   primary: z.object({
     firstName: z.string(),
     lastName: z.string(),
     ssn: z.string(),
     dateOfBirth: z.string(),
     occupation: z.string().optional(),
+    usResidencyMonths: z.number().int().min(0).max(12).optional(),
+    employmentValidSsnIssuedByDueDate: z.boolean().optional(),
+    tinIssuedByDueDate: z.boolean().optional(),
   }),
   spouse: z
     .object({
@@ -53,6 +99,9 @@ export const TaxpayerSchema = z.object({
       ssn: z.string(),
       dateOfBirth: z.string(),
       occupation: z.string().optional(),
+      usResidencyMonths: z.number().int().min(0).max(12).optional(),
+      employmentValidSsnIssuedByDueDate: z.boolean().optional(),
+      tinIssuedByDueDate: z.boolean().optional(),
     })
     .optional(),
   address: z.object({
@@ -66,6 +115,8 @@ export const TaxpayerSchema = z.object({
 });
 
 export const W2Schema = z.object({
+  stateLocalSources: W2StateLocalSourcesSchema.optional(),
+  taxYear: z.number().int().optional(),
   employer: z.object({
     name: z.string(),
     ein: z.string(),
@@ -85,11 +136,16 @@ export const W2Schema = z.object({
   box12CodeBB: optionalDecimal, // Box 12 code BB designated Roth contributions under section 403(b)
   box12CodeEE: optionalDecimal, // Box 12 code EE designated Roth contributions under governmental section 457(b)
   box12CodeT: optionalDecimal, // Box 12 code T employer-provided adoption benefits
-  socialSecurityWages: optionalDecimal, // Box 3
-  socialSecurityTips: optionalDecimal, // Box 7
+  box12CodeTP: reportedTipOrOvertimeAmount.optional(), // 2026 Box12TP total reported cash tips; already included in wages.
+  box12CodeTT: reportedTipOrOvertimeAmount.optional(), // 2026 Box12TT qualified overtime; already included in wages.
+  treasuryTippedOccupationCodes: reportedTippedOccupationCodes.optional(), // 2026 Box14b; 000 is an actual nonqualifying occupation.
+  socialSecurityWages: optionalDecimalInput, // Box 3; omitted is not a verified zero
+  socialSecurityTips: optionalDecimalInput, // Box 7; omitted is not a verified zero
+  allocatedTips: optionalDecimalInput, // Box8; actual source amount, distinct from Box1/7 income.
   socialSecurityWithheld: optionalDecimal, // Box 4
   medicareWages: optionalDecimal, // Box 5
   medicareWithheld: optionalDecimal, // Box 6
+  box10DependentCareBenefits: optionalDecimalInput, // Actual Box 10; omission is unknown, not zero.
   stateTaxWithheld: optionalDecimal, // Box 17
   localWages: optionalDecimal, // Box 18
   localTaxWithheld: optionalDecimal, // Box 19
@@ -104,8 +160,19 @@ export const W2Schema = z.object({
   locality: z.string().optional(), // Box 20 locality name
 });
 
+const PrivateActivityBondFactsSchema = z.object({
+  taxYear: z.union([z.literal(2025), z.literal(2026)]),
+  sourceId: z.string().trim().min(1),
+  recipientAmountsConfirmed: z.literal(true),
+  otherwiseAllowableDeduction: decimal,
+  deductionSourceReference: z.string().trim().min(1).optional(),
+  deductionAllowanceAndNoDuplicationConfirmed: z.literal(true).optional(),
+});
+
 export const Form1099IntSchema = z.object({
+  taxYear: z.number().int().optional(), // Actual original calendar year; omission remains unknown.
   payer: z.string(),
+  accountReference: z.string().trim().min(1).optional(), // Actual local account identity for source-bound tax elections; omission remains unknown.
   payerTin: z.string().optional(), // Payer TIN shown on the recipient copy; used for IL Schedule IL-WIT Column B auto-attachment
   accountHolder: z.enum(["primary", "spouse"]).optional(), // Local owner tag for taxpayer vs spouse on shared state returns
   interestIncome: decimal, // Box 1
@@ -115,13 +182,17 @@ export const Form1099IntSchema = z.object({
   foreignTaxPaid: optionalDecimal, // Box 6
   foreignCountry: z.string().optional(), // Box 7
   taxExemptInterest: optionalDecimal, // Box 8
+  privateActivityBondInterest: decimal.optional(), // Actual Box 9, included in Box 8; unknown is not zero.
+  privateActivityBondFacts: PrivateActivityBondFactsSchema.optional(),
   paDirectObligationInterest: optionalDecimal, // PA-specific allocation of exempt interest attributable to direct PA obligations
   stateWithheld: optionalDecimal, // Box 17 — state income tax withheld
   state: z.string().optional(), // Box 18 — state
 });
 
 export const Form1099DivSchema = z.object({
+  taxYear: z.number().int().optional(), // Actual original calendar year; omission remains unknown.
   payer: z.string(),
+  accountReference: z.string().trim().min(1).optional(), // Actual local account identity for source-bound tax elections; omission remains unknown.
   payerTin: z.string().optional(), // Payer TIN shown on the recipient copy; used for IL Schedule IL-WIT Column B auto-attachment
   accountHolder: z.enum(["primary", "spouse"]).optional(), // Local owner tag for taxpayer vs spouse on shared state returns
   ordinaryDividends: decimal, // Box 1a
@@ -136,6 +207,8 @@ export const Form1099DivSchema = z.object({
   foreignTaxPaid: optionalDecimal, // Box 7
   foreignCountry: z.string().optional(),
   exemptInterestDividends: optionalDecimal, // Box 12
+  specifiedPrivateActivityBondInterest: decimal.optional(), // Actual Box 13, already included in Box 12 and net of fund expenses.
+  privateActivityBondFacts: PrivateActivityBondFactsSchema.optional(),
   paExemptInterestDividendAllocation: optionalDecimal, // PA-specific allocation of Box 12 attributable to PA and U.S. government obligations
   stateWithheld: optionalDecimal, // Box 16 — state income tax withheld
   state: z.string().optional(), // Box 17 — state
@@ -153,10 +226,21 @@ export const CapitalTransactionSchema = z.object({
   washSale: z.boolean().default(false),
   washSaleDisallowed: optionalDecimal,
   digitalAsset: z.boolean().default(false), // PA Schedule D digital-asset disclosure support
+  qofInclusion: z.boolean().optional(), // Previously deferred QOF gain, Form8949 code Y.
+  adjustmentCodes: z.string().regex(/^(?:B|E|BE)$/).optional(), // Source-derived Form8949 column f codes.
+  sourceDocumentType: z.enum(["1099-b", "1099-da", "not-reported"]).optional(), // Actual reporting source; omission in the original Form1099B collection retains its legacy1099-B meaning.
 });
 
 export const Form1099BSchema = z.object({
   broker: z.string(),
+  sourceId: z.string().optional(), // Original statement identifier; never a transaction-row identifier.
+  taxYear: z.number().int().optional(),
+  accountReference: z.string().optional(),
+  federalWithheld: decimal.optional(), // Actual Box4; omission remains unknown, not zero.
+  withholdingOnlyOpenShortSale: z.object({
+    description: z.string().optional(), openedDate: z.string().optional(),
+    stillOpenAtYearEndConfirmed: z.boolean().optional(), otherNumberedBoxesBlankConfirmed: z.boolean().optional(),
+  }).strict().optional(),
   payerTin: z.string().optional(), // Broker or payer TIN shown on the recipient copy; used for IL Schedule IL-WIT Column B auto-attachment
   accountHolder: z.enum(["primary", "spouse"]).optional(), // Local owner tag for taxpayer vs spouse on shared state returns / spouse-separated PA Schedule D reporting
   stateWithheld: optionalDecimal, // Box 16 — state income tax withheld
@@ -164,36 +248,153 @@ export const Form1099BSchema = z.object({
   transactions: z.array(CapitalTransactionSchema),
 });
 
-// ── Form 1099-DA: Digital Asset Proceeds from Broker Transactions ──
-// Per IRS Form 1099-DA (2025+), brokers report digital asset dispositions.
-// Mirrors 1099-B structure with crypto-specific fields.
-// IRS Reference: Form 1099-DA Instructions (2025), Notice 2024-56
-export const Form1099DATransactionSchema = z.object({
-  digitalAssetName: z.string(), // Box 6 — name of digital asset
-  ticker: z.string().optional(), // Box 7 — ticker symbol (e.g., BTC, ETH)
-  quantity: decimal.optional(), // Quantity of digital asset disposed (for lot matching)
-  dateAcquired: z.string(), // Box 8 — YYYY-MM-DD or "VARIOUS"
-  dateSold: z.string(), // Box 9 — YYYY-MM-DD
-  proceeds: decimal, // Box 10 — gross proceeds
-  costBasis: decimal, // Box 11 — cost or other basis
-  gainOrLoss: decimal.optional(), // Box 12 — gain or loss (computed if not provided)
-  basisReportedToIRS: z.boolean().default(true), // Box G — whether basis was reported
-  holdingPeriod: z.enum(["short", "long"]), // Derived from acquisition/sale dates
-  transactionType: z.enum(["sale", "exchange", "payment", "gift"]).default("sale"),
-  lotId: z.string().optional(), // For specific_id method: identifies which lot to match
-  washSale: z.boolean().default(false),
-  washSaleDisallowed: optionalDecimal,
-  adjustments: optionalDecimal,
+// Actual local source facts for the Schedule D line 18/19 worksheets.
+const ScheduleDCapitalSourceIdentitySchema = z.object({
+  firstName: z.string().trim().min(1), lastName: z.string().trim().min(1), ssnLast4: z.string().regex(/^\d{4}$/),
+});
+const ScheduleDCapitalSourceRowSchema = z.object({
+  sourceId: z.string().trim().min(1), sourceTaxYear: z.number().int(), sourceReference: z.string().trim().min(1),
+  accountHolder: z.enum(["primary", "spouse"]), payerName: z.string().trim().min(1),
+});
+export const ScheduleDSpecialGainSourcesSchema = z.object({
+  taxYear: z.number().int(), sourceReference: z.string().trim().min(1),
+  sourceFactsConfirmed: z.literal(true), allSourcesIncluded: z.literal(true),
+  primary: ScheduleDCapitalSourceIdentitySchema, spouse: ScheduleDCapitalSourceIdentitySchema.optional(),
+  priorShortTermCapitalLoss: decimal, priorLongTermCapitalLoss: decimal, section1231Lookback: decimal,
+  amtBasisAndCarryoversSameAsRegularConfirmed: z.boolean(),
+  form2439Present: z.boolean(), partnershipInterestDispositionPresent: z.boolean(), other1250DispositionPresent: z.boolean(),
+  longTermAssets: z.array(ScheduleDCapitalSourceRowSchema.extend({
+    description: z.string().trim().min(1), dateAcquired: z.string().min(1), dateSold: z.string().min(1),
+    proceeds: decimal, costBasis: decimal, adjustments: decimal, washSale: z.boolean(), washSaleDisallowed: decimal,
+    character: z.enum(["ordinary", "collectible", "qsbs"]),
+  })),
+  reportedGains: z.array(ScheduleDCapitalSourceRowSchema.extend({
+    netLongTermCapitalGain: decimal, collectiblesGain: decimal, unrecapturedSection1250Gain: decimal, section1202Gain: decimal,
+    section1231Gain: decimal.optional(), isFinalK1: z.boolean().optional(), finalYearLongTermCapitalLoss: decimal.optional(),
+  })),
 });
 
-export const Form1099DASchema = z.object({
+// Actual Section1202 source records; amounts are original, before any exclusion.
+export const Section1202SourcesSchema = z.object({
+  taxYear: z.number().int(), sourceReference: z.string().trim().min(1), sourceFactsConfirmed: z.boolean(),
+  allSourcesIncluded: z.boolean(), preExclusionAmountsConfirmed: z.boolean(),
+  primary: ScheduleDCapitalSourceIdentitySchema, spouse: ScheduleDCapitalSourceIdentitySchema.optional(),
+  issuers: z.array(z.object({
+    issuerId: z.string().trim().min(1), issuerName: z.string().trim().min(1), sourceReference: z.string().trim().min(1),
+    allPriorUseAndCurrentDispositionsConfirmed: z.boolean(), membershipUnchangedConfirmed: z.boolean(),
+    priorEligibleGainUsed: decimal, historySourceReference: z.string().trim().min(1),
+    priorReturns: z.array(z.object({
+      taxYear: z.number().int(), sourceReference: z.string().trim().min(1), filingStatus: FilingStatusSchema,
+      primary: ScheduleDCapitalSourceIdentitySchema, spouse: ScheduleDCapitalSourceIdentitySchema.optional(), eligibleGainUsed: decimal,
+    })),
+    eligibleGainAllocations: z.array(z.object({ sourceId: z.string().trim().min(1), ordinaryEligibleGain: decimal, empowermentEligibleGain: decimal })).optional(),
+  })),
+  lots: z.array(z.object({
+    lotId: z.string().trim().min(1), sourceId: z.string().trim().min(1), issuerId: z.string().trim().min(1), sourceReference: z.string().trim().min(1),
+    accountHolder: z.enum(['primary', 'spouse']), payerName: z.string().trim().min(1), securityDescription: z.string().trim().min(1),
+    acquisitionMethod: z.enum(['original_issue', 'gift', 'inheritance', 'partnership_distribution', 'conversion', 'section351_or_368']),
+    originalIssueDate: z.string(), effectiveAcquiredDate: z.string(), dateSold: z.string(),
+    recognizedGain: decimal, basisIgnoringPostIssueAdditions: decimal, empowermentZoneGainThrough2018: decimal,
+    empowermentQualificationAndAttributionConfirmed: z.boolean(),
+    proceeds: decimal.optional(), costBasis: decimal.optional(), adjustments: decimal.optional(), washSale: z.boolean().optional(), washSaleDisallowed: decimal.optional(),
+    qualification: z.object({
+      domesticCCorporationAtIssue: z.boolean(), consideration: z.enum(['money', 'property_not_stock', 'services_not_underwriter', 'stock', 'other']),
+      allPredecessorAndControlledGroupAssetsIncluded: z.boolean(), maxGrossAssetsBeforeIssue: decimal, grossAssetsImmediatelyAfterIssue: decimal,
+      cCorporationThroughoutHolding: z.boolean(), activeBusinessRequirementSatisfied: z.boolean(), redemptionRestrictionsSatisfied: z.boolean(), offsettingPositionPresent: z.boolean(),
+    }),
+    passThrough: z.object({
+      ownerInterestAcquiredDate: z.string(), heldContinuouslyThroughSale: z.boolean(), unchangedOwnershipProportionConfirmed: z.boolean(),
+      ownershipPercentage: decimal, entityRecognizedGain: decimal, entityBasisIgnoringPostIssueAdditions: decimal,
+      fundCapitalGainDistributions: decimal, fundSection1202Gain: decimal,
+    }).optional(),
+  })),
+});
+
+// ── Form 1099-DA: Digital Asset Proceeds from Broker Transactions ──
+// Original final-form boxes are separate from completed taxpayer basis records.
+// Legacy defaults retain historical arithmetic but never establish actual facts.
+export const Form1099DATransactionSchema = z.preprocess((value) => {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return value;
+  const raw = value as Record<string, unknown>;
+  const required = ["sourceId", "digitalAssetCode", "digitalAssetName", "quantity", "reportedDateAcquired", "reportedCostBasis", "dateAcquired", "dateSold", "proceeds", "costBasis", "basisReportedToIRS", "holdingPeriod", "transactionType", "basisSource", "basisSourceReference", "basisFactsConfirmed", "proceedsType", "sellingExpenses", "marketDiscount", "washSale", "washSaleDisallowed", "adjustments", "qof", "lossNotAllowed", "ordinaryIncome", "onlyCashProceeds", "customerProvidedAcquisitionInformation", "noncoveredSecurity", "optionalReportingMethod", "assetOrigin", "capitalAssetConfirmed", "nftOrCollectible"];
+  return { ...raw, sourceFactsComplete: raw.sourceFactsComplete !== false && required.every(field => raw[field] !== undefined) };
+}, z.object({
+  sourceId: z.string().optional(),
+  sourceFactsComplete: z.boolean().optional(),
+  digitalAssetCode: z.string().optional(), // Original Box1a DTIF code.
+  digitalAssetName: z.string(), // Box1b.
+  ticker: z.string().optional(), // Optional statement abbreviation, not a numbered box.
+  quantity: decimal.optional(), // Box1c.
+  reportedDateAcquired: z.string().nullable().optional(), // Original Box1d; null means actually blank.
+  reportedCostBasis: decimal.nullable().optional(), // Original Box1g; null means actually blank.
+  dateAcquired: z.string(), // Completed basis record date, independently supported when Box1d is blank.
+  dateSold: z.string(), // Box1e.
+  proceeds: decimal, // Box1f.
+  costBasis: decimal, // Actual completed taxpayer basis; never inferred from a blank Box1g.
+  paCostBasis: decimal.optional(), // Separately supported Pennsylvania adjusted basis, including actual zero.
+  paBasisSourceReference: z.string().optional(),
+  paBasisFactsConfirmed: z.boolean().optional(),
+  paTransactionForProfitConfirmed: z.boolean().optional(),
+  gainOrLoss: decimal.optional(), // Optional substitute-statement summary, not a numbered1099DA box.
+  basisReportedToIRS: z.boolean().default(true), // Original Box2.
+  holdingPeriod: z.enum(["short", "long"]), // Derived from acquisition/sale dates
+  transactionType: z.enum(["sale", "exchange", "payment", "gift"]).default("sale"),
+  basisSource: z.enum(["broker_statement", "taxpayer_records"]).optional(),
+  basisSourceReference: z.string().optional(),
+  basisFactsConfirmed: z.boolean().optional(),
+  basisCorrectionConfirmed: z.boolean().optional(), // Taxpayer records replace a differing Box1g.
+  sellingCostsNotInProceedsConfirmed: z.boolean().optional(), // Box1f already reflects transaction costs by rule.
+  originIncomeIncludedConfirmed: z.boolean().optional(), // Mining, staking or airdrop value was reported as income.
+  inheritedBasisConfirmed: z.boolean().optional(), // Basis is the actual section1014 value.
+  giftSource: z.object({ donorBasis: z.string().optional(), fairMarketValueAtGift: z.string().optional(), giftDate: z.string().optional(), sourceFactsConfirmed: z.boolean().optional(),
+    donorHoldingDocumented: z.boolean().optional(), fromSpouse: z.boolean().optional() }).strict().optional(),
+  proceedsType: z.enum(["gross", "net"]).optional(), // Box3a.
+  sellingExpenses: decimal.optional(),
+  marketDiscount: decimal.optional(), // Box1h.
+  qof: z.boolean().optional(), // Box3b.
+  lossNotAllowed: z.boolean().optional(), // Box5.
+  ordinaryIncome: z.boolean().optional(), // Box6 ordinary indicator.
+  onlyCashProceeds: z.boolean().optional(), // Box7.
+  customerProvidedAcquisitionInformation: z.boolean().optional(), // Box8.
+  noncoveredSecurity: z.boolean().optional(), // Box9.
+  optionalReportingMethod: z.enum(["none", "stablecoins", "specified_nfts"]).optional(), // Box11a.
+  assetOrigin: z.enum(["purchase", "mining", "staking", "airdrop", "gift", "inheritance", "other"]).optional(),
+  capitalAssetConfirmed: z.boolean().optional(),
+  nftOrCollectible: z.boolean().optional(),
+  lotId: z.string().optional(), // For specific_id method: identifies which lot to match
+  washSale: z.boolean().default(false),
+  washSaleDisallowed: optionalDecimal, // Original Box1i.
+  adjustments: optionalDecimal,
+}));
+
+export const Form1099DASchema = z.preprocess((value) => {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return value;
+  const raw = value as Record<string, unknown>;
+  const required = ["sourceId", "taxYear", "sourceReference", "sourceFactsConfirmed", "allTransactionsIncluded", "brokerName", "accountHolder", "federalWithheld", "stateTaxReporting", "transactions"];
+  required.push(raw.stateTaxReporting === "multiple" ? "stateWithholding" : "stateWithheld");
+  return { ...raw, sourceFactsComplete: raw.sourceFactsComplete !== false && required.every(field => raw[field] !== undefined) };
+}, z.object({
+  sourceId: z.string().optional(),
+  taxYear: z.number().int().optional(),
+  sourceReference: z.string().optional(),
+  sourceFactsConfirmed: z.boolean().optional(),
+  sourceFactsComplete: z.boolean().optional(),
+  allTransactionsIncluded: z.boolean().optional(),
   brokerName: z.string(), // Box — broker name
   brokerTin: z.string().optional(), // Broker TIN
+  accountReference: z.string().optional(),
   accountHolder: z.enum(["primary", "spouse"]).optional(),
-  stateWithheld: optionalDecimal,
+  federalWithheld: decimal.optional(), // Original Box4, once per statement; unknown remains unknown.
+  stateTaxReporting: z.enum(["none", "single", "multiple"]).optional(),
+  stateWithheld: optionalDecimalInput,
   state: z.string().optional(),
+  stateIdentificationNumber: z.string().optional(),
+  stateWithholding: z.array(z.object({
+    state: z.string().optional(), stateIdentificationNumber: z.string().optional(),
+    stateWithheld: decimal.optional(),
+  }).strict()).optional(),
   transactions: z.array(Form1099DATransactionSchema),
-});
+}));
 
 // ── Crypto Cost Basis Method Election ──
 // IRS Notice 2014-21, Q&A 7: taxpayers may use FIFO or specific identification
@@ -365,11 +566,21 @@ export const CryptoDonationSchema = z.object({
   costBasis: decimal, // Original cost basis
   charityName: z.string(),
   charityEIN: z.string().optional(),
-  isQualifiedOrganization: z.boolean().default(true), // 501(c)(3)
+  isQualifiedOrganization: z.boolean().optional(), // Actual IRC170 eligibility, never assumed.
+  // Legacy other-qualified is preserved but cannot establish foundation valuation.
+  recipientCategory: z.enum(["fifty-percent", "private-nonoperating", "other-thirty-percent", "other-qualified"]).optional(),
+  capitalAsset: z.boolean().optional(),
+  sourceFactsConfirmed: z.boolean().optional(),
+  fullOwnershipInterestDonated: z.boolean().optional(),
+  noGoodsOrServicesReceived: z.boolean().optional(),
+  substantiationRequirementsMet: z.boolean().optional(),
+  appraisalRequired: z.boolean().optional(), // Actual similar-property aggregation and threshold review.
+  qualifiedAppraisalObtained: z.boolean().optional(),
 });
 
 // ── Aggregated Crypto Income Input ──
 export const CryptoIncomeInputSchema = z.object({
+  businessAccountHolder: z.enum(["primary", "spouse"]).optional(),
   miningIncome: z.array(CryptoMiningIncomeSchema).default([]),
   stakingIncome: z.array(CryptoStakingIncomeSchema).default([]),
   airdropIncome: z.array(CryptoAirdropIncomeSchema).default([]),
@@ -387,10 +598,14 @@ export const CryptoIncomeInputSchema = z.object({
 });
 
 export const Form1099NecSchema = z.object({
+  taxYear: z.number().int().optional(),
   payer: z.string(),
   payerTin: z.string().optional(), // Payer's TIN (used for IL Schedule IL-WIT Column B auto-attachment)
   accountHolder: z.enum(["primary", "spouse"]).optional(), // Local owner tag for taxpayer vs spouse attribution on shared returns
   nonemployeeCompensation: decimal, // Box 1
+  cashTips: reportedTipOrOvertimeAmount.optional(), // 2026 Box1b, included in Box1a compensation.
+  qualifiedOvertimeCompensation: reportedTipOrOvertimeAmount.optional(), // 2026 Box1d, included in Box1a compensation.
+  treasuryTippedOccupationCodes: reportedTippedOccupationCodes.optional(), // 2026 Box1c.
   federalWithheld: optionalDecimal, // Box 4
   stateWithheld: optionalDecimal, // Box 5
   state: z.string().optional(), // Box 6 (abbreviated state name and payer state identification number)
@@ -398,38 +613,103 @@ export const Form1099NecSchema = z.object({
 });
 
 export const Form1099MiscSchema = z.object({
+  taxYear: z.number().int().optional(),
+  sourceId: z.string().optional(),
+  accountReference: z.string().optional(),
+  sourceFormRevision: z.enum(["2025-04", "2026-12"]).optional(),
   payer: z.string(),
   payerTin: z.string().optional(), // Payer's TIN (used for IL Schedule IL-WIT Column B auto-attachment)
   accountHolder: z.enum(["primary", "spouse"]).optional(), // Local owner tag for taxpayer vs spouse attribution on shared returns
   rents: optionalDecimal, // Box 1
   royalties: optionalDecimal, // Box 2
   otherIncome: optionalDecimal, // Box 3
+  cashTips: reportedTipOrOvertimeAmount.optional(), // 2026 Box13a, included in Box3 other income.
+  qualifiedOvertimeCompensation: reportedTipOrOvertimeAmount.optional(), // 2026 Box14, included in Box3 other income.
+  treasuryTippedOccupationCodes: reportedTippedOccupationCodes.optional(), // 2026 Box13b.
   federalWithheld: optionalDecimal, // Box 4
   fishingBoatProceeds: optionalDecimal, // Box 5
   medicalPayments: optionalDecimal, // Box 6
+  directSales: z.boolean().optional(), // Box 7
   substitutePayments: optionalDecimal, // Box 8
   cropInsurance: optionalDecimal, // Box 9
   grossAttorneyProceeds: optionalDecimal, // Box 10
+  fishPurchasedForResale: decimal.optional(), // Box 11
   section409ADeferrals: optionalDecimal, // Box 12
-  excessGoldenParachute: optionalDecimal, // Box 13
-  nonqualifiedDeferredComp: optionalDecimal, // Box 14
+  fatcaFilingRequirement: z.boolean().optional(), // 2025 Box13; separate checkbox on 2026 revision.
+  excessGoldenParachute: optionalDecimal, // Legacy import field; not a current 2025/2026 MISC box.
+  nonqualifiedDeferredComp: optionalDecimal, // Box 15 on the 2025/2026 revisions.
   stateWithheld: optionalDecimal, // Box 16
   state: z.string().optional(), // Box 17 (abbreviated state name and payer state identification number)
+  payerStateId: z.string().optional(), // Original Box 17 payer state identification.
   stateIncome: decimal.optional(), // Box 18 — state income for IL Schedule IL-WIT Column D
 });
 
-export const Form1099GSchema = z.object({
+export const Form1099GSchema = z.preprocess((value) => {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return value;
+  const raw = value as Record<string, unknown>;
+  const required = ["sourceId", "accountReference", "taxYear", "sourceFormRevision", "accountHolder", "programType", "unemploymentCompensation", "federalWithheld", "rtaaPayments", "taxableGrants", "agriculturePayments", "marketGain", "tradeOrBusinessRefund", "currentYearRepaid", "priorYearRepaid", "unrecoveredAfterTaxContributions", "actualReceiptConfirmed", "additionalWorksheetRequired", "sourceFactsConfirmed", "stateTaxReporting"];
+  if (raw.taxYear === 2026 || raw.sourceFormRevision === "2026-12") required.push("familyLeaveBenefits");
+  if (raw.stateTaxReporting === "single") required.push("state", "stateWithheld");
+  const refundPresent = raw.stateOrLocalTaxRefund !== undefined || raw.stateLocalIncomeTaxRefund !== undefined;
+  return { ...raw, sourceFactsComplete: raw.sourceFactsComplete !== false && refundPresent && required.every(field => raw[field] !== undefined) };
+}, z.object({
   payer: z.string(),
   payerTin: z.string().optional(), // Payer TIN shown on the recipient copy; required for IL Schedule IL-WIT Column B auto-attachment
   accountHolder: z.enum(["primary", "spouse"]).optional(), // Local owner tag for taxpayer vs spouse attribution on shared returns
+  sourceId: z.string().optional(),
+  accountReference: z.string().optional(),
+  taxYear: z.number().int().optional(),
+  sourceFormRevision: z.enum(["2024-03", "2026-12"]).optional(),
+  sourceFactsComplete: z.boolean().optional(),
+  sourceFactsConfirmed: z.boolean().optional(),
+  actualReceiptConfirmed: z.boolean().optional(),
+  additionalWorksheetRequired: z.boolean().optional(),
+  programType: z.enum(["government-unemployment", "employer-supplemental", "private-or-union", "other-government"]).optional(),
   unemploymentCompensation: decimal, // Box 1
   stateLocalIncomeTaxRefund: optionalDecimal, // Box 2 (IL Schedule IL-WIT path)
   stateOrLocalTaxRefund: optionalDecimal, // Box 2 (OH and generic path)
-  refundTaxYear: z.number().optional(), // Box 3
+  refundTaxYear: z.number().optional(), // Box 3: state return year, not necessarily the payment year
+  refundExpenseTaxYear: z.number().int().min(1900).optional(), // Actual year the refunded tax was paid/deducted
+  /** Actual complete dated payment basis for one income-tax refund; no inferred Box3 payment year. */
+  refundPaymentBasis: z.object({
+    sourceReference: z.string().optional(), sourceFactsConfirmed: z.boolean().optional(),
+    allPaymentsForStateReturnIncludedConfirmed: z.boolean().optional(),
+    receivedDate: z.string().optional(), state: z.string().optional(),
+    payments: z.array(z.object({
+      sourceReference: z.string().optional(), datePaid: z.string().optional(), amount: optionalDecimalInput,
+      currentYearPayment: z.object({ collection: z.enum(["estimatedTaxPayments", "extensionPayments"]), index: z.number().int().nonnegative() }).strict().optional(),
+    }).strict()).optional(),
+  }).strict().optional(),
   federalWithheld: optionalDecimal, // Box 4
-  stateWithheld: optionalDecimal, // Box 11
+  rtaaPayments: optionalDecimalInput, // Box 5
+  taxableGrants: optionalDecimalInput, // Box 6
+  grantIncomeCategory: z.enum(["nonbusiness", "business", "farm"]).optional(),
+  agriculturePayments: optionalDecimalInput, // Box 7
+  tradeOrBusinessRefund: z.boolean().optional(), // Box 8
+  marketGain: optionalDecimalInput, // Box 9
+  familyLeaveBenefits: optionalDecimalInput, // Box 10 from the December 2026 revision
+  familyLeaveProgramType: z.enum(["state-pfml-family", "state-pfml-medical", "private-family-leave"]).optional(),
+  currentYearRepaid: optionalDecimalInput,
+  priorYearRepaid: optionalDecimalInput,
+  // Actual earlier-return records for a Pub525 repayment of income from an earlier year.
+  priorYearRepaymentSource: z.object({
+    sourceReference: z.string().optional(), sourceFactsConfirmed: z.boolean().optional(), originalTaxYear: z.number().int().optional(),
+    earlierReturnTax: z.string().optional(), refiguredEarlierTax: z.string().optional(), separateEarlierReturn: z.boolean().optional(),
+  }).strict().optional(),
+  unemploymentReceivedBeforeRepayment: optionalDecimalInput,
+  box1IncludesCurrentYearRepayment: z.boolean().optional(),
+  repaymentSourceReference: z.string().optional(),
+  /** Actual available nondeductible unemployment contributions; PFML contributions are separate. */
+  unrecoveredAfterTaxContributions: optionalDecimalInput,
+  contributionProgramId: z.string().optional(),
+  contributionHistoryReference: z.string().optional(),
+  contributionBalanceReconciled: z.boolean().optional(),
+  allProgramPaymentsIncluded: z.boolean().optional(),
+  stateTaxReporting: z.enum(["none", "single", "multiple"]).optional(),
+  stateWithheld: optionalDecimal, // Box 11 before 2026; Box 12 in the 2026 revision
   state: z.string().optional(),
-});
+  statePayerId: z.string().optional(),
+}));
 
 /**
  * Form 1099-OID — Original Issue Discount
@@ -440,28 +720,68 @@ export const Form1099GSchema = z.object({
  *
  * Ref: IRC §§1272–1273, §171; IRS Pub 1212; Pub 550 Ch. 1.
  */
-export const Form1099OIDSchema = z.object({
-  /** Payer/issuer name or broker */
+const Form1099OIDFieldsSchema = z.object({
   payer: z.string(),
-  /** Box 1: Original issue discount — taxable OID accrued during the year */
-  originalIssueDiscount: decimal,
-  /** Box 2: Other periodic interest (stated coupon interest, separate from OID) */
-  otherPeriodicInterest: optionalDecimal,
-  /** Box 3: Early withdrawal penalty (CD early withdrawal) */
-  earlyWithdrawalPenalty: optionalDecimal,
-  /** Box 4: Federal income tax withheld (backup withholding) */
-  federalWithheld: optionalDecimal,
-  /** Box 6: Acquisition premium — reduces taxable OID per IRC §1272(a)(7) */
-  acquisitionPremium: optionalDecimal,
-  /** Box 8: OID on U.S. Treasury obligations (subset of Box 1, state/local exempt) */
-  treasuryOID: optionalDecimal,
-  /** Box 11: Amortizable bond premium — offsets interest under IRC §171 election */
-  bondPremium: optionalDecimal,
-  /** Box 13: Bond premium on tax-exempt bond (mandatory amortization, reduces basis) */
+  payerTin: z.string().optional(),
+  accountHolder: z.enum(["primary", "spouse"]).optional(),
+  sourceId: z.string().optional(),
+  taxYear: z.number().int().optional(),
+  sourceFormRevision: z.literal("2024-01").optional(),
+  sourceFactsConfirmed: z.boolean().optional(),
+  sourceFactsComplete: z.boolean().optional(),
+  /** Actual recipient amounts account for holding period, basis and nominee adjustments. */
+  recipientAmountsConfirmed: z.boolean().optional(),
+  obligationType: z.enum(["taxable", "treasury", "tax_exempt"]).optional(),
+  inflationIndexed: z.boolean().optional(),
+  /** Actual specified-private-activity classification, including statutory exceptions. */
+  specifiedPrivateActivityBond: z.boolean().optional(),
+  originalIssueDiscount: decimal, // Box 1, excludes Box 8 Treasury OID
+  otherPeriodicInterest: optionalDecimal, // Box 2, classified by this obligation
+  earlyWithdrawalPenalty: optionalDecimal, // Box 3, separate deduction
+  federalWithheld: optionalDecimal, // Box 4
+  marketDiscount: decimal.optional(), // Box 5, actual current accrual
+  acquisitionPremium: optionalDecimal, // Box 6, offsets matching OID category
+  description: z.string().optional(), // Box 7, actual CUSIP or description
+  treasuryOID: optionalDecimal, // Box 8, separate from Box 1; may be negative for TIPS
+  investmentExpenses: decimal.optional(), // Box 9, already included in Box 2, nondeductible
+  bondPremium: optionalDecimal, // Box 10, offsets stated interest when allowed
+  taxExemptOID: optionalDecimal, // Box 11
+  /** Historical mislabeled aggregate. Positive values require actual source reconciliation. */
   taxExemptBondPremium: optionalDecimal,
-  /** Box 14: Tax-exempt OID (municipal bond discount, flows to Line 2a) */
-  taxExemptOID: optionalDecimal,
+  stateWithholding: z.array(z.object({
+    state: z.string().regex(/^[A-Z]{2}$/), // Box 12
+    statePayerId: z.string(), // Box 13; actual blank is retained as blank
+    stateWithheld: decimal, // Box 14
+  })).max(2).optional(),
+  oidReportedNetOfAcquisitionPremium: z.boolean().optional(),
+  interestReportedNetOfBondPremium: z.boolean().optional(),
+  marketDiscountElection: z.boolean().optional(), // Actual IRC 1278(b) current-inclusion election
+  bondPremiumElection: z.boolean().optional(), // Actual IRC 171 election, taxable bonds only
+  modernBondPremiumRulesApply: z.boolean().optional(), // Actual applicability; no inferred pre-1988 election history
+  /** Signed changes to named source amounts from a completed recipient worksheet, before premium offsets. */
+  recipientAdjustments: z.object({
+    sourceReference: z.string().min(1), oid: decimal, periodicInterest: decimal,
+    acquisitionPremium: decimal, bondPremium: decimal, marketDiscount: decimal,
+  }).optional(),
+  bondPremiumWorksheet: z.object({
+    priorInterestInclusions: decimal, priorPremiumDeductions: decimal, priorCarryforward: decimal,
+    disposedDuringYear: z.boolean(),
+    periods: z.array(z.object({ endDate: z.string(), qualifiedStatedInterest: decimal, amortization: decimal })),
+  }).optional(),
+  tipsDeflationFacts: z.object({
+    allInstrumentInterestReportedHere: z.boolean(),
+    priorInterestInclusions: decimal, priorOrdinaryLosses: decimal, priorCarryforward: decimal,
+  }).optional(),
 });
+export const Form1099OIDSchema = z.preprocess((value) => {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return value;
+  const raw = value as Record<string, unknown>;
+  const fields = ["payer", "sourceId", "taxYear", "sourceFormRevision", "sourceFactsConfirmed", "recipientAmountsConfirmed",
+    "obligationType", "inflationIndexed", "description", "originalIssueDiscount", "otherPeriodicInterest", "earlyWithdrawalPenalty",
+    "federalWithheld", "marketDiscount", "acquisitionPremium", "treasuryOID", "investmentExpenses", "bondPremium", "taxExemptOID",
+    "stateWithholding", "oidReportedNetOfAcquisitionPremium", "interestReportedNetOfBondPremium"];
+  return { ...raw, sourceFactsComplete: raw.sourceFactsComplete !== false && fields.every((field) => raw[field] !== undefined) };
+}, Form1099OIDFieldsSchema);
 export type Form1099OID = z.infer<typeof Form1099OIDSchema>;
 
 export const FormW2GSchema = z.object({
@@ -484,10 +804,13 @@ export const FormW2GSchema = z.object({
 });
 
 export const Form1099KSchema = z.object({
+  taxYear: z.number().int().optional(),
   pse: z.string(), // Payment Settlement Entity name (filer)
   statePayerNumber: z.string().optional(), // Box 7 — state payer number for IL Schedule IL-WIT Column B
   accountHolder: z.enum(["primary", "spouse"]).optional(), // Local owner tag for taxpayer vs spouse on shared state returns
   grossAmount: decimal, // Box 1a — gross amount of payment card/third-party network transactions
+  cashTips: reportedTipOrOvertimeAmount.optional(), // 2026 Box1c, included in Box1a gross amount.
+  treasuryTippedOccupationCodes: reportedTippedOccupationCodes.optional(), // 2026 Box1d.
   cardNotPresent: optionalDecimal, // Box 1b — card not present transactions (subset of 1a)
   federalWithheld: optionalDecimal, // Box 4 — federal income tax withheld (backup withholding)
   stateWithheld: optionalDecimal, // Box 8 — state income tax withheld
@@ -506,31 +829,201 @@ export const Form1099CSchema = z.object({
   fmvOfProperty: optionalDecimal, // Box 7
 });
 
-export const Form1099QSchema = z.object({
+const EducationDistributionTransferSchema = z.object({
+  kind: z.enum(["none", "qtp", "coverdell", "able", "roth", "refund_recontribution"]),
+  amount: optionalDecimalInput,
+  receivedDate: z.string().optional(),
+  sameBeneficiary: z.boolean().optional(),
+  eligibleFamilyMember: z.boolean().optional(),
+  priorRolloverWithin12Months: z.boolean().optional(),
+  destinationBeneficiaryAge: z.number().int().min(0).optional(),
+  destinationSpecialNeeds: z.boolean().optional(),
+  ableAnnualContributionLimit: optionalDecimalInput,
+  otherAbleContributions: optionalDecimalInput,
+  destinationAccountEligible: z.boolean().optional(),
+  destinationAccountId: z.string().trim().min(1).optional(),
+  accountOpenedDate: z.string().optional(),
+  contributionsAndEarningsBeforeFiveYears: optionalDecimalInput,
+  beneficiaryAgeAtYearEnd: z.number().int().min(0).optional(),
+  beneficiaryTaxableCompensation: optionalDecimalInput,
+  otherIraContributions: optionalDecimalInput,
+  previousRothRollovers: optionalDecimalInput,
+  refundSourceId: z.string().trim().min(1).optional(),
+  refundDate: z.string().optional(),
+  refundedExpenseAmount: optionalDecimalInput,
+  coverdellTransferredBasis: optionalDecimalInput,
+});
+export const Form1099QSchema = z.preprocess((value) => {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return value;
+  const raw = value as Record<string, unknown>;
+  const required = ["sourceId", "accountId", "beneficiaryId", "recipientOwner", "taxYear", "accountType", "grossDistribution", "isTrusteeToTrustee", "isQtpToRoth", "recipientNotBeneficiary", "sourceFactsConfirmed", "transfer"];
+  if (raw.distributionCode === "2" || raw.distributionCode === "3") required.push("distributionDate", "returnedContributionId", "returnedContributionTaxYear", "returnedContributionDate", "returnedContributionOriginalAmount", "returnedContributionPrincipal", "returnedContributionNetIncome", "returnedContributionIncomePreviouslyReported", "returnedContributionNetIncomeConfirmed", "returnedContributionBasisReconciled");
+  if (raw.distributionCode === "6") {
+    required.push("prohibitedTransactionKind", "prohibitedTransactionDate", "prohibitedTransactionSourceReference", "prohibitedTransactionSourceConfirmed", "prohibitedTransactionBasis");
+    if (raw.prohibitedTransactionKind === "account_disqualification") required.push("prohibitedTransactionJanuary1Value");
+    if (raw.prohibitedTransactionKind === "pledged_portion") required.push("prohibitedTransactionPledgedAmount");
+  }
+  return { ...raw, sourceFactsComplete: raw.sourceFactsComplete !== false && required.every(field => raw[field] !== undefined) };
+}, z.object({
+  sourceFactsComplete: z.boolean().optional(),
+  sourceFactsConfirmed: z.boolean().optional(),
+  sourceId: z.string().trim().min(1).optional(),
+  accountId: z.string().trim().min(1).optional(),
+  beneficiaryId: z.string().trim().min(1).optional(),
+  recipientOwner: z.enum(["primary", "spouse", "other"]).optional(),
+  /** Opaque source person link; required for a recipient outside this return. */
+  recipientId: z.string().trim().min(1).optional(),
+  taxYear: z.number().int().optional(),
   payerName: z.string().optional(),
-  accountType: z.enum(["529", "coverdell_esa"]).default("529"), // Box 5 simplified
+  accountType: z.enum(["529", "coverdell_esa"]).default("529"), // Boxes5a/5b versus5c
+  /** Actual distribution form; unknown is not an inferred cash payment. */
+  distributionMedium: z.enum(["cash", "in_kind_prepaid_tuition"]).optional(),
   grossDistribution: decimal, // Box 1
-  earnings: optionalDecimal, // Box 2
-  basis: optionalDecimal, // Box 3
-  isTrusteeToTrustee: z.boolean().default(false), // Box 4
+  earnings: optionalDecimalInput, // Box2: an omitted Coverdell value is not zero
+  basis: optionalDecimalInput, // Box3
+  isTrusteeToTrustee: z.boolean().default(false), // Box4a
+  isQtpToRoth: z.boolean().optional(), // Box4b
+  recipientNotBeneficiary: z.boolean().optional(), // Box6
+  distributionCode: z.enum(["1", "2", "3", "4", "5", "6"]).optional(),
+  finalDistribution: z.boolean().optional(),
+  distributionDate: z.string().optional(),
+  /** Actual source confirmation when an annual statement contains several distributions. */
+  allDistributionsAfterJuly42025: z.boolean().optional(),
+  transfer: EducationDistributionTransferSchema.optional(),
+  /** Actual custodian correction worksheet; omitted facts remain unknown. */
+  returnedContributionId: z.string().trim().min(1).optional(),
+  returnedContributionTaxYear: z.number().int().optional(),
+  returnedContributionDate: z.string().optional(),
+  returnedContributionOriginalAmount: optionalDecimalInput,
+  returnedContributionPrincipal: optionalDecimalInput,
+  returnedContributionNetIncome: optionalDecimalInput,
+  returnedContributionIncomePreviouslyReported: optionalDecimalInput,
+  returnedContributionNetIncomeConfirmed: z.boolean().optional(),
+  returnedContributionBasisReconciled: z.boolean().optional(),
+  /** Actual code6 event records; completeness does not enable unsupported tax treatment. */
+  prohibitedTransactionKind: z.enum(["account_disqualification", "pledged_portion"]).optional(),
+  prohibitedTransactionDate: z.string().optional(),
+  prohibitedTransactionSourceReference: z.string().optional(),
+  prohibitedTransactionSourceConfirmed: z.boolean().optional(),
+  prohibitedTransactionJanuary1Value: optionalDecimalInput,
+  prohibitedTransactionBasis: optionalDecimalInput,
+  prohibitedTransactionPledgedAmount: optionalDecimalInput,
+  /** Actual beneficiary total includes qualifying QTP contributions under530(b)(2)(B). */
+  prohibitedTransactionQualifiedEducationExpenses: optionalDecimalInput,
+  /** Full-year source review, covering interest, dividends and realized gains/losses after January1. */
+  prohibitedTransactionNoPostDisqualificationActivityConfirmed: z.boolean().optional(),
+  prohibitedTransactionPostDisqualificationSourceReference: z.string().optional(),
+}));
+
+const EducationDistributionExpenseSchema = z.object({
+  id: z.string().trim().min(1), beneficiaryId: z.string().trim().min(1),
+  category: z.enum(["postsecondary_tuition", "postsecondary_books", "postsecondary_special_needs", "postsecondary_room_board", "postsecondary_computer", "k12_tuition", "k12_curriculum", "k12_books", "k12_online", "k12_tutoring", "k12_testing", "k12_dual_enrollment", "k12_disability_therapy", "coverdell_k12_other", "qtp_contribution", "apprenticeship", "student_loan", "credential_enrollment", "credential_testing", "credential_continuing_education"]),
+  paidDate: z.string().optional(),
+  amount: optionalDecimalInput, refundedAmount: optionalDecimalInput,
+  taxFreeAssistance: optionalDecimalInput, educationCreditAmount: optionalDecimalInput,
+  otherTaxBenefitAmount: optionalDecimalInput,
+  qualificationConfirmed: z.boolean().optional(),
+  /** Actual same-year refund records are separate from the unchanged original benefit/statement. */
+  refundHistoryCompleteConfirmed: z.boolean().optional(),
+  /** Non-tuition credit character must come from the actual course/institution records. */
+  creditExpenseTreatment: z.enum(["aotc_required_course_materials", "llc_required_institution_charge", "none"]).optional(),
+  creditExpenseSourceReference: z.string().trim().optional(),
+  creditExpenseQualificationConfirmed: z.boolean().optional(),
+  halfTimeStudent: z.boolean().optional(), roomBoardAllowance: optionalDecimalInput,
+  schoolOwnedHousingCharge: optionalDecimalInput,
+  tutorUnrelated: z.boolean().optional(), tutoringOutsideHome: z.boolean().optional(), tutorQualified: z.boolean().optional(),
+  studentHasDisability: z.boolean().optional(), providerLicensedOrAccredited: z.boolean().optional(),
+  credentialRecognized: z.boolean().optional(), requiredForCredential: z.boolean().optional(),
+  /** Actual Labor Department program registration and required apprenticeship costs. */
+  apprenticeshipRegistered: z.boolean().optional(), requiredForApprenticeship: z.boolean().optional(),
+  destinationAccountId: z.string().trim().min(1).optional(),
+  borrowerId: z.string().trim().min(1).optional(), beneficiaryOrSibling: z.boolean().optional(),
+  studentLoanInterestAmount: optionalDecimalInput, studentLoanInterestDeducted: optionalDecimalInput,
+});
+const EducationDistributionSourceFactsSchema = z.object({
+  taxYear: z.number().int().optional(), sourceFactsConfirmed: z.boolean().optional(),
+  allDistributionsReconciled: z.boolean().optional(),
+  exceptionsDistinctFromCreditConfirmed: z.boolean().optional(),
+  beneficiaries: z.array(z.object({
+    id: z.string().trim().min(1), name: z.string().optional(),
+    studentTaxId: z.string().regex(/^\d{3}-?\d{2}-?\d{4}$/).optional(),
+    outsideK12QualifiedDistributions: optionalDecimalInput,
+    /** Required to distinguish actual outside cash before the separate prepaid K12 method. */
+    outsideK12CashOnlyConfirmed: z.boolean().optional(),
+  })).max(100).optional(),
+  expenses: z.array(EducationDistributionExpenseSchema).max(500).optional(),
+  expenseRefunds: z.array(z.object({
+    id: z.string().trim().min(1), expenseId: z.string().trim().min(1),
+    amount: optionalDecimalInput, receivedDate: z.string().optional(),
+    receivedByBeneficiary: z.boolean().optional(),
+    disposition: z.enum(["cash_retained", "qtp_recontribution", "benefit_correction", "other"]).optional(),
+    sourceReference: z.string().trim().optional(), sourceFactsConfirmed: z.boolean().optional(),
+  })).max(1000).optional(),
+  roomBoardPeriods: z.array(EducationRoomBoardPeriodSchema).max(100).optional(),
+  roomBoardPeriodExpenses: z.array(EducationRoomBoardPeriodExpenseSchema).max(500).optional(),
+  roomBoardEsaAllocations: z.array(EducationRoomBoardEsaAllocationSchema).max(1000).optional(),
+  roomBoardPriorUses: z.array(EducationRoomBoardPriorUseSchema).max(500).optional(),
+  roomBoardPriorUseExpenses: z.array(EducationRoomBoardPriorUseExpenseSchema).max(1000).optional(),
+  allocations: z.array(z.object({
+    expenseId: z.string().trim().min(1), sourceId: z.string().trim().min(1),
+    /** Actual expense allocation after all reductions, before category caps. */
+    amount: optionalDecimalInput,
+    /** Distinct portion of this expense taken into account for an education credit. */
+    creditAmount: optionalDecimalInput,
+    /** Actual interest portion of this loan-payment allocation, before statutory caps. */
+    loanInterestAmount: optionalDecimalInput,
+  })).max(1000).optional(),
+  /** Actual benefits provided by prepaid QTP statements, separate from elected tax allocations. */
+  inKindBenefits: z.array(z.object({
+    id: z.string().trim().min(1), sourceId: z.string().trim().min(1), expenseId: z.string().trim().min(1),
+    amount: optionalDecimalInput, providedDate: z.string().optional(),
+    qualificationConfirmed: z.boolean().optional(), sourceReference: z.string().trim().optional(),
+    /** Original qualified prepaid-plan and redeemed-credit evidence for K12 benefits. */
+    prepaidPlanSponsor: z.enum(["state", "eligible_educational_institutions"]).optional(),
+    prepaidPlanQualifiedConfirmed: z.boolean().optional(),
+    prepaidTuitionCreditRedeemed: z.boolean().optional(),
+    prepaidPlanSourceReference: z.string().trim().optional(),
+    prepaidInstitutionQualifiedTrustConfirmed: z.boolean().optional(),
+    prepaidInstitutionDeterminationReference: z.string().trim().optional(),
+  })).max(500).optional(),
+  loanBorrowers: z.array(z.object({
+    id: z.string().trim().min(1), owner: z.enum(["primary", "spouse", "other"]).optional(),
+    priorQualifiedDistributions: optionalDecimalInput,
+    otherCurrentQualifiedDistributions: optionalDecimalInput,
+  })).max(100).optional(),
+  coverdellAccounts: z.array(z.object({
+    accountId: z.string().trim().min(1), priorYearBasis: optionalDecimalInput,
+    currentYearContributions: optionalDecimalInput, yearEndValue: optionalDecimalInput,
+    outstandingRollovers: optionalDecimalInput,
+    /** Actual basis received in rollovers, not their gross value. Explicit zero when none. */
+    rolloverBasisReceived: optionalDecimalInput,
+  })).max(100).optional(),
+  penaltyExceptions: z.array(z.object({
+    id: z.string().trim().min(1), sourceId: z.string().trim().min(1),
+    kind: z.enum(["scholarship", "military_academy", "death", "disability"]),
+    qualifyingAmount: optionalDecimalInput, distributionAmount: optionalDecimalInput,
+    eligibilityConfirmed: z.boolean().optional(), eventDate: z.string().optional(),
+    paidToBeneficiaryOrEstate: z.boolean().optional(),
+  })).max(500).optional(),
 });
 
 /** Qualified education expense summary for Form 1099-Q distribution taxation */
 export const QualifiedEducationExpenseSummarySchema = z.object({
   /** Total qualified education expenses paid during the year for the beneficiary */
-  totalQualifiedExpenses: decimal,
+  totalQualifiedExpenses: optionalDecimalInput,
   /** Tax-free educational assistance: scholarships, grants, employer assistance, etc. */
-  taxFreeEducationalAssistance: optionalDecimal,
+  taxFreeEducationalAssistance: optionalDecimalInput,
   /** Amounts used to claim AOTC or LLC on Form 8863 */
-  amountsUsedForEducationCredits: optionalDecimal,
+  amountsUsedForEducationCredits: optionalDecimalInput,
   /** Penalty exception: scholarship/grant amount that exempts earnings from 10% penalty */
-  penaltyExceptionScholarshipAmount: optionalDecimal,
+  penaltyExceptionScholarshipAmount: optionalDecimalInput,
   /** Penalty exception: beneficiary died */
-  penaltyExceptionDeath: z.boolean().default(false),
+  penaltyExceptionDeath: z.boolean().optional(),
   /** Penalty exception: beneficiary became disabled */
-  penaltyExceptionDisability: z.boolean().default(false),
+  penaltyExceptionDisability: z.boolean().optional(),
   /** Penalty exception: cost of attendance at US military academy */
-  penaltyExceptionMilitaryAcademyAmount: optionalDecimal,
+  penaltyExceptionMilitaryAcademyAmount: optionalDecimalInput,
+  sourceFacts: EducationDistributionSourceFactsSchema.optional(),
 });
 
 /** COD exclusion under IRC §108 — filed on Form 982 */
@@ -574,8 +1067,12 @@ export const CodExclusionSchema = z.object({
 });
 
 export const Form1099RSchema = z.object({
+  taxYear: z.number().int().optional(), // Preserve actual source year; ordinary basis binding requires an exact match.
+  trumpAccount: z.boolean().optional(), // Actual2026 Box7c; absence is unknown.
+  excessContributionEarnings: decimal.optional(), // Actual2026 Box7d; retain known zero separately from absence.
   payer: z.string(),
   payerTin: z.string().optional(), // Payer TIN shown on the recipient copy; required for IL Schedule IL-WIT Column B auto-attachment
+  accountReference: z.string().trim().min(1).optional(), // Actual local account identity; never inferred from payer or statement order.
   accountHolder: z.enum(["primary", "spouse"]).optional(), // Local owner tag for taxpayer vs spouse IRA ownership on shared returns
   grossDistribution: decimal, // Box 1
   taxableAmount: decimal.optional(), // Box 2a
@@ -980,7 +1477,7 @@ function getNormalizedDistributionCodes(code?: string): string[] {
 export const Form1099SASchema = z.object({
   payer: z.string(),
   grossDistribution: decimal, // Box 1
-  earningsOnExcessContributions: optionalDecimal, // Box 2
+  earningsOnExcessContributions: optionalDecimalInput, // Box 2; unknown is distinct from actual zero.
   distributionCode: z.enum(["1", "2", "3", "4", "5", "6"]), // Box 3
   fmvOnDateOfDeath: decimal.optional(), // Box 4
   trusteeToTrusteeTransfer: z.boolean().optional(), // Local extraction guardrail: direct HSA/MSA transfers are not reported on Form 1099-SA
@@ -1094,19 +1591,20 @@ export const Form1099SASchema = z.object({
     });
   }
 
-  if (value.beneficiaryRole === "surviving_spouse" && value.accountHolder === "primary") {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: "Surviving spouse HSA beneficiaries must use the spouse owner path instead of a primary account-holder tag",
-      path: ["accountHolder"],
-    });
-  }
+  // Beneficiary relationship is to the decedent, not a primary/spouse position
+  // on this return. The surviving beneficiary can be either actual return owner.
 });
 
 export const FormSSA1099Schema = z.object({
   recipient: z.string().optional(),
   netBenefits: decimal, // Box 5
   federalWithheld: optionalDecimal, // Box 6
+});
+
+export const SocialSecurityFactsSchema = z.object({
+  puertoRicoIncomeExclusion: decimal.pipe(z.string().refine(value => d(value).gte(0), "Must be nonnegative")).optional(),
+  americanSamoaIncomeExclusion: decimal.pipe(z.string().refine(value => d(value).gte(0), "Must be nonnegative")).optional(),
+  sourceFactsConfirmed: z.boolean().optional(),
 });
 
 export const FormRRB1099Schema = z.object({
@@ -1182,6 +1680,23 @@ export const Form8606Schema = z.object({
 export const Form8606ByOwnerSchema = z.object({
   primary: Form8606Schema.optional(),
   spouse: Form8606Schema.optional(),
+});
+
+export const Form5329HsaSourceSchema = z.object({
+  sourceTaxYear: z.number().int().optional(),
+  sourceFactsConfirmed: z.boolean().optional(),
+  priorYearSourceTaxYear: z.number().int().optional(),
+  priorYearExcessContributions: optionalDecimalInput,
+  priorYearAdditionalTax: optionalDecimalInput,
+  valueDec31: optionalDecimalInput,
+  returnedExcessContributionsUnder9100Relief: optionalDecimalInput,
+  returnedExcessContributionEarningsUnder9100Relief: optionalDecimalInput,
+  reliefRequirementsConfirmed: z.boolean().optional(),
+  excessEmployerContributionsAlreadyInWages: optionalDecimalInput,
+});
+export const Form5329HsaByOwnerSchema = z.object({
+  primary: Form5329HsaSourceSchema.optional(),
+  spouse: Form5329HsaSourceSchema.optional(),
 });
 
 export const Form5329Schema = z.object({
@@ -1282,19 +1797,49 @@ export const Form5329Schema = z.object({
   rmdShortfallCorrectedWithinWindow: z.boolean().default(false), // Part IX Line 57 - whether the shortfall was corrected within the IRC 4974(d) correction window (reduces rate from 25% to 10%)
 });
 
-export const Form8801Schema = z.object({
+export const Form8801Schema = z.preprocess(value => {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return value;
+  const record = value as Record<string, unknown>;
+  const required = ["priorYearFilingStatus", "priorYearAMT", "priorYearExclusionItemAdjustments", "unusedMinimumTaxCreditCarryforward"];
+  return { ...record, sourceFactsComplete: record.sourceFactsComplete !== false && required.every(key => record[key] !== undefined) };
+}, z.object({
+  sourceFactsComplete: z.boolean().optional(),
   priorYearFilingStatus: FilingStatusSchema,
-  priorYearTaxableIncome: decimal, // Prior year Form 1040 Line 15
-  priorYearExclusionItemAdjustments: optionalDecimal, // Sum of prior year 6251 exclusion items (SALT, etc.)
-  priorYearAMT: optionalDecimal, // Prior year Form 6251 Line 11
-  priorYearRegularTax: decimal, // Prior year regular tax before credits
-  unusedMinimumTaxCreditCarryforward: optionalDecimal, // Carryforward from earlier years
-  // Part III inputs — prior year capital gains for maximum capital gains rate recomputation
-  priorYearQualifiedDividends: optionalDecimal, // Prior year qualified dividends
-  priorYearNetLTCG: optionalDecimal, // Prior year net long-term capital gain (Schedule D Line 15, zero-floored)
-  priorYearUnrecapturedSection1250Gain: optionalDecimal, // Prior year unrecaptured §1250 gain (25% max rate)
-  priorYearCollectiblesGain: optionalDecimal, // Prior year collectibles/§1202 gain (28% max rate)
-});
+  priorYearTaxableIncome: decimal.optional(), // Legacy2025 alias only; verified path uses actual6251 sources.
+  priorYearExclusionItemAdjustments: optionalDecimal,
+  priorYearAMT: optionalDecimal,
+  priorYearRegularTax: decimal.optional(), // Legacy2025 alias only; verified path uses actual6251 line10.
+  unusedMinimumTaxCreditCarryforward: optionalDecimal,
+  priorYearQualifiedDividends: optionalDecimal,
+  priorYearNetLTCG: optionalDecimal,
+  priorYearUnrecapturedSection1250Gain: optionalDecimal,
+  priorYearCollectiblesGain: optionalDecimal,
+  // Unknown source facts remain absent. Current-year limitations are calculated by the engine.
+  priorYear: z.number().int().optional(),
+  sourceFactsConfirmed: z.boolean().optional(),
+  priorYearForm6251Line1And2e: decimal.optional(),
+  priorYearMinimumTaxCreditNOLDeduction: decimal.optional(),
+  priorYearMinimumTaxForeignTaxCredit: decimal.optional(),
+  priorYearForm6251Line10: decimal.optional(),
+  priorYearUnallowedQualifiedElectricVehicleCredit: decimal.optional(),
+  priorYearFiledForm2555: z.boolean().optional(),
+  priorYearFiledForm1040NR: z.boolean().optional(),
+  priorYearNetUSRealPropertyGain: decimal.optional(),
+  priorYearCapitalGainsRequired: z.boolean().optional(),
+  priorYearForeignEarnedIncome: z.object({
+    form2555Lines45And50: decimal,
+    disallowedDeductions: decimal,
+    capitalGainAdjustmentsConfirmed: z.boolean().optional(),
+  }).optional(),
+  priorYearCapitalGainsWorksheet: z.object({
+    method: z.enum(["qualified_dividends", "schedule_d"]),
+    preferentialIncome: decimal,
+    ordinaryIncomeForZeroRate: decimal,
+    ordinaryIncomeForFifteenRate: decimal,
+    section1250Gain: decimal.optional(),
+    scheduleDTaxWorksheetLine10: decimal.optional(),
+  }).optional(),
+}));
 
 export const Form8880Schema = z.object({
   primaryElectiveDeferrals: optionalDecimal, // Line 1 column (a)
@@ -1332,6 +1877,7 @@ export const Form8889PriorYearRedeterminedLimitWorksheetSchema = z.object({
 });
 
 export const Form8889Schema = z.object({
+  useLastMonthRule: z.boolean().optional(), // Actual contribution-limit choice; omitted is unknown
   accountOwner: z.enum(["primary", "spouse"]).default("primary"),
   coverageByMonth: z.array(HsaCoverageSchema).length(12).default(defaultHsaCoverageByMonth),
   spouseFamilyCoverageMonths: z.array(z.number().int().min(1).max(12)).default([]),
@@ -1343,7 +1889,7 @@ export const Form8889Schema = z.object({
   supportedW2EmployerContributions: optionalDecimal, // Engine trace: attached W-2 Box 12 code W support for Line 9
   qualifiedFundingDistribution: optionalDecimal, // Line 10
   qualifiedFundingDistributionSource: z.enum(["traditional_ira", "roth_ira"]).optional(), // Engine routing support for Form 8606 defaults
-  distributionsReceived: optionalDecimal, // Line 14a
+  distributionsReceived: optionalDecimalInput, // Line 14a; absent worksheet amount may use actual 1099-SA Box1 support.
   excludedDistributions: decimal.optional(), // Line 14b; absence lets the engine default from rollovers and returned excess support
   rolloverDistributions: optionalDecimal, // Line 14b rollovers included on Line 14a
   prohibitedTransactionDistributions: optionalDecimal, // Form 1099-SA Box 3 code 5 deemed distributions that cannot be matched with Line 15 medical expenses
@@ -1351,6 +1897,7 @@ export const Form8889Schema = z.object({
   decedentQualifiedMedicalExpensesPaidWithinOneYearAfterDeath: optionalDecimal, // Line 15 beneficiary-only post-death branch for supported non-estate HSA death distributions
   distributionsNotSubjectToAdditionalTax: optionalDecimal, // Line 17a/17b exception amount
   distributionsAfterAge65: optionalDecimal, // Line 17a/17b validated taxable distributions made after turning age 65 during the year
+  disabilityExceptionTaxableDistributions: optionalDecimalInput, // Actual taxable code 3 amount after its medical/rollover allocations; omission is unknown.
   lastMonthRuleContributions: optionalDecimal, // Part III Line 18 input
   lastMonthRuleRedeterminedLimit: decimal.optional(), // Part III Line 18 manual override; absence lets the engine use the supported worksheet path
   priorYearRedeterminedLimitWorksheet: Form8889PriorYearRedeterminedLimitWorksheetSchema.optional(), // Part III Line 18 supported auto-recompute inputs
@@ -1358,6 +1905,7 @@ export const Form8889Schema = z.object({
   testingPeriodFailureDueToDeathOrDisability: z.boolean().default(false), // Part III exception that zeros Lines 18-21
   supported1099SAGrossDistributions: optionalDecimal, // Engine trace: aggregated Form 1099-SA support for Line 14a
   supported1099SAReturnedExcessContributions: optionalDecimal, // Engine trace: aggregated Form 1099-SA code 2 support for Line 14b
+  supported1099SAReturnedExcessContributionEarnings: optionalDecimalInput, // Actual included Box2 earnings; principal correction is gross Box1 minus Box2.
   supported1099SADeathDistributionDateOfDeathValue: optionalDecimal, // Engine trace: Box 4 death-distribution support included in Line 14a
   supported1099SAOtherBeneficiaryDeathDistributionDateOfDeathValue: optionalDecimal, // Engine trace: non-estate-beneficiary Box 4 death-distribution support eligible for the special Line 15 offset, including inferred Form 1099-SA code 6 records
   supported1099SAEstateDeathDistributionDateOfDeathValue: optionalDecimal, // Engine trace: estate-beneficiary Box 4 death-distribution support that cannot offset Form 8889 Line 15 medical expenses
@@ -1381,25 +1929,27 @@ export const Form6198Schema = z.object({
   /** Activity name for audit trail */
   activityName: z.string().default(""),
 
+  // Preserve missing source amounts. Actual-source coordinators must require
+  // known values; an omitted entry is not evidence of a printed zero.
   // ── Part I: Current Year Profit (Loss) ──────────────────────
   /** Line 1: Ordinary income (loss) from the activity */
-  ordinaryIncome: optionalDecimal,
+  ordinaryIncome: decimal.optional(),
   /** Line 2: Gain (loss) from sale/disposition of activity assets */
-  gainLossFromDispositions: optionalDecimal,
+  gainLossFromDispositions: decimal.optional(),
   /** Line 3: Other income and gains from the activity */
-  otherIncomeGains: optionalDecimal,
+  otherIncomeGains: decimal.optional(),
   /** Line 4: Other deductions and losses from the activity */
-  otherDeductionsLosses: optionalDecimal,
+  otherDeductionsLosses: decimal.optional(),
 
   // ── Part II: Simplified Computation of Amount At Risk ────────
   /** Line 6: Adjusted basis in the activity at the effective date (first year only; floor at 0) */
-  adjustedBasisAtEffectiveDate: optionalDecimal,
+  adjustedBasisAtEffectiveDate: decimal.optional(),
   /** Line 7: Increases — additional contributions, recourse borrowing, qualified nonrecourse financing */
-  currentYearIncreases: optionalDecimal,
+  currentYearIncreases: decimal.optional(),
   /** Line 9: Decreases — distributions, nonrecourse financing, protected amounts */
-  currentYearDecreases: optionalDecimal,
+  currentYearDecreases: decimal.optional(),
   /** Line 10a: Amount at risk at close of preceding tax year (0 if first year) */
-  priorYearAmountAtRisk: optionalDecimal,
+  priorYearAmountAtRisk: decimal.optional(),
 });
 export type Form6198Input = z.infer<typeof Form6198Schema>;
 
@@ -1544,6 +2094,16 @@ const PAScheduleAAdjustmentSchema = z.object({
 });
 
 const PAScheduleASchema = z.object({
+  oidSources: z.array(z.object({
+    sourceId: z.string().min(1),
+    sourceReference: z.string().min(1),
+    factsConfirmed: z.boolean(),
+    paTaxTreatment: z.enum(["taxable", "pennsylvania", "us_government"]),
+    strippedBond: z.boolean(),
+    strippedBondExemptInterest: decimal.optional(),
+    bondPremiumNettedOnStatement: decimal,
+    paBondPremiumAmortization: decimal,
+  })).optional(),
   additionAdjustments: z.array(PAScheduleAAdjustmentSchema).optional(),
   paObligationInterest: decimal.optional(),
   reductionAdjustments: z.array(PAScheduleAAdjustmentSchema).optional(),
@@ -1701,6 +2261,10 @@ export const PANonresidentReturnSchema = z.object({
 });
 
 export const ScheduleK1Schema = z.object({
+  /** Original statement tax year; omission does not establish the return year. */
+  taxYear: z.number().int().optional(),
+  /** Actual federal tax withheld shown on Schedule K-1; not state withholding. */
+  federalIncomeTaxWithheld: optionalDecimalInput,
   partnershipName: z.string(),
   partnershipEIN: z.string(),
   accountHolder: z.enum(["primary", "spouse"]).optional(), // Local owner tag for spouse-separated PA class reporting
@@ -1721,15 +2285,19 @@ export const ScheduleK1Schema = z.object({
   otherIncome: optionalDecimal, // Box 11
   section179Deduction: optionalDecimal, // Box 12
   otherDeductions: optionalDecimal, // Box 13 (aggregate or Code W only when code-level fields are used)
-  // Box 13 code-level charitable contributions (flow to Schedule A, NOT Schedule E)
-  charitableCash: optionalDecimal, // Box 13 Code A — cash/non-capital-gain property to 50% orgs (60% AGI limit) → Schedule A Line 12
-  charitableCapitalGain30: optionalDecimal, // Box 13 Code B — capital gain property to 50% orgs (30% AGI limit) → Schedule A Line 13
-  charitableCapitalGain20: optionalDecimal, // Box 13 Code C — capital gain property to non-50% orgs (20% AGI limit) → Schedule A Line 13
-  // Box 13 Code D — investment interest expense (→ Form 4952 Line 1)
-  investmentInterestExpense: optionalDecimal, // Box 13 Code D — IRC §163(d) investment interest expense from partnership
+  // Charitable semantic amounts flow to Schedule A, not Schedule E.
+  // Semantic amounts, not raw box-code records. Partnership Box 13 and S-corporation
+  // Box 12 both use A/E/F/H for the categories below; saved values are not recoded.
+  charitableCash: optionalDecimal, // Code A: cash (60% limit) → Schedule A Line 11
+  charitableCapitalGain30: optionalDecimal, // Code E: capital gain property to 50% organizations (30% limit) → Schedule A Line 12
+  charitableCapitalGain20: optionalDecimal, // Code F: capital gain property (20% limit) → Schedule A Line 12
+  investmentInterestExpense: optionalDecimal, // Code H: §163(d) investment interest → Form 4952 Line 1
   // Box 13 Code K — excess business interest expense (tracked for §163(j) carryforward)
   excessBusinessInterest: optionalDecimal, // Box 13 Code K — IRC §163(j) excess business interest expense
-  selfEmploymentEarnings: optionalDecimal, // Box 14
+  selfEmploymentEarnings: optionalDecimalInput, // Actual Box 14 code A, including applicable guaranteed payments
+  selfEmploymentFactsConfirmed: z.boolean().optional(),
+  selfEmploymentNetEarningsAfterAdjustments: optionalDecimalInput, // Actual partner worksheet after deductible expenses/loss limits
+  selfEmploymentIncomeType: z.enum(["farm", "nonfarm"]).optional(),
   foreignTaxPaid: optionalDecimal, // Box 16 Code O/P — creditable foreign taxes
   /** Gross foreign source income from Box 16 Codes D/E/F.
    *  When provided, this explicit amount is used for Form 1116 limitation
@@ -1756,6 +2324,7 @@ export const ScheduleK1Schema = z.object({
   investmentExpenses: optionalDecimal, // Box 20 Code B — investment expenses from partnership → Form 4952 Line 4f
   excessTaxableIncome: optionalDecimal, // Partnership Box 20 Code AE or S-corp Box 17 Code AA — current engine only uses the partnership branch for EBIE release
   excessBusinessInterestIncome: optionalDecimal, // Partnership Box 20 Code AF or S-corp Box 17 Code AB — current engine only uses the partnership branch for EBIE release
+  qbiMateriallyParticipated: z.boolean().optional(),
   section199AQBI: optionalDecimal, // Box 20 Code Z — qualified business income
   section199AW2Wages: optionalDecimal, // Section 199A statement — W-2 wages allocable to QBI
   section199AUBIA: optionalDecimal, // Section 199A statement — UBIA of qualified property
@@ -1842,10 +2411,13 @@ export const ScheduleK1Schema = z.object({
  * Ref: IRS Schedule K-1 (Form 1041) Instructions; IRC §§652, 662, 691(c), 642(h).
  */
 export const ScheduleK1Form1041Schema = z.object({
+  /** Actual federal tax withheld shown on Schedule K-1; not state withholding. */
+  federalIncomeTaxWithheld: optionalDecimalInput,
   /** Name of the estate or trust */
   estateTrustName: z.string(),
   /** EIN of the estate or trust */
   estateTrustEIN: z.string(),
+  accountHolder: z.enum(["primary", "spouse"]).optional(), // Beneficiary on a joint return.
   /** Whether this is the final K-1 (trust/estate terminating) */
   isFinalK1: z.boolean().default(false),
 
@@ -1901,6 +2473,7 @@ export const ScheduleK1Form1041Schema = z.object({
   // dividends, and qualified PTP income. These mirror the partnership
   // K-1 Box 20 Code Z fields.
   /** Box 14 Code I: Qualified business income from the trust/estate */
+  qbiMateriallyParticipated: z.boolean().optional(),
   section199AQBI: optionalDecimal,
   /** Box 14 Code I statement: W-2 wages allocable to QBI */
   section199AW2Wages: optionalDecimal,
@@ -1925,47 +2498,276 @@ export type ScheduleK1Form1041 = z.infer<typeof ScheduleK1Form1041Schema>;
  * Ref: IRS Form 1098-E Instructions; IRC §221; Pub 970 Chapter 4.
  */
 export const Form1098ESchema = z.object({
+  sourceId: z.string().optional(),
+  taxYear: z.number().int().optional(),
+  borrowerId: z.string().optional(),
+  accountHolder: z.enum(["primary", "spouse"]).optional(),
   /** Name of the lender or loan servicer */
   lender: z.string(),
   /** Box 1: Student loan interest received by lender */
   studentLoanInterestReceived: decimal,
-  /** Box 2: Checked if Box 1 includes loan origination fees and/or capitalized interest (informational) */
-  includesOriginationFeesOrCapitalizedInterest: z.boolean().default(false),
+  /** Actual Box2: Box1 excludes these amounts for a loan made before September1,2004. */
+  box2ExcludesOriginationFeesOrCapitalizedInterest: z.boolean().optional(),
+  /** @deprecated Incorrect historical label. Preserved as unverified, never an actual Box2 answer. */
+  includesOriginationFeesOrCapitalizedInterest: z.boolean().optional(),
 });
 export type Form1098E = z.infer<typeof Form1098ESchema>;
 
-export const Form1098Schema = z.object({
+/** Actual borrower and benefit sources for Schedule1 line21; no favorable defaults. */
+export const StudentLoanInterestSourceSchema = z.object({
+  sourceId: z.string().optional(), borrowerId: z.string().optional(),
+  accountHolder: z.enum(["primary", "spouse"]).optional(), lender: z.string().optional(),
+  sourceKind: z.enum(["form1098e", "lender_statement", "payment_records"]).optional(),
+  form1098ESourceId: z.string().optional(), loanOriginationDate: z.string().optional(),
+  interestPaid: optionalDecimalInput, additionalInterestPaid: optionalDecimalInput,
+  additionalInterestSourceReference: z.string().optional(), additionalInterestQualificationConfirmed: z.boolean().optional(),
+  paymentsInTaxYearConfirmed: z.boolean().optional(), legallyObligated: z.boolean().optional(),
+  solelyQualifiedEducationExpenses: z.boolean().optional(), eligibleInstitutionAtOrigination: z.boolean().optional(),
+  enrolledAtLeastHalfTime: z.boolean().optional(), pursuingCredential: z.boolean().optional(),
+  studentRelationshipAtOrigination: z.enum(["self", "spouse", "dependent", "other"]).optional(),
+  expensesWithinReasonablePeriod: z.boolean().optional(), relatedLender: z.boolean().optional(), employerPlanLoan: z.boolean().optional(),
+  employerAssistanceExcluded: optionalDecimalInput, otherTaxFreeAssistance: optionalDecimalInput,
+  interestDeductibleElsewhere: optionalDecimalInput, qtpTaxFreeEarningsUsedForInterest: optionalDecimalInput,
+  reductionsDistinctConfirmed: z.boolean().optional(), educationExpenseIds: z.array(z.string()).optional(),
+});
+export const StudentLoanInterestFactsSchema = z.object({
+  sourceTaxYear: z.number().int().optional(), sourceFactsConfirmed: z.boolean().optional(),
+  primaryClaimedAsDependent: z.boolean().optional(), spouseClaimedAsDependent: z.boolean().optional(),
+  puertoRicoIncomeExclusion: optionalDecimalInput, americanSamoaIncomeExclusion: optionalDecimalInput,
+  loans: z.array(StudentLoanInterestSourceSchema).optional(),
+});
+export type StudentLoanInterestFacts = z.infer<typeof StudentLoanInterestFactsSchema>;
+
+export const Form1098Schema = z.preprocess(value => {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return value;
+  const source = value as Record<string,unknown>;
+  const complete = source.sourceFactsComplete !== false && ["sourceId","taxYear","mortgageInterestReceived","outstandingMortgagePrincipal","mortgageOriginationDate","refundOfOverpaidInterest","pointsPaid"].every(key => source[key] !== undefined);
+  return {...source,sourceFactsComplete:complete};
+},z.object({
+  sourceId: z.string().optional(),
+  taxYear: z.number().int().optional(),
+  sourceFactsComplete: z.boolean().optional(),
   lender: z.string(),
+  loanAccountReference: z.string().optional(),
   mortgageInterestReceived: decimal, // Box 1
   outstandingMortgagePrincipal: decimal, // Box 2
   mortgageOriginationDate: z.string().optional(),
-  refundOfOverpaidInterest: optionalDecimal, // Box 3
+  refundOfOverpaidInterest: optionalDecimal, // Box 4: prior-year interest recovery
   mortgageInsurancePremiums: optionalDecimal, // Box 5
+  mortgageInsuranceQualification: z.object({
+    allocationTaxYear: z.number().int(),
+    contractIssueDate: z.string(),
+    qualifiedProvider: z.boolean(),
+    acquisitionDebt: z.boolean(),
+    qualifiedResidence: z.boolean(),
+    premiumsAllocableToYear: optionalDecimalInput,
+    prepaidSources: MortgageInsurancePrepaidSourcesSchema.optional(),
+  }).refine(facts => facts.prepaidSources !== undefined || facts.premiumsAllocableToYear !== undefined, "Manual mortgage insurance requires an actual annual allocation").optional(),
   pointsPaid: optionalDecimal, // Box 6
   propertyTax: optionalDecimal,
-});
+}));
 
-export const Form1095ASchema = z.object({
+const MortgageBalanceSchema = z.discriminatedUnion("method", [
+  z.object({method:z.literal("highest_balance"),amount:decimal,sourceReference:z.string().min(1)}),
+  z.object({method:z.literal("lender_average"),amount:decimal,sourceReference:z.string().min(1)}),
+  z.object({method:z.literal("first_last"),firstBalance:decimal,lastBalance:decimal,noAdditionalBorrowing:z.boolean(),noPrepaymentOverOneMonth:z.boolean(),levelPaymentsAtLeastSemiannually:z.boolean()}),
+  z.object({method:z.literal("monthly"),qualifiedHomeMonths:z.array(z.number().int().min(1).max(12)).min(1),balances:z.array(z.object({month:z.number().int().min(1).max(12),amount:decimal})).min(1)}),
+  z.object({method:z.literal("interest_rate"),currentYearInterest:decimal,currentYearInterestPaidInPriorYears:decimal,currentYearInterestPaidInPriorYearsByOthers:decimal,interestRefundedToOthers:decimal,lowestAnnualRate:decimal,securedAllYear:z.boolean(),interestPaidAtLeastMonthly:z.boolean()}),
+  z.object({method:z.literal("category_worksheet"),grandfatheredDebt:decimal,acquisitionDebtBefore2017:decimal,acquisitionDebtAfter2017:decimal,excludedDebt:decimal,worksheetReference:z.string().min(1),classificationConfirmed:z.boolean(),paymentsAppliedInRequiredOrderConfirmed:z.boolean()}),
+]);
+const MortgagePointsSchema = z.discriminatedUnion("method", [
+  z.object({method:z.literal("none")}),
+  z.object({method:z.literal("current_year"),cashMethod:z.boolean(),establishedPractice:z.boolean(),withinUsualAmount:z.boolean(),notServiceFees:z.boolean(),ownFundsSufficient:z.boolean(),buyBuildOrImproveMainHome:z.enum(["purchase","build","improve"]),percentageOfPrincipal:z.boolean(),onSettlementStatement:z.boolean(),fullDeductionElected:z.boolean(),paidDate:z.string()}),
+  z.object({method:z.literal("ratable"),originalPoints:decimal,originalPrincipal:decimal,loanTermMonths:z.number().int().positive(),paymentsInYear:z.number().int().nonnegative(),paymentIntervalMonths:z.number().int().positive(),unamortizedPointsAtStartOfYear:decimal,cashMethod:z.boolean(),comparableLoanTerms:z.boolean(),pointsAreInterest:z.boolean(),paidDate:z.string()}),
+  z.object({method:z.literal("completed_amortization"),deductibleAmountBeforeLimit:decimal,unamortizedPointsAvailable:decimal,sourceTaxYear:z.number().int(),worksheetReference:z.string().min(1),serviceFeesExcludedConfirmed:z.boolean(),reportedOnCurrentForm1098:z.boolean()}),
+]);
+/** Actual Pub936 source records. No omitted source amount or qualification is defaulted. */
+export const MortgageInterestWorksheetSchema = z.object({
+  sourceTaxYear:z.number().int(),sourceReference:z.string().min(1),sourceFactsConfirmed:z.boolean(),allHomeDebtIncluded:z.boolean(),
+  loans:z.array(z.object({
+    sourceId:z.string().min(1),form1098SourceId:z.string().min(1).optional(),loanAccountReference:z.string().optional(),lenderName:z.string().min(1),lenderAddress:z.string().optional(),lenderTaxId:z.string().optional(),
+    accountHolder:z.enum(["primary","spouse","joint"]),homeId:z.string().min(1),homeUse:z.enum(["main","second","other"]),
+    qualifiedResidence:z.boolean(),securedDebt:z.boolean(),ownershipInterest:z.boolean(),obligationToRepay:z.boolean(),
+    originationDate:z.string(),loanType:z.enum(["original","refinanced_mixed"]),acquisitionUse:z.boolean(),currentYearInterestOnly:z.boolean(),
+    interestPaid:decimal,interestPaidByOthers:decimal,interestDeductedElsewhere:decimal,sameYearInterestRefund:decimal,nonqualifiedInterest:decimal,
+    pointsPaid:decimal,pointsPaidByOthers:decimal,pointsNotInterest:decimal,points:MortgagePointsSchema,balance:MortgageBalanceSchema,
+    bindingContract:z.object({signedDate:z.string(),requiredClosingDate:z.string(),purchaseDate:z.string()}).optional(),
+  })),
+  priorYearInterestRecoveries:z.array(z.object({sourceId:z.string().min(1),form1098SourceId:z.string().min(1).optional(),originTaxYear:z.number().int(),refundReceived:decimal,taxableRecovery:decimal,alreadyIncludedInOtherIncome:decimal,otherIncomeSource:z.object({form1099MiscIndex:z.number().int().nonnegative()}).optional(),taxBenefitWorksheetReference:z.string().min(1),taxBenefitWorksheetConfirmed:z.boolean()})),
+});
+export type MortgageInterestWorksheet = z.infer<typeof MortgageInterestWorksheetSchema>;
+
+const nonnegativePremium = decimal.refine(value => !d(value).isNegative(), "Premium amount must be nonnegative");
+const uniqueCoverageMonths = (rows: Array<{month:number}>) => new Set(rows.map(row => row.month)).size === rows.length;
+export const Form1095ASchema = z.preprocess(value => {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return value;
+  const record = value as Record<string,unknown>;
+  const rows = record.monthlyPremiums;
+  const complete = record.sourceFactsComplete !== false && record.taxYear !== undefined
+    && typeof record.marketplace === "string" && record.marketplace.trim().length > 0
+    && typeof record.policyNumber === "string" && record.policyNumber.trim().length > 0
+    && Array.isArray(rows) && rows.length > 0 && rows.every(row => row && typeof row === "object"
+      && ["month","enrolleePremium","slcsp","advancePremiumTaxCredit"].every(key => (row as Record<string,unknown>)[key] !== undefined));
+  return {...record,sourceFactsComplete:complete};
+}, z.object({
+  sourceFactsComplete: z.boolean().optional(),
+  taxYear: z.number().int().optional(),
   marketplace: z.string(),
   policyNumber: z.string(),
-  monthlyPremiums: z.array(
-    z.object({
-      month: z.number().int().min(1).max(12),
-      enrolleePremium: decimal,
-      slcsp: decimal, // Second lowest cost silver plan
-      advancePremiumTaxCredit: optionalDecimal,
-    })
-  ),
+  recipientName: z.string().optional(),
+  recipientSsn: z.string().optional(),
+  coveredIndividuals: z.array(MarketplaceCoveredIndividualSchema).optional(),
+  monthlyPremiums: z.array(z.object({
+    month: z.number().int().min(1).max(12),
+    enrolleePremium: nonnegativePremium,
+    // Explicit null records an actually printed blank; omitted remains unknown.
+    // Only a source-backed method with separate actual benchmarks may use it.
+    slcsp: nonnegativePremium.nullable(),
+    advancePremiumTaxCredit: nonnegativePremium.optional().default("0"),
+  })).min(1).refine(uniqueCoverageMonths, "Duplicate1095A source months must be reconciled"),
+}));
+
+export const Form8962Schema = z.object({
+  taxFamilySize: z.number().int().min(1).optional(),
+  fplRegion: z.enum(["contiguous","alaska","hawaii"]).optional(),
+  // Components may be negative; Form8962 line3 applies the household zero floor.
+  taxpayerModifiedAGI: optionalDecimalInput,
+  requiredFilingDependentsModifiedAGI: optionalDecimalInput,
+  householdFactsConfirmed: z.boolean().optional(),
+  canBeClaimedAsDependent: z.boolean().optional(),
+  marriedFilingSeparatelyExceptionConfirmed: z.boolean().optional(),
+  belowPovertyException: z.enum(["none","marketplace_estimate","lawfully_present_ineligible_medicaid"]).optional(),
+  marketplaceEstimatedIncomeWithinEligibilityRange: z.boolean().optional(),
+  marketplaceInformationAccurate: z.boolean().optional(),
+  coverageFactsConfirmed: z.boolean().optional(),
+  allocationRequired: z.boolean().optional(),
+  sharedPolicyAllocations: Form8962SharedPolicySchema.optional(),
+  alternativeMarriageCalculationElected: z.boolean().optional(),
+  marriageSources: Form8962MarriageSourcesSchema.optional(),
+  selfEmployedHealthInsuranceCoordinationRequired: z.boolean().optional(),
+  qsehraAffected: z.boolean().optional(),
+  lawfulPresenceReconciliationRequired: z.boolean().optional(),
+  monthlyReconciliation: z.array(z.object({
+    month: z.number().int().min(1).max(12),
+    enrolleePremium: nonnegativePremium,
+    slcsp: nonnegativePremium,
+    advancePremiumTaxCredit: nonnegativePremium,
+    coverageEligible: z.boolean(),
+    incomeBasedSepEnrollment: z.boolean(),
+    qsehraAffordable: z.boolean().optional(),
+    qsehraMonthlyPermittedBenefit: nonnegativePremium.optional(),
+  })).refine(uniqueCoverageMonths,"Duplicate PTC reconciliation months are not allowed").optional(),
 });
 
 export const CharitableDonationSchema = z.object({
   organization: z.string(),
+  /** Actual charitable qualification under IRC170(c); omission remains unknown in either supported year. */
+  qualifiedOrganization: z.boolean().optional(),
+  supportingOrganization: z.boolean().optional(),
+  donorAdvisedFund: z.boolean().optional(),
+  qualifiedAppreciatedStock: z.boolean().optional(),
   type: z.enum(["cash", "appreciated_stock", "property", "other"]),
   amount: decimal, // Fair market value
-  costBasis: optionalDecimal, // For appreciated property
+  costBasis: optionalDecimalInput, // For appreciated property
   dateOfDonation: z.string(),
-  isLongTermCapitalGain: z.boolean().optional().default(false),
-  isPrivateFoundation: z.boolean().optional().default(false), // Validated 20%-of-AGI branch for LTCG property donated to a private foundation / second-category organization
+  isLongTermCapitalGain: z.boolean().optional(),
+  /** Actual IRC170(b)(1)(A)/(F) recipient category; no default or inference from the legacy flag. */
+  recipientCategory: z.enum(["fifty-percent", "private-nonoperating", "other-thirty-percent"]).optional(),
+  /** Saved legacy foundation/second-category answer. True is ambiguous; preserve it for source migration. */
+  isPrivateFoundation: z.boolean().optional(),
+});
+
+/** Actual filed NOL sources. Unknown history and tax character have no defaults. */
+export const NetOperatingLossVintageSchema = z.object({
+  sourceId: z.string().optional(), lossTaxYear: z.number().int().optional(), sourceReference: z.string().optional(),
+  originKind: z.enum(["individual_nol", "excess_business_loss", "estate_termination"]).optional(),
+  originalLoss: optionalDecimalInput, openingCarryforward: optionalDecimalInput,
+  carrybackTreatment: z.enum(["not_required", "waived", "completed"]).optional(), carrybackSourceReference: z.string().optional(),
+  ordinaryHistoricalCarrybackConfirmed: z.boolean().optional(), adjustedThroughTaxYear: z.number().int().optional(),
+  historySourceReference: z.string().optional(), allHistoryIncluded: z.boolean().optional(), farmingLossIncluded: z.boolean().optional(),
+  filingUnitOrigin: NolFilingUnitOriginSchema.optional(),
+  history: z.array(z.object({ taxYear: z.number().int().optional(), nolUsed: optionalDecimalInput,
+    attributeReduction: optionalDecimalInput, sourceReference: z.string().optional(), filingUnitUses: z.array(NolFilingUnitUseSchema).optional() })).optional(),
+  section1411OriginalLoss: optionalDecimalInput,
+});
+export const NetOperatingLossSourcesSchema = z.object({
+  sourceTaxYear: z.number().int().optional(), sourceReference: z.string().optional(), sourceFactsConfirmed: z.boolean().optional(),
+  allCarryoversIncluded: z.boolean().optional(), calendarYearTaxpayer: z.boolean().optional(),
+  returnMembership: z.enum(["continuous_individual", "same_spouses_joint", "changed_membership"]).optional(), membershipUnchangedConfirmed: z.boolean().optional(),
+  filingUnitHistory: FilingUnitHistorySchema.optional(),
+  sameCoupleJointHistory: NolSameCoupleJointHistorySchema.optional(),
+  newMarriageHistory: NolSameCoupleJointHistorySchema.optional(),
+  currentOwnerSources: NolNewMarriageCurrentSourcesSchema.optional(),
+  primaryName: z.string().optional(), primaryTaxpayerIdLast4: z.string().optional(), spouseName: z.string().optional(), spouseTaxpayerIdLast4: z.string().optional(),
+  vintages: z.array(NetOperatingLossVintageSchema).optional(),
+  alternativeTax: z.object({ sourceReference: z.string().optional(), sourceFactsConfirmed: z.boolean().optional(),
+    filingUnitHistory: FilingUnitHistorySchema.optional(),
+    sameCoupleJointHistory: NolSameCoupleJointHistorySchema.optional(),
+    newMarriageHistory: NolSameCoupleJointHistorySchema.optional(),
+    allCarryoversIncluded: z.boolean().optional(), specialDisasterCarryIncluded: z.boolean().optional(),
+    currentYearAdjustmentsCompleteConfirmed: z.boolean().optional(), regularBasisAndLossLimitsSameAsAlternativeConfirmed: z.boolean().optional(),
+    /** Independent actual charity histories; absence never establishes either history is empty. */
+    charitableCarryoverHistory: z.object({
+      sourceTaxYear: z.number().int().optional(), sourceReference: z.string().optional(),
+      sourceFactsConfirmed: z.boolean().optional(), allCarryoversIncluded: z.boolean().optional(),
+      /** Independent full AMT origin/use history. Never inferred from regular charity sources. */
+      alternativeCarryoverSources: CharitableCarryoverSourcesSchema.optional(),
+      priorRegularCarryovers: z.array(z.object({ taxYear: z.number().int().optional(),
+        category: z.enum(["cash_60", "noncash_50", "capital_gain_30", "other_30", "capital_gain_20"]).optional(),
+        amount: optionalDecimalInput, sourceReference: z.string().optional() })).optional(),
+      priorAlternativeCarryovers: z.array(z.object({ taxYear: z.number().int().optional(),
+        category: z.enum(["cash_60", "noncash_50", "capital_gain_30", "other_30", "capital_gain_20"]).optional(),
+        amount: optionalDecimalInput, sourceReference: z.string().optional() })).optional(),
+    }).optional(),
+    vintages: z.array(NetOperatingLossVintageSchema).optional() }).optional(),
+});
+
+/** Current origin facts, separate from filed prior loss vintages. No calculated income overrides. */
+export const Form172OriginSourcesSchema = z.object({
+  sourceTaxYear: z.number().int().optional(), sourceReference: z.string().optional(), sourceFactsConfirmed: z.boolean().optional(),
+  allCurrentYearSourcesIncluded: z.boolean().optional(), farmingLossIncluded: z.boolean().optional(),
+  cancelledDebtIncluded: z.boolean().optional(), estateOrTrustLossIncluded: z.boolean().optional(),
+  businessSources: z.array(z.object({
+    sourceId: z.string().optional(), accountHolder: z.enum(["primary", "spouse"]).optional(), businessName: z.string().optional(),
+    sourceReference: z.string().optional(), sourceFactsConfirmed: z.boolean().optional(),
+    materiallyParticipated: z.boolean().optional(), allInvestmentAtRisk: z.boolean().optional(), financialTradingBusiness: z.boolean().optional(),
+  })).optional(),
+  /** Original capital records and actual character; no computed gain or loss override. */
+  capitalSources: z.object({
+    sourceTaxYear: z.number().int().optional(), sourceReference: z.string().optional(), sourceFactsConfirmed: z.boolean().optional(),
+    allCapitalSourcesIncluded: z.boolean().optional(),
+    transactions: z.array(z.object({
+      sourceId: z.string().optional(), sourceTaxYear: z.number().int().optional(), sourceReference: z.string().optional(),
+      accountHolder: z.enum(["primary", "spouse"]).optional(), statementSourceId: z.string().optional(), payerName: z.string().optional(),
+      accountReference: z.string().optional(), nonbusinessInvestmentConfirmed: z.boolean().optional(),
+      capitalCharacter: z.enum(["ordinary_investment", "collectible", "section1202"]).optional(),
+      transaction: z.object({
+        description: z.string().optional(), dateAcquired: z.string().optional(), dateSold: z.string().optional(),
+        proceeds: optionalDecimalInput, costBasis: optionalDecimalInput, adjustments: optionalDecimalInput,
+        holdingPeriod: z.enum(["short", "long"]).optional(), basisReportedToIRS: z.boolean().optional(),
+        washSale: z.boolean().optional(), washSaleDisallowed: optionalDecimalInput, digitalAsset: z.boolean().optional(),
+      }).optional(),
+    })).optional(),
+    distributions: z.array(z.object({
+      sourceId: z.string().optional(), sourceTaxYear: z.number().int().optional(), sourceReference: z.string().optional(),
+      accountHolder: z.enum(["primary", "spouse"]).optional(), payerName: z.string().optional(), accountReference: z.string().optional(),
+      nonbusinessInvestmentConfirmed: z.boolean().optional(), totalCapitalGainDistributions: optionalDecimalInput,
+      section1250Gain: optionalDecimalInput, section1202Gain: optionalDecimalInput, collectiblesGain: optionalDecimalInput,
+    })).optional(),
+    priorCapitalLosses: z.object({
+      sourceTaxYear: z.number().int().optional(), sourceReference: z.string().optional(), sourceFactsConfirmed: z.boolean().optional(),
+      allCarryoversIncluded: z.boolean().optional(), sameReturnMembershipConfirmed: z.boolean().optional(),
+      nonbusinessInvestmentConfirmed: z.boolean().optional(), shortTermCapitalLoss: optionalDecimalInput, longTermCapitalLoss: optionalDecimalInput,
+    }).optional(),
+    alternativeTax: z.object({
+      sourceReference: z.string().optional(), sourceFactsConfirmed: z.boolean().optional(),
+      currentBasisAndAdjustmentsSameConfirmed: z.boolean().optional(), priorCapitalLossesSameConfirmed: z.boolean().optional(),
+    }).optional(),
+  }).optional(),
+  alternativeTax: z.object({
+    sourceReference: z.string().optional(), sourceFactsConfirmed: z.boolean().optional(), currentYearAdjustmentsCompleteConfirmed: z.boolean().optional(),
+    regularBasisAndLossLimitsSameAsAlternativeConfirmed: z.boolean().optional(), regularDepreciationSameAsAlternativeConfirmed: z.boolean().optional(),
+  }).optional(),
 });
 
 export const PriorYearCarryforwardSchema = z.object({
@@ -1977,6 +2779,20 @@ export const PriorYearCarryforwardSchema = z.object({
       z.object({
         partnershipName: z.string(),
         amount: decimal,
+        /** Actual prior filed QBI loss worksheet; no inferred origin or qualification. */
+        qbiLossTracking: z.object({
+          sourceTaxYear: z.number().int(),
+          sourceReference: z.string(),
+          sourceFactsConfirmed: z.boolean().optional(),
+          vintages: z.array(z.object({
+            taxYear: z.number().int(),
+            originalLoss: decimal,
+            qualifiedOriginalLoss: decimal,
+            remainingLoss: decimal,
+            qualifiedRemainingLoss: decimal,
+            materiallyParticipatedInCurrentYear: z.boolean().optional(),
+          })),
+        }).optional(),
       })
     )
     .default([]),
@@ -2008,7 +2824,14 @@ export const PriorYearCarryforwardSchema = z.object({
       amount: decimal,
     }))
   ).optional(),
-  qbiLossCarryforward: optionalDecimal,
+  /** Actual separately computed AMT foreign-credit records; omission is unknown. */
+  amtForeignTaxCreditCarryforwardByCategory: z.partialRecord(
+    z.enum(["passive", "general"]),
+    z.array(z.object({ taxYear: z.number().int(), amount: decimal }))
+  ).optional(),
+  qbiLossCarryforward: optionalDecimalInput,
+  /** Actual active portion of the QBI loss carryover; unknown is not zero. */
+  activeQbiLossCarryforward: optionalDecimalInput,
   /** Form 8995-A Part IV aggregation elections per Reg. §1.199A-4 */
   qbiAggregationElections: z.array(z.object({
     name: z.string(),
@@ -2022,6 +2845,7 @@ export const PriorYearCarryforwardSchema = z.object({
   charitableCarryforwardByYear: z.array(z.object({
     taxYear: z.number().int(),
     amount: decimal,
+    category: z.enum(["cash_60", "noncash_50", "capital_gain_30", "other_30", "capital_gain_20"]).optional(),
   })).default([]),
   /** Per-partnership suspended excess business interest expense carryforward
    *  from prior years under IRC §163(j)(4)(B)(ii). Each entry tracks the
@@ -2037,29 +2861,164 @@ export const PriorYearCarryforwardSchema = z.object({
   /** General business credit carryforward from prior years (IRC §39, 20-year limit) */
   generalBusinessCreditCarryforward: optionalDecimal,
   /** NOL carryforward from prior-year excess business losses under IRC §461(l) */
-  excessBusinessLossNOL: optionalDecimal,
+  excessBusinessLossNOL: optionalDecimalInput,
   /** General NOL carryforward available for deduction under IRC §172.
    *  When provided, takes precedence over excessBusinessLossNOL for the
    *  Schedule 1 Line 8a NOL deduction. When absent, the engine defaults
    *  to the excessBusinessLossNOL amount. For post-2017 NOLs, the
    *  deduction is limited to 80% of taxable income (IRC §172(a)(2)). */
-  nolCarryforward: optionalDecimal,
+  nolCarryforward: optionalDecimalInput,
   priorYearTax: optionalDecimal,
   priorYearAGI: optionalDecimal,
 });
 
+export const StandardDeductionFactsSchema = z.object({
+  primaryBlind: z.boolean().optional(),
+  spouseBlind: z.boolean().optional(),
+  primaryCanBeClaimedAsDependent: z.boolean().optional(),
+  spouseCanBeClaimedAsDependent: z.boolean().optional(),
+  spouseItemizes: z.boolean().optional(),
+  dualStatusAlien: z.boolean().optional(),
+  nonresidentAlien: z.boolean().optional(),
+  residentJointElection: z.boolean().optional(),
+  shortTaxYear: z.boolean().optional(),
+  dependentEarnedIncome: optionalDecimalInput,
+  primaryDeathDate: z.string().nullable().optional(),
+  spouseDeathDate: z.string().nullable().optional(),
+  claimSpouseAdditionalDeduction: z.boolean().optional(),
+  spouseHasGrossIncome: z.boolean().optional(),
+  spouseFilesReturn: z.boolean().optional(),
+});
+
 export const DependentCareSchema = z.object({
+  sourceFactsConfirmed: z.boolean().optional(),
+  receivedBenefits: z.boolean().optional(),
+  usesDeemedIncome: z.boolean().optional(),
+  providers: z.array(z.object({
+    name: z.string().trim().min(1), address: z.string().trim().min(1),
+    identifierType: z.enum(["tin", "tax_exempt", "foreign_no_us_tin", "employer_furnished", "withheld"]),
+    taxId: z.string().optional(), dueDiligenceStatement: z.string().optional(),
+    householdEmployee: z.boolean(), amountPaid: decimal,
+  })).max(50).optional(),
+  qualifyingPersons: z.array(z.object({
+    firstName: z.string().trim().min(1), lastName: z.string().trim().min(1),
+    identifierType: z.enum(["tax_id", "died"]), taxId: z.string().optional(),
+    over12Disabled: z.boolean(), qualifyingPersonConfirmed: z.boolean(), qualifiedExpenses: decimal,
+  })).max(20).optional(),
+  /** Actual completed prior-year expense worksheet credit; missing is not zero. */
+  priorYearExpenseCredit: optionalDecimalInput,
+  /** Earned income after applicable exclusions, SE adjustments and substantiated deemed monthly income. */
+  primaryEarnedIncome: optionalDecimalInput,
+  spouseEarnedIncome: optionalDecimalInput,
+  /** Section 129 amount already determined excludable using Form 2441 Part III; unknown is not zero. */
+  excludedDependentCareBenefits: optionalDecimalInput,
+  eligibilityConfirmed: z.boolean().optional(),
   expenses: decimal,
   qualifyingIndividuals: z.number().int().min(1).default(1),
 });
 
+/** Actual Form 2441 Part III sources. Omission is unknown, including empty arrays and zero amounts. */
+export const DependentCareBenefitsSchema = z.object({
+  sourceFactsConfirmed: z.boolean().optional(),
+  exclusionEligibilityConfirmed: z.boolean().optional(),
+  /** Part I records for a benefits-only return without manufacturing a Part II credit claim. */
+  providers: DependentCareSchema.shape.providers,
+  usesDeemedIncome: z.boolean().optional(),
+  employeeBenefits: z.array(z.object({
+    sourceId: z.string().trim().min(1).optional(),
+    owner: z.enum(["primary", "spouse"]).optional(),
+    benefitsReported: optionalDecimalInput,
+    alreadyIncludedInWages: optionalDecimalInput,
+    priorYearCarryoverUsed: optionalDecimalInput,
+    forfeited: optionalDecimalInput,
+    carriedForward: optionalDecimalInput,
+  })).max(100).optional(),
+  selfEmployedBenefits: z.array(z.object({
+    sourceId: z.string().trim().min(1).optional(),
+    owner: z.enum(["primary", "spouse"]).optional(),
+    schedule: z.enum(["schedule-c", "schedule-e", "schedule-f"]).optional(),
+    /** Actual received benefits; amounts not received are not manufactured as line 14 forfeitures. */
+    benefitsReceived: optionalDecimalInput,
+    priorYearCarryoverUsed: optionalDecimalInput,
+    /** Actual amount already included in this activity's reported deductible expenses, including known zero. */
+    alreadyDeducted: optionalDecimalInput,
+  })).max(100).optional(),
+  deductionAllocations: z.array(z.object({
+    sourceId: z.string().trim().min(1).optional(),
+    owner: z.enum(["primary", "spouse"]).optional(),
+    schedule: z.enum(["schedule-c", "schedule-e", "schedule-f"]).optional(),
+    /** Actual whole-dollar allocation of calculated line 24 to this activity. */
+    amount: optionalDecimalInput,
+  })).max(100).optional(),
+  planExclusionLimit: optionalDecimalInput,
+  qualifiedExpensesIncurred: optionalDecimalInput,
+  /** Signed completed Part III worksheets, excluding line 12 benefits; not combined household earnings. */
+  primaryEarnedIncome: optionalDecimalInput,
+  spouseEarnedIncome: optionalDecimalInput,
+  earnedIncomeWorksheetConfirmed: z.boolean().optional(),
+  spouseLivedApartLast6Months: z.boolean().optional(),
+  paidOverHalfHomeCost: z.boolean().optional(),
+  qualifyingPersonMainHomeOverHalfYear: z.boolean().optional(),
+  spouseDiedDuringYear: z.boolean().optional(),
+  useDeceasedSpouseEarnedIncome: z.boolean().optional(),
+  qualifyingIndividuals: z.number().int().min(0).optional(),
+  /** Actual line 30 paid expenses after excluding line 28 benefits and expenses claimed elsewhere. */
+  qualifiedExpensesPaidForCredit: optionalDecimalInput,
+  creditExpenseCoordinationConfirmed: z.boolean().optional(),
+});
+
+const EducationInstitutionSchema = z.object({
+  name: z.string().min(1),
+  address: z.string().min(1),
+  ein: z.string().regex(/^\d{2}-?\d{7}$/).optional(),
+  receivedCurrentYear1098T: z.boolean(),
+  receivedPriorYear1098TWithBox7: z.boolean(),
+});
+const EducationStudentFacts = {
+  name: z.string(),
+  studentTaxId: z.string().regex(/^\d{3}-?\d{2}-?\d{4}$/).optional(),
+  studentRole: z.enum(["primary", "spouse", "dependent"]).optional(),
+  qualifiedExpenses: decimal,
+  studentSsnEligible: z.boolean().optional(),
+  studentTinEligible: z.boolean().optional(),
+  institutionEligible: z.boolean().optional(),
+  expensesEligibilityConfirmed: z.boolean().optional(),
+  form1098TRequirementMet: z.boolean().optional(),
+  institutions: z.array(EducationInstitutionSchema).optional(),
+};
 export const EducationExpensesSchema = z.object({
+  primarySsnEligible: z.boolean().optional(),
+  spouseSsnEligible: z.boolean().optional(),
+  primaryTinEligible: z.boolean().optional(),
+  claimedAsDependent: z.boolean().optional(),
+  canBeClaimedAsDependent: z.boolean().optional(),
+  nonresidentAlien: z.boolean().optional(),
+  residentJointElection: z.boolean().optional(),
+  aocBanInEffect: z.boolean().optional(),
+  form8862Required: z.boolean().optional(),
+  form8862Completed: z.boolean().optional(),
+  possessionIncomeExclusion: optionalDecimalInput,
   aocStudents: z.array(z.object({
-    name: z.string(),
-    qualifiedExpenses: decimal,
+    ...EducationStudentFacts,
+    institutionEin: z.string().regex(/^\d{2}-?\d{7}$/).optional(),
     priorYearsClaimed: z.number().int().min(0).optional(),
+    completedFirstFourYearsBeforeYear: z.boolean().optional(),
+    enrolledAtLeastHalfTime: z.boolean().optional(),
+    pursuingDegreeOrCredential: z.boolean().optional(),
+    felonyDrugConviction: z.boolean().optional(),
   })).default([]),
+  llcStudents: z.array(z.object({
+    ...EducationStudentFacts,
+    courseEligibilityConfirmed: z.boolean().optional(),
+  })).optional(),
   llcExpenses: optionalDecimal,
+  refundableAocEligible: z.boolean().optional(),
+  refundableAocFacts: z.object({
+    fullTimeStudent: z.boolean(),
+    earnedIncome: decimal,
+    totalSupport: decimal,
+    parentAlive: z.boolean(),
+  }).optional(),
 });
 
 export const BusinessExpensesSchema = z.object({
@@ -2099,12 +3058,49 @@ export const BusinessExpensesSchema = z.object({
   otherExpenses: optionalDecimal,
 });
 
+const form4137SourceAmount = decimal.refine(value => d(value).gte(0), "Actual tip amount must be nonnegative");
+/** Actual annual columns already reconciled to the IRS reporting-year rules. */
+export const Form4137SourceFactsSchema = z.object({
+  sourceTaxYear: z.number().int().optional(),
+  sourceReference: z.string().trim().min(1).optional(),
+  sourceFactsConfirmed: z.boolean().optional(),
+  allEmployersIncluded: z.boolean().optional(),
+  reportingYearTreatmentConfirmed: z.boolean().optional(),
+  railroadRetirementCompensation: form4137SourceAmount.optional(),
+  noncashTipsNotIncludedInWages: form4137SourceAmount.optional(),
+  employers: z.array(z.object({
+    sourceId: z.string().trim().min(1).optional(),
+    employerName: z.string().trim().min(1).optional(),
+    employerEin: z.string().optional(),
+    w2SourceIds: z.array(z.string().trim().min(1)).optional(),
+    cashAndChargeTipsReceived: form4137SourceAmount.optional(),
+    tipsReportedToEmployer: form4137SourceAmount.optional(),
+    allocatedTips: form4137SourceAmount.optional(),
+    adequateRecordsSupportUnreportedTips: z.boolean().optional(),
+    railroadRetirementCovered: z.boolean().optional(),
+    medicareOnlyGovernmentUnreportedTips: form4137SourceAmount.optional(),
+    medicareOnlyGovernmentQualificationConfirmed: z.boolean().optional(),
+    reportedTipsNotIncludedInBox7: form4137SourceAmount.optional(),
+    box7TipsExcludedFromReportedTotal: form4137SourceAmount.optional(),
+    reportedTipReconciliationReference: z.string().trim().min(1).optional(),
+    smallTipMonths: z.array(z.object({
+      month: z.number().int().min(1).max(12).optional(),
+      totalCashAndChargeTips: form4137SourceAmount.optional(),
+      tipsReportedToEmployer: form4137SourceAmount.optional(),
+    })).optional(),
+  })).optional(),
+});
 export const Form4137Schema = z.object({
-  unreportedTipIncome: decimal,
+  accountHolder: z.enum(["primary", "spouse"]).optional(),
+  unreportedTipIncome: decimal.optional(),
   socialSecurityWagesAndTipsAlreadyReported: decimal.optional(),
-  medicareOnlyGovernmentEmployeeTips: optionalDecimal,
+  medicareOnlyGovernmentEmployeeTips: decimal.optional(),
+  sourceFacts: Form4137SourceFactsSchema.optional(),
 }).superRefine((value, ctx) => {
-  if (d(value.medicareOnlyGovernmentEmployeeTips).greaterThan(d(value.unreportedTipIncome))) {
+  if (value.sourceFacts === undefined && value.unreportedTipIncome === undefined) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["unreportedTipIncome"], message: "Form4137 requires actual source facts or a legacy summary" });
+  }
+  if (value.sourceFacts === undefined && d(value.medicareOnlyGovernmentEmployeeTips).greaterThan(d(value.unreportedTipIncome))) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       message: "Form 4137 Medicare-only government-employee tips cannot exceed unreported tip income",
@@ -2114,6 +3110,7 @@ export const Form4137Schema = z.object({
 });
 
 export const Form8919Schema = z.object({
+  accountHolder: z.enum(["primary", "spouse"]).optional(),
   wagesNotReportedOnW2: decimal,
   socialSecurityWagesAndTipsAlreadyReported: decimal.optional(),
   rrtaCompensationSubjectToSocialSecurityTax: decimal.optional(),
@@ -2121,6 +3118,10 @@ export const Form8919Schema = z.object({
 
 /** A depreciable asset for per-asset MACRS depreciation computation. */
 export const DepreciableAssetSchema = z.object({
+  /** Optional actual ordinary prior-year disposal; no first-year or return qualification. */
+  dispositionSources: MACRSDispositionSourcesSchema.optional(),
+  /** Optional original-bound actual basis; absence remains legacy/unqualified. */
+  basisSources: MACRSAssetBasisSourcesSchema.optional(),
   /** Descriptive name (e.g., "Office computer", "Rental building") */
   description: z.string().optional(),
   /** Depreciable cost basis after any section 179 election */
@@ -2157,6 +3158,17 @@ export const DepreciableAssetSchema = z.object({
   /** Cumulative ADS straight-line depreciation that would have been allowed in all
    *  prior years. Required when section280FRecaptureTriggered is true. */
   cumulativePriorAdsDeductions: optionalDecimal,
+}).superRefine((asset, ctx) => {
+  if (asset.dispositionSources !== undefined) {
+    try { resolveMACRSDispositionSources(asset, asset.dispositionSources.sourceTaxYear); }
+    catch { ctx.addIssue({ code: "custom", path: ["dispositionSources"], message: "Actual MACRS disposition sources are incomplete, contradictory or unsupported" }); }
+  }
+  if (asset.basisSources === undefined) return;
+  try {
+    resolveMACRSAssetBasisSources(asset, asset.basisSources.sourceTaxYear);
+  } catch {
+    ctx.addIssue({ code: "custom", path: ["basisSources"], message: "Actual MACRS basis sources are incomplete, contradictory or unsupported" });
+  }
 });
 
 /** An amortizable asset for per-asset Part VI amortization computation. */
@@ -2179,20 +3191,22 @@ export const AmortizableAssetSchema = z.object({
 });
 
 export const Form4562Schema = z.object({
+  /** Standalone worksheet only; canonical owner/activity attribution remains denied. */
+  passengerFirstYearSources: PassengerFirstYearSourcesSchema.optional(),
   /** Tax year for computing per-asset depreciation (defaults to 2025) */
   taxYear: z.number().optional(),
   /** Per-asset detail — when provided, the engine computes Lines 17, 19, 20 from assets */
   assets: z.array(DepreciableAssetSchema).optional(),
   /** Per-asset amortization — when provided, the engine computes Lines 42, 43 from amortizable assets */
   amortizableAssets: z.array(AmortizableAssetSchema).optional(),
-  section179MaximumDeduction: optionalDecimal,
+  section179MaximumDeduction: optionalDecimalInput,
   section179TotalCost: optionalDecimal,
-  section179ThresholdCost: optionalDecimal,
+  section179ThresholdCost: optionalDecimalInput,
   section179ElectedCost: optionalDecimal,
   section179CarryoverFromPriorYear: optionalDecimal,
   section179BusinessIncomeLimit: optionalDecimal,
-  section179ExpenseDeduction: optionalDecimal,
-  section179CarryoverToNextYear: optionalDecimal,
+  section179ExpenseDeduction: optionalDecimalInput,
+  section179CarryoverToNextYear: optionalDecimalInput,
   specialDepreciationAllowance: optionalDecimal,
   section168f1Depreciation: optionalDecimal,
   otherDepreciation: optionalDecimal,
@@ -2297,7 +3311,60 @@ export const Form8829Schema = z.object({
   }
 });
 
+/** Actual source records; blanks remain unknown until the Schedule C source calculator validates them. */
+export const ScheduleCSourceFactsSchema = z.object({
+  passengerFirstYear:PassengerAutoParentSourcesSchema.optional(),
+  depreciation:z.object({sourceTaxYear:z.number().int().optional(),sourceReference:z.string().optional(),sourceFactsConfirmed:z.boolean().nullable().optional(),
+    fullCalendarYearConfirmed:z.boolean().nullable().optional(),allAssetsForThisBusinessConfirmed:z.boolean().nullable().optional(),noOtherActivityAssetsConfirmed:z.boolean().nullable().optional(),noOtherDepreciationOrAmortizationConfirmed:z.boolean().nullable().optional(),notDeductedElsewhereConfirmed:z.boolean().nullable().optional(),
+    originalBusiness:z.record(z.string(),z.unknown()).optional(),
+    rows:z.array(z.object({assetIndex:z.number().int().optional(),assetReference:z.string().optional(),accountHolder:z.enum(["primary","spouse"]).optional(),bonusZeroTreatment:z.enum(["not_eligible","elected_out"]).optional(),bonusTreatmentSourceReference:z.string().optional(),originalAsset:z.record(z.string(),z.unknown()).optional()}).strict()).optional(),
+  }).strict().optional(),
+  amortization:z.object({sourceTaxYear:z.number().int().optional(),sourceReference:z.string().optional(),sourceFactsConfirmed:z.boolean().nullable().optional(),
+    fullCalendarYearConfirmed:z.boolean().nullable().optional(),allAssetsForThisScheduleCConfirmed:z.boolean().nullable().optional(),notDeductedElsewhereConfirmed:z.boolean().nullable().optional(),
+    remainingOtherExpenses:z.string().optional(),remainingOtherExpenseSourceReference:z.string().optional(),
+    rows:z.array(z.object({assetIndex:z.number().int().optional(),sourceReference:z.string().optional(),sourceFactsConfirmed:z.boolean().nullable().optional(),accountHolder:z.enum(["primary","spouse"]).optional(),originalAsset:z.record(z.string(),z.unknown()).optional(),acquisitionDate:z.string().optional(),businessStartDate:z.string().optional(),
+      acquiredGoodwillForThisBusinessConfirmed:z.boolean().nullable().optional(),armsLengthTaxableCashPurchaseAfter1993Confirmed:z.boolean().nullable().optional(),noSelfCreatedRelatedPartyAntiChurningForeignLeaseOrDispositionConfirmed:z.boolean().nullable().optional(),fullBusinessUseConfirmed:z.boolean().nullable().optional(),
+    }).strict()).optional(),
+    reclassification:z.object({sourceReference:z.string().optional(),originalOtherExpenses:z.string().optional(),amortizationAlreadyIncluded:z.string().optional(),remainingOtherExpenses:z.string().optional()}).strict().optional(),
+  }).strict().optional(),
+  sourceTaxYear:z.number().int().optional(), sourceReference:z.string().optional(), sourceFactsConfirmed:z.boolean().nullable().optional(),
+  accountHolder:z.enum(["primary","spouse"]).optional(), ownerName:z.string().optional(),
+  businessNameStatus:z.enum(["reported","blank_original"]).optional(), businessName:z.string().optional(),
+  businessEINStatus:z.enum(["reported","not_issued"]).optional(), businessEIN:z.string().optional(),
+  interest:z.object({
+    sourceReference:z.string().optional(), mortgageInterest:z.string().optional(), vehicleLoanInterest:z.string().optional(), otherInterest:z.string().optional(),
+    allInterestOrdinaryCurrentCashBusinessOnlyConfirmed:z.boolean().nullable().optional(),
+    noCapitalizedPrepaidRelatedPartyOrForeignInterestConfirmed:z.boolean().nullable().optional(),
+    noPersonalOrSchedule1AInterestConfirmed:z.boolean().nullable().optional(),
+    mortgageBank1098OrSimilarStatementConfirmed:z.boolean().nullable().optional(),
+    notDeductedElsewhereConfirmed:z.boolean().nullable().optional(),
+    otherExpensesExcludingInterest:z.string().optional(), otherExpenseSourceReference:z.string().optional(),
+    grossReceiptsException:z.object({
+      allAggregationAndPassThroughSharesIncludedConfirmed:z.boolean().nullable().optional(), notTaxShelterConfirmed:z.boolean().nullable().optional(), noPriorDisallowedInterestOrPartnershipEbieConfirmed:z.boolean().nullable().optional(),
+      history:z.array(z.object({taxYear:z.number().int().optional(),grossReceipts:z.string().optional(),sourceReference:z.string().optional(),fullTaxYearConfirmed:z.boolean().nullable().optional()}).strict()).optional(),
+    }).strict().optional(),
+    reclassification:z.object({originalOtherExpenses:z.string().optional(),interestAlreadyIncluded:z.string().optional(),ordinaryExpensesAlreadyIncluded:z.string().optional(),remainingOtherExpenses:z.string().optional(),sourceReference:z.string().optional()}).strict().optional(),
+  }).strict().optional(),
+  address:z.object({method:z.enum(["separate_business_address","home_at_return_address"]).optional(),street:z.string().optional(),unitStatus:z.enum(["reported","blank_original"]).optional(),unit:z.string().optional(),city:z.string().optional(),state:z.string().optional(),zip:z.string().optional(),homeAtReturnAddressConfirmed:z.boolean().nullable().optional(),homeReturnAddress:z.object({street:z.string(),apt:z.string().optional(),city:z.string(),state:z.string(),zip:z.string()}).strict().optional()}).strict().optional(),
+  ordinaryExpenses:z.object({sourceReference:z.string().optional(),sourceFactsConfirmed:z.boolean().nullable().optional(),
+    allCurrentCashBusinessOnlyConfirmed:z.boolean().nullable().optional(),
+    notCapitalizedInventoryOrDeductedElsewhereConfirmed:z.boolean().nullable().optional(),
+    rentExcludesHomeVehiclesPrepaidAndCapitalAcquisitionConfirmed:z.boolean().nullable().optional(),
+    repairsExcludeCapitalImprovementsConfirmed:z.boolean().nullable().optional(),
+    taxesExcludeIncomeSelfEmploymentCollectedSalesPenaltiesAndAssessmentsConfirmed:z.boolean().nullable().optional(),
+    wagesAreNonownerEmployeesWithoutEmploymentCreditsConfirmed:z.boolean().nullable().optional(),
+    remainingOtherExpenses:z.string().optional(),remainingOtherExpenseSourceReference:z.string().optional(),
+    rows:z.array(z.object({category:z.string().optional(),amount:z.string().optional(),sourceReference:z.string().optional(),sourceFactsConfirmed:z.boolean().nullable().optional()}).strict()).optional(),
+  }).strict().optional(),
+}).strict();
+export type ScheduleCSourceFacts = z.infer<typeof ScheduleCSourceFactsSchema>;
+
 export const ScheduleCInputSchema = z.object({
+  sourceFacts:ScheduleCSourceFactsSchema.optional(),
+  qbiMateriallyParticipated: z.boolean().optional(),
+  principalBusinessActivity: z.string().optional(),
+  allInvestmentAtRisk: z.boolean().optional(),
+  otherExpenseDescription: z.string().optional(),
   businessName: z.string().optional(),
   businessCode: z.string().optional(),
   ein: z.string().optional(),
@@ -2355,6 +3422,7 @@ export const FarmExpensesSchema = z.object({
 });
 
 export const ScheduleFInputSchema = z.object({
+  qbiMateriallyParticipated: z.boolean().optional(),
   principalCropOrActivity: z.string().optional(),
   activityCode: z.string().optional(),    // NAICS code from Part IV
   ein: z.string().optional(),
@@ -2392,6 +3460,53 @@ export const ScheduleFInputSchema = z.object({
 
 export const RentalPropertySchema = z.object({
   description: z.string(), // e.g. "123 Main St, Unit A"
+  accountHolder: z.enum(["primary", "spouse", "joint"]).optional(),
+  allInvestmentAtRisk: z.boolean().optional(),
+  sourceFactsConfirmed: z.boolean().optional(),
+  paClassification: z.object({
+    sourceReference: z.string().min(1),
+    factsConfirmed: z.boolean(),
+    offeredToPublic: z.boolean(),
+    forProfit: z.boolean(),
+    regularAndContinuous: z.boolean(),
+    averageCustomerUseDays: decimal,
+    availableDuringBusinessHours: z.boolean(),
+    significantServices: z.boolean(),
+    significantOperatingExpenses: z.boolean(),
+    incidentalToRealEstateSales: z.boolean(),
+    relatedPartyRental: z.boolean(),
+    dealerPropertyHeldForSale: z.boolean(),
+  }).optional(),
+  /** Actual PA amounts after rental/personal allocation, before ownership allocation.
+   * Federal expense and depreciation amounts are not a substitute. No zero defaults. */
+  paIncomeExpenses: z.object({
+    taxYear: z.number().int(),
+    sourceReference: z.string().trim().min(1),
+    factsConfirmed: z.boolean(),
+    amountsBeforeOwnershipAllocation: z.boolean(),
+    expensesAreRentalUseOnly: z.boolean(),
+    paRulesApplied: z.boolean(),
+    grossRents: decimal,
+    advertising: decimal,
+    autoTravel: decimal,
+    cleaning: decimal,
+    commissions: decimal,
+    insurance: decimal,
+    legalProfessional: decimal,
+    managementFees: decimal,
+    mortgageInterest: decimal,
+    otherInterest: decimal,
+    repairs: decimal,
+    supplies: decimal,
+    taxes: decimal,
+    utilities: decimal,
+    depreciation: decimal,
+    otherExpenses: decimal,
+    depreciationSourceReference: z.string().optional(),
+    allocationSourceReference: z.string().optional(),
+    otherExpenseDescription: z.string().optional(),
+  }).optional(),
+  otherExpenseDescription: z.string().optional(),
   propertyType: z.enum(["single_family", "multi_family", "vacation", "commercial", "land", "other"]).default("single_family"),
   personalUseDays: z.number().int().min(0).default(0),
   rentalDays: z.number().int().min(0).default(365),
@@ -2416,12 +3531,22 @@ export const RentalPropertySchema = z.object({
   otherExpenses: optionalDecimal,
   // Section 199A QBI — rental activity qualifies as trade/business (Rev. Proc. 2019-38 safe harbor or case law)
   qualifiesForQBI: z.boolean().default(false),
+  qbiMateriallyParticipated: z.boolean().optional(),
   qbiW2Wages: optionalDecimal, // W-2 wages paid by the rental activity (for Form 8995-A detailed calculation)
   qbiUBIA: optionalDecimal, // UBIA of qualified property (for Form 8995-A detailed calculation)
   qbiIsSST: z.boolean().default(false), // Whether the rental activity is a specified service trade or business
 });
 
 export const IraDeductionWorksheetSchema = z.object({
+  /** Actual eligible compensation after each owner's SE-tax/retirement deductions,
+   * before the joint lower-earner allocation. Unknowns have no defaults. */
+  sourceFactsConfirmed: z.boolean().optional(),
+  primaryCompensation: optionalDecimalInput,
+  spouseCompensation: optionalDecimalInput,
+  primaryRothContributions: optionalDecimalInput,
+  spouseRothContributions: optionalDecimalInput,
+  primarySection501c18Contributions: optionalDecimalInput,
+  spouseSection501c18Contributions: optionalDecimalInput,
   /** Traditional IRA contributions for the primary taxpayer */
   primaryContributions: decimal,
   /** Whether the primary taxpayer is an active participant in an employer retirement plan (W-2 Box 13 Retirement Plan checked) */
@@ -2429,21 +3554,153 @@ export const IraDeductionWorksheetSchema = z.object({
   /** Whether the primary taxpayer is age 50 or older by the end of the tax year */
   primaryAge50OrOlder: z.boolean().optional(),
   /** Traditional IRA contributions for the spouse (MFJ only) */
-  spouseContributions: optionalDecimal,
+  spouseContributions: optionalDecimalInput,
   /** Whether the spouse is an active participant in an employer retirement plan */
   spouseIsActiveParticipant: z.boolean().optional(),
   /** Whether the spouse is age 50 or older by the end of the tax year */
   spouseAge50OrOlder: z.boolean().optional(),
 });
 
+/** Original childless claimant answers under Pub596 Rules12–14; no defaults. */
+const EicChildlessClaimantSchema = z.object({
+  mainHomeInUnitedStatesMoreThanHalfYear: z.boolean().optional(),
+  countedMilitaryDutyOutsideUnitedStates: z.boolean().optional(),
+  /** Preserved source spelling; the same actual fact also applies with children. */
+  qualifyingChildOfAnotherTaxpayer: z.boolean().optional(),
+  militaryDutySourceReference: z.string().optional(),
+  extendedActiveDutyOrderOver90DaysOrIndefinite: z.boolean().optional(),
+  dependentException: z.object({
+    sourceReference: z.string().optional(),
+    allPotentialClaimantsNotRequiredToFile: z.boolean().optional(),
+    allPotentialClaimantsDidNotFileOrRefundOnly: z.boolean().optional(),
+  }).optional(),
+});
+
 export const EicConfigSchema = z.object({
-  /** Whether the MFS filer qualifies for the separated-spouse EIC exception
-   *  (lived apart from spouse for the last 6 months of the year + qualifying child) */
-  mfsEligible: z.boolean().default(false),
-  /** Override investment income (otherwise computed by the engine from interest, dividends, capital gains, rental) */
-  investmentIncomeOverride: optionalDecimal,
-  /** Whether the primary filer is a full-time student (disqualifies childless EIC) */
+  /** Actual claimant facts for IRC32. Omission preserves unknown historical sources. */
+  claimantEligibility: z.object({
+    sourceTaxYear: z.number().int().optional(),
+    sourceReference: z.string().optional(),
+    sourceFactsConfirmed: z.boolean().optional(),
+    primaryNonresidentAlienDuringYear: z.boolean().optional(),
+    spouseNonresidentAlienDuringYear: z.boolean().optional(),
+    /** Actual valid IRC6013(g)/(h) election, not an inferred residency answer. */
+    residentJointElection: z.boolean().optional(),
+    /** Pub596 Rule10/13 applies whether or not the claimant has a child. */
+    primaryQualifyingChildOfAnotherTaxpayer: z.boolean().optional(),
+    spouseQualifyingChildOfAnotherTaxpayer: z.boolean().optional(),
+    primaryChildless: EicChildlessClaimantSchema.optional(),
+    spouseChildless: EicChildlessClaimantSchema.optional(),
+  }).optional(),
+  /** Actual Rule3 records; eligibility and SSN-counted children are derived. */
+  separatedSpouseSources: EicSeparatedSpouseSourcesSchema.optional(),
+  /** Actual independent filer denial/allowance history; omission remains unknown. */
+  disallowanceSources: EicDisallowanceSourcesSchema.optional(),
+  /** Current original recertification records; no completed-form or eligibility default. */
+  recertificationSources: Form8862SourcesSchema.optional(),
+  /** Unverified legacy2025 eligibility input; omitted is unknown, not a confirmed false. */
+  mfsEligible: z.boolean().optional(),
+  /** Explicit legacy total only; absence must use computed income, never a default zero. */
+  investmentIncomeOverride: decimal.refine(value => d(value).isFinite() && d(value).gte(0),
+    "EIC investment income must be finite and nonnegative").optional(),
+  /** Preserved historical fact; full-time study alone is not an EIC disqualifier. */
   primaryIsFullTimeStudent: z.boolean().default(false),
+});
+
+/** Form 2210 regular-method facts. Unknown values intentionally have no defaults. */
+const Form2210DateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/).refine((value) => {
+  const instant = new Date(`${value}T00:00:00Z`);
+  return Number.isFinite(instant.getTime()) && instant.toISOString().slice(0, 10) === value;
+}, "Must be an actual calendar date");
+const Form2210PaymentSchema = z.object({ date: Form2210DateSchema, amount: decimal });
+const Form2210AnnualizedPeriodSchema = z.object({
+  adjustedGrossIncome: z.string().optional(), itemizedDeductions: z.string().optional(), qbiDeduction: z.string().optional(),
+  qualifiedDividends: z.string().optional(), netCapitalGain: z.string().optional(), netProfitFromSelfEmployment: z.string().optional(),
+  socialSecurityWages: z.string().optional(), otherTaxes: z.string().optional(), credits: z.string().optional(), schedule1AAdjustment: z.string().optional(),
+}).strict();
+
+const Form2210SelfEmploymentOwnerSchema = z.object({
+  accountHolder: z.enum(["primary", "spouse"]).optional(),
+  sourceTaxYear: z.number().int().optional(), sourceReference: z.string().optional(), sourceFactsConfirmed: z.boolean().optional(),
+  periods: z.array(z.object({ netProfitFromSelfEmployment: z.string().optional(), socialSecurityWages: z.string().optional() }).strict()).optional(),
+}).strict();
+export const Form2210Schema = z.object({
+  selfEmploymentOwnerPeriods: z.array(Form2210SelfEmploymentOwnerSchema).optional(),
+  annualizedIncomePeriods: z.array(Form2210AnnualizedPeriodSchema).optional(),
+  farmingIncomeTwoThirdsConfirmed: z.boolean().optional(),
+  waiverKind: z.enum(["full", "partial"]).optional(),
+  waiverAmount: z.string().optional(),
+  waiverReason: z.enum(["retirement_or_disability", "casualty_disaster_or_unusual_circumstance"]).optional(),
+  waiverStatementReference: z.string().optional(),
+  bothSpousesSelfEmployed: z.boolean().optional(),
+  calendarYearTaxpayer: z.boolean().optional(),
+  residentReturn: z.boolean().optional(),
+  farmerOrFisher: z.boolean().optional(),
+  disasterReliefClaimed: z.boolean().optional(),
+  waiverRequested: z.boolean().optional(),
+  calculationMethod: z.enum(["regular", "annualized"]).optional(),
+  withholdingMethod: z.enum(["equal-installments", "actual-dates"]).optional(),
+  withholdingPayments: z.array(Form2210PaymentSchema).optional(),
+  priorYearTaxStatus: z.enum(["return-filed", "no-return", "no-tax-liability"]).optional(),
+  priorYearFullYear: z.boolean().optional(),
+  priorYearResidentAllYear: z.boolean().optional(),
+  priorYearJointReturn: z.boolean().optional(),
+  // Actual instructions line 8 computation, including filing-status allocation.
+  priorYearTaxForForm2210: decimal.optional(),
+  priorYearAgiForForm2210: decimal.optional(),
+  priorYearTaxComputationConfirmed: z.boolean().optional(),
+  // Effective applied-credit dates must come from actual payment/return history.
+  priorYearCreditPayments: z.array(Form2210PaymentSchema).optional(),
+  returnPayments: z.array(Form2210PaymentSchema).optional(),
+  returnFiledDate: Form2210DateSchema.optional(),
+  returnPaidInFullDate: Form2210DateSchema.optional(),
+});
+
+/** Actual completed attribution of allowed taxpayer deductions under Reg.1.199A-3(b)(1)(vi). */
+export const QBIDeductionAllocationsSchema = z.object({
+  sourceFactsConfirmed: z.boolean(),
+  rows: z.array(z.object({
+    sourceId: z.string().regex(/^(scheduleC|scheduleF|cryptoBusiness|scheduleK1:\d+|nonQbi)$/),
+    accountHolder: z.enum(["primary", "spouse"]),
+    deductibleSelfEmploymentTax: decimal,
+    selfEmployedHealthInsurance: decimal,
+    selfEmployedRetirementPlans: decimal,
+  })),
+});
+
+/** Schedule 1 line 11 actual sources; omitted qualification is not a negative answer. */
+export const EducatorExpenseSourceSchema = z.object({
+  accountHolder: z.enum(["primary", "spouse"]).optional(),
+  taxYear: z.number().int().optional(),
+  schoolYear: z.string().optional(),
+  sourceFactsConfirmed: z.boolean().optional(),
+  schools: z.array(z.object({
+    name: z.string(),
+    role: z.enum(["teacher", "instructor", "counselor", "principal", "aide", "interscholastic_sports_administrator", "coach", "other"]).optional(),
+    /** Required for2026; historical2025 omission retains only the original K12 contract. */
+    level: z.enum(["k12", "early_childhood", "other"]).optional(),
+    earlyChildhoodNonresidentChildrenUnder6: z.number().int().nonnegative().optional(),
+    operatedAtPublicExpense: z.boolean().optional(), receivesFeePaymentOrGrant: z.boolean().optional(),
+    schoolEligible: z.boolean().optional(),
+    hoursWorked: optionalDecimalInput,
+  })).optional(),
+  expenses: z.array(z.object({
+    sourceId: z.string(), datePaid: z.string(), description: z.string(),
+    category: z.enum(["classroom", "professional_development", "protective_supplies", "other"]).optional(),
+    amount: optionalDecimalInput,
+    ordinaryAndNecessary: z.boolean().optional(), qualifyingUse: z.boolean().optional(),
+    /** Actual broader section67 instructional activity; qualifying classroom use already suffices. */
+    instructionalActivity: z.boolean().optional(),
+    itemizedReimbursements: optionalDecimalInput, itemizedTaxFreeFunding: optionalDecimalInput,
+    healthOrPhysicalEducation: z.boolean().optional(), athleticSupplies: z.boolean().optional(),
+    deductedElsewhere: z.boolean().optional(),
+  })).optional(),
+  reimbursementsNotInWages: optionalDecimalInput,
+  /** Explicit source calculation for fully excluded unchanged bonds; omission preserves the actual worksheet contract. */
+  savingsBondReductionMethod: z.enum(["return_sources"]).optional(),
+  excludedSavingsBondInterest: optionalDecimalInput,
+  nontaxableQualifiedTuitionProgramAmount: optionalDecimalInput,
+  nontaxableCoverdellEarnings: optionalDecimalInput,
 });
 
 export const AdjustmentsSchema = z.object({
@@ -2481,6 +3738,7 @@ export const AdjustmentsSchema = z.object({
   educatorExpenses: optionalDecimal,
   primaryEducatorExpenses: optionalDecimal,
   spouseEducatorExpenses: optionalDecimal,
+  educatorExpenseSources: z.array(EducatorExpenseSourceSchema).optional(),
   businessExpenseAdjustments: optionalDecimal,
   hsaDeduction: optionalDecimal,
   armedForcesMovingExpenses: optionalDecimal,
@@ -2498,10 +3756,21 @@ export const AdjustmentsSchema = z.object({
 
 export const ScheduleAInputSchema = z.object({
   medicalExpenses: optionalDecimal,
+  /** Qualified payments not already counted on a Form 1098. */
+  realEstateTaxes: optionalDecimal,
+  /** Qualified income tax payments not already counted in withholding or estimates. */
+  additionalStateLocalIncomeTaxes: optionalDecimal,
+  /** Actual modeled non-W2 withholding already deducted on C/E/F; unknown is not zero. */
+  nonW2IncomeTaxesDeductedElsewhere: optionalDecimalInput,
   personalPropertyTaxes: optionalDecimal,
+  /** SALT MAGI worksheet line 3a. Not deducted from AGI by this adapter. */
+  excludedPuertoRicoIncome: optionalDecimal,
+  /** SALT MAGI worksheet line 3d; Form 4563 itself remains a separate scenario. */
+  form4563ExcludedIncome: optionalDecimal,
   investmentInterestExpense: optionalDecimal,
   gamblingWinnings: optionalDecimal,
   gamblingLosses: optionalDecimal,
+  gamblingExpenses: optionalDecimal,
 });
 
 /**
@@ -2536,7 +3805,34 @@ export const SalesTaxDeductionSchema = z.object({
 });
 export type SalesTaxDeduction = z.infer<typeof SalesTaxDeductionSchema>;
 
-export const Form4952InputSchema = z.object({
+/** Actual Form461 classification after basis, at-risk and passive limitations. */
+export const Form461SourceSchema = z.object({
+  sourceTaxYear: z.number().int().optional(),
+  sourceReference: z.string().trim().min(1).optional(),
+  sourceFactsConfirmed: z.boolean().optional(),
+  atRiskAndPassiveLimitationsApplied: z.boolean().optional(),
+  scheduleESupplementalIncome: optionalDecimalInput,
+  passiveLossModifiedAgi: optionalDecimalInput, // Actual completed Form8582 line6 worksheet when passive sources interact.
+  tradeOrBusinessCapitalGainNetIncome: optionalDecimalInput,
+  noncapitalNonbusinessIncome: optionalDecimalInput,
+  noncapitalNonbusinessLoss: optionalDecimalInput,
+  noncapitalBusinessNet: optionalDecimalInput,
+  otherBusinessIncome: optionalDecimalInput,
+  otherBusinessDeductions: optionalDecimalInput,
+});
+
+export const Form4952InputSchema = z.preprocess((value) => {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return value;
+  const record = value as Record<string, unknown>;
+  const amounts = ["investmentInterestExpense", "priorYearDisallowed", "grossInvestmentIncome", "qualifiedDividendsIncluded", "netGainFromInvestmentProperty", "netCapitalGainFromInvestmentProperty", "electedPreferentialIncome", "investmentExpenses"];
+  return { ...record, sourceFactsComplete: record.sourceFactsComplete !== false && amounts.every(key => record[key] !== undefined) };
+}, z.object({
+  sourceTaxYear: z.number().int().optional(),
+  sourceReference: z.string().trim().min(1).optional(),
+  sourceFactsConfirmed: z.boolean().optional(),
+  /** Computed from raw source presence before historical defaults are applied. */
+  sourceFactsComplete: z.boolean().optional(),
+  priorYearSourceTaxYear: z.number().int().optional(),
   /** Line 1: Investment interest expense paid or accrued during the tax year (margin interest, etc.) */
   investmentInterestExpense: decimal,
   /** Line 2: Disallowed investment interest expense from prior year Form 4952 */
@@ -2545,25 +3841,164 @@ export const Form4952InputSchema = z.object({
   grossInvestmentIncome: optionalDecimal,
   /** Line 4b: Qualified dividends included on Line 4a */
   qualifiedDividendsIncluded: optionalDecimal,
-  /** Line 4d: Non-preferential net gain from disposition of investment property (floor at 0) */
+  /** Line 4d: Total net investment-property gain. Legacy unconfirmed records used only nonpreferential gain. */
   netGainFromInvestmentProperty: optionalDecimal,
-  /** Line 4e: Amount of qualified dividends and/or net capital gain elected to include as investment income */
+  /** Actual net long-term investment gain less net short-term loss, before the line 4e cap. */
+  netCapitalGainFromInvestmentProperty: optionalDecimalInput,
+  /** Line 4g: Actual election of qualified dividends and/or net capital gain as investment income. */
   electedPreferentialIncome: optionalDecimal,
-  /** Line 4f: Investment expenses directly connected with production of investment income */
+  /** Optional actual "Elec." allocation; omission follows the IRS capital-gain-first rule. */
+  electedNetCapitalGain: optionalDecimalInput,
+  /** Line 5: Expenses actually deductible on the return, not miscellaneous investment fees. */
   investmentExpenses: optionalDecimal,
-});
+  investmentExpensesDeductibleConfirmed: z.boolean().optional(),
+  /** Separate actual parent totals exclude every child elected on Form 8814. */
+  childIncomeSources: z.object({
+    sourceTaxYear: z.number().int(), sourceReference: z.string().trim().min(1), sourceFactsConfirmed: z.boolean(),
+    parentSourcesExcludeAllChildrenConfirmed: z.boolean(),
+    parentGrossInvestmentIncome: decimal, parentQualifiedDividends: decimal,
+    parentNetInvestmentGain: decimal, parentNetLongTermGain: decimal, parentNetShortTermGain: decimal,
+    children: z.array(z.object({
+      sourceId: z.string().trim().min(1), sourceTaxYear: z.number().int(), sourceReference: z.string().trim().min(1),
+      firstName: z.string().trim().min(1), lastName: z.string().trim().min(1), dateOfBirth: z.string().min(1), ssnLast4: z.string().regex(/^\d{4}$/),
+    })),
+  }).optional(),
+}));
 export type Form4952Input = z.infer<typeof Form4952InputSchema>;
 
-export const SavingsBondRedemptionSchema = z.object({
-  /** Total redemption proceeds (principal + interest) */
-  proceeds: decimal,
-  /** Interest portion of the proceeds */
-  interest: decimal,
-  /** Qualified higher education expenses paid */
-  qualifiedExpenses: decimal,
+/** Actual completed AMT gain/basis worksheets; omitted source answers stay unknown. */
+export const AMTCapitalGainsSchema = z.object({
+  sourceTaxYear: z.number().int().optional(),
+  sourceReference: z.string().trim().min(1).optional(),
+  sourceFactsConfirmed: z.boolean().optional(),
+  qualifiedDividends: optionalDecimalInput,
+  netCapitalGain: optionalDecimalInput,
+  section1250Gain: optionalDecimalInput,
+  collectiblesGain: optionalDecimalInput,
 });
 
+export const SavingsBondRedemptionSchema = z.preprocess((value) => {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return value;
+  const record = value as Record<string, unknown>;
+  const required = ["sourceId", "proceeds", "bondType", "issueDate", "redemptionDate", "ownerDateOfBirth", "registeredOwner", "ownershipConfirmed", "faceValue"];
+  return { ...record, sourceFactsComplete: record.sourceFactsComplete !== false && required.every(key => record[key] !== undefined)
+    && (record.priorYearInterestReported !== undefined || record.reissueSourceId !== undefined) };
+}, z.object({
+  /** Recomputed from original fields; a supplied true marker is not evidence. */
+  sourceFactsComplete: z.boolean().optional(),
+  /** Total redemption proceeds (principal + interest) */
+  proceeds: decimal,
+  /** Historical aggregate aliases do not establish current-year eligibility. */
+  interest: optionalDecimalInput,
+  qualifiedExpenses: optionalDecimalInput,
+  sourceId: z.string().trim().min(1).optional(),
+  /** Links this actual redemption to an original successor in the reissue history. */
+  reissueSourceId: z.string().trim().min(1).optional(),
+  bondIdentifier: z.string().trim().min(1).optional(),
+  bondType: z.enum(["paper_ee", "electronic_ee", "series_i", "other"]).optional(),
+  issueDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  redemptionDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  ownerDateOfBirth: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  registeredOwner: z.enum(["taxpayer", "spouse", "taxpayer_and_spouse", "other"]).optional(),
+  /** Actual registered person used for the age-at-issue test; required for joint registration. */
+  ageTestOwner: z.enum(["taxpayer", "spouse"]).optional(),
+  ownershipConfirmed: z.boolean().optional(),
+  faceValue: optionalDecimalInput,
+  priorYearInterestReported: optionalDecimalInput,
+  /** Actual income ownership; not a proposed allocation of a final exclusion. */
+  incomeOwnership: z.object({
+    taxpayerPurchaseFunds: optionalDecimalInput,
+    spousePurchaseFunds: optionalDecimalInput,
+    taxpayerPriorYearInterestReported: optionalDecimalInput,
+    spousePriorYearInterestReported: optionalDecimalInput,
+    communityProperty: z.boolean().optional(),
+    communityPropertyThroughoutAccrualConfirmed: z.boolean().optional(),
+    ownershipUnchangedSinceIssueConfirmed: z.boolean().optional(),
+    sourceFactsConfirmed: z.boolean().optional(),
+    sourceReference: z.string().trim().optional(),
+  }).optional(),
+}));
+
+/** Form 8815 expenses are coordinated once per return, not once per bond. */
+export const Form8815Schema = z.object({
+  reissueSources: SavingsBondReissueSourcesSchema.optional(),
+  sourceFactsConfirmed: z.boolean().optional(),
+  currentStatementReconciliationConfirmed: z.boolean().optional(),
+  priorYearInterestIncludedInCurrentStatements: optionalDecimalInput,
+  educationExpenses: z.array(z.object({
+    sourceId: z.string().trim().min(1),
+    beneficiaryName: z.string().trim().min(1),
+    /** Actual identity link to the taxpayer, spouse, or claimed dependent; never inferred from name. */
+    beneficiaryTaxId: z.string().trim().min(1).optional(),
+    relationship: z.enum(["taxpayer", "spouse", "dependent", "other"]),
+    dependentClaimed: z.boolean().optional(),
+    institutionName: z.string().trim().min(1),
+    institutionAddress: z.string().trim().min(1),
+    expenseType: z.enum(["tuition_and_required_fees", "coverdell_contribution", "qtp_contribution"]),
+    paidTaxYear: z.number().int(),
+    amountPaid: decimal,
+    qualificationConfirmed: z.boolean(),
+    coordinationConfirmed: z.boolean(),
+    directInstitutionBenefits: decimal,
+    educationCreditExpenses: decimal,
+    taxFreeDistributionExpenses: decimal,
+    beneficiaryBenefits: decimal,
+  })).optional(),
+  /** Actual official Line 9 Worksheet addbacks; omitted means unknown. */
+  americanSamoaIncomeExclusion: optionalDecimalInput,
+  puertoRicoIncomeExclusion: optionalDecimalInput,
+  /** Signed MAGI change from the actual pre-exclusion royalty interest deduction. */
+  royaltyInterestAdjustment: optionalDecimalInput,
+});
+
+const EnergyPropertySourceSchema = z.object({
+  sourceId: z.string().trim().min(1).optional(),
+  homeId: z.string().trim().min(1).optional(),
+  /** Actual net qualified costs paid by every occupant, including this return. */
+  totalCostPaidByAllOccupants: optionalDecimalInput,
+  associationCostShare: z.boolean().optional(),
+  associationAllocation: z.object({
+    totalQualifiedCost: decimal, numerator: decimal, denominator: decimal,
+    sourceReference: z.string().trim().min(1),
+  }).optional(),
+});
 export const EnergyCreditsSchema = z.object({
+  sourceFactsConfirmed: z.boolean().optional(),
+  separateSpousalMainHomes: z.boolean().optional(),
+  homes: z.array(z.object({
+    id: z.string().trim().min(1), owner: z.enum(["primary", "spouse", "joint"]).optional(),
+    address: z.object({ street: z.string(), unit: z.string().optional(), city: z.string(), state: z.string(), zip: z.string() }),
+    locatedInUnitedStates: z.boolean().optional(), usedAsResidence: z.boolean().optional(),
+    mainHomeFor: z.enum(["primary", "spouse", "both", "neither"]).optional(),
+    mainHomeStartDate: z.string().optional(), mainHomeEndDate: z.string().optional(),
+    ownedByTaxpayer: z.boolean().optional(), jointOccupancyWithOtherReturn: z.boolean().optional(),
+    allOccupantCostsComplete: z.boolean().optional(),
+  })).optional(),
+  /** Itemized records preserve actual category, timing and qualification. */
+  qualifiedImprovements: z.array(EnergyPropertySourceSchema.extend({
+    category: z.enum(["insulation", "exterior_door", "windows_skylights", "central_ac", "gas_water_heater", "furnace_boiler", "electrical_panel", "heat_pump", "heat_pump_water_heater", "biomass", "home_energy_audit"]),
+    qualifiedCost: decimal,
+    installationCompletedDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    qualificationConfirmed: z.boolean(),
+    manufacturerQualifiedId: z.string().optional(),
+    originalUseByTaxpayer: z.boolean().optional(), expectedFiveYearUse: z.boolean().optional(),
+    newConstruction: z.boolean().optional(), auditReportCertified: z.boolean().optional(),
+    enabledPropertyIds: z.array(z.string().trim().min(1)).optional(),
+    panelLoadAmps: optionalDecimalInput, panelCodeComplianceConfirmed: z.boolean().optional(),
+    consecutiveYearElection: z.boolean().optional(), priorYearCreditClaimed: z.boolean().optional(),
+  })).optional(),
+  cleanEnergyProperties: z.array(EnergyPropertySourceSchema.extend({
+    category: z.enum(["solar_electric", "solar_water", "fuel_cell", "small_wind", "geothermal", "battery"]),
+    qualifiedCost: decimal,
+    installationCompletedDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    qualificationConfirmed: z.boolean(),
+    fuelCellKilowattCapacity: optionalDecimalInput,
+    batteryKilowattHours: optionalDecimalInput,
+  })).optional(),
+  residenceEligibilityConfirmed: z.boolean().optional(),
+  priorYearCarryforward: optionalDecimalInput,
+  carryforwardSourceTaxYear: z.number().int().optional(),
+  carryforwardConfirmed: z.boolean().optional(),
   /** Part I: Residential Clean Energy Credit (30% of qualified costs) */
   solarElectricCost: optionalDecimal, // Line 1
   solarWaterHeatingCost: optionalDecimal, // Line 2
@@ -2577,7 +4012,36 @@ export const EnergyCreditsSchema = z.object({
   homeEnergyAuditCost: optionalDecimal, // Line 13a
 });
 
-export const NewCleanVehicleSchema = z.object({
+// Record whether original source facts existed before legacy schema defaults.
+// Recompute this marker; an imported `sourceFactsComplete: true` is never evidence.
+const sourceFactPresence = (required: string[]) => (value: unknown) => {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return value;
+  const record = value as Record<string, unknown>;
+  return {...record, sourceFactsComplete: record.sourceFactsComplete !== false && required.every(key => record[key] !== undefined)};
+};
+const VehicleSourceFactFields = {
+  sourceFactsComplete: z.boolean(),
+  owner: z.enum(["primary", "spouse"]).optional(),
+  vin: z.string().optional(),
+  datePlacedInService: z.string().optional(),
+  bindingContractDate: z.string().optional(),
+  paymentDate: z.string().optional(),
+  bindingContractConfirmed: z.boolean().optional(),
+  sellerReportReceived: z.boolean().optional(),
+  sellerReportCreditAmount: optionalDecimalInput,
+  eligibilityConfirmed: z.boolean().optional(),
+  creditTransferredAmount: optionalDecimalInput,
+  resoldWithin30Days: z.boolean().optional(),
+  returnedToSellerWithin30Days: z.boolean().optional(),
+  sellerReportUpdatedForReturn: z.boolean().optional(),
+  priorYearMagi: optionalDecimalInput,
+  priorYearFilingStatus: FilingStatusSchema.optional(),
+  priorYearMagiConfirmed: z.boolean().optional(),
+};
+
+export const NewCleanVehicleSchema = z.preprocess(sourceFactPresence(["msrp", "vehicleType", "personalUsePercentage", "creditTransferredToDealer"]), z.object({
+  ...VehicleSourceFactFields,
+  powertrain: z.enum(["battery", "fuel_cell"]).optional(),
   /** Date acquired (YYYY-MM-DD) */
   dateAcquired: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Must be YYYY-MM-DD"),
   /** Does the vehicle meet the critical minerals requirement? */
@@ -2592,9 +4056,10 @@ export const NewCleanVehicleSchema = z.object({
   personalUsePercentage: optionalDecimal.default("100"),
   /** Was the credit transferred to the dealer at point of sale? */
   creditTransferredToDealer: z.boolean().default(false),
-});
+}));
 
-export const PreviouslyOwnedCleanVehicleSchema = z.object({
+export const PreviouslyOwnedCleanVehicleSchema = z.preprocess(sourceFactPresence(["salePrice", "personalUsePercentage", "creditTransferredToDealer"]), z.object({
+  ...VehicleSourceFactFields,
   /** Date acquired (YYYY-MM-DD) */
   dateAcquired: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Must be YYYY-MM-DD"),
   /** Sale price of the vehicle (must be ≤ $25,000 to qualify) */
@@ -2603,13 +4068,18 @@ export const PreviouslyOwnedCleanVehicleSchema = z.object({
   personalUsePercentage: optionalDecimal.default("100"),
   /** Was the credit transferred to the dealer at point of sale? */
   creditTransferredToDealer: z.boolean().default(false),
-});
+}));
 
 export const Form8936Schema = z.object({
   newCleanVehicles: z.array(NewCleanVehicleSchema).default([]),
   previouslyOwnedCleanVehicles: z.array(PreviouslyOwnedCleanVehicleSchema).default([]),
   /** Prior-year AGI for the lesser-of-two-years MAGI check */
-  priorYearAgi: optionalDecimal,
+  priorYearAgi: optionalDecimalInput,
+  priorYearFilingStatus: FilingStatusSchema.optional(),
+  agiAdjustmentsConfirmed: z.boolean().optional(),
+  priorYearAgiAdjustmentsConfirmed: z.boolean().optional(),
+  possessionIncomeExclusion: optionalDecimalInput,
+  priorYearPossessionIncomeExclusion: optionalDecimalInput,
   /** Foreign earned income exclusion (Form 2555 Line 45) — current year */
   foreignEarnedIncomeExclusion: optionalDecimal,
   /** Foreign housing deduction (Form 2555 Line 50) — current year */
@@ -2685,30 +4155,41 @@ export const HouseholdEmployeeSchema = z.object({
   /** Total cash wages paid to this employee during the year */
   cashWages: decimal,
   /** Whether this employee is the taxpayer's spouse */
-  isSpouse: z.boolean().default(false),
+  isSpouse: z.boolean().optional(),
   /** Whether this employee is the taxpayer's child under age 21 */
-  isChildUnder21: z.boolean().default(false),
+  isChildUnder21: z.boolean().optional(),
   /** Whether this employee is the taxpayer's parent */
-  isParent: z.boolean().default(false),
+  isParent: z.boolean().optional(),
+  /** Both qualifying-child care and marital/spouse-incapacity conditions under Pub. 926 are actually met. */
+  parentCareExceptionApplies: z.boolean().optional(),
   /** Whether this employee is under age 18 and household work is not their principal occupation */
-  isUnder18NonPrincipal: z.boolean().default(false),
+  isUnder18NonPrincipal: z.boolean().optional(),
   /** Federal income tax voluntarily withheld for this employee */
   federalIncomeTaxWithheld: optionalDecimal,
 });
 
 export const ScheduleHSchema = z.object({
   employees: z.array(HouseholdEmployeeSchema).min(1),
-  /** Whether total cash wages to all employees were $1,000+ in any calendar quarter
-   *  (triggers FUTA obligation). Defaults to true when total qualifying wages ≥ $1,000. */
-  futaApplies: z.boolean().default(true),
+  /** Actual $1,000 quarterly test in the current or preceding tax year; never inferred from an annual total. */
+  futaApplies: z.boolean().optional(),
   /** Whether all state unemployment taxes were paid timely and in a single state
    *  with no credit reduction. When true, uses Section A simplified FUTA (0.6%).
    *  When false, uses Section B with gross rate minus allowable credit. */
-  futaSectionA: z.boolean().default(true),
+  futaSectionA: z.boolean().optional(),
   /** Total state unemployment contributions actually paid (Section B only) */
   stateUnemploymentContributions: optionalDecimal,
+  /** Actual Schedule H line 17 state/rate periods; null means no assigned experience rate, not unknown. */
+  futaStatePeriods: z.array(z.object({
+    state: z.string().regex(/^[A-Z]{2}$/),
+    periodStart: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    periodEnd: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    taxableWages: decimal,
+    experienceRate: decimal.nullable(),
+    contributionsPaidTimely: decimal,
+  })).optional(),
+  stateUnemploymentContributionsPaidLate: optionalDecimalInput,
   /** FUTA credit reduction amount for credit reduction states (CA, USVI for 2025) */
-  futaCreditReduction: optionalDecimal,
+  futaCreditReduction: optionalDecimalInput,
 });
 
 export const Form8615Schema = z.object({
@@ -2743,7 +4224,18 @@ export type Form8615Input = z.infer<typeof Form8615Schema>;
  * Per-child inputs for the adoption credit (Part II) and employer-provided
  * adoption benefit exclusion (Part III). MFS filers are ineligible.
  */
-export const Form8839ChildSchema = z.object({
+export const Form8839ChildSchema = z.preprocess(sourceFactPresence(["isSpecialNeeds", "isForeignAdoption", "employerBenefits", "priorYearCreditsClaimed", "priorYearExclusionsClaimed"]), z.object({
+  sourceFactsComplete: z.boolean().optional(),
+  childFirstName: z.string().min(1).optional(),
+  childLastName: z.string().min(1).optional(),
+  childBirthYear: z.number().int().min(1900).optional(),
+  childIdentifyingNumber: z.string().regex(/^\d{3}-?\d{2}-?\d{4}$/).optional(),
+  childPermanentlyDisabled: z.boolean().optional(),
+  adoptionFinalizedYear: z.number().int().nullable().optional(),
+  expensesByYear: z.array(z.object({year: z.number().int(), amount: decimal})).optional(),
+  employerPlanQualified: z.boolean().optional(),
+  priorYearForeignBenefits: optionalDecimalInput,
+  priorYearForeignBenefitHistory: AdoptionPriorBenefitHistorySchema.optional(),
   /** Child's name (for audit trail) */
   childName: z.string().default(""),
   /** Whether the child has special needs as defined by IRC §23(d)(3) */
@@ -2760,9 +4252,14 @@ export const Form8839ChildSchema = z.object({
   priorYearCreditsClaimed: optionalDecimal,
   /** Total employer benefit exclusions claimed for this child in prior tax years */
   priorYearExclusionsClaimed: optionalDecimal,
-});
+}));
 
 export const Form8839Schema = z.object({
+  eligibilityConfirmed: z.boolean().optional(),
+  possessionIncomeExclusion: optionalDecimalInput,
+  exclusionMagi: optionalDecimalInput,
+  carryforwards: z.array(z.object({originTaxYear: z.number().int(), amount: decimal})).optional(),
+  carryforwardReconciled2025: z.boolean().optional(),
   children: z.array(Form8839ChildSchema).min(1),
   /** Foreign earned income exclusion amount (Form 2555) for MAGI computation */
   foreignEarnedIncomeExclusion: optionalDecimal,
@@ -2865,6 +4362,166 @@ export const SEHealthInsuranceWorksheetSchema = z.object({
 });
 export type SEHealthInsuranceWorksheetInput = z.infer<typeof SEHealthInsuranceWorksheetSchema>;
 
+/** Actual Form7206 sources. Omission preserves unknown; the calculator requires
+ * source completeness before using a plan or canonical business income limit. */
+export const Form7206Schema = z.object({
+  sourceTaxYear: z.number().int().optional(),
+  sourceReference: z.string().optional(),
+  sourceFactsConfirmed: z.boolean().optional(),
+  allPlansIncluded: z.boolean().optional(),
+  /** Actual partner gross-income attachments, separate from K-1 net income. */
+  partnershipGrossIncomeSources: z.object({
+    sourceTaxYear: z.number().int().optional(),
+    sourceReference: z.string().optional(),
+    sourceFactsConfirmed: z.boolean().optional(),
+    statements: z.array(z.object({
+      businessSourceId: z.string().optional(),
+      accountHolder: z.enum(["primary", "spouse"]).optional(),
+      sourceReference: z.string().optional(),
+      sourceFactsConfirmed: z.boolean().optional(),
+      originalK1: z.object({
+        taxYear: z.number().int().optional(),
+        partnershipName: z.string().optional(),
+        partnershipEIN: z.string().optional(),
+        accountHolder: z.enum(["primary", "spouse"]).optional(),
+        ordinaryIncome: optionalDecimalInput,
+        selfEmploymentEarnings: optionalDecimalInput,
+        selfEmploymentIncomeType: z.enum(["farm", "nonfarm"]).optional(),
+      }).strict().optional(),
+      grossIncome: optionalDecimalInput,
+      ordinaryActivityOnlyConfirmed: z.boolean().optional(),
+      allGrossIncomeIncludedConfirmed: z.boolean().optional(),
+    }).strict()).optional(),
+  }).strict().optional(),
+  /** Actual recorded Pub974 reasonable-method choice; no credit or percentage override. */
+  marketplaceCreditAllocation: z.object({
+    sourceTaxYear: z.number().int().optional(),
+    sourceReference: z.string().optional(),
+    sourceFactsConfirmed: z.boolean().optional(),
+    method: z.enum(["monthly_eligible_plan_enrollment"]).optional(),
+    sameMethodForAllCalculationsConfirmed: z.boolean().optional(),
+  }).optional(),
+  /** Original proof of a wholly domestic farm, separate from foreign-source mapping. */
+  domesticFarmSources: z.object({
+    sourceTaxYear: z.number().int().optional(),
+    sourceReference: z.string().optional(),
+    sourceFactsConfirmed: z.boolean().optional(),
+    businessSourceId: z.literal("scheduleF").optional(),
+    accountHolder: z.enum(["primary", "spouse"]).optional(),
+    principalCropOrActivity: z.string().optional(),
+    ein: z.string().optional(),
+    allIncomeDomesticConfirmed: z.boolean().optional(),
+    noSelfEmployedRetirementDeductionConfirmed: z.boolean().optional(),
+  }).strict().optional(),
+  /** Actual attribution of positive already-allowed retirement and Form2555line45 amounts. */
+  incomeDeductions: z.object({
+    sourceReference: z.string().optional(),
+    sourceFactsConfirmed: z.boolean().optional(),
+    allocations: z.array(z.object({
+      businessSourceId: z.string().optional(),
+      accountHolder: z.enum(["primary", "spouse"]).optional(),
+      retirementDeduction: optionalDecimalInput,
+      foreignExclusion: optionalDecimalInput,
+    })).optional(),
+    otherForeignExclusion: optionalDecimalInput,
+  }).optional(),
+  persons: z.array(z.object({
+    personId: z.string().optional(),
+    name: z.string().optional(),
+    householdRole: z.enum(["primary", "spouse", "other"]).optional(),
+    /** Actual attained age from the covered person's year-end source worksheet. */
+    attainedAgeAtYearEnd: z.number().int().min(0).max(120).optional(),
+  })).optional(),
+  plans: z.array(z.object({
+    planId: z.string().optional(),
+    policyReference: z.string().optional(),
+    accountHolder: z.enum(["primary", "spouse"]).optional(),
+    businessSourceId: z.string().optional(),
+    businessKind: z.enum(["self_employed", "partnership", "s_corporation"]).optional(),
+    kind: z.enum(["medical", "qualified_ltc"]).optional(),
+    policyHolder: z.enum(["individual", "business"]).optional(),
+    establishedUnderBusiness: z.boolean().optional(),
+    insuranceQualificationConfirmed: z.boolean().optional(),
+    /** Actual guaranteed-payment or Box1 inclusion, not an assumed wage source. */
+    premiumsIncludedInOwnerIncome: z.boolean().optional(),
+    moreThanTwoPercentShareholder: z.boolean().optional(),
+    marketplaceCoverage: z.boolean().optional(),
+    premiumTaxCreditInvolved: z.boolean().optional(),
+    marketplacePolicySourceIds: z.array(z.string()).optional(),
+    allCoveredPersonsInCoverageFamilyConfirmed: z.boolean().optional(),
+    /** Actual identity links between complete payment and shared-policy sources.
+     * Neither a paid share nor a health deduction is inferred from the agreement. */
+    coverageFamilySources: MarketplaceCoverageFamilySchema.optional(),
+    sharedMarketplaceSources: z.object({
+      sourceTaxYear: z.number().int().optional(),
+      sourceReference: z.string().optional(),
+      sourceFactsConfirmed: z.boolean().optional(),
+      allCoveredPersonsLinkedConfirmed: z.boolean().optional(),
+      allThisReturnPersonsInCoverageFamilyConfirmed: z.boolean().optional(),
+      persons: z.array(z.object({
+        personId: z.string().optional(),
+        coveredIndividualSsn: z.string().optional(),
+      }).strict()).optional(),
+    }).strict().optional(),
+    clergySpecialRules: z.boolean().optional(),
+    coveredPersons: z.array(z.object({
+      personId: z.string().optional(),
+      relationshipToOwner: z.enum(["self", "spouse", "dependent", "child_under_27", "other"]).optional(),
+      dependencyEligibilityConfirmed: z.boolean().optional(),
+      /** Actual child relationship before the marriage-year payments; distinct
+       * from dependency or membership in a Form8962 alternative family. */
+      childRelationshipSources: z.object({
+        sourceTaxYear: z.number().int().optional(),
+        sourceReference: z.string().optional(),
+        sourceFactsConfirmed: z.boolean().optional(),
+        accountHolder: z.enum(["primary", "spouse"]).optional(),
+        ownerSsn: z.string().optional(),
+        coveredIndividualSsn: z.string().optional(),
+        childRelationship: z.enum(["son_or_daughter", "stepchild", "adopted_child", "foster_child"]).optional(),
+        relationshipStartDate: z.string().optional(),
+      }).strict().optional(),
+    })).optional(),
+    months: z.array(z.object({
+      month: z.number().int().min(1).max(12).optional(),
+      /** The applicable medical or LTC employer plan, including any part month. */
+      employerSubsidizedPlanEligible: z.boolean().optional(),
+      /** Actual completed PTC offer worksheet; an offer differs from enrollment. */
+      employerOfferPtcException: z.enum(["unaffordable", "does_not_provide_minimum_value"]).optional(),
+      employerCoverageEnrolled: z.boolean().optional(),
+      employerOfferSourceReference: z.string().optional(),
+    })).optional(),
+    payments: z.array(z.object({
+      sourceId: z.string().optional(),
+      datePaid: z.string().optional(),
+      coverageTaxYear: z.number().int().optional(),
+      coverageMonth: z.number().int().min(1).max(12).optional(),
+      grossPremium: optionalDecimalInput,
+      ownerOrBusinessPaid: optionalDecimalInput,
+      otherPersonPaid: optionalDecimalInput,
+      /** Actual government advance payment, separate from taxpayer paid premiums. */
+      advancePremiumTaxCredit: optionalDecimalInput,
+      personAmounts: z.array(z.object({
+        personId: z.string().optional(),
+        /** Reimbursements belong to the business share, never both shares. */
+        payer: z.enum(["owner_after_tax", "business_paid_or_reimbursed"]).optional(),
+        amountPaid: optionalDecimalInput,
+        advancePremiumTaxCredit: optionalDecimalInput,
+        excludedPublicSafetyOfficerAmount: optionalDecimalInput,
+        publicSafetyOfficerAccountHolder: z.enum(["primary", "spouse"]).optional(),
+        otherTaxFreeFunding: optionalDecimalInput,
+      })).optional(),
+    })).optional(),
+  })).optional(),
+  /** Actual allocation only when the same person's LTC cap spans businesses. */
+  longTermCareAllocations: z.array(z.object({
+    personId: z.string().optional(),
+    accountHolder: z.enum(["primary", "spouse"]).optional(),
+    businessSourceId: z.string().optional(),
+    allowedPremium: optionalDecimalInput,
+  })).optional(),
+});
+export type Form7206Input = z.infer<typeof Form7206Schema>;
+
 /**
  * Taxable Refund Worksheet — Schedule 1, Line 1
  *
@@ -2875,14 +4532,22 @@ export type SEHealthInsuranceWorksheetInput = z.infer<typeof SEHealthInsuranceWo
  * Ref: IRS Schedule 1 Instructions, Worksheet 1; IRC §111; Pub 525.
  */
 export const TaxableRefundWorksheetSchema = z.object({
+  /** Year of the tax deduction being recovered, not the year the refund arrived. */
+  priorTaxYear: z.number().int().min(2018).max(2026),
+  /** Actual historical SALT MAGI, including exclusions; required from 2025. */
+  priorYearSaltMagi: optionalDecimalInput,
   /** Whether the taxpayer itemized deductions on the prior-year return */
   priorYearItemized: z.boolean(),
+  /** Actual prior Schedule A tax election; omission preserves historical unknown. */
+  priorYearStateLocalTaxElection: z.enum(["income", "sales"]).optional(),
   /** Prior-year Schedule A Line 17 total itemized deductions */
   priorYearItemizedTotal: optionalDecimal,
-  /** Prior-year standard deduction amount (Form 1040 Line 12a) */
+  /** Actual standard deduction available in the recovery worksheet, including any mandatory-itemization restriction. */
   priorYearStandardDeduction: decimal,
   /** Total state/local income taxes actually paid in the prior year (before SALT cap) */
-  priorYearStateLocalTaxesPaid: optionalDecimal,
+  priorYearStateLocalTaxesPaid: optionalDecimalInput,
+  /** Historical state/local real and personal property taxes; preserve unknown. */
+  priorYearPropertyTaxesPaid: optionalDecimalInput,
   /** Alternative prior-year general sales tax deduction that could have been
    *  claimed instead of state/local income taxes. When provided, Pub. 525 caps
    *  the taxable refund at the excess of the chosen income-tax deduction over
@@ -2890,8 +4555,51 @@ export const TaxableRefundWorksheetSchema = z.object({
   priorYearAlternativeGeneralSalesTaxDeduction: optionalDecimal,
   /** Prior-year filing status (for SALT cap: $10K general, $5K MFS) */
   priorYearFilingStatus: FilingStatusSchema,
+}).superRefine((value, ctx) => {
+  if (value.priorTaxYear >= 2025 && value.priorYearSaltMagi === undefined) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["priorYearSaltMagi"], message: "Historical SALT MAGI is required for tax years 2025 and 2026" });
+  }
+  if (value.priorYearItemized) {
+    for (const field of ["priorYearStateLocalTaxesPaid", "priorYearPropertyTaxesPaid"] as const) {
+      if (value[field] === undefined) ctx.addIssue({ code: z.ZodIssueCode.custom, path: [field], message: "Actual historical SALT amounts are required, including explicit zero when applicable" });
+    }
+  }
+  for (const field of ["priorYearItemizedTotal", "priorYearStandardDeduction", "priorYearStateLocalTaxesPaid", "priorYearPropertyTaxesPaid", "priorYearAlternativeGeneralSalesTaxDeduction"] as const) {
+    if (value[field] !== undefined && d(value[field]).isNegative()) ctx.addIssue({ code: z.ZodIssueCode.custom, path: [field], message: "Historical deduction and tax payment amounts cannot be negative" });
+  }
 });
 export type TaxableRefundWorksheetInput = z.infer<typeof TaxableRefundWorksheetSchema>;
+
+/** Finite Pub525 original-sourced recovery collection. Unknown facts are not negative answers. */
+export const TaxableStateRefundYearSchema = z.object({
+  sourceReference: z.string().optional(), sourceFactsConfirmed: z.boolean().optional(),
+  priorTaxYear: z.number().int().optional(), priorYearFilingStatus: FilingStatusSchema.optional(),
+  priorYearPrimarySsn: z.string().optional(), priorYearSpouseSsn: z.string().optional(),
+  priorYearItemized: z.boolean().optional(), priorYearStateLocalTaxElection: z.enum(["income", "sales"]).optional(),
+  priorYearItemizedTotal: optionalDecimalInput, priorYearStandardDeduction: optionalDecimalInput,
+  priorYearStateLocalTaxesPaid: optionalDecimalInput, priorYearPropertyTaxesPaid: optionalDecimalInput,
+  priorYearAlternativeGeneralSalesTaxDeduction: optionalDecimalInput, priorYearSaltMagi: optionalDecimalInput,
+  priorYearSaltDeduction: optionalDecimalInput, priorYearOtherItemizedDeductions: optionalDecimalInput,
+  priorYearAdjustedGrossIncome: optionalDecimalInput, priorYearTaxableIncome: optionalDecimalInput,
+  priorYearAdditionalDeductions: optionalDecimalInput,
+  priorYearHadAMT: z.boolean().optional(), priorYearHadUnusedTaxCredits: z.boolean().optional(),
+  priorYearHadTaxCredits: z.boolean().optional(), priorYearUsedSpecialTaxComputation: z.boolean().optional(), priorYearUsedPreferentialTaxWorksheet: z.boolean().optional(),
+  priorYearWasDependent: z.boolean().optional(), priorYearNonresidentAlien: z.boolean().optional(),
+  priorYearHadCarryoverBenefits: z.boolean().optional(), priorYearHadOtherRecoveries: z.boolean().optional(),
+  priorYearHadEarlierRefunds: z.boolean().optional(), priorYearBlind: z.boolean().optional(),
+  priorYearDeceased: z.boolean().optional(), priorYearMandatoryItemization: z.boolean().optional(),
+  communityPropertyAllocationRequired: z.boolean().optional(),
+}).strict();
+export const TaxableStateRefundRecoveriesSchema = z.object({
+  methodVersion: z.literal("state-income-tax-recoveries-v1").optional(),
+  sourceTaxYear: z.number().int().optional(), sourceReference: z.string().optional(),
+  sourceFactsConfirmed: z.boolean().optional(), allRefundSourcesIncludedConfirmed: z.boolean().optional(),
+  originalTaxpayer: TaxpayerSchema.optional(),
+  sourceOriginals: z.array(z.object({sourceId: z.string().optional(), original: Form1099GSchema.optional()}).strict()).optional(),
+  years: z.array(TaxableStateRefundYearSchema).optional(),
+}).strict();
+export type TaxableStateRefundRecoveriesInput = z.infer<typeof TaxableStateRefundRecoveriesSchema>;
+export type TaxableStateRefundYearInput = z.infer<typeof TaxableStateRefundYearSchema>;
 
 /**
  * Schedule J — Income Averaging for Farmers and Fishermen (IRC §1301)
@@ -3069,37 +4777,311 @@ export const Form6252Schema = z.object({
 });
 export type Form6252Input = z.infer<typeof Form6252Schema>;
 
-export const Form2555Schema = z.object({
-  /** Total foreign earned income (wages, SE income, allowances from foreign sources) */
-  foreignEarnedIncome: decimal,
-  /** Number of days in the qualifying period that fall within the tax year (1-366) */
-  qualifyingDays: z.number().int().min(1).max(366),
-  /** Total days in the tax year — 365 or 366 for leap year (default 365) */
-  totalDaysInYear: z.number().int().min(365).max(366).default(365),
-  /** Qualified housing expenses paid during the tax year */
-  qualifiedHousingExpenses: optionalDecimal,
-  /** Location-specific housing expense limit override (IRS high-cost locality table).
-   *  If omitted, uses the default 30% of the prorated maximum exclusion. */
-  housingExpenseLocationLimit: decimal.optional(),
-  /** Employer-provided housing amounts (not counting direct employer reimbursements) */
-  employerProvidedHousingAmount: optionalDecimal,
-  /** Whether the taxpayer is self-employed (housing deduction) or employee (housing exclusion) */
-  isSelfEmployed: z.boolean().default(false),
+/** Actual ordinary Form1116 source worksheets for deduction-year deemed absorption. */
+const ForeignTaxDeductionCarryoverSchema = z.object({
+  sourceTaxYear: z.number().int().optional(), sourceReference: z.string().optional(), sourceFactsConfirmed: z.boolean().optional(),
+  method: z.enum(["ordinary_passive"]).optional(),
+  filingHistory: z.enum(["continuous_individual", "continuous_joint_same_spouse"]).optional(), filingHistoryConfirmed: z.boolean().optional(),
+  noCarrybackOrRedeterminationAdjustmentsConfirmed: z.boolean().optional(), noForeignOrDomesticLossAccountsConfirmed: z.boolean().optional(),
+  noOtherForeignIncomeConfirmed: z.boolean().optional(), allCurrentTaxesCreditEligibleConfirmed: z.boolean().optional(), passiveCategoryConfirmed: z.boolean().optional(),
+  adjustedThroughTaxYear: z.number().int().optional(),
+  incomeSources: z.array(z.object({
+    sourceId: z.string().optional(), payerName: z.string().optional(), payerTin: z.string().optional(), accountReference: z.string().optional(),
+    owner: z.enum(["primary", "spouse"]).optional(), foreignCountry: z.string().optional(),
+    reportedIncome: decimal.optional(), foreignIncome: decimal.optional(), sourceReference: z.string().optional(),
+  }).strict()).optional(),
+  carryovers: z.array(z.object({ originTaxYear: z.number().int().optional(), category: z.enum(["passive", "general"]).optional(), amount: decimal.optional(), sourceReference: z.string().optional() }).strict()).optional(),
+  /** Separate actual AMT history. Empty is an explicit source answer, never a regular-ledger copy. */
+  amt: z.object({
+    sourceTaxYear: z.number().int().optional(), sourceReference: z.string().optional(), sourceFactsConfirmed: z.boolean().optional(),
+    carryoverHistoryConfirmed: z.boolean().optional(), adjustedThroughTaxYear: z.number().int().optional(),
+    carryovers: z.array(z.object({ originTaxYear: z.number().int().optional(), category: z.enum(["passive", "general"]).optional(), amount: decimal.optional(), sourceReference: z.string().optional() }).strict()).optional(),
+    foreignAmountsSameAsRegularConfirmed: z.boolean().optional(), firstPost1997CreditClaimTaxYear: z.number().int().optional(),
+    simplifiedElectionMadeInFirstClaimYear: z.boolean().optional(), noRevocationConfirmed: z.boolean().optional(),
+  }).strict().optional(),
+  itemizedAllocation: z.object({
+    sourceReference: z.string().optional(), sourceFactsConfirmed: z.boolean().optional(),
+    incomeOrSalesTaxes: decimal.optional(), homeRealPropertyTaxes: decimal.optional(), personalPropertyTaxes: decimal.optional(),
+    allRealPropertyTaxesForPersonalResidenceConfirmed: z.boolean().optional(), noTreatyCharitableDeductionConfirmed: z.boolean().optional(),
+    mortgageInterestMethod: z.enum(["gross_income", "us_source_small_foreign_income"]).optional(),
+    /** Actual ordinary-method history and complete, nonoverlapping jurisdiction attribution. */
+    stateAllocation: z.object({
+      method: z.enum(["ordinary_presumption", "existing_safe_harbor_or_other"]).optional(),
+      sourceFactsConfirmed: z.boolean().optional(), sourceReference: z.string().optional(),
+      methodHistoryConfirmed: z.boolean().optional(), allStateSourcesIncludedConfirmed: z.boolean().optional(),
+      nonoverlappingIncomeConfirmed: z.boolean().optional(),
+      noTaxStateIncome: z.array(z.object({
+        stateCode: z.string().optional(), usTaxableIncome: decimal.optional(), sourceReference: z.string().optional(),
+      }).strict()).optional(),
+    }).strict().optional(),
+    stateIncomeTaxes: z.array(z.object({
+      stateCode: z.string().optional(), deductibleAmount: decimal.optional(), stateTaxableIncome: decimal.optional(),
+      foreignIncomeSpecificallyExempt: z.boolean().optional(), sourceReference: z.string().optional(),
+      /** Actual nonoverlapping country attribution, including known-zero countries. */
+      countryIncomeConfirmed: z.boolean().optional(),
+      countryIncome: z.array(z.object({ foreignCountry: z.string().optional(), stateTaxableIncome: decimal.optional(), sourceReference: z.string().optional() }).strict()).optional(),
+    }).strict()).optional(),
+  }).strict().optional(),
+}).strict();
+
+/** Actual paid-tax credit sources shared by ordinary1116 and the904(j)election. */
+const ForeignTaxCreditSourceSchema = z.object({
+  electionConfirmed: z.boolean().optional(), filingContext: z.enum(["original_return", "amended_return"]).optional(),
+  sourceFactsConfirmed: z.boolean().optional(), sourceReference: z.string().optional(),
+  allForeignGrossIncomePassiveConfirmed: z.boolean().optional(),
+  allForeignIncomeOnQualifiedPayeeStatementsConfirmed: z.boolean().optional(),
+  noRequiredTaxReductionsConfirmed: z.boolean().optional(),
+  taxpayers: z.array(z.object({ owner: z.enum(["primary", "spouse"]).optional(),
+    status: z.enum(["us_citizen", "full_year_resident_alien", "other"]).optional(), sourceReference: z.string().optional(),
+  }).strict()).optional(),
+  carryoverHistoryConfirmed: z.boolean().optional(), adjustedThroughTaxYear: z.number().int().optional(),
+  filingHistory: z.enum(["continuous_individual", "continuous_joint_same_spouse", "changed"]).optional(),
+  carryovers: z.array(z.object({ originTaxYear: z.number().int().optional(), category: z.enum(["passive", "general"]).optional(),
+    amount: decimal.optional(), sourceReference: z.string().optional(),
+  }).strict()).optional(),
+  amtCarryovers: z.array(z.object({ originTaxYear: z.number().int().optional(), category: z.enum(["passive", "general"]).optional(),
+    amount: decimal.optional(), sourceReference: z.string().optional(),
+  }).strict()).optional(),
+}).strict();
+const ForeignTaxPriorCapacitySchema = z.object({
+  taxYear: z.number().int().optional(), election: z.enum(["form1116_credit", "direct_credit_election", "deduction"]).optional(),
+  sourceFactsConfirmed: z.boolean().optional(), sourceReference: z.string().optional(), allPriorUseIncludedConfirmed: z.boolean().optional(),
+  limitation: decimal.optional(), currentTaxes: decimal.optional(), priorCarryoversUsed: decimal.optional(),
+}).strict();
+const ForeignTaxOrdinaryCreditSchema = ForeignTaxCreditSourceSchema.extend({
+  sourceTaxYear: z.number().int().optional(), method: z.enum(["ordinary_passive"]).optional(),
+  allForeignIncomeSourcesIncludedConfirmed: z.boolean().optional(), noForeignOrDomesticLossAccountsConfirmed: z.boolean().optional(),
+  noCfcOrQbuIncomeConfirmed: z.boolean().optional(),
+  incomeSources: z.array(z.object({
+    sourceId: z.string().optional(), payerName: z.string().optional(), payerTin: z.string().optional(), accountReference: z.string().optional(),
+    owner: z.enum(["primary", "spouse"]).optional(), foreignCountry: z.string().optional(),
+    reportedIncome: decimal.optional(), foreignIncome: decimal.optional(), sourceReference: z.string().optional(),
+    passiveGroup: z.enum(["withholding_15_or_more", "withholding_under_15", "no_foreign_tax", "other_foreign_tax"]).optional(),
+  }).strict()).optional(),
+  itemizedAllocation: ForeignTaxDeductionCarryoverSchema.shape.itemizedAllocation,
+  amt: z.object({
+    sourceFactsConfirmed: z.boolean().optional(), sourceReference: z.string().optional(), foreignAmountsSameAsRegularConfirmed: z.boolean().optional(),
+    firstPost1997CreditClaimTaxYear: z.number().int().optional(), simplifiedElectionMadeInFirstClaimYear: z.boolean().optional(), noRevocationConfirmed: z.boolean().optional(),
+  }).strict().optional(),
+  regularCarryback: ForeignTaxPriorCapacitySchema.optional(), amtCarryback: ForeignTaxPriorCapacitySchema.optional(),
+}).strict();
+
+/** Actual annual foreign income-tax choice and paid-tax deduction records. */
+export const ForeignTaxElectionSchema = z.object({
+  taxYear: z.number().int().optional(),
+  election: z.enum(["credit", "deduction"]).optional(),
+  accountingMethod: z.enum(["paid", "accrued"]).optional(),
+  priorAccruedCreditElection: z.boolean().optional(),
+  sourceReference: z.string().optional(),
+  sourceFactsConfirmed: z.boolean().optional(),
+  allQualifiedForeignTaxesIncludedConfirmed: z.boolean().optional(),
+  noUnusedCreditCarryoversConfirmed: z.boolean().optional(),
+  deductionYearCarryover: ForeignTaxDeductionCarryoverSchema.optional(),
+  /** Actual section904(j) election; no source eligibility or history defaults. */
+  creditWithoutForm1116: ForeignTaxCreditSourceSchema.optional(),
+  creditWithForm1116: ForeignTaxOrdinaryCreditSchema.optional(),
+  noRedeterminationsConfirmed: z.boolean().optional(),
+  sources: z.array(z.object({
+    sourceId: z.string().optional(), // Actual form1099Int, form1099Div, scheduleK1 or scheduleK1Form1041 index.
+    qualifiedPayeeStatement: z.enum(["schedule_k3", "schedule_k1_1041"]).optional(),
+    payerName: z.string().optional(), payerTin: z.string().optional(), accountReference: z.string().optional(),
+    owner: z.enum(["primary", "spouse"]).optional(),
+    foreignCountry: z.string().optional(), jurisdictionType: z.enum(["foreign_country", "us_territory"]).optional(),
+    reportedTaxAmount: decimal.optional(),
+    qualifiedIncomeTaxConfirmed: z.boolean().optional(),
+    creditEligibility: z.object({
+      passiveIncomeConfirmed: z.boolean().optional(), legalTaxLiabilityConfirmed: z.boolean().optional(),
+      noRefundOrSubsidyConfirmed: z.boolean().optional(), holdingPeriodRequirementMetConfirmed: z.boolean().optional(),
+      noRelatedPaymentsConfirmed: z.boolean().optional(), noDisallowedCountryOrBoycottConfirmed: z.boolean().optional(),
+    }).strict().optional(),
+    taxOnExcludedIncome: decimal.optional(),
+    taxDeductedElsewhere: decimal.optional(),
+    payments: z.array(z.object({ date: z.string(), amountUsd: decimal }).strict()).optional(),
+    investmentAllocableAmount: decimal.optional(),
+    allocationMethodDescription: z.string().optional(),
+    sourceReference: z.string().optional(),
+  }).strict()).optional(),
+}).strict();
+
+/** Actual completed NIIT worksheet components that cannot be inferred from income totals. */
+export const Form8960SourcesSchema = z.object({
+  sourceTaxYear: z.number().int().optional(),
+  sourceReference: z.string().min(1).optional(),
+  sourceFactsConfirmed: z.boolean().optional(),
+  feieAllocableDeductions: decimal.optional(),
+  annuities: z.array(z.object({
+    sourceId: z.string().min(1).optional(), // Exact form1099R:index binding.
+    payerName: z.string().trim().min(1).optional(), payerTin: z.string().trim().min(1).optional(),
+    accountReference: z.string().trim().min(1).optional(),
+    owner: z.enum(["primary", "spouse"]).optional(),
+    classification: z.enum(["nonqualified_annuity", "excluded_retirement_plan"]).optional(),
+    excludedPlanSection: z.enum(["401", "403a", "403b", "408", "408A", "457b"]).optional(),
+    grossDistribution: decimal.optional(),
+    taxableAmount: decimal.optional(),
+    sourceReference: z.string().min(1).optional(),
+  }).strict()).optional(),
+  ordinaryTaxAllocation: z.object({
+    allocationMethodDescription: z.string().min(1).optional(),
+    noDuplicateDeductionConfirmed: z.boolean().optional(),
+    incomeOrSalesTaxes: z.object({ sourceAmount: decimal.optional(), regularDeductibleAmount: decimal.optional(), investmentAllocableAmount: decimal.optional() }).strict().optional(),
+    realPropertyTaxes: z.object({ sourceAmount: decimal.optional(), regularDeductibleAmount: decimal.optional(), investmentAllocableAmount: decimal.optional() }).strict().optional(),
+    personalPropertyTaxes: z.object({ sourceAmount: decimal.optional(), regularDeductibleAmount: decimal.optional(), investmentAllocableAmount: decimal.optional() }).strict().optional(),
+  }).strict().optional(),
+  dispositions: z.object({
+    regularCapitalGainOrLoss: decimal,
+    regularOrdinaryGainOrLoss: decimal,
+    excludedGainOrLossAdjustment: decimal,
+    passthroughAdjustment: decimal,
+  }).optional(),
+  itemizedAllocation: z.object({
+    investmentInterest: decimal,
+    ordinaryLoss: decimal,
+    investmentIncomeTaxes: decimal.optional(),
+  }).optional(),
 });
+
+export const Form2555Schema = z.preprocess(value => {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return value;
+  const record = value as Record<string, unknown>;
+  const required = ["foreignEarnedIncome", "qualifyingDays", "totalDaysInYear", "qualifiedHousingExpenses", "isSelfEmployed"];
+  return { ...record, sourceFactsComplete: record.sourceFactsComplete !== false && required.every(key => record[key] !== undefined) };
+}, z.object({
+  taxYear: z.number().int().optional(),
+  accountHolder: z.enum(["primary", "spouse"]).optional(),
+  /** Actual one-taxpayer mapping to income already reported, or separate foreign wages. */
+  sourceMapping: z.object({
+    sourceReference: z.string(), sourceFactsConfirmed: z.boolean(), allSourcesIncluded: z.boolean(), oneOwnerOnlyConfirmed: z.boolean(),
+    rows: z.array(z.object({
+      sourceId: z.string(), sourceTaxYear: z.number().int(), accountHolder: z.enum(["primary", "spouse"]),
+      sourceReference: z.string(), payerName: z.string(), payerEin: z.string().optional(),
+      foreignEarnedIncome: decimal, priorYearIncomeReceived: decimal,
+      notIncludedInW2Confirmed: z.boolean().optional(),
+      businessGrossReceipts: decimal.optional(), businessReturnsAndAllowances: decimal.optional(),
+      businessCostOfGoodsSold: decimal.optional(), businessOtherIncome: decimal.optional(),
+      partnerPerformedServicesConfirmed: z.boolean().optional(), capitalMaterialIncomeFactor: z.boolean().optional(),
+      allBusinessIncomeForeignConfirmed: z.boolean().optional(),
+      foreignBusinessExpenses: decimal.optional(), foreignBusinessExpenseSourceReference: z.string().optional(), foreignBusinessExpensesConfirmed: z.boolean().optional(),
+      qbiForeignProfit: decimal.optional(), // Net profit from these services inside the K-1's QBI.
+      k1QbiExcludesForeignConfirmed: z.boolean().optional(),
+      reasonableServicesAllowance: decimal.optional(), reasonableAllowanceConfirmed: z.boolean().optional(),
+    })),
+  }).optional(),
+  sourceFactsComplete: z.boolean().optional(),
+  sourceFactsConfirmed: z.boolean().optional(),
+  /** Confirmed tax home and residence/presence eligibility, including permitted services. */
+  eligibilityConfirmed: z.boolean().optional(),
+  /** Actual election validity, including any prior revocation and required IRS consent. */
+  electionsValidConfirmed: z.boolean().optional(),
+  claimForeignEarnedIncomeExclusion: z.boolean().optional(),
+  claimHousingExclusionOrDeduction: z.boolean().optional(),
+  foreignEarnedIncome: decimal,
+  qualifyingDays: z.number().int().min(0).max(366),
+  totalDaysInYear: z.number().int().min(365).max(366).default(365),
+  qualifiedHousingExpenses: optionalDecimal,
+  housingExpensesQualificationConfirmed: z.boolean().optional(),
+  /** Legacy field is accepted for migration only; arbitrary overrides cannot calculate. */
+  housingExpenseLocationLimit: decimal.optional(),
+  housingLocationPeriods: z.array(z.object({
+    locationId: z.string().min(1), // Exact catalog ID, or "default" for an unlisted location.
+    days: z.number().int().min(1).max(365),
+    noticeTaxYear: z.number().int().optional(), // Explicit2025 election of higher2026 limits.
+    priorYearLocationId: z.string().min(1).optional(), // Actual earlier notice location when labels changed.
+  })).optional(),
+  /** Legacy reimbursement field never substitutes for actual employer-provided income. */
+  employerProvidedHousingAmount: optionalDecimal,
+  employerProvidedForeignEarnedIncome: decimal.optional(),
+  isSelfEmployed: z.boolean().default(false),
+  deductionsAllocableToExcludedIncome: decimal.optional(),
+  foreignEarnedIncomeTaxWorksheetDisallowedDeductions: decimal.optional(),
+  priorYearHousingDeductionCarryover: decimal.optional(),
+  priorYearHousingCarryoverTaxYear: z.number().int().optional(),
+  priorYearHousingCarryoverConfirmed: z.boolean().optional(),
+  priorYearIncomeExclusion: decimal.optional(),
+  priorYearIncomeExclusionTaxYear: z.number().int().optional(),
+  priorYearIncomeStatementConfirmed: z.boolean().optional(),
+  priorYearIncomeAlreadyReportedConfirmed: z.boolean().optional(),
+  priorYearIncomeReceived: decimal.optional(),
+  priorYearUnusedExclusion: decimal.optional(),
+  partIV: z.object({
+    wages: decimal, businessPersonalServices: decimal, partnershipPersonalServices: decimal,
+    noncashLodging: decimal, noncashMeals: decimal, noncashCar: decimal, noncashOther: decimal,
+    allowanceCostOfLiving: decimal, allowanceFamily: decimal, allowanceEducation: decimal,
+    allowanceHomeLeave: decimal, allowanceQuarters: decimal, allowanceOther: decimal,
+    otherEarnedIncome: decimal, section119MealsAndLodging: decimal,
+  }).optional(),
+  incomeSourceMappingConfirmed: z.boolean().optional(),
+  /** Eligible foreign receipts already present in their actual return income sources;
+   * business/partnership amounts are eligible gross personal-service receipts, not net profit. */
+  incomeSources: z.object({
+    foreignEmploymentIncomeIncludedOnW2: decimal,
+    foreignEmploymentIncomeNotOnW2: decimal,
+    foreignBusinessIncomeAlreadyReported: decimal,
+    foreignPartnershipIncomeAlreadyReported: decimal,
+    otherForeignIncomeAlreadyReported: decimal,
+  }).optional(),
+}));
 export type Form2555Input = z.infer<typeof Form2555Schema>;
 
-export const Form8814ChildSchema = z.object({
+const Form8814ElectionFactsSchema = z.object({
+  taxYear: z.number().int(), sourceReference: z.string().trim().min(1), sourceFactsConfirmed: z.boolean(),
+  /** Actual subsets of the child totals; Alaska is already included in line2a. */
+  incomeCharacter: z.object({
+    sourceReference: z.string().optional(),
+    alaskaPermanentFundDividends: optionalDecimalInput,
+    collectiblesGain: optionalDecimalInput,
+    unrecapturedSection1250Gain: optionalDecimalInput,
+    section1202Gain: optionalDecimalInput,
+  }).optional(),
+  child: z.object({ firstName: z.string().trim().min(1), lastName: z.string().trim().min(1), ssn: z.string(), dateOfBirth: z.string() }),
+  electionRequested: z.boolean(), timelyElectionStatus: z.enum(["planned_timely", "filed_timely", "late"]),
+  childRequiredToFile: z.boolean(), childFilesJointReturn: z.boolean(),
+  otherGrossIncome: decimal, estimatedTaxPayments: decimal, priorYearOverpaymentApplied: decimal, federalIncomeTaxWithheld: decimal,
+  student: z.object({
+    program: z.enum(["school", "school_on_farm", "government_on_farm", "online_only", "correspondence", "on_the_job"]),
+    fullTimeMonths: z.array(z.number().int().min(1).max(12)), sourceReference: z.string().trim().min(1),
+  }).optional(),
+  electingTaxpayer: z.enum(["primary", "spouse"]), relationshipToChild: z.enum(["parent", "stepparent"]),
+  parentSituation: z.enum(["joint_with_other_parent", "married_separate", "custodial_unmarried", "custodial_considered_unmarried", "custodial_joint_stepparent", "custodial_separate_stepparent", "never_married_together_all_year", "surviving_unmarried", "surviving_joint_stepparent", "surviving_separate_stepparent"]),
+  custodialParentConfirmed: z.boolean().optional(),
+  consideredUnmarriedUnder7703Confirmed: z.boolean().optional(),
+  parentIncomeComparison: z.object({
+    taxYear: z.number().int(), returnTaxableIncomeWithoutChild: decimal, otherParentTaxableIncomeWithoutChild: decimal,
+    returnSourceReference: z.string().trim().min(1), otherParentSourceReference: z.string().trim().min(1), excludesElectedChildIncomeConfirmed: z.boolean(),
+  }).optional(),
+});
+export const Form8814ChildSchema = z.preprocess(value => {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return value;
+  const raw = value as Record<string, unknown>;
+  return { ...raw, incomeSourcesComplete: raw.incomeSourcesComplete !== false && ["taxableInterest", "taxExemptInterest", "ordinaryDividends", "qualifiedDividends", "capitalGainDistributions"].every(field => raw[field] !== undefined) };
+}, z.object({
+  incomeSourcesComplete: z.boolean().optional(),
+  electionFacts: Form8814ElectionFactsSchema.optional(),
   /** Line 1a: Child's taxable interest (Forms 1099-INT, 1099-OID) */
   taxableInterest: optionalDecimal,
   /** Line 1b: Child's tax-exempt interest (informational, not in Line 4 total) */
-  taxExemptInterest: optionalDecimal,
+  taxExemptInterest: decimal,
   /** Line 2a: Child's ordinary dividends (Forms 1099-DIV Box 1a) */
   ordinaryDividends: optionalDecimal,
   /** Line 2b: Child's qualified dividends (subset of 2a, for proportional allocation) */
   qualifiedDividends: optionalDecimal,
   /** Line 3: Child's capital gain distributions (Forms 1099-DIV Box 2a) */
   capitalGainDistributions: optionalDecimal,
-});
+  /** Complete actual exempt-interest statements for the child's AMT preference. */
+  amtSources: z.object({
+    taxYear: z.union([z.literal(2025), z.literal(2026)]),
+    allStatementsConfirmed: z.literal(true),
+    statements: z.array(z.object({
+      sourceId: z.string().trim().min(1),
+      form: z.enum(["1099-INT", "1099-DIV"]),
+      taxExemptInterest: decimal,
+      /** Actual INT box9 or DIV box13; never inferred from exempt interest. */
+      specifiedPrivateActivityBondInterest: decimal,
+    })),
+    otherwiseAllowableDeduction: decimal,
+    deductionSourceReference: z.string().trim().min(1).optional(),
+    deductionAllowanceAndNoDuplicationConfirmed: z.literal(true).optional(),
+  }).optional(),
+}));
 export type Form8814ChildInput = z.infer<typeof Form8814ChildSchema>;
 
 /**
@@ -4149,9 +6131,126 @@ export const NYIT201FullReturnInputSchema = z.object({
 });
 export type NYIT201FullReturnInputDocument = z.infer<typeof NYIT201FullReturnInputSchema>;
 
+/** Schedule 1-A qualification facts. Absence is unknown, never assumed eligible. */
+const schedule1AMoney = decimal.refine((value) => d(value).isFinite() && d(value).gte(0), "Amount must be finite and nonnegative");
+const schedule1AOwner = z.enum(["primary", "spouse"]);
+const schedule1ADate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date").refine((value) => {
+  const parsed = new Date(`${value}T00:00:00Z`);
+  return Number.isFinite(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value;
+}, "Invalid calendar date");
+const schedule1ATipFacts = {
+  owner: schedule1AOwner,
+  occupationCode: z.string().regex(/^\d{3}$/),
+  eligibleOccupation: z.boolean(),
+  voluntaryCashTips: z.boolean(),
+  lawfulActivity: z.boolean(),
+  meetsSstbRuleOrTransition: z.boolean(),
+};
+export const Schedule1ASchema = z.object({
+  sourceTaxYear: z.number().int().optional(),
+  sourceReference: z.string().trim().min(1).optional(),
+  sourceFactsConfirmed: z.boolean().optional(),
+  allSourcesIncluded: z.boolean().optional(),
+  primarySsnEligible: z.boolean(),
+  spouseSsnEligible: z.boolean().optional(),
+  excludedPuertoRicoIncome: schedule1AMoney,
+  form4563Exclusion: schedule1AMoney,
+  employeeTips: z.array(z.object({
+    ...schedule1ATipFacts,
+    employer: z.string().trim().min(1),
+    w2SourceIds: z.array(z.string().trim().min(1)).optional(),
+    form4137EmployerSourceId: z.string().trim().min(1).optional(),
+    reportingMethod: z.enum(["w2", "employer_statement", "form4070", "form4137"]).optional(),
+    reportingSourceReference: z.string().trim().min(1).optional(),
+    reportedEmployerTips: schedule1AMoney.optional(),
+    qualifiedW2Tips: schedule1AMoney,
+    qualifiedForm4137Tips: schedule1AMoney,
+  })),
+  businessTips: z.array(z.object({
+    ...schedule1ATipFacts,
+    businessName: z.string().trim().min(1),
+    businessSourceId: z.string().trim().min(1).optional(),
+    reportedTipSources: z.array(z.object({ sourceId: z.string().trim().min(1), qualifiedTips: schedule1AMoney })).optional(),
+    qualifiedReportedTips: schedule1AMoney,
+    netProfit: decimal.optional(),
+    otherAllocableDeductions: schedule1AMoney.optional(),
+  })),
+  overtime: z.array(z.object({
+    owner: schedule1AOwner,
+    qualifiedPremium: schedule1AMoney,
+    reportedCompensation: schedule1AMoney,
+    compensationExcludedFromWages: schedule1AMoney.optional(),
+    requiredByFlsa: z.boolean(),
+    compensationSourceId: z.string().trim().min(1).optional(),
+    reportingSourceReference: z.string().trim().min(1).optional(),
+  }).refine((value) => d(value.qualifiedPremium).lte(value.reportedCompensation), "Premium exceeds reported compensation")),
+  vehicleLoans: z.array(z.object({
+    owner: schedule1AOwner.optional(),
+    lenderName: z.string().trim().min(1).optional(),
+    loanAccountReference: z.string().trim().min(1).optional(),
+    sourceTaxYear: z.number().int().optional(),
+    sourceReference: z.string().trim().min(1).optional(),
+    borrowerQualificationConfirmed: z.boolean().optional(),
+    vin: z.string().regex(/^[A-HJ-NPR-Z0-9]{17}$/, "VIN must contain 17 valid characters"),
+    acquiredDate: schedule1ADate,
+    loanOriginationDate: schedule1ADate,
+    interestPaid: schedule1AMoney,
+    businessInterestDeducted: schedule1AMoney,
+    nonqualifyingInterest: schedule1AMoney,
+    firstLien: z.boolean(),
+    originalUse: z.boolean(),
+    finalAssemblyUnitedStates: z.boolean(),
+    personalUse: z.boolean(),
+    vehicleType: z.enum(["car", "minivan", "van", "sport_utility_vehicle", "pickup_truck", "motorcycle"]),
+    grossVehicleWeightRating: z.number().int().positive(),
+    relatedParty: z.boolean(),
+    lease: z.boolean(),
+    fleet: z.boolean(),
+    salvageOrScrap: z.boolean(),
+    refinanced: z.boolean(),
+    refinancingSources: VehicleRefinancingSourcesSchema.optional(),
+  }).refine((value) => d(value.businessInterestDeducted).plus(value.nonqualifyingInterest).lte(value.interestPaid), "Excluded interest exceeds interest paid")),
+  seniorOwners: z.array(schedule1AOwner),
+}).superRefine((facts, ctx) => {
+  for (const [name, entries] of [
+    ["employeeTips", facts.employeeTips.map((entry) => `${entry.owner}:${entry.employer.toLowerCase()}`)],
+    ["businessTips", facts.businessTips.map((entry) => `${entry.owner}:${entry.businessName.toLowerCase()}`)],
+    ["vehicleLoans", facts.vehicleLoans.map((entry) => entry.vin)],
+    ["seniorOwners", facts.seniorOwners],
+  ] as const) {
+    if (new Set(entries).size !== entries.length) ctx.addIssue({ code: z.ZodIssueCode.custom, path: [name], message: `Duplicate ${name} entry` });
+  }
+});
+export type Schedule1AInput = z.infer<typeof Schedule1ASchema>;
+
 /** Complete input for a tax year */
 export const TaxYearInputSchema = z.object({
   taxpayer: TaxpayerSchema,
+  ohioResidency: OhioResidencyFactsSchema.optional(),
+  ohioPayments: OhioPaymentFactsSchema.optional(),
+  ohioReturnHeaderSources: OhioReturnHeaderSourcesSchema.optional(),
+  ohioSchoolDistrict: OhioSchoolDistrictFactsSchema.optional(),
+  paResidencySources: PAResidencySourcesSchema.optional(),
+  paReciprocitySources: PAReciprocitySourcesSchema.optional(),
+  paOrdinaryReturnFacts: PAOrdinaryReturnFactsSchema.optional(),
+  paMarriedOrdinarySources: PAMarriedOrdinarySourcesSchema.optional(),
+  paOrdinaryReturnCompletionSources: PAOrdinaryReturnCompletionSourcesSchema.optional(),
+  qofDispositionFacts: z.object({
+    sourceTaxYear: z.number().int().optional(),
+    sourceReference: z.string().optional(),
+    sourceFactsConfirmed: z.boolean().optional(),
+    allInvestmentsReviewed: z.boolean().optional(),
+    disposedOfQofInvestment: z.boolean().optional(),
+    deferredGainHeldAtYearEnd: z.boolean().optional(),
+    investments: z.array(QofInvestmentSourceSchema).optional(),
+  }).optional(),
+  childTaxCredit: z.object({
+    bonaFidePuertoRicoResident: z.boolean().optional(),
+    puertoRicoExcludedIncome: decimal.refine(value => d(value).gte(0), "Must be nonnegative").optional(),
+    form4563ExcludedIncome: decimal.refine(value => d(value).gte(0), "Must be nonnegative").optional(),
+    possessionIncomeExclusion: decimal.refine(value => d(value).gte(0), "Must be nonnegative").optional(),
+    nonTaxableCombatPayElection: decimal.refine(value => d(value).gte(0), "Must be nonnegative").optional(),
+  }).optional(),
   w2s: z.array(W2Schema).default([]),
   form1099Int: z.array(Form1099IntSchema).default([]),
   form1099Div: z.array(Form1099DivSchema).default([]),
@@ -4165,6 +6264,8 @@ export const TaxYearInputSchema = z.object({
   form1099K: z.array(Form1099KSchema).default([]),
   form1099C: z.array(Form1099CSchema).default([]),
   codExclusion: CodExclusionSchema.optional(),
+  form982NolSources: Form982NolSourcesSchema.optional(),
+  form982AttributeSources: Form982AttributeSourcesSchema.optional(),
   form1099Q: z.array(Form1099QSchema).default([]),
   qualifiedEducationExpenses: QualifiedEducationExpenseSummarySchema.optional(),
   form1099R: z.array(Form1099RSchema).optional(),
@@ -4172,15 +6273,19 @@ export const TaxYearInputSchema = z.object({
   formSSA1099: z.array(FormSSA1099Schema).optional(),
   formRRB1099: z.array(FormRRB1099Schema).optional(),
   form4137: Form4137Schema.optional(),
+  form4137ByOwner: z.object({ primary: Form4137Schema.optional(), spouse: Form4137Schema.optional() }).optional(),
   form8919: Form8919Schema.optional(),
   socialSecurityLumpSumElection: SocialSecurityLumpSumElectionSchema.optional(),
+  socialSecurityFacts: SocialSecurityFactsSchema.optional(),
   form4562: Form4562Schema.optional(),
   form4797: Form4797Schema.optional(),
   form8801: Form8801Schema.optional(),
   form8880: Form8880Schema.optional(),
   form5329: Form5329Schema.optional(),
+  form5329HsaByOwner: Form5329HsaByOwnerSchema.optional(),
   form8606: Form8606Schema.optional(),
   form8606ByOwner: Form8606ByOwnerSchema.optional(),
+  iraBasisSources: IraBasisSourcesSchema.optional(),
   form8889: Form8889Schema.optional(),
   form8889ByOwner: Form8889ByOwnerSchema.optional(),
   paScheduleGLStatements: z.array(PAScheduleGLStatementSchema).optional(),
@@ -4191,46 +6296,91 @@ export const TaxYearInputSchema = z.object({
   scheduleK1: z.array(ScheduleK1Schema).default([]),
   scheduleK1Form1041: z.array(ScheduleK1Form1041Schema).default([]),
   form1098: z.array(Form1098Schema).default([]),
+  mortgageInterestWorksheet: MortgageInterestWorksheetSchema.optional(),
   form1098E: z.array(Form1098ESchema).default([]),
+  studentLoanInterestFacts: StudentLoanInterestFactsSchema.optional(),
   form1095A: z.array(Form1095ASchema).default([]),
+  form8962: Form8962Schema.optional(),
   donations: z.array(CharitableDonationSchema).default([]),
   rentalProperties: z.array(RentalPropertySchema).default([]),
+  royaltyPropertySources: RoyaltyPropertySourcesSchema.optional(),
   scheduleC: ScheduleCInputSchema.optional(),
   scheduleF: ScheduleFInputSchema.optional(),
+  qbiDeductionAllocations: QBIDeductionAllocationsSchema.optional(),
   dependentCare: DependentCareSchema.optional(),
+  dependentCareBenefits: DependentCareBenefitsSchema.optional(),
+  standardDeductionFacts: StandardDeductionFactsSchema.optional(),
+  deductionElection: z.enum(["automatic", "standard", "itemized", "nonitemized"]).optional(),
   educationExpenses: EducationExpensesSchema.optional(),
   priorYear: PriorYearCarryforwardSchema.optional(),
+  netOperatingLoss: NetOperatingLossSourcesSchema.optional(),
+  charitableCarryoverSources: CharitableCarryoverSourcesSchema.optional(),
+  k1CharitableSources: K1CharitableReturnSourcesSchema.optional(),
+  qbiLossSources: QbiLossSourcesSchema.optional(),
+  form172: Form172OriginSourcesSchema.optional(),
   adjustments: AdjustmentsSchema.optional(),
+  form2210: Form2210Schema.optional(),
   scheduleA: ScheduleAInputSchema.optional(),
+  schedule1A: Schedule1ASchema.optional(),
   salesTaxDeduction: SalesTaxDeductionSchema.optional(),
   energyCredits: EnergyCreditsSchema.optional(),
   form8936: Form8936Schema.optional(),
   savingsBondRedemptions: z.array(SavingsBondRedemptionSchema).default([]),
+  form8815: Form8815Schema.optional(),
   iraDeductionWorksheet: IraDeductionWorksheetSchema.optional(),
   eic: EicConfigSchema.optional(),
   scheduleR: ScheduleRInputSchema.optional(),
   scheduleH: ScheduleHSchema.optional(),
   form2555: Form2555Schema.optional(),
+  foreignTaxElection: ForeignTaxElectionSchema.optional(),
+  form8960Sources: Form8960SourcesSchema.optional(),
   form4684: Form4684Schema.optional(),
+  form461: Form461SourceSchema.optional(),
   form4952: Form4952InputSchema.optional(),
+  form4952Amt: Form4952InputSchema.optional(),
+  amtCapitalGains: AMTCapitalGainsSchema.optional(),
   form6252: z.array(Form6252Schema).default([]),
   form6781: Form6781Schema.optional(),
   form8615: Form8615Schema.optional(),
   form8814: z.array(Form8814ChildSchema).default([]),
+  scheduleDSpecialGainSources: ScheduleDSpecialGainSourcesSchema.optional(),
+  section1202Sources: Section1202SourcesSchema.optional(),
   form8839: Form8839Schema.optional(),
   form3800: Form3800Schema.optional(),
   form3903: Form3903Schema.optional(),
   seHealthInsuranceWorksheet: SEHealthInsuranceWorksheetSchema.optional(),
+  form7206: Form7206Schema.optional(),
   scheduleJ: ScheduleJSchema.optional(),
   homeSales: z.array(HomeSaleSchema).default([]),
   form8915F: Form8915FSchema.optional(),
   taxableRefundWorksheet: TaxableRefundWorksheetSchema.optional(),
+  taxableStateRefundRecoveries: TaxableStateRefundRecoveriesSchema.optional(),
+  rrtaPayrollSources: RRTAPayrollSourcesSchema.optional(),
   form8824: z.array(Form8824Schema).default([]),
   cryptoIncome: CryptoIncomeInputSchema.optional(),
   stateReturns: z.object({
     illinois: IllinoisStateReturnInputSchema.optional(),
   }).optional(),
 }).superRefine((value, ctx) => {
+  // Do not silently consume or ignore standalone passenger facts in a full return.
+  if (value.form4562?.passengerFirstYearSources !== undefined || value.scheduleC?.sourceFacts?.passengerFirstYear !== undefined) {
+    try { calculateScheduleCPassengerSources(value,value.scheduleC); }
+    catch { ctx.addIssue({ code: "custom", path: ["form4562", "passengerFirstYearSources"], message: "Passenger worksheet requires complete actual Schedule C parent and income sources" }); }
+  }
+  value.rentalProperties.forEach((property, index) => {
+    if (property.form4562?.passengerFirstYearSources !== undefined) ctx.addIssue({ code: "custom", path: ["rentalProperties", index, "form4562", "passengerFirstYearSources"], message: "Standalone passenger worksheet requires a separate rental owner/activity bridge" });
+  });
+  if (value.form4137 !== undefined && value.form4137ByOwner !== undefined) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["form4137ByOwner"], message: "Use either form4137 or form4137ByOwner, not both" });
+  }
+  if (value.form4137ByOwner?.spouse && (!value.taxpayer.spouse || value.taxpayer.filingStatus !== "married_filing_jointly")) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["form4137ByOwner", "spouse"], message: "A separate spouse Form4137 requires an actual spouse and joint return" });
+  }
+  for (const owner of ["primary", "spouse"] as const) {
+    if (value.form4137ByOwner?.[owner] && value.form4137ByOwner[owner].accountHolder !== owner) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["form4137ByOwner", owner], message: "Form4137 record owner must match its actual household owner" });
+    }
+  }
   if (value.form8606 !== undefined && value.form8606ByOwner !== undefined) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
@@ -4411,6 +6561,7 @@ export type Form1099SA = z.infer<typeof Form1099SASchema>;
 export type FormSSA1099 = z.infer<typeof FormSSA1099Schema>;
 export type FormRRB1099 = z.infer<typeof FormRRB1099Schema>;
 export type Form4137Input = z.infer<typeof Form4137Schema>;
+export type Form4137SourceFacts = z.infer<typeof Form4137SourceFactsSchema>;
 export type Form8919Input = z.infer<typeof Form8919Schema>;
 export type SocialSecurityLumpSumElection = z.infer<typeof SocialSecurityLumpSumElectionSchema>;
 export type SocialSecurityLumpSumElectionYear = z.infer<typeof SocialSecurityLumpSumElectionYearSchema>;
@@ -4447,6 +6598,7 @@ export type PriorYearCarryforward = z.infer<typeof PriorYearCarryforwardSchema>;
 export type Adjustments = z.infer<typeof AdjustmentsSchema>;
 export type RentalProperty = z.infer<typeof RentalPropertySchema>;
 export type DependentCare = z.infer<typeof DependentCareSchema>;
+export type DependentCareBenefits = z.infer<typeof DependentCareBenefitsSchema>;
 export type EducationExpenses = z.infer<typeof EducationExpensesSchema>;
 export type EnergyCredits = z.infer<typeof EnergyCreditsSchema>;
 export type SavingsBondRedemption = z.infer<typeof SavingsBondRedemptionSchema>;

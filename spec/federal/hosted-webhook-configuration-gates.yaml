@@ -1,0 +1,46 @@
+form: "Hosted-Webhook-Configuration-Gates"
+fullName: "Hosted webhook configuration gates before raw-body authentication or effects"
+taxYear: 2026
+reference: "apps/web/src/lib/hosted-server-db.ts; apps/web/src/lib/hosted-billing.ts; apps/web/src/lib/hosted-runtime-safety.ts"
+notes: |
+  Source-first controls against the existing route API, baseline 5996cbda.
+  Hosted production must honor the actual database and billing blocked flags.
+  Preview requires its isolated staging database; DATABASE_URL cannot substitute.
+  Failure returns 503 before reading raw body, invoking signature construction,
+  constructing Stripe SDK clients, reconciling, writing receipts/credits or memory.
+  Rate limiting remains before configuration checks and is mocked allowed here.
+  Required production billing inputs are key, Starter price, Plus price, signing
+  secret and valid application origin. Preview origin follows Vercel metadata.
+  No invented SSL validator: current database config does not classify invalid
+  SSL modes as blocked. That separate source gap is outside this package.
+  Positive adapters do not establish actual SDK authentication, DB atomicity,
+  provider connectivity, live entitlement or deployment configuration.
+lines:
+  - line: "database-gates"
+    description: "Unavailable durable hosted database fails closed"
+    formula: "Missing production DB, missing isolated Preview DB despite general DB, or malformed isolated Preview DB ->503 before body/auth/effects; explicitly injected memory cannot override."
+    testRef: "tests/apps/web/hosted-webhook-configuration-gates.test.ts::blocks unavailable hosted configuration before authentication or effects: %s"
+  - line: "billing-gates"
+    description: "Existing required billing configuration is respected"
+    formula: "Missing key, Starter price, Plus price, signing secret, app origin or invalid origin; invalid Preview origin ->503 before raw body/SDK/effects, preserving the existing key-mode guard."
+    testRef: "tests/apps/web/hosted-webhook-configuration-gates.test.ts::blocks unavailable hosted configuration before authentication or effects: %s"
+  - line: "configured"
+    description: "Configured hosted production and isolated Preview retain the atomic injected boundary"
+    formula: "Valid production or isolated Preview ->200, exact raw body passed once to constructor, same synthetic owner/customer/subscription reconciled once, no memory or legacy side effects."
+    testRef: "tests/apps/web/hosted-webhook-configuration-gates.test.ts::preserves configured injected atomic reconciliation: %s"
+  - line: "development"
+    description: "Explicit development memory remains available"
+    formula: "Hosted development without production DB/billing prerequisites, valid signing secret, explicit memory store ->200 and one exact active record; no durable adapter/receipt/credit call."
+    testRef: "tests/apps/web/hosted-webhook-configuration-gates.test.ts::preserves explicit hosted development memory without production prerequisites"
+  - line: "selfhost"
+    description: "Self-host production bypass remains before hosted configuration"
+    formula: "Self-host production with no hosted prerequisites ->200 bypass, body unread, no signature/SDK/effects."
+    testRef: "tests/apps/web/hosted-webhook-configuration-gates.test.ts::preserves production self-host bypass before hosted configuration"
+  - line: "configured-production-signatures"
+    description: "Complete production configuration retains real SDK raw-payload authentication and signed event mode binding"
+    formula: "For test and live keys matching explicit billing mode, with both prices, signing secret, valid app URL and DB present, actual SDK signature verification accepts matching subscription/credit events 200 and rejects opposite/absent/malformed livemode 400 before effects. Synthetic keys and local SDK only; no provider HTTP."
+    testRef: "tests/apps/web/hosted-billing-mode-binding.test.ts::rejects opposite or malformed signed modes with fully configured production: %s"
+  - line: "configured-production-matching"
+    description: "Complete hosted production configuration reaches the injected atomic/credit adapters"
+    formula: "Matching test/live signed event returns200; exactly one receipt and exact subscription/credit write; no outbound SDK operation. Keyless legacy signed payloads remain unchanged but explicitly use development, not production."
+    testRef: "tests/apps/web/hosted-billing-mode-binding.test.ts::accepts matching signed modes with fully configured production: %s"

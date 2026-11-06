@@ -1,3 +1,4 @@
+import { reachFilingStatus } from "./guided-fixtures";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { expect, test } from "@playwright/test";
@@ -14,8 +15,9 @@ async function enableAdvancedMode(page: import("@playwright/test").Page) {
 
 async function reachGuidedW2Step(page: import("@playwright/test").Page) {
   await page.goto("/returns/new");
-  await expect(page).toHaveURL(/\/returns\/[a-z0-9-]+(?:\?create=1)?$/i);
+  await expect(page).toHaveURL(/\/returns\/(?!new(?:[/?#]|$))[a-z0-9-]+(?:\?create=1)?$/i);
 
+  await reachFilingStatus(page);
   await page.getByRole("radio", { name: /single/i }).click();
   await page.getByRole("button", { name: "Continue" }).click();
   await page.getByRole("checkbox", { name: /w-2 wages/i }).check();
@@ -32,7 +34,7 @@ test("advanced upload rejects future-year official sample PDFs before they chang
   await enableAdvancedMode(page);
 
   await page.getByRole("button", { name: /start your tax return/i }).click();
-  await expect(page).toHaveURL(/\/returns\/[a-z0-9-]+$/i);
+  await expect(page).toHaveURL(/\/returns\/(?!new(?:[/?#]|$))[a-z0-9-]+$/i);
 
   await page.locator('input[type="file"]').setInputFiles(path.join(sampleDocsDir, "irs-w2-2026.pdf"));
 

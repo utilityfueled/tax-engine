@@ -9,13 +9,14 @@ import {
 } from "./hosted-persistence-registry";
 import {
   checkRateLimitForEnvironment,
+  rateLimitUnavailableResponse,
   createRateLimitStore,
   rateLimitTiers,
   registerStoreForCleanup,
   resolveClientIdentifier,
   type RateLimitStore
 } from "./rate-limit";
-import { safeParseJsonBody } from "./safe-body-parser";
+import { safeParseJsonBody, safeReadBinaryBody } from "./safe-body-parser";
 import {
   createWorkspacePersistenceAdapter,
   resolveHostedDocumentBlobStore,
@@ -65,6 +66,18 @@ interface HostedWorkspaceRouteDependencies {
 
 export interface HostedWorkspaceRouteContext {
   workspaceId: string;
+}
+
+function privateWorkspaceResponse<Arguments extends unknown[], Result extends Response | undefined>(
+  handler: (...args: Arguments) => Promise<Result>
+) {
+  return async (...args: Arguments): Promise<Result> => {
+    const response = await handler(...args);
+    if (response !== undefined) {
+      response.headers.set("Cache-Control", "private, no-store, max-age=0");
+    }
+    return response;
+  };
 }
 
 function buildOwnerRequiredResponse() {
@@ -160,25 +173,30 @@ async function createHostedAdapter(
     } as const;
   }
 
-  const actor = await resolveHostedWorkspaceActor({
-    env,
-    requestHeaders: request.headers
-  });
+  let actor: Awaited<ReturnType<typeof resolveHostedWorkspaceActor>>;
+  try {
+    actor = await resolveHostedWorkspaceActor({
+      env,
+      requestHeaders: request.headers
+    });
 
-  if (!actor) {
-    return {
-      response: buildOwnerRequiredResponse()
-    } as const;
-  }
-
-  if (!env.TAX_ENGINE_HOSTED_PREVIEW_ACTOR_ID?.trim()) {
-    const { entitlement } = await getHostedEntitlementByOwnerId(env, actor.id);
-
-    if (!entitlement.workspaceAccess) {
+    if (!actor) {
       return {
-        response: buildPlanRequiredResponse()
+        response: buildOwnerRequiredResponse()
       } as const;
     }
+
+    if (!env.TAX_ENGINE_HOSTED_PREVIEW_ACTOR_ID?.trim()) {
+      const { entitlement } = await getHostedEntitlementByOwnerId(env, actor.id);
+
+      if (!entitlement.workspaceAccess) {
+        return {
+          response: buildPlanRequiredResponse()
+        } as const;
+      }
+    }
+  } catch (error) {
+    return { response: buildPersistenceUnavailableResponse(error) } as const;
   }
 
   const hostedStoreFactory = dependencies.hostedStoreFactory
@@ -227,12 +245,18 @@ async function createHostedAdapter(
 }
 
 const WORKSPACE_SAVE_MAX_BODY_SIZE = 5 * 1024 * 1024; // 5 MB
+// Leave room below Vercel's 4.5 MB ingress limit for app-level JSON rejection.
+const VERCEL_WORKSPACE_SAVE_MAX_BODY_SIZE = 4 * 1024 * 1024;
 
 async function readWorkspaceSnapshotFromRequest(
   request: Request,
-  workspaceId: string
+  workspaceId: string,
+  env: HostedWorkspaceRouteEnvironment
 ) {
-  const parsed = await safeParseJsonBody(request, WORKSPACE_SAVE_MAX_BODY_SIZE);
+  const maxBodySize = env.VERCEL === "1"
+    ? VERCEL_WORKSPACE_SAVE_MAX_BODY_SIZE
+    : WORKSPACE_SAVE_MAX_BODY_SIZE;
+  const parsed = await safeParseJsonBody(request, maxBodySize);
 
   if (!parsed.ok) {
     return {
@@ -305,17 +329,24 @@ async function readWorkspaceSnapshotFromRequest(
 }
 
 const DOCUMENT_UPLOAD_MAX_SIZE_BYTES = 25 * 1024 * 1024; // 25 MB
+// Conservative app policy below Vercel's documented 4.5 MB request limit.
+const VERCEL_DOCUMENT_MAX_SIZE_BYTES = 4 * 1024 * 1024;
+const VERCEL_DOCUMENT_MAX_REQUEST_BYTES = VERCEL_DOCUMENT_MAX_SIZE_BYTES + 256 * 1024;
 
 /** Maximum time to wait for multipart form data to arrive before aborting (30 seconds). */
 const FORM_DATA_READ_TIMEOUT_MS = 30_000;
 
-function withFormDataTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+function withFormDataTimeout<T>(promise: Promise<T>, ms: number, signal: AbortSignal): Promise<T> {
   return new Promise<T>((resolve, reject) => {
-    const timer = setTimeout(() => reject(new Error("Form data read timed out.")), ms);
+    const abort = () => { cleanup(); reject(new Error("Request cancelled.")); };
+    const timer = setTimeout(() => { cleanup(); reject(new Error("Form data read timed out.")); }, ms);
+    function cleanup() { clearTimeout(timer); signal.removeEventListener("abort", abort); }
+    signal.addEventListener("abort", abort, { once: true });
+    if (signal.aborted) abort();
 
     promise.then(
-      (value) => { clearTimeout(timer); resolve(value); },
-      (error) => { clearTimeout(timer); reject(error); }
+      (value) => { cleanup(); resolve(value); },
+      (error) => { cleanup(); reject(error); }
     );
   });
 }
@@ -437,29 +468,41 @@ const DOCUMENT_UPLOAD_MAX_REQUEST_SIZE = DOCUMENT_UPLOAD_MAX_SIZE_BYTES + 1024 *
 async function readHostedDocumentBlobFromRequest(
   request: Request,
   workspaceId: string,
-  now: () => string
+  now: () => string,
+  env: HostedWorkspaceRouteEnvironment
 ) {
-  const contentLength = request.headers.get("content-length");
-
-  if (contentLength) {
-    const declaredSize = parseInt(contentLength, 10);
-
-    if (!Number.isNaN(declaredSize) && declaredSize > DOCUMENT_UPLOAD_MAX_REQUEST_SIZE) {
-      return {
-        response: buildBadRequestResponse(
-          "Uploaded file exceeds the 25 MB size limit."
-        )
-      } as const;
-    }
+  const vercelHosted = resolveDeploymentMode(env) === "hosted"
+    && (env.VERCEL === "1" || ["preview", "production", "development"].includes(env.VERCEL_ENV ?? ""));
+  const fileLimit = vercelHosted ? VERCEL_DOCUMENT_MAX_SIZE_BYTES : DOCUMENT_UPLOAD_MAX_SIZE_BYTES;
+  const requestLimit = vercelHosted ? VERCEL_DOCUMENT_MAX_REQUEST_BYTES : DOCUMENT_UPLOAD_MAX_REQUEST_SIZE;
+  const tooLarge = () => vercelHosted
+    ? NextResponse.json({ error: "Uploaded file or multipart request exceeds the hosted upload limit. Maximum file size is 4 MiB." }, { status: 413 })
+    : buildBadRequestResponse("Uploaded file exceeds the 25 MB size limit.");
+  const deadline = Date.now() + FORM_DATA_READ_TIMEOUT_MS;
+  const body = await safeReadBinaryBody(request, requestLimit, FORM_DATA_READ_TIMEOUT_MS);
+  if (!body.ok) {
+    return { response: body.status === 413
+      ? tooLarge()
+      : body.status === 499
+        ? NextResponse.json({ error: "Request cancelled." }, { status: 499 })
+        : buildBadRequestResponse("Hosted document uploads require multipart form data with a file.") } as const;
   }
 
   let formData: FormData;
 
   try {
-    formData = await withFormDataTimeout(request.formData(), FORM_DATA_READ_TIMEOUT_MS);
+    const remaining = deadline - Date.now();
+    if (remaining <= 0) throw new Error("Form data read timed out.");
+    // Only bounded, byte-exact input reaches multipart parsing. Parsing shares
+    // the original read deadline rather than receiving another 30 seconds.
+    formData = await withFormDataTimeout(new Response(body.bytes, {
+      headers: { "content-type": request.headers.get("content-type") ?? "" }
+    }).formData(), remaining, request.signal);
   } catch {
     return {
-      response: buildBadRequestResponse(
+      response: request.signal.aborted
+        ? NextResponse.json({ error: "Request cancelled." }, { status: 499 })
+        : buildBadRequestResponse(
         "Hosted document uploads require multipart form data with a file."
       )
     } as const;
@@ -477,13 +520,7 @@ async function readHostedDocumentBlobFromRequest(
     } as const;
   }
 
-  if (file.size > DOCUMENT_UPLOAD_MAX_SIZE_BYTES) {
-    return {
-      response: buildBadRequestResponse(
-        "Uploaded file exceeds the 25 MB size limit."
-      )
-    } as const;
-  }
+  if (file.size > fileLimit) return { response: tooLarge() } as const;
 
   const mediaType = file.type?.toLowerCase().trim();
 
@@ -504,6 +541,9 @@ async function readHostedDocumentBlobFromRequest(
   }
 
   const fileBytes = new Uint8Array(await file.arrayBuffer());
+  if (request.signal.aborted) {
+    return { response: NextResponse.json({ error: "Request cancelled." }, { status: 499 }) } as const;
+  }
 
   if (!matchesMagicBytes(fileBytes, mediaType)) {
     return {
@@ -559,9 +599,11 @@ export function createHostedWorkspaceRouteHandlers(
     return checkRateLimitForEnvironment(uploadStore, `upload:${clientId}`, rateLimitTiers.upload, env);
   }
 
-  return {
+  const handlers = {
     async list(request: Request) {
       const rateCheck = await applyApiRateLimit(request);
+
+      if (rateCheck.unavailable) return rateLimitUnavailableResponse();
 
       if (!rateCheck.allowed) {
         return buildRateLimitResponse(rateCheck.retryAfterMs);
@@ -591,6 +633,8 @@ export function createHostedWorkspaceRouteHandlers(
       }
 
       const rateCheck = await applyApiRateLimit(request);
+
+      if (rateCheck.unavailable) return rateLimitUnavailableResponse();
 
       if (!rateCheck.allowed) {
         return buildRateLimitResponse(rateCheck.retryAfterMs);
@@ -642,6 +686,8 @@ export function createHostedWorkspaceRouteHandlers(
 
       const rateCheck = await applyApiRateLimit(request);
 
+      if (rateCheck.unavailable) return rateLimitUnavailableResponse();
+
       if (!rateCheck.allowed) {
         return buildRateLimitResponse(rateCheck.retryAfterMs);
       }
@@ -652,7 +698,9 @@ export function createHostedWorkspaceRouteHandlers(
         return result.response;
       }
 
-      const payload = await readWorkspaceSnapshotFromRequest(request, context.workspaceId);
+      const payload = await readWorkspaceSnapshotFromRequest(
+        request, context.workspaceId, dependencies.env ?? process.env
+      );
 
       if ("response" in payload) {
         return payload.response;
@@ -702,6 +750,8 @@ export function createHostedWorkspaceRouteHandlers(
 
       const rateCheck = await applyApiRateLimit(request);
 
+      if (rateCheck.unavailable) return rateLimitUnavailableResponse();
+
       if (!rateCheck.allowed) {
         return buildRateLimitResponse(rateCheck.retryAfterMs);
       }
@@ -737,6 +787,8 @@ export function createHostedWorkspaceRouteHandlers(
 
       const rateCheck = await applyUploadRateLimit(request);
 
+      if (rateCheck.unavailable) return rateLimitUnavailableResponse();
+
       if (!rateCheck.allowed) {
         return buildRateLimitResponse(rateCheck.retryAfterMs);
       }
@@ -750,7 +802,8 @@ export function createHostedWorkspaceRouteHandlers(
       const payload = await readHostedDocumentBlobFromRequest(
         request,
         context.workspaceId,
-        () => dependencies.now?.() ?? new Date().toISOString()
+        () => dependencies.now?.() ?? new Date().toISOString(),
+        dependencies.env ?? process.env
       );
 
       if ("response" in payload) {
@@ -771,5 +824,13 @@ export function createHostedWorkspaceRouteHandlers(
         return buildPersistenceUnavailableResponse(error);
       }
     }
+  };
+
+  return {
+    list: privateWorkspaceResponse(handlers.list),
+    get: privateWorkspaceResponse(handlers.get),
+    save: privateWorkspaceResponse(handlers.save),
+    delete: privateWorkspaceResponse(handlers.delete),
+    uploadDocument: privateWorkspaceResponse(handlers.uploadDocument)
   };
 }

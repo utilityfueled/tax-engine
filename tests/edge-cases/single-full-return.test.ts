@@ -1,3 +1,4 @@
+import { niitDispositionSources } from "../fixtures/niit-sources.js";
 /**
  * Single filer end-to-end test.
  * Mid-income single filer with diverse income: W-2, interest, dividends,
@@ -46,7 +47,7 @@ const singleFixture: TaxYearInput = {
     },
   ],
   form1099Int: [
-    {
+    { privateActivityBondInterest: "0",
       payer: "Savings Bank",
       interestIncome: "1500",
       federalWithheld: "0",
@@ -56,7 +57,7 @@ const singleFixture: TaxYearInput = {
     },
   ],
   form1099Div: [
-    {
+    { specifiedPrivateActivityBondInterest: "0",
       payer: "Brokerage",
       ordinaryDividends: "3000",
       qualifiedDividends: "2500",
@@ -145,7 +146,7 @@ const singleFixture: TaxYearInput = {
   ],
   form1095A: [],
   donations: [
-    {
+    { qualifiedOrganization: true, isPrivateFoundation: false,
       organization: "Local NPO",
       type: "cash",
       amount: "2000",
@@ -382,13 +383,9 @@ describe("Single filer - W-2 only, standard deduction (simplest return)", () => 
     expect(result.taxableIncome.toNumber()).toBe(59250);
   });
 
-  it("Form 1040 Line 16 - tax computed on $59,250 via single brackets", () => {
-    // 10% on $11,925 = $1,192.50
-    // 12% on ($48,475 - $11,925) = $4,386
-    // 22% on ($59,250 - $48,475) = $2,370.50
-    // Total = $7,949
-    const expected = d("1192.50").plus(d("4386")).plus(d("2370.50"));
-    expect(result.totalTaxBeforeCredits.toNumber()).toBe(expected.toNumber());
+  it("Form 1040 Line 16 - tax computed on $59,250 using the published single table row", () => {
+    // Final2025 Tax Table: at least59250 but less than59300, single column7955.
+    expect(result.totalTaxBeforeCredits.toString()).toBe("7955");
   });
 
   it("Form 1040 Line 21 - no credits", () => {
@@ -397,7 +394,7 @@ describe("Single filer - W-2 only, standard deduction (simplest return)", () => 
 
   it("Form 1040 Lines 34/37 - refund or owed computed correctly", () => {
     const eq = result.totalPayments.minus(result.refund).plus(result.amountOwed);
-    expect(result.totalTax.toNumber()).toBe(eq.toNumber());
+    expect(result.totalTax.plus(result.estimatedTaxPenalty).toNumber()).toBe(eq.toNumber());
   });
 
   it("no SE tax, no AMT, no NIIT, no Additional Medicare Tax", () => {
@@ -497,7 +494,7 @@ describe("Single filer - investment income triggering NIIT", () => {
       },
     ],
     form1099Div: [
-      {
+      { specifiedPrivateActivityBondInterest: "0",
         payer: "Vanguard",
         ordinaryDividends: "15000",
         qualifiedDividends: "12000",
@@ -512,7 +509,7 @@ describe("Single filer - investment income triggering NIIT", () => {
       },
     ],
     form1099Int: [
-      {
+      { privateActivityBondInterest: "0",
         payer: "HYSA",
         interestIncome: "5000",
         federalWithheld: "0",
@@ -644,7 +641,7 @@ describe("Single filer - capital gains and QDCG worksheet", () => {
       },
     ],
     form1099Div: [
-      {
+      { specifiedPrivateActivityBondInterest: "0",
         payer: "VTI Fund",
         ordinaryDividends: "2000",
         qualifiedDividends: "1800",
@@ -707,8 +704,8 @@ describe("Single filer - large charitable deductions (itemized)", () => {
       },
     ],
     donations: [
-      { organization: "Red Cross", type: "cash", amount: "12000", dateOfDonation: "2025-03-01", costBasis: "0" },
-      { organization: "Hospital Fund", type: "cash", amount: "5000", dateOfDonation: "2025-06-15", costBasis: "0" },
+      { qualifiedOrganization: true, isPrivateFoundation: false, organization: "Red Cross", type: "cash", amount: "12000", dateOfDonation: "2025-03-01", costBasis: "0" },
+      { qualifiedOrganization: true, isPrivateFoundation: false, organization: "Hospital Fund", type: "cash", amount: "5000", dateOfDonation: "2025-06-15", costBasis: "0" },
     ],
   });
   const result = calculateFederalTax(input);
@@ -775,7 +772,7 @@ describe("Single filer - education credits (AOTC)", () => {
 
   it("tax equation holds with education credits", () => {
     const eq = result.totalPayments.minus(result.refund).plus(result.amountOwed);
-    expect(result.totalTax.toNumber()).toBe(eq.toNumber());
+    expect(result.totalTax.plus(result.estimatedTaxPenalty).toNumber()).toBe(eq.toNumber());
   });
 });
 
@@ -825,8 +822,8 @@ describe("Single filer - with dependent child (CTC)", () => {
   });
   const result = calculateFederalTax(input);
 
-  it("Form 8812 - CTC = $2,000 per qualifying child", () => {
-    expect(result.childTaxCredit.toNumber()).toBe(2000);
+  it("Form 8812 - CTC = $2,200 per qualifying child", () => {
+    expect(result.childTaxCredit.toNumber()).toBe(2200);
   });
 
   it("Form 1040 Line 19 - nonrefundable CTC applied against tax", () => {
@@ -839,7 +836,7 @@ describe("Single filer - with dependent child (CTC)", () => {
 
   it("tax equation holds with CTC", () => {
     const eq = result.totalPayments.minus(result.refund).plus(result.amountOwed);
-    expect(result.totalTax.toNumber()).toBe(eq.toNumber());
+    expect(result.totalTax.plus(result.estimatedTaxPenalty).toNumber()).toBe(eq.toNumber());
   });
 });
 
@@ -864,7 +861,7 @@ describe("Single filer - foreign tax credit", () => {
       },
     ],
     form1099Div: [
-      {
+      { specifiedPrivateActivityBondInterest: "0",
         payer: "International Fund",
         ordinaryDividends: "5000",
         qualifiedDividends: "4000",
@@ -981,7 +978,7 @@ describe("Single filer - AMT triggered", () => {
       },
     ],
     donations: [
-      { organization: "Charity", type: "cash", amount: "5000", dateOfDonation: "2025-12-01", costBasis: "0" },
+      { qualifiedOrganization: true, isPrivateFoundation: false, organization: "Charity", type: "cash", amount: "5000", dateOfDonation: "2025-12-01", costBasis: "0" },
     ],
   });
   const result = calculateFederalTax(input);
@@ -1051,8 +1048,10 @@ describe("Single filer - estimated tax payments and underpayment penalty", () =>
     expect(result.estimatedTaxPenalty.gte(0)).toBe(true);
   });
 
-  it("Sched 2 - penalty included in additional taxes", () => {
-    expect(result.totalAdditionalTaxes.gte(result.estimatedTaxPenalty)).toBe(true);
+  it("Form1040 line38 carries penalty outside Schedule2 additional taxes", () => {
+    expect(result.allLines.find(line => line.form === "1040" && line.line === "38")?.value.toString()).toBe(result.estimatedTaxPenalty.toString());
+    expect(result.schedule2?.lines.find(line => line.line === "19")?.value.toString()).toBe("0");
+    expect(result.totalAdditionalTaxes.toString()).toBe(result.schedule2?.partIITotal.toString());
   });
 
   it("Form 1040 Line 37 - amount owed (insufficient payments)", () => {
@@ -1097,8 +1096,9 @@ describe("Single filer - very low income ($15K, near filing threshold)", () => {
   });
 
   it("Form 1040 Line 34 - full refund of withholding plus childless EIC", () => {
-    // $500 withholding + $314 childless EIC (7.65% phase-in/out, $15K income, age 35)
-    expect(result.refund.toNumber()).toBe(814);
+    // Final2025 Pub596 $15,000–$15,050 nonjoint/no-child column: $312.
+    // $500 actual withholding + $312 published EIC = $812.
+    expect(result.refund.toFixed()).toBe("812");
     expect(result.amountOwed.toNumber()).toBe(0);
   });
 });
@@ -1124,7 +1124,7 @@ describe("Single filer - very high income ($550K+ with surtaxes)", () => {
       },
     ],
     form1099Div: [
-      {
+      { specifiedPrivateActivityBondInterest: "0",
         payer: "Brokerage",
         ordinaryDividends: "50000",
         qualifiedDividends: "40000",
@@ -1299,7 +1299,7 @@ describe("Single filer - energy credits (Form 5695)", () => {
 
   it("tax equation holds with energy credits", () => {
     const eq = result.totalPayments.minus(result.refund).plus(result.amountOwed);
-    expect(result.totalTax.toNumber()).toBe(eq.toNumber());
+    expect(result.totalTax.plus(result.estimatedTaxPenalty).toNumber()).toBe(eq.toNumber());
   });
 });
 
@@ -1312,6 +1312,8 @@ describe("Single filer with business property sales", () => {
   // Exercises: Form 4797 Parts I/II/III → Schedule 1 Line 4 → Schedule D →
   // QDCG worksheet (unrecaptured §1250 at 25%) → correct final tax.
   const input = baseSingleFiler({
+    // Actual rental investment gain110,000; nonpassive equipment recapture8,000 excluded.
+    form8960Sources: niitDispositionSources("110000", "8000", "-8000"),
     w2s: [
       {
         employer: { name: "Employer Co", ein: "11-2233445" },
@@ -1388,6 +1390,7 @@ describe("Single filer with business property sales", () => {
   it("QDCG preferential rates produce lower tax than all-ordinary treatment", () => {
     // Compare against a hypothetical where $110K is ordinary instead of LTCG
     const allOrdinaryInput = baseSingleFiler({
+      form8960Sources: niitDispositionSources("0", "118000", "-118000"),
       w2s: [
         {
           employer: { name: "Employer Co", ein: "11-2233445" },
@@ -1416,7 +1419,7 @@ describe("Single filer with business property sales", () => {
             description: "All-ordinary hypothetical",
             costOrBasis: "250000",
             depreciationAllowed: "250000",
-            grossSalesPrice: "360000",
+            grossSalesPrice: "110000",
             propertyType: "section1245",
             heldMoreThanOneYear: true,
           },
@@ -1430,7 +1433,7 @@ describe("Single filer with business property sales", () => {
 
   it("tax equation holds", () => {
     const eq = result.totalPayments.minus(result.refund).plus(result.amountOwed);
-    expect(result.totalTax.toNumber()).toBe(eq.toNumber());
+    expect(result.totalTax.plus(result.estimatedTaxPenalty).toNumber()).toBe(eq.toNumber());
   });
 
   it("audit trail includes Form 4797 Part III entries", () => {

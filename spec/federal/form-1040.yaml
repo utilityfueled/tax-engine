@@ -2,10 +2,47 @@ form: "Form 1040"
 fullName: "U.S. Individual Income Tax Return"
 taxYear: 2025
 irsReference: "https://www.irs.gov/instructions/i1040"
+reviewPdfMapping:
+  source: "https://www.irs.gov/pub/irs-pdf/f1040.pdf"
+  sourceRevision: "2025 Form 1040, created 2025-09-05"
+  retrievedAt: "2026-10-24"
+  reviewStatus: "independent-review-pending"
+  rules:
+    - "Use the printed 2025 line locations, including page 2 deduction lines and 11b AGI repeat; no pre-2025 positions."
+    - "Dependent columns contain each person's first name, last name, SSN and relationship vertically; residency, student and credit checkboxes are distinct rows."
+    - "Map engine audit line values without recalculating tax; total deductions includes Schedule 1-A."
+    - "All five filing statuses have separate boxes; QSS must not select MFJ."
+    - "Review availability is not filing qualification, and taxpayer identifiers remain redacted by the web review path."
+  testRef: "tests/pdf/form-1040-source-mapping.test.ts::places simple return values on official 2025 printed lines after serialization"
 
 lines:
+  - line: "savings-bond-exclusion-addbacks"
+    description: "Actual exclusions are added back for education savings bond MAGI"
+    formula: "Pre-bond-exclusion AGI plus studentloaninterest deduction, net2555lines45+50, and actual8839benefit exclusion; possession exclusions require their separate actual source contract"
+    irsRef: "https://www.irs.gov/publications/p970, Education Savings Bond Program MAGI"
+    testRef: "tests/engine/federal-income-exclusion-addbacks.test.ts::restores actual foreign and adoption exclusions for savings bond MAGI"
+  - line: "foreign-income-source-routing"
+    description: "Actual foreign employment receipts absent from W2"
+    formula: "Add only confirmed foreignEmploymentIncomeNotOnW2 to line1h; retain actual W2 wages on1a. Amounts already in wages/business/partnership/other source records are not added again. Form2555 source tax year must match, source mapping must reconcile, and actual W2 attribution cannot exceed total W2 wages."
+    irsRef: "https://www.irs.gov/instructions/i1040gi, line1h; https://www.irs.gov/instructions/i2555"
+    testRef: "tests/engine/federal-foreign-income-routing.test.ts::adds only actual foreign employment income absent from W2"
+  - line: "foreign-income-tax-worksheet"
+    description: "Form2555 net exclusions and housing deduction determine tax stacking"
+    formula: "FEI worksheet1=1040line15;2a=2555lines45+50;2b=actual disallowed itemized deductions/exclusions;2c=max(0,2a-2b);3=1+2c;4=applicable tax on3;5=ordinary tax on2c;6=max(0,4-5). If taxable income is zero, tax is zero. Capital-gain excess reduces preferential income before the stacked computation."
+    irsRef: "https://www.irs.gov/instructions/i1040gi, Foreign Earned Income Tax Worksheet"
+    testRef: "tests/engine/federal-foreign-income-routing.test.ts::uses net exclusions and actual disallowed deductions in the foreign income tax worksheet"
+  - line: "foreign-income-capital-gain-excess"
+    description: "Capital gain excess adjustment in the foreign earned income tax worksheet"
+    formula: "When preferential gains exceed actual1040taxable income, reduce netlongterm gains first and qualified dividends next by the excess before taxing the stacked amount; no preferential income is restored by adding excluded foreign income. Zero1040taxable income produces zero tax."
+    irsRef: "https://www.irs.gov/instructions/i1040gi, Foreign Earned Income Tax Worksheet footnote"
+    testRef: "tests/engine/federal-foreign-income-routing.test.ts::limits preferential gains to actual taxable income before foreign stacking"
+  - line: "foreign-income-education-magi"
+    description: "Education MAGI adds actual net2555amounts"
+    formula: "Education MAGI adds Form2555lines45+50 to AGI, not grossline43; Pub970 Worksheets2-1 and3-1"
+    irsRef: "https://www.irs.gov/publications/p970"
+    testRef: "tests/engine/federal-foreign-income-routing.test.ts::uses net Form2555 amounts for education MAGI"
   # ── Digital Asset Question ─────────────────────────────
-  - line: "1a-digital-asset"
+  - line: "digital-asset"
     description: "Digital asset question"
     formula: |
       Answer "Yes" if any of:
@@ -13,7 +50,7 @@ lines:
       - Any capitalTransaction has digitalAsset = true
       - cryptoIncome has any mining, staking, or airdrop entries
       Otherwise "No".
-    irsRef: "Form 1040 Instructions, Line 1a — At any time during the tax year, did you receive, sell, exchange, gift, or otherwise dispose of a digital asset?"
+    irsRef: "Form 1040 Instructions, Digital Assets — At any time during the tax year, did you receive, sell, exchange, gift, or otherwise dispose of a digital asset?"
     edgeCases:
       - "Holding digital assets without disposing does not trigger 'Yes' unless received during the year"
       - "NFT transactions count as digital asset activity"
@@ -325,7 +362,7 @@ lines:
   # ── Tax ──────────────────────────────────────────────────
   - line: "16"
     description: "Tax"
-    formula: "QDCG worksheet if qualified dividends/LTCG > 0, else Tax Table/brackets"
+    formula: "Applicable QDCG or ScheduleD Tax Worksheet; ordinary steps use final-year Tax Table below100000 and Tax Computation Worksheet otherwise. Foreign exclusions use the same sources for both stacked and excluded income. Final2026 table remains unavailable: indexed-rate preview is explicitly unqualified."
     irsRef: "Form 1040 Instructions, Line 16; QDCG Worksheet"
     inputs:
       - "Line 15 (taxable income)"
@@ -402,7 +439,7 @@ lines:
   # ── Additional Taxes ─────────────────────────────────────
   - line: "23"
     description: "Other taxes (Schedule 2)"
-    formula: "Schedule 2 total including AMT, excess advance premium tax credit repayment, SE tax, Form 5329 retirement-plan additional tax, Additional Medicare Tax, NIIT, Form 8889 HSA distribution additional tax, Form 8889 testing-period recapture tax, and other implemented additional taxes"
+    formula: "Schedule 2 Part II total excluding AMT, excess advance premium tax credit repayment and Form 2210 penalty, including SE tax, Form 5329 retirement-plan additional tax, Additional Medicare Tax, NIIT, Form 8889 HSA distribution additional tax, Form 8889 testing-period recapture tax, and other implemented additional taxes"
     irsRef: "Form 1040 Instructions, Line 23; Schedule 2"
     inputs:
       - "Schedule 2 Line 3"
@@ -450,10 +487,9 @@ lines:
 
   - line: "31"
     description: "Schedule 3 refundable credits and other payments"
-    formula: "Refundable AOC (40% of Form 8863) + excess SS withholding + net PTC"
+    formula: "Schedule 3 line 15 only; refundable AOC is separately reported on Form 1040 line 29"
     irsRef: "Form 1040 Instructions, Line 31; Schedule 3 Part II"
     inputs:
-      - "Form 8863 Line 14 (refundable AOC)"
       - "Schedule 3 Line 13a (excess SS withholding)"
       - "Form 8962 (net premium tax credit)"
     testRef: "tests/engine/integration.test.ts::education refundable AOC flows into totalPayments"
@@ -467,7 +503,7 @@ lines:
 
   - line: "33"
     description: "Total payments"
-    formula: "Line 25d + Line 26 + Line 31 (refundable credits)"
+    formula: "Line 25d + Line 26 + Lines 27a, 28, 29, 30, and 31"
     irsRef: "Form 1040 Instructions, Line 33"
     testRef: "tests/engine/federal.test.ts::Form 1040 Line 33 - total payments includes excess SS"
 
@@ -479,6 +515,46 @@ lines:
 
   - line: "37"
     description: "Amount you owe"
-    formula: "Line 24 - Line 33, if positive"
+    formula: "max(0, Line 24 - Line 33 + estimated tax penalty on Line 38)"
     irsRef: "Form 1040 Instructions, Line 37"
     testRef: "tests/engine/federal.test.ts::Form 1040 Line 37 - amount owed when withholding is insufficient"
+
+  - line: "2025-payment-routing"
+    description: "Separate assessed tax, refundable credits and estimated-tax penalty"
+    formula: "1040 line 23 equals Schedule 2 Part II only; line 24 excludes Form 2210 penalty. Report refundable AOC on line 29 and Schedule 3 payments on line 31. Line 34 is gross overpayment, line 35a is refund after penalty, line 37 includes any unpaid penalty, and line 38 shows the penalty separately. Digital asset audit identity does not reuse wage line 1a."
+    irsRef: "https://www.irs.gov/instructions/i1040gi, Lines 29, 31 and 38"
+    testRef: "tests/engine/federal-payment-routing.test.ts::Form 1040 payment and penalty routing"
+
+  - line: "source-wages-withholding"
+    description: "Preserve source categories on wage and withholding lines"
+    formula: "W-2 box 1 is line 1a; Form 4137 tips are 1c; Form 8919 wages are 1g; supported pre-retirement disability pensions are 1h. Withholding: W-2 box 2 on 25a; Forms 1099 including SSA/RRB on 25b; W-2G, reported K-1 withholding and Form 8959 line 24 on 25c. Line 25d sums the three. Additional Medicare withholding is a payment, including when joint liability is zero."
+    irsRef: "https://www.irs.gov/instructions/i1040gi, Lines 1a, 1c, 1g, 1h and 25"
+    testRef: "tests/engine/federal-source-lines.test.ts::Form 1040 source classification"
+
+  - line: "personal-credit-ordering"
+    description: "Credit Limit Worksheets A/B coordinate CTC with adoption and clean energy"
+    formula: "After allowed prior-ranking personal credits, reserve Schedule8812 WorksheetB line14 (CTC before limitation less potentialACTC) when a qualifying child and adoption/clean-energy credit exist and Form2555 is absent; otherwise reserve ordinary CTC limited to remaining tax. Limit adoption next, then residential clean energy. WorksheetA subtracts actual allowed adoption/clean credits before final CTC; unused adoption/clean credit remains carryforward."
+    irsRef: "https://www.irs.gov/instructions/i1040s8, Credit Limit Worksheets A/B; https://www.irs.gov/instructions/i8839, line17; https://www.irs.gov/instructions/i5695, line14"
+    testRef: "tests/engine/forms/personal-credit-ordering.test.ts::Personal credit limit worksheets"
+
+  - line: "credit-source-reparse"
+    description: "Original unknown personal-credit source facts survive schema reparsing"
+    formula: "Once sourceFactsComplete is false, generated legacy defaults cannot establish actual vehicle/adoption source facts on a subsequent parse. A supplied true marker still cannot replace original required facts."
+    testRef: "tests/engine/credit-source-contract.test.ts::keeps original missing vehicle and adoption facts incomplete after reparsing"
+  - line: "credit-source-contract"
+    description: Preserve actual adoption and vehicle eligibility, year, income and transfer facts before calculation
+    formula: For verified vehicle claims require original personal-use, transfer and price/type facts; missing prior-year AGI remains unknown. Adoption carries actual finalized year, expense years, employer plan, exclusion MAGI and origin-year carryforwards.
+    irsRef: https://www.irs.gov/instructions/i8839 and https://www.irs.gov/instructions/i8936
+    testRef: tests/engine/credit-source-contract.test.ts::Personal credit source contracts
+
+  - line: "credit-return-integration"
+    description: Apply actual personal-credit limits, split refundable adoption credit and preserve energy/adoption carryforward
+    formula: Tax-before-credits includes actual transferred vehicle repayments. Allocate prior-ranking credits then Schedule 8812 A/B reservation, adoption and clean energy. Carryforward is unused eligible credit, not a new 2026 energy cost. Adoption signed taxable employer benefits enter wages line 1f; refundable credit enters line 30 and total payments, not Schedule 3 nonrefundable credits.
+    irsRef: https://www.irs.gov/instructions/i8839 and https://www.irs.gov/instructions/i5695 and https://www.irs.gov/instructions/i1040s8
+    testRef: tests/engine/federal-credit-integration.test.ts::Personal credit return integration
+
+  - line: "ptc-source-integration"
+    description: "Use actual tax-year PTC household and coverage facts"
+    formula: "Pass taxYear and actual Form8962 facts/source statements;2026 no AGI-only or inferred-family fallback. Route netcreditline26 toSchedule3line9 and uncapped2026excessrepaymentline29 toSchedule2line1a."
+    irsRef: "2026 IRC36B, IRS Form8962 instructions and source worksheet contract"
+    testRef: "tests/engine/federal-credit-integration.test.ts::uses actual 2026 PTC facts and routes full excess advances to Schedule2"

@@ -1,0 +1,1692 @@
+{
+  "version": 1,
+  "purpose": "Explicit implementation traceability; not legal review, scenario qualification, filing readiness or e-file support.",
+  "entries": [
+    {
+      "key": "federal/amt-investment-interest",
+      "enginePath": "src/engine/federal.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-6251.ts",
+      "testRefs": [
+        "tests/engine/federal-amt-investment.test.ts::uses separate actual deductions and preserves both signs on line2c",
+        "tests/pdf/form-6251-audit.test.ts::prints actual AMT investment adjustment and complete capital-gain worksheet"
+      ],
+      "note": "The named method is exercised through this shared engine module by this specification's own regression references. The linked historical review output does not qualify any 2026 form. This association neither changes scenario exclusions nor establishes independent human review."
+    },
+    {
+      "key": "federal/charitable-carryover-sources",
+      "enginePath": "src/engine/federal.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-schedule-a.ts",
+      "testRefs": [
+        "tests/engine/schedules/schedule-a-charity-history.test.ts::retains actual standard-year absorption after the final deduction choice",
+        "tests/pdf/schedule-a-charity-history.test.ts::maps prior noncash to line13 and rejects stale source grouping"
+      ],
+      "note": "The named method is exercised through this shared engine module by this specification's own regression references. The linked historical review output does not qualify any 2026 form. This association neither changes scenario exclusions nor establishes independent human review."
+    },
+    {
+      "key": "federal/charitable-cod-modified-composition",
+      "enginePath": "src/engine/forms/cod-nol-reductions.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-982.ts",
+      "testRefs": [
+        "tests/engine/federal-charitable-cod-modified.test.ts::preserves a unique charitable benefit when the same COD fits both loss comparisons",
+        "tests/pdf/charitable-cod-modified-review.test.ts::shows distinct actual use modified absorption and comparison after the same reduction"
+      ],
+      "note": "Original debt and separate regular, AMT and charitable comparison histories produce bounded equal reductions without changing current tax. Historical original-bound review does not qualify final 2026 forms, broader exhaustion or human review."
+    },
+    {
+      "key": "federal/charitable-determined-floor",
+      "enginePath": "src/engine/federal.ts",
+      "testRefs": [
+        "tests/engine/federal-charitable-determined-floor.test.ts::selects determined floor carry after the actual deduction choice",
+        "tests/guided-interview/guided-charitable-determined-floor.test.ts::preserves actual prior categories and current floor sources through guide and review gates"
+      ],
+      "note": "The shared canonical calculation selects the source-bound determined 2026 floor and its actual carry. The guide regression preserves the closed year and PDF gates; no 2026 physical form, filing support or human qualification is claimed."
+    },
+    {
+      "key": "federal/charitable-determined-nol",
+      "enginePath": "src/engine/forms/charitable-determined-nol.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-net-operating-loss.ts",
+      "testRefs": [
+        "tests/engine/federal-charitable-determined-nol.test.ts::replays a unique current charitable origin through the actual canonical return",
+        "tests/apps/web/workspace-charitable-determined-nol.test.ts::exports determined original charity from actual guided sources"
+      ],
+      "note": "Original current and independent prior sources determine zero-benefit or one-affected-excess NOL carry, with actual guided sources and a source-bound 2025 review reference. Positive multiple-origin attribution and closed year/filing gates remain distinct."
+    },
+    {
+      "key": "federal/charitable-filing-unit-history",
+      "enginePath": "src/engine/forms/charitable-filing-unit-history.ts",
+      "packetPath": "src/pdf/mappings/2025/charitable-filing-unit-review.ts",
+      "testRefs": [
+        "tests/engine/forms/charitable-filing-unit-history.test.ts::derives the published first-separate-year allocation from original excesses",
+        "tests/pdf/charitable-filing-unit-review.test.ts::renders original ownership ratios and physical prior deduction without identifiers"
+      ],
+      "note": "Original filed ownership histories feed existing regular/AMT charitable methods. Source-bound review appendix preserves exact ratios and original years; traceability is not human or filing qualification."
+    },
+    {
+      "key": "federal/charitable-k1-basis-release-nol",
+      "enginePath": "src/engine/federal.ts",
+      "packetPath": "src/pdf/mappings/2025/k1-charitable-review.ts",
+      "testRefs": [
+        "tests/engine/federal-charitable-k1-basis-release-nol.test.ts::uses the actual2025 release without repeating old appreciation or basis carry",
+        "tests/pdf/charitable-k1-release-nol-review.test.ts::binds historical basis and released-year charity before redacted output"
+      ],
+      "note": "Actual 2025 charitable basis releases retain their original basis and receipt history through existing section 170 and regular/AMT NOL calculations. This association does not admit the separate 2026 release/floor-year method, binding at-risk allocation or broader operating K1 loss-origin methods, and it is not human qualification."
+    },
+    {
+      "key": "federal/charitable-original-source-nol",
+      "enginePath": "src/engine/federal.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-net-operating-loss.ts",
+      "testRefs": [
+        "tests/engine/federal-charitable-original-source-nol.test.ts::uses original crypto category values without creating a disposition or changing receipts",
+        "tests/pdf/charitable-original-source-nol-review.test.ts::binds original sources and both charitable carries before saved redacted review output"
+      ],
+      "note": "The named method is exercised through this shared engine module by this specification's own regression references. The linked historical review output does not qualify any 2026 form. This association neither changes scenario exclusions nor establishes independent human review."
+    },
+    {
+      "key": "federal/charitable-prior-other-capacity",
+      "enginePath": "src/engine/federal.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-schedule-a.ts",
+      "testRefs": [
+        "tests/engine/federal-charitable-prior-other-capacity.test.ts::uses the original prior other ceiling under final deduction selection",
+        "tests/pdf/charitable-prior-other-capacity.test.ts::prints corrected current property and prior other use with original source binding"
+      ],
+      "note": "The named method is exercised through this shared engine module by this specification's own regression references. The linked historical review output does not qualify any 2026 form. This association neither changes scenario exclusions nor establishes independent human review."
+    },
+    {
+      "key": "federal/charitable-public-cash-carry-2025",
+      "enginePath": "src/engine/federal.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-schedule-a.ts",
+      "testRefs": [
+        "tests/pdf/charitable-public-cash-carry-2025.test.ts::preserves the mixed cash and property sources through canonical review output"
+      ],
+      "note": "The named method is exercised through this shared engine module by this specification's own regression references. The linked historical review output does not qualify any 2026 form. This association neither changes scenario exclusions nor establishes independent human review."
+    },
+    {
+      "key": "federal/charitable-recipient-classification",
+      "enginePath": "src/engine/schedules/schedule-a.ts",
+      "testRefs": [
+        "tests/engine/forms/charitable-recipient-classification.test.ts::separates actual recipient limits and foundation valuation without rewriting legacy facts"
+      ],
+      "note": "The named method is exercised through this shared engine module by this specification's own regression references. No additional packet or filing support is claimed. This association neither changes scenario exclusions nor establishes independent human review."
+    },
+    {
+      "key": "federal/charitable-single-category-nol",
+      "enginePath": "src/engine/forms/charitable-net-operating-loss.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-schedule-a.ts",
+      "testRefs": [
+        "tests/engine/federal-charitable-single-category-nol.test.ts::reproduces the published capital-property NOL carry difference",
+        "tests/engine/federal-charitable-single-category-nol.test.ts::replays each single current category without converting its carry to public cash"
+      ],
+      "note": "Single-category charitable NOL replay uses the shared regular calculation with independent AMT source handling; the linked packet is the 2025 review mapping."
+    },
+    {
+      "key": "federal/cod-ordinary-attribute-sources",
+      "enginePath": "src/engine/forms/cod-attribute-return.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-982.ts",
+      "testRefs": [
+        "tests/engine/federal-cod-ordinary-attributes.test.ts::uses the actual immediately-after cap and next-year bases separately",
+        "tests/engine/federal-cod-ordinary-attributes.test.ts::retains actual minimum passive and independent foreign credit closings",
+        "tests/pdf/cod-attribute-closing-references.test.ts::separates current Form8801 lines from the final minimum-credit carry after COD"
+      ],
+      "note": "Original regular and alternative attributes reconcile current use before statutory COD reductions. Reference exports preserve current form lines and label source-validated final carries separately. Ordinary foreign/NOL and signed current MTC follow-through remain distinct; no final2026, filing or human qualification."
+    },
+    {
+      "key": "federal/cod-partial-personal-insolvency",
+      "enginePath": "src/engine/forms/cod-nol-reductions.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-982.ts",
+      "testRefs": [
+        "tests/engine/federal-cod-partial-personal.test.ts::uses the published personal partial-insolvency amounts from complete originals",
+        "tests/pdf/cod-partial-personal-review.test.ts::retains the original personal interest and after-tax closing evidence before any output"
+      ],
+      "note": "The named method is exercised through this shared engine module by this specification's own regression references. The linked historical review output does not qualify any 2026 form. This association neither changes scenario exclusions nor establishes independent human review."
+    },
+    {
+      "key": "federal/cod-title-11-chapter-13",
+      "enginePath": "src/engine/forms/cod-nol-reductions.ts",
+      "testRefs": [
+        "tests/engine/federal-cod-title-11.test.ts::excludes the complete chapter 13 discharge"
+      ],
+      "note": "The named method is exercised through this shared engine module by this specification's own regression references. The linked historical review output does not qualify any 2026 form. This association neither changes scenario exclusions nor establishes independent human review."
+    },
+    {
+      "key": "federal/crypto-charitable-integration",
+      "enginePath": "src/engine/federal.ts",
+      "testRefs": [
+        "tests/engine/federal-crypto-charity.test.ts::values gifts before limitations using actual property facts"
+      ],
+      "note": "The named method is exercised through this shared engine module by this specification's own regression references. No additional packet or filing support is claimed. This association neither changes scenario exclusions nor establishes independent human review."
+    },
+    {
+      "key": "federal/crypto-income",
+      "enginePath": "src/engine/forms/crypto-lot-matching.ts",
+      "testRefs": [
+        "tests/engine/forms/crypto-lot-matching.test.ts::Hobby mining income computed as quantity * FMV",
+        "tests/engine/forms/crypto-lot-matching.test.ts::Crypto hobby income flows to otherIncome (Schedule 1 Line 8z)"
+      ],
+      "note": "Digital-asset income and original donation calculations are exported by the shared lot-matching module; this entry makes no packet or filing claim."
+    },
+    {
+      "key": "federal/crypto-similar-property-appraisal",
+      "enginePath": "src/engine/forms/crypto-lot-matching.ts",
+      "testRefs": [
+        "tests/engine/forms/crypto-similar-property-appraisal.test.ts::checks the known annual asset group across recipients and row order",
+        "tests/engine/forms/crypto-similar-property-appraisal.test.ts::uses exact values and the contribution basis at the threshold"
+      ],
+      "note": "Digital-asset income and original donation calculations are exported by the shared lot-matching module; this entry makes no packet or filing claim."
+    },
+    {
+      "key": "federal/current-charitable-crypto-handoff",
+      "enginePath": "src/engine/forms/current-charitable-candidates.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-schedule-a.ts",
+      "testRefs": [
+        "tests/engine/forms/current-charitable-crypto-handoff.test.ts::reconciles verified crypto and direct receipts once by original category",
+        "tests/engine/forms/current-charitable-crypto-handoff.test.ts::preserves unknown valuation and partial media guards at the handoff"
+      ],
+      "note": "Original current receipts are validated and classified before ScheduleA calculation; the linked mapping is 2025 review output only."
+    },
+    {
+      "key": "federal/current-charitable-public-property",
+      "enginePath": "src/engine/forms/current-charitable-candidates.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-schedule-a.ts",
+      "testRefs": [
+        "tests/engine/forms/current-charitable-public-property.test.ts::resolves the enacted reciprocal public gift limits without a source priority election",
+        "tests/engine/forms/current-charitable-public-property.test.ts::requires exact original public property valuation and supported source character"
+      ],
+      "note": "Current recipient/basis candidates share this calculation and the 2025 ScheduleA review mapping; no additional scenario or year is enabled."
+    },
+    {
+      "key": "federal/current-charitable-receipt-categories",
+      "enginePath": "src/engine/forms/current-charitable-candidates.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-schedule-a.ts",
+      "testRefs": [
+        "tests/engine/forms/current-charitable-receipt-categories.test.ts::conserves the current five category allowances and final carry candidates",
+        "tests/engine/forms/current-charitable-receipt-categories.test.ts::binds exact original stock and ordinary property valuation without invented categories"
+      ],
+      "note": "Current recipient/basis candidates share this calculation and the 2025 ScheduleA review mapping; no additional scenario or year is enabled."
+    },
+    {
+      "key": "federal/current-public-other-cash",
+      "enginePath": "src/engine/forms/current-charitable-candidates.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-schedule-a.ts",
+      "testRefs": [
+        "tests/engine/forms/current-public-other-cash.test.ts::keeps current public and other-recipient cash carries in their actual categories",
+        "tests/engine/forms/current-public-other-cash.test.ts::requires actual cash category sources and preserves exact floor boundaries"
+      ],
+      "note": "Current recipient/basis candidates share this calculation and the 2025 ScheduleA review mapping; no additional scenario or year is enabled."
+    },
+    {
+      "key": "federal/defi-advanced",
+      "enginePath": "src/engine/forms/crypto-lot-matching.ts",
+      "testRefs": [
+        "tests/engine/forms/crypto-lot-matching.test.ts::LP entry is non-taxable and establishes LP token lot",
+        "tests/engine/forms/crypto-lot-matching.test.ts::LP exit generates taxable disposition with correct gain/loss"
+      ],
+      "note": "Digital-asset income and original donation calculations are exported by the shared lot-matching module; this entry makes no packet or filing claim."
+    },
+    {
+      "key": "federal/defi-transactions",
+      "enginePath": "src/engine/forms/crypto-lot-matching.ts",
+      "testRefs": [
+        "tests/engine/forms/crypto-lot-matching.test.ts::DEX swap ETH\u2192USDC generates taxable disposition with correct gain/loss",
+        "tests/engine/forms/crypto-lot-matching.test.ts::DEX swap capitalizes gas fee into new token basis"
+      ],
+      "note": "Digital-asset income and original donation calculations are exported by the shared lot-matching module; this entry makes no packet or filing claim."
+    },
+    {
+      "key": "federal/education-annual-category-limits",
+      "enginePath": "src/engine/forms/form-1099-q.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-1099-q.ts",
+      "testRefs": [
+        "tests/engine/forms/education-annual-category-limits.test.ts::applies the K12 annual cap once before unequal original earnings",
+        "tests/pdf/education-annual-category-limits.test.ts::binds annual category sources and prints the derived physical totals"
+      ],
+      "note": "Actual ordinary annual cash category qualification, dated refund and borrower history, completed beneficiary limits and source-bound historical 2025 review are exercised by these own-spec tests. Mixed effective-date and positive qualified-interest attribution remain separate internal methods. No final2026 output, filing qualification or independent human review is claimed."
+    },
+    {
+      "key": "federal/education-annual-loan-interest",
+      "enginePath": "src/engine/forms/form-1099-q.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-5329.ts",
+      "testRefs": [
+        "tests/engine/education-annual-loan-interest.test.ts::derives the annual interest exclusion and actual lender deduction once",
+        "tests/pdf/education-annual-loan-interest.test.ts::binds original lender records and the calculated deduction before rendering"
+      ],
+      "note": "The own-spec controls exercise actual annual interest-only qualification, original Box2 earnings, independent lender deduction and historical2025 Form5329 output. The private review binds all consumed original return facts before output. Mixed-purpose attribution, mixed effective dates and bond methods remain separate; no final2026 output, filing qualification or independent human review is claimed."
+    },
+    {
+      "key": "federal/education-distribution-return",
+      "enginePath": "src/engine/federal.ts",
+      "testRefs": [
+        "tests/engine/federal-education-distribution.test.ts::uses actual return year for the2026 K12 cap and preserves unknown sources"
+      ],
+      "note": "The named method is exercised through this shared engine module by this specification's own regression references. No additional packet or filing support is claimed. This association neither changes scenario exclusions nor establishes independent human review."
+    },
+    {
+      "key": "federal/education-ordinary-expense-composition",
+      "enginePath": "src/engine/forms/form-1099-q.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-1099-q.ts",
+      "testRefs": [
+        "tests/engine/forms/education-ordinary-expense-composition.test.ts::qualifies ordinary receipts without inventing prepaid membership",
+        "tests/pdf/education-ordinary-expense-composition.test.ts::binds original ordinary receipts and refund chronology before review output"
+      ],
+      "note": "Actual ordinary postsecondary receipt qualification, retained refund chronology and credit character use the shared original-source calculation and historical 2025 review summary. No final2026 output, filing qualification, scenario expansion beyond the named method or independent human review is claimed."
+    },
+    {
+      "key": "federal/educator-2026-itemized",
+      "enginePath": "src/engine/federal.ts",
+      "testRefs": [
+        "tests/engine/forms/educator-2026-itemized.test.ts::routes actual educator excess through the year-specific itemized candidate"
+      ],
+      "note": "The named method is exercised through this shared engine module by this specification's own regression references. No additional packet or filing support is claimed. This association neither changes scenario exclusions nor establishes independent human review."
+    },
+    {
+      "key": "federal/educator-bond-rational-magi",
+      "enginePath": "src/engine/forms/educator-bond-sources.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-8815.ts",
+      "testRefs": [
+        "tests/engine/forms/educator-bond-rational-magi.test.ts::calculates bond MAGI before the final educator reduction",
+        "tests/pdf/educator-bond-review.test.ts::binds actual educator ownership and MAGI before saved review output"
+      ],
+      "note": "Exact original educator and bond sources use a separate pre-exclusion MAGI worksheet and source-bound historical reference output. No final2026 form, independent human review or filing qualification is claimed."
+    },
+    {
+      "key": "federal/educator-bond-reissue-coordination",
+      "enginePath": "src/engine/forms/educator-bond-ownership.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-8815.ts",
+      "testRefs": [
+        "tests/engine/federal-educator-bond-reissues.test.ts::uses actual historical successor interest for both educator owners",
+        "tests/pdf/educator-bond-reissue-review.test.ts::binds actual successor income and educator originals before saved review output"
+      ],
+      "note": "Original successor ownership feeds the educator reduction and bond MAGI. The historical review remains a partial reference packet, with independent agent review and no human, final2026 or filing qualification."
+    },
+    {
+      "key": "federal/educator-in-kind-exclusions",
+      "enginePath": "src/engine/forms/educator-education-exclusions.ts",
+      "testRefs": [
+        "tests/engine/educator-in-kind-exclusions.test.ts::reconciles actual in-kind earnings without deducting basis or another recipients benefit"
+      ],
+      "note": "The named method is exercised through this shared engine module by this specification's own regression references. No additional packet or filing support is claimed. This association neither changes scenario exclusions nor establishes independent human review."
+    },
+    {
+      "key": "federal/eic-additional-review-checkboxes",
+      "enginePath": "src/engine/federal.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-1040.ts",
+      "testRefs": [
+        "tests/pdf/eic-additional-checkboxes.test.ts::prints known SSN restrictions without inferring from omitted identities"
+      ],
+      "note": "The named method is exercised through this shared engine module by this specification's own regression references. The linked historical review output does not qualify any 2026 form. This association neither changes scenario exclusions nor establishes independent human review."
+    },
+    {
+      "key": "federal/eic-child-investment-income",
+      "enginePath": "src/engine/federal.ts",
+      "testRefs": [
+        "tests/engine/eic-child-investment-income.test.ts::includes child ordinary income on both sides of the investment ceiling"
+      ],
+      "note": "The named method is exercised through this shared engine module by this specification's own regression references. No additional packet or filing support is claimed. This association neither changes scenario exclusions nor establishes independent human review."
+    },
+    {
+      "key": "federal/eic-childless-sources",
+      "enginePath": "src/engine/federal.ts",
+      "testRefs": [
+        "tests/engine/eic-childless-sources.test.ts::uses actual dependency and the separately confirmed filing exception"
+      ],
+      "note": "The named method is exercised through this shared engine module by this specification's own regression references. No additional packet or filing support is claimed. This association neither changes scenario exclusions nor establishes independent human review."
+    },
+    {
+      "key": "federal/eic-claimant-review",
+      "enginePath": "src/engine/federal.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-1040.ts",
+      "testRefs": [
+        "tests/pdf/eic-claimant-review.test.ts::preserves actual Rule10 sources in the saved official checkbox"
+      ],
+      "note": "The named method is exercised through this shared engine module by this specification's own regression references. The linked historical review output does not qualify any 2026 form. This association neither changes scenario exclusions nor establishes independent human review."
+    },
+    {
+      "key": "federal/eic-disallowance-canonical",
+      "enginePath": "src/engine/federal.ts",
+      "testRefs": [
+        "tests/engine/eic-disallowance-canonical.test.ts::applies actual individual and joint bans before claiming a canonical credit"
+      ],
+      "note": "The named method is exercised through this shared engine module by this specification's own regression references. No additional packet or filing support is claimed. This association neither changes scenario exclusions nor establishes independent human review."
+    },
+    {
+      "key": "federal/eic-investment-capital",
+      "enginePath": "src/engine/federal.ts",
+      "testRefs": [
+        "tests/engine/eic-investment-capital.test.ts::excludes section1231 business gain from the investment ceiling"
+      ],
+      "note": "The named method is exercised through this shared engine module by this specification's own regression references. No additional packet or filing support is claimed. This association neither changes scenario exclusions nor establishes independent human review."
+    },
+    {
+      "key": "federal/eic-investment-income-presence",
+      "enginePath": "src/engine/federal.ts",
+      "testRefs": [
+        "tests/engine/eic-investment-income-presence.test.ts::keeps the actual investment ceiling when an EIC record is opened"
+      ],
+      "note": "The named method is exercised through this shared engine module by this specification's own regression references. No additional packet or filing support is claimed. This association neither changes scenario exclusions nor establishes independent human review."
+    },
+    {
+      "key": "federal/eic-separated-review",
+      "enginePath": "src/engine/federal.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-schedule-eic.ts",
+      "testRefs": [
+        "tests/pdf/eic-separated-review.test.ts::retains the actual self-only child attachment and truthful claimant boxes"
+      ],
+      "note": "The named method is exercised through this shared engine module by this specification's own regression references. The linked historical review output does not qualify any 2026 form. This association neither changes scenario exclusions nor establishes independent human review."
+    },
+    {
+      "key": "federal/energy-return-sources",
+      "enginePath": "src/engine/federal.ts",
+      "testRefs": [
+        "tests/engine/federal-energy-source.test.ts::retains actual joint filing status through both energy computations"
+      ],
+      "note": "The named method is exercised through this shared engine module by this specification's own regression references. No additional packet or filing support is claimed. This association neither changes scenario exclusions nor establishes independent human review."
+    },
+    {
+      "key": "federal/estimated-tax-integration",
+      "enginePath": "src/engine/federal.ts",
+      "testRefs": [
+        "tests/engine/federal-2210-dated.test.ts::Federal dated estimated-tax integration"
+      ],
+      "note": "The named method is exercised through this shared engine module by this specification's own regression references. No additional packet or filing support is claimed. This association neither changes scenario exclusions nor establishes independent human review."
+    },
+    {
+      "key": "federal/foreign-tax-deduction-carryover-pdf",
+      "enginePath": "src/engine/federal.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-1116.ts",
+      "testRefs": [
+        "tests/pdf/foreign-tax-carryover-reference.test.ts::labels the deduction-year record separately from a current credit"
+      ],
+      "note": "The named method is exercised through this shared engine module by this specification's own regression references. The linked historical review output does not qualify any 2026 form. This association neither changes scenario exclusions nor establishes independent human review."
+    },
+    {
+      "key": "federal/foreign-tax-multiple-state",
+      "enginePath": "src/engine/federal.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-1116.ts",
+      "testRefs": [
+        "tests/engine/federal-foreign-tax-carryover.test.ts::uses the aggregate state method once in the canonical hypothetical return",
+        "tests/pdf/foreign-state-allocation-reference.test.ts::preserves multiple-state source aggregation in the saved review record"
+      ],
+      "note": "The named method is exercised through this shared engine module by this specification's own regression references. The linked historical review output does not qualify any 2026 form. This association neither changes scenario exclusions nor establishes independent human review."
+    },
+    {
+      "key": "federal/form-1040",
+      "enginePath": "src/engine/federal.ts",
+      "testRefs": [
+        "tests/engine/federal-income-exclusion-addbacks.test.ts::restores actual foreign and adoption exclusions for savings bond MAGI"
+      ],
+      "note": "The named method is exercised through this shared engine module by this specification's own regression references. No additional packet or filing support is claimed. This association neither changes scenario exclusions nor establishes independent human review."
+    },
+    {
+      "key": "federal/form-1099-da",
+      "enginePath": "src/engine/federal.ts",
+      "testRefs": [
+        "tests/engine/forms/crypto-lot-matching.test.ts::1099-DA transactions flow through Form 8949 to Schedule D"
+      ],
+      "note": "The named method is exercised through this shared engine module by this specification's own regression references. No additional packet or filing support is claimed. This association neither changes scenario exclusions nor establishes independent human review."
+    },
+    {
+      "key": "federal/form-1099-g-return",
+      "enginePath": "src/engine/federal.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-schedule-1.ts",
+      "testRefs": [
+        "tests/engine/federal-government-source-integration.test.ts::routes actual repayment and contribution recovery without reducing withholding",
+        "tests/engine/federal-government-source-integration.test.ts::prints the actual repayment alongside canonical unemployment"
+      ],
+      "note": "The named method is exercised through this shared engine module by this specification's own regression references. The linked historical review output does not qualify any 2026 form. This association neither changes scenario exclusions nor establishes independent human review."
+    },
+    {
+      "key": "federal/form-1099-g-sources",
+      "enginePath": "src/engine/forms/form-1099-g.ts",
+      "testRefs": [
+        "tests/engine/forms/form-1099-g-sources.test.ts::retains unverified historical absent-box compatibility without bypassing actual facts"
+      ],
+      "note": "The named method is exercised through this shared engine module by this specification's own regression references. No additional packet or filing support is claimed. This association neither changes scenario exclusions nor establishes independent human review."
+    },
+    {
+      "key": "federal/form-1099-q-annual-cash",
+      "enginePath": "src/engine/forms/form-1099-q.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-1099-q.ts",
+      "testRefs": [
+        "tests/pdf/form-1099-q-annual-cash.test.ts::prints summed annual cents and rejects rounded-source total forgery"
+      ],
+      "note": "Actual complete ordinary cash QTP originals feed the annual source fraction and summed reporting amounts. The own-spec regression generates historical2025 review output and validates the original-bound education summary. This association does not qualify2026 final forms, promote scenario support or establish human tax review."
+    },
+    {
+      "key": "federal/form-1099-q-cash-assistance",
+      "enginePath": "src/engine/forms/form-1099-q.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-1099-q.ts",
+      "testRefs": [
+        "tests/engine/forms/form-1099-q-cash-assistance.test.ts::applies actual prepaid tuition before the cash expense remainder",
+        "tests/pdf/form-1099-q-cash-assistance.test.ts::binds original cash assistance sources before review output"
+      ],
+      "note": "Actual prepaid and cash QTP tuition sources after assistance without ESA; shared calculation and historical 2025 review mapping only, with final-year and filing gates unchanged."
+    },
+    {
+      "key": "federal/form-1099-q-corrections",
+      "enginePath": "src/engine/forms/form-1099-q.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-1099-q.ts",
+      "testRefs": [
+        "tests/engine/forms/form-1099-q-corrections.test.ts::preserves unknown returned contribution source facts",
+        "tests/engine/forms/form-1099-q-corrections.test.ts::taxes actual returned contribution earnings in their contribution year"
+      ],
+      "note": "Original education distribution methods share the Form1099-Q calculation and 2025 review summary. Each spec retains its own bounded source method and test references."
+    },
+    {
+      "key": "federal/form-1099-q-coverdell-basis",
+      "enginePath": "src/engine/forms/form-1099-q.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-1099-q.ts",
+      "testRefs": [
+        "tests/engine/forms/form-1099-q-coverdell-basis.test.ts::rounds Coverdell worksheet inputs without creating negative basis",
+        "tests/engine/forms/form-1099-q-coverdell-basis.test.ts::aggregates source cents before rounding account distributions"
+      ],
+      "note": "Original education distribution methods share the Form1099-Q calculation and 2025 review summary. Each spec retains its own bounded source method and test references."
+    },
+    {
+      "key": "federal/form-1099-q-disqualification",
+      "enginePath": "src/engine/forms/form-1099-q.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-1099-q.ts",
+      "testRefs": [
+        "tests/engine/forms/form-1099-q-disqualification.test.ts::rejects missing or conflicting disqualification boundaries",
+        "tests/engine/forms/form-1099-q-disqualification.test.ts::calculates the source-bounded whole-account deemed distribution"
+      ],
+      "note": "Original education distribution methods share the Form1099-Q calculation and 2025 review summary. Each spec retains its own bounded source method and test references."
+    },
+    {
+      "key": "federal/form-1099-q-distinct-in-kind-assistance",
+      "enginePath": "src/engine/forms/form-1099-q.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-1099-q.ts",
+      "testRefs": [
+        "tests/engine/forms/form-1099-q-distinct-in-kind-assistance.test.ts::keeps distinct actual tuition expense and statement records",
+        "tests/engine/forms/form-1099-q-distinct-in-kind-assistance.test.ts::keeps exact source rounding and separately supplied credit amounts"
+      ],
+      "note": "Original education distribution methods share the Form1099-Q calculation and 2025 review summary. Each spec retains its own bounded source method and test references."
+    },
+    {
+      "key": "federal/form-1099-q-distinct-qtp-esa",
+      "enginePath": "src/engine/forms/form-1099-q.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-1099-q.ts",
+      "testRefs": [
+        "tests/engine/forms/form-1099-q-distinct-qtp-esa.test.ts::keeps each prepaid source ratio in the actual ESA allocation",
+        "tests/engine/forms/form-1099-q-distinct-qtp-esa.test.ts::rejects conflicting distinct original source groups"
+      ],
+      "note": "Original education distribution methods share the Form1099-Q calculation and 2025 review summary. Each spec retains its own bounded source method and test references."
+    },
+    {
+      "key": "federal/form-1099-q-expense-cap",
+      "enginePath": "src/engine/forms/form-1099-q.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-1099-q.ts",
+      "testRefs": [
+        "tests/engine/forms/form-1099-q-expense-cap.test.ts::uses actual room and board capacity without diluting it by unallocated spending",
+        "tests/engine/forms/form-1099-q-expense-cap.test.ts::conserves the single category cap across actual distributions and source states"
+      ],
+      "note": "Original education distribution methods share the Form1099-Q calculation and 2025 review summary. Each spec retains its own bounded source method and test references."
+    },
+    {
+      "key": "federal/form-1099-q-in-kind",
+      "enginePath": "src/engine/forms/form-1099-q.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-1099-q.ts",
+      "testRefs": [
+        "tests/engine/forms/form-1099-q-in-kind.test.ts::preserves actual in-kind source records and rejects missing benefit evidence",
+        "tests/engine/forms/form-1099-q-in-kind.test.ts::rejects mismatched benefit identity dates amounts and recipient facts"
+      ],
+      "note": "Original education distribution methods share the Form1099-Q calculation and 2025 review summary. Each spec retains its own bounded source method and test references."
+    },
+    {
+      "key": "federal/form-1099-q-in-kind-assistance",
+      "enginePath": "src/engine/forms/form-1099-q.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-1099-q.ts",
+      "testRefs": [
+        "tests/engine/forms/form-1099-q-in-kind-assistance.test.ts::preserves original tuition and exact assistance reductions",
+        "tests/engine/forms/form-1099-q-in-kind-assistance.test.ts::uses only separately supplied additional-tax exception evidence"
+      ],
+      "note": "Original education distribution methods share the Form1099-Q calculation and 2025 review summary. Each spec retains its own bounded source method and test references."
+    },
+    {
+      "key": "federal/form-1099-q-in-kind-coordination",
+      "enginePath": "src/engine/forms/form-1099-q.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-1099-q.ts",
+      "testRefs": [
+        "tests/engine/forms/form-1099-q-in-kind-coordination.test.ts::coordinates actual assistance and credit without inventing an exception",
+        "tests/engine/forms/form-1099-q-in-kind-coordination.test.ts::uses the actual single-expense ESA election without reassigning costs"
+      ],
+      "note": "Original education distribution methods share the Form1099-Q calculation and 2025 review summary. Each spec retains its own bounded source method and test references."
+    },
+    {
+      "key": "federal/form-1099-q-in-kind-credit",
+      "enginePath": "src/engine/forms/form-1099-q.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-1099-q.ts",
+      "testRefs": [
+        "tests/engine/forms/form-1099-q-in-kind-credit.test.ts::coordinates actual tuition credits with the reported in-kind distribution",
+        "tests/engine/forms/form-1099-q-in-kind-credit.test.ts::retains cash capacity after an actual credit-reduced benefit"
+      ],
+      "note": "Original education distribution methods share the Form1099-Q calculation and 2025 review summary. Each spec retains its own bounded source method and test references."
+    },
+    {
+      "key": "federal/form-1099-q-in-kind-k12",
+      "enginePath": "src/engine/forms/form-1099-q.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-1099-q.ts",
+      "testRefs": [
+        "tests/engine/forms/form-1099-q-in-kind-k12.test.ts::binds expanded eligibility to the actual furnished benefit dates",
+        "tests/engine/education-in-kind-k12-return.test.ts::carries cash-limited earnings without taxing the qualified prepaid benefit"
+      ],
+      "note": "Original education distribution methods share the Form1099-Q calculation and 2025 review summary. Each spec retains its own bounded source method and test references."
+    },
+    {
+      "key": "federal/form-1099-q-in-kind-room-board",
+      "enginePath": "src/engine/forms/form-1099-q.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-1099-q.ts",
+      "testRefs": [
+        "tests/engine/forms/form-1099-q-in-kind-room-board.test.ts::limits the original benefit using actual school costs",
+        "tests/engine/forms/form-1099-q-in-kind-room-board.test.ts::preserves enrollment zero and exact monetary boundaries"
+      ],
+      "note": "Original education distribution methods share the Form1099-Q calculation and 2025 review summary. Each spec retains its own bounded source method and test references."
+    },
+    {
+      "key": "federal/form-1099-q-mixed-tuition",
+      "enginePath": "src/engine/forms/form-1099-q.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-1099-q.ts",
+      "testRefs": [
+        "tests/engine/forms/form-1099-q-mixed-tuition.test.ts::keeps actual prepaid cash and ESA amounts separate",
+        "tests/pdf/form-1099-q-mixed-tuition.test.ts::binds mixed original accounts before private review output"
+      ],
+      "note": "Actual prepaid and cash QTP tuition with ordinary ESA allocations share the original-source calculation and historical 2025 review summary; no final-year output, filing qualification or readiness promotion."
+    },
+    {
+      "key": "federal/form-1099-q-multiple-expense-esa",
+      "enginePath": "src/engine/forms/form-1099-q.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-1099-q.ts",
+      "testRefs": [
+        "tests/engine/forms/form-1099-q-multiple-expense-esa.test.ts::uses the actual multiple-expense election with distinct earnings ratios",
+        "tests/engine/forms/form-1099-q-multiple-expense-esa.test.ts::rejects incomplete or conflicting original expense groups"
+      ],
+      "note": "Original education distribution methods share the Form1099-Q calculation and 2025 review summary. Each spec retains its own bounded source method and test references."
+    },
+    {
+      "key": "federal/form-1099-q-prohibited-source",
+      "enginePath": "src/engine/forms/form-1099-q.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-1099-q.ts",
+      "testRefs": [
+        "tests/engine/forms/form-1099-q-prohibited-source.test.ts::preserves actual prohibited-transaction facts and missing-source status",
+        "tests/engine/forms/form-1099-q-prohibited-source.test.ts::validates the actual deemed-distribution source before blocking unresolved treatment"
+      ],
+      "note": "Original education distribution methods share the Form1099-Q calculation and 2025 review summary. Each spec retains its own bounded source method and test references."
+    },
+    {
+      "key": "federal/form-1099-q-room-board-periods",
+      "enginePath": "src/engine/forms/form-1099-q.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-1099-q.ts",
+      "testRefs": [
+        "tests/engine/forms/form-1099-q-room-board-periods.test.ts::applies one actual period allowance across distinct receipts",
+        "tests/pdf/form-1099-q-room-board-periods.test.ts::binds original period records before writing the review summary"
+      ],
+      "note": "Actual institutional periods, uniquely linked receipts and determined allocations feed the shared Form1099-Q calculation and source-bound historical 2025 review summary. Unresolved allocation methods remain explicit; this association does not qualify 2026 output or promote filing, human-review or release readiness."
+    },
+    {
+      "key": "federal/form-1099-q-room-board-prior-use",
+      "enginePath": "src/engine/forms/form-1099-q.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-1099-q.ts",
+      "testRefs": [
+        "tests/engine/forms/form-1099-q-room-board-prior-use.test.ts::uses actual prior cost before assistance without resetting the period cap",
+        "tests/pdf/form-1099-q-room-board-prior-use.test.ts::binds historical period originals and prints separate prior and current limits"
+      ],
+      "note": "Actual prior worksheets and original receipts conserve one academic-period allowance before current Form1099-Q calculation. Historical2025 private review binds prior cost, assistance and current remaining cap; no final2026 output, filing or human-review qualification is inferred."
+    },
+    {
+      "key": "federal/form-1099-q-source",
+      "enginePath": "src/engine/forms/form-1099-q.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-1099-q.ts",
+      "testRefs": [
+        "tests/engine/forms/form-1099-q-source.test.ts::Form1099Q source contract preserves missing facts and refuses default promotion",
+        "tests/engine/forms/form-1099-q-source.test.ts::Form1099Q source allocations prevent cross-beneficiary and duplicate expense use"
+      ],
+      "note": "Original education distribution methods share the Form1099-Q calculation and 2025 review summary. Each spec retains its own bounded source method and test references."
+    },
+    {
+      "key": "federal/form-1099-q-tuition-account-group",
+      "enginePath": "src/engine/forms/form-1099-q.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-1099-q.ts",
+      "testRefs": [
+        "tests/engine/forms/form-1099-q-tuition-account-group.test.ts::uses the beneficiary ESA ratio across distinct tuition account histories",
+        "tests/engine/forms/form-1099-q-tuition-account-group.test.ts::conserves each original benefit in a shared tuition expense"
+      ],
+      "note": "Original education distribution methods share the Form1099-Q calculation and 2025 review summary. Each spec retains its own bounded source method and test references."
+    },
+    {
+      "key": "federal/form-172-capital-origin",
+      "enginePath": "src/engine/federal.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-net-operating-loss.ts",
+      "testRefs": [
+        "tests/engine/federal-form-172-capital-origin.test.ts::conserves exact investment capital sources in regular AMT and investment origins",
+        "tests/pdf/form-172-capital-origin-review.test.ts::reconciles original capital sources and exact amounts in the redacted NOL review"
+      ],
+      "note": "The named method is exercised through this shared engine module by this specification's own regression references. The linked historical review output does not qualify any 2026 form. This association neither changes scenario exclusions nor establishes independent human review."
+    },
+    {
+      "key": "federal/form-172-charitable-carried-composition",
+      "enginePath": "src/engine/federal.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-net-operating-loss.ts",
+      "testRefs": [
+        "tests/engine/federal-form-172-charitable-carried-composition.test.ts::keeps unused old regular carry separate from the new current loss",
+        "tests/pdf/form-172-charitable-carried-composition-review.test.ts::binds old carry and new current loss independently before review output"
+      ],
+      "note": "Complete actual old NOL and charitable histories use the established zero or unique original-excess comparison before independently adding the current Form172 loss. Historical review output and isolated2026 controls do not qualify filing, final2026 forms or human review."
+    },
+    {
+      "key": "federal/form-172-charitable-closure",
+      "enginePath": "src/engine/forms/form-172-charitable-sources.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-net-operating-loss.ts",
+      "testRefs": [
+        "tests/engine/federal-form-172-charitable-closure.test.ts::uses actual donation-only crypto and charity-only K1 sources in current origins",
+        "tests/pdf/form-172-charitable-closure-review.test.ts::binds original charitable source kinds and independent values in loss review"
+      ],
+      "note": "Original charitable and independent prior sources in actual selected current loss origins; linked2025 reference is review-only, with isolated2026 choice controls and unchanged final-year gates."
+    },
+    {
+      "key": "federal/form-172-charitable-histories",
+      "enginePath": "src/engine/federal.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-net-operating-loss.ts",
+      "testRefs": [
+        "tests/engine/federal-form-172-charitable-histories.test.ts::uses actual nonbusiness income for current and prior charitable origin deductions",
+        "tests/pdf/form-172-charitable-histories-review.test.ts::binds current loss and both original charitable histories before rendering"
+      ],
+      "note": "Actual current Form172 composes selected current and prior charitable histories with independently known-empty prior NOL ledgers. Historical private review is source-bound; actual2026 form, filing and human qualification remain separate."
+    },
+    {
+      "key": "federal/form-172-charitable-origin",
+      "enginePath": "src/engine/forms/form-172-charitable-sources.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-net-operating-loss.ts",
+      "testRefs": [
+        "tests/engine/federal-form-172-charitable-origin.test.ts::uses selected charitable deductions in separate regular and alternative origins",
+        "tests/pdf/form-172-charitable-origin-review.test.ts::saves separate current charity and loss-origin review amounts"
+      ],
+      "note": "Actual direct current charitable sources, independent histories and selected loss-origin amounts; linked2025 reference is review-only and does not establish human or filing qualification."
+    },
+    {
+      "key": "federal/form-172-itemized-origin",
+      "enginePath": "src/engine/federal.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-net-operating-loss.ts",
+      "testRefs": [
+        "tests/engine/federal-form-172-itemized-origin.test.ts::computes medical and property deductions independently for regular and alternative origins",
+        "tests/pdf/form-172-itemized-origin-review.test.ts::revalidates itemized sources even when their changes leave the current loss unchanged"
+      ],
+      "note": "The named method is exercised through this shared engine module by this specification's own regression references. The linked historical review output does not qualify any 2026 form. This association neither changes scenario exclusions nor establishes independent human review."
+    },
+    {
+      "key": "federal/form-172-operating-k1",
+      "enginePath": "src/engine/forms/form-172-return.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-net-operating-loss.ts",
+      "testRefs": [
+        "tests/engine/federal-form-172-operating-k1.test.ts::classifies actual basis-limited ordinary K1 and charitable amounts separately",
+        "tests/apps/web/workspace-form-172-operating-k1.test.ts::exports actual guided operating K1 origins and independent carry histories"
+      ],
+      "note": "Actual original operating K1 income after existing basis and at-risk limits is classified in current regular/AMT Form172, with distinct charitable sources, current EBL, source-only guide and private review. The isolated2026 control preserves closed calculation/export gates; no human or filing qualification is claimed."
+    },
+    {
+      "key": "federal/form-172-origin-precision",
+      "enginePath": "src/engine/federal.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-net-operating-loss.ts",
+      "testRefs": [
+        "tests/pdf/form-172-origin-precision-review.test.ts::rejects altered exact origin amounts hidden by identical printed totals"
+      ],
+      "note": "The named method is exercised through this shared engine module by this specification's own regression references. The linked historical review output does not qualify any 2026 form. This association neither changes scenario exclusions nor establishes independent human review."
+    },
+    {
+      "key": "federal/form-172-section-1202-origin",
+      "enginePath": "src/engine/forms/form-172-origin.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-net-operating-loss.ts",
+      "testRefs": [
+        "tests/engine/federal-form-172-section-1202-origin.test.ts::restores positive QSBS once when statutory and printed origin traces agree",
+        "tests/pdf/form-172-section-1202-origin-review.test.ts::rechecks original QSBS exclusion and separate origin traces in the review statement"
+      ],
+      "note": "The named method is exercised through this shared engine module by this specification's own regression references. The linked historical review output does not qualify any 2026 form. This association neither changes scenario exclusions nor establishes independent human review."
+    },
+    {
+      "key": "federal/form-2210-f",
+      "enginePath": "src/engine/forms/form-2210.ts",
+      "testRefs": [
+        "tests/engine/forms/form-2210-f.test.ts::figures the required payment and underpayment"
+      ],
+      "note": "The named method is exercised through this shared engine module by this specification's own regression references. The linked historical review output does not qualify any 2026 form. This association neither changes scenario exclusions nor establishes independent human review."
+    },
+    {
+      "key": "federal/form-2441-return-integration",
+      "enginePath": "src/engine/federal.ts",
+      "testRefs": [
+        "tests/engine/federal-care-benefits-integration.test.ts::rejects missing and contradictory original benefit sources"
+      ],
+      "note": "The named method is exercised through this shared engine module by this specification's own regression references. No additional packet or filing support is claimed. This association neither changes scenario exclusions nor establishes independent human review."
+    },
+    {
+      "key": "federal/form-2555-rounding",
+      "enginePath": "src/engine/forms/form-2555.ts",
+      "testRefs": [
+        "tests/engine/forms/form-2555-rounding.test.ts::derives printed income from reconciled original PartIV amounts"
+      ],
+      "note": "The named method is exercised through this shared engine module by this specification's own regression references. No additional packet or filing support is claimed. This association neither changes scenario exclusions nor establishes independent human review."
+    },
+    {
+      "key": "federal/form-4137-return",
+      "enginePath": "src/engine/federal.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-4137.ts",
+      "testRefs": [
+        "tests/engine/federal-form4137-sources.test.ts::keeps each actual owner's tip tax and wage-base usage separate",
+        "tests/pdf/fill-form-4137-source.test.ts::prints both owners and all source rows without substituting tax totals"
+      ],
+      "note": "The named method is exercised through this shared engine module by this specification's own regression references. The linked historical review output does not qualify any 2026 form. This association neither changes scenario exclusions nor establishes independent human review."
+    },
+    {
+      "key": "federal/form-5329-education-owner",
+      "enginePath": "src/engine/federal.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-5329.ts",
+      "testRefs": [
+        "tests/pdf/form-5329-education-owner.test.ts::copies each education recipient audit and merges only the same owners HSA part"
+      ],
+      "note": "The named method is exercised through this shared engine module by this specification's own regression references. The linked historical review output does not qualify any 2026 form. This association neither changes scenario exclusions nor establishes independent human review."
+    },
+    {
+      "key": "federal/form-5329-hsa-owner",
+      "enginePath": "src/engine/federal.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-5329.ts",
+      "testRefs": [
+        "tests/engine/federal-hsa-excess-owner.test.ts::keeps actual prior tax and missing source facts distinct",
+        "tests/pdf/form-5329-hsa-owner.test.ts::prints separate owner forms and rejects altered source results"
+      ],
+      "note": "The named method is exercised through this shared engine module by this specification's own regression references. The linked historical review output does not qualify any 2026 form. This association neither changes scenario exclusions nor establishes independent human review."
+    },
+    {
+      "key": "federal/form-5695-source",
+      "enginePath": "src/engine/federal.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-5695.ts",
+      "testRefs": [
+        "tests/pdf/form-5695-source-mapping.test.ts::fills actual physical source fields and preserves saved widgets"
+      ],
+      "note": "The named method is exercised through this shared engine module by this specification's own regression references. The linked historical review output does not qualify any 2026 form. This association neither changes scenario exclusions nor establishes independent human review."
+    },
+    {
+      "key": "federal/form-7206-pdf",
+      "enginePath": "src/engine/federal.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-7206.ts",
+      "testRefs": [
+        "tests/pdf/fill-form-7206.test.ts::preserves cleared review identifiers and closed year gates"
+      ],
+      "note": "The named method is exercised through this shared engine module by this specification's own regression references. The linked historical review output does not qualify any 2026 form. This association neither changes scenario exclusions nor establishes independent human review."
+    },
+    {
+      "key": "federal/form-8606-roth-history",
+      "enginePath": "src/engine/forms/form-8606.ts",
+      "testRefs": [
+        "tests/engine/forms/form-8606-roth-history.test.ts::depletes contribution history using line19 before the homebuyer exclusion"
+      ],
+      "note": "The named method is exercised through this shared engine module by this specification's own regression references. No additional packet or filing support is claimed. This association neither changes scenario exclusions nor establishes independent human review."
+    },
+    {
+      "key": "federal/form-8606-rounding",
+      "enginePath": "src/engine/forms/form-8606.ts",
+      "testRefs": [
+        "tests/engine/forms/form-8606-rounding.test.ts::aggregates source cents before rounding each traditional line"
+      ],
+      "note": "The named method is exercised through this shared engine module by this specification's own regression references. No additional packet or filing support is claimed. This association neither changes scenario exclusions nor establishes independent human review."
+    },
+    {
+      "key": "federal/form-8814-rounding",
+      "enginePath": "src/engine/forms/form-8814.ts",
+      "testRefs": [
+        "tests/engine/forms/form-8814-rounding.test.ts::rounds each preferential ratio without truncating the dollar transfer"
+      ],
+      "note": "The named method is exercised through this shared engine module by this specification's own regression references. No additional packet or filing support is claimed. This association neither changes scenario exclusions nor establishes independent human review."
+    },
+    {
+      "key": "federal/form-8839-history-review",
+      "enginePath": "src/engine/federal.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-8839.ts",
+      "testRefs": [
+        "tests/pdf/form8839-history-review.test.ts::retains a saved benefits-only packet and distinct physical and signed lines"
+      ],
+      "note": "The named method is exercised through this shared engine module by this specification's own regression references. The linked historical review output does not qualify any 2026 form. This association neither changes scenario exclusions nor establishes independent human review."
+    },
+    {
+      "key": "federal/form-8839-prior-benefits-return",
+      "enginePath": "src/engine/federal.ts",
+      "testRefs": [
+        "tests/engine/federal-adoption-prior-benefits.test.ts::transfers prior-only current and mixed benefits once with actual identity"
+      ],
+      "note": "The named method is exercised through this shared engine module by this specification's own regression references. No additional packet or filing support is claimed. This association neither changes scenario exclusions nor establishes independent human review."
+    },
+    {
+      "key": "federal/form-8862-deceased-claimant",
+      "enginePath": "src/engine/forms/form-8862.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-8862.ts",
+      "testRefs": [
+        "tests/engine/forms/form-8862-deceased-claimant.test.ts::derives the deceased claimant period without a fixed full-year day threshold",
+        "tests/engine/forms/form-8862-deceased-claimant.test.ts::keeps separate deceased and surviving spouse periods including both-deceased returns"
+      ],
+      "note": "Current EIC requalification and deceased-claimant source methods share Form8862 and its physical 2025 review mapping; this link is not tax or form qualification."
+    },
+    {
+      "key": "federal/form-8862-eic",
+      "enginePath": "src/engine/forms/form-8862.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-8862.ts",
+      "testRefs": [
+        "tests/engine/forms/form-8862-eic.test.ts::derives current year and the income-only shortcut from original history",
+        "tests/engine/forms/form-8862-eic.test.ts::preserves known Rule10 and dependency restrictions instead of clearing them with a form"
+      ],
+      "note": "Current EIC requalification and deceased-claimant source methods share Form8862 and its physical 2025 review mapping; this link is not tax or form qualification."
+    },
+    {
+      "key": "federal/form-8862-review",
+      "enginePath": "src/engine/forms/form-8862.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-8862.ts",
+      "testRefs": [
+        "tests/pdf/form-8862-review.test.ts::maps the income-only shortcut and both actual claimant rows",
+        "tests/pdf/form-8862-review.test.ts::retains actual birth death days and required evidence alongside the printed child convention"
+      ],
+      "note": "Current EIC requalification and deceased-claimant source methods share Form8862 and its physical 2025 review mapping; this link is not tax or form qualification."
+    },
+    {
+      "key": "federal/form-8889-source",
+      "enginePath": "src/engine/forms/form-8889.ts",
+      "testRefs": [
+        "tests/engine/forms/form-8889-source.test.ts::honors the actual monthly-method choice and preserves it through distribution merging"
+      ],
+      "note": "The named method is exercised through this shared engine module by this specification's own regression references. No additional packet or filing support is claimed. This association neither changes scenario exclusions nor establishes independent human review."
+    },
+    {
+      "key": "federal/form-8949-digital-reporting",
+      "enginePath": "src/engine/federal.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-8949.ts",
+      "testRefs": [
+        "tests/pdf/form-8949-digital-reporting.test.ts::prints combined digital and other categories in the six ScheduleD rows",
+        "tests/pdf/form-8949-digital-reporting.test.ts::retains all categories and digital continuation rows after reopening"
+      ],
+      "note": "The named method is exercised through this shared engine module by this specification's own regression references. The linked historical review output does not qualify any 2026 form. This association neither changes scenario exclusions nor establishes independent human review."
+    },
+    {
+      "key": "federal/form-8960-royalty-sources",
+      "enginePath": "src/engine/federal.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-8960.ts",
+      "testRefs": [
+        "tests/engine/federal-niit-royalty.test.ts::retains MISC and K1 royalties independently of ordinary activity character",
+        "tests/pdf/form-8960-royalty-sources.test.ts::reopens the retained royalty source and business adjustment fields"
+      ],
+      "note": "The named method is exercised through this shared engine module by this specification's own regression references. The linked historical review output does not qualify any 2026 form. This association neither changes scenario exclusions nor establishes independent human review."
+    },
+    {
+      "key": "federal/form-8962-default-allocation",
+      "enginePath": "src/engine/forms/form-8962-shared-policy.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-8962.ts",
+      "testRefs": [
+        "tests/engine/forms/form-8962-default-allocation.test.ts::requires actual no-agreement and enrollment facts without accepting a supplied fraction",
+        "tests/engine/forms/form-8962-default-allocation.test.ts::matches published no-agreement shares from either actual taxpayer role"
+      ],
+      "note": "Shared-policy allocation methods use the same calculation and physical 2025 review mapping; only the source method described by each spec is traced."
+    },
+    {
+      "key": "federal/form-8962-marriage-first-day",
+      "enginePath": "src/engine/forms/form-8962-marriage-worksheets.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-8962.ts",
+      "testRefs": [
+        "tests/engine/forms/form-8962-marriage-first-day.test.ts::derives every February through December first-day cutoff from actual dates",
+        "tests/engine/forms/form-8962-marriage-first-day.test.ts::uses ordinary July credit for a July first wedding and preserves later-day treatment"
+      ],
+      "note": "The marriage alternative calculation and its current-year review mapping remain subject to the actual source and readiness gates."
+    },
+    {
+      "key": "federal/form-8962-marriage-return",
+      "enginePath": "src/engine/forms/form-8962-marriage-worksheets.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-8962.ts",
+      "testRefs": [
+        "tests/engine/federal-marriage-return.test.ts::uses actual canonical household income and transfers marriage repayment once",
+        "tests/engine/federal-marriage-return.test.ts::retains actual ordinary credit when there is no excess advance"
+      ],
+      "note": "The marriage alternative calculation and its current-year review mapping remain subject to the actual source and readiness gates."
+    },
+    {
+      "key": "federal/form-8962-no-advance-allocation",
+      "enginePath": "src/engine/forms/form-8962-shared-policy.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-8962.ts",
+      "testRefs": [
+        "tests/engine/forms/form-8962-no-advance-allocation.test.ts::requires actual zero advances and complete independently bound benchmark sources",
+        "tests/engine/forms/form-8962-no-advance-allocation.test.ts::matches the published Situation3 ratio without using the rounded printed share"
+      ],
+      "note": "Shared-policy allocation methods use the same calculation and physical 2025 review mapping; only the source method described by each spec is traced."
+    },
+    {
+      "key": "federal/form-8962-no-advance-overlap",
+      "enginePath": "src/engine/forms/form-8962-shared-policy.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-8962.ts",
+      "testRefs": [
+        "tests/engine/forms/form-8962-no-advance-overlap.test.ts::rejects incomplete duplicate and contradictory full-family monthly sources",
+        "tests/engine/forms/form-8962-no-advance-overlap.test.ts::allocates overlapping original premiums from full family benchmarks once"
+      ],
+      "note": "Shared-policy allocation methods use the same calculation and physical 2025 review mapping; only the source method described by each spec is traced."
+    },
+    {
+      "key": "federal/form-8962-overlapping-policies",
+      "enginePath": "src/engine/forms/form-8962-shared-policy.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-8962.ts",
+      "testRefs": [
+        "tests/engine/forms/form-8962-overlapping-policies.test.ts::combines overlapping Situation4 rows before monthly rounding",
+        "tests/engine/forms/form-8962-overlapping-policies.test.ts::uses one actual benchmark per unshared coverage group"
+      ],
+      "note": "Shared-policy allocation methods use the same calculation and physical 2025 review mapping; only the source method described by each spec is traced."
+    },
+    {
+      "key": "federal/form-8962-shared-policy-review",
+      "enginePath": "src/engine/forms/form-8962-shared-policy.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-8962.ts",
+      "testRefs": [
+        "tests/pdf/form8962-shared-policy-review.test.ts::maps actual PartIV and monthly values in saved independent-reader fields"
+      ],
+      "note": "Shared-policy allocation methods use the same calculation and physical 2025 review mapping; only the source method described by each spec is traced."
+    },
+    {
+      "key": "federal/form-8962-shared-unshared",
+      "enginePath": "src/engine/forms/form-8962-shared-policy.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-8962.ts",
+      "testRefs": [
+        "tests/engine/forms/form-8962-shared-unshared.test.ts::combines actual shared and unshared policy months without another allocation",
+        "tests/engine/forms/form-8962-shared-unshared.test.ts::requires actual unshared classification evidence and complete source identity"
+      ],
+      "note": "Shared-policy allocation methods use the same calculation and physical 2025 review mapping; only the source method described by each spec is traced."
+    },
+    {
+      "key": "federal/form-8995-a-loss-netting",
+      "enginePath": "src/engine/forms/form-8995-a.ts",
+      "testRefs": [
+        "tests/engine/forms/form-8995-a-loss-netting.test.ts::qualifies current SSTB income before applying a prior qualified loss"
+      ],
+      "note": "The named method is exercised through this shared engine module by this specification's own regression references. No additional packet or filing support is claimed. This association neither changes scenario exclusions nor establishes independent human review."
+    },
+    {
+      "key": "federal/form-w2g",
+      "enginePath": "src/engine/federal.ts",
+      "testRefs": [
+        "tests/engine/forms/form-w2g.test.ts::W-2G gambling income - single W-2G reports winnings as income"
+      ],
+      "note": "The named method is exercised through this shared engine module by this specification's own regression references. No additional packet or filing support is claimed. This association neither changes scenario exclusions nor establishes independent human review."
+    },
+    {
+      "key": "federal/investment-interest-return",
+      "enginePath": "src/engine/federal.ts",
+      "testRefs": [
+        "tests/engine/federal-investment-interest.test.ts::uses actual combined sources once and preserves source year and missingness"
+      ],
+      "note": "The named method is exercised through this shared engine module by this specification's own regression references. No additional packet or filing support is claimed. This association neither changes scenario exclusions nor establishes independent human review."
+    },
+    {
+      "key": "federal/ira-return-integration",
+      "enginePath": "src/engine/federal.ts",
+      "testRefs": [
+        "tests/engine/federal-ira-sources.test.ts::uses complete interest and farm income in one canonical IRA worksheet"
+      ],
+      "note": "The named method is exercised through this shared engine module by this specification's own regression references. No additional packet or filing support is claimed. This association neither changes scenario exclusions nor establishes independent human review."
+    },
+    {
+      "key": "federal/k1-charitable-at-risk",
+      "enginePath": "src/engine/forms/k1-charitable-at-risk.ts",
+      "packetPath": "src/pdf/mappings/2025/k1-charitable-review.ts",
+      "testRefs": [
+        "tests/engine/federal-k1-charitable-at-risk.test.ts::allocates actual activity deductions after basis without merging suspension ledgers",
+        "tests/pdf/k1-charitable-at-risk-review.test.ts::saves separate original basis at-risk and section170 amounts with source binding"
+      ],
+      "note": "Actual current activity membership and original Form6198 sources permit basis-first deduction allocation with independent known-empty prior at-risk history. Original basis, at-risk and charitable balances stay distinct in review output. This does not qualify a 2026 form or replace independent human review."
+    },
+    {
+      "key": "federal/k1-charitable-first-admission",
+      "enginePath": "src/engine/forms/k1-charitable-first-admission.ts",
+      "testRefs": [
+        "tests/engine/federal-k1-charitable-first-admission.test.ts::derives the current admission year without reusing historical basis or appreciation",
+        "tests/engine/federal-k1-charitable-first-admission.test.ts::preserves linked earlier section170 slices and independent alternative history"
+      ],
+      "note": "Actual annual original sources determine only the current basis-admitted portion and retain earlier carry years. No final2026 packet or filing qualification is claimed."
+    },
+    {
+      "key": "federal/k1-ordinary-gift-at-risk",
+      "enginePath": "src/engine/forms/k1-charitable-at-risk.ts",
+      "testRefs": [
+        "tests/engine/federal-k1-ordinary-gift-at-risk.test.ts::uses actual ordinary gifts at zero activity risk for either entity",
+        "tests/engine/federal-k1-ordinary-gift-at-risk.test.ts::preserves basis ordinary risk and charitable ledgers separately"
+      ],
+      "note": "Original ordinary gift source classification excludes current gifts from actual activity loss. Recorded prior activity history remains separate. No human tax qualification, final2026 form or filing readiness is claimed."
+    },
+    {
+      "key": "federal/k1-passive-capital-sources",
+      "enginePath": "src/engine/federal.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-8582.ts",
+      "testRefs": [
+        "tests/engine/federal-k1-passive-capital.test.ts::routes actual passive capital through PartIX once and preserves the portfolio distinction",
+        "tests/pdf/k1-passive-capital-review.test.ts::prints ordinary and capital destinations with exact separate PartIX records"
+      ],
+      "note": "Own-spec controls bind actual ordinary K1 capital character, independent loss histories and exact reporting-part allocation to the historical2025 packet. The mixed ST/LT PartV summary is a derived interpretation, with original term amounts retained. PTP, rental, disposition and special-rate methods remain excluded; no filing readiness, full2026 output or independent human qualification is claimed."
+    },
+    {
+      "key": "federal/k1-passive-distribution-gain",
+      "enginePath": "src/engine/federal.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-8582.ts",
+      "testRefs": [
+        "tests/engine/federal-k1-passive-distribution.test.ts::routes positive zero and loss outcomes without duplicating capital gain",
+        "tests/pdf/k1-passive-distribution-review.test.ts::saves original passive distribution character and separate capital and loss amounts"
+      ],
+      "note": "The named method is exercised through this shared engine module by this specification's own regression references. The linked historical review output does not qualify any 2026 form. This association neither changes scenario exclusions nor establishes independent human review."
+    },
+    {
+      "key": "federal/k1-prior-charitable-at-risk",
+      "enginePath": "src/engine/forms/k1-prior-charitable-at-risk.ts",
+      "packetPath": "src/pdf/mappings/2025/k1-charitable-review.ts",
+      "testRefs": [
+        "tests/engine/federal-k1-prior-charitable-at-risk.test.ts::releases actual prior activity deductions once while preserving separate basis tax and QBI histories",
+        "tests/pdf/k1-prior-charitable-at-risk-review.test.ts::saves original historical use separately from current basis and charitable deductions"
+      ],
+      "note": "Actual post-basis original deductions, at-risk history and original gifts feed current allowance once. Original section465 histories and new section469 qualified-loss suspensions remain distinct; actual guide and private historical review bind the sources. This does not qualify a 2026 form or replace independent human review."
+    },
+    {
+      "key": "federal/k1-prior-property-nonitemized-2026",
+      "enginePath": "src/engine/forms/k1-charitable-return-sources.ts",
+      "testRefs": [
+        "tests/engine/federal-k1-prior-property-nonitemized-2026.test.ts::derives below equal and above capacity prior basis releases without carrying every undeducted dollar",
+        "tests/engine/federal-k1-prior-property-nonitemized-2026.test.ts::conserves simultaneous prior basis and risk sources without repeated appreciation",
+        "tests/pdf/k1-prior-property-nonitemized-context.test.ts::binds original choice and every independent balance before output while keeping2026 export closed"
+      ],
+      "note": "Actual2026 property release applicability flows through shared original-source calculation and the separate prior-risk helper, with source-bound nonitemized percentage carry. The context regression proves rejection at the unqualified2026 output gate; it is not packet or filing support. No human or final-form qualification is claimed."
+    },
+    {
+      "key": "federal/k1-royalty-classification",
+      "enginePath": "src/engine/schedules/schedule-e.ts",
+      "testRefs": [
+        "tests/engine/k1-royalty-classification.test.ts::routes portfolio royalties to PartI for both entity and activity classes"
+      ],
+      "note": "The named method is exercised through this shared engine module by this specification's own regression references. No additional packet or filing support is claimed. This association neither changes scenario exclusions nor establishes independent human review."
+    },
+    {
+      "key": "federal/marketplace-actual-cash-health",
+      "enginePath": "src/engine/forms/marketplace-actual-cash-health.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-7206.ts",
+      "testRefs": [
+        "tests/engine/federal-marketplace-actual-cash.test.ts::deducts actual cash once while preserving independently allocated policy amounts",
+        "tests/pdf/marketplace-actual-cash-review.test.ts::prints actual cash separately from allocated pools with private source binding"
+      ],
+      "note": "Actual cash, allocated premium pools and final zero credit are independently bound. This derived sufficient method does not attribute positive credit/repayment, remove outside-person or marriage boundaries, or establish filing qualification."
+    },
+    {
+      "key": "federal/marketplace-actual-paid-repayment",
+      "enginePath": "src/engine/federal.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-7206.ts",
+      "testRefs": [
+        "tests/engine/federal-marketplace-actual-paid-repayment.test.ts::uses actual owner cash and only the fully repaid own-return advances",
+        "tests/pdf/marketplace-actual-paid-review.test.ts::prints actual payer repayment with private source and result binding"
+      ],
+      "note": "Actual original cash and own-return advance repayment require final return proof and own-business limits; private 2025 review keeps source and reported cents separate. This association does not qualify 2026 forms or filing."
+    },
+    {
+      "key": "federal/marketplace-business-credit-method",
+      "enginePath": "src/engine/forms/marketplace-health-deduction.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-7206.ts",
+      "testRefs": [
+        "tests/engine/federal-marketplace-business-credit-method.test.ts::combines signed business worksheets using the recorded monthly premium method",
+        "tests/pdf/marketplace-business-credit-method-review.test.ts::binds the chosen method and signed business rows before redacted PDF output"
+      ],
+      "note": "Actual recorded consistent monthly full eligible-plan allocation and signed per-business worksheets use the shared health calculation and original-source 2025 review packet; no filing qualification or binding joint repayment-cap ownership method is claimed."
+    },
+    {
+      "key": "federal/marketplace-coverage-family-health",
+      "enginePath": "src/engine/forms/marketplace-coverage-family-health.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-7206.ts",
+      "testRefs": [
+        "tests/engine/forms/marketplace-coverage-family-health.test.ts::derives the published Gary Sue split and retains full original advances and premiums",
+        "tests/pdf/coverage-family-health-review.test.ts::prints signed family coordination with original private sources and rejects stale ledgers"
+      ],
+      "note": "Actual monthly coverage-family source calculation feeds the source-bound 2025 Form7206 review mapper; this link makes no additional scenario, tax-law or filing qualification claim."
+    },
+    {
+      "key": "federal/marketplace-full-advance-repayment",
+      "enginePath": "src/engine/forms/marketplace-full-advance-repayment.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-7206.ts",
+      "testRefs": [
+        "tests/engine/federal-marketplace-full-repayment.test.ts::accepts only actual zero final credit and full original repayment after the ordinary deduction",
+        "tests/pdf/marketplace-full-repayment-review.test.ts::prints actual ordinary health and fully repaid advances with private source binding"
+      ],
+      "note": "Actual zero final credit and full original advance repayment support the ordinary own-business premium deduction. Source-only intake and private original-input review context remain distinct from final method acceptance. Partial/capped repayment, source-cent differences and closed year/filing gates remain explicit."
+    },
+    {
+      "key": "federal/marketplace-health-business-gross-sources",
+      "enginePath": "src/engine/forms/marketplace-health-business-gross.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-7206.ts",
+      "testRefs": [
+        "tests/engine/forms/marketplace-health-business-gross.test.ts::binds actual ordinary partnership gross income without substituting net earnings",
+        "tests/pdf/marketplace-health-gross-review.test.ts::retains actual gross attachments in private context and printed source review"
+      ],
+      "note": "Actual original partnership gross statements feed the existing canonical health method and private 2025 review context. No net-income denominator, current deduction override or independent qualification is inferred."
+    },
+    {
+      "key": "federal/marketplace-health-negative-limit",
+      "enginePath": "src/engine/forms/form-7206-return.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-7206.ts",
+      "testRefs": [
+        "tests/engine/federal-marketplace-negative-limit.test.ts::uses the signed worksheet claim once with actual same-owner QBI sources",
+        "tests/pdf/marketplace-health-negative-limit.test.ts::preserves original forms and the signed combined claim before review output"
+      ],
+      "note": "Actual same-owner sources retain signed W15 and one nonnegative combined claim with source-bound gross attribution. The linked 2025 review output does not establish human tax-law qualification or filing readiness."
+    },
+    {
+      "key": "federal/marketplace-health-ordered",
+      "enginePath": "src/engine/federal.ts",
+      "testRefs": [
+        "tests/engine/federal-marketplace-health-ordered.test.ts::uses the prior Step3 health amount for the actual student loan worksheet"
+      ],
+      "note": "The named method is exercised through this shared engine module by this specification's own regression references. No additional packet or filing support is claimed. This association neither changes scenario exclusions nor establishes independent human review."
+    },
+    {
+      "key": "federal/marketplace-health-owner-income",
+      "enginePath": "src/engine/federal.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-7206.ts",
+      "testRefs": [
+        "tests/engine/federal-marketplace-health-owner-income.test.ts::applies zero-advance2025 owner limits to the joint credit and separate QBI",
+        "tests/pdf/form7206-health-owner-income-review.test.ts::binds the review owner deduction to its actual earned-income limit"
+      ],
+      "note": "The named method is exercised through this shared engine module by this specification's own regression references. The linked historical review output does not qualify any 2026 form. This association neither changes scenario exclusions nor establishes independent human review."
+    },
+    {
+      "key": "federal/marketplace-health-separate-business",
+      "enginePath": "src/engine/forms/marketplace-health-premiums.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-7206.ts",
+      "testRefs": [
+        "tests/engine/federal-marketplace-health-separate-business.test.ts::retains the separate actual business deduction before the historical cap",
+        "tests/engine/forms/marketplace-health-separate-business.test.ts::subtracts the other business deduction without borrowing its earnings"
+      ],
+      "note": "Separate actual plan owners use the shared owner calculation and source-bound 2025 review mapping."
+    },
+    {
+      "key": "federal/marketplace-health-separate-owners",
+      "enginePath": "src/engine/forms/marketplace-health-limit.ts",
+      "packetPath": "src/pdf/mappings/2025/form-7206-marketplace-source.ts",
+      "testRefs": [
+        "tests/engine/forms/marketplace-health-separate-owners.test.ts::conserves separate claims once without transferring business or spouse capacity",
+        "tests/engine/federal-marketplace-health-separate-owners.test.ts::derives the historical joint deduction from three original shareholder sources",
+        "tests/pdf/form7206-health-separate-owners.test.ts::rejects missing duplicate and altered owner residual proofs"
+      ],
+      "note": "Original zero advances and each independently sufficient business, owner and combined residual bind this bounded historical composition. The physical7206 and existing private8962 reference retain exact original source checks; no new physical8962, final2026, filing, staging or independent human qualification."
+    },
+    {
+      "key": "federal/marketplace-marriage-coverage-family",
+      "enginePath": "src/engine/forms/marketplace-marriage-health-sources.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-8962.ts",
+      "testRefs": [
+        "tests/engine/federal-marriage-coverage-family.test.ts::replays actual monthly marriage coverage through health final credit and QBI once",
+        "tests/pdf/marriage-coverage-family-review.test.ts::retains enrolled ineligible married-month fields in the elected marriage form"
+      ],
+      "note": "Complete monthly sources compose with shared marriage and health worksheets; the linked historical review mapping retains actual monthly enrollment columns. Traceability does not establish human or filing qualification."
+    },
+    {
+      "key": "federal/marketplace-marriage-health",
+      "enginePath": "src/engine/forms/marketplace-marriage-health.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-8962.ts",
+      "testRefs": [
+        "tests/engine/federal-marketplace-marriage-health.test.ts::composes actual marriage and health sources without changing the joint income",
+        "tests/pdf/marketplace-marriage-health-review.test.ts::prints the source-bound marriage and health worksheets with the computed cap"
+      ],
+      "note": "Own-spec controls bind actual unshared marriage and health sources to the existing health worksheets and historical2025 Form8962 review output. Actual joint eligibility, computed repayment limit, owner deductions and original sources remain separate. No additional source cohort, filing readiness or independent human qualification is claimed."
+    },
+    {
+      "key": "federal/marketplace-marriage-outside-person",
+      "enginePath": "src/engine/forms/marketplace-marriage-health-sources.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-7206.ts",
+      "testRefs": [
+        "tests/engine/federal-marriage-outside-person.test.ts::composes actual outside child cash with allocated marriage and later own advances",
+        "tests/pdf/marriage-outside-person-review.test.ts::prints and binds actual child relationship separately from marriage family amounts"
+      ],
+      "note": "Actual relationship/payment/month/other-return sources qualify the bounded historical marriage calculation and bind saved review output. No final2026 or independent human filing qualification."
+    },
+    {
+      "key": "federal/marketplace-net-operating-loss",
+      "enginePath": "src/engine/federal.ts",
+      "testRefs": [
+        "tests/engine/federal-marketplace-nol.test.ts::recomputes actual NOL at each capped health step and retains only final carry"
+      ],
+      "note": "The named method is exercised through this shared engine module by this specification's own regression references. No additional packet or filing support is claimed. This association neither changes scenario exclusions nor establishes independent human review."
+    },
+    {
+      "key": "federal/marketplace-nonspecified-stop",
+      "enginePath": "src/engine/forms/marketplace-nonspecified-stop.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-7206.ts",
+      "testRefs": [
+        "tests/engine/federal-marketplace-nonspecified-stop.test.ts::stops before W when every actual specified business has exhausted its own income",
+        "tests/pdf/form7206-nonspecified-stop.test.ts::saves the completed nonspecified forms and rejects stale stopping sources before IO"
+      ],
+      "note": "Actual completed business income limits determine the published P/Form7206 stop; the shared 2025 mapper prints the completed nonspecified claim and final-credit review. No positive noncoverage-advance allocation, new ordinary physical8962 mapping, or filing qualification is claimed."
+    },
+    {
+      "key": "federal/marketplace-other-return-cash",
+      "enginePath": "src/engine/forms/marketplace-outside-cash-sources.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-7206.ts",
+      "testRefs": [
+        "tests/engine/federal-marketplace-other-return-cash.test.ts::retains actual outside cash independently of the other taxpayers positive credit",
+        "tests/engine/federal-marketplace-other-return-cash-precision.test.ts::preserves exact outside net cash through ordinary worksheet coordination",
+        "tests/pdf/marketplace-other-return-cash-review.test.ts::rounds physical nonspecified fields from exact annual source ratios"
+      ],
+      "note": "Original insurer receipts, reimbursements and independent completed other-return sources bind the canonical health path and private2025 review. Exact aggregation uses src/utils/sum-source-money.ts and src/utils/sum-source-money-ratios.ts before existing report boundaries. The linked precision and physical regressions retain both half-minus-tail and exact-half outcomes. No final2026 form, filing, staging or independent human qualification is established."
+    },
+    {
+      "key": "federal/marketplace-outside-person-health",
+      "enginePath": "src/engine/forms/marketplace-coverage-family-sources.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-7206.ts",
+      "testRefs": [
+        "tests/engine/federal-marketplace-outside-person.test.ts::deducts actual outside child cash as nonspecified without changing family premiums",
+        "tests/pdf/marketplace-outside-person-review.test.ts::prints original outside cash separately and binds qualification before output"
+      ],
+      "note": "Actual outside-child cash and the independent completed zero-credit other return are bound to original policy and person sources. This sufficient source cohort does not establish a universal other-return requirement, positive-credit disallowance, marriage method or filing qualification."
+    },
+    {
+      "key": "federal/marketplace-passive-ordering",
+      "enginePath": "src/engine/federal.ts",
+      "testRefs": [
+        "tests/engine/federal-marketplace-passive.test.ts::retains the actual rental allowance from the preceding health step"
+      ],
+      "note": "The named method is exercised through this shared engine module by this specification's own regression references. No additional packet or filing support is claimed. This association neither changes scenario exclusions nor establishes independent human review."
+    },
+    {
+      "key": "federal/marketplace-reported-repayment-payment",
+      "enginePath": "src/engine/forms/marketplace-reported-repayment-payment.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-7206.ts",
+      "testRefs": [
+        "tests/engine/federal-marketplace-reported-repayment.test.ts::uses actual reported repayment without treating source cents as paid",
+        "tests/pdf/marketplace-reported-repayment-review.test.ts::prints reported repayment and unpaid source cents with private source binding"
+      ],
+      "note": "One actual eligible owner/business payment pool derives paid cost from original cash and completed reported repayment; private original source binding precedes review output. No allocation across differently qualified pools or independent filing qualification is claimed."
+    },
+    {
+      "key": "federal/marketplace-shared-marriage-health",
+      "enginePath": "src/engine/forms/form-8962-marriage-sources.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-8962.ts",
+      "testRefs": [
+        "tests/engine/federal-marketplace-shared-marriage-health.test.ts::allocates actual agreement and default sources before marriage and health",
+        "tests/pdf/marketplace-shared-marriage-health-review.test.ts::prints both actual allocation and marriage parts with the independent health sources"
+      ],
+      "note": "Own-spec controls bind actual full shared policies, PartIV allocation, alternative marriage groups and independent health payments to the historical2025 Form8962 review packet. Exact source fractions remain distinct from printed percentages. Unresolved within-return grouping, partial-family and payer methods remain explicit; no filing or human qualification is claimed."
+    },
+    {
+      "key": "federal/minimum-tax-credit-source-year",
+      "enginePath": "src/engine/forms/form-8801.ts",
+      "testRefs": [
+        "tests/engine/forms/minimum-tax-credit-source-year.test.ts::calculates the actual source year without reading future-year inputs",
+        "tests/engine/forms/minimum-tax-credit-source-year.test.ts::preserves negative adjustments and actual ancillary worksheet amounts",
+        "tests/engine/forms/minimum-tax-credit-source-year.test.ts::derives the2026 MFS source-period addition and cap without opening filing"
+      ],
+      "note": "Explicit source-year PartI/III and signed adjustment only, with actual exclusion-only NOL and foreign-credit worksheets. The full-form prior-year API and readiness gates remain unchanged. This is not a future-year form, canonical COD deduction override, final form qualification or independent human review."
+    },
+    {
+      "key": "federal/net-operating-loss-filing-unit-history",
+      "enginePath": "src/engine/forms/net-operating-loss-filing-unit-history.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-net-operating-loss.ts",
+      "testRefs": [
+        "tests/engine/forms/net-operating-loss-filing-unit-history.test.ts::derives the published original joint allocation without inheriting the other owner loss",
+        "tests/engine/federal-net-operating-loss-filing-unit.test.ts::computes the current separate return from independent regular and AMT owner histories"
+      ],
+      "note": "Original owner allocation and filed historical use determine a current one-owner carry, with independent AMT sources and original-bound historical review. Current joint pooling, human review and final 2026 filing qualification remain distinct."
+    },
+    {
+      "key": "federal/net-operating-loss-joint-ebl",
+      "enginePath": "src/engine/forms/net-operating-loss-joint-components.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-net-operating-loss.ts",
+      "testRefs": [
+        "tests/engine/federal-net-operating-loss-joint-ebl.test.ts::composes fully consumed actual EBL and ordinary sources once",
+        "tests/engine/forms/qbi-prior-carry-sources.test.ts::requires an actual ordinary prior carry separately from EBL suspension",
+        "tests/pdf/net-operating-loss-joint-ebl-review.test.ts::separates actual ordinary prior carry from released EBL in the saved review"
+      ],
+      "note": "Actual original component histories determine current regular and alternative use only within the proved vectors. The separate src/engine/forms/qbi-prior-carry-sources.ts helper requires actual preceding-year ordinary QBI carry and binds the source-bound guide and historical review. No current owner allocation, final2026 form, filing, staging or independent human qualification is established."
+    },
+    {
+      "key": "federal/net-operating-loss-joint-pools",
+      "enginePath": "src/engine/forms/net-operating-loss.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-net-operating-loss.ts",
+      "testRefs": [
+        "tests/engine/forms/net-operating-loss-joint-pools.test.ts::pools separate originals once by year without assigning current owner amounts",
+        "tests/pdf/net-operating-loss-joint-pools-review.test.ts::binds original components and joint totals before saving the review"
+      ],
+      "note": "Actual same-couple originals and historical owner use determine current joint loss-year totals. Independent regular and alternative sources and fixed investment fractions are retained. Review output does not assign current owner closing shares or establish human, final2026 or filing qualification."
+    },
+    {
+      "key": "federal/net-operating-loss-new-marriage",
+      "enginePath": "src/engine/forms/net-operating-loss-new-marriage.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-net-operating-loss.ts",
+      "testRefs": [
+        "tests/engine/federal-net-operating-loss-new-marriage.test.ts::uses only the actual loss owner income with independent AMT originals",
+        "tests/engine/federal-net-operating-loss-new-marriage.test.ts::calculates verified empty personal ledgers without owner contexts"
+      ],
+      "note": "Actual individual premarital originals and separately recomputed owner MFS current/modified sources constrain joint regular and independent AMT use. Guided edits invalidate source confirmations; historical review output binds original facts. Specialist source projections, final2026 forms, filing and qualified human review remain distinct."
+    },
+    {
+      "key": "federal/net-operating-loss-vintages",
+      "enginePath": "src/engine/forms/net-operating-loss.ts",
+      "testRefs": [
+        "tests/engine/forms/net-operating-loss-vintages.test.ts::requires reconciled actual loss history and continuous return identity"
+      ],
+      "note": "The named method is exercised through this shared engine module by this specification's own regression references. No additional packet or filing support is claimed. This association neither changes scenario exclusions nor establishes independent human review."
+    },
+    {
+      "key": "federal/nonitemized-allowable-charitable-carry",
+      "enginePath": "src/engine/forms/selected-charitable-carryover.ts",
+      "testRefs": [
+        "tests/engine/federal-nonitemized-allowable-charitable-carry-2026.test.ts::preserves common carry with separately selected deductions and current cash cap",
+        "tests/engine/federal-nonitemized-allowable-charitable-carry-2026.test.ts::orders the current floor before independent regular and alternative loss origins",
+        "tests/engine/federal-nonitemized-allowable-charitable-carry-2026.test.ts::requires actual prior release floor proof independently of standard selection"
+      ],
+      "note": "Current determined floor and ordinary percentage excess retain the same carry across actual deduction choices. Original amounts, prior-vintage attribution guards, independent NOL comparisons and section170(p) remain separate; source/software review and production2026 rejection receipts are not filing or human qualification."
+    },
+    {
+      "key": "federal/nonitemized-charitable-election",
+      "enginePath": "src/engine/federal.ts",
+      "testRefs": [
+        "tests/engine/federal-nonitemized-charity.test.ts::claims only actual current eligible cash when the standard deduction is unavailable",
+        "tests/pdf/nonitemized-charity-boundary.test.ts::keeps the new election out of unsupported historical and future export paths"
+      ],
+      "note": "The named method is exercised through the shared federal calculator by this specification's own regression references. Its PDF regression proves rejection, not packet generation; no packet or filing support is claimed. This association neither changes scenario exclusions nor establishes independent human review."
+    },
+    {
+      "key": "federal/passive-income-ordering",
+      "enginePath": "src/engine/federal.ts",
+      "testRefs": [
+        "tests/engine/federal-passive-income-ordering.test.ts::calculates taxable benefits from allowed rental losses rather than suspended losses"
+      ],
+      "note": "The named method is exercised through this shared engine module by this specification's own regression references. No additional packet or filing support is claimed. This association neither changes scenario exclusions nor establishes independent human review."
+    },
+    {
+      "key": "federal/qbi-loss-review",
+      "enginePath": "src/engine/federal.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-8995.ts",
+      "testRefs": [
+        "tests/pdf/qbi-loss-review.test.ts::prints the physical REIT and PTP zero floor without losing its carry"
+      ],
+      "note": "The named method is exercised through this shared engine module by this specification's own regression references. The linked historical review output does not qualify any 2026 form. This association neither changes scenario exclusions nor establishes independent human review."
+    },
+    {
+      "key": "federal/qbi-prior-carry-sources",
+      "enginePath": "src/engine/forms/qbi-prior-carry-sources.ts",
+      "packetPath": "src/pdf/mappings/2025/qbi-loss-review.ts",
+      "testRefs": [
+        "tests/engine/forms/qbi-prior-carry-ordinary.test.ts::combines recorded ordinary carries with positive negative and zero current QBI",
+        "tests/guided-interview/guided-prior-qbi-ordinary.test.ts::bridges actual ordinary prior carry without an NOL history",
+        "tests/pdf/prior-qbi-ordinary-review.test.ts::binds the direct original ordinary carry before saved review output"
+      ],
+      "note": "Actual preceding-return ordinary QBI records supply the separate incoming carry for the same individual or joint couple, including known zero and unknown active character. Original-source review validates the historical8995 and private appendix; supplied NOL histories still reconcile. Pending interview sections, changed filing units, final2026 forms, filing, staging and independent human qualification remain separate."
+    },
+    {
+      "key": "federal/rrta-tip-payroll",
+      "enginePath": "src/engine/forms/rrta-payroll-sources.ts",
+      "testRefs": [
+        "tests/engine/forms/rrta-tip-payroll.test.ts::requires exact original RRTA and tip records before payroll",
+        "tests/engine/forms/rrta-tip-payroll.test.ts::admits actual RRTA compensation with nonrailroad unreported tips"
+      ],
+      "note": "The original-bound helper supplies the finite RRTA payroll source proof used by Form4137 and Form8959. Actual historical and indexed-test-only 2026 calculations are traced here; RRTA PDF output is explicitly denied, and this link establishes no filing, human review, full 2026 or paper qualification."
+    },
+    {
+      "key": "federal/savings-bond-reissue-return",
+      "enginePath": "src/engine/federal.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-8815.ts",
+      "testRefs": [
+        "tests/engine/savings-bond-reissue-return.test.ts::preserves current transfer interest outside the education exclusion",
+        "tests/pdf/savings-bond-reissue-review.test.ts::binds original bond history and income before saved review output"
+      ],
+      "note": "Actual original coowner reissue and current statement histories preserve exact recognition/redemption fractions through the canonical return and source-bound historical 2025 Form8815 reference. This is partial reference output, not a qualified official form, e-file support, final2026 qualification or independent human review."
+    },
+    {
+      "key": "federal/savings-bond-return-integration",
+      "enginePath": "src/engine/federal.ts",
+      "testRefs": [
+        "tests/engine/federal-bond-source-integration.test.ts::uses actual source facts and the return year for bond exclusion"
+      ],
+      "note": "The named method is exercised through this shared engine module by this specification's own regression references. No additional packet or filing support is claimed. This association neither changes scenario exclusions nor establishes independent human review."
+    },
+    {
+      "key": "federal/schedule-1-a-sources",
+      "enginePath": "src/engine/federal.ts",
+      "testRefs": [
+        "tests/engine/schedules/schedule-1-a-sources.test.ts::binds senior eligibility to the canonical household death record"
+      ],
+      "note": "The named method is exercised through this shared engine module by this specification's own regression references. No additional packet or filing support is claimed. This association neither changes scenario exclusions nor establishes independent human review."
+    },
+    {
+      "key": "federal/schedule-a-2026",
+      "enginePath": "src/engine/schedules/schedule-a.ts",
+      "testRefs": [
+        "tests/engine/schedules/schedule-a-2026.test.ts::2026 mortgage insurance",
+        "tests/engine/schedules/schedule-a-2026.test.ts::2026 itemized charitable integration"
+      ],
+      "note": "The named method is exercised through this shared engine module by this specification's own regression references. No additional packet or filing support is claimed. This association neither changes scenario exclusions nor establishes independent human review."
+    },
+    {
+      "key": "federal/schedule-a-charity-reporting",
+      "enginePath": "src/engine/schedules/schedule-a.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-schedule-a.ts",
+      "testRefs": [
+        "tests/engine/schedules/schedule-a-charity-reporting.test.ts::reports current and prior charity groups separately after exact computation",
+        "tests/pdf/schedule-a-charity-reporting.test.ts::rejects missing conflicting and stale same-total charity sources before rendering"
+      ],
+      "note": "The named method is exercised through this shared engine module by this specification's own regression references. The linked historical review output does not qualify any 2026 form. This association neither changes scenario exclusions nor establishes independent human review."
+    },
+    {
+      "key": "federal/schedule-a-review-election",
+      "enginePath": "src/engine/federal.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-schedule-a.ts",
+      "testRefs": [
+        "tests/pdf/schedule-a-election.test.ts::maps only the actual election to itemize below the standard deduction"
+      ],
+      "note": "The named method is exercised through this shared engine module by this specification's own regression references. The linked historical review output does not qualify any 2026 form. This association neither changes scenario exclusions nor establishes independent human review."
+    },
+    {
+      "key": "federal/schedule-d-digital-sources",
+      "enginePath": "src/engine/federal.ts",
+      "testRefs": [
+        "tests/engine/schedules/schedule-d-digital-sources.test.ts::binds original long-term DA sources in direct and canonical capital worksheets"
+      ],
+      "note": "The named method is exercised through this shared engine module by this specification's own regression references. No additional packet or filing support is claimed. This association neither changes scenario exclusions nor establishes independent human review."
+    },
+    {
+      "key": "federal/schedule-d-review-mapping",
+      "enginePath": "src/engine/federal.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-schedule-d.ts",
+      "testRefs": [
+        "tests/pdf/schedule-d-actual-subtotals.test.ts::routes actual Form8949 categories and adjustments to the printed rows"
+      ],
+      "note": "The named method is exercised through this shared engine module by this specification's own regression references. The linked historical review output does not qualify any 2026 form. This association neither changes scenario exclusions nor establishes independent human review."
+    },
+    {
+      "key": "federal/schedule-e-passive-distribution-review",
+      "enginePath": "src/engine/federal.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-schedule-e.ts",
+      "testRefs": [
+        "tests/pdf/schedule-e-passive-distribution-review.test.ts::keeps released ordinary losses separate from capital distribution income"
+      ],
+      "note": "The named method is exercised through this shared engine module by this specification's own regression references. The linked historical review output does not qualify any 2026 form. This association neither changes scenario exclusions nor establishes independent human review."
+    },
+    {
+      "key": "federal/schedule-e-physical-review",
+      "enginePath": "src/engine/federal.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-schedule-e.ts",
+      "testRefs": [
+        "tests/pdf/schedule-e-physical-review.test.ts::reopens actual royalty columns and printed totals without filling farming reconciliation"
+      ],
+      "note": "The named method is exercised through this shared engine module by this specification's own regression references. The linked historical review output does not qualify any 2026 form. This association neither changes scenario exclusions nor establishes independent human review."
+    },
+    {
+      "key": "federal/schedule-k-1",
+      "enginePath": "src/engine/federal.ts",
+      "testRefs": [
+        "tests/engine/k1-semantic-labels.test.ts::retains semantic K1 amounts without asserting invented mixed-entity source codes"
+      ],
+      "note": "The named method is exercised through this shared engine module by this specification's own regression references. No additional packet or filing support is claimed. This association neither changes scenario exclusions nor establishes independent human review."
+    },
+    {
+      "key": "federal/schedule-k-1-1041",
+      "enginePath": "src/engine/federal.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-schedule-a.ts",
+      "testRefs": [
+        "tests/engine/forms/schedule-k-1-1041.test.ts::combines estate tax and gambling in one canonical ScheduleA16",
+        "tests/pdf/schedule-a-estate-deduction.test.ts::prints estate and gambling deductions exactly once"
+      ],
+      "note": "The named method is exercised through this shared engine module by this specification's own regression references. The linked historical review output does not qualify any 2026 form. This association neither changes scenario exclusions nor establishes independent human review."
+    },
+    {
+      "key": "federal/scorp-debt-nondeductible-order",
+      "enginePath": "src/engine/federal.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-partner-basis-schedule.ts",
+      "testRefs": [
+        "tests/pdf/scorp-debt-nondeductible-reference.test.ts::retains nondeductible debt reductions and actual carry status in the review record"
+      ],
+      "note": "The named method is exercised through this shared engine module by this specification's own regression references. The linked historical review output does not qualify any 2026 form. This association neither changes scenario exclusions nor establishes independent human review."
+    },
+    {
+      "key": "federal/section-1202-return",
+      "enginePath": "src/engine/federal.ts",
+      "testRefs": [
+        "tests/engine/federal-section-1202.test.ts::applies the verified Q adjustment once to the original broker row"
+      ],
+      "note": "The named method is exercised through this shared engine module by this specification's own regression references. No additional packet or filing support is claimed. This association neither changes scenario exclusions nor establishes independent human review."
+    },
+    {
+      "key": "federal/section-1202-review-pdf",
+      "enginePath": "src/engine/federal.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-8949.ts",
+      "testRefs": [
+        "tests/pdf/section-1202-review.test.ts::includes fund-only issuer rows and their ScheduleD10 transfer in the review packet",
+        "tests/pdf/section-1202-review.test.ts::retains every category and overflow transaction in interactive continuation pages"
+      ],
+      "note": "The named method is exercised through this shared engine module by this specification's own regression references. The linked historical review output does not qualify any 2026 form. This association neither changes scenario exclusions nor establishes independent human review."
+    },
+    {
+      "key": "federal/shared-marketplace-health-other-allocations",
+      "enginePath": "src/engine/forms/shared-marketplace-health.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-7206.ts",
+      "testRefs": [
+        "tests/engine/forms/shared-marketplace-health-other-allocations.test.ts::uses actual default enrollment allocation with independently paid health sources",
+        "tests/engine/forms/shared-marketplace-health-other-allocations.test.ts::uses exact no-advance benchmark allocation without inferring actual cash"
+      ],
+      "note": "Original shared health-plan sources feed the self-employed deduction; the linked 2025 review mapping validates the recorded calculation audit."
+    },
+    {
+      "key": "federal/shared-owner-marketplace-health",
+      "enginePath": "src/engine/forms/shared-marketplace-health.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-7206.ts",
+      "testRefs": [
+        "tests/engine/forms/shared-owner-marketplace-health.test.ts::binds each actual plan and original payment group separately",
+        "tests/engine/forms/shared-owner-marketplace-health.test.ts::rejects missing and balanced conflicting separate-plan sources"
+      ],
+      "note": "Separate actual plan owners use the shared owner calculation and source-bound 2025 review mapping."
+    },
+    {
+      "key": "federal/shared-unshared-marketplace-health",
+      "enginePath": "src/engine/forms/shared-marketplace-health.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-7206.ts",
+      "testRefs": [
+        "tests/engine/forms/shared-unshared-marketplace-health.test.ts::retains full unshared originals beside actual allocated health sources",
+        "tests/engine/federal-shared-unshared-marketplace-health.test.ts::coordinates shared and unshared health premiums without double counting"
+      ],
+      "note": "Original shared health-plan sources feed the self-employed deduction; the linked 2025 review mapping validates the recorded calculation audit."
+    },
+    {
+      "key": "federal/social-security-source-facts",
+      "enginePath": "src/engine/federal.ts",
+      "testRefs": [
+        "tests/engine/federal-income-exclusion-addbacks.test.ts::adds actual possession exclusions once and reconciles lump-sum aggregates"
+      ],
+      "note": "The named method is exercised through this shared engine module by this specification's own regression references. No additional packet or filing support is claimed. This association neither changes scenario exclusions nor establishes independent human review."
+    },
+    {
+      "key": "federal/state-sales-tax-deduction",
+      "enginePath": "src/engine/forms/state-sales-tax-deduction-worksheet.ts",
+      "testRefs": [
+        "tests/engine/forms/state-sales-tax-deduction-worksheet.test.ts::Actual total replaces table lookup"
+      ],
+      "note": "The named method is exercised through this shared engine module by this specification's own regression references. No additional packet or filing support is claimed. This association neither changes scenario exclusions nor establishes independent human review."
+    },
+    {
+      "key": "federal/student-loan-interest-return",
+      "enginePath": "src/engine/federal.ts",
+      "testRefs": [
+        "tests/engine/federal-student-loan-sources.test.ts::routes actual loan sources once and preserves eligibility and unknown distinctions"
+      ],
+      "note": "The named method is exercised through this shared engine module by this specification's own regression references. No additional packet or filing support is claimed. This association neither changes scenario exclusions nor establishes independent human review."
+    },
+    {
+      "key": "state/oh-2026-actual-balance-payment",
+      "enginePath": "src/engine/state/oh-2026-payment-source.ts",
+      "testRefs": [
+        "tests/engine/state/oh-2026-actual-balance-payment.test.ts::rejects unknown contradictory or unsupported actual payment %s",
+        "tests/engine/state/oh-2026-actual-balance-payment.test.ts::admits actual timely balance at statutory boundary %s",
+        "tests/engine/state/oh-2026-actual-balance-payment.test.ts::reports source-qualified return and paid account separately for %s",
+        "tests/engine/state/oh-2026-actual-balance-payment.test.ts::binds exact current originals and keeps payment private identifiers off results",
+        "tests/engine/state/oh-2026-actual-balance-payment.test.ts::preserves withholding-only fields and unsupported year gates"
+      ],
+      "note": "The finite original-bound timely small-balance employee method is exercised through this source helper. This association adds no packet, independent human review, public2026 filing qualification or broader payment-method support."
+    },
+    {
+      "key": "state/oh-2026-resident-credit-draft",
+      "enginePath": "src/engine/state/oh-2026-resident-credit.ts",
+      "testRefs": [
+        "tests/engine/state/oh-2026-resident-credit-draft.test.ts::applies independent literal2026 paid-credit and settlement accounts %s",
+        "tests/engine/state/oh-2026-resident-credit-draft.test.ts::rejects unsettled contradictory or unavailable paid-account originals: %s",
+        "tests/engine/state/oh-2026-resident-credit-draft.test.ts::binds current originals privately and preserves historical and filing gates"
+      ],
+      "note": "Links the enacted-law 2026 Ohio resident-credit draft calculation and its own-spec actual-original settlement/binding regressions. Composition separately requires oh-2026-resident-credit-source.ts and oh-2026-ordinary-source.ts; the historical worksheet rounding continuity remains provisional. No final 2026 form, packet, complete 2026 return, legal review or filing qualification is claimed."
+    },
+    {
+      "key": "state/oh-school-source-material-equality",
+      "enginePath": "src/engine/state/oh-sd-100-sources.ts",
+      "testRefs": [
+        "tests/engine/state/oh-school-source-material-equality.test.ts::preserves complete school baseline and commitments for %s",
+        "tests/engine/state/oh-school-source-material-equality.test.ts::preserves full current material normalization for %s",
+        "tests/engine/state/oh-school-source-material-equality.test.ts::rejects changed current school material for %s",
+        "tests/engine/state/oh-school-source-material-equality.test.ts::preserves school original context integrity for %s"
+      ],
+      "note": "Links the transient complete-material equality implementation and its own-spec compatibility/source-integrity regressions. Existing source guards and durable SHA256 commitments remain required. Compatibility hashes are unchanged-source oracles, not independent tax-law qualification; this entry supplies no packet or filing readiness."
+    },
+    {
+      "key": "state/pa-2026-childless-eic-dependency",
+      "enginePath": "src/engine/state/pa-2026-ordinary-dependencies.ts",
+      "testRefs": [
+        "tests/engine/state/pa-2026-childless-eic.test.ts::PA2026 childless draft composes literal FY PY NR taxes",
+        "tests/engine/state/pa-2026-childless-eic.test.ts::PA2026 childless draft preserves old cohorts and public gates"
+      ],
+      "note": "The shared helper validates the complete original no-EIC-child inventory and a conservative raw-and-reported >=19540 finite zero-credit proof for the separately typed PA2026 ordinary draft. Native capture is separate from combined calculation; no positive EIC, final2026 physical output, filing or human qualification."
+    },
+    {
+      "key": "state/pa-2026-ordinary-draft",
+      "enginePath": "src/engine/state/pa-ordinary-return.ts",
+      "testRefs": [
+        "tests/engine/state/pa-2026-ordinary-draft.test.ts::PA2026 draft composes all actual residency sources without full federal admission",
+        "tests/engine/state/pa-2026-ordinary-draft.test.ts::PA2026 draft retains actual public federal ordinary and PDF gates"
+      ],
+      "note": "The exported calculatePA2026OrdinaryDraft in this shared composer invokes the source-bound dependency helper and existing PA arithmetic. This finite FY/PY/NR state-only draft does not establish full federal admission, final2026 physical output, filing or human review."
+    },
+    {
+      "key": "state/pa-actual-care-official-review",
+      "enginePath": "src/engine/state/pa-married-ordinary-return.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-pa-care-official-review.ts",
+      "testRefs": [
+        "tests/pdf/pa-actual-care-official-review.test.ts::actual care public packet includes official DC and required federal companions %s",
+        "tests/pdf/pa-actual-care-official-review.test.ts::official DC physical cells and source ovals preserve documentary facts %s %s",
+        "tests/pdf/pa-actual-care-official-review.test.ts::actual care retains unsupported stale year and filing boundaries",
+        "tests/pdf/pa-actual-care-official-review.test.ts::legacy actual care cannot bypass privacy or federal binding by omitting documentary metadata"
+      ],
+      "note": "Links the actual joint PA care return calculation and the original-bound static 2025 Schedule DC review renderer exercised through public fillReturn. Single care separately uses pa-ordinary-return.ts; both review contexts replay actual federal/state originals. The finite documentary, privacy, source-revision and physical-fit gates remain required. This is a redacted review packet, not filing or e-file qualification, final 2026 forms or a qualified human review."
+    },
+    {
+      "key": "state/pa-care-paper-identity",
+      "enginePath": "src/engine/state/pa-care-paper-sources.ts",
+      "testRefs": [
+        "tests/engine/state/pa-care-paper-sources.test.ts::identity projection rejects incomplete stale and contradictory originals %s",
+        "tests/engine/state/pa-care-paper-sources.test.ts::documentary identifier kinds remain explicit and never qualify paper %s",
+        "tests/engine/state/pa-care-paper-sources.test.ts::identity collection preserves current year and paper gates"
+      ],
+      "note": "Links only the pure documentary provider/person identity-source validator and its own-spec source/kind/gate regressions. It returns officialPaperQualified=false and filingEligible=false; optional collection and guided/native tests do not themselves admit a paper packet. The separate original-bound 2025 actual-care review successor has its own inventory entry; no 2026 or filing qualification is claimed."
+    },
+    {
+      "key": "state/pa-source-precision",
+      "enginePath": "src/engine/state/pa-residency-sources.ts",
+      "testRefs": [
+        "tests/engine/state/pa-source-precision.test.ts::ordinary PA source precision preserves both sides of the large half-dollar boundary",
+        "tests/engine/state/pa-source-precision.test.ts::ordinary PA source precision retains sixty source digits before reporting",
+        "tests/engine/state/pa-source-precision.test.ts::ordinary PA source precision preserves global Decimal configuration and original facts"
+      ],
+      "note": "Local Decimal source aggregation and printed-tax rounding in the existing ordinary PA residency method. Independently exercised finite sources up to60 digits; no packet qualification, e-file business rules or current2026 filing readiness."
+    }
+  ]
+}

@@ -1,0 +1,37 @@
+form: "Coverdell account basis reconciliation"
+fullName: "Ordinary account worksheet rounding and rollover basis"
+taxYear: 2026
+irsReference: "https://www.irs.gov/publications/p970"
+sources:
+  - "https://www.irs.gov/instructions/i1040gi"
+  - "https://uscode.house.gov/us/usc/119-124/t26/s530/"
+notes: |
+  Refreshed 2026-10-25. Publication 970 Worksheet 6-3 line 2 is actual
+  prior-year basis. It must not silently incorporate current rollover basis.
+  An account with current incoming/outgoing rollover basis uses a separately
+  labeled source reconciliation worksheet, retaining its actual prior basis
+  and each adjustment. This is calculation review, not a qualified IRS form.
+  Round monetary worksheet input lines consistently to whole dollars; aggregate
+  multiple source amounts for one input line before rounding. Keep exact source
+  cents in separate audited source entries. Ratios retain Decimal precision.
+lines:
+  - line: "rounded-inputs"
+    description: "Consistent whole-dollar worksheet inputs and nonnegative carry"
+    formula: "Round prior basis/current contributions/account distribution total/year-end total before worksheet arithmetic. Line10 cannot exceed line3; line15=line3-line10. Preserve exact source cents separately."
+    testRef: "tests/engine/forms/form-1099-q-coverdell-basis.test.ts::rounds Coverdell worksheet inputs without creating negative basis"
+  - line: "aggregate-inputs"
+    description: "Aggregate account source amounts before rounding"
+    formula: "Account line4 is rounded once after adding actual nonrollover distributions; allocated statement basis and earnings sum to the account's whole-dollar amounts."
+    testRef: "tests/engine/forms/form-1099-q-coverdell-basis.test.ts::aggregates source cents before rounding account distributions"
+  - line: "rollover-attribution"
+    description: "Distinguish actual prior basis from current rollover adjustments"
+    formula: "Adjusted available basis=rounded prior basis+rounded current contributions+rounded actual received rollover basis-rounded actual outgoing rollover basis. Use Coverdell rollover worksheet audit identity, not an altered official line2. Reject negative exact or rounded available basis."
+    testRef: "tests/engine/forms/form-1099-q-coverdell-basis.test.ts::separates prior basis from actual current rollover adjustments"
+  - line: "reference-source"
+    description: "Source and custom worksheet identity in reference output"
+    formula: "Validate exact account source facts against source audits; choose the recorded worksheet identity only when it matches actual rollover facts. Missing or altered source/worksheet audits reject."
+    testRef: "tests/pdf/form-1099-q-coverdell-basis-summary.test.ts::retains exact account sources and distinguishes rollover worksheet lines"
+  - line: "rollover-rounding"
+    description: "Preserve aggregate rollover basis across statements"
+    formula: "Sum actual outgoing rollover basis before rounding, then allocate its rounded account total across the source statements. Rollover earnings equal the rounded aggregate transferred amount less the rounded transferred basis."
+    testRef: "tests/engine/forms/form-1099-q-coverdell-basis.test.ts::reconciles rounded rollover basis across multiple statements"

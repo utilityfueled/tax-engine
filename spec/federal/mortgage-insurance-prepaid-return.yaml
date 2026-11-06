@@ -1,0 +1,21 @@
+form: "Original prepaid mortgage insurance federal return coordination"
+fullName: "Actual 2026 original PMI with SALT, charitable floor, QBI and section68"
+taxYear: 2026
+reference: "https://www.ecfr.gov/current/title-26/section-1.163-11"
+sources:
+  - "IRC163(h)(3)(E),(5)(F);26CFR1.163-11"
+  - "IRC170(b)(1)(I),68,199A(e)(1);Rev.Proc.2025-32"
+notes: "Finite source-complete hypothetical original-loan scenarios. Actual validated originals allocate9240*8/84=880 before the existing ScheduleA MAGI phase-out and one final IRS rounding. Tests use the existing test-only draft2026constant substitution, preserve public unavailable status and do not qualify a final2026TaxTable, PDF or filing return. Sufficient actual fictional withholding establishes its own penalty exception; no prior-tax-liability fact is guessed. Separate AMT treatment is not inferred from regular itemization."
+lines:
+  - line: "ordinary-source-composition"
+    description: "Original PMI enters actual federal itemization once"
+    formula: "For single AGI100000,actual main-home interest5000,propertytax20000,current eligible publiccashgift4000:rawPMI9240*8/84=880;PMI880;SALT20000;gift4000-0.005*100000=3500;itemized29380;automatic selects itemized over16100;taxable70620. Actual source identity/year mismatches reject, no financial/source input mutates."
+    testRef: "tests/engine/federal-mortgage-insurance-prepaid.test.ts::composes original PMI with actual SALT and charitable floor once"
+  - line: "reit-income-limitation"
+    description: "Original PMI participates in the real QBI taxable-income limit"
+    formula: "Same100000AGI is actual ordinary199A REIT dividends:otherwise allowable itemized29380;taxable beforeQBI70620;QBI=min(0.20*100000,0.20*70620)=14124;taxable56496. Source-derived PMI changes the limit but not AGI."
+    testRef: "tests/engine/federal-mortgage-insurance-prepaid.test.ts::uses original PMI in the actual REIT taxable income limit"
+  - line: "high-income-source-zero"
+    description: "Retain original source proof when PMI phases to zero before section68"
+    formula: "SingleAGI700000,actual interest5000,propertytax20000,gift103500:same original allocation880;actual PMI phase-out yields0;SALTmax(10000,40400-0.30*(700000-505000))=10000;gift103500-3500=100000;otherwise itemized115000;section68roundDollar((2/37)*min(115000,700000-640600))=3211;allowed111789;taxable588211. Actual880allocation audit persists despite0reported PMI."
+    testRef: "tests/engine/federal-mortgage-insurance-prepaid.test.ts::retains original proof through zero PMI and actual section68 limitation"

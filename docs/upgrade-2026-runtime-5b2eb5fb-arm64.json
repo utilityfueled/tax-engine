@@ -1,0 +1,102 @@
+{
+  "schemaVersion": 1,
+  "sourceCommit": "5b2eb5fb66f1510322aa6462b16237fafdbb8fb9",
+  "recordedAt": "2026-10-31T13:52:20+00:00",
+  "releaseReady": false,
+  "scope": "Local synthetic native arm64 evidence built with Podman from a clean archive of this commit. Not staging, production or human security review.",
+  "platform": "linux/arm64",
+  "builder": "podman build --format docker",
+  "image": {
+    "id": "sha256:4584fab00196d713acd3cabfd4631f3c84ac905927a8e76a870f9e5d6b9ccb55",
+    "archiveSha256": "1d8b2e6e6ef75283ebf9793b34b1d221f89bba7bb097e27ad4497bf837071408",
+    "revisionLabel": "5b2eb5fb66f1510322aa6462b16237fafdbb8fb9"
+  },
+  "smoke": {
+    "result": "passed",
+    "image": "4584fab00196d713acd3cabfd4631f3c84ac905927a8e76a870f9e5d6b9ccb55",
+    "readOnly": true,
+    "healthy": true,
+    "assets": true,
+    "imageCacheWritten": true,
+    "selfHostAuth": true,
+    "uid": 1001,
+    "node": "v24.22.1",
+    "architecture": "arm64",
+    "imageCacheFilesystem": 16914836,
+    "imageCacheLimitBytes": 67108864,
+    "packageTools": false,
+    "providerKeys": false,
+    "templates": 44,
+    "evidence": {
+      "path": ".local/upgrade-evidence/container-5b2eb5fb-arm64-smoke.log",
+      "sha256": "a96805593c6cd9bed19c63431d75761c02dbac6406aee3efdf77fd08e8021c0f"
+    }
+  },
+  "recovery": {
+    "result": "passed",
+    "previousImage": "localhost/tax-engine:2026-d32cb8c-arm64",
+    "phases": [
+      "previous",
+      "upgrade",
+      "database-restart",
+      "database-dump-restore",
+      "rollback",
+      "re-upgrade"
+    ],
+    "databaseRecovery": {
+      "result": "passed",
+      "evidence": "local-synthetic-postgresql-dump-restore",
+      "tables": 9,
+      "tenantWorkspaces": 2,
+      "exactCostRestored": true,
+      "metadataCleanupReapplied": true,
+      "metadataCleanupIdempotent": true,
+      "checksum": "75e9b09861de94f00e525e76721dfe880622fb805e96af5325999d0de0f526d1"
+    },
+    "browserRecovery": {
+      "passed": true,
+      "encrypted": true,
+      "wrongPasswordRejected": true,
+      "tamperRejected": true,
+      "originalBytes": true,
+      "unknownYearPreserved": true,
+      "exactCents": true,
+      "deletion": true,
+      "networkObservation": {
+        "requests": 397,
+        "startsBeforeUpload": true,
+        "rawPrivateMarkersAbsent": true,
+        "limitation": "Checks raw request URLs and postData for the synthetic SSN, filename and PDF signature; not a general encoded or binary PII proof."
+      }
+    },
+    "evidence": {
+      "path": ".local/upgrade-evidence/recovery-5b2eb5fb-arm64.log",
+      "sha256": "204cbcda3c86f3fdcfd3d5ce05bb6e6a9a05c8d25712817e54686b519318d5ad"
+    }
+  },
+  "sbom": {
+    "components": 2930,
+    "path": ".local/upgrade-evidence/sbom-5b2eb5fb-arm64.cdx.json",
+    "sha256": "4622d35c61d8734a7d80cef26f793734f63dddf786fe0a052ee66cb138c8e4fb"
+  },
+  "scan": {
+    "databaseBuilt": "2026-10-31T06:18:17Z",
+    "matches": 159,
+    "distinctAdvisories": 68,
+    "severity": {
+      "High": 56,
+      "Negligible": 46,
+      "Medium": 47,
+      "Low": 10
+    },
+    "artifactTypes": {
+      "deb": 159
+    },
+    "fixedVersionAvailable": 0,
+    "newSinceRegister": [],
+    "goneSinceRegister": [],
+    "path": ".local/upgrade-evidence/scan-5b2eb5fb-arm64.json",
+    "sha256": "b998f61985d2caff1382316166ec5879a47f192048df3da820c419a59c63c29c"
+  },
+  "advisoryAcceptance": "Pending owner. The register review date is 2026-11-07. This scan accepts nothing."
+}

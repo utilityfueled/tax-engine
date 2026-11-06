@@ -63,10 +63,10 @@ lines:
 
   # ── Part II: Tax on Non-Farm Income (Current Year) ──────────
   - line: "4"
-    description: "Tax on Line 3 using 2025 rates"
-    formula: "calculateTaxFromBrackets(Line 3, 2025 brackets[filingStatus]) or QDCG worksheet"
+    description: "Tax on Line 3 using the current-year Tax Table or applicable worksheet"
+    formula: "Current-year Tax Table below100000, Tax Computation Worksheet at/above100000, or applicable QDCG/ScheduleD/foreign worksheet; base years explicitly retain their Tax Rate Schedules"
     irsRef: "Schedule J Instructions, Line 4"
-    testRef: "tests/engine/forms/schedule-j.test.ts::elected farm income equals full taxable income"
+    testRef: "tests/engine/federal-tax-table-integration.test.ts::keeps ScheduleJ base years on actual rate schedules"
 
   # ── Part II: Base Year 1 (2022) ─────────────────────────────
   - line: "5"

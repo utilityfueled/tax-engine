@@ -1,3 +1,5 @@
+import { useTemporaryPdfOutput } from "./temporary-output.js";
+const testOutputDir = useTemporaryPdfOutput();
 /**
  * Tests for Schedule A PDF filling.
  * Verifies that engine results are correctly mapped to PDF form fields.
@@ -37,7 +39,7 @@ function isChecked(doc: PDFDocument, fieldName: string): boolean {
   return false;
 }
 
-const BLANK_SA = "forms/blank/f1040sa.pdf";
+const BLANK_SA = "forms/blank/2025/f1040sa.pdf";
 
 // ─── Schedule A — MFJ with itemized deductions ───────────────────────────
 
@@ -197,7 +199,7 @@ describe("fillReturn orchestrator with Schedule A", () => {
     const result = calculateFederalTax(complexMFJFixture);
     const { filledForms } = await fillReturn(complexMFJFixture, result, {
       blankFormsDir: "forms/blank",
-      outputDir: "forms/filled",
+      outputDir: testOutputDir,
     });
     expect(filledForms.some((f) => f.includes("f1040sa-filled"))).toBe(true);
   }, 15_000);
@@ -207,7 +209,7 @@ describe("fillReturn orchestrator with Schedule A", () => {
     const result = calculateFederalTax(simpleW2Fixture);
     const { filledForms } = await fillReturn(simpleW2Fixture, result, {
       blankFormsDir: "forms/blank",
-      outputDir: "forms/filled",
+      outputDir: testOutputDir,
     });
     expect(filledForms.some((f) => f.includes("f1040sa-filled"))).toBe(false);
   }, 15_000);

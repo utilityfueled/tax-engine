@@ -1,0 +1,20 @@
+form: Ohio native resident-credit independent inventory and transaction boundaries
+taxYear: 2025
+reference: https://codes.ohio.gov/ohio-revised-code/section-5747.05
+notes: |
+  Independent integration controls before native implementation. Existing reviewed
+  finite single-primary one-W2 Virginia method is the only eligible method here.
+  Complete zero-value additional originals are still actual inventory, not absent
+  records. Parent/child original captures must agree with current complete facts.
+  Existing paired bank/agency payment evidence must reach the canonical authority.
+  No new credit calculation, verified agency retrieval, filing or human qualification.
+lines:
+  - line: "ordinary"
+    formula: Actual OH100000/VA60000, tax2323, limit1394, paid1000, credit1000 and requested Ohio refund677 remain unchanged across readonly replay.
+    testRef: "tests/guided-interview/guided-oh-rc-native-independent.test.ts::independent native RC retains ordinary source and literal result"
+  - line: "inventory"
+    formula: A second actual W2 or retained zero interest, dividend or NEC original cannot enter this finite one-W2 native method even when all explicit federal captures match the new actual inventory.
+    testRef: "tests/guided-interview/guided-oh-rc-native-independent.test.ts::independent native RC refuses coherent unsupported inventory %s"
+  - line: "payment"
+    formula: Settled bank and applied agency originals with actual mismatched amount or wrong tax period cannot be reduced to a receipt scalar by the native bridge, even with a current exact child packet commitment.
+    testRef: "tests/guided-interview/guided-oh-rc-native-independent.test.ts::independent native RC preserves canonical paired-original refusal %s"

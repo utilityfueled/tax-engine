@@ -1,3 +1,4 @@
+import { fillRequiredTaxpayerFacts, reachFilingStatus } from "./guided-fixtures";
 import { expect, test } from "@playwright/test";
 /** Set advanced mode in localStorage so the workspace skips guided interview. */
 async function enableAdvancedMode(page: import("@playwright/test").Page) {
@@ -8,16 +9,18 @@ async function enableAdvancedMode(page: import("@playwright/test").Page) {
 
 async function saveGuidedSetupProgress(page: import("@playwright/test").Page) {
   await page.getByRole("button", { name: /start your tax return/i }).click();
-  await expect(page).toHaveURL(/\/returns\/[a-z0-9-]+(?:\?create=1)?$/i);
+  await expect(page).toHaveURL(/\/returns\/(?!new(?:[/?#]|$))[a-z0-9-]+(?:\?create=1)?$/i);
 
   const workspaceId = new URL(page.url()).pathname.split("/").at(-1);
 
+  await reachFilingStatus(page);
   await page.getByRole("radio", { name: /single/i }).click();
   await page.getByRole("button", { name: "Continue" }).click();
   await page.getByRole("checkbox", { name: /w-2 wages/i }).check();
   await page.getByRole("button", { name: "Continue" }).click();
   await page.getByRole("button", { name: "Continue" }).click();
   await page.getByRole("button", { name: /start my return/i }).click();
+  await fillRequiredTaxpayerFacts(page);
   await page.getByRole("textbox", { name: /first name/i }).fill("Jane");
   await page.getByRole("textbox", { name: /last name/i }).fill("Doe");
   await page.getByRole("button", { name: "Continue" }).click();
@@ -51,8 +54,8 @@ test("landing page can resume and delete saved local returns", async ({ page }) 
   await expect(workspaceCard.getByText(/1 guided section saved/i)).toBeVisible();
   await expect(workspaceCard.getByText(/ready to resume at w-2 wages/i)).toBeVisible();
 
-  await workspaceCard.getByRole("link", { name: /continue return/i }).click();
-  await expect(page).toHaveURL(new RegExp(`/returns/${workspaceId}$`, "i"));
+  await workspaceCard.getByRole("link", { name: /continue tax return/i }).click();
+  await expect(page).toHaveURL(new RegExp(`/returns/${workspaceId}(?:\\?local=1)?$`, "i"));
   await expect(page.getByText(/w-2 #1/i)).toBeVisible();
 
   await page.getByRole("link", { name: /my returns/i }).click();
@@ -94,7 +97,7 @@ test("landing page hides untouched drafts until the filer actually starts the re
   await enableAdvancedMode(page);
 
   await page.getByRole("button", { name: /start your tax return/i }).click();
-  await expect(page).toHaveURL(/\/returns\/[a-z0-9-]+(?:\?create=1)?$/i);
+  await expect(page).toHaveURL(/\/returns\/(?!new(?:[/?#]|$))[a-z0-9-]+(?:\?create=1)?$/i);
 
   await page.getByRole("link", { name: /back to my returns/i }).click();
   await expect(page).toHaveURL("/");
@@ -159,14 +162,14 @@ test("switching one return to advanced mode does not skip guided onboarding for 
   await expect(page).toHaveURL("/");
 
   const existingWorkspaceCard = page.getByRole("listitem").filter({ hasText: `Tax Return ${workspaceId}` });
-  await existingWorkspaceCard.getByRole("link", { name: /continue return/i }).click();
+  await existingWorkspaceCard.getByRole("link", { name: /continue tax return/i }).click();
   await expect(page.getByRole("button", { name: /start guided interview/i })).toBeVisible();
 
   await page.getByRole("link", { name: /^my returns$/i }).click();
   await expect(page).toHaveURL("/");
 
   await page.getByRole("link", { name: /start new return/i }).click();
-  await expect(page).toHaveURL(/\/returns\/[a-z0-9-]+(?:\?create=1)?$/i);
+  await expect(page).toHaveURL(/\/returns\/(?!new(?:[/?#]|$))[a-z0-9-]+(?:\?create=1)?$/i);
   await expect(page.getByRole("heading", { name: /let's tailor your return\./i })).toBeVisible();
   await expect(page.getByRole("button", { name: /switch to advanced mode/i })).toBeVisible();
 });

@@ -1,22 +1,40 @@
 "use client";
+import type { HealthInsuranceData } from "@/lib/guided-health-insurance-facts";
 
 import { RetroShell } from "@/components/retro-shell";
 import {
   type CreditsData,
   type DependentCareData,
-  type EducationCreditData,
-  type EducationStudentData,
-  type EnergyCreditData,
+  type FilingStatus,
+  type PersonalInfoData,
   emptyCreditsData,
-  emptyEducationStudent,
 } from "@/lib/guided-interview-flow";
 import { CurrencyField } from "./currency-field";
+import { EnergySourceDetails } from "./energy-source-details";
+import { VehicleSourceDetails } from "./vehicle-source-details";
+import { AdoptionSourceDetails } from "./adoption-source-details";
+import { EducationSourceDetails } from "./education-source-details";
+import { EducationDistributionDetails } from "./education-distribution-details";
+import { PremiumTaxCreditSourceDetails } from "./premium-tax-credit-source-details";
+import { SavingsBondSourceDetails } from "./savings-bond-source-details";
+import { CareBenefitsDetails } from "./care-benefits-details";
+import type { CareBenefitSource } from "@/lib/guided-dependent-care-benefits";
+import { CareSourceDetails } from "./care-source-details";
+import { MinimumTaxCreditDetails } from "./minimum-tax-credit-details";
+
+function EligibilityFact({ label, value, onChange }: { label: string; value: boolean | null | undefined; onChange: (value: boolean | null) => void }) {
+  return <label className="guided-field"><span className="guided-field-label">{label}</span><select className="guided-input" value={value == null ? "" : String(value)} onChange={(event) => onChange(event.target.value === "" ? null : event.target.value === "true")}><option value="">Confirm from actual records</option><option value="true">Yes</option><option value="false">No</option></select></label>;
+}
 
 function DependentCareSection({
   data,
+  filingStatus,
   onChange,
+  hasBenefitFacts,
 }: {
   data: DependentCareData;
+  hasBenefitFacts?: boolean;
+  filingStatus?: FilingStatus | null;
   onChange: (data: DependentCareData) => void;
 }) {
   const needsQualifyingIndividuals = data.expenses.trim() !== "" && data.qualifyingIndividuals === "";
@@ -37,20 +55,20 @@ function DependentCareSection({
           label="Total care expenses paid"
           hint="Daycare, babysitter, after-school care, summer camp, etc."
           value={data.expenses}
-          onChange={(v) => onChange({ ...data, expenses: v })}
+          onChange={(v) => onChange({ ...data, sourceFactsConfirmed: false, expenses: v })}
         />
         <label className="guided-field">
           <span className="guided-field-label">Qualifying individuals</span>
-          <select
+          <input
+            type="number"
+            min="1"
+            max="20"
+            step="1"
             className="guided-input guided-input-narrow"
             value={data.qualifyingIndividuals}
-            onChange={(e) => onChange({ ...data, qualifyingIndividuals: e.target.value })}
+            onChange={(e) => onChange({ ...data, sourceFactsConfirmed: false, qualifyingIndividuals: e.target.value })}
             aria-describedby="qualifying-individuals-hint"
-          >
-            <option value="">Select count</option>
-            <option value="1">1</option>
-            <option value="2">2 or more</option>
-          </select>
+          />
           <span className="guided-field-hint" id="qualifying-individuals-hint">
             Children under 13, or a disabled spouse/dependent who lived with you.
           </span>
@@ -61,241 +79,11 @@ function DependentCareSection({
           ) : null}
         </label>
       </div>
-    </div>
-  );
-}
-
-function EducationStudentCard({
-  index,
-  student,
-  onUpdate,
-  onRemove,
-  removable,
-}: {
-  index: number;
-  student: EducationStudentData;
-  onUpdate: (field: keyof EducationStudentData, value: string) => void;
-  onRemove: () => void;
-  removable: boolean;
-}) {
-  return (
-    <div className="guided-w2-card" style={{ padding: "12px" }}>
-      <div className="guided-w2-card-header">
-        <h5 className="guided-w2-card-title">Student #{index + 1}</h5>
-        {removable && (
-          <button
-            type="button"
-            className="utility-button utility-button-small utility-button-danger"
-            onClick={onRemove}
-            aria-label={`Remove student #${index + 1}${student.name ? ` — ${student.name}` : ""}`}
-          >
-            Remove
-          </button>
-        )}
-      </div>
-      <div className="guided-form-grid">
-        <label className="guided-field">
-          <span className="guided-field-label">Student name</span>
-          <input
-            type="text"
-            className="guided-input"
-            value={student.name}
-            onChange={(e) => onUpdate("name", e.target.value)}
-            placeholder="e.g. Jane Smith"
-            aria-required="true"
-          />
-        </label>
-        <CurrencyField
-          label="Qualified tuition & expenses"
-          hint="Tuition, fees, and course materials from Form 1098-T."
-          value={student.qualifiedExpenses}
-          onChange={(v) => onUpdate("qualifiedExpenses", v)}
-        />
-      </div>
-      <label className="guided-field">
-        <span className="guided-field-label">Prior years AOTC was claimed</span>
-        <select
-          className="guided-input guided-input-narrow"
-          value={student.priorYearsClaimed}
-          onChange={(e) => onUpdate("priorYearsClaimed", e.target.value)}
-          aria-describedby={`student-${index}-aotc-hint`}
-        >
-          <option value="0">0 (first year)</option>
-          <option value="1">1</option>
-          <option value="2">2</option>
-          <option value="3">3</option>
-          <option value="4">4+ (no longer eligible for AOTC)</option>
-        </select>
-        <span className="guided-field-hint" id={`student-${index}-aotc-hint`}>
-          The American Opportunity Credit can be claimed for up to 4 tax years per student.
-        </span>
-      </label>
-    </div>
-  );
-}
-
-function EducationSection({
-  data,
-  onChange,
-}: {
-  data: EducationCreditData;
-  onChange: (data: EducationCreditData) => void;
-}) {
-  function updateStudent(index: number, field: keyof EducationStudentData, value: string) {
-    const next = data.aocStudents.map((s, i) =>
-      i === index ? { ...s, [field]: value } : s
-    );
-    onChange({ ...data, aocStudents: next });
-  }
-
-  function addStudent() {
-    onChange({ ...data, aocStudents: [...data.aocStudents, { ...emptyEducationStudent }] });
-  }
-
-  function removeStudent(index: number) {
-    onChange({ ...data, aocStudents: data.aocStudents.filter((_, i) => i !== index) });
-  }
-
-  return (
-    <div className="guided-w2-card" style={{ padding: "12px" }}>
-      <div className="guided-w2-card-header">
-        <h3 className="guided-w2-card-title">
-          Education Credits (Form 8863)
-        </h3>
-      </div>
-      <p className="guided-hint" style={{ marginTop: "4px" }}>
-        Two credits are available: the American Opportunity Credit (up to $2,500/student,
-        partially refundable) and the Lifetime Learning Credit (up to $2,000 total).
-      </p>
-
-      <h4 className="guided-w2-card-title" style={{ marginTop: "12px", marginBottom: "8px" }}>
-        American Opportunity Credit students
-      </h4>
-
-      {data.aocStudents.length > 0 && (
-        <div className="guided-w2-stack">
-          {data.aocStudents.map((student, index) => (
-            <EducationStudentCard
-              key={index}
-              index={index}
-              student={student}
-              onUpdate={(field, value) => updateStudent(index, field, value)}
-              onRemove={() => removeStudent(index)}
-              removable={data.aocStudents.length > 1}
-            />
-          ))}
-        </div>
-      )}
-
-      <button
-        type="button"
-        className="utility-button"
-        onClick={addStudent}
-        style={{ marginTop: "8px" }}
-        aria-label="Add another student for American Opportunity Credit"
-      >
-        + Add a student
-      </button>
-
-      <details className="guided-expand" style={{ marginTop: "12px" }}>
-        <summary className="guided-expand-trigger">Lifetime Learning Credit</summary>
-        <div className="guided-expand-body">
-          <CurrencyField
-            label="Lifetime Learning Credit expenses"
-            hint="Tuition for graduate school, professional courses, or students past their 4th year. Up to $10,000 in expenses qualifies (20% credit = $2,000 max)."
-            value={data.llcExpenses}
-            onChange={(v) => onChange({ ...data, llcExpenses: v })}
-          />
-        </div>
-      </details>
-    </div>
-  );
-}
-
-function EnergySection({
-  data,
-  onChange,
-}: {
-  data: EnergyCreditData;
-  onChange: (data: EnergyCreditData) => void;
-}) {
-  function update(field: keyof EnergyCreditData, value: string) {
-    onChange({ ...data, [field]: value });
-  }
-
-  return (
-    <div className="guided-w2-card" style={{ padding: "12px" }}>
-      <div className="guided-w2-card-header">
-        <h3 className="guided-w2-card-title">
-          Residential Energy Credits (Form 5695)
-        </h3>
-      </div>
-      <p className="guided-hint" style={{ marginTop: "4px" }}>
-        If you installed solar panels, made energy-efficient home improvements, or
-        purchased a qualifying heat pump, you may qualify for a 30% credit.
-      </p>
-
-      <fieldset className="guided-fieldset">
-        <legend className="sr-only">Clean energy credits</legend>
-        <h4 className="guided-w2-card-title" style={{ marginTop: "12px", marginBottom: "8px" }}>
-          Clean energy (30% credit, no annual cap)
-        </h4>
-        <div className="guided-form-grid">
-          <CurrencyField
-            label="Solar electric system"
-            hint="Solar panels, inverters, and installation."
-            value={data.solarElectricCost}
-            onChange={(v) => update("solarElectricCost", v)}
-          />
-          <CurrencyField
-            label="Solar water heating"
-            hint="Solar water heater and installation."
-            value={data.solarWaterHeatingCost}
-            onChange={(v) => update("solarWaterHeatingCost", v)}
-          />
-        </div>
-      </fieldset>
-
-      <details className="guided-expand" style={{ marginTop: "12px" }}>
-        <summary className="guided-expand-trigger">Home efficiency improvements</summary>
-        <div className="guided-expand-body">
-          <fieldset className="guided-fieldset">
-            <legend className="sr-only">Home efficiency improvements</legend>
-            <p className="guided-hint">
-              30% credit, up to $3,200/year for qualifying home improvements.
-            </p>
-            <div className="guided-form-grid">
-              <CurrencyField
-                label="Insulation & air sealing"
-                value={data.insulationCost}
-                onChange={(v) => update("insulationCost", v)}
-              />
-              <CurrencyField
-                label="Exterior doors & windows"
-                value={data.exteriorDoorsWindowsCost}
-                onChange={(v) => update("exteriorDoorsWindowsCost", v)}
-              />
-              <CurrencyField
-                label="Roofing (metal or asphalt)"
-                value={data.roofCost}
-                onChange={(v) => update("roofCost", v)}
-              />
-              <CurrencyField
-                label="Energy-efficient HVAC"
-                hint="Central AC, furnace, boiler. Must meet efficiency standards."
-                value={data.energyEfficientHvacCost}
-                onChange={(v) => update("energyEfficientHvacCost", v)}
-              />
-              <CurrencyField
-                label="Water heater / heat pump"
-                hint="Heat pump water heater, heat pump for heating/cooling."
-                value={data.waterHeaterHeatPumpCost}
-                onChange={(v) => update("waterHeaterHeatPumpCost", v)}
-              />
-            </div>
-          </fieldset>
-        </div>
-      </details>
+      <EligibilityFact label="Do the qualifying-person, work-related care and eligible-provider requirements in Form 2441 apply?" value={data.eligibilityConfirmed} onChange={(value) => onChange({ ...data, sourceFactsConfirmed: false, eligibilityConfirmed: value })} />
+      <CurrencyField label="Your earned income for Form 2441 line 4" allowNegative hint="Use the worksheet amount after applicable self-employment adjustments, exclusions and substantiated student/incapacity rules." value={data.primaryEarnedIncome ?? ""} onChange={(value) => onChange({ ...data, sourceFactsConfirmed: false, primaryEarnedIncome: value })} />
+      {filingStatus === "mfj" && <CurrencyField label="Spouse's earned income for Form 2441 line 5" allowNegative hint="Use your spouse's own worksheet amount, including substantiated deemed income where applicable. Enter 0 only when zero is established." value={data.spouseEarnedIncome ?? ""} onChange={(value) => onChange({ ...data, sourceFactsConfirmed: false, spouseEarnedIncome: value })} />}
+      <CurrencyField label="Excluded dependent-care benefits from Form 2441 Part III" hint={hasBenefitFacts ? "Leave blank to use the validated Part III line 28 amount. If supplied, this amount must match it exactly." : "Confirm 0 when no benefits were received. Otherwise complete the actual dependent-care benefit details above."} value={data.excludedDependentCareBenefits ?? ""} onChange={(value) => onChange({ ...data, sourceFactsConfirmed: false, excludedDependentCareBenefits: value })} />
+      <CareSourceDetails data={data} onChange={onChange} />
     </div>
   );
 }
@@ -303,10 +91,20 @@ function EnergySection({
 export function SectionCredits({
   data,
   hasDependents,
+  filingStatus,
+  taxYear,
   onDataChange,
+  careBenefitSources,
+  personalData,
+  healthInsurance,
 }: {
+  healthInsurance?: HealthInsuranceData;
+  personalData?: PersonalInfoData;
+  careBenefitSources?: CareBenefitSource[];
   data: CreditsData | undefined;
   hasDependents: boolean;
+  taxYear?: number | null;
+  filingStatus?: FilingStatus | null;
   onDataChange: (data: CreditsData) => void;
 }) {
   const current = data ?? emptyCreditsData;
@@ -323,25 +121,39 @@ export function SectionCredits({
 
         <p className="guided-hint" style={{ marginTop: "8px", fontStyle: "italic" }}>
           Note: The Child Tax Credit and Earned Income Credit are computed automatically
-          from the dependents you entered in the Personal Info section
-          {hasDependents ? " — you're all set there" : ""}.
+          from the dependents you entered in the Personal Info section.
+          {hasDependents ? " Review the actual eligibility and identification answers there." : ""}
         </p>
 
         <div className="guided-w2-stack" style={{ marginTop: "16px" }}>
+          <CareBenefitsDetails data={current.dependentCareBenefits} taxYear={taxYear} filingStatus={filingStatus} sources={careBenefitSources} careProviders={current.dependentCare.providers} onChange={dependentCareBenefits => onDataChange({ ...current, dependentCareBenefits })} />
           <DependentCareSection
+            hasBenefitFacts={current.dependentCareBenefits !== undefined}
             data={current.dependentCare}
+            filingStatus={filingStatus}
             onChange={(next) => onDataChange({ ...current, dependentCare: next })}
           />
 
-          <EducationSection
+          <EducationSourceDetails
+            filingStatus={filingStatus}
+            taxYear={taxYear}
             data={current.education}
             onChange={(next) => onDataChange({ ...current, education: next })}
           />
 
-          <EnergySection
+          <EducationDistributionDetails data={current.educationDistributions} onChange={educationDistributions => onDataChange({ ...current, educationDistributions })} />
+          <PremiumTaxCreditSourceDetails healthInsurance={healthInsurance} personal={personalData} filingStatus={filingStatus} taxYear={taxYear} data={current.premiumTaxCredit} onChange={premiumTaxCredit => onDataChange({ ...current, premiumTaxCredit })} />
+          <SavingsBondSourceDetails data={current.savingsBondEducation} onChange={savingsBondEducation => onDataChange({ ...current, savingsBondEducation })} />
+          <MinimumTaxCreditDetails data={current.minimumTaxCredit} onChange={minimumTaxCredit => onDataChange({ ...current, minimumTaxCredit })} />
+
+          <EnergySourceDetails
+            filingStatus={filingStatus}
+            taxYear={taxYear}
             data={current.energy}
             onChange={(next) => onDataChange({ ...current, energy: next })}
           />
+          <AdoptionSourceDetails data={current.adoption} onChange={(next) => onDataChange({ ...current, adoption: next })} />
+          <VehicleSourceDetails data={current.vehicles} filingStatus={filingStatus} onChange={(next) => onDataChange({ ...current, vehicles: next })} />
         </div>
       </div>
     </RetroShell>

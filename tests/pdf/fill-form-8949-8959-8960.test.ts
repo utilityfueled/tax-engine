@@ -1,3 +1,5 @@
+import { useTemporaryPdfOutput } from "./temporary-output.js";
+const testOutputDir = useTemporaryPdfOutput();
 /**
  * Tests for Form 8949, 8959, and 8960 PDF filling.
  * Verifies that engine results are correctly mapped to PDF form fields.
@@ -39,9 +41,9 @@ function isChecked(doc: PDFDocument, fieldName: string): boolean {
   return false;
 }
 
-const BLANK_8949 = "forms/blank/f8949.pdf";
-const BLANK_8959 = "forms/blank/f8959.pdf";
-const BLANK_8960 = "forms/blank/f8960.pdf";
+const BLANK_8949 = "forms/blank/2025/f8949.pdf";
+const BLANK_8959 = "forms/blank/2025/f8959.pdf";
+const BLANK_8960 = "forms/blank/2025/f8960.pdf";
 
 // ─── Form 8949 — MFJ with capital transactions ─────────────────────────────
 
@@ -204,7 +206,7 @@ describe("Form 8959 PDF fill — MFJ complex filer", () => {
     const f8959 = result.form8959!;
     const expected = formatCurrency(f8959.withholdingCredit);
     if (expected === "") {
-      expect(getFieldText(doc, FORM_8959_FIELDS.line22)).toBeUndefined();
+      expect(getFieldText(doc, FORM_8959_FIELDS.line22)).toBe("0");
     } else {
       expect(getFieldText(doc, FORM_8959_FIELDS.line22)).toBe(expected);
     }
@@ -333,7 +335,7 @@ describe("fillReturn orchestrator with Form 8949, 8959, 8960", () => {
     const result = calculateFederalTax(complexMFJFixture);
     const { filledForms } = await fillReturn(complexMFJFixture, result, {
       blankFormsDir: "forms/blank",
-      outputDir: "forms/filled",
+      outputDir: testOutputDir,
     });
     expect(filledForms.some((f) => f.includes("f8949-filled"))).toBe(true);
   }, 15_000);
@@ -343,7 +345,7 @@ describe("fillReturn orchestrator with Form 8949, 8959, 8960", () => {
     const result = calculateFederalTax(complexMFJFixture);
     const { filledForms } = await fillReturn(complexMFJFixture, result, {
       blankFormsDir: "forms/blank",
-      outputDir: "forms/filled",
+      outputDir: testOutputDir,
     });
     if (result.form8959) {
       expect(filledForms.some((f) => f.includes("f8959-filled"))).toBe(true);
@@ -355,7 +357,7 @@ describe("fillReturn orchestrator with Form 8949, 8959, 8960", () => {
     const result = calculateFederalTax(complexMFJFixture);
     const { filledForms } = await fillReturn(complexMFJFixture, result, {
       blankFormsDir: "forms/blank",
-      outputDir: "forms/filled",
+      outputDir: testOutputDir,
     });
     if (result.form8960) {
       expect(filledForms.some((f) => f.includes("f8960-filled"))).toBe(true);
@@ -367,7 +369,7 @@ describe("fillReturn orchestrator with Form 8949, 8959, 8960", () => {
     const result = calculateFederalTax(simpleW2Fixture);
     const { filledForms } = await fillReturn(simpleW2Fixture, result, {
       blankFormsDir: "forms/blank",
-      outputDir: "forms/filled",
+      outputDir: testOutputDir,
     });
     expect(filledForms.some((f) => f.includes("f8949-filled"))).toBe(false);
     expect(filledForms.some((f) => f.includes("f8959-filled"))).toBe(false);

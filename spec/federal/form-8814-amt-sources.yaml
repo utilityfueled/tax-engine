@@ -1,0 +1,45 @@
+form: "Form 8814 AMT source worksheet"
+fullName: "Actual child tax-exempt interest preference transferred to Form 6251"
+taxYear: 2026
+irsReference: "https://www.irs.gov/instructions/i6251"
+sources:
+  - url: "https://www.irs.gov/instructions/i6251"
+    section: "Final 2025 instructions, line 2g; IRC 57(a)(5)"
+    retrieved: "2026-10-25"
+  - url: "https://www.irs.gov/instructions/i8814"
+    section: "Final 2025 instructions, Alternative minimum tax and line 1b"
+    retrieved: "2026-10-25"
+reviewStatus: "Implemented source handoff; independent tax review and final 2026 form qualification pending"
+notes: |
+  This source worksheet applies the unchanged preference handoff for 2025 and
+  the isolated 2026 candidate engine. It does not qualify Form 8814 election
+  eligibility, enable a tax year, qualify a blank/map or authorize filing.
+  A positive child line 1b needs the complete actual statement collection,
+  including explicit zero preference amounts. Child line 1b itself is required;
+  a missing amount must not default to zero. Form 1099-INT box 9 and Form
+  1099-DIV box 13 already identify specified private activity bond income;
+  issue-date and statutory exceptions must be reflected in those actual
+  reported boxes, not guessed from total exempt interest. Box 13 already nets
+  the fund's expenses; no second fund expense deduction is permitted.
+  Any additional allowable deduction is a completed source worksheet amount
+  with a reference and confirmation that it is allowable if the interest were
+  taxable, belongs to these sources, and was not already netted or deducted.
+  An expense payment alone is not evidence of an allowable deduction.
+  All arithmetic uses Decimal. Keep source cents through the aggregate; the
+  existing Form 6251 calculation applies its reporting and tax rounding.
+lines:
+  - line: "source-reconciliation"
+    description: "Complete actual child exempt-interest records"
+    formula: "Sum actual statement exempt interest = child Form8814 line1b; each actual preference box is between zero and that statement's exempt interest. Require matching year, confirmed completeness, nonblank unique source IDs, and all monetary facts."
+    irsRef: "Form8814 line1b; Form6251 line2g"
+    testRef: "tests/engine/forms/form-8814-amt-sources.test.ts::requires complete matching actual sources instead of treating unknown preference as zero"
+  - line: "child-preference"
+    description: "Net preference for one child"
+    formula: "max(0, sum actual INT box9 and DIV box13 amounts minus actual otherwise allowable deduction)"
+    irsRef: "Form6251 line2g; IRC57(a)(5)(A)-(B)"
+    testRef: "tests/engine/forms/form-8814-amt-sources.test.ts::uses reported interest and dividend preferences with actual deductions and a zero floor"
+  - line: "preference-total"
+    description: "Child preference transferred once to the parent's AMT calculation"
+    formula: "Sum net child preferences; add to separately derived parent private activity interest on Form6251 line2g. Do not add child line1b to parent1040line2a."
+    irsRef: "Form8814 AMT instruction; Form6251 line2g final paragraph"
+    testRef: "tests/engine/federal-child-amt-sources.test.ts::transfers actual child preferences once into AMT without adding regular parent exempt interest"

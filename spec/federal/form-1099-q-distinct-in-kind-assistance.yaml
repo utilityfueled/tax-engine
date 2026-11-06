@@ -1,0 +1,56 @@
+form: "Form1099Q distinct in-kind tuition assistance"
+fullName: "Separate actual tuition benefits and expense-specific assistance"
+taxYear: 2026
+irsReference: "https://uscode.house.gov/us/usc/119-118/t26/s529/"
+sources:
+  - "https://www.irs.gov/publications/p970"
+  - "https://www.irs.gov/instructions/i1099q"
+notes: |
+  Official sources refreshed October26,2026. IRC529(c)(3)(B)(i),(v) and25A(g)(2)
+  coordinate actual in-kind benefits with tax-free assistance and actual credit
+  expenses. Pub970 chapter7 supplies the earnings fraction, rounding and separate
+  additional-tax exception rules. These examples are independently derived
+  synthetic source records, not IRS published examples or human review.
+  Extend the single-benefit method only to a complete set of distinct actual
+  postsecondary tuition expenses for one actual student. Every expense has one
+  original benefit and one allocation, its own recorded assistance and credit,
+  known zero refund/other-benefit amounts, and benefit equal to expense. Each
+  original statement retains its own earnings/basis and sums to its linked
+  benefits. No assistance is spread across expenses, no shared-source election
+  is inferred and no original statement is merged for convenience. A single
+  actual statement may document multiple distinct benefits. Cash/ESA mixtures,
+  duplicate benefits, unbound expenses and unknown source facts remain rejected
+  by this method; the separately specified actual ESA method remains unchanged.
+lines:
+  - line: "distinct-sources"
+    description: "Preserve original source earnings while reducing each separate tuition expense"
+    formula: "Benefit4000/earnings800/assistance1000/allocation3000 gives600excluded and200taxable; separate6000/900/1500/4500 gives675excluded and225taxable. Same recipient425taxable has43additional tax. One actual10000statement with1700earnings and both benefits also gives1275excluded and425taxable."
+    testRef: "tests/engine/forms/form-1099-q-distinct-in-kind-assistance.test.ts::keeps distinct actual tuition expense and statement records"
+  - line: "cents-and-credit"
+    description: "Use each actual statement fraction and actual credit allocation"
+    formula: "Assistance1002.50/1503.33 gives taxable200/225;1002.51/1503.34 gives201/226. Actual credit1000/500 with original assistance1000/1500 gives allocations2000/4000, taxable400/300, and credit exceptions200/75; remaining425taxable earnings gives43additional tax."
+    testRef: "tests/engine/forms/form-1099-q-distinct-in-kind-assistance.test.ts::keeps exact source rounding and separately supplied credit amounts"
+  - line: "complete-source-group"
+    description: "Every beneficiary expense and statement must reconcile independently"
+    formula: "Reject an unbound extra expense, shared or duplicated benefit, cross-linked allocation, mixed cash/ESA source, wrong year/owner, unknown assistance/refund, missing confirmation, and unreconciled original Box1. Zero assistance remains an actual value."
+    testRef: "tests/engine/forms/form-1099-q-distinct-in-kind-assistance.test.ts::rejects incomplete or shared tuition source groups without inventing allocations"
+  - line: "canonical-transfer"
+    description: "Carry source-derived recipient amounts through the canonical return"
+    formula: "50000wages plus425taxable earnings gives50425AGI and43additional tax. Actual1500LLC expenses yield300LLC,700taxable earnings and50700AGI while the credit exception leaves43additional tax. Preserve the real2026 and filing gates."
+    testRef: "tests/engine/education-distinct-in-kind-return.test.ts::carries distinct tuition assistance and actual credit through the return"
+  - line: "actual-guide"
+    description: "The existing collector retains all distinct original records"
+    formula: "Collect both original statements, expenses, benefits and allocations without merging them; missing assistance or stale confirmation blocks the bridge. A balanced edit to the distribution's own records clears its confirmation through updateSectionData even when the new amounts still reconcile; confirming unchanged facts remains possible."
+    testRef: "tests/guided-interview/guided-distinct-in-kind-assistance.test.ts::retains distinct actual tuition sources through the guided bridge"
+  - line: "linked-confirmation-sequence"
+    description: "Reconfirm edited education sources before independent linked loan facts"
+    formula: "An actual education-source edit clears both education and affected loan/educator confirmations. Explicitly confirming unchanged education facts restores only education confirmation; then confirming unchanged loan facts preserves the restored education confirmation without a cycle."
+    testRef: "tests/guided-interview/guided-student-loan-facts.test.ts::invalidates substantive source changes without cycling confirmations"
+  - line: "private-review"
+    description: "Bind each original tuition source before redaction and output"
+    formula: "A redacted saved packet retains425taxable earnings and43additional tax with separate1000/1500assistance traces. Balanced source edits, removed sources and stale audit reject before PDF I/O; no identifiers or filing claims appear."
+    testRef: "tests/pdf/form-1099-q-distinct-in-kind-assistance.test.ts::binds all distinct original tuition sources before producing the review packet"
+  - line: "workspace-packet"
+    description: "The unmocked guided workspace prepares private original source evidence"
+    formula: "Reopen the actual combined workspace packet with both assistance traces,425income,43additional tax, per-page review notices and private identifiers absent."
+    testRef: "tests/apps/web/distinct-tuition-workspace-packet.test.ts::reopens the actual distinct tuition guided workspace packet"

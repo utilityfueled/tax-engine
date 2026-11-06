@@ -9,15 +9,14 @@ This repository focuses on auditability:
 
 ## Status
 
-Current capabilities include:
-- Federal Form 1040 orchestration and many supporting forms and schedules
-- State support for all 50 states with deeper validated coverage for selected states
-- Fillable PDF generation for supported federal and state forms
-- A local-first web app for guided return preparation
+No scenario is currently qualified for filing or electronic submission.
 
-Current non-goals:
-- This is not legal, tax, or financial advice
-- This project does not currently e-file returns
+- The 2025 federal and state engines provide experimental calculations; dedicated state implementations still require scenario and form review.
+- Tax year 2026 (filed in 2027) has a separate, incomplete rule pack. Full calculation and PDF output remain blocked.
+- PDF downloads are for review only and omit taxpayer Social Security numbers. Names, tax amounts and explicit business EINs may remain, so the downloads are not anonymous or complete filing exports.
+- The local-first app collects guided facts and saves drafts. New AI profiles remain evaluation candidates.
+
+See the app's `/support` matrix and [implementation evidence and remaining work](docs/upgrade-2026-progress.md).
 
 ## Repository Layout
 
@@ -27,20 +26,23 @@ packages/           Shared workspace packages
 spec/               Tax rule specifications and test references
 src/                Core engine, models, CLI, PDF filling, utilities
 tests/              Unit and integration tests
-forms/blank/        Blank PDF forms used for filling tests
+forms/blank/2025/   Pinned historical review templates (not filing qualified)
+src/pdf/mappings/2025/  Historical review mappings tied to those template bytes
 ```
 
 ## Getting Started
 
 ### Prerequisites
 
-- Node.js 22+
-- pnpm 10+
+- Node.js 26.13.0 (`nvm use`, or a runtime manager reading `.node-version`)
+- pnpm 10.34.8 (pinned in `packageManager`)
+- Python 3.13+ with `venv` for PDF text assertions
 
 ### Install
 
 ```bash
-pnpm install
+pnpm install --frozen-lockfile
+pnpm test:setup
 ```
 
 ### Run the app
@@ -59,11 +61,27 @@ pnpm test
 
 ```bash
 pnpm build
+pnpm build:web
 pnpm lint
 pnpm typecheck
+pnpm typecheck:contracts
+pnpm typecheck:web
 pnpm spec:validate
+pnpm spec:inventory:check
+pnpm test:coverage
+pnpm --filter @tax-engine/web exec playwright install chromium
+pnpm sample-docs:fetch
 pnpm test:web
 ```
+
+`pnpm test:setup` creates an isolated `.local/pdf-test-venv` with hash-pinned
+`pypdf`. Tests use that interpreter; `TAX_ENGINE_PDF_TEST_PYTHON` may point to an
+equivalent environment. Regenerate the committed implementation inventory with
+`pnpm spec:inventory` after adding specs or test references. Inventory entries
+record code and reference existence, not tax-law review or filing qualification.
+The coverage gate remains 85% for branches. Hosted browser tests require the
+separate database and Stripe setup below; skipped hosted tests are not release
+evidence.
 
 ### Hosted billing webhook smoke
 
@@ -104,11 +122,15 @@ For Vercel staging on `staging.vivalatax.com`, set these environment variables i
 - `STRIPE_PRICE_ID_PLUS_MONTHLY=<stripe test price id>`
 - `STRIPE_PRICE_ID_AI_HELPER_TOP_UP=<stripe test price id>`
 
-For shared hosted rate limiting on Vercel, add one of these Redis configurations:
+Hosted production requires shared rate limiting. Add one of these Redis configurations:
 
 - Vercel KV / Upstash integration: Vercel injects `KV_REST_API_URL` and `KV_REST_API_TOKEN` automatically.
 - Direct Upstash REST credentials: set `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN`.
 - Optional: `TAX_ENGINE_RATE_LIMIT_PREFIX=tax-engine:staging:ratelimit` so staging and production do not share buckets.
+
+Missing shared configuration blocks hosted production startup. During Redis
+errors or timeouts, protected routes return retryable HTTP 503 responses before
+auth, billing, upload, or AI work. Self-host mode can use process-local limits.
 
 Vercel Analytics is now wired into the app shell with `@vercel/analytics`; no extra app code is needed beyond deploying on Vercel.
 

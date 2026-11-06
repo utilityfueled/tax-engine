@@ -26,6 +26,7 @@ import type { ScheduleK1 } from "@/models/inputs.js";
 import type { CalculatedLine } from "@/models/outputs.js";
 import { d } from "@/utils/decimal.js";
 import { AuditTrail } from "@/utils/audit.js";
+import { calculateK1CharitableBasisSources, type K1CharitableBasisContext, type K1CharitableBasisRecord, type K1CharitableCategory } from "./k1-charitable-basis-sources.js";
 
 const ZERO = new Decimal(0);
 const FORM = "Basis Schedule";
@@ -46,6 +47,8 @@ export interface DebtBasisResult {
   debtBasisBeforeAdjustments: Decimal;
   /** Debt basis restored from net income per IRC §1367(b)(2)(B) */
   restoration: Decimal;
+  /** Nondeductible expenses applied after stock under Form 7203 line 28. */
+  nondeductibleExpensesAppliedToDebtBasis: Decimal;
   /** Excess stock losses applied to reduce debt basis per IRC §1367(b)(2)(A) */
   lossesAppliedToDebtBasis: Decimal;
   endingDebtBasis: Decimal;
@@ -53,8 +56,17 @@ export interface DebtBasisResult {
   debtBasisReductionCarryforward: Decimal;
 }
 
+export interface K1CharitableBasisResult {
+  sourceFactsVerified: true;
+  /** Basis-stage amounts only; activity and section170 limitations still apply. */
+  availableAfterBasis: Record<K1CharitableCategory, Decimal>;
+  basisAllowed: Decimal; basisSuspended: Decimal; appreciationExempt: Decimal;
+  records: Array<K1CharitableBasisRecord & { basisAllowed: Decimal; basisSuspended: Decimal; availableAfterBasis: Decimal }>;
+}
+
 export interface PartnerBasisScheduleResult {
   entityType: "partnership" | "s_corporation";
+  charitableSources?: K1CharitableBasisResult;
 
   // ── Increases ──
   beginningBasis: Decimal;
@@ -70,6 +82,9 @@ export interface PartnerBasisScheduleResult {
   // ── Nondeductible expenses ──
   totalNondeductibleExpenses: Decimal;
   basisAfterNondeductible: Decimal;
+  /** Remaining nondeductible costs after the supplied stock and debt bases. */
+  unabsorbedNondeductibleExpenses: Decimal;
+  /** For S corporations, carries only under the actual Reg. 1.1367-1(g) election. */
   suspendedNondeductible: Decimal;
 
   // ── Losses ──
@@ -102,13 +117,15 @@ export interface PartnerBasisScheduleResult {
     otherDeductions: Decimal;
     investmentInterest: Decimal;
     ebie: Decimal;
+    foreignTax: Decimal;
   };
 
   lines: CalculatedLine[];
 }
 
-export function calculatePartnerBasisSchedule(k1: ScheduleK1): PartnerBasisScheduleResult {
+export function calculatePartnerBasisSchedule(k1: ScheduleK1, charitableSourceContext?: K1CharitableBasisContext): PartnerBasisScheduleResult {
   const audit = new AuditTrail();
+  const charitable = charitableSourceContext ? calculateK1CharitableBasisSources(k1, charitableSourceContext) : undefined;
   const entityType = k1.entityType ?? "partnership";
   const entityLabel = entityType === "s_corporation" ? "S-Corp" : "Partnership";
 
@@ -202,7 +219,7 @@ export function calculatePartnerBasisSchedule(k1: ScheduleK1): PartnerBasisSched
 
   // ── Build loss categories ──
   const priorSuspended = k1.priorSuspendedLosses;
-  const lossCategories: LossCategory[] = buildLossCategories(k1, priorSuspended);
+  const lossCategories: LossCategory[] = buildLossCategories(k1, priorSuspended, charitable?.currentBasis, charitable?.priorBasis);
   const totalLosses = lossCategories.reduce((sum, c) => sum.plus(c.total), ZERO);
 
   let basisAfterNondeductible: Decimal;
@@ -220,7 +237,7 @@ export function calculatePartnerBasisSchedule(k1: ScheduleK1): PartnerBasisSched
     // Step 4 (swapped): Losses first
     basisAvailableForLosses = basisAfterDistributions;
     ({ totalAllowed: totalAllowedLosses, totalSuspended: totalSuspendedLosses } =
-      allocateLossesProRata(lossCategories, basisAvailableForLosses, audit));
+      allocateLossesProRata(lossCategories, basisAvailableForLosses, audit, charitable !== undefined));
 
     const basisAfterLosses = basisAfterDistributions.minus(totalAllowedLosses);
 
@@ -249,27 +266,21 @@ export function calculatePartnerBasisSchedule(k1: ScheduleK1): PartnerBasisSched
     // Step 5: Losses
     basisAvailableForLosses = basisAfterNondeductible;
     ({ totalAllowed: totalAllowedLosses, totalSuspended: totalSuspendedLosses } =
-      allocateLossesProRata(lossCategories, basisAvailableForLosses, audit));
+      allocateLossesProRata(lossCategories, basisAvailableForLosses, audit, charitable !== undefined));
 
     endingBasis = basisAfterNondeductible.minus(totalAllowedLosses);
   }
 
   audit.record(FORM, "total-losses", "Total loss and deduction items", totalLosses,
-    "Sum of current-year losses + prior suspended losses", {
+    "Sum of current-year losses, deductions and foreign tax + prior suspended losses", {
       "Current-year + prior suspended total": totalLosses,
     });
-  audit.record(FORM, "total-allowed", "Total losses allowed against basis",
-    totalAllowedLosses, `min(${totalLosses}, ${basisAvailableForLosses})`, {
-      "Total losses": totalLosses,
-      "Basis available": basisAvailableForLosses,
-    });
-  if (totalSuspendedLosses.gt(ZERO)) {
-    audit.record(FORM, "total-suspended", "Total losses suspended (IRC §704(d)/§1366(d))",
-      totalSuspendedLosses, "Carry forward indefinitely", {
-        "Total losses": totalLosses,
-        "Allowed": totalAllowedLosses,
-      });
+  const foreignTaxCategory = findCategory(lossCategories, "foreignTax");
+  if (foreignTaxCategory.total.gt(ZERO)) {
+    audit.record(FORM, "foreign-tax", "Foreign taxes paid or accrued, included in total loss and deduction items", foreignTaxCategory.total,
+      "IRC 704(d)(3)(A); Form 7203 line 46");
   }
+  const stockAllowedLosses = totalAllowedLosses;
 
   audit.record(FORM, "ending-basis", `${entityLabel} adjusted basis at end of year`,
     endingBasis, "Basis after all decreases (≥ 0)", {
@@ -285,6 +296,7 @@ export function calculatePartnerBasisSchedule(k1: ScheduleK1): PartnerBasisSched
   // excess losses beyond stock basis can reduce debt basis (IRC §1367(b)(2)(A)).
   // In net-increase years, income first restores debt basis (IRC §1367(b)(2)(B)).
   let debtBasisResult: DebtBasisResult | undefined;
+  let unabsorbedNondeductibleExpenses = suspendedNondeductible;
 
   if (entityType === "s_corporation" && k1.beginningDebtBasis !== undefined) {
     const beginningDebtBasis = Decimal.max(ZERO, d(k1.beginningDebtBasis));
@@ -292,96 +304,132 @@ export function calculatePartnerBasisSchedule(k1: ScheduleK1): PartnerBasisSched
     const priorDebtReduction = Decimal.max(ZERO, d(k1.priorDebtBasisReduction));
     const debtBasisBeforeAdjustments = beginningDebtBasis.plus(additionalLoans);
 
-    audit.record(FORM, "debt-15", "S-Corp beginning debt basis (Form 7203 Part II Line 15)",
+    audit.record(FORM, "debt-15", "S-Corp beginning debt basis (Form 7203 line 21)",
       beginningDebtBasis, "Adjusted basis of shareholder loans to S-corp at beginning of year");
     if (additionalLoans.gt(ZERO)) {
-      audit.record(FORM, "debt-16", "Additional loans to S-Corp (Form 7203 Part II Line 16)",
+      audit.record(FORM, "debt-16", "Additional loans to S-Corp (Form 7203 line 22)",
         additionalLoans, "New direct loans made during the year");
     }
-    audit.record(FORM, "debt-17", "Debt basis before adjustments (Form 7203 Part II Line 17)",
+    audit.record(FORM, "debt-17", "Debt basis before restoration and reductions",
       debtBasisBeforeAdjustments, "Beginning debt + additional loans", {
         "Beginning debt": beginningDebtBasis,
         "Additional loans": additionalLoans,
       });
 
     // Net increase = max(0, ending stock basis (pre-restoration) - beginning stock basis)
-    // Per Treas. Reg. §1.1367-2(c)(2), net increase = stock increases - stock reductions
+    // Per Treas. Reg. §1.1367-2(c)(1), net increase = stock increases - stock reductions.
     const netIncrease = Decimal.max(ZERO, endingBasis.minus(beginningBasis));
 
-    let restoration = ZERO;
+    // A positive net increase restores reductions from both deductible losses
+    // and nondeductible expenses. It cannot coexist with an unabsorbed stock cost.
+    const restoration = Decimal.min(netIncrease, priorDebtReduction);
+    if (restoration.gt(ZERO)) {
+      endingBasis = endingBasis.minus(restoration);
+      audit.record(FORM, "debt-18", "S-Corp debt basis restoration from net increase",
+        restoration, "Form 7203 line 23: net increase restores prior debt basis reductions", {
+          "Net increase": netIncrease, "Prior debt reduction": priorDebtReduction,
+        });
+      audit.record(FORM, "ending-basis-adjusted", "S-Corp stock basis after debt restoration",
+        endingBasis, "Stock basis less the actual debt restoration");
+    }
+    let availableDebt = debtBasisBeforeAdjustments.plus(restoration);
+    let nondeductibleExpensesAppliedToDebtBasis = ZERO;
     let lossesAppliedToDebtBasis = ZERO;
-    let endingDebtBasis: Decimal;
-    let debtBasisReductionCarryforward: Decimal;
-
-    if (totalSuspendedLosses.gt(ZERO) && debtBasisBeforeAdjustments.gt(ZERO)) {
-      // Excess losses exist and debt basis is available → losses reduce debt basis
-      // No restoration (net increase is zero or negative when there are suspended losses)
-      lossesAppliedToDebtBasis = Decimal.min(totalSuspendedLosses, debtBasisBeforeAdjustments);
-
+    const applyNondeductible = () => {
+      nondeductibleExpensesAppliedToDebtBasis = Decimal.min(unabsorbedNondeductibleExpenses, availableDebt);
+      availableDebt = availableDebt.minus(nondeductibleExpensesAppliedToDebtBasis);
+      unabsorbedNondeductibleExpenses = unabsorbedNondeductibleExpenses.minus(nondeductibleExpensesAppliedToDebtBasis);
+    };
+    const applyLosses = () => {
+      lossesAppliedToDebtBasis = Decimal.min(totalSuspendedLosses, availableDebt);
       if (lossesAppliedToDebtBasis.gt(ZERO)) {
-        // Second-pass pro-rata allocation of debt-allowed losses across suspended categories
-        allocateDebtBasisLosses(lossCategories, lossesAppliedToDebtBasis, audit);
+        allocateDebtBasisLosses(lossCategories, lossesAppliedToDebtBasis, audit, charitable !== undefined);
         totalAllowedLosses = totalAllowedLosses.plus(lossesAppliedToDebtBasis);
         totalSuspendedLosses = totalSuspendedLosses.minus(lossesAppliedToDebtBasis);
+        availableDebt = availableDebt.minus(lossesAppliedToDebtBasis);
       }
-
-      endingDebtBasis = Decimal.max(ZERO, debtBasisBeforeAdjustments.minus(lossesAppliedToDebtBasis));
-      debtBasisReductionCarryforward = priorDebtReduction.plus(lossesAppliedToDebtBasis);
-
-      audit.record(FORM, "debt-20", "Losses applied to debt basis (IRC §1367(b)(2)(A))",
-        lossesAppliedToDebtBasis, "Excess losses from stock basis reduce debt basis", {
-          "Stock-suspended losses": totalSuspendedLosses.plus(lossesAppliedToDebtBasis),
-          "Debt basis available": debtBasisBeforeAdjustments,
-          "Applied to debt": lossesAppliedToDebtBasis,
-        });
-    } else if (netIncrease.gt(ZERO) && priorDebtReduction.gt(ZERO)) {
-      // Net increase year with prior debt reduction → restore debt basis
-      // Per Treas. Reg. §1.1367-1(g), net increase first restores debt basis,
-      // then any excess increases stock basis
-      restoration = Decimal.min(netIncrease, priorDebtReduction);
-      endingBasis = endingBasis.minus(restoration); // Divert from stock to debt restoration
-      endingDebtBasis = debtBasisBeforeAdjustments.plus(restoration);
-      debtBasisReductionCarryforward = priorDebtReduction.minus(restoration);
-
-      audit.record(FORM, "debt-18", "Debt basis restoration from net increase (IRC §1367(b)(2)(B))",
-        restoration, `Net increase of ${netIncrease} restores ${restoration} of prior reduction`, {
-          "Net increase (stock)": netIncrease,
-          "Prior debt reduction": priorDebtReduction,
-          "Restoration": restoration,
-        });
-      // Update the stock basis audit entry to reflect restoration
-      audit.record(FORM, "ending-basis-adjusted",
-        "S-Corp ending stock basis after debt restoration (Treas. Reg. §1.1367-1(g))",
-        endingBasis, `Stock basis reduced by ${restoration} for debt restoration`, {
-          "Pre-restoration stock basis": endingBasis.plus(restoration),
-          "Restoration diverted to debt": restoration,
-        });
+    };
+    if (useElectionOrdering) {
+      applyLosses();
+      applyNondeductible();
     } else {
-      // No excess losses and no restoration needed — debt basis unchanged
-      endingDebtBasis = debtBasisBeforeAdjustments;
-      debtBasisReductionCarryforward = priorDebtReduction;
+      applyNondeductible();
+      applyLosses();
     }
-
-    audit.record(FORM, "debt-21", "S-Corp ending debt basis (Form 7203 Part II Line 21)",
-      endingDebtBasis, "Debt basis at end of year", {
-        "Before adjustments": debtBasisBeforeAdjustments,
-        "Restoration": restoration,
-        "Losses applied": lossesAppliedToDebtBasis,
+    const endingDebtBasis = availableDebt;
+    const debtBasisReductionCarryforward = priorDebtReduction.minus(restoration)
+      .plus(nondeductibleExpensesAppliedToDebtBasis).plus(lossesAppliedToDebtBasis);
+    audit.record(FORM, "debt-nondeductible", "Nondeductible expenses applied to S-Corp debt basis",
+      nondeductibleExpensesAppliedToDebtBasis,
+      useElectionOrdering ? "Actual Reg. 1.1367-1(g) election: losses precede nondeductible costs"
+        : "Form 7203 line 28: excess stock nondeductible costs precede debt-allowed losses", {
+        "Unabsorbed nondeductible costs": unabsorbedNondeductibleExpenses,
       });
-
+    audit.record(FORM, "debt-20", "Losses applied to S-Corp debt basis", lossesAppliedToDebtBasis,
+      "Form 7203 line 30: actual losses after the applicable debt reduction order");
+    audit.record(FORM, "debt-21", "S-Corp ending debt basis", endingDebtBasis,
+      "Beginning debt plus additions/restoration less nondeductible costs and allowed losses", {
+        "Debt before adjustments": debtBasisBeforeAdjustments, "Restoration": restoration,
+        "Nondeductible reduction": nondeductibleExpensesAppliedToDebtBasis, "Loss reduction": lossesAppliedToDebtBasis,
+      });
     debtBasisResult = {
-      beginningDebtBasis,
-      additionalLoans,
-      debtBasisBeforeAdjustments,
-      restoration,
-      lossesAppliedToDebtBasis,
-      endingDebtBasis,
-      debtBasisReductionCarryforward,
+      beginningDebtBasis, additionalLoans, debtBasisBeforeAdjustments, restoration,
+      nondeductibleExpensesAppliedToDebtBasis, lossesAppliedToDebtBasis,
+      endingDebtBasis, debtBasisReductionCarryforward,
     };
   }
+  if (entityType === "s_corporation") {
+    suspendedNondeductible = useElectionOrdering ? unabsorbedNondeductibleExpenses : ZERO;
+    audit.record(FORM, "nondeductible-unabsorbed", "Nondeductible costs exceeding supplied stock and debt bases",
+      unabsorbedNondeductibleExpenses, "Actual original nondeductible costs less stock and debt reductions");
+    audit.record(FORM, "nondeductible-carry", "S-Corp nondeductible carry under the actual election",
+      suspendedNondeductible, useElectionOrdering ? "Reg. 1.1367-1(g) election carries the unabsorbed amount"
+        : "No election: unabsorbed nondeductible costs do not carry");
+  }
+  audit.record(FORM, "total-allowed", "Total losses allowed against stock/outside and debt basis",
+    totalAllowedLosses, "Stock or outside-basis allowance plus actual direct-debt allowance", {
+      "Stock or outside allowance": stockAllowedLosses,
+      "Debt allowance": debtBasisResult?.lossesAppliedToDebtBasis ?? ZERO,
+    });
+  if (totalSuspendedLosses.gt(ZERO)) {
+    audit.record(FORM, "total-suspended", "Total losses suspended after supplied stock/outside and debt basis",
+      totalSuspendedLosses, "Original total losses less final basis allowance", {
+        "Total losses": totalLosses, "Allowed": totalAllowedLosses,
+      });
+  }
 
+  let charitableSources: K1CharitableBasisResult | undefined;
+  if (charitable) {
+    const basisCategory = findCategory(lossCategories, "charitable");
+    const records = charitable.records.map(row => ({ ...row,
+      basisAllowed: basisCategory.total.isZero() ? ZERO : row.basisSubjectToLimit.times(basisCategory.allowed).div(basisCategory.total),
+      basisSuspended: ZERO, availableAfterBasis: ZERO,
+    }));
+    // Reconcile only Decimal division residue, never whole-dollar reporting roundoff.
+    const allocated = records.reduce((total, row) => total.plus(row.basisAllowed), ZERO);
+    const residue = basisCategory.allowed.minus(allocated);
+    if (!residue.isZero()) {
+      const largest = [...records].sort((a,b) => b.basisSubjectToLimit.cmp(a.basisSubjectToLimit) || a.sourceId.localeCompare(b.sourceId))[0];
+      if (largest) largest.basisAllowed = largest.basisAllowed.plus(residue);
+    }
+    const availableAfterBasis = { cash_60: ZERO, capital_gain_30: ZERO, capital_gain_20: ZERO };
+    for (const [index, row] of records.entries()) {
+      row.basisSuspended = row.basisSubjectToLimit.minus(row.basisAllowed);
+      row.availableAfterBasis = row.basisAllowed.plus(row.appreciationExempt);
+      availableAfterBasis[row.category] = availableAfterBasis[row.category].plus(row.availableAfterBasis);
+      audit.record("K1 Charitable Basis", `source-${index+1}`, "Actual charitable source after basis limitation", row.availableAfterBasis,
+        "Allowed original basis plus current appreciation; no prior appreciation duplication", {
+          "Original source year": new Decimal(row.originTaxYear), "Original contribution": row.contributionShare,
+          "Original property or cash basis": row.originalBasis, "Prior basis allowed": row.basisPreviouslyAllowed,
+          "Basis subject to limit": row.basisSubjectToLimit, "Basis allowed": row.basisAllowed,
+          "Basis suspended": row.basisSuspended, "Current appreciation": row.appreciationExempt,
+        });
+    }
+    charitableSources = { sourceFactsVerified: true, availableAfterBasis, records,
+      basisAllowed: basisCategory.allowed, basisSuspended: basisCategory.suspended, appreciationExempt: charitable.appreciationExempt };
+  }
   return {
-    entityType,
+    entityType, charitableSources,
     beginningBasis,
     totalIncomeItems,
     basisBeforeDecreases,
@@ -391,6 +439,7 @@ export function calculatePartnerBasisSchedule(k1: ScheduleK1): PartnerBasisSched
     totalNondeductibleExpenses,
     basisAfterNondeductible,
     suspendedNondeductible,
+    unabsorbedNondeductibleExpenses,
     totalLosses,
     basisAvailableForLosses,
     totalAllowedLosses,
@@ -411,8 +460,9 @@ export function calculatePartnerBasisSchedule(k1: ScheduleK1): PartnerBasisSched
       otherDeductions: findCategory(lossCategories, "otherDeductions").suspended,
       investmentInterest: findCategory(lossCategories, "investmentInterest").suspended,
       ebie: findCategory(lossCategories, "ebie").suspended,
+      foreignTax: findCategory(lossCategories, "foreignTax").suspended,
     },
-    lines: audit.getLines(),
+    lines: [...(charitable?.lines ?? []), ...audit.getLines()],
   };
 }
 
@@ -424,6 +474,8 @@ function findCategory(categories: LossCategory[], key: string): LossCategory {
 function buildLossCategories(
   k1: ScheduleK1,
   prior: ScheduleK1["priorSuspendedLosses"],
+  currentCharitableBasis?: Decimal,
+  priorCharitableBasis?: Decimal,
 ): LossCategory[] {
   // Extract current-year loss amounts (negative Box values become positive losses)
   const currentOrdinaryLoss = Decimal.max(ZERO, d(k1.ordinaryIncome).neg());
@@ -436,12 +488,14 @@ function buildLossCategories(
 
   // Deduction items are always positive amounts that reduce basis
   const currentSection179 = Decimal.max(ZERO, d(k1.section179Deduction));
-  const currentCharitable = Decimal.max(ZERO, d(k1.charitableCash))
+  const currentCharitable = currentCharitableBasis ?? Decimal.max(ZERO, d(k1.charitableCash))
     .plus(Decimal.max(ZERO, d(k1.charitableCapitalGain30)))
     .plus(Decimal.max(ZERO, d(k1.charitableCapitalGain20)));
   const currentOtherDeductions = Decimal.max(ZERO, d(k1.otherDeductions));
   const currentInvestmentInterest = Decimal.max(ZERO, d(k1.investmentInterestExpense));
   const currentEBIE = Decimal.max(ZERO, d(k1.excessBusinessInterest));
+  // IRC 704(d)(3)(A) and Form 7203 line 46 count foreign tax with these items.
+  const currentForeignTax = Decimal.max(ZERO, d(k1.foreignTaxPaid));
 
   // Add prior suspended amounts
   const priorOrdinary = d(prior?.ordinary);
@@ -452,7 +506,7 @@ function buildLossCategories(
   const prior1231 = d(prior?.section1231);
   const priorOtherLoss = d(prior?.otherLoss);
   const priorSection179 = d(prior?.section179);
-  const priorCharitable = d(prior?.charitable);
+  const priorCharitable = priorCharitableBasis ?? d(prior?.charitable);
   const priorOtherDeductions = d(prior?.otherDeductions);
   const priorInvestmentInterest = d(prior?.investmentInterest);
   const priorEBIE = d(prior?.ebie);
@@ -466,10 +520,11 @@ function buildLossCategories(
     { key: "section1231", description: "Section 1231 loss (Box 10)", total: current1231Loss.plus(prior1231), allowed: ZERO, suspended: ZERO },
     { key: "otherLoss", description: "Other loss (Box 11)", total: currentOtherLoss.plus(priorOtherLoss), allowed: ZERO, suspended: ZERO },
     { key: "section179", description: "Section 179 deduction (Box 12)", total: currentSection179.plus(priorSection179), allowed: ZERO, suspended: ZERO },
-    { key: "charitable", description: "Charitable contributions (Box 13 A/B/C)", total: currentCharitable.plus(priorCharitable), allowed: ZERO, suspended: ZERO },
+    { key: "charitable", description: "Charitable contributions (semantic cash and capital-gain categories)", total: currentCharitable.plus(priorCharitable), allowed: ZERO, suspended: ZERO },
     { key: "otherDeductions", description: "Other deductions (Box 13 W)", total: currentOtherDeductions.plus(priorOtherDeductions), allowed: ZERO, suspended: ZERO },
-    { key: "investmentInterest", description: "Investment interest expense (Box 13 D)", total: currentInvestmentInterest.plus(priorInvestmentInterest), allowed: ZERO, suspended: ZERO },
+    { key: "investmentInterest", description: "Investment interest expense (semantic amount)", total: currentInvestmentInterest.plus(priorInvestmentInterest), allowed: ZERO, suspended: ZERO },
     { key: "ebie", description: "Excess business interest expense (Box 13 K)", total: currentEBIE.plus(priorEBIE), allowed: ZERO, suspended: ZERO },
+    { key: "foreignTax", description: "Foreign taxes paid or accrued", total: currentForeignTax, allowed: ZERO, suspended: ZERO },
   ];
 }
 
@@ -477,12 +532,14 @@ function buildLossCategories(
  * Allocate losses pro-rata across categories when total losses exceed available basis.
  * Per IRS K-1 basis worksheet Part II and Form 7203 Part III:
  *   Each category allowed = (category total / sum of all totals) × available basis
- * Rounding to nearest dollar with correction on the largest category.
+ * Legacy reporting rounds to dollars; actual source contexts retain exact intermediates.
+ * Reconcile division residue on the largest category.
  */
 function allocateLossesProRata(
   categories: LossCategory[],
   availableBasis: Decimal,
   audit: AuditTrail,
+  exactSourceAmounts = false,
 ): { totalAllowed: Decimal; totalSuspended: Decimal } {
   const totalLosses = categories.reduce((sum, c) => sum.plus(c.total), ZERO);
 
@@ -512,8 +569,10 @@ function allocateLossesProRata(
   for (let i = 0; i < categories.length; i++) {
     const cat = categories[i];
     if (cat.total.gt(ZERO)) {
-      // Round each category's allowed amount to nearest dollar
-      cat.allowed = cat.total.div(totalLosses).times(availableBasis).toDecimalPlaces(0, Decimal.ROUND_HALF_UP);
+      // Preserve actual-source intermediate amounts; retain existing legacy reporting.
+      const allocation = exactSourceAmounts ? cat.total.times(availableBasis).div(totalLosses)
+        : cat.total.div(totalLosses).times(availableBasis);
+      cat.allowed = exactSourceAmounts ? allocation : allocation.toDecimalPlaces(0, Decimal.ROUND_HALF_UP);
       allocatedSum = allocatedSum.plus(cat.allowed);
       if (cat.total.gt(largestTotal)) {
         largestTotal = cat.total;
@@ -555,12 +614,13 @@ function allocateLossesProRata(
 /**
  * Second-pass allocation: distribute debt-basis-allowed losses across
  * categories that still have suspended amounts from the stock basis pass.
- * Uses the same proportional method with rounding correction.
+ * Uses the same proportional method and actual-source precision as the stock pass.
  */
 function allocateDebtBasisLosses(
   categories: LossCategory[],
   debtBasisAvailable: Decimal,
   audit: AuditTrail,
+  exactSourceAmounts = false,
 ): void {
   const totalSuspended = categories.reduce((sum, c) => sum.plus(c.suspended), ZERO);
   if (totalSuspended.lte(ZERO) || debtBasisAvailable.lte(ZERO)) return;
@@ -576,8 +636,9 @@ function allocateDebtBasisLosses(
   for (let i = 0; i < categories.length; i++) {
     const cat = categories[i];
     if (cat.suspended.gt(ZERO)) {
-      additionalAmounts[i] = cat.suspended.div(totalSuspended).times(allocatable)
-        .toDecimalPlaces(0, Decimal.ROUND_HALF_UP);
+      const allocation = exactSourceAmounts ? cat.suspended.times(allocatable).div(totalSuspended)
+        : cat.suspended.div(totalSuspended).times(allocatable);
+      additionalAmounts[i] = exactSourceAmounts ? allocation : allocation.toDecimalPlaces(0, Decimal.ROUND_HALF_UP);
       allocatedSum = allocatedSum.plus(additionalAmounts[i]);
       if (cat.suspended.gt(largestSuspended)) {
         largestSuspended = cat.suspended;

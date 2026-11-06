@@ -1,0 +1,224 @@
+{
+  "recordedAt": "2026-10-26",
+  "sourceCommit": "76e3538a1b851f1d68f86ca818bb87a8ce5eaf98",
+  "sourceTree": "651098f2b79840dabbd1c39240398c743284d34c",
+  "scope": "Intermediate exact-source local synthetic runtime evidence. Subsequent application commits and final native platforms need verification. No image publication or staging evidence.",
+  "platform": "linux/arm64",
+  "image": "sha256:3f501d41191075e2454c6d7a282334637b54adc7eeeb291fe82a0e310a38d308",
+  "imageArchiveBinding": {
+    "configSha256": "3f501d41191075e2454c6d7a282334637b54adc7eeeb291fe82a0e310a38d308",
+    "revisionLabel": "76e3538a1b851f1d68f86ca818bb87a8ce5eaf98",
+    "localArchive": ".local/upgrade-evidence/container-76e3538-arm64.tar",
+    "sbomComponentId": "ffedf15fc6f1b76d",
+    "sbomComponentVersion": "sha256:2ad343c7763b5fd38e2e0c6cadc64396e56de48ac4d5d9118f4238d048dea6d8",
+    "note": "Archive manifest and hashed config bind the runtime image and revision; CycloneDX component identifier is not the runtime image ID."
+  },
+  "build": {
+    "result": "passed",
+    "evidence": {
+      "path": ".local/upgrade-evidence/container-76e3538-arm64-build-retry.log",
+      "sha256": "23b5a8180bcc0b94a203959cae468e4541d0934e2cd7b8688ee1f078dae46de0"
+    },
+    "initialFailure": "VM storage filled while saving a layer after compilation. Removed only a proven prior task builder tip and unshared ancestors. A second cache tip was still in use and retained; no force, containers or volumes removed.",
+    "cleanupEvidence": {
+      "path": ".local/upgrade-evidence/container-space-task-cache-cleanup.json",
+      "sha256": "7a4dc39e1599ec7192575a8949937461e4686f79d362e5dab7b6c5da4fb7c3a4"
+    }
+  },
+  "smoke": {
+    "result": "passed",
+    "image": "3f501d41191075e2454c6d7a282334637b54adc7eeeb291fe82a0e310a38d308",
+    "readOnly": true,
+    "healthy": true,
+    "assets": true,
+    "imageCacheWritten": true,
+    "selfHostAuth": true,
+    "uid": 1001,
+    "node": "v24.22.1",
+    "architecture": "arm64",
+    "imageCacheFilesystem": 16914836,
+    "imageCacheLimitBytes": 67108864,
+    "packageTools": false,
+    "providerKeys": false,
+    "templates": 43,
+    "evidence": {
+      "path": ".local/upgrade-evidence/container-76e3538-arm64-smoke.log",
+      "sha256": "2017cad09648f7da3ccd07701a89b3e24f8ef6fddd9ec0370fec377657bf6d12"
+    }
+  },
+  "recovery": {
+    "kind": "local-synthetic-compose-release-rehearsal",
+    "project": "tax-rehearsal-b7e45257",
+    "phases": [
+      {
+        "phase": "previous",
+        "imageDigest": "535c87589d0dd979e0df15fbd0cf76fcd45949370c60a36a2205769c8dbb203f",
+        "databaseSha256": "2ff57b44e35f90ca3827f09dcbbab7c85a056105b9911dcd36cefa5c84fce9d8",
+        "browserFactsSha256": "f767fc70844cf56888d32df1a686df2de10a555b28ea79446752eb86534e2dcb",
+        "documentSha256": "12582c83f5ca5d295b23168261527b605f6db6a75c611312a44b18ca7fa0a70a",
+        "readOnly": true,
+        "runtimeFacts": {
+          "uid": 1001,
+          "arch": "arm64",
+          "node": "v24.22.1",
+          "noNewPrivileges": true,
+          "noEffectiveCapabilities": true,
+          "noBoundingCapabilities": true,
+          "providerKeys": false
+        }
+      },
+      {
+        "phase": "upgrade",
+        "imageDigest": "3f501d41191075e2454c6d7a282334637b54adc7eeeb291fe82a0e310a38d308",
+        "databaseSha256": "2ff57b44e35f90ca3827f09dcbbab7c85a056105b9911dcd36cefa5c84fce9d8",
+        "browserFactsSha256": "f767fc70844cf56888d32df1a686df2de10a555b28ea79446752eb86534e2dcb",
+        "documentSha256": "12582c83f5ca5d295b23168261527b605f6db6a75c611312a44b18ca7fa0a70a",
+        "readOnly": true,
+        "runtimeFacts": {
+          "uid": 1001,
+          "arch": "arm64",
+          "node": "v24.22.1",
+          "noNewPrivileges": true,
+          "noEffectiveCapabilities": true,
+          "noBoundingCapabilities": true,
+          "providerKeys": false
+        }
+      },
+      {
+        "phase": "database-restart",
+        "imageDigest": "3f501d41191075e2454c6d7a282334637b54adc7eeeb291fe82a0e310a38d308",
+        "databaseSha256": "2ff57b44e35f90ca3827f09dcbbab7c85a056105b9911dcd36cefa5c84fce9d8",
+        "browserFactsSha256": "f767fc70844cf56888d32df1a686df2de10a555b28ea79446752eb86534e2dcb",
+        "documentSha256": "12582c83f5ca5d295b23168261527b605f6db6a75c611312a44b18ca7fa0a70a",
+        "readOnly": true,
+        "runtimeFacts": {
+          "uid": 1001,
+          "arch": "arm64",
+          "node": "v24.22.1",
+          "noNewPrivileges": true,
+          "noEffectiveCapabilities": true,
+          "noBoundingCapabilities": true,
+          "providerKeys": false
+        }
+      },
+      {
+        "phase": "database-dump-restore",
+        "imageDigest": "3f501d41191075e2454c6d7a282334637b54adc7eeeb291fe82a0e310a38d308",
+        "databaseSha256": "2ff57b44e35f90ca3827f09dcbbab7c85a056105b9911dcd36cefa5c84fce9d8",
+        "browserFactsSha256": "f767fc70844cf56888d32df1a686df2de10a555b28ea79446752eb86534e2dcb",
+        "documentSha256": "12582c83f5ca5d295b23168261527b605f6db6a75c611312a44b18ca7fa0a70a",
+        "readOnly": true,
+        "runtimeFacts": {
+          "uid": 1001,
+          "arch": "arm64",
+          "node": "v24.22.1",
+          "noNewPrivileges": true,
+          "noEffectiveCapabilities": true,
+          "noBoundingCapabilities": true,
+          "providerKeys": false
+        }
+      },
+      {
+        "phase": "rollback",
+        "imageDigest": "535c87589d0dd979e0df15fbd0cf76fcd45949370c60a36a2205769c8dbb203f",
+        "databaseSha256": "2ff57b44e35f90ca3827f09dcbbab7c85a056105b9911dcd36cefa5c84fce9d8",
+        "browserFactsSha256": "f767fc70844cf56888d32df1a686df2de10a555b28ea79446752eb86534e2dcb",
+        "documentSha256": "12582c83f5ca5d295b23168261527b605f6db6a75c611312a44b18ca7fa0a70a",
+        "readOnly": true,
+        "runtimeFacts": {
+          "uid": 1001,
+          "arch": "arm64",
+          "node": "v24.22.1",
+          "noNewPrivileges": true,
+          "noEffectiveCapabilities": true,
+          "noBoundingCapabilities": true,
+          "providerKeys": false
+        }
+      },
+      {
+        "phase": "re-upgrade",
+        "imageDigest": "3f501d41191075e2454c6d7a282334637b54adc7eeeb291fe82a0e310a38d308",
+        "databaseSha256": "2ff57b44e35f90ca3827f09dcbbab7c85a056105b9911dcd36cefa5c84fce9d8",
+        "browserFactsSha256": "f767fc70844cf56888d32df1a686df2de10a555b28ea79446752eb86534e2dcb",
+        "documentSha256": "12582c83f5ca5d295b23168261527b605f6db6a75c611312a44b18ca7fa0a70a",
+        "readOnly": true,
+        "runtimeFacts": {
+          "uid": 1001,
+          "arch": "arm64",
+          "node": "v24.22.1",
+          "noNewPrivileges": true,
+          "noEffectiveCapabilities": true,
+          "noBoundingCapabilities": true,
+          "providerKeys": false
+        }
+      }
+    ],
+    "platform": "linux/arm64",
+    "previousDigest": "535c87589d0dd979e0df15fbd0cf76fcd45949370c60a36a2205769c8dbb203f",
+    "candidateDigest": "3f501d41191075e2454c6d7a282334637b54adc7eeeb291fe82a0e310a38d308",
+    "databaseRecovery": {
+      "result": "passed",
+      "evidence": "local-synthetic-postgresql-dump-restore",
+      "tables": 9,
+      "tenantWorkspaces": 2,
+      "exactCostRestored": true,
+      "metadataCleanupReapplied": true,
+      "metadataCleanupIdempotent": true,
+      "checksum": "6b155fc47a24609300fe87c80ab0e85d785c223f0f76ea1f03a85c14f275ddf0"
+    },
+    "browserRecovery": {
+      "passed": true,
+      "encrypted": true,
+      "wrongPasswordRejected": true,
+      "tamperRejected": true,
+      "originalBytes": true,
+      "unknownYearPreserved": true,
+      "exactCents": true,
+      "deletion": true,
+      "networkObservation": {
+        "requests": 403,
+        "startsBeforeUpload": true,
+        "rawPrivateMarkersAbsent": true,
+        "limitation": "Checks raw request URLs and postData for the synthetic SSN, filename and PDF signature; not a general encoded or binary PII proof."
+      }
+    },
+    "result": "passed",
+    "evidence": {
+      "path": ".local/upgrade-evidence/container-76e3538-arm64-rehearsal.log",
+      "sha256": "b2ae23e60f8d985b17d79d83bdc1703a40413ffde31c8dffb92d6ff28e50b6c9"
+    }
+  },
+  "scan": {
+    "components": 2930,
+    "matches": 157,
+    "uniqueAdvisories": 67,
+    "severity": {
+      "Critical": 0,
+      "High": 54,
+      "Medium": 47,
+      "Negligible": 46,
+      "Low": 10
+    },
+    "npmMatches": 0,
+    "fixable": 0,
+    "database": {
+      "schemaVersion": "v6.1.10",
+      "from": "https://grype.anchore.io/databases/v6/vulnerability-db_v6.1.10_2026-10-25T00:33:23Z_1792909654.tar.zst?checksum=sha256%3A4bdb42924659936a80a73f5df039603dc01734ed6032575b9879745216a713ea",
+      "built": "2026-10-25T06:27:34Z",
+      "path": "/Users/beebs/Documents/Programming/tax-engine/.local/grype-db/6/vulnerability.db",
+      "valid": true
+    },
+    "sbom": {
+      "path": ".local/upgrade-evidence/container-76e3538-arm64.cdx.json",
+      "sha256": "9a4a6aae47565fc258d393d912d5291180bf86ba219b372bea39ad9027236a35"
+    },
+    "report": {
+      "path": ".local/upgrade-evidence/container-76e3538-arm64.grype.json",
+      "sha256": "0a0f7b48b6730ed9c086f63fba4de1922383f23d2e12247f9bcc5d0b249817bb"
+    },
+    "acceptance": "Pending explicit owner acceptance; existing exposure ledger expires 2026-11-07. No advisories accepted by this record."
+  },
+  "published": false,
+  "stagingEvidence": false,
+  "releaseReady": false
+}

@@ -19,7 +19,7 @@ notes: |
     $26,050–$100,000: $360.69 + 2.75% of amount over $26,050
     Over $100,000: $2,394.32 + 3.50% of amount over $100,000
 
-  Tax year 2025 (R.C. 5747.02(A)(3), per HB 1):
+  Tax year 2025 (R.C. 5747.02(A)(3), per HB 96):
     $0–$26,050: 0% (no tax)
     $26,050–$100,000: $342.00 + 2.75% of amount over $26,050
     Over $100,000: $2,394.32 + 3.125% of amount over $100,000
@@ -53,6 +53,12 @@ packetRules:
     packet whenever Ohio output is generated.
 
 businessRuleValidation:
+  - rule: "actual-year-exemption-ceiling"
+    description: "2024 has no upper-MAGI exemption ceiling. 2025 uses actual MAGI <750000, not a rounded749999 upper tier. Official2024/2025 booklet line4 and RC5747.025 refreshed2026-10-25."
+    testRef: "tests/engine/state/oh-exemption-year-boundaries.test.ts::uses the actual year and exact exemption ceiling: %s"
+  - rule: "historical-resident-credit-integration"
+    description: "An actual2024 high-income resident return retains exemptions and the qualifying joint credit; 2025 applies its new ceilings."
+    testRef: "tests/engine/state/oh-exemption-year-boundaries.test.ts::keeps historical exemptions and joint credit in the complete resident calculation"
   - rule: "reference-summary-packet"
     description: "Inventory support counts this form as business-rule validated only when regression coverage proves the emitted Ohio IT 1040 packet artifact stays labeled as a reference summary and only surfaces deterministic computed Ohio return lines."
     testRef: "tests/pdf/fill-oh-reference-forms.test.ts::fillOhioReferenceForms keeps the Ohio IT 1040 packet artifact reference-only and limited to supported computed lines"
@@ -106,8 +112,9 @@ lines:
       Exemption amount depends on MAGI (Ohio AGI + business income deduction):
         MAGI ≤ $40,000: $2,400 per exemption
         MAGI $40,001–$80,000: $2,150 per exemption
-        MAGI $80,001–$749,999: $1,900 per exemption
-        MAGI ≥ $750,000: $0 per exemption
+        MAGI > $80,000: $1,900 per exemption before the year-specific ceiling.
+      For 2025, actual MAGI >= $750,000 disallows exemptions; cents immediately
+      below the ceiling remain eligible. The 2024 table has no upper-MAGI ceiling.
       Exemptions include: taxpayer (if not claimed on another return), spouse
       (if MFJ and not claimed elsewhere), and federal dependents.
     edgeCases:

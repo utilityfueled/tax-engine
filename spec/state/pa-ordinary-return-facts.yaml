@@ -1,0 +1,66 @@
+form: "PA ordinary return facts"
+fullName: "Actual Pennsylvania original payment and eligibility-income sources"
+taxYear: 2025
+reference: "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40in.pdf"
+notes: |
+  Reconstructed from retained November2 source contract and original controls after
+  temporary archive loss. No historical green is current-source evidence. All three
+  selected residencies remain in scope; full household and dated method successors
+  remain internal work, not a missing demand decision.
+lines:
+  - line: "originals"
+    description: "Private current owner/year and original identity"
+    formula: "Validate explicit complete facts and full current snapshot excluding only the three PA packet roots. SHA256 binds originals; audit contains digest only. Unknown is not zero."
+    testRef: "tests/engine/state/pa-ordinary-return-facts.test.ts::PA ordinary facts bind current originals and reject stale identity"
+  - line: "payments"
+    description: "Actual dated estimated receipts and prior credit"
+    formula: "Reconcile owner/name/SSN/year/type/date/amount/receipt identity. Reject semantic duplicates. Sum exact receipts once by actual intended installment; first endpoint method requires actual published due dates. Distinguish no prior return from actual prior zero. Never infer timing or prior eligibility."
+    testRef: "tests/engine/state/pa-ordinary-return-facts.test.ts::PA ordinary facts retain exact receipt sums and reject duplicate identities"
+  - line: "sp"
+    description: "All-source Schedule SP additions"
+    formula: "Replay actual PA ordinary residency source. III6 sums excluded outside-PA compensation, reciprocal compensation, and outside-PA bank interest once. Require explicit known-none or actual entries for III2/3/4/5/7/8/9/10; do not infer missing gifts/benefits/etc from federal forms. Single living full-calendar first household; dependent needs actual completed claiming-household SP."
+    testRef: "tests/engine/state/pa-ordinary-return-facts.test.ts::PA ordinary facts derive worldwide SP without losing nonresident income"
+  - line: "filing"
+    description: "Actual S or Final Return facts and independent timing"
+    formula: "Actual PA F means Final Return, not marital status. Permit residentF with actual no-next-year PA income reason. Actual filed versus expected filing date is independent of actual/expected balance payment; no payment date inferred. Unknown 2027 interest and arbitrary dated penalty methods remain guarded."
+    testRef: "tests/engine/state/pa-ordinary-return-facts.test.ts::PA ordinary facts retain resident Final Return source choice"
+  - line: "use-tax"
+    description: "Actual itemized purchase worksheet"
+    formula: "Explicit no taxable purchases or actual single-locality itemized purchase receipts and classified taxable goods/services, allowable tax actually paid. Never infer locality from address or accept precomputed tax override."
+    testRef: "tests/engine/state/pa-ordinary-return-facts.test.ts::PA ordinary facts calculate actual itemized use tax"
+  - line: "disposition"
+    description: "Actual refund/credit/donation allocation"
+    formula: "Require actual requested whole-dollar refund, credit and up to5 unique published donation codes; H needs ScheduleP successor. Sum must equal fresh reported29. No automatic refund election."
+    testRef: "tests/engine/state/pa-ordinary-return-facts.test.ts::PA ordinary facts reconcile actual elections to fresh overpayment"
+  - line: "guide"
+    description: "Explicit original confirmation only"
+    formula: "Drafts preserve unknown values. Edits invalidate source confirmation. Only explicit confirmation snapshots raw originals; read/conversion never refreshes stale originals."
+    testRef: "tests/apps/web/guided-pa-ordinary-return-facts.test.ts::PA ordinary guide only snapshots originals on confirmation"
+  - line: guide-ui
+    description: Explicit private source fields and confirmation after edits
+    formula: Unknown dates, amounts, answers and source year remain unknown in a new draft; edits invalidate confirmation and retain unrelated original fields.
+    testRef: "tests/apps/web/pa-ordinary-return-details.test.tsx::PA ordinary UI preserves unknown drafts and invalidates edits"
+  - line: prior-originals
+    description: Actual prior filed return and current available credit
+    formula: Replay current-owner prior actual filed full-year resident PA40 and its original reported taxable income and forgiveness; no-return never becomes prior zero. An actual prior elected credit additionally needs matching current account available credit and no offsets, reversals or refund. One-hundred-percent forgiveness requires completed actual prior SP replay.
+    testRef: "tests/engine/state/pa-ordinary-return-facts.test.ts::PA ordinary facts distinguish actual prior zero and available elected credit"
+  - line: dependent-child-original-relationship
+    description: Actual PA child relation must agree with retained federal original
+    formula: PA40IN p38 includes natural/adopted/step/foster children and grandchildren who can be federal dependents, including adult children. Require unique actual child identities and a valid birth date no later than the tax year. A federal sibling/other adult is not a PA child; do not let an independent PA classification contradict the retained original relationship.
+    testRef: "tests/engine/state/pa-ordinary-return-facts.test.ts::PA ordinary facts bind child classification to actual federal relationship"
+  - line: multistate-actual-withholding-successor
+    description: Replay complete actual W2 state rows and preserve jurisdiction boundaries
+    formula: Present current canonical packets require complete calculateW2StateLocalSources validation; malformed/stale/duplicate/unknown packets never fall back. Select actual PA Box17 once independent of first scalar or unused legacy projection. Primitive facts may retain OH1000/PA1535 and project PA1535, binding outside actual1000 in raw originals without claiming resident credit or local completion. All actual payroll/residency/Box12/source guards persist; composer separately requires every actual jurisdiction history and guards positive outside/local withholding pending actual successors.
+    testRef: "tests/engine/state/pa-ordinary-return-facts.test.ts::PA ordinary facts normalize complete actual multistate W2 withholding"
+  - line: claiming-household-other-taxpayer
+    description: Completed claiming household belongs to another taxpayer
+    formula: The completed Schedule SP taxpayer must have a valid identity different from the current dependent claimant; the other taxpayer must actually list the claimant. A self-owning household cannot establish dependency eligibility (2025 SP eligibility question1 and SectionI line1b).
+    testRef: "tests/engine/state/pa-ordinary-return-facts.test.ts::PA ordinary facts reject self as the claiming household taxpayer"
+  - line: replayed-income-source-commitment
+    description: Digest binds complete actual PA income packets separately from canonical originals
+    formula: Hash current canonical originals excluding collector roots, the complete validated ordinary facts, and raw actual replayed residency and optional reciprocity packets as distinct keys. Exclude the ordinary self root to avoid recursive snapshots; changes to actual bank timing or Ohio owner exception sources must change the digest when they change PA income.
+    testRef: "tests/engine/state/pa-ordinary-return-facts.test.ts::PA ordinary facts bind replayed bank timing to the source commitment"
+  - line: replayed-reciprocity-source-commitment
+    description: Digest includes the actual reciprocal employee exception source
+    formula: The raw replayed reciprocity packet is committed even though excluded from the canonical original snapshot; an actual Ohio shareholder ownership exception changes PA taxable and worldwide excluded income and the source digest.
+    testRef: "tests/engine/state/pa-ordinary-return-facts.test.ts::PA ordinary facts bind replayed reciprocity originals to the source commitment"

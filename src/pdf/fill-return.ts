@@ -1,9 +1,28 @@
+import {requiresRRTAPayrollReview,rrtaPayrollReviewOriginalInput,type PreparedRRTAPayrollReview} from './rrta-payroll-review-context.js';
+export {prepareRRTAPayrollReview} from './rrta-payroll-review-context.js';
+import {isDeepStrictEqual} from 'node:util';
+import {redactReviewIdentifiers} from './redact-review-identifiers.js';
+import {fillPACareOfficialReview} from './mappings/2025/fill-pa-care-official-review.js';
+import {hasForm2210OriginalIdentity,prepareForm2210Review,form2210ReviewOriginalInput,requiresForm2210ScheduleAiReview,recordSavedForm2210Review,type PreparedForm2210Review,type SavedForm2210Review} from './form-2210-review-context.js';
+import {fillForm2210} from './mappings/2025/fill-form-2210.js';
+import {isPAMarriedOrdinaryReturnResult} from '@/engine/state/pa-return-result.js';
+import {assertPAMarriedPublicDisplayPrivacy,type PreparedPAMarriedReturnReview} from './pa-married-return-review-context.js';
+import {fillPAMarriedOfficialReview} from './mappings/2025/fill-pa-married-official-review.js';
+import {fillPAOrdinaryScheduleD} from "./mappings/2025/fill-pa-ordinary-schedule-d.js";
+import {fillPAOrdinaryScheduleGL} from "./mappings/2025/fill-pa-ordinary-schedule-gl.js";
+import {calculateScheduleCReviewSource} from "./schedule-c-review-source.js";
+import {preparePARoyaltyReview,assertPARoyaltyReview,type PreparedPARoyaltyReview} from "./pa-royalty-review-context.js";
+import { assertPAWorkingCreditReview, type PreparedPAWorkingCreditReview } from "./pa-working-credit-review-context.js";
+import {assertPAOrdinaryReturnReview,isPAOrdinaryReturnResult,type PreparedPAOrdinaryReturnReview} from "./pa-ordinary-return-review-context.js";
 /**
  * Top-level orchestrator for filling a complete tax return as PDFs.
  * Fills all applicable forms and saves them to the output directory.
  */
 
 import { join } from "path";
+import { assertPreparedEducationReturn, hasInKindEducationReviewSources, prepareEducationReview, type PreparedEducationReview } from "./education-review-context.js";
+import { hasSavingsBondReviewSources, prepareSavingsBondReview, savingsBondReviewOriginalInput, type PreparedSavingsBondReview } from "./savings-bond-review-context.js";
+import { PDFDocument, PDFName } from "pdf-lib";
 import Decimal from "decimal.js";
 import type { TaxReturnResult } from "@/models/outputs.js";
 import type { TaxYearInput } from "@/models/inputs.js";
@@ -16,35 +35,51 @@ import { fillScheduleB } from "./fill-schedule-b.js";
 import { fillScheduleC } from "./fill-schedule-c.js";
 import { fillScheduleD } from "./fill-schedule-d.js";
 import { fillScheduleE } from "./fill-schedule-e.js";
+import { requiresScheduleEReview, prepareScheduleEReview, assertScheduleEReview, type PreparedScheduleEReview } from "./schedule-e-review-context.js";
 import { fillScheduleSE } from "./fill-schedule-se.js";
 import { fillForm8949 } from "./fill-form-8949.js";
 import { fillForm8959 } from "./fill-form-8959.js";
 import { fillForm8960 } from "./fill-form-8960.js";
 import { fillForm8582 } from "./fill-form-8582.js";
 import { fillForm8995 } from "./fill-form-8995.js";
+import { buildQbiLossReview, fillQbiLossReview, QBI_LOSS_REFERENCE_FILENAME } from "./mappings/2025/qbi-loss-review.js";
+import { prepareQbiLossReview, type PreparedQbiLossReview } from "./qbi-loss-review-context.js";
 import { fillForm8812 } from "./fill-form-8812.js";
 import { fillForm8889 } from "./fill-form-8889.js";
 import { fillForm2441 } from "./fill-form-2441.js";
 import { fillForm8863 } from "./fill-form-8863.js";
 import { fillForm6251 } from "./fill-form-6251.js";
+import { form8949ReviewCalculation, prepareForm8949Review, type PreparedForm8949Review } from "./form-8949-review-context.js";
+import { codNolReviewOriginalSourceInput, prepareCodNolReview, type PreparedCodNolReview } from "./cod-nol-review-context.js";
+import { fillCharitableFilingUnitReview, CHARITABLE_FILING_UNIT_REFERENCE_FILENAME } from './mappings/2025/charitable-filing-unit-review.js';
+import { prepareNolFilingUnitReview, nolFilingUnitReviewOriginalSourceInput, requiresNolFilingUnitReview, type PreparedNolFilingUnitReview } from "./nol-filing-unit-review-context.js";
+import { prepareCharitableReview, charitableReviewOriginalSourceInput, requiresCharitableNolReview, requiresK1CharitableReview, requiresCharitableFilingHistoryReview, type PreparedCharitableReview } from "./charitable-review-context.js";
+import { fillK1CharitableReview, K1_CHARITABLE_REFERENCE_FILENAME } from "./mappings/2025/k1-charitable-review.js";
+import { hasHistoricalAdoptionSources, prepareAdoptionReview, type PreparedAdoptionReview } from "./adoption-review-context.js";
+import { eicReviewChildren, eicReviewOriginalSourceInput, hasEicReviewSources, prepareEicReview, type PreparedEicReview } from "./eic-review-context.js";
+import { fillForm8862 } from "./fill-form-8862.js";
 import { fillForm8880 } from "./fill-form-8880.js";
 import { fillForm5329 } from "./fill-form-5329.js";
 import { fillForm8606 } from "./fill-form-8606.js";
 import { fillForm1098EReference } from "./fill-form-1098-e.js";
 import { fillTaxableRefundWorksheetReference } from "./fill-taxable-refund-worksheet.js";
 import { fillSocialSecurityBenefitsWorksheetReference } from "./fill-social-security-benefits-worksheet.js";
+import { assertForm7206ReviewSource, fillForm7206 } from "./fill-form-7206.js";
 import { fillSEHealthInsuranceWorksheetReference } from "./fill-se-health-insurance-worksheet.js";
 import { fillIraDeductionWorksheetReference } from "./fill-ira-deduction-worksheet.js";
-import { fillForm8962Reference } from "./fill-form-8962.js";
+import { buildNetOperatingLossReview, fillNetOperatingLossReview } from "./fill-net-operating-loss.js";
+import { buildForm8962ReferenceSummary, fillForm8962Reference, fillForm8962SharedPolicy, fillForm8962Marriage, fillForm8962CoverageFamily, fillForm8962BindingOwnerFullRepayment } from "./fill-form-8962.js";
+import { hasPremiumTaxCreditReviewSources, preparePremiumTaxCreditReview, type PreparedPremiumTaxCreditReview } from "./premium-tax-credit-review-context.js";
 import {
   fillForm1116Reference,
   shouldIncludeForm1116ReferenceSummary,
 } from "./fill-form-1116.js";
 import { fillForm3903Reference } from "./fill-form-3903.js";
 import { fillForm1099CReference } from "./fill-form-1099-c.js";
+import { buildForm8997ReferenceSummary, fillForm8997Reference } from "./mappings/2025/fill-form-8997-reference.js";
 import { fillForm982Reference } from "./fill-form-982.js";
 import { fillForm1099KReference } from "./fill-form-1099-k.js";
-import { fillForm1099QReference } from "./fill-form-1099-q.js";
+import { buildForm1099QReferenceSummary, fillForm1099QReference } from "./fill-form-1099-q.js";
 import { fillForm2555Reference } from "./fill-form-2555.js";
 import {
   fillForm6252Reference,
@@ -74,13 +109,14 @@ import {
   fillForm6781Reference,
   shouldIncludeForm6781ReferenceSummary,
 } from "./fill-form-6781.js";
-import { fillForm4137 } from "./fill-form-4137.js";
+import { fillForm4137, assertForm4137ReviewSource } from "./fill-form-4137.js";
 import { fillForm8919 } from "./fill-form-8919.js";
 import { fillScheduleEIC } from "./fill-schedule-eic.js";
 import { fillScheduleH } from "./fill-schedule-h.js";
 import { fillForm4797 } from "./fill-form-4797.js";
+import { resolveReviewTemplateDirectory } from "./template-registry.js";
 import { fillForm4952 } from "./fill-form-4952.js";
-import { fillScheduleR } from "./fill-schedule-r.js";
+import { assertScheduleRSourceConsistency, fillScheduleR } from "./fill-schedule-r.js";
 import { fillForm8936 } from "./fill-form-8936.js";
 import { fillScheduleF } from "./fill-schedule-f.js";
 import { fillScheduleJ } from "./fill-schedule-j.js";
@@ -155,7 +191,8 @@ import { fillNYIT201 } from "./fill-ny-it201.js";
 import { fillForm4684 } from "./fill-form-4684.js";
 import { fillForm8839 } from "./fill-form-8839.js";
 import { fillForm5695 } from "./fill-form-5695.js";
-import { savePdf, flattenForm } from "./pdf-utils.js";
+import { savePdf as savePdfDocument, flattenForm, loadBlankPdf } from "./pdf-utils.js";
+import { assertPdfExportAllowed, markReviewPdf, type PdfExportPurpose } from "./export-policy.js";
 import { calculatePAScheduleC } from "@/engine/state/pa-schedule-c.js";
 import { d } from "@/utils/decimal.js";
 import { shouldIncludePAScheduleDReferenceSummary } from "@/utils/pa-schedule-d-packet.js";
@@ -170,7 +207,8 @@ function shouldIncludeScheduleE(result: TaxReturnResult["scheduleE"] | undefined
   }
 
   return (
-    result.rentalProperties.length > 0
+    (result.royaltyProperties?.length ?? 0) > 0
+    || result.rentalProperties.length > 0
     || result.partnerships.length > 0
     || !result.totalSupplementalIncome.isZero()
     || result.suspendedPassiveLosses.length > 0
@@ -362,17 +400,55 @@ function hasPAScheduleSD(
 }
 
 export interface FillReturnOptions {
+  /** Review is the only enabled purpose until independent filing qualification. */
+  purpose?: PdfExportPurpose;
   /** Directory containing blank IRS PDF forms. */
   blankFormsDir: string;
   /** Directory to write filled PDF forms. */
   outputDir: string;
   /** Whether to flatten form fields (makes PDF non-editable but renders consistently). */
   flatten?: boolean;
+  /** Disable only for temporary merge inputs; downloaded files keep compression. */
+  useObjectStreams?: boolean;
+  /** Only flattened, uncompressed inputs for a later page-only workspace merge. */
+  pageOnlyTemporaryMerge?: boolean;
+  /** Prepared from complete original facts before review identifiers are cleared. */
+  capitalGainReview?: PreparedForm8949Review;
+  /** Original COD and loss records, validated before review identifier removal. */
+  codNolReview?: PreparedCodNolReview;
+  /** Original prior-charity identity/history, validated before render redaction. */
+  charitableReview?: PreparedCharitableReview;
+  nolFilingUnitReview?: PreparedNolFilingUnitReview;
+  /** Actual historical benefits and income, checked before identifier redaction. */
+  adoptionReview?: PreparedAdoptionReview;
+  qbiLossReview?: PreparedQbiLossReview;
+  /** Prepared from complete actual originals before display redaction. */
+  form2210Review?:PreparedForm2210Review;
+  /** Actual original RRTA payroll and complete federal replay, before redaction. */
+  rrtaPayrollReview?:PreparedRRTAPayrollReview;
+  scheduleEReview?: PreparedScheduleEReview;
+  paRoyaltyReview?: PreparedPARoyaltyReview;
+  /** Actual WPTC originals checked before render-only identifier redaction. */
+  paWorkingCreditReview?: PreparedPAWorkingCreditReview;
+  /** Actual complete ordinary originals, privately prepared before redaction. */
+  paOrdinaryReview?:PreparedPAOrdinaryReturnReview;
+  /** Actual complete household and owned results, privately prepared before redaction. */
+  paMarriedReview?:PreparedPAMarriedReturnReview;
+  /** Actual EIC child records, validated before identifier redaction. */
+  eicReview?: PreparedEicReview;
+  /** Actual policy allocation and whole-return income, validated before redaction. */
+  premiumTaxCreditReview?: PreparedPremiumTaxCreditReview;
+  /** Original student identities validated privately before render redaction. */
+  educationReview?: PreparedEducationReview;
+  /** Complete original bond history and MAGI sources, prepared before redaction. */
+  savingsBondReview?: PreparedSavingsBondReview;
 }
 
 export interface FillReturnResult {
   /** List of filled PDF file paths. */
   filledForms: string[];
+  /** Opaque source/current-result/saved-byte proof; never inferred from filenames. */
+  form2210ReviewArtifact?:SavedForm2210Review;
 }
 
 /**
@@ -385,15 +461,129 @@ export async function fillReturn(
   result: TaxReturnResult,
   options: FillReturnOptions,
 ): Promise<FillReturnResult> {
+  assertPdfExportAllowed(input.taxpayer.taxYear, result.taxYear, options.purpose);
+  const rrtaRequested=requiresRRTAPayrollReview(input,result)||options.rrtaPayrollReview!==undefined;
+  const rrtaOriginal=rrtaRequested?rrtaPayrollReviewOriginalInput(input,result,options.rrtaPayrollReview):undefined;
+  // Validate actual companion sources before any output/template operation.
+  if(rrtaOriginal)assertForm4137ReviewSource(rrtaOriginal,result);
+  const form2210Review=options.form2210Review??(requiresForm2210ScheduleAiReview(input,result)&&hasForm2210OriginalIdentity(input)?prepareForm2210Review(input):undefined);
+  if(form2210Review)form2210ReviewOriginalInput(input,result,form2210Review);
+  let form2210ReviewArtifact:SavedForm2210Review|undefined;
+  const paMarriedReview=options.paMarriedReview;
+  let paOrdinaryCareOfficial=false;
+  const marriedRequested=input.paMarriedOrdinarySources!==undefined||isPAMarriedOrdinaryReturnResult(result.stateReturns?.pennsylvania)||paMarriedReview!==undefined;
+  if(marriedRequested){
+    if(!input.paMarriedOrdinarySources||!isPAMarriedOrdinaryReturnResult(result.stateReturns?.pennsylvania)||!paMarriedReview)throw Error('Actual married PA originals, owned result and original prepared review context are required.');
+    if(options.paOrdinaryReview!==undefined||options.paWorkingCreditReview!==undefined||options.paRoyaltyReview!==undefined)throw Error('Married PA context cannot be replaced or mixed with a legacy scalar review context.');
+    // Validate complete actual household and exact owned results before template/file I/O.
+    assertPAMarriedPublicDisplayPrivacy(input,result,paMarriedReview);
+  }
+  assertScheduleRSourceConsistency(input, result);
+  const scheduleCSources=calculateScheduleCReviewSource(input,result.scheduleC);
+  if(scheduleCSources&&!result.scheduleC)throw new Error("Schedule C actual source calculation is missing");
+  if (options.pageOnlyTemporaryMerge && (options.flatten !== true || options.useObjectStreams !== false)) {
+    throw new Error("Page-only temporary merge packets require flattened, uncompressed components");
+  }
+  const scheduleEReview = requiresScheduleEReview(input, result) || options.scheduleEReview
+    ? options.scheduleEReview ?? prepareScheduleEReview(input) : undefined;
+  if (scheduleEReview) assertScheduleEReview(input, result, scheduleEReview);
+  const paRoyaltyReview = !paMarriedReview && ((input.royaltyPropertySources && result.stateReturns?.pennsylvania) || options.paRoyaltyReview)
+    ? options.paRoyaltyReview ?? preparePARoyaltyReview(input) : undefined;
+  if (paRoyaltyReview) assertPARoyaltyReview(input,result,paRoyaltyReview);
+  if (!paMarriedReview && result.stateReturns?.pennsylvania){
+    if(isPAOrdinaryReturnResult(result.stateReturns.pennsylvania)||input.paOrdinaryReturnFacts!==undefined||input.paOrdinaryReturnCompletionSources!==undefined||options.paOrdinaryReview!==undefined){
+      if(options.paWorkingCreditReview!==undefined)throw new Error("PA ordinary result requires its actual ordinary prepared context");
+      paOrdinaryCareOfficial=assertPAOrdinaryReturnReview(input,result,options.paOrdinaryReview).care!==undefined;
+    }else{
+      if(options.paOrdinaryReview!==undefined)throw new Error("PA ordinary prepared context cannot qualify a legacy result");
+      assertPAWorkingCreditReview(input,result,options.paWorkingCreditReview);
+    }
+  }
+  // Public care companions use canonical structured redaction; retained originals
+  // remain private in the prepared context and are never rewritten here.
+  if((marriedRequested||isPAOrdinaryReturnResult(result.stateReturns?.pennsylvania))&&input.dependentCare!==undefined&&!isDeepStrictEqual(input,redactReviewIdentifiers(input)))throw Error('Public official care review requires redacted render input');
+  const eicReview = hasEicReviewSources(input) || result.scheduleEIC?.form8862 || options.eicReview
+    ? options.eicReview ?? prepareEicReview(input) : undefined;
+  const actualEicChildren = eicReview ? eicReviewChildren(eicReviewOriginalSourceInput(input, result, eicReview)) : undefined;
+  const qbiLossReview = input.qbiLossSources || options.qbiLossReview
+    ? options.qbiLossReview ?? prepareQbiLossReview(input) : undefined;
+  if (qbiLossReview) buildQbiLossReview(input, result, qbiLossReview);
+  if (input.deductionElection === "nonitemized" || result.deductionUsed === "nonitemized") throw new Error("Nonitemized election is available only for 2026 and has no supported review PDF mapping");
+  const nolFilingUnitReview = requiresNolFilingUnitReview(input, result) || options.nolFilingUnitReview
+    ? options.nolFilingUnitReview ?? prepareNolFilingUnitReview(input) : undefined;
+  if (nolFilingUnitReview) nolFilingUnitReviewOriginalSourceInput(input, result, nolFilingUnitReview);
+  const charitableReview = input.charitableCarryoverSources || requiresK1CharitableReview(input, result) || requiresCharitableNolReview(input, result) || requiresCharitableFilingHistoryReview(input, result) || options.charitableReview
+    ? options.charitableReview ?? prepareCharitableReview(input) : undefined;
+  if (charitableReview) charitableReviewOriginalSourceInput(input, result, charitableReview);
+  const adoptionReview = hasHistoricalAdoptionSources(input)
+    ? options.adoptionReview ?? prepareAdoptionReview(input) : undefined;
+  const premiumTaxCreditReview = hasPremiumTaxCreditReviewSources(input) || result.form8962?.sharedPolicyAllocation || result.form8962?.marriageCalculation || options.premiumTaxCreditReview
+    ? options.premiumTaxCreditReview ?? preparePremiumTaxCreditReview(input) : undefined;
+  const premiumTaxCreditContext = premiumTaxCreditReview ? { input, prepared: premiumTaxCreditReview } : undefined;
+  if (premiumTaxCreditContext) buildForm8962ReferenceSummary(input.form1095A, result, premiumTaxCreditContext);
+  const educationReview = hasInKindEducationReviewSources(input) || options.educationReview
+    ? options.educationReview ?? prepareEducationReview(input) : undefined;
+  if (educationReview) {
+    if (!result.form1099Q || !input.form1099Q?.length) throw new Error("Education review requires the original distribution calculation");
+    assertPreparedEducationReturn(input, result.form1099Q, educationReview, result.schedule1?.studentLoanInterest, result);
+    buildForm1099QReferenceSummary(input.form1099Q, result.form1099Q, input.qualifiedEducationExpenses, educationReview);
+  }
+  const savingsBondReview = hasSavingsBondReviewSources(input) || result.form8815?.reissueSourcesVerified || options.savingsBondReview
+    ? options.savingsBondReview ?? prepareSavingsBondReview(input) : undefined;
+  if (savingsBondReview) savingsBondReviewOriginalInput(input, result, savingsBondReview);
+  const capitalGainReview = options.capitalGainReview ?? prepareForm8949Review(
+    charitableReview ? charitableReviewOriginalSourceInput(input, result, charitableReview) : input,
+  );
+  const capitalTransactions = form8949ReviewCalculation(input, capitalGainReview);
+  const hasDigitalDispositions = [capitalTransactions.shortTermBoxG, capitalTransactions.shortTermBoxH, capitalTransactions.shortTermBoxI,
+    capitalTransactions.longTermBoxJ, capitalTransactions.longTermBoxK, capitalTransactions.longTermBoxL].some(category => category.transactions.length > 0);
+  if (capitalTransactions.section1202) {
+    if (!result.scheduleD?.section1202Exclusion.eq(capitalTransactions.section1202.exclusion)) {
+      throw new Error("QSBS review source exclusion does not reconcile with ScheduleD");
+    }
+  }
+  const hasK1CashDistribution = input.k1CharitableSources?.statements?.some(source => source.cashDistribution !== undefined);
+  if (capitalTransactions.section1202 || hasDigitalDispositions || hasK1CashDistribution || input.qofDispositionFacts?.investments?.length) {
+    for (const entry of capitalTransactions.lines.filter(row => row.form === "Form 8949")) {
+      const canonical = result.allLines.filter(row => row.form === entry.form && row.line === entry.line);
+      if (canonical.length !== 1 || !canonical[0].value.eq(entry.value)) throw new Error("Form8949 original source audit does not reconcile");
+      for (const key of ['proceeds', 'cost', 'adjustments'] as const) {
+        const original = entry.inputs[key];
+        if (original === undefined) continue;
+        const retained = canonical[0].inputs[key];
+        if (!Decimal.isDecimal(original) || !Decimal.isDecimal(retained) || !original.eq(retained)) {
+          throw new Error('Form8949 original source audit columns do not reconcile');
+        }
+      }
+    }
+  }
+  if (input.form7206 || result.form7206) assertForm7206ReviewSource(input, result, charitableReview, premiumTaxCreditReview);
+  if (input.qofDispositionFacts?.investments?.length || result.qofInclusion) buildForm8997ReferenceSummary(input, result);
+  const codNolReview = input.form982NolSources || result.codNolReduction || options.codNolReview
+    ? options.codNolReview ?? prepareCodNolReview(input) : undefined;
+  // Bind the prepared sources and result before output, even when both copies
+  // omit the loss records that the separate review below would replay.
+  if (codNolReview) codNolReviewOriginalSourceInput(input, result, codNolReview);
+  if (Boolean(result.codNolReduction?.title11) !== (Boolean(result.codNolReduction) && input.form982NolSources?.title11Case === true)) throw new Error("Form982 exclusion route must match its original title 11 answer");
+  if (input.netOperatingLoss || result.netOperatingLoss) buildNetOperatingLossReview(input, result, capitalGainReview, codNolReview, charitableReview, qbiLossReview, nolFilingUnitReview);
   const filledForms: string[] = [];
-  const { blankFormsDir, outputDir, flatten = false } = options;
+  const finalizedPaths = new Set<string>();
+  const savePacketPdf = async (doc: PDFDocument, outputPath: string) => {
+    // Finalize the visible notice while the completed form is still in memory.
+    // Track only successful writes, scoped to this packet rather than a cache.
+    await markReviewPdf(doc);
+    await savePdfDocument(doc, outputPath, { useObjectStreams: options.useObjectStreams, pageOnlyTemporaryMerge: options.pageOnlyTemporaryMerge });
+    finalizedPaths.add(outputPath);
+  };
+  const { outputDir, flatten = false } = options;
+  const blankFormsDir = resolveReviewTemplateDirectory(options.blankFormsDir, result.taxYear);
 
   // ── Form 1040 (always filled) ──
   const f1040Path = join(blankFormsDir, "f1040.pdf");
-  const doc1040 = await fillForm1040(input, result, f1040Path);
+  const doc1040 = await fillForm1040(input, result, f1040Path, eicReview);
   if (flatten) await flattenForm(doc1040.getForm());
   const outputPath1040 = join(outputDir, "f1040-filled.pdf");
-  await savePdf(doc1040, outputPath1040);
+  await savePacketPdf(doc1040, outputPath1040);
   filledForms.push(outputPath1040);
 
   // ── Schedule 1 (if applicable) ──
@@ -402,7 +592,7 @@ export async function fillReturn(
     const docS1 = await fillSchedule1(input, result, s1Path);
     if (flatten) await flattenForm(docS1.getForm());
     const outputPathS1 = join(outputDir, "f1040s1-filled.pdf");
-    await savePdf(docS1, outputPathS1);
+    await savePacketPdf(docS1, outputPathS1);
     filledForms.push(outputPathS1);
   }
 
@@ -412,7 +602,7 @@ export async function fillReturn(
     const docS2 = await fillSchedule2(input, result, s2Path);
     if (flatten) await flattenForm(docS2.getForm());
     const outputPathS2 = join(outputDir, "f1040s2-filled.pdf");
-    await savePdf(docS2, outputPathS2);
+    await savePacketPdf(docS2, outputPathS2);
     filledForms.push(outputPathS2);
   }
 
@@ -422,26 +612,28 @@ export async function fillReturn(
     const docS3 = await fillSchedule3(input, result, s3Path);
     if (flatten) await flattenForm(docS3.getForm());
     const outputPathS3 = join(outputDir, "f1040s3-filled.pdf");
-    await savePdf(docS3, outputPathS3);
+    await savePacketPdf(docS3, outputPathS3);
     filledForms.push(outputPathS3);
 
-    if (input.energyCredits) {
-      const f5695Path = join(blankFormsDir, "f5695.pdf");
-      const doc5695 = await fillForm5695(input, result, f5695Path);
-      if (flatten) await flattenForm(doc5695.getForm());
-      const outputPath5695 = join(outputDir, "f5695-filled.pdf");
-      await savePdf(doc5695, outputPath5695);
-      filledForms.push(outputPath5695);
-    }
+  }
+
+  // Form5695 line16 retains unused credit even when no Schedule3 credit is allowed.
+  if (input.energyCredits) {
+    const f5695Path = join(blankFormsDir, "f5695.pdf");
+    const doc5695 = await fillForm5695(input, result, f5695Path);
+    if (flatten) await flattenForm(doc5695.getForm());
+    const outputPath5695 = join(outputDir, "f5695-filled.pdf");
+    await savePacketPdf(doc5695, outputPath5695);
+    filledForms.push(outputPath5695);
   }
 
   // ── Schedule A (if applicable — only when itemizing) ──
   if (result.scheduleA && result.deductionUsed === "itemized") {
     const saPath = join(blankFormsDir, "f1040sa.pdf");
-    const docSA = await fillScheduleA(input, result, saPath);
+    const docSA = await fillScheduleA(input, result, saPath, charitableReview);
     if (flatten) await flattenForm(docSA.getForm());
     const outputPathSA = join(outputDir, "f1040sa-filled.pdf");
-    await savePdf(docSA, outputPathSA);
+    await savePacketPdf(docSA, outputPathSA);
     filledForms.push(outputPathSA);
   }
 
@@ -451,7 +643,7 @@ export async function fillReturn(
     const docSB = await fillScheduleB(input, result, sbPath);
     if (flatten) await flattenForm(docSB.getForm());
     const outputPathSB = join(outputDir, "f1040sb-filled.pdf");
-    await savePdf(docSB, outputPathSB);
+    await savePacketPdf(docSB, outputPathSB);
     filledForms.push(outputPathSB);
   }
 
@@ -461,27 +653,27 @@ export async function fillReturn(
     const docSC = await fillScheduleC(input, result, scPath);
     if (flatten) await flattenForm(docSC.getForm());
     const outputPathSC = join(outputDir, "f1040sc-filled.pdf");
-    await savePdf(docSC, outputPathSC);
+    await savePacketPdf(docSC, outputPathSC);
     filledForms.push(outputPathSC);
   }
 
   // ── Schedule D (if applicable) ──
   if (result.scheduleD) {
     const sdPath = join(blankFormsDir, "f1040sd.pdf");
-    const docSD = await fillScheduleD(input, result, sdPath);
+    const docSD = await fillScheduleD(input, result, sdPath, charitableReview);
     if (flatten) await flattenForm(docSD.getForm());
     const outputPathSD = join(outputDir, "f1040sd-filled.pdf");
-    await savePdf(docSD, outputPathSD);
+    await savePacketPdf(docSD, outputPathSD);
     filledForms.push(outputPathSD);
   }
 
   // ── Schedule E (if applicable — rental properties or K-1 partnerships) ──
   if (shouldIncludeScheduleE(result.scheduleE)) {
     const sePath = join(blankFormsDir, "f1040se.pdf");
-    const docSE = await fillScheduleE(input, result, sePath);
+    const docSE = await fillScheduleE(input, result, sePath, scheduleEReview);
     if (flatten) await flattenForm(docSE.getForm());
     const outputPathSE = join(outputDir, "f1040se-filled.pdf");
-    await savePdf(docSE, outputPathSE);
+    await savePacketPdf(docSE, outputPathSE);
     filledForms.push(outputPathSE);
   }
 
@@ -491,7 +683,7 @@ export async function fillReturn(
     const docSF = await fillScheduleF(input, result, sfPath);
     if (flatten) await flattenForm(docSF.getForm());
     const outputPathSF = join(outputDir, "f1040sf-filled.pdf");
-    await savePdf(docSF, outputPathSF);
+    await savePacketPdf(docSF, outputPathSF);
     filledForms.push(outputPathSF);
   }
 
@@ -501,7 +693,7 @@ export async function fillReturn(
     const docSJ = await fillScheduleJ(input, result, sjPath);
     if (flatten) await flattenForm(docSJ.getForm());
     const outputPathSJ = join(outputDir, "f1040sj-filled.pdf");
-    await savePdf(docSJ, outputPathSJ);
+    await savePacketPdf(docSJ, outputPathSJ);
     filledForms.push(outputPathSJ);
   }
 
@@ -511,50 +703,68 @@ export async function fillReturn(
     const docSSE = await fillScheduleSE(input, result, ssePath);
     if (flatten) await flattenForm(docSSE.getForm());
     const outputPathSSE = join(outputDir, "f1040sse-filled.pdf");
-    await savePdf(docSSE, outputPathSSE);
+    await savePacketPdf(docSSE, outputPathSSE);
     filledForms.push(outputPathSSE);
   }
 
-  // ── Form 8949 (if applicable — capital transactions on 1099-B) ──
-  if (input.form1099B && input.form1099B.length > 0) {
-    const hasTransactions = input.form1099B.some((f) => f.transactions.length > 0);
-    if (hasTransactions) {
-      const f8949Path = join(blankFormsDir, "f8949.pdf");
-      const doc8949 = await fillForm8949(input, f8949Path);
-      if (flatten) await flattenForm(doc8949.getForm());
-      const outputPath8949 = join(outputDir, "f8949-filled.pdf");
-      await savePdf(doc8949, outputPath8949);
-      filledForms.push(outputPath8949);
-    }
+  // Original DA statements and issuer adjustments can require8949 even with
+  // no original1099-B. Select from the complete validated capital calculation.
+  if ([capitalTransactions.shortTermBoxA, capitalTransactions.shortTermBoxB, capitalTransactions.shortTermBoxC,
+    capitalTransactions.longTermBoxD, capitalTransactions.longTermBoxE, capitalTransactions.longTermBoxF]
+    .some(category => category.transactions.length > 0) || hasDigitalDispositions) {
+    const f8949Path = join(blankFormsDir, "f8949.pdf");
+    const doc8949 = await fillForm8949(input, f8949Path, capitalGainReview);
+    if (flatten) await flattenForm(doc8949.getForm());
+    const outputPath8949 = join(outputDir, "f8949-filled.pdf");
+    await savePacketPdf(doc8949, outputPath8949);
+    filledForms.push(outputPath8949);
   }
 
   // ── Form 8959 (if applicable — Additional Medicare Tax) ──
-  if (result.form8959 && result.form8959.additionalMedicareTax.gt(0)) {
+  // Selection preserves exact original Box5 threshold tails; canonical tax remains unchanged.
+  const medicareSources = input.w2s.map(w2 => new Decimal(w2.medicareWages));
+  const medicareSelectionAmounts = result.form8959 ? [
+    ...medicareSources, result.form8959.unreportedTips, result.form8959.form8919Wages,
+    Decimal.max(0, result.form8959.selfEmploymentEarnings), result.form8959.threshold,
+  ] : [];
+  const selectionIntegers = Math.max(1, ...medicareSelectionAmounts.map(value => value.e + 1));
+  const selectionFractions = Math.max(0, ...medicareSelectionAmounts.map(value => value.decimalPlaces()));
+  const SelectionDecimal = Decimal.clone({ precision: Math.max(50,
+    selectionIntegers + selectionFractions + String(medicareSelectionAmounts.length).length + 4) });
+  const originalCombinedMedicare = medicareSelectionAmounts.slice(0, -1)
+    .reduce((total, value) => total.plus(value.toFixed()), new SelectionDecimal(0));
+  const medicareThresholdRequiresForm = result.form8959 && (
+    medicareSources.some(value => value.gt(200000)) ||
+    originalCombinedMedicare.gt(result.form8959.threshold.toFixed())
+  );
+  if (result.form8959 && (result.form8959.additionalMedicareTax.gt(0) ||
+    result.form8959.withholdingCredit.gt(0) || rrtaRequested || medicareThresholdRequiresForm)) {
     const f8959Path = join(blankFormsDir, "f8959.pdf");
-    const doc8959 = await fillForm8959(input, result, f8959Path);
+    const doc8959 = await fillForm8959(input, result, f8959Path,options.rrtaPayrollReview);
     if (flatten) await flattenForm(doc8959.getForm());
     const outputPath8959 = join(outputDir, "f8959-filled.pdf");
-    await savePdf(doc8959, outputPath8959);
+    await savePacketPdf(doc8959, outputPath8959);
     filledForms.push(outputPath8959);
   }
 
   // ── Form 8960 (if applicable — Net Investment Income Tax) ──
-  if (result.form8960 && result.form8960.niitTax.gt(0)) {
+  if (result.form8960?.requiresForm8960) {
     const f8960Path = join(blankFormsDir, "f8960.pdf");
     const doc8960 = await fillForm8960(input, result, f8960Path);
     if (flatten) await flattenForm(doc8960.getForm());
     const outputPath8960 = join(outputDir, "f8960-filled.pdf");
-    await savePdf(doc8960, outputPath8960);
+    await savePacketPdf(doc8960, outputPath8960);
     filledForms.push(outputPath8960);
   }
 
   // ── Form 4137 (if applicable — Social Security and Medicare Tax on Unreported Tips) ──
-  if (result.form4137 && result.form4137.line13.gt(0)) {
+  const tipForms = assertForm4137ReviewSource(rrtaOriginal??input, result);
+  if (tipForms.some(form => form.sourceFactsVerified || form.line13.gt(0))) {
     const f4137Path = join(blankFormsDir, "f4137.pdf");
-    const doc4137 = await fillForm4137(input, result, f4137Path);
+    const doc4137 = await fillForm4137(input, result, f4137Path,options.rrtaPayrollReview);
     if (flatten) await flattenForm(doc4137.getForm());
     const outputPath4137 = join(outputDir, "f4137-filled.pdf");
-    await savePdf(doc4137, outputPath4137);
+    await savePacketPdf(doc4137, outputPath4137);
     filledForms.push(outputPath4137);
   }
 
@@ -564,17 +774,17 @@ export async function fillReturn(
     const doc8919 = await fillForm8919(input, result, f8919Path);
     if (flatten) await flattenForm(doc8919.getForm());
     const outputPath8919 = join(outputDir, "f8919-filled.pdf");
-    await savePdf(doc8919, outputPath8919);
+    await savePacketPdf(doc8919, outputPath8919);
     filledForms.push(outputPath8919);
   }
 
   // ── Form 8582 (if applicable — Passive Activity Loss Limitations) ──
-  if (result.form8582 && result.form8582.suspendedLoss.gt(0)) {
+  if (result.form8582?.requiresForm8582) {
     const f8582Path = join(blankFormsDir, "f8582.pdf");
-    const doc8582 = await fillForm8582(input, result, f8582Path);
+    const doc8582 = await fillForm8582(input, result, f8582Path, charitableReview);
     if (flatten) await flattenForm(doc8582.getForm());
     const outputPath8582 = join(outputDir, "f8582-filled.pdf");
-    await savePdf(doc8582, outputPath8582);
+    await savePacketPdf(doc8582, outputPath8582);
     filledForms.push(outputPath8582);
   }
 
@@ -584,7 +794,7 @@ export async function fillReturn(
     const doc4684 = await fillForm4684(input, result, f4684Path);
     if (flatten) await flattenForm(doc4684.getForm());
     const outputPath4684 = join(outputDir, "f4684-filled.pdf");
-    await savePdf(doc4684, outputPath4684);
+    await savePacketPdf(doc4684, outputPath4684);
     filledForms.push(outputPath4684);
   }
 
@@ -594,18 +804,33 @@ export async function fillReturn(
     const doc4797 = await fillForm4797(input, result, f4797Path);
     if (flatten) await flattenForm(doc4797.getForm());
     const outputPath4797 = join(outputDir, "f4797-filled.pdf");
-    await savePdf(doc4797, outputPath4797);
+    await savePacketPdf(doc4797, outputPath4797);
     filledForms.push(outputPath4797);
   }
 
   // ── Form 8995 (if applicable — QBI Deduction Simplified Computation) ──
-  if (result.form8995 && result.form8995.qbiDeduction.gt(0)) {
+  if (result.form8995) {
     const f8995Path = join(blankFormsDir, "f8995.pdf");
     const doc8995 = await fillForm8995(input, result, f8995Path);
     if (flatten) await flattenForm(doc8995.getForm());
     const outputPath8995 = join(outputDir, "f8995-filled.pdf");
-    await savePdf(doc8995, outputPath8995);
+    await savePacketPdf(doc8995, outputPath8995);
     filledForms.push(outputPath8995);
+  }
+  if (qbiLossReview) {
+    const doc = await fillQbiLossReview(input, result, qbiLossReview);
+    const outputPath = join(outputDir, QBI_LOSS_REFERENCE_FILENAME);
+    await savePacketPdf(doc, outputPath); filledForms.push(outputPath);
+  }
+  if (requiresCharitableFilingHistoryReview(input, result)) {
+    const doc = await fillCharitableFilingUnitReview(input, result, charitableReview);
+    const outputPath = join(outputDir, CHARITABLE_FILING_UNIT_REFERENCE_FILENAME);
+    await savePacketPdf(doc, outputPath); filledForms.push(outputPath);
+  }
+  if (input.k1CharitableSources) {
+    const doc = await fillK1CharitableReview(input, result, charitableReview);
+    const outputPath = join(outputDir, K1_CHARITABLE_REFERENCE_FILENAME);
+    await savePacketPdf(doc, outputPath); filledForms.push(outputPath);
   }
 
   // ── Schedule 8812 (if applicable — Child Tax Credit / ACTC) ──
@@ -614,7 +839,7 @@ export async function fillReturn(
     const doc8812 = await fillForm8812(input, result, f8812Path);
     if (flatten) await flattenForm(doc8812.getForm());
     const outputPath8812 = join(outputDir, "f1040s8-filled.pdf");
-    await savePdf(doc8812, outputPath8812);
+    await savePacketPdf(doc8812, outputPath8812);
     filledForms.push(outputPath8812);
   }
 
@@ -630,7 +855,7 @@ export async function fillReturn(
         if (flatten) await flattenForm(doc8889.getForm());
         const suffix = hsaOwners.length > 1 ? `-${ownerKey}` : "";
         const outputPath8889 = join(outputDir, `f8889${suffix}-filled.pdf`);
-        await savePdf(doc8889, outputPath8889);
+        await savePacketPdf(doc8889, outputPath8889);
         filledForms.push(outputPath8889);
       }
     }
@@ -639,17 +864,17 @@ export async function fillReturn(
     const doc8889 = await fillForm8889(input, result, f8889Path, "primary");
     if (flatten) await flattenForm(doc8889.getForm());
     const outputPath8889 = join(outputDir, "f8889-filled.pdf");
-    await savePdf(doc8889, outputPath8889);
+    await savePacketPdf(doc8889, outputPath8889);
     filledForms.push(outputPath8889);
   }
 
-  // ── Form 2441 (if applicable — Child and Dependent Care Credit) ──
-  if (result.form2441 && result.form2441.credit.gt(0)) {
+  // ── Form 2441: care credit or actual benefit reconciliation, including no-credit returns. ──
+  if (result.form2441?.credit.gt(0) || result.form2441Benefits || input.dependentCareBenefits) {
     const f2441Path = join(blankFormsDir, "f2441.pdf");
     const doc2441 = await fillForm2441(input, result, f2441Path);
     if (flatten) await flattenForm(doc2441.getForm());
     const outputPath2441 = join(outputDir, "f2441-filled.pdf");
-    await savePdf(doc2441, outputPath2441);
+    await savePacketPdf(doc2441, outputPath2441);
     filledForms.push(outputPath2441);
   }
 
@@ -661,17 +886,19 @@ export async function fillReturn(
     const doc8863 = await fillForm8863(input, result, f8863Path);
     if (flatten) await flattenForm(doc8863.getForm());
     const outputPath8863 = join(outputDir, "f8863-filled.pdf");
-    await savePdf(doc8863, outputPath8863);
+    await savePacketPdf(doc8863, outputPath8863);
     filledForms.push(outputPath8863);
   }
 
   // ── Form 6251 (if applicable — Alternative Minimum Tax) ──
-  if (result.form6251 && result.form6251.amt.gt(0)) {
+  // Include the actual NOL adjustment in this review packet even when AMT is
+  // zero. Inclusion is for source review and is not a filing-requirement claim.
+  if (result.form6251 && (result.form6251.amt.gt(0) || result.netOperatingLoss || capitalTransactions.section1202?.amtPreference.gt(0))) {
     const f6251Path = join(blankFormsDir, "f6251.pdf");
-    const doc6251 = await fillForm6251(input, result, f6251Path);
+    const doc6251 = await fillForm6251(input, result, f6251Path, capitalGainReview, codNolReview, charitableReview, qbiLossReview, nolFilingUnitReview);
     if (flatten) await flattenForm(doc6251.getForm());
     const outputPath6251 = join(outputDir, "f6251-filled.pdf");
-    await savePdf(doc6251, outputPath6251);
+    await savePacketPdf(doc6251, outputPath6251);
     filledForms.push(outputPath6251);
   }
 
@@ -681,17 +908,30 @@ export async function fillReturn(
     const doc8880 = await fillForm8880(input, result, f8880Path);
     if (flatten) await flattenForm(doc8880.getForm());
     const outputPath8880 = join(outputDir, "f8880-filled.pdf");
-    await savePdf(doc8880, outputPath8880);
+    await savePacketPdf(doc8880, outputPath8880);
     filledForms.push(outputPath8880);
   }
 
   // ── Form 5329 (if applicable — Additional Taxes on Qualified Plans) ──
-  if (result.form5329 && result.form5329.totalAdditionalTax.gt(0)) {
+  const hsa5329Owners = (Object.keys(result.form5329HsaByOwner ?? {}) as Array<"primary" | "spouse">)
+    .filter(owner => result.form5329HsaByOwner?.[owner]?.requiresForm5329
+      || (owner === "primary" && result.form5329?.totalAdditionalTax.gt(0)));
+  const education5329Owners = result.form1099Q?.sourceFactsVerified
+    ? result.form1099Q.perRecipient.flatMap(row => row.owner !== "other" && row.taxableEarnings.gt(0) ? [row.owner] : []) : [];
+  const source5329Owners = [...new Set([...hsa5329Owners, ...education5329Owners])];
+  for (const owner of source5329Owners) {
+    const doc5329 = await fillForm5329(input, result, join(blankFormsDir, "f5329.pdf"), owner, educationReview);
+    if (flatten) await flattenForm(doc5329.getForm());
+    const outputPath5329 = join(outputDir, `f5329-${owner}-filled.pdf`);
+    await savePacketPdf(doc5329, outputPath5329);
+    filledForms.push(outputPath5329);
+  }
+  if (source5329Owners.length === 0 && result.form5329 && result.form5329.totalAdditionalTax.gt(0)) {
     const f5329Path = join(blankFormsDir, "f5329.pdf");
-    const doc5329 = await fillForm5329(input, result, f5329Path);
+    const doc5329 = await fillForm5329(input, result, f5329Path, undefined, educationReview);
     if (flatten) await flattenForm(doc5329.getForm());
     const outputPath5329 = join(outputDir, "f5329-filled.pdf");
-    await savePdf(doc5329, outputPath5329);
+    await savePacketPdf(doc5329, outputPath5329);
     filledForms.push(outputPath5329);
   }
 
@@ -707,7 +947,7 @@ export async function fillReturn(
         if (flatten) await flattenForm(doc8606.getForm());
         const suffix = f8606Owners.length > 1 ? `-${ownerKey}` : "";
         const outputPath8606 = join(outputDir, `f8606${suffix}-filled.pdf`);
-        await savePdf(doc8606, outputPath8606);
+        await savePacketPdf(doc8606, outputPath8606);
         filledForms.push(outputPath8606);
       }
     }
@@ -716,7 +956,7 @@ export async function fillReturn(
     const doc8606 = await fillForm8606(input, result, f8606Path, "primary");
     if (flatten) await flattenForm(doc8606.getForm());
     const outputPath8606 = join(outputDir, "f8606-filled.pdf");
-    await savePdf(doc8606, outputPath8606);
+    await savePacketPdf(doc8606, outputPath8606);
     filledForms.push(outputPath8606);
   }
 
@@ -756,14 +996,28 @@ export async function fillReturn(
     filledForms.push(outputPathSocialSecurityBenefitsWorksheetReference);
   }
 
+  // Actual Form7206 has a separate completed worksheet for each business.
+  if (result.form7206) {
+    for (const [index, business] of result.form7206.businesses.entries()) {
+      const doc = await fillForm7206(input, result, join(blankFormsDir, "f7206.pdf"), business.businessSourceId, business.accountHolder, charitableReview, premiumTaxCreditReview);
+      if (flatten) await flattenForm(doc.getForm());
+      const outputPath = join(outputDir, `form-7206-${business.accountHolder}-${index + 1}.pdf`);
+      await savePacketPdf(doc, outputPath); filledForms.push(outputPath);
+    }
+  }
+
   // ── Self-Employed Health Insurance Worksheet reference summary (if applicable — supported Pub. 535 worksheet inputs) ──
-  if (result.seHealthInsuranceWorksheet) {
+  if (result.seHealthInsuranceWorksheet && !result.form7206) {
     const outputPathSEHealthInsuranceWorksheetReference =
       await fillSEHealthInsuranceWorksheetReference(result, outputDir);
     filledForms.push(outputPathSEHealthInsuranceWorksheetReference);
   }
 
   // ── IRA Deduction Worksheet reference summary (if applicable — supported Pub. 590-A deduction worksheet inputs) ──
+  if (result.netOperatingLoss) {
+    filledForms.push(await fillNetOperatingLossReview(input, result, outputDir, capitalGainReview, codNolReview, charitableReview, qbiLossReview, nolFilingUnitReview));
+  }
+
   if (result.iraDeductionWorksheet) {
     const outputPathIraDeductionWorksheetReference = await fillIraDeductionWorksheetReference(
       result.iraDeductionWorksheet,
@@ -774,8 +1028,22 @@ export async function fillReturn(
 
   // ── Form 8962 reference summary (if applicable — supported marketplace reconciliation data) ──
   if (input.form1095A.length > 0 && result.form8962) {
-    const outputPath8962Reference = await fillForm8962Reference(input.form1095A, result, outputDir);
+    if (result.form8962.sharedPolicyAllocation || result.form8962.marriageCalculation || result.form7206?.coverageFamilyAllocations?.length || result.marketplaceFullRepaymentHealth) {
+      const fill = result.form8962.marriageCalculation ? fillForm8962Marriage : result.form8962.sharedPolicyAllocation ? fillForm8962SharedPolicy
+        : result.form7206?.coverageFamilyAllocations?.length ? fillForm8962CoverageFamily : fillForm8962BindingOwnerFullRepayment;
+      const doc8962 = await fill(input, result, join(blankFormsDir, "f8962.pdf"), premiumTaxCreditReview);
+      if (options.flatten) await flattenForm(doc8962.getForm());
+      const outputPath8962 = join(outputDir, "f8962-filled.pdf");
+      await savePacketPdf(doc8962, outputPath8962);
+      filledForms.push(outputPath8962);
+    }
+    const outputPath8962Reference = await fillForm8962Reference(input.form1095A, result, outputDir, premiumTaxCreditContext);
     filledForms.push(outputPath8962Reference);
+  }
+
+  // ── Form 8997 PartIII reference (if applicable — actual QOF inclusion records) ──
+  if (input.qofDispositionFacts?.investments?.length) {
+    filledForms.push(await fillForm8997Reference(input, result, outputDir));
   }
 
   // ── Form 1099-C reference summary (if applicable — supported cancellation-of-debt statements) ──
@@ -791,7 +1059,7 @@ export async function fillReturn(
   }
 
   // ── Form 982 reference summary (if applicable — supported COD exclusions that trigger attribute reductions) ──
-  if (result.form982) {
+  if (result.form982 || result.codNolReduction) {
     const outputPath982Reference = await fillForm982Reference(result, outputDir);
     filledForms.push(outputPath982Reference);
   }
@@ -809,6 +1077,7 @@ export async function fillReturn(
       result.form1099Q,
       input.qualifiedEducationExpenses,
       outputDir,
+      educationReview,
     );
     filledForms.push(outputPath1099QReference);
   }
@@ -870,7 +1139,7 @@ export async function fillReturn(
   }
 
   // ── Form 461 reference summary (if applicable — supported excess business loss limitation outputs) ──
-  if (result.form461?.applies) {
+  if (result.form461?.requiresForm461) {
     const outputPath461Reference = await fillForm461Reference(result.form461, outputDir);
     filledForms.push(outputPath461Reference);
   }
@@ -889,7 +1158,8 @@ export async function fillReturn(
 
   // ── Form 6781 reference summary (if applicable — supported section 1256 and straddle activity) ──
   if (shouldIncludeForm6781ReferenceSummary(input)) {
-    const outputPath6781Reference = await fillForm6781Reference(input.form6781!, outputDir);
+    if (!input.form6781) throw new Error("Actual Form 6781 sources are required for its reference summary.");
+    const outputPath6781Reference = await fillForm6781Reference(input.form6781, outputDir);
     filledForms.push(outputPath6781Reference);
   }
 
@@ -909,19 +1179,20 @@ export async function fillReturn(
   if (
     (input.savingsBondRedemptions?.length ?? 0) > 0
     && result.form8815
-    && result.form8815.excludableSavingsBondInterest.gt(0)
+    && (result.form8815.excludableSavingsBondInterest.gt(0) || result.form8815.reissueSourcesVerified)
   ) {
     const outputPath8815Reference = await fillForm8815Reference(
       input.savingsBondRedemptions ?? [],
       result.form8815,
       outputDir,
+      savingsBondReview ? { input, result, prepared: savingsBondReview } : undefined,
     );
     filledForms.push(outputPath8815Reference);
   }
 
   // ── Form 3800 reference summary (if applicable — supported general business credit outputs) ──
   if (result.form3800 && result.form3800.totalCredit.gt(0)) {
-    const outputPath3800Reference = await fillForm3800Reference(result.form3800, outputDir);
+    const outputPath3800Reference = await fillForm3800Reference(result.form3800, outputDir, result);
     filledForms.push(outputPath3800Reference);
   }
 
@@ -939,14 +1210,15 @@ export async function fillReturn(
 
   // ── Form 8801 reference summary (if applicable — supported prior-year minimum tax credit outputs) ──
   if (input.form8801 && result.form8801) {
-    const outputPath8801Reference = await fillForm8801Reference(result.form8801, outputDir);
+    const outputPath8801Reference = await fillForm8801Reference(result.form8801, outputDir, result);
     filledForms.push(outputPath8801Reference);
   }
 
   // ── Form 8915-F reference summary (if applicable — supported qualified disaster distribution activity) ──
   if (shouldIncludeForm8915FReferenceSummary(input.form8915F) && result.form8915F) {
+    if (!input.form8915F) throw new Error("Actual Form 8915-F sources are required for its reference summary.");
     const outputPath8915FReference = await fillForm8915FReference(
-      input.form8915F!,
+      input.form8915F,
       input.taxpayer.taxYear,
       result.form8915F,
       outputDir,
@@ -955,19 +1227,43 @@ export async function fillReturn(
   }
 
   // ── Form 2210 (if applicable — Underpayment of Estimated Tax) ──
-  // We do not auto-attach Form 2210 to the packet by default.
+  // Other 2210 methods remain omitted. This is not generic auto-attachment.
+  if(form2210Review&&requiresForm2210ScheduleAiReview(input,result)){
+    let doc=await fillForm2210(input,result,join(blankFormsDir,"f2210.pdf"),qbiLossReview,form2210Review);
+    if(flatten){
+      await flattenForm(doc.getForm());
+      // The new static review is a page-only copy, excluding the blank source
+      // catalog and unreachable field/action graph after appearance painting.
+      // Interactive direct mapper callers retain their original form fields.
+      for(const page of doc.getPages()){page.node.delete(PDFName.of("Annots"));page.node.delete(PDFName.of("AA"));}
+      const completed=await PDFDocument.create();
+      for(const page of await completed.copyPages(doc,doc.getPageIndices()))completed.addPage(page);
+      completed.setTitle("Form 2210 with Schedule AI - review only");completed.setAuthor("Tax Engine");
+      doc=completed;
+    }
+    const path=join(outputDir,"f2210-filled.pdf");await savePacketPdf(doc,path);filledForms.push(path);
+    form2210ReviewArtifact=await recordSavedForm2210Review(input,result,form2210Review,path);
+  }
   // The main return can reflect an estimated tax penalty without requiring
   // this supporting worksheet to be filed, and attaching it automatically
   // makes draft packets look more filing-ready than they are.
 
   // ── Schedule EIC (if applicable — qualifying children for EIC) ──
-  const eicChildren = input.taxpayer.dependents.filter((dep) => dep.qualifiesForEIC);
+  if (result.earnedIncomeCredit.gt(0) && result.scheduleEIC?.form8862?.required
+    && result.scheduleEIC.form8862.currentFormRequirementsMet) {
+    const doc8862 = await fillForm8862(input, result, join(blankFormsDir, "f8862.pdf"), eicReview);
+    if (flatten) await flattenForm(doc8862.getForm());
+    const outputPath8862 = join(outputDir, "f8862-filled.pdf");
+    await savePacketPdf(doc8862, outputPath8862);
+    filledForms.push(outputPath8862);
+  }
+  const eicChildren = actualEicChildren ?? input.taxpayer.dependents.filter((dep) => dep.qualifiesForEIC);
   if (result.scheduleEIC && !result.scheduleEIC.disqualified && eicChildren.length > 0) {
     const seiPath = join(blankFormsDir, "f1040sei.pdf");
-    const docSEI = await fillScheduleEIC(input, result, seiPath);
+    const docSEI = await fillScheduleEIC(input, result, seiPath, eicReview);
     if (flatten) await flattenForm(docSEI.getForm());
     const outputPathSEI = join(outputDir, "f1040sei-filled.pdf");
-    await savePdf(docSEI, outputPathSEI);
+    await savePacketPdf(docSEI, outputPathSEI);
     filledForms.push(outputPathSEI);
   }
 
@@ -977,7 +1273,7 @@ export async function fillReturn(
     const docSH = await fillScheduleH(input, result, shPath);
     if (flatten) await flattenForm(docSH.getForm());
     const outputPathSH = join(outputDir, "f1040sh-filled.pdf");
-    await savePdf(docSH, outputPathSH);
+    await savePacketPdf(docSH, outputPathSH);
     filledForms.push(outputPathSH);
   }
 
@@ -987,7 +1283,7 @@ export async function fillReturn(
     const doc4952 = await fillForm4952(input, result, f4952Path);
     if (flatten) await flattenForm(doc4952.getForm());
     const outputPath4952 = join(outputDir, "f4952-filled.pdf");
-    await savePdf(doc4952, outputPath4952);
+    await savePacketPdf(doc4952, outputPath4952);
     filledForms.push(outputPath4952);
   }
 
@@ -997,7 +1293,7 @@ export async function fillReturn(
     const docSR = await fillScheduleR(input, result, srPath);
     if (flatten) await flattenForm(docSR.getForm());
     const outputPathSR = join(outputDir, "f1040sr-filled.pdf");
-    await savePdf(docSR, outputPathSR);
+    await savePacketPdf(docSR, outputPathSR);
     filledForms.push(outputPathSR);
   }
 
@@ -1007,17 +1303,19 @@ export async function fillReturn(
     const doc8936 = await fillForm8936(input, result, f8936Path);
     if (flatten) await flattenForm(doc8936.getForm());
     const outputPath8936 = join(outputDir, "f8936-filled.pdf");
-    await savePdf(doc8936, outputPath8936);
+    await savePacketPdf(doc8936, outputPath8936);
     filledForms.push(outputPath8936);
   }
 
   // ── Form 8839 (if applicable — Qualified Adoption Expenses) ──
-  if (result.form8839 && result.form8839.eligible && result.form8839.adoptionCredit.gt(0)) {
+  if (result.form8839 && result.form8839.eligible && (result.form8839.adoptionCredit.gt(0)
+    || result.form8839.totalEmployerBenefits.gt(0) || result.form8839.allowableExclusion.gt(0)
+    || result.form8839.lines.some(row => row.form === "Form 8839" && row.line === "prior-benefits-income-adjustment"))) {
     const f8839Path = join(blankFormsDir, "f8839.pdf");
-    const doc8839 = await fillForm8839(input, result, f8839Path);
+    const doc8839 = await fillForm8839(input, result, f8839Path, adoptionReview);
     if (flatten) await flattenForm(doc8839.getForm());
     const outputPath8839 = join(outputDir, "f8839-filled.pdf");
-    await savePdf(doc8839, outputPath8839);
+    await savePacketPdf(doc8839, outputPath8839);
     filledForms.push(outputPath8839);
   }
 
@@ -1029,18 +1327,43 @@ export async function fillReturn(
     const docIL1040 = await fillIL1040(input, result, il1040Path);
     if (flatten) await flattenForm(docIL1040.getForm());
     const outputPathIL1040 = join(outputDir, "il-1040-filled.pdf");
-    await savePdf(docIL1040, outputPathIL1040);
+    await savePacketPdf(docIL1040, outputPathIL1040);
     filledForms.push(outputPathIL1040);
   }
 
   // ── PA-40 (if applicable — Pennsylvania state return) ──
-  if (result.stateReturns?.pennsylvania) {
+  if(paMarriedReview){
+    const documents=await fillPAMarriedOfficialReview(input,result,blankFormsDir,paMarriedReview);
+    for(const {filename,doc}of documents){
+      const outputPath=join(outputDir,filename);
+      await savePacketPdf(doc,outputPath);filledForms.push(outputPath);
+    }
+  } else if (result.stateReturns?.pennsylvania && !isPAMarriedOrdinaryReturnResult(result.stateReturns.pennsylvania)) {
     const pa40Path = join(blankFormsDir, "pa-40.pdf");
-    const docPA40 = await fillPA40(input, result, pa40Path);
+    const docPA40 = await fillPA40(input, result, pa40Path, options.paWorkingCreditReview,options.paOrdinaryReview);
     if (flatten) await flattenForm(docPA40.getForm());
     const outputPathPA40 = join(outputDir, "pa-40-filled.pdf");
-    await savePdf(docPA40, outputPathPA40);
+    await savePacketPdf(docPA40, outputPathPA40);
     filledForms.push(outputPathPA40);
+
+    // Actual employee amounts come from the already asserted pre-redaction ordinary context.
+    // Each employer keeps its own UE/NRH reference; no scalar legacy packet is fabricated.
+    if (isPAOrdinaryReturnResult(result.stateReturns.pennsylvania) && result.stateReturns.pennsylvania.employeeSources) {
+      for (const [index, employee] of result.stateReturns.pennsylvania.employeeSources.perEmployer.entries()) {
+        const employerDir = index === 0 ? outputDir : join(outputDir, `pa-employee-${index + 1}`);
+        if (shouldIncludePAScheduleUEReferenceSummary(employee.scheduleUE)) {
+          filledForms.push(await fillPAScheduleUEReference(employee.scheduleUE, employerDir));
+        }
+        if (employee.residentPeriod === false && (employee.rawGrossCompensation.gt(0) || employee.scheduleUE.totalExpenses.gt(0))) {
+          filledForms.push(await fillPAScheduleNRHReference(input, employee.scheduleNRH, employerDir, employee));
+        }
+      }
+    }
+
+    if(isPAOrdinaryReturnResult(result.stateReturns.pennsylvania)&&result.stateReturns.pennsylvania.pa40.residentCredit.gt(0)){
+      const schedules=await fillPAOrdinaryScheduleGL(input,result,join(blankFormsDir,"pa-schedule-g-l.pdf"),options.paOrdinaryReview);
+      for(const {state,doc}of schedules){if(flatten)await flattenForm(doc.getForm());const path=join(outputDir,"pa-schedule-g-l-"+state.toLowerCase()+"-filled.pdf");await savePacketPdf(doc,path);filledForms.push(path);}
+    }
 
     if (
       hasPAScheduleSP(result.stateReturns.pennsylvania)
@@ -1108,7 +1431,13 @@ export async function fillReturn(
       filledForms.push(outputPathPAScheduleE);
     }
 
-    if (input.taxpayer.address.state.toUpperCase() === "PA" && input.scheduleC) {
+    if (isPAOrdinaryReturnResult(result.stateReturns.pennsylvania)) {
+      // The prepared ordinary context already replayed the private actual business originals.
+      if (result.stateReturns.pennsylvania.scheduleC) {
+        const outputPathPAScheduleC = await fillPAScheduleCReference(result.stateReturns.pennsylvania.scheduleC, outputDir);
+        filledForms.push(outputPathPAScheduleC);
+      }
+    } else if (input.taxpayer.address.state.toUpperCase() === "PA" && input.scheduleC) {
       const outputPathPAScheduleC = await fillPAScheduleCReference(
         calculatePAScheduleC({
           taxYear: input.taxpayer.taxYear,
@@ -1179,8 +1508,14 @@ export async function fillReturn(
       filledForms.push(outputPathPAScheduleF);
     }
 
+    if(isPAOrdinaryReturnResult(result.stateReturns.pennsylvania)&&result.stateReturns.pennsylvania.scheduleD){
+      const doc=await fillPAOrdinaryScheduleD(input,result,join(blankFormsDir,"pa-schedule-d.pdf"),options.paOrdinaryReview);
+      if(!doc)throw new Error("Actual ordinary ScheduleD paper source result is missing");
+      if(flatten)await flattenForm(doc.getForm());const path=join(outputDir,"pa-schedule-d-filled.pdf");await savePacketPdf(doc,path);filledForms.push(path);
+    }
     if (
-      hasPAScheduleD(result.stateReturns.pennsylvania)
+      !isPAOrdinaryReturnResult(result.stateReturns.pennsylvania)
+      && hasPAScheduleD(result.stateReturns.pennsylvania)
       && shouldIncludePAScheduleDReferenceSummary(input, result.stateReturns.pennsylvania.scheduleD)
     ) {
       const outputPathPAScheduleD = await fillPAScheduleDReference(
@@ -1230,15 +1565,18 @@ export async function fillReturn(
       && hasPAScheduleDC(result.stateReturns.pennsylvania)
       && shouldIncludePAScheduleDCReferenceSummary(result.stateReturns.pennsylvania.scheduleDC)
     ) {
-      const outputPathPAScheduleDC = await fillPAScheduleDCReference(
-        result.stateReturns.pennsylvania.scheduleDC,
-        outputDir,
-      );
-      filledForms.push(outputPathPAScheduleDC);
+      if(paOrdinaryCareOfficial){
+        if(!options.paOrdinaryReview)throw Error('Official care paper requires its original prepared ordinary context');
+        const doc=await fillPACareOfficialReview(input,result,join(blankFormsDir,'pa-schedule-dc.pdf'),{kind:'ordinary',prepared:options.paOrdinaryReview});
+        const path=join(outputDir,'pa-ordinary-dc-review.pdf');await savePacketPdf(doc,path);filledForms.push(path);
+      }else{
+        const outputPathPAScheduleDC=await fillPAScheduleDCReference(result.stateReturns.pennsylvania.scheduleDC,outputDir);filledForms.push(outputPathPAScheduleDC);
+      }
     }
 
     if (
       !input.paNonresidentReturn
+      && "scheduleGL"in result.stateReturns.pennsylvania
       && shouldIncludePAScheduleGLReferenceSummary(result.stateReturns.pennsylvania.scheduleGL)
     ) {
       const outputPathPAScheduleGL = await fillPAScheduleGLReference(
@@ -1286,7 +1624,7 @@ export async function fillReturn(
     const docNYIT201 = await fillNYIT201(input, result, nyIT201Path);
     if (flatten) await flattenForm(docNYIT201.getForm());
     const outputPathNYIT201 = join(outputDir, "ny-it201-filled.pdf");
-    await savePdf(docNYIT201, outputPathNYIT201);
+    await savePacketPdf(docNYIT201, outputPathNYIT201);
     filledForms.push(outputPathNYIT201);
   }
 
@@ -1296,9 +1634,15 @@ export async function fillReturn(
     const docNJ1040 = await fillNJ1040(input, result, nj1040Path);
     if (flatten) await flattenForm(docNJ1040.getForm());
     const outputPathNJ1040 = join(outputDir, "nj-1040-filled.pdf");
-    await savePdf(docNJ1040, outputPathNJ1040);
+    await savePacketPdf(docNJ1040, outputPathNJ1040);
     filledForms.push(outputPathNJ1040);
   }
 
-  return { filledForms };
+  for (const path of filledForms) {
+    if (finalizedPaths.has(path)) continue;
+    // Reference generators that write their own bytes still need finalization.
+    const doc = await loadBlankPdf(path);
+    await savePacketPdf(doc, path);
+  }
+  return { filledForms,form2210ReviewArtifact };
 }

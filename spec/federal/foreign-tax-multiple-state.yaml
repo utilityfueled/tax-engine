@@ -1,0 +1,57 @@
+form: "Foreign tax multiple-state allocation"
+fullName: "Ordinary aggregate state-tax presumption with actual source modifications"
+taxYear: 2026
+irsReference: "https://www.ecfr.gov/current/title-26/section-1.861-8"
+sources:
+  - url: "https://www.ecfr.gov/current/title-26/section-1.861-8"
+    section: "(e)(6)(ii)(A)/(C)/(D), examples25–27; taxable-income residual and required exempt/no-tax-state modifications"
+    retrieved: "2026-10-25"
+  - url: "https://www.irs.gov/publications/p514"
+    section: "Individual state income taxes; same ordinary taxable-source presumption"
+    retrieved: "2026-10-25"
+notes: |
+  Apply the general taxpayer rule to an explicitly confirmed ordinary individual
+  source cohort; the corporate example's state factors are not invented for an
+  individual. Every taxing/no-tax jurisdiction and its actual nonoverlapping
+  source basis must be known. Existing elective safe-harbor methods have their
+  own continuing-election rules and cannot silently become this method.
+  Pool nonexempt-state bases and allowed deductions once. Deduct exempt-state
+  U.S. bases and actual U.S. taxable income attributable to no-tax states from
+  the pre-state federal U.S. residual. Unknown/overlapping income, an unsupported
+  state/federal difference, negative residual or a different binding method
+  stays unresolved. No state rate, UDITPA factors or country split is inferred.
+  Single-state records require the same completeness/history facts because
+  Example27 can apply even when only one state imposes an income tax.
+lines:
+  - line: "contract"
+    description: "Actual method history and complete jurisdiction facts"
+    formula: "Require ordinary_presumption, confirmed method history, complete state sources, nonoverlapping income, local source reference and explicit no-tax-state records ([] when none); preserve omitted and false values"
+    testRef: "tests/engine/forms/foreign-tax-multiple-state.test.ts::preserves unknown method facts and rejects incomplete source jurisdiction records"
+  - line: "aggregate"
+    description: "One aggregate allocation using the prescribed taxable-source comparison"
+    formula: "S=sum nonexempt state taxable bases;T=sum their allowed tax;U=pre-state U.S.taxable income−exempt-state bases−actual no-tax-state U.S.income;F=max(0,S−U); foreign tax=T*F/S. Exempt-state taxes stay U.S.-source. Reject S>U+pre-state foreign taxable income."
+    testRef: "tests/engine/forms/foreign-tax-multiple-state.test.ts::reproduces the aggregate and exempt-state regulation examples"
+  - line: "no-tax-state"
+    description: "Use the actual U.S. taxable source attribution required by Example27"
+    formula: "Reduce the U.S.comparator by actual completed no-tax-state U.S.taxable attribution once; no assumed zero, equal split or invented apportionment factors"
+    testRef: "tests/engine/forms/foreign-tax-multiple-state.test.ts::applies actual no-tax-state income once without allocating its nonexistent tax"
+  - line: "countries"
+    description: "Actual country sources conserve the aggregate foreign base"
+    formula: "Sum actual nonoverlapping country bases across state worksheets; require complete known country identities/zeros and sumF, then allocate pooledT by each country's aggregate basis/S; round only the final country deduction"
+    testRef: "tests/engine/forms/foreign-tax-multiple-state.test.ts::conserves actual country amounts across states and preserves source cents"
+  - line: "guided"
+    description: "Collect and validate actual aggregate source facts"
+    formula: "Normalize actual money strings, retain unknown/false, require explicit jurisdiction completeness and empty no-tax ledger, and reject duplicate/unmatched jurisdiction sources"
+    testRef: "tests/guided-interview/guided-foreign-multiple-state.test.ts::collects actual aggregate state sources without assuming an empty no-tax ledger"
+  - line: "interaction"
+    description: "State-method source edits revoke all dependent confirmations"
+    formula: "Method, jurisdiction, country or underlying income edits clear aggregate, itemized, carryover and annual confirmations; explicit confirmation alone creates no source amount"
+    testRef: "tests/apps/web/foreign-multiple-state-interactions.test.tsx::enters an actual no-tax jurisdiction and revokes the source confirmations"
+  - line: "canonical"
+    description: "Actual multi-state source records reach the canonical review calculation"
+    formula: "The canonical hypothetical pass retains the actual election and source bases, calculates zero current credit, and copies the conserved aggregate allocation to the review-only record"
+    testRef: "tests/engine/federal-foreign-tax-carryover.test.ts::uses the aggregate state method once in the canonical hypothetical return"
+  - line: "reference"
+    description: "Copy the actual pooled source amounts into the saved review record"
+    formula: "Use canonical aggregate70000 taxable base and6000tax pool with actual country12000.01/2999.99; copied state deductions1029/257 and final3590limit/2990absorbed/1010remaining retain one review notice per page and no private source identifiers"
+    testRef: "tests/pdf/foreign-state-allocation-reference.test.ts::preserves multiple-state source aggregation in the saved review record"

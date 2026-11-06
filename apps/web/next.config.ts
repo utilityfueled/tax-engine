@@ -1,5 +1,5 @@
 import path from "node:path";
-import { withSentryConfig } from "@sentry/nextjs";
+import { withSentryConfig } from "@sentry/nextjs/config";
 import type { NextConfig } from "next";
 
 const cspDirectives = [
@@ -40,10 +40,16 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  outputFileTracingIncludes: {
+    "/api/workspace/filled-return": ["../../forms/blank/**/*"],
+  },
   poweredByHeader: false,
   reactStrictMode: true,
   compress: true,
   experimental: {
+    // Release webpack memory before the separate TypeScript build check.
+    webpackBuildWorker: true,
+    webpackMemoryOptimizations: true,
     optimizePackageImports: ["@tax-engine/contracts", "@tax-engine/engine"],
   },
   allowedDevOrigins: ["127.0.0.1"],
@@ -53,6 +59,14 @@ const nextConfig: NextConfig = {
       {
         source: "/(.*)",
         headers: securityHeaders
+      },
+      {
+        source: "/account/recover",
+        headers: [
+          { key: "Referrer-Policy", value: "no-referrer" },
+          { key: "Cache-Control", value: "private, no-store, max-age=0" },
+          { key: "X-Robots-Tag", value: "noindex, nofollow" },
+        ],
       }
     ];
   },

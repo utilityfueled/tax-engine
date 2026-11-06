@@ -1,0 +1,51 @@
+form: "Guided PA Personal Debt and Foreign Bank Source Records"
+fullName: "Explicit current primary-owner original capture and confirmation for the reviewed finite PA method"
+taxYear: 2025
+reference: "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/taxlawpoliciesbulletinsnotices/taxbulletins/pit/documents/pit_bulletin_2009-02.pdf"
+notes: |
+  Source collector only, not new tax arithmetic, eligibility or filing qualification.
+  Reviewed coreV3 a719fce6 plus root merged model/engine dependency preserves digital.
+  PA Bulletin2009-02 III/IV.A/D/V requires actual legal discharge, personal use,
+  no employment/service/prior PA deduction or property/collateral method, and
+  complete cancelled charges. No federal insolvency or blank arrays infer these.
+  Official PIT interest guide is gross, and actual receipt dates allocate ordinary
+  interest for full-year/part-year/nonresident. Foreign country tax does not reduce
+  gross ordinary interest or qualify for PA resident credit after2013.
+  UI captures actual original index, current tax year and explicitly selected
+  primary owner; null/blank/zero remain distinct. Current original copies are
+  retained only on explicit confirmation; read/build validation never refreshes.
+  All parent and child source confirmations clear on edits without changing the
+  previously retained original. Existing core decides source eligibility, including
+  actual retained federal no-collateral evidence and contradictory debtor facts.
+  Core accepts all3 residency classes for finite primary ordinary sources, while
+  complete underlying residency/interest-date/payroll/completion facts still matter.
+  Missing or unsupported debt/property/business/owner/currency sources remain guarded.
+lines:
+  - line: "whole-panel"
+    description: "Actual state panel exposes supported original sources for all three classes"
+    formula: "Resident/PY/NR panels expose actual debt qualification and foreign USD receipt fields, not JSON or tax overrides; retain all original current sources."
+    testRef: "tests/apps/web/pa-personal-debt-foreign-details.test.tsx::actual PA panel exposes finite personal debt and foreign records for %s"
+  - line: "unknown-start"
+    description: "Explicit start never fills unknown zero year owner or evidence"
+    formula: "No collector exists before start. New rows have blank reference/amount/date/country, null index/year/answers and empty owner/original; original canonical records remain untouched."
+    testRef: "tests/apps/web/guided-pa-personal-debt-foreign-sources.test.ts::new actual source drafts keep unknown year owner charges and receipts distinct from zero"
+  - line: "explicit-replay"
+    description: "Only explicit confirmation refreshes original snapshots"
+    formula: "Validate actual owner/year/index/qualification/complete charges/receipts against reviewed core before returning confirmed current copies. Build/read never confirms, repairs or refreshes stale records."
+    testRef: "tests/apps/web/guided-pa-personal-debt-foreign-sources.test.ts::explicit source confirmation binds current originals and all3 class amounts stay exact: %s"
+  - line: "edit-invalidation"
+    description: "Every saved source edit clears all child and containing residency confirmation"
+    formula: "A debt legal-source or receipt amount change clears sourceFactsConfirmed on every child and on containing residency. Previously retained originals and actual input remain byte-exact until explicit successful reconfirmation."
+    testRef: "tests/apps/web/pa-personal-debt-foreign-details.test.tsx::editing actual legal evidence clears both child groups and the containing PA confirmation"
+  - line: "unsupported-guard"
+    description: "Wrong debtor dates charge totals unknown evidence or receipt currency cannot be confirmed"
+    formula: "Strict complete source schema plus reviewed core reject missing/wrong index, year, owner, current-original identity, zero vs unknown charges, legal/use/deduction/property answers, debtor/security conflict, dates, duplicate receipts and unimplemented currency. No new eligibility inference."
+    testRef: "tests/apps/web/guided-pa-personal-debt-foreign-sources.test.ts::actual source confirmation rejects unsupported or unknown records: %s"
+  - line: "actual-panel-confirmation"
+    description: "Real panel confirmation and save/reopen retain source binding"
+    formula: "Explicit confirm uses current source records, JSON persistence preserves private snapshots/confirmations, later country or receipt edit invalidates. Errors leave originals and unconfirmed records intact; removal cannot remove actual canonical originals."
+    testRef: "tests/apps/web/pa-personal-debt-foreign-details.test.tsx::explicit confirmation retains originals through JSON reopen and later receipt edits revoke it"
+  - line: "actual-remount"
+    description: "Saved private source records are reopened in the real panel without implicit refresh"
+    formula: "JSON save and actual React dispose/remount retain the confirmed private original snapshot. An equal-money current original account edit cannot silently replace it during reads; existing core read replay rejects it until explicit fresh source confirmation."
+    testRef: "tests/apps/web/pa-personal-debt-foreign-details.test.tsx::reopening saved records never refreshes a changed current original snapshot"

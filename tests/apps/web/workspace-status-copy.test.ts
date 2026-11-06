@@ -1,3 +1,4 @@
+import { completePersonalInfo, completeW2Entry } from "../../guided-interview/complete-facts";
 import { describe, expect, it } from "vitest";
 import type { WorkspaceReturnSummary } from "@tax-engine/contracts";
 import { createWorkspaceRecord, ingestFilesIntoWorkspace } from "../../../apps/web/src/lib/workspace-storage";
@@ -41,6 +42,21 @@ function createReturnSummary(overrides: Partial<WorkspaceReturnSummary> = {}): W
 }
 
 describe("workspace status copy", () => {
+  // Spec: workspace-guided-bundle.yaml#draft-boundaries.
+  it("keeps missing conflicting unsupported and incomplete guided bundles labeled as drafts", () => {
+    const completed = { phase: "complete" } as GuidedFlowState;
+    for (const summary of [
+      createReturnSummary(),
+      createReturnSummary({ targetTaxYear: null, taxYearState: "missing", blockers: [] }),
+      createReturnSummary({ targetTaxYear: 2025, taxYearState: "multiple", blockers: [] }),
+      createReturnSummary({ targetTaxYear: 2025, blockers: [{ id: "guided:incomplete-facts", message: "Actual source facts are missing.", relatedFactIds: [], sourceDocumentIds: [] }] }),
+      createReturnSummary({ targetTaxYear: 2025, blockers: [{ id: "guided:unknown-document-year", message: "Original source year is unknown.", relatedFactIds: [], sourceDocumentIds: [] }] }),
+    ]) {
+      expect(canPresentCompletedReturnDownload({ returnSummary: summary, guidedFlowState: completed,
+        pendingInterviewQuestionCount: 0, guidedReviewIssueCount: 0, hasEnginePreview: true })).toBe(false);
+    }
+  });
+
   it("surfaces unsupported tax-year warnings in filer-facing copy", () => {
     const returnSummary = createReturnSummary();
 
@@ -169,18 +185,7 @@ describe("workspace status copy", () => {
           casualtyLosses: "",
           otherItemized: ""
         },
-        "personal-info": {
-          firstName: "Jane",
-          lastName: "Doe",
-          ssn: "",
-          addressLine1: "",
-          addressLine2: "",
-          city: "",
-          state: "",
-          zip: "",
-          dependentCount: "0",
-          dependents: []
-        }
+        "personal-info": { ...completePersonalInfo }
       }
     };
 
@@ -215,16 +220,8 @@ describe("workspace status copy", () => {
         },
         "income-w2": {
           entries: [{
-            employerName: "Acme",
-            employerEin: "",
+            ...completeW2Entry,
             wages: "50000",
-            federalWithheld: "",
-            socialSecurityWages: "",
-            socialSecurityWithheld: "",
-            medicareWages: "",
-            medicareWithheld: "",
-            stateWages: "",
-            stateWithheld: ""
           }]
         }
       }
@@ -291,7 +288,7 @@ describe("workspace status copy", () => {
   it("keeps touched workspaces visible once the filer has added real data", () => {
     const workspace = ingestFilesIntoWorkspace(
       createWorkspaceRecord("active-workspace"),
-      [{ name: "fw2.pdf", size: 10 }]
+      [{ name: "fw2--2026.pdf", size: 10 }]
     );
 
     expect(isUntouchedWorkspaceShell(workspace)).toBe(false);

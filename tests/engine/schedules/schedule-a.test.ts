@@ -1,3 +1,4 @@
+import { syntheticPublicCashHistory } from "../../fixtures/charitable-carryover.js";
 /**
  * Tests for Schedule A — Itemized Deductions
  * Spec: spec/federal/schedule-a.yaml
@@ -86,7 +87,7 @@ describe("Schedule A - Medical Expenses", () => {
 // ═══════════════════════════════════════════════════════════
 
 describe("Schedule A - SALT", () => {
-  it("Schedule A Line 5b - personal property taxes", () => {
+  it("Schedule A Line 5c - personal property taxes", () => {
     const result = calculateScheduleA(simpleW2Fixture, d(85000), "single", c, {
       personalPropertyTaxes: d(500),
     });
@@ -94,7 +95,7 @@ describe("Schedule A - SALT", () => {
     expect(result.saltDeduction.toNumber()).toBe(500);
   });
 
-  it("Schedule A Line 5b - personal property included in SALT cap", () => {
+  it("Schedule A Line 5c - personal property included in 2025 SALT deduction", () => {
     const input = {
       ...complexMFJFixture,
       w2s: [{
@@ -105,17 +106,16 @@ describe("Schedule A - SALT", () => {
     const result = calculateScheduleA(input, d(300000), "married_filing_jointly", c, {
       personalPropertyTaxes: d(2000),
     });
-    // State $5K + personal property $2K + real estate $8.5K = $15.5K → capped at $10K
-    expect(result.saltDeduction.toNumber()).toBe(10000);
+    expect(result.saltDeduction.toNumber()).toBe(15500);
   });
 
-  it("Schedule A Line 5d - SALT capped at $10K", () => {
+  it("Schedule A Line 5e - 2025 SALT below the limit", () => {
     const result = calculateScheduleA(complexMFJFixture, d(300000), "married_filing_jointly", c);
     // State withholding $0 (WA) + property tax $8,500 = $8,500 (under cap)
     expect(result.saltDeduction.toNumber()).toBe(8500);
   });
 
-  it("Schedule A Line 5d - MFS capped at $5K", () => {
+  it("Schedule A Line 5e - MFS allows $12,500 below its 2025 limit", () => {
     const input = {
       ...complexMFJFixture,
       w2s: [{
@@ -124,8 +124,7 @@ describe("Schedule A - SALT", () => {
       }],
     };
     const result = calculateScheduleA(input, d(200000), "married_filing_separately", c);
-    // State tax $4K + property tax $8,500 = $12,500 → capped at $5K for MFS
-    expect(result.saltDeduction.toNumber()).toBe(5000);
+    expect(result.saltDeduction.toNumber()).toBe(12500);
   });
 
   it("Schedule A Line 5d - under cap passes through", () => {
@@ -233,7 +232,7 @@ describe("Schedule A - Mortgage Interest Refund", () => {
 // ═══════════════════════════════════════════════════════════
 
 describe("Schedule A - Points Paid", () => {
-  it("Schedule A Line 8c - points paid on purchase of principal residence", () => {
+  it("Schedule A Line 8a - reported points paid on purchase of principal residence", () => {
     const input = {
       ...simpleW2Fixture,
       form1098: [{
@@ -247,11 +246,12 @@ describe("Schedule A - Points Paid", () => {
       }],
     };
     const result = calculateScheduleA(input, d(200000), "single", c);
-    const line8c = result.lines.find((l) => l.line === "8c");
-    expect(line8c!.value.toNumber()).toBe(3000);
+    expect(result.mortgageWorksheet.deductiblePoints.toNumber()).toBe(3000);
+    expect(result.lines.find((l) => l.form === "Sched A" && l.line === "8a")!.value.toNumber()).toBe(15000);
+    expect(result.lines.find((l) => l.form === "Sched A" && l.line === "8c")!.value.toNumber()).toBe(0);
   });
 
-  it("Schedule A Line 8c - multiple 1098s sum points", () => {
+  it("Schedule A Line 8a - multiple 1098s include reported points", () => {
     const input = {
       ...simpleW2Fixture,
       form1098: [
@@ -276,8 +276,9 @@ describe("Schedule A - Points Paid", () => {
       ],
     };
     const result = calculateScheduleA(input, d(200000), "single", c);
-    const line8c = result.lines.find((l) => l.line === "8c");
-    expect(line8c!.value.toNumber()).toBe(3500);
+    expect(result.mortgageWorksheet.deductiblePoints.toNumber()).toBe(3500);
+    expect(result.lines.find((l) => l.form === "Sched A" && l.line === "8a")!.value.toNumber()).toBe(15500);
+    expect(result.lines.find((l) => l.form === "Sched A" && l.line === "8c")!.value.toNumber()).toBe(0);
   });
 });
 
@@ -381,7 +382,7 @@ describe("Schedule A - Medical 7.5% floor at various AGI levels", () => {
 // ═══════════════════════════════════════════════════════════
 
 describe("Schedule A - SALT cap edge cases", () => {
-  it("Schedule A Line 5d - state income tax + property tax combined capped at $10K", () => {
+  it("Schedule A Line 5e - 2025 state and property taxes of $13K are fully deductible", () => {
     const input = {
       ...simpleW2Fixture,
       w2s: [{
@@ -399,8 +400,7 @@ describe("Schedule A - SALT cap edge cases", () => {
       }],
     };
     const result = calculateScheduleA(input, d(150000), "single", c);
-    // State $6K + property $7K = $13K → capped at $10K
-    expect(result.saltDeduction.toNumber()).toBe(10000);
+    expect(result.saltDeduction.toNumber()).toBe(13000);
   });
 
   it("Schedule A Line 5d - SALT exactly at $10K cap is not reduced", () => {
@@ -479,7 +479,7 @@ describe("Schedule A - Charitable donation categories", () => {
     const input = {
       ...simpleW2Fixture,
       donations: [
-        {
+        { qualifiedOrganization: true, isPrivateFoundation: false,
           organization: "Red Cross",
           type: "cash" as const,
           amount: "80000",
@@ -497,7 +497,7 @@ describe("Schedule A - Charitable donation categories", () => {
     const input = {
       ...simpleW2Fixture,
       donations: [
-        {
+        { qualifiedOrganization: true, isPrivateFoundation: false,
           organization: "Museum",
           type: "appreciated_stock" as const,
           amount: "50000",
@@ -516,14 +516,15 @@ describe("Schedule A - Charitable donation categories", () => {
     const input = {
       ...simpleW2Fixture,
       donations: [
-        {
+        { qualifiedOrganization: true,
           organization: "Smith Private Foundation",
           type: "appreciated_stock" as const,
           amount: "25000",
           costBasis: "3000",
           dateOfDonation: "2025-06-15",
           isLongTermCapitalGain: true,
-          isPrivateFoundation: true,
+          isPrivateFoundation: true, recipientCategory: "private-nonoperating",
+          qualifiedAppreciatedStock: true,
         },
       ],
     };
@@ -536,7 +537,7 @@ describe("Schedule A - Charitable donation categories", () => {
     const input = {
       ...simpleW2Fixture,
       donations: [
-        {
+        { qualifiedOrganization: true, isPrivateFoundation: false,
           organization: "Goodwill",
           type: "property" as const,
           amount: "70000",
@@ -552,10 +553,10 @@ describe("Schedule A - Charitable donation categories", () => {
   });
 
   it("Schedule A Line 12 - cash charitable includes prior year carryforward", () => {
-    const input = {
+    const input = { charitableCarryoverSources: syntheticPublicCashHistory([{ taxYear: 2024, amount: "3000" }]),
       ...simpleW2Fixture,
       donations: [
-        {
+        { qualifiedOrganization: true, isPrivateFoundation: false,
           organization: "United Way",
           type: "cash" as const,
           amount: "5000",
@@ -596,12 +597,9 @@ describe("Schedule A - Itemized vs Standard Deduction comparison", () => {
       }],
     };
     const result = calculateScheduleA(input, d(120000), "single", c);
-    // SALT: $5K state + $6K property = $11K → capped at $10K
-    // Mortgage: $12K (under limit)
-    // Total = $10K + $12K = $22K > $15K standard deduction
-    expect(result.saltDeduction.toNumber()).toBe(10000);
+    expect(result.saltDeduction.toNumber()).toBe(11000);
     expect(result.mortgageInterest.toNumber()).toBe(12000);
-    expect(result.totalItemized.toNumber()).toBe(22000);
+    expect(result.totalItemized.toNumber()).toBe(23000);
     expect(result.totalItemized.toNumber()).toBeGreaterThan(
       c.standardDeduction.single.toNumber()
     );
@@ -613,7 +611,7 @@ describe("Schedule A - Itemized vs Standard Deduction comparison", () => {
       ...complexMFJFixture,
       form1098: [],
       donations: [
-        {
+        { qualifiedOrganization: true, isPrivateFoundation: false,
           organization: "Local charity",
           type: "cash" as const,
           amount: "2000",
@@ -721,8 +719,7 @@ describe("Schedule A - State income tax + local tax + property tax combined unde
     expect(result.saltDeduction.toNumber()).toBe(8500);
   });
 
-  it("Schedule A Line 5d - state + local + property taxes exceed cap and are capped at $10K", () => {
-    // State: $4,000, local: $2,500, property: $5,000 → total $11,500 → capped at $10K
+  it("Schedule A Line 5e - 2025 state, local and property taxes of $11,500 are fully deductible", () => {
     const input = {
       ...simpleW2Fixture,
       w2s: [{
@@ -741,7 +738,7 @@ describe("Schedule A - State income tax + local tax + property tax combined unde
       }],
     };
     const result = calculateScheduleA(input, d(150000), "single", c);
-    expect(result.saltDeduction.toNumber()).toBe(10000);
+    expect(result.saltDeduction.toNumber()).toBe(11500);
   });
 });
 
@@ -751,7 +748,8 @@ describe("Schedule A - State income tax + local tax + property tax combined unde
 
 describe("Schedule A - State estimated tax payments in SALT", () => {
   it("Schedule A Line 5a - state estimated tax payments included in SALT", () => {
-    // State withholding $3K + state estimated $4K + property $2K = $9K (under $10K cap)
+    // State withholding $3K + $3K paid this calendar year + property $2K = $8K.
+    // The January2026 installment is deducted in2026, even if for2025 state tax.
     const input = {
       ...simpleW2Fixture,
       w2s: [{
@@ -778,12 +776,11 @@ describe("Schedule A - State estimated tax payments in SALT", () => {
       },
     };
     const result = calculateScheduleA(input, d(150000), "single", c);
-    // $3K withholding + $4K estimated + $2K property = $9K
-    expect(result.saltDeduction.toNumber()).toBe(9000);
+    expect(result.lines.find(line => line.line === "5a")?.value.toString()).toBe("6000");
+    expect(result.saltDeduction.toNumber()).toBe(8000);
   });
 
-  it("Schedule A Line 5a - state estimated payments push SALT over $10K cap", () => {
-    // State withholding $6K + state estimated $3K + property $5K = $14K → capped $10K
+  it("Schedule A Line 5a - estimated payments are included in 2025 SALT of $14K", () => {
     const input = {
       ...simpleW2Fixture,
       w2s: [{
@@ -808,7 +805,7 @@ describe("Schedule A - State estimated tax payments in SALT", () => {
       },
     };
     const result = calculateScheduleA(input, d(200000), "single", c);
-    expect(result.saltDeduction.toNumber()).toBe(10000);
+    expect(result.saltDeduction.toNumber()).toBe(14000);
   });
 
   it("Schedule A Line 5a - federal estimated payments excluded from SALT", () => {
@@ -869,8 +866,7 @@ describe("Schedule A - State estimated tax payments in SALT", () => {
     expect(result.saltDeduction.toNumber()).toBe(9000);
   });
 
-  it("Schedule A Line 5a - state estimated payments with MFS $5K cap", () => {
-    // MFS: state withholding $2K + state estimated $2K + property $3K = $7K → capped $5K
+  it("Schedule A Line 5a - MFS estimated payments below the 2025 $20K limit", () => {
     const input = {
       ...simpleW2Fixture,
       w2s: [{
@@ -895,7 +891,7 @@ describe("Schedule A - State estimated tax payments in SALT", () => {
       },
     };
     const result = calculateScheduleA(input, d(100000), "married_filing_separately", c);
-    expect(result.saltDeduction.toNumber()).toBe(5000);
+    expect(result.saltDeduction.toNumber()).toBe(7000);
   });
 });
 
@@ -904,7 +900,7 @@ describe("Schedule A - State estimated tax payments in SALT", () => {
 // ═══════════════════════════════════════════════════════════
 
 describe("Schedule A - Mortgage interest with points paid", () => {
-  it("Schedule A Lines 8a and 8c - mortgage interest and points are both deductible and included in total", () => {
+  it("Schedule A Line 8a - reported interest and points are both deductible and included in total", () => {
     const input = {
       ...simpleW2Fixture,
       form1098: [{
@@ -923,8 +919,9 @@ describe("Schedule A - Mortgage interest with points paid", () => {
     // SALT: $7K property tax (under $10K cap)
     // Total = $20K + $4.5K + $7K = $31,500
     expect(result.mortgageInterest.toNumber()).toBe(20000);
-    const line8c = result.lines.find((l) => l.line === "8c");
-    expect(line8c!.value.toNumber()).toBe(4500);
+    expect(result.mortgageWorksheet.deductiblePoints.toNumber()).toBe(4500);
+    expect(result.lines.find((l) => l.form === "Sched A" && l.line === "8a")!.value.toNumber()).toBe(24500);
+    expect(result.lines.find((l) => l.form === "Sched A" && l.line === "8c")!.value.toNumber()).toBe(0);
     expect(result.totalItemized.toNumber()).toBe(31500);
   });
 });
@@ -1017,7 +1014,7 @@ describe("Schedule A - Total itemized with all deduction sections populated", ()
         mortgageInsurancePremiums: "0",
         pointsPaid: "2000",
       }],
-      donations: [{
+      donations: [{ qualifiedOrganization: true, isPrivateFoundation: false,
         organization: "Charity",
         type: "cash" as const,
         amount: "5000",
@@ -1050,7 +1047,7 @@ describe("Schedule A - Itemized less than standard deduction", () => {
     // Small charitable donation only: $2,000 itemized vs $15,000 standard
     const input = {
       ...simpleW2Fixture,
-      donations: [{
+      donations: [{ qualifiedOrganization: true, isPrivateFoundation: false,
         organization: "Local org",
         type: "cash" as const,
         amount: "2000",
@@ -1068,9 +1065,8 @@ describe("Schedule A - Itemized less than standard deduction", () => {
 // MFS SALT Cap $5,000
 // ═══════════════════════════════════════════════════════════
 
-describe("Schedule A - MFS SALT cap at $5,000", () => {
-  it("Schedule A Line 5d - MFS filer with state + local + property taxes above $5K is capped at $5,000", () => {
-    // State: $2,000, local: $1,500, property: $4,000 → total $7,500 → capped at $5K for MFS
+describe("Schedule A - MFS 2025 SALT maximum of $20,000", () => {
+  it("Schedule A Line 5e - MFS allows combined 2025 taxes of $7,500", () => {
     const input = {
       ...simpleW2Fixture,
       w2s: [{
@@ -1089,7 +1085,7 @@ describe("Schedule A - MFS SALT cap at $5,000", () => {
       }],
     };
     const result = calculateScheduleA(input, d(100000), "married_filing_separately", c);
-    expect(result.saltDeduction.toNumber()).toBe(5000);
+    expect(result.saltDeduction.toNumber()).toBe(7500);
   });
 });
 
@@ -1116,7 +1112,7 @@ describe("Schedule A - audit trail line values for each section", () => {
         mortgageInsurancePremiums: "1200",
         pointsPaid: "2500",
       }],
-      donations: [{
+      donations: [{ qualifiedOrganization: true, isPrivateFoundation: false,
         organization: "Food bank",
         type: "cash" as const,
         amount: "4000",
@@ -1124,7 +1120,6 @@ describe("Schedule A - audit trail line values for each section", () => {
         costBasis: "0",
       }],
     };
-    // AGI = $120,000; 7.5% = $9,000; Medical = $11,000 → deduction $2,000
     const result = calculateScheduleA(input, d(120000), "single", c, {
       medicalExpenses: new Decimal(11000),
       investmentInterestExpense: new Decimal(800),
@@ -1132,33 +1127,26 @@ describe("Schedule A - audit trail line values for each section", () => {
       gamblingLosses: new Decimal(2000),
     });
 
-    const getLine = (id: string) => result.lines.find((l) => l.line === id)!.value.toNumber();
+    const getLine = (id: string) => result.lines.find((l) => l.form === "Sched A" && l.line === id)!.value.toNumber();
 
     // Line 1: raw medical expenses
     expect(getLine("1")).toBe(11000);
-    // Line 4: medical deduction ($11K - $9K = $2K)
     expect(getLine("4")).toBe(2000);
-    // Line 5a: state $4,000 + local $500 = $4,500
     expect(getLine("5a")).toBe(4500);
     // Line 5b: no personal property taxes
-    expect(getLine("5b")).toBe(0);
-    // Line 5c: property tax $3,500
-    expect(getLine("5c")).toBe(3500);
-    // Line 5d: $4,500 + $0 + $3,500 = $8,000 (under $10K cap)
+    expect(getLine("5b")).toBe(3500);
+    expect(getLine("5c")).toBe(0);
     expect(getLine("5d")).toBe(8000);
-    // Line 8a: $14,000 mortgage interest (principal $450K ≤ $750K)
-    expect(getLine("8a")).toBe(14000);
-    // Line 8c: $2,500 points paid
-    expect(getLine("8c")).toBe(2500);
+    expect(getLine("8a")).toBe(16500); //14000 interest+2500 reported points
+    expect(getLine("8c")).toBe(0); //No unreported points
     // Line 8d: reserved for future use in 2025
     expect(getLine("8d")).toBe(0);
-    // Line 9: $800 investment interest
     expect(getLine("9")).toBe(800);
-    // Line 12: $4,000 cash charitable (under 60% AGI = $72K)
-    expect(getLine("12")).toBe(4000);
-    // Line 28: gambling losses $2,000 = winnings $2,000
+    expect(getLine("11")).toBe(4000);
+    expect(getLine("12")).toBe(0);
+    expect(getLine("13")).toBe(0);
+    expect(getLine("14")).toBe(4000);
     expect(getLine("28")).toBe(2000);
-    // Line 17: total = $2K + $8K + $14K + $2.5K + $0.8K + $4K + $2K = $33,300
     expect(getLine("17")).toBe(33300);
   });
 });
@@ -1170,7 +1158,7 @@ describe("Schedule A - audit trail line values for each section", () => {
 describe("Schedule A - Charitable Carryforward", () => {
   it("no carryforward when cash donations are under 60% AGI limit", () => {
     const result = calculateScheduleA(
-      { ...simpleW2Fixture, donations: [{ type: "cash", amount: "5000" }] },
+      { ...simpleW2Fixture, donations: [{ qualifiedOrganization: true, isPrivateFoundation: false, dateOfDonation: "2025-12-01", organization: "Synthetic qualified charity", type: "cash", amount: "5000" }] },
       d(50000), "single", c
     );
     expect(result.charitableCarryforward.toNumber()).toBe(0);
@@ -1179,7 +1167,7 @@ describe("Schedule A - Charitable Carryforward", () => {
   it("carryforward equals excess when cash donations exceed 60% AGI limit", () => {
     // AGI $50K → 60% cash limit = $30K. Donate $40K → excess = $10K
     const result = calculateScheduleA(
-      { ...simpleW2Fixture, donations: [{ type: "cash", amount: "40000" }] },
+      { ...simpleW2Fixture, donations: [{ qualifiedOrganization: true, isPrivateFoundation: false, dateOfDonation: "2025-12-01", organization: "Synthetic qualified charity", type: "cash", amount: "40000" }] },
       d(50000), "single", c
     );
     expect(result.cashCharitable.toNumber()).toBe(30000);
@@ -1189,9 +1177,9 @@ describe("Schedule A - Charitable Carryforward", () => {
   it("carryforward includes prior-year carryforward that cannot be used", () => {
     // AGI $50K → 60% cash limit = $30K. Donate $25K cash + $10K prior carryforward = $35K → deductible $30K, carryforward $5K
     const result = calculateScheduleA(
-      {
+      { charitableCarryoverSources: syntheticPublicCashHistory([{ taxYear: 2024, amount: "10000" }]),
         ...simpleW2Fixture,
-        donations: [{ type: "cash", amount: "25000" }],
+        donations: [{ qualifiedOrganization: true, isPrivateFoundation: false, dateOfDonation: "2025-12-01", organization: "Synthetic qualified charity", type: "cash", amount: "25000" }],
         priorYear: { charitableCarryforward: "10000" },
       },
       d(50000), "single", c
@@ -1205,7 +1193,7 @@ describe("Schedule A - Charitable Carryforward", () => {
     const result = calculateScheduleA(
       {
         ...simpleW2Fixture,
-        donations: [{
+        donations: [{ qualifiedOrganization: true,
           type: "appreciated_stock",
           organization: "Public Charity",
           amount: "50000",
@@ -1240,9 +1228,12 @@ describe("Schedule A - Charitable Carryforward Vintage Tracking", () => {
     // Two prior-year vintages: 2022 ($6K) and 2023 ($8K)
     // FIFO: use 2022 first ($6K), then 2023 ($4K of $8K)
     const result = calculateScheduleA(
-      {
+      { charitableCarryoverSources: syntheticPublicCashHistory([
+            { taxYear: 2023, amount: "8000" },
+            { taxYear: 2022, amount: "6000" },
+          ]),
         ...simpleW2Fixture,
-        donations: [{ type: "cash", amount: "20000" }],
+        donations: [{ qualifiedOrganization: true, isPrivateFoundation: false, dateOfDonation: "2025-12-01", organization: "Synthetic qualified charity", type: "cash", amount: "20000" }],
         priorYear: {
           charitableCarryforwardByYear: [
             { taxYear: 2023, amount: "8000" },
@@ -1264,9 +1255,12 @@ describe("Schedule A - Charitable Carryforward Vintage Tracking", () => {
     // Tax year 2025. Carryforward from 2019 is 6 years old → expired (>5)
     // Carryforward from 2020 is 5 years old → still valid
     const result = calculateScheduleA(
-      {
+      { charitableCarryoverSources: syntheticPublicCashHistory([
+            { taxYear: 2019, amount: "5000" },
+            { taxYear: 2020, amount: "3000" },
+          ]),
         ...simpleW2Fixture,
-        donations: [{ type: "cash", amount: "10000" }],
+        donations: [{ qualifiedOrganization: true, isPrivateFoundation: false, dateOfDonation: "2025-12-01", organization: "Synthetic qualified charity", type: "cash", amount: "10000" }],
         priorYear: {
           charitableCarryforwardByYear: [
             { taxYear: 2019, amount: "5000" },
@@ -1290,9 +1284,11 @@ describe("Schedule A - Charitable Carryforward Vintage Tracking", () => {
   it("carryforward at exactly 5 years old is still valid (boundary test)", () => {
     // Tax year 2025. Carryforward from 2020 is exactly 5 years old → valid
     const result = calculateScheduleA(
-      {
+      { charitableCarryoverSources: syntheticPublicCashHistory([
+            { taxYear: 2020, amount: "7000" },
+          ]),
         ...simpleW2Fixture,
-        donations: [{ type: "cash", amount: "5000" }],
+        donations: [{ qualifiedOrganization: true, isPrivateFoundation: false, dateOfDonation: "2025-12-01", organization: "Synthetic qualified charity", type: "cash", amount: "5000" }],
         priorYear: {
           charitableCarryforwardByYear: [
             { taxYear: 2020, amount: "7000" },
@@ -1314,9 +1310,11 @@ describe("Schedule A - Charitable Carryforward Vintage Tracking", () => {
     // Current-year cash = $15K, leaving $3K capacity for carryforward
     // Prior vintage 2023: $8K → use $3K, carry $5K
     const result = calculateScheduleA(
-      {
+      { charitableCarryoverSources: syntheticPublicCashHistory([
+            { taxYear: 2023, amount: "8000" },
+          ]),
         ...simpleW2Fixture,
-        donations: [{ type: "cash", amount: "15000" }],
+        donations: [{ qualifiedOrganization: true, isPrivateFoundation: false, dateOfDonation: "2025-12-01", organization: "Synthetic qualified charity", type: "cash", amount: "15000" }],
         priorYear: {
           charitableCarryforwardByYear: [
             { taxYear: 2023, amount: "8000" },
@@ -1339,7 +1337,7 @@ describe("Schedule A - Charitable Carryforward Vintage Tracking", () => {
     const result = calculateScheduleA(
       {
         ...simpleW2Fixture,
-        donations: [{ type: "cash", amount: "40000" }],
+        donations: [{ qualifiedOrganization: true, isPrivateFoundation: false, dateOfDonation: "2025-12-01", organization: "Synthetic qualified charity", type: "cash", amount: "40000" }],
       },
       d(50000), "single", c
     );
@@ -1358,9 +1356,13 @@ describe("Schedule A - Charitable Carryforward Vintage Tracking", () => {
     // FIFO: 2019 expired. 2021: use $4K (capacity left = $1K). 2024: use $1K (carry $5K).
     // Total deductible = $25K + $5K = $30K
     const result = calculateScheduleA(
-      {
+      { charitableCarryoverSources: syntheticPublicCashHistory([
+            { taxYear: 2019, amount: "3000" },
+            { taxYear: 2021, amount: "4000" },
+            { taxYear: 2024, amount: "6000" },
+          ]),
         ...simpleW2Fixture,
-        donations: [{ type: "cash", amount: "25000" }],
+        donations: [{ qualifiedOrganization: true, isPrivateFoundation: false, dateOfDonation: "2025-12-01", organization: "Synthetic qualified charity", type: "cash", amount: "25000" }],
         priorYear: {
           charitableCarryforwardByYear: [
             { taxYear: 2019, amount: "3000" },
@@ -1383,9 +1385,13 @@ describe("Schedule A - Charitable Carryforward Vintage Tracking", () => {
 
   it("reconciliation detail tracks each vintage year individually", () => {
     const result = calculateScheduleA(
-      {
+      { charitableCarryoverSources: syntheticPublicCashHistory([
+            { taxYear: 2019, amount: "2000" },
+            { taxYear: 2022, amount: "5000" },
+            { taxYear: 2024, amount: "3000" },
+          ]),
         ...simpleW2Fixture,
-        donations: [{ type: "cash", amount: "20000" }],
+        donations: [{ qualifiedOrganization: true, isPrivateFoundation: false, dateOfDonation: "2025-12-01", organization: "Synthetic qualified charity", type: "cash", amount: "20000" }],
         priorYear: {
           charitableCarryforwardByYear: [
             { taxYear: 2019, amount: "2000" },
@@ -1417,19 +1423,19 @@ describe("Schedule A - Charitable Carryforward Vintage Tracking", () => {
     expect(detail[2].amountRemaining.toNumber()).toBe(0);
   });
 
-  it("legacy single aggregate carryforward is treated as prior-year vintage", () => {
-    // When only charitableCarryforward is provided (no byYear), treat as taxYear-1
+  it("actual source history supplies the original vintage of a legacy aggregate", () => {
+    // Actual filed synthetic history establishes2024; the saved aggregate alone cannot.
     const result = calculateScheduleA(
-      {
+      { charitableCarryoverSources: syntheticPublicCashHistory([{ taxYear: 2024, amount: "8000" }]),
         ...simpleW2Fixture,
-        donations: [{ type: "cash", amount: "25000" }],
+        donations: [{ qualifiedOrganization: true, isPrivateFoundation: false, dateOfDonation: "2025-12-01", organization: "Synthetic qualified charity", type: "cash", amount: "25000" }],
         priorYear: { charitableCarryforward: "8000" },
       },
       d(50000), "single", c
     );
 
     // 60% limit = $30K, current = $25K, capacity = $5K
-    // Legacy $8K treated as 2024 vintage → use $5K, carry $3K
+    // Confirmed actual2024 cash $8K → use $5K, carry $3K
     expect(result.cashCharitable.toNumber()).toBe(30000);
     expect(result.charitableCarryforwardByYear).toHaveLength(1);
     expect(result.charitableCarryforwardByYear[0].taxYear).toBe(2024);
@@ -1440,7 +1446,7 @@ describe("Schedule A - Charitable Carryforward Vintage Tracking", () => {
     const result = calculateScheduleA(
       {
         ...simpleW2Fixture,
-        donations: [{ type: "cash", amount: "5000" }],
+        donations: [{ qualifiedOrganization: true, isPrivateFoundation: false, dateOfDonation: "2025-12-01", organization: "Synthetic qualified charity", type: "cash", amount: "5000" }],
       },
       d(100000), "single", c
     );
@@ -1452,9 +1458,12 @@ describe("Schedule A - Charitable Carryforward Vintage Tracking", () => {
 
   it("all carryforward vintages expire when every entry is older than 5 years", () => {
     const result = calculateScheduleA(
-      {
+      { charitableCarryoverSources: syntheticPublicCashHistory([
+            { taxYear: 2018, amount: "3000" },
+            { taxYear: 2019, amount: "4000" },
+          ]),
         ...simpleW2Fixture,
-        donations: [{ type: "cash", amount: "5000" }],
+        donations: [{ qualifiedOrganization: true, isPrivateFoundation: false, dateOfDonation: "2025-12-01", organization: "Synthetic qualified charity", type: "cash", amount: "5000" }],
         priorYear: {
           charitableCarryforwardByYear: [
             { taxYear: 2018, amount: "3000" },
@@ -1476,7 +1485,7 @@ describe("Schedule A - Charitable Carryforward Vintage Tracking", () => {
     const result = calculateScheduleA(
       {
         ...simpleW2Fixture,
-        donations: [{
+        donations: [{ qualifiedOrganization: true,
           type: "appreciated_stock",
           organization: "Public Charity",
           amount: "50000",

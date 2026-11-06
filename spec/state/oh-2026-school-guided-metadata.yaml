@@ -1,0 +1,25 @@
+form: "OH2026-school-guided-metadata"
+taxYear: 2026
+status: "source-only-incomplete"
+reference: "https://codes.ohio.gov/ohio-revised-code/section-5748.01"
+notes: |
+  Native source handoff compatibility only. The existing source engine still
+  requires exact complete current originals and the finite earned-school cohort.
+  No new income, deduction calculation, final2026 return or paper qualification.
+lines:
+  - line: "current-guided-originals"
+    description: "Accept actual unrelated native canonical structural metadata"
+    formula: "Actual buildTaxInputFromGuidedData plus TaxYearInputSchema output retains form1099R, formSSA1099 and formRRB1099 as exact empty arrays and deductionElection exactly standard. These contain no extra income source and are retained unchanged in all original commitments."
+    testRef: "tests/apps/web/oh-2026-school-guided-metadata.test.ts::admits actual current guided standard originals without stripping any fields"
+  - line: "exact-empty-only"
+    description: "Never convert unknown or retained additional income to an empty inventory"
+    formula: "For those three named keys only, admission requires Array.isArray and length0. Null, scalar, record, nonempty or unknown-key empty inventories remain denied. Existing undefined originals remain valid."
+    testRef: "tests/apps/web/oh-2026-school-guided-metadata.test.ts::denies every supplied nonempty malformed or unknown source inventory"
+  - line: "actual-standard-only"
+    description: "Record only the actual canonical standard choice"
+    formula: "The optional retained deductionElection may be undefined or exactly standard. Automatic, itemized, nonitemized, null, record and unknown strings remain denied; source admission does not compute or infer a deduction."
+    testRef: "tests/apps/web/oh-2026-school-guided-metadata.test.ts::denies every other supplied deduction choice and preserves historical absence"
+  - line: "source-currentness"
+    description: "Metadata remains part of current full original binding"
+    formula: "Changing even a newly admitted metadata root after confirmation invalidates original binding; do not delete roots, rewrite snapshots, refresh confirmation on reads or turn unknown school financials into zero."
+    testRef: "tests/apps/web/oh-2026-school-guided-metadata.test.ts::retains complete current originals and denies same-cash metadata drift"

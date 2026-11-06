@@ -22,6 +22,11 @@ describe("Form 1099-SA packet reference summary", () => {
   it("buildForm1099SAReferenceSummary keeps the packet artifact reference-only and limited to supported HSA outputs", () => {
     const hsaFixture = {
       ...simpleW2Fixture,
+      taxpayer: {
+        ...simpleW2Fixture.taxpayer,
+        filingStatus: "married_filing_jointly",
+        spouse: { firstName: "Pat", lastName: "Example", ssn: "987-65-4321", dateOfBirth: "1980-01-01" },
+      },
       form1099SA: [
         {
           payer: "HSA Bank",

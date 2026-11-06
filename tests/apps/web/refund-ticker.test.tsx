@@ -136,32 +136,32 @@ describe("formatFilingStatus", () => {
 
 describe("computeRawTarget", () => {
   it("returns 0 when preview is null", () => {
-    expect(computeRawTarget(null)).toBe(0);
+    expect(computeRawTarget(null)).toBe("0");
   });
 
   it("returns positive value for refund", () => {
     const preview = buildPreview({ metrics: { refund: "1400", amountOwed: "0" } });
-    expect(computeRawTarget(preview)).toBe(1400);
+    expect(computeRawTarget(preview)).toBe("1400");
   });
 
   it("returns negative value for amount owed", () => {
     const preview = buildPreview({ metrics: { refund: "0", amountOwed: "2300" } });
-    expect(computeRawTarget(preview)).toBe(-2300);
+    expect(computeRawTarget(preview)).toBe("-2300");
   });
 
   it("returns 0 when both refund and owed are zero", () => {
     const preview = buildPreview({ metrics: { refund: "0", amountOwed: "0" } });
-    expect(computeRawTarget(preview)).toBe(0);
+    expect(computeRawTarget(preview)).toBe("0");
   });
 
   it("prefers refund when both are positive", () => {
     const preview = buildPreview({ metrics: { refund: "500", amountOwed: "200" } });
-    expect(computeRawTarget(preview)).toBe(500);
+    expect(computeRawTarget(preview)).toBe("500");
   });
 
   it("handles decimal string metrics", () => {
     const preview = buildPreview({ metrics: { refund: "1400.50", amountOwed: "0" } });
-    expect(computeRawTarget(preview)).toBe(1400.5);
+    expect(computeRawTarget(preview)).toBe("1400.5");
   });
 });
 
@@ -314,7 +314,7 @@ describe("computeStateTickerInfo", () => {
     expect(info.label).toBe("OH Refund");
     expect(info.value).toBe("$600");
     expect(info.className).toContain("guided-ticker-positive");
-    expect(info.rawTarget).toBe(600);
+    expect(info.rawTarget).toBe("600");
   });
 
   it("returns balance due info with negative class when state has balance due", () => {
@@ -329,7 +329,7 @@ describe("computeStateTickerInfo", () => {
     expect(info.label).toBe("CA Balance Due");
     expect(info.value).toBe("$500");
     expect(info.className).toContain("guided-ticker-negative");
-    expect(info.rawTarget).toBe(-500);
+    expect(info.rawTarget).toBe("-500");
   });
 
   it("returns zero result when state has no refund or balance due", () => {
@@ -344,7 +344,7 @@ describe("computeStateTickerInfo", () => {
     expect(info.label).toBe("PA Result");
     expect(info.value).toBe("$0");
     expect(info.className).toBe("guided-ticker-sub");
-    expect(info.rawTarget).toBe(0);
+    expect(info.rawTarget).toBe("0");
   });
 
   it("uppercases state code from input", () => {
@@ -457,62 +457,62 @@ function fedAndState(
 
 describe("computeNetResult", () => {
   it("returns federal refund when no state", () => {
-    expect(computeNetResult(fedOnly(1400, 0))).toBe(1400);
+    expect(computeNetResult(fedOnly(1400, 0))).toBe("1400");
   });
 
   it("returns negative when federal owed and no state", () => {
-    expect(computeNetResult(fedOnly(0, 800))).toBe(-800);
+    expect(computeNetResult(fedOnly(0, 800))).toBe("-800");
   });
 
   it("combines federal refund and state refund", () => {
-    expect(computeNetResult(fedAndState(1400, 0, 600, 0))).toBe(2000);
+    expect(computeNetResult(fedAndState(1400, 0, 600, 0))).toBe("2000");
   });
 
   it("combines federal refund with state owed", () => {
-    expect(computeNetResult(fedAndState(1400, 0, 0, 500))).toBe(900);
+    expect(computeNetResult(fedAndState(1400, 0, 0, 500))).toBe("900");
   });
 
   it("returns negative when state owed exceeds federal refund", () => {
-    expect(computeNetResult(fedAndState(300, 0, 0, 500))).toBe(-200);
+    expect(computeNetResult(fedAndState(300, 0, 0, 500))).toBe("-200");
   });
 
   it("returns zero when everything cancels out", () => {
-    expect(computeNetResult(fedAndState(500, 0, 0, 500))).toBe(0);
+    expect(computeNetResult(fedAndState(500, 0, 0, 500))).toBe("0");
   });
 
   it("combines both owed amounts", () => {
-    expect(computeNetResult(fedAndState(0, 800, 0, 200))).toBe(-1000);
+    expect(computeNetResult(fedAndState(0, 800, 0, 200))).toBe("-1000");
   });
 
   it("treats null state as zero contribution", () => {
     const input: CombinedTickerInput = { federalRefund: 1000, federalOwed: 0, stateRefund: null, stateOwed: null };
-    expect(computeNetResult(input)).toBe(1000);
+    expect(computeNetResult(input)).toBe("1000");
   });
 });
 
 describe("computeHeroAmount", () => {
   it("returns federal refund when no state", () => {
-    expect(computeHeroAmount(fedOnly(1400, 0))).toBe(1400);
+    expect(computeHeroAmount(fedOnly(1400, 0))).toBe("1400");
   });
 
   it("returns federal owed when no state and owed", () => {
-    expect(computeHeroAmount(fedOnly(0, 800))).toBe(800);
+    expect(computeHeroAmount(fedOnly(0, 800))).toBe("800");
   });
 
   it("returns 0 when federal is zero and no state", () => {
-    expect(computeHeroAmount(fedOnly(0, 0))).toBe(0);
+    expect(computeHeroAmount(fedOnly(0, 0))).toBe("0");
   });
 
   it("returns absolute combined value when state is present", () => {
-    expect(computeHeroAmount(fedAndState(1400, 0, 600, 0))).toBe(2000);
+    expect(computeHeroAmount(fedAndState(1400, 0, 600, 0))).toBe("2000");
   });
 
   it("returns absolute combined when state owed exceeds federal refund", () => {
-    expect(computeHeroAmount(fedAndState(300, 0, 0, 500))).toBe(200);
+    expect(computeHeroAmount(fedAndState(300, 0, 0, 500))).toBe("200");
   });
 
   it("returns 0 when everything cancels out", () => {
-    expect(computeHeroAmount(fedAndState(500, 0, 0, 500))).toBe(0);
+    expect(computeHeroAmount(fedAndState(500, 0, 0, 500))).toBe("0");
   });
 });
 
@@ -627,8 +627,8 @@ describe("buildCombinedInputFromPreview", () => {
   it("returns federal-only input when no state metrics", () => {
     const preview = buildPreview({ metrics: { refund: "1400", amountOwed: "0" } });
     const result = buildCombinedInputFromPreview(preview);
-    expect(result.federalRefund).toBe(1400);
-    expect(result.federalOwed).toBe(0);
+    expect(result.federalRefund).toBe("1400");
+    expect(result.federalOwed).toBe("0");
     expect(result.stateRefund).toBeNull();
     expect(result.stateOwed).toBeNull();
   });
@@ -645,10 +645,10 @@ describe("buildCombinedInputFromPreview", () => {
       },
     });
     const result = buildCombinedInputFromPreview(preview);
-    expect(result.federalRefund).toBe(1400);
-    expect(result.federalOwed).toBe(0);
-    expect(result.stateRefund).toBe(600);
-    expect(result.stateOwed).toBe(0);
+    expect(result.federalRefund).toBe("1400");
+    expect(result.federalOwed).toBe("0");
+    expect(result.stateRefund).toBe("600");
+    expect(result.stateOwed).toBe("0");
   });
 
   it("handles state balance due", () => {
@@ -663,9 +663,9 @@ describe("buildCombinedInputFromPreview", () => {
       },
     });
     const result = buildCombinedInputFromPreview(preview);
-    expect(result.federalRefund).toBe(500);
-    expect(result.stateOwed).toBe(500);
-    expect(result.stateRefund).toBe(0);
+    expect(result.federalRefund).toBe("500");
+    expect(result.stateOwed).toBe("500");
+    expect(result.stateRefund).toBe("0");
   });
 });
 
@@ -703,8 +703,8 @@ describe("computeTickerHeroText", () => {
     expect(computeTickerHeroText("empty", "needs-review")).toBe("Review flagged items to see your estimate");
   });
 
-  it("returns preparing text for empty state with 'ready-to-recompute' workspace status", () => {
-    expect(computeTickerHeroText("empty", "ready-to-recompute")).toBe("Preparing your estimate\u2026");
+  it("returns taxpayer facts prompt for empty state with 'ready-to-recompute' workspace status", () => {
+    expect(computeTickerHeroText("empty", "ready-to-recompute")).toBe("Complete taxpayer facts in the guided interview");
   });
 
   it("returns upload prompt for empty state with null workspace status", () => {
@@ -721,5 +721,16 @@ describe("computeTickerHeroText", () => {
     expect(computeTickerHeroText("ready")).toBeNull();
     expect(computeTickerHeroText("ready", "awaiting-interview")).toBeNull();
     expect(computeTickerHeroText("ready", "ready-to-recompute")).toBeNull();
+  });
+});
+
+describe("exact monetary display", () => {
+  it("preserves a small federal/state net difference between large exact amounts", () => {
+    expect(computeNetResult({ federalRefund: "9007199254740992.51", federalOwed: "0", stateRefund: "0", stateOwed: "9007199254740992.01" })).toBe("0.5");
+    expect(computeCombinedTickerLabel({ federalRefund: "9007199254740992.51", federalOwed: "0", stateRefund: "0", stateOwed: "9007199254740992.01" })).toBe("Total Estimated Refund");
+  });
+  it("rounds the original decimal for display instead of a binary-float approximation", () => {
+    expect(formatTickerCurrency("9007199254740992.51")).toBe("$9,007,199,254,740,993");
+    expect(formatTickerCurrency("-9007199254740992.51")).toBe("-$9,007,199,254,740,993");
   });
 });

@@ -6,6 +6,15 @@ import type { TaxYearInput } from "@/models/inputs.js";
 
 /** Single filer with one W-2, no other income */
 export const simpleW2Fixture: TaxYearInput = {
+  // Explicit synthetic facts, including spouse values used by joint test variants.
+  // These are fixture facts only; the production schema preserves missing answers.
+  standardDeductionFacts: {
+    primaryBlind: false, spouseBlind: false,
+    primaryCanBeClaimedAsDependent: false, spouseCanBeClaimedAsDependent: false,
+    primaryDeathDate: null, spouseDeathDate: null,
+    dualStatusAlien: false, nonresidentAlien: false, shortTaxYear: false,
+    spouseItemizes: false, claimSpouseAdditionalDeduction: false,
+  },
   taxpayer: {
     taxYear: 2025,
     filingStatus: "single",
@@ -28,6 +37,7 @@ export const simpleW2Fixture: TaxYearInput = {
     {
       employer: { name: "Tech Corp", ein: "12-3456789" },
       wages: "85000",
+      box10DependentCareBenefits: "0", // Explicit synthetic no-benefits source.
       federalWithheld: "12750",
       socialSecurityWages: "85000",
       socialSecurityWithheld: "5270",
@@ -52,6 +62,12 @@ export const simpleW2Fixture: TaxYearInput = {
 
 /** MFJ filers with complex income: W-2s, 1099s, K-1, donations, mortgage */
 export const complexMFJFixture: TaxYearInput = {
+  standardDeductionFacts: {
+    primaryBlind: false, spouseBlind: false,
+    primaryCanBeClaimedAsDependent: false, spouseCanBeClaimedAsDependent: false,
+    primaryDeathDate: null, spouseDeathDate: null,
+    dualStatusAlien: false, nonresidentAlien: false, shortTaxYear: false,
+  },
   taxpayer: {
     taxYear: 2025,
     filingStatus: "married_filing_jointly",
@@ -214,14 +230,14 @@ export const complexMFJFixture: TaxYearInput = {
   ],
   form1095A: [],
   donations: [
-    {
+    { qualifiedOrganization: true, isPrivateFoundation: false,
       organization: "United Way",
       type: "cash",
       amount: "5000",
       dateOfDonation: "2025-12-15",
       costBasis: "0",
     },
-    {
+    { qualifiedOrganization: true, isPrivateFoundation: false,
       organization: "Community Foundation",
       type: "appreciated_stock",
       amount: "20000",

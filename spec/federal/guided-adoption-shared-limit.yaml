@@ -1,0 +1,23 @@
+form: "Guided Form 8839 historical limit source binding"
+fullName: "Actual year-specific adoption exclusion limit in documentary intake"
+taxYear: 2026
+irsReference: "https://www.irs.gov/instructions/i8839; https://www.irs.gov/pub/irs-drop/rp-25-32.pdf"
+notes: |
+  Caller-only integration of the independently reviewed original agreed-share source
+  method. Final2025 exclusion maximum17280; RP2025-32 section4.18 gives2026
+  maximum17670. Actual constants stay Decimal and do not enable whole2026 rules.
+  Existing guided history type and canonical schema retain the actual nested
+  agreement. No allocation, identity, share, benefit or unknownzero is inferred.
+lines:
+  - line: "guided-actual-limit"
+    description: "Pass the actual exclusion-year limit to the original-source resolver"
+    formula: "Nonempty adoption source validation admits only actual2025 or2026 year; resolver receives2025 getConstants adoption maximum or2026 indexed adoption maximum as Decimal"
+    testRef: "tests/guided-interview/guided-adoption-shared-limit.test.ts::preserves complete ordinary and agreed original histories with the actual year limit"
+  - line: "year-and-unknown-guards"
+    description: "No cap fallback or fabricated shared facts"
+    formula: "Missing/unsupported return year, wrong-year share total, missing agreement and unknown or contradictory source facts reject; no-child intake remains absent"
+    testRef: "tests/guided-interview/guided-adoption-shared-limit.test.ts::rejects unsupported years and stale or incomplete agreed limits without guessing facts"
+  - line: "actual-caller-transfer"
+    description: "Actual guided and calculation caller integration"
+    formula: "Actual guided packet remains canonical, ownbenefits10000/ownshare6000 gives allowed6000/signedincome-4000; real2025 federal guided transfer occurs once and public2026 constants remain gated"
+    testRef: "tests/guided-interview/guided-adoption-shared-limit.test.ts::carries the actual shared packet through the guided bridge and existing calculator once"

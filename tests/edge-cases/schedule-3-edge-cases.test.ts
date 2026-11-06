@@ -3,7 +3,7 @@
  * Spec: spec/federal/schedule-3.yaml
  *
  * Focuses on:
- * - Lines 6a-6m credit flow-through (prior year AMT credit, general business
+ * - Lines 6b-6m credit flow-through (prior year AMT credit, general business
  *   credit, adoption credit, elderly/disabled credit, clean vehicle credits)
  * - All 12 nonrefundable credit types combined
  * - All 4 refundable credit types combined
@@ -19,11 +19,11 @@ import { simpleW2Fixture } from "../fixtures/simple-w2.js";
 const d = (n: number | string) => new Decimal(n);
 
 // ═══════════════════════════════════════════════════════════
-// Line 6a — Prior Year Minimum Tax Credit (Form 8801)
+// Line 6b — Prior Year Minimum Tax Credit (Form 8801)
 // ═══════════════════════════════════════════════════════════
 
-describe("Schedule 3 Line 6a - prior year minimum tax credit", () => {
-  it("Schedule 3 Line 6a - Form 8801 credit flows to nonrefundable total", () => {
+describe("Schedule 3 Line 6b - prior year minimum tax credit", () => {
+  it("Schedule 3 Line 6b - Form 8801 credit flows to nonrefundable total", () => {
     const result = calculateSchedule3(simpleW2Fixture, {
       priorYearMinimumTaxCredit: d(3500),
     });
@@ -31,12 +31,12 @@ describe("Schedule 3 Line 6a - prior year minimum tax credit", () => {
     expect(result.totalNonrefundableCredits.toNumber()).toBe(3500);
     expect(result.totalRefundableCredits.toNumber()).toBe(0);
 
-    const line6a = result.lines.find((l) => l.line === "6a");
-    expect(line6a).toBeDefined();
-    expect(line6a!.value.toNumber()).toBe(3500);
+    const line6b = result.lines.find((l) => l.line === "6b");
+    expect(line6b).toBeDefined();
+    expect(line6b!.value.toNumber()).toBe(3500);
   });
 
-  it("Schedule 3 Line 6a - prior year AMT credit combined with FTC and education credits", () => {
+  it("Schedule 3 Line 6b - prior year AMT credit combined with FTC and education credits", () => {
     const result = calculateSchedule3(simpleW2Fixture, {
       foreignTaxCredit: d(800),
       educationCredits: d(2500),
@@ -46,7 +46,7 @@ describe("Schedule 3 Line 6a - prior year minimum tax credit", () => {
     expect(result.totalNonrefundableCredits.toNumber()).toBe(7500);
   });
 
-  it("Schedule 3 Line 6a - zero prior year AMT credit does not affect total", () => {
+  it("Schedule 3 Line 6b - zero prior year AMT credit does not affect total", () => {
     const result = calculateSchedule3(simpleW2Fixture, {
       foreignTaxCredit: d(500),
       priorYearMinimumTaxCredit: d(0),
@@ -57,23 +57,23 @@ describe("Schedule 3 Line 6a - prior year minimum tax credit", () => {
 });
 
 // ═══════════════════════════════════════════════════════════
-// Line 6b — General Business Credit (Form 3800)
+// Line 6a — General Business Credit (Form 3800)
 // ═══════════════════════════════════════════════════════════
 
-describe("Schedule 3 Line 6b - general business credit", () => {
-  it("Schedule 3 Line 6b - Form 3800 credit flows to nonrefundable total", () => {
+describe("Schedule 3 Line 6a - general business credit", () => {
+  it("Schedule 3 Line 6a - Form 3800 credit flows to nonrefundable total", () => {
     const result = calculateSchedule3(simpleW2Fixture, {
       generalBusinessCredit: d(12000),
     });
     expect(result.generalBusinessCredit.toNumber()).toBe(12000);
     expect(result.totalNonrefundableCredits.toNumber()).toBe(12000);
 
-    const line6b = result.lines.find((l) => l.line === "6b");
-    expect(line6b).toBeDefined();
-    expect(line6b!.value.toNumber()).toBe(12000);
+    const line6a = result.lines.find((l) => l.line === "6a");
+    expect(line6a).toBeDefined();
+    expect(line6a!.value.toNumber()).toBe(12000);
   });
 
-  it("Schedule 3 Line 6b - general business credit stacks with energy credits", () => {
+  it("Schedule 3 Line 6a - general business credit stacks with energy credits", () => {
     const result = calculateSchedule3(simpleW2Fixture, {
       generalBusinessCredit: d(8000),
       residentialCleanEnergyCredit: d(9000),
@@ -197,8 +197,8 @@ describe("Schedule 3 Line 6m - previously owned clean vehicle credit", () => {
 // All 12 Nonrefundable Credits Combined
 // ═══════════════════════════════════════════════════════════
 
-describe("Schedule 3 Line 7 - all 12 nonrefundable credit types", () => {
-  it("Schedule 3 Line 7 - every nonrefundable credit line populated sums correctly", () => {
+describe("Schedule 3 Line 8 - all 12 nonrefundable credit types", () => {
+  it("Schedule 3 Line 8 - every nonrefundable credit line populated sums correctly", () => {
     const result = calculateSchedule3(simpleW2Fixture, {
       foreignTaxCredit: d(500),                       // Line 1
       childDependentCareCredit: d(1200),              // Line 2
@@ -206,8 +206,8 @@ describe("Schedule 3 Line 7 - all 12 nonrefundable credit types", () => {
       retirementSavingsCredit: d(1000),               // Line 4
       residentialCleanEnergyCredit: d(9000),          // Line 5a
       energyImprovementCredit: d(3200),               // Line 5b
-      priorYearMinimumTaxCredit: d(2000),             // Line 6a
-      generalBusinessCredit: d(5000),                 // Line 6b
+      priorYearMinimumTaxCredit: d(2000),             // Line 6b
+      generalBusinessCredit: d(5000),                 // Line 6a
       adoptionCredit: d(8000),                        // Line 6c
       elderlyOrDisabledCredit: d(750),                // Line 6d
       newCleanVehicleCredit: d(7500),                 // Line 6f
@@ -218,7 +218,7 @@ describe("Schedule 3 Line 7 - all 12 nonrefundable credit types", () => {
     expect(result.totalRefundableCredits.toNumber()).toBe(0);
   });
 
-  it("Schedule 3 - Lines 6a-6m do not affect refundable total (Line 15)", () => {
+  it("Schedule 3 - Lines 6b-6m do not affect refundable total (Line 15)", () => {
     const result = calculateSchedule3(simpleW2Fixture, {
       priorYearMinimumTaxCredit: d(5000),
       generalBusinessCredit: d(10000),
@@ -260,11 +260,11 @@ describe("Schedule 3 - grand total with all 16 credit types", () => {
     });
     // Nonrefundable: 500+1200+2500+1000+9000+3200+2000+5000+8000+750+7500+4000 = 44650
     expect(result.totalNonrefundableCredits.toNumber()).toBe(44650);
-    // Refundable: 3600+1482+1700+1000 = 7782
-    expect(result.totalRefundableCredits.toNumber()).toBe(7782);
+    // Schedule 3 payments: 3600 + 1482 = 5082; ACTC/AOC are direct 1040 lines.
+    expect(result.totalRefundableCredits.toNumber()).toBe(5082);
     // Grand total
     const grandTotal = result.totalNonrefundableCredits.plus(result.totalRefundableCredits);
-    expect(grandTotal.toNumber()).toBe(52432);
+    expect(grandTotal.toNumber()).toBe(49732);
   });
 
   it("Schedule 3 - audit trail includes all Line 6x entries", () => {
@@ -277,8 +277,8 @@ describe("Schedule 3 - grand total with all 16 credit types", () => {
       previouslyOwnedCleanVehicleCredit: d(600),
     });
     const lineIds = result.lines.map((l) => l.line);
-    expect(lineIds).toContain("6a");
     expect(lineIds).toContain("6b");
+    expect(lineIds).toContain("6a");
     expect(lineIds).toContain("6c");
     expect(lineIds).toContain("6d");
     expect(lineIds).toContain("6f");

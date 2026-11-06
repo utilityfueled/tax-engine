@@ -106,7 +106,8 @@ export interface OhioIT1040Result {
 // Helpers
 // ---------------------------------------------------------------------------
 
-function getExemptionAmount(magi: Decimal, tiers: OhioExemptionTier[]): Decimal {
+function getExemptionAmount(magi: Decimal, tiers: OhioExemptionTier[], magiLimit: Decimal | null): Decimal {
+  if (magiLimit !== null && magi.greaterThanOrEqualTo(magiLimit)) return new Decimal(0);
   for (const tier of tiers) {
     if (tier.maxMagi === null || magi.lessThanOrEqualTo(tier.maxMagi)) {
       return tier.amount;
@@ -190,7 +191,7 @@ export function calculateOhioIT1040(input: OhioIT1040Input): OhioIT1040Result {
   const magi = line3.plus(businessIncomeDeductionAmount);
 
   // Line 4 — Exemptions
-  const exemptionAmountPerPerson = getExemptionAmount(magi, constants.exemptionTiers);
+  const exemptionAmountPerPerson = getExemptionAmount(magi, constants.exemptionTiers, constants.exemptionMagiLimit);
   const line4 = exemptionAmountPerPerson.times(input.exemptions);
   audit.record(
     "OH-IT-1040", "4",
@@ -240,7 +241,7 @@ export function calculateOhioIT1040(input: OhioIT1040Input): OhioIT1040Result {
     "OH-IT-1040", "8a",
     "Nonbusiness income tax",
     line8a,
-    "2025 Ohio income tax brackets applied to Line 7",
+    `${input.taxYear} Ohio income tax brackets applied to Line 7`,
     { "Line 7": line7 }
   );
 

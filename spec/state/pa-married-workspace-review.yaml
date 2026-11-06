@@ -1,0 +1,74 @@
+form: PA-Married-Workspace-Review
+fullName: Original-bound married Pennsylvania public and workspace review routing
+taxYear: 2025
+reference: https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40in.pdf
+notes: |
+  Routing only; tax law/calculation and independently reviewed PA40/SP renderer8
+  remain unchanged. Exact209 baseline plus root8 4cb8c1c7 and peer2 acef2557.
+  One actual federal MFJ household; J one owned PA40 or M two separate PA40s.
+  SP is appended only for an actual positive supported credit. No owner federal
+  return is invented. Opaque original context is prepared before redaction;
+  source replay and exact typed result comparison precede filesystem access.
+  Review only2025;2026, filing, unknown/stale/forged and scalar substitute remain
+  denied. EIC prepared context is supplied only when existing hasEicReviewSources
+  reports applicable separated or recertification originals; empty disallowance
+  history is not invented into an EIC review packet. Workspace tests use default
+  Node module behavior; only real mounted copy controls use restored local JSDOM.
+  denied. No source confirmations or snapshots refresh on read. Classification
+  gates remain partial/notvalidated/filingfalse; only false paper copy changes.
+  Existing federal return objects retain the existing physical emission contract:
+  f1040-filled.pdf 2 pages; f1040s1-filled.pdf 2; f1040s2-filled.pdf 2;
+  f1040s3-filled.pdf 1; f1040sc-filled.pdf 2; f1040sd-filled.pdf 2.
+  These exact six filenames account for 11 actual household federal pages,
+  including existing zero-valued schedules. No federal page is removed.
+  The single-cover first pass was later found to clip required disclosures.
+  Letter612x792, unchanged font10.5/line14.175/gap6 and body baseline42
+  define actual text-height pagination; preserve every existing line in order.
+  Preflight a whole bullet and move it if it fits a fresh page; split only an
+  overlong bullet at wrapped-line boundaries. Keep headings with first lines.
+  A continuation repeats the full original warning panel/typography and summary
+  preface, adds (CONTINUED) to the summary title, and repeats the active section
+  heading. Merge marks every summary page review-only exactly once.
+  Fitting cohorts retain one cover page. All six current literal cases require
+  two covers from independent source line/height accounting at boundary42.
+  Workspace = two covers + 11 federal + two per actual PA40/SP document:
+  J whole/cents15; M whole/cents and J sharedSP17; M sharedSP21.
+  Direct outputs 48 plus six merged workspace PDFs total 54 retained files
+  and initially 186 pages. Faithful source pagination produces192 pages.
+  Preserve all prior54/186 bytes and clipped geometry evidence.
+  The initial 24-output estimate omitted five federal schedules;
+  its first 30PASS/6FAIL and all 54 saved artifacts remain immutable.
+  Marker already executed once with the original estimate; never repeated.
+lines:
+  - line: "baseline"
+    description: Current unchanged actual household sources satisfy reviewed calculation and private preparation
+    formula: Six literal fullresident ordinaryW2 J/M whole cents and SP sources replay before public API outputs. Current public dispatch guard remains unchanged for first genuineRED.
+    testRef: "tests/pdf/pa-married-review-dispatch.test.ts::PA married review baseline actual six original sources are already qualified privately"
+  - line: "public-owned"
+    description: Public review dispatch keeps one actual federal and exact owned state pages
+    formula: Jwhole80000/2456/WH2456/refund0; Mcaseprimary50000/1535/spouse30000/921. Jcents80001/2456/WH2457/request1 with noissuance1 disclosure. SharedSP J13001/399/359 or M10000/307/276 and3001/92/83. Exact printed source rectangles and original federal household unchanged; one1040 only; filenames remain actual owner-specific names.
+    testRef: "tests/pdf/pa-married-review-dispatch.test.ts::PA married public review dispatch actual owned pages $mode $name"
+  - line: "authority"
+    description: Missing forged stale mixed and stripped context denies before output
+    formula: Required prepared married token cannot be replaced by fake legacy ordinary/WPTC/royalty token. Current owner identity, equalmoney original employer, filingmode, owned resultcash/order/elections and source root must match retained originals. No incorrect-state legacy fallback or partial file writes.
+    testRef: "tests/pdf/pa-married-review-dispatch.test.ts::PA married public review rejects before IO %s"
+  - line: "year-purpose"
+    description: Public review routing preserves year and filing restrictions
+    formula: Every2026 or filingpurpose request rejects before templates. No PDF mapping pack, readiness gate or tax calculation changes.
+    testRef: "tests/pdf/pa-married-review-dispatch.test.ts::PA married public review retains mapping and filing denial %s"
+  - line: "workspace"
+    description: Current guided source replay merges one federal household with owned state pages
+    formula: Guided J/M whole cents and SP cases produce one real household1040 and actual separate ownerPA40/SP documents. Cover identifies actual included forms, review-only partialstatus and separate local obligations. An additional married-only cover bullet lists every actual included owned PA40/SP filename using the existing label map; generic first-six form summary stays intact. No owner page is inferred from result scalars instead of actual included files. The exact owner-label text assertion normalizes PDF line-wrap whitespace only; full owner label literal stays unchanged. All privacy, cash, status and other raw text checks remain raw. No stale enginePreview authority; no source edits, readconfirmation or metadata defaults. Reopened JSON actual source packets produce exact literals.
+    testRef: "tests/apps/web/pa-married-workspace-review.test.ts::PA married workspace current original packets produce actual review $mode $name"
+  - line: "workspace-visible-content"
+    description: Every retained cover disclosure is visible inside source-defined margins with exact continuation and complete content
+    formula: All authentic original cover text lines remain in order. Each body baseline is at least42, x within letter margins and no line crosses page edges or marker area. Two source-derived covers for all six finite cases; every cover has warning and review notice once and continuation has visible CONTINUED plus active section. No shrinking omission ellipsis or money changes.
+    testRef: "tests/apps/web/pa-married-workspace-review.test.ts::PA married workspace current original packets produce actual review $mode $name"
+  - line: "workspace-denial"
+    description: Missing unknown stale or conflicting actual source packets stay blocked
+    formula: Unknown confirmation, blank filingchoice, equalcash actual employer changed, missing source root, conflicting retained single packet, retained generic cash and workspaceyear mismatch reject without changing originals. Real actual review route cannot restore arbitrary saved scalar previews.
+    testRef: "tests/apps/web/pa-married-workspace-review.test.ts::PA married workspace missing or stale sources deny without refresh %s"
+  - line: "honest-disclosure"
+    description: Native and merged-copy statements distinguish reviewed paper from filing
+    formula: Supported owned PA40/SP pages may be included only after current source validation. No claim that all paper remains unavailable once included. Partial classifications and notvalidated/filingfalse unchanged; local returns still need separate review.
+    testRef: "tests/apps/web/pa-married-workspace-review.test.ts::PA married review disclosure follows actual supported route and keeps filing closed"

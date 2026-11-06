@@ -1,0 +1,94 @@
+form: "Shared Marketplace policies, marriage and business health insurance"
+fullName: "Actual Part IV source amounts before the alternative marriage worksheets"
+taxYear: 2025
+irsReference: "https://www.irs.gov/publications/p974"
+notes: |
+  Refreshed official i8962 line9/Table3/Worksheet3 and Pub974 TableA tip,
+  Steps2/4: finish PartIV before PartV and exclude amounts allocated to the
+  other taxpayer. Preserve each full original; PartIV never establishes cash
+  paid by an owner. Existing Situation3 exact benchmark ratios, Situation4
+  actual agreements/default enrollment and complete overlapping-family sources
+  remain independent. No new allocation percentage or health method is elected.
+  The old global no-marriage answer cannot be true in a marriage year. Instead
+  this composition requires actual source confirmation that the other taxpayer
+  was not married to either joint filer during the year. Divorce/current-year
+  former-spouse allocation remains its separately determined monthly method.
+  Steps2/4 group this-return people on originals sent to a filer with that filer.
+  For originals sent to neither filer, this bounded method admits an allocated
+  policy only when its actual own people belong to one alternative family in
+  each month. A policy spanning both alternative families needs a separate
+  within-return premium grouping method, not an inferred equal split.
+  Other-family people stay on originals/payment records but are not counted in
+  this return's alternative benchmarks. Source payment/person qualification,
+  business limits, historical repayment limits and private output binding remain
+  required. Existing positive outside-person or partial-coverage marriage
+  methods are not implied by this source composition.
+lines:
+  - line: "agreement-and-default"
+    description: "Use actual allocated originals before marriage and health worksheets"
+    formula: "2025 full monthly P2000/B1600/A1400 for primary plus unrelated other taxpayer; actual agreement .50 or two-enrollee default gives P1000/B800/A700. Actual owner cash300, other cash300, A1400 are separate receipts. July15 and C100000 give W3600, maximum12000, Step2credit5662, health6338, finalAGI86597, PTC5149, repayment3251 and QBI health6338 once. Full original premium remains24000. No allocation amount is a payment assumption."
+    testRef: "tests/engine/federal-marketplace-shared-marriage-health.test.ts::allocates actual agreement and default sources before marriage and health"
+  - line: "other-recipient"
+    description: "Group a policy sent to the other taxpayer from actual alternative-family membership"
+    formula: "The same allocated primary coverage sent to the unrelated other taxpayer belongs to primary Step2(b); final6338health/5149PTC is unchanged. Other-taxpayer covered identity is retained in originals but excluded from the actual primary alternative benchmark."
+    testRef: "tests/engine/federal-marketplace-shared-marriage-health.test.ts::uses actual alternative family for a policy sent to the other taxpayer"
+  - line: "exact-no-advance"
+    description: "Preserve original printed blank and exact Situation3 ratios before PartV"
+    formula: "Actual premium3000.03 and benchmarks800/1600 produce allocated1000.01, not3000.03*.33. Printed blank originalB is retained as null; actual zeroAPTC is required. Primary alternative benchmark800 excludes outside people. Separate actual unshared spouse APTC coverage supplies its own original months and benchmark."
+    testRef: "tests/engine/federal-marketplace-shared-marriage-health.test.ts::retains exact no-advance allocations and separate unshared marriage months"
+  - line: "relationship"
+    description: "Do not reuse a contradictory global no-marriage confirmation"
+    formula: "Missing/false unrelated-other-taxpayer confirmation, missing source reference, old global no-marriage=true, or a Situation1/2 selection rejects. Blank remains unknown; matching money cannot replace actual relationship history."
+    testRef: "tests/engine/federal-marketplace-shared-marriage-health.test.ts::requires actual counterparty relationship facts for the marriage year"
+  - line: "people-and-payments"
+    description: "Preserve independent actual family, person, payment and source identity"
+    formula: "Changed original identity, allocated cash mismatch, outside person inserted into own alternative benchmark or a policy sent to neither filer spanning both alternative families rejects. End-year family labels do not establish premarriage payment qualification. Input records remain unchanged."
+    testRef: "tests/engine/federal-marketplace-shared-marriage-health.test.ts::retains independent shared person and payment evidence"
+  - line: "guided"
+    description: "Collect independent relationship, allocation, marriage and paid sources"
+    formula: "The actual source bridge preserves full2000/1600/1400 original, own300cash and outside300cash. Copied alternative groups contain only actual own coverage; source reference edits invalidate both packets. Unknown relationship facts stay pending and source-copy does not infer confirmation."
+    testRef: "tests/guided-interview/guided-marketplace-shared-marriage-health.test.ts::preserves all original shared marriage sources through the guide"
+  - line: "guided-groups"
+    description: "Copy factual alternative benchmark membership without copying eligibility"
+    formula: "An original sent to the other taxpayer covering primary plus outside person yields seven primary source groups with only primary identity, blank benchmark and unknown confirmation. No other-taxpayer identity or prior benchmark amount is silently copied into own group."
+    testRef: "tests/guided-interview/guided-marketplace-shared-marriage-health.test.ts::copies own alternative groups from actual shared-family assignments"
+  - line: "guided-controls"
+    description: "Reach actual relationship source questions in the full adjustments shell"
+    formula: "Marriage election shows the independently confirmed other-taxpayer relationship and reference instead of the contradictory global no-marriage question. Changing the source revokes confirmation; complete independent re-confirmation restores6338health/5149PTC."
+    testRef: "tests/apps/web/marketplace-shared-marriage-health-interactions.test.tsx::edits actual counterparty relationship in the full marriage health shell"
+  - line: "separate-owners"
+    description: "Keep a shared primary original and independent unshared spouse original separate"
+    formula: "Actual primary original P2000/B1600/A1800 with half allocation and independent owner100/other100cash; actual spouse original500/400/450 and owner50cash. Own monthly1500/1200/1350 gives health7698 split5132primary/2566spouse, AGI85237 and PTC8748. QBI allocation follows each actual owner without transferring income or duplicating the full original premium."
+    testRef: "tests/engine/federal-marketplace-shared-marriage-health.test.ts::preserves separate owners with shared and unshared originals"
+  - line: "ambiguous-group"
+    description: "Do not invent a premium split between two alternative families"
+    formula: "An original sent to neither filer with both filers covered and assigned to this return cannot select one marriage worksheet from the recipient or an equal money split. Both alternative-family membership and original source snapshots remain bound; reject this undetermined within-return grouping."
+    testRef: "tests/engine/federal-marketplace-shared-marriage-health.test.ts::rejects an other-recipient policy spanning both alternative families"
+  - line: "isolated-next-year"
+    description: "Retain the isolated enacted next-year calculation without release qualification"
+    formula: "The same original and payment composition in2026 uses existing enacted tables and no repayment cap: health7811, AGI85124, PTC3346, repayment5054. Source identity/year and actual payment checks remain; full2026 release stays separately gated."
+    testRef: "tests/engine/federal-marketplace-shared-marriage-health-2026.test.ts::keeps the isolated next-year shared marriage calculation source bound"
+  - line: "source-order-and-benchmark"
+    description: "Bind complete allocated months and benchmarks before tax rounding"
+    formula: "Reordering original policies without sourceId rebinding rejects. A one-cent change to the complete own joint benchmark rejects even if rounded Form8962 values would agree. Canonical linked order and source input remain unchanged."
+    testRef: "tests/engine/federal-marketplace-shared-marriage-health.test.ts::requires exact original ordering and allocated joint benchmark reconciliation"
+  - line: "no-advance-health"
+    description: "Compose exact Situation3 and later unshared receipts for the same actual owner"
+    formula: "Jan-June original P3000.03/blankB/zeroA, actual benchmarks800/1600, owncash1000.01 and othercash2000.02; July-Dec unshared P1000/B800/A1000 with owncash0. Actual total own premiums12000.06 and cash6000.06; Step2HH80934.94 reports80935 and credit5662. Raw health6338.06 reports6338, finalAGI86597, PTC5149, A6000, repayment851. Original cash and no-advance facts remain separate from the printed .33."
+    testRef: "tests/engine/federal-marketplace-shared-marriage-health.test.ts::composes exact no-advance and later unshared actual health receipts"
+  - line: "physical"
+    description: "Print both source-bound allocation and marriage parts on the same physical form"
+    formula: "2025 physical8962 line3/24/25/29=86597/5149/8400/3251, PartIV actual policy/blankidentifier/01/12/.50/.50/.50 and PartV1/198/01/07. Reference preserves full24000premiums/16800advances, allocated12000/8400 and actual6338health; all pages carry review notices and tax identifiers stay private."
+    testRef: "tests/pdf/marketplace-shared-marriage-health-review.test.ts::prints both actual allocation and marriage parts with the independent health sources"
+  - line: "output-binding"
+    description: "Bind actual counterparty, original policy, allocation and receipt sources before output"
+    formula: "Changing relationship reference, same-money original allocation evidence, or actual person receipt invalidates the prepared private context before file I/O. Missing/forged context on redacted input and altered retained credit reject."
+    testRef: "tests/pdf/marketplace-shared-marriage-health-review.test.ts::rejects changed shared marriage sources before output"
+  - line: "workspace"
+    description: "Export the actual guided original and both completed credit parts"
+    formula: "The unmocked workspace exports source-bound shared/alternative marriage/health facts, full original and actual paid evidence, physicalPartIV+V and health6338/finalPTC5149. The merged review is flattened with one notice per page, no private tax identifiers and unchanged saved sources."
+    testRef: "tests/apps/web/workspace-marketplace-shared-marriage-health.test.ts::exports actual shared marriage health sources through the workspace"
+  - line: "browser"
+    description: "Preserve actual shared marriage relationship, original and cash records in production"
+    formula: "Desktop filer-recipient and mobile other-recipient workflows edit the actual relationship reference, clear independent allocation/marriage/health confirmations and restore86597AGI only after complete reconfirmation. Blank relationship and benchmark remain unknown after reload. Full2000premium/1400advance/300owner/300othercash and outside-person source identity persist privately."
+    testRef: "apps/web/tests/guided-marketplace-shared-marriage-health.spec.ts::preserves shared marriage and health sources through edits and reload"

@@ -1,3 +1,4 @@
+import { qsbsFullExclusionFundInput } from "../fixtures/section-1202.js";
 /**
  * Edge case tests for Form 8949 — Sales and Other Dispositions of Capital Assets
  * Tests wash sales, mixed holding periods, zero-gain transactions,
@@ -1230,48 +1231,18 @@ describe("Form 8949 - multiple brokers with overlapping securities", () => {
 });
 
 describe("Form 8949 + Schedule D - QSBS Section 1202 exclusion reduces long-term gain", () => {
-  it("$5M of QSBS gain reported on 1099-DIV Box 2c is excluded via Schedule D Line 13", () => {
-    // IRC §1202: up to $10M (or 10× basis) of gain from qualified small-business stock held 5+ years
-    // is excluded from income. The gain first flows through 1099-DIV Box 2c into Schedule D Line 13.
-    const input = makeSchedDFixture({
-      form1099B: [
-        {
-          broker: "E*Trade",
-          transactions: [
-            // The QSBS sale is recorded on Form 8949 as a normal LT transaction;
-            // the exclusion happens on Schedule D Line 13 via 1099-DIV.
-            makeTx({ description: "Startup Corp QSBS", proceeds: "6000000", costBasis: "1000000", holdingPeriod: "long", basisReportedToIRS: false }),
-          ],
-        },
-      ],
-      form1099Div: [
-        {
-          payer: "E*Trade",
-          ordinaryDividends: "0",
-          qualifiedDividends: "0",
-          totalCapitalGainDistributions: "0",
-          section1250Gain: "0",
-          section1202Gain: "5000000", // Box 2c: $5M eligible for §1202 exclusion
-          collectiblesGain: "0",
-          nondividendDistributions: "0",
-          federalWithheld: "0",
-          foreignTaxPaid: "0",
-          exemptInterestDividends: "0",
-        },
-      ],
-    });
-
-    // Form 8949 records the full gain without any exclusion
+  it("$5M of verified fund QSBS is excluded through8949 while full2a remains on ScheduleD13", () => {
+    const input = qsbsFullExclusionFundInput("5000000");
     const form8949 = calculateForm8949(input);
-    expect(form8949.totalLongTermGainLoss.toNumber()).toBe(5000000);
-
-    // Schedule D applies the §1202 exclusion: net LT = $5M gain - $5M exclusion = $0
+    expect(form8949.longTermBoxF.transactions[0]!.adjustmentCode).toBe("Q");
+    expect(form8949.totalLongTermGainLoss.toFixed()).toBe("-5000000");
     const schedD = calculateScheduleD(input, "single", c2025);
-    expect(schedD.section1202Exclusion.toNumber()).toBe(5000000);
-    expect(schedD.netLongTerm.toNumber()).toBe(0); // $5M - $5M exclusion
-    expect(schedD.netCapitalGainLoss.toNumber()).toBe(0);
-    expect(schedD.capitalLossDeduction.toNumber()).toBe(0);
-    expect(schedD.carryforwardLongTerm.toNumber()).toBe(0);
+    expect(schedD.lines.find(line => line.form === "Sched D" && line.line === "13")?.value.toFixed()).toBe("5000000");
+    expect(schedD.section1202Exclusion.toFixed()).toBe("5000000");
+    expect(schedD.netLongTerm.toFixed()).toBe("0");
+    expect(schedD.netCapitalGainLoss.toFixed()).toBe("0");
+    expect(schedD.capitalLossDeduction.toFixed()).toBe("0");
+    expect(schedD.carryforwardLongTerm.toFixed()).toBe("0");
   });
 });
 

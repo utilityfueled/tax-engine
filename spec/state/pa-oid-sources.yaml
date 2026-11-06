@@ -1,0 +1,34 @@
+form: "PA-OID-Sources"
+fullName: "Pennsylvania original issue discount source reconciliation"
+taxYear: 2026
+reference: "https://www.pa.gov/agencies/revenue/forms-and-publications/pa-personal-income-tax-guide/interest"
+notes: |
+  Retrieved 2026-10-25. PA PIT Guide sections Imputed Interest and Original
+  Issue Discount, Bond Premium Amortization, Forfeited Interest Penalty and
+  STRIPS; final 2025 PA-40 Schedule A instructions lines 1-8. Final 2026
+  forms and independent human review remain pending. This is a bounded
+  resident calculation, not a qualified filing map.
+  Each OID source requires confirmed PA issuer/treatment and premium facts
+  linked to the actual federal source ID and a source worksheet reference.
+  An explicitly confirmed zero is different from a missing fact.
+lines:
+  - line: "federal-base"
+    description: "Include verified recipient OID amounts in PA Schedule A"
+    formula: "Add federal taxable OID to line 1 and federal exempt OID to line 2. Never use legacy aliases as verified classifications."
+    testRef: "tests/engine/state/pa-oid-sources.test.ts::includes OID once with separate PA and federal premium methods"
+  - line: "premium"
+    description: "Reconcile actual federal and PA premium amortization"
+    formula: "Line 3 adds federal coupon reduction plus actual premium already netted on a source statement; line 8 subtracts actual PA amortization. Neither amount defaults from the other."
+    testRef: "tests/engine/state/pa-oid-sources.test.ts::includes OID once with separate PA and federal premium methods"
+  - line: "exemption"
+    description: "Use actual direct-obligation or stripped-bond classification"
+    formula: "Ordinary interest is federal taxable plus tax-exempt OID minus current market discount plus federal premium addback minus PA premium. Direct PA or U.S. obligations exempt this ordinary amount; stripped obligations require the actual exempt worksheet amount bounded by that amount. Market discount remains taxable."
+    testRef: "tests/engine/state/pa-oid-sources.test.ts::retains taxable market discount and the taxable part of stripped obligations"
+  - line: "penalty"
+    description: "Deduct only same-source forfeited interest"
+    formula: "Deduct actual Box 3 only up to this source's PA-taxable interest; excess requires an integrated disposition worksheet and rejects instead of offsetting another source."
+    testRef: "tests/engine/state/pa-oid-sources.test.ts::rejects incomplete contradictory and unmatched PA source facts"
+  - line: "withholding"
+    description: "Include actual PA state withholding rows"
+    formula: "Sum verified Box 14 rows whose actual Box 12 is PA using Decimal; other states are excluded."
+    testRef: "tests/engine/state/pa-oid-sources.test.ts::keeps exact PA withholding and source identities"

@@ -1,3 +1,7 @@
+import { emptyEstimatedTaxFacts } from "@/lib/guided-estimated-tax-facts";
+import { emptyPaymentData } from "@/lib/guided-interview-flow";
+import { guidedSharedMarketplaceHealthState } from "../../fixtures/guided-shared-marketplace-health";
+import { energySource, sourceCleanProperty } from "../../fixtures/energy-source";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { PDFDocument } from "pdf-lib";
 import { rm, writeFile } from "fs/promises";
@@ -16,6 +20,17 @@ import type { GuidedFlowState } from "../../../apps/web/src/lib/guided-interview
 import { buildTaxInputFromGuidedData } from "../../../apps/web/src/lib/guided-interview-bridge";
 import { TaxYearInputSchema } from "../../../src/models/inputs";
 import { calculateFederalTax } from "../../../src/engine/federal";
+import * as federalEngine from "../../../src/engine/federal";
+import * as rendering from "@/pdf/fill-return";
+import { actualGuidedAdoptionHistory } from "../../fixtures/guided-adoption-prior-benefits";
+import { actualGuidedK1PassiveDistribution } from "../../fixtures/guided-k1-passive-distribution";
+import { startCompleteInterview, completeW2Entry } from "../../guided-interview/complete-facts";
+import { emptyDeductionData } from "../../../apps/web/src/lib/guided-interview-flow";
+import { actualGuidedK1Sources } from "../../fixtures/guided-k1-qbi-sources";
+import { actual, guidedForm8862 } from "../../fixtures/guided-form-8862";
+import { ohioPaymentFixture } from "../../fixtures/oh-payments";
+import { confirmGuidedOhioResidencyFacts } from "@/lib/guided-ohio-residency-facts";
+import { confirmGuidedOhioPaymentFacts } from "@/lib/guided-ohio-payment-facts";
 
 vi.mock("server-only", () => ({}));
 
@@ -165,7 +180,7 @@ async function extractPdfText(contents: Uint8Array) {
 
   try {
     const pdfTextScan = await vi.importActual<typeof import("node:child_process")>("node:child_process");
-    return pdfTextScan.execFileSync("python", ["-c", `
+    return pdfTextScan.execFileSync(process.env.TAX_ENGINE_PDF_TEST_PYTHON ?? "python3", ["-c", `
 from pypdf import PdfReader
 reader = PdfReader(r"${outputPath}")
 print("\\n".join((page.extract_text() or "") for page in reader.pages))
@@ -213,6 +228,7 @@ function createNeedsReviewWorkspace(): ReturnWorkspaceRecord {
 
 function createGuidedFlowState(): GuidedFlowState {
   return {
+    taxYear: 2025,
     phase: "complete",
     segmentation: {
       filingStatus: "single",
@@ -231,6 +247,10 @@ function createGuidedFlowState(): GuidedFlowState {
     ],
     sectionData: {
       "personal-info": {
+        standardDeductionFacts: { primaryBlind: false, primaryCanBeClaimedAsDependent: false, primaryDeceased: false, dualStatusAlien: false, nonresidentAlien: false, shortTaxYear: false },
+        dateOfBirth: "1990-02-15",
+        usResidencyMonths: "12",
+        stateResidency: "full-year",
         firstName: "Jordan",
         lastName: "Northwind",
         ssn: "111-22-3333",
@@ -246,13 +266,18 @@ function createGuidedFlowState(): GuidedFlowState {
         entries: [
           {
             employerName: "Northwind Labs",
+            accountHolder: "primary",
+            stateTaxReporting: "single",
+            state: "IL",
             employerEin: "12-3456789",
             wages: "75000",
             federalWithheld: "8200",
             socialSecurityWages: "75000",
+            socialSecurityTips: "0",
             socialSecurityWithheld: "4650",
             medicareWages: "75000",
             medicareWithheld: "1087.50",
+            box10DependentCareBenefits: "0",
             stateWages: "75000",
             stateWithheld: "3750",
             aiSuggestedFields: {},
@@ -311,7 +336,10 @@ function createGuidedFlowStateWithEnergyCredit(): GuidedFlowState {
           llcExpenses: "",
         },
         energy: {
+          ...energySource, qualifiedImprovements: [], carryforwardSourceTaxYear: "2024",
           solarElectricCost: "12000",
+          residenceEligibilityConfirmed: true,
+          cleanEnergyProperties: [{ ...sourceCleanProperty, category: "solar_electric", qualifiedCost: "12000", installationCompletedDate: "2025-06-01", qualificationConfirmed: true }],
           solarWaterHeatingCost: "",
           insulationCost: "",
           exteriorDoorsWindowsCost: "",
@@ -324,23 +352,40 @@ function createGuidedFlowStateWithEnergyCredit(): GuidedFlowState {
   };
 }
 
-function createGuidedFlowStateWithOhioStateSelection(): GuidedFlowState {
-  const base = createGuidedFlowState();
-
-  return {
-    ...base,
-    segmentation: {
-      ...base.segmentation,
-      stateCode: "OH",
-    },
-    sectionData: {
-      ...base.sectionData,
-      "personal-info": {
-        ...base.sectionData["personal-info"],
-        state: "OH",
-      },
+/** Explicit synthetic domicile/account originals, confirmed only when constructing this fixture. */
+function confirmActualOhioWorkspaceSources(state: GuidedFlowState, remainingTaxPayment: Record<string, unknown> = { status: 'no_remaining_tax', sourceReference: 'Synthetic account shows no remaining tax', sourceFactsConfirmed: true }): GuidedFlowState {
+  const originals = ohioPaymentFixture('full_year_resident');
+  const raw = buildTaxInputFromGuidedData(state);
+  if (!raw) throw new Error('Explicit synthetic current federal originals are required');
+  const input = TaxYearInputSchema.parse(raw);
+  const current: NonNullable<GuidedFlowState['sectionData']['state-return']> = {
+    stateEstimatedPayments: [], additionalStateWithholding: '',
+    ohioResidency: { ...originals.ohioResidency, taxYear: '2025' },
+    ohioPayments: {
+      ...originals.ohioPayments, taxYear: '2025',
+      specialFacts: { farmingFishingIncome: 'known_none', militaryDisasterRelief: 'known_none' },
+      remainingTaxPayment,
     },
   };
+  state.sectionData['state-return'] = current;
+  current.ohioResidency = confirmGuidedOhioResidencyFacts(input, current.ohioResidency);
+  current.ohioPayments = confirmGuidedOhioPaymentFacts(input, current.ohioPayments);
+  return state;
+}
+function createGuidedFlowStateWithOhioStateSelection(): GuidedFlowState {
+  const base = createGuidedFlowState();
+  const wages = base.sectionData['income-w2'];
+  const personal = base.sectionData['personal-info'];
+  if (!wages || !personal) throw new Error('Explicit synthetic wage and personal originals are required');
+  return confirmActualOhioWorkspaceSources({
+    ...base,
+    segmentation: { ...base.segmentation, stateCode: 'OH' },
+    sectionData: {
+      ...base.sectionData,
+      'income-w2': { entries: wages.entries.map(entry => ({ ...entry, sourceTaxYear: '2025', state: 'OH' })) },
+      'personal-info': { ...personal, state: 'OH' },
+    },
+  });
 }
 
 function createGuidedFlowStateWithUnderpayment(): GuidedFlowState {
@@ -354,13 +399,18 @@ function createGuidedFlowStateWithUnderpayment(): GuidedFlowState {
         entries: [
           {
             employerName: "Northwind Labs",
+            accountHolder: "primary",
+            stateTaxReporting: "single",
+            state: "IL",
             employerEin: "12-3456789",
             wages: "180000",
             federalWithheld: "8000",
             socialSecurityWages: "176100",
+            socialSecurityTips: "0",
             socialSecurityWithheld: "10918.20",
             medicareWages: "180000",
             medicareWithheld: "2610",
+            box10DependentCareBenefits: "0",
             stateWages: "180000",
             stateWithheld: "0",
             aiSuggestedFields: {},
@@ -372,16 +422,26 @@ function createGuidedFlowStateWithUnderpayment(): GuidedFlowState {
 }
 
 describe("workspace filled return download", () => {
+  it("rejects missing facts and mismatched years instead of falling back to a preview", async () => {
+    const valid = createGuidedFlowState();
+    await expect(buildWorkspaceFilledReturnDownload(createWorkspace(), { ...valid, taxYear: null })).rejects.toThrow(/year/);
+    await expect(buildWorkspaceFilledReturnDownload(createWorkspace(), { ...valid, taxYear: 2026 })).rejects.toThrow(/year/);
+    await expect(buildWorkspaceFilledReturnDownload(createWorkspace(), { ...valid, sectionData: { ...valid.sectionData,
+      "personal-info": { ...valid.sectionData["personal-info"]!, dateOfBirth: "" },
+    } })).rejects.toThrow(/taxpayer facts/);
+  });
   it("builds a merged filled-PDF download from a ready workspace", async () => {
     const download = await buildWorkspaceFilledReturnDownload(createWorkspace(), createGuidedFlowState());
     const pdf = await PDFDocument.load(download.contents);
     const pdfText = await extractPdfText(download.contents);
 
-    expect(download.fileName).toBe("workspace-northwind-review-2025-filled-return.pdf");
+    expect(download.fileName).toBe("workspace-northwind-review-2025-review-return.pdf");
     expect(download.includedForms).toContain("f1040-filled.pdf");
     expect(pdf.getPageCount()).toBeGreaterThan(0);
     expect(pdfText).toContain("EXPERIMENTAL TAX RETURN REFERENCE");
-    expect(pdfText).toContain("AI SUMMARY OF THIS PACKET");
+    expect(pdfText).toContain("SUMMARY OF THIS REVIEW PACKET");
+    expect(pdfText.match(/FOR REVIEW ONLY - NOT FOR FILING/g)).toHaveLength(pdf.getPageCount());
+    expect(pdfText).not.toContain("123-45-6789");
   });
 
   it("serves the merged PDF through the app route", async () => {
@@ -398,13 +458,15 @@ describe("workspace filled return download", () => {
 
     expect(response.status).toBe(200);
     expect(response.headers.get("content-type")).toBe("application/pdf");
-    expect(response.headers.get("content-disposition")).toContain("filled-return.pdf");
+    expect(response.headers.get("content-disposition")).toContain("review-return.pdf");
+    expect(response.headers.get("x-tax-engine-export-purpose")).toBe("review");
+    expect(response.headers.get("cache-control")).toBe("no-store, private");
 
     const pdf = await PDFDocument.load(new Uint8Array(await response.arrayBuffer()));
     expect(pdf.getPageCount()).toBeGreaterThan(0);
   });
 
-  it("still supports the legacy workspace-only route payload", async () => {
+  it("rejects the legacy workspace-only payload without actual taxpayer facts", async () => {
     const response = await POST(new Request("http://localhost/api/workspace/filled-return", {
       method: "POST",
       headers: {
@@ -413,8 +475,17 @@ describe("workspace filled return download", () => {
       body: JSON.stringify(createWorkspace()),
     }));
 
-    expect(response.status).toBe(200);
-    expect(response.headers.get("content-type")).toBe("application/pdf");
+    expect(response.status).toBe(400);
+    expect((await response.json()).error).toMatch(/taxpayer facts/);
+  });
+
+  it("rejects an explicit filing export request", async () => {
+    const response = await POST(new Request("http://localhost/api/workspace/filled-return", {
+      method: "POST", headers: { "content-type": "application/json" },
+      body: JSON.stringify({ workspace: createWorkspace(), guidedFlowState: createGuidedFlowState(), purpose: "filing" }),
+    }));
+    expect(response.status).toBe(400);
+    expect((await response.json()).error).toMatch(/not qualified/);
   });
 
   it("allows localhost filled-return downloads for local-browser workspaces during hosted development", async () => {
@@ -462,12 +533,169 @@ describe("workspace filled return download", () => {
     expect(commandResult).not.toContain("000000000");
   });
 
+  it("binds actual K1 loss sources before redacting the workspace packet", async () => {
+    const state = createGuidedFlowState();
+    state.segmentation.lifeEvents = ['k1-loss-sources'];
+    state.completedSections.push('adjustments', 'other-taxes');
+    state.sectionData['personal-info'] = { ...state.sectionData['personal-info'], lastName: 'Example' };
+    const wages = state.sectionData['income-w2']?.entries[0];
+    if (!wages) throw new Error('Missing original wage source');
+    Object.assign(wages, { wages: '100000', socialSecurityWages: '100000', socialSecurityWithheld: '6200',
+      medicareWages: '100000', medicareWithheld: '1450', stateWages: '100000' });
+    state.sectionData.adjustments = { k1LossSources: actualGuidedK1Sources() };
+    const before = JSON.stringify(state), calculate = vi.spyOn(federalEngine, 'calculateFederalTax');
+    try {
+      const download = await buildWorkspaceFilledReturnDownload(createWorkspace(), state);
+      expect(download.includedForms).toContain('f8995-filled.pdf');
+      expect(download.includedForms).toContain('qbi-loss-reference-filled.pdf');
+      expect(calculate.mock.calls.every(([input]) => input.taxpayer.primary.ssn === '111-22-3333')).toBe(true);
+      const text = await extractPdfText(download.contents);
+      expect(text).toContain('Current QBI after loss limits: $-48000');
+      expect(text).toContain('465, origin 2025: suspended $40000; qualified $32000');
+      for (const secret of ['111223333', 'Original K1 and199A attachment', 'Actual year-end outside-basis worksheet']) expect(text).not.toContain(secret);
+      expect(JSON.stringify(state)).toBe(before);
+    } finally { calculate.mockRestore(); }
+  });
+
+  // Spec: spec/federal/schedule-e-passive-distribution-review.yaml.
+  it("prepares the actual passive distribution context before workspace redaction", async () => {
+    const source = actualGuidedK1PassiveDistribution();
+    const state = startCompleteInterview({ filingStatus: 'single', incomeTypes: ['w2-wages'], lifeEvents: ['k1-loss-sources'], stateCode: null });
+    state.sectionData['income-w2'] = { entries: [{ ...completeW2Entry, wages: '100000' }] };
+    state.sectionData.adjustments = { k1LossSources: source.qualifiedLoss };
+    state.sectionData.deductions = { ...emptyDeductionData, method: 'itemized', medicalExpenses: '0', stateLocalTaxes: '0', realEstateTaxes: '0', mortgageInterest: '0', charitableContributions: '0', casualtyLosses: '0', otherItemized: '0', gamblingWinnings: '0', nonW2IncomeTaxesDeductedElsewhere: '0', donationEntries: [], k1CharitableSources: source.charity };
+    const before = JSON.stringify(state), calculate = vi.spyOn(federalEngine, 'calculateFederalTax');
+    try {
+      const download = await buildWorkspaceFilledReturnDownload(createWorkspace(), state);
+      for (const name of ['f1040se-filled.pdf', 'f1040sd-filled.pdf', 'f8582-filled.pdf', 'f8949-filled.pdf', 'qbi-loss-reference-filled.pdf']) expect(download.includedForms).toContain(name);
+      expect(calculate.mock.calls.length).toBeGreaterThan(0);
+      expect(calculate.mock.calls.every(([input]) => input.taxpayer.primary.ssn === state.sectionData['personal-info']!.ssn)).toBe(true);
+      const text = await extractPdfText(download.contents);
+      expect(text).toContain('Ordinary passive loss allowed: $1000');
+      expect(text).toContain('Passive loss remaining: $500');
+      for (const secret of ['111223333', 'asset-1', 'activity-1', 'Fictional complete entity activity and valuation report']) expect(text).not.toContain(secret);
+      expect(JSON.stringify(state)).toBe(before);
+    } finally { calculate.mockRestore(); }
+  });
+
+  it("binds historical adoption before redacting the actual workspace packet", async () => {
+    const state = createGuidedFlowState();
+    state.sectionData["personal-info"] = { ...state.sectionData["personal-info"], lastName: "Example" };
+    const wages = state.sectionData["income-w2"]?.entries[0];
+    if (!wages || !state.sectionData.credits) throw new Error("Missing actual source fixture");
+    Object.assign(wages, { wages: "100000", socialSecurityWages: "102000", socialSecurityWithheld: "6324",
+      medicareWages: "102000", medicareWithheld: "1479", box12CodeT: "2000" });
+    state.sectionData.credits.adoption = actualGuidedAdoptionHistory();
+    const before = JSON.stringify(state), calculate = vi.spyOn(federalEngine, "calculateFederalTax");
+    try {
+      const download = await buildWorkspaceFilledReturnDownload(createWorkspace(), state);
+      expect(download.includedForms).toContain("f8839-filled.pdf");
+      expect(calculate.mock.calls.every(([input]) => input.taxpayer.primary.ssn === "111-22-3333")).toBe(true);
+      const text = await extractPdfText(download.contents);
+      expect(text).toContain("Signed Form 1040 line 1f: $-8000");
+      expect(text).toContain("Actual prior benefits allocated: $8000.10");
+      for (const secret of ["111223333", "345678901", "Actual original adoption statement-A", "Actual fictional prior benefits worksheet", "8901"]) expect(text).not.toContain(secret);
+      expect(JSON.stringify(state)).toBe(before);
+    } finally { calculate.mockRestore(); }
+  });
+
+  it("calculates education using complete identity before redacting every student page", async () => {
+    const calculate = vi.spyOn(federalEngine, "calculateFederalTax");
+    const state = createGuidedFlowState();
+    const credits = state.sectionData.credits!;
+    credits.education = {
+      aocStudents: [{
+        name: "Jordan Northwind", studentTaxId: "111-22-3333", studentRole: "primary", qualifiedExpenses: "4000", priorYearsClaimed: "0",
+        institutionEin: "12-3456789", institutionEligible: true, expensesEligibilityConfirmed: true, form1098TRequirementMet: true, studentTinEligible: true,
+        completedFirstFourYearsBeforeYear: false, enrolledAtLeastHalfTime: true, pursuingDegreeOrCredential: true, felonyDrugConviction: false,
+        institutions: [{ name: "Synthetic College", address: "1 Campus Drive, Chicago IL 60601", ein: "12-3456789", receivedCurrentYear1098T: true, receivedPriorYear1098TWithBox7: false }],
+      }], llcStudents: [], llcExpenses: "0", possessionIncomeExclusion: "0", primaryTinEligible: true,
+      canBeClaimedAsDependent: false, claimedAsDependent: false, nonresidentAlien: false, aocBanInEffect: false, form8862Required: false,
+    };
+    const original = JSON.stringify(state);
+    const download = await buildWorkspaceFilledReturnDownload(createWorkspace(), state);
+    expect(calculate.mock.lastCall?.[0].taxpayer.primary.ssn).toBe("111-22-3333");
+    calculate.mockRestore();
+    expect(download.includedForms).toContain("f8863-filled.pdf");
+    const text = await extractPdfText(download.contents);
+    expect(text).toContain("Synthetic College");
+    expect(text).toContain("2500");
+    expect(text.replace(/\s|-/g, "")).not.toContain("111223333");
+    expect(JSON.stringify(state)).toBe(original);
+  });
+
+  // Spec: spec/federal/form-1099-q-in-kind-room-board.yaml.
+  it("binds distinct in-kind students before redacting the actual workspace packet", async () => {
+    const state = createGuidedFlowState(), credits = state.sectionData.credits;
+    if (!credits) throw new Error("Missing credits fixture");
+    credits.educationDistributions = {
+      taxYear: "2025", sourceFactsConfirmed: true, allDistributionsReconciled: true,
+      forms: ["primary", "other"].map(owner => ({ fields: {
+        sourceId: owner, accountId: owner, beneficiaryId: owner, recipientOwner: owner,
+        ...(owner === "other" ? { recipientId: "outside-student" } : {}), taxYear: "2025",
+        accountType: "529", distributionMedium: "in_kind_prepaid_tuition", grossDistribution: "4000", earnings: "800", basis: "3200",
+        isTrusteeToTrustee: false, isQtpToRoth: false, recipientNotBeneficiary: false, sourceFactsConfirmed: true,
+      }, transfer: { kind: "none" } })),
+      beneficiaries: [{ id: "primary", studentTaxId: "111-22-3333", outsideK12QualifiedDistributions: "0" },
+        { id: "other", studentTaxId: "222-33-4444", outsideK12QualifiedDistributions: "0" }],
+      expenses: ["primary", "other"].map(owner => ({ id: owner, beneficiaryId: owner, category: "postsecondary_room_board",
+        paidDate: "2025-08-15", amount: "4000", refundedAmount: "0", taxFreeAssistance: "0", educationCreditAmount: "0",
+        otherTaxBenefitAmount: "0", qualificationConfirmed: true, halfTimeStudent: true,
+        roomBoardAllowance: owner === "primary" ? "3000" : "1000", schoolOwnedHousingCharge: "0" })),
+      allocations: ["primary", "other"].map(owner => ({ sourceId: owner, expenseId: owner, amount: "4000", creditAmount: "0" })),
+      inKindBenefits: ["primary", "other"].map(owner => ({ id: owner, sourceId: owner, expenseId: owner, amount: "4000",
+        providedDate: "2025-08-15", qualificationConfirmed: true, sourceReference: "Actual synthetic provided benefit" })),
+      loanBorrowers: [], coverdellAccounts: [], penaltyExceptions: [],
+    };
+    const before = JSON.stringify(state), download = await buildWorkspaceFilledReturnDownload(createWorkspace(), state);
+    expect(download.includedForms).toContain("f1099q-reference-filled.pdf");
+    expect(download.includedForms).toContain("f5329-primary-filled.pdf");
+    expect(download.includedForms.filter(path => path.includes("f5329"))).toHaveLength(1);
+    const text = await extractPdfText(download.contents);
+    expect(text).toContain("Qualified in-kind room-and-board expense after school limit: $3000");
+    expect(text).toContain("Qualified in-kind room-and-board expense after school limit: $1000");
+    expect(text).toContain("Primary taxpayer, Form 5329 line 5: Education distributions included in recipient income: $200");
+    expect(text).toContain("Primary taxpayer, Form 5329 line 8: Additional tax on education distributions: $20");
+    for (const identifier of ["111223333", "222334444"]) expect(text.replace(/\s|-/g, "")).not.toContain(identifier);
+    expect(JSON.stringify(state)).toBe(before);
+  });
+
   it("does not include a blank Schedule E for a simple wage-only return", async () => {
     const download = await buildWorkspaceFilledReturnDownload(createWorkspace(), createGuidedFlowState());
 
     await assertPacketParity(download, {
       suppressedForms: ["f1040se-filled.pdf"],
     });
+  });
+
+  // Spec: spec/federal/form-1099-q-in-kind-assistance.yaml.
+  it("preserves actual tuition assistance in the redacted workspace packet", async () => {
+    const state = createGuidedFlowState(), credits = state.sectionData.credits;
+    if (!credits) throw new Error("Missing credits fixture");
+    credits.educationDistributions = {
+      taxYear: "2025", sourceFactsConfirmed: true, allDistributionsReconciled: true,
+      forms: [{ fields: { sourceId: "prepaid", accountId: "prepaid-account", beneficiaryId: "student", recipientOwner: "primary", taxYear: "2025",
+        accountType: "529", distributionMedium: "in_kind_prepaid_tuition", grossDistribution: "4000", earnings: "800", basis: "3200",
+        isTrusteeToTrustee: false, isQtpToRoth: false, recipientNotBeneficiary: false, sourceFactsConfirmed: true }, transfer: { kind: "none" } }],
+      beneficiaries: [{ id: "student", studentTaxId: "111-22-3333", outsideK12QualifiedDistributions: "0" }],
+      expenses: [{ id: "tuition", beneficiaryId: "student", category: "postsecondary_tuition", paidDate: "2025-08-15", amount: "4000",
+        refundedAmount: "0", taxFreeAssistance: "1000", educationCreditAmount: "0", otherTaxBenefitAmount: "0", qualificationConfirmed: true }],
+      allocations: [{ sourceId: "prepaid", expenseId: "tuition", amount: "3000", creditAmount: "0" }],
+      inKindBenefits: [{ id: "benefit", sourceId: "prepaid", expenseId: "tuition", amount: "4000", providedDate: "2025-08-15",
+        qualificationConfirmed: true, sourceReference: "Actual synthetic provided benefit" }],
+      loanBorrowers: [], coverdellAccounts: [], penaltyExceptions: [],
+    };
+    const before = JSON.stringify(state), download = await buildWorkspaceFilledReturnDownload(createWorkspace(), state);
+    expect(download.includedForms).toContain("f1099q-reference-filled.pdf");
+    expect(download.includedForms).toContain("f5329-primary-filled.pdf");
+    const text = await extractPdfText(download.contents);
+    expect(text).toContain("Tax-free assistance: $1000");
+    expect(text).toContain("Actual in-kind QTP expense allocation: $3000");
+    expect(text).toContain("Primary taxpayer, Form 5329 line 5: Education distributions included in recipient income: $200");
+    expect(text).toContain("Primary taxpayer, Form 5329 line 8: Additional tax on education distributions: $20");
+    expect(text.replace(/\s|-/g, "")).not.toContain("111223333");
+    expect(text).not.toContain("prepaid-account");
+    expect(JSON.stringify(state)).toBe(before);
   });
 
   it("does not auto-attach Form 2210 even when the engine computes an estimated tax penalty and keeps business-rule validation disclosed as not-validated", async () => {
@@ -487,6 +715,19 @@ describe("workspace filled return download", () => {
     });
   });
 
+  it("warns in the packet when an estimated tax penalty waiver is requested", async () => {
+    const base = createGuidedFlowStateWithUnderpayment();
+    const estimatedTaxFacts = { ...emptyEstimatedTaxFacts, sourceTaxYear: "2025", sourceReference: "Fictional records", sourceFactsConfirmed: true, allPaymentRecordsIncluded: true, calendarYearTaxpayer: true, residentReturn: true,
+      farmerOrFisher: false, disasterReliefClaimed: false, waiverRequested: true, waiverKind: "partial" as const, waiverAmount: "1", waiverReason: "retirement_or_disability" as const, waiverStatementReference: "Fictional statement",
+      calculationMethod: "regular" as const, withholdingMethod: "equal-installments" as const, priorYearTaxStatus: "no-return" as const, earlyReturnExceptionClaimed: false };
+    const state = { ...base, sectionData: { ...base.sectionData, payments: { ...emptyPaymentData, ...base.sectionData.payments, estimatedTaxFacts } } };
+    const download = await buildWorkspaceFilledReturnDownload(createWorkspace(), state);
+    await assertPacketParity(download, {
+      suppressedForms: ["f2210-filled.pdf"],
+      expectedText: ["This return requests an estimated tax penalty waiver."],
+    });
+  });
+
   it("includes Ohio reference packet forms and disclosures when Ohio is selected", async () => {
     const download = await buildWorkspaceFilledReturnDownload(
       createWorkspace(),
@@ -503,4 +744,90 @@ describe("workspace filled return download", () => {
       ],
     });
   });
+  // Spec: spec/state/guided-state-routing.yaml.
+  it.each(["PA", "OH"])("preserves federal-only selection despite a PA or OH mailing address: %s", async mailingState => {
+    const state = createGuidedFlowState();
+    const personal = state.sectionData["personal-info"];
+    if (!personal) throw new Error("Missing synthetic personal facts");
+    personal.state = mailingState;
+    state.segmentation.stateCode = null;
+    const download = await buildWorkspaceFilledReturnDownload(createWorkspace(), state);
+    expect(download.includedForms.some(form => form.startsWith("pa-") || form.startsWith("oh-"))).toBe(false);
+  });
+  it.each(["PA", "OH"])("does not print resident state forms for a part-year selection without allocations: %s", async selectedState => {
+    const state = createGuidedFlowState();
+    const personal = state.sectionData["personal-info"];
+    if (!personal) throw new Error("Missing synthetic personal facts");
+    personal.state = selectedState;
+    personal.stateResidency = "part-year";
+    state.segmentation.stateCode = selectedState;
+    const renderer = vi.spyOn(rendering, 'fillReturn');
+    try {
+      await expect(buildWorkspaceFilledReturnDownload(createWorkspace(), state)).rejects.toThrow(/actual|source|allocation|complete/i);
+      expect(renderer).not.toHaveBeenCalled();
+    } finally { renderer.mockRestore(); }
+  });
+  it("does not turn another state's W-2 withholding into an Ohio payment", async () => {
+    const state = createGuidedFlowStateWithOhioStateSelection();
+    const wage = state.sectionData['income-w2']?.entries[0];
+    if (!wage) throw new Error('Explicit synthetic wage original is required');
+    wage.state = 'IL';
+    expect(wage.wages).toBe('75000'); expect(wage.stateWithheld).toBe('3750');
+    // Official2025 booklet pp17/18: (75000-2150-26050)*.0275+342 =1629.
+    confirmActualOhioWorkspaceSources(state, { status: 'expected_payment', sourceReference: 'Synthetic intended April15 payment; official2025 bracket/exemption arithmetic', sourceFactsConfirmed: true, date: '2026-04-15', amountAppliedToTax: '1629' });
+    const download = await buildWorkspaceFilledReturnDownload(createWorkspace(), state);
+    expect(download.includedForms).toContain("oh-it-1040-reference.pdf");
+    expect(download.includedForms).not.toContain("oh-schedule-of-withholding-reference.pdf");
+  });
+});
+
+// Spec: spec/federal/guided-shared-marketplace-health.yaml.
+it("exports actual shared health through the original workspace source context", async () => {
+  const state = guidedSharedMarketplaceHealthState(), before = JSON.stringify(state);
+  const download = await buildWorkspaceFilledReturnDownload(createWorkspace(), state);
+  expect(download.includedForms.some(name => /form-7206-/.test(name))).toBe(true);
+  expect(download.includedForms).toContain("f8962-filled.pdf");
+  const text = await extractPdfText(download.contents);
+  for (const value of ["original premium $1000", "actual advance credit $600", "premium $500; advances $300", "Schedule 1 line 17 transfer: $2340", "Final Form 8962 credit: $3480"]) expect(text).toContain(value);
+  expect(text.replace(/\s|-/g, "")).not.toMatch(/111223333|444556666/);
+  expect(JSON.stringify(state)).toBe(before);
+});
+
+// Spec: spec/federal/form-8862-review.yaml.
+it('binds current Form8862 before redacting workspace identities', async () => {
+  const state = guidedForm8862(true), before = JSON.stringify(state), calculate = vi.spyOn(federalEngine, 'calculateFederalTax');
+  const primary = actual(state.sectionData['personal-info']);
+  try {
+    const download = await buildWorkspaceFilledReturnDownload(createWorkspace(), state);
+    expect(download.includedForms).toContain('f8862-filled.pdf');
+    expect(calculate.mock.calls.every(([input]) => input.taxpayer.primary.ssn === primary.ssn && input.taxpayer.spouse?.ssn === primary.spouse?.ssn)).toBe(true);
+    const text = await extractPdfText(download.contents);
+    expect(text).toContain('Current Form 8862 EIC source record'); expect(text).toContain('Primary filer: 365 home days'); expect(text).toContain('Spouse: 365 home days');
+    for (const secret of [primary.ssn, primary.ssn.replaceAll('-', ''), actual(primary.spouse).ssn, actual(primary.spouse).ssn.replaceAll('-', ''), 'Fictional actual current Form8862 records', 'actual-denial']) expect(text).not.toContain(secret);
+    expect(JSON.stringify(state)).toBe(before);
+  } finally { calculate.mockRestore(); }
+});
+
+// Spec: spec/federal/form-8862-review.yaml.
+it('exports the actual born and deceased child without changing original eligibility sources', async () => {
+  const state = guidedForm8862(), personal = actual(state.sectionData['personal-info']);
+  personal.dateOfBirth = '2003-02-01'; personal.dependentCount = '1';
+  personal.dependents = [{ firstName: 'Alex', lastName: 'Example', ssn: '', dateOfBirth: '2025-10-01', relationship: 'child', monthsLivedWithYou: '3', qualifiesForCTC: false, qualifiesForODC: false, qualifiesForEIC: false }];
+  const current = actual(personal.eicRecertificationSources), owner = actual(current.filers?.[0]), original = actual(personal.dependents[0]);
+  actual(owner.originalTaxpayer).dateOfBirth = personal.dateOfBirth;
+  current.children = [{ sourceId: 'dependent:0', sourceReference: 'Fictional private child evidence',
+    original: { firstName: original.firstName, lastName: original.lastName, ssn: '', dateOfBirth: original.dateOfBirth, relationship: original.relationship, monthsLivedWithYou: original.monthsLivedWithYou },
+    livedWithTaxpayerInUnitedStatesMoreThanHalfYear: true, specialResidencePeriodClaimed: true,
+    marriedAtYearEnd: false, jointReturnFiled: false, validSsnIssuedByDueDate: false,
+    allOtherEligibleClaimantsIncluded: true, otherEligibleClaimants: [], deathDate: '2025-12-31',
+    homeDays: { sourceReference: 'Fictional actual child calendar', actualUnitedStatesDays: '47', temporaryAbsences: [], militaryOutsideUnitedStatesDays: '0', allDaysIncludedAndDistinctConfirmed: true },
+    bornAndDeceasedRecord: { sourceReference: 'Fictional private hospital record', recordType: 'hospital_record', showsLiveBirth: true, copyAvailableForReturnAttachment: true } }];
+  const before = JSON.stringify(state), input = TaxYearInputSchema.parse(actual(buildTaxInputFromGuidedData(state)));
+  expect(calculateFederalTax(input).earnedIncomeCredit.toFixed()).toBe('3409');
+  const download = await buildWorkspaceFilledReturnDownload(createWorkspace(), state);
+  expect(download.includedForms).toContain('f8862-filled.pdf'); expect(download.includedForms).toContain('f1040sei-filled.pdf');
+  const text = await extractPdfText(download.contents);
+  expect(text).toContain('actual 47 days; printed 365 days'); expect(text).toContain('Attach the actual live-birth document copy');
+  for (const secret of [personal.ssn, personal.ssn.replaceAll('-', ''), 'dependent:0', 'Fictional private hospital record']) expect(text).not.toContain(secret);
+  expect(JSON.stringify(state)).toBe(before);
 });

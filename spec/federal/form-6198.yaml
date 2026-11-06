@@ -51,7 +51,7 @@ notes: |
 businessRuleValidation:
   - rule: "reference-summary-packet"
     description: "Inventory support counts this form as business-rule validated only when regression coverage proves the emitted packet artifact stays labeled as a non-filing reference summary and only surfaces the supported Form 6198 at-risk limitation outputs, while the draft packet includes it only when supported Schedule K-1 at-risk inputs are present."
-    testRef: "tests/pdf/fill-form-6198.test.ts::fillReturn includes the Form 6198 reference summary only when supported Schedule K-1 at-risk inputs are present"
+    testRef: "tests/pdf/fill-form-6198.test.ts::fillReturn includes the Form 6198 reference summary only when supported Schedule K-1 at-risk inputs are present: %s"
 
 lines:
   # ── Part I: Current Year Profit (Loss) From the Activity ──

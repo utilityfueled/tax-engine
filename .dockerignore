@@ -5,12 +5,14 @@
 .*-state
 .*-stop
 .vscode
+.local
 coverage
 data
 dist
-forms
 logs
 node_modules
+.pnpm-store
+**/.pnpm-store
 playwright-report
 prompts
 sample-documents
@@ -45,9 +47,16 @@ CLAUDE.md
 # Development-only files — not needed at runtime and increase attack surface
 tests
 spec
-forms
 data
 prompts
 vitest.config.ts
 CLAUDE.md
 AGENTS.md
+forms/filled/
+
+# Apply secret exclusions to nested workspace directories too.
+**/.env*
+**/.aws
+**/.ssh
+**/.npmrc
+**/.pnpmrc

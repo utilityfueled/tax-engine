@@ -64,7 +64,7 @@ describe("Ohio Resident Credit", () => {
       ],
     });
     // 40000 / 100000 = 0.4
-    expect(result.stateDetails[0]!.apportionmentFraction.toNumber()).toBe(0.4);
+    expect(result.line4_apportionmentFraction.toNumber()).toBe(0.4);
   });
 
   it("OH Resident Credit - apportionment fraction capped at 1.0", () => {
@@ -76,7 +76,7 @@ describe("Ohio Resident Credit", () => {
         { stateCode: "IN", incomeType: "other", doubleTaxedIncome: 45000, taxPaid: 1500 },
       ],
     });
-    expect(result.stateDetails[0]!.apportionmentFraction.toNumber()).toBe(1);
+    expect(result.line4_apportionmentFraction.toNumber()).toBe(1);
   });
 
   it("OH Resident Credit - fraction equals 1.0 when all income is double-taxed", () => {
@@ -87,7 +87,7 @@ describe("Ohio Resident Credit", () => {
         { stateCode: "WV", incomeType: "other", doubleTaxedIncome: 60000, taxPaid: 3000 },
       ],
     });
-    expect(result.stateDetails[0]!.apportionmentFraction.toNumber()).toBe(1);
+    expect(result.line4_apportionmentFraction.toNumber()).toBe(1);
   });
 
   // -------------------------------------------------------------------------
@@ -103,7 +103,7 @@ describe("Ohio Resident Credit", () => {
       ],
     });
     // 0.4 × 2000 = 800
-    expect(result.stateDetails[0]!.ohioTaxOnOtherStateIncome.toNumber()).toBe(800);
+    expect(result.line6_ohioTaxOnOtherStateIncome.toNumber()).toBe(800);
   });
 
   it("OH Resident Credit - Ohio tax portion rounds to nearest dollar", () => {
@@ -115,11 +115,11 @@ describe("Ohio Resident Credit", () => {
       ],
     });
     // 33333 / 70000 = 0.47618571..., × 1500 = 714.278..., rounds to 714
-    expect(result.stateDetails[0]!.ohioTaxOnOtherStateIncome.toNumber()).toBe(714);
+    expect(result.line6_ohioTaxOnOtherStateIncome.toNumber()).toBe(714);
   });
 
   // -------------------------------------------------------------------------
-  // Per-state credit (W7) — lesser of Ohio portion and other state tax
+  // Single eligible state: printed aggregate credit equals its single A/B pair
   // -------------------------------------------------------------------------
 
   it("OH Resident Credit - per-state credit is lesser of Ohio portion and other state tax", () => {
@@ -131,7 +131,7 @@ describe("Ohio Resident Credit", () => {
         { stateCode: "NY", incomeType: "other", doubleTaxedIncome: 40000, taxPaid: 1200 },
       ],
     });
-    expect(result.stateDetails[0]!.credit.toNumber()).toBe(800);
+    expect(result.totalResidentCredit.toNumber()).toBe(800);
   });
 
   it("OH Resident Credit - reciprocity-state compensation yields zero credit", () => {
@@ -148,9 +148,9 @@ describe("Ohio Resident Credit", () => {
       ],
     });
 
-    expect(result.stateDetails[0]!.apportionmentFraction.toNumber()).toBe(0);
-    expect(result.stateDetails[0]!.ohioTaxOnOtherStateIncome.toNumber()).toBe(0);
-    expect(result.stateDetails[0]!.credit.toNumber()).toBe(0);
+    expect(result.line4_apportionmentFraction.toNumber()).toBe(0);
+    expect(result.line6_ohioTaxOnOtherStateIncome.toNumber()).toBe(0);
+    expect(result.line7_residentCredit.toNumber()).toBe(0);
     expect(result.totalResidentCredit.toNumber()).toBe(0);
   });
 
@@ -168,7 +168,7 @@ describe("Ohio Resident Credit", () => {
       ],
     });
 
-    expect(result.stateDetails[0]!.credit.toNumber()).toBe(663);
+    expect(result.line7_residentCredit.toNumber()).toBe(663);
     expect(result.totalResidentCredit.toNumber()).toBe(663);
   });
 
@@ -194,7 +194,7 @@ describe("Ohio Resident Credit", () => {
     });
 
     expect(result.stateDetails[0]!.stateCode).toBe("DC");
-    expect(result.stateDetails[0]!.credit.toNumber()).toBe(700);
+    expect(result.line7_residentCredit.toNumber()).toBe(700);
     expect(result.totalResidentCredit.toNumber()).toBe(700);
   });
 
@@ -231,7 +231,7 @@ describe("Ohio Resident Credit", () => {
         { stateCode: "IN", incomeType: "other", doubleTaxedIncome: 40000, taxPaid: 300 },
       ],
     });
-    expect(result.stateDetails[0]!.credit.toNumber()).toBe(300);
+    expect(result.totalResidentCredit.toNumber()).toBe(300);
   });
 
   it("OH Resident Credit - credit limited by Ohio tax portion when lower", () => {
@@ -244,14 +244,14 @@ describe("Ohio Resident Credit", () => {
       ],
     });
     // 20000/100000 = 0.2, 0.2 × 2000 = 400
-    expect(result.stateDetails[0]!.credit.toNumber()).toBe(400);
+    expect(result.totalResidentCredit.toNumber()).toBe(400);
   });
 
   // -------------------------------------------------------------------------
   // Multiple states
   // -------------------------------------------------------------------------
 
-  it("OH Resident Credit - multiple states computed independently", () => {
+  it("OH Resident Credit - multiple state originals produce one aggregate credit", () => {
     const result = calculateOhioResidentCredit({
       ohioAgi: 100000,
       ohioTaxBeforeCredits: 2000,
@@ -261,12 +261,12 @@ describe("Ohio Resident Credit", () => {
       ],
     });
     expect(result.stateDetails).toHaveLength(2);
-    // NY: 30000/100000 = 0.3, 0.3 × 2000 = 600, min(600, 800) = 600
-    expect(result.stateDetails[0]!.credit.toNumber()).toBe(600);
-    // IL: 20000/100000 = 0.2, 0.2 × 2000 = 400, min(400, 300) = 300
-    expect(result.stateDetails[1]!.credit.toNumber()).toBe(300);
-    // Total: 600 + 300 = 900
-    expect(result.totalResidentCredit.toNumber()).toBe(900);
+    expect(result.stateDetails.map(row => row.doubleTaxedIncome.toString())).toEqual(["30000", "20000"]);
+    expect(result.stateDetails.map(row => row.taxPaidToOtherState.toString())).toEqual(["800", "300"]);
+    expect(result.line1_totalDoubleTaxedIncome.toString()).toBe("50000");
+    expect(result.line2_totalOtherStateTax.toString()).toBe("1100");
+    // Actual printed IT RC: min(1100, round(0.5*2000))=1000, not sum of per-state minima900.
+    expect(result.totalResidentCredit.toNumber()).toBe(1000);
   });
 
   it("OH Resident Credit - multiple states preserves state codes", () => {
@@ -337,7 +337,7 @@ describe("Ohio Resident Credit", () => {
       ],
     });
     expect(result.totalResidentCredit.toNumber()).toBe(0);
-    expect(result.stateDetails).toHaveLength(0);
+    expect(result.stateDetails).toHaveLength(1);
   });
 
   it("OH Resident Credit - negative Ohio AGI yields zero credit", () => {
@@ -362,52 +362,44 @@ describe("Ohio Resident Credit", () => {
     expect(result.totalResidentCredit.toNumber()).toBe(0);
   });
 
-  it("OH Resident Credit - zero double-taxed income yields zero per-state credit", () => {
-    const result = calculateOhioResidentCredit({
+  it("OH Resident Credit - zero income with positive other-state tax rejects a one-sided claim", () => {
+    expect(() => calculateOhioResidentCredit({
       ohioAgi: 75000,
       ohioTaxBeforeCredits: 1800,
       otherStates: [
         { stateCode: "NY", incomeType: "other", doubleTaxedIncome: 0, taxPaid: 500 },
       ],
-    });
-    expect(result.stateDetails[0]!.credit.toNumber()).toBe(0);
-    expect(result.totalResidentCredit.toNumber()).toBe(0);
+    })).toThrow(/actual positive|nonnegative/u);
   });
 
-  it("OH Resident Credit - zero tax paid to other state yields zero per-state credit", () => {
-    const result = calculateOhioResidentCredit({
+  it("OH Resident Credit - positive income without tax paid rejects a one-sided claim", () => {
+    expect(() => calculateOhioResidentCredit({
       ohioAgi: 75000,
       ohioTaxBeforeCredits: 1800,
       otherStates: [
         { stateCode: "NY", incomeType: "other", doubleTaxedIncome: 30000, taxPaid: 0 },
       ],
-    });
-    expect(result.stateDetails[0]!.credit.toNumber()).toBe(0);
-    expect(result.totalResidentCredit.toNumber()).toBe(0);
+    })).toThrow(/actual positive|nonnegative/u);
   });
 
-  it("OH Resident Credit - negative double-taxed income treated as zero", () => {
-    const result = calculateOhioResidentCredit({
+  it("OH Resident Credit - negative other-state income rejects", () => {
+    expect(() => calculateOhioResidentCredit({
       ohioAgi: 75000,
       ohioTaxBeforeCredits: 1800,
       otherStates: [
         { stateCode: "NY", incomeType: "other", doubleTaxedIncome: -5000, taxPaid: 200 },
       ],
-    });
-    expect(result.stateDetails[0]!.doubleTaxedIncome.toNumber()).toBe(0);
-    expect(result.stateDetails[0]!.credit.toNumber()).toBe(0);
+    })).toThrow(/actual positive|nonnegative/u);
   });
 
-  it("OH Resident Credit - negative tax paid treated as zero", () => {
-    const result = calculateOhioResidentCredit({
+  it("OH Resident Credit - negative other-state tax rejects", () => {
+    expect(() => calculateOhioResidentCredit({
       ohioAgi: 75000,
       ohioTaxBeforeCredits: 1800,
       otherStates: [
         { stateCode: "NY", incomeType: "other", doubleTaxedIncome: 30000, taxPaid: -100 },
       ],
-    });
-    expect(result.stateDetails[0]!.taxPaidToOtherState.toNumber()).toBe(0);
-    expect(result.stateDetails[0]!.credit.toNumber()).toBe(0);
+    })).toThrow(/actual positive|nonnegative/u);
   });
 
   // -------------------------------------------------------------------------
@@ -428,8 +420,8 @@ describe("Ohio Resident Credit", () => {
     // Fraction: 65000/65000 = 1.0
     // Ohio portion: 1.0 × 1413 = 1413
     // Credit: min(1413, 2600) = 1413
-    expect(result.stateDetails[0]!.apportionmentFraction.toNumber()).toBe(1);
-    expect(result.stateDetails[0]!.credit.toNumber()).toBe(1413);
+    expect(result.line4_apportionmentFraction.toNumber()).toBe(1);
+    expect(result.line7_residentCredit.toNumber()).toBe(1413);
     expect(result.totalResidentCredit.toNumber()).toBe(1413);
   });
 
@@ -447,7 +439,7 @@ describe("Ohio Resident Credit", () => {
     // Fraction: 60000/80000 = 0.75
     // Ohio portion: 0.75 × 1826 = 1369.50, rounds to 1370
     // Credit: min(1370, 1842) = 1370
-    expect(result.stateDetails[0]!.credit.toNumber()).toBe(1370);
+    expect(result.totalResidentCredit.toNumber()).toBe(1370);
   });
 
   it("OH Resident Credit - partial wage income in nonreciprocity state", () => {
@@ -463,7 +455,7 @@ describe("Ohio Resident Credit", () => {
     // Fraction: 30000/90000 = 0.3333...
     // Ohio portion: 0.3333... × 2159 = 719.67, rounds to 720
     // Credit: min(720, 1278) = 720
-    expect(result.stateDetails[0]!.credit.toNumber()).toBe(720);
+    expect(result.totalResidentCredit.toNumber()).toBe(720);
   });
 
   it("OH Resident Credit - three-state noncompensation scenario", () => {
@@ -478,13 +470,12 @@ describe("Ohio Resident Credit", () => {
         { stateCode: "WV", incomeType: "other", doubleTaxedIncome: 20000, taxPaid: 1100 },
       ],
     });
-    // KY: 40000/120000 = 0.3333, 0.3333 × 3019 = 1006.33 → 1006, min(1006, 1600) = 1006
-    // IN: 30000/120000 = 0.25, 0.25 × 3019 = 754.75 → 755, min(755, 936) = 755
-    // WV: 20000/120000 = 0.1667, 0.1667 × 3019 = 503.17 → 503, min(503, 1100) = 503
-    // Total: 1006 + 755 + 503 = 2264, cap = 3019 → 2264
-    expect(result.stateDetails[0]!.credit.toNumber()).toBe(1006);
-    expect(result.stateDetails[1]!.credit.toNumber()).toBe(755);
-    expect(result.stateDetails[2]!.credit.toNumber()).toBe(503);
+    expect(result.stateDetails.map(row => row.doubleTaxedIncome.toString())).toEqual(["40000", "30000", "20000"]);
+    expect(result.stateDetails.map(row => row.taxPaidToOtherState.toString())).toEqual(["1600", "936", "1100"]);
+    expect(result.line1_totalDoubleTaxedIncome.toString()).toBe("90000");
+    expect(result.line2_totalOtherStateTax.toString()).toBe("3636");
+    expect(result.line4_apportionmentFraction.toString()).toBe("0.75");
+    // Aggregate limit round(.75*3019)=2264, less than actual other-state tax3636.
     expect(result.totalResidentCredit.toNumber()).toBe(2264);
   });
 
@@ -504,7 +495,7 @@ describe("Ohio Resident Credit", () => {
     expect(result.lines.some((l) => l.form === "OH-RESIDENT-CREDIT")).toBe(true);
   });
 
-  it("OH Resident Credit - audit trail includes per-state entries", () => {
+  it("OH Resident Credit - audit trail follows all seven actual printed lines", () => {
     const result = calculateOhioResidentCredit({
       ohioAgi: 100000,
       ohioTaxBeforeCredits: 2000,
@@ -513,9 +504,11 @@ describe("Ohio Resident Credit", () => {
         { stateCode: "NJ", incomeType: "other", doubleTaxedIncome: 20000, taxPaid: 500 },
       ],
     });
-    const nyLines = result.lines.filter((l) => l.line?.startsWith("NY/"));
-    const njLines = result.lines.filter((l) => l.line?.startsWith("NJ/"));
-    expect(nyLines.length).toBeGreaterThan(0);
-    expect(njLines.length).toBeGreaterThan(0);
+    const printed = result.lines.filter(line => /^[1-7]$/u.test(line.line));
+    expect(printed.map(line => line.line)).toEqual(["1", "2", "3", "4", "5", "6", "7"]);
+    expect(printed.map(line => line.value.toString())).toEqual(["50000", "1300", "100000", "0.5", "2000", "1000", "1000"]);
+    expect(result.stateDetails.map(row => row.stateCode)).toEqual(["NY", "NJ"]);
+    expect(result.lines.find(line => line.line === "NY/A-1")?.value.toString()).toBe("30000");
+    expect(result.lines.find(line => line.line === "NJ/B-2")?.value.toString()).toBe("500");
   });
 });

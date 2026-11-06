@@ -33,7 +33,7 @@ function expectedCurrency(value: Decimal): string | undefined {
   return formatted || undefined;
 }
 
-const BLANK_5329 = "forms/blank/f5329.pdf";
+const BLANK_5329 = "forms/blank/2025/f5329.pdf";
 const F = FORM_5329_FIELDS;
 
 // ─── Fixture 1: Early distribution penalty (Part I) ─────────────────────

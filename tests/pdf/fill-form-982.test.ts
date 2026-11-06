@@ -12,7 +12,10 @@ import {
   FORM_982_REFERENCE_FILENAME,
 } from "@/pdf/fill-form-982.js";
 import { fillReturn } from "@/pdf/fill-return.js";
+import { prepareCodNolReview } from "@/pdf/cod-nol-review-context.js";
+import { redactReviewIdentifiers } from "@/pdf/redact-review-identifiers.js";
 import { simpleW2Fixture } from "../fixtures/simple-w2.js";
+import { actualCodBasisCapInput } from "../fixtures/cod-ordinary-attributes.js";
 
 async function makeOutputDir() {
   return mkdtemp(join(tmpdir(), "tax-engine-982-"));
@@ -36,58 +39,50 @@ const insolvencyFixture = {
 };
 
 describe("Form 982 packet reference summary", () => {
+  it("retains the original aggregate-only insolvency specimen as an explicit source rejection", () => {
+    expect(() => calculateFederalTax(insolvencyFixture)).toThrow(/COD.*actual.*attribute|COD.*complete.*source/i);
+  });
+
   it("buildForm982ReferenceSummary keeps the packet artifact reference-only and limited to supported exclusion and attribute-reduction outputs", () => {
-    const result = calculateFederalTax(insolvencyFixture);
+    const result = calculateFederalTax(actualCodBasisCapInput());
     const summary = buildForm982ReferenceSummary(result);
 
-    expect(summary.title).toBe("Form 982 COD Attribute Reduction Reference Summary");
+    expect(summary.title).toBe("Form 982 Insolvency and Attribute Reduction Reference Summary");
     expect(summary.warningLabel).toBe("REFERENCE SUMMARY ONLY");
     expect(summary.exclusions).toEqual([
       {
         line: "1b",
         description: "Insolvency exclusion",
-        value: "20000",
+        value: "1500",
       },
     ]);
     expect(summary.reductions.map((line) => line.line)).toEqual([
-      "part2-line4",
-      "part2-line5",
-      "part2-line6",
-      "part2-line7",
-      "part2-line8",
-      "part2-line9",
-      "part2-line10",
+      "6", "7", "8", "9", "10a", "12", "13",
     ]);
-    expect(summary.reductions.find((line) => line.line === "part2-line4")).toEqual({
-      line: "part2-line4",
-      description: "NOL carryforward reduction",
+    expect(summary.reductions.find((line) => line.line === "6")).toEqual({
+      line: "6",
+      description: "Regular net operating loss attribute reduction",
       value: "0",
-      formula: "Reduce NOL by $0 (remaining: $0)",
+      formula: "Current-year original NOL first; then oldest carryover to this year before residual expiry. Actual current deductions are unchanged.",
     });
-    expect(summary.totals).toEqual([
-      {
-        label: "Total excluded cancellation of debt",
-        value: "20000",
-      },
-      {
-        label: "Total Form 982 attribute reduction applied",
-        value: "0",
-      },
-      {
-        label: "Excluded amount not absorbed by supported attributes",
-        value: "20000",
-      },
-    ]);
+    expect(summary.reductions.find((line) => line.line === "10a")).toEqual(expect.objectContaining({ value: "100" }));
+    expect(summary.totals).toEqual(expect.arrayContaining([
+      { label: "Line2 reported excluded debt", value: "1500" },
+      { label: "Regular property basis attribute reduction", value: "100" },
+      { label: "Regular unreduced excluded debt", value: "1400" },
+      { label: "Regular remaining property basis", value: "5400" },
+    ]));
   });
 
   it("fillReturn includes a Form 982 reference summary when cancellation-of-debt exclusions produce a Form 982 computation", async () => {
     const outputDir = await makeOutputDir();
 
     try {
-      const result = calculateFederalTax(insolvencyFixture);
-      const { filledForms } = await fillReturn(insolvencyFixture, result, {
+      const input = actualCodBasisCapInput(), result = calculateFederalTax(input);
+      const { filledForms } = await fillReturn(redactReviewIdentifiers(input), result, {
         blankFormsDir: "forms/blank",
         outputDir,
+        codNolReview: prepareCodNolReview(input),
       });
 
       const referencePath = filledForms.find((path) => path.endsWith(FORM_982_REFERENCE_FILENAME));

@@ -1,0 +1,47 @@
+form: "Schedule D special gain worksheets"
+fullName: "28 percent rate gain and unrecaptured section1250 gain"
+taxYear: 2026
+irsReference: "https://www.irs.gov/instructions/i1040sd"
+sources:
+  - url: "https://www.irs.gov/instructions/i1040sd"
+    section: "Lines18/19, 28% Rate Gain Worksheet and Unrecaptured Section1250 Gain Worksheet"
+    retrieved: "2026-10-25"
+notes: |
+  Worksheet arithmetic consumes canonical source subtotals, never a replacement
+  taxable-income answer or a guessed asset classification. All monetary amounts
+  are Decimal. Retain source cents until the completed worksheet line is rounded.
+  Negative short-term income and long-term carry losses first offset the signed
+  collectibles/QSBS subtotal; the remaining loss then offsets1250gain. Do not
+  add an estate final-year capital loss twice when it is already in ScheduleD14.
+  Source binding, asset classification, installment history and any foreign-income
+  tax worksheet modifications must be established by the caller before enabling
+  a source cohort. This arithmetic alone is not filing qualification.
+lines:
+  - line: "28:1-4"
+    description: "Signed collectible gains and actual section1202 worksheet component"
+    formula: "1=actual8949PartIIcollectiblegain/loss;2=actualexcludedQSBSamountfor50percent,2/3of60percentexclusion,1/3of75percentexclusion,0for100percent;3=otherformcollectiblegain/loss;4=actualDIV/2439/K1/childcollectiblegain/loss;subtotal=sum1..4. Do not use excluded100percentQSBSgain on2."
+    testRef: "tests/engine/schedules/schedule-d-special-gains.test.ts::combines actual signed source gains before either loss offset"
+  - line: "28:5-7"
+    description: "Apply capital-loss carry and short-term loss once"
+    formula: "5=signedScheduleD14carryincludingfinal1041loss;6=min(0,ScheduleD7);7=max(0,sum1..6) suppliesScheduleD18. Child730collectible,shortloss1000 gives0."
+    testRef: "tests/engine/schedules/schedule-d-special-gains.test.ts::uses short and carry losses once against collectible gains first"
+  - line: "1250:1-3"
+    description: "Per-property depreciation gain after ordinary recapture"
+    formula: "For each actual long-term1250property in4797PartIbutnot6252:1=min(depreciationallowed,totalgain);2=ordinary1250recapture;3=1−2. Sum the per-property3 amounts. Reject recapture exceeding the actual lesser amount."
+    testRef: "tests/engine/schedules/schedule-d-special-gains.test.ts::calculates each property before limiting the business aggregate"
+  - line: "1250:4-9"
+    description: "Apply business gain and section1231 lookback limitations"
+    formula: "When4797line7>0:4=actualinstallment1250gain;5=actualpartnership/Scorp1250gain;6=sum3..5;7=min(6,4797line7);8=4797line8;9=max(0,7−8). Otherwise skip1..9 and use0for9."
+    testRef: "tests/engine/schedules/schedule-d-special-gains.test.ts::applies actual business gain and lookback limits before other source gains"
+  - line: "1250:10-13"
+    description: "Other actual unrecaptured1250source amounts"
+    formula: "10=actualpartnershipinterestsale1250gain;11=DIV/2439/1041/1099R/child1250gain;12=otheractual1250dispositiongain;13=sum9..12. No double counting partnership K1line5 as estate/trustline11."
+    testRef: "tests/engine/schedules/schedule-d-special-gains.test.ts::keeps reported and nonbusiness1250sources when business gain is absent"
+  - line: "1250:14-18"
+    description: "Use the signed collectible subtotal to determine the remaining loss offset"
+    formula: "14=sum28worksheet1..4;15=min(0,ScheduleD7);16=signedScheduleD14carry;17=max(0,−sum14..16);18=max(0,13−17) suppliesScheduleD19. Child730collectible/1460unrecaptured and1000STloss leave1190unrecaptured."
+    testRef: "tests/engine/schedules/schedule-d-special-gains.test.ts::nets remaining capital losses against1250gain instead of gross source gain"
+  - line: "source-boundaries"
+    description: "Preserve source identity and arithmetic boundaries"
+    formula: "Reject missing/nonfinite source amounts, positive loss carry, negative1250gain, or impossible recapture; retain signed collectible losses and source cents. No source object mutation."
+    testRef: "tests/engine/schedules/schedule-d-special-gains.test.ts::rejects impossible source amounts and preserves exact cents and inputs"

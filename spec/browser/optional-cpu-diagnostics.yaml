@@ -1,0 +1,49 @@
+form: "Optional-Browser-CPU-Diagnostics"
+taxYear: 2025
+status: "verification-contract"
+reference: "Chrome DevTools Protocol Profiler.Profile / ProfileNode; Playwright TestCase.id, automatic fixtures and --test-list"
+notes: |
+  Primary sources refreshed 2026-11-06: https://playwright.dev/docs/test-fixtures,
+  https://playwright.dev/docs/test-cli,
+  https://playwright.dev/docs/api/class-browsercontext#browser-context-new-cdp-session,
+  https://playwright.dev/docs/api/class-testcase#test-case-id, and
+  https://raw.githubusercontent.com/ChromeDevTools/devtools-protocol/master/json/js_protocol.json.
+  Installed Playwright 1.64.1 CLI and worker source were inspected offline.
+  Test infrastructure only, never qualification. The original failed container
+  step and all 592 cases remain unchanged. An explicitly enabled separate run
+  observes only the 14 original failures on the same job-owned Linux image.
+  Profile start/end/timeDeltas are sampling wall intervals, not process CPU
+  accounting. No exact CPU time, total browser CPU, tax or readiness inference.
+lines:
+  - line: "explicit-opt-in"
+    description: "Remain inert unless the reviewed diagnostic is explicitly enabled"
+    formula: "Default disabled performs no filesystem, process, network or CDP operation. Enabled CI requires the original failed qualification plus exact local job-owned container identity; no managed server or arbitrary endpoint."
+    testRef: "tests/scripts/browser-cpu-diagnostics.test.ts::remains inert unless explicitly enabled"
+  - line: "exact-collection"
+    description: "Preserve the complete original collection and select exactly fourteen"
+    formula: "Verify the immutable 592 IDs, title paths, projects, deadlines, expected states and original request-audit source hash; with the four import-only fixture changes the complete collection must match its immutable canonical hash. Resolve --test-list to the exact 14 original IDs, 2 workers, 0 retries and 30000ms deadline. Preserve validated original scheduler row keys through the selected cases and reuse original request budget batches and natural windows."
+    testRef: "tests/scripts/browser-cpu-diagnostics.test.ts::rejects changed identity selection deadline or audit"
+  - line: "import-only-overlay"
+    description: "Keep every actual test action and assertion intact"
+    formula: "In the private candidate only replace the four pinned base Playwright import module specifiers with the optional automatic fixture. All other bytes must be identical. Preserve all test bytes except those four import specifiers and exactly their four audit hashes; private preparation does not write main; eventual adoption is root-owned; no instrumentation of production code or Playwright internals."
+    testRef: "tests/scripts/browser-cpu-diagnostics.test.ts::permits only the pinned import-only overlay"
+  - line: "bounded-private-profile"
+    description: "Collect a finite page-only sampled JS profile with no source data"
+    formula: "Use only Profiler.enable/setSamplingInterval(1000)/start/stop/disable and detach on the current synthetic local page. Request stop at 29000ms and reserve up to 1000ms for the response; accept only profile spans at most 30000000us. The observation may omit the end of the test body; timer latency is not a hard runtime guarantee. setup and cleanup each share an absolute monotonic 1000ms budget; no test or fixture timeout override. The full CDP stop response is materialized before validation, so no hard browser/transport peak-memory cap is claimed. Sanitized file writing has a separate 1000ms bound, so collector teardown is at most 2000ms within the existing Playwright teardown slot; body deadlines remain unchanged. Cap accepted evidence at 40000 samples, 20000 nodes, 80000 child edges and 8MiB sanitized profile. Fixed unavailable codes replace unsupported/invalid/oversized/unresponsive profiles, never raw errors. No Debugger/Runtime/Network calls, locals, document/DOM/storage content, function names, script source or exports."
+    testRef: "tests/scripts/browser-cpu-diagnostics.test.ts::bounds collection and always detaches without replacing a test failure"
+  - line: "sampling-accounting"
+    description: "Retain observable samples and distinguish wall intervals"
+    formula: "Preserve every valid sample and its sampling interval; assign safe local public chunk locations or fixed idle/program/garbage-collector/other buckets. Account all sample weights and preserve the unsampled tail separately. Never label summed sample intervals exact CPU time. Invalid or missing arrays do not become zero activity."
+    testRef: "tests/scripts/browser-cpu-diagnostics.test.ts::accounts sampling wall weights and idle separately"
+  - line: "public-code-only"
+    description: "Map only independently inventoried public code"
+    formula: "Allow only exact own-origin query-free fragment-free static JS paths present in a bounded local image-public-chunk inventory. Inventory records must have exactly the own enumerable data keys sha256 (a string, never a coerced object) and bytes (a bounded integer); reject inherited, polluted, symbol, non-enumerable and accessor fields without invoking getters. Diagnostic plan metadata is projected explicitly to sha256 and bytes, never forwarded as an arbitrary record. Exclude credentials, arbitrary origins, eval/data/blob scripts and all raw names/errors. Only own keys of the three fixed native category names are recognized; all other names stay other. Generated coordinates must be nonnegative protocol int32 before conversion to one-based positions. Initial diagnostics use chunk hash and generated line/column only. Source-map resolution is deferred and reported unavailable; no remote fetching or sourcesContent output."
+    testRef: "tests/scripts/browser-cpu-diagnostics.test.ts::drops private frames and maps only pinned public code"
+  - line: "nonqualifying-ci"
+    description: "Keep diagnostic observations separate from the original failure"
+    formula: "A new disabled-by-default CI action is eligible only after the unchanged qualification step fails; no continue-on-error or new condition on that original step. Record profile availability separately from diagnostic test outcome. Original 573 pass /14 fail /5 skip is immutable historical evidence. Reconstruct the safe numeric profile schema again before uploading any transient record; unknown fields become fixed unavailable. Attach only the bounded sanitized diagnostic directory, not traces, documents, exports or raw reports."
+    testRef: "tests/scripts/browser-cpu-diagnostics.test.ts::keeps original failure separate from diagnostic outcome"
+  - line: "owned-process-deadline"
+    description: "Bound only owned diagnostic child commands and transient output"
+    formula: "Each child has an operation deadline followed by SIGTERM, then SIGKILL after 2000ms and a 500ms close-observation grace. Missing close becomes fixed unavailable with cleanup unconfirmed, never a successful observation. A 12-minute runner deadline aborts only its own commands; the outer CI step is the final containment. Never forward captured stderr or raw Playwright reports; erase owned transient outputs."
+    testRef: "tests/scripts/browser-cpu-diagnostics.test.ts::settles an unresponsive owned child without waiting indefinitely for close"

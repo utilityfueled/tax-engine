@@ -1,0 +1,54 @@
+form: "EIC history restriction dispatch"
+fullName: "Canonical actual history and recertification prerequisite"
+taxYear: 2026
+irsReference: "https://www.ecfr.gov/current/title-26/section-1.32-3"
+notes: |
+  Retrieved2026-10-26. IRC32(k), Reg1.32-3 and Pub596 chapter5 govern the
+  source resolver in eic-disallowance-history.yaml. A confirmed actual ban
+  produces zero, independently of the income table. A positive claim with
+  unresolved required8862 needs the separate current-form source method;
+  an affirmative completed-form checkbox is not accepted as its replacement.
+  Actual supplied history always reconciles to the same household/year, even
+  when another rule produces zero. Omitted legacy2025 history stays expressly
+  unverified. Positive2026 and newly source-confirmed claimant paths require
+  actual complete history. No source facts are fabricated for income-based zero.
+  Existing final2025 table,2026 isolated formula and readiness gates are unchanged.
+  An active ban does not need an irrelevant child-only exception answer. A
+  child-only exception otherwise needs actual verified child presence, never
+  absence inferred from the historical SSN-counted child count.
+lines:
+  - line: "ban"
+    description: "Actual separate-filer ban reaches the canonical credit"
+    formula: "Any required filer's source-derived active ban forces EIC0; explicit complete empty histories preserve the ordinary table result"
+    irsRef: "IRC32(k); Reg1.32-3(e); Pub596 chapter5"
+    testRef: "tests/engine/eic-disallowance-canonical.test.ts::applies actual individual and joint bans before claiming a canonical credit"
+  - line: "recertification"
+    description: "Unresolved Form8862 is not a completed current claim"
+    formula: "A positive credit needing8862 remains unresolved until actual current-form sources are implemented; later allowed-source exceptions remain separately derived"
+    irsRef: "Reg1.32-3(a)-(d); i8862 Exceptions"
+    testRef: "tests/engine/eic-disallowance-canonical.test.ts::requires actual current recertification while honoring a source-bound later allowance"
+  - line: "unknown"
+    description: "Legacy unknown history and new actual claim completeness stay distinct"
+    formula: "Omitted2025 history is unverified; actual claimant packet or2026 positive claim requires actual history; zero does not infer missing history"
+    irsRef: "Actual source contract; IRC32(a),(k)"
+    testRef: "tests/engine/eic-disallowance-canonical.test.ts::preserves historical unknown history without inventing it for new positive claims or zero income"
+  - line: "binding"
+    description: "Actual supplied history remains bound on a zero-credit return"
+    formula: "Reconcile original taxpayer, source year, confirmations and current claim dates even when income or other claimant rules yield zero"
+    irsRef: "Reg1.32-3(c); actual source conservation"
+    testRef: "tests/engine/eic-disallowance-canonical.test.ts::rejects stale original history even when other conditions make the credit zero"
+  - line: "actualChildPresence"
+    description: "The no-child exception cannot clear a statutory ban or infer missing child facts"
+    formula: "Active ban yields zero with unknown irrelevant child exception; otherwise child-only exception requires actual child source determination"
+    irsRef: "IRC32(k); i8862 Exceptions; actual source boundary"
+    testRef: "tests/engine/eic-disallowance-canonical.test.ts::keeps the actual no-child exception independent of active bans and historical child counts"
+  - line: "excludedForeignIncome"
+    description: "Supplied history stays bound when Form2555 independently makes EIC zero"
+    formula: "Validate the same actual history before the Form2555 zero-credit branch; do not invent missing history for the disqualified return"
+    irsRef: "IRC32(c)(1)(C),(k); original source reconciliation"
+    testRef: "tests/engine/eic-disallowance-canonical.test.ts::validates supplied history even when foreign exclusion independently disqualifies the credit"
+  - line: "sharedActualChild"
+    description: "The direct calculation and history resolver use the same actual-child fact"
+    formula: "A repeated history actual-child answer must match the calculation's actual-child answer; use that single answer for the recertification exception. Unknown and an SSN-counted amount of zero never establish actual child absence."
+    irsRef: "i8862 Exceptions; IRC32(c)(3)(D); source identity consistency"
+    testRef: "tests/engine/eic-disallowance-canonical.test.ts::binds actual child presence across the direct calculation and recertification exception"

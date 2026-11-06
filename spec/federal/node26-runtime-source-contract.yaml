@@ -1,0 +1,49 @@
+form: "Node26-Runtime-Source-Contract"
+fullName: "Node 26 runtime pins and reproducible Linux bootstrap"
+taxYear: 2026
+reference: "https://nodejs.org/en/blog/release/v26.13.0; https://raw.githubusercontent.com/nodejs/docker-node/34e1b0030b415bdea959ccb15afda976a0761346/26/trixie-slim/Dockerfile; https://registry.npmjs.org/pnpm/10.34.8"
+notes: |
+  Operational source contract, not tax eligibility or a filing/readiness change.
+  Node24.22.1/Undici7.30.1 Request(FormData) cancellation produced unhandled
+  enqueue-after-close failures through unchanged upload and historical APIs.
+  Official Node26.13.0/Undici8.12.2 ran unchanged33+130 with no unhandled errors.
+  This local comparison does not establish Linux image, full suite or deployment.
+  Exact development/CI/image baseline is26.13.0. Hosted engines select26.x;
+  Vercel can use different minor/patch versions in build and function runtime.
+  Node25+ no longer bundles Corepack. Bootstrap only existing pnpm10.34.8 from
+  published SHA512-verified tarball with lifecycle scripts disabled. Keep lock,
+  TS5.9.3, Decimal10.6.0, pdf-lib1.17.1 and Node24 compatibility types unchanged.
+  The Node26 package preserved historical lock d199e2344fa6cf61402330f216e3f7ccf6bc9b5e7a568670b29a9fe27dc8c23f.
+  Subsequent separately reviewed Vercel Functions dependency commit1fef5041 adds
+  only its web importer and17 package/snapshot entries, retaining every old entry.
+  Bind current approved lock268026058217dd84aee4e9b1c691fa1bac7d3049e6cb68d7fd16ef3af7a76dea;
+  future dependency changes require their own source review and exact successor.
+  November6 image refresh pins official index5adad64f9a1fca2d51972caa65983634c8a774eb300d72b20f7f2a0f60368072 in both stages,
+  CI preload and same-architecture smoke proof. ARM64 primary-layer evidence
+  confirms apt/libapt3.0.3 to3.0.4 (CVE-2026-109518) and tzdata2026f;
+  the36 registered vulnerable runtime package versions remain unchanged.
+  This source pin is not a qualified build, scanner result or risk acceptance.
+  Official trixie recipe installs libatomic1; both actual architectures still
+  require native linkage, package/layer proof, recovery and fresh scan evidence.
+lines:
+  - line: "package-roots"
+    formula: "Root and web engines >=26.13.0 <27; package manager10.34.8 and all application/type pins remain unchanged."
+    testRef: "tests/runtime/node26-runtime-source-contract.test.ts::declares Node 26 at both deployable package roots without changing retained pins"
+  - line: "development-ci"
+    formula: "Both runtime-manager files pin26.13.0; all nine existing CI setup-node calls inherit .node-version."
+    testRef: "tests/runtime/node26-runtime-source-contract.test.ts::pins local and inherited CI Node versions consistently"
+  - line: "immutable-image"
+    formula: "Both Docker stages and CI preload use same26.13.0-trixie-slim OCI index; no architecture-specific substitution."
+    testRef: "tests/runtime/node26-runtime-source-contract.test.ts::binds both image stages and CI preload to the reviewed multiarch index"
+  - line: "pnpm-bootstrap"
+    formula: "No corepack-enable assumption; fetch existing10.34.8 tarball, verify published SHA512 before global local-tarball install; ignore lifecycle scripts."
+    testRef: "tests/runtime/node26-runtime-source-contract.test.ts::verifies the pinned pnpm archive before installing without lifecycle scripts"
+  - line: "runtime-proof"
+    formula: "Actual runner must report exact26.13.0 and8.12.2, retain libatomic1 and original non-root/layer/full-package/apt-removal proof."
+    testRef: "tests/runtime/node26-runtime-source-contract.test.ts::retains source guards for actual runtime identity and Linux dependency proof"
+  - line: "frozen-dependencies"
+    formula: "Root engine change and web engines addition preserved historical lock; separately reviewed dependency successor1fef5041 supplies the current exact frozen lock. Do not accept arbitrary lock drift."
+    testRef: "tests/runtime/node26-runtime-source-contract.test.ts::preserves the reviewed dependency lock exactly"
+  - line: "operational-docs"
+    formula: "Current setup documentation names26.13.0/26; historical Node24 evidence remains unchanged rather than rewritten."
+    testRef: "tests/runtime/node26-runtime-source-contract.test.ts::updates active operational prerequisites without rewriting historical receipts"

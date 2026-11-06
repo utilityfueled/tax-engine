@@ -1,0 +1,198 @@
+form: "Educator and savings-bond source coordination"
+fullName: "Exact original bond ownership and the pre-exclusion educator deduction for Form8815 MAGI"
+taxYear: 2026
+irsReference: "https://www.irs.gov/pub/irs-pdf/f8815.pdf"
+retrievedAt: "2026-10-27"
+notes: |
+  Final2025 Form8815 page4 Line9 worksheet footnote requires educator expenses
+  before reduction for the Form8815line14 exclusion. This is a separate
+  calculation from final Schedule1line11; source records are not replaced by
+  invented zero exclusions. Current Pub550 Co-owners and Table1-2 attribute
+  unchanged noncommunity interest to actual purchase funds, subtracting each
+  owner's actual previously reported interest. A repeating ratio is a valid
+  exact calculation, not a missing source document. IRC62(d)(2) and final1040
+  instructions Schedule1line11 then reduce each actual educator's expenses by
+  that educator's determined excluded interest, with the annual person cap.
+  https://www.irs.gov/publications/p550
+  https://www.irs.gov/instructions/i1040gi
+  https://uscode.house.gov/us/usc/119-118/t26/s62/
+  The literal examples below are independently derived from originals and
+  printed rules, not published IRS examples. Historical2025 and provisional2026
+  person caps remain300/350; final2026 qualification is not promoted.
+  A positive reduced joint exclusion with two positive income owners remains
+  a separate allocation question. No arbitrary exclusion split is introduced.
+lines:
+  - line: "exact-income-ownership"
+    description: "Retain actual funded income ownership as exact source ratios"
+    formula: |
+      Lifetime interest equals actual proceeds minus original principal.
+      Owner current-interest ratio numerator equals lifetime interest times
+      actual owner purchase funds minus actual owner previously reported interest
+      times principal; denominator equals principal. Both source ratios must
+      sum exactly to actual current interest. With1000/2000 funds, principal3000
+      and interest1000, retain1000/3 and2000/3 without a finite quotient check.
+      Missing, false, negative or conflicting source history remains rejected.
+    testRef: "tests/engine/forms/educator-bond-rational-magi.test.ts::retains unchanged one-third ownership without rounding the source share"
+  - line: "pre-bond-magi"
+    description: "Use the pre-bond educator deduction for the official MAGI worksheet"
+    formula: |
+      Recalculate each actual educator's deduction before reducing costs by
+      Form8815line14, retaining actual reimbursement/QTP/ESA reductions and
+      person cap. Replace only the educator deduction for the Line9 computation.
+      Actual wages149650, bond interest500, educator costs600 and no other
+      reductions give pre-bond deduction300, MAGI149850, excess600/30000,
+      exclusion490, final educator110, taxable interest10 and finalAGI149550.
+      A self-consistent final declaration487/deduction113 does not change the
+      official pre-bond MAGI and must be rejected against the calculated490.
+    testRef: "tests/engine/forms/educator-bond-rational-magi.test.ts::calculates bond MAGI before the final educator reduction"
+  - line: "actual-derived-reduction"
+    description: "Derive a supported owner reduction from actual return bond sources"
+    formula: |
+      An explicit return_sources method requests calculated bond coordination;
+      it is not an entered deduction, exclusion or split. Unknown legacy sources
+      remain unknown. Complete actual bond records and confirmed educator facts
+      are required. With all1000 interest excluded and actual400/800 paid costs,
+      exact1000/3 and2000/3 reductions leave200/3 and400/3, each below300;
+      add exact allowed owner deductions then report Schedule1line11=200.
+      Preserve optional supplied legacy amounts and require exact reconciliation;
+      333.33/666.67 cannot stand in for recurring actual shares.
+      The source-derived route is the complete unchanged, fully excluded bond
+      cohort. Calculate the exact owner-income candidate before other return
+      worksheets, then require the completed actual Form8815 exclusion to equal
+      that whole candidate and its per-owner result. This prevents an interim
+      educator amount from escaping through IRA, benefits, passive, NOL or PTC
+      calculations. A reduced exclusion is not assumed to equal original owner
+      income; legacy exact worksheet declarations retain their existing route.
+    testRef: "tests/engine/forms/educator-bond-rational-magi.test.ts::derives exact owner reductions without an entered recurring exclusion"
+  - line: "source-boundaries"
+    description: "Preserve original zero, unknown and unsupported partial sources"
+    formula: |
+      Derived mode requires actual original bond and Form8815 records. Omitted
+      mode still requires the original declared exclusion. Do not accept a
+      rounded recurring declaration, changed ownership, missing confirmation or
+      reduced final exclusion as a fully excluded owner-income determination.
+    testRef: "tests/engine/forms/educator-bond-rational-magi.test.ts::requires the actual complete full-exclusion sources and exact optional declarations"
+  - line: "ordered-consumers"
+    description: "Keep the verified final educator amount in other return worksheets"
+    formula: |
+      In the same fully excluded1/3 case with wages80000 and actual eligible
+      IRA contribution1000, the IRA worksheet sees80800 (81000 minus final
+      educator200). Form8815 sees79400 (81000 minus IRA1000 and pre-bond
+      educators600). Final AGI is78800. The pre-bond educator deduction is
+      solely a Form8815 MAGI adjustment, not a replacement return source.
+    testRef: "tests/engine/forms/educator-bond-rational-magi.test.ts::uses the determined final educator deduction in the earlier IRA worksheet"
+  - line: "guided-originals"
+    description: "Save and reload the original funding method without manufacturing an amount"
+    formula: |
+      An explicit fully-excluded return-source choice preserves absent original
+      worksheet amounts as absent. The full guide requires actual bond records;
+      a selected choice without the packet is incomplete. Bond or expense edits
+      invalidate affected confirmations while preserving all original values.
+    testRef: "tests/guided-interview/guided-educator-bond.test.ts::preserves actual ownership through saved guide sources without a recurring amount override"
+  - line: "guided-invalidation"
+    description: "Preserve blank worksheet originals and actual costs after edits"
+    formula: "Original bond funding edits revoke both actual educator confirmations before calculation."
+    testRef: "tests/guided-interview/guided-educator-bond.test.ts::invalidates actual educator and bond sources after original edits and permits separate reconfirmation"
+  - line: "source-step-order"
+    description: "Permit collection of later bond originals without permitting an incomplete return"
+    formula: |
+      Adjustments validates the actual educator records collected in that step.
+      It must permit Continue after those records are complete even when the
+      bond packet in the later Tax Credits step is absent or unconfirmed.
+      Tax Credits validates the combined educator/bond source method; a missing
+      or unconfirmed packet still blocks completion there and the whole-return
+      bridge remains unavailable. Clearing a local paid cost still blocks
+      Adjustments. Neither navigation nor one confirmation supplies the other.
+    testRef: "tests/guided-interview/guided-educator-bond.test.ts::validates educator and later bond records in their actual collection order"
+  - line: "source-step-reachability"
+    description: "Reach the later source confirmation through the ordinary interview controls"
+    formula: |
+      With no future step pre-marked complete, an actual educator cost edit
+      revokes educator and bond confirmations. A blank cost blocks Continue.
+      Restoring and confirming both educator records permits ordinary navigation
+      through Deductions to Tax Credits. Continue there remains blocked until
+      the actual bond records are separately confirmed. The saved complete
+      originals still produce educator deduction200 and AGI79800.
+    testRef: "tests/apps/web/educator-bond-interactions.test.tsx::reaches the later bond confirmation through normal interview navigation"
+  - line: "visible-source-choice"
+    description: "Collect the original-source method and independently confirm both records"
+    formula: |
+      Actual educator and bond panels offer the source-derived method without
+      filling a recurring amount. Selecting or editing it revokes educator and
+      bond confirmations. Confirming one source does not confirm the other;
+      the complete saved originals produce the same exact200 deduction.
+      Clearing the method restores the requirement for an actual worksheet
+      amount. Unknown remains absent, and an actual zero remains zero.
+    testRef: "tests/apps/web/educator-bond-interactions.test.tsx::collects exact bond coordination through both real source panels"
+  - line: "original-review"
+    description: "Bind original ownership costs and MAGI before review output"
+    formula: |
+      An opaque in-memory context retains the entire actual return and the
+      completed educator/Form8815 result before identifier redaction. A changed
+      income, owner, purchase amount, receipt, source method or computed audit
+      must reject before any PDF I/O. Render the two exact excluded-interest
+      ratios1000/3 and2000/3, pre-bond educator600 and final Schedule1 deduction200;
+      Form1040 AGI79800 and Schedule1line11=200. Do not expose original references.
+    testRef: "tests/pdf/educator-bond-review.test.ts::binds actual educator ownership and MAGI before saved review output"
+  - line: "saved-review"
+    description: "Use the same actual source route after guide save and reload"
+    formula: |
+      The saved guide contains original funds and expenses with absent derived
+      amounts. Its review download prints the verified200 deduction and79800AGI,
+      preserves source privacy and rejects missing or stale actual confirmations.
+      Form8815 remains a reference; filing and current-year qualification gates
+      are unchanged.
+    testRef: "tests/apps/web/workspace-educator-bond.test.ts::downloads original educator and bond sources after save and reload"
+  - line: "reported-owner-total"
+    description: "Add exact owner deductions before reporting the completed line"
+    formula: |
+      The1040 whole-dollar instruction adds all amounts on a line before
+      rounding. Actual equal purchase funds and1001 interest give500.50 excluded
+      per owner;600 actual cost each leaves99.50 each, Schedule1line11=199.
+      Actual zero current interest is confirmed by the original principal,
+      proceeds and Box3; it does not replace a missing source amount.
+    testRef: "tests/engine/forms/educator-bond-rational-magi.test.ts::reports the exact completed owner deduction once and preserves actual zero"
+  - line: "original-cents"
+    description: "Keep full original excluded interest distinct from its reported whole-dollar line"
+    formula: |
+      In the explicitly source-derived unchanged cohort, verify every original
+      eligible owner, the full expense fraction1, MAGI at or below the threshold,
+      and no reduced exclusion. The reported sum of exact source interest must
+      equal Form8815line6/14; do not allocate the reporting difference to owners.
+      Actual1000.50 interest and1000/2000 purchase funds yield333.50/667 actual
+      excluded interest. With400/800 costs,66.50+133=199.50 reports educator200.
+      Form8815 reports1001; the original owner values remain333.50/667. A fraction
+      below1 or any phaseout cannot claim this method merely because the rounded
+      Form8815 lines happen to be equal.
+    testRef: "tests/engine/forms/educator-bond-rational-magi.test.ts::keeps actual full-exclusion cents separate from printed bond totals"
+  - line: "statement-rounding"
+    description: "Report the source-derived statement line once before subtracting the printed exclusion"
+    formula: |
+      For the explicitly derived cohort, ScheduleBline2 adds the original payer
+      amounts and actual prior-interest adjustment, then rounds its completed
+      total, as does the existing reissue route. Actual1000.49 interest reports
+      line2=1000; full Form8815line14=1000 leaves taxable interest0. Keep the
+      actual1000.49 and exact owner fractions for source/educator reconciliation.
+      An original statement1000.48 cannot cover actual redeemed1000.49 merely
+      because the two rounded lines match; raw source capacity is still checked.
+    testRef: "tests/engine/forms/educator-bond-rational-magi.test.ts::reconciles raw statement cents before separately reporting Schedule B"
+  - line: "isolated-current-year"
+    description: "Preserve the current-year person cap and actual itemized funding facts"
+    formula: |
+      An isolated2026 constants test preserves the public qualification gate.
+      Actual equal purchase funds and1000 fully excluded interest give500
+      excluded per owner. Each educator paid1000 and supplies actual500
+      itemized tax-free funding. Each above-line deduction is350, total700;
+      each remaining itemized amount is150, total300. Wages80000 give final
+      AGI79300 and the pre-bond MAGI80300. Paid-year mismatches still reject.
+    testRef: "tests/engine/forms/educator-bond-rational-magi-2026.test.ts::preserves isolated current-year caps and independently entered itemized funding"
+  - line: "production-saved-source"
+    description: "Reach the actual source choice and review output on desktop and mobile"
+    formula: |
+      Start with original400/800 receipts and1000/2000 purchase funds. Clear
+      the actual400 paid-cost field, save and reload the unknown amount, then
+      restore400 and independently reconfirm both educator sources and the
+      bond source. No recurring reduction amount is inserted. The actual
+      saved review prints educator200 and AGI79800, identifies Form8815 as a
+      partial reference packet and preserves the original privacy boundary.
+    testRef: "apps/web/tests/guided-educator-bond.spec.ts::preserves actual educator and bond originals through edits reload and review"

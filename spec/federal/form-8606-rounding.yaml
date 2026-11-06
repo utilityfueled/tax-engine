@@ -1,0 +1,37 @@
+form: "Form 8606 whole-dollar calculation"
+fullName: "IRA basis allocation and monetary line rounding"
+taxYear: 2025
+irsReference: "https://www.irs.gov/pub/irs-pdf/f8606.pdf"
+notes: |
+  Official Form8606 and instructions plus Form1040 instructions, Rounding Off to
+  Whole Dollars, refreshed2026-10-25. The engine elects whole-dollar form values.
+  Preserve exact source cents while combining amounts for one line, then round
+  the line once using Decimal HALF_UP. Carry the rounded form lines into their
+  dependent lines. Form8606 line10 is a ratio rounded to three decimal places;
+  it is not a monetary value. Other worksheet fractions retain Decimal precision.
+  This arithmetic correction does not qualify source facts or physical2026 forms.
+lines:
+  - line: "source-aggregation"
+    description: "Round each completed source aggregate once"
+    formula: "Line1 = round(nondeductible contributions + qualified reservist repayments); line6 = round(max(0, all year-end values + outstanding rollovers - specified repayments)); line7 and line19 = round(max(0, gross distributions - actual exclusions)). Preserve source cents and original inputs."
+    testRef: "tests/engine/forms/form-8606-rounding.test.ts::aggregates source cents before rounding each traditional line"
+  - line: "traditional-basis"
+    description: "Whole-dollar taxable amount and basis carry"
+    formula: "Round monetary source lines2/4/8; line10 = min(1, line5 / line9) rounded HALF_UP to3places; line12 = round(line7 * line10); line14 = max(0, line3 - line13) + rounded prior worksheet adjustment; line15a = max(0, line7 - line12)."
+    testRef: "tests/engine/forms/form-8606-rounding.test.ts::carries whole-dollar traditional basis and taxable distributions"
+  - line: "separate-allocation-lines"
+    description: "Round both allocation lines before their total"
+    formula: "Line11 = round(line8 * line10); line12 = round(line7 * line10); line13 = line11 + line12. PartII lines16/17 reuse lines8/11; line18 subtracts those completed lines."
+    testRef: "tests/engine/forms/form-8606-rounding.test.ts::rounds each conversion and distribution allocation before adding them"
+  - line: "disaster-and-repayment"
+    description: "Whole-dollar special-distribution worksheet amounts"
+    formula: "Round monetary disaster and repayment worksheet entries and proportional dollar results. Retain the unrestricted Decimal fraction rather than applying the line10 ratio convention to other fractions. Round a worksheet entry once before downstream subtraction, minimum or carry adjustment."
+    testRef: "tests/engine/forms/form-8606-rounding.test.ts::rounds disaster and repayment dollar entries without rounding their fractions"
+  - line: "roth-source-basis"
+    description: "Whole-dollar Roth lines with exact original basis history"
+    formula: "Line19 rounds the net source distribution; line20 rounds its allowed homebuyer amount; line22 rounds the sum of all actual contribution-basis vintages and prior adjustment; line24 rounds the sum of actual conversion-basis vintages. Original vintage records retain cents; dependent monetary lines use the completed whole-dollar values."
+    testRef: "tests/engine/forms/form-8606-rounding.test.ts::sums Roth basis vintages before rounding the form lines"
+  - line: "published-example"
+    description: "Preserve the official line15c worksheet examples"
+    formula: "IRS line15c examples1/2 use taxable distributions10000, gross12500, eligible5000 and repayments3000/5000; reductions3000/4000 produce taxable7000/6000 and later basis adjustments0/1000."
+    testRef: "tests/engine/forms/form-8606-rounding.test.ts::retains the published line15c repayment examples"

@@ -1,0 +1,127 @@
+form: "Empty NOL history and ordinary foreign credit composition"
+fullName: "Independent regular and AMT foreign carry use before ordinary section 108 reduction"
+taxYear: 2026
+irsReference: "https://www.irs.gov/instructions/i1116"
+sources:
+  - url: "https://www.govinfo.gov/content/pkg/CFR-2025-title26-vol11/pdf/CFR-2025-title26-vol11-sec1-904-2.pdf"
+    section: "1.904-2(b), (c)(3)(ii), (d): deduction-year hypothetical excess limitation and chronological absorption"
+    retrieved: "2026-10-28"
+  - url: "https://www.irs.gov/instructions/i1116"
+    section: "Line 10 restrictions; four-decimal limitation ratio and reported country amounts"
+    retrieved: "2026-10-28"
+  - url: "https://uscode.house.gov/us/usc/119-136/t26/s59/"
+    section: "59(a)(1) and (3): separate AMT substitutions and actual simplified-limitation election"
+    retrieved: "2026-10-28"
+  - url: "https://uscode.house.gov/us/usc/119-136/t26/s56/"
+    section: "56(b)(1)(A): taxes excluded from AMT itemized deductions"
+    retrieved: "2026-10-28"
+  - url: "https://www.irs.gov/instructions/i6251"
+    section: "Line 8 Steps 1–6, separate AMT carry history and actual election"
+    retrieved: "2026-10-28"
+  - url: "https://www.irs.gov/instructions/i982"
+    section: "Part II: determine current tax first; credits reduced one dollar for three dollars of excluded debt"
+    retrieved: "2026-10-28"
+notes: |
+  This is a derived composition of established ordinary source methods, not a
+  published combined COD example. Complete independently validated empty regular
+  and AMT original NOL histories remove only a context-presence rejection.
+  Missing, expired, exhausted or positive original NOLs are not this cohort.
+  Retain current Form172/461 and foreign/domestic loss-account guards.
+  The actual annual deduction election grants no current regular or AMT credit,
+  and current paid taxes create no new deduction-year credit carry. Hypothetical
+  absorption is a separate derived use of old carry, never currentYearUse.
+  Complete separate AMT history is mandatory for the COD deduction route. A
+  confirmed empty AMT inventory proves zero outgoing carry without inventing a
+  simplified election or a hypothetical AMT limitation. Positive AMT carry needs
+  actual same-amount source confirmation and first-claim election history.
+  Canonical Form6251 AMTI and pre-credit tax supply the AMT counterfactual;
+  regular taxable income and regular tax cannot stand in for them.
+  Apply actual current use/carryback and derived deemed absorption before108,
+  retaining the normal end-of-year expiry separately. The source-only pass may
+  defer affected final-year expiry equality until the canonical hypothetical
+  result exists; no completed reduction or output may defer it.
+  One original row per category/year binds a positive derived absorption.
+  Competing originals without a determined allocation remain rejected.
+  Original source cents, aggregate Form982 round-once dollars and exact credit
+  thirds retain their existing boundaries. No signed current MTC method changes.
+lines:
+  - line: "ordinary-empty"
+    description: "Validated empty histories compose with ordinary current credit"
+    formula: "2025 single AGI50000, standard15750, taxable34250, TaxTable3875; foreign5000 minus1575 gives3425; ratio.1, limit388. Current100 plus old288 used; old500 leaves212. Independent AMT tax0 leaves old300 and new100, actual prior carryback capacity0. COD300 reduces regular212 to112 and oldest AMT300 to200; AMT total300. Current tax3487 unchanged."
+    testRef: "tests/engine/federal-cod-empty-nol-foreign.test.ts::composes ordinary credit with complete empty loss sources and actual independent carries"
+  - line: "deduction-independent"
+    description: "Separate regular and AMT deemed absorption before COD"
+    formula: "2025 single AGI100000, standard15750, TaxTable13455. Foreign5000 less round(15750*.05)=788 gives4212, round4(4212/84250)=.05, regular limit673/currenttax100/absorption573. AMTI100000, exemption88100, precredit3094, foreignratio.05, AMTlimit155/absorption55. Prior1000/300 become427/245 beforeCOD, then327/145 afterCOD300. Actual current regular and AMT credit0; current tax13455."
+    testRef: "tests/engine/federal-cod-empty-nol-foreign.test.ts::derives separate deduction-year absorption without granting either current credit"
+  - line: "actual-simplified-election"
+    description: "Use an actual applicable simplified election only for its numerator"
+    formula: "Same originals with actual first-claim simplified election: AMT numerator4212, denominator100000, ratio.0421, limit130, absorption30, old300 leaves270 then170 afterCOD300. Regular closing327 unchanged."
+    testRef: "tests/engine/federal-cod-empty-nol-foreign.test.ts::uses the actual simplified election without copying the regular carry"
+  - line: "empty-amt"
+    description: "Explicit empty independent AMT carry does not invent a foreign election"
+    formula: "Complete confirmed independent empty AMT history plus actual deduction election gives zero old absorption, zero new credit carry, zero afterCOD carry; retain no invented hypothetical tax or election. Regular327 remains independently derived."
+    testRef: "tests/engine/federal-cod-empty-nol-foreign.test.ts::preserves a complete empty alternative inventory without inventing election facts"
+  - line: "expiry"
+    description: "Normal final-year expiry follows hypothetical use and COD"
+    formula: "Move prior originals to2015 with all intervening actual zero-use histories. Normal regular/AMT expiry427/245; COD300 consumes100 credit in each pool before expiry, leaving327/145 expired after reduction and zero future carry. Actual current credit remains0."
+    testRef: "tests/engine/federal-cod-empty-nol-foreign.test.ts::keeps final-year expiry separate from derived absorption and credit reduction"
+  - line: "source-containment"
+    description: "No zero fallback or exhausted-history shortcut"
+    formula: "Require actual owner/year/complete independent empty NOL source lists; missing AMT history, positive or exhausted original losses, missing independent AMT foreign history and stale original amounts reject."
+    testRef: "tests/engine/federal-cod-empty-nol-foreign.test.ts::rejects missing changed and nonempty original loss or alternative foreign sources"
+  - line: "current-use-separation"
+    description: "Derived hypothetical absorption cannot masquerade as actual credit use"
+    formula: "Deduction original currentYearUse must reconcile to actual zero credit. Derived per-origin absorption binds the original opening separately; altered original amount or current use573 rejects rather than double-consuming or relabeling it."
+    testRef: "tests/engine/federal-cod-empty-nol-foreign.test.ts::rejects false actual use and altered originals instead of hiding hypothetical absorption"
+  - line: "exact-third"
+    description: "Existing Form982 units survive the new composition"
+    formula: "Deduction originals with excluded debt1 retain regular427-1/3 and AMT245-1/3; current tax and derived573/55 absorption unchanged. Source money uses Decimal and credit thirds retain exact ratio provenance."
+    testRef: "tests/engine/federal-cod-empty-nol-foreign.test.ts::retains exact credit thirds after independent hypothetical absorption"
+  - line: "guided-amt-history"
+    description: "Collect independent AMT annual facts and retain unknown versus empty"
+    formula: "Actual source years and separate original AMT balances are normalized; no regular-history copy. Every nested edit clears source confirmation; explicit empty AMT history is distinct from missing. Canonical guide derives327/145 from retained1000/300 originals."
+    testRef: "tests/guided-interview/guided-cod-empty-nol-foreign.test.ts::binds independent AMT deduction history through the actual guided return"
+  - line: "guided-amt-edit"
+    description: "Actual AMT history controls invalidate nested and enclosing confirmations"
+    formula: "New history starts unknown; user supplies its source year, preceding adjusted year, source reference, original balances and actual election facts. Edits cannot retain the old source confirmation."
+    testRef: "tests/apps/web/cod-empty-nol-foreign-interactions.test.tsx::collects independent AMT history without copying regular balances"
+  - line: "reference-closing"
+    description: "Saved foreign references distinguish actual use, deemed absorption and after-COD balances"
+    formula: "Regular deduction prior1000 less573 deemed absorption gives427 beforeCOD and327 after; AMT300 less55 gives245 before and145 after. Ordinary actual-use288/0 stays separate and closes112/300. No current tax changes."
+    testRef: "tests/pdf/cod-empty-nol-foreign-review.test.ts::saves independent before and after COD foreign balances without changing current tax"
+  - line: "reference-context"
+    description: "Private output rejects missing or stale original and derived foreign records before I/O"
+    formula: "Missing or duplicated derived absorption, changed source reference, changed AMT history, missing COD ledger or altered final carry rejects. Original source replay binds regular and AMT worksheets and preserves redacted review-only output."
+    testRef: "tests/pdf/cod-empty-nol-foreign-review.test.ts::rejects stale foreign and derived absorption contexts before output"
+  - line: "saved-amt-history"
+    description: "Reconcile the separate annual AMT history with every actual saved AMT carry"
+    formula: "A supplied saved AMT category/year ledger must equal the independently entered AMT original history. Neither positive nor explicitly empty annual records can erase or replace a conflicting saved balance."
+    testRef: "tests/engine/federal-cod-empty-nol-foreign.test.ts::rejects conflicting saved AMT carry history even when the annual list is explicitly empty"
+  - line: "nonempty-loss-history"
+    description: "A zero available loss is not an empty original history"
+    formula: "Retain a positive2021 original fully used in2022 and a positive2004 original expired before2025 as distinct nonempty histories; both remain outside this finite foreign-composition method."
+    testRef: "tests/engine/federal-cod-empty-nol-foreign.test.ts::keeps exhausted and expired original NOL histories outside the empty-source method"
+  - line: "matching-saved-amt-history"
+    description: "Matching saved AMT sources remain usable without granting a hypothetical credit"
+    formula: "Saved prior AMT2024 balance300 reconciles to the independent annual300 source and retains final145. The private pre-credit recomputation uses no saved foreign-credit balance; original sources are validated before and after that recomputation, and no current credit is claimed. Missing or conflicting annual sources still reject."
+    testRef: "tests/engine/federal-cod-empty-nol-foreign.test.ts::accepts matching saved AMT sources without changing current credit or original inputs"
+  - line: "workspace"
+    description: "Actual guided original sources reach the partial workspace review"
+    formula: "Reopen ordinary112/300 and deduction327/145 final carries in the actual workspace PDF with before-COD amounts retained, review notices on every page and identifiers redacted. Unknown independent AMT confirmation blocks output."
+    testRef: "tests/apps/web/workspace-cod-empty-nol-foreign.test.ts::reopens actual independent foreign histories in the partial workspace packet"
+  - line: "browser"
+    description: "Desktop and mobile source edits require actual reconfirmation before download"
+    formula: "The retained plain guide original equals the source-only fixture. A blank, zero and restored300 AMT balance stays distinct; edits invalidate enclosing sources and related COD/NOL/payment confirmations. Visit each required section, retain actual source/workspace JSONs, and download the partial review with regular327 and AMT145 after-COD values."
+    testRef: "apps/web/tests/cod-empty-nol-foreign.spec.ts::preserves independent AMT sources through edits and the actual partial download"
+  - line: "reference-current-tax"
+    description: "Prepared original context binds the complete current-tax output before any PDF I/O"
+    formula: "Recompute the canonical result from complete original sources and retain its identifier-redacted digest. Every supplied federal result field and audit must match, including actual foreignTaxCredit, Form6251 line8/line9/tentativeMinimumTax, Schedule3 and Form1040 transfers, and root current-tax/payment totals. Deduction-year hypothetical credit never authorizes an actual current credit. Mutated consistent-looking current-tax results reject before creating an absent output directory or changing an existing directory; exact original and identifier-redacted canonical results remain accepted."
+    testRef: "tests/pdf/cod-empty-nol-foreign-review.test.ts::rejects manufactured actual foreign credits before creating or changing output directories"
+  - line: "reference-complete-result"
+    description: "Current-tax audits and final totals cannot escape the source replay through an omitted digest field"
+    formula: "Changed root tax/credit/payment values and Schedule3/Form1040 audits reject against the retained original result before output. This changes only the private review reconciliation, not current calculation, hypothetical absorption, source allocation or saved valid physical amounts."
+    testRef: "tests/pdf/cod-empty-nol-foreign-review.test.ts::binds complete actual tax audits and totals while accepting canonical redacted results"
+  - line: "reference-state-attachment"
+    description: "Federal source replay preserves the independently calculated state attachment boundary"
+    formula: "The guided workspace appends its independently calculated Pennsylvania stateReturns after federal calculation. The federal COD context binds every federal result field and audit but does not treat that state-owned result object as a changed federal calculation. A complete actual PA guided packet remains exportable with unchanged federal327/145 closings; changed actual federal credit still rejects before I/O with the legitimate PA result attached. Preview-only export remains blocked by the existing required-guided-source guard."
+    testRef: "tests/apps/web/workspace-cod-empty-nol-foreign.test.ts::preserves the actual Pennsylvania attachment without relaxing federal output binding"

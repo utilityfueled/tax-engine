@@ -96,9 +96,11 @@ describe("Married Filing Separately half-limits", () => {
   });
 
   it("MFS CTC fully phased out at high income", () => {
-    // 1 child, $2K credit. Phase-out: ($250K - $200K) / $1K × $50 = $2,500
-    // Credit = max(0, $2K - $2,500) = $0
+
+
     const credit = calculateChildTaxCredit(1, 0, d(250000), "married_filing_separately", c);
+    // 2025 worksheet: child credit 0 + ODC 0 = 0.
+    // 2025 worksheet: child credit 0 + ODC 0 = 0.
     expect(credit.total.toNumber()).toBe(0);
   });
 
@@ -107,10 +109,9 @@ describe("Married Filing Separately half-limits", () => {
     expect(c.capitalGainsRates.fifteen.threshold.married_filing_jointly.toNumber()).toBe(600050);
   });
 
-  it("MFS SALT cap unchanged at $10K", () => {
-    // SALT cap is $10K for all statuses (not $5K for MFS under TCJA)
-    const salt = calculateSALTDeduction(d(8000), d(5000), c);
-    expect(salt.toNumber()).toBe(10000);
+  it("2025 MFS SALT allows $13K below its $20K limit", () => {
+    const salt = calculateSALTDeduction(d(8000), d(5000), c, d(100000), "single");
+    expect(salt.toNumber()).toBe(13000);
   });
 });
 
@@ -408,18 +409,17 @@ describe("Capital loss limit by filing status — IRC §1211(b)", () => {
 // ═══════════════════════════════════════════════════════════
 
 describe("SALT cap across filing statuses — IRC §164(b)(6)", () => {
-  it("Spec §164(b)(6): SALT cap is $10K for all statuses under TCJA", () => {
-    // Under TCJA (2018-2025), SALT cap is $10K for all filers including MFS
-    expect(c.saltCap.toNumber()).toBe(10000);
+  it("Spec 2025 SALT maximum before MAGI reduction is $40K, halved for MFS", () => {
+    expect(c.saltCap.toNumber()).toBe(40000);
   });
 
-  it("Spec §164(b)(6): SALT deduction capped at $10K even with $25K total", () => {
-    const salt = calculateSALTDeduction(d(15000), d(10000), c);
-    expect(salt.toNumber()).toBe(10000);
+  it("Spec 2025 SALT allows $25K below the $40K limit", () => {
+    const salt = calculateSALTDeduction(d(15000), d(10000), c, d(100000), "single");
+    expect(salt.toNumber()).toBe(25000);
   });
 
   it("Spec §164(b)(6): SALT under cap returns actual amount", () => {
-    const salt = calculateSALTDeduction(d(3000), d(2000), c);
+    const salt = calculateSALTDeduction(d(3000), d(2000), c, d(100000), "single");
     expect(salt.toNumber()).toBe(5000);
   });
 });
@@ -456,20 +456,20 @@ describe("AMT exemption differences across filing statuses — IRC §55", () => 
       .toBe(c.amt.exemption.married_filing_jointly.toNumber() / 2);
   });
 
-  it("Spec §55(d)(3): AMT phase-out thresholds — MFJ/QSS highest, Single=HoH in middle", () => {
+  it("Spec §55(d)(3): AMT phase-out thresholds — MFJ/QSS highest, Single=HoH=MFS", () => {
     const mfs = c.amt.phaseOutThreshold.married_filing_separately.toNumber();
     const single = c.amt.phaseOutThreshold.single.toNumber();
     const hoh = c.amt.phaseOutThreshold.head_of_household.toNumber();
     const mfj = c.amt.phaseOutThreshold.married_filing_jointly.toNumber();
     const qss = c.amt.phaseOutThreshold.qualifying_surviving_spouse.toNumber();
 
-    // MFS phase-out ($626,350) > Single/HoH ($609,350) because MFS = half of MFJ ($1,252,700)
+    // Single, HOH and MFS share the $626,350 threshold in 2025.
     expect(single).toBe(hoh);
-    expect(single).toBeLessThan(mfs);
+    expect(single).toBe(mfs);
     expect(mfs).toBeLessThan(mfj);
     expect(mfj).toBe(qss);
     expect(mfs).toBe(626350);
-    expect(single).toBe(609350);
+    expect(single).toBe(626350);
   });
 });
 

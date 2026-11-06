@@ -1,0 +1,36 @@
+form: "Ohio actual ordinary resident-credit sources"
+taxYear: 2025
+reference: "https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/forms/ohio_individual/individual/2025/it1040-booklet.pdf"
+notes: |
+  Source-first exactfbb9618b. Official2025 IT RC lines1-7/printedbooklet40 and
+  RC5747.05(B)(5),(C),(D). Existing printed scalar helper unchanged. Finite single
+  primary under65/full-year Ohio resident ordinary W2 with actual Virginia
+  nonresident wage services and a fully settled original2025 Virginia763 account.
+  Actual other-state liability/credits are completed original source facts, not
+  recalculated Virginia qualification. No PY/joint/business/SD/reciprocal/native/
+  physical/2026/readiness/human qualification. Exact private originals digest only.
+lines:
+  - line: "actual-credit"
+    formula: "OhioAGI100000/exemption1900/taxable98100 yields2323. ActualVAincome60000 is already in same OhioAGI; ratio truncate4(.6)=.6000; line6 roundDollar2323*.6=1394; actualnetpaid1000 after credits/refund -> credit1000, Ohio tax1323. ActualOhioWH2000 -> requestedrefund677; no refundreceived inferred."
+    testRef: "tests/engine/state/oh-resident-credit-sources.test.ts::admits actual resident same-income Virginia tax with complete paid account"
+  - line: "rounding"
+    formula: "Sum original raw service/payments before printed-state A/B rounding; no eachreceipt rounding. Raw60000.49/1000.49 ->A60000/B1000;60000.50/1000.50 ->A60001/B1001. Existinghelper computes one min after aggregate lines and trunc4 ratio. Actual0/0 excludes columns; missing never0."
+    testRef: "tests/engine/state/oh-resident-credit-sources.test.ts::preserves actual source cents and paid-credit cap %s"
+  - line: "current-source"
+    formula: "Actual current owner/year/W2/fullOHtimeline, originalservice ledger with dates/employer and actual corporate-employer identity original (no pass-through owner reclassification) and complete federal wage allocation; exact filedVirginia763 and completed agency payment/refund account must reconcile netpaid to netincome tax after actualcredits. Full current federal replay and all income inventory required."
+    testRef: "tests/engine/state/oh-resident-credit-sources.test.ts::rejects missing or contradictory resident-credit original %s"
+  - line: "no-inference"
+    formula: "No scalarresidentcredit/otherstatetax/WH/cash override, no retainedbusiness or otherincome, reciprocal wages, incomplete account or doubleNRC use. Completeknownzero and originalmissing are different."
+    testRef: "tests/engine/state/oh-resident-credit-sources.test.ts::rejects retained unsupported resident-credit composition %s"
+  - line: "projection-binding"
+    formula: "A genuine opaque source context authorizes only its independently source-derived current return projection. Changed cash, credit, timing, owner, residency, commitment, otherstate rows, or exemptions must reject; missing/fabricated context never authorizes direct return. Removing both packet and context from an otherwise source-qualified adapted return must not convert its derived credit rows into a legacy scalar claim."
+    testRef: "tests/engine/state/oh-resident-credit-sources.test.ts::denies changed direct adapted source projection %s"
+  - line: "privacy-purity"
+    formula: "Identical money with explicit coherent source-reference replacement changes whole-private-source commitment. No read mutation, private IDs/references in audit or Decimal global precision mutation. Current source result remains source-bound before downstream review I/O."
+    testRef: "tests/engine/state/oh-resident-credit-sources.test.ts::binds exact private originals without mutation or private audit disclosure"
+  - line: "legacy-gates"
+    formula: "Unattached ordinary fullresident input remains legacycompatible; actual credit without sourcepacket stays rejected. Public2026 federal rulepack stays unavailable; no readiness/registry/source guard relaxed."
+    testRef: "tests/engine/state/oh-resident-credit-sources.test.ts::retains bare credit guard and public2026 gate"
+  - line: "known-zero-and-raw-sums"
+    formula: "Actual settled VA net tax0 with appliedWH1200/refund1200 gives no IT RC A/B claim even if actualVAincome60000; actualOHWH2500 ->tax2323/refund177. Distinct applied receipts600.24+599.76 aggregate1200 before whole-dollar reporting, refund200 ->netpaid1000. Reordering valid source rows changes rawcommitment but not arithmetic."
+    testRef: "tests/engine/state/oh-resident-credit-sources.test.ts::retains actual zero tax and exact raw account sums without inventing paid tax"

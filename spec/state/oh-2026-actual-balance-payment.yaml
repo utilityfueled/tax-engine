@@ -1,0 +1,35 @@
+form: "Ohio2026 source-qualified actual timely small balance payment"
+fullName: "Original-bound ordinary employee draft account settlement"
+taxYear: 2026
+reference: "https://codes.ohio.gov/ohio-revised-code/section-5747.09"
+notes: |
+  RC5747.09(B) estimate threshold is more than500 after compensation withholding;
+  RC5747.08(G),(H) separately establishes timely payment and withholding credits.
+  Official2026 IT1040ES confirms installment dates/account SSN, but its stale
+  tax brackets are not authority for enacted2026 tax. This finite original2026
+  ordinary employee method supports actual fully paid timely balance<=500 only;
+  no estimated/extension/prior/carry/refundable/school/elections/business method.
+  Return balance due is not reduced by an already-made balance receipt. Separate
+  account applied/outstanding status is not a tax credit. All public2026 filing,
+  independent human review, final forms and broader-method gates stay closed.
+lines:
+  - line: "actual-account-originals"
+    description: "Actual full matched original receipt, no unknown source defaults"
+    formula: "Require current2026 complete employee and payment originals, actual sameowner name/SSN IT1040 account/year/date/amount/confirmation, Jan1 throughApr15,2027 and paid<=asOf, exact applied cash and complete inventory. No estimated rows/prior return/carry/other balance elections; no future/expected/partial/excess receipt qualification."
+    testRef: "tests/engine/state/oh-2026-actual-balance-payment.test.ts::rejects unknown contradictory or unsupported actual payment %s"
+  - line: "statutory-small-balance"
+    description: "Actual statutory no-estimate threshold, never a generic penalty zero"
+    formula: "Fresh reported remainingTax=incomeTax−withholding must be positive and<=500; finite admission policy also requires incomeTax minus exact validated original withholding<=500 before reporting-rounding; no controlling interpretation of statutory rounding is asserted. Matched actual receipt=remainingTax exactly, no rounding-up receipt proof. No unpaid interval after deadline because actual full receipt and filing chronology are timely; underpaymentPenalty0/lateInterest0 only within these proved facts."
+    testRef: "tests/engine/state/oh-2026-actual-balance-payment.test.ts::admits actual timely balance at statutory boundary %s"
+  - line: "separate-return-and-account"
+    description: "Reported return amount due remains distinct from actual paid account"
+    formula: "amountDue=remainingTax; actualBalancePaymentApplied=remainingTax; outstandingTaxBalance=0 on documentary reported-balance arithmetic only; refund0; no independently observed external-account settlement. Existing source-derived incomeTax/NRC/credits/withholding unchanged, original balance receipt not added to estimates/withholding or deducted from income."
+    testRef: "tests/engine/state/oh-2026-actual-balance-payment.test.ts::reports source-qualified return and paid account separately for %s"
+  - line: "currentness-and-privacy"
+    description: "Opaque current original proof and no private audit values"
+    formula: "Complete original/receipt reference and lexical changes invalidate context even equal cash. Forged/reused changed context denied; no canonical source rewrites; no account SSN/name/confirmation/source reference in result or audit."
+    testRef: "tests/engine/state/oh-2026-actual-balance-payment.test.ts::binds exact current originals and keeps payment private identifiers off results"
+  - line: "compatibility-and-gates"
+    description: "Historical and withholding-only path semantics stay unchanged"
+    formula: "Absent actual small balance branch uses unchanged withholding coverage result. Reciprocal, VAcredit and canonical business payments do not gain this finite method. Current2026 draft stays incomplete/independent-review-pending/filingQualifiedfalse; no historical2025/year/constants or output qualification change."
+    testRef: "tests/engine/state/oh-2026-actual-balance-payment.test.ts::preserves withholding-only fields and unsupported year gates"

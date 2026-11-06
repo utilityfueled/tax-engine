@@ -1,0 +1,28 @@
+form: "Native RRTA paper-original handoff"
+taxYear: 2025
+status: "partial-review-only"
+reference: "https://www.irs.gov/instructions/i8959"
+notes: |
+  Existing finite ordinary2025 RRTA method and opaque original-bound PDF API only.
+  No new tax calculation, ordinary B/N adjustment,2026 export or filing admission.
+lines:
+  - line: "documentary-controls"
+    description: "Collect paper-only facts separately from payroll eligibility"
+    formula: "Unknown initial year/reference/ordinary Box12B-N absence and confirmation; user explicitly captures current confirmed guided originals, then separately confirms paper evidence. Neither checked-zero payroll amounts nor native calculation confirmation establishes paper absence."
+    testRef: "tests/apps/web/guided-rrta-paper-handoff.test.tsx::offers explicit separate paper originals without automatically confirming payroll"
+  - line: "original-custody"
+    description: "Bind full actual source input and native lexical facts"
+    formula: "Capture only current canonical2025 RRTA originals derived through ordinary guided bridge; retain exact immutable full input and current raw native parent/payroll facts. On handoff require exact owner/year/all W2s/full original sources plus current paper reference and explicit absence/confirmation; unknown false stale forged or changed facts deny."
+    testRef: "tests/apps/web/guided-rrta-paper-handoff.test.tsx::binds confirmed paper originals and denies missing stale and changed owner facts"
+  - line: "separate-confirmation"
+    description: "Paper capture does not change tax facts or create a confirmation cycle"
+    formula: "Paper-only custody and confirmation are excluded only from tax-source comparison; every actual tax original and paper fact remains in its own custody comparison. Payroll/parent source edits revoke paper confirmation and preserve immutable prior originals; no-op and reload retain valid evidence."
+    testRef: "tests/apps/web/guided-rrta-paper-handoff.test.tsx::invalidates paper edits without recapturing unchanged tax sources"
+  - line: "server-context"
+    description: "Derive the opaque prepared context on the server before redaction"
+    formula: "Workspace resolves complete confirmed guided originals, validates saved paper custody against those same originals, and calls existing prepareRRTAPayrollReview in the server realm before redaction. Pass its live WeakMap token directly to fillReturn; no serialized token or client trust flag is accepted. Current canonical/payroll/PDF guards are unchanged."
+    testRef: "tests/apps/web/workspace-rrta-paper-handoff.test.ts::prepares an original-bound railroad context through the actual workspace POST before rendering"
+  - line: "negative-guards"
+    description: "Preserve unsupported and privacy boundaries"
+    formula: "No paper record or unknown false absence still denies review400; source/owner/year/identity/reference drift and unsupported positive B-N adjustments cannot acquire a context. Original source references and identifiers stay private across all companion PDFs;2026 and filing deny unchanged."
+    testRef: "tests/apps/web/workspace-rrta-paper-handoff.test.ts::keeps missing paper evidence and unsupported years unavailable through the actual POST"

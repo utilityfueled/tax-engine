@@ -1,0 +1,42 @@
+form: "Hosted-Subscription-Transaction"
+fullName: "Source-first disposable PostgreSQL transaction proof plan"
+taxYear: 2026
+reference: "https://www.postgresql.org/docs/16/tutorial-transactions.html; https://node-postgres.com/features/transactions"
+notes: |
+  Future test contract only; no implementation or database execution. A unique
+  schema in an explicitly disposable loopback database is required. Never reuse
+  deployment DATABASE_URL. Real SQL faults/concurrency must prove rollback;
+  in-memory spies are not transaction evidence. Existing normal deadlines stay.
+lines:
+  - line: "receipt-fault"
+    description: "A database receipt error cannot leave subscription state committed"
+    formula: "Inject a real trigger exception on event insertion. No new subscription or event survives; remove fault and retry signed event: one exact state row and one receipt."
+    testRef: "tests/apps/web/hosted-subscription-transaction.test.ts::rolls back subscription and receipt on a receipt fault"
+  - line: "state-fault"
+    description: "A subscription failure cannot consume the event"
+    formula: "A trigger rejects state write after claimed event; rollback leaves neither effect. Retry commits both once."
+    testRef: "tests/apps/web/hosted-subscription-transaction.test.ts::rolls back the event claim on a subscription fault"
+  - line: "replacement-fault"
+    description: "Canceled-row replacement is atomic"
+    formula: "Reject replacement insertion after attempted old-row deletion; the original canceled row survives, new row and event do not. Successful retry atomically replaces it."
+    testRef: "tests/apps/web/hosted-subscription-transaction.test.ts::preserves canceled history when replacement insertion fails"
+  - line: "duplicate-concurrency"
+    description: "Concurrent copies of one signed event mutate once"
+    formula: "Two actual DB clients deliver the same event. Exactly one receipt/state mutation; duplicate performs no provider load. Both acknowledgments follow completion."
+    testRef: "tests/apps/web/hosted-subscription-transaction.test.ts::serializes concurrent copies of one event"
+  - line: "reversed-concurrency"
+    description: "Concurrent distinct events cannot commit stale snapshots by completion order"
+    formula: "Use controlled provider snapshots and actual locks/barriers; final state equals the last serialized authoritative read, including equal-created-second events. Never sort event IDs."
+    testRef: "tests/apps/web/hosted-subscription-transaction.test.ts::serializes authoritative reads and state commits"
+  - line: "replacement-concurrency"
+    description: "Old canceled-subscription events do not revoke the active replacement"
+    formula: "Same customer, distinct subscription IDs: active replacement remains owner entitlement after old canceled event, which is receipted as superseded without a late state rewrite."
+    testRef: "tests/apps/web/hosted-subscription-transaction.test.ts::preserves an active replacement against a late canceled event"
+  - line: "connection-fault"
+    description: "Failure releases transaction state and permits retry"
+    formula: "Provider/query timeout or thrown error rolls back claim/state and releases locks/client; next bounded attempt succeeds. A disconnected uncertain client is discarded."
+    testRef: "tests/apps/web/hosted-subscription-transaction.test.ts::releases rollback locks and discards an uncertain client"
+  - line: "commit-ack-loss"
+    description: "Retry after committed response loss is harmless"
+    formula: "First transaction commits but simulated response is lost. Same-event retry sees the receipt and does not retrieve or mutate again. Exact owner/customer and credit-pack totals unchanged."
+    testRef: "tests/apps/web/hosted-subscription-transaction.test.ts::deduplicates a retry after commit acknowledgment loss"

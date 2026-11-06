@@ -8,6 +8,8 @@ import Decimal from "decimal.js";
 import { calculateFederalTax } from "@/engine/federal.js";
 import type { TaxYearInput } from "@/models/inputs.js";
 import { simpleW2Fixture, complexMFJFixture } from "../fixtures/simple-w2.js";
+import { actualPartialPersonalCodInput } from "../fixtures/cod-partial-personal.js";
+import { partialPersonalLegacyNolZeroPoolInput } from "../fixtures/cod-zero-minimum-tax-credit-bound.js";
 
 const d = (n: number | string) => new Decimal(n);
 
@@ -228,11 +230,8 @@ describe("Simple W-2 single filer", () => {
   });
 
   it("Form 1040 Line 16 - tax on $69,250 single", () => {
-    // $11,925 × 10% = $1,192.50
-    // ($48,475 - $11,925) × 12% = $4,386
-    // ($69,250 - $48,475) × 22% = $4,570.50
-    // Total = $10,149
-    expect(result.totalTaxBeforeCredits.toNumber()).toBe(10149);
+    // Published2025 single table row69250–69300:10155.
+    expect(result.totalTaxBeforeCredits.toNumber()).toBe(10155);
   });
 
   it("Form 1040 Line 19 - no child tax credit (no children)", () => {
@@ -240,6 +239,7 @@ describe("Simple W-2 single filer", () => {
   });
 
   it("Form 1040 Line 20 - Form 8880 saver's credit flows through Schedule 3 and is capped by the remaining tax", () => {
+    // Published4250–4300 single row428 caps the1000 tentative credit.
     const saverCreditResult = calculateFederalTax({
       ...simpleW2Fixture,
       w2s: [
@@ -260,15 +260,16 @@ describe("Simple W-2 single filer", () => {
 
     const line20 = saverCreditResult.allLines.find((line) => line.form === "1040" && line.line === "20");
 
-    expect(saverCreditResult.totalTaxBeforeCredits.toNumber()).toBe(425);
+    expect(saverCreditResult.totalTaxBeforeCredits.toNumber()).toBe(428);
     expect(saverCreditResult.form8880?.line10.toNumber()).toBe(1000);
-    expect(saverCreditResult.form8880?.line11.toNumber()).toBe(425);
-    expect(saverCreditResult.form8880?.line12.toNumber()).toBe(425);
-    expect(saverCreditResult.otherCredits.toNumber()).toBe(425);
-    expect(line20?.value.toNumber()).toBe(425);
+    expect(saverCreditResult.form8880?.line11.toNumber()).toBe(428);
+    expect(saverCreditResult.form8880?.line12.toNumber()).toBe(428);
+    expect(saverCreditResult.otherCredits.toNumber()).toBe(428);
+    expect(line20?.value.toNumber()).toBe(428);
   });
 
   it("Form 1040 Line 20 - W-2 Box 12 retirement contributions default into Form 8880 when Line 2 inputs are omitted", () => {
+    // Published4250–4300 single row428 caps the tentative credit.
     const saverCreditResult = calculateFederalTax({
       ...simpleW2Fixture,
       w2s: [
@@ -291,11 +292,12 @@ describe("Simple W-2 single filer", () => {
 
     expect(saverCreditResult.form8880?.line2a.toNumber()).toBe(3000);
     expect(String(form8880Line2?.inputs["Supported W-2 Box 12 retirement contributions"])).toBe("3000");
-    expect(saverCreditResult.form8880?.line12.toNumber()).toBe(425);
-    expect(saverCreditResult.otherCredits.toNumber()).toBe(425);
+    expect(saverCreditResult.form8880?.line12.toNumber()).toBe(428);
+    expect(saverCreditResult.otherCredits.toNumber()).toBe(428);
   });
 
   it("Form 8880 Line 11 - the federal engine includes Schedule 2 Line 3 excess APTC repayment in the saver's credit limitation base", () => {
+    // Published2250–2275 single row226 plus375 APTC=601.
     const saverCreditResult = calculateFederalTax({
       ...simpleW2Fixture,
       w2s: [
@@ -326,17 +328,18 @@ describe("Simple W-2 single filer", () => {
       },
     });
 
-    const schedule2Line2 = saverCreditResult.allLines.find((line) => line.form === "Sched 2" && line.line === "2");
+    const schedule2Line2 = saverCreditResult.allLines.find((line) => line.form === "Sched 2" && line.line === "1a");
 
-    expect(saverCreditResult.totalTaxBeforeCredits.toNumber()).toBe(225);
+    expect(saverCreditResult.totalTaxBeforeCredits.toNumber()).toBe(226);
     expect(saverCreditResult.form8880?.line10.toNumber()).toBe(1000);
     expect(schedule2Line2?.value.toNumber()).toBe(375);
-    expect(saverCreditResult.form8880?.line11.toNumber()).toBe(600);
-    expect(saverCreditResult.form8880?.line12.toNumber()).toBe(600);
-    expect(saverCreditResult.otherCredits.toNumber()).toBe(600);
+    expect(saverCreditResult.form8880?.line11.toNumber()).toBe(601);
+    expect(saverCreditResult.form8880?.line12.toNumber()).toBe(601);
+    expect(saverCreditResult.otherCredits.toNumber()).toBe(601);
   });
 
   it("Form 8880 Line 11 - the federal engine subtracts earlier Schedule 3 credits before limiting the saver's credit", () => {
+    // Published5250–5300 single row528; FTC remains25 after rounding.
     const saverCreditResult = calculateFederalTax({
       ...simpleW2Fixture,
       w2s: [
@@ -351,7 +354,7 @@ describe("Simple W-2 single filer", () => {
         },
       ],
       form1099Div: [
-        {
+        { specifiedPrivateActivityBondInterest: "0",
           payer: "Global Equity Fund",
           ordinaryDividends: "1000",
           qualifiedDividends: "0",
@@ -373,21 +376,21 @@ describe("Simple W-2 single filer", () => {
     const schedule3Line1 = saverCreditResult.allLines.find((line) => line.form === "Sched 3" && line.line === "1");
     const schedule3Line4 = saverCreditResult.allLines.find((line) => line.form === "Sched 3" && line.line === "4");
 
-    expect(saverCreditResult.totalTaxBeforeCredits.toNumber()).toBe(525);
+    expect(saverCreditResult.totalTaxBeforeCredits.toNumber()).toBe(528);
     // FTC limited by Form 1116 apportionment: deduction × (foreign/AGI) reduces net foreign source
-    // $15.75K std ded × ($1K/$21K) = $750 apportioned → net foreign = $250 → limitation = $525×($250/$5,250) = $25
+    // $15.75K std ded × ($1K/$21K) = $750 apportioned → net foreign = $250 → limitation = $528×($250/$5,250) = $25
     expect(saverCreditResult.foreignTaxCredit.toNumber()).toBe(25);
     expect(schedule3Line1?.value.toNumber()).toBe(25);
-    // Saver's credit: Line 10 = $1000, Line 11 = $525 - $25(FTC) = $500, Line 12 = min($1000,$500) = $500
+    // Saver's credit: Line 10 = $1000, Line 11 = $528 - $25(FTC) = $503, Line 12 = min($1000,$503) = $503
     expect(saverCreditResult.form8880?.line10.toNumber()).toBe(1000);
-    expect(saverCreditResult.form8880?.line11.toNumber()).toBe(500);
-    expect(saverCreditResult.form8880?.line12.toNumber()).toBe(500);
-    expect(schedule3Line4?.value.toNumber()).toBe(500);
-    expect(saverCreditResult.otherCredits.toNumber()).toBe(525);
+    expect(saverCreditResult.form8880?.line11.toNumber()).toBe(503);
+    expect(saverCreditResult.form8880?.line12.toNumber()).toBe(503);
+    expect(schedule3Line4?.value.toNumber()).toBe(503);
+    expect(saverCreditResult.otherCredits.toNumber()).toBe(528);
   });
 
   it("Form 1040 Line 24 - total tax (no additional taxes)", () => {
-    expect(result.totalTax.toNumber()).toBe(10149);
+    expect(result.totalTax.toNumber()).toBe(10155);
   });
 
   it("Form 1040 Line 25d - withholding from W-2", () => {
@@ -399,7 +402,7 @@ describe("Simple W-2 single filer", () => {
   });
 
   it("Form 1040 Line 34 - refund (overpaid)", () => {
-    expect(result.refund.toNumber()).toBe(2601); // 12750 - 10149
+    expect(result.refund.toNumber()).toBe(2595); // Actual withholding12750 minus published tax10155
   });
 
   it("Form 1040 Line 37 - amount owed is zero when overpaid", () => {
@@ -1601,7 +1604,7 @@ describe("Simple W-2 single filer", () => {
     expect(schedule2Line17c?.value.toNumber()).toBe(0);
   });
 
-  it("Form 1040 Line 8 and Schedule 2 - surviving-spouse Form 1099-SA records infer the spouse owner even without an explicit owner tag", () => {
+  it("Form 1040 Line 8 and Schedule 2 - surviving-spouse Form 1099-SA records use the actual spouse owner", () => {
     const result = calculateFederalTax({
       ...simpleW2Fixture,
       taxpayer: {
@@ -1626,6 +1629,7 @@ describe("Simple W-2 single filer", () => {
           distributionCode: "4",
           accountType: "hsa",
           beneficiaryRole: "surviving_spouse",
+          accountHolder: "spouse",
         },
       ],
       adjustments: {
@@ -1742,7 +1746,7 @@ describe("Simple W-2 single filer", () => {
     expect(schedule2Line17c?.value.toNumber()).toBe(180);
   });
 
-  it("Form 1040 Line 8 and Schedule 2 - explicit primary Form 8889 inputs keep inferred surviving-spouse HSA support on a supplemental spouse statement", () => {
+  it("Form 1040 Line 8 and Schedule 2 - explicit primary Form 8889 inputs keep actual spouse-owned inherited HSA support on a supplemental spouse statement", () => {
     const result = calculateFederalTax({
       ...simpleW2Fixture,
       taxpayer: {
@@ -1773,6 +1777,7 @@ describe("Simple W-2 single filer", () => {
           distributionCode: "4",
           accountType: "hsa",
           beneficiaryRole: "surviving_spouse",
+          accountHolder: "spouse",
         },
       ],
       adjustments: {
@@ -2015,7 +2020,7 @@ describe("Simple W-2 single filer", () => {
     expect(result.totalAdditionalTaxes.toNumber()).toBe(480);
   });
 
-  it("Form 1040 Line 8 and Schedule 2 - surviving-spouse code 5 HSA records infer the spouse owner and preserve the spouse age-65 exception", () => {
+  it("Form 1040 Line 8 and Schedule 2 - surviving-spouse code 5 HSA records use the actual spouse owner and preserve the spouse age-65 exception", () => {
     const result = calculateFederalTax({
       ...simpleW2Fixture,
       taxpayer: {
@@ -2039,6 +2044,7 @@ describe("Simple W-2 single filer", () => {
           distributionCode: "5",
           accountType: "hsa",
           beneficiaryRole: "surviving_spouse",
+          accountHolder: "spouse",
         },
       ],
       adjustments: {
@@ -2062,7 +2068,7 @@ describe("Simple W-2 single filer", () => {
     expect(result.totalAdditionalTaxes.toNumber()).toBe(0);
   });
 
-  it("Form 1040 Line 8 and Schedule 2 - surviving-spouse HSA records remap to a primary-owned Form 8889 when the current taxpayer payload no longer includes a spouse", () => {
+  it("Form 1040 Line 8 and Schedule 2 - surviving-spouse HSA records with actual primary ownership retain the primary Form 8889 age test", () => {
     const result = calculateFederalTax({
       ...simpleW2Fixture,
       taxpayer: {
@@ -2081,6 +2087,7 @@ describe("Simple W-2 single filer", () => {
           distributionCode: "5",
           accountType: "hsa",
           beneficiaryRole: "surviving_spouse",
+          accountHolder: "primary",
         },
       ],
       adjustments: {
@@ -2093,7 +2100,7 @@ describe("Simple W-2 single filer", () => {
     const schedule2Line17c = result.allLines.find((line) => line.form === "Sched 2" && line.line === "17c");
     const form8889Line17a = result.allLines.find((line) => line.form === "Form 8889" && line.line === "17a");
 
-    expect(result.form1099SA?.defaultAccountOwner).toBe("spouse");
+    expect(result.form1099SA?.defaultAccountOwner).toBe("primary");
     expect(result.form8889).toBeDefined();
     expect(result.form8889?.line14a.toNumber()).toBe(2400);
     expect(result.form8889?.line16.toNumber()).toBe(2400);
@@ -2107,7 +2114,7 @@ describe("Simple W-2 single filer", () => {
     expect(result.totalAdditionalTaxes.toNumber()).toBe(0);
   });
 
-  it("Form 1040 Line 8 - surviving-spouse code 2 HSA records infer the spouse owner and keep returned-excess earnings on the spouse path", () => {
+  it("Form 1040 Line 8 - surviving-spouse code 2 HSA records use the actual spouse owner and keep returned-excess earnings on the spouse path", () => {
     const result = calculateFederalTax({
       ...simpleW2Fixture,
       taxpayer: {
@@ -2132,6 +2139,7 @@ describe("Simple W-2 single filer", () => {
           distributionCode: "2",
           accountType: "hsa",
           beneficiaryRole: "surviving_spouse",
+          accountHolder: "spouse",
         },
       ],
       adjustments: {
@@ -2153,7 +2161,7 @@ describe("Simple W-2 single filer", () => {
     expect(result.otherIncome.toNumber()).toBe(25);
   });
 
-  it("Form 1040 Line 8 and Schedule 2 - surviving-spouse code 3 HSA records infer the spouse owner and preserve the disability exception", () => {
+  it("Form 1040 Line 8 and Schedule 2 - surviving-spouse code 3 HSA records use the actual spouse owner and preserve the disability exception", () => {
     const result = calculateFederalTax({
       ...simpleW2Fixture,
       taxpayer: {
@@ -2177,6 +2185,7 @@ describe("Simple W-2 single filer", () => {
           distributionCode: "3",
           accountType: "hsa",
           beneficiaryRole: "surviving_spouse",
+          accountHolder: "spouse",
         },
       ],
       adjustments: {
@@ -2235,7 +2244,8 @@ describe("Simple W-2 single filer", () => {
         amount: d(-9000),
       },
     ]);
-    expect(result.otherIncome.toNumber()).toBe(0);
+    expect(result.otherIncome.toNumber()).toBe(-6000); // Canonical1040line8 includes allowedScheduleE loss.
+    expect(result.schedule1.totalAdditionalIncome.toNumber()).toBe(-6000);
     expect(result.totalIncome.toNumber()).toBe(79000);
     expect(result.agi.toNumber()).toBe(79000);
   });
@@ -2265,14 +2275,14 @@ describe("Simple W-2 single filer", () => {
     const form8889Line21 = hsaRecaptureResult.allLines.find((line) => line.form === "Form 8889" && line.line === "21");
 
     expect(form8889Line20?.value.toNumber()).toBe(4200);
-    expect(form8889Line21?.value.toNumber()).toBe(270);
+    expect(form8889Line21?.value.toNumber()).toBe(420);
     expect(schedule1Line8f?.value.toNumber()).toBe(4200);
-    expect(schedule2Line17d?.value.toNumber()).toBe(270);
+    expect(schedule2Line17d?.value.toNumber()).toBe(420);
     expect(line8?.value.toNumber()).toBe(4200);
-    expect(line23?.value.toNumber()).toBe(270);
+    expect(line23?.value.toNumber()).toBe(420);
     expect(hsaRecaptureResult.otherIncome.toNumber()).toBe(4200);
     expect(hsaRecaptureResult.totalIncome.toNumber()).toBe(89200);
-    expect(hsaRecaptureResult.totalAdditionalTaxes.toNumber()).toBe(270);
+    expect(hsaRecaptureResult.totalAdditionalTaxes.toNumber()).toBe(420);
   });
 
   it("Form 1040 Lines 8 and 23 - HSA testing-period failure can auto-recompute the prior-year redetermined limit", () => {
@@ -2394,6 +2404,7 @@ describe("Form 8824 federal integration", () => {
   it("Form 1040 Line 8 and Schedule 1 - Form 8824 line 21 ordinary recapture flows through Schedule 1 Line 4", () => {
     const result = calculateFederalTax({
       ...simpleW2Fixture,
+      form8960Sources: {sourceTaxYear:2025,sourceReference:"Synthetic passive rental disposition worksheet",sourceFactsConfirmed:true,dispositions:{regularCapitalGainOrLoss:"30000",regularOrdinaryGainOrLoss:"10000",excludedGainOrLossAdjustment:"0",passthroughAdjustment:"0"}},
       form8824: [
         {
           description: "Rental duplex exchange",
@@ -2496,8 +2507,7 @@ describe("Complex MFJ filer", () => {
   });
 
   it("Form 1040 Line 19 - child tax credit for 1 child", () => {
-    // AGI under $400K threshold for MFJ
-    expect(result.childTaxCredit.toNumber()).toBe(2000);
+    expect(result.childTaxCredit.toNumber()).toBe(2200);
   });
 
   it("Schedule SE Line 12 - SE tax on consulting income", () => {
@@ -3826,6 +3836,8 @@ describe("Complex MFJ filer", () => {
   it("Form 1040 Line 23 - mixed-age MFJ code 1 distributions stay manual when the owner is untagged", () => {
     const ambiguousAge59AndHalfResult = calculateFederalTax({
       ...complexMFJFixture,
+      // Isolate the owner/5329 boundary below the separate NIIT source threshold.
+      w2s: complexMFJFixture.w2s.map(source => ({ ...source, wages: "50000" })),
       taxpayer: {
         ...complexMFJFixture.taxpayer,
         primary: {
@@ -3863,6 +3875,8 @@ describe("Complex MFJ filer", () => {
   it("Form 1040 Line 23 - spouse-tagged mixed-age MFJ code 1 distributions default exception 12 for the tagged spouse", () => {
     const taggedSpouseAge59AndHalfResult = calculateFederalTax({
       ...complexMFJFixture,
+      // Isolate the owner/5329 boundary below the separate NIIT source threshold.
+      w2s: complexMFJFixture.w2s.map(source => ({ ...source, wages: "50000" })),
       taxpayer: {
         ...complexMFJFixture.taxpayer,
         primary: {
@@ -5822,11 +5836,11 @@ describe("Retirement distributions through federal pipeline", () => {
     const form1099RLine2 = result.allLines.find((line) => line.form === "Form 1099-R" && line.line === "2");
 
     expect(line4a?.value.toNumber()).toBe(240000);
-    expect(line4b?.value.toNumber()).toBe(30000);
+    expect(line4b?.value.toNumber()).toBe(24000);
     expect(result.iraDistributionsGross.toNumber()).toBe(240000);
-    expect(result.iraDistributionsTaxable.toNumber()).toBe(30000);
-    expect(result.totalIncome.toNumber()).toBe(30000);
-    expect(String(form1099RLine2?.inputs["Qualified charitable distributions (capped)"])).toBe("210000");
+    expect(result.iraDistributionsTaxable.toNumber()).toBe(24000);
+    expect(result.totalIncome.toNumber()).toBe(24000);
+    expect(String(form1099RLine2?.inputs["Qualified charitable distributions (capped)"])).toBe("216000");
   });
 
   it("Form 1040 Line 4b - inherited IRA code Y4 QCDs stay on 4a and do not leak onto the pension lines", () => {
@@ -7753,9 +7767,9 @@ describe("Retirement distributions through federal pipeline", () => {
         },
       ],
       form1099Int: [
-        {
+        { privateActivityBondInterest: "0",
           payer: "US Treasury",
-          interestIncome: "3000",
+          interestIncome: "0", // Actual Box1 excludes the separate Treasury Box3.
           federalWithheld: "0",
           earlyWithdrawalPenalty: "0",
           usSavingsBondInterest: "3000",
@@ -7877,7 +7891,7 @@ describe("Retirement distributions through federal pipeline", () => {
       ...simpleW2Fixture,
       w2s: [],
       form1099Int: [
-        {
+        { privateActivityBondInterest: "0",
           payer: "City Bond Fund",
           interestIncome: "0",
           federalWithheld: "0",
@@ -8088,8 +8102,7 @@ describe("ODC through federal pipeline", () => {
       },
     };
     const result = calculateFederalTax(fixture);
-    // CTC: $2K + ODC: $500 = $2,500
-    expect(result.childTaxCredit.toNumber()).toBe(2500);
+    expect(result.childTaxCredit.toNumber()).toBe(2700);
   });
 });
 
@@ -8116,9 +8129,9 @@ describe("Amount owed scenario", () => {
     expect(result.totalTax.greaterThan(result.totalPayments)).toBe(true);
     expect(result.amountOwed.greaterThan(0)).toBe(true);
     expect(result.refund.toNumber()).toBe(0);
-    // Verify equation: amountOwed = totalTax - totalPayments
+    // Form 1040 line 37 includes the separately reported line 38 penalty.
     expect(result.amountOwed.toNumber()).toBe(
-      result.totalTax.minus(result.totalPayments).toNumber()
+      result.totalTax.minus(result.totalPayments).plus(result.estimatedTaxPenalty).toNumber()
     );
   });
 
@@ -8151,13 +8164,13 @@ describe("Federal pipeline - special capital gain rates", () => {
     // MFJ with $100K wages + $20K LTCG, compare with vs without §1250
     const baseFixture: TaxYearInput = {
       ...simpleW2Fixture,
-      taxpayer: { ...simpleW2Fixture.taxpayer, filingStatus: "married_filing_jointly" },
+      taxpayer: { ...simpleW2Fixture.taxpayer, filingStatus: "married_filing_jointly", spouse: complexMFJFixture.taxpayer.spouse },
       w2s: [{
         ...simpleW2Fixture.w2s[0],
         wages: "100000",
         federalWithheld: "15000",
       }],
-      form1099Div: [{
+      form1099Div: [{ specifiedPrivateActivityBondInterest: "0",
         payer: "REIT Fund",
         ordinaryDividends: "0",
         qualifiedDividends: "0",
@@ -8185,22 +8198,22 @@ describe("Federal pipeline - special capital gain rates", () => {
     };
     const withSection1250 = calculateFederalTax(with1250);
 
-    // Per IRS Schedule D Tax Worksheet: 25% is a MAXIMUM rate. At this income level
-    // ($100K wages + $20K LTCG = $105K taxable), all gains fall within the 15% bracket.
-    // §1250 gets 15% (not 25%) → same tax as without §1250.
-    expect(withSection1250.totalTax.toNumber()).toBe(withoutSection1250.totalTax.toNumber());
+    // Worksheet21 adds10000 special gain to ordinary68500. Published MFJ
+    // rows68500/78500 differ1200; remaining regular gain is zero-rated.
+    expect(withSection1250.totalTax.toNumber()).toBe(8946);
+    expect(withSection1250.totalTax.minus(withoutSection1250.totalTax).toNumber()).toBe(1200);
   });
 
   it("collectibles gain from 1099-DIV taxed at higher rate", () => {
     const baseFixture: TaxYearInput = {
       ...simpleW2Fixture,
-      taxpayer: { ...simpleW2Fixture.taxpayer, filingStatus: "married_filing_jointly" },
+      taxpayer: { ...simpleW2Fixture.taxpayer, filingStatus: "married_filing_jointly", spouse: complexMFJFixture.taxpayer.spouse },
       w2s: [{
         ...simpleW2Fixture.w2s[0],
         wages: "100000",
         federalWithheld: "15000",
       }],
-      form1099Div: [{
+      form1099Div: [{ specifiedPrivateActivityBondInterest: "0",
         payer: "Gold Fund",
         ordinaryDividends: "0",
         qualifiedDividends: "0",
@@ -8227,10 +8240,10 @@ describe("Federal pipeline - special capital gain rates", () => {
     };
     const withCollectiblesResult = calculateFederalTax(withCollectibles);
 
-    // Per IRS Schedule D Tax Worksheet: 28% is a MAXIMUM rate. At this income level
-    // (MFJ, $100K wages + $15K LTCG = $85K taxable), all gains fall within the 0% bracket
-    // ($96,700 MFJ threshold). Collectibles get 0% → same tax as without collectibles.
-    expect(withCollectiblesResult.totalTax.toNumber()).toBe(withoutCollectibles.totalTax.toNumber());
+    // All15000 collectibles enter ordinary worksheet21. Published MFJ
+    // rows68500/83500 differ1800; no0percent special-gain preference.
+    expect(withCollectiblesResult.totalTax.toNumber()).toBe(9546);
+    expect(withCollectiblesResult.totalTax.minus(withoutCollectibles.totalTax).toNumber()).toBe(1800);
   });
 
   it("K-1 Box 9b unrecaptured section 1250 gain applies the 25% maximum rate", () => {
@@ -8355,7 +8368,7 @@ describe("Federal pipeline - special capital gain rates", () => {
         collectiblesGain: "5000", // Box 9c
         isPassiveActivity: false,
       }],
-      form1099Div: [{
+      form1099Div: [{ specifiedPrivateActivityBondInterest: "0",
         payer: "REIT Fund",
         ordinaryDividends: "0",
         qualifiedDividends: "0",
@@ -8405,12 +8418,12 @@ describe("Federal pipeline - special capital gain rates", () => {
   });
 
   it("K-1 Box 9b at low income gets lower rate since 25% is a maximum not minimum", () => {
-    // MFJ with $50K wages + $10K LTCG from K-1 (all §1250). At this income level
-    // ($50K + $10K − $30K std ded = $30K taxable), all gains fall within
-    // the 0% bracket ($96,700 MFJ threshold). §1250 gets 0% not 25%.
+    // MFJ50000 wages+10000gain-31500deduction=28500. Published28500
+    // row2946 applies ordinary rates to all1250gain; regular gain version
+    // instead taxes18500 ordinary income at published1853.
     const baseFixture: TaxYearInput = {
       ...simpleW2Fixture,
-      taxpayer: { ...simpleW2Fixture.taxpayer, filingStatus: "married_filing_jointly" },
+      taxpayer: { ...simpleW2Fixture.taxpayer, filingStatus: "married_filing_jointly", spouse: complexMFJFixture.taxpayer.spouse },
       w2s: [{
         ...simpleW2Fixture.w2s[0],
         wages: "50000",
@@ -8438,8 +8451,9 @@ describe("Federal pipeline - special capital gain rates", () => {
     };
     const withoutSection1250Result = calculateFederalTax(withoutSection1250);
 
-    // At this low income, both get 0% rate → same tax
-    expect(withSection1250.totalTax.toNumber()).toBe(withoutSection1250Result.totalTax.toNumber());
+    // The lower ordinary rate applies, rather than a0percent exemption.
+    expect(withSection1250.totalTax.toNumber()).toBe(2946);
+    expect(withoutSection1250Result.totalTax.toNumber()).toBe(1853);
   });
 
   it("multiple K-1 forms aggregate Box 9b and 9c amounts", () => {
@@ -8896,12 +8910,12 @@ describe("Rental property QBI — Section 199A deduction from qualifying rental 
       ...simpleW2Fixture,
       w2s: [{
         employer: { name: "Corp", ein: "12-3456789" },
-        wages: "130000",
+        wages: "140000",
         federalWithheld: "20000",
-        socialSecurityWages: "130000",
-        socialSecurityWithheld: "8060",
-        medicareWages: "130000",
-        medicareWithheld: "1885",
+        socialSecurityWages: "140000",
+        socialSecurityWithheld: "8680",
+        medicareWages: "140000",
+        medicareWithheld: "2030",
       }],
       rentalProperties: [{
         description: "Phaseout Rental",
@@ -8929,17 +8943,12 @@ describe("Rental property QBI — Section 199A deduction from qualifying rental 
       }],
     };
     const result = calculateFederalTax(fixture);
-    // Net rental: 10000 - 20000 = -10000
-    // AGI ~ $130K → MAGI ~ $140K (rental loss add-back) → $25K allowance
-    // phased out by ($140K - $100K) × 50% = $20K → allowance = $5K
-    // Allowed: $5K, Suspended: $5K
-    // QBI should be -5000 (only the allowed portion)
-    expect(result.form8582).toBeDefined();
-    expect(result.form8582!.suspendedLoss.toNumber()).toBeGreaterThan(0);
-    // The QBI loss should be only the allowed portion, not the full -10000
-    if (result.form8995) {
-      expect(result.form8995.totalQBI.toNumber()).toBeGreaterThan(-10000);
-    }
+    // Wages140000 less current loss10000: preliminary AGI130000, MAGI140000.
+    // Official line8 capacity5000, line9 allowed5000, suspended5000.
+    expect(result.form8582?.modifiedAgi.toFixed()).toBe("140000");
+    expect(result.form8582?.suspendedLoss.toFixed()).toBe("5000");
+    expect(result.form8995?.totalQBI.toFixed()).toBe("-5000");
+
   });
 
   it("audit trail records rental QBI source", () => {
@@ -9184,7 +9193,7 @@ describe("Multiple income sources combined in total income", () => {
   it("total income combines wages + interest + dividends + capital gains", () => {
     const fixture: TaxYearInput = {
       ...simpleW2Fixture,
-      form1099Int: [{
+      form1099Int: [{ privateActivityBondInterest: "0",
         payer: "Bank",
         interestIncome: "1000",
         federalWithheld: "0",
@@ -9192,7 +9201,7 @@ describe("Multiple income sources combined in total income", () => {
         usSavingsBondInterest: "0",
         taxExemptInterest: "0",
       }],
-      form1099Div: [{
+      form1099Div: [{ specifiedPrivateActivityBondInterest: "0",
         payer: "Vanguard",
         ordinaryDividends: "2000",
         qualifiedDividends: "1500",
@@ -9601,8 +9610,11 @@ describe("Form 8936 clean vehicle credits through federal engine", () => {
     };
     const result = calculateFederalTax(fixture);
     // AGI ~$50K, under $75K single threshold → qualifies
-    // $4,000 previously owned credit (30% of $20K = $6K, capped at $4K)
-    expect(result.form8936?.totalPreviouslyOwnedCredit.toNumber()).toBe(4000);
+    // Tentative $4,000 (30% of $20K capped at $4K), then actual tax-liability cap.
+    // Published34250–34300 single tax3875 limits the4000 tentative credit.
+    expect(result.form8936?.tentativePreviouslyOwnedCredit.toString()).toBe("4000");
+    expect(result.form8936?.totalPreviouslyOwnedCredit.toString()).toBe("3875");
+    expect(result.form8936?.unusedPersonalCredit.toString()).toBe("125");
   });
 
   it("Form 8936 AGI over threshold disqualifies credit in federal context", () => {
@@ -9829,8 +9841,8 @@ describe("K-1 Box 17 AMT items through federal pipeline", () => {
     expect(line2l!.value.toNumber()).toBe(15000);
 
     // AMTI should be $15K higher with the adjustment
-    const baseAmti = baseResult.allLines.find((l) => l.form === "Form 6251" && l.line === "7");
-    const withAmti = withK1Amt.allLines.find((l) => l.form === "Form 6251" && l.line === "7");
+    const baseAmti = baseResult.allLines.find((l) => l.form === "Form 6251" && l.line === "4");
+    const withAmti = withK1Amt.allLines.find((l) => l.form === "Form 6251" && l.line === "4");
     expect(baseAmti).toBeDefined();
     expect(withAmti).toBeDefined();
     expect(withAmti!.value.minus(baseAmti!.value).toNumber()).toBe(15000);
@@ -9872,7 +9884,7 @@ describe("K-1 Box 17 AMT items through federal pipeline", () => {
     expect(line2k!.value.toNumber()).toBe(8000);
   });
 
-  it("K-1 Box 17 Code C depletion adjustment appears in Form 6251 Line 2c", () => {
+  it("K-1 Box 17 Code C depletion adjustment appears in Form 6251 Line 2d", () => {
     const result = calculateFederalTax({
       ...simpleW2Fixture,
       w2s: [{
@@ -9903,7 +9915,7 @@ describe("K-1 Box 17 AMT items through federal pipeline", () => {
       }],
     });
 
-    const line2c = result.allLines.find((l) => l.form === "Form 6251" && l.line === "2c");
+    const line2c = result.allLines.find((l) => l.form === "Form 6251" && l.line === "2d");
     expect(line2c).toBeDefined();
     expect(line2c!.value.toNumber()).toBe(5000);
   });
@@ -9997,7 +10009,7 @@ describe("K-1 Box 17 AMT items through federal pipeline", () => {
     expect(line2k!.value.toNumber()).toBe(2000);
 
     // Depletion: 3000 + 0 = 3000
-    const line2c = result.allLines.find((l) => l.form === "Form 6251" && l.line === "2c");
+    const line2c = result.allLines.find((l) => l.form === "Form 6251" && l.line === "2d");
     expect(line2c).toBeDefined();
     expect(line2c!.value.toNumber()).toBe(3000);
 
@@ -10085,7 +10097,7 @@ describe("K-1 Box 17 AMT items through federal pipeline", () => {
     });
 
     // No adjustment audit lines should appear when all AMT amounts are zero
-    const line2c = result.allLines.find((l) => l.form === "Form 6251" && l.line === "2c");
+    const line2c = result.allLines.find((l) => l.form === "Form 6251" && l.line === "2d");
     const line2k = result.allLines.find((l) => l.form === "Form 6251" && l.line === "2k");
     const line2l = result.allLines.find((l) => l.form === "Form 6251" && l.line === "2l");
     const line3 = result.allLines.find((l) => l.form === "Form 6251" && l.line === "3");
@@ -10116,13 +10128,13 @@ describe("K-1 Box 18 tax-exempt interest through federal pipeline", () => {
   it("K-1 Box 18 Code A aggregates with 1099-INT and 1099-DIV tax-exempt interest", () => {
     const result = calculateFederalTax({
       ...simpleW2Fixture,
-      form1099Int: [{
+      form1099Int: [{ privateActivityBondInterest: "0",
         payer: "Bank",
         interestIncome: "500",
         earlyWithdrawalPenalty: "0",
         taxExemptInterest: "2000",
       }],
-      form1099Div: [{
+      form1099Div: [{ specifiedPrivateActivityBondInterest: "0",
         payer: "Muni Fund",
         ordinaryDividends: "100",
         qualifiedDividends: "0",
@@ -10195,10 +10207,10 @@ describe("K-1 Box 18 tax-exempt interest through federal pipeline", () => {
         wages: "200000",
         federalWithheld: "40000",
       }],
-      form1099Int: [{ payer: "Broker", interestIncome: "5000" }],
-      form1099Div: [{ payer: "Fund", ordinaryDividends: "3000", qualifiedDividends: "2000" }],
+      form1099Int: [{ taxExemptInterest: "0", privateActivityBondInterest: "0", payer: "Broker", interestIncome: "5000" }],
+      form1099Div: [{ exemptInterestDividends: "0", specifiedPrivateActivityBondInterest: "0", payer: "Fund", ordinaryDividends: "3000", qualifiedDividends: "2000" }],
       form1098: [{ lender: "Bank", mortgageInterestReceived: "12000", outstandingMortgagePrincipal: "300000", propertyTax: "8000" }],
-      donations: [{ type: "cash", amount: "5000" }],
+      donations: [{ qualifiedOrganization: true, isPrivateFoundation: false, dateOfDonation: "2025-12-01", organization: "Synthetic qualified charity", type: "cash", amount: "5000" }],
       form4952: {
         investmentInterestExpense: "10000",
         priorYearDisallowed: "2000",
@@ -10231,7 +10243,7 @@ describe("K-1 Box 18 tax-exempt interest through federal pipeline", () => {
         federalWithheld: "30000",
       }],
       form1098: [{ lender: "Bank", mortgageInterestReceived: "8000", outstandingMortgagePrincipal: "200000", propertyTax: "6000" }],
-      donations: [{ type: "cash", amount: "3000" }],
+      donations: [{ qualifiedOrganization: true, isPrivateFoundation: false, dateOfDonation: "2025-12-01", organization: "Synthetic qualified charity", type: "cash", amount: "3000" }],
       scheduleA: {
         investmentInterestExpense: "99999", // should be overridden by Form 4952
       },
@@ -10257,7 +10269,7 @@ describe("K-1 Box 18 tax-exempt interest through federal pipeline", () => {
         federalWithheld: "30000",
       }],
       form1098: [{ lender: "Bank", mortgageInterestReceived: "8000", outstandingMortgagePrincipal: "200000", propertyTax: "6000" }],
-      donations: [{ type: "cash", amount: "3000" }],
+      donations: [{ qualifiedOrganization: true, isPrivateFoundation: false, dateOfDonation: "2025-12-01", organization: "Synthetic qualified charity", type: "cash", amount: "3000" }],
       scheduleA: {
         investmentInterestExpense: "4500",
       },
@@ -10315,7 +10327,7 @@ describe("Sub-result exposure in FederalTaxResult", () => {
       ...simpleW2Fixture,
       w2s: [{ ...simpleW2Fixture.w2s[0], wages: "150000", federalWithheld: "30000" }],
       form1098: [{ lender: "Bank", mortgageInterestReceived: "8000", outstandingMortgagePrincipal: "200000", propertyTax: "6000" }],
-      donations: [{ type: "cash", amount: "3000" }],
+      donations: [{ qualifiedOrganization: true, isPrivateFoundation: false, dateOfDonation: "2025-12-01", organization: "Synthetic qualified charity", type: "cash", amount: "3000" }],
       form4952: {
         investmentInterestExpense: "10000",
         priorYearDisallowed: "2000",
@@ -10419,7 +10431,7 @@ describe("Sub-result exposure in FederalTaxResult", () => {
       ...simpleW2Fixture,
       w2s: [{ ...simpleW2Fixture.w2s[0], wages: "200000", federalWithheld: "40000" }],
       form1098: [{ lender: "Bank", mortgageInterestReceived: "8000", outstandingMortgagePrincipal: "200000", propertyTax: "6000" }],
-      donations: [{ type: "cash", amount: "3000" }],
+      donations: [{ qualifiedOrganization: true, isPrivateFoundation: false, dateOfDonation: "2025-12-01", organization: "Synthetic qualified charity", type: "cash", amount: "3000" }],
       form4952: {
         investmentInterestExpense: "15000",
         grossInvestmentIncome: "5000",
@@ -10787,7 +10799,7 @@ describe("K-1 Box 13 code separation — charitable contributions to Schedule A"
   it("K-1 Box 13 Code A charitable cash flows to Schedule A", () => {
     const result = calculateFederalTax({
       ...simpleW2Fixture,
-      donations: [{ organization: "Local Charity", type: "cash", amount: "1000", dateOfDonation: "2025-06-15" }],
+      donations: [{ qualifiedOrganization: true, isPrivateFoundation: false, organization: "Local Charity", type: "cash", amount: "1000", dateOfDonation: "2025-06-15" }],
       scheduleK1: [{
         partnershipName: "Acme LP",
         partnershipEIN: "11-1111111",
@@ -10797,9 +10809,9 @@ describe("K-1 Box 13 code separation — charitable contributions to Schedule A"
     });
 
     // Cash charitable should include both the direct donation and K-1 Code A
-    const line12 = result.allLines.find((l) => l.form === "Sched A" && l.line === "12");
-    expect(line12).toBeDefined();
-    expect(line12!.value.toNumber()).toBe(6000); // 1000 + 5000
+    const line11 = result.allLines.find((l) => l.form === "Sched A" && l.line === "11");
+    expect(line11).toBeDefined();
+    expect(line11!.value.toNumber()).toBe(6000); // 1000 + 5000
   });
 
   it("K-1 Box 13 Code A without personal donations still flows to Schedule A", () => {
@@ -10813,75 +10825,75 @@ describe("K-1 Box 13 code separation — charitable contributions to Schedule A"
       }],
     });
 
-    const line12 = result.allLines.find((l) => l.form === "Sched A" && l.line === "12");
-    expect(line12).toBeDefined();
-    expect(line12!.value.toNumber()).toBe(3000);
+    const line11 = result.allLines.find((l) => l.form === "Sched A" && l.line === "11");
+    expect(line11).toBeDefined();
+    expect(line11!.value.toNumber()).toBe(3000);
   });
 
-  it("K-1 Box 13 Code B charitable capital gain property flows to Schedule A", () => {
+  it("K-1 Box 13 Code E charitable capital gain property flows to Schedule A", () => {
     const result = calculateFederalTax({
       ...simpleW2Fixture,
       scheduleK1: [{
         partnershipName: "Real Estate LP",
         partnershipEIN: "22-2222222",
         ordinaryIncome: "10000",
-        charitableCapitalGain30: "8000", // Box 13 Code B — 30% AGI limit
+        charitableCapitalGain30: "8000", // Box 13 Code E — 30% AGI limit
       }],
     });
 
-    // Non-cash charitable should include K-1 Code B
-    const line13 = result.allLines.find((l) => l.form === "Sched A" && l.line === "13");
-    expect(line13).toBeDefined();
-    expect(line13!.value.toNumber()).toBe(8000);
+    // Non-cash charitable should include K-1 Code E
+    const line12 = result.allLines.find((l) => l.form === "Sched A" && l.line === "12");
+    expect(line12).toBeDefined();
+    expect(line12!.value.toNumber()).toBe(8000);
   });
 
-  it("K-1 Box 13 Code C charitable capital gain property flows to Schedule A", () => {
+  it("K-1 Box 13 Code F charitable capital gain property flows to Schedule A", () => {
     const result = calculateFederalTax({
       ...simpleW2Fixture,
       scheduleK1: [{
         partnershipName: "Art Fund LP",
         partnershipEIN: "33-3333333",
         ordinaryIncome: "10000",
-        charitableCapitalGain20: "4000", // Box 13 Code C — 20% AGI limit
+        charitableCapitalGain20: "4000", // Box 13 Code F — 20% AGI limit
       }],
     });
 
-    const line13 = result.allLines.find((l) => l.form === "Sched A" && l.line === "13");
-    expect(line13).toBeDefined();
-    expect(line13!.value.toNumber()).toBe(4000);
+    const line12 = result.allLines.find((l) => l.form === "Sched A" && l.line === "12");
+    expect(line12).toBeDefined();
+    expect(line12!.value.toNumber()).toBe(4000);
   });
 
-  it("K-1 Box 13 Codes A+B+C aggregate from multiple partnerships to Schedule A", () => {
+  it("K-1 Box 13 Codes A+E+F aggregate from multiple partnerships to Schedule A", () => {
     const result = calculateFederalTax({
       ...simpleW2Fixture,
-      donations: [{ organization: "Personal charity", type: "cash", amount: "2000", dateOfDonation: "2025-03-01" }],
+      donations: [{ qualifiedOrganization: true, isPrivateFoundation: false, organization: "Personal charity", type: "cash", amount: "2000", dateOfDonation: "2025-03-01" }],
       scheduleK1: [
         {
           partnershipName: "Fund A",
           partnershipEIN: "44-4444444",
           ordinaryIncome: "15000",
           charitableCash: "3000", // Code A
-          charitableCapitalGain30: "2000", // Code B
+          charitableCapitalGain30: "2000", // Code E
         },
         {
           partnershipName: "Fund B",
           partnershipEIN: "55-5555555",
           ordinaryIncome: "10000",
           charitableCash: "1000", // Code A
-          charitableCapitalGain20: "1500", // Code C
+          charitableCapitalGain20: "1500", // Code F
         },
       ],
     });
 
     // Cash: 2000 direct + 3000 K-1 A (Fund A) + 1000 K-1 A (Fund B) = 6000
-    const line12 = result.allLines.find((l) => l.form === "Sched A" && l.line === "12");
-    expect(line12).toBeDefined();
-    expect(line12!.value.toNumber()).toBe(6000);
+    const line11 = result.allLines.find((l) => l.form === "Sched A" && l.line === "11");
+    expect(line11).toBeDefined();
+    expect(line11!.value.toNumber()).toBe(6000);
 
     // Non-cash: 2000 K-1 B (Fund A) + 1500 K-1 C (Fund B) = 3500
-    const line13 = result.allLines.find((l) => l.form === "Sched A" && l.line === "13");
-    expect(line13).toBeDefined();
-    expect(line13!.value.toNumber()).toBe(3500);
+    const line12 = result.allLines.find((l) => l.form === "Sched A" && l.line === "12");
+    expect(line12).toBeDefined();
+    expect(line12!.value.toNumber()).toBe(3500);
   });
 
   it("K-1 charitable amounts do NOT reduce partnership income on Schedule E", () => {
@@ -10892,7 +10904,7 @@ describe("K-1 Box 13 code separation — charitable contributions to Schedule A"
         partnershipEIN: "66-6666666",
         ordinaryIncome: "50000",
         charitableCash: "5000", // Code A — should NOT subtract from Schedule E
-        charitableCapitalGain30: "3000", // Code B — should NOT subtract from Schedule E
+        charitableCapitalGain30: "3000", // Code E — should NOT subtract from Schedule E
       }],
     });
 
@@ -10925,9 +10937,9 @@ describe("K-1 Box 13 code separation — charitable contributions to Schedule A"
     expect(schedELine!.value.toNumber()).toBe(28000);
 
     // Schedule A should get 4000 from Code A
-    const line12 = result.allLines.find((l) => l.form === "Sched A" && l.line === "12");
-    expect(line12).toBeDefined();
-    expect(line12!.value.toNumber()).toBe(4000);
+    const line11 = result.allLines.find((l) => l.form === "Sched A" && l.line === "11");
+    expect(line11).toBeDefined();
+    expect(line11!.value.toNumber()).toBe(4000);
   });
 
   it("K-1 Code A charitable subject to 60% AGI limit on Schedule A", () => {
@@ -10944,49 +10956,49 @@ describe("K-1 Box 13 code separation — charitable contributions to Schedule A"
       }],
     });
 
-    const line12 = result.allLines.find((l) => l.form === "Sched A" && l.line === "12");
-    expect(line12).toBeDefined();
-    expect(line12!.value.toNumber()).toBe(57000); // 60% of 95000 AGI
+    const line11 = result.allLines.find((l) => l.form === "Sched A" && l.line === "11");
+    expect(line11).toBeDefined();
+    expect(line11!.value.toNumber()).toBe(57000); // 60% of 95000 AGI
   });
 
-  it("K-1 Code B charitable subject to 30% AGI limit on Schedule A", () => {
+  it("K-1 Code E charitable subject to 30% AGI limit on Schedule A", () => {
     // AGI = 85000 (W-2) + 5000 (K-1 ordinary) = 90000
     // 30% of 90000 = 27000
-    // K-1 Code B = 30000 → capped at 27000
+    // K-1 Code E = 30000 → capped at 27000
     const result = calculateFederalTax({
       ...simpleW2Fixture,
       scheduleK1: [{
         partnershipName: "Property Donor LP",
         partnershipEIN: "99-9999999",
         ordinaryIncome: "5000",
-        charitableCapitalGain30: "30000", // Code B exceeds 30% AGI limit
+        charitableCapitalGain30: "30000", // Code E exceeds 30% AGI limit
       }],
     });
 
-    const line13 = result.allLines.find((l) => l.form === "Sched A" && l.line === "13");
-    expect(line13).toBeDefined();
-    expect(line13!.value.toNumber()).toBe(27000); // 30% of 90000 AGI
+    const line12 = result.allLines.find((l) => l.form === "Sched A" && l.line === "12");
+    expect(line12).toBeDefined();
+    expect(line12!.value.toNumber()).toBe(27000); // 30% of 90000 AGI
   });
 
-  it("K-1 Code C charitable subject to 20% AGI limit on Schedule A", () => {
+  it("K-1 Code F charitable subject to 20% AGI limit on Schedule A", () => {
     // AGI = 85000 (W-2) + 5000 (K-1 ordinary) = 90000
     // 20% of 90000 = 18000
-    // K-1 Code C = 20000 → capped at 18000
+    // K-1 Code F = 20000 → capped at 18000
     const result = calculateFederalTax({
       ...simpleW2Fixture,
       scheduleK1: [{
         partnershipName: "Foundation Donor LP",
         partnershipEIN: "10-1010101",
         ordinaryIncome: "5000",
-        charitableCapitalGain20: "20000", // Code C exceeds 20% AGI limit
+        charitableCapitalGain20: "20000", // Code F exceeds 20% AGI limit
       }],
     });
 
-    const line13 = result.allLines.find((l) => l.form === "Sched A" && l.line === "13");
-    expect(line13).toBeDefined();
+    const line12 = result.allLines.find((l) => l.form === "Sched A" && l.line === "12");
+    expect(line12).toBeDefined();
     // 20% limit applies: min(20000, 18000) = 18000
     // But also subject to 30% headroom and 50% headroom checks
-    expect(line13!.value.toNumber()).toBe(18000);
+    expect(line12!.value.toNumber()).toBe(18000);
   });
 
   it("K-1 charitable excess carries forward", () => {
@@ -11055,14 +11067,14 @@ describe("K-1 Box 13 code separation — charitable contributions to Schedule A"
 // ═══════════════════════════════════════════════════════════
 
 describe("K-1 investment interest — Form 4952 integration", () => {
-  it("K-1 Box 13 Code D investment interest expense flows to Form 4952 Line 1", () => {
+  it("K-1 Box 13 Code H investment interest expense flows to Form 4952 Line 1", () => {
     const result = calculateFederalTax({
       ...simpleW2Fixture,
       scheduleK1: [{
         partnershipName: "Leveraged Investment LP",
         partnershipEIN: "20-2020201",
         ordinaryIncome: "10000",
-        investmentInterestExpense: "3000", // Box 13 Code D
+        investmentInterestExpense: "3000", // Box 13 Code H
         investmentIncome: "5000", // Box 20 Code A — enough to cover
       }],
     });
@@ -11090,11 +11102,11 @@ describe("K-1 investment interest — Form 4952 integration", () => {
     expect(result.form4952).toBeDefined();
     // Line 4a = 8000 (K-1) + 0 (direct) = 8000
     expect(result.form4952!.line4a.toNumber()).toBe(8000);
-    // 4g = 8000 (income, no qualified div adjustment)
+    // Line 6 = 8000 (income, no qualified dividend adjustment)
     expect(result.form4952!.deductibleAmount.toNumber()).toBe(6000); // fully deductible
   });
 
-  it("K-1 Box 20 Code B investment expenses flow to Form 4952 Line 4f", () => {
+  it("K-1 Box 20 Code B requires actual deductible expense classification", () => {
     const result = calculateFederalTax({
       ...simpleW2Fixture,
       scheduleK1: [{
@@ -11111,12 +11123,13 @@ describe("K-1 investment interest — Form 4952 integration", () => {
     });
 
     expect(result.form4952).toBeDefined();
-    // Line 4f = 500 (direct) + 2000 (K-1) = 2500
-    expect(result.form4952!.line4f.toNumber()).toBe(2500);
-    // 4g = max(0, 6000 + 0 + 0 - 2500) = 3500
-    expect(result.form4952!.line4g.toNumber()).toBe(3500);
-    expect(result.form4952!.deductibleAmount.toNumber()).toBe(3500);
-    expect(result.form4952!.disallowedCarryforward.toNumber()).toBe(1500);
+    // Actual classification is missing for Box 20 B. The historical preview
+    // retains only the explicitly supplied direct expense on printed line 5.
+    expect(result.form4952!.line5.toNumber()).toBe(500);
+    expect(result.form4952!.line6.toNumber()).toBe(5500);
+    expect(result.form4952!.deductibleAmount.toNumber()).toBe(5000);
+    expect(result.form4952!.disallowedCarryforward.toNumber()).toBe(0);
+    expect(result.form4952!.sourceFactsVerified).toBe(false);
   });
 
   it("K-1 investment amounts combine with direct Form 4952 input", () => {
@@ -11126,7 +11139,7 @@ describe("K-1 investment interest — Form 4952 integration", () => {
         partnershipName: "Mixed Investment LP",
         partnershipEIN: "20-2020204",
         ordinaryIncome: "15000",
-        investmentInterestExpense: "4000", // Box 13 Code D
+        investmentInterestExpense: "4000", // Box 13 Code H
         investmentIncome: "3000", // Box 20 Code A
         investmentExpenses: "500", // Box 20 Code B
       }],
@@ -11142,14 +11155,12 @@ describe("K-1 investment interest — Form 4952 integration", () => {
     expect(result.form4952!.line1.toNumber()).toBe(10000);
     // Line 4a = 7000 (direct) + 3000 (K-1 Code A) = 10000
     expect(result.form4952!.line4a.toNumber()).toBe(10000);
-    // Line 4f = 200 (direct) + 500 (K-1 Code B) = 700
-    expect(result.form4952!.line4f.toNumber()).toBe(700);
-    // Line 3 = 10000 (no prior carryforward)
-    // Line 4g = max(0, 10000 + 0 + 0 - 700) = 9300
-    expect(result.form4952!.line4g.toNumber()).toBe(9300);
-    // Deduction = min(10000, 9300) = 9300
-    expect(result.form4952!.deductibleAmount.toNumber()).toBe(9300);
-    expect(result.form4952!.disallowedCarryforward.toNumber()).toBe(700);
+    // Box 20 B alone cannot establish an allowable deduction. The supplied
+    // direct amount remains an unverified historical preview on line 5.
+    expect(result.form4952!.line5.toNumber()).toBe(200);
+    expect(result.form4952!.line6.toNumber()).toBe(9800);
+    expect(result.form4952!.deductibleAmount.toNumber()).toBe(9800);
+    expect(result.form4952!.disallowedCarryforward.toNumber()).toBe(200);
   });
 
   it("K-1 investment amounts alone trigger Form 4952 without explicit form4952 input", () => {
@@ -11159,7 +11170,7 @@ describe("K-1 investment interest — Form 4952 integration", () => {
         partnershipName: "K1-Only Investment LP",
         partnershipEIN: "20-2020205",
         ordinaryIncome: "10000",
-        investmentInterestExpense: "2000", // Box 13 Code D
+        investmentInterestExpense: "2000", // Box 13 Code H
         investmentIncome: "4000", // Box 20 Code A
       }],
     });
@@ -11180,7 +11191,7 @@ describe("K-1 investment interest — Form 4952 integration", () => {
           partnershipName: "Fund Alpha",
           partnershipEIN: "20-2020206",
           ordinaryIncome: "8000",
-          investmentInterestExpense: "1500", // Box 13 Code D
+          investmentInterestExpense: "1500", // Box 13 Code H
           investmentIncome: "3000", // Box 20 Code A
           investmentExpenses: "300", // Box 20 Code B
         },
@@ -11188,7 +11199,7 @@ describe("K-1 investment interest — Form 4952 integration", () => {
           partnershipName: "Fund Beta",
           partnershipEIN: "20-2020207",
           ordinaryIncome: "12000",
-          investmentInterestExpense: "2500", // Box 13 Code D
+          investmentInterestExpense: "2500", // Box 13 Code H
           investmentIncome: "2000", // Box 20 Code A
           investmentExpenses: "200", // Box 20 Code B
         },
@@ -11200,11 +11211,10 @@ describe("K-1 investment interest — Form 4952 integration", () => {
     expect(result.form4952!.line1.toNumber()).toBe(4000);
     // Line 4a = 3000 + 2000 = 5000
     expect(result.form4952!.line4a.toNumber()).toBe(5000);
-    // Line 4f = 300 + 200 = 500
-    expect(result.form4952!.line4f.toNumber()).toBe(500);
-    // Line 4g = max(0, 5000 + 0 + 0 - 500) = 4500
-    expect(result.form4952!.line4g.toNumber()).toBe(4500);
-    // Deduction = min(4000, 4500) = 4000 (fully deductible)
+    // Source Code B amounts remain informational pending actual classification.
+    expect(result.form4952!.line5.toNumber()).toBe(0);
+    expect(result.form4952!.line6.toNumber()).toBe(5000);
+    // Deduction = min(4000, 5000) = 4000 (fully deductible)
     expect(result.form4952!.deductibleAmount.toNumber()).toBe(4000);
     expect(result.form4952!.disallowedCarryforward.toNumber()).toBe(0);
   });
@@ -11222,7 +11232,7 @@ describe("K-1 investment interest — Form 4952 integration", () => {
         partnershipName: "High-Leverage LP",
         partnershipEIN: "20-2020208",
         ordinaryIncome: "5000",
-        investmentInterestExpense: "8000", // Box 13 Code D
+        investmentInterestExpense: "8000", // Box 13 Code H
         investmentIncome: "3000", // Box 20 Code A — not enough
       }],
     });
@@ -11368,7 +11378,7 @@ describe("IRC §163(j) partner-level business interest expense", () => {
     expect(sched1Line5!.value.toNumber()).toBe(10000); // 15000 - 5000 EBIE deduction
     expect(result.form4952).toBeDefined();
     expect(result.form4952!.line4a.toNumber()).toBe(8000);
-    expect(result.form4952!.line4g.toNumber()).toBe(8000);
+    expect(result.form4952!.line6.toNumber()).toBe(8000);
     expect(result.form4952!.deductibleAmount.toNumber()).toBe(6000);
     expect(result.form4952!.disallowedCarryforward.toNumber()).toBe(0);
   });
@@ -11421,7 +11431,7 @@ describe("IRC §163(j) partner-level business interest expense", () => {
 
     expect(result.form4952).toBeDefined();
     expect(result.form4952!.line4a.toNumber()).toBe(0);
-    expect(result.form4952!.line4g.toNumber()).toBe(0);
+    expect(result.form4952!.line6.toNumber()).toBe(0);
     expect(result.form4952!.deductibleAmount.toNumber()).toBe(0);
     expect(result.form4952!.disallowedCarryforward.toNumber()).toBe(6000);
   });
@@ -11681,7 +11691,7 @@ describe("REIT dividends and PTP income - federal integration", () => {
     const fixture: TaxYearInput = {
       ...simpleW2Fixture,
       form1099Div: [
-        {
+        { exemptInterestDividends: "0", specifiedPrivateActivityBondInterest: "0",
           payer: "Vanguard REIT Index Fund",
           ordinaryDividends: "5000",
           qualifiedDividends: "500",
@@ -11701,9 +11711,9 @@ describe("REIT dividends and PTP income - federal integration", () => {
     const fixture: TaxYearInput = {
       ...simpleW2Fixture,
       form1099Div: [
-        { payer: "Vanguard REIT", ordinaryDividends: "3000", section199ADividends: "2500" },
-        { payer: "Schwab REIT", ordinaryDividends: "2000", section199ADividends: "1500" },
-        { payer: "Fidelity Growth", ordinaryDividends: "1000" }, // no REIT dividends
+        { exemptInterestDividends: "0", specifiedPrivateActivityBondInterest: "0", payer: "Vanguard REIT", ordinaryDividends: "3000", section199ADividends: "2500" },
+        { exemptInterestDividends: "0", specifiedPrivateActivityBondInterest: "0", payer: "Schwab REIT", ordinaryDividends: "2000", section199ADividends: "1500" },
+        { exemptInterestDividends: "0", specifiedPrivateActivityBondInterest: "0", payer: "Fidelity Growth", ordinaryDividends: "1000" }, // no REIT dividends
       ],
     };
     const result = calculateFederalTax(fixture);
@@ -11716,7 +11726,7 @@ describe("REIT dividends and PTP income - federal integration", () => {
     const fixture: TaxYearInput = {
       ...simpleW2Fixture,
       form1099Div: [
-        { payer: "REIT Fund", ordinaryDividends: "3000", section199ADividends: "2000" },
+        { exemptInterestDividends: "0", specifiedPrivateActivityBondInterest: "0", payer: "REIT Fund", ordinaryDividends: "3000", section199ADividends: "2000" },
       ],
       scheduleK1: [
         {
@@ -11758,7 +11768,7 @@ describe("REIT dividends and PTP income - federal integration", () => {
       ...simpleW2Fixture,
       form1099Nec: [{ payer: "Client", nonemployeeCompensation: "40000", federalWithheld: "0" }],
       form1099Div: [
-        { payer: "REIT Fund", ordinaryDividends: "8000", section199ADividends: "6000" },
+        { exemptInterestDividends: "0", specifiedPrivateActivityBondInterest: "0", payer: "REIT Fund", ordinaryDividends: "8000", section199ADividends: "6000" },
       ],
       scheduleK1: [
         {
@@ -11785,7 +11795,7 @@ describe("REIT dividends and PTP income - federal integration", () => {
       ...simpleW2Fixture,
       w2s: [{ employer: { name: "Employer", ein: "12-3456789" }, wages: "250000", federalWithheld: "50000" }],
       form1099Div: [
-        { payer: "REIT Fund", ordinaryDividends: "30000", section199ADividends: "25000" },
+        { exemptInterestDividends: "0", specifiedPrivateActivityBondInterest: "0", payer: "REIT Fund", ordinaryDividends: "30000", section199ADividends: "25000" },
       ],
     };
     const result = calculateFederalTax(fixture);
@@ -11826,7 +11836,7 @@ describe("REIT dividends and PTP income - federal integration", () => {
     const fixture: TaxYearInput = {
       ...simpleW2Fixture,
       form1099Div: [
-        { payer: "Bond Fund", ordinaryDividends: "3000" }, // no REIT dividends
+        { exemptInterestDividends: "0", specifiedPrivateActivityBondInterest: "0", payer: "Bond Fund", ordinaryDividends: "3000" }, // no REIT dividends
       ],
     };
     const result = calculateFederalTax(fixture);
@@ -12099,7 +12109,7 @@ describe("Form 1099-C cancellation of debt through federal pipeline", () => {
         { creditor: "Creditor", amountDischarged: "25000", personallyLiable: true },
       ],
     });
-    const partiallyExcluded = calculateFederalTax({
+    const incompleteOriginal = {
       ...simpleW2Fixture,
       form1099C: [
         { creditor: "Creditor", amountDischarged: "25000", personallyLiable: true },
@@ -12111,7 +12121,13 @@ describe("Form 1099-C cancellation of debt through federal pipeline", () => {
           // Insolvent by $15,000 → $10,000 remains taxable
         },
       },
-    });
+    };
+    // Spec: cod-partial-personal-insolvency.yaml legacy-agi. Preserve the old
+    // incomplete input as rejection evidence; only the complete successor runs.
+    expect(() => calculateFederalTax(incompleteOriginal)).toThrow(/COD.*complete|COD.*actual/i);
+    const partiallyExcluded = calculateFederalTax(actualPartialPersonalCodInput({
+      debt: "25000", interest: "0", liabilities: "200000", assets: "185000", creditor: "Creditor",
+    }));
 
     expect(fullyTaxable.schedule1!.cancelledDebtIncome.toNumber()).toBe(25000);
     expect(partiallyExcluded.schedule1!.cancelledDebtIncome.toNumber()).toBe(10000);
@@ -12342,7 +12358,7 @@ describe("Schedule F farm income through federal pipeline", () => {
 // ═══════════════════════════════════════════════════════════
 
 describe("Form 2555 foreign earned income exclusion through federal pipeline", () => {
-  it("Foreign earned income exclusion reduces wages and total income", () => {
+  it("Foreign earned income exclusion preserves wages and reduces Schedule1 income", () => {
     const base = calculateFederalTax(simpleW2Fixture);
     const withExclusion = calculateFederalTax({
       ...simpleW2Fixture,
@@ -12353,8 +12369,10 @@ describe("Form 2555 foreign earned income exclusion through federal pipeline", (
       },
     });
 
-    // The exclusion should reduce wages
-    expect(withExclusion.totalWages.toNumber()).toBeLessThan(base.totalWages.toNumber());
+    // Final Form2555line45 reduces Schedule1line8d; gross wages remain on1040.
+    expect(withExclusion.totalWages.toString()).toBe("85000");
+    expect(withExclusion.totalWages).toEqual(base.totalWages);
+    expect(withExclusion.schedule1!.lines.find(line => line.line === "8d")!.value.toString()).toBe("-85000");
     // Total income should decrease
     expect(withExclusion.totalIncome.toNumber()).toBeLessThan(base.totalIncome.toNumber());
     // Tax should be lower
@@ -12379,8 +12397,11 @@ describe("Form 2555 foreign earned income exclusion through federal pipeline", (
       },
     });
 
-    // Half-year should have higher wages than full year (less excluded)
-    expect(halfYear.totalWages.toNumber()).toBeGreaterThan(fullYear.totalWages.toNumber());
+    // 130000 × 183/365 rounds to65178; proration changes the exclusion, not wages.
+    expect(halfYear.totalWages.toString()).toBe("85000");
+    expect(fullYear.totalWages.toString()).toBe("85000");
+    expect(halfYear.totalIncome.toString()).toBe("19822");
+    expect(fullYear.totalIncome.toString()).toBe("0");
   });
 
   it("Form 2555 sub-result is populated on the return", () => {
@@ -12400,11 +12421,13 @@ describe("Form 2555 foreign earned income exclusion through federal pipeline", (
   it("Housing deduction flows to Schedule 1 adjustments for SE filers", () => {
     const result = calculateFederalTax({
       ...simpleW2Fixture,
+      scheduleC: { grossReceipts: "200000", expenses: {} },
       form2555: {
-        foreignEarnedIncome: "100000",
+        foreignEarnedIncome: "200000",
         qualifyingDays: 365,
         totalDaysInYear: 365,
         qualifiedHousingExpenses: "25000",
+        employerProvidedForeignEarnedIncome: "0",
         isSelfEmployed: true,
       },
     });
@@ -12512,7 +12535,7 @@ describe("Form 8615 kiddie tax through federal pipeline", () => {
         },
       ],
       form1099Int: [
-        {
+        { privateActivityBondInterest: "0",
           payer: "Trust Fund",
           interestIncome: "10000",
           federalWithheld: "0",
@@ -12670,7 +12693,7 @@ describe("Form 6252 installment sales through federal pipeline", () => {
 
 describe("Form 982 federal integration", () => {
   it("Form 982 Part II - insolvency exclusion reduces NOL carryforward through federal pipeline", () => {
-    const result = calculateFederalTax({
+    const incompleteOriginal = {
       ...simpleW2Fixture,
       form1099C: [
         {
@@ -12689,18 +12712,25 @@ describe("Form 982 federal integration", () => {
         nolCarryforward: "15000",
         excessBusinessLossNOL: "15000",
       },
-    });
+    };
+    // Spec: cod-partial-personal-insolvency.yaml current-use. The original two
+    // aggregate aliases do not establish a loss origin or its actual use.
+    expect(() => calculateFederalTax(incompleteOriginal)).toThrow(/COD.*complete|COD.*actual/i);
+    const result = calculateFederalTax(partialPersonalLegacyNolZeroPoolInput());
 
     // Insolvency amount = 200K - 180K = 20K → exclude 20K of 30K COD
     // Taxable COD = 10K flows to Schedule 1 Line 8c
     expect(result.schedule1!.cancelledDebtIncome.toNumber()).toBe(10000);
 
-    // Without Form 982: NOL carryforward would be 15000 - nolDeduction
-    // With Form 982: the $20K exclusion reduces NOL in the general order
-    // NOL after 80% deduction limit and then Form 982 reduction
-    // The exact reduction depends on the NOL deduction applied, but the
-    // carryforward should be less than it would be without Form 982
+    // Preserve the original inequality and strengthen the actual source result:
+    // the same15,000 carry is entirely used for current tax, so its subsequent
+    // section108 NOL reduction is zero in each independently sourced ledger.
     expect(result.carryforwards.nolCarryforward.toNumber()).toBeLessThan(15000);
+    for (const ledger of [result.codNolReduction!.regular!, result.codNolReduction!.alternativeTax!]) {
+      expect(ledger.currentTaxUse.toFixed()).toBe("15000");
+      expect(ledger.reduction.toFixed()).toBe("0");
+      expect(ledger.carryforward.toFixed()).toBe("0");
+    }
   });
 
   it("Form 982 Part II - bankruptcy exclusion with no carryforwards leaves carryforwards unchanged", () => {
@@ -12887,11 +12917,13 @@ describe("Form 5329 Part VII HSA excess contribution auto-derivation", () => {
     });
     const line47 = result.allLines.find((line) => line.form === "Form 5329" && line.line === "47");
 
-    expect(result.form5329?.line47.toNumber()).toBe(300);
-    expect(result.form5329?.line48.toNumber()).toBe(300);
-    expect(result.form5329?.line49.toNumber()).toBe(18);
+    // 2025 i1099-SA Box1 includes Box2:900 gross less30 earnings returns870 principal.
+    // The1200 excess therefore leaves330; legacy unrounded tax is330*6%=19.80.
+    expect(result.form5329?.line47.toNumber()).toBe(330);
+    expect(result.form5329?.line48.toNumber()).toBe(330);
+    expect(result.form5329?.line49.toNumber()).toBe(19.8);
     expect(String(line47?.inputs["Raw current-year HSA excess before returned-excess reduction"])).toBe("1200");
-    expect(String(line47?.inputs["Supported timely returned excess contributions"])).toBe("900");
+    expect(String(line47?.inputs["Supported timely returned excess contributions"])).toBe("870");
     expect(result.otherIncome.toNumber()).toBe(30);
   });
 
@@ -13361,7 +13393,7 @@ describe("PTP passive loss segregation (IRC §469(k))", () => {
     expect(result.form8582?.ptpSuspendedLosses[0].netSuspended.toNumber()).toBe(12000);
   });
 
-  it("PTP income flows into passive pool and offsets non-PTP passive losses", () => {
+  it("PTP income stays nonpassive and cannot offset non-PTP passive losses", () => {
     const result = calculateFederalTax({
       ...simpleW2Fixture,
       scheduleK1: [
@@ -13382,15 +13414,16 @@ describe("PTP passive loss segregation (IRC §469(k))", () => {
       ],
     });
 
-    // PTP net income flows into passive pool
+    // Section469(k): PTP net income remains outside the regular passive pool.
     expect(result.form8582?.ptpNetIncome.toNumber()).toBe(8000);
     expect(result.form8582?.ptpSuspendedLosses).toHaveLength(0);
 
-    // Non-PTP loss offset by PTP income: 8000 allowed of 15000
-    expect(result.form8582?.allowedLoss.toNumber()).toBe(8000);
-    expect(result.form8582?.suspendedLoss.toNumber()).toBe(7000);
+    // The unrelated15000 loss remains fully suspended.
+    expect(result.form8582?.allowedLoss.toNumber()).toBe(0);
+    expect(result.form8582?.suspendedLoss.toNumber()).toBe(15000);
     expect(result.carryforwards.suspendedPassiveLosses).toHaveLength(1);
-    expect(result.carryforwards.suspendedPassiveLosses[0].amount.toNumber()).toBe(7000);
+    expect(result.carryforwards.suspendedPassiveLosses[0].amount.toNumber()).toBe(15000);
+    expect(result.agi.toFixed()).toBe("93000"); // Actual85000 wages plus nonpassive8000 PTP.
   });
 
   it("PTP prior-year carryforward is consumed by current-year PTP income", () => {
@@ -13751,6 +13784,8 @@ describe("Taxable Refund Worksheet through federal pipeline", () => {
         },
       ],
       taxableRefundWorksheet: {
+        priorTaxYear: 2024,
+        priorYearPropertyTaxesPaid: "0",
         priorYearItemized: true,
         priorYearItemizedTotal: "20000",
         priorYearStandardDeduction: "14600",
@@ -13780,6 +13815,8 @@ describe("Taxable Refund Worksheet through federal pipeline", () => {
         },
       ],
       taxableRefundWorksheet: {
+        priorTaxYear: 2024,
+        priorYearPropertyTaxesPaid: "0",
         priorYearItemized: false,
         priorYearStandardDeduction: "14600",
         priorYearFilingStatus: "single",
@@ -13803,6 +13840,8 @@ describe("Taxable Refund Worksheet through federal pipeline", () => {
         },
       ],
       taxableRefundWorksheet: {
+        priorTaxYear: 2024,
+        priorYearPropertyTaxesPaid: "0",
         priorYearItemized: true,
         priorYearItemizedTotal: "25000",
         priorYearStandardDeduction: "14600",
@@ -13830,6 +13869,8 @@ describe("Taxable Refund Worksheet through federal pipeline", () => {
         },
       ],
       taxableRefundWorksheet: {
+        priorTaxYear: 2024,
+        priorYearPropertyTaxesPaid: "0",
         priorYearItemized: true,
         priorYearItemizedTotal: "20000",
         priorYearStandardDeduction: "14600",
@@ -13854,6 +13895,8 @@ describe("Taxable Refund Worksheet through federal pipeline", () => {
         },
       ],
       taxableRefundWorksheet: {
+        priorTaxYear: 2024,
+        priorYearPropertyTaxesPaid: "0",
         priorYearItemized: true,
         priorYearItemizedTotal: "18000",
         priorYearStandardDeduction: "14600",
@@ -13895,6 +13938,8 @@ describe("Taxable Refund Worksheet through federal pipeline", () => {
         },
       ],
       taxableRefundWorksheet: {
+        priorTaxYear: 2024,
+        priorYearPropertyTaxesPaid: "0",
         priorYearItemized: true,
         priorYearItemizedTotal: "20000",
         priorYearStandardDeduction: "14600",

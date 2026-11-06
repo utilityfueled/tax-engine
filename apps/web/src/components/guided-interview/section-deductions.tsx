@@ -10,29 +10,37 @@ import {
   getStandardDeductionAmount,
 } from "@/lib/guided-interview-flow";
 import { CurrencyField } from "./currency-field";
+import { DeductionSourceDetails } from "./deduction-source-details";
+import { InvestmentInterestSourceDetails } from "./investment-interest-source-details";
+import { CharitableCarryoverDetails } from "./charitable-carryover-details";
+import { CryptoDonationDetails } from "./crypto-donation-details";
+import { K1CharitableSourceDetails } from "./k1-charitable-source-details";
+import type { K1LossSourcesData } from "@/lib/guided-qbi-loss-data";
+import type { ChildElectionData } from "@/lib/guided-child-election-facts";
+import { formatGuidedCurrency, parseGuidedDisplayAmount } from "@/lib/guided-currency";
 
-const currencyFormatter = new Intl.NumberFormat("en-US", {
-  style: "currency",
-  currency: "USD",
-  maximumFractionDigits: 0,
-});
-
-function formatUsd(amount: number): string {
-  return currencyFormatter.format(amount);
-}
+const formatUsd = formatGuidedCurrency;
 
 export function SectionDeductions({
   data,
   filingStatus,
+  taxYear,
+  childEntries,
+  k1Activities,
   onDataChange,
 }: {
   data: DeductionData | undefined;
   filingStatus: FilingStatus | null;
+  taxYear?: number | null;
+  childEntries?: ChildElectionData[];
+  k1Activities?: K1LossSourcesData['activities'];
   onDataChange: (data: DeductionData) => void;
 }) {
   const current = data ?? emptyDeductionData;
-  const standardAmount = getStandardDeductionAmount(filingStatus);
-  const comparison = computeDeductionComparison(filingStatus, current);
+  const standardAmount = getStandardDeductionAmount(filingStatus, taxYear);
+  let comparison: ReturnType<typeof computeDeductionComparison> | null = null;
+  try { comparison = computeDeductionComparison(filingStatus, current, taxYear); }
+  catch { /* Incomplete edits stay visible and are validated before calculation. */ }
 
   function setMethod(method: DeductionMethod) {
     onDataChange({ ...current, method });
@@ -52,9 +60,9 @@ export function SectionDeductions({
           standard amount. We&apos;ll help you compare.
         </p>
 
-        {standardAmount > 0 && (
+        {standardAmount > 0 && current.method !== "nonitemized" && (
           <div className="guided-deduction-standard-callout">
-            Your standard deduction is <strong>{formatUsd(standardAmount)}</strong> based on your filing status.
+            Base standard deduction before age, blindness or dependent adjustments: <strong>{formatUsd(standardAmount)}</strong> based on your filing status.
           </div>
         )}
 
@@ -94,8 +102,28 @@ export function SectionDeductions({
                 List specific expenses on Schedule A. Choose this if your total exceeds the standard deduction.
               </span>
             </label>
+            {taxYear === 2026 && <label className={`guided-option-card ${current.method === "nonitemized" ? "guided-option-card-selected" : ""}`}>
+              <input type="radio" name="deduction-method" value="nonitemized" checked={current.method === "nonitemized"}
+                onChange={() => setMethod("nonitemized")} className="guided-option-radio" />
+              <span className="guided-option-label">Do not itemize; standard deduction unavailable</span>
+              <span className="guided-option-description">Use this only when your actual eligibility facts make the standard deduction unavailable. Qualifying current cash gifts may still be deductible.</span>
+            </label>}
           </div>
         </fieldset>
+
+        {current.method === "nonitemized" && <p className="guided-hint">This choice claims no standard or itemized deduction. Confirm why the standard deduction is unavailable in your personal information, then enter actual current charitable sources below.</p>}
+        {current.method !== "itemized" && taxYear === 2026 && <DeductionSourceDetails taxYear={taxYear} filingStatus={filingStatus} data={current} onChange={onDataChange} includeMortgages={false} />}
+        {current.method !== "itemized" && <details className="guided-expand"><summary className="guided-expand-trigger">Earlier-year mortgage refunds and recoveries</summary><div className="guided-expand-body">
+          <p className="guided-hint">An earlier-year refund can create taxable income even when you do not itemize this year. Enter the original records and completed tax-benefit worksheet here.</p>
+          <DeductionSourceDetails taxYear={taxYear} filingStatus={filingStatus} data={current} onChange={onDataChange} includeDonations={false} />
+        </div></details>}
+
+        <CurrencyField label="Gambling winnings not already reported on an entered W-2G" hint="Enter actual winnings regardless of deduction method. Enter 0 only when known to be zero." value={current.gamblingWinnings ?? ""} onChange={(value) => update("gamblingWinnings", value)} />
+        <CurrencyField label="Non-W-2 withholding already deducted on other schedules" hint="Enter the actual part of state or local withholding from your entered non-W-2 forms that is already deducted on Schedule C, E or F. Enter 0 only after checking. The source withholding is counted separately; do not add it again to additional income taxes." value={current.nonW2IncomeTaxesDeductedElsewhere ?? ""} onChange={value => update("nonW2IncomeTaxesDeductedElsewhere", value)} />
+        <InvestmentInterestSourceDetails data={current.investmentInterestSources} childEntries={childEntries} onChange={investmentInterestSources => onDataChange({ ...current, investmentInterestSources })} />
+        <CryptoDonationDetails data={current.cryptoDonations} onChange={cryptoDonations => onDataChange({ ...current, cryptoDonations })} />
+        <CharitableCarryoverDetails data={current.charitableCarryoverSources} onChange={charitableCarryoverSources => onDataChange({ ...current, charitableCarryoverSources })} />
+        <K1CharitableSourceDetails data={current.k1CharitableSources} activities={k1Activities} onChange={k1CharitableSources => onDataChange({ ...current, k1CharitableSources })} />
 
         {current.method === "itemized" && (
           <div className="guided-w2-card" style={{ marginTop: "16px" }}>
@@ -112,31 +140,21 @@ export function SectionDeductions({
 
             <div className="guided-form-grid">
               <CurrencyField
-                label="State and local income taxes"
-                hint="W-2 Box 17 amounts are already included from your W-2 entries."
+                label="Additional state and local income taxes paid"
+                hint="Only amounts paid during this tax year, excluding withholding and estimates already entered elsewhere."
                 value={current.stateLocalTaxes}
                 onChange={(v) => update("stateLocalTaxes", v)}
               />
               <CurrencyField
                 label="Real estate taxes"
+                hint="Qualified real estate taxes paid this year, excluding amounts already reported on an entered Form 1098."
                 value={current.realEstateTaxes}
                 onChange={(v) => update("realEstateTaxes", v)}
               />
+              <CurrencyField label="Personal property taxes" hint="Only the annual tax based on property value, such as the value-based part of vehicle registration." value={current.personalPropertyTaxes ?? ""} onChange={(value) => update("personalPropertyTaxes", value)} />
             </div>
 
-            <CurrencyField
-              label="Home mortgage interest"
-              hint="From Form 1098 Box 1."
-              value={current.mortgageInterest}
-              onChange={(v) => update("mortgageInterest", v)}
-            />
-
-            <CurrencyField
-              label="Charitable contributions"
-              hint="Cash and non-cash donations to qualified organizations."
-              value={current.charitableContributions}
-              onChange={(v) => update("charitableContributions", v)}
-            />
+            <DeductionSourceDetails taxYear={taxYear} filingStatus={filingStatus} data={current} onChange={onDataChange} />
 
             <details className="guided-expand">
               <summary className="guided-expand-trigger">Less common itemized deductions</summary>
@@ -145,25 +163,24 @@ export function SectionDeductions({
                   <legend className="sr-only">Less common itemized deductions</legend>
                   <CurrencyField
                     label="Casualty and theft losses"
-                    hint="Only federally declared disaster losses are deductible."
+                    hint="A saved total is insufficient. Calculation requires the specific Form 4684 event, property and reimbursement facts; this guided branch is not yet supported."
                     value={current.casualtyLosses}
                     onChange={(v) => update("casualtyLosses", v)}
                   />
-                  <CurrencyField
-                    label="Other itemized deductions"
-                    hint="Gambling losses (up to winnings), investment interest, etc."
-                    value={current.otherItemized}
-                    onChange={(v) => update("otherItemized", v)}
-                  />
+                  <CurrencyField label="Investment interest expense" hint="Interest on money borrowed for taxable investments. Complete the actual regular and AMT source worksheets above; a saved total must reconcile to the regular worksheet's current expense." value={current.investmentInterestExpense ?? ""} onChange={(value) => update("investmentInterestExpense", value)} />
+                  <CurrencyField label="Wagering losses" hint="Enter actual losses supported by records. The engine applies the year's deduction limit against winnings." value={current.gamblingLosses ?? ""} onChange={(value) => update("gamblingLosses", value)} />
+                  <CurrencyField label="Otherwise deductible wagering expenses" hint="Enter actual qualifying expenses incurred in wagering transactions. Exclude wagers already entered as losses, personal costs and amounts deducted elsewhere. Leave blank if unknown; enter 0 only when checked." value={current.gamblingExpenses ?? ""} onChange={(value) => update("gamblingExpenses", value)} />
+                  {current.otherItemized.trim() && <CurrencyField label="Saved other-deduction total to reconcile" hint="Classify this total in the investment-interest, wagering-loss and wagering-expense fields. Other deductions require their specific supporting forms." value={current.otherItemized} onChange={(value) => update("otherItemized", value)} />}
                 </fieldset>
               </div>
             </details>
 
-            {comparison.itemizedTotal > 0 && (
+            {!comparison && <p className="guided-hint" role="status">Correct incomplete amounts to compare your expenses.</p>}
+            {comparison && parseGuidedDisplayAmount(comparison.itemizedTotal).gt(0) && (
               <div className="guided-deduction-comparison" style={{ marginTop: "16px" }} role="status" aria-live="polite">
                 <div className="guided-ticker-grid">
                   <div className="guided-ticker-item">
-                    <span className="guided-ticker-label">Itemized Total</span>
+                    <span className="guided-ticker-label">Expenses entered</span>
                     <strong className="guided-ticker-value">
                       {formatUsd(comparison.itemizedTotal)}
                     </strong>
@@ -178,35 +195,7 @@ export function SectionDeductions({
                   )}
                 </div>
 
-                {standardAmount > 0 && (
-                  <div
-                    className={`guided-deduction-recommendation ${
-                      comparison.recommendation === "itemized"
-                        ? "guided-deduction-recommendation-itemized"
-                        : comparison.recommendation === "standard"
-                          ? "guided-deduction-recommendation-standard"
-                          : ""
-                    }`}
-                  >
-                    {comparison.recommendation === "itemized" && (
-                      <>
-                        Itemizing saves you <strong>{formatUsd(comparison.savings)}</strong> over the standard deduction. Good call!
-                      </>
-                    )}
-                    {comparison.recommendation === "standard" && (
-                      <>
-                        The standard deduction is <strong>{formatUsd(comparison.savings)}</strong> higher.
-                        You may want to switch back to standard unless you expect to add more deductions.
-                      </>
-                    )}
-                    {comparison.recommendation === "equal" && (
-                      <>
-                        Your itemized deductions exactly match the standard deduction amount.
-                        Either option works — standard is simpler.
-                      </>
-                    )}
-                  </div>
-                )}
+                <p className="guided-hint">These are reported amounts before payment allocations, tax limits and income-based adjustments. The calculation determines the deductible amount after all required facts are confirmed.</p>
               </div>
             )}
           </div>

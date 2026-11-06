@@ -73,7 +73,7 @@ const SIMPLIFIED_THRESHOLD: Record<FilingStatus, Decimal> = {
   married_filing_jointly: new Decimal(600),
   married_filing_separately: new Decimal(300),
   head_of_household: new Decimal(300),
-  qualifying_surviving_spouse: new Decimal(600),
+  qualifying_surviving_spouse: new Decimal(300),
 };
 
 /**

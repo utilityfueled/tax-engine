@@ -36,8 +36,8 @@ function getFieldText(doc: PDFDocument, fieldName: string): string | undefined {
   return undefined;
 }
 
-const BLANK_4137 = "forms/blank/f4137.pdf";
-const BLANK_8919 = "forms/blank/f8919.pdf";
+const BLANK_4137 = "forms/blank/2025/f4137.pdf";
+const BLANK_8919 = "forms/blank/2025/f8919.pdf";
 
 async function makeOutputDir() {
   return mkdtemp(join(tmpdir(), "tax-engine-4137-8919-"));
@@ -159,6 +159,7 @@ describe("Form 4137 PDF fill — single filer with unreported tips", () => {
     );
 
     const mockResult = {
+      taxYear: 2025,
       form4137: engineResult,
     } as TaxReturnResult;
 
@@ -217,7 +218,7 @@ describe("Form 4137 PDF fill — no form 4137 result", () => {
   let doc: PDFDocument;
 
   beforeAll(async () => {
-    const mockResult = {} as TaxReturnResult;
+    const mockResult = { taxYear: 2025 } as TaxReturnResult;
     doc = await fillForm4137(form4137Fixture, mockResult, BLANK_4137);
   });
 
@@ -233,38 +234,25 @@ describe("Form 4137 PDF fill — no form 4137 result", () => {
 });
 
 describe("Form 4137 packet inclusion", () => {
-  it("fillReturn attaches Form 4137 only when supported unreported tips produce additional tax", async () => {
+  it.each([["included", true], ["omitted", false]] as const)("fillReturn attaches Form 4137 only when supported unreported tips produce additional tax: %s", async (_scenario, included) => {
+    const input: TaxYearInput = included ? form4137Fixture : {
+      ...form4137Fixture, form4137: { unreportedTipIncome: "0" },
+    };
     const outputDir = await makeOutputDir();
-
     try {
-      const supportedResult = calculateFederalTax(form4137Fixture);
-      const supportedPacket = await fillReturn(form4137Fixture, supportedResult, {
-        blankFormsDir: "forms/blank",
-        outputDir,
-      });
-
-      const supportedPath = supportedPacket.filledForms.find((path) => path.endsWith("f4137-filled.pdf"));
-
-      expect(supportedResult.form4137?.line13.toNumber()).toBeGreaterThan(0);
-      expect(supportedPath).toBeDefined();
-      await access(supportedPath!);
-      const pdfBytes = await readFile(supportedPath!);
-      expect(pdfBytes.length).toBeGreaterThan(0);
-
-      const zeroTaxFixture: TaxYearInput = {
-        ...form4137Fixture,
-        form4137: {
-          unreportedTipIncome: "0",
-        },
-      };
-      const zeroTaxResult = calculateFederalTax(zeroTaxFixture);
-      const suppressedPacket = await fillReturn(zeroTaxFixture, zeroTaxResult, {
-        blankFormsDir: "forms/blank",
-        outputDir,
-      });
-
-      expect(zeroTaxResult.form4137?.line13.toNumber()).toBe(0);
-      expect(suppressedPacket.filledForms.some((path) => path.endsWith("f4137-filled.pdf"))).toBe(false);
+      const result = calculateFederalTax(input);
+      const packet = await fillReturn(input, result, { blankFormsDir: "forms/blank", outputDir });
+      if (included) expect(result.form4137?.line13.toNumber()).toBeGreaterThan(0);
+      else expect(result.form4137?.line13.toNumber()).toBe(0);
+      if (included) {
+        const referencePath = packet.filledForms.find((path) => path.endsWith("f4137-filled.pdf"));
+        expect(referencePath).toBeDefined();
+        await access(referencePath!);
+        const pdfBytes = await readFile(referencePath!);
+        expect(pdfBytes.length).toBeGreaterThan(0);
+      } else {
+        expect(packet.filledForms.some((path) => path.endsWith("f4137-filled.pdf"))).toBe(false);
+      }
     } finally {
       await rm(outputDir, { recursive: true, force: true });
     }
@@ -287,6 +275,7 @@ describe("Form 8919 PDF fill — single filer with unreported wages", () => {
     );
 
     const mockResult = {
+      taxYear: 2025,
       form8919: engineResult,
     } as TaxReturnResult;
 
@@ -349,7 +338,7 @@ describe("Form 8919 PDF fill — no form 8919 result", () => {
   let doc: PDFDocument;
 
   beforeAll(async () => {
-    const mockResult = {} as TaxReturnResult;
+    const mockResult = { taxYear: 2025 } as TaxReturnResult;
     doc = await fillForm8919(form8919Fixture, mockResult, BLANK_8919);
   });
 

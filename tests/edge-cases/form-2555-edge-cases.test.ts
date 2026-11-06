@@ -9,7 +9,6 @@
  */
 
 import { describe, expect, it } from "vitest";
-import Decimal from "decimal.js";
 import { calculateForm2555 } from "@/engine/forms/form-2555.js";
 import type { Form2555Input } from "@/models/inputs.js";
 import { getConstants } from "@/models/constants.js";
@@ -18,6 +17,7 @@ const constants = getConstants(2025);
 
 function makeInput(overrides: Partial<Form2555Input> = {}): Form2555Input {
   return {
+    employerProvidedForeignEarnedIncome: overrides.isSelfEmployed === true ? "0" : (overrides.foreignEarnedIncome ?? "100000"),
     foreignEarnedIncome: "100000",
     qualifyingDays: 365,
     totalDaysInYear: 365,
@@ -31,12 +31,12 @@ function makeInput(overrides: Partial<Form2555Input> = {}): Form2555Input {
 // ── Maximum Exclusion Boundaries ─────────────────────────────────────
 
 describe("Form 2555 - maximum exclusion boundary ($130,000 for 2025)", () => {
-  it("Form 2555 Line 42 - maximum exclusion is $130,000 for tax year 2025", () => {
+  it("Form 2555 Line 37 - maximum exclusion is $130,000 for tax year 2025", () => {
     const result = calculateForm2555(makeInput(), constants);
     expect(result.maximumExclusion.toNumber()).toBe(130000);
   });
 
-  it("Form 2555 Line 45 - income exactly $130,000 full year: entire income excluded", () => {
+  it("Form 2555 Line 42 - income exactly $130,000 full year: entire income excluded", () => {
     const result = calculateForm2555(makeInput({
       foreignEarnedIncome: "130000",
     }), constants);
@@ -44,7 +44,7 @@ describe("Form 2555 - maximum exclusion boundary ($130,000 for 2025)", () => {
     expect(result.foreignEarnedIncomeExclusion.toNumber()).toBe(130000);
   });
 
-  it("Form 2555 Line 45 - income $130,001 full year: exclusion capped at $130,000", () => {
+  it("Form 2555 Line 42 - income $130,001 full year: exclusion capped at $130,000", () => {
     const result = calculateForm2555(makeInput({
       foreignEarnedIncome: "130001",
     }), constants);
@@ -52,7 +52,7 @@ describe("Form 2555 - maximum exclusion boundary ($130,000 for 2025)", () => {
     expect(result.foreignEarnedIncomeExclusion.toNumber()).toBe(130000);
   });
 
-  it("Form 2555 Line 45 - income $50,000 full year: only $50,000 excluded", () => {
+  it("Form 2555 Line 42 - income $50,000 full year: only $50,000 excluded", () => {
     const result = calculateForm2555(makeInput({
       foreignEarnedIncome: "50000",
     }), constants);
@@ -60,7 +60,7 @@ describe("Form 2555 - maximum exclusion boundary ($130,000 for 2025)", () => {
     expect(result.foreignEarnedIncomeExclusion.toNumber()).toBe(50000);
   });
 
-  it("Form 2555 Line 45 - income $0: zero exclusion", () => {
+  it("Form 2555 Line 42 - income $0: zero exclusion", () => {
     const result = calculateForm2555(makeInput({
       foreignEarnedIncome: "0",
     }), constants);
@@ -71,8 +71,8 @@ describe("Form 2555 - maximum exclusion boundary ($130,000 for 2025)", () => {
 
 // ── Partial-Year Proration ───────────────────────────────────────────
 
-describe("Form 2555 - partial-year proration (Line 43)", () => {
-  it("Form 2555 Line 43 - full year 365 days: prorated exclusion equals maximum", () => {
+describe("Form 2555 - partial-year proration (Line 40)", () => {
+  it("Form 2555 Line 40 - full year 365 days: prorated exclusion equals maximum", () => {
     const result = calculateForm2555(makeInput({
       foreignEarnedIncome: "200000",
       qualifyingDays: 365,
@@ -82,7 +82,7 @@ describe("Form 2555 - partial-year proration (Line 43)", () => {
     expect(result.proratedMaximumExclusion.toNumber()).toBe(130000);
   });
 
-  it("Form 2555 Line 43 - half year 183/365 days: prorated exclusion ~$65,178", () => {
+  it("Form 2555 Line 40 - half year 183/365 days: prorated exclusion ~$65,178", () => {
     const result = calculateForm2555(makeInput({
       foreignEarnedIncome: "200000",
       qualifyingDays: 183,
@@ -93,7 +93,7 @@ describe("Form 2555 - partial-year proration (Line 43)", () => {
     expect(result.proratedMaximumExclusion.toNumber()).toBe(65178);
   });
 
-  it("Form 2555 Line 43 - 1 qualifying day: minimal exclusion ($356)", () => {
+  it("Form 2555 Line 40 - 1 qualifying day: minimal exclusion ($356)", () => {
     const result = calculateForm2555(makeInput({
       foreignEarnedIncome: "200000",
       qualifyingDays: 1,
@@ -104,33 +104,13 @@ describe("Form 2555 - partial-year proration (Line 43)", () => {
     expect(result.proratedMaximumExclusion.toNumber()).toBe(356);
   });
 
-  it("Form 2555 Line 43 - leap year 366 days full year: still $130,000", () => {
-    const result = calculateForm2555(makeInput({
-      foreignEarnedIncome: "200000",
-      qualifyingDays: 366,
-      totalDaysInYear: 366,
-    }), constants);
-
-    expect(result.proratedMaximumExclusion.toNumber()).toBe(130000);
+  it("Form2555 rejects366 qualifying days in2025", () => {
+    expect(() => calculateForm2555(makeInput({ qualifyingDays: 366, totalDaysInYear: 366 }), constants)).toThrow(/calendar year/);
   });
 
-  it("Form 2555 Line 43 - leap year 183/366 days: different proration than 183/365", () => {
-    const normalYear = calculateForm2555(makeInput({
-      foreignEarnedIncome: "200000",
-      qualifyingDays: 183,
-      totalDaysInYear: 365,
-    }), constants);
-
-    const leapYear = calculateForm2555(makeInput({
-      foreignEarnedIncome: "200000",
-      qualifyingDays: 183,
-      totalDaysInYear: 366,
-    }), constants);
-
-    // Different denominators should give different prorated amounts
-    expect(leapYear.proratedMaximumExclusion.toNumber()).toBeLessThan(
-      normalYear.proratedMaximumExclusion.toNumber()
-    );
+  it("Form2555 does not accept a fabricated leap year to change proration", () => {
+    expect(calculateForm2555(makeInput({ foreignEarnedIncome: "200000", qualifyingDays: 183 }), constants).proratedMaximumExclusion.toFixed()).toBe("65178");
+    expect(() => calculateForm2555(makeInput({ qualifyingDays: 183, totalDaysInYear: 366 }), constants)).toThrow(/calendar year/);
   });
 
   it("Form 2555 - partial year income below prorated exclusion: full income excluded", () => {
@@ -150,7 +130,7 @@ describe("Form 2555 - partial-year proration (Line 43)", () => {
 // ── Housing Amount (16% Base, 30% Limit) ─────────────────────────────
 
 describe("Form 2555 - housing amount edge cases", () => {
-  it("Form 2555 Line 27 - base housing amount is 16% of prorated maximum", () => {
+  it("Form 2555 Line 32 - base housing amount is 16% of prorated maximum", () => {
     // Full year: $130,000 × 0.16 = $20,800
     const result = calculateForm2555(makeInput({
       qualifiedHousingExpenses: "30000",
@@ -231,7 +211,7 @@ describe("Form 2555 - location-specific housing limit override", () => {
     // Location limit $60,000 > default $39,000
     const result = calculateForm2555(makeInput({
       qualifiedHousingExpenses: "50000",
-      housingExpenseLocationLimit: "60000",
+      housingLocationPeriods: [{ locationId: "Russia / Saint Petersburg", days: 365 }],
     }), constants);
 
     expect(result.housingExpenseLimit.toNumber()).toBe(60000);
@@ -244,28 +224,23 @@ describe("Form 2555 - location-specific housing limit override", () => {
   it("Form 2555 - location limit lower than expenses: caps at location limit", () => {
     const result = calculateForm2555(makeInput({
       qualifiedHousingExpenses: "80000",
-      housingExpenseLocationLimit: "70000",
+      housingLocationPeriods: [{ locationId: "China / Beijing", days: 365 }],
     }), constants);
 
-    expect(result.qualifiedHousingExpensesCapped.toNumber()).toBe(70000);
-    // Housing amount = $70,000 - $20,800 = $49,200
-    expect(result.housingAmount.toNumber()).toBe(49200);
+    expect(result.qualifiedHousingExpensesCapped.toNumber()).toBe(66600);
+    // Beijing2025: $66,600 - $20,800 = $45,800.
+    expect(result.housingAmount.toNumber()).toBe(45800);
   });
 });
 
 // ── Self-Employed vs Employee Housing Treatment ──────────────────────
 
 describe("Form 2555 - self-employed housing deduction vs employee housing exclusion", () => {
-  it("Form 2555 Part VI - self-employed gets housing deduction, not exclusion", () => {
-    const result = calculateForm2555(makeInput({
-      foreignEarnedIncome: "100000",
-      qualifiedHousingExpenses: "30000",
-      isSelfEmployed: true,
-    }), constants);
-
-    // Housing amount = $30,000 - $20,800 = $9,200
-    expect(result.housingDeduction.toNumber()).toBe(9200);
-    expect(result.housingExclusion.toNumber()).toBe(0);
+  it("Form2555 self-employed housing carries over when FEIE consumes all income", () => {
+    const result = calculateForm2555(makeInput({ qualifiedHousingExpenses: "30000", isSelfEmployed: true }), constants);
+    expect(result.housingDeduction.toFixed()).toBe("0");
+    expect(result.housingDeductionCarryover.toFixed()).toBe("9200");
+    expect(result.housingExclusion.toFixed()).toBe("0");
   });
 
   it("Form 2555 Part VIII - employee gets housing exclusion, not deduction", () => {
@@ -284,62 +259,35 @@ describe("Form 2555 - self-employed housing deduction vs employee housing exclus
 
 // ── Employer-Provided Housing Offset ─────────────────────────────────
 
-describe("Form 2555 - employer-provided housing reduces housing exclusion", () => {
-  it("Form 2555 Part VIII - employer housing partially offsets housing exclusion", () => {
-    // Housing amount = $30,000 - $20,800 = $9,200
-    // Employer-provided $5,000
-    // Housing exclusion = $9,200 - $5,000 = $4,200
-    const result = calculateForm2555(makeInput({
-      qualifiedHousingExpenses: "30000",
-      employerProvidedHousingAmount: "5000",
-    }), constants);
-
-    expect(result.housingExclusion.toNumber()).toBe(4200);
+describe("Form 2555 - employer-provided reimbursements remain part of actual income", () => {
+  it("Form2555 reimbursement5000 does not subtract from the housing exclusion", () => {
+    const result = calculateForm2555(makeInput({ qualifiedHousingExpenses: "30000", employerProvidedHousingAmount: "5000" }), constants);
+    expect(result.housingExclusion.toFixed()).toBe("9200");
   });
 
-  it("Form 2555 Part VIII - employer housing exceeds housing amount: exclusion is $0", () => {
-    // Housing amount = $30,000 - $20,800 = $9,200
-    // Employer-provided $15,000 > $9,200
-    // Housing exclusion = max(0, $9,200 - $15,000) = $0
-    const result = calculateForm2555(makeInput({
-      qualifiedHousingExpenses: "30000",
-      employerProvidedHousingAmount: "15000",
-    }), constants);
-
-    expect(result.housingExclusion.toNumber()).toBe(0);
+  it("Form2555 reimbursement15000 does not subtract from the housing exclusion", () => {
+    const result = calculateForm2555(makeInput({ qualifiedHousingExpenses: "30000", employerProvidedHousingAmount: "15000" }), constants);
+    expect(result.housingExclusion.toFixed()).toBe("9200");
   });
 
-  it("Form 2555 Part VIII - employer housing exactly equals housing amount: exclusion is $0", () => {
-    // Housing amount = $30,000 - $20,800 = $9,200
-    // Employer-provided exactly $9,200
-    const result = calculateForm2555(makeInput({
-      qualifiedHousingExpenses: "30000",
-      employerProvidedHousingAmount: "9200",
-    }), constants);
-
-    expect(result.housingExclusion.toNumber()).toBe(0);
+  it("Form2555 reimbursement9200 does not subtract from the housing exclusion", () => {
+    const result = calculateForm2555(makeInput({ qualifiedHousingExpenses: "30000", employerProvidedHousingAmount: "9200" }), constants);
+    expect(result.housingExclusion.toFixed()).toBe("9200");
   });
 });
 
 // ── Housing Deduction Reduces Income Available for Exclusion ─────────
 
 describe("Form 2555 - housing amounts reduce income available for exclusion", () => {
-  it("Form 2555 Line 44 - housing deduction reduces income available for FEI exclusion", () => {
-    // Foreign income $100,000, self-employed, housing deduction $9,200
-    // Income available = $100,000 - $9,200 = $90,800
-    // Exclusion = min($90,800, $130,000) = $90,800
-    const result = calculateForm2555(makeInput({
-      foreignEarnedIncome: "100000",
-      qualifiedHousingExpenses: "30000",
-      isSelfEmployed: true,
-    }), constants);
-
-    expect(result.housingDeduction.toNumber()).toBe(9200);
-    expect(result.incomeAvailableForExclusion.toNumber()).toBe(90800);
-    expect(result.foreignEarnedIncomeExclusion.toNumber()).toBe(90800);
+  it("Form2555 housing deduction cannot reduce earned income before FEIE", () => {
+    const result = calculateForm2555(makeInput({ foreignEarnedIncome: "100000", qualifiedHousingExpenses: "30000", isSelfEmployed: true }), constants);
+    expect(result.housingDeduction.toFixed()).toBe("0");
+    expect(result.incomeAvailableForExclusion.toFixed()).toBe("100000");
+    expect(result.foreignEarnedIncomeExclusion.toFixed()).toBe("100000");
+    expect(result.housingDeductionCarryover.toFixed()).toBe("9200");
   });
 
-  it("Form 2555 Line 44 - housing exclusion reduces income available for FEI exclusion", () => {
+  it("Form 2555 Line 41 - housing exclusion reduces income available for FEI exclusion", () => {
     // Foreign income $100,000, employee, housing exclusion $9,200
     // Income available = $100,000 - $9,200 = $90,800
     const result = calculateForm2555(makeInput({
@@ -377,15 +325,15 @@ describe("Form 2555 - total exclusion combines FEI and housing exclusion", () =>
 
   it("Form 2555 - self-employed total exclusion does not include housing deduction", () => {
     // Housing deduction goes through Schedule 1, not included in totalExclusion
-    // for income reduction purposes on Line 1
+    // from the net exclusion at Schedule1line8d
     const result = calculateForm2555(makeInput({
       foreignEarnedIncome: "200000",
       qualifiedHousingExpenses: "30000",
       isSelfEmployed: true,
     }), constants);
 
-    // Housing deduction = $9,200 (goes to Schedule 1, not Form 1040 Line 1)
-    // Income available = $200,000 - $9,200 = $190,800
+    // Housing deduction = $9,200 goes to Schedule1line24j.
+    // Income available for FEIE = $200,000 before housing deduction.
     // FEI exclusion = $130,000
     // Total exclusion = $130,000 + $0 housing exclusion = $130,000
     expect(result.foreignEarnedIncomeExclusion.toNumber()).toBe(130000);
@@ -400,8 +348,8 @@ describe("Form 2555 - total exclusion combines FEI and housing exclusion", () =>
 describe("Form 2555 - partial year proration affects housing calculations", () => {
   it("Form 2555 - half year prorates both base and limit", () => {
     // 183/365 year → proration factor ~0.5014
-    // Base = $130,000 × 0.16 × 183/365 = $10,434 (rounded)
-    // Limit = $130,000 × 0.30 × 183/365 = $19,562 (rounded)
+    // Base = published $56.99 × 183 = $10,429.
+    // Limit = published $106.85 × 183 = $19,554.
     const result = calculateForm2555(makeInput({
       foreignEarnedIncome: "200000",
       qualifiedHousingExpenses: "25000",

@@ -1,15 +1,18 @@
+import Decimal from "decimal.js";
 import type {
   SeededFactId,
   WorkspaceDocumentCoverage,
   WorkspaceDocumentDetectedFactRecord,
   WorkspaceDocumentKind,
-  WorkspaceStructuredFactMachineValue1099BTransaction,
+  WorkspaceStructuredFactMachineValue1099DATransaction,
   WorkspaceStructuredFactMachineValue1099DivSummary,
   WorkspaceStructuredFactMachineValue1099IntSummary,
+  WorkspaceStructuredFactMachineValue1099NecSummary,
   WorkspaceStructuredFactMachineValueW2Summary,
 } from "@tax-engine/contracts";
 
 export interface ParsedUploadedDocument {
+  taxYear?: number | null;
   kind: WorkspaceDocumentKind;
   coverage: WorkspaceDocumentCoverage;
   label: string;
@@ -33,7 +36,15 @@ let pdfJsPromise: Promise<typeof import("pdfjs-dist/legacy/build/pdf.mjs")> | nu
 
 async function loadPdfJs() {
   if (!pdfJsPromise) {
-    pdfJsPromise = import("pdfjs-dist/legacy/build/pdf.mjs");
+    pdfJsPromise = import("pdfjs-dist/legacy/build/pdf.mjs").then((pdfjs) => {
+      if (typeof window !== "undefined") {
+        pdfjs.GlobalWorkerOptions.workerPort = new Worker(
+          new URL("pdfjs-dist/legacy/build/pdf.worker.mjs", import.meta.url),
+          { type: "module" },
+        );
+      }
+      return pdfjs;
+    });
   }
 
   return pdfJsPromise;
@@ -69,17 +80,20 @@ export async function extractPdfTextFromFile(file: File) {
   const pdfjs = await loadPdfJs();
   const buffer = await file.arrayBuffer();
   const data = new Uint8Array(buffer);
-  const pdf = await pdfjs.getDocument({ data }).promise;
-  const pageTexts: string[] = [];
-
-  for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
-    const page = await pdf.getPage(pageNumber);
-    const textContent = await page.getTextContent();
-
-    pageTexts.push(groupPageText(textContent.items as ExtractedTextItem[]));
+  const task = pdfjs.getDocument({ data, useWorkerFetch: false });
+  try {
+    const pdf = await task.promise;
+    const pageTexts: string[] = [];
+    for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
+      const page = await pdf.getPage(pageNumber);
+      const textContent = await page.getTextContent();
+      pageTexts.push(groupPageText(textContent.items as ExtractedTextItem[]));
+      page.cleanup();
+    }
+    return pageTexts.join("\n\n");
+  } finally {
+    await task.destroy();
   }
-
-  return pageTexts.join("\n\n");
 }
 
 function normalizeParsingText(text: string) {
@@ -123,20 +137,15 @@ function normalizeAmount(value: string) {
 }
 
 function normalizeSignedAmount(value: string) {
-  const normalized = value.replace(/[,\s$]/g, "").trim();
-  const cleaned = normalized.startsWith("(") && normalized.endsWith(")")
-    ? `-${normalized.slice(1, -1)}`
-    : normalized;
-
-  return /^-?\d+(\.\d{2})?$/.test(cleaned) ? cleaned : null;
+  const normalized = value.replace(/[,\s]/g, "").trim();
+  return /^-?\d+(\.\d{2})?$/.test(normalized) ? normalized : null;
 }
 
 function formatAmountLabel(value: string) {
-  const numericValue = Number(value);
-
-  return Number.isFinite(numericValue)
-    ? numericValue.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-    : value;
+  const amount = new Decimal(value);
+  if (!amount.isFinite()) return value;
+  const [whole, cents] = amount.toFixed(2, Decimal.ROUND_HALF_UP).split(".");
+  return `${whole.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}.${cents}`;
 }
 
 function dedupeSeededFactIds(entries: SeededFactId[]) {
@@ -171,19 +180,6 @@ function extractAmountByPatterns(text: string, patterns: RegExp[]) {
   return null;
 }
 
-function extractSignedAmountByPatterns(text: string, patterns: RegExp[]) {
-  for (const pattern of patterns) {
-    const match = text.match(pattern);
-    const amount = normalizeSignedAmount(match?.[1] ?? "");
-
-    if (amount) {
-      return amount;
-    }
-  }
-
-  return null;
-}
-
 function buildReviewedDocument(
   label: string,
   notes: string,
@@ -198,309 +194,29 @@ function buildReviewedDocument(
   };
 }
 
-function amountsMatchWithinOneCent(left: string, right: string) {
-  return Math.abs(Number(left) - Number(right)) <= 0.01;
-}
-
-function inferSocialSecurityWagesFromKnownValues(
-  wages: string | null,
-  socialSecurityWithheld: string | null,
-) {
-  if (!wages || !socialSecurityWithheld) {
-    return null;
-  }
-
-  const expectedWithholding = (Number(wages) * 0.062).toFixed(2);
-
-  return amountsMatchWithinOneCent(expectedWithholding, socialSecurityWithheld)
-    ? wages
-    : null;
-}
-
-function pickMostFrequentAmount(candidates: string[]) {
-  if (candidates.length === 0) {
-    return null;
-  }
-
-  const counts = new Map<string, number>();
-
-  for (const candidate of candidates) {
-    counts.set(candidate, (counts.get(candidate) ?? 0) + 1);
-  }
-
-  return [...counts.entries()]
-    .sort((left, right) => {
-      if (right[1] !== left[1]) {
-        return right[1] - left[1];
-      }
-
-      return Number(right[0]) - Number(left[0]);
-    })[0]?.[0] ?? null;
-}
-
-function pickLargestAmount(amounts: string[]) {
-  if (amounts.length === 0) {
-    return null;
-  }
-
-  return [...amounts].sort((left, right) => Number(right) - Number(left))[0] ?? null;
-}
-
-function pickSmallestAmount(amounts: string[]) {
-  if (amounts.length === 0) {
-    return null;
-  }
-
-  return [...amounts].sort((left, right) => Number(left) - Number(right))[0] ?? null;
-}
-
-function collectAmountsNearLabel(
-  text: string,
-  labelPattern: RegExp,
-  nextLabelPatterns: RegExp[],
-  {
-    windowLength = 240,
-    pickCandidate,
-  }: {
-    windowLength?: number;
-    pickCandidate: (amounts: string[]) => string | null;
-  }
-) {
-  const matches = Array.from(text.matchAll(new RegExp(labelPattern.source, `${labelPattern.flags.includes("g") ? labelPattern.flags : `${labelPattern.flags}g`}`)));
-  const candidates: string[] = [];
-
-  for (const match of matches) {
-    const start = match.index ?? 0;
-    const matchEnd = start + match[0].length;
-    let segmentEnd = Math.min(text.length, matchEnd + windowLength);
-
-    for (const pattern of nextLabelPatterns) {
-      const nextMatch = pattern.exec(text.slice(matchEnd));
-
-      if (!nextMatch || nextMatch.index === undefined) {
-        continue;
-      }
-
-      const candidateEnd = matchEnd + nextMatch.index;
-
-      if (candidateEnd > matchEnd && candidateEnd < segmentEnd) {
-        segmentEnd = candidateEnd;
-      }
-    }
-
-    const segment = text.slice(matchEnd, segmentEnd);
-    const amounts = [...segment.matchAll(/\b\d[\d,]*\.\d{2}\b/g)]
-      .map((entry) => normalizeAmount(entry[0]))
-      .filter((entry): entry is string => entry !== null);
-    const candidate = pickCandidate(amounts);
-
-    if (candidate) {
-      candidates.push(candidate);
-    }
-  }
-
-  return pickMostFrequentAmount(candidates);
-}
-
 function extractEmployerName(lines: string[]) {
-  const startIndex = lines.findIndex((line) => /Employer'?s name, address, and ZIP code/i.test(line));
-
-  if (startIndex === -1) {
-    return null;
-  }
-
-  for (let index = startIndex + 1; index < Math.min(lines.length, startIndex + 6); index += 1) {
-    const line = lines[index]?.trim();
-
-    if (!line || /^Batch\b/i.test(line) || /^\d+\./.test(line)) {
-      continue;
-    }
-
-    if (/\d/.test(line) && !/[A-Za-z]/.test(line)) {
-      continue;
-    }
-
-    return line;
-  }
-
-  return null;
+  const names = lines.flatMap((line, index) => {
+    if (!/^(?:c\s+)?Employer'?s name, address, and ZIP code$/i.test(line)) return [];
+    const candidate = lines[index + 1]?.trim();
+    if (!candidate || /^(?:[a-f](?:\/f)?\s+|\d{1,2}[a-z]?\s+|Employer'?s\s+.*(?:number|EIN)|Employee'?s\s+|Batch\b)/i.test(candidate)) return [];
+    return [candidate];
+  });
+  return new Set(names).size === 1 ? names[0] : null;
 }
 
 function extractEmployerEin(text: string) {
-  const employerSectionMatch = text.match(/Employer'?s FED ID number([\s\S]{0,120})/i);
-  const employerSection = employerSectionMatch?.[1] ?? text;
-  const einCandidates = [...employerSection.matchAll(/\b\d{2}-\d{7}\b/g)]
-    .map((entry) => entry[0])
-    .filter((entry) => !entry.includes("XX"));
-
-  if (einCandidates.length > 0) {
-    return einCandidates[0] ?? null;
-  }
-
-  return [...text.matchAll(/\b\d{2}-\d{7}\b/g)]
-    .map((entry) => entry[0])
-    .find((entry) => !entry.includes("XX")) ?? null;
+  const candidates = [...text.matchAll(/(?:Employer'?s (?:FED ID number|identification number(?: \(EIN\))?)|\bb\s+Employer identification number(?: \(EIN\))?)[ \t]*:?[ \t]*(?:\n[ \t]*)?(\d{2}-?\d{7})(?=\s|$)/gi)].map(match => match[1]);
+  const distinct = new Set(candidates.map(value => value.replace(/-/g, "")));
+  return distinct.size === 1 ? candidates[0] : null;
 }
 
-function collectAmountsFromLinesAfterLabel(
-  lines: string[],
-  labelPattern: RegExp,
-  nextLabelPatterns: RegExp[],
-  maxLookahead = 8,
-) {
-  const matches: string[][] = [];
-
-  for (let index = 0; index < lines.length; index += 1) {
-    const line = lines[index] ?? "";
-
-    if (!labelPattern.test(line)) {
-      continue;
-    }
-
-    const amounts: string[] = [];
-
-    for (
-      let lookahead = index + 1;
-      lookahead < lines.length && lookahead <= index + maxLookahead;
-      lookahead += 1
-    ) {
-      const candidateLine = lines[lookahead] ?? "";
-
-      if (nextLabelPatterns.some((pattern) => pattern.test(candidateLine))) {
-        break;
-      }
-
-      const amount = normalizeAmount(candidateLine);
-
-      if (amount) {
-        amounts.push(amount);
-      }
-    }
-
-    if (amounts.length > 0) {
-      matches.push(amounts);
-    }
-  }
-
-  return matches;
-}
-
-function pickFirstLineAmount(
-  lines: string[],
-  labelPattern: RegExp,
-  nextLabelPatterns: RegExp[],
-  maxLookahead = 8,
-) {
-  const matches = collectAmountsFromLinesAfterLabel(lines, labelPattern, nextLabelPatterns, maxLookahead);
-
-  for (const amounts of matches) {
-    const amount = amounts[0];
-
-    if (amount) {
-      return amount;
-    }
-  }
-
-  return null;
-}
-
-function pickLastLineAmount(
-  lines: string[],
-  labelPattern: RegExp,
-  nextLabelPatterns: RegExp[],
-  maxLookahead = 8,
-) {
-  const matches = collectAmountsFromLinesAfterLabel(lines, labelPattern, nextLabelPatterns, maxLookahead);
-
-  for (const amounts of matches) {
-    const amount = amounts[amounts.length - 1];
-
-    if (amount) {
-      return amount;
-    }
-  }
-
-  return null;
-}
-
-function pickSmallestLineAmount(
-  lines: string[],
-  labelPattern: RegExp,
-  nextLabelPatterns: RegExp[],
-  maxLookahead = 8,
-) {
-  const matches = collectAmountsFromLinesAfterLabel(lines, labelPattern, nextLabelPatterns, maxLookahead);
-
-  for (const amounts of matches) {
-    const amount = pickSmallestAmount(amounts);
-
-    if (amount) {
-      return amount;
-    }
-  }
-
-  return null;
-}
-
-function parseW2Box1Wages(text: string) {
-  const reportedW2Wages = collectAmountsNearLabel(
-    text,
-    /Reported W-2 Wages/i,
-    [/Employer'?s FED ID number/i, /1\s+Wages, tips, other comp\./i],
-    {
-      pickCandidate: (amounts) => {
-        if (amounts.length === 0) {
-          return null;
-        }
-
-        return pickMostFrequentAmount(amounts);
-      },
-    }
-  );
-
-  if (reportedW2Wages) {
-    return reportedW2Wages;
-  }
-
-  return collectAmountsNearLabel(
-    text,
-    /Wages, tips, other comp\./i,
-    [/2 Federal income tax withheld/i, /3\s+Social security wages/i],
-    {
-      pickCandidate: (amounts) => {
-        if (amounts.length === 0) {
-          return null;
-        }
-
-        return pickLargestAmount(amounts);
-      },
-    }
-  );
-}
-
-function parseW2Box2FederalWithholding(text: string, wages: string | null) {
-  return collectAmountsNearLabel(
-    text,
-    /2 Federal income tax withheld/i,
-    [/4 Social security tax withheld/i, /3\s+Social security wages/i],
-    {
-      pickCandidate: (amounts) => {
-        if (amounts.length === 0) {
-          return null;
-        }
-
-        if (wages) {
-          const filtered = amounts.filter((amount) => amount !== wages);
-
-          if (filtered.length > 0) {
-            return filtered[filtered.length - 1] ?? null;
-          }
-        }
-
-        return amounts[amounts.length - 1] ?? null;
-      },
-    }
-  );
+/** Accept an explicit single-box value or an exact labeled two-column layout. */
+function w2SourceAmount(text: string, label: string, grids: Array<{ pattern: RegExp; index: number }> = []): string | undefined {
+  const pattern = new RegExp(`(?:^|\\n)[ \\t]*${label}[ \\t]*(?:\\n[ \\t]*)?\\$?[ \\t]*([\\d,]+\\.\\d{2})[ \\t]*(?=\\n|$)`, "gi");
+  const values = [...text.matchAll(pattern)].map(match => match[1]);
+  for (const grid of grids) values.push(...[...text.matchAll(grid.pattern)].map(match => match[grid.index]));
+  const amounts = values.map(normalizeAmount).filter((value): value is string => value !== null);
+  return new Set(amounts.map(value => new Decimal(value).toFixed())).size === 1 ? amounts[0] : undefined;
 }
 
 export function parseUploadedW2Text(text: string, fileName = ""): ParsedUploadedDocument | null {
@@ -516,83 +232,51 @@ export function parseUploadedW2Text(text: string, fileName = ""): ParsedUploaded
   }
 
   const lines = buildLogicalLines(normalizedText);
-  const employerName = extractEmployerName(lines) ?? "Employer from uploaded W-2";
+  const employerName = extractEmployerName(lines) ?? "";
   const employerEin = extractEmployerEin(normalizedText) ?? "";
-  const wages = parseW2Box1Wages(normalizedText);
-  const federalWithheld = parseW2Box2FederalWithholding(normalizedText, wages);
-  const parsedSocialSecurityWages = pickFirstLineAmount(
-    lines,
-    /^3\s+Social security wages$/i,
-    [/^4\s+Social security tax withheld$/i, /^5\s+Medicare wages(?: and tips)?$/i]
-  );
-  const socialSecurityWithheld = pickLastLineAmount(
-    lines,
-    /^4\s+Social security tax withheld$/i,
-    [/^5\s+Medicare wages(?: and tips)?$/i, /^6\s+Medicare tax withheld$/i]
-  );
-  const medicareWages = pickFirstLineAmount(
-    lines,
-    /^5\s+Medicare wages(?: and tips)?$/i,
-    [/^6\s+Medicare tax withheld$/i, /^7\s+Social security tips$/i, /^8\s+Allocated tips$/i]
-  );
-  const medicareWithheld = pickLastLineAmount(
-    lines,
-    /^6\s+Medicare tax withheld$/i,
-    [/^7\s+Social security tips$/i, /^8\s+Allocated tips$/i, /^10\s+Dependent care benefits$/i]
-  );
-  const stateWages = collectAmountsNearLabel(
-    normalizedText,
-    /16\s+State wages, tips, etc\./i,
-    [/17\s+State income tax/i, /18\s+Local wages, tips, etc\./i],
-    {
-      windowLength: 160,
-      pickCandidate: (amounts) => pickLargestAmount(amounts),
-    }
-  ) ?? pickFirstLineAmount(
-    lines,
-    /16\s+State wages, tips, etc\./i,
-    [/^17\s+State income tax$/i, /^18\s+Local wages, tips, etc\./i],
-    10,
-  );
-  const stateWithheld = collectAmountsNearLabel(
-    normalizedText,
-    /(?:17\s+)?State income tax/i,
-    [/18\s+Local wages, tips, etc\./i, /19\s+Local income tax/i, /20\s+Locality name/i],
-    {
-      windowLength: 160,
-      pickCandidate: (amounts) => pickSmallestAmount(amounts),
-    }
-  ) ?? pickSmallestLineAmount(
-    lines,
-    /^17\s+State income tax$/i,
-    [/^19\s+Local income tax$/i, /^20\s+Locality name$/i],
-    10,
-  );
-  const socialSecurityWages = parsedSocialSecurityWages
-    ?? inferSocialSecurityWagesFromKnownValues(wages, socialSecurityWithheld);
+  const wageGrid = /(?:^|\n)1\s+Wages, tips, other comp\.\s+2\s+Federal income tax withheld[ \t]*\n[ \t]*([\d,]+\.\d{2})[ \t]+([\d,]+\.\d{2})[ \t]*(?=\n|$)/gi;
+  const socialGrid = /(?:^|\n)(?:3\s+Social security wages\s+4\s+Social security tax withheld|3\s+4\s+Social security tax withheld[ \t]*\n[ \t]*Social security wages)[ \t]*\n[ \t]*([\d,]+\.\d{2})[ \t]+([\d,]+\.\d{2})[ \t]*(?=\n|$)/gi;
+  const medicareGrid = /(?:^|\n)5\s+Medicare wages(?: and tips)?\s+6\s+Medicare tax withheld[ \t]*\n[ \t]*([\d,]+\.\d{2})[ \t]+([\d,]+\.\d{2})[ \t]*(?=\n|$)/gi;
+  const wages = w2SourceAmount(normalizedText, "1\\s+Wages, tips, other comp\\.", [{ pattern: wageGrid, index: 1 }]);
+  const federalWithheld = w2SourceAmount(normalizedText, "2\\s+Federal income tax withheld", [{ pattern: wageGrid, index: 2 }]);
+  const socialSecurityWages = w2SourceAmount(normalizedText, "3\\s+Social security wages", [{ pattern: socialGrid, index: 1 }]);
+  const socialSecurityWithheld = w2SourceAmount(normalizedText, "4\\s+Social security tax withheld", [{ pattern: socialGrid, index: 2 }]);
+  const medicareWages = w2SourceAmount(normalizedText, "5\\s+Medicare wages(?: and tips)?", [{ pattern: medicareGrid, index: 1 }]);
+  const medicareWithheld = w2SourceAmount(normalizedText, "6\\s+Medicare tax withheld", [{ pattern: medicareGrid, index: 2 }]);
+  const socialSecurityTips = w2SourceAmount(normalizedText, "7\\s+Social security tips");
+  const box10DependentCareBenefits = w2SourceAmount(normalizedText, "10\\s+Dependent care benefits");
+  const stateWages = w2SourceAmount(normalizedText, "16\\s+State wages, tips, etc\\.", [{ pattern: /(?:^|\n)15\s+State Employer'?s state ID no\.?\s+16\s+State wages, tips, etc\.[ \t]*\n[ \t]*[A-Z]{2}[ \t]+[\d-]+[ \t]+([\d,]+\.\d{2})[ \t]*(?=\n|$)/gi, index: 1 }]);
+  const stateWithheld = w2SourceAmount(normalizedText, "17\\s+State income tax", [{ pattern: /(?:^|\n)(?:17\s+)?State income tax\s+18\s+Local wages, tips, etc\.[ \t]*\n(?:[ \t]*17[ \t]*\n)?[ \t]*([\d,]+\.\d{2})[ \t]+([\d,]+\.\d{2})[ \t]*(?=\n|$)/gi, index: 1 }]);
+  const sourceStates = [...new Set([...normalizedText.matchAll(/^15[ \t]+State(?:[ \t]+Employer['’]?s state ID(?: no\.?| number))?(?:[ \t]+16[^\n]*)?[ \t]*:?[ \t]*(?:\n[ \t]*)?([A-Z]{2})(?=[ \t]|$)/gm)].map((match) => match[1]))];
+  const sourceState = sourceStates.length === 1 ? sourceStates[0] : undefined;
 
-  if (!wages || !federalWithheld) {
+  if (wages === undefined && federalWithheld === undefined) {
     return null;
   }
 
   const machineValue: WorkspaceStructuredFactMachineValueW2Summary = {
     entryKind: "w2-summary",
+    sourceFactsVersion: 2,
     employerName,
     employerEin,
-    wages,
-    federalWithheld,
+    wages: wages ?? "",
+    federalWithheld: federalWithheld ?? "",
     ...(socialSecurityWages ? { socialSecurityWages } : {}),
+    ...(socialSecurityTips !== undefined ? { socialSecurityTips } : {}),
+    ...(box10DependentCareBenefits !== undefined ? { box10DependentCareBenefits } : {}),
     ...(socialSecurityWithheld ? { socialSecurityWithheld } : {}),
     ...(medicareWages ? { medicareWages } : {}),
     ...(medicareWithheld ? { medicareWithheld } : {}),
     ...(stateWages ? { stateWages } : {}),
     ...(stateWithheld ? { stateWithheld } : {}),
+    ...(sourceState ? { state: sourceState, stateTaxReporting: "single" as const } : sourceStates.length > 1 ? { stateTaxReporting: "multiple" as const } : {}),
   };
 
   return {
     kind: "w2",
-    coverage: "supported",
-    label: employerName === "Employer from uploaded W-2" ? "Form W-2 upload" : `${employerName} W-2`,
+    taxYear: extractExplicitDocumentTaxYear(normalizedText),
+    coverage: employerName && employerEin && [wages, federalWithheld, socialSecurityWages, socialSecurityTips, box10DependentCareBenefits, socialSecurityWithheld, medicareWages, medicareWithheld, stateWages, stateWithheld].every(value => value !== undefined) && sourceState ? "supported" : "partially-supported",
+    label: employerName ? `${employerName} W-2` : "Form W-2 upload",
     notes: "Parsed W-2 wage and withholding boxes from an uploaded W-2 PDF.",
     seededFactIds: ["wages", "withholding"],
     detectedFacts: [
@@ -600,7 +284,7 @@ export function parseUploadedW2Text(text: string, fileName = ""): ParsedUploaded
         idSuffix: "parsed-w2-summary",
         factId: "wages",
         label: "Wages",
-        value: `Parsed uploaded W-2: ${employerName} box 1 wages $${formatAmountLabel(wages)} and box 2 federal withholding $${formatAmountLabel(federalWithheld)}.`,
+        value: `Parsed uploaded W-2: ${employerName || "payer identity unconfirmed"} box 1 wages $${wages === undefined ? "unknown" : formatAmountLabel(wages)} and box 2 federal withholding $${federalWithheld === undefined ? "unknown" : formatAmountLabel(federalWithheld)}.`,
         confidence: "high",
         machineValue,
       },
@@ -608,230 +292,139 @@ export function parseUploadedW2Text(text: string, fileName = ""): ParsedUploaded
         idSuffix: "parsed-w2-withholding",
         factId: "withholding",
         label: "Federal withholding",
-        value: `Parsed uploaded W-2 withholding: box 2 federal income tax withheld $${formatAmountLabel(federalWithheld)}.`,
+        value: `Parsed uploaded W-2 withholding: box 2 federal income tax withheld $${federalWithheld === undefined ? "unknown" : formatAmountLabel(federalWithheld)}.`,
         confidence: "high",
       },
     ],
   };
 }
 
+function sourcePayer(text: string): string {
+  const names = [...text.matchAll(/^(?:Payer(?:'s)?(?: name)?|Broker(?:'s)?(?: name)?):[ \t]*([^\n]+)$/gim)].map((match) => (match[1] ?? "").trim());
+  const distinct = [...new Set(names)];
+  return distinct.length === 1 ? (distinct[0] ?? "") : "";
+}
+
+function sourceFormCount(text: string, form: string): number {
+  return [...text.matchAll(new RegExp(`\\bForm\\s+${form}\\b`, "gi"))].length;
+}
+
+/** A missing box cannot borrow a later box's amount. Conflicting copies remain unknown. */
+function sourceBoxAmount(text: string, boxLabel: string): string | undefined {
+  const pattern = new RegExp(`(?:^|\\n)[ \\t]*${boxLabel}\\s*\\$?\\s*([\\d,]+\\.\\d{2})(?!\\d)`, "gi");
+  const amounts = [...text.matchAll(pattern)].map((match) => normalizeAmount(match[1] ?? "")).filter((amount): amount is string => amount !== null);
+  const distinct = [...new Set(amounts)];
+  return distinct.length === 1 ? distinct[0] : undefined;
+}
+
+function sourceFormSection(text: string, form: string): string {
+  const header = new RegExp(`\\bForm\\s+${form}\\b`, "i").exec(text);
+  if (!header) return "";
+  const section = text.slice(header.index + header[0].length);
+  const nextHeader = /\bForm\s+1099-[A-Z]+\b/i.exec(section);
+  return nextHeader ? section.slice(0, nextHeader.index) : section;
+}
+
+function knownSourceAmounts(values: Record<string, string | undefined>): Record<string, string> {
+  return Object.fromEntries(Object.entries(values).filter((entry): entry is [string, string] => entry[1] !== undefined));
+}
+
+function interestSourceFacts(text: string, payer: string): WorkspaceStructuredFactMachineValue1099IntSummary | null {
+  const interestIncome = sourceBoxAmount(text, "1\\s+Interest Income");
+  if (interestIncome === undefined) return null;
+  return { entryKind: "1099-int-summary", sourceFactsVersion: 2, payer, interestIncome, ...knownSourceAmounts({
+    earlyWithdrawalPenalty: sourceBoxAmount(text, "2\\s+Early [Ww]ithdrawal [Pp]enalty"),
+    federalWithheld: sourceBoxAmount(text, "4\\s+Federal Income Tax Withheld"),
+    usSavingsBondInterest: sourceBoxAmount(text, "3\\s+Interest on U\\.S\\. Savings Bonds and Treasury Obligations"),
+    taxExemptInterest: sourceBoxAmount(text, "8\\s+Tax[- ]Exempt Interest"),
+  }) };
+}
+
+function completeInterestSource(entry: WorkspaceStructuredFactMachineValue1099IntSummary): boolean {
+  return Boolean(entry.payer) && [entry.earlyWithdrawalPenalty, entry.federalWithheld, entry.usSavingsBondInterest, entry.taxExemptInterest].every((value) => value !== undefined);
+}
+
+function parseUploaded1099NecText(text: string, fileName = ""): ParsedUploadedDocument | null {
+  if (!/1099[- ]?NEC\b/i.test(`${fileName}\n${text}`)) return null;
+  const base = {
+    kind: "1099-nec" as const,
+    coverage: "partially-supported" as const,
+    label: "Form 1099-NEC source review",
+    notes: "Confirm the actual recipient, source boxes and separate business facts in the guided interview before calculating.",
+    seededFactIds: ["nonemployee-compensation", "schedule-c-expense-review"] as SeededFactId[],
+  };
+  if (sourceFormCount(text, "1099-NEC") > 1) return { ...base, notes: "Multiple Forms 1099-NEC need separate source records and recipient confirmation.", detectedFacts: [] };
+  const compensation = sourceBoxAmount(text, "1(?:a)?\\s+Nonemployee [Cc]ompensation");
+  if (compensation === undefined) return { ...base, detectedFacts: [] };
+  const payer = sourcePayer(text);
+  const tins = [...new Set([...text.matchAll(/^Payer(?:'s)?\s+TIN:[ \t]*(\d{2}-?\d{7})\b/gim)].map(match => match[1]))];
+  const states = [...new Set([...text.matchAll(/(?:^|\n)[ \t]*6\s+State(?:\/|\s+and\s+)Payer(?:'s)?\s+state\s+(?:no\.?|number)[ \t]*(?:\n[ \t]*)?([A-Z]{2})\b/gi)].map(match => match[1].toUpperCase()))];
+  const machineValue: WorkspaceStructuredFactMachineValue1099NecSummary = {
+    entryKind: "1099-nec-summary", sourceFactsVersion: 2, payer, nonemployeeCompensation: compensation,
+    ...(tins.length === 1 ? { payerTin: tins[0] } : {}),
+    ...knownSourceAmounts({ federalWithheld: sourceBoxAmount(text, "4\\s+Federal [Ii]ncome [Tt]ax [Ww]ithheld"), stateWithheld: sourceBoxAmount(text, "5\\s+State [Tt]ax [Ww]ithheld"), stateIncome: sourceBoxAmount(text, "7\\s+State [Ii]ncome") }),
+    ...(states.length === 1 ? { state: states[0], stateTaxReporting: "single" as const } : states.length > 1 ? { stateTaxReporting: "multiple" as const } : {}),
+  };
+  return { ...base, label: payer ? `${payer} 1099-NEC` : base.label, detectedFacts: [{ idSuffix: "parsed-1099-nec-summary", factId: "nonemployee-compensation", label: "Nonemployee compensation source", value: `Parsed actual NEC compensation $${formatAmountLabel(compensation)}; business and recipient facts still require confirmation.`, confidence: "high", machineValue }] };
+}
+
 function parseUploadedComposite1099Text(text: string, fileName = ""): ParsedUploadedDocument | null {
   const normalizedText = normalizeParsingText(text);
-  const signalText = `${fileName}\n${normalizedText}`;
-
-  if (!/1099 composite/i.test(signalText)) {
-    return null;
-  }
-
+  if (!/1099 composite/i.test(`${fileName}\n${normalizedText}`)) return null;
+  const payer = sourcePayer(normalizedText);
   const accountNumber = extractAccountNumber(normalizedText);
-  const labelSuffix = accountNumber ? ` ending in ${accountNumber.slice(-4)}` : "";
-  const payerLabel = /schwab/i.test(signalText) ? "Schwab" : "Composite broker";
-
-  const interestIncome = extractAmountByPatterns(normalizedText, [
-    /1\s+Interest Income[\s\S]{0,120}?\$\s*([\d,]+\.\d{2})/i,
-  ]);
-  const ordinaryDividends = extractAmountByPatterns(normalizedText, [
-    /1a\s+Total Ordinary Dividends[\s\S]{0,120}?\$\s*([\d,]+\.\d{2})/i,
-  ]);
-  const qualifiedDividends = extractAmountByPatterns(normalizedText, [
-    /1b\s+Qualified Dividends[\s\S]{0,80}?\$\s*([\d,]+\.\d{2})/i,
-  ]) ?? "0";
-  const capitalGainDistributions = extractAmountByPatterns(normalizedText, [
-    /2a\s+Total Capital Gain Distributions[\s\S]{0,120}?\$\s*([\d,]+\.\d{2})/i,
-  ]) ?? "0";
-  const dividendFederalWithheld = extractAmountByPatterns(normalizedText, [
-    /4\s+Federal Income Tax Withheld[\s\S]{0,80}?\$\s*([\d,]+\.\d{2})/i,
-  ]) ?? "0";
-  const section199ADividends = extractAmountByPatterns(normalizedText, [
-    /5\s+Section 199A Dividends[\s\S]{0,80}?\$\s*([\d,]+\.\d{2})/i,
-  ]) ?? "0";
-  const foreignTaxPaid = extractAmountByPatterns(normalizedText, [
-    /7\s+Foreign Tax Paid[\s\S]{0,80}?\$\s*([\d,]+\.\d{2})/i,
-  ]) ?? "0";
-  const shortTermProceeds = extractAmountByPatterns(normalizedText, [
-    /Total Short-Term \(Cost basis is reported to the IRS\)[\s\S]{0,80}?\$\s*([\d,]+\.\d{2})/i,
-  ]);
-  const shortTermCostBasis = extractAmountByPatterns(normalizedText, [
-    /Total Short-Term \(Cost basis is reported to the IRS\)[\s\S]{0,120}?\$\s*[\d,]+\.\d{2}\s*\$\s*([\d,]+\.\d{2})/i,
-  ]);
-  const shortTermGainLoss = extractSignedAmountByPatterns(normalizedText, [
-    /Total Short-Term \(Cost basis is reported to the IRS\)[\s\S]{0,200}?\$\s*(\(?-?[\d,]+\.\d{2}\)?)/i,
-    /Total Short-Term Sales Price of Stocks, Bonds, etc\.[\s\S]{0,200}?\$\s*(\(?-?[\d,]+\.\d{2}\)?)/i,
-  ]);
-
+  const label = `${payer || "Uploaded brokerage"}${accountNumber ? ` ending in ${accountNumber.slice(-4)}` : ""}`;
+  const interest = interestSourceFacts(sourceFormSection(normalizedText, "1099-INT"), payer);
+  const dividendsText = sourceFormSection(normalizedText, "1099-DIV");
+  const ordinaryDividends = sourceBoxAmount(dividendsText, "1a\\s+Total Ordinary Dividends");
+  const dividendAmounts = knownSourceAmounts({
+    qualifiedDividends: sourceBoxAmount(dividendsText, "1b\\s+Qualified Dividends"),
+    capitalGainDistributions: sourceBoxAmount(dividendsText, "2a\\s+Total Capital Gain Distributions"),
+    federalWithheld: sourceBoxAmount(dividendsText, "4\\s+Federal Income Tax Withheld"),
+    section199ADividends: sourceBoxAmount(dividendsText, "5\\s+Section 199A Dividends"),
+    foreignTaxPaid: sourceBoxAmount(dividendsText, "7\\s+Foreign Tax Paid"),
+  });
+  const totals = sourceFormSection(normalizedText, "1099-B").match(/Total Short-Term \(Cost basis is reported to the IRS\)\s*\$\s*([\d,]+\.\d{2})\s*\$\s*([\d,]+\.\d{2})/i);
+  const proceeds = totals ? normalizeAmount(totals[1]) : null;
+  const basis = totals ? normalizeAmount(totals[2]) : null;
   const detectedFacts: WorkspaceDocumentDetectedFactRecord[] = [];
   const seededFactIds: SeededFactId[] = [];
-
-  if (interestIncome) {
-    const machineValue: WorkspaceStructuredFactMachineValue1099IntSummary = {
-      entryKind: "1099-int-summary",
-      payer: `${payerLabel}${labelSuffix}`,
-      interestIncome,
-      earlyWithdrawalPenalty: "0",
-      federalWithheld: "0",
-      taxExemptInterest: "0",
-      usSavingsBondInterest: "0",
-    };
-
+  if (interest) {
     seededFactIds.push("taxable-interest");
-    detectedFacts.push({
-      idSuffix: "parsed-composite-interest",
-      factId: "taxable-interest",
-      label: "Taxable interest",
-      value: `Parsed uploaded composite statement: taxable interest $${formatAmountLabel(interestIncome)}.`,
-      confidence: "high",
-      machineValue,
-    });
+    detectedFacts.push({ idSuffix: "parsed-composite-interest", factId: "taxable-interest", label: "Taxable interest", value: `Parsed uploaded composite statement: taxable interest $${formatAmountLabel(interest.interestIncome)}. Missing boxes require confirmation.`, confidence: "high", machineValue: interest });
   }
-
-  if (ordinaryDividends) {
-    const machineValue: WorkspaceStructuredFactMachineValue1099DivSummary = {
-      entryKind: "1099-div-summary",
-      payer: `${payerLabel}${labelSuffix}`,
-      ordinaryDividends,
-      qualifiedDividends,
-      capitalGainDistributions,
-      federalWithheld: dividendFederalWithheld,
-      section199ADividends,
-      foreignTaxPaid,
-    };
-
-    seededFactIds.push("ordinary-dividends", "qualified-dividends", "capital-gain-distributions");
-    detectedFacts.push(
-      {
-        idSuffix: "parsed-composite-dividends",
-        factId: "ordinary-dividends",
-        label: "Ordinary dividends",
-        value: `Parsed uploaded composite statement: ordinary dividends $${formatAmountLabel(ordinaryDividends)}, qualified dividends $${formatAmountLabel(qualifiedDividends)}, and foreign tax paid $${formatAmountLabel(foreignTaxPaid)}.`,
-        confidence: "high",
-        machineValue,
-      },
-      {
-        idSuffix: "parsed-composite-qualified-dividends",
-        factId: "qualified-dividends",
-        label: "Qualified dividends",
-        value: `Parsed uploaded composite statement: qualified dividends $${formatAmountLabel(qualifiedDividends)}.`,
-        confidence: "high",
-      },
-      {
-        idSuffix: "parsed-composite-capital-gain-distributions",
-        factId: "capital-gain-distributions",
-        label: "Capital gain distributions",
-        value: `Parsed uploaded composite statement: capital gain distributions $${formatAmountLabel(capitalGainDistributions)} and Section 199A dividends $${formatAmountLabel(section199ADividends)}.`,
-        confidence: "high",
-      },
-    );
+  if (ordinaryDividends !== undefined) {
+    const machineValue: WorkspaceStructuredFactMachineValue1099DivSummary = { entryKind: "1099-div-summary", sourceFactsVersion: 2, payer, ordinaryDividends, ...dividendAmounts };
+    seededFactIds.push("ordinary-dividends");
+    detectedFacts.push({ idSuffix: "parsed-composite-dividends", factId: "ordinary-dividends", label: "Ordinary dividends", value: `Parsed uploaded composite statement: ordinary dividends $${formatAmountLabel(ordinaryDividends)}. Missing dividend boxes require confirmation.`, confidence: "high", machineValue });
+    for (const [field, factId, title] of [["qualifiedDividends", "qualified-dividends", "Qualified dividends"], ["capitalGainDistributions", "capital-gain-distributions", "Capital gain distributions"]] as const) {
+      if (dividendAmounts[field] === undefined) continue;
+      seededFactIds.push(factId);
+      detectedFacts.push({ idSuffix: `parsed-composite-${factId}`, factId, label: title, value: `${title} $${formatAmountLabel(dividendAmounts[field])} from the actual dividend section.`, confidence: "high" });
+    }
   }
-
-  if (shortTermProceeds && shortTermCostBasis) {
-    const gainLoss = shortTermGainLoss ?? (Number(shortTermProceeds) - Number(shortTermCostBasis)).toFixed(2);
-    const machineValue: WorkspaceStructuredFactMachineValue1099BTransaction = {
-      entryKind: "1099-b-transaction",
-      description: `${payerLabel}${labelSuffix} short-term covered summary`,
-      dateAcquired: "VARIOUS",
-      dateSold: "2025-12-31",
-      proceeds: shortTermProceeds,
-      costBasis: shortTermCostBasis,
-      adjustments: "0",
-      basisReportedToIRS: true,
-      holdingPeriod: "short",
-      washSale: false,
-      washSaleDisallowed: "0",
-    };
-
+  if (proceeds !== null && basis !== null) {
     seededFactIds.push("broker-proceeds", "cost-basis-review");
-    detectedFacts.push(
-      {
-        idSuffix: "parsed-composite-short-term-summary",
-        factId: "broker-proceeds",
-        label: "Broker sale proceeds",
-        value: `Parsed uploaded composite statement: short-term covered sales proceeds $${formatAmountLabel(shortTermProceeds)}, basis $${formatAmountLabel(shortTermCostBasis)}, gain/loss $${formatAmountLabel(gainLoss.replace("-", ""))}${gainLoss.startsWith("-") ? " loss" : " gain"}.`,
-        confidence: "high",
-        machineValue,
-      },
-      {
-        idSuffix: "parsed-composite-cost-basis-review",
-        factId: "cost-basis-review",
-        label: "Cost basis review",
-        value: "Parsed uploaded composite statement includes covered short-term 1099-B totals with basis reported to the IRS.",
-        confidence: "high",
-      },
-    );
+    detectedFacts.push({ idSuffix: "parsed-composite-short-term-summary", factId: "broker-proceeds", label: "Broker sale proceeds", value: `Parsed short-term covered summary: proceeds $${formatAmountLabel(proceeds)} and basis $${formatAmountLabel(basis)}. Actual dates and adjustments remain unconfirmed.`, confidence: "high", machineValue: {
+      entryKind: "1099-b-transaction", sourceFactsVersion: 2, description: `${label} short-term covered summary`, dateAcquired: "", dateSold: "", proceeds, costBasis: basis, basisReportedToIRS: true, holdingPeriod: "short",
+    } });
+    detectedFacts.push({ idSuffix: "parsed-composite-cost-basis-review", factId: "cost-basis-review", label: "Cost basis review", value: "The summary reports short-term basis to the IRS; actual transaction dates, adjustments and wash-sale facts require confirmation.", confidence: "high" });
   }
-
-  if (detectedFacts.length === 0) {
-    return null;
-  }
-
-  const kind: WorkspaceDocumentKind = shortTermProceeds
-    ? "1099-b"
-    : ordinaryDividends
-      ? "1099-div"
-      : "1099-int";
-
-  return {
-    kind,
-    coverage: "supported",
-    label: `${payerLabel}${labelSuffix} composite tax statement`,
-    notes: "Parsed supported 1099 fields from an uploaded composite brokerage statement.",
-    seededFactIds: dedupeSeededFactIds(seededFactIds),
-    detectedFacts,
-  };
+  if (!detectedFacts.length) return null;
+  // Repeated form headings may be duplicate copies or separate statements. A
+  // single extracted section cannot establish which, or a complete total.
+  const unambiguousSections = ["1099-INT", "1099-DIV", "1099-B"].every((form) => sourceFormCount(normalizedText, form) <= 1);
+  const complete = unambiguousSections && !proceeds && (!sourceFormCount(normalizedText, "1099-INT") || (interest !== null && completeInterestSource(interest))) && (!sourceFormCount(normalizedText, "1099-DIV") || (ordinaryDividends !== undefined && payer !== "" && Object.keys(dividendAmounts).length === 5));
+  return { kind: proceeds !== null ? "1099-b" : ordinaryDividends !== undefined ? "1099-div" : "1099-int", coverage: complete ? "supported" : "partially-supported", label: `${label} composite tax statement`, notes: "Parsed only explicitly labeled source fields; missing boxes, payer identity and transaction details require confirmation.", seededFactIds: dedupeSeededFactIds(seededFactIds), detectedFacts };
 }
 
 function parseUploaded1099IntText(text: string, fileName = ""): ParsedUploadedDocument | null {
   const normalizedText = normalizeParsingText(text);
   const signalText = `${fileName}\n${normalizedText}`;
-
-  if (!/1099-?int\b/i.test(signalText) || /1099 composite/i.test(signalText)) {
-    return null;
-  }
-
-  const interestIncome = extractAmountByPatterns(normalizedText, [
-    /1\s+Interest Income[\s\S]{0,120}?\$\s*([\d,]+\.\d{2})/i,
-  ]);
-
-  if (!interestIncome) {
-    return null;
-  }
-
-  const federalWithheld = extractAmountByPatterns(normalizedText, [
-    /4\s+Federal Income Tax Withheld[\s\S]{0,80}?\$\s*([\d,]+\.\d{2})/i,
-  ]) ?? "0";
-  const usSavingsBondInterest = extractAmountByPatterns(normalizedText, [
-    /3\s+Interest on U\.S\. Savings Bonds and Treasury Obligations[\s\S]{0,80}?\$\s*([\d,]+\.\d{2})/i,
-  ]) ?? "0";
-  const taxExemptInterest = extractAmountByPatterns(normalizedText, [
-    /8\s+Tax-Exempt Interest[\s\S]{0,80}?\$\s*([\d,]+\.\d{2})/i,
-  ]) ?? "0";
-  const payer = fileName.replace(/\.pdf$/i, "") || "Interest payer";
-  const machineValue: WorkspaceStructuredFactMachineValue1099IntSummary = {
-    entryKind: "1099-int-summary",
-    payer,
-    interestIncome,
-    earlyWithdrawalPenalty: "0",
-    federalWithheld,
-    taxExemptInterest,
-    usSavingsBondInterest,
-  };
-
-  return {
-    kind: "1099-int",
-    coverage: "supported",
-    label: `${payer} 1099-INT`,
-    notes: "Parsed taxable interest boxes from an uploaded 1099-INT PDF.",
-    seededFactIds: ["taxable-interest"],
-    detectedFacts: [
-      {
-        idSuffix: "parsed-1099-int-summary",
-        factId: "taxable-interest",
-        label: "Taxable interest",
-        value: `Parsed uploaded 1099-INT: taxable interest $${formatAmountLabel(interestIncome)}.`,
-        confidence: "high",
-        machineValue,
-      },
-    ],
-  };
+  if (!/1099-?int\b/i.test(signalText) || /1099 composite/i.test(signalText)) return null;
+  const machineValue = interestSourceFacts(normalizedText, sourcePayer(normalizedText));
+  if (!machineValue) return null;
+  return { kind: "1099-int", coverage: completeInterestSource(machineValue) && sourceFormCount(normalizedText, "1099-INT") <= 1 ? "supported" : "partially-supported", label: `${machineValue.payer || "Uploaded"} 1099-INT`, notes: "Parsed actual labeled interest boxes; missing payer identity or boxes require confirmation.", seededFactIds: ["taxable-interest"], detectedFacts: [{ idSuffix: "parsed-1099-int-summary", factId: "taxable-interest", label: "Taxable interest", value: `Parsed uploaded 1099-INT: taxable interest $${formatAmountLabel(machineValue.interestIncome)}.`, confidence: "high", machineValue }] };
 }
 
 function parseUploaded1099DAText(text: string, fileName = ""): ParsedUploadedDocument | null {
@@ -843,41 +436,50 @@ function parseUploaded1099DAText(text: string, fileName = ""): ParsedUploadedDoc
   }
 
   const assetMatch = normalizedText.match(/\b([A-Z0-9]{2,10})\s*\/\s*([A-Z0-9]{4,})\b/);
-  const assetName = assetMatch?.[1] ?? "Digital asset";
-  const rowPattern = /(\d{2}\/\d{2}\/\d{2})\s+[0-9.]+\s+([0-9]+\.[0-9]{2})\s+(\d{2}\/\d{2}\/\d{2})\s+([0-9]+\.[0-9]{2})\s+(-?[0-9]+\.[0-9]{2})/g;
+  const assetName = assetMatch?.[1] ?? "";
+  const longTerm = /\bLong[- ]Term Transactions\b/i.test(normalizedText);
+  const shortTerm = /\bShort[- ]Term Transactions\b/i.test(normalizedText);
+  const holdingPeriod = longTerm !== shortTerm ? (longTerm ? "long" : "short") : undefined;
+  const notReported = /cost basis (?:is|was) not reported to the IRS/i.test(normalizedText);
+  const reported = /cost basis (?:is|was) reported to the IRS/i.test(normalizedText);
+  const basisReportedToIRS = reported !== notReported ? reported : undefined;
+  const rowPattern = /(\d{2}\/\d{2}\/\d{2})\s+([0-9]+(?:\.[0-9]+)?)\s+([0-9]+\.[0-9]{2})\s+(\d{2}\/\d{2}\/\d{2}|--)\s+([0-9]+\.[0-9]{2}|--)\s+(-?[0-9]+\.[0-9]{2}|--)/g;
   const detectedFacts: WorkspaceDocumentDetectedFactRecord[] = [];
   const transactions = [...normalizedText.matchAll(rowPattern)];
 
   for (const [index, match] of transactions.entries()) {
+    const rowAsset = [...normalizedText.slice(0, match.index).matchAll(/\b([A-Z0-9]{2,10})\s*\/\s*([A-Z0-9]{4,})\b/g)].at(-1);
     const dateSold = toIsoDate(match[1] ?? "");
-    const proceeds = normalizeAmount(match[2] ?? "");
-    const dateAcquired = toIsoDate(match[3] ?? "");
-    const costBasis = normalizeAmount(match[4] ?? "");
+    const proceeds = normalizeAmount(match[3] ?? "");
+    const dateAcquired = match[4] === "--" ? null : toIsoDate(match[4] ?? "");
+    const costBasis = match[5] === "--" ? null : normalizeAmount(match[5] ?? "");
+    const gainOrLoss = match[6] === "--" ? undefined : normalizeSignedAmount(match[6] ?? "") ?? undefined;
 
-    if (!proceeds || !costBasis || !dateSold || !dateAcquired) {
+    if (!proceeds || !dateSold || (match[4] !== "--" && !dateAcquired) || (match[5] !== "--" && !costBasis)) {
       continue;
     }
 
-    const machineValue: WorkspaceStructuredFactMachineValue1099BTransaction = {
-      entryKind: "1099-b-transaction",
-      description: `${assetName} via Coinbase`,
-      dateAcquired,
+    const machineValue: WorkspaceStructuredFactMachineValue1099DATransaction = {
+      entryKind: "1099-da-transaction",
+      sourceFactsVersion: 2,
+      transactionEvidence: "individual",
+      ...(rowAsset?.[1] ? { digitalAssetName: rowAsset[1] } : {}),
+      ...(rowAsset?.[2] ? { digitalAssetCode: rowAsset[2] } : {}),
+      quantity: match[2],
+      reportedDateAcquired: dateAcquired,
       dateSold,
       proceeds,
-      costBasis,
-      adjustments: "0",
-      basisReportedToIRS: false,
-      holdingPeriod: "long",
-      digitalAsset: true,
-      washSale: false,
-      washSaleDisallowed: "0",
+      reportedCostBasis: costBasis,
+      ...(gainOrLoss === undefined ? {} : { gainOrLoss }),
+      ...(basisReportedToIRS === undefined ? {} : { basisReportedToIRS }),
+      ...(holdingPeriod === undefined ? {} : { holdingPeriod }),
     };
 
     detectedFacts.push({
       idSuffix: `parsed-1099-da-transaction-${index + 1}`,
       factId: "broker-proceeds",
       label: "Digital asset sale",
-      value: `Parsed uploaded 1099-DA: ${assetName} sold ${dateSold} for $${formatAmountLabel(proceeds)} with basis $${formatAmountLabel(costBasis)}.`,
+      value: `Parsed uploaded 1099-DA: ${rowAsset?.[1] ?? assetName} sold ${dateSold} for $${formatAmountLabel(proceeds)} with ${costBasis === null ? "blank reported basis" : `reported basis $${formatAmountLabel(costBasis)}`}.`,
       confidence: "high",
       machineValue,
     });
@@ -904,18 +506,14 @@ function parseUploaded1099DAText(text: string, fileName = ""): ParsedUploadedDoc
       value: `Parsed uploaded 1099-DA summary: proceeds $${formatAmountLabel(summaryProceeds)} and basis $${formatAmountLabel(summaryBasis)}.`,
       confidence: "high",
       machineValue: {
-        entryKind: "1099-b-transaction",
-        description: "Coinbase digital asset summary",
-        dateAcquired: "VARIOUS",
-        dateSold: "2025-12-31",
+        entryKind: "1099-da-transaction",
+        sourceFactsVersion: 2,
+        transactionEvidence: "summary",
+        ...(assetName ? { digitalAssetName: assetName } : {}),
         proceeds: summaryProceeds,
-        costBasis: summaryBasis,
-        adjustments: "0",
-        basisReportedToIRS: false,
-        holdingPeriod: "long",
-        digitalAsset: true,
-        washSale: false,
-        washSaleDisallowed: "0",
+        reportedCostBasis: summaryBasis,
+        ...(basisReportedToIRS === undefined ? {} : { basisReportedToIRS }),
+        ...(holdingPeriod === undefined ? {} : { holdingPeriod }),
       },
     });
   }
@@ -924,27 +522,36 @@ function parseUploaded1099DAText(text: string, fileName = ""): ParsedUploadedDoc
     idSuffix: "parsed-1099-da-cost-basis-review",
     factId: "cost-basis-review",
     label: "Cost basis review",
-    value: "Parsed uploaded 1099-DA indicates basis was not reported to the IRS for these digital asset transactions.",
+    value: "Confirm actual basis reporting, holding period, adjustments and wash-sale treatment from the source transaction records.",
     confidence: "high",
   });
 
   return {
     kind: "1099-da",
-    coverage: "supported",
-    label: "Coinbase 1099-DA",
-    notes: "Parsed digital asset sale rows from an uploaded 1099-DA PDF.",
+    coverage: "partially-supported",
+    label: "Uploaded 1099-DA",
+    notes: "Parsed digital asset rows or totals. Summary-only amounts require actual transaction dates and review before calculation.",
     seededFactIds: ["broker-proceeds", "cost-basis-review"],
     detectedFacts,
   };
+}
+
+export function extractExplicitDocumentTaxYear(text: string): number | null {
+  const years = new Set<number>();
+  for (const pattern of [/\b(?:tax\s+year|(?:for\s+)?calendar\s+year)\s*[:-]?\s*(20\d{2})\b/gi, /\b(20\d{2})\s+(?:Form\s+)?(?:W-?2|1099-[A-Z]+|1098-[A-Z]+|1095-[A-Z]+)\b/gi]) {
+    for (const match of text.matchAll(pattern)) years.add(Number(match[1]));
+  }
+  return years.size === 1 ? [...years][0] : null;
 }
 
 export function parseUploadedDocumentText(text: string, fileName = ""): ParsedUploadedDocument | null {
   const normalizedText = normalizeParsingText(text);
   const signalText = `${fileName}\n${normalizedText}`;
 
-  return parseUploadedW2Text(normalizedText, fileName)
+  const parsed = parseUploadedW2Text(normalizedText, fileName)
     ?? parseUploadedComposite1099Text(normalizedText, fileName)
     ?? parseUploaded1099IntText(normalizedText, fileName)
+    ?? parseUploaded1099NecText(normalizedText, fileName)
     ?? parseUploaded1099DAText(normalizedText, fileName)
     ?? (/1095.?c/i.test(signalText)
       ? buildReviewedDocument(
@@ -964,6 +571,7 @@ export function parseUploadedDocumentText(text: string, fileName = ""): ParsedUp
           "Bank year-end summaries were reviewed as supplemental records only. The actual 1099-INT should be used for deterministic interest income."
         )
       : null);
+  return parsed ? { ...parsed, taxYear: extractExplicitDocumentTaxYear(normalizedText) } : null;
 }
 
 export async function prepareUploadableFiles(files: File[]): Promise<PreparedUploadableFile[]> {

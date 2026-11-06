@@ -1,0 +1,42 @@
+form: "Publication 974 signed combined earned-income limit"
+fullName: "Actual same-owner negative Worksheet W line 15"
+taxYear: 2025
+irsReference: "https://www.irs.gov/publications/p974"
+notes: |
+  Refreshed 2026-10-26. Worksheet W line 15 subtracts the completed
+  nonspecified deduction from the income of the specified-plan businesses.
+  W16, X30, Y/Z20 and Simplified Step3 line9 use the smaller signed amount;
+  these instructions do not insert a zero floor. The published P/7206 stop
+  still takes precedence when every specified-plan business is exhausted.
+  This method uses one actual owner for every business contributing income
+  or a nonspecified deduction. It retains a nonnegative combined deduction;
+  the negative specified intermediate is not a separate negative deduction.
+  Under Reg.1.199A-3(b)(1)(vi), the owner's combined allowable deduction is
+  attributed for QBI using actual gross income from every business used in
+  calculating it, including the separate nonspecified source. No current
+  deduction, earned-income or credit allocation override is accepted.
+lines:
+  - line: "W15-X30"
+    description: "Preserve the signed combined limit through W and X"
+    formula: "W13=sum actual specified-plan business income after attributable SE/retirement/foreign deductions. W14=sum completed nonspecified deductions. W15=W13-W14. For the actual same-owner negative-limit cohort, W16=min(W3,W15), W17=W14+W16 and W19=W15-W16. X30=min(X28,W15), X31=W14+X30. Reject a negative combined claim or conflicting contributing owners. No zero floor or extra stop election."
+    testRef: "tests/engine/forms/marketplace-health-negative-limit.test.ts::retains negative W15 in W and X without manufacturing another stop"
+  - line: "ordered-cents"
+    description: "Keep exact signed cents and the actual ordered limits"
+    formula: "Y/Z retain W15 as line19 and use the signed minimum on line20; only the final combined Schedule1 transfer rounds. W15=-0.01 remains negative even when a printed line is zero. Actual zero advances skip X; actual positive advances retain the calculated X/Y/Z cap."
+    testRef: "tests/engine/forms/marketplace-health-negative-limit.test.ts::keeps signed cents through zero-advance and ordered worksheet stages"
+  - line: "owner-source"
+    description: "Require original same-owner contributing businesses"
+    formula: "All actual specified-plan businesses and every business contributing a positive nonspecified deduction must have the same owner for this combined negative-limit method. Separate-owner ownership and an aggregate negative final claim remain distinct methods. Positive unrelated business income cannot increase W13."
+    testRef: "tests/engine/forms/marketplace-health-negative-limit.test.ts::rejects conflicting owners and preserves the completed nonspecified stop"
+  - line: "canonical-qbi"
+    description: "Transfer the combined allowable claim once and attribute QBI without negative deductions"
+    formula: "Actual C5000/F20000/W225000 and F premiums6000 produce halfSE1767, W13=4646.6, W14=6000, W15=W16=X30=-1353.4, combined health4646.6 and Schedule1 4647. Final AGI43586/PTC3577/repayment23. The combined claim uses gross5000/20000, exact QBI shares929.32/3717.28, reported shares929/3718; total QBI deduction3717. Original payments and business limits remain unchanged."
+    testRef: "tests/engine/federal-marketplace-negative-limit.test.ts::uses the signed worksheet claim once with actual same-owner QBI sources"
+  - line: "canonical-zero-advances"
+    description: "Use the same original-source method without X"
+    formula: "Explicit zero policy advances and reconciled actual cash payments skip X. The same negative W15 limits the combined deduction; no repayment is created. Reversing source plans does not change income, credit, deduction or per-business allocation."
+    testRef: "tests/engine/federal-marketplace-negative-limit.test.ts::preserves source order and the zero-advance variant"
+  - line: "saved-review"
+    description: "Show the signed intermediate and bind actual gross-income sources before output"
+    formula: "Each physical Form7206 retains its actual nonspecified source claim; the appendix identifies the signed W15 and the single combined return transfer, which is not the sum of those standalone form lines. The negative specified amount is not a separate negative QBI deduction. Reconcile original gross-income sources and every retained audit before PDF I/O; changed same-net sources or balanced QBI tampering reject."
+    testRef: "tests/pdf/marketplace-health-negative-limit.test.ts::preserves original forms and the signed combined claim before review output"

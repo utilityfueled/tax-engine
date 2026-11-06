@@ -1,0 +1,34 @@
+form: "Form 8839 Prior Benefits Return"
+fullName: "Historical foreign-adoption benefits in the completed return"
+taxYear: 2026
+irsReference: "https://www.irs.gov/instructions/i8839"
+notes: |
+  Source review 2026-10-25. This uses the source/rounding convention documented
+  in form-8839-prior-benefits.yaml, including the explicit continuation of the
+  2023 signed reporting instruction retained by the historical worksheet.
+  Physical Form8839 line31 and the signed Form1040 line1f adjustment are distinct.
+  Pub915 Worksheet1 line5 specifically adds physical8839line30. The existing
+  IRA, Form8582 and savings-bond MAGI exclusion addbacks continue to use the
+  actual full exclusion, not the negative prior-year transfer.
+  Form8962 Worksheet1-1 adds tax-exempt interest, section911 exclusions and
+  nontaxable Social Security to AGI; it has no adoption-exclusion addback.
+  https://www.irs.gov/publications/p915
+  https://www.irs.gov/instructions/i8962
+  https://www.irs.gov/publications/p974
+lines:
+  - line: "1f"
+    description: "Once-only signed historical benefit transfer"
+    formula: "Resolve actual taxpayer identity; activate for current benefits, prior benefits or a supplied history; Form1040line1f=physical8839line31-priorBenefitWorksheet9"
+    testRef: "tests/engine/federal-adoption-prior-benefits.test.ts::transfers prior-only current and mixed benefits once with actual identity"
+  - line: "magi"
+    description: "Physical exclusion in the Social Security worksheet"
+    formula: "Pub915 line5 adds full physical8839line30; final adoption credit MAGI uses actual AGI plus its specified foreign and possession adjustments"
+    testRef: "tests/engine/federal-adoption-prior-benefits.test.ts::retains the physical exclusion addback and final actual credit MAGI"
+  - line: "ptc"
+    description: "Historical reduction survives Marketplace replays"
+    formula: "Each Pub974 replay includes the signed adoption adjustment once; final Form8962 uses actual final AGI without an adoption addback"
+    testRef: "tests/engine/federal-adoption-prior-benefits.test.ts::keeps historical benefits in final Pub974 and Form8962 income"
+  - line: "sources"
+    description: "Canonical source contradictions remain rejected"
+    formula: "Bind prior recipients to actual return identity and current W2 adoption benefits to current child benefits, separately from historical sources"
+    testRef: "tests/engine/federal-adoption-prior-benefits.test.ts::rejects unknown or contradictory original source and current payroll facts"

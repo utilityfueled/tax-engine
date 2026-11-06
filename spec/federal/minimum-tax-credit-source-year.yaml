@@ -1,0 +1,61 @@
+form: "Minimum tax credit source year"
+fullName: "Signed credit adjustment from the actual source year before any later-year credit limit"
+taxYear: 2026
+irsReference: "https://www.irs.gov/instructions/i8801"
+sources:
+  - "https://www.irs.gov/instructions/i8801 (2025 instructions, PartI and PartIII; refreshed2026-10-28)"
+  - "https://uscode.house.gov/us/usc/119-124/t26/s55/ (55(d)(2),(4), current through2026-10-15)"
+  - "https://www.irs.gov/irb/2025-45_IRB (RevProc2025-32 sections3.03/3.10; retrieved2026-10-28)"
+notes: |
+  IRC108(b)(2)(C) reaches the minimum tax credit available at the start of the
+  following year. Current Form8801 line26 alone does not include the signed
+  current-source-year adjustment that will appear on that following form's18.
+  Expose the existing individual PartI/III arithmetic through signed18 as a pure
+  source-year-only mode. It consumes no later-year regular tax, tentative tax,
+  credit use or invented zero. It returns no later-year credit or carryforward.
+  The full2025/2026 form API and its actual preceding-year rules are unchanged.
+  Source-year2026 is a calculation worksheet, not permission to file2027 forms.
+  Strict original source year, confirmation, completeness, original6251 lines,
+  exclusion-only NOL/foreign-credit worksheets and applicability remain required.
+  This arithmetic primitive does not accept a current COD deduction override or
+  establish the current canonical MTCNOLD/MTFTCE source binding. That integration
+  remains separate. Unknown ancillary worksheets must not be substituted with0.
+  Preserve the signed difference, including negative deferral reversals; source
+  zero AMT does not itself establish a zero signed credit adjustment.
+  Every amount uses Decimal and existing whole-dollar IRS line rounding. Source
+  2024/2025 keep25percent phaseout/additional-MFS rates. Source2026 uses50percent
+  in both occurrences in55(d)(2), under55(d)(4)(A)(ii)(IV). Source2026 MFS initial
+  phaseout ends at500000+70100/0.50=640200. Additional AMTI is the lesser of70100
+  or50percent of the excess over640200. No automatic current-return MFS method
+  or final-source-year form qualification is introduced.
+lines:
+  - line: "source-mode"
+    description: "Compute only source-year exclusion tax and signed credit adjustment"
+    formula: "Source2025 income200000+exclusions10000, NOL0, FTC0, actual comparison30000 and AMT5000: exclusionAMTI210000, exemption88100, base121900, exclusiontax31694, net1694, signed adjustment3306. No later-year inputs or19-26 outputs exist."
+    irsRef: "Form8801 PartI15-18; IRC53(d) and108(b)(2)(C)"
+    testRef: "tests/engine/forms/minimum-tax-credit-source-year.test.ts::calculates the actual source year without reading future-year inputs"
+  - line: "signed-adjustment"
+    description: "Retain source-period negative adjustments"
+    formula: "With the same source2025 exclusion tax1694 and actualAMT1000, signed adjustment=-694; actualAMT0 gives -1694. No zero clamp before combining the next-year pool."
+    irsRef: "Form8801 lines16-18/21"
+    testRef: "tests/engine/forms/minimum-tax-credit-source-year.test.ts::preserves negative adjustments and actual ancillary worksheet amounts"
+  - line: "source-year-rules"
+    description: "Use the actual source-year rules, not a hypothetical filing-year pack"
+    formula: "The200000+10000 source has signed adjustments2682/3306/3826 in2024/2025/2026 from exemptions85700/88100/90100. Source2026 single500000 has exemption90100, tax109882;500002 has exemption90099, tax109883."
+    irsRef: "IRC55(d); RevProc2025-32 sections3.03/3.10; retained prior-year indexing"
+    testRef: "tests/engine/forms/minimum-tax-credit-source-year.test.ts::uses independent source-year exemptions and phaseout rules"
+  - line: "mfs-source-2026"
+    description: "Apply the2026 MFS addition with the amended rate and its cap"
+    formula: "Pre-addition640200 gives AMTI640200/tax176811;640201 rounds the50percent addition to1, giving640202/tax176812;780400 caps addition70100, giving850500/tax235695."
+    irsRef: "IRC55(d)(2) final sentence and55(d)(4)(A)(ii)(IV)"
+    testRef: "tests/engine/forms/minimum-tax-credit-source-year.test.ts::derives the2026 MFS source-period addition and cap without opening filing"
+  - line: "conditional-worksheets"
+    description: "Keep actual preferential and foreign stacking sources"
+    formula: "Source2026 income200000, QD25000, actual ordinary175000: ordinaryAMT22074+preferential3750=25824, comparison24000/actualAMT5000 gives signed3176. Sourceincome300000 with actual foreign stack100000 gives tax81882-26000=55882, comparison50000/AMT8000 gives signed2118."
+    irsRef: "Form8801 PartIII and Foreign Earned Income Tax Worksheet"
+    testRef: "tests/engine/forms/minimum-tax-credit-source-year.test.ts::preserves actual capital and foreign worksheet branches"
+  - line: "source-boundaries"
+    description: "Missing source facts and unknown source years cannot be silently filled"
+    formula: "Require confirmed complete sources and all applicable source-period worksheets. Reject missing ancillary amounts, unsupported2027 source, and full2027 filing call. Keep full2026 credit on prior2025 rules."
+    irsRef: "Form8801 source/review contract and year-readiness policy"
+    testRef: "tests/engine/forms/minimum-tax-credit-source-year.test.ts::rejects missing sources and preserves the full-form year boundary"

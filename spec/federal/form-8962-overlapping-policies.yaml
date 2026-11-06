@@ -1,0 +1,54 @@
+form: "Form 8962 Part II and Part IV"
+fullName: "Actual overlapping Situation 4 and unshared policy months"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i8962"
+retrievedAt: "2026-10-26"
+reviewStatus: "source-derived-implementation-independent-review-pending"
+notes: |
+  Instructions12-23 columns(a)/(f) sum the actual allocated and unallocated
+  enrollment premiums/advances. Column(b) adds PartIV allocated SLCSP amounts
+  to the applicable unallocated coverage-family benchmark. Multiple unallocated
+  policies in one location do not create multiple household benchmarks;
+  26CFR1.36B-3(f)(4)/(5) combines distinct-location coverage groups and uses
+  the applicable family or multiple-self-only benchmark within a location.
+  The actual Marketplace benchmark remains source input, never an entered
+  calculated credit. This method requires each grouped original statement's
+  SLCSP to be confirmed correct and equal to its group's actual benchmark.
+  Missing/corrected original benchmarks and overlapping Situation3 coverage
+  families remain distinct source methods. Original policy rows and PartIV
+  periods stay separate; household monthly reconciliation consumes one
+  derived aggregate. Whole-dollar reporting follows the exact monthly sums.
+  Full2026 and independent human tax/form qualification remain closed.
+lines:
+  - line: "12-23-a-f"
+    description: "Sum overlapping allocated policy sources once before rounding"
+    formula: "Actual fractions .25/.50 on premiums1000.01/100.03, benchmarks1200.01/80.03 and advances200.01/20.03 yield exact household300.0175/340.0175/60.0175. At zero monthly contribution the printed credit300 less advances60 gives net240. Preserve both original rows and both PartIV periods."
+    testRef: "tests/engine/forms/form-8962-overlapping-policies.test.ts::combines overlapping Situation4 rows before monthly rounding"
+  - line: "12-23-b"
+    description: "Deduplicate actual unshared coverage-group benchmarks"
+    formula: "Allocated250/300/50 plus unshared600/450/100 and600/450/100 in one actual rating-area group yields1450/750/250, credit750 and net500 at zero contribution. Two independently sourced groups with450/500 benchmarks yield1450/1250/250 and net1000. Group source binds original policy indexes, active people, year and actual benchmark; no geography or group is inferred from equal money."
+    testRef: "tests/engine/forms/form-8962-overlapping-policies.test.ts::uses one actual benchmark per unshared coverage group"
+  - line: "source-reconciliation"
+    description: "Require complete actual overlap grouping and reject stale sources"
+    formula: "Require explicit source year, reference, confirmation, complete monthly ledger and complete rating-area/coverage-family confirmations only for months with multiple unshared policy sources. Every such original appears once; no other source/month is inserted. Each active person appears in only one location group. Reject unknown, conflicting, duplicated, stale or changed source facts. One unshared source needs no invented group."
+    testRef: "tests/engine/forms/form-8962-overlapping-policies.test.ts::rejects missing stale and contradictory benchmark group sources"
+  - line: "source-order-and-method"
+    description: "Preserve originals, deterministic order and distinct Situation3 method"
+    formula: "Reverse source-packet order without changing original indexes and retain identical policy/household amounts. Keep exact source originals and immutable inputs. Overlapping Situation3 requires complete coverage-family benchmark coordination beyond the existing per-policy subset; reject that named combination while disjoint Situation3 remains supported."
+    testRef: "tests/engine/forms/form-8962-overlapping-policies.test.ts::preserves source order and the separate overlapping Situation3 boundary"
+  - line: "guided-source"
+    description: "Capture actual overlapping source months without fabricated groups"
+    formula: "Copy the original overlapping unshared months and actual selected covered people. Leave rating area, benchmark, source references and confirmations unknown. Derive one household month and preserve separate coverage eligibility. Exact originals and source identifiers survive the bridge; all related source edits invalidate nested and outer confirmations."
+    testRef: "tests/guided-interview/guided-overlapping-policies.test.ts::captures actual benchmark groups and transfers one household month"
+  - line: "guided-controls"
+    description: "Reach benchmark grouping from the credits screen"
+    formula: "Actual original policies can be selected into a named source group, with separate year/reference/area/benchmark and completeness answers. The household amounts are calculated once and cannot be entered as a source override. Clearing the benchmark remains unknown after confirmation invalidation."
+    testRef: "tests/apps/web/overlapping-policy-interactions.test.tsx::reaches actual overlapping benchmark sources and invalidates edits"
+  - line: "saved-review"
+    description: "Retain original and combined source traces in saved review output"
+    formula: "Recompute from an unforgeable original-source token. Physical monthly columns show the once-only household amounts, with original per-policy PartIV periods. Reference output retains separate original rows and combined benchmark groups using ordinals, with no private identifiers or source references. Reject stale grouping and altered retained aggregate results."
+    testRef: "tests/pdf/form8962-overlapping-policies.test.ts::saves household totals and original allocation periods with source binding"
+  - line: "browser-source-persistence"
+    description: "Keep actual overlap groups and unknown answers after reload"
+    formula: "Production credits controls copy original months, collect the actual benchmark group and produce1450/750/250 once. Source edits revoke nested and outer confirmation, clearing an amount remains unknown, and stored original records are unchanged. Desktop/mobile controls do not overflow or send source identifiers."
+    testRef: "apps/web/tests/guided-overlapping-policies.spec.ts::preserves actual overlapping coverage groups"

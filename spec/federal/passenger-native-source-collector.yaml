@@ -1,0 +1,35 @@
+form: Native passenger documentary source collector
+taxYear: 2026
+status: finite_native_handoff_only
+references:
+- https://www.irs.gov/instructions/i4562
+- https://www.irs.gov/publications/p946
+lines:
+- line: "native-route"
+  formula: Preserve explicit original vehicle identity, gross cost, acquisition and contract dates, service date, weight, mileage, all eligibility evidence, completed Part I amounts, election records and complete inventory; derive finite admission through the actual canonical passenger calculator, never from a UI eligibility claim.
+  description: native route
+  testRef: "tests/apps/web/passenger-native-source-collector.test.ts::captures immutable full native originals without mutating the interview or inventing a provisional tax input"
+- line: "parent-route"
+  formula: Reconcile actual NEC compensation plus separately entered non-NEC receipts once, all34 explicit expense records and six classifications; retain exact original taxpayer, owner, year, business, form and native context.
+  description: parent route
+  testRef: "tests/apps/web/passenger-native-source-collector.test.ts::covers actual NEC and nonNEC exactly once and binds each original reference and row"
+- line: "native-context"
+  formula: Allow only explicitly validated compatible standard-deduction facts, automatic or standard election, empty retirement and benefit arrays and zero-only child-credit facts, bound to immutable originals. Unknown or competing native facts fail rather than being dropped.
+  description: native context
+  testRef: "tests/apps/web/passenger-native-source-collector.test.ts::retains incompatible native contexts rather than silently dropping facts"
+- line: "capture-recovery"
+  formula: Explicit complete-source capture validates the actual bridge and calculator; edits revoke confirmation without rebasing originals; reload and encrypted recovery preserve draft blanks and stale status. Existing ordinary and production2026 export gates remain.
+  description: capture recovery
+  testRef: "tests/apps/web/passenger-native-source-collector.test.ts::retains blanks, zero and originals through local reload and actual encrypted recovery while hosted shell stays private"
+- line: "explicit-other-source-inventory"
+  formula: Each other income and property canonical inventory requires its own original source reference and explicit reviewed-none confirmation; normalized default empty arrays alone never establish documentary absence. Retain every reviewed-none reference in the canonical parent packet, paired with its native-context binding.
+  description: explicit other source inventory
+  testRef: "tests/apps/web/passenger-native-source-collector.test.ts::requires every original no-other-source row rather than default empty arrays"
+- line: "native-controls"
+  description: Actual React field entry and capture without preseeded passenger originals
+  formula: Enter every documentary source through native controls; no source snapshots exist before explicit capture, confirmation-only changes preserve current facts, and a changed reference revokes confirmation while retaining originals.
+  testRef: "tests/apps/web/passenger-source-details.test.tsx::real native passenger entry captures all actual originals and revokes a changed reference"
+- line: "unchanged-year-gate"
+  description: Native source completeness does not qualify the incomplete2026 federal rule pack
+  formula: The actual federal calculator remains unavailable for2026 even after finite source capture; review and filing export gates remain closed. Finite ScheduleC source results are not a completed federal return.
+  testRef: "tests/apps/web/passenger-native-source-collector.test.ts::preserves actual incomplete2026 whole-return calculation denial after native source handoff"

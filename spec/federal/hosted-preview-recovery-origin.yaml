@@ -1,0 +1,58 @@
+form: "Hosted-Preview-Recovery-Origin"
+fullName: Recovery email links use the same validated deployment origin as hosted authentication
+taxYear: 2026
+reference: https://vercel.com/docs/environment-variables/system-environment-variables
+notes: |
+  Official Vercel system metadata exposes the generated deployment hostname in
+  VERCEL_URL without a scheme, at both build and runtime. Production URL metadata
+  can continue pointing at production during Preview. Reuse the existing
+  resolveHostedAppBaseUrl policy; do not introduce another host validator or trust
+  request headers. This package changes only recovery-mail origin selection.
+  Synthetic transport controls do not establish actual Preview delivery/reset,
+  staging qualification, provider authorization or production readiness.
+lines:
+  - line: "selected-preview-origin"
+    formula: |
+      Exact hosted VERCEL_ENV=preview selects the same validated HTTPS deployment
+      origin as hosted auth, even when configured APP_URL is stale or absent.
+      Ignore the unused configured origin rather than send its recovery link.
+    testRef: "tests/apps/web/hosted-preview-recovery-origin.test.ts::uses the validated Preview origin despite the unused configured URL: %s"
+  - line: "same-preview-fragment"
+    formula: |
+      The actual plain-text message uses exactly selectedOrigin/account/recover
+      with the single-use token only in #token. No other deployment, configured
+      staging origin, query token, HTML, attachments or extra recipient appears.
+      Preserve TLS1.2+, certificate verification and disabled diagnostic logging.
+    testRef: "tests/apps/web/hosted-preview-recovery-origin.test.ts::sends the actual recovery fragment on exactly the selected Preview origin"
+  - line: "invalid-metadata-before-smtp"
+    formula: |
+      A blocked or unconfigured resolver result yields no recovery config and
+      generic delivery failure before creating SMTP transport. In Preview, a
+      valid configured production/staging URL cannot recover missing or invalid
+      VERCEL_URL, including in nonproduction NODE_ENV. No fallback to localhost.
+    testRef: "tests/apps/web/hosted-preview-recovery-origin.test.ts::blocks invalid Preview metadata before any SMTP transport: %s"
+  - line: "exact-environment-boundary"
+    formula: |
+      Preserve the existing exact hosted/preview selector. Other environments
+      use explicit configured APP_URL and retain recovery-mail URL sanitation.
+      Do not change deployment mode, auth/database configuration or trust lists.
+    testRef: "tests/apps/web/hosted-preview-recovery-origin.test.ts::preserves configured recovery origin outside exact Preview: %s"
+  - line: "existing-url-tls-and-loopback-guards"
+    formula: |
+      Outside Preview reject configured userinfo/path/query/fragment and HTTP
+      remote origin. Explicit insecure SMTP remains available only when both
+      SMTP and app hosts are loopback in nonproduction. A real Preview origin
+      cannot become insecure merely because its SMTP test host is loopback.
+    testRef: "tests/apps/web/hosted-preview-recovery-origin.test.ts::preserves existing recovery URL and TLS boundaries: %s"
+  - line: "private-failure-and-no-mutation"
+    formula: |
+      Invalid Preview origin produces only the fixed delivery error; no SMTP
+      credentials, recipient, token or malformed metadata diagnostic is logged.
+      The caller environment and recovery message remain unchanged.
+    testRef: "tests/apps/web/hosted-preview-recovery-origin.test.ts::keeps blocked Preview failures private without mutating caller facts"
+  - line: "preserve-silent-nonpreview-rejection"
+    formula: |
+      Outside exact Preview, retain the existing direct configured-URL parsing
+      path. Missing or malformed development configuration still returns null
+      without newly logging configured strings or inventing a localhost origin.
+    testRef: "tests/apps/web/hosted-preview-recovery-origin.test.ts::preserves silent rejection of invalid non-Preview development URLs: %s"

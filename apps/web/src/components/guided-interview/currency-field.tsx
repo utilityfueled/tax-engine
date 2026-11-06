@@ -1,6 +1,11 @@
 "use client";
 
 import { useCallback, useState, type ReactNode } from "react";
+import Decimal from "decimal.js";
+
+function isDecimalInput(raw: string): boolean {
+  return /^-?(?:\d+|\d{1,3}(?:,\d{3})+)(?:\.\d*)?$/.test(raw.trim().replace(/^\$/, ""));
+}
 
 /**
  * Parse a raw user string into a clean numeric string (no commas, no leading $).
@@ -18,29 +23,27 @@ export function parseCurrencyInput(raw: string): string {
  */
 export function formatCurrencyDisplay(value: string): string {
   const cleaned = parseCurrencyInput(value);
-  if (cleaned === "") return "";
+  if (value.trim() === "") return "";
 
-  const num = Number(cleaned);
-  if (Number.isNaN(num)) return value;
+  if (!isDecimalInput(value)) return value;
 
   // Preserve decimals if the user typed them
   if (cleaned.includes(".")) {
     const [intPart, decPart] = cleaned.split(".");
-    const formattedInt = Number(intPart).toLocaleString("en-US");
-    return `${formattedInt}.${decPart}`;
+    const formattedInt = new Decimal(intPart).abs().toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    return `${cleaned.startsWith("-") ? "-" : ""}${formattedInt}.${decPart}`;
   }
 
-  return num.toLocaleString("en-US");
+  return new Decimal(cleaned).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
 
 /**
  * Check whether a raw user string represents a valid non-negative number.
  */
-export function isValidCurrencyValue(value: string): boolean {
+export function isValidCurrencyValue(value: string, allowNegative = false): boolean {
   const cleaned = parseCurrencyInput(value);
-  if (cleaned === "") return true; // empty is valid (optional field)
-  const num = Number(cleaned);
-  return !Number.isNaN(num) && num >= 0;
+  if (value.trim() === "") return true; // actual empty input is optional
+  return isDecimalInput(value) && new Decimal(cleaned).isFinite() && (allowNegative || new Decimal(cleaned).gte(0));
 }
 
 export function CurrencyField({
@@ -51,6 +54,7 @@ export function CurrencyField({
   fieldClassName,
   footer,
   required,
+  allowNegative = false,
 }: {
   label: string;
   hint?: string;
@@ -59,10 +63,11 @@ export function CurrencyField({
   fieldClassName?: string;
   footer?: ReactNode;
   required?: boolean;
+  allowNegative?: boolean;
 }) {
   const [focused, setFocused] = useState(false);
   const [fieldId] = useState(() => `currency-field-${Math.random().toString(36).slice(2, 10)}`);
-  const invalid = !focused && value.trim() !== "" && !isValidCurrencyValue(value);
+  const invalid = !focused && value.trim() !== "" && !isValidCurrencyValue(value, allowNegative);
   const errorId = `${fieldId}-error`;
   const hintId = `${fieldId}-hint`;
   const describedBy = invalid ? errorId : hint ? hintId : undefined;

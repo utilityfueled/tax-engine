@@ -1,0 +1,101 @@
+form: "PA-Reciprocity"
+fullName: "Actual reciprocal employee compensation and refund-support sources"
+taxYear: 2026
+reference: "https://www.pa.gov/agencies/revenue/forms-and-publications/pa-personal-income-tax-guide/gross-compensation"
+notes: |
+  Source refresh 2026-11-02: actual 2025PA40IN p11,42-43 and current DOR
+  Gross Compensation reciprocal section. These six states are IN MD NJ OH VA
+  WV. Employee compensation must be legally subject to employer withholding;
+  actual positive withholding is not a condition. Only actual reciprocal
+  earning/residency periods qualify. PA-resident-earned deferred compensation
+  is not excluded by this agreement. An Ohio resident's remuneration as a
+  >=20percent shareholder-employee of a PA S corporation remains taxable.
+  Source facts and original payroll remain intact; never fake PAservices0 or
+  rewrite original Box16 to obtain an exclusion. No local exemption, resident
+  credit, final refund/filing or final2026 physical qualification is implied.
+  First finite route is the separately validated single-owner ordinary source
+  cohort. Spouse/mixed source and actual multi-state W2 rows remain required
+  internal successors. This specification does not implement an Ohio return.
+lines:
+  - line: "employee-exclusion"
+    description: "Classify actual ordinary reciprocal employee payroll segments"
+    formula: |
+      Require exact current W2/year/owner and actual ordinary-payroll snapshots,
+      actual qualifying domicile/earning period and true employee/withholding
+      applicability/no-PA-resident-earned-deferred facts. Each relevant actual
+      nonresident reciprocal positivePAservices segment has one proof; complete
+      unique original and segment coverage, no absent-row proof or free scalar.
+      Exclude the exact actual PAservice amount once for qualified segments.
+      Actual resident-period all-source compensation remains fully included.
+      Unknown/false eligibility is not a zero or presumed employee exemption.
+    testRef: "tests/engine/state/pa-reciprocity.test.ts::PA reciprocity - excludes actual employee services and preserves actual originals"
+  - line: "ohio-exception"
+    description: "Actual Ohio shareholder-employee exception threshold"
+    formula: |
+      Resolve actual PA-S-corporation and shareholder-employee facts for Ohio
+      residents. If both true require actual covered-period ownership Decimal
+      0..100; at least20percent means no reciprocal exclusion of PAservices.
+      Below20 permits employee exemption if every other actual fact qualifies.
+      Other-state compensation never acquires an Ohio-specific exception merely
+      from a neighboring-state address; unknown necessary entity facts reject.
+    testRef: "tests/engine/state/pa-reciprocity.test.ts::PA reciprocity - distinguishes actual Ohio ownership below and at20percent"
+  - line: "withholding-refund-support"
+    description: "Once-only actual original PAwithholding and document-readiness"
+    formula: |
+      Each covered W2 original appears once independently of payroll count.
+      Preserve explicit actual PABox17 or actual no-PA-row status and known0;
+      reconcile the original, do not treat another state's withholding as PA.
+      The covered-original withholding subtotal is informational source proof,
+      never an additional credit on top of that same canonical W2Box17.
+      This finite packet requires actual zero-or-one state-row original proof;
+      multiple states/continuations need the next source method and cannot be
+      represented as duplicated federal W2s. State wages can overlap and must
+      never be forced to sum to federal wages.
+      Refund-support readiness requires actual sameyear/owner/state filed
+      resident-return copy, W2copy and residency statement sources. Missing or
+      pending copies change readiness only, not a determined wage exclusion.
+      No actual submission or whole-PA refund amount is established here.
+    testRef: "tests/engine/state/pa-reciprocity.test.ts::PA reciprocity - counts withholding once and separates pending refund documents"
+  - line: "source-binding"
+    description: "Original-preserving exact raw source commitment"
+    formula: |
+      Raw originals, actual payroll, complete year/owner/identity/references and
+      every classification/refund source bind privately before redaction.
+      Same money with different original identity is a new source commitment;
+      old snapshots reject changed current originals. No fullSSN/EIN/private
+      reference is exposed in output/audit, only digest and nonprivate amounts.
+    testRef: "tests/engine/state/pa-reciprocity.test.ts::PA reciprocity - rejects stale unknown contradictory and duplicated source proof"
+  - line: "guide-atomic-confirmation"
+    description: "Actual joint confirmation and source-edit recovery"
+    formula: |
+      Empty drafts retain unknown answers/years/amounts. One explicit action
+      snapshots actual current owner/W2 and actual already-entered payroll into
+      both ordinary and reciprocal packets, confirms headers atomically, then
+      replays actual source classification; individual answers are not invented.
+      Edits retain all raw data and clear both confirmations. Inject reciprocal
+      sources before ordinary-source replay, avoiding a confirmation cycle.
+    testRef: "tests/apps/web/guided-pa-reciprocity-facts.test.ts::PA reciprocal guide - jointly confirms actual sources and preserves edits"
+  - line: "guide-controls"
+    description: "Actual reciprocal employee and document-source controls"
+    formula: "No inferred state, ownership, positive withholding, document filing or zero facts; explicit actual controls and invalidation."
+    testRef: "tests/apps/web/pa-reciprocity-details.test.tsx::PA reciprocal UI - retains unknown source facts and invalidates proof edits"
+
+  - line: "ordinary-source-integration"
+    description: "Actual reciprocal exclusion after payroll reconciliation and before class reporting"
+    formula: |
+      First validate full actual ordinary originals, residency and payroll.
+      Reconcile original PABox16 to actual pre-exclusion taxable-source ledger,
+      then subtract only fresh source-proved reciprocal PAservice exclusions.
+      Keep outsidePA-services exclusion distinct from reciprocal PAservices.
+      Aggregate the resulting exact class, round it once, then ordinary PA tax.
+      Missing proof never fakes zero originalPAwages or automatically excludes.
+    testRef: "tests/engine/state/pa-reciprocity.test.ts::PA reciprocity - integrates actual part-year exclusion after pre-exclusion payroll reconciliation"
+  - line: "complete-coverage-cents"
+    description: "Complete actual proof and raw exclusion before whole-class reporting"
+    formula: |
+      Duplicate covered originals, absent/out-of-range payroll, conflicting
+      actual residency, unknown Ohio shareholder facts and ownership above100
+      reject. Preserve exact source cents: actual resident16.49 plus exempt
+      reciprocal0.49 gives raw taxable16.49, reported compensation16 and tax0.
+      Do not separately whole-dollar-round the reciprocal exclusion first.
+    testRef: "tests/engine/state/pa-reciprocity.test.ts::PA reciprocity - rejects incomplete coverage and keeps raw exclusion cents before class rounding"

@@ -1,3 +1,5 @@
+import {calculatePAReturn} from '@/engine/state/pa-orchestrator';
+import {isPAMarriedOrdinaryReturnResult} from '@/engine/state/pa-return-result';
 /**
  * Heavy preview computation — split from guided-interview-bridge so that the
  * tax engine + decimal.js are only loaded on-demand (dynamic import) instead
@@ -5,14 +7,22 @@
  */
 
 import Decimal from "decimal.js";
+import { sumAdditionalStateWithholding } from "./guided-state-facts";
+import { parseGuidedCurrency } from "./guided-currency";
 import { calculateFederalTax } from "@/engine/federal";
+import {calculatePAOrdinaryReturn} from "@/engine/state/pa-ordinary-return";
+import { assertQofStateMethod } from "@/engine/forms/qof-inclusion";
+import { assertClaimOfRightStateMethod } from "@/engine/forms/claim-of-right";
+import { buildOhioResidentReturnInput } from "@/engine/state/oh-input-adapter";
+import { calculateOhioResidentReturn } from "@/engine/state/oh-return";
+import { buildGuidedOhioOverlay, buildGuidedStateOriginals } from "./guided-state-engine-inputs";
 import {
   calculateGenericStateReturn,
   type GenericStateReturnInput,
   type GenericStateReturnResult,
 } from "@/engine/state/generic-resident-return";
 import { STATE_CONSTANTS } from "@/models/state-constants";
-import { TaxYearInputSchema } from "@/models/inputs";
+import { TaxYearInputSchema, type TaxYearInput } from "@/models/inputs";
 import type { TaxReturnResult } from "@/models/outputs";
 import type { FilingStatus as EngineFilingStatus } from "@/models/constants";
 import type {
@@ -26,6 +36,7 @@ import {
   mapFilingStatus,
   type GuidedPreviewMetrics,
   type StatePreviewMetrics,
+  type SchoolDistrictPreviewMetrics,
 } from "./guided-interview-bridge";
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
@@ -34,7 +45,9 @@ function decimalToString(val: { toString(): string }): string {
   return val.toString();
 }
 
-function extractStateMetrics(stateResult: GenericStateReturnResult): StatePreviewMetrics {
+type StatePreviewResult = Pick<GenericStateReturnResult, "stateCode" | "stateName" | "stateTax" | "refund" | "balanceDue" | "totalPayments"> & {schoolDistrict?:SchoolDistrictPreviewMetrics};
+
+function extractStateMetrics(stateResult: StatePreviewResult): StatePreviewMetrics {
   return {
     stateCode: stateResult.stateCode,
     stateName: stateResult.stateName,
@@ -42,12 +55,13 @@ function extractStateMetrics(stateResult: GenericStateReturnResult): StatePrevie
     stateRefund: decimalToString(stateResult.refund),
     stateAmountOwed: decimalToString(stateResult.balanceDue),
     stateWithholding: decimalToString(stateResult.totalPayments),
+    ...(stateResult.schoolDistrict?{schoolDistrict:stateResult.schoolDistrict}: {}),
   };
 }
 
 export function extractMetricsFromResult(
   result: TaxReturnResult,
-  stateResult?: GenericStateReturnResult | null,
+  stateResult?: StatePreviewResult | null,
 ): GuidedPreviewMetrics {
   return {
     totalIncome: decimalToString(result.totalIncome),
@@ -57,13 +71,16 @@ export function extractMetricsFromResult(
     totalPayments: decimalToString(result.totalPayments),
     refund: decimalToString(result.refund),
     amountOwed: decimalToString(result.amountOwed),
+    selfEmploymentTax: decimalToString(result.selfEmploymentTax),
+    additionalMedicareTax: decimalToString(result.additionalMedicareTax),
+    netInvestmentIncomeTax: decimalToString(result.niitTax),
     state: stateResult ? extractStateMetrics(stateResult) : null,
   };
 }
 
 // ── State withholding / estimated payments ──────────────────────────────────
 
-function collectStateWithholding(state: GuidedFlowState): Decimal {
+function collectStateWithholding(state: GuidedFlowState, input: TaxYearInput): Decimal {
   const w2Data = state.sectionData["income-w2"] as { entries: W2EntryData[] } | undefined;
   const stateReturnData = state.sectionData["state-return"] as StateReturnData | undefined;
 
@@ -71,15 +88,24 @@ function collectStateWithholding(state: GuidedFlowState): Decimal {
 
   if (w2Data?.entries) {
     for (const e of w2Data.entries) {
-      const val = Number(e.stateWithheld?.trim().replace(/,/g, ""));
-      if (!Number.isNaN(val)) total = total.plus(val);
+      if (e.stateTaxReporting === "single" && e.state?.trim().toUpperCase() === state.segmentation.stateCode?.trim().toUpperCase()
+        && e.aiSuggestedFields?.stateWithheld?.status !== "pending-confirmation" && e.aiSuggestedFields?.state?.status !== "pending-confirmation") total = total.plus(parseGuidedCurrency(e.stateWithheld));
     }
   }
 
-  if (stateReturnData?.additionalStateWithholding) {
-    const val = Number(stateReturnData.additionalStateWithholding.trim().replace(/,/g, ""));
-    if (!Number.isNaN(val)) total = total.plus(val);
+  const investments = state.sectionData["income-investments"];
+  for (const entry of investments?.oidEntries ?? []) for (const row of entry.stateWithholding ?? []) {
+    if (row.state.trim().toUpperCase() === state.segmentation.stateCode?.trim().toUpperCase()) total = total.plus(parseGuidedCurrency(row.stateWithheld));
   }
+  const necEntries = state.sectionData["income-self-employment"]?.necEntries ?? [];
+  for (const entry of [...investments?.interestEntries ?? [], ...investments?.dividendEntries ?? [], ...investments?.brokerageEntries ?? [], ...investments?.digitalAssetEntries ?? [], ...necEntries, ...state.sectionData["income-retirement"]?.entries ?? [], ...state.sectionData["income-unemployment"]?.entries ?? []]) {
+    if (entry.stateTaxReporting === "single" && entry.state?.trim().toUpperCase() === state.segmentation.stateCode?.trim().toUpperCase()) total = total.plus(parseGuidedCurrency(entry.stateWithheld));
+  }
+
+  for (const source of input.form1099Misc) {
+    if (source.state?.trim().toUpperCase() === state.segmentation.stateCode?.trim().toUpperCase()) total = total.plus(new Decimal(source.stateWithheld));
+  }
+  total = total.plus(sumAdditionalStateWithholding(stateReturnData));
 
   return total;
 }
@@ -89,8 +115,7 @@ function collectStateEstimatedPayments(state: GuidedFlowState): Decimal {
   if (!stateReturnData?.stateEstimatedPayments) return new Decimal(0);
 
   return stateReturnData.stateEstimatedPayments.reduce((sum, entry) => {
-    const val = Number(entry.amount?.trim().replace(/,/g, ""));
-    return sum.plus(Number.isNaN(val) ? 0 : val);
+    return sum.plus(parseGuidedCurrency(entry.amount));
   }, new Decimal(0));
 }
 
@@ -130,42 +155,83 @@ function tryComputeStatePreview(
 // ── Main preview computation ────────────────────────────────────────────────
 
 export function computeGuidedPreview(state: GuidedFlowState | null | undefined): GuidedPreviewMetrics | null {
+  return computeGuidedPreviewOutcome(state).metrics;
+}
+
+/** An engine rejection is a reason to show, unlike missing facts or a schema failure. */
+export function computeGuidedPreviewOutcome(state: GuidedFlowState | null | undefined): { metrics: GuidedPreviewMetrics | null; blockedBy: string | null } {
+  let blockedBy: string | null = null;
+  const metrics = runGuidedPreview(state, message => { blockedBy = message; });
+  return { metrics, blockedBy };
+}
+
+function runGuidedPreview(state: GuidedFlowState | null | undefined, onBlocked: (message: string) => void): GuidedPreviewMetrics | null {
   if (!state || typeof state !== "object" || state.segmentation == null || state.sectionData == null) {
     return null;
   }
 
-  const rawInput = buildTaxInputFromGuidedData(state);
-  if (!rawInput) return null;
-
   try {
+    const rawInput = buildTaxInputFromGuidedData(state);
+    if (!rawInput) return null;
     const taxInput = TaxYearInputSchema.parse(rawInput);
-    const result = calculateFederalTax(taxInput);
+    let result: ReturnType<typeof calculateFederalTax>;
+    try {
+      result = calculateFederalTax(taxInput);
+    } catch (error) {
+      onBlocked(error instanceof Error ? error.message : "This return cannot be figured yet.");
+      return null;
+    }
 
-    let stateResult: GenericStateReturnResult | null = null;
+    let stateResult: StatePreviewResult | null = null;
+    let separateMetrics:StatePreviewMetrics|null=null;
     const stateCode = state.segmentation.stateCode;
-    if (stateCode) {
+    if (stateCode && (stateCode === "OH" || stateCode === "PA" || state.sectionData["personal-info"]?.stateResidency === "full-year")) {
       const personalInfo = state.sectionData["personal-info"] as PersonalInfoData | undefined;
       const depCount = Number(personalInfo?.dependentCount ?? "0");
       if (!state.segmentation.filingStatus) return null;
       const filingStatus = mapFilingStatus(state.segmentation.filingStatus) as EngineFilingStatus;
       const hasSpouse = filingStatus === "married_filing_jointly" || filingStatus === "married_filing_separately";
-      const stateWithholding = collectStateWithholding(state);
+      const stateWithholding = collectStateWithholding(state, taxInput);
       const stateEstimatedPayments = collectStateEstimatedPayments(state);
 
-      stateResult = tryComputeStatePreview(
-        stateCode,
-        2025,
-        filingStatus,
-        result.agi,
-        result.taxableIncome,
-        Number.isNaN(depCount) ? 0 : depCount,
-        hasSpouse,
-        stateWithholding,
-        stateEstimatedPayments,
-      );
+      try {
+        assertQofStateMethod(taxInput, stateCode);
+        assertClaimOfRightStateMethod(taxInput, stateCode);
+        if (stateCode === "PA") {
+          const currentOriginals=buildGuidedStateOriginals(taxInput,state);
+          const married=currentOriginals.paMarriedOrdinarySources!==undefined?calculatePAReturn(currentOriginals):null;
+          if(married&&isPAMarriedOrdinaryReturnResult(married)){
+            if(married.filingMode==='M')separateMetrics={kind:'separate-returns',stateCode,stateName:'Pennsylvania',returns:married.returns.map(row=>{if(row.accountHolder==='joint')throw Error('Actual M return owner must remain separate');return{accountHolder:row.accountHolder,displayName:row.accountHolder==='primary'?currentOriginals.taxpayer.primary.firstName+' '+currentOriginals.taxpayer.primary.lastName:currentOriginals.taxpayer.spouse?.firstName+' '+currentOriginals.taxpayer.spouse?.lastName,filingChoice:'M',stateTax:row.pa40.taxLiability.toString(),stateRefund:row.refundDisposition.refund.toString(),stateAmountOwed:row.pa40.totalAmountDue.toString(),stateWithholding:row.pa40.totalPayments.toString()};})};
+            else{const row=married.returns[0];stateResult={stateCode,stateName:'Pennsylvania',stateTax:row.pa40.netTaxLiability,refund:row.refundDisposition.refund,balanceDue:row.pa40.totalAmountDue,totalPayments:row.pa40.totalPayments};}
+          }else{
+            const pa=calculatePAOrdinaryReturn(currentOriginals,currentOriginals.paOrdinaryReturnFacts,currentOriginals.paOrdinaryReturnCompletionSources).pa40;
+            stateResult={stateCode,stateName:'Pennsylvania',stateTax:pa.netTaxLiability,refund:pa.netOverpayment,balanceDue:pa.totalAmountDue,totalPayments:pa.totalPayments};
+          }
+        } else if (stateCode === "OH") {
+          const currentOriginals = buildGuidedStateOriginals(taxInput, state);
+          const ohio = calculateOhioResidentReturn(buildOhioResidentReturnInput(currentOriginals, result, buildGuidedOhioOverlay(currentOriginals, state, result.taxExemptInterest)));
+          const oh=ohio.it1040,sd=ohio.sd100,source=ohio.schoolDistrictSource,schoolPacket=currentOriginals.ohioSchoolDistrict;
+          if(currentOriginals.ohioSchoolDistrict&&(!sd||!source))throw new Error('Actual required school district result is unavailable.');
+          if(sd&&source&&(source.district.districtNumber!=='0302'||!schoolPacket))throw new Error('Verified finite school district review context is unavailable.');
+          stateResult = { stateCode, stateName: "Ohio", stateTax: oh.line13_totalLiability,
+            refund: oh.line26_refund, balanceDue: oh.line22_totalAmountDue, totalPayments: oh.line17_totalPayments,
+            ...(sd&&source&&schoolPacket?{schoolDistrict:{districtCode:'0302',districtName:'Hillsdale LSD',taxYear:schoolPacket.taxYear,taxType:'earned_income' as const,
+              earnedIncome:source.residentIncome.line33.toString(),tax:sd.line10_totalLiability.toString(),withholding:sd.line11_sdWithholding.toString(),
+              estimatedPayments:schoolPacket.payments.account.estimatedPaymentsCredited,priorCredit:schoolPacket.payments.account.priorCreditApplied,totalPayments:sd.line13_totalPayments.toString(),
+              overpayment:sd.line19_overpayment.toString(),outgoingCarryforward:sd.line20_creditCarryforward.toString(),refund:sd.line21_refund.toString(),amountOwed:sd.line18_totalAmountDue.toString()}}: {}) };
+        } else {
+          stateResult = tryComputeStatePreview(stateCode, taxInput.taxpayer.taxYear, filingStatus,
+            result.agi, result.taxableIncome, Number.isNaN(depCount) ? 0 : depCount,
+            hasSpouse, stateWithholding, stateEstimatedPayments);
+        }
+      } catch {
+        // Keep the federal result while the dedicated state's actual facts need reconciliation.
+        stateResult = null;
+      }
     }
 
-    return extractMetricsFromResult(result, stateResult);
+    const metrics=extractMetricsFromResult(result,stateResult);
+    return separateMetrics?{...metrics,state:separateMetrics}:metrics;
   } catch {
     return null;
   }

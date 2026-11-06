@@ -1,0 +1,60 @@
+form: "EIC Schedule E investment components"
+fullName: "Publication 596 Worksheet 1 royalty and regular passive income"
+taxYear: 2025
+irsReference: "https://www.irs.gov/publications/p596"
+retrievedAt: "2026-10-26"
+notes: |
+  Publication596 (2025) Worksheet1 lines8-13 separates net royalties from
+  net passive activity income. Never floor the aggregate ScheduleE total:
+  nonpassive income is excluded, and nonpassive losses cannot reduce royalties.
+  Use portfolio royalties actually routed through ScheduleE and final ordinary
+  Form8582 allowed current/prior losses, including the active-rental allowance.
+  The current royalty sources have no royalty expenses or personal-property
+  rental source method; do not manufacture such expenses from unrelated rents.
+  Form8582 instructions, Special Instructions for PTPs, classify the overall
+  PTP gain as nonpassive. Its same-PTP offsetting income/loss contributes zero
+  to these ordinary passive lines; disposition/capital character is separate.
+  Exclude an ordinary passive amount already included in ScheduleSE earnings
+  only when actual confirmed Box14 and adjusted amounts reconcile to the entire
+  original ordinary source and its final current allowance, with no other
+  ordinary/rental categories or prior loss. Partial or mixed SE sources and
+  passive EBIE coordination require their separate source method. An unresolved
+  component cannot support a positive EIC or a completed investment worksheet.
+  Known nonnegative components may independently establish no credit; report
+  that zero without inventing the unknown investment amount. Historical explicit
+  overrides stay identified as legacy input and are not qualified worksheets.
+  Decimal amounts retain cents until the existing Form8582 dollar line rounding.
+  Final2026 forms, complete other-source methods and human review remain gated.
+lines:
+  - line: "active-income"
+    description: "Exclude nonpassive ordinary income"
+    formula: "Wages2000 plus nonpassive S-corporation ordinary12000: passive investment0; AGI14000 and published-table EIC155."
+    testRef: "tests/engine/eic-schedule-e-investment.test.ts::excludes active business and continuing PTP income"
+  - line: "royalty-separation"
+    description: "Do not net nonpassive losses against portfolio royalties"
+    formula: "Royalty12000 and nonpassive loss10000 leave royalty investment12000 and credit0; rental special loss also cannot reduce royalty investment."
+    testRef: "tests/engine/eic-schedule-e-investment.test.ts::keeps royalties separate from active and allowed rental losses"
+  - line: "allowed-prior-loss"
+    description: "Use completed passive current and prior allowances"
+    formula: "Passive income12000 with prior allowed loss2000 gives passive investment10000, AGI12000 and EIC155; suspended losses contribute no deduction."
+    testRef: "tests/engine/eic-schedule-e-investment.test.ts::uses allowed current and prior passive losses once"
+  - line: "cents-and-ceiling"
+    description: "Preserve royalty cents and final passive dollar amounts"
+    formula: "Royalties11950 permit credit155 and11950.01 disqualify; passive12000.49 less prior2000.50 uses Form8582 income12000 and allowance2001, giving9999."
+    testRef: "tests/engine/eic-schedule-e-investment.test.ts::preserves royalty cents and completed passive rounding"
+  - line: "earned-exclusion"
+    description: "Exclude actual ordinary amounts already counted as earned"
+    formula: "Confirmed complete ordinary Box14 source12000 produces passive investment0. Confirmed current allowed SE loss2000 removes that same passive loss from line12, leaving a separate passive income12000 subject to the investment ceiling."
+    testRef: "tests/engine/eic-schedule-e-investment.test.ts::excludes complete ordinary self employment income and losses without duplication"
+  - line: "unknown-method"
+    description: "Do not infer the earned/passive partition for mixed sources"
+    formula: "Partial adjusted SE income, incomplete confirmation or prior passive history cannot establish the overlap. Reject a possible positive EIC; an independently zero credit does not qualify those unknown sources."
+    testRef: "tests/engine/eic-schedule-e-investment.test.ts::requires a separate method for unresolved earned passive overlap"
+  - line: "empty-passive-source"
+    description: "A purely nonpassive guaranteed payment has no passive amount to exclude"
+    formula: "Guaranteed payment12000 and actual Box14 amount12000 do not contribute to passive investment when ordinary current and prior passive amounts are all zero."
+    testRef: "tests/engine/eic-schedule-e-investment.test.ts::does not require an overlap allocation for a zero passive source"
+  - line: "original-index"
+    description: "Bind earned exclusions to original passive indexes including PTP gaps"
+    formula: "Nonpassive source, then PTP source, then ordinary actual SE source must exclude only the correct regular passive source; names are not a substitute for indexes."
+    testRef: "tests/engine/eic-schedule-e-investment.test.ts::keeps original indexes when nonpassive and PTP rows precede earned sources"

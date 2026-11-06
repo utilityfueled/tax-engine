@@ -1,0 +1,23 @@
+form: "Guided Ohio actual owner domicile and NRC sources"
+taxYear: 2025
+reference: "https://dam.assets.ohio.gov/image/upload/v1767095693/tax.ohio.gov/forms/ohio_individual/individual/2025/it1040-booklet.pdf"
+notes: |
+  Actual owner status and complete calendar domicile periods are separate from
+  home mailing address. No contact-day presumption is inferred. Every source
+  allocation is supplied from actual records; blank remains unknown and actual
+  zero remains zero. Valid displayed comma-grouped amounts convert losslessly to decimal strings without rounding; blanks remain unknown. Signed capital/rent source fields permit actual negative values. Editing any source invalidates confirmation. Full-year
+  resident only households need actual timelines but no fabricated NRC rows.
+  The current original snapshot is copied only after actual source confirmation;
+  source allocations and eligibility facts are never inferred from this copy.
+  Initial NRC source classification is nonbusiness wages/bank/dividends with
+  exact current owner reconciliation, no Ohio adjustment exclusions or district
+  ambiguity. Other internally actionable routes remain explicit required work.
+lines:
+  - line: "residency"
+    label: "Actual owner domicile and allocation facts"
+    formula: "Validate current year, source reference, confirmation and complete unique owner timelines. Validate every required actual NRC row with Decimal and retain unknown versus zero."
+    testRef: "tests/guided-interview/guided-ohio-residency.test.ts::preserves actual source allocations and copies only confirmed current originals"
+businessRuleValidation:
+  - rule: "actual-collector-confirmation-recovery"
+    description: "Visible actual data edits invalidate confirmation; explicit removal preserves missing state instead of inventing full-year residency. No hidden zero defaults."
+    testRef: "tests/apps/web/ohio-residency-interactions.test.tsx"

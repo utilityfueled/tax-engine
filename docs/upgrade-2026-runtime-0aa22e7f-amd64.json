@@ -1,0 +1,210 @@
+{
+  "sourceHead": "0aa22e7f4abb490629d04d41a62eff75a5111c20",
+  "actualPRMergeSourceRevision": "7efde66aa49b2deb556a84238ee065745fe2a2ba",
+  "run": 41630510881,
+  "job": 125899047742,
+  "artifact": 13229428647,
+  "artifactZipSHA256": "c2fcb63e1f44c424b7221d462b8ca0cbebea3f053130ab6244975c4811585e8e",
+  "recovery": {
+    "kind": "local-synthetic-compose-release-rehearsal",
+    "project": "tax-rehearsal-33efc9a0",
+    "phases": [
+      {
+        "phase": "previous",
+        "imageDigest": "sha256:e6e61f283a898eccd773086d39e8a3514a356cd084ad8f38b43756b22112feb6",
+        "databaseSha256": "2ff57b44e35f90ca3827f09dcbbab7c85a056105b9911dcd36cefa5c84fce9d8",
+        "browserFactsSha256": "f767fc70844cf56888d32df1a686df2de10a555b28ea79446752eb86534e2dcb",
+        "documentSha256": "088621b4e7d9695656a45381a4b9054a4d4bf161906e744b18a4e37bf93e7b7f",
+        "readOnly": true,
+        "runtimeFacts": {
+          "uid": 1001,
+          "arch": "x64",
+          "node": "v24.22.1",
+          "noNewPrivileges": true,
+          "noEffectiveCapabilities": true,
+          "noBoundingCapabilities": true,
+          "providerKeys": false
+        }
+      },
+      {
+        "phase": "upgrade",
+        "imageDigest": "sha256:4f25c572e3c29e031b8f85914cfeb4f702c5fc528416a182c8f648eee5e79a8a",
+        "databaseSha256": "2ff57b44e35f90ca3827f09dcbbab7c85a056105b9911dcd36cefa5c84fce9d8",
+        "browserFactsSha256": "f767fc70844cf56888d32df1a686df2de10a555b28ea79446752eb86534e2dcb",
+        "documentSha256": "088621b4e7d9695656a45381a4b9054a4d4bf161906e744b18a4e37bf93e7b7f",
+        "readOnly": true,
+        "runtimeFacts": {
+          "uid": 1001,
+          "arch": "x64",
+          "node": "v24.22.1",
+          "noNewPrivileges": true,
+          "noEffectiveCapabilities": true,
+          "noBoundingCapabilities": true,
+          "providerKeys": false
+        }
+      },
+      {
+        "phase": "database-restart",
+        "imageDigest": "sha256:4f25c572e3c29e031b8f85914cfeb4f702c5fc528416a182c8f648eee5e79a8a",
+        "databaseSha256": "2ff57b44e35f90ca3827f09dcbbab7c85a056105b9911dcd36cefa5c84fce9d8",
+        "browserFactsSha256": "f767fc70844cf56888d32df1a686df2de10a555b28ea79446752eb86534e2dcb",
+        "documentSha256": "088621b4e7d9695656a45381a4b9054a4d4bf161906e744b18a4e37bf93e7b7f",
+        "readOnly": true,
+        "runtimeFacts": {
+          "uid": 1001,
+          "arch": "x64",
+          "node": "v24.22.1",
+          "noNewPrivileges": true,
+          "noEffectiveCapabilities": true,
+          "noBoundingCapabilities": true,
+          "providerKeys": false
+        }
+      },
+      {
+        "phase": "database-dump-restore",
+        "imageDigest": "sha256:4f25c572e3c29e031b8f85914cfeb4f702c5fc528416a182c8f648eee5e79a8a",
+        "databaseSha256": "2ff57b44e35f90ca3827f09dcbbab7c85a056105b9911dcd36cefa5c84fce9d8",
+        "browserFactsSha256": "f767fc70844cf56888d32df1a686df2de10a555b28ea79446752eb86534e2dcb",
+        "documentSha256": "088621b4e7d9695656a45381a4b9054a4d4bf161906e744b18a4e37bf93e7b7f",
+        "readOnly": true,
+        "runtimeFacts": {
+          "uid": 1001,
+          "arch": "x64",
+          "node": "v24.22.1",
+          "noNewPrivileges": true,
+          "noEffectiveCapabilities": true,
+          "noBoundingCapabilities": true,
+          "providerKeys": false
+        }
+      },
+      {
+        "phase": "rollback",
+        "imageDigest": "sha256:e6e61f283a898eccd773086d39e8a3514a356cd084ad8f38b43756b22112feb6",
+        "databaseSha256": "2ff57b44e35f90ca3827f09dcbbab7c85a056105b9911dcd36cefa5c84fce9d8",
+        "browserFactsSha256": "f767fc70844cf56888d32df1a686df2de10a555b28ea79446752eb86534e2dcb",
+        "documentSha256": "088621b4e7d9695656a45381a4b9054a4d4bf161906e744b18a4e37bf93e7b7f",
+        "readOnly": true,
+        "runtimeFacts": {
+          "uid": 1001,
+          "arch": "x64",
+          "node": "v24.22.1",
+          "noNewPrivileges": true,
+          "noEffectiveCapabilities": true,
+          "noBoundingCapabilities": true,
+          "providerKeys": false
+        }
+      },
+      {
+        "phase": "re-upgrade",
+        "imageDigest": "sha256:4f25c572e3c29e031b8f85914cfeb4f702c5fc528416a182c8f648eee5e79a8a",
+        "databaseSha256": "2ff57b44e35f90ca3827f09dcbbab7c85a056105b9911dcd36cefa5c84fce9d8",
+        "browserFactsSha256": "f767fc70844cf56888d32df1a686df2de10a555b28ea79446752eb86534e2dcb",
+        "documentSha256": "088621b4e7d9695656a45381a4b9054a4d4bf161906e744b18a4e37bf93e7b7f",
+        "readOnly": true,
+        "runtimeFacts": {
+          "uid": 1001,
+          "arch": "x64",
+          "node": "v24.22.1",
+          "noNewPrivileges": true,
+          "noEffectiveCapabilities": true,
+          "noBoundingCapabilities": true,
+          "providerKeys": false
+        }
+      }
+    ],
+    "platform": "linux/amd64",
+    "previousDigest": "sha256:e6e61f283a898eccd773086d39e8a3514a356cd084ad8f38b43756b22112feb6",
+    "candidateDigest": "sha256:4f25c572e3c29e031b8f85914cfeb4f702c5fc528416a182c8f648eee5e79a8a",
+    "databaseRecovery": {
+      "result": "passed",
+      "evidence": "local-synthetic-postgresql-dump-restore",
+      "tables": 9,
+      "tenantWorkspaces": 2,
+      "exactCostRestored": true,
+      "metadataCleanupReapplied": true,
+      "metadataCleanupIdempotent": true,
+      "checksum": "85a5a38a967e841aed97c54a9645686a9babc73ba56d1d7edc6ddd972fcee701"
+    },
+    "browserRecovery": {
+      "passed": true,
+      "encrypted": true,
+      "wrongPasswordRejected": true,
+      "tamperRejected": true,
+      "originalBytes": true,
+      "unknownYearPreserved": true,
+      "exactCents": true,
+      "deletion": true,
+      "networkObservation": {
+        "requests": 404,
+        "startsBeforeUpload": true,
+        "rawPrivateMarkersAbsent": true,
+        "limitation": "Checks raw request URLs and postData for the synthetic SSN, filename and PDF signature; not a general encoded or binary PII proof."
+      }
+    },
+    "result": "passed"
+  },
+  "sbomSHA256": "4000ef68cac2a973bb8ca897a4f66b03975bdc4ec98c4692d9cc6bc58b31dedd",
+  "scanSHA256": "f0f6192ba55ef4727f6458483a513bd0d1cc76ec0d6508083d80e29d79617cdc",
+  "matches": 176,
+  "uniqueAdvisories": 80,
+  "severity": {
+    "Critical": 0,
+    "High": 59,
+    "Medium": 62,
+    "Low": 11,
+    "Negligible": 44
+  },
+  "advisoryRegistryIDsComplete": true,
+  "newIDs": [],
+  "historicalRegistryAbsentIDs": [
+    "CVE-2011-3374"
+  ],
+  "releaseOwnerConfirmation": "pending",
+  "ownerRole": "release maintainer",
+  "reviewBy": "2026-11-07",
+  "wholeJob": "failure: actual image browser538pass2fail5hostedskip",
+  "publicationAuthorized": false,
+  "qualifiedRelease": false,
+  "recordedAt": "2026-11-03",
+  "postgres": {
+    "scope": "fresh local disposable PostgreSQL16 on loopback; no staging database",
+    "tests": {
+      "numTotalTests": 45,
+      "numPassedTests": 45,
+      "numFailedTests": 0,
+      "numPendingTests": 0
+    },
+    "logSHA256": "789f19360c4376a7ea0d872c6588f3a3c356015a223e6a1f48beab8cf9de6c7c",
+    "serverStopped": true,
+    "clusterRemoved": true
+  },
+  "remoteCoverage": {
+    "run": 41630511158,
+    "job": 125898712720,
+    "testsPassed": 23215,
+    "filesPassed": 1772,
+    "pending": 0,
+    "seconds": "2861.64",
+    "statements": "91.70",
+    "branches": "87.31",
+    "functions": "90.57",
+    "lines": "94.78",
+    "logSHA256": "67f1c34da6efccad87c5cfede4ed5248fa9aa64902b97e265199d5d71184054b",
+    "result": "passed all unchanged thresholds",
+    "scope": "0aa PR workflow, predates reciprocal6d9144e3; not final integrated qualification"
+  },
+  "currentTaxPackage": {
+    "commit": "6d9144e3d45dc9e3d23072c9a05ad0f1e77ef351",
+    "pushed": true,
+    "mainTests": 1362,
+    "files": 41,
+    "checks": 13
+  },
+  "requiredFollowups": [
+    "repair two PA royalty browser source-contract failures preserving dollars and unknown/private facts",
+    "native current-source AMD64 and ARM64 recovery/browser/image checks after remaining products",
+    "refresh and accept/remediate advisories with authorized owner and independent security review",
+    "real staging auth/SMTP/Stripe/provider/outages checks",
+    "human tax/privacy/security review and final2026 form qualification"
+  ]
+}

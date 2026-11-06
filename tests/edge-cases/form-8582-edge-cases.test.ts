@@ -89,13 +89,13 @@ describe("Form 8582 - rental allowance phase-out", () => {
     expect(result.suspendedLoss.toNumber()).toBe(0);
   });
 
-  it("AGI $100,001: $1 excess → $1 reduction (rounds to $1)", () => {
+  it("AGI $100,001: printed allowance capacity rounds 24999.50 to25000", () => {
     const result = calculateForm8582(makeInput({
       activities: [makeActivity("Rental", 0, -25000, true, true)],
       agi: d(100001),
     }));
-    // $1 excess × 50% = $0.50 → rounds to $1
-    expect(result.rentalAllowance.toNumber()).toBe(24999);
+    // Official line8 rounds the remaining capacity, not a subtracted reduction.
+    expect(result.rentalAllowance.toNumber()).toBe(25000);
   });
 
   it("rental loss less than $25K: allowance limited to loss amount", () => {
@@ -652,7 +652,7 @@ describe("Form 8582 - multiple rental properties with mixed income and loss", ()
     expect(result.netRental.toNumber()).toBe(7000);
     expect(result.rentalAllowance.toNumber()).toBe(0);
     expect(result.suspendedLoss.toNumber()).toBe(0);
-    expect(result.allowedLoss.toNumber()).toBe(0);
+    expect(result.allowedLoss.toNumber()).toBe(18000);
   });
 });
 
@@ -763,7 +763,7 @@ describe("Form 8582 - net passive income means passive loss limitation does not 
     }));
     expect(result.combinedLoss.toNumber()).toBe(0);
     expect(result.rentalAllowance.toNumber()).toBe(0);
-    expect(result.allowedLoss.toNumber()).toBe(0);
+    expect(result.allowedLoss.toNumber()).toBe(45000);
     expect(result.suspendedLoss.toNumber()).toBe(0);
   });
 
@@ -786,7 +786,7 @@ describe("Form 8582 - net passive income means passive loss limitation does not 
 // ═══════════════════════════════════════════════════════════
 
 describe("Form 8582 - audit trail records all key limitation lines", () => {
-  it("audit trail contains Form 8582 lines 1a, 1b, 1c, 3a, 3b, 3c, 5, 7, 9, 10", () => {
+  it("audit trail contains official Form 8582 lines1a through11", () => {
     const result = calculateForm8582(makeInput({
       activities: [
         makeActivity("K-1", 5000, 0, false, false),
@@ -801,42 +801,49 @@ describe("Form 8582 - audit trail records all key limitation lines", () => {
     expect(lineNumbers).toContain("1a");
     expect(lineNumbers).toContain("1b");
     expect(lineNumbers).toContain("1c");
-    expect(lineNumbers).toContain("3a");
-    expect(lineNumbers).toContain("3b");
-    expect(lineNumbers).toContain("3c");
+    expect(lineNumbers).toContain("1d");
+    expect(lineNumbers).toContain("2a");
+    expect(lineNumbers).toContain("2b");
+    expect(lineNumbers).toContain("2c");
+    expect(lineNumbers).toContain("2d");
+    expect(lineNumbers).toContain("3");
+    expect(lineNumbers).toContain("4");
+    expect(lineNumbers).toContain("6");
+    expect(lineNumbers).toContain("8");
+    expect(lineNumbers).toContain("11");
     expect(lineNumbers).toContain("5");
     expect(lineNumbers).toContain("7");
     expect(lineNumbers).toContain("9");
     expect(lineNumbers).toContain("10");
   });
 
-  it("audit trail line 7 value matches computed rentalAllowance", () => {
+  it("audit trail line 9 value matches computed rentalAllowance", () => {
     // AGI $130K → excess $30K × 50% = $15K reduction → allowance = $10K
     const result = calculateForm8582(makeInput({
       activities: [makeActivity("Rental", 0, -25000, true, true)],
       agi: d(130000),
     }));
 
-    const line7 = result.lines.find(
-      (l) => l.form === "Form 8582" && l.line === "7"
+    const line9 = result.lines.find(
+      (l) => l.form === "Form 8582" && l.line === "9"
     );
-    expect(line7).toBeDefined();
-    expect(line7!.value.toNumber()).toBe(result.rentalAllowance.toNumber());
-    expect(line7!.value.toNumber()).toBe(10000);
+    expect(line9).toBeDefined();
+    expect(line9!.value.toNumber()).toBe(result.rentalAllowance.toNumber());
+    expect(line9!.value.toNumber()).toBe(10000);
   });
 
-  it("audit trail line 10 value matches suspendedLoss for MFS filer", () => {
+  it("audit trail suspended diagnostic value matches suspendedLoss for MFS filer", () => {
     const result = calculateForm8582(makeInput({
       activities: [makeActivity("Rental", 0, -22000, true, true)],
       agi: d(60000),
       filingStatus: "married_filing_separately",
     }));
 
-    const line10 = result.lines.find(
-      (l) => l.form === "Form 8582" && l.line === "10"
+    const suspended = result.lines.find(
+      (l) => l.form === "Form 8582" && l.line === "suspended"
     );
-    expect(line10).toBeDefined();
-    expect(line10!.value.toNumber()).toBe(result.suspendedLoss.toNumber());
-    expect(line10!.value.toNumber()).toBe(22000);
+    expect(suspended).toBeDefined();
+    expect(suspended!.value.toNumber()).toBe(result.suspendedLoss.toNumber());
+    expect(suspended!.value.toNumber()).toBe(22000);
   });
 });

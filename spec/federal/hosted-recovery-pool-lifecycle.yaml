@@ -1,0 +1,43 @@
+form: Hosted recovery pool lifecycle
+schedule: Hosting operational recovery
+taxYear: 2026
+reference: scripts/rehearse-hosted-recovery.ts
+notes: |
+  Operational cleanup only; no tax, year, filing, SQL, schema or TLS change.
+  The existing rehearsal uses its actual pg Pool directly. Installed Kysely
+  0.29.7 RuntimeDriver.destroy returns without calling its driver when initPromise
+  is absent. Installed PostgresDriver.destroy ends its Pool only after init.
+  pg8.23.1/pg-pool3.14.0 provides the public Client constructor option used here
+  solely as a socket-free wire adapter. Actual Pool and Kysely lifecycle code runs.
+  The prior real V5.2 receipt 6f365540 records ownSessionsRemaining=1 after
+  schema absence, migration, restore and outside-catalog checks. It remains a
+  failure; these unit controls do not establish remote session-zero or DB recovery.
+  Freeze these controls before helper implementation. No missing future export
+  or import error is a behavior RED. No sleeps, retries, sockets or error swallowing.
+lines:
+  - line: "raw-pool-only"
+    formula: |
+      Raw pool query leaves one idle actual Pool client. Actual db.destroy before
+      driver init leaves Pool open (source prerequisite). closeRecoveryRuntime
+      then closes the client and Pool; ended=true and totalCount=idleCount=0.
+    testRef: "tests/scripts/hosted-recovery-pool-lifecycle.test.ts::closes a raw-pool-only actual runtime after proving lazy destroy leaves it open"
+  - line: "initialized-once"
+    formula: |
+      An actual Kysely query initializes the driver. Cleanup delegates its single
+      Pool.end through db.destroy and must not end the Pool a second time.
+    testRef: "tests/scripts/hosted-recovery-pool-lifecycle.test.ts::closes an initialized actual driver exactly once"
+  - line: "already-ended"
+    formula: "An already-ended actual Pool remains ended without a duplicate end call."
+    testRef: "tests/scripts/hosted-recovery-pool-lifecycle.test.ts::preserves an already-ended actual pool without a second end"
+  - line: "incomplete-ending"
+    formula: |
+      Actual pool.end with a checked-out client makes ending=true/ended=false.
+      Cleanup must fail closed instead of reporting success or ending twice.
+      Test finally releases its own client and awaits the original end promise.
+    testRef: "tests/scripts/hosted-recovery-pool-lifecycle.test.ts::rejects an ending but incomplete actual pool without ending twice"
+  - line: "destroy-rejection"
+    formula: "The original db.destroy rejection propagates; no Pool.end or successful completion."
+    testRef: "tests/scripts/hosted-recovery-pool-lifecycle.test.ts::propagates a database destroy rejection without claiming closure"
+  - line: "end-rejection"
+    formula: "A fallback Pool.end rejection propagates without reporting successful closure."
+    testRef: "tests/scripts/hosted-recovery-pool-lifecycle.test.ts::propagates a fallback pool end rejection without claiming closure"

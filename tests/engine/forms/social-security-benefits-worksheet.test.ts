@@ -61,6 +61,36 @@ const mfsLivedWithSpouseFixture = calculateSocialSecurityBenefitsWorksheet({
 });
 
 describe("Social Security Benefits Worksheet", () => {
+  it("reconciles actual exclusions once for both lump-sum comparison methods", () => {
+    // Spec: spec/federal/social-security-benefits-worksheet.yaml#pub915-known-exclusions
+    const actual = {
+      filingStatus: "single" as const, benefitsReceived: d(20000),
+      otherIncome: d(5000), taxExemptInterest: d(0), exclusionsAdjustments: d(25000),
+      lumpSumElection: { currentYearExclusionsAdjustments: d(25000), earlierYears: [{
+        taxYear: 2024, filingStatus: "single" as const, benefitsReceivedInEarlierYear: d(0),
+        delayedBenefitsReceivedInCurrentYear: d(5000), adjustedGrossIncome: d(0),
+        taxableBenefitsPreviouslyReported: d(0),
+      }] },
+    };
+    const result = calculateSocialSecurityBenefitsWorksheet(actual);
+    expect(result.standardTaxableBenefits.toString()).toBe("9600");
+    expect(result.lumpSumElectionTaxableBenefits?.toString()).toBe("7475");
+    expect(result.taxableBenefits.toString()).toBe("7475");
+    expect(result.lines.filter((line) => line.form === "Pub915 WS1").map((line) => line.value.toString()))
+      .toEqual(["20000", "10000", "5000", "0", "25000", "40000", "0", "40000", "25000", "15000", "9000", "6000", "9000", "4500", "4500", "5100", "9600", "17000", "9600"]);
+    expect(() => calculateSocialSecurityBenefitsWorksheet({ ...actual, lumpSumElection: {
+      ...actual.lumpSumElection, currentYearExclusionsAdjustments: d(24999),
+    } })).toThrow(/exclusions/i);
+    for (const invalid of ["-1", "NaN", "Infinity"]) {
+      expect(() => calculateSocialSecurityBenefitsWorksheet({ ...actual, exclusionsAdjustments: d(invalid) }))
+        .toThrow(/exclusions/i);
+    }
+    const marriedSeparate = calculateSocialSecurityBenefitsWorksheet({
+      ...actual, filingStatus: "married_filing_separately", livedWithSpouseAtAnyTimeDuringYear: true,
+    });
+    expect(marriedSeparate.taxableBenefits.toString()).toBe("12750");
+    expect(marriedSeparate.lines.some((line) => line.form === "Pub915 WS1" && line.line === "9")).toBe(false);
+  });
   it("Social Security Benefits Worksheet Line 1 - aggregates SSA-1099 and RRB-1099 equivalent Box 5 benefits", () => {
     expect(line6Fixture.line1.toNumber()).toBe(24000);
   });

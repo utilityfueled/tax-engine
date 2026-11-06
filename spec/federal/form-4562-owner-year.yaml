@@ -1,0 +1,36 @@
+form: "Form-4562-Owner-Year"
+fullName: "Form4562 parent-year binding and indexed section179 defaults"
+taxYear: 2026
+reference: "https://www.irs.gov/irb/2025-45_IRB; https://www.irs.gov/publications/p946"
+notes: |
+  RevProc2025-32 section4.24 and Pub946 What's New for2026, retrieved
+  November5,2026. Indexed defaults are2560000/4090000 for2026 and remain
+  2500000/4000000 for2025. This is arithmetic/year binding, not full asset,
+  section179 election, final-form, professional review or filing qualification.
+  Preserve standalone legacy2025 inputs; parent context must never be replaced
+  by a missing nested year or a conflicting explicit nested year.
+lines:
+  - line: "indexed-defaults"
+    description: "Use owner-year indexed section179 defaults with exact money"
+    formula: "Resolve explicit owner year first, otherwise the explicit standalone year, otherwise the historical standalone2025 default. Select2025 or2026 indexed maximum/phaseout defaults; reject unknown, fractional or nonfinite years. Preserve exact dollar-for-dollar phaseout and business-income limitation."
+    testRef: "tests/engine/forms/form-4562-owner-year.test.ts::uses independently published indexed defaults and exact threshold cents"
+  - line: "owner-conflict"
+    description: "An explicit nested year cannot contradict the actual return"
+    formula: "If both owner year and nested Form4562 year exist they must be equal before any asset, amortization or section179 calculation. Do not mutate the saved nested input or invent a migration year."
+    testRef: "tests/engine/forms/form-4562-owner-year.test.ts::rejects conflicting owner years without changing historical input"
+  - line: "activity-binding"
+    description: "Business and rental bridges use the actual taxpayer year"
+    formula: "Pass the present actual taxpayer taxYear to Form4562 for ScheduleC and each ScheduleE property. Omitted nested year cannot silently select2025 on an actual2026 return; explicit mismatch fails. Legacy standalone ScheduleE without taxpayer context remains separately unqualified."
+    testRef: "tests/engine/forms/form-4562-owner-year.test.ts::binds business and rental amortization to the actual owner year"
+  - line: "reference-binding"
+    description: "The reference summary recomputes with the same owner year"
+    formula: "Every ScheduleC and rental Form4562 reference-summary call uses the actual input taxpayer year; mismatch denies the summary before rendering or filesystem effects. Existing reference-only and final-year export gates remain unchanged."
+    testRef: "tests/engine/forms/form-4562-owner-year.test.ts::rejects mismatched reference activities before rendering"
+  - line: "audit-years"
+    description: "The year-specific audit agrees with the resolved calculation"
+    formula: "Default statutory descriptions use resolved taxYear; section179 opening carry comes from taxYear minus1 and closing carry goes to taxYear plus1. Preserve the existing2025 audit wording."
+    testRef: "tests/engine/forms/form-4562-owner-year.test.ts::reports the actual statutory and carryover years in the audit"
+  - line: "canonical-absence"
+    description: "Canonical parsing preserves absent overrides separately from actual zero"
+    formula: "Do not default missing maximum, threshold, direct deduction or direct closing carry overrides to0. Absent fields select the year/computed method; explicit0 remains0 before and after JSON replay. No other missing taxpayer fact or readiness qualification is inferred."
+    testRef: "tests/engine/forms/form-4562-owner-year.test.ts::preserves absent and explicit zero overrides through actual canonical parsing"

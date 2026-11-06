@@ -1,0 +1,28 @@
+form: "Section172 NOL carry sources"
+fullName: "Actual net operating loss carry history and legacy source preservation"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i172"
+notes: |
+  Section172(a)(2) distinguishes pre2018 carry from post2017 losses. The latter
+  limit excludes deductions under172,199A and250. Carry absorption is separately
+  governed by172(b)(2), including modified taxable income and FIFO; it cannot
+  universally be equated to the amount deducted. These first source-preservation
+  cases retain existing unverified legacy2025 behavior while actual vintage and
+  modified-income calculation is implemented separately. They do not qualify
+  unknown loss years or open2026 calculation or filing gates.
+lines:
+  - line: "omitted-general-source"
+    description: "Preserve omitted general carry distinctly from an actual zero"
+    formula: "Parsed priorEBL20000 with omitted general carry retains the EBL fallback; actual general0 continues to take precedence."
+    irsRef: "Section172 carryover records; existing legacy input precedence contract"
+    testRef: "tests/engine/federal-nol-sources.test.ts::preserves absent and actual zero general NOL sources through parsing"
+  - line: "general-carry-conservation"
+    description: "Retain all unused available legacy carry instead of only the EBL alias"
+    formula: "Wages50000 minus standard15750 gives34250; legacy post2017 allowance27400 leaves22600 of a50000 general source."
+    irsRef: "Section172(a)(2) and(b)(2); Form172 instructions carryforward records"
+    testRef: "tests/engine/federal-nol-sources.test.ts::preserves the unused general carry and estate carry once"
+  - line: "new-ebl-conservation"
+    description: "Add only the new current EBL to the remaining prior carry"
+    formula: "Current500000 ScheduleC loss less313000 threshold creates187000 new EBL; prior general50000 remains, giving237000 total."
+    irsRef: "Section461(l)(2); Form172 instructions Excess Business Loss worksheet"
+    testRef: "tests/engine/federal-nol-sources.test.ts::adds current EBL without dropping or duplicating the prior general source"

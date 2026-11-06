@@ -1,4 +1,17 @@
+import {prepareRRTAPayrollReview,requiresRRTAPayrollReview} from '@/pdf/rrta-payroll-review-context';
+import {readGuidedRRTAPaperSources} from './guided-rrta-paper-sources';
+import {prepareForm2210Review,requiresForm2210ScheduleAiReview,hasSavedForm2210Review,type SavedForm2210Review} from '@/pdf/form-2210-review-context.js';
+import {assertNoPAMarriedPaperExport,isPAMarriedOrdinaryReturnResult} from '@/engine/state/pa-return-result';
+import {calculatePAMarriedOrdinaryReturn} from '@/engine/state/pa-married-ordinary-return';
+import {preparePAMarriedReturnReview} from '@/pdf/pa-married-return-review-context';
+import { prepareOhioResidencyReview } from "@/engine/state/oh-residency-source.js";
+import {preparePARoyaltyReview} from "@/pdf/pa-royalty-review-context.js";
+import { preparePAWorkingCreditReview } from "@/pdf/pa-working-credit-review-context.js";
+import { hasInKindEducationReviewSources, prepareEducationReview } from "@/pdf/education-review-context.js";
+import { hasSavingsBondReviewSources, prepareSavingsBondReview } from "@/pdf/savings-bond-review-context.js";
+import { buildGuidedOhioOverlay, buildGuidedStateOriginals } from "./guided-state-engine-inputs";
 import "server-only";
+import Decimal from "decimal.js";
 
 import { mkdir, mkdtemp, readFile, rm, stat, writeFile } from "fs/promises";
 import { tmpdir } from "os";
@@ -16,25 +29,28 @@ import {
   type TaxYearInput,
 } from "@/models/inputs.js";
 import { supportedStates } from "@/lib/guided-interview-flow";
-import { buildWorkspaceEngineInput } from "@tax-engine/engine/src/workspace-engine-input";
 import { calculateFederalTax } from "@/engine/federal.js";
-import { calculatePANonresidentReturn } from "@/engine/state/pa-nonresident-orchestrator.js";
-import { calculatePAReturn } from "@/engine/state/pa-orchestrator.js";
+import { calculatePAOrdinaryReturn } from "@/engine/state/pa-ordinary-return.js";
+import { preparePAOrdinaryReturnReview, isPAOrdinaryReturnResult } from "@/pdf/pa-ordinary-return-review-context.js";
 import { fillReturn } from "@/pdf/fill-return.js";
+import { redactReviewIdentifiers } from "@/pdf/redact-review-identifiers.js";
+import { prepareForm8949Review } from "@/pdf/form-8949-review-context.js";
+import { prepareCodNolReview } from "@/pdf/cod-nol-review-context.js";
+import { prepareNolFilingUnitReview, requiresNolFilingUnitReview } from "@/pdf/nol-filing-unit-review-context.js";
+import { prepareCharitableReview, requiresCharitableNolReview, requiresCharitableFilingHistoryReview } from "@/pdf/charitable-review-context.js";
+import { hasHistoricalAdoptionSources, prepareAdoptionReview } from "@/pdf/adoption-review-context.js";
+import { hasScheduleEReviewSources, prepareScheduleEReview } from "@/pdf/schedule-e-review-context.js";
+import { prepareQbiLossReview } from "@/pdf/qbi-loss-review-context.js";
+import { hasEicReviewSources, prepareEicReview } from "@/pdf/eic-review-context.js";
+import { hasPremiumTaxCreditReviewSources, preparePremiumTaxCreditReview } from "@/pdf/premium-tax-credit-review-context.js";
 import { fillOhioReferenceForms } from "@/pdf/fill-oh-reference-forms.js";
 import { loadPdfDocumentQuietly } from "@/pdf/pdf-utils.js";
+import { assertPdfExportAllowed, markReviewPdf, REVIEW_PDF_NOTICE } from "@/pdf/export-policy.js";
 import {
   buildTaxInputFromGuidedData,
 } from "@/lib/guided-interview-bridge";
-import {
-  type GuidedFlowState,
-  type StateReturnData,
-} from "@/lib/guided-interview-flow";
+import type { GuidedFlowState } from "@/lib/guided-interview-flow";
 import { assessReturnReadiness } from "@/utils/return-readiness.js";
-import {
-  extractOhioWithholding,
-  type OhioOverlayInput,
-} from "@/engine/state/oh-input-adapter.js";
 
 export interface WorkspaceFilledReturnDownload {
   fileName: string;
@@ -66,6 +82,7 @@ const STATE_NAME_FALLBACKS = new Map<string, string>(
 );
 const FORM_LABELS: Record<string, string> = {
   "f1040-filled.pdf": "Form 1040",
+  "f8997-reference-filled.pdf": "Form 8997 Reference",
   "f1040s1-filled.pdf": "Schedule 1",
   "f1040s2-filled.pdf": "Schedule 2",
   "f1040s3-filled.pdf": "Schedule 3",
@@ -95,6 +112,7 @@ const FORM_LABELS: Record<string, string> = {
   "f8959-filled.pdf": "Form 8959",
   "f8960-filled.pdf": "Form 8960",
   "f8995-filled.pdf": "Form 8995",
+  "qbi-loss-reference-filled.pdf": "QBI loss sources and carryforwards",
   "oh-it-1040-reference.pdf": "Ohio IT 1040 (reference summary)",
   "oh-schedule-adjustments-reference.pdf": "Ohio Schedule of Adjustments (reference summary)",
   "oh-it-bus-reference.pdf": "Ohio Schedule of Business Income (reference summary)",
@@ -107,6 +125,12 @@ const FORM_LABELS: Record<string, string> = {
   "nj-1040-filled.pdf": "New Jersey NJ-1040",
   "ny-it201-filled.pdf": "New York IT-201",
   "pa-40-filled.pdf": "Pennsylvania PA-40",
+  "pa-joint-40-review.pdf": "Joint Pennsylvania PA-40",
+  "pa-joint-sp-review.pdf": "Joint Pennsylvania Schedule SP",
+  "pa-primary-40-review.pdf": "Primary Pennsylvania PA-40",
+  "pa-primary-sp-review.pdf": "Primary Pennsylvania Schedule SP",
+  "pa-spouse-40-review.pdf": "Spouse Pennsylvania PA-40",
+  "pa-spouse-sp-review.pdf": "Spouse Pennsylvania Schedule SP",
   "pa-schedule-a-reference.pdf": "Pennsylvania Schedule A (reference summary)",
   "pa-schedule-b-reference.pdf": "Pennsylvania Schedule B (reference summary)",
   "pa-schedule-c-reference.pdf": "Pennsylvania Schedule C (reference summary)",
@@ -144,7 +168,7 @@ async function resolveBlankFormsDir() {
 
   for (const candidate of candidates) {
     try {
-      await stat(join(candidate, "f1040.pdf"));
+      await stat(join(candidate, "2025", "f1040.pdf"));
       return candidate;
     } catch {
       // Try the next possible workspace root.
@@ -160,6 +184,7 @@ async function mergePdfFiles(pdfPaths: string[]) {
   for (const pdfPath of pdfPaths) {
     const bytes = await readFile(pdfPath);
     const source = await loadPdfDocumentQuietly(bytes);
+    await markReviewPdf(source);
     const pages = await merged.copyPages(source, source.getPageIndices());
 
     for (const page of pages) {
@@ -167,16 +192,14 @@ async function mergePdfFiles(pdfPaths: string[]) {
     }
   }
 
+  merged.setSubject(REVIEW_PDF_NOTICE);
   return merged.save();
 }
 
-function formatCurrencyWholeDollars(value: number) {
-  const rounded = Math.round(value);
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: 0,
-  }).format(rounded);
+function formatCurrencyWholeDollars(value: Decimal) {
+  const rounded = value.toDecimalPlaces(0, Decimal.ROUND_HALF_UP);
+  const digits = rounded.abs().toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  return `${rounded.isNegative() ? "-" : ""}$${digits}`;
 }
 
 function wrapText(text: string, font: PDFFont, size: number, maxWidth: number) {
@@ -251,6 +274,8 @@ function drawBulletList(
     x,
     y,
     maxWidth,
+    nextPage,
+    freshBodyY,
     bulletGap = 14,
     bulletColor = rgb(0.13, 0.13, 0.13),
   }: {
@@ -259,33 +284,55 @@ function drawBulletList(
     x: number;
     y: number;
     maxWidth: number;
+    nextPage: () => { page: PDFPage; y: number };
+    freshBodyY: number;
     bulletGap?: number;
     bulletColor?: ReturnType<typeof rgb>;
   },
 ) {
+  let activePage = page;
   let cursorY = y;
+  const lineHeight = size * 1.35;
+  const continuePage = () => {
+    const continued = nextPage();
+    activePage = continued.page;
+    cursorY = continued.y;
+  };
 
   for (const bullet of bullets) {
-    page.drawText("•", {
-      x,
-      y: cursorY,
-      font,
-      size,
-      color: bulletColor,
-    });
-    cursorY = drawWrappedText(page, bullet, {
-      font,
-      size,
-      x: x + bulletGap,
-      y: cursorY,
-      maxWidth: maxWidth - bulletGap,
-      lineHeight: size * 1.35,
-      color: bulletColor,
-    });
+    const lines = wrapText(bullet, font, size, maxWidth - bulletGap);
+    const lastLineOffset = lineHeight * (lines.length - 1);
+    // Keep a whole bullet together when it fits a fresh page. Only a bullet
+    // longer than a fresh body is split, at its existing wrapped line breaks.
+    if (cursorY - lastLineOffset < PAGE_MARGIN
+      && freshBodyY - lastLineOffset >= PAGE_MARGIN) {
+      continuePage();
+    }
+    let needsBullet = true;
+    for (const line of lines) {
+      if (cursorY < PAGE_MARGIN) {
+        continuePage();
+        needsBullet = true;
+      }
+      if (needsBullet) {
+        activePage.drawText("•", {
+          x, y: cursorY, font, size, color: bulletColor,
+        });
+        needsBullet = false;
+      }
+      activePage.drawText(line, {
+        x: x + bulletGap,
+        y: cursorY,
+        font,
+        size,
+        color: bulletColor,
+      });
+      cursorY -= lineHeight;
+    }
     cursorY -= 6;
   }
 
-  return cursorY;
+  return { page: activePage, y: cursorY };
 }
 
 function resolveStateCode(
@@ -293,7 +340,7 @@ function resolveStateCode(
   taxInput: TaxYearInput,
   guidedFlowState?: GuidedFlowState | null,
 ) {
-  const stateCode = guidedFlowState?.segmentation.stateCode ?? taxInput.taxpayer.address.state ?? null;
+  const stateCode = guidedFlowState ? guidedFlowState.segmentation.stateCode : taxInput.taxpayer.address.state ?? null;
   if (!stateCode) {
     return null;
   }
@@ -331,6 +378,7 @@ function buildPacketSummary(
   includedForms: string[],
   source: WorkspaceFilledReturnSource,
   guidedFlowState?: GuidedFlowState | null,
+  form2210ReviewArtifact?:SavedForm2210Review,
 ): PacketSummary {
   const missingChecklistItems = workspace.checklist
     .filter((item) => item.status !== "ready")
@@ -354,9 +402,9 @@ function buildPacketSummary(
     `This packet includes ${includedForms.length} filled form${includedForms.length === 1 ? "" : "s"}: ${formatIncludedForms(includedForms)}.`,
     `Documents reviewed for this workspace: ${workspace.documents.length}; manual-review uploads still open: ${workspace.summary.pendingReviewDocuments}.`,
     result.refund.gt(0)
-      ? `Current federal estimate shows a refund of ${formatCurrencyWholeDollars(result.refund.toNumber())}.`
+      ? `Current federal estimate shows a refund of ${formatCurrencyWholeDollars(result.refund)}.`
       : result.amountOwed.gt(0)
-        ? `Current federal estimate shows a balance due of ${formatCurrencyWholeDollars(result.amountOwed.toNumber())}.`
+        ? `Current federal estimate shows a balance due of ${formatCurrencyWholeDollars(result.amountOwed)}.`
         : "Current federal estimate is effectively balanced with no refund or balance due.",
     "Social Security numbers are intentionally redacted from this PDF packet.",
   ];
@@ -364,6 +412,14 @@ function buildPacketSummary(
     "This software is experimental and not a substitute for a preparer review, filing software validation, or legal/tax advice.",
     "Verify every line, schedule, payment, withholding amount, and filing obligation before relying on this packet.",
   ];
+
+  if(isPAMarriedOrdinaryReturnResult(result.stateReturns?.pennsylvania)){
+    compiledBullets.push(`Owned Pennsylvania review pages: ${formatIncludedForms(includedForms.filter(form=>/^pa-(joint|primary|spouse)-(40|sp)-review\.pdf$/.test(form)))}.`);
+    compiledBullets.push(result.stateReturns.pennsylvania.filingMode==='M'
+      ?'The two owned Pennsylvania returns keep each person’s tax, payments and requested refund separate. The federal return is one actual household.'
+      :'The owned joint Pennsylvania review uses the same actual federal household.');
+    missingBullets.push('Filing and separate local returns remain unqualified. Review each actual owned PA40 and Schedule SP page with its original source documents.');
+  }
 
   if (isSelectedStatePacketUnsupported && stateName) {
     missingBullets.push(
@@ -391,65 +447,30 @@ function buildPacketSummary(
     );
   }
 
-  if (result.estimatedTaxPenalty.gt(0)) {
+  if (result.form2210?.waiver) {
+    missingBullets.push(`This return requests an estimated tax penalty waiver. The IRS decides, and may bill the penalty. Attach ${result.form2210.farmerMethod ? "Form 2210-F" : "Form 2210"} and your statement.`);
+  }
+
+  const actualAiReview=hasSavedForm2210Review(taxInput,result,includedForms,form2210ReviewArtifact);
+  if (result.form2210?.scheduleAi && result.form2210.requiresForm2210) {
+    missingBullets.push(actualAiReview?"Form 2210 with completed Schedule AI is included for source-qualified review, including when the calculated penalty is zero. Filing qualification has not been established.":"This return uses the annualized income method, so Form 2210 with Schedule AI must be filed with it even when the penalty is zero. Neither is attached to this draft.");
+  }
+
+  if (result.form2210?.farmerMethod && result.form2210.requiresForm2210 && !result.form2210.waiver) {
+    missingBullets.push("Form 2210-F must be filed with this return because the joint filing status changed. It is not attached to this draft.");
+  }
+
+  if (result.estimatedTaxPenalty.gt(0)&&!actualAiReview) {
     missingBullets.push(
-      `The return currently includes an estimated tax penalty of ${formatCurrencyWholeDollars(result.estimatedTaxPenalty.toNumber())}, but Form 2210 is not auto-attached to this draft packet.`
+      `The return currently includes an estimated tax penalty of ${formatCurrencyWholeDollars(result.estimatedTaxPenalty)}, but ${result.form2210?.farmerMethod ? "Form 2210-F" : "Form 2210"} is not auto-attached to this draft packet.`
     );
   }
 
   return {
-    headline: "AI SUMMARY OF THIS PACKET",
+    headline: "SUMMARY OF THIS REVIEW PACKET",
     compiledBullets,
     missingBullets,
   };
-}
-
-function parseCurrencyAmount(value: string | undefined) {
-  const normalized = value?.trim().replace(/,/g, "") ?? "";
-  if (!normalized) {
-    return 0;
-  }
-
-  const parsed = Number(normalized);
-  return Number.isFinite(parsed) ? parsed : 0;
-}
-
-function buildOhioOverlayFromGuidedState(
-  taxInput: TaxYearInput,
-  guidedFlowState?: GuidedFlowState | null,
-): OhioOverlayInput {
-  const stateReturnData = guidedFlowState?.sectionData["state-return"] as StateReturnData | undefined;
-
-  if (!stateReturnData) {
-    return {};
-  }
-
-  const additionalWithholding = parseCurrencyAmount(stateReturnData.additionalStateWithholding);
-  const estimatedPayments = stateReturnData.stateEstimatedPayments.reduce(
-    (sum, entry) => sum + parseCurrencyAmount(entry.amount),
-    0,
-  );
-  const baseOhioWithholding = extractOhioWithholding(
-    taxInput.w2s,
-    taxInput.formW2G,
-    taxInput.form1099G,
-    taxInput.form1099K,
-    taxInput.form1099R,
-    taxInput.form1099Nec,
-    taxInput.form1099Misc,
-  ).toNumber();
-
-  const overlay: OhioOverlayInput = {};
-
-  if (additionalWithholding > 0) {
-    overlay.ohioWithholdingOverride = baseOhioWithholding + additionalWithholding;
-  }
-
-  if (estimatedPayments > 0) {
-    overlay.estimatedPayments = estimatedPayments;
-  }
-
-  return overlay;
 }
 
 function attachPennsylvaniaReturn(
@@ -457,164 +478,166 @@ function attachPennsylvaniaReturn(
   result: ReturnType<typeof calculateFederalTax>,
   stateCode: string | null,
 ) {
-  if (stateCode !== "PA" || result.stateReturns?.pennsylvania) {
-    return result;
+  if (stateCode !== "PA") return result;
+  if(taxInput.paMarriedOrdinarySources!==undefined){
+    return {...result,stateReturns:{...(result.stateReturns??{}),
+      pennsylvania:calculatePAMarriedOrdinaryReturn(taxInput,taxInput.paMarriedOrdinarySources)}};
   }
-
-  return {
-    ...result,
-    stateReturns: {
-      ...(result.stateReturns ?? {}),
-      pennsylvania: taxInput.paNonresidentReturn
-        ? calculatePANonresidentReturn(taxInput)
-        : calculatePAReturn(taxInput),
-    },
-  };
+  assertNoPAMarriedPaperExport(taxInput,result.stateReturns?.pennsylvania);
+  return {...result,stateReturns:{...(result.stateReturns??{}),
+    pennsylvania:calculatePAOrdinaryReturn(taxInput,taxInput.paOrdinaryReturnFacts,taxInput.paOrdinaryReturnCompletionSources)}};
 }
 
 async function buildReturnSummaryCoverPage(summary: PacketSummary) {
   const doc = await PDFDocument.create();
-  const page = doc.addPage([LETTER_PAGE_WIDTH, LETTER_PAGE_HEIGHT]);
   const bold = await doc.embedFont(StandardFonts.HelveticaBold);
   const regular = await doc.embedFont(StandardFonts.Helvetica);
   const warningColor = rgb(0.62, 0.19, 0.14);
   const borderColor = rgb(0.16, 0.16, 0.16);
   const lightPanel = rgb(0.98, 0.95, 0.88);
-  let y = LETTER_PAGE_HEIGHT - PAGE_MARGIN;
-  const warningPanelHeight = 142;
-  const warningPanelBottom = y - warningPanelHeight;
+  const sectionPage = (continued: boolean, section: string, color: ReturnType<typeof rgb>) => {
+    const page = doc.addPage([LETTER_PAGE_WIDTH, LETTER_PAGE_HEIGHT]);
+    let y = LETTER_PAGE_HEIGHT - PAGE_MARGIN;
+    const warningPanelHeight = 142;
+    const warningPanelBottom = y - warningPanelHeight;
 
-  page.drawRectangle({
-    x: PAGE_MARGIN,
-    y: warningPanelBottom,
-    width: LETTER_PAGE_WIDTH - PAGE_MARGIN * 2,
-    height: warningPanelHeight,
-    color: lightPanel,
-    borderColor,
-    borderWidth: 2,
-  });
-
-  y = drawWrappedText(page, "EXPERIMENTAL TAX RETURN REFERENCE", {
-    font: bold,
-    size: 20,
-    x: PAGE_MARGIN + 16,
-    y: y - 30,
-    maxWidth: LETTER_PAGE_WIDTH - PAGE_MARGIN * 2 - 32,
-    lineHeight: 24,
-    color: warningColor,
-  });
-  y = drawWrappedText(page, "DO NOT SUBMIT AS-IS", {
-    font: bold,
-    size: 18,
-    x: PAGE_MARGIN + 16,
-    y: y - 8,
-    maxWidth: LETTER_PAGE_WIDTH - PAGE_MARGIN * 2 - 32,
-    lineHeight: 22,
-    color: borderColor,
-  });
-  y = drawWrappedText(
-    page,
-    "This packet is an experimental reference copy only. It may omit required filing forms, elections, adjustments, or supporting schedules.",
-    {
-      font: regular,
-      size: 10.5,
-      x: PAGE_MARGIN + 16,
-      y: y - 12,
-      maxWidth: LETTER_PAGE_WIDTH - PAGE_MARGIN * 2 - 32,
-      lineHeight: 14,
-      color: borderColor,
-    }
-  );
-  drawWrappedText(
-    page,
-    "Review every page independently before relying on any value in this packet.",
-    {
-      font: regular,
-      size: 10.5,
-      x: PAGE_MARGIN + 16,
-      y: y - 6,
-      maxWidth: LETTER_PAGE_WIDTH - PAGE_MARGIN * 2 - 32,
-      lineHeight: 14,
-      color: borderColor,
-    }
-  );
-
-  y = warningPanelBottom - 24;
-  y = drawWrappedText(page, summary.headline, {
-    font: bold,
-    size: 15,
-    x: PAGE_MARGIN,
-    y,
-    maxWidth: LETTER_PAGE_WIDTH - PAGE_MARGIN * 2,
-    lineHeight: 18,
-    color: borderColor,
-  });
-  y = drawWrappedText(
-    page,
-    "The summary below is generated from structured return data and should be treated as a starting point for review, not a filing certification.",
-    {
-      font: regular,
-      size: 10.5,
+    page.drawRectangle({
       x: PAGE_MARGIN,
-      y: y - 6,
-      maxWidth: LETTER_PAGE_WIDTH - PAGE_MARGIN * 2,
-      lineHeight: 14,
+      y: warningPanelBottom,
+      width: LETTER_PAGE_WIDTH - PAGE_MARGIN * 2,
+      height: warningPanelHeight,
+      color: lightPanel,
+      borderColor,
+      borderWidth: 2,
+    });
+
+    y = drawWrappedText(page, "EXPERIMENTAL TAX RETURN REFERENCE", {
+      font: bold,
+      size: 20,
+      x: PAGE_MARGIN + 16,
+      y: y - 30,
+      maxWidth: LETTER_PAGE_WIDTH - PAGE_MARGIN * 2 - 32,
+      lineHeight: 24,
+      color: warningColor,
+    });
+    y = drawWrappedText(page, "DO NOT SUBMIT AS-IS", {
+      font: bold,
+      size: 18,
+      x: PAGE_MARGIN + 16,
+      y: y - 8,
+      maxWidth: LETTER_PAGE_WIDTH - PAGE_MARGIN * 2 - 32,
+      lineHeight: 22,
       color: borderColor,
-    }
-  );
+    });
+    y = drawWrappedText(
+      page,
+      "This packet is an experimental reference copy only. It may omit required filing forms, elections, adjustments, or supporting schedules.",
+      {
+        font: regular,
+        size: 10.5,
+        x: PAGE_MARGIN + 16,
+        y: y - 12,
+        maxWidth: LETTER_PAGE_WIDTH - PAGE_MARGIN * 2 - 32,
+        lineHeight: 14,
+        color: borderColor,
+      }
+    );
+    drawWrappedText(
+      page,
+      "Review every page independently before relying on any value in this packet.",
+      {
+        font: regular,
+        size: 10.5,
+        x: PAGE_MARGIN + 16,
+        y: y - 6,
+        maxWidth: LETTER_PAGE_WIDTH - PAGE_MARGIN * 2 - 32,
+        lineHeight: 14,
+        color: borderColor,
+      }
+    );
 
-  y -= 18;
-  y = drawWrappedText(page, "What was compiled", {
-    font: bold,
-    size: 13,
-    x: PAGE_MARGIN,
-    y,
-    maxWidth: LETTER_PAGE_WIDTH - PAGE_MARGIN * 2,
-    lineHeight: 16,
-    color: borderColor,
-  });
-  y = drawBulletList(page, summary.compiledBullets, {
+    y = warningPanelBottom - 24;
+    y = drawWrappedText(page, continued ? `${summary.headline} (CONTINUED)` : summary.headline, {
+      font: bold,
+      size: 15,
+      x: PAGE_MARGIN,
+      y,
+      maxWidth: LETTER_PAGE_WIDTH - PAGE_MARGIN * 2,
+      lineHeight: 18,
+      color: borderColor,
+    });
+    y = drawWrappedText(
+      page,
+      "The summary below is generated from structured return data and should be treated as a starting point for review, not a filing certification.",
+      {
+        font: regular,
+        size: 10.5,
+        x: PAGE_MARGIN,
+        y: y - 6,
+        maxWidth: LETTER_PAGE_WIDTH - PAGE_MARGIN * 2,
+        lineHeight: 14,
+        color: borderColor,
+      }
+    );
+
+    y -= 18;
+    y = drawWrappedText(page, section, {
+      font: bold,
+      size: 13,
+      x: PAGE_MARGIN,
+      y,
+      maxWidth: LETTER_PAGE_WIDTH - PAGE_MARGIN * 2,
+      lineHeight: 16,
+      color,
+    });
+    return { page, y: y - 8 };
+  };
+  const first = sectionPage(false, "What was compiled", borderColor);
+  const compiled = drawBulletList(first.page, summary.compiledBullets, {
     font: regular,
     size: 10.5,
     x: PAGE_MARGIN + 2,
-    y: y - 8,
+    y: first.y,
     maxWidth: LETTER_PAGE_WIDTH - PAGE_MARGIN * 2 - 2,
+    freshBodyY: first.y,
+    nextPage: () => sectionPage(true, "What was compiled", borderColor),
   });
 
-  y -= 8;
-  y = drawWrappedText(page, "What may be missing or still needs review", {
-    font: bold,
-    size: 13,
-    x: PAGE_MARGIN,
-    y,
-    maxWidth: LETTER_PAGE_WIDTH - PAGE_MARGIN * 2,
-    lineHeight: 16,
-    color: warningColor,
-  });
-  drawBulletList(page, summary.missingBullets, {
+  let missingPage = compiled.page;
+  let missingY = compiled.y - 8;
+  const firstMissingLines = wrapText(summary.missingBullets[0] ?? "", regular, 10.5,
+    LETTER_PAGE_WIDTH - PAGE_MARGIN * 2 - 2 - 14);
+  // A section heading stays with its first whole bullet when that bullet fits
+  // a fresh body; an overlong first bullet still keeps at least its first line.
+  const firstMissingOffset = Math.min(10.5 * 1.35 * (firstMissingLines.length - 1),
+    first.y - PAGE_MARGIN);
+  if (missingY - 16 - 8 - firstMissingOffset < PAGE_MARGIN) {
+    const continued = sectionPage(true, "What may be missing or still needs review", warningColor);
+    missingPage = continued.page;
+    missingY = continued.y;
+  } else {
+    missingY = drawWrappedText(missingPage, "What may be missing or still needs review", {
+      font: bold,
+      size: 13,
+      x: PAGE_MARGIN,
+      y: missingY,
+      maxWidth: LETTER_PAGE_WIDTH - PAGE_MARGIN * 2,
+      lineHeight: 16,
+      color: warningColor,
+    }) - 8;
+  }
+  drawBulletList(missingPage, summary.missingBullets, {
     font: regular,
     size: 10.5,
     x: PAGE_MARGIN + 2,
-    y: y - 8,
+    y: missingY,
     maxWidth: LETTER_PAGE_WIDTH - PAGE_MARGIN * 2 - 2,
     bulletColor: borderColor,
+    freshBodyY: first.y,
+    nextPage: () => sectionPage(true, "What may be missing or still needs review", warningColor),
   });
 
   return doc.save();
-}
-
-function buildTaxInputFromWorkspacePreview(workspace: ReturnWorkspaceRecord) {
-  const engineInput = buildWorkspaceEngineInput(
-    workspace.documents,
-    workspace.returnSummary,
-    workspace.structuredFacts
-  );
-
-  if (!engineInput) {
-    return null;
-  }
-
-  return TaxYearInputSchema.parse(engineInput.taxInput);
 }
 
 function buildTaxInputFromGuidedInterview(guidedFlowState: GuidedFlowState | null | undefined) {
@@ -622,20 +645,30 @@ function buildTaxInputFromGuidedInterview(guidedFlowState: GuidedFlowState | nul
     return null;
   }
 
+  const stateSources=guidedFlowState.sectionData["state-return"];
+  const marriedSources=stateSources?.paMarriedOrdinarySources!==undefined;
+  if(guidedFlowState.segmentation.stateCode==="PA"&&!marriedSources&&(!stateSources?.paOrdinaryReturnFacts||!stateSources?.paOrdinaryReturnCompletionSources)){
+    throw new Error("Complete the actual Pennsylvania ordinary and completion source packets before exporting a review PDF.");
+  }
   const rawInput = buildTaxInputFromGuidedData(guidedFlowState);
 
   if (!rawInput) {
     return null;
   }
 
-  return TaxYearInputSchema.parse(rawInput);
+  return buildGuidedStateOriginals(TaxYearInputSchema.parse(rawInput), guidedFlowState);
 }
 
 function resolveFilledReturnTaxInput(
   workspace: ReturnWorkspaceRecord,
   guidedFlowState?: GuidedFlowState | null
 ) {
+  if (!guidedFlowState) throw new Error("Complete the required taxpayer facts in the guided interview before exporting a review PDF.");
+  if (guidedFlowState.taxYear == null || guidedFlowState.taxYear !== workspace.returnSummary.targetTaxYear) {
+    throw new Error("Confirm the interview year and make it agree with the workspace before exporting.");
+  }
   const guidedTaxInput = buildTaxInputFromGuidedInterview(guidedFlowState);
+  if (!guidedTaxInput) throw new Error("Complete the required taxpayer facts before exporting.");
 
   if (guidedTaxInput) {
     return {
@@ -644,65 +677,54 @@ function resolveFilledReturnTaxInput(
     };
   }
 
-  const previewTaxInput = buildTaxInputFromWorkspacePreview(workspace);
 
-  if (previewTaxInput) {
-    return {
-      source: { mode: "workspace-preview" } satisfies WorkspaceFilledReturnSource,
-      taxInput: previewTaxInput,
-    };
-  }
-
-  return null;
-}
-
-function redactPdfTaxInputIdentifiers(taxInput: TaxYearInput): TaxYearInput {
-  return {
-    ...taxInput,
-    taxpayer: {
-      ...taxInput.taxpayer,
-      primary: {
-        ...taxInput.taxpayer.primary,
-        ssn: "",
-      },
-      spouse: taxInput.taxpayer.spouse
-        ? {
-            ...taxInput.taxpayer.spouse,
-            ssn: "",
-          }
-        : undefined,
-      dependents: taxInput.taxpayer.dependents.map((dependent) => ({
-        ...dependent,
-        ssn: "",
-      })),
-    },
-  };
 }
 
 export async function buildWorkspaceFilledReturnDownload(
   workspace: ReturnWorkspaceRecord,
   guidedFlowState?: GuidedFlowState | null
 ): Promise<WorkspaceFilledReturnDownload> {
+  assertPdfExportAllowed(workspace.returnSummary.targetTaxYear ?? 0, workspace.returnSummary.targetTaxYear ?? 0);
   const resolved = resolveFilledReturnTaxInput(workspace, guidedFlowState);
 
   if (!resolved) {
     throw new Error("Could not build the structured return input from this workspace.");
   }
 
-  if (
-    resolved.source.mode === "workspace-preview"
-    && workspace.returnSummary.status !== "ready-to-recompute"
-  ) {
-    throw new Error("The return is not ready to generate filled PDFs yet.");
-  }
-
-  const redactedTaxInput = redactPdfTaxInputIdentifiers(resolved.taxInput);
-  const stateCode = resolveStateCode(workspace, redactedTaxInput, guidedFlowState);
-  const result = attachPennsylvaniaReturn(
-    redactedTaxInput,
-    calculateFederalTax(redactedTaxInput),
+  const stateCode = resolveStateCode(workspace, resolved.taxInput, guidedFlowState);
+  const completeResult = attachPennsylvaniaReturn(
+    resolved.taxInput,
+    calculateFederalTax(resolved.taxInput),
     stateCode,
   );
+  // Identity participates in household matching and state worksheets. Keep it
+  // intact through calculation, then redact only copies passed to renderers.
+  const capitalGainReview = prepareForm8949Review(resolved.taxInput);
+  const codNolReview = resolved.taxInput.form982NolSources ? prepareCodNolReview(resolved.taxInput) : undefined;
+  const nolFilingUnitReview = requiresNolFilingUnitReview(resolved.taxInput, completeResult) ? prepareNolFilingUnitReview(resolved.taxInput) : undefined;
+  const charitableReview = resolved.taxInput.charitableCarryoverSources || resolved.taxInput.k1CharitableSources || requiresCharitableNolReview(resolved.taxInput, completeResult) || requiresCharitableFilingHistoryReview(resolved.taxInput, completeResult)
+    ? prepareCharitableReview(resolved.taxInput) : undefined;
+  const adoptionReview = hasHistoricalAdoptionSources(resolved.taxInput) ? prepareAdoptionReview(resolved.taxInput) : undefined;
+  const scheduleEReview = hasScheduleEReviewSources(resolved.taxInput) ? prepareScheduleEReview(resolved.taxInput) : undefined;
+  const paMarriedReview=isPAMarriedOrdinaryReturnResult(completeResult.stateReturns?.pennsylvania)
+    ?preparePAMarriedReturnReview(resolved.taxInput):undefined;
+  const paRoyaltyReview = !paMarriedReview && resolved.taxInput.royaltyPropertySources && completeResult.stateReturns?.pennsylvania ? preparePARoyaltyReview(resolved.taxInput) : undefined;
+  const paOrdinaryReview=completeResult.stateReturns?.pennsylvania&&isPAOrdinaryReturnResult(completeResult.stateReturns.pennsylvania)
+    ? preparePAOrdinaryReturnReview(resolved.taxInput):undefined;
+  const paWorkingCreditReview = completeResult.stateReturns?.pennsylvania && !paMarriedReview && !paOrdinaryReview && !resolved.taxInput.paNonresidentReturn
+    ? preparePAWorkingCreditReview(resolved.taxInput) : undefined;
+  const qbiLossReview = resolved.taxInput.qbiLossSources ? prepareQbiLossReview(resolved.taxInput) : undefined;
+  const eicReview = hasEicReviewSources(resolved.taxInput) ? prepareEicReview(resolved.taxInput) : undefined;
+  const premiumTaxCreditReview = hasPremiumTaxCreditReviewSources(resolved.taxInput) ? preparePremiumTaxCreditReview(resolved.taxInput) : undefined;
+  const educationReview = hasInKindEducationReviewSources(resolved.taxInput) ? prepareEducationReview(resolved.taxInput) : undefined;
+  const savingsBondReview = hasSavingsBondReviewSources(resolved.taxInput) ? prepareSavingsBondReview(resolved.taxInput) : undefined;
+  const ohioOriginalReview = stateCode === "OH" ? prepareOhioResidencyReview(resolved.taxInput) : undefined;
+  const ohioSourceOverlay = stateCode === "OH" ? buildGuidedOhioOverlay(resolved.taxInput, guidedFlowState, completeResult.taxExemptInterest) : undefined;
+  const form2210Review=requiresForm2210ScheduleAiReview(resolved.taxInput,completeResult)?prepareForm2210Review(resolved.taxInput):undefined;
+  const rrtaPayrollReview=requiresRRTAPayrollReview(resolved.taxInput,completeResult)
+    ?prepareRRTAPayrollReview(resolved.taxInput,readGuidedRRTAPaperSources(resolved.taxInput,guidedFlowState)):undefined;
+  const redactedTaxInput = redactReviewIdentifiers(resolved.taxInput);
+  const result = redactReviewIdentifiers(completeResult);
   const blankFormsDir = await resolveBlankFormsDir();
   const tempRoot = await mkdtemp(join(tmpdir(), "tax-engine-filled-return-"));
   const outputDir = join(tempRoot, "filled");
@@ -710,19 +732,40 @@ export async function buildWorkspaceFilledReturnDownload(
   try {
     await mkdir(outputDir, { recursive: true });
     const fillResult = await fillReturn(redactedTaxInput, result, {
+      rrtaPayrollReview,
+      capitalGainReview,
+      codNolReview,
+      charitableReview,
+      nolFilingUnitReview,
+      adoptionReview,
+      qbiLossReview,
+      form2210Review,
+      scheduleEReview,
+      paRoyaltyReview,
+      paWorkingCreditReview,
+      paOrdinaryReview,
+      paMarriedReview,
+      eicReview,
+      premiumTaxCreditReview,
+      educationReview,
+      savingsBondReview,
       blankFormsDir,
       outputDir,
       flatten: true,
+      // These files are read once for the final compressed download, then removed.
+      useObjectStreams: false,
+      pageOnlyTemporaryMerge: true,
     });
     const filledForms = [...fillResult.filledForms];
 
     if (stateCode === "OH") {
-      const ohioOverlay = buildOhioOverlayFromGuidedState(redactedTaxInput, guidedFlowState);
       const ohioReferencePacket = await fillOhioReferenceForms(
         redactedTaxInput,
         result,
         outputDir,
-        ohioOverlay,
+        ohioSourceOverlay,
+        ohioOriginalReview,
+        blankFormsDir,
       );
       filledForms.push(...ohioReferencePacket.filledForms);
     }
@@ -735,11 +778,13 @@ export async function buildWorkspaceFilledReturnDownload(
       includedForms,
       resolved.source,
       guidedFlowState,
+      fillResult.form2210ReviewArtifact,
     );
     const readiness = assessReturnReadiness({
       taxInput: redactedTaxInput,
       federalResult: result,
       includedForms,
+      form2210ReviewArtifact:fillResult.form2210ReviewArtifact,
       stateCode,
     });
     packetSummary.compiledBullets.push(
@@ -755,7 +800,7 @@ export async function buildWorkspaceFilledReturnDownload(
     const yearToken = workspace.returnSummary.targetTaxYear?.toString() ?? "draft";
 
     return {
-      fileName: `${sanitizeFileToken(workspace.id)}-${yearToken}-filled-return.pdf`,
+      fileName: `${sanitizeFileToken(workspace.id)}-${yearToken}-review-return.pdf`,
       contents: mergedPdf,
       includedForms,
     };

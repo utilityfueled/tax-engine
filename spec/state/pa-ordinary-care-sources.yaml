@@ -1,0 +1,33 @@
+form: "PA Ordinary Care Sources"
+fullName: "Actual resident care originals in the complete PA return"
+taxYear: 2025
+reference: "https://www.palegis.us/statutes/unconsolidated/law-information/view-statute?act=176&chpt=16W&iFrame=true&sessInd=0&smthLwInd=0&txtType=HTM&yr=1929"
+notes: |
+  Retrieved 2026-11-03. Fiscal Code 1602-W,1603-W(c),1604-W,1605-W;
+  official 2022 Form2441 lines3-11; current PA DOR OBBBA conformity table;
+  existing reviewed spec/state/pa-schedule-dc.yaml. The complete return first
+  admits a single living full-year resident, actual current-year ordinary care,
+  no section129 benefits or deemed income, known zero prior-expense credit,
+  complete provider/person originals and a nonbinding actual federal limit.
+  Receipt dates, payment amounts and identities are actual synthetic fixture
+  originals, never defaults for real users. Every provider/person amount and
+  current federal source snapshot must reconcile exactly before credit replay.
+  PA40 line23 is refundable; it does not reduce the tax used for SP or REV1630.
+  Existing 2026 public rule-pack denial and all final-form/filing gates remain.
+  The previously reviewed 2026 helper uses frozen2022 percentages, never the
+  larger current federal percentage. No 2026 public full-return qualification
+  is claimed here. PY/NR, benefits, deemed income and liability-limited care
+  remain explicit source successors.
+lines:
+  - line: "actual-payment-replay"
+    formula: "Reconcile each actual receipt once to its original provider and qualifying person, current-year paid/incurred dates, current canonical care originals and complete reviewed metadata. Exact Decimal totals must equal source totals before rounding."
+    testRef: "tests/engine/state/pa-ordinary-care-sources.test.ts::actual resident care originals reach refundable PA23 once"
+  - line: "credit-order"
+    formula: "Fresh 2025 federal9a=600 on min(3000,100000) at20%; actual PA credit600. PA taxable100120, tax3074, withholding3074, SP0, refundable600, refund-request600."
+    testRef: "tests/engine/state/pa-ordinary-care-sources.test.ts::actual resident care originals reach refundable PA23 once"
+  - line: "source-guards"
+    formula: "Missing, stale, conflicting, duplicate, unknown, positive-benefit, nonresident or wrong-year originals cannot produce an authoritative care credit."
+    testRef: "tests/engine/state/pa-ordinary-care-sources.test.ts::actual care composition rejects source defect %s"
+  - line: "public-year-gate"
+    formula: "Complete actual 2026 care sources do not authorize incomplete federal rule-pack promotion."
+    testRef: "tests/engine/state/pa-ordinary-care-sources.test.ts::actual care composition preserves public2026 rule pack denial"

@@ -1,0 +1,56 @@
+form: OH-BUSINESS-PY212-NATIVE-BROWSER
+taxYear: 2025
+jurisdiction: OH
+source: "2025 Ohio IT1040 booklet printed15/16/35/36/50; source-bound oh-business-part-year-header.yaml"
+notes: >-
+  Two new actual browser journeys1280x900/390x844 for the fictional400000
+  July31 move cohort; no reinterpretation of old181-day PY. Only unrelated
+  personal/currentC federal facts enter initial storage; every Ohio root,
+  confirmation and snapshot is absent. Before UI source entry, expected
+  federal originals are independently parsed with the same public input schema
+  as the actual guided caller (including declared empty-array/zero defaults).
+  This expected object is never read from captures or written into state proof.
+  Full equality remains mandatory; no fields are ignored. All source facts originate through
+  actual native controls. Enter parent domicile/allocation rows before child
+  confirmation because the existing business confirm validates its parent;
+  then enter every actual payment original and explicitly reconfirm business,
+  parent and payments after all payment values are entered, before header.
+  Business edits invalidate header confirmation while retaining its original
+  captured facts; a confirmed whole header cannot remain equal across an edit. Source
+  original2503/Franklin is fictional documentary evidence, not a live lookup.
+  Original eight status appearance checks retain exact selected/unselected
+  counts; additional33 pinned blank widgets require absence of visible On ink,
+  including source widgets without an Off resource. All41 statuses remain
+  checked; no nonexistent Off appearance is required.
+  No new tax arithmetic, product edits, filing activation or2026 claim.
+  Existing managed90s/image30s budgets, normal workers and explicit retries0
+  remain; no waits, action bypass, value injection or post-origin store edits.
+lines:
+  - line: "blank-origins"
+    label: "Actual empty Ohio source roots and validation"
+    formula: "Initial storage contains no OhioResidency/Payments/Header/RC/reciprocal/SD proof; native business/header add begins unknown with no captures; blank confirmation remains invalid and usable."
+    testRef: "apps/web/tests/oh-business-part-year-native.spec.ts::originates212-day business and header originals through real save review reopen and delete"
+  - line: "current-dated-sources"
+    label: "Actual entered annual and domicile originals"
+    formula: "CurrentC400000; property10000/20000 at both ends; zero payroll/rent/subrent; December15 receipt400000 with100000 Ohio benefit; December31 VA halfSE16275. Explicit OHJan1-Jul31/VAAug1-Dec31, federal adjustments16275 and other NRC categories0; complete knownzero payment account and explicit return history."
+    testRef: "apps/web/tests/oh-business-part-year-native.spec.ts::originates212-day business and header originals through real save review reopen and delete"
+  - line: "dependent-confirmations"
+    label: "Real parent and child confirmation order"
+    formula: "Fill parent source rows before child confirm, then after all payment entry business→residency→payment→header actual buttons bind current originals. Header is separate from federal snapshot; no snapshot recapture on reads. Independent expectedAGI383725/BID250000/OhioAGI133725/taxable131825/tax3955/NRC3955/remaining0/payment0."
+    testRef: "apps/web/tests/oh-business-part-year-native.spec.ts::originates212-day business and header originals through real save review reopen and delete"
+  - line: "actual-majority-header"
+    label: "Distinct212-day documentary header"
+    formula: "Actual primary identity matches currentowner; distinct OH residentialJan1-Jul31=212days, Finder/CountyFranklin/ColumbusCSD2503/no district tax and pinnedbooklet row50 explicitly reviewed. Mailing remainsVA23219. Neither mailing nor missing rate establishes jurisdiction."
+    testRef: "apps/web/tests/oh-business-part-year-native.spec.ts::originates212-day business and header originals through real save review reopen and delete"
+  - line: "stale-and-unknown"
+    label: "Identity and zero facts require fresh confirmation"
+    formula: "Edit actual Finder reference only: header invalid, old captures retained through reload; explicit reconfirm updates actual source identity. Clear payrollOhio0 to blank: business/parent/header confirmation invalid, old captured originals retained; reload stays unknown. Restore actual0 and explicitly reconfirm dependencies/header, no read repair."
+    testRef: "apps/web/tests/oh-business-part-year-native.spec.ts::originates212-day business and header originals through real save review reopen and delete"
+  - line: "actual-public-download"
+    label: "Current official and reference review output"
+    formula: "Actual DownloadReviewPDF POST200/application-pdf/review/no-store; browser saved bytes equalresponse. Exactlyfive Ohio official companions included. Strict allobject/stream privacy/action/widget/field checks, source390cells/41statuses/struckweights and truthful review/nonfiling notices; physicalsource independent expected3955credit and0cash. Filing purpose actual400 and no extra download."
+    testRef: "apps/web/tests/oh-business-part-year-native.spec.ts::originates212-day business and header originals through real save review reopen and delete"
+  - line: "geometry-private-lifecycle"
+    label: "Both viewports preserve actual local source lifecycle"
+    formula: "Capture all blank/validation/entry/confirmation/review/stale/unknown/reopened/export phases with actual label/control/panel containment and usable anchor. No private sources in publicsummary/unrelated requests. Reopen preserves originals; actual delete removes onlyowned workspace/guided records."
+    testRef: "apps/web/tests/oh-business-part-year-native.spec.ts::originates212-day business and header originals through real save review reopen and delete"

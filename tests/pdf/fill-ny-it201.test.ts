@@ -47,7 +47,7 @@ function isChecked(doc: PDFDocument, fieldName: string): boolean {
   return false;
 }
 
-const BLANK_PDF = "forms/blank/ny-it201.pdf";
+const BLANK_PDF = "forms/blank/2025/ny-it201.pdf";
 
 // ─── Minimal Result Factories ──────────────────────────────────────────────
 

@@ -1,0 +1,31 @@
+form: "PA-Married-Payment-Sources"
+fullName: Original individual-account PA married separate payment composition
+taxYear: 2025
+reference: https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40in.pdf
+notes: |
+  Actual2025 PA40 instructions printed21 lines14-16; REV1630 printed1 line6.
+  61PaCode117.2 keeps separate liabilities and department account offsets distinct.
+  This finite method admits only original2025 M individual accounts, unchanged
+  posted prior credits and timely original filings. No joint-account transfer,
+  priorSP inference, late-payment interest, final2026 or filing qualification.
+lines:
+  - line: "14-16"
+    description: Exact actual separate-owner posted payment originals
+    formula: Reconcile every retained original receipt and payment status to the current complete individual account. For each owner sum actual estimate originals then round line15 once; sum actual extension originals then round line16 once; unchanged prior elected credit must equal posted available credit before rounding line14. Keep raw cents and original snapshots immutable. Known zero is explicit; absent payment facts cannot become zero.
+    testRef: "tests/engine/state/pa-married-payment-sources.test.ts::PA married payments compose actual separate accounts with exact printed lines"
+  - line: "source"
+    description: Original owner account inventory and prior credit binding
+    formula: Require same actual owner name/SSN,2025 PA40 individual M account, complete posted inventory through actual asOf, no transfers/refunds/offsets/reversals/adjustments. Prior credit requires original same-owner M2024 return election and unchanged2025 available credit. Reject stale originals, unknowns, duplicates, excess elected credit, unsupported accounts and balance payments before totals.
+    testRef: "tests/engine/state/pa-married-payment-sources.test.ts::PA married payments reject incomplete or contradictory originals %s"
+  - line: "REV1630-6"
+    description: Actual timely installments without inferred prior history
+    formula: Assign each actual estimate only to its documented due-date period; include unchanged prior credit applied by April15 in Q1. Extension paid April15 next year never enters Q4. Require all current installments sufficient or existing actual withholding-credit exemption; otherwise deny before a positive penalty without actual priorSP eligibility. No made-up safe harbor or dated-payment interest method.
+    testRef: "tests/engine/state/pa-married-payment-sources.test.ts::PA married payments fund actual installments without inventing priorSP history"
+  - line: "boundaries"
+    description: Separate method limits and private source commitment
+    formula: Preserve J known-none and legacy M known-none admission. New supplemental payment proof rejects J,2026,joint accounts, off-period or post-asOf receipts, payment extensions, late originals, opposing balances and malformed supplied data. All supplemental originals bind full household source commitment; output audit includes no private identities, confirmation numbers or source references.
+    testRef: "tests/engine/state/pa-married-payment-sources.test.ts::PA married payments preserve source commitment privacy and original inputs"
+  - line: "prior-credit-chronology"
+    description: Finite documented prior filing and credit application chronology
+    formula: This first method requires the original separate prior return filed between Jan1 and its April15 due date, no later than the actual unchanged carryover application on April15. A later filed prior return or retroactive/account adjustment requires its own actual dated successor; do not infer a pre-filing election.
+    testRef: "tests/engine/state/pa-married-payment-sources.test.ts::PA married payments reject unsupported prior filing after carryover application"

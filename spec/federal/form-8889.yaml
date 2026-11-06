@@ -333,9 +333,9 @@ lines:
 
   - line: "21"
     description: "Additional tax on HSA recapture income"
-    formula: "10% of Line 18"
-    irsRef: "Form 8889 Instructions, Line 21"
+    formula: "10% of Line 20, including both last-month-rule and qualified HSA funding distribution recapture"
+    irsRef: "2025 Form 8889, printed lines 18-21; IRC 223(f)(4)(C) and 223(b)(8)(B)"
     inputs:
-      - "Form 8889 Line 18"
-    notes: "This amount flows to Schedule 2 (Form 1040) Line 17d. The 10% rate applies only to the Line 18 last-month-rule recapture amount, not to Line 19, and is zero when the death-or-disability testing-period exception keeps Line 18 at zero."
+      - "Form 8889 Line 20"
+    notes: "This amount flows to Schedule 2 (Form 1040) Line 17d. The printed 2025 Form 8889 line 21 applies 10% to line 20, the sum of lines 18 and 19. The tax is zero when the death-or-disability exception excuses both recapture amounts. Source refreshed 2026-10-25: https://www.irs.gov/pub/irs-pdf/f8889.pdf."
     testRef: "tests/engine/forms/form-8889.test.ts::Form 8889 Line 21 - excused testing-period failures do not create recapture tax"

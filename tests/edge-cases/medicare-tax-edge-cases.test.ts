@@ -601,23 +601,23 @@ describe("Form 8959 - audit trail lines", () => {
     expect(line1!.description).toMatch(/Medicare wages/i);
   });
 
-  it("audit trail contains Line 5 (SE earnings) recording self-employment income", () => {
+  it("audit trail contains Line 8 (SE earnings) recording self-employment income", () => {
     const input = makeW2Input("0", "0", "0");
     const result = calculateForm8959(input, d(220000), "single", c);
-    const line5 = result.lines.find((l) => l.form === "Form 8959" && l.line === "5");
+    const line5 = result.lines.find((l) => l.form === "Form 8959" && l.line === "8");
     expect(line5).toBeDefined();
     expect(line5!.value.toNumber()).toBe(220000);
   });
 
-  it("audit trail contains Line 7 (threshold) matching the filing-status threshold", () => {
+  it("audit trail contains Line 5 (threshold) matching the filing-status threshold", () => {
     const input = makeW2Input("0", "0", "0");
     const resultSingle = calculateForm8959(input, d(0), "single", c);
     const resultMFJ = calculateForm8959(input, d(0), "married_filing_jointly", c);
     const resultMFS = calculateForm8959(input, d(0), "married_filing_separately", c);
 
-    const line7Single = resultSingle.lines.find((l) => l.form === "Form 8959" && l.line === "7");
-    const line7MFJ = resultMFJ.lines.find((l) => l.form === "Form 8959" && l.line === "7");
-    const line7MFS = resultMFS.lines.find((l) => l.form === "Form 8959" && l.line === "7");
+    const line7Single = resultSingle.lines.find((l) => l.form === "Form 8959" && l.line === "5");
+    const line7MFJ = resultMFJ.lines.find((l) => l.form === "Form 8959" && l.line === "5");
+    const line7MFS = resultMFS.lines.find((l) => l.form === "Form 8959" && l.line === "5");
 
     expect(line7Single!.value.toNumber()).toBe(200000);
     expect(line7MFJ!.value.toNumber()).toBe(250000);
@@ -633,33 +633,34 @@ describe("Form 8959 - audit trail lines", () => {
     expect(line18!.value.toNumber()).toBe(540);
   });
 
-  it("audit trail contains Line 19 (withholding credit) when employer over-withholds", () => {
+  it("audit trail contains Line 24 (withholding credit) when employer over-withholds", () => {
     // $350K wages single: regular = $350K × 1.45% = $5,075
     // Employer withholds additional on $150K excess: $150K × 0.9% = $1,350
     // Total withheld: $5,075 + $1,350 = $6,425
     // Credit: $6,425 - $5,075 = $1,350
     const input = makeW2Input("350000", "350000", "6425");
     const result = calculateForm8959(input, d(0), "single", c);
-    const line19 = result.lines.find((l) => l.form === "Form 8959" && l.line === "19");
+    const line19 = result.lines.find((l) => l.form === "Form 8959" && l.line === "24");
     expect(line19).toBeDefined();
     expect(line19!.value.toNumber()).toBe(1350);
   });
 
   it("audit trail has the supported Form 8959 line set including supported lines 2 and 3", () => {
-    // The supported slice records Line 1, 2, 3, 5, 7, 18, and 19.
+    // Parts I/II and V are supported; RRTA lines 14–17 and 23 remain absent.
     const input = makeW2Input("250000", "250000", "3625");
     const result = calculateForm8959(input, d(0), "single", c);
     const form8959Lines = result.lines.filter((l) => l.form === "Form 8959");
     const lineNumbers = form8959Lines.map((l) => l.line).sort();
-    expect(lineNumbers).toEqual(["1", "18", "19", "2", "3", "5", "7"]);
+    expect(lineNumbers).toEqual(["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "18", "19", "20", "21", "22", "24"].sort());
   });
 
-  it("audit trail Line 18 formula string encodes total earnings and threshold", () => {
+  it("audit trail records the part sum, statutory threshold and rate", () => {
     // Verify the formula field documents how the tax is computed
     const input = makeW2Input("210000", "210000", "3045");
     const result = calculateForm8959(input, d(0), "single", c);
     const line18 = result.lines.find((l) => l.form === "Form 8959" && l.line === "18");
-    expect(line18!.formula).toContain("200000"); // threshold embedded in formula
+    expect(line18!.formula).toContain("Lines 7 + 13");
+    expect(result.lines.find(l => l.line === "5")?.value.toString()).toBe("200000");
     expect(line18!.formula).toContain("0.009");  // rate embedded in formula
   });
 });

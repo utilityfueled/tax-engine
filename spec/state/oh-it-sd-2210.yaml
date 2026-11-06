@@ -14,7 +14,7 @@ notes: |
   due dates and thresholds — not implemented here.
 
   The same computation supports two personal-return modes:
-    - IT 1040 mode: line references map to IT 1040 lines 10, 14, and 15
+    - IT 1040 mode: line references map to IT 1040 lines 10 minus 16, 14, and 15
     - SD 100 mode: line references map to SD 100 lines 8, 11, and 12
   The tax math is identical; only the source line references and audit trail labels differ.
 
@@ -28,6 +28,10 @@ notes: |
     factor = annual_rate × days_in_period / 365.25
   When a period spans two calendar years with different rates:
     factor = (rate_year1 × days_year1 + rate_year2 × days_year2) / 365.25
+
+  For2025, report monetary lines as nearest whole dollars, half up, after
+  summing actual components once. Rates and statutory exact comparisons are
+  retained separately; no final2026 worksheet format is inferred.
 
   Three independent safe harbors — if ANY one is met, no penalty is owed:
     A. Taxes paid >= 90% of current year tax liability
@@ -84,9 +88,9 @@ lines:
 
   - line: "2"
     description: "Current year tax liability"
-    formula: "IT 1040 line 10 (tax after nonrefundable credits)"
+    formula: "IT 1040 line 10 minus line 16 (tax after all credits)"
     inputs:
-      - "Tax liability after nonrefundable credits"
+      - "Tax liability after nonrefundable and refundable credits"
     notes: |
       This is the tax liability BEFORE payments but AFTER nonrefundable credits.
       Refundable credits are not subtracted here — they are part of payments.
@@ -95,7 +99,7 @@ lines:
 
   - line: "3"
     description: "Prior year tax liability"
-    formula: "Prior year IT 1040 line 10 (tax after nonrefundable credits)"
+    formula: "Prior year IT 1040 line 10 minus line 16 (tax after all credits)"
     inputs:
       - "Prior year tax liability after nonrefundable credits"
     notes: |
@@ -190,8 +194,10 @@ lines:
       Payments made after the final quarterly due date do not count in any
       quarter because line 12 only includes payments made by the dates shown at
       the top of columns A through D.
-      If no estimated payment dates are provided, all estimated payments are
-      treated as paid by Q4 (January 15 of following year).
+      The older isolated arithmetic API retains a no-schedule reference fallback
+      for historical tests. It is not qualified actual payment timing. The
+      source-qualified canonical method requires every actual payment date,
+      complete coverage and exact current-account receipt reconciliation.
     edgeCases:
       - "Payments made after the final quarterly due date are excluded from all columns"
     testRef: "tests/engine/state/oh-it-sd-2210.test.ts::OH IT/SD 2210 Line 12 - cumulative estimated payments"
@@ -234,7 +240,7 @@ lines:
 
   - line: "16"
     description: "Interest penalty per quarter"
-    formula: "Line 14 × Line 15 (per column, rounded to nearest cent)"
+    formula: "2025: roundDollar(Line14 × exact published Line15) per column;2024historicalmethod unchanged"
     inputs:
       - "Line 14"
       - "Line 15"
@@ -242,7 +248,7 @@ lines:
 
   - line: "17"
     description: "Total interest penalty"
-    formula: "Sum of Line 16 columns A through D, rounded to nearest dollar"
+    formula: "2025: sum the four nearest-dollar reported Line16 amounts;2024historicalmethod unchanged"
     inputs:
       - "Line 16 columns A-D"
     notes: |
@@ -253,3 +259,22 @@ lines:
       - "Penalty rounds to nearest dollar"
       - "SD 100 mode uses school district line references in the audit trail"
     testRef: "tests/engine/state/oh-it-sd-2210.test.ts::OH IT/SD 2210 Line 17 - total penalty"
+
+  - line: "actual-regular-source"
+    description: "Actual regular2025 source-qualified payment contract"
+    formula: "Actual no-return or original timely12-month prior return, dated current-account payments, complete coverage, no source overrides; all credits reduce liability"
+    testRef: "tests/engine/state/oh-payment-source.test.ts::preserves prior zero return versus actual no return"
+
+  - line: "published-2025-dollar-projection"
+    description: "Published2025 nearest-dollar monetary worksheet lines"
+    formula: "Round each reported monetary line to nearest whole dollar, half up, after summing its actual components; percentages and published rates remain exact; sum rounded line16 amounts on17"
+    notes: |
+      General2025booklet rounding plus actual2024 published TaxAcademy Joe
+      worksheet16cells2/5/10/10 corroborate reporting projection; this does not
+      relabel2024example as2025. New2025adaptedJoe16cells2/5/10/9 sum26;
+      exact-cents final-only25 is preserved as a historical conflicting oracle.
+      Preliminary100k PY42 and refundable50083 were statutory exact/cents
+      calculations; source-reviewed reported-line projections are41 and82.
+      Earlier2024 kernel behavior is preserved in this package; no2026final
+      printedformat or year/rate availability is inferred.
+    testRef: "tests/engine/state/oh-it-sd-2210.test.ts::uses published2025 whole-dollar monetary lines and exact rate factors"

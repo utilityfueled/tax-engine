@@ -1,0 +1,12 @@
+form: "Native VA Refund Owner Unknown Transition"
+fullName: "Actual owner selection can return to unknown without retaining a confirmed source"
+taxYear: 2025
+reference: "https://law.lis.virginia.gov/vacode/title58.1/chapter3/section58.1-499/"
+notes: |
+  Native source completeness control only; no tax method or monetary formula changes.
+  An explicit unknown selection cannot keep the old confirmed identity or silently copy the current taxpayer.
+lines:
+  - line: "owner-cleared"
+    description: "Every actual owner control can clear a previously known selection"
+    formula: "After selecting the unknown placeholder, clear only that draft identity, invalidate child/parent confirmation, retain original confirmed source snapshots unchanged, and deny canonical replay/reconfirmation until actual owner is explicitly supplied. No render/read mutation or full SSN input."
+    testRef: "tests/apps/web/pa-digital-refund-native-owner-clear.test.tsx::native actual refund owner can return to unknown: %s"

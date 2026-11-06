@@ -1,0 +1,18 @@
+form: "PA Ordinary Source Precision"
+fullName: "Exact ordinary Pennsylvania class aggregation and printed-tax rounding"
+taxYear: 2026
+reference: "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40in.pdf"
+notes: "Actual2025 printed-class rounding is retained for2025/2026 draft source calculation; no current2026 qualification. Local Decimal context must preserve source digits and must not change global settings."
+lines:
+  - line: "half-boundary"
+    description: "Exact tax must not move across a half-dollar boundary through intermediate significant-digit rounding"
+    formula: "Printed compensation1000000000000002437 plus printed interest120 equals1000000000000002557; exact multiplication by0.0307 is30700000000000078.4999, reported tax30700000000000078. Adding one actual dollar compensation gives30700000000000078.5306 and reported30700000000000079. Same source arithmetic for2025 and draft2026."
+    testRef: "tests/engine/state/pa-source-precision.test.ts::ordinary PA source precision preserves both sides of the large half-dollar boundary"
+  - line: "sixty-digits"
+    description: "Preserve the full finite source digits consumed by the actual-credit method"
+    formula: "For compensation100000000000000000000000000000000000000000000000000000002437 plus interest120, printed income100000000000000000000000000000000000000000000000000000002557 and exact tax3070000000000000000000000000000000000000000000000000000078.4999 yield reported tax3070000000000000000000000000000000000000000000000000000078. Independent Python Decimal150 oracle; no Number conversion or newly rejected valid source."
+    testRef: "tests/engine/state/pa-source-precision.test.ts::ordinary PA source precision retains sixty source digits before reporting"
+  - line: "isolation"
+    description: "A pure calculation must not mutate the shared Decimal configuration or originals"
+    formula: "Use a local precision context for source arithmetic; global Decimal precision and rounding and all current originals remain byte-equivalent after calculation; ordinary50000+120 retains1539."
+    testRef: "tests/engine/state/pa-source-precision.test.ts::ordinary PA source precision preserves global Decimal configuration and original facts"

@@ -1,0 +1,22 @@
+form: "Section 199A source deduction attribution"
+fullName: "Taxpayer deductions attributable to each qualified trade or business"
+taxYear: 2026
+irsReference: "https://www.irs.gov/instructions/i8995"
+retrievedAt: "2026-10-25"
+reviewStatus: "independent-review-pending"
+sources:
+  - "https://www.irs.gov/pub/irs-drop/td-reg-107892-18-corrected.pdf"
+  - "https://www.irs.gov/newsroom/qualified-business-income-deduction"
+lines:
+  - line: "source-attribution"
+    description: "Apply taxpayer-level deductions to the business that generated them"
+    formula: "Reduce QBI by the attributable deductible part of SE tax, section 162(l) health insurance and qualified retirement-plan contributions. A partnership's reported section 199A amount does not already include the partner's individual deductions. Allocate only that individual's Schedule SE deduction; never spread one spouse's wage-base limitation to another spouse. Box14A includes guaranteed payments, so do not add Box4 to the allocation denominator again."
+    testRef: "tests/engine/forms/qbi-source-deductions.test.ts::QBI source deduction attribution"
+  - line: "actual-allocation"
+    description: "Preserve actual attribution where automatic attribution is ambiguous"
+    formula: "An actual allocation lists each source ID and owner with the three allowed deduction amounts, including known zero. Rows must reconcile to each person's allowed SE deduction and total allowed health and retirement deductions. Non-QBI deductions are separately identified rather than charged to another trade. For 2026, multiple contributing trades or excluded SE earnings require a confirmed allocation; historical proportional previews remain explicitly unverified. A single contributing eligible trade can receive its person's full deduction."
+    testRef: "tests/engine/forms/qbi-source-deductions.test.ts::QBI source deduction attribution"
+  - line: "return-integration"
+    description: "Carry source attribution into both QBI forms"
+    formula: "Calculate each Schedule C, Schedule F, crypto business and partnership source separately, subtract reconciled deductions, and retain loss sources. Preserve source order and material participation. The resulting QBI feeds either Form8995 or Form8995-A; no filing qualification follows from this computation."
+    testRef: "tests/engine/federal-qbi-attribution.test.ts::Federal QBI source attribution"

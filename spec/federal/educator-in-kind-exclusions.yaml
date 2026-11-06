@@ -1,0 +1,30 @@
+form: "Educator in-kind QTP exclusions"
+fullName: "Recipient-specific excluded earnings from actual prepaid tuition benefits"
+taxYear: 2026
+irsReference: "https://uscode.house.gov/us/usc/119-118/t26/s62/"
+retrievedAt: "2026-10-25"
+notes: |
+  Applies to supported2025/2026 sources. Section62(d)(2) contains no cash-only
+  restriction. Section529(c)(3)(A),(B)(i),(iv) treats a provided benefit as a
+  beneficiary distribution and excludes the otherwise taxable earnings. The
+  linked Publication529(12/2020) educator instructions expressly identify QTP
+  earnings; final2025 Form1040 Schedule1line11 describes earnings or distributions.
+  Thus the existing fully qualified actual benefit method supplies the excluded
+  earnings, with section72 basis separate. This is a bounded reading of statute
+  and instructions, not an IRS numerical example or independent human review.
+  Partial in-kind allocation and mixed-owner partial bond attribution remain
+  separate methods. Sources: https://uscode.house.gov/us/usc/119-118/t26/s529/
+  https://www.irs.gov/publications/p529 https://www.irs.gov/instructions/i1040gi
+lines:
+  - line: "recipient"
+    description: "Apply verified in-kind education-excluded earnings to the actual educator"
+    formula: "Use the source-verified current-year Form1099Q educationExpenseExcludedEarnings for each actual recipient. Cash and supported prepaid tuition both qualify; exclude basis, transfer exclusions, outside recipients and returned contributions. Sum with Decimal and reconcile the declared educator reduction exactly."
+    testRef: "tests/engine/educator-in-kind-exclusions.test.ts::reconciles actual in-kind earnings without deducting basis or another recipients benefit"
+  - line: "return"
+    description: "Carry the actual in-kind exclusion through the federal educator worksheet"
+    formula: "Actual4000 qualified benefit containing800 earnings reduces1000 classroom costs to200; Form1099Q income remains0 and wages50000 yieldAGI49800. Apply each spouse source only once; retain the existing educator caps and separate2026 itemized funding rules."
+    testRef: "tests/engine/educator-in-kind-exclusions.test.ts::uses actual qualified benefits in both years canonical educator deductions"
+  - line: "boundaries"
+    description: "Preserve incomplete evidence and source rounding boundaries"
+    formula: "Keep missing medium or benefit evidence rejected; require original source identity/year/recipient, exact benefit-to-Box1 conservation and qualification. Use the upstream final whole-dollar excluded earnings, not raw Box2 cents or gross benefits, and retain known zero."
+    testRef: "tests/engine/educator-in-kind-exclusions.test.ts::preserves source boundaries and final exclusion rounding"

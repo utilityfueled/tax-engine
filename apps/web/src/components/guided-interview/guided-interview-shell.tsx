@@ -1,5 +1,17 @@
 "use client";
+import {isSeparateStatePreview} from '@/lib/guided-interview-bridge';
+import {PASeparateReturnPreview} from '@/components/pa-separate-return-preview';
+import { buildGuidedW2SourceContext } from "@/lib/guided-interview-bridge";
 
+import { invalidateRoyaltySources } from "@/lib/guided-royalty-sources";
+import { SectionRoyaltyIncome } from "./section-royalty-income";
+import { foreignIncomeSourceOptions } from "@/lib/guided-foreign-income";
+import { marketplacePolicyOptions } from "@/lib/guided-marketplace-health-facts";
+
+import { healthInsuranceSourceOptions } from "@/lib/guided-health-insurance-facts";
+import { guidedCareBenefitSources } from "@/lib/guided-dependent-care-benefits";
+import Decimal from "decimal.js";
+import { TaxYearInputSchema, type TaxYearInput } from "@/models/inputs";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ReturnWorkspaceRecord } from "@tax-engine/contracts";
 import {
@@ -16,11 +28,12 @@ import {
 import { RetroShell } from "@/components/retro-shell";
 import {
   type GuidedPreviewMetrics,
-  type StatePreviewMetrics,
+  buildTaxInputFromGuidedData,
+  mapFilingStatus,
   buildGuidedFactAnswers,
   buildGuidedSyntheticDocuments,
 } from "@/lib/guided-interview-bridge";
-import { computeGuidedPreview } from "@/lib/guided-preview-compute";
+import { computeGuidedPreviewOutcome } from "@/lib/guided-preview-compute";
 import { collectW2Suggestions } from "@/lib/workspace-assistant";
 import {
   type AdjustmentData,
@@ -46,9 +59,13 @@ import {
   canGoBack,
   canGoForward,
   clearGuidedFlowState,
-  computeFlowProgress,
+  analyzeGuidedRender,
+  type GuidedRenderAnalysis,
+  type FlowProgress,
   shouldPromptBeforeAdvance,
   emptyBrokerageEntry,
+  emptyCreditsData,
+  emptyDeductionData,
   emptyDividendEntry,
   emptyInterestEntry,
   emptyNecEntry,
@@ -57,6 +74,7 @@ import {
   emptyScheduleCExpenses,
   emptyW2Entry,
   getSectionData,
+  buildGuidedPAOrdinarySourceInput,
   getVisitedSectionStatus,
   goToNextSection,
   goToPreviousSection,
@@ -66,7 +84,6 @@ import {
   resumeInterviewAtSection,
   saveGuidedFlowState,
   startInterview,
-  summarizeFlowCompletion,
   updateSectionData,
 } from "@/lib/guided-interview-flow";
 import { getBrowserStorage } from "@/lib/browser-storage";
@@ -79,9 +96,12 @@ import { SectionRentalIncome } from "./section-rental-income";
 import { SectionRetirementIncome } from "./section-retirement-income";
 import { SectionSocialSecurity } from "./section-social-security";
 import { SectionUnemployment } from "./section-unemployment";
+import { SectionAdditionalDeductions } from "./section-additional-deductions";
 import { SectionDeductions } from "./section-deductions";
 import { SectionAdjustments } from "./section-adjustments";
+import { K1CharitableSourceDetails } from "./k1-charitable-source-details";
 import { SectionCredits } from "./section-credits";
+import { PremiumTaxCreditSourceDetails } from "./premium-tax-credit-source-details";
 import { SectionOtherTaxes } from "./section-other-taxes";
 import { SectionPayments } from "./section-payments";
 import { SectionReview } from "./section-review";
@@ -90,12 +110,14 @@ import { ReturnHelpDock } from "../return-help-dock";
 
 function SectionProgressBar({
   state,
+  analysis,
   onJump,
 }: {
   state: GuidedFlowState;
+  analysis: GuidedRenderAnalysis;
   onJump: (sectionId: InterviewSectionId) => void;
 }) {
-  const progress = computeFlowProgress(state);
+  const progress = analysis.progress;
   const stepsRef = useRef<HTMLDivElement | null>(null);
   const stepRefs = useRef<Record<InterviewSectionId, HTMLButtonElement | null>>({} as Record<
     InterviewSectionId,
@@ -185,7 +207,7 @@ function SectionProgressBar({
           onScroll={syncOverflowState}
         >
           {progress.sections.map((section, index) => {
-            const sectionStatus = getVisitedSectionStatus(state, section.id);
+            const sectionStatus = analysis.sectionStatuses.get(section.id) ?? getVisitedSectionStatus(state, section.id);
             const isDone = sectionStatus === "complete";
             const isSkipped = sectionStatus === "skipped";
             const needsReview = sectionStatus === "needs-review";
@@ -245,27 +267,29 @@ function SectionPlaceholder({
 
 function RefundTicker({
   guidedPreview,
-  workspace,
+  workspace: _workspace,
   progress,
 }: {
   guidedPreview: GuidedPreviewMetrics | null;
   workspace: ReturnWorkspaceRecord;
-  progress: ReturnType<typeof computeFlowProgress>;
+  progress: FlowProgress;
 }) {
   const [breakdownOpen, setBreakdownOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(true);
 
-  const workspacePreview = workspace.enginePreview;
-  const metrics = guidedPreview ?? (workspacePreview ? workspacePreview.metrics : null);
+  // A missing guided preview can mean missing facts, an unsupported year or a
+  // workspace-year mismatch. An older workspace estimate cannot satisfy that gate.
+  const metrics = guidedPreview;
   const hasMetrics = metrics !== null;
-  const refund = hasMetrics ? Number(metrics.refund) : 0;
-  const owed = hasMetrics ? Number(metrics.amountOwed) : 0;
+  const refund = new Decimal(hasMetrics ? metrics.refund : "0");
+  const owed = new Decimal(hasMetrics ? metrics.amountOwed : "0");
 
   // State metrics — only available from the guided preview, not the workspace engine preview
-  const stateMetrics: StatePreviewMetrics | null = guidedPreview?.state ?? null;
-  const stateRefund = stateMetrics ? Number(stateMetrics.stateRefund) : 0;
-  const stateOwed = stateMetrics ? Number(stateMetrics.stateAmountOwed) : 0;
-  const stateRawAmount = stateRefund > 0 ? stateRefund : stateOwed > 0 ? stateOwed : 0;
+  const separateMetrics=isSeparateStatePreview(guidedPreview?.state)?guidedPreview?.state:null;
+  const stateMetrics = isSeparateStatePreview(guidedPreview?.state)?null:(guidedPreview?.state??null);
+  const stateRefund = new Decimal(stateMetrics ? stateMetrics.stateRefund : "0");
+  const stateOwed = new Decimal(stateMetrics ? stateMetrics.stateAmountOwed : "0");
+  const stateRawAmount = stateRefund.gt(0) ? stateRefund : stateOwed.gt(0) ? stateOwed : 0;
 
   const hasBothFederalAndState = hasMetrics && stateMetrics !== null;
 
@@ -297,7 +321,7 @@ function RefundTicker({
   };
 
   return (
-    <div className="guided-refund-ticker-sticky">
+    <div className={`guided-refund-ticker-sticky${separateMetrics ? " guided-refund-ticker-separate" : ""}`}>
       <RetroShell title="Live Ticker" eyebrow="ESTIMATE">
         <div className="guided-ticker-toolbar">
           <p className="guided-ticker-toolbar-copy">
@@ -312,6 +336,7 @@ function RefundTicker({
             {collapsed ? "Expand Ticker" : "Minimize Ticker"}
           </button>
         </div>
+        {separateMetrics&&<PASeparateReturnPreview metrics={separateMetrics}/>}
         <div className={`guided-ticker-grid${collapsed ? " guided-ticker-grid-collapsed" : ""}`}>
           <div
             className={`guided-ticker-item guided-ticker-item-hero ${tickerClass}${collapsed ? "" : " guided-ticker-clickable"}${pulsing ? " ticker-pulse" : ""}`}
@@ -366,18 +391,18 @@ function RefundTicker({
           ) : (
             <>
               {hasBothFederalAndState && (
-                <div className={`guided-ticker-item guided-ticker-sub ${refund > 0 ? "guided-ticker-positive" : owed > 0 ? "guided-ticker-negative" : ""}`}>
+                <div className={`guided-ticker-item guided-ticker-sub ${refund.gt(0) ? "guided-ticker-positive" : owed.gt(0) ? "guided-ticker-negative" : ""}`}>
                   <span className="guided-ticker-label">Federal</span>
                   <strong className="guided-ticker-value">
-                    {refund > 0 ? "+" : owed > 0 ? "-" : ""}{formatTickerCurrency(refund > 0 ? metrics.refund : metrics.amountOwed)}
+                    {refund.gt(0) ? "+" : owed.gt(0) ? "-" : ""}{formatTickerCurrency(refund.gt(0) ? metrics.refund : metrics.amountOwed)}
                   </strong>
                 </div>
               )}
               {hasBothFederalAndState && stateMetrics && (
-                <div className={`guided-ticker-item guided-ticker-sub ${stateRefund > 0 ? "guided-ticker-positive" : stateOwed > 0 ? "guided-ticker-negative" : ""}`}>
+                <div className={`guided-ticker-item guided-ticker-sub ${stateRefund.gt(0) ? "guided-ticker-positive" : stateOwed.gt(0) ? "guided-ticker-negative" : ""}`}>
                   <span className="guided-ticker-label">{stateMetrics.stateCode}</span>
                   <strong className="guided-ticker-value">
-                    {stateRefund > 0 ? "+" : stateOwed > 0 ? "-" : ""}{formatAnimatedCurrency(animatedStateAmount)}
+                    {stateRefund.gt(0) ? "+" : stateOwed.gt(0) ? "-" : ""}{formatAnimatedCurrency(animatedStateAmount)}
                   </strong>
                 </div>
               )}
@@ -431,15 +456,15 @@ function RefundTicker({
                   <span className="guided-ticker-breakdown-value">{formatTickerCurrency(stateMetrics.stateTax)}</span>
                 </div>
                 <div className="guided-ticker-breakdown-row">
-                  <span className="guided-ticker-breakdown-label">State Withholding</span>
+                  <span className="guided-ticker-breakdown-label">State Payments</span>
                   <span className="guided-ticker-breakdown-value">{formatTickerCurrency(stateMetrics.stateWithholding)}</span>
                 </div>
-                <div className={`guided-ticker-breakdown-row guided-ticker-breakdown-result ${stateRefund > 0 ? "guided-ticker-breakdown-refund" : stateOwed > 0 ? "guided-ticker-breakdown-owed" : ""}`}>
+                <div className={`guided-ticker-breakdown-row guided-ticker-breakdown-result ${stateRefund.gt(0) ? "guided-ticker-breakdown-refund" : stateOwed.gt(0) ? "guided-ticker-breakdown-owed" : ""}`}>
                   <span className="guided-ticker-breakdown-label">
-                    State {stateRefund > 0 ? "Refund" : stateOwed > 0 ? "Balance Due" : "Result"}
+                    State {stateRefund.gt(0) ? "Refund" : stateOwed.gt(0) ? "Balance Due" : "Result"}
                   </span>
                   <span className="guided-ticker-breakdown-value">
-                    {stateRefund > 0 ? formatTickerCurrency(stateMetrics.stateRefund) : stateOwed > 0 ? formatTickerCurrency(stateMetrics.stateAmountOwed) : "—"}
+                    {stateRefund.gt(0) ? formatTickerCurrency(stateMetrics.stateRefund) : stateOwed.gt(0) ? formatTickerCurrency(stateMetrics.stateAmountOwed) : "—"}
                   </span>
                 </div>
               </>
@@ -453,6 +478,7 @@ function RefundTicker({
 
 function SectionContent({
   sectionId,
+  analysis,
   state,
   workspace,
   onUploadDocuments,
@@ -462,6 +488,7 @@ function SectionContent({
   section,
 }: {
   sectionId: InterviewSectionId;
+  analysis: GuidedRenderAnalysis;
   state: GuidedFlowState;
   workspace: ReturnWorkspaceRecord;
   onUploadDocuments?: (files: File[]) => Promise<string>;
@@ -486,6 +513,7 @@ function SectionContent({
       const entries = w2Data?.entries ?? [emptyW2Entry];
       return (
         <SectionW2Income
+          originalInput={buildGuidedW2SourceContext(state)}
           entries={entries}
           workspace={workspace}
           onUploadDocuments={onUploadDocuments}
@@ -505,11 +533,14 @@ function SectionContent({
       return (
         <SectionSelfEmployment
           workspace={workspace}
+          flowState={state}
           necEntries={necEntries}
           manualGrossReceipts={manualGrossReceipts}
           expenses={expenses}
           bankStatementAnalyses={bankStatementAnalyses}
           incomeDocumentAnalyses={incomeDocumentAnalyses}
+          qbiMateriallyParticipated={seData?.qbiMateriallyParticipated}
+          businessFacts={seData?.businessFacts}
           onSectionChange={(next) =>
             onStateChange(updateSectionData(state, "income-self-employment", next))
           }
@@ -518,22 +549,37 @@ function SectionContent({
     }
     case "income-investments": {
       const investData = getSectionData(state, "income-investments");
+      const savedSources = investData ?? { interestEntries: [], dividendEntries: [], brokerageEntries: [] };
       const interestEntries = investData?.interestEntries ?? [emptyInterestEntry];
       const dividendEntries = investData?.dividendEntries ?? [emptyDividendEntry];
       const brokerageEntries = investData?.brokerageEntries ?? [emptyBrokerageEntry];
+      const oidEntries = investData?.oidEntries ?? [];
       return (
         <SectionInvestmentIncome
           interestEntries={interestEntries}
           dividendEntries={dividendEntries}
           brokerageEntries={brokerageEntries}
+          oidEntries={oidEntries}
+          digitalAssetEntries={investData?.digitalAssetEntries}
+          onDigitalAssetEntriesChange={digitalAssetEntries => onStateChange(updateSectionData(state, "income-investments", { ...savedSources, digitalAssetEntries }))}
+          childElections={investData?.childElections}
+          qofDispositionFacts={investData?.qofDispositionFacts}
+          scheduleDSources={investData?.scheduleDSources}
+          section1202Sources={investData?.section1202Sources}
+          onSection1202SourcesChange={section1202Sources => onStateChange(updateSectionData(state, "income-investments", { ...savedSources, section1202Sources }))}
+          onScheduleDSourcesChange={scheduleDSources => onStateChange(updateSectionData(state, "income-investments", { ...savedSources, scheduleDSources }))}
+          onQofDispositionFactsChange={qofDispositionFacts => onStateChange(updateSectionData(state, "income-investments", { ...savedSources, qofDispositionFacts }))}
+          onChildElectionsChange={childElections => onStateChange(updateSectionData(state, "income-investments", { ...savedSources, childElections }))}
+          stateCode={state.segmentation.stateCode}
+          onOidEntriesChange={next => onStateChange(updateSectionData(state, "income-investments", { ...savedSources, oidEntries: next }))}
           onInterestEntriesChange={(next: InterestEntryData[]) =>
-            onStateChange(updateSectionData(state, "income-investments", { interestEntries: next, dividendEntries, brokerageEntries }))
+            onStateChange(updateSectionData(state, "income-investments", { ...savedSources, interestEntries: next }))
           }
           onDividendEntriesChange={(next: DividendEntryData[]) =>
-            onStateChange(updateSectionData(state, "income-investments", { interestEntries, dividendEntries: next, brokerageEntries }))
+            onStateChange(updateSectionData(state, "income-investments", { ...savedSources, dividendEntries: next }))
           }
           onBrokerageEntriesChange={(next: BrokerageEntryData[]) =>
-            onStateChange(updateSectionData(state, "income-investments", { interestEntries, dividendEntries, brokerageEntries: next }))
+            onStateChange(updateSectionData(state, "income-investments", { ...savedSources, brokerageEntries: next }))
           }
         />
       );
@@ -544,18 +590,23 @@ function SectionContent({
       return (
         <SectionRetirementIncome
           entries={entries}
+          basisSources={retData?.basisSources}
+          onBasisSourcesChange={basisSources => onStateChange(updateSectionData(state, "income-retirement", { ...retData, entries, basisSources }))}
           onEntriesChange={(next: RetirementEntryData[]) =>
-            onStateChange(updateSectionData(state, "income-retirement", { entries: next }))
+            onStateChange(updateSectionData(state, "income-retirement", { ...retData, entries: next }))
           }
         />
       );
     }
+    case "income-royalties":
+      return <SectionRoyaltyIncome data={getSectionData(state, "income-royalties")} taxYear={state.taxYear} stateCode={state.segmentation.stateCode} onDataChange={data => onStateChange(updateSectionData(state, "income-royalties", data))} />;
     case "income-rental": {
       const rentalData = getSectionData(state, "income-rental");
       const rentalEntries = rentalData?.entries ?? [emptyRentalPropertyEntry];
       return (
         <SectionRentalIncome
           entries={rentalEntries}
+          stateCode={state.segmentation.stateCode}
           onEntriesChange={(next: RentalPropertyEntryData[]) =>
             onStateChange(updateSectionData(state, "income-rental", { entries: next }))
           }
@@ -574,16 +625,22 @@ function SectionContent({
     case "income-unemployment":
       return (
         <SectionUnemployment
+          state={state}
           data={getSectionData(state, "income-unemployment")}
           onDataChange={(data: UnemploymentData) =>
             onStateChange(updateSectionData(state, "income-unemployment", data))
           }
         />
       );
+    case "additional-deductions":
+      return <SectionAdditionalDeductions state={state} data={getSectionData(state, "additional-deductions")} w2Entries={getSectionData(state, "income-w2")?.entries} onChange={data => onStateChange(updateSectionData(state, "additional-deductions", data))} />;
     case "deductions":
       return (
         <SectionDeductions
+          taxYear={state.taxYear}
           data={getSectionData(state, "deductions")}
+          childEntries={getSectionData(state, "income-investments")?.childElections}
+          k1Activities={getSectionData(state, "adjustments")?.k1LossSources?.activities}
           filingStatus={state.segmentation.filingStatus}
           onDataChange={(data: DeductionData) =>
             onStateChange(updateSectionData(state, "deductions", data))
@@ -592,23 +649,63 @@ function SectionContent({
       );
     case "adjustments":
       return (
+        <div className="panel-stack">
         <SectionAdjustments
+          taxYear={state.taxYear}
           data={getSectionData(state, "adjustments")}
+          investments={getSectionData(state, "income-investments")}
           hasSelfEmployment={state.segmentation.incomeTypes.includes("self-employment")}
           hasStudentLoans={state.segmentation.lifeEvents.includes("student-loans")}
           hasHsa={state.segmentation.lifeEvents.includes("hsa-contributions")}
+          hasHealthInsurance={state.segmentation.lifeEvents.includes("self-employed-health-insurance")}
+          filingStatus={state.segmentation.filingStatus}
+          educationDistributions={getSectionData(state, "credits")?.educationDistributions}
+          foreignIncomeSources={foreignIncomeSourceOptions(state)}
+          healthInsuranceSources={healthInsuranceSourceOptions(getSectionData(state, "income-self-employment"), getSectionData(state, "income-w2")?.entries, getSectionData(state, "adjustments")?.k1LossSources)}
+          marketplacePolicies={marketplacePolicyOptions(getSectionData(state, "credits")?.premiumTaxCredit?.policies)}
           onDataChange={(data: AdjustmentData) =>
             onStateChange(updateSectionData(state, "adjustments", data))
           }
         />
+        {getSectionData(state, "adjustments")?.healthInsuranceFacts?.plans.some(plan => plan.marketplaceCoverage === true) && (
+          <PremiumTaxCreditSourceDetails
+            healthInsurance={getSectionData(state, "adjustments")?.healthInsuranceFacts}
+            data={getSectionData(state, "credits")?.premiumTaxCredit}
+            personal={getSectionData(state, "personal-info")}
+            filingStatus={state.segmentation.filingStatus}
+            taxYear={state.taxYear}
+            onChange={premiumTaxCredit => onStateChange(updateSectionData(state, "credits", {
+              ...emptyCreditsData,
+              ...getSectionData(state, "credits"),
+              premiumTaxCredit,
+            }))}
+          />
+        )}
+        {(state.segmentation.lifeEvents.includes("k1-loss-sources") || getSectionData(state, "adjustments")?.k1LossSources) && (
+          <K1CharitableSourceDetails
+            data={getSectionData(state, "deductions")?.k1CharitableSources}
+            activities={getSectionData(state, "adjustments")?.k1LossSources?.activities}
+            onChange={(k1CharitableSources) => onStateChange(updateSectionData(state, "deductions", {
+              ...emptyDeductionData,
+              ...getSectionData(state, "deductions"),
+              k1CharitableSources,
+            }))}
+          />
+        )}
+        </div>
       );
     case "credits": {
       const personalData = getSectionData(state, "personal-info");
       const depCount = Number(personalData?.dependentCount ?? "0");
       return (
         <SectionCredits
+          healthInsurance={getSectionData(state, "adjustments")?.healthInsuranceFacts}
+          personalData={personalData}
+          careBenefitSources={guidedCareBenefitSources(getSectionData(state, "income-w2")?.entries, getSectionData(state, "income-self-employment")?.businessFacts, getSectionData(state, "income-self-employment")?.expenses)}
+          taxYear={state.taxYear}
           data={getSectionData(state, "credits")}
           hasDependents={depCount > 0}
+          filingStatus={state.segmentation.filingStatus}
           onDataChange={(data: CreditsData) =>
             onStateChange(updateSectionData(state, "credits", data))
           }
@@ -620,7 +717,9 @@ function SectionContent({
         <SectionOtherTaxes
           data={getSectionData(state, "other-taxes")}
           hasSelfEmployment={state.segmentation.incomeTypes.includes("self-employment")}
-          hasInvestments={state.segmentation.incomeTypes.includes("investments")}
+          hasInvestments={state.segmentation.incomeTypes.some(type => ["investments", "retirement", "rental", "royalties"].includes(type))}
+          retirementEntries={getSectionData(state, "income-retirement")?.entries}
+          investment={getSectionData(state, "income-investments")}
           guidedPreview={guidedPreview}
           onDataChange={(data: OtherTaxesData) =>
             onStateChange(updateSectionData(state, "other-taxes", data))
@@ -630,6 +729,7 @@ function SectionContent({
     case "payments":
       return (
         <SectionPayments
+          taxYear={state.taxYear}
           data={getSectionData(state, "payments")}
           onDataChange={(data: PaymentData) =>
             onStateChange(updateSectionData(state, "payments", data))
@@ -639,15 +739,27 @@ function SectionContent({
     case "review":
       return (
         <SectionReview
+          analysis={analysis}
           state={state}
           preview={guidedPreview}
           onJumpToSection={onJumpToSection}
         />
       );
-    case "state-return":
+    case "state-return": {
+      let originalInput: TaxYearInput | null = null;
+      try {
+        const raw = buildTaxInputFromGuidedData(state);
+        const parsed = raw ? TaxYearInputSchema.safeParse(raw) : undefined;
+        if (parsed?.success) originalInput = parsed.data;
+      } catch { /* Actual incomplete federal sources stay unavailable for confirmation. */ }
       return (
         <SectionStateReturn
+          currentWorkspaceId={workspace.id}
           stateCode={state.segmentation.stateCode as SupportedStateCode}
+          originalInput={originalInput}
+          ordinaryOriginalInput={buildGuidedPAOrdinarySourceInput(state)}
+          taxYear={state.taxYear}
+          filingStatus={state.segmentation.filingStatus ? mapFilingStatus(state.segmentation.filingStatus) : null}
           data={getSectionData(state, "state-return")}
           guidedPreview={guidedPreview}
           onDataChange={(data: StateReturnData) =>
@@ -655,8 +767,9 @@ function SectionContent({
           }
         />
       );
+    }
     case "final-review": {
-      const completion = summarizeFlowCompletion(state);
+      const completion = analysis.completion;
       const followUpSections = completion.skippedSections + completion.needsReviewSections;
       const requiresFollowUp = followUpSections > 0;
 
@@ -677,23 +790,26 @@ function SectionContent({
 
 function InterviewPhase({
   state,
+  analysis,
   guidedPreview,
+  guidedPreviewBlockedBy,
   onStateChange,
   workspace,
   onUploadDocuments,
   onFinish,
 }: {
   state: GuidedFlowState;
+  analysis: GuidedRenderAnalysis;
   guidedPreview: GuidedPreviewMetrics | null;
+  guidedPreviewBlockedBy: string | null;
   onStateChange: (next: GuidedFlowState) => void;
   workspace: ReturnWorkspaceRecord;
   onUploadDocuments?: (files: File[]) => Promise<string>;
   onFinish: () => void;
 }) {
-  const progress = computeFlowProgress(state);
+  const progress = analysis.progress;
   const currentSection = progress.currentSection;
   const sectionRef = useRef<HTMLDivElement>(null);
-  const [sectionKey, setSectionKey] = useState(0);
   const prevSectionIndex = useRef(state.currentSectionIndex);
   const [skipPromptOpen, setSkipPromptOpen] = useState(false);
   const skipPrompt = skipPromptOpen ? shouldPromptBeforeAdvance(state) : null;
@@ -745,9 +861,9 @@ function InterviewPhase({
   useEffect(() => {
     if (prevSectionIndex.current !== state.currentSectionIndex) {
       prevSectionIndex.current = state.currentSectionIndex;
-      setSectionKey((k) => k + 1);
       setSkipPromptOpen(false);
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      // Start the new section at a stable viewport before its controls are used.
+      window.scrollTo({ top: 0, behavior: "instant" });
     }
   }, [state.currentSectionIndex]);
 
@@ -776,11 +892,15 @@ function InterviewPhase({
   // Keyboard shortcuts: Enter = continue, Escape = back / dismiss skip prompt
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
+      // A focused control may already have handled this key (for example the ticker).
+      if (e.defaultPrevented) return;
       // Don't intercept when user is typing in an input/textarea/select
       const tag = (e.target as HTMLElement)?.tagName;
       if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
 
       if (e.key === "Enter" && !e.metaKey && !e.ctrlKey && !e.shiftKey) {
+        // Let interactive elements receive their own native Enter activation.
+        if (e.target instanceof Element && e.target.closest('button, a[href], [role="button"], [contenteditable="true"]')) return;
         e.preventDefault();
         handleAdvance();
       } else if (e.key === "Escape") {
@@ -805,13 +925,15 @@ function InterviewPhase({
 
   return (
     <div className="guided-interview-phase" ref={sectionRef}>
-      <SectionProgressBar state={state} onJump={handleJump} />
+      <SectionProgressBar state={state} analysis={analysis} onJump={handleJump} />
 
       <RefundTicker guidedPreview={guidedPreview} workspace={workspace} progress={progress} />
+      {guidedPreviewBlockedBy && <p role="status" className="guided-hint">This return cannot be figured yet: {guidedPreviewBlockedBy}</p>}
 
-      <div key={sectionKey} className="guided-section-transition">
+      <div key={currentSection?.id} className="guided-section-transition">
         {currentSection ? (
           <SectionContent
+            analysis={analysis}
             sectionId={currentSection.id as InterviewSectionId}
             state={state}
             workspace={workspace}
@@ -896,7 +1018,9 @@ function InterviewPhase({
 }
 
 function CompletionScreen({
+  analysis,
   guidedPreview,
+  guidedPreviewBlockedBy,
   workspace,
   state,
   onBack,
@@ -905,23 +1029,26 @@ function CompletionScreen({
   onContinueToWorkspace,
 }: {
   guidedPreview: GuidedPreviewMetrics | null;
+  guidedPreviewBlockedBy: string | null;
   workspace: ReturnWorkspaceRecord;
   state: GuidedFlowState;
   onBack: () => void;
   onResumeSection: (sectionId: InterviewSectionId) => void;
   onRestart: () => void;
   onContinueToWorkspace: () => void;
+  analysis: GuidedRenderAnalysis;
 }) {
-  const completion = summarizeFlowCompletion(state);
+  const completion = analysis.completion;
   const requiresFollowUp = completion.skippedSections > 0 || completion.needsReviewSections > 0;
   const followUpSections = completion.skippedSections + completion.needsReviewSections;
-  const progress = computeFlowProgress(state);
+  const progress = analysis.progress;
 
   return (
     <div className="guided-completion">
-      <SectionProgressBar state={state} onJump={onResumeSection} />
+      <SectionProgressBar state={state} analysis={analysis} onJump={onResumeSection} />
 
       <RefundTicker guidedPreview={guidedPreview} workspace={workspace} progress={progress} />
+      {guidedPreviewBlockedBy && <p role="status" className="guided-hint">This return cannot be figured yet: {guidedPreviewBlockedBy}</p>}
 
       <CompletionSummaryContent
         guidedPreview={guidedPreview}
@@ -951,7 +1078,7 @@ function CompletionScreen({
 
 function CompletionSummaryContent({
   guidedPreview,
-  workspace,
+  workspace: _workspace,
   requiresFollowUp,
   followUpSections,
   completion,
@@ -962,14 +1089,15 @@ function CompletionSummaryContent({
   followUpSections: number;
   completion: FlowCompletionSummary;
 }) {
-  const metrics = guidedPreview ?? workspace.enginePreview?.metrics ?? null;
+  const metrics = guidedPreview;
   const hasMetrics = metrics !== null;
-  const refund = hasMetrics ? Number(metrics.refund) : 0;
-  const owed = hasMetrics ? Number(metrics.amountOwed) : 0;
-  const stateMetrics: StatePreviewMetrics | null = guidedPreview?.state ?? null;
-  const stateRefund = stateMetrics ? Number(stateMetrics.stateRefund) : 0;
-  const stateOwed = stateMetrics ? Number(stateMetrics.stateAmountOwed) : 0;
-  const netResult = (refund - owed) + (stateRefund - stateOwed);
+  const refund = new Decimal(hasMetrics ? metrics.refund : "0");
+  const owed = new Decimal(hasMetrics ? metrics.amountOwed : "0");
+  const separateMetrics=isSeparateStatePreview(guidedPreview?.state)?guidedPreview?.state:null;
+  const stateMetrics = isSeparateStatePreview(guidedPreview?.state)?null:(guidedPreview?.state??null);
+  const stateRefund = new Decimal(stateMetrics ? stateMetrics.stateRefund : "0");
+  const stateOwed = new Decimal(stateMetrics ? stateMetrics.stateAmountOwed : "0");
+  const netResult = refund.minus(owed).plus(stateRefund).minus(stateOwed);
 
   return (
     <>
@@ -984,38 +1112,39 @@ function CompletionSummaryContent({
       </section>
 
       <RetroShell title="Summary" eyebrow="REVIEW">
+        {separateMetrics&&<PASeparateReturnPreview metrics={separateMetrics}/>}
         <div className="guided-ticker-grid">
           {hasMetrics && (
-            <div className={`guided-ticker-item guided-ticker-item-hero ${stateMetrics ? (netResult > 0 ? "guided-ticker-positive" : netResult < 0 ? "guided-ticker-negative" : "") : (refund > 0 ? "guided-ticker-positive" : owed > 0 ? "guided-ticker-negative" : "")}`}>
+            <div className={`guided-ticker-item guided-ticker-item-hero ${stateMetrics ? (netResult.gt(0) ? "guided-ticker-positive" : netResult.lt(0) ? "guided-ticker-negative" : "") : (refund.gt(0) ? "guided-ticker-positive" : owed.gt(0) ? "guided-ticker-negative" : "")}`}>
               <span className="guided-ticker-label">
                 {stateMetrics
-                  ? netResult > 0 ? "Total Refund" : netResult < 0 ? "Total Balance Due" : "Result"
-                  : refund > 0 ? "Your Refund" : owed > 0 ? "Balance Due" : "Result"}
+                  ? netResult.gt(0) ? "Total Refund" : netResult.lt(0) ? "Total Balance Due" : "Result"
+                  : refund.gt(0) ? "Your Refund" : owed.gt(0) ? "Balance Due" : "Result"}
               </span>
               <strong className="guided-ticker-value guided-ticker-value-hero">
                 {stateMetrics
-                  ? formatTickerCurrency(String(Math.abs(netResult)))
-                  : refund > 0
+                  ? formatTickerCurrency(netResult.abs().toFixed())
+                  : refund.gt(0)
                     ? formatTickerCurrency(metrics.refund)
-                    : owed > 0
+                    : owed.gt(0)
                       ? formatTickerCurrency(metrics.amountOwed)
                       : "—"}
               </strong>
             </div>
           )}
           {hasMetrics && stateMetrics && (
-            <div className={`guided-ticker-item guided-ticker-sub ${refund > 0 ? "guided-ticker-positive" : owed > 0 ? "guided-ticker-negative" : ""}`}>
+            <div className={`guided-ticker-item guided-ticker-sub ${refund.gt(0) ? "guided-ticker-positive" : owed.gt(0) ? "guided-ticker-negative" : ""}`}>
               <span className="guided-ticker-label">Federal</span>
               <strong className="guided-ticker-value">
-                {refund > 0 ? formatTickerCurrency(metrics.refund) : owed > 0 ? formatTickerCurrency(metrics.amountOwed) : "—"}
+                {refund.gt(0) ? formatTickerCurrency(metrics.refund) : owed.gt(0) ? formatTickerCurrency(metrics.amountOwed) : "—"}
               </strong>
             </div>
           )}
           {hasMetrics && stateMetrics && (
-            <div className={`guided-ticker-item guided-ticker-sub ${stateRefund > 0 ? "guided-ticker-positive" : stateOwed > 0 ? "guided-ticker-negative" : ""}`}>
+            <div className={`guided-ticker-item guided-ticker-sub ${stateRefund.gt(0) ? "guided-ticker-positive" : stateOwed.gt(0) ? "guided-ticker-negative" : ""}`}>
               <span className="guided-ticker-label">{stateMetrics.stateCode}</span>
               <strong className="guided-ticker-value">
-                {stateRefund > 0 ? formatTickerCurrency(stateMetrics.stateRefund) : stateOwed > 0 ? formatTickerCurrency(stateMetrics.stateAmountOwed) : "—"}
+                {stateRefund.gt(0) ? formatTickerCurrency(stateMetrics.stateRefund) : stateOwed.gt(0) ? formatTickerCurrency(stateMetrics.stateAmountOwed) : "—"}
               </strong>
             </div>
           )}
@@ -1095,13 +1224,13 @@ export function GuidedInterviewShell({
 }) {
   const [flowState, setFlowState] = useState<GuidedFlowState>(() => {
     const browserStorage = getBrowserStorage();
-    return browserStorage ? loadGuidedFlowState(browserStorage, workspace.id) ?? initialFlowState : initialFlowState;
+    return browserStorage ? loadGuidedFlowState(browserStorage, workspace.id) ?? { ...initialFlowState, taxYear: workspace.returnSummary.targetTaxYear } : { ...initialFlowState, taxYear: workspace.returnSummary.targetTaxYear };
   });
 
   useEffect(() => {
     const browserStorage = getBrowserStorage();
-    setFlowState(browserStorage ? loadGuidedFlowState(browserStorage, workspace.id) ?? initialFlowState : initialFlowState);
-  }, [workspace.id]);
+    setFlowState(browserStorage ? loadGuidedFlowState(browserStorage, workspace.id) ?? { ...initialFlowState, taxYear: workspace.returnSummary.targetTaxYear } : { ...initialFlowState, taxYear: workspace.returnSummary.targetTaxYear });
+  }, [workspace.id, workspace.returnSummary.targetTaxYear]);
 
   useEffect(() => {
     if (!resumeSectionId) {
@@ -1124,16 +1253,18 @@ export function GuidedInterviewShell({
   // Compute live preview from the guided interview data. This runs the
   // tax engine on every state change so the refund ticker updates in
   // real time as the user enters data.
-  const guidedPreview = useMemo(
-    () => computeGuidedPreview(flowState),
-    [flowState],
+  const { metrics: guidedPreview, blockedBy: guidedPreviewBlockedBy } = useMemo(
+    () => workspace.returnSummary.targetTaxYear != null && flowState.taxYear !== workspace.returnSummary.targetTaxYear ? { metrics: null, blockedBy: null } : computeGuidedPreviewOutcome(flowState),
+    [flowState, workspace.returnSummary.targetTaxYear],
   );
+  // Recompute from the entire actual state on every render; never retain a source-result cache.
+  const renderAnalysis = flowState.phase === "segmentation" ? null : analyzeGuidedRender(flowState);
   const currentSection = flowState.phase === "interview"
-    ? computeFlowProgress(flowState).currentSection
+    ? renderAnalysis?.progress.currentSection ?? null
     : null;
 
   function handleSegmentationComplete(answers: SegmentationAnswers) {
-    handleFlowStateChange(startInterview(answers));
+    handleFlowStateChange(startInterview(answers, flowState.taxYear ?? null));
   }
 
   function handleRestart() {
@@ -1142,18 +1273,22 @@ export function GuidedInterviewShell({
     if (browserStorage) {
       clearGuidedFlowState(browserStorage, workspace.id);
     }
-    setFlowState(initialFlowState);
+    setFlowState({ ...initialFlowState, taxYear: workspace.returnSummary.targetTaxYear });
   }
 
-  const handleSyncAndExit = useCallback(() => {
+  const syncAndExit = useCallback((nextFlowState: GuidedFlowState) => {
+    if (nextFlowState !== flowState) handleFlowStateChange(nextFlowState);
     if (onSyncToWorkspace) {
-      const syntheticDocs = buildGuidedSyntheticDocuments(flowState);
-      const factAnswers = buildGuidedFactAnswers(flowState);
-      onSyncToWorkspace(syntheticDocs, factAnswers, flowState);
+      const syntheticDocs = buildGuidedSyntheticDocuments(nextFlowState);
+      const factAnswers = buildGuidedFactAnswers(nextFlowState);
+      onSyncToWorkspace(syntheticDocs, factAnswers, nextFlowState);
     } else {
       onExitGuided();
     }
-  }, [flowState, onSyncToWorkspace, onExitGuided]);
+  }, [flowState, handleFlowStateChange, onSyncToWorkspace, onExitGuided]);
+
+  const handleSyncAndExit = () => syncAndExit(flowState);
+  const handleFinishReview = () => syncAndExit(currentSection?.id === "final-review" ? goToNextSection(flowState) : flowState);
 
   return (
     <div className="guided-interview-shell">
@@ -1162,6 +1297,20 @@ export function GuidedInterviewShell({
           Switch to advanced mode
         </button>
       </div>
+
+      <label className="guided-field">
+        <span className="guided-field-label">Tax year for this interview</span>
+        <select className="guided-input" value={flowState.taxYear ?? ""} onChange={(event) => { const taxYear = event.target.value ? Number(event.target.value) : null; const sources = flowState.sectionData["income-royalties"]; handleFlowStateChange({ ...flowState, taxYear, ...(taxYear !== flowState.taxYear && sources ? { sectionData: { ...flowState.sectionData, "income-royalties": invalidateRoyaltySources(sources) } } : {}) }); }}>
+          <option value="">Confirm the tax year</option>
+          <option value="2025">2025 — filed in 2026</option>
+          <option value="2026">2026 — calculation not yet available</option>
+        </select>
+      </label>
+      {flowState.taxYear == null && <p role="status">This saved interview has no confirmed year. Confirm it before calculating.</p>}
+      {workspace.returnSummary.targetTaxYear != null && flowState.taxYear != null && flowState.taxYear !== workspace.returnSummary.targetTaxYear && (
+        <p role="alert">The interview year differs from this workspace's {workspace.returnSummary.targetTaxYear} return. Calculation and PDF download are unavailable until the years agree.</p>
+      )}
+      {flowState.taxYear === 2026 && <p role="status">You can save 2026 facts. The 2026 rules and filing forms are not yet qualified.</p>}
 
       <ReturnHelpDock
         workspace={workspace}
@@ -1180,20 +1329,24 @@ export function GuidedInterviewShell({
         />
       )}
 
-      {flowState.phase === "interview" && (
+      {flowState.phase === "interview" && renderAnalysis && (
         <InterviewPhase
+          analysis={renderAnalysis}
           state={flowState}
           guidedPreview={guidedPreview}
+          guidedPreviewBlockedBy={guidedPreviewBlockedBy}
           onStateChange={handleFlowStateChange}
           workspace={workspace}
           onUploadDocuments={onUploadDocuments}
-          onFinish={handleSyncAndExit}
+          onFinish={handleFinishReview}
         />
       )}
 
-      {flowState.phase === "complete" && (
+      {flowState.phase === "complete" && renderAnalysis && (
         <CompletionScreen
+          analysis={renderAnalysis}
           guidedPreview={guidedPreview}
+          guidedPreviewBlockedBy={guidedPreviewBlockedBy}
           workspace={workspace}
           state={flowState}
           onBack={() => {

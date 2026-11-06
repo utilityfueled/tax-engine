@@ -4,6 +4,11 @@ taxYear: 2025
 reference: "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40d.pdf"
 
 notes: |
+  Year boundary: no home sale means zero on line 8 without consulting a federal
+  rule pack. If home sales are present and the requested year's federal home
+  exclusion rules are unavailable, reject the calculation; never use 2025
+  values for 2026. Standalone empty-state tests do not qualify a filing packet.
+
   Pennsylvania Schedule D computes Class 5 net gains or losses from the sale,
   exchange, or other disposition of property. The supported resident slice
   covers the property-disposition sources already normalized by the tax engine:

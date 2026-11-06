@@ -1,0 +1,27 @@
+form: "Ohio actual resident header lifecycle"
+taxYear: 2025
+reference: "https://dam.assets.ohio.gov/image/upload/v1767095693/tax.ohio.gov/forms/ohio_individual/individual/2025/it1040-booklet.pdf"
+notes: |
+  Independent integration controls for the finite actual residential header.
+  No tax arithmetic changes, inferred geography, final2026 or filing approval.
+  Header originals are a separate self-referential Ohio child, excluded only from
+  raw federal snapshot comparisons. Prepared review binds the whole input.
+lines:
+  - line: "native-replay"
+    formula: "Current native parent/payment/RC replays first; complete header then survives exactly. Native removal cannot silently discard a retained canonical header. Existing2323/1000/677 tax and full child remain unchanged."
+    testRef: "tests/apps/web/oh-return-header-lifecycle.test.ts::Ohio header integration preserves full native sources and current677"
+  - line: "retained-root"
+    formula: "Retained canonical header requires its native draft and explicit reconciliation."
+    testRef: "tests/apps/web/oh-return-header-lifecycle.test.ts::Ohio header integration rejects retained canonical originals without native packet"
+  - line: "actual-edit"
+    formula: "Any actual own-header, parent, payment or RC identity edit clears header confirmation while retaining all four old captures; header-only edit preserves parent/payment/RC confirmation."
+    testRef: "tests/apps/web/oh-return-header-lifecycle.test.ts::Ohio header integration invalidates actual %s without replacing old captures"
+  - line: "confirmation-only"
+    formula: "Explicit header confirmation changes automatic captures only; does not invalidate unchanged actual sources or its newly confirmed flag."
+    testRef: "tests/apps/web/oh-return-header-lifecycle.test.ts::Ohio header integration accepts explicit confirmation without invalidating parents"
+  - line: "opaque-review"
+    formula: "Federal snapshot excludes header self-root only; opaque prepared review still rejects any same-tax header source replacement."
+    testRef: "tests/apps/web/oh-return-header-lifecycle.test.ts::Ohio header integration binds whole private header in opaque review"
+  - line: "upstream-original-edit"
+    formula: "A real personal-info identity edit through the existing flow clears header confirmation, retaining old federal/residency/payment/paired captures for explicit reconciliation."
+    testRef: "tests/apps/web/oh-return-header-lifecycle.test.ts::Ohio header integration invalidates actual upstream identity without replacing captures"

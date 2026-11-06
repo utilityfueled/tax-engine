@@ -73,10 +73,10 @@ export const hostedPlanCatalog: HostedPlanDefinition[] = [
     featureBullets: [
       "Hosted account and billing",
       "Privacy-safe workspace shells across devices",
-      "Paid AI helper with workspace-aware explanations and a $10 included usage budget per cycle",
+      "AI explanations are planned and unavailable pending qualification",
       "Deadline tracking (coming soon)",
       "Quarterly deadline reminder emails (coming soon)",
-      "AI-generated draft-return summary with raw files kept out of durable server storage"
+      "Draft-return AI summaries are unavailable pending qualification"
     ]
   },
   {
@@ -111,15 +111,15 @@ export const hostedAffordanceCatalog: HostedAffordanceDefinition[] = [
     id: "provider-summary",
     label: "AI-powered return summary",
     minimumPlanId: "starter",
-    rollout: "preview",
-    summary: "Generate a privacy-safe summary of your draft return that you can review yourself or share externally."
+    rollout: "coming-soon",
+    summary: "AI summaries remain unavailable until independent evaluation and production qualification pass."
   },
   {
     id: "filing-pack-history",
-    label: "Saved return history",
+    label: "Saved return metadata",
     minimumPlanId: "plus",
     rollout: "preview",
-    summary: "Keep completed return downloads saved to your account instead of relying on browser-local downloads only."
+    summary: "See saved return metadata across devices. Original documents, private answers and review downloads remain on your device."
   },
   {
     id: "partner-review",
@@ -239,7 +239,7 @@ export const officialSampleDocumentFixtures: OfficialSampleDocumentFixture[] = [
     id: "irs-w2-2026",
     kind: "w2",
     title: "2026 Form W-2 (official info-copy PDF)",
-    aliases: ["irs-w2-2026", "fw2"],
+    aliases: ["irs-w2-2026", "fw2--2026"],
     taxYearHint: 2026
   },
   {
@@ -345,6 +345,7 @@ export type WorkspaceAuditEventKind =
   | "workspace-created"
   | "documents-ingested"
   | "document-removed"
+  | "document-year-confirmed"
   | "workspace-cleared"
   | "interview-answered"
   | "interview-reopened";
@@ -522,43 +523,86 @@ export type WorkspaceStructuredFactConfidence =
 
 export interface WorkspaceStructuredFactMachineValue1099BTransaction {
   entryKind: "1099-b-transaction";
+  sourceFactsVersion?: 2;
   description: string;
   dateAcquired: string;
   dateSold: string;
   proceeds: string;
   costBasis: string;
-  adjustments: string;
-  basisReportedToIRS: boolean;
-  holdingPeriod: "short" | "long";
+  adjustments?: string;
+  basisReportedToIRS?: boolean;
+  holdingPeriod?: "short" | "long";
   digitalAsset?: boolean;
-  washSale: boolean;
-  washSaleDisallowed: string;
+  washSale?: boolean;
+  washSaleDisallowed?: string;
+}
+
+/** Original1099DA boxes; taxpayer-completed basis belongs in the reviewed context. */
+export interface WorkspaceStructuredFactMachineValue1099DATransaction {
+  entryKind: "1099-da-transaction";
+  sourceFactsVersion?: 2;
+  transactionEvidence: "individual" | "summary";
+  digitalAssetName?: string;
+  digitalAssetCode?: string;
+  ticker?: string;
+  quantity?: string;
+  dateSold?: string;
+  proceeds: string;
+  gainOrLoss?: string;
+  reportedDateAcquired?: string | null;
+  reportedCostBasis?: string | null;
+  basisReportedToIRS?: boolean;
+  holdingPeriod?: "short" | "long";
+  marketDiscount?: string;
+  washSaleDisallowed?: string;
+  proceedsType?: "gross" | "net";
+  qof?: boolean;
+  lossNotAllowed?: boolean;
+  ordinaryIncome?: boolean;
+  onlyCashProceeds?: boolean;
+  customerProvidedAcquisitionInformation?: boolean;
+  noncoveredSecurity?: boolean;
+  optionalReportingMethod?: "none" | "stablecoins" | "specified_nfts";
+  brokerName?: string;
+  brokerTin?: string;
+  accountReference?: string;
+  accountHolder?: "primary" | "spouse";
+  taxYear?: number;
+  federalWithheld?: string;
+  stateWithheld?: string;
+  state?: string;
 }
 
 export interface WorkspaceStructuredFactMachineValueW2Summary {
   entryKind: "w2-summary";
+  sourceFactsVersion?: 2;
   employerName: string;
   employerEin: string;
   wages: string;
   federalWithheld: string;
   socialSecurityWages?: string;
+  socialSecurityTips?: string;
   socialSecurityWithheld?: string;
   medicareWages?: string;
   medicareWithheld?: string;
   stateWages?: string;
   stateWithheld?: string;
+  state?: string;
+  stateTaxReporting?: "none" | "single" | "multiple";
+  box10DependentCareBenefits?: string;
   box12CodeW?: string;
   accountHolder?: "primary" | "spouse";
 }
 
 export interface WorkspaceStructuredFactMachineValue1099IntSummary {
   entryKind: "1099-int-summary";
+  sourceFactsVersion?: 2;
   payer: string;
   interestIncome: string;
-  earlyWithdrawalPenalty: string;
-  federalWithheld: string;
-  taxExemptInterest: string;
-  usSavingsBondInterest: string;
+  earlyWithdrawalPenalty?: string;
+  federalWithheld?: string;
+  taxExemptInterest?: string;
+  usSavingsBondInterest?: string;
 }
 
 export interface WorkspaceStructuredFactMachineValue1099GSummary {
@@ -587,13 +631,14 @@ export interface WorkspaceStructuredFactMachineValue1099OIDSummary {
 
 export interface WorkspaceStructuredFactMachineValue1099DivSummary {
   entryKind: "1099-div-summary";
+  sourceFactsVersion?: 2;
   payer: string;
   ordinaryDividends: string;
-  qualifiedDividends: string;
-  capitalGainDistributions: string;
-  federalWithheld: string;
-  section199ADividends: string;
-  foreignTaxPaid: string;
+  qualifiedDividends?: string;
+  capitalGainDistributions?: string;
+  federalWithheld?: string;
+  section199ADividends?: string;
+  foreignTaxPaid?: string;
 }
 
 export interface WorkspaceStructuredFactMachineValue1095ASummary {
@@ -610,16 +655,29 @@ export interface WorkspaceStructuredFactMachineValue1095ASummary {
 
 export interface WorkspaceStructuredFactMachineValue1098ESummary {
   entryKind: "1098-e-summary";
+  sourceId?: string;
+  taxYear?: number;
+  borrowerId?: string;
+  accountHolder?: "primary" | "spouse";
   lender: string;
   studentLoanInterestReceived: string;
+  box2ExcludesOriginationFeesOrCapitalizedInterest?: boolean;
+  /** Historical wrong label; not an actual Box2 checkbox. */
   includesOriginationFeesOrCapitalizedInterest?: boolean;
 }
 
 export interface WorkspaceStructuredFactMachineValue1099NecSummary {
   entryKind: "1099-nec-summary";
+  sourceFactsVersion?: 2;
   payer: string;
+  payerTin?: string;
+  accountHolder?: "primary" | "spouse";
   nonemployeeCompensation: string;
-  federalWithheld: string;
+  federalWithheld?: string;
+  stateTaxReporting?: "none" | "single" | "multiple";
+  state?: string;
+  stateIncome?: string;
+  stateWithheld?: string;
 }
 
 export interface WorkspaceStructuredFactMachineValue1099RSummary {
@@ -684,6 +742,7 @@ export interface WorkspaceStructuredFactMachineValue1099SASummary {
 export type WorkspaceStructuredFactMachineValue =
   | WorkspaceStructuredFactMachineValueW2Summary
   | WorkspaceStructuredFactMachineValue1099BTransaction
+  | WorkspaceStructuredFactMachineValue1099DATransaction
   | WorkspaceStructuredFactMachineValue1099IntSummary
   | WorkspaceStructuredFactMachineValue1099GSummary
   | WorkspaceStructuredFactMachineValue1099OIDSummary
@@ -813,6 +872,8 @@ export interface WorkspaceEnginePreview {
 
 export interface WorkspaceDocumentRecord {
   id: string;
+  /** Actual source/confirmed return year. Null is explicitly unknown; absent is legacy. */
+  taxYear?: number | null;
   name: string;
   size: number;
   uploadedAt: string;

@@ -1,3 +1,4 @@
+import { workspaceTaxpayerFixture } from "../helpers/workspace-taxpayer";
 import { describe, expect, it } from "vitest";
 import type {
   SeededReturnSummary,
@@ -6,9 +7,16 @@ import type {
   WorkspaceReturnSummary
 } from "@tax-engine/contracts";
 import {
-  buildWorkspaceEnginePreview,
+  buildWorkspaceEnginePreview as calculateWorkspace,
   buildWorkspaceStructuredFacts
 } from "@tax-engine/engine";
+
+import { qualifiedWorkspaceLoanContext, workspaceScenarioContext } from "../helpers/workspace-calculation-context";
+
+function buildWorkspaceEnginePreview(...args: Parameters<typeof calculateWorkspace>) {
+  const taxpayer = args[3];
+  return calculateWorkspace(...args.slice(0, 4) as [typeof args[0], typeof args[1], typeof args[2], typeof args[3]], args[4] ?? (taxpayer ? workspaceScenarioContext(args[2] ?? [], taxpayer) : undefined));
+}
 
 function createDocument(
   overrides: Partial<WorkspaceDocumentRecord>
@@ -277,30 +285,28 @@ describe("workspace engine preview", () => {
     const preview = buildWorkspaceEnginePreview(
       documents,
       createReturnSummary({}),
-      structuredFacts
+      structuredFacts,
+      workspaceTaxpayerFixture()
     );
 
     expect(preview).toMatchObject({
       mode: "engine-recompute",
-      title: "Deterministic engine recompute preview",
+      title: "Complete return recompute preview",
       taxYear: 2025,
       filingStatus: "single",
       filingState: "TX",
       sourceDocumentIds: ["doc-1099b"],
       sourceFixtureIds: ["irs-1099-b-2025"],
-      assumptions: [
-        "Uploaded PDFs are not parsed yet; this engine run uses fixture-derived transaction facts captured in the workspace ledger.",
-        "The confirmed 2025 Form 1099-B upload contributes 2 capital-gains transaction fact(s) with no withholding or carryforwards.",
-        "This preview only runs after the related capital-gains facts are fully confirmed in the interview loop."
-      ],
+      assumptions: ["This preview uses the supplied complete, reviewed return facts. Each selected original document record is reconciled to its actual calculation source; abbreviated summaries do not supply missing eligibility, identity, dates or amounts."],
       metrics: {
         totalIncome: "55000",
         agi: "55000",
+        // Published 2025 single row [14,250, 14,300): 1,475; 25,000 gain at 0%.
         taxableIncome: "39250",
-        totalTax: "1534",
+        totalTax: "1475",
         totalPayments: "0",
         refund: "0",
-        amountOwed: "1534"
+        amountOwed: "1537"
       },
       highlightedLines: expect.arrayContaining([
         {
@@ -325,7 +331,7 @@ describe("workspace engine preview", () => {
           line: "15",
           label: "Net long-term capital gain/loss",
           value: "25000",
-          formula: "Form 8949 Part II + K-1 Box 9a + K-1 1041 Box 4a + K-1 1041 Box 11D + Form 4797 Line 9 + 1099-DIV Box 2a + prior LT carryforward - §1202 exclusion + home sale gain + Form 6781 long-term + Form 6252 long-term",
+          formula: "Form 8949 Part II after Q adjustments + K-1 Box 9a + K-1 1041 Box 4a + K-1 1041 Box 11D + Form 4797 Line 9 + 1099-DIV Box 2a + prior LT carryforward + home sale gain + Form 6781 long-term + Form 6252 long-term",
           sourceFactIds: [
             "broker-proceeds:document-detected",
             "broker-proceeds:fixture-long-term-sale",
@@ -388,7 +394,7 @@ describe("workspace engine preview", () => {
           form: "1040",
           line: "24",
           label: "Total tax",
-          value: "1534",
+          value: "1475",
           formula: expect.stringContaining("Line 22"),
           sourceFactIds: [
             "broker-proceeds:document-detected",
@@ -419,9 +425,9 @@ describe("workspace engine preview", () => {
           id: "1040:34",
           form: "1040",
           line: "34",
-          label: "Overpayment (refund)",
+          label: "Overpayment before estimated-tax penalty",
           value: "0",
-          formula: "Total payments - Total tax (if positive)",
+          formula: "max(0, total payments - total tax)",
           sourceFactIds: [
             "broker-proceeds:document-detected",
             "broker-proceeds:fixture-long-term-sale",
@@ -436,8 +442,8 @@ describe("workspace engine preview", () => {
           form: "1040",
           line: "37",
           label: "Amount you owe",
-          value: "1534",
-          formula: "Total tax - Total payments (if positive)",
+          value: "1537",
+          formula: "max(0, total tax - total payments + line 38 penalty)",
           sourceFactIds: [
             "broker-proceeds:document-detected",
             "broker-proceeds:fixture-long-term-sale",
@@ -460,7 +466,8 @@ describe("workspace engine preview", () => {
     const preview = buildWorkspaceEnginePreview(
       documents,
       createReturnSummary({ status: "awaiting-interview" }),
-      structuredFacts
+      structuredFacts,
+      workspaceTaxpayerFixture()
     );
 
     expect(preview).toBeNull();
@@ -530,30 +537,28 @@ describe("workspace engine preview", () => {
           }
         ]
       }),
-      structuredFacts
+      structuredFacts,
+      workspaceTaxpayerFixture()
     );
 
     expect(preview).toMatchObject({
       mode: "engine-recompute",
-      title: "Deterministic engine recompute preview",
+      title: "Complete return recompute preview",
       taxYear: 2025,
       filingStatus: "single",
       filingState: "TX",
       sourceDocumentIds: ["doc-1099b-a", "doc-1099b-b"],
       sourceFixtureIds: ["irs-1099-b-2025"],
-      assumptions: [
-        "Uploaded PDFs are not parsed yet; this engine run uses fixture-derived transaction facts captured in the workspace ledger.",
-        "The confirmed 2025 Form 1099-B uploads contribute 4 capital-gains transaction fact(s) with no withholding or carryforwards.",
-        "This preview only runs after the related capital-gains facts are fully confirmed in the interview loop."
-      ],
+      assumptions: ["This preview uses the supplied complete, reviewed return facts. Each selected original document record is reconciled to its actual calculation source; abbreviated summaries do not supply missing eligibility, identity, dates or amounts."],
       metrics: {
         totalIncome: "110000",
         agi: "110000",
+        // Single row [44,250, 44,300): 5,075 + 45,900 at 15% = 11,960.
         taxableIncome: "94250",
-        totalTax: "12458",
+        totalTax: "11960",
         totalPayments: "0",
         refund: "0",
-        amountOwed: "12458"
+        amountOwed: "12461"
       },
       highlightedLines: expect.arrayContaining([
         {
@@ -565,8 +570,10 @@ describe("workspace engine preview", () => {
           formula: "Form 8949 Part I + K-1 Box 8 + K-1 1041 Box 3 + K-1 1041 Box 11C + prior ST carryforward + Form 6781 short-term + Form 6252 short-term",
           sourceFactIds: [
             "broker-proceeds:document-detected",
-            "broker-proceeds:fixture-long-term-sale",
-            "broker-proceeds:fixture-short-term-sale",
+            "broker-proceeds:fixture-long-term-sale:doc-1099b-a",
+            "broker-proceeds:fixture-long-term-sale:doc-1099b-b",
+            "broker-proceeds:fixture-short-term-sale:doc-1099b-a",
+            "broker-proceeds:fixture-short-term-sale:doc-1099b-b",
             "broker-proceeds:interview-answer",
             "cost-basis-review:document-detected",
             "cost-basis-review:interview-answer"
@@ -578,11 +585,13 @@ describe("workspace engine preview", () => {
           line: "15",
           label: "Net long-term capital gain/loss",
           value: "50000",
-          formula: "Form 8949 Part II + K-1 Box 9a + K-1 1041 Box 4a + K-1 1041 Box 11D + Form 4797 Line 9 + 1099-DIV Box 2a + prior LT carryforward - §1202 exclusion + home sale gain + Form 6781 long-term + Form 6252 long-term",
+          formula: "Form 8949 Part II after Q adjustments + K-1 Box 9a + K-1 1041 Box 4a + K-1 1041 Box 11D + Form 4797 Line 9 + 1099-DIV Box 2a + prior LT carryforward + home sale gain + Form 6781 long-term + Form 6252 long-term",
           sourceFactIds: [
             "broker-proceeds:document-detected",
-            "broker-proceeds:fixture-long-term-sale",
-            "broker-proceeds:fixture-short-term-sale",
+            "broker-proceeds:fixture-long-term-sale:doc-1099b-a",
+            "broker-proceeds:fixture-long-term-sale:doc-1099b-b",
+            "broker-proceeds:fixture-short-term-sale:doc-1099b-a",
+            "broker-proceeds:fixture-short-term-sale:doc-1099b-b",
             "broker-proceeds:interview-answer",
             "cost-basis-review:document-detected",
             "cost-basis-review:interview-answer"
@@ -597,8 +606,10 @@ describe("workspace engine preview", () => {
           formula: "Schedule D Line 21",
           sourceFactIds: [
             "broker-proceeds:document-detected",
-            "broker-proceeds:fixture-long-term-sale",
-            "broker-proceeds:fixture-short-term-sale",
+            "broker-proceeds:fixture-long-term-sale:doc-1099b-a",
+            "broker-proceeds:fixture-long-term-sale:doc-1099b-b",
+            "broker-proceeds:fixture-short-term-sale:doc-1099b-a",
+            "broker-proceeds:fixture-short-term-sale:doc-1099b-b",
             "broker-proceeds:interview-answer",
             "cost-basis-review:document-detected",
             "cost-basis-review:interview-answer"
@@ -613,8 +624,10 @@ describe("workspace engine preview", () => {
           formula: "Line 9 - Line 10",
           sourceFactIds: [
             "broker-proceeds:document-detected",
-            "broker-proceeds:fixture-long-term-sale",
-            "broker-proceeds:fixture-short-term-sale",
+            "broker-proceeds:fixture-long-term-sale:doc-1099b-a",
+            "broker-proceeds:fixture-long-term-sale:doc-1099b-b",
+            "broker-proceeds:fixture-short-term-sale:doc-1099b-a",
+            "broker-proceeds:fixture-short-term-sale:doc-1099b-b",
             "broker-proceeds:interview-answer",
             "cost-basis-review:document-detected",
             "cost-basis-review:interview-answer"
@@ -629,8 +642,10 @@ describe("workspace engine preview", () => {
           formula: "AGI - total deductions",
           sourceFactIds: [
             "broker-proceeds:document-detected",
-            "broker-proceeds:fixture-long-term-sale",
-            "broker-proceeds:fixture-short-term-sale",
+            "broker-proceeds:fixture-long-term-sale:doc-1099b-a",
+            "broker-proceeds:fixture-long-term-sale:doc-1099b-b",
+            "broker-proceeds:fixture-short-term-sale:doc-1099b-a",
+            "broker-proceeds:fixture-short-term-sale:doc-1099b-b",
             "broker-proceeds:interview-answer",
             "cost-basis-review:document-detected",
             "cost-basis-review:interview-answer"
@@ -641,12 +656,14 @@ describe("workspace engine preview", () => {
           form: "1040",
           line: "24",
           label: "Total tax",
-          value: "12458",
+          value: "11960",
           formula: expect.stringContaining("Line 22"),
           sourceFactIds: [
             "broker-proceeds:document-detected",
-            "broker-proceeds:fixture-long-term-sale",
-            "broker-proceeds:fixture-short-term-sale",
+            "broker-proceeds:fixture-long-term-sale:doc-1099b-a",
+            "broker-proceeds:fixture-long-term-sale:doc-1099b-b",
+            "broker-proceeds:fixture-short-term-sale:doc-1099b-a",
+            "broker-proceeds:fixture-short-term-sale:doc-1099b-b",
             "broker-proceeds:interview-answer",
             "cost-basis-review:document-detected",
             "cost-basis-review:interview-answer"
@@ -661,8 +678,10 @@ describe("workspace engine preview", () => {
           formula: "Withholding + estimated + EIC + ACTC + refundable credits",
           sourceFactIds: [
             "broker-proceeds:document-detected",
-            "broker-proceeds:fixture-long-term-sale",
-            "broker-proceeds:fixture-short-term-sale",
+            "broker-proceeds:fixture-long-term-sale:doc-1099b-a",
+            "broker-proceeds:fixture-long-term-sale:doc-1099b-b",
+            "broker-proceeds:fixture-short-term-sale:doc-1099b-a",
+            "broker-proceeds:fixture-short-term-sale:doc-1099b-b",
             "broker-proceeds:interview-answer",
             "cost-basis-review:document-detected",
             "cost-basis-review:interview-answer"
@@ -672,13 +691,15 @@ describe("workspace engine preview", () => {
           id: "1040:34",
           form: "1040",
           line: "34",
-          label: "Overpayment (refund)",
+          label: "Overpayment before estimated-tax penalty",
           value: "0",
-          formula: "Total payments - Total tax (if positive)",
+          formula: "max(0, total payments - total tax)",
           sourceFactIds: [
             "broker-proceeds:document-detected",
-            "broker-proceeds:fixture-long-term-sale",
-            "broker-proceeds:fixture-short-term-sale",
+            "broker-proceeds:fixture-long-term-sale:doc-1099b-a",
+            "broker-proceeds:fixture-long-term-sale:doc-1099b-b",
+            "broker-proceeds:fixture-short-term-sale:doc-1099b-a",
+            "broker-proceeds:fixture-short-term-sale:doc-1099b-b",
             "broker-proceeds:interview-answer",
             "cost-basis-review:document-detected",
             "cost-basis-review:interview-answer"
@@ -689,12 +710,14 @@ describe("workspace engine preview", () => {
           form: "1040",
           line: "37",
           label: "Amount you owe",
-          value: "12458",
-          formula: "Total tax - Total payments (if positive)",
+          value: "12461",
+          formula: "max(0, total tax - total payments + line 38 penalty)",
           sourceFactIds: [
             "broker-proceeds:document-detected",
-            "broker-proceeds:fixture-long-term-sale",
-            "broker-proceeds:fixture-short-term-sale",
+            "broker-proceeds:fixture-long-term-sale:doc-1099b-a",
+            "broker-proceeds:fixture-long-term-sale:doc-1099b-b",
+            "broker-proceeds:fixture-short-term-sale:doc-1099b-a",
+            "broker-proceeds:fixture-short-term-sale:doc-1099b-b",
             "broker-proceeds:interview-answer",
             "cost-basis-review:document-detected",
             "cost-basis-review:interview-answer"
@@ -781,28 +804,27 @@ describe("workspace engine preview", () => {
           }
         ]
       }),
-      structuredFacts
+      structuredFacts,
+      workspaceTaxpayerFixture()
     );
 
     expect(preview).not.toBeNull();
     expect(preview).toMatchObject({
       mode: "engine-recompute",
-      title: "Deterministic engine recompute preview",
+      title: "Complete return recompute preview",
       taxYear: 2025,
       filingStatus: "single",
       sourceDocumentIds: ["doc-w2"],
       sourceFixtureIds: ["irs-w2-2025"],
-      assumptions: [
-        "Uploaded PDFs are not parsed yet; this engine run uses fixture-derived facts captured in the workspace ledger.",
-        "The confirmed 2025 Form W-2 upload contributes $52,000 of wages and $5,000 of federal withholding."
-      ],
+      assumptions: ["This preview uses the supplied complete, reviewed return facts. Each selected original document record is reconciled to its actual calculation source; abbreviated summaries do not supply missing eligibility, identity, dates or amounts."],
       metrics: {
         totalIncome: "52000",
         agi: "52000",
+        // Published single row [36,250, 36,300): 4,115; 5,000 withheld leaves 885.
         taxableIncome: "36250",
-        totalTax: "4112",
+        totalTax: "4115",
         totalPayments: "5000",
-        refund: "888",
+        refund: "885",
         amountOwed: "0"
       }
     });
@@ -828,7 +850,7 @@ describe("workspace engine preview", () => {
         form: "1040",
         line: "24",
         label: "Total tax",
-        value: "4112",
+        value: "4115",
         formula: expect.stringContaining("Line 22"),
         sourceFactIds: [
           "wages:document-detected",
@@ -859,9 +881,9 @@ describe("workspace engine preview", () => {
         id: "1040:34",
         form: "1040",
         line: "34",
-        label: "Overpayment (refund)",
-        value: "888",
-        formula: "Total payments - Total tax (if positive)",
+        label: "Overpayment before estimated-tax penalty",
+        value: "885",
+        formula: "max(0, total payments - total tax)",
         sourceFactIds: [
           "wages:document-detected",
           "wages:fixture-wages",
@@ -874,7 +896,7 @@ describe("workspace engine preview", () => {
     ]));
   });
 
-  it("builds a deterministic simple Schedule C preview from confirmed 1099-NEC fixture facts", () => {
+  it("does not infer qualified business expenses from a source NEC and prose answer", () => {
     const documents = [
       createDocument({
         id: "doc-nec",
@@ -951,81 +973,18 @@ describe("workspace engine preview", () => {
           }
         ]
       }),
-      structuredFacts
+      structuredFacts,
+      workspaceTaxpayerFixture()
     );
 
-    expect(preview).not.toBeNull();
-    expect(preview).toMatchObject({
-      mode: "engine-recompute",
-      title: "Deterministic engine recompute preview",
-      taxYear: 2025,
-      filingStatus: "single",
-      sourceDocumentIds: ["doc-nec"],
-      sourceFixtureIds: ["irs-1099-nec-2025"],
-      assumptions: [
-        "Uploaded PDFs are not parsed yet; this engine run uses fixture-derived facts captured in the workspace ledger.",
-        "The confirmed 2025 Form 1099-NEC upload contributes $18,000 of Schedule C gross receipts with no withholding.",
-        "This simple Schedule C preview assumes zero business expenses and no home office deduction unless a later fact model captures them explicitly."
-      ],
-      metrics: {
-        totalIncome: "18000",
-        totalPayments: "182"
-      }
-    });
-    expect(Number.parseInt(preview?.metrics.totalTax ?? "0", 10)).toBeGreaterThan(0);
-    expect(preview?.highlightedLines).toEqual(expect.arrayContaining([
-      {
-        id: "Sched C:31",
-        form: "Sched C",
-        line: "31",
-        label: "Net profit or loss",
-        value: "18000",
-        formula: "Line 29 - Line 30",
-        sourceFactIds: [
-          "nonemployee-compensation:document-detected",
-          "nonemployee-compensation:fixture-nec-income",
-          "nonemployee-compensation:interview-answer",
-          "schedule-c-expense-review:document-detected",
-          "schedule-c-expense-review:fixture-schedule-c-expense-review",
-          "schedule-c-expense-review:interview-answer"
-        ]
-      },
-      {
-        id: "Sched 1:3",
-        form: "Sched 1",
-        line: "3",
-        label: "Business income or loss",
-        value: "18000",
-        formula: "Schedule C Line 31",
-        sourceFactIds: [
-          "nonemployee-compensation:document-detected",
-          "nonemployee-compensation:fixture-nec-income",
-          "nonemployee-compensation:interview-answer",
-          "schedule-c-expense-review:document-detected",
-          "schedule-c-expense-review:fixture-schedule-c-expense-review",
-          "schedule-c-expense-review:interview-answer"
-        ]
-      },
-      {
-        id: "1040:8-sched-c",
-        form: "1040",
-        line: "8-sched-c",
-        label: "Business income (Schedule C)",
-        value: "18000",
-        formula: "Schedule C Line 31",
-        sourceFactIds: [
-          "nonemployee-compensation:document-detected",
-          "nonemployee-compensation:fixture-nec-income",
-          "nonemployee-compensation:interview-answer",
-          "schedule-c-expense-review:document-detected",
-          "schedule-c-expense-review:fixture-schedule-c-expense-review",
-          "schedule-c-expense-review:interview-answer"
-        ]
-      }
-    ]));
+    // A prose answer and source NEC are not actual activity, owner, expense,
+    // participation and loss-limit facts. Complete those in the guided path.
+    expect(preview).toBeNull();
+    expect(structuredFacts.some(fact => fact.machineValue?.entryKind === "1099-nec-summary"
+      && fact.machineValue.nonemployeeCompensation === "18000")).toBe(true);
   });
 
-  it("uses exact Decimal totals in preview assumptions when workspace fact amounts exceed JS integer precision", () => {
+  it("uses exact Decimal totals when complete workspace amounts exceed JS integer precision", () => {
     const documents = [
       createDocument({
         id: "doc-w2-a",
@@ -1055,10 +1014,14 @@ describe("workspace engine preview", () => {
         questionId: null,
         updatedAt: "2026-03-12T00:00:00.000Z",
         machineValue: {
-          entryKind: "w2-summary",
+          entryKind: "w2-summary", socialSecurityTips: "0", box10DependentCareBenefits: "0", stateTaxReporting: "none",
           employerName: "Large Employer A",
           employerEin: "12-3456789",
           wages: "9007199254740991",
+          socialSecurityWages: "9007199254740991",
+          socialSecurityWithheld: "0", // Explicit fictional withholding for this precision fixture.
+          medicareWages: "9007199254740991",
+          medicareWithheld: "0",
           federalWithheld: "10"
         }
       },
@@ -1074,10 +1037,14 @@ describe("workspace engine preview", () => {
         questionId: null,
         updatedAt: "2026-03-12T00:00:00.000Z",
         machineValue: {
-          entryKind: "w2-summary",
+          entryKind: "w2-summary", socialSecurityTips: "0", box10DependentCareBenefits: "0", stateTaxReporting: "none",
           employerName: "Large Employer B",
           employerEin: "98-7654321",
           wages: "10",
+          socialSecurityWages: "10",
+          socialSecurityWithheld: "0",
+          medicareWages: "10",
+          medicareWithheld: "0",
           federalWithheld: "9007199254740991"
         }
       }
@@ -1104,11 +1071,12 @@ describe("workspace engine preview", () => {
           factCount: 2
         }
       ]
-    }, structuredFacts);
+    }, structuredFacts,
+      workspaceTaxpayerFixture());
 
-    expect(preview?.assumptions).toContain(
-      "The confirmed 2025 Form W-2 uploads contribute $9,007,199,254,741,001 of wages and $9,007,199,254,741,001 of federal withholding."
-    );
+    expect(preview?.metrics.totalIncome).toBe("9007199254741001");
+    expect(preview?.metrics.totalPayments).toBe("9007199254741001");
+    expect(preview?.assumptions).toEqual(["This preview uses the supplied complete, reviewed return facts. Each selected original document record is reconciled to its actual calculation source; abbreviated summaries do not supply missing eligibility, identity, dates or amounts."]);
   });
 
   it("builds a retirement-distribution preview from a confirmed 1099-R fixture", () => {
@@ -1165,7 +1133,8 @@ describe("workspace engine preview", () => {
           }
         ]
       }),
-      structuredFacts
+      structuredFacts,
+      workspaceTaxpayerFixture()
     );
 
     expect(preview).not.toBeNull();
@@ -1272,16 +1241,12 @@ describe("workspace engine preview", () => {
           }
         ]
       }),
-      structuredFacts
+      structuredFacts,
+      workspaceTaxpayerFixture()
     );
 
     expect(preview).not.toBeNull();
-    expect(preview?.assumptions).toContain(
-      "The confirmed 2025 Form 1099-R uploads contribute $16,000 of gross retirement distributions, $16,000 of statement-reported taxable amount, and $300 of withholding."
-    );
-    expect(preview?.assumptions).toContain(
-      "Confirmed Roth-qualified or pre-2021 Roth contribution history metadata from the upload is applied before the final retirement taxable lines are recomputed."
-    );
+    expect(preview?.assumptions).toEqual(["This preview uses the supplied complete, reviewed return facts. Each selected original document record is reconciled to its actual calculation source; abbreviated summaries do not supply missing eligibility, identity, dates or amounts."]);
     expect(preview?.metrics).toMatchObject({
       totalIncome: "0",
       agi: "0",
@@ -1366,16 +1331,12 @@ describe("workspace engine preview", () => {
           }
         ]
       }),
-      structuredFacts
+      structuredFacts,
+      workspaceTaxpayerFixture()
     );
 
     expect(preview).not.toBeNull();
-    expect(preview?.assumptions).toContain(
-      "The confirmed 2025 Form 1099-R upload contributes $12,000 of gross retirement distributions, $12,000 of statement-reported taxable amount, and $200 of withholding."
-    );
-    expect(preview?.assumptions).toContain(
-      "Confirmed qualified charitable distribution metadata from the upload is applied before the final retirement taxable lines are recomputed."
-    );
+    expect(preview?.assumptions).toEqual(["This preview uses the supplied complete, reviewed return facts. Each selected original document record is reconciled to its actual calculation source; abbreviated summaries do not supply missing eligibility, identity, dates or amounts."]);
     expect(preview?.metrics).toMatchObject({
       totalIncome: "5000",
       agi: "5000",
@@ -1464,13 +1425,12 @@ describe("workspace engine preview", () => {
           }
         ]
       }),
-      structuredFacts
+      structuredFacts,
+      workspaceTaxpayerFixture()
     );
 
     expect(preview).not.toBeNull();
-    expect(preview?.assumptions).toContain(
-      "Confirmed retirement distribution-date, early-distribution exception, and eligible governmental 457(b) metadata from the upload is applied before Form 5329 defaults and the final retirement taxable lines are recomputed."
-    );
+    expect(preview?.assumptions).toEqual(["This preview uses the supplied complete, reviewed return facts. Each selected original document record is reconciled to its actual calculation source; abbreviated summaries do not supply missing eligibility, identity, dates or amounts."]);
     expect(preview?.metrics).toMatchObject({
       totalIncome: "10000",
       agi: "10000",
@@ -1524,6 +1484,10 @@ describe("workspace engine preview", () => {
       }
     ] satisfies WorkspaceStructuredFactRecord[];
 
+    const actualContext = workspaceScenarioContext(structuredFacts, workspaceTaxpayerFixture());
+    // Actual annuity source: age60 Table1 has310 expected payments; 62000/310*10 =2000 recovery.
+    Object.assign(actualContext.taxInput.form1099R![0]!, { simplifiedMethodCostInPlan: "62000", simplifiedMethodAnnuityStartingDate: "2025-03-01", simplifiedMethodPrimaryAnnuitantAgeAtStartingDate: 60, simplifiedMethodPaymentsReceivedThisYear: 10, simplifiedMethodPriorYearRecovered: "0" });
+
     const preview = buildWorkspaceEnginePreview(
       documents,
       createReturnSummary({
@@ -1542,13 +1506,13 @@ describe("workspace engine preview", () => {
           }
         ]
       }),
-      structuredFacts
+      structuredFacts,
+      workspaceTaxpayerFixture(),
+      actualContext
     );
 
     expect(preview).not.toBeNull();
-    expect(preview?.assumptions).toContain(
-      "The confirmed 2025 Form 1099-R upload contributes $12,000 of gross retirement distributions, statement-reported taxable amount not determined, and $300 of withholding."
-    );
+    expect(preview?.assumptions).toEqual(["This preview uses the supplied complete, reviewed return facts. Each selected original document record is reconciled to its actual calculation source; abbreviated summaries do not supply missing eligibility, identity, dates or amounts."]);
     expect(preview?.metrics).toMatchObject({
       totalIncome: "10000",
       agi: "10000",
@@ -1636,15 +1600,14 @@ describe("workspace engine preview", () => {
           }
         ]
       }),
-      structuredFacts
+      structuredFacts,
+      workspaceTaxpayerFixture()
     );
 
     expect(preview).not.toBeNull();
     expect(preview?.metrics.totalIncome).toBe("0");
     expect(preview?.metrics.totalPayments).toBe("0");
-    expect(preview?.assumptions).toContain(
-      "The confirmed 2025 Form 1099-R upload was marked as not belonging on the current-year return, so no retirement distributions were included in this preview."
-    );
+    expect(preview?.assumptions).toEqual(["This preview uses the supplied complete, reviewed return facts. Each selected original document record is reconciled to its actual calculation source; abbreviated summaries do not supply missing eligibility, identity, dates or amounts."]);
     expect(preview?.highlightedLines.some((line) => line.id === "1040:4a")).toBe(false);
     expect(preview?.highlightedLines.some((line) => line.id === "1040:25b")).toBe(false);
   });
@@ -1703,7 +1666,8 @@ describe("workspace engine preview", () => {
           }
         ]
       }),
-      structuredFacts
+      structuredFacts,
+      workspaceTaxpayerFixture()
     );
 
     expect(preview).not.toBeNull();
@@ -1711,10 +1675,7 @@ describe("workspace engine preview", () => {
     expect(preview?.metrics.totalIncome).toBe("2400");
     expect(preview?.metrics.totalTax).toBe("480");
     expect(preview?.metrics.amountOwed).toBe("480");
-    expect(preview?.assumptions).toEqual(expect.arrayContaining([
-      "The confirmed 2025 Form 1099-SA upload contributes $2,400 of HSA distributions.",
-      "This HSA preview still leaves rollover and medical-expense offsets manual unless they are separately confirmed in the workspace ledger."
-    ]));
+    expect(preview?.assumptions).toEqual(["This preview uses the supplied complete, reviewed return facts. Each selected original document record is reconciled to its actual calculation source; abbreviated summaries do not supply missing eligibility, identity, dates or amounts."]);
     expect(preview?.highlightedLines).toEqual(expect.arrayContaining([
       expect.objectContaining({
         id: "Sched 1:8f",
@@ -1764,6 +1725,7 @@ describe("workspace engine preview", () => {
           grossDistribution: "2400",
           distributionCode: "1",
           accountType: "hsa",
+          accountHolder: "primary",
           rolloverDistributions: "400",
           qualifiedMedicalExpenses: "1500",
         }
@@ -1788,7 +1750,8 @@ describe("workspace engine preview", () => {
           }
         ]
       }),
-      structuredFacts
+      structuredFacts,
+      workspaceTaxpayerFixture()
     );
 
     expect(preview).not.toBeNull();
@@ -1796,14 +1759,7 @@ describe("workspace engine preview", () => {
     expect(preview?.metrics.totalIncome).toBe("500");
     expect(preview?.metrics.totalTax).toBe("100");
     expect(preview?.metrics.amountOwed).toBe("100");
-    expect(preview?.assumptions).toEqual(expect.arrayContaining([
-      "The confirmed 2025 Form 1099-SA upload contributes $2,400 of HSA distributions.",
-      "Confirmed HSA rollover review excludes $400 of distributions on Form 8889 Line 14b.",
-      "Confirmed qualified medical-expense review applies $1,500 on Form 8889 Line 15."
-    ]));
-    expect(preview?.assumptions).not.toContain(
-      "This HSA preview still leaves rollover and medical-expense offsets manual unless they are separately confirmed in the workspace ledger."
-    );
+    expect(preview?.assumptions).toEqual(["This preview uses the supplied complete, reviewed return facts. Each selected original document record is reconciled to its actual calculation source; abbreviated summaries do not supply missing eligibility, identity, dates or amounts."]);
     expect(preview?.highlightedLines).toEqual(expect.arrayContaining([
       expect.objectContaining({
         id: "Sched 1:8f",
@@ -1853,6 +1809,7 @@ describe("workspace engine preview", () => {
           grossDistribution: "5300",
           distributionCode: "6",
           accountType: "hsa",
+          accountHolder: "primary",
           beneficiaryRole: "other_beneficiary",
           deathDistributionTiming: "after_year_of_death",
           fmvOnDateOfDeath: "5000",
@@ -1879,7 +1836,8 @@ describe("workspace engine preview", () => {
           }
         ]
       }),
-      structuredFacts
+      structuredFacts,
+      workspaceTaxpayerFixture()
     );
 
     expect(preview).not.toBeNull();
@@ -1887,12 +1845,7 @@ describe("workspace engine preview", () => {
     expect(preview?.metrics.totalIncome).toBe("4100");
     expect(preview?.metrics.totalTax).toBe("0");
     expect(preview?.metrics.amountOwed).toBe("0");
-    expect(preview?.assumptions).toEqual(expect.arrayContaining([
-      "The confirmed 2025 Form 1099-SA upload contributes $5,300 of HSA distributions.",
-      "Confirmed Form 1099-SA death-distribution metadata uses $5,000 of date-of-death fair market value on Form 8889 and routes $300 of post-death earnings to other income.",
-      "Confirmed decedent medical-expense review applies $1,200 on the beneficiary-only Form 8889 Line 15 branch.",
-      "This HSA preview still leaves rollover offsets manual unless they are separately confirmed in the workspace ledger."
-    ]));
+    expect(preview?.assumptions).toEqual(["This preview uses the supplied complete, reviewed return facts. Each selected original document record is reconciled to its actual calculation source; abbreviated summaries do not supply missing eligibility, identity, dates or amounts."]);
     expect(preview?.highlightedLines).toEqual(expect.arrayContaining([
       expect.objectContaining({
         id: "Sched 1:8f",
@@ -1906,7 +1859,7 @@ describe("workspace engine preview", () => {
     expect(preview?.highlightedLines.some((line) => line.id === "Sched 2:17c")).toBe(false);
   });
 
-  it("builds an interest-income preview from a confirmed Form 1099-OID fixture", () => {
+  it("blocks unqualified legacy financial input from a confirmed Form 1099-OID fixture", () => {
     const documents = [createInterestDocument({})];
     const structuredFacts = buildWorkspaceStructuredFacts(
       documents,
@@ -1916,37 +1869,13 @@ describe("workspace engine preview", () => {
     const preview = buildWorkspaceEnginePreview(
       documents,
       createInterestReturnSummary({}),
-      structuredFacts
+      structuredFacts,
+      workspaceTaxpayerFixture()
     );
 
-    expect(preview).not.toBeNull();
-    expect(preview?.sourceFixtureIds).toEqual(["irs-1099-oid-2025"]);
-    expect(preview?.metrics.totalIncome).toBe("1300");
-    expect(preview?.metrics.agi).toBe("1275");
-    expect(preview?.metrics.totalPayments).toBe("40");
-    expect(preview?.metrics.refund).toBe("40");
-    expect(preview?.assumptions).toEqual(expect.arrayContaining([
-      "The confirmed 2025 Form 1099-OID upload contributes $1,300 of taxable interest with $40 of withholding and $25 of early-withdrawal penalty.",
-      "This interest preview nets any confirmed Form 1099-OID acquisition premium and bond premium adjustments before Schedule B is recomputed."
-    ]));
-    expect(preview?.highlightedLines).toEqual(expect.arrayContaining([
-      expect.objectContaining({
-        id: "1040:2b",
-        value: "1300"
-      }),
-      expect.objectContaining({
-        id: "1040:11",
-        value: "1275"
-      }),
-      expect.objectContaining({
-        id: "1040:33",
-        value: "40"
-      }),
-      expect.objectContaining({
-        id: "1040:34",
-        value: "40"
-      })
-    ]));
+    expect(preview).toBeNull();
+    expect(structuredFacts.some(fact => fact.machineValue)).toBe(true);
+    // This legacy summary lacks actual source qualification; it remains evidence.
   });
 
   it("builds a government-payments preview from a confirmed Form 1099-G fixture", () => {
@@ -1959,7 +1888,8 @@ describe("workspace engine preview", () => {
     const preview = buildWorkspaceEnginePreview(
       documents,
       createGovernmentPaymentsReturnSummary({}),
-      structuredFacts
+      structuredFacts,
+      workspaceTaxpayerFixture()
     );
 
     expect(preview).not.toBeNull();
@@ -1968,10 +1898,7 @@ describe("workspace engine preview", () => {
     expect(preview?.metrics.agi).toBe("6200");
     expect(preview?.metrics.totalPayments).toBe("620");
     expect(preview?.metrics.refund).toBe("620");
-    expect(preview?.assumptions).toEqual(expect.arrayContaining([
-      "The confirmed 2025 Form 1099-G upload contributes $6,200 of unemployment compensation, $1,100 of state or local income tax refunds, and $620 of federal withholding.",
-      "This government-payments preview leaves the prior-year state-refund tax-benefit worksheet manual, so uploaded Form 1099-G Box 2 amounts stay non-taxable until prior-year itemized-deduction context is confirmed."
-    ]));
+    expect(preview?.assumptions).toEqual(["This preview uses the supplied complete, reviewed return facts. Each selected original document record is reconciled to its actual calculation source; abbreviated summaries do not supply missing eligibility, identity, dates or amounts."]);
     expect(preview?.highlightedLines).toEqual(expect.arrayContaining([
       expect.objectContaining({
         id: "Sched 1:7",
@@ -2050,7 +1977,8 @@ describe("workspace engine preview", () => {
           }
         ]
       }),
-      structuredFacts
+      structuredFacts,
+      workspaceTaxpayerFixture()
     );
 
     expect(preview).not.toBeNull();
@@ -2058,10 +1986,7 @@ describe("workspace engine preview", () => {
     expect(preview?.metrics.totalIncome).toBe("2500");
     expect(preview?.metrics.totalPayments).toBe("1500");
     expect(preview?.metrics.refund).toBe("1500");
-    expect(preview?.assumptions).toEqual(expect.arrayContaining([
-      "The confirmed 2025 Form SSA-1099 upload contributes $60,000 of net Social Security benefits and $1,500 of withholding.",
-      "This Social Security preview assumes no lump-sum election, prior-year repayment, or Railroad Retirement equivalent-benefit adjustment facts beyond the uploaded statement summary."
-    ]));
+    expect(preview?.assumptions).toEqual(["This preview uses the supplied complete, reviewed return facts. Each selected original document record is reconciled to its actual calculation source; abbreviated summaries do not supply missing eligibility, identity, dates or amounts."]);
     expect(preview?.highlightedLines).toEqual(expect.arrayContaining([
       expect.objectContaining({
         id: "1040:6a",
@@ -2132,7 +2057,9 @@ describe("workspace engine preview", () => {
           }
         ]
       }),
-      structuredFacts
+      structuredFacts,
+      workspaceTaxpayerFixture(),
+      qualifiedWorkspaceLoanContext(structuredFacts, workspaceTaxpayerFixture())
     );
 
     expect(preview).not.toBeNull();
@@ -2140,11 +2067,7 @@ describe("workspace engine preview", () => {
     expect(preview?.metrics.totalIncome).toBe("0");
     expect(preview?.metrics.agi).toBe("-2100");
     expect(preview?.metrics.refund).toBe("0");
-    expect(preview?.assumptions).toEqual(expect.arrayContaining([
-      "The confirmed 2025 Form 1098-E upload contributes $2,100 of student loan interest.",
-      "This student loan preview keeps any uploaded capitalized-interest indicator attached to Form 1098-E before Schedule 1 Line 21 is recomputed.",
-      "This student loan preview assumes no additional below-threshold interest needs manual entry beyond the uploaded statements."
-    ]));
+    expect(preview?.assumptions).toEqual(["This preview uses the supplied complete, reviewed return facts. Each selected original document record is reconciled to its actual calculation source; abbreviated summaries do not supply missing eligibility, identity, dates or amounts."]);
     expect(preview?.highlightedLines).toEqual(expect.arrayContaining([
       expect.objectContaining({
         id: "Sched 1:21",
@@ -2187,6 +2110,7 @@ describe("workspace engine preview", () => {
           earningsOnExcessContributions: "60",
           distributionCode: "2",
           accountType: "hsa",
+          accountHolder: "primary",
         }
       }
     ];
@@ -2209,16 +2133,14 @@ describe("workspace engine preview", () => {
           }
         ]
       }),
-      structuredFacts
+      structuredFacts,
+      workspaceTaxpayerFixture()
     );
 
     expect(preview).not.toBeNull();
     expect(preview?.metrics.totalIncome).toBe("60");
     expect(preview?.metrics.totalTax).toBe("0");
-    expect(preview?.assumptions).toEqual(expect.arrayContaining([
-      "The confirmed 2025 Form 1099-SA upload contributes $1,500 of HSA distributions.",
-      "Confirmed Form 1099-SA Box 2 earnings on returned excess contributions add $60 of other income."
-    ]));
+    expect(preview?.assumptions).toEqual(["This preview uses the supplied complete, reviewed return facts. Each selected original document record is reconciled to its actual calculation source; abbreviated summaries do not supply missing eligibility, identity, dates or amounts."]);
     expect(preview?.highlightedLines).toEqual(expect.arrayContaining([
       expect.objectContaining({
         id: "1040:8",

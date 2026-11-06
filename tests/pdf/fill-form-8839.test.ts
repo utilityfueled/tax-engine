@@ -4,10 +4,13 @@
  */
 
 import { describe, it, expect, beforeAll } from "vitest";
+import Decimal from "decimal.js";
+import { REVIEW_PDF_NOTICE } from "@/pdf/export-policy.js";
+import { calculateForm8839 } from "@/engine/forms/form-8839.js";
+import { TAX_CONSTANTS } from "@/models/constants.js";
 import { PDFDocument, PDFTextField, PDFCheckBox } from "pdf-lib";
 import { calculateFederalTax } from "@/engine/federal.js";
 import { fillForm8839, FORM_8839_FIELDS } from "@/pdf/fill-form-8839.js";
-import { formatCurrency } from "@/pdf/pdf-utils.js";
 import type { TaxYearInput } from "@/models/inputs.js";
 
 /** Helper: get text value from a filled PDF field. */
@@ -36,7 +39,7 @@ function isChecked(doc: PDFDocument, fieldName: string): boolean {
   return false;
 }
 
-const BLANK_8839 = "forms/blank/f8839.pdf";
+const BLANK_8839 = "forms/blank/2025/f8839.pdf";
 const F = FORM_8839_FIELDS;
 
 // ─── Fixture 1: MFJ, one child, no phase-out, no employer benefits ────────
@@ -103,6 +106,7 @@ const singleChildFixture: TaxYearInput = {
     children: [
       {
         childName: "Emma Wilson",
+        childFirstName: "Emma", childLastName: "Wilson",
         isSpecialNeeds: false,
         isForeignAdoption: false,
         adoptionBecameFinal: true,
@@ -264,6 +268,7 @@ const phaseOutFixture: TaxYearInput = {
   form1095A: [],
   donations: [],
   form8839: {
+    exclusionMagi: "283000",
     children: [
       {
         childName: "Lily Chen",
@@ -304,26 +309,22 @@ describe("Form 8839 PDF filling — Single filer with MAGI phase-out and employe
   });
 
   it("fills Part II Line 8 — MAGI exceeds threshold, checkbox Yes", () => {
-    // AGI = ~$280,000 (wages), MAGI = AGI > $259,190
+    // Wages include $1,785 of taxable employer benefits; credit MAGI is $281,785.
     expect(isChecked(doc, F.line8CheckboxYes)).toBe(true);
     expect(isChecked(doc, F.line8CheckboxNo)).toBe(false);
   });
 
   it("fills Part II Line 8 — excess MAGI value", () => {
-    const val = getFieldText(doc, F.line8);
-    expect(val).toBeDefined();
-    // MAGI - $259,190 = some positive amount
-    const excess = parseInt(val!, 10);
-    expect(excess).toBeGreaterThan(0);
+    expect(result.agi.toString()).toBe("281785");
+    expect(getFieldText(doc, F.line7)).toBe("281785");
+    expect(getFieldText(doc, F.line8)).toBe("22595");
   });
 
   it("fills Part II Line 11a — credit after phase-out is reduced", () => {
-    const val = getFieldText(doc, F.line11a[0]);
-    expect(val).toBeDefined();
-    const creditAfterPhaseOut = parseInt(val!, 10);
-    // Should be less than Line 6 ($15,000) due to phase-out
-    expect(creditAfterPhaseOut).toBeLessThan(15000);
-    expect(creditAfterPhaseOut).toBeGreaterThan(0);
+    // 22,595 / 40,000 rounds to .565; 15,000 - 8,475 = 6,525.
+    expect(getFieldText(doc, F.line11a[0])).toBe("6525");
+    expect(getFieldText(doc, F.line13)).toBe("5000");
+    expect(getFieldText(doc, F.line18)).toBe("1525");
   });
 
   it("fills Part III when employer benefits exist", () => {
@@ -340,17 +341,14 @@ describe("Form 8839 PDF filling — Single filer with MAGI phase-out and employe
   });
 
   it("fills Part III Line 30 — total excluded benefits", () => {
-    const val = getFieldText(doc, F.line30);
-    expect(val).toBeDefined();
-    const excluded = parseInt(val!, 10);
-    // Should be less than $3,000 due to phase-out
-    expect(excluded).toBeLessThan(3000);
-    expect(excluded).toBeGreaterThan(0);
+    // 23,810 / 40,000 rounds to .595; 3,000 - 1,785 = 1,215.
+    expect(getFieldText(doc, F.line25)).toBe("283000");
+    expect(getFieldText(doc, F.line30)).toBe("1215");
   });
 
   it("fills Part III Line 31 — taxable benefits", () => {
-    const val = getFieldText(doc, F.line31);
-    expect(val).toBeDefined();
+    expect(getFieldText(doc, F.line31)).toBe("1785");
+    expect(result.form8839?.taxableEmployerBenefits.toString()).toBe("1785");
   });
 });
 
@@ -465,4 +463,81 @@ describe("Form 8839 PDF filling — Special needs child, adoption final", () => 
   it("fills Line 14 — nonrefundable = $17,280 - $5,000 = $12,280", () => {
     expect(getFieldText(doc, F.line14)).toBe("12280");
   });
+});
+
+
+it("maps audited refundable nonrefundable carryforward and signed benefits without recalculation", async () => {
+  const result=calculateFederalTax(singleChildFixture);
+  const child={childName:"Synthetic Child",isSpecialNeeds:true,isForeignAdoption:false,adoptionBecameFinal:true,
+    qualifiedExpenses:"0",employerBenefits:"1000",priorYearCreditsClaimed:"0",priorYearExclusionsClaimed:"0",employerPlanQualified:true};
+  const form8839=calculateForm8839({filingStatus:"married_filing_jointly",agi:new Decimal("100000"),children:[child],
+    foreignEarnedIncomeExclusion:new Decimal(0),foreignHousingExclusion:new Decimal(0),constants:TAX_CONSTANTS[2025].adoptionCredit,
+    taxLiabilityLimit:new Decimal("100"),carryforwards:[{originTaxYear:2024,amount:new Decimal("700")}],exclusionMagi:new Decimal("100000")});
+  const doc=await fillForm8839({...singleChildFixture,form8839:{children:[child]}},{...result,form8839},BLANK_8839);
+  expect(getFieldText(doc,F.line13)).toBe("5000");
+  expect(getFieldText(doc,F.line15)).toBe("700");
+  expect(getFieldText(doc,F.line16)).toBe("12980");
+  expect(getFieldText(doc,F.line17)).toBe("100");
+  expect(getFieldText(doc,F.line18)).toBe("100");
+  expect(getFieldText(doc,F.line31)).toBe("(16280)");
+  expect(isChecked(doc,F.line31CheckboxYes)).toBe(true);
+  // Reopen serialized AcroForm rather than trusting only in-memory values.
+  const reopened=await PDFDocument.load(await doc.save());
+  expect(getFieldText(reopened,F.line18)).toBe("100");
+  expect(getFieldText(reopened,F.line31)).toBe("(16280)");
+});
+
+it("rejects missing audited amounts and too many children for a single review form", async () => {
+  const result=calculateFederalTax(singleChildFixture);
+  const form8839=result.form8839;
+  expect(form8839).toBeDefined();
+  if(!form8839) throw new Error("Missing fixture");
+  await expect(fillForm8839(singleChildFixture,{...result,form8839:{...form8839,lines:form8839.lines.filter(l=>l.line!=="13")}},BLANK_8839)).rejects.toThrow(/audit/i);
+  const input={...singleChildFixture,form8839:{children:Array.from({length:4},()=>({...singleChildFixture.form8839?.children[0]}))}} as TaxYearInput;
+  await expect(fillForm8839(input,result,BLANK_8839)).rejects.toThrow(/three|3|attachment/i);
+});
+
+
+it("maps actual adopted child identity and disability without inferring household facts", async () => {
+  const result = calculateFederalTax(singleChildFixture);
+  const child = singleChildFixture.form8839?.children[0];
+  if (!child) throw new Error("Missing child fixture");
+  const input = { ...singleChildFixture, form8839: { children: [{ ...child,
+    childName: "Legacy Display Must Not Be Split", childFirstName: "Mary Ann", childLastName: "Van Buren",
+    childBirthYear: 2007, childIdentifyingNumber: "123-45-6789", childPermanentlyDisabled: true,
+    isSpecialNeeds: false, adoptionFinalizedYear: 2025,
+  }] } };
+  const doc = await fillForm8839(input, result, BLANK_8839);
+  expect(getFieldText(doc, F.child1FirstName)).toBe("Mary Ann");
+  expect(getFieldText(doc, F.child1LastName)).toBe("Van Buren");
+  expect(getFieldText(doc, F.child1YearOfBirth)).toBe("2007");
+  expect(getFieldText(doc, F.child1IdNumber)).toBe("123456789");
+  expect(isChecked(doc, F.child1BornBefore2008)).toBe(true);
+  expect(isChecked(doc, F.child1SpecialNeeds)).toBe(false);
+  expect(doc.getSubject()).toBe(REVIEW_PDF_NOTICE);
+  for (const [childBirthYear, childPermanentlyDisabled] of [[2008, true], [2007, false]] as const) {
+    const other = await fillForm8839({ ...input, form8839: { children: [{ ...input.form8839.children[0], childBirthYear, childPermanentlyDisabled }] } }, result, BLANK_8839);
+    expect(isChecked(other, F.child1BornBefore2008)).toBe(false);
+  }
+  const missing = await fillForm8839({ ...singleChildFixture, form8839: { children: [{ ...child,
+    childFirstName: undefined, childLastName: undefined, childBirthYear: undefined,
+    childIdentifyingNumber: undefined, childPermanentlyDisabled: undefined,
+  }] } }, result, BLANK_8839);
+  // A matching dependent name and DOB/SSN exist, but no identity is guessed or restored.
+  expect(getFieldText(missing, F.child1FirstName) ?? "").toBe("");
+  expect(getFieldText(missing, F.child1LastName) ?? "").toBe("");
+  expect(getFieldText(missing, F.child1YearOfBirth) ?? "").toBe("");
+  expect(getFieldText(missing, F.child1IdNumber) ?? "").toBe("");
+  expect(isChecked(missing, F.child1BornBefore2008)).toBe(false);
+  expect(missing.getPageCount()).toBe(3);
+  expect(missing.getSubject()).toBe(REVIEW_PDF_NOTICE);
+});
+
+it("rejects impossible or contradictory adopted child source facts", async () => {
+  const result = calculateFederalTax(singleChildFixture);
+  const child = singleChildFixture.form8839?.children[0];
+  if (!child) throw new Error("Missing child fixture");
+  for (const change of [{ childBirthYear: 2026 }, { childIdentifyingNumber: "123" }, { adoptionFinalizedYear: 2026, adoptionBecameFinal: true }]) {
+    await expect(fillForm8839({ ...singleChildFixture, form8839: { children: [{ ...child, ...change }] } }, result, BLANK_8839)).rejects.toThrow(/birth|identif|final/i);
+  }
 });

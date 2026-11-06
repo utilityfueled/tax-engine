@@ -1,0 +1,58 @@
+form: Ohio SD100 and SD withholding official review companions
+taxYear: 2025
+reference: https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/forms/ohio_individual/individual/2025/it1040-booklet.pdf
+notes: |
+  Source first November3 2026. Finite actual full-year Hillsdale0302 earned-income
+  single-primary under65 ordinary-W2 cohort already admitted by canonical sources.
+  Actual residence/Finder originals, classified local row and separate complete
+  SD100 payments are mandatory; no inference from postal address or IT1040 cash.
+  Exact official2025 fillable bundle SHA4b065c66f85d9f732e52bc45c78f5ba2d9439c10a9ee1da5dbb95a35bea38a5e,
+  pages1-3 SD100 and page4 SDWH; page5 UPC excluded. Current standalone SDWH
+  SHAc77f28bbe8215dc10a80f54ab81b52d38ce1db7c7f2a25aba42ba35a2cd3c33a
+  corroborates printed cells but has a different actual2025 barcode revision.
+  Booklet printed56-59 controls formulas/skip directions. No filing/2026/template
+  readiness promotion. Static redacted companions carry review notice on every
+  page; signature, dates, private identifiers and bank instructions remain blank.
+  Existing summaries/ordinary dispatcher behavior remains. Official field keys
+  are legacy names: printed13 uses L14,14 L15,15 L16,16 L17,17 L18,18 L19,
+  19 L20,20 L21,21 L22. Earned printed29 uses COLA30,30 COLA31,31 COLA32,
+  32 COLA35,33 COLA36,34 COLA37,35 COLA38,36 COLA39,37 COLA40,38 LINE41.
+  Booklet printed49 describes four-digit decimal rates and printed51 gives
+  Hillsdale0302 .0125. The pinned source COLA37 printed34 wrongly limits text
+  to4characters although .0125 has5. In the marked static review copy ONLY,
+  validate original MaxLen4 then change this one field to5 for exact .0125;
+  retain canonical V, nonempty appearance, actual rectangle and exact source asset.
+  No other field bounds change. Canonical/physical rate .0125 means unchanged
+  80000*.0125=1000; percent1.25 or truncated0125 would misstate printed34.
+  Traditional and unused column blank. Actual original return leaves amended14
+  blank. If netpayments15 exceeds liability10, printed skip leaves16-18 blank.
+  SDWH OHWAGE/OHIT legacy keys mean SD Box18/19, never state IT cash.
+  Only positive actual school withholding W2 rows appear, excluding municipality
+  even when municipal row is first. Knownzero school withholding omits SDWH.
+  Actual reported Ohio employer ID is8digits or first8 of actual9digits, never a
+  fabricated ID. New fictional source supplement12345678 replaces the original
+  mathematical fixture private placeholder only in this new physical fixture.
+  Source field tree315/canonical widgets387/rendered265/template-only122 pinned.
+  Controlled exact template orphan removal, original source appearance handling,
+  all saved references, canonical values and every widget must be verified.
+lines:
+  - line: "literal-originals"
+    description: Source originals independently establish school cash and earned base
+    formula: OhioAGI80000 plus BID0, exemptions2150, line5 77850; earned wages80000 plus netSE0 capped MAGI80000 gives tax80000*.0125=1000. IT withholding3000 remains distinct in every case. Source cash is not inferred from requested refund.
+    testRef: "tests/pdf/oh-school-district-official-review.test.ts::SD official fixture independently preserves school and state cash %s"
+  - line: "physical-companions"
+    description: Actual original-bound dispatcher emits marked official SD100 and SDWH
+    formula: SD1003pages plus SDWH1page for positive school withholding. Base1100WH refunds100; actual400estimates+600WH refunds0; actual outgoing25 leaves75; actual prior100+WH1100 refunds200; knownzeroWH+1000estimates refunds0 and omits SDWH. Municipality50 is excluded. Printed fields follow official labels and conditional skips, not legacy key numbering.
+    testRef: "tests/pdf/oh-school-district-official-review.test.ts::SD original source review emits exact official printed companions %s"
+  - line: "source-guards"
+    description: Retained private source and fresh federal result cannot be replaced
+    formula: Forged context, same-money W2 identity edit, missing district packet, unresolved local classification, stale federal values or inconsistent SD account rejects before output creation. No read refresh or input mutation.
+    testRef: "tests/pdf/oh-school-district-official-review.test.ts::SD official source conflict rejects before output %s"
+  - line: "original-employer-id"
+    description: Actual reported employer Ohio ID follows SDWH instructions
+    formula: Actual9digits123456789 prints first8 12345678. A reported malformed nonnumeric original is not replaced or silently erased; missing or not-reported identity retains the actual unknown/blank boundary.
+    testRef: "tests/pdf/oh-school-district-official-review.test.ts::SD official employer identity prints actual first eight digits"
+  - line: "physical-privacy"
+    description: Saved source cells and privacy survive approved review flattening
+    formula: Strict-reopen all saved objects including streams, no dangling refs/widgets/AcroForm/actions; each page carries review notice; raw SSN, private source strings and private original employer ID absent. Physical cells, checkbox placement, full pages and existing IT cash require separate rendered verification before qualification.
+    testRef: "tests/pdf/oh-school-district-official-review.test.ts::SD original source review emits exact official printed companions %s"

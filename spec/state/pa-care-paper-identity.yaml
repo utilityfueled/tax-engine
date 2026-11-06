@@ -1,0 +1,46 @@
+form: PA-Care-Paper-Identity-Sources
+fullName: Documentary PA care identifier kinds and explicit native originals
+# Source refresh2026-11-05; facts are collectable across years, not final-form admission.
+taxYear: 2025
+reference: https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40dc.pdf
+notes: |
+  Official2025DC source SHA2566abbe9cbaf97a405392191dbe311bead6bcbde876faa8f6349aad2fe9a3cd795.
+  Provider SSN/FEIN and person SSN/ITIN ovals are documentary facts; ATIN uses the
+  person SSN oval per instructions. Federal2441 generic TIN does not prove type.
+  IRS2441 instructions permit an individual provider ITIN; retain this real kind
+  distinctly but do not invent a PA provider oval or admit paper. Provider kinds
+  cannot be inferred from punctuation, digit count or names. Global federal TIN
+  semantics, existing actual-care calculations, historical absence compatibility,
+  full2026 unavailable rulepack and all filing gates remain intact. Stage2 official2025 care paper may separately admit a complete original-bound parent context; the documentary validator itself never qualifies paper.
+  Source-only identity validation is not care eligibility or a renderer authority.
+lines:
+  - line: "optional-identity"
+    formula: Optional strict PA-only documentary sources survive canonical parsing and existing guided build; absent metadata does not change historical cash or create documentary facts.
+    testRef: "tests/engine/state/pa-care-paper-sources.test.ts::optional documentary identity survives existing source APIs without changing cash"
+  - line: "source-bindings"
+    formula: Confirm actual current-year references, availability and exact reviewed snapshots; every provider/person appears once with valid unique original indices and each person matches one actual original dependent. Reads do not recapture or mutate originals.
+    testRef: "tests/engine/state/pa-care-paper-sources.test.ts::identity projection rejects incomplete stale and contradictory originals %s"
+  - line: "kinds"
+    formula: Explicit provider ssn fein itin and person ssn itin atin remain distinct; provider itin records unsupported2025oval rather than relabeling SSN. Any unknown kind or incompatible federal identifier status rejects confirmation.
+    testRef: "tests/engine/state/pa-care-paper-sources.test.ts::documentary identifier kinds remain explicit and never qualify paper %s"
+  - line: "native-unknown"
+    formula: Add optional documentary collection with unknown year kinds indices and confirmations; reviewed capture never supplies year reference availability or kind and requires explicit actual indices.
+    testRef: "tests/apps/web/pa-care-paper-identity-native.test.tsx::native documentary collection starts unknown and cannot infer identifier kinds"
+  - line: "capture"
+    formula: Explicit reviewed capture binds selected provider person and dependent originals without modifying canonical facts; changing general care originals clears documentary confirmation but preserves retained identity snapshots.
+    testRef: "tests/engine/state/pa-care-paper-sources.test.ts::recapture clears documentary confirmation without silently replacing identity originals"
+  - line: "native-complete"
+    formula: Native documentary fields and explicit original review plus separate identity care and household confirmations reach the actual married calculation with refund600; no JSON or hidden fields supply facts.
+    testRef: "tests/apps/web/pa-care-paper-identity-native.test.tsx::native documentary entry reaches actual source composition after separate confirmations"
+  - line: "invalidation"
+    formula: Kind reference index or original care changes revoke documentary care and household confirmations; retain prior original snapshots. Exact unchanged currency blur preserves all confirmations and writes nothing.
+    testRef: "tests/apps/web/pa-care-paper-identity-native.test.tsx::native material identity edits revoke both source confirmations and retain originals %s"
+  - line: "stale-build"
+    formula: Supplied documentary metadata must be complete and current before guided confirmation; stale equal-money identity changes cannot be accepted by reading remounting or building.
+    testRef: "tests/engine/state/pa-care-paper-sources.test.ts::guided build rejects supplied incomplete documentary metadata %s"
+  - line: "native-preserve"
+    formula: Existing documentary snapshots and unknown answers remain visible through mount and serialization; capture or removal is an explicit action, never a factual default.
+    testRef: "tests/apps/web/pa-care-paper-identity-native.test.tsx::native unchanged blur preserves identity confirmation and retained unknowns"
+  - line: "year-paper"
+    formula: Documentary facts may be collected for2026; this does not unlock the full2026 return or filing eligibility. The separate original-bound2025 review successor may admit complete SSN/FEIN facts; providerITIN and incomplete documentary facts remain denied, and documentary validator readiness flags remainfalse.
+    testRef: "tests/engine/state/pa-care-paper-sources.test.ts::identity collection preserves current year and paper gates"

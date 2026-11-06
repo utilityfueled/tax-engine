@@ -1,0 +1,168 @@
+import { ScheduleK1Schema, type TaxYearInput } from '@/models/inputs';
+import { validateK1QbiLossSources, type K1QbiLossSourceInput } from '@/engine/forms/k1-qbi-loss-sources';
+import { calculatePartnerBasisSchedule } from '@/engine/forms/partner-basis-schedule';
+import { calculateScheduleE } from '@/engine/schedules/schedule-e';
+import { calculateK1OrdinarySelfEmployment } from '@/engine/forms/k1-ordinary-self-employment';
+import { calculateK1PassiveDistributionSources } from '@/engine/forms/k1-passive-distribution-sources';
+import { calculateK1PassiveCapitalSources } from '@/engine/forms/k1-passive-capital-sources';
+import { calculateQbiEblNol } from '@/engine/forms/qbi-ebl-nol';
+import { calculateQbiPriorCarrySources } from '@/engine/forms/qbi-prior-carry-sources';
+import { d,sum } from '@/utils/decimal';
+import {calculateCK1NecReceiptSources} from '@/engine/forms/c-k1-nec-receipt-sources';
+import {buildNecInputs} from './guided-business-facts';
+import {parseGuidedCurrency} from './guided-currency';
+import type { GuidedFlowState } from './guided-interview-flow';
+import { parseGuidedQbiLossPacket, qbiSourceValues, type K1LossSourcesData } from './guided-qbi-loss-data';
+import { buildGuidedNetOperatingLoss } from './guided-net-operating-loss';
+import { guidedSourceValuesChanged } from './guided-source-confirmation';
+import { parseGuidedK1CharitableSources } from './guided-k1-charitable-data';
+import { k1CashDistributionKnownTreatment } from './guided-k1-cash-distribution';
+const statuses = { single: 'single', mfj: 'married_filing_jointly', mfs: 'married_filing_separately', hoh: 'head_of_household', qss: 'qualifying_surviving_spouse' } as const;
+
+/** Only original facts and canonical source-limit calculations, without an income assumption. */
+export function buildGuidedK1Sources(data: K1LossSourcesData | undefined, state: GuidedFlowState) {
+  if (!data) return undefined;
+  const { taxYear, segmentation, sectionData } = state, personal = sectionData['personal-info'];
+  if ((taxYear !== 2025 && taxYear !== 2026) || !segmentation.filingStatus || !personal) throw new Error('Confirm the actual household, filing status and year for K-1 histories.');
+  const packet = parseGuidedQbiLossPacket(data);
+  if (!packet || !Array.isArray(data.activities) || !Array.isArray(packet.activities)) throw new Error('Record every actual K-1, including an explicit empty list when none.');
+  const charitable = parseGuidedK1CharitableSources(sectionData.deductions?.k1CharitableSources, packet.activities.length);
+  if (charitable?.independentCount) throw new Error('Link every charitable K-1 to its actual qualified-loss activity before combining the complete source packets.');
+  const middle = personal.middleName?.replace(/[^A-Za-z]/g, '').charAt(0).toUpperCase();
+  const taxpayer: K1QbiLossSourceInput['taxpayer'] = { taxYear, filingStatus: statuses[segmentation.filingStatus],
+    primary: { firstName: [personal.firstName.trim(), middle].filter(Boolean).join(' '), lastName: personal.lastName, ssn: personal.ssn },
+    ...(segmentation.filingStatus === 'mfj' && personal.spouse ? { spouse: personal.spouse } : {}) };
+  const scheduleK1 = packet.activities.map((source, index) => {
+    const entered = data.activities?.[index];
+    const charitableOriginal = charitable?.originals.get(index);
+    const otherFields = ['netShortTermCapitalGain', 'netLongTermCapitalGain', 'interestIncome', 'ordinaryDividends', 'qualifiedDividends'] as const;
+    const assignedOtherAmounts = charitableOriginal && otherFields.some(field => !d(charitableOriginal[field]).isZero());
+    const assignment = charitable?.packet.statements?.find(row => row.k1SourceId === `scheduleK1:${index}`)?.atRisk?.activityAllocation;
+    // The original collector supplies each actual separate amount and confirms
+    // unlisted boxes. Preserve the older zero answers; never reinterpret true.
+    const zeroConfirmed = charitableOriginal ? assignedOtherAmounts
+      ? entered?.allOtherAmountsZeroConfirmed === false && entered.allOtherNonCharitableAmountsZeroConfirmed === false
+        && assignment?.sourceFactsConfirmed === true
+      : entered?.allOtherNonCharitableAmountsZeroConfirmed === true && entered.allOtherAmountsZeroConfirmed !== true
+      : entered?.allOtherAmountsZeroConfirmed === true;
+    if (!zeroConfirmed || entered?.domesticNonPtpConfirmed !== true
+      || (source.entityType === 's_corporation' && entered.noScorpDebtBasisOrElectionConfirmed !== true)) {
+      throw new Error('Confirm actual zero other K-1 boxes and the continuing domestic non-PTP source. S-corporation loan basis and elections require separate actual facts.');
+    }
+    const statement = source.statement;
+    if (!statement || statement.ordinaryIncome === undefined || statement.section199AQBI === undefined
+      || statement.section199AW2Wages === undefined || statement.section199AUBIA === undefined
+      || typeof statement.isPassiveActivity !== 'boolean' || typeof statement.section199AIsSST !== 'boolean'
+      || typeof statement.qbiMateriallyParticipated !== 'boolean' || !source.basis || !source.atRisk) {
+      throw new Error('Enter each actual ordinary, 199A, participation, opening-basis and at-risk source field.');
+    }
+    if (source.entityType === 'partnership' && (statement.selfEmploymentEarnings === undefined
+      || statement.selfEmploymentIncomeType === undefined || !source.selfEmploymentTreatment)) {
+      throw new Error('Enter original partnership Box 14 and the actual current adjustment and independent prior SE history.');
+    }
+    // A linked attachment carries the actual original worksheet. The common source
+    // validator below reconciles it to the independent QBI/basis/risk history.
+    if (charitableOriginal) return charitableOriginal;
+    const original = ScheduleK1Schema.parse({ taxYear: source.sourceTaxYear, partnershipName: source.entityName,
+      partnershipEIN: source.entityEIN, entityType: source.entityType, accountHolder: source.accountHolder, ...statement,
+      selfEmploymentFactsConfirmed: source.selfEmploymentTreatment?.sourceFactsConfirmed,
+      beginningBasis: source.basis.beginningBasis, priorSuspendedLosses: { ordinary: source.basis.priorSuspendedLoss },
+      // These zeros follow the explicit original-statement and ordinary-only answers above.
+      federalIncomeTaxWithheld: '0', foreignSourceIncome: '0', njPassThroughBusinessAlternativeIncomeTaxCredit: '0',
+    });
+    const basis = calculatePartnerBasisSchedule(original);
+    const ordinaryAfterBasis = d(original.ordinaryIncome).lt(0)
+      ? (basis.lossCategories.find(row => row.key === 'ordinary')?.allowed ?? d(0)).negated() : d(original.ordinaryIncome);
+    original.form6198 = { activityName: original.partnershipName, ordinaryIncome: ordinaryAfterBasis.toFixed(),
+      gainLossFromDispositions: '0', otherIncomeGains: '0', otherDeductionsLosses: '0',
+      adjustedBasisAtEffectiveDate: source.atRisk.adjustedBasisAtEffectiveDate ?? '', priorYearAmountAtRisk: source.atRisk.priorYearAmountAtRisk ?? '',
+      currentYearIncreases: source.atRisk.currentYearIncreases ?? '', currentYearDecreases: source.atRisk.currentYearDecreases ?? '' };
+    return original;
+  });
+  const suspendedPassiveLosses: NonNullable<TaxYearInput['priorYear']>['suspendedPassiveLosses'] = packet.activities.map((source, index) => {
+    const capital = charitable?.packet.statements?.find(row => row.k1SourceId === `scheduleK1:${index}`)?.capitalCharacter;
+    let amount = source.priorPassiveLoss ?? '';
+    if (capital) {
+      const prior = capital.priorPassiveCapital;
+      if (!amount || prior?.shortTermLoss === undefined || prior.longTermLoss === undefined)
+        throw new Error('Record the independent ordinary and short/long-term capital prior passive balances, including known zero.');
+      amount = d(amount).plus(prior.shortTermLoss).plus(prior.longTermLoss).toFixed();
+    }
+    return { partnershipName: scheduleK1[index].partnershipName, amount,
+    qbiLossTracking: qbiSourceValues(data.activities?.[index]?.passiveHistory) as NonNullable<TaxYearInput['priorYear']>['suspendedPassiveLosses'][number]['qbiLossTracking'],
+  }; });
+  const sourceInput = { taxpayer, scheduleK1, qbiLossSources: packet, k1CharitableSources: charitable?.packet, priorYear: { suspendedPassiveLosses }, ...k1CashDistributionKnownTreatment(state) };
+  validateK1QbiLossSources(sourceInput);
+  const scheduleE = calculateScheduleE({ ...sourceInput, rentalProperties: [], form1099Misc: [] });
+  calculateK1OrdinarySelfEmployment(sourceInput, scheduleE);
+  // This validated route has actual business capital. It cannot assert the
+  // different ordinary-only461 method; supplied classifications still reject.
+  const passiveDistribution = calculateK1PassiveDistributionSources(sourceInput, scheduleE);
+  const passiveCapital = calculateK1PassiveCapitalSources(sourceInput, scheduleE);
+  if (scheduleK1.length && !passiveDistribution.rows.length && !passiveCapital?.rows.some(row => row.hasPassiveCapital)) {
+    const classification = packet.form461Classification;
+    if (!classification || classification.sourceTaxYear !== taxYear || !classification.sourceReference?.trim()
+      || classification.sourceFactsConfirmed !== true || (classification.method !== 'ordinary_k1_only' && classification.method !== 'profitable_ordinary_c_and_k1')
+      || classification.allNonEmployeeBusinessSourcesIncluded !== true || classification.capitalIncomeIsNonbusiness !== true
+      || classification.otherBusinessIncome === undefined || classification.otherBusinessDeductions === undefined
+      || !d(classification.otherBusinessIncome).isZero() || !d(classification.otherBusinessDeductions).isZero()) {
+      throw new Error('Confirm the actual ordinary business classification method and known-zero other business amounts. Current Form461 amounts are calculated from the return.');
+    }
+    const proof=classification.scheduleCSource;
+    if(classification.method==='profitable_ordinary_c_and_k1') {
+      const business=sectionData['income-self-employment']?.businessFacts;
+      const person=proof?.accountHolder==='primary'?taxpayer.primary:proof?.accountHolder==='spouse'?taxpayer.spouse:undefined;
+      const name=(text:string|undefined)=>text?.trim().replace(/\s+/g,' ').toLowerCase();
+      const ein=(text:string|undefined)=>text?.trim().replaceAll('-','');
+      if(!proof||proof.sourceTaxYear!==taxYear||!proof.sourceReference?.trim()||proof.sourceFactsConfirmed!==true
+        ||proof.allIncomeDomesticConfirmed!==true||proof.ordinaryBusinessOnlyConfirmed!==true
+        ||!business||proof.accountHolder!==business.accountHolder||!person||!/^\d{9}$/.test(person.ssn.replaceAll('-',''))
+        ||!/^\d{4}$/.test(proof.recipientTaxpayerIdLast4??'')||person.ssn.replaceAll('-','').slice(-4)!==proof.recipientTaxpayerIdLast4
+        ||!proof.recipientName?.trim()||name(proof.recipientName)!==name(`${person.firstName} ${person.lastName}`)
+        ||!(proof.businessNameStatus==='reported'?Boolean(proof.businessName?.trim()&&business.businessName?.trim()&&proof.businessName.trim()===business.businessName.trim())
+          :proof.businessNameStatus==='blank_original'&&!proof.businessName?.trim()&&!business.businessName?.trim())
+        ||!(proof.businessEINStatus==='reported'?/^\d{9}$/.test(ein(proof.businessEIN)??'')&&ein(proof.businessEIN)===ein(business.ein)
+          :proof.businessEINStatus==='not_issued'&&!proof.businessEIN?.trim()&&!business.ein?.trim())) {
+        throw new Error('Confirm actual current ordinary domestic ScheduleC classification, original name/EIN status and owner identity. No missing source fact is inferred.');
+      }
+      const self=sectionData['income-self-employment'],necs=buildNecInputs(self?.necEntries);
+      if(proof.necReceipts){
+        proof.necReceipts.rows=proof.necReceipts.rows?.map(row=>{
+          const match=/^form1099Nec:(0|[1-9]\d*)$/.exec(row.necSourceId??''),actual=match?necs[Number(match[1])]:undefined;
+          return {...row,original:row.original??(actual?{...actual}:undefined)};
+        });
+      }
+      const gross=self?.manualGrossReceipts!==undefined?sum(...necs.map(row=>parseGuidedCurrency(row.nonemployeeCompensation)),parseGuidedCurrency(self.manualGrossReceipts)).toFixed():undefined;
+      calculateCK1NecReceiptSources({taxpayer,form1099Nec:necs as TaxYearInput['form1099Nec'],scheduleC:{accountHolder:proof.accountHolder,grossReceipts:gross},qbiLossSources:packet});
+    } else if(proof!==undefined) throw new Error('K1-only classification cannot include a different ScheduleC source method');
+  }
+  const netOperatingLoss = buildGuidedNetOperatingLoss(sectionData.adjustments?.netOperatingLossSources, taxYear, segmentation.filingStatus,
+    personal, sectionData.deductions, data);
+  const priorQbiCarry = calculateQbiPriorCarrySources({ taxpayer, qbiLossSources: packet, netOperatingLoss }, false);
+  calculateQbiEblNol({ taxpayer, qbiLossSources: packet, netOperatingLoss, priorYear: priorQbiCarry });
+  return { scheduleK1, qbiLossSources: packet, suspendedPassiveLosses, priorQbiCarry };
+}
+export function k1LossSourceFactErrors(state: GuidedFlowState): Record<string, string> {
+  try {
+    const data = state.sectionData.adjustments?.k1LossSources;
+    if (!data && state.segmentation.lifeEvents.includes('k1-loss-sources')) {
+      throw new Error('Enter the actual K-1 and qualified loss sources, or remove that setup choice.');
+    }
+    if (!data && state.sectionData.adjustments?.netOperatingLossSources?.vintages?.some(row => row.originKind === 'excess_business_loss')) {
+      throw new Error('Enter the original qualified EBL history linked to each actual regular NOL source.');
+    }
+    buildGuidedK1Sources(data, state); return {};
+  } catch (error) { return { k1LossSources: error instanceof Error ? error.message : 'Reconcile actual K-1 and qualified loss sources.' }; }
+}
+export function invalidateK1LossSources(data: K1LossSourcesData): K1LossSourcesData {
+  const visit = (value: unknown): unknown => {
+    if (Array.isArray(value)) return value.map(visit);
+    if (value && typeof value === 'object') return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, key === 'sourceFactsConfirmed' ? null : visit(item)]));
+    return value;
+  };
+  return { ...visit(data) as K1LossSourcesData, sourceFactsConfirmed: null };
+}
+export function updateK1LossSources(previous: K1LossSourcesData, patch: Partial<K1LossSourcesData>): K1LossSourcesData {
+  const next = { ...previous, ...patch };
+  return guidedSourceValuesChanged(previous, next) ? invalidateK1LossSources(next) : next;
+}

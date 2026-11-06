@@ -1,0 +1,14 @@
+form: "Guided-only review bundle"
+fullName: "Download actual guided return review output without an upload prerequisite"
+taxYear: 2026
+irsReference: "https://www.irs.gov/instructions/i1040gi"
+notes: "This changes review-download availability only. It does not qualify a filing export or infer original documents from guided answers."
+lines:
+  - line: "guided-summary"
+    description: "Use the actual saved guided year and completion metadata in a local summary bundle"
+    formula: "A saved guided interview can expose the existing summary and audit download even with no uploaded documents. The bundle does not claim to back up private guided answers, and no source document or financial preview is invented."
+    testRef: "tests/apps/web/workspace-guided-year.test.ts::builds the guided-only summary bundle without inventing source documents or serializing private answers"
+  - line: "draft-boundaries"
+    description: "Preserve unknown, conflicting, unsupported and incomplete source boundaries"
+    formula: "A completed phase or old preview cannot make a missing or unsupported return year, conflicting original years, or incomplete guided source facts appear ready to review. Those downloads remain drafts; the review PDF retains its existing complete-input validation and redaction."
+    testRef: "tests/apps/web/workspace-status-copy.test.ts::keeps missing conflicting unsupported and incomplete guided bundles labeled as drafts"

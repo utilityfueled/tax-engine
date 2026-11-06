@@ -24,17 +24,9 @@ const trustSignals = [
   { label: "Hosted plans are software tools", detail: `Sync, reminders, and AI helper budgets for tax year ${latestEngineTargetYear}` }
 ];
 
-async function readRequestHeadersSafely() {
-  try {
-    return await headers();
-  } catch {
-    return new Headers();
-  }
-}
-
 export default async function HomePage() {
   const actor = await resolveHostedWorkspaceActor({
-    requestHeaders: await readRequestHeadersSafely()
+    requestHeaders: await headers()
   });
   const prefersLocalDraft = shouldPreferLocalWorkspaceDraft() && !actor;
   const deploymentMode = prefersLocalDraft ? "self-host" : resolveDeploymentMode();
@@ -43,7 +35,7 @@ export default async function HomePage() {
   });
 
   return (
-    <main className="workspace-grid">
+    <div className="workspace-grid">
       <section className="hero home-hero">
         <div className="home-hero-copy">
           <p className="hero-kicker">OPEN-SOURCE TAX SOFTWARE // AUDITABLE ENGINE // LOCAL-FIRST</p>
@@ -81,8 +73,8 @@ export default async function HomePage() {
             </a>
           </div>
           <div className="hero-bar home-hero-bar" aria-label="Product highlights">
-            <span>Federal + all 50 states</span>
-            <span>{latestEngineTargetYear} tax-year coverage</span>
+            <span>Federal and state previews</span>
+            <span>{latestEngineTargetYear} experimental calculations</span>
             <span>Reference PDFs, not e-file</span>
           </div>
         </div>
@@ -116,6 +108,6 @@ export default async function HomePage() {
           </article>
         ))}
       </section>
-    </main>
+    </div>
   );
 }

@@ -157,13 +157,14 @@ describe("MACRS depreciation computation", () => {
       expect(result!.recoveryYear).toBe(6);
     });
 
-    it("placed in January year 29 (final) - 1.970%", () => {
+    it("placed in January year 29 is beyond the published recovery schedule", () => {
       const result = computeAssetDepreciation(
         { costBasis: "275000", placedInServiceDate: "1997-01", recoveryPeriod: "27.5" },
         2025,
       );
-      expect(result!.depreciation.toNumber()).toBe(5418);
+      expect(result!.depreciation.toNumber()).toBe(0);
       expect(result!.recoveryYear).toBe(29);
+      expect(result?.fullyDepreciated).toBe(true);
     });
 
     it("placed in January year 30 - fully depreciated", () => {
@@ -293,13 +294,11 @@ describe("MACRS depreciation computation", () => {
       expect(result!.depreciation.toNumber()).toBe(2000);
     });
 
-    it("disposed 5-year asset in year 3 gets half the table percentage", () => {
-      const result = computeAssetDepreciation(
-        { costBasis: "10000", placedInServiceDate: "2023-06", recoveryPeriod: "5", disposedDuringYear: true },
-        2025,
-      );
-      // Year 3 normal = 19.20% of $10,000 = $1,920; half = $960
-      expect(result!.depreciation.toNumber()).toBe(960);
+    it("prior-year disposal requires actual source dates and history instead of a YYYY-MM approximation", () => {
+      const asset = { costBasis: "10000", placedInServiceDate: "2023-06", recoveryPeriod: "5", disposedDuringYear: true } as const;
+      const before = JSON.stringify(asset);
+      expect(() => computeAssetDepreciation(asset, 2025)).toThrow(/MACRS disposition sources/);
+      expect(JSON.stringify(asset)).toBe(before);
     });
 
     it("description is optional and defaults to empty string", () => {
@@ -443,11 +442,11 @@ describe("MACRS depreciation computation", () => {
         ], 2025)).toBe(false);
       });
 
-      it("assets with explicit convention override are excluded from the test", () => {
+      it("assets with explicit convention remain subject to the statutory test", () => {
         expect(isMidQuarterRequired([
           { costBasis: "10000", placedInServiceDate: "2025-03", recoveryPeriod: "5" },
           { costBasis: "50000", placedInServiceDate: "2025-10", recoveryPeriod: "5", convention: "halfYear" },
-        ], 2025)).toBe(false);
+        ], 2025)).toBe(true);
       });
 
       it("empty assets returns false", () => {
@@ -684,8 +683,8 @@ describe("computeListedPropertyDepreciation", () => {
       2025,
     );
     expect(result).not.toBeNull();
-    // Tentative: 20% × $80K = $16,000; cap $12,400
-    expect(result!.depreciation.toNumber()).toBe(12400);
+    // Tentative: 20% × $80K = $16,000; cap $12,200 (Rev. Proc. 2025-16).
+    expect(result!.depreciation.toNumber()).toBe(12200);
   });
 
   it("passenger auto — 60% business use reduces before cap comparison", () => {
@@ -701,8 +700,8 @@ describe("computeListedPropertyDepreciation", () => {
       2025,
     );
     expect(result).not.toBeNull();
-    // Tentative: 20% × $80K × 60% = $9,600; cap $12,400 → $9,600
-    expect(result!.depreciation.toNumber()).toBe(9600);
+    // Tentative: 20% × $80K ×60%=$9,600; adjusted2025 cap $12,200×60%=$7,320.
+    expect(result!.depreciation.toNumber()).toBe(7320);
   });
 
   it("≤50% business use forces ADS SL for passenger auto", () => {

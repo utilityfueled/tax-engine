@@ -1,0 +1,55 @@
+form: "Guided-Ohio-Actual-Source-Navigation"
+fullName: "Require actual Ohio residency and payment packets before state navigation"
+taxYear: 2025
+reference: "spec/state/guided-ohio-residency.yaml; spec/state/guided-ohio-payments.yaml"
+notes: |
+  Existing official-source-qualified residency/payment collectors remain authoritative.
+  This adds only mandatory source navigation; no tax formula, full return calculation,
+  relief/farmer inference, source confirmation on read, or filing/readiness promotion.
+lines:
+  - line: "mandatory-packets"
+    description: "All three Ohio residency categories need both actual packets"
+    formula: |
+      For selected OH, parse complete current raw federal originals through the normal
+      bridge. Require actual residency and payment drafts and replay each using its
+      existing source builder with that same private canonical original. Missing,
+      malformed, unknown, year/owner/receipt-inconsistent or unconfirmed records keep
+      state navigation partial and non-skippable. Do not call shared state helper or
+      full composer and do not attach state packets to the federal-only bridge.
+    testRef: "tests/guided-interview/guided-ohio-source-navigation.test.ts::Ohio navigation requires residency and payment sources for all three residencies"
+  - line: "special-method-guard"
+    description: "Keep raw unknown and positive special facts guarded"
+    formula: |
+      Use the existing payment builder's actual no-farming/fishing and no-relief
+      source guard. Blank or reported farming/fishing or military/disaster facts
+      cannot become regular-method eligibility, even when old generic payment rows
+      are empty. Preserve every raw source field, positive receipt and owner record.
+    testRef: "tests/guided-interview/guided-ohio-source-navigation.test.ts::Ohio navigation preserves and guards unknown and positive special source facts"
+  - line: "pure-read"
+    description: "Navigation neither confirms sources nor changes federal input"
+    formula: |
+      Validate on read only, never mutate draft confirmations/snapshots/amounts,
+      infer actual tax year or synthesize facts. Missing state packets leave the
+      normal complete federal input identical; current confirmed packets can be
+      reopened unchanged. Preserve existing PA navigation and non-OH paths.
+    testRef: "tests/guided-interview/guided-ohio-source-navigation.test.ts::Ohio navigation is a pure read and preserves federal originals when state sources are missing"
+  - line: "explicit-original-binding"
+    description: "Only explicit source confirmation can bind current private originals"
+    formula: |
+      Both Ohio drafts retain optional originalFederalSources, excluding only the
+      two Ohio roots to avoid recursion. Legacy boolean-only confirmation without
+      retained originals fails on read. Compare complete owner/year/federal originals
+      before replay, including full-year residency and same-money employer edits.
+      Explicit confirm alone clones current private originals after all actual source
+      validation. Every source field edit clears the header while retaining old
+      originals. Unknown source year, raw special facts, relief eligibility, dates,
+      amounts and actual confirmation stay unknown until supplied. No auto-refresh.
+    testRef: "tests/guided-interview/guided-ohio-source-navigation.test.ts::Ohio reads reject boolean-only legacy confirmation without retained originals"
+  - line: "explicit-confirm-ui"
+    description: "Structured panels require current original input for explicit confirmation"
+    formula: |
+      Section passes federal-only originals to both Ohio panels. A confirm action
+      validates and binds current actual originals; absent current originals disables
+      confirmation, and invalid/unknown facts produce errors without mutation.
+      Source edits clear confirmation and retain previous snapshots/positive facts.
+    testRef: "tests/apps/web/guided-ohio-source-confirmation.test.tsx::Ohio panels require current originals for explicit confirmation"

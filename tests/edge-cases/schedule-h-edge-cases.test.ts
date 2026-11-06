@@ -46,7 +46,7 @@ function makeEmployee(
 }
 
 describe("Schedule H cash wage threshold boundary ($2,800)", () => {
-  it("Schedule H Line 1 - $2,799 does not trigger Schedule H", () => {
+  it("Schedule H Line 1 - $2,799 excludes Social Security but preserves actual FUTA", () => {
     const result = calculateScheduleH({
       employees: [makeEmployee("2799")],
       futaApplies: true,
@@ -55,7 +55,9 @@ describe("Schedule H cash wage threshold boundary ($2,800)", () => {
     });
 
     expect(result.qualifyingEmployeeCount).toBe(0);
-    expect(result.totalTax.toNumber()).toBe(0);
+    expect(result.line1.toNumber()).toBe(0);
+    expect(result.futaTax.toFixed(2)).toBe("16.79");
+    expect(result.totalTax.toFixed(2)).toBe("16.79");
   });
 
   it("Schedule H Line 1 - $2,800 triggers Schedule H at exact threshold", () => {
@@ -281,6 +283,9 @@ describe("Schedule H FUTA Section B credit edge cases", () => {
       futaApplies: true,
       futaSectionA: false,
       stateUnemploymentContributions: "378", // $7,000 × 5.4% = $378
+      futaStatePeriods: [{ state: "OH", periodStart: "2025-01-01", periodEnd: "2025-12-31", taxableWages: "7000", experienceRate: "0.054", contributionsPaidTimely: "378" }],
+      stateUnemploymentContributionsPaidLate: "0",
+      futaCreditReduction: "0",
       constants: CONSTANTS_2025,
     });
 
@@ -297,6 +302,8 @@ describe("Schedule H FUTA Section B credit edge cases", () => {
       futaApplies: true,
       futaSectionA: false,
       stateUnemploymentContributions: "200",
+      futaStatePeriods: [{ state: "OH", periodStart: "2025-01-01", periodEnd: "2025-12-31", taxableWages: "7000", experienceRate: null, contributionsPaidTimely: "200" }],
+      stateUnemploymentContributionsPaidLate: "0",
       futaCreditReduction: "300",
       constants: CONSTANTS_2025,
     });
@@ -314,6 +321,9 @@ describe("Schedule H FUTA Section B credit edge cases", () => {
       futaApplies: true,
       futaSectionA: false,
       stateUnemploymentContributions: "0",
+      futaStatePeriods: [{ state: "OH", periodStart: "2025-01-01", periodEnd: "2025-12-31", taxableWages: "7000", experienceRate: null, contributionsPaidTimely: "0" }],
+      stateUnemploymentContributionsPaidLate: "0",
+      futaCreditReduction: "0",
       constants: CONSTANTS_2025,
     });
 
@@ -329,7 +339,7 @@ describe("Schedule H employee exemption combinations", () => {
       employees: [
         makeEmployee("50000", { name: "Spouse", isSpouse: true }),
         makeEmployee("15000", { name: "Child", isChildUnder21: true }),
-        makeEmployee("20000", { name: "Parent", isParent: true }),
+        makeEmployee("20000", { name: "Parent", isParent: true, parentCareExceptionApplies: false }),
         makeEmployee("8000", { name: "Teen Sitter", isUnder18NonPrincipal: true }),
         makeEmployee("12000", { name: "Nanny" }),
       ],
@@ -341,6 +351,8 @@ describe("Schedule H employee exemption combinations", () => {
     expect(result.qualifyingEmployeeCount).toBe(1);
     expect(result.line1.toNumber()).toBe(12000);
     expect(result.line3.toNumber()).toBe(12000);
+    // The unrelated minor remains subject to FUTA; the parent is excluded.
+    expect(result.futaTax.toFixed(2)).toBe("84.00");
   });
 
   it("Schedule H - exempt employees with high wages have zero contribution", () => {
@@ -359,7 +371,7 @@ describe("Schedule H employee exemption combinations", () => {
     expect(result.totalTax.toNumber()).toBe(0);
   });
 
-  it("Schedule H - below-threshold employee withholding is excluded from Line 7", () => {
+  it("Schedule H - below-threshold employee actual withholding remains on Line 7", () => {
     const result = calculateScheduleH({
       employees: [
         makeEmployee("2000", { name: "Below", federalIncomeTaxWithheld: "300" }),
@@ -370,8 +382,8 @@ describe("Schedule H employee exemption combinations", () => {
       constants: CONSTANTS_2025,
     });
 
-    // Only above-threshold employee's withholding counts
-    expect(result.line7.toNumber()).toBe(700);
+    // Line 7 includes all federal income tax actually withheld.
+    expect(result.line7.toNumber()).toBe(1000);
     expect(result.qualifyingEmployeeCount).toBe(1);
   });
 });
@@ -450,11 +462,11 @@ describe("Schedule H combined threshold interactions", () => {
     expect(result.line5.toNumber()).toBe(50000);
     expect(result.line6.toNumber()).toBe(450);
 
-    // Withholding: only qualifying employees
+    // Withholding: all actual federal income tax withheld
     expect(result.line7.toNumber()).toBe(2000);
 
-    // FUTA: min(250000, 7000) + min(100000, 7000) + min(2800, 7000) = 7000 + 7000 + 2800 = 16800
-    // $16,800 × 0.6% = $100.80
-    expect(result.futaTax.toNumber()).toBe(100.8);
+    // FUTA includes the below-SS-threshold worker: 7000 + 7000 + 2800 + 2799 = 19599.
+    // $19,599 × 0.6% rounds to $117.59.
+    expect(result.futaTax.toFixed(2)).toBe("117.59");
   });
 });

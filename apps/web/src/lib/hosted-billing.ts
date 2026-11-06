@@ -17,6 +17,7 @@ import {
 } from "./hosted-ai-helper-billing";
 import {
   checkRateLimitForEnvironment,
+  rateLimitUnavailableResponse,
   createRateLimitStore,
   rateLimitTiers,
   registerStoreForCleanup,
@@ -25,6 +26,7 @@ import {
 } from "./rate-limit";
 import { safeParseJsonBody } from "./safe-body-parser";
 import { resolveHostedAppBaseUrl } from "./hosted-runtime-safety";
+import { canPurchaseHostedAiCredits } from "./hosted-ai-availability";
 
 type BillingEnvironment = Record<string, string | undefined>;
 
@@ -91,8 +93,9 @@ function isHostedPlanId(value: string): value is HostedPlanId {
 const WORKSPACE_ID_MAX_LENGTH = 128;
 const WORKSPACE_ID_PATTERN = /^[a-zA-Z0-9_-]+$/;
 
-function isValidWorkspaceId(workspaceId: string): boolean {
-  return workspaceId.length > 0
+function isValidWorkspaceId(workspaceId: unknown): workspaceId is string {
+  return typeof workspaceId === "string"
+    && workspaceId.length > 0
     && workspaceId.length <= WORKSPACE_ID_MAX_LENGTH
     && WORKSPACE_ID_PATTERN.test(workspaceId);
 }
@@ -160,7 +163,7 @@ function getStripeCheckoutPaymentMethodTypes(env: BillingEnvironment) {
   const parsed = configured
     .split(",")
     .map((value) => value.trim().toLowerCase())
-    .filter((value): value is Stripe.Checkout.SessionCreateParams.PaymentMethodType => {
+    .filter((value): value is Stripe.Checkout.SessionCreateParams.AllowedPaymentMethodType => {
       return value === "card"
         || value === "link"
         || value === "cashapp";
@@ -173,9 +176,25 @@ function getStripeSecretKey(env: BillingEnvironment) {
   return env.STRIPE_SECRET_KEY?.trim() || null;
 }
 
+/** Local mode evidence for account-level keys, not credential validation. */
+export function isHostedStripeKeyModeCompatible(
+  env: BillingEnvironment,
+  mode: HostedBillingMode
+): boolean {
+  const key = getStripeSecretKey(env);
+
+  // Missing keys retain existing development adapters and signature-only
+  // webhooks. Production outbound configuration still requires a key.
+  if (!key || mode === "disabled") return true;
+
+  return [`sk_${mode}_`, `rk_${mode}_`].some((prefix) => {
+    return key.startsWith(prefix) && key.length > prefix.length;
+  });
+}
+
 function createStripeClient(secretKey: string) {
   return new Stripe(secretKey, {
-    apiVersion: "2026-03-25.dahlia"
+    apiVersion: "2026-09-30.endive"
   });
 }
 
@@ -220,9 +239,32 @@ async function ensureStripeCustomerId(
 function buildPreviewCheckoutSession(
   request: HostedBillingCheckoutRequest
 ): Pick<Stripe.Checkout.Session, "id" | "url"> {
+  const url = new URL(request.successUrl);
+  url.searchParams.set("checkout", "preview");
+  url.searchParams.set("plan", request.planId);
   return {
     id: `cs_preview_${request.planId}`,
-    url: `${request.successUrl}?checkout=preview&plan=${encodeURIComponent(request.planId)}`
+    url: url.toString()
+  };
+}
+
+function billingUnavailableResponse() {
+  return NextResponse.json(
+    { error: "Hosted billing is temporarily unavailable. Please try again later.", code: "billing-unavailable" },
+    { status: 503, headers: { "Retry-After": "5", "Cache-Control": "no-store" } }
+  );
+}
+
+// Authentication, shared protection, entitlement and database failures can happen
+// before a Stripe call. Keep every boundary retryable without exposing the
+// upstream error, which may contain credentials or customer data.
+function withBillingAvailability(handler: (request: Request) => Promise<Response>) {
+  return async (request: Request): Promise<Response> => {
+    try {
+      return await handler(request);
+    } catch {
+      return billingUnavailableResponse();
+    }
   };
 }
 
@@ -238,12 +280,13 @@ export function getHostedBillingConfig(
   const hasWebhookSecret = Boolean(env.STRIPE_WEBHOOK_SECRET?.trim());
   const nodeEnv = env.NODE_ENV?.trim().toLowerCase() || "development";
   const blocked = deploymentMode === "hosted"
-    && nodeEnv === "production"
-    && (!hasSecret || !hasStarterPrice || !hasPlusPrice || !hasWebhookSecret || appBaseUrl.blocked);
+    && (!isHostedStripeKeyModeCompatible(env, mode)
+      || (nodeEnv === "production"
+        && (!hasSecret || !hasStarterPrice || !hasPlusPrice || !hasWebhookSecret || appBaseUrl.blocked)));
 
   if (blocked) {
     console.error(
-      "[security] CRITICAL: hosted billing is missing Stripe configuration. " +
+      "[security] CRITICAL: hosted billing configuration is missing or incompatible with its mode. " +
       "Set TAX_ENGINE_APP_URL, STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, " +
       "STRIPE_PRICE_ID_STARTER_MONTHLY, and STRIPE_PRICE_ID_PLUS_MONTHLY."
     );
@@ -323,7 +366,7 @@ async function createStripeCheckoutSession(
   return stripe.checkout.sessions.create({
     mode: "subscription",
     customer: customerId,
-    payment_method_types: getStripeCheckoutPaymentMethodTypes(env),
+    allowed_payment_method_types: getStripeCheckoutPaymentMethodTypes(env),
     line_items: [
       {
         price: priceId,
@@ -370,7 +413,7 @@ export function createHostedBillingCheckoutRouteHandlers(
   }
 
   return {
-    async POST(request: Request) {
+    POST: withBillingAvailability(async (request: Request) => {
       const env = dependencies.env ?? process.env;
       const config = getHostedBillingConfig(env);
 
@@ -392,6 +435,8 @@ export function createHostedBillingCheckoutRouteHandlers(
         rateLimitTiers.api,
         env
       );
+
+      if (rateCheck.unavailable) return rateLimitUnavailableResponse();
 
       if (!rateCheck.allowed) {
         const retryAfterSeconds = Math.ceil(
@@ -459,37 +504,26 @@ export function createHostedBillingCheckoutRouteHandlers(
         );
       }
 
-      try {
-        const session = await (dependencies.createCheckoutSession
-          ? dependencies.createCheckoutSession({
-              actor,
-              request: parsed.data,
-              config,
-              env,
-              existingSubscription
-            })
-          : createStripeCheckoutSession(env, actor, parsed.data, existingSubscription));
+      const session = await (dependencies.createCheckoutSession
+        ? dependencies.createCheckoutSession({
+            actor,
+            request: parsed.data,
+            config,
+            env,
+            existingSubscription
+          })
+        : createStripeCheckoutSession(env, actor, parsed.data, existingSubscription));
 
-        return NextResponse.json({
-          provider: config.provider,
-          mode: config.mode,
-          planId: parsed.data.planId,
-          sessionId: session.id,
-          checkoutUrl: session.url,
-          bypassed: false,
-          message: "Redirecting to Stripe Checkout."
-        } satisfies HostedBillingCheckoutResponse);
-      } catch (error) {
-        return NextResponse.json(
-          {
-            error: error instanceof Error
-              ? error.message
-              : "Could not create a hosted billing checkout session."
-          },
-          { status: 400 }
-        );
-      }
-    }
+      return NextResponse.json({
+        provider: config.provider,
+        mode: config.mode,
+        planId: parsed.data.planId,
+        sessionId: session.id,
+        checkoutUrl: session.url,
+        bypassed: false,
+        message: "Redirecting to Stripe Checkout."
+      } satisfies HostedBillingCheckoutResponse);
+    })
   };
 }
 
@@ -515,9 +549,11 @@ async function createStripeAiCreditCheckoutSession(
   const nodeEnv = env.NODE_ENV?.trim().toLowerCase() || "development";
 
   if ((!secretKey || !priceId) && nodeEnv !== "production") {
+    const url = new URL(request.successUrl);
+    url.searchParams.set("checkout", "preview-ai-top-up");
     return {
       id: "cs_preview_ai_top_up",
-      url: `${request.successUrl}?checkout=preview-ai-top-up`
+      url: url.toString()
     };
   }
 
@@ -536,7 +572,7 @@ async function createStripeAiCreditCheckoutSession(
   return stripe.checkout.sessions.create({
     mode: "payment",
     customer: customerId,
-    payment_method_types: getStripeCheckoutPaymentMethodTypes(env),
+    allowed_payment_method_types: getStripeCheckoutPaymentMethodTypes(env),
     line_items: [{
       price: priceId,
       quantity: 1
@@ -569,7 +605,7 @@ export function createHostedAiCreditCheckoutRouteHandlers(
   }
 
   return {
-    async POST(request: Request) {
+    POST: withBillingAvailability(async (request: Request) => {
       const env = dependencies.env ?? process.env;
       const config = getHostedBillingConfig(env);
 
@@ -591,6 +627,8 @@ export function createHostedAiCreditCheckoutRouteHandlers(
         rateLimitTiers.api,
         env
       );
+
+      if (rateCheck.unavailable) return rateLimitUnavailableResponse();
 
       if (!rateCheck.allowed) {
         const retryAfterSeconds = Math.ceil(
@@ -653,36 +691,32 @@ export function createHostedAiCreditCheckoutRouteHandlers(
         );
       }
 
-      const existingSubscription = await lookupExistingHostedSubscription(env, actor.id);
-
-      try {
-        const session = await (dependencies.createCheckoutSession
-          ? dependencies.createCheckoutSession({
-              actor,
-              request: parsed.data,
-              env,
-              existingSubscription
-            })
-          : createStripeAiCreditCheckoutSession(env, actor, parsed.data, existingSubscription));
-
-        return NextResponse.json({
-          checkoutUrl: session.url,
-          sessionId: session.id,
-          purchaseKind: "ai-credit-pack",
-          creditedBudgetCents: resolveHostedAiTopUpCreditCents(env),
-          priceCents: resolveHostedAiTopUpPriceCents(env)
-        });
-      } catch (error) {
+      if (!canPurchaseHostedAiCredits(undefined, env)) {
         return NextResponse.json(
-          {
-            error: error instanceof Error
-              ? error.message
-              : "Could not create an AI helper credit checkout session."
-          },
-          { status: 400 }
+          { error: "AI credit purchases are unavailable while the production helper is awaiting qualification.", code: "ai_qualification_pending" },
+          { status: 503, headers: { "Cache-Control": "no-store, private" } }
         );
       }
-    }
+
+      const existingSubscription = await lookupExistingHostedSubscription(env, actor.id);
+
+      const session = await (dependencies.createCheckoutSession
+        ? dependencies.createCheckoutSession({
+            actor,
+            request: parsed.data,
+            env,
+            existingSubscription
+          })
+        : createStripeAiCreditCheckoutSession(env, actor, parsed.data, existingSubscription));
+
+      return NextResponse.json({
+        checkoutUrl: session.url,
+        sessionId: session.id,
+        purchaseKind: "ai-credit-pack",
+        creditedBudgetCents: resolveHostedAiTopUpCreditCents(env),
+        priceCents: resolveHostedAiTopUpPriceCents(env)
+      });
+    })
   };
 }
 
@@ -730,7 +764,7 @@ export function createHostedBillingPortalRouteHandlers(
   }
 
   return {
-    async POST(request: Request) {
+    POST: withBillingAvailability(async (request: Request) => {
       const env = dependencies.env ?? process.env;
       const config = getHostedBillingConfig(env);
 
@@ -752,6 +786,8 @@ export function createHostedBillingPortalRouteHandlers(
         rateLimitTiers.api,
         env
       );
+
+      if (rateCheck.unavailable) return rateLimitUnavailableResponse();
 
       if (!rateCheck.allowed) {
         const retryAfterSeconds = Math.ceil(
@@ -795,26 +831,15 @@ export function createHostedBillingPortalRouteHandlers(
         );
       }
 
-      try {
-        const session = await (dependencies.createPortalSession
-          ? dependencies.createPortalSession({
-              actor,
-              returnUrl: parsed.data.returnUrl,
-              env
-            })
-          : createStripePortalSession(env, actor, parsed.data.returnUrl));
+      const session = await (dependencies.createPortalSession
+        ? dependencies.createPortalSession({
+            actor,
+            returnUrl: parsed.data.returnUrl,
+            env
+          })
+        : createStripePortalSession(env, actor, parsed.data.returnUrl));
 
-        return NextResponse.json({ url: session.url });
-      } catch (error) {
-        return NextResponse.json(
-          {
-            error: error instanceof Error
-              ? error.message
-              : "Could not open the hosted billing portal."
-          },
-          { status: 400 }
-        );
-      }
-    }
+      return NextResponse.json({ url: session.url });
+    })
   };
 }

@@ -42,12 +42,25 @@ OH 52-5111787
 `;
 
 describe("uploaded document detection", () => {
+  it("preserves actual Box 7 tips without inventing zero from other payroll boxes", () => {
+    const unknown = parseUploadedW2Text(sampleW2Text);
+    expect(unknown?.detectedFacts[0].machineValue).not.toHaveProperty("socialSecurityTips");
+    expect(unknown?.coverage).toBe("partially-supported");
+    for (const value of ["0.00", "123.45", "9007199254740993.01"]) {
+      const actual = parseUploadedW2Text(sampleW2Text.replace("10 Dependent care benefits", `7 Social security tips\n${value}\n10 Dependent care benefits`));
+      expect(actual?.detectedFacts[0].machineValue).toHaveProperty("socialSecurityTips", value);
+    }
+    const conflicting = parseUploadedW2Text(`${sampleW2Text}\n7 Social security tips\n1.00\n7 Social security tips\n2.00`);
+    expect(conflicting?.detectedFacts[0].machineValue).not.toHaveProperty("socialSecurityTips");
+    expect(conflicting?.coverage).toBe("partially-supported");
+  });
   it("parses deterministic W-2 values from extracted PDF text", () => {
     const parsed = parseUploadedW2Text(sampleW2Text, "2025 Northwind W2.pdf");
 
     expect(parsed).toEqual({
       kind: "w2",
-      coverage: "supported",
+      taxYear: 2025,
+      coverage: "partially-supported",
       label: "NORTHWIND FABRICATION LLC W-2",
       notes: "Parsed W-2 wage and withholding boxes from an uploaded W-2 PDF.",
       seededFactIds: ["wages", "withholding"],
@@ -60,6 +73,10 @@ describe("uploaded document detection", () => {
           confidence: "high",
           machineValue: {
             entryKind: "w2-summary",
+            sourceFactsVersion: 2,
+            box10DependentCareBenefits: "0.00",
+            stateTaxReporting: "single",
+            state: "OH",
             employerName: "NORTHWIND FABRICATION LLC",
             employerEin: "04-3097449",
             wages: "107175.28",
@@ -86,8 +103,17 @@ describe("uploaded document detection", () => {
   it("ignores non-W-2 text", () => {
     expect(parseUploadedW2Text("Random statement with no wage boxes", "statement.pdf")).toBeNull();
   });
+  it("reads the actual Box 15 state and leaves absent or multiple source states unresolved", () => {
+    const differentSourceState = parseUploadedW2Text(sampleW2Text.replace("OH 52-5111787", "NY 52-5111787"));
+    expect(differentSourceState?.detectedFacts[0].machineValue).toMatchObject({ state: "NY", stateTaxReporting: "single" });
+    const absent = parseUploadedW2Text(sampleW2Text.replace("15 State Employer's state ID no.\nOH 52-5111787", ""));
+    expect(absent?.detectedFacts[0].machineValue).not.toHaveProperty("state"); expect(absent?.coverage).toBe("partially-supported");
+    const multiple = parseUploadedW2Text(`${sampleW2Text}\n15 State Employer's state ID no.\nNY 123456789\n16 State wages, tips, etc.\n100.00`);
+    expect(multiple?.detectedFacts[0].machineValue).toMatchObject({ stateTaxReporting: "multiple" });
+    expect(multiple?.detectedFacts[0].machineValue).not.toHaveProperty("state"); expect(multiple?.coverage).toBe("partially-supported");
+  });
 
-  it("infers social security wages from box 4 when that is the only confident source", () => {
+  it("keeps social security wages unknown when only box 4 is reported", () => {
     const parsed = parseUploadedW2Text(`
 2025 W-2 and EARNINGS SUMMARY
 W-2
@@ -113,9 +139,9 @@ Employer's FED ID number
 
     expect(parsed?.detectedFacts[0]?.machineValue).toMatchObject({
       entryKind: "w2-summary",
-      socialSecurityWages: "107175.28",
       socialSecurityWithheld: "6644.87",
     });
+    expect(parsed?.detectedFacts[0]?.machineValue).not.toHaveProperty("socialSecurityWages");
   });
 
   it("keeps state wage and withholding boxes stable for PDF.js-style W-2 text layouts", () => {
@@ -179,7 +205,7 @@ Total Short-Term (Cost basis is reported to the IRS) $ 917.48 $ 1,006.94 -- $ (8
 `, "1099 schwab 529.PDF");
 
     expect(parsed?.kind).toBe("1099-b");
-    expect(parsed?.coverage).toBe("supported");
+    expect(parsed?.coverage).toBe("partially-supported");
     expect(parsed?.seededFactIds).toEqual([
       "taxable-interest",
       "ordinary-dividends",
@@ -208,7 +234,7 @@ Total Short-Term (Cost basis is reported to the IRS) $ 917.48 $ 1,006.94 -- $ (8
     });
   });
 
-  it("parses Coinbase 1099-DA transactions as digital asset sales with basis not reported", () => {
+  it("preserves actual digital asset rows and leaves unreported classification details unknown", () => {
     const parsed = parseUploadedDocumentText(`
 Form 1099-DA
 Long Term Transactions With Cost Basis Captured By Coinbase
@@ -220,17 +246,19 @@ Total: 0.40 0.70 -0.30
 `, "coinbase 1099-da.pdf");
 
     expect(parsed?.kind).toBe("1099-da");
-    expect(parsed?.coverage).toBe("supported");
+    expect(parsed?.coverage).toBe("partially-supported");
     const machineValues = parsed?.detectedFacts
       .map((fact) => fact.machineValue)
       .filter((value): value is NonNullable<typeof value> => value !== undefined && value !== null) ?? [];
     expect(machineValues[0]).toMatchObject({
-      entryKind: "1099-b-transaction",
-      description: "ETH via Coinbase",
-      basisReportedToIRS: false,
-      digitalAsset: true,
+      entryKind: "1099-da-transaction",
+      digitalAssetName: "ETH",
+      digitalAssetCode: "X9J9K872S",
+      transactionEvidence: "individual",
       holdingPeriod: "long",
     });
+    expect(machineValues[0]).not.toHaveProperty("basisReportedToIRS");
+    expect(machineValues[0]).not.toHaveProperty("adjustments");
   });
 
   it("marks employer 1095-C statements as reviewed instead of blocking deterministic recompute", () => {
@@ -238,6 +266,7 @@ Total: 0.40 0.70 -0.30
 
     expect(parsed).toEqual({
       kind: "unknown",
+      taxYear: null,
       coverage: "reviewed",
       label: "Form 1095-C reviewed",
       notes: "Employer health-coverage statements were reviewed. Form 1095-C does not create a deterministic federal tax input for this return and no additional engine mapping is required.",

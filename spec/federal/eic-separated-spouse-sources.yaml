@@ -1,0 +1,90 @@
+form: "EIC separated-spouse sources"
+fullName: "Actual IRC32(d)(2)(B) separated-spouse and qualifying-child sources"
+taxYear: 2026
+irsReference: "https://www.irs.gov/publications/p596"
+notes: |
+  Official sources retrieved 2026-10-26: final2025 Pub596 Rules2/3/8/9,
+  https://www.irs.gov/instructions/i1040gi EIC Step3 questions1-6 and Step4;
+  https://www.govinfo.gov/content/pkg/USCODE-2024-title26/html/USCODE-2024-title26-subtitleA-chap1-subchapA-partIV-subpartC-sec32.htm
+  IRC32(c)(1)(A), (c)(3)(A)-(D), and (d)(2)(B). The permanent separated-spouse
+  provision applies to tax years beginning after2020 (Pub.L.117-2 section9623).
+  A married nonjoint filer needs a qualifying child sharing the principal abode
+  for more than half the applicable year, and either distinct principal homes
+  throughout the last six months OR a qualifying state-law written agreement /
+  decree of separate maintenance plus distinct households at year end. Neither
+  alternative is inferred from the other or from annual residency months.
+  A fully established alternative does not require an answer to an unused
+  alternative. Supplied contradictory facts still reject. State-law instruments
+  retain their actual supported state, type, effective date and reference.
+  Actual child qualification and timely employment-valid SSN are separate.
+  IRC32(c)(3)(D) limits the SSN exclusion to subsection(b); final1040 Step3
+  skips Step4 for an actual qualifying child without conditioning that question
+  on the child's SSN. Therefore an actual child without a valid SSN can establish
+  the Rule3 exception and self-only amount without adding childless age or
+  dependency requirements. Amount/table math is unchanged. Published2025 table
+  $10,000-$10,050 yields3409 for one counted child and649 for none; these are
+  independently fixed amounts, not outputs copied from the implementation.
+  This bounded source packet binds original household identities and every
+  represented EIC candidate. All candidate/competing-claim records are explicit,
+  including each original dependent with a represented qualifying relationship,
+  including known empty arrays. Ordinary full-year residence tests are supported;
+  A repeated original child identifier remains a duplicate across harmless
+  identifier formatting changes; an absent claimant identifier cannot establish
+  an actual identity merely because the recorded snapshot is also blank.
+  an actual special residence-period claim, married-child dependency method,
+  contested tie-break, or deceased claimant's short-year Rule3 period requires
+  its own source method. Never infer those results from a general eligibility flag.
+  Final2025 ScheduleEIC line6 expressly permits actual residence for more than
+  half the year but fewer than7 months (print7); an original rounded month count
+  of6 therefore does not refute the separate actual shared-home answer. Preserve
+  that count and derive printed line6 separately. Actual0-5 months conflicts with
+  an ordinary shared-home answer ofYes. Source: https://www.irs.gov/pub/irs-pdf/f1040sei.pdf
+  Older2025 source-free mfsEligible compatibility remains visibly unverified;
+  omission stays unknown. Actual sources and2026 cannot substitute a bare true
+  override for the packet. Full2026 calculation/filing readiness stays closed.
+lines:
+  - line: "separation"
+    description: "Derive the two statutory separated-spouse alternatives independently"
+    formula: "married nonjoint + actual qualifying child + (last-six-month principal homes apart OR state-law instrument and year-end households apart)"
+    irsRef: "IRC32(d)(2)(B); Pub596 Rule3; final1040 Step3 questions3-5"
+    testRef: "tests/engine/eic-separated-spouse-sources.test.ts::derives each actual separated-spouse alternative without substituting unknown facts"
+  - line: "child"
+    description: "Bind actual child source qualification before the separate SSN amount count"
+    formula: "Reconcile original child identity, age/relationship, U.S. shared home, marital/joint return and actual competing claims; count valid timely SSNs separately"
+    irsRef: "IRC32(c)(3); Pub596 Rules2/8/9"
+    testRef: "tests/engine/eic-separated-spouse-sources.test.ts::binds child qualification and original source identity without borrowing the legacy EIC flag"
+  - line: "selfOnly"
+    description: "Actual qualifying child with invalid SSN uses the self-only amount but skips childless restrictions"
+    formula: "Actual qualifying child present, SSN-count0:2025 $10000 income gives649 even when claimant is under25 or over64"
+    irsRef: "IRC32(c)(3)(D); final1040 Step3/Step4 and WorksheetA; Pub596 Rule3"
+    testRef: "tests/engine/eic-separated-spouse-sources.test.ts::uses the self-only amount for an actual invalid-SSN child without imposing childless age rules"
+  - line: "negative"
+    description: "No actual qualifying child cannot satisfy the married nonjoint exception"
+    formula: "Known failed child or separation condition yields zero; unknown required facts throw and never become false or zero"
+    irsRef: "IRC32(d)(2)(B); final1040 Step4 question1"
+    testRef: "tests/engine/eic-separated-spouse-sources.test.ts::keeps known ineligibility distinct from unknown sources and unsupported methods"
+  - line: "legacy"
+    description: "Preserve historical source omission without validating an affirmative override"
+    formula: "No actual packet preserves legacy2025 results; actual and2026 affirmative claims need source facts; full2026 remains closed"
+    irsRef: "Actual source boundary and IRC32(d)"
+    testRef: "tests/engine/eic-separated-spouse-sources.test.ts::preserves legacy omission and enforces actual next-year source boundaries"
+  - line: "childSources"
+    description: "Use original relationship and age sources, including supported guided relationship spellings"
+    formula: "Every represented child relationship needs an actual source row; derive under19, student under24 or disability qualification without copying a legacy qualification flag"
+    irsRef: "IRC32(c)(3); Pub596 Rule8"
+    testRef: "tests/engine/eic-separated-spouse-sources.test.ts::derives supported original relationship and age conditions while rejecting missing candidate rows"
+  - line: "nextYearSources"
+    description: "Validate next-year eligibility sources independently of the closed full-return gate"
+    formula: "Actual2026 source year/identity/applicable period validates without a financial override; missing or conflicting source facts reject"
+    irsRef: "IRC32(d)(2)(B), effective after2020; actual source contract"
+    testRef: "tests/engine/eic-separated-spouse-sources.test.ts::validates actual next-year sources and original identity without fabricating a financial context"
+  - line: "residenceConservation"
+    description: "Ordinary child home answer must reconcile to original residence months"
+    formula: "Reject original0-5 months with ordinary more-than-half-year true; preserve actual6-month source with true and retain the separate special-period boundary"
+    irsRef: "IRC32(c)(3)(A); final2025 ScheduleEIC line6 instructions"
+    testRef: "tests/engine/eic-separated-spouse-sources.test.ts::rejects contradictory ordinary residence months while preserving the six-month source"
+  - line: "claimantIdentity"
+    description: "The claimant cannot also be a represented qualifying child"
+    formula: "Reject a child's original nonblank identifier equal to the claimant's identifier after punctuation normalization, regardless of names or legacy eligibility flags"
+    irsRef: "IRC32(c)(3) relationship/identity; original source conservation"
+    testRef: "tests/engine/eic-separated-spouse-sources.test.ts::rejects an original child identifier that duplicates the claimant"

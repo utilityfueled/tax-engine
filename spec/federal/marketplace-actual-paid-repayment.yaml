@@ -1,0 +1,83 @@
+form: "Marketplace actual payer and completed advance repayment"
+fullName: "Actual owner payments differing from Part IV with determined own-return repayment"
+taxYear: 2025
+irsReference: "https://www.ecfr.gov/current/title-26/section-1.162(l)-1"
+notes: |
+  Refreshed 2026-10-27: IRC162(l)(1)-(2), Reg1.162(l)-1(a)(1)-(3),
+  Reg1.36B-4(a)(1)(ii), official i7206, Pub974 specified premiums and
+  RP2014-41 sections3-4. This is a derived sufficient composition, not a
+  published combined example. Part IV establishes this return's premium and
+  advance amounts; it does not establish actual payer cash. Full originals,
+  each person's actual cash/advance and the other return's advance remain
+  independent. For each eligible component C=0 and full repayment of every
+  advance attributable to this return restore exactly its actual advance.
+  Actual own cash plus that advance must not exceed the independently allocated
+  specified/nonspecified component. No other-return repayment is imported.
+  Form7206 applies actual person/payer/month/business qualification and its own
+  business income limit. Complete actual return C=0 and R=reported attributable A
+  must remain true after the proposed ordinary deduction. No entered tax scalar.
+  Where exact A differs from reported A, only a single fully eligible owner and
+  business pool may use min(original actual eligible cost, actual cash+reported R).
+  It retains unpaid cents and never creates premium expense from rounding up.
+  The actual marriage worksheets may compose only after their original date,
+  family and monthly source binder passes and their completed alternative result
+  independently preserves C=0 and full attributable repayment. Positive credit,
+  partial/capped repayment, unresolved source-cent allocation across groups and
+  positive outside-child advances/other-return credit remain separate methods.
+  Existing 2026 production and human qualification gates remain unchanged.
+lines:
+  - line: "paid-source"
+    description: "Actual cash differs from allocated premiums without importing other-return advances"
+    formula: "Monthly this-return premium1500, actual coveragecash250/noncoveragecash50, respective advances600/400, cost1300. Annual deduction15600, this-return A/R12000 and AGI269465. Shared original3000/A2000 retains other-return A12000 separately; unshared original1500/A1000 yields the same actual deduction."
+    testRef: "tests/engine/federal-marketplace-actual-paid-repayment.test.ts::uses actual owner cash and only the fully repaid own-return advances"
+  - line: "owners"
+    description: "Existing actual owners and qualification remain independent"
+    formula: "Two actual plans with15600 cost each yield primary15600 and spouse4646 under spouse5000 income, never borrowing primary earnings. One excluded employer month leaves14300; originals and full repayment remain intact. Reversing plans preserves all return totals."
+    testRef: "tests/engine/federal-marketplace-actual-paid-repayment.test.ts::preserves separate owners and actual monthly health qualification"
+  - line: "reported-cents"
+    description: "Single complete eligible cost pool retains exact source and reported repayment"
+    formula: "Actual monthly cash300 and A1000.49 yield source cost15605.88. Monthly R12000 gives15600 actual paid cost; annual R12006 is capped at15605.88, reported deduction15606. Source A0.12/reportR0 leaves3600 actual paid cost and0.12 unpaid. Multiple owner or partially qualified pools cannot allocate the reporting difference."
+    testRef: "tests/engine/federal-marketplace-actual-paid-repayment.test.ts::retains actual source cents and the single eligible reported payment boundary"
+  - line: "marriage"
+    description: "Actual marriage sources compose only with completed zero credit and full repayment"
+    formula: "Actual July15 marriage, ten own coverage months with700 advance and200 cash, two noncoverage months with900 cash: cost10800, A/R7000, finalAGI274265 and actual alternative credit0. Shared original A14000 still yields own-return R7000; Part IV/V facts are unchanged."
+    testRef: "tests/engine/federal-marketplace-actual-paid-repayment.test.ts::reconciles actual marriage worksheets before accepting the payment proof"
+  - line: "source-boundary"
+    description: "Unknowns and component excess cannot supply actual payments"
+    formula: "Reject missing person advances, stale original source, actual coverage cash plus advance above the independently allocated component, and inconsistent complete-family amounts. No agreement or original gross total is a payer confirmation."
+    testRef: "tests/engine/federal-marketplace-actual-paid-repayment.test.ts::requires complete actual source and component payment bounds"
+  - line: "outside-composition"
+    description: "Existing eligible outside-child cash remains separate from own-return advances"
+    formula: "Actual January-June family cash900.01 and independently qualified child cash100, original outside advance0 and completed other-return credit0, plus July-December own advance1000: eligible cost12000.06, Schedule1 deduction12000, own A/R6000 and AGI273065. An actual positive other-return credit remains its separate source method. No outside advance or repayment enters this cost."
+    testRef: "tests/engine/federal-marketplace-actual-paid-repayment.test.ts::composes actual outside-child cash with separate own-return advances"
+  - line: "final-boundary"
+    description: "Completed actual credit and repayment control acceptance"
+    formula: "Lower actual business income restoring positive credit or partial repayment rejects after the complete calculation. Changed final credit, reduced repayment or duplicate line24/25/29 audit cannot certify the source proof."
+    testRef: "tests/engine/federal-marketplace-actual-paid-repayment.test.ts::rejects a changed final credit repayment or duplicated audit"
+  - line: "intake"
+    description: "Actual payments remain reachable without guessing the eventual credit"
+    formula: "Original shared premium3000/advance2000 and actual ownercash300/personadvances600+400 normalize unchanged; final15600 deduction. Marriage source with actual July15 date yields10800. Source-only validation cannot certify a positive-credit lower-income return. Nested changes invalidate confirmations and unknown person payments stay unknown."
+    testRef: "tests/guided-interview/guided-marketplace-actual-paid.test.ts::retains actual payments separately from allocation and final repayment proof"
+  - line: "controls"
+    description: "Full interview edits invalidate the actual source packet"
+    formula: "Existing actual payment and coverage-family controls remain reachable; original gross3000, cash300, othercash700 and advances2000 persist. Editing source evidence requires independent family, allocation and outer confirmations before continuing."
+    testRef: "tests/apps/web/marketplace-actual-paid-interactions.test.tsx::reaches actual paid repayment sources and independent reconfirmation"
+  - line: "review"
+    description: "Physical forms retain original and attributable payments with a private proof"
+    formula: "Shared exact own A12005.88/reportR12000 yields15600; original A24011.76 stays distinct. Saved7206/8962 show15600/0/12000/12000 with source cents, every-page review notices and private identifiers. Changed or omitted proof/source/audit rejects before file I/O."
+    testRef: "tests/pdf/marketplace-actual-paid-review.test.ts::prints actual payer repayment with private source and result binding"
+  - line: "workspace"
+    description: "Actual guide sources reach the saved review packet"
+    formula: "Shared marriage originalA14000 and ownA/R7000 yield actual health10800. Original paid sources, PartIV/V and once-only final transfers remain in the downloaded review; all pages are marked and private identifiers withheld."
+    testRef: "tests/apps/web/workspace-marketplace-actual-paid.test.ts::downloads actual marriage payer sources without importing other repayment"
+  - line: "browser"
+    description: "Desktop and mobile retain actual payments after source edits and reload"
+    formula: "Real production controls preserve original policy, actual owner and other cash, person advances and independent confirmations; unknown source amounts remove the preview and cannot silently become zero. Complete fictional prior-return and payment histories are reconfirmed after health edits, every eligible section is visited, and the actual review PDF is downloaded and reopened. The marriage fixture uses both separate2024 tax amounts2000+1000 and AGIs60000+40000 under i2210line8; the established joint fixture uses actual joint tax3000/AGI100000. No current tax or penalty override is entered."
+    testRef: "apps/web/tests/guided-marketplace-actual-paid.spec.ts::retains actual payment sources and requires final source reconfirmation"
+  - line: "isolated-2026"
+    description: "The same source proof uses actual2026 repayment only behind existing gates"
+    formula: "Actual unshared annual advances12005.88/report12006 and cost15605.88 produce15606 deduction at actual150000 business income. Lower100000 business income restoring positive credit rejects. No production qualification gate is changed."
+    testRef: "tests/engine/federal-marketplace-actual-paid-2026.test.ts::checks actual2026 credit after the actual paid deduction"
+
+# Final delivery browser reopening also requires the upstream elected-marriage
+# audit to identify actual2025, never the former hard-coded2026 wording.

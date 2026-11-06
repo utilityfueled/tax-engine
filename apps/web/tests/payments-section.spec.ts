@@ -1,3 +1,4 @@
+import { reachFilingStatus } from "./guided-fixtures";
 import { expect, test } from "@playwright/test";
 
 /**
@@ -10,9 +11,11 @@ import { expect, test } from "@playwright/test";
 
 /** Complete segmentation with Single / W-2 wages / no events / no state. */
 async function completeSegmentation(page: import("@playwright/test").Page) {
-  await expect(page.getByText(/let's figure out your tax situation/i)).toBeVisible({ timeout: 10000 });
+  await expect(page.getByText(/let's tailor your return/i)).toBeVisible({ timeout: 10000 });
 
+  await reachFilingStatus(page);
   await page.getByRole("radio", { name: /single/i }).click();
+  await page.getByRole("button", { name: "Continue" }).click();
   await expect(page.getByText(/what types of income/i)).toBeVisible({ timeout: 5000 });
 
   await page.getByRole("checkbox", { name: /w-2 wages/i }).check();
@@ -31,7 +34,7 @@ async function completeSegmentation(page: import("@playwright/test").Page) {
 async function createReturn(page: import("@playwright/test").Page) {
   await page.goto("/");
   await page.getByRole("button", { name: /start your tax return/i }).click();
-  await expect(page).toHaveURL(/\/returns\/[a-z0-9-]+/i);
+  await expect(page).toHaveURL(/\/returns\/(?!new(?:[/?#]|$))[a-z0-9-]+/i);
 }
 
 /** Skip a section by clicking Continue and then Skip if prompted. */
@@ -75,7 +78,7 @@ test.describe("Payments section — layout and defaults", () => {
   });
 
   test("Add an estimated payment button is visible", async ({ page }) => {
-    await expect(page.getByRole("button", { name: /add an estimated payment/i })).toBeVisible();
+    await expect(page.getByRole("button", { name: /add another estimated tax payment/i })).toBeVisible();
   });
 
   test("no payment cards are shown by default", async ({ page }) => {
@@ -96,7 +99,7 @@ test.describe("Payments section — estimated payment management", () => {
   });
 
   test("clicking Add creates a payment card with date and amount fields", async ({ page }) => {
-    await page.getByRole("button", { name: /add an estimated payment/i }).click();
+    await page.getByRole("button", { name: /add another estimated tax payment/i }).click();
 
     await expect(page.getByText(/payment #1/i)).toBeVisible();
     await expect(page.getByText(/date paid/i)).toBeVisible();
@@ -105,20 +108,20 @@ test.describe("Payments section — estimated payment management", () => {
   });
 
   test("can add multiple estimated payment cards", async ({ page }) => {
-    await page.getByRole("button", { name: /add an estimated payment/i }).click();
+    await page.getByRole("button", { name: /add another estimated tax payment/i }).click();
     await expect(page.getByText(/payment #1/i)).toBeVisible();
 
-    await page.getByRole("button", { name: /add an estimated payment/i }).click();
+    await page.getByRole("button", { name: /add another estimated tax payment/i }).click();
     await expect(page.getByText(/payment #2/i)).toBeVisible();
 
-    await page.getByRole("button", { name: /add an estimated payment/i }).click();
+    await page.getByRole("button", { name: /add another estimated tax payment/i }).click();
     await expect(page.getByText(/payment #3/i)).toBeVisible();
   });
 
   test("can remove a payment card", async ({ page }) => {
     // Add two payments
-    await page.getByRole("button", { name: /add an estimated payment/i }).click();
-    await page.getByRole("button", { name: /add an estimated payment/i }).click();
+    await page.getByRole("button", { name: /add another estimated tax payment/i }).click();
+    await page.getByRole("button", { name: /add another estimated tax payment/i }).click();
     await expect(page.getByText(/payment #2/i)).toBeVisible();
 
     // Remove the second payment
@@ -130,7 +133,7 @@ test.describe("Payments section — estimated payment management", () => {
   });
 
   test("can remove the only payment card", async ({ page }) => {
-    await page.getByRole("button", { name: /add an estimated payment/i }).click();
+    await page.getByRole("button", { name: /add another estimated tax payment/i }).click();
     await expect(page.getByText(/payment #1/i)).toBeVisible();
 
     const card = page.locator(".guided-w2-card").filter({ hasText: /payment #1/i });
@@ -140,7 +143,7 @@ test.describe("Payments section — estimated payment management", () => {
   });
 
   test("date field accepts text input", async ({ page }) => {
-    await page.getByRole("button", { name: /add an estimated payment/i }).click();
+    await page.getByRole("button", { name: /add another estimated tax payment/i }).click();
 
     const dateInput = page.locator(".guided-w2-card")
       .filter({ hasText: /payment #1/i })
@@ -150,7 +153,7 @@ test.describe("Payments section — estimated payment management", () => {
   });
 
   test("amount field formats value as currency on blur", async ({ page }) => {
-    await page.getByRole("button", { name: /add an estimated payment/i }).click();
+    await page.getByRole("button", { name: /add another estimated tax payment/i }).click();
 
     const amountInput = page.locator(".guided-w2-card")
       .filter({ hasText: /payment #1/i })
@@ -170,7 +173,7 @@ test.describe("Payments section — total summary", () => {
   });
 
   test("total estimated payments appears after entering an amount", async ({ page }) => {
-    await page.getByRole("button", { name: /add an estimated payment/i }).click();
+    await page.getByRole("button", { name: /add another estimated tax payment/i }).click();
 
     const amountInput = page.locator(".guided-w2-card")
       .filter({ hasText: /payment #1/i })
@@ -184,7 +187,7 @@ test.describe("Payments section — total summary", () => {
 
   test("total sums multiple payment amounts", async ({ page }) => {
     // Add first payment
-    await page.getByRole("button", { name: /add an estimated payment/i }).click();
+    await page.getByRole("button", { name: /add another estimated tax payment/i }).click();
     const amount1 = page.locator(".guided-w2-card")
       .filter({ hasText: /payment #1/i })
       .locator("input.guided-input-currency");
@@ -192,7 +195,7 @@ test.describe("Payments section — total summary", () => {
     await amount1.blur();
 
     // Add second payment
-    await page.getByRole("button", { name: /add an estimated payment/i }).click();
+    await page.getByRole("button", { name: /add another estimated tax payment/i }).click();
     const amount2 = page.locator(".guided-w2-card")
       .filter({ hasText: /payment #2/i })
       .locator("input.guided-input-currency");
@@ -205,14 +208,14 @@ test.describe("Payments section — total summary", () => {
 
   test("total updates when a payment is removed", async ({ page }) => {
     // Add two payments
-    await page.getByRole("button", { name: /add an estimated payment/i }).click();
+    await page.getByRole("button", { name: /add another estimated tax payment/i }).click();
     const amount1 = page.locator(".guided-w2-card")
       .filter({ hasText: /payment #1/i })
       .locator("input.guided-input-currency");
     await amount1.fill("3000");
     await amount1.blur();
 
-    await page.getByRole("button", { name: /add an estimated payment/i }).click();
+    await page.getByRole("button", { name: /add another estimated tax payment/i }).click();
     const amount2 = page.locator(".guided-w2-card")
       .filter({ hasText: /payment #2/i })
       .locator("input.guided-input-currency");
@@ -230,7 +233,7 @@ test.describe("Payments section — total summary", () => {
   });
 
   test("total disappears when all payment amounts are removed", async ({ page }) => {
-    await page.getByRole("button", { name: /add an estimated payment/i }).click();
+    await page.getByRole("button", { name: /add another estimated tax payment/i }).click();
     const amountInput = page.locator(".guided-w2-card")
       .filter({ hasText: /payment #1/i })
       .locator("input.guided-input-currency");
@@ -255,33 +258,41 @@ test.describe("Payments section — other payments", () => {
   });
 
   test("Other payments is collapsed by default", async ({ page }) => {
-    await expect(page.getByText(/extension payments, excess social security/i)).not.toBeVisible();
+    await expect(page.getByRole("button", { name: "Add extension payment", exact: true })).not.toBeVisible();
+    await expect(page.getByRole("button", { name: "Add prior-year applied refund", exact: true })).not.toBeVisible();
   });
 
-  test("expanding Other payments shows currency field with hint", async ({ page }) => {
+  test("expanding Other payments exposes actual extension and applied-refund sources", async ({ page }) => {
     await page.locator("summary").filter({ hasText: /other payments/i }).click();
 
-    await expect(page.getByText(/extension payments, excess social security/i)).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Federal extension payments", exact: true })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Prior-year federal refund applied to this return", exact: true })).toBeVisible();
+    await page.getByRole("button", { name: "Add extension payment", exact: true }).click();
+    await expect(page.getByLabel("Extension payment #1 date", { exact: true })).toHaveValue("");
+    await expect(page.getByRole("textbox", { name: /^Extension payment #1 amount/ })).toHaveValue("");
   });
 
-  test("Other payments field accepts and formats currency", async ({ page }) => {
+  test("Extension payment accepts and formats currency", async ({ page }) => {
     await page.locator("summary").filter({ hasText: /other payments/i }).click();
 
-    const otherInput = page.locator(".guided-expand-body input.guided-input-currency");
+    await page.getByRole("button", { name: "Add extension payment", exact: true }).click();
+    const otherInput = page.getByRole("textbox", { name: /^Extension payment #1 amount/ });
     await otherInput.fill("750");
     await otherInput.blur();
 
     await expect(otherInput).toHaveValue("750");
   });
 
-  test("Other payments field formats large amounts with commas", async ({ page }) => {
+  test("Applied refund formats large amounts with commas and keeps its source year unknown", async ({ page }) => {
     await page.locator("summary").filter({ hasText: /other payments/i }).click();
 
-    const otherInput = page.locator(".guided-expand-body input.guided-input-currency");
+    await page.getByRole("button", { name: "Add prior-year applied refund", exact: true }).click();
+    const otherInput = page.getByRole("textbox", { name: /^Applied refund #1 amount/ });
     await otherInput.fill("12500");
     await otherInput.blur();
 
     await expect(otherInput).toHaveValue("12,500");
+    await expect(page.getByLabel("Applied refund #1 source tax year", { exact: true })).toHaveValue("");
   });
 });
 
@@ -292,7 +303,7 @@ test.describe("Payments section — data persistence", () => {
     await navigateToPayments(page);
 
     // Add a payment with date and amount
-    await page.getByRole("button", { name: /add an estimated payment/i }).click();
+    await page.getByRole("button", { name: /add another estimated tax payment/i }).click();
 
     const dateInput = page.locator(".guided-w2-card")
       .filter({ hasText: /payment #1/i })
@@ -331,7 +342,7 @@ test.describe("Payments section — data persistence", () => {
     await navigateToPayments(page);
 
     // Add a payment
-    await page.getByRole("button", { name: /add an estimated payment/i }).click();
+    await page.getByRole("button", { name: /add another estimated tax payment/i }).click();
 
     const amountInput = page.locator(".guided-w2-card")
       .filter({ hasText: /payment #1/i })
@@ -342,18 +353,9 @@ test.describe("Payments section — data persistence", () => {
     // Reload page
     await page.reload();
 
-    // Navigate back to payments section after reload restores state
-    // The reload should restore the guided interview at the current section
-    // We may need to re-navigate if it goes back to personal info
-    const paymentsVisible = await page.getByText(/tax you've already paid this year/i)
-      .isVisible({ timeout: 3000 })
-      .catch(() => false);
-
-    if (!paymentsVisible) {
-      // Reload went back to interview start — re-navigate
-      await expect(page.getByText(/let's start with the basics/i)).toBeVisible({ timeout: 5000 });
-      await navigateToPayments(page);
-    }
+    // Wait for hydration to restore the saved section; isVisible does not wait.
+    await expect(page.getByRole("heading", { name: "Payments & Withholding", exact: true })).toBeVisible();
+    await expect(page.getByText(/tax you've already paid this year/i)).toBeVisible();
 
     // Payment should still be present
     await expect(page.getByText(/payment #1/i)).toBeVisible();

@@ -1,26 +1,59 @@
 "use client";
 
+import { ForeignIncomeDetails } from "./foreign-income-details";
+import { NetOperatingLossDetails } from "./net-operating-loss-details";
+import { CurrentLossOriginDetails } from "./current-loss-origin-details";
+import { CodNolDetails } from "./cod-nol-details";
+import { K1LossSourceDetails } from "./k1-loss-source-details";
+import { HealthInsuranceSourceDetails } from "./health-insurance-source-details";
+import type { HealthInsuranceSourceOption } from "@/lib/guided-health-insurance-facts";
+import type { MarketplacePolicyOption } from "@/lib/guided-marketplace-health-facts";
 import { RetroShell } from "@/components/retro-shell";
 import {
   type AdjustmentData,
+  type FilingStatus,
   emptyAdjustmentData,
 } from "@/lib/guided-interview-flow";
 import { CurrencyField } from "./currency-field";
+import { HsaSourceDetails } from "./hsa-source-details";
+import { EducatorSourceDetails } from "./educator-source-details";
+import { StudentLoanSourceDetails } from "./student-loan-source-details";
+import type { EducationDistributionData } from "@/lib/guided-education-distributions";
+import { AdjustmentSourceDetails } from "./adjustment-source-details";
+import type { InvestmentData } from "@/lib/guided-investment-facts";
 
 export function SectionAdjustments({
   data,
   hasSelfEmployment,
   hasStudentLoans,
   hasHsa,
+  filingStatus,
+  taxYear,
+  educationDistributions,
+  foreignIncomeSources,
+  healthInsuranceSources,
+  marketplacePolicies,
+  hasHealthInsurance,
+  investments,
   onDataChange,
 }: {
   data: AdjustmentData | undefined;
   hasSelfEmployment: boolean;
   hasStudentLoans: boolean;
   hasHsa: boolean;
+  filingStatus?: FilingStatus | null;
+  taxYear?: number | null;
+  educationDistributions?: EducationDistributionData;
+  foreignIncomeSources?: { sourceId: string; label: string }[];
+  healthInsuranceSources?: HealthInsuranceSourceOption[];
+  marketplacePolicies?: MarketplacePolicyOption[];
+  hasHealthInsurance?: boolean;
+  investments?: InvestmentData;
   onDataChange: (data: AdjustmentData) => void;
 }) {
-  const current = data ?? emptyAdjustmentData;
+  // Older or source-only saved sections may omit the legacy aggregate inputs.
+  // Keep those amounts unknown (blank) while preserving every actual source.
+  const current = { ...emptyAdjustmentData, ...data };
 
   function update(field: keyof AdjustmentData, value: string) {
     onDataChange({ ...current, [field]: value });
@@ -36,58 +69,52 @@ export function SectionAdjustments({
         </p>
 
         <div className="guided-form-grid">
-          {hasHsa && (
-            <CurrencyField
-              label="HSA deduction"
-              hint="Your contributions to a Health Savings Account (not employer contributions)."
-              value={current.hsaDeduction}
-              onChange={(v) => update("hsaDeduction", v)}
-            />
-          )}
 
-          {hasStudentLoans && (
+
+          {current.studentLoanInterest.trim() && (
             <CurrencyField
-              label="Student loan interest"
-              hint="Up to $2,500. From Form 1098-E Box 1."
+              label="Saved student-loan gross interest"
+              hint="Reconcile this saved total with actual source records below. Eligibility and income limits determine the allowed deduction."
               value={current.studentLoanInterest}
               onChange={(v) => update("studentLoanInterest", v)}
             />
           )}
 
-          {hasSelfEmployment && (
+          {current.selfEmployedHealthInsurance.trim() && (
             <CurrencyField
-              label="Self-employed health insurance"
-              hint="Premiums you paid for yourself, spouse, and dependents."
+              label="Saved health insurance premiums"
+              hint="Reconcile this saved amount with actual owner and business paid premium shares below. It does not establish the allowed deduction."
               value={current.selfEmployedHealthInsurance}
               onChange={(v) => update("selfEmployedHealthInsurance", v)}
             />
           )}
 
-          <CurrencyField
-            label="Educator expenses"
-            hint="Up to $300 ($600 MFJ if both are educators). Books, supplies, etc."
+          {current.educatorExpenses.trim() && <CurrencyField
+            label="Saved educator net-expense amount"
+            hint="Retained from the earlier interview. Reconcile this amount with actual net source expenses below. It does not establish an educator's eligibility."
             value={current.educatorExpenses}
             onChange={(v) => update("educatorExpenses", v)}
-          />
+          />}
         </div>
+
+        {(hasStudentLoans || current.studentLoanFacts || current.studentLoanInterest.trim()) && <StudentLoanSourceDetails data={current.studentLoanFacts} filingStatus={filingStatus} educationDistributions={educationDistributions} onChange={studentLoanFacts => onDataChange({ ...current, studentLoanFacts })} />}
+
+        {(hasHealthInsurance || hasSelfEmployment || healthInsuranceSources?.length || current.healthInsuranceFacts || current.selfEmployedHealthInsurance.trim()) && <HealthInsuranceSourceDetails data={current.healthInsuranceFacts} sources={healthInsuranceSources} marketplacePolicies={marketplacePolicies} onChange={healthInsuranceFacts => onDataChange({ ...current, healthInsuranceFacts })} />}
+
+        <ForeignIncomeDetails data={current.foreignIncome} sources={foreignIncomeSources} onChange={foreignIncome => onDataChange({ ...current, foreignIncome })} />
+        <NetOperatingLossDetails data={current.netOperatingLossSources} onChange={netOperatingLossSources => onDataChange({ ...(data ?? emptyAdjustmentData), netOperatingLossSources })} />
+        <K1LossSourceDetails data={current.k1LossSources} nol={current.netOperatingLossSources} onChange={k1LossSources => onDataChange({ ...current, k1LossSources })} />
+        <CodNolDetails data={current.codNolSources} onChange={codNolSources => onDataChange({ ...current, codNolSources })} />
+        <CurrentLossOriginDetails data={current.currentLossOrigin} investments={investments} k1Sources={current.k1LossSources?.activities?.map((source, index) => [`scheduleK1:${index}`, `K-1 ${index + 1}: ${source.entityName?.trim() || "Original entity name required"}`])} onChange={currentLossOrigin => onDataChange({ ...(data ?? emptyAdjustmentData), currentLossOrigin })} />
+
+        <EducatorSourceDetails sources={current.educatorExpenseSources} taxYear={taxYear} onChange={educatorExpenseSources => onDataChange({ ...current, educatorExpenseSources })} />
+
+        {(hasHsa || current.hsaAccounts?.length || current.hsaDeduction.trim()) && <HsaSourceDetails data={current} filingStatus={filingStatus} taxYear={taxYear} onChange={onDataChange} />}
 
         <details className="guided-expand">
           <summary className="guided-expand-trigger">More adjustments</summary>
           <div className="guided-expand-body">
-            <div className="guided-form-grid">
-              <CurrencyField
-                label="IRA deduction"
-                hint="Deductible traditional IRA contributions."
-                value={current.iraDeduction}
-                onChange={(v) => update("iraDeduction", v)}
-              />
-              <CurrencyField
-                label="Alimony paid"
-                hint="Only for divorce agreements finalized before 2019."
-                value={current.alimonyPaid}
-                onChange={(v) => update("alimonyPaid", v)}
-              />
-            </div>
+            <AdjustmentSourceDetails data={current} filingStatus={filingStatus} onChange={onDataChange} />
           </div>
         </details>
       </div>

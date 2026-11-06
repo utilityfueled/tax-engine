@@ -3,6 +3,7 @@
  */
 
 import { describe, expect, it } from "vitest";
+import { niitDispositionSources } from "../fixtures/niit-sources.js";
 import { calculateFederalTax } from "@/engine/federal.js";
 import { simpleW2Fixture } from "../fixtures/simple-w2.js";
 
@@ -10,6 +11,7 @@ describe("Federal engine - Form 4797 section 1231 routing", () => {
   it("K-1 section 1231 gains default through Form 4797 and Schedule D instead of Schedule E", () => {
     const result = calculateFederalTax({
       ...simpleW2Fixture,
+      form8960Sources: niitDispositionSources("6500", "2500", "-9000"),
       scheduleK1: [
         {
           partnershipName: "Timber LP",
@@ -34,6 +36,7 @@ describe("Federal engine - Form 4797 section 1231 routing", () => {
   it("nonpassive K-1 section 1231 losses route to Schedule 1 while passive losses stay deferred", () => {
     const result = calculateFederalTax({
       ...simpleW2Fixture,
+      form8960Sources: niitDispositionSources("0", "-4000", "4000"),
       scheduleK1: [
         {
           partnershipName: "Operating LLC",

@@ -1,0 +1,78 @@
+form: "EIC claimant eligibility"
+fullName: "Actual claimant SSN, residency and childless age checks"
+taxYear: 2026
+irsReference: "https://www.irs.gov/publications/p596"
+notes: |
+  Retrieved 2026-10-25. Existing-law source: 26 USC 32(c)(1)(A)(ii),
+  32(c)(1)(D)/(E), 32(m), and 6013(g)/(h); official code text through
+  Public Law119-120 at https://uscode.house.gov/us/usc/119-118/t26/s32/.
+  Final2025 Pub596 Rules2/4/11 describe the same ordinary2025/2026 claimant
+  restrictions. This package does not implement proposed REG-119882-25 or
+  draft2026 Schedule3-A public-benefit reductions.
+  Actual SSN answers must include timely issuance and valid work authorization
+  where required. Both joint filers need eligible SSNs for EIC; CTC's one-spouse
+  rule is not borrowed. Primary and spouse nonresident histories are separate.
+  A nonresident for any part of the year needs a valid6013(g)/(h) joint resident
+  election. Known overlapping standard-deduction facts must reconcile.
+  Childless joint age is satisfied by either spouse. Pub596 Rule11 uses the day
+  before the25th birthday and the65th birthday, with actual death date when
+  applicable. Never invent an alive answer for an actual source claim.
+  Existing2025 calls with no actual packet retain their historical unverified
+  source boundary; known negative facts are never ignored. The new actual
+  packet and2026 source route require known relevant facts with no defaults.
+  Other EIC child, abode, dependency, recertification and income rules remain
+  distinct; these checks do not claim comprehensive EIC qualification. Existing
+  formula/table behavior and full2026 readiness gate are unchanged.
+  The actual claimant packet, when supplied, is always checked. Without one,
+  income that computes no EIC does not require unrelated claimant records;
+  that zero does not assert source qualification.
+  Without an actual packet, a known ineligible SSN, known nonresident status
+  without a qualifying election, or fully known failing childless ages can
+  independently establish zero. These disqualifications do not establish the
+  missing affirmative claimant facts or replace the required2026 claim packet.
+lines:
+  - line: "identity"
+    description: "Known claimant SSN and residency disqualifiers"
+    formula: "EIC=0 when a required claimant SSN is known ineligible or actual nonresident status lacks a valid joint resident election"
+    irsRef: "IRC32(c)(1)(D)/(E),32(m); Pub596 Rules2/4"
+    testRef: "tests/engine/eic-claimant-eligibility.test.ts::rejects known ineligible SSNs and nonresident claimants in the canonical return"
+  - line: "jointAge"
+    description: "Childless claimant age using either joint filer"
+    formula: "Any relevant claimant reaches25 on the day before birthday, but not65 at reference date; reference is actual death or year end"
+    irsRef: "IRC32(c)(1)(A)(ii)(II); Pub596 Rule11 and spouse-age Example2"
+    testRef: "tests/engine/eic-claimant-eligibility.test.ts::uses either spouse and actual age or death dates for the childless age test"
+  - line: "source"
+    description: "Actual source identity, year and unknown boundaries"
+    formula: "Validate actual year/reference/confirmation and known required answers; reconcile household facts before using the packet"
+    irsRef: "Pub596 Rules2/4/11; actual source contract"
+    testRef: "tests/engine/eic-claimant-eligibility.test.ts::preserves legacy unknowns while rejecting incomplete or contradictory actual sources"
+  - line: "guide"
+    description: "Actual guide answers reach canonical EIC and survive edits truthfully"
+    formula: "Forward existing household SSNs and actual EIC residency packet, preserving false/null and revoking confirmation on related edits"
+    irsRef: "Pub596 Rules2/4/11; source collection boundary"
+    testRef: "tests/guided-interview/guided-eic-eligibility.test.ts::forwards actual claimant facts and invalidates edited confirmations"
+  - line: "nextYearSources"
+    description: "Actual2026 sources remain required despite historical2025 compatibility"
+    formula: "Require an actual same-year packet, both joint SSN answers, separate nonresident histories and actual childless death statuses; do not open full-year calculation"
+    irsRef: "IRC32(c)(1)(D)/(E),32(m); Pub596 Rules2/4/11"
+    testRef: "tests/engine/eic-claimant-eligibility.test.ts::requires actual 2026 claimant sources without opening the full-year gate"
+  - line: "noIncomeCredit"
+    description: "No positive EIC amount needs no inferred claimant sources"
+    formula: "For an absent packet and zero income-based EIC, preserve zero and do not label claimant sources verified"
+    irsRef: "IRC32(a); source-completeness boundary"
+    testRef: "tests/engine/eic-claimant-eligibility.test.ts::does not demand claimant sources for an income-based zero credit"
+  - line: "knownDisqualification"
+    description: "Known disqualification does not infer other claimant facts"
+    formula: "Without a supplied packet, retain zero from actual ineligible SSN, nonresident status or fully known failing ages; source completeness remains false"
+    irsRef: "IRC32(c)(1)(A)/(D)/(E); Pub596 Rules2/4/11"
+    testRef: "tests/engine/eic-claimant-eligibility.test.ts::keeps known disqualification distinct from missing affirmative 2026 facts"
+  - line: "persistence"
+    description: "Original answers persist locally on desktop and mobile"
+    formula: "Saved actual false remains false, unanswered remains unknown, confirmation edits control preview and no source fields are posted"
+    irsRef: "Actual source and local privacy contract"
+    testRef: "apps/web/tests/guided-eic-eligibility.spec.ts::preserves actual EIC claimant answers and local privacy"
+  - line: "reachability"
+    description: "Childless claimant and spouse can enter actual SSN and residency facts"
+    formula: "Render the actual source controls without requiring a child credit"
+    irsRef: "Pub596 Rule2 and Rule11"
+    testRef: "tests/apps/web/eic-eligibility-interactions.test.tsx::collects actual EIC claimant facts for childless joint filers without default answers"

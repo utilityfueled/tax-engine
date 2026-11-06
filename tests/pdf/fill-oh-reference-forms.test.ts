@@ -18,6 +18,7 @@ import { describe, expect, it } from "vitest";
 import { calculateFederalTax } from "@/engine/federal.js";
 import { fillOhioReferenceForms } from "@/pdf/fill-oh-reference-forms.js";
 import { simpleW2Fixture } from "../fixtures/simple-w2.js";
+import { TaxYearInputSchema } from "@/models/inputs.js";
 
 async function makeOutputDir() {
   return mkdtemp(join(tmpdir(), "tax-engine-oh-packet-"));
@@ -25,7 +26,7 @@ async function makeOutputDir() {
 
 function extractPdfText(pdfPath: string) {
   return execFileSync(
-    "python",
+    process.env.TAX_ENGINE_PDF_TEST_PYTHON ?? "python3",
     [
       "-c",
       `
@@ -83,6 +84,33 @@ function makeOhioUnderpaymentFixture() {
 }
 
 describe("Ohio reference packet summaries", () => {
+  it("renders investment statement withholding in the Ohio audit summary", async () => {
+    const outputDir = await makeOutputDir();
+    try {
+      const input = TaxYearInputSchema.parse({
+        ...makeOhioFixture(), w2s: [],
+        form1099Int: [{ payer: "Synthetic bank", interestIncome: "100", state: "OH", stateWithheld: "10.10" }],
+        form1099Div: [{ payer: "Synthetic fund", ordinaryDividends: "100", state: "OH", stateWithheld: "20.20" }],
+        form1099B: [{ broker: "Synthetic broker", state: "OH", stateWithheld: "30.30", transactions: [] }],
+        form1099OID: [{ payer: "Synthetic OID broker", sourceId: "oid-statement", taxYear: 2025,
+          sourceFormRevision: "2024-01", sourceFactsConfirmed: true, recipientAmountsConfirmed: true,
+          obligationType: "taxable", inflationIndexed: false, description: "Synthetic corporate bond",
+          originalIssueDiscount: "100", otherPeriodicInterest: "0", earlyWithdrawalPenalty: "0", federalWithheld: "0",
+          marketDiscount: "0", acquisitionPremium: "0", treasuryOID: "0", investmentExpenses: "0",
+          bondPremium: "0", taxExemptOID: "0", oidReportedNetOfAcquisitionPremium: false,
+          interestReportedNetOfBondPremium: false,
+          stateWithholding: [{ state: "OH", statePayerId: "actual", stateWithheld: "10.11" }] }],
+      });
+      const packet = await fillOhioReferenceForms(input, calculateFederalTax(input), outputDir);
+      const withholding = packet.filledForms.find(path => basename(path) === "oh-schedule-of-withholding-reference.pdf");
+      expect(withholding).toBeDefined();
+      if (!withholding) throw new Error("Expected investment withholding summary");
+      const text = extractPdfText(withholding);
+      for (const source of ["1099-INT", "1099-DIV", "1099-B", "1099-OID"]) expect(text).toContain(`Ohio withholding from ${source} statements`);
+      expect(text).toContain("Value: 70.71");
+    } finally { await rm(outputDir, { recursive: true, force: true }); }
+  });
+
   it("fillOhioReferenceForms keeps the Ohio IT 1040 packet artifact reference-only and limited to supported computed lines", async () => {
     const outputDir = await makeOutputDir();
 

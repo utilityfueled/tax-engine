@@ -219,7 +219,7 @@ describe("security: .dockerignore excludes development-only files from productio
   const devOnlyEntries = [
     { entry: "tests", reason: "test suite exposes internal fixtures and test data" },
     { entry: "spec", reason: "IRS spec YAML files are development-only reference" },
-    { entry: "forms", reason: "blank/filled PDF forms are not served by the web app" },
+    { entry: "forms/filled/", reason: "filled taxpayer returns must never enter the image" },
     { entry: "data", reason: "example input/output data is not needed at runtime" },
     { entry: "prompts", reason: "agent prompt files expose internal tooling details" },
     { entry: "vitest.config.ts", reason: "test configuration is not needed at runtime" },
@@ -232,6 +232,11 @@ describe("security: .dockerignore excludes development-only files from productio
       expect(lines).toContain(entry);
     });
   }
+
+  it("retains blank templates required by the PDF export service", () => {
+    expect(lines).not.toContain("forms");
+    expect(lines).not.toContain("forms/blank");
+  });
 });
 
 describe("security: TAX_ENGINE_HOSTED_PREVIEW_ACTOR_ID blocked in production", () => {

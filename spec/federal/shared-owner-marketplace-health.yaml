@@ -1,0 +1,63 @@
+form: "Shared policy health sources across actual owners and businesses"
+fullName: "Independent original plans before existing Pub974 owner and business limits"
+taxYear: [2025, 2026]
+irsReference: "https://www.irs.gov/publications/p974"
+retrievedAt: "2026-10-26"
+sources:
+  - "https://www.irs.gov/instructions/i8962"
+  - "https://www.ecfr.gov/current/title-26/section-1.162(l)-1"
+notes: |
+  Pub974 Specified Premiums first applies the actual two-tax-family policy
+  allocation. Worksheet W and Simplified Step3 then preserve the separately
+  established business plans. Existing actual owner income limits and the
+  published enrollment-premium credit allocation remain separate from source
+  payment attribution. Every original is linked to exactly one actual plan;
+  no agreement creates payment facts or assigns the joint repayment cap.
+  Each plan retains its complete original-person/payment attachment, including
+  a household-only plan beside a shared plan. Its coverage-family answer must
+  match the actual original people. No confirmations or amounts are defaulted.
+  Existing binding2025 joint-cap ownership and multiple-owner nonspecified
+  coordination remain separate methods. Full2026 qualification is unchanged.
+  Amounts below are independently derived controls, not published or human
+  qualified numerical oracles. Actual allocation uses monthly8962 reporting.
+lines:
+  - line: "original-plans"
+    description: "Bind separate shared and household-only originals to their plans"
+    formula: "Two actual full shared premiums1000/500 at.50 yield own500/250. Full monthly advances20/10 yield own10/5, independently paid owner490/245 and other490/245. Keep original full1500/30 distinct from own750/15. A household-only spouse policy250/5 instead keeps full250 and actual owner245, with its own original-person link."
+    testRef: "tests/engine/forms/shared-owner-marketplace-health.test.ts::binds each actual plan and original payment group separately"
+  - line: "unknown-conflict"
+    description: "Reject incomplete and contradictory owner or source links"
+    formula: "Missing person links, unknown or contrary coverage-family answers, duplicated original policy links, balanced paid-share substitutions and changed actual person identities reject without mutating originals. Actual owner/business eligibility is independently checked by7206."
+    testRef: "tests/engine/forms/shared-owner-marketplace-health.test.ts::rejects missing and balanced conflicting separate-plan sources"
+  - line: "canonical"
+    description: "Keep monthly credit and owner QBI deductions once"
+    formula: "Actual primaryC30000/spouseF20000 give SE halves2119/1413. W specified9000/advances180 and nonbinding maximum9000; Step2AGI37468/183%/.0132 gives41monthly contribution and7908PTC. Health1092 split728/364, finalAGI45376/221%/.0284 gives107monthly contribution and7116PTC. Same original monthly result when the spouse plan is wholly household-only."
+    testRef: "tests/engine/federal-shared-owner-marketplace-health.test.ts::coordinates separate actual shared-plan owners through monthly credit and QBI"
+  - line: "no-advance-binding-income"
+    description: "Retain full benchmark sources and binding actual owner income"
+    formula: "With no advances, complete own-family benchmark700 and each actual other-family benchmark700 allocate the same500/250 premiums. PrimaryC1000/spouseF50000 gives remaining929/46467 and maximum3929. Step2AGI43467/212%/.0248 gives90monthly and7320PTC; owner deductions929/560 yield1489health. FinalAGI45907/224%/.0296 gives113monthly and7044PTC. Original coverage-family benchmark is counted once."
+    testRef: "tests/engine/federal-shared-owner-marketplace-health.test.ts::preserves zero-advance family benchmarks and actual binding owner income"
+  - line: "boundary-and-order"
+    description: "Preserve exact source amounts ordering and remaining owner methods"
+    formula: "Reordering independent plans, receipts and person links changes no result. Full1000.02 at.50 and actual490.01 owner+490.01 other+20advances give500.01 own premium without early rounding. If C/F belong to one actual owner, that owner's SE half rounds3533, finalAGI45375 and unchanged1092health/7116PTC; the existing gross-income QBI attribution is655/437. Positive historical advances with binding owner income and an unreconciled joint capped repayment still reject at the existing calculated-method guards."
+    testRef: "tests/engine/federal-shared-owner-marketplace-health.test.ts::retains source order cents and the actual joint repayment boundary"
+  - line: "2026"
+    description: "Use the separate uncapped2026 calculation without opening filing"
+    formula: "The same original separate plans use the already implemented uncapped owner calculation in an isolated2026 test. Step2AGI37468/177%/.0549 gives2057 annual contribution and171monthly:6348PTC/2652health. Final43816/207%/.0686 gives3006annual and251monthly:5388PTC. Owner deductions1768/884 are reported from exact Decimal allocation. Normal2026 calculation remains unavailable."
+    testRef: "tests/engine/federal-shared-owner-marketplace-health-2026.test.ts::preserves isolated2026 separate-plan owners and the qualification gate"
+  - line: "guide"
+    description: "Reach both actual plan owners through saved original source controls"
+    formula: "The real guide stores each original policy, owner/business, covered person and complete payment attachment. ActualC30000 plus spouse shareholderW2Box1=20000/Box5=17000 givesStep2AGI38881 and7776monthlyPTC; health1224 splits816/408; finalAGI46657 and6948PTC. Household-only plan links stay explicit. Editing either plan invalidates its source confirmations; missing answers remain unknown and original amounts survive reload."
+    testRef: "tests/guided-interview/guided-shared-owner-marketplace-health.test.ts::transfers complete separate-plan owner sources and invalidates edits"
+  - line: "output"
+    description: "Retain original plans and owner amounts through private output"
+    formula: "Prepared original context binds every policy, person, owner and payment. Physical8962 and separate owner7206 packets preserve once-only credit and health transfers. Equal-total owner redistribution, missing or forged context and changed original sources reject before template I/O."
+    testRef: "tests/pdf/shared-owner-marketplace-health-review.test.ts::renders separate shared-plan owners from the original private context"
+  - line: "guide-shell"
+    description: "Reach both plan and allocation confirmations before Continue"
+    formula: "The actual adjustments shell displays both plans and their original allocation records; changing either plan invalidates both nested links and the common coverage confirmation. Reconfirmation restores only supported actual facts, while a blank paid amount blocks progression."
+    testRef: "tests/apps/web/shared-owner-health-interactions.test.tsx::reaches both separate-plan original confirmations in the actual guide shell"
+  - line: "browser"
+    description: "Edit and reopen actual separate-plan health sources"
+    formula: "Desktop and mobile source flows retain two actual owners and plan links, wait for a settled numeric result, require fresh confirmation after editing and retain blank original payment facts as unknown. Original identifiers remain local."
+    testRef: "apps/web/tests/guided-shared-owner-marketplace-health.spec.ts::retains actual separate health plans through source edits and reload"

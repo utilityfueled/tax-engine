@@ -1,0 +1,18 @@
+form: "Hosted-Homepage-Request-Boundary"
+fullName: "Homepage auth must run only with actual request headers"
+taxYear: 2026
+reference: "https://nextjs.org/docs/messages/dynamic-server-error; https://nextjs.org/docs/app/api-reference/functions/headers"
+notes: "Actual Vercel preview f4be3b75 failed at prerender after caught headers() control flow reached hosted database migrations. Preserve framework rendering control signals and request headers; do not suppress auth/database failures, bypass auth or introduce a fake session."
+lines:
+  - line: "rendering-control"
+    description: "Framework control flow must reach Next before auth initialization"
+    formula: "If headers rejects, preserve the exact original error object and do not call the auth actor resolver."
+    testRef: "tests/apps/web/hosted-homepage-request-boundary.test.tsx::homepage preserves request rendering errors before auth initialization"
+  - line: "actual-request"
+    description: "Resolve the actor from the actual request headers"
+    formula: "Pass the same Headers object containing the actual synthetic cookie and forwarded host exactly once to actor resolution; do not mutate it."
+    testRef: "tests/apps/web/hosted-homepage-request-boundary.test.tsx::homepage retains actual request identity when resolving the actor"
+  - line: "auth-failure"
+    description: "Request-time auth failures remain fail closed"
+    formula: "A rejected auth resolver is propagated unchanged; no anonymous fallback is manufactured."
+    testRef: "tests/apps/web/hosted-homepage-request-boundary.test.tsx::homepage preserves request-time auth failure"

@@ -6,15 +6,9 @@ import {
   emptyRetirementEntry,
 } from "@/lib/guided-interview-flow";
 import { CurrencyField } from "./currency-field";
-
-const distributionCodeOptions = [
-  { value: "1", label: "1 — Early distribution (before age 59½)", hint: "May be subject to 10% penalty" },
-  { value: "2", label: "2 — Early distribution, exception applies" },
-  { value: "3", label: "3 — Disability" },
-  { value: "4", label: "4 — Death" },
-  { value: "7", label: "7 — Normal distribution (age 59½ or older)", hint: "Most common for retirees" },
-  { value: "G", label: "G — Direct rollover to qualified plan or IRA" },
-];
+import { RetirementSourceFields } from "./retirement-source-fields";
+import { IraBasisSourceFields } from "./ira-basis-source-fields";
+import type { GuidedIraBasisData } from "@/lib/guided-ira-basis";
 
 function RetirementCard({
   index,
@@ -22,12 +16,14 @@ function RetirementCard({
   onUpdate,
   onRemove,
   removable,
+  basisMode,
 }: {
   index: number;
   entry: RetirementEntryData;
   onUpdate: <K extends keyof RetirementEntryData>(field: K, value: RetirementEntryData[K]) => void;
   onRemove: () => void;
   removable: boolean;
+  basisMode?: boolean;
 }) {
   return (
     <div className="guided-w2-card">
@@ -68,46 +64,34 @@ function RetirementCard({
           required
         />
         <CurrencyField
-          label="Taxable amount (Box 2a)"
-          hint="The portion subject to income tax"
+          label={basisMode ? "Printed taxable amount (Box 2a)" : "Taxable amount (Box 2a)"}
+          hint={basisMode ? "Copy only the amount printed on the original form. Leave it blank when Box 2b is checked and the source gives no taxable amount; the owner basis worksheet calculates taxability." : "Use the actual taxable amount established by the source and applicable basis worksheet. A blank Box 2a is unknown; do not copy the gross distribution or assume zero."}
           value={entry.taxableAmount}
           onChange={(v) => onUpdate("taxableAmount", v)}
-          required
+          required={!basisMode}
         />
         <CurrencyField
           label="Federal tax withheld (Box 4)"
           value={entry.federalWithheld}
           onChange={(v) => onUpdate("federalWithheld", v)}
+          required
         />
 
         <label className="guided-field">
-          <span className="guided-field-label">Distribution code (Box 7)</span>
-          <select
+          <span className="guided-field-label">Distribution code ({entry.sourceTaxYear === "2026" ? "Box 7a" : "Box 7"})</span>
+          <input
             className="guided-input"
-            value={entry.distributionCode}
+            value={entry.requiresCodeConfirmation ? "" : entry.distributionCode}
             onChange={(e) => onUpdate("distributionCode", e.target.value)}
             aria-describedby={`retirement-${index}-dist-hint`}
-          >
-            {distributionCodeOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
+          />
           <span className="guided-field-hint" id={`retirement-${index}-dist-hint`}>
-            Code 7 is most common for retirees. Code 1 means early withdrawal with potential penalty.
+            Enter every code printed in Box 7 (2026 Box 7a); do not infer a code from age.
+            {entry.requiresCodeConfirmation ? ` Saved code ${entry.distributionCode} needs confirmation because older versions prefilled it.` : ""}
           </span>
         </label>
 
-        <label className="guided-field guided-checkbox-field">
-          <input
-            type="checkbox"
-            checked={entry.isIraSepSimple}
-            onChange={(e) => onUpdate("isIraSepSimple", e.target.checked)}
-            className="guided-option-checkbox"
-          />
-          <span className="guided-field-label">IRA / SEP / SIMPLE (Box 7 checkbox)</span>
-        </label>
+        <RetirementSourceFields entry={entry} onUpdate={onUpdate} basisMode={basisMode} />
       </div>
     </div>
   );
@@ -116,9 +100,13 @@ function RetirementCard({
 export function SectionRetirementIncome({
   entries,
   onEntriesChange,
+  basisSources,
+  onBasisSourcesChange,
 }: {
   entries: RetirementEntryData[];
   onEntriesChange: (entries: RetirementEntryData[]) => void;
+  basisSources?: GuidedIraBasisData;
+  onBasisSourcesChange?: (value: GuidedIraBasisData | undefined) => void;
 }) {
   function updateEntry<K extends keyof RetirementEntryData>(
     index: number,
@@ -126,7 +114,7 @@ export function SectionRetirementIncome({
     value: RetirementEntryData[K],
   ) {
     const next = entries.map((entry, i) =>
-      i === index ? { ...entry, [field]: value } : entry
+      i === index ? { ...entry, sourceFactsConfirmed: null, [field]: value, ...(field === "distributionCode" ? { requiresCodeConfirmation: false } : {}), ...(field === "isIraSepSimple" ? { requiresIraConfirmation: false } : {}) } : entry
     );
     onEntriesChange(next);
   }
@@ -146,7 +134,7 @@ export function SectionRetirementIncome({
         <p className="guided-prompt">Let&apos;s enter your retirement distributions.</p>
         <p className="guided-hint">
           Enter each 1099-R you received. This covers IRA withdrawals, 401(k) distributions,
-          pensions, and annuities. You&apos;ll find all the info you need on your 1099-R form.
+          pensions, and annuities. You may also need actual basis, rollover or other source records to establish taxability.
         </p>
 
         <div className="guided-w2-stack">
@@ -155,6 +143,7 @@ export function SectionRetirementIncome({
               key={index}
               index={index}
               entry={entry}
+              basisMode={!!basisSources && entry.isIraSepSimple === true}
               onUpdate={(field, value) => updateEntry(index, field, value)}
               onRemove={() => removeEntry(index)}
               removable={entries.length > 1}
@@ -172,20 +161,22 @@ export function SectionRetirementIncome({
           + Add another 1099-R
         </button>
 
+        {onBasisSourcesChange && <IraBasisSourceFields data={basisSources} entries={entries} onChange={onBasisSourcesChange} />}
+
         <details className="guided-expand" style={{ marginTop: "16px" }}>
           <summary className="guided-expand-trigger">Learn more about 1099-R</summary>
           <div className="guided-expand-body">
             <p>
               Form 1099-R reports distributions from retirement plans, IRAs, pensions, and annuities.
-              Box 1 shows the total distribution amount. Box 2a shows how much is taxable — for most
-              traditional IRA and 401(k) distributions, this equals Box 1. For Roth distributions,
-              Box 2a may be $0 if it&apos;s a qualified distribution.
+              Box 1 shows the total distribution amount. A reported Box 2a does not establish that
+              nondeductible basis, a rollover or another exclusion is absent. Confirm the actual
+              taxable amount using the applicable source records and worksheets.
             </p>
             <p>
-              The distribution code in Box 7 tells the IRS (and us) whether this was a normal
-              distribution, early withdrawal, rollover, or something else. Code 7 is the most
-              common for retirees. Code 1 means early distribution with a potential 10% penalty.
-              Code G means it was a direct rollover and isn&apos;t taxable.
+              The distribution code in Box 7 (2026 Box 7a) identifies the reported distribution.
+              Code 1 may carry an additional tax. Code G identifies a direct rollover, but a
+              rollover to a Roth account may be taxable. This ordinary route requires a confirmed
+              nontaxable rollover; conversions need their actual source and basis worksheets.
             </p>
           </div>
         </details>

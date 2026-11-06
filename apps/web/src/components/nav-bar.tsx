@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { NavigationScrollBoundary } from "./navigation-scroll-boundary";
 import Link from "next/link";
 import { resolveDeploymentMode } from "@/lib/deployment-mode";
 import { headers } from "next/headers";
@@ -20,7 +21,7 @@ export async function NavBar() {
   }
 
   return (
-    <nav className="site-nav" aria-label="Main navigation">
+    <NavigationScrollBoundary>
       <div className="site-nav-inner">
         <Link href="/" className="site-nav-logo" aria-label="Viva La Tax home">
           <Image
@@ -61,6 +62,6 @@ export async function NavBar() {
           )}
         </div>
       </div>
-    </nav>
+    </NavigationScrollBoundary>
   );
 }

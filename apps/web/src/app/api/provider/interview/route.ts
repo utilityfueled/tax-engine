@@ -4,6 +4,7 @@ import { resolveHostedWorkspaceActor } from "../../../../lib/hosted-auth";
 import { containsUnsafeDirectIdentifier } from "../../../../lib/provider-request-privacy";
 import {
   checkRateLimitForEnvironment,
+  rateLimitUnavailableResponse,
   rateLimitTiers,
   resolveClientIdentifier
 } from "../../../../lib/rate-limit";
@@ -54,6 +55,8 @@ export async function POST(request: Request) {
     rateLimitTiers.provider,
     env
   );
+
+  if (rateCheck.unavailable) return rateLimitUnavailableResponse();
 
   if (!rateCheck.allowed) {
     const retryAfterSeconds = Math.ceil(

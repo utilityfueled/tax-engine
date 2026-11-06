@@ -50,7 +50,7 @@ notes: |
     qualified joint survivor annuities are included when the normalized
     1099-R input marks the beneficiary-survivor-annuity indicator.
 
-  State withholding: W-2 Box 17 (PA state) + W-2G Box 13 (PA state) + 1099-G Box 11
+  State withholding: W-2 Box 17 (PA state) + W-2G Box 15 (PA state) + 1099-G Box 11
 
 packetRules:
   packetBehavior: "filled-pa-40-pdf"
@@ -71,6 +71,11 @@ businessRuleValidation:
     testRef: "tests/apps/web/pa-state-packet.test.ts::buildWorkspaceFilledReturnDownload includes the Pennsylvania PA-40 packet and keeps the business-rule disclosure honest"
 
 lines:
+  - line: "actual-rental-business-share"
+    description: "Actual owner and share of a supported rental business"
+    formula: "(whole-property rents - whole-property expenses) * actual ownershipPercentage / 100; attribute to the actual owner before PA Class4 loss limits"
+    notes: "The existing short-term classification is a separately bounded legacy slice; annual rentalDays do not prove average customer stay for a full-year property. No new classification qualification is implied."
+    testRef: "tests/engine/state/pa-rental-source-allocation.test.ts::PA attributes a supported short rental to its actual spouse and share"
   - line: "resolve-pa-resident-inputs"
     description: "Resolve PA resident supplemental inputs from validated TaxYearInput before running the resident schedules"
     formula: |
@@ -105,14 +110,15 @@ lines:
     description: "Compute PA interest income through PA Schedule A before carrying the result to PA-40 Line 2"
     formula: |
       Build PA Schedule A using supported inputs as follows:
-        - Line 1: supported federal interest baseline consisting of Form 1099-INT
-          Box 1 interest plus the federal Schedule K-1 Box 5 interest that is
-          included on the federal return
+        - Line 1: supported federal interest baseline consisting of disjoint
+          Form 1099-INT Boxes 1 and 3 plus federal Schedule K-1 interest,
+          less the actual calculated Form 8815 exclusion when present
         - Line 2: Form 1099-INT Box 8 tax-exempt interest included on the federal return
         - Line 3: explicit Schedule A addition adjustments from overrides or paResidentReturn
         - Line 5: total federal Schedule K-1 Box 5 interest included in the federal baseline
         - Line 6: explicit Pennsylvania direct-obligation interest amount
-        - Line 7: Form 1099-INT Box 3 U.S. government interest
+        - Line 7: Form 1099-INT Box 3 U.S. government interest less the actual
+          Form 8815 exclusion already removed from federal Schedule B
         - Line 8: explicit Schedule A reduction adjustments from overrides or
           paResidentReturn plus the supported Form 1099-INT Box 2
           forfeited-interest penalty default described below
@@ -788,13 +794,15 @@ lines:
     description: "Map PA state withholding from all sources"
     formula: |
       Sum of:
-        W-2 Box 17 (PA) + W-2G Box 13 (PA) + 1099-G Box 11 (PA) +
-        1099-K Box 8 (PA) + 1099-R Box 12 (PA) + 1099-INT Box 13 (PA) +
-        1099-DIV Box 14 (PA) + 1099-MISC Box 16 (PA) +
-        1099-NEC Box 5 (PA)
+        Actual PA state withholding from W-2, W-2G,1099-G,1099-K,1099-R,
+        1099-INT,1099-DIV,1099-MISC,1099-NEC and1099-B sources, plus separately
+        reconciled additionalStateWithholding. OID withholding is added once
+        from its separately validated source rows.
     notes: |
       Includes withholding from all document types that carry PA state withholding.
-      Only includes documents where state = 'PA' or state is absent (assumed resident state).
+      Only includes documents with actual source state = 'PA'. A nonzero amount
+      without its source state requires reconciliation; residency does not
+      establish the jurisdiction paid. Explicit zero remains zero.
       1099-R, 1099-INT, 1099-DIV, 1099-MISC, and 1099-NEC state withholding
       fields are mapped so PA-40 Line 13 captures nonwage withholding reported
       on information returns, including independent-contractor withholding from
@@ -810,6 +818,29 @@ lines:
       - "Non-PA 1099-R/INT/DIV/MISC/NEC withholding excluded"
       - "Mixed PA and non-PA documents across all types"
     testRef: "tests/engine/state/pa-orchestrator.test.ts::PA orchestrator sums PA state withholding from W-2s"
+
+  - line: "map-withholding-source-validation"
+    description: "Require actual jurisdiction and valid statement amounts before PA withholding exclusions"
+    formula: |
+      For each W-2, W-2G, 1099-G, 1099-K, 1099-R, 1099-INT, 1099-DIV,
+      1099-MISC, 1099-NEC and 1099-B statement, first require the supplied
+      withholding amount to be finite and nonnegative. For each nonzero amount,
+      require the actual two-letter state code after trimming and uppercasing.
+      Sum only PA amounts using Decimal; preserve exact cents until the return
+      line rounding rule. Explicit zero does not require a state assignment.
+    notes: |
+      PA-40 instructions (2025 revision, retrieved 2026-10-25), printed page21,
+      Line13 require PA tax withheld; residency cannot establish the source
+      jurisdiction. Validation must occur before filtering other jurisdictions
+      so malformed, negative or unknown values cannot silently disappear.
+      Source: https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40in.pdf
+      This source does not qualify a final 2026 PA-40 form or filing export.
+    edgeCases:
+      - "All ten source categories reject nonzero withholding with missing, blank or spelled-out state"
+      - "Other-state amounts are excluded only after amount validation"
+      - "Negative, NaN and infinite amounts reject before the state filter"
+      - "Explicit zero without a state is preserved; PA cents aggregate exactly"
+    testRef: "tests/engine/state/pa-withholding-source-facts.test.ts::preserves explicit zero and sums PA cents while excluding actual other-state amounts"
 
   - line: "schedule-ue"
     description: "Compute Schedule UE (Unreimbursed Employee Business Expenses) when detailed input provided"
@@ -1026,37 +1057,39 @@ lines:
     testRef: "tests/engine/state/pa-orchestrator.test.ts::PA orchestrator computes Schedule DC from the federal dependent care credit"
 
   - line: "working-pennsylvanians-tax-credit"
-    description: "Compute the Working Pennsylvanians Tax Credit from the federal EITC"
+    description: "Compute actual same-year WPTC separately from printed2025PA40"
     formula: |
-      1. Compute supported Pennsylvania earned income as:
-         positive PA Class 1 compensation + positive PA Class 4 business income
-      2. Compute the federal Earned Income Credit from the federal return result
-      3. If the taxpayer is marked in PA resident supplements as claimed on
-         another person's federal return, force WPTC to 0
-      4. Otherwise, if Pennsylvania earned income > 0 and federal EITC > 0,
-         compute WPTC = round(federal EITC × 10%)
-      5. Add the WPTC amount to the PA-40 refundable-credit bucket
+      ActualpositivePAearned class1/class4 plus validfreshsame-year federal1040EITC
+      determines10% roundedWPTC, with no805fixedcap and no separateSPdependentbar.
+      Do not add it to2025paperPA40 refundableCredits or printed24/refund.
+      Separate workingCreditProcessing reference: applied=min(credit,paperTaxDue),
+      remainingTaxDueBeforePenalties=max(0,paperTaxDue-credit),
+      additionalOverpaymentBeforePenalties=max(0,credit-paperTaxDue).
     notes: |
-      The 2025 PA preparation guide states taxpayers who qualify for the
-      federal EITC automatically qualify for the state credit, that the credit
-      is refundable, and that the taxpayer must have earned income in
-      Pennsylvania consisting of wages, salary, and/or self-employment income.
-      The Department may calculate it automatically during filing, but the
-      engine computes it directly for a deterministic PA result. The refundable
-      amount is exposed through the orchestrator and PA-40 result objects so
-      reviewers can see the state-calculated amount without depending on the
-      Department's post-filing automation. The resident supplement flag for
-      "claimed as a dependent on another federal return" is also used as a
-      guard because that fact disqualifies the federal EITC even if the
-      embedded federal calculation was run without the supplemental dependency
-      metadata.
-    edgeCases:
-      - "Federal EITC is $0: no WPTC"
-      - "Federal EITC is positive but resident has no Pennsylvania earned income: no WPTC"
-      - "Small federal EITC rounds to the nearest dollar"
-      - "WPTC can create a refund even when PA tax is already zero"
-      - "PA resident supplement marks taxpayer as claimed on another federal return: no WPTC"
+      FiscalCodeArticleXVI-W.2 and DORFAQ4255/4256, refreshed2026-11-02.
+      The reference is an estimated Department processing adjustment, not actual
+      DOR approval/payment or finalbalance. Current shared federal/PA filingstatus
+      does not invent joint-federal/separate-PA originals; that sourcepath is an
+      internal residency successor. No2026physicalmap is enabled.
     testRef: "tests/engine/state/pa-orchestrator.test.ts::PA orchestrator computes the Working Pennsylvanians Tax Credit from federal EITC"
+
+  - line: "wptc-paper-processing-reference"
+    description: "Source-backed paper and processing values remain separate"
+    formula: "Actual19000PAwages with583withholding and onequalifyingchild: PA tax583/SP0/paper24=583/paperrefund0; federalEITC4328 -> processingWPTC433"
+    testRef: "tests/engine/state/pa-orchestrator.test.ts::PA WPTC processing reference does not change actual paper settlement"
+
+  - line: "wptc-private-review-context"
+    description: "Bind actual WPTC sources before any PA review templateI/O"
+    formula: "Opaque privately prepared completeoriginal+exactredaction;freshactualEIC/PAearned/WPTCdigest plus engine-produced versioned rawsource commitment;retainedcredit and paper-exclusion/processingrelations mustmatch"
+    notes: |
+      No caller digest/override. Token validates WPTC-specific facts only,
+      not source qualification of unrelated PA totals. Current actualguided
+      payment overlays remain supported; canonical dated payment sources and
+      fullPA replay remain required internal successor. Public PA40 always replays actual
+      sources; incomplete originals cannot become mapping-only mocks by stripping
+      proof, arrays or retained markers. Legacy field-map unit fixtures use an explicit
+      diagnostic projection with no WPTC or wholePA source qualification.
+    testRef: "tests/pdf/pa-working-credit-review-context.test.ts::PA WPTC review binds fresh actual sources and the processing reference"
 
   - line: "map-local-withholding"
     description: "Map local EIT withholding from W-2 Box 19"
@@ -1128,21 +1161,40 @@ lines:
 
   - line: "exclude-us-gov-interest"
     description: "Exclude US government obligation interest from PA Class 2"
-    formula: "Subtract 1099-INT Box 3 (usSavingsBondInterest) from PA interest income"
+    formula: |
+      federalInterestBaseline = sum(1099-INT Box 1 + Box 3) + federal K-1 interest
+      federalBondExclusion = calculated Form 8815 exclusion, or zero when absent
+      previouslyReportedBondInterest = verified Schedule B prior-year adjustment
+      Schedule A line 1 = roundDollar(federalInterestBaseline - previouslyReportedBondInterest - federalBondExclusion)
+      Schedule A line 7 = roundDollar(max(0, sum(Box 3) - previouslyReportedBondInterest - federalBondExclusion))
+      Schedule SP nontaxable interest includes the full sum(Box 3) once.
     notes: |
-      PA exempts interest on obligations of the US government from personal income tax.
-      This includes Treasury bills, notes, bonds, and US savings bonds.
-      1099-INT Box 3 reports this amount, which is included in Box 1 (total interest).
-      For PA, subtract Box 3 from Box 1 to get PA-taxable interest.
-      The excluded amount is added to Schedule SP nontaxable income.
-      Reference: PA-40 instructions, Class 2 income; 72 Pa.C.S. § 7303(a)(2).
+      Box 1 excludes Box 3. PA starts with federal taxable interest, then removes
+      U.S. government interest that remains in that federal amount. An education
+      savings-bond exclusion must not be deducted a second time. Per-line dollar
+      rounding follows the PA schedule and can differ from rounding Box 1 alone.
+      Prior federally reported bond interest also reduces both federal-based
+      Schedule A lines. It is not automatically a PA Schedule SP exclusion:
+      SP line 2 includes all exempt direct federal-obligation income received,
+      including the portion outside Schedule A line 7.
+      Official sources retrieved 2026-10-25; independent human review pending:
+      IRS Instructions for Forms 1099-INT/OID (01/2024), Boxes 1 and 3:
+      https://www.irs.gov/instructions/i1099int
+      PA Schedule A 2025 (04-25), Lines 1 and 7, and dollar rounding:
+      https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40a.pdf
+      PA Personal Income Tax Guide, Interest, direct-obligation exemption:
+      https://www.pa.gov/agencies/revenue/forms-and-publications/pa-personal-income-tax-guide/interest
+      PA Schedule SP 2025 (04-25), Section III line 2:
+      https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40sp.pdf
+      This source correction does not qualify a final 2026 filing packet.
     edgeCases:
-      - "All interest from Treasury bonds: PA interest reduced to zero"
-      - "Partial US gov interest: only Box 3 amount excluded"
-      - "No US gov interest: interest unchanged"
-      - "Box 3 equals Box 1: all interest exempt for PA"
-      - "Multiple 1099-INTs with mixed US gov interest"
-    testRef: "tests/engine/state/pa-orchestrator.test.ts::PA orchestrator excludes US government interest from Class 2"
+      - "Box 1 zero, positive Box 3: no PA-taxable interest"
+      - "Positive Box 1 is not reduced by separate Box 3 amounts"
+      - "Equal Boxes 1 and 3 still leave the entire Box 1 amount taxable"
+      - "Multiple sources and cents are aggregated before each line is rounded"
+      - "Federal education exclusion reduces both PA line 1 and line 7 only once"
+      - "Prior federally reported bond interest is reconciled once in both Schedule A lines"
+    testRef: "tests/engine/state/pa-interest-source.test.ts::PA preserves Box 1 interest when a separate Box 3 is reported"
 
   - line: "exclude-noncash-pa-lottery"
     description: "Exclude only noncash Pennsylvania Lottery prizes from PA Class 8"
@@ -1186,7 +1238,10 @@ lines:
     notes: |
       REV-1630 is computed only when the caller provides quarterlyEstimatedPayments.
       The withholdingAndCredits input is computed from the final PA-40 result:
-      state withholding + tax forgiveness credit + resident credit + other credits.
+      sum of reported PA-40 Lines 13 + 17 + 21 + 22 + 23: round each line once;
+      include nonresident withholding and the full allowed other-credit amount
+      including Schedule DC. Exclude payment-only Lines 14,15,16,18 and
+      separate department-processing WPTC.
       Supports prior year safe harbor (Exception 1) and prior year 100% forgiveness exemption.
     edgeCases:
       - "No quarterly payments provided: REV-1630 not computed"
@@ -1296,3 +1351,20 @@ lines:
     description: "Assemble final PA-40 with all credits, penalty, use tax, and interest"
     formula: "PA-40 with tax forgiveness + resident credit + penalty → refund or total amount due"
     testRef: "tests/engine/state/pa-orchestrator.test.ts::PA orchestrator end-to-end: W-2 employee with withholding"
+
+  - line: "federal-c-amortization-source-boundary"
+    description: "Do not silently substitute federal Section197 allowance for PA business amortization"
+    formula: "When the new actual federal ScheduleC Form4562 PartVI source method has a positive allowance, reject the automatic PA business-income mapper/resident composition until its independent actual PA basis and amortization sources have a supported method. Do not infer PA0 or copy federal44. Preserve existing standalone PA actual-source expense mapping and unsupported federal boundaries."
+    irsRef: "Pennsylvania ScheduleC source/basis methods; federal i4562 PartVI44 is not evidence of PA allowance"
+    testRef: "tests/engine/schedules/schedule-c-amortization.test.ts::does not invent PA amortization from the new federal source"
+
+  - line: "wptc-partial-source-rejection"
+    description: "Stripped actual sources cannot enter the diagnostic fixture boundary"
+    formula: "PublicfillPA40 with actualpositive source changed by removing EICproof, canonicalarray and all3savedmarkers rejects beforetemplateIO"
+    testRef: "tests/pdf/pa-working-credit-review-context.test.ts::PA WPTC rejects actual originals stripped into partial mapping shape"
+
+  - line: "rev1630-reported-line2"
+    description: "REV-1630 Line2 includes actual printed NRK-1 withholding once"
+    formula: "roundDollar(PA40Line13) + roundDollar(PA40Line17) + roundDollar(PA40Line21) + roundDollar(PA40Line22) + roundDollar(PA40Line23)"
+    reference: "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_rev-1630.pdf"
+    testRef: "tests/engine/state/pa-orchestrator.test.ts::PA orchestrator REV-1630 includes each reported withholding line once"

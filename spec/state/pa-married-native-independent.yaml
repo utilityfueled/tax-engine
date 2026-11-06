@@ -1,0 +1,38 @@
+form: "PA-Married-Native-Independent"
+fullName: "Independent current-source and shared-household J/M review"
+taxYear: 2026
+reference: "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40sp.pdf"
+notes: |
+  Independent actual2025 finite review only. PA40IN .0307/whole-dollar rounding;
+  SP common married Table2 and columns B/C independently refreshed November3.
+  New fictional outside-household gift evidence is explicit and retained, never
+  inferred from wages or claim intent. No filing/paper/2026 qualification.
+lines:
+  - line: "household-boundaries"
+    description: Independently derived Table2 boundary with two current owners
+    formula: Actual13001 wages plus outside-household gift249 gives13250 and90%; gift250 gives13251 and80%; gift2250 gives15251 and0%. J tax399 has credits359/319/0; M taxes307 and92 have credits276+83/246+74/0+0. Actual individual WH equals liabilities so refunds equal credits, without any aggregate M cash.
+    testRef: "tests/apps/web/pa-married-native-independent.test.tsx::Independent actual gift %s mode %s uses common Table2 without owner cash aggregation"
+  - line: "original-guards"
+    description: Actual gift provenance cannot be guessed or contradicted
+    formula: Null donor, own-household donor, wrong recipient, current versus original amount/date disagreement, unconfirmed exclusion from other categories, known-none with retained gift and missing gift original kind reject without mutation or TypeError.
+    testRef: "tests/apps/web/pa-married-native-independent.test.tsx::Independent actual gift rejects %s"
+  - line: "originals"
+    description: Reads retain both actual identities and originals exactly
+    formula: Changed spouse DOB, same-dollar employer and owner-year original invalidate reads. Private JSON restore does not reconfirm. Support liability forbids joint but permits explicitly chosen M; two actual people cannot have one SSN. Conflicting single source roots remain blocked.
+    testRef: "tests/apps/web/pa-married-native-independent.test.tsx::Independent current source reads reject %s without refresh"
+  - line: "native"
+    description: Mounted owner rows stay unknown and every edit clears review
+    formula: Blank source packet plus explicit owner rows leave year, identity, income and tax answers unknown; no raw JSON entry. Actual SP original field edit clears confirmation and retains full old originals. Real source-flow update likewise invalidates without discarding records.
+    testRef: "tests/apps/web/pa-married-native-independent.test.tsx::Independent mounted source edit invalidates gift proof without rewriting original household"
+  - line: "ticker-lifecycle"
+    description: Current pending actual sources cannot resurrect older household totals
+    formula: Current confirmed M with actual federal refund400 shows only federal400 and owner PA276/83. Actual source edit makes current state unavailable and keeps fresh federal400; Actual existing workspace reconciliation clears old engine federal1000 plus scalarPA5000 before the ticker receives current preview, never resurrecting6000. No post-edit reconfirmation or source injection. Source-first refinement v2 follows static discovery of this real caller defense before any output; original hypothesis controls preserved.
+    testRef: "tests/apps/web/pa-married-native-independent.test.tsx::Independent pending M source edit never resurrects old aggregate cash"
+  - line: "paper-boundary"
+    description: Separate source or result alone keeps paper export blocked
+    formula: Actual attached source root rejects even with stripped result marker; recognized actual result rejects even without input root. No PDF creation or source privacy relaxation. Actual filing and paper qualification remain false.
+    testRef: "tests/apps/web/pa-married-native-independent.test.tsx::Independent paper guard rejects %s without generating files"
+  - line: "actual-caller"
+    description: Real workspace reconciliation removes old unbound estimates
+    formula: Existing reconcileWorkspaceGuidedState clears stale enginePreview both ready and pending. Current M uses separate owner metrics and fresh federal400; clearing does not mutate saved sources or saved prior workspace. Actual ReturnWorkspaceScreen local and hosted load and sync call reconciliation. Standalone ticker direct stale-prop hypothesis is not a reachable defect where this contract holds.
+    testRef: "tests/apps/web/pa-married-native-independent.test.tsx::Independent actual workspace read clears old aggregate before current ready M reaches ticker"

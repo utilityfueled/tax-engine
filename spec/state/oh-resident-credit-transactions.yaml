@@ -1,0 +1,31 @@
+form: "Ohio resident-credit actual remittance transaction originals"
+taxYear: 2025
+reference: "https://codes.ohio.gov/ohio-revised-code/section-5747.05"
+notes: |
+  Existing resident-credit formula and first single full-year Ohio/ordinary Virginia
+  wage cohort remain unchanged. This source adapter distinguishes actual separately
+  settled ACH-credit balance payments, not caller-renamed receipt identifiers.
+  Virginia Electronic Payment Guide Appendix B requires numeric15 ACH entry traces;
+  this is not a guessed format for arbitrary bank/provider/eForms confirmations.
+  Virginia eForms User Guide printed12 says filing confirmation does not automatically
+  confirm bank payment. Actual settled bank and applied agency originals both required.
+  Synthetic fixture records are not external bank/agency authentication or human review.
+lines:
+  - line: "actual-distinct-same-day"
+    formula: "Actual VA withholding1200 plus two distinct same-day settled250 remittances less actual refund700 equals net income tax1000. Ohio tax2323; same income60000/AGI100000 gives .6000 cap1394; credit1000; actual OhioWH2000 minus tax1323 yields requestedrefund677. Preserve exact source cents and existing whole-dollar credit rounding."
+    testRef: "tests/engine/state/oh-resident-credit-transactions.test.ts::admits independently linked same-day remittance originals %s"
+  - line: "exact-cents-and-cap"
+    formula: "Two250.25, WH1200, refund700.01=>net1000.49/credit1000/refund677; refund700.00=>net1000.50/credit1001/refund678. Two300+WH1200/refund0=>net1800 but cap1394/refund1071. Sum exact cents before existing resident-credit printed-line rounding; no per-receipt rounding."
+    testRef: "tests/engine/state/oh-resident-credit-transactions.test.ts::admits independently linked same-day remittance originals %s"
+  - line: "two-independent-originals"
+    formula: "Optional transactionOriginals only for positive balance receipts: settled bank ACH-credit and applied agency posting independently supply exact current taxpayer/2025/VA/income-tax balance purpose/period2025-12-31/amount. Actual bank settlement equals receipt date; agency posting date is not earlier and not after complete account date; agency account reference equals actual complete account source. Trace numeric15 matches both originals; independent agency posting ID is required without guessed provider format. Validate every provided original, including noncolliding rows."
+    testRef: "tests/engine/state/oh-resident-credit-transactions.test.ts::rejects incomplete or contradictory transaction originals %s"
+  - line: "deduplication"
+    formula: "Existing unique receipt IDs/references and complete paid account reconciliation remain mandatory. Same kind/date/exact Decimal amount collision requires all colliding receipts to have valid distinct original bank traces AND distinct agency posting IDs. Reject repeated trace or posting identity anywhere in provided originals even when amounts/dates differ. Merely renamed IDs/references, partial proof and copied full originals never establish a second payment."
+    testRef: "tests/engine/state/oh-resident-credit-transactions.test.ts::rejects incomplete or contradictory transaction originals %s"
+  - line: "legacy-preserved"
+    formula: "Existing unproved unique original receipt accounts remain compatible; existing unproved semantic duplicates remain rejected. Two genuine remittances may be reordered without changing money. Original70 and independent47 controls are unchanged."
+    testRef: "tests/engine/state/oh-resident-credit-transactions.test.ts::preserves legacy unique receipts and rejects renamed unproved duplicates"
+  - line: "private-original-binding"
+    formula: "Existing private SHA256 source commitment binds all bank/agency originals; same-money original changes alter digest-only audit and stale adapted context rejects. No trace, posting ID, original private reference or personal identifier is exposed in audit. No source mutation, global Decimal change or current recapture."
+    testRef: "tests/engine/state/oh-resident-credit-transactions.test.ts::binds exact transaction originals privately and rejects stale adapted source"

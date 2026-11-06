@@ -1,0 +1,14 @@
+form: "Browser-Runtime-Timeout-Inheritance"
+taxYear: 2025
+status: "verification-contract"
+reference: "https://playwright.dev/docs/test-timeouts"
+notes: |
+  Test orchestration only; no tax formula, expected value, protection quota,
+  case membership, skip, retry or deadline extension. Preserve the managed90s
+  project default and container CLI30s; existing reviewed PA180s/240s bodies
+  and skipped hosted180s contracts remain unchanged.
+lines:
+  - line: "inherit-selected-runtime-deadline"
+    description: "Ordinary journeys inherit the selected Playwright deadline"
+    formula: "No ordinary browser body resets test.setTimeout to the managed project default. A CLI-selected30s deadline must remain30s after the actual body begins; default managed90s remains90s. Existing explicit reviewed long-body exceptions remain separately audited."
+    testRef: "tests/scripts/browser-runtime-timeout-inheritance.test.ts::inherits ordinary deadlines and retains only reviewed runtime exceptions"

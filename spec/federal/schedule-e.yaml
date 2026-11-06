@@ -76,10 +76,10 @@ lines:
     testRef: "tests/engine/schedules/schedule-e.test.ts::Schedule E - 50% ownership halves rents and expenses"
 
   - line: "4"
-    description: "Royalty income from 1099-MISC"
-    formula: "Sum of 1099-MISC Box 2 royalties"
+    description: "Royalty income from 1099-MISC and K-1 portfolio boxes"
+    formula: "Sum of 1099-MISC Box 2, Form1065 K-1 Box7 and Form1120S K-1 Box6 royalties"
     irsRef: "Schedule E Instructions, Part I Line 4"
-    notes: "1099-MISC royalties flow through Schedule E Part I, not as other income"
+    notes: "Portfolio royalties flow through Part I and stay outside the Part II passive-activity pool"
     testRef: "tests/engine/schedules/schedule-e.test.ts::Schedule E Line 4 - 1099-MISC royalties flow to Part I"
 
   - line: "26"
@@ -116,7 +116,7 @@ lines:
 
   - line: "28-k1-fields"
     description: "K-1 additional income fields flowing through Part II"
-    formula: "ordinary + guaranteed + rental + royalties + other - §179 - other deductions"
+    formula: "ordinary + guaranteed + rental + other - §179 - other deductions; portfolio royalties remain in Part I"
     irsRef: "Schedule E Instructions, Part II"
     notes: |
       K-1 capital gains and interest/dividends flow through Schedule D and B respectively.
@@ -181,7 +181,7 @@ lines:
 
   - line: "28-col-G"
     description: "Nonpassive income from K-1"
-    formula: "K-1 ordinary income + guaranteed payments + rental + royalties + other - §179 - deductions (if not passive); OR guaranteed payments only (if passive — Box 4 always nonpassive)"
+    formula: "K-1 ordinary income + guaranteed payments + rental + other - §179 - deductions (if not passive); OR guaranteed payments only (if passive — Box 4 always nonpassive)"
     irsRef: "Schedule E Instructions, Part II Column G; K-1 Box 4 Instructions; Form 8582 Instructions"
     edgeCases:
       - "Guaranteed payments (K-1 Box 4) are ALWAYS nonpassive, even when the activity is passive"

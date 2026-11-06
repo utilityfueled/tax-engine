@@ -1,0 +1,53 @@
+form: "Form1099Q distinct QTP sources with ESA"
+fullName: "Separate original prepaid tuition statements coordinated with one ordinary ESA"
+taxYear: [2025, 2026]
+irsReference: "https://uscode.house.gov/us/usc/119-118/t26/s529/"
+sources:
+  - "https://www.irs.gov/publications/p970"
+  - "https://www.irs.gov/irb/2016-07_IRB#NOT-2016-13"
+  - "https://uscode.house.gov/us/usc/119-118/t26/s530/"
+  - "https://www.irs.gov/pub/irs-pdf/i1040tt.pdf"
+notes: |
+  Official sources refreshed October26,2026. Section529(c)(3)(B)(v)/(vi)
+  requires actual reduced expenses and taxpayer allocations across QTP/ESA
+  distributions. Notice2016-13 section2 and Pub970 chapter7 explain repeal of
+  QTP account aggregation after2014; retain each original earnings ratio.
+  Extend the existing one-QTP/ESA tuition method to distinct ordinary prepaid
+  QTP statements for one beneficiary/recipient/year, each with original benefit
+  and expense links. Every expense has exactly one QTP benefit and explicit
+  QTP/ESA expense and credit allocations. Conserve each expense, each original
+  QTP Box1 and the ESA distribution. Require distinct original accounts, actual
+  same-recipient records and complete ESA basis/history. Never choose an election,
+  combine earnings ratios or attribute a benefit to another original source.
+  Other categories, partial benefit sharing and multiple ESA account methods
+  remain separate. These literal controls are statutory derivations, not
+  published numerical examples or qualified human tax review.2026 stays gated.
+lines:
+  - line: "separate-ratios"
+    description: "Retain each original statement's earnings and explicit allocation"
+    formula: "Tuition4500/3500 minus aid500/500 and credit500/500 leaves3500/2500. QTP2500 earnings500 allocates1000; QTP1500 earnings600 allocates500; ESA6000 earnings1800 allocates4500. Exclusions200/200/1350; taxable300/400/450; credit exceptions100/200/0; total taxable1150 and additional tax85."
+    testRef: "tests/engine/forms/form-1099-q-distinct-qtp-esa.test.ts::keeps each prepaid source ratio in the actual ESA allocation"
+  - line: "conservation"
+    description: "Reject a balanced total that changes an original source or linked expense"
+    formula: "Reject cross-source benefit/gross shifts, extra unlinked originals, unknown earnings/basis/assistance, reused accounts, wrong beneficiary/recipient/year, missing links, excess ESA allocation and duplicate allocation. Known-zero QTP allocation remains valid; sources are never mutated."
+    testRef: "tests/engine/forms/form-1099-q-distinct-qtp-esa.test.ts::rejects conflicting distinct original source groups"
+  - line: "canonical"
+    description: "Route separate earnings through the return once"
+    formula: "Wages50000 plus1150 gives51150AGI. Moving500 actual expense from ESA to the first QTP gives exclusions300/200/1200, taxable1200 and additional tax90.2025 taxable35400/35450 has tax4013/4019 per printed tax table page6; subtract200LLC then add85/90 gives3898/3909 total tax. Actual20000Box2 plus508 Form8959 withholding gives16610/16599 refund; browser W2 with725Medicare gives16102/16091."
+    testRef: "tests/engine/education-distinct-qtp-esa-return.test.ts::routes distinct prepaid and ESA sources once"
+  - line: "guide"
+    description: "Preserve separate accounts and actual allocation choices in saved guided data"
+    formula: "Three original forms, two benefits, four allocations and actual ESA basis survive save/reload; edits revoke confirmation and blank facts remain unknown."
+    testRef: "tests/guided-interview/guided-distinct-qtp-esa.test.ts::preserves distinct prepaid and ESA sources through saved guided state"
+  - line: "review"
+    description: "Bind source identity, each original ratio and every audited expense before PDF I/O"
+    formula: "Source audit rows remain prepaid:fall-tuition and prepaid-spring:spring-tuition. Balanced source edits or removed source/audit reject. Physical5329 prints1150income/300exception/85tax and blanks identifiers; every page stays review-only."
+    testRef: "tests/pdf/form-1099-q-distinct-qtp-esa.test.ts::binds distinct prepaid statements before producing the review packet"
+  - line: "workspace"
+    description: "Reopen the review packet from actual saved guided sources"
+    formula: "Saved workspace download retains both original tuition traces and1150/300/85 education amounts, with privacy and review notices on every page."
+    testRef: "tests/apps/web/distinct-qtp-esa-workspace-packet.test.ts::reopens the distinct prepaid and ESA guided workspace packet"
+  - line: "browser"
+    description: "Edit source allocations at desktop and mobile widths"
+    formula: "Original forms/benefits/ESA history survive reload; source changes require confirmation, missing assistance blocks the estimate, and restored sources give settled refunds16102/16091 before/after the actual election. Private identifiers stay out of requests."
+    testRef: "apps/web/tests/guided-distinct-qtp-esa.spec.ts::preserves distinct prepaid sources through correction and local reload"

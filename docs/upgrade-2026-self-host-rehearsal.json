@@ -1,0 +1,180 @@
+{
+  "schemaVersion": 1,
+  "recordedAt": "2026-10-25",
+  "sourceCommit": "da3e0fc5e51184418f29e16f98faecd13d3ddbb3",
+  "releaseReady": false,
+  "published": false,
+  "scope": {
+    "environment": "isolated local synthetic Compose project",
+    "platform": "linux/arm64",
+    "historicalHostedSchemaDowngradeVerified": false,
+    "hostedAuthenticationVerified": false,
+    "stagingVerified": false,
+    "limitation": "Application tables were initialized using the current schema. Previous and candidate web images used self-host browser-local storage. This verifies volume/data retention and local database backup restoration, not a historical hosted schema downgrade."
+  },
+  "rehearsal": {
+    "kind": "local-synthetic-compose-release-rehearsal",
+    "project": "tax-rehearsal-ac209630",
+    "phases": [
+      {
+        "phase": "previous",
+        "imageDigest": "905d28422236c424b7a90bec9ff0d2d4d4d63fdc9ba689e51f38d0425549c393",
+        "databaseSha256": "2ff57b44e35f90ca3827f09dcbbab7c85a056105b9911dcd36cefa5c84fce9d8",
+        "browserFactsSha256": "f767fc70844cf56888d32df1a686df2de10a555b28ea79446752eb86534e2dcb",
+        "documentSha256": "59a4252ccc40ef229131b6fafdca00196ee82075f9a706dc6c912f963a127695",
+        "readOnly": true,
+        "runtimeFacts": {
+          "uid": 1001,
+          "arch": "arm64",
+          "node": "v24.22.1",
+          "providerKeys": false
+        }
+      },
+      {
+        "phase": "upgrade",
+        "imageDigest": "c018a5100f6553355472519c05694d4cd54a40e974abef62431d5e9eaafe6598",
+        "databaseSha256": "2ff57b44e35f90ca3827f09dcbbab7c85a056105b9911dcd36cefa5c84fce9d8",
+        "browserFactsSha256": "f767fc70844cf56888d32df1a686df2de10a555b28ea79446752eb86534e2dcb",
+        "documentSha256": "59a4252ccc40ef229131b6fafdca00196ee82075f9a706dc6c912f963a127695",
+        "readOnly": true,
+        "runtimeFacts": {
+          "uid": 1001,
+          "arch": "arm64",
+          "node": "v24.22.1",
+          "providerKeys": false
+        }
+      },
+      {
+        "phase": "database-restart",
+        "imageDigest": "c018a5100f6553355472519c05694d4cd54a40e974abef62431d5e9eaafe6598",
+        "databaseSha256": "2ff57b44e35f90ca3827f09dcbbab7c85a056105b9911dcd36cefa5c84fce9d8",
+        "browserFactsSha256": "f767fc70844cf56888d32df1a686df2de10a555b28ea79446752eb86534e2dcb",
+        "documentSha256": "59a4252ccc40ef229131b6fafdca00196ee82075f9a706dc6c912f963a127695",
+        "readOnly": true,
+        "runtimeFacts": {
+          "uid": 1001,
+          "arch": "arm64",
+          "node": "v24.22.1",
+          "providerKeys": false
+        }
+      },
+      {
+        "phase": "database-dump-restore",
+        "imageDigest": "c018a5100f6553355472519c05694d4cd54a40e974abef62431d5e9eaafe6598",
+        "databaseSha256": "2ff57b44e35f90ca3827f09dcbbab7c85a056105b9911dcd36cefa5c84fce9d8",
+        "browserFactsSha256": "f767fc70844cf56888d32df1a686df2de10a555b28ea79446752eb86534e2dcb",
+        "documentSha256": "59a4252ccc40ef229131b6fafdca00196ee82075f9a706dc6c912f963a127695",
+        "readOnly": true,
+        "runtimeFacts": {
+          "uid": 1001,
+          "arch": "arm64",
+          "node": "v24.22.1",
+          "providerKeys": false
+        }
+      },
+      {
+        "phase": "rollback",
+        "imageDigest": "905d28422236c424b7a90bec9ff0d2d4d4d63fdc9ba689e51f38d0425549c393",
+        "databaseSha256": "2ff57b44e35f90ca3827f09dcbbab7c85a056105b9911dcd36cefa5c84fce9d8",
+        "browserFactsSha256": "f767fc70844cf56888d32df1a686df2de10a555b28ea79446752eb86534e2dcb",
+        "documentSha256": "59a4252ccc40ef229131b6fafdca00196ee82075f9a706dc6c912f963a127695",
+        "readOnly": true,
+        "runtimeFacts": {
+          "uid": 1001,
+          "arch": "arm64",
+          "node": "v24.22.1",
+          "providerKeys": false
+        }
+      },
+      {
+        "phase": "re-upgrade",
+        "imageDigest": "c018a5100f6553355472519c05694d4cd54a40e974abef62431d5e9eaafe6598",
+        "databaseSha256": "2ff57b44e35f90ca3827f09dcbbab7c85a056105b9911dcd36cefa5c84fce9d8",
+        "browserFactsSha256": "f767fc70844cf56888d32df1a686df2de10a555b28ea79446752eb86534e2dcb",
+        "documentSha256": "59a4252ccc40ef229131b6fafdca00196ee82075f9a706dc6c912f963a127695",
+        "readOnly": true,
+        "runtimeFacts": {
+          "uid": 1001,
+          "arch": "arm64",
+          "node": "v24.22.1",
+          "providerKeys": false
+        }
+      }
+    ],
+    "platform": "linux/arm64",
+    "previousDigest": "905d28422236c424b7a90bec9ff0d2d4d4d63fdc9ba689e51f38d0425549c393",
+    "candidateDigest": "c018a5100f6553355472519c05694d4cd54a40e974abef62431d5e9eaafe6598",
+    "databaseRecovery": {
+      "result": "passed",
+      "evidence": "local-synthetic-postgresql-dump-restore",
+      "tables": 9,
+      "tenantWorkspaces": 2,
+      "exactCostRestored": true,
+      "metadataCleanupReapplied": true,
+      "metadataCleanupIdempotent": true,
+      "checksum": "438996a4e7615ffd20c645d369d97f5f9d20f095f82bbe5c158cd7c36f5f3429"
+    },
+    "browserRecovery": {
+      "passed": true,
+      "encrypted": true,
+      "wrongPasswordRejected": true,
+      "tamperRejected": true,
+      "originalBytes": true,
+      "unknownYearPreserved": true,
+      "exactCents": true,
+      "deletion": true,
+      "networkObservation": {
+        "requests": 407,
+        "startsBeforeUpload": true,
+        "rawPrivateMarkersAbsent": true,
+        "limitation": "Checks raw request URLs and postData for the synthetic SSN, filename and PDF signature; not a general encoded or binary PII proof."
+      }
+    },
+    "result": "passed"
+  },
+  "artifacts": {
+    "buildLog": {
+      "path": ".local/upgrade-evidence/container-da3e0fc-arm64-build.log",
+      "sha256": "27b4903137341bd45d7baa0319e518f0472044b7cd7442bd8bb7a85d294bc6ff"
+    },
+    "smokeLog": {
+      "path": ".local/upgrade-evidence/container-da3e0fc-arm64-smoke-reviewed.log",
+      "sha256": "d19a1ceeb221bbd3b25a4330cac034a92e8f5c406bb98cb9cf87557e818a6bee"
+    },
+    "recoveryLog": {
+      "path": ".local/upgrade-evidence/container-da3e0fc-arm64-recovery-reviewed.log",
+      "sha256": "9fea6097baba6e43a12f3d0ac5d6b764046f7e431808c37b64f02681e363fb84"
+    },
+    "sbom": {
+      "path": ".local/upgrade-evidence/container-da3e0fc-arm64.cdx.json",
+      "sha256": "6be93818604d1ff44c92c185919d5779782276464573d374ab572b1480d68634"
+    },
+    "scan": {
+      "path": ".local/upgrade-evidence/container-da3e0fc-arm64.grype.json",
+      "sha256": "0c058fa350f49217ca7c36d90c839d1d095cce8b573e08d6c358e27217c1196c"
+    }
+  },
+  "runtimeScan": {
+    "matches": 157,
+    "distinctAdvisories": 67,
+    "critical": 0,
+    "high": 54,
+    "medium": 47,
+    "low": 10,
+    "negligible": 46,
+    "npmMatches": 0,
+    "fixedMatches": 0,
+    "disposition": "unresolved-release-review-required",
+    "reviewBy": "2026-11-07"
+  },
+  "agentReview": {
+    "status": "four concrete findings corrected and local rehearsal rerun passed",
+    "independentHumanSecurityReview": false,
+    "corrections": [
+      "Pin verified local container endpoint before mutation",
+      "Retain request observations from before original upload and bound privacy claim to raw markers",
+      "Verify wrong-password and ciphertext-tamper rejection without restored records",
+      "Attempt every cleanup independently and retain original failure"
+    ]
+  }
+}

@@ -79,7 +79,7 @@ test.describe("Footer", () => {
 
     // Brand
     await expect(footer.getByText("Viva La Tax", { exact: true })).toBeVisible();
-    await expect(footer.getByText(/local-first by default/i)).toBeVisible();
+    await expect(footer.getByText(/your data can stay on your device/i)).toBeVisible();
 
     // Navigation links
     const footerNav = footer.getByRole("navigation", { name: /footer navigation/i });
@@ -89,7 +89,7 @@ test.describe("Footer", () => {
     await expect(footerNav.getByRole("link", { name: /privacy policy/i })).toBeVisible();
 
     // Legal disclaimer
-    await expect(footer.getByText(/not a substitute for licensed tax advice or tax preparation/i)).toBeVisible();
+    await expect(footer.getByText(/not a substitute for professional tax advice or tax preparation/i)).toBeVisible();
   });
 
   test("footer renders on help page", async ({ page }) => {
@@ -141,7 +141,7 @@ test.describe("Self-hosted mode", () => {
     await page.goto("/");
 
     // In self-host mode (default), the "Local Mode" badge should be visible
-    await expect(page.getByText("Local Mode")).toBeVisible();
+    await expect(page.getByText("Local Mode", { exact: true })).toBeVisible();
   });
 
   test("no sign-in or auth UI is shown in self-host mode", async ({ page }) => {

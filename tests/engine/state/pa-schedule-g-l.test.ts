@@ -23,6 +23,8 @@ const ZERO = new Decimal(0);
 function makeStateCredit(overrides: Partial<OtherStateCredit> = {}): OtherStateCredit {
   return {
     stateCode: "NJ",
+    // Explicit fictional business arithmetic; never inferred from withholding.
+    incomeClass: "business",
     incomeTaxableByBothStates: ZERO,
     taxPaidToOtherState: ZERO,
     ...overrides,
@@ -347,27 +349,12 @@ describe("Pennsylvania Schedule G-L — Credit for Taxes Paid to Other States", 
 
   describe("Realistic Scenarios", () => {
     it("PA Schedule G-L - PA resident working in NJ (higher tax state)", () => {
-      // PA resident commutes to NJ. $80,000 compensation.
-      // NJ tax on that income: ~$3,200 (hypothetical)
-      // PA tax: $80,000 × 3.07% = $2,456
-      // Credit = min($3,200, $2,456) = $2,456
-      const result = calculateScheduleGL(makeInput({
-        paTaxLiability: d(2456),
-        otherStateCredits: [
-          makeStateCredit({
-            stateCode: "NJ",
-            incomeTaxableByBothStates: d(80000),
-            taxPaidToOtherState: d(3200),
-          }),
-        ],
-      }));
-      expect(result.perStateResults[0].paTaxOnSharedIncome.toNumber()).toBe(2456);
-      expect(result.perStateResults[0].credit.toNumber()).toBe(2456);
-      // Full PA tax offset by NJ credit
-      expect(result.totalCredit.toNumber()).toBe(2456);
+      // Historical wrong 80000/3200 commuter oracle is retained in original-source.
+      // Same actual employee source amounts must require NJ withholding refund.
+      expect(() => calculateScheduleGL(makeInput({paTaxLiability:d(2456),otherStateCredits:[makeStateCredit({stateCode:"NJ",incomeClass:"compensation",incomeTaxableByBothStates:d(80000),taxPaidToOtherState:d(3200)})]}))).toThrow(/reciprocal|refund|source/i);
     });
 
-    it("PA Schedule G-L - PA resident with investment income in another state", () => {
+    it("PA Schedule G-L - PA resident with rental income in another state", () => {
       // PA resident has rental income in Maryland: $24,000
       // MD tax paid: $600
       // PA tax on $24,000: $24,000 × 3.07% = $736.80 → $737
@@ -377,6 +364,7 @@ describe("Pennsylvania Schedule G-L — Credit for Taxes Paid to Other States", 
         otherStateCredits: [
           makeStateCredit({
             stateCode: "MD",
+            incomeClass: "rents",
             incomeTaxableByBothStates: d(24000),
             taxPaidToOtherState: d(600),
           }),
@@ -387,8 +375,8 @@ describe("Pennsylvania Schedule G-L — Credit for Taxes Paid to Other States", 
       expect(result.totalCredit.toNumber()).toBe(600);
     });
 
-    it("PA Schedule G-L - PA resident working in two states", () => {
-      // Works in NJ ($60,000) and NY ($20,000)
+    it("PA Schedule G-L - explicit business income in two states", () => {
+      // Explicit fictional business sources in NJ ($60,000) and NY ($20,000); not employee wages.
       // Total PA tax liability on $100K total income (with other income too): $3,377
       const result = calculateScheduleGL(makeInput({
         paTaxLiability: d(3377),
@@ -594,3 +582,9 @@ describe("Pennsylvania Schedule G-L — Credit for Taxes Paid to Other States", 
     });
   });
 });
+
+// Spec: state/pa-schedule-g-l.yaml reciprocal-source-guard. Official PITguide compensation rule.
+it("PA Schedule G-L reciprocal employees and unknown classes require refund or actual source method",()=>{for(const stateCode of ["IN","MD","NJ","OH","VA","WV","oh"," nj "]){for(const incomeClass of [undefined,"compensation"] as const){expect(()=>calculateScheduleGL(makeInput({paTaxLiability:d('307'),otherStateCredits:[makeStateCredit({stateCode,incomeClass,incomeTaxableByBothStates:d('10000'),taxPaidToOtherState:d('500')})]}))).toThrow(/reciprocal|refund|class|source/i);}}});
+it("PA Schedule G-L explicit reciprocal business and rental arithmetic remain possible",()=>{for(const incomeClass of ["business","rents"] as const){const result=calculateScheduleGL(makeInput({paTaxLiability:d('307'),otherStateCredits:[makeStateCredit({stateCode:'OH',incomeClass,incomeTaxableByBothStates:d('10000'),taxPaidToOtherState:d('500')})]}));expect(result.totalCredit.toString()).toBe('307');}});
+it("PA Schedule G-L nonreciprocal employee arithmetic remains possible",()=>{const result=calculateScheduleGL(makeInput({paTaxLiability:d('307'),otherStateCredits:[makeStateCredit({stateCode:'NY',incomeClass:'compensation',incomeTaxableByBothStates:d('10000'),taxPaidToOtherState:d('200')})]}));expect(result.totalCredit.toString()).toBe('200');});
+it("PA Schedule G-L reciprocal zero does not invent positive eligibility",()=>{for(const value of ['income','tax']){const result=calculateScheduleGL(makeInput({paTaxLiability:d('307'),otherStateCredits:[makeStateCredit({stateCode:'OH',incomeClass:undefined,incomeTaxableByBothStates:d(value==='income'?'0':'10000'),taxPaidToOtherState:d(value==='tax'?'0':'500')})]}));expect(result.totalCredit.toString()).toBe('0');}});

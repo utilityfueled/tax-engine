@@ -1,0 +1,196 @@
+{
+  "schemaVersion": 1,
+  "sourceCommit": "d05534d8ffa296023489bf27489c81592fc81e13",
+  "recordedAt": "2026-11-01T15:25:38+00:00",
+  "releaseReady": false,
+  "scope": "Local synthetic native arm64 evidence built with Podman from a clean archive of this commit. Not staging, production or human security review.",
+  "platform": "linux/arm64",
+  "builder": "podman build --format docker",
+  "image": {
+    "id": "sha256:d19d1d4b38bb6e36a9cba468d151eb1c89e569fa559b15f7433c3e38dd49470c",
+    "archiveSha256": "db7fd0c58b303a94b7f0f54f732f55f28a4867b8314610f0576880bd686bca26",
+    "revisionLabel": "d05534d8ffa296023489bf27489c81592fc81e13"
+  },
+  "smoke": {
+    "result": "passed",
+    "image": "d19d1d4b38bb6e36a9cba468d151eb1c89e569fa559b15f7433c3e38dd49470c",
+    "readOnly": true,
+    "healthy": true,
+    "assets": true,
+    "imageCacheWritten": true,
+    "selfHostAuth": true,
+    "uid": 1001,
+    "node": "v24.22.1",
+    "architecture": "arm64",
+    "imageCacheFilesystem": 16914836,
+    "imageCacheLimitBytes": 67108864,
+    "packageTools": false,
+    "providerKeys": false,
+    "templates": 44
+  },
+  "recovery": {
+    "result": "passed",
+    "previousImage": "localhost/tax-engine:2026-d32cb8c-arm64",
+    "phases": [
+      {
+        "phase": "previous",
+        "imageDigest": "a19e168da153371ff7ec30a27340cbcc7fd248585216b54c3806d7964f3dcf87",
+        "databaseSha256": "2ff57b44e35f90ca3827f09dcbbab7c85a056105b9911dcd36cefa5c84fce9d8",
+        "browserFactsSha256": "f767fc70844cf56888d32df1a686df2de10a555b28ea79446752eb86534e2dcb",
+        "documentSha256": "cd82c47a60ea9833424c284bb0526e56dc014c356b1bee086ad2f1a5ab7bb63e",
+        "readOnly": true,
+        "runtimeFacts": {
+          "uid": 1001,
+          "arch": "arm64",
+          "node": "v24.22.1",
+          "noNewPrivileges": true,
+          "noEffectiveCapabilities": true,
+          "noBoundingCapabilities": true,
+          "providerKeys": false
+        }
+      },
+      {
+        "phase": "upgrade",
+        "imageDigest": "d19d1d4b38bb6e36a9cba468d151eb1c89e569fa559b15f7433c3e38dd49470c",
+        "databaseSha256": "2ff57b44e35f90ca3827f09dcbbab7c85a056105b9911dcd36cefa5c84fce9d8",
+        "browserFactsSha256": "f767fc70844cf56888d32df1a686df2de10a555b28ea79446752eb86534e2dcb",
+        "documentSha256": "cd82c47a60ea9833424c284bb0526e56dc014c356b1bee086ad2f1a5ab7bb63e",
+        "readOnly": true,
+        "runtimeFacts": {
+          "uid": 1001,
+          "arch": "arm64",
+          "node": "v24.22.1",
+          "noNewPrivileges": true,
+          "noEffectiveCapabilities": true,
+          "noBoundingCapabilities": true,
+          "providerKeys": false
+        }
+      },
+      {
+        "phase": "database-restart",
+        "imageDigest": "d19d1d4b38bb6e36a9cba468d151eb1c89e569fa559b15f7433c3e38dd49470c",
+        "databaseSha256": "2ff57b44e35f90ca3827f09dcbbab7c85a056105b9911dcd36cefa5c84fce9d8",
+        "browserFactsSha256": "f767fc70844cf56888d32df1a686df2de10a555b28ea79446752eb86534e2dcb",
+        "documentSha256": "cd82c47a60ea9833424c284bb0526e56dc014c356b1bee086ad2f1a5ab7bb63e",
+        "readOnly": true,
+        "runtimeFacts": {
+          "uid": 1001,
+          "arch": "arm64",
+          "node": "v24.22.1",
+          "noNewPrivileges": true,
+          "noEffectiveCapabilities": true,
+          "noBoundingCapabilities": true,
+          "providerKeys": false
+        }
+      },
+      {
+        "phase": "database-dump-restore",
+        "imageDigest": "d19d1d4b38bb6e36a9cba468d151eb1c89e569fa559b15f7433c3e38dd49470c",
+        "databaseSha256": "2ff57b44e35f90ca3827f09dcbbab7c85a056105b9911dcd36cefa5c84fce9d8",
+        "browserFactsSha256": "f767fc70844cf56888d32df1a686df2de10a555b28ea79446752eb86534e2dcb",
+        "documentSha256": "cd82c47a60ea9833424c284bb0526e56dc014c356b1bee086ad2f1a5ab7bb63e",
+        "readOnly": true,
+        "runtimeFacts": {
+          "uid": 1001,
+          "arch": "arm64",
+          "node": "v24.22.1",
+          "noNewPrivileges": true,
+          "noEffectiveCapabilities": true,
+          "noBoundingCapabilities": true,
+          "providerKeys": false
+        }
+      },
+      {
+        "phase": "rollback",
+        "imageDigest": "a19e168da153371ff7ec30a27340cbcc7fd248585216b54c3806d7964f3dcf87",
+        "databaseSha256": "2ff57b44e35f90ca3827f09dcbbab7c85a056105b9911dcd36cefa5c84fce9d8",
+        "browserFactsSha256": "f767fc70844cf56888d32df1a686df2de10a555b28ea79446752eb86534e2dcb",
+        "documentSha256": "cd82c47a60ea9833424c284bb0526e56dc014c356b1bee086ad2f1a5ab7bb63e",
+        "readOnly": true,
+        "runtimeFacts": {
+          "uid": 1001,
+          "arch": "arm64",
+          "node": "v24.22.1",
+          "noNewPrivileges": true,
+          "noEffectiveCapabilities": true,
+          "noBoundingCapabilities": true,
+          "providerKeys": false
+        }
+      },
+      {
+        "phase": "re-upgrade",
+        "imageDigest": "d19d1d4b38bb6e36a9cba468d151eb1c89e569fa559b15f7433c3e38dd49470c",
+        "databaseSha256": "2ff57b44e35f90ca3827f09dcbbab7c85a056105b9911dcd36cefa5c84fce9d8",
+        "browserFactsSha256": "f767fc70844cf56888d32df1a686df2de10a555b28ea79446752eb86534e2dcb",
+        "documentSha256": "cd82c47a60ea9833424c284bb0526e56dc014c356b1bee086ad2f1a5ab7bb63e",
+        "readOnly": true,
+        "runtimeFacts": {
+          "uid": 1001,
+          "arch": "arm64",
+          "node": "v24.22.1",
+          "noNewPrivileges": true,
+          "noEffectiveCapabilities": true,
+          "noBoundingCapabilities": true,
+          "providerKeys": false
+        }
+      }
+    ],
+    "databaseRecovery": {
+      "result": "passed",
+      "evidence": "local-synthetic-postgresql-dump-restore",
+      "tables": 9,
+      "tenantWorkspaces": 2,
+      "exactCostRestored": true,
+      "metadataCleanupReapplied": true,
+      "metadataCleanupIdempotent": true,
+      "checksum": "069e2d1dafba72ac2fccff423e64bb87b407da18193d1aceb8dcfb70a360fdfd"
+    },
+    "browserRecovery": {
+      "passed": true,
+      "encrypted": true,
+      "wrongPasswordRejected": true,
+      "tamperRejected": true,
+      "originalBytes": true,
+      "unknownYearPreserved": true,
+      "exactCents": true,
+      "deletion": true,
+      "networkObservation": {
+        "requests": 410,
+        "startsBeforeUpload": true,
+        "rawPrivateMarkersAbsent": true,
+        "limitation": "Checks raw request URLs and postData for the synthetic SSN, filename and PDF signature; not a general encoded or binary PII proof."
+      }
+    },
+    "evidence": ".local/upgrade-evidence/recovery-d05534d8-arm64.log",
+    "kind": "local-synthetic-compose-release-rehearsal",
+    "project": "tax-rehearsal-46681435",
+    "platform": "linux/arm64",
+    "previousDigest": "a19e168da153371ff7ec30a27340cbcc7fd248585216b54c3806d7964f3dcf87",
+    "candidateDigest": "d19d1d4b38bb6e36a9cba468d151eb1c89e569fa559b15f7433c3e38dd49470c"
+  },
+  "sbom": {
+    "components": 2930,
+    "path": ".local/upgrade-evidence/sbom-d05534d8-arm64.cdx.json",
+    "sha256": "f5024505c91476cd0453dd9e337af3160b2760fb1bf4150a817f06e34ea5a040"
+  },
+  "scan": {
+    "databaseBuilt": "2026-10-31T06:18:17Z",
+    "matches": 159,
+    "distinctAdvisories": 68,
+    "severity": {
+      "High": 56,
+      "Negligible": 46,
+      "Medium": 47,
+      "Low": 10
+    },
+    "artifactTypes": {
+      "deb": 159
+    },
+    "fixedVersionAvailable": 0,
+    "newSinceRegister": [],
+    "goneSinceRegister": [],
+    "path": ".local/upgrade-evidence/scan-d05534d8-arm64.json",
+    "sha256": "cff03afb481b8018cf600d796c9a368769b1eeec49154b3849562a2c0351f1f0"
+  },
+  "advisoryAcceptance": "Pending owner. The register review date is 2026-11-07. This scan accepts nothing."
+}

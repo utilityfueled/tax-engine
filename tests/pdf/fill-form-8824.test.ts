@@ -1,11 +1,13 @@
 /**
- * Spec: spec/federal/form-8824.yaml
+ * Spec: spec/
+        form8960Sources: niitDispositionSources("17500", "7500", "-25000"),federal/form-8824.yaml
  */
 
 import { access, mkdtemp, readFile, rm } from "fs/promises";
 import { tmpdir } from "os";
 import { join } from "path";
 import { describe, expect, it } from "vitest";
+import { niitDispositionSources } from "../fixtures/niit-sources.js";
 import { calculateFederalTax } from "@/engine/federal.js";
 import { calculateForm8824Aggregate } from "@/engine/forms/form-8824.js";
 import {
@@ -107,6 +109,7 @@ describe("Form 8824 packet reference summary", () => {
     try {
       const fixture = {
         ...simpleW2Fixture,
+        form8960Sources: niitDispositionSources("17500", "7500", "-25000"),
         form8824: [
           {
             description: "Warehouse exchange",

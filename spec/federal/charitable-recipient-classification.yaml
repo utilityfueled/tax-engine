@@ -1,0 +1,47 @@
+form: "Charitable recipient classification"
+fullName: "Actual recipient category and foundation valuation"
+taxYear: [2025, 2026]
+irsReference: "https://www.irs.gov/publications/p526"
+references:
+  - "https://uscode.house.gov/us/usc/119-120/t26/s170/"
+notes: |
+  Refreshed2026-10-25. IRC170(b)(1)(A)(vii)/(F) includes qualifying private
+  operating and certain other foundations in the50percent recipient category.
+  G applies to qualifying cash; C applies to public-category capital property.
+  The e(1)(B)(ii) capital-gain reduction applies to private foundations outside F,
+  not every other qualified30percent recipient. Three actual source values
+  distinguish fifty-percent, private-nonoperating and other-thirty-percent.
+  Original legacy isPrivateFoundation is retained, not overwritten. Its true
+  answer conflated private foundation and second category, so requires actual
+  classification. Explicit legacy false retains its historical public-category
+  meaning with legacy provenance, never a new affirmative source. Clearing a
+  new guided answer remains unknown even when legacy false is retained.
+  Crypto legacy other-qualified likewise cannot establish foundation valuation;
+  preserve it as unresolved. No source name or institution inference is allowed.
+  This source prerequisite does not expand2026 mixed-category carry methods or
+  release calculation/export qualification gates.
+lines:
+  - line: "current"
+    description: "Actual category controls ordinary source limits and valuation"
+    formula: "At2025base10000, actual fifty-percent qualified cash6000 gives6000 even if legacy foundation=true; private-nonoperating cash gives3000. Atbase100000, actual other-thirty-percent long-term property FMV2000/basis1000 retains2000 before limits; private-nonoperating nonqualified stock reduces to1000. Preserve input and unknown/false qualification."
+    testRef: "tests/engine/forms/charitable-recipient-classification.test.ts::separates actual recipient limits and foundation valuation without rewriting legacy facts"
+  - line: "migration"
+    description: "Ambiguous legacy answers cannot establish current classification"
+    formula: "Positive eligible legacy foundation=true without new category rejects in both years. Explicitfalse remains a legacy public source. Omitted or invalid new category never becomes public. Known ineligible or zero gifts create no deduction or carry."
+    testRef: "tests/engine/forms/charitable-recipient-classification.test.ts::preserves unresolved legacy categories and actual false without inventing eligibility"
+  - line: "crypto"
+    description: "Crypto uses the same foundation distinction"
+    formula: "For an actual long-term capital gift FMV2000/basis1000, fifty-percent uses2000 inC, private-nonoperating uses1000 inD, other-thirty-percent uses2000 inD. Old other-qualified preserves its raw source but rejects ambiguous foundation valuation; no silent migration."
+    testRef: "tests/engine/forms/charitable-recipient-classification.test.ts::binds crypto valuation to the same actual category and rejects the ambiguous legacy enum"
+  - line: "guide"
+    description: "Actual category intake preserves unknown and legacy provenance"
+    formula: "Guide offers three actual classifications without a default, retains legacy boolean, forwards actual category and uses the same resolver. Changing category revokes charitable-history confirmation; clearing an explicit answer remains unknown. No dollar values, receipt dates or organization identity are rewritten."
+    testRef: "tests/guided-interview/guided-charitable-recipient.test.ts::preserves actual category and legacy facts while revoking stale history confirmation"
+  - line: "controls"
+    description: "Real intake controls can resolve an ambiguous saved source"
+    formula: "A saved true source renders unchanged and pending; actual fifty-percent selection can establish a qualifying operating-foundation category without replacing that legacy value. New rows and cleared answers remain unknown; private-nonoperating alone exposes the qualified-stock question."
+    testRef: "tests/apps/web/charitable-recipient-interactions.test.tsx::collects actual recipient classification without promoting the saved ambiguous flag"
+  - line: "review"
+    description: "Original review binding includes actual classification"
+    formula: "Prepared charitable review context and exact source digest retain category and legacy provenance. Changing either actual classification or source valuation after calculation rejects before rendering; render-only identifiers remain redacted and original input immutable."
+    testRef: "tests/pdf/charitable-recipient-binding.test.ts::rejects changed recipient category against the original prepared charity context"

@@ -21,45 +21,45 @@ function makeBond(proceeds: string, interest: string, expenses: string) {
 // ═══════════════════════════════════════════════════════════
 
 describe("Form 8815 - basic exclusion calculation", () => {
-  it("Form 8815 Line 2 - qualified expenses", () => {
+  it("Form 8815 Line 4 - qualified expenses", () => {
     const result = calculateForm8815([makeBond("10000", "2000", "8000")], d(50000), "single");
     expect(result.qualifiedExpenses.toNumber()).toBe(8000);
   });
 
-  it("Form 8815 Line 3 - total proceeds", () => {
+  it("Form 8815 Line 5 - total proceeds", () => {
     const result = calculateForm8815([makeBond("10000", "2000", "8000")], d(50000), "single");
     expect(result.totalProceeds.toNumber()).toBe(10000);
   });
 
-  it("Form 8815 Line 4 - interest portion", () => {
+  it("Form 8815 Line 6 - interest portion", () => {
     const result = calculateForm8815([makeBond("10000", "2000", "8000")], d(50000), "single");
     expect(result.totalInterest.toNumber()).toBe(2000);
   });
 
-  it("Form 8815 Line 5 - ratio capped at 1", () => {
+  it("Form 8815 Line 7 - ratio capped at 1", () => {
     // Expenses ($15K) > Proceeds ($10K) → ratio capped at 1
     const result = calculateForm8815([makeBond("10000", "2000", "15000")], d(50000), "single");
     expect(result.expenseRatio.toNumber()).toBe(1);
   });
 
-  it("Form 8815 Line 5 - ratio less than 1 when expenses < proceeds", () => {
+  it("Form 8815 Line 7 - ratio less than 1 when expenses < proceeds", () => {
     // Expenses $5K / Proceeds $10K = 0.5
     const result = calculateForm8815([makeBond("10000", "2000", "5000")], d(50000), "single");
     expect(result.expenseRatio.toNumber()).toBe(0.5);
   });
 
-  it("Form 8815 Line 6 - excludable before phase-out", () => {
+  it("Form 8815 Line 8 - excludable before phase-out", () => {
     // Interest $2K × ratio 0.8 = $1,600
     const result = calculateForm8815([makeBond("10000", "2000", "8000")], d(50000), "single");
     expect(result.excludableBeforePhaseOut.toNumber()).toBe(1600);
   });
 
-  it("Form 8815 Line 7 - modified AGI", () => {
+  it("Form 8815 Line 9 - modified AGI", () => {
     const result = calculateForm8815([makeBond("10000", "2000", "8000")], d(75000), "single");
     expect(result.modifiedAGI.toNumber()).toBe(75000);
   });
 
-  it("Form 8815 Line 8 - phase-out threshold", () => {
+  it("Form 8815 Line 10 - phase-out threshold", () => {
     const single = calculateForm8815([makeBond("10000", "2000", "8000")], d(50000), "single");
     expect(single.phaseOutThreshold.toNumber()).toBe(99500);
 
@@ -67,7 +67,7 @@ describe("Form 8815 - basic exclusion calculation", () => {
     expect(mfj.phaseOutThreshold.toNumber()).toBe(149250);
   });
 
-  it("Form 8815 Line 13 - final exclusion below phase-out", () => {
+  it("Form 8815 Line 14 - final exclusion below phase-out", () => {
     // AGI $50K well below $100,800 threshold → full exclusion
     const result = calculateForm8815([makeBond("10000", "2000", "8000")], d(50000), "single");
     // Interest $2K × ratio 0.8 = $1,600. No phase-out reduction.
@@ -379,15 +379,8 @@ describe("Form 8815 - extended edge cases and boundary conditions", () => {
     expect(result.excludableSavingsBondInterest.toNumber()).toBe(2500);
   });
 
-  it("zero bond proceeds with nonzero interest → zero exclusion, no division error", () => {
-    // Edge: proceeds = 0 but interest > 0 (shouldn't happen in practice)
-    const result = calculateForm8815(
-      [makeBond("0", "500", "1000")],
-      d(50000),
-      "single"
-    );
-    expect(result.expenseRatio.toNumber()).toBe(0);
-    expect(result.excludableSavingsBondInterest.toNumber()).toBe(0);
+  it("zero bond proceeds with positive interest rejects contradictory source amounts", () => {
+    expect(() => calculateForm8815([makeBond("0", "500", "1000")], d(50000), "single")).toThrow(/interest exceeds proceeds/);
   });
 
   it("multiple bonds aggregate correctly with partial phase-out", () => {
@@ -471,7 +464,7 @@ describe("Form 8815 - audit trail", () => {
       "single"
     );
     const lineIds = result.lines.map((l) => l.line);
-    const expectedLines = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13"];
+    const expectedLines = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14"];
     for (const id of expectedLines) {
       expect(lineIds, `expected line ${id} in audit trail`).toContain(id);
     }
@@ -486,25 +479,27 @@ describe("Form 8815 - audit trail", () => {
     );
     const getLine = (id: string) => result.lines.find((l) => l.line === id)?.value;
 
-    expect(getLine("2")?.toNumber()).toBe(result.qualifiedExpenses.toNumber());
-    expect(getLine("3")?.toNumber()).toBe(result.totalProceeds.toNumber());
-    expect(getLine("4")?.toNumber()).toBe(result.totalInterest.toNumber());
-    expect(getLine("6")?.toNumber()).toBe(result.excludableBeforePhaseOut.toNumber());
-    expect(getLine("7")?.toNumber()).toBe(result.modifiedAGI.toNumber());
-    expect(getLine("8")?.toNumber()).toBe(result.phaseOutThreshold.toNumber());
-    expect(getLine("10")?.toNumber()).toBe(result.phaseOutRange.toNumber());
-    expect(getLine("13")?.toNumber()).toBe(result.excludableSavingsBondInterest.toNumber());
+    expect(getLine("2")?.toNumber()).toBe(result.grossQualifiedExpenses.toNumber());
+    expect(getLine("3")?.toNumber()).toBe(result.nontaxableEducationalBenefits.toNumber());
+    expect(getLine("4")?.toNumber()).toBe(result.qualifiedExpenses.toNumber());
+    expect(getLine("5")?.toNumber()).toBe(result.totalProceeds.toNumber());
+    expect(getLine("6")?.toNumber()).toBe(result.totalInterest.toNumber());
+    expect(getLine("7")?.toNumber()).toBe(result.expenseRatio.toNumber());
+    expect(getLine("8")?.toNumber()).toBe(result.excludableBeforePhaseOut.toNumber());
+    expect(getLine("9")?.toNumber()).toBe(result.modifiedAGI.toNumber());
+    expect(getLine("10")?.toNumber()).toBe(result.phaseOutThreshold.toNumber());
+    expect(getLine("14")?.toNumber()).toBe(result.excludableSavingsBondInterest.toNumber());
   });
 
-  it("Form 8815 - MFS audit trail records only line 13 with zero value", () => {
-    // MFS short-circuits: only one line should appear (line 13 = $0)
+  it("Form 8815 - MFS audit trail records only line 14 with zero value", () => {
+    // MFS short-circuits: only one line should appear (line 14 = $0)
     const result = calculateForm8815(
       [makeBond("10000", "2000", "10000")],
       d(50000),
       "married_filing_separately"
     );
     expect(result.lines.length).toBe(1);
-    expect(result.lines[0].line).toBe("13");
+    expect(result.lines[0].line).toBe("14");
     expect(result.lines[0].value.toNumber()).toBe(0);
   });
 });
@@ -670,7 +665,7 @@ describe("Form 8815 - federal pipeline", () => {
       ...simpleW2Fixture,
       form1099Int: [{
         payer: "US Treasury",
-        interestIncome: "3000",
+        interestIncome: "0", // Box 3 is separate from Box 1.
         earlyWithdrawalPenalty: "0",
         usSavingsBondInterest: "3000",
         federalWithheld: "0",
@@ -710,11 +705,11 @@ describe("Form 8815 - federal pipeline", () => {
 
 // ═══════════════════════════════════════════════════════════
 // Form 8815 MAGI: Student Loan Interest Add-Back
-// Per IRS Form 8815 Instructions, Line 7: MAGI = AGI + student loan interest deduction
+// Per IRS Form 8815 Instructions, Line 9: MAGI = AGI + student loan interest deduction
 // ═══════════════════════════════════════════════════════════
 
 describe("Form 8815 - MAGI adds back student loan interest in federal pipeline", () => {
-  it("SLI deduction added back to MAGI for Form 8815 phase-out — IRS Form 8815 Instructions Line 7", () => {
+  it("SLI deduction added back to MAGI for Form 8815 phase-out — IRS Form 8815 Instructions Line 9", () => {
     // MFJ: $152,750 wages, $4K bond interest, $2,500 SLI
     // Total income: $156,750. SLI MAGI $156,750 < $170K → full $2,500 SLI.
     // AGI: $156,750 - $2,500 = $154,250
@@ -745,7 +740,7 @@ describe("Form 8815 - MAGI adds back student loan interest in federal pipeline",
       }],
       form1099Int: [{
         payer: "US Treasury",
-        interestIncome: "4000",
+        interestIncome: "0", // Box 3 is separate from Box 1.
         earlyWithdrawalPenalty: "0",
         usSavingsBondInterest: "4000",
         federalWithheld: "0",
@@ -766,15 +761,15 @@ describe("Form 8815 - MAGI adds back student loan interest in federal pipeline",
     };
     const result = calculateFederalTax(fixture);
 
-    // Find Form 8815 Line 7 (Modified AGI) in audit trail
+    // Find Form 8815 Line 9 (Modified AGI) in audit trail
     const form8815MAGI = result.allLines
-      .find((l) => l.form === "Form 8815" && l.line === "7")?.value;
+      .find((l) => l.form === "Form 8815" && l.line === "9")?.value;
     // MAGI should be AGI + SLI = $154,250 + $2,500 = $156,750
     expect(form8815MAGI?.toNumber()).toBe(156750);
 
-    // Form 8815 Line 13 (excludable) should be $3,000 (with SLI add-back), not $3,333
+    // Form 8815 Line 14 (excludable) should be $3,000 (with SLI add-back), not $3,333
     const excludable = result.allLines
-      .find((l) => l.form === "Form 8815" && l.line === "13")?.value;
+      .find((l) => l.form === "Form 8815" && l.line === "14")?.value;
     expect(excludable?.toNumber()).toBe(3000);
   });
 
@@ -790,7 +785,7 @@ describe("Form 8815 - MAGI adds back student loan interest in federal pipeline",
     };
     const result = calculateFederalTax(fixture);
     const form8815MAGI = result.allLines
-      .find((l) => l.form === "Form 8815" && l.line === "7")?.value;
+      .find((l) => l.form === "Form 8815" && l.line === "9")?.value;
     const agi = result.allLines
       .find((l) => l.form === "1040" && l.line === "11")?.value;
     // With no SLI, MAGI should equal pre-exclusion AGI.
@@ -827,7 +822,7 @@ describe("Form 8815 - MAGI adds back student loan interest in federal pipeline",
       }],
       form1099Int: [{
         payer: "US Treasury",
-        interestIncome: "500",
+        interestIncome: "0", // Box 3 is separate from Box 1.
         earlyWithdrawalPenalty: "0",
         usSavingsBondInterest: "500",
         federalWithheld: "0",
@@ -850,7 +845,7 @@ describe("Form 8815 - MAGI adds back student loan interest in federal pipeline",
 
     // MAGI should be $149,250 + $2,500 = $151,750 (above threshold)
     const form8815MAGI = result.allLines
-      .find((l) => l.form === "Form 8815" && l.line === "7")?.value;
+      .find((l) => l.form === "Form 8815" && l.line === "9")?.value;
     expect(form8815MAGI?.toNumber()).toBe(151750);
 
     // With MAGI $151,750: excess = $2,500, ratio = 2500/30000 = 0.08333...
@@ -858,7 +853,7 @@ describe("Form 8815 - MAGI adds back student loan interest in federal pipeline",
     // excludable = $500 - $42 = $458
     // Without SLI add-back (buggy): MAGI $149,250 at threshold → no reduction → $500
     const excludable = result.allLines
-      .find((l) => l.form === "Form 8815" && l.line === "13")?.value;
+      .find((l) => l.form === "Form 8815" && l.line === "14")?.value;
     expect(excludable?.toNumber()).toBe(458);
   });
 });

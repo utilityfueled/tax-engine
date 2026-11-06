@@ -8,7 +8,8 @@
  */
 
 import Decimal from "decimal.js";
-import { min, zeroFloor, roundDollar, sum } from "@/utils/decimal.js";
+import {ordinarySourcePrecision,publicOrdinaryMoney,publicOrdinaryLines} from "./pa-ordinary-source-precision.js";
+import { min, zeroFloor, roundDollar } from "@/utils/decimal.js";
 import { AuditTrail } from "@/utils/audit.js";
 import type { CalculatedLine } from "@/models/outputs.js";
 import { STATE_TAX_CONSTANTS } from "@/models/constants.js";
@@ -202,7 +203,39 @@ export function calculatePA40AllowedOtherCredits(input: PA40AllowedOtherCreditsI
 // Calculation
 // ---------------------------------------------------------------------------
 
-export function calculatePA40(input: PA40Input): PA40Result {
+export function calculatePA40(originalInput: PA40Input): PA40Result {
+  const Money=Decimal.clone({precision:ordinarySourcePrecision(originalInput),rounding:Decimal.ROUND_HALF_UP});
+  const sum=(...values:Decimal[]):Decimal=>values.reduce((total,value)=>total.plus(value),new Money(0));
+  const zeroFloor=(value:Decimal):Decimal=>value.lt(0)?new Money(0):new Money(value);
+  // Spec: printed-income-rounding/reported-payments. Aggregate exact originals
+  // within each line first, then round that reported line once for arithmetic.
+  // Actual 2024 and 2025 instructions use the same rule; 2026 remains draft.
+  // Retain original cents, including unprinted late-payment components.
+  const input: PA40Input = {
+    ...originalInput,
+    refundableCredits:new Money(originalInput.refundableCredits),
+    underpaymentPenalty:new Money(originalInput.underpaymentPenalty ?? 0),lateFilingOrPaymentPenalty:new Money(originalInput.lateFilingOrPaymentPenalty ?? 0),latePaymentInterest:new Money(originalInput.latePaymentInterest ?? 0),
+    compensation: roundDollar(new Money(originalInput.compensation)),
+    unreimbursedExpenses: roundDollar(new Money(originalInput.unreimbursedExpenses)),
+    interest: roundDollar(new Money(originalInput.interest)),
+    dividends: roundDollar(new Money(originalInput.dividends)),
+    netBusinessIncome: roundDollar(new Money(originalInput.netBusinessIncome)),
+    netGainOrLoss: roundDollar(new Money(originalInput.netGainOrLoss)),
+    netRentalIncome: roundDollar(new Money(originalInput.netRentalIncome)),
+    estateTrustIncome: roundDollar(new Money(originalInput.estateTrustIncome)),
+    gamblingIncome: roundDollar(new Money(originalInput.gamblingIncome)),
+    otherDeductions: roundDollar(new Money(originalInput.otherDeductions)),
+    stateWithholding: roundDollar(new Money(originalInput.stateWithholding)),
+    creditFromPriorYear: roundDollar(new Money(originalInput.creditFromPriorYear)),
+    estimatedPayments: roundDollar(new Money(originalInput.estimatedPayments)),
+    extensionPayment: roundDollar(new Money(originalInput.extensionPayment)),
+    nonresidentTaxWithheld: roundDollar(new Money(originalInput.nonresidentTaxWithheld)),
+    taxForgivenessEligibilityIncome: roundDollar(new Money(originalInput.taxForgivenessEligibilityIncome)),
+    taxForgivenessCredit: roundDollar(new Money(originalInput.taxForgivenessCredit)),
+    residentCredit: roundDollar(new Money(originalInput.residentCredit)),
+    otherCredits: roundDollar(new Money(originalInput.otherCredits)),
+    useTax: roundDollar(new Money(originalInput.useTax)),
+  };
   const constants = STATE_TAX_CONSTANTS.pa[input.taxYear];
   if (!constants) {
     throw new Error(`PA constants not available for tax year ${input.taxYear}`);
@@ -377,13 +410,13 @@ export function calculatePA40(input: PA40Input): PA40Result {
   audit.record("PA-40", "23a", "Net tax liability after credits", netTaxLiability, "Line 12 - Line 22a, floor at 0");
 
   // Line 24: Total payments and credits on the printed PA-40
-  const totalPaymentsAndCredits = totalPayments.plus(totalCredits);
+  const totalPaymentsAndCredits = sum(input.stateWithholding, totalEstimatedPaymentsAndCredits, totalCredits);
   audit.record(
     "PA-40",
     "24",
     "Total payments and credits",
     totalPaymentsAndCredits,
-    "Line 13 + Line 18 + Line 21 + Line 22 + Line 23, plus supported engine-only refundable credits",
+    "Line 13 + Line 18 + Line 21 + Line 22 + Line 23; excludes unprinted engine-only refundable helpers",
   );
 
   // -----------------------------------------------------------------------
@@ -392,8 +425,8 @@ export function calculatePA40(input: PA40Input): PA40Result {
 
   const netDue = netTaxLiability.minus(totalPayments);
 
-  const overpayment = netDue.isNegative() ? roundDollar(netDue.abs()) : new Decimal(0);
-  const amountOwed = netDue.isPositive() ? roundDollar(netDue) : new Decimal(0);
+  const overpayment = netDue.isNegative() ? roundDollar(netDue.abs()) : new Money(0);
+  const amountOwed = netDue.isPositive() ? roundDollar(netDue) : new Money(0);
 
   audit.record("PA-40", "24-legacy", "Legacy overpayment helper", overpayment,
     "Legacy helper before use tax and penalties are applied");
@@ -409,82 +442,82 @@ export function calculatePA40(input: PA40Input): PA40Result {
 
   // Line 26: Tax due before penalties and interest
   const taxDueBase = totalPATax.minus(totalPaymentsAndCredits);
-  const taxDue = taxDueBase.isPositive() ? roundDollar(taxDueBase) : new Decimal(0);
+  const taxDue = taxDueBase.isPositive() ? roundDollar(taxDueBase) : new Money(0);
   audit.record("PA-40", "26", "Tax due", taxDue, "If Line 12 + Line 25 exceeds Line 24: the difference");
 
   // Line 27: Penalties and interest
-  const underpaymentPenalty = input.underpaymentPenalty ?? new Decimal(0);
-  const lateFilingOrPaymentPenalty = input.lateFilingOrPaymentPenalty ?? new Decimal(0);
-  const latePaymentInterest = input.latePaymentInterest ?? new Decimal(0);
+  const underpaymentPenalty = input.underpaymentPenalty ?? new Money(0);
+  const lateFilingOrPaymentPenalty = input.lateFilingOrPaymentPenalty ?? new Money(0);
+  const latePaymentInterest = input.latePaymentInterest ?? new Money(0);
   audit.record("PA-40", "25a", "Underpayment penalty component", underpaymentPenalty, "From REV-1630 Line 16");
   audit.record("PA-40", "25b", "Late filing or payment penalty component", lateFilingOrPaymentPenalty, "Penalty for filing late and/or failing to pay tax by the due date");
   audit.record("PA-40", "25c", "Late payment interest component", latePaymentInterest, "Interest for late filing/payment");
-  const penaltiesAndInterest = sum(
+  const penaltiesAndInterest = roundDollar(sum(
     underpaymentPenalty,
     lateFilingOrPaymentPenalty,
     latePaymentInterest,
-  );
+  ));
   audit.record(
     "PA-40",
     "27",
     "Penalties and interest",
     penaltiesAndInterest,
-    "REV-1630 underpayment interest + late filing/payment penalty + late-payment interest",
+    "Round the sum of reported REV-1630 interest and unprinted late penalty/interest once",
   );
 
   const settlementDifference = totalPaymentsAndCredits.minus(totalPATax).minus(penaltiesAndInterest);
-  const totalAmountDue = settlementDifference.isNegative() ? roundDollar(settlementDifference.abs()) : new Decimal(0);
-  const netOverpayment = settlementDifference.isPositive() ? roundDollar(settlementDifference) : new Decimal(0);
+  const totalAmountDue = settlementDifference.isNegative() ? roundDollar(settlementDifference.abs()) : new Money(0);
+  const netOverpayment = settlementDifference.isPositive() ? roundDollar(settlementDifference) : new Money(0);
   audit.record("PA-40", "28", "Total amount due", totalAmountDue, "If Line 26 + Line 27 is greater than 0: the amount due");
   audit.record("PA-40", "29", "Overpayment", netOverpayment, "If Line 24 exceeds Line 12 + Line 25 + Line 27: the difference");
 
   return {
     // Part A
-    compensation: input.compensation,
-    unreimbursedExpenses: input.unreimbursedExpenses,
-    netCompensation,
-    interest: input.interest,
-    dividends: input.dividends,
-    netBusinessIncome: input.netBusinessIncome,
-    netGainOrLoss: input.netGainOrLoss,
-    netRentalIncome: input.netRentalIncome,
-    estateTrustIncome: input.estateTrustIncome,
-    gamblingIncome: input.gamblingIncome,
-    totalPATaxableIncome,
-    otherDeductions: input.otherDeductions,
-    adjustedPATaxableIncome,
-    taxForgivenessEligibilityIncome: input.taxForgivenessEligibilityIncome,
+    compensation: publicOrdinaryMoney(input.compensation),
+    unreimbursedExpenses: publicOrdinaryMoney(input.unreimbursedExpenses),
+    netCompensation: publicOrdinaryMoney(netCompensation),
+    interest: publicOrdinaryMoney(input.interest),
+    dividends: publicOrdinaryMoney(input.dividends),
+    netBusinessIncome: publicOrdinaryMoney(input.netBusinessIncome),
+    netGainOrLoss: publicOrdinaryMoney(input.netGainOrLoss),
+    netRentalIncome: publicOrdinaryMoney(input.netRentalIncome),
+    estateTrustIncome: publicOrdinaryMoney(input.estateTrustIncome),
+    gamblingIncome: publicOrdinaryMoney(input.gamblingIncome),
+    totalPATaxableIncome: publicOrdinaryMoney(totalPATaxableIncome),
+    otherDeductions: publicOrdinaryMoney(input.otherDeductions),
+    adjustedPATaxableIncome: publicOrdinaryMoney(adjustedPATaxableIncome),
+    taxForgivenessEligibilityIncome: publicOrdinaryMoney(input.taxForgivenessEligibilityIncome),
 
     // Settlement helpers
-    useTax: input.useTax,
-    totalPATax,
+    useTax: publicOrdinaryMoney(input.useTax),
+    totalPATax: publicOrdinaryMoney(totalPATax),
 
     // Part B
-    taxLiability,
-    stateWithholding: input.stateWithholding,
-    creditFromPriorYear: input.creditFromPriorYear,
-    estimatedPayments: input.estimatedPayments,
-    extensionPayment: input.extensionPayment,
-    nonresidentTaxWithheld: input.nonresidentTaxWithheld,
-    refundableCredits: input.refundableCredits,
-    totalEstimatedPaymentsAndCredits,
-    totalPayments,
-    taxForgivenessCredit: input.taxForgivenessCredit,
-    residentCredit: input.residentCredit,
-    otherCredits,
-    totalCredits,
-    netTaxLiability,
-    totalPaymentsAndCredits,
-    overpayment,
-    amountOwed,
-    taxDue,
-    underpaymentPenalty,
-    lateFilingOrPaymentPenalty,
-    latePaymentInterest,
-    penaltiesAndInterest,
-    totalAmountDue,
-    netOverpayment,
+    taxLiability: publicOrdinaryMoney(taxLiability),
+    stateWithholding: publicOrdinaryMoney(input.stateWithholding),
+    creditFromPriorYear: publicOrdinaryMoney(input.creditFromPriorYear),
+    estimatedPayments: publicOrdinaryMoney(input.estimatedPayments),
+    extensionPayment: publicOrdinaryMoney(input.extensionPayment),
+    nonresidentTaxWithheld: publicOrdinaryMoney(input.nonresidentTaxWithheld),
+    refundableCredits: publicOrdinaryMoney(input.refundableCredits),
+    totalEstimatedPaymentsAndCredits: publicOrdinaryMoney(totalEstimatedPaymentsAndCredits),
+    totalPayments: publicOrdinaryMoney(totalPayments),
+    taxForgivenessCredit: publicOrdinaryMoney(input.taxForgivenessCredit),
+    residentCredit: publicOrdinaryMoney(input.residentCredit),
+    otherCredits: publicOrdinaryMoney(otherCredits),
+    totalCredits: publicOrdinaryMoney(totalCredits),
+    netTaxLiability: publicOrdinaryMoney(netTaxLiability),
+    totalPaymentsAndCredits: publicOrdinaryMoney(totalPaymentsAndCredits),
+    overpayment: publicOrdinaryMoney(overpayment),
+    amountOwed: publicOrdinaryMoney(amountOwed),
+    taxDue: publicOrdinaryMoney(taxDue),
+    underpaymentPenalty: publicOrdinaryMoney(underpaymentPenalty),
+    lateFilingOrPaymentPenalty: publicOrdinaryMoney(lateFilingOrPaymentPenalty),
+    latePaymentInterest: publicOrdinaryMoney(latePaymentInterest),
+    penaltiesAndInterest: publicOrdinaryMoney(penaltiesAndInterest),
+    totalAmountDue: publicOrdinaryMoney(totalAmountDue),
+    netOverpayment: publicOrdinaryMoney(netOverpayment),
 
-    lines: audit.getLines(),
+    lines: publicOrdinaryLines(audit.getLines()),
   };
 }

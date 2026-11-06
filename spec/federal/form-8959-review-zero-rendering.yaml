@@ -1,0 +1,33 @@
+form: "Form8959 historical explicit-zero review rendering"
+fullName: "Honor printed2025 zero instructions using existing canonical results"
+taxYear: 2025
+irsReference: "https://www.irs.gov/pub/irs-pdf/f8959.pdf"
+notes: |
+  Applies only to the historical 2025 template. Existing cross-year export gates
+  remain unchanged; no 2026 physical export or filing qualification is granted.
+  Pure review rendering, not tax computation. Official2025 printed6/11/12/16/22
+  explicitly require zero when the applicable computed amount is zero or less.
+  Ordinary rendered6/11/12/22 use literal0 only for actual computed zero. Ordinary
+  RRTA14-17 remain inapplicable and blank. The already-qualified RRTA branch
+  already emits actual canonical zero and skips inapplicable PartII unchanged.
+  Printed8 specifically requires zero for a loss: use actual existing negative
+  ScheduleSE netSEEarnings plus canonical zero line8, never infer loss from zero.
+  Missing Form8959 data retains blank fields and never obtains invented zero.
+lines:
+  - line: "explicit-zero"
+    description: "Render applicable existing zero with literal0 and keep other branches unchanged"
+    formula: "Existing ordinary6/11/12/22 calculations: zero ->physical0; positive ->unchanged money formatter. Actual canonical SE loss with effectiveSE0 ->line8 physical0. No result ->no zero; nonRRTA16 stays blank; RRTA branch exact."
+    testRef: "tests/pdf/form-8959-review-selection.test.ts::renders only applicable explicitly instructed zeros from actual canonical amounts: %s"
+  - line: "unknown-is-not-zero"
+    description: "An absent canonical form cannot acquire literal zero fields"
+    formula: "Without a Form8959 result, preserve the old header-only mapper and blank6/8/11/12/16/22."
+    testRef: "tests/pdf/form-8959-review-selection.test.ts::keeps absent canonical Form8959 data blank rather than inventing zero"
+
+  - line: "known-no-se-skip"
+    description: "Skip PartII only for actual existing zero SE originals and canonical effective zero"
+    formula: "Official i8959 Specific Instructions PartII says no self-employment income ->skip8–13. Render none of8–13 when existing ScheduleSE.netSEEarnings.isZero and canonicalForm8959.selfEmploymentEarnings.isZero. Missing ScheduleSE preserves previous behavior; actual loss remains rendered with8=0. This supersedes the prior ordinary no-SE PartII applicability assumption, not any tax formula."
+    testRef: "tests/pdf/form-8959-review-selection.test.ts::skips PartII for actual known-zero SE originals through the actual %s entry point"
+  - line: "missing-se-preservation"
+    description: "Do not infer known no-SE from an absent ScheduleSE carrier"
+    formula: "An absent ScheduleSE does not satisfy the new exactknownzero conjunction. Retain prior direct-mapper rendering for supplied canonical Form8959 and preserve original actual-loss behavior."
+    testRef: "tests/pdf/form-8959-review-selection.test.ts::preserves existing direct-mapper behavior when ScheduleSE is absent"

@@ -7,16 +7,23 @@ import type {
 } from "@tax-engine/contracts";
 import { buildProviderFacingWorkspacePayload } from "@tax-engine/engine/src/provider-facing-workspace-payload";
 import { collectProviderDirectIdentifiersFromWorkspace } from "@tax-engine/engine/src/provider-direct-identifiers";
+import { readWorkspaceAiOptOut } from "./workspace-ai-preferences";
+import { buildLocalProviderWorkspaceResponse } from "./provider-workspace-local";
 
 export interface ProviderWorkspaceRequest {
   task: "workspace-summary" | "workspace-help";
   requestId: string;
   requestedAt: string;
-  workspace: ReturnWorkspaceRecord;
-  unsupportedRoutes: WorkspaceUnsupportedRoute[];
+  workspace: Pick<ReturnWorkspaceRecord, "id" | "updatedAt" | "storageMode"> & {
+    summary: Pick<ReturnWorkspaceRecord["summary"], "totalDocuments">;
+    seededReturn: { interviewQuestions: Array<Pick<ReturnWorkspaceRecord["seededReturn"]["interviewQuestions"][number], "status" | "prompt">> };
+    returnSummary: Pick<ReturnWorkspaceRecord["returnSummary"], "status" | "targetTaxYear">;
+  };
+  unsupportedRoutes: Array<Pick<WorkspaceUnsupportedRoute, "title" | "description" | "reasons"> & { id: string }>;
   redactions: ProviderFacingPayloadRedaction[];
   replacementCount: number;
   question?: string;
+  optedOut?: boolean;
   assistantContext?: {
     mode: "workspace" | "guided";
     currentSectionId?: string | null;
@@ -33,6 +40,9 @@ export interface ProviderWorkspaceRequest {
 }
 
 export interface ProviderUsageStats {
+  providerCostUsd?: string;
+  usageKind?: "reported" | "estimated";
+  pricingEffectiveFrom?: string;
   inputTokens: number;
   outputTokens: number;
   estimatedCostCents: number;
@@ -63,6 +73,7 @@ export interface ProviderWorkspaceResponse {
   redactionCount: number;
   usage?: ProviderUsageStats;
   budget?: ProviderWorkspaceBudgetSnapshot;
+  sourceIds?: string[];
 }
 
 export interface ProviderWorkspaceErrorResponse {
@@ -99,6 +110,7 @@ export interface BuildProviderWorkspaceRequestOptions {
   now?: string;
   task?: "workspace-summary" | "workspace-help";
   question?: string;
+  optedOut?: boolean;
   workspaceStorageModeOverride?: ReturnWorkspaceRecord["storageMode"];
   assistantContext?: ProviderWorkspaceRequest["assistantContext"];
   selectedDocumentIds?: string[];
@@ -107,6 +119,7 @@ export interface BuildProviderWorkspaceRequestOptions {
 export interface RequestProviderWorkspaceOptions extends BuildProviderWorkspaceRequestOptions {
   endpoint?: string;
   fetchFn?: typeof fetch;
+  signal?: AbortSignal;
 }
 
 function adaptUnsupportedRoutesForProviderRequest(
@@ -170,6 +183,7 @@ export function buildProviderWorkspaceRequest(
     unsupportedRoutes: adaptUnsupportedRoutesForProviderRequest(payload.unsupportedRoutes),
     redactions: payload.redactions,
     replacementCount: payload.replacementCount,
+    ...(options.optedOut ? { optedOut: true } : {}),
     ...(options.question ? { question: options.question } : {}),
     ...(assistantContext ? { assistantContext } : {})
   };
@@ -179,14 +193,16 @@ export async function requestProviderWorkspace(
   workspace: ReturnWorkspaceRecord,
   options: RequestProviderWorkspaceOptions = {}
 ) {
-  const request = buildProviderWorkspaceRequest(workspace, options);
+  const request = buildProviderWorkspaceRequest(workspace, { ...options, optedOut: options.optedOut ?? readWorkspaceAiOptOut(workspace.id) });
+  if (request.optedOut) return { request, response: buildLocalProviderWorkspaceResponse(request) };
   const fetchFn = options.fetchFn ?? fetch;
   const response = await fetchFn(options.endpoint ?? "/api/provider/workspace", {
     method: "POST",
     headers: {
       "content-type": "application/json"
     },
-    body: JSON.stringify(request)
+    body: JSON.stringify(request),
+    signal: options.signal
   });
 
   if (!response.ok) {

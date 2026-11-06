@@ -1,0 +1,201 @@
+{
+  "recordedAt": "2026-11-04T04:33:07.242795+00:00",
+  "kind": "bounded-local-native-arm64-runtime-evidence",
+  "sourceCommit": "ad23b0fad2d76013173151d68700c212783d67cb",
+  "documentationHeadAtRecording": "f09a3dd7ad2f3a12f02a8d50efd0da01050033e6",
+  "applicationSourceUnchangedSinceImage": true,
+  "laterChangedPaths": [
+    "apps/web/tests/oh-business-part-year-native.spec.ts",
+    "docs/upgrade-2026-checkpoint.json",
+    "docs/upgrade-2026-oh-business-part-year-native-browser-work.md",
+    "docs/upgrade-2026-oh-reciprocal-official-review-work.md",
+    "docs/upgrade-2026-progress.md",
+    "docs/upgrade-2026-public-source-refresh-20261104.md",
+    "spec/coverage/inventory-2025.json",
+    "spec/state/oh-business-part-year-native-browser.yaml",
+    "tests/pdf/oh-reciprocal-official-review.test.ts"
+  ],
+  "status": "SMOKE_RECOVERY_PASS_BROWSER_FOUR_TIMEOUTS_SCAN_ARTIFACTS_RETAINED_POST_MEMORY_GATE_FAILED",
+  "candidateImageID": "706761b11058485b6ee29a99a9d7ac3fc7fbaf4f6ec0fe69927a83b8fd4a57a8",
+  "previousImageID": "a19e168da153371ff7ec30a27340cbcc7fd248585216b54c3806d7964f3dcf87",
+  "nativeArchitecture": "linux/arm64",
+  "sourceArchiveSHA256": "a28afd7e3f2a46a008d2491095214b7e6fcc192def75dac7fc4d03d03acfb2c2",
+  "sourceInventorySHA256": "5f96b3e71ab1e2652a8dbf5ee0cd49a46d1e7c87e7e2bf6cd4afe2c87014e0ca",
+  "evidenceSHA256": {
+    "originalFailedBuildReceipt": "79b20f2c50776a26ca404d1ca632adde435eeaa29562fd3f5ccf4e96230c6f29",
+    "metadataReconciliation": "d54da7a016d15cddb5411c84f5503e49ab01c74c145e57627df5034eb6e7c3cb",
+    "unchangedSmokeReceipt": "755ab05c812378d0d408feca68ca71c5c7a202bc2a1df0e7882e0e0d80f8045f",
+    "unchangedSmokeStdout": "62cb6c3ef3eec1724759377b2f590f75ca7ba7c065d25d40a842a5e7c13952f5",
+    "recoveryReceipt": "4841c5c0be9f4375f4ea65d06a70d7e463f355b273b91a4baa32436637aec7bb",
+    "recoveryEvidence": "c29a5a7642e232fe98da038b81810a5c026e715567a8f3417b84a8d08ac4be8c",
+    "actualFourBrowserReceipt": "19c70c249acb599b6af1bab4259f4c9caf5bc38341542e11f7f3b28b1b447f94",
+    "scanOperationReceipt": "0acb8821eb683937e0461fc39c537bc4f29909ba4d905dbf9b365f6a50ab24a1",
+    "sbom": "c0c0eec68983c708e58e2cf683f737ef2c972133854b78407af97fee7fc4662e",
+    "grypeReport": "7299d1a6aeb05cbf41ae6965aff0ebef447045a41c47097b119a79924c676c07"
+  },
+  "historicalFailuresPreserved": [
+    "Initial image metadata reader looked for Config.Healthcheck; Podman image metadata reports top-level Healthcheck. Separate reconciliation retained the original failure.",
+    "Original Podman Compose1.6.0 cannot accept the unchanged service-qualified ps --quiet web command. Actual operation used explicit Docker Compose5.5.1 via the same local Podman endpoint; application/script unchanged.",
+    "Preflight memory-floor, sandbox and manual accounting-hash failures remain retained. No resource floor or script assertion was weakened."
+  ],
+  "phaseEvidence": [
+    {
+      "phase": "previous",
+      "imageID": "a19e168da153371ff7ec30a27340cbcc7fd248585216b54c3806d7964f3dcf87",
+      "databaseSHA256": "2ff57b44e35f90ca3827f09dcbbab7c85a056105b9911dcd36cefa5c84fce9d8",
+      "browserFactsSHA256": "f767fc70844cf56888d32df1a686df2de10a555b28ea79446752eb86534e2dcb",
+      "documentSHA256": "a498d5f30cbc665d57ab6e12f9e77de1ef3731524afd3248dcf2a9199c2add48",
+      "readOnly": true,
+      "runtimeFacts": {
+        "uid": 1001,
+        "arch": "arm64",
+        "node": "v24.22.1",
+        "noNewPrivileges": true,
+        "noEffectiveCapabilities": true,
+        "noBoundingCapabilities": true,
+        "providerKeys": false
+      }
+    },
+    {
+      "phase": "upgrade",
+      "imageID": "706761b11058485b6ee29a99a9d7ac3fc7fbaf4f6ec0fe69927a83b8fd4a57a8",
+      "databaseSHA256": "2ff57b44e35f90ca3827f09dcbbab7c85a056105b9911dcd36cefa5c84fce9d8",
+      "browserFactsSHA256": "f767fc70844cf56888d32df1a686df2de10a555b28ea79446752eb86534e2dcb",
+      "documentSHA256": "a498d5f30cbc665d57ab6e12f9e77de1ef3731524afd3248dcf2a9199c2add48",
+      "readOnly": true,
+      "runtimeFacts": {
+        "uid": 1001,
+        "arch": "arm64",
+        "node": "v26.13.0",
+        "noNewPrivileges": true,
+        "noEffectiveCapabilities": true,
+        "noBoundingCapabilities": true,
+        "providerKeys": false
+      }
+    },
+    {
+      "phase": "database-restart",
+      "imageID": "706761b11058485b6ee29a99a9d7ac3fc7fbaf4f6ec0fe69927a83b8fd4a57a8",
+      "databaseSHA256": "2ff57b44e35f90ca3827f09dcbbab7c85a056105b9911dcd36cefa5c84fce9d8",
+      "browserFactsSHA256": "f767fc70844cf56888d32df1a686df2de10a555b28ea79446752eb86534e2dcb",
+      "documentSHA256": "a498d5f30cbc665d57ab6e12f9e77de1ef3731524afd3248dcf2a9199c2add48",
+      "readOnly": true,
+      "runtimeFacts": {
+        "uid": 1001,
+        "arch": "arm64",
+        "node": "v26.13.0",
+        "noNewPrivileges": true,
+        "noEffectiveCapabilities": true,
+        "noBoundingCapabilities": true,
+        "providerKeys": false
+      }
+    },
+    {
+      "phase": "database-dump-restore",
+      "imageID": "706761b11058485b6ee29a99a9d7ac3fc7fbaf4f6ec0fe69927a83b8fd4a57a8",
+      "databaseSHA256": "2ff57b44e35f90ca3827f09dcbbab7c85a056105b9911dcd36cefa5c84fce9d8",
+      "browserFactsSHA256": "f767fc70844cf56888d32df1a686df2de10a555b28ea79446752eb86534e2dcb",
+      "documentSHA256": "a498d5f30cbc665d57ab6e12f9e77de1ef3731524afd3248dcf2a9199c2add48",
+      "readOnly": true,
+      "runtimeFacts": {
+        "uid": 1001,
+        "arch": "arm64",
+        "node": "v26.13.0",
+        "noNewPrivileges": true,
+        "noEffectiveCapabilities": true,
+        "noBoundingCapabilities": true,
+        "providerKeys": false
+      }
+    },
+    {
+      "phase": "rollback",
+      "imageID": "a19e168da153371ff7ec30a27340cbcc7fd248585216b54c3806d7964f3dcf87",
+      "databaseSHA256": "2ff57b44e35f90ca3827f09dcbbab7c85a056105b9911dcd36cefa5c84fce9d8",
+      "browserFactsSHA256": "f767fc70844cf56888d32df1a686df2de10a555b28ea79446752eb86534e2dcb",
+      "documentSHA256": "a498d5f30cbc665d57ab6e12f9e77de1ef3731524afd3248dcf2a9199c2add48",
+      "readOnly": true,
+      "runtimeFacts": {
+        "uid": 1001,
+        "arch": "arm64",
+        "node": "v24.22.1",
+        "noNewPrivileges": true,
+        "noEffectiveCapabilities": true,
+        "noBoundingCapabilities": true,
+        "providerKeys": false
+      }
+    },
+    {
+      "phase": "re-upgrade",
+      "imageID": "706761b11058485b6ee29a99a9d7ac3fc7fbaf4f6ec0fe69927a83b8fd4a57a8",
+      "databaseSHA256": "2ff57b44e35f90ca3827f09dcbbab7c85a056105b9911dcd36cefa5c84fce9d8",
+      "browserFactsSHA256": "f767fc70844cf56888d32df1a686df2de10a555b28ea79446752eb86534e2dcb",
+      "documentSHA256": "a498d5f30cbc665d57ab6e12f9e77de1ef3731524afd3248dcf2a9199c2add48",
+      "readOnly": true,
+      "runtimeFacts": {
+        "uid": 1001,
+        "arch": "arm64",
+        "node": "v26.13.0",
+        "noNewPrivileges": true,
+        "noEffectiveCapabilities": true,
+        "noBoundingCapabilities": true,
+        "providerKeys": false
+      }
+    }
+  ],
+  "recoveryClaims": {
+    "unchangedScript": true,
+    "sixPhases": true,
+    "syntheticDatabaseAndBrowserBackup": true,
+    "sameCandidateAfterUpgradeAndReupgrade": true,
+    "sameOriginalDocumentBytes": true,
+    "ownedCleanupConfirmedByReceipt": true
+  },
+  "pending": [
+    "Native image browser successor at unchanged30s/retries0/workers2, then full browser if passing",
+    "Final-runtime SBOM/scan operation and owned/expiring advisory dispositions",
+    "Current native AMD64 provenance and full qualification",
+    "Current hosted Node26 and integrated outage/recovery/security rehearsal",
+    "Independent human security/privacy/tax and final2026 forms"
+  ],
+  "limits": [
+    "This is local synthetic evidence, not Preview or production recovery.",
+    "Previous image retains its historical mutable Node24 base/health metadata limitations.",
+    "Managed90s browser evidence is separate from the failed native30s qualification.",
+    "No release, filing, model promotion, production deployment or owner advisory acceptance."
+  ],
+  "releaseReady": false,
+  "updatedAt": "2026-11-04T05:10:08.187182+00:00",
+  "browserOutcome": {
+    "executed": 4,
+    "passed": 0,
+    "timedOut": 4,
+    "deadlineMilliseconds": 30000,
+    "retries": 0,
+    "configuredWorkers": 2,
+    "observedWorkers": 1,
+    "fullSuiteExecuted": false,
+    "cleanupPassed": true,
+    "interpretation": "All four reporter outcomes timedOut; the mobile count assertion began after the deadline and does not establish a wrong UI count. No distinct monetary or transport defect demonstrated.",
+    "independentEngineeringDiagnosisSHA256": "c93afd11c93aedef369a7767348fde51e5c3223221f2f5df6fb5f4fae0a26a32"
+  },
+  "scanOutcome": {
+    "syftExitCode": 0,
+    "grypeExitCode": 0,
+    "matches": 181,
+    "severity": {
+      "High": 61,
+      "Medium": 65,
+      "Low": 11,
+      "Negligible": 44,
+      "Critical": 0
+    },
+    "databaseBuilt": "2026-11-03T06:20:47Z",
+    "operationStatus": "FAIL_STOPPED",
+    "postRunMemoryGatePassed": false,
+    "finalSafetyChecks": "PASS",
+    "riskAcceptance": false
+  },
+  "independentScanArtifactReviewSHA256": "a9bdfda43b8836942b638eb04e35779ec63550f9dc2d88c1e6b2f4f2e748d16a",
+  "advisoryStatus": "docs/upgrade-2026-image-advisories-20261104.json",
+  "relatedNativeAmd64Evidence": "docs/upgrade-2026-runtime-f09-amd64.json"
+}

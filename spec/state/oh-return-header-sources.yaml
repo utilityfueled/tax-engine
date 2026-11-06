@@ -1,0 +1,124 @@
+form: "Ohio actual resident return header sources"
+fullName: "Finite 2025 primary single full-resident Columbus2503 actual residential originals"
+taxYear: 2025
+reference: "https://dam.assets.ohio.gov/image/upload/v1767095693/tax.ohio.gov/forms/ohio_individual/individual/2025/it1040-booklet.pdf"
+notes: |
+  Source-first factual header successor, not tax arithmetic or filing qualification.
+  Booklet printed15 requires actual majority-year resident district;9999 is only
+  full-year nonresident. Printed50 lists Columbus CSD2503 with no tax rate/base.
+  Reuse existing official code/name index and rate metadata. Null rate alone is
+  insufficient. First finite verified non-tax row2503 only; all other districts
+  retain originals and require separately verified inventory/method. No geography
+  lookup, ZIP/address inference, default county/code/year or no-tax boolean proof.
+  A user explicitly selects the actual2025 instructions as the list original; its
+  pinned publication SHA is artifact metadata, never a user-entered technical hash.
+  Actual one residential location covers365 days2025; mailing may differ. Actual
+  owner/year/address/date-linked residence, Finder, county and official inventory
+  originals must reconcile. Current Ohio fullresident source replay is separate.
+  First method explicitly supports actual Franklin only, confirmed as an Ohio county by the official Secretary of State directory and Revised Code2301.02. Coherent bogus or other unsupported county originals reject without claiming other actual counties legally invalid. Actual code2503 and actual county Franklin project2503/FRAN, not9999. County formatting
+  only after actual county original validation; no county inferred from district.
+  Draft unknown fields persist; explicit confirm alone captures current raw federal
+  and full independently replayed current Ohio residency/payment originals. Replay current parent, payments and native resident-credit child using their existing converters. A bare parent omits its separately converted child and cannot substitute for full canonical residency. Reads never refresh. Current
+  original/context/field edits invalidate confirmation but keep old evidence.
+  Persist a separate confirmedHeaderSources copy paired with the web draft; even
+  a naked retained true flag cannot approve changed draft contents on read.
+  Only safe header projection may be public; source snapshots/SSNs/reference IDs
+  remain private. New canonical admission and actual section wiring ROOT-owned.
+  Incomplete resident header cannot qualify a complete public resident packet.
+  County-name sources: https://www.ohiosos.gov/directories/county-boards-of-elections and https://codes.ohio.gov/ohio-revised-code/section-2301.02; county existence only, no fictional address validation.
+  Existing nonresident/SD/RC math, source methods, privacy and2026/filing gates stay.
+lines:
+  - line: "literal-source-baseline"
+    description: "Independent existing canonical sources and official inventory"
+    formula: "Actual RC W2/AGI100000; VA60000/netpaid1000; OHtax2323/RC1000/OHrefund677. Actual asserted residential source2503/Columbus CSD/Franklin/full365days. Booklet50 no-rate row and existing name index agree; mailing does not establish residential district."
+    testRef: "tests/apps/web/oh-return-header-existing-api.test.tsx::Ohio header existing source baseline preserves exact RC arithmetic and official district identity"
+  - line: "canonical-lossless-admission"
+    description: "Existing canonical API must retain a complete actual optional root"
+    formula: "Present explicitly confirmed actual header root survives strict TaxYearInputSchema parse exactly; no unknown-key stripping or original mutation."
+    testRef: "tests/apps/web/oh-return-header-existing-api.test.tsx::Ohio header existing canonical API preserves complete actual header originals"
+  - line: "malformed-present-root"
+    description: "Unknown is not silently erased at canonical boundary"
+    formula: "Present malformed or contradictory source root rejects; no root remains allowed for federal-only work but cannot establish complete resident paper."
+    testRef: "tests/apps/web/oh-return-header-existing-api.test.tsx::Ohio header existing canonical API rejects malformed present header %s"
+  - line: "native-origination"
+    description: "Actual existing state section offers source entry"
+    formula: "Fullresident Ohio section offers Add actual Ohio resident return header sources; starts blank/unknown/unconfirmed with no captured originals."
+    testRef: "tests/apps/web/oh-return-header-existing-api.test.tsx::Ohio header existing section offers absent native source origination"
+  - line: "safe-actual-projection"
+    description: "Typed actual residence header without geographic inference"
+    formula: "Confirmed source2503/actual Franklin=>schoolDistrictNumber2503,ohioCountyFRAN,residencyresident; one actual period365days; mailing may differ; input unchanged."
+    testRef: "tests/engine/state/oh-return-header-source.test.ts::Ohio header derives actual2503 and FRAN without using mailing geography"
+  - line: "actual-source-guards"
+    description: "Complete original identity date and jurisdiction relationships"
+    formula: "Require all actual owner/year/address/date/county/Finder/inventory/currentOhio matches; reject gapped/multiple/unknown residential periods, malformed dates, taxing or unknown codes, wrong name and unsupported2026 before any projection."
+    testRef: "tests/engine/state/oh-return-header-source.test.ts::Ohio header retains and rejects inconsistent actual original %s"
+  - line: "source-digest"
+    description: "Identity significance independent of printed equality"
+    formula: "Changing actual source reference with identical printed jurisdiction changes private source commitment only after separately valid explicit originals; stale saved snapshots never accepted."
+    testRef: "tests/engine/state/oh-return-header-source.test.ts::Ohio header distinct valid same-cell source originals have distinct commitments"
+  - line: "public-privacy"
+    description: "Only safe factual cells may be public"
+    formula: "Safe header contains only actual schoolDistrictNumber/ohioCounty/residency; no SSN,address,raw originals,references or sourceDigest. Original private source survives immutable."
+    testRef: "tests/engine/state/oh-return-header-source.test.ts::Ohio header safe projection and audit omit private source originals"
+  - line: "draft-unknown"
+    description: "Blank means unknown; no header defaults"
+    formula: "Year/owner/location/district/county/classification/confirmations start empty or null; no2503/9999/0/known-none or current-owner copy on read. Pending meaningful originals persist JSON."
+    testRef: "tests/apps/web/guided-ohio-return-header-sources.test.tsx::Ohio header draft empty and pending JSON records remain unknown"
+  - line: "explicit-confirmation"
+    description: "Separate current federal and Ohio originals"
+    formula: "Only explicit valid confirm captures immutable current raw federal excluding only self-referential Ohio roots plus full current Ohio residency and payments after existing parent→payment→native RC replay; build/read compares all retained snapshots and never rebinds; absent/stale parent, payment or child remains denied."
+    testRef: "tests/apps/web/guided-ohio-return-header-sources.test.tsx::Ohio header explicit confirmation binds current originals without read refresh"
+  - line: "native-fields"
+    description: "Plain structured actual source entry"
+    formula: "All actual residential/Finder/county/inventory owner/date/source fields reachable without JSON; every field edit clears own confirmation while retaining old snapshots; no raw SSN echoed outside private inputs."
+    testRef: "tests/apps/web/guided-ohio-return-header-sources.test.tsx::Ohio header panel complete native source entry confirms explicit originals"
+  - line: "native-edit-reset"
+    description: "Identity and jurisdiction edits invalidate even same-money sources"
+    formula: "Every actual source text/date/enum/checkbox change resets header; saved original snapshots retained, no current source overwrite."
+    testRef: "tests/apps/web/guided-ohio-return-header-sources.test.tsx::Ohio header panel edit preserves old originals and clears confirmation %s"
+  - line: "stale-draft-guards"
+    description: "Retained confirmation cannot approve different actual originals"
+    formula: "Missing snapshots, missing paired confirmation, changed fields, changed owner/employer/parent or unconfirmed parent all reject without mutation or refresh."
+    testRef: "tests/apps/web/guided-ohio-return-header-sources.test.tsx::Ohio header draft denies stale or naked confirmation %s"
+  - line: "blank-native-confirmation"
+    description: "Blank submission creates no known facts"
+    formula: "Blank native confirm stays unconfirmed with unknown district/county and no captured current originals or paired confirmed header."
+    testRef: "tests/apps/web/guided-ohio-return-header-sources.test.tsx::Ohio header panel blank failed confirmation retains all unknown facts"
+  - line: "saved-pending-native"
+    description: "Pending actual records survive reopening"
+    formula: "Save/reopen retains blank unknown code/county and actual entered rate display; failed confirmation cannot silently remove or fill them."
+    testRef: "tests/apps/web/guided-ohio-return-header-sources.test.tsx::Ohio header panel save and remount preserve pending actual records"
+  - line: "read-no-side-effects"
+    description: "Mount or remount cannot confirm or capture"
+    formula: "Read-only remount emits no update, preserves retained originals and never captures a current source snapshot."
+    testRef: "tests/apps/web/guided-ohio-return-header-sources.test.tsx::Ohio header panel read remount never emits new source snapshots"
+  - line: "public-pdf-source-privacy"
+    description: "Saved public output is not a source packet serialization"
+    formula: "Actual present header passes the original-context standalone review renderer; every returned reference page carries exactly one existing FOR REVIEW ONLY - NOT FOR FILING notice, including continuation pages. Every saved PDF object/reference/decoded stream and page is inspected, no fields/widgets or active provider actions, no actual residence/Finder query/SSN/source reference/commitment exposed. Native confirm and review perform zero fetch transfers. The workspace finalizer retains its existing idempotent page notice."
+    testRef: "tests/engine/state/oh-return-header-source.test.ts::Ohio header public review excludes private originals from every saved object without provider transfer"
+  - line: "current-native-source-baseline"
+    description: "Current native child conversion is preserved before header implementation"
+    formula: "Current actual state builder replays native parent/payment/RC and preserves complete child account and source-derived owner rows, OHcredit1000/OHtax1323/WH2000/refund677; source documents immutable. A raw number-year canonical child is never treated as an entered web draft."
+    testRef: "tests/apps/web/oh-return-header-existing-api.test.tsx::Ohio header current native baseline retains full resident credit replay and original677"
+  - line: "coherent-bogus-county"
+    description: "Agreement alone does not establish a real supported county"
+    formula: "Both independently retained Finder/county values set to Narnia reject. First finite actual Franklin is source-cited; never derive it from2503,address,ZIP or mailing."
+    testRef: "tests/engine/state/oh-return-header-source.test.ts::Ohio header rejects coherent bogus county originals without inventing jurisdiction"
+  - line: "unsupported-actual-county"
+    description: "Preserve actual unsupported geography without qualification"
+    formula: "Both retained actual county originals naming Delaware remain unchanged and are denied by this finite Franklin-only method; no claim Delaware is legally invalid."
+    testRef: "tests/engine/state/oh-return-header-source.test.ts::Ohio header retains other actual county originals as unsupported"
+  - line: "complete-current-parent-payment-child"
+    description: "Full prepared source context includes separately converted native method"
+    formula: "Missing/unconfirmed payments or child, separately reconfirmed equal-money payment/RC original changes, and retained canonical RC with missing native child all reject old header without read refresh. Full originalOhioResidencySources and originalOhioPaymentSources remain privately bound. Existing native W2 lossless metadata is validated before canonical comparison."
+    testRef: "tests/apps/web/guided-ohio-return-header-sources.test.tsx::Ohio header requires complete current native payment and credit replay %s"
+
+  - line: "public-physical-source-prerequisites"
+    description: "Separate explicit fictional actual employer account for physical Schedule W"
+    formula: "Public privacy review uses an independently supplied actual fictional Ohio employer ID07100412, never the old placeholder PRIVATE-OH-RC-STATE-ID or a production default. Explicitly reconfirm current parent/payment/native RC/header through existing APIs; no direct snapshot rebinding. Preserve all original header fixture, privacy/cash/source expectations and malformed employer-account negatives. Conditional fixture successor only after retained full-suite stack confirms the physical employer-ID guard. No tax or renderer change."
+    testRef: "tests/engine/state/oh-return-header-source.test.ts::Ohio header public review excludes private originals from every saved object without provider transfer"
+
+  - line: "part-year-school-212-sources"
+    description: "Separate actual212-day majority-year taxable district and county originals"
+    formula: "Single primary ordinary W2 current PY school method; explicitly supplied Ashland county/Finder same212-day Ohio home, official2025 booklet51 Hillsdale0302/.0125/E; complete parent/payment/school replay. Preserve full-year2503 and distinct PY business header methods. No county from district/address/ZIP, no amount allowlist or snapshot refresh."
+    testRef: "tests/engine/state/oh-school-district-part-year-official-review.test.ts::SD PY paper existing header API derives actual ASHL and0302 without mailing inference"

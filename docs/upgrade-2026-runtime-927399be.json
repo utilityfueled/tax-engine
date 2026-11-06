@@ -1,0 +1,283 @@
+{
+  "schemaVersion": 1,
+  "recordedAt": "2026-10-27T02:53:47.774640+00:00",
+  "sourceCommit": "927399be49312738511b0fe1da3b989e8f6b5e76",
+  "releaseReady": false,
+  "published": false,
+  "scope": "Completed synthetic GitHub native-amd64 runtime and recovery evidence. No staging, production, filing or human-review qualification. Does not include later9c077851 marriage or99592823 PDF performance commits.",
+  "workflow": {
+    "runId": 40436395967,
+    "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40436395967",
+    "artifactId": 12705526403,
+    "archiveSha256": "2dcb9d1e3b4a5c4cec607b7f6df7436d82cd6ab9e90f2d6f1c9f68bac77995be",
+    "archiveBytes": 46047766,
+    "archiveEntries": 309
+  },
+  "smoke": {
+    "result": "passed",
+    "image": "sha256:e2eda90bb9c26747e49acad0d73008ce419aae87e922409254644b66b40b4a82",
+    "readOnly": true,
+    "healthy": true,
+    "assets": true,
+    "imageCacheWritten": true,
+    "selfHostAuth": true,
+    "uid": 1001,
+    "node": "v24.22.1",
+    "architecture": "x64",
+    "imageCacheFilesystem": 16914836,
+    "imageCacheLimitBytes": 67108864,
+    "packageTools": false,
+    "providerKeys": false,
+    "templates": 44
+  },
+  "rehearsal": {
+    "kind": "local-synthetic-compose-release-rehearsal",
+    "project": "tax-rehearsal-de60df1d",
+    "phases": [
+      {
+        "phase": "previous",
+        "imageDigest": "sha256:ccf9eec9b7e95bec68ce4661249422ba9d06fbbb1704773dafa72c8d08638c14",
+        "databaseSha256": "2ff57b44e35f90ca3827f09dcbbab7c85a056105b9911dcd36cefa5c84fce9d8",
+        "browserFactsSha256": "f767fc70844cf56888d32df1a686df2de10a555b28ea79446752eb86534e2dcb",
+        "documentSha256": "4de043469082567dfa27eecf0e1ff870e907e9978c9ee93cc0748c0b3699bc61",
+        "readOnly": true,
+        "runtimeFacts": {
+          "uid": 1001,
+          "arch": "x64",
+          "node": "v24.22.1",
+          "noNewPrivileges": true,
+          "noEffectiveCapabilities": true,
+          "noBoundingCapabilities": true,
+          "providerKeys": false
+        }
+      },
+      {
+        "phase": "upgrade",
+        "imageDigest": "sha256:e2eda90bb9c26747e49acad0d73008ce419aae87e922409254644b66b40b4a82",
+        "databaseSha256": "2ff57b44e35f90ca3827f09dcbbab7c85a056105b9911dcd36cefa5c84fce9d8",
+        "browserFactsSha256": "f767fc70844cf56888d32df1a686df2de10a555b28ea79446752eb86534e2dcb",
+        "documentSha256": "4de043469082567dfa27eecf0e1ff870e907e9978c9ee93cc0748c0b3699bc61",
+        "readOnly": true,
+        "runtimeFacts": {
+          "uid": 1001,
+          "arch": "x64",
+          "node": "v24.22.1",
+          "noNewPrivileges": true,
+          "noEffectiveCapabilities": true,
+          "noBoundingCapabilities": true,
+          "providerKeys": false
+        }
+      },
+      {
+        "phase": "database-restart",
+        "imageDigest": "sha256:e2eda90bb9c26747e49acad0d73008ce419aae87e922409254644b66b40b4a82",
+        "databaseSha256": "2ff57b44e35f90ca3827f09dcbbab7c85a056105b9911dcd36cefa5c84fce9d8",
+        "browserFactsSha256": "f767fc70844cf56888d32df1a686df2de10a555b28ea79446752eb86534e2dcb",
+        "documentSha256": "4de043469082567dfa27eecf0e1ff870e907e9978c9ee93cc0748c0b3699bc61",
+        "readOnly": true,
+        "runtimeFacts": {
+          "uid": 1001,
+          "arch": "x64",
+          "node": "v24.22.1",
+          "noNewPrivileges": true,
+          "noEffectiveCapabilities": true,
+          "noBoundingCapabilities": true,
+          "providerKeys": false
+        }
+      },
+      {
+        "phase": "database-dump-restore",
+        "imageDigest": "sha256:e2eda90bb9c26747e49acad0d73008ce419aae87e922409254644b66b40b4a82",
+        "databaseSha256": "2ff57b44e35f90ca3827f09dcbbab7c85a056105b9911dcd36cefa5c84fce9d8",
+        "browserFactsSha256": "f767fc70844cf56888d32df1a686df2de10a555b28ea79446752eb86534e2dcb",
+        "documentSha256": "4de043469082567dfa27eecf0e1ff870e907e9978c9ee93cc0748c0b3699bc61",
+        "readOnly": true,
+        "runtimeFacts": {
+          "uid": 1001,
+          "arch": "x64",
+          "node": "v24.22.1",
+          "noNewPrivileges": true,
+          "noEffectiveCapabilities": true,
+          "noBoundingCapabilities": true,
+          "providerKeys": false
+        }
+      },
+      {
+        "phase": "rollback",
+        "imageDigest": "sha256:ccf9eec9b7e95bec68ce4661249422ba9d06fbbb1704773dafa72c8d08638c14",
+        "databaseSha256": "2ff57b44e35f90ca3827f09dcbbab7c85a056105b9911dcd36cefa5c84fce9d8",
+        "browserFactsSha256": "f767fc70844cf56888d32df1a686df2de10a555b28ea79446752eb86534e2dcb",
+        "documentSha256": "4de043469082567dfa27eecf0e1ff870e907e9978c9ee93cc0748c0b3699bc61",
+        "readOnly": true,
+        "runtimeFacts": {
+          "uid": 1001,
+          "arch": "x64",
+          "node": "v24.22.1",
+          "noNewPrivileges": true,
+          "noEffectiveCapabilities": true,
+          "noBoundingCapabilities": true,
+          "providerKeys": false
+        }
+      },
+      {
+        "phase": "re-upgrade",
+        "imageDigest": "sha256:e2eda90bb9c26747e49acad0d73008ce419aae87e922409254644b66b40b4a82",
+        "databaseSha256": "2ff57b44e35f90ca3827f09dcbbab7c85a056105b9911dcd36cefa5c84fce9d8",
+        "browserFactsSha256": "f767fc70844cf56888d32df1a686df2de10a555b28ea79446752eb86534e2dcb",
+        "documentSha256": "4de043469082567dfa27eecf0e1ff870e907e9978c9ee93cc0748c0b3699bc61",
+        "readOnly": true,
+        "runtimeFacts": {
+          "uid": 1001,
+          "arch": "x64",
+          "node": "v24.22.1",
+          "noNewPrivileges": true,
+          "noEffectiveCapabilities": true,
+          "noBoundingCapabilities": true,
+          "providerKeys": false
+        }
+      }
+    ],
+    "platform": "linux/amd64",
+    "previousDigest": "sha256:ccf9eec9b7e95bec68ce4661249422ba9d06fbbb1704773dafa72c8d08638c14",
+    "candidateDigest": "sha256:e2eda90bb9c26747e49acad0d73008ce419aae87e922409254644b66b40b4a82",
+    "databaseRecovery": {
+      "result": "passed",
+      "evidence": "local-synthetic-postgresql-dump-restore",
+      "tables": 9,
+      "tenantWorkspaces": 2,
+      "exactCostRestored": true,
+      "metadataCleanupReapplied": true,
+      "metadataCleanupIdempotent": true,
+      "checksum": "cd63c7721a1577c064f2848941974b7a2269cb0d17f055808ae5fdce32a91593"
+    },
+    "browserRecovery": {
+      "passed": true,
+      "encrypted": true,
+      "wrongPasswordRejected": true,
+      "tamperRejected": true,
+      "originalBytes": true,
+      "unknownYearPreserved": true,
+      "exactCents": true,
+      "deletion": true,
+      "networkObservation": {
+        "requests": 398,
+        "startsBeforeUpload": true,
+        "rawPrivateMarkersAbsent": true,
+        "limitation": "Checks raw request URLs and postData for the synthetic SSN, filename and PDF signature; not a general encoded or binary PII proof."
+      }
+    },
+    "result": "passed"
+  },
+  "previousApplicationCommit": "d32cb8cf3d607c643c4c7f7e1b845fcace61563f",
+  "browser": {
+    "container": {
+      "job": 121966183683,
+      "passed": 484,
+      "hostedSkipped": 5,
+      "configuredRetries": 0,
+      "duration": "17.5m"
+    },
+    "selfHost": {
+      "job": 121966183413,
+      "passed": 484,
+      "hostedSkipped": 5,
+      "configuredRetries": 1,
+      "reportedFlaky": 0,
+      "duration": "22.4m"
+    }
+  },
+  "otherCi": {
+    "unit": {
+      "job": 121966177482,
+      "passed": 19420,
+      "files": 1353,
+      "workers": 1,
+      "seconds": "1386.62"
+    },
+    "coverage": {
+      "sourceCommit": "927399be49312738511b0fe1da3b989e8f6b5e76",
+      "runId": 40436395899,
+      "jobId": 121966177512,
+      "conclusion": "failure",
+      "passed": 19415,
+      "failed": 5,
+      "passedFiles": 1348,
+      "failedFiles": 5,
+      "totalFiles": 1353,
+      "seconds": "2001.57",
+      "workers": 1,
+      "failureKind": "All five cases hit the unchanged5000ms timeout; no complete coverage report was produced.",
+      "failedCases": [
+        "tests/pdf/k1-cash-distribution-review.test.ts > binds and saves the redacted distribution gain with original basis evidence",
+        "tests/pdf/qbi-loss-review.test.ts > retains a saved zero-deduction QBI packet and separate loss limits",
+        "tests/pdf/temporary-component-serialization.test.ts > preserves actual form values and notices in temporary component serialization (flatten=false)",
+        "tests/apps/web/workspace-annual-cash-qtp.test.ts > replays annual cash originals before workspace redaction",
+        "tests/apps/web/workspace-room-board-prior-use.test.ts > replays actual historical room and board sources before workspace redaction"
+      ],
+      "log": {
+        "path": ".local/upgrade-evidence/927399be-coverage-ci.log",
+        "sha256": "1278af35d13eaa289b92e577e66c120a952606d8cb2caa7c81aff41ad56d365f"
+      },
+      "coverageGatePassed": false
+    }
+  },
+  "runtimeScan": {
+    "sbomComponents": 2930,
+    "sbomGenerator": "syft1.42.3",
+    "sbomTimestamp": "2026-10-27T02:29:19Z",
+    "scanner": "grype 0.121.0",
+    "scanTimestamp": "2026-10-27T02:30:25.281823698Z",
+    "databaseBuilt": "2026-10-26T06:38:44Z",
+    "databaseValid": true,
+    "matches": 157,
+    "distinctAdvisories": 67,
+    "matchSeverities": {
+      "High": 54,
+      "Negligible": 46,
+      "Medium": 47,
+      "Low": 10
+    },
+    "npmMatches": 0,
+    "fixedVersionMatches": 0,
+    "exactAdvisoryTuplesUnchangedFrom8f8": true,
+    "ownerConfirmation": "pending",
+    "reviewBy": "2026-11-07"
+  },
+  "artifacts": {
+    "container-smoke.log": {
+      "path": ".local/upgrade-evidence/container-runtime-evidence-927399be/container-smoke.log",
+      "sha256": "382e1f0b7f6849f5c0823a0eb5de4392b1a16df3cdd8cb63fd6be6eae19a52f5"
+    },
+    "container-recovery.log": {
+      "path": ".local/upgrade-evidence/container-runtime-evidence-927399be/container-recovery.log",
+      "sha256": "e244f2f23c6a29878b1dc650460359ba5167a0ec651ef0106ecde2915c8c45c9"
+    },
+    "container-vulnerabilities.json": {
+      "path": ".local/upgrade-evidence/container-runtime-evidence-927399be/container-vulnerabilities.json",
+      "sha256": "8d7ef9e877e6db838c72b2e9045a120171acff9f4b163258c4d7bce5e05d83f9"
+    },
+    "container.cdx.json": {
+      "path": ".local/upgrade-evidence/container-runtime-evidence-927399be/container.cdx.json",
+      "sha256": "e305edf3b0bcdd7ea3c051391592d010081d948e90e18f8c912d48fe0b51537a"
+    }
+  },
+  "jobLogs": {
+    "unit": {
+      "path": ".local/upgrade-evidence/927399be-unit-ci.log",
+      "sha256": "fc103e9d05aed69a11457c660b8ad6012b34d4559f52e173683665a498271583"
+    },
+    "coverage": {
+      "path": ".local/upgrade-evidence/927399be-coverage-ci.log",
+      "sha256": "1278af35d13eaa289b92e577e66c120a952606d8cb2caa7c81aff41ad56d365f"
+    },
+    "container": {
+      "path": ".local/upgrade-evidence/927399be-container-ci.log",
+      "sha256": "8ffbbd799cb990ae6738ea76bf6361328c94512fd5774ff2937f9d5a845811dd"
+    },
+    "self-host": {
+      "path": ".local/upgrade-evidence/927399be-self-host-ci.log",
+      "sha256": "f7845138226591128e6a6bf974789153b8d0b217a294ac20d3ec6abf7b11d410"
+    }
+  },
+  "independentHumanSecurityReview": false
+}

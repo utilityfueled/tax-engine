@@ -4,8 +4,10 @@ taxYear: 2025
 irsReference: "https://www.irs.gov/instructions/i1040sh"
 
 notes: |
-  Schedule H is filed by taxpayers who paid cash wages of $2,800 or more
-  to any single household employee during 2025 (IRC §3121(a)(7)(B);
+  Schedule H is filed for qualifying Social Security/Medicare wages, FUTA
+  wages, or any voluntarily withheld federal income tax. Cash wages of $2,800
+  or more to one nonexempt household employee trigger Social Security and
+  Medicare during 2025 (IRC §3121(a)(7)(B);
   Rev. Proc. 2024-40 §3.28). Household employees include housekeepers,
   maids, babysitters, gardeners, cooks, and others who work in or around
   your private home.
@@ -31,8 +33,11 @@ notes: |
   - Any employee under age 18 for whom household work is not their
     principal occupation (e.g., a high school student babysitting)
 
-  FUTA exemptions are broader: spouse, child under 21, and parent wages
-  are fully excluded regardless of amount.
+  FUTA uses a separate employee set: spouse, child under 21, and parent wages
+  are excluded. Other employees below the Social Security threshold, including
+  unrelated under-18 employees, remain subject to FUTA when the quarterly test
+  was met in the current or immediately preceding year. Withholding is reported
+  for all household employees independently of Social Security/FUTA exemptions.
 
   Social Security wages per employee are capped at $176,100 for 2025.
   Medicare wages have no cap. Additional Medicare Tax applies only to the
@@ -44,7 +49,7 @@ lines:
     formula: "Sum of each employee's qualifying wages, capped at $176,100 per employee"
     irsRef: "Schedule H Line 1; IRC §3121(a)(1); Rev. Proc. 2024-40 §3.01"
     edgeCases:
-      - "Exclude exempt workers: spouse, child under 21, parent, under-18 non-principal"
+      - "Exclude spouse, child under 21, parent unless actual childcare exception applies, and under-18 non-principal workers"
       - "Cap each employee's wages at $176,100 (2025 SS wage base)"
       - "Only include employees whose total wages meet the $2,800 cash threshold"
     testRef: "tests/engine/forms/schedule-h.test.ts::Schedule H - single employee with $10,000 wages computes correct SS, Medicare, and FUTA"
@@ -87,7 +92,7 @@ lines:
 
   - line: "7"
     description: "Federal income tax withheld"
-    formula: "Sum of voluntarily withheld federal income tax across employees"
+    formula: "Sum of all voluntarily withheld federal income tax, including Social Security-exempt and below-threshold employees"
     irsRef: "Schedule H Instructions Line 7"
     edgeCases:
       - "Household employers are not required to withhold federal income tax"
@@ -102,7 +107,7 @@ lines:
 
   - line: "15"
     description: "Total cash wages subject to FUTA tax"
-    formula: "Sum of each qualifying employee's wages capped at $7,000 per employee; exclude spouse, child <21, and parent"
+    formula: "Sum each employee's wages capped at $7,000, independently of the Social Security wage threshold or under-18 exemption; exclude spouse, child <21, and parent"
     irsRef: "IRC §3306(a)(3), §3306(c)(5); Schedule H Line 15"
     edgeCases:
       - "FUTA exemptions: spouse, child under 21, and parent are excluded"
@@ -130,3 +135,8 @@ lines:
     formula: "Line 8 + FUTA tax (Line 16 or Line 24)"
     irsRef: "Schedule H Line 26 → Schedule 2 Line 9"
     testRef: "tests/engine/forms/schedule-h.test.ts::Schedule H total flows to Schedule 2 Line 9"
+  - line: "17-24-credit-worksheets"
+    description: "Section B experience-rate, timely contribution, late contribution and credit-reduction credits"
+    formula: "For each actual state/rate period, column g=max(0,taxableWages*0.054-taxableWages*experienceRate), zero when no experience rate assigned; line19=sum(g+timelyContributions). Late worksheet credit=min(maxCredit,line19+0.90*min(max(0,maxCredit-line19),lateContributions)). Allowed credit=max(0,credit-creditReduction). Line24=max(0,FUTA wages*0.06-allowed credit). Round monetary form lines to cents. Unknown Section B periods or timing block calculation."
+    irsRef: "Schedule H Instructions lines 17-24 and Worksheets 1 and 2"
+    testRef: "tests/engine/forms/schedule-h-fact-boundaries.test.ts::applies additional experience-rate credit and the late contribution worksheet"

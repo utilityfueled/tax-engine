@@ -1,0 +1,61 @@
+form: "Section1202 Return Integration"
+fullName: "Source-qualified QSBS adjustments and regular/AMT return flow"
+taxYear: 2026
+supportedTaxYears: [2025, 2026]
+irsReference: "https://www.irs.gov/instructions/i1040sd"
+sources:
+  - url: "https://www.irs.gov/instructions/i1040sd"
+    revision: "Final2025; QSBS reporting and28percent gain worksheet"
+    retrieved: "2026-10-25"
+  - url: "https://www.irs.gov/instructions/i6251"
+    revision: "Final2025; line2h and PartIII instruction to retain the full1202 exclusion"
+    retrieved: "2026-10-25"
+  - url: "https://uscode.house.gov/us/usc/119-118/t26/s1202/"
+    revision: "1202(a),(b),(g); current through PL119-120"
+    retrieved: "2026-10-25"
+  - url: "https://www.ecfr.gov/current/title-26/section-1.172-5"
+    revision: "Modified taxable income; capital losses and1202 exclusion"
+    retrieved: "2026-10-25"
+notes: |
+  Original source reconciliation precedes exclusion. The source contract and
+  issuer/date arithmetic are specified separately. These derived synthetic
+  cases are not published IRS numeric examples or independent human approval.
+  Unknown sources, changed source character and incomplete2026 readiness stay
+  blocked. This package does not qualify physical forms or additional transfer,
+  installment, changing-ownership or child-election methods.
+lines:
+  - line: "8949-original-Q"
+    description: "Original broker row exclusion exactly once"
+    formula: "Retain original proceeds/basis/dates; subtract verified lot exclusion in column g with codeQ and preserve other actual adjustments; aggregate signed net gain to its originalD/E category"
+    irsRef: "ScheduleD QSBS How To Report; Form8949(f)-(h)"
+    testRef: "tests/engine/federal-section-1202.test.ts::applies the verified Q adjustment once to the original broker row"
+  - line: "8949-fund-Q"
+    description: "Fund gross distribution and separate issuer adjustment"
+    formula: "Retain full1099DIV2a on ScheduleD13; add issuer-named PartIIBoxF row with negativeQ exclusion and no duplicate proceeds or basis; combineF withD/E once on ScheduleD15"
+    irsRef: "ScheduleD Gain from Form1099DIV"
+    testRef: "tests/engine/federal-section-1202.test.ts::retains full fund distributions and separate issuer Q rows"
+  - line: "28-rate-netting"
+    description: "Actual partial-exclusion rate character after source losses"
+    formula: "Feed verified eligible gain less exclusion to28percent worksheet line2; combine actual collectible dispositions, reported components and signed short/long carry losses; round only the final ScheduleD18 amount"
+    irsRef: "ScheduleD28percent Rate Gain Worksheet lines1-7"
+    testRef: "tests/engine/federal-section-1202.test.ts::nets actual collectible and carry losses against the partial exclusion component"
+  - line: "6251-2h"
+    description: "Actual pre2010 QSBS AMT preference"
+    formula: "Round once the sum of7percent of verified exclusions for stock acquired before2010-09-28; add on6251line2h without decreasing the exclusion in AMT capital-gain worksheets"
+    irsRef: "6251line2h and PartIII note;57(a)(7)"
+    testRef: "tests/engine/federal-section-1202.test.ts::adds the actual QSBS preference to AMTI without changing capital gain character"
+  - line: "known-ineligible"
+    description: "Known source qualification failure"
+    formula: "Keep actual gross capital gain when known corporate facts fail; zero exclusion and AMT preference, no fabricatedQ adjustment"
+    irsRef: "1202(c)-(e)"
+    testRef: "tests/engine/federal-section-1202.test.ts::keeps known ineligible gain taxable without a Q adjustment"
+  - line: "source-completeness"
+    description: "No inference from a reported label or missing character"
+    formula: "Reject positive2c without actual issuer sources, missing actual ScheduleD source worksheets, contradictoryQSBS classification and an incomplete public2026 rule pack"
+    irsRef: "1202(a)-(g); actual ScheduleD worksheets"
+    testRef: "tests/engine/federal-section-1202.test.ts::rejects missing and conflicting original QSBS return facts"
+  - line: "modified-NOL-AMT"
+    description: "Full restoration before modified capital-loss netting"
+    formula: "Modified regular/AMT carry income removes1202 exclusion before disallowing remaining net capital loss; omit7percent preference when the entire exclusion has been restored, while actual current AMTI retains its own preference"
+    irsRef: "172(d)(2); Reg1.172-5;56(d);57(a)(7)"
+    testRef: "tests/engine/federal-section-1202.test.ts::restores the full exclusion once in modified AMT carry income"

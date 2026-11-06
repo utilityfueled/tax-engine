@@ -1,0 +1,85 @@
+form: "Form 8962 Part IV Allocation Situation 2"
+fullName: "A policy shared with a spouse on a separate return"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i8962"
+retrievedAt: "2026-11-01"
+reviewStatus: "bounded-agent-source-review-pending-human-qualification-pending"
+notes: |
+  Form 8962 instructions Table 3 and Allocation Situation 2. Spouses married at
+  year end who file separately and shared a policy allocate equally. With Exception 2
+  the filer enters 0.50 in columns e and g, leaves f blank, and enters the SLCSP for
+  their own coverage family on lines 12-23 column b, because the reported figure can
+  be wrong for a family smaller than the enrollment. Without an exception the filer
+  is not an applicable taxpayer, enters 0.50 in column g only, line 24 is zero, and
+  the allocated advance credit is repaid subject to the line 28 limit.
+  Exception 1 lets a married person who meets the Form 1040 head of household
+  living-apart rules file that way and take the credit, and Table 3 sends them to the
+  same entries as Exception 2, with line A clear because that box is for Exception 2.
+  The single form of Exception 1 is for Form 1040-NR, which this engine does not produce.
+  The engine has no months-apart or spouse data on such a return, so the filer confirms them.
+  The instructions say no corrected Form 1095-A is needed, so an own benchmark above
+  the reported figure needs a named source and is not rejected.
+  Limits: a third tax family on
+  the policy (Pub974 Worksheets E and F), a month with only one family covered, a
+  second policy in an allocated month, and self-employed health coordination all reject.
+lines:
+  - line: "exception"
+    description: "Exception 2 allocates premium and advance credit and uses the filer's own benchmark"
+    formula: "Premium1000, reported SLCSP900, advance500, own SLCSP420: premium500, slcsp420, advance250, no printed SLCSP fraction"
+    irsRef: "i8962 Allocation Situation 2"
+    testRef: "tests/engine/forms/form-8962-separate-return.test.ts::allocates premium and advance credit with the filer's own benchmark"
+  - line: "living-apart"
+    description: "Exception 1 uses the same entries without line A"
+    formula: "Head of household, living-apart confirmed: premium500, own SLCSP420, advance250, credit allowed, line A clear. Unconfirmed, or the same answer as single, separate, joint or surviving spouse, rejects"
+    irsRef: "i8962 Exception 1, Table 3 and Allocation Situation 2"
+    testRef: "tests/engine/forms/form-8962-separate-return.test.ts::applies Exception 1 to a married filer living apart"
+  - line: "no-exception"
+    description: "Without an exception only the advance credit is allocated"
+    formula: "Advance500: advance250, premium0, slcsp0, no benchmark source needed"
+    irsRef: "i8962 Allocation Situation 2; line24"
+    testRef: "tests/engine/forms/form-8962-separate-return.test.ts::allocates only the advance credit without an exception"
+  - line: "return"
+    description: "A separate return reconciles half the advance credit"
+    formula: "No exception: credit0, advance3000, line29 the smaller of 3000 and the Table 5 limit. Exception: the credit uses the filer's premium and own benchmark"
+    irsRef: "i8962 lines24-29"
+    testRef: "tests/engine/forms/form-8962-separate-return.test.ts::reconciles half the advance credit on the return"
+  - line: "no-advance"
+    description: "A shared policy with no advance credit still allocates premium"
+    formula: "Exception, advance0: premium500, advance0"
+    irsRef: "i8962 Allocation Situation 2"
+    testRef: "tests/engine/forms/form-8962-separate-return.test.ts::allocates a policy with no advance credit"
+  - line: "required-sources"
+    description: "Require the spouse, the year-end marriage and the own-family benchmark"
+    formula: "Each missing or conflicting fact rejects, including a spouse whose name or SSN differs from the return, an agreement, default or printed fractions on this route, a third family, and a month with one family"
+    irsRef: "i8962 Table 3 and Allocation Situation 2"
+    testRef: "tests/engine/forms/form-8962-separate-return.test.ts::requires the spouse the marriage and the benchmark sources"
+  - line: "line-a"
+    description: "Line A stays clear for Exception 1"
+    formula: "Head of household, living apart, stale separate-return answer true: line A clear, columns e and g 0.50"
+    irsRef: "i8962 Exception 2 and line A"
+    testRef: "tests/pdf/form-8962-separate-return.test.ts::leaves line A clear for Exception 1"
+  - line: "matching-sources"
+    description: "Accept the matching spouse and a blank reported benchmark"
+    formula: "Spouse matches, reported SLCSP blank, own950: slcsp950"
+    irsRef: "i8962 Allocation Situation 2"
+    testRef: "tests/engine/forms/form-8962-separate-return.test.ts::accepts the matching spouse and a blank reported benchmark"
+  - line: "above-reported"
+    description: "Require a source for an own benchmark above the reported figure"
+    formula: "Own equal to reported: no source needed. Own950 over reported900, or over reported0: rejects without a source, accepted with one, and the review copy says so"
+    irsRef: "i8962 applicable SLCSP premium; no corrected Form 1095-A is required"
+    testRef: "tests/engine/forms/form-8962-separate-return.test.ts::needs a source for an own benchmark above the reported figure"
+  - line: "audit"
+    description: "Explain each allocated amount in the review record"
+    formula: "Equal allocation line; zero premium names the advance-only route; SLCSP names the own family"
+    irsRef: "i8962 lines30-33"
+    testRef: "tests/engine/forms/form-8962-separate-return.test.ts::explains each allocated amount in the review record"
+  - line: "other-routes"
+    description: "A separate return accepts only this route or an unshared policy"
+    formula: "Agreement route on a separate return rejects; this route on a joint return rejects; a second policy in an allocated month rejects"
+    irsRef: "i8962 Table 3"
+    testRef: "tests/engine/forms/form-8962-separate-return.test.ts::keeps other routes rejected"
+  - line: "part-iv-print"
+    description: "Print only the columns the instructions name"
+    formula: "Exception: columns e and g 0.50, f blank, line A checked. No exception: g 0.50, e and f blank, line A clear"
+    irsRef: "i8962 lines30-33"
+    testRef: "tests/pdf/form-8962-separate-return.test.ts::prints only the allocated columns"

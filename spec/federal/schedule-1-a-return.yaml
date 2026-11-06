@@ -1,0 +1,44 @@
+form: "Schedule1-A canonical source and QBI coordination"
+fullName: "Source-bound tips and overtime with section199A coordination"
+taxYear: 2026
+irsReference: "https://www.irs.gov/instructions/i1040gi"
+notes: |
+  Sources refreshed October25,2026: final2025 Schedule1-A instructions;
+  TD10044 section1.224-1(d)/(e), https://www.irs.gov/irb/2026-18_IRB ;
+  IRC199A(c)(4)(D), https://uscode.house.gov/us/usc/119-118/t26/s199A/ .
+  Actual2026 information-return reporting is separate from the2025 transition.
+  No general allocation method was found for a reduced shared tip deduction
+  across employee and business sources. Such a result remains explicitly gated.
+lines:
+  - line: "source-identity"
+    description: "Bind actual compensation claims to return sources"
+    formula: "Require the actual source year, owner and original array index, complete confirmed Schedule1-A source metadata, and matching actual employment-valid SSN facts. Reject missing source records, aliases, duplicates and inconsistent employer identities. Historical source-free2025 preview remains unverified; positive business tips require actual canonical sources."
+    testRef: "tests/engine/forms/schedule-1-a-return.test.ts::rejects unknown or contradictory source identity and source aliases"
+  - line: "employee-tips"
+    description: "Use one report comparison per actual employer"
+    formula: "Bind W2 and actual owner-specific Form4137 employer columns. Qualified Form4137 tips and employer-tip claims cannot exceed the actual column1(c) cash tips; actual2025 alternative report totals must reconcile column1(d) when both sources are present. Use max(qualified reported tips, qualified column1(c)) once per employer. 2026 W2 tips require actual Box12TP and TTOC reporting;2025 uses actual Box7 or the actual alternative employer/report statement amount, never Box1 as a proxy after pre-tax payroll deductions. TTOC metadata alone does not establish eligibility. An actual Form4137-only reporting method uses its verified employer column(c), requires a zero employer-report claim, and needs no fabricated W2/TP or alternative employer statement."
+    testRef: "tests/engine/forms/schedule-1-a-return.test.ts::binds each employer report to actual payroll and column c without duplication"
+  - line: "overtime"
+    description: "Reconcile actual FLSA premium to reported compensation"
+    formula: "Actual W2/NEC/MISC source ownership and year must match. Full reported compensation reconciles to the linked gross income source plus actual confirmed payroll exclusions for W2; the qualified premium must not exceed the reported compensation. For2026 require the original TT or qualified-overtime field and bound the claimed premium by it. Do not add that compensation to income a second time."
+    testRef: "tests/engine/forms/schedule-1-a-return.test.ts::bounds overtime by actual year-specific reporting while retaining the2025 transition"
+  - line: "business-net-limit"
+    description: "Derive business profit and deductions from calculated return sources"
+    formula: "For the supported actual ScheduleC/NEC route, bind the actual owner, business identity and original information-return receipts. Require source gross income already included in ScheduleC, exact reported-tip allocation totals and known source attribution. Set net profit from calculated ScheduleC and allocable deductions from reconciled SE/health/retirement deductions. Caller supplied profit or deduction values must match; no user override can increase the cap."
+    testRef: "tests/engine/forms/schedule-1-a-return.test.ts::uses canonical business profit and attributable deductions rather than overrides"
+  - line: "qbi-exclusion"
+    description: "Exclude allowable business tip deductions from QBI"
+    formula: "IRC199A(c)(4)(D) removes tips for which section224 allows a deduction. Zero final deduction removes zero; an unreduced shared deduction removes each actual business limited amount; one eligible business with no employee tips receives the final deduction after cap or phase-down. Do not invent an allocation when a shared reduction mixes employee and business sources. Income, AGI and payroll taxes remain unchanged."
+    testRef: "tests/engine/forms/schedule-1-a-return.test.ts::excludes allowable business tips from QBI and rejects an unresolved shared reduction"
+  - line: "canonical-return"
+    description: "Apply the deduction after AGI and before QBI"
+    formula: "Schedule1-A line38 reduces taxable income only. Actual ScheduleC tips already included in receipts remain taxable business income for AGI and SE tax; the allowable business tip deduction also reduces the business source QBI once."
+    testRef: "tests/engine/federal-schedule-1-a-sources.test.ts::deducts actual business tips once from taxable income and QBI without changing AGI or SE tax"
+  - line: "source-conservation"
+    description: "Validate whole information-return amounts before any deduction"
+    formula: "Actual reported tip/overtime subsets cannot exceed the original NEC/MISC gross amount even when the claimed qualified subset is smaller. When both original2026 tip and overtime reports are known, their distinct amounts together cannot exceed the same actual gross compensation; W2 gross includes the separately confirmed payroll exclusions. Section225(c)(2) excludes qualified tips from overtime. Unknown source ownership, incomplete payroll exclusions, duplicated source links and conflicting business classification cannot be replaced by zero or a deduction claim."
+    testRef: "tests/engine/forms/schedule-1-a-return.test.ts::conserves complete information-return amounts and rejects contradictory subsets"
+  - line: "boundary-support"
+    description: "Retain known eligibility and supported reporting distinctions"
+    formula: "A known ineligible owner or occupation produces zero after source validation; absent sources remain errors. A sole owner with no W2 can use an actual Form4137 employer record, and a2025 source-free historical preview remains explicitly unverified. Actual joint owner links never inherit another person's records."
+    testRef: "tests/engine/forms/schedule-1-a-return.test.ts::preserves actual zero ineligibility and the separate historical preview boundary"

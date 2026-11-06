@@ -1,167 +1,104 @@
 form: "Form 461"
 fullName: "Limitation on Business Losses"
-taxYear: 2025
+taxYear: 2026
 irsReference: "https://www.irs.gov/instructions/i461"
-statute: "IRC §461(l)"
-
-notes: |
-  IRC §461(l) limits the amount of aggregate business losses that
-  a non-corporate taxpayer can use to offset nonbusiness income.
-  For 2025, the threshold is $313,000 ($626,000 MFJ) per
-  Rev. Proc. 2024-40 §3.36. Any excess business loss is disallowed
-  and treated as a net operating loss (NOL) carryforward.
-
-  This limitation was enacted by TCJA (2017), suspended for 2018-2020
-  by CARES Act, reinstated for 2021, and extended through 2028 by
-  the Inflation Reduction Act (2022).
-
-  The excess business loss add-back flows to Schedule 1 Line 8p.
-
-businessRuleValidation:
-  - rule: "reference-summary-packet"
-    description: "Inventory support counts this form as business-rule validated only when regression coverage proves the emitted packet artifact stays labeled as a non-filing reference summary and only surfaces the supported Form 461 Lines 1 through 5, 7 through 16, the Schedule 1 Line 8p add-back amount, and the tracked excess-business-loss NOL carryforward."
-    testRef: "tests/pdf/fill-form-461.test.ts::buildForm461ReferenceSummary keeps the packet artifact reference-only and limited to supported excess-business-loss outputs"
-
+retrievedAt: "2026-10-25"
+statute: "IRC461(l); IRC164(f)(2); RevProc2025-32 section4.31"
+notes: "Final2025 form identities and current-law2026 indexed calculation; OBBBA makes limitation permanent. Employee services excluded. At-risk then passive then461. Final2026 filing qualification and independent review remain pending. Legacy summary field names remain compatibility aliases, never printed line identities."
 lines:
-  # ── Part I: Total Business Income or Loss ────────────────────
   - line: "1"
-    description: "Taxable income from all W-2 wages"
-    formula: "Sum of W-2 Box 1 wages"
-    irsRef: "Form 461 Instructions, Line 1"
-    notes: "Wages are treated as income attributable to a trade or business for EBL purposes."
-    testRef: "tests/engine/forms/form-461.test.ts::Form 461 Line 1 - W-2 wages count as business income"
-
+    description: "Reserved; employee wages excluded"
+    formula: "Leave blank. IRC461(l)(3)(A) excludes employee-service income and deductions."
+    testRef: "tests/engine/forms/form-461-sources.test.ts::excludes employee wages and preserves Schedule1 source conservation"
   - line: "2"
-    description: "Net profit or loss from Schedule C"
-    formula: "Schedule C Line 31"
-    irsRef: "Form 461 Instructions, Line 2"
-    testRef: "tests/engine/forms/form-461.test.ts::Form 461 Line 2 - Schedule C net profit or loss"
-
+    description: "Business income or loss"
+    formula: "Actual Schedule1line3 after source limitations."
+    testRef: "tests/engine/forms/form-461-sources.test.ts::emits the official sixteen-line arithmetic"
   - line: "3"
-    description: "Net farm profit or loss from Schedule F"
-    formula: "Schedule F Line 34"
-    irsRef: "Form 461 Instructions, Line 3"
-    testRef: "tests/engine/forms/form-461.test.ts::Form 461 Line 3 - Schedule F net farm profit or loss"
-
+    description: "Capital gain or loss"
+    formula: "Actual Form1040line7a. Capital losses are removed on11; capital gains beyond min(total capital gain net income,business capital gain net income) are removed on10."
+    testRef: "tests/engine/forms/form-461-sources.test.ts::limits business capital gains and removes all capital losses"
   - line: "4"
-    description: "Other gains or losses from Form 4797"
-    formula: "Form 4797 ordinary gain or loss"
-    irsRef: "Form 461 Instructions, Line 4"
-    testRef: "tests/engine/forms/form-461.test.ts::Form 461 Line 4 - Form 4797 ordinary gain or loss"
-
+    description: "Other gains or losses"
+    formula: "Actual Schedule1line4."
+    testRef: "tests/engine/forms/form-461-sources.test.ts::emits the official sixteen-line arithmetic"
   - line: "5"
-    description: "Nonpassive income or loss from partnerships and S corporations"
-    formula: "Schedule E Page 2 nonpassive income or loss from K-1s"
-    irsRef: "Form 461 Instructions, Line 5"
-    notes: "Only nonpassive business amounts are included. Passive amounts subject to Form 8582 are excluded."
-    testRef: "tests/engine/forms/form-461.test.ts::Form 461 Line 5 - nonpassive K-1 income or loss"
-
+    description: "Supplemental income or loss"
+    formula: "Actual Schedule1line5 after at-risk and passive limitations; nonbusiness portions removed in PartII. Passive status alone does not exclude an allowed business loss."
+    testRef: "tests/engine/forms/form-461-sources.test.ts::emits the official sixteen-line arithmetic"
+  - line: "6"
+    description: "Farm income or loss"
+    formula: "Actual Schedule1line6."
+    testRef: "tests/engine/forms/form-461-sources.test.ts::emits the official sixteen-line arithmetic"
   - line: "7"
-    description: "Other business income or loss"
-    formula: "Business income not captured on lines 1-5, including 1099-MISC business rents and other business income"
-    irsRef: "Form 461 Instructions, Line 7"
-    testRef: "tests/engine/forms/form-461.test.ts::Form 461 Line 7 - other business income"
-
+    description: "Reserved"
+    formula: "Leave blank."
+    testRef: "tests/engine/forms/form-461-sources.test.ts::emits the official sixteen-line arithmetic"
   - line: "8"
-    description: "Total business income"
-    formula: "Sum of positive amounts from Lines 1-7"
-    irsRef: "Form 461 Instructions, Line 8"
-    testRef: "tests/engine/forms/form-461.test.ts::Form 461 Line 8 - total business income aggregates positive lines"
-
+    description: "Other business income and deductions"
+    formula: "Other actual business income/gain/loss on return minus separately deductible actual business adjustments not included on2–6. Exclude NOL,199A and employee deductions."
+    testRef: "tests/engine/forms/form-461-sources.test.ts::emits the official sixteen-line arithmetic"
   - line: "9"
-    description: "Total business deductions from lines above"
-    formula: "Sum of absolute values of negative amounts from Lines 1-7"
-    irsRef: "Form 461 Instructions, Line 9"
-    testRef: "tests/engine/forms/form-461.test.ts::Form 461 Line 9 - total business deductions from negative lines"
-
-  # ── Part I continued: Above-the-line business deductions ────
+    description: "Combined income or loss"
+    formula: "Sum2,3,4,5,6,8, signed."
+    testRef: "tests/engine/forms/form-461-sources.test.ts::emits the official sixteen-line arithmetic"
   - line: "10"
-    description: "Deductible part of self-employment tax"
-    formula: "Schedule SE Line 13 (deductible half of SE tax)"
-    irsRef: "Form 461 Instructions, Line 10; Schedule SE"
-    testRef: "tests/engine/forms/form-461.test.ts::Form 461 Line 10 - deductible SE tax"
-
+    description: "Nonbusiness income and gain"
+    formula: "Actual noncapital nonbusiness income included in PartI plus disallowed nonbusiness capital gain."
+    testRef: "tests/engine/forms/form-461-sources.test.ts::limits business capital gains and removes all capital losses"
   - line: "11"
-    description: "Self-employed health insurance deduction"
-    formula: "Schedule 1 Line 17"
-    irsRef: "Form 461 Instructions, Line 11"
-    testRef: "tests/engine/forms/form-461.test.ts::Form 461 Line 11 - SE health insurance"
-
+    description: "Nonbusiness losses and deductions"
+    formula: "Actual noncapital nonbusiness losses included in PartI plus all capital losses, entered positive."
+    testRef: "tests/engine/forms/form-461-sources.test.ts::limits business capital gains and removes all capital losses"
   - line: "12"
-    description: "Self-employed SEP, SIMPLE, and qualified plan contributions"
-    formula: "Schedule 1 Line 16"
-    irsRef: "Form 461 Instructions, Line 12"
-    testRef: "tests/engine/forms/form-461.test.ts::Form 461 Line 12 - SE retirement contributions"
-
+    description: "Nonbusiness net"
+    formula: "10 minus11, signed."
+    testRef: "tests/engine/forms/form-461-sources.test.ts::emits the official sixteen-line arithmetic"
   - line: "13"
-    description: "Total business deductions"
-    formula: "Line 9 + Line 10 + Line 11 + Line 12"
-    irsRef: "Form 461 Instructions, Line 13"
-    testRef: "tests/engine/forms/form-461.test.ts::Form 461 Line 13 - total business deductions"
-
-  # ── Part II: Excess Business Loss ───────────────────────────
+    description: "Adjustment"
+    formula: "Negative of12."
+    testRef: "tests/engine/forms/form-461-sources.test.ts::emits the official sixteen-line arithmetic"
   - line: "14"
-    description: "Net business income or loss"
-    formula: "Line 8 - Line 13"
-    irsRef: "Form 461 Instructions, Line 14"
-    notes: "If positive, there is no excess business loss. If negative, compare to threshold."
-    testRef: "tests/engine/forms/form-461.test.ts::Form 461 Line 14 - net business income or loss"
-
+    description: "Business net"
+    formula: "9 plus13."
+    testRef: "tests/engine/forms/form-461-sources.test.ts::emits the official sixteen-line arithmetic"
   - line: "15"
-    description: "Threshold amount"
-    formula: "$313,000 (single/HoH/MFS/QSS) or $626,000 (MFJ) for 2025"
-    irsRef: "Form 461 Instructions, Line 15; Rev. Proc. 2024-40 §3.36; IRC §461(l)(3)(A)(ii)"
-    edgeCases:
-      - "MFJ threshold is double the single threshold"
-      - "MFS filers use the single threshold, not half the MFJ threshold"
-      - "QSS filers use the single threshold"
-    testRef: "tests/engine/forms/form-461.test.ts::Form 461 Line 15 - threshold by filing status"
-
+    description: "Indexed threshold"
+    formula: "2025:313000 or626000MFJ.2026:256000 or512000MFJ per RevProc2025-32 section4.31."
+    testRef: "tests/engine/forms/form-461-sources.test.ts::applies year thresholds and the separate return-attachment boundary"
   - line: "16"
-    description: "Excess business loss"
-    formula: "If Line 14 is negative: max(0, |Line 14| - Line 15). If Line 14 >= 0: $0"
-    irsRef: "Form 461 Instructions, Line 16; IRC §461(l)(1)"
-    notes: |
-      The excess business loss is the amount by which aggregate business
-      deductions exceed aggregate business income plus the threshold.
-      This amount is disallowed as a current-year deduction and instead
-      treated as a net operating loss (NOL) carryforward under IRC §172.
-    edgeCases:
-      - "No excess when business income exceeds business deductions"
-      - "No excess when business loss is within threshold"
-      - "Loss exactly at threshold produces $0 excess"
-      - "Loss $1 over threshold produces $1 excess"
-      - "Large business losses above threshold produce proportionally large excess"
-    testRef: "tests/engine/forms/form-461.test.ts::Form 461 Line 16 - excess business loss computation"
-
-  - line: "schedule1-addback"
-    description: "Excess business loss add-back to Schedule 1"
-    formula: "Line 16 → Schedule 1 Line 8p (added back as other income)"
-    irsRef: "Schedule 1 Instructions, Line 8p; IRC §461(l)(2)"
-    notes: |
-      The disallowed excess is added back to income on Schedule 1 Line 8p,
-      effectively limiting the business loss deduction. The net effect is
-      that the taxpayer can only deduct business losses up to total business
-      income plus the threshold amount against nonbusiness income.
-    testRef: "tests/engine/forms/form-461.test.ts::Form 461 - excess business loss flows to Schedule 1 as income add-back"
-
-  - line: "nol-carryforward"
-    description: "NOL carryforward from excess business loss"
-    formula: "Line 16 becomes an NOL carryforward to the next tax year"
-    irsRef: "IRC §461(l)(2), §172"
-    notes: |
-      The excess business loss is treated as a net operating loss for
-      the tax year, which carries forward under IRC §172. The NOL can
-      offset up to 80% of taxable income in future years. Prior-year
-      EBL NOL carryforward is added to the current year's NOL.
-    edgeCases:
-      - "Carryforward accumulates across years"
-      - "Prior-year NOL carryforward from EBL is tracked separately"
-    testRef: "tests/engine/forms/form-461.test.ts::Form 461 - excess business loss produces NOL carryforward"
-
+    description: "Signed result and positive addback"
+    formula: "14 plus15, signed. Only a negative result produces positive Schedule1line8p and current EBL NOL. Employee wages remain on1040line1z and cannot absorb this loss."
+    testRef: "tests/engine/forms/form-461-sources.test.ts::excludes employee wages and preserves Schedule1 source conservation"
+  - line: "source"
+    description: "Actual classification"
+    formula: "Current actual source worksheets preserve year, source confirmation, completed prior at-risk/passive limitations, actual capital and noncapital business classifications, other business amounts and separate deductions. Unknown source is not zero; post-passive line5 must reconcile with Schedule1."
+    testRef: "tests/engine/forms/form-461-sources.test.ts::rejects incomplete and contradictory source classifications"
+  - line: "required"
+    description: "Attachment requirement"
+    formula: "Attach when net business loss exceeds indexed threshold or any PartI line has a loss greater than half the single-filer threshold (156500 for2025), including a zero-addback joint return."
+    testRef: "tests/engine/forms/form-461-sources.test.ts::applies year thresholds and the separate return-attachment boundary"
   - line: "packet"
-    description: "Draft packet inclusion rule for supported Form 461 excess-business-loss outputs"
-    formula: "When Form 461 applies for the return, include a non-filing reference-summary PDF in the packet that lists the supported Form 461 Lines 1 through 5 and 7 through 16 outputs, plus the resulting Schedule 1 Line 8p add-back amount and tracked excess-business-loss NOL carryforward."
-    irsRef: "Form 461 Instructions, Lines 1-16; Schedule 1 Instructions, Line 8p; IRC §461(l)(2)"
-    notes: "This packet slice intentionally emits a deterministic reference summary instead of attempting to recreate a filed Form 461, so the draft packet stays honest about the supported excess-business-loss limitation scope while still surfacing the computed federal effects."
-    testRef: "tests/pdf/fill-form-461.test.ts::fillReturn includes a Form 461 reference summary when the excess business loss limitation applies"
+    description: "Reference-only canonical audit"
+    formula: "Copy unique official nonreserved2–6,8–16 and retained NOL; reject missing/tampered audit values. Every page stays reference-only."
+    testRef: "tests/pdf/fill-form-461.test.ts::buildForm461ReferenceSummary keeps the packet artifact reference-only and limited to supported excess-business-loss outputs"
+  - line: "return-sources"
+    description: "Completed source and final return reconciliation"
+    formula: "Retain actual return-year source classification and require source line5 to equal final Schedule1 supplemental income after passive loss processing. Other business receipts must reconcile to actual other-income sources; deductions must be separately deducted on return."
+    testRef: "tests/engine/forms/form-461-sources.test.ts::reconciles completed supplemental business classification with the return"
+  - line: "packet-integrity"
+    description: "Reference audit integrity"
+    formula: "Every supported canonical audit line must occur exactly once, be finite and equal retained result; no missing component is made up for display."
+    testRef: "tests/pdf/fill-form-461.test.ts::rejects missing or tampered canonical Form461 audit values"
+  - line: "packet-required"
+    description: "Required form with no excess loss"
+    formula: "Use requiresForm461 independently of a positive addback."
+    testRef: "tests/pdf/fill-form-461.test.ts::includes a required zero-addback Form461 attachment"
+  - line: "passive-ordering"
+    description: "Actual passive-loss coordination before material business limitation"
+    formula: "A material supplemental-loss scenario requires the completed Form8582 MAGI worksheet and final allowed ScheduleE amount; do not reuse post461AGI to invent the earlier limitation."
+    testRef: "tests/engine/forms/form-461-sources.test.ts::requires actual passive worksheet sources before material business limitation"
+  - line: "mixed-source-netting"
+    description: "Offsetting business and nonbusiness source components"
+    formula: "Reconcile the actual noncapital business net plus nonbusiness income minus nonbusiness losses to the combined noncapital PartI lines. Gross nonbusiness components may exceed a net printed amount when an opposite business component offsets them; never cap these classifications by the signs of net printed lines. Verified sources require the actual noncapital business net."
+    testRef: "tests/engine/forms/form-461-sources.test.ts::reconciles offsetting business and nonbusiness components within one printed line"

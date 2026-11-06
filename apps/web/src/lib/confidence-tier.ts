@@ -1,18 +1,18 @@
 /**
  * Confidence tier classification for state tax returns.
  *
- * Determines whether a state return was produced by a validated spec-driven
+ * Determines whether a state return was produced by a dedicated spec-driven
  * engine, the generic best-effort engine, or is not applicable (no income tax).
  */
 
-export type ConfidenceTier = "validated" | "best-effort" | "not-applicable";
+export type ConfidenceTier = "dedicated" | "best-effort" | "not-applicable";
 
-/** States with fully verified engines and complete accuracy checks. */
-const VALIDATED_STATES = new Set(["CA", "NY", "NJ", "IL", "PA", "OH"]);
+/** States with dedicated implementations; this is not a qualification claim. */
+const DEDICATED_STATES = new Set(["CA", "NY", "NJ", "IL", "PA", "OH"]);
 
 /**
  * States with no general income tax.
- * NH taxes interest/dividends only (being phased out).
+ * This classification does not establish the absence of filing obligations.
  * WA has a capital gains excise tax only.
  */
 const NO_INCOME_TAX_STATES = new Set([
@@ -35,11 +35,11 @@ export interface ConfidenceTierInfo {
   missingCreditsNote: string | null;
 }
 
-const VALIDATED_INFO: ConfidenceTierInfo = {
-  tier: "validated",
-  label: "Verified engine — review before filing",
+const DEDICATED_INFO: ConfidenceTierInfo = {
+  tier: "dedicated",
+  label: "State preview — unqualified",
   description:
-    "This state return used a fully verified dedicated state engine with deeper automated coverage, but it is still experimental software output that must be independently reviewed.",
+    "This state has a dedicated implementation, but this preview and its form mappings are not qualified for filing.",
   disclaimer: null,
   missingCreditsNote: null,
 };
@@ -48,7 +48,7 @@ const BEST_EFFORT_INFO: ConfidenceTierInfo = {
   tier: "best-effort",
   label: "Draft — estimate using published rates",
   description:
-    "Draft estimate using published rates. Review against your state’s official instructions before filing.",
+    "Experimental estimate using published rates. It is not qualified for filing.",
   disclaimer:
     "This state return was calculated using published tax rates and standard deductions. It may not include all state-specific credits or adjustments. You could be eligible for additional credits that would reduce your tax. Review your state’s official instructions before filing.",
   missingCreditsNote:
@@ -57,7 +57,7 @@ const BEST_EFFORT_INFO: ConfidenceTierInfo = {
 
 const NOT_APPLICABLE_INFO: ConfidenceTierInfo = {
   tier: "not-applicable",
-  label: "No state income tax required",
+  label: "No general income tax",
   description: "This state does not levy a general income tax.",
   disclaimer: null,
   missingCreditsNote: null,
@@ -69,7 +69,7 @@ const NOT_APPLICABLE_INFO: ConfidenceTierInfo = {
  */
 export function getConfidenceTier(stateCode: string): ConfidenceTier {
   const code = stateCode.toUpperCase();
-  if (VALIDATED_STATES.has(code)) return "validated";
+  if (DEDICATED_STATES.has(code)) return "dedicated";
   if (NO_INCOME_TAX_STATES.has(code)) return "not-applicable";
   return "best-effort";
 }
@@ -81,8 +81,8 @@ export function getConfidenceTier(stateCode: string): ConfidenceTier {
 export function getConfidenceTierInfo(stateCode: string): ConfidenceTierInfo {
   const tier = getConfidenceTier(stateCode);
   switch (tier) {
-    case "validated":
-      return VALIDATED_INFO;
+    case "dedicated":
+      return DEDICATED_INFO;
     case "not-applicable":
       return NOT_APPLICABLE_INFO;
     case "best-effort":
@@ -90,9 +90,9 @@ export function getConfidenceTierInfo(stateCode: string): ConfidenceTierInfo {
   }
 }
 
-/** Returns true if the state has a fully verified engine. */
-export function isValidatedState(stateCode: string): boolean {
-  return getConfidenceTier(stateCode) === "validated";
+/** Returns true if the state has a dedicated engine. */
+export function isDedicatedState(stateCode: string): boolean {
+  return getConfidenceTier(stateCode) === "dedicated";
 }
 
 /** Returns true if the state uses the draft estimate engine. */
@@ -105,8 +105,8 @@ export function isNoIncomeTaxState(stateCode: string): boolean {
   return getConfidenceTier(stateCode) === "not-applicable";
 }
 
-/** All validated state codes. */
-export const VALIDATED_STATE_CODES = [...VALIDATED_STATES] as const;
+/** All dedicated state codes. */
+export const DEDICATED_STATE_CODES = [...DEDICATED_STATES] as const;
 
 /** All no-income-tax state codes. */
 export const NO_INCOME_TAX_STATE_CODES = [...NO_INCOME_TAX_STATES] as const;

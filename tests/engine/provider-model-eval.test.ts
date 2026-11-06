@@ -1,596 +1,169 @@
-import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
-  buildProviderModelBenchmark,
-  buildProviderModelEvalFixturePack,
-  buildProviderModelBenchmarkSnapshot,
-  buildProviderModelLiveEvalTemplate,
-  parseProviderModelLiveEvalTemplate,
-  renderProviderModelBenchmarkMarkdown,
-  providerModelPricingSnapshot,
-  providerModelCandidates,
-  recommendProviderModelStack,
-  summarizeProviderModelLiveEvalTemplate,
-  taxProviderModelEvalFixtures
-} from "@tax-engine/engine";
+  buildProviderModelBenchmark, buildProviderModelEvalFixturePack, buildProviderModelLiveEvalTemplate,
+  parseProviderModelLiveEvalTemplate, providerModelCandidates, recommendProviderModelStack,
+  scoreProviderEvalEntry, summarizeProviderModelLiveEvalTemplate, taxProviderModelEvalFixtures,
+  type ProviderModelLiveEvalEntry,
+  type ProviderModelLiveEvalTemplate,
+} from "../../packages/engine/src/provider-model-eval";
+import { AI_TASKS } from "../../packages/engine/src/ai-task-registry";
+import { PROVIDER_EVAL_BINDING_VERSION, validateProviderEvalOutput } from "../../packages/engine/src/provider-eval-application";
+import type { ProviderEvalFixture } from "../../packages/engine/src/provider-eval-fixtures";
+import { providerEvalCorpusDigest, providerEvalFixtureDigest } from "../../packages/engine/src/provider-eval-provenance";
 
-describe("provider model eval harness", () => {
-  it("covers the required tax-workflow task types with committed redacted fixtures", () => {
-    expect(taxProviderModelEvalFixtures.map((fixture) => fixture.task)).toEqual([
-      "workspace-summary",
-      "interview-assist",
-      "unsupported-route",
-      "explanation-draft"
-    ]);
+// Every synthetic entry uses this same unmodified corpus. Hash it once when
+// preparing the test fixtures; the production report still validates provenance.
+const syntheticCorpusDigest = providerEvalCorpusDigest();
 
-    for (const fixture of taxProviderModelEvalFixtures) {
-      const serializedPayload = JSON.stringify(fixture.payload);
+function run(fixture: ProviderEvalFixture, profileId = "luna-high", repeat = 1): ProviderModelLiveEvalEntry {
+  // Test-only payloads are built from literal test oracles. Never written to a run artifact.
+  const applicationOutput = { disposition: fixture.expected.disposition, sourceIds: fixture.sourceIds,
+    label: "Synthetic source", payer: "[organization-1]", documentPeriod: String(fixture.taxYear), summary: "Review the source facts.", suggestions: [],
+    facts: Object.entries(fixture.expected.fields).map(([name, field]) => ({ name, kind: field.kind, value: field.value,
+      sourceId: fixture.sourceIds[0], sourceQuote: fixture.input })) };
+  const validated = validateProviderEvalOutput(fixture, applicationOutput);
+  const profile = providerModelCandidates.find(item => item.id === profileId);
+  if (!profile) throw new Error("Missing test profile.");
+  return {
+    profileId, fixtureId: fixture.id, fixtureVersion: 1, repeat, elapsedMs: 1000,
+    applicationSchemaValid: validated.applicationSchemaValid, output: validated.output,
+    measurement: { runPurpose: "qualification", planDigest: "0".repeat(64), corpusDigest: syntheticCorpusDigest, fixtureDigest: providerEvalFixtureDigest(fixture), bindingVersion: PROVIDER_EVAL_BINDING_VERSION,
+      promptVersion: AI_TASKS[fixture.task].promptVersion, schemaVersion: AI_TASKS[fixture.task].schemaVersion,
+      normalizationStatus: validated.normalizationStatus, applicationOutput, privacyFailure: false, responseReference: "test-only", reportedModel: profile.model },
+    independentReview: { method: "human", reviewer: "independent-test-reviewer", grounded: true, qualityAccepted: true, piiLeak: false },
+    attempts: [{ profileId, startedAt: "2026-10-24T12:00:00Z", usage: { inputTokens: 1000, outputTokens: 1000 } }],
+  };
+}
+function changePayload(entry: ProviderModelLiveEvalEntry, change: (payload: { disposition: string; facts: {name: string; value: string}[] }) => void) {
+  if (!entry.measurement) throw new Error("Missing test measurement.");
+  const payload = entry.measurement.applicationOutput as { disposition: string; facts: {name: string; value: string}[] };
+  change(payload);
+  const fixture = taxProviderModelEvalFixtures.find(fixture => fixture.id === entry.fixtureId);
+  if (!fixture) throw new Error("Missing test fixture.");
+  const validated = validateProviderEvalOutput(fixture, payload);
+  entry.output = validated.output; entry.applicationSchemaValid = validated.applicationSchemaValid;
+  entry.measurement.normalizationStatus = validated.normalizationStatus;
+}
+const extraction = taxProviderModelEvalFixtures.find(fixture => fixture.id === "case-income-large-ledger-precision")!;
+// Explicitly synthetic evidence for exercising gates; these records are never written to qualification artifacts.
+const availability: ProviderModelLiveEvalTemplate["availability"] = providerModelCandidates.map(profile => ({
+  profileId: profile.id, status: "available", checkedAt: "2026-10-24T00:00:00Z", expiresAt: "2026-10-25T00:00:00Z",
+  evidenceReference: "test-only-account-capability", structuredOutput: true, reasoningEffort: true, reportedUsage: true, reason: "Synthetic test evidence",
+}));
 
-      expect(fixture.estimatedInputTokens).toBeGreaterThan(0);
-      expect(fixture.estimatedOutputTokens).toBeGreaterThan(0);
-
-      for (const blockedTerm of fixture.blockedTerms) {
-        expect(serializedPayload).not.toContain(blockedTerm);
-      }
-    }
+describe("measured task model evaluation", () => {
+  it("keeps 240 distinct draft scenarios with fixed held-out coverage and no qualification claim", () => {
+    const pack = buildProviderModelEvalFixturePack();
+    expect(pack.fixtureCount).toBe(240);
+    expect(pack.templateVariantCount).toBe(0);
+    expect(pack.standaloneScenarioCount).toBe(240);
+    expect(pack.taskTypes).toHaveLength(8);
+    expect(pack.fixtures.filter(fixture => fixture.split === "held-out")).toHaveLength(80);
+    expect(pack.fixtures.every(fixture => fixture.review.status === "pending")).toBe(true);
+    expect(new Set(pack.fixtures.map(fixture => fixture.id)).size).toBe(240);
+    expect(pack.qualification).toBe("draft-unreviewed");
   });
-
-  it("keeps a committed provider-safe fixture pack synchronized for later live evals", () => {
-    const fixturePack = buildProviderModelEvalFixturePack();
-    const checkedInFixturePack = readFileSync(
-      new URL("../../prompts/provider-model-eval/fixture-pack.json", import.meta.url),
-      "utf8"
-    );
-    const serializedFixturePack = JSON.stringify(fixturePack, null, 2);
-
-    expect(fixturePack).toMatchObject({
-      version: 1,
-      pricingRetrievedAt: providerModelPricingSnapshot.retrievedAt,
-      fixtureCount: 4,
-      taskTypes: [
-        "workspace-summary",
-        "interview-assist",
-        "unsupported-route",
-        "explanation-draft"
-      ]
-    });
-
-    for (const blockedTerm of taxProviderModelEvalFixtures.flatMap((fixture) => fixture.blockedTerms)) {
-      expect(serializedFixturePack).not.toContain(blockedTerm);
-    }
-
-    expect(`${serializedFixturePack}\n`).toBe(checkedInFixturePack);
+  it("has effort-specific candidates and both baselines, without fabricated quality scores or recommendations", () => {
+    expect(providerModelCandidates.map(profile => profile.id)).toEqual(["luna-high", "sol-low", "sol-high", "gemini-flash-high", "baseline-gpt-5-mini", "baseline-gemini-3-flash-preview"]);
+    expect(JSON.stringify(buildProviderModelBenchmark())).not.toContain('taskScores');
+    expect(recommendProviderModelStack()).toBeNull();
+    expect(buildProviderModelBenchmark().recommendation).toBeNull();
   });
-
-  it("keeps a committed provider-safe benchmark snapshot synchronized with the harness output", () => {
-    const benchmarkSnapshot = buildProviderModelBenchmarkSnapshot();
-    const checkedInBenchmarkSnapshot = readFileSync(
-      new URL("../../prompts/provider-model-eval/benchmark.json", import.meta.url),
-      "utf8"
-    );
-    const serializedBenchmarkSnapshot = JSON.stringify(benchmarkSnapshot, null, 2);
-
-    expect(benchmarkSnapshot).toMatchObject({
-      version: 1,
-      sourcePath: "../../prompts/provider-model-eval/benchmark.json",
-      fixturePackPath: "../../prompts/provider-model-eval/fixture-pack.json",
-      fixtureCount: 4,
-      taskTypes: [
-        "workspace-summary",
-        "interview-assist",
-        "unsupported-route",
-        "explanation-draft"
-      ],
-      pricingSnapshot: providerModelPricingSnapshot,
-      roleRubric: {
-        primary: {
-          taskWeights: {
-            "workspace-summary": 0.35,
-            "interview-assist": 0.35,
-            "unsupported-route": 0.1,
-            "explanation-draft": 0.2
-          },
-          metricWeights: {
-            taskFit: 0.45,
-            structuredOutput: 0.1,
-            latency: 0.2,
-            price: 0.25
-          }
-        },
-        fallback: {
-          taskWeights: {
-            "workspace-summary": 0.1,
-            "interview-assist": 0.1,
-            "unsupported-route": 0.45,
-            "explanation-draft": 0.35
-          },
-          metricWeights: {
-            taskFit: 0.65,
-            structuredOutput: 0.1,
-            latency: 0.05,
-            price: 0.2
-          }
-        },
-        lowCost: {
-          taskWeights: {
-            "workspace-summary": 0.35,
-            "interview-assist": 0.35,
-            "unsupported-route": 0.15,
-            "explanation-draft": 0.15
-          },
-          metricWeights: {
-            taskFit: 0.15,
-            structuredOutput: 0.1,
-            latency: 0.25,
-            price: 0.5
-          }
-        }
-      }
-    });
-
-    for (const blockedTerm of taxProviderModelEvalFixtures.flatMap((fixture) => fixture.blockedTerms)) {
-      expect(serializedBenchmarkSnapshot).not.toContain(blockedTerm);
-    }
-
-    expect(`${serializedBenchmarkSnapshot}\n`).toBe(checkedInBenchmarkSnapshot);
+  it("fails closed for an empty or independently unreviewed corpus", () => {
+    const empty = summarizeProviderModelLiveEvalTemplate(buildProviderModelLiveEvalTemplate());
+    expect(empty.independentlyReviewedCases).toBe(0);
+    expect(empty.groups.every(group => !group.eligibleForPromotionReview)).toBe(true);
+    const partial = summarizeProviderModelLiveEvalTemplate({ version: 2, entries: [run(extraction)] });
+    const group = partial.groups.find(group => group.profileId === "luna-high" && group.task === "income-extraction")!;
+    expect(group.blockers).toContain("independent-fixture-review-incomplete");
+    expect(group.blockers).toContain("held-out-repeat-coverage-incomplete");
+    expect(group.blockers).toContain("baseline-comparison-incomplete");
   });
-
-  it("keeps a committed live-run worksheet synchronized for future API benchmarks", () => {
-    const liveEvalTemplate = buildProviderModelLiveEvalTemplate();
-    const checkedInLiveEvalTemplate = readFileSync(
-      new URL("../../prompts/provider-model-eval/live-run-template.json", import.meta.url),
-      "utf8"
-    );
-    const serializedLiveEvalTemplate = JSON.stringify(liveEvalTemplate, null, 2);
-
-    expect(liveEvalTemplate).toMatchObject({
-      version: 1,
-      sourcePath: "../../prompts/provider-model-eval/live-run-template.json",
-      benchmarkPath: "../../prompts/provider-model-eval/benchmark.json",
-      fixturePackPath: "../../prompts/provider-model-eval/fixture-pack.json",
-      candidateCount: 4,
-      fixtureCount: 4
-    });
-
-    for (const blockedTerm of taxProviderModelEvalFixtures.flatMap((fixture) => fixture.blockedTerms)) {
-      expect(serializedLiveEvalTemplate).not.toContain(blockedTerm);
-    }
-
-    expect(`${serializedLiveEvalTemplate}\n`).toBe(checkedInLiveEvalTemplate);
+  it("uses Decimal for exact cent comparisons beyond JavaScript's safe monetary range", () => {
+    const entry = run(extraction);
+    expect(scoreProviderEvalEntry(entry, extraction).accepted).toBe(true);
+    changePayload(entry, payload => { const amount = payload.facts.find(fact => fact.name === "amount"); if (!amount) throw new Error("Missing amount."); amount.value = "90071992547409.92"; });
+    expect(scoreProviderEvalEntry(entry, extraction)).toMatchObject({ accepted: false, criticalCorrect: false, exactFields: 1 });
   });
-
-  it("rejects malformed live-run worksheets before summarizing them", () => {
-    const liveEvalTemplate = buildProviderModelLiveEvalTemplate();
-    const malformedTemplate = {
-      ...liveEvalTemplate,
-      entries: [
-        {
-          ...liveEvalTemplate.entries[0],
-          tier: "low-cost"
-        }
-      ]
-    };
-
-    expect(() => parseProviderModelLiveEvalTemplate(malformedTemplate)).toThrowError(
-      /Invalid provider model live-eval file:/
-    );
-    expect(() => parseProviderModelLiveEvalTemplate(malformedTemplate)).toThrowError(
-      /entries\[0\]\.tier: must match model gpt-5\.2 tier premium/
-    );
-    expect(() => parseProviderModelLiveEvalTemplate(malformedTemplate)).toThrowError(
-      /entries: must contain candidateCount \* fixtureCount entries \(16\)/
-    );
+  it("counts missing or abstained critical fields as failures and reports abstention separately", () => {
+    const entry = run(extraction);
+    changePayload(entry, payload => { payload.disposition = "abstain"; payload.facts = []; });
+    const summary = summarizeProviderModelLiveEvalTemplate({ version: 2, entries: [entry] });
+    expect(summary.groups.find(group => group.profileId === "luna-high" && group.task === "income-extraction"))
+      .toMatchObject({ criticalFieldExactMatch: 0, answerableAbstentions: 1, acceptedRuns: 0 });
   });
-
-  it("keeps the benchmark recommendation aligned to the current stack defaults", () => {
-    const recommendation = recommendProviderModelStack();
-
-    expect(recommendation.primary.modelId).toBe("gpt-5-mini");
-    expect(recommendation.fallback.modelId).toBe("gpt-5.2");
-    expect(recommendation.lowCost.modelId).toBe("gpt-5-nano");
+  it.each(["pii", "filing", "override", "invented", "grounding", "category", "date", "schema"])("rejects %s failures", failure => {
+    const entry = run(extraction);
+    if (failure === "pii") entry.independentReview!.piiLeak = true;
+    if (failure === "filing") entry.output!.filingReady = true;
+    if (failure === "override") entry.output!.engineValues = { invented: "2200" };
+    if (failure === "invented") entry.output!.fields.invented = "123";
+    if (failure === "grounding") entry.output!.sourceIds = ["not-a-source"];
+    if (failure === "category") entry.output!.category = "business";
+    if (failure === "date") entry.output!.fields.date = "2025-06-29";
+    if (failure === "schema") entry.applicationSchemaValid = false;
+    expect(scoreProviderEvalEntry(entry, extraction).accepted).toBe(false);
   });
-
-  it("pins the committed pricing snapshot used by the benchmark", () => {
-    expect(providerModelPricingSnapshot).toEqual({
-      retrievedAt: "2026-03-12",
-      pricingSourceUrl: "https://platform.openai.com/docs/pricing",
-      modelSourceUrls: [
-        "https://platform.openai.com/docs/models",
-        "https://platform.openai.com/docs/models/gpt-5.2",
-        "https://platform.openai.com/docs/models/gpt-5.1",
-        "https://platform.openai.com/docs/models/gpt-5-mini",
-        "https://platform.openai.com/docs/models/gpt-5-nano"
-      ]
-    });
-
-    expect(providerModelCandidates).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          modelId: "gpt-5.2",
-          pricing: {
-            inputUsdPerMillionTokens: 1.75,
-            cachedInputUsdPerMillionTokens: 0.175,
-            outputUsdPerMillionTokens: 14
-          },
-          evaluation: {
-            taskScores: {
-              "workspace-summary": 10,
-              "interview-assist": 10,
-              "unsupported-route": 10,
-              "explanation-draft": 10
-            },
-            structuredOutputScore: 10,
-            latencyScore: 3,
-            priceScore: 2
-          }
-        }),
-        expect.objectContaining({
-          modelId: "gpt-5.1",
-          pricing: {
-            inputUsdPerMillionTokens: 1.25,
-            cachedInputUsdPerMillionTokens: 0.125,
-            outputUsdPerMillionTokens: 10
-          },
-          evaluation: {
-            taskScores: {
-              "workspace-summary": 9,
-              "interview-assist": 8,
-              "unsupported-route": 9,
-              "explanation-draft": 9
-            },
-            structuredOutputScore: 8,
-            latencyScore: 5,
-            priceScore: 3
-          }
-        }),
-        expect.objectContaining({
-          modelId: "gpt-5-mini",
-          pricing: {
-            inputUsdPerMillionTokens: 0.25,
-            cachedInputUsdPerMillionTokens: 0.025,
-            outputUsdPerMillionTokens: 2
-          },
-          evaluation: {
-            taskScores: {
-              "workspace-summary": 8,
-              "interview-assist": 9,
-              "unsupported-route": 7,
-              "explanation-draft": 8
-            },
-            structuredOutputScore: 9,
-            latencyScore: 8,
-            priceScore: 9
-          }
-        }),
-        expect.objectContaining({
-          modelId: "gpt-5-nano",
-          pricing: {
-            inputUsdPerMillionTokens: 0.05,
-            cachedInputUsdPerMillionTokens: 0.005,
-            outputUsdPerMillionTokens: 0.4
-          },
-          evaluation: {
-            taskScores: {
-              "workspace-summary": 5,
-              "interview-assist": 6,
-              "unsupported-route": 4,
-              "explanation-draft": 5
-            },
-            structuredOutputScore: 7,
-            latencyScore: 10,
-            priceScore: 10
-          }
-        })
-      ])
-    );
+  it("retains actual and January costs for rejected outputs, including the one escalation", () => {
+    const entry = run(extraction, "gemini-flash-high");
+    entry.applicationSchemaValid = false;
+    entry.attempts.push({ profileId: "sol-high", startedAt: "2026-10-24T12:00:02Z", usage: { inputTokens: 1000, outputTokens: 1000 } });
+    expect(scoreProviderEvalEntry(entry, extraction)).toMatchObject({ accepted: false, actualCostUsd: "0.0165", filingSeasonCostUsd: "0.021" });
   });
-
-  it("orders estimated benchmark cost from current premium to lowest-cost tiers", () => {
-    const benchmark = buildProviderModelBenchmark();
-
-    expect(benchmark.pricingSnapshot).toEqual(providerModelPricingSnapshot);
-    expect(benchmark.roleRubric.primary.metricWeights.price).toBe(0.25);
-    expect(benchmark.roleRubric.fallback.taskWeights["unsupported-route"]).toBe(0.45);
-    expect(benchmark.roleRubric.lowCost.metricWeights.price).toBe(0.5);
-
-    const gpt52 = benchmark.candidates.find((candidate) => candidate.modelId === "gpt-5.2");
-    const gpt51 = benchmark.candidates.find((candidate) => candidate.modelId === "gpt-5.1");
-    const gpt5Mini = benchmark.candidates.find((candidate) => candidate.modelId === "gpt-5-mini");
-    const gpt5Nano = benchmark.candidates.find((candidate) => candidate.modelId === "gpt-5-nano");
-
-    expect(gpt52).toBeDefined();
-    expect(gpt51).toBeDefined();
-    expect(gpt5Mini).toBeDefined();
-    expect(gpt5Nano).toBeDefined();
-
-    expect(gpt52!.estimatedPackCostUsd).toBeGreaterThan(gpt51!.estimatedPackCostUsd);
-    expect(gpt51!.estimatedPackCostUsd).toBeGreaterThan(gpt5Mini!.estimatedPackCostUsd);
-    expect(gpt5Mini!.estimatedPackCostUsd).toBeGreaterThan(gpt5Nano!.estimatedPackCostUsd);
-
-    expect(gpt52!.estimatedCachedPackCostUsd).toBeLessThan(gpt52!.estimatedPackCostUsd);
-    expect(gpt51!.estimatedCachedPackCostUsd).toBeLessThan(gpt51!.estimatedPackCostUsd);
-    expect(gpt5Mini!.estimatedCachedPackCostUsd).toBeLessThan(gpt5Mini!.estimatedPackCostUsd);
-    expect(gpt5Nano!.estimatedCachedPackCostUsd).toBeLessThan(gpt5Nano!.estimatedPackCostUsd);
-
-    expect(gpt52!.estimatedCachedPackCostUsd).toBeGreaterThan(gpt51!.estimatedCachedPackCostUsd);
-    expect(gpt51!.estimatedCachedPackCostUsd).toBeGreaterThan(gpt5Mini!.estimatedCachedPackCostUsd);
-    expect(gpt5Mini!.estimatedCachedPackCostUsd).toBeGreaterThan(gpt5Nano!.estimatedCachedPackCostUsd);
-
-    expect(gpt52!.taskFitScores.fallback).toBeGreaterThan(gpt51!.taskFitScores.fallback);
-    expect(gpt51!.taskFitScores.fallback).toBeGreaterThan(gpt5Mini!.taskFitScores.fallback);
-    expect(gpt5Mini!.scores.primary).toBeGreaterThan(gpt52!.scores.primary);
-    expect(gpt5Nano!.scores.lowCost).toBeGreaterThan(gpt5Mini!.scores.lowCost);
+  it("does not convert unknown usage or missing independent review into a measured pass", () => {
+    const entry = run(extraction);
+    entry.attempts[0]!.usage = null;
+    entry.independentReview = null;
+    expect(scoreProviderEvalEntry(entry, extraction)).toMatchObject({ accepted: false, complete: false, actualCostUsd: null });
   });
-
-  it("summarizes partially completed live runs into comparable model metrics", () => {
+  it("rejects duplicate runs, unknown profiles, invalid token counts and extra escalations", () => {
+    const entry = run(extraction);
+    expect(() => parseProviderModelLiveEvalTemplate({ version: 2, entries: [entry, entry] })).toThrow(/duplicate run/);
+    expect(() => parseProviderModelLiveEvalTemplate({ version: 2, entries: [{ ...entry, profileId: "made-up" }] })).toThrow(/Unknown evaluation profile/);
+    expect(() => parseProviderModelLiveEvalTemplate({ version: 2, entries: [{ ...entry, attempts: [entry.attempts[0], entry.attempts[0], entry.attempts[0]] }] })).toThrow();
+    const invalid = structuredClone(entry); invalid.attempts[0]!.usage!.inputTokens = -1;
+    expect(() => parseProviderModelLiveEvalTemplate({ version: 2, entries: [invalid] })).toThrow();
+  });
+  it("requires reviewed repeated comparisons and a measured benefit, then only permits human promotion review", () => {
+    const fixtures = taxProviderModelEvalFixtures.map(fixture => ({ ...fixture, review: { author: "author", status: "reviewed" as const, reviewer: "different-reviewer", reviewedAt: "2026-10-24" } }));
+    const cases = fixtures.filter(fixture => fixture.task === "income-extraction");
+    const entries = ["luna-high", "baseline-gpt-5-mini", "baseline-gemini-3-flash-preview"].flatMap(profile => cases.flatMap(fixture => [1, 2, 3].map(repeat => run(fixture, profile, repeat))));
+    const summary = summarizeProviderModelLiveEvalTemplate({ version: 2, entries, availability }, fixtures);
+    expect(summary.groups.find(group => group.profileId === "luna-high" && group.task === "income-extraction"))
+      .toMatchObject({ completedRuns: 90, schemaValidity: 1, criticalFieldExactMatch: 1, eligibleForPromotionReview: true, blockers: [] });
+    expect(summary.productionPromotion).toBe(false);
+    changePayload(entries[0]!, payload => { const amount = payload.facts[0]; if (!amount) throw new Error("Missing amount."); amount.value = "999"; });
+    const rejected = summarizeProviderModelLiveEvalTemplate({ version: 2, entries, availability }, fixtures);
+    expect(rejected.groups.find(group => group.profileId === "luna-high" && group.task === "income-extraction")!.blockers).toContain("critical-field-regression");
+  });
+  it.each(["unavailable", "failed"] as const)("records %s account checks without treating them as passing runs", status => {
+    const evidence = availability!.map(item => ({ ...item, status }));
+    const summary = summarizeProviderModelLiveEvalTemplate({ version: 2, entries: [run(extraction)], availability: evidence });
+    expect(summary.groups[0]!.availability?.status).toBe(status);
+    expect(summary.groups.every(group => group.blockers.includes("account-capability-unverified-or-unavailable"))).toBe(true);
+  });
+  it("rejects duplicated or indefinitely valid account evidence", () => {
+    expect(() => parseProviderModelLiveEvalTemplate({ version: 2, entries: [], availability: [availability![0], availability![0]] })).toThrow(/Duplicate/);
+    expect(() => parseProviderModelLiveEvalTemplate({ version: 2, entries: [], availability: [{ ...availability![0], expiresAt: "2027-12-01T00:00:00Z" }] })).toThrow(/30 days/);
+  });
+  it("enforces the declared P50 budget even when the P95 budget passes", () => {
+    const entry = run(extraction); entry.elapsedMs = 15000;
+    const summary = summarizeProviderModelLiveEvalTemplate({ version: 2, entries: [entry], availability });
+    const group = summary.groups.find(item => item.profileId === "luna-high" && item.task === "income-extraction")!;
+    expect(group.p95LatencyMs).toBe(15000);
+    expect(group.blockers).toContain("latency-budget");
+  });
+  it("requires account capability evidence for every escalation at the attempt time", () => {
+    const entry = run(extraction); entry.attempts.push({ profileId: "sol-high", startedAt: "2026-10-25T12:00:00Z", usage: { inputTokens: 1, outputTokens: 1 } });
+    const summary = summarizeProviderModelLiveEvalTemplate({ version: 2, entries: [entry], availability });
+    expect(summary.groups.find(item => item.profileId === "luna-high" && item.task === "income-extraction")!.blockers).toContain("account-capability-unverified-or-unavailable");
+  });
+  it("rejects changed, duplicated or removed cases in reviewed corpus input", () => {
     const template = buildProviderModelLiveEvalTemplate();
-    const scoredTemplate = {
-      ...template,
-      entries: template.entries.map((entry) => {
-        if (entry.modelId !== "gpt-5-mini") {
-          return entry;
-        }
-
-        const latencyByFixtureId: Record<string, number> = {
-          "workspace-summary-supported": 900,
-          "interview-assist-withholding": 1100,
-          "unsupported-route-side-gig": 1500,
-          "explanation-draft-ready-preview": 1000
-        };
-        const taskQualityByFixtureId: Record<string, number> = {
-          "workspace-summary-supported": 8,
-          "interview-assist-withholding": 9,
-          "unsupported-route-side-gig": 7,
-          "explanation-draft-ready-preview": 8
-        };
-        const structuredOutputByFixtureId: Record<string, number> = {
-          "workspace-summary-supported": 9,
-          "interview-assist-withholding": 8,
-          "unsupported-route-side-gig": 8,
-          "explanation-draft-ready-preview": 9
-        };
-
-        return {
-          ...entry,
-          requiredSignalResults: entry.requiredSignalResults.map((result, index) => ({
-            ...result,
-            passed: entry.fixtureId === "unsupported-route-side-gig" && index === 2 ? false : true
-          })),
-          latencyMs: latencyByFixtureId[entry.fixtureId],
-          taskQualityScore: taskQualityByFixtureId[entry.fixtureId],
-          structuredOutputReliabilityScore: structuredOutputByFixtureId[entry.fixtureId],
-          hallucinationObserved: false,
-          privacyLeakObserved: false,
-          unsupportedBoundaryHeld: entry.task === "unsupported-route" ? true : null,
-          notes: "Scored from a local live API run."
-        };
-      })
-    };
-
-    const summary = summarizeProviderModelLiveEvalTemplate(scoredTemplate);
-    const gpt5Mini = summary.candidates.find((candidate) => candidate.modelId === "gpt-5-mini");
-    const gpt52 = summary.candidates.find((candidate) => candidate.modelId === "gpt-5.2");
-
-    expect(summary).toMatchObject({
-      version: 1,
-      sourcePath: "../../prompts/provider-model-eval/live-run-template.json",
-      benchmarkPath: "../../prompts/provider-model-eval/benchmark.json",
-      fixturePackPath: "../../prompts/provider-model-eval/fixture-pack.json",
-      candidateCount: 4,
-      fixtureCount: 4,
-      entryCount: 16,
-      completedEntryCount: 4,
-      pendingEntryCount: 12,
-      readyForRecommendation: false,
-      recommendationCoverage: {
-        primary: {
-          ready: false,
-          completedModelIds: ["gpt-5-mini"],
-          missingModelIds: ["gpt-5.2", "gpt-5.1"]
-        },
-        fallback: {
-          ready: false,
-          completedModelIds: [],
-          missingModelIds: ["gpt-5.2", "gpt-5.1"]
-        },
-        lowCost: {
-          ready: false,
-          completedModelIds: [],
-          missingModelIds: ["gpt-5-nano"]
-        }
-      },
-      provisionalRecommendation: {
-        primary: {
-          modelId: "gpt-5-mini"
-        },
-        fallback: null,
-        lowCost: null
-      }
-    });
-
-    expect(gpt5Mini).toMatchObject({
-      completedEntryCount: 4,
-      pendingEntryCount: 0,
-      averageLatencyMs: 1125,
-      averageTaskQualityScore: 8,
-      averageStructuredOutputReliabilityScore: 8.5,
-      requiredSignalPassRate: 0.917,
-      hallucinationRate: 0,
-      privacyLeakRate: 0,
-      unsupportedBoundaryHoldRate: 1
-    });
-
-    expect(gpt52).toMatchObject({
-      completedEntryCount: 0,
-      pendingEntryCount: 4,
-      averageLatencyMs: null,
-      averageTaskQualityScore: null,
-      averageStructuredOutputReliabilityScore: null,
-      requiredSignalPassRate: null,
-      hallucinationRate: null,
-      privacyLeakRate: null,
-      unsupportedBoundaryHoldRate: null
-    });
-  });
-
-  it("does not unlock live recommendations from touched-but-unscored worksheet rows", () => {
-    const template = buildProviderModelLiveEvalTemplate();
-    const touchedTemplate = {
-      ...template,
-      entries: template.entries.map((entry) => ({
-        ...entry,
-        notes: "Row reviewed but not scored yet."
-      }))
-    };
-
-    const summary = summarizeProviderModelLiveEvalTemplate(touchedTemplate);
-
-    expect(summary).toMatchObject({
-      completedEntryCount: 16,
-      pendingEntryCount: 0,
-      readyForRecommendation: false,
-      recommendationCoverage: {
-        primary: {
-          ready: false,
-          completedModelIds: [],
-          missingModelIds: ["gpt-5.2", "gpt-5.1", "gpt-5-mini"]
-        },
-        fallback: {
-          ready: false,
-          completedModelIds: [],
-          missingModelIds: ["gpt-5.2", "gpt-5.1"]
-        },
-        lowCost: {
-          ready: false,
-          completedModelIds: [],
-          missingModelIds: ["gpt-5-nano"]
-        }
-      },
-      provisionalRecommendation: {
-        primary: null,
-        fallback: null,
-        lowCost: null
-      }
-    });
-  });
-
-  it("turns completed live runs into provisional role picks and applies safety gates", () => {
-    const template = buildProviderModelLiveEvalTemplate();
-    const scoredTemplate = {
-      ...template,
-      entries: template.entries.map((entry) => {
-        const scoringByModelId: Record<
-          string,
-          {
-            latencyMs: number;
-            taskQualityScore: number;
-            structuredOutputReliabilityScore: number;
-            hallucinationObserved: boolean;
-            privacyLeakObserved: boolean;
-            unsupportedBoundaryHeld: boolean | null;
-          }
-        > = {
-          "gpt-5.2": {
-            latencyMs: 1800,
-            taskQualityScore: 10,
-            structuredOutputReliabilityScore: 9,
-            hallucinationObserved: false,
-            privacyLeakObserved: false,
-            unsupportedBoundaryHeld: entry.task === "unsupported-route" ? false : null
-          },
-          "gpt-5.1": {
-            latencyMs: 1300,
-            taskQualityScore: entry.task === "unsupported-route" ? 9 : 8,
-            structuredOutputReliabilityScore: 8,
-            hallucinationObserved: false,
-            privacyLeakObserved: false,
-            unsupportedBoundaryHeld: entry.task === "unsupported-route" ? true : null
-          },
-          "gpt-5-mini": {
-            latencyMs: 900,
-            taskQualityScore: entry.task === "unsupported-route" ? 7 : 9,
-            structuredOutputReliabilityScore: 9,
-            hallucinationObserved: false,
-            privacyLeakObserved: false,
-            unsupportedBoundaryHeld: entry.task === "unsupported-route" ? true : null
-          },
-          "gpt-5-nano": {
-            latencyMs: 650,
-            taskQualityScore: entry.task === "unsupported-route" ? 5 : 6,
-            structuredOutputReliabilityScore: 7,
-            hallucinationObserved: false,
-            privacyLeakObserved: false,
-            unsupportedBoundaryHeld: entry.task === "unsupported-route" ? true : null
-          }
-        };
-        const scoring = scoringByModelId[entry.modelId];
-
-        return {
-          ...entry,
-          requiredSignalResults: entry.requiredSignalResults.map((result) => ({
-            ...result,
-            passed: true
-          })),
-          latencyMs: scoring.latencyMs,
-          taskQualityScore: scoring.taskQualityScore,
-          structuredOutputReliabilityScore: scoring.structuredOutputReliabilityScore,
-          hallucinationObserved: scoring.hallucinationObserved,
-          privacyLeakObserved: scoring.privacyLeakObserved,
-          unsupportedBoundaryHeld: scoring.unsupportedBoundaryHeld,
-          notes: "Scored from a complete local live API benchmark."
-        };
-      })
-    };
-
-    const summary = summarizeProviderModelLiveEvalTemplate(scoredTemplate);
-
-    expect(summary).toMatchObject({
-      completedEntryCount: 16,
-      pendingEntryCount: 0,
-      readyForRecommendation: true,
-      recommendationCoverage: {
-        primary: {
-          ready: true,
-          completedModelIds: ["gpt-5.2", "gpt-5.1", "gpt-5-mini"],
-          missingModelIds: []
-        },
-        fallback: {
-          ready: true,
-          completedModelIds: ["gpt-5.2", "gpt-5.1"],
-          missingModelIds: []
-        },
-        lowCost: {
-          ready: true,
-          completedModelIds: ["gpt-5-nano"],
-          missingModelIds: []
-        }
-      },
-      provisionalRecommendation: {
-        primary: {
-          modelId: "gpt-5-mini"
-        },
-        fallback: {
-          modelId: "gpt-5.1"
-        },
-        lowCost: {
-          modelId: "gpt-5-nano"
-        }
-      }
-    });
-  });
-
-  it("keeps the checked-in markdown benchmark report synchronized with the harness output", () => {
-    const benchmark = buildProviderModelBenchmark();
-    const checkedInReport = readFileSync(
-      new URL("../../docs/strategy/model-stack-eval.md", import.meta.url),
-      "utf8"
-    );
-    const renderedReport = renderProviderModelBenchmarkMarkdown(benchmark);
-
-    for (const blockedTerm of taxProviderModelEvalFixtures.flatMap((fixture) => fixture.blockedTerms)) {
-      expect(renderedReport).not.toContain(blockedTerm);
-    }
-
-    expect(renderedReport).toBe(checkedInReport);
+    expect(() => summarizeProviderModelLiveEvalTemplate(template, taxProviderModelEvalFixtures.slice(1))).toThrow(/full frozen corpus/);
+    const duplicate = [...taxProviderModelEvalFixtures]; duplicate[1] = duplicate[0]!;
+    expect(() => summarizeProviderModelLiveEvalTemplate(template, duplicate)).toThrow(/unique IDs/);
+    const changed = structuredClone(taxProviderModelEvalFixtures); changed[0]!.expected.fields = { invented: { kind: "money", value: "1" } };
+    expect(() => summarizeProviderModelLiveEvalTemplate(template, changed)).toThrow(/frozen case content/);
   });
 });

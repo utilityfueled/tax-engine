@@ -1,0 +1,31 @@
+form: "PA-Ordinary-Local-W2-Boundary"
+fullName: Source-bound single PA original local W2 row handoff
+taxYear: 2025
+reference: https://www.irs.gov/pub/irs-prior/iw2w3--2025.pdf
+notes: |
+  Current IRS2026 iw2w3 and original2025 instructions distinguish boxes15-20.
+  PA2025 PA40 instructions printed21 Line13 uses PA Box17, not local Box19.
+  Actual existing resident/part-year/nonresident ordinary PA cohorts remain.
+  This is a reported-source handoff, never a municipal rate/liability calculation,
+  local refund/settlement claim, final2026 paper or filing qualification.
+lines:
+  - line: "reported-local-rows"
+    description: All actual original local rows outside state arithmetic
+    formula: After complete current original owner/year/box/row/scalar validation preserve each printed local row once with original index, primary owner, row position, reviewed jurisdiction index and exact reported wages/withholding. Bind locality name to a separately confirmed jurisdiction, never infer municipality from residence. Source local wages can overlap between reported jurisdictions and are not additional federal or PA income. Local Box19 never enters state credit.
+    testRef: "tests/engine/state/pa-ordinary-local-w2-boundary.test.ts::single PA actual local W2 rows preserve all three residency return calculations"
+  - line: "original-proof"
+    description: Unknown positive local amounts cannot fall back to legacy scalars
+    formula: A supplied row packet must validate freshly against the actual canonical original and all snapshots. Positive legacy local wages or withholding require complete original rows. Keep state-only withholding eligibility and unrelated income/year/owner gates. Reject stale original, wrong owner/year, contradictory first-row or unused scalar projection, duplicate local rows, missing jurisdiction, unknown obligation and positive blank locality.
+    testRef: "tests/engine/state/pa-ordinary-local-w2-boundary.test.ts::single PA local W2 handoff rejects incomplete actual source proofs %s"
+  - line: "multiple-zero"
+    description: Multiple rows and deliberate blank original
+    formula: Preserve exact cents and overlapping original local wages without summing into income. Preserve an explicit blank locality only with actual zero wages and withholding and null jurisdiction link. Existing known-zero legacy path remains without invented local rows. An unused scalar projection must retain only blank/zero scalars; its complete local rows remain authoritative.
+    testRef: "tests/engine/state/pa-ordinary-local-w2-boundary.test.ts::single PA local W2 handoff preserves multiple rows explicit blank zero and unused scalars"
+  - line: "fresh-private"
+    description: Whole source identity and audit privacy
+    formula: Bind all original local values to unchanged actual ordinary/residency/completion snapshots and source commitment; editing equal-state-cash local originals requires fresh confirmation and changes commitment. Input packets and caller Decimal configuration remain unchanged. New audit entries expose only raw reported money and numeric owner/index/row metadata, never locality/source/owner identifiers. Existing prepared original review continues fresh full result replay.
+    testRef: "tests/engine/state/pa-ordinary-local-w2-boundary.test.ts::single PA local W2 handoff binds originals without private audit leakage or input mutation"
+  - line: "readiness"
+    description: Separate municipal obligation and current qualification preserved
+    formula: Keep separate_return_required and all known resident/work obligations, filingEligible false and full2026 rule-pack/finalform restrictions. Report no local rate, tax due, local refund or settled payment. Other-state withholding and incomplete jurisdiction history cannot become local or PA credits.
+    testRef: "tests/engine/state/pa-ordinary-local-w2-boundary.test.ts::single PA local W2 handoff preserves separate obligations year and source gates"

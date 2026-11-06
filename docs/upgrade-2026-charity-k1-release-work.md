@@ -1,0 +1,50 @@
+# Actual 2025 K-1 charitable basis releases and NOLs
+
+This package connects an actual 2025 release of previously suspended charitable basis to the established section 170 and regular/AMT NOL methods. The source packet retains the original payment year, receipt, basis origin, previously allowed appreciation, annual basis use and remaining suspension. It collects no calculated release or deduction. The three runtime changes remove only the 2025 handoff restrictions; existing source validation, basis arithmetic, percentage limits, comparison arithmetic and private PDF binding remain in place.
+
+## Source method
+
+[Reg. 1.704-1(d)](https://www.ecfr.gov/current/title-26/section-1.704-1) permits the partnership item when later basis becomes available and includes current and prior items in the basis allocation. [Reg. 1.1366-2(a)(3), (5)](https://www.ecfr.gov/current/title-26/section-1.1366-2) preserves the S-corporation item's character and treats the disallowed item as incurred in succeeding entity years. Current [section 704(d)](https://uscode.house.gov/us/usc/119-120/t26/s704/) and [section 1366(d)](https://uscode.house.gov/us/usc/119-120/t26/s1366/) retain the appreciation exceptions. The [IRS partnership basis FAQ](https://www.irs.gov/newsroom/new-limits-on-partners-shares-of-partnership-losses-frequently-asked-questions) supplies the published 150 FMV / 50 basis / 30 available-basis control: 130 available charitable value and 20 basis suspension. Rev. Rul. 2008-16 is historical corroboration, not the sole authority for current law.
+
+The available 2025 amount enters the current section 170 limits with its original recipient, category and medium. A section 170 excess first arising on this release has a 2025 contribution-limit origin; the original basis origin remains separately recorded. [Form 172 line 26](https://www.irs.gov/instructions/i172) and [Reg. 1.170A-10(d)](https://www.ecfr.gov/current/title-26/section-1.170A-10) still govern any reduction caused by the succeeding NOL comparison. Current Form 172 uses the selected charitable deduction and actual nonbusiness income, with independent regular and alternative histories.
+
+The existing Form 6198 proof remains a conservative nonbinding-capacity condition. This package does not conclude that charity is exempt from section 465. The instructions' activity-specific deductions, income and loss allocation require a separate method when that limit binds.
+
+## Derived controls
+
+These are independently derived fixtures, not published matching NOL examples.
+
+| Actual sources | Result |
+| --- | --- |
+| Original 2018 C gift 180,000, adjusted basis 80,000, appreciation previously used 100,000, basis previously used 20,000; actual 2025 available basis 60,000 | Release 60,000, new appreciation 0 and basis suspension 0. Income 100,000 with old NOL 100,000 gives NOLD 56,000, AGI 44,000 and charity 13,200. Old carry 44,000 versus comparison 30,560 leaves 2025 charitable carry 33,360; independent known-zero ATNOL leaves 46,800 AMT charitable carry. |
+| Current G 20,000 and prior C basis suspension 60,000, available basis 40,000 | Actual proportional basis release G 10,000 / C 30,000 and separate basis suspension 40,000. NOLD 48,000, AGI 52,000, charity 25,600; unique C excess 14,400 less NOL benefit 11,520 leaves 2,880 section 170 carry. |
+| Released C 60,000, income 100,000 and capital loss 3,000, known-zero regular NOL, actual ATNOL 100,000 | Current ATNOLD 61,110 remains unchanged; regular charitable carry 30,900 and AMT carry 30,090. |
+| Released C 60,000.49 or 60,000.50 | Exact basis and tentative Schedule A excess 46,800.49 / 46,800.50 are preserved. The established completed single-category carry worksheet reports regular 33,360 / 33,361 and AMT 46,800 / 46,801. Sources and percentage capacities are not rounded early. |
+| Released G 1,000, prior C 5,000 regular / 500 AMT, wages 20,000, active Schedule C loss 40,000, interest 30,000 and SALT 20,000 | Selected charity 4,000 regular / 1,500 AMT. With old NOL 100,000 in each system: regular old use 0, new loss 14,000 and closing carry 114,000; ATNOLD 7,650, old AMT carry 92,350, AMTI 850 and no new ATNOL. With known-empty old histories the new regular loss remains 14,000 and AMTI is 8,500. |
+
+## Verification and review status
+
+Spec-linked baseline tests reproduced four handoff failures before runtime changes. Five new calculation cases plus the existing five original-source cases, actual guided collector, direct review PDF and unmocked workspace PDF pass: 13 tests in five files. The adjacent charity, basis, K-1, NOL and current-loss cohort passes 444 tests in 112 files. Root and web types, both builds, 5,654 spec references, 565 strict spec/inventory tests in five files and the generated 534-entry inventory pass. Scoped lint has no errors or warnings. The final 13-case package rerun passes after replacing new fixture non-null assertions with explicit source checks; the separate 444-case adjacent result predates that test-only cleanup. Exact log hashes and the independent readiness cohort are recorded in the immutable snapshot manifest. The first spec-test command also named an unmatched readiness path; its five matched spec files are counted only as spec tests, and readiness is checked separately against the real files.
+
+Production desktop and mobile tests pass two cases with zero retries. They edit and reopen the original seven annual basis-use records, preserve unknown versus zero, revoke and restore both K-1 and NOL confirmations, and save an actual draft workspace PDF. Four screenshots were inspected; the local server was stopped. The first browser run incorrectly tried to click disabled Final Review before later sections were complete. Its log and screenshots are retained; the test now explicitly verifies that disabled state and uses the existing advanced-workspace control. No product navigation, timeout or assertion was weakened.
+
+Two author-only setup errors are retained separately from the initial product red: a new cents expectation first confused exact tentative excess with the established rounded completed carry worksheet; another assertion used the wrong output property name. Corrected tests retain explicit source-cents and completed-output checks. No rounding implementation changed.
+
+The immutable source and retained original/PDF artifacts passed the separate agent reviews recorded below. Agent checks do not constitute human tax-law review, filing qualification or a final 2026 release.
+
+## Remaining boundaries
+
+Positive 2026 prior-basis releases retain the specific contribution-year/floor interpretation guard. Missing annual basis records, contradictory appreciation, altered original receipts and unknown independent AMT history reject. Binding at-risk allocation, operating K-1 current-loss classification, positive charitable-comparison benefit with COD and changed filing-unit histories remain separate internal methods. Positive benefit shared by multiple excess origins and the other precise floor/media allocation questions remain separately documented; this package does not silently reclassify them as completed.
+
+
+## Independent source and artifact review
+
+The separate facts reviewer cleared immutable `734d415f44fc3e44b3c6bd0bb1cf40f1870b3e5c`: 19 tests across six files, including six independent controls, with all 17 owned hashes unchanged. The controls include a new 30,000 release with 80,000 wages (8,688 regular and 19,440 AMT charity carry), mixed current/prior basis allocation (3,072), original identity and risk/history contradictions, known zero versus missing basis, and retained operating/year guards. Report `facts-charity-k1-release-source-review.json`, SHA256 `75d2e3234dbb4a82d3c1fa363c735d5531a16c54bae11332e599bba1ae2c749b`; log SHA256 `0be9994014e1e0e8fcf62a91f7967bf3330ba661c83cd64147b2e8ffe90ef8b2`. An initial reviewer assertion used zero for an absent optional AMT result; only that setup expectation was corrected and the failure was retained.
+
+Independent artifact review derived results from the six saved canonical originals and actual guided workspace, reopened 48 PDFs / 105 pages / 278 populated fields, checked 203 physical and 119 reference values and absence of 48 private strings, and visually inspected seven contacts, seven footer strips and 23 readable pages. Original, PDF, producer, generator and 17 source hashes remained unchanged. Report `facts-charity-k1-release-artifact-review.json`, SHA256 `0737ccaddacfa92e82227a6b2972a6258d717a540179c09be6ea6260c21d9d0b`. Reviewer setup, expectation and rendering initialization corrections are retained in that report. This is bounded agent source/software and artifact review, not human tax-law qualification, filing readiness or production evidence.
+
+## Final delivered-base verification
+
+The final private candidate is based on `c4c199fb25201bc451cd8b3c79da1631046cb357`, after health cents `2511060a` and the two independently reviewed performance commits. All 14 reviewed runtime/spec/test/UI files remain byte-identical to `734d415f`; the four unrelated performance paths are retained exactly. Existing 538 inventory rows and 132 implementation links are preserved, with one new row and one linked method. Rules advance to `2025.162` and `2026.159-law-integration-draft`; calculation, human-review and filing gates are unchanged.
+
+Exact final checks pass: 36 tests across seven package/readiness files (13 package cases and 23 readiness cases), 570 strict spec/inventory tests across five files, root/web types, 5,716 valid spec references, 539 generated inventory rows and scoped lint with no errors or warnings. The broader 444-case author cohort, production browser checks and saved artifact review above belong to the recorded original source freeze; they are not claimed as rerun on this final base. Final patch, hashes, preservation proof and logs are recorded in `charity-k1-release-final-snapshot.json`. Normal branch publication remains pending the parent final-delta review and exclusive integration lease.

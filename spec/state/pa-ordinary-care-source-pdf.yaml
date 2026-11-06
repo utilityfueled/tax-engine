@@ -1,0 +1,20 @@
+form: "PA Ordinary Care Source PDF"
+fullName: "Independent saved actual care review packet"
+taxYear: 2025
+reference: "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40dc.pdf"
+notes: |
+  Independent source literals precede saved output: actual PA100120, tax3074,
+  actual withholding3074, care credit600, printed24=3674 and29/30=600.
+  Schedule DC remains REFERENCE SUMMARY ONLY, never an official filing copy.
+  Native source confirmations and private original replay remain separate from
+  final-form, browser, independent human tax review and filing qualification.
+lines:
+  - line: "saved"
+    formula: "Actual source replay plus opaque original context writes once-only PA23=600,24=3674,29=600,30=600 and an honestly labeled DC reference; reopen validates actual fields, appearances and annotation links."
+    testRef: "tests/pdf/pa-ordinary-care-source-pdf.test.ts::actual care saved packet preserves official PA cells privacy and reference scope"
+  - line: "pre-io"
+    formula: "Fabricated context, stale equal-dollar original changes and retained result tampering reject before template or output I/O."
+    testRef: "tests/pdf/pa-ordinary-care-source-pdf.test.ts::actual care packet rejects stale private sources and changed results before I O %s"
+  - line: "year"
+    formula: "Actual2026 public denial remains closed; isolated2025 evidence does not qualify a later tax year."
+    testRef: "tests/pdf/pa-ordinary-care-source-pdf.test.ts::actual care packet preserves public future-year denial"

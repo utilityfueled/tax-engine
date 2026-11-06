@@ -749,7 +749,7 @@ describe("Schedule B edge case - savings bond exclusion (Form 8815)", () => {
       form1099Int: [
         make1099Int({
           payer: "Treasury Direct",
-          interestIncome: "3000",
+          interestIncome: "0", // Box 3 is not included in Box 1.
           usSavingsBondInterest: "3000",
         }),
       ],
@@ -767,7 +767,7 @@ describe("Schedule B edge case - savings bond exclusion (Form 8815)", () => {
       form1099Int: [
         make1099Int({
           payer: "Treasury Direct",
-          interestIncome: "500",
+          interestIncome: "0",
           usSavingsBondInterest: "500",
         }),
       ],
@@ -786,7 +786,7 @@ describe("Schedule B edge case - savings bond exclusion (Form 8815)", () => {
       form1099Int: [
         make1099Int({
           payer: "Treasury Direct - Series I",
-          interestIncome: "2000",
+          interestIncome: "0",
           usSavingsBondInterest: "2000",
         }),
       ],

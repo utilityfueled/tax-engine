@@ -1,0 +1,33 @@
+form: "Charitable Category Use"
+fullName: "Source-bound ordinary charitable percentage use before the actual deduction choice"
+taxYear: 2026
+irsReference: "https://uscode.house.gov/us/usc/119-118/t26/s170/"
+retrievedAt: "2026-10-26"
+reviewStatus: "independent-review-pending"
+notes: |
+  This extracts the existing reviewed2026 nonitemized percentage computation
+  without changing its capacities, current-before-prior order, FIFO or expiry.
+  It does not select standard deduction or claim an itemized deduction. The
+  actual choice wrapper and determined current-origin floor wrapper consume
+  the same original-source result. Current170(B)/(C)/(D)/(G), historical
+  Reg1.170A-10 and final2025 Pub526 Carryovers supply the stated method.
+  Current C is reserved without its special30% cap for the B shared ceiling;
+  prior C uses its actual treated-paid stage. The amended-offset prior-C
+  conflict and partial same-category cash/noncash allocation remain guarded.
+lines:
+  - line: "current-prior"
+    description: "Conserve actual current and original prior categories before any floor"
+    formula: "Use the previously reviewed category capacities once; source-current allowance and original treated-paid use remain distinct. No input election changes contribution base, category or original expiry."
+    testRef: "tests/engine/forms/nonitemized-charitable-categories.test.ts::conserves all five actual categories across current and prior sources"
+  - line: "current-c-reservation"
+    description: "Preserve the current-versus-prior capital-property source distinction"
+    formula: "Actual current C reserves its A amount without the special C restriction when deriving B; prior C uses the independent treated-paid stage. Do not replace one source stage by the other."
+    testRef: "tests/engine/forms/nonitemized-charitable-categories.test.ts::distinguishes actual current capital property from prior treated-paid reservations"
+  - line: "history"
+    description: "Keep exact original contribution-year use and expiry"
+    formula: "Current sources first within category, then actual eligible original vintages oldest first. Each opening equals treated-paid use plus retained carry plus expiry; no floor is applied by this helper."
+    testRef: "tests/engine/forms/nonitemized-charitable-categories.test.ts::preserves exact FIFO balances and original expiration without floor carry"
+  - line: "source-and-attribution"
+    description: "Reject unknown sources and unresolved attribution instead of inventing a carry"
+    formula: "Original receipt, actual identity, complete annual history and exact current category amounts reconcile before calculation; partial mixed media and prior-C offset attribution retain their separate methods."
+    testRef: "tests/engine/forms/charitable-determined-floor.test.ts::binds the determined candidates to original current and prior sources"

@@ -1,0 +1,96 @@
+form: "PA-Residency-Sources"
+fullName: "Pennsylvania actual ordinary residency and source derivation"
+taxYear: 2026
+reference: "https://www.pacodeandbulletin.gov/Display/pacode?file=/secure/pacode/data/061/chapter121/s121.8.html&d=reduce"
+notes: |
+  User selected PA full-year resident, part-year resident and nonresident routes.
+  This first finite source method derives ordinary cash W2 compensation and
+  personal bank interest for a single actual owner. Source-aware ordinary dividend
+  and printed A/B line extension is specified in pa-ordinary-investment-sources.yaml. It qualifies neither an
+  arbitrary PA income override nor a full return/payment/credit/export packet.
+  Spouse joint/separate/mixed residency and richer source scenarios remain
+  required internal successors. Final 2026 physical/filing gates remain closed.
+  Fresh source review 2026-11-02: 61 Pa.Code121.8; current DOR DSM12 overview;
+  actual 2025 PA40 IN pp4-7,14,42-43; current DOR OBBBA conformity table. PA tax
+  is independent of federal AGI and personal/QBI/SALT/tips/overtime deductions.
+lines:
+  - line: "residency"
+    description: "Derive actual owner residency from domicile, abode and physical-presence records"
+    formula: |
+      Require real dates and a full selected-year domicile timeline, actual
+      abode periods and presence-days worksheets, complete owner/year source
+      confirmation. No mailing-address or 183-day-only inference. Ordinary
+      one-move part-year requires actual abandonment/new domicile/presence facts.
+      Actual December31 principal residence and school district come from their
+      confirmed actual records, not a forced domicile or mailing-address match.
+      Apply the statutory nonresident exception only to actual no-PA-abode,
+      full outside-abode and <=30 PA days facts; statutory residency requires
+      actual PA permanent abode and >183 PA days, not presence alone.
+    testRef: "tests/engine/state/pa-residency-sources.test.ts::PA actual residency sources - derives all three ordinary residency classes"
+  - line: "compensation"
+    description: "Actual ordinary wage records allocated by source and actual residency period"
+    formula: |
+      Reconcile each complete unique original W2 snapshot/year/owner to actual
+      payroll segments before rounding. Each explicitly supplied segment has
+      actual paid and service dates, gross, PA-service and outside-PA-service
+      amounts. Both source amounts are explicit and sum exactly to gross.
+      Resident-period ordinary cash gross is taxable from all sources.
+      Nonresident-period ordinary cash includes actual PA services only.
+      No inferred residual, calendar-day proration or Box16-only qualification.
+      Reject unknown PA/federal wage differences, nonordinary source facts,
+      corrected/void/duplicate originals and unsupported reciprocal exceptions.
+    testRef: "tests/engine/state/pa-residency-sources.test.ts::PA actual residency sources - derives actual compensation without day allocation"
+  - line: "interest"
+    description: "Actual personal bank interest credits classified by actual resident period"
+    formula: |
+      Require unique complete current original 1099INT snapshots/year/owner and
+      actual dated credit ledger totaling original Box1 exactly. Resident-period
+      ordinary personal bank credits are taxable; nonresident-period ordinary
+      personal bank credits are excluded. Actual business-source or other-box
+      positive interest requires its separate source/class method.
+    testRef: "tests/engine/state/pa-residency-sources.test.ts::PA actual residency sources - retains known zero and actual interest timing"
+  - line: "ordinary-tax"
+    description: "Source-derived ordinary PA tax before credits and payments"
+    formula: |
+      Preserve exact source cents; aggregate within each actual income class,
+      then roundDollar each reported class once (never each original/receipt).
+      Under the source-aware A/B extension, reported interest follows printed
+      A1 minus A8 and reported dividends follows B12; preserve raw included/excluded
+      cents separately. PA40 line9 sums the resulting reported income classes,
+      line10 is confirmed zero in this finite method, line11 equals line9,
+      and line12 is roundDollar(line11 * Decimal('0.0307')).
+    testRef: "tests/engine/state/pa-residency-sources.test.ts::PA actual residency sources - matches independent original tax amounts"
+  - line: "source-binding"
+    description: "Complete raw original binding and unknown preservation"
+    formula: |
+      Every retained relevant original exactly once; no absent-row proof. Full
+      raw year/owner/identity/source references bind privately before redaction.
+      Semantic duplicate originals reject even with distinct indices/references.
+      Semantic identity ignores empty optional metadata and presentation-only text/TIN
+      differences; it cannot create an extra original. Reject unsupported retained
+      corrected/void status keys and negative uncorrected monetary boxes.
+      Missing monetary amounts are unknown, not zero. Require actual known-none
+      other classes/adjustments and crosscheck canonical positive facts. Same
+      money with changed owner, identity, source reference or dates stales proof.
+      Output only digest commitment and nonprivate calculation audit values.
+      Ignore only the packet itself when binding its canonical input, to avoid
+      self-reference; retain every other original field. Reject actual retained
+      Schedule C/F, OID, pass-through, rental or other income sources until their
+      actual PA class derivation is supplied. Explicit zero originals still need
+      complete coverage; equivalent representations cannot establish two forms.
+    testRef: "tests/engine/state/pa-residency-sources.test.ts::PA actual residency sources - rejects incomplete or contradictory original facts"
+
+  - line: "guide-confirmation"
+    description: "Explicit current originals and source edits in the actual guide adapter"
+    formula: |
+      Store incomplete raw drafts without guessed dates, amounts or zeros.
+      Explicit original confirmation privately copies actual selected canonical
+      originals and owner identity; source edits preserve prior raw records and
+      reset confirmation. Rebuilding after equal-dollar original identity edits
+      rejects stale snapshots until actual reconfirmation. No public export
+      fallback or arbitrary caller-provided digest qualifies the source packet.
+    testRef: "tests/apps/web/guided-pa-residency-facts.test.ts::PA residency guide - binds actual originals and resets source confirmation"
+  - line: "guide-ui"
+    description: "Actual controls collect residency, payroll and dated bank credits"
+    formula: "Unknown raw fields remain blank; only explicit user action confirms originals; removal preserves unrelated draft facts."
+    testRef: "tests/apps/web/pa-residency-details.test.tsx::PA residency UI - preserves unknown facts and invalidates edited confirmations"

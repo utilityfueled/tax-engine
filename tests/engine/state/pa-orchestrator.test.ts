@@ -1,3 +1,4 @@
+import { fictionalEmptyEicHistory } from "../../fixtures/eic-disallowance.js";
 /**
  * Tests for Pennsylvania Personal Income Tax Return Orchestrator
  * Spec: spec/state/pa-orchestrator.yaml
@@ -8,7 +9,7 @@
 
 import { describe, it, expect } from "vitest";
 import Decimal from "decimal.js";
-import { calculatePAReturn, type PAOrchestratorOverrides } from "@/engine/state/pa-orchestrator.js";
+import { calculatePAReturn, calculatePAScheduleCNetIncome, type PAOrchestratorOverrides } from "@/engine/state/pa-orchestrator.js";
 import { calculateFederalTax } from "@/engine/federal.js";
 import { TaxYearInputSchema, type TaxYearInput } from "@/models/inputs.js";
 
@@ -155,16 +156,19 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
       expect(result.stateWithholding.toNumber()).toBe(0);
     });
 
-    it("PA orchestrator includes W-2 with no state (assumed resident)", () => {
-      const result = calculatePAReturn(makeInput({
+    it("PA orchestrator requires actual w2s source state before crediting withholding", () => {
+      const input = makeInput({
         w2s: [{
           employer: { name: "Acme Corp", ein: "12-3456789" },
           wages: "65000",
           federalWithheld: "9000",
           stateTaxWithheld: "1996",
-          // no state field
+          // actual source state is unknown
         }],
-      }));
+      });
+      expect(() => calculatePAReturn(input)).toThrow(/actual source state/);
+      input.w2s[0].state = "PA";
+      const result = calculatePAReturn(input);
       expect(result.mappedIncome.compensation.toNumber()).toBe(65000);
       expect(result.stateWithholding.toNumber()).toBe(1996);
     });
@@ -280,8 +284,8 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
     it("PA orchestrator maps 1099-INT to interest", () => {
       const result = calculatePAReturn(makeInput({
         form1099Int: [
-          { payer: "Bank A", interestIncome: "1500" },
-          { payer: "Bank B", interestIncome: "800" },
+          { taxExemptInterest: "0", privateActivityBondInterest: "0", payer: "Bank A", interestIncome: "1500" },
+          { taxExemptInterest: "0", privateActivityBondInterest: "0", payer: "Bank B", interestIncome: "800" },
         ],
       }));
       expect(result.mappedIncome.interest.toNumber()).toBe(2300);
@@ -290,8 +294,8 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
     it("PA orchestrator maps 1099-DIV to dividends", () => {
       const result = calculatePAReturn(makeInput({
         form1099Div: [
-          { payer: "Fund A", ordinaryDividends: "3000" },
-          { payer: "Fund B", ordinaryDividends: "2000", qualifiedDividends: "1500" },
+          { exemptInterestDividends: "0", specifiedPrivateActivityBondInterest: "0", payer: "Fund A", ordinaryDividends: "3000" },
+          { exemptInterestDividends: "0", specifiedPrivateActivityBondInterest: "0", payer: "Fund B", ordinaryDividends: "2000", qualifiedDividends: "1500" },
         ],
       }));
       // PA taxes all dividends equally — uses ordinaryDividends (Box 1a)
@@ -337,7 +341,7 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
     });
 
     it("PA orchestrator maps additional PA Schedule C printed expense lines into Class 4 business income", () => {
-      const result = calculatePAReturn(makeInput({
+      const input = makeInput({
         scheduleC: {
           grossReceipts: "10000",
           expenses: {
@@ -348,13 +352,16 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
             wages: "2000",
           },
         },
-      }));
+      });
+      // State-only original-source projection; this is not a mocked successful full return.
+      const paNetBusinessIncome = calculatePAScheduleCNetIncome(input);
+      expect(() => calculatePAReturn(input)).toThrow(/separate supported federal source method/);
 
-      expect(result.mappedIncome.netBusinessIncome.toNumber()).toBe(5600);
+      expect(paNetBusinessIncome.toNumber()).toBe(5600);
     });
 
     it("PA orchestrator maps newly supported PA Schedule C employee and property deduction lines into Class 4 business income", () => {
-      const result = calculatePAReturn(makeInput({
+      const input = makeInput({
         scheduleC: {
           grossReceipts: "10000",
           expenses: {
@@ -365,13 +372,16 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
             repairsAndMaintenance: "260.49",
           },
         },
-      }));
+      });
+      // State-only original-source projection; this is not a mocked successful full return.
+      const paNetBusinessIncome = calculatePAScheduleCNetIncome(input);
+      expect(() => calculatePAReturn(input)).toThrow(/separate supported federal source method/);
 
-      expect(result.mappedIncome.netBusinessIncome.toNumber()).toBe(9107);
+      expect(paNetBusinessIncome.toNumber()).toBe(9107);
     });
 
     it("PA orchestrator maps newly supported PA Schedule C amortization, postage, and IDC/start-up deduction lines into Class 4 business income", () => {
-      const result = calculatePAReturn(makeInput({
+      const input = makeInput({
         scheduleC: {
           grossReceipts: "10000",
           expenses: {
@@ -383,9 +393,12 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
             startupCostsDirectExpense: "100",
           },
         },
-      } as Partial<TaxYearInput>));
+      } as Partial<TaxYearInput>);
+      // State-only original-source projection; this is not a mocked successful full return.
+      const paNetBusinessIncome = calculatePAScheduleCNetIncome(input);
+      expect(() => calculatePAReturn(input)).toThrow(/separate supported federal source method/);
 
-      expect(result.mappedIncome.netBusinessIncome.toNumber()).toBe(9280);
+      expect(paNetBusinessIncome.toNumber()).toBe(9280);
     });
 
     it("PA orchestrator maps actual home-office costs from Schedule C into Class 4 business income", () => {
@@ -580,7 +593,7 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
 
     it("PA orchestrator maps 1099-DIV capital gain distributions to dividends instead of net gains", () => {
       const result = calculatePAReturn(makeInput({
-        form1099Div: [{
+        form1099Div: [{ exemptInterestDividends: "0", specifiedPrivateActivityBondInterest: "0",
           payer: "Vanguard Fund",
           ordinaryDividends: "2000",
           totalCapitalGainDistributions: "5000",
@@ -592,7 +605,7 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
 
     it("PA orchestrator computes dividends through PA Schedule B and taxes federally exempt out-of-state bond dividends", () => {
       const result = calculatePAReturn(makeInput({
-        form1099Div: [{
+        form1099Div: [{ specifiedPrivateActivityBondInterest: "0",
           payer: "National Municipal Fund",
           ordinaryDividends: "100",
           exemptInterestDividends: "80",
@@ -623,7 +636,7 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
 
     it("PA orchestrator defaults Schedule B Line 3 from Form 1099-DIV Pennsylvania exemption allocations", () => {
       const result = calculatePAReturn(makeInput({
-        form1099Div: [{
+        form1099Div: [{ specifiedPrivateActivityBondInterest: "0",
           payer: "National Municipal Fund",
           ordinaryDividends: "100",
           exemptInterestDividends: "80",
@@ -643,7 +656,7 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
 
     it("PA orchestrator lets explicit Schedule B Line 3 override the derived Form 1099-DIV allocation", () => {
       const result = calculatePAReturn(makeInput({
-        form1099Div: [{
+        form1099Div: [{ specifiedPrivateActivityBondInterest: "0",
           payer: "National Municipal Fund",
           ordinaryDividends: "100",
           exemptInterestDividends: "80",
@@ -1361,7 +1374,7 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
 
     it("PA orchestrator extracts 1099-INT PA state withholding", () => {
       const result = calculatePAReturn(makeInput({
-        form1099Int: [{
+        form1099Int: [{ taxExemptInterest: "0", privateActivityBondInterest: "0",
           payer: "Chase Bank",
           interestIncome: "5000",
           stateWithheld: "154",
@@ -1373,7 +1386,7 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
 
     it("PA orchestrator ignores non-PA 1099-INT withholding", () => {
       const result = calculatePAReturn(makeInput({
-        form1099Int: [{
+        form1099Int: [{ taxExemptInterest: "0", privateActivityBondInterest: "0",
           payer: "NY Bank",
           interestIncome: "8000",
           stateWithheld: "400",
@@ -1385,7 +1398,7 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
 
     it("PA orchestrator extracts 1099-DIV PA state withholding", () => {
       const result = calculatePAReturn(makeInput({
-        form1099Div: [{
+        form1099Div: [{ exemptInterestDividends: "0", specifiedPrivateActivityBondInterest: "0",
           payer: "Schwab",
           ordinaryDividends: "10000",
           stateWithheld: "307",
@@ -1397,7 +1410,7 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
 
     it("PA orchestrator ignores non-PA 1099-DIV withholding", () => {
       const result = calculatePAReturn(makeInput({
-        form1099Div: [{
+        form1099Div: [{ exemptInterestDividends: "0", specifiedPrivateActivityBondInterest: "0",
           payer: "CA Fund",
           ordinaryDividends: "6000",
           stateWithheld: "300",
@@ -1471,13 +1484,13 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
           stateWithheld: "307",
           state: "PA",
         }],
-        form1099Int: [{
+        form1099Int: [{ taxExemptInterest: "0", privateActivityBondInterest: "0",
           payer: "Chase",
           interestIncome: "3000",
           stateWithheld: "92",
           state: "PA",
         }],
-        form1099Div: [{
+        form1099Div: [{ exemptInterestDividends: "0", specifiedPrivateActivityBondInterest: "0",
           payer: "Schwab",
           ordinaryDividends: "2000",
           stateWithheld: "61",
@@ -1532,13 +1545,13 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
           },
         ],
         form1099Int: [
-          {
+          { taxExemptInterest: "0", privateActivityBondInterest: "0",
             payer: "PA Bank",
             interestIncome: "2000",
             stateWithheld: "61",
             state: "PA",
           },
-          {
+          { taxExemptInterest: "0", privateActivityBondInterest: "0",
             payer: "NY Bank",
             interestIncome: "3000",
             stateWithheld: "150",
@@ -1551,52 +1564,64 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
       expect(result.stateWithholding.toNumber()).toBe(2210);
     });
 
-    it("PA orchestrator includes 1099-R withholding when state is absent (assumed PA resident)", () => {
-      const result = calculatePAReturn(makeInput({
+    it("PA orchestrator requires actual form1099R source state before crediting withholding", () => {
+      const input = makeInput({
         form1099R: [{
           payer: "Retirement Plan",
           grossDistribution: "25000",
           distributionCode: "7",
           stateWithheld: "768",
-          // no state field — assumed PA resident
+          // actual source state is unknown
         }],
-      }));
+      });
+      expect(() => calculatePAReturn(input)).toThrow(/actual source state/);
+      input.form1099R[0].state = "PA";
+      const result = calculatePAReturn(input);
       expect(result.stateWithholding.toNumber()).toBe(768);
     });
 
-    it("PA orchestrator includes 1099-INT withholding when state is absent", () => {
-      const result = calculatePAReturn(makeInput({
-        form1099Int: [{
+    it("PA orchestrator requires actual form1099Int source state before crediting withholding", () => {
+      const input = makeInput({
+        form1099Int: [{ taxExemptInterest: "0", privateActivityBondInterest: "0",
           payer: "Local CU",
           interestIncome: "1500",
           stateWithheld: "46",
-          // no state field
+          // actual source state is unknown
         }],
-      }));
+      });
+      expect(() => calculatePAReturn(input)).toThrow(/actual source state/);
+      input.form1099Int[0].state = "PA";
+      const result = calculatePAReturn(input);
       expect(result.stateWithholding.toNumber()).toBe(46);
     });
 
-    it("PA orchestrator includes 1099-DIV withholding when state is absent", () => {
-      const result = calculatePAReturn(makeInput({
-        form1099Div: [{
+    it("PA orchestrator requires actual form1099Div source state before crediting withholding", () => {
+      const input = makeInput({
+        form1099Div: [{ exemptInterestDividends: "0", specifiedPrivateActivityBondInterest: "0",
           payer: "Fund Co",
           ordinaryDividends: "4000",
           stateWithheld: "123",
-          // no state field
+          // actual source state is unknown
         }],
-      }));
+      });
+      expect(() => calculatePAReturn(input)).toThrow(/actual source state/);
+      input.form1099Div[0].state = "PA";
+      const result = calculatePAReturn(input);
       expect(result.stateWithholding.toNumber()).toBe(123);
     });
 
-    it("PA orchestrator includes 1099-MISC withholding when state is absent", () => {
-      const result = calculatePAReturn(makeInput({
+    it("PA orchestrator requires actual form1099Misc source state before crediting withholding", () => {
+      const input = makeInput({
         form1099Misc: [{
           payer: "Royalty Corp",
           royalties: "7000",
           stateWithheld: "215",
-          // no state field
+          // actual source state is unknown
         }],
-      }));
+      });
+      expect(() => calculatePAReturn(input)).toThrow(/actual source state/);
+      input.form1099Misc[0].state = "PA";
+      const result = calculatePAReturn(input);
       expect(result.stateWithholding.toNumber()).toBe(215);
     });
 
@@ -1642,9 +1667,10 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
       expect(result.scheduleSP.forgivenessPercentage.toNumber()).toBe(100);
       expect(result.scheduleSP.taxForgivenessCredit.toNumber()).toBe(154);
       const wptc = result.workingPennsylvaniansTaxCredit?.credit.toNumber() ?? 0;
+      expect(result.workingCreditProcessing?.credit.toNumber() ?? 0).toBe(wptc);
       // Withholding is on the payment side; tax forgiveness zeroes the tax liability.
       expect(result.pa40.netTaxLiability.toNumber()).toBe(0);
-      expect(result.pa40.overpayment.toNumber()).toBe(154 + wptc);
+      expect(result.pa40.overpayment.toNumber()).toBe(154);
     });
 
     it("PA orchestrator maps married filing jointly to married category for SP", () => {
@@ -1942,13 +1968,13 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
           state: "PA",
         }],
         paScheduleGLStatements: [{
-          stateCode: "NJ",
+          stateCode: "NY",
           incomeTaxableByBothStates: "40000",
           taxPaidToOtherState: "1500",
         }],
       }));
       // PA tax: $100K × 3.07% = $3,070
-      // NJ credit: min($1,500 paid, $40K × 3.07% = $1,228) = $1,228
+      // Fictional nonreciprocal NY credit: min($1,500 paid, $40K × 3.07% = $1,228) = $1,228
       expect(result.scheduleGL.totalCredit.toNumber()).toBe(1228);
       // Net tax: $3,070 - $1,228 = $1,842
       expect(result.pa40.netTaxLiability.toNumber()).toBe(1842);
@@ -2007,7 +2033,7 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
         }),
         {
           otherStateCredits: [{
-            stateCode: "NJ",
+            stateCode: "NY",
             incomeTaxableByBothStates: d(10000),
             taxPaidToOtherState: d(500),
           }],
@@ -2016,7 +2042,8 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
 
       expect(result.scheduleGL.totalCredit.toNumber()).toBe(307);
       expect(result.scheduleSP.forgivenessPercentage.toNumber()).toBe(100);
-      expect(result.scheduleSP.taxPaidToOtherStates.toNumber()).toBe(500);
+      // Official 2025 Schedule SP Line 13 carries the capped PA-40 Line 22 credit.
+      expect(result.scheduleSP.taxPaidToOtherStates.toNumber()).toBe(307);
       expect(result.scheduleSP.taxLiabilityAfterOtherStateTaxes.toNumber()).toBe(0);
       expect(result.scheduleSP.taxForgivenessCredit.toNumber()).toBe(0);
       expect(result.pa40.totalCredits.toNumber()).toBe(307);
@@ -2038,7 +2065,7 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
           stateTaxWithheld: "2610",
           state: "PA",
         }],
-        form1099Int: [{ payer: "Bank", interestIncome: "250" }],
+        form1099Int: [{ taxExemptInterest: "0", privateActivityBondInterest: "0", payer: "Bank", interestIncome: "250" }],
       }));
       // Compensation: $85,000; interest: $250
       // Total PA taxable: $85,250
@@ -2093,7 +2120,7 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
           stateTaxWithheld: "1842",
           state: "PA",
         }],
-        form1099Div: [{
+        form1099Div: [{ exemptInterestDividends: "0", specifiedPrivateActivityBondInterest: "0",
           payer: "Vanguard",
           ordinaryDividends: "5000",
           qualifiedDividends: "4000",
@@ -2162,9 +2189,10 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
       // Forgiveness credit: $368 (100%)
       expect(result.pa40.taxForgivenessCredit.toNumber()).toBe(368);
       const wptc = result.workingPennsylvaniansTaxCredit?.credit.toNumber() ?? 0;
+      expect(result.workingCreditProcessing?.credit.toNumber() ?? 0).toBe(wptc);
       // Withholding is on the payment side; tax forgiveness zeroes the tax liability.
       expect(result.pa40.netTaxLiability.toNumber()).toBe(0);
-      expect(result.pa40.overpayment.toNumber()).toBe(368 + wptc);
+      expect(result.pa40.overpayment.toNumber()).toBe(368);
     });
 
     it("PA orchestrator end-to-end: zero income produces zero tax", () => {
@@ -2240,8 +2268,8 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
             stateTaxWithheld: "1535",
             state: "PA",
           }],
-          form1099Int: [{ payer: "Bank", interestIncome: "1000" }],
-          form1099Div: [{ payer: "Fund", ordinaryDividends: "2000" }],
+          form1099Int: [{ taxExemptInterest: "0", privateActivityBondInterest: "0", payer: "Bank", interestIncome: "1000" }],
+          form1099Div: [{ exemptInterestDividends: "0", specifiedPrivateActivityBondInterest: "0", payer: "Fund", ordinaryDividends: "2000" }],
           scheduleC: { grossReceipts: "30000" },
           form1099B: [{
             broker: "Broker",
@@ -2323,7 +2351,7 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
           stateTaxWithheld: "184",
           state: "PA",
         }],
-        form1099Int: [{
+        form1099Int: [{ privateActivityBondInterest: "0",
           payer: "Muni Fund",
           interestIncome: "0",
           taxExemptInterest: "3000",
@@ -2401,6 +2429,7 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
       const result = calculatePAReturn(makeInput({
         form1099R: [{
           payer: "Pennsylvania Municipal Employees' Retirement System",
+          accountHolder: "primary",
           grossDistribution: "12000",
           taxableAmount: "4500",
           distributionCode: "7D",
@@ -2635,6 +2664,7 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
       const result = calculatePAReturn(makeInput({
         form1099R: [{
           payer: "Nonqualified Annuity",
+          accountHolder: "primary",
           grossDistribution: "12000",
           taxableAmount: "4500",
           distributionCode: "7D",
@@ -2646,17 +2676,15 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
       expect(result.scheduleSP.nontaxableIncome.toNumber()).toBe(0);
     });
 
-    it("PA orchestrator uses the supported Simplified Method taxable amount for code D paired annuity interest", () => {
+    it("PA orchestrator uses the actual reported taxable amount for code D paired annuity interest", () => {
       const result = calculatePAReturn(makeInput({
         form1099R: [{
           payer: "Nonqualified Annuity",
+          accountHolder: "primary",
           grossDistribution: "12000",
-          taxableAmountNotDetermined: true,
+          // Actual synthetic Box2a. Pub575 prohibits the Simplified Method for a nonqualified annuity.
+          taxableAmount: "10800",
           distributionCode: "7D",
-          simplifiedMethodCostInPlan: "24000",
-          simplifiedMethodExpectedPayments: 240,
-          simplifiedMethodPaymentsReceivedThisYear: 12,
-          simplifiedMethodPriorYearRecovered: "6000",
         }],
       }));
 
@@ -3262,7 +3290,7 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
             localTaxWithheld: "850",
             state: "PA",
           }],
-          form1099Int: [{ payer: "Bank", interestIncome: "250" }],
+          form1099Int: [{ taxExemptInterest: "0", privateActivityBondInterest: "0", payer: "Bank", interestIncome: "250" }],
         }),
         {
           localMunicipality: "Media Borough",
@@ -3493,11 +3521,11 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
             state: "PA",
           }],
           form1099Int: [
-            { payer: "Bank A", interestIncome: "1200" },
-            { payer: "Bank B", interestIncome: "800" },
+            { taxExemptInterest: "0", privateActivityBondInterest: "0", payer: "Bank A", interestIncome: "1200" },
+            { taxExemptInterest: "0", privateActivityBondInterest: "0", payer: "Bank B", interestIncome: "800" },
           ],
           form1099Div: [
-            { payer: "Vanguard", ordinaryDividends: "3500", qualifiedDividends: "2800", totalCapitalGainDistributions: "1500" },
+            { exemptInterestDividends: "0", specifiedPrivateActivityBondInterest: "0", payer: "Vanguard", ordinaryDividends: "3500", qualifiedDividends: "2800", totalCapitalGainDistributions: "1500" },
           ],
           form1099B: [{
             broker: "Schwab",
@@ -3527,7 +3555,7 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
         }),
         {
           otherStateCredits: [{
-            stateCode: "NJ",
+            stateCode: "NY",
             incomeTaxableByBothStates: d(15000),
             taxPaidToOtherState: d(600),
           }],
@@ -3587,7 +3615,7 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
       // Schedule G-L — Resident Credit
       // ---------------------------------------------------------------
 
-      // NJ: PA tax on $15,000 shared = $15,000 × 3.07% = $460.50 → $461
+      // Fictional nonreciprocal NY: PA tax on $15,000 shared = $15,000 × 3.07% = $460.50 → $461
       // Credit = min($600 paid, $461 PA tax) = $461
       expect(result.scheduleGL.perStateResults[0].credit.toNumber()).toBe(461);
       expect(result.scheduleGL.totalCredit.toNumber()).toBe(461);
@@ -3666,8 +3694,9 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
       expect(result.pa40.netTaxLiability.toNumber()).toBe(0);
 
       const wptc = result.workingPennsylvaniansTaxCredit?.credit.toNumber() ?? 0;
+      expect(result.workingCreditProcessing?.credit.toNumber() ?? 0).toBe(wptc);
       // Withholding is on the payment side; tax forgiveness zeroes the tax liability.
-      expect(result.pa40.overpayment.toNumber()).toBe(553 + wptc);
+      expect(result.pa40.overpayment.toNumber()).toBe(553);
       expect(result.pa40.amountOwed.toNumber()).toBe(0);
     });
 
@@ -3714,9 +3743,10 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
 
       expect(result.pa40.netTaxLiability.toNumber()).toBe(0);
       const wptc = result.workingPennsylvaniansTaxCredit?.credit.toNumber() ?? 0;
-      // Withholding plus any refundable WPTC now show up entirely as overpayment.
+      expect(result.workingCreditProcessing?.credit.toNumber() ?? 0).toBe(wptc);
+      // Actual paper withholding is separate from processing-stage WPTC (DOR FAQ4255).
       expect(result.pa40.amountOwed.toNumber()).toBe(0);
-      expect(result.pa40.overpayment.toNumber()).toBe(675 + wptc);
+      expect(result.pa40.overpayment.toNumber()).toBe(675);
     });
 
     it("PA orchestrator end-to-end: MFJ near forgiveness boundary with partial credit", () => {
@@ -3765,7 +3795,8 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
       expect(result.pa40.netTaxLiability.toNumber()).toBe(288);
 
       // Withholding produces the refund after partial forgiveness reduces net tax.
-      expect(result.pa40.overpayment.toNumber()).toBe(455);
+      // FAQ4255: paper refund722-(721-433)=434; WPTC is a separate processing reference.
+      expect(result.pa40.overpayment.toNumber()).toBe(434);
     });
 
     it("PA orchestrator end-to-end: retiree with fully exempt retirement income", () => {
@@ -3780,7 +3811,7 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
             { payerName: "SSA", netBenefits: "24000" },
           ],
           form1099Int: [
-            { payer: "Credit Union", interestIncome: "350" },
+            { taxExemptInterest: "0", privateActivityBondInterest: "0", payer: "Credit Union", interestIncome: "350" },
           ],
         }),
       );
@@ -3835,7 +3866,7 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
             repairs: "4000",
             depreciation: "5000",
           }],
-          form1099Int: [{ payer: "Savings", interestIncome: "500" }],
+          form1099Int: [{ taxExemptInterest: "0", privateActivityBondInterest: "0", payer: "Savings", interestIncome: "500" }],
         }),
       );
 
@@ -3866,41 +3897,16 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
     });
 
     it("PA orchestrator end-to-end: NJ commuter with full resident credit offset", () => {
-      // PA resident working entirely in NJ — G-L credit should offset most/all PA tax
-      const result = calculatePAReturn(
-        makeInput({
-          w2s: [{
-            employer: { name: "NJ Corp", ein: "77-7777777" },
-            wages: "110000",
-            federalWithheld: "18000",
-            stateWages: "110000",
-            stateTaxWithheld: "3377", // PA withholding
-            state: "PA",
-          }],
-        }),
-        {
-          otherStateCredits: [{
-            stateCode: "NJ",
-            incomeTaxableByBothStates: d(110000),
-            taxPaidToOtherState: d(4500), // NJ tax on $110K
-          }],
-        },
-      );
-
-      // Class 1: $110,000
+      // Historical NJ110000/4500 credit expectation is preserved in original-caller-source.
+      // Actual reciprocal employee scalar evidence requires refund/source method.
+      const input=makeInput({w2s:[{employer:{name:"NJ Corp",ein:"77-7777777"},wages:"110000",federalWithheld:"18000",stateWages:"110000",stateTaxWithheld:"3377",state:"PA"}]});
+      expect(()=>calculatePAReturn(input,{otherStateCredits:[{stateCode:"NJ",incomeTaxableByBothStates:d(110000),taxPaidToOtherState:d(4500)}]})).toThrow(/reciprocal|refund|source/i);
+      // Independently stated fictional NY source preserves all original numeric cap/payment oracles.
+      const result=calculatePAReturn(input,{otherStateCredits:[{stateCode:"NY",incomeTaxableByBothStates:d(110000),taxPaidToOtherState:d(4500)}]});
       expect(result.pa40.totalPATaxableIncome.toNumber()).toBe(110000);
-
-      // Tax: $110,000 × 3.07% = $3,377
       expect(result.pa40.taxLiability.toNumber()).toBe(3377);
-
-      // G-L: PA tax on shared = $110,000 × 3.07% = $3,377
-      // Credit = min($4,500, $3,377) = $3,377
       expect(result.scheduleGL.perStateResults[0].credit.toNumber()).toBe(3377);
-
-      // Net tax: $3,377 - $3,377 = $0
       expect(result.pa40.netTaxLiability.toNumber()).toBe(0);
-
-      // The resident credit zeroes the tax liability; only withholding creates the refund.
       expect(result.pa40.overpayment.toNumber()).toBe(3377);
     });
   });
@@ -4377,10 +4383,10 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
   describe.sequential("US Government Interest Exclusion", () => {
     it("PA orchestrator excludes US government interest from Class 2", () => {
       const result = calculatePAReturn(makeInput({
-        form1099Int: [{
+        form1099Int: [{ taxExemptInterest: "0", privateActivityBondInterest: "0",
           payer: "Treasury Direct",
-          interestIncome: "5000",
-          usSavingsBondInterest: "3000", // Box 3: US gov interest included in Box 1
+          interestIncome: "2000",
+          usSavingsBondInterest: "3000", // Box 3: separate US government interest
         }],
       }));
       // PA-taxable interest = 5000 - 3000 = 2000
@@ -4390,9 +4396,9 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
 
     it("PA orchestrator excludes all interest when entirely from US government", () => {
       const result = calculatePAReturn(makeInput({
-        form1099Int: [{
+        form1099Int: [{ taxExemptInterest: "0", privateActivityBondInterest: "0",
           payer: "Treasury Direct",
-          interestIncome: "8000",
+          interestIncome: "0",
           usSavingsBondInterest: "8000",
         }],
       }));
@@ -4404,7 +4410,7 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
 
     it("PA orchestrator handles no US government interest (Box 3 absent)", () => {
       const result = calculatePAReturn(makeInput({
-        form1099Int: [{
+        form1099Int: [{ taxExemptInterest: "0", privateActivityBondInterest: "0",
           payer: "First Bank",
           interestIncome: "1200",
           // usSavingsBondInterest not set → defaults to 0
@@ -4417,9 +4423,9 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
     it("PA orchestrator sums US government interest across multiple 1099-INTs", () => {
       const result = calculatePAReturn(makeInput({
         form1099Int: [
-          { payer: "Treasury Direct", interestIncome: "3000", usSavingsBondInterest: "3000" },
-          { payer: "First Bank", interestIncome: "2000", usSavingsBondInterest: "500" },
-          { payer: "Credit Union", interestIncome: "1000" }, // no Box 3
+          { taxExemptInterest: "0", privateActivityBondInterest: "0", payer: "Treasury Direct", interestIncome: "0", usSavingsBondInterest: "3000" },
+          { taxExemptInterest: "0", privateActivityBondInterest: "0", payer: "First Bank", interestIncome: "1500", usSavingsBondInterest: "500" },
+          { taxExemptInterest: "0", privateActivityBondInterest: "0", payer: "Credit Union", interestIncome: "1000" }, // no Box 3
         ],
       }));
       // Gross interest: 3000 + 2000 + 1000 = 6000
@@ -4439,9 +4445,9 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
           stateTaxWithheld: "154",
           state: "PA",
         }],
-        form1099Int: [{
+        form1099Int: [{ taxExemptInterest: "0", privateActivityBondInterest: "0",
           payer: "Treasury Direct",
-          interestIncome: "2000",
+          interestIncome: "0",
           usSavingsBondInterest: "2000",
         }],
       }));
@@ -4456,9 +4462,9 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
       // Without exclusion: interest = 10000, tax = 10000 × 3.07% = $307
       // With exclusion: interest = 10000 - 6000 = 4000, tax = 4000 × 3.07% = $123
       const result = calculatePAReturn(makeInput({
-        form1099Int: [{
+        form1099Int: [{ taxExemptInterest: "0", privateActivityBondInterest: "0",
           payer: "Treasury Direct",
-          interestIncome: "10000",
+          interestIncome: "4000",
           usSavingsBondInterest: "6000",
         }],
       }));
@@ -4468,9 +4474,9 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
 
     it("PA orchestrator US gov interest does not affect K-1 interest", () => {
       const result = calculatePAReturn(makeInput({
-        form1099Int: [{
+        form1099Int: [{ taxExemptInterest: "0", privateActivityBondInterest: "0",
           payer: "Treasury Direct",
-          interestIncome: "3000",
+          interestIncome: "1000",
           usSavingsBondInterest: "2000",
         }],
         scheduleK1: [{
@@ -4488,9 +4494,9 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
 
     it("PA orchestrator US gov interest combined with early IRA 1099-R interest", () => {
       const result = calculatePAReturn(makeInput({
-        form1099Int: [{
+        form1099Int: [{ taxExemptInterest: "0", privateActivityBondInterest: "0",
           payer: "Treasury Direct",
-          interestIncome: "4000",
+          interestIncome: "0",
           usSavingsBondInterest: "4000",
         }],
         form1099R: [{
@@ -4757,9 +4763,9 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
           stateTaxWithheld: "1535",
           state: "PA",
         }],
-        form1099Int: [{
+        form1099Int: [{ taxExemptInterest: "0", privateActivityBondInterest: "0",
           payer: "Treasury Direct",
-          interestIncome: "6000",
+          interestIncome: "2000",
           usSavingsBondInterest: "4000",
         }],
         formW2G: [
@@ -4788,9 +4794,9 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
 
     it("PA orchestrator retiree with Treasury interest and PA lottery cash owes tax on the lottery", () => {
       const result = calculatePAReturn(makeInput({
-        form1099Int: [{
+        form1099Int: [{ taxExemptInterest: "0", privateActivityBondInterest: "0",
           payer: "Treasury Direct",
-          interestIncome: "12000",
+          interestIncome: "0",
           usSavingsBondInterest: "12000",
         }],
         formW2G: [{
@@ -4826,9 +4832,9 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
           stateTaxWithheld: "123",
           state: "PA",
         }],
-        form1099Int: [{
+        form1099Int: [{ taxExemptInterest: "0", privateActivityBondInterest: "0",
           payer: "Treasury Direct",
-          interestIncome: "3000",
+          interestIncome: "0",
           usSavingsBondInterest: "3000", // All US gov → excluded
         }],
         formW2G: [{
@@ -4861,9 +4867,9 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
           stateTaxWithheld: "92",
           state: "PA",
         }],
-        form1099Int: [{
+        form1099Int: [{ taxExemptInterest: "0", privateActivityBondInterest: "0",
           payer: "Treasury Direct",
-          interestIncome: "2000",
+          interestIncome: "0",
           usSavingsBondInterest: "2000",
         }],
       }));
@@ -5031,9 +5037,9 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
 
       expect(result.rev1630).toBeDefined();
       expect(result.rev1630!.priorYearTaxAtCurrentRate).toEqual(d(921));
-      // Q1 cumulative: $0 (no withholding/4) + $500 = $500 < $921
+      // Q1 cumulative500 >=25%of921 rounded230
       // Q2 cumulative: $500 + $0 + $500 = $1,000 ≥ $921 → met
-      expect(result.rev1630!.quarters[0].exception1Met).toBe(false);
+      expect(result.rev1630!.quarters[0].exception1Met).toBe(true);
       expect(result.rev1630!.quarters[1].exception1Met).toBe(true);
     });
 
@@ -5075,7 +5081,7 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
 
       const overrides: PAOrchestratorOverrides = {
         otherStateCredits: [{
-          stateCode: "NJ",
+          stateCode: "NY",
           incomeTaxableByBothStates: d(100000),
           taxPaidToOtherState: d(5000),
         }],
@@ -5141,7 +5147,8 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
       // $10,000 × 3.07% = $307
       expect(result.pa40.taxLiability.toNumber()).toBe(307);
       const wptc = result.workingPennsylvaniansTaxCredit?.credit.toNumber() ?? 0;
-      expect(result.pa40.amountOwed.toNumber()).toBe(307 - wptc);
+      expect(result.workingCreditProcessing?.credit.toNumber() ?? 0).toBe(wptc);
+      expect(result.pa40.amountOwed.toNumber()).toBe(307);
     });
   });
 
@@ -5889,7 +5896,8 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
 
       expect(result.scheduleDC).toBeDefined();
       expect(result.scheduleDC!.credit.toNumber()).toBe(1050);
-      expect(result.workingPennsylvaniansTaxCredit?.credit.toNumber() ?? 0).toBe(0);
+      // PA/SP dependency answer does not disallow actual same-year federal EITC.
+      expect(result.workingPennsylvaniansTaxCredit!.credit.gt(0)).toBe(true);
       expect(result.pa40.otherCredits.toNumber()).toBe(1050);
       expect(result.pa40.totalCredits.toNumber()).toBe(1050);
       expect(result.pa40.refundableCredits.toNumber()).toBe(0);
@@ -5974,7 +5982,8 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
       expect(federalEitc.toNumber()).toBeGreaterThan(0);
       expect(result.workingPennsylvaniansTaxCredit).toBeDefined();
       expect(result.workingPennsylvaniansTaxCredit!.credit.toNumber()).toBe(expectedWptc.toNumber());
-      expect(result.pa40.refundableCredits.toNumber()).toBe(expectedWptc.toNumber());
+      expect(result.pa40.refundableCredits.toNumber()).toBe(0);
+      expect((result as unknown as {workingCreditProcessing:{credit:Decimal}}).workingCreditProcessing.credit.toFixed()).toBe(expectedWptc.toFixed());
     });
 
     it("PA orchestrator blocks WPTC when federal EITC is positive but Pennsylvania earned income is zero", () => {
@@ -6025,7 +6034,7 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
       expect(result.pa40.refundableCredits.toNumber()).toBe(0);
     });
 
-    it("PA orchestrator blocks WPTC when the resident supplement marks the taxpayer as claimed on another federal return", () => {
+    it("PA orchestrator uses actual federal EITC rather than a separate PA dependency bar", () => {
       const input = makeInput({
         taxpayer: {
           taxYear: 2025,
@@ -6067,7 +6076,7 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
       const result = calculatePAReturn(input);
 
       expect(federalEitc.toNumber()).toBeGreaterThan(0);
-      expect(result.workingPennsylvaniansTaxCredit?.credit.toNumber() ?? 0).toBe(0);
+      expect(result.workingPennsylvaniansTaxCredit?.credit.toFixed()).toBe("433");
       expect(result.pa40.refundableCredits.toNumber()).toBe(0);
     });
   });
@@ -6108,7 +6117,7 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
             },
             otherStateCredits: [
               {
-                stateCode: "NJ",
+                stateCode: "NY",
                 incomeTaxableByBothStates: "10000",
                 taxPaidToOtherState: "400",
               },
@@ -6141,7 +6150,7 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
       expect(result.scheduleOC).toBeDefined();
       expect(result.scheduleOC!.totalOtherCredits.toNumber()).toBe(150);
       expect(result.scheduleGL.totalCredit.toNumber()).toBe(307);
-      expect(result.scheduleGL.perStateResults[0].stateCode).toBe("NJ");
+      expect(result.scheduleGL.perStateResults[0].stateCode).toBe("NY");
       expect(result.localEIT).toBeDefined();
       expect(result.localEIT!.municipality).toBe("Abington Township");
       expect(result.localEIT!.localEITRate.toNumber()).toBe(0.01);
@@ -6248,7 +6257,7 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
       const blocked = calculatePAReturn(dependentInput);
       expect(blocked.scheduleSP.forgivenessPercentage.toNumber()).toBe(0);
       expect(blocked.pa40.taxForgivenessCredit.toNumber()).toBe(0);
-      expect(blocked.workingPennsylvaniansTaxCredit?.credit.toNumber() ?? 0).toBe(0);
+      expect(blocked.workingPennsylvaniansTaxCredit!.credit.gt(0)).toBe(true);
       expect(blocked.pa40.totalAmountDue.toNumber()).toBe(123);
 
       const allowed = calculatePAReturn(dependentInput, {
@@ -6256,7 +6265,7 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
       });
       expect(allowed.scheduleSP.forgivenessPercentage.toNumber()).toBe(100);
       expect(allowed.pa40.taxForgivenessCredit.toNumber()).toBe(123);
-      expect(allowed.workingPennsylvaniansTaxCredit?.credit.toNumber() ?? 0).toBe(0);
+      expect(allowed.workingPennsylvaniansTaxCredit!.credit.eq(blocked.workingPennsylvaniansTaxCredit!.credit)).toBe(true);
       expect(allowed.pa40.totalAmountDue.toNumber()).toBe(0);
       expect(allowed.pa40.netOverpayment.toNumber()).toBe(0);
     });
@@ -6264,9 +6273,9 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
     it("PA orchestrator computes interest through PA Schedule A with Pennsylvania pass-through reclassification", () => {
       const result = calculatePAReturn(makeInput({
         form1099Int: [
-          {
+          { privateActivityBondInterest: "0",
             payer: "TreasuryDirect",
-            interestIncome: "1000",
+            interestIncome: "900",
             taxExemptInterest: "40",
             usSavingsBondInterest: "100",
           },
@@ -6274,6 +6283,7 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
         form1099R: [
           {
             payer: "Annuity Co",
+            accountHolder: "primary",
             grossDistribution: "40",
             taxableAmount: "40",
             distributionCode: "7D",
@@ -6328,9 +6338,9 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
     it("PA orchestrator defaults Schedule A Line 6 from Form 1099-INT Pennsylvania direct-obligation allocations", () => {
       const result = calculatePAReturn(makeInput({
         form1099Int: [
-          {
+          { privateActivityBondInterest: "0",
             payer: "Pennsylvania Municipal Fund",
-            interestIncome: "200",
+            interestIncome: "190",
             taxExemptInterest: "80",
             usSavingsBondInterest: "10",
             paDirectObligationInterest: "50",
@@ -6349,12 +6359,12 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
     it("PA orchestrator defaults Schedule A Line 8 from supported Form 1099-INT forfeited-interest penalties without over-deducting interest", () => {
       const result = calculatePAReturn(makeInput({
         form1099Int: [
-          {
+          { taxExemptInterest: "0", privateActivityBondInterest: "0",
             payer: "First Bank",
             interestIncome: "40",
             earlyWithdrawalPenalty: "60",
           },
-          {
+          { taxExemptInterest: "0", privateActivityBondInterest: "0",
             payer: "Second Bank",
             interestIncome: "10",
             earlyWithdrawalPenalty: "5",
@@ -6513,4 +6523,40 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
       expect(result.pa40.interest.toNumber()).toBe(1500);
     });
   });
+});
+
+// Spec: state/pa-orchestrator.yaml#wptc-paper-processing-reference
+it("PA WPTC processing reference does not change actual paper settlement",()=>{
+  const input=makeInput({taxpayer:{taxYear:2025,filingStatus:"head_of_household",stateResidency:"full-year",
+    primary:{firstName:"Avery",lastName:"Source",ssn:"900-70-0311",dateOfBirth:"1990-01-01",usResidencyMonths:12,employmentValidSsnIssuedByDueDate:true},
+    address:{street:"1 Test Lane",city:"Harrisburg",state:"PA",zip:"17101"},
+    dependents:[{firstName:"Casey",lastName:"Source",ssn:"900-70-0313",relationship:"child",dateOfBirth:"2017-06-01",monthsLivedWithYou:12,qualifiesForCTC:true,ctcSsnEligible:true,qualifiesForODC:false,qualifiesForEIC:true}]},
+    w2s:[{taxYear:2025,accountHolder:"primary",employer:{name:"Source Employer",ein:"99-1234567"},wages:"19000",federalWithheld:"0",stateWages:"19000",stateTaxWithheld:"583",state:"PA"}],
+    eic:{claimantEligibility:{sourceTaxYear:2025,sourceReference:"actual-claimant-worksheet",sourceFactsConfirmed:true,primaryNonresidentAlienDuringYear:false,primaryQualifyingChildOfAnotherTaxpayer:false},primaryIsFullTimeStudent:false}});
+  input.eic!.disallowanceSources=fictionalEmptyEicHistory(input.taxpayer);
+  const result=calculatePAReturn(input);
+  expect(result.pa40.taxLiability.toFixed()).toBe("583");
+  expect(result.scheduleSP.taxForgivenessCredit.toFixed()).toBe("0");
+  expect(result.workingPennsylvaniansTaxCredit?.credit.toFixed()).toBe("433");
+  expect(result.pa40.refundableCredits.toFixed()).toBe("0");
+  expect(result.pa40.totalPaymentsAndCredits.toFixed()).toBe("583");
+  expect(result.pa40.netOverpayment.toFixed()).toBe("0");
+  const processing=(result as unknown as {workingCreditProcessing:{stage:string;credit:Decimal;creditAppliedToTaxDue:Decimal;remainingTaxDueBeforePenalties:Decimal;additionalOverpaymentBeforePenalties:Decimal}}).workingCreditProcessing;
+  expect(processing.stage).toBe("department-processing-reference");
+  expect(processing.credit.toFixed()).toBe("433");
+  expect(processing.creditAppliedToTaxDue.toFixed()).toBe("0");
+  expect(processing.remainingTaxDueBeforePenalties.toFixed()).toBe("0");
+  expect(processing.additionalOverpaymentBeforePenalties.toFixed()).toBe("433");
+});
+
+// Spec: spec/state/pa-orchestrator.yaml#rev1630-reported-line2
+it("PA orchestrator REV-1630 includes each reported withholding line once", () => {
+  const input=makeInput({w2s:[{employer:{name:"Fictional Work",ein:"12-3456789"},wages:"80000",federalWithheld:"0",stateWages:"80000",stateTaxWithheld:"1500",state:"PA"}]});
+  const result=calculatePAReturn(input,{nonresidentTaxWithheld:d(700),quarterlyEstimatedPayments:[d(0),d(0),d(0),d(0)]});
+  expect(result.pa40.taxLiability).toEqual(d(2456));
+  expect(result.rev1630?.withholdingAndCredits).toEqual(d(2200));
+  expect(result.rev1630?.netTaxOwed).toEqual(d(256));
+  expect(result.rev1630?.totalInterest).toEqual(d(0));
+  const cents=calculatePAReturn({...input,w2s:[{...input.w2s[0],stateTaxWithheld:"1000.49"}]},{nonresidentTaxWithheld:d("100.49"),quarterlyEstimatedPayments:[d(0),d(0),d(0),d(0)]});
+  expect(cents.rev1630?.withholdingAndCredits).toEqual(d(1100));
 });

@@ -1,0 +1,53 @@
+form: "Publication974 passive-first coordination"
+fullName: "Actual rental allowance before subsequent ordered Marketplace deductions"
+taxYear: 2025
+irsReference: "https://www.irs.gov/publications/p974"
+notes: |
+  Where Form8582 lines1d and3 are losses, WorksheetX and the first Simplified
+  pass omit rental real estate losses. Compute Form8582 using the preceding
+  Step3 health deduction, retain that allowance, and repeat the method before
+  IRA, savings bond and student loan worksheets. Current positive rental income
+  remains present. WorksheetY line2 uses the actual newly allowed loss once.
+  This bounded source path covers actual ordinary rental pools; unresolved K1
+  active-participation and disposition histories must not be inferred.
+lines:
+  - line: "rental-before-ptc"
+    description: "Use the preceding health deduction for actual passive MAGI"
+    formula: "2025 profit50000 gives net46467, initial health2344; rental10000 gives8582MAGI47656/allowed10000. Y subtracts10000 from44067; next health913, finalAGI35554/PTC4777."
+    irsRef: "Publication974 special instructions steps1-5; WorksheetX1 and WorksheetY2"
+    testRef: "tests/engine/federal-marketplace-passive.test.ts::retains the actual rental allowance from the preceding health step"
+  - line: "positive-rental-conservation"
+    description: "Do not remove positive rental income with the initial losses"
+    formula: "Profit50000 plus rental10000 and loss40000 initially includes positive10000. Initial health3776;8582MAGI46224 permits35000loss. Y subtracts35000 from54067; finalhealth0/AGI21467/PTC6000."
+    irsRef: "Publication974 WorksheetX1 and ordered rental instructions; Form8582 lines1a-11"
+    testRef: "tests/engine/federal-marketplace-passive.test.ts::retains positive rental income and subtracts the allowed pool once"
+  - line: "following-ira"
+    description: "Run the covered IRA worksheet after the retained passive allowance"
+    formula: "After the10000rental allowance, precedingStep3health913 givesIRA MAGI35554 and7000deduction. Z1 subtracts7000; subsequent health288, finalAGI29179/PTC5498."
+    irsRef: "Publication974 special deduction order and WorksheetZ"
+    testRef: "tests/engine/federal-marketplace-passive.test.ts::computes the IRA only after the retained rental allowance"
+  - line: "uncapped-2026"
+    description: "Keep the ordered source method separate from final2026 eligibility"
+    formula: "Isolated2026 source preview: initialhealth3513 givespassiveMAGI46487/allowed10000; nexthealth1922, finalAGI34545/PTC3464/fullrepayment136."
+    irsRef: "Publication974 special instructions; enacted section36B(f)(2)"
+    testRef: "tests/engine/federal-marketplace-passive.test.ts::applies the uncapped source sequence without changing actual final eligibility"
+  - line: "no-advances"
+    description: "Repeat the source method without inventing a WorksheetX or Y"
+    formula: "With actual advances0, initialhealth1910 givespassiveMAGI48090/allowed10000. RepeatedStep2 giveshealth634, finalAGI35833/PTC4753; noX/Y/Z."
+    irsRef: "Publication974 special instructions step5"
+    testRef: "tests/engine/federal-marketplace-passive.test.ts::uses the no-advance method without a repayment worksheet"
+  - line: "prior-rental-release"
+    description: "Treat an allowed prior rental loss as the same ordered claim once"
+    formula: "Current rentalprofit6000 and actual priorloss30000 produce initialXincome50067, precedinghealth3163, MAGI46837 and allowed30000. FinalScheduleE-24000/health0/AGI22467/PTC6000."
+    irsRef: "Form8582 lines1a-1d and11; Publication974 WorksheetX1 and Y2"
+    testRef: "tests/engine/federal-marketplace-passive.test.ts::releases the actual prior rental pool through the ordered allowance"
+  - line: "ordinary-refigure"
+    description: "Discard the interim allowance when final2026 PTC eligibility fails"
+    formula: "Profit110000, specified6000/APTC3600, benchmark14400: auxiliaryhealth1184 givesinterimloss20592. Finalineligibility requiresordinaryhealth6000/MAGI104000/allowed23000/AGI73228/PTC0/fullrepayment3600."
+    irsRef: "Publication974 SimplifiedStep2 Cannot take the PTC; Form8582 lines6-10"
+    testRef: "tests/engine/federal-marketplace-passive.test.ts::refigures the phaseout allowance with ordinary health after final ineligibility"
+  - line: "known-source-boundary"
+    description: "Do not infer K1 participation or business-loss ordering from rental facts"
+    formula: "An actual K1 passive pool alongside the special rental claim requires its separate participation and disposition source method."
+    irsRef: "Form8582 instructions active participation and dispositions; Publication974 special instructions"
+    testRef: "tests/engine/federal-marketplace-passive.test.ts::requires the separate K1 method instead of inferring rental participation"

@@ -1,0 +1,20 @@
+form: "Hosted-Billing-Mode-Independent"
+fullName: "Independent Stripe namespace and destructive event controls"
+taxYear: 2026
+reference: "https://docs.stripe.com/api/events/object; https://docs.stripe.com/keys"
+notes: |
+  Independently authored before implementation. Synthetic key strings and locally
+  signed raw events only; no provider HTTP, live resources or credentials.
+lines:
+  - line: "config-mode"
+    description: "Configured namespaces agree in every hosted runtime"
+    formula: "A nonempty sk/rk key for the opposite selected mode blocks config even in development; both matching namespaces remain accepted."
+    testRef: "tests/apps/web/hosted-billing-mode-independent.test.ts::binds config to the declared namespace (%s)"
+  - line: "destructive-event"
+    description: "Signed cancellation cannot cross namespaces"
+    formula: "For updated/deleted subscription events, missing, string false and opposite boolean livemode return400 and preserve the entire prior active record; matching boolean returns200 and retains original owner/customer/subscription/plan."
+    testRef: "tests/apps/web/hosted-billing-mode-independent.test.ts::preserves an active record on wrong or unknown signed mode (%s)"
+  - line: "accepted-event"
+    description: "Valid updates and cancellations still work without an API key"
+    formula: "Only a signing secret is needed; matching mode accepts exactly once with original owner/customer/subscription/plan and requested status."
+    testRef: "tests/apps/web/hosted-billing-mode-independent.test.ts::accepts a matching signed lifecycle event (%s)"

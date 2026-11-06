@@ -1,3 +1,12 @@
+import { readOhioResidentCreditSource } from './oh-resident-credit-source.js';
+import { buildOhioSchoolDistrictSource } from './oh-sd-100-sources.js';
+import { readOhioReciprocalWageSource } from './oh-reciprocal-wage-source.js';
+import {roundDollar} from '@/utils/decimal.js';
+import {buildOhioPaymentSource} from './oh-payment-source.js';
+import { calculateW2StateLocalSources } from '@/engine/forms/w2-state-local.js';
+import type {OhioPaymentFacts} from '@/models/ohio-payments.js';
+import type {OhioResidencyFacts} from "@/models/ohio-residency.js";
+import {buildOhioResidencySource} from "./oh-residency-source.js";
 /**
  * Ohio Input Adapter — bridges federal tax documents and results to Ohio engine input.
  * Spec: spec/state/oh-input-adapter.yaml
@@ -14,12 +23,19 @@
  * from an overlay input.
  */
 
+import { assertClaimOfRightStateMethod } from "@/engine/forms/claim-of-right.js";
+import { assertQofStateMethod } from "@/engine/forms/qof-inclusion.js";
 import Decimal from "decimal.js";
+import { calculateDigitalAssetStateSources } from "./digital-asset-sources.js";
+import { calculateForm1099G } from "@/engine/forms/form-1099-g.js";
 import type {
   TaxYearInput,
   W2,
   Form1099R,
   Form1099Int,
+  Form1099Div,
+  Form1099B,
+  Form1099OID,
   Form1099G,
   Form1099K,
   Form1099Misc,
@@ -56,6 +72,7 @@ import {
   lookupOhioSchoolDistrictNumberFromLocalityLabel,
 } from "@/engine/state/oh-school-district-lookup.js";
 import { calculateOhioScheduleOfWithholding } from "@/engine/state/oh-schedule-of-withholding.js";
+import { calculateForm1099OID } from "@/engine/forms/form-1099-oid.js";
 import { d } from "@/utils/decimal.js";
 
 // ---------------------------------------------------------------------------
@@ -63,6 +80,8 @@ import { d } from "@/utils/decimal.js";
 // ---------------------------------------------------------------------------
 
 export interface OhioOverlayInput {
+  payments?:OhioPaymentFacts;
+  residency?:OhioResidencyFacts;
   // --- Schedule of Adjustments: Additions ---
   nonOhioStateLocalInterest?: Decimal | string | number;
   employeeBenefitPlanDistributions?: Decimal | string | number;
@@ -213,7 +232,7 @@ export interface OhioOverlayInput {
  * Ohio IT 1040 line 14 flows from the Schedule of Ohio Withholding, which
  * includes Ohio amounts from W-2, W-2G, and 1099 income statements. This
  * adapter supports the modeled 1099 variants that can carry state withholding:
- * 1099-G, 1099-K, 1099-R, 1099-NEC, and 1099-MISC.
+ * 1099-G, 1099-K, 1099-R, 1099-NEC, 1099-MISC, 1099-INT, 1099-DIV, and 1099-B.
  */
 export function extractOhioWithholding(
   w2s: W2[],
@@ -223,7 +242,14 @@ export function extractOhioWithholding(
   form1099Rs: Form1099R[] = [],
   form1099Necs: Form1099Nec[] = [],
   form1099Miscs: Form1099Misc[] = [],
+  form1099Ints: Form1099Int[] = [],
+  form1099Divs: Form1099Div[] = [],
+  form1099Bs: Form1099B[] = [],
+  form1099OIDs: Form1099OID[] = [],
 ): Decimal {
+  if (w2s.some(w2 => w2.stateLocalSources !== undefined)) {
+    throw new Error("Ohio actual W2 rows require full canonical owner/year/original context, not the scalar-only extractor");
+  }
   return calculateOhioScheduleOfWithholding({
     w2s,
     formW2Gs,
@@ -232,6 +258,10 @@ export function extractOhioWithholding(
     form1099Rs,
     form1099Necs,
     form1099Miscs,
+    form1099Ints,
+    form1099Divs,
+    form1099Bs,
+    form1099OIDs,
   }).line6_totalOhioWithholding;
 }
 
@@ -472,6 +502,7 @@ function deriveJointFilingQualifyingIncome(
   form1099Rs: Form1099R[] = [],
   qualifyingBusinessIncome?: Decimal | string | number,
   businessIncomeDeductionCap?: Decimal | string | number,
+  taxYear = 2025,
 ): DerivedJointFilingQualifyingIncome {
   if (filingStatus !== "married_filing_jointly") {
     return {
@@ -506,8 +537,14 @@ function deriveJointFilingQualifyingIncome(
     addAttributedAmount(form.accountHolder, form.reportableWinnings);
   }
 
-  for (const form of form1099Gs) {
-    addAttributedAmount(form.accountHolder, form.unemploymentCompensation);
+  if (form1099Gs.length) {
+    const government = calculateForm1099G(form1099Gs, taxYear, filingStatus);
+    for (const program of government.programs) {
+      addAttributedAmount(program.accountHolder, program.taxableUnemployment);
+    }
+    for (const source of government.sources) {
+      addAttributedAmount(source.accountHolder, source.taxableRtaa.plus(source.taxableGrants).plus(source.taxableFamilyLeave));
+    }
   }
 
   for (const form of form1099Miscs) {
@@ -584,6 +621,7 @@ export function determineBothSpousesQualifyingIncome(
   form1099Rs: Form1099R[] = [],
   qualifyingBusinessIncome?: Decimal | string | number,
   businessIncomeDeductionCap?: Decimal | string | number,
+  taxYear = 2025,
 ): boolean {
   if (filingStatus !== "married_filing_jointly") return false;
 
@@ -608,6 +646,7 @@ export function determineBothSpousesQualifyingIncome(
     form1099Rs,
     qualifyingBusinessIncome,
     businessIncomeDeductionCap,
+    taxYear,
   );
   if (!derived.hasAttribution) return false;
 
@@ -711,8 +750,44 @@ export function buildOhioResidentReturnInput(
   federalResult: TaxReturnResult,
   overlay: OhioOverlayInput = {},
 ): OhioResidentReturnInput {
+  if(overlay.nonresidentCredit!==undefined&&!d(overlay.nonresidentCredit).isZero())throw new Error("Ohio nonresident credit requires actual owner residency sources, not a credit override");
+  const canonical=(taxInput as TaxYearInput&{ohioResidency?:OhioResidencyFacts}).ohioResidency;
+  if(canonical&&overlay.residency&&JSON.stringify(canonical)!==JSON.stringify(overlay.residency))throw new Error("Ohio canonical and overlay residency originals conflict");
+  const residency=canonical??overlay.residency;
+  const canonicalPayments=(taxInput as TaxYearInput&{ohioPayments?:OhioPaymentFacts}).ohioPayments;
+  if(canonicalPayments&&overlay.payments&&JSON.stringify(canonicalPayments)!==JSON.stringify(overlay.payments))throw new Error('Ohio actual payment sources: canonical and overlay payment packets conflict');
+  const paymentFacts=canonicalPayments??overlay.payments;
+  const schoolDistrictFacts=taxInput.ohioSchoolDistrict;
+  if(schoolDistrictFacts){
+    if(!canonical||!canonicalPayments)throw new Error('Ohio actual school district sources: independent canonical residency and IT1040 payment sources are required');
+    if(Object.entries(overlay).some(([key,value])=>value!==undefined&&key!=='residency'&&key!=='payments'))throw new Error('Ohio actual school district sources: finite source-bound return does not accept unbound district or state overrides');
+  }
+  if(paymentFacts){
+    const forbidden=['underpaymentPenalty','useTax','estimatedPayments','refundableCredits','amendedPriorOverpayment','latePaymentInterest','creditCarryforward','donations','computeUnderpaymentPenalty','priorYearTaxLiability','priorYearTimelyFiled','estimatedPaymentSchedule','ohioWithholdingOverride'] as const;
+    if(forbidden.some(key=>overlay[key]!==undefined))throw new Error('Ohio actual payment sources: source-qualified facts do not accept unbound payment/credit/penalty overrides');
+    if(!residency)throw new Error('Ohio actual payment sources: actual owner residency packet is required');
+  }
+
+  if(residency?.residentCreditSources && Object.keys(overlay).some(key=>key!=='residency'&&key!=='payments'))throw new Error('Ohio actual resident-credit sources reject unbound financial overrides');
+  if(residency?.reciprocalWageSources && Object.keys(overlay).some(key=>key!=='residency'&&key!=='payments'))throw new Error('Ohio actual reciprocal wage sources reject unbound financial overrides');
+  if(residency?.businessSources && (overlay.qualifyingBusinessIncome!==undefined || overlay.otherBusinessIncome!==undefined))throw new Error('Ohio actual canonical business sources do not accept a supplied business income override');
+  if(residency&&overlay.nonresidentCredit!==undefined)throw new Error("Ohio source-derived credit does not accept a supplied scalar override");
+  assertQofStateMethod(taxInput, "Ohio");
+  assertClaimOfRightStateMethod(taxInput, "Ohio");
+  const digitalCapitalInput = calculateDigitalAssetStateSources(taxInput, "OH");
   const filingStatus = mapFilingStatus(federalResult.filingStatus);
   const w2s = taxInput.w2s ?? [];
+  const actualW2Rows = w2s.map((w2, index) => w2.stateLocalSources === undefined
+    ? undefined : calculateW2StateLocalSources(taxInput, index, w2.stateLocalSources));
+  if (actualW2Rows.some(source => source !== undefined) && overlay.ohioWithholdingOverride !== undefined) {
+    throw new Error("Ohio actual W2 withholding sources do not accept a scalar withholding override");
+  }
+  if (residency && !schoolDistrictFacts && actualW2Rows.some(source => source?.localRows.some(row => row.withheld.gt(0)))) {
+    throw new Error("Ohio actual local/school withholding requires separate district reconciliation");
+  }
+  const actualOhioW2Withholding = actualW2Rows.flatMap(source => source?.stateRows ?? [])
+    .filter(row => row.state === "OH").reduce((total, row) => total.plus(row.withheld), new Decimal(0));
+  const legacyW2s = w2s.filter((_w2, index) => actualW2Rows[index] === undefined);
   const formW2Gs = taxInput.formW2G ?? [];
   const form1099Gs = taxInput.form1099G ?? [];
   const form1099Ks = taxInput.form1099K ?? [];
@@ -720,23 +795,36 @@ export function buildOhioResidentReturnInput(
   const form1099Necs = taxInput.form1099Nec ?? [];
   const form1099Rs = taxInput.form1099R ?? [];
   const form1099Ints = taxInput.form1099Int ?? [];
+  const form1099OIDs = taxInput.form1099OID ?? [];
+  const oid = form1099OIDs.length ? calculateForm1099OID(form1099OIDs, federalResult.taxYear) : undefined;
+  if (oid && !oid.sourceFactsVerified) throw new Error("Ohio OID adaptation requires verified source classifications and recipient amounts.");
+  if (oid?.taxExemptInterest.gt(0) && overlay.nonOhioStateLocalInterest === undefined) {
+    throw new Error("Ohio OID municipal interest requires an actual non-Ohio issuer allocation, including confirmed zero.");
+  }
+  if (federalResult.taxExemptInterest?.gt(0) && overlay.nonOhioStateLocalInterest === undefined) {
+    throw new Error("Ohio tax-exempt interest requires an actual issuer allocation, including confirmed zero for non-Ohio state and local interest.");
+  }
 
   // Auto-extract values
   const ohioWithholding =
     overlay.ohioWithholdingOverride !== undefined
       ? overlay.ohioWithholdingOverride
-      : extractOhioWithholding(
-          w2s,
+      : actualOhioW2Withholding.plus(extractOhioWithholding(
+          legacyW2s,
           formW2Gs,
           form1099Gs,
           form1099Ks,
           form1099Rs,
           form1099Necs,
           form1099Miscs,
-        );
+          form1099Ints,
+          taxInput.form1099Div,
+          digitalCapitalInput.form1099B,
+          form1099OIDs,
+        ));
 
   const sdWithholding =
-    overlay.sdWithholdingOverride !== undefined
+    schoolDistrictFacts ? undefined : overlay.sdWithholdingOverride !== undefined
       ? overlay.sdWithholdingOverride
       : extractSchoolDistrictWithholding(w2s, form1099Rs);
 
@@ -793,6 +881,7 @@ export function buildOhioResidentReturnInput(
     form1099Rs,
     qualifyingBusinessIncome,
     businessIncomeDeductionCap,
+    federalResult.taxYear,
   );
   const primaryQualifyingIncome =
     overlay.primaryQualifyingIncome !== undefined
@@ -818,24 +907,34 @@ export function buildOhioResidentReturnInput(
     form1099Rs,
     qualifyingBusinessIncome,
     businessIncomeDeductionCap,
+    federalResult.taxYear,
   );
 
   // Auto-extract federal interest exempt from Ohio (1099-INT box 3) unless overridden
   const federalInterestExemptFromOhio =
     overlay.federalInterestExemptFromOhio !== undefined
       ? overlay.federalInterestExemptFromOhio
-      : extractFederalInterestExemptFromOhio(form1099Ints);
+      : Decimal.max(0, extractFederalInterestExemptFromOhio(form1099Ints)
+          .minus(federalResult.scheduleB?.previouslyReportedSavingsBondInterest ?? d(0))
+          .minus(federalResult.form8815?.excludableSavingsBondInterest ?? d(0)))
+          .plus(oid?.treasuryInterest ?? d(0));
 
   // Auto-extract state/municipal tax refunds (1099-G box 2) unless overridden
   const stateMunicipalTaxRefunds =
     overlay.stateMunicipalTaxRefunds !== undefined
       ? overlay.stateMunicipalTaxRefunds
-      : extractStateMunicipalTaxRefunds(form1099Gs);
+      : federalResult.schedule1?.taxableRefunds ?? d(0);
+
+  const careLine9c = federalResult.form2441?.lines.filter(line => line.form === "Form 2441" && line.line === "9c");
+  if (overlay.federal2441Line9c === undefined && federalResult.form2441 &&
+    (careLine9c?.length !== 1 || !careLine9c[0].value.isFinite() || careLine9c[0].value.isNegative())) {
+    throw new Error("Ohio requires the actual Form 2441 line9c audit or an explicit reconciled amount.");
+  }
 
   const federal2441Line9c =
     overlay.federal2441Line9c !== undefined
       ? overlay.federal2441Line9c
-      : federalResult.form2441?.qualifyingExpenses;
+      : careLine9c?.[0]?.value;
 
   const federal2441Line11 =
     overlay.federal2441Line11 !== undefined
@@ -843,11 +942,11 @@ export function buildOhioResidentReturnInput(
       : federalResult.form2441?.credit;
 
   const schoolDistricts =
-    overlay.schoolDistricts !== undefined
+    schoolDistrictFacts ? [] : overlay.schoolDistricts !== undefined
       ? resolveOverlaySchoolDistricts(federalResult.taxYear, overlay.schoolDistricts)
       : deriveSchoolDistrictsFromW2s(federalResult.taxYear, w2s);
 
-  return {
+  const adapted:OhioResidentReturnInput = {
     taxYear: federalResult.taxYear,
     filingStatus,
     federalAgi: federalResult.agi,
@@ -987,4 +1086,37 @@ export function buildOhioResidentReturnInput(
     sdLatePaymentInterest: overlay.sdLatePaymentInterest,
     sdCreditCarryforward: overlay.sdCreditCarryforward,
   };
+  if(residency){
+    if(overlay.schoolDistricts===undefined)adapted.schoolDistricts=[];
+    const verified=buildOhioResidencySource(taxInput,federalResult,adapted,residency);
+    adapted.residency=verified.facts;adapted.residencySourceDigest=verified.sourceDigest;
+    if(verified.residentCreditSource){
+      adapted.residencyResidentCreditSource=verified.residentCreditSource;
+      adapted.otherStateTaxes=readOhioResidentCreditSource(verified.residentCreditSource,verified.facts).otherStateTaxes;
+      adapted.federalAgi=roundDollar(federalResult.agi);
+    }
+    if(verified.businessSource){adapted.residencyBusinessSource=verified.businessSource;adapted.qualifyingBusinessIncome=verified.canonicalQualifyingBusinessIncome;}
+    if(verified.reciprocalWageSource){
+      adapted.residencyReciprocalWageSource=verified.reciprocalWageSource;
+      adapted.federalAgi=roundDollar(federalResult.agi);
+      readOhioReciprocalWageSource(verified.reciprocalWageSource,verified.facts,adapted.federalAgi);
+    }
+  }
+  if(paymentFacts){
+    if(!schoolDistrictFacts&&((adapted.schoolDistricts?.length??0)||residency?.schoolDistrictStatus!=='no_ohio_taxing_district_residency'))throw new Error('Ohio actual payment sources: actual SD/combined method is required');
+    const source=buildOhioPaymentSource(taxInput,paymentFacts);
+    adapted.paymentDatedSource=source.datedPayments ? source : undefined;adapted.paymentTaxCoverage=source.facts.remainingTaxPayment;adapted.paymentSourceDigest=source.sourceDigest;adapted.paymentMethodVersion=source.methodVersion;adapted.paymentTiming={kind:source.timingKind,valuationDate:source.valuationDate,asOfDate:source.asOfDate};
+    adapted.ohioWithholding=roundDollar(d(adapted.ohioWithholding));adapted.estimatedPayments=roundDollar(source.estimatedPayments);adapted.estimatedPaymentSchedule=source.estimatedPaymentSchedule;adapted.priorYearTaxLiability=source.priorYearTaxLiability;adapted.priorYearTimelyFiled=source.priorYearTimelyFiled;
+    adapted.useTax=roundDollar(source.useTax);adapted.creditCarryforward=roundDollar(source.creditCarryforward);adapted.donations=roundDollar(source.donations);adapted.latePaymentInterest=source.latePaymentInterest;adapted.computeUnderpaymentPenalty=true;
+  }
+  if(schoolDistrictFacts){
+    const source=buildOhioSchoolDistrictSource(taxInput,federalResult,adapted);
+    adapted.schoolDistrictSource=source;adapted.schoolDistricts=[source.district];
+    adapted.sdWithholding=source.sdWithholding;adapted.sdEstimatedPayments=source.estimatedPayments;
+    adapted.sdEstimatedPaymentSchedule=source.estimatedPaymentSchedule;
+    adapted.sdPriorYearTaxLiability=source.priorYearTaxLiability;adapted.sdPriorYearTimelyFiled=source.priorYearTimelyFiled;
+    adapted.sdCreditCarryforward=source.creditCarryforward;adapted.sdAmendedPriorOverpayment=new Decimal(0);adapted.sdLatePaymentInterest=new Decimal(0);
+  }
+  if(adapted.residencyResidentCreditSource&&adapted.residency)readOhioResidentCreditSource(adapted.residencyResidentCreditSource,adapted.residency,adapted);
+  return adapted;
 }

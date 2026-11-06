@@ -195,13 +195,12 @@ lines:
     description: "Refundable credits"
     formula: "Sum of refundable PA credits carried on the payment side of the return"
     notes: |
-      The current resident engine uses this bucket for credits that may increase
-      the refund even when they exceed PA tax liability. For tax year 2025 this
-      includes the Working Pennsylvanians Tax Credit and any future supported
-      refundable credits that are not printed directly on the PA-40. This
-      remains an internal engine line used to make supported refundable credits
-      explicit and auditable even when the printed PA-40 routes them through
-      other labels.
+      This is a generic internal/reference arithmetic bucket; it is not an
+      official2025PA40 field. WPTC must not enter the actual2025paper totals:
+      DORFAQ4255 says Department adds WPTC duringprocessing with no paperform
+      change. Residentorchestrator keeps WPTC separate; physical2025filler
+      rejects a nonzero unprintedbucket. Genericdirecthelper tests retain
+      mathematical reference behavior, not printedform qualification.
     testRef: "tests/engine/state/pa-40.test.ts::PA-40 refundable credits increase total payments and refund"
 
   - line: "18"
@@ -259,14 +258,11 @@ lines:
     description: "Total payments and credits"
     formula: "Line 13 + Line 18 + Line 21 + Line 22 + Line 23, plus supported Line 18a engine-only refundable credits"
     notes: |
-      The printed 2025 PA-40 adds withholding, estimated-payment credits, and
-      supported credits on Line 24. The current resident engine also carries an
-      internal refundable-credit helper bucket (Line 18a) into this settlement
-      total so Working Pennsylvanians Tax Credit and any other supported
-      engine-only refundable credits remain explicit and auditable. Restricted
-      Schedule OC credits must already be capped before being placed on
-      Line 23, but refundable Schedule DC may still increase Line 24 beyond
-      the remaining PA tax liability.
+      Actualprinted2025Line24 is13+18+21+22+23 only. Genericdirecthelper can
+      additionally model an internalreference refundablebucket, but that is
+      not qualified for physical2025PA40. WPTC is computed separately in the
+      residentorchestrator and added only duringDepartmentprocessing.
+      RestrictedOC remainscapped; actualrefundableScheduleDC is printed23.
     testRef: "tests/engine/state/pa-40.test.ts::PA-40 Line 24 - total payments and credits include withholding payments and supported credits"
 
   - line: "22a"
@@ -343,3 +339,110 @@ lines:
       absorbed. The engine preserves a legacy pre-additions overpayment helper
       separately for backward compatibility.
     testRef: "tests/engine/state/pa-40.test.ts::PA-40 Line 29 - overpayment is net of use tax and penalties"
+
+  # Diagnostic projection is a separate internal rendering method, never credit approval.
+  - line: "field-map-diagnostic"
+    description: "Explicit internal field-map diagnostics do not admit source-qualified public packets"
+    formula: "PrecreatedPDF+taxpayer renderfields+zero-unprinted scalarprojection only; strict2025reviewpolicy/reviewmark/diagnostictitle; no credit/source approval or templateIO"
+    testRef: "tests/pdf/fill-pa-40.test.ts::PA40 diagnostic projection keeps zero-credit mapping separate from source admission"
+
+  - line: "printed-income-rounding"
+    description: "2024, 2025 and draft 2026 PA-40 Part A uses reported whole-dollar lines before tax"
+    formula: |
+      Keep exact admissible original source cents through within-class aggregation.
+      Round aggregate input lines 1a, 1b, 2 through 8, and 10 once using Decimal
+      roundDollar. Line 1c is max(0, reported 1a minus reported 1b). Line 9 sums
+      positive reported income classes including 1c; a class loss cannot offset
+      another class. Line 11 is max(0, reported 9 minus reported 10). Line 12
+      is roundDollar(reported 11 times 0.0307). The result and audit expose the
+      same reported Part A amounts. Do not round each W-2/source independently.
+    notes: |
+      Actual 2025 PA-40 IN printed page 4 Rounding Numbers requires whole-dollar
+      form/schedule amounts; page 14 directs 1c = 1a minus 1b; page 21 directs
+      reported adjusted-income and tax lines. Retrieved 2026-11-02 at
+      https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40in.pdf
+      Source SHA e8996504a4302a65055e697ba6301a3e41a411a4802645a5fc5f653f7538c172.
+      Fresh 2024 PA-40 IN printed page 4 confirms the identical whole-dollar
+      rule (retrieved 2026-11-02, SHA
+      de983ef28babe59e4e5da1ed0100f996e219b2aaa2119757eace746170c0a822).
+      The historical 2024 cents path is corrected under that actual source;
+      original exact source records and prior whole-dollar tests stay intact.
+      The existing draft 2026 computation carries this method; final 2026
+      physical forms and upstream source eligibility are not qualified here.
+    testRef: "tests/engine/state/pa-40.test.ts::PA-40 printed income - rounds reported classes before adding income and computing tax"
+
+  - line: "reported-payments"
+    description: "Whole-dollar printed payment and credit lines precede total arithmetic"
+    formula: |
+      Aggregate exact admissible raw source cents within each reported line,
+      then roundDollar once for 13, 14, 15, 16, 17, 20, 21, 22, 23 and 25.
+      Line18 is reported14+15+16+17; printed24 sums reported13+18+21+22+23.
+      Preserve original source values; do not round each receipt/source first.
+      The existing unprinted refundable helper remains in legacy helper totals
+      only; exclude it from printed24 and printed26/28/29. It cannot be passed
+      off as WPTC on paper. Existing paper/source guards remain in force.
+    notes: |
+      Actual 2024/2025 PA40IN whole-dollar rules and actual2025PA40 lines18/24.
+      Source-only independent review receipt4945532feda3747177c296c8736f42e984163687d55df1153382f292ac47e43c.
+      An admissible allowed credit is a caller precondition, not established by
+      rounding a bare amount. No actual receipt/date/eligibility is inferred.
+    testRef: "tests/engine/state/pa-40.test.ts::PA-40 reported settlement - sums reported payment lines without changing exact originals"
+
+  - line: "reported-penalties"
+    description: "One reported line27 combines the already-reported REV1630 transfer and unprinted late components"
+    formula: |
+      Given the admissible already-reported REV1630 line16 transfer, add its
+      whole-dollar amount to exact unprinted late penalty and late interest;
+      roundDollar their sum once for printed27. Retain component amounts for
+      the audit, without rounding each late component independently. Use this
+      reported27, reported24, reported12 and reported25 for net28/29 arithmetic.
+      A preexisting overpayment offsets27 before amount due is reported.
+      Preserve printed one-dollar due/overpayment values; payment/issuance
+      policy and actual refund elections are separate from printed arithmetic.
+    testRef: "tests/engine/state/pa-40.test.ts::PA-40 reported settlement - combines unprinted late components once and nets the reported penalty"
+
+  - line: "actual-2025-physical"
+    description: "Actual2025 PA40 asset and mutually exclusive official widget appearances"
+    formula: |
+      Pin actual2025 official blank SHA fcd7648601f3ce5a7a258be49c54aa1c604e1c61c1fe9175351451ac6087d8b3.
+      Preserve145 canonical fields and original widget AP streams. Filing group values
+      are1S,2J,3M,4F; residency group1R,2N,3P. Set field V and exactly matching
+      widget AS, never first-widget check(). Explicit diagnostic render facts are
+      not taxpayer-source qualification. Actual part-year dates use MM/DD, actual
+      school code is retained. Hide only pure pushbutton annotations intersecting
+      the review-notice band; keep original field definitions and widgets intact.
+    notes: |
+      Actual2025 official PA40 MOD04-25 and PA40IN p24. Raw actual2025/old2024
+      sources and widget locations are retained in nov02-pa-remaining-lines-source-review.
+      Final2026 and filing exports remain disabled.
+    testRef: "tests/pdf/pa40-actual-2025-physical.test.ts::PA40 actual2025 physical - pins the correct official year and canonical fields"
+
+  - line: "actual-2025-settlement-fields"
+    description: "Known zero use tax, component codes and explicit refund allocation"
+    formula: |
+      Print known zero line25 as0, leave no-penalty27 blank. Positive estimated-only
+      component usesE, late-onlyL, bothB; X requires a separately proven attached
+      exception and is not guessed from zero. Unknown refund intent leaves30/31
+      blank; an explicit diagnostic requested refund may not exceed reported29.
+      Its rendering does not establish actual taxpayer intent or entitlement.
+    testRef: "tests/pdf/pa40-actual-2025-physical.test.ts::PA40 actual2025 physical - prints known zero and leaves unknown refund intent blank"
+
+  - line: "actual-2025-text-fit"
+    description: "Preserve actual occupation text and fit its saved appearance within the official rectangle"
+    formula: "Keep original occupation string; size the appearance so full text width is within widget width minus border padding. Do not truncate or alter canonical field definition."
+    testRef: "tests/pdf/pa40-actual-2025-physical.test.ts::PA40 actual2025 physical - fits complete occupation text in its saved appearance"
+
+  - line: "actual-2025-original-on-appearances"
+    description: "Keep the official saved checkbox on-state appearance bytes"
+    formula: |
+      Preserve each original normal on-state appearance stream byte for byte
+      through default PDF save, including an unselected unknown-residency group.
+      Add only a blank Off appearance where missing,
+      so nonselected widgets do not force pdf-lib to regenerate official marks.
+      Original field flags, on-state names, geometry and original asset stay fixed.
+    testRef: "tests/pdf/pa40-actual-2025-physical.test.ts::PA40 actual2025 physical - retains official on appearances after default save"
+
+  - line: "accepted-source-precision"
+    description: "Accepted source digits survive reported class aggregation and tax computation"
+    formula: "Use a local per-call Decimal context derived from actual admitted digit widths, scales and sum carry. No amount cap or global mutation. ActualOID reportedinterest10^140+123 pluswages50000 yieldsPAincome10^140+50123; exacttax307*10^136+1539. Preserve unchanged per-line rounding, all eligibility/credit/no-cross-class-loss rules and stable public results/audits."
+    testRef: "tests/engine/state/pa-ordinary-oid-printed-boundaries.test.ts::preserves accepted OID printed inputs through standalone PA40"

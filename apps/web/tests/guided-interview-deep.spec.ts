@@ -1,3 +1,4 @@
+import { fillRequiredW2Facts, fillRequiredTaxpayerFacts, reachFilingStatus } from "./guided-fixtures";
 import { expect, test } from "@playwright/test";
 
 /**
@@ -15,10 +16,12 @@ async function completeSegmentation(
 ) {
   const { filingStatus = "single", incomeTypes = ["w-2 wages"] } = options;
 
-  await expect(page.getByText(/let's figure out your tax situation/i)).toBeVisible();
+  await expect(page.getByText(/let's tailor your return/i)).toBeVisible();
 
   // Step 1: Filing status
+  await reachFilingStatus(page);
   await page.getByRole("radio", { name: new RegExp(filingStatus, "i") }).click();
+  await page.getByRole("button", { name: "Continue" }).click();
   await expect(page.getByText(/what types of income/i)).toBeVisible({ timeout: 5000 });
 
   // Step 2: Income types
@@ -42,7 +45,7 @@ async function completeSegmentation(
 async function createReturn(page: import("@playwright/test").Page) {
   await page.goto("/");
   await page.getByRole("button", { name: /start your tax return/i }).click();
-  await expect(page).toHaveURL(/\/returns\/[a-z0-9-]+/i);
+  await expect(page).toHaveURL(/\/returns\/(?!new(?:[/?#]|$))[a-z0-9-]+/i);
 }
 
 /** Skip through personal info to get to the W-2 section. */
@@ -124,6 +127,7 @@ test.describe("Refund ticker in review section", () => {
     await completeSegmentation(page);
 
     // Fill personal info
+    await fillRequiredTaxpayerFacts(page);
     await page.getByRole("textbox", { name: /first name/i }).fill("Jane");
     await page.getByRole("textbox", { name: /last name/i }).fill("Doe");
     await page.getByRole("button", { name: "Continue" }).click();
@@ -138,6 +142,7 @@ test.describe("Refund ticker in review section", () => {
     const fedWithheldInput = page.locator("input.guided-input-currency").nth(1);
     await fedWithheldInput.fill("12000");
     await fedWithheldInput.blur();
+    await fillRequiredW2Facts(page);
 
     // Skip through remaining sections to reach review
     await page.getByRole("button", { name: "Continue" }).click();
@@ -180,6 +185,7 @@ test.describe("Refund ticker in review section", () => {
     await completeSegmentation(page);
 
     // Fill minimal data and skip to review
+    await fillRequiredTaxpayerFacts(page);
     await page.getByRole("textbox", { name: /first name/i }).fill("Test");
     await page.getByRole("textbox", { name: /last name/i }).fill("User");
     await page.getByRole("button", { name: "Continue" }).click();
@@ -189,6 +195,7 @@ test.describe("Refund ticker in review section", () => {
     const wagesInput = page.locator("input.guided-input-currency").first();
     await wagesInput.fill("50000");
     await wagesInput.blur();
+    await fillRequiredW2Facts(page);
     await page.getByRole("button", { name: "Continue" }).click();
 
     // Skip through remaining sections
@@ -225,6 +232,7 @@ test.describe("Review section content", () => {
     await completeSegmentation(page);
 
     // Fill personal info
+    await fillRequiredTaxpayerFacts(page);
     await page.getByRole("textbox", { name: /first name/i }).fill("Alice");
     await page.getByRole("textbox", { name: /last name/i }).fill("Smith");
     await page.getByRole("button", { name: "Continue" }).click();
@@ -234,6 +242,7 @@ test.describe("Review section content", () => {
     const wagesInput = page.locator("input.guided-input-currency").first();
     await wagesInput.fill("85000");
     await wagesInput.blur();
+    await fillRequiredW2Facts(page);
     await page.getByRole("button", { name: "Continue" }).click();
 
     // Skip to review
@@ -264,6 +273,7 @@ test.describe("Review section content", () => {
     await completeSegmentation(page);
 
     // Fill personal info
+    await fillRequiredTaxpayerFacts(page);
     await page.getByRole("textbox", { name: /first name/i }).fill("Bob");
     await page.getByRole("textbox", { name: /last name/i }).fill("Jones");
     await page.getByRole("button", { name: "Continue" }).click();
@@ -360,10 +370,12 @@ test.describe("Multiple income types in segmentation", () => {
 
   test("all income types available in segmentation step 2", async ({ page }) => {
     await createReturn(page);
-    await expect(page.getByText(/let's figure out your tax situation/i)).toBeVisible();
+    await expect(page.getByText(/let's tailor your return/i)).toBeVisible();
 
     // Select filing status to advance to income types
+    await reachFilingStatus(page);
     await page.getByRole("radio", { name: /single/i }).click();
+    await page.getByRole("button", { name: "Continue" }).click();
     await expect(page.getByText(/what types of income/i)).toBeVisible({ timeout: 5000 });
 
     // All income types should be listed

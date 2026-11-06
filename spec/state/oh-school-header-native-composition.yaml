@@ -1,0 +1,39 @@
+form: "Ohio native school and header source composition"
+taxYear: 2025
+reference: "https://dam.assets.ohio.gov/image/upload/v1767095693/tax.ohio.gov/forms/ohio_individual/individual/2025/it1040-booklet.pdf"
+notes: |
+  Integration successor, no tax formula, source fact, geography or paper qualification change.
+  Existing literal actual originals: annual wages60000, Ohio resident wages40000,
+  Ohio212days/VA153days, actual Hillsdale0302/Ashland documentary header.
+  School tax500, school withholding600/refund100 or500/refund0; IT withholding2000.
+  Existing IT1217/NRC406/tax811/refund1189 remains separate. No PDF operation here.
+  Source-first controls precede all five product changes on exact51a8d4c4.
+  Browser four complete-source failures e9f8f6ae remain retained and unchanged.
+lines:
+  - line: "school-baseline"
+    formula: "Replay existing confirmed R/P and actual native school before any header. Actual school tax500 and separate IT2000 remain unchanged."
+    testRef: "tests/apps/web/oh-school-header-native-composition.test.tsx::Ohio school header baseline preserves existing actual payroll and separate cash"
+  - line: "credit-baseline"
+    formula: "Existing four-argument full-year R/P/RC header continues to replay current677 without creating a school child or dropping resident-credit originals."
+    testRef: "tests/apps/web/oh-school-header-native-composition.test.tsx::Ohio school header baseline preserves complete native resident credit677"
+  - line: "native-caller"
+    formula: "Actual SectionStateReturn supplies current confirmed native school draft to header confirmation; raw input starts without canonical Ohio roots. Both source-complete cash cases confirm without mutating R/P/SD."
+    testRef: "tests/apps/web/oh-school-header-native-composition.test.tsx::Ohio school header actual mounted caller confirms current school %s"
+  - line: "header-only-edit"
+    formula: "Editing only actual header identity invalidates only header confirmation; confirmed school, residency and payments retain exact sources and captures."
+    testRef: "tests/apps/web/oh-school-header-native-composition.test.tsx::Ohio school header own edit preserves confirmed school %s"
+  - line: "explicit-replay"
+    formula: "Only explicit header confirmation replays R/P/RC plus native SD, captures current SD in draft-only metadata, and retains all canonical header originals. Read and JSON recovery compare immutable captured child, never refresh it."
+    testRef: "tests/apps/web/oh-school-header-native-composition.test.tsx::Ohio school header explicit replay captures current child and recovers without refresh %s"
+  - line: "same-cash-child"
+    formula: "A newly confirmed equal-cash different school source is valid as a school child but cannot rebind an old header on read. Explicit header reconfirmation captures it; all money stays unchanged."
+    testRef: "tests/apps/web/oh-school-header-native-composition.test.tsx::Ohio school header rejects equally paid replacement until explicit reconfirmation"
+  - line: "unknown-child"
+    formula: "Unknown payroll amount, unconfirmed child, removed child, stripped child capture, changed federal identity or changed parent/payment source cannot admit or refresh the old header."
+    testRef: "tests/apps/web/oh-school-header-native-composition.test.tsx::Ohio school header rejects actual missing or stale dependency %s"
+  - line: "dependency-invalidation"
+    formula: "Actual parent, payment and school source edits retain all old captures and invalidate dependent header and school confirmation; upstream invalidations remain intact."
+    testRef: "tests/apps/web/oh-school-header-native-composition.test.tsx::Ohio school header dependency edit invalidates child and header %s"
+  - line: "retained-child"
+    formula: "A retained canonical school child with no native packet cannot be silently reused or dropped by native header replay."
+    testRef: "tests/apps/web/oh-school-header-native-composition.test.tsx::Ohio school header retained canonical child requires actual native originals"

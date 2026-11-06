@@ -8,7 +8,8 @@ import type {
 import { isSupportedEngineTaxYear } from "@tax-engine/contracts";
 import { calculateFederalTax } from "../../../src/engine/federal";
 import type { TaxReturnResult } from "../../../src/models/outputs";
-import { buildWorkspaceEngineInput } from "./workspace-engine-input";
+import type { Taxpayer } from "../../../src/models/inputs";
+import { buildWorkspaceEngineInput, type WorkspaceEngineCalculationContext } from "./workspace-engine-input";
 
 type HighlightedPreviewLineRef = {
   id: string;
@@ -124,7 +125,9 @@ function buildHighlightedLines(
 export function buildWorkspaceEnginePreview(
   documents: WorkspaceDocumentRecord[],
   returnSummary: WorkspaceReturnSummary,
-  structuredFacts: WorkspaceStructuredFactRecord[] = []
+  structuredFacts: WorkspaceStructuredFactRecord[] = [],
+  taxpayer?: Taxpayer,
+  context?: WorkspaceEngineCalculationContext
 ): WorkspaceEnginePreview | null {
   const taxYear = returnSummary.targetTaxYear;
 
@@ -136,17 +139,19 @@ export function buildWorkspaceEnginePreview(
     return null;
   }
 
-  const previewInput = buildWorkspaceEngineInput(documents, returnSummary, structuredFacts);
+  const previewInput = buildWorkspaceEngineInput(documents, returnSummary, structuredFacts, taxpayer, context);
 
   if (!previewInput) {
     return null;
   }
 
-  const result = calculateFederalTax(previewInput.taxInput);
+  let result: TaxReturnResult;
+  try { result = calculateFederalTax(previewInput.taxInput); }
+  catch { return null; }
 
   return {
     mode: "engine-recompute",
-    title: "Deterministic engine recompute preview",
+    title: "Complete return recompute preview",
     taxYear,
     filingStatus: result.filingStatus,
     filingState: previewInput.taxInput.taxpayer.address.state,

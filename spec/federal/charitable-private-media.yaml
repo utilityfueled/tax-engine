@@ -1,0 +1,37 @@
+form: "Private charitable contribution media"
+fullName: "Actual cash and noncash in the common other-30-percent category"
+taxYear: 2025
+irsReference: "https://www.irs.gov/publications/p526"
+retrievedAt: "2026-10-25"
+reviewStatus: "independent-review-pending"
+notes: |
+  Publication526 Worksheet2 lines5/7/23/24/25 combine private ordinary cash
+  and property in one percentage category. Neither that worksheet nor the
+  reviewed carry instructions establish cash-first or proportional allocation
+  of a partial same-year allowance between these media. Preserve the actual
+  sources and support only uniquely determined zero/full mixed allowances,
+  or a single positive medium. A partial mixed allowance remains an internal
+  unresolved method, not an external approval or a user-selected formula.
+  Current2026 floor allocation within B has the same source boundary. This
+  package does not open the separate2026 prior-carry calculation gate.
+lines:
+  - line: "current"
+    description: "No invented cash-first current allowance"
+    formula: "Given exact current cash C and ordinary noncash N and allowed B amount U, require0<=U<=C+N. If one medium is zero, assign U to the other. If both are positive, U=0 assigns0/0 and U=C+N assignsC/N; otherwise reject the unresolved partial source allocation. Apply after any2026 floor, before reporting and carry assignment."
+    testRef: "tests/engine/forms/charitable-private-media.test.ts::preserves only determined current private cash and property allowances"
+  - line: "prior"
+    description: "Preserve same-year actual media and FIFO between years"
+    formula: "Each actual year/category/medium appears once, with a separate original excess and complete actual use/reduction history. For each category consume older years first; group a year's other_30 cash/noncash before allocating its allowance. Zero/full group use is exact and independent of row/source-ID order. A partial mixed group rejects before a source balance is assigned. Fifth-year expiry remains per original source."
+    testRef: "tests/engine/forms/charitable-private-media.test.ts::groups same-year private media before FIFO use and expiry"
+  - line: "source"
+    description: "Facts-only validation preserves medium identity and legacy totals"
+    formula: "Accept distinct cash and noncash histories in the same year/other_30 category; reject duplicate same-medium histories or duplicate source IDs. Legacy year/category totals reconcile the sum of those actual sources without assigning their medium. The facts-only collector can retain an otherwise complete partial-allocation scenario without computing a deduction."
+    testRef: "tests/guided-interview/guided-charitable-private-media.test.ts::retains complete separate private media without inventing an allowance"
+  - line: "carry"
+    description: "Current outgoing carry retains actual private media"
+    formula: "For a supported mixed allowance, preserve each medium's exact current carry. In2025 a zero allowance carries all C and N, and a full allowance carries none. In2026 floor-only disallowance without a percentage excess creates no carry; when the statutory excess condition holds, a zero post-floor allowance carries both actual media. Never relabel the common B amount as cash."
+    testRef: "tests/engine/forms/charitable-private-media.test.ts::retains exact private carry media after caps and the current floor"
+  - line: "canonical-review"
+    description: "Canonical source groups and review lines agree"
+    formula: "Actual current cash1000.49/noncash2000.51 and prior cash3000.49/noncash4000.51 fully allowed atbase100000 produce exactcash4000.98/noncash6001.02; printed11=1000,12=2001,13=7001,14=10002. Preserve original and redacted-review source binding. Partial current or prior mixed allowance rejects canonical output rather than inventing medium balances."
+    testRef: "tests/pdf/charitable-private-media.test.ts::preserves actual current and prior private media through canonical review"

@@ -1,0 +1,605 @@
+{
+  "schemaVersion": 1,
+  "recordedAt": "2026-11-01T19:28:58+00:00",
+  "releaseReady": false,
+  "scope": "Synthetic remote CI evidence. Not staging, production or human review.",
+  "runs": [
+    {
+      "sourceCommit": "ba1cbaf8",
+      "ci": 41168954959,
+      "web": 41168954956,
+      "ciConclusion": "success",
+      "webConclusion": "success",
+      "unit": {
+        "tests": 19876,
+        "files": 1500,
+        "workers": 1
+      },
+      "coverage": {
+        "tests": 19876,
+        "files": 1500,
+        "statements": "91.73",
+        "branches": "86.96",
+        "functions": "90.22",
+        "lines": "94.48",
+        "thresholdsPassed": true
+      },
+      "browser": {
+        "selfHost": {
+          "passed": 530,
+          "skipped": 5
+        },
+        "container": {
+          "passed": 530,
+          "skipped": 5,
+          "timeoutMs": 30000,
+          "retries": 0
+        }
+      },
+      "artifactDigest": "sha256:8af308f837ba176e7b0deec416c85f376d9ed2af5e616e99ee50e759488771fe"
+    },
+    {
+      "sourceCommit": "ad8fd777",
+      "ci": 41171202159,
+      "web": 41171202207,
+      "ciConclusion": "success",
+      "webConclusion": "failure",
+      "unit": {
+        "tests": 19880,
+        "files": 1500,
+        "workers": 1
+      },
+      "coverage": {
+        "tests": 19880,
+        "files": 1500,
+        "statements": "91.74",
+        "branches": "86.97",
+        "functions": "90.22",
+        "lines": "94.49",
+        "thresholdsPassed": true
+      },
+      "browser": {
+        "selfHost": {
+          "passed": 530,
+          "skipped": 5
+        },
+        "container": {
+          "passed": 528,
+          "failed": 2,
+          "skipped": 5,
+          "timeoutMs": 30000,
+          "retries": 0,
+          "failures": [
+            "guided-marketplace-actual-paid.spec.ts 390px",
+            "guided-marketplace-other-return-cash.spec.ts 390px"
+          ],
+          "cause": "Both ran out of the 30s test budget at different steps, the same two tests as f70258c3. Locally they take 11.9s and 13.1s and pass. Corrected in 96a1a47a by giving these two tests the 90s repository default; no assertion changed."
+        }
+      }
+    },
+    {
+      "sourceCommit": "a17f8237",
+      "ci": 41174678598,
+      "web": 41174678657,
+      "ciConclusion": "failure",
+      "webConclusion": "success",
+      "unit": {
+        "tests": 19880,
+        "files": 1500,
+        "workers": 1
+      },
+      "coverage": {
+        "tests": 19872,
+        "failed": 8,
+        "files": 1500,
+        "seconds": 2480.12,
+        "report": "not produced",
+        "failures": "Eight explicit 5000ms timeouts at 5025-6063ms. The normal job passed the same tests."
+      },
+      "browser": {
+        "selfHost": {
+          "passed": 530,
+          "skipped": 5
+        },
+        "container": {
+          "passed": 530,
+          "skipped": 5,
+          "timeoutMs": 30000,
+          "retries": 0
+        }
+      },
+      "artifactDigest": "sha256:e9e5e322f3528e4f0109d291c322fea47c9aed5c18cae203fd1c55c5c76f336e"
+    },
+    {
+      "sourceCommit": "12faedf5",
+      "ci": 41177713206,
+      "web": 41177713248,
+      "ciConclusion": "cancelled",
+      "webConclusion": "success",
+      "unit": {
+        "conclusion": "cancelled",
+        "cause": "Exceeded the 30m job cap with no reported test failure. The job cap is raised to 60m in the next commit."
+      },
+      "coverage": {
+        "tests": 19880,
+        "files": 1500,
+        "seconds": 1953.46,
+        "statements": "91.74",
+        "branches": "86.97",
+        "functions": "90.22",
+        "lines": "94.49",
+        "thresholdsPassed": true,
+        "perTestDeadlineMs": 15000
+      },
+      "browser": {
+        "selfHost": {
+          "passed": 530,
+          "skipped": 5
+        },
+        "container": {
+          "passed": 530,
+          "skipped": 5,
+          "timeoutMs": 30000,
+          "retries": 0
+        }
+      },
+      "artifactDigest": "sha256:32bcdf7a96ed374bf17a175ea9fb5f2dae15f63f45487bf8741ba86f999b56b4"
+    },
+    {
+      "sourceCommit": "9e37c119",
+      "ci": 41180004917,
+      "web": 41180004898,
+      "ciConclusion": "success",
+      "webConclusion": "success",
+      "unit": {
+        "tests": 19880,
+        "files": 1500,
+        "workers": 1,
+        "seconds": 1398.56,
+        "perTestDeadlineMs": 5000
+      },
+      "coverage": {
+        "tests": 19880,
+        "files": 1500,
+        "workers": 1,
+        "seconds": 1948.59,
+        "statements": "91.74",
+        "branches": "86.97",
+        "functions": "90.22",
+        "lines": "94.49",
+        "thresholdsPassed": true,
+        "perTestDeadlineMs": 15000
+      },
+      "browser": {
+        "selfHost": {
+          "passed": 530,
+          "skipped": 5
+        },
+        "container": {
+          "passed": 530,
+          "skipped": 5,
+          "timeoutMs": 30000,
+          "retries": 0
+        }
+      },
+      "artifactDigest": "sha256:6f5b6b3581050be271edc5565c7bd7bb240cb4bb775a3a9ca298563cf58f2af7"
+    },
+    {
+      "sourceCommit": "c632be9e",
+      "web": 41192516682,
+      "ci": 41192516819,
+      "ciConclusion": "success",
+      "webConclusion": "failure",
+      "failure": "tests/qof-source.spec.ts at both widths still expected a replaced status message. Corrected in 51a87661."
+    },
+    {
+      "sourceCommit": "5b2eb5fb",
+      "ci": 41207278152,
+      "web": 41207278175,
+      "ciConclusion": "success",
+      "webConclusion": "success",
+      "unit": {
+        "tests": 19930,
+        "files": 1512,
+        "workers": 1,
+        "perTestDeadlineMs": 5000
+      },
+      "coverage": {
+        "tests": 19930,
+        "files": 1512,
+        "workers": 1,
+        "statements": "91.76",
+        "branches": "87.00",
+        "functions": "90.16",
+        "lines": "94.48",
+        "thresholdsPassed": true,
+        "perTestDeadlineMs": 15000
+      },
+      "browser": {
+        "selfHost": {
+          "passed": 530,
+          "skipped": 5
+        },
+        "container": {
+          "passed": 530,
+          "skipped": 5,
+          "timeoutMs": 30000,
+          "retries": 0
+        }
+      },
+      "artifactDigest": "sha256:c73d8a9a27e92ba2b2516121d067e84a34872307ce1dc521ec93003c25f6c3bb"
+    },
+    {
+      "sourceCommit": "74f3994e",
+      "ci": 41233600529,
+      "web": 41233600589,
+      "ciConclusion": "success",
+      "webConclusion": "success",
+      "unit": {
+        "tests": 19960,
+        "files": 1514,
+        "workers": 1,
+        "perTestDeadlineMs": 5000
+      },
+      "coverage": {
+        "tests": 19960,
+        "files": 1514,
+        "workers": 1,
+        "statements": "91.78",
+        "branches": "87.02",
+        "functions": "90.11",
+        "lines": "94.47",
+        "thresholdsPassed": true,
+        "perTestDeadlineMs": 15000
+      },
+      "browser": {
+        "selfHost": {
+          "passed": 530,
+          "skipped": 5
+        },
+        "container": {
+          "passed": 530,
+          "skipped": 5,
+          "timeoutMs": 30000,
+          "retries": 0
+        }
+      },
+      "artifactDigest": "sha256:ac50e3203fc71fa69160694e9b1ac35ad2fbacd9ea40f3ebe390459d96433439"
+    },
+    {
+      "sourceCommit": "4850901d",
+      "ci": 41257328138,
+      "web": 41257328293,
+      "ciConclusion": "success",
+      "webConclusion": "success",
+      "unit": {
+        "tests": 19967,
+        "files": 1516,
+        "workers": 1,
+        "perTestDeadlineMs": 5000
+      },
+      "coverage": {
+        "tests": 19967,
+        "files": 1516,
+        "workers": 1,
+        "statements": "91.77",
+        "branches": "87.01",
+        "functions": "90.09",
+        "lines": "94.47",
+        "thresholdsPassed": true,
+        "perTestDeadlineMs": 15000
+      },
+      "browser": {
+        "selfHost": {
+          "passed": 530,
+          "skipped": 5
+        },
+        "container": {
+          "passed": 530,
+          "skipped": 5,
+          "timeoutMs": 30000,
+          "retries": 0
+        }
+      },
+      "artifactDigest": "sha256:8038ee8c53fb7610a95c19011f97b23aea16640ce2645057273b7d7bc53d79d4"
+    },
+    {
+      "sourceCommit": "9e5af8c0",
+      "ci": 41262983182,
+      "web": 41262983290,
+      "ciConclusion": "success",
+      "webConclusion": "success",
+      "unit": {
+        "tests": 19972,
+        "files": 1518,
+        "workers": 1,
+        "perTestDeadlineMs": 5000
+      },
+      "coverage": {
+        "tests": 19972,
+        "files": 1518,
+        "workers": 1,
+        "statements": "91.81",
+        "branches": "87.09",
+        "functions": "90.26",
+        "lines": "94.51",
+        "thresholdsPassed": true,
+        "perTestDeadlineMs": 15000
+      },
+      "browser": {
+        "selfHost": {
+          "passed": 530,
+          "skipped": 5
+        },
+        "container": {
+          "passed": 530,
+          "skipped": 5,
+          "timeoutMs": 30000,
+          "retries": 0
+        }
+      },
+      "note": "Tests only since 4850901d, whose runtime records still describe the application image."
+    },
+    {
+      "sourceCommit": "01fc9505",
+      "ci": 41277891966,
+      "web": 41277891960,
+      "ciConclusion": "success",
+      "webConclusion": "success",
+      "unit": {
+        "tests": 19988,
+        "files": 1520,
+        "workers": 1,
+        "perTestDeadlineMs": 5000
+      },
+      "coverage": {
+        "tests": 19988,
+        "files": 1520,
+        "workers": 1,
+        "statements": "91.83",
+        "branches": "87.12",
+        "functions": "90.30",
+        "lines": "94.52",
+        "thresholdsPassed": true,
+        "perTestDeadlineMs": 15000
+      },
+      "browser": {
+        "selfHost": {
+          "passed": 530,
+          "skipped": 5
+        },
+        "container": {
+          "passed": 530,
+          "skipped": 5,
+          "timeoutMs": 30000,
+          "retries": 0
+        }
+      },
+      "artifactDigest": "sha256:01867ec6c2ba8b597ad2059b7c0a86138be7e955d4ae86afdb6f861766a11fbb"
+    },
+    {
+      "sourceCommit": "8eee5728",
+      "ci": 41284244850,
+      "web": 41284244859,
+      "ciConclusion": "success",
+      "webConclusion": "success",
+      "unit": {
+        "tests": 19988,
+        "files": 1520,
+        "workers": 1,
+        "perTestDeadlineMs": 5000
+      },
+      "coverage": {
+        "tests": 19988,
+        "files": 1520,
+        "workers": 1,
+        "statements": "91.83",
+        "branches": "87.12",
+        "functions": "90.30",
+        "lines": "94.52",
+        "thresholdsPassed": true,
+        "perTestDeadlineMs": 15000
+      },
+      "browser": {
+        "selfHost": {
+          "passed": 530,
+          "skipped": 5
+        },
+        "container": {
+          "passed": 530,
+          "skipped": 5,
+          "timeoutMs": 30000,
+          "retries": 0
+        }
+      },
+      "artifactDigest": "sha256:2839a1cfad4ab4985b5c54b666b86445089b27dbf9b2b847214d54d1b6854e0f"
+    },
+    {
+      "sourceCommit": "5271026e",
+      "ci": 41296434418,
+      "web": 41296434413,
+      "ciConclusion": "success",
+      "webConclusion": "success",
+      "unit": {
+        "tests": 19990,
+        "files": 1520,
+        "workers": 1,
+        "perTestDeadlineMs": 5000
+      },
+      "coverage": {
+        "tests": 19990,
+        "files": 1520,
+        "workers": 1,
+        "statements": "91.83",
+        "branches": "87.12",
+        "functions": "90.30",
+        "lines": "94.52",
+        "thresholdsPassed": true,
+        "perTestDeadlineMs": 15000
+      },
+      "browser": {
+        "selfHost": {
+          "passed": 530,
+          "skipped": 5
+        },
+        "container": {
+          "passed": 530,
+          "skipped": 5,
+          "timeoutMs": 30000,
+          "retries": 0
+        }
+      },
+      "artifactDigest": "sha256:75ff34685db28f837afe645f5b36126f92b10e1a38d1b44262170e1ef9193c38"
+    },
+    {
+      "sourceCommit": "d05534d8",
+      "ci": 41318512858,
+      "web": 41318512964,
+      "ciConclusion": "success",
+      "webConclusion": "success",
+      "unit": {
+        "tests": 19992,
+        "files": 1520,
+        "workers": 1,
+        "perTestDeadlineMs": 5000
+      },
+      "coverage": {
+        "tests": 19992,
+        "files": 1520,
+        "workers": 1,
+        "statements": "91.83",
+        "branches": "87.13",
+        "functions": "90.31",
+        "lines": "94.53",
+        "thresholdsPassed": true,
+        "perTestDeadlineMs": 15000
+      },
+      "browser": {
+        "selfHost": {
+          "passed": 534,
+          "skipped": 5
+        },
+        "container": {
+          "passed": 534,
+          "skipped": 5,
+          "timeoutMs": 30000,
+          "retries": 0
+        }
+      },
+      "artifactDigest": "sha256:b3ca420275a8746304b8f72bca413cc75a139cbf52b45756a4ed2fa35816e6d5"
+    },
+    {
+      "sourceCommit": "dfb4cffc",
+      "ci": 41324106559,
+      "web": 41324106629,
+      "ciConclusion": "success",
+      "webConclusion": "success",
+      "unit": {
+        "tests": 20003,
+        "files": 1521,
+        "workers": 1,
+        "perTestDeadlineMs": 5000
+      },
+      "coverage": {
+        "tests": 20003,
+        "files": 1521,
+        "workers": 1,
+        "statements": "91.84",
+        "branches": "87.13",
+        "functions": "90.31",
+        "lines": "94.53",
+        "thresholdsPassed": true,
+        "perTestDeadlineMs": 15000
+      },
+      "browser": {
+        "selfHost": {
+          "passed": 534,
+          "skipped": 5
+        },
+        "container": {
+          "passed": 534,
+          "skipped": 5,
+          "timeoutMs": 30000,
+          "retries": 0
+        }
+      },
+      "artifactDigest": "sha256:b9cfa0f1165b0a3155cf338432309aa4a145b20592fe13b0f3dd6c09729da3fd"
+    },
+    {
+      "sourceCommit": "204aa9f4",
+      "ci": 41331467301,
+      "web": 41331467270,
+      "ciConclusion": "success",
+      "webConclusion": "success",
+      "unit": {
+        "tests": 20018,
+        "files": 1524,
+        "workers": 1,
+        "perTestDeadlineMs": 5000
+      },
+      "coverage": {
+        "tests": 20018,
+        "files": 1524,
+        "workers": 1,
+        "statements": "91.85",
+        "branches": "87.15",
+        "functions": "90.33",
+        "lines": "94.53",
+        "thresholdsPassed": true,
+        "perTestDeadlineMs": 15000
+      },
+      "browser": {
+        "selfHost": {
+          "passed": 534,
+          "skipped": 5
+        },
+        "container": {
+          "passed": 534,
+          "skipped": 5,
+          "timeoutMs": 30000,
+          "retries": 0
+        }
+      },
+      "artifactDigest": "sha256:32d03910836ff31ab0141d1b8f83ac3fb23074c444d594155b7b0ad113436dd0"
+    },
+    {
+      "sourceCommit": "a3e43a9f",
+      "ci": 41337763366,
+      "web": 41337763369,
+      "ciConclusion": "success",
+      "webConclusion": "success",
+      "unit": {
+        "tests": 20023,
+        "files": 1524,
+        "workers": 1,
+        "perTestDeadlineMs": 5000
+      },
+      "coverage": {
+        "tests": 20023,
+        "files": 1524,
+        "workers": 1,
+        "statements": "91.85",
+        "branches": "87.15",
+        "functions": "90.33",
+        "lines": "94.53",
+        "thresholdsPassed": true,
+        "perTestDeadlineMs": 15000
+      },
+      "browser": {
+        "selfHost": {
+          "passed": 534,
+          "skipped": 5
+        },
+        "container": {
+          "passed": 534,
+          "skipped": 5,
+          "timeoutMs": 30000,
+          "retries": 0
+        }
+      },
+      "artifactDigest": "sha256:ce1951b5d03143ba6345450b57f9071b3ba45435ad52106e7df307a3fef92790"
+    }
+  ],
+  "hostedSkips": "The five skipped browser cases are hosted-only and establish nothing about hosted readiness.",
+  "latestSourceCommit": "a3e43a9f"
+}

@@ -1,0 +1,23 @@
+# PA 2026 ordinary state-only draft
+
+`calculatePA2026OrdinaryDraft` composes a finite Pennsylvania draft from complete actual 2026 originals without calculating or fabricating a completed federal return. It covers a single living unmarried owner in each actual full-year, part-year and nonresident class, with ordinary W-2 wages, complete payroll/residency/payment/SP/credit/local sources, explicit no-care/no-employer-benefit evidence, and reported PA withholding covering fresh reported PA tax.
+
+The existing PA residency and state calculations already handled 2026. The missing dependency was the ordinary composer's unconditional full-federal calculation, which reaches the intentionally incomplete 2026 federal rule pack. The new separately typed entrypoint reuses that composer through a private source-proof branch. The original ordinary API keeps its complete federal dependency and its existing 2026 refusal.
+
+## Source and calculation boundary
+
+Exact federal W-2 wages must exceed $70,244, the largest completed 2026 EIC phaseout across both filing tables and all four child-count columns in [Rev. Proc. 2025-32, section 4.06](https://www.irs.gov/pub/irs-drop/rp-25-32.pdf). This proves the needed federal EIC dependency is zero without guessing EIC children from PA dependents. Retained EIC, adjustment, foreign, care or specialized packets are refused. Known empty document arrays do not establish absence; the existing explicit complete-none original-source confirmations are required independently.
+
+The unchanged state components apply [Tax Reform Code sections 302–304](https://www.legis.state.pa.us/WU01/LI/LI/US/HTM/1971/0/0002..HTM#19710002u302s), [61 Pa. Code 121.8](https://www.pacodeandbulletin.gov/Display/pacode?file=/secure/pacode/data/061/chapter121/s121.8.html&d=reduce), [final 2026 REV-413(I)](https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2026/2026_rev-413i.pdf) and [Act 45 of 2025, Article XVI-W.2](https://www.palegis.us/statutes/unconsolidated/law-information/view-statute?ActNum=0045.&SessInd=0&SessYr=2025&txtType=PDF). The finite withholding-covered cohort needs neither an invented SP index nor a guessed 2027 interest rate. All arithmetic remains Decimal; PA40 reporting retains its existing aggregate-then-round boundaries.
+
+Independent literal cases retain $75,000 worldwide wages: full-year taxable income $75,000 gives $2,303 tax; part-year pre-move PA $9,000 plus resident-period all-source $30,000 gives $39,000 taxable and $1,197 tax; nonresident PA wages $9,000 gives $276 tax. Actual nonresident PA wages zero remains zero. Reported withholding $2,302.49 rounds to $2,302 and is insufficient; $2,302.50 rounds to $2,303 and covers the full-year case. Source cents and lexical snapshots remain unchanged.
+
+## Evidence and integration
+
+Private source packet `nov06-pa-2026-ordinary-draft-private`: manifest `03fbbc874e9c4ae29652c2ed0ce843bd3cc1836082d6d486335514301f51d690`. Independent ROOT review `nov06-pa-2026-draft-root-independent`: manifest `edcd26fc811bba3eb5e5cd560af8e915c1fdde1e9e4bc0b05bd7cf993c9becae`. The original three complete-source cases genuinely fail at the existing federal gate. Author 29 plus independent 13 cases pass; independent Python Decimal confirms literal taxes and the eight official EIC endpoints. Existing source capture/build/update APIs preserve originals and refuse stale owner, reference, lexical-money and payroll changes.
+
+Main integration evidence is `nov06-pa-2026-ordinary-draft-main-integration`: 156 tests across eight files, three product type checks, library and web builds, spec/inventory/lint, actual source audit and default/strict browser collection parity. The source-audit change is exactly two replacements and two additions; all 153 existing contracts and 590 case rows remain unchanged. Collection executes no browser cases. Inventory retains all 924 previous rows and 68 supported statuses; its two new inferred helper/spec rows remain conservatively unsupported pending any separately reviewed traceability link.
+
+The source packet retains the accidental broad include/timeout, private import and contradictory fixture setup failures, then the genuine three-case RED. Candidate rounding/census/type construction failures also remain alongside corrected results. These are distinguished from passing final checks.
+
+This is a state-only library draft. It adds no combined guided preview, annual-form/PDF mapping, filing admission, full-federal readiness, human tax review, hosted/native rehearsal or new browser qualification. Those gates remain unchanged. Lower-income EIC, married, positive-interest and specialized state-only cohorts require their own complete source methods.

@@ -98,7 +98,10 @@ export function buildWorkspaceStructuredFacts(
 
   for (const document of documents) {
     structuredFacts.push(...buildUploadStructuredFacts(document, supportedFactIds));
-    structuredFacts.push(...buildFixtureStructuredFacts(document, supportedFactIds));
+    // Repeated sample files still need distinct evidence identities. Otherwise
+    // audit references collapse two inputs into one indistinguishable fact.
+    const repeatedFixture = documents.filter((entry) => entry.matchedFixtureId === document.matchedFixtureId).length > 1;
+    structuredFacts.push(...buildFixtureStructuredFacts(document, supportedFactIds, repeatedFixture));
   }
 
   return structuredFacts.sort((left, right) => {

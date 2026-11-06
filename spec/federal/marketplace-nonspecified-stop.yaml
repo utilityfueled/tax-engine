@@ -1,0 +1,61 @@
+form: "Publication 974 nonspecified-premium stopping rule"
+fullName: "Actual completed Form7206 income limits before ordinary final credit"
+taxYear: 2025
+irsReference: "https://www.irs.gov/publications/p974"
+notes: |
+  Official Pub974 refreshed 2026-10-26: Before You Begin step1, Worksheet P
+  line3 and Instructions for Worksheet P after completing Form7206. If P2
+  does not exceed P1, or Form7206 line13 does not exceed line3, claim the
+  completed nonspecified deduction and calculate Form8962; do not continue
+  into W/X or the iterative/simplified special instructions. Each actual
+  business and owner retains its own completed Form7206 income limit.
+  This bounded method applies when every qualified specified-plan business
+  has no remaining income after its own actual nonspecified deduction, and
+  actual nonspecified deductions are positive. It does not consume an
+  unrelated business's earnings or infer a positive deduction from a loss.
+  Both2025 and isolated2026 use the same enacted162(l) source limitation;
+  no2026 form qualification or readiness change follows from this method.
+  Negative W15 with some remaining specified-business capacity and positive
+  noncoverage-family advances remain separate methods. No repayment split
+  or new allocation election is inferred here.
+lines:
+  - line: "source-stop"
+    description: "Determine the stop from completed actual business sources"
+    formula: "For each qualified specified-plan group use canonical remaining earned income after its own completed nonspecified claim. Stop only if all are <=0, at least one has actual specified premiums, and the combined actual nonspecified deduction is positive. Retain unrelated completed nonspecified claims without borrowing their income."
+    testRef: "tests/engine/federal-marketplace-nonspecified-stop.test.ts::stops before W when every actual specified business has exhausted its own income"
+  - line: "ordinary-final"
+    description: "Compute ordinary final credit and other claims once at the fixed health amount"
+    formula: "Specified deduction=0; health transfer=round(sum(actual completed nonspecified deductions)). Calculate actual final8962 and other AGI-sensitive claims using that fixed transfer, without retained Pub974 ordered worksheets or a historical repayment override. Preserve original source amounts and plan-order invariance. C5000/F20000/W225000 plus actual Cnonspecified6000/Fnonspecified3000 gives SEdeduction1767; Cclaim4646.6/Fclaim3000, health7647, AGI40586 and PTC4068."
+    testRef: "tests/engine/federal-marketplace-nonspecified-stop.test.ts::refigures the actual loan without retaining special ordered worksheets after the stop"
+  - line: "owner-attribution"
+    description: "Preserve independently calculated owner and business claims"
+    formula: "Actual joint C5000 primary and F20000 spouse produce separate SE half deductions354/1413, so Cnonspecified4646 and Fnonspecified3000 transfer7646. Each owner keeps their own health amount for QBI; no combined earnings limit or cross-owner repayment allocation is needed."
+    testRef: "tests/engine/federal-marketplace-nonspecified-stop.test.ts::keeps the actual spouse deduction and income limit separate at the stop"
+  - line: "exact-boundary"
+    description: "Use exact completed income rather than a printed zero"
+    formula: "Actual Cremaining0 qualifies; actual Cremaining0.01 does not, even though it prints0. A negative combined W15 caused by a separate business remains the separate nonexhausted method. Unknown or unconfirmed source facts never establish the stop."
+    testRef: "tests/engine/federal-marketplace-nonspecified-stop.test.ts::does not turn one cent of remaining capacity into a stopping election"
+  - line: "private-output"
+    description: "Render and bind the actual nonspecified claim and final credit"
+    formula: "Print each business's completed nonspecified Form7206; identify the published stop and final8962 separately. Do not label the ordinary final credit as special Step2. Repeated combined return transfer is not another deduction. Bind original payments, actual owner limits, final credit and each retained audit before PDF I/O. Do not manufacture W/X or retained ordered worksheets."
+    testRef: "tests/pdf/form7206-nonspecified-stop.test.ts::saves the completed nonspecified forms and rejects stale stopping sources before IO"
+  - line: "isolated-2026"
+    description: "Use actual final uncapped credit with the same source-derived stop"
+    formula: "The actual joint50000 income/1767 SE/7646 health gives2026 AGI40587. Two-person contiguous FPL21150 gives191percent and0.0617 applicable rate; contribution2504, PTC3496 and full104 repayment. Each owner has one actual SE trade, so no unrelated unverified multiple-trade SE allocation is supplied. Test constants are isolated; normal2026 readiness is unchanged."
+    testRef: "tests/engine/federal-marketplace-nonspecified-stop-2026.test.ts::uses the actual uncapped final credit after the isolated2026 stop"
+  - line: "guided-sources"
+    description: "Reach and edit the same actual plan sources without a claimed deduction input"
+    formula: "Existing guide controls retain specified and nonspecified original policies, receipts, owner and income links. C5000/SE354 plus spouse W250000 and actual N claims4646/3000 give health7646/AGI47000/PTC4515. Source edits revoke confirmation; blank remains unknown and cannot act as a stop election."
+    testRef: "tests/guided-interview/guided-marketplace-nonspecified-stop.test.ts::passes complete original plans through the actual published stop"
+  - line: "guided-reachability"
+    description: "Keep the original nonspecified plan editable in the full shell"
+    formula: "The same saved source model is reachable before adjustments Continue. An actual policy edit invalidates source confirmation; explicit reconfirmation restores calculation, while a blank paid amount keeps it incomplete."
+    testRef: "tests/apps/web/marketplace-nonspecified-stop-interactions.test.tsx::edits the actual stopped plan through the full shell without a deduction override"
+  - line: "production-source-flow"
+    description: "Preserve stopped original sources through the production desktop and mobile flow"
+    formula: "Actual C5000 and spouse W250000 sources retain AGI47000 after explicit source reconfirmation. Original monthly500 premiums, zero advances and business owners remain intact; a blank paid share stays unknown after reload. Source references and identifiers stay in the local review flow."
+    testRef: "apps/web/tests/guided-marketplace-nonspecified-stop.spec.ts::retains the completed nonspecified stop through source edits and reload"
+  - line: "workspace-output"
+    description: "Build the real flattened review packet from the actual completed source state"
+    formula: "The guide-derived workspace contains both nonspecified Form7206 business claims and the existing ordinary Form8962 reference summary. Retain the stop statement and combined7646 transfer; preserve actual4515 final credit and omit W/X. Each saved page carries the review notice and render copies clear tax identifiers. This does not add an ordinary physical8962 mapper."
+    testRef: "tests/apps/web/workspace-marketplace-nonspecified-stop.test.ts::exports the completed stop through the actual guided workspace"

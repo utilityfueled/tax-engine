@@ -35,6 +35,7 @@ export interface Form1099SAResult {
   hsaPostDeathEarnings: Decimal;
   hsaProhibitedTransactionDistributions: Decimal;
   defaultAccountOwner?: Form8889Input["accountOwner"];
+  unattributedRecordCount: number;
   accountOwnerSupport: Record<Form8889Input["accountOwner"], Form1099SAOwnerSupport>;
   unattributedSupport: Form1099SAOwnerSupport;
   lines: CalculatedLine[];
@@ -129,15 +130,7 @@ function isOtherBeneficiaryDeathDistribution(form: Form1099SA): boolean {
 function resolveOwnerAttribution(
   form: Form1099SA
 ): Form8889Input["accountOwner"] | undefined {
-  if (form.accountHolder !== undefined) {
-    return form.accountHolder;
-  }
-
-  if (isSurvivingSpouseInheritedHsaDistribution(form)) {
-    return "spouse";
-  }
-
-  return undefined;
+  return form.accountHolder;
 }
 
 function summarizeHsaForms(forms: Form1099SA[]): {
@@ -261,7 +254,7 @@ export function calculateForm1099SA(forms: Form1099SA[] = []): Form1099SAResult 
     "1",
     "HSA gross distributions available for Form 8889 Line 14a",
     aggregate.hsaGrossDistributions,
-    "Sum Form 1099-SA Box 1 for ordinary HSA records, including validated surviving-spouse inherited-HSA records that stay on the spouse path, plus Box 4 fair market value for nonspouse or estate death-distribution records",
+    "Sum Form 1099-SA Box 1 for ordinary HSA records, including surviving-spouse inherited accounts attributed only by actual return owner, plus Box 4 fair market value for nonspouse or estate death-distribution records",
     {
       "Ordinary HSA forms": ordinaryDistributionForms.length.toString(),
       "Nonspouse or estate death-distribution HSA forms": deathDistributionForms.length.toString(),
@@ -359,6 +352,7 @@ export function calculateForm1099SA(forms: Form1099SA[] = []): Form1099SAResult 
     hsaPostDeathEarnings: aggregate.hsaPostDeathEarnings,
     hsaProhibitedTransactionDistributions: aggregate.hsaProhibitedTransactionDistributions,
     defaultAccountOwner,
+    unattributedRecordCount: hsaForms.length - attributableOwners.length,
     accountOwnerSupport: {
       primary: {
         hsaGrossDistributions: accountOwnerSupport.primary.hsaGrossDistributions,
@@ -409,6 +403,14 @@ export function mergeForm1099SAIntoForm8889Input(
   form1099SA: Form1099SAResult,
   taxpayer?: Taxpayer
 ): Form8889Input | undefined {
+  if (taxpayer && !taxpayer.spouse && (input?.accountOwner === "spouse"
+    || form1099SA.defaultAccountOwner === "spouse"
+    || ownerSupportHasAnyValues(form1099SA.accountOwnerSupport.spouse))) {
+    throw new Error("HSA spouse-owned sources require actual spouse taxpayer context; reconcile ownership instead of relabeling the source.");
+  }
+  if (taxpayer && taxpayer.taxYear >= 2026 && form1099SA.unattributedRecordCount > 0) {
+    throw new Error("Actual account owner is required for every 2026 HSA source record.");
+  }
   const canDefaultUnattributedSupportToPrimary = canSafelyDefaultUnattributedSupportToPrimary(taxpayer);
   const hasUnattributedSupport = ownerSupportHasAnyValues(form1099SA.unattributedSupport);
   const inferredAccountOwner = input?.accountOwner
@@ -419,26 +421,17 @@ export function mergeForm1099SAIntoForm8889Input(
         : undefined
     );
   const requestedAccountOwner = inferredAccountOwner;
-  const remapSpouseSupportToPrimary =
-    requestedAccountOwner === "spouse"
-    && taxpayer !== undefined
-    && taxpayer.spouse === undefined;
-  const useInferredSurvivingSpouseSupportForPrimary =
-    input?.accountOwner === "primary"
-    && taxpayer?.spouse === undefined
-    && !ownerSupportHasAnyValues(form1099SA.accountOwnerSupport.primary)
-    && ownerSupportHasAnyValues(form1099SA.accountOwnerSupport.spouse);
-  const selectedAccountOwner = remapSpouseSupportToPrimary ? "primary" : requestedAccountOwner;
+  const selectedAccountOwner = requestedAccountOwner;
   const requestedOwnerSupport = requestedAccountOwner === undefined
     ? EMPTY_OWNER_SUPPORT
-    : useInferredSurvivingSpouseSupportForPrimary || remapSpouseSupportToPrimary
-      ? normalizeOwnerSupport(form1099SA.accountOwnerSupport.spouse)
-      : normalizeOwnerSupport(form1099SA.accountOwnerSupport[requestedAccountOwner]);
+    : normalizeOwnerSupport(form1099SA.accountOwnerSupport[requestedAccountOwner]);
   const ownerSupport = selectedAccountOwner === "primary" && canDefaultUnattributedSupportToPrimary
     ? addOwnerSupport(requestedOwnerSupport, normalizeOwnerSupport(form1099SA.unattributedSupport))
     : requestedOwnerSupport;
   const supportedAutomaticExceptionAmount = ownerSupport.hsaDeathDistributionDateOfDeathValue
-    .plus(ownerSupport.hsaDisabilityExceptionDistributions);
+    .plus(input?.disabilityExceptionTaxableDistributions === undefined
+      ? ownerSupport.hsaDisabilityExceptionDistributions
+      : d(input.disabilityExceptionTaxableDistributions));
   const requestedExceptionAmount = Decimal.max(
     new Decimal(0),
     d(input?.distributionsNotSubjectToAdditionalTax)
@@ -457,6 +450,7 @@ export function mergeForm1099SAIntoForm8889Input(
   return {
     accountOwner: selectedAccountOwner ?? "primary",
     coverageByMonth: input?.coverageByMonth ?? DEFAULT_HSA_COVERAGE_BY_MONTH,
+    useLastMonthRule: input?.useLastMonthRule,
     spouseFamilyCoverageMonths: input?.spouseFamilyCoverageMonths ?? [],
     contributionsMade: input?.contributionsMade ?? "0",
     archerMSAContributions: input?.archerMSAContributions ?? "0",
@@ -476,6 +470,7 @@ export function mergeForm1099SAIntoForm8889Input(
       input?.decedentQualifiedMedicalExpensesPaidWithinOneYearAfterDeath ?? "0",
     distributionsNotSubjectToAdditionalTax: autoExceptionAmount.toString(),
     distributionsAfterAge65: input?.distributionsAfterAge65 ?? "0",
+    disabilityExceptionTaxableDistributions: input?.disabilityExceptionTaxableDistributions,
     lastMonthRuleContributions: input?.lastMonthRuleContributions ?? "0",
     lastMonthRuleRedeterminedLimit: input?.lastMonthRuleRedeterminedLimit,
     priorYearRedeterminedLimitWorksheet: input?.priorYearRedeterminedLimitWorksheet,
@@ -483,6 +478,7 @@ export function mergeForm1099SAIntoForm8889Input(
     testingPeriodFailureDueToDeathOrDisability: input?.testingPeriodFailureDueToDeathOrDisability ?? false,
     supported1099SAGrossDistributions: ownerSupport.hsaGrossDistributions.toString(),
     supported1099SAReturnedExcessContributions: ownerSupport.hsaReturnedExcessContributions.toString(),
+    supported1099SAReturnedExcessContributionEarnings: ownerSupport.hsaReturnedExcessContributionEarnings.toString(),
     supported1099SADeathDistributionDateOfDeathValue: ownerSupport.hsaDeathDistributionDateOfDeathValue.toString(),
     supported1099SAOtherBeneficiaryDeathDistributionDateOfDeathValue:
       ownerSupport.hsaOtherBeneficiaryDeathDistributionDateOfDeathValue.toString(),

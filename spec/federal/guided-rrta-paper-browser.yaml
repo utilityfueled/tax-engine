@@ -1,0 +1,56 @@
+form: Guided railroad paper browser lifecycle
+taxYear: 2025
+reference: "https://www.irs.gov/instructions/i8959"
+status: partial
+lines:
+  - line: "actual-paper-original-controls"
+    formula: "Desktop and mobile begin without paper facts, collect explicit original Box12 B/N absence visibly, capture and separately confirm; unknown and stale documentary evidence remains refused without confirming tax facts."
+    testRef: "apps/web/tests/rrta-paper-review-native.spec.ts::collects separate paper originals downloads real review and preserves recovery privacy and year gates"
+  - line: "actual-review-response"
+    formula: "The actual draft-bundle not-filing and experimental-draft notices remain visible with unrelated guided sections unfinished. One genuine local review POST returns200, private no-store application/pdf review headers and saved PDF bytes with flattened fields and one review marker on every page. Original-bound4137/8959 are included. Filing POST remains400. Actual printed geometry/privacy requires separately retained physical review."
+    testRef: "apps/web/tests/rrta-paper-review-native.spec.ts::collects separate paper originals downloads real review and preserves recovery privacy and year gates"
+  - line: "saved-paper-recovery-and-privacy"
+    formula: "Reload and encrypted restore retain exact actual paper originals and source custody; wrong-password restore denies; raw and decoded request surfaces exclude private originals outside review body and exclude passwords everywhere. Final2026 visible guard hides review; both owned returns delete."
+    testRef: "apps/web/tests/rrta-paper-review-native.spec.ts::collects separate paper originals downloads real review and preserves recovery privacy and year gates"
+  - line: "saved-pdf-typed-privacy"
+    formula: "Saved review bytes retain all strict raw bytes, names, dictionary keys, PDF strings/hex and literal/hex strings decoded from every stream. A bounded isolated Python child additionally validates the full object graph and typed actual page/Form content: only strictly embedded fractional cm/Tm coordinate substrings may be distinguished from identifiers; integer identifiers, identifier hits in unknown/unreferenced streams or hidden/UTF16/encoded values, unknown content operators, raw matches, malformed parsing and untrusted child output deny. Every original private marker remains checked; structural flattening and one review notice per page remain required. Child deadline4s/output64KiB and browser30s/2workers/zero retries stay unchanged."
+    testRef: "tests/pdf/rrta-saved-review-privacy.test.ts::distinguishes compressed geometry in the actual saved-review inspector"
+  - line: "saved-pdf-hidden-encoding-denials"
+    formula: "Every representative literal, hex, UTF16, nested, hidden-name, unknown and unreferenced encoded stream, integer identifier, invalid operator, raw match and uncompressed numeric collision remains denied through the actual bounded parser; each distinct case keeps the ordinary5s unit deadline."
+    testRef: "tests/pdf/rrta-saved-review-privacy.test.ts::denies hidden saved-review identifier case %s"
+  - line: "saved-pdf-child-and-derived-surface-boundary"
+    formula: "Legacy PDFLib strict derived string checks deny before any child result can admit the document; child timeout, signal, error, stderr, excessive output, malformed or inconsistent projection denies. Markers travel on stdin only; no provider environment is inherited."
+    testRef: "tests/pdf/rrta-saved-review-privacy.test.ts::rejects malformed saved PDFs and untrusted bounded child outcomes"
+  - line: "saved-pdf-bounded-per-invocation-reuse"
+    formula: "Marker encoding variants and exact ASCII decimal eligibility may be prepared once per inspection; identical immutable content bytes may reuse only parser operations/spans within that same reader invocation, bounded to8MiB key bytes and4096 entries with full parsing fallback. All per-reference resource/Do/cycle/ambiguity/context/group checks and every argument check remain. After successful scanning, an identical retained immutable parsed-operations object may reuse only its context-free operand-string verdict within this invocation, bounded to4096 identity entries with full scanning fallback; raw/decoded/graph/page-text and resource-context checks are never skipped. No document/fact/result cache crosses invocations."
+    testRef: "tests/pdf/rrta-saved-review-privacy-efficiency.test.ts::reuses only identical parser bytes within one inspection and retains full fallback"
+  - line: "saved-pdf-safe-child-failure-categories"
+    formula: "Fail-closed child outcomes expose only a fixed safe category for timeout, spawn error, signal, exit, stderr, output, JSON or projection inconsistency; never raw error/code/stream/identifier content. Original4s deadline,64KiB bound, exact input hashes/pages/marker counts/scope and all privacy predicates remain."
+    testRef: "tests/pdf/rrta-saved-review-privacy-efficiency.test.ts::classifies bounded child failure %s without raw data"
+
+  - line: "saved-pdf-optional-phase-telemetry"
+    description: "Bounded source-free entered-phase evidence for the existing4s inspector"
+    formula: |
+      Optional FD3 carries at most8 fixed ordered major-phase records/2048bytes.
+      Each contains only version/ordinal/fixed phase/nonnegative integer cumulative
+      wall and processCPU microseconds. No document/source/marker/error data.
+      Strict whole-payload parsing rejects unknown/truncated/oversize/malformed
+      telemetry without changing the original child verdict. Failure-only output
+      is a reconstructed whitelist with original safe failure category; no raw
+      output fallback. Preserve4000ms/65536B/env and original8 success fields.
+      Nine privacy/main ASTs unchanged; only six outer inspect stage calls.
+      Unsupported FD/writes disable optional diagnostics; no retry. Shared pipe
+      flooding remains an original process error, never ignored as success.
+    testRef: "tests/pdf/rrta-saved-review-privacy-efficiency.test.ts::records safe phase evidence on the original timeout without forwarding raw child data"
+
+  - line: "saved-pdf-telemetry-literal-wire-grammar"
+    formula: "Reject every backslash escape in optional telemetry before JSON decoding. The supported fixed ASCII writer has no escaped keys/values; escaped duplicate keys are malformed, never a valid diagnostic prefix. Preserve original timeout/privacy verdict and no raw output."
+    testRef: "tests/pdf/rrta-saved-review-privacy-efficiency.test.ts::rejects escaped duplicate diagnostic keys through the actual failure wrapper: %s"
+
+  - line: "saved-pdf-bounded-operand-verdict-reuse"
+    formula: "For repeated exact parsed content, scan every argument before retaining its successful context-free operand verdict. Retain at most4096 operation-list identities, which remain alive for the inspection; on capacity exhaustion scan fully. A subsequent inspection or changed marker set starts empty. Repeated Do references still validate each resource context and preserve cycle, missing resource, ambiguous context, encoded marker and indirect operand denials. Existing4s child deadline and all remaining privacy surfaces are unchanged."
+    testRef: "tests/pdf/rrta-saved-review-privacy-efficiency.test.ts::reuses only successfully scanned immutable operands within one inspection and retains full fallback"
+
+  - line: "saved-pdf-exact-name-success-reuse"
+    formula: "Within one inspect marker closure only, exact type NameObject may reuse its full successful scan_string verdict for the exact immutable str after str(value) still executes. Retain only complete successes, at most4096 names and512 characters per retained name; long names and capacity exhaustion fall back to all original checks without denial. TextString original_bytes, ByteString bytes, subclasses, raw/graph/encoded/geometry/context/resource/cycle/parser/page-text checks are unchanged. New marker sets and inspections never share verdicts;4s/64KiB and strict8field output stay unchanged."
+    testRef: "tests/pdf/rrta-saved-review-name-verdict.test.ts::reuses only complete successful exact NameObject checks within one inspection"

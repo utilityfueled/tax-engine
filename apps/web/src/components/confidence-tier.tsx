@@ -8,13 +8,13 @@ import { RetroShell } from "./retro-shell";
 /* ── Badge ── */
 
 const TIER_CSS: Record<ConfidenceTier, string> = {
-  validated: "confidence-badge confidence-validated",
+  dedicated: "confidence-badge confidence-dedicated",
   "best-effort": "confidence-badge confidence-best-effort",
   "not-applicable": "confidence-badge confidence-not-applicable",
 };
 
 const TIER_ICON: Record<ConfidenceTier, string> = {
-  validated: "✓",      // checkmark
+  dedicated: "—",      // implementation category, not qualification
   "best-effort": "⚠",  // warning sign
   "not-applicable": "—", // em dash
 };
@@ -79,7 +79,7 @@ export function StateReturnPanel({ stateCodes }: { stateCodes: string[] }) {
   return (
     <RetroShell title="State Returns" eyebrow="CONFIDENCE" panelId="workspace-state-returns">
       <p className="panel-text">
-        Accuracy level for {entries.length === 1 ? "the" : "each"} detected filing{" "}
+        Review limitations for {entries.length === 1 ? "the" : "each"} detected filing{" "}
         {entries.length === 1 ? "state" : "states"}.
       </p>
       <ul className="stack-list">

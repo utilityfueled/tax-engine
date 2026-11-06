@@ -1,0 +1,10 @@
+form: "Energy source facts"
+taxYear: 2026
+references:
+  - "https://www.irs.gov/instructions/i5695"
+lines:
+  - line: "source-records"
+    description: "Preserve actual improvement, installation and carryforward facts"
+    formula: "Qualified improvements and residential clean-energy properties retain individual category, net qualified cost, installation completion date and explicit qualification. Keep manufacturer identifiers and fuel-cell capacity where applicable. Prior-year carryforward retains its actual source year and confirmation. Omitted residence/carryforward facts remain unknown; never default a qualification to true."
+    irsRef: "Form 5695 instructions Parts I and II; Public Law 119-21 sections 70505 and 70506"
+    testRef: "tests/models/energy-source-facts.test.ts::preserves explicit energy source facts and leaves missing qualification unknown"

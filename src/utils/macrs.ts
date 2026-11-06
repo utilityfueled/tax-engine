@@ -31,12 +31,19 @@ import {
   type MACRSConvention,
 } from "@/models/constants.js";
 import { d, roundDollar } from "@/utils/decimal.js";
+import { resolveMACRSAssetBasisSources, type MACRSBasisSourceAmounts, type MACRSBasisSourceStatus } from "@/models/macrs-asset-basis-sources.js";
+
+import { resolveMACRSDispositionSources } from "@/models/macrs-disposition-sources.js";
 
 const ZERO = new Decimal(0);
 
 export interface AssetDepreciationResult {
+  dispositionSourceStatus?: "documented_ordinary_nonterminal";
+  dispositionAudit?: { sourceTaxYear: number; dispositionDate: string; annualPercentage: Decimal; fraction: Decimal; fractionNumerator: Decimal; fractionDenominator: Decimal; priorAllowedOrAllowable: Decimal; openingAdjustedBasis: Decimal; uncappedDepreciation: Decimal; preRoundDepreciation: Decimal; };
   description: string;
   costBasis: Decimal;
+  basisSourceStatus: MACRSBasisSourceStatus;
+  basisSourceAmounts?: MACRSBasisSourceAmounts;
   recoveryPeriod: number;
   method: MACRSMethod;
   convention: MACRSConvention;
@@ -64,7 +71,21 @@ export function computeAssetDepreciation(
   taxYear: number,
   conventionOverride?: MACRSConvention,
 ): AssetDepreciationResult | null {
-  const costBasis = d(asset.costBasis);
+  const disposition = resolveMACRSDispositionSources(asset, taxYear);
+  if (disposition) {
+    const uncappedDepreciation = disposition.originalMacrsBasis.times(disposition.annualPercentage).div(100).times(disposition.fractionNumerator).div(disposition.fractionDenominator);
+    const preRoundDepreciation = Decimal.min(uncappedDepreciation, disposition.remainingBasis);
+    return { description: asset.description ?? "", costBasis: disposition.originalMacrsBasis,
+      basisSourceStatus: "legacy_unqualified", dispositionSourceStatus: "documented_ordinary_nonterminal",
+      dispositionAudit: { sourceTaxYear: taxYear, dispositionDate: disposition.dispositionDate, annualPercentage: disposition.annualPercentage, fraction: disposition.fraction, fractionNumerator: disposition.fractionNumerator, fractionDenominator: disposition.fractionDenominator, priorAllowedOrAllowable: disposition.priorAllowedOrAllowable, openingAdjustedBasis: disposition.remainingBasis, uncappedDepreciation, preRoundDepreciation },
+      recoveryPeriod: disposition.recoveryPeriod, method: disposition.method, convention: disposition.convention,
+      placedInServiceYear: disposition.placedInServiceYear, placedInServiceMonth: disposition.placedInServiceMonth,
+      recoveryYear: disposition.recoveryYear, percentage: disposition.annualPercentage,
+      depreciation: roundDollar(preRoundDepreciation), fullyDepreciated: false };
+  }
+  const basisSourceAmounts = resolveMACRSAssetBasisSources(asset, taxYear);
+  const basisSourceStatus: MACRSBasisSourceStatus = basisSourceAmounts ? "documented_first_year" : "legacy_unqualified";
+  const costBasis = basisSourceAmounts?.regularMacrsBasis ?? d(asset.costBasis);
   if (costBasis.lessThanOrEqualTo(ZERO)) return null;
 
   const recoveryPeriod = parseFloat(asset.recoveryPeriod);
@@ -74,16 +95,20 @@ export function computeAssetDepreciation(
   // Recovery year: year 1 = placed-in-service year
   const recoveryYear = taxYear - pisYear + 1;
   if (recoveryYear < 1) return null;
+  // Pub946 chapter1 Excepted Property: no depreciation when placed and
+  // disposed in the same year. An absent disposition remains unasserted.
+  if (recoveryYear === 1 && asset.disposedDuringYear === true) return null;
 
   const isRealProperty = recoveryPeriod === 27.5 || recoveryPeriod === 39;
   const method = resolveMethod(asset.method, recoveryPeriod);
 
-  // Convention resolution: explicit asset override > aggregate override > default
+  // The statutory current-year aggregate convention cannot be opted out of
+  // by an asset's explicit half-year choice. Prior-year calls have no override.
   let convention: MACRSConvention;
-  if (asset.convention) {
-    convention = asset.convention as MACRSConvention;
-  } else if (conventionOverride && !isRealProperty) {
+  if (conventionOverride && !isRealProperty && recoveryYear === 1) {
     convention = conventionOverride;
+  } else if (asset.convention) {
+    convention = asset.convention as MACRSConvention;
   } else {
     convention = resolveConvention(undefined, isRealProperty);
   }
@@ -97,6 +122,8 @@ export function computeAssetDepreciation(
     return {
       description: asset.description ?? "",
       costBasis,
+      basisSourceStatus,
+      ...(basisSourceAmounts ? { basisSourceAmounts } : {}),
       recoveryPeriod,
       method,
       convention,
@@ -110,24 +137,13 @@ export function computeAssetDepreciation(
   }
 
   const percentage = table[recoveryYear - 1];
-  let depreciation = roundDollar(costBasis.times(percentage).dividedBy(100));
-
-  if (asset.disposedDuringYear && !isRealProperty && recoveryYear <= maxYears) {
-    // Disposal year: half the table percentage for half-year convention,
-    // or the applicable quarter fraction for mid-quarter convention.
-    if (convention === "midQuarter") {
-      // Mid-quarter disposal: deduction for the quarter fraction of the year
-      // the asset was disposed. Since we don't track disposal quarter,
-      // use the same halving rule as a reasonable approximation.
-      depreciation = roundDollar(depreciation.dividedBy(2));
-    } else {
-      depreciation = roundDollar(depreciation.dividedBy(2));
-    }
-  }
+  const depreciation = roundDollar(costBasis.times(percentage).dividedBy(100));
 
   return {
     description: asset.description ?? "",
     costBasis,
+    basisSourceStatus,
+    ...(basisSourceAmounts ? { basisSourceAmounts } : {}),
     recoveryPeriod,
     method,
     convention,
@@ -149,6 +165,7 @@ export function computeAssetDepreciation(
  * switches from half-year to mid-quarter convention.
  */
 export interface AggregatedDepreciation {
+  basisSourceStatus: MACRSBasisSourceStatus;
   /** Line 17: MACRS depreciation for assets placed in service before the current year */
   priorYearAssets: Decimal;
   /** Line 19: Current-year GDS depreciation (200DB or 150DB) */
@@ -167,6 +184,16 @@ export function computeAggregateDepreciation(
   assets: DepreciableAsset[],
   taxYear: number,
 ): AggregatedDepreciation {
+
+  const dispositionIdentities = new Set<string>();
+  for (const asset of assets) {
+    resolveMACRSDispositionSources(asset, taxYear);
+    if (asset.dispositionSources !== undefined) {
+      const identity = JSON.stringify([asset.dispositionSources.activityIdentity, asset.dispositionSources.assetIdentity]);
+      if (dispositionIdentities.has(identity)) throw new Error("MACRS disposition sources: duplicate actual asset identity");
+      dispositionIdentities.add(identity);
+    }
+  }
   // --- Step 1: Mid-quarter test on current-year personal property ---
   // The mid-quarter test considers ALL personal property including listed property
   const midQuarterRequired = isMidQuarterRequired(assets, taxYear);
@@ -211,6 +238,7 @@ export function computeAggregateDepreciation(
   const listedProperty = computeListedPropertyAggregation(assets, taxYear, conventionOverride);
 
   return {
+    basisSourceStatus: assets.length > 0 && assets.every(asset => asset.basisSources !== undefined) ? "documented_first_year" : "legacy_unqualified",
     priorYearAssets, currentYearGds, currentYearAds, assetResults,
     midQuarterRequired, listedProperty,
   };
@@ -224,8 +252,8 @@ export function computeAggregateDepreciation(
  * depreciable basis of such property is placed in service during the last
  * 3 months (October through December), mid-quarter is required.
  *
- * Assets with an explicit `convention` set to something other than
- * "midQuarter" are excluded from the test (they override the default).
+ * Explicit conventions do not exempt eligible property. Exclude known
+ * same-year dispositions and the personal-use part of listed-property basis.
  */
 export function isMidQuarterRequired(
   assets: DepreciableAsset[],
@@ -235,6 +263,8 @@ export function isMidQuarterRequired(
   let q4Basis = ZERO;
 
   for (const asset of assets) {
+    resolveMACRSDispositionSources(asset, taxYear);
+  const basisSourceAmounts = resolveMACRSAssetBasisSources(asset, taxYear);
     const recoveryPeriod = parseFloat(asset.recoveryPeriod);
     const isRealProperty = recoveryPeriod === 27.5 || recoveryPeriod === 39;
     if (isRealProperty) continue; // real property excluded from the test
@@ -242,10 +272,15 @@ export function isMidQuarterRequired(
     const pisYear = parseInt(asset.placedInServiceDate.substring(0, 4), 10);
     if (pisYear !== taxYear) continue; // only current-year assets
 
-    // Assets with an explicit convention are not subject to the auto-test
-    if (asset.convention) continue;
+    // Pub946 excludes assets placed and disposed in the same year, but an
+    // explicit convention does not exempt otherwise eligible MACRS basis.
+    if (asset.disposedDuringYear === true) continue;
 
-    const basis = d(asset.costBasis);
+    // Actual section179 is business-only; allocate gross use before subtracting it.
+    // Bonus affects regular MACRS, never the statutory mid-quarter test basis.
+    const basis = basisSourceAmounts?.midQuarterTestBasis ?? (asset.isListedProperty
+      ? d(asset.costBasis).times(new Decimal(asset.businessUsePercentage ?? 100)).dividedBy(100)
+      : d(asset.costBasis));
     if (basis.lessThanOrEqualTo(ZERO)) continue;
 
     totalBasis = totalBasis.plus(basis);
@@ -259,7 +294,7 @@ export function isMidQuarterRequired(
   if (totalBasis.isZero()) return false;
 
   // More than 40% → mid-quarter required
-  return q4Basis.dividedBy(totalBasis).greaterThan(new Decimal("0.40"));
+  return q4Basis.times(100).greaterThan(totalBasis.times(40));
 }
 
 // ---------------------------------------------------------------------------
@@ -269,6 +304,8 @@ export function isMidQuarterRequired(
 export interface ListedPropertyResult {
   description: string;
   costBasis: Decimal;
+  basisSourceStatus: MACRSBasisSourceStatus;
+  basisSourceAmounts?: MACRSBasisSourceAmounts;
   businessUsePercentage: Decimal;
   isPassengerAutomobile: boolean;
   /** Whether business use exceeds 50% (required for MACRS GDS; otherwise ADS SL) */
@@ -312,7 +349,10 @@ export function computeListedPropertyDepreciation(
   taxYear: number,
   conventionOverride?: MACRSConvention,
 ): ListedPropertyResult | null {
-  const costBasis = d(asset.costBasis);
+  if (resolveMACRSDispositionSources(asset, taxYear)) throw new Error("MACRS disposition sources: ordinary disposal cannot enter listed-property calculation");
+  const basisSourceAmounts = resolveMACRSAssetBasisSources(asset, taxYear);
+  const basisSourceStatus: MACRSBasisSourceStatus = basisSourceAmounts ? "documented_first_year" : "legacy_unqualified";
+  const costBasis = basisSourceAmounts?.regularMacrsBasis ?? d(asset.costBasis);
   if (costBasis.lessThanOrEqualTo(ZERO)) return null;
 
   const businessUsePct = new Decimal(asset.businessUsePercentage ?? 100);
@@ -324,6 +364,7 @@ export function computeListedPropertyDepreciation(
   const pisMonth = parseInt(asset.placedInServiceDate.substring(5, 7), 10);
   const recoveryYear = taxYear - pisYear + 1;
   if (recoveryYear < 1) return null;
+  if (recoveryYear === 1 && asset.disposedDuringYear === true) return null;
 
   // >50% business use required for MACRS GDS; otherwise ADS straight-line
   const qualifiesForMacrs = businessUsePct.greaterThan(new Decimal(50));
@@ -337,13 +378,13 @@ export function computeListedPropertyDepreciation(
     ? resolveMethod(asset.method, effectiveRecoveryPeriod)
     : "SL";
 
-  // Convention resolution: explicit > aggregate override > default
+  // A mandatory current-year aggregate convention precedes asset choices.
   const isRealProperty = effectiveRecoveryPeriod === 27.5 || effectiveRecoveryPeriod === 39;
   let convention: MACRSConvention;
-  if (asset.convention) {
-    convention = asset.convention as MACRSConvention;
-  } else if (conventionOverride && !isRealProperty) {
+  if (conventionOverride && !isRealProperty && recoveryYear === 1) {
     convention = conventionOverride;
+  } else if (asset.convention) {
+    convention = asset.convention as MACRSConvention;
   } else {
     convention = resolveConvention(undefined, isRealProperty);
   }
@@ -356,6 +397,8 @@ export function computeListedPropertyDepreciation(
     return {
       description: asset.description ?? "",
       costBasis,
+      basisSourceStatus,
+      ...(basisSourceAmounts ? { basisSourceAmounts } : {}),
       businessUsePercentage: businessUsePct,
       isPassengerAutomobile: isPassengerAuto,
       qualifiesForMacrs,
@@ -372,15 +415,12 @@ export function computeListedPropertyDepreciation(
   }
 
   const percentage = table[recoveryYear - 1];
-  let rawDepreciation = roundDollar(costBasis.times(percentage).dividedBy(100));
-
-  // Disposal-year halving
-  if (asset.disposedDuringYear && !isRealProperty && recoveryYear <= maxYears) {
-    rawDepreciation = roundDollar(rawDepreciation.dividedBy(2));
-  }
+  const rawDepreciation = roundDollar(costBasis.times(percentage).dividedBy(100));
 
   // Apply business-use percentage
-  const tentativeDepreciation = roundDollar(rawDepreciation.times(businessUseRatio));
+  const tentativeDepreciation = basisSourceAmounts
+    ? rawDepreciation
+    : roundDollar(rawDepreciation.times(businessUseRatio));
 
   // Apply §280F cap for passenger automobiles
   let section280FCap: Decimal | null = null;
@@ -393,7 +433,7 @@ export function computeListedPropertyDepreciation(
       const limitTable = isFirstYearBonus ? limits.withBonus : limits.withoutBonus;
       // Year 1-3 use indices 0-2; year 4+ use index 3
       const capIndex = Math.min(recoveryYear - 1, limitTable.length - 1);
-      section280FCap = limitTable[capIndex];
+      section280FCap = roundDollar(limitTable[capIndex].times(businessUseRatio));
       depreciation = Decimal.min(tentativeDepreciation, section280FCap);
     }
   }
@@ -401,6 +441,8 @@ export function computeListedPropertyDepreciation(
   return {
     description: asset.description ?? "",
     costBasis,
+    basisSourceStatus,
+    ...(basisSourceAmounts ? { basisSourceAmounts } : {}),
     businessUsePercentage: businessUsePct,
     isPassengerAutomobile: isPassengerAuto,
     qualifiesForMacrs,
@@ -432,6 +474,8 @@ export function computeListedPropertyAggregation(
   const results: ListedPropertyResult[] = [];
 
   for (const asset of assets) {
+    resolveMACRSAssetBasisSources(asset, taxYear);
+    resolveMACRSDispositionSources(asset, taxYear);
     if (!asset.isListedProperty) continue;
 
     const result = computeListedPropertyDepreciation(asset, taxYear, conventionOverride);

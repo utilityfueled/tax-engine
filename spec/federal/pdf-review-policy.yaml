@@ -1,0 +1,39 @@
+form: "PDF-Review-Policy"
+fullName: "Visible review-only PDF output boundaries"
+taxYear: 2025
+reference: "docs/upgrade-2026-execution-brief.md"
+notes: |
+  This is an output policy, not a tax computation or form qualification.
+  Every registered review template is stamped before it reaches a caller,
+  including early-return paths. Every added page is stamped when finalized.
+  Existing document Subject metadata never establishes a visible page notice.
+  Unchanged template hashes, year and filing gates remain mandatory.
+lines:
+  - line: "compression-byte-compatibility"
+    description: "PDF compression preserves bytes and reset semantics with native zero filling"
+    formula: "The pinned pako1.0.11 local patch may clear internal buffers with native fill(0) when available, retaining the original fallback. Compressed output for repeated and chunked streams, full flush, typed/untyped buffers, dictionaries, raw and gzip modes must match the unmodified bundled implementation and decode with an independent zlib reader. PDF content, notices, privacy and qualification gates are unchanged."
+    testRef: "tests/pdf/compression-compatibility.test.ts::preserves compressed bytes and independent decoding across reset modes"
+  - line: "form8815-reference-pagination"
+    description: "Every Form8815 reference body line remains above the review footer"
+    formula: "Paginate each wrapped text line before it crosses the existing40-point body margin, including long audit explanations and every computed-source total. Preserve all text and amounts in order, and stamp every added page with the review-only notice."
+    testRef: "tests/pdf/form8815-reference-pagination.test.ts::keeps every wrapped Form8815 audit line above the review footer"
+  - line: "mapped-write-batch"
+    description: "One current field lookup pass for a bounded batch of mapped writes"
+    formula: "Resolve names and types from the current form once at apply time; reject missing or wrong-type fields even for blank values before writes. Apply exact original text/currency/checkbox values in order, retain no cross-document index, and close the batch after application. Template, privacy and year gates remain unchanged."
+    testRef: "tests/pdf/pdf-field-batch.test.ts::saves text, exact money and both checkbox states with one lookup pass"
+  - line: "registered-template"
+    description: "Review templates are visibly marked before mapping"
+    formula: "Verify registered revision/year, load, visibly stamp every page, then return."
+    testRef: "tests/pdf/review-template-notice.test.ts::marks every registered template before callers can return it: %s"
+  - line: "appended-pages"
+    description: "Pages added after the initial stamp remain review-only"
+    formula: "Stamp each newly added page at finalization; repeated calls do not add duplicate notices to unchanged pages."
+    testRef: "tests/pdf/review-template-notice.test.ts::marks appended pages and does not trust a matching metadata subject"
+  - line: "unavailable-year"
+    description: "Unavailable years cannot inspect a template path"
+    formula: "Reject unsupported mapping years before filesystem reads."
+    testRef: "tests/pdf/review-template-notice.test.ts::rejects an unavailable year before reading a template path"
+  - line: "saved-pages"
+    description: "Saved and merged pages retain one visible review notice"
+    formula: "Replace only the dedicated review-notice drawing stream on each finalization; reload/copy and arbitrary Subject metadata never suppress the visible notice or duplicate it."
+    testRef: "tests/pdf/review-template-notice.test.ts::replaces dedicated notice streams after saving and merging pages"

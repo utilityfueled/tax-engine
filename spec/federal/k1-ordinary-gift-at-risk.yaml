@@ -1,0 +1,62 @@
+form: "K1 Ordinary Gift At Risk Classification"
+fullName: "Separately stated ordinary charitable gifts outside the actual section465 activity loss"
+taxYear: 2025
+irsReference: "https://www.ecfr.gov/current/title-26/section-1.702-1"
+retrievedAt: "2026-10-28"
+reviewStatus: "independent-review-pending"
+notes: |
+  IRC465(c),(d) limits deductions attributable to the identified business or
+  income-producing activity. Final Reg1.702-1(a)(4),1.703-1(a)(2)(iv),
+  IRC1363(b)(2) and Reg1.1366-1(a)(2)(iii) separately pass ordinary section170
+  gifts to the individual. An ordinary public cash or ordinary appreciated-stock
+  gift on the original charitable K1 code does not become an activity deduction
+  because an all-items checkbox or an attachment lists its source ID.
+  This is a bounded statutory/final-regulation inference for the existing ordinary
+  gift source contract. Proposed1.465-13 corroborates but is not final authority.
+  Reg1.162-15 business payments with commensurate return, conservation/property
+  special regimes and unrepresented activity items are separate; no input election
+  can transform their classification into an ordinary section170 gift.
+  Basis limitation still occurs first. Actual ordinary and capital losses,
+  separately stated income, distributions, actual risk increases/decreases and
+  Form6198 reconciliation remain unchanged. The activity loss excludes the
+  basis-admitted ordinary gifts, which retain their original identities and pass
+  to section170 without new465 suspension. Current receipts and original
+  basis-origin years are retained; this rule supplies no new first170 carry year.
+  Independently recorded prior465 history remains distinct. This correction
+  neither reclassifies an old filed return nor re-ages its original section170
+  history. Unknown original historical use remains a separate source question.
+  The actual Form6198 PartI line4 and assigned charitable IDs must exclude the
+  ordinary basis-admitted gifts. Existing historical-risk records keep their
+  exact source binding. Unknown/false confirmations and wrong source amounts
+  reject rather than being repaired or zero-filled.
+  Same current ordinary classification is tested with isolated2026 constants;
+  the production year and physical-form gates remain closed.
+lines:
+  - line: "current-ordinary-gift"
+    description: "Exclude a proven ordinary gift from current activity loss"
+    formula: "Actual ordinaryloss10000, risk0/4000, separate basis-admitted cashgift2000 and actual line4zero gives allowed ordinary0/4000 and suspended10000/6000. Gift2000 remains available with no465 suspension."
+    testRef: "tests/engine/forms/k1-ordinary-gift-at-risk.test.ts::keeps ordinary gifts outside zero and binding actual activity losses"
+  - line: "zero-risk-canonical"
+    description: "An ordinary gift alone does not require invented risk capacity"
+    formula: "Partnership orS corporation actualcashgift5000, basis5000 and actual activityloss0/risk0 has AGI100000, ScheduleA cash5000 and no170carry. Unknown risk source remains unknown."
+    testRef: "tests/engine/federal-k1-ordinary-gift-at-risk.test.ts::uses actual ordinary gifts at zero activity risk for either entity"
+  - line: "ordinary-source-proof"
+    description: "Actual activity originals cannot silently include the separate gift"
+    formula: "Actual ordinaryloss10000 plus ordinarygift2000 requires line4zero and no current gift IDs in the activity assignment. Entering line4=2000 or assigning that current gift rejects; zero is not assumed from missing."
+    testRef: "tests/engine/federal-k1-ordinary-gift-at-risk.test.ts::rejects gift-as-activity statements and missing original zero"
+  - line: "basis-and-risk"
+    description: "Keep basis and activity limitations independent"
+    formula: "Ordinary80000+cashgift20000 share50000basis, leaving40000ordinary+10000gift. Actualrisk25000 allows25000ordinary, suspends15000ordinary and leaves10000gift available. Separate basis suspensions40000ordinary/10000gift remain. Wages100000 gives AGI75000 and QBI loss25000."
+    testRef: "tests/engine/federal-k1-ordinary-gift-at-risk.test.ts::preserves basis ordinary risk and charitable ledgers separately"
+  - line: "source-conservation"
+    description: "Preserve exact gift amounts and actual decreases"
+    formula: "Ordinary8.02, risk5.53 and separate1.01cash+2.03property allows5.53ordinary and all3.04gifts, suspends2.49ordinary only. Reordering gifts changes no amount. Actual risk decrease0.01 changes only ordinary allowance to5.52; no global Decimal setting changes."
+    testRef: "tests/engine/forms/k1-ordinary-gift-at-risk.test.ts::retains exact original gifts through activity ordering and decreases"
+  - line: "legacy-history"
+    description: "Do not use the current classification to invent historical original use"
+    formula: "Original prior465 sources remain on their recorded original character/year ledger. The current correction does not infer that an old recorded gift had no prior170use, start a2025/2026clock, or repair an old filed calculation. Existing completeness and identity checks remain."
+    testRef: "tests/engine/federal-k1-ordinary-gift-at-risk.test.ts::retains original history and requires complete actual source identity"
+  - line: "guide-classification"
+    description: "The existing source controls explain the ordinary gift boundary"
+    formula: "The activity fieldset states that current ordinary charitable gifts stay outside this list. Existing prior source IDs remain editable with no defaults; explicit none differs from missing, edits invalidate confirmation, and a false source answer remains false."
+    testRef: "tests/apps/web/k1-charitable-at-risk-interactions.test.tsx::collects original activity membership without inventing a gift identity"

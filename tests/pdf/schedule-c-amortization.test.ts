@@ -1,0 +1,17 @@
+/** Spec: spec/federal/schedule-c.yaml#27b-amortization-review-binding; form-4562.yaml#44-schedule-c-attribution. */
+import {expect,it,vi} from 'vitest';
+import {calculateFederalTax} from '@/engine/federal.js';
+import {fillScheduleC,SCHEDULE_C_FIELDS} from '@/pdf/fill-schedule-c.js';
+import {fillReturn} from '@/pdf/fill-return.js';
+import {redactReviewIdentifiers} from '@/pdf/redact-review-identifiers.js';
+import * as pdfUtils from '@/pdf/pdf-utils.js';
+import {scheduleCAmortizationFixture,scheduleCAmortizationProof} from '../fixtures/schedule-c-amortization.js';
+it('renders actual amortization PartV and rejects stale originals before I O',async()=>{
+ const input=scheduleCAmortizationFixture(),result=calculateFederalTax(input),doc=await fillScheduleC(redactReviewIdentifiers(input),result,'forms/blank/2025/f1040sc.pdf');const form=doc.getForm();expect(form.getTextField(SCHEDULE_C_FIELDS.line27).getText()).toBe('1100');expect(form.getTextField(SCHEDULE_C_FIELDS.line28).getText()).toBe('2100');expect(form.getTextField(SCHEDULE_C_FIELDS.line31).getText()).toBe('37900');expect(form.getTextField('topmostSubform[0].Page2[0].PartVTable[0].Item2[0].f2_17[0]').getText()).toMatch(/amortization/i);expect(form.getTextField('topmostSubform[0].Page2[0].PartVTable[0].Item2[0].f2_18[0]').getText()).toBe('600');
+ for(const mutate of [(i:typeof input)=>{const p=(i.scheduleC!.sourceFacts! as unknown as Record<string,unknown>).amortization as ReturnType<typeof scheduleCAmortizationProof>;p.rows[0].sourceReference='Changed exact original reference';},(i:typeof input)=>{i.form4562!.amortizableAssets![0].description='Changed exact original goodwill description';const p=(i.scheduleC!.sourceFacts! as unknown as Record<string,unknown>).amortization as ReturnType<typeof scheduleCAmortizationProof>;p.rows[0].originalAsset.description='Changed exact original goodwill description';}]){const changed=scheduleCAmortizationFixture();mutate(changed);for(const invoke of [()=>fillScheduleC(redactReviewIdentifiers(changed),result,'/missing-amort-template'),()=>fillReturn(redactReviewIdentifiers(changed),result,{blankFormsDir:'/missing-amort-templates',outputDir:'/missing-amort-output'})]){const spy=vi.spyOn(pdfUtils,'loadReviewTemplate');try{await expect(invoke()).rejects.toThrow(/source|original|stale|amorti/i);expect(spy).not.toHaveBeenCalled();}finally{spy.mockRestore();}}}
+});
+
+it('keeps actual amortization packet reference only and binds computed source rows',async()=>{
+ const {buildForm4562ReferenceSummary}=await import('@/pdf/fill-form-4562.js');const input=scheduleCAmortizationFixture(),summary=buildForm4562ReferenceSummary(input);expect(summary.warningLabel).toBe('REFERENCE SUMMARY ONLY');expect(summary.activities[0].amortizationBridgeValue).toBe('600');expect(summary.activities[0].amortizationBridgeLabel).toMatch(/Schedule C.*Part V|Schedule C.*other.expense/i);
+ const {mkdtemp,rm}=await import('node:fs/promises'),{tmpdir}=await import('node:os'),{join}=await import('node:path');const directory=await mkdtemp(join(tmpdir(),'tax-amort-actual-redacted-'));try{const packet=await fillReturn(redactReviewIdentifiers(input),calculateFederalTax(input),{blankFormsDir:'forms/blank/2025',outputDir:directory});expect(packet.filledForms.some(path=>path.includes('f1040sc'))).toBe(true);expect(packet.filledForms.some(path=>path.endsWith('f4562-reference-filled.pdf'))).toBe(true);}finally{await rm(directory,{recursive:true,force:true});}
+});

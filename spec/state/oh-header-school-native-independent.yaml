@@ -1,0 +1,38 @@
+form: "Ohio native header school independent integration"
+taxYear: 2025
+reference: "https://dam.assets.ohio.gov/image/upload/v1767095693/tax.ohio.gov/forms/ohio_individual/individual/2025/it1040-booklet.pdf"
+notes: |
+  Independent software-composition controls, authored against exact51a8 before candidate products.
+  Existing fictional212OH/153VA originals and existing qualified school/header methods only.
+  Independent Decimal:342+(57850-26050)*.0275=1216.50 ->1217;
+  truncate4(20000/60000)=.3333;1217*.3333 ->406; tax811/refund1189.
+  Separate school40000*.0125=500; withholding600/refund100 or500/refund0.
+  No new tax calculation, PDF qualification, final2026 or filing claim.
+lines:
+  - line: "canonical-precondition"
+    formula: "Existing independently qualified canonical and native school source replay passes before new header composition, with IT811 and SD500 independently fixed."
+    testRef: "tests/apps/web/oh-header-school-native-independent.test.tsx::independent school header canonical source precondition retains811 and500"
+  - line: "actual-positive"
+    formula: "Existing canonical source precondition stands independently; actual header receives the confirmed native school child, captures it only on explicit confirmation, and preserves separate cash plus source originals."
+    testRef: "tests/apps/web/oh-header-school-native-independent.test.tsx::independent school header current native sources retain separate cash %s"
+  - line: "same-cash-replacement"
+    formula: "A valid explicitly reconfirmed school source with different identity and identical cash must invalidate the prior header read until explicit header confirmation; no read refreshes any capture."
+    testRef: "tests/apps/web/oh-header-school-native-independent.test.tsx::independent school header same cash child replacement requires explicit header reconfirmation"
+  - line: "stale-child"
+    formula: "Missing/pending/unknown/stale native child and absent/forged child capture cannot admit current header or silently choose a retained canonical school packet."
+    testRef: "tests/apps/web/oh-header-school-native-independent.test.tsx::independent school header rejects changed actual child %s"
+  - line: "header-only-edit"
+    formula: "Header-only Finder or county identity edit revokes header confirmation while preserving R/P/SD including original captures exactly; confirmation-only update does not invalidate those sources."
+    testRef: "tests/apps/web/oh-header-school-native-independent.test.tsx::independent school header own source edit preserves current school %s"
+  - line: "json-reopen"
+    formula: "Actual JSON recovery remains a pure full-source read; old capture survives a same-cash source identity edit and is rejected rather than recaptured."
+    testRef: "tests/apps/web/oh-header-school-native-independent.test.tsx::independent school header JSON reopen preserves captures and rejects same cash edit"
+  - line: "confirmation-only"
+    formula: "An explicit header confirmation changes only header captures; its source-equal metadata change cannot invalidate the confirmed school child or R/P."
+    testRef: "tests/apps/web/oh-header-school-native-independent.test.tsx::independent school header confirmation-only update preserves confirmed school"
+  - line: "retained-canonical-child"
+    formula: "A canonical school packet cannot substitute for absent native school originals during either header confirmation or read."
+    testRef: "tests/apps/web/oh-header-school-native-independent.test.tsx::independent school header retained canonical child cannot bypass missing native draft"
+  - line: "legacy-credit"
+    formula: "Existing full-year R/P/RC four-argument compatibility retains2323 taxbefore/1000 RC/677 refund and never invents a school child."
+    testRef: "tests/apps/web/oh-header-school-native-independent.test.tsx::independent school header legacy full year credit remains677 without school"

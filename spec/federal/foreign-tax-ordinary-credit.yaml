@@ -1,0 +1,118 @@
+form: "Form 1116 ordinary source credit"
+fullName: "Actual ordinary passive regular and AMT credit worksheets"
+taxYear: 2026
+supportedTaxYears: [2025, 2026]
+irsReference: "https://www.irs.gov/instructions/i1116"
+sources:
+  - url: "https://www.irs.gov/instructions/i1116"
+    revision: "Final2025, country sources, lines2–6,9–24 and35"
+    retrieved: "2026-10-25"
+  - url: "https://www.irs.gov/instructions/i6251"
+    revision: "Final2025, line8 Steps1–6 and simplified limitation election"
+    retrieved: "2026-10-25"
+  - url: "https://www.irs.gov/publications/p514"
+    revision: "Final2025, deduction allocation and carryback/carryforward order"
+    retrieved: "2026-10-25"
+  - url: "https://www.ecfr.gov/current/title-26/section-1.904-4"
+    revision: "Paragraph(c), prescribed passive withholding groups and high-taxed test"
+    retrieved: "2026-10-25"
+  - url: "https://uscode.house.gov/us/usc/119-118/t26/s904/"
+    revision: "904(a),(c),(d), current regular and separate AMT carry histories"
+    retrieved: "2026-10-25"
+  - url: "https://uscode.house.gov/us/usc/119-118/t26/s59/"
+    revision: "59(a)(1)(C) applicable AMT rate substitution; (a)(3) first post-1997 simplified election"
+    retrieved: "2026-10-25"
+  - url: "https://uscode.house.gov/us/usc/119-118/t26/s55/"
+    revision: "55(b)(1) taxable excess and applicable26/28percent rates; indexed breakpoint and separate-return half threshold"
+    retrieved: "2026-10-25"
+notes: |
+  This is a source-bound cash-paid ordinary INT/DIV method. It is distinct from
+  the elected904(j) method and does not infer all statement income as foreign.
+  The canonical return supplies current regular gross income, deductions and
+  tax, and actual6251lines4/7; input cannot override these current tax amounts.
+  Independent AMT source history and the actual first-claim simplified-election
+  decision are required. No regular carry is substituted for an AMT carry.
+  The initial arithmetic cohort has one actual prescribed non-CFC/QBU passive
+  group. A high-taxed group, mixed grouping requiring expense attribution,
+  foreign/domestic loss accounts, preferential rates, special deductions,
+  foreign earned exclusions and NOL foreign-origin allocation require their
+  separate methods. These remain internal software scope, not external approval.
+  Exact source dollars are retained. Countries combine before each printed tax
+  amount is rounded; final line10/24 rounding does not consume more actual prior
+  balance than exists. A current-year carry is derived from reported line9 tax.
+  Prior-return carryback capacity is based on actual completed prior category
+  figures and history, never guessed zero. A prior904(j) election prevents both
+  carryback use and deemed absorption. A prior deduction-year hypothetical
+  capacity is a separate method, not an elective carryback waiver.
+  This prerequisite does not qualify a physical filing form or change readiness.
+lines:
+  - line: "regular-allocation"
+    description: "Ordinary actual regular foreign taxable income"
+    formula: "Actual country gross less prescribed allowed deductions; standard/nondefinite and home-mortgage gross ratios at4places; actual state allocation; non-treaty charity U.S.-source; worldwide=AGI-deductions+section151senior amount"
+    irsRef: "1116lines1–7,15–19;P514 allocation;Reg1.861-8(e)"
+    testRef: "tests/engine/forms/foreign-tax-ordinary-credit.test.ts::computes regular and separate AMT income from actual deduction rules"
+  - line: "amt-allocation"
+    description: "Independent ordinary AMT numerator and denominator"
+    formula: "Separate method removes standard/state/local deductions, retains actual allowed medical/home-mortgage/non-treaty-charity rules; simplified method uses actual regularline17; denominator actual6251line4 before exemption, tax actual6251line7"
+    irsRef: "i6251line8Steps2–5;56(b)"
+    testRef: "tests/engine/forms/foreign-tax-ordinary-credit.test.ts::honors actual AMT first claim election and independent taxable income"
+  - line: "high-taxed"
+    description: "Actual prescribed passive group high-taxed boundary"
+    formula: "Reject reclassification-required group when actual foreign tax exceeds37percent regular or applicable AMT rate times net group income; AMT is26percent at/below actual indexed6251line6 breakpoint and28percent above, using canonical tax context; equality remains passive; reject unsupported mixed/CFC/QBU grouping"
+    irsRef: "Reg1.904-4(c)(1)–(4);59(a)(1)(C);55(b)(1);i6251high-taxed income"
+    testRef: "tests/engine/forms/foreign-tax-ordinary-credit.test.ts::checks the actual passive grouping independently for regular and AMT"
+  - line: "amt-rate-boundary"
+    description: "Actual AMT taxable excess determines the applicable high-tax rate"
+    formula: "Canonical taxable excess must be finite, nonnegative and no greater than AMTI; actual indexed breakpoint must be positive. Exact breakpoint retains26percent; one dollar above uses28percent. No user-entered rate or automatic highest28percent. First election year means first post1997year with an AMT foreign credit claim."
+    irsRef: "59(a)(1)(C),(3);55(b)(1)"
+    testRef: "tests/engine/forms/foreign-tax-ordinary-credit.test.ts::uses the actual AMT taxable excess at and above its indexed rate breakpoint"
+  - line: "simplified-high-tax"
+    description: "The simplified section904 limitation does not replace actual AMT high-tax classification"
+    formula: "Apply Step1 AMT high-tax grouping to actual AMT net income. Only then substitute regularline17 for the elected AMT limitation numerator under59(a)(3). Keep actual AMT classification income separately audited."
+    irsRef: "59(a)(1)(C),(3);i6251line8Step1,Step2andStep3"
+    testRef: "tests/engine/forms/foreign-tax-ordinary-credit.test.ts::retains actual AMT high tax classification when electing the simplified limitation"
+  - line: "limitation"
+    description: "Printed category credit limitation"
+    formula: "ratio=min(1,round4(max(0,netforeign)/worldwidetaxable)),zero denominator=>0;limit=round(actualprecredittax*ratio); currenttax is sum roundedcountrytaxes"
+    irsRef: "1116lines9,17–24; i6251Steps4–5"
+    testRef: "tests/engine/forms/foreign-tax-ordinary-credit.test.ts::uses current tax then oldest prior credits and expires only the unused tenth year"
+  - line: "carry-use"
+    description: "Independent regular and AMT prior-vintage use"
+    formula: "Currenttaxfirst; priorpassive oldestfirst limited to remainingcapacity; preserveothercategorybalance; expireunusedyear-currentyearminus10; exact source amount=used+expired+remaining"
+    irsRef: "904(c);P514carryoverorder;ScheduleB1116"
+    testRef: "tests/engine/forms/foreign-tax-ordinary-credit.test.ts::uses current tax then oldest prior credits and expires only the unused tenth year"
+  - line: "carryback"
+    description: "Actual immediately prior-year capacity before new forward carry"
+    formula: "Currentexcess=max(0,reportedcurrenttax-limit);actualpriorcreditcapacity=max(0,priorlimitation-priorcurrenttax-priorcarryused);carryback=min(excess,capacity);newforward=excess-carryback;prior904j=>carryback0withoutabsorption"
+    irsRef: "904(c);1116line10;P514CarrybackandCarryover"
+    testRef: "tests/engine/forms/foreign-tax-ordinary-credit.test.ts::requires and conserves actual prior return carryback records separately for AMT"
+  - line: "unknowns"
+    description: "No invented facts limits or histories"
+    formula: "Reject nonfinite/negative/inconsistent contexts, missing required confirmations, future/duplicate vintages, contradictory prior capacity and unknown/late AMT election"
+    irsRef: "1116source and carry records;i6251recordkeeping/election"
+    testRef: "tests/engine/forms/foreign-tax-ordinary-credit.test.ts::rejects missing contradictory or unsafe source arithmetic"
+  - line: "amt-history-consistency"
+    description: "Known prior AMT credit cannot precede the stated first claim"
+    formula: "If actual prior completed Form1116 has positive allowed current tax or used prior credits, firstpost1997AMTclaimyear must be no later than that prior taxyear; preserve zero-capacity years without inventing a claim"
+    irsRef: "59(a)(3);i6251 simplifiedlimitation firstclaimyear"
+    testRef: "tests/engine/forms/foreign-tax-ordinary-credit.test.ts::reconciles the first AMT claim against actual prior allowed credit"
+  - line: "6251-transfer"
+    description: "Independent actual regular and AMT foreign credits"
+    formula: "6251line8=calculatedAMTFTC;line9=max(0,line7-AMTFTC);line10=actualregularprecredittax-regularFTC. Validate finite whole credits within their separate limits and reject simultaneous904jelection. Retain8for actualcarry records and downstreamTMTconsumers even if optional physicalskip would apply."
+    irsRef: "55(b),(c);i6251line8/10;1116line35"
+    testRef: "tests/engine/forms/form-6251-ordinary-credit.test.ts::uses separate ordinary regular and AMT credits without a direct election cap"
+  - line: "canonical"
+    description: "Current regular and AMT limits come from the actual canonical return"
+    formula: "Resolve actual sourceyear/identity before calculation; use canonical ordinary income and allowed deductions, actual6251line4/6/7 and constants breakpoint; route regularFTC once toSchedule3line1 and separateAMTFTC once to6251line8; preserve both computedcarryledgers. No invented foreignincome estimate or currenttaxoverride."
+    irsRef: "1116lines17–24/35;i6251Steps4–6;Schedule3line1"
+    testRef: "tests/engine/federal-foreign-tax-ordinary-credit.test.ts::routes actual ordinary regular and AMT credits with separate carry histories"
+  - line: "canonical-boundaries"
+    description: "Unsupported current methods cannot enter the ordinary source calculation"
+    formula: "Reject preferential income, NOL, adjustments, unreconciled AMT source differences, special deductions, Marketplace/vehicle/foreignearned methods; preserve entered source facts and existing supported904jelection separately"
+    irsRef: "1116actualincomeadjustments;i6251actualAMTsources"
+    testRef: "tests/engine/federal-foreign-tax-ordinary-credit.test.ts::rejects source context conflicts instead of using the historical estimate"
+  - line: "6251-review"
+    description: "Review form reconciles separate actual ordinary credits"
+    formula: "Require the ordinary source result and exact matching regularFTC/AMTFTC audits; preserve8/9/10, reject changed or missing source/result audit, and describe the supported ordinary method without claiming physical form qualification"
+    irsRef: "6251lines8–10;1116line35;review-only export policy"
+    testRef: "tests/pdf/form-6251-ordinary-credit.test.ts::prints separate actual ordinary credits and rejects a changed source audit"

@@ -11,7 +11,7 @@ import Decimal from "decimal.js";
 import type { TaxYearInput } from "@/models/inputs.js";
 import type { CalculatedLine } from "@/models/outputs.js";
 import type { FilingStatus, YearConstants } from "@/models/constants.js";
-import { d, sum, zeroFloor, max, min } from "@/utils/decimal.js";
+import { d, sum, zeroFloor, max, min, roundDollar } from "@/utils/decimal.js";
 import { AuditTrail } from "@/utils/audit.js";
 import { calculateForm8949 } from "../forms/form-8949.js";
 import { calculateForm4797, type Form4797Result } from "../forms/form-4797.js";
@@ -19,20 +19,35 @@ import { calculateHomeSales, type HomeSaleAggregateResult } from "../forms/home-
 import { calculateForm6781, type Form6781Result } from "../forms/form-6781.js";
 import { calculateForm6252, aggregateForm6252Results, type Form6252AggregateResult } from "../forms/form-6252.js";
 
+import { calculateK1CharitableReturnSources, type K1CharitableReturnResult } from "../forms/k1-charitable-return-sources.js";
+import { calculateK1PassiveCapitalSources } from "../forms/k1-passive-capital-sources.js";
+import { calculateScheduleE } from "./schedule-e.js";
+import { calculateScheduleDSourceBinding } from "./schedule-d-source-binding.js";
+import type { ScheduleDSpecialGainResult } from "./schedule-d-special-gains.js";
+
 export interface ScheduleDResult {
   netShortTerm: Decimal; // Line 7
-  section1202Exclusion: Decimal; // Line 13
+  section1202Exclusion: Decimal; // Separate Form8949 adjustment; not Line13 distributions
+  section1202AmtPreference: Decimal; // Actual source aggregate before Form6251 rounding
   netLongTerm: Decimal; // Line 15
   netCapitalGainLoss: Decimal; // Line 16
   capitalLossDeduction: Decimal; // Line 21 (capped loss or full gain)
   carryforwardShortTerm: Decimal;
   carryforwardLongTerm: Decimal;
   homeSales?: HomeSaleAggregateResult;
+  specialGainWorksheets?: ScheduleDSpecialGainResult;
   lines: CalculatedLine[];
 }
 
 export interface ScheduleDExtraInput {
+  k1CharitableSources?: K1CharitableReturnResult;
+  /** Original source-only DA records when the calculation input has already been normalized. */
+  originalDigitalAssetSources?: TaxYearInput['form1099DA'];
   form8824CapitalGainLoss?: Decimal;
+  /** Canonical actual Form8814 line10 transfers, before capital-loss netting. */
+  childCapitalGainDistributions?: Decimal;
+  childCollectiblesGain?: Decimal;
+  childUnrecapturedSection1250Gain?: Decimal;
 }
 
 export function calculateScheduleD(
@@ -43,10 +58,16 @@ export function calculateScheduleD(
   extra?: ScheduleDExtraInput
 ): ScheduleDResult {
   const audit = new AuditTrail();
+  const k1Charitable = extra?.k1CharitableSources ?? calculateK1CharitableReturnSources(input);
+  const passiveCapital = input.k1CharitableSources?.statements?.some(row => row.capitalCharacter !== undefined)
+    ? calculateK1PassiveCapitalSources(input, calculateScheduleE(input, k1Charitable)) : undefined;
   const form8824CapitalGainLoss = extra?.form8824CapitalGainLoss ?? new Decimal(0);
+  const childCapitalGainDistributions = extra?.childCapitalGainDistributions ?? new Decimal(0);
+  if (!childCapitalGainDistributions.isFinite() || childCapitalGainDistributions.lt(0)) throw new Error("ScheduleD child distributions must be finite and nonnegative");
 
   // ── Form 8949: Transaction detail ─────────────────────
   const form8949 = calculateForm8949(input);
+  if (form8949.section1202 && !input.scheduleDSpecialGainSources) throw new Error("Section1202 requires the actual ScheduleD source worksheets");
   audit.merge(form8949.lines);
   const form4797 = precomputedForm4797 ?? calculateForm4797(input);
   if (precomputedForm4797 === undefined) {
@@ -77,7 +98,11 @@ export function calculateScheduleD(
 
   // ── Short-term (Line 7) ────────────────────────────────
   const k1ShortTerm = input.scheduleK1.reduce(
-    (acc, k) => acc.plus(d(k.netShortTermCapitalGain)),
+    (acc, k, index) => {
+      const source = k1Charitable?.statements.find(row => row.k1Index === index);
+      return acc.plus(passiveCapital?.rows.find(row => row.k1Index === index && row.hasCapitalSource)?.shortTermAmount
+        ?? source?.atRiskAllocation?.shortTermAmount ?? source?.shortTermAmount ?? d(k.netShortTermCapitalGain));
+    },
     new Decimal(0)
   );
   // K-1 Form 1041 Box 3: short-term capital gain from estates/trusts
@@ -91,6 +116,12 @@ export function calculateScheduleD(
     new Decimal(0)
   );
   const priorShortTermLoss = d(input.priorYear?.shortTermCapitalLoss);
+  audit.record("Sched D", "4", "Other-form short-term gain/loss", sum(form6781ShortTerm, form6252ShortTerm),
+    "Form6781 short-term + Form6252 short-term", { "Form6781": form6781ShortTerm, "Form6252": form6252ShortTerm });
+  audit.record("Sched D", "5", "Pass-through short-term gain/loss", sum(k1ShortTerm, k1Form1041ShortTerm),
+    "Partnership/S-corporation K1 + estate/trust K1", { "K1": k1ShortTerm, "1041K1": k1Form1041ShortTerm });
+  audit.record("Sched D", "6", "Short-term capital loss carryover", sum(priorShortTermLoss, k1Form1041FinalSTLoss),
+    "Prior short-term carryover + final estate/trust short-term loss", { "Prior carryover": priorShortTermLoss, "Final1041 loss": k1Form1041FinalSTLoss });
   const netShortTerm = sum(form8949.totalShortTermGainLoss, k1ShortTerm, k1Form1041ShortTerm, k1Form1041FinalSTLoss, priorShortTermLoss, form6781ShortTerm, form6252ShortTerm);
   audit.record("Sched D", "7", "Net short-term capital gain/loss", netShortTerm,
     "Form 8949 Part I + K-1 Box 8 + K-1 1041 Box 3 + K-1 1041 Box 11C + prior ST carryforward + Form 6781 short-term + Form 6252 short-term", {
@@ -103,23 +134,11 @@ export function calculateScheduleD(
       "Form 6252 short-term": form6252ShortTerm,
     });
 
-  // ── Line 13: Section 1202 QSBS exclusion ──────────────
-  // IRC §1202: 100% exclusion for qualified small business stock held 5+ years
-  // 1099-DIV Box 2c reports the §1202 gain eligible for exclusion
-  // Per-issuer cap: greater of $10M or 10× adjusted basis (we apply $10M cap here)
-  const qbsGainFromDiv = input.form1099Div.reduce(
-    (acc, f) => acc.plus(d(f.section1202Gain)),
-    new Decimal(0)
-  );
-  const QSBS_CAP = filingStatus === "married_filing_separately"
-    ? new Decimal(5000000)
-    : new Decimal(10000000);
-  const section1202Exclusion = min(qbsGainFromDiv, QSBS_CAP);
-  audit.record("Sched D", "13", "Section 1202 exclusion (QSBS)", section1202Exclusion,
-    `min(${qbsGainFromDiv} eligible gain, $${QSBS_CAP} cap)`, {
-      "1099-DIV Box 2c eligible gain": qbsGainFromDiv,
-      "Section 1202 cap": QSBS_CAP,
-    });
+  // ── Separate Section 1202 QSBS adjustment ────────────
+  const section1202Exclusion = form8949.section1202?.exclusion ?? new Decimal(0);
+  const section1202AmtPreference = form8949.section1202?.amtPreference ?? new Decimal(0);
+  audit.record("Sched D", "1202-adjustment", "Section 1202 exclusion (QSBS)", section1202Exclusion,
+    "Verified original issuer/date exclusions already included once in Form8949 PartII");
 
   // ── Home Sale Exclusion (IRC §121) ────────────────────
   const homeSales = (input.homeSales ?? []).length > 0
@@ -132,7 +151,11 @@ export function calculateScheduleD(
 
   // ── Long-term (Line 15) ────────────────────────────────
   const k1LongTerm = input.scheduleK1.reduce(
-    (acc, k) => acc.plus(d(k.netLongTermCapitalGain)),
+    (acc, k, index) => {
+      const source = k1Charitable?.statements.find(row => row.k1Index === index);
+      return acc.plus(passiveCapital?.rows.find(row => row.k1Index === index && row.hasCapitalSource)?.longTermAmount
+        ?? source?.atRiskAllocation?.longTermAmount ?? source?.longTermAmount ?? d(k.netLongTermCapitalGain));
+    },
     new Decimal(0)
   );
   // K-1 Form 1041 Box 4a: long-term capital gain from estates/trusts
@@ -150,24 +173,38 @@ export function calculateScheduleD(
     (acc, f) => acc.plus(d(f.totalCapitalGainDistributions)),
     new Decimal(0)
   );
+  audit.record("Sched D", "13", "Capital gain distributions", capGainDistributions.plus(childCapitalGainDistributions),
+    "Parent1099DIVBox2a + childForm8814Line10; exclusions are separate adjustments", {
+      "1099-DIV Box 2a": capGainDistributions,
+      "Form8814 Line10": childCapitalGainDistributions,
+    });
   const priorLongTermLoss = d(input.priorYear?.longTermCapitalLoss);
+  audit.record("Sched D", "11", "Other-form long-term gain/loss", sum(form4797LongTermGain, form6781LongTerm, form6252LongTerm, form8824CapitalGainLoss),
+    "Form4797line9 + Form6781long-term + Form6252long-term + capital-route Form8824", {
+      "Form4797": form4797LongTermGain, "Form6781": form6781LongTerm, "Form6252": form6252LongTerm, "Form8824": form8824CapitalGainLoss,
+    });
+  audit.record("Sched D", "12", "Pass-through long-term gain/loss", sum(k1LongTerm, k1Form1041LongTerm),
+    "Partnership/S-corporation K1 + estate/trust K1", { "K1": k1LongTerm, "1041K1": k1Form1041LongTerm });
+  audit.record("Sched D", "14", "Long-term capital loss carryover", sum(priorLongTermLoss, k1Form1041FinalLTLoss),
+    "Prior long-term carryover + final estate/trust long-term loss", { "Prior carryover": priorLongTermLoss, "Final1041 loss": k1Form1041FinalLTLoss });
   const netLongTerm = sum(
     form8949.totalLongTermGainLoss, k1LongTerm, k1Form1041LongTerm, k1Form1041FinalLTLoss,
-    form4797LongTermGain, capGainDistributions,
-    priorLongTermLoss, section1202Exclusion.negated(), homeSaleTaxableGain, form6781LongTerm, form6252LongTerm,
+    form4797LongTermGain, capGainDistributions, childCapitalGainDistributions,
+    priorLongTermLoss, homeSaleTaxableGain, form6781LongTerm, form6252LongTerm,
     form8824CapitalGainLoss
   );
   const longTermFormula = form8824CapitalGainLoss.isZero()
-    ? "Form 8949 Part II + K-1 Box 9a + K-1 1041 Box 4a + K-1 1041 Box 11D + Form 4797 Line 9 + 1099-DIV Box 2a + prior LT carryforward - §1202 exclusion + home sale gain + Form 6781 long-term + Form 6252 long-term"
-    : "Form 8949 Part II + K-1 Box 9a + K-1 1041 Box 4a + K-1 1041 Box 11D + Form 4797 Line 9 + 1099-DIV Box 2a + prior LT carryforward - §1202 exclusion + home sale gain + Form 6781 long-term + Form 6252 long-term + capital-route Form 8824 recognized gain/loss";
+    ? "Form 8949 Part II after Q adjustments + K-1 Box 9a + K-1 1041 Box 4a + K-1 1041 Box 11D + Form 4797 Line 9 + 1099-DIV Box 2a + prior LT carryforward + home sale gain + Form 6781 long-term + Form 6252 long-term"
+    : "Form 8949 Part II after Q adjustments + K-1 Box 9a + K-1 1041 Box 4a + K-1 1041 Box 11D + Form 4797 Line 9 + 1099-DIV Box 2a + prior LT carryforward + home sale gain + Form 6781 long-term + Form 6252 long-term + capital-route Form 8824 recognized gain/loss";
   audit.record("Sched D", "15", "Net long-term capital gain/loss", netLongTerm,
-    longTermFormula, {
+    childCapitalGainDistributions.gt(0) ? `${longTermFormula} + Form8814 line10 distributions` : longTermFormula, {
       "Form 8949 Part II": form8949.totalLongTermGainLoss,
       "K-1 Box 9a": k1LongTerm,
       "K-1 1041 Box 4a": k1Form1041LongTerm,
       "K-1 1041 Box 11 Code D": k1Form1041FinalLTLoss,
       "Form 4797 Line 9": form4797LongTermGain,
       "1099-DIV Box 2a": capGainDistributions,
+      "Form8814 Line10": childCapitalGainDistributions,
       "Prior year LT carryforward": priorLongTermLoss,
       "Section 1202 exclusion": section1202Exclusion,
       "Home sale taxable gain (IRC §121)": homeSaleTaxableGain,
@@ -183,6 +220,27 @@ export function calculateScheduleD(
       "Line 7": netShortTerm,
       "Line 15": netLongTerm,
     });
+
+  const sourceWorksheets = calculateScheduleDSourceBinding(input, {
+    form4797, netShortTerm, longTermLossCarryover: sum(priorLongTermLoss, k1Form1041FinalLTLoss),
+    childCollectiblesGain: extra?.childCollectiblesGain ?? new Decimal(0),
+    childUnrecapturedSection1250Gain: extra?.childUnrecapturedSection1250Gain ?? new Decimal(0),
+    section1202: form8949.section1202,
+    originalDigitalAssetSources: extra?.originalDigitalAssetSources,
+  });
+  const gainCondition = netLongTerm.gt(0) && netCapitalGainLoss.gt(0);
+  const specialGainWorksheets = sourceWorksheets ? {
+    ...sourceWorksheets,
+    collectiblesGain: gainCondition ? roundDollar(sourceWorksheets.collectiblesGain) : new Decimal(0),
+    unrecapturedSection1250Gain: gainCondition ? roundDollar(sourceWorksheets.unrecapturedSection1250Gain) : new Decimal(0),
+  } : undefined;
+  if (specialGainWorksheets) {
+    audit.merge(specialGainWorksheets.lines);
+    if (gainCondition) {
+      audit.record("Sched D", "18", "28 percent rate gain", specialGainWorksheets.collectiblesGain, "Completed actual 28 percent rate gain worksheet, rounded once");
+      audit.record("Sched D", "19", "Unrecaptured section1250 gain", specialGainWorksheets.unrecapturedSection1250Gain, "Completed actual unrecaptured1250 gain worksheet, rounded once");
+    }
+  }
 
   // ── Line 21: Capital loss deduction ────────────────────
   // MFS: limited to $1,500; others: $3,000
@@ -259,12 +317,14 @@ export function calculateScheduleD(
   return {
     netShortTerm,
     section1202Exclusion,
+    section1202AmtPreference,
     netLongTerm,
     netCapitalGainLoss,
     capitalLossDeduction,
     carryforwardShortTerm,
     carryforwardLongTerm,
     homeSales,
+    specialGainWorksheets,
     lines: audit.getLines(),
   };
 }

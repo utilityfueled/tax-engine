@@ -1,0 +1,35 @@
+form: "Ohio SD100 independent original-source review"
+fullName: "Distinct final2025 Hillsdale ordinary wage-only review"
+taxYear: 2025
+reference: "https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/forms/ohio_individual/individual/2025/it1040-booklet.pdf"
+notes: |
+  Independently refreshed official final2025 SD100/SDWH/booklet and historical5748.01.
+  Before any candidate execution, independent Decimal100 literals frozen in ignored
+  nov03-oh-school-district-independent/oracles-before-products.json. Hillsdale0302
+  rate .0125 is earned-income, residence proved separately from local withholding.
+  Actual wage-only full365days single under65:80000*.0125=1000;SDWH1100=>100
+  overpayment;actual outgoing25=>75refund;municipal50never contributes to SD/IT.
+  Whole-dollar source controls admit exact printed amounts; nonwhole source amounts
+  need a distinct printed method or explicit guard, never silent unknown-to-zero.
+  No actualFinder lookup/human review/native/PDF/2026 public evidence asserted.
+lines:
+  - line: "independent-literals"
+    description: Literal complete SD100 and municipal/credit/cash controls
+    formula: Actual80000wages/MAGI/29/31/32/33,SE0,35/37/38/7/8/10=1000;SDWH1100/11,19/21=100. Outgoing25=>21=75; actualprior25=>12=25/19=125. Timely four100+WH600=>13=1000/19=0. ITWH3000 separate.
+    testRef: "tests/engine/state/oh-sd-100-independent.test.ts::OH SD distinct independently proves printed tax and separate cash"
+  - line: "source-unknowns"
+    description: Current owner/calendar/lookup/local classification/source answers
+    formula: Reject unknown, omitted, invalid or contradictory owner/year/address/lookup/full-calendar/local rows/box14/confirmation rather than infer from cash or tax output; preserve immutable originals and current source commitment.
+    testRef: "tests/engine/state/oh-sd-100-independent.test.ts::OH SD distinct rejects source contradiction %s"
+  - line: "all-income-presence"
+    description: Ordinary wage-only means every retained unsupported original is guarded
+    formula: Retained 4797/home sale/6252/6781/8814/8824/bond originals require their own owner/classification source composition even when actualzero or cancelling gain/loss. No freshAGI equality substitutes for explicit original coverage.
+    testRef: "tests/engine/state/oh-sd-100-independent.test.ts::OH SD distinct rejects retained nonwage original %s"
+  - line: "payments"
+    description: Original account, receipt timing and actual election
+    formula: Actual SD receipts retain owner/year/returntype/date/amount/confirmation; complete asof account reconciles. Reject samecash renamed/case/whitespace and IT-to-SD reuse. Actualtimelyquarter coverage separately supports school2210; annualtotal alone never provesquarterzero. Outgoingcredit requires actualsource not computedrefund.
+    testRef: "tests/engine/state/oh-sd-100-independent.test.ts::OH SD distinct rejects cash contradiction %s"
+  - line: "cents-and-gates"
+    description: Exact cents, stale originals, overlays and year boundaries
+    formula: Nearestwhole literals retained before products; cents outside qualifiedprinted method guard; altered original not autorebound byreads; current federalresult required; arbitraryschool overlay/2026 public calculation reject. Per-call precision must preserve globalDecimal settings.
+    testRef: "tests/engine/state/oh-sd-100-independent.test.ts::OH SD distinct preserves commitments and exact finite boundaries"

@@ -1,0 +1,60 @@
+form: "Section1202 Source Binding"
+fullName: "Original issuer, household and disposition source reconciliation"
+taxYear: 2026
+supportedTaxYears: [2025, 2026]
+irsReference: "https://uscode.house.gov/us/usc/119-118/t26/s1202/"
+sources:
+  - url: "https://uscode.house.gov/us/usc/119-118/t26/s1202/"
+    revision: "1202(b),(c),(d),(e),(g),(h); current through PL119-120"
+    retrieved: "2026-10-25"
+  - url: "https://www.irs.gov/instructions/i1040sd"
+    revision: "Final2025; qualified stock tests, pass-through ownership and original1099DIV2c"
+    retrieved: "2026-10-25"
+notes: |
+  A positive reported label alone never establishes qualification. This initial
+  source method binds original brokerage stock and constant-proportion mutual
+  fund distributions, with complete actual issuer history and original stock
+  facts. Prior household changes, transfers, changing entity interests and
+  installment/exchange methods require their additional source worksheets.
+  Every positive2c fund source must be partitioned into actual issuer lots and
+  reconcile exactly before rounding. Issuer history records eligible gain before
+  exclusion percentage. Original qualifying-stock basis includes every current
+  disposition, including losses and stock without a qualifying holding period.
+  The source packet requires explicit known-zero amounts and actual household,
+  owner and source identity. No net gain, exclusion or AMT overrides are accepted.
+lines:
+  - line: "identity"
+    description: "Actual household and original source identity"
+    formula: "Require matching year, complete confirmations, actual primary/spouse names and last4, original payer/owner and unique lot identity; reject stale or omitted sources"
+    irsRef: "1202(b),(c),(g); source substantiation"
+    testRef: "tests/engine/forms/section-1202-sources.test.ts::rejects unknown stale incomplete or conflicting source facts"
+  - line: "history"
+    description: "Original per-issuer eligible-gain use"
+    formula: "Sum actual prior eligible gain before exclusion; each prior year and same-member return identity reconciles; reject negative missing duplicate or future history and incomplete current dispositions"
+    irsRef: "1202(b)(1),(3),(4)"
+    testRef: "tests/engine/forms/section-1202-sources.test.ts::reconciles prior issuer use before applying exclusion percentages"
+  - line: "qualification"
+    description: "Actual original-issue corporate and business facts"
+    formula: "Qualified only if original direct/underwriter issue after1993-08-10, eligible consideration, domesticCcorporation, complete predecessor/controlled-group asset maxima<=50million for issue<=2025-07-04 or75million later, substantially-all Ccorporation/active-business requirements and redemption restrictions satisfied; no unresolved offsetting position"
+    irsRef: "1202(c),(d),(e),(j)"
+    testRef: "tests/engine/forms/section-1202-sources.test.ts::uses original corporate and business facts rather than the stock label"
+  - line: "broker"
+    description: "Actual stock transaction before exclusion"
+    formula: "Match original dates/amounts/owner, canonical unaliased sourceID and date-derived holding period; calculate proceeds-cost+adjustments+actual disallowed wash loss; reconcile the source recognized gain and preserve cents"
+    irsRef: "1202(a),(b); Form8949 original gain beforeQ"
+    testRef: "tests/engine/forms/section-1202-sources.test.ts::binds the actual brokerage gain and preserves source cents"
+  - line: "fund"
+    description: "Actual original mutual-fund stock and ownership sources"
+    formula: "Require ownership from entity acquisition through sale and unchanged actual percentage; reported recognized gain and ignored-addition basis equal entity source amounts times ownership percentage; sum every lot exactly to actual1099DIV2c subset of2a"
+    irsRef: "1202(g)(1)-(3); ScheduleD pass-through and1099DIV instructions"
+    testRef: "tests/engine/forms/section-1202-sources.test.ts::binds each fund issuer and original constant ownership share"
+  - line: "ineligible-fund"
+    description: "Known failure to hold the original entity interest"
+    formula: "Known late or interrupted ownership yields no exclusion; missing ownership facts remain unknown; changing interests require the original-interest allocation worksheet"
+    irsRef: "1202(g)(2),(3)"
+    testRef: "tests/engine/forms/section-1202-sources.test.ts::does not qualify late or interrupted fund ownership"
+  - line: "empowerment"
+    description: "Actual qualifying empowerment-zone source"
+    formula: "Positive pre2019 attribution requires explicit qualifying-business and attribution confirmation; apply actual percentage only after source verification"
+    irsRef: "1202(a)(2); ScheduleD empowerment-zone requirements"
+    testRef: "tests/engine/forms/section-1202-sources.test.ts::requires the actual empowerment source for a positive attribution"

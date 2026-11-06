@@ -1,0 +1,40 @@
+form: "PA full-return reciprocal fixture source contract"
+fullName: "Synthetic reciprocal wage refund guards and nonreciprocal arithmetic integration"
+taxYear: 2025
+reference: "https://www.pa.gov/agencies/revenue/forms-and-publications/pa-personal-income-tax-guide/deductions-and-credits"
+notes: |
+  Test-only source correction. No tax engine, source admission, privacy, money or
+  filing gate changes. The historical synthetic NJ inputs remain explicit refund
+  rejection controls. Separate fictional NY compensation arithmetic preserves all
+  original monetary inputs; the separate SP law successor corrects three erroneous output assertions; caller scalar tax paid does not prove
+  filed state return/payment/source eligibility. Official PA guide excludes
+  ordinary compensation in NJ and five other reciprocal states from G-L credit.
+  NJ reciprocal agreement requires refund of erroneous NJ wage withholding.
+  New York is outside that reciprocal list. The historical credits interaction
+  supplies scalar final state tax paid200, never derived from withholding.
+  Exact original file and genuine baseline failures are retained before migration.
+lines:
+  - line: "historical-nj"
+    description: "Preserve historical NJ wage fixture and reject reciprocal employee credit"
+    formula: "Original PA wages60000/WH1842 and NJ wages40000/WH1400 with NJ shared40000/paid1400 reject; no taxpayer facts or eligibility exception invented."
+    testRef: "tests/edge-cases/pa-full-return.test.ts::retains the original NJ wage-credit input as a reciprocal refund rejection"
+  - line: "explicit-nj"
+    description: "Classification or jurisdiction whitespace cannot bypass reciprocal refund guard"
+    formula: "Actual fixture wage classification is compensation; positive NJ40000/1400 remains rejected with explicit compensation and normalized jurisdiction."
+    testRef: "tests/edge-cases/pa-full-return.test.ts::rejects explicit normalized NJ compensation without changing original wages or withholding"
+  - line: "ny-exact-credit"
+    description: "Separate synthetic nonreciprocal arithmetic preserves original amounts"
+    formula: "Fictional NY eligible income40000, supplied final tax paid1400; PA tax on same income40000*0.0307=1228; min1400,1228=1228 below whole-return tax3070. PA WH1842 only; all non-SP original assertions retained."
+    testRef: "tests/edge-cases/pa-full-return.test.ts::preserves exact nonreciprocal resident-credit arithmetic without qualifying source evidence"
+  - line: "historical-credits-nj"
+    description: "Original low-income reciprocal scalar must reject"
+    formula: "Original2025 MFJ wages14000/WH430 plus NJ shared5000/paid200 and other credit50 reject; no tax result is invented for rejected input."
+    testRef: "tests/edge-cases/pa-full-return.test.ts::retains the original low-income NJ override as reciprocal refund rejection"
+  - line: "explicit-credits-nj"
+    description: "Explicit employee class cannot turn NJ payment into resident credit"
+    formula: "Same original low-income amounts, explicit NJ compensation, requires refund guard."
+    testRef: "tests/edge-cases/pa-full-return.test.ts::rejects the low-income NJ compensation override with explicit classification"
+  - line: "ny-credits-order"
+    description: "Separate fictional NY final tax paid preserves existing SP and credit ordering"
+    formula: "Original14000*0.0307=429.80→430; supplied NY final tax200; G-L5000*0.0307=153.50→154; SPline13=residentcredit154; SP60%*(430-154)=165.60→166; other50; credits370; net60. Official2025SP13 carries PA40line22, not raw tax200. Prior138/342/88 versions retained unchanged in immutable predecessor. Scalar legacy integration only."
+    testRef: "tests/edge-cases/pa-full-return.test.ts::forgiveness + resident credit + other credits all reduce tax"

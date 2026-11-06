@@ -1,0 +1,40 @@
+form: "Ohio reciprocal wages guided source collector"
+taxYear: 2025
+reference: "https://dam.assets.ohio.gov/image/upload/v1767095693/tax.ohio.gov/forms/ohio_individual/individual/2025/it1040-booklet.pdf"
+notes: |
+  Native source-origin successor to independently reviewed core6d9144e3.
+  Finite actual2025 primary/single/full-year PA domicile, one ordinary corporate
+  employee W2 with original PA/OH rows, Ohio service payroll, complete separately
+  confirmed IT1040 payment/account facts and no other income or special method.
+  No arithmetic/rates changed. Blank evidence is unknown; actual zero is explicit.
+  Documentary identity, dates, current W2, payroll and history are not inferred
+  from address, refund result, checkbox alone, a copied taxpayer or printed tax.
+  Current2026 public filing, paper export and human qualification remain closed.
+lines:
+  - line: "existing-native-public"
+    formula: "An actually entered reciprocal draft must reach the existing native StateReturn binder, original-source adapter, federal-to-Ohio engine and public safe result. Raw60000.25/OhioWH2000.60 stays raw; printed line1/ADJ14 both60000 ->OhioAGI0/tax0/NRC0, requestedrefund2001. Same actual result with Ohio first or second original row; PAWH0 never becomes Ohio cash."
+    testRef: "tests/apps/web/oh-reciprocal-wages-guided-integration.test.ts::answers existing native state API from current actual reciprocal originals %s"
+  - line: "printed-boundaries"
+    formula: "Raw wages60000.49/60000.50 report60000/60001; WH2000.49/2000.50 reports2000/2001. ActualWH0 yields0, never unknown->0. Each printed income/deduction line rounds once and no second nonresident exemption is created."
+    testRef: "tests/apps/web/oh-reciprocal-wages-guided-integration.test.ts::retains exact native raw wages %s and Ohio withholding %s"
+  - line: "preconditions"
+    formula: "Unchanged core canonical packet independently passes all pinned literals before native wiring is claimed; no mocked federal result or copied household identity authorizes the source collector."
+    testRef: "tests/apps/web/oh-reciprocal-wages-guided-integration.test.ts::pins unchanged strict core and public-safe oracles before native binding %s"
+  - line: "blank-native"
+    formula: "New draft has blank year/owner/reference/document identities/dates and absent selected original, nullable attestations and empty payroll. Visible controls originate actual supplied records; missing records cannot be replaced by zeros, current residence address or financial outputs."
+    testRef: "tests/apps/web/oh-reciprocal-wages-guided-details.test.tsx::collects actual reciprocal originals from blank controls before confirmation"
+  - line: "current-original-copy"
+    formula: "Only an explicit checked current W2 selection copies that complete actual original. Typing a current equal-money employer or owner does not rewrite retained originals. Reconfirmation requires actual independent original identity/document answers and current separately confirmed residency/payments."
+    testRef: "tests/apps/web/oh-reciprocal-wages-guided-facts.test.ts::copies only an explicitly checked selected original and retains stale evidence"
+  - line: "immutable-binding"
+    formula: "Explicit current confirmation binds federal originals and the separately confirmed actual Ohio residency/payment records. Pure replay/save/reload never refreshes them. Any owner/year/W2/domicile/entity/payroll or payment reference/date/election change revokes current source binding even if tax cash is unchanged."
+    testRef: "tests/apps/web/oh-reciprocal-wages-guided-integration.test.ts::invalidates actual reciprocal confirmation without replacing originals after %s"
+  - line: "strict-source-guards"
+    formula: "Reject missing/false/unknown confirmations, wrong source owner/year, employer entity PTE20percent, copied-original mismatch, duplicate payroll IDs/records, date gaps/invalid dates, sum differences and unreviewed payment originals. Retained unsupported other income or scalar ledgers remain guarded even zero/netzero; never drop them to fit wage-only method."
+    testRef: "tests/apps/web/oh-reciprocal-wages-guided-facts.test.ts::guards actual reciprocal source conflict %s"
+  - line: "native-unknown-zero-recovery"
+    formula: "Actual zero/false and unknown survive native change/save/restored draft; no numeric scalar editor, JSON editor, synthetic spouse copy or fabricated history. Child source confirmation is separate from parent residency/payment confirmation and never changes a historical original on read."
+    testRef: "tests/apps/web/oh-reciprocal-wages-guided-details.test.tsx::preserves actual zero and revoked unknown sources across restored native controls"
+  - line: "privacy-2026"
+    formula: "Safe preview/audit output excludes source references, account identifiers, SSN and original packets. Actual2026 public rulepack stays denied; no native draft or unknown-source selection enables registry/filing/PDF promotion."
+    testRef: "tests/apps/web/oh-reciprocal-wages-guided-integration.test.ts::keeps native current2026 public denial and original source privacy"

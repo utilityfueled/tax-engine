@@ -7,7 +7,6 @@ import Decimal from "decimal.js";
 import { calculateForm8829 } from "@/engine/forms/form-8829.js";
 import type { Form8829Input } from "@/models/inputs.js";
 import { AuditTrail } from "@/utils/audit.js";
-import { roundDollar, sum } from "@/utils/decimal.js";
 import type { CalculatedLine } from "@/models/outputs.js";
 
 const SUPPORTED_TAX_YEARS = new Set([2024, 2025, 2026]);
@@ -112,15 +111,22 @@ export interface PAScheduleCResult {
   lines: CalculatedLine[];
 }
 
-function normalizeAmount(value?: Decimal): Decimal {
-  return roundDollar(value ?? new Decimal(0));
-}
-
 export function calculatePAScheduleC(input: PAScheduleCInput): PAScheduleCResult {
   if (!SUPPORTED_TAX_YEARS.has(input.taxYear)) {
     throw new Error(`PA Schedule C constants not available for tax year ${input.taxYear}`);
   }
 
+  // Accepted Decimal inputs have no monetary digit cap. Bound additions/subtractions by
+  // the largest integer width, fractional scale and term-count carry, with local minimum100.
+  let integerDigits=1,fractionalDigits=0,terms=0;
+  const inspect=(value:unknown):void=>{
+    if(Decimal.isDecimal(value)){if(!value.isFinite())throw new Error("PA Schedule C actual monetary input must be finite");integerDigits=Math.max(integerDigits,value.e+1);fractionalDigits=Math.max(fractionalDigits,value.decimalPlaces());terms++;}
+    else if(value&&typeof value==="object")Object.values(value).forEach(inspect);
+  };
+  inspect(input);
+  const Money=Decimal.clone({precision:Math.max(100,integerDigits+fractionalDigits+Math.ceil(Math.log10(terms+1))+8),rounding:Decimal.ROUND_HALF_UP});
+  const normalizeAmount=(value?:Decimal):Decimal=>new Money(value??0).toDecimalPlaces(0,Decimal.ROUND_HALF_UP);
+  const sum=(...values:Decimal[]):Decimal=>values.reduce((total,value)=>total.plus(value),new Money(0));
   const audit = new AuditTrail();
   const expenses = input.expenses;
 
@@ -159,7 +165,7 @@ export function calculatePAScheduleC(input: PAScheduleCInput): PAScheduleCResult
     line28: normalizeAmount(expenses?.supplies),
     line29: normalizeAmount(expenses?.taxes),
     line30: normalizeAmount(expenses?.telephone),
-    line31: sum(normalizeAmount(expenses?.travel), normalizeAmount(expenses?.meals)),
+    line31: normalizeAmount(new Money(expenses?.travel??0).plus(expenses?.meals??0)),
     line32: normalizeAmount(expenses?.utilities),
     line33: normalizeAmount(expenses?.wages),
     line34: normalizeAmount(expenses?.idcsCurrentExpensing),
@@ -203,7 +209,7 @@ export function calculatePAScheduleC(input: PAScheduleCInput): PAScheduleCResult
     expenseLines.line37,
   );
   const tentativeProfitBeforeHomeOffice = line5.minus(totalExpensesBeforeHomeOffice);
-  let homeOfficeExpense = new Decimal(0);
+  let homeOfficeExpense = new Money(0);
 
   if (input.homeOffice?.method === "actual") {
     if (input.homeOffice.form8829) {
@@ -214,7 +220,7 @@ export function calculatePAScheduleC(input: PAScheduleCInput): PAScheduleCResult
           ?? tentativeProfitBeforeHomeOffice.toString(),
       });
       audit.merge(form8829.lines);
-      homeOfficeExpense = form8829.line36;
+      homeOfficeExpense = new Money(form8829.line36);
     } else {
       homeOfficeExpense = normalizeAmount(input.homeOffice.actualAmount);
     }
@@ -257,7 +263,7 @@ export function calculatePAScheduleC(input: PAScheduleCInput): PAScheduleCResult
   audit.record("PA-Schedule-C", "28", "Supplies", expenseLines.line28, "Rounded supplies expense");
   audit.record("PA-Schedule-C", "29", "Taxes", expenseLines.line29, "Rounded taxes expense");
   audit.record("PA-Schedule-C", "30", "Telephone", expenseLines.line30, "Rounded telephone expense");
-  audit.record("PA-Schedule-C", "31", "Travel and entertainment", expenseLines.line31, "Rounded travel expense + rounded meals expense");
+  audit.record("PA-Schedule-C", "31", "Travel and entertainment", expenseLines.line31, "Aggregate actual travel and meals, then round printed line once");
   audit.record("PA-Schedule-C", "32", "Utilities", expenseLines.line32, "Rounded utilities expense");
   audit.record("PA-Schedule-C", "33", "Wages", expenseLines.line33, "Rounded wages expense");
   audit.record("PA-Schedule-C", "34", "IDCs (1/3 current expensing)", expenseLines.line34, "Rounded Pennsylvania-allowable current IDC expense");
@@ -277,18 +283,22 @@ export function calculatePAScheduleC(input: PAScheduleCInput): PAScheduleCResult
   audit.record("PA-Schedule-C", "38", "Total expenses", line38, "Sum of supported Schedule C deduction lines");
   audit.record("PA-Schedule-C", "39", "Net profit or loss", line39, "Line 5 - Line 38");
 
+  // Decimal constructor copies preserve every digit without applying its arithmetic precision.
+  // Public values and audit inputs use the stable constructor for strict unchanged replay.
+  const publicExpenseLines={...expenseLines};
+  for(const [key,value]of Object.entries(expenseLines))publicExpenseLines[key as keyof typeof publicExpenseLines]=new Decimal(value);
   return {
-    line1a,
-    line1b,
-    line1c,
-    line2,
-    line3,
-    line4,
-    line5,
-    ...expenseLines,
-    line37,
-    line38,
-    line39,
-    lines: audit.getLines(),
+    line1a:new Decimal(line1a),
+    line1b:new Decimal(line1b),
+    line1c:new Decimal(line1c),
+    line2:new Decimal(line2),
+    line3:new Decimal(line3),
+    line4:new Decimal(line4),
+    line5:new Decimal(line5),
+    ...publicExpenseLines,
+    line37:new Decimal(line37),
+    line38:new Decimal(line38),
+    line39:new Decimal(line39),
+    lines: audit.getLines().map(line=>({...line,value:new Decimal(line.value),inputs:Object.fromEntries(Object.entries(line.inputs).map(([key,value])=>[key,typeof value==="string"?value:new Decimal(value)]))})),
   };
 }

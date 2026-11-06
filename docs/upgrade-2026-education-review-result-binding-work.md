@@ -1,0 +1,9 @@
+# Annual-interest review result integrity
+
+This six-path security change is separate from the education tax calculation. The independent reviewer reproduced a pre-existing gap in both delivered sole-interest and new mixed-interest reviews: replacing only result AGI58000→58001 or56500→56501 while preserving originals/QTP/deduction/token reached template I/O. No output PDF was created by those absent-template controls. Original evidence and the frozen tax packet remain unchanged.
+
+The spec and desired tests came first: two existing physical PDF cases passed and ten new desired controls failed. The private prepared annual-interest context now keeps digests of the entire recomputed original return result and its exact existing identifier redaction. The public return entry and direct5329 mapper pass the entire result before template access. Assertion performs no recomputation and returns no original, digest or extra token field. Existing prepaid/room-board contexts retain their earlier requirements. Fresh automatic preparation from complete originals remains available; it now applies the same full-result check.
+
+AGI, total income, taxable income, tax, refund, withholding, carryforward, audit and digital-asset changes reject before any template/output access for sole and mixed cases, with or without an explicit prepared token, plus the direct5329 entry. Exact original and exact redacted results remain accepted. Focused physical positive tests retain700/58000 and700/56500 plus8700/7200 taxable and870/720 additional tax. No tax formula, source qualification, redactor, model, filing gate or2026 output qualification changes.
+
+Author bounded checks and retained outputs remain in the private packet. A distinct reviewer clears the finite source/security contract with25 independent/adjacent controls. MAIN adoption passes99 tests in15files,3 spec references and generated inventory checks. This is agent software verification, not human tax approval.

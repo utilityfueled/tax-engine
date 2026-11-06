@@ -1,0 +1,36 @@
+form: "Form 8960"
+fullName: "Portfolio royalties in the actual Schedule E source handoff"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i8960"
+retrievedAt: "2026-10-26"
+reviewStatus: "source-derived-implementation-independent-review-pending"
+notes: |
+  Final 2025 instructions lines 4a/4b include the completed Schedule 1 line 5
+  and exclude only excepted business income. Portfolio royalties are investment
+  income under section 1411(c)(1)(A)(i); they do not become excluded merely
+  because they are outside the section 469 passive pool. Schedule E Part I
+  retains original MISC box 2 and K1 royalty amounts. This package transfers
+  those represented amounts exactly once into Form 8960 line 4c while retaining
+  the existing passive loss allowance and active-business adjustment.
+  This does not implement unrepresented royalty expenses, direct business
+  classification, personal-property rentals or passive/SE overlapping methods.
+  Synthetic literal calculations below are independently derived controls,
+  not published IRS examples or independent human qualification. Full 2026
+  readiness and final form qualification remain closed.
+lines:
+  - line: "4a-4c-royalties"
+    description: "Keep MISC and K1 portfolio royalties after the excluded business adjustment"
+    formula: "At wages200000, MISC7000.75 plus K1royalties3000.25 gives royalties10001. With active ordinary5000, line4a15001 less adjustment5000 gives line4c10001 and NIIT380. With passive ordinary5000, adjustment0 gives line4c15001 and NIIT570. Partnership and S corporation royalty character remains independent of ordinary activity character."
+    testRef: "tests/engine/federal-niit-royalty.test.ts::retains MISC and K1 royalties independently of ordinary activity character"
+  - line: "4c-passive-loss"
+    description: "Do not offset portfolio royalties with suspended passive activity losses"
+    formula: "Wages200000, royalty12000 and ordinary passive loss10000 gives AGI212000, suspended loss10000, line4c12000 and NIIT456. Both entity types preserve the same portfolio income; actual permitted passive income6000 and loss2000 instead contribute4000 once alongside royalty10000, giving NIIT532."
+    testRef: "tests/engine/federal-niit-royalty.test.ts::retains royalties separately from suspended and allowed passive losses"
+  - line: "13-17-threshold"
+    description: "Retain cents until the final NIIT tax rounding"
+    formula: "Wages199999.99 plus royalty0.01 reaches MAGI200000 and NIIT0. Royalty13.17 instead gives MAGI200013.16, NII13.17, taxablebase13.16 and round(13.16*.038)=1. Source amounts and input remain unchanged."
+    testRef: "tests/engine/federal-niit-royalty.test.ts::keeps exact royalties and the MAGI boundary through final tax rounding"
+  - line: "saved-review"
+    description: "Retain source-derived royalty amounts in reopened Form8960 fields"
+    formula: "The active ordinary5000 and portfolio10001 example prints lines4a15001,4b(5000),4c10001,12=10001,13=215001,15=15001,16=10001,17=380, with review-only notice. No filling or qualification gate is changed."
+    testRef: "tests/pdf/form-8960-royalty-sources.test.ts::reopens the retained royalty source and business adjustment fields"

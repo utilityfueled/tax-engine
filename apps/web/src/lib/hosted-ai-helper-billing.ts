@@ -1,5 +1,7 @@
 import type { HostedPlanId } from "@tax-engine/contracts";
-import { providerModelCandidates } from "@tax-engine/engine/src/provider-model-eval";
+import Decimal from "decimal.js";
+import { calculateAiCost } from "@tax-engine/engine/src/ai-pricing";
+import { AI_TASKS } from "@tax-engine/engine/src/ai-task-registry";
 
 type HostedAiBillingEnvironment = Record<string, string | undefined>;
 
@@ -7,12 +9,15 @@ export interface HostedAiUsageEstimate {
   inputTokens: number;
   outputTokens: number;
   estimatedCostCents: number;
+  providerCostUsd: string;
+  usageKind: "reported" | "estimated";
+  pricingEffectiveFrom: string;
 }
 
 const DEFAULT_INCLUDED_AI_BUDGET_CENTS = 1_000;
 const DEFAULT_AI_TOP_UP_CREDIT_CENTS = 1_000;
 const DEFAULT_AI_TOP_UP_PRICE_CENTS = 1_500;
-const DEFAULT_MAX_OUTPUT_TOKENS = 700;
+const DEFAULT_MAX_OUTPUT_TOKENS = AI_TASKS["workspace-summary"].maxOutputTokens;
 
 function readConfiguredNumber(
   rawValue: string | undefined
@@ -27,33 +32,17 @@ function readConfiguredNumber(
     return null;
   }
 
-  const parsed = Number(trimmed);
-  return Number.isFinite(parsed) ? parsed : null;
+  try {
+    const parsed = new Decimal(trimmed);
+    return parsed.isFinite() && parsed.isInteger() && parsed.abs().lte(Number.MAX_SAFE_INTEGER) ? parsed.toNumber() : null;
+  } catch {
+    return null;
+  }
 }
 
 function approximateTokenCount(value: unknown) {
   const serialized = typeof value === "string" ? value : JSON.stringify(value);
-  return Math.max(1, Math.ceil(serialized.length / 4));
-}
-
-function resolveModelPricing(modelId: string, env: HostedAiBillingEnvironment) {
-  const configuredInput = readConfiguredNumber(env.TAX_ENGINE_AI_HELPER_INPUT_USD_PER_MILLION);
-  const configuredOutput = readConfiguredNumber(env.TAX_ENGINE_AI_HELPER_OUTPUT_USD_PER_MILLION);
-
-  if (configuredInput !== null && configuredInput >= 0 && configuredOutput !== null && configuredOutput >= 0) {
-    return {
-      inputUsdPerMillionTokens: configuredInput,
-      outputUsdPerMillionTokens: configuredOutput
-    };
-  }
-
-  const candidate = providerModelCandidates.find((entry) => entry.modelId === modelId)
-    ?? providerModelCandidates.find((entry) => entry.modelId === "gpt-5.2");
-
-  return {
-    inputUsdPerMillionTokens: candidate?.pricing.inputUsdPerMillionTokens ?? 1.75,
-    outputUsdPerMillionTokens: candidate?.pricing.outputUsdPerMillionTokens ?? 14
-  };
+  return Math.max(1, new TextEncoder().encode(serialized).byteLength + 1024);
 }
 
 export function resolveHostedAiIncludedBudgetCents(
@@ -108,29 +97,37 @@ export function estimateHostedAiUsageCost(
     responseText,
     modelId,
     inputTokens,
-    outputTokens
+    outputTokens,
+    cachedInputTokens = 0,
+    at = new Date().toISOString()
   }: {
     requestPayload: unknown;
     responseText?: string | null;
     modelId: string;
     inputTokens?: number | null;
     outputTokens?: number | null;
+    cachedInputTokens?: number;
+    at?: string;
   },
   env: HostedAiBillingEnvironment = process.env
 ): HostedAiUsageEstimate {
-  const pricing = resolveModelPricing(modelId, env);
   const resolvedInputTokens = inputTokens ?? approximateTokenCount(requestPayload);
   const resolvedOutputTokens = outputTokens
     ?? approximateTokenCount(responseText ?? "") ;
-  const estimatedCostUsd = (
-    (resolvedInputTokens / 1_000_000) * pricing.inputUsdPerMillionTokens
-    + (resolvedOutputTokens / 1_000_000) * pricing.outputUsdPerMillionTokens
-  );
+  if ([resolvedInputTokens, resolvedOutputTokens, cachedInputTokens].some(count => !Number.isSafeInteger(count) || count < 0)
+    || cachedInputTokens > resolvedInputTokens) throw new Error("Invalid AI token usage.");
+  if (env.TAX_ENGINE_AI_HELPER_INPUT_USD_PER_MILLION?.trim() || env.TAX_ENGINE_AI_HELPER_OUTPUT_USD_PER_MILLION?.trim()) {
+    throw new Error("Unreviewed custom AI prices are not supported. Add a sourced effective-dated price entry.");
+  }
+  const cost = calculateAiCost(modelId, at, { inputTokens: resolvedInputTokens, outputTokens: resolvedOutputTokens, cachedInputTokens });
 
   return {
     inputTokens: resolvedInputTokens,
     outputTokens: resolvedOutputTokens,
-    estimatedCostCents: Math.max(1, Math.ceil(estimatedCostUsd * 100))
+    estimatedCostCents: cost.retailChargeCents,
+    providerCostUsd: cost.providerCostUsd,
+    pricingEffectiveFrom: cost.pricingEffectiveFrom,
+    usageKind: inputTokens != null && outputTokens != null ? "reported" : "estimated",
   };
 }
 
@@ -150,21 +147,21 @@ export function estimateHostedAiReserveCostCents(
     requestPayload,
     modelId,
     inputTokens: approximateTokenCount(requestPayload),
-    outputTokens: maxOutputTokens ?? DEFAULT_MAX_OUTPUT_TOKENS
+    outputTokens: maxOutputTokens ?? resolveHostedAiMaxOutputTokens(env)
   }, env).estimatedCostCents;
 }
 
 export function resolveHostedAiHelperModelId(
   env: HostedAiBillingEnvironment = process.env
 ) {
-  return env.MODEL_PROVIDER_MODEL?.trim() || "gpt-5-mini";
+  return env.MODEL_PROVIDER_MODEL?.trim() || "gpt-6-luna";
 }
 
 export function resolveHostedAiMaxOutputTokens(
   env: HostedAiBillingEnvironment = process.env
 ) {
   const configured = readConfiguredNumber(env.TAX_ENGINE_AI_HELPER_MAX_OUTPUT_TOKENS);
-  return configured !== null && configured > 0
+  return configured !== null && configured > 0 && configured <= 16384
     ? Math.floor(configured)
     : DEFAULT_MAX_OUTPUT_TOKENS;
 }

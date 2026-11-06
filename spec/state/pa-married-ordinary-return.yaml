@@ -1,0 +1,75 @@
+form: "PA-Married-Ordinary-Return"
+fullName: Actual two-owner Pennsylvania ordinary J or M return group
+taxYear: 2026
+reference: https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40in.pdf
+notes: |
+  Source-first proposal928452ac and eight literal Decimal worksheets e8b95b60.
+  Actual2025 form/instructions pp4,6,7,36,39; SP printed1,2 and instructions.
+  61PaCode117.2 distinguishes separate/joint liabilities and agency offsets.
+  Cohabiting living actual full-year resident spouses; ordinary current cash W2s.
+  No synthetic single federal returns or overwritten owner IDs. First other classes
+  known-none; actual outside-household gift sources may add SP line5 only.
+  J/M choice independent of actual joint federal household. No positive M EIC
+  allocation absent its actual separate-PA successor. Printed request is not cash.
+  No native/public/PDF integration or final2026/fullreturn qualification claim.
+lines:
+  - line: "household"
+    description: Both current actual owners and original household facts
+    formula: Require two distinct original current identities, actual full-year PA domicile/abode/day facts, living/cohabiting marital sources, calendar years and complete worldwide source proof. No absent owner default or cloned single federal return. Explicit contradictory canonical marital/residency facts reject. Retained other nonempty source blocks, even net-zero business or offsetting adjustments, cannot be omitted by a worldwide-known-none answer.
+    testRef: "tests/engine/state/pa-married-ordinary-return.test.ts::PA married ordinary derives joint and actual separate owner returns"
+  - line: "joint-eligibility"
+    description: Actual joint-filing restrictions and separate payment ownership
+    formula: Confirm same year-end and no individual support/DHS/court obligation for J. M retains separate liabilities. Actual unknown, joint-to-separate estimates/transfers, deceased/mixed residency and positive unsupported classes cannot become defaults.
+    testRef: "tests/engine/state/pa-married-ordinary-return.test.ts::PA married ordinary rejects unsupported or unknown household facts %s"
+  - line: "wages"
+    description: Complete uniquely owned original cash payroll
+    formula: Every current W2 including zero has exactly one current original row, explicit actual owner/recipient/year/all-boxes status and dated payroll; exact sum matches source Box1 and PA Box16. Same-owner semantic duplicates reject. Withholding belongs once to original recipient; no spouse split or inferred zero.
+    testRef: "tests/engine/state/pa-married-ordinary-return.test.ts::PA married ordinary rejects incomplete or contradictory wage sources %s"
+  - line: "printed-rounding"
+    description: Round each actual return line after summing its raw sources
+    formula: J sums actual owner cash compensation and withholding before whole-dollar rounding; M sums each owner originals separately. Use Decimal dynamic source precision; raw50000.25+30000.25 gives J80001; raw1535.25+921.25 gives J2457. Preserve original raw cents and no per-document rounding.
+    testRef: "tests/engine/state/pa-married-ordinary-return.test.ts::PA married ordinary preserves exact cents before actual printed return lines"
+  - line: "sp"
+    description: Shared Table2 eligibility applied to each actual return tax
+    formula: Actual married cohabiting J uses SP ColumnA; M uses each actual owner ColumnB/C and identical joint eligibility income/Table2. Sum each reported category, no federalAGI or free spouse-income override. Apply shared fraction only to actual return tax less actual resident credit. Do not make either spouse a dependent.
+    testRef: "tests/engine/state/pa-married-ordinary-return.test.ts::PA married ordinary preserves eight independently pinned worksheet cases"
+  - line: "sp-gifts"
+    description: Actual outside-household gifts versus unknown or excluded benefits
+    formula: Only actual current owner original outside-household gifts enter line5; immutable receipt date/amount/recipient/donor and no-double-count facts bind. Other first-cohort SP categories require actual known-none. Missing, unsupported classified benefits or gifts within household do not become free additions or zeros.
+    testRef: "tests/engine/state/pa-married-ordinary-return.test.ts::PA married ordinary rejects unknown or misclassified worldwide income %s"
+  - line: "federal"
+    description: Fresh unchanged joint federal household computed once
+    formula: Calculate actual canonical federal once, preserving owner/status/originals. Reconcile ordinary total income to actual W2 sources; no mocked result/AGI override. Actual EIC zero remains zero; positive M EIC requires separate owner allocation successor, never two copies or half. Positive J EIC uses actual service earnings and processing-only WPTC.
+    testRef: "tests/engine/state/pa-married-ordinary-return.test.ts::PA married ordinary uses actual unchanged federal household and preserves 2026 denial"
+  - line: "payments"
+    description: Actual known-empty accounts and no hidden payment allocation
+    formula: First no-estimate/no-extension/no-prior-credit source proof is explicit for each actual owner and current account. Unknown/positive receipt, hidden PA scalar or old source account cannot be discarded. Current wage withholding is derived once from actual sources; no prior-return safe harbor invented. REV2 uses reported13+21 and no unsupported dated principal.
+    testRef: "tests/engine/state/pa-married-ordinary-return.test.ts::PA married ordinary rejects unqualified payment histories and disposition %s"
+  - line: "disposition"
+    description: Per-return actual refund request and unsettled cross-owner accounts
+    formula: Reconcile each actual output return refund/credit/donation request to its fresh printed29. No default refund, source-driven election or issued-cash claim. Cross-owner opposing excess/deficit requires actual117.2 account successor; first balanced M does not choose a fake offset.
+    testRef: "tests/engine/state/pa-married-ordinary-return.test.ts::PA married ordinary rejects unqualified payment histories and disposition %s"
+  - line: "commitment"
+    description: Raw original source commitment and side-effect-free private audit
+    formula: Stable browser-safe SHA256 binds full private original household excluding only own packet plus complete actual source facts. Same-dollar owner/payer/reference/raw-cent/date changes invalidate snapshots or change commitment. Key-order changes do not. Audit only digest/numeric identifiers; no names/SSN/source refs. No mutations or I/O.
+    testRef: "tests/engine/state/pa-married-ordinary-return.test.ts::PA married ordinary binds exact raw sources without side effects or private audit leakage"
+  - line: "legacy"
+    description: Preserve existing single method and explicit new household API
+    formula: Old single calculatePAOrdinaryReturn continues rejecting spouse packets, conserving all historical tests and source gates. Actual married method is separate and requires full packet; field removal cannot downgrade it into single compatibility.
+    testRef: "tests/engine/state/pa-married-ordinary-return.test.ts::PA married ordinary never weakens legacy single admission or accepts missing packet"
+  - line: "category-columns"
+    description: Sum exact joint category sources before its printed rounding
+    formula: Actual gifts0.25 per owner give J ColumnA line5 rounded1 and eligibility13001, but M own ColumnsB/C line5 each0 and shared eligibility13000. Different receipt references cannot make duplicate actual originals distinct sources.
+    testRef: "tests/engine/state/pa-married-ordinary-return.test.ts::PA married ordinary rounds exact joint categories once and rejects reference-only duplicate gifts"
+  - line: "prior-exemption"
+    description: Prior-return unknowns cannot become a computed positive penalty
+    formula: Actual no-return source history is distinct from an existing but unreviewed prior return. If current withholding/SP independently eliminates the penalty, prior information is unnecessary. If the provisional published REV calculation requires a positive penalty, actual prior100percentSP eligibility must be established independently of whether any return was filed. This packet contains no actual priorSP worksheet, so any such positive-penalty composition requires the prior-forgiveness/exemption and safe-harbor source successor; no_return, not_used and actual_return cannot stand in for ineligibility proof.
+    testRef: "tests/engine/state/pa-married-ordinary-return.test.ts::PA married ordinary requires actual prior exemption facts when penalty could apply %s"
+  - line: "attached-packet"
+    description: No override of a different attached canonical household packet
+    formula: The separate source parameter permits validated unattached review input. When the optional canonical paMarriedOrdinarySources field is present, require exact stable equality to that actual packet; no alternate J/M proof or raw parameter may override conflicting current source facts. Identical packet/key-order semantics remain valid.
+    testRef: "tests/engine/state/pa-married-ordinary-return.test.ts::PA married ordinary binds an attached canonical source packet without raw override"
+  - line: "prior-sp-nonfiling"
+    description: Missing priorSP qualification is unknown even for actual nonfilers
+    formula: No prior filing history cannot prove ineligibility for the before-begin100percentSP exemption. Positive provisional REV penalty requires actual prior eligibility source method; independently zero penalty remains admitted with all no_return statuses and unchanged source facts.
+    testRef: "tests/engine/state/pa-married-ordinary-return.test.ts::PA married ordinary does not infer priorSP ineligibility from actual no return history"

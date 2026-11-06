@@ -1,0 +1,59 @@
+form: "Publication974 and Section172 coordination"
+fullName: "Actual NOL recomputation in prescribed Marketplace health contexts"
+taxYear: 2025
+irsReference: "https://www.irs.gov/publications/p974"
+notes: |
+  Publication974 W/X and Simplified Steps1-3 require the return's actual income
+  for each fixed health deduction. Section172(a)(2),(b)(2) and Regulation1.172-5
+  independently require current-limit and modified-income computations. Recompute
+  the actual NOL at each prescribed health step; do not invent a NOL entry in the
+  list of special ordered deductions or retain an earlier step's NOL/carry result.
+  Statutory income contexts refigure already enabled AGI-sensitive claims; the
+  final actual return retains any completed Pub974 ordered claims as prescribed.
+  Statutory AMT replays use the health amount fixed for that particular context,
+  including its actual business attribution under Regulation1.199A-3(b)(1)(vi).
+  Temporary QBI allocations and carry results are not retained on the final return.
+  Final deduction plus allocated PTC must not exceed original premiums. The
+  literals below are derived synthetic examples, not IRS published examples.
+  Isolated2026 tests use partial constants; full-return readiness remains closed.
+lines:
+  - line: "capped-2025"
+    description: "Recompute NOL for W, X maximum, and final Step3 health"
+    formula: "Profit100000 less7065SEhalf gives92935. Whealth2400 givesNOL59828 andXincome30707; Xcap975/max3375. Maximumhealth givesNOL59048/AGI30512;202% figure.0208 gives635contribution/PTC5365. Finalhealth635 givesNOL61240/AGI31060/finalPTC5304/carry38760."
+    irsRef: "Pub974W/X and SimplifiedSteps1-3; IRC172(a)(2),(b)(2); Form8962Table2 202/206percent"
+    testRef: "tests/engine/federal-marketplace-nol.test.ts::recomputes actual NOL at each capped health step and retains only final carry"
+  - line: "modified-carry"
+    description: "Retain separate modified-income absorption after the final health amount"
+    formula: "Same2025sources with3000capital loss: WNOL57428/Xincome30107/Xcap375/max2775; maximumNOL57128/AGI30032 giveshealth589. Finalclaim58877/AGI30469/PTC5366, modifiedabsorption61277 andcarry38723."
+    irsRef: "IRC172(d)(2); Reg1.172-5; Pub974 final health deduction and Form8962Table2"
+    testRef: "tests/engine/federal-marketplace-nol.test.ts::refigures modified carry income with the final health deduction"
+  - line: "uncapped-2026"
+    description: "Use actual final2026 eligibility with a separately recalculated NOL"
+    formula: "At100000profit, maximumhealth6000 andstandard16100 giveNOL56668/AGI30267;193% figure.0626 gives1895contribution/PTC4105. Finalhealth1895 givesNOL59952/AGI31088/PTC3979/carry40048."
+    irsRef: "Pub974 SimplifiedSteps1-3; enactedIRC36B; RevProc2025-25 applicable percentages; IRC172"
+    testRef: "tests/engine/federal-marketplace-nol.test.ts::recomputes the isolated uncapped source result without an interim eligibility override"
+  - line: "ordered-ira"
+    description: "Refigure statutory NOL contexts without freezing a Pub974 IRA into their MAGI"
+    formula: "Same2025profit100000 with covered7000IRA: firstStep3health635 establishes7000IRA. Yincome23707 givescap375/max2775; repeatedStep2NOL59528/AGI23632 giveshealth57. Final current-limit MAGI92878 allows0IRA andNOL61702; actual retainedIRA7000 givesAGI24176/PTC5903/carry38298."
+    irsRef: "Pub974 special ordered IRA instructions and WorksheetY; IRC172(a)(2),(b)(2); Reg1.172-5(a)(2)(ii)"
+    testRef: "tests/engine/federal-marketplace-nol.test.ts::refigures NOL limit contexts while retaining the actual ordered IRA only on the final return"
+  - line: "ineligible-final"
+    description: "Keep actual ordinary health and full repayment when final2026 income is ineligible"
+    formula: "Profit100000/SEhalf7065, actualNOL10000 andordinaryhealth6000 giveAGI76935 above400%FPL. FinalPTC0/fullAPTC3600, NOLdeduction10000/carry0; no auxiliary eligibility flag survives."
+    irsRef: "Pub974 SimplifiedStep2 Cannot takePTC; IRC36B(c)(1),(f)(2); IRC172"
+    testRef: "tests/engine/federal-marketplace-nol.test.ts::retains final no-credit health and repayment with actual NOL sources"
+  - line: "independent-final-ledgers"
+    description: "Retain only final regular AMT and investment-loss transfers"
+    formula: "Final2025health635 givesregular61240claim. CurrentQBI3062 givesAMTI89238/ATNOLD80314; modifiedAMTI92300 absorbs83070 from independent100000AMTcarry, leaving16930. Actual1411origin30000/100000 times61240 gives18372, not an interim amount or carry absorption."
+    irsRef: "IRC56(a)(4),(d), Reg1.55-1(b), Reg1.1411-4(h); final Pub974 Step3"
+    testRef: "tests/engine/federal-marketplace-nol.test.ts::retains independent final AMT and investment ledgers without interim source transfers"
+  - line: "multiple-business-context"
+    description: "Recompute temporary health attribution while preserving final source confirmations"
+    formula: "Two actual50000gross businesses share7065SEhalf equally. Separate half-year policies use monthlyPTC5364 at maximumhealth3375, givingfinalhealth636, NOL61239 andAGI31060. Final actualhealth318perbusiness reconciles once; temporary W/max amounts are computed from the same actual gross sources."
+    irsRef: "Pub974 more than one trade or business; Reg1.199A-3(b)(1)(vi); IRC172 and56"
+    testRef: "tests/engine/federal-marketplace-nol.test.ts::recomputes temporary business allocations and validates the actual final source amounts"
+  - line: "review-packet"
+    description: "Preserve final health and separate carry review statements together"
+    formula: "Final Schedule1health635, Form8962credit5304, regular61240/38760claim/carry and alternative80314/16930claim/carry reconcile in the same review-only packet; source identifiers stay redacted."
+    irsRef: "Pub974 final transfer; IRC172/56; project review-only export contract"
+    testRef: "tests/pdf/marketplace-nol-review.test.ts::retains the final health and separate loss ledgers in one redacted review packet"

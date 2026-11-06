@@ -8,8 +8,13 @@
  */
 
 import Decimal from "decimal.js";
+import { calculateW2StateLocalSources, type W2StateLocalSourceContext } from "@/engine/forms/w2-state-local.js";
 import type { CalculatedLine } from "@/models/outputs.js";
 import type {
+  Form1099Int,
+  Form1099Div,
+  Form1099B,
+  Form1099OID,
   Form1099G,
   Form1099K,
   Form1099Misc,
@@ -23,15 +28,22 @@ import { d, sum } from "@/utils/decimal.js";
 
 export interface OhioScheduleOfWithholdingInput {
   w2s?: W2[];
+  /** Required for actual packets: current private owner/year and complete W2 list. */
+  w2SourceContext?: W2StateLocalSourceContext;
   formW2Gs?: FormW2G[];
   form1099Gs?: Form1099G[];
   form1099Ks?: Form1099K[];
   form1099Rs?: Form1099R[];
   form1099Necs?: Form1099Nec[];
   form1099Miscs?: Form1099Misc[];
+  form1099Ints?: Form1099Int[];
+  form1099Divs?: Form1099Div[];
+  form1099Bs?: Form1099B[];
+  form1099OIDs?: Form1099OID[];
 }
 
 export interface OhioScheduleOfWithholdingResult {
+  actualW2SourceCommitments: Array<{ originalIndex: number; sourceCommitment: string }>;
   line1_w2OhioWithholding: Decimal;
   line2_w2gOhioWithholding: Decimal;
   line3_1099gOhioWithholding: Decimal;
@@ -39,8 +51,20 @@ export interface OhioScheduleOfWithholdingResult {
   line5_1099rOhioWithholding: Decimal;
   line5a_1099NecOhioWithholding: Decimal;
   line5b_1099MiscOhioWithholding: Decimal;
+  line5c_1099IntOhioWithholding: Decimal;
+  line5d_1099DivOhioWithholding: Decimal;
+  line5e_1099BOhioWithholding: Decimal;
+  line5f_1099OIDOhioWithholding: Decimal;
+  line5g_1099DAOhioWithholding: Decimal;
   line6_totalOhioWithholding: Decimal;
   lines: CalculatedLine[];
+}
+
+/** Compare retained originals structurally, without depending on object key order. */
+function stableSource(value: unknown): string {
+  if (Array.isArray(value)) return `[${value.map(stableSource).join(",")}]`;
+  if (value && typeof value === "object") return `{${Object.entries(value).filter(([, child]) => child !== undefined).sort(([a], [b]) => a.localeCompare(b)).map(([key, child]) => `${JSON.stringify(key)}:${stableSource(child)}`).join(",")}}`;
+  return JSON.stringify(value) ?? "null";
 }
 
 function isOhioStateCode(state: string | undefined): boolean {
@@ -54,11 +78,16 @@ function sumOhioAmounts<T extends { state?: string }>(
   let total = new Decimal(0);
 
   for (const statement of statements ?? []) {
+    const amount = d(getAmount(statement));
+    if (!amount.isFinite() || amount.isNegative()) throw new Error("Ohio source withholding must be finite and nonnegative.");
+    if (!amount.isZero() && !/^[A-Z]{2}$/.test(statement.state?.trim().toUpperCase() ?? "")) {
+      throw new Error("Ohio withholding requires the actual source state for every nonzero amount.");
+    }
     if (!isOhioStateCode(statement.state)) {
       continue;
     }
 
-    total = total.plus(d(getAmount(statement)));
+    total = total.plus(amount);
   }
 
   return total;
@@ -69,16 +98,33 @@ export function calculateOhioScheduleOfWithholding(
 ): OhioScheduleOfWithholdingResult {
   const audit = new AuditTrail();
 
-  const line1 = sumOhioAmounts(
-    input.w2s,
-    (statement) => statement.stateTaxWithheld,
-  );
+  const w2s = input.w2s ?? [];
+  const hasActualW2 = w2s.some(statement => statement.stateLocalSources !== undefined);
+  const context = input.w2SourceContext;
+  if (hasActualW2 && !context) throw new Error("Ohio actual W2 withholding requires full current owner/year/source context.");
+  if (context && stableSource(w2s) !== stableSource(context.w2s)) throw new Error("Ohio W2 source context differs from the current complete original W2 list.");
+  let line1 = new Decimal(0);
+  const actualW2SourceCommitments: OhioScheduleOfWithholdingResult["actualW2SourceCommitments"] = [];
+  for (const [originalIndex, statement] of w2s.entries()) {
+    if (statement.stateLocalSources === undefined) {
+      line1 = line1.plus(sumOhioAmounts([statement], row => row.stateTaxWithheld));
+      continue;
+    }
+    // The complete packet is validated even when it reports no OH row or known zero.
+    if (!context) throw new Error("Ohio actual W2 withholding requires source context.");
+    const actual = calculateW2StateLocalSources(context, originalIndex, statement.stateLocalSources);
+    const ohio = sum(...actual.stateRows.filter(row => row.state === "OH").map(row => row.withheld));
+    line1 = line1.plus(ohio);
+    actualW2SourceCommitments.push({ originalIndex, sourceCommitment: actual.sourceCommitment });
+    audit.record("OH-SCHEDULE-WH", `actual-w2-${originalIndex}`, "Original-bound actual Ohio W2 withholding", ohio,
+      `Admitted OH printed rows once; original source commitment ${actual.sourceCommitment}`);
+  }
   audit.record(
     "OH-SCHEDULE-WH",
     "1",
     "Ohio withholding from W-2 statements",
     line1,
-    "Sum W-2 box 17 amounts where state = OH",
+    "Sum admitted actual OH printed box 17 rows once; otherwise use the original legacy OH scalar",
   );
 
   const line2 = sumOhioAmounts(
@@ -153,13 +199,43 @@ export function calculateOhioScheduleOfWithholding(
     "Sum 1099-MISC box 16 amounts where state = OH",
   );
 
-  const line6 = sum(line1, line2, line3, line4, line5, line5a, line5b);
+  const line5c = sumOhioAmounts(input.form1099Ints, statement => statement.stateWithheld);
+  audit.record("OH-SCHEDULE-WH", "5c", "Ohio withholding from 1099-INT statements", line5c,
+    "Sum 1099-INT box 17 amounts where state = OH");
+  const line5d = sumOhioAmounts(input.form1099Divs, statement => statement.stateWithheld);
+  audit.record("OH-SCHEDULE-WH", "5d", "Ohio withholding from 1099-DIV statements", line5d,
+    "Sum 1099-DIV box 16 amounts where state = OH");
+  const isDigitalStatement = (statement: Form1099B) => statement.transactions.some(row => row.sourceDocumentType === "1099-da");
+  const line5e = sumOhioAmounts(input.form1099Bs?.filter(statement => !isDigitalStatement(statement)), statement => statement.stateWithheld);
+  audit.record("OH-SCHEDULE-WH", "5e", "Ohio withholding from 1099-B statements", line5e,
+    "Sum 1099-B box 16 amounts where state = OH");
+
+  let line5f = new Decimal(0);
+  for (const source of input.form1099OIDs ?? []) {
+    const rows = source.stateWithholding ?? [];
+    if (rows.length > 2 || new Set(rows.map(row => row.state.trim().toUpperCase())).size !== rows.length) {
+      throw new Error("Ohio OID withholding rows must be distinct and no more than two.");
+    }
+    for (const row of rows) {
+      const amount = d(row.stateWithheld);
+      if (!amount.isFinite() || amount.isNegative()) throw new Error("Ohio OID withholding must be finite and nonnegative.");
+      if (!amount.isZero() && !/^[A-Z]{2}$/.test(row.state.trim().toUpperCase())) throw new Error("Ohio OID withholding requires the actual source state for every nonzero amount.");
+      if (isOhioStateCode(row.state)) line5f = line5f.plus(amount);
+    }
+  }
+  audit.record("OH-SCHEDULE-WH", "5f", "Ohio withholding from 1099-OID statements", line5f,
+    "Sum actual 1099-OID box 14 rows where box 12 state = OH");
+  const line5g = sumOhioAmounts(input.form1099Bs?.filter(isDigitalStatement), statement => statement.stateWithheld);
+  audit.record("OH-SCHEDULE-WH", "5g", "Ohio withholding from original 1099-DA statements", line5g,
+    "Sum original 1099-DA state withholding once where the actual state = OH");
+
+  const line6 = sum(line1, line2, line3, line4, line5, line5a, line5b, line5c, line5d, line5e, line5f, line5g);
   audit.record(
     "OH-SCHEDULE-WH",
     "6",
     "Total Ohio withholding for IT 1040 line 14",
     line6,
-    "Line 1 + Line 2 + Line 3 + Line 4 + Line 5 + Line 5a + Line 5b",
+    "Line 1 + Line 2 + Line 3 + Line 4 + Line 5 + Line 5a + Line 5b + Line 5c + Line 5d + Line 5e + Line 5f + Line 5g",
     {
       "Line 1": line1,
       "Line 2": line2,
@@ -168,10 +244,16 @@ export function calculateOhioScheduleOfWithholding(
       "Line 5": line5,
       "Line 5a": line5a,
       "Line 5b": line5b,
+      "Line 5c": line5c,
+      "Line 5d": line5d,
+      "Line 5e": line5e,
+      "Line 5f": line5f,
+      "Line 5g": line5g,
     },
   );
 
   return {
+    actualW2SourceCommitments,
     line1_w2OhioWithholding: line1,
     line2_w2gOhioWithholding: line2,
     line3_1099gOhioWithholding: line3,
@@ -179,6 +261,11 @@ export function calculateOhioScheduleOfWithholding(
     line5_1099rOhioWithholding: line5,
     line5a_1099NecOhioWithholding: line5a,
     line5b_1099MiscOhioWithholding: line5b,
+    line5c_1099IntOhioWithholding: line5c,
+    line5d_1099DivOhioWithholding: line5d,
+    line5e_1099BOhioWithholding: line5e,
+    line5f_1099OIDOhioWithholding: line5f,
+    line5g_1099DAOhioWithholding: line5g,
     line6_totalOhioWithholding: line6,
     lines: audit.getLines(),
   };

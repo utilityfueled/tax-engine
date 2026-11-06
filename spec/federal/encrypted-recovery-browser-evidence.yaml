@@ -1,0 +1,28 @@
+form: Encrypted recovery browser evidence
+schedule: Local recovery test infrastructure
+taxYear: 2026
+reference: apps/web/src/lib/workspace-recovery.ts
+notes: |
+  Test-only evidence validation; no change to production AES-GCM/PBKDF2 or recovery.
+  A random base64 ciphertext may contain a short plaintext-looking token by chance.
+  The envelope has exactly eight canonical JSON fields: fixed public algorithm/version
+  fields and three canonical base64 binary fields (salt16/iv12/ciphertext+tag).
+  No arbitrary plaintext field or unknown key is admitted. Authenticated plaintext
+  must equal the actual pre-backup workspace, raw guided answers/mode and originals.
+  Zero user or provider credentials; these controls use only fictional local returns.
+lines:
+  - line: "saved-artifact"
+    formula: "A valid authenticated archive is not rejected solely because random ciphertext contains a short marker; validation never returns ciphertext or decoded private payload."
+    testRef: "tests/apps/web/encrypted-recovery-review.test.ts::accepts authenticated ciphertext with a deterministic short-marker coincidence"
+  - line: "canonical-envelope"
+    formula: "Exact8-key canonical JSON, literal format/version/algorithms/600000iterations and canonical16byte salt/12byte IV/minimum16byte GCMtag; unknown, duplicate, extra, plaintext or invalid encoding denied."
+    testRef: "tests/apps/web/encrypted-recovery-review.test.ts::rejects extra or disguised plaintext and noncanonical encryption parameters"
+  - line: "authenticated-originals"
+    formula: "Independent Node AES256GCM decrypt with format:1 AAD must authenticate and exactly match actual workspace/guided originals plus each source identity/name/type/mtime/size/hash/bytes."
+    testRef: "tests/apps/web/encrypted-recovery-review.test.ts::rejects validly encrypted changed originals and missing or duplicate files"
+  - line: "authentication"
+    formula: "Wrong password, changed salt/IV/cipher/tag/AAD and malformed cleartext deny with bounded safe error, no payload/ciphertext forwarded."
+    testRef: "tests/apps/web/encrypted-recovery-review.test.ts::rejects authentication and payload failures without returning private material"
+  - line: "browser-preservation"
+    formula: "Complete native upload/reopen/wrong-password/restore/delete/PDF/privacy/year journey remains; only randomized-text substring assertions become canonical authenticated source comparison. Original case count/deadline/requests/retries unchanged."
+    testRef: "tests/apps/web/encrypted-recovery-review.test.ts::checks actual production export and import preserve the complete source packet"

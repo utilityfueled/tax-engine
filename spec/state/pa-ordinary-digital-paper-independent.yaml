@@ -1,0 +1,32 @@
+form: "PA Ordinary Official Digital Schedule D Independent Review"
+fullName: "Independent original-bound paper arithmetic privacy and artifact authority"
+taxYear: 2025
+status: "internal-independent-review-no-filing-qualification"
+sources:
+  - url: "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40d.pdf"
+    section: "Whole dollars; PA basis columns d/e/f; all dispositions including loss; same-taxpayer line3; line12; actual primary oval"
+    retrieved: "2026-11-03"
+notes: |
+  Actual source-bound prepared contexts must preserve all known private original
+  record identifiers when descriptions are projected for review. Explicit acquisition
+  basisSourceReference and paBasisSourceReference and printed broker state account
+  identification are typed original records, not arbitrary guessed free-text secrets.
+  This stage generates no PDF; saved official outputs are separately read/rendered.
+  No human, filing or final2026 qualification is inferred from these controls.
+lines:
+  - line: "privacy"
+    description: "Typed actual source identifiers embedded in a complete description remain private"
+    formula: "Keep complete safe prefix/suffix; replace actual retained acquisition/broker identifiers with REDACTED without mutating original."
+    testRef: "tests/pdf/pa-ordinary-digital-paper-independent.test.ts::independent actual typed source identifiers embedded in descriptions stay private: %s"
+  - line: "money"
+    description: "Reject both individual printed column discrepancies and row sum mismatch"
+    formula: "Keep actual engine20 or1; no fabricated penny allocation. For two same-primary actual rows gains20 andloss30, print signedtotal-10; wages50000 andSP50000 unchanged."
+    testRef: "tests/pdf/pa-ordinary-digital-paper-independent.test.ts::independent same primary mixed gains retain signed paper total without wage offset"
+  - line: "authority"
+    description: "Only actual original-bound immutable prepared authority supports paper projection"
+    formula: "Returned row mutations cannot change prepared context; wrong original token and stripped method reject, even if monetary totals agree."
+    testRef: "tests/pdf/pa-ordinary-digital-paper-independent.test.ts::independent returned paper facts cannot mutate the original prepared authority"
+  - line: "readiness"
+    description: "Artifact filenames cannot promote filing qualification"
+    formula: "Legacy reference/wrong suffix cannot satisfy actual official D; officialbasename may satisfy artifactpresence only while all filing qualification stays false."
+    testRef: "tests/pdf/pa-ordinary-digital-paper-independent.test.ts::independent exact official artifact basename cannot promote filing readiness"

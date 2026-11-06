@@ -46,6 +46,7 @@ export interface Form8889Result {
   line20: Decimal;
   line21: Decimal;
   supportedReturnedExcessContributions: Decimal;
+  supportedReturnedExcessContributionPrincipal: Decimal;
   lines: CalculatedLine[];
 }
 
@@ -259,9 +260,8 @@ function calculateContributionLimitComputation(
 
     return total.plus(
       annualContributionLimitForCoverage(coverage, hsaLimits, age55OrOlder, marriedUsesLine7CatchUp)
-        .dividedBy(12)
     );
-  }, new Decimal(0));
+  }, new Decimal(0)).dividedBy(12);
   const lastMonthRuleAnnualLimit = eligibleOnDecemberFirst
     ? annualContributionLimitForCoverage(
       decemberCoverage as Exclude<HsaCoverage, "none">,
@@ -288,8 +288,8 @@ function calculateContributionLimitComputation(
       return total;
     }
 
-    return total.plus(hsaLimits.familyContributionLimit.dividedBy(12));
-  }, new Decimal(0));
+    return total.plus(hsaLimits.familyContributionLimit);
+  }, new Decimal(0)).dividedBy(12);
   const familyCoverageLine5 = Decimal.max(new Decimal(0), familyCoverageLine3.minus(line4));
   const otherContributionLimit = spouseAllocationApplies && !treatedAsFamilyCoverageForAllMonths
     ? Decimal.max(new Decimal(0), line5.minus(familyCoverageLine5))
@@ -389,8 +389,17 @@ export function calculateForm8889(
     filingStatus,
     input,
     getHsaContributionLimitConstants(constants),
-    true
+    input.useLastMonthRule !== false
   );
+  if (taxpayer.taxYear >= 2026 && input.useLastMonthRule === undefined) {
+    const monthlyMethod = calculateContributionLimitComputation(
+      ownerDateOfBirth, taxpayer.taxYear, filingStatus, input,
+      getHsaContributionLimitConstants(constants), false
+    );
+    if (!monthlyMethod.line8.eq(contributionLimitComputation.line8)) {
+      throw new Error("Form 8889 requires an actual last-month-rule choice when it changes the contribution limit");
+    }
+  }
   const {
     coverageType,
     age55OrOlder,
@@ -432,6 +441,12 @@ export function calculateForm8889(
     new Decimal(0),
     d(input.supported1099SAReturnedExcessContributions)
   );
+  const returnedExcessEarnings = d(input.supported1099SAReturnedExcessContributionEarnings);
+  if (!returnedExcessEarnings.isFinite() || returnedExcessEarnings.lt(0)
+    || returnedExcessEarnings.gt(supported1099SAReturnedExcessContributions)) {
+    throw new Error("Form1099-SA returned-excess Box2 earnings must be included within gross Box1");
+  }
+  const supportedReturnedExcessContributionPrincipal = supported1099SAReturnedExcessContributions.minus(returnedExcessEarnings);
   const rolloverDistributions = Decimal.max(new Decimal(0), d(input.rolloverDistributions));
   const line14bDefaultAmount = rolloverDistributions.plus(supported1099SAReturnedExcessContributions);
   const line14b = input.excludedDistributions === undefined
@@ -508,11 +523,27 @@ export function calculateForm8889(
   );
   const line15 = ordinaryQualifiedMedicalExpenseOffset.plus(beneficiaryPostDeathMedicalExpenseOffset);
   const line16 = Decimal.max(new Decimal(0), line14c.minus(line15));
+  const actualDisabilityTaxableAmount = input.disabilityExceptionTaxableDistributions === undefined
+    ? undefined : d(input.disabilityExceptionTaxableDistributions);
+  if (actualDisabilityTaxableAmount !== undefined && (!actualDisabilityTaxableAmount.isFinite()
+    || actualDisabilityTaxableAmount.lt(0) || actualDisabilityTaxableAmount.gt(supported1099SADisabilityExceptionDistributions)
+    || actualDisabilityTaxableAmount.gt(line16))) {
+    throw new Error("Actual disability exception amount must be nonnegative and no greater than supported code 3 gross or total taxable HSA distributions");
+  }
+  if (taxpayer.taxYear >= 2026 && !age65OrOlderOnFirstDayOfYear && line16.gt(0)
+    && supported1099SADisabilityExceptionDistributions.gt(0)
+    && supported1099SAGrossDistributions.gt(supported1099SADisabilityExceptionDistributions)
+    && actualDisabilityTaxableAmount === undefined) {
+    throw new Error("Actual taxable disability distribution allocation is required for mixed HSA source codes");
+  }
+  const supportedTaxableExceptionAmount = actualDisabilityTaxableAmount === undefined
+    ? supported1099SAAutomaticExceptionDistributions
+    : supported1099SAAutomaticExceptionDistributions.minus(supported1099SADisabilityExceptionDistributions).plus(actualDisabilityTaxableAmount);
   const supportedPostAge65Distributions = age65OrOlderOnFirstDayOfYear
     ? new Decimal(0)
     : Decimal.max(new Decimal(0), d(input.distributionsAfterAge65));
   const line17aInputAmount = Decimal.max(new Decimal(0), d(input.distributionsNotSubjectToAdditionalTax));
-  const line17aSupportedExceptionAmount = supported1099SAAutomaticExceptionDistributions.plus(
+  const line17aSupportedExceptionAmount = supportedTaxableExceptionAmount.plus(
     supportedPostAge65Distributions
   );
   const line17aInputIncludesSupportedAmount = line17aInputAmount.greaterThanOrEqualTo(
@@ -544,6 +575,10 @@ export function calculateForm8889(
   const hasManualRedeterminedLimit = input.lastMonthRuleRedeterminedLimit !== undefined;
   const hasSupportedRedeterminedLimitWorksheet = input.priorYearRedeterminedLimitWorksheet !== undefined;
   const hasRedeterminedLimitSupport = hasManualRedeterminedLimit || hasSupportedRedeterminedLimitWorksheet;
+  if (taxpayer.taxYear >= 2026 && d(input.lastMonthRuleContributions).gt(0)
+    && !testingPeriodFailureDueToDeathOrDisability && !hasRedeterminedLimitSupport) {
+    throw new Error("Form 8889 testing-period recapture requires the actual prior-year redetermined limit or worksheet");
+  }
   const line18RedeterminedLimit = input.lastMonthRuleRedeterminedLimit === undefined
     ? supportedPriorYearRedeterminedLimit
     : Decimal.max(new Decimal(0), d(input.lastMonthRuleRedeterminedLimit));
@@ -566,7 +601,7 @@ export function calculateForm8889(
     ? new Decimal(0)
     : Decimal.max(new Decimal(0), d(input.recaptureQualifiedFundingDistribution));
   const line20 = line18.plus(line19);
-  const line21 = line18.times(HSA_RECAPTURE_TAX_RATE);
+  const line21 = line20.times(HSA_RECAPTURE_TAX_RATE);
   const ownerAwareInputs = (inputs: Record<string, Decimal | string> = {}): Record<string, Decimal | string> => ({
     "Account owner": input.accountOwner,
     ...inputs,
@@ -598,6 +633,7 @@ export function calculateForm8889(
     age55OrOlder: age55OrOlder ? "true" : "false",
     filingStatus: taxpayer.filingStatus,
     marriedUsesLine7CatchUp: marriedUsesLine7CatchUp ? "true" : "false",
+    useLastMonthRule: input.useLastMonthRule === undefined ? "unknown_legacy_choice" : String(input.useLastMonthRule),
     eligibleOnDecemberFirst: eligibleOnDecemberFirst ? "true" : "false",
     decemberCoverage,
     spouseFamilyCoverageMonths: input.spouseFamilyCoverageMonths?.join(",") || "none",
@@ -645,6 +681,7 @@ export function calculateForm8889(
     ownerAwareInputs({
       eligibleFamilyMonths: line7EligibleFamilyMonths.toString(),
       marriedUsesLine7CatchUp: marriedUsesLine7CatchUp ? "true" : "false",
+      useLastMonthRule: input.useLastMonthRule === undefined ? "unknown_legacy_choice" : String(input.useLastMonthRule),
       eligibleOnDecemberFirst: eligibleOnDecemberFirst ? "true" : "false",
       decemberCoverage,
       spouseFamilyCoverageMonths: input.spouseFamilyCoverageMonths?.join(",") || "none",
@@ -740,6 +777,7 @@ export function calculateForm8889(
       "Line 17a input amount before Line 16 cap": line17aInputAmount,
       "Validated post-age-65 distributions": supportedPostAge65Distributions,
       "Supported Form 1099-SA disability exception distributions": supported1099SADisabilityExceptionDistributions,
+      "Actual taxable disability exception amount": actualDisabilityTaxableAmount?.toString() ?? "unknown legacy allocation",
       "Supported Form 1099-SA death-distribution exception amount":
         supported1099SADeathDistributionDateOfDeathValue,
       "Supported Form 1099-SA automatic exception distributions": supported1099SAAutomaticExceptionDistributions,
@@ -796,8 +834,8 @@ export function calculateForm8889(
     "Line 19": line19,
     testingPeriodFailureDueToDeathOrDisability: testingPeriodFailureDueToDeathOrDisability ? "true" : "false",
   }));
-  audit.record("Form 8889", "21", "Additional tax on HSA recapture income", line21, "10% × Line 18", ownerAwareInputs({
-    "Line 18": line18,
+  audit.record("Form 8889", "21", "Additional tax on HSA recapture income", line21, "10% × Line 20", ownerAwareInputs({
+    "Line 20": line20,
     testingPeriodFailureDueToDeathOrDisability: testingPeriodFailureDueToDeathOrDisability ? "true" : "false",
   }));
 
@@ -827,6 +865,7 @@ export function calculateForm8889(
     line20,
     line21,
     supportedReturnedExcessContributions: supported1099SAReturnedExcessContributions,
+    supportedReturnedExcessContributionPrincipal,
     lines: audit.getLines(),
   };
 }

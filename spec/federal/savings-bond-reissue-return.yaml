@@ -1,0 +1,71 @@
+form: "Savings-bond reissue return reporting"
+fullName: "Original reissue and redemption interest through Schedule B and Form 8815"
+taxYear: 2026
+irsReference: "https://www.irs.gov/publications/p550"
+retrievedAt: "2026-10-27"
+notes: |
+  Consumes the actual source method in savings-bond-reissue-sources.yaml.
+  Pub550 separates current transferor recognition, later redemption interest,
+  and previously recognized amounts included in a current Form1099-INT. The
+  actual original Box3 and its original account/owner are retained. Each linked
+  redemption and current transfer belongs to exactly one statement source.
+  IRC135(a) excludes only eligible redemption interest, not interest recognized
+  on reissue. The Form8815 source worksheet labels the current-transfer amount
+  separately; it is never described as prior-year interest. Actual statement
+  inclusion, including an explicit zero, is required rather than inferred from
+  a paper/electronic classification. Current taxable interest enters through
+  original Box3 once; the calculated recognition is not added again.
+  The retained published worksheet rounds its individual printed lines. Exact
+  history fractions are accumulated before reporting a line; actual originals
+  are never replaced by a constructed cent allocation. Current-transfer
+  separation uses exact source amounts before reporting line6; the separately
+  displayed transfer subtotal is not an extra rounded subtraction. This
+  source-derived additional worksheet is not a published IRS
+  numerical example. For every supplied actual reissue packet, including a
+  historical-only packet or accompanying ordinary non-reissue redemptions,
+  final line6 aggregates the exact eligible source amounts before rounding.
+  The retained printed worksheet1-8 audit shows independently rounded line
+  values; subtracting those displayed subtotals can differ from that final
+  exact-source total. No displayed rounded subtotal replaces an original.
+  Final2026 physical qualification remains separate.
+lines:
+  - line: "current-half-dollar"
+    description: "Separate exact current transfer recognition before rounding eligible redemption interest"
+    formula: "Actual principal500 and reissuevalue501, followed by two actual250.50 redemptions, give originalBox3=1. Current transfer0.50 and eligible redemption0.50 are distinct exact source amounts. Report eligible Form8815line6=1 at its own boundary; do not subtract the separately displayed rounded transfer1 from rounded worksheetinterest1. Complete expenses5000 yield exclusion1, ScheduleB taxable0 and AGI80000. Below/above controls retain actual0.49/0.51 and unchanged input/global precision."
+    testRef: "tests/engine/savings-bond-reissue-return.test.ts::separates current transfer before rounding a half-dollar redemption"
+  - line: "current-half-dollar-review"
+    description: "Save the actual half-dollar source distinction and reported Form1040 values"
+    formula: "The saved source-bound reference preserves exact current transfer1/2 and eligible redemption1/2 while reporting line6/exclusion1; physical1040line2b is blank for zero under the existing mapper convention and AGI80000. The raw originalBox3 remains1 and no per-source penny allocation is manufactured."
+    testRef: "tests/pdf/savings-bond-reissue-review.test.ts::saves half-dollar source amounts before reported exclusion rounding"
+  - line: "source-precision"
+    description: "Keep every original digit through the reported worksheet and interest total"
+    formula: "Four redemptions each yield0.125 minus10^-65, so exact aggregate interest is0.5 minus4*10^-65 and reports0. The complete current statements retain all actual digits; Form8815 and ScheduleB each report0 rather than rounding intermediate sums up. Do not mutate global Decimal precision."
+    testRef: "tests/engine/savings-bond-reissue-return.test.ts::preserves original precision below an aggregate reporting boundary"
+  - line: "aggregate-cents"
+    description: "Aggregate original cents and exact recognition ratios before reporting"
+    formula: "Two actual current transfers of0.50 report1, not2; their combined eligible redemption interest1 remains separate. Two proportional reissue originals each with0.49 redemption interest give combined0.98 and reported exclusion1; compare the bound to reported remainingBox3=1 while preserving the two actual0.49 statements. Reverse the originals without changing the result or Decimal global precision."
+    testRef: "tests/engine/savings-bond-reissue-return.test.ts::aggregates exact source fractions and compares reported statement bounds"
+  - line: "private-review"
+    description: "Bind the complete original return and exact history before any PDF I/O"
+    formula: "Only the original return or its exact identifier-redacted copy may use the opaque prepared token. Recompute current/prior history, statement interest, Form8815 and MAGI; reject changed income, owner, history, reported amount, audit or serialized token before creating output. Saved1040line2b=100,AGI80100; reference separates transfer100 from eligible redemption400 without original IDs."
+    testRef: "tests/pdf/savings-bond-reissue-review.test.ts::binds original bond history and income before saved review output"
+  - line: "separate-transaction-statements"
+    description: "Bind separate current transfer and final redemption statements without duplicate reporting"
+    formula: "Actual current transfer statement Box3=100 and actual final redemption statement Box3=400 give total500 once. Reordered statement indexes and redemption links preserve400 exclusion/100taxable. Duplicate current-transfer linkage or a mismatched copied original must reject."
+    testRef: "tests/engine/savings-bond-reissue-return.test.ts::binds separate transfer and redemption originals after reordering"
+  - line: "canonical-historical-reissue"
+    description: "Use actual previous recognition in the current redemption worksheet"
+    formula: "Original1000faceEE/500principal, actual accrued200 and sole-funder half transfer in prior year recognizes100 then. Current successors redeem for500 each: current redemption interest250+150=400. Original currentBox3=500 with actual prior100 included gives ScheduleB400, exclusion400 and no taxable interest."
+    testRef: "tests/engine/savings-bond-reissue-return.test.ts::binds historical reissue and actual statement inclusion once"
+  - line: "canonical-current-reissue"
+    description: "Keep current transfer recognition taxable after a current redemption"
+    formula: "The same original reissued and redeemed in the current year has100 taxable transfer interest plus400 eligible redemption interest. ActualBox3=500 is reported once, prior adjustment0, Form8815 interest/exclusion400, ScheduleB taxable100."
+    testRef: "tests/engine/savings-bond-reissue-return.test.ts::preserves current transfer interest outside the education exclusion"
+  - line: "statement-source-identity"
+    description: "Require actual complete statement links and copied originals"
+    formula: "Bind index, payer/account/owner and originalBox3. Require actual prior-interest inclusion and unrelatedBox3 values, including known0, and complete transfer/redemption links. Reject stale copies, missing original components, duplicate links and missing actual statements before calculation. Compare exact computed totals at the same whole-dollar reporting boundary, preserving all original cents."
+    testRef: "tests/engine/savings-bond-reissue-return.test.ts::rejects missing stale or duplicated original statement facts"
+  - line: "rational-reporting"
+    description: "Report an exact one-third transfer and redemption without a fabricated allocation"
+    formula: "Original3000principal funded1000/2000, value4000 at whole current reissue to spouse, final proceeds5000. Current transfer1000/3 and redemption5000/3 sum2000 exactly. Retain both fractions, report the worksheet's transfer333 and current eligible interest1667; originalBox3=2000 yields333 taxable after full exclusion."
+    testRef: "tests/engine/savings-bond-reissue-return.test.ts::keeps exact thirds through current return reporting"

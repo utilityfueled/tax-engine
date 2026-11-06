@@ -1,0 +1,27 @@
+form: "Ohio business review private-description provenance independent controls"
+fullName: "Known actual original SSN display safety across optional current-context paths"
+taxYear: 2025
+reference: "https://dam.assets.ohio.gov/image/upload/v1767095693/tax.ohio.gov/forms/ohio_individual/individual/2025/it1040-booklet.pdf"
+notes: |
+  Privacy/provenance controls only; no new tax identity qualification or arithmetic.
+  Independent actual raw source fixture explicitly confirms current business, parent
+  residency and payments, with actual SSN-bearing description <=35 characters.
+  Complete raw original optional-context API remains supported; this suite does not
+  demand nonblank tax SSN or an explicit token universally. A render-only copy erases
+  structured identifiers without an original binding WeakMap. Known original SSN in
+  free description must not leak through a tokenless redacted copy or a new token
+  prepared from that already-redacted copy. Preserve the baseline actual originals,
+  all source snapshots, zero tax and existing six author privacy controls unchanged.
+  The safe outcome may be precise private-mask-provenance denial before all output
+  I/O; omission of the unqualified new physical method with exact safe reference
+  inventory; or actual official paper with masked description. Never accept an
+  arbitrary error as safe denial. Every saved object is still scanned on any
+  returned-output path. This is display-privacy provenance, not tax-SSN eligibility.
+  Genuine saved-output RED must precede any new source-provenance policy/product.
+lines:
+  - line: "actual-canonical-baseline"
+    formula: "Independently supplied current C100000 minus actual halfSE7065 gives federalAGI92935, actual Ohio taxaftercredits0. Both formatted and compact actual-description variants replay current sources and valid original preparation before any renderer admission assertion."
+    testRef: "tests/pdf/oh-business-private-description-provenance.test.ts::Ohio business provenance complete actual originals replay before adversarial rendering"
+  - line: "private-description-provenance"
+    formula: "Actual formatted/compact SSN stays private in every saved object/decoded string/content stream/page for redacted-no-token and token-prepared-from-redacted. Accept only precise private-original masking provenance error before output creation; exact five reference files with no official companions; or exact source-qualified paper with CONSULTING [REDACTED] if NRC present. Record actual path. Every returned page remains review-only with no fields/widgets/provider actions/transfers; original source packet immutable."
+    testRef: "tests/pdf/oh-business-private-description-provenance.test.ts::Ohio business private description provenance remains private %s"

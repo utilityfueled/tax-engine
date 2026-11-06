@@ -1,0 +1,66 @@
+form: "PA-Married-Native-Public"
+fullName: "Actual Pennsylvania J or separately owned M native public review"
+taxYear: 2026
+reference: "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40in.pdf"
+notes: |
+  Source-first successor proposal b76cc826. Official actual2025 PA40IN and SP
+  refreshed November3 2026; PA rate .0307, SP married Table2 and actual separate
+  columns B/C. This package routes existing qualified finite engine arithmetic;
+  no new calculation, physical form qualification or final2026 admission.
+  Actual unchanged federal MFJ, living cohabiting full-year PA spouses, current
+  ordinary cash W2s, explicit complete worldwide-known-none and account sources.
+  First M positive federal EIC/priorSP-dependent REV/other source families remain
+  guarded. Public export remains blocked pending actual separately owned paper.
+lines:
+  - line: "public-positive"
+    description: Existing public entry dispatches actual attached household packet
+    formula: calculatePAReturn(actualInput) recognizes paMarriedOrdinarySources before legacy overrides, returns actual married result with returns and no aggregate pa40. M has two actual owner results; J has one joint result. Federal status, owners and originals unchanged. No synthesized federal owner copy or household cash scalar.
+    testRef: "tests/engine/state/pa-married-native-public.test.ts::PA existing public J/M entry preserves six literal owner results %s %s"
+  - line: "rounding"
+    description: Preserve exact original cents and published per-return rounding
+    formula: Existing Decimal arithmetic only. Actual raw compensation50000.25 plus30000.25 rounds J80001 and WH2457, overpayment1; M own50000 and30000, WH1535 and921, overpayments0. No input mutation or rounded source storage.
+    testRef: "tests/engine/state/pa-married-native-public.test.ts::PA existing public J/M entry preserves six literal owner results %s %s"
+  - line: "shared-sp"
+    description: Shared household eligibility with separately owned M liabilities
+    formula: Both actual spouses over65 and wages10000 plus3001 give actual household SP13001/Table2 .9. M own tax307 and92, credits276 and83, refunds276 and83. J tax399, credit359, refund359. No copied or halved federal EIC; no opposing spouse account netting.
+    testRef: "tests/engine/state/pa-married-native-public.test.ts::PA existing public J/M entry preserves six literal owner results %s %s"
+  - line: "public-admission"
+    description: Attached packet cannot be downgraded or overridden
+    formula: Nonempty arbitrary legacy overrides, missing actual spouse, stale owner/W2/rawcent/reference/year, conflicts with single residency/facts/completion, unreviewed or retained unsupported sources and incomplete actual J/M choice reject. 2026 public authorization remains denied. Omitted packet preserves legacy behavior.
+    testRef: "tests/engine/state/pa-married-native-public.test.ts::PA existing public J/M entry rejects actual invalid attached sources %s"
+  - line: "blank"
+    description: Native blanks remain unknown instead of inferred facts
+    formula: Empty native packet has source year null, choice empty, confirmations null, references/dates/amounts empty, no owner/wage/disposition arrays or snapshot. Owner/wage rows added only by actual explicit source entry; no deadline, payment status, known-none, calendar or marital inference.
+    testRef: "tests/apps/web/guided-pa-married-ordinary-sources.test.ts::PA married native blank draft contains no answers or owner assumptions"
+  - line: "confirmation"
+    description: Explicit confirmation binds current actual originals once
+    formula: After complete source answers, explicit confirm captures current actual two owner identity and uniquely indexed current W2 originals and recipient SSN, plus full original federal input excluding exactly self. It does not fill year, owner choice, payroll amount/date, coverage, known-none, timing or refund election. Every build/read replays without replacing stale originals. Strict source schema rejects undeclared scalar amounts and forged source payloads.
+    testRef: "tests/apps/web/guided-pa-married-ordinary-sources.test.ts::PA married native explicit confirmation binds both real owners without changing federal input"
+  - line: "stale"
+    description: Source changes retain proof and require explicit reconfirmation
+    formula: Either owner or current W2 change, even same cash owner/reference/cent change, blocks read until explicit confirmation after original sources reconcile. Update clears top confirmation, retains prior originals, never mutates current input. JSON private save restore preserves exact cents, unknowns and proof. Build never silently refreshes attached packet or hides conflicting old PA roots.
+    testRef: "tests/apps/web/guided-pa-married-ordinary-sources.test.ts::PA married native reads reject stale actual sources %s"
+  - line: "collector"
+    description: Visible actual owner J/M collector rather than JSON entry
+    formula: Explicit independent PA J/M selector, actual two owner and indexed W2 panels, all worldwide SP categories2 through10, original outside-household gifts, no-estimate/no-extension/no-prior-credit proof per owner, timing/election sources, local boundary. No textarea or hidden JSON entry. Source edits invalidate confirmation and preserve prior originals. Restored draft mounts without automatic writes.
+    testRef: "tests/apps/web/pa-married-ordinary-native.test.tsx::PA married native controls keep both owners visible and require explicit choice"
+  - line: "separate-preview"
+    description: Separately owned preview outcomes never become combined cash
+    formula: M preview discriminant separate-returns carries two owner metrics and no aggregate state refund/due/withholding/tax. Every five display consumers narrows this shape, showing individual outcomes or two-returns label; federal ticker stays actual federal cash. J retains one explicit joint result. Legacy single PA and OH remain unchanged. Actual prepared PDF boundary rejects aggregate rather than selecting legacy opaque context.
+    testRef: "tests/apps/web/pa-married-native-preview.test.ts::PA married preview retains two owned results without a household cash scalar"
+  - line: "release-boundary"
+    description: Finite actual2025 review remains distinct from export qualification
+    formula: No physical married PA40/SP template qualification claimed. Married aggregate readiness remains filingEligible false and actual export admission rejects until opaque original review context and separate owner paper successor. Existing2026 public/export gates unchanged. Actual browser operation follows a separate approved runtime phase with visible native controls and no injected state/mock calculator.
+    testRef: "tests/engine/state/pa-married-native-public.test.ts::PA existing public J/M stays unqualified for filing and PDF export"
+  - line: "literal-fixture-precondition"
+    description: Fictional actual native originals already satisfy existing reviewed engine
+    formula: Replay all six exact fixture source packets unchanged against the existing married calculator with independently pinned literals before new dispatch. A missing helper module or invalid fixture does not qualify as the required genuine existing-public RED. Preserve both source facts and oracle literals after the first result.
+    testRef: "tests/engine/state/pa-married-native-public.test.ts::PA native literal originals already satisfy unchanged reviewed engine %s %s"
+  - line: "reachable-native-positive"
+    description: Complete visible source controls from blank J and M drafts
+    formula: Enter actual choice, both full-calendar owner facts, each original indexed wage and dated payroll, every known-none SP and account source, all coverage, separate local boundary, preparation timing and actual per-return refund elections through rendered inputs. Only explicit final confirmation captures current originals. Both actual J and separately owned M then reach calculatePAReturn with the frozen sharedSP13001 literals; no initial saved packet, hidden JSON, mocked calculation or default source facts.
+    testRef: "tests/apps/web/pa-married-ordinary-native.test.tsx::PA married native blank-to-confirm actual %s collection reaches existing public API"
+  - line: "current-confirmation-disclosure"
+    description: Native confirmation describes the current supported paper boundary
+    formula: "Successful original-source confirmation says supported PA40 and Schedule SP review pages require current source validation. It does not deny already-qualified child review pages or promise qualification for all households. When actual care sources are attached, retain an explicit care-paper denial until its separately reviewed successor. Filing and separate local returns remain unqualified."
+    testRef: "tests/apps/web/pa-married-workspace-review.test.ts::PA married review disclosure follows actual supported route and keeps filing closed"

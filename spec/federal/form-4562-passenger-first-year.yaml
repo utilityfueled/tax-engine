@@ -1,0 +1,44 @@
+form: "Passenger-First-Year-Combined"
+fullName: "Finite original-bound first-year passenger allocation"
+taxYear: 2026
+reference: "https://www.irs.gov/publications/p946"
+notes: |
+  Standalone documented worksheet only. No canonical owner/activity, future basis or filing qualification is established.
+  First scope: one new purchased model-year2026 passenger automobile, ordinary owned cash trade
+  or business, domestic use, full calendar first year, current-year GDS 5-year
+  200DB half-year, actual qualified business use equal to total business use >50%.
+  Explicit cash sole-proprietor active business, actual-expense method, no ADS requirement or double deduction; no investment/employee/related-party/for-hire use. No carryover/credit/conversion,
+  disposition/history, no other depreciable activity or asset. Bonus treatment
+  must be actual election-out (0) or independently documented qualifying 100%
+  post-Jan19-2025 acquisition and placed-in-service, no optional lower-rate election.
+lines:
+  - line: "7-9"
+    formula: "C = roundDollar(original placement-year table maximum times actual annual business-use percentage /100), with higher table only for actually applicable claimed bonus."
+    testRef: "tests/engine/forms/form-4562-passenger-first-year.test.ts::computes the separate first-year passenger worksheet without duplicate deductions"
+  - line: "10-15"
+    formula: "Validate actual allowed section179 S from original completed election/PartI source inputs, with no carryover or limited election in this finite cohort;0<=S<=businessBasis and S<=ordinary no-bonus ceiling. Actual reported S must be whole dollars; actual income supports S without carryover. D=C-S;businessBasis=grossBasis*use/100;T=businessBasis-S. S is business-only and must not be multiplied by use again."
+    testRef: "tests/engine/forms/form-4562-passenger-first-year.test.ts::computes the separate first-year passenger worksheet without duplicate deductions"
+  - line: "16"
+    formula: "Bonus election-out requires actual class election record and B=0. Qualified100% branch has tentativeBonus=T and allowedBonus=min(roundDollar(T),D);regular=0 because either no reported basis or no cap remains. Require a positive reported100% bonus amount; do not enable the bonus ceiling for an unclaimed allowance. Distinguish tentative and allowed amounts; infer neither a future basis balance nor safe-harbor method."
+    testRef: "tests/engine/forms/form-4562-passenger-first-year.test.ts::computes the separate first-year passenger worksheet without duplicate deductions"
+  - line: "17-20"
+    formula: "For actual zero bonus only, remaining regular limit=D;regularBasis=T;tentativeRegular=roundDollar(T*.20);allowedRegular=min(D,tentativeRegular). For100% branch explicit0. Preserve exact documentary basis/mileage arithmetic; round computed deductions and cap to whole dollars, not percentages. Whole-dollar policy remains existing policy; literal initial examples avoid intermediate fractional basis."
+    testRef: "tests/engine/forms/form-4562-passenger-first-year.test.ts::computes the separate first-year passenger worksheet without duplicate deductions"
+  - line: "part-v-routing"
+    formula: "Listed bonus belongs25 then28/21, regular belongs26(h) then28/21; allowed section179 belongs26(i)/29 then7/8/12. Ordinary line14 excludes listed bonus. line22 counts section179+listed bonus+listed regular once. Require summary/source reconciliation, no scalar additions or partial mixed asset collections."
+    testRef: "tests/engine/forms/form-4562-passenger-first-year.test.ts::computes the separate first-year passenger worksheet without duplicate deductions"
+  - line: "unknown-source-and-inventory"
+    formula: "Require explicit original normalized form and asset, original documentary mileage/acquisition/eligibility/election/PartI facts,2026only/Jan-Sep placement/newdomesticordinarycar; no missing zero, stale scalar, extra or mixed originals, limitations/carryovers/credits/history. Original source references remain private; current-year result does not establish future basis."
+    testRef: "tests/models/passenger-auto-first-year-sources.test.ts::rejects incomplete original documentary facts and unsupported first-year cohorts"
+  - line: "canonical-owner-denial"
+    formula: "Standalone packet cannot reach a canonical TaxYearInput or ScheduleC/E deduction until a separate canonical owner/activity source bridge exists. Reject top-level/rental presence before any no-business or zero path; do not silently strip packet."
+    testRef: "tests/engine/forms/form-4562-passenger-first-year.test.ts::denies canonical and direct parent consumption before any no-business or zero path"
+  - line: "exact-original-precision"
+    formula: "Evaluate all admitted up-to100-character original money/mileage arithmetic using a fresh local Decimal precision256; never silently reconcile contradictory originals or round a basis before computing a whole-dollar deduction. Do not change global Decimal precision."
+    testRef: "tests/engine/forms/form-4562-passenger-first-year.test.ts::preserves exact long original amounts and rejects contradictory mileage without changing global precision"
+  - line: "reported-part-i-income"
+    formula: "Keep original actual income and the conservative unrounded section179 eligibility comparison intact; report Form4562 line11=roundDollar(min(actualincome,maximum)) and line2=roundDollar(businessBasis); documentary/worksheet amounts remain exact. Rounded reporting grants no additional election/carryover. Legacy positive prior179carryover requires separate complete passenger sources."
+    testRef: "tests/engine/forms/form-4562-passenger-first-year.test.ts::rounds only the reported PartI income line and denies undocumented prior carryover"
+  - line: "reported-part-i-cost"
+    formula: "Report Form4562 line2 whole dollars; preserve original PartI totalCost and worksheet13 exact business basis and all original/source equality checks. No admission or deduction formula changes."
+    testRef: "tests/engine/forms/form-4562-passenger-first-year.test.ts::rounds only the reported PartI total cost while retaining exact documentary basis"

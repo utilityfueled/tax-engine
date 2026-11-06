@@ -1,0 +1,24 @@
+form: "Form 4952 final 2026 template candidate"
+fullName: "Investment Interest Expense Deduction physical mapping candidate"
+taxYear: 2026
+reference: "https://www.irs.gov/pub/irs-pdf/f4952.pdf"
+revision: "Created 5/28/26, final 2026 form with embedded instructions"
+retrievedAt: "2026-10-25"
+notes: |
+  This is a physical field-location candidate, not an enabled export. It is absent
+  from the review and filing registries. Existing 2026 calculation, review-export
+  and filing gates remain closed. Independent human mapping and source review
+  remain required. The unchanged monetary formulas are in form-4952.yaml.
+lines:
+  - line: "revision"
+    description: "Pin the exact final 2026 source bytes separately from 2025"
+    formula: "Require SHA256 90b9fc0bd6778983521b61ed5c94cc5668e62af858e38e94a1a6fd4b631bfb6d and the four-page source with 17 canonical text fields. Do not register this candidate for export."
+    testRef: "tests/pdf/form-4952-2026-candidate.test.ts::pins the final 2026 source without enabling public exports"
+  - line: "physical-locations"
+    description: "Map headers and every printed line to the inspected first-page widgets"
+    formula: "Headers use f1_1/f1_2; lines1/2/3 use f1_3/4/5;4a uses nested Line4a_ReadOrder.f1_6;4b through8 use f1_7 through17. Verify printed-line rectangles independently. Names differ from 2025 zero-padded fields."
+    testRef: "tests/pdf/form-4952-2026-candidate.test.ts::maps every candidate field to its independently inspected printed location"
+  - line: "saved-values"
+    description: "Save and reopen synthetic mapping proof with canonical values and appearances"
+    formula: "Write independent synthetic expected worksheet amounts, retain all 17 interactive fields, compare canonical values and page widgets, and require a nonempty normal appearance. Preserve instructions and mark every page FOR REVIEW ONLY - NOT FOR FILING."
+    testRef: "tests/pdf/form-4952-2026-candidate.test.ts::retains synthetic values and appearances without changing readiness"

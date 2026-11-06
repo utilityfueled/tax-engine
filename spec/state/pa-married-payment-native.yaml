@@ -1,0 +1,31 @@
+form: "PA-Married-Payment-Native"
+fullName: "Actual separate-M Pennsylvania payment account collection"
+taxYear: 2025
+reference: "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40in.pdf"
+notes: |
+  Final2025 PA40 instructions lines14-16 and61PaCode117.2 retain separate
+  actual accounts; existing payment-source backend is unchanged. Capture only
+  actual documentary records; no totals-to-original or account transfer inference.
+  This native collector does not qualify J,2026,late/positive-underpayment methods,
+  independent human review, final forms, filing or service readiness.
+lines:
+  - line: "native-entry"
+    description: "Actual account transcript and separate receipt originals"
+    formula: "Start every value unknown; collect each original account identity/year/status/asOf/completeness, independent posted receipt inventory, receipt original and installment reference, and actual prior election/status. Preserve blank and knownzero lexemes."
+    testRef: "tests/apps/web/pa-married-payment-native.test.tsx::native separate PA payment account controls start unknown"
+  - line: "capture"
+    description: "Explicit original capture without inferred facts"
+    formula: "Only an explicit reviewed receipt capture copies entered originals into retained owner receipt snapshots; no edit or confirmation derives originals from totals or overwrites independent posted account rows."
+    testRef: "tests/apps/web/pa-married-payment-native.test.tsx::native blank separate PA payments reach literal existing backend outputs"
+  - line: "invalidation"
+    description: "Current source confirmations and immutable retained snapshots"
+    formula: "Every actual source edit revokes child and household confirmation; identical primitive callbacks do nothing. Retain previous captured owner and federal originals through edits until explicit capture. Child confirmation replays actual payment source backend; household confirmation replays actual full composer."
+    testRef: "tests/apps/web/guided-pa-married-payments.test.ts::PA payment provenance edits revoke both confirmations and retain originals"
+  - line: "bounds"
+    description: "Existing engine source and method gates"
+    formula: "Reject unknown/duplicate/stale/wrongowner/year/unsupportedJ and2026 account proof using existing validation; retain all original unknown and malformed literals for correction. No new tax formulas or synthetic original records."
+    testRef: "tests/apps/web/guided-pa-married-payments.test.ts::PA payment confirmation preserves existing unsupported method guards"
+  - line: "saved-recovery"
+    description: "Private saved workspace and full recovery fidelity"
+    formula: "Persist every actual source lexeme and original snapshot privately through reload and encrypted workspace recovery; legacy absence remains absent; hosted shell omits private account records and identifiers."
+    testRef: "tests/apps/web/pa-married-payment-saved.test.ts::PA married payment originals survive saved workspace and encrypted recovery"

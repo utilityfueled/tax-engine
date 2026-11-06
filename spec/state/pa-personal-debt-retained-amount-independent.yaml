@@ -1,0 +1,19 @@
+form: "PA Personal Debt Retained Actual Amount Independent Controls"
+fullName: "Retained confirmed actual discharge amount and interest reconciliation"
+taxYear: 2025
+status: "internal-independent-source-review-no-filing-qualification"
+sources:
+  - url: "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/taxlawpoliciesbulletinsnotices/taxbulletins/pit/documents/pit_bulletin_2009-02.pdf"
+    section: "V: complete actual cancelled charges; no inference from federal exclusion"
+    retrieved: "2026-11-03"
+notes: |
+  Retained current federal source-confirmed personalDebt actualDischargedAmount
+  and actualDischargedInterest identify actual amounts, not federal exclusion choices.
+  Contradictory confirmed actual amounts cannot be replaced by separately confirmed
+  PA full-charge statements. An ambiguous combined noPayment/newBorrowing false
+  answer alone does not establish a PA cash receipt and is not a failure oracle.
+lines:
+  - line: "retained-amount-conflicts"
+    description: "Retained actual discharged amounts reconcile current original and PA complete charges"
+    formula: "Actual current original300 including interest0 conflicts with retained confirmed actualDischargedAmount400 or actualDischargedInterest30; reject until reconciled. No invented replacements."
+    testRef: "tests/engine/state/pa-personal-debt-retained-amount-independent.test.ts::independent current retained actual discharge amounts cannot contradict PA complete charges: %s"

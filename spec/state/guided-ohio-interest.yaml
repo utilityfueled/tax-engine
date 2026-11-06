@@ -1,0 +1,39 @@
+form: "Guided-Ohio-Interest"
+fullName: "Actual Ohio classification of federal tax-exempt interest"
+taxYear: 2026
+reference: "https://codes.ohio.gov/ohio-revised-code/section-5747.01"
+notes: |
+  Refreshed2026-10-25: ORC5747.01(A)(1)-(3), effective2026-03-05;
+  final2025 IT1040 booklet Schedule of Adjustments lines1 and10, pages19-20:
+  https://dam.assets.ohio.gov/image/upload/v1767095693/tax.ohio.gov/forms/ohio_individual/individual/2025/it1040-booklet.pdf
+  This worksheet classifies the unrounded, actual federal exempt-interest total
+  from all current source records. It does not classify already-taxable Treasury
+  interest or assign an issuer jurisdiction from a mailing address. Every amount
+  is actual Decimal currency; blank is unknown and entered zero is preserved.
+  Federal/territory interest exempt federally but taxable by Ohio enters the
+  existing other-additions aggregate for line10. Final2026 maps remain gated.
+lines:
+  - line: "source-allocation"
+    description: "Reconcile actual source classifications before Ohio calculation"
+    formula: "actual federal exempt total = non-Ohio state/local + Ohio state/local + other Ohio-exempt + federally exempt but Ohio-taxable federal obligations; require actual year, source reference and confirmation"
+    testRef: "tests/guided-interview/guided-ohio-interest.test.ts::requires actual reconciled Ohio source facts without blocking the federal preview"
+  - line: "state-additions"
+    description: "Add only the actual Ohio-taxable portions once"
+    formula: "Schedule of Adjustments line1 = non-Ohio state/local portion; line10 contribution = Ohio-taxable federal-obligation portion; Ohio and legally exempt other portions produce no addition"
+    testRef: "tests/guided-interview/guided-ohio-interest.test.ts::uses the same exact allocations for preview and packet overlays"
+  - line: "unknown-and-zero"
+    description: "Preserve unknown and explicit zero across source and UI edits"
+    formula: "blank, negative, invalid, unreconciled, stale-year or unconfirmed facts prevent state calculation; edited source facts invalidate prior confirmation"
+    testRef: "tests/guided-interview/guided-ohio-interest.test.ts::rejects unknown or stale classifications and preserves exact explicit zero"
+  - line: "source-edit"
+    description: "Require reconfirmation after editing investment sources"
+    formula: "updating investment facts clears only the Ohio allocation confirmation and preserves entered source amounts"
+    testRef: "tests/guided-interview/guided-ohio-interest.test.ts::invalidates Ohio source confirmation after investment changes"
+  - line: "core-gate"
+    description: "Require an explicit Ohio allocation for all exempt source types"
+    formula: "positive actual federal exempt-interest total from INT, DIV, OID or passthrough records cannot silently receive a zero Ohio addition"
+    testRef: "tests/guided-interview/guided-ohio-interest.test.ts::does not default INT or DIV exempt interest to zero Ohio additions"
+  - line: "actual-controls"
+    description: "Collect actual allocation and confirmation from editable controls"
+    formula: "initial fields unknown; edited worksheet clears confirmation; preserve exact cents and all actual inputs"
+    testRef: "tests/apps/web/ohio-interest-interactions.test.tsx::collects actual Ohio issuer allocation without defaulting missing amounts"

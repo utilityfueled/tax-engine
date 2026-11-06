@@ -1,0 +1,77 @@
+form: "Ohio 2026 enacted return draft"
+fullName: "Source-qualified ordinary employee integration for all three residency statuses"
+taxYear: 2026
+irsReference: "https://codes.ohio.gov/ohio-revised-code/section-5747.02"
+sources:
+  - "https://codes.ohio.gov/ohio-revised-code/section-5747.01"
+  - "https://codes.ohio.gov/ohio-revised-code/section-5747.05"
+  - "https://codes.ohio.gov/ohio-revised-code/section-5747.022"
+  - "https://codes.ohio.gov/ohio-revised-code/section-5747.71"
+  - "https://codes.ohio.gov/ohio-revised-code/section-5747.98"
+  - "https://codes.ohio.gov/ohio-revised-code/section-5747.09"
+  - "https://www.irs.gov/pub/irs-drop/rp-25-32.pdf"
+  - "https://codes.ohio.gov/ohio-administrative-code/rule-5703-7-03"
+  - "https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/forms/ohio_individual/individual/2025/it1040-booklet.pdf"
+notes: |
+  Sources refreshed 2026-11-05; implementation remains a labeled internal draft.
+  This is a minimum first complete arithmetic/source cohort, not the entire
+  remaining Ohio scope. All other factual branches stay unsupported, not zero.
+  Explicit 2026 draft entry point in oh-engine.ts calls the source and return methods;
+  it cannot remain a test-only scalar composition. No full federal result is
+  fabricated. Historical public paths remain unchanged until separately reviewed.
+  Require source-complete ordinary employee originals, actual owner/date/allocation
+  evidence, known-zero state adjustments/business/A34/A35/other credits, actual
+  no-taxing-school-district evidence, current filing-status and exemption facts,
+  no actual EITC qualifying children and AGI above the indexed zero-child phaseout, otherwise unsupported, and exact
+  actual payments. Scalar caller assertions cannot become source qualification.
+  This finite domestic cohort requires actual recognized US state/DC service and
+  domicile codes and distinct primary/spouse taxpayer identities. Unknown codes
+  or duplicate persons cannot qualify by supplying internally consistent totals.
+  Calculation status remains incomplete, filingQualified=false, review pending;
+  final2026 form identities/numbering and professional review are separate gates.
+lines:
+  - line: "source-admission"
+    description: "Bind a current ordinary employee packet to all current originals"
+    formula: "Require taxYear2026, actual filing/owner identities, all-original-source-family inventory (reject unknown/unhandled even if zero), W2 source validation, complete Ohio residency periods/categories, exact original snapshot and source commitments. Derive wages/withholding from actual W2 rows once; state wages are not a substitute for services allocation. Require all unknown adjustment/credit/payment facts, never optional defaults."
+    testRef: "tests/engine/state/oh-2026-return-draft.test.ts::rejects unknown changed or unsupported actual original sources: %s"
+  - line: "AGI"
+    description: "Ordinary employee federal and Ohio AGI"
+    formula: "For the source-complete ordinary W2-only cohort, federalAGI=sum actual federal W2 wages, with no other federal income or adjustment admitted; OhioAGI=federalAGI because every state adjustment is explicitly source-qualified zero. Other federal components require completed current computation or a separate explicit draft method. No forged TaxReturnResult or 2025 constants."
+    testRef: "tests/engine/state/oh-2026-return-draft.test.ts::derives current ordinary wage AGI without a fabricated federal return"
+  - line: "rate-and-exemption"
+    description: "Consume the corrected 2026 baseline"
+    formula: "Use corrected actual MAGI and completed eligible-person count; use separate business/nonbusiness bases and unchanged explicit Decimal rounding. Compute preceding personal-exemption credit before the joint credit."
+    testRef: "tests/engine/state/oh-2026-return-draft.test.ts::integrates enacted tax and explicit exemptions across all three residencies: %s"
+  - line: "credit-order"
+    description: "Apply personal, joint, EITC, then NRC in statutory order"
+    formula: "For the initial single/MFJ household with no dependents and each owner not claimable elsewhere, eligibleCount is actual owner count. Personal=min(tax,20*eligibleCount) only if MAGI-exemptions<30000. Joint applies to remaining tax at actual owner qualifying-income tiers/cap. EITC0 is derived only from complete known no-qualifying-child sources and actual AGI at or above19540(single)/26820(MFJ), Rev.Proc.2025-32. Other EITC cases reject. Every other preceding or intervening credit must be source-qualified absent, otherwise reject until separate computation. Then apply actual NRC and finally actual resident-credit method when supported, never double use income."
+    testRef: "tests/engine/state/oh-2026-return-draft.test.ts::retains credit order caps and strict personal-credit boundary"
+  - line: "residency"
+    description: "Full-year, part-year, and nonresident actual-source computation"
+    formula: "Reuse actual owner timeline/category validation and ITNRC allocation with 2026 source-contract evidence. Full-year source totals include all income; PY uses actual resident/nonresident services periods, not calendar ratio. Nonresident services are Ohio only when actually sourced here. Use min(1,truncate4(outsideOhioAGI/OhioAGI)); multiply tax after every preceding credit and roundDollar once. Reciprocal compensation requires separate current agreement/source method and cannot be treated as ordinary taxable OH wages."
+    testRef: "tests/engine/state/oh-2026-return-draft.test.ts::uses actual services amounts rather than residency day counts"
+  - line: "settlement"
+    description: "Finish known ordinary settlement without fabricating penalties"
+    formula: "Only admit source-complete calendar original returns with known timely-payment/filing facts. Initial employee cohort uses actual Ohio compensation withholding at least current tax, no school tax, no other payments/refundable credits/use tax/amendment/carryforward/donations. Section5747.09 withholding is equal across installment dates absent actual-date election, covering required current installments; penalty0. Unknown dates/election or other payment methods require a separate current method. Refund=withheld-tax; no late interest if no unpaid tax, otherwise dated method required."
+    testRef: "tests/engine/state/oh-2026-return-draft.test.ts::settles only complete current withholding-covered returns"
+  - line: "closed-gates"
+    description: "Preserve all qualification boundaries"
+    formula: "Return labeled draft taxYear2026 with independent current provenance, incomplete calculation and review status, filingQualified=false, no official2026 form/export qualification. Preserve historical numeric outputs and public unknown/unsupported gates; full selected-state completion stays false until remaining factual branches, human review, forms and operational evidence pass."
+    testRef: "tests/engine/state/oh-2026-return-draft.test.ts::keeps filing and historical gates intact"
+  - line: "pa-reciprocal-current-sources"
+    description: "Separately qualify actual2026 full-year Pennsylvania employee originals"
+    formula: "Require an explicit oh-2026-pa-reciprocal-employee-draft-v1 packet, current original taxpayer/W2/domicile/employer/service/payroll evidence, single primary full-year PA nonresident, one ordinary C-corporation employer and all wages for actual OH employee services. Reconcile complete unique current-year service/pay dates, W2 cash and actual OH withholding. Current reciprocal originals in residency and source packet must match exactly and bind every unchanged input/source. Preserve all ordinary original-family, age, EITC, school, other-credit and timely withholding-only payment gates. Direct ordinary qualifier still rejects reciprocity. Unknown mixed/PY/MFJ/non-PA/special compensation remains unsupported."
+    testRef: "tests/engine/state/oh-2026-reciprocal-return-draft.test.ts::qualifies only complete current PA employee originals"
+  - line: "pa-reciprocal-refund"
+    description: "Refund actual Ohio compensation withholding without duplicate relief"
+    formula: "RC5747.05(A)(2) compensation reciprocity and historical2025 ScheduleAdjustments reciprocal-wage treatment applied as a labeled2026 statutory draft: federalAGI=roundDollar(actual complete W2 wages); exclusion=the same source-qualified compensation; OhioAGI=federalAGI-exclusion=0. Actual known-zero other sources and complete no-child federal EITC facts imply zero Ohio taxable income and tax/credits, NRC0/resident-credit0 (never reuse excluded wages), refund=roundDollar(sum actual OH state compensation withholding). School/municipal/other-state withholding never enters the Ohio refund. Do not fabricate a federal return or final2026 form lines; current draft filing/review gates remain closed."
+    testRef: "tests/engine/state/oh-2026-reciprocal-return-draft.test.ts::refunds only actual OH withholding on source-qualified reciprocal wages: %s"
+  - line: "pa-reciprocal-commitment"
+    description: "Preserve current original commitments, historical behavior and closed gates"
+    formula: "Opaque current source context binds untouched original input and complete packet; missing, stale, copied or forged contexts reject. Provenance-only original changes require requalification and a changed source commitment even at equal cash. Existing ordinary outputs and historical2025 source methods/year guards remain unchanged; all final2026 forms/public year/filing activation and full selected-state completion remain false."
+    testRef: "tests/engine/state/oh-2026-reciprocal-return-draft.test.ts::rejects stale and forged reciprocal contexts without changing historical gates"
+
+  - line: "va-paid-resident-credit-current"
+    description: "Compose actual paid Virginia liability after preceding credits and NRC"
+    formula: "Separate oh-2026-va-resident-credit-employee-draft-v1 source method requires current single full-year Ohio employee originals, one exact OH/VA W2 and matching complete service payroll, original filed2026 VA763 and settled original agency account/receipts. Derive actual net income tax paid after Virginia credits/payments/refunds, never gross withholding or a calculated Virginia return. Strict new confirmations replace contradictory no-other-state-tax/no-other-credit ordinary facts. Apply remaining-tax ratio/cap after every preceding credit and NRC; full-year OH proves NRC0 and no reciprocal overlap. Current opaque context binds complete unchanged originals; historical2025 methods, ordinary/PA reciprocal packets and final2026 gates remain unchanged."
+    testRef: "tests/engine/state/oh-2026-resident-credit-draft.test.ts::binds current originals privately and preserves historical and filing gates"

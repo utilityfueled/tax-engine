@@ -45,7 +45,7 @@ function makeFederalInput(form8615Overrides?: Partial<Form8615Input>, extraInput
       dependents: [],
     },
     w2s: [],
-    form1099Int: [{ payer: "Bank", interestIncome: "5000" }],
+    form1099Int: [{ taxExemptInterest: "0", privateActivityBondInterest: "0", payer: "Bank", interestIncome: "5000" }],
     form1099Div: [],
     form1099B: [],
     form1099Nec: [],
@@ -298,16 +298,14 @@ describe("Form 8615 — Tax for Certain Children Who Have Unearned Income", () =
   it("Form 8615 Line 15 - tax on child's remaining income at child's rate", () => {
     // Child: $8000 unearned, taxable = $8650
     // Net unearned = 5300, line 5 = 5300, line 6 = 3350
-    // Tax on 3350 at single rate = 3350 * 10% = 335
+    // Published2025 single3350–3400 row338.
     const result = calculateForm8615(
       makeInput({ childUnearnedIncome: "8000" }),
       new Decimal(8650),
       "single",
       constants
     );
-    const expectedLine15 = calculateTaxFromBrackets(
-      new Decimal(3350), constants.taxBrackets.single
-    );
+    const expectedLine15 = new Decimal(338); // Published table, not exact3350*10percent.
     expect(result.taxOnChildRateIncome.toNumber()).toBe(expectedLine15.toNumber());
   });
 
@@ -318,9 +316,7 @@ describe("Form 8615 — Tax for Certain Children Who Have Unearned Income", () =
       "single",
       constants
     );
-    const expectedLine17 = calculateTaxFromBrackets(
-      new Decimal(5000), constants.taxBrackets.single
-    );
+    const expectedLine17 = new Decimal(503); // Published5000–5050 single row.
     expect(result.taxAtChildOwnRate.toNumber()).toBe(expectedLine17.toNumber());
   });
 
@@ -656,7 +652,7 @@ describe("Form 8615 — Tax for Certain Children Who Have Unearned Income", () =
       parentTaxableIncome: "200000",
       parentFilingStatus: "single",
     }, {
-      form1099Int: [{ payer: "Trust Fund", interestIncome: "25000" }],
+      form1099Int: [{ taxExemptInterest: "0", privateActivityBondInterest: "0", payer: "Trust Fund", interestIncome: "25000" }],
     }));
 
     expect(result.form8615).toBeDefined();
@@ -672,7 +668,7 @@ describe("Form 8615 — Tax for Certain Children Who Have Unearned Income", () =
       parentTaxableIncome: "200000",
       parentFilingStatus: "single",
     }, {
-      form1099Int: [{ payer: "Trust Fund", interestIncome: "25000" }],
+      form1099Int: [{ taxExemptInterest: "0", privateActivityBondInterest: "0", payer: "Trust Fund", interestIncome: "25000" }],
     }));
 
     const form8615Lines = result.allLines.filter(l => l.form === "8615");

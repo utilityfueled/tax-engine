@@ -1,0 +1,24 @@
+form: "MACRS-Residential-Real-Property-Tables"
+fullName: "Exact Table A-6 residential rental mid-month recovery percentages"
+taxYear: 2026
+reference: "https://www.irs.gov/pub/irs-pdf/p946.pdf"
+notes: |
+  Publication 946 (2025), Appendix A, Table A-6, printed page 73; official PDF
+  retrieved November 5, 2026. These non-indexed GDS straight-line 27.5-year
+  percentages apply to the modeled full calendar-year residential rental asset.
+  Do not normalize percentages or infer original basis/history from this table.
+  This correction does not qualify disposition arithmetic, adjusted-basis cases,
+  short tax years, ADS, final 2026 forms or filing. Nonresidential tables unchanged.
+lines:
+  - line: "published-cells"
+    description: "Preserve every published month and recovery-year percentage"
+    formula: "Use the exact Table A-6 cell for the original placed-in-service month and recovery year. Years 2–9 are 3.636 for every month. Years 10–27 alternate 3.637/3.636 for January–June and 3.636/3.637 for July–December, starting with the first value in year 10. Do not replace all full-year cells with one rounded annual rate."
+    testRef: "tests/utils/macrs-real-property-tables.test.ts::matches every published Table A-6 cell through the actual asset calculator"
+  - line: "recovery-duration"
+    description: "End each original-month recovery schedule in its published year"
+    formula: "January–June end in recovery year 28 with percentages 1.970, 2.273, 2.576, 2.879, 3.182, 3.485. July–December use 3.636 in year 28 and end in year 29 with 0.152, 0.455, 0.758, 1.061, 1.364, 1.667. Later ordinary recovery deductions are zero. Do not add an extra full recovery year."
+    testRef: "tests/utils/macrs-real-property-tables.test.ts::uses the published terminal year and returns zero beyond each month schedule"
+  - line: "whole-basis"
+    description: "Exact published percentage schedules exhaust the table basis"
+    formula: "Each of the twelve published percentage columns sums to exactly 100.000 using Decimal. Preserve every original cell, rather than scaling an inaccurate table to 100. This percentage identity does not invent actual remaining basis after historical deductions."
+    testRef: "tests/utils/macrs-real-property-tables.test.ts::accounts for exactly one hundred percent without normalizing any published cell"

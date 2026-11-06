@@ -1,0 +1,20 @@
+form: "Native RRTA formatted original amount handoff"
+taxYear: 2025
+reference: "https://www.irs.gov/instructions/i8959"
+status: "finite native source adapter only"
+notes: |
+  Existing ordinary2025 RRTA eligibility and every payroll calculation remain unchanged.
+  CurrencyField formats actual typed amounts on blur. This adapter validates that
+  existing guided decimal grammar and converts valid displayed monetary strings to
+  exact ungrouped Decimal strings only at the canonical packet boundary. No new
+  canonical schema, tax method, monetary rounding, source confirmation or readiness.
+lines:
+  - line: "formatted-canonical-handoff"
+    formula: "Actual230,000 payroll bases must produce canonical230000 without changing the saved formatted draft.230,000.25 and270.25 retain exact cents. Explicit zero remains0; unknown is never inferred as0. Existing actual source ownership, originals and eligibility remain mandatory."
+    testRef: "tests/guided-interview/guided-rrta-currency-handoff.test.ts::accepts actual CurrencyField grouping only at the canonical original handoff"
+  - line: "strict-money-and-currentness"
+    formula: "Reject malformed comma grouping, negative including negativezero, nonfinite/exponent notation, absent amounts and more than2 entered decimal places. Validate first, never blindly strip punctuation or round. Keep raw draft lexical values and captured original snapshots immutable; same-cash lexical or reference edits remain stale until explicit recapture and confirmation."
+    testRef: "tests/guided-interview/guided-rrta-currency-handoff.test.ts::retains lexical custody and requires recapture after equal-cash formatted edits"
+  - line: "composed-sources"
+    formula: "Standalone and combined actual RRTA/refund original capture retain the same canonical eligibility guards and separate confirmations. Grouping does not bypass source checks; complete Example28 still yields300 historical recovery,100 current-year reduction and900 current state income tax deduction. Existing2026 refusal remains."
+    testRef: "tests/guided-interview/guided-rrta-currency-handoff.test.ts::composes formatted RRTA originals with actual refund originals without confirming either"

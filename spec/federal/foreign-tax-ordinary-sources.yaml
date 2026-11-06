@@ -1,0 +1,56 @@
+form: "Form1116 ordinary source records"
+fullName: "Actual passive income, paid taxes and independent credit histories"
+taxYear: 2026
+supportedTaxYears: [2025, 2026]
+irsReference: "https://www.irs.gov/instructions/i1116"
+sources:
+  - url: "https://www.irs.gov/instructions/i1116"
+    revision: "Final2025 income categories, creditable tax, paid-tax records and lines1–10"
+    retrieved: "2026-10-25"
+  - url: "https://www.irs.gov/instructions/i6251"
+    revision: "Final2025 line8 separate AMT sources, carry records and simplified election"
+    retrieved: "2026-10-25"
+  - url: "https://www.ecfr.gov/current/title-26/section-1.904-4"
+    revision: "Paragraph(c)(3) actual passive income grouping"
+    retrieved: "2026-10-25"
+notes: |
+  The annual creditWithForm1116 method is distinct from creditWithoutForm1116.
+  It shares actual cash-paid creditability/status/history validation but has no
+  section904(j)300/600limit. The original statement income is never assumed to
+  be wholly foreign. Current tax and tax limits come only from the canonical
+  return, not this source packet. Source records preserve omissions and false.
+  This initial method supports ordinary passive qualified payee statements,
+  one prescribed non-CFC/QBU grouping and unchanged original return ownership.
+  Accrual, foreign/domestic loss accounts, preferential income, NOL, redetermination,
+  changed ownership and mixed groups remain separate internal calculation work.
+lines:
+  - line: "unknowns"
+    description: "Unknown actual worksheet facts remain unknown"
+    formula: "No defaults for source year/confirmation/ownership/group/AMT election/carry amounts; preserve explicit zero/false and reject unsupported current-tax overrides"
+    irsRef: "1116recordkeeping;i6251recordkeeping"
+    testRef: "tests/engine/forms/foreign-tax-ordinary-sources.test.ts::preserves missing source facts and rejects supplied current tax overrides"
+  - line: "income"
+    description: "Original statement income and actual foreign part"
+    formula: "Bind each unique actual INT/DIV statement owner/payerTIN/account/country, exact reportedBox1 income and explicit foreign income<=reported; aggregate actual foreign income bycountry, not allstatement income"
+    irsRef: "1116line1a and separate category rules"
+    testRef: "tests/engine/forms/foreign-tax-ordinary-sources.test.ts::binds actual foreign portions without applying the direct election threshold"
+  - line: "tax"
+    description: "Actual annual paid-tax creditability and completeness"
+    formula: "Reuse actual year/status/originalreturn/paidtax/paymentdate/creditability/annualexclusivity validation; every positive foreign-tax statement and paid source must have actual foreign income identity; no omitted source is treated as zero"
+    irsRef: "901,903,905;1116WhoCanTakeCredit/paidtax/qualifiedtax"
+    testRef: "tests/engine/forms/foreign-tax-ordinary-sources.test.ts::rejects stale incomplete contradictory or unsupported source records"
+  - line: "group"
+    description: "Actual prescribed passive grouping"
+    formula: "Require one known source-backed grouping under1.904-4(c)(3); known untaxed group haszeroactualtax; unknown/mixed/CFC/QBU remain unresolved ratherthan inferred from aggregate amounts"
+    irsRef: "Reg1.904-4(c)(3)"
+    testRef: "tests/engine/forms/foreign-tax-ordinary-sources.test.ts::keeps actual passive groups and source identities distinct"
+  - line: "foreign-country"
+    description: "A domestic or territory source is not a foreign-country tax"
+    formula: "Both shared credit methods reject known U.S. or territory jurisdiction aliases even if an entered source labels them foreign_country; original statement and source country must agree"
+    irsRef: "1116WhoCanTakeCredit;901foreigncountry requirement"
+    testRef: "tests/engine/forms/foreign-tax-ordinary-sources.test.ts::rejects domestic country labels in both actual credit methods"
+  - line: "history"
+    description: "Independent actual regular and AMT source history"
+    formula: "Require both explicit carry ledgers and actual firstpost1997AMTelection history; preserve separate prior-return capacity records and their original references for validation; existing saved category ledgers reconcile exactly"
+    irsRef: "904(c);59(a)(3);i6251line8"
+    testRef: "tests/engine/forms/foreign-tax-ordinary-sources.test.ts::retains independent regular and AMT histories without manufacturing prior capacity"

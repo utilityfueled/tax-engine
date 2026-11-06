@@ -43,7 +43,7 @@ function readDigitFields(doc: PDFDocument, fields: readonly string[]): string {
   return digits.slice(firstNonEmpty).join("");
 }
 
-const BLANK_PDF = "forms/blank/nj-1040.pdf";
+const BLANK_PDF = "forms/blank/2025/nj-1040.pdf";
 
 // ─── Minimal NJ1040Result factory ──────────────────────────────────────────
 

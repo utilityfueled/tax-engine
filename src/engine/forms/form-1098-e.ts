@@ -57,9 +57,11 @@ export function calculateForm1098E(
         "1",
         `Student loan interest — ${form.lender}`,
         amount,
-        form.includesOriginationFeesOrCapitalizedInterest
-          ? "Box 1 (includes origination fees and/or capitalized interest)"
-          : "Box 1",
+        form.box2ExcludesOriginationFeesOrCapitalizedInterest === true
+          ? "Box 1; checked Box 2 means Box 1 does not include origination fees and/or capitalized interest for a pre-September 1, 2004 loan"
+          : form.box2ExcludesOriginationFeesOrCapitalizedInterest === false
+            ? "Box 1; Box 2 unchecked on actual statement"
+            : "Box 1; Box 2 status unknown; any legacy inclusion flag remains unverified",
       );
     }
 

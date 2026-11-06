@@ -21,6 +21,10 @@ function isHostedProduction(env: HostedRuntimeEnvironment) {
     && (env.NODE_ENV?.trim().toLowerCase() || "development") === "production";
 }
 
+export function isHostedVercelPreviewEnvironment(env: HostedRuntimeEnvironment) {
+  return resolveDeploymentMode(env) === "hosted" && env.VERCEL_ENV === "preview";
+}
+
 function isValidAppUrl(value: string) {
   try {
     const parsed = new URL(value);
@@ -50,6 +54,18 @@ export function isLoopbackAppUrl(value: string): boolean {
 export function resolveHostedAppBaseUrl(
   env: HostedRuntimeEnvironment = process.env
 ): HostedAppUrlResolution {
+  // Vercel owns this deployment metadata. Never derive origin trust from a
+  // request header or inherit the production app URL in an isolated preview.
+  if (isHostedVercelPreviewEnvironment(env)) {
+    const hostname = env.VERCEL_URL?.toLowerCase();
+    const valid = hostname !== undefined && hostname.length <= 253
+      && hostname.endsWith(".vercel.app")
+      && hostname.split(".").every(label => /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/.test(label));
+    return valid
+      ? { appBaseUrl: `https://${hostname}`, blocked: false, hasValidConfiguredUrl: true }
+      : { appBaseUrl: localhostAppUrl, blocked: true, hasValidConfiguredUrl: false };
+  }
+
   const configuredUrl = env.TAX_ENGINE_APP_URL?.trim();
   const hostedProduction = isHostedProduction(env);
 
@@ -133,7 +149,7 @@ export function shouldPreferLocalWorkspaceDraft(
     return false;
   }
 
-  if (isHostedProduction(env)) {
+  if (isHostedProduction(env) || isHostedVercelPreviewEnvironment(env)) {
     return false;
   }
 
@@ -150,7 +166,7 @@ export function shouldAllowLoopbackLocalWorkspaceResume(
     return false;
   }
 
-  if (isHostedProduction(env)) {
+  if (isHostedProduction(env) || isHostedVercelPreviewEnvironment(env)) {
     return false;
   }
 

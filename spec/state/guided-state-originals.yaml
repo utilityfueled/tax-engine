@@ -1,0 +1,18 @@
+form: "Guided State Originals"
+fullName: "Canonical actual PA and Ohio source packets"
+taxYear: 2025
+reference: "docs/upgrade-2026-execution-brief.md"
+lines:
+  - line: "canonical-originals"
+    description: "Retain complete actual originals before federal computation, state derivation and redaction"
+    formula: |
+      Preserve ohioResidency, ohioPayments, paResidencySources and paReciprocitySources
+      with their actual owner/year/receipt/source facts and confirmed/unknown states.
+      Parse each with its dedicated model. Never silently discard a present packet,
+      default missing facts to zero, or bind a redacted copy as original evidence.
+      Schema admission does not establish state eligibility or full source qualification.
+    testRef: "tests/guided-interview/state-originals-schema.test.ts::state originals canonical schema retains actual private source packets"
+  - line: "reject-malformed"
+    description: "Present malformed source packets stop before output"
+    formula: "Reject malformed source packet structures instead of stripping or accepting them as an unqualified state calculation."
+    testRef: "tests/guided-interview/state-originals-schema.test.ts::state originals canonical schema rejects malformed packets"

@@ -71,15 +71,14 @@ describe("Form 8962 - Lines", () => {
   it("Form 8962 Line 3 - FPL percentage retains decimal precision", () => {
     // Family of 1: FPL = $15,060 (2024 HHS). AGI $30,000
     // FPL% = 30000/15060 × 100 = 199.2031...% (NOT rounded to 199)
-    // IRS Form 8962 Line 3 shows "___.__%" — decimal precision required for
-    // accurate interpolation and repayment cap tier classification.
+    // The raw ratio is diagnostic only; physical line 5 drops its fraction for Table 2.
     const result = calculateForm8962(makeInput({
       taxFamilySize: 1,
       modifiedAGI: d(30000),
     }));
     // 30000 / 15060 × 100 = 199.2031872509960159...
     expect(result.fplPercentage.toNumber()).toBeCloseTo(199.20, 1);
-    // Must be in the 150-200% bracket, not rounded to 199 or 200
+    // Diagnostic retains its fraction; the separate fplPercentageForTable is 199.
     expect(result.fplPercentage.greaterThan(199)).toBe(true);
     expect(result.fplPercentage.lessThan(200)).toBe(true);
   });
@@ -148,22 +147,18 @@ describe("Form 8962 - Lines", () => {
 
 describe("Form 8962 - PTC Reconciliation", () => {
   it("Form 8962 Line 24 - PTC allowed", () => {
-    // Low income: AGI $15K, FPL ~96% → contribution rate 0%
-    // SLCSP = $600/mo = $7,200. Expected contribution = $0.
-    // PTC = min($7200, $4800 premium) = $4,800
+    // 2025 income $18,000 is above 100% FPL and below 150%; applicable figure is zero.
     const result = calculateForm8962(makeInput({
-      modifiedAGI: d(15000),
+      modifiedAGI: d(18000),
       form1095A: make1095A(400, 600, 300),
     }));
     expect(result.ptcAllowed.toNumber()).toBe(4800); // Can't exceed enrollment premium
   });
 
   it("Form 8962 Line 24 - PTC capped at enrollment premium", () => {
-    // Low income, low premium but high SLCSP
-    // Premium = $200/mo = $2,400. SLCSP = $800/mo = $9,600.
-    // Expected contribution = $0. PTC = min($9600, $2400) = $2,400
+    // 2025 income $18,000 is above 100% FPL and below 150%; applicable figure is zero.
     const result = calculateForm8962(makeInput({
-      modifiedAGI: d(15000),
+      modifiedAGI: d(18000),
       form1095A: make1095A(200, 800, 100),
     }));
     expect(result.ptcAllowed.toNumber()).toBe(2400);
@@ -183,9 +178,9 @@ describe("Form 8962 - PTC Reconciliation", () => {
   });
 
   it("Form 8962 Line 26 - net PTC refundable", () => {
-    // PTC allowed > APTC received → net refund
+    // 2025 income $18,000 is above 100% FPL and below 150%; applicable figure is zero.
     const result = calculateForm8962(makeInput({
-      modifiedAGI: d(15000),
+      modifiedAGI: d(18000),
       form1095A: make1095A(400, 600, 200), // APTC = $2400, PTC should be $4800
     }));
     expect(result.netPTC.toNumber()).toBe(2400); // 4800 - 2400
@@ -239,7 +234,13 @@ describe("Form 8962 - audit trail", () => {
     const result = calculateForm8962(makeInput());
     const lineIds = result.lines.map((l) => l.line);
     expect(lineIds).toContain("1");
-    expect(lineIds).toContain("2");
+    expect(lineIds).toContain("2a");
+    expect(lineIds).toContain("2b");
+    expect(lineIds).toContain("4");
+    expect(lineIds).toContain("8a");
+    expect(lineIds).toContain("8b");
+    expect(lineIds).toContain("11f");
+    expect(lineIds).toContain("29");
     expect(lineIds).toContain("3");
     expect(lineIds).toContain("5");
     expect(lineIds).toContain("7");
@@ -252,10 +253,10 @@ describe("Form 8962 - audit trail", () => {
     expect(lineIds).toContain("27");
   });
 
-  it("audit trail contains exactly 12 line entries", () => {
-    // Lines 1, 2, 3, 5, 7, 11a, 11b, 11c, 24, 25, 26, 27
+  it("audit trail contains exactly 20 distinct annual reconciliation entries", () => {
+    // The current annual path has 20 unique physical line identifiers.
     const result = calculateForm8962(makeInput());
-    expect(result.lines).toHaveLength(12);
+    expect(result.lines).toHaveLength(20);
   });
 });
 
@@ -337,24 +338,18 @@ describe("Form 8962 - expected contribution by FPL bracket", () => {
 
 describe("Form 8962 - monthly PTC calculation", () => {
   it("Form 8962 Line 24 - monthly PTC equals (SLCSP - expected contribution) / 12", () => {
-    // AGI $14,000 → below 150% FPL (14000/15650 ≈ 89%) → rate 0%, expected contribution $0
-    // SLCSP = $600/mo = $7,200/yr. Monthly PTC = $7,200 / 12 = $600
-    // Enrollment premium = $700/mo = $8,400/yr → PTC not capped by premium
+    // 2025 income $18,000 is above 100% FPL and below 150%; applicable figure is zero.
     const result = calculateForm8962(makeInput({
       taxFamilySize: 1,
-      modifiedAGI: d(14000),
+      modifiedAGI: d(18000),
       form1095A: make1095A(700, 600, 0),
     }));
-    // Annual PTC = SLCSP - 0 = $7,200; monthly equivalent = $600
     expect(result.ptcAllowed.toNumber()).toBe(7200);
     expect(result.ptcAllowed.dividedBy(12).toNumber()).toBe(600);
   });
 
-  it("Form 8962 Line 24 - monthly PTC reduced by expected contribution", () => {
-    // AGI $30,120 → 200% FPL → rate 2%, expected contribution $602
-    // Monthly expected = $602/12 = $50.17. SLCSP $200/mo.
-    // Monthly PTC = min(max(0, 200-50.17), 300) = $149.83
-    // Total PTC = 12 × $149.83 = $1,798
+  it("Form 8962 Line 24 - annual PTC reduced by expected contribution", () => {
+    // Unchanged full-year coverage uses annual line 11: $2400 benchmark less $602 annual contribution = $1798.
     const result = calculateForm8962(makeInput({
       taxFamilySize: 1,
       modifiedAGI: d(30120),
@@ -431,65 +426,38 @@ describe("Form 8962 - partial year coverage", () => {
   });
 
   it("Form 8962 Line 24 - PTC for partial year is based on actual covered months only", () => {
-    // 3 months covered (months 1-3). AGI $14,000 → below 150% → rate 0%, expected $0
-    // SLCSP $600/mo × 3 = $1,800. Premium $700/mo × 3 = $2,100.
-    // PTC = min($1,800, $2,100) = $1,800
+    // 2025 income $18,000 is above 100% FPL and below 150%; applicable figure is zero.
     const result = calculateForm8962(makeInput({
       taxFamilySize: 1,
-      modifiedAGI: d(14000),
+      modifiedAGI: d(18000),
       form1095A: make1095APartialYear(700, 600, 0, [1, 2, 3]),
     }));
     expect(result.ptcAllowed.toNumber()).toBe(1800);
   });
 
   it("Form 8962 - partial-year coverage with non-zero expected contribution uses per-month PTC (IRS Lines 12-23)", () => {
-    // Regression test: annual method would give $183, monthly method gives $1,592
-    // AGI $45,180 → 300% FPL → rate 6%, expected = $2,711
-    // Monthly expected = $2,711/12 = $225.92
-    // 6-month coverage (Jul-Dec): SLCSP $500/mo, premium $600/mo, APTC $200/mo
-    //
-    // Old code (annual method, WRONG):
-    //   Annual SLCSP = 6 × $500 = $3,000
-    //   PTC = min(max(0, $3,000 - $2,711), $3,600) = min($289, $3,600) = $289
-    //
-    // Correct (per-month, IRS Lines 12-23):
-    //   Monthly PTC = min(max(0, $500 - $225.92), $600) = min($274.08, $600) = $274.08
-    //   Total PTC = 6 × $274.08 = $1,645 (rounded)
+    // Line 8a is $2711; line 8b is $226. Six months times ($500 - $226) is exactly $1644.
     const result = calculateForm8962(makeInput({
       taxFamilySize: 1,
       modifiedAGI: d(45180),
       form1095A: make1095APartialYear(600, 500, 200, [7, 8, 9, 10, 11, 12]),
     }));
-    // Per-month method: each month's PTC is computed independently
-    // Monthly expected = 2711/12 = 225.9166... (Decimal precision: 225.91666666666666667)
-    // Monthly PTC = min(max(0, 500 - 225.91667), 600) = 274.08333...
-    // Total = 6 × 274.0833... = 1644.4999... → roundDollar = $1,644
-    // (Slightly below 1644.5 due to Decimal finite precision in repeating fraction)
     expect(result.ptcAllowed.toNumber()).toBe(1644);
     expect(result.annualPremium.toNumber()).toBe(3600);
     expect(result.annualSLCSP.toNumber()).toBe(3000);
-    // APTC = $1,200 (6 × $200). Net PTC = $1,644 - $1,200 = $444
     expect(result.advancePTCTotal.toNumber()).toBe(1200);
     expect(result.netPTC.toNumber()).toBe(444);
   });
 
   it("Form 8962 - partial-year with high expected, monthly method prevents false zero PTC", () => {
-    // Without per-month calculation, this taxpayer would get $0 PTC
-    // AGI $60,240 → 400% FPL → rate 8.5%, expected = $5,120
-    // Monthly expected = $5,120/12 = $426.67
-    // 6-month coverage: SLCSP $500/mo, premium $600/mo
-    //
-    // Old code (annual method): SLCSP $3,000 - $5,120 = -$2,120 → PTC = $0 (WRONG)
-    // Correct (monthly): PTC = 6 × min(max(0, 500-426.67), 600) = 6 × $73.33 = $440
+    // Line 8b rounds 5120 / 12 to $427. Six months times ($500 - $427) = $438.
     const result = calculateForm8962(makeInput({
       taxFamilySize: 1,
       modifiedAGI: d(60240),
       form1095A: make1095APartialYear(600, 500, 0, [7, 8, 9, 10, 11, 12]),
     }));
-    // Monthly PTC = min(max(0, 500 - 5120/12), 600) = min(500 - 426.6667, 600) = 73.3333
-    // Total = 6 × 73.3333 = 440.0 → roundDollar = $440
-    expect(result.ptcAllowed.toNumber()).toBe(440);
-    expect(result.netPTC.toNumber()).toBe(440);
+    expect(result.ptcAllowed.toNumber()).toBe(438);
+    expect(result.netPTC.toNumber()).toBe(438);
   });
 });
 
@@ -532,14 +500,10 @@ describe("Form 8962 - FPL 100% boundary", () => {
 
 describe("Form 8962 - APTC reconciliation exact match", () => {
   it("Form 8962 Lines 26-27 - zero net PTC and zero repayment when PTC equals APTC", () => {
-    // Engineer input so PTC allowed exactly equals APTC received
-    // AGI $15,000 → ~96% FPL → rate 0%, expected $0
-    // SLCSP $500/mo = $6,000. Premium $400/mo = $4,800. APTC $400/mo = $4,800.
-    // PTC = min($6000, $4800) = $4,800. APTC = $4,800.
-    // Net PTC = $0. Excess = $0.
+    // 2025 income $18,000 is above 100% FPL and below 150%; applicable figure is zero.
     const result = calculateForm8962(makeInput({
       taxFamilySize: 1,
-      modifiedAGI: d(15000),
+      modifiedAGI: d(18000),
       form1095A: make1095A(400, 500, 400),
     }));
     expect(result.ptcAllowed.toNumber()).toBe(4800);
@@ -555,16 +519,13 @@ describe("Form 8962 - APTC reconciliation exact match", () => {
 
 describe("Form 8962 - household size variations", () => {
   it("Form 8962 - family of 6 FPL and contribution rate", () => {
-    // Family of 6: FPL = $15,060 + 5×$5,380 = $41,960
-    // AGI $80,000 → 80000/41960 × 100 = 190.6578...% → within 150-200 bracket
-    // Linear interpolation: position = (190.6578-150)/50 = 0.81316
-    // Rate = 0 + 0.02 × 0.81316 = 0.01626
+    // The diagnostic percentage is about 190.66; line 5 drops the fraction to 190 and Table 2 gives .0160.
     const result = calculateForm8962(makeInput({
       taxFamilySize: 6,
       modifiedAGI: d(80000),
     }));
     expect(result.fplPercentage.toNumber()).toBeCloseTo(190.66, 0);
-    expect(result.contributionRate.toNumber()).toBeCloseTo(0.01626, 4);
+    expect(result.contributionRate.toNumber()).toBe(0.016);
   });
 
   it("Form 8962 - family of 8 at 200% FPL", () => {
@@ -637,9 +598,8 @@ describe("Form 8962 - SLCSP variations", () => {
 // ═══════════════════════════════════════════════════════════
 
 describe("Form 8962 - zero and negative scenarios", () => {
-  it("Form 8962 - zero AGI yields zero contribution and maximum PTC", () => {
-    // AGI = $0 → 0% FPL → rate 0%, expected $0
-    // PTC = min(SLCSP, premium) = min($6000, $4800) = $4,800
+  it("Form 8962 - zero AGI yields zero contribution without an assumed eligibility exception", () => {
+    // Below 100% FPL, no confirmed exception: no credit; advance repayment still reconciles.
     const result = calculateForm8962(makeInput({
       taxFamilySize: 1,
       modifiedAGI: d(0),
@@ -648,18 +608,16 @@ describe("Form 8962 - zero and negative scenarios", () => {
     expect(result.fplPercentage.toNumber()).toBe(0);
     expect(result.contributionRate.toNumber()).toBe(0);
     expect(result.expectedContribution.toNumber()).toBe(0);
-    expect(result.ptcAllowed.toNumber()).toBe(4800);
-    expect(result.netPTC.toNumber()).toBe(1200); // 4800 - 3600
+    expect(result.ptcAllowed.toNumber()).toBe(0);
+    expect(result.netPTC.toNumber()).toBe(0);
+    expect(result.excessAPTCRepayment.toString()).toBe("375");
   });
 
   it("Form 8962 - zero APTC with positive PTC yields full net PTC refund", () => {
-    // No advance credits received, but PTC is owed
-    // AGI $15,000 → ~96% FPL → rate 0%, expected $0
-    // SLCSP $500/mo = $6,000. Premium $400/mo = $4,800. APTC $0.
-    // PTC = $4,800. Net PTC = $4,800 - $0 = $4,800.
+    // 2025 income $18,000 is above 100% FPL and below 150%; applicable figure is zero.
     const result = calculateForm8962(makeInput({
       taxFamilySize: 1,
-      modifiedAGI: d(15000),
+      modifiedAGI: d(18000),
       form1095A: make1095A(400, 500, 0),
     }));
     expect(result.ptcAllowed.toNumber()).toBe(4800);
@@ -944,12 +902,10 @@ describe("Form 8962 - income changes mid-year affecting annual PTC", () => {
   });
 
   it("Form 8962 Line 24 - mid-year enrollment start reduces annual PTC proportionally", () => {
-    // Coverage starts July 1 (months 7-12 only). AGI $14,000 → below 150% → rate 0%, expected $0
-    // SLCSP $500/mo × 6 = $3,000. Premium $400/mo × 6 = $2,400. APTC $0.
-    // PTC = min($3,000, $2,400) = $2,400 (half of what full-year would be: $4,800)
+    // 2025 income $18,000 is above 100% FPL and below 150%; applicable figure is zero.
     const result = calculateForm8962(makeInput({
       taxFamilySize: 1,
-      modifiedAGI: d(14000),
+      modifiedAGI: d(18000),
       form1095A: make1095APartialYear(400, 500, 0, [7, 8, 9, 10, 11, 12]),
     }));
     expect(result.annualPremium.toNumber()).toBe(2400);
@@ -999,25 +955,23 @@ describe("Form 8962 - audit trail line value verification", () => {
     expect(line1!.value.toNumber()).toBe(result.familySize);
   });
 
-  it("Form 8962 audit trail Line 3 value matches fplPercentage result field", () => {
-    // AGI $30,120 → 200% FPL
+  it("Form 8962 audit trail Line 5 value matches fplPercentageForTable result field", () => {
+    // Physical line 5 is the whole-number poverty percentage; line 3 is household income.
     const result = calculateForm8962(makeInput({
       taxFamilySize: 1,
       modifiedAGI: d(30120),
     }));
-    const line3 = result.lines.find((l) => l.line === "3");
-    expect(line3).toBeDefined();
-    expect(line3!.value.toNumber()).toBe(200);
-    expect(line3!.value.toNumber()).toBe(result.fplPercentage.toNumber());
+    const line5 = result.lines.find((l) => l.line === "5");
+    expect(line5).toBeDefined();
+    expect(line5!.value.toNumber()).toBe(200);
+    expect(line5!.value.toNumber()).toBe(result.fplPercentageForTable.toNumber());
   });
 
   it("Form 8962 audit trail Line 24 and Line 26 values are consistent with reconciliation", () => {
-    // AGI $15,000 → ~96% FPL → rate 0%, expected $0
-    // SLCSP $500/mo = $6,000. Premium $400/mo = $4,800. APTC $200/mo = $2,400.
-    // PTC = $4,800. Net PTC = $4,800 - $2,400 = $2,400.
+    // 2025 income $18,000 is above 100% FPL and below 150%; applicable figure is zero.
     const result = calculateForm8962(makeInput({
       taxFamilySize: 1,
-      modifiedAGI: d(15000),
+      modifiedAGI: d(18000),
       form1095A: make1095A(400, 500, 200),
     }));
     const line24 = result.lines.find((l) => l.line === "24");

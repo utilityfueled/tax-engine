@@ -1,0 +1,1213 @@
+{
+  "taxYear": 2026,
+  "form": "schedule-c",
+  "filename": "f1040sc.pdf",
+  "sourceUrl": "https://www.irs.gov/pub/irs-pdf/f1040sc.pdf",
+  "sha256": "cc44e7d1150e54d991835814c1191f60a32617730ca9e50e6f532b51293a86b4",
+  "pages": 2,
+  "canonicalFieldsIncludingGroups": 116,
+  "leafWidgets": 109,
+  "created": "5/15/26",
+  "locations": {
+    "name": {
+      "fieldName": "topmostSubform[0].Page1[0].f1_1[0]",
+      "page": 1,
+      "rect": [
+        "36",
+        "684.5",
+        "445.4",
+        "698.001"
+      ],
+      "type": "/Tx"
+    },
+    "ssn": {
+      "fieldName": "topmostSubform[0].Page1[0].f1_2[0]",
+      "page": 1,
+      "rect": [
+        "447.4",
+        "684.5",
+        "576",
+        "698.001"
+      ],
+      "type": "/Tx"
+    },
+    "businessOrProfession": {
+      "fieldName": "topmostSubform[0].Page1[0].f1_3[0]",
+      "page": 1,
+      "rect": [
+        "36",
+        "660.499",
+        "445.4",
+        "674"
+      ],
+      "type": "/Tx"
+    },
+    "businessCode": {
+      "fieldName": "topmostSubform[0].Page1[0].f1_4[0]",
+      "page": 1,
+      "rect": [
+        "460.8",
+        "660.502",
+        "547.2",
+        "672.001"
+      ],
+      "type": "/Tx"
+    },
+    "businessName": {
+      "fieldName": "topmostSubform[0].Page1[0].f1_5[0]",
+      "page": 1,
+      "rect": [
+        "36",
+        "636.498",
+        "445.4",
+        "649.999"
+      ],
+      "type": "/Tx"
+    },
+    "businessStreet": {
+      "fieldName": "topmostSubform[0].Page1[0].f1_7[0]",
+      "page": 1,
+      "rect": [
+        "36",
+        "612.5",
+        "488.6",
+        "626.001"
+      ],
+      "type": "/Tx"
+    },
+    "businessApartment": {
+      "fieldName": "topmostSubform[0].Page1[0].f1_8[0]",
+      "page": 1,
+      "rect": [
+        "490.6",
+        "612.5",
+        "576",
+        "626.001"
+      ],
+      "type": "/Tx"
+    },
+    "businessCity": {
+      "fieldName": "topmostSubform[0].Page1[0].f1_9[0]",
+      "page": 1,
+      "rect": [
+        "36",
+        "588.499",
+        "294.2",
+        "602"
+      ],
+      "type": "/Tx"
+    },
+    "businessState": {
+      "fieldName": "topmostSubform[0].Page1[0].f1_10[0]",
+      "page": 1,
+      "rect": [
+        "296.2",
+        "588.499",
+        "445.4",
+        "602"
+      ],
+      "type": "/Tx"
+    },
+    "businessZip": {
+      "fieldName": "topmostSubform[0].Page1[0].f1_11[0]",
+      "page": 1,
+      "rect": [
+        "447.4",
+        "588.499",
+        "576",
+        "602"
+      ],
+      "type": "/Tx"
+    },
+    "accountingOtherDescription": {
+      "fieldName": "topmostSubform[0].Page1[0].f1_12[0]",
+      "page": 1,
+      "rect": [
+        "367.2",
+        "576.5",
+        "576",
+        "587.499"
+      ],
+      "type": "/Tx"
+    },
+    "ein": {
+      "fieldName": "topmostSubform[0].Page1[0].BoxD[0].f1_6[0]",
+      "page": 1,
+      "rect": [
+        "447.4",
+        "636.498",
+        "576",
+        "649.999"
+      ],
+      "type": "/Tx"
+    },
+    "accountingCash": {
+      "fieldName": "topmostSubform[0].Page1[0].c1_1[0]",
+      "page": 1,
+      "rect": [
+        "161.4",
+        "577.5",
+        "169.4",
+        "585.5"
+      ],
+      "type": "/Btn"
+    },
+    "accountingAccrual": {
+      "fieldName": "topmostSubform[0].Page1[0].c1_1[1]",
+      "page": 1,
+      "rect": [
+        "226.2",
+        "577.5",
+        "234.2",
+        "585.5"
+      ],
+      "type": "/Btn"
+    },
+    "accountingOther": {
+      "fieldName": "topmostSubform[0].Page1[0].c1_1[2]",
+      "page": 1,
+      "rect": [
+        "298.2",
+        "577.5",
+        "306.2",
+        "585.5"
+      ],
+      "type": "/Btn"
+    },
+    "materialParticipationYes": {
+      "fieldName": "topmostSubform[0].Page1[0].c1_2[0]",
+      "page": 1,
+      "rect": [
+        "514.4",
+        "566.001",
+        "522.4",
+        "574.001"
+      ],
+      "type": "/Btn"
+    },
+    "materialParticipationNo": {
+      "fieldName": "topmostSubform[0].Page1[0].c1_2[1]",
+      "page": 1,
+      "rect": [
+        "550.4",
+        "566.001",
+        "558.4",
+        "574.001"
+      ],
+      "type": "/Btn"
+    },
+    "businessStarted": {
+      "fieldName": "topmostSubform[0].Page1[0].c1_3[0]",
+      "page": 1,
+      "rect": [
+        "514.4",
+        "554.002",
+        "522.4",
+        "562.002"
+      ],
+      "type": "/Btn"
+    },
+    "paymentsRequire1099Yes": {
+      "fieldName": "topmostSubform[0].Page1[0].c1_4[0]",
+      "page": 1,
+      "rect": [
+        "514.4",
+        "542",
+        "522.4",
+        "550"
+      ],
+      "type": "/Btn"
+    },
+    "paymentsRequire1099No": {
+      "fieldName": "topmostSubform[0].Page1[0].c1_4[1]",
+      "page": 1,
+      "rect": [
+        "550.4",
+        "542",
+        "558.4",
+        "550"
+      ],
+      "type": "/Btn"
+    },
+    "filedRequired1099Yes": {
+      "fieldName": "topmostSubform[0].Page1[0].c1_5[0]",
+      "page": 1,
+      "rect": [
+        "514.4",
+        "530.001",
+        "522.4",
+        "538.001"
+      ],
+      "type": "/Btn"
+    },
+    "filedRequired1099No": {
+      "fieldName": "topmostSubform[0].Page1[0].c1_5[1]",
+      "page": 1,
+      "rect": [
+        "550.4",
+        "530.001",
+        "558.4",
+        "538.001"
+      ],
+      "type": "/Btn"
+    },
+    "statutoryEmployee": {
+      "fieldName": "topmostSubform[0].Page1[0].Line1_ReadOrder[0].c1_6[0]",
+      "page": 1,
+      "rect": [
+        "452.8",
+        "494.001",
+        "460.8",
+        "502.001"
+      ],
+      "type": "/Btn"
+    },
+    "line1": {
+      "fieldName": "topmostSubform[0].Page1[0].f1_13[0]",
+      "page": 1,
+      "rect": [
+        "490.6",
+        "492.501",
+        "576",
+        "504"
+      ],
+      "type": "/Tx"
+    },
+    "line2": {
+      "fieldName": "topmostSubform[0].Page1[0].f1_14[0]",
+      "page": 1,
+      "rect": [
+        "490.6",
+        "480.502",
+        "576",
+        "491.501"
+      ],
+      "type": "/Tx"
+    },
+    "line3": {
+      "fieldName": "topmostSubform[0].Page1[0].f1_15[0]",
+      "page": 1,
+      "rect": [
+        "490.6",
+        "468.5",
+        "576",
+        "479.499"
+      ],
+      "type": "/Tx"
+    },
+    "line4": {
+      "fieldName": "topmostSubform[0].Page1[0].f1_16[0]",
+      "page": 1,
+      "rect": [
+        "490.6",
+        "456.501",
+        "576",
+        "467.5"
+      ],
+      "type": "/Tx"
+    },
+    "line5": {
+      "fieldName": "topmostSubform[0].Page1[0].f1_17[0]",
+      "page": 1,
+      "rect": [
+        "490.6",
+        "444.502",
+        "576",
+        "455.501"
+      ],
+      "type": "/Tx"
+    },
+    "line6": {
+      "fieldName": "topmostSubform[0].Page1[0].f1_18[0]",
+      "page": 1,
+      "rect": [
+        "490.6",
+        "432.5",
+        "576",
+        "443.499"
+      ],
+      "type": "/Tx"
+    },
+    "line7": {
+      "fieldName": "topmostSubform[0].Page1[0].f1_19[0]",
+      "page": 1,
+      "rect": [
+        "490.6",
+        "420.501",
+        "576",
+        "431.5"
+      ],
+      "type": "/Tx"
+    },
+    "line8": {
+      "fieldName": "topmostSubform[0].Page1[0].Lines8-16c_ReadOrder[0].f1_20[0]",
+      "page": 1,
+      "rect": [
+        "217",
+        "396.5",
+        "301.4",
+        "407.499"
+      ],
+      "type": "/Tx"
+    },
+    "line9": {
+      "fieldName": "topmostSubform[0].Page1[0].Lines8-16c_ReadOrder[0].f1_21[0]",
+      "page": 1,
+      "rect": [
+        "217",
+        "372.502",
+        "301.4",
+        "384.001"
+      ],
+      "type": "/Tx"
+    },
+    "line10": {
+      "fieldName": "topmostSubform[0].Page1[0].Lines8-16c_ReadOrder[0].f1_22[0]",
+      "page": 1,
+      "rect": [
+        "217",
+        "360.5",
+        "301.4",
+        "371.499"
+      ],
+      "type": "/Tx"
+    },
+    "line11": {
+      "fieldName": "topmostSubform[0].Page1[0].Lines8-16c_ReadOrder[0].f1_23[0]",
+      "page": 1,
+      "rect": [
+        "217",
+        "348.501",
+        "301.4",
+        "359.5"
+      ],
+      "type": "/Tx"
+    },
+    "line12": {
+      "fieldName": "topmostSubform[0].Page1[0].Lines8-16c_ReadOrder[0].f1_24[0]",
+      "page": 1,
+      "rect": [
+        "217",
+        "336.502",
+        "301.4",
+        "347.501"
+      ],
+      "type": "/Tx"
+    },
+    "line13": {
+      "fieldName": "topmostSubform[0].Page1[0].Lines8-16c_ReadOrder[0].f1_25[0]",
+      "page": 1,
+      "rect": [
+        "217",
+        "306.5",
+        "301.4",
+        "317.999"
+      ],
+      "type": "/Tx"
+    },
+    "line14": {
+      "fieldName": "topmostSubform[0].Page1[0].Lines8-16c_ReadOrder[0].f1_26[0]",
+      "page": 1,
+      "rect": [
+        "217",
+        "282.502",
+        "301.4",
+        "294.001"
+      ],
+      "type": "/Tx"
+    },
+    "line15": {
+      "fieldName": "topmostSubform[0].Page1[0].Lines8-16c_ReadOrder[0].f1_27[0]",
+      "page": 1,
+      "rect": [
+        "217",
+        "270.5",
+        "301.4",
+        "281.499"
+      ],
+      "type": "/Tx"
+    },
+    "line16a": {
+      "fieldName": "topmostSubform[0].Page1[0].Lines8-16c_ReadOrder[0].f1_28[0]",
+      "page": 1,
+      "rect": [
+        "217",
+        "246.502",
+        "301.4",
+        "258.001"
+      ],
+      "type": "/Tx"
+    },
+    "line16bVehicleLoan": {
+      "fieldName": "topmostSubform[0].Page1[0].Lines8-16c_ReadOrder[0].f1_29[0]",
+      "page": 1,
+      "rect": [
+        "217",
+        "234.5",
+        "301.4",
+        "245.499"
+      ],
+      "type": "/Tx"
+    },
+    "line16cOther": {
+      "fieldName": "topmostSubform[0].Page1[0].Lines8-16c_ReadOrder[0].f1_31[0]",
+      "page": 1,
+      "rect": [
+        "217",
+        "222.501",
+        "301.4",
+        "233.5"
+      ],
+      "type": "/Tx"
+    },
+    "line17": {
+      "fieldName": "topmostSubform[0].Page1[0].Lines8-16c_ReadOrder[0].f1_32[0]",
+      "page": 1,
+      "rect": [
+        "217",
+        "210.502",
+        "301.4",
+        "221.501"
+      ],
+      "type": "/Tx"
+    },
+    "line18": {
+      "fieldName": "topmostSubform[0].Page1[0].f1_33[0]",
+      "page": 1,
+      "rect": [
+        "490.6",
+        "396.5",
+        "576",
+        "407.499"
+      ],
+      "type": "/Tx"
+    },
+    "line19": {
+      "fieldName": "topmostSubform[0].Page1[0].f1_34[0]",
+      "page": 1,
+      "rect": [
+        "490.6",
+        "384.501",
+        "576",
+        "395.5"
+      ],
+      "type": "/Tx"
+    },
+    "line20a": {
+      "fieldName": "topmostSubform[0].Page1[0].f1_35[0]",
+      "page": 1,
+      "rect": [
+        "490.6",
+        "360.5",
+        "576",
+        "371.999"
+      ],
+      "type": "/Tx"
+    },
+    "line20b": {
+      "fieldName": "topmostSubform[0].Page1[0].f1_36[0]",
+      "page": 1,
+      "rect": [
+        "490.6",
+        "348.501",
+        "576",
+        "359.5"
+      ],
+      "type": "/Tx"
+    },
+    "line21": {
+      "fieldName": "topmostSubform[0].Page1[0].f1_37[0]",
+      "page": 1,
+      "rect": [
+        "490.6",
+        "336.502",
+        "576",
+        "347.501"
+      ],
+      "type": "/Tx"
+    },
+    "line22": {
+      "fieldName": "topmostSubform[0].Page1[0].f1_38[0]",
+      "page": 1,
+      "rect": [
+        "490.6",
+        "324.5",
+        "576",
+        "335.499"
+      ],
+      "type": "/Tx"
+    },
+    "line23": {
+      "fieldName": "topmostSubform[0].Page1[0].f1_39[0]",
+      "page": 1,
+      "rect": [
+        "490.6",
+        "312.501",
+        "576",
+        "323.5"
+      ],
+      "type": "/Tx"
+    },
+    "line24a": {
+      "fieldName": "topmostSubform[0].Page1[0].f1_40[0]",
+      "page": 1,
+      "rect": [
+        "490.6",
+        "288.5",
+        "576",
+        "299.999"
+      ],
+      "type": "/Tx"
+    },
+    "line24b": {
+      "fieldName": "topmostSubform[0].Page1[0].f1_41[0]",
+      "page": 1,
+      "rect": [
+        "490.6",
+        "276.501",
+        "576",
+        "287.5"
+      ],
+      "type": "/Tx"
+    },
+    "line25": {
+      "fieldName": "topmostSubform[0].Page1[0].f1_42[0]",
+      "page": 1,
+      "rect": [
+        "490.6",
+        "264.502",
+        "576",
+        "275.501"
+      ],
+      "type": "/Tx"
+    },
+    "line26": {
+      "fieldName": "topmostSubform[0].Page1[0].f1_43[0]",
+      "page": 1,
+      "rect": [
+        "490.6",
+        "252.5",
+        "576",
+        "263.499"
+      ],
+      "type": "/Tx"
+    },
+    "line27a": {
+      "fieldName": "topmostSubform[0].Page1[0].f1_44[0]",
+      "page": 1,
+      "rect": [
+        "490.6",
+        "222.501",
+        "576",
+        "234"
+      ],
+      "type": "/Tx"
+    },
+    "line27b": {
+      "fieldName": "topmostSubform[0].Page1[0].f1_45[0]",
+      "page": 1,
+      "rect": [
+        "490.6",
+        "210.502",
+        "576",
+        "221.501"
+      ],
+      "type": "/Tx"
+    },
+    "line28": {
+      "fieldName": "topmostSubform[0].Page1[0].f1_46[0]",
+      "page": 1,
+      "rect": [
+        "490.6",
+        "198.5",
+        "576",
+        "209.499"
+      ],
+      "type": "/Tx"
+    },
+    "line29": {
+      "fieldName": "topmostSubform[0].Page1[0].f1_47[0]",
+      "page": 1,
+      "rect": [
+        "490.6",
+        "186.501",
+        "576",
+        "197.5"
+      ],
+      "type": "/Tx"
+    },
+    "line30": {
+      "fieldName": "topmostSubform[0].Page1[0].f1_50[0]",
+      "page": 1,
+      "rect": [
+        "490.6",
+        "132.501",
+        "576",
+        "144"
+      ],
+      "type": "/Tx"
+    },
+    "line31": {
+      "fieldName": "topmostSubform[0].Page1[0].f1_51[0]",
+      "page": 1,
+      "rect": [
+        "490.6",
+        "84.502",
+        "576",
+        "96.001"
+      ],
+      "type": "/Tx"
+    },
+    "homeTotalSquareFeet": {
+      "fieldName": "topmostSubform[0].Page1[0].Line30_ReadOrder[0].f1_48[0]",
+      "page": 1,
+      "rect": [
+        "352.8",
+        "156.002",
+        "439.2",
+        "168.001"
+      ],
+      "type": "/Tx"
+    },
+    "homeBusinessSquareFeet": {
+      "fieldName": "topmostSubform[0].Page1[0].Line30_ReadOrder[0].f1_49[0]",
+      "page": 1,
+      "rect": [
+        "223.2",
+        "144",
+        "316.8",
+        "155.999"
+      ],
+      "type": "/Tx"
+    },
+    "line32aAllAtRisk": {
+      "fieldName": "topmostSubform[0].Page1[0].c1_7[0]",
+      "page": 1,
+      "rect": [
+        "493.6",
+        "67.001",
+        "501.6",
+        "75.001"
+      ],
+      "type": "/Btn"
+    },
+    "line32bSomeNotAtRisk": {
+      "fieldName": "topmostSubform[0].Page1[0].c1_7[1]",
+      "page": 1,
+      "rect": [
+        "493.6",
+        "46.999",
+        "501.6",
+        "54.999"
+      ],
+      "type": "/Btn"
+    },
+    "line33aCost": {
+      "fieldName": "topmostSubform[0].Page2[0].c2_1[0]",
+      "page": 2,
+      "rect": [
+        "255",
+        "715.502",
+        "263",
+        "723.502"
+      ],
+      "type": "/Btn"
+    },
+    "line33bLowerCostOrMarket": {
+      "fieldName": "topmostSubform[0].Page2[0].c2_2[0]",
+      "page": 2,
+      "rect": [
+        "319.8",
+        "715.502",
+        "327.8",
+        "723.502"
+      ],
+      "type": "/Btn"
+    },
+    "line33cOther": {
+      "fieldName": "topmostSubform[0].Page2[0].c2_3[0]",
+      "page": 2,
+      "rect": [
+        "449.4",
+        "715.502",
+        "457.4",
+        "723.502"
+      ],
+      "type": "/Btn"
+    },
+    "line34InventoryChangeYes": {
+      "fieldName": "topmostSubform[0].Page2[0].c2_4[0]",
+      "page": 2,
+      "rect": [
+        "504",
+        "686",
+        "512",
+        "694"
+      ],
+      "type": "/Btn"
+    },
+    "line34InventoryChangeNo": {
+      "fieldName": "topmostSubform[0].Page2[0].c2_4[1]",
+      "page": 2,
+      "rect": [
+        "547.2",
+        "686",
+        "555.2",
+        "694"
+      ],
+      "type": "/Btn"
+    },
+    "line35": {
+      "fieldName": "topmostSubform[0].Page2[0].f2_1[0]",
+      "page": 2,
+      "rect": [
+        "490.6",
+        "654.501",
+        "576",
+        "666"
+      ],
+      "type": "/Tx"
+    },
+    "line36": {
+      "fieldName": "topmostSubform[0].Page2[0].f2_2[0]",
+      "page": 2,
+      "rect": [
+        "490.6",
+        "630.5",
+        "576",
+        "641.999"
+      ],
+      "type": "/Tx"
+    },
+    "line37": {
+      "fieldName": "topmostSubform[0].Page2[0].f2_3[0]",
+      "page": 2,
+      "rect": [
+        "490.6",
+        "606.502",
+        "576",
+        "618.001"
+      ],
+      "type": "/Tx"
+    },
+    "line38": {
+      "fieldName": "topmostSubform[0].Page2[0].f2_4[0]",
+      "page": 2,
+      "rect": [
+        "490.6",
+        "582.501",
+        "576",
+        "594"
+      ],
+      "type": "/Tx"
+    },
+    "line39": {
+      "fieldName": "topmostSubform[0].Page2[0].f2_5[0]",
+      "page": 2,
+      "rect": [
+        "490.6",
+        "558.5",
+        "576",
+        "569.999"
+      ],
+      "type": "/Tx"
+    },
+    "line40": {
+      "fieldName": "topmostSubform[0].Page2[0].f2_6[0]",
+      "page": 2,
+      "rect": [
+        "490.6",
+        "534.502",
+        "576",
+        "546.001"
+      ],
+      "type": "/Tx"
+    },
+    "line41": {
+      "fieldName": "topmostSubform[0].Page2[0].f2_7[0]",
+      "page": 2,
+      "rect": [
+        "490.6",
+        "510.501",
+        "576",
+        "522"
+      ],
+      "type": "/Tx"
+    },
+    "line42": {
+      "fieldName": "topmostSubform[0].Page2[0].f2_8[0]",
+      "page": 2,
+      "rect": [
+        "490.6",
+        "486.5",
+        "576",
+        "497.999"
+      ],
+      "type": "/Tx"
+    },
+    "vehiclePlacedMonth": {
+      "fieldName": "topmostSubform[0].Page2[0].f2_9[0]",
+      "page": 2,
+      "rect": [
+        "374.4",
+        "432.5",
+        "403.2",
+        "443.999"
+      ],
+      "type": "/Tx"
+    },
+    "vehiclePlacedDay": {
+      "fieldName": "topmostSubform[0].Page2[0].f2_10[0]",
+      "page": 2,
+      "rect": [
+        "410.4",
+        "432.5",
+        "439.2",
+        "443.999"
+      ],
+      "type": "/Tx"
+    },
+    "vehiclePlacedYear": {
+      "fieldName": "topmostSubform[0].Page2[0].f2_11[0]",
+      "page": 2,
+      "rect": [
+        "446.4",
+        "432.5",
+        "482.4",
+        "443.999"
+      ],
+      "type": "/Tx"
+    },
+    "line44aBusinessMiles": {
+      "fieldName": "topmostSubform[0].Page2[0].f2_12[0]",
+      "page": 2,
+      "rect": [
+        "100.8",
+        "390.002",
+        "194.4",
+        "402.001"
+      ],
+      "type": "/Tx"
+    },
+    "line44bCommutingMiles": {
+      "fieldName": "topmostSubform[0].Page2[0].f2_13[0]",
+      "page": 2,
+      "rect": [
+        "331.2",
+        "390.002",
+        "424.8",
+        "402.001"
+      ],
+      "type": "/Tx"
+    },
+    "line44cOtherMiles": {
+      "fieldName": "topmostSubform[0].Page2[0].f2_14[0]",
+      "page": 2,
+      "rect": [
+        "482.4",
+        "390.002",
+        "576",
+        "402.001"
+      ],
+      "type": "/Tx"
+    },
+    "line45Yes": {
+      "fieldName": "topmostSubform[0].Page2[0].c2_5[0]",
+      "page": 2,
+      "rect": [
+        "504",
+        "367.779",
+        "512.444",
+        "376.223"
+      ],
+      "type": "/Btn"
+    },
+    "line45No": {
+      "fieldName": "topmostSubform[0].Page2[0].c2_5[1]",
+      "page": 2,
+      "rect": [
+        "547.2",
+        "367.779",
+        "555.644",
+        "376.223"
+      ],
+      "type": "/Btn"
+    },
+    "line46Yes": {
+      "fieldName": "topmostSubform[0].Page2[0].c2_6[0]",
+      "page": 2,
+      "rect": [
+        "504",
+        "343.778",
+        "512.444",
+        "352.222"
+      ],
+      "type": "/Btn"
+    },
+    "line46No": {
+      "fieldName": "topmostSubform[0].Page2[0].c2_6[1]",
+      "page": 2,
+      "rect": [
+        "547.2",
+        "343.778",
+        "555.644",
+        "352.222"
+      ],
+      "type": "/Btn"
+    },
+    "line47aYes": {
+      "fieldName": "topmostSubform[0].Page2[0].c2_7[0]",
+      "page": 2,
+      "rect": [
+        "504",
+        "319.779",
+        "512.445",
+        "328.224"
+      ],
+      "type": "/Btn"
+    },
+    "line47aNo": {
+      "fieldName": "topmostSubform[0].Page2[0].c2_7[1]",
+      "page": 2,
+      "rect": [
+        "547.2",
+        "319.78",
+        "555.644",
+        "328.224"
+      ],
+      "type": "/Btn"
+    },
+    "line47bYes": {
+      "fieldName": "topmostSubform[0].Page2[0].c2_8[0]",
+      "page": 2,
+      "rect": [
+        "504",
+        "295.778",
+        "512.445",
+        "304.223"
+      ],
+      "type": "/Btn"
+    },
+    "line47bNo": {
+      "fieldName": "topmostSubform[0].Page2[0].c2_8[1]",
+      "page": 2,
+      "rect": [
+        "547.2",
+        "295.779",
+        "555.644",
+        "304.223"
+      ],
+      "type": "/Btn"
+    },
+    "otherExpense1Description": {
+      "fieldName": "topmostSubform[0].Page2[0].f2_15[0]",
+      "page": 2,
+      "rect": [
+        "36",
+        "252.5",
+        "482.4",
+        "264.001"
+      ],
+      "type": "/Tx"
+    },
+    "otherExpense1Amount": {
+      "fieldName": "topmostSubform[0].Page2[0].f2_16[0]",
+      "page": 2,
+      "rect": [
+        "490.6",
+        "252.5",
+        "576",
+        "264.001"
+      ],
+      "type": "/Tx"
+    },
+    "otherExpense2Description": {
+      "fieldName": "topmostSubform[0].Page2[0].f2_17[0]",
+      "page": 2,
+      "rect": [
+        "36",
+        "228.499",
+        "482.4",
+        "240"
+      ],
+      "type": "/Tx"
+    },
+    "otherExpense2Amount": {
+      "fieldName": "topmostSubform[0].Page2[0].f2_18[0]",
+      "page": 2,
+      "rect": [
+        "490.6",
+        "228.499",
+        "576",
+        "240"
+      ],
+      "type": "/Tx"
+    },
+    "otherExpense3Description": {
+      "fieldName": "topmostSubform[0].Page2[0].f2_19[0]",
+      "page": 2,
+      "rect": [
+        "36",
+        "204.498",
+        "482.4",
+        "215.999"
+      ],
+      "type": "/Tx"
+    },
+    "otherExpense3Amount": {
+      "fieldName": "topmostSubform[0].Page2[0].f2_20[0]",
+      "page": 2,
+      "rect": [
+        "490.6",
+        "204.498",
+        "576",
+        "215.999"
+      ],
+      "type": "/Tx"
+    },
+    "otherExpense4Description": {
+      "fieldName": "topmostSubform[0].Page2[0].f2_21[0]",
+      "page": 2,
+      "rect": [
+        "36",
+        "180.5",
+        "482.4",
+        "192.001"
+      ],
+      "type": "/Tx"
+    },
+    "otherExpense4Amount": {
+      "fieldName": "topmostSubform[0].Page2[0].f2_22[0]",
+      "page": 2,
+      "rect": [
+        "490.6",
+        "180.5",
+        "576",
+        "192.001"
+      ],
+      "type": "/Tx"
+    },
+    "otherExpense5Description": {
+      "fieldName": "topmostSubform[0].Page2[0].f2_23[0]",
+      "page": 2,
+      "rect": [
+        "36",
+        "156.499",
+        "482.4",
+        "168"
+      ],
+      "type": "/Tx"
+    },
+    "otherExpense5Amount": {
+      "fieldName": "topmostSubform[0].Page2[0].f2_24[0]",
+      "page": 2,
+      "rect": [
+        "490.6",
+        "156.499",
+        "576",
+        "168"
+      ],
+      "type": "/Tx"
+    },
+    "otherExpense6Description": {
+      "fieldName": "topmostSubform[0].Page2[0].f2_25[0]",
+      "page": 2,
+      "rect": [
+        "36",
+        "132.498",
+        "482.4",
+        "143.999"
+      ],
+      "type": "/Tx"
+    },
+    "otherExpense6Amount": {
+      "fieldName": "topmostSubform[0].Page2[0].f2_26[0]",
+      "page": 2,
+      "rect": [
+        "490.6",
+        "132.498",
+        "576",
+        "143.999"
+      ],
+      "type": "/Tx"
+    },
+    "otherExpense7Description": {
+      "fieldName": "topmostSubform[0].Page2[0].f2_27[0]",
+      "page": 2,
+      "rect": [
+        "36",
+        "108.5",
+        "482.4",
+        "120.001"
+      ],
+      "type": "/Tx"
+    },
+    "otherExpense7Amount": {
+      "fieldName": "topmostSubform[0].Page2[0].f2_28[0]",
+      "page": 2,
+      "rect": [
+        "490.6",
+        "108.5",
+        "576",
+        "120.001"
+      ],
+      "type": "/Tx"
+    },
+    "otherExpense8Description": {
+      "fieldName": "topmostSubform[0].Page2[0].f2_29[0]",
+      "page": 2,
+      "rect": [
+        "36",
+        "84.499",
+        "482.4",
+        "96"
+      ],
+      "type": "/Tx"
+    },
+    "otherExpense8Amount": {
+      "fieldName": "topmostSubform[0].Page2[0].f2_30[0]",
+      "page": 2,
+      "rect": [
+        "490.6",
+        "84.499",
+        "576",
+        "96"
+      ],
+      "type": "/Tx"
+    },
+    "otherExpense9Description": {
+      "fieldName": "topmostSubform[0].Page2[0].f2_31[0]",
+      "page": 2,
+      "rect": [
+        "36",
+        "60.498",
+        "482.4",
+        "71.999"
+      ],
+      "type": "/Tx"
+    },
+    "otherExpense9Amount": {
+      "fieldName": "topmostSubform[0].Page2[0].f2_32[0]",
+      "page": 2,
+      "rect": [
+        "490.6",
+        "60.498",
+        "576",
+        "71.999"
+      ],
+      "type": "/Tx"
+    },
+    "line48": {
+      "fieldName": "topmostSubform[0].Page2[0].f2_33[0]",
+      "page": 2,
+      "rect": [
+        "490.6",
+        "48.502",
+        "576",
+        "59.501"
+      ],
+      "type": "/Tx"
+    }
+  },
+  "scope": "Original physical-source contract manually matched to rendered printed lines. No calculated return, map activation or qualification."
+}

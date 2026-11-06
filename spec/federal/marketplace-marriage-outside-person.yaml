@@ -1,0 +1,77 @@
+form: "Marriage-year health payments for a child outside the tax family"
+fullName: "Actual owner qualification and other-return credit composed with Part IV and Part V"
+taxYear: 2025
+irsReference: "https://www.irs.gov/publications/p974"
+notes: |
+  Refreshed 2026-10-27: IRC162(l)(1)-(2), final2025 i7206, Pub974 WorksheetP,
+  the specified/nonspecified definitions, and alternative-marriage Steps1-8;
+  RevProc2014-41 sections3-4 and section7 Example3; Reg1.162(l)-1(a).
+  A child under27 need not be a return dependent for the parent's actual cash
+  to qualify under162(l). That does not make the child a member of the parent's
+  PartV alternative family. Retain actual monthly coverage-family sources and
+  the separate original PartIV assignment, paid receipt and business limit.
+  The existing outside-child method requires known zero attributable outside
+  advances and an actual completed other-return Form8962 line24 zero, with the
+  original other claimant, policy, person, year and complete-policy evidence.
+  This is a sufficient supported source cohort, not a universal legal requirement
+  or a claim that positive other-return PTC necessarily disallows the payer.
+  In a marriage year, capture the actual child relationship kind and start date,
+  bound to the owner and covered original identifiers, source year/reference and
+  confirmation. The relationship must already exist for the actual paid coverage
+  period in this method. A year-end child label or the spouse's PartV dependent
+  assignment does not prove that fact. Unknown or contradictory source dates
+  remain unresolved, not zero deductions; no premarital facts are invented.
+  Existing monthly employer and insurance qualification, child attained age,
+  payer/business establishment, full receipts and own business limits still apply.
+  Age27 or other-person classification preserves paid originals without claiming
+  the under27 deduction. Only eligible actual outside cash enters nonspecified
+  Form7206 once. It never changes the parent's alternative family or SLCSP.
+  A shared no-advance source can compose with separately supported positive
+  own-family advances on another original or month. Use the existing official
+  allocation and marriage worksheet order; never move outside advances or another
+  return's repayment to the payer. Positive outside credit/advances, timing that
+  cannot establish an already existing qualifying relationship, and ambiguous
+  two-owner capped-repayment attribution retain their precise method boundaries.
+  These are derived controls, not published numeric examples. Source cash and
+  worksheet intermediates use Decimal; reported transfers use whole dollars.
+lines:
+  - line: "cash-and-marriage"
+    description: "Outside child cash precedes the specified marriage worksheet without enlarging its family"
+    formula: "Jan-Jun full original3000.03, actual allocation1000.01, owner familycash1000.01/childcash100/othercash1900.02/APTC0; Jul-Dec separate own original1000/APTC1000. Nonspecified600 plus specified12000.06. Business100000 less SEhalf7065: maximum deduction12600.06 gives Step2income80334.94, credit5725, health6875 and finalAGI86060/PTC5192/repayment808. Child remains outside both PartV families."
+    testRef: "tests/engine/federal-marriage-outside-person.test.ts::composes actual outside child cash with allocated marriage and later own advances"
+  - line: "relationship-source"
+    description: "Actual owner relationship must already cover every positive child payment"
+    formula: "Require current source year/reference/confirmation, exact actual owner and original covered-person identities, statutory child kind and valid actual relationship start date. Missing, wrong owner/person/year, unknown kind/date or a date after the paid coverage period rejects. No current tax or deduction override is accepted."
+    testRef: "tests/engine/federal-marriage-outside-person.test.ts::requires original owner child relationship before the actual paid coverage"
+  - line: "independent-boundaries"
+    description: "Other-return credit, original advances and each monthly source remain independent"
+    formula: "Completed other-return line24 explicit0 is independent of this return's computed5192; positive/unknown/draft other credit or positive outside advances rejects. Zero outside cash needs no relationship claim; known age27 preserves original600 cash but returns the prior own-family health6338."
+    testRef: "tests/engine/federal-marriage-outside-person.test.ts::preserves zero unknown qualification and other-return credit distinctions"
+  - line: "months-and-cents"
+    description: "Exact original cash and monthly qualification survive source order"
+    formula: "Only actual positive covered months enter the nonspecified ledger. Reversing person, month and payment rows does not change calculations. Cash100.01 for six months remains600.06 and family premium12000.06 before separate form rounding. Employer-ineligible months preserve full original cash while excluding that month's otherwise eligible child cost."
+    testRef: "tests/engine/federal-marriage-outside-person.test.ts::conserves exact cash and actual monthly qualification through source order"
+  - line: "intake"
+    description: "Capture actual relationship and completed other-return evidence without replacing unknowns"
+    formula: "The shared health model carries the actual source year, owner/person identifiers, child kind and relationship date. Blank date/owner/kind/confirmation remains unknown and blocks a positive outside-child claim. Any actual source edit revokes the nested relationship and independent plan, allocation, marriage and household confirmations. Reconfirmation restores the same derived6875/5192/808 with unchanged full originals."
+    testRef: "tests/guided-interview/guided-marriage-outside-person.test.ts::preserves actual outside child originals and relationship confirmation through the guide"
+  - line: "actual-owner"
+    description: "The actual business and relationship owner controls the source rather than filer position"
+    formula: "Exchanging actual primary/spouse filing positions while rebinding business ownership, relationship owner, marriage household identities and alternative benchmark owner preserves the joint6875 health/86060AGI/5192PTC/808repayment. Original covered identifiers, paid source amounts, outside-child separate return and tax-family membership remain unchanged."
+    testRef: "tests/engine/federal-marriage-outside-person.test.ts::preserves the actual parent owner when joint filer positions change"
+  - line: "controls"
+    description: "The existing adjustment shell exposes the actual child relationship record"
+    formula: "Create an empty relationship record with no guessed owner, identity, kind, date or confirmation. Editing a populated date clears the independent source confirmations; a missing date remains unresolved, and checking the root alone cannot restore it. The full shell replays actual6875 health after source-specific reconfirmation."
+    testRef: "tests/apps/web/marriage-outside-person-interactions.test.tsx::edits actual outside child relationship in the full marriage health shell"
+  - line: "review"
+    description: "Original relationship and other-return proof remain bound before any PDF output"
+    formula: "Physical7206 reports the nonspecified600, while its appendix retains exact combined6875.06 and reportedSchedule1 6875. Physical8962 reports5192/6000/808 with unchangedPartV family1/1. Print actual child relationship kind/date/source and completedotherreturn0 separately; changed relationship/source/identity or tampered output rejects before I/O. Withhold identifiers and place one review notice on every page."
+    testRef: "tests/pdf/marriage-outside-person-review.test.ts::prints and binds actual child relationship separately from marriage family amounts"
+  - line: "workspace"
+    description: "Actual guided source reaches the private flattened review packet"
+    formula: "The guided workspace retains the full original receipts, child source and separate completed return privately; exported flattened forms show6875/5192/808, relationship provenance andPartIV/PartV without personal tax identifiers. Input remains unchanged."
+    testRef: "tests/apps/web/workspace-marriage-outside-person.test.ts::exports actual marriage and outside child sources through the workspace"
+  - line: "browser"
+    description: "Desktop and mobile retain actual originals and require specific reconfirmation"
+    formula: "Real production controls edit the child relationship reference and date, preserve missing date as unknown, invalidate independent source confirmations, then restore86060AGI from the confirmed actual originals. Reload retains identities and exact cash privately; request bodies exclude the fictional personal identifiers and source reference, and the narrow viewport has no horizontal overflow."
+    testRef: "apps/web/tests/guided-marriage-outside-person.spec.ts::preserves actual outside child marriage sources through edits and reload"

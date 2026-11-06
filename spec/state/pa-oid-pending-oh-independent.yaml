@@ -1,0 +1,42 @@
+form: "PA OID Pending Ohio Independent"
+fullName: "Independent exact-source and pending Ohio cash review"
+taxYear: 2025
+reference: "https://codes.ohio.gov/ohio-revised-code/section-5747.20"
+notes: |
+  Independent agent technical review of a finite original-only method; no qualified
+  human tax review, filing approval, native UI or Ohio form origination is claimed.
+  Captured author official ORC5747.20/.11/.08, Ohio2025 booklet and PA111.4/.5
+  provide method context. Literal independently frozen monetary trace:
+  100.10 + 20.20 = 120.30; reported federal AGI120; Ohio personal nonbusiness
+  intangible allocation0; actual agency-credited cash0.20 - actual refund0 =
+  outstanding0.20; same-income/liability limit0 gives PAcredit0. PAinterest120
+  at3.07% yields reported tax4, independently complete SP forgiveness4, printed
+  PAwithholding0 and requestedrefund0. No cash refund is inferred from a return.
+  Additional canonical document tests explicitly parse known canonical form
+  schemas before insertion; these are finite-method scope exclusions, not claims
+  that those original families are unknown or have no tax/credit consequences.
+lines:
+  - line: "literal"
+    formula: "Exact raw120.30 and printed120 are distinct; actual.20 remains cash/outstanding, receivedrefund0 and PAcredit0. Current sources/Decimal precision stay immutable."
+    testRef: "tests/engine/state/pa-oid-pending-oh-independent.test.ts::independent literal pending-cash and complete PA return trace"
+  - line: "missing-payer-id"
+    formula: "Original unknown payerTIN and actual blank Ohio payerID are retained and do not gain synthetic facts."
+    testRef: "tests/engine/state/pa-oid-pending-oh-independent.test.ts::unknown actual payer identifier remains unknown without a manufactured qualification"
+  - line: "known-families"
+    formula: "Each known canonical original withholding family with actual OH withholding remains visible and requires its own complete method even when federal income is zero. Retained filed snapshot is explicitly synchronized only in test fixture construction to prevent unrelated stale-history attribution."
+    testRef: "tests/engine/state/pa-oid-pending-oh-independent.test.ts::rejects a canonically admitted hidden OH original %s"
+  - line: "paid-source"
+    formula: "Missing actual beneficial ownership, payer recourse proof, account owner, receipt ID or complete agency events cannot be replaced by sourceFactsConfirmed. Unknown source years/owner and extra unknown source fields reject."
+    testRef: "tests/engine/state/pa-oid-pending-oh-independent.test.ts::requires actual account/remittance proof beyond a header confirmation %s"
+  - line: "immutable-filed"
+    formula: "Filed exact AGI cannot be replaced with printed120 or a different120.31 that rounds to120; historical source amounts and current OID source owner/year remain independently bound."
+    testRef: "tests/engine/state/pa-oid-pending-oh-independent.test.ts::rejects an incorrect exact filed amount despite unchanged reported120 %s"
+  - line: "domicile"
+    formula: "PA mailing address does not establish actual full-year nonOH domicile; gap, overlap or actualOH period rejects."
+    testRef: "tests/engine/state/pa-oid-pending-oh-independent.test.ts::a postal PA address cannot repair missing actual nonOH calendar %s"
+  - line: "replay"
+    formula: "JSON saved draft replays without refreshing history; current same-dollar original edits fail read/confirmation rather than rebinding."
+    testRef: "tests/engine/state/pa-oid-pending-oh-independent.test.ts::same-dollar current original edit cannot rebind retained filed history on read or confirmation"
+  - line: "prepared-context"
+    formula: "Prepared source token cannot authorize a result with changed pendingcash even when every PA40 field and requested refund stays unchanged; private source proof remains outside returned audit text."
+    testRef: "tests/engine/state/pa-oid-pending-oh-independent.test.ts::prepared result includes exact pending cash in its original result comparison"

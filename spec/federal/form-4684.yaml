@@ -20,9 +20,15 @@ notes: |
   Section B (business and income-producing property) is not implemented.
 
 businessRuleValidation:
-  - rule: "packet-inclusion-supported-disaster-scenarios"
-    description: "Inventory support counts this form as business-rule validated only when regression coverage proves `fillReturn` attaches the official Form 4684 PDF for supported federally declared disaster scenarios that produce either a deductible personal casualty loss or a net casualty gain, and suppresses the form when no deductible loss or gain remains."
-    testRef: "tests/pdf/fill-form-4684.test.ts::fillReturn attaches Form 4684 only when supported disaster scenarios produce a deductible loss or net casualty gain"
+  - rule: "packet-inclusion-deductible-loss"
+    description: "The review packet includes Form 4684 for a supported disaster with deductible loss; this does not qualify a filing export."
+    testRef: "tests/pdf/fill-form-4684.test.ts::fillReturn attaches Form 4684 for a deductible disaster loss"
+  - rule: "packet-inclusion-net-gain"
+    description: "The review packet includes Form 4684 for a supported disaster with net casualty gain."
+    testRef: "tests/pdf/fill-form-4684.test.ts::fillReturn attaches Form 4684 for a net casualty gain"
+  - rule: "packet-exclusion-no-residual"
+    description: "The review packet omits Form 4684 when no deductible loss or net gain remains."
+    testRef: "tests/pdf/fill-form-4684.test.ts::fillReturn omits Form 4684 when no residual loss or gain remains"
 
 lines:
   # ── Per-Property Lines ────────────────────────────────

@@ -56,6 +56,32 @@ packetRules:
     the packet-inclusion gate for the Ohio SD 100 reference summary.
 
 businessRuleValidation:
+  - rule: "actual-owner-residency-nrc-source"
+    description: "2025 official IT NRC Section I actual owner domicile and income-original reconciliation; no bare nonzero NRC scalar, owner default, unknown-zero substitution or district inference. New full-resident proof cannot silently drop actual local/school withholding. Proof adjustment rows cannot contradict actual zero adjustment sources. Actual IN/KY/MI/PA/WV reciprocal-period Ohio compensation requires its actual exemption allocation, and is not silently admitted by the no-adjustment cohort. No new residency packet can accept a free RC scalar or unqualified other-state tax row, including fullresident; actual resident-period linkage is a separate source method. All newly qualified canonical packets, including fullresident, require an exact current private original snapshot; do not normalize away actual owner identity changes in private validation. The published digest-only commitment hashes the exact current private original packet, including actual owner/payer identifiers; equal-money actual owner replacement must change that commitment. Identifier normalization is only for permitted render-copy comparison after opaque current-original resolution. Original-context fresh federal replay precedes reference PDF I/O; permitted structured-ID redaction is render-only."
+    testRef: "tests/engine/state/oh-residency-source.test.ts::changes the digest-only current-original commitment after an equal-money actual owner replacement"
+  - rule: "actual-federal-inclusions-and-care-audit"
+    description: |
+      Final2025 Ohio booklet, Schedule of Adjustments lines26/28 and care
+      worksheet page45, refreshed2026-10-25: deduction cannot exceed amounts
+      actually included federally. Remove prior-reported savings-bond interest
+      and Form8815 exclusion from source Box3 before Ohio deduction. State
+      refund deduction is actual Schedule1 taxable refunds, not gross1099-G.
+      Care worksheet uses audited Form2441 line9c, not expense limit line3.
+      Missing/duplicate/nonfinite care audit values require reconciliation;
+      explicit source/overlay zero is retained.
+    testRef: "tests/engine/state/oh-federal-inclusions.test.ts::Ohio deducts only the actual taxable state refund"
+  - rule: "verified-oid-state-adaptation"
+    description: |
+      Refreshed 2026-10-25: final 2025 Ohio IT1040 booklet, Schedule of
+      Adjustments line26 and IT1040 line14; IRS1099-OID January2024 boxes12-14.
+      Only reconciled Treasury interest included in federal AGI is deductible;
+      market discount is not Treasury interest. Require verified source year
+      and classification. A municipal source requires an explicit actual
+      non-Ohio interest allocation (zero is valid); do not infer its issuer.
+      State withholding is included once only for actual OH rows.
+      https://dam.assets.ohio.gov/image/upload/v1767095693/tax.ohio.gov/forms/ohio_individual/individual/2025/it1040-booklet.pdf
+      https://www.irs.gov/pub/irs-pdf/f1099oid.pdf
+    testRef: "tests/engine/state/oh-oid-sources.test.ts::Ohio uses verified Treasury OID and actual state withholding once"
   - rule: "sd100-reference-summary-gating"
     description: "Inventory support counts this adapter as business-rule validated only when regression coverage proves adapter-derived SD-prefixed district names can auto-attach the Ohio SD 100 reference summary and ambiguous names stay suppressed."
     testRef: "tests/pdf/fill-oh-reference-forms.test.ts::fillOhioReferenceForms auto-includes and suppresses the Ohio SD 100 reference summary based on official SD-prefixed district names"
@@ -97,6 +123,9 @@ lines:
         - Line 5: 1099-R box 14 where 1099-R state = 'OH'
         - Line 5a: 1099-NEC box 5 where 1099-NEC state = 'OH'
         - Line 5b: 1099-MISC box 16 where 1099-MISC state = 'OH'
+        - Line 5c: 1099-INT box 17 where 1099-INT state = 'OH'
+        - Line 5d: 1099-DIV box 16 where 1099-DIV state = 'OH'
+        - Line 5e: 1099-B box 16 where 1099-B state = 'OH'
     formula: |
       calculateOhioScheduleOfWithholding({
         w2s,
@@ -105,7 +134,10 @@ lines:
         form1099K,
         form1099R,
         form1099Nec,
-        form1099Misc
+        form1099Misc,
+        form1099Int,
+        form1099Div,
+        form1099B
       }).line6_totalOhioWithholding
     notes: |
       Ohio IT 1040 line 14 flows from the Schedule of Ohio Withholding. The
@@ -113,7 +145,10 @@ lines:
       Withholding module so the state withholding path has its own spec and
       audit trail. In addition to the booklet's W-2, W-2G, and 1099 examples,
       the engine supports the modeled 1099 forms that can carry Ohio
-      withholding: 1099-G, 1099-K, 1099-R, 1099-NEC, and 1099-MISC.
+      withholding: 1099-G, 1099-K, 1099-R, 1099-NEC, 1099-MISC, 1099-INT,
+      1099-DIV, and 1099-B. The guided packet override includes those same
+      sources before adding separately confirmed state payments. Source revisions
+      and references are recorded in oh-schedule-of-withholding.yaml.
     edgeCases:
       - "No Ohio withholding statements -> $0"
       - "Multiple Ohio W-2, W-2G, 1099-G, 1099-K, 1099-R, 1099-NEC, and 1099-MISC statements are summed together"
@@ -242,14 +277,14 @@ lines:
 
   - line: "federal2441Line9c"
     description: "Ohio child and dependent care credit worksheet line 2 input"
-    source: "OhioOverlayInput.federal2441Line9c or TaxReturnResult.form2441.qualifyingExpenses"
+    source: "OhioOverlayInput.federal2441Line9c or the unique audited Form2441 line9c"
     formula: |
       If overlay.federal2441Line9c is supplied:
         overlay.federal2441Line9c
       Else:
-        federalResult.form2441?.qualifyingExpenses ?? $0
+        actual finite nonnegative Form2441 audit line9c; unknown source rejects
     notes: |
-      Page 44 of the 2025 Ohio IT 1040 booklet instructs taxpayers claiming the
+      Page45 of the final2025 Ohio IT1040 booklet instructs taxpayers claiming the
       Ohio child and dependent care credit to enter federal Form 2441 line 9c
       on worksheet line 2. When the federal engine has already computed Form
       2441, the adapter should auto-fill this amount from the validated federal
@@ -495,7 +530,9 @@ lines:
         overlay.spouseQualifyingIncome >= $500
       Otherwise, MFJ only. First derive spouse-level qualifying income as:
         wages from W-2 box 1
-        + unemployment compensation from 1099-G box 1
+        + actual taxable government unemployment after repayments and program
+          contribution recovery, plus taxable RTAA/nonbusiness grants/family
+          benefits from the canonical Form1099G source worksheet
         + reportable winnings from W-2G box 1
         + 1099-MISC box 3 other income
         + taxable disability pensions from 1099-R records treated as wages
@@ -573,12 +610,13 @@ lines:
 
   - line: "federalInterestExemptFromOhio"
     description: "U.S. government obligation interest exempt from Ohio tax"
-    source: "Sum of 1099-INT box 3 (usSavingsBondInterest) across all 1099-INTs"
-    formula: "sum(f.usSavingsBondInterest for f in form1099Int)"
+    source: "Actual federal current-year inclusion from 1099-INT Box3 and verified Treasury OID"
+    formula: "max(0, sum(INT Box3) - prior-reported bond interest - Form8815 exclusion) + verified OID Treasury interest"
     notes: |
       Interest from U.S. Treasury bills, notes, bonds, and Series I/EE/HH
       savings bonds is exempt from state taxation under 31 U.S.C. 3124.
-      Flows to Ohio Schedule of Adjustments line 16 as a deduction.
+      Flows to final2025 Ohio Schedule of Adjustments line26 as a deduction
+      (the current engine reference summary uses internal line16).
       Can be overridden by setting overlay.federalInterestExemptFromOhio.
     edgeCases:
       - "No 1099-INTs -> $0"
@@ -589,13 +627,13 @@ lines:
 
   - line: "stateMunicipalTaxRefunds"
     description: "Prior-year state/local tax refunds included in federal AGI"
-    source: "Sum of 1099-G box 2 (stateOrLocalTaxRefund) across all 1099-Gs"
-    formula: "sum(f.stateOrLocalTaxRefund for f in form1099G)"
+    source: "Federal Schedule1 taxableRefunds after the actual historical tax-benefit worksheet"
+    formula: "federalResult.schedule1.taxableRefunds; zero when no taxable refund is included"
     notes: |
       Prior-year state/local tax refunds are included in federal AGI when the
       taxpayer itemized in the prior year. Ohio allows these as a deduction on
-      Schedule of Adjustments line 18 since Ohio already taxed the underlying
-      income. All 1099-G box 2 amounts are included regardless of issuing state.
+      Final2025 Schedule of Adjustments line28 (internal reference line18).
+      Gross Box2 amounts are not deductible when excluded from federal AGI.
       Can be overridden by setting overlay.stateMunicipalTaxRefunds.
     edgeCases:
       - "No 1099-Gs -> $0"

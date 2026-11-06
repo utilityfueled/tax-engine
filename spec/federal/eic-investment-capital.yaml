@@ -1,0 +1,37 @@
+form: "Earned Income Credit investment worksheet capital component"
+fullName: "Publication 596 Worksheet 1 lines 5 through 7"
+taxYear: 2025
+irsReference: "https://www.irs.gov/publications/p596"
+retrievedAt: "2026-10-26"
+notes: |
+  Publication 596 (2025), Rule 6, Worksheet 1 separates net capital gains
+  from business-property gain. Line 5 floors Form 1040 line 7a at zero.
+  Line 6 uses positive Form 4797 line 7, or line 9 when the lookback lines
+  are completed. This engine computes line 9 for every return; with no
+  lookback it equals the positive line 7. Line 7 floors line 5 minus line 6
+  at zero. Use the calculated Form 4797 result, including actual lookback
+  sources; do not subtract gross sale proceeds or ordinary recapture.
+  Preserve Decimal cents until the applicable line requires rounding.
+  Other investment-income components and final 2026 qualification remain
+  separate work. This correction does not qualify legacy aggregate overrides.
+lines:
+  - line: "business-gain"
+    description: "Remove the long-term business gain from investment capital"
+    formula: "Wages 2000 and nonpassive section1231 gain 12000 produce capital gain 12000, investment capital 0 and published-table EIC 155."
+    testRef: "tests/engine/eic-investment-capital.test.ts::excludes section1231 business gain from the investment ceiling"
+  - line: "lookback"
+    description: "Subtract the post-lookback amount rather than the full business gain"
+    formula: "Section1231 gain 12000 less lookback 4000 produces Form4797 line9 8000; with securities gain 200.01, capital gain 8200.01 less line9 leaves investment capital 200.01."
+    testRef: "tests/engine/eic-investment-capital.test.ts::uses post-lookback gain without excluding separate securities gains"
+  - line: "loss-floor"
+    description: "A net capital loss contributes no investment capital"
+    formula: "Business gain 12000 plus securities loss -15000 yields net capital loss -3000; Worksheet1 lines5 and7 are zero and line6 is 12000."
+    testRef: "tests/engine/eic-investment-capital.test.ts::floors a net capital loss before and after the business subtraction"
+  - line: "securities"
+    description: "Keep the actual capital investment ceiling without business gain"
+    formula: "Securities gain 11950 permits credit155 for wages2000; gain11950.01 exceeds the 2025 investment ceiling and disqualifies."
+    testRef: "tests/engine/eic-investment-capital.test.ts::preserves both sides of the securities investment ceiling"
+  - line: "ordinary-lookback"
+    description: "Fully recaptured lookback does not remove securities gains"
+    formula: "Business gain100 with nonrecaptured losses100 produces line9 zero; securities gain12000 remains investment capital12000."
+    testRef: "tests/engine/eic-investment-capital.test.ts::does not subtract business gain recharacterized as ordinary income"

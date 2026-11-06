@@ -1,14 +1,20 @@
 import Stripe from "stripe";
 import { NextResponse } from "next/server";
 import type { HostedPlanId } from "@tax-engine/contracts";
-import { getHostedBillingConfig } from "./hosted-billing";
-import {
+import { getHostedBillingConfig, isHostedStripeKeyModeCompatible } from "./hosted-billing";
+import type {
   deleteHostedSubscriptionBySubscriptionId,
   getHostedSubscriptionByCustomerId,
   getHostedSubscriptionBySubscriptionId,
-  markStripeEventProcessed,
   persistHostedStripeSubscription
 } from "./hosted-billing-db";
+import { markStripeEventProcessed } from "./hosted-billing-db";
+import {
+  reconcileHostedStripeSubscriptionEvent,
+  type ReconcileHostedSubscriptionInput,
+  type HostedSubscriptionReconciliationResult,
+  type VerifiedCurrentHostedSubscription
+} from "./hosted-billing-reconciliation";
 import { recordHostedAiCreditPurchase } from "./hosted-ai-usage-db";
 import { getHostedServerDatabaseConfig } from "./hosted-server-db";
 import {
@@ -20,6 +26,7 @@ import {
 } from "./hosted-billing-state";
 import {
   checkRateLimitForEnvironment,
+  rateLimitUnavailableResponse,
   createRateLimitStore,
   rateLimitTiers,
   registerStoreForCleanup,
@@ -31,8 +38,9 @@ import { safeReadTextBody } from "./safe-body-parser";
 type BillingEnvironment = Record<string, string | undefined>;
 
 /**
- * Maximum age (in seconds) for a webhook event to be considered valid.
- * Events older than this are rejected to reduce replay risk.
+ * Maximum age (in seconds) of the signed delivery timestamp, verified by Stripe.
+ * event.created is immutable and may precede a legitimate retry by days.
+ * The existing exported name is retained for compatibility.
  */
 const WEBHOOK_EVENT_MAX_AGE_SECONDS = 300;
 
@@ -103,30 +111,22 @@ function readPlanIdFromSubscriptionItems(
   return null;
 }
 
-function isWebhookEventTimestampValid(
+function isWebhookEventCreationTimeValid(
   createdUnixSeconds: number,
   nowUnixSeconds: number,
-  maxAgeSeconds: number = WEBHOOK_EVENT_MAX_AGE_SECONDS,
   maxFutureSeconds: number = WEBHOOK_EVENT_MAX_FUTURE_SECONDS
 ): boolean {
-  const age = nowUnixSeconds - createdUnixSeconds;
-
-  if (age > maxAgeSeconds) {
-    return false;
-  }
-
-  if (age < -maxFutureSeconds) {
-    return false;
-  }
-
-  return true;
+  // Authentication and replay recency belong to the signed delivery header.
+  // Keep the independent future-created guard without rejecting old retries.
+  return createdUnixSeconds <= nowUnixSeconds + maxFutureSeconds;
 }
 
 function isStripeEventShape(event: Stripe.Event): boolean {
   return typeof event.id === "string"
     && typeof event.type === "string"
     && typeof event.created === "number"
-    && Number.isFinite(event.created)
+    && Number.isSafeInteger(event.created)
+    && event.created >= 0
     && typeof event.data === "object"
     && event.data !== null
     && "object" in event.data;
@@ -190,6 +190,45 @@ type HostedStripeSubscriptionChange = HostedBillingSubscriptionChange & {
   cancelAtPeriodEnd: boolean;
   currentPeriodEnd: string | null;
 };
+
+function normalizeCurrentSubscription(
+  subscription: Stripe.Subscription,
+  env: BillingEnvironment
+): VerifiedCurrentHostedSubscription {
+  const items = subscription.items?.data;
+  const item = Array.isArray(items) && items.length === 1 ? items[0] : undefined;
+  const planId = getPlanIdForStripePriceId(readOptionalString(item?.price?.id), env);
+  const metadataPlan = subscription.metadata?.planId;
+  const owner = readOptionalString(subscription.metadata?.hostedOwnerId ?? subscription.metadata?.workspaceOwnerId);
+  const customer = readOptionalString(subscription.customer);
+  const status = readOptionalString(subscription.status);
+  if (subscription.object !== "subscription" || !planId
+    || (metadataPlan !== undefined && readPlanId(metadataPlan) !== planId)
+    || !owner || !isValidOwnerId(owner) || !customer || !isValidStripeId(customer)
+    || !isValidStripeId(subscription.id) || typeof subscription.livemode !== "boolean"
+    || typeof subscription.cancel_at_period_end !== "boolean" || !status
+    || !["active", "trialing", "past_due", "unpaid", "canceled", "incomplete_expired", "incomplete", "paused"].includes(status)) {
+    throw new Error("Invalid or unsupported authoritative subscription metadata, owner or plan.");
+  }
+  // The pinned Stripe SDK places current_period_end on the subscription item.
+  // Missing dates remain unknown, never a date inferred from event creation.
+  const period: unknown = item?.current_period_end;
+  if (period !== undefined && period !== null
+    && (typeof period !== "number" || !Number.isSafeInteger(period) || period < 0
+      || !Number.isFinite(new Date(period * 1000).getTime()))) {
+    throw new Error("Invalid authoritative subscription period.");
+  }
+  return {
+    subscriptionId: subscription.id,
+    customerId: customer,
+    ownerId: owner,
+    planId,
+    status: mapStripeSubscriptionStatus(status),
+    cancelAtPeriodEnd: subscription.cancel_at_period_end,
+    currentPeriodEnd: typeof period === "number" ? new Date(period * 1000).toISOString() : null,
+    livemode: subscription.livemode
+  };
+}
 
 function normalizeSubscriptionChange(
   event: Stripe.Event,
@@ -317,11 +356,15 @@ interface HostedBillingWebhookRouteDependencies {
   getExistingPersistedSubscriptionByCustomerId?: typeof getHostedSubscriptionByCustomerId;
   deletePersistedSubscription?: typeof deleteHostedSubscriptionBySubscriptionId;
   recordAiCreditPurchase?: typeof recordHostedAiCreditPurchase;
+  reconcileSubscription?: (
+    env: BillingEnvironment,
+    input: Readonly<ReconcileHostedSubscriptionInput>
+  ) => Promise<HostedSubscriptionReconciliationResult>;
 }
 
 function createStripeClient(secretKey: string) {
   return new Stripe(secretKey, {
-    apiVersion: "2026-03-25.dahlia"
+    apiVersion: "2026-09-30.endive"
   });
 }
 
@@ -344,6 +387,8 @@ export function createHostedBillingWebhookRouteHandlers(
         rateLimitTiers.webhook,
         env
       );
+
+      if (rateCheck.unavailable) return rateLimitUnavailableResponse();
 
       if (!rateCheck.allowed) {
         const retryAfterSeconds = Math.ceil(
@@ -368,6 +413,14 @@ export function createHostedBillingWebhookRouteHandlers(
           bypassed: true,
           message: "Self-host deployment bypasses hosted billing webhooks."
         });
+      }
+
+      if (config.blocked || getHostedServerDatabaseConfig(env).blocked
+        || !isHostedStripeKeyModeCompatible(env, config.mode)) {
+        return NextResponse.json(
+          { error: "Hosted billing is unavailable. Please contact the administrator." },
+          { status: 503 }
+        );
       }
 
       const secret = env.STRIPE_WEBHOOK_SECRET?.trim();
@@ -420,7 +473,7 @@ export function createHostedBillingWebhookRouteHandlers(
         event = dependencies.constructEvent
           ? dependencies.constructEvent(payload, signature, secret)
           : createStripeClient(env.STRIPE_SECRET_KEY?.trim() || "sk_test_placeholder")
-              .webhooks.constructEvent(payload, signature, secret);
+              .webhooks.constructEvent(payload, signature, secret, WEBHOOK_EVENT_MAX_AGE_SECONDS);
       } catch {
         return NextResponse.json(
           { error: "Invalid webhook request." },
@@ -437,7 +490,14 @@ export function createHostedBillingWebhookRouteHandlers(
 
       const nowUnixSeconds = dependencies.nowUnixSeconds ?? Math.floor(Date.now() / 1000);
 
-      if (!isWebhookEventTimestampValid(event.created, nowUnixSeconds)) {
+      if (!isWebhookEventCreationTimeValid(event.created, nowUnixSeconds)) {
+        return NextResponse.json(
+          { error: "Invalid webhook request." },
+          { status: 400 }
+        );
+      }
+
+      if (typeof event.livemode !== "boolean" || event.livemode !== (config.mode === "live")) {
         return NextResponse.json(
           { error: "Invalid webhook request." },
           { status: 400 }
@@ -514,44 +574,23 @@ export function createHostedBillingWebhookRouteHandlers(
         return NextResponse.json({ acknowledged: true });
       }
 
-      const getExistingPersistedSubscription = dependencies.getExistingPersistedSubscription
-        ?? getHostedSubscriptionBySubscriptionId;
-      const getExistingPersistedSubscriptionByCustomerId = dependencies.getExistingPersistedSubscriptionByCustomerId
-        ?? getHostedSubscriptionByCustomerId;
-      const deletePersistedSubscription = dependencies.deletePersistedSubscription
-        ?? deleteHostedSubscriptionBySubscriptionId;
-      const persistSubscription = dependencies.persistSubscription
-        ?? persistHostedStripeSubscription;
-      const markEventProcessedFn = dependencies.markEventProcessed
-        ?? markStripeEventProcessed;
-
-      const existingRecord = await getExistingPersistedSubscription(env, subscriptionChange.subscriptionId);
-
-      if (existingRecord && subscriptionChange.status !== "canceled") {
-        const existingUpdatedAt = new Date(existingRecord.updatedAt).getTime();
-        const incomingUpdatedAt = event.created * 1000;
-
-        if (incomingUpdatedAt < existingUpdatedAt) {
-          return NextResponse.json({ acknowledged: true });
-        }
+      if (!subscriptionChange.customerId) {
+        throw new Error("A signed subscription customer is required for reconciliation.");
       }
-
-      if (subscriptionChange.customerId && subscriptionChange.status !== "canceled") {
-        const existingCustomerRecord = await getExistingPersistedSubscriptionByCustomerId(
-          env,
-          subscriptionChange.customerId
-        );
-
-        if (
-          existingCustomerRecord
-          && existingCustomerRecord.subscriptionId !== subscriptionChange.subscriptionId
-          && existingCustomerRecord.status === "canceled"
-        ) {
-          await deletePersistedSubscription(env, existingCustomerRecord.subscriptionId);
-        }
+      let reconcile = dependencies.reconcileSubscription;
+      if (!reconcile) {
+        const key = env.STRIPE_SECRET_KEY?.trim();
+        if (!key) throw new Error("A configured Stripe key is required for subscription reconciliation.");
+        const stripe = createStripeClient(key);
+        reconcile = (facts, input) => reconcileHostedStripeSubscriptionEvent(facts, input, async () => {
+          const current = await stripe.subscriptions.retrieve(input.stripeSubscriptionId, {}, {
+            timeout: 2000,
+            maxNetworkRetries: 0
+          });
+          return normalizeCurrentSubscription(current, facts);
+        });
       }
-
-      await persistSubscription(env, {
+      await reconcile(env, {
         ownerId: subscriptionChange.workspaceOwnerId,
         stripeSubscriptionId: subscriptionChange.subscriptionId,
         stripeCustomerId: subscriptionChange.customerId,
@@ -562,18 +601,9 @@ export function createHostedBillingWebhookRouteHandlers(
         eventId: event.id,
         eventType: event.type,
         eventCreatedAt: new Date(event.created * 1000).toISOString(),
-        updatedAt: dependencies.now ?? new Date().toISOString()
+        updatedAt: dependencies.now ?? new Date().toISOString(),
+        livemode: event.livemode
       });
-
-      const newlyProcessed = await markEventProcessedFn(env, {
-        id: event.id,
-        type: event.type,
-        createdAt: new Date(event.created * 1000).toISOString()
-      });
-
-      if (!newlyProcessed) {
-        return NextResponse.json({ acknowledged: true });
-      }
 
       return NextResponse.json({
         acknowledged: true

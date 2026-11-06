@@ -245,7 +245,7 @@ describe("Form 8839 per-child maximum and prior year credits", () => {
     expect(result.adoptionCredit.toNumber()).toBe(7280);
   });
 
-  it("Form 8839 Line 5 - prior year credits exceeding tentative credit yields zero net credit", () => {
+  it("Form 8839 Line 5 - prior usage reduces the lifetime maximum before current expenses", () => {
     const result = calculateForm8839(makeParams({
       agi: d(100000),
       children: [makeChild({
@@ -254,8 +254,8 @@ describe("Form 8839 per-child maximum and prior year credits", () => {
       })],
     }));
 
-    expect(result.childResults[0].netCredit.toNumber()).toBe(0);
-    expect(result.adoptionCredit.toNumber()).toBe(0);
+    expect(result.childResults[0].netCredit.toNumber()).toBe(5280);
+    expect(result.adoptionCredit.toNumber()).toBe(5280);
   });
 
   it("Form 8839 Line 1 - zero qualified expenses yields zero credit", () => {
@@ -289,7 +289,7 @@ describe("Form 8839 employer-provided adoption benefit exclusion", () => {
     expect(result.taxableEmployerBenefits.toNumber()).toBe(0);
   });
 
-  it("Form 8839 Part III - employer benefits capped by remaining max after credit", () => {
+  it("Form 8839 Part III - employer benefits have an independent lifetime maximum", () => {
     const result = calculateForm8839(makeParams({
       agi: d(100000),
       children: [makeChild({
@@ -299,12 +299,11 @@ describe("Form 8839 employer-provided adoption benefit exclusion", () => {
     }));
 
     // Tentative credit: min(15000, 17280) = 15000
-    // Remaining for exclusion: 17280 - 15000 = 2280
-    // Tentative exclusion: min(10000, 2280) = 2280
-    expect(result.childResults[0].tentativeExclusion.toNumber()).toBe(2280);
-    expect(result.allowableExclusion.toNumber()).toBe(2280);
-    // Taxable: 10000 - 2280 = 7720
-    expect(result.taxableEmployerBenefits.toNumber()).toBe(7720);
+    // IRS Part III has an independent exclusion cap: min(10000,17280)=10000.
+    expect(result.childResults[0].tentativeExclusion.toNumber()).toBe(10000);
+    expect(result.allowableExclusion.toNumber()).toBe(10000);
+    // Taxable: 10000 - 10000 = 0
+    expect(result.taxableEmployerBenefits.toNumber()).toBe(0);
   });
 
   it("Form 8839 Part III - employer exclusion also subject to MAGI phase-out", () => {

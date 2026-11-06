@@ -1,0 +1,51 @@
+form: "Shared Marketplace health with default and no-advance allocations"
+fullName: "Actual Situation 4 enrollment default and Situation 3 benchmark allocation before health deduction"
+taxYear: 2025
+irsReference: "https://www.irs.gov/publications/p974"
+retrievedAt: "2026-10-26"
+notes: |
+  Final Pub974 Specified Premiums requires policy allocation between tax families
+  before determining the specified coverage-family premium. That instruction
+  does not require an allocation agreement. Final i8962 Situation4 and Example2
+  derive the no-agreement allocation from original enrollment and family facts;
+  Situation3 and the Gary/Jim example derive enrollment premium by the exact
+  ratio of independently supplied coverage-family SLCSP premiums. Situation3
+  prints a rounded PartIV column(e) ratio but does not multiply by that rounded
+  display fraction. Its own-family SLCSP is used directly, and actual advances
+  are zero. Pub974 W18 skips WorksheetX when the attributable APTC is zero.
+  This extension reuses those existing source calculators, with the same
+  independent owner-paid/person/source reconciliation as the agreement method.
+  It creates no payment from an agreement, default, benchmark or credit result.
+  One owner/business, complete actual coverage-family membership and original
+  sources remain required. Allocated-versus-actually-paid mismatches and the
+  existing outside-person, partial-family and multiple-owner methods remain
+  explicit unfinished work. Final2026 qualification remains separate.
+lines:
+  - line: "default-health"
+    description: "Use actual default enrollment facts before health premiums"
+    formula: "Two actual enrollees in two families with a confirmed original enrolling taxpayer produce .50 of the full1000premium/600APTC, independently reconciled to actual owner200cash/300APTC. A missing enrollment fact or a paid-share mismatch still rejects."
+    testRef: "tests/engine/forms/shared-marketplace-health-other-allocations.test.ts::uses actual default enrollment allocation with independently paid health sources"
+  - line: "no-advance-health"
+    description: "Keep exact benchmark allocation separate from the printed fraction"
+    formula: "Full1500monthlypremium, ownSLCSP1000 and otherSLCSP500 produce1000specifiedpremium, not1005 from printed.67. Actual owner1000cash plus other500cash conserves original1500; both individual and full APTC are explicit0. Missing original APTC remains unknown, and changed payment/benchmark facts reject."
+    testRef: "tests/engine/forms/shared-marketplace-health-other-allocations.test.ts::uses exact no-advance benchmark allocation without inferring actual cash"
+  - line: "canonical-transfer"
+    description: "Apply the existing monthly Pub974 method after the actual allocation"
+    formula: "Default .50 sources retain2340health/44127AGI/3480PTC/120repayment. No-advance exact2/3 sources give12000maximum; Step2 AGI34467/228%/.0312 gives90monthly contribution and10920credit, so1080health. FinalAGI45387/301%/.0603 gives228monthly contribution and9264PTC. Actual1000000 business income gives12000health and0credit/repayment without replacing full original receipts."
+    testRef: "tests/engine/federal-shared-health-other-allocations.test.ts::coordinates default and no-advance health allocations once through final monthly credit"
+  - line: "complete-overlap"
+    description: "Retain complete actual coverage-family groups across linked no-advance originals"
+    formula: "Two original750premiums covering the same actual people use the complete monthly1000/500 coverage-family benchmarks. Combined allocated premium remains1000 and the household benchmark enters once; actual combined1500 receipt retains independently paid1000/500. Source order changes no amount, while missing full coverage-family evidence rejects."
+    testRef: "tests/engine/forms/shared-marketplace-health-other-allocations.test.ts::reconciles linked no-advance originals against one complete actual coverage-family benchmark"
+  - line: "guided-sources"
+    description: "Retain actual enrollment or benchmark evidence beside independent payment records"
+    formula: "Transfer complete original source records through the existing shared saved guide model; missing enrollment, benchmark, explicit zero advances or payment facts blocks calculation. Source edits revoke independent confirmations and never replace original premiums with allocated amounts."
+    testRef: "tests/guided-interview/guided-shared-health-other-allocations.test.ts::preserves default and no-advance source methods through the actual guide"
+  - line: "private-output"
+    description: "Print source-derived credit and display allocation with original private binding"
+    formula: "Physical PartIV displays.50 for default and.67 for exact2/3 no-advance; the latter leaves columns f/g blank. Form8962 prints9264credit/0advance/0repayment for no-advance. Health appendix retains1500original/1000owner/500other/0advance and1080transfer, with reviewed original context required before I/O."
+    testRef: "tests/pdf/shared-health-other-allocations-review.test.ts::prints actual allocation methods without changing calculation precision or source privacy"
+  - line: "source-browser"
+    description: "Reopen actual sources in the production guide"
+    formula: "Desktop default and mobile no-advance routes show44127 and45387AGI; edited shared-health sources revoke confirmations, explicit reconfirmation restores the result, and a blank paid share remains unknown after reload. Source identifiers remain local."
+    testRef: "apps/web/tests/guided-shared-health-other-allocations.spec.ts::preserves allocation evidence and independent actual payments"

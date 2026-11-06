@@ -1,0 +1,57 @@
+form: "PA Ordinary Original Digital Capital Sources"
+fullName: Finite full-year resident direct digital capital sales in canonical PA composition
+taxYear: 2025
+status: internal-source-method-no-filing-qualification
+sources:
+  - url: "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40d.pdf"
+    section: "Final04-25 digital disclosure, actual adjusted basis, columns d-f, line12 to PA40 line5; whole dollars"
+    retrieved: "2026-11-03"
+  - url: "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40sp.pdf"
+    section: "Final04-25 SectionIII actual PA40 taxable income and separately recorded nontaxable sources"
+    retrieved: "2026-11-03"
+notes: |
+  The existing actualDA federal packet and independent PA basis remain originals.
+  This successor supports only actual primary-owned full-year resident capital
+  purchases sold for cash, without wash/special adjustments or business income.
+  Its confirmation retains exact original DA statements; reads replay, never
+  refresh. Every original must occur exactly once, including knownzero proceeds.
+  Validated no-state or actual zero-PA original withholding requires no invented
+  payment/refund answers; unknown/missing original source boxes still reject.
+  Any positive raw PA cents require BOTH true remittance/no-payer-refund proofs
+  before aggregation or printed rounding, including a positive amount below0.50.
+  Positive actual PA withholding requires remittance/no-payer-refund evidence;
+  other-state withholding is retained but not a PA payment or free tax credit.
+  Class5 signed net is reported once; a negative class cannot offset wages or
+  another class. SP uses actual PA40 income; omitted other worldwide sources
+  remain unknown. Existing2026 final-rule/form gates stay closed. This package
+  does not qualify a new official D attachment, part-year sourcing, nonresident
+  sourcing, spouse allocation, rewards/business, or unrestricted adjustments.
+lines:
+  - line: "class5"
+    description: Independent actual Pennsylvania basis and once-only class sum
+    formula: "Original proceeds100.49 minus actualPAbasis80.24 equals exact20.25 and reported20. Federalbasis90.24 preserves10.25. Wage50000 plus20 equals50020 and PA40tax1536."
+    testRef: "tests/engine/state/pa-ordinary-digital-integration.test.ts::composes the independent actual PA gain without changing federal originals"
+  - line: "loss-zero"
+    description: Preserve exact zero and signed losses without cross-class offset
+    formula: "ActualPAcost100.49 giveszero; actualPAcost200.49 givesloss100. Wage50000 remains50000 taxable, tax1535, SPeligibility50000."
+    testRef: "tests/engine/state/pa-ordinary-digital-integration.test.ts::keeps a signed capital loss out of wage and SP class income"
+  - line: "withholding"
+    description: Actual jurisdiction rows and PA remittance sources once
+    formula: "OriginalPAwithholding0.25+secondoriginalPA0.30 givesexact0.55 and PA40line13reported1; no second generic scalar or federalBox4 payment. Otherstate withholding stays retained and guarded."
+    testRef: "tests/engine/state/pa-ordinary-digital-integration.test.ts::sums actual PA statement withholding cents once before the printed line"
+  - line: "current-originals"
+    description: Actual complete original identities and source confirmations
+    formula: "Missing packet/basis/year/owner/status, duplicate originals, changed raw identity or unknown remittance reject. An equal-money reference edit is stale and no read refreshes the stored snapshot."
+    testRef: "tests/engine/state/pa-ordinary-digital-integration.test.ts::rejects an equal-money original edit without refreshing its private snapshot"
+  - line: "exact-public"
+    description: Exact local source arithmetic and stable public Decimal boundary
+    formula: "Arbitrary admitted source integer and fractional spans determine local precision; preserve100.49-80.24 and verylarge cancellation .49 rather than dropping it. Public constructors stay the shared Decimal; no global precision change."
+    testRef: "tests/engine/state/pa-ordinary-digital-sources.test.ts::preserves a long original cancellation residual and stable public Decimal outputs"
+  - line: "guided"
+    description: Explicit new classification confirmation and existing canonical lifecycle
+    formula: "Copy actual statements only during explicit confirmation. A later original edit invalidates source/facts/completion; confirming current DA alone cannot refresh those independent records. No inferred tax year, basis, residency or payment is added."
+    testRef: "tests/engine/state/pa-ordinary-digital-sources.test.ts::does not mutate an original or saved source packet during replay"
+  - line: "positive-raw-proof"
+    description: Raw positive cents never become a zero-proof exception
+    formula: "Only validated zero/noPA source permits nullable irrelevant proofs; any positive raw PA amount0.01 or0.49 still requires BOTHtrue evidence before summation or whole-dollar rounding."
+    testRef: "tests/engine/state/pa-ordinary-digital-sources.test.ts::requires both remittance proofs for every positive raw PA cent amount before rounding"

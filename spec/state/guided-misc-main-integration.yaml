@@ -1,0 +1,25 @@
+form: "Guided-MISC-Main-Integration"
+fullName: "Existing public guided APIs integrate finite MISC with current main sources"
+taxYear: 2025
+reference: "https://www.irs.gov/instructions/i1040sca"
+notes: |
+  Genuine existing-API integration regression. Current main includes newer OID,
+  business, brokerage, royalty and digital methods; all remain byte preserved.
+  The exact complete Treasury source fixture is a separate read-only dependency,
+  not authority to replace its older PA core. No original guide literal changes.
+lines:
+  - line: "current-preview"
+    formula: "Actual current complete PA/OH originals and same .20 saved claim produce state preview without counting that description as new cash; original withholding2000+.10+.20 rounds2000."
+    testRef: "tests/guided-interview/guided-misc-main-integration.test.ts::current main finite MISC preview uses actual canonical sources %s"
+  - line: "current-itemized"
+    formula: "Current builder source worksheet W22000+OID.10+MISC.20+actual estimate.30=2000.60 for PA/OH. Saved original claim contributes no second .20."
+    testRef: "tests/guided-interview/guided-misc-main-integration.test.ts::current main itemized MISC claim contributes no second payment %s"
+  - line: "mixed-dispatch"
+    formula: "Current original pension500 and MISC.20 form separate source subgroups; complete raw saved500.20 remains immutable. Federal source taxes W22000+pension500+MISC.20=2500.20."
+    testRef: "tests/guided-interview/guided-misc-main-integration.test.ts::current main mixed R and MISC originals survive earlier bridge validation"
+  - line: "preserved-current-royalty"
+    formula: "Existing separately documented original/corrected royalty histories retain raw AGI211000.5/210900.5 and PA6478/6475; absent actual historical source remains unknown, not auto-confirmed by MISC integration."
+    testRef: "tests/guided-interview/guided-misc-main-integration.test.ts::current main documented royalty history remains unchanged %s"
+  - line: "preserved-unknown-royalty"
+    formula: "Current legacy saved royalty history without actual filedhistory remains retained but does not qualify state preview."
+    testRef: "tests/guided-interview/guided-misc-main-integration.test.ts::current main unknown royalty history stays unknown"

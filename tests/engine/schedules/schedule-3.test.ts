@@ -40,7 +40,7 @@ describe("Schedule 3 Part I - Nonrefundable Credits", () => {
     expect(result.energyImprovementCredit.toNumber()).toBe(3200);
   });
 
-  it("Schedule 3 Line 7 - total nonrefundable", () => {
+  it("Schedule 3 Line 8 - total nonrefundable", () => {
     const result = calculateSchedule3(simpleW2Fixture, {
       foreignTaxCredit: d(150),
       educationCredits: d(2000),
@@ -60,12 +60,12 @@ describe("Schedule 3 Part I - Nonrefundable Credits", () => {
 // ═══════════════════════════════════════════════════════════
 
 describe("Schedule 3 Part II - Refundable Credits", () => {
-  it("Schedule 3 Line 10 - premium tax credit", () => {
+  it("Schedule 3 Line 9 - premium tax credit", () => {
     const result = calculateSchedule3(simpleW2Fixture, { netPremiumTaxCredit: d(3600) });
     expect(result.netPremiumTaxCredit.toNumber()).toBe(3600);
   });
 
-  it("Schedule 3 Line 13a - excess SS withholding", () => {
+  it("Schedule 3 Line 11 - excess SS withholding", () => {
     const result = calculateSchedule3(simpleW2Fixture, { excessSocialSecurityWithholding: d(1500) });
     expect(result.excessSSWithholding.toNumber()).toBe(1500);
   });
@@ -84,6 +84,39 @@ describe("Schedule 3 Part II - Refundable Credits", () => {
 // ═══════════════════════════════════════════════════════════
 
 describe("Excess SS Withholding", () => {
+  it("preserves unknown historical employer identity without manufacturing excess credit", () => {
+    // Spec: spec/federal/schedule-3.yaml, line11-legacy-unknown-employer.
+    const known = { ...simpleW2Fixture.w2s[0], socialSecurityWithheld: "10918.20" };
+    const unknown = structuredClone(known);
+    Reflect.deleteProperty(unknown.employer, "ein");
+    expect(calculateExcessSSWithholding([known, unknown], d(176100), d("0.062"), {
+      taxYear: 2025, filingStatus: "single",
+    }).toString()).toBe("0");
+    expect(calculateExcessSSWithholding([unknown, unknown], d(176100), d("0.062"), {
+      taxYear: 2025, filingStatus: "single",
+    }).toString()).toBe("0");
+    expect(() => calculateExcessSSWithholding([unknown], d(184500), d("0.062"), {
+      taxYear: 2026, filingStatus: "single",
+    })).toThrow(/employer.*identity/i);
+    expect(unknown.employer).not.toHaveProperty("ein");
+  });
+  it("computes excess separately per owner and excludes employer overcollection", () => {
+    const base = simpleW2Fixture.w2s[0];
+    const w2 = (owner: "primary"|"spouse", ein: string, withheld: string) => ({ ...base, accountHolder: owner, employer: { name: "Synthetic", ein }, socialSecurityWithheld: withheld });
+    const opts = { taxYear: 2026, filingStatus: "married_filing_jointly" as const };
+    const cap = d("184500"), rate = d("0.062");
+    expect(calculateExcessSSWithholding([w2("primary","11-1111111","11439"),w2("spouse","11-1111111","11439")],cap,rate,opts).toString()).toBe("0");
+    expect(calculateExcessSSWithholding([w2("primary","11-1111111","12500")],cap,rate,opts).toString()).toBe("0");
+    expect(calculateExcessSSWithholding([w2("primary","11-1111111","12500"),w2("primary","22-2222222","1000")],cap,rate,opts).toString()).toBe("1000");
+    expect(calculateExcessSSWithholding([w2("primary","11-1111111","8000"),w2("primary","111111111","6000")],cap,rate,opts).toString()).toBe("0");
+    expect(calculateExcessSSWithholding([w2("primary","11-1111111","8000"),w2("primary","22-2222222","6000"),w2("spouse","11-1111111","8000"),w2("spouse","22-2222222","6000")],cap,rate,opts).toString()).toBe("5122");
+  });
+  it("requires actual2026 owner and employer facts for excess withholding", () => {
+    const cap = d("184500"), rate = d("0.062"), opts = { taxYear: 2026, filingStatus: "married_filing_jointly" as const };
+    expect(() => calculateExcessSSWithholding([simpleW2Fixture.w2s[0]],cap,rate,opts)).toThrow(/owner.*unknown/i);
+    expect(() => calculateExcessSSWithholding([{...simpleW2Fixture.w2s[0],accountHolder:"primary",employer:{name:"",ein:""}}],cap,rate,opts)).toThrow(/employer.*identity/i);
+    expect(() => calculateExcessSSWithholding([{...simpleW2Fixture.w2s[0],accountHolder:"primary",socialSecurityWithheld:"-1"}],cap,rate,opts)).toThrow(/withholding.*nonnegative/i);
+  });
   it("no excess with single employer", () => {
     const excess = calculateExcessSSWithholding(
       [{ employer: { name: "Corp", ein: "12-3" }, wages: "100000", federalWithheld: "0",
@@ -150,7 +183,7 @@ describe("Schedule 3 - audit trail", () => {
     expect(lineIds).toContain("5b");
     expect(lineIds).toContain("7");
     expect(lineIds).toContain("10");
-    expect(lineIds).toContain("13a");
+    expect(lineIds).toContain("11");
     expect(lineIds).toContain("15");
   });
 
@@ -160,7 +193,7 @@ describe("Schedule 3 - audit trail", () => {
       educationCredits: d(2000),
       netPremiumTaxCredit: d(1200),
     });
-    const line7 = result.lines.find((l) => l.line === "7");
+    const line7 = result.lines.find((l) => l.line === "8");
     expect(line7?.value.toNumber()).toBe(result.totalNonrefundableCredits.toNumber());
     const line15 = result.lines.find((l) => l.line === "15");
     expect(line15?.value.toNumber()).toBe(result.totalRefundableCredits.toNumber());
@@ -295,7 +328,7 @@ describe("Excess SS Withholding - additional scenarios", () => {
 // ═══════════════════════════════════════════════════════════
 
 describe("Schedule 3 - individual credit edge cases", () => {
-  it("Schedule 3 Line 1 - foreign tax credit only populates Line 7", () => {
+  it("Schedule 3 Line 1 - foreign tax credit only populates Line 8", () => {
     const result = calculateSchedule3(simpleW2Fixture, { foreignTaxCredit: d(300) });
     expect(result.foreignTaxCredit.toNumber()).toBe(300);
     expect(result.childDependentCareCredit.toNumber()).toBe(0);
@@ -306,7 +339,7 @@ describe("Schedule 3 - individual credit edge cases", () => {
     expect(result.totalRefundableCredits.toNumber()).toBe(0);
   });
 
-  it("Schedule 3 Line 2 - child/dependent care credit only populates Line 7", () => {
+  it("Schedule 3 Line 2 - child/dependent care credit only populates Line 8", () => {
     const result = calculateSchedule3(simpleW2Fixture, { childDependentCareCredit: d(600) });
     expect(result.childDependentCareCredit.toNumber()).toBe(600);
     expect(result.foreignTaxCredit.toNumber()).toBe(0);
@@ -314,7 +347,7 @@ describe("Schedule 3 - individual credit edge cases", () => {
     expect(result.totalRefundableCredits.toNumber()).toBe(0);
   });
 
-  it("Schedule 3 Line 3 - education credits only populates Line 7", () => {
+  it("Schedule 3 Line 3 - education credits only populates Line 8", () => {
     const result = calculateSchedule3(simpleW2Fixture, { educationCredits: d(2500) });
     expect(result.educationCredits.toNumber()).toBe(2500);
     expect(result.foreignTaxCredit.toNumber()).toBe(0);
@@ -332,7 +365,7 @@ describe("Schedule 3 - individual credit edge cases", () => {
     expect(result.totalRefundableCredits.toNumber()).toBe(0);
   });
 
-  it("Schedule 3 Line 5 - combined energy credits (5a + 5b) flow to Line 7", () => {
+  it("Schedule 3 Line 5 - combined energy credits (5a + 5b) flow to Line 8", () => {
     const result = calculateSchedule3(simpleW2Fixture, {
       residentialCleanEnergyCredit: d(9000),
       energyImprovementCredit: d(3200),
@@ -348,7 +381,7 @@ describe("Schedule 3 - individual credit edge cases", () => {
 // ═══════════════════════════════════════════════════════════
 
 describe("Schedule 3 - totals and boundary edge cases", () => {
-  it("Schedule 3 Line 7 - all nonrefundable credits combined sum correctly", () => {
+  it("Schedule 3 Line 8 - all nonrefundable credits combined sum correctly", () => {
     const result = calculateSchedule3(simpleW2Fixture, {
       foreignTaxCredit: d(300),
       childDependentCareCredit: d(600),
@@ -360,7 +393,7 @@ describe("Schedule 3 - totals and boundary edge cases", () => {
     expect(result.totalNonrefundableCredits.toNumber()).toBe(16600);
   });
 
-  it("Schedule 3 Line 7 - nonrefundable credits can exceed typical tax liability (no cap in Schedule 3)", () => {
+  it("Schedule 3 Line 8 - nonrefundable credits can exceed typical tax liability (no cap in Schedule 3)", () => {
     // Schedule 3 itself does not cap credits against tax liability;
     // the cap is applied on Form 1040 Line 22. Schedule 3 just sums.
     const result = calculateSchedule3(simpleW2Fixture, {
@@ -410,14 +443,14 @@ describe("Schedule 3 - totals and boundary edge cases", () => {
     expect(result.totalRefundableCredits.toNumber()).toBe(0);
   });
 
-  it("Schedule 3 Line 10 - premium tax credit as refundable flows to Line 15", () => {
+  it("Schedule 3 Line 9 - premium tax credit as refundable flows to Line 15", () => {
     const result = calculateSchedule3(simpleW2Fixture, { netPremiumTaxCredit: d(7200) });
     expect(result.netPremiumTaxCredit.toNumber()).toBe(7200);
     expect(result.totalRefundableCredits.toNumber()).toBe(7200);
     expect(result.totalNonrefundableCredits.toNumber()).toBe(0);
   });
 
-  it("Schedule 3 Line 10 - net premium tax credit in excess APTC scenario", () => {
+  it("Schedule 3 Line 9 - net premium tax credit in excess APTC scenario", () => {
     // When APTC exceeds PTC, net PTC is negative on Form 8962 but
     // Schedule 3 receives it as 0 (repayment goes elsewhere).
     // Here we confirm a positive net PTC flows through.
@@ -426,7 +459,7 @@ describe("Schedule 3 - totals and boundary edge cases", () => {
     expect(result.totalRefundableCredits.toNumber()).toBe(1250);
   });
 
-  it("Schedule 3 Line 13a - excess SS withholding only flows to Line 15", () => {
+  it("Schedule 3 Line 11 - excess SS withholding only flows to Line 15", () => {
     const result = calculateSchedule3(simpleW2Fixture, {
       excessSocialSecurityWithholding: d(1482),
     });
@@ -465,14 +498,14 @@ describe("Schedule 3 - totals and boundary edge cases", () => {
 // ═══════════════════════════════════════════════════════════
 
 describe("Schedule 3 Part I - nonrefundable credit flow-through", () => {
-  it("foreign tax credit (Line 1) flows into Part I total (Line 7)", () => {
+  it("foreign tax credit (Line 1) flows into Part I total (Line 8)", () => {
     const result = calculateSchedule3(simpleW2Fixture, { foreignTaxCredit: d(425) });
     expect(result.foreignTaxCredit.toNumber()).toBe(425);
     expect(result.totalNonrefundableCredits.toNumber()).toBe(425);
     expect(result.totalRefundableCredits.toNumber()).toBe(0);
   });
 
-  it("education credits (Line 3) — AOC + LLC combined amount flows into Part I total (Line 7)", () => {
+  it("education credits (Line 3) — AOC + LLC combined amount flows into Part I total (Line 8)", () => {
     // AOC max nonrefundable portion = $1,500; LLC max = $2,000.
     // Combined education credits passed as a single field matching Form 8863 output.
     const result = calculateSchedule3(simpleW2Fixture, { educationCredits: d(3500) });
@@ -481,7 +514,7 @@ describe("Schedule 3 Part I - nonrefundable credit flow-through", () => {
     expect(result.totalRefundableCredits.toNumber()).toBe(0);
   });
 
-  it("dependent care credit (Line 2) flows into Part I total (Line 7)", () => {
+  it("dependent care credit (Line 2) flows into Part I total (Line 8)", () => {
     // Form 2441 max credit for two or more qualifying persons is $1,200 at 20% rate.
     const result = calculateSchedule3(simpleW2Fixture, { childDependentCareCredit: d(1200) });
     expect(result.childDependentCareCredit.toNumber()).toBe(1200);
@@ -489,7 +522,7 @@ describe("Schedule 3 Part I - nonrefundable credit flow-through", () => {
     expect(result.totalRefundableCredits.toNumber()).toBe(0);
   });
 
-  it("residential clean energy credit Form 5695 Part I (Line 5a) flows into Part I total (Line 7)", () => {
+  it("residential clean energy credit Form 5695 Part I (Line 5a) flows into Part I total (Line 8)", () => {
     // Form 5695 Part I: 30% of qualified solar, wind, geothermal expenditures
     const result = calculateSchedule3(simpleW2Fixture, { residentialCleanEnergyCredit: d(9600) });
     expect(result.residentialCleanEnergyCredit.toNumber()).toBe(9600);
@@ -497,7 +530,7 @@ describe("Schedule 3 Part I - nonrefundable credit flow-through", () => {
     expect(result.totalRefundableCredits.toNumber()).toBe(0);
   });
 
-  it("energy efficiency improvement credit Form 5695 Part II (Line 5b) flows into Part I total (Line 7)", () => {
+  it("energy efficiency improvement credit Form 5695 Part II (Line 5b) flows into Part I total (Line 8)", () => {
     // Form 5695 Part II: 30% of qualified energy-efficient improvements, max $1,200 aggregate
     const result = calculateSchedule3(simpleW2Fixture, { energyImprovementCredit: d(1200) });
     expect(result.energyImprovementCredit.toNumber()).toBe(1200);
@@ -505,7 +538,7 @@ describe("Schedule 3 Part I - nonrefundable credit flow-through", () => {
     expect(result.totalRefundableCredits.toNumber()).toBe(0);
   });
 
-  it("all Part I nonrefundable credits combined produce correct Line 7 sum", () => {
+  it("all Part I nonrefundable credits combined produce correct Line 8 sum", () => {
     // 750 + 1200 + 2500 + 8000 + 3200 = 15650
     const result = calculateSchedule3(simpleW2Fixture, {
       foreignTaxCredit: d(750),
@@ -524,38 +557,38 @@ describe("Schedule 3 Part I - nonrefundable credit flow-through", () => {
 // ═══════════════════════════════════════════════════════════
 
 describe("Schedule 3 Part II - refundable credit flow-through", () => {
-  it("ACTC (Line 14a) flows into Part II total (Line 15) without affecting Part I", () => {
+  it("ACTC is retained for direct Form 1040 line 28 and excluded from Schedule 3", () => {
     // Additional Child Tax Credit is the refundable portion of the Child Tax Credit
     const result = calculateSchedule3(simpleW2Fixture, { additionalChildTaxCredit: d(1700) });
     expect(result.additionalChildTaxCredit.toNumber()).toBe(1700);
-    expect(result.totalRefundableCredits.toNumber()).toBe(1700);
+    expect(result.totalRefundableCredits.toNumber()).toBe(0);
     expect(result.totalNonrefundableCredits.toNumber()).toBe(0);
   });
 
-  it("net premium tax credit (Line 10) flows into Part II total (Line 15)", () => {
+  it("net premium tax credit (Line 9) flows into Part II total (Line 15)", () => {
     const result = calculateSchedule3(simpleW2Fixture, { netPremiumTaxCredit: d(5400) });
     expect(result.netPremiumTaxCredit.toNumber()).toBe(5400);
     expect(result.totalRefundableCredits.toNumber()).toBe(5400);
     expect(result.totalNonrefundableCredits.toNumber()).toBe(0);
   });
 
-  it("AOC refundable portion 40% (Line 14b) flows into Part II total (Line 15)", () => {
+  it("AOC refundable portion is retained for direct Form 1040 line 29 and excluded from Schedule 3", () => {
     // AOC allows 40% of up to $2,500 credit to be refundable = max $1,000
     const result = calculateSchedule3(simpleW2Fixture, { aocRefundablePortion: d(1000) });
     expect(result.aocRefundablePortion.toNumber()).toBe(1000);
-    expect(result.totalRefundableCredits.toNumber()).toBe(1000);
+    expect(result.totalRefundableCredits.toNumber()).toBe(0);
     expect(result.totalNonrefundableCredits.toNumber()).toBe(0);
   });
 
   it("all Part II refundable credits combined produce correct Line 15 sum", () => {
-    // Net PTC 3600 + excess SS 1482 + ACTC 1700 + AOC refundable 1000 = 7782
+    // Schedule 3 includes net PTC 3600 + excess SS 1482 = 5082; ACTC/AOC go directly to 1040.
     const result = calculateSchedule3(simpleW2Fixture, {
       netPremiumTaxCredit: d(3600),
       excessSocialSecurityWithholding: d(1482),
       additionalChildTaxCredit: d(1700),
       aocRefundablePortion: d(1000),
     });
-    expect(result.totalRefundableCredits.toNumber()).toBe(7782);
+    expect(result.totalRefundableCredits.toNumber()).toBe(5082);
     expect(result.totalNonrefundableCredits.toNumber()).toBe(0);
   });
 });
@@ -565,9 +598,9 @@ describe("Schedule 3 Part II - refundable credit flow-through", () => {
 // ═══════════════════════════════════════════════════════════
 
 describe("Schedule 3 - total credits and cross-part scenarios", () => {
-  it("total Schedule 3 = Part I (Line 7) plus Part II (Line 15) with all credits present", () => {
+  it("total Schedule 3 = Part I (Line 8) plus Part II (Line 15) with all credits present", () => {
     // Nonrefundable: 500 + 1200 + 2500 + 9000 + 3200 = 16400
-    // Refundable: 3600 + 1482 + 1700 + 1000 = 7782
+    // Schedule 3 payments: 3600 + 1482 = 5082; direct 1040 credits remain separate.
     const result = calculateSchedule3(simpleW2Fixture, {
       foreignTaxCredit: d(500),
       childDependentCareCredit: d(1200),
@@ -580,9 +613,9 @@ describe("Schedule 3 - total credits and cross-part scenarios", () => {
       aocRefundablePortion: d(1000),
     });
     expect(result.totalNonrefundableCredits.toNumber()).toBe(16400);
-    expect(result.totalRefundableCredits.toNumber()).toBe(7782);
+    expect(result.totalRefundableCredits.toNumber()).toBe(5082);
     const grandTotal = result.totalNonrefundableCredits.plus(result.totalRefundableCredits);
-    expect(grandTotal.toNumber()).toBe(24182);
+    expect(grandTotal.toNumber()).toBe(21482);
   });
 
   it("zero credits scenario — all totals are zero when no credits provided", () => {
@@ -600,29 +633,31 @@ describe("Schedule 3 - total credits and cross-part scenarios", () => {
     expect(result.totalRefundableCredits.toNumber()).toBe(0);
   });
 
-  it("audit trail includes Line 14a (ACTC) and Line 14b (AOC refundable) entries", () => {
+  it("audit trail excludes fabricated ACTC and AOC Schedule 3 entries", () => {
     const result = calculateSchedule3(simpleW2Fixture, {
       additionalChildTaxCredit: d(1700),
       aocRefundablePortion: d(1000),
     });
     const lineIds = result.lines.map((l) => l.line);
-    expect(lineIds).toContain("14a");
-    expect(lineIds).toContain("14b");
+    expect(lineIds).not.toContain("14a");
+    expect(lineIds).not.toContain("14b");
   });
 
-  it("audit trail Line 14a and Line 14b values match result fields", () => {
+  it("direct1040 refundable fields remain separate from the Schedule3 audit", () => {
     const result = calculateSchedule3(simpleW2Fixture, {
       additionalChildTaxCredit: d(1700),
       aocRefundablePortion: d(500),
       netPremiumTaxCredit: d(2400),
     });
     const line14a = result.lines.find((l) => l.line === "14a");
-    expect(line14a?.value.toNumber()).toBe(result.additionalChildTaxCredit.toNumber());
+    expect(line14a).toBeUndefined();
+    expect(result.additionalChildTaxCredit.toNumber()).toBe(1700);
     const line14b = result.lines.find((l) => l.line === "14b");
-    expect(line14b?.value.toNumber()).toBe(result.aocRefundablePortion.toNumber());
+    expect(line14b).toBeUndefined();
+    expect(result.aocRefundablePortion.toNumber()).toBe(500);
     const line15 = result.lines.find((l) => l.line === "15");
-    // 1700 + 500 + 2400 = 4600
-    expect(line15?.value.toNumber()).toBe(4600);
+    // Only PTC 2400 belongs on Schedule 3; ACTC 1700 and AOC 500 are direct 1040 credits.
+    expect(line15?.value.toNumber()).toBe(2400);
   });
 });
 

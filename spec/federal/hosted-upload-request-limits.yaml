@@ -1,0 +1,58 @@
+form: "Hosted multipart request byte bounds"
+taxYear: 2026
+reference: "https://vercel.com/docs/functions/limitations#request-body-size"
+notes: |
+  Hosting policy, not tax law or readiness. Source-first proposal only; no runtime.
+  Vercel documentation states4.5MB entire request/response cap, not25MiB/file.
+  App chooses conservative4MiB file plus256KiB envelope=4456448request bytes.
+  These application constants are below decimal4500000 and are not claimed to
+  be the provider's exact byte threshold. Non-Vercel hosted Node retains25MiB
+  file/26MiB request and existing responses; self-host client stays local/no-fetch.
+  Selected platform is based only on server deployment metadata, never request
+  origin/host/forwarded headers or caller upload fields. Hosted+VERCEL=1 or a
+  recognized VERCEL_ENV selects stricter cap; optional missing system metadata
+  cannot be presented as proof of actual deployment platform.
+  Actual UI currently stores raw files locally and saves hosted metadata JSON;
+  exported uploadPersistedWorkspaceDocuments is not called by production components.
+  Do not apply a global4MiB local-file restriction or add new upload wiring.
+lines:
+  - line: "platform-bounds"
+    label: "Entire request and file both fit platform-aware application policy"
+    formula: "On identified Vercel hosted runtime, accept actual4MiB file only within4456448-byte entire multipart envelope. Reject file+1byte and request+1byte without writes, even when reported Content-Length is absent, false, malformed, or small. Other hosted Node retains25MiB/26MiB."
+    testRef: "tests/apps/web/hosted-upload-request-limits.test.ts::rejects Vercel upload beyond application bound %s"
+  - line: "bounded-binary-read"
+    label: "Count raw bytes before multipart parsing"
+    formula: "Authenticate and rate-limit first. Read original binary stream with cumulative byte bound; do not use text decoding for multipart. Stop at first excess without retaining that chunk, cancel reader, release lock and never parse/write an oversized remainder. Preserve file bytes and current MIME/magic/id sanitation."
+    testRef: "tests/apps/web/hosted-upload-request-limits.test.ts::cancels an unknown-length oversized stream before later chunks or storage %s"
+  - line: "cancel-deadline"
+    label: "Abort and fixed total read deadline cancel active work"
+    formula: "Use original30s total read/parse deadline, not30s twice. Incoming abort or deadline cancels active reader and prevents writes; timeout response stays private/generic. Preserve all auth, entitlement, owner scoping and no-store responses."
+    testRef: "tests/apps/web/hosted-upload-request-limits.test.ts::cancels a stalled upload at the existing deadline without writes"
+  - line: "safe-client-413"
+    label: "Platform non-JSON413 is a safe actionable upload error"
+    formula: "Exported upload client checks HTTP413 before attempting JSON. Platform plaintext/HTML413 gives fixed safe smaller-file guidance, never SyntaxError or returned private/platform body. Existing structured errors and success metadata remain unchanged; self-host helper performs no fetch."
+    testRef: "tests/apps/web/hosted-upload-error-response.test.ts::handles platform non-JSON 413 without exposing body %s"
+  - line: "nonsettling-cancel"
+    label: "Untrusted producer cancellation cannot block the response"
+    formula: "When actual bytes exceed the request bound, initiate reader cancellation without awaiting an untrusted underlying cancel promise. The limit response must settle within the unchanged total 30000ms budget, release the reader lock, and perform no save even if cancellation never resolves."
+    testRef: "tests/apps/web/hosted-upload-request-limits.test.ts::settles the limit response and releases its lock when producer cancellation never settles"
+  - line: "inclusive-request-boundary"
+    label: "Whole request boundary includes every multipart byte"
+    formula: "A valid multipart request of exactly4456448 bytes with an allowed small binary file is accepted; the same valid envelope at4456449 bytes is rejected and never saved. Actual stream bytes control regardless of missing Content-Length."
+    testRef: "tests/apps/web/hosted-upload-request-limits.test.ts::accepts the exact whole multipart request byte boundary"
+  - line: "request-boundary-plus-one"
+    label: "One entire-request byte over is denied"
+    formula: "A valid4456449-byte multipart envelope is denied413 before persistence, even though the contained file is only24bytes and no declared size is supplied."
+    testRef: "tests/apps/web/hosted-upload-request-limits.test.ts::rejects one byte over the whole multipart request boundary"
+  - line: "native-formdata-cancellation-regression"
+    label: "Native Request FormData cancellation has no asynchronous producer errors"
+    formula: "With an excessive declared request length and an actual small FormData file, preserve the existing non-Vercel400/25 MB error and no-save guard. Cancellation must not produce an unhandled native producer enqueue after closure. A paired accepted native FormData request preserves PDF bytes and one save. Observe one normal event-loop turn, not a timer sleep or enlarged deadline; let the test runner detect unhandled errors without suppression."
+    testRef: "tests/apps/web/hosted-upload-request-limits.test.ts::rejects the original native FormData excessive declaration without asynchronous producer errors"
+  - line: "native-formdata-accepted-pair"
+    label: "Native multipart accepted pair remains valid"
+    formula: "The original accepted four-byte PDF FormData source yields200, exact bytes, owner tuple and one save, with no native producer error after a normal event-loop turn. No old fixture or assertion is changed."
+    testRef: "tests/apps/web/hosted-upload-request-limits.test.ts::accepts the original native FormData pair without asynchronous producer errors"
+  - line: "native-formdata-measured-excess"
+    label: "Acquired native multipart reader rejects measured excess safely"
+    formula: "A native Request(FormData) with a real5MiB file and absent Content-Length exceeds the4456448-byte request bound. It must return413/no-save and cancel its acquired reader without an unhandled asynchronous native producer rejection. Observe one event-loop turn under the existing5s test deadline, with no process rejection listener, timer delay or assertion weakening. This challenges the actual bundled producer defect beyond unopened declaration preflight."
+    testRef: "tests/apps/web/hosted-upload-request-limits.test.ts::rejects measured native FormData excess without an asynchronous producer error"

@@ -1,0 +1,39 @@
+form: "PA actual VA digital refund independent review"
+fullName: "Independent exact-source refund, cash, identity and privacy controls"
+taxYear: 2025
+reference: "https://www.pacodeandbulletin.gov/secure/pacode/data/061/chapter111/s111.4.html"
+notes: |
+  Independent review of exact author17 manifest2487ddec. 61PA111.4(b)
+  excludes actually refunded overpaid tax from resident credit; VA58.1-499(D)
+  requires actual special written application for refunds below1. No computation
+  of VA liability or inference from VA withheld/printedzero. Each positive current
+  original requires complete exact immutable owner/year/remittance/account proof.
+  Duplicate remittance identity is normalized trim/collapse whitespace/case as
+  existing PA payment original identity; distinct original accounts do not make
+  one remittance proof into two receipts. Actual fractional cash is never rounded
+  before refund reconciliation. All examples explicitly fictional source facts.
+lines:
+  - line: "cash"
+    description: "Full cash remains separate from printed forms and PA tax"
+    formula: "VAWH0.30=received0.30;netpaid0;credit0;PAtax1537−reportedPAWH1=1536."
+    testRef: "tests/engine/state/pa-digital-refund-independent.test.ts::independent literal complete composition keeps refunded cash and PA tax separate"
+  - line: "source"
+    description: "Only actual original identities and unchanged snapshots replay"
+    formula: "Missing/future/wrong-owner/stale facts reject, while exact serialized original repeats digest."
+    testRef: "tests/engine/state/pa-digital-refund-independent.test.ts::independent serialized replay retains digest and every private original"
+  - line: "duplicate"
+    description: "Semantically one remittance cannot establish two actual payments"
+    formula: "Two distinct valid VA statements need two distinct normalized actual remittance identities."
+    testRef: "tests/engine/state/pa-digital-refund-independent.test.ts::independent semantic duplicate remittance is rejected: %s"
+  - line: "distinct"
+    description: "Actual different original receipts sum exact cents once"
+    formula: "Actual0.30+0.30=0.60;reportedVA1;actualrefund0.60;PAcredit0."
+    testRef: "tests/engine/state/pa-digital-refund-independent.test.ts::independent distinct VA originals and distinct remittances reconcile exact0.60"
+  - line: "precision"
+    description: "Small cash mismatch cannot disappear after public Decimal copy"
+    formula: "0.3000000000000000000000000000000000000001 stays exact; difference0.0000000000000000000000000000000000000001 rejects."
+    testRef: "tests/engine/state/pa-digital-refund-independent.test.ts::independent tiny exact refund cash survives public Decimal boundary"
+  - line: "privacy"
+    description: "Only digest and nonprivate monetary evidence is public"
+    formula: "Private SSN/account/statement/remittance/application/award/refund references remain original-private."
+    testRef: "tests/engine/state/pa-digital-refund-independent.test.ts::independent source audit emits no actual private receipt identities"

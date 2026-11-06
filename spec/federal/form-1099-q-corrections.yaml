@@ -1,0 +1,61 @@
+form: "Form 1099-Q Coverdell correction sources"
+fullName: "Returned contributions and source-year earnings"
+taxYear: 2026
+irsReference: "https://www.irs.gov/instructions/i1099q"
+sources:
+  - "https://uscode.house.gov/us/usc/119-124/t26/s530/"
+  - "https://www.irs.gov/publications/p970"
+  - "https://www.irs.gov/irb/2003-33_IRB#NOT-2003-53"
+notes: |
+  Refreshed2026-10-25. IRC530(b)(4) deems a timely contribution designated
+  for the preceding year made on its last day. IRC530(d)(4)(C) excludes
+  timely returned contributions from the additional tax and assigns their
+  net income to the contribution year. Pub970 Worksheet6-3 excludes timely
+  returned contributions from ordinary distributions and current contributions.
+  A separate actual custodian net-income calculation is required; an ordinary
+  pooled education-expense ratio cannot substitute for that calculation.
+  Code2 reports current-statement-year earnings; code3 reports prior-year
+  earnings. Other-year earnings are retained for source review, not silently
+  included in the current return. Prior reported income is an actual fact;
+  an income adjustment is not an automatically computed amended tax or filing.
+lines:
+  - line: "source-contract"
+    description: "Unknown-preserving returned contribution facts"
+    formula: "Retain actual contribution identity/year/date/amount, returned principal, signed net income, previously reported earnings and confirmation of the net-income and basis reconciliation; no defaults"
+    testRef: "tests/engine/forms/form-1099-q-corrections.test.ts::preserves unknown returned contribution source facts"
+  - line: "current-year"
+    description: "Current-year returned contribution"
+    formula: "Timely principal plus attributable net income reconciles gross distribution; current-year taxable income=max(0,rounded net income); all such taxable earnings are excepted from10percent additional tax"
+    testRef: "tests/engine/forms/form-1099-q-corrections.test.ts::taxes actual returned contribution earnings in their contribution year"
+  - line: "statement-year"
+    description: "Different statement and income years"
+    formula: "For code3 require contribution year=statement year-1; current return includes earnings only when contribution year matches return year, retaining signed reported-income adjustment for the other year"
+    testRef: "tests/engine/forms/form-1099-q-corrections.test.ts::separates current and following statement years from taxable income year"
+  - line: "loss"
+    description: "Actual correction net loss"
+    formula: "Signed attributable loss reduces returned cash; it does not create deductible income or an additional tax. Nonfinal reported Boxes2/3 may be0/gross, while actual worksheet retains the principal and loss"
+    testRef: "tests/engine/forms/form-1099-q-corrections.test.ts::preserves actual correction losses without inventing a deduction"
+  - line: "ordinary-account"
+    description: "Ordinary and correction sources in one account"
+    formula: "Exclude correction distribution and earnings from ordinary Worksheet6-3 and education expense allocations; require actual corrected basis/contributions, retaining the correction separately"
+    testRef: "tests/engine/forms/form-1099-q-corrections.test.ts::keeps returned contributions out of ordinary account and expense ratios"
+  - line: "eligibility"
+    description: "Actual timing and source reconciliation"
+    formula: "Validate beforeJune1 deadline, timely designated-year contribution, code/year consistency, net-income/basis confirmations, no duplicate contribution over-return, jointly reconciled reported boxes, and no education/transfer/exception allocation to the correction"
+    testRef: "tests/engine/forms/form-1099-q-corrections.test.ts::rejects missing inconsistent late and duplicated correction sources"
+  - line: "source-review"
+    description: "Audited correction reference"
+    formula: "Show source year separately from taxable contribution year, copy actual correction audits and signed adjustment, validate actual correction boxes without treating an earlier-year amount as tax free"
+    testRef: "tests/pdf/form-1099-q-correction-summary.test.ts::retains actual correction year income and loss evidence in review summaries"
+  - line: "guided-correction"
+    description: "Collect and forward actual correction sources"
+    formula: "Collect the actual custodian correction worksheet using explicit year/date/amounts and unknown-preserving confirmations; changing source facts revokes the existing statement confirmation"
+    testRef: "tests/guided-interview/guided-education-distributions.test.ts::collects actual returned contribution years and signed source amounts"
+  - line: "complete-source-review"
+    description: "Every correction and recipient remains represented in review"
+    formula: "Require exactly one correction record per correction statement and one recipient record per distribution owner/recipient, including outside-return recipients whose amounts do not enter return totals"
+    testRef: "tests/pdf/form-1099-q-correction-summary.test.ts::rejects missing outside recipients and mismatched correction identities"
+  - line: "correction-controls"
+    description: "Actual correction controls preserve unknowns and signed net income"
+    formula: "Show correction source fields for codes2/3; retain exact entered negative net income, unknown principal and known false confirmation, using existing source-edit invalidation"
+    testRef: "tests/apps/web/education-distribution-interactions.test.tsx::collects actual education distribution records and invalidates edited facts"

@@ -31,7 +31,7 @@ describe("Form 4952 edge cases", () => {
   // ═══════════════════════════════════════════════════════════
 
   describe("deduction limited to net investment income", () => {
-    it("Form 4952 Line 5 - deduction equals interest when income exceeds expense", () => {
+    it("Form 4952 Line 8 - deduction equals interest when income exceeds expense", () => {
       const result = calculateForm4952(make({
         investmentInterestExpense: "5000",
         grossInvestmentIncome: "10000",
@@ -40,7 +40,7 @@ describe("Form 4952 edge cases", () => {
       expect(result.disallowedCarryforward).toEqual(new Decimal(0));
     });
 
-    it("Form 4952 Line 5 - deduction limited when expense exceeds income", () => {
+    it("Form 4952 Line 8 - deduction limited when expense exceeds income", () => {
       const result = calculateForm4952(make({
         investmentInterestExpense: "15000",
         grossInvestmentIncome: "8000",
@@ -49,7 +49,7 @@ describe("Form 4952 edge cases", () => {
       expect(result.disallowedCarryforward).toEqual(new Decimal(7000));
     });
 
-    it("Form 4952 Line 5 - deduction equals expense when income exactly matches", () => {
+    it("Form 4952 Line 8 - deduction equals expense when income exactly matches", () => {
       const result = calculateForm4952(make({
         investmentInterestExpense: "10000",
         grossInvestmentIncome: "10000",
@@ -73,7 +73,7 @@ describe("Form 4952 edge cases", () => {
       // Line 4c = max(0, 8000 - 6000) = 2000
       expect(result.line4c).toEqual(new Decimal(2000));
       // Net investment income = 2000
-      expect(result.line4g).toEqual(new Decimal(2000));
+      expect(result.line6).toEqual(new Decimal(2000));
       // Deduction limited to 2000
       expect(result.deductibleAmount).toEqual(new Decimal(2000));
       expect(result.disallowedCarryforward).toEqual(new Decimal(3000));
@@ -86,7 +86,7 @@ describe("Form 4952 edge cases", () => {
         qualifiedDividendsIncluded: "5000",
       }));
       expect(result.line4c).toEqual(new Decimal(0));
-      expect(result.line4g).toEqual(new Decimal(0));
+      expect(result.line6).toEqual(new Decimal(0));
       expect(result.deductibleAmount).toEqual(new Decimal(0));
       expect(result.disallowedCarryforward).toEqual(new Decimal(5000));
     });
@@ -97,7 +97,7 @@ describe("Form 4952 edge cases", () => {
   // ═══════════════════════════════════════════════════════════
 
   describe("election to include preferential income", () => {
-    it("Form 4952 Line 4e - electing qualified dividends as investment income increases deduction", () => {
+    it("Form 4952 Line 4g - electing qualified dividends as investment income increases deduction", () => {
       const result = calculateForm4952(make({
         investmentInterestExpense: "10000",
         grossInvestmentIncome: "6000",
@@ -105,22 +105,22 @@ describe("Form 4952 edge cases", () => {
         electedPreferentialIncome: "4000",
       }));
       // Line 4c = max(0, 6000 - 6000) = 0
-      // Line 4g = max(0, 0 + 0 + 4000 - 0) = 4000
-      expect(result.line4g).toEqual(new Decimal(4000));
+      // Line 6 = max(0, 0 + 0 + 4000 - 0) = 4000
+      expect(result.line6).toEqual(new Decimal(4000));
       expect(result.deductibleAmount).toEqual(new Decimal(4000));
       expect(result.disallowedCarryforward).toEqual(new Decimal(6000));
     });
 
-    it("Form 4952 Line 4e - electing full amount restores all investment income", () => {
+    it("Form 4952 Line 4g - electing full amount restores all investment income", () => {
       const result = calculateForm4952(make({
         investmentInterestExpense: "5000",
         grossInvestmentIncome: "8000",
         qualifiedDividendsIncluded: "8000",
         electedPreferentialIncome: "8000",
       }));
-      // Line 4c = 0, Line 4e = 8000
-      // Line 4g = max(0, 0 + 0 + 8000 - 0) = 8000
-      expect(result.line4g).toEqual(new Decimal(8000));
+      // Line 4c = 0, Line 4g = 8000
+      // Line 6 = max(0, 0 + 0 + 8000 - 0) = 8000
+      expect(result.line6).toEqual(new Decimal(8000));
       expect(result.deductibleAmount).toEqual(new Decimal(5000));
     });
   });
@@ -160,26 +160,26 @@ describe("Form 4952 edge cases", () => {
   // ═══════════════════════════════════════════════════════════
 
   describe("investment expenses reduce net investment income", () => {
-    it("Form 4952 Line 4g - investment expenses reduce net investment income", () => {
+    it("Form 4952 Line 6 - investment expenses reduce net investment income", () => {
       const result = calculateForm4952(make({
         investmentInterestExpense: "8000",
         grossInvestmentIncome: "12000",
         investmentExpenses: "5000",
       }));
-      // Line 4g = max(0, 12000 + 0 + 0 - 5000) = 7000
-      expect(result.line4g).toEqual(new Decimal(7000));
+      // Line 6 = max(0, 12000 + 0 + 0 - 5000) = 7000
+      expect(result.line6).toEqual(new Decimal(7000));
       expect(result.deductibleAmount).toEqual(new Decimal(7000));
       expect(result.disallowedCarryforward).toEqual(new Decimal(1000));
     });
 
-    it("Form 4952 Line 4g - expenses exceeding income floor at zero", () => {
+    it("Form 4952 Line 6 - expenses exceeding income floor at zero", () => {
       const result = calculateForm4952(make({
         investmentInterestExpense: "5000",
         grossInvestmentIncome: "3000",
         investmentExpenses: "5000",
       }));
-      // Line 4g = max(0, 3000 - 5000) = 0
-      expect(result.line4g).toEqual(new Decimal(0));
+      // Line 6 = max(0, 3000 - 5000) = 0
+      expect(result.line6).toEqual(new Decimal(0));
       expect(result.deductibleAmount).toEqual(new Decimal(0));
       expect(result.disallowedCarryforward).toEqual(new Decimal(5000));
     });
@@ -219,8 +219,8 @@ describe("Form 4952 edge cases", () => {
         grossInvestmentIncome: "5000",
         netGainFromInvestmentProperty: "8000",
       }));
-      // Line 4g = max(0, 5000 + 8000 + 0 - 0) = 13000
-      expect(result.line4g).toEqual(new Decimal(13000));
+      // Line 6 = max(0, 5000 + 8000 + 0 - 0) = 13000
+      expect(result.line6).toEqual(new Decimal(13000));
       expect(result.deductibleAmount).toEqual(new Decimal(13000));
       expect(result.disallowedCarryforward).toEqual(new Decimal(2000));
     });
@@ -233,8 +233,8 @@ describe("Form 4952 edge cases", () => {
       }));
       // Line 4d = max(0, -3000) = 0
       expect(result.line4d).toEqual(new Decimal(0));
-      // Line 4g = 8000 + 0 = 8000
-      expect(result.line4g).toEqual(new Decimal(8000));
+      // Line 6 = 8000 + 0 = 8000
+      expect(result.line6).toEqual(new Decimal(8000));
     });
   });
 
@@ -243,15 +243,15 @@ describe("Form 4952 edge cases", () => {
   // ═══════════════════════════════════════════════════════════
 
   describe("qualified dividends exceeding gross investment income", () => {
-    it("Form 4952 Line 4c - qualified dividends exceeding gross income floors Line 4c at zero", () => {
+    it("Form 4952 Line 4c - signed difference is preserved before line6 zero floor", () => {
       const result = calculateForm4952(make({
         investmentInterestExpense: "5000",
         grossInvestmentIncome: "3000",
         qualifiedDividendsIncluded: "5000",
       }));
-      // Line 4c = max(0, 3000 - 5000) = 0 (floored)
-      expect(result.line4c).toEqual(new Decimal(0));
-      expect(result.line4g).toEqual(new Decimal(0));
+      // Printed4c =3000-5000=-2000; the net-income floor belongs to line6.
+      expect(result.line4c).toEqual(new Decimal(-2000));
+      expect(result.line6).toEqual(new Decimal(0));
       expect(result.deductibleAmount).toEqual(new Decimal(0));
       expect(result.disallowedCarryforward).toEqual(new Decimal(5000));
     });
@@ -263,9 +263,9 @@ describe("Form 4952 edge cases", () => {
         qualifiedDividendsIncluded: "3000",
         electedPreferentialIncome: "3000",
       }));
-      // Line 4c = 0, Line 4e = 3000, Line 4g = 3000
+      // Line 4c = 0, Line 4g = 3000, Line 6 = 3000
       expect(result.line4c).toEqual(new Decimal(0));
-      expect(result.line4g).toEqual(new Decimal(3000));
+      expect(result.line6).toEqual(new Decimal(3000));
       expect(result.deductibleAmount).toEqual(new Decimal(3000));
       expect(result.disallowedCarryforward).toEqual(new Decimal(2000));
     });
@@ -306,7 +306,7 @@ describe("Form 4952 edge cases", () => {
   // ═══════════════════════════════════════════════════════════
 
   describe("multi-component net investment income boundaries", () => {
-    it("Form 4952 Line 4g - all components combine to exactly match total expense, zero carryforward", () => {
+    it("Form 4952 Line 6 - all components combine to exactly match total expense, zero carryforward", () => {
       const result = calculateForm4952(make({
         investmentInterestExpense: "10000",
         grossInvestmentIncome: "6000",
@@ -316,14 +316,14 @@ describe("Form 4952 edge cases", () => {
         investmentExpenses: "0",
       }));
       // Line 4c = 6000 - 2000 = 4000
-      // Line 4g = 4000 + 3000 + 1000 - 0 = 8000
+      // Line 6 = 4000 + 3000 + 1000 - 0 = 8000
       expect(result.line4c).toEqual(new Decimal(4000));
-      expect(result.line4g).toEqual(new Decimal(8000));
+      expect(result.line6).toEqual(new Decimal(8000));
       expect(result.deductibleAmount).toEqual(new Decimal(8000));
       expect(result.disallowedCarryforward).toEqual(new Decimal(2000));
     });
 
-    it("Form 4952 Line 4g - investment expenses exactly offset all other income components", () => {
+    it("Form 4952 Line 6 - investment expenses exactly offset all other income components", () => {
       const result = calculateForm4952(make({
         investmentInterestExpense: "5000",
         grossInvestmentIncome: "8000",
@@ -333,13 +333,13 @@ describe("Form 4952 edge cases", () => {
         investmentExpenses: "8000",
       }));
       // Line 4c = 8000 - 3000 = 5000
-      // Line 4g = max(0, 5000 + 2000 + 1000 - 8000) = 0
-      expect(result.line4g).toEqual(new Decimal(0));
+      // Line 6 = max(0, 5000 + 2000 + 1000 - 8000) = 0
+      expect(result.line6).toEqual(new Decimal(0));
       expect(result.deductibleAmount).toEqual(new Decimal(0));
       expect(result.disallowedCarryforward).toEqual(new Decimal(5000));
     });
 
-    it("Form 4952 Line 4g - $1 of net investment income allows $1 deduction on a large expense", () => {
+    it("Form 4952 Line 6 - $1 of net investment income allows $1 deduction on a large expense", () => {
       const result = calculateForm4952(make({
         investmentInterestExpense: "50000",
         priorYearDisallowed: "25000",
@@ -347,16 +347,16 @@ describe("Form 4952 edge cases", () => {
         qualifiedDividendsIncluded: "10000",
       }));
       // Line 4c = max(0, 10001 - 10000) = 1
-      // Line 4g = 1
+      // Line 6 = 1
       expect(result.line4c).toEqual(new Decimal(1));
-      expect(result.line4g).toEqual(new Decimal(1));
+      expect(result.line6).toEqual(new Decimal(1));
       // Line 3 = 50000 + 25000 = 75000
       expect(result.line3).toEqual(new Decimal(75000));
       expect(result.deductibleAmount).toEqual(new Decimal(1));
       expect(result.disallowedCarryforward).toEqual(new Decimal(74999));
     });
 
-    it("Form 4952 Line 5 - election of net capital gain plus all other components produces exact deduction match", () => {
+    it("Form 4952 Line 8 - election of net capital gain plus all other components produces exact deduction match", () => {
       const result = calculateForm4952(make({
         investmentInterestExpense: "20000",
         grossInvestmentIncome: "12000",
@@ -366,8 +366,8 @@ describe("Form 4952 edge cases", () => {
         investmentExpenses: "1000",
       }));
       // Line 4c = 12000 - 4000 = 8000
-      // Line 4g = max(0, 8000 + 5000 + 4000 - 1000) = 16000
-      expect(result.line4g).toEqual(new Decimal(16000));
+      // Line 6 = max(0, 8000 + 5000 + 4000 - 1000) = 16000
+      expect(result.line6).toEqual(new Decimal(16000));
       expect(result.deductibleAmount).toEqual(new Decimal(16000));
       expect(result.disallowedCarryforward).toEqual(new Decimal(4000));
     });

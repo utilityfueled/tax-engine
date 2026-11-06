@@ -1,0 +1,37 @@
+form: PA-Married-Mixed-Residency-Paper
+taxYear: 2025
+reference: "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40sp.pdf"
+sources:
+  - https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40in.pdf
+  - https://www.pacodeandbulletin.gov/secure/pacode/data/061/chapter117/s117.2.html
+  - https://www.pacodeandbulletin.gov/secure/pacode/data/061/chapter121/s121.8.html
+description: Original-bound review-only separate-M paper for one actual resident and one actual nonresident or part-year spouse, preserving the genuine federal MFJ household.
+lines:
+  - line: "owned-residency-and-dates"
+    description: Render each current original owner's independently derived residency, complete PA domicile period and December31 school identity.
+    formula: "Fresh complete married source replay; resident=1, nonresident=2, part_year=3. Part-year MM/DD dates come only from the single actual proved PA resident period. No date or domicile inference. Separate owner Box16/17 cash only."
+    testRef: "tests/pdf/pa-married-mixed-residency-paper.test.ts::renders actual owned nonresident and part-year status dates school and cash"
+  - line: "worldwide-sp-originals"
+    description: Both separate spouses report the same original worldwide eligibility, with excluded non-PA cash on line6 rather than line1.
+    formula: "SP1 owner=reported PA taxable compensation; SP6 owner=roundDollar(sum current original Box1 minus fresh raw PA taxable compensation). SP5=actual gifts; every other category retains known-none proof. Require displayed line totals equal fresh joint eligibility, otherwise fail closed for a rounding successor. Separate tax and forgiveness remain owner-only."
+    testRef: "tests/pdf/pa-married-mixed-residency-paper.test.ts::splits actual excluded worldwide wages onto SP6 on both separate worksheets"
+  - line: "source-currentness-before-io"
+    description: Private context retains originals, complete source commitments and actual current federal and owner result trees.
+    formula: "Reject missing or forged token, same-cash changed source, calendar, school, owner, wages, federal/result mutation before template/output IO; no original recapture or canonical rewrite."
+    testRef: "tests/pdf/pa-married-mixed-residency-paper.test.ts::rejects stale forged and altered mixed results before template IO"
+  - line: "physical-private-review"
+    description: Redacted saved official review pages preserve actual selected appearance, geometry and private identifier exclusion.
+    formula: "Pinned 2025 templates only; flattened static review copies contain no active widget, AcroForm, JavaScript or original identifier/provenance in any saved object; each page has review-only watermark. Inspection retains the complete trailer and indexed/embedded object graph plus every page text; normalize this full concatenated text once per inspector invocation, then compare every individually normalized private marker without truncation or cross-document cache. Public dispatcher retains actual original-bound federal companion pages for mixed positiveSP."
+    testRef: "tests/pdf/pa-married-mixed-residency-paper.test.ts::saves private static mixed review pages with actual canonical appearances"
+  - line: "resident-parity-and-year-gates"
+    description: Existing no-packet J/M resident paper remains unchanged; no final2026 or filing qualification.
+    formula: "Preserve all existing source/care/credit/penalty/export gates and resident mapper values; positive working credit, penalty or unsupported packet remains denied. Selected year2026 cannot use the 2025 paper."
+    testRef: "tests/pdf/pa-married-mixed-residency-paper.test.ts::preserves existing resident projections and unavailable year guards"
+  - line: "independent-rounding-boundary"
+    description: An emitted Schedule SP may not silently balance incompatible independently rounded source lines.
+    formula: "Use actual raw outside-PA cash rounded once on SP6; require actual rounded lines1+5+6 across both owners to equal the fresh joint eligibility total before emission. A half-dollar mismatch is explicitly unqualified rather than altered to force agreement. No-SP outputs need no unprinted SP line reconciliation."
+    testRef: "tests/pdf/pa-married-mixed-residency-paper.test.ts::denies unreconciled independently rounded mixed SP lines before template IO"
+  - line: "bounded-money-field-resolution"
+    description: Reuse the existing bounded field-write batch for PA40 income and payment text writes without retaining a mutable form index.
+    formula: "Each income/payment helper queues the same ordered text/currency writes and applies one existing createPdfFieldBatch before returning. Resolve current first matching fields at application time; preserve final valid field/status output, text-relative write order, Decimal formatting, missing/wrong-type text denials, original checkbox/widget/header/font operations and all later appearance/privacy/object inspection. Immediate checkbox/text interleaving and malformed partial-write/error precedence may differ; failed mapping must throw without returning/saving a malformed document. No field index survives the helper or any subsequent structural edit, flatten or document. Actual named money writes do not invoke a new full-tree getFieldMaybe traversal per write. Original eighteen saved PDFs/thirty-six pages and five-second test deadline remain intact; this work bound is not a remote speed qualification."
+    testRef: "tests/pdf/pa-40-field-lookup-bound.test.ts::resolves actual PA40 money writes without one field-tree lookup per write"

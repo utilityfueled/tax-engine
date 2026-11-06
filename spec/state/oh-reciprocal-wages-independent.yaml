@@ -1,0 +1,39 @@
+form: "Ohio reciprocal wages independent source boundaries"
+taxYear: 2025
+reference: "https://dam.assets.ohio.gov/image/upload/v1767095693/tax.ohio.gov/forms/ohio_individual/individual/2025/it1040-booklet.pdf"
+notes: |
+  Independent reviewer controls frozen before candidate product inspection/runtime.
+  Booklet printed5 nearest-dollar reporting, printed20 Adjustments14 qualified
+  employee compensation/PTE exception, printed35 excludes deducted wages from
+  NRC ColumnB. RC5747.01(A)(33) permits no second deduction. Full-year PA,
+  single primary, ordinary corporate employee only; no actual cash receipt,
+  public2026/native/physical/human qualification inferred.
+lines:
+  - line: "independent-reporting"
+    label: "Independent raw source reporting"
+    formula: "Raw wages63333.33/.50/.99 report63333/63334/63334; WH2476.49/.50/.99 report2476/2477/2477. Qualified line14 matches reported wages once; OhioAGI/tax/NRC0; requested refund matches actual reported WH, including explicit0. W2 state row order never duplicates wages."
+    testRef: "tests/engine/state/oh-reciprocal-wages-independent.test.ts::reports independent reciprocal originals %s with Ohio row %s"
+  - line: "independent-register"
+    label: "Sum originals before report rounding"
+    formula: "11*5000.40+4995.85=60000.25;11*.40+1996.20=2000.60; report60000/2001 once. No row-level roundoff or second NRC exemption."
+    testRef: "tests/engine/state/oh-reciprocal-wages-independent.test.ts::aggregates independent actual payroll cents before one reported deduction and withholding"
+  - line: "independent-facts"
+    label: "Unknown source is never known zero"
+    formula: "Missing/unconfirmed/invalid owner-year-identity/calendar/employer/service/payment/state facts deny even with current exact outer snapshots. Unsupported retained zero originals never disappear."
+    testRef: "tests/engine/state/oh-reciprocal-wages-independent.test.ts::denies independently incomplete current source %s"
+  - line: "independent-stale"
+    label: "Same money does not establish current source identity"
+    formula: "Raw owner/employer/issued-state source changes deny while subordinate originals remain stale. Fully explicit coherent replacement changes source commitment without changing dollars; input and globalDecimal configuration unchanged."
+    testRef: "tests/engine/state/oh-reciprocal-wages-independent.test.ts::binds a coherent independently supplied same-cash employer replacement"
+  - line: "independent-overlay"
+    label: "No financial scalar substitutes for verified originals"
+    formula: "Positive arbitrary other-deductions/NRC/RC/WH/payment overlays deny; fresh federal AGI must replay actual source facts."
+    testRef: "tests/engine/state/oh-reciprocal-wages-independent.test.ts::denies independent financial overlay %s"
+  - line: "independent-federal"
+    label: "Actual federal result is current"
+    formula: "A modified actual AGI retaining original source input is not current federal evidence."
+    testRef: "tests/engine/state/oh-reciprocal-wages-independent.test.ts::denies a stale federal result despite equal source packet"
+  - line: "independent-adapted-context"
+    label: "Genuine adapted source context cannot approve mutated cash"
+    formula: "The actual current account proof requires known0 useTax/refundable credits/donations/carryforward/late interest for this finite reciprocal method. Reusing a real opaque reciprocal context with changed cash scalars must deny, never retain its actual-source claim with altered cash. Unmodified genuine adaptation reports actual2001 refund."
+    testRef: "tests/engine/state/oh-reciprocal-wages-independent.test.ts::denies changed cash projection retaining genuine adapted source context %s"

@@ -1,0 +1,42 @@
+form: "Guided HSA distribution sources"
+fullName: "Actual Form 1099-SA and Form 8889 distribution source records"
+taxYear: 2025
+irsReference: "https://www.irs.gov/pub/irs-prior/i1099sa--2025.pdf"
+notes: |
+  Source checked 2026-10-25: final2025 Form1099-SA instructions and Form8889
+  lines14a-17b. Ordinary code1/code3 HSA records require actual event dates,
+  gross amounts, qualified unreimbursed medical costs and rollover facts.
+  Missing year/owner/amounts remain unknown. Code2 corrections, nonspouse
+  death, estate and prohibited-transaction cases require their separate
+  qualified source worksheets; no ordinary-source treatment is inferred.
+lines:
+  - line: "source-amounts"
+    description: "Reconcile actual source records and events by owner and year"
+    formula: "Actual event gross amounts sum exactly to the owner's Form1099-SA Box1. Box2 is separately known and included in Box1; a nonzero Box2 cannot be treated as ordinary code1/code3. Each uniquely identified source belongs to the actual return year and owner."
+    irsRef: "2025 Instructions for1099-SA Boxes1-5; Form8889 lines14a-14b"
+    testRef: "tests/guided-interview/guided-hsa-distribution-facts.test.ts::reconciles exact ordinary distribution events without guessing missing facts"
+  - line: "medical-source"
+    description: "Use only actual qualified unreimbursed medical expenses"
+    formula: "Use actual medical costs attributable to distributions only after establishing qualified expense and beneficiary, HSA establishment, no other reimbursement and no ScheduleA deduction. Unknown eligibility blocks; known ineligibility preserves the source cost but contributes zero to line15."
+    irsRef: "Form8889 instructions line15; Publication969 qualified medical expenses"
+    testRef: "tests/guided-interview/guided-hsa-distribution-facts.test.ts::preserves known medical ineligibility and prevents duplicate expense use"
+  - line: "rollover-and-age"
+    description: "Validate actual rollover timing and age exception dates"
+    formula: "An actual same-owner HSA rollover completed within60days and with no other rollover in the prior12months contributes to line14b. Actual invalid timing contributes no rollover exclusion. Only taxable distribution amounts paid on or after the actual65thbirthday contribute to the age exception."
+    irsRef: "Form8889 instructions Rollovers and lines17a-17b; Publication969"
+    testRef: "tests/guided-interview/guided-hsa-distribution-facts.test.ts::uses actual rollover dates and taxable post-age65 amounts"
+  - line: "source-review"
+    description: "Keep actual source edits unconfirmed until reviewed"
+    formula: "Source and event edits revoke confirmation. Blank money, actual zero, exact cents and unsupported source codes are retained without replacing them with a favorable classification. Removing a record is explicit. Original/corrected statements and same-owner rollover history must reconcile before use."
+    irsRef: "Form1099-SA instructions corrected returns; Form8889 source records and rollover rules"
+    testRef: "tests/apps/web/hsa-distribution-interactions.test.tsx::collects distribution sources from unknown controls and preserves exact amounts and confirmation"
+  - line: "taxable-exception-allocation"
+    description: "Apply disability exceptions only to the actual taxable disability distributions"
+    formula: "Actual taxable code3 amount equals that code's gross less its qualified medical and valid rollover allocations. It cannot exceed code3 gross or total line16. Use this net source once, separately from non-code3 post-age65 taxable events. In2026 mixed code3 and other sources with positive taxable income require known allocation unless the owner is already65 at the year's start. A fully medical1000 code3 source plus1000 taxable ordinary source yields200 additional tax for an owner under65."
+    irsRef: "Form8889 lines15-17b and exceptions to additional20percenttax; IRC223(f)(4)"
+    testRef: "tests/engine/forms/form-8889-distribution-allocation.test.ts::does not use gross disability distributions to shelter other taxable HSA income"
+  - line: "owner-return-binding"
+    description: "Calculate actual guided distribution sources within the same owner's return"
+    formula: "Bind the owner's confirmed actual statements and event offsets to separate Form8889 and Form5329 inputs. A saved distribution record cannot disappear when its applicability answer changes. Preserve actual source year and recipient; obtain age only from the actual household date of birth."
+    irsRef: "Form8889 separate spouse forms and PartII source records"
+    testRef: "tests/guided-interview/guided-hsa-distribution-facts.test.ts::binds actual distributions to the owner return and preserves contradictory saved records"

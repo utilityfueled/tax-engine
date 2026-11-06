@@ -1,0 +1,1499 @@
+# Federal 2026 work ledger
+
+Status: implementation in progress; **not tax-review qualified or filing ready**.
+Full 2026 return calculation remains gated. Expected outputs below are manually
+derived synthetic literals, not independent human-reviewed evidence.
+
+## Scope audit (2026-10-24)
+
+- [x] Refresh IRS Rev. Proc. 2025-32, Schedule A instructions, Publication 525,
+  and the final 2025 Schedule 1-A form. Current Schedule A/Pub. 525 instructions
+  are still labeled 2025. Do not represent them as final 2026 form qualification.
+- [x] Historical refund SALT rules and explicit origin-year validation.
+- [ ] Independent complete immutable 2026 data, provenance and payroll checks.
+- [ ] Schedule 1-A eligibility, phase-downs and orchestration.
+- [ ] CTC/ACTC eligibility, three-child/SS tax branch and exclusions.
+- [ ] Charitable floor/nonitemizer deduction, itemized cap, gambling rules.
+- [ ] Dependent care, adoption refundability and expense coordination.
+- [ ] Education/529, QBI minimum deduction, PTC/APTC and energy transitions.
+- [ ] Carryforward year validation and historical computation audit.
+- [ ] Independent human review, independently derived expected outputs and
+  final form qualification (external requirements; no substitution by agents).
+
+## Package: taxable refunds preserve their deduction year
+
+Sources refreshed 2026-10-24:
+- https://www.irs.gov/publications/p525 — Recoveries; recovery for multiple years;
+  sales-tax alternative and SALT tax benefit.
+- https://www.irs.gov/instructions/i1040sca — 2025 SALT deduction worksheet,
+  including MFS division after phase-down.
+- https://www.irs.gov/publications/p505 — 2026 SALT amount and MAGI thresholds.
+
+Spec was updated first; 19 new boundary/unknown/mismatch tests ran with 15
+failures before implementation. Exact historical years 2018–2026 are supported
+for this worksheet, with 2025/2026 MAGI explicitly required. The receipt year
+cannot be the same as or precede the deduction year. Conflicting 1099-G Box 3
+years and negative refunds reject. Property taxes consume the same SALT cap
+under both income- and sales-tax alternatives. Existing 2025 fixtures now state
+their known 2024 deduction year; absent years do not silently migrate.
+
+Checks: 537 tests pass across the federal orchestrator, refund unit/boundary and
+PDF reference-summary suites; engine typecheck passes; spec validation passes
+(2,961 references at this checkpoint). Scoped diff reviewed; no filing gates
+changed. Mixed-origin-year batches reject pending separate-workbook orchestration.
+
+Review follow-up to `49d3085`: absent property/income-tax payments now fail for
+an itemized refund, rather than consuming zero cap headroom. Explicit zero is
+preserved. Negative deduction/payment facts and nonfinite MAGI reject; a finite
+negative MAGI remains legal and incurs no phase-down. Seven additional failure
+regressions failed before the fix. All 544 focused tests and typecheck pass.
+
+## Package: complete independent 2026 constant data
+
+The 2026 object now declares every existing federal `YearConstants` family,
+without copying a 2025 object or importing historical state data. Every nested
+object/Decimal is frozen. The rule version is `2026.2-constant-data-draft` and
+full 2026 calculations still reject until rule implementation/qualification.
+
+Additional official sources retrieved 2026-10-24:
+- https://www.irs.gov/pub/irs-drop/n-25-67.pdf — IRA and QCD amounts.
+- https://www.irs.gov/pub/irs-drop/rp-25-19.pdf — HSA contributions.
+- https://www.ssa.gov/oact/cola/CovThresh.html — household wage trigger.
+- https://www.irs.gov/pub/irs-pdf/p926.pdf — payroll rates and wage base.
+
+39 new official-value/boundary/immutability tests failed before implementation;
+all 81 constant/indexed tests and engine typecheck pass. The constant audit also
+found a separate legacy 2025 QCD error ($105,000 rather than $108,000), pending
+its own spec-first correction. Values for expired incentives intentionally do
+not bypass acquisition/discharge date rules or imply current eligibility.
+
+## Package: Schedule 1-A explicit facts and calculation
+
+Official sources refreshed 2026-10-24:
+- https://www.irs.gov/pub/irs-pdf/f1040s1a.pdf — final 2025 lines and rounding.
+- https://www.irs.gov/instructions/i1040gi — employer/business tip worksheets,
+  SSN and eligibility rules, deductible premium and senior birth-date cutoff.
+- https://www.irs.gov/instructions/i8995 — line 11 subtracts Schedule 1-A.
+- https://www.irs.gov/irb/2026-39_irb — T.D. 10054 vehicle interest regulations,
+  published September 2026 and effective November 9, 2026.
+
+Spec and 38 tests preceded the new module. Three federal integration regressions
+failed first; two review regressions then failed for per-person senior rounding
+and nonjoint spouse claims. The model requires actual SSN, occupation, FLSA,
+loan and exclusion facts. It rejects duplicate sources, unknown spouse facts,
+invalid dates and unsupported refinancing. Tips/overtime use floor steps; vehicle
+interest uses ceiling steps; senior reduction applies separately per person.
+Federal deduction flow preserves AGI/payroll and reduces the QBI income limit.
+Business tips are calculated independently but federal integration rejects them
+until source-level QBI coordination is implemented. Final 2026 form qualification
+and independent human review remain outstanding. No readiness gate was opened.
+
+This package also preserves optional residency and education eligibility facts
+requested by the guided-input package; optional fields remain unknown until
+explicitly answered. Subsequent education work will consume those actual facts.
+
+Checks: 567 focused Schedule 1-A, federal integration and QBI tests pass;
+engine typecheck and spec validation (2,971 references) pass. Scoped diff and
+whitespace reviewed. All new calculation expectations are synthetic or directly
+transcribed IRS example arithmetic, not independently reviewed evidence.
+
+## Package: 2026 wagering and nonitemizer cash gifts
+
+Refreshed https://uscode.house.gov/us/usc/119-120/t26/s165/ (90% wagering
+loss/expense deduction before winnings cap) and
+https://uscode.house.gov/us/usc/119-120/t26/s170/ (subsection (p), recipient
+exclusions, current-year cash only, retained 60% contribution-base limit).
+22 spec-linked tests ran with 19 failures before implementation. All 553 focused
+Schedule A and federal tests pass, with engine typecheck passing. The 2026
+standard-versus-itemized selection includes the additional eligible cash gift
+amount; AGI is unchanged. Positive 2026 cash gifts require actual recipient
+qualification, supporting-organization and donor-advised-fund facts. Invalid
+amounts/dates reject. This does not complete the separate itemized 0.5% floor,
+category carryover, PMI or overall limitation work, and the 2026 full-return gate
+still prevents public use of the incomplete rule pack.
+
+## Correction: 2025 QCD limit
+
+IRS Notice 2025-67 explicitly compares the $111,000 2026 QCD limit with
+$108,000 for 2025. The prior constant had used the 2024 $105,000 limit. A new
+published-limit regression failed first; the constant/spec and joint-return
+integration expectation now use $108,000 per owner. The older standalone tests
+that inject $105,000 remain useful parameterized historical-limit tests and do
+not select a tax year. Rule provenance advances to 2025.4. This numeric correction
+does not establish independent review or remedy every legacy QCD eligibility path.
+Checks: 601 focused retirement/federal tests, engine typecheck and spec validation
+pass. Scoped diff reviewed; the QCD change is independent of other 2026 law work.
+
+## Package: 2026 itemized contribution categories and floor
+
+Official sources refreshed 2026-10-24: current 26 USC 170 at
+https://uscode.house.gov/us/usc/119-120/t26/s170/ and IRS Publications 526 and
+505. The new worksheet keeps the cash/public-property/second-category capital
+limits separate, applies the statutory 10%-of-base cash coordination, then
+consumes the 0.5% floor in statutory category order. Current-year carryforwards
+retain their original year and category; floor-only amounts carry only when a
+percentage-limit excess also exists. Ordinary donated property uses the lesser
+of value and known basis; unsupported private-foundation capital-gain valuation
+rejects unless qualified appreciated stock is explicitly established.
+
+The spec preceded the 13 worksheet tests (initially missing-module failure),
+four failing integration regressions and four failing qualification regressions.
+Checks: 630 focused charitable/Schedule A/federal tests pass; engine typecheck,
+spec validation (2,978 references), and whitespace checks pass. Scoped diff
+review confirmed the 2025 calculation branch remains unchanged. Optional basis,
+recipient classification and holding-period facts preserve unknowns.
+
+Still blocked: historical charitable carryovers require source category and a
+reviewed 2026 floor-transition treatment; they explicitly reject rather than
+become current cash. Qualified conservation contributions, special property
+valuation/elections and independent human review are not claimed by this
+worksheet. The full 2026 readiness gate remains closed. These are synthetic
+regressions and source-derived formulas, not independent expected-output review.
+
+## Contract: education identification facts
+
+2026 Publication 505 and IRC 25A(g)(1) were refreshed. The input model preserves
+optional taxpayer/spouse/student SSN eligibility and AOC institution EIN; supplied
+EIN syntax is validated, absent facts remain absent. Three spec-linked tests
+included two red-first regressions; 59 education tests, typecheck and spec
+validation pass. This contract enables fact collection and does not yet claim
+2026 Form 8863 eligibility/calculation completion.
+
+## Package: restored 2026 mortgage insurance premiums
+
+IRC 163(h)(3)(E), (F)(i)(III), (5)(E)-(F), 2026 Publication 505, and the
+historical 2021 Publication 936 premium allocation guidance were refreshed.
+Schedule A accepts known provider/residence/acquisition-debt qualification,
+contract date, allocation year and substantiated premiums allocable to that year.
+Box 5 alone rejects for 2026; prepaid premiums are not assumed fully deductible.
+The aggregate qualified allocation receives the exact 10% ceiling-step phaseout,
+including the MFS threshold/step. Contracts before 2007 remain excluded; 2025
+continues to give no PMI deduction. Actual prepaid amortization inputs remain
+required from source records rather than an inferred loan term.
+
+All 18 new tests failed before implementation. 579 focused Schedule A/federal
+tests pass, engine typecheck and spec validation pass, and the scoped diff was
+reviewed. No qualification/readiness gate changed.
+
+## Package: overall itemized limitation and QBI coordination
+
+Refreshed IRC 68 and 199A(e)(1), plus 2026 Publication 505 Worksheet 2-6.
+The statute's exact 2/37 ratio is used instead of the estimated-tax worksheet's
+rounded 5.4%; final return-form qualification remains outstanding. QBI is
+computed without section 68; its deduction reduces the section 68 income base.
+A newly smaller itemized deduction triggers selection of the standard deduction
+and recomputation of taxable-income-limited QBI. The section 68 reduction is
+reversed for AMT under IRC 56(b)(1)(E). Current section 56 URLs were unavailable;
+the official 2023 code text and IRS instructions establish the unchanged AMT
+exception, pending independent current-law review.
+
+Eight standalone boundary tests began with a missing-module failure; all four
+initial integration tests failed, followed by a red-first AMT regression. Five
+integration tests now cover the charitable floor, standard selection, QBI order,
+QBI recomputation and explicit NOL-coordination rejection. 730 focused federal,
+QBI, AMT and Schedule 1-A tests and engine typecheck pass. Scoped diff and
+whitespace reviewed. Spec references for this package pass; a concurrent guided
+payment spec had a malformed reference and was reported to its owning agent.
+
+Remaining implementation work: existing historical NOL application changes AGI
+only after deductions, so 2026 NOL coordination explicitly rejects until a correct
+joint calculation is implemented. Existing standard-deduction and senior AMT
+addbacks were also identified for a separate corrective package. No gate opened.
+
+## Correction: standard and enhanced senior AMT addbacks
+
+The refreshed 2025 Form 6251 instructions expressly add back the selected
+standard deduction and Schedule 1-A senior deduction. Federal orchestration now
+passes those actual amounts separately from K-1 preferences, with distinct audit
+entries. AMTI starts with AGI less deductions before Form 1040's zero floor so
+low-income returns do not overstate AMTI when adding deductions back. Other
+Schedule 1-A deductions remain allowed. The 2025 rule version advances to 2025.5.
+
+Four regressions included three red-first failures. 641 federal/AMT/Schedule
+1-A tests and three Form 8801 packet tests pass; engine typecheck and spec
+validation pass. The affected PDF expectation was independently recomputed:
+($200,000 AMTI - $88,100 exemption) × 26% = $29,094 TMT; $37,067 regular tax less
+$29,094 gives the $7,973 credit limit. Scoped diff reviewed. This is a code
+correction, not independent tax-law or return qualification evidence.
+
+## Contract and calculation: direct SALT payment categories
+
+Refreshed Schedule A instructions lines 5a–5c. Additional qualified income-tax
+payments now enter line 5a and its sales-tax comparison; separately supplied
+real-estate taxes enter line 5b. Personal-property taxes stay on line 5c. Input
+contract expressly excludes amounts already counted on forms or estimates;
+negative/nonfinite additional payments reject. Four integration regressions
+failed first; 535 focused tests, typecheck and spec validation pass. Scoped diff
+reviewed. This removes the need to invent a Form 1098 lender for direct tax facts.
+
+## Correction: historical wagering precision and QCD expectations
+
+The full-suite run exposed two 2025 wagering precision regressions and a 2025
+extra worksheet audit entry introduced by the new 2026 Schedule A branch. The
+legacy Decimal source precision and audit identities are restored; existing
+regression assertions remain unchanged. Two historical QCD fixtures now use the
+source-backed 2025 $108,000 per-owner cap from IRS Notice 2025-67; expected taxable
+amounts are independently derived, including the Form 8606 rounded ratio.
+
+All five failures were reproduced before correction. 604 focused tests pass;
+spec validation and whitespace review pass. Engine typecheck reached only three
+errors in concurrent parent-owned PDF mapping edits (reported to the parent),
+with no federal-source errors. No readiness status changed.
+
+## Correction: Form 1040 and Schedule 2 payment routing
+
+Refreshed the official 2025 Form 1040 instructions (lines 29, 31 and 38) and final
+Schedule 2 PDF. Estimated-tax penalty now stays on Form 1040 line 38, outside
+line 23 and total tax; it reduces the refund or increases line 37. Line 34 shows
+the overpayment before penalty. Refundable AOC uses line 29. Schedule 2 correctly
+separates Part I (APTC line 1a and AMT line 2) from Part II line 21, and line 18
+sums only line 17 taxes. The penalty no longer impersonates Schedule 2 line 19.
+The digital-asset response has its own audit key. The duplicated AMT in the
+penalty tax base was removed. The Schedule H agent's new facts are forwarded.
+
+All four new regressions failed first. 601 focused federal, integration and
+Schedule 2 tests pass; typecheck, spec validation and whitespace checks pass.
+Older assertions using incorrect Schedule 2 grand totals were replaced with
+amounts derived from the final form's Part II sum, preserving boundary and
+precision coverage; the >$100k scenario still exercises an actual >$100k Part II
+sum. Scoped diff reviewed. Rule version advances to 2025.6. Parent's qualified
+review-PDF mapping spec metadata is preserved in this shared-spec commit.
+
+Remaining Form 2210 work: the existing algorithm assumes equal quarterly
+underpayments and 2025 rates, so it is not qualification evidence for 2026 or
+irregular payments. Separate work must finish dated installment calculations,
+prior-year safe-harbor qualification, and all tax-base exclusions. Wage/withholding
+classification and foreign-exclusion line routing remain separate corrections.
+
+## Integration: 2026 dependent-care facts
+
+The source-backed Form 2441 calculator now receives the actual return year,
+filing status, separate taxpayer/spouse earned-income limits, known excluded
+section 129 benefits and eligibility confirmation. Unknown amounts remain
+unknown; zero spouse income stays zero. Four new integration assertions failed
+first; 609 focused tests and typecheck pass. Whitespace and scoped diff reviewed.
+The package's spec reference resolves; global spec validation temporarily sees
+31 references in the concurrently edited Form 8839 spec before its agent writes
+its tests. The 2025 legacy omission path remains explicitly tested.
+
+Part III employer-benefit exclusion and taxable-benefit wage routing still need
+full integration before the complete 2026 rule pack can be qualified; accepting
+an explicitly determined excluded amount does not invent those facts.
+
+## Package: active-business QBI minimum
+
+Refreshed IRC 199A(i), (c)(2), (d) and (e). The 2026 constant pack now declares the
+$400 minimum and $1,000 active-income threshold. Both Form 8995 paths apply the
+minimum after ordinary limits, using exact pre-threshold Decimal amounts and
+actual material participation. Detailed SSTBs contribute only their applicable
+qualified portion; elective aggregation does not invent participation. Unknown
+participation or active historical loss character rejects when it could change
+the floor. A deduction already at least $400, or sources that cannot reach
+$1,000 even if all positive sources were active, need no invented participation.
+The zero-taxable-income path now computes the statutory minimum, and a historical
+QBI loss survives a year with no current business sources.
+
+Initially nine law/integration assertions and two constant assertions failed;
+the no-current-business carryover regression also failed before correction.
+674 focused tests passed before that final carryover case; the final count is
+recorded with the commit checks below. Typecheck/spec validation pass. The scoped
+diff was reviewed. This is source-derived implementation, with independent tax-law
+review still pending; no readiness gate changed. Business-tip allocation and
+self-employed deduction attribution remain separate QBI integration work.
+Final package verification: 675 focused tests pass, including the carryover
+regression; engine typecheck, spec validation and whitespace checks pass.
+
+
+## Correction: source wage and withholding lines
+
+Official Form 1040 instructions and Form 8959 Part V establish separate W-2,
+1099 and other-form withholding. Additional Medicare withholding was computed
+but omitted from federal payments. It now reaches line 25c, including a joint
+return with withholding but no Additional Medicare liability. Actual K-1 federal
+withholding is preserved separately from state amounts. Form 8959 withholding
+reconciliation uses whole-dollar source totals and provides actual lines 19–24.
+Wage audit lines 1a, 1c, 1g and 1h now retain their source classification.
+
+Three source-classification regressions failed first; 597 focused tests and
+engine typecheck pass. Spec/whitespace checks and scoped diff reviewed before
+commit. Rule version advances to 2025.7. Remaining Form 8959 Part I/II audit
+positions and separate-part rounding need a separate source-backed correction;
+RRTA inputs remain unsupported. No qualification gate changed.
+
+## Correction: Form 8959 separate tax parts
+
+The final official Form 8959 requires separate rounded wage tax (line 7) and
+self-employment tax (line 13), summed on line 18. The former combined calculation
+could differ by a dollar and exposed incorrect line identifiers. Both regression
+cases failed first; 115 focused tests pass, with engine typecheck, spec validation
+and whitespace checks. Five older audit expectations now use the official line
+positions and full supported line set, preserving their amount assertions.
+The separate parts also provide the source amounts needed for the Schedule 8812
+payroll-tax alternative. RRTA compensation remains unsupported; no gate changed.
+
+## Package: Schedule 8812 refundable-credit worksheet
+
+Refreshed the final Schedule 8812 and its Credit Limit Worksheet B. The calculator
+now supports the payroll-tax alternative for three-child families and bona fide
+Puerto Rico residents, subtracts EIC/excess Social Security payments, disallows
+ACTC when Form 2555 is filed, and exposes the worksheet's reserved nonrefundable
+amount for adoption/clean-energy ordering. The indexed refundable cap is explicit
+in the constant pack. Unknown 2026 payroll facts reject when material. Counts and
+monetary inputs are validated; all arithmetic uses Decimal. Actual identity and
+foreign-income addback facts remain the next federal integration package.
+
+Seven new assertions failed first; all 115 focused tests, typecheck and spec
+validation pass. Existing audit checks now verify the official line positions
+and complete supported line set; no amount assertion was weakened. Scoped diff
+reviewed. Integration/identity qualifications and Schedule 3-A remain pending.
+
+## Integration: Schedule 8812 identity, MAGI and payroll facts
+
+2026 child-credit claims now require actual timely taxpayer/dependent SSN/TIN
+eligibility and known possession-income/PR-residency facts. An SSN's printed
+format is not evidence of employment validity or issue date. Joint filers may
+qualify with one employment-valid SSN and both timely TINs. Known ineligibility
+removes the claimed credit without manufacturing an ODC claim. Existing explicit
+qualifying-dependent flags remain responsible for the non-identity dependency
+requirements; independently qualified complete-dependent review is still pending.
+
+The federal calculation now supplies the actual year, foreign-income addbacks,
+Form 2555 status and payroll/EIC/excess-SS amounts to Schedule 8812. EIC and Form
+8959 run before credit allocation so Worksheet B can use those source amounts.
+Five substantive identity/payroll regressions failed first; additional positive,
+ODC, duplicate-claim and unknown-residency checks pass. One draft joint-return
+fixture was corrected before implementation to the independently derived bracket
+amount ($50,000 minus $32,200, times 10%). Final 2026 tax tables remain unqualified.
+625 focused tests/typecheck/whitespace checks pass; all our spec references resolve.
+Global spec validation temporarily sees eight references in the concurrently
+edited Form 8936 specification, reported to its owner. Scoped diff reviewed.
+
+### Personal credit limit worksheets A/B — 2026-10-25
+
+Refreshed IRS Schedule 8812, Form 8839 and Form 5695 instructions. Added a pure
+Decimal allocation helper: reserve Worksheet B line 14 where applicable, allocate
+adoption before residential clean energy, then return the actual remaining CTC
+limit. Form 2555 and claims without qualifying children use ordinary CTC priority.
+Six spec-linked tests were absent/red before implementation and now pass, including
+$1,000 tax/$2,200 CTC/$1,700 refundable potential -> $500 adoption and $500 CTC.
+72 focused tests, typecheck, spec validation and whitespace checks pass. Reviewed
+scoped diff. Integration follows separately; this helper does not qualify a form.
+
+### Adoption/vehicle source contracts — 2026-10-25
+
+Added actual adoption finality/expense years, plan/exclusion worksheet and
+origin-year carryforwards; preserved vehicle acquisition/service/report/transfer
+facts and current/prior MAGI confirmations. Missing prior-year AGI remains unknown;
+known zero remains usable. Before legacy vehicle defaults, compute completeness
+from original price/type/personal-use/transfer fields and overwrite any supplied
+marker. Verified calculations will require that evidence rather than infer it.
+Four spec-linked contract tests failed first; 120 focused tests, root typecheck and
+whitespace checks pass. Subsequent log inspection found malformed YAML in the new
+contract entry (the shell continued after validation failed); corrected in the
+return-integration package and reran validation. Scoped diff reviewed.
+
+### Federal personal-credit integration — 2026-10-25
+
+Integrated actual Form 2441/5695/8936 limits and Schedule 8812 Worksheets A/B.
+The dependent-care/elderly/education/saver/improvement/vehicle sequence now feeds
+actual remaining limits to adoption and residential clean energy, then CTC.
+Schedule 3 aggregates allowed credits after general-business and prior-AMT
+allocation; prior-AMT now sees actual net regular tax after earlier credits.
+
+Form 8839 uses actual Part III exclusion MAGI before AGI, includes signed taxable
+benefits on 1040 line 1f, sends refundable adoption to line 30, limits nonrefundable
+credit, and preserves year-tagged carryforward. Actual W-2 code T must reconcile
+when reported. 2026 original classification/benefit/prior-lifetime-use history is
+required before defaults. Form 5695 exposes allowed credit and next-year carry;
+2026 costs cannot become carryforward. Verified 8936 claims require original
+facts; actual new/used transfer repayments enter Schedule 2 lines 1b/1c and 1040
+line 17. Unresolved legacy transfers and unattributed business vehicle credits
+reject explicitly.
+
+Nine calculation/missing-fact regressions failed first, plus an adoption-history
+regression; eleven integration cases now pass, including child/adoption ordering.
+Expanded focused run: 918/919 passed; the remaining pre-existing vehicle assertion
+expected tentative $4,000 rather than the actual $3,872 tax limit. Corrected it with
+an independently derived bracket amount and additional $4,000 tentative/$128
+unused assertions. The affected 469 tests pass on rerun; root typecheck, 3,112
+spec references, and whitespace checks pass. Scoped ESLint has no errors and six
+pre-existing non-null warnings. Scoped diff reviewed.
+
+Still unqualified: 2026 Schedule 3-A public-benefit limitation/final IRS forms and
+independent tax review; Schedule R/8863 exact worksheet audit needs follow-up;
+prior-AMT year-aware prior constants remain next. No filing readiness gate changed.
+
+### Schedule 3 and omitted payments — 2026-10-25
+
+Refreshed official 2025 Schedule 3 and 1040/2210 instructions. Corrected GBC/prior-AMT
+lines 6a/6b, separate line-6 subtotal7 and total8, PTC9, extension10 and excessSS11.
+ACTC/AOC remain explicit legacy result fields but never enter Schedule 3 totals or
+fabricated lines14a/14b; they belong directly on1040. Federal extension payments
+now enter total payments once; actual prior-return applied credits enter line26,
+with source-year mismatch rejected. Form2210 treats excessSS as withholding and
+excludes extension payments from refundable-credit tax-base reductions.
+
+Five new source-linked regressions failed first. Historical line/total assertions
+were corrected to the printed form without dropping cases; direct1040 amounts are
+still asserted. 549 focused tests, root typecheck, 3,114 spec references and
+whitespace checks pass. Scoped diff reviewed. Rule versions advanced to2025.8 and
+2026.3-law-integration-draft to identify changed calculations; qualification and
+incomplete2026 gates remain unchanged. Per-filer/per-employer excessSS calculation
+and actual dated Form2210 payment/rate calculation remain separate follow-up.
+
+### Historical routing regressions reconciled — 2026-10-25
+
+Reconciled the fifteen reported historical failures against the refreshed final
+1040/Schedules2/3 instructions. Schedule2line21 is PartII alone, APTC belongs in
+PartI, return balance equations include separate line38 penalty, and source
+withholding checks use1099line25b/W2Gline25c. Corrected the related single-return
+balance equations and strengthened penalty isolation/source amount assertions.
+No test was removed and no tolerance widened. All321 affected tests pass; the144
+cases with added assertions pass again. Typecheck,3,115spec refs and whitespace
+checks pass. Scoped diff reviewed; these fixes do not qualify the legacy2210
+short-method estimate or final tax tables.
+
+### Schedule8812 MAGI source audit — 2026-10-25
+
+Added actual Puerto Rico and Form4563 excluded-income fields. Known combined zero
+implies both nonnegative components zero; positive2026 totals require an actual
+split and supplied totals must reconcile. Schedule8812 now audits AGIline1,
+PuertoRico2a, actual Form2555exclusion/housing2b, Form4563amount2c, and known subtotal2d.
+Unknown legacy2025 source components remain absent; no zero is invented for review
+PDFs. Three spec-linked regressions failed first;88 focused tests, root types,
+3,116 spec refs and whitespace checks pass. Scoped diff reviewed. Guided actual
+identity facts are required for both years; omitted historical2025 identity facts
+remain explicitly unqualified legacy compatibility, never independent review.
+
+### Education eligibility and actual Form8863 worksheet — 2026-10-25
+
+Refreshed final2025 instructions, IRC25A-related IRS2026 SSN guidance and the
+2026 draft form (layout evidence only). Added actual student identity/role,
+AOCqualification, separate LLCstudent, claimant residency/dependency, Form8862,
+and claimant support facts. Joint2026 eligibility requires primary OR spouse
+employment-valid timelySSN; dependentstudents require theirs. Known ineligibility
+applies to either year; omitted2025 facts remain unqualified compatibility.
+Refundability follows actual claimant age/support, including exact half-support
+boundary; the unrefundable AOC portion remains available as nonrefundable credit.
+
+Corrected every printed calculation line, including refundable8/nonrefundable9,
+LLC18 and actual credit-limit19. Federal integration now forwards prior claim
+history and other student facts, adds actual excludedincome toMAGI, verifies2026
+student identity against the return role, and preserves the typed form8863 result.
+Eight regressions failed first (seven module/model and one integration);180 focused
+engine/edge/integration/PDF tests pass. Root types pass; scopedlint has noerrors
+and15 existing non-null warnings; whitespace/diff reviewed. Education specrefs
+resolve; the only3 global spec failures are the next package's newly written PTC
+model tests not yet implemented. No test removed or tolerance weakened. Final2026
+forms, complete institution PDF mapping, public-benefit rules and independent
+review remain separate qualification requirements.
+
+### PTC household and monthly source contract — 2026-10-25
+
+Implemented the parallel PTC owner's source-first schema contract. Actual household
+MAGI components retain signed values and unknown optional facts; monthly coverage
+reconciliation requires actual nonnegative premiums/APTC and eligibility answers,
+with duplicate months rejected. Form1095A completeness is calculated before
+legacy defaults, ignores claimed true markers, and preserves incomplete false
+through reparsing so a missing APTC cannot become verified zero. Actual statement
+year and policy identity are required for verified calculation; no household
+benchmark is inferred by summing policies. Three model regressions failed first;
+70 focused schema/historical-form tests, root types, all3,146 spec references and
+whitespace checks pass. Scoped diff reviewed. PTC calculation and federal routing
+are the next parallel integration package; this contract does not qualify filing.
+
+### Credit stacking historical assertions — 2026-10-25
+
+Reconciled the historical credit-stacking tests with final Schedule3lines8/9/11,
+Form8962repaymentline29 and Schedule2AMTline2. Updated independent arithmetic
+oracles for actual allowed energy/care credit limits and Schedule8812WorksheetB
+CTC reservations; added unused-energy carryforward and ACTC checks. Synthetic
+APTC statements now include their actual1–12 month identifiers; the synthetic
+child claiming CTC has a consistent under17birthyear. Existing source withholding
+assertions remain unchanged and pass. No test removed or tolerance widened.
+
+All100 affected tests, root types,3,146spec refs and whitespace checks pass.
+Scoped diff reviewed. Rule versions2025.9/2026.4-law-integration-draft add the
+refreshed education sources; dated-source validation now permits actual later
+refreshes while still checking the new exact2026-10-25 education provenance.
+Qualification remains incomplete/pendingreview/filingfalse.
+
+### PTC return integration — 2026-10-25
+
+Integrated the parallel ca8c1e5 Form8962 package with explicit taxYear and actual
+household/coverage facts. Only unqualified2025 compatibility previews receive
+legacy AGI/family proxies;2026 never does. NetPTC routes to Schedule3line9 and
+full2026 excess advances to Schedule2line1a. A new regression failed first on
+silently selecting2025; it now verifies the2026 income cutoff, full3600repayment,
+2400netcredit and missing-fact rejection.73 focused return/schema/stacking tests,
+root types and all3,147spec refs pass; whitespace and scoped diff reviewed.
+Unsupported special PTC allocation, marriage, lawful-presence and self-employment
+coordination worksheets remain explicit gates, with final review still pending.
+
+### Education dependent-claim and LLC TIN correction — 2026-10-25
+
+A second source cross-check of final8863 Table1 and WhoCanClaim identified two
+boundaries: timely studentTIN applies to LLC as well asAOC, and education-credit
+ineligibility depends on being actually claimed as a dependent rather than merely
+being claimable. Added actual claimedAsDependent, required for2026, and preserved
+the distinct claimability fact. A source-linked regression failed first;132
+focused tests, root types,3,150spec refs and whitespace checks pass. Scoped diff
+reviewed. Guided facts owner received the corrected distinction. The prior PTC
+integration spec run actually had3,148refs after a concurrent spec addition.
+
+### Standard deduction source model and calculator — 2026-10-25
+
+Refreshed final1040/Pub501 dependent worksheets, death examples and2026RevProc
+2025-32 amounts. Added explicit blindness/dependency/residency/short-year/death
+facts, MFS spouse conditions and deduction election. The pure calculator applies
+the dependent1350minimum/earned+450cap, indexed age/blind additions, day-before
+65thbirthday and actual deathdate, including the IRS5350blind-dependent and33100
+joint examples. MFS extra spouse boxes require actual no-income/no-return/no-other
+claimant facts; ineligible standard deductions remain zero.2026 omissions reject;
+2025 omissions remain unqualified compatibility. Qualified disaster enhancement
+is explicitly separate and is not inferred from ordinary casualty loss.
+
+Spec/test preceded implementation.89 focused calculator/constant-shape tests,
+root types, all3,155spec refs, scopedlint and whitespace checks pass. Scoped diff
+reviewed. Federal selection/routing integration and explicit synthetic2026
+fixture facts follow in a separate package; no readiness gate changed.
+
+### Standard deduction return integration — 2026-10-25
+
+Integrated the7a2a95b worksheet, persisted its audit/result, and honored explicit
+standard/itemized elections. An ineligible standard deduction or explicit
+itemization cannot switch to standard after the2026 section68 limitation.
+Synthetic fixtures now state their actual eligibility facts; three incomplete
+joint capital-gain fixtures now contain an actual synthetic spouse identity.
+Two new spec-linked integration tests failed before implementation and now
+verify actual senior/blind/dependent deductions, unknown2026 rejection,
+automatic comparison and both explicit elections.617 focused federal/form tests,
+root types and all3,157spec refs pass; scopedlint has zeroerrors (199existing
+nonnullwarnings in large historical tests). Scoped diff and whitespace reviewed.
+Qualified disaster enhancement and independent review remain outstanding.
+
+### Excess Social Security withholding by owner and employer — 2026-10-25
+
+Refreshed final1040 Schedule3line11 instructions and SSA contribution bases:
+https://www.irs.gov/instructions/i1040gi and
+https://www.ssa.gov/oact/cola/cbb.html. Each spouse has a separate cap; one-employer
+overcollection goes to employer correction/Form843. Grouped by actual owner and
+normalized employerEIN, capped each employer contribution before calculating
+each owner's excess, and preserved exact10918.20/11439.00 yearly limits. Repeated
+EIN records cannot manufacture another employer.2026 joint owner or employer
+identity omissions reject;2025 untagged historical preview remains unqualified
+and still needs actual owner facts before qualification. Guided owner collection
+is being completed by the facts owner. RRTA source support remains separate.
+
+Two new source-linked tests failed before implementation.591 focused return,
+Schedule3 and stacking tests, root types and all3,191spec refs pass. Scopedlint,
+diff and whitespace reviewed; no filing gate changed.
+
+### State income tax payment-year deduction — 2026-10-25
+
+Refreshed final ScheduleAline5a instructions at
+https://www.irs.gov/instructions/i1040sca: estimated and prior-year income taxes
+are deductible when paid in the calendar year. Added one shared payment-year
+calculator for ScheduleA and the income-versus-sales-tax comparison. It includes
+actual in-year state estimated/extension payments and actual immediately
+prior-year state credits applied, excludes federal/out-of-year payments, and
+rejects invalid dates, amounts and ambiguous older applied-credit source years.
+The source-linked regression failed first; the existing four-installment
+fixture now asserts6000line5a/8000SALT because its next-January1000payment belongs
+to2026.587 focused tests, root types and all3,192spec refs pass; scopedlint has
+zeroerrors. Scoped diff/whitespace reviewed. Non-W2 withholding classification
+and amounts already deducted on business schedules remain a separate audit gap.
+
+### Stable-suite source assertions reconciled — 2026-10-25
+
+Addressed five law-owned failures from the parent's15929pass/6fail snapshot.
+Final Form8863line14 is MAGI, line8 is refundableAOC, and line18 is LLC after
+phaseout; the regression now asserts exact independent line values. Final8962
+Table5 puts MFS in the other-status column:40000/15060 floors to265% FPL and
+1950repayment cap, with noPTC absent an exception. Its synthetic1095A now has
+actual policy identity/months. Three joint-return comparison fixtures now have
+actual synthetic spouse identities; surtax/bracket/AMT expectations stay intact.
+230 affected tests pass, scopedlint has noerrors, and diff/whitespace reviewed.
+The remaining workspace1095A expected-source-marker failure is with the facts
+owner. SALT audit-label typo after the earlier rename was separately corrected
+in8c459ce; all587 tests and root types were rerun successfully after that fix.
+
+### Form8801 return integration — 2026-10-25
+
+Integrated independently implementeda44adbb/93f336c prior-year source worksheets.
+Taxyear, sourceyear, original completeness, actual NOL/foreign-tax/capital-gain/
+foreign-income facts now reach the module without optional-value coercion.
+Verified2026 calculations do not need fabricated legacy alias amounts. Final
+line22 uses1040line16+Schedule2line1z less CTC and actual earlier Schedule3credits,
+excluding the minimum-tax credit itself, per refreshed i8801 instructions.
+Red-first integration tests prove2025prior tables produce2306available credit,
+earlier clean-energy credit reduces the current limit to0, and missing/sourceyear
+errors reject. A second red-first direct-input test prevents missing priorAMT
+from becoming zero even when bypassing schema parse.549 focused tests, root
+types and all3,194spec refs pass; scopedlint has zeroerrors, diff/whitespace
+reviewed. Source confirmation and independent final-form review remain required.
+
+### Historical unknown employer compatibility — 2026-10-25
+
+Remote CI exposed legacy direct inputs with no employer EIN. Added a red-first
+source-linked regression and preserved those omissions without manufacturing a
+distinct employer or an excess-withholding credit. Strict2026 still requires
+actual EIN. Existing withholding source records remain unchanged.333 focused
+Schedule3/Pennsylvania orchestration tests, root types, all3197spec refs and
+scopedlint pass. Scoped diff and whitespace reviewed. This is unqualified
+historical preview compatibility; actual employer facts remain required for
+final return qualification.
+
+### Original credit source facts survive reparsing — 2026-10-25
+
+A red-first schema regression demonstrated that legacy defaults could turn an
+incomplete vehicle or adoption record into a complete record on its second
+parse. The shared presence marker now preserves an earlier false value, while
+explicit complete original facts still pass and a caller-supplied true marker
+cannot replace missing fields.17 focused model/guided contract tests, root types
+and scopedlint pass. New spec reference resolves; the global validator currently
+reports46 expected in-progress Form2555 test references owned by that parallel
+package. Scoped diff/whitespace reviewed. No qualification gate changed.
+
+### Foreign income return routing and tax worksheet — 2026-10-25
+
+Integrated 28ba63d's actual Form 2555 source worksheets. Gross wages remain on
+Form 1040; only actual foreign employment absent from W-2 is added to line 1h.
+Net exclusion line 45 enters negative Schedule 1 line 8d, and housing deduction
+line 50 enters adjustment 24j. Source years and W-2 attribution reconcile.
+The foreign income tax worksheet uses net lines 45 plus 50, actual disallowed
+deductions, and the official capital-gain-excess adjustment. Education MAGI also
+uses net lines 45 plus 50 per Pub. 970. Rules now report versions 2025.10 and
+2026.5-law-integration-draft; review and filing gates remain unchanged.
+
+Six source-linked integration tests include red-first routing, source-year,
+net-MAGI, stacking and capital-gain-excess regressions. Independent bracket
+arithmetic for the above-$100,000 fixture gives 85,835 minus 24,095 = 61,740.
+625 focused return/form/schedule tests and another nine metadata/routing tests
+pass; root types, all 3,239 spec references and scoped lint pass (zero errors).
+Scoped diff and whitespace reviewed. The module owner committed the shared
+Form2555 historical integration test file with its coherent package.
+
+Remaining related work is explicit: IRS Tax Table use below $100,000, special
+capital-gain worksheet correctness, Social Security and savings-bond exclusion
+addbacks, foreign self-employment/QBI coordination, and independent qualification.
+
+### Separately reported Treasury interest — 2026-10-25
+
+Refreshed official IRS i1099int: Box 3 Treasury/savings-bond interest is excluded
+from Box 1. Schedule B now includes both source amounts exactly once before the
+separate Form 8815 exclusion, and preserves both amounts in its payer audit.
+A red-first direct test proves 100 + 2,000 = 2,100 interest and a valid 1,000
+exclusion leaves 1,100; the federal return independently reports 87,100 AGI on
+85,000 wages. Historical fixtures now represent actual disjoint Boxes 1 and 3
+while retaining their original exclusion-boundary assertions.136 focused
+Schedule B/OID tests, root types, all 3,257 spec references and scoped lint pass
+(zero errors). Scoped diff/whitespace reviewed. Pennsylvania integration is a
+separate package owned by the parent; all qualification gates remain in place.
+
+### Social Security and bond exclusion addbacks — 2026-10-25
+
+Refreshed Pub.915 Worksheet1 and Pub.970 chapter9. Actual net foreign exclusion,
+housing deduction and adoption-benefit exclusion now feed Social Security
+provisional income and savings-bond MAGI. The housing deduction is also retained
+among the actual Schedule1 line25 adjustments. Farm income now enters both
+preliminary worksheets. A supplied lump-sum exclusion aggregate is counted once
+and rejected when below known exclusions. Positive exclusions use the audited
+19-line Pub.915 worksheet; MFS lived-together skips lines9–16 as instructed.
+The result identifies its worksheet kind for the separate reference-PDF update.
+
+Four red-first regressions prove full SS taxation after an actual foreign
+exclusion, 9,600 taxable benefits after a 17,280 adoption exclusion, restored
+107,000 bond MAGI, farm income inclusion and no duplicate lump-sum addback.
+A further red-first MFS audit assertion preserves the official skipped lines.
+119 focused income/farm/identity tests, 124 adjacent SS/adoption/reference-PDF
+and metadata tests, and a final 123-test SS/bond/metadata run pass. Root types,
+all 3,278 spec references and scoped lint pass (zero errors); diff reviewed.
+Versions are2025.11 and2026.6-law-integration-draft. No filing or review gate is
+changed. Source-qualified Form8815 integration and territory exclusions are the
+next separate package. CTC synthetic joint wage-owner fixture correction is
+committed separately as aaa9dd7; its14 original identity assertions pass.
+
+### Source-qualified savings-bond return integration — 2026-10-25
+
+Integrated acab62e with the actual return year and full source facts. Confirmed
+prior interest included in current statements is removed once before income,
+Social Security and MAGI calculations; original gross Box3 remains intact.
+Verified current bond interest and exclusion must fit the remaining reported
+Box3. Actual territory exclusions and the signed royalty worksheet adjustment
+are required for verified MAGI, including explicit known zeros. No legacy
+amount is silently turned into a verified source fact.
+
+Three red-first return regressions cover2026 midpoint phase-out, prior interest
+and statement contradictions, and actual territory/royalty addbacks.211 focused
+bond/interest/metadata tests pass, root types and all3,282 then-current spec
+references pass; scoped lint has zeroerrors and diff/whitespace was reviewed.
+Metadata is2025.12/2026.7-law-integration-draft; qualification remains closed.
+PA source treatment and independent legal/form review remain separately owned.
+
+### Non-W2 state/local withholding deduction — 2026-10-25
+
+Refreshed ScheduleA line5a instructions. A shared source calculation now includes
+modeled INT/DIV/B/DA/NEC/MISC/G/K/W2G and1099R state/local withholding once, along
+with W2 amounts, actual in-year payments and separate additional payments.
+Equal1099R aliases count once; conflicting positive aliases reject. Actual
+non-W2 withholding deducted on other schedules is removed.2026 requires that
+allocation when positive non-W2 withholding exists; an explicit zero is valid
+and omitted facts remain unknown. A fixed sales-tax election does not require
+an unused income-tax allocation. Auto-comparison uses the same complete amount
+as ScheduleA, preventing a false choice caused by missing withholding.
+
+Spec-linked red tests reproduced450 instead of490 in the comparison and an
+unnecessary missing-fact rejection on fixed sales-tax election.220 focused
+ScheduleA/payment-year/sales-tax tests and six final source/metadata tests pass;
+root types, all3,289spec references and scoped lint pass (zeroerrors). The scoped
+diff was reviewed.2025.13/2026.8-law-integration-draft remain unqualified. OID
+withholding awaits its separately assigned corrected source contract.
+
+### Schedule C other income and official review fields — 2026-10-25
+
+The final 2025 IRS Schedule C confirms receipts less returns on line3, COGS4,
+gross profit5, separate other income6 and gross income7. Actual other income now
+enters profit, Schedule1 and ScheduleSE once. Canonical result names follow those
+printed lines. The review PDF copies unique finite audited amounts, rejects
+source/result contradictions, and preserves unknown proprietor/accounting/
+participation/at-risk facts. Actual activity and other-expense descriptions are
+represented without inventing them. Physical field checks also corrected the
+home-office/net-profit positions and removed text from the line27a amount box.
+
+Two calculation regressions and the source/physical-field PDF regressions were
+red before implementation.141 focused ScheduleC/SE/PDF/metadata tests pass;
+root types, all3,293 spec references and scoped lint pass (zero errors; existing
+non-null assertions warn). The saved canonical fields were reopened and both
+synthetic pages rendered and inspected. Scope/diff/whitespace reviewed. Versions
+are2025.14/2026.9-law-integration-draft. Detailed COGS/vehicle/home-area facts and
+loss limitation forms still require qualification; review copies remain marked
+not for filing. This is not an independent tax or form review.
+
+### Separate-person Schedule SE and complete review pages — 2026-10-25
+
+Refreshed final IRS Schedule SE instructions and form. Each spouse now receives
+an independent regular-method computation: only that person's profits, losses,
+W2 Boxes3/7 and Forms4137/8919 reduce their wage base. Partnership Box14A enters
+once; Box4 guaranteed payments are not added again. Actual adjusted K1 source
+amounts and farm/nonfarm classification are required in2026. Missing joint
+owners or payroll boxes remain unknown; legacy aggregate paths are explicitly
+unverified. A partially attributed payroll calculation rejects unknown W2
+owners rather than dropping their wages. Additional Medicare consumes line6
+subject earnings after the SE filing threshold.
+
+Eight source regressions reproduce spouse wage-base/loss netting, tips, K1
+amount duplication and missing-attribution errors. The final2025 review mapper
+copies each person's official audits into a complete two-page interactive form,
+rejects contradictory totals/duplicate audits and preserves unknown identity.
+Reopened canonical fields, widget values and appearance streams are checked;
+all four synthetic pages were rendered and inspected.637 focused engine/PDF/
+Illinois tests, root types and all3,315 spec references pass. The two historical
+Treasury fixtures now use disjoint actual Boxes1/3; a separate100 bank-interest
+assertion confirms Illinois retains that taxable amount. No assertion was
+removed. Scoped diff/whitespace reviewed; metadata2025.15/2026.10 remains
+unqualified. Optional SE methods, CRP/church/community-property worksheets and
+per-business QBI deduction attribution remain separate qualification work.
+
+### OID return integration and source-specific deductions — 2026-10-25
+
+Integrated e5696a2 recipient calculations with ScheduleB and the federal result.
+Taxable, Treasury and exempt amounts remain separate; actual private-activity
+preference enters Form6251line2g. OID federal/state withholding and early
+withdrawal penalties enter their own return lines once. Allowable excess bond
+premium enters ScheduleAline16, with unused premium carry retained in the OID
+result. A historical payer audit now has one reconciled instrument amount and
+explicitly labels its unverified aliases. Physical ScheduleA16 and6251line2g
+copies use unique finite audits; saved source fields were reopened and rendered.
+
+Five integration/PDF regressions, with calculation and missing-field cases red
+before implementation, cover310.33 taxable/620 exempt interest,12.70 withholding,
+20 SALT,10 penalty,15 allowable premium and45 carry.293 focused engine/PDF and
+metadata tests, root types, all3,321spec references and lint pass (zero errors;
+12 existing non-null warnings). Scoped diff and whitespace reviewed. Versions
+are2025.16/2026.11-law-integration-draft. Excess TIPS ordinary-loss amounts remain
+available from the source module but positive return integration explicitly
+rejects:26CFR1.1275-7(f) establishes the loss, while refreshed Pub1212 only
+specifies the current-instrument ScheduleB offset, not the excess-loss return
+route. No routing fact or line was invented. Detailed TIPS split-statement and
+historic premium cases remain blocked in the source module. Independent review
+and full Form6251 mapping qualification, including existing standard/senior
+add-back display, remain outstanding.
+
+
+## Package: QBI deductions follow their actual owner and trade
+
+Sources refreshed 2026-10-25: https://www.irs.gov/instructions/i8995 and
+https://www.irs.gov/pub/irs-drop/td-reg-107892-18-corrected.pdf,
+Reg.1.199A-3(b)(1)(vi). Partner-level SE tax deductions, health insurance and
+qualified retirement deductions reduce the attributable business's QBI. A
+partnership statement does not include the partner's individual deductions.
+
+The spec and ten tests preceded implementation: the missing helper failed to
+load, and the two return regressions showed omitted partnership and retirement
+deductions. The implementation preserves each owner's calculated SE deduction,
+does not add guaranteed payments to Box14A twice, and accepts reconciled actual
+allocation facts for multiple trades/non-QBI portions. Ambiguous 2026 attribution
+fails explicitly; proportional historical previews remain marked unverified.
+The allocation contract preserves known zero and rejects omitted amounts,
+duplicate sources, mismatches, negative/nonfinite amounts and unknown owners.
+This slice attributes already allowed plan deductions; it does not qualify a
+retirement plan or establish the allowable contribution from an aggregate entry.
+
+All 11 tax-owned failures in the c0871d3 coverage snapshot were traced to omitted
+synthetic W2 Box7 facts or fixtures that had stored ordinary income in Box14A
+while separately adding guaranteed payments. Fixtures now state actual Box14A
+totals, preserving the independently computed SE totals, and audit assertions
+use official line2 instead of the optional-method line4b.
+
+Checks: 215 focused QBI/care/CTC/SE/ScheduleE tests pass; root typecheck and all
+3,346 spec references pass. A broader 672-test run passed671 and found only the
+separate newly strict Form2210 dated-payment integration (queued next), not a QBI
+failure. Scoped lint has zero errors; existing non-null warnings remain. New
+helper/tests are warning-free. Diff reviewed. Rule versions advance to2025.17
+and2026.12-law-integration-draft; review/filing gates remain closed.
+
+
+## Package: actual dated estimated-tax integration
+
+The Form2210 core/source package is44793ac. This return integration refreshes
+https://www.irs.gov/instructions/i2210 lines1–3,6 and the household-employer
+exception. Four new tests ran red before implementation (one source fixture
+needed its actual supported Form8919 field, corrected before implementation).
+Two additional household/extension regressions cover distinct integration paths.
+
+The return now forwards the actual tax year, full optional Form2210 source facts,
+actual federal estimated and extension dates, and explicit prior-credit/return
+payment histories. It excludes state payments and never substitutes an annual
+amount for dates. Physical line1 receives actual Form1040line22. Line2 includes
+only the supported enumerated taxes: SE, distribution taxes, Medicare/NIIT,
+HSA distribution/recapture and household tax subject to the two-part exception.
+Employee misclassification taxes and excess-contribution excise taxes remain in
+Form1040total tax but are excluded from the estimated-tax base.
+
+Five historical direct-call edge fixtures were reconciled with the official
+line IDs and actual synthetic quarterly dates. Their original safe-harbor and
+$1,443 penalty assertions are retained; no annual-total shortcut was restored.
+The independently calculated late-payment regression owes$268 for the three
+late installments despite a January catch-up sufficient for the annual amount.
+
+Checks:795 focused core, federal, guided and edge tests pass; root typecheck
+and all3,350 spec references pass. Scoped lint has zero errors and six pre-existing
+non-null warnings; diff reviewed. Four itemization-only 2026 fixtures additionally needed explicit synthetic
+prior-year no-tax-liability facts; their deduction/AGI/taxable-income assertions
+remain unchanged. Current 2026 source-fact and unpublished2027Q1 rate gates remain enforced.
+Rule versions2025.18/2026.13-law-integration-draft remain unqualified.
+
+## 2026-10-25 — Canonical Form6251 printed audit and review copy
+
+- Official final2025 form and instructions refreshed: <https://www.irs.gov/pub/irs-pdf/f6251.pdf>, <https://www.irs.gov/instructions/i6251>. Source line1a is actual1040line14 minus Schedule1A37; line1b retains signed income; line2a carries actual selected standard deduction or ScheduleA taxes. Depletion belongs2d, AMTI/exemption/base4/5/6, computed tax7, tentative tax9, actual comparison10, excess11 -> Schedule2line2.
+- Spec updated first; five new regressions failed before implementation (including an independently known senior/std source fixture:85000AGI,17750standard,5400senior ->1a17750/1b67250/2a17750/AMTI85000). Historical boundary assertions retain amounts and now use official audit IDs.
+- Calculation emits official audit lines and actual total deductions; unknown total deductions do not become a fabricated line1a. Review mapper copies unique finite audited amounts and checks result reconciliation instead of deriving the regular-tax comparison from AMT. Duplicate or inconsistent audits reject.
+- Added a review attachment identifying unimplemented AMT foreign-tax credit, foreign-income stacking, MFS additional AMTI, AMT NOL and full PartIII source worksheets. No verified-zero AMTFTC or qualification is claimed. Existing calculation amounts are unchanged in this printed-line package.
+- Verification:569 focused calculation/federal/OID/PDF/metadata tests passed; root typecheck and3356spec references passed; scoped lint and diff whitespace checks clean. Three-page senior/std PDF rendered; first page and limitation attachment visually checked, review notice text verified on all3pages. Local artifact `.local/upgrade-evidence/amt-review/6251-senior.pdf`.
+- Rule metadata now2025.19 and2026.14-law-integration-draft; all independent review/filing gates remain closed. Commit reference: this entry's package commit.
+
+## 2026-10-25 — Single ScheduleA estate-tax deduction
+
+- Refreshed official beneficiary instructions <https://www.irs.gov/instructions/i1041sk1> Box10 and ScheduleAline16. Actual estate tax attributable to IRD belongs in the same other-itemized deduction aggregate as allowable wagering losses and excess bond premium.
+- Fixed a concrete integration regression: the ScheduleA result/PDF omitted estate tax while the global audit carried a second conflicting line16. ScheduleA now includes and validates actual Box10 sources once; the post-ScheduleA duplicate addition is removed. Existing3000/3500independent assertions preserved. New spec-first mixed-source and physical-PDF tests failed before implementation and now prove2000gambling+3000estate=5000once, including totalitemized.
+- Verification:254 focused ScheduleA/K1/OID/PDF tests and364 adjacent full-return/SE-PDF tests pass; types,3360spec refs, lint0errors1existingwarning, and diff checks pass. Rendered ScheduleAline16/17 and source descriptions inspected (`.local/upgrade-evidence/amt-review/estate.pdf`). All prior CI8f7f172 non2210 failures assigned to this package now pass at current source.
+- Separate unresolved source boundary: Box11B termination deductions retain their fiduciary statement category and cannot be qualified from the legacy aggregate scalar; Box11A official line24k routing also remains in the bounded federal follow-up list. This package does not claim those scenarios qualified.
+- Metadata2025.20/2026.15-law-integration-draft; gates remain closed. Commit reference: this entry's package commit.
+
+## 2026-10-25 — Published federal Tax Table source helper
+
+- Refreshed final2022–2025 IRS tables; exact URLs and sourcePDF SHA-256 hashes are in `spec/federal/tax-table.yaml`. Actual published rows were extracted independently from PDF text into `tests/fixtures/tax-tables/`; all2,062 rows/all8,248 filing-status amounts peryear match the Decimal interval-midpoint calculation. Total32,992 source cells, both integer endpoints, and all QSS/joint comparisons pass.
+- Added explicit taxYear to current/base-year constant packs and a separate `calculateRegularIncomeTax` helper. The existing exact progressive-bracket helper retains its semantics for callers that require rate arithmetic. Final2022–25 ordinary tax uses the published intervals below100000 and exact brackets at/above100000; nonfinite and unknown-year requests reject.
+- Final2026 table was unavailable at refresh (current publication still2025). The2026 helper is explicitly `statutory-rate-preview` and does not generate or claim final table amounts. Existing getConstants(2026), independent review and filing gates remain closed.
+- Spec first, three red tests recorded before implementation.69 focused tests pass, including every source cell; root types pass. This source/helper package precedes actual1040/QDCG/foreign/kiddie/ScheduleJ integration, whose historical expected amounts must be reconciled with the source rows separately.
+
+## 2026-10-25 — Immutable f23a13a full-suite fixture reconciliation
+
+- Parent full-suite snapshot found five stale cases across four owned files: two AMT audits still expected pre2025 line numbers, and three isolated2026 credit/deduction/bond scenarios lacked actual Form2210 facts. Updated only the physical audit IDs(1b/4/5/6/9) and declared explicit synthetic full-year US-resident prior-year zero-tax facts. Original tax/credit/deduction/bond amount assertions remain intact; no penalty or unknown-rate gate changed.
+- All84 focused tests pass. Scoped diff reviewed and whitespace clean. Parent's snapshot met unchanged coverage thresholds(85.96percent branches,91.61percent functions) but was red until these five fixture corrections; this entry does not substitute a fresh all-green whole-suite run.
+
+## 2026-10-25 — Published tax tables and complete preferential tax worksheets
+
+- Integrated source helper `0b3d78e` into Form 1040, both foreign-income tax worksheet steps, parent/child Form 8615 and the current-year Schedule J computation. Schedule J base years intentionally use their actual Tax Rate Schedules, as the official instructions require; the three years derive from the return year. The result labels final historical table sources separately from the unqualified 2026 statutory-rate preview.
+- Refreshed official 1040 and Schedule D instructions. Replaced the approximate special-gain stacking with the official QDCG lines 1–25 and Schedule D Tax Worksheet lines 1–47. Actual investment-income election amounts are supported by the pure worksheet contract. Low-income section 1250 and collectible gains use the applicable ordinary rates; capital losses do not erase actual qualified dividends. Every intermediate line is audited.
+- Seven new source and integration tests were red before implementation. Independent expected outputs include every line of the 600000 mixed-gain worksheet (165177 tax), the published 69250–69300 single table row (10155), the foreign exclusion worksheet (6790), kiddie tax (412), and actual Schedule J base-year rates. Historical failures were corrected from source table rows and manually derived worksheet arithmetic; no thresholds or assertions were removed.
+- Verification: 598 focused tests and 98 adjacent QDCG/Schedule J/metadata tests pass; root types and all 3459 spec references pass. Scoped lint reports zero errors with existing non-null/unused warnings. Diff and whitespace reviewed. Metadata is now 2025.21 and 2026.16-law-integration-draft; qualification gates remain closed.
+- Limits are explicit: final 2026 Tax Table is unavailable; Schedule D lines 18/19 source gain/loss worksheets, current Schedule J gain allocation and actual Form 4952 election integration remain separate work. A complete tax worksheet does not establish those missing source amounts or independent review.
+
+## Bounded remaining federal implementation matrix — refreshed 2026-10-25
+
+This replaces the earlier “next package” list. Implemented means source-backed
+code and tests exist. The 2026 pack is still incomplete, independently unqualified
+and unavailable for filing. A rejected branch is not completed implementation.
+
+| Execution-brief family | Completed bounded paths | Remaining internal work or exact source-method boundary |
+| --- | --- | --- |
+| Year provenance and final arithmetic | Independent year packs; published 2022–25 tables; current-law 2026 statutory preview; ordinary/QDCG/Schedule D tax worksheets | Final 2026 Tax Table and unavailable final forms are external publication dependencies. 2dbce45 implements the bounded actual Schedule D special-gain source worksheets. Schedule J gain allocation and additional property/QSBS histories remain source-workbook work. |
+| Schedule 1-A, tip payroll and QBI | edde2a0 separate-owner Form4137; b0db101 original reporting, canonical business limit and allowable tip deduction into QBI; d0dd710 actual senior death facts; 74c2d24 guided sources | Reduced mixed employee/business or multiple-business tip claims lack a verified allocation method for the final section224 deduction. Other business/1099K/MISC tip mappings and RRTA Medicare coordination are implementable source integrations. Vehicle refinancing/history beyond the supported actual loan remains separate. |
+| Health deduction and Marketplace PTC | 686760e actual per-business Form7206; c499cab positive2026 coupling; c0b9c33 historical W/X; c21b6ae ordered IRA/bond/loan and Y/Z; bcb3a92 and242e3ea actual guided policies and health sources; b1fab71 fresh-source aggregate review pages; this package retains the actual ordinary rental allowance before IRA/bond/loan and refigures it on final no-PTC ineligibility | d89cbe5 implements ordinary actual NOL sources and separate regular/AMT/1411 replay; the Pub974 package below composes those calculations at each prescribed health step. Ordinary-no-PTC re-entry, historical forgiven-advance premium allocation, separate historical nonspecified-only businesses, mixed owners, partial family/payer shares and missing K1 gross-income attribution remain internal methods. Shared policies, alternative marriage and special lawful-presence worksheets need their actual source contracts. |
+| Passive activities and business losses | 0a7398a Form8582 official lines, net-loss MAGI, allocation, prior-loss transfer and review pages; fc39cf3 continuing PTP prior-loss transfer; this package separates current rental QBI from actual FIFO prior qualified vintages and fixes detailed trade loss netting | 7441a20 corrects ordinary passive-first SSA/IRA/bond/loan ordering; this package adds the ordinary rental Pub974 sequence. Ordinary actual NOL/passive replay is implemented in the package below. Disposed PTP character, detailed PTP QBI calculation and physical8995-A audit mapping remain internal work. K1 active-participation and qualified-loss vintages, further post-passive limitations, basis/at-risk limits, personal-use280A and real-estate-professional source treatment require their actual histories. No inferred activity or QBI carry character. |
+| Ordinary NIIT and foreign tax | Actual annuity and allocable-tax sources; current cash-paid deduction election and ScheduleA6/AMT2a/NIIT9b; deduction-year hypothetical carry absorption; actual country/state allocation; a996dbc actual904(j); 8638b5e/ce607a2 ordinary passive regular/AMT1116, independent carry ledgers, intake and review | Qualified-dividend/capital rate adjustments and4952 sourcing, mixed passive/high-tax and other categories, loss accounts, differing AMT sources, accrual/redetermination, changed filing history and special itemized allocation require their own actual histories and worksheets. These are internal implementation boundaries. |
+| Education, educator and savings bonds | Actual8863 identity/support/credit coordination; actual1099Q beneficiary/account/recipient sources; affeef4 returned ESA amounts; 4421801 bounded account disqualification; 894f7b9 in-kind ordering; 3fbaf48 actual loan deduction; 195f018/efbbb6a bond income ownership; actual educator eligibility and final exclusions | Partial final bond exclusion across mixed owners has no verified attribution method. Broader pledged-account/disqualified-account basis and education-coordination methods remain explicit. Source-supported cash, full-exclusion ownership and bounded in-kind branches are already implemented, not “next.” Ordinary actual loan/NOL replay and the Pub974 composition below are implemented; unrepresented special-source interactions remain separate. |
+| Itemization, SALT, charity and mortgage | Actual source-state withholding, current/payment-year refunds, enacted SALT phase-down; Pub936 debt/points/recovery source worksheets; crypto gifts; educator excess, TIPS loss and post-section68 NIIT limits; ffdb3e2/ba451d3/d912b8f/029d5d9 original source, balance-method, completed-category and points-history mortgage intake | Mixed-origin refund batches need separate prior-year workbooks. Automatic mixed/refinanced debt tracing beyond supplied completed sources, charitable transition/election histories and actual Form8283 qualification remain separate. |
+| Care, adoption and child income | Actual2441 PartIII and wage/C/F/QBI; actual8839 refundable split; child-credit identity/payroll; child/parent PAB; actual8814 election/parent comparison, income character and Alaska; special-gain netting; child4952 source conservation; 5a3aab5/3aed6e8/cc10a79 actual1202 issuer/acquisition/holding-period limits, canonical transfer, intake and review | Additional changing-ownership/property histories remain separate. ScheduleE care-benefit deductions need partner/rental SE/passive coordination. Schedule3-A public-benefit limits still need an applicable authoritative method and taxpayer sources; a generic approval flag cannot establish it. |
+| Retirement, HSA and other special worksheets | Actual IRA compensation/age/rounding, separate-owner HSA sources/excess/corrections and distributions; actual Form8801/2555/8815/OID/dated2210; canonical Schedule1 and estate24k; actual foreign-income source/qualification intake; corrected8606 monetary lines and fc46b8d Roth FIFO/repayment worksheets | 0834e46 implements ordinary separate-owner positive traditional-IRA basis with actual account/distribution sources and review binding. Broader IRA/Roth/RMD/correction histories, non-HSA separate-owner5329 parts, qualified-funding treatment, general AMT/MFS/special-loss worksheets, disaster standard deduction and ScheduleR credit-limit sources remain internal work. Complex split-statement/pre-modern OID remains separately rejected. |
+| Energy and transition vehicles | Actual acquisition/placed-in-service dates, transfer reports, tax limits, carryforwards and source-bound review pages | Mixed business Form3800 coordination and unsupported special histories require source implementation. Unpublished final forms and independent qualification remain external. |
+
+The current finite canonical queue is:
+
+1. **Remaining NOL methods:** the actual carry source and ordinary IRA, SSA,
+   passive, loan and itemized replay are implemented below, with separate AMT
+   and1411 histories. Pub974 composition and current public-cash170(d) carry
+   coordination with known-empty ATNOL history are implemented below. Next are
+   broader current-year origin-loss sources beyond the implemented active,
+   all-at-risk ScheduleC standard/ordinary-itemized and ordinary investment
+   capital methods. Positive-ATNOL current-public-cash charitable coordination
+   and clear nonnegative-net1202 origins are now implemented. AI owns
+   prior/mixed-category charity and2026 nonitemizer carry; federal-law owns
+   the bounded actual insolvency/NOL reduction package and its guided collector.
+   Distinct modified-absorption COD coordination and later attributes remain
+   explicit internal methods. Other remaining source methods are
+   estate/EBL origin-character and general foreign-loss allocation methods.
+   Current AMT basis/depletion exceptions need their separate source worksheets.
+   No missing origin, history, ownership or loss character may be inferred.
+2. **Remaining Marketplace methods:** ordinary-method eligibility re-entry;
+   actual forgiven-advance costs in the historical capped branch; separate
+   historical nonspecified-only businesses; mixed owners, partial family/payer
+   shares and K1 earned/gross-income attribution. Shared-policy, marriage and
+   lawful-presence paths need their actual allocations before calculation.
+3. **Remaining passive/QBI source methods:** disposed PTP character and detailed
+   PTP QBI; actual K1 participation and qualified-loss vintages; physical8995-A
+   line mapping. Existing basis/at-risk and personal-use limits remain explicit
+   source-history branches, not implicitly completed by a Form8582 calculation.
+4. **Schedule1-A attribution:** reduced mixed employee/business or multiple
+   business tips still lack a verified final-deduction allocation method; further
+   source types, RRTA payroll and vehicle refinancing histories require their
+   concrete source paths. No invented pro-rata or favorable-priority election.
+5. **Named special-source limits:** parent-owned broader ScheduleD/section1202
+   transfer and changing-ownership histories beyond the implemented actual issuer
+   source route; foreign-credit special income, loss and reduction histories
+   (implementation ownership is currently unassigned while the AI agent finishes
+   the execution brief's evaluation work);
+   partial mixed-owner bond exclusions, pledged education accounts, mixed-origin
+   refunds and remaining source-specific retirement/AMT/care-business branches
+   listed in the matrix above. These stay within their existing form families.
+
+A source-history requirement means the input contract and calculation method must
+be implemented together; it does not mean that user approval is missing. Actual
+facts needed include NOL origin/use and elections, activity ownership and loss
+vintages, policy allocations, foreign payment/election history and special asset
+acquisition/basis. When the existing enabled inputs cannot establish a method,
+the exact branch remains rejected. Those internal gaps are distinct from final
+form publication and independent professional review. New findings must attach
+to this finite queue or the named matrix family, rather than expand the task into
+unrelated forms.
+
+The current COD package is tracked in
+[`upgrade-2026-cod-nol-work.md`](upgrade-2026-cod-nol-work.md). It preserves current
+tax, independent regular/AMT histories and fixed1411 origin character, and reduces
+carryovers to the discharge year before residual final-year expiry. Its actual
+guided collector follows canonical review; structured inputs alone do not finish
+the enabled-source criterion. The positive1202 negative-net printed/statutory
+overlap remains a named qualified-interpretation dependency, not a user arithmetic
+choice. Ordinary capital intake belongs to facts, and prior/mixed charity belongs
+to AI; none is silently reassigned or counted complete here.
+
+External evidence is limited to independent tax review with independently
+reviewed expected outputs, final year-specific forms/mappings where unpublished,
+and the future2027 first-quarter rate for2026 Form2210 exposure extending there.
+Parent owns hosted/provider/staging evidence and selected-state qualification.
+No missing source, reviewer or future rate has been invented.
+
+
+## 2026-10-25 — Actual possession exclusions in Social Security
+
+- Refreshed Publication915 Worksheet1 line5. Consumed the actual Puerto Rico and American Samoa source contract from 0b29f28; missing amounts or source confirmation are rejected when supplied, and positive-benefit 2026 calculations require this source pair. Historical absent facts remain a legacy preview rather than an invented assertion of zero.
+- Two regressions failed before the fix. The ordinary synthetic worksheet has10000 wages,20000 benefits and25000 actual exclusions: provisional income45000 produces13850 taxable benefits and23850 AGI. With4000 attributable to the actual prior year, the lump-sum method produces12150; the25000 aggregate replaces rather than duplicates the known exclusions. A contradictory smaller aggregate rejects.
+-34 focused calculation/model tests pass; root types,3469 spec references and scoped lint/diff checks pass. Rule versions2025.22/2026.17 remain unqualified. Source confirmation establishes the exclusion amount already determined by the taxpayer; it does not implement or qualify a resident Form4563 return.
+- Added to the bounded historical-source queue after facts audit: new 1099-G family-leave source box under Rev.Rul.2025-4 and actual unemployment repayment/contributory rules. Positive unsupported PFML/repayment paths remain gated by source collection until their calculation/routing is implemented.
+
+## 2026-10-25 — Actual dependent-care benefits in the federal return
+
+- Refreshed final Form2441 instructions lines12/24/26. Bound Part III to actual W2 Box10 and source owner, actual Schedule C/F owner/activity and already-deducted expense. Positive W2 benefits require matched source records; unknown Box10 remains unknown, with a strict2026 gate. Source IDs retain original array positions and no payer or owner is invented.
+- The return calculates benefits before wages, business profit, self-employment tax and QBI. Additional taxable benefits enter1040line1e once. Schedule C14 and Schedule F15 add the actual allocated deduction and subtract actual already-deducted benefits. Independent source cases with0,2000or2500already recorded all produce the same2000allowed deduction and98000net profit from100000receipts. An amount above the actual reported expense rejects.
+- Original validated Part III facts flow to Part II, whose net expense base is not reduced twice. The actual supported MFS living-apart exception works. Benefits-only results remain available in form2441Benefits without inventing a credit claim. Schedule E sources explicitly reject pending their actual SE/QBI/passive coordination.
+- Spec preceded five new integration regressions and a failing physical-PDF regression. The Schedule C mapper now copies and reconciles audited line14; tampered audits reject. Rendered first page visually confirms2000at14/28 and98000at31 (`.local/upgrade-evidence/care-benefits-review/schedule-c.pdf`).
+-224 focused and522 adjacent federal/PDF tests pass; root types and all3480 current spec references pass. Scoped lint has zero errors and16 existing non-null warnings; diff/whitespace reviewed. Care-agent omission regression now explicitly omits Box10 rather than relying on the shared complete synthetic fixture. Metadata2025.23/2026.18 remains unqualified and independently unreviewed. Commit reference: this entry's package commit.
+
+## 2026-10-25 — Immutable99fc4c2 Tax Table regression reconciliation
+
+- Parent's immutable full run exposed16 assigned historical expectations still using exact-dollar brackets or the old special-gain component semantics. Reconciled all16 against the already verified final2025 source rows, including single69250→10155,59250→7955,66250→9495,34250→3875 and MFJ23500→2353,51500→5706. Child worksheet2700uses271 and zero-parent2300uses231. Credit limits/carry amounts now follow those source taxes; all credit conservation and penalty assertions remain explicit.
+- Corrected the complex section1250 assertion to compare total income tax. The actual2000gain moves from15percent to the applicable24percent ordinary rate, raising total tax180 (43741→43921), while the separately reported preferential component decreases300. Added exact totals and component assertions rather than weakening the old comparison.
+-342 tests across all six assigned files pass. The late-payment penalty remains268 with the table-derived2285quarterly requirement. Parent owns the remaining state/PDF timeout diagnostics; facts owner handles workspace previews. This is a fixture/source reconciliation for99fc4c2, with no further production calculation or readiness change.
+
+## 2026-10-25 — IRA compensation, excess contributions and source summary
+
+- Refreshed official Publication590-A Worksheets1-2 and AppendixB2 (https://www.irs.gov/publications/p590a). Corrected the IRS rounding direction: round the remaining phaseout deduction upward to the next10, rather than rounding the reduction upward. Actual compensation and section501(c)(18) contributions cap allowable contributions; excess contributions remain separate from valid nondeductible basis. The200 minimum cannot exceed actual eligible contributions. A nonparticipant QSS is not treated as a current joint filer for the spouse-active rule.
+- Three source-boundary tests failed before implementation. Independent examples include2025MAGI79001→7000 and80001→6300;2026age50MAGI86000→4300;2000compensation/7000contribution produces2000deduction and5000excess, rather than adding excess to Form8606basis. Strict2026 requires actual compensation/plan facts and applicable MFS living arrangement; historical missing sources remain explicitly unverified.
+- The reference PDF copies unique reconciled worksheet audits, displays actual compensation or Unknown, and separates valid nondeductible contributions from excess. A contradictory result rejects. Rendered and inspected the one-page2000compensation/5000excess example at `.local/upgrade-evidence/ira-source-review/ira-deduction-worksheet-reference-filled.pdf`; no filing template or independent-review claim was added.
+-150 focused core/Schedule1/PDF tests pass. Root types and scoped lint pass with three existing non-null warnings. Adjacent457-case run has453passes and four known parent Form4952 audit-label transitions, assigned to the following integration package; the single current spec mismatch is the parent-owned ScheduleA→4952canonical-line reference. Metadata2025.24/2026.19 remains unqualified. Full-return compensation and MAGI coordination is the next separate implementation, not claimed complete by this pure worksheet package.
+
+## 2026-10-25 — Canonical IRA return income and compensation
+
+- Four source-first integration regressions reproduced inconsistent Schedule1/result deductions, omitted Social Security and compensation, and unknown spouse contributions defaulting to zero. The return now computes IRA modified AGI once from all pre-bond income (including actual Treasury interest, farm income and other Schedule1 additions), actual non-IRA/non-student-loan adjustments and foreign/adoption addbacks. It computes AppendixB Social Security before IRA, then recomputes actual benefits using the allowed deduction. Schedule1 receives the same completed amount instead of recomputing from partial income.
+- Added actual per-owner compensation after SE-tax/retirement adjustments, Roth and section501(c)(18) contributions, and source confirmation; omitted spouse contributions stay unknown. Joint lower-earner compensation subtracts the other spouse's actual traditional and Roth contributions. Actual dates of birth supply age; QSS cannot add a current-spouse contribution. Source-complete2026 and explicitly supplied current facts require the full source set. Historical incomplete sources remain unverified.
+- Independent examples:79000wages+10000Treasury interest yields89000MAGI and no deduction;5000farm profit with printed SE half354 yields84646MAGI and3050deduction;118000joint wages+12000benefits yields128200IRA MAGI/7120deduction/121080AGI. At20000wages+20000benefits, IRA MAGI includes2500pre-deduction benefits, while actual taxable benefits after7000deduction are zero. Joint10000compensation less6000traditional/1000Roth supports only3000for the other spouse; the4000excess is not nondeductible basis.
+-154 focused tests pass;450/454 broad federal tests pass, with only the four parent4952canonical-line transitions remaining for the next package. Root types,3499spec references and scoped lint pass (six existing non-null warnings). One printed Schedule1line20 exists and reconciles with the retained IRA result. SE retirement adjustments now reach Schedule1line16 consistently; Form8582 adds back the actual worksheet deduction.
+- Explicit bounded limitations: IRA with NOL/passive losses, current IRA distributions or a lump-sum Social Security election rejects pending its specialized source coordination. Mixed traditional/Roth excess needs actual allocation. Excess contributions are separately exposed; their return/correction/remaining-excise facts and Form8606 basis persistence still require separate source treatment. Student-loan and remaining post-AGI interactions remain in the bounded matrix. Rule versions2025.25/2026.20 remain unqualified and independently unreviewed.
+
+## 2026-10-25 — Actual investment-interest source and preferential election
+
+- Refreshed official Schedule D/1040 instructions and K-1 Code B routing. Completed source-confirmed Form4952 amounts now retain the actual year and include partnership amounts once. Historical direct-only previews retain automatic interest/income aggregation; Box20B is informational until actual deductible expense classification. The final Form4952 line5 excludes nondeductible miscellaneous expenses, so source CodeB alone is not a deduction.
+- Three red-first integration cases now pass. Electing10000qualified dividends into investment income leaves80000ordinary taxable income and12520published2025table tax. An8000election allocated4000to gains leaves6000dividends/6000gains preferential and produces7720tax from the published5920ordinary row plus1800preferential tax. The actual1040qualified-dividend amount remains unchanged.
+- Foreign stacking uses the post-election ScheduleDline10 to compute capital-gain excess. With20000dividends,5000election,10000taxable income and80000excluded earnings, excess5000reduces worksheetline6to10000while actual electionline3stays5000; stacked14020less12520on excluded income yields1500tax. Current-year missing/wrong-year sources reject. ScheduleJ/Form8615 election combinations explicitly reject pending their separate source worksheets.
+-532 focused tests pass, including the complete federal suite and adjacent FEI/4952/reference PDF tests. Root types and3512current spec references pass; scoped lint reports zero errors and202 existing non-null warnings. Diff and source formulas reviewed. The next separate package supplies actual AMT Form4952 rather than assuming regular-tax values also apply. Rule versions2025.26/2026.21 remain unqualified; the preceding IRA ledger's2026.20 was a documentation version label and the actual prior metadata still read2026.19, now advanced explicitly.
+
+## 2026-10-25 — Separate AMT investment sources and actual Part III
+
+- Official Form6251 instructions require a separate AMT4952 with its own current interest, prior AMT carryover, income, gains and expenses. Added actual form4952Amt and confirmed amtCapitalGains source contracts; no defaults turn missing sources into zero. The AMT election reconciles to min(regular4952line4g,AMT4b+4e). 2026regular4952 requires this separate worksheet; actual preferential sources require completed AMT basis/gain values.
+- New signed2c is regular deduction minus AMT deduction when itemizing. Independent5000regular/8000AMT and5000regular/2000AMT examples produce−3000/+3000 and77000/83000AMTI. The same source under the standard deduction creates no itemized adjustment. A different year, missing source or contradictory election rejects.
+- Added a pure Decimal implementation of all29PartIII lines12–40, using AMT source13/14/15 and distinct regular source20/27. Actual election10000from20000dividends leaves10000preferential AMT income:71900AMTbase gives61900ordinary×26% plus1500, totaling17594. The independent special-rate line fixture produces47400; every printed intermediate is asserted. Historical absent AMT source worksheets remain unverified compatibility and do not emit fabricated PartIII audits.
+- Five new calculation/integration regressions were red before implementation; a separate review-PDF tampering test failed before reconciliation.616focused/adjacent tests now pass; types,3557current spec references and scoped lint pass (six existing warnings). Rendered the three-page review at `.local/upgrade-evidence/amt-investment-review/form6251.pdf` and inspected actual PartIII fields; signed2c prints(3000), with actual17564line40in the second scenario. Unique complete PartIII audits must reconcile40to7 and12to6.
+- This package implements actual supplied source arithmetic, not the creation of every AMT basis worksheet. Foreign AMT stacking/FTC, MFS additional AMTI, AMT NOL, ScheduleE interest allocation and other missing-source branches remain bounded implementation work. Filing and independent-review gates remain closed. Metadata2025.27/2026.22 records this source slice; package commit supplies the exact reference.
+
+## 2026-10-25 — Actual energy filing status in return credit limits
+
+- Forwarded actual filing status to both preliminary improvement and final clean-energy computations, preserving the source-qualified separate-main-home rule for joint filers. The source regression failed before the two call sites were corrected. Two actual spouse homes with10000qualified heat-pump cost each retain separate2000limits and a4000allowed improvement credit.
+-29 focused tests pass, including the actual-home source suite and credit integration. Root types and all3561current spec references pass; the narrow diff was reviewed. This is a caller handoff for30fc3dd, with no filing or independent-review gate change.
+
+## 2026-10-25 — Immutableff761dd IRA boundary expectations
+
+- Refreshed Publication590-A Worksheet1-2 lines4/6/8 and Table1-3. Seven historical assertions still encoded the replaced reduction-rounding direction, a current-spouse phaseout for QSS nonparticipants, or excess contributions as valid basis. Corrected their independent source expectations:9999×0.80=7999.20 rounds to8000;19999×0.35=6999.65 and9999×0.70=6999.30 round to7000. QSS nonparticipants have no Table1-3 income phaseout.10000contributed with7000allowable yields3000excess and0nondeductible basis after7000deduction.
+-43 focused tests and all3570current spec references pass. Existing failing assertions were retained as exact source boundaries, with explicit excess-contribution conservation added. No calculation, threshold or readiness gate was changed.
+
+## 2026-10-25 — Canonical Schedule1 and1040 source totals
+
+- Refreshed final Schedule1, beneficiary K1 instructions and Pub925. ScheduleD capital gains remain on1040line7; Schedule1line10 now includes only its own1–7/9. Finalization retains actual C/F/E, digital8v, taxable529/Coverdell8z, NOL8a and source components once. Estate finalBox11A is positive24k and reaches25/26. Housing24j reaches25 while its Pub970/590-A MAGI addback is preserved.
+- The final source result is emitted once after passive/NOL worksheets. Result.otherIncome is now canonical1040line8, including business/farm/rental amounts. Suspended rental losses already excluded fromAGI now also correct totalIncome; final1040line9 minus10 equals11. Existing declared NOL/passive source limitations are unchanged.
+- Five source regressions were red before fixes. Independent combined example:10000business+2000farm+3000royalties+400misc+200education+100digital=15700Schedule1;5000capitalgain stays separate.85000wages give105700income;700estate deduction joins848SE half for1548adjustments. At150000wages the10000rental loss is suspended, leaving150000income andAGI.85000wages+1000misc−5000NOL gives81000once. Housing5000at95000MAGI preserves833student-loan deduction.
+- The review mapper copies unique canonical audits and reconciles them with retained results and1040; two tampered-audit boundaries reject. Rendered three-page source review at `.local/upgrade-evidence/schedule1-review/schedule1.pdf`; pages1/2 visually checked and allthreepages retain the review notice. Printed8v100/8z600/9=700/10=15700 and24k700/25=700/26=1548 match sources. Unclassified manual24totals are disclosed, not assigned a made-up category.
+-887focused/adjacent tests, root types and3588spec references pass. Scoped lint has zeroerrors/sixexisting non-null warnings. Reviewed diff and source fixtures; two older rental assertions now preserve the allowed25000loss/2000carry rather than contradictingAGI. Metadata2025.28/2026.23 remains unqualified.
+- Remaining classification branches in this slice: unclassified1099-MISC rents and K1otherportfolio components, section280Frecapture placement back to the originating business schedule, and crypto lending characterization. Their historical preview values remain explicitly unqualified; this finalizer does not invent their underlying tax facts or independent review.
+
+## 2026-10-25 — Individual HSA excess forms and absorbed deduction
+
+- Refreshed final i5329 joint-return instructions and PartVII42–49, plus i8889 excess/prior-contribution instructions. Added actual form5329HsaByOwner current/prior-year sources, prior line48/49, individual year-end value and correction facts. Omitted values remain unknown. Each owner uses only their8889 room, distributions and corrections; source-conflicting aggregate amounts reject.2026material exposure cannot silently disappear when the legacy aggregate form is absent.
+- Separate600/700excess boundaries use indexed2026/2025limits. The independent2025two-owner example has700excess each but100/10000account values, producing6and42tax rather than an aggregate84. Primary1000prior excess cannot be absorbed by spouse3300unused room. Actual prior49zero does not create a line42carry. Each line48carry persists separately, with an aggregate display total only.
+- Implemented the previously omitted same-owner prior-excess deduction beforeAGI:2000current contributions plus2300absorbed prior excess yields4300Form8889line13 and80700AGI on85000wages. Ordinary3600.10deductions retain cents; exact Decimal source amounts are retained and the final excise tax rounds to dollars.700confirmed amended-return relief affects only that owner;25earnings reachesSchedule1once.700employer excess with200already in actualW2wages adds500otherincome, even when excess is returned. Unknown employer-income reconciliation rejects.
+- Refreshed final2025 i1099-SA page2 Boxes1/2 (https://www.irs.gov/pub/irs-prior/i1099sa--2025.pdf): gross Box1 includes Box2 earnings. A725gross/25earnings timely correction excludes725on8889line14b while reducing5329excess by700principal;25remains income. An omitted worksheet14a now receives actual source gross instead of a manufactured zero. Source-confirmed corrections require known Box2 and actual owner; contradictory gross exclusions reject. The historical900gross/30earnings regression now retains330excess from1200and19.80unrounded compatibility tax.
+- Six source integration regressions, the physical mapper regression, a cents-review regression and source correction/reconciliation boundaries failed before their respective fixes.921focused/adjacent tests now pass, including two companion Form8889line21expectation corrections owned by the facts agent. Root types,3614current spec references and scoped lint pass (zero errors/eight existing warnings). Reviewed the scoped diff. The facts UI binding is a separate commit.
+- Separate three-page review forms carry actual individual name/SSN and audited42–49; source/audit tampering rejects. The packet retains a required zero-tax form when prior excess is fully absorbed. Rendered `.local/upgrade-evidence/hsa-owner-review/primary.pdf` and spouse.pdf; primaryPartVIIvisually inspected, and all six pages preserve exactly one review notice. No final2026template or filing qualification is claimed.
+- Bounded remaining source cases: corrections exceeding current-owner excess require actual origin-year attribution; qualified funding beyond the annual limit requires IRA treatment; positive non-HSA joint5329parts require their own owner allocation and are explicitly rejected when combined with this actual-source path. Mixed1099-SA disability/ordinary distributions require actual event-level medical and taxable-exception allocation; the current gross automatic exception cannot establish that allocation. These are internal source/integration work, not missing approval. Metadata2025.29/2026.24 remains independently unreviewed and unqualified.
+
+## 2026-10-25 — Crypto property enters charitable limits before deduction
+
+- Refreshed official digital-asset FAQ78/79 and Publication526 current-year Worksheet2. Crypto tentative property values now enter the combined charitable categories before ScheduleA caps/floor; the old post-calculation addition is removed. Short-term and ordinary property use min(FMV,basis); known unqualified recipients receive zero. A calendar-year anniversary remains short term even across a leap year. Long-term loss property has no avoided gain or capital-gain category; second-category capital property receives the required basis reduction and retains its20%category.
+-2026 and source-confirmed gifts require actual recipient category, capital-asset status, complete ownership/no-benefit facts and substantiation/appraisal review. Missing qualification is no longer defaulttrue. Historical incomplete facts remain an explicitly unverified preview. Donation transfer costs are not added to value. Actual similar-property appraisal requirement is retained, and an individual value above5000cannot claim no appraisal requirement.
+- Four source integration tests were red before implementation. At100000AGI,40000public capital crypto yields29500deduction and10500category carry after the2026floor; direct20000pluscrypto20000shares the same limit. A40000FMV/25000basis gift to a second-category foundation yields19500deduction and5500carry. A short-term12000basis/8000FMV gift uses8000. Crypto never supplies the nonitemizer cash deduction.
+- Final2025 current-year categories use published Worksheet2 rather than the2026floor or cash adjustment. The official50000AGI example with2000publiccash/28000publiccapital/5000privatecash yields17000deduction,13000capital carry and5000private carry. The return-level100000AGI/30000cash/40000crypto example yields50000deduction and20000carry.
+-759 focused and adjacent tests pass, including the full federal suite; root types,3635current spec references and scoped diff review pass; scoped lint has zero errors and five existing warnings. Source-preserving metadata2025.30/2026.25 stays unqualified. This implements current contributions; historical category carry coordination, public-property50% election, special bargain/partial gifts and Form8283 source pages remain separate bounded work. HSA package reference:104bca4; the actual contribution UI binding ised5cae9.
+
+
+## 2026-10-25 — Form461 employee exclusion, actual classifications and attachment
+
+- Immutable10be1de exposed an old otherIncome assertion, but refreshed final2025 Form461 and instructions established a substantive error: employee wages and employee deductions are excluded under §461(l), and official lines1/7 are reserved. Replaced invented printed identities with actual lines2–6/8–16. Capital losses are removed in PartII; business capital gains are capped by the lesser of business capital gain net income and total capital gain net income. Actual separate business adjustments enter8; statutory164(f)(2) supports SE-tax business attribution. OBBBA permanence and indexed2026 threshold256000/512000 are recorded in the spec.
+- Five initial source tests failed before implementation. At50000wages and550000ScheduleC loss, EBL is237000; Schedule1line10 is−313000 and1040income/AGI−263000. Wages stay on1040line1z and cannot absorb business loss. The full official-line example independently yields−383000business net, signed16−70000 and positive8p70000. Original historical source amounts remain intact; stale wage-offset oracles were corrected with explicit arithmetic.
+- Added optional source worksheet with actual year/reference, capital and noncapital classifications and completed prior at-risk/passive limitations. Missing source remains unknown; other receipts/deductions must reconcile to reported amounts. Material supplemental-loss cases require actual post-passive classification; source-confirmed interactions use the actual completed8582MAGI worksheet and reconcile final allowedE. The separate passive regression was red first:550000C loss plus25000allowed business rental loss produces262000addback and−313000netSchedule1. This supports actual completed worksheets; automatic source classification and coupled upstream worksheets remain separate internal work.
+- Attachment requirement now includes any PartI line loss above half the single-filer threshold, even on a joint return with no addback. The source reference copies unique official audited values and rejects missing/duplicate/tampered lines. Three new PDF checks were red first. A200000line loss retains its required reference attachment with zeroaddback. Both rendered pages at `.local/upgrade-evidence/form461-review/` were visually inspected and carry the reference-only notice; no filing qualification is inferred.
+-608 focused/adjacent tests across8files pass, including full federal, canonicalSchedule1, workspace preview and saved-storage tests. Root types pass. All3665working-tree spec references resolve; the isolated exact staged package also passes608tests, root types and3659committed spec references without adjacent educator edits. Scoped lint has zero errors with existing non-null warnings. Restored the established AGI audit formula presentation. Parent independent code review identified an invalid net-sign bound: a net−100000ScheduleE can contain+100000business and−200000nonbusiness, or−300000business and+200000nonbusiness. A red-first regression now requires actual noncapital business net and reconciles the signed source components, accepting both cases and rejecting a one-dollar discrepancy. Parent re-review found no remaining actionable issues in this slice and independently ran13source/PDF tests successfully. This is agent code review, not independent professional tax qualification. Scoped diff reviewed; metadata2025.31/2026.26 remains unqualified. Crypto prerequisite isca323c5; this package does not alter its law or inputs.
+
+
+## 2026-10-25 — Preserve unknown qualified-stock facts
+
+- Remote CI054cd59 exposed a regression after the common crypto category integration: missing qualified-appreciated-stock status was treated as false for a2026 private-foundation gift. Refreshed Pub526 capital-gain-property exceptions and restored unknown rejection while retaining knownfalse basis reduction. At100000AGI,2000FMV/1000basis yields1500deduction when qualified and500when explicitly unqualified, after the500floor. Unknown basis on the false branch also rejects.
+- Existing failing assertion reproduced before implementation, spec updated first, and explicit true/false/unknown boundaries retained.142focused tests, root types and3676working-tree spec refs pass; lint has zero errors/one existing warning. Narrow diff reviewed. Rule2026.27 remains incomplete/unqualified. Form461 predecessor9d814f9 contains the independent agent-review correction.
+
+
+## 2026-10-25 — Actual education distribution return handoff
+
+- Integrated eaaeb04 source calculator with actual return year and actual credit-student inputs; an explicit empty list means no credit is claimed.2026cannot silently use the legacy2025 fallback. Own recipient earnings enter canonical Schedule1once; other recipients remain in source output without entering this return's income or tax. A spouse recipient requires an actual joint-return spouse.
+- Added per-student eligible LLC expenses to the retained8863result and validate the linked actual student after phaseout and tax limits. A credit allocation that creates taxable529earnings cannot rely on an absent/ineligible/zero-allowed credit or another student's positive credit. No automatic expense reallocation is performed. The published5300distribution/950earnings/1200AQEE example yields735taxable,717credit-related exception and2additional tax; another recipient's200earnings remains outside this return. The2026K12case uses20000qualified expenses.
+- Four initial source-integration regressions and the separate duplicate-PartII regression were red before fixes. Draft2026constants are injected only inside isolated tests; production readiness is unchanged.733focused/adjacent tests, root types,3679working-tree spec refs and diff review pass; lint has zero errors/four existing warnings. Unknown actual loan coordination cannot silently double-deduct tax-free529earnings: a positive legacy student-loan claim with a calculated exclusion is temporarily rejected pending the actual loan-source helper now owned by the facts agent. Positive legacy aggregate5329PartII with verified recipient sources likewise requires reconciliation rather than being added twice; actual per-recipient PDF integration is owned by the529agent. These are internal integration items, not external approval blockers.
+- Rule versions2025.32/2026.28remain unqualified. Prior tax fixes: Form4619d814f9 and unknown private-stock status758b024.
+
+## 2026-10-25 — Actual mortgage debt, interest, points and recovery sources
+
+- Refreshed final Publication 936 Table 1, average-balance methods, points and recovery instructions (https://www.irs.gov/publications/p936). Replaced the verified path's raw Form 1098 Box 2 proxy with actual highest/lender/first-last/monthly/interest-rate balance sources or a completed mixed-category worksheet. December 15, 2017 remains older acquisition debt; genuine pre-October 14, 1987 debt retains the separate uncapped category. The combined worksheet applies the printed three-decimal ratio to both qualified interest and allowed points.
+- Source records bind actual year, payer shares, lender, qualification, current refunds, points and all debt sources. Unknown 2026 facts cannot become qualification. Current-purchase point tests, the published 4,800/240-month/3-payment example (60 deductible points), ratable prior points and actual completed amortization sources are supported. Historical aggregate calculations remain explicitly unverified. Known ineligible ownership produces zero; omitted qualification rejects.
+- Parent agent review identified an understated interest-rate numerator that could unlock a larger deduction. The regression was red before correction: 100 numerator cannot coexist with 40,000 actual paid interest. Actual current-year interest prepaid in an earlier year is attributed separately to each payer; only this return's share enters its deduction. Independent 45,000/4% gives 1,125,000 average debt, and 38,000 own interest times .667 gives 25,346. Excess other-person refunds reject. Printed Table 1 line 13 rounds before multiplication: 1,000.51 at a .5 ratio yields 501.
+- Current-year refunds reduce current interest. Actual prior-year Box 4 recoveries instead use the supplied origin-year tax-benefit worksheet and reach Schedule 1 line 8z once. A 2,000 refund with 600 actual taxable recovery raises 85,000 income to 85,600; an already-reported 600 must bind to an actual 1099-MISC Box 3 source and does not add income twice. Unknown or overallocated recovery sources reject.
+- Canonical Schedule A lines 8a/8b/8c/8e/10 now separate reported interest/current points, unreported interest and amortized/unreported points. The reference mapper copies unique reconciled audits instead of adding raw Box 6 again, and uses the actual nested lender-description field. A 1.1 million combined debt example yields 29,326/1,364/273 on 8a/8b/8c and 30,963 on 8e. Tampered source/audit cases reject. Rendered and visually inspected the one-page review at `.local/upgrade-evidence/mortgage-review/schedule-a.pdf`; lender details and all amounts fit, and the review-only notice remains present.
+- All 693 focused/adjacent tests across eight files pass, including the complete federal suite. Root types and production lint pass (zero errors, five existing non-null warnings); new tests no longer introduce non-null assertions. Relevant red/green logs include `mortgage-rate-source-red.log`, `mortgage-rate-source-green.log`, `mortgage-final-adjacent.log`, `mortgage-types.log` and `mortgage-production-lint.log` under `.local/upgrade-evidence/`. Rule versions 2025.33/2026.29 remain unqualified and independently unreviewed. The isolated staged tree 9df0d03 passes the same 693 tests, root types and all 3,703 committed spec references. Parent independent bounded re-review found no remaining actionable issue and ran 21 adjacent source/PDF tests successfully; this is agent code review, not professional tax qualification.
+- Bounded remaining implementation: guided binding of its already-collected ordinary mortgage facts (facts owner), automatic mixed/refinanced debt tracing beyond an actual completed category worksheet, and specialized mortgage-credit/assistance/prepaid allocations outside the represented methods. These source branches remain separate internal work, not a claim that professional review or final-form qualification has occurred. Preceding 529 integration: 6b07529; actual student-loan helper now committed separately as d162f6c and is next for canonical return integration.
+
+## 2026-10-25 — Canonical actual student-loan deduction
+
+- Refreshed Publication 970 chapter 4 Worksheet 4-1 and its no-double-benefit rule (https://www.irs.gov/publications/p970). Integrated d162f6c actual borrower/loan sources with canonical full income after taxable Social Security, savings-bond exclusion and allowed passive losses. Net Form2555 exclusion, housing deduction and actual Puerto Rico/American Samoa exclusions enter MAGI. Actual 529 per-expense tax-free earnings reduce only the linked interest claim; basis-funded payments remain eligible. Omitted facts cannot become favorable eligibility, and positive 2026 raw claims require actual sources.
+- Five initial integration regressions were red before implementation. Actual lender interest 1,200.15 gives a 1,200 deduction and 48,800 AGI on 50,000 wages. At 85,000 wages plus 8,000 Treasury interest and 1,000 actual possession exclusion, MAGI is 94,000 and the deduction is 1,000. A 30,000 rental loss with 120,000 wages allows only 15,000, leaving 105,000 MAGI and no deduction. A 1,000 interest payment funded by a 529 distribution with 200 excluded earnings retains an 800 deduction.
+- Added independent ordering boundaries: 80,000 wages plus 8,500 taxable Social Security gives 88,500 MAGI, a rounded 1,917 deduction and 86,583 AGI. The existing benefit calculation excludes loan interest; a separately reproduced audit regression now retains the final 1,917 as the excluded-source metadata without changing benefits. At 97,000 wages plus 4,000 bond interest, Form8815 MAGI is 101,000 and its exclusion 3,600; loan MAGI is 97,400, the deduction 433 and AGI 96,967. The final Schedule1 and Form1040 adjustments reconcile once.
+- All 720 focused and adjacent tests across 11 files pass, including the complete federal suite, historical student-loan edges, source helpers and reference PDF tests. Root types and 3,731 working-tree spec references pass; scoped lint has zero errors and four existing non-null warnings. Logs are `.local/upgrade-evidence/student-loan-audit-red.log`, `student-loan-return-final-adjacent.log`, `student-loan-return-final-types.log`, `student-loan-return-final-spec.log` and `student-loan-return-final-lint.log`. Parent independently reviewed the bounded ordering/audit changes and ran 15 core/helper/DOM tests with no actionable findings; this is agent review, not professional tax qualification.
+- Positive actual source-qualified loan claims with prior NOL remain explicitly blocked until the coupled NOL/deduction computation is implemented; no pre-NOL MAGI is called final. Historical source-incomplete previews remain unqualified. Exact staged tree 3e63075 passes the same 720 tests, root types and all 3,715 committed spec references. Rule versions 2025.34/2026.30 retain the existing incomplete/independent-review/filing gates. The guided source handoff is a separate facts-owner package, with its actual-source regression already passing against this core.
+
+
+## 2026-10-25 — Enacted educator eligibility and itemized source costs
+
+- Refreshed current IRC62 and67 (https://uscode.house.gov/us/usc/119-118/t26/s62/ and https://uscode.house.gov/us/usc/119-118/t26/s67/) plus Publication5052026. PL119-111 divisionB1 extends eligible educators to qualifying early-childhood facilities for expenses after2025. Actual2026 school level, more than two nonresident children under6 and public expense or a fee/payment/grant are required; no omitted school level becomes K12. Historical2025 remains subject to its K12 rule. Coach/sports-administrator hours count only for the expanded section67 deduction.
+- The itemized calculation retains actual ordinary/necessary receipts, broader instructional-use facts, nonathletic PE supplies and expense-specific reimbursement/tax-free funding. It subtracts the same owner's allowed Schedule1 deduction once. Material unknown allocations remain incomplete; contradictory funding of the same receipt rejects. Above-line receipt reimbursements must reconcile with itemized allocations, and funded overlapping costs cannot bypass the above-line education-benefit reductions. The itemized calculation is distinct from section62(d)(2)'s blanket135/529/530 exclusion reduction; that statutory interpretation remains explicitly subject to independent human tax review.
+- Five source/return regressions were red before implementation or their source-integrity corrections. A2026 teacher with85000wages and20000actual qualified costs has350above-line,19650itemized,84650AGI and65000taxable income;2025 receives300above-line and no new educator itemization. A1000receipt with100actual reimbursement produces350above-line and550itemized. A fully tax-free-funded1000receipt produces neither deduction. Unknown school level, missing allocation and conflicting zero-funding claims are rejected. Draft2026 ScheduleA17k is retained only as a draft audit identity; no physical template or filing qualification is asserted.
+- Working-tree verification:703 focused/adjacent tests across ten files, root and web type checks,3765 spec references and scoped diff review pass. Scoped lint has zero errors and one existing non-null warning. Evidence logs: `.local/upgrade-evidence/educator-expanded-red.log`, `educator-funding-red.log`, `educator-level-red.log`, `educator-level-green.log`, `educator-expanded-adjacent.log`, `educator-expanded-types.log`, `educator-expanded-webtypes.log` and `educator-expanded-lint.log`. Parent independently verified the current statutes/effective date and Pub505 ordering and ran the five source/return tests; the initial omitted-school-level finding was corrected with a red-first regression.
+- Remaining internal coordination: reconcile supplied per-owner135/529/530 reductions against final calculated source results, preserving actual joint allocations and cash-earnings versus prepaid-benefit distinctions. The facts owner supplied the minimal actual-school-level selector/adapter and red-first source/DOM regressions for this atomic commit; expanded childcare, coach and funding collection is their separate follow-up. Rule versions2025.35/2026.31retain incomplete/independent-review/filing gates. Canonical student-loan predecessor is3fbaf48 and its guided collector ised915c1.
+- Exact staged source tree `8b4cc5b` passed the same 703 tests, root/web types and all 3,748 committed spec references in `/private/tmp/tax-engine-educator-typ7s4n6`; the difference from working-tree references is the excluded concurrent packages. Minimal school-level UI changes were implemented and checked by the facts owner, reviewed here, and included so this snapshot is independently green.
+
+
+## 2026-10-25 — Actual TIPS ordinary-loss deduction and NIIT handoff
+
+- Refreshed final2025 ScheduleA instructions line16 (https://www.irs.gov/instructions/i1040sca), which expressly identifies inflation-indexed debt ordinary loss, and Regulations1.1411-4(f)(5)/(7) (https://www.ecfr.gov/current/title-26/section-1.1411-4). This resolves the earlier source-routing blocker recorded above. Source-calculated allowed loss enters ScheduleA once; its unused deflation carry remains separate and neither reduces gross interest or AGI a second time. Draft2026 line17g is only an audit identity, not a qualified physical mapping.
+- NIIT line10 now retains the actual ordinary-loss deduction when the return itemizes, capped at the actual post-section68 itemized allowance. No deduction is invented under the standard election, and no arbitrary proportional allocation is used. Actual1000loss with1000carry and10000other interest leavesAGI210000; the standard election produces380NIIT, while16000otheritemized costs allow1000loss and342NIIT. The2026source20000loss-only itemization at high income has1081section68 reduction,18919allowed deduction and421NIIT on30000interest.
+- Four source/return/PDF regressions were red before implementation.622 focused/adjacent tests across seven files and root types pass. The reference ScheduleA copies audited line16 with the TIPS description;8960 now retains gross income, actual line10 and total deductions separately from net investment income. Broader historical8960 capital/MAGI/audit corrections are a separate next package, not claimed as complete here. Rule versions2025.36/2026.32remain unqualified and independently unreviewed. Red/green evidence is in `.local/upgrade-evidence/tips-routing-{red,green,adjacent,types}.log`.
+- Rendered/reopened `.local/upgrade-evidence/tips-review/schedule-a.pdf` and `form8960.pdf`; inspected the actual1000line16/line10,10000gross,9000net and342NIIT. Both pages retain the review notice. Root types,3783working-tree spec references and scoped lint pass (zero errors/five existing non-null warnings after removing an unused mapper import). Parent bounded source/diff review found no actionable issue and independently ran25adjacent cases. This remains agent review, not professional qualification. Metadata also records independently corrected2025LTC limits from8f7c622.
+- Exact staged tree `edaf4aa9` passed the same 622 tests, root types and all 3,770 committed spec references in `/private/tmp/tax-engine-tips-f812hohd`; staged lint has zero errors and five existing warnings. The concurrent government-payment integration was excluded from this snapshot.
+
+
+## 2026-10-25 — Canonical actual government-payment sources
+
+- Integrated source core027a383 with Schedule1, Form1040 withholding, standalone deduction MAGI and source audit retention. Publication525 current-year unemployment repayments and actual nondeductible program contributions reduce taxable benefits once, while withholding remains separate. Actual RTAA, nonbusiness taxable grants and Rev.Rul.2025-4 state family benefits enter other income, never assumed self-employment earnings. Source1000 less200repayment and300basis gives500unemployment; separate50RTAA/70grant/19200family produces19320other income and69820AGI on50000wages.
+- Refreshed Publication525 Recoveries (https://www.irs.gov/publications/p525): a same-year expense recovery reduces that deduction. Box3 names the state return year, which is not necessarily the payment/deduction year. Added actual refundExpenseTaxYear for positive verified refunds; both years survive. A2024state balance paid/refunded in2025 reduces2025SALT from20000to19500 without income. A2023state balance paid in2024 and refunded in2025 uses actual2024tax-benefit facts. Missing expense year, contradictory source aliases, unknown history and mixed deduction years reject rather than invent taxable treatment.
+- Preserved historical direct-call compatibility only as explicitly unverified2022–25 Box1/4 aggregates, including former absent-box zero defaults; actual/new-source records and2026 still require original facts. Existing full-return constants and standalone OID year gates are unchanged. Parent review suggested historical helper regression checks; direct investigation confirmed that Schedule1 and SALT already rejected2024 through their existing constants/OID gates. No new historical full-return support is claimed.
+- Eight canonical return/source/PDF regressions, the legacy omitted-box boundary, actual expense-year boundary and positive repayment checkbox were red before their corresponding fixes. All674 focused/adjacent tests across11files pass, including full federal, historical refunds, Schedule1/SALT and review PDFs. Root types pass; scoped lint has zero errors/four existing non-null warnings. Evidence: `.local/upgrade-evidence/government-{legacy-red,refund-year-red,refund-year-green,repaid-checkbox-red,return-final-adjacent,return-final-types,return-final-lint}.log`.
+- Reopened/rendered `.local/upgrade-evidence/government-review/schedule-1.pdf`; actual500line7,200repayment with checkbox,120separateRTAA/grant line8z and620totaladditionalincome fit. The source attachment and review-only notice remain. Rule versions2025.37/2026.33remain unqualified. Preceding TIPS package3e766a7 is separately reviewable. Remaining government branches are actual prior-year claim-of-right relief and business/farm/private/medical classification worksheets; current nonfarm source routes do not assert those branches implemented.
+
+## Current bounded federal convergence queue — 2026-10-25
+
+1. TIPS ordinary-loss return/NIIT handoff: complete3e766a7,622exact-staged tests; no filing qualification.
+2. Canonical government payments: complete source integration;674exact-staged tests and parent175-case review pass; parent guided/OH handoff follows the commit.
+3. Form8960: signed capital netting, official audit identities, actual MAGI and physical mapper corrections are implemented in the separately verified package below. Source-dependent annuity, CFC/PFIC and unrelated deduction allocations remain distinct implementation boundaries.
+4. Educator135/529/530 coordination: canonical final-source handoff is implemented below using helper7fcf2ab and actual distribution medium6965daa. Mixed/joint bond and prepaid methods remain explicitly unresolved; no inferred split.
+5. Form7206 canonical handoff: facts owner is implementing actual source/month/owner/business helper; integrate after its reviewed stable commit using computed business/SE/retirement/foreign context. Marketplace/PTC coordination remains a distinct currently unsupported worksheet, not an invented zero.
+
+The broader matrix above remains the exact residual implementation register. This queue does not convert unresolved internal source branches into external blockers. External professional tax review, missing final2026table/forms and required release evidence remain separately gated.
+- Parent independent bounded source/code review found no remaining actionable findings and reran175source/refund/return/PDF/guided/Ohio tests successfully (`parent-government-final-review.log`). This is agent review, not professional tax qualification.
+
+- Government exact staged tree `9e46609e` passed the same 674 tests, root types and all 3,789 committed spec references in `/private/tmp/tax-engine-government-zjrh0nvu`; staged lint has zero errors and four existing warnings. Concurrent guided/Ohio/Form7206 changes were excluded.
+
+
+## 2026-10-25 — Form 8960 signed sources, actual MAGI and audited review copy
+
+- Refreshed the [final 2025 instructions](https://www.irs.gov/instructions/i8960) and [Regulation 1.1411-4](https://www.ecfr.gov/current/title-26/section-1.1411-4). The individual calculator now records the official lines 1–17. Line 5a retains the actual signed Form 1040 capital amount and Schedule 1 ordinary disposition amount. Opposing short/long categories and the permitted capital loss reduce net investment income; the former instruction to discard those losses was unsupported and removed.
+- Actual disposition adjustments require their year, completed source reference and confirmation, with both regular return components reconciled. Nonzero underlying business gains/losses retain this requirement when they offset to zero. A synthetic 4,000 nonpassive gain and 4,000 passive loss therefore retain the actual negative 4,000 exclusion adjustment, reducing 20,000 interest to 16,000 NII and 608 tax. No classification is inferred from depreciation or a property label.
+- The NIIT MAGI worksheet uses AGI plus Form 2555 line 42 less actual line 44 deductions allocable to that exclusion. Housing is not automatically added back. A positive mixed housing/FEIE deduction requires an actual allocation. Allowed Schedule A investment interest and TIPS ordinary loss share the actual final itemized allowance. Where both exceed the post-section68 limit, a completed actual allocation is required; 35,000 source deductions share 33,108 allowed, rather than using the limit twice.
+- The review mapper copies unique finite audited lines, validates retained values and intermediate arithmetic, and prints actual MAGI below the threshold. The packet includes Form 8960 when MAGI exceeds the filing threshold even if NIIT is zero. Reopened/rendered synthetic `niit-review/below.pdf` and `signed.pdf` retain the review notice. The signed case reports -3,000 on line 5a, 17,000 NII, 267,000 MAGI and 646 NIIT.
+- Spec-linked failures reproduced signed netting, missing mixed FEIE allocation, missing business classifications, the omitted zero-tax form, incorrect below-threshold PDF MAGI, an inconsistent intermediate PDF audit and a zero-net business-source bypass. Corrected legacy Form 4797/8824 fixtures now state hand-derived actual classifications. The single-filer ordinary/preferential comparison was also repaired to use the same 118,000 total gain in both cases; monetary assertions remain explicit.
+- Verification before scoped staging: 850 tests in 14 primary consumer files plus 187 tests in 10 remaining form/packet consumers pass. Root types and all 3,858 current-tree spec references pass; scoped lint has zero errors and six existing non-null warnings. Evidence: `niit-final-consumers.log`, `niit-remaining-consumers.log`, `niit-types-final.log`, `niit-spec-final.log`, `niit-lint-final.log`, `niit-equation-red.log` and `niit-offsetting-red.log` in ignored `.local/upgrade-evidence/`.
+- Rule versions 2025.38 and 2026.34 retain pending independent review and disabled filing qualification. These source-bound calculations do not establish nonqualified-annuity, CFC/PFIC, nonresident-election, special trust or unrelated investment-deduction completeness. Final 2026 form qualification and professional tax review remain separate requirements.
+- Exact staged tree `45ec6803` in `/private/tmp/tax-engine-niit-ru0m4dg7` passes 1,037 tests in 24 files, root types and all 3,845 committed spec references. Scoped lint has zero errors and the same six existing warnings. Parent independently reopened the official instructions and ran 12 source/section68/PDF cases with no actionable findings in the bounded delta (`parent-niit-review.log`). Agent software review is not independent human tax qualification.
+
+
+## 2026-10-25 — Canonical educator education-exclusion conservation
+
+- Connected reviewed helper7fcf2ab after final Form8815 and Form1099Q, before accepting the federal result. Refreshed the posted Publication529 educator reduction and Publication970 earnings/basis/source distinctions. Declared owner reductions now reconcile actual current-return exclusions; source audits appear once. No automatic owner or expense reallocation occurs.
+- Two return regressions were red before integration (`educator-return-conservation-red.log`). A500classroom cost reduced by200cash-QTP and142Coverdell excluded earnings yields158Schedule1deduction and49842AGI on50000wages. Asole-owner2000bond exclusion against2200costs yields200deduction and49800AGI. Omitted/mismatched reductions, unsupported positive declarations and unknown QTP medium reject. Basis, valid transfer amounts and other-recipient income are not reassigned.
+- All507focused tests across nine return/core/guided files pass (`educator-return-conservation-green.log`). Rule versions2025.39/2026.35remain independently unreviewed and filing-disabled. Positive mixed/joint bond-owner allocation and prepaid in-kind reduction methods remain explicit source/legal-method boundaries, not invented allocations. New actual bond identity validation is a separate pending handoff from the source owner.
+- Exact staged tree `98b1703a` in `/private/tmp/tax-engine-educator-5hj566l0` passes the same507 tests, root types and3851committed spec references. Scoped lint has zero errors/four existing warnings. Parent independently ran eight core/return tests and found no actionable issue in the bounded handoff (`parent-educator-canonical-review.log`); professional tax qualification remains pending.
+
+
+## 2026-10-25 — Actual Form 7206 canonical income and QBI handoff
+
+- Refreshed final [Form 7206](https://www.irs.gov/pub/irs-pdf/f7206.pdf), its [instructions](https://www.irs.gov/instructions/i7206), and the actual Form 2555 source contract. The canonical wrapper now supplies computed C/F/crypto/K1 income, same-owner positive business income, deductible SE tax, actual shareholder W2 Box5 and confirmed retirement/foreign allocations to source core724f95c. Actual person names and attained ages reconcile household birth dates; business reimbursement shares reconcile included W2 wages or partnership guaranteed payments.
+- Source deductions retain exact cents. Each completed business Form7206 line14 rounds once for transfer; the same amount enters Schedule1 line17 and that business's QBI. A600.10 source yields600 allowed adjustment and600 lower AGI without changing SE tax. A shareholder deduction uses its own4000 Medicare-wage limit and does not reduce an unrelated ScheduleC's QBI. Positive2026 legacy aggregates and source worksheets without complete canonical context reject instead of bypassing source eligibility.
+- Actual positive retirement and foreign deductions need a completed, source-referenced attribution worksheet; allocations conserve allowed aggregate amounts and actual owners. Confirmed Form2555 income classes bound foreign allocations, so a wage-only exclusion cannot be attributed to a domestic business. Canonical W2 IDs have one index spelling; formW2:0 and formW2:00 cannot duplicate the income limit. Mixed QBI/nonQBI health amounts require actual allocation, never movement to another trade.
+- Spec-linked red tests reproduced ignored source deduction, foreign-source contradiction, duplicate W2 index limit, unknown2026 facts, household age substitution and unsupported cross-business QBI redistribution before each fix. Working-tree verification:664 tests in11 consumer files pass,17 focused wrapper/QBI tests pass, root types and3904 current-tree spec references pass; lint has zero errors/four existing federal warnings. Logs: form7206-{canonical-red,context-red,source-gate-red,w2-alias-red,foreign-source-red,final-core,canonical-final-adjacent,types-final,spec-final,lint-final}.log. Parent bounded source review found no actionable issue in the initial owner/age/attribution delta; subsequent exact-tree evidence is recorded below.
+- Metadata advances to2025.40/2026.36 with independent review pending and filing disabled. Marketplace/PTC coupling, optional-method SE income, clergy special rules, and automatic ScheduleA qualification of excess premiums remain distinct internal source/integration work; this package does not establish their support. Actual Form7206 review PDF and guided collection are assigned to the facts owner. The next bounded packages are actual per-owner4137 and business-tip/QBI coordination, then positive SE-health/PTC coupling and NIIT ordinary-source handoffs.
+- Exact staged tree `7c145382` in `/private/tmp/tax-engine-health-2ftndm7s` passes633 tests in8 committed consumer files, root types and all3877 committed spec references. Scoped lint has zero errors/four existing warnings. The later guided UI is excluded from this snapshot. Parent source review found no actionable issue in the canonical owner/age/retirement/foreign-binding delta; final source-class and W2-alias regressions are included in the passing exact-tree tests.
+
+## 2026-10-25 — Actual separate-owner tip payroll and review forms
+
+- Refreshed [Form4137 and its instructions](https://www.irs.gov/pub/irs-pdf/f4137.pdf), [ScheduleSE instructions](https://www.irs.gov/instructions/i1040sse) and [Form8959 instructions](https://www.irs.gov/instructions/i8959). Source core2e85ad2 now has a canonical owner resolver: original-index W2 employer links, actual Boxes3/7/8, actual annual/monthly tip records, and separate spouse wage-base use. An unknown joint owner, mismatched year, duplicate representation or unowned Form8919 combined with actual tip payroll rejects.
+- Form1040line1c includes actual unreported cash and noncash income. Actual employer-month cash below20 and noncash amounts stay out of payroll bases; Schedule2line5 sums separately rounded owner taxes, ScheduleSE8b uses that owner's Form4137line10, and Form8959line2 sums actual line6 amounts. A2026 source test uses184500 base:184000 payroll plus1000tips yields31SocialSecurity+15Medicare; separate spouse1000tips yields62+15. Full2026 readiness remains closed.
+- The2025 review mapper copies unique audited source amounts, validates them by replaying canonical source payroll, preserves actual recipient identities and all employer rows, adds the instructed Medicare-only government-tip annotation, and includes source forms even with zero tax. Both owner forms retain their instructions and continuation pages. Rendered/reopened `.local/upgrade-evidence/tip-review/f4137.pdf` shows the108small-tip source with zero payroll and the other owner's1000tips/77tax. All five pages retain the review notice in extracted text.
+- Red-first source and PDF regressions cover ignored owner sources, stale payroll/audit inputs and missing government annotation.730 focused/adjacent tests in14 files, root types and3924 working-tree spec references pass. Scoped lint has zero errors; new test assertions were then cleaned to retain only existing production non-null warnings. Evidence includes `form4137-return-red.log`, `form4137-return-source-red.log`, `form4137-review-payroll-red.log`, `form4137-government-pdf-red.log`, `form4137-final-adjacent.log`, `form4137-types-final.log` and `form4137-spec-final.log` in ignored `.local/upgrade-evidence/`.
+- Metadata2025.41/2026.37 remains independently unreviewed and unqualified. Positive actual RRTA compensation needs its separate Medicare-compensation/withholding source before return integration; the standalone4137 source formula does not authorize inventing Form8959PartIII. This remains internal source work. Next enabled-path packages remain actual Schedule1-A business tip/QBI source coordination, positive7206/PTC coupling and ordinary NIIT source handoffs; full professional review/final-form qualification are separate external gates.
+- Parent software review found two review-copy defects: an explicitly undefined optional owner was counted as a source, and long continuation names could overflow. Both were reproduced red and corrected with source-count filtering and complete wrapped text; no source text is truncated. The government-tip annotation was rendered and visually checked separately. Exact staged tree `a57a55d0` in `/private/tmp/tax-engine-checks-tllywcz_` passes 732 tests in 14 files, root types and all 3,922 committed spec references. Scoped lint has zero errors; new files are warning-free. The exhaustive file lint includes 132 pre-existing warnings in the existing source-core test file plus six existing production warnings. Evidence: `form4137-parent-review-{red,green}.log` and `form4137-staged-{tests,types,spec,lint}.log`.
+- Committed as `edde2a0`; parent independently reran 22 relevant source/core/PDF cases, found no further actionable issue in the bounded re-review, and verified the push to origin. This remains software review, not professional tax qualification.
+
+## 2026-10-25 — Actual 2026 tip and overtime reporting fields
+
+- Refreshed the final2026 [W2 instructions](https://www.irs.gov/instructions/iw2w3) and posted December2026 [NEC/MISC](https://www.irs.gov/instructions/i1099mec) and [1099K](https://www.irs.gov/instructions/i1099k) instructions. Their revision explicitly applies to2026 information returns. Preserved actual source years, W2 Box12TP/TT and Box14b, NEC1b/1c/1d, MISC13a/13b/14 and K1c/1d as optional facts without zero defaults. New amounts remain included in the source's original gross income, not additional income.
+- Two spec-first schema tests reproduced discarded actual fields before implementation and now pass; invalid negative reporting amounts reject while unknown and actual zero remain distinct. This source-only package does not itself establish Schedule1A eligibility or open any filing gate. The canonical linked-source and business/QBI handoff follows separately.
+- Exact staged tree `f605772d` passes 143 tests across four reporting/ScheduleC/Schedule1A files, root types, all 3,926 spec references and warning-free scoped lint. Logs: `schedule1a-reporting-{red,green,staged-tests,staged-types,staged-spec,staged-lint}.log`.
+
+
+## 2026-10-25 — Canonical Schedule1-A sources and business-tip QBI
+
+- Refreshed final2025 [Schedule1-A instructions](https://www.irs.gov/instructions/i1040gi), [TD10044](https://www.irs.gov/irb/2026-18_IRB), [section199A(c)(4)(D)](https://uscode.house.gov/us/usc/119-118/t26/s199A/) and [section225(c)(2)](https://uscode.house.gov/us/usc/119-118/t26/s225/). Actual claims now bind original source index/year/owner, household employment-valid SSN answers and final Treasury occupations. Separate2026 TP/TT/1099 reporting is preserved; the2025 transition uses actual reports. Payroll exclusions are actual source amounts, never inferred from a favorable difference.
+- Employee claims reconcile one actual employer and its owner-specific4137 record; alternative2025 reports must agree with the actual4137 reporting-year total. A900 employer report cannot coexist with700total tips, while the matching500reported/700total source yields700 once. Original tip and overtime reports cannot together exceed their linked gross compensation; explicit payroll exclusions remain part of the W2 gross reconciliation.
+- Supported business tips bind actual ScheduleC/NEC income already included in receipts. Calculated business profit and verified SE/health/retirement deductions determine the limit; caller overrides reject. The allowable business-tip deduction reduces QBI once under199A. In both year fixtures,10000profit with1000tips preserves1413SE tax and707SE adjustment; QBI changes9293to8293, QBI deduction1859to1659 and taxable income falls800. AGI, receipts, payroll tax and withholding are unchanged.
+- Zero final tip deduction excludes zero from QBI. Unreduced shared claims retain their actual business amount; a sole eligible business with no employee tips receives the final capped/phased deduction. No controlling allocation method was found for reduced mixed employee/business or multiple-business claims, so those remain a specific method gate without fabricated proportional allocation. Other business/1099K/MISC source mappings remain explicit internal integration work.
+- Spec and initial failing source/full-return regressions preceded implementation. The facts agent independently refreshed official instructions, identified the conflicting employer-report case, and reran all8 canonical/source cases after its red-first correction with no further confirmed issue. Its adjacent combined-report concern was independently reproduced red and corrected. This is bounded software/source review, not human tax qualification. Working-tree529 focused/adjacent tests, root types and warning-free new-file lint passed before the last combined-report regression; exact final-stage results follow below. Evidence includes schedule1a-canonical-{red,final-tests,coverage,types}, schedule1a-employer-review-{red,green}, schedule1a-shared-compensation-{red,green} and facts-rereview-schedule1a logs under ignored .local/upgrade-evidence/.
+- Rule versions2025.42/2026.38 retain independent-review pending, incomplete2026 and filing-disabled status. Next internal packages remain positive Marketplace/PTC health coordination and ordinary NIIT annuity/tax-source handoffs; these gates are not completion of the broader execution brief.
+- Added the explicit actual Form4137-only reporting method after the guided review identified an unnecessary employer-statement requirement. Both2025 and2026 source-only600tip cases pass; a nonzero employer claim or missing verified4137 record rejects. No W2/TP/alternative statement is fabricated. TD10044 section1.224-1(d) expressly permits the taxpayer's Form4137 as the reporting source. Schema and canonical regression were red before this correction.
+- Exact staged tree `4889eb47` in `/private/tmp/tax-engine-checks-4u5j6lvz` passes529 tests across10 files, root types and all3944 committed spec references. Scoped lint has zero errors/four existing federal warnings; new files are warning-free. The isolated new-helper coverage run passes unchanged thresholds:93.42% statements,91.76% branches,92.85% functions and99.24% lines. Exact evidence is `schedule1a-canonical-staged-{tests,types,spec,lint,coverage}.log`; reviewed staged diff excludes all concurrent UI, AI and bond changes.
+
+
+## 2026-10-25 — Canonical premium-tax-credit taxpayer income
+
+- Refreshed [Form8962 Worksheets1-1/1-2](https://www.irs.gov/instructions/i8962), [Form8814 instructions](https://www.irs.gov/instructions/i8814) and [Publication974](https://www.irs.gov/publications/p974). The return now derives taxpayer MAGI from final AGI, actual parent exempt interest, Form2555lines45/50 and nontaxable SocialSecurity benefits. A conflicting supplied taxpayer worksheet rejects; an omitted calculated total is derived from those sources. Required-filing dependent MAGI remains the actual completed source worksheet, with signed components preserved before the household floor.
+- Child8814line1b stays in child metadata and the actual dependent worksheet, not parent1040line2a. This follows the enumerated8814 parent transfers together with8962's explicit dependent instruction; it is a consistent source inference, not an express8814 sentence forbidding the transfer. The synthetic4000childtaxable/500childexempt election contributes1300 to parentAGI and3200 to the dependent worksheet. Parent1000ownexempt remains1000; household income25500 counts the child component once. Dedicated child-PAB source/AMT binding remains internal work; this correction does not claim it exists.
+- Spec-first tests reproduced the favorable MAGI override on immutableHEAD and the childexempt double count before correction. Source and8814 checks pass62tests; the broader PTC/child-election consumer run passes2462tests in53files. Evidence: `.local/upgrade-evidence/ptc-income-baseline-red.log`, `ptc-child-exempt-{red,green}.log`, `ptc-income-consumers.log`, `ptc-income-{types,lint}.log`. New helper/type checks pass. Exact staged evidence follows after review/index availability.
+- Rule versions2025.43/2026.39 retain independent review pending, incomplete2026 and filing disabled. Next internal work is actual positive2026 Marketplace health/PTC coupling using Pub974;2025 capped repayment worksheets, other eligibility/coverage branches, child-PAB and ordinary NIIT source handoffs remain separate implementation. No external human tax qualification is inferred from software review.
+
+- Exact staged tree `b89a5f50` in `/private/tmp/tax-engine-checks-4d4w6r9w` passes130 tests across five core/source/return files, root types and all3965 committed spec references. Scoped lint has zero errors/five existing warnings. Parent independently refreshed the official instructions and passed39 affected cases without an actionable finding (`parent-ptc-income-review.log`). Exact logs are `ptc-income-staged-{tests,types,spec,lint}.log`; the concurrent Marketplace source contract was excluded.
+
+## 2026-10-25 — Actual 2026 Marketplace health deduction and PTC
+
+- Refreshed [Publication 974](https://www.irs.gov/publications/p974), [Form 7206 instructions](https://www.irs.gov/instructions/i7206), [section 36B(f)(2)](https://uscode.house.gov/us/usc/119-118/t26/s36B/) and [Regulation 1.199A-3(b)(1)(vi)](https://www.ecfr.gov/current/title-26/chapter-I/subchapter-A/part-1/subject-group-ECFRcc67ec453a5e514/section-1.199A-3). Full excess-advance repayment after 2025 makes the W/X maximum equal to the smaller of specified premiums or the remaining combined earned-income limit. That derived bound is only Step 1; actual Step 2 credit, Step 3 deduction and Step 4 final return are each calculated separately.
+- Actual policy IDs, coverage months, paid premiums, advances and person shares reconcile original 1095-A and completed household coverage sources. Unknown allocations do not become zeros. An employer offer that blocks the health deduction may still allow PTC only with an actual unaffordable or nonminimum-value source and confirmed absence of employer enrollment. A contradictory no-credit plan declaration cannot create a second deduction. Original payment cents and source flags remain unchanged.
+- Separate business W and Step 3 components are combined before the final cap, as instructed. Signed business losses remain signed until the combined floor. A two-business source with remaining limits 1,000 and 7,000 and 12,000 premiums produces a 7,113 deduction after 4,887 allocated credit, rather than incorrectly imposing each business limit twice. QBI attribution then uses actual gross income independently of premium shares; a sole business receives the deduction without invented gross-income audit values. Separate nonspecified-only business income is not used to enlarge the Marketplace limit, based on section 162(l)'s plan/business restriction together with W4/13 and the separate-form instructions. That cross-business reading is an inference for independent review, not a published IRS numerical example.
+- A 50,000-profit source has 7,065 SE tax, 3,533 SE adjustment and a 6,000 maximum. Step 2 MAGI 40,467 produces 4,887 PTC; Step 3 deduction is 1,113. Final MAGI 45,354 produces 4,032 PTC and 432 net credit after 3,600 advances. Above the 2026 eligibility cliff, the actual ordinary Form 7206 claims 6,000 and all 3,600 advances are repaid. Annual/monthly column(e) audits must reconcile retained line 24; a missing eligible zero or positive audit cannot silently become zero. Printed-dollar conservation retains original cents, including 5,999.88 premiums legitimately reported as 6,000 credit.
+- Red regressions preceded source/audit, combined-cap, signed-loss, no-PTC ordinary-form and rounding corrections. The broader run passes 2,583 tests across 61 files (`marketplace-health-broad.log`). Parent independently refreshed the current instructions, reviewed the corrected supported branch and passed all 17 focused tests without an actionable finding (`parent-marketplace-review.log`). A final audit-only regression removed a single-source internal unit weight incorrectly labeled gross income (`marketplace-health-single-audit-red.log`). This remains software review, not independent human tax qualification.
+- Rule versions 2025.44 and 2026.40 retain the existing review, completeness and filing gates. Remaining internal work is explicit: 2025 capped W/X/Y/Z calculations; the ordered passive-loss, IRA, bond and student-loan deduction calculations; mixed-owner and partial coverage-family/payer allocations; actual missing K1 gross-income attribution; and the guided/source review-PDF handoff. NIIT ordinary sources are assigned separately, and child-PAB/other dependent income source completeness remains distinct. Final 2026 forms/tables and professional tax qualification are external gates, not explanations for unfinished software methods.
+- Exact staged tree `39ec25a1` in `/private/tmp/tax-engine-checks-busjbiu0` passes the same 2,583 tests across 61 files, root types and all 4,002 committed spec references. Scoped lint has zero errors and ten existing non-null warnings; the new source helpers/tests are warning-free. Evidence is `marketplace-health-staged-{tests,types,spec,lint}.log`. Concurrent NIIT model and document-context work was excluded using the exact Form7206 schema patch.
+
+## 2026-10-25 — Historical Marketplace W/X repayment limits
+
+- Refreshed [Publication 974](https://www.irs.gov/publications/p974), including W4–19, X1–31, the Simplified steps and the instructions directing the calculated X25 to final Form 8962 line 28. The new pure limit helper retains actual source premiums/advances, signed combined business income and canonical household income. It tests each repayment tier only after subtracting the permitted remaining-income reduction, with truncated poverty percentages.
+- The independently published Carla inputs (13,000 specified premiums, 4,200 advances, 25,381 remaining earned income, 100,675 household income and 31,200 poverty line) produce W16 of 8,800, X25 of 3,250 and X30 of 12,050. The canonical 50,000-profit fixture produces a 3,375 maximum, 2,344 health deduction, 44,123 final AGI, 3,494 allowed PTC and 106 repayment. A separate 52,000-profit case retains the calculated 975 cap even though final income enters the ordinary 1,625 Table 5 band. Known zero advances skip Worksheet X; no credit ordinary coverage preserves actual per-business Form 7206 limits.
+- The new source/spec regressions were red before implementation. Current working-tree consumer testing passes 2,583 tests with seven failures from concurrent, excluded child-PAB/NIIT source changes; this is diagnostic evidence, not the package's isolated validation. The new low-profit oracle was corrected independently from printed Schedule SE: 4,617.50 rounds to 4,618, the two tax components total 707 and its deductible half rounds to 354, leaving a 4,646 health limit.
+- Versions 2025.45 and 2026.41 preserve all independent-review, incomplete-year and filing gates. Remaining internal Marketplace methods are the ordered passive-loss/IRA/bond/student-loan calculations and Y/Z adjustments, partial forgiven-advance ordinary-premium allocation when no PTC is allowed, separate nonspecified-only business coordination in the historical method, mixed-owner/partial coverage-family allocation and missing actual K1 gross-income attribution. They are not external source or approval blockers. Guided and physical review source handoff remains assigned to the facts owner.
+- Exact staged tree `fde990f5` in `/private/tmp/tax-engine-checks-q6vi07kb` passes all 2,590 tests across 63 consumer files, root types and all 4,020 committed spec references. Scoped lint reports zero errors and ten existing non-null warnings. Evidence: `marketplace-2025-staged-{tests,types,spec,lint}.log`; parent child-PAB and AI ordinary-NIIT changes were excluded by a four-hunk federal patch. This establishes the scoped code result, not tax qualification.
+- The facts owner independently refreshed W/X and the Carla example, checked the actual tier/truncation and final-cap rules, and reran 18 focused cases without an actionable finding (`facts-review-marketplace-wx.log`). Ordered deductions and capped ineligible-credit cost allocation were reviewed as explicit remaining internal methods, not implied support.
+
+## 2026-10-25 — Ordered Marketplace IRA, bond and student-loan worksheets
+
+- Refreshed [Publication974 special instructions and WorksheetsY/Z](https://www.irs.gov/publications/p974), including the final-Step2 no-credit exception. The [historical2020 publication](https://www.irs.gov/pub/irs-prior/p974--2020.pdf), pp66–69, corroborates auxiliary Form8962 line5=400 in a cliff year. This auxiliary tag never changes actual household income or final2026 eligibility. The final return uses actual section36B income and full excess-advance repayment.
+- Actual covered IRA, bond exclusion and student-loan worksheets now run in the prescribed order. Each uses the preceding Step3 health amount; previously computed results and their original MAGI audits remain fixed for later steps. Historical Y and each Z retain the original W/X source amounts, deduct the next completed claim and recompute the permitted maximum and final repayment limit. Known zero advances follow the separate no-X instruction.
+- Independent arithmetic:2025 profit94,000 less SE deduction6,641 yields87,359 before health. Initial health6,406 yields IRA MAGI80,953 and a5,640 deduction after rounding up to the next10. The following actual loan deduction1,500 yields final health5,799, AGI74,420, PTC5,674 and repayment326. The simpler50,000-profit/1,500-loan case yields health2,096, AGI42,871 and PTC3,702. Separate actual bond sources preserve their4,000 exclusion and original47,588 MAGI before the loan calculation.
+- Independent software review identified a real exception before commit: final Step2 ineligibility requires refiguring earlier claims under ordinary Form7206. A red-first2026 profit110,000 case initially retained zero IRA deduction at interimMAGI93,241. It now recalculates ordinary health12,000, IRA MAGI90,228, deduction580 and finalAGI89,648. Intermediate diagnostic audits explicitly distinguish attempted ordered values from final ordinary claims; ordinary repayment uses actual Form8962 rules, not a discarded X/Y/Z override.
+- A separate two-person2026 regression reaches the eligibility cliff from the other direction: profit106,000 produces interim IRA830 and finalStep2 income85,681, but ordinary health12,000 produces IRA3,370 and income83,141. The final consistency check explicitly rejects this ordinary-method re-entry rather than returning a no-credit method with newly eligible PTC. The prior premium-conservation check also rejected this fixture; the explicit method check makes the unresolved re-entry boundary independent of whether the premium cap happens to bind. A sourced re-entry method remains internal work.
+- Versions2025.46 and2026.42 preserve pending independent tax review, incomplete2026 and filing-disabled gates. Remaining internal Marketplace work includes passive rental-loss ordering, partial forgiven-advance ordinary-premium attribution, separate historical nonspecified-only business coordination and mixed-owner/partial-family sources. These are implementation tasks, not missing external approvals. The guided/source-review handoff remains owned by the facts agent.
+- Exact staged calculation tree `195d239c` in `/private/tmp/tax-engine-checks-ux24tpkx` passes2,652 tests across68 consumer files, root types and all4,053 committed spec references. Scoped lint has zero errors/four existing federal warnings; changed helpers/tests are warning-free. Evidence is `marketplace-ordered-staged-{tests,types,spec,lint}.log`. The independent facts review reran13 focused cases after the580 correction (`facts-rereview-marketplace-ordered.log`); the explicit re-entry regression separately reproduced the old conservation diagnostic then passed its precise method guard. Concurrent recipient-PAB and source UI changes were excluded. The final documentation-only evidence append does not alter that tested calculation tree.
+
+## 2026-10-25 — Form8582 official loss columns and canonical transfer
+
+- Refreshed [Form8582 instructions](https://www.irs.gov/instructions/i8582) and the [final2025 form](https://www.irs.gov/pub/irs-pdf/f8582.pdf). Current income/current loss/prior unallowed loss remain separate in PartsIV/V and lines1a–2d. Line4 uses the smaller net loss, line8 rounds remaining capacity, and line3 at or above zero permits all losses without inventing PartsII/III. MFS living together uses the other-passive bucket. PTP income cannot offset an unrelated regular passive loss.
+- Canonical line6 removes the net passive loss rather than adding every losing property separately; actual SE half, taxable SocialSecurity, IRA/loan/bond/adoption adjustments follow the line6 instructions. Signed ScheduleE replacement transfers allowed prior losses as well as suspended current losses once. With120000wages,10000rental profit and40000rental loss, actualMAGI120000 permits15000 special allowance and15000suspended loss, leaving105000AGI. Positive10000rental income with3000prior loss leaves127000AGI from120000wages.
+- PartsVI–VIII allocate using overall activity loss, retain exact source cents and preserve actual input indices. The deterministic largest-remainder tie rule is a software choice to conserve whole-dollar form totals, not an IRS ownership-allocation method. Three equal losses and one dollar of allowance allocate1/0/0 in original order; displayed six-place ratios also sum to1 without changing source ownership or calculated dollar limits.
+- The review mapper reruns actual activity/carry facts against retained modified AGI, validates all retained arithmetic and copies official audits. Known zeros print as zero; skipped lines stay blank. All activities, full names, original cents and actual report locations survive continuation pages. Required all-losses-allowed forms now attach even when suspended loss is zero. This source check does not independently recompute every upstream modified-AGI component; canonical return tests cover the supplied calculation path.
+- Initial calculation and physical-source regressions failed before implementation. The current consumer run passes700 tests across nine files, followed by four expanded PDF cases covering ratio totals, skipped lines, all-allowed attachment and source/audit tampering. The four-page interactive/flattened review was reopened and rendered; pages1,2 and4 were visually checked and every page retains one review notice. Evidence: form8582-source-red.log, form8582-packet-red.log, form8582-consumer-green.log, form8582-ratio-green.log and form8582-review-* under ignored .local/upgrade-evidence/.
+- Bounded follow-ups remain explicit: passive-first Marketplace/SSA/IRA/loan ordering, NOL coupling, actual K1 participation, continuing PTP prior/disposition transfers and QBI character of released prior losses. This prerequisite does not qualify those branches. Versions2025.47/2026.43 retain all review/completeness/filing gates. Exact staged checks and independent package review follow below.
+- Exact staged calculation tree `f2271616` in `/private/tmp/tax-engine-checks-qw62yn4r` passes1,089 tests across14 consumer files, root types and all4,106 committed spec references. Scoped lint has zero errors/232 existing legacy warnings; new source/core/PDF files are clean. Parent independently refreshed the official sources and passed21 bounded core/canonical/PDF/health-review cases without an additional finding (`parent-passive-marketplace-review.log`). It separately identified the already-recorded prior-PTP and released-loss QBI follow-ups, which remain immediate internal work. Logs are `form8582-staged-{tests,types,spec,lint}.log`; parent8814 and facts Marketplace-PDF changes were excluded. This final documentation-only evidence append does not alter the tested calculation tree.
+
+
+## 2026-10-25 — Continuing PTP prior-loss transfer
+
+- The actual per-partnership net computed under the [Form8582 PTP instructions](https://www.irs.gov/instructions/i8582) now enters Schedule1, AGI and the regular rental-loss modified-AGI worksheet once. A20,000 continuing PTP profit with15,000 actual prior loss contributes5,000; a25,000 prior loss leaves zero current income and5,000 carry. No unrelated passive loss offsets that net income. Invalid prior amounts and ambiguous duplicate current PTP identities reject.
+- Both source-integrity and canonical transfer regressions failed before correction (`form8582-ptp-transfer-red.log`);555 focused consumer tests pass (`form8582-ptp-transfer-green.log`). Parent independently reran the continuing-PTP cases in a705-test integration run with no additional scoped finding. Disposed-PTP cross-form character and actual QBI vintage tracking remain distinct immediate internal work; this small correction does not establish those methods or alter filing gates.
+- Exact staged calculation tree `233ffd9e` in `/private/tmp/tax-engine-checks-iwjk1xul` passes555 tests across4 files, root types and all4,124 committed spec references. Scoped lint has zero errors/four existing federal warnings. Logs are `form8582-ptp-staged-{tests,types,spec,lint}.log`; unfinished QBI vintage and concurrent foreign-tax work were excluded. This evidence-only append does not alter the tested calculation tree.
+
+## 2026-10-25 — Pennsylvania rental source fixture repair
+
+- Reproduced the remote Pennsylvania full-return failures: three legacy fixtures supplied an actual rental name under `address`, while the current source model and adapter require `description`. The repair moves the same known strings to the correct field; monetary inputs and all tax assertions remain unchanged.
+- A separate red regression establishes that a raw caller bypassing the input model receives the explicit Form8582 missing-source-name diagnostic, rather than a JavaScript `trim` exception. No identity is manufactured. Evidence is `passive-pa-identity-red.log` and `passive-missing-name-red.log`; the working-tree source/PA cohort passes101 tests. This repair is isolated from the pending rental QBI vintage calculation.
+- Exact staged calculation tree `0ce47787` in `/private/tmp/tax-engine-checks-ga23sgcf` passes186 tests across the four PA/Form8582/canonical source files, root types and all4,152 committed spec references. Scoped lint has zero errors/ten existing PA test warnings. Logs are `passive-pa-repair-staged-{tests,types,spec,lint}.log`. This evidence-only append does not change the tested calculation tree.
+
+## 2026-10-25 — Actual rental QBI loss vintages and detailed trade netting
+
+- Refreshed [Form8995 loss-tracking instructions](https://www.irs.gov/instructions/i8995), [Regulation1.199A-3(b)(1)(iv)](https://www.ecfr.gov/current/title-26/chapter-I/subchapter-A/part-1/subject-group-ECFRcc67ec453a5e514/section-1.199A-3), [Form8995-A instructions](https://www.irs.gov/instructions/i8995a) and its continuous-use [ScheduleA](https://www.irs.gov/pub/irs-pdf/f8995aa.pdf)/[ScheduleC](https://www.irs.gov/pub/irs-pdf/f8995ac.pdf). Actual prior-year original/remaining total and qualified losses bind the filed activity worksheet. FIFO uses the fixed originating fraction; pre2018 losses never become QBI. Unknown participation remains unknown when the2026 minimum can change. No old source year, qualification or owner is invented.
+- Canonical10000current rental income with3000actual prior qualified loss contributes7000QBI and1400deduction. Current income stays10000 on line1 while the released prior amount enters line3 once. New vintages contain only the loss actually suspended:20000current less12000allowed opens8000, not20000. A partly qualified SSTB with6current/2allowed opens4total/2qualified at40%. The parent review identified the original-vintage issue; both independent examples failed before correction.
+- The detailed trade calculation now applies current SSTB qualification before its separate prior qualified loss. Current10000 at50%, less3000prior, gives2000net and400deduction. Prior losses retain their originating character. Current100000profit/40000loss gives12000deduction without subtracting the loss again. Excluded current SSTB losses do not enter the qualified pool; exhausted businesses have zero wage/UBIA amounts. Whole-dollar allocations conserve the printed total using largest remainders and original-order ties, an implementation rounding choice rather than an IRS ownership method.
+- Initial source/canonical tests and four detailed-ordering regressions failed before implementation. The review PDF test independently verifies simplified lines2/3/4/15 as10000/3000/7000/1400 and the detailed reference's2000net/400component. No mapper change was needed. All1050 consumer tests across19 core/return/PA/PDF files pass; root types pass and scoped lint has zero errors/nine existing warnings. Targeted modules report97.58% statements,93.97% branches,100% functions and99.53% lines against unchanged thresholds. Working-tree spec validation has only two unrelated AI source-UI references still being authored; exact scoped validation follows.
+- Parent independently refreshed the sources and reran94 focused cases with no remaining scoped actionable finding (`parent-passive-qbi-final-review.log`). This is agent software/source review, not independent professional qualification. Detailed PTP rules, physical8995-A audit identities, K1 loss-vintage sources, post-passive limitation allocation and passive-first Marketplace/NOL ordering remain explicit internal work. Versions2025.48/2026.44 preserve all incomplete/review/filing gates. Evidence includes `passive-loss-qbi-suspended-origin-{red,green}.log`, `qbi-detailed-loss-netting-{red,green}.log` and `passive-qbi-{complete-consumers,final-coverage,final-types,final-lint}.log` under ignored `.local/upgrade-evidence/`.
+- Exact staged calculation tree `b5e2bd30` in `/private/tmp/tax-engine-checks-ka1zuvvf` passes1,050 tests across19 files, root types and all4,177 committed spec references. Scoped lint has zero errors/nine existing warnings. Logs are `passive-qbi-staged-{tests,types,spec,lint}.log`; concurrent child-character and foreign-state sources are excluded. This evidence-only append does not alter the tested calculation tree.
+
+## 2026-10-25 — Allowed passive income before SSA, IRA and bond worksheets
+
+- Refreshed [Form8582 line6 instructions](https://www.irs.gov/instructions/i8582), [Publication915](https://www.irs.gov/publications/p915) and [Publication590-A](https://www.irs.gov/publications/p590a). Form8582 MAGI removes passive net losses and excludes taxable benefits, IRA/loan deductions and the bond exclusion, so the actual passive allowance can be completed first. Downstream income now contains only allowed losses; no provisional suspended loss reaches those worksheets. The old blanket IRA/passive rejection is removed for this supported ordinary order.
+- Three independent literal regressions failed before implementation. Wages50000/rental loss40000/benefits20000 permit25000loss, produce5350taxable benefits and30350AGI. Wages90000/rental loss20000/covered IRA7000 produce70000IRA MAGI,7000deduction and63000AGI. Adding4000actual Treasury interest to the first case gives8750taxable benefits,37750bond MAGI,4000exclusion and33750final AGI. Current/prior passive transfer, PTP sources and canonical Schedule1 remain once-only.
+- The separate Pub974 passive-special method is still explicit until the next package; NOL and disposed-PTP character remain internal work. Versions2025.50/2026.46 retain all review, completeness and filing gates. Working-tree ordinary and adjacent consumer checks pass; the concurrent facts2555 PartIV red was identified separately and is excluded from exact package validation. Evidence: passive-income-order-{red,green,consumers,types,lint}.log.
+- Exact staged calculation tree `779fc74a` in `/private/tmp/tax-engine-checks-72b1iex6` passes788 tests across11 files, root types and all4194 committed spec references. Scoped lint has zero errors/four existing federal warnings; logs are `passive-income-order-staged-{tests,types,spec,lint}.log`. Parent independently refreshed the sources, passed the three regressions and checked four further2025 boundary examples without an actionable finding (`parent-passive-first-{review,focused}.log`). The standalone2026 readiness gate remains closed. This evidence-only append does not change the tested calculation tree.
+
+## 2026-10-25 — Passive rental allowance in ordered Marketplace health calculations
+
+- Refreshed [Publication974 special instructions and WorksheetsX/Y/Z](https://www.irs.gov/publications/p974). The first W/X/Simplified pass omits rental losses only when actual Form8582 lines1d and3 are both losses; positive rental income remains. The next Form8582 uses the preceding Step3 health deduction, and its allowed current/prior loss is retained while the subsequent IRA, bond and student-loan methods run. The no-advance branch repeats the method without creating X/Y/Z. Final no-PTC ineligibility discards the retained allowance and recomputes it with ordinary Form7206.
+- Two initial regressions failed on the former explicit gate. Eight independent source cases now pass: profit50000/rental loss10000 yields retainedMAGI47656/allowed10000, health913, AGI35554 and PTC4777; adding7000coveredIRA produces health288/AGI29179/PTC5498. A positive6000rental with30000prior carry releases30000 once and leaves AGI22467. Actual zero advances produces health634/AGI35833/PTC4753 and no repayment worksheet.
+- The isolated2026 calculation retains its actual final eligibility and full repayment: health1922/AGI34545/PTC3464/repayment136. At110000profit,6000premiums and14400benchmark, the auxiliary allowance20592 is replaced by ordinary allowance23000 when finalStep2 is ineligible; finalAGI73228/PTC0/repayment3600. These are manually derived synthetic outputs, not independent human qualification. K1 participation/disposition and excess-business-loss interactions remain separately rejected instead of inferred from ordinary rental records.
+- Working-tree verification passes779 tests across24 core, canonical, guided and PDF consumer files; root types pass; scoped lint has zero errors/four existing federal warnings. Evidence is `marketplace-passive-{red,expanded,boundaries,consumers,types,lint}.log` under ignored `.local/upgrade-evidence/`. The finite matrix above removes completed passive ordering and child income-character work from the next-work list; actual NOL source and deduction coordination is next.
+- Exact staged calculation tree `a33c5b9eca2dc8de9bb9f8fa206d096976d8cd97` in `/private/tmp/tax-engine-checks-jxfmk01y` passes779 tests across24 files, three rule-pack metadata tests, root types and all4,213 committed spec references. Scoped lint has zero errors/four existing federal warnings. Parent independently refreshed Publication974 X1 and special instructions and passed all eight literal cases without an actionable finding (`parent-marketplace-passive-review.log`). This is bounded software/source review, not independent professional qualification. Versions2025.51/2026.47 preserve all readiness and filing gates. Logs are `marketplace-passive-staged-{tests,metadata,types,spec,lint}.log`; concurrent ScheduleD,2555 rounding and source-intake work were excluded. This evidence-only append does not change the tested calculation tree.
+
+## 2026-10-25 — Preserve selected legacy NOL carry sources
+
+- Three parsed-source regressions reproduced two independent source losses. The general carry field previously manufactured zero when omitted, masking a supplied prior EBL balance. It now preserves omission separately from actual zero. The remaining aggregate previously started only from Form461's prior EBL alias, dropping unused general and estate carry. It now starts from the same selected available source used by the legacy deduction and adds only the new current EBL disallowance.
+- With actual50000wages and50000general carry, the historical post2017 calculation claims27400 and retains22600. The same total supplied as40000general plus10000final estate carry retains22600 once. A500000current ScheduleC loss produces187000current EBL and preserves50000prior general carry, totaling237000. The monetary oracles use actual source amounts; no origin year is inferred.
+- This repair preserves the existing unverified legacy2025 method. It does not establish that carry absorption universally equals the deduction. [Section172(b)(2)](https://uscode.house.gov/us/usc/119-118/t26/s172/) and the [Form172 instructions](https://www.irs.gov/instructions/i172) require separate modified-income/FIFO calculations. Actual origin/use history, pre2018 expiration, the limit before199A/250, and AGI-dependent coordination are the next implementation, not external review blockers.
+- All three regressions failed before implementation;538 tests across four NOL/EBL/estate/full-return files now pass. Parent independently ran the three cases and reviewed the two narrow code changes without an actionable finding (`parent-nol-source-prerequisite-review.log`). Evidence is `nol-source-conservation-{red,green}.log`. Exact scoped checks follow before commit; all readiness/filing gates remain closed as before.
+- Exact staged calculation tree `aa48d9bf0b5c07a584c9a4a8f3cd2924210fb409` in `/private/tmp/tax-engine-checks-q5w4onje` passes541 tests across five files, root types and all4,227 committed spec references. Scoped lint has zero errors/four existing federal warnings. Logs are `nol-source-staged-{tests,types,spec,lint}.log`. Versions2025.54/2026.50 retain the closed gates; the pending vintage calculator and other agents' foreign-source changes were excluded. This evidence-only append does not alter the tested calculation tree.
+
+## 2026-10-25 — Actual NOL vintage source and carry worksheet
+
+- Refreshed [section172](https://uscode.house.gov/us/usc/119-118/t26/s172/), [Regulation1.172-5](https://www.ecfr.gov/current/title-26/section-1.172-5), the [Form172 instructions](https://www.irs.gov/instructions/i172) and final historical Publications536. The standalone helper binds actual original loss, prior use, attribute reductions, carryback method and opening carry to the same continuing taxpayer or spouses. Pre2018 carry expires after20years; later carry does not. Ordinary historical use is limited to the verified two-year or2018–2020 five-year window; extended historical methods, farming, estate-origin binding and changed return membership retain explicit source-method boundaries.
+- The current deduction and modified-income absorption are separate results. Actual100000income with two100000post2017vintages claims80000/0. When the independently computed modified base is103000, the earlier-only percentage limit and complementary reserve both use that modified basis:82400 and20600, giving82400/0absorption and17600/100000remaining. This is a derived statutory/regulatory example, not an IRS published numerical oracle. The parent and AI source reviews identified why freezing the actual80000 deduction would contradict Regulation1.172-5(a)(2)(ii); the revised cases failed before correction.
+- Source-only validation returns no invented deduction or closing carry. A deduction-only context leaves carry calculation incomplete. The caller must actually refigure every affected AGI-sensitive item for the separate modified contexts; adding back a capital loss without that refiguring does not satisfy the contract. No root input property or canonical return route is added by this standalone package, so it cannot silently accept an ignored election. Actual canonical NOL integration and subsequent Pub974 coordination remain the next internal work, with all readiness and filing gates unchanged.
+- Fourteen source/context cases pass, including negative income, pre2018 deduction exceeding absorption, expiration, joint identity, historical windows and missing or contradictory contexts. The isolated helper coverage is94.36%statements,90.38%branches,100%functions and95.83%lines; types and warning-free scoped lint pass. Parent independently reread the revised helper and passed all14cases with no actionable finding in the provided-canonical-context contract (`parent-nol-vintages-review.log`). Working-tree evidence is `nol-vintages-{final,coverage,types,lint}.log`, with separate recorded red histories and percentage-basis regressions. Exact staged validation follows before commit.
+- Exact staged calculation tree `d81849326cdeb6042cd6c0811c41b648194a2dbb` in `/private/tmp/tax-engine-checks-4z0b48ql` passes55 tests across the vintage, legacy-source and Form461 suites, root types, all committed spec references and warning-free scoped lint. Logs are `nol-vintages-staged-{tests,types,spec,lint}.log`. This evidence-only append leaves the tested calculation files unchanged; concurrent guided2555, QOF and ScheduleD work is excluded.
+
+
+## 2026-10-25 — Actual NOL return ordering, separate AMT carry and review statement
+
+- The canonical return now consumes the actual filed origin/history packet and replays original income sources for the current deduction limit, each earlier-vintage modified carry context, and the final return. Ordinary passive losses, IRA deductions, taxable Social Security, bond/loan deductions and itemized deductions are recalculated in their actual order. The deduction enters Schedule1 line8a once, before AGI-sensitive calculations; the current limit is computed before199A and250. Existing source-free2025 compatibility remains explicitly unverified. Missing history, year, ownership or1411 origin amounts have no defaults.
+- Primary authorities refreshed for this package are [Form172 instructions](https://www.irs.gov/instructions/i172), [IRC172](https://uscode.house.gov/us/usc/119-118/t26/s172/), [Regulation1.172-5](https://www.ecfr.gov/current/title-26/section-1.172-5), [Form6251 line2f](https://www.irs.gov/instructions/i6251), [IRC56](https://uscode.house.gov/us/usc/119-118/t26/s56/), [Regulation1.55-1(b)](https://www.ecfr.gov/current/title-26/section-1.55-1) and [Form8960 line7](https://www.irs.gov/instructions/i8960). Separate AMT records supply the alternative loss; the individual AMT income calculation retains regular-tax AGI and restores the regular deduction on2e before subtracting the actual ATNOLD on2f. Current AMTI retains current QBI; modified carry income removes199A under172(d)(8). Ordinary alternative capacity is90%, separately rounded and conserved. Special historical disaster and unrepresented AMT basis/depletion methods remain separate.
+- Derived synthetic examples distinguish claims from absorption. At100000 wages with a3000 capital loss, a100000 regular carry claims65000 and absorbs67400, leaving32600. Independent100000 AMT carry claims87300 against97000 AMTI, absorbs90000 against100000 modified AMTI, and leaves10000. Two100000 regular vintages with100000 current and103000 modified limit income claim80000/0 but absorb82400/0; the modified80% deduction and20% reserve use the same modified basis. These are statutory/regulatory derivations, not published IRS numerical oracles. The recorded earlier source reviews did not independently qualify the full return implementation.
+- Other literal cases cover refigured IRA, Social Security, ordinary rental loss, medical and student-loan deductions, current QBI versus modified AMTI, and an actual1411 originating-loss fraction. The investment case transfers30000 of a100000 claimed regular deduction to negative8960line7 and yields1786NIIT; carry absorption is not the fraction base. A separate red QBI test caught89368 modified AMTI where the actual source result is92935; removing QBI only from modified carry income produces83642 absorption while the current alternative deduction remains78271.
+- The review statement keeps both carry ledgers, current/modified bases, claim/absorption/expiry and the actual1411 amount. Form6251 prints the positive magnitude inside its parenthesized2f field while the internal audit remains negative. Review packets include the adjustment even with zero AMT, without asserting a filing requirement. Source years, balances, history, totals and unique audits must reconcile; source cents remain intact and form-dollar AMTI is compared after rounding. Identifier-redacted input remains usable, and no source reference, name or taxpayer identifier is printed. This source check does not independently replay every upstream income item; canonical tests cover that separate responsibility.
+- Spec-linked tests preceded implementation. Recorded evidence includes the initial canonical/source red cases, `nol-amt-qbi-red.log`, `nol-review-cents-red.log` and their green runs. The initial completed focused run passed32 tests across six files, root types and lint with zero errors/six existing warnings; the final cents correction passes both PDF cases. Exact immutable validation and independent bounded review follow below. Versions2025.59/2026.55 preserve incomplete2026, pending independent tax review and filing-disabled gates.
+- Remaining NOL work is internal: Pub974 coupling, current-year original-loss worksheets,170(d)(1)(B) charitable carry reduction, regular/AMT debt-cancellation vintage reduction, estate source binding, prior EBL qualified-loss character, general foreign-credit loss allocation and deduction-year hypothetical coupling. [Regulation1.170A-10(d)](https://www.ecfr.gov/current/title-26/section-1.170A-10) supports the explicit charitable-double-carry boundary. Coupled adoption exclusions, changed return membership and specialized AMT histories also retain named method guards. Rejecting these branches is not completion and does not imply missing user approval. Final form publication and independent professional review remain distinct external dependencies.
+- Exact calculation tree `2b3b9e3ac130c3c74147ce6d8612690de5652ec0` in `/private/tmp/tax-engine-checks-n9herjay`, based on `c6a8cc7`, passes1,078 tests across59 NOL, IRA, SSA, passive, loan, foreign-credit, AMT, full-return and PDF consumer files. Root types and all4,328 spec references pass. Scoped lint has zero errors/six existing non-null warnings. Logs are `nol-return-staged-{tests,types,spec,lint}.log`; unrelated source UI/reference work is excluded. The generated statement and Form6251 pages1/3 were reopened, rendered and visually inspected in `.local/upgrade-evidence/nol-review/`; every PDF page has one review notice. Parent independent source review is still pending at this evidence checkpoint. This documentation append does not change the tested calculation tree.
+- Parent independently refreshed IRC172/56, Form6251 and Regulations1.172-5/1.55-1, reviewed the immutable source/canonical changes and passed19 cases (`parent-nol-return-review.log`). Four extra cases covered separate1411 fractions (89500 from185000claimed versus187400absorbed), an independent10000AMT carry versus80000regular, full pre2018 deduction/20-year expiry and the closed2026 gate. No actionable finding remained within the documented ordinary method. This bounded software/source review does not replace professional filing qualification.
+- A subsequent parent QSBS review identified an overlap between the1202 exclusion and the already removed capital loss. The new regression reproduced100500 modifiedAGI instead of100300 for100000wages,1000capital gain,700loss and500exclusion. Under172(d)(2)(A)/(B), modified capital income is max(0,ScheduleDnet+exclusion); the two audit adjustments now sum to its difference from actual1040capital income, rather than double-restoring the overlap. A4000loss control restores only the actual3000capital deduction. These are derived combined statutory examples, not published IRS numerical oracles. The source arithmetic is tested against the existing legacy QSBS result; actual issuer/exclusion eligibility remains the parent's separate source package. Evidence: `nol-capital-1202-{red,green}.log`, with31 cases passing after the correction.
+- Final exact tree `e079876062355a6d71feeac3d0deb38c3b8cdff8` in `/private/tmp/tax-engine-checks-7xchhyx4`, based on `f6da5b2`, includes that correction and passes1,079 tests across the same59 consumer files, root types and all4,340 spec references. Scoped lint has zero errors/six existing warnings. Evidence is `nol-return-final-{tests,types,spec,lint}.log`. The calculation source otherwise matches the independently reviewed tree; only intervening committed source-intake packages and this separately reproduced overlap correction were added. This final evidence append changes no executable source.
+
+
+## 2026-10-25 — Actual NOL in Marketplace health contexts
+
+- Refreshed [Publication974 W/X and Simplified/Special Instructions](https://www.irs.gov/publications/p974), [section172](https://uscode.house.gov/us/usc/119-118/t26/s172/) and [Regulation1.172-5](https://www.ecfr.gov/current/title-26/section-1.172-5). The existing prescribed health sequence now calls the actual NOL orchestration for each fixed health amount. No new NOL entry is invented in the special passive/IRA/bond/loan ordering. Statutory NOL current-limit and modified-income contexts recompute already enabled AGI-sensitive worksheets; future ordered claims stay omitted. Actual return income retains completed Pub974 claims as prescribed. Only the final health context supplies the final current deduction, modified carry absorption, AMT and1411 result.
+- Five source regressions were red on the former explicit Marketplace/NOL gate. Independent derived2025 examples use100000ScheduleC profit,7065SEhalf,6000premiums and3600APTC: Whealth2400 gives59828NOL and30707Xincome; Xcap975/max3375 gives Step2PTC5365. Finalhealth635 gives61240NOL,31060AGI,5304PTC and38760regular carry. A3000capital-loss control gives589health,58877claim but61277modified absorption and38723carry. These are synthetic statutory/worksheet derivations, not IRS published numerical examples.
+- The covered7000IRA case retains that actual Pub974 claim while the statutory current-limit MAGI independently allows zero IRA: finalhealth57, NOL61702, AGI24176, PTC5903 andcarry38298. The isolated2026 source case giveshealth1895, NOL59952, AGI31088 andPTC3979; a separate10000carry case remains above400percent with ordinary6000health, zeroPTC andfull3600repayment. Incomplete2026 readiness and filing qualification are unchanged.
+- [Regulation1.199A-3(b)(1)(vi)](https://www.ecfr.gov/current/title-26/section-1.199A-3) supplies the existing gross-income business attribution in interim NOL/AMT income contexts as well as the final health calculation. Actual final allocation declarations are not forced to equal different temporary deductions; their health column is recomputed for the internal context and the original declaration is validated on the actual final return. Separate equal-gross businesses with half-year policies produce5364Step2PTC,636final health and318perbusiness; a mismatched final declaration rejects. Mixed QBI/non-QBI source treatment remains an explicit method boundary.
+- The independent final-ledger case retains61240regular deduction,80314ATNOLD,83070AMT absorption and16930AMT carry. A30000/100000 originating1411 fraction transfers18372 based on the final regular claim. Final6251,8960 and QBI transfers appear once. The review packet reopens actual health and NOL PDFs together:635health,5304PTC and separate38760regular/16930AMT carry, one review notice per page, with taxpayer identifiers removed. Existing physical layouts are unchanged.
+- Working-tree verification:82 tests across14 core/canonical suites,11 tests across three PDF suites, and root types pass. Evidence: `marketplace-nol-{red,second,allocations-red,adjacent,pdf,types}.log`. The allocation red run separately reproduced the actual final-versus-interim source mismatch; its other assertion was corrected to inspect the printed QBI transfer rather than an unrounded proportional audit amount. Exact snapshot and independent review follow before commit. Versions2025.60/2026.56 retain all incomplete/review/filing gates.
+- Remaining internal methods are the named origin-loss,170(d) carry, COD-vintage, estate/EBL character, foreign-loss and specialized AMT branches, plus the existing Marketplace ordinary re-entry/forgiven-advance/shared-policy/owner-allocation methods. This composition does not turn those source or legal-method gaps into external approval dependencies.
+- Exact isolated calculation tree `d8640c1319f21a604b51ea9815e5008b478f12c2` in `/private/tmp/tax-engine-checks-hmt_r1hu`, based on `683734a`, passes1,165 tests across75 files, root types and all4,371 spec references. Scoped lint has zero errors/four existing federal non-null warnings. Logs are `marketplace-nol-staged-{tests,types,spec,lint}.log`. Concurrent ordinary foreign-credit, QSBS and guided NOL source work are excluded. Independent review remains pending at this checkpoint; this evidence append changes no executable source.
+- Parent independently refreshed Publication974, Regulations1.172-5 and1.199A-3, reviewed the wrapper and temporary gross-income health allocation, and passed11 cases in the immutable tree (`parent-marketplace-nol-review.log`). Four added probes covered a5000loss with zeroPTC/full3600repayment, the closed2026gate, missing independent AMT sources, and immutable input with retained7000IRA/final61702NOL. No actionable finding remained in this bounded package. This agent software/source review does not replace independent professional qualification.
+
+## 2026-10-25 — Current charitable carry and succeeding NOL coordination
+
+- Refreshed [section170](https://uscode.house.gov/us/usc/119-118/t26/s170/), [Regulation1.170A-10(d)](https://www.ecfr.gov/current/title-26/section-1.170A-10), [Regulation1.172-5](https://www.ecfr.gov/current/title-26/section-1.172-5), and [Regulation1.55-1](https://www.ecfr.gov/current/title-26/section-1.55-1). The current public-cash excess is reduced only by the increase it creates in a succeeding regular NOL carry. An internal counterfactual removes that excess from the contribution amount, refigures percentage limits, earlier-vintage deductions, deduction choice and expiry, and leaves original receipts and the actual current NOL claim unchanged. The published historical regulation example tests its carry-difference rule without importing its obsolete percentage limit into current years.
+- Derived2025 example:100000wages/60000cash/100000post2017NOL claims32000, leaves68000AGI,40800charity and19200tentative charitable carry. Modified income without the excess contribution becomes59200, absorbing47360 rather than32000; succeeding NOL falls from68000 to52640. The15360difference reduces charitable carry to3840. With two100000vintages, the second modified income must refigure charity after the earlier deduction: actual totalcarry148800 versus comparison143424 produces5376reduction and13824charitable carry. The first provisional two-vintage expectation incorrectly froze the second charity limit; it was corrected by independently deriving and asserting both stages, not by changing the source amounts.
+- The isolated2026 itemized case includes eligible floor carry before170(d)(1)(B). Actual67600AGI gives40222charity and19778tentative carry. Removing the excess leaves40222contributions; the counterfactual500floor gives39722deduction and60278modified income. Comparison51778NOLcarry versus actual67600 leaves3956charitable carry. This is a derived statutory reading of source removal and floor ordering, not a published IRS numeric oracle. Actual2026 standard-deduction carry coordination remains a separate internal method.
+- A2017loss case refigures the automatic deduction choice in the counterfactual, while an explicit itemized election remains itemized. A2005loss expiring after2025 creates no succeeding NOL carry and therefore no charitable reduction. Source cents remain exact before form-dollar totals; incomplete recipient/date/qualification, prior carry and mixed property/pass-through categories reject instead of receiving invented classifications.
+- Alternative charitable carry is retained separately when the actual complete AMT source packet establishes no available ATNOL. In the single-vintage example it remains19200, independently of regular3840. Regulation1.55-1 and sections56/170 support separate computation; the corporate nonprecedential CCA201226021 corroborates the distinction but supplies no individual numeric method. Positive ATNOL/charity coordination is still unfinished internal work and is explicitly rejected. No regular carry is copied into an unknown AMT ledger.
+- The review statement binds current receipt totals and final carry, retains the separate counterfactual income/vintage ledger and displays both regular and alternative charitable carries. It checks unique actual adjustment audits after identifier redaction. It does not claim to replay every upstream income source. Rule versions2025.63/2026.59 preserve incomplete2026 readiness, independent-review-pending status and closed filing qualification. Exact checks and independent package review follow below.
+- Exact calculation tree `ae9794d2e7f97f6147fbda5f9124d2cb824fef4e`, based on `3aed6e8`, passes 875 tests with two pre-existing workspace preview assertion failures. Replaying the unchanged base reproduces both failures with identical Schedule D formula/audit expectations and unchanged monetary results (`charitable-nol-baseline-storage.log`). Parent separately repaired those fixtures in `0825893`; the final snapshot below includes that commit. Root types, all 4,417 spec references and scoped lint pass, with zero lint errors and seven existing warnings. Both one-page review examples were reopened, rendered and visually inspected; each has one review notice and no source identifiers.
+- Parent independently refreshed sections 170 and 56 and Regulations 1.170A-10, 1.172-5 and 1.55-1, reviewed the counterfactual and separate AMT carry, and passed eight cases (`parent-charitable-nol-review.log`). Its additional pre-2018 case uses 80,000 wages and 48,000 gifts, producing 32,000 absorption, 48,000 actual NOL carry and 15,750 comparison/charitable carry. Its mixed 30,000 pre-2018 and 100,000 post-2017 case produces 38,000 claimed, 74,000 actual carry, 73,760 comparison carry and 22,560 charitable carry. No actionable finding remained in this bounded method. This agent review is not independent professional qualification.
+- Final isolated calculation tree `b4d5945b5ab63e4cb34eafc13f0e985135222906` in `/private/tmp/tax-engine-checks-g20wtzxo`, based on `0825893`, passes all 877 tests across 21 consumer files, root types and all 4,417 spec references. Evidence is `charitable-nol-final-{tests,types,spec}.log`; unchanged calculation files retain the preceding zero-error lint result. This final evidence append changes no executable source. Concurrent rental intake, foreign reference and QSBS PDF changes are excluded.
+
+## 2026-10-25 — Standalone current-year Form 172 Part I
+
+- Refreshed the [continuous-use physical Form 172](https://www.irs.gov/pub/irs-pdf/f172.pdf), [its instructions](https://www.irs.gov/instructions/i172), [section 172](https://uscode.house.gov/us/usc/119-118/t26/s172/) and [historical 2023 Publication 536](https://www.irs.gov/pub/irs-prior/p536--2023.pdf). The standalone Decimal calculator implements all 24 Part I identities for actual canonical whole-dollar amounts. Business and nonbusiness capital classifications must conserve the original Schedule D net amount. Standard deduction, excess nonbusiness deductions and an older NOL do not become a new loss.
+- The independently published historical retail example on Publication 536 page 6 uses 1,225 wages, 425 interest, 2,000 business capital gain, 5,000 operating loss, 1,000 nonbusiness capital loss and the actual 13,850 historical standard deduction. Every line reconciles to its published 1,775 original NOL. Separate single/MFS cases verify the 3,000/1,500 capital limitation and the remaining nonbusiness gain available to business losses. Original source cents must remain upstream; the internal completed-form interface rejects fractional or missing amounts and accepts exact values beyond JavaScript integer precision.
+- This package introduces no root input, automatic current-year carry, AMT origin amount or 1411 allocation. Those require canonical source classification and separate return integration. Positive section 1202 exclusions remain a precise internal method boundary: the physical lines 16–21 require their source convention to be resolved before overlapping capital adjustments can be accepted. The current instructions' EBL worksheet still points to line 33, although the current physical origin loss is Part I line 24; Part II line 33 must not be substituted. A future canonical current-year carry must add the actual Form 461 amount once, after its existing income addback.
+- Spec-first tests failed before the module existed, then all 71 adjacent Form 172/NOL/AMT/Form 461 tests passed. Root types and scoped lint pass. Shared spec validation reported only two unrelated, unfinished AI corpus references; exact isolated validation follows. No active return calculation changes, so this prerequisite does not change rule-pack metadata or qualification gates.
+- Exact calculation tree `9fb209af4bec34e039838df766e7cf8ad683a3c4` in `/private/tmp/tax-engine-checks-bf2e5nfl`, based on `3629ce0`, passes the same 71 tests across five files, root types and the complete isolated spec validator. Evidence is `form172-origin-staged-{tests,types,spec}.log`. The facts agent independently reopened the official form, instructions and historical oracle, reviewed every Part I identity and passed all four new cases (`facts-review-form172-origin.log`), with no actionable finding in this standalone arithmetic. Canonical regular/AMT/1411 binding and positive section 1202 remain separate implementation work. This source/software review is not independent professional qualification; the final documentation append changes no executable source.
+
+## 2026-10-25 — Actual current-year ordinary loss origins
+
+- The actual current-year Form172 source packet binds the active, all-at-risk ScheduleC identity and owner, ordinary source classifications, and separate current AMT basis/depreciation/loss-limit confirmations. It requires complete actual prior regular and AMT ledgers even when both are known empty. It supplies no user-entered profit, AGI or original-loss override. Unsupported capital/1202, passive, farming, estate, COD, foreign and itemized-origin methods reject before offsetting records can hide their missing classifications.
+- Canonical wages20000, interest5000 and actual business loss100000 give AGI-75000. Regular PartI adds back10750 of excess nonbusiness deductions and creates80000; the independent AMT calculation creates75000. Actual500.25 private-activity interest changes only alternative income and gives74500 completed alternative loss. The investment-only172 computation excludes the active nontrading business and creates no1411 loss. These are derived literal examples, not published IRS numerical controls.
+- A current500000 business loss produces verified Form461 addback187000, then293000 regular PartI and288000 alternative PartI. The current EBL is retained as its own origin and added once, producing480000/475000 new carry. Old actual regular/AMT carry remains independently reconciled, and a pre2018 deduction is restored on PartI23. Original expense and deduction cents remain unchanged; completed PartI inputs follow the whole-dollar convention.
+- This exposed a prerequisite ScheduleA defect: negative AGI made its7.5percent threshold negative, creating medical deductions without paid expenses. [Section213(a)](https://uscode.house.gov/us/usc/119-118/t26/s213/) and [Publication502](https://www.irs.gov/publications/p502) limit the deduction to actual paid expenses. The threshold now floors AGI at zero; signed return AGI remains unchanged. Red-first core and physical-review regressions prove zero paid expenses gives zero deduction, and actual5000 can deduct no more than5000. This negative-income example is a derived paid-expense ceiling, not an IRS published numerical oracle.
+- The result retains all24 regular, alternative and investment PartI values. The existing NOL review statement prints the applicable audited lines and both closing carry totals; the inapplicable capital-limit block stays omitted. It revalidates current source facts, freshly computes the business after dependent-care expense adjustments, checks interest/dividend and private-activity amounts, and reconciles retained canonical contexts and unique audits. Changed source profit, altered worksheet values, missing source packets and duplicate audits reject. No identifier or source reference is printed; the statement explicitly does not claim to independently replay every upstream calculation.
+- Eleven targeted calculation/physical-review cases and222 adjacent source, NOL, charity, ScheduleA and Form461 tests pass. Root types and exact isolated validation follow before commit. Versions2025.64/2026.60 preserve incomplete-year, pending independent review and filing-disabled status. Current itemized/capital/1202 origins, positive-ATNOL and prior/mixed charity, COD vintage reduction, estate/prior-EBL character and foreign-loss methods remain internal work; their rejection is not completion.
+- Exact calculation tree `142ec0bcbc36b12c01a9e183a4687337c2189966` in `/private/tmp/tax-engine-checks-vohuv5ju`, based on `b0dd105`, passes320 tests across24 files, root types and all4,497 spec references. Scoped lint has zero errors and five existing warnings. Evidence is `form172-return-staged-{tests,types,spec,lint}.log`. The three-page redacted review statement was saved, reopened, rendered and visually inspected; all current-origin amounts, separate closing carries and review notices are legible, with no source identifiers or clipping. Concurrent IRA source and AI evaluation changes are excluded.
+- Parent independently refreshed the Form172 instructions, Publication502 and Regulation1.1411-4, inspected current-loss conservation and retained PDF/source audits, and passed11 focused cases. No actionable finding remained within the active ScheduleC/standard-deduction method. This is agent source/software review, not independent professional qualification. This final evidence and finite-queue update changes no executable source.
+- Final staged tree `8dd4acd9bb8d2931799cb494ad82b786ad55e54b` in `/private/tmp/tax-engine-checks-8ty_2wjm`, based on `029d5d9`, reruns all320 tests across24 files successfully, root types and all4,518 spec references. Evidence is `form172-return-final-{tests,types,spec}.log`. The reviewed calculation/PDF blobs are unchanged; the staged model excludes all three pending parent IRA additions. This last evidence append changes only this ledger.
+
+
+## 2026-10-25 — Ordinary itemized deductions in current loss origins
+
+- Refreshed [Form172 instructions](https://www.irs.gov/instructions/i172), [Form6251 instructions](https://www.irs.gov/instructions/i6251), the [Form4952 instructions](https://www.irs.gov/pub/irs-pdf/f4952.pdf) and [Regulation1.55-1(b)](https://www.ecfr.gov/current/title-26/section-1.55-1). Ordinary medical, personal property/sales tax, main-home mortgage/points and investment-interest deductions enter the regular nonbusiness limit. AMT disallows personal taxes, uses regular-AGI medical limits, and requires independent actual investment-interest sources. No business-versus-investment income-tax allocation is inferred.
+- Canonical wages20000, interest5000 and active business loss100000 with medical50000 produce80000 regular and alternative losses. Medical2000 plus property20000 still gives80000 regular but77000 alternative. Independent regular5000/AMT5500 investment-interest deductions with500PABincome produce80000 in each system. Actual main-home ratable points240 are retained in both applicable deduction totals. These are derived controls, not published IRS numerical examples.
+- Source cents are summed before the existing ScheduleA rounding boundary. The new helper freshly recomputes the supported itemized sources and checks both the allowed component totals and original ScheduleA audit lines. Review output therefore rejects changed property receipts even when the SALT cap and NOL nonbusiness limit leave all final carries unchanged. The review statement shows the distinct regular, alternative and investment itemized classifications without identifiers or source references.
+- The ordinary method keeps state/local income-tax attribution, foreign taxes, charity/casualty/other deductions, second-home AMT dwelling facts and special investment classifications as specific internal source work. It does not infer a capped-tax allocation, reuse an unverified mortgage summary, or copy the regular4952 into AMT. Table-based sales sources and post-section68 deduction reconciliation also remain outside this current-origin slice. Existing full-year and filing gates are unchanged.
+- Initial spec-first six-case suite failed before implementation;15 new/adjacent source and review cases now pass, including two additional reproduced source-conservation edges. Exact isolated checks and independent review follow. Rule versions2025.66/2026.62 retain incomplete2026, independent-review-pending and filing-disabled status.
+- Independent review reproduced a second-home source omission: prior ratable points can be deductible when current interest and points payments are both zero. The new regression fails on that old guard. Pub936 now exposes each actual loan's already-calculated eligible interest and points without changing its arithmetic; Form172 checks those amounts for the AMT dwelling boundary. Main-home prior points240 produce75240 alternative loss, while the corresponding second-home ratable or completed-amortization source requires its missing dwelling method. A genuinely ineligible second-home source with no allowed deduction does not block the separate main-home claim.
+- Corrected isolated tree `8f9b1a941610de5fd01d61c910c5e9f7bc3a3a0c` in `/private/tmp/tax-form172-itemized-d60r68w8`, based on `a38c41e`, passes 372 tests across 40 core, guided, DOM and PDF files, root/web types and all 4,551 spec references. Scoped lint has zero errors and four existing federal non-null warnings. Evidence is `form172-itemized-corrected-{tests,types,web-types,spec,lint}.log`. The three-page redacted statement was saved, reopened, rendered and visually inspected; the separate 80,000 regular and 77,000 alternative origins, source classifications and review notices are legible without source identifiers or clipping.
+- The independent facts reviewer reran 14 package cases and the original two-case points probe on the corrected tree: all 16 pass, with no remaining actionable finding in this bounded method. Evidence is `facts-rereview-itemized-origin.log` and `facts-rereview-itemized-origin-probe.log`. This remains agent source/software review, not independent professional qualification. This final evidence append changes no executable source.
+
+
+## 2026-10-25 — Exact computational amounts in Form172 origin worksheets
+
+- [IRC6102(c)](https://uscode.house.gov/us/usc/119-120/t26/s6102/) separates computational items from amounts reported on the form. [Regulation301.6102-1(c), official2025CFR pages72–73](https://www.govinfo.gov/content/pkg/CFR-2025-title26-vol20/pdf/CFR-2025-title26-vol20-sec301-6102-1.pdf) expressly preserves receipt cents before reporting the total. The [1040 rounding instructions](https://www.irs.gov/instructions/i1040gi) and [Rev.Proc.2024-33 section5.2.6](https://www.irs.gov/pub/irs-irbs/irb24-44.pdf) corroborate this distinction. The precision spec records short source quotations and the actual Form172 line boundaries. This is a derived application to Form172; no published IRS cents example was located.
+- Exact nonbusiness gains100.49 and losses100.50 conserve the actual ScheduleD net-.01. Printed2=101 and3=100 do not fabricate an additional dollar of loss: exact4=.01 reports0, and the exact adjustment removes the same capital loss already in AGI. The resulting current loss is80000. A19899.99 net gain instead yields exact signed computation-70850.01 and reported carry70850. These derived controls preserve original capital character and impose exact conservation, not a rounding tolerance.
+- The helper retains all exact computational line amounts alongside their whole-dollar presentation. The existing1775 historical published example and all whole-dollar literal expectations remain unchanged. A separately reproduced review check rejects changed fractional retained values even when printed totals and carry are unchanged. Four new calculation probes and the retained-data review probe failed before their corrections;25 focused historical, canonical and PDF tests now pass.
+- Existing canonical callers still provide their completed source values; this prerequisite does not infer missing source cents or enable a capital-origin route. Ordinary investment-source classification, separate AMT basis and canonical capital integration remain the next package. Positive1202 and other unresolved source methods remain internal work. No metadata or readiness gate changes are included. Isolated checks and independent source review follow.
+- Exact isolated tree `57d7d8f27047254157a045d5360f094d4fca32f2` in `/private/tmp/tax-form172-origin-precision-ahjz6mqg`, based on `e74436b`, passes47 tests across10 current-origin, historical, canonical NOL and PDF files, root types and all4,556 references; scoped lint is clean. Logs are `form172-origin-precision-staged-{tests,types,spec,lint}.log`. No rendering changed, and the new retained-value rejection is tested directly.
+- The independent facts reviewer refreshed IRC6102(c), official2025CFR301.6102-1(c) and physical172, then passed nine package/historical/review cases plus an MFS1500-ceiling/.49-remainder probe. No actionable finding remained in the documented derived precision convention. Evidence is `facts-review-form172-precision.log` and `facts-review-form172-precision-probe.log`. Agent review does not qualify filing; the final evidence append changes no executable source.
+
+## 2026-10-25 — Ordinary investment capital sources in current loss origins
+
+- Refreshed [Form172 and its instructions](https://www.irs.gov/instructions/i172), [Form6251 disposition instructions](https://www.irs.gov/instructions/i6251) and [Regulation1.1411-4(h)](https://www.ecfr.gov/current/title-26/section-1.1411-4). Actual ordinary nonbusiness investment transactions, capital distributions and filed prior short/long losses now supply gross capital classifications. Each original statement, owner, source year, date, amount and special-character answer is reconciled before netting. Independent AMT basis/adjustment/carry evidence is required; a separately supplied contradictory AMT rate worksheet rejects.
+- Exact gain100.49 and loss100.50 give ScheduleD net-.01, AGI-75000.01 and regular80000/AMT75000 new losses. Gain20000.49 less loss100.50 gives19899.99, regular70850 and AMT55100. A500 distribution with actual prior ST-4000/LT-3000 gives net-6500 and capped1040loss-3000; Form172 restores3000, leaving80000/75000 origins and preserving the full6500capital carry. Actual disallowed wash loss is added once. These are independently derived controls, not published IRS numeric examples.
+- The coherent canonical handoff now retains exact completed AGI/deduction/capital computation through Form172 and rounds each reported line under the separately reviewed6102 convention. It does not reconstruct cents already rounded by an upstream form. All original capital gross and net amounts must reconcile exactly to ScheduleD7/15/16 and the1040 transfer. Investment-only172 is independently recomputed; the nonbusiness capital restriction prevents these investment losses from creating a new1411NOL.
+- Source-only validation produces no original-loss amount. The review statement freshly checks source capital and ScheduleD, then compares exact retained172amounts, printed lines and closing carries. Changed source cents reject even when a final cap is unchanged. Account redaction is preserved; no source reference or account number is printed.
+- The bounded method excludes business/personal-use/digital/special-character capital, positive1202, other non-wash adjustments, differing AMT basis/carry and unclassified aggregate prior carry. Those are named source-method boundaries, not inferred zero. Ordinary capital-source intake is a separate UI handoff; existing source-only current-origin intake remains unchanged. Rule versions2025.67/2026.63 preserve incomplete2026, independent-review-pending and disabled filing status.
+- Five spec-linked return/review cases failed on the previous explicit gate;49 new and adjacent current-origin/carry/Marketplace/PDF tests then passed. A later independent source-conflict probe reproduced acceptance of contradictory AMT capital worksheets and was corrected separately. Exact isolated checks and independent review follow below. No8949 or ScheduleD arithmetic, categories or physical mappings are changed in this package.
+- Exact tree `7c2a21851e60a749dc2fc9edc3e731ef0b001c12`, based on `8cf0e8e`, passes649 tests across21 files, root/web types and all4,583 spec references. Scoped lint has zero errors and four existing federal non-null warnings. Evidence is `form172-capital-origin-staged-{tests,types,spec}.log`, `form172-capital-origin-carry-tests.log` and `form172-capital-origin-lint.log`. The saved four-page review statement was reopened, text/privacy checked and all four rendered pages inspected under `form172-capital-review/`.
+- The independent AI agent refreshed official172,6251 and Regulation1.1411-4(h), then passed12 package/adjacent cases and four additional probes: MFS1500 capital ceiling, the exact10750.50/.51 carry boundary, split versus combined fractional losses, and stale account/AMT source rejection. No actionable finding remained in this bounded review (`ai-review-form172-capital-{tests,probes}.log`). This is agent software/source review, not independent human filing qualification.
+
+### Finite federal execution queue after ordinary capital origins
+
+The remaining named methods in the matrix above are internal implementation
+boundaries, not external blockers and not claims of completed support. The
+following is the selected execution order; it does not silently enable every
+special method named in that matrix.
+
+1. Ordinary selected capital-source collection is complete through `9d71c5f`:
+   original1099-DA source binding/withholding, all twelve8949 categories,
+   document/guided/state handoffs, and ordinary/QSBS capital-origin intake. Their
+   source, calculation and review boundaries remain subject to the final
+   enabled-path integration audit; no broader special method is implied.
+2. Actual positive1202 current-origin restoration is implemented and verified
+   where post-exclusion capital net is nonnegative, including the separate AMT
+   preference and original-source review replay (2025.70/2026.66). The negative-net
+   printed/statutory overlap remains a specific unresolved interpretation,
+   documented with its complete trace in
+   `upgrade-2026-form172-qsbs-origin-work.md`; no convention is invented.
+3. Positive ATNOL with current public-cash gifts and separate actual AMT charity
+   history is committed, as is the charity reporting/precision prerequisite.
+   The AI owner now owns selected actual prior/mixed-category charity and2026
+   nonitemizer carry, with source collection included in each coherent package.
+4. Source-bound insolvency reductions of regular/AMT loss vintages are committed
+   in `bb5cbe6`. Their actual guided collector now passes its isolated source,
+   canonical, production persistence and privacy checks and bounded independent
+   review. Different modified-absorption/current-use amounts, later
+   attributes, partial taxable debt and other debt exclusions remain named
+   internal methods. Unknown exclusions, elections or histories cannot become
+   zero. Farming, estate/EBL origins and broader foreign-loss methods remain
+   separately identified unsupported methods.
+5. Close the enabled-scenario source, calculation, review/PDF and readiness
+   audit, then the parent owns the integrated release checks. Mixed-owner PTC,
+   disposed-PTP, preferential foreign-credit/loss accounts, pledged ESA and
+   additional special retirement/property histories remain deliberately
+   unsupported until their own scoped methods are implemented; none is relabeled
+   external. Final2026 publications and independent human qualification are
+   separate external dependencies.
+
+## 2026-10-25 — Source-bound positive1202 current loss origins
+
+- Actual issuer/lot exclusions now feed gross-capital classifications and Form172 line17 once for the independently reconciled nonnegative-net method. The AMT origin removes the rounded seven-percent preference already included on6251 before restoring the full exclusion. Source cents and separate regular/AMT/1411 origin calculations are retained; no taxpayer-entered exclusion or result override is accepted.
+- A private original-source token authenticates the whole source/household/year packet before fresh redacted-review replay. Missing, forged, other-packet or changed-source tokens reject; snapshots and retained computations are frozen. The limited accessor supplies actual original capital facts while preserving current noncapital facts, so stale business expenses cannot be hidden.
+- Parent independent review on `e1fbc77db1a2ee77119f011d03f1702346b462b7` passed13 cases, including five new source/token probes, with no actionable finding. Final isolated product tree `194d229b3ce295d2b4a23305eaf27343a951710f`, after separately committed PDF-reader repair `9da0bab`, passed12 affected cases, root/web types, all4614 spec references and lint with zero errors/two existing warnings. The preceding571 adjacent cases passed; the only failed reader transport now passes without assertion or timeout changes. All four saved review pages were visually inspected and retain notices without original identifiers.
+- Rule versions2025.70/2026.66 retain incomplete2026, independent-review-pending and disabled filing. The complete derived numerical controls, source citations and negative-net printed-versus-statutory mismatch are in `upgrade-2026-form172-qsbs-origin-work.md`. That single interpretation remains disabled pending qualified authoritative input; the user is not asked to choose arithmetic. The federal owner's next selected implementation is actual cancelled-debt reductions of loss vintages.
+
+## 2026-10-25 — Actual insolvency reductions of NOL vintages
+
+- Actual original1099-C statements and complete immediately-before insolvency
+  records now bind the exclusion. The supported individual noncommunity route
+  requires full exclusion and sufficient independent regular/AMT NOL attributes.
+  Current origins reduce first, then earlier vintages; residual final-year carry
+  expires afterward. Current deductions and original1411 fractions stay intact.
+- The opaque original-source review context rejects stale source/calculation
+  packets before any files are written. The NOL and Form982 reference statements
+  show before/after balances, independent AMT amounts and residual expiry without
+  private identifiers. All four saved ordinary/expiry pages were inspected.
+- Exact tree `183cbe33621972e0f073ddb55fc72116ae5233b2` passes 713 tests across
+  34 files, pinned Node24 root/web types and 4,665 spec references. Scoped lint
+  reports zero errors and six existing warnings. Parent independent source review
+  passed 16 cases, including five additional literal/adversarial probes, with no
+  actionable finding. Full evidence and bounded methods are in
+  `upgrade-2026-cod-nol-work.md`.
+- Versions2025.75/2026.71 retain all readiness and independent-review gates.
+  The guided source collector and its exact verification are recorded in
+  `upgrade-2026-guided-cod-nol-work.md`: 795 isolated tests, both production
+  viewports and 11 independent source-review cases pass. Later attribute
+  waterfalls and different modified-absorption/current-use amounts remain
+  explicit internal methods, not external approval blockers.

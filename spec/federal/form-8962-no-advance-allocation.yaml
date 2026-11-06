@@ -1,0 +1,57 @@
+form: "Form 8962 Part IV"
+fullName: "Situation 3 source-bound allocation when no advance credit was paid"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i8962"
+retrievedAt: "2026-10-26"
+reviewStatus: "source-derived-implementation-independent-review-pending"
+notes: |
+  Final2025 i8962 Situation3 and Reg1.36B-3(h) allocate enrollment premiums
+  using each tax family's applicable benchmark, rather than a person count
+  or agreed percentage. The published Gary/Jim example has original15000,
+  separate applicable benchmarks12000/6000, and premiums10000/5000. Printed
+  PartIV(e) is .67/.33, while arithmetic retains the original benchmark ratio.
+  Columns(f)/(g) stay blank. Each return uses its actual applicable benchmark,
+  not a fraction of the original statement's often incorrect BoxB.
+  Actual printed blank BoxB is retained as null, distinct from missing source
+  information and numeric zero. This route requires explicit complete benchmark
+  sources for both coverage families, exact assigned/covered person identities,
+  zero actual APTC in every original month, and confirmation all original people
+  belong to those coverage families. No computed share, agreement, or original
+  amount replacement is accepted. Two families and nonoverlapping original
+  policies are supported; other coverage/coordination methods remain separate.
+  All monetary arithmetic uses Decimal. Multiply before dividing at precision
+  derived from source digits; only the printed fraction is rounded to two places.
+  Full2026 readiness and independent human tax/form qualification remain closed.
+lines:
+  - line: "source"
+    description: "Preserve original zero, printed blank and unknown distinctly"
+    formula: "Only explicit original slcsp=null is a known printed blank. Retain it in both original statement and source snapshot. Bind noAdvanceAllocation source year/reference/confirmation and each month's actual benchmark references and coverage-family people. Reject incomplete, replaced, duplicate or contradictory sources."
+    testRef: "tests/engine/forms/form-8962-no-advance-allocation.test.ts::requires actual zero advances and complete independently bound benchmark sources"
+  - line: "30-33e"
+    description: "Exact benchmark ratio before rounded printed fraction"
+    formula: "premium=originalPremium*thisReturnSlcsp/(thisReturnSlcsp+otherReturnSlcsp); printedFraction=round2(thisReturnSlcsp/(thisReturnSlcsp+otherReturnSlcsp)). Published15000*12000/18000=10000, other5000, with .67/.33 only on PartIV(e). Never calculate using the two-place printed fraction."
+    testRef: "tests/engine/forms/form-8962-no-advance-allocation.test.ts::matches the published Situation3 ratio without using the rounded printed share"
+  - line: "monthly"
+    description: "Separate actual monthly benchmarks and retained original cents"
+    formula: "Recompute premium using each month's actual own/other benchmarks. The return benchmark is the full own benchmark, advance is actual zero. Preserve original values including printed blank and retain input immutability; period grouping follows printed shares without replacing monthly source ratios."
+    testRef: "tests/engine/forms/form-8962-no-advance-allocation.test.ts::retains monthly benchmark changes exact cents and known blank originals"
+  - line: "canonical"
+    description: "Transfer source-derived amounts to monthly Form8962 once"
+    formula: "Actual30000 wages, monthly original1500, own1200/other600 benchmarks and zeroAPTC give1000 allocated premiums and12000 credit. Reject a supplied reconciliation using rounded.67 or original BoxB. Existing full2026 and unrelated blank-source guards remain."
+    testRef: "tests/engine/forms/form-8962-no-advance-allocation.test.ts::uses actual no-advance sources canonically and rejects stale reconciliation"
+  - line: "guided-sources"
+    description: "Preserve actual no-advance benchmark worksheets and printed blank originals"
+    formula: "An explicit source checkbox retains original printed SLCSP blank as null; an unanswered or missing amount remains unknown. Copy actual monthly coverage-family identities without supplying benchmark amounts or references. Derived household premiums use the unrounded ratio; original sources and independent eligibility remain unchanged. Every source edit revokes all applicable confirmations."
+    testRef: "tests/guided-interview/guided-no-advance-allocation.test.ts::preserves original blank and independent family benchmark facts through canonical intake"
+  - line: "guided-controls"
+    description: "Reach actual no-advance benchmark controls from the credits component"
+    formula: "Choosing Situation3 clears incompatible agreement/default inputs, requires both actual benchmarks and coverage-family evidence, and derives household amounts once. Missing source evidence prevents calculation and is retained across changes."
+    testRef: "tests/apps/web/shared-policy-interactions.test.tsx::reaches no-advance benchmark controls without supplying a computed fraction"
+  - line: "review"
+    description: "Keep rounded PartIV e distinct from exact monthly ratio and blank columns f/g"
+    formula: "Print rounded ratio in column e only. Leave f/g blank; retain actual own benchmark, original printed blank and exact premium allocation in reference output. Private original source context rejects altered benchmark identities, values, references and calculations."
+    testRef: "tests/pdf/form8962-shared-policy-review.test.ts::retains no-advance ratio columns and actual blank original in private review"
+  - line: "browser"
+    description: "Save and reload actual no-advance sources on desktop and mobile"
+    formula: "The production guide preserves original printed blank, independent family benchmarks and unknown source answers. Changes revoke confirmations, derive actual amounts once and do not transmit private source identifiers."
+    testRef: "apps/web/tests/guided-no-advance-allocation.spec.ts::preserves actual no-advance benchmark sources"

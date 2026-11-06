@@ -19,6 +19,15 @@ import { AuditTrail } from "@/utils/audit.js";
 
 export interface ScheduleRParams {
   filingStatus: FilingStatus;
+  /** Actual form year, used for the printed AGI source label. */
+  taxYear?: number;
+  /** Actual Line21 Credit Limit Worksheet; omission remains unknown. */
+  creditLimitWorksheet?: {
+    taxBeforeCredits: Decimal;
+    foreignTaxCredit: Decimal;
+    dependentCareCredit: Decimal;
+    schedule3Line6l: Decimal;
+  };
   agi: Decimal;
   /** Nontaxable Social Security: Form 1040 Line 6a minus Line 6b */
   nontaxableSocialSecurity: Decimal;
@@ -41,12 +50,15 @@ export interface ScheduleRResult {
   eligible: boolean;
   box?: ScheduleRBox;
   initialAmount: Decimal;        // Line 10
+  line11Amount?: Decimal;         // Actual uncapped line11; absent for age-only boxes
   adjustedInitialAmount: Decimal; // Line 12
   nontaxableBenefits: Decimal;   // Line 13c
-  netInitialAmount: Decimal;     // Line 14
-  agiReduction: Decimal;         // Line 18
+  netInitialAmount: Decimal;     // Helper: line12 minus13c, not a printed line
+  agiReduction: Decimal;         // Line 17
   creditBase: Decimal;           // Line 19
   credit: Decimal;               // Line 20 (tentative credit)
+  creditLimit?: Decimal;         // Line21, only with actual worksheet context
+  allowedCredit?: Decimal;       // Line22, only with actual worksheet context
   lines: CalculatedLine[];
 }
 
@@ -82,10 +94,10 @@ function determineBox(
     if (!primaryAge65 && !spouseAge65 && primaryDisabled && !spouseDisabled) return 4;
     if (!primaryAge65 && !spouseAge65 && !primaryDisabled && spouseDisabled) return 4;
     if (!primaryAge65 && !spouseAge65 && primaryDisabled && spouseDisabled) return 5;
-    if (primaryAge65 && !spouseAge65 && !spouseDisabled) return 6;
-    if (!primaryAge65 && spouseAge65 && !primaryDisabled) return 6;
-    if (primaryAge65 && !spouseAge65 && spouseDisabled) return 7;
-    if (!primaryAge65 && spouseAge65 && primaryDisabled) return 7;
+    if (primaryAge65 && !spouseAge65 && !spouseDisabled) return 7;
+    if (!primaryAge65 && spouseAge65 && !primaryDisabled) return 7;
+    if (primaryAge65 && !spouseAge65 && spouseDisabled) return 6;
+    if (!primaryAge65 && spouseAge65 && primaryDisabled) return 6;
     return undefined;
   }
 
@@ -97,7 +109,7 @@ function determineBox(
 
 /** Whether the box requires disability income to cap the initial amount */
 function isDisabilityBox(box: ScheduleRBox): boolean {
-  return box === 2 || box === 4 || box === 5 || box === 7 || box === 9;
+  return box === 2 || box === 4 || box === 5 || box === 6 || box === 9;
 }
 
 /** Get the initial amount (Line 10) based on the eligibility box */
@@ -108,8 +120,8 @@ function getInitialAmount(
   switch (box) {
     case 1: case 2: return constants.initialAmountSingle; // $5,000
     case 3: return constants.initialAmountBoth;            // $7,500
-    case 4: case 6: return constants.initialAmountSingle;  // $5,000 (one qualifying)
-    case 5: case 7: return constants.initialAmountBoth;    // $7,500 (both qualifying)
+    case 4: case 7: return constants.initialAmountSingle;  // $5,000 (one qualifying)
+    case 5: case 6: return constants.initialAmountBoth;    // $7,500 (both qualifying)
     case 8: case 9: return constants.initialAmountMFS;     // $3,750
   }
 }
@@ -130,10 +142,10 @@ function getDisabilityIncome(
       return primaryDisabled ? primaryDisability : spouseDisability;
     }
     case 5: return sum(primaryDisability, spouseDisability);
-    case 7: {
-      // One 65+, one disabled — the disabled one's income
+    case 6: {
+      // Final2025/2026 line11: age-based $5,000 plus younger spouse income
       const primaryDisabled = input.primaryQualifies && !input.primaryAge65OrOlder;
-      return primaryDisabled ? primaryDisability : spouseDisability;
+      return new Decimal(5000).plus(primaryDisabled ? primaryDisability : spouseDisability);
     }
     default: return ZERO; // Non-disability boxes
   }
@@ -141,7 +153,22 @@ function getDisabilityIncome(
 
 export function calculateScheduleR(params: ScheduleRParams): ScheduleRResult {
   const { filingStatus, agi, nontaxableSocialSecurity, scheduleRInput, livedWithSpouse, constants } = params;
+  if (!Decimal.isDecimal(agi) || !agi.isFinite()) {
+    throw new Error("Schedule R actual AGI source must be finite");
+  }
+  const actualBenefitsAndDisability = [nontaxableSocialSecurity,
+    d(scheduleRInput.primaryDisabilityIncome), d(scheduleRInput.spouseDisabilityIncome),
+    d(scheduleRInput.nontaxablePensionsAnnuities)];
+  if (actualBenefitsAndDisability.some(value => !Decimal.isDecimal(value) || !value.isFinite() || value.lt(0))) {
+    throw new Error("Schedule R actual benefit and disability sources must be finite and nonnegative");
+  }
   const audit = new AuditTrail();
+  const worksheet = params.creditLimitWorksheet;
+  if (worksheet && [worksheet.taxBeforeCredits, worksheet.foreignTaxCredit, worksheet.dependentCareCredit, worksheet.schedule3Line6l].some(value => !Decimal.isDecimal(value) || !value.isFinite() || value.lt(0))) {
+    throw new Error("Schedule R credit limit worksheet requires actual finite nonnegative components");
+  }
+  const creditLimit = worksheet ? Decimal.max(ZERO, worksheet.taxBeforeCredits.minus(sum(
+    worksheet.foreignTaxCredit, worksheet.dependentCareCredit, worksheet.schedule3Line6l))) : undefined;
 
   // ── Part I: Determine eligibility ────────────────────────
   const box = determineBox(filingStatus, scheduleRInput, livedWithSpouse);
@@ -168,10 +195,12 @@ export function calculateScheduleR(params: ScheduleRParams): ScheduleRResult {
   audit.record("Sched R", "10", "Initial amount", initialAmount, `Box ${box} base amount`);
 
   // ── Line 11-12: Disability income cap ────────────────────
+  let line11Amount: Decimal | undefined;
   let adjustedInitialAmount: Decimal;
   if (isDisabilityBox(box)) {
     const disabilityIncome = getDisabilityIncome(box, scheduleRInput);
-    audit.record("Sched R", "11", "Taxable disability income", disabilityIncome, "Disability income for under-65 filer(s)");
+    line11Amount = disabilityIncome;
+    audit.record("Sched R", "11", "Line11 disability amount", disabilityIncome, box === 6 ? "$5,000 + actual younger disabled spouse income" : "Actual qualifying disability income");
     adjustedInitialAmount = min(initialAmount, disabilityIncome);
     audit.record("Sched R", "12", "Adjusted initial amount", adjustedInitialAmount, `min(Line 10 = ${initialAmount}, Line 11 = ${disabilityIncome})`);
   } else {
@@ -186,54 +215,49 @@ export function calculateScheduleR(params: ScheduleRParams): ScheduleRResult {
   audit.record("Sched R", "13b", "Nontaxable pensions/annuities/disability", nontaxablePensions, "Tax-exempt pensions, VA disability, etc.");
   audit.record("Sched R", "13c", "Total nontaxable benefits", nontaxableBenefits, "Line 13a + Line 13b");
 
-  // ── Line 14: Net initial amount ──────────────────────────
+  // This helper is retained for callers; its value is not printed line14.
   const netInitialAmount = Decimal.max(ZERO, adjustedInitialAmount.minus(nontaxableBenefits));
-  audit.record("Sched R", "14", "Net initial amount", netInitialAmount, `max(0, Line 12 - Line 13c) = max(0, ${adjustedInitialAmount} - ${nontaxableBenefits})`);
 
-  if (netInitialAmount.isZero()) {
-    audit.record("Sched R", "20", "Credit", ZERO, "Net initial amount is zero — no credit");
-    return {
-      eligible: true,
-      box,
-      initialAmount,
-      adjustedInitialAmount,
-      nontaxableBenefits,
-      netInitialAmount,
-      agiReduction: ZERO,
-      creditBase: ZERO,
-      credit: ZERO,
-      lines: audit.getLines(),
-    };
-  }
-
-  // ── Lines 15-18: AGI reduction ───────────────────────────
+  // ── Printed lines14–18: actual AGI and total reduction ──
   const agiThreshold = constants.agiThreshold[filingStatus];
   const excessAgi = Decimal.max(ZERO, agi.minus(agiThreshold));
   const agiReduction = roundDollar(excessAgi.times(HALF));
+  audit.record("Sched R", "14", "AGI", agi, params.taxYear === 2026 ? "Form1040 line11b" : params.taxYear === 2025 ? "Form1040 line11a" : "Actual Form1040 adjusted gross income");
+  audit.record("Sched R", "15", "AGI threshold", agiThreshold, `Filing status: ${filingStatus}`);
+  audit.record("Sched R", "16", "Excess AGI", excessAgi, `max(0, ${agi} - ${agiThreshold})`);
+  audit.record("Sched R", "17", "Half excess AGI", agiReduction, `${excessAgi} × 0.5`);
+  const totalReduction = nontaxableBenefits.plus(agiReduction);
+  audit.record("Sched R", "18", "Total reduction", totalReduction, "Line13c + line17");
 
-  audit.record("Sched R", "15", "AGI", agi, "Form 1040 Line 11");
-  audit.record("Sched R", "16", "AGI threshold", agiThreshold, `Filing status: ${filingStatus}`);
-  audit.record("Sched R", "17", "Excess AGI", excessAgi, `max(0, ${agi} - ${agiThreshold})`);
-  audit.record("Sched R", "18", "AGI reduction (50% of excess)", agiReduction, `${excessAgi} × 0.5`);
-
-  // ── Line 19: Credit base ─────────────────────────────────
-  const creditBase = Decimal.max(ZERO, netInitialAmount.minus(agiReduction));
-  audit.record("Sched R", "19", "Credit base", creditBase, `max(0, Line 14 - Line 18) = max(0, ${netInitialAmount} - ${agiReduction})`);
+  const creditBase = Decimal.max(ZERO, adjustedInitialAmount.minus(totalReduction));
+  audit.record("Sched R", "19", "Credit base", creditBase, "max(0, line12 - line18)");
 
   // ── Line 20: Tentative credit ────────────────────────────
   const credit = roundDollar(creditBase.times(constants.creditRate));
   audit.record("Sched R", "20", "Credit for the elderly or the disabled", credit, `${creditBase} × ${constants.creditRate}`);
 
+  const allowedCredit = creditLimit === undefined ? undefined : Decimal.min(credit, creditLimit);
+  if (worksheet && creditLimit !== undefined && allowedCredit !== undefined) {
+    audit.record("Sched R", "21", "Tax liability limit", creditLimit,
+      "max(0, Form1040 line18 - Schedule3 lines1,2,6l)", {
+        taxBeforeCredits: worksheet.taxBeforeCredits, foreignTaxCredit: worksheet.foreignTaxCredit,
+        dependentCareCredit: worksheet.dependentCareCredit, schedule3Line6l: worksheet.schedule3Line6l,
+      });
+    audit.record("Sched R", "22", "Allowed credit", allowedCredit, "min(line20, line21)");
+  }
   return {
     eligible: true,
     box,
     initialAmount,
+    line11Amount,
     adjustedInitialAmount,
     nontaxableBenefits,
     netInitialAmount,
     agiReduction,
     creditBase,
     credit,
+    creditLimit,
+    allowedCredit,
     lines: audit.getLines(),
   };
 }

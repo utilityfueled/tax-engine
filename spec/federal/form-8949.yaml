@@ -6,8 +6,12 @@ irsReference: "https://www.irs.gov/instructions/i8949"
 notes: |
   Form 8949 reports individual capital asset transactions. Transactions are
   categorized by holding period (Part I: short-term, Part II: long-term) and
-  by whether cost basis was reported to the IRS (Box A/D: reported, Box B/E: not reported, Box C/F: no 1099-B).
-  Totals flow to Schedule D.
+  by original reporting document and basis reporting.1099-B uses A/B/D/E;
+  1099-DA uses G/H/J/K. Transactions with neither use C/F for other capital
+  assets and I/L for digital assets. See form-8949-digital-reporting.yaml for
+  the source guards, complete category conservation and physical review maps.
+  Totals flow to Schedule D. Original source facts are never inferred from
+  basis reporting or from a digital-asset flag alone.
 
 lines:
   # ── Part I: Short-Term ───────────────────────────────────
@@ -65,7 +69,8 @@ lines:
   - line: "to-schedule-d"
     description: "Totals flow to Schedule D"
     formula: |
-      Part I totals → Schedule D Line 1a/1b/1c (short-term by box)
-      Part II totals → Schedule D Line 8a/8b/8c (long-term by box)
+      Part I A+G → Schedule D1b; B+H →2; C+I →3
+      Part II D+J → Schedule D8b; E+K →9; F+L →10
+      Current transactions appear on8949; the optional1a/8a bypass is not used.
     irsRef: "Schedule D Instructions, Lines 1-3 and 8-10"
     testRef: "tests/engine/forms/form-8949.test.ts::Form 8949 totals flow to Schedule D"

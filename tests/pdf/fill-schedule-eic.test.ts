@@ -38,7 +38,7 @@ function isChecked(doc: PDFDocument, fieldName: string): boolean {
   return false;
 }
 
-const BLANK_EIC = "forms/blank/f1040sei.pdf";
+const BLANK_EIC = "forms/blank/2025/f1040sei.pdf";
 const F = SCHEDULE_EIC_FIELDS;
 
 // ─── Fixture 1: Single HoH filer with 2 qualifying children ──────────────

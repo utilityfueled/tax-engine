@@ -1,0 +1,57 @@
+form: "Form1099Q prepaid and cash tuition assistance"
+fullName: "Actual prepaid tuition before cash QTP expense remainder without ESA"
+taxYear: 2026
+irsReference: "https://uscode.house.gov/us/usc/119-118/t26/s529/"
+sources:
+  - "https://www.irs.gov/publications/p970"
+  - "https://www.irs.gov/irb/2016-07_IRB#NOT-2016-13"
+notes: |
+  Sources refreshed October 26, 2026. IRC529(c)(3)(B)(i),(ii),(v) applies actual
+  tuition reductions once, preserves the qualified prepaid benefit and allows
+  cash distributions only the remaining expense. This source cohort has one
+  prepaid benefit per actual tuition receipt, complete original cash QTP rows,
+  explicit per-original expense and credit allocations, and no ESA. Each
+  original keeps its own earnings ratio; no assistance split or basis is guessed.
+  Multiple receipts can bind one or multiple prepaid originals. Refund/other
+  reductions remain actual known zero in this bounded method. A shared binding
+  cap among multiple prepaid benefits on one receipt is a separate method.
+  Existing zero-assistance cash/prepaid methods retain their original source
+  checks; they are not rerouted through the new positive-assistance cohort.
+  Controls are derived fictional examples, not published IRS numerical oracles.
+lines:
+  - line: "prepaid-before-cash"
+    description: "Derive the qualified prepaid cost before using the cash remainder"
+    formula: "Tuition10000-assistance1000-credit1000=8000. Prepaid4000/earn800 with actual500credit gives3500qualified/700excluded/100taxable; cash8000/earn2000 uses4500expense+500credit and gives1125excluded/875taxable. Total975taxable,225creditexception,75additional tax."
+    testRef: "tests/engine/forms/form-1099-q-cash-assistance.test.ts::applies actual prepaid tuition before the cash expense remainder"
+  - line: "distinct-and-zero"
+    description: "Retain distinct receipts, original ratios and actual zero allocations"
+    formula: "Two independent copies with separate original statements conserve1950taxable/450creditexception/150additionaltax. Tuition4000-assistance1000 leaves3000prepaid/0cash, giving600excluded/2200taxable/220additionaltax."
+    testRef: "tests/engine/forms/form-1099-q-cash-assistance.test.ts::preserves distinct receipts and an actual zero cash allocation"
+  - line: "source-conservation"
+    description: "Reject missing original facts and unsupported source reassignment"
+    formula: "Unknown cash allocation/assistance/medium, fabricated cash benefit, original Box1 overcapacity, substituted recipient/year, duplicate source and a one-cent or subcent imbalance reject. A balanced attempt to move prepaid qualified cost to cash also rejects."
+    testRef: "tests/engine/forms/form-1099-q-cash-assistance.test.ts::rejects unknown or conflicting assistance and original source allocations"
+  - line: "canonical-educator"
+    description: "Carry actual taxable and excluded earnings once into the return"
+    formula: "Actual50000wages+975taxableearnings gives50975AGI and75additionaltax. Actual2500educatorcost less1825QTPexcludedearnings leaves675before300/350cap; AGI50675/50625. Altered excluded-earnings source rejects."
+    testRef: "tests/engine/education-cash-assistance-return.test.ts::routes actual cash assistance and educator source earnings once"
+  - line: "actual-guide"
+    description: "Retain actual original sources and reconfirmation through persistence"
+    formula: "The original two statements and source records survive save/reload. Assistance2000/cash3500 is a substantive edit and blocks until reconfirmed, then gives51225AGI. Blank assistance remains unknown; actual0 with5500cash is explicit and gives50725AGI."
+    testRef: "tests/guided-interview/guided-cash-assistance.test.ts::retains actual cash assistance records and independent confirmations"
+  - line: "real-controls"
+    description: "The existing source panel exposes every necessary actual source value"
+    formula: "Actual assistance, cash allocation and confirmation controls move50975 to pending to51225. Blank versus0 remains distinct, and a false qualification is preserved and blocks the method."
+    testRef: "tests/apps/web/cash-assistance-interactions.test.tsx::edits actual assistance and cash remainder through source controls"
+  - line: "private-review"
+    description: "Bind original assistance and cash sources before redacted output"
+    formula: "Original source changes and stale audit reject before I/O. Saved Form5329 shows975income/225exception/75tax; source reference retains both actual statement media and source-derived assistance without identifiers."
+    testRef: "tests/pdf/form-1099-q-cash-assistance.test.ts::binds original cash assistance sources before review output"
+  - line: "workspace-output"
+    description: "The actual workspace retains the source-derived review packet"
+    formula: "The unmocked guided workspace download preserves975income/75additional tax, review notices on every page, and original identifier privacy."
+    testRef: "tests/apps/web/cash-assistance-workspace-packet.test.ts::reopens the actual cash assistance workspace packet"
+  - line: "browser-persistence"
+    description: "Exercise actual assistance sources on desktop and mobile"
+    formula: "1280/390px production flows preserve original statements, blank versus0 assistance, explicit confirmation, local reload and review-only PDF. Actual assistance2000/cash3500 gives1225income/100additional tax; no source data leaves the app before its requested same-origin review download."
+    testRef: "apps/web/tests/guided-cash-assistance.spec.ts::preserves cash assistance sources through edits and reload"

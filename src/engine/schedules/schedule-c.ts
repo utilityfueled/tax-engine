@@ -1,3 +1,4 @@
+import {assertScheduleCPassengerResult} from './schedule-c-passenger-first-year-sources.js';
 /**
  * Schedule C — Profit or Loss From Business (Sole Proprietorship)
  * Spec: spec/federal/schedule-c.yaml
@@ -7,9 +8,10 @@
  */
 
 import Decimal from "decimal.js";
-import type { Form8829Input, TaxYearInput } from "@/models/inputs.js";
+import {calculateScheduleCSourceFacts} from "./schedule-c-source-facts.js";
+import type { Form8829Input, TaxYearInput, ScheduleCSourceFacts } from "@/models/inputs.js";
 import type { CalculatedLine } from "@/models/outputs.js";
-import { d, min, roundDollar } from "@/utils/decimal.js";
+import { d as legacyAmount, min, roundDollar } from "@/utils/decimal.js";
 import { AuditTrail } from "@/utils/audit.js";
 import type { Form4562Result } from "@/engine/forms/form-4562.js";
 import { calculateForm4562 } from "@/engine/forms/form-4562.js";
@@ -17,10 +19,24 @@ import { calculateForm8829 } from "@/engine/forms/form-8829.js";
 
 /** Business expense categories matching Schedule C line items */
 export interface BusinessExpenses {
+  businessInterest?: string;
+  commissionsAndFees?: string;
+  rentOnBusinessProperty?: string;
+  repairsAndMaintenance?: string;
+  taxes?: string;
+  wages?: string;
+  bankCharges?: string;
+  duesAndPublications?: string;
+  freight?: string;
+  laundryAndCleaning?: string;
+  managementFees?: string;
+  postage?: string;
+  telephone?: string;
   advertising?: string; // Line 8
   carAndTruck?: string; // Line 9
   contractLabor?: string; // Line 11
   depreciation?: string; // Line 13
+  employeeBenefitPrograms?: string; // Line 14
   insurance?: string; // Line 15
   legalAndProfessional?: string; // Line 17
   officeExpense?: string; // Line 18
@@ -39,13 +55,17 @@ export interface HomeOfficeDeduction {
 }
 
 export interface ScheduleCInput {
+  accountHolder?: "primary"|"spouse";
+  sourceFacts?: ScheduleCSourceFacts;
   businessName?: string;
+  otherExpenseDescription?: string;
   businessCode?: string; // NAICS code
   ein?: string;
   accountingMethod?: "cash" | "accrual";
   grossReceipts?: string; // Line 1 (override — otherwise sum of 1099-NEC)
   returnsAndAllowances?: string; // Line 2
-  costOfGoodsSold?: string; // Line 3
+  costOfGoodsSold?: string; // Line 4
+  otherIncome?: string; // Line 6, separate from gross receipts
   expenses?: BusinessExpenses;
   homeOffice?: HomeOfficeDeduction;
 }
@@ -53,9 +73,11 @@ export interface ScheduleCInput {
 export interface ScheduleCResult {
   grossReceipts: Decimal; // Line 1
   returnsAndAllowances: Decimal; // Line 2
-  costOfGoodsSold: Decimal; // Line 3
-  grossIncome: Decimal; // Line 5
-  grossProfit: Decimal; // Line 7
+  netReceipts: Decimal; // Line 3
+  costOfGoodsSold: Decimal; // Line 4
+  grossProfit: Decimal; // Line 5
+  otherIncome: Decimal; // Line 6
+  grossIncome: Decimal; // Line 7
 
   // Expenses
   depreciationAndSection179Deduction: Decimal; // Line 13
@@ -77,14 +99,23 @@ const SIMPLIFIED_HOME_OFFICE_MAX = new Decimal(1500);
 
 export function calculateScheduleC(
   input: TaxYearInput,
-  scheduleCInput?: ScheduleCInput
+  scheduleCInput?: ScheduleCInput,
+  options: { dependentCareBenefitsAdjustment?: Decimal } = {},
 ): ScheduleCResult {
   const audit = new AuditTrail();
+  const sources = calculateScheduleCSourceFacts(input, scheduleCInput);
+  // Only the admitted documentary passenger path needs the100-character exact
+  // projection. Keep historical caller precision/behavior for all other inputs.
+  const Exact = sources?.passenger ? Decimal.clone({precision:256,rounding:Decimal.ROUND_HALF_UP}) : undefined;
+  const d = (value:Parameters<typeof legacyAmount>[0]):Decimal => Exact
+    ? new Exact(value === undefined || value === null || value === '' ? 0 : value)
+    : legacyAmount(value);
+  if(sources) audit.merge(sources.lines);
 
   // Line 1: Gross receipts
   const necTotal = input.form1099Nec.reduce(
     (acc, f) => acc.plus(d(f.nonemployeeCompensation)),
-    new Decimal(0)
+    d(0)
   );
   const grossReceipts = scheduleCInput?.grossReceipts
     ? d(scheduleCInput.grossReceipts)
@@ -95,22 +126,22 @@ export function calculateScheduleC(
   const returnsAndAllowances = d(scheduleCInput?.returnsAndAllowances);
   audit.record("Sched C", "2", "Returns and allowances", returnsAndAllowances, "Refunds/rebates");
 
-  // Line 3: COGS
+  // Lines 3–7: receipts, cost of goods, and separately reported other income.
+  const netReceipts = grossReceipts.minus(returnsAndAllowances);
+  audit.record("Sched C", "3", "Net receipts", netReceipts, "Line 1 - Line 2");
   const costOfGoodsSold = d(scheduleCInput?.costOfGoodsSold);
-  audit.record("Sched C", "3", "Cost of goods sold", costOfGoodsSold, "Line 42 (inventory calculation)");
-
-  // Line 5: Gross income
-  const grossIncome = grossReceipts.minus(returnsAndAllowances).minus(costOfGoodsSold);
-  audit.record("Sched C", "5", "Gross income", grossIncome, "Line 1 - Line 2 - Line 3");
-
-  // Line 7: Gross profit (same as gross income for most service businesses)
-  const grossProfit = grossIncome;
-  audit.record("Sched C", "7", "Gross profit", grossProfit, "Line 5");
+  audit.record("Sched C", "4", "Cost of goods sold", costOfGoodsSold, "Line 42 (inventory calculation)");
+  const grossProfit = netReceipts.minus(costOfGoodsSold);
+  audit.record("Sched C", "5", "Gross profit", grossProfit, "Line 3 - Line 4");
+  const otherIncome = d(scheduleCInput?.otherIncome);
+  audit.record("Sched C", "6", "Other business income", otherIncome, "Actual income classified separately from gross receipts");
+  const grossIncome = grossProfit.plus(otherIncome);
+  audit.record("Sched C", "7", "Gross income", grossIncome, "Line 5 + Line 6");
 
   // ── Expenses (Lines 8-27) ────────────────────────────
   const expenses = scheduleCInput?.expenses ?? {};
   const expenseBreakdown: Record<string, Decimal> = {};
-  const form4562 = input.form4562 ? calculateForm4562(input.form4562) : undefined;
+  const form4562 = input.form4562 ? calculateForm4562(input.form4562, input.taxpayer.taxYear) : undefined;
   if (form4562) {
     audit.merge(form4562.lines);
   }
@@ -122,9 +153,10 @@ export function calculateScheduleC(
     return val;
   };
 
-  let totalExpenses = new Decimal(0);
+  let totalExpenses = d(0);
   totalExpenses = totalExpenses.plus(addExpense("8", "Advertising", expenses.advertising));
   totalExpenses = totalExpenses.plus(addExpense("9", "Car and truck", expenses.carAndTruck));
+  totalExpenses = totalExpenses.plus(addExpense("10", "Commissions and fees", expenses.commissionsAndFees));
   totalExpenses = totalExpenses.plus(addExpense("11", "Contract labor", expenses.contractLabor));
   const depreciationAndSection179Deduction = form4562?.line22 ?? d(expenses.depreciation);
   expenseBreakdown["Depreciation and section 179"] = depreciationAndSection179Deduction;
@@ -139,9 +171,25 @@ export function calculateScheduleC(
       : { "Validated manual Schedule C depreciation amount": d(expenses.depreciation) }
   );
   totalExpenses = totalExpenses.plus(depreciationAndSection179Deduction);
+  const employeeBenefits = d(expenses.employeeBenefitPrograms).plus(options.dependentCareBenefitsAdjustment ?? d("0"));
+  if (!employeeBenefits.isFinite() || employeeBenefits.lt(0)) {
+    throw new Error("Schedule C employee benefit programs must reconcile to a finite nonnegative expense");
+  }
+  totalExpenses = totalExpenses.plus(addExpense("14", "Employee benefit programs", employeeBenefits.toString()));
   totalExpenses = totalExpenses.plus(addExpense("15", "Insurance", expenses.insurance));
+  if(sources && (sources.interestTotal.gt(0) || scheduleCInput?.sourceFacts?.interest)){
+    totalExpenses=totalExpenses.plus(sources.interestTotal);
+    expenseBreakdown["Business interest"]=sources.interestTotal;
+    audit.record("Sched C","16a","Business mortgage interest reported on actual1098 or similar",sources.mortgage,"Actual eligible business mortgage source");
+    audit.record("Sched C","16b","Other business interest",input.taxpayer.taxYear===2026?sources.vehicle:sources.vehicle.plus(sources.other),"Actual source-year interest classification");
+    if(input.taxpayer.taxYear===2026)audit.record("Sched C","16c","Other business interest",sources.other,"Actual 2026 other-interest source");
+  }
   totalExpenses = totalExpenses.plus(addExpense("17", "Legal and professional", expenses.legalAndProfessional));
   totalExpenses = totalExpenses.plus(addExpense("18", "Office expense", expenses.officeExpense));
+  totalExpenses=totalExpenses.plus(addExpense("20b","Rent of business property",expenses.rentOnBusinessProperty));
+  totalExpenses=totalExpenses.plus(addExpense("21","Repairs and maintenance",expenses.repairsAndMaintenance));
+  totalExpenses=totalExpenses.plus(addExpense("23","Taxes and licenses",expenses.taxes));
+  totalExpenses=totalExpenses.plus(addExpense("26","Wages",expenses.wages));
   totalExpenses = totalExpenses.plus(addExpense("22", "Supplies", expenses.supplies));
   totalExpenses = totalExpenses.plus(addExpense("24a", "Travel", expenses.travel));
 
@@ -153,17 +201,18 @@ export function calculateScheduleC(
   totalExpenses = totalExpenses.plus(deductibleMeals);
 
   totalExpenses = totalExpenses.plus(addExpense("25", "Utilities", expenses.utilities));
-  totalExpenses = totalExpenses.plus(addExpense("27", "Other expenses", expenses.otherExpenses));
+  // Classified Part V sources include actual Form4562 amortization, separate from line13.
+  totalExpenses = totalExpenses.plus(addExpense("27b", "Other expenses", d(expenses.otherExpenses).plus(sources?.partV??d(0)).toString()));
 
   // Line 28: Total expenses
   audit.record("Sched C", "28", "Total expenses", totalExpenses, "Sum of Lines 8-27");
 
   // Line 29: Tentative profit
-  const tentativeProfit = grossProfit.minus(totalExpenses);
+  const tentativeProfit = grossIncome.minus(totalExpenses);
   audit.record("Sched C", "29", "Tentative profit or loss", tentativeProfit, "Line 7 - Line 28");
 
   // Line 30: Home office deduction
-  let homeOfficeDeduction = new Decimal(0);
+  let homeOfficeDeduction = d(0);
   if (scheduleCInput?.homeOffice) {
     const ho = scheduleCInput.homeOffice;
     if (ho.method === "simplified") {
@@ -174,7 +223,7 @@ export function calculateScheduleC(
       );
       // Simplified method cannot create a loss
       if (tentativeProfit.lessThanOrEqualTo(0)) {
-        homeOfficeDeduction = new Decimal(0);
+        homeOfficeDeduction = d(0);
       } else {
         homeOfficeDeduction = min(homeOfficeDeduction, tentativeProfit);
       }
@@ -200,12 +249,14 @@ export function calculateScheduleC(
   const netProfit = tentativeProfit.minus(homeOfficeDeduction);
   audit.record("Sched C", "31", "Net profit or loss", netProfit, "Line 29 - Line 30");
 
-  return {
+  const result:ScheduleCResult = {
     grossReceipts,
     returnsAndAllowances,
+    netReceipts,
     costOfGoodsSold,
     grossIncome,
     grossProfit,
+    otherIncome,
     depreciationAndSection179Deduction,
     expenseBreakdown,
     totalExpenses,
@@ -215,4 +266,6 @@ export function calculateScheduleC(
     form4562,
     lines: audit.getLines(),
   };
+  if(sources?.passenger)assertScheduleCPassengerResult(sources.passenger,result,sources.commitment);
+  return result;
 }

@@ -1,0 +1,25 @@
+form: "PA NY Investment Account Independent Controls"
+fullName: "Independent exhaustive current withholding and unique receipt checks"
+taxYear: 2025
+reference: "https://www.nysenate.gov/legislation/laws/TAX/686"
+notes: |
+  Technical source completeness controls; frozen author V1 has an unsupported NY return-credit premise and remains held.
+  Independently supplied positive NY remittances cannot be silently erased by a B-only account packet.
+  Money remains literal exact strings and Decimal in products. No NY filing or human qualification.
+lines:
+  - line: "complete-known-remittances"
+    description: "Every retained NY original survives the whole-account boundary"
+    formula: "A B-only complete account cannot assert net zero while additional known positive NY1099R/G/K/W2G withholding remains unreconciled, including the R stateTaxWithheld alias. Reject without guessing a refund."
+    testRef: "tests/engine/state/pa-investment-account-independent.test.ts::independent NY investment account refuses omitted known current remittance %s"
+  - line: "unique-source-receipts"
+    description: "Two renderings of one actual receipt are not two cash receipts"
+    formula: "Case and insignificant whitespace variants of the same supplied confirmation identity cannot be counted twice to reconcile gross withholding. Refuse duplicate source identities instead of inventing separately received cash."
+    testRef: "tests/engine/state/pa-investment-account-independent.test.ts::independent NY investment account refuses semantic duplicate refund receipt"
+  - line: "successor-principal-duplicate"
+    description: "Duplicate identity control retains actual exact principal allocation"
+    formula: "For a separately supplied actual claim/determination successor, independently stated principal200+200 and known interest0 remain internally consistent with each receipt amount200 before duplicate identity is checked. Two case/whitespace renderings still denote one receipt and must fail explicitly as duplicate. Keep the original six controls unchanged."
+    testRef: "tests/engine/state/pa-investment-account-independent.test.ts::independent NY investment account checks duplicate identity after exact principal allocation"
+  - line: "normalized-known-jurisdiction"
+    description: "Known NY jurisdiction survives case and surrounding whitespace"
+    formula: "An actual known NY code rendered with surrounding whitespace/lowercase cannot erase positive withholding from an independently retained original. Normalize the code or reject the source; never silently exclude it from the complete NY account."
+    testRef: "tests/engine/state/pa-investment-account-independent.test.ts::independent NY investment account cannot erase normalized known NY remittance"

@@ -2,6 +2,7 @@
  * Edge case tests for Form 2210 — Underpayment of Estimated Tax
  * Tests safe harbor threshold boundaries, 110% vs 100% prior year,
  * MFS $75K boundary, and penalty precision.
+ * Spec: spec/federal/form-2210.yaml (boundary-regression-contract).
  */
 
 import { describe, it, expect } from "vitest";
@@ -14,7 +15,7 @@ import {
 const d = (n: number | string) => new Decimal(n);
 
 function makeInput(overrides?: Partial<Form2210Input>): Form2210Input {
-  return {
+  const input: Form2210Input = {
     currentYearTax: d(15000),
     withholding: d(10000),
     estimatedPayments: d(0),
@@ -24,6 +25,24 @@ function makeInput(overrides?: Partial<Form2210Input>): Form2210Input {
     filingStatus: "single",
     ...overrides,
   };
+  // This helper defines an explicit synthetic ordinary-resident, full-year
+  // prior-return scenario; these are test source facts, never adapter defaults.
+  input.taxYear = 2025;
+  input.incomeTaxAfterCredits = input.currentYearTax;
+  input.facts = {
+    calendarYearTaxpayer: true, residentReturn: true, farmerOrFisher: false,
+    disasterReliefClaimed: false, waiverRequested: false,
+    calculationMethod: "regular", withholdingMethod: "equal-installments",
+    priorYearTaxStatus: input.priorYearTax === undefined ? "no-return" : "return-filed",
+    priorYearFullYear: true, priorYearTaxComputationConfirmed: true,
+    priorYearTaxForForm2210: input.priorYearTax?.toFixed(),
+    priorYearAgiForForm2210: input.priorYearAGI?.toFixed(),
+    ...overrides?.facts,
+  };
+  // Explicit fixture scenario: equal cash estimates paid on each timely date.
+  input.payments = overrides?.payments ?? ["2025-04-15", "2025-06-16", "2025-09-15", "2026-01-15"]
+    .map((date) => ({ date, amount: input.estimatedPayments.div(4), kind: "estimated" as const }));
+  return input;
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -70,15 +89,18 @@ describe("Form 2210 - 90% current year safe harbor", () => {
       withholding: d(18000), // exactly 90%
     }));
     expect(result.safeHarborMet).toBe(true);
-    expect(result.safeHarborReason).toBe("Payments ≥ 90% current year tax");
+    expect(result.safeHarborReason).toBe("Statutory withholding installments meet 90% current year tax");
   });
 
   it("just below 90% does not meet safe harbor", () => {
     const result = calculateForm2210(makeInput({
       currentYearTax: d(20000),
       withholding: d(17999), // $1 short of 90%
+      priorYearTax: d(20000), // Prior-year alternative cannot mask this boundary.
     }));
-    expect(result.safeHarborReason).not.toBe("Payments ≥ 90% current year tax");
+    expect(result.safeHarborMet).toBe(false);
+    expect(result.underpayment.toFixed()).toBe("1");
+    expect(result.safeHarborReason).not.toBe("Statutory withholding installments meet 90% current year tax");
   });
 
   it("estimated payments count toward 90% threshold", () => {
@@ -86,8 +108,11 @@ describe("Form 2210 - 90% current year safe harbor", () => {
       currentYearTax: d(20000),
       withholding: d(10000),
       estimatedPayments: d(8000), // Total = $18K = 90%
+      priorYearTax: d(20000),
     }));
     expect(result.safeHarborMet).toBe(true);
+    expect(result.requiredAnnualPayment.toFixed()).toBe("18000");
+    expect(result.installments.map((entry) => entry.payments.toFixed())).toEqual(["4500", "4500", "4500", "4500"]);
   });
 });
 
@@ -104,7 +129,7 @@ describe("Form 2210 - prior year safe harbor", () => {
       priorYearAGI: d(150000), // exactly at threshold → 100%
     }));
     expect(result.safeHarborMet).toBe(true);
-    expect(result.safeHarborReason).toBe("Payments ≥ 100% prior year tax");
+    expect(result.safeHarborReason).toBe("Timely installments meet 100% prior year tax");
   });
 
   it("110% required when AGI > $150K", () => {
@@ -116,7 +141,7 @@ describe("Form 2210 - prior year safe harbor", () => {
     }));
     // 100% = $12K (met), but 110% = $13,200 (not met)
     // However, the code checks > threshold, so $150,001 triggers 110%
-    expect(result.safeHarborReason).not.toBe("Payments ≥ 100% prior year tax");
+    expect(result.safeHarborReason).not.toBe("Timely installments meet 100% prior year tax");
   });
 
   it("110% prior year met", () => {
@@ -127,7 +152,7 @@ describe("Form 2210 - prior year safe harbor", () => {
       priorYearAGI: d(200000),
     }));
     expect(result.safeHarborMet).toBe(true);
-    expect(result.safeHarborReason).toBe("Payments ≥ 110% prior year tax");
+    expect(result.safeHarborReason).toBe("Timely installments meet 110% prior year tax");
   });
 
   it("MFS uses $75K threshold for 110%", () => {
@@ -151,7 +176,7 @@ describe("Form 2210 - prior year safe harbor", () => {
       filingStatus: "married_filing_separately",
     }));
     expect(result.safeHarborMet).toBe(true);
-    expect(result.safeHarborReason).toBe("Payments ≥ 100% prior year tax");
+    expect(result.safeHarborReason).toBe("Timely installments meet 100% prior year tax");
   });
 });
 
@@ -160,7 +185,7 @@ describe("Form 2210 - prior year safe harbor", () => {
 // ═══════════════════════════════════════════════════════════
 
 describe("Form 2210 - penalty calculation", () => {
-  it("penalty uses IRS short-method factor (not full annual rate)", () => {
+  it("equal unpaid installments use the dated regular-method day totals", () => {
     const result = calculateForm2210(makeInput({
       currentYearTax: d(20000),
       withholding: d(5000),
@@ -203,10 +228,9 @@ describe("Form 2210 - penalty calculation", () => {
       currentYearTax: d(15000),
       withholding: d(10000),
       estimatedPayments: d(0),
-      refundableCredits: d(4000), // Total payments = $14K
+      refundableCredits: d(4000), // Reduces tax shown, not a separate payment.
     }));
-    // Net tax = $15K - $14K = $1K → safe harbor (< $1K would be false, = $1K is borderline)
-    // $1K net → NOT < $1K → check 90%: $14K ≥ $13,500 → safe harbor
+    // Refundable credits reduce tax shown to $11K; withholding $10K exceeds 90% ($9,900).
     expect(result.safeHarborMet).toBe(true);
   });
 });
@@ -216,7 +240,7 @@ describe("Form 2210 - penalty calculation", () => {
 // ═══════════════════════════════════════════════════════════
 
 describe("Form 2210 - penalty rate verification", () => {
-  it("penalty equals underpayment × short-method factor", () => {
+  it("equal installment shortfalls accrue for 365, 304, 212 and 90 days", () => {
     // Required = min(90% × $10K, 100% × $10K) = $9K
     // Payments = $2K. Underpayment = $7K. Penalty = $7K × 7% × 971/1460 = $326
     const result = calculateForm2210(makeInput({
@@ -261,7 +285,7 @@ describe("Form 2210 - safe harbor via estimated payments only", () => {
       priorYearAGI: d(100000),
     }));
     expect(result.safeHarborMet).toBe(true);
-    expect(result.safeHarborReason).toBe("Payments ≥ 90% current year tax");
+    expect(result.safeHarborReason).toBe("Timely installments meet 90% current year tax");
   });
 
   it("estimated payments alone satisfy 110% prior year safe harbor", () => {
@@ -274,17 +298,17 @@ describe("Form 2210 - safe harbor via estimated payments only", () => {
       priorYearAGI: d(200000),
     }));
     expect(result.safeHarborMet).toBe(true);
-    expect(result.safeHarborReason).toBe("Payments ≥ 110% prior year tax");
+    expect(result.safeHarborReason).toBe("Timely installments meet 110% prior year tax");
   });
 });
 
 // ═══════════════════════════════════════════════════════════
-// First-Year Filer (no prior year tax)
+// Actual Eligible Prior Return Versus First-Year Filer
 // ═══════════════════════════════════════════════════════════
 
 describe("Form 2210 - first-year filer", () => {
-  it("first-year filer with $0 prior year tax always meets 100% safe harbor", () => {
-    // priorYearTax = $0 → 100% × $0 = $0. Any payment amount ≥ $0 → safe harbor met.
+  it("an eligible full-year prior return with zero tax has a zero prior-tax requirement", () => {
+    // Actual filed full-year prior return has zero tax. This is not inferred from being a first-time filer.
     // Even with $0 withholding, totalPayments ($0) ≥ priorYearRequired ($0).
     // But first the $1K net tax check: $20K - $0 = $20K ≥ $1K, so we reach safe harbor test 3.
     // 90% of $20K = $18K, not met with $0 payments. Prior year $0 → met.
@@ -296,7 +320,7 @@ describe("Form 2210 - first-year filer", () => {
       priorYearAGI: d(0),
     }));
     expect(result.safeHarborMet).toBe(true);
-    expect(result.safeHarborReason).toBe("Payments ≥ 100% prior year tax");
+    expect(result.safeHarborReason).toBe("Eligible 100% prior year tax is zero");
     expect(result.penalty.toNumber()).toBe(0);
   });
 
@@ -345,7 +369,7 @@ describe("Form 2210 - MFJ high-income 110% safe harbor", () => {
       filingStatus: "married_filing_jointly",
     }));
     expect(result.safeHarborMet).toBe(true);
-    expect(result.safeHarborReason).toBe("Payments ≥ 110% prior year tax");
+    expect(result.safeHarborReason).toBe("Timely installments meet 110% prior year tax");
   });
 
   it("MFJ AGI exactly $150K uses 100% (not 110%) of prior year", () => {
@@ -359,7 +383,7 @@ describe("Form 2210 - MFJ high-income 110% safe harbor", () => {
       filingStatus: "married_filing_jointly",
     }));
     expect(result.safeHarborMet).toBe(true);
-    expect(result.safeHarborReason).toBe("Payments ≥ 100% prior year tax");
+    expect(result.safeHarborReason).toBe("Timely installments meet 100% prior year tax");
   });
 });
 
@@ -415,7 +439,7 @@ describe("Form 2210 - large prior year tax with small current year", () => {
       priorYearAGI: d(100000),
     }));
     expect(result.safeHarborMet).toBe(true);
-    expect(result.safeHarborReason).toBe("Payments ≥ 90% current year tax");
+    expect(result.safeHarborReason).toBe("Statutory withholding installments meet 90% current year tax");
   });
 });
 
@@ -442,7 +466,7 @@ describe("Form 2210 - zero and edge scenarios", () => {
     }));
     // 100% of $0 = $0. Payments ($0) ≥ $0 → safe harbor
     expect(result.safeHarborMet).toBe(true);
-    expect(result.safeHarborReason).toBe("Payments ≥ 100% prior year tax");
+    expect(result.safeHarborReason).toBe("Eligible 100% prior year tax is zero");
   });
 
   it("HoH uses $150K threshold (same as single)", () => {
@@ -455,7 +479,7 @@ describe("Form 2210 - zero and edge scenarios", () => {
     }));
     // AGI $200K > $150K → 110% × $12K = $13,200 → met
     expect(result.safeHarborMet).toBe(true);
-    expect(result.safeHarborReason).toBe("Payments ≥ 110% prior year tax");
+    expect(result.safeHarborReason).toBe("Timely installments meet 110% prior year tax");
   });
 
   it("QSS uses $150K threshold (same as MFJ)", () => {
@@ -467,7 +491,7 @@ describe("Form 2210 - zero and edge scenarios", () => {
       filingStatus: "qualifying_surviving_spouse",
     }));
     expect(result.safeHarborMet).toBe(true);
-    expect(result.safeHarborReason).toBe("Payments ≥ 110% prior year tax");
+    expect(result.safeHarborReason).toBe("Timely installments meet 110% prior year tax");
   });
 });
 
@@ -476,7 +500,7 @@ describe("Form 2210 - zero and edge scenarios", () => {
 // ═══════════════════════════════════════════════════════════
 
 describe("Form 2210 - audit trail", () => {
-  it("safe harbor result includes audit line for total payments", () => {
+  it("safe harbor result includes withholding and remaining-tax audit lines", () => {
     const result = calculateForm2210(makeInput({
       currentYearTax: d(5000),
       withholding: d(5000),
@@ -496,8 +520,10 @@ describe("Form 2210 - audit trail", () => {
     const lineIds = result.lines.map((l) => l.line);
     expect(lineIds).toContain("6");
     expect(lineIds).toContain("7");
-    expect(lineIds).toContain("8");
-    expect(lineIds).toContain("penalty");
+    expect(lineIds).not.toContain("8"); // No prior return is supplied in this scenario.
+    expect(lineIds).toContain("9");
+    expect(lineIds).toContain("17a");
+    expect(lineIds).toContain("19");
     expect(lineIds).toContain("safe_harbor");
   });
 });
@@ -515,10 +541,11 @@ describe("Form 2210 - all three payment sources", () => {
       withholding: d(10000),
       estimatedPayments: d(11000),
       refundableCredits: d(7000),
+      priorYearTax: d(30000),
     }));
     expect(result.totalPayments.toNumber()).toBe(21000);
     expect(result.safeHarborMet).toBe(true);
-    expect(result.safeHarborReason).toBe("Payments ≥ 90% current year tax");
+    expect(result.safeHarborReason).toBe("Timely installments meet 90% current year tax");
   });
 
   it("$1 short of 90% of tax shown fails safe harbor", () => {
@@ -563,7 +590,7 @@ describe("Form 2210 - safe harbor priority order", () => {
       priorYearAGI: d(100000),
     }));
     expect(result.safeHarborMet).toBe(true);
-    expect(result.safeHarborReason).toBe("Payments ≥ 90% current year tax");
+    expect(result.safeHarborReason).toBe("Statutory withholding installments meet 90% current year tax");
   });
 });
 
@@ -585,7 +612,7 @@ describe("Form 2210 - withholding alone satisfies safe harbor", () => {
     }));
     expect(result.totalPayments.toNumber()).toBe(36000);
     expect(result.safeHarborMet).toBe(true);
-    expect(result.safeHarborReason).toBe("Payments ≥ 90% current year tax");
+    expect(result.safeHarborReason).toBe("Statutory withholding installments meet 90% current year tax");
   });
 
   it("withholding alone at 110% of prior year meets high-income safe harbor", () => {
@@ -601,7 +628,7 @@ describe("Form 2210 - withholding alone satisfies safe harbor", () => {
     }));
     expect(result.totalPayments.toNumber()).toBe(22000);
     expect(result.safeHarborMet).toBe(true);
-    expect(result.safeHarborReason).toBe("Payments ≥ 110% prior year tax");
+    expect(result.safeHarborReason).toBe("Timely installments meet 110% prior year tax");
   });
 });
 
@@ -633,9 +660,9 @@ describe("Form 2210 - refundable credits reduce tax shown below $1K", () => {
 // ═══════════════════════════════════════════════════════════
 
 describe("Form 2210 - extreme underpayment penalty amounts", () => {
-  it("$1 underpayment produces $0 penalty (rounds down from $0.07)", () => {
+  it("$1 spread over four installments rounds its $0.04655 penalty to zero", () => {
     // Required = 90% × $20K = $18K. Payments = $17,999. Underpayment = $1.
-    // Penalty = $1 × 7% = $0.07 → rounds down to $0.
+    // Penalty = $1 × 7% × 971 / 1460 = $0.04655... → rounds down to $0.
     // Prior year $25K so required = min($18K, $25K) = $18K.
     const result = calculateForm2210(makeInput({
       currentYearTax: d(20000),
@@ -688,7 +715,7 @@ describe("Form 2210 - prior year tax = $0 with high income", () => {
       filingStatus: "single",
     }));
     expect(result.safeHarborMet).toBe(true);
-    expect(result.safeHarborReason).toBe("Payments ≥ 110% prior year tax");
+    expect(result.safeHarborReason).toBe("Eligible 110% prior year tax is zero");
     expect(result.penalty.toNumber()).toBe(0);
   });
 });
@@ -711,7 +738,7 @@ describe("Form 2210 - combined sources at exact 90% of tax shown threshold", () 
     }));
     expect(result.totalPayments.toNumber()).toBe(36000);
     expect(result.safeHarborMet).toBe(true);
-    expect(result.safeHarborReason).toBe("Payments ≥ 90% current year tax");
+    expect(result.safeHarborReason).toBe("Timely installments meet 90% current year tax");
   });
 });
 
@@ -751,7 +778,7 @@ describe("Form 2210 - MFS vs single filing status penalty divergence", () => {
 
     // Single: AGI $100K ≤ $150K single threshold → 100% × $12K = $12K required; $12K paid → met
     expect(singleResult.safeHarborMet).toBe(true);
-    expect(singleResult.safeHarborReason).toBe("Payments ≥ 100% prior year tax");
+    expect(singleResult.safeHarborReason).toBe("Timely installments meet 100% prior year tax");
   });
 });
 
@@ -760,33 +787,22 @@ describe("Form 2210 - MFS vs single filing status penalty divergence", () => {
 // ═══════════════════════════════════════════════════════════
 
 describe("Form 2210 - audit trail line values match result fields", () => {
-  it("line 6 value equals requiredAnnualPayment, line 7 equals totalPayments, line 8 equals underpayment", () => {
-    // Forces no-safe-harbor path so lines 6, 7, 8, and penalty are all recorded.
+  it("physical audit lines preserve tax components and the required-payment comparison", () => {
     const result = calculateForm2210(makeInput({
-      currentYearTax: d(20000),
-      withholding: d(5000),
-      estimatedPayments: d(0),
-      refundableCredits: d(0),
-      priorYearTax: d(20000),
-      priorYearAGI: d(100000),
+      currentYearTax: d(20000), withholding: d(5000), estimatedPayments: d(0),
+      refundableCredits: d(0), priorYearTax: d(20000), priorYearAGI: d(100000),
     }));
-
     expect(result.safeHarborMet).toBe(false);
-
-    const line6 = result.lines.find((l) => l.line === "6");
-    const line7 = result.lines.find((l) => l.line === "7");
-    const line8 = result.lines.find((l) => l.line === "8");
-    const linePenalty = result.lines.find((l) => l.line === "penalty");
-
-    expect(line6).toBeDefined();
-    expect(line7).toBeDefined();
-    expect(line8).toBeDefined();
-    expect(linePenalty).toBeDefined();
-
-    expect(line6!.value.toNumber()).toBe(result.requiredAnnualPayment.toNumber());
-    expect(line7!.value.toNumber()).toBe(result.totalPayments.toNumber());
-    expect(line8!.value.toNumber()).toBe(result.underpayment.toNumber());
-    expect(linePenalty!.value.toNumber()).toBe(result.penalty.toNumber());
+    const line = (id: string) => result.lines.find((entry) => entry.form === "Form 2210" && entry.line === id)?.value.toFixed();
+    expect(line("1")).toBe("20000");
+    expect(line("2")).toBe("0");
+    expect(line("6")).toBe("5000");
+    expect(line("7")).toBe("15000");
+    expect(line("8")).toBe("20000");
+    expect(line("9")).toBe("18000");
+    expect(line("19")).toBe("605");
+    expect(result.underpayment.toFixed()).toBe("13000");
+    expect(result.installments.map((entry) => entry.underpayment.toFixed())).toEqual(["3250", "4500", "4500", "4500"]);
   });
 
   it("safe harbor path records line 7 and safe_harbor with safe_harbor value = 1", () => {
@@ -805,9 +821,10 @@ describe("Form 2210 - audit trail line values match result fields", () => {
     const lineSafeHarbor = result.lines.find((l) => l.line === "safe_harbor");
 
     expect(line7).toBeDefined();
-    expect(line7!.value.toNumber()).toBe(result.totalPayments.toNumber());
+    expect(line7?.value.toFixed()).toBe("2000");
+    expect(result.lines.find((line) => line.line === "6")?.value.toFixed()).toBe("18000");
 
     expect(lineSafeHarbor).toBeDefined();
-    expect(lineSafeHarbor!.value.toNumber()).toBe(1); // 1 = true = safe harbor met
+    expect(lineSafeHarbor?.value.toNumber()).toBe(1); // 1 = true = safe harbor met
   });
 });

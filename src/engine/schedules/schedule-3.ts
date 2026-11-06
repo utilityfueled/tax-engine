@@ -8,6 +8,7 @@
 
 import Decimal from "decimal.js";
 import type { TaxYearInput } from "@/models/inputs.js";
+import type { FilingStatus } from "@/models/constants.js";
 import type { CalculatedLine } from "@/models/outputs.js";
 import { d, zeroFloor, sum } from "@/utils/decimal.js";
 import { AuditTrail } from "@/utils/audit.js";
@@ -19,9 +20,9 @@ export interface Schedule3Input {
   retirementSavingsCredit?: Decimal;
   residentialCleanEnergyCredit?: Decimal;
   energyImprovementCredit?: Decimal;
-  /** Credit for prior year minimum tax — Form 8801, Schedule 3 Line 6a */
+  /** Credit for prior year minimum tax — Form 8801, Schedule 3 Line 6b */
   priorYearMinimumTaxCredit?: Decimal;
-  /** General business credit — Form 3800, Schedule 3 Line 6b */
+  /** General business credit — Form 3800, Schedule 3 Line 6a */
   generalBusinessCredit?: Decimal;
   /** Adoption credit — Form 8839, Schedule 3 Line 6c */
   adoptionCredit?: Decimal;
@@ -32,10 +33,12 @@ export interface Schedule3Input {
   /** Previously owned clean vehicle credit — Form 8936 Part IV, Schedule 3 Line 6m */
   previouslyOwnedCleanVehicleCredit?: Decimal;
   netPremiumTaxCredit?: Decimal;
+  /** Pub525 Method 2 repayment credit, Schedule 3 Line 13b. */
+  section1341Credit?: Decimal;
   excessSocialSecurityWithholding?: Decimal;
-  /** Additional Child Tax Credit (ACTC) from Form 8812 — refundable, Line 14a */
+  /** Additional Child Tax Credit (ACTC) from Form 8812 — refundable directly on Form 1040 line 28; excluded from Schedule 3 */
   additionalChildTaxCredit?: Decimal;
-  /** AOC refundable portion (40% of AOC credit, max $1,000) — refundable, Line 14b */
+  /** AOC refundable portion (40% of AOC credit, max $1,000) — refundable directly on Form 1040 line 29; excluded from Schedule 3 */
   aocRefundablePortion?: Decimal;
 }
 
@@ -46,18 +49,20 @@ export interface Schedule3Result {
   retirementSavingsCredit: Decimal;
   residentialCleanEnergyCredit: Decimal;
   energyImprovementCredit: Decimal;
-  priorYearMinimumTaxCredit: Decimal; // Line 6a
-  generalBusinessCredit: Decimal; // Line 6b
+  priorYearMinimumTaxCredit: Decimal; // Line 6b
+  generalBusinessCredit: Decimal; // Line 6a
   adoptionCredit: Decimal; // Line 6c
   elderlyOrDisabledCredit: Decimal; // Line 6d
   newCleanVehicleCredit: Decimal; // Line 6f
   previouslyOwnedCleanVehicleCredit: Decimal; // Line 6m
-  totalNonrefundableCredits: Decimal; // Line 7
+  totalNonrefundableCredits: Decimal; // Line 8
 
+  extensionPayment: Decimal;
   netPremiumTaxCredit: Decimal;
   excessSSWithholding: Decimal;
-  additionalChildTaxCredit: Decimal; // Line 14a
-  aocRefundablePortion: Decimal;     // Line 14b
+  section1341Credit: Decimal; // Line 13b
+  additionalChildTaxCredit: Decimal; // Form 1040 line 28, retained for API compatibility
+  aocRefundablePortion: Decimal;     // Form 1040 line 29, retained for API compatibility
   totalRefundableCredits: Decimal;   // Line 15
 
   lines: CalculatedLine[];
@@ -67,16 +72,39 @@ export interface Schedule3Result {
 export function calculateExcessSSWithholding(
   w2s: TaxYearInput["w2s"],
   ssWageBase: Decimal,
-  ssRate: Decimal
+  ssRate: Decimal,
+  options?: { taxYear: number; filingStatus: FilingStatus }
 ): Decimal {
-  // IRS Form 1040 Instructions: max SS withholding = $176,100 × 6.2% = $10,918.20 (exact, not rounded)
-  // "You can take a credit for the amount withheld in excess of $10,918.20"
+  // IRS1040 Schedule3line11: each person has a separate cap. Excess collected by
+  // one employer belongs to employer correction/Form843, never this credit.
+  // Exact cents are retained:2025 cap10918.20;2026 cap11439.00.
   const maxWithholding = ssWageBase.times(ssRate);
-  const totalWithheld = w2s.reduce(
-    (acc, w2) => acc.plus(d(w2.socialSecurityWithheld)),
-    new Decimal(0)
-  );
-  return zeroFloor(totalWithheld.minus(maxWithholding));
+  if (!maxWithholding.isFinite() || maxWithholding.lte(0)) throw new Error("Excess Social Security cap must be finite and positive");
+  const employersByOwner = new Map<string, Map<string, Decimal>>();
+  for (const w2 of w2s) {
+    const withheld = d(w2.socialSecurityWithheld);
+    if (!withheld.isFinite() || withheld.lt(0)) throw new Error("Social Security withholding must be finite and nonnegative");
+    if (options?.taxYear === 2026 && options.filingStatus === "married_filing_jointly" && !w2.accountHolder) {
+      throw new Error("Social Security W2 owner is unknown for the joint2026 return");
+    }
+    const ein = w2.employer?.ein?.replace(/-/g, "").trim();
+    if (options?.taxYear === 2026 && (!ein || !/^\d{9}$/.test(ein))) throw new Error("Social Security employer identity requires actual EIN");
+    // An incomplete historical record cannot establish another employer. Its
+    // withholding remains on the source record; it cannot create this credit.
+    if (!ein) continue;
+    // Historical untagged records retain an explicitly unqualified preview path.
+    // The2026 joint path above cannot infer ownership from record order.
+    const owner = w2.accountHolder ?? "primary";
+    const employers = employersByOwner.get(owner) ?? new Map<string, Decimal>();
+    employers.set(ein, (employers.get(ein) ?? d(0)).plus(withheld));
+    employersByOwner.set(owner, employers);
+  }
+  let excess = d(0);
+  for (const employers of employersByOwner.values()) {
+    const eligible = [...employers.values()].reduce((total, withheld) => total.plus(Decimal.min(withheld, maxWithholding)), d(0));
+    excess = excess.plus(zeroFloor(eligible.minus(maxWithholding)));
+  }
+  return excess;
 }
 
 export function calculateSchedule3(
@@ -106,10 +134,10 @@ export function calculateSchedule3(
   audit.record("Sched 3", "5b", "Energy improvement credit", energyImprovementCredit, "Form 5695 Part II");
 
   const priorYearMinimumTaxCredit = extra?.priorYearMinimumTaxCredit ?? new Decimal(0);
-  audit.record("Sched 3", "6a", "Credit for prior year minimum tax", priorYearMinimumTaxCredit, "Form 8801");
+  audit.record("Sched 3", "6b", "Credit for prior year minimum tax", priorYearMinimumTaxCredit, "Form 8801");
 
   const generalBusinessCredit = extra?.generalBusinessCredit ?? new Decimal(0);
-  audit.record("Sched 3", "6b", "General business credit", generalBusinessCredit, "Form 3800");
+  audit.record("Sched 3", "6a", "General business credit", generalBusinessCredit, "Form 3800");
 
   const adoptionCredit = extra?.adoptionCredit ?? new Decimal(0);
   audit.record("Sched 3", "6c", "Adoption credit", adoptionCredit, "Form 8839");
@@ -137,28 +165,39 @@ export function calculateSchedule3(
     newCleanVehicleCredit,
     previouslyOwnedCleanVehicleCredit
   );
-  audit.record("Sched 3", "7", "Total nonrefundable credits", totalNonrefundableCredits, "Sum Lines 1-6 → 1040 Line 20");
+  const line6Subtotal = sum(priorYearMinimumTaxCredit, generalBusinessCredit, adoptionCredit,
+    elderlyOrDisabledCredit, newCleanVehicleCredit, previouslyOwnedCleanVehicleCredit);
+  audit.record("Sched 3", "7", "Other nonrefundable credit subtotal", line6Subtotal, "Supported lines 6a through 6m");
+  audit.record("Sched 3", "8", "Total nonrefundable credits", totalNonrefundableCredits, "Lines 1 through 5b + line 7 → Form 1040 line 20");
 
   // ── Part II: Other Payments and Refundable Credits ────
 
   const netPremiumTaxCredit = extra?.netPremiumTaxCredit ?? new Decimal(0);
-  audit.record("Sched 3", "10", "Net premium tax credit", netPremiumTaxCredit, "Form 8962");
+  audit.record("Sched 3", "9", "Net premium tax credit", netPremiumTaxCredit, "Form 8962");
 
+  const extensionPayment = sum(...(input.adjustments?.extensionPayments ?? [])
+    .filter(payment => payment.type === "federal").map(payment => d(payment.amount)));
+  if (!extensionPayment.isFinite() || extensionPayment.lt(0)) throw new Error("Federal extension payment must be finite and nonnegative");
+  audit.record("Sched 3", "10", "Amount paid with extension request", extensionPayment, "Actual federal extension payments, excluding fees");
   const excessSSWithholding = extra?.excessSocialSecurityWithholding ?? new Decimal(0);
-  audit.record("Sched 3", "13a", "Excess SS withholding", excessSSWithholding, "Multiple employer refund");
+  audit.record("Sched 3", "11", "Excess SS withholding", excessSSWithholding,
+    "Separate owner caps across distinct employers; excludes single-employer overcollection");
 
   const additionalChildTaxCredit = extra?.additionalChildTaxCredit ?? new Decimal(0);
-  audit.record("Sched 3", "14a", "Additional child tax credit (ACTC)", additionalChildTaxCredit, "Form 8812");
+
 
   const aocRefundablePortion = extra?.aocRefundablePortion ?? new Decimal(0);
-  audit.record("Sched 3", "14b", "AOC refundable portion (40%)", aocRefundablePortion, "Form 8863 Line 8");
 
+
+  const section1341Credit = extra?.section1341Credit ?? new Decimal(0);
+  audit.record("Sched 3", "13b", "Section 1341 credit", section1341Credit, "Pub525 Method 2 credit for income repaid this year");
   const totalRefundableCredits = sum(
+    section1341Credit,
     netPremiumTaxCredit,
-    excessSSWithholding,
-    additionalChildTaxCredit,
-    aocRefundablePortion
+    extensionPayment,
+    excessSSWithholding
   );
+  audit.record("Sched 3", "14", "Other payment subtotal", section1341Credit, "Line13b, the only supported line13 payment input");
   audit.record("Sched 3", "15", "Total refundable credits", totalRefundableCredits, "Sum Lines 9-14 → 1040 Line 31");
 
   return {
@@ -175,8 +214,10 @@ export function calculateSchedule3(
     newCleanVehicleCredit,
     previouslyOwnedCleanVehicleCredit,
     totalNonrefundableCredits,
+    extensionPayment,
     netPremiumTaxCredit,
     excessSSWithholding,
+    section1341Credit,
     additionalChildTaxCredit,
     aocRefundablePortion,
     totalRefundableCredits,

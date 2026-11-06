@@ -1,0 +1,63 @@
+form: "Guided PA ordinary resident-credit original sources"
+fullName: "Persisted typed actual-source collector for the reviewed finite Schedule G-L method"
+taxYear: 2025
+reference: "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/pa-40_pa-41g-l.pdf"
+notes: |
+  Official12page G-L actual03-24 form/instructions refreshed2026-11-02, SHA256
+  b30072eb0bacf5c2cb4cd15344f1a6b9fabc01de99820c5508381c8004c3cd68.
+  This collector calls the unchanged reviewed actual2025 ordinary employee method;
+  it never supplies actual return facts or authorizes filing. Actual filed other-state
+  returns/schedules, W2/payroll/work originals and complete tax-account histories
+  substantiate the same resident-period compensation and paid-liability bound.
+  Nonresident positive claims, reciprocal wages, specialclasses, dual residency,
+  amendments, adjustments and final2026 remain separate guarded source methods.
+  Web-only otherStateTaxes.residentCreditDraft is a typed persisted draft, allowing
+  blank enums/null indices/absent snapshots. It is not a canonical tax source packet.
+  No factual year, status, amount, index, owner, credit or source date is inferred.
+  Root integration must pass current actual ordinaryFacts separately to the completion
+  panel/helper because its existing originalInput excludes that PA collector root.
+lines:
+  - line: "empty-draft"
+    description: "Actual unknowns stay unknown in typed persisted draft"
+    formula: "All source amounts/dates/owner/state/references blank; actual year and selected W2/payroll indices null; actual confirmations null; filed return/payment/refund/credit kind blank. Original snapshots absent until explicit confirmation. Arrays contain only explicitly added structured records. No JSON/untyped factual editor."
+    testRef: "tests/apps/web/guided-pa-resident-credit-sources.test.ts::PA credit draft factories preserve actual unknowns"
+  - line: "explicit-confirm"
+    description: "Only explicit nested source action binds current originals"
+    formula: "First replay already confirmed actual ordinary facts without changing them. Require explicit current W2/payroll selections and actual source fields. Explicit confirm alone clones current full W2/payroll for selected sources and binds exact federal originals excluding four PA roots plus actual PA residency/reciprocity/facts. Strict canonical rich schema and unchanged resident-credit calculation must pass before canonical packet emission."
+    testRef: "tests/apps/web/guided-pa-resident-credit-sources.test.ts::PA credit explicit confirmation qualifies actual resident sources"
+  - line: "all-residencies"
+    description: "Already reviewed finite source method is preserved"
+    formula: "ActualDE withholding800 plus posted balance1200 gives actual netpaid2000; resident50000 sameincome cap1535, partyear residentperiod20000 cap614. Nonresident explicit empty claims gives0; actual positive nonresident claim rejects. Actual row order does not change current source-aware withholding. No allowed-credit input exists."
+    testRef: "tests/apps/web/guided-pa-resident-credit-sources.test.ts::PA credit actual all3 residency and row orders preserve literal oracles"
+  - line: "original-records"
+    description: "Complete structured source fields and receipt reconciliation"
+    formula: "Retain actual work owner/year/state/paid/service dates/amount/two ordinary-service answers; filed original return identity/date/status/residency/full schedules/allcredits/ordinaryincome answers and actual tax/nonpayment credit lines; all payment/refund/offset/nextyeartransfer originals and complete accountasof/netpaid/unpaid/overpayment/adjustment answers. Exact Decimal arithmetic remains solely in reviewed engine; unknown/missing/mismatch/duplicate facts reject."
+    testRef: "tests/apps/web/guided-pa-resident-credit-sources.test.ts::PA credit rejects incomplete mismatched or unsupported actual sources: %s"
+  - line: "read-no-refresh"
+    description: "Saved canonical source reads compare retained originals"
+    formula: "Build/read replays confirmed actual facts and unchanged rich packet; changed federal/PA/ordinary originals or source dates fail without mutating snapshots. Explicit nested confirmation cannot repair stale ordinary facts by refreshing them. Source field edits clear nested confirmation and retain originals."
+    testRef: "tests/apps/web/guided-pa-resident-credit-sources.test.ts::PA credit reads never refresh current or stale originals"
+  - line: "persisted-draft"
+    description: "Meaningful incomplete actual facts survive workspace JSON"
+    formula: "Web-only typed nested residentCreditDraft survives JSON save/reopen, retaining blank kinds/null indices/explicit0/raw receipt amounts and old snapshots. All actual edits clear outer and nested confirmations. A pending draft, missing canonical packet, stale original, changed confirmation or draft/packet field mismatch must reject top confirmation/read."
+    testRef: "tests/apps/web/pa-resident-credit-completion-binding.test.ts::PA completion retains and refuses pending credit drafts"
+  - line: "canonical-boundary"
+    description: "Strip only validated web draft after paired replay"
+    formula: "Require current explicitlyconfirmed typed draft content exactly equal to confirmed rich canonical packet after deterministic key ordering; retain every meaningful field and confirmation. Replay canonical source packet against existing current facts before stripping only residentCreditDraft for strict canonical completion parse. Unknown extra fields are never dropped. Coarse unsupported actual payment histories without a draft preserve their existing reported-source/method-guard path."
+    testRef: "tests/apps/web/pa-resident-credit-completion-binding.test.ts::PA completion accepts only exact current confirmed credit pair"
+  - line: "structured-ui"
+    description: "Persist actual typed fields through existing completion panel"
+    formula: "Expose add/remove claim, selected current W2/payroll source, work fields, filed return/nonpaymentcredit fields, payment/refund fields and account fields using typed controls. No free credit amount/JSON entry or default state/year/kind. Field edits immediately clear outer/retained rich/draft confirmation while preserving original copies. Explicit nested confirmation alone replaces originals; actual originalInput/facts missing refuses."
+    testRef: "tests/apps/web/pa-resident-credit-details.test.tsx::PA credit panel persists typed unknown records and invalidates edits"
+  - line: "privacy-readiness"
+    description: "No source projection or qualification promotion"
+    formula: "Raw originals remain private draft/canonical facts, never in readiness or public review output. Existing engine audit contains only derived numbers/digest. Collector result is not taxcalculation readiness. No canonical model/engine/PDF or filing/model/hosting gate change. Source2026 rich confirm remains blocked by existing actual2025 method."
+    testRef: "tests/apps/web/guided-pa-resident-credit-sources.test.ts::PA credit collector preserves privacy and year gate"
+  - line: "native-entry"
+    description: "Complete actual claim originates through native controls"
+    formula: "From absent draft, explicitly enter every source identity, year, work/W2/payroll selection, filed-return fact, payment and complete-account field. Resident50000/partyear20000 actual eligible compensation with DE netpaid2000 yields credit1535/614. Save/reopen preserves exact confirmed originals; editing compensation to actual0 retains snapshots and refuses reconciliation. No programmatic insertion of a prepared claim into the mounted collector."
+    testRef: "tests/apps/web/pa-resident-credit-native-entry.test.tsx::native PA resident-credit entry confirms an entire actual claim and preserves it after reopening: %s"
+  - line: "native-account-events"
+    description: "Actual refund cents and explicit zero credits survive native entry"
+    formula: "Independently stated actual balance1200.20 + withholding800 - refund0.20 = netpaid2000 and credit1535. A known zero nonpayment-credit line is retained as0; an incomplete refund, duplicate receipt or removing the refund while retaining netpaid2000 must refuse confirmation. Explicit removals retain remaining original amounts and clear confirmation."
+    testRef: "tests/apps/web/pa-resident-credit-native-entry.test.tsx::native PA credit entry retains actual returned cents and zero credits, and blocks incomplete or duplicate events"

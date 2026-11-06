@@ -1,0 +1,38 @@
+form: "Educator Expense Worksheet"
+fullName: "2026 early-childhood eligibility and separate itemized educator expenses"
+taxYear: 2026
+irsReference: "https://uscode.house.gov/us/usc/119-118/t26/s62/"
+notes: |
+  Refreshed2026-10-25: PL119-111 divisionB section1 expands62(d)(1) to early
+  childhood effective for expenses in tax years after2025. PL119-21 section70110
+  creates67(b)(13)/(g), effective2026. Pub5052026 confirms Schedule1 deduction
+  precedes the distinct itemized deduction. Draft2026 ScheduleA17k identifies the
+  itemized amount but is not a final qualified template; final instructions are
+  still unavailable. Historical2025 educator sources remain the originalK12
+  contract. Unknown expanded qualification does not become a favorable fact.
+lines:
+  - line: "early-childhood"
+    description: "Apply the enacted early-childhood expansion only from2026"
+    formula: "Require900actual school-year hours in eligible roles and an explicit actual school level for2026. Early-childhood school/facility must serve more than2nonresident children under6 and either operate at public expense or receive a fee/payment/grant. Require each actual condition;2025early-childhood sources are ineligible. Historical omitted2025level retains only the prior K12 qualification contract."
+    irsRef: "IRC62(d)(1); PL119-111 divisionB1(a)-(c),140Stat1049"
+    testRef: "tests/engine/forms/educator-2026-itemized.test.ts::uses actual early-childhood facility facts only for the enacted year"
+  - line: "expanded-itemized"
+    description: "Keep the expanded itemized eligibility separate from the capped deduction"
+    formula: "2026itemized900-hour eligibility includes interscholastic sports administrators/coaches;62above-line does not. Itemized supplies may be nonathletic PE supplies and used as part of actual instructional activity outside the classroom. Actual162ordinary/necessary expense and no duplicate deduction remain required."
+    irsRef: "IRC67(b)(13),(g); PL119-21section70110"
+    testRef: "tests/engine/forms/educator-2026-itemized.test.ts::keeps coach and broader instructional expenses out of the above-line deduction"
+  - line: "net-itemized"
+    description: "Deduct only the remaining actual unreimbursed expense"
+    formula: "For each eligible owner, itemized source expenses equal actual qualified162cost less actual expense-specific reimbursements and tax-free funding. Subtract that owner's allowed Schedule1deduction once and floor at0. Missing material source allocations remain incomplete; never transfer unused spouse caps or deduct a receipt twice."
+    irsRef: "IRC62(a) final sentence;162;67(g); Pub5052026 educator deduction sequence"
+    testRef: "tests/engine/forms/educator-2026-itemized.test.ts::reconciles actual funded costs and subtracts the above-line amount only once"
+  - line: "return"
+    description: "Include the source itemized amount in the return candidate"
+    formula: "2026ScheduleA adds completed educator deduction to other itemized deductions before the standard/itemized comparison and overall limitation. 85000wages and20000qualified costs give350above-line,19650itemized and65000taxable income.2025cannot claim the new itemized amount."
+    irsRef: "Pub5052026; draft2026ScheduleA17k; IRC67effective date"
+    testRef: "tests/engine/forms/educator-2026-itemized.test.ts::routes actual educator excess through the year-specific itemized candidate"
+  - line: "source-conservation"
+    description: "Reconcile overlapping above-line and itemized expense sources"
+    formula: "For completed2026 allocations, reimbursements attached to above-line-eligible receipts must equal that source worksheet's reimbursement amount; tax-free funding of those receipts cannot exceed its education-benefit reductions. Broader-only receipts have separate actual funding. Inconsistent overlapping source statements must be corrected before either amount is used."
+    irsRef: "IRC62(a) final sentence;62(d)(2);162;67(g)"
+    testRef: "tests/engine/forms/educator-2026-itemized.test.ts::rejects contradictory funding of the same above-line and itemized receipt"

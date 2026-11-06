@@ -24,18 +24,27 @@ interface FixtureStructuredFactTemplate {
   machineValue?: WorkspaceStructuredFactRecord["machineValue"];
 }
 
+// These values are explicit synthetic examples attached to blank IRS templates,
+// not facts extracted from a taxpayer's upload or IRS worked-example evidence.
 const fixtureStructuredFactsByFixtureId: Record<string, FixtureStructuredFactTemplate[]> = {
   "irs-w2-2025": [
     {
       idSuffix: "fixture-wages",
       factId: "wages",
       label: "Wages",
-      value: "Official fixture wages: Form W-2 box 1 wages $52,000 and box 2 federal withholding $5,000.",
+      value: "Official fixture wages: Form W-2 box 1 wages $52,000, box 2 federal withholding $5,000, and boxes 3 and 5 payroll wages $52,000.",
       machineValue: {
         entryKind: "w2-summary",
+        stateTaxReporting: "none",
         employerName: "Official fixture employer",
         employerEin: "12-3456789",
         wages: "52000",
+        socialSecurityWages: "52000",
+        socialSecurityTips: "0",
+        box10DependentCareBenefits: "0",
+        socialSecurityWithheld: "3224",
+        medicareWages: "52000",
+        medicareWithheld: "754",
         federalWithheld: "5000"
       } satisfies WorkspaceStructuredFactMachineValueW2Summary
     },
@@ -51,12 +60,19 @@ const fixtureStructuredFactsByFixtureId: Record<string, FixtureStructuredFactTem
       idSuffix: "fixture-wages",
       factId: "wages",
       label: "Wages",
-      value: "Official fixture wages: Form W-2 box 1 wages $52,000 and box 2 federal withholding $5,000.",
+      value: "Official fixture wages: Form W-2 box 1 wages $52,000, box 2 federal withholding $5,000, and boxes 3 and 5 payroll wages $52,000.",
       machineValue: {
         entryKind: "w2-summary",
+        stateTaxReporting: "none",
         employerName: "Official fixture employer",
         employerEin: "12-3456789",
         wages: "52000",
+        socialSecurityWages: "52000",
+        socialSecurityTips: "0",
+        box10DependentCareBenefits: "0",
+        socialSecurityWithheld: "3224",
+        medicareWages: "52000",
+        medicareWithheld: "754",
         federalWithheld: "5000"
       } satisfies WorkspaceStructuredFactMachineValueW2Summary
     },
@@ -267,7 +283,8 @@ const fixtureStructuredFactsByFixtureId: Record<string, FixtureStructuredFactTem
         payer: "Official fixture HSA custodian",
         grossDistribution: "2400",
         distributionCode: "1",
-        accountType: "hsa"
+        accountType: "hsa",
+        accountHolder: "primary",
       } satisfies WorkspaceStructuredFactMachineValue1099SASummary
     }
   ],
@@ -295,7 +312,8 @@ const fixtureStructuredFactsByFixtureId: Record<string, FixtureStructuredFactTem
 
 export function buildFixtureStructuredFacts(
   document: WorkspaceDocumentRecord,
-  supportedFactIds: ReadonlySet<SeededFactId>
+  supportedFactIds: ReadonlySet<SeededFactId>,
+  namespaceDocument = false
 ): WorkspaceStructuredFactRecord[] {
   if (!document.matchedFixtureId) {
     return [];
@@ -307,7 +325,7 @@ export function buildFixtureStructuredFacts(
     }
 
     return [{
-      id: `${fact.factId}:${fact.idSuffix}`,
+      id: `${fact.factId}:${fact.idSuffix}${namespaceDocument ? `:${document.id}` : ""}`,
       factId: fact.factId,
       label: fact.label,
       kind: "fixture-derived",

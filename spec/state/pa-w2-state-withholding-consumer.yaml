@@ -1,0 +1,44 @@
+form: "PA-W2-State-Withholding-Consumer"
+fullName: "Pennsylvania actual W2 state withholding consumer"
+taxYear: 2025
+reference: "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40in.pdf"
+notes: |
+  Internal source-consumer successor only. Existing qualified PA payroll/residency
+  and reciprocal source methods determine taxable compensation. W2Box15/17
+  jurisdiction determines withholding only; Box19 local tax never PA40line13.
+  Historical frozen facts10 and composer5 remain in durable evidence. Migrate
+  the previous blanketvalidpacket TODO guard to stronger numeric and negative
+  controls. No actual other-state credit, local completion or filing promotion.
+lines:
+  - line: "actual-original"
+    description: Complete current actual state/local W2 source proof
+    formula: Validate present canonicalpacket using calculateW2StateLocalSources with actualinput/index before selecting any amount. Unknown/malformed/stale/duplicate/currentyear/owner/fulloriginal/allboxes/row-count/amount contradictions reject; never fall back to scalar. Existing all3 residency/payroll and positiveunsupportedBox12 gates remain. Valid actual OH1000/PA1535 is permitted for primitive withholding projection without admitting an outside-state credit.
+    testRef: "tests/engine/state/pa-w2-state-withholding-consumer.test.ts::PA W2 successor rejects unknown current original proof"
+  - line: "line13"
+    description: Exact source PA withholding once
+    formula: Select only PA Box17 from every complete actualpacket, excluding its legacy scalar projection. LegacyW2s and actual PA bank withholding retain existing methods. PAfirst/OHfirst/unusued scalar layout never changes selectedPA amount; complete knownnoPA/PAzero gives zero while missingsecondamount fails. Sum Decimal source cents before printed PA40line13 rounding once; original packet remains unchanged.
+    testRef: "tests/engine/state/pa-w2-state-withholding-consumer.test.ts::PA W2 successor selects actual PA withholding in all three residency classes"
+  - line: "no-pa-and-unused"
+    description: Known zero versus explicit absence of legacy scalar evidence
+    formula: Explicit legacyunused projection may omit scalar state/wages/withholding/localfields while full current canonical rows remain known; no fabricatedzero. KnownnoPArow and actualPAzero establish zero PA withholding independently of taxable payroll; jurisdiction absence cannot determine taxable compensation.
+    testRef: "tests/engine/state/pa-w2-state-withholding-consumer.test.ts::PA W2 successor admits unused scalars and known no PA withholding"
+  - line: "other-state-completion"
+    description: Every actual outside-state row needs its complete history
+    formula: Composer enumerates all actual stateRows, alongside actual domicile/work/legacy/bank sources, for complete currentowner/year/asof tax histories. OHsecondzero must still have actual OH history. Any positiveactualoutsideWH must guard until its qualified credit/refund source method exists, even when legacyfirstPAWHzero orunused. Primitive facts preserveactualpositiveoutsideWH without treating it as PA or creditzero.
+    testRef: "tests/engine/state/pa-w2-state-withholding-consumer.test.ts::PA W2 successor requires every actual outside jurisdiction history"
+  - line: "local-boundary"
+    description: Actual local Box19 remains outside state withholding
+    formula: Primitive projection excludes actuallocalwithholding from PAWH. Complete composer refuses positiveactualBox19 pending actuallocalreconciliation, even when legacyscalarunused; no locality/residency inference, zero localtax or readiness bypass. Existing nooverride/rawpayment source shape guards remain unchanged.
+    testRef: "tests/engine/state/pa-w2-state-withholding-consumer.test.ts::PA W2 successor does not hide actual local withholding"
+  - line: "reported-cents"
+    description: One printed withholding rounding after all original cents
+    formula: ActualpacketPA1538.25 plus distinctactuallegacyPA0.25 gives source1538.50; printedline13=1539. Do not separatelyroundsources. Actualoriginal sourcecents remain intact; explicitfresh settlement/elections and global2026gate remain unchanged.
+    testRef: "tests/engine/state/pa-w2-state-withholding-consumer.test.ts::PA W2 successor sums source cents before one printed line rounding"
+  - line: "reciprocal"
+    description: Actual reciprocal payroll and truthful two-state original proof
+    formula: Replay unchanged current reciprocal originals/payroll/actualPAWH evidence; actual two-statepacket must truthfullyreport zeroOrOneStateRow false. Positiveunsupported Box12 adjustment, stale payroll or year/owner/source contradictions still reject. No W2row duplication or income allocation from withholding.
+    testRef: "tests/engine/state/pa-w2-state-withholding-consumer.test.ts::PA W2 successor preserves reciprocal payroll and PA withholding proof"
+  - line: "commitment-and-gates"
+    description: Source identity and review-only boundaries
+    formula: Current complete raw W2packet and rawreplayedPA packets remain bound through ordinarysourcecommitment. Fullstate employerIDs/sourceidentities are private, digestonlyaudit. No caller mutation, new scalaroverride, actualcreditmethod, canonicalUI, final2026 qualification or filing readiness change.
+    testRef: "tests/engine/state/pa-w2-state-withholding-consumer.test.ts::PA W2 successor binds raw packet identity without audit leakage"

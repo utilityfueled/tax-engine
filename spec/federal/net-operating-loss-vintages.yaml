@@ -1,0 +1,91 @@
+form: "Section172 actual carry ledger"
+fullName: "NOL deduction and separate FIFO modified-income absorption"
+taxYear: 2025
+irsReference: "https://uscode.house.gov/us/usc/119-118/t26/s172/"
+notes: |
+  This worksheet consumes actual filed loss and carry records; it does not derive
+  an originating NOL from a current business loss or compute a historical return.
+  All original balances, prior use and attribute reductions reconcile exactly.
+  Unchanged individual or same-spouse joint membership is required in this slice.
+  Deduction limit income and each vintage's modified income come from canonical
+  return computations, never a user taxable-income override. Before supplying a
+  modified-income context, the caller must refigure every affected AGI/deduction
+  item under172(b)(2), including capital,1202,151,199A and250 modifications.
+  Section172(a) deduction and(b)(2) absorption are different outputs. The latter
+  recomputes percentage-limited deductions under Reg1.172-5(a)(2)(ii). Its earlier
+  NOL allowance and20percent reserve use the separately modified no-NOL limit base,
+  not the actual return's unmodified base. This consistent-base reading is derived
+  from the statute/regulation; no published post2017 numerical example was located.
+  Source records remain unchanged; filed carry amounts are whole dollars, and
+  current calculated form amounts round to the nearest dollar.
+lines:
+  - line: "actual-history"
+    description: "Bind the adjusted original loss and use history to the current taxpayer"
+    formula: "Original60000 minus prioruse5000 minus attribute reduction1000 equals opening54000; unknown history, wrong owner/year or unequal balance rejects."
+    irsRef: "Form172 instructions Keeping records and Change in filing status; IRC172(e)"
+    testRef: "tests/engine/forms/net-operating-loss-vintages.test.ts::requires reconciled actual loss history and continuous return identity"
+  - line: "source-only"
+    description: "Do not manufacture a deduction without canonical income"
+    formula: "Validated sources without income context return no deduction or closing carry calculation."
+    irsRef: "IRC172(a)(2) and(b)(2)"
+    testRef: "tests/engine/forms/net-operating-loss-vintages.test.ts::leaves calculation unknown until the canonical income context exists"
+  - line: "post2017-limit"
+    description: "Compute the80percent allowance before172,199A and250"
+    formula: "Actual limit income100000 and post2017carry100000 permit80000; supplied QBI is not deducted from that limit income."
+    irsRef: "IRC172(a)(2)(B)(ii); Form172 NOL deduction limitation"
+    testRef: "tests/engine/forms/net-operating-loss-vintages.test.ts::limits post2017 carry using the canonical base before QBI"
+  - line: "mixed-vintages"
+    description: "Use pre2018 carry first and limit only the later balance"
+    formula: "Pre2018carry20000 plus postcarry100000 against100000base permits20000+80percent(80000)=84000; later carry36000."
+    irsRef: "IRC172(a)(2)(A)-(B), (b)(2); Form172 FIFO instructions"
+    testRef: "tests/engine/forms/net-operating-loss-vintages.test.ts::separates old loss deductions from the post2017 limitation"
+  - line: "deduction-versus-absorption"
+    description: "Retain the distinction between the claim and modified-income use"
+    formula: "Postcarry100000 and actual base100000 permit80000 deduction; modified no-NOL income103000 less20600 statutory reserve absorbs82400, leaving17600."
+    irsRef: "IRC172(b)(2)(A)-(C), (d)(2); Reg1.172-5(a)(2)(ii); Form172 modified taxable income"
+    testRef: "tests/engine/forms/net-operating-loss-vintages.test.ts::uses modified income rather than the claimed deduction for carry absorption"
+  - line: "old-loss-negative-income"
+    description: "A pre2018 claim can exceed current income without consuming all carry"
+    formula: "Pre2018carry100000 and base30000 permit100000 deduction; modifiedincome30000 absorbs30000, leaving70000."
+    irsRef: "IRC172(a)(2)(A), (b)(2); Form172 NOL resulting in no taxable income"
+    testRef: "tests/engine/forms/net-operating-loss-vintages.test.ts::does not cap a pre2018 deduction at the amount absorbed"
+  - line: "expiration"
+    description: "Apply the20year carry period to pre2018 origins only"
+    formula: "A2005loss is available in2025 and its unused remainder expires afterward; it is unavailable in2026. A2018loss does not expire after20years."
+    irsRef: "IRC172(b)(1)(A)(ii)"
+    testRef: "tests/engine/forms/net-operating-loss-vintages.test.ts::expires old losses after the final allowed year without expiring later losses"
+  - line: "fifo-and-context"
+    description: "Bind each modified-income computation to earlier permitted claims"
+    formula: "Post2021carry60000 and2022carry60000 against100000base claim60000/20000; second modified base is40000 before20000 reserve. Duplicate or mismatched context rejects."
+    irsRef: "IRC172(b)(2)(A); Form172 earliest-loss ordering"
+    testRef: "tests/engine/forms/net-operating-loss-vintages.test.ts::requires each FIFO context to retain the actual earlier deductions"
+  - line: "history-boundaries"
+    description: "Retain actual carryback history and reject unsupported attribution"
+    formula: "2018-2020/pre2018 sources require actual completed or waived carryback records; same-year mixed NOL sources, farming and changed membership require their separate worksheets."
+    irsRef: "IRC172(b)(1), (b)(3); Form172 filing-status and farming instructions"
+    testRef: "tests/engine/forms/net-operating-loss-vintages.test.ts::rejects missing carryback records and ambiguous origin methods"
+  - line: "historical-carryback-window"
+    description: "Bind historical use to the statutory carryback years"
+    formula: "A 2019 ordinary loss may have completed carryback use only in 2014-2018. An ordinary two-year 2017 loss may use 2015-2016 only when that historical method is confirmed. Prior-origin use is unavailable for nonfarming post2020 losses or a waived carryback; extended historical methods require separate source history."
+    irsRef: "IRC172(b)(1)(D); final 2017 Publication536 When to use an NOL and exceptions to the two-year rule"
+    testRef: "tests/engine/forms/net-operating-loss-vintages.test.ts::bounds actual historical carryback use to its supported statutory period"
+  - line: "ebl-origin"
+    description: "Reject an EBL origin before its effective calendar year"
+    formula: "Section461(l) EBL carry begins with calendar2021 after the CARES Act correction; a claimed2018-2020 EBL origin is not converted into an ordinary NOL."
+    irsRef: "IRC461(l)(1)(B), (l)(2); CARES Act2304; IRM4.11.11.2.2"
+    testRef: "tests/engine/forms/net-operating-loss-vintages.test.ts::requires the actual post2020 excess business loss origin"
+  - line: "modified-fifo-percentage"
+    description: "Recompute earlier percentage-limited deductions on the modified base"
+    formula: "Two post2017vintages of100000 with actual limitbase100000 claim80000/0. Modified limitbase103000 permits earlier-only82400 and a20600reserve: absorption82400/0, carry17600/100000. Prior actual80000 and modified reserve20600 cannot be mixed."
+    irsRef: "IRC172(b)(2)(A)-(C); Reg1.172-5(a)(2)(i)-(ii)"
+    testRef: "tests/engine/forms/net-operating-loss-vintages.test.ts::recomputes earlier NOL percentage limits using the same modified income basis"
+  - line: "joint-identity"
+    description: "Bind the carry to both actual continuing joint-return members"
+    formula: "Both matching source names and tax-ID suffixes are required; omitted spouse identity, changed membership or extra spouse facts on a single return rejects."
+    irsRef: "Form172 Change in Marital Status and Change in Filing Status"
+    testRef: "tests/engine/forms/net-operating-loss-vintages.test.ts::binds both unchanged joint members without inferring a spouse allocation"
+  - line: "partial-and-zero-context"
+    description: "Keep an allowed claim separate from an unfinished closing carry computation"
+    formula: "Claim-only context may establish the deduction but leaves absorption/carry unknown; negative income permits no post2017 claim/use. Explicit empty source and context lists reconcile to zero. Missing, nonfinite, negative-prior or extra contexts reject."
+    irsRef: "IRC172(a)(2), (b)(2); Reg1.172-5(a)(2)"
+    testRef: "tests/engine/forms/net-operating-loss-vintages.test.ts::preserves unknown carry calculation and validates actual zero or negative income"

@@ -1,0 +1,35 @@
+form: "Form 8606 Roth history and repayments"
+fullName: "Actual Roth basis depletion and line 25c worksheet"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i8606"
+notes: |
+  Refreshed 2026-10-25. The Basis in Regular Roth IRA Contributions Worksheet
+  subtracts the previous distribution year's line 19, not line 21, from its
+  line 22 basis. The conversions chart footnote 2 refigures prior line 23
+  without the homebuyer amount on line 20. Current taxable lines still apply
+  the homebuyer amount. History consumes actual nonexcluded distributions in
+  FIFO order, preserving the original vintage amounts and prior consumption.
+  The line 25c worksheet subtracts actual qualifying repayments directly from
+  line 25a less line 25b. It has no proportional eligible-taxable-share cap.
+  Its published examples 1 and 2 include 7500 ordinary and 5000 eligible gross
+  distributions, 2500 basis and repayments 3000 or 5000. Taxable results are
+  7000 and 5000 with no later basis increase. These are published controls;
+  the homebuyer carry tests are independently derived worksheet arithmetic.
+  Physical final 2026 form qualification and taxpayer source review remain gated.
+lines:
+  - line: "regular-basis-carry"
+    description: "Homebuyer distributions still consume regular contribution basis"
+    formula: "Consume min(line19, line22) across actual contribution vintages oldest first. Do not subtract line20 from the distribution used for next-year history. Original contribution amounts and prior withdrawals remain intact."
+    testRef: "tests/engine/forms/form-8606-roth-history.test.ts::depletes contribution history using line19 before the homebuyer exclusion"
+  - line: "conversion-basis-carry"
+    description: "Refigure distribution beyond contributions without homebuyer relief"
+    formula: "For next-year conversion history, consume min(max(0, line19 - line22), line24) across actual conversion vintages oldest first. Current line23 still equals max(0, line21 - line22)."
+    testRef: "tests/engine/forms/form-8606-roth-history.test.ts::depletes conversion history without changing current homebuyer relief"
+  - line: "source-conservation"
+    description: "Exclude rollovers and preserve exact original vintage records"
+    formula: "Use completed line19 after actual exclusions. A zero line19 consumes no basis. Keep original contribution/conversion cents and prior withdrawals unchanged; per-vintage consumed plus remaining basis equals its original available amount."
+    testRef: "tests/engine/forms/form-8606-roth-history.test.ts::preserves original source cents and excludes rolled-over distributions"
+  - line: "published-repayment"
+    description: "Apply actual qualifying Roth repayments to the whole worksheet taxable amount"
+    formula: "Worksheet2 = line25a - line25b; worksheet3 = actual qualifying repayment capped by its supported gross distribution; worksheet4 = max(0, worksheet2 - worksheet3); worksheet5 = max(0, worksheet3 - worksheet2). No proportional tax-share cap applies to worksheet3. No eligible gross distribution means no qualifying repayment."
+    testRef: "tests/engine/forms/form-8606-roth-history.test.ts::matches all published Roth repayment examples without a proportional tax cap"

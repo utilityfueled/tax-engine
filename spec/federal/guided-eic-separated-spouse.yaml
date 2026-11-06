@@ -1,0 +1,53 @@
+form: "Guided EIC separated-spouse sources"
+fullName: "Actual Rule 3 separation and qualifying-child records"
+taxYear: 2026
+irsReference: "https://www.irs.gov/publications/p596"
+notes: |
+  Refreshed 2026-10-26: IRC32(d)(2)(B), Pub596 Rules3/8/9 and final2025
+  i1040gi EIC Step3 distinguish actual qualifying-child presence from the
+  subsection(b) timely valid-SSN child count. Final2025 ScheduleEIC line2
+  expressly permits an actual blank identifier for the self-only route.
+  The guide preserves original household identities, original months, actual
+  full-year period and each independent separation alternative. It never asks
+  for an eligibility, MAGI or credit override. Use the shared facts-only source
+  validator; no fictional financial context is constructed for validation.
+  Unknown answers remain unknown; all candidate children and actual other
+  eligible claimants need complete records, including explicitly known empty
+  lists. Source edits revoke confirmation. The existing competing-claim,
+  married-child and special-period method boundaries remain explicit.
+  Actual blank child IDs are permitted only in the confirmed bound EIC source
+  route with timely valid SSN false and no CTC/ODC claim. A missing record or
+  unknown answer cannot waive identification requirements elsewhere.
+  Historical saved fields remain intact. No new student restriction, formula,
+  filing qualification or public2026 readiness is introduced.
+lines:
+  - line: "canonical"
+    description: "Actual separated-spouse facts reach canonical EIC"
+    formula: "Derive separation eligibility and actual child presence from original records; the published2025 10000 wage row is3409 for one valid-SSN child and649 for self-only"
+    irsRef: "IRC32(c)(3)(D),(d)(2)(B); Pub596 Rules3/8/9; i1040gi EIC Steps3/4"
+    testRef: "tests/guided-interview/guided-eic-separated-spouse.test.ts::derives guided Rule3 eligibility and separate actual-child and SSN-counted routes"
+  - line: "unknown"
+    description: "Unknown, stale and contradictory records remain blockers"
+    formula: "Validate actual original household/year/period, independent alternatives and complete child records; preserve known false and reject an unknown required answer"
+    irsRef: "Pub596 Rules3/8/9"
+    testRef: "tests/guided-interview/guided-eic-separated-spouse.test.ts::rejects unknown or stale separation and child records without inventing source facts"
+  - line: "identifier"
+    description: "Actual blank child identifier remains distinct from missing facts"
+    formula: "Accept a source-confirmed original blank with actual valid-SSN false only for EIC self-only; missing confirmation or CTC/ODC claim cannot use that exception"
+    irsRef: "2025 ScheduleEIC instructions line2; IRC32(c)(3)(D)"
+    testRef: "tests/guided-interview/guided-eic-separated-spouse.test.ts::preserves a confirmed actual blank child identifier only in the EIC self-only route"
+  - line: "capture"
+    description: "Copy only existing original household facts"
+    formula: "Copy actual names/identifiers/dates/relationship/months with stable dependent IDs; do not fill year, separation, child eligibility or competing-claim history"
+    irsRef: "Application original-source contract"
+    testRef: "tests/guided-interview/guided-eic-separated-spouse.test.ts::copies only actual household source fields and revokes nested confirmations"
+  - line: "controls"
+    description: "Actual source questions are reachable in the personal section"
+    formula: "Expose both independent alternatives, original-child copy and explicit competing-claim controls; preserve null and false and clear confirmation on edit"
+    irsRef: "Pub596 Rules3/8/9"
+    testRef: "tests/apps/web/eic-separated-spouse-interactions.test.tsx::collects separated-spouse and actual child sources through the personal section"
+  - line: "persistence"
+    description: "Local source records survive desktop and mobile reloads"
+    formula: "Save and reload original source/blank/false records; preserve actual self-only credit, revoke stale confirmation, and make no source-bearing network request"
+    irsRef: "Application local source privacy contract"
+    testRef: "apps/web/tests/guided-eic-separated-spouse.spec.ts::saves actual separation and self-only child facts locally without guessing eligibility"

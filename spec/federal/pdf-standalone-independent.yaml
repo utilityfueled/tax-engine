@@ -1,0 +1,28 @@
+form: "Independent standalone flatten structural review"
+fullName: "Narrow deleted-widget cleanup and preservation of existing PDF structures"
+taxYear: 2026
+reference: "https://pdf-lib.js.org/docs/api/classes/pdfform#flatten"
+notes: |
+  Independent source-first controls of frozen product155376fc, not author changes.
+  Explicit flatten removes only references invalidated by that operation. Save
+  defaults remain interactive and preserve unsigned signature structure. Existing
+  missing/orphan ambiguity, linked annotations, retained tags/ParentTree mappings
+  and references outside structure K must not be silently sanitized. Legal indirect
+  name-valued dictionary entries must resolve before widget/OBJR classification;
+  PDF dictionaries permit indirect values (Adobe PDF Reference section3.2.9).
+  Strict saved-byte reader visits trailer plus every xref/object-stream object.
+  No cryptographic signing, signed-document flatten approval, PDF/UA, tax or
+  production readiness qualification is claimed. All authored six paths immutable.
+lines:
+  - line: "independent-standalone"
+    description: "Saved resolved widgets and stable unrelated annotations"
+    formula: "Both serialization modes preserve two painted text values, a link and review notices while explicit flatten removes all generated fields/widgets/missing refs"
+    testRef: "tests/pdf/standalone-flatten-independent.test.ts::independent standalone flatten serializes clean widget removal with object streams %s"
+  - line: "independent-defaults"
+    description: "Interactive default and explicit flatten preservation boundaries"
+    formula: "Interactive canonical/widget/signature structure stays present; links/popups/notes, old orphan/missing refs and unflattened structure stay unchanged"
+    testRef: "tests/pdf/standalone-flatten-independent.test.ts::independent standalone default save preserves interactive values and unsigned signature structure"
+  - line: "independent-resolved-names"
+    description: "Resolve legal indirect PDF name values before classification"
+    formula: "Widget Subtype and structure Type OBJR are semantically identical whether direct names or indirect name references; explicit flatten must not create missing refs"
+    testRef: "tests/pdf/standalone-flatten-independent.test.ts::independent standalone flatten resolves indirect widget subtype names"

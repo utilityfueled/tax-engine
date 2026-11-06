@@ -1,5 +1,6 @@
 "use client";
 
+import { EstimatedTaxSourceDetails } from "./estimated-tax-source-details";
 import { RetroShell } from "@/components/retro-shell";
 import {
   type PaymentData,
@@ -8,6 +9,7 @@ import {
   emptyPaymentData,
 } from "@/lib/guided-interview-flow";
 import { CurrencyField } from "./currency-field";
+import { formatGuidedCurrency, sumGuidedDisplayAmounts } from "@/lib/guided-currency";
 
 function EstimatedPaymentCard({
   index,
@@ -67,12 +69,16 @@ function EstimatedPaymentCard({
 export function SectionPayments({
   data,
   onDataChange,
+  taxYear,
 }: {
   data: PaymentData | undefined;
+  taxYear?: number | null;
   onDataChange: (data: PaymentData) => void;
 }) {
   const current = data ?? emptyPaymentData;
   const payments = current.estimatedPayments;
+  const extensions = current.extensionPayments ?? [];
+  const appliedRefunds = current.priorYearAppliedCredits ?? [];
 
   function updatePayment(index: number, field: keyof EstimatedPaymentEntry, value: string) {
     const next = payments.map((entry, i) =>
@@ -95,10 +101,7 @@ export function SectionPayments({
     });
   }
 
-  const totalEstimated = payments.reduce((sum, entry) => {
-    const num = Number(entry.amount?.replace(/,/g, "") ?? "0");
-    return sum + (Number.isNaN(num) ? 0 : num);
-  }, 0);
+  const totalEstimated = sumGuidedDisplayAmounts(payments.map((entry) => entry.amount));
 
   return (
     <RetroShell title="Payments & Withholding" eyebrow="PAYMENTS">
@@ -141,21 +144,32 @@ export function SectionPayments({
         <details className="guided-expand" style={{ marginTop: "16px" }}>
           <summary className="guided-expand-trigger">Other payments</summary>
           <div className="guided-expand-body">
-            <CurrencyField
-              label="Other payments"
-              hint="Extension payments, excess Social Security withheld, or other credits applied."
-              value={current.otherPayments}
-              onChange={(v) => onDataChange({ ...current, otherPayments: v })}
-            />
+            {current.otherPayments.trim() && <CurrencyField label="Saved other-payment total to classify" hint="Reconcile this saved total with the actual extension and applied-refund entries below. Excess Social Security withholding is computed from your W-2s." value={current.otherPayments} onChange={(otherPayments) => onDataChange({ ...current, otherPayments })} />}
+            <h4>Federal extension payments</h4>
+            {extensions.map((entry, index) => <div key={index} className="guided-w2-card">
+              <label className="guided-field"><span className="guided-field-label">Extension payment #{index + 1} date</span><input className="guided-input" type="date" value={entry.date} onChange={(event) => onDataChange({ ...current, extensionPayments: extensions.map((item, i) => i === index ? { ...item, date: event.target.value } : item) })} /></label>
+              <CurrencyField label={`Extension payment #${index + 1} amount`} value={entry.amount} onChange={(amount) => onDataChange({ ...current, extensionPayments: extensions.map((item, i) => i === index ? { ...item, amount } : item) })} required />
+              <button type="button" className="utility-button" onClick={() => onDataChange({ ...current, extensionPayments: extensions.filter((_, i) => i !== index) })}>Remove extension payment #{index + 1}</button>
+            </div>)}
+            <button type="button" className="utility-button" onClick={() => onDataChange({ ...current, extensionPayments: [...extensions, { ...emptyEstimatedPayment }] })}>Add extension payment</button>
+            <h4>Prior-year federal refund applied to this return</h4>
+            {appliedRefunds.map((entry, index) => <div key={index} className="guided-w2-card">
+              <label className="guided-field"><span className="guided-field-label">Applied refund #{index + 1} source tax year</span><input className="guided-input" inputMode="numeric" value={entry.sourceTaxYear} onChange={(event) => onDataChange({ ...current, priorYearAppliedCredits: appliedRefunds.map((item, i) => i === index ? { ...item, sourceTaxYear: event.target.value } : item) })} /></label>
+              <CurrencyField label={`Applied refund #${index + 1} amount`} value={entry.amount} onChange={(amount) => onDataChange({ ...current, priorYearAppliedCredits: appliedRefunds.map((item, i) => i === index ? { ...item, amount } : item) })} required />
+              <button type="button" className="utility-button" onClick={() => onDataChange({ ...current, priorYearAppliedCredits: appliedRefunds.filter((_, i) => i !== index) })}>Remove applied refund #{index + 1}</button>
+            </div>)}
+            <button type="button" className="utility-button" onClick={() => onDataChange({ ...current, priorYearAppliedCredits: [...appliedRefunds, { sourceTaxYear: "", amount: "" }] })}>Add prior-year applied refund</button>
           </div>
         </details>
 
-        {totalEstimated > 0 && (
+        <EstimatedTaxSourceDetails data={current.estimatedTaxFacts} appliedCredits={current.priorYearAppliedCredits} taxYear={taxYear} onChange={estimatedTaxFacts => onDataChange({ ...current, estimatedTaxFacts })} />
+
+        {totalEstimated.gt(0) && (
           <div className="guided-ticker-grid" style={{ marginTop: "16px" }} role="status" aria-live="polite">
             <div className="guided-ticker-item">
               <span className="guided-ticker-label">Total Estimated Payments</span>
               <strong className="guided-ticker-value">
-                ${totalEstimated.toLocaleString("en-US", { minimumFractionDigits: 0 })}
+                {formatGuidedCurrency(totalEstimated)}
               </strong>
             </div>
           </div>

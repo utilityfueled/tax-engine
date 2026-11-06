@@ -49,7 +49,13 @@ describe("sample tax document registry", () => {
       expect(fixture?.title).toBe(entry.title);
       expect(fixture?.taxYearHint).toBe(entry.taxYearHint);
       expect(fixture?.aliases).toContain(entry.id);
-      expect(fixture?.aliases).toContain(downloadBasename);
+      // The IRS current fw2.pdf URL changes years; its basename cannot establish a tax year.
+      if (entry.id === "irs-w2-2026") {
+        expect(fixture?.aliases).not.toContain(downloadBasename);
+        expect(fixture?.aliases).toContain("fw2--2026");
+      } else {
+        expect(fixture?.aliases).toContain(downloadBasename);
+      }
     }
   });
 });

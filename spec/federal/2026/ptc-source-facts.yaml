@@ -1,0 +1,51 @@
+form: "Premium tax credit source facts"
+taxYear: 2026
+references:
+  - "https://www.irs.gov/instructions/i8962"
+  - "https://www.irs.gov/publications/p974"
+  - "https://www.irs.gov/irb/2025-32_IRB"
+  - "https://www.govinfo.gov/content/pkg/PLAW-119publ21/html/PLAW-119publ21.htm"
+lines:
+  - line: "household-facts"
+    description: "Actual Form 8962 household, eligibility and worksheet facts"
+    formula: >-
+      Optional form8962 object retains taxFamilySize, fplRegion (contiguous, alaska,
+      hawaii), taxpayerModifiedAGI, requiredFilingDependentsModifiedAGI,
+      householdFactsConfirmed, canBeClaimedAsDependent,
+      marriedFilingSeparatelyExceptionConfirmed, belowPovertyException (none,
+      marketplace_estimate, lawfully_present_ineligible_medicaid),
+      marketplaceEstimatedIncomeWithinEligibilityRange, marketplaceInformationAccurate,
+      coverageFactsConfirmed, allocationRequired, alternativeMarriageCalculationElected,
+      selfEmployedHealthInsuranceCoordinationRequired and qsehraAffected.
+      No inferred family size, AGI-only proxy, default-zero dependent income or
+      default-true eligibility. Confirmation means the actual IRS worksheets and
+      applicable family/coverage rules were checked, not that all coverage is eligible.
+      Missing facts remain absent; a known false fact remains false.
+    irsRef: "Form 8962 lines 1-5, 9; Pub. 974 coverage and household income rules"
+    testRef: "tests/models/ptc-source-facts.test.ts::preserves PTC household facts and unknown optional qualifications"
+  - line: "monthly-reconciliation"
+    description: "Actual monthly coverage-family reconciliation, without duplicated benchmark premiums"
+    formula: >-
+      monthlyReconciliation contains unique month integers 1-12, enrolleePremium,
+      slcsp, advancePremiumTaxCredit, coverageEligible and incomeBasedSepEnrollment.
+      Each actual covered source month is represented, with known nonnegative
+      dollar amounts. Premiums represent the completed eligible-coverage worksheet;
+      SLCSP is the correct household benchmark, which cannot be inferred by adding
+      duplicate policy benchmarks. APTC reconciles to all source statements before
+      any allocation. When qsehraAffected is true, each row also requires actual
+      qsehraAffordable and qsehraMonthlyPermittedBenefit. Special allocation,
+      alternative marriage or self-employment coordination worksheets cannot be
+      silently replaced with ordinary monthly arithmetic.
+    irsRef: "Form 8962 lines 11-23; Pub. 974 QSEHRA and special worksheets"
+    testRef: "tests/models/ptc-source-facts.test.ts::preserves monthly PTC amounts and rejects duplicate reconciliation months"
+  - line: "raw-statements"
+    description: "Preserve source tax year and missing amounts before legacy defaults"
+    formula: >-
+      Form1095A accepts actual taxYear and derives sourceFactsComplete from the raw
+      source year, nonempty marketplace/policy identity and every monthly row's
+      month, enrolleePremium, slcsp and advancePremiumTaxCredit before defaults.
+      Ignore a caller-supplied sourceFactsComplete flag. Missing amounts cannot
+      become verified zero. Each form has at least one unique valid month; corrected
+      statements replace originals and are not double counted as another policy.
+    irsRef: "Form 1095-A Parts I and III; Form 8962 correct and voided statement instructions"
+    testRef: "tests/models/ptc-source-facts.test.ts::derives statement completeness before defaults and rejects duplicate source months"

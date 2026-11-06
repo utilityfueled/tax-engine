@@ -1,0 +1,22 @@
+form: "Schedule 1 educator expense limit"
+fullName: "Year-specific above-the-line educator expense cap"
+taxYear: 2026
+irsReference: "https://www.irs.gov/pub/irs-drop/rp-25-32.pdf"
+notes: |
+  Rev. Proc. 2025-32 section 4.12 sets the 2026 section 62(a)(2)(D)
+  per-educator cap at $350. The final 2025 Form 1040 instructions retain
+  $300 per eligible educator. Retrieved 2026-10-25. Actual eligibility and
+  net qualified source expenses are distinct from this indexed limit.
+  The 2026 excess educator itemized deduction is a separate calculation;
+  this cap change does not qualify or manufacture that deduction.
+lines:
+  - line: "11-year-cap"
+    description: "Apply the actual tax year's separate per-person cap"
+    formula: "2025: max(0,min(actual net qualified primary expenses,300)) plus the separately capped actual spouse amount only for MFJ. 2026: the same formula with350. A legacy aggregate establishes at most one person's cap, never two eligible educators."
+    irsRef: "Rev. Proc. 2025-32 section 4.12; 2025 Form1040 instructions Schedule1 line11"
+    testRef: "tests/engine/schedules/educator-expense-limits.test.ts::applies the published educator cap separately for each tax year and spouse"
+  - line: "11-source-zero"
+    description: "Keep zero and loss amounts from becoming negative deductions"
+    formula: "Unreimbursed qualified educator expenses cannot create a negative adjustment; actual zero remains zero and cents below the cap remain exact."
+    irsRef: "IRC62(a)(2)(D); Schedule1 line11 qualified unreimbursed expenses"
+    testRef: "tests/engine/schedules/educator-expense-limits.test.ts::preserves exact cents and zero at the educator expense cap"

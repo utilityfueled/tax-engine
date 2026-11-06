@@ -1,0 +1,42 @@
+form: "Chapter 13 title 11 cancellation"
+fullName: "Actual chapter 13 discharge excluded under the title 11 route"
+taxYear: 2025
+irsReference: "https://www.irs.gov/publications/p4681"
+notes: |
+  Retrieved 2026-10-31. IRC108(a)(1)(A),(a)(2)(A),(b) and (d)(2); IRC1017(b)(2);
+  IRC1398(a); Pub4681 Bankruptcy; Form982 instructions lines1a, 1b and 10a;
+  Forms1099-A and C instructions Box6 code A.
+  A discharge in a title 11 case is excluded in full. The insolvency limit does
+  not apply, line1a is checked and line1b is not. Attributes reduce in the same
+  order. Line10a's basis limit reads liabilities immediately after the discharge,
+  so the complete asset and liability records are still required.
+  Limits: IRC1398 names chapters 7 and 11, where a separate bankruptcy estate
+  takes the attributes, so those stay rejected. Chapter 12 stays rejected as a scope choice: IRC1399 gives it no separate estate, but its farm provisions are not reviewed here.
+  Creditors generally need not report a consumer discharge in bankruptcy, so this
+  route covers a discharge shown on a statement, with code A.
+lines:
+  - line: "full-exclusion"
+    description: "Exclude the complete chapter 13 discharge"
+    formula: "Debt18000, liabilities90000, assets80000: excluded18000, taxable0, though insolvency is only10000. A solvent debtor with assets200000 also excludes18000."
+    irsRef: "IRC108(a)(1)(A) and (a)(2)(A); Pub4681 Bankruptcy"
+    testRef: "tests/engine/federal-cod-title-11.test.ts::excludes the complete chapter 13 discharge"
+  - line: "required-sources"
+    description: "Require the chapter, court and code facts"
+    formula: "Chapter must be 13. Chapters 7, 11, 12 and unknown reject. The debtor must be under the court's jurisdiction, and the court must grant the discharge or it must follow an approved plan. The statement code must be A, the exclusion answer and source route must agree, and code A rejects outside title 11."
+    irsRef: "Form982 instructions Definitions; IRC1398(a); Forms1099-A and C instructions Box6"
+    testRef: "tests/engine/federal-cod-title-11.test.ts::requires the chapter, court and code facts"
+  - line: "attributes"
+    description: "Reduce attributes in the same order, protecting exempt property"
+    formula: "Immediately-after liabilities are the worksheet liabilities less the discharge, and the regular and alternative ledgers reconcile as they do for insolvency. IRC1017(c)(1) bars basis reduction on property the debtor treats as exempt under title11 section522, for the title11 exclusion only. Each following-year property answers that question on a title11 return, the answer must match on both ledgers, an exempt property keeps its basis, and any unreduced exclusion is reported. The answer rejects outside title11."
+    irsRef: "IRC108(b); IRC1017(b)(2),(c)(1); Form982 instructions line10a"
+    testRef: "tests/engine/federal-cod-title-11.test.ts::reduces attributes from the full exclusion"
+  - line: "review"
+    description: "Report line1a on the review summary"
+    formula: "The Form982 summary and the NOL statement show line1a with the excluded amount, not line1b. The summary rejects an exclusion that does not equal the discharge, and output rejects a title11 flag that disagrees with the source answer."
+    irsRef: "Pub4681 Bankruptcy; Form982 line1a"
+    testRef: "tests/engine/federal-cod-title-11.test.ts::reports line 1a on the review summary"
+  - line: "guide"
+    description: "Carry the chapter answers from the guide"
+    formula: "A Yes needs chapter 13 and both court answers, and they pass through to the engine. Chapter 7 shows its named rejection."
+    irsRef: "Pub4681 Bankruptcy"
+    testRef: "tests/guided-interview/guided-cod-title-11.test.ts::carries chapter 13 answers from the guide"

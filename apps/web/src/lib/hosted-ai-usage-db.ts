@@ -1,4 +1,5 @@
 import { ensureHostedAppSchema, getHostedServerDatabase } from "./hosted-server-db";
+import Decimal from "decimal.js";
 
 type HostedAiEnvironment = Record<string, string | undefined>;
 
@@ -14,21 +15,6 @@ export interface HostedAiBudgetSnapshot {
   totalRemainingCents: number;
 }
 
-export interface RecordHostedAiUsageInput {
-  requestId: string;
-  ownerId: string;
-  cycleKey: string;
-  task: string;
-  provider: string;
-  modelId: string | null;
-  inputTokens: number;
-  outputTokens: number;
-  estimatedCostCents: number;
-  includedChargeCents: number;
-  purchasedChargeCents: number;
-  createdAt: string;
-}
-
 export interface RecordHostedAiCreditPurchaseInput {
   checkoutSessionId: string;
   ownerId: string;
@@ -40,9 +26,9 @@ export interface RecordHostedAiCreditPurchaseInput {
 }
 
 function coerceCount(value: unknown) {
-  return typeof value === "number" && Number.isFinite(value)
-    ? value
-    : Number(value ?? 0) || 0;
+  const amount = new Decimal(String(value ?? 0));
+  if (!amount.isFinite() || amount.isNegative() || !amount.isInteger() || amount.gt(Number.MAX_SAFE_INTEGER)) throw new Error("Invalid AI budget cents.");
+  return amount.toNumber();
 }
 
 export async function getHostedAiBudgetSnapshot(
@@ -72,10 +58,10 @@ export async function getHostedAiBudgetSnapshot(
     pool.query(
       `
         SELECT
-          COALESCE(SUM(CASE WHEN cycle_key = $2 THEN included_charge_cents ELSE 0 END), 0) AS included_used_cents,
-          COALESCE(SUM(purchased_charge_cents), 0) AS purchased_used_cents
-        FROM hosted_ai_usage_ledger
-        WHERE owner_id = $1;
+          (SELECT COALESCE(SUM(included_charge_cents), 0) FROM hosted_ai_usage_ledger WHERE owner_id=$1 AND cycle_key=$2)
+            + (SELECT COALESCE(SUM(included_charge_cents - included_refund_cents + included_reserved_cents),0) FROM hosted_ai_reservations WHERE owner_id=$1 AND cycle_key=$2) AS included_used_cents,
+          (SELECT COALESCE(SUM(purchased_charge_cents), 0) FROM hosted_ai_usage_ledger WHERE owner_id=$1)
+            + (SELECT COALESCE(SUM(purchased_charge_cents - purchased_refund_cents + purchased_reserved_cents),0) FROM hosted_ai_reservations WHERE owner_id=$1) AS purchased_used_cents;
       `,
       [ownerId, cycleKey]
     )
@@ -84,8 +70,8 @@ export async function getHostedAiBudgetSnapshot(
   const purchasedBudgetCents = coerceCount(purchaseResult.rows[0]?.purchased_budget_cents);
   const includedUsedCents = coerceCount(usageResult.rows[0]?.included_used_cents);
   const purchasedUsedCents = coerceCount(usageResult.rows[0]?.purchased_used_cents);
-  const includedRemainingCents = Math.max(0, includedBudgetCents - includedUsedCents);
-  const purchasedRemainingCents = Math.max(0, purchasedBudgetCents - purchasedUsedCents);
+  const includedRemainingCents = coerceCount(Decimal.max(0, new Decimal(includedBudgetCents).minus(includedUsedCents)).toFixed());
+  const purchasedRemainingCents = coerceCount(Decimal.max(0, new Decimal(purchasedBudgetCents).minus(purchasedUsedCents)).toFixed());
 
   return {
     ownerId,
@@ -96,55 +82,8 @@ export async function getHostedAiBudgetSnapshot(
     purchasedBudgetCents,
     purchasedUsedCents,
     purchasedRemainingCents,
-    totalRemainingCents: includedRemainingCents + purchasedRemainingCents
+    totalRemainingCents: coerceCount(new Decimal(includedRemainingCents).plus(purchasedRemainingCents).toFixed())
   };
-}
-
-export async function recordHostedAiUsage(
-  env: HostedAiEnvironment,
-  input: RecordHostedAiUsageInput
-) {
-  await ensureHostedAppSchema(env);
-  const { pool } = await getHostedServerDatabase(env);
-  const result = await pool.query(
-    `
-      INSERT INTO hosted_ai_usage_ledger (
-        request_id,
-        owner_id,
-        cycle_key,
-        task,
-        provider,
-        model_id,
-        input_tokens,
-        output_tokens,
-        estimated_cost_cents,
-        included_charge_cents,
-        purchased_charge_cents,
-        created_at
-      )
-      VALUES (
-        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12::timestamptz
-      )
-      ON CONFLICT (request_id) DO NOTHING
-      RETURNING request_id;
-    `,
-    [
-      input.requestId,
-      input.ownerId,
-      input.cycleKey,
-      input.task,
-      input.provider,
-      input.modelId,
-      input.inputTokens,
-      input.outputTokens,
-      input.estimatedCostCents,
-      input.includedChargeCents,
-      input.purchasedChargeCents,
-      input.createdAt
-    ]
-  );
-
-  return (result.rowCount ?? 0) > 0;
 }
 
 export async function recordHostedAiCreditPurchase(

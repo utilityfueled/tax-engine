@@ -1,0 +1,41 @@
+form: "K1 QBI Loss Sources"
+fullName: "Actual ordinary K-1 loss source binding before section199A character calculation"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i1065sk1"
+retrievedAt: "2026-10-25"
+notes: |
+  Applies to actual2025/2026 original partnership and S-corporation K-1s.
+  Reg1.199A-3(b)(1)(iv) and i8995 require basis, at-risk and passive
+  limitations before QBI; released prior losses keep original character.
+  This source validator establishes identity, original statements and actual
+  opening/movement facts only. It accepts no current allowed loss or QBI
+  override. The canonical calculator supplies basis/6198/8582/461 amounts.
+  The initial route is one continuing ordinary Box1 activity per K-1 with
+  explicit zero other tax/basis categories, actual known zero prior basis
+  and at-risk loss, complete actual passive history, and independent same
+  regular/AMT treatment. Positive prior basis/at-risk, PTP, dispositions,
+  foreign or differing-AMT methods remain separate unfinished methods.
+  Ordinary-only confirmation explicitly asserts the named other boxes are
+  zero; a known conflicting original field always rejects. It does not
+  manufacture an original source year, owner, statement or history.
+lines:
+  - line: "binding"
+    description: "Bind original K-1, recipient and exact statement values"
+    formula: "One source per original scheduleK1:index; actual year, entity/EIN/type, owner, recipient name/last4 and every ordinary/199A statement amount/boolean must match. Preserve original cents and input objects. Spouse sources require the actual joint spouse."
+    testRef: "tests/engine/forms/k1-qbi-loss-sources.test.ts::binds exact original K1 identity and statement without calculated overrides"
+  - line: "openings"
+    description: "Retain actual basis and at-risk facts and separate passive history"
+    formula: "Actual beginning basis and all simplified6198 movement fields must match original source records. Prior basis and at-risk loss must be explicitly zero for this route; actual469 opening equals the named prior row and its confirmed preceding-year vintages, including an explicit empty zero history."
+    testRef: "tests/engine/forms/k1-qbi-loss-sources.test.ts::requires actual opening facts and preserves independent passive character"
+  - line: "unknown"
+    description: "Omissions never become actual zero or false"
+    formula: "Optional schema preserves absent fields. Source activation requires every consumed amount, identity, year, known eligibility and history. A supplied zero amount or false material-participation answer remains valid when coherent. Legacy input without packet remains unchanged and unverified."
+    testRef: "tests/engine/forms/k1-qbi-loss-sources.test.ts::keeps missing source facts distinct from explicit zero and false"
+  - line: "conservation"
+    description: "Reject stale, duplicated, incomplete and unsupported source records"
+    formula: "All original K-1 activities must be represented once; canonical-index aliases, duplicate EIN/name keys and rental-name collisions reject. Other known income/deduction/credit/basis facts cannot disappear through ordinary-only confirmation; PTP/disposal/foreign, positive prior basis/at-risk or unknown/different AMT require separate methods."
+    testRef: "tests/engine/forms/k1-qbi-loss-sources.test.ts::rejects stale duplicate incomplete and unsupported original sources"
+  - line: "self-employment"
+    description: "Bind actual partnership Box14A and adjusted partner earnings before canonical SE"
+    formula: "Actual partnership sources require the signed original Box14A, actual adjusted partner earnings, farm/nonfarm classification and confirmation. Each matches the original K1/partner worksheet. Missing2025 fields cannot use legacy zero/default behavior. S-corporation sources cannot contain partnership SE earnings. Original cents and explicit zero are retained."
+    testRef: "tests/engine/forms/k1-qbi-loss-sources.test.ts::requires actual partnership self-employment facts rather than legacy defaults"

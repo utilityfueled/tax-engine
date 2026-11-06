@@ -1,3 +1,5 @@
+import {hasSavedForm2210Review,type SavedForm2210Review} from '@/pdf/form-2210-review-context.js';
+import {isPAMarriedOrdinaryReturnResult} from '@/engine/state/pa-return-result.js';
 import type { TaxYearInput } from "@/models/inputs.js";
 import type { TaxReturnResult } from "@/models/outputs.js";
 import { shouldIncludePAScheduleEReferenceSummary } from "@/pdf/fill-pa-schedule-e.js";
@@ -16,6 +18,7 @@ import { shouldIncludePAScheduleDReferenceSummary } from "@/utils/pa-schedule-d-
 export type ReturnCompletenessStatus = "supported" | "partial" | "unsupported";
 
 export interface ReturnReadinessAssessment {
+  filingQualified: false;
   packetCompleteness: ReturnCompletenessStatus;
   lineCompleteness: ReturnCompletenessStatus;
   businessRuleValidation: "validated" | "not-validated";
@@ -26,6 +29,7 @@ export interface AssessReturnReadinessInput {
   taxInput: TaxYearInput;
   federalResult: TaxReturnResult;
   includedForms: string[];
+  form2210ReviewArtifact?:SavedForm2210Review;
   stateCode?: string | null;
 }
 
@@ -258,11 +262,16 @@ export function assessReturnReadiness(
 
   let packetCompleteness: ReturnCompletenessStatus = "supported";
   let lineCompleteness: ReturnCompletenessStatus = "supported";
+  if(input.taxInput.paMarriedOrdinarySources!==undefined||isPAMarriedOrdinaryReturnResult(input.federalResult.stateReturns?.pennsylvania)){
+    packetCompleteness='partial';lineCompleteness='partial';findings.push('Married Pennsylvania owned PA40 and Schedule SP review coverage must be verified against the actual original sources. Filing and separate local returns remain unqualified.');
+  }
 
-  if (input.federalResult.estimatedTaxPenalty.gt(0)) {
+  const estimatedTax = input.federalResult.form2210;
+  if (input.federalResult.estimatedTaxPenalty.gt(0) || estimatedTax?.requiresForm2210 || estimatedTax?.waiver) {
     packetCompleteness = "partial";
-    findings.push(
-      "Form 2210 is still suppressed from the draft packet even when an estimated tax penalty is present.",
+    const actualAi=hasSavedForm2210Review(input.taxInput,input.federalResult,input.includedForms,input.form2210ReviewArtifact);
+    findings.push(actualAi?"Form 2210 with completed Schedule AI is included as a source-qualified review copy. Filing remains unqualified; this packet is partial and has not passed business-rule validation.":
+      `${estimatedTax?.farmerMethod ? "Form 2210-F" : "Form 2210"} is still suppressed from the draft packet even when ${input.federalResult.estimatedTaxPenalty.gt(0) ? "an estimated tax penalty" : "a waiver request or required filing"} is present.`,
     );
   }
 
@@ -274,7 +283,8 @@ export function assessReturnReadiness(
   }
 
   if (
-    (input.taxInput.form1099B?.some((entry) => entry.transactions.length > 0) ?? false)
+    ((input.taxInput.form1099B?.some((entry) => entry.transactions.length > 0) ?? false)
+      || (input.taxInput.form1099DA?.some((entry) => entry.transactions.length > 0) ?? false))
     && !hasIncludedForm(input.includedForms, /^f8949.*-filled\.pdf$/i)
   ) {
     packetCompleteness = "partial";
@@ -298,6 +308,40 @@ export function assessReturnReadiness(
     );
   }
 
+  if (input.federalResult.form8815?.excludableSavingsBondInterest.gt(0)) {
+    const hasForm8815Reference = hasIncludedForm(
+      input.includedForms,
+      /^f8815-reference-filled\.pdf$/i,
+    );
+
+    // The current output is a reference summary. A supplied filename cannot
+    // establish qualification of a physical form or its mapping.
+    packetCompleteness = "partial";
+    findings.push(
+      hasForm8815Reference
+        ? "Form 8815 is included as a reference summary, not an official filed Form 8815."
+        : "Form 8815 applies, but no qualified official Form 8815 or reference summary was generated.",
+    );
+  }
+
+  if (
+    input.federalResult.codNolReduction?.sourceExcludedAmount.gt(0)
+    || input.federalResult.form982?.totalReduction.gt(0)
+    || input.federalResult.form982?.unreducedExclusion.gt(0)
+  ) {
+    const hasForm982Reference = hasIncludedForm(
+      input.includedForms,
+      /^f982-reference-filled\.pdf$/i,
+    );
+
+    packetCompleteness = "partial";
+    findings.push(
+      hasForm982Reference
+        ? "Form 982 is included as a reference summary, not an official filed Form 982."
+        : "Form 982 applies, but no qualified official Form 982 or reference summary was generated.",
+    );
+  }
+
   if (input.federalResult.carryforwards.partnerBasis.length > 0) {
     const hasPartnerBasisReference = hasIncludedForm(
       input.includedForms,
@@ -317,8 +361,12 @@ export function assessReturnReadiness(
       input.includedForms,
       /^oh-.*-reference\.pdf$/i,
     );
+    const hasOhioReviewForms = hasIncludedForm(
+      input.includedForms,
+      /^oh-(?:it-(?:1040|nrc|rc)|schedule-(?:adjustments|credits|of-withholding|business-income)|sd-(?:100|withholding))-review\.pdf$/i,
+    );
 
-    if (!hasOhioReferenceForms) {
+    if (!hasOhioReferenceForms && !hasOhioReviewForms) {
       packetCompleteness = "unsupported";
       findings.push(
         "Ohio was selected, but no Ohio packet artifacts were generated.",
@@ -326,7 +374,9 @@ export function assessReturnReadiness(
     } else {
       packetCompleteness = "partial";
       findings.push(
-        "Ohio packet output is currently generated as reference-summary pages, not official filled Ohio PDFs.",
+        hasOhioReviewForms
+          ? `Ohio packet includes official-form review copies${hasOhioReferenceForms ? " and reference summaries" : ""}. These review-only artifacts do not establish complete Ohio filing coverage or filing qualification.`
+          : "Ohio packet output is currently generated as reference-summary pages, not official filled Ohio PDFs.",
       );
     }
   }
@@ -502,17 +552,18 @@ export function assessReturnReadiness(
       input.federalResult.stateReturns.pennsylvania.scheduleD,
     )
   ) {
-    const hasPAScheduleDReference = hasIncludedForm(
-      input.includedForms,
-      /^pa-schedule-d-reference\.pdf$/i,
-    );
-
+    const stateReturn=input.federalResult.stateReturns.pennsylvania;
     packetCompleteness = "partial";
-    findings.push(
-      hasPAScheduleDReference
+    if(stateReturn&&"methodVersion"in stateReturn&&stateReturn.methodVersion==="pa-ordinary-return-v1"){
+      const hasOfficial=input.includedForms.some(form=>form.replaceAll("\\","/").split("/").at(-1)?.toLowerCase()==="pa-schedule-d-filled.pdf");
+      if(!hasOfficial)findings.push("Pennsylvania ordinary Schedule D is missing from the review packet.");
+      findings.push("Pennsylvania ordinary Schedule D review forms do not include the original broker statements and filing qualification.");
+    }else{
+      const hasPAScheduleDReference = hasIncludedForm(input.includedForms,/^pa-schedule-d-reference\.pdf$/i);
+      findings.push(hasPAScheduleDReference
         ? "Pennsylvania Schedule D is included as a reference summary, not an official PA Schedule D filing copy."
-        : "Pennsylvania Schedule D applies, but no Schedule D packet artifact was generated.",
-    );
+        : "Pennsylvania Schedule D applies, but no Schedule D packet artifact was generated.");
+    }
   }
 
   if (
@@ -589,10 +640,44 @@ export function assessReturnReadiness(
     );
   }
 
+  const ordinaryPA=input.federalResult.stateReturns?.pennsylvania;
+  if (
+    normalizedStateCode === "PA"
+    && ordinaryPA
+    && "methodVersion" in ordinaryPA
+    && ordinaryPA.methodVersion === "pa-ordinary-return-v1"
+    && ordinaryPA.employeeSources
+  ) {
+    const employees = ordinaryPA.employeeSources.perEmployer;
+    const requiredUE = employees.filter(employee => shouldIncludePAScheduleUEReferenceSummary(employee.scheduleUE)).length;
+    const requiredNRH = employees.filter(employee => employee.residentPeriod === false && (employee.rawGrossCompensation.gt(0) || employee.scheduleUE.totalExpenses.gt(0))).length;
+    const countArtifacts = (filename: string) => input.includedForms.filter(form => form.replaceAll("\\", "/").split("/").at(-1)?.toLowerCase() === filename).length;
+    if (requiredUE > 0) {
+      packetCompleteness = "partial";
+      findings.push(countArtifacts("pa-schedule-ue-reference.pdf") >= requiredUE
+        ? "Pennsylvania Schedule UE is included as a reference summary, not an official PA Schedule UE filing copy."
+        : "Pennsylvania Schedule UE applies, but no complete set of employer Schedule UE packet artifacts was generated.");
+    }
+    if (requiredNRH > 0) {
+      packetCompleteness = "partial";
+      findings.push(countArtifacts("pa-schedule-nrh-reference.pdf") >= requiredNRH
+        ? "Pennsylvania Schedule NRH is included as a reference summary, not an official PA Schedule NRH filing copy."
+        : "Pennsylvania Schedule NRH applies, but no complete set of employer Schedule NRH packet artifacts was generated.");
+    }
+  }
+  if(normalizedStateCode==="PA"&&ordinaryPA&&"methodVersion"in ordinaryPA&&ordinaryPA.methodVersion==="pa-ordinary-return-v1"&&ordinaryPA.pa40.residentCredit.gt(0)){
+    packetCompleteness="partial";
+    const states=ordinaryPA.residentCreditSources?.perState.filter(row=>row.credit.gt(0)).map(row=>row.state)??[];
+    if(!states.length)findings.push("Pennsylvania ordinary Schedule G-L is missing its actual source-qualified state detail.");
+    for(const state of states){const filename="pa-schedule-g-l-"+state.toLowerCase()+"-filled.pdf";if(!input.includedForms.some(form=>form.replaceAll("\\","/").split("/").at(-1)?.toLowerCase()===filename))findings.push("Pennsylvania ordinary Schedule G-L "+state+" is missing from the review packet.");}
+    findings.push("Pennsylvania ordinary Schedule G-L review forms do not include the original other-state return and W-2 attachments required to support the credit.");
+  }
+
   if (
     normalizedStateCode === "PA"
     && !input.taxInput.paNonresidentReturn
     && input.federalResult.stateReturns?.pennsylvania
+    && "scheduleGL"in input.federalResult.stateReturns.pennsylvania
     && shouldIncludePAScheduleGLReferenceSummary(input.federalResult.stateReturns.pennsylvania.scheduleGL)
   ) {
     const hasPAScheduleGLReference = hasIncludedForm(
@@ -632,6 +717,7 @@ export function assessReturnReadiness(
   );
 
   return {
+    filingQualified: false,
     packetCompleteness,
     lineCompleteness,
     businessRuleValidation: "not-validated",

@@ -1,0 +1,311 @@
+{
+  "taxYear": 2026,
+  "form": "schedule-r",
+  "filename": "f1040sr.pdf",
+  "sourceUrl": "https://www.irs.gov/pub/irs-pdf/f1040sr.pdf",
+  "sha256": "945275e6be3cc7353a3faf165ddd7ccb79e3c8a43abe6678d4c47f8207594cb5",
+  "pages": 2,
+  "canonicalFieldsIncludingGroups": 32,
+  "leafWidgets": 27,
+  "created": "4/21/26",
+  "locations": {
+    "name": {
+      "fieldName": "topmostSubform[0].Page1[0].f1_1[0]",
+      "page": 1,
+      "rect": [
+        "36",
+        "672.466",
+        "459.8",
+        "685.967"
+      ],
+      "type": "/Tx"
+    },
+    "ssn": {
+      "fieldName": "topmostSubform[0].Page1[0].f1_2[0]",
+      "page": 1,
+      "rect": [
+        "461.8",
+        "672.466",
+        "576",
+        "685.967"
+      ],
+      "type": "/Tx"
+    },
+    "box1": {
+      "fieldName": "topmostSubform[0].Page1[0].c1_1[0]",
+      "page": 1,
+      "rect": [
+        "550.4",
+        "553.97",
+        "558.4",
+        "561.97"
+      ],
+      "type": "/Btn"
+    },
+    "box2": {
+      "fieldName": "topmostSubform[0].Page1[0].c1_1[1]",
+      "page": 1,
+      "rect": [
+        "550.4",
+        "529.969",
+        "558.4",
+        "537.969"
+      ],
+      "type": "/Btn"
+    },
+    "box3": {
+      "fieldName": "topmostSubform[0].Page1[0].Married[0].c1_1[0]",
+      "page": 1,
+      "rect": [
+        "550.4",
+        "493.969",
+        "558.4",
+        "501.969"
+      ],
+      "type": "/Btn"
+    },
+    "box4": {
+      "fieldName": "topmostSubform[0].Page1[0].Married[0].c1_1[1]",
+      "page": 1,
+      "rect": [
+        "550.4",
+        "457.969",
+        "558.4",
+        "465.969"
+      ],
+      "type": "/Btn"
+    },
+    "box5": {
+      "fieldName": "topmostSubform[0].Page1[0].Married[0].c1_1[2]",
+      "page": 1,
+      "rect": [
+        "550.4",
+        "421.969",
+        "558.4",
+        "429.969"
+      ],
+      "type": "/Btn"
+    },
+    "box6": {
+      "fieldName": "topmostSubform[0].Page1[0].Married[0].c1_1[3]",
+      "page": 1,
+      "rect": [
+        "550.4",
+        "385.969",
+        "558.4",
+        "393.969"
+      ],
+      "type": "/Btn"
+    },
+    "box7": {
+      "fieldName": "topmostSubform[0].Page1[0].Married[0].c1_1[4]",
+      "page": 1,
+      "rect": [
+        "550.4",
+        "349.969",
+        "558.4",
+        "357.969"
+      ],
+      "type": "/Btn"
+    },
+    "box8": {
+      "fieldName": "topmostSubform[0].Page1[0].MarriedSeparate[0].c1_1[0]",
+      "page": 1,
+      "rect": [
+        "550.4",
+        "313.969",
+        "558.4",
+        "321.969"
+      ],
+      "type": "/Btn"
+    },
+    "box9": {
+      "fieldName": "topmostSubform[0].Page1[0].MarriedSeparate[0].c1_1[1]",
+      "page": 1,
+      "rect": [
+        "550.4",
+        "277.969",
+        "558.4",
+        "285.969"
+      ],
+      "type": "/Btn"
+    },
+    "priorPhysicianStatement": {
+      "fieldName": "topmostSubform[0].Page1[0].c1_2[0]",
+      "page": 1,
+      "rect": [
+        "550.4",
+        "133.969",
+        "558.4",
+        "141.969"
+      ],
+      "type": "/Btn"
+    },
+    "line10": {
+      "fieldName": "topmostSubform[0].Page2[0].f2_1[0]",
+      "page": 2,
+      "rect": [
+        "505",
+        "696.47",
+        "576",
+        "707.969"
+      ],
+      "type": "/Tx"
+    },
+    "line11": {
+      "fieldName": "topmostSubform[0].Page2[0].f2_2[0]",
+      "page": 2,
+      "rect": [
+        "505",
+        "576.468",
+        "576",
+        "587.967"
+      ],
+      "type": "/Tx"
+    },
+    "line12": {
+      "fieldName": "topmostSubform[0].Page2[0].f2_3[0]",
+      "page": 2,
+      "rect": [
+        "505",
+        "492.469",
+        "576",
+        "503.968"
+      ],
+      "type": "/Tx"
+    },
+    "line13a": {
+      "fieldName": "topmostSubform[0].Page2[0].f2_4[0]",
+      "page": 2,
+      "rect": [
+        "411.4",
+        "444.47",
+        "481.4",
+        "455.969"
+      ],
+      "type": "/Tx"
+    },
+    "line13b": {
+      "fieldName": "topmostSubform[0].Page2[0].f2_5[0]",
+      "page": 2,
+      "rect": [
+        "411.4",
+        "408.47",
+        "481.4",
+        "419.969"
+      ],
+      "type": "/Tx"
+    },
+    "line13c": {
+      "fieldName": "topmostSubform[0].Page2[0].f2_6[0]",
+      "page": 2,
+      "rect": [
+        "411.4",
+        "360.468",
+        "481.4",
+        "371.967"
+      ],
+      "type": "/Tx"
+    },
+    "line14Agi": {
+      "fieldName": "topmostSubform[0].Page2[0].f2_7[0]",
+      "page": 2,
+      "rect": [
+        "317.8",
+        "336.47",
+        "387.8",
+        "347.969"
+      ],
+      "type": "/Tx"
+    },
+    "line15": {
+      "fieldName": "topmostSubform[0].Page2[0].f2_8[0]",
+      "page": 2,
+      "rect": [
+        "317.8",
+        "300.47",
+        "387.8",
+        "311.969"
+      ],
+      "type": "/Tx"
+    },
+    "line16": {
+      "fieldName": "topmostSubform[0].Page2[0].f2_9[0]",
+      "page": 2,
+      "rect": [
+        "317.8",
+        "264.47",
+        "387.8",
+        "275.969"
+      ],
+      "type": "/Tx"
+    },
+    "line17": {
+      "fieldName": "topmostSubform[0].Page2[0].f2_10[0]",
+      "page": 2,
+      "rect": [
+        "411.4",
+        "252.468",
+        "481.4",
+        "263.967"
+      ],
+      "type": "/Tx"
+    },
+    "line18": {
+      "fieldName": "topmostSubform[0].Page2[0].f2_11[0]",
+      "page": 2,
+      "rect": [
+        "505",
+        "240.469",
+        "576",
+        "251.968"
+      ],
+      "type": "/Tx"
+    },
+    "line19": {
+      "fieldName": "topmostSubform[0].Page2[0].f2_12[0]",
+      "page": 2,
+      "rect": [
+        "505",
+        "216.468",
+        "576",
+        "227.967"
+      ],
+      "type": "/Tx"
+    },
+    "line20": {
+      "fieldName": "topmostSubform[0].Page2[0].f2_13[0]",
+      "page": 2,
+      "rect": [
+        "505",
+        "204.469",
+        "576",
+        "215.468"
+      ],
+      "type": "/Tx"
+    },
+    "line21": {
+      "fieldName": "topmostSubform[0].Page2[0].f2_14[0]",
+      "page": 2,
+      "rect": [
+        "505",
+        "192.47",
+        "576",
+        "203.469"
+      ],
+      "type": "/Tx"
+    },
+    "line22": {
+      "fieldName": "topmostSubform[0].Page2[0].f2_15[0]",
+      "page": 2,
+      "rect": [
+        "505",
+        "168.469",
+        "576",
+        "179.968"
+      ],
+      "type": "/Tx"
+    }
+  },
+  "scope": "Original physical-source contract manually matched to rendered printed lines. No calculated return, map activation or qualification."
+}

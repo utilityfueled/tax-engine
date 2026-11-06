@@ -1,0 +1,142 @@
+import { calculateMortgageInsurancePrepaid } from '@/engine/forms/mortgage-insurance-prepaid';
+import { mortgagePrepaidSource, mortgagePrepaidParentValues, mortgagePrepaidDraftValues, assertMortgagePrepaidSnapshot, type GuidedMortgageInsurancePrepaidData } from './guided-mortgage-insurance-prepaid';
+import { Form1098Schema, MortgageInterestWorksheetSchema } from "@/models/inputs";
+import { calculateHomeMortgageInterest, type HomeMortgageInterestInput } from "@/engine/forms/home-mortgage-interest";
+import type { DeductionData, FilingStatus, MortgageEntryData } from "./guided-interview-flow";
+import { mortgageFactErrors } from "./guided-mortgage-facts";
+import { amountError, hasEnteredAmount, isActualDate } from "./guided-required-facts";
+import { parseGuidedCurrency } from "./guided-currency";
+import { buildGuidedMortgageBalance } from "./guided-mortgage-balances";
+import { buildGuidedMortgagePoints } from "./guided-mortgage-points";
+import { buildGuidedMortgageRecoveries, type MortgageRecoveryData, type RecoveryOnlyStatementData, type RecoveryMiscData } from "./guided-mortgage-recoveries";
+
+export interface MortgageWorksheetData {
+  sourceTaxYear: string;
+  sourceReference: string;
+  allHomeDebtIncluded: boolean | null;
+  priorYearInterestRecoveriesPresent: boolean | null;
+  sourceFactsConfirmed: boolean | null;
+  allRecoveriesIncluded?: boolean | null;
+  recoveries?: MortgageRecoveryData[];
+  recoveryOnlyStatements?: RecoveryOnlyStatementData[];
+  recoveryMiscStatements?: RecoveryMiscData[];
+}
+export const emptyMortgageWorksheet: MortgageWorksheetData = { sourceTaxYear: "", sourceReference: "", allHomeDebtIncluded: null, priorYearInterestRecoveriesPresent: null, sourceFactsConfirmed: null };
+export type MortgageDeductionData = DeductionData & { mortgageWorksheet?: MortgageWorksheetData };
+export const mortgagePaymentAmounts = {
+  interestPaidByReturnAmount: "Actual Box 1 interest paid by taxpayers on this return",
+  interestPaidByOthers: "Actual Box 1 interest paid by other returns",
+  interestDeductedElsewhere: "Interest from this return's share deducted on another schedule",
+  sameYearInterestRefund: "Refund of this year's interest paid by this return",
+  nonqualifiedInterest: "Other ineligible interest in this return's paid share",
+  pointsPaidByReturnAmount: "Box 6 points allocable to this return, including qualifying seller-paid points",
+  pointsPaidByOthers: "Box 6 points allocable to another return",
+  pointsNotInterest: "Service fees or other noninterest amounts in this return's points share",
+} as const;
+const statuses = { single: "single", mfj: "married_filing_jointly", mfs: "married_filing_separately", hoh: "head_of_household", qss: "qualifying_surviving_spouse" } as const;
+const sourceIdentity = (entry: MortgageEntryData) => `${entry.lender.trim()}:${entry.accountReference?.trim() ?? ""}`;
+function money(value: string | undefined, label: string): string {
+  const error = amountError(value, label); if (error) throw new Error(error);
+  return parseGuidedCurrency(value).toFixed();
+}
+
+/** Preserve raw source provenance as well as its validated canonical projection. */
+function currentPrepaidParentValues(data: MortgageDeductionData, taxYear: number | null | undefined, filingStatus: FilingStatus | null | undefined, form1098: unknown, mortgageInterestWorksheet: unknown) {
+  const originalMortgageEntries = data.mortgageEntries?.map(({sourceFactsConfirmed: _confirmation, ...entry}) => {
+    if (!entry.insurancePrepaid) return entry;
+    const {capturedOriginal: _original, sourceFactsConfirmed: _sourceConfirmation, ...facts} = entry.insurancePrepaid;
+    return {...entry, insurancePrepaid: facts};
+  });
+  const {sourceFactsConfirmed: _worksheetConfirmation, ...originalMortgageWorksheet} = data.mortgageWorksheet ?? {};
+  return mortgagePrepaidParentValues({taxYear,filingStatus,form1098,mortgageInterestWorksheet,originalMortgageEntries,originalMortgageWorksheet});
+}
+
+/** Source-only context: never creates a taxpayer identity to validate a worksheet. */
+function buildMortgageInputs(data: MortgageDeductionData | undefined, taxYear?: number | null, filingStatus?: FilingStatus | null, spouse?: unknown, reviewOriginals = false): Pick<HomeMortgageInterestInput, 'form1098' | 'mortgageInterestWorksheet'> & Partial<Pick<HomeMortgageInterestInput, 'form1099Misc'>> {
+  const root = data?.mortgageWorksheet;
+  const recoverySources = buildGuidedMortgageRecoveries(root, data?.mortgageEntries ?? [], taxYear, filingStatus, spouse);
+  const recoveryPresent = root?.priorYearInterestRecoveriesPresent === true;
+  if (data && data.method !== "itemized" && data.mortgageEntries?.some(entry => amountError(entry.refundOfOverpaidInterest, "actual earlier-year interest refund"))) throw new Error("The earlier-year interest refund on a saved mortgage source is unknown; confirm the actual source before excluding possible recovery income.");
+  if (data?.method === "itemized" && !data.mortgageEntries?.length && hasEnteredAmount(data.mortgageInterest) && parseGuidedCurrency(money(data.mortgageInterest, "saved mortgage interest")).gt(0)) throw new Error("Enter actual mortgage source records to reconcile the saved interest total.");
+  if (!data || (!recoveryPresent && (data.method !== "itemized" || !data.mortgageEntries?.length))) return { form1098: [] };
+  if ((taxYear !== 2025 && taxYear !== 2026) || !filingStatus) throw new Error("Confirm the actual return year and filing status for the mortgage worksheet.");
+  const entries = data.mortgageEntries ?? [];
+  const errors = mortgageFactErrors(entries, taxYear, filingStatus, true);
+  if (Object.keys(errors).length) throw new Error(Object.values(errors)[0]);
+  if (!root || root.sourceTaxYear !== String(taxYear) || !root.sourceReference.trim() || root.allHomeDebtIncluded !== true || root.sourceFactsConfirmed !== true) throw new Error("Complete and confirm the actual mortgage worksheet year, source reference and all-home-debt records.");
+  if (typeof root.priorYearInterestRecoveriesPresent !== "boolean") throw new Error("Confirm actual prior-year interest recoveries before calculating the mortgage worksheet.");
+  const form1098 = entries.map(entry => Form1098Schema.parse({
+    sourceId: sourceIdentity(entry), loanAccountReference:entry.accountReference?.trim(), taxYear: Number(entry.sourceTaxYear), lender: entry.lender.trim(), mortgageInterestReceived: money(entry.mortgageInterest, "Form 1098 Box 1"),
+    outstandingMortgagePrincipal: money(entry.outstandingPrincipal, "Form 1098 Box 2"), mortgageOriginationDate: entry.originationDate,
+    refundOfOverpaidInterest: money(entry.refundOfOverpaidInterest, "Form 1098 Box 4"), mortgageInsurancePremiums: money(entry.mortgageInsurancePremiums, "Form 1098 Box 5"),
+    pointsPaid: money(entry.pointsPaid, "Form 1098 Box 6"), propertyTax: money(entry.propertyTaxPaid, "actual qualified real estate tax disbursements"),
+    ...(taxYear === 2026 && entry.hasMortgageInsuranceAllocation === true ? { mortgageInsuranceQualification: {
+      allocationTaxYear: Number(entry.insuranceAllocationTaxYear), contractIssueDate: entry.insuranceContractIssueDate,
+      qualifiedProvider: entry.insuranceQualifiedProvider, acquisitionDebt: entry.insuranceAcquisitionDebt, qualifiedResidence: entry.insuranceQualifiedResidence,
+      ...(entry.insuranceAllocationMethod === 'current-original-prepaid'
+        ? { prepaidSources:mortgagePrepaidSource(entry), ...(entry.insurancePremiumsAllocableToYear?.trim() ? {premiumsAllocableToYear:money(entry.insurancePremiumsAllocableToYear,'saved annual mortgage insurance allocation')} : {}) }
+        : { premiumsAllocableToYear:money(entry.insurancePremiumsAllocableToYear,'annual mortgage insurance allocation') }),
+    } } : {}),
+  }));
+  if (hasEnteredAmount(data.mortgageInterest) && !form1098.reduce((sum, form) => sum.plus(form.mortgageInterestReceived), parseGuidedCurrency("0")).eq(money(data.mortgageInterest, "saved mortgage interest"))) throw new Error("Reconcile the saved mortgage interest total with the original statement amounts.");
+  const loans = entries.map(entry => {
+    const amounts = Object.fromEntries(Object.entries(mortgagePaymentAmounts).map(([field, label]) => [field, money(entry[field as keyof typeof mortgagePaymentAmounts], label)])) as Record<keyof typeof mortgagePaymentAmounts, string>;
+    const balance = buildGuidedMortgageBalance(entry);
+    const points = buildGuidedMortgagePoints(entry, taxYear);
+    const transition = entry.loanType === "original" && entry.originationDate >= "2017-12-16" && entry.originationDate < "2018-04-01";
+    if (transition && typeof entry.bindingContractApplies !== "boolean") throw new Error("Confirm whether the actual 2017 binding-contract transition applies to this loan.");
+    if (!transition && entry.bindingContractApplies === true) throw new Error("The saved binding-contract transition conflicts with this loan's origination date; reconcile the actual dates.");
+    const bindingContract = entry.bindingContractApplies === true ? { signedDate: entry.bindingContractSignedDate, requiredClosingDate: entry.bindingContractRequiredClosingDate, purchaseDate: entry.bindingContractPurchaseDate } : undefined;
+    if (bindingContract && Object.values(bindingContract).some(value => !isActualDate(value))) throw new Error("Enter all actual binding-contract, required-closing and purchase dates.");
+    return { sourceId: sourceIdentity(entry), form1098SourceId: sourceIdentity(entry), loanAccountReference:entry.accountReference?.trim(), lenderName: entry.lender.trim(), accountHolder: entry.accountHolder,
+      homeId: entry.propertyAddress!.trim().toLowerCase().replace(/\s+/g, " "), homeUse: entry.propertyUse === "main-home" ? "main" : "second", qualifiedResidence: true,
+      securedDebt: entry.securedDebt, ownershipInterest: entry.ownershipInterest, obligationToRepay: entry.obligationToRepay,
+      originationDate: entry.originationDate, loanType: entry.loanType === "original" ? "original" : "refinanced_mixed", acquisitionUse: entry.proceedsUse === "acquisition", currentYearInterestOnly: entry.currentYearInterestOnly,
+      interestPaid: amounts.interestPaidByReturnAmount, interestPaidByOthers: amounts.interestPaidByOthers, interestDeductedElsewhere: amounts.interestDeductedElsewhere,
+      sameYearInterestRefund: amounts.sameYearInterestRefund, nonqualifiedInterest: amounts.nonqualifiedInterest, pointsPaid: amounts.pointsPaidByReturnAmount,
+      pointsPaidByOthers: amounts.pointsPaidByOthers, pointsNotInterest: amounts.pointsNotInterest,
+      points, balance,
+      ...(bindingContract ? { bindingContract } : {}),
+    };
+  });
+  form1098.push(...recoverySources.recoveryOnlyForm1098);
+  const mortgageInterestWorksheet = MortgageInterestWorksheetSchema.parse({ sourceTaxYear: Number(root.sourceTaxYear), sourceReference: root.sourceReference.trim(), sourceFactsConfirmed: root.sourceFactsConfirmed, allHomeDebtIncluded: root.allHomeDebtIncluded, loans, priorYearInterestRecoveries: recoverySources.recoveries });
+  const form1099Misc = recoverySources.form1099Misc;
+  calculateHomeMortgageInterest({ taxpayer: { taxYear, filingStatus: statuses[filingStatus], spouse }, form1098, mortgageInterestWorksheet, form1099Misc });
+  const actual = { taxpayer:{taxYear,filingStatus:statuses[filingStatus],spouse},form1098,mortgageInterestWorksheet,form1099Misc };
+  const parentValues = currentPrepaidParentValues(data,taxYear,filingStatus,form1098,mortgageInterestWorksheet);
+  entries.forEach(entry => {
+    if (entry.insuranceAllocationMethod === 'current-original-prepaid') {
+      calculateMortgageInsurancePrepaid(actual,sourceIdentity(entry));
+      if (!reviewOriginals) assertMortgagePrepaidSnapshot(entry,mortgagePrepaidSource(entry),parentValues);
+    }
+  });
+  return { form1098, mortgageInterestWorksheet, ...(form1099Misc.length ? { form1099Misc } : {}) };
+}
+
+export function buildGuidedMortgageInputs(data: MortgageDeductionData | undefined, taxYear?: number | null, filingStatus?: FilingStatus | null, spouse?: unknown) {
+  return buildMortgageInputs(data,taxYear,filingStatus,spouse);
+}
+/** Explicit user capture only. Does not change any mortgage entry/worksheet confirmation. */
+export function captureGuidedMortgageInsurancePrepaid(data: MortgageDeductionData, index: number, taxYear?: number | null, filingStatus?: FilingStatus | null, spouse?: unknown): GuidedMortgageInsurancePrepaidData {
+  const entry = data.mortgageEntries?.[index];
+  if (!entry?.insurancePrepaid) throw new Error('Enter the actual original premium records before capture.');
+  const input=buildMortgageInputs(data,taxYear,filingStatus,spouse,true);
+  if (!input.mortgageInterestWorksheet) throw new Error('Complete the actual mortgage worksheet before capture.');
+  const capturedOriginal={ source:structuredClone(mortgagePrepaidSource(entry)),draftValues:mortgagePrepaidDraftValues(entry.insurancePrepaid),parentValues:currentPrepaidParentValues(data,taxYear,filingStatus,input.form1098,input.mortgageInterestWorksheet) };
+  return {...entry.insurancePrepaid,capturedOriginal,sourceFactsConfirmed:null};
+}
+export function confirmGuidedMortgageInsurancePrepaid(data: MortgageDeductionData, index:number, taxYear?:number|null, filingStatus?:FilingStatus|null,spouse?:unknown): GuidedMortgageInsurancePrepaidData {
+  const entry=data.mortgageEntries?.[index];
+  if (!entry?.insurancePrepaid) throw new Error('Capture the actual original records before confirmation.');
+  const current=captureGuidedMortgageInsurancePrepaid(data,index,taxYear,filingStatus,spouse);
+  const original=current.capturedOriginal;
+  if (!original) throw new Error('Capture the actual original premium records before confirmation.');
+  assertMortgagePrepaidSnapshot(entry,original.source,original.parentValues,false);
+  return {...entry.insurancePrepaid,sourceFactsConfirmed:true};
+}
+
+export function mortgageWorksheetFactErrors(data: MortgageDeductionData | undefined, taxYear?: number | null, filingStatus?: FilingStatus | null, spouse?: unknown): Record<string, string> {
+  try { buildGuidedMortgageInputs(data, taxYear, filingStatus, spouse); return {}; }
+  catch (error) { return { mortgageWorksheet: error instanceof Error ? error.message : "Complete the actual mortgage source worksheet." }; }
+}

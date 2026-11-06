@@ -6,7 +6,7 @@
  *   Deduction = min(prorated premiums, earned income limit)
  *   Earned income limit = max(0, net profit - SE tax - retirement contributions)
  *   LTC premiums capped by age (IRC §213(d)(10)):
- *     Age ≤ 40: $480, 41-50: $890, 51-60: $1,790, 61-70: $4,770, ≥ 71: $5,960
+ *     Age ≤ 40: $480, 41-50: $900, 51-60: $1,800, 61-70: $4,810, ≥ 71: $6,020
  *   Prorated by eligible months (1-12)
  *   Excess flows to Schedule A medical expenses
  */
@@ -114,7 +114,7 @@ describe("SE Health Insurance WS - LTC age-based limits", () => {
     expect(result.longTermCarePremiumsAllowed.toNumber()).toBe(480);
   });
 
-  it("SE Health Ins WS Line 2 - age 41 uses $890 limit (boundary between 40/41-50)", () => {
+  it("SE Health Ins WS Line 2 - age 41 uses $900 limit (boundary between 40/41-50)", () => {
     const result = calculateSEHealthInsuranceWorksheet(
       makeInput({
         medicalDentalPremiums: "0",
@@ -122,10 +122,10 @@ describe("SE Health Insurance WS - LTC age-based limits", () => {
       }),
       constants
     );
-    expect(result.longTermCarePremiumsAllowed.toNumber()).toBe(890);
+    expect(result.longTermCarePremiumsAllowed.toNumber()).toBe(900);
   });
 
-  it("SE Health Ins WS Line 2 - age 50 still uses $890 limit", () => {
+  it("SE Health Ins WS Line 2 - age 50 still uses $900 limit", () => {
     const result = calculateSEHealthInsuranceWorksheet(
       makeInput({
         medicalDentalPremiums: "0",
@@ -133,10 +133,10 @@ describe("SE Health Insurance WS - LTC age-based limits", () => {
       }),
       constants
     );
-    expect(result.longTermCarePremiumsAllowed.toNumber()).toBe(890);
+    expect(result.longTermCarePremiumsAllowed.toNumber()).toBe(900);
   });
 
-  it("SE Health Ins WS Line 2 - age 51 jumps to $1,790 limit", () => {
+  it("SE Health Ins WS Line 2 - age 51 jumps to $1,800 limit", () => {
     const result = calculateSEHealthInsuranceWorksheet(
       makeInput({
         medicalDentalPremiums: "0",
@@ -144,10 +144,10 @@ describe("SE Health Insurance WS - LTC age-based limits", () => {
       }),
       constants
     );
-    expect(result.longTermCarePremiumsAllowed.toNumber()).toBe(1790);
+    expect(result.longTermCarePremiumsAllowed.toNumber()).toBe(1800);
   });
 
-  it("SE Health Ins WS Line 2 - age 61 uses $4,770 limit", () => {
+  it("SE Health Ins WS Line 2 - age 61 uses $4,810 limit", () => {
     const result = calculateSEHealthInsuranceWorksheet(
       makeInput({
         medicalDentalPremiums: "0",
@@ -155,10 +155,10 @@ describe("SE Health Insurance WS - LTC age-based limits", () => {
       }),
       constants
     );
-    expect(result.longTermCarePremiumsAllowed.toNumber()).toBe(4770);
+    expect(result.longTermCarePremiumsAllowed.toNumber()).toBe(4810);
   });
 
-  it("SE Health Ins WS Line 2 - age 71 uses $5,960 limit", () => {
+  it("SE Health Ins WS Line 2 - age 71 uses $6,020 limit", () => {
     const result = calculateSEHealthInsuranceWorksheet(
       makeInput({
         medicalDentalPremiums: "0",
@@ -166,7 +166,7 @@ describe("SE Health Insurance WS - LTC age-based limits", () => {
       }),
       constants
     );
-    expect(result.longTermCarePremiumsAllowed.toNumber()).toBe(5960);
+    expect(result.longTermCarePremiumsAllowed.toNumber()).toBe(6020);
   });
 
   it("SE Health Ins WS Line 2 - actual premium under limit: uses actual", () => {
@@ -187,13 +187,13 @@ describe("SE Health Insurance WS - LTC age-based limits", () => {
         medicalDentalPremiums: "0",
         longTermCareCoverages: [
           { premiumsPaid: "600", attainedAge: 35 },  // capped at 480
-          { premiumsPaid: "3000", attainedAge: 55 },  // capped at 1790
+          { premiumsPaid: "3000", attainedAge: 55 },  // capped at 1800
         ],
       }),
       constants
     );
-    // 480 + 1790 = 2270
-    expect(result.longTermCarePremiumsAllowed.toNumber()).toBe(2270);
+    // 480 + 1800 = 2280
+    expect(result.longTermCarePremiumsAllowed.toNumber()).toBe(2280);
   });
 });
 
@@ -276,7 +276,7 @@ describe("SE Health Insurance WS - combined LTC and medical with proration and l
       makeInput({
         medicalDentalPremiums: "15000",
         longTermCareCoverages: [
-          { premiumsPaid: "2000", attainedAge: 55 }, // capped at 1790
+          { premiumsPaid: "2000", attainedAge: 55 }, // capped at 1800
         ],
         medicarePartBPremiums: "1800",
         medicarePartDPremiums: "0",
@@ -288,14 +288,14 @@ describe("SE Health Insurance WS - combined LTC and medical with proration and l
       }),
       constants
     );
-    // Total premiums: 15000 + 1790 + 1800 = 18590
-    // Prorated: round(18590 * 9/12) = round(13942.5) = 13943
-    expect(result.totalPremiums.toNumber()).toBe(18590);
-    expect(result.proratedPremiums.toNumber()).toBe(13943);
+    // Total premiums: 15000 + 1800 + 1800 = 18600
+    // Prorated: round(18600 * 9/12) = round(13950) = 13950
+    expect(result.totalPremiums.toNumber()).toBe(18600);
+    expect(result.proratedPremiums.toNumber()).toBe(13950);
     // Earned income limit: max(0, 20000 - 1413 - 0) = 18587
     expect(result.earnedIncomeLimit.toNumber()).toBe(18587);
-    // Deduction: min(13943, 18587) = 13943
-    expect(result.deductibleAmount.toNumber()).toBe(13943);
+    // Deduction: min(13950, 18587) = 13950
+    expect(result.deductibleAmount.toNumber()).toBe(13950);
     expect(result.excessForScheduleA.toNumber()).toBe(0);
   });
 });

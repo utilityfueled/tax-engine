@@ -1,0 +1,57 @@
+form: "Ohio resident-credit actual native browser lifecycle"
+taxYear: 2025
+reference: "https://dam.assets.ohio.gov/image/upload/v1767095693/tax.ohio.gov/forms/ohio_individual/individual/2025/it1040-booklet.pdf"
+notes: |
+  Four normal managed production Chromium journeys: distinct250.00 and cents250.25
+  remittances, each at1280x900 and390x844. Workers1/retries0; existing90000ms
+  test timeout and managed-server policy unchanged. No tax/product changes.
+  Source-first independent-oracles-before-output.json SHA6e62955c6a23206d;
+  ORC5747.05(B,C,D) and actual2025ITRC/booklet govern the already reviewed method.
+  Fictional current general/federal/W2/fullOhioresidency/ordinarypayment originals
+  may be seeded ONCE before the RC interaction. No RC packet, confirmations,
+  original captures, calculated result or requested refund is seeded. All RC
+  records thereafter are typed through visible native controls. No storage edits
+  after that initial unrelated setup. These are fictional records, not authenticated
+  bank/agency documents, actual funds or received Ohio refunds.
+  Independent literals: AGI100000/exemption1900/taxable98100/tax2323;
+  same-income60000/100000 gives .6000 limit1394. ActualVA withholding1200 plus
+  two independently settled250.00 payments less actually receivedVArefund700
+  gives1000credit/1323Ohiotax/677requestedrefund. Payments250.25 instead give
+  paid1000.50/reported1001credit/1322tax/678requestedrefund. Distinct15digit
+  bank traces and distinct applied agency postings are typed for both payments.
+  Current output is a financial REFERENCE SUMMARY ONLY, not an official resident
+  filing packet. No officialRCdownload/header availability, broadOhio,2026,
+  externalagency/funds, staging, fullupload-to-delete or human qualification.
+lines:
+  - line: "blank-source"
+    label: "Unknown is not zero or an empty list"
+    formula: "Actual add action creates blank year/owner/refs/amounts and null unreviewed payment/refund lists; child and parent unconfirmed, snapshots absent. Actual blank confirmation fails visibly; reload preserves the same unknowns without capture."
+    testRef: "apps/web/tests/oh-resident-credit-native.spec.ts::types actual Virginia originals and preserves source-bound review lifecycle"
+  - line: "typed-originals"
+    label: "Explicit filed-return and completed-account evidence"
+    formula: "Review lists; add two service rows, three applied-payment rows and one received-refund row; add bank+agency originals for balances2/3. Type every actual identity/year/date/amount/reference and explicit source assurance; comma entry normalizes only after user action. Parent then child confirmation; no implied facts."
+    testRef: "apps/web/tests/oh-resident-credit-native.spec.ts::types actual Virginia originals and preserves source-bound review lifecycle"
+  - line: "independent-cash"
+    label: "Actual tax and requested-refund literals"
+    formula: "Ohio tax2323 less credit1000 equals1323, actualOhiopayments2000 gives requestedrefund677; centspaid1000.50 reportscredit1001/tax1322/refund678. Federalincome100000 once; residentcreditlimit1394 and no NRC double-credit."
+    testRef: "apps/web/tests/oh-resident-credit-native.spec.ts::types actual Virginia originals and preserves source-bound review lifecycle"
+  - line: "same-cash-edit"
+    label: "Source identity edits revoke confirmations"
+    formula: "Change payment2 source reference only; cash/traces/postings unchanged. Child+parent become unconfirmed and no qualified RC summary remains. Retained original captures stay unchanged; reload must not recapture. Explicit reconfirmation restores the same money."
+    testRef: "apps/web/tests/oh-resident-credit-native.spec.ts::types actual Virginia originals and preserves source-bound review lifecycle"
+  - line: "unknown-zero"
+    label: "Actual account zero remains distinct from missing"
+    formula: "Clear actual unappliedPayments0 to blank; child confirmation fails, parent and child invalid, captured originals unchanged. Reopen retains blank. User types actual0 and explicitly reconfirms; no default."
+    testRef: "apps/web/tests/oh-resident-credit-native.spec.ts::types actual Virginia originals and preserves source-bound review lifecycle"
+  - line: "actual-review"
+    label: "Actual response and two saved downloads"
+    formula: "Actual review button returns200application/pdf with review/no-store headers and included oh-resident-credit-reference.pdf. Save exact response/download bytes; strictly resolve every indirect object to a non-None target, including orphan xref entries; traverse dictionary/array contents, decode streams and standalone text/byte string objects for personal/source privacy. Report safe structural/string counts, financial projection and hashes only, never decoded private strings. Empty fields/widgets/actions remain required. ReferenceIT1040 tax/refund and residentcredit1394limit/1000or1001credit equal independent literals. Every page retains review notice; reference-only disclosure is required."
+    testRef: "apps/web/tests/oh-resident-credit-native.spec.ts::types actual Virginia originals and preserves source-bound review lifecycle"
+  - line: "reopen-and-deny"
+    label: "Read-only reopen and filing denial"
+    formula: "Actual workspace navigation/reopen retains exact typed packet and captures without refresh; second actual review download has the same literal financial/privacy projection. Exactly two downloads per journey. Actual purposefiling request400 with existing denial; no third download."
+    testRef: "apps/web/tests/oh-resident-credit-native.spec.ts::types actual Virginia originals and preserves source-bound review lifecycle"
+  - line: "geometry-privacy"
+    label: "Native desktop and mobile usability"
+    formula: "Before measuring each real anchor, scroll that element to the viewport center using ordinary browser scrolling, retaining the real sticky navigation/ticker and every containment, viewport, visibility and center-hit assertion unchanged. Blank, confirmed, invalidated and reopened panel/labels/controls/buttons remain contained with usable anchors. No page/console errors, source identifiers in public financial display or unrelated requests. Artifact metadata contains hashes/safe headers/counts, never raw private request payloads."
+    testRef: "apps/web/tests/oh-resident-credit-native.spec.ts::types actual Virginia originals and preserves source-bound review lifecycle"

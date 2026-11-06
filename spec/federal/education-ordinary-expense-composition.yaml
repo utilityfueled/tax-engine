@@ -1,0 +1,96 @@
+form: "Form1099Q ordinary expense source composition"
+fullName: "Actual ordinary postsecondary receipts across prepaid QTP, cash QTP and ESA sources"
+taxYear: 2026
+irsReference: "https://uscode.house.gov/us/usc/119-118/t26/s529/"
+sources:
+  - "https://uscode.house.gov/us/usc/119-118/t26/s530/"
+  - "https://uscode.house.gov/us/usc/119-118/t26/s25A/"
+  - "https://www.irs.gov/publications/p970"
+notes: |
+  Sources refreshed October 26, 2026. IRC529(e)(3)(A) and530(b)(2)(A)
+  recognize required postsecondary tuition/fees/books/supplies/equipment,
+  connected special-needs services and the specified enrolled-beneficiary
+  computer/internet expenses. Actual qualification remains an explicit source
+  fact. A receipt need not have a prepaid benefit merely because another
+  receipt for its beneficiary does. IRC529(c)(3)(B)(i),(ii),(v),(vi) preserve
+  actual benefit cost, apply reductions once, give the qualified prepaid cost
+  priority before cash, and retain actual supplied ESA allocations.
+  This common source boundary covers those four ordinary categories. Existing
+  separately validated room/board periods remain separate; annual special
+  category caps are the next package. Original source/account/recipient/year,
+  Box1 capacity, account basis and explicit allocation zeros remain mandatory.
+  No credit eligibility, assistance choice or account allocation is inferred.
+  A new non-tuition credit allocation requires the actual AOTC required-course-
+  material or LLC required-institution-charge classification and source record,
+  reconciled to the actual credit student. Special-needs services cannot be
+  characterized as AOTC course materials. Personal/medical costs do not become
+  qualified merely because an institution charges them.
+  Positive ordinary receipt refunds require a complete, confirmed, dated
+  receipt-linked original ledger. The bounded new method is same-year cash
+  received and retained by the beneficiary, preserving original reported
+  benefit and Box1. IRC529(c)(3)(D) and Pub970 chapter7 distinguish actual
+  recontribution within60days; a recontribution, corrected benefit, later-year
+  refund or credit recapture needs its separate actual method, not an inferred
+  net statement. A known zero is not a missing amount. Derived examples below
+  are independent arithmetic controls, not published IRS examples.
+lines:
+  - line: "ordinary-receipts"
+    description: "Qualify ordinary receipts independently of prepaid membership"
+    formula: "Qualified prepaid books/computer/special-needs cost4000 less1000assistance gives3000QEE,600excluded,200taxable and20additional tax from original800earnings. An unrelated cash book receipt1000 increases existing cashQEE4500 to5500; prepaid100 plus cash625 gives725taxable,225creditexception and50tax."
+    testRef: "tests/engine/forms/education-ordinary-expense-composition.test.ts::qualifies ordinary receipts without inventing prepaid membership"
+  - line: "actual-esa-choice"
+    description: "Preserve actual ESA choices and each original statement ratio"
+    formula: "Books8000 less1000aid gives7000AQEE; supplied prepaid2000/ESA4000/cash1000 produces400/400/500taxable,1300total and130additional tax. A cash-only or ESA-only receipt beside that group needs no fabricated prepaid benefit."
+    testRef: "tests/engine/forms/education-ordinary-expense-composition.test.ts::conserves actual ESA choices across ordinary and cash-only receipts"
+  - line: "unallocated-source-boundary"
+    description: "Keep a positive unallocated receipt distinct from an actual zero receipt"
+    formula: "An extra actual zero receipt adds no qualified cost and needs no fabricated prepaid benefit. An additional positive receipt without its required source allocations still rejects; the existing two-statement1275excluded/425taxable result stays unchanged for actual zero."
+    testRef: "tests/engine/forms/form-1099-q-distinct-in-kind-assistance.test.ts::rejects incomplete or shared tuition source groups without inventing allocations"
+  - line: "prior-rejection-boundary"
+    description: "Preserve actual-source rejection when the new refund history guard runs first"
+    formula: "Positive refund without actual dated history and missing refund amount remain errors, as do positive unallocated receipts and prior source contradictions."
+    testRef: "tests/engine/forms/form-1099-q-in-kind-assistance.test.ts::rejects unbound or mixed assistance source groups"
+  - line: "prior-output-binding"
+    description: "Reject changed actual refund sources before historical review output"
+    formula: "A changed positive refund with no actual history must reject before the prior in-kind audit comparison; other allocation and benefit mutations retain their existing rejection checks."
+    testRef: "tests/pdf/form-1099-q-in-kind-summary.test.ts::rejects changed allocation and remaining expense source records"
+  - line: "refund-chronology"
+    description: "Apply an actual current retained cash refund once"
+    formula: "Original prepaid4000/earn800 remains unchanged. Actual same-year cash refund500 plus assistance1000 leaves2500QEE,500excluded,300taxable and30tax. Multiple refund records must sum exactly to the actual receipt refund."
+    testRef: "tests/engine/forms/education-ordinary-expense-composition.test.ts::uses confirmed current refund chronology without rewriting the original benefit"
+  - line: "credit-character"
+    description: "Bind non-tuition credit expense to actual applicable credit sources"
+    formula: "Required books4000,aid1000,actual LLC-required institution charge1000 leaves2000QEE:400excluded,400taxable,200creditexception,20tax. Missing/false credit qualification, wrong program or treating special-needs services as course materials rejects."
+    testRef: "tests/engine/forms/education-ordinary-expense-composition.test.ts::binds non-tuition credit character to the actual credit student"
+  - line: "source-boundaries"
+    description: "Retain unknowns and enforce each original receipt and account capacity"
+    formula: "Unknown eligibility/refund ledger or missing account row, conflicting date/year/recipient/reference, duplicate refund, recontribution/corrected benefit and balanced per-original overcapacity reject without mutation. False unrelated receipt eligibility contributes0; reordered exact41-place original amounts remain conserved."
+    testRef: "tests/engine/forms/education-ordinary-expense-composition.test.ts::rejects missing or contradictory original expense composition facts"
+  - line: "canonical-educator"
+    description: "Use actual excluded and taxable earnings once in the return"
+    formula: "50000wages plus200taxable earnings less300/350educator cap gives49900/49850AGI. The actual1000educator cost is reduced by600excludedQTP earnings, and a stale800exclusion source rejects."
+    testRef: "tests/engine/education-ordinary-expense-return.test.ts::carries ordinary source earnings into the return and educator worksheet once"
+  - line: "guided-sources"
+    description: "Retain actual ordinary qualification, refund records and reconfirmation"
+    formula: "Actual category, receipt refund chronology and per-account amounts survive serialization. Substantive edits revoke root and refund confirmations; missing/false answers remain distinct from explicit0 and require correction or reconfirmation."
+    testRef: "tests/guided-interview/guided-ordinary-education-expenses.test.ts::preserves ordinary expense originals and invalidates changed refund sources"
+  - line: "actual-controls"
+    description: "Expose actual refund and credit source controls in the real education panel"
+    formula: "The existing panel can add a receipt-linked refund, enter actual date/amount/recipient/disposition/reference and confirm it, and retains saved records on category changes. No returned amount or eligibility is defaulted."
+    testRef: "tests/apps/web/ordinary-education-expense-interactions.test.tsx::collects actual refund and credit facts through the education source panel"
+  - line: "private-review"
+    description: "Bind original ordinary receipts and refund chronology before output"
+    formula: "Changed original category/refund date/reference, equal-total receipt substitution and stale source audit reject before PDF I/O. Saved historical review forms preserve300income/30additional tax and actual source trace without taxpayer identifiers."
+    testRef: "tests/pdf/education-ordinary-expense-composition.test.ts::binds original ordinary receipts and refund chronology before review output"
+  - line: "ordinary-reference-labels"
+    description: "Name actual ordinary QTP benefits and expense allocations without relabeling them tuition"
+    formula: "The assistance audit names the actual in-kind QTP benefit, and ESA coordination names the actual expense allocation. Books, computer and special-needs sources retain their original categories and unchanged monetary totals."
+    testRef: "tests/pdf/education-ordinary-expense-composition.test.ts::names ordinary QTP benefits accurately in review references"
+  - line: "workspace-review"
+    description: "Carry actual source facts through saved workspace review"
+    formula: "An unmocked saved guided workspace yields50300AGI/30additional tax, flattened review-only pages and no original source identifiers."
+    testRef: "tests/apps/web/ordinary-education-expense-workspace.test.ts::reopens an actual ordinary education expense workspace review"
+  - line: "browser-persistence"
+    description: "Exercise actual source edits and review downloads on desktop and mobile"
+    formula: "1280/390px production flows edit and confirm actual refund sources, preserve unknown versus0, save/reload locally and download a review-only PDF; no source facts are transmitted before the requested same-origin download."
+    testRef: "apps/web/tests/guided-ordinary-education-expenses.spec.ts::preserves ordinary education expenses and refund chronology through reload"

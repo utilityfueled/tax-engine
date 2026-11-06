@@ -1,0 +1,30 @@
+form: "schedule-se final 2026 physical candidate"
+fullName: "Final 2026 Schedule SE physical field source contract"
+taxYear: 2026
+reference: "https://www.irs.gov/pub/irs-pdf/f1040sse.pdf"
+revision: "Created 4/27/26; final annual source, not export-qualified"
+retrievedAt: "2026-11-06T00:18:55.962869Z"
+notes: |
+  Physical asset and field-location validation only. No tax calculation, optional
+  method eligibility, filing qualification or export route is enabled. The 2025
+  asset and all existing registries remain unchanged. Printed line 7 ($184,500)
+  and line 14 ($7,560) have one-point-wide empty text anchors in the original;
+  these anchors are inventoried but are not writable amount cells. Diagnostic
+  values are fictional probes, never calculated taxpayer facts.
+lines:
+  - line: "revision"
+    description: "Pin the actual final annual PDF bytes"
+    formula: "SHA256 a42f5a19c0e84a966a49b5f4ca021d3f49c4fda2e087da0b00bf2003525f8655; 77739 bytes; two pages; printed 2026 and Created 4/27/26. No substitution of 2025 bytes."
+    testRef: "tests/pdf/schedule-se-2026-candidate.test.ts::pins the exact final annual source"
+  - line: "physical-locations"
+    description: "Bind every original leaf to its printed location"
+    formula: "Require a bijection for all 27 leaf widgets (26 text, one checkbox), with original full field name, type, page and four rectangle coordinates. Group nodes are not leaves; the two fixed printed-amount anchors remain empty."
+    testRef: "tests/pdf/schedule-se-2026-candidate.test.ts::maps every leaf to its original physical location"
+  - line: "saved-values"
+    description: "Save and reopen fictional field probes"
+    formula: "Preserve every writable text value and both minister-checkbox states, nonempty saved appearances, empty printed-amount anchors and a review notice on both pages. Use REDACTED instead of any SSN; no tax calculation is invoked."
+    testRef: "tests/pdf/schedule-se-2026-candidate.test.ts::retains diagnostic values and both checkbox states after save"
+  - line: "closed-exports"
+    description: "Keep physical availability separate from qualification"
+    formula: "The frozen candidate is absent from qualified review and filing template packs; both public 2026 export modes continue to refuse, and 2026 bytes are rejected by the 2025 hash allowlist."
+    testRef: "tests/pdf/schedule-se-2026-candidate.test.ts::keeps every export gate closed"

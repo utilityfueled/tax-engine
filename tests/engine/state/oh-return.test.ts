@@ -742,7 +742,7 @@ describe("Ohio Resident Return — Orchestrator", () => {
     // Ohio portion: 0.375 × $1,767 = $662.625 → $663
     // Credit: min($663, $921) = $663
     expect(result.residentCredit).not.toBeNull();
-    expect(result.residentCredit!.stateDetails[0]!.credit.toNumber()).toBe(663);
+    expect(result.residentCredit!.line7_residentCredit.toNumber()).toBe(663);
     expect(result.it1040.line9_nonrefundableCredits.toNumber()).toBe(663);
   });
 
@@ -2051,4 +2051,13 @@ describe("Ohio Resident Return — Orchestrator", () => {
     // Total = $3,790
     expect(result.it1040.line8c_totalTax.toNumber()).toBe(3790);
   });
+});
+
+// Spec: state/oh-return.yaml#actual-refund-credit-2210-liability
+it('subtracts actual refundable line16 from underpayment liability', () => {
+ const result=calculateOhioResidentReturn(makeInput({federalAgi:'100000',refundableCredits:'500',ohioWithholding:'0',estimatedPayments:'0',priorYearTimelyFiled:false,computeUnderpaymentPenalty:true}));
+ expect(result.it1040.line10_taxAfterCredits.toString()).toBe('2323');
+ expect(result.it1040.line16_refundableCredits.toString()).toBe('500');
+ expect(result.itsd2210?.line2_currentYearLiability.toString()).toBe('1823');
+ expect(result.itsd2210?.line17_totalPenalty.toString()).toBe('82');
 });

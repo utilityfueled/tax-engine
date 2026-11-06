@@ -790,12 +790,12 @@ describe("Education Credit — reduces federal tax liability (federal pipeline)"
     };
     const result = calculateFederalTax(lowWageFiler);
 
-    // $5K wages: standard deduction ($15,000) wipes out all taxable income → $0 income tax
+    // $5K wages are below the standard deduction, so income tax is $0.
     // AOC credit: MAGI $5K << $80K → full $2,500; refundable 40% = $1,000
-    // Childless EIC: 7.65% × $5,000 = $382 (below phase-out start, age 35)
-    // With $0 tax and $0 withholding, refund = $1,000 + $382 = $1,382
+    // Final2025 Pub596 EIC Table, $5,000–$5,050 nonjoint/no-child column: $384.
+    // With $0 tax and withholding, refund = $1,000 AOC + $384 EIC = $1,384.
     expect(result.totalTax.toNumber()).toBe(0);
-    expect(result.refund.toNumber()).toBe(1382);
+    expect(result.refund.toFixed()).toBe("1384");
   });
 });
 
@@ -979,17 +979,17 @@ describe("Education Credit — audit trail records correct Form 8863 lines", () 
     });
 
     const lineNumbers = result.lines.map((l) => l.line);
-    // Per-student AOC line (line 1)
+    // Final2025 Form8863: AOC total tentative line1; upper MAGI limit line2.
     expect(lineNumbers).toContain("1");
-    // AOC total tentative (line 2)
+    // AOC upper MAGI limit (line2)
     expect(lineNumbers).toContain("2");
     // AOC after phase-out (line 7)
     expect(lineNumbers).toContain("7");
-    // Nonrefundable AOC 60% (line 8)
+    // Refundable AOC40% (line8)
     expect(lineNumbers).toContain("8");
-    // LLC after phase-out (line 10)
+    // LLC qualified expenses (line10)
     expect(lineNumbers).toContain("10");
-    // Refundable AOC 40% (line 14)
+    // LLC MAGI (line14)
     expect(lineNumbers).toContain("14");
     // Total nonrefundable (line 19)
     expect(lineNumbers).toContain("19");
@@ -1003,8 +1003,16 @@ describe("Education Credit — audit trail records correct Form 8863 lines", () 
     const line7 = result.lines.find((l) => l.line === "7");
     expect(line7?.value.toNumber()).toBe(result.aocAfterPhaseOut.toNumber());
 
-    const line14 = result.lines.find((l) => l.line === "14");
-    expect(line14?.value.toNumber()).toBe(result.aocRefundable.toNumber());
+    // Literal source-derived worksheet values, not regenerated outputs.
+    const value = (line:string) => result.lines.find(l=>l.line===line)?.value.toString();
+    expect(value("1")).toBe("2500");
+    expect(value("2")).toBe("90000");
+    expect(value("8")).toBe("1000");
+    expect(value("9")).toBe("1500");
+    expect(value("10")).toBe("10000");
+    expect(value("14")).toBe("50000");
+    expect(value("18")).toBe("2000");
+    expect(value("19")).toBe("3500");
 
     const line19 = result.lines.find((l) => l.line === "19");
     expect(line19?.value.toNumber()).toBe(result.totalNonrefundable.toNumber());

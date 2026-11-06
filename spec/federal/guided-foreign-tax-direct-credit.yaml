@@ -1,0 +1,45 @@
+form: "Guided direct foreign tax credit"
+fullName: "Actual section904(j) election, source history and retained-credit review record"
+taxYear: 2026
+supportedTaxYears: [2025, 2026]
+irsReference: "https://www.irs.gov/instructions/i1116"
+sources:
+  - url: "https://uscode.house.gov/us/usc/119-118/t26/s904/"
+    revision: "Current subsection(j), original election and carry restrictions"
+    retrieved: "2026-10-25"
+  - url: "https://www.irs.gov/instructions/i1116"
+    revision: "Final2025 Who Can Take the Credit Without Filing Form1116"
+    retrieved: "2026-10-25"
+notes: |
+  Actual election and taxpayer/source eligibility must be entered, never inferred
+  from a small tax amount. Unknown and false facts remain distinct. The same
+  source validator is used by completion and the bridge; known nonresident or
+  dual-status facts cannot conflict with the entered full-return status. Known
+  positive foreign earned-income sources cannot coexist with all-passive claims.
+  Monetary strings use Decimal. All regular and AMT prior vintages are explicit,
+  including an actual empty ledger; no assumed zero balance or automatic choice.
+  Original statement owner/payer/account/country/tax and dated payments remain
+  bound. Editing the underlying sources clears both confirmations. No provider
+  receives this information. The reference artifact copies canonical audits;
+  it is not a Form1116 filing or a qualified form.
+lines:
+  - line: "source"
+    description: "Actual original election and complete source facts"
+    formula: "Require actual taxpayer status and creditability/history facts; normalize year and Decimal amounts; preserve omissions and reject conflicting known residency"
+    testRef: "tests/guided-interview/guided-foreign-tax-direct-credit.test.ts::preserves actual election and vintage facts with exact money and unknowns"
+  - line: "handoff"
+    description: "Matching section and canonical input contract"
+    formula: "Completion and bridge use the same actual source, residency and known foreign-earned-income validation; no election inferred from threshold eligibility"
+    testRef: "tests/guided-interview/guided-foreign-tax-direct-credit.test.ts::requires the same actual election and residency facts for completion and bridge"
+  - line: "invalidation"
+    description: "Source changes revoke election confirmation"
+    formula: "Substantive source and taxpayer edits clear annual and direct-election confirmation; confirmation-only changes do not invalidate themselves"
+    testRef: "tests/guided-interview/guided-foreign-tax-direct-credit.test.ts::revokes both election confirmations after source edits without loops"
+  - line: "entry"
+    description: "A blank worksheet can collect the complete actual election"
+    formula: "Collect actual original-return election, each taxpayer status, payment and source eligibility, explicitly empty or nonempty regular/AMT histories; source edits revoke confirmation"
+    testRef: "tests/apps/web/foreign-tax-direct-credit-interactions.test.tsx::collects the actual elected credit from an empty annual worksheet"
+  - line: "review"
+    description: "Canonical source and retained-vintage review record"
+    formula: "Copy unique finite reconciled audits and actual return totals; preserve current uncredited tax without new carry and every regular/AMT prior vintage without use; reject missing altered duplicate or inconsistent source outputs"
+    testRef: "tests/pdf/foreign-tax-direct-credit-reference.test.ts::copies actual elected credit and retained vintages without exposing source identifiers"

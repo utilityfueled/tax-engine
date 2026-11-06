@@ -1,0 +1,61 @@
+"use client";
+import { useState } from "react";
+import type { TaxYearInput } from "@/models/inputs";
+import type { PAReciprocitySources } from "@/models/pa-reciprocity";
+import type { PAResidencySources } from "@/models/pa-residency";
+import { BooleanFact, TextFact } from "./fact-fields";
+import { CurrencyField } from "./currency-field";
+import { emptyGuidedPAReciprocitySources, updateGuidedPAReciprocitySources, confirmGuidedPAReciprocitySources } from "@/lib/guided-pa-reciprocity-facts";
+function NumberFact({label,value,onChange}:{label:string;value:number|null;onChange:(value:number|null)=>void}){
+ return <label className="guided-field"><span className="guided-field-label">{label}</span><input className="guided-input" type="number" step="1" value={value===null?"":value} onChange={e=>onChange(e.target.value===""?null:Number(e.target.value))}/></label>;
+}
+function SelectFact({label,value,options,onChange}:{label:string;value:string;options:Array<[string,string]>;onChange:(value:string)=>void}){
+ return <label className="guided-field"><span className="guided-field-label">{label}</span><select className="guided-input" value={value} onChange={e=>onChange(e.target.value)}><option value="">Choose from actual records</option>{options.map(([key,text])=><option key={key} value={key}>{text}</option>)}</select></label>;
+}
+/** Actual source controls; confirmation snapshots originals but does not supply legal answers. */
+export function PAReciprocityDetails({originalInput,residencySources,data,onChange}:{originalInput:TaxYearInput|null;residencySources:PAResidencySources;data?:PAReciprocitySources;onChange:(data:{residencySources:PAResidencySources;reciprocitySources?:PAReciprocitySources})=>void}){
+ const [message,setMessage]=useState("");
+ if(!data) return <button type="button" onClick={()=>onChange({residencySources:{...residencySources,sourceFactsConfirmed:null},reciprocitySources:emptyGuidedPAReciprocitySources()})}>Add reciprocal employee sources</button>;
+ const current=data;
+ const update=(patch:Partial<PAReciprocitySources>)=>{setMessage("");onChange(updateGuidedPAReciprocitySources(residencySources,current,patch));};
+ const changeOriginal=(index:number,patch:Partial<PAReciprocitySources["originals"][number]>)=>update({originals:current.originals.map((o,i)=>i===index?{...o,...patch}:o)});
+ const changeSegment=(index:number,patch:Partial<PAReciprocitySources["segments"][number]>)=>update({segments:current.segments.map((o,i)=>i===index?{...o,...patch}:o)});
+ const w2Options:Array<[string,string]>=(originalInput?.w2s??[]).map((w,i)=>[String(i),`Entered W-2 ${i+1}: ${w.employer.name}; wages ${w.wages}`]);
+ return <section aria-label="Actual reciprocal employee sources"><h3>Reciprocal employee compensation</h3>
+ <p className="guided-hint">Actual employee wages earned while resident in Indiana, Maryland, New Jersey, Ohio, Virginia or West Virginia can qualify. Positive withholding is not required. PA-resident-earned deferred amounts and nonemployee fees need their own methods. An Ohio resident's at-least-20% PA S-corporation shareholder-employee wages remain taxable. No local exclusion, resident credit, final refund or filing qualification is inferred.</p>
+ <NumberFact label="Reciprocal source tax year" value={current.sourceTaxYear} onChange={sourceTaxYear=>update({sourceTaxYear})}/>
+ <TextFact label="Reciprocal employee source reference" value={current.sourceReference} onChange={sourceReference=>update({sourceReference})}/>
+ <SelectFact label="Actual reciprocal source owner" value={current.owner.accountHolder} options={[["primary","Primary taxpayer"],["spouse","Spouse — separate owner method required"]]} onChange={value=>update({owner:{...current.owner,accountHolder:value as typeof current.owner.accountHolder}})}/>
+ <h4>Actual covered originals and PA withholding</h4><p>Each covered entered W-2 appears once even if it has several actual payroll periods. Multiple state rows require the next source method; do not create duplicate federal W-2s. Pending refund-support copies do not change a determined employee exclusion.</p>
+ {current.originals.map((o,index)=><fieldset className="guided-card" key={index}><legend>Covered original {index+1}</legend>
+ <SelectFact label={`Covered original ${index+1} entered W-2`} value={o.originalIndex===null?"":String(o.originalIndex)} options={w2Options} onChange={value=>changeOriginal(index,{originalIndex:value===""?null:Number(value)})}/>
+ <NumberFact label={`Covered original ${index+1} actual year`} value={o.sourceTaxYear} onChange={sourceTaxYear=>changeOriginal(index,{sourceTaxYear})}/>
+ <TextFact label={`Covered original ${index+1} reference`} value={o.sourceReference} onChange={sourceReference=>changeOriginal(index,{sourceReference})}/>
+ {([["sourceFactsConfirmed","Actual original facts checked"],["zeroOrOneStateRowOnActualOriginalConfirmed","The actual original has zero or one state row"],["noAdditionalPAStateRowOnOriginalConfirmed","No additional PA state row is retained on another copy or continuation"]] as const).map(([key,label])=><BooleanFact key={key} label={`Original ${index+1}: ${label}`} value={o[key]} onChange={value=>changeOriginal(index,{[key]:value})}/>)}
+ <SelectFact label={`Original ${index+1} actual PA withholding status`} value={o.paWithholdingStatus} options={[["reported_PA_box17","Actual original reports PA Box 17"],["no_PA_row_on_original","Actual original has no PA row"]]} onChange={value=>changeOriginal(index,{paWithholdingStatus:value as typeof o.paWithholdingStatus})}/>
+ <CurrencyField label={`Original ${index+1} actual PA withholding, including known zero`} value={o.actualPAWithheld} onChange={actualPAWithheld=>changeOriginal(index,{actualPAWithheld})}/>
+ <BooleanFact label={`Original ${index+1}: Refund of PA withholding requested`} value={o.refundRequested} onChange={refundRequested=>changeOriginal(index,{refundRequested})}/>
+ <TextFact label={`Original ${index+1} retained W-2 copy reference`} value={o.w2CopySourceReference} onChange={w2CopySourceReference=>changeOriginal(index,{w2CopySourceReference})}/>
+ <TextFact label={`Original ${index+1} residency statement reference`} value={o.residencyStatementSourceReference} onChange={residencyStatementSourceReference=>changeOriginal(index,{residencyStatementSourceReference})}/>
+ <NumberFact label={`Original ${index+1} resident-return actual year`} value={o.residentStateReturn.sourceTaxYear} onChange={sourceTaxYear=>changeOriginal(index,{residentStateReturn:{...o.residentStateReturn,sourceTaxYear}})}/>
+ <TextFact label={`Original ${index+1} resident-return actual state`} value={o.residentStateReturn.state} onChange={state=>changeOriginal(index,{residentStateReturn:{...o.residentStateReturn,state}})}/>
+ <TextFact label={`Original ${index+1} resident-return copy reference`} value={o.residentStateReturn.sourceReference} onChange={sourceReference=>changeOriginal(index,{residentStateReturn:{...o.residentStateReturn,sourceReference}})}/>
+ <BooleanFact label={`Original ${index+1}: Actual resident return has been filed`} value={o.residentStateReturn.filedConfirmed} onChange={filedConfirmed=>changeOriginal(index,{residentStateReturn:{...o.residentStateReturn,filedConfirmed}})}/>
+ <BooleanFact label={`Original ${index+1}: Actual refund-support copies and same owner checked`} value={o.refundSupportFactsConfirmed} onChange={refundSupportFactsConfirmed=>changeOriginal(index,{refundSupportFactsConfirmed})}/>
+ <button type="button" onClick={()=>update({originals:current.originals.filter((_,i)=>i!==index)})}>Remove covered original {index+1}</button></fieldset>)}
+ <button type="button" onClick={()=>update({originals:[...current.originals,{originalIndex:null,sourceTaxYear:null,sourceReference:"",sourceFactsConfirmed:null,zeroOrOneStateRowOnActualOriginalConfirmed:null,paWithholdingStatus:"",actualPAWithheld:"",noAdditionalPAStateRowOnOriginalConfirmed:null,refundRequested:null,refundSupportFactsConfirmed:null,w2CopySourceReference:"",residentStateReturn:{sourceTaxYear:null,state:"",sourceReference:"",filedConfirmed:null},residencyStatementSourceReference:""}]})}>Add covered reciprocal W-2 original</button>
+ <h4>Actual employee earning periods</h4><p>Choose the entered original and its actual payroll segment number from the PA allocation sources. Amounts and dates are privately snapshotted only when both packets are explicitly confirmed.</p>
+ {current.segments.map((s,index)=><fieldset className="guided-card" key={index}><legend>Employee segment {index+1}</legend>
+ <SelectFact label={`Employee segment ${index+1} entered W-2`} value={s.originalIndex===null?"":String(s.originalIndex)} options={w2Options} onChange={value=>changeSegment(index,{originalIndex:value===""?null:Number(value)})}/>
+ <SelectFact label={`Employee segment ${index+1} actual payroll segment`} value={s.payrollIndex===null?"":String(s.payrollIndex)} options={(residencySources.wages.find(w=>w.originalIndex===s.originalIndex)?.payroll??[]).map((pay,i)=>[String(i),`Segment ${i+1}: ${pay.serviceFrom}–${pay.serviceThrough}; PA services ${pay.paServicesCompensation}`])} onChange={value=>changeSegment(index,{payrollIndex:value===""?null:Number(value)})}/>
+ <TextFact label={`Employee segment ${index+1} actual classification reference`} value={s.sourceReference} onChange={sourceReference=>changeSegment(index,{sourceReference})}/>
+ <SelectFact label={`Employee segment ${index+1} actual reciprocal resident state`} value={s.reciprocalState} options={[["IN","Indiana"],["MD","Maryland"],["NJ","New Jersey"],["OH","Ohio"],["VA","Virginia"],["WV","West Virginia"]]} onChange={reciprocalState=>changeSegment(index,{reciprocalState})}/>
+ {([["sourceFactsConfirmed","Actual source facts checked"],["employeeCompensationOnlyConfirmed","Actual employee compensation only"],["compensationLegallySubjectToEmployerWithholdingConfirmed","Compensation legally subject to employer withholding, regardless of amount withheld"],["earnedWhileReciprocalResidentConfirmed","Earned while actually resident in the selected reciprocal state"],["noPAResidentEarnedDeferredCompensationConfirmed","No deferred compensation earned during PA residency"],["employerIsPASCorporation","Actual employer is a PA S corporation (required for Ohio)"],["shareholderEmployee","Actual employee is a shareholder-employee (required for Ohio PA S corporation)"]] as const).map(([key,label])=><BooleanFact key={key} label={`Employee segment ${index+1}: ${label}`} value={s[key]} onChange={value=>changeSegment(index,{[key]:value})}/>)}
+ <TextFact label={`Employee segment ${index+1} actual covered-period ownership percent`} value={s.actualOwnershipPercent} onChange={actualOwnershipPercent=>changeSegment(index,{actualOwnershipPercent})}/>
+ <button type="button" onClick={()=>update({segments:current.segments.filter((_,i)=>i!==index)})}>Remove employee segment {index+1}</button></fieldset>)}
+ <button type="button" onClick={()=>update({segments:[...current.segments,{originalIndex:null,payrollIndex:null,sourceReference:"",sourceFactsConfirmed:null,reciprocalState:"",employeeCompensationOnlyConfirmed:null,compensationLegallySubjectToEmployerWithholdingConfirmed:null,earnedWhileReciprocalResidentConfirmed:null,noPAResidentEarnedDeferredCompensationConfirmed:null,employerIsPASCorporation:null,shareholderEmployee:null,actualOwnershipPercent:""}]})}>Add actual reciprocal employee segment</button>
+ <button type="button" onClick={()=>{try{if(!originalInput)throw new Error("Complete actual taxpayer and income originals first");onChange(confirmGuidedPAReciprocitySources(originalInput,residencySources,current));setMessage("Both actual source packets confirmed after the last edit.");}catch(error){setMessage(error instanceof Error?error.message:"Complete actual source records first");}}}>Confirm both actual PA and reciprocal source packets</button>
+ <p role="status">{message||(current.sourceFactsConfirmed===true&&residencySources.sourceFactsConfirmed===true?"Both private original packets retained; source edits require reconfirmation.":"Both actual source packets require confirmation.")}</p>
+ <button type="button" onClick={()=>onChange({residencySources:{...residencySources,sourceFactsConfirmed:null},reciprocitySources:undefined})}>Remove reciprocal employee sources</button>
+ </section>;
+}

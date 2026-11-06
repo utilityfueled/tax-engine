@@ -1,6 +1,7 @@
 "use client";
+import {isSeparateStatePreview} from '@/lib/guided-interview-bridge';
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import type {
   ProviderFacingPayloadRedaction,
@@ -45,7 +46,9 @@ import {
   type GuidedReviewIssue,
   type InterviewSectionId,
 } from "@/lib/guided-interview-flow";
-import { mapFilingStatus } from "@/lib/guided-interview-bridge";
+import { TaxYearInputSchema } from "@/models/inputs";
+import { buildTaxInputFromGuidedData, mapFilingStatus } from "@/lib/guided-interview-bridge";
+import { reconcileWorkspaceGuidedState } from "@/lib/workspace-guided-state";
 import { computeGuidedPreview } from "@/lib/guided-preview-compute";
 import { getInterviewQuestionUiHint } from "@/lib/interview-question-ui";
 import {
@@ -54,12 +57,15 @@ import {
   type ProviderWorkspaceResponse
 } from "@/lib/provider-workspace-request";
 import { prepareUploadableFiles } from "@/lib/uploaded-document-detection";
-import { cacheWorkspaceDocumentFiles } from "@/lib/workspace-document-file-cache";
+import { DocumentTaxYearField } from "./document-tax-year-field";
+import { cacheWorkspaceDocumentFiles, deleteCachedWorkspaceDocumentFiles } from "@/lib/workspace-document-file-cache";
 import {
   answerInterviewQuestion,
   answerWorkspaceInterviewQuestion,
   clearWorkspace,
   clearWorkspaceRecord,
+  clearWorkspaceGuidedData,
+  confirmWorkspaceDocumentTaxYear,
   getFutureYearSampleUploadMessage,
   ingestFiles,
   ingestFilesIntoWorkspace,
@@ -420,6 +426,13 @@ export function ReturnWorkspaceScreen({
   );
   const [partnerReviewDownloadRun, setPartnerReviewDownloadRun] = useState<PartnerReviewDownloadRun | null>(null);
   const [persistedGuidedFlowState, setPersistedGuidedFlowState] = useState<GuidedFlowState | null>(null);
+  const getTaxExplanationInput = useCallback(() => {
+    if (persistedGuidedFlowState?.phase !== "complete" || persistedGuidedFlowState.taxYear !== 2025) return null;
+    try {
+      const parsed = TaxYearInputSchema.safeParse(buildTaxInputFromGuidedData(persistedGuidedFlowState));
+      return parsed.success ? parsed.data : null;
+    } catch { return null; }
+  }, [persistedGuidedFlowState]);
   const [guidedFallbackPreview, setGuidedFallbackPreview] = useState<RefundTickerPreviewData | null>(null);
   const [guidedResumeSectionId, setGuidedResumeSectionId] = useState<InterviewSectionId | null>(null);
   const [guidedReviewIssues, setGuidedReviewIssues] = useState<GuidedReviewIssue[]>([]);
@@ -477,7 +490,7 @@ export function ReturnWorkspaceScreen({
           if (localWorkspace) {
             setEffectiveDeploymentMode("self-host");
             setWorkspaceAvailability("ready");
-            setWorkspace(localWorkspace);
+            setWorkspace(reconcileWorkspaceGuidedState(localWorkspace, loadGuidedFlowState(browserStorage, workspaceId)));
             setWorkspaceLookupComplete(true);
             setStorageMessage(null);
 
@@ -498,7 +511,7 @@ export function ReturnWorkspaceScreen({
 
         setEffectiveDeploymentMode(deploymentMode);
         setWorkspaceAvailability(adapter.availability);
-        setWorkspace(nextWorkspace);
+        setWorkspace(nextWorkspace ? reconcileWorkspaceGuidedState(nextWorkspace, loadGuidedFlowState(browserStorage, workspaceId)) : null);
         setWorkspaceLookupComplete(true);
         setStorageMessage(
           adapter.availability === "owner-required"
@@ -577,6 +590,7 @@ export function ReturnWorkspaceScreen({
       )
       || workspace.returnSummary.targetTaxYear === null
       || !nextGuidedFlowState
+      || nextGuidedFlowState.taxYear !== workspace.returnSummary.targetTaxYear
       || nextGuidedFlowState.segmentation.filingStatus === null
     ) {
       setGuidedFallbackPreview(null);
@@ -603,7 +617,8 @@ export function ReturnWorkspaceScreen({
         refund: guidedPreview.refund,
         amountOwed: guidedPreview.amountOwed
       },
-      stateMetrics: guidedPreview.state
+      separateStateReturns:isSeparateStatePreview(guidedPreview.state)?guidedPreview.state:undefined,
+      stateMetrics: guidedPreview.state&&!isSeparateStatePreview(guidedPreview.state)
         ? {
             stateCode: guidedPreview.state.stateCode,
             stateTax: guidedPreview.state.stateTax,
@@ -749,6 +764,13 @@ export function ReturnWorkspaceScreen({
     }
   }
 
+  function resetWorkspaceUi() {
+    setAnswerDrafts({}); setProviderSummaryRun(null); setProviderSummaryError(null);
+    setPersistedGuidedFlowState(null); setGuidedFallbackPreview(null); setGuidedResumeSectionId(null);
+    setGuidedReviewIssues([]); setGuidedReviewSummary(null); setGuidedModeRaw(false);
+    setPartnerReviewConsent(defaultPartnerReviewConsent); setPartnerReviewDownloadRun(null);
+  }
+
   function resetWorkspace() {
     if (!localWorkspaceEditingEnabled) {
       if (!workspace) {
@@ -759,6 +781,9 @@ export function ReturnWorkspaceScreen({
       void (async () => {
         try {
           await persistHostedWorkspace(clearWorkspaceRecord(workspace));
+          await deleteCachedWorkspaceDocumentFiles(workspaceId);
+          clearWorkspaceGuidedData(requireBrowserStorage(), workspaceId);
+          resetWorkspaceUi();
           setStorageMessage("Return reset.");
         } catch (error) {
           setStorageMessage(resolveUiErrorMessage(error, "Could not reset the return. Please try again."));
@@ -767,13 +792,17 @@ export function ReturnWorkspaceScreen({
       return;
     }
 
-    try {
-      const nextWorkspace = clearWorkspace(requireBrowserStorage(), workspaceId);
-      setWorkspace(nextWorkspace);
-      setStorageMessage("Return reset.");
-    } catch {
-      setStorageMessage("Could not reset the return. Please try again.");
-    }
+    void (async () => {
+      try {
+        await deleteCachedWorkspaceDocumentFiles(workspaceId);
+        const nextWorkspace = clearWorkspace(requireBrowserStorage(), workspaceId);
+        resetWorkspaceUi();
+        setWorkspace(nextWorkspace);
+        setStorageMessage("Return reset.");
+      } catch {
+        setStorageMessage("Could not reset the return. Please try again.");
+      }
+    })();
   }
 
   function removeWorkspaceDocument(documentId: string, documentLabel: string) {
@@ -786,6 +815,7 @@ export function ReturnWorkspaceScreen({
       void (async () => {
         try {
           await persistHostedWorkspace(removeDocumentFromWorkspace(workspace, documentId));
+          await deleteCachedWorkspaceDocumentFiles(workspaceId, [documentId]);
           setStorageMessage(`Removed ${documentLabel}.`);
         } catch (error) {
           setStorageMessage(resolveUiErrorMessage(error, "Could not remove the document. Please try again."));
@@ -794,13 +824,23 @@ export function ReturnWorkspaceScreen({
       return;
     }
 
-    try {
-      const nextWorkspace = removeDocument(requireBrowserStorage(), workspaceId, documentId);
-      setWorkspace(nextWorkspace);
-      setStorageMessage(`Removed ${documentLabel}.`);
-    } catch {
-      setStorageMessage("Could not remove the document. Please try again.");
-    }
+    void (async () => {
+      try {
+        await deleteCachedWorkspaceDocumentFiles(workspaceId, [documentId]);
+        const nextWorkspace = removeDocument(requireBrowserStorage(), workspaceId, documentId);
+        setWorkspace(nextWorkspace);
+        setStorageMessage(`Removed ${documentLabel}.`);
+      } catch {
+        setStorageMessage("Could not remove the document. Please try again.");
+      }
+    })();
+  }
+
+  async function confirmDocumentYear(documentId: string, year: number | null) {
+    if (!workspace) throw new Error("The return is not available.");
+    const nextWorkspace = confirmWorkspaceDocumentTaxYear(workspace, documentId, year);
+    await persistHostedWorkspace(nextWorkspace);
+    setStorageMessage("Document year saved. Review the related answers again.");
   }
 
   function markInterviewQuestionAnswered(
@@ -950,7 +990,7 @@ export function ReturnWorkspaceScreen({
 
       const fileName = resolveDownloadFileName(
         response.headers,
-        `${workspace.id}-filled-return.pdf`
+        `${workspace.id}-review-return.pdf`
       );
       const includedForms = response.headers
         .get("X-Tax-Engine-Included-Forms")
@@ -1033,19 +1073,19 @@ export function ReturnWorkspaceScreen({
 
   if (!workspace && !workspaceLookupComplete) {
     return (
-      <main className="workspace-grid">
+      <div className="workspace-grid">
         <section className="hero">
           <p className="hero-kicker">TAX RETURN</p>
           <h1>Loading your return...</h1>
           <p className="hero-copy">{storageMessage ?? "One moment while we load your tax return."}</p>
         </section>
-      </main>
+      </div>
     );
   }
 
   if (!workspace) {
     return (
-      <main className="workspace-grid">
+      <div className="workspace-grid">
       <section className="hero">
         <p className="hero-kicker">TAX RETURN</p>
         <h1>
@@ -1073,7 +1113,7 @@ export function ReturnWorkspaceScreen({
             </Link>
           </div>
         </section>
-      </main>
+      </div>
     );
   }
 
@@ -1094,10 +1134,9 @@ export function ReturnWorkspaceScreen({
   const partnerReviewRoute = unsupportedRoutes.find((route) => route.id === "partner-review-later") ?? null;
   const unsupportedTaxYear = hasUnsupportedTaxYear(workspace.returnSummary);
   const unsupportedTaxYearNotice = formatUnsupportedTaxYearNotice(workspace.returnSummary);
-  const filingPackDownload = workspace.documents.length > 0
+  const filingPackDownload = workspace.documents.length > 0 || persistedGuidedFlowState !== null
     ? buildWorkspaceFilingPackDownload(workspace)
     : null;
-  const filingPackReady = workspace.returnSummary.status === "ready-to-recompute";
   const canPresentCompletedBundle = canPresentCompletedReturnDownload({
     returnSummary: workspace.returnSummary,
     guidedFlowState: persistedGuidedFlowState,
@@ -1109,13 +1148,15 @@ export function ReturnWorkspaceScreen({
     pendingInterviewQuestionCount,
     guidedReviewIssueCount: guidedReviewIssues.length
   });
-  const canDownloadFilledReturnPdf = filingPackReady || persistedGuidedFlowState !== null;
+  const canDownloadFilledReturnPdf = persistedGuidedFlowState?.taxYear === 2025
+    && workspace.returnSummary.targetTaxYear === 2025
+    && workspace.returnSummary.taxYearState === "single";
   const filingPackPanelTitle = canPresentCompletedBundle ? "Return Bundle" : "Draft Return Bundle";
   const filingPackJumpLabel = canPresentCompletedBundle ? "Go to Return Bundle" : "Go to Draft Return Bundle";
   const filingPackIntroCopy = canPresentCompletedBundle
-    ? "Download a filled PDF packet for the federal forms and state artifacts we currently generate, or keep the local JSON bundle with the structured data and audit notes."
+    ? "Download a review PDF with taxpayer IDs removed, or save the workspace summary and audit notes as JSON. Filing exports are not yet qualified."
     : canDownloadFilledReturnPdf
-      ? "Your return still has review items, but you can download a draft filled federal PDF based on your guided answers and keep the JSON bundle for audit notes."
+      ? "You can download a review PDF after completing the required taxpayer facts. It is not a filing copy. Save the workspace summary and audit notes as JSON."
       : "Your return is not filing-ready yet. Download a local draft return bundle with the current forms data, checklist, and review notes.";
   const filingPackButtonLabel = canPresentCompletedBundle ? "Download Return Bundle (.json)" : "Download Draft Return Bundle (.json)";
   const missingItemsMemoIncluded = filingPackDownload?.filingPack.files.some(
@@ -1189,7 +1230,7 @@ export function ReturnWorkspaceScreen({
       <p className="panel-text">
         {hasBlockingActions
           ? "Some items need your attention before your return can be finalized. Please review them in order."
-          : "Your return bundle is ready. These follow-ups are advisory and can help you review uploaded documents that were not deterministically mapped into the return."}
+          : "Review these advisory follow-ups and any uploaded documents that still need attention."}
       </p>
       <div className="route-grid section-heading">
         {unsupportedRoutes.map((route) => {
@@ -1322,6 +1363,9 @@ export function ReturnWorkspaceScreen({
               <strong>{filingPackDownload.filingPack.manifest.localOnly ? "yes" : "no"}</strong>
             </article>
           </div>
+          {persistedGuidedFlowState ? (
+            <p className="answer-note">The JSON summary does not include your private guided answers. Use the encrypted recovery backup to save and restore those answers and original files.</p>
+          ) : null}
           <div className="inline-actions">
             {canDownloadFilledReturnPdf ? (
               <button
@@ -1335,7 +1379,7 @@ export function ReturnWorkspaceScreen({
                 {filledReturnPending
                   ? "Generating Filled Return PDF..."
                   : canPresentCompletedBundle
-                    ? "Download Filled Return PDF"
+                    ? "Download Review PDF"
                     : "Download Draft Filled Return PDF"}
               </button>
             ) : null}
@@ -1380,7 +1424,7 @@ export function ReturnWorkspaceScreen({
         </>
       ) : (
         <p className="panel-text">
-          Upload at least one document to generate your return bundle.
+          Enter guided return facts or upload a document to generate your return bundle.
         </p>
       )}
     </RetroShell>
@@ -1525,7 +1569,7 @@ export function ReturnWorkspaceScreen({
 
   if (guidedMode) {
     return (
-      <main className="workspace-grid">
+      <div className="workspace-grid">
         <GuidedInterviewShell
           workspace={workspace}
           onExitGuided={() => {
@@ -1542,12 +1586,12 @@ export function ReturnWorkspaceScreen({
             setGuidedResumeSectionId(null);
           }}
         />
-      </main>
+      </div>
     );
   }
 
   return (
-    <main className="workspace-grid">
+    <div className="workspace-grid">
       <div className="guided-mode-toggle" style={{ justifyContent: "flex-start" }}>
         <button
           className="utility-button utility-button-small"
@@ -1563,6 +1607,7 @@ export function ReturnWorkspaceScreen({
         mode="workspace"
         onUploadDocuments={handleGuidedUpload}
         deploymentMode={effectiveDeploymentMode}
+        getTaxExplanationInput={persistedGuidedFlowState?.phase === "complete" && persistedGuidedFlowState.taxYear === 2025 ? getTaxExplanationInput : undefined}
         onOpenGuided={() => setGuidedMode(true)}
       />
 
@@ -1595,6 +1640,14 @@ export function ReturnWorkspaceScreen({
           <Link className="utility-button workspace-link" href="/">
             Back to My Returns
           </Link>
+          <span
+            className="status-inline"
+            role="status"
+            aria-live="polite"
+            aria-label="Return status"
+          >
+            {storageMessage ?? documentStatusMessage}
+          </span>
         </div>
         {unsupportedTaxYearNotice ? (
           <p className="document-meta">{unsupportedTaxYearNotice}</p>
@@ -1716,11 +1769,11 @@ export function ReturnWorkspaceScreen({
               ) : null}
               <li>{formatWorkspaceCalculationStatus(uploadedSupportedDocumentCount, workspace.returnSummary)}</li>
               <li>{workspace.summary.pendingReviewDocuments} documents need review</li>
-              <li>
-                tax year: {workspace.seededReturn.taxYearHints.length > 0
+              {uploadedDocumentCount > 0 ? <li>
+                source document tax years: {workspace.seededReturn.taxYearHints.length > 0
                   ? workspace.seededReturn.taxYearHints.join(", ")
                   : "not yet determined"}
-              </li>
+              </li> : null}
             </ul>
             {unsupportedTaxYearNotice ? (
               <p className="panel-text">{unsupportedTaxYearNotice}</p>
@@ -1782,6 +1835,11 @@ export function ReturnWorkspaceScreen({
                   ))}
                 </ul>
               </>
+            ) : null}
+            {workspace.documents.length > 0 && !workspace.enginePreview && !guidedFallbackPreview ? (
+              <p className="panel-text">
+                A calculation requires complete taxpayer facts for the selected year. Open the guided interview to confirm your filing status, birth dates, residency and eligibility details. Answering document questions alone does not establish those facts.
+              </p>
             ) : null}
           </RetroShell>
 
@@ -1956,18 +2014,11 @@ export function ReturnWorkspaceScreen({
                   onChange={syncUpload}
                 />
               </label>
+              <p className="document-meta">{storageMessage === `${workspace.summary.totalDocuments} docs stored locally.` ? storageMessage : documentStatusMessage}</p>
               <div className="inline-actions">
                 <button className="utility-button" type="button" onClick={resetWorkspace}>
                   Reset Return
                 </button>
-                <span
-                  className="status-inline"
-                  role="status"
-                  aria-live="polite"
-                  aria-label="Return status"
-                >
-                  {storageMessage ?? documentStatusMessage}
-                </span>
               </div>
             </RetroShell>
 
@@ -2164,6 +2215,12 @@ export function ReturnWorkspaceScreen({
                     </div>
                     <p className="document-meta">{document.name}</p>
                     <p className="document-meta">{document.notes}</p>
+                    <DocumentTaxYearField
+                      key={`${document.id}:${document.taxYear ?? "unknown"}`}
+                      taxYear={document.taxYear}
+                      fixture={Boolean(document.matchedFixtureId)}
+                      onConfirm={(year) => confirmDocumentYear(document.id, year)}
+                    />
                     {formatDocumentCoverageNote(document.coverage, workspace.returnSummary) ? (
                       <p className="document-meta">
                         {formatDocumentCoverageNote(document.coverage, workspace.returnSummary)}
@@ -2319,6 +2376,6 @@ export function ReturnWorkspaceScreen({
         </div>
       </div>
 
-    </main>
+    </div>
   );
 }

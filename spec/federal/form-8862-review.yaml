@@ -1,0 +1,50 @@
+form: form-8862-review
+taxYear: 2025
+notes: >-
+  Review-only mapping of final Form8862 (Rev12/2025), official IRS source
+  https://www.irs.gov/pub/irs-pdf/f8862.pdf and instructions
+  https://www.irs.gov/instructions/i8862, retrieved2026-10-26.
+  The EIC-only source route maps PartsI/II and leaves III/IV unmarked. Original
+  current sources, denial history and canonical results are bound before identifier
+  redaction through an opaque prepared context. No final-year or filing gate opens.
+lines:
+  - line: "1-4"
+    description: "Actual claim year and derived income-only shortcut"
+    formula: "Map actual current year and EIC box; line3 derives from unresolved denial reasons; when true, retain all remaining PartII fields blank"
+    irsRef: "Final8862 PartsI/II lines1-4"
+    testRef: "tests/pdf/form-8862-review.test.ts::maps the income-only shortcut and both actual claimant rows"
+  - line: "5-8"
+    description: "Actual selected children and birth/death residence convention"
+    formula: "Use canonical source IDs for the same ScheduleEIC child order; print actual line7 total or365/366 when the actual birth/death period rule applies; print only actual claim-year birth/death month/day"
+    irsRef: "Final8862 lines5-8; i8862 line7; finalScheduleEIC lines2 and6"
+    testRef: "tests/pdf/form-8862-review.test.ts::retains actual birth death days and required evidence alongside the printed child convention"
+  - line: "9-11"
+    description: "Separate actual claimant residence age and dependency"
+    formula: "Print each applicable original owner row without copying the other owner's days; preserve derived actual dependency exceptions"
+    irsRef: "Final8862 lines9-11"
+    testRef: "tests/pdf/form-8862-review.test.ts::maps the income-only shortcut and both actual claimant rows"
+  - line: "source-context"
+    description: "Private original source and calculation binding"
+    formula: "Reject missing changed or serialized source context and changed physical/audit values before PDF IO; render original-source validation separately from redacted identities"
+    irsRef: "Original current Form8862 source conservation"
+    testRef: "tests/pdf/form-8862-review.test.ts::rejects changed current sources and forged printed results before PDF IO"
+  - line: "packet"
+    description: "Current required EIC attachment in the review packet"
+    formula: "Include actual Form8862 only for a positive EIC claim requiring completed current recertification; preserve independent ScheduleEIC inclusion and no fabricated supporting certificate"
+    irsRef: "i8862 Purpose of Form; finalScheduleEIC attachment instructions"
+    testRef: "tests/pdf/form-8862-review.test.ts::includes current recertification only for an actual required positive claim"
+  - line: "workspace"
+    description: "Actual workspace sources bind before identity redaction"
+    formula: "Prepare current EIC original source context before redaction and include the calculated current attachment in the review download"
+    irsRef: "Original current source and review privacy boundary"
+    testRef: "tests/apps/web/workspace-filled-return.test.ts::binds current Form8862 before redacting workspace identities"
+  - line: "workspace-birth-death"
+    description: "Actual born and deceased child remains source-bound through full workspace export"
+    formula: "Preserve actual blank SSN and current evidence while producing the positive required claim packet; actual residence47 of92days remains distinct from printed365days and ScheduleEIC12months"
+    irsRef: "i8862 line7 and finalScheduleEIC lines2 and6; original source privacy boundary"
+    testRef: "tests/apps/web/workspace-filled-return.test.ts::exports the actual born and deceased child without changing original eligibility sources"
+  - line: "claimant-checkbox"
+    description: "Current actual-child dispatch controls printed childless restrictions"
+    formula: "Use the same calculated current qualifying-child presence as canonical EIC; an SSN-ineligible actual child still prevents childless age/home restrictions; preserve Rule10 and actual no-child conditions"
+    irsRef: "Final1040 line27c instructions; IRC32(c)(3)(D); i8862 PartsI/II"
+    testRef: "tests/pdf/form-8862-review.test.ts::uses actual current child presence for printed claimant restrictions"

@@ -15,8 +15,8 @@
 import Decimal from "decimal.js";
 import type { FilingStatus, YearConstants, BaseYearTaxConstants } from "@/models/constants.js";
 import type { CalculatedLine } from "@/models/outputs.js";
-import { getBaseYearConstants } from "@/models/constants.js";
-import { calculateTaxFromBrackets, calculateCapitalGainsTax } from "@/utils/tax-math.js";
+import { getBaseYearConstants, TAX_CONSTANTS } from "@/models/constants.js";
+import { calculateTaxFromBrackets, calculateRegularIncomeTax, calculateCapitalGainsTax } from "@/utils/tax-math.js";
 import { d, zeroFloor, roundDollar } from "@/utils/decimal.js";
 import { AuditTrail } from "@/utils/audit.js";
 
@@ -207,11 +207,11 @@ export function calculateScheduleJ(
     line4 = result.tax;
   } else {
     line4 = line3.greaterThan(0)
-      ? calculateTaxFromBrackets(line3, constants.taxBrackets[filingStatus])
+      ? calculateRegularIncomeTax(line3, filingStatus, constants)
       : ZERO;
   }
-  audit.record("Sch J", "4", "Tax on non-farm income (2025 rates)", line4,
-    `Tax on Line 3 ($${line3}) at 2025 rates`);
+  audit.record("Sch J", "4", `Tax on non-farm income (${constants.taxYear} rates)`, line4,
+    `Tax on Line 3 ($${line3}) at ${constants.taxYear} rates`);
 
   // ── Base year computations ─────────────────────────────────
   const baseYears = [
@@ -226,8 +226,8 @@ export function calculateScheduleJ(
   }[] = [];
 
   for (const { input: byInput, yearOffset, linePrefix } of baseYears) {
-    const year = 2025 - yearOffset;
-    const byConstants = getBaseYearConstants(year);
+    const year = constants.taxYear - yearOffset;
+    const byConstants = year === 2025 ? TAX_CONSTANTS[2025] : getBaseYearConstants(year);
     const byFilingStatus = byInput.filingStatus;
 
     // Base year taxable income (can be negative)
@@ -287,9 +287,9 @@ export function calculateScheduleJ(
   const line19 = baseYearResults[0].originalTax;
   const line20 = baseYearResults[1].originalTax;
   const line21 = baseYearResults[2].originalTax;
-  audit.record("Sch J", "19", "2022 original tax", line19, "From 2022 return");
-  audit.record("Sch J", "20", "2023 original tax", line20, "From 2023 return");
-  audit.record("Sch J", "21", "2024 original tax", line21, "From 2024 return");
+  audit.record("Sch J", "19", `${constants.taxYear-3} original tax`, line19, `From ${constants.taxYear-3} return`);
+  audit.record("Sch J", "20", `${constants.taxYear-2} original tax`, line20, `From ${constants.taxYear-2} return`);
+  audit.record("Sch J", "21", `${constants.taxYear-1} original tax`, line21, `From ${constants.taxYear-1} return`);
 
   // Line 22: sum of original taxes
   const line22 = roundDollar(line19.plus(line20).plus(line21));
@@ -365,6 +365,7 @@ function computeBaseYearTax(
     if (byQD.greaterThan(0) || totalLTCG.greaterThan(0)) {
       // Build a minimal YearConstants-like object for calculateCapitalGainsTax
       const pseudoConstants = {
+        taxYear: byConstants.taxYear,
         taxBrackets: byConstants.taxBrackets,
         capitalGainsRates: {
           ...byConstants.capitalGainsRates,
@@ -374,7 +375,7 @@ function computeBaseYearTax(
 
       const result = calculateCapitalGainsTax(
         combinedIncome, byQD, totalLTCG, filingStatus, pseudoConstants,
-        { section1250Gain: totalSection1250 }
+        { section1250Gain: totalSection1250, useTaxRateSchedules: true }
       );
       return result.tax;
     }

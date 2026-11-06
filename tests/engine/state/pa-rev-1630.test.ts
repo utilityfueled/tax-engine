@@ -338,15 +338,15 @@ describe("Pennsylvania REV-1630 Underpayment of Estimated Tax", () => {
         // Cumulative: Q1 = $250 (whd) + $500 = $750
         //             Q2 = $750 + $250 + $500 = $1,500
         //             Q3 = $1,500 + $250 + $500 = $2,250 ≥ $1,535
-        // Exception met from Q3 onward
+        // Rounded prior-tax thresholds are384/768/1151/1535; all four periods qualify.
         priorYearPATaxableIncome: d(50000),
       }));
 
-      // Q1: cumulative $750 < $1,535 → exception NOT met
-      expect(result.quarters[0].exception1Met).toBe(false);
+      // Q1: cumulative750 >= rounded25%prior-tax384
+      expect(result.quarters[0].exception1Met).toBe(true);
 
-      // Q2: cumulative $1,500 < $1,535 → exception NOT met
-      expect(result.quarters[1].exception1Met).toBe(false);
+      // Q2: cumulative1500 >= rounded50%prior-tax768
+      expect(result.quarters[1].exception1Met).toBe(true);
 
       // Q3: cumulative $2,250 ≥ $1,535 → exception MET
       expect(result.quarters[2].exception1Met).toBe(true);
@@ -354,7 +354,7 @@ describe("Pennsylvania REV-1630 Underpayment of Estimated Tax", () => {
       // Q4: cumulative $3,000 ≥ $1,535 → exception MET
       expect(result.quarters[3].exception1Met).toBe(true);
 
-      // Interest only on Q1 and Q2
+      // All periods are excepted.
       expect(result.quarters[2].interest).toEqual(ZERO);
       expect(result.quarters[3].interest).toEqual(ZERO);
     });
@@ -730,11 +730,11 @@ describe("Pennsylvania REV-1630 Underpayment of Estimated Tax", () => {
       }));
 
       // Quarterly withholding share = $500/4 = $125
-      // Q1 cumulative: $125 + $1,000 = $1,125 < $3,070 → NOT met
+      // Q1cumulative1125 >= rounded25%of3070=768 → MET
       // Q2 cumulative: $1,125 + $125 + $1,000 = $2,250 < $3,070 → NOT met
       // Q3 cumulative: $2,250 + $125 + $0 = $2,375 < $3,070 → NOT met
       // Q4 cumulative: $2,375 + $125 + $0 = $2,500 < $3,070 → NOT met
-      expect(result.quarters[0].exception1Met).toBe(false);
+      expect(result.quarters[0].exception1Met).toBe(true);
       expect(result.quarters[3].exception1Met).toBe(false);
 
       // Q1: required $1,675, paid $1,000 → underpayment $675
@@ -752,7 +752,7 @@ describe("Pennsylvania REV-1630 Underpayment of Estimated Tax", () => {
       expect(result.totalInterest.gt(ZERO)).toBe(true);
     });
 
-    it("REV-1630 e2e: penalty with exception 1 partially met", () => {
+    it("REV-1630 e2e: corrected quarterly prior-year fractions except all periods", () => {
       // Tax = $6,000, withholding = $1,000
       // 90% = $5,400, underpayment base = $4,400, required = $1,100
       // Prior year: $30,000 → tax = $921
@@ -767,18 +767,18 @@ describe("Pennsylvania REV-1630 Underpayment of Estimated Tax", () => {
       expect(result.priorYearTaxAtCurrentRate).toEqual(d(921));
 
       // Quarterly withholding share = $1,000 / 4 = $250
-      // Q1: $250 + $200 = $450 < $921 → NOT met
-      // Q2: $450 + $250 + $200 = $900 < $921 → NOT met
+      // Q1:450 >=25%of921 rounded230 → met
+      // Q2:900 >=50%of921 rounded461 → met
       // Q3: $900 + $250 + $200 = $1,350 ≥ $921 → MET
       // Q4: cumulative ≥ $921 → MET
-      expect(result.quarters[0].exception1Met).toBe(false);
-      expect(result.quarters[1].exception1Met).toBe(false);
+      expect(result.quarters[0].exception1Met).toBe(true);
+      expect(result.quarters[1].exception1Met).toBe(true);
       expect(result.quarters[2].exception1Met).toBe(true);
       expect(result.quarters[3].exception1Met).toBe(true);
 
-      // Interest only on Q1 and Q2
-      expect(result.quarters[0].interest.gt(ZERO)).toBe(true);
-      expect(result.quarters[1].interest.gt(ZERO)).toBe(true);
+      // All quarters meet their matching fractions.
+      expect(result.quarters[0].interest).toEqual(ZERO);
+      expect(result.quarters[1].interest).toEqual(ZERO);
       expect(result.quarters[2].interest).toEqual(ZERO);
       expect(result.quarters[3].interest).toEqual(ZERO);
     });
@@ -844,5 +844,69 @@ describe("Pennsylvania REV-1630 Underpayment of Estimated Tax", () => {
 
       expect(result.lines.length).toBeGreaterThan(0);
     });
+  });
+});
+
+// Spec: spec/state/pa-rev-1630.yaml#year-specific-source-contract
+// Originals pinned before product in nov02-pa-rev1630-correction/originals-before-output.json.
+describe("REV1630 refreshed official worksheet source contract", () => {
+  it("uses sourced yearly worksheet factors without inventing the 2027 rate", () => {
+    expect(PA_REV1630_CONSTANTS[2024].daysToYearEnd).toEqual([258,197,106]);
+    expect(PA_REV1630_CONSTANTS[2025].daysToYearEnd).toEqual([260,198,107]);
+    const c = PA_REV1630_CONSTANTS[2026];
+    expect(c.minimumTaxThreshold).toEqual(d(430));
+    expect(c.daysToYearEnd).toEqual([260,199,107]);
+    expect(c.dailyRate).toEqual(d(".000192"));
+    expect(c.nextYearDailyRate).toBeUndefined();
+  });
+
+  it.each([2024,2025,2026])("compares the official prior-tax fractions for year %s", taxYear => {
+    const result=calculateREV1630(makeInput({taxYear,taxLiability:d(5000),withholdingAndCredits:d(1000),quarterlyEstimatedPayments:[d(500),d(500),d(500),d(500)],priorYearPATaxableIncome:d(50000)}));
+    expect(result.priorYearTaxAtCurrentRate).toEqual(d(1535));
+    expect(result.quarters.map(q=>q.exception1Met)).toEqual([true,true,true,true]);
+    expect(result.totalInterest).toEqual(ZERO);
+  });
+
+  // Spec: quarterly-safe-harbor-boundary
+  it("compares cumulative payments with the matching rounded prior-tax fraction", () => {
+    const result=calculateREV1630(makeInput({taxLiability:d(10000),quarterlyEstimatedPayments:[d(383),d(385),d(383),d(384)],priorYearPATaxableIncome:d(50000)}));
+    expect(result.quarters.map(q=>q.exception1Met)).toEqual([false,true,true,true]);
+    expect(result.quarters[0].underpayment).toEqual(d(1867));
+    expect(result.quarters[0].interest).toEqual(d(131));
+    expect(result.totalInterest).toEqual(d(131));
+  });
+
+  it("uses the actual published 2024 Q3 factor without claiming calendar Q1 resolution", () => {
+    const result=calculateREV1630(makeInput({taxYear:2024,taxLiability:d(100000)}));
+    expect(result.quarters[2].underpayment).toEqual(d(22500));
+    expect(result.quarters[2].interest).toEqual(d(976));
+    expect(result.lines.some(x=>x.formula.includes("published worksheet"))).toBe(true);
+  });
+
+  // Spec: unknown-next-year-rate
+  it("rejects unexcepted 2026 interest requiring an unknown 2027 rate", () => {
+    expect(()=>calculateREV1630(makeInput({taxYear:2026,taxLiability:d(430)}))).toThrow(/2027.*rate|rate.*2027/i);
+  });
+
+  it("keeps known 2026 zero outcomes without requiring an unused future rate", () => {
+    const inputs=[
+      makeInput({taxYear:2026,taxLiability:d(429)}),
+      makeInput({taxYear:2026,taxLiability:d(5000),priorYear100PercentForgiveness:true}),
+      makeInput({taxYear:2026,taxLiability:d(5000),withholdingAndCredits:d(4500)}),
+      makeInput({taxYear:2026,taxLiability:d(5000),quarterlyEstimatedPayments:[d(1125),d(1125),d(1125),d(1125)]}),
+    ];
+    for(const input of inputs)expect(calculateREV1630(input).totalInterest).toEqual(ZERO);
+  });
+
+  // Spec: reported-inputs
+  it.each(["negativeTax","nanTax","infiniteCredit","negativePayment","negativePriorIncome","negativePriorCredit"])("rejects invalid reported amounts even on an otherwise exempt return %s", label => {
+    const input=makeInput({priorYear100PercentForgiveness:true});
+    if(label==="negativeTax")input.taxLiability=d(-1);
+    if(label==="nanTax")input.taxLiability=d("NaN");
+    if(label==="infiniteCredit")input.withholdingAndCredits=d("Infinity");
+    if(label==="negativePayment")input.quarterlyEstimatedPayments=[d(-1),ZERO,ZERO,ZERO];
+    if(label==="negativePriorIncome")input.priorYearPATaxableIncome=d(-1);
+    if(label==="negativePriorCredit")input.priorYearTaxForgivenessCredit=d(-1);
+    expect(()=>calculateREV1630(input)).toThrow(/finite|nonnegative/i);
   });
 });

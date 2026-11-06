@@ -1,13 +1,13 @@
 form: "Form 1098-E"
 fullName: "Student Loan Interest Statement"
 taxYear: 2025
-irsReference: "https://www.irs.gov/instructions/i1098e"
+irsReference: "https://www.irs.gov/pub/irs-prior/i1098et--2025.pdf"
 
 notes: |
   Form 1098-E reports student loan interest received by a lender from a
   borrower during the calendar year. Eligible lenders (banks, credit unions,
   federal/state agencies, loan servicers) must file when interest received
-  exceeds $600. Borrowers use Box 1 to claim the student loan interest
+  is $600 or more. Borrowers use Box 1 as a source for the student loan interest
   deduction on Schedule 1 Line 21, subject to:
   - $2,500 annual maximum (IRC §221(b)(1))
   - Modified AGI phase-out (IRC §221(b)(2)(B)):
@@ -20,6 +20,10 @@ notes: |
       least half-time in a degree program at an eligible institution.
   - Loan origination fees and capitalized interest count as interest paid
     (IRC §221(e)(1); Pub 970 Ch. 4).
+  Refreshed 2026-10-25 against final2025 instructions and current2026 instructions.
+  Box2 checked means Box1 DOES NOT include origination fees/capitalized interest
+  for a pre-September1,2004 loan. The old positively named field is unverified
+  legacy data, never an inferred actual checkbox or additional interest amount.
 
   Multiple Form 1098-E statements are aggregated when a borrower has loans
   with multiple servicers. The engine sums all Box 1 amounts and feeds the
@@ -41,15 +45,27 @@ businessRuleValidation:
 lines:
   - line: "1"
     description: "Student loan interest received by lender"
-    formula: "Total qualified student loan interest paid by borrower to this lender during the year. Includes interest payments, loan origination fees allocated over the life of the loan, and capitalized interest. Does not include penalties or late charges."
+    formula: "Actual lender Box1 interest received during the calendar year. For loans on/after September1,2004 the lender includes qualifying origination fees and capitalized interest. Source amounts do not establish borrower deduction eligibility or additional unreported interest."
     irsRef: "Form 1098-E Instructions, Box 1"
     testRef: "tests/engine/forms/form-1098-e.test.ts::single Form 1098-E returns correct total"
 
   - line: "2"
-    description: "Checkbox — interest includes loan origination fees and/or capitalized interest"
-    formula: "Boolean indicator; if checked, Box 1 includes capitalized interest or origination fee amounts. Informational only — does not affect the deduction computation."
+    description: "Checkbox — Box1 excludes certain interest for a pre-September1,2004 loan"
+    formula: "Actual checked Box2 means origination fees/capitalized interest are not reported in Box1 for a loan before September1,2004. Actual unchecked is false, omitted is unknown. Preserve the historical incorrectly labeled flag as unverified; never flip it into a new fact or invent an additional amount."
     irsRef: "Form 1098-E Instructions, Box 2"
-    testRef: "tests/engine/forms/form-1098-e.test.ts::Box 2 capitalized interest flag appears in audit trail"
+    testRef: "tests/engine/forms/form-1098-e-sources.test.ts::preserves actual Box2 status and never reinterprets the legacy flag"
+
+  - line: "2-reference"
+    description: "Reference summary preserves actual checkbox meaning"
+    formula: "Display checked, unchecked or unknown actual Box2 status with the official exclusion meaning. Preserve the reference-only disclosure and original Box1 amount; no estimated additional interest is added."
+    irsRef: "2025 Instructions for Forms1098E/1098T, Box2"
+    testRef: "tests/pdf/fill-form-1098-e.test.ts::distinguishes checked unchecked and unknown Box2 in the reference summary"
+
+  - line: "source-adapter"
+    description: "Retain only supplied source year ownership and Box2 status"
+    formula: "Forward actual sourceId, taxYear, borrowerId, accountHolder and Box2 value without defaults. Preserve an older wrong-label field as legacy information; it establishes no actual checkbox or borrower eligibility."
+    irsRef: "2025 Instructions for Forms1098E/1098T, borrower and Box2"
+    testRef: "tests/engine/workspace-engine-input.test.ts::preserves actual student loan source metadata without reversing legacy Box2"
 
   - line: "agg"
     description: "Aggregation: sum Box 1 across all Form 1098-E statements plus any manual studentLoanInterest"

@@ -1,0 +1,180 @@
+{
+  "version": 1,
+  "qualification": "NONQUALIFYING_DIAGNOSTIC",
+  "applicationSource": "cecb99444f63aca4ad8cc4411675c0fa2cf630de",
+  "originalFullListSha256": "b15051ef3a45fa837b72268af3deb638e6732ca415a0bd2448a9e6b06452aaec",
+  "fullCaseCount": 592,
+  "originalOutcome": {
+    "passed": 573,
+    "failed": 14,
+    "skipped": 5
+  },
+  "workers": 2,
+  "retries": 0,
+  "targetDeadlineMs": 30000,
+  "auditSha256": "2dc7e6dbadbd4ba3396689eb8d93276aa9363aa020732459af63785f758f2864",
+  "targets": [
+    {
+      "id": "b728893f573b6d85455a-44bacf3413917e38c444",
+      "file": "oh-business-part-year-native.spec.ts",
+      "titles": [
+        "Actual NEW212 source lifecycle 1280px",
+        "originates212-day business and header originals through real save review reopen and delete"
+      ],
+      "project": "chromium",
+      "timeout": 30000,
+      "expectedStatus": "passed"
+    },
+    {
+      "id": "b728893f573b6d85455a-1f27c83ed876ec70bb57",
+      "file": "oh-business-part-year-native.spec.ts",
+      "titles": [
+        "Actual NEW212 source lifecycle 390px",
+        "originates212-day business and header originals through real save review reopen and delete"
+      ],
+      "project": "chromium",
+      "timeout": 30000,
+      "expectedStatus": "passed"
+    },
+    {
+      "id": "cbbe468a2c437a74ba3b-b9a58af97c24a75e52a4",
+      "file": "oh-reciprocal-native.spec.ts",
+      "titles": [
+        "Actual OH reciprocal refund at 1280px",
+        "originates reciprocal employee originals and preserves actual source-bound review through reopen"
+      ],
+      "project": "chromium",
+      "timeout": 30000,
+      "expectedStatus": "passed"
+    },
+    {
+      "id": "cbbe468a2c437a74ba3b-05ac8b59964841d0dc0b",
+      "file": "oh-reciprocal-native.spec.ts",
+      "titles": [
+        "Actual OH reciprocal known-zero at 1280px",
+        "originates reciprocal employee originals and preserves actual source-bound review through reopen"
+      ],
+      "project": "chromium",
+      "timeout": 30000,
+      "expectedStatus": "passed"
+    },
+    {
+      "id": "cbbe468a2c437a74ba3b-d71bc1a8bc93a25d5e2c",
+      "file": "oh-reciprocal-native.spec.ts",
+      "titles": [
+        "Actual OH reciprocal refund at 390px",
+        "originates reciprocal employee originals and preserves actual source-bound review through reopen"
+      ],
+      "project": "chromium",
+      "timeout": 30000,
+      "expectedStatus": "passed"
+    },
+    {
+      "id": "cbbe468a2c437a74ba3b-33f2ddc9210831690b79",
+      "file": "oh-reciprocal-native.spec.ts",
+      "titles": [
+        "Actual OH reciprocal known-zero at 390px",
+        "originates reciprocal employee originals and preserves actual source-bound review through reopen"
+      ],
+      "project": "chromium",
+      "timeout": 30000,
+      "expectedStatus": "passed"
+    },
+    {
+      "id": "1c6b3c0da1a0cee28bb0-b18fd5b3cbf9cf54a7d3",
+      "file": "oh-resident-credit-native.spec.ts",
+      "titles": [
+        "Actual Ohio resident credit distinct at 1280px",
+        "types actual Virginia originals and preserves source-bound review lifecycle"
+      ],
+      "project": "chromium",
+      "timeout": 30000,
+      "expectedStatus": "passed"
+    },
+    {
+      "id": "1c6b3c0da1a0cee28bb0-413dd8bf0f3f19bfdebc",
+      "file": "oh-resident-credit-native.spec.ts",
+      "titles": [
+        "Actual Ohio resident credit cents at 1280px",
+        "types actual Virginia originals and preserves source-bound review lifecycle"
+      ],
+      "project": "chromium",
+      "timeout": 30000,
+      "expectedStatus": "passed"
+    },
+    {
+      "id": "1c6b3c0da1a0cee28bb0-661a9801074b0ae1fd61",
+      "file": "oh-resident-credit-native.spec.ts",
+      "titles": [
+        "Actual Ohio resident credit distinct at 390px",
+        "types actual Virginia originals and preserves source-bound review lifecycle"
+      ],
+      "project": "chromium",
+      "timeout": 30000,
+      "expectedStatus": "passed"
+    },
+    {
+      "id": "1c6b3c0da1a0cee28bb0-b9cc83516ffaa9de7d41",
+      "file": "oh-resident-credit-native.spec.ts",
+      "titles": [
+        "Actual Ohio resident credit cents at 390px",
+        "types actual Virginia originals and preserves source-bound review lifecycle"
+      ],
+      "project": "chromium",
+      "timeout": 30000,
+      "expectedStatus": "passed"
+    },
+    {
+      "id": "dea52e293800d48dc676-850bc71ea1c1aa50f182",
+      "file": "oh-school-district-part-year-native.spec.ts",
+      "titles": [
+        "PY school refund100 at 1280px",
+        "originates dated school and header originals through actual review and saved reopen"
+      ],
+      "project": "chromium",
+      "timeout": 30000,
+      "expectedStatus": "passed"
+    },
+    {
+      "id": "dea52e293800d48dc676-f185a68e4f050a27095f",
+      "file": "oh-school-district-part-year-native.spec.ts",
+      "titles": [
+        "PY school covered at 1280px",
+        "originates dated school and header originals through actual review and saved reopen"
+      ],
+      "project": "chromium",
+      "timeout": 30000,
+      "expectedStatus": "passed"
+    },
+    {
+      "id": "dea52e293800d48dc676-4634c520e2768358b2cd",
+      "file": "oh-school-district-part-year-native.spec.ts",
+      "titles": [
+        "PY school refund100 at 390px",
+        "originates dated school and header originals through actual review and saved reopen"
+      ],
+      "project": "chromium",
+      "timeout": 30000,
+      "expectedStatus": "passed"
+    },
+    {
+      "id": "dea52e293800d48dc676-35a1043fbf28043ab222",
+      "file": "oh-school-district-part-year-native.spec.ts",
+      "titles": [
+        "PY school covered at 390px",
+        "originates dated school and header originals through actual review and saved reopen"
+      ],
+      "project": "chromium",
+      "timeout": 30000,
+      "expectedStatus": "passed"
+    }
+  ],
+  "targetSourceSha256": {
+    "oh-business-part-year-native.spec.ts": "1b289ea42c57f108f810d84c8993e452380cbdf738c6f015e5dfe2526fbc1760",
+    "oh-reciprocal-native.spec.ts": "fbabb235a1803f1487e2f4db0e61fe8cba43c06dcf649d52da9598910626366b",
+    "oh-resident-credit-native.spec.ts": "a63c81e7604477a2bbdb0f4e7bc340d407f2d9f67f4a4995f15e28b304b7582d",
+    "oh-school-district-part-year-native.spec.ts": "3b23e50ffa61e4fe5307e9134f8fda8bffa0baec1bf1977a1d2d183e77c0cf5b"
+  },
+  "fullCollectionSha256": "d198850bbaf6bb9aea91be6f252c185a2b1eb28c9bb2732bc9bbaa5ddc68c0e0",
+  "originalAuditSha256": "7330923d4f247b90548f0384614ae916a88259b5da97a6b0aab1ce74e504fbb6"
+}

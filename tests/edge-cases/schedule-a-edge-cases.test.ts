@@ -1,3 +1,4 @@
+import { syntheticPublicCashHistory } from "../fixtures/charitable-carryover.js";
 /**
  * Edge case tests for Schedule A — Itemized Deductions
  * Tests SALT cap ($10K/$5K MFS), medical 7.5% threshold, mortgage
@@ -33,14 +34,14 @@ function makeFixture(overrides: Partial<TaxYearInput>): TaxYearInput {
 // ═══════════════════════════════════════════════════════════
 
 describe("Schedule A - SALT cap", () => {
-  it("$10K cap: $15K state taxes capped at $10K", () => {
+  it("2025 SALT allows $15K state taxes below the $40K limit", () => {
     const result = calculateScheduleA(makeFixture({
       w2s: [{
         ...simpleW2Fixture.w2s[0],
         stateTaxWithheld: "15000",
       }],
     }), d(100000), "single", c);
-    expect(result.saltDeduction.toNumber()).toBe(10000);
+    expect(result.saltDeduction.toNumber()).toBe(15000);
   });
 
   it("under cap: $7K state taxes fully deductible", () => {
@@ -63,24 +64,24 @@ describe("Schedule A - SALT cap", () => {
     expect(result.saltDeduction.toNumber()).toBe(10000);
   });
 
-  it("MFS: $5K cap instead of $10K", () => {
+  it("2025 MFS SALT allows $8K below the $20K limit", () => {
     const result = calculateScheduleA(makeFixture({
       w2s: [{
         ...simpleW2Fixture.w2s[0],
         stateTaxWithheld: "8000",
       }],
     }), d(100000), "married_filing_separately", c);
-    expect(result.saltDeduction.toNumber()).toBe(5000);
+    expect(result.saltDeduction.toNumber()).toBe(8000);
   });
 
-  it("MFJ gets full $10K cap", () => {
+  it("2025 MFJ SALT allows $12K below the $40K limit", () => {
     const result = calculateScheduleA(makeFixture({
       w2s: [{
         ...simpleW2Fixture.w2s[0],
         stateTaxWithheld: "12000",
       }],
     }), d(200000), "married_filing_jointly", c);
-    expect(result.saltDeduction.toNumber()).toBe(10000);
+    expect(result.saltDeduction.toNumber()).toBe(12000);
   });
 
   it("SALT includes state income + property + personal property taxes", () => {
@@ -100,8 +101,7 @@ describe("Schedule A - SALT cap", () => {
         mortgageInsurancePremiums: "0",
       }],
     }), d(100000), "single", c, { personalPropertyTaxes: d(2000) });
-    // $5K + $4K + $2K = $11K → capped at $10K
-    expect(result.saltDeduction.toNumber()).toBe(10000);
+    expect(result.saltDeduction.toNumber()).toBe(11000);
   });
 
   it("zero taxes: zero SALT deduction", () => {
@@ -261,19 +261,14 @@ describe("Schedule A - total itemized deductions", () => {
         mortgageInsurancePremiums: "200",
       }],
       donations: [
-        { recipient: "Charity", amount: "5000", type: "cash" },
+        { qualifiedOrganization: true, isPrivateFoundation: false, dateOfDonation: "2025-12-01", organization: "Synthetic qualified charity", recipient: "Charity", amount: "5000", type: "cash" },
       ],
     }), d(100000), "single", c, { medicalExpenses: d(10000) });
-    // Medical: $10K - $7.5K = $2.5K
-    // SALT: $8K + $3K = $11K → capped $10K
-    // Mortgage: $12K; PMI is ignored for 2025 because line 8d is reserved
-    // Charitable: $5K
-    // Total: $2.5K + $10K + $12K + $5K = $29,500
     expect(result.medicalDeduction.toNumber()).toBe(2500);
-    expect(result.saltDeduction.toNumber()).toBe(10000);
+    expect(result.saltDeduction.toNumber()).toBe(11000);
     expect(result.mortgageInterest.toNumber()).toBe(12000);
     expect(result.cashCharitable.toNumber()).toBe(5000);
-    expect(result.totalItemized.toNumber()).toBe(29500);
+    expect(result.totalItemized.toNumber()).toBe(30500);
   });
 
   it("zero everything: zero total", () => {
@@ -339,25 +334,24 @@ describe("Schedule A - SALT boundary edge cases", () => {
     expect(result.saltDeduction.toNumber()).toBeLessThanOrEqual(10000);
   });
 
-  it("SALT at $10,001 (single): capped at $10K — $1 lost", () => {
+  it("2025 single SALT allows $10,001 below the $40K limit", () => {
     const result = calculateScheduleA(makeFixture({
       w2s: [{
         ...simpleW2Fixture.w2s[0],
         stateTaxWithheld: "10001",
       }],
     }), d(120000), "single", c);
-    expect(result.saltDeduction.toNumber()).toBe(10000);
+    expect(result.saltDeduction.toNumber()).toBe(10001);
   });
 
-  it("very high SALT $50K (MFJ): still capped at $10K", () => {
-    // Combined state taxes far exceeding the cap should still be limited to $10K for MFJ
+  it("2025 MFJ SALT $50K is limited to $40K below the MAGI threshold", () => {
     const result = calculateScheduleA(makeFixture({
       w2s: [{
         ...simpleW2Fixture.w2s[0],
         stateTaxWithheld: "50000",
       }],
     }), d(400000), "married_filing_jointly", c);
-    expect(result.saltDeduction.toNumber()).toBe(10000);
+    expect(result.saltDeduction.toNumber()).toBe(40000);
   });
 });
 
@@ -391,12 +385,6 @@ describe("Schedule A - medical threshold boundary edge cases", () => {
 
 describe("Schedule A - all categories simultaneously", () => {
   it("medical + SALT + mortgage + charitable all active: each line computed independently", () => {
-    // AGI $150K → medical threshold $11,250. Expenses $15K → deduction $3,750
-    // State taxes $9K + property tax $2K = $11K → capped at $10K SALT
-    // Mortgage $600K → full interest ($24K); PMI is ignored for 2025
-    // Cash donations $7K
-    // Points $1K
-    // Total: $3,750 + $10,000 + $24,000 + $1,000 + $7,000 = $45,750
     const result = calculateScheduleA(makeFixture({
       w2s: [{
         ...simpleW2Fixture.w2s[0],
@@ -413,15 +401,15 @@ describe("Schedule A - all categories simultaneously", () => {
         mortgageInsurancePremiums: "500",
       }],
       donations: [
-        { recipient: "Red Cross", amount: "7000", type: "cash" },
+        { qualifiedOrganization: true, isPrivateFoundation: false, dateOfDonation: "2025-12-01", organization: "Synthetic qualified charity", recipient: "Red Cross", amount: "7000", type: "cash" },
       ],
     }), d(150000), "single", c, { medicalExpenses: d(15000) });
 
     expect(result.medicalDeduction.toNumber()).toBe(3750);
-    expect(result.saltDeduction.toNumber()).toBe(10000);
+    expect(result.saltDeduction.toNumber()).toBe(11000);
     expect(result.mortgageInterest.toNumber()).toBe(24000);
     expect(result.cashCharitable.toNumber()).toBe(7000);
-    expect(result.totalItemized.toNumber()).toBe(45750);
+    expect(result.totalItemized.toNumber()).toBe(46750);
   });
 });
 
@@ -434,7 +422,7 @@ describe("Schedule A - charitable deduction AGI limits", () => {
     // AGI $100K → 60% limit = $60K. Cash donations $20K → all deductible
     const result = calculateScheduleA(makeFixture({
       donations: [
-        { organization: "Red Cross", amount: "20000", type: "cash", dateOfDonation: "2025-06-01" },
+        { qualifiedOrganization: true, isPrivateFoundation: false, organization: "Red Cross", amount: "20000", type: "cash", dateOfDonation: "2025-06-01" },
       ],
     }), d(100000), "single", c);
     expect(result.cashCharitable.toNumber()).toBe(20000);
@@ -444,7 +432,7 @@ describe("Schedule A - charitable deduction AGI limits", () => {
     // AGI $100K → 60% limit = $60K. Cash donations $75K → capped at $60K
     const result = calculateScheduleA(makeFixture({
       donations: [
-        { organization: "Foundation", amount: "75000", type: "cash", dateOfDonation: "2025-06-01" },
+        { qualifiedOrganization: true, isPrivateFoundation: false, organization: "Foundation", amount: "75000", type: "cash", dateOfDonation: "2025-06-01" },
       ],
     }), d(100000), "single", c);
     expect(result.cashCharitable.toNumber()).toBe(60000);
@@ -454,7 +442,7 @@ describe("Schedule A - charitable deduction AGI limits", () => {
     // AGI $200K → 60% limit = $120K. Cash donations $120K → exactly at limit
     const result = calculateScheduleA(makeFixture({
       donations: [
-        { organization: "Charity", amount: "120000", type: "cash", dateOfDonation: "2025-06-01" },
+        { qualifiedOrganization: true, isPrivateFoundation: false, organization: "Charity", amount: "120000", type: "cash", dateOfDonation: "2025-06-01" },
       ],
     }), d(200000), "single", c);
     expect(result.cashCharitable.toNumber()).toBe(120000);
@@ -464,7 +452,7 @@ describe("Schedule A - charitable deduction AGI limits", () => {
     // AGI $200K → 30% limit = $60K. Appreciated stock $25K → all deductible
     const result = calculateScheduleA(makeFixture({
       donations: [
-        { organization: "Museum", amount: "25000", type: "appreciated_stock", dateOfDonation: "2025-06-01", costBasis: "10000", isLongTermCapitalGain: true },
+        { qualifiedOrganization: true, isPrivateFoundation: false, organization: "Museum", amount: "25000", type: "appreciated_stock", dateOfDonation: "2025-06-01", costBasis: "10000", isLongTermCapitalGain: true },
       ],
     }), d(200000), "single", c);
     expect(result.nonCashCharitable.toNumber()).toBe(25000);
@@ -474,24 +462,24 @@ describe("Schedule A - charitable deduction AGI limits", () => {
     // AGI $100K → 30% limit = $30K. Appreciated stock $50K → capped at $30K
     const result = calculateScheduleA(makeFixture({
       donations: [
-        { organization: "University", amount: "50000", type: "appreciated_stock", dateOfDonation: "2025-06-01", costBasis: "15000", isLongTermCapitalGain: true },
+        { qualifiedOrganization: true, isPrivateFoundation: false, organization: "University", amount: "50000", type: "appreciated_stock", dateOfDonation: "2025-06-01", costBasis: "15000", isLongTermCapitalGain: true },
       ],
     }), d(100000), "single", c);
     expect(result.nonCashCharitable.toNumber()).toBe(30000);
   });
 
   it("mix of cash and appreciated property: stacked per IRC §170(b)(1)", () => {
-    // AGI $100K. LTCG = min($40K, 30%=$30K) = $30K. Non-cash = $30K.
-    // Cash = min($70K, 60%=$60K - $30K = $30K) = $30K.
+    // Final2025 Pub526 Worksheet2: cash=min(70000,60000)=60000 first.
+    // Capital=min(40000,30000,max(50000-70000,0))=0; carry10000cash+40000capital.
     const result = calculateScheduleA(makeFixture({
       donations: [
-        { organization: "Red Cross", amount: "70000", type: "cash", dateOfDonation: "2025-06-01" },
-        { organization: "Art Museum", amount: "40000", type: "appreciated_stock", dateOfDonation: "2025-06-01", costBasis: "12000", isLongTermCapitalGain: true },
+        { qualifiedOrganization: true, isPrivateFoundation: false, organization: "Red Cross", amount: "70000", type: "cash", dateOfDonation: "2025-06-01" },
+        { qualifiedOrganization: true, isPrivateFoundation: false, organization: "Art Museum", amount: "40000", type: "appreciated_stock", dateOfDonation: "2025-06-01", costBasis: "12000", isLongTermCapitalGain: true },
       ],
     }), d(100000), "single", c);
-    expect(result.cashCharitable.toNumber()).toBe(30000);  // 60% - 30K = $30K
-    expect(result.nonCashCharitable.toNumber()).toBe(30000);
-    // Total = $30K + $30K = $60K = 60% of AGI
+    expect(result.cashCharitable.toNumber()).toBe(60000);
+    expect(result.nonCashCharitable.toNumber()).toBe(0);
+    expect(result.charitableCarryforward.toNumber()).toBe(50000);
     expect(result.totalItemized.toNumber()).toBe(60000);
   });
 
@@ -499,8 +487,8 @@ describe("Schedule A - charitable deduction AGI limits", () => {
     // AGI $0 → 60% = $0, 30% = $0
     const result = calculateScheduleA(makeFixture({
       donations: [
-        { organization: "Charity", amount: "5000", type: "cash", dateOfDonation: "2025-06-01" },
-        { organization: "Museum", amount: "3000", type: "appreciated_stock", dateOfDonation: "2025-06-01", costBasis: "1000", isLongTermCapitalGain: true },
+        { qualifiedOrganization: true, isPrivateFoundation: false, organization: "Charity", amount: "5000", type: "cash", dateOfDonation: "2025-06-01" },
+        { qualifiedOrganization: true, isPrivateFoundation: false, organization: "Museum", amount: "3000", type: "appreciated_stock", dateOfDonation: "2025-06-01", costBasis: "1000", isLongTermCapitalGain: true },
       ],
     }), d(0), "single", c);
     expect(result.cashCharitable.toNumber()).toBe(0);
@@ -509,9 +497,9 @@ describe("Schedule A - charitable deduction AGI limits", () => {
 
   it("charitable carryforward from prior year added to cash before AGI limit", () => {
     // AGI $100K → 60% limit = $60K. Cash $30K + carryforward $40K = $70K → capped at $60K
-    const result = calculateScheduleA(makeFixture({
+    const result = calculateScheduleA(makeFixture({ charitableCarryoverSources: syntheticPublicCashHistory([{ taxYear: 2024, amount: "40000" }]),
       donations: [
-        { organization: "Charity", amount: "30000", type: "cash", dateOfDonation: "2025-06-01" },
+        { qualifiedOrganization: true, isPrivateFoundation: false, organization: "Charity", amount: "30000", type: "cash", dateOfDonation: "2025-06-01" },
       ],
       priorYear: { charitableCarryforward: "40000" },
     }), d(100000), "single", c);
@@ -525,8 +513,8 @@ describe("Schedule A - charitable deduction AGI limits", () => {
 
 describe("Schedule A - mortgage interest MFS and boundaries", () => {
   it("MFS filer: mortgage debt limit is $375K (half of $750K) per IRC §163(h)(3)(B)(ii)", () => {
-    // MFS with $900K mortgage → ratio = 375K/900K = 41.67%
-    // Interest $36K × 41.67% = $15,000
+    // MFS with $900K mortgage → Table1line14 =375K/900K rounded3places =0.417
+    // Interest $36K ×0.417 = $15,012
     const result = calculateScheduleA(makeFixture({
       form1098: [{
         lender: "Bank",
@@ -539,7 +527,7 @@ describe("Schedule A - mortgage interest MFS and boundaries", () => {
         mortgageInsurancePremiums: "0",
       }],
     }), d(200000), "married_filing_separately", c);
-    expect(result.mortgageInterest.toNumber()).toBe(15000);
+    expect(result.mortgageInterest.toNumber()).toBe(15012);
   });
 
   it("$1 over $750K debt: interest slightly prorated", () => {
@@ -644,8 +632,8 @@ describe("Schedule A - multiple mortgages aggregate debt limit (IRS Pub 936)", (
     // Mortgage A: $500K principal, $25K interest
     // Mortgage B: $400K principal, $20K interest
     // Combined: $900K > $750K limit
-    // Ratio: $750K / $900K = 0.8333...
-    // Deductible: roundDollar($45K × 0.8333...) = $37,500
+    // Table1line14: $750K / $900K rounds to0.833
+    // Deductible: roundDollar($45K ×0.833) = $37,485
     const result = calculateScheduleA(makeFixture({
       form1098: [
         {
@@ -670,7 +658,7 @@ describe("Schedule A - multiple mortgages aggregate debt limit (IRS Pub 936)", (
         },
       ],
     }), d(200000), "single", c);
-    expect(result.mortgageInterest.toNumber()).toBe(37500);
+    expect(result.mortgageInterest.toNumber()).toBe(37485);
   });
 
   it("Two post-TCJA mortgages combined exactly at $750K: full deduction", () => {
@@ -740,8 +728,8 @@ describe("Schedule A - multiple mortgages aggregate debt limit (IRS Pub 936)", (
     // Post-TCJA: $300K, $12K interest → limited to $150K (out of $300K)
     // Total limited: $600K + $150K = $750K
     // Total principal: $900K
-    // Ratio: $750K / $900K = 0.8333...
-    // Deductible: roundDollar($36K × 0.8333...) = $30,000
+    // Table1line14: $750K / $900K rounds to0.833
+    // Deductible: roundDollar($36K ×0.833) = $29,988
     const result = calculateScheduleA(makeFixture({
       form1098: [
         {
@@ -766,12 +754,12 @@ describe("Schedule A - multiple mortgages aggregate debt limit (IRS Pub 936)", (
         },
       ],
     }), d(200000), "single", c);
-    expect(result.mortgageInterest.toNumber()).toBe(30000);
+    expect(result.mortgageInterest.toNumber()).toBe(29988);
   });
 
   it("Single mortgage still works correctly with aggregate method", () => {
     // Regression: single $900K mortgage → $750K/$900K = 0.8333...
-    // Interest $36K × 0.8333... = $30,000
+    // Interest $36K × rounded0.833 = $29,988
     const result = calculateScheduleA(makeFixture({
       form1098: [{
         lender: "Bank",
@@ -784,7 +772,7 @@ describe("Schedule A - multiple mortgages aggregate debt limit (IRS Pub 936)", (
         mortgageInsurancePremiums: "0",
       }],
     }), d(200000), "single", c);
-    expect(result.mortgageInterest.toNumber()).toBe(30000);
+    expect(result.mortgageInterest.toNumber()).toBe(29988);
   });
 });
 
@@ -793,15 +781,14 @@ describe("Schedule A - multiple mortgages aggregate debt limit (IRS Pub 936)", (
 // ═══════════════════════════════════════════════════════════
 
 describe("Schedule A - SALT cap for HoH and QSS filing statuses", () => {
-  it("HoH: state taxes $12K capped at $10K SALT limit", () => {
-    // Head of Household uses the same $10K cap as single and MFJ
+  it("2025 HoH allows $12K state taxes below the $40K limit", () => {
     const result = calculateScheduleA(makeFixture({
       w2s: [{
         ...simpleW2Fixture.w2s[0],
         stateTaxWithheld: "12000",
       }],
     }), d(120000), "head_of_household", c);
-    expect(result.saltDeduction.toNumber()).toBe(10000);
+    expect(result.saltDeduction.toNumber()).toBe(12000);
   });
 
   it("HoH: state taxes exactly $10K — fully deductible, not capped", () => {
@@ -814,15 +801,14 @@ describe("Schedule A - SALT cap for HoH and QSS filing statuses", () => {
     expect(result.saltDeduction.toNumber()).toBe(10000);
   });
 
-  it("QSS: state taxes $15K capped at $10K SALT limit", () => {
-    // Qualifying Surviving Spouse uses the $10K cap (same as MFJ)
+  it("2025 QSS allows $15K state taxes below the $40K limit", () => {
     const result = calculateScheduleA(makeFixture({
       w2s: [{
         ...simpleW2Fixture.w2s[0],
         stateTaxWithheld: "15000",
       }],
     }), d(200000), "qualifying_surviving_spouse", c);
-    expect(result.saltDeduction.toNumber()).toBe(10000);
+    expect(result.saltDeduction.toNumber()).toBe(15000);
   });
 
   it("MFS: state taxes exactly $5K — fully deductible at MFS cap boundary", () => {
@@ -836,14 +822,14 @@ describe("Schedule A - SALT cap for HoH and QSS filing statuses", () => {
     expect(result.saltDeduction.toNumber()).toBe(5000);
   });
 
-  it("MFS: state taxes $5,001 capped at $5K — $1 lost to MFS SALT cap", () => {
+  it("2025 MFS allows $5,001 below the $20K limit", () => {
     const result = calculateScheduleA(makeFixture({
       w2s: [{
         ...simpleW2Fixture.w2s[0],
         stateTaxWithheld: "5001",
       }],
     }), d(100000), "married_filing_separately", c);
-    expect(result.saltDeduction.toNumber()).toBe(5000);
+    expect(result.saltDeduction.toNumber()).toBe(5001);
   });
 });
 
@@ -948,7 +934,7 @@ describe("Schedule A - itemized vs standard deduction in federal pipeline", () =
       }],
       form1098: [],
       donations: [
-        { recipient: "Charity", amount: "3000", type: "cash" },
+        { qualifiedOrganization: true, isPrivateFoundation: false, dateOfDonation: "2025-12-01", organization: "Synthetic qualified charity", recipient: "Charity", amount: "3000", type: "cash" },
       ],
     };
     const result = calculateFederalTax(fixture);
@@ -1045,13 +1031,7 @@ describe("Schedule A - itemized vs standard deduction in federal pipeline", () =
 // ═══════════════════════════════════════════════════════════
 
 describe("Schedule A - all categories simultaneously hitting caps and limits", () => {
-  it("SALT at $10K cap + mortgage at $750K debt limit + medical just over threshold + charitable at 60% AGI limit", () => {
-    // AGI $200,000
-    // Medical: $200K × 7.5% = $15K threshold. Expenses $16,500 → deduction $1,500
-    // SALT: state $8K + property tax $3K = $11K → capped at $10K
-    // Mortgage: $750K principal → full interest ($30K) with no proration
-    // Charitable: 60% × $200K = $120K limit. Cash donations $120K → exactly at limit
-    // Total: $1,500 + $10,000 + $30,000 + $120,000 = $161,500
+  it("2025 SALT plus mortgage debt limit, medical threshold and charitable AGI limit", () => {
     const result = calculateScheduleA(makeFixture({
       w2s: [{
         ...simpleW2Fixture.w2s[0],
@@ -1068,15 +1048,15 @@ describe("Schedule A - all categories simultaneously hitting caps and limits", (
         mortgageInsurancePremiums: "0",
       }],
       donations: [
-        { organization: "Foundation", amount: "120000", type: "cash", dateOfDonation: "2025-06-01" },
+        { qualifiedOrganization: true, isPrivateFoundation: false, organization: "Foundation", amount: "120000", type: "cash", dateOfDonation: "2025-06-01" },
       ],
     }), d(200000), "single", c, { medicalExpenses: d(16500) });
 
     expect(result.medicalDeduction.toNumber()).toBe(1500);
-    expect(result.saltDeduction.toNumber()).toBe(10000);
+    expect(result.saltDeduction.toNumber()).toBe(11000);
     expect(result.mortgageInterest.toNumber()).toBe(30000);
     expect(result.cashCharitable.toNumber()).toBe(120000);
-    expect(result.totalItemized.toNumber()).toBe(161500);
+    expect(result.totalItemized.toNumber()).toBe(162500);
   });
 });
 
@@ -1102,7 +1082,7 @@ describe("Schedule A - audit trail completeness", () => {
         mortgageInsurancePremiums: "300",
       }],
       donations: [
-        { organization: "Charity", amount: "4000", type: "cash", dateOfDonation: "2025-06-01" },
+        { qualifiedOrganization: true, isPrivateFoundation: false, organization: "Charity", amount: "4000", type: "cash", dateOfDonation: "2025-06-01" },
       ],
     }), d(120000), "single", c, { medicalExpenses: d(10000) });
 
@@ -1124,20 +1104,39 @@ describe("Schedule A - audit trail completeness", () => {
     expect(lineNumbers).toContain("8d");  // Mortgage insurance premiums (PMI)
 
     // Charitable section
-    expect(lineNumbers).toContain("12");  // Cash charitable
-    expect(lineNumbers).toContain("13");  // Non-cash charitable
+    expect(lineNumbers).toContain("11");  // Current cash charitable
+    expect(lineNumbers).toContain("12");  // Current noncash charitable
+    expect(lineNumbers).toContain("13");  // Actual prior carryover used
+    expect(lineNumbers).toContain("14");  // Reported charitable subtotal
 
     // Total
     expect(lineNumbers).toContain("17");  // Total itemized deductions
   });
 
-  it("each audit line carries the correct form identifier 'Sched A'", () => {
+  it("audit lines identify Schedule A and its SALT worksheet separately", () => {
     const result = calculateScheduleA(
       makeFixture({}), d(100000), "single", c,
       { medicalExpenses: d(10000) }
     );
     for (const line of result.lines) {
-      expect(line.form).toBe("Sched A");
+      expect(["Sched A", "SALT WS", "SALT Income Tax WS", "Pub936 Table1", "OID Deduction Worksheet", "Educator Expense Worksheet", "Charitable Computation", "Charitable WS"]).toContain(line.form);
+    }
+    expect(result.lines.some(line => line.form === "SALT Income Tax WS" && line.line === "total")).toBe(true);
+    const oidLoss = result.lines.filter(line => line.form === "OID Deduction Worksheet" && line.line === "ordinary-loss");
+    expect(oidLoss).toHaveLength(1);
+    expect(oidLoss[0].value.toString()).toBe("0");
+    const educator = result.lines.filter(line => line.form === "Educator Expense Worksheet" && line.line === "itemized");
+    expect(educator).toHaveLength(1);
+    expect(educator[0].value.toString()).toBe("0");
+    for (const id of ["cash_60", "noncash_50", "capital_gain_30", "other_30", "capital_gain_20", "total"]) {
+      const category = result.lines.filter(line => line.form === "Charitable WS" && line.line === id);
+      expect(category).toHaveLength(1);
+      expect(category[0].value.toString()).toBe("0");
+    }
+    for (const id of ["cash", "noncash"]) {
+      const computational = result.lines.filter(line => line.form === "Charitable Computation" && line.line === id);
+      expect(computational).toHaveLength(1);
+      expect(computational[0].value.toString()).toBe("0");
     }
   });
 

@@ -1,0 +1,28 @@
+form: "PA-Married-Residency-Native"
+taxYear: 2025
+status: "finite-source-intake-review-only"
+reference: "https://www.pacodeandbulletin.gov/secure/pacode/data/061/chapter117/s117.2.html"
+notes: |
+  Native collection for the existing separately sourced M method, with federal
+  MFJ retained. No residency, wage allocation or tax arithmetic changes. Exactly
+  one full-year PA resident plus the existing nonresident or one-move spouse;
+  statutory/183-day ambiguity, reciprocity and care remain separate methods.
+  Detailed sources never silently erase competing legacy summaries. Mixed paper
+  and whole2026 federal/filing gates remain closed.
+lines:
+  - line: "native-detailed-timeline"
+    description: "Enter actual owner calendars and payroll through existing guide"
+    formula: "Add a detailed source packet with unknown year, confirmations, status, dates and days. Enter both actual owners and domicile/PA-abode/outside-abode periods plus the existing actual payroll primitives. No date, day, money or identity original is inferred. Keep legacy summaries visible and reject contradictions until explicitly reconciled."
+    testRef: "tests/apps/web/pa-married-residency-native.test.tsx::actual married household exposes detailed calendar source collection"
+  - line: "explicit-capture-and-confirm"
+    description: "Actual2025 current owner originals are captured explicitly"
+    formula: "For this2025 native method only, capture the selected actual current taxpayer identities on an explicit action, then independently confirm using the unchanged residency source engine. Confirmation never recaptures a changed owner. Full household confirmation still replays the existing canonical composer. Raw payroll values and retained original snapshots remain unchanged."
+    testRef: "tests/apps/web/guided-pa-married-residency.test.ts::captures actual owner originals explicitly and confirms unchanged source method"
+  - line: "stale-proof-and-noop"
+    description: "Any material calendar or household edit revokes current proof"
+    formula: "An exact primitive no-op emits no parent write. Calendar/day/owner/year/reference changes and parent payroll edits revoke detailed and household confirmation while preserving prior identity and federal/W2 originals. Equal-cash provenance changes are material; absent days and actual zero remain distinct."
+    testRef: "tests/apps/web/pa-married-residency-native.test.tsx::parent payroll edits revoke detailed confirmation without replacing originals"
+  - line: "saved-recovery-privacy"
+    description: "Incomplete actual source drafts remain lossless and private"
+    formula: "Save/reload and encrypted full-fidelity recovery preserve blanks, zero days, literal malformed cash, explicit false/null and prior originals without confirming or inferring sources. Hosted metadata strips private calendar/payroll references. Legacy households acquire no new detailed packet."
+    testRef: "tests/apps/web/pa-married-residency-saved.test.ts::detailed PA residency drafts survive encrypted recovery without source inference"

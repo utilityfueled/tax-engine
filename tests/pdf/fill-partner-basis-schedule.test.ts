@@ -107,33 +107,22 @@ describe("Partner basis schedule packet reference summary", () => {
     ]);
   });
 
-  it("fillReturn includes the partner basis reference summary only when supported Schedule K-1 basis inputs are present", async () => {
+  it.each([["included", true], ["omitted", false]] as const)("fillReturn includes the partner basis reference summary only when supported Schedule K-1 basis inputs are present: %s", async (_scenario, included) => {
+    const input = included ? basisFixture : simpleW2Fixture;
     const outputDir = await makeOutputDir();
-
     try {
-      const basisResult = calculateFederalTax(basisFixture);
-      const included = await fillReturn(basisFixture, basisResult, {
-        blankFormsDir: "forms/blank",
-        outputDir,
-      });
-      const referencePath = included.filledForms.find((path) =>
-        path.endsWith(PARTNER_BASIS_SCHEDULE_REFERENCE_FILENAME),
-      );
+      const result = calculateFederalTax(input);
+      const packet = await fillReturn(input, result, { blankFormsDir: "forms/blank", outputDir });
 
-      expect(referencePath).toBeDefined();
-      await access(referencePath!);
-      const pdfBytes = await readFile(referencePath!);
-      expect(pdfBytes.length).toBeGreaterThan(0);
-
-      const simpleResult = calculateFederalTax(simpleW2Fixture);
-      const omitted = await fillReturn(simpleW2Fixture, simpleResult, {
-        blankFormsDir: "forms/blank",
-        outputDir,
-      });
-
-      expect(
-        omitted.filledForms.some((path) => path.endsWith(PARTNER_BASIS_SCHEDULE_REFERENCE_FILENAME)),
-      ).toBe(false);
+      if (included) {
+        const referencePath = packet.filledForms.find((path) => path.endsWith(PARTNER_BASIS_SCHEDULE_REFERENCE_FILENAME));
+        expect(referencePath).toBeDefined();
+        await access(referencePath!);
+        const pdfBytes = await readFile(referencePath!);
+        expect(pdfBytes.length).toBeGreaterThan(0);
+      } else {
+        expect(packet.filledForms.some((path) => path.endsWith(PARTNER_BASIS_SCHEDULE_REFERENCE_FILENAME))).toBe(false);
+      }
     } finally {
       await rm(outputDir, { recursive: true, force: true });
     }

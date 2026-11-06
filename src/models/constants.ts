@@ -4,6 +4,8 @@
  */
 
 import Decimal from "decimal.js";
+import { freezeRuleData, getRulePack } from "./rule-pack-metadata.js";
+export { getRulePack } from "./rule-pack-metadata.js";
 
 export type FilingStatus =
   | "single"
@@ -48,7 +50,10 @@ export interface StateYearConstants {
 }
 
 export interface YearConstants {
+  taxYear: number;
   standardDeduction: Record<FilingStatus, Decimal>;
+  dependentStandardDeduction: { minimum: Decimal; earnedIncomeAddition: Decimal };
+  additionalStandardDeduction: { unmarried: Decimal; marriedOrSurvivingSpouse: Decimal };
   taxBrackets: Record<FilingStatus, TaxBracket[]>;
   capitalGainsRates: {
     zero: { threshold: Record<FilingStatus, Decimal> };
@@ -56,7 +61,9 @@ export interface YearConstants {
     twenty: Record<string, never>; // remainder
   };
   saltCap: Decimal;
+  saltPhaseDown: { magiThreshold: Decimal; minimumCap: Decimal; rate: Decimal };
   childTaxCredit: {
+    refundablePerChild?: Decimal;
     perChild: Decimal;
     otherDependentCredit: Decimal; // $500 per ODC-qualifying dependent
     phaseOutThreshold: Record<FilingStatus, Decimal>;
@@ -85,6 +92,7 @@ export interface YearConstants {
   amt: {
     exemption: Record<FilingStatus, Decimal>;
     phaseOutThreshold: Record<FilingStatus, Decimal>;
+    phaseOutRate: Decimal;
     rate26Limit: Record<FilingStatus, Decimal>; // 26% rate applies up to this, 28% above
   };
   qbi: {
@@ -206,6 +214,7 @@ export interface YearConstants {
   };
   /** Form 8839 — Qualified Adoption Expenses (IRC §23, §137) */
   adoptionCredit: {
+    refundablePerChild?: Decimal;
     /** Maximum adoption credit and exclusion per eligible child (Rev. Proc. 2024-40 §3.01) */
     maxCreditPerChild: Decimal;
     /** MAGI threshold above which credit/exclusion begins to phase out */
@@ -344,6 +353,8 @@ export interface OhioIT1040YearConstants {
   businessTaxRate: Decimal;
   businessIncomeDeduction: Record<"default" | "married_filing_separately", Decimal>;
   exemptionTiers: OhioExemptionTier[];
+  /** Exclusive actual-MAGI ceiling; null before the statutory ceiling began. */
+  exemptionMagiLimit: Decimal | null;
 }
 
 export interface OhioScheduleOfAdjustmentsYearConstants {
@@ -388,7 +399,8 @@ export interface OhioScheduleOfCreditsYearConstants {
   exemptionCreditMagiLessExemptionsLimit: Decimal;
   jointFilingCreditTiers: JointFilingCreditTier[];
   jointFilingCreditMax: Decimal;
-  jointFilingCreditMagiLessExemptionsLimit: Decimal;
+  /** Eligibility uses actual MAGI; rate tiers separately use MAGI less exemptions. */
+  jointFilingCreditMagiLimit: Decimal | null;
   earnedIncomeCreditRate: Decimal;
   homeSchoolExpensesCreditMaxPerReturn: Decimal;
   homeSchoolExpensesCreditMaxPerStudent: Decimal;
@@ -635,9 +647,9 @@ export const OHIO_TAX_CONSTANTS: Record<number, OhioYearConstants> = {
       exemptionTiers: [
         { maxMagi: d(40000), amount: d(2400) },
         { maxMagi: d(80000), amount: d(2150) },
-        { maxMagi: d(749999), amount: d(1900) },
-        { maxMagi: null, amount: d(0) },
+        { maxMagi: null, amount: d(1900) },
       ],
+      exemptionMagiLimit: null,
     },
     scheduleAdjustments: {
       businessIncomeDeductionCap: {
@@ -680,7 +692,7 @@ export const OHIO_TAX_CONSTANTS: Record<number, OhioYearConstants> = {
         { maxMagiLessExemptions: null, rate: d("0.05") },
       ],
       jointFilingCreditMax: d(650),
-      jointFilingCreditMagiLessExemptionsLimit: d(750000),
+      jointFilingCreditMagiLimit: null,
       earnedIncomeCreditRate: d("0.30"),
       homeSchoolExpensesCreditMaxPerReturn: d(250),
       homeSchoolExpensesCreditMaxPerStudent: d(250),
@@ -720,9 +732,9 @@ export const OHIO_TAX_CONSTANTS: Record<number, OhioYearConstants> = {
       exemptionTiers: [
         { maxMagi: d(40000), amount: d(2400) },
         { maxMagi: d(80000), amount: d(2150) },
-        { maxMagi: d(749999), amount: d(1900) },
-        { maxMagi: null, amount: d(0) },
+        { maxMagi: null, amount: d(1900) },
       ],
+      exemptionMagiLimit: d(750000),
     },
     scheduleAdjustments: {
       businessIncomeDeductionCap: {
@@ -768,7 +780,7 @@ export const OHIO_TAX_CONSTANTS: Record<number, OhioYearConstants> = {
         { maxMagiLessExemptions: null, rate: d("0.05") },
       ],
       jointFilingCreditMax: d(650),
-      jointFilingCreditMagiLessExemptionsLimit: d(750000),
+      jointFilingCreditMagiLimit: d(750000),
       earnedIncomeCreditRate: d("0.30"),
       homeSchoolExpensesCreditMaxPerReturn: d(250),
       homeSchoolExpensesCreditMaxPerStudent: d(250),
@@ -1172,6 +1184,7 @@ export const NY_IT201_RESIDENT_CONSTANTS: Record<number, NYIT201ResidentYearCons
 
 export const TAX_CONSTANTS: Record<number, YearConstants> = {
   2025: {
+    taxYear: 2025,
     standardDeduction: {
       single: d(15750),
       married_filing_jointly: d(31500),
@@ -1179,6 +1192,8 @@ export const TAX_CONSTANTS: Record<number, YearConstants> = {
       head_of_household: d(23625),
       qualifying_surviving_spouse: d(31500),
     },
+    dependentStandardDeduction: { minimum: d("1350"), earnedIncomeAddition: d("450") },
+    additionalStandardDeduction: { unmarried: d("2000"), marriedOrSurvivingSpouse: d("1600") },
     taxBrackets: {
       married_filing_jointly: [
         { min: d(0), max: d(23850), rate: d(0.10) },
@@ -1247,9 +1262,11 @@ export const TAX_CONSTANTS: Record<number, YearConstants> = {
       },
       twenty: {},
     },
-    saltCap: d(10000),
+    saltCap: d(40000),
+    saltPhaseDown: { magiThreshold: d(500000), minimumCap: d(10000), rate: d("0.30") },
     childTaxCredit: {
-      perChild: d(2000),
+      refundablePerChild: d("1700"),
+      perChild: d(2200),
       otherDependentCredit: d(500),
       phaseOutThreshold: {
         single: d(200000),
@@ -1293,6 +1310,7 @@ export const TAX_CONSTANTS: Record<number, YearConstants> = {
     capitalLossLimit: d(3000),
     estimatedTaxSafeHarbor: d(1.1),
     amt: {
+      phaseOutRate: d("0.25"),
       exemption: {
         single: d(88100),
         married_filing_jointly: d(137000),
@@ -1301,10 +1319,10 @@ export const TAX_CONSTANTS: Record<number, YearConstants> = {
         qualifying_surviving_spouse: d(137000),
       },
       phaseOutThreshold: {
-        single: d(609350),
+        single: d(626350),
         married_filing_jointly: d(1252700),
         married_filing_separately: d(626350),
-        head_of_household: d(609350),
+        head_of_household: d(626350),
         qualifying_surviving_spouse: d(1252700),
       },
       rate26Limit: {
@@ -1461,6 +1479,7 @@ export const TAX_CONSTANTS: Record<number, YearConstants> = {
       taxRate: d("0.10"),
     },
     adoptionCredit: {
+      refundablePerChild: d(5000),
       maxCreditPerChild: d(17280),
       phaseOutThreshold: d(259190),
       phaseOutRange: d(40000),
@@ -1498,18 +1517,18 @@ export const TAX_CONSTANTS: Record<number, YearConstants> = {
       maxExclusionMFS: d(375000),
     },
     // IRC §408(d)(8)(A), SECURE 2.0 Act §307 — indexed for inflation starting 2024
-    // Rev. Proc. 2024-40 §3.27: $105,000 for 2025
+    // IRS Notice 2025-67 comparison: $108,000 for 2025; $111,000 for 2026.
     qcd: {
-      annualLimit: d(105000),
+      annualLimit: d("108000"),
     },
     // IRC §213(d)(10) — Qualified long-term care insurance premium limits by attained age
-    // Rev. Proc. 2024-40 §3.18 for 2025
+    // Rev. Proc. 2024-40 §2.28 and final Form 7206 line 2 for 2025
     longTermCarePremiumLimits: {
       age40OrUnder: d(480),
-      age41to50: d(890),
-      age51to60: d(1790),
-      age61to70: d(4770),
-      age71OrOlder: d(5960),
+      age41to50: d(900),
+      age51to60: d(1800),
+      age61to70: d(4810),
+      age71OrOlder: d(6020),
     },
     state: {
       njResident: {
@@ -1563,7 +1582,9 @@ export const TAX_CONSTANTS: Record<number, YearConstants> = {
   },
 };
 
-TAX_CONSTANTS[2026] = TAX_CONSTANTS[2025];
+// A year is added only with its own complete implementation. Incomplete rule
+// packs are recorded in rule-pack-metadata.ts, never aliased to a prior year.
+freezeRuleData(TAX_CONSTANTS);
 
 // ---------------------------------------------------------------------------
 // MACRS Depreciation Tables — IRS Publication 946
@@ -1607,18 +1628,18 @@ export const MACRS_GDS_150DB_HALF_YEAR: Record<number, Decimal[]> = {
  * Straight-line method over 27.5 years.
  */
 export const MACRS_RESIDENTIAL_RENTAL_MID_MONTH: Record<number, Decimal[]> = {
-  1:  [d("3.485"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("1.970")],
-  2:  [d("3.182"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("2.273")],
-  3:  [d("2.879"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("2.576")],
-  4:  [d("2.576"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("2.879")],
-  5:  [d("2.273"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.182")],
-  6:  [d("1.970"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.485")],
-  7:  [d("1.667"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.788")],
-  8:  [d("1.364"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("4.091")],
-  9:  [d("1.061"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("4.394")],
-  10: [d("0.758"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("4.697")],
-  11: [d("0.455"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("5.000")],
-  12: [d("0.152"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("5.303")],
+  1: [d("3.485"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.637"), d("3.636"), d("3.637"), d("3.636"), d("3.637"), d("3.636"), d("3.637"), d("3.636"), d("3.637"), d("3.636"), d("3.637"), d("3.636"), d("3.637"), d("3.636"), d("3.637"), d("3.636"), d("3.637"), d("3.636"), d("1.970")],
+  2: [d("3.182"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.637"), d("3.636"), d("3.637"), d("3.636"), d("3.637"), d("3.636"), d("3.637"), d("3.636"), d("3.637"), d("3.636"), d("3.637"), d("3.636"), d("3.637"), d("3.636"), d("3.637"), d("3.636"), d("3.637"), d("3.636"), d("2.273")],
+  3: [d("2.879"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.637"), d("3.636"), d("3.637"), d("3.636"), d("3.637"), d("3.636"), d("3.637"), d("3.636"), d("3.637"), d("3.636"), d("3.637"), d("3.636"), d("3.637"), d("3.636"), d("3.637"), d("3.636"), d("3.637"), d("3.636"), d("2.576")],
+  4: [d("2.576"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.637"), d("3.636"), d("3.637"), d("3.636"), d("3.637"), d("3.636"), d("3.637"), d("3.636"), d("3.637"), d("3.636"), d("3.637"), d("3.636"), d("3.637"), d("3.636"), d("3.637"), d("3.636"), d("3.637"), d("3.636"), d("2.879")],
+  5: [d("2.273"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.637"), d("3.636"), d("3.637"), d("3.636"), d("3.637"), d("3.636"), d("3.637"), d("3.636"), d("3.637"), d("3.636"), d("3.637"), d("3.636"), d("3.637"), d("3.636"), d("3.637"), d("3.636"), d("3.637"), d("3.636"), d("3.182")],
+  6: [d("1.970"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.637"), d("3.636"), d("3.637"), d("3.636"), d("3.637"), d("3.636"), d("3.637"), d("3.636"), d("3.637"), d("3.636"), d("3.637"), d("3.636"), d("3.637"), d("3.636"), d("3.637"), d("3.636"), d("3.637"), d("3.636"), d("3.485")],
+  7: [d("1.667"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.637"), d("3.636"), d("3.637"), d("3.636"), d("3.637"), d("3.636"), d("3.637"), d("3.636"), d("3.637"), d("3.636"), d("3.637"), d("3.636"), d("3.637"), d("3.636"), d("3.637"), d("3.636"), d("3.637"), d("3.636"), d("0.152")],
+  8: [d("1.364"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.637"), d("3.636"), d("3.637"), d("3.636"), d("3.637"), d("3.636"), d("3.637"), d("3.636"), d("3.637"), d("3.636"), d("3.637"), d("3.636"), d("3.637"), d("3.636"), d("3.637"), d("3.636"), d("3.637"), d("3.636"), d("0.455")],
+  9: [d("1.061"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.637"), d("3.636"), d("3.637"), d("3.636"), d("3.637"), d("3.636"), d("3.637"), d("3.636"), d("3.637"), d("3.636"), d("3.637"), d("3.636"), d("3.637"), d("3.636"), d("3.637"), d("3.636"), d("3.637"), d("3.636"), d("0.758")],
+  10: [d("0.758"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.637"), d("3.636"), d("3.637"), d("3.636"), d("3.637"), d("3.636"), d("3.637"), d("3.636"), d("3.637"), d("3.636"), d("3.637"), d("3.636"), d("3.637"), d("3.636"), d("3.637"), d("3.636"), d("3.637"), d("3.636"), d("1.061")],
+  11: [d("0.455"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.637"), d("3.636"), d("3.637"), d("3.636"), d("3.637"), d("3.636"), d("3.637"), d("3.636"), d("3.637"), d("3.636"), d("3.637"), d("3.636"), d("3.637"), d("3.636"), d("3.637"), d("3.636"), d("3.637"), d("3.636"), d("1.364")],
+  12: [d("0.152"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.636"), d("3.637"), d("3.636"), d("3.637"), d("3.636"), d("3.637"), d("3.636"), d("3.637"), d("3.636"), d("3.637"), d("3.636"), d("3.637"), d("3.636"), d("3.637"), d("3.636"), d("3.637"), d("3.636"), d("3.637"), d("3.636"), d("1.667")],
 };
 
 /**
@@ -1790,12 +1811,20 @@ export const MACRS_GDS_SL_MID_QUARTER: Record<number, Record<number, Decimal[]>>
  * `withoutBonus[0]` is the year-1 limit without bonus depreciation.
  * Years 2+ are the same regardless of bonus election.
  *
- * Reference: Rev. Proc. 2024-13, §5.01 (2025 tax year limits).
+ * Reference: Rev. Proc. 2025-16 §4.01 Tables 1/2 and Rev. Proc. 2026-15
+ * §4.01 Tables 1/2 (printed page 7), retrieved November 5, 2026.
+ * The key is the original placed-in-service year, not the current return year.
+ * These are 100%-use maxima; table availability does not prove eligibility,
+ * source-complete basis/history, or the combined §179/bonus/regular deduction.
  */
 export const SECTION_280F_LIMITS: Record<number, { withBonus: Decimal[]; withoutBonus: Decimal[] }> = {
   2025: {
-    withBonus:    [d("20400"), d("19800"), d("11900"), d("7160")],
-    withoutBonus: [d("12400"), d("19800"), d("11900"), d("7160")],
+    withBonus:    [d("20200"), d("19600"), d("11800"), d("7060")],
+    withoutBonus: [d("12200"), d("19600"), d("11800"), d("7060")],
+  },
+  2026: {
+    withBonus:    [d("20300"), d("19800"), d("11900"), d("7160")],
+    withoutBonus: [d("12300"), d("19800"), d("11900"), d("7160")],
   },
 };
 
@@ -1808,6 +1837,7 @@ export const SECTION_280F_ADS_RECOVERY_PERIOD = 5;
 // ---------------------------------------------------------------------------
 
 export interface BaseYearTaxConstants {
+  taxYear: number;
   taxBrackets: Record<FilingStatus, TaxBracket[]>;
   capitalGainsRates: {
     zero: { threshold: Record<FilingStatus, Decimal> };
@@ -1832,6 +1862,7 @@ export interface StateTaxConstants {
 export const BASE_YEAR_TAX_CONSTANTS: Record<number, BaseYearTaxConstants> = {
   // ── 2022 (Rev. Proc. 2021-45) ─────────────────────────────
   2022: {
+    taxYear: 2022,
     taxBrackets: {
       single: [
         { min: d(0), max: d(10275), rate: d(0.10) },
@@ -1903,6 +1934,7 @@ export const BASE_YEAR_TAX_CONSTANTS: Record<number, BaseYearTaxConstants> = {
 
   // ── 2023 (Rev. Proc. 2022-38) ─────────────────────────────
   2023: {
+    taxYear: 2023,
     taxBrackets: {
       single: [
         { min: d(0), max: d(11000), rate: d(0.10) },
@@ -1974,6 +2006,7 @@ export const BASE_YEAR_TAX_CONSTANTS: Record<number, BaseYearTaxConstants> = {
 
   // ── 2024 (Rev. Proc. 2023-34) ─────────────────────────────
   2024: {
+    taxYear: 2024,
     taxBrackets: {
       single: [
         { min: d(0), max: d(11600), rate: d(0.10) },
@@ -2087,6 +2120,10 @@ export function getNYIT201ResidentConstants(
 export function getConstants(year: number): YearConstants {
   const constants = TAX_CONSTANTS[year];
   if (!constants) {
+    if (year === 2026) {
+      const pack = getRulePack(year);
+      throw new Error(`Tax year ${year} rule pack ${pack.ruleVersion} is incomplete; calculation is unavailable.`);
+    }
     throw new Error(
       `Tax constants not available for year ${year}. Available years: ${Object.keys(TAX_CONSTANTS).join(", ")}`
     );

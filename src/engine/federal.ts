@@ -1,3 +1,19 @@
+import { assertW2StateLocalSources } from "./forms/w2-state-local.js";
+import { buildForm2210OwnerSourceContext } from './forms/form-2210-owner-source.js';
+import { calculateMarketplaceActualPaidRepayment, type MarketplaceActualPaidAdjustment } from "./forms/marketplace-actual-paid-repayment.js";
+import { calculateMarketplaceActualPaidSources } from "./forms/marketplace-actual-paid-sources.js";
+import { calculateMarketplaceActualCashSources, calculateMarketplaceActualCashHealth } from './forms/marketplace-actual-cash-health.js';
+import { calculateMarketplaceCoverageFamilySources } from "./forms/marketplace-coverage-family-sources.js";
+import { calculateMarketplaceReportedRepaymentPayment, type MarketplaceReportedRepaymentPayment } from "./forms/marketplace-reported-repayment-payment.js";
+import { calculateMarketplaceFullAdvanceRepayment, hasBindingOwnerFullRepaymentSources } from "./forms/marketplace-full-advance-repayment.js";
+import { calculateBrokerageWithholding } from "./forms/form-1099-b-withholding.js";
+import { calculateForm1099DASources } from "./forms/form-1099-da-sources.js";
+import { normalizeDigitalAssetCapitalInput } from "./forms/digital-asset-capital-input.js";
+import { calculateForm172Return } from "./forms/form-172-return.js";
+import { calculateForm172CharitableSources } from "./forms/form-172-charitable-sources.js";
+import { validateQofDispositionFacts } from "./forms/qof-disposition-facts.js";
+import { assertNoDerivedCapitalFields, assertQofStateMethod, calculateQofInclusion } from "./forms/qof-inclusion.js";
+import { assertClaimOfRightStateMethod, calculateClaimOfRightSources, claimOfRightNetRefund, claimOfRightStage, withClaimOfRightStage } from "./forms/claim-of-right.js";
 /**
  * Federal tax calculation orchestrator.
  * Coordinates all schedules, forms, and worksheets to produce a complete Form 1040.
@@ -6,6 +22,9 @@
  */
 
 import Decimal from "decimal.js";
+import { reportSavingsBondRatios } from "@/utils/savings-bond-ratios.js";
+import type { CharitableNolContributionLimit } from "@/utils/charitable-nol-source.js";
+import { usesDeterminedCharitableNolOrigins } from "@/utils/charitable-nol-origins.js";
 import type {
   Form1099B,
   Form1099Div,
@@ -25,14 +44,23 @@ import type {
 import type { TaxReturnResult } from "@/models/outputs.js";
 import { getConstants, type FilingStatus } from "@/models/constants.js";
 import { d, sum, zeroFloor, min, roundDollar } from "@/utils/decimal.js";
+import { sumSourceMoney } from "@/utils/sum-source-money.js";
+import { sumSourceMoneyRatios } from "@/utils/sum-source-money-ratios.js";
 import { AuditTrail } from "@/utils/audit.js";
+import { resolveForm2555Sources } from "./forms/form-2555-source-binding.js";
 import {
   calculateCapitalGainsTax,
-  calculateTaxFromBrackets,
+  calculateRegularIncomeTax,
+  regularIncomeTaxSource,
 } from "@/utils/tax-math.js";
+import { calculateQBISourceDeductions, type QBIDeductionSource } from "./forms/qbi-source-deductions.js";
 import { calculateForm8812 } from "./forms/form-8812.js";
+import { calculatePersonalCreditOrdering } from "./forms/personal-credit-ordering.js";
+import { calculateChildCreditEligibility } from "./forms/child-credit-eligibility.js";
 import { calculateForm8959 } from "./forms/form-8959.js";
+import { calculateForm1099G } from "./forms/form-1099-g.js";
 import { calculateForm8960 } from "./forms/form-8960.js";
+import { resolveForm8960OrdinarySources } from "./forms/form-8960-ordinary-sources.js";
 import {
   calculateForm1116,
   estimateForeignSourceIncome,
@@ -41,28 +69,62 @@ import {
   estimateForeignSourceIncomeFromScheduleK1Form1041,
   type FTCCarryforwardEntry,
 } from "./forms/form-1116.js";
+import { calculateForeignTaxDeductionCarryover, type ForeignTaxHypotheticalContext } from "./forms/foreign-tax-deduction-carryover.js";
+import { calculateForeignTaxDirectCredit } from "./forms/foreign-tax-direct-credit.js";
+import { calculateForeignTaxOrdinaryCredit } from "./forms/foreign-tax-ordinary-credit.js";
+import { validateForeignTaxDeductionScope } from "./forms/foreign-tax-deduction-scope.js";
 import { calculateScheduleB } from "./schedules/schedule-b.js";
 import { calculateScheduleC } from "./schedules/schedule-c.js";
 import { calculateScheduleD, recomputeCarryforward } from "./schedules/schedule-d.js";
+import { calculateK1CharitableReturnSources } from "./forms/k1-charitable-return-sources.js";
 import { calculateScheduleE } from "./schedules/schedule-e.js";
-import { calculateScheduleSE } from "./schedules/schedule-se.js";
+import { calculateK1PassiveCapitalSources } from "./forms/k1-passive-capital-sources.js";
+import { calculateK1Form461Classification } from "./forms/k1-form461-classification.js";
+import { calculateK1PassiveDistributionSources } from "./forms/k1-passive-distribution-sources.js";
+import { calculateK1OrdinarySelfEmployment } from "./forms/k1-ordinary-self-employment.js";
+import { calculateScheduleSE, k1SelfEmploymentAmount } from "./schedules/schedule-se.js";
+import { calculateHomeMortgageInterest } from "./forms/home-mortgage-interest.js";
 import { calculateScheduleA } from "./schedules/schedule-a.js";
-import { calculateForm6251 } from "./forms/form-6251.js";
+import { calculateSelectedCharitableCarryover } from "./forms/selected-charitable-carryover.js";
+import { calculateFederalDeductionSelection } from "./forms/federal-deduction-selection.js";
+import { calculateSchedule1AReturn } from "./forms/schedule-1-a-return.js";
+import { calculateItemizedDeductionLimit } from "./forms/itemized-deduction-limit.js";
+import { calculateStandardDeduction } from "./forms/standard-deduction.js";
+import { calculateStateLocalIncomeTaxDeduction } from "./forms/state-local-income-tax-deduction.js";
+import { calculateForm1099OID } from "./forms/form-1099-oid.js";
+import { calculateForm6251, type Form6251Input, type Form6251IncomeInput } from "./forms/form-6251.js";
 import { calculateForm8801 } from "./forms/form-8801.js";
+import { calculateCurrentMinimumTaxCredit } from "./forms/current-minimum-tax-credit.js";
+import { calculateCodZeroMinimumTaxCreditBound } from "./forms/cod-zero-minimum-tax-credit-bound.js";
 import { calculateForm8582 } from "./forms/form-8582.js";
+import { calculatePassiveLossQBI, type PassiveLossQBIResult } from "./forms/passive-loss-qbi.js";
+import { calculateK1QbiLossReturn } from "./forms/k1-qbi-loss-return.js";
 import type { PassiveActivity } from "./forms/form-8582.js";
 import { calculateForm2441 } from "./forms/form-2441.js";
+import { calculateForm2441Benefits } from "./forms/form-2441-benefits.js";
+import { calculateDependentCareBenefitSources } from "./forms/dependent-care-benefit-sources.js";
 import { calculateForm8863 } from "./forms/form-8863.js";
-import { calculateForm8962 } from "./forms/form-8962.js";
-import { calculateForm4137 } from "./forms/form-4137.js";
+import type { calculateForm8962 } from "./forms/form-8962.js";
+import { calculatePremiumTaxCreditReturn } from "./forms/premium-tax-credit-return.js";
+import { calculateMarketplaceHealthDeduction, type MarketplaceHealthDeductionResult } from "./forms/marketplace-health-deduction.js";
+import { calculateMarketplaceHealthReentry } from "./forms/marketplace-health-reentry.js";
+import type { MarketplaceHealthPremiumGroup } from "./forms/marketplace-health-premiums.js";
+import { calculateMarketplaceHealthLimit, type MarketplaceHealthLimitResult } from "./forms/marketplace-health-limit.js";
+import { calculateUnreportedTipPayroll } from "./forms/unreported-tip-payroll.js";
 import { calculateForm8919 } from "./forms/form-8919.js";
 import { calculateSchedule3, calculateExcessSSWithholding } from "./schedules/schedule-3.js";
 import { calculateSchedule1 } from "./schedules/schedule-1.js";
+import { finalizeSchedule1 } from "./forms/schedule-1-return.js";
 import { calculateSchedule2 } from "./schedules/schedule-2.js";
 import { calculateForm2210 } from "./forms/form-2210.js";
 import { calculateForm3800 } from "./forms/form-3800.js";
 import { calculateForm5695 } from "./forms/form-5695.js";
 import { calculateForm8815, type Form8815Result } from "./forms/form-8815.js";
+import { validateSavingsBondReturnIdentity } from "./forms/savings-bond-return-identity.js";
+import { reconcileEducatorEducationExclusions } from "./forms/educator-education-exclusions.js";
+import { calculateEducatorBondSources } from "./forms/educator-bond-sources.js";
+import { calculateEducatorExpensesDeduction } from "./forms/educator-expenses.js";
+import { calculateForm7206Return } from "./forms/form-7206-return.js";
 import { calculateForm8995 } from "./forms/form-8995.js";
 import { calculateForm8995A } from "./forms/form-8995-a.js";
 import type { QBIBusinessSource } from "./forms/form-8995-a.js";
@@ -81,13 +143,18 @@ import {
   mergeW2RetirementContributionsIntoForm8880Input,
 } from "./forms/form-8880.js";
 import { calculateForm8606 } from "./forms/form-8606.js";
+import { calculateIraBasisSources } from "./forms/ira-basis-sources.js";
 import type { Form8606Result } from "./forms/form-8606.js";
 import { calculateSocialSecurityBenefitsWorksheet } from "./forms/social-security-benefits-worksheet.js";
 import type { QBISource } from "./forms/form-8995.js";
-import { calculateIraDeduction } from "./forms/ira-deduction-worksheet.js";
+import { calculateIraReturnWorksheet } from "./forms/ira-return-worksheet.js";
 import { calculateScheduleR } from "./forms/schedule-r.js";
 import { calculateForm8839 } from "./forms/form-8839.js";
 import { calculateEic } from "./forms/schedule-eic.js";
+import { calculateEicDisallowanceHistory } from "./forms/eic-disallowance-history.js";
+import { calculateForm8862 } from "./forms/form-8862.js";
+import { calculateEicScheduleEInvestment } from "./forms/eic-schedule-e-investment.js";
+import { calculateEicSeparatedSpouseSources } from "./forms/eic-separated-spouse-sources.js";
 import { calculateForm8936 } from "./forms/form-8936.js";
 import { calculateScheduleH } from "./forms/schedule-h.js";
 import { calculateForm2555 } from "./forms/form-2555.js";
@@ -95,6 +162,11 @@ import { calculateForm4684 } from "./forms/form-4684.js";
 import { calculateForm4952 } from "./forms/form-4952.js";
 import { calculateForm8615 } from "./forms/form-8615.js";
 import { aggregateForm8814Results } from "./forms/form-8814.js";
+import { calculateForm8814AmtSources } from "./forms/form-8814-amt-sources.js";
+import { calculateForm4952ChildSources } from "./forms/form-4952-child-sources.js";
+import { calculateForm8814Election } from "./forms/form-8814-election.js";
+import { calculateForm8814IncomeCharacter } from "./forms/form-8814-income-character.js";
+import { calculateForm6251BondSources } from "./forms/form-6251-bond-sources.js";
 import { calculateScheduleF } from "./schedules/schedule-f.js";
 import { calculateForm461 } from "./forms/form-461.js";
 import type { AggregatedForm8814 } from "./forms/form-8814.js";
@@ -102,10 +174,18 @@ import { calculateForm1099Q } from "./forms/form-1099-q.js";
 import { calculateForm1099K } from "./forms/form-1099-k.js";
 import { calculateForm1099C } from "./forms/form-1099-c.js";
 import { calculateForm982 } from "./forms/form-982.js";
+import { calculateCodNolReduction } from "./forms/cod-nol-reductions.js";
+import { hasCompleteEmptyForeignNolSources } from "./forms/empty-nol-foreign-sources.js";
+import { calculateCodAttributeReturn } from "./forms/cod-attribute-return.js";
 import { calculateSEHealthInsuranceWorksheet, type SEHealthInsuranceWorksheetResult } from "./forms/se-health-insurance-worksheet.js";
+import { calculateMarketplaceNonspecifiedStop } from "./forms/marketplace-nonspecified-stop.js";
 import { calculateScheduleJ } from "./forms/schedule-j.js";
 import { calculateForm8915F, type Form8915FResult } from "./forms/form-8915-f.js";
 import { calculateTaxableRefundWorksheet, type TaxableRefundWorksheetResult } from "./forms/taxable-refund-worksheet.js";
+import {calculateTaxableStateRefundRecoveries, type TaxableStateRefundRecoveriesResult} from "./forms/taxable-state-refund-recoveries.js";
+import { calculateStudentLoanInterestDeduction } from "./forms/student-loan-interest.js";
+import { calculateNetOperatingLossReturn, type NetOperatingLossReturnResult, type NolIncomeContext, type NolAlternativeIncomeContext } from "./forms/net-operating-loss-return.js";
+import { calculateQbiEblNol } from "./forms/qbi-ebl-nol.js";
 import { calculateForm1098E, type Form1098EResult } from "./forms/form-1098-e.js";
 import { calculateSalesTaxDeduction, type SalesTaxDeductionResult } from "./forms/state-sales-tax-deduction-worksheet.js";
 import { calculateForm8824Aggregate } from "./forms/form-8824.js";
@@ -135,11 +215,241 @@ import {
 import { calculateIllinoisReturn, type ILStateInput } from "./state/il-orchestrator.js";
 import type { ILScheduleWITRecord } from "./state/il-schedule-il-wit.js";
 
+/** Spec: claim-of-right.yaml. Pub525 compares each method's tax for the year of repayment. */
 export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
+  // Validate retained actual row packets even when Schedule A is not selected.
+  input.w2s.forEach((w2, index) => {
+    const packet = (w2 as typeof w2 & { stateLocalSources?: unknown }).stateLocalSources;
+    if (packet !== undefined) assertW2StateLocalSources(input, index, packet);
+  });
+  const claim = claimOfRightStage(input) ? undefined : calculateClaimOfRightSources(input);
+  if (!claim) return calculateFederalTaxForSources(input);
+  if (input.form7206?.plans?.some(plan => plan.marketplaceCoverage === true)) throw new Error("Repaid earlier-year income with Marketplace worksheets needs a separate method");
+  if (claim.eligibleAmount.isZero()) return { ...calculateFederalTaxForSources(input), claimOfRight: { ...claim, method: "not_deductible" } };
+  // Both stages must complete, so a single entered worksheet figure cannot match both.
+  if (input.form2210?.calculationMethod === "annualized" || input.form2210?.returnPaidInFullDate !== undefined || (input.form8814?.length ?? 0) > 0) throw new Error("Repaid earlier-year income with Schedule AI, an early-return payment date or Form 8814 needs a separate method");
+  const deduction = calculateFederalTaxForSources(withClaimOfRightStage(input, { deduction: claim.eligibleAmount, credit: d("0") }));
+  const credit = calculateFederalTaxForSources(withClaimOfRightStage(input, { deduction: d("0"), credit: claim.availableCredit }));
+  if (deduction.deductionUsed !== "itemized" && claim.availableCredit.isZero()) return { ...credit, claimOfRight: { ...claim, method: "no_benefit" } };
+  return claimOfRightNetRefund(credit).gt(claimOfRightNetRefund(deduction))
+    ? { ...credit, claimOfRight: { ...claim, method: "credit" } } : { ...deduction, claimOfRight: { ...claim, method: "deduction" } };
+}
+
+function calculateFederalTaxForSources(input: TaxYearInput): TaxReturnResult {
+  if (input.k1CharitableSources && (input.form982NolSources
+    || [input.priorYear?.nolCarryforward, input.priorYear?.excessBusinessLossNOL,
+      ...(input.scheduleK1Form1041 ?? []).map(row => row.finalYearNOLCarryover)].some(value => !d(value).isZero()))) {
+    throw new Error("K1 charitable NOL coordination requires its original source replay method");
+  }
+  if (input.deductionElection === "nonitemized" && (input.netOperatingLoss || input.form172)
+    && !usesDeterminedCharitableNolOrigins(input)
+    && !(input.form172 && input.netOperatingLoss?.vintages?.length === 0
+      && input.netOperatingLoss.alternativeTax?.vintages?.length === 0 && !input.form982NolSources
+      && calculateForm172CharitableSources(input)?.sourceKind === "current")) {
+    throw new Error("Explicit nonitemized NOL coordination requires its separate source method");
+  }
+  validateQofDispositionFacts(input.qofDispositionFacts, input.taxpayer.taxYear);
+  assertNoDerivedCapitalFields(input);
+  calculateQofInclusion(input);
+  if (input.form982AttributeSources && !input.form982NolSources) throw new Error("COD later attributes require actual complete original debt and NOL sources");
+  if (input.form982NolSources) calculateCodNolReduction(input);
+  const marketplace = input.form7206?.plans?.some(plan => plan.marketplaceCoverage === true && plan.premiumTaxCreditInvolved === true);
+  if (!marketplace) return calculateFederalTaxWithNol(input);
+  if (![2025,2026].includes(input.taxpayer.taxYear)) throw new Error("Marketplace health coordination supports actual2025 and2026 sources.");
+  const familySources = calculateMarketplaceCoverageFamilySources(input);
+  if (calculateMarketplaceActualPaidSources(input)) {
+    const candidate = calculateFederalTaxWithNol(input, { stage: 'actual-paid' });
+    const payment = calculateMarketplaceActualPaidRepayment(input, candidate, 'candidate').reportedPayment;
+    const result = payment ? calculateFederalTaxWithNol(input, { stage: 'actual-paid', actualPaidAdjustment: payment }) : candidate;
+    result.marketplaceActualPaidRepaymentHealth = calculateMarketplaceActualPaidRepayment(input, result);
+    result.allLines.push(...result.marketplaceActualPaidRepaymentHealth.lines);
+    return result;
+  }
+  if (calculateMarketplaceActualCashSources(input)) {
+    const result = calculateFederalTaxWithNol(input, { stage: 'actual-cash' });
+    result.marketplaceActualCashHealth = calculateMarketplaceActualCashHealth(input, result);
+    result.allLines.push(...result.marketplaceActualCashHealth.lines);
+    return result;
+  }
+  const bindingOwnerFullRepayment = hasBindingOwnerFullRepaymentSources(input);
+  if (bindingOwnerFullRepayment || familySources?.some(plan => plan.months.some(row => row.ownNoncoverageAdvance.gt(0)))) {
+    // This is an internal ordinary-premium candidate, never an entered credit
+    // or repayment. Acceptance depends on the completed actual final return.
+    const result = calculateFederalTaxWithNol(input, { stage: "full-repayment" });
+    const exactAdvances = bindingOwnerFullRepayment
+      ? sum(...input.form1095A.flatMap(policy => policy.monthlyPremiums.map(row => d(row.advancePremiumTaxCredit))))
+      : sum(...familySources!.flatMap(plan => plan.months.map(row => row.ownAdvance)));
+    if (!bindingOwnerFullRepayment && result.form8962 && !exactAdvances.eq(result.form8962.advancePTCTotal)) {
+      const reportedPayment = calculateMarketplaceReportedRepaymentPayment(input, result, "candidate");
+      const paidResult = calculateFederalTaxWithNol(input, { stage: "full-repayment", reportedPayment });
+      paidResult.marketplaceReportedRepaymentHealth = calculateMarketplaceReportedRepaymentPayment(input, paidResult);
+      paidResult.allLines.push(...paidResult.marketplaceReportedRepaymentHealth.lines);
+      return paidResult;
+    }
+    result.marketplaceFullRepaymentHealth = calculateMarketplaceFullAdvanceRepayment(input, result);
+    result.allLines.push(...result.marketplaceFullRepaymentHealth.lines);
+    return result;
+  }
+  // Discover the passive special method from actual Form8582 PartI in the first
+  // canonical pass; do not infer its net-loss condition from raw property signs.
+  const kinds: MarketplaceOrderedKind[] = ["passive"];
+  if (d(input.adjustments?.iraDeduction).gt(0) && !input.iraDeductionWorksheet) throw new Error("Pub974 ordered IRA claims require actual contribution and participation sources.");
+  if (input.iraDeductionWorksheet && (input.iraDeductionWorksheet.primaryIsActiveParticipant || input.iraDeductionWorksheet.spouseIsActiveParticipant)) kinds.push("ira");
+  if ((input.savingsBondRedemptions?.length ?? 0) > 0) kinds.push("bond");
+  if (input.studentLoanInterestFacts || (input.form1098E?.length ?? 0) > 0 || d(input.adjustments?.studentLoanInterest).gt(0)) {
+    if (!input.studentLoanInterestFacts) throw new Error("Pub974 ordered student-loan claims require actual borrower and loan sources.");
+    kinds.push("studentLoan");
+  }
+  let ordered: MarketplaceOrderedState = { kinds };
+  let historicalLimit: MarketplaceHealthLimitResult | undefined;
+  const completeNonspecifiedStop = (initial: MarketplaceInterim): TaxReturnResult => {
+    const fixed = calculateMarketplaceHealthDeduction({ input, groups: initial.groups, credit: initial.credit });
+    // P/7206 explicitly stops before the special ordering. Recalculate actual
+    // ordinary claims at the fixed nonspecified amount, with no retained state.
+    const result = calculateFederalTaxWithNol(input, { stage: "final", deduction: fixed });
+    if (!result.form8962 || result.form8962.orderedDeductionInterim) throw new Error("Pub974 nonspecified stop requires the actual final credit.");
+    const final = calculateMarketplaceHealthDeduction({ input, groups: initial.groups, credit: result.form8962 });
+    if (!final.specifiedDeduction.isZero() || !final.nonspecifiedDeduction.eq(fixed.nonspecifiedDeduction)
+      || !result.schedule1?.seHealthInsurance.eq(roundDollar(final.nonspecifiedDeduction))) throw new Error("Pub974 stopped deduction must reconcile its completed actual business claims.");
+    for (const owner of ["primary", "spouse"] as const) {
+      const actual = final.businesses.filter(row => row.accountHolder === owner);
+      const premiums = sumSourceMoney(...actual.map(row => row.specifiedPremiums), ...(result.form7206?.businesses ?? []).filter(row => row.accountHolder === owner).map(row => row.eligiblePremiums));
+      if (roundDollar(sumSourceMoney(...actual.flatMap(row => [row.nonspecifiedDeduction, row.allocatedCredit]))).gt(roundDollar(premiums))) {
+        throw new Error("Pub974 stopped deduction and credit exceed the actual owner's premium sources; separate coverage-family coordination is required.");
+      }
+    }
+    result.marketplaceHealthInsurance = { ...final, step2Credit: result.form8962.ptcAllowed,
+      finalCredit: result.form8962.ptcAllowed, maximumDeduction: final.nonspecifiedDeduction };
+    result.allLines.push(...final.lines);
+    return result;
+  };
+  if (input.taxpayer.taxYear === 2025) {
+    const initial = calculateFederalTaxWithNol(input, { stage: "worksheet-w", ordered });
+    if (calculateMarketplaceNonspecifiedStop(initial.groups)) return completeNonspecifiedStop(initial);
+    if (!initial.passiveSpecialRequired) kinds.splice(kinds.indexOf("passive"), 1);
+    historicalLimit = calculateMarketplaceHealthLimit({ taxYear: 2025, filingStatus: input.taxpayer.filingStatus, groups: initial.groups,
+      householdIncomeAfterW: initial.credit.canonicalTaxpayerModifiedAGI.plus(d(input.form8962?.requiredFilingDependentsModifiedAGI)), federalPovertyLine: initial.credit.federalPovertyLine });
+  }
+  let intermediate = calculateFederalTaxWithNol(input, { stage: "maximum", historicalLimit, ordered, orderedDeductionInterim: kinds.length > 0 });
+  if (calculateMarketplaceNonspecifiedStop(intermediate.groups)) return completeNonspecifiedStop(intermediate);
+  if (kinds.includes("passive") && !intermediate.passiveSpecialRequired) kinds.splice(kinds.indexOf("passive"), 1);
+  let deduction: MarketplaceHealthDeductionResult = calculateMarketplaceHealthDeduction({ input, groups: intermediate.groups, credit: intermediate.credit, historicalLimit });
+  const orderedAmounts: { kind: MarketplaceOrderedKind; amount: Decimal }[] = [];
+  const orderedAudit = new AuditTrail();
+  for (const [index, kind] of kinds.entries()) {
+    // Compute one next worksheet at the preceding Step3 health amount. Earlier
+    // completed worksheets stay fixed; later claims stay excluded from income.
+    const next = calculateFederalTaxWithNol(input, { stage: "ordered", deduction, ordered: { ...ordered, calculating: kind } });
+    const value = next.deductions[kind];
+    if (!value) throw new Error(`Pub974 actual ordered ${kind} worksheet is incomplete.`);
+    ordered = { ...ordered, [kind]: value };
+    const amount = kind === "passive" ? next.deductions.passive?.allowedLoss
+      : kind === "ira" ? next.deductions.ira?.totalDeduction
+      : kind === "bond" ? next.deductions.bond?.excludableSavingsBondInterest : next.deductions.studentLoan?.result.deduction;
+    if (!amount || !amount.isFinite() || amount.lt(0)) throw new Error("Pub974 ordered deduction must be finite and nonnegative.");
+    orderedAmounts.push({ kind, amount });
+    orderedAudit.record("Pub974 Ordered Deductions", kind, "Interim ordered deduction or exclusion", amount,
+      "Actual next worksheet using preceding Step3 health; retained unless finalStep2 requires ordinary no-credit refiguring",
+      { "Preceding Step3 health": roundDollar(sumSourceMoney(deduction.specifiedDeduction, deduction.nonspecifiedDeduction)),
+        "Auxiliary Step2 percentage": intermediate.credit.fplPercentageForTable,
+        "Auxiliary actual household income": intermediate.credit.modifiedAGI });
+    if (historicalLimit) historicalLimit = calculateMarketplaceHealthLimit({ taxYear: 2025, filingStatus: input.taxpayer.filingStatus,
+      groups: intermediate.groups, householdIncomeAfterW: historicalLimit.householdIncomeAfterW,
+      federalPovertyLine: historicalLimit.federalPovertyLine, orderedDeductions: orderedAmounts });
+    intermediate = calculateFederalTaxWithNol(input, { stage: "maximum", historicalLimit, ordered, orderedDeductionInterim: index < kinds.length - 1 });
+    deduction = calculateMarketplaceHealthDeduction({ input, groups: intermediate.groups, credit: intermediate.credit, historicalLimit });
+  }
+  const ordinary = deduction.method.startsWith("ordinary-no-ptc-");
+  // Pub974 Simplified Step2: when the final iteration is ineligible, stop this
+  // method and refigure the listed deductions using actual ordinary Form7206.
+  let reentered = false;
+  if (ordinary) {
+    // This is a private eligibility probe, so a supplied final source MAGI is
+    // reconciled only after choosing the method actually used on the return.
+    const refigured = calculateFederalTaxWithNol(input, { stage: "ordered", deduction });
+    if (refigured.credit.taxpayerEligible) {
+      deduction = calculateMarketplaceHealthReentry({ input, groups: refigured.groups,
+        credit: refigured.credit, ordinaryDeduction: deduction });
+      intermediate = refigured;
+      reentered = true;
+    }
+  }
+  const result = calculateFederalTaxWithNol(input, { stage: "final", deduction, ordered: ordinary ? undefined : ordered });
+  if (ordinary && !reentered && kinds.length) orderedAudit.record("Pub974 Ordered Deductions", "ordinary-refigure", "Ordinary health deduction used to refigure all listed claims",
+    roundDollar(sumSourceMoney(deduction.specifiedDeduction, deduction.nonspecifiedDeduction)), "FinalStep2 ineligible: discard retained interim claims and recalculate ordinary source worksheets");
+  if (!result.form8962 || result.form8962.orderedDeductionInterim) throw new Error("Pub974 final premium tax credit is incomplete.");
+  if (ordinary && !reentered && result.form8962.taxpayerEligible) throw new Error("Pub974 ordinary-method eligibility changed after the actual refiguring calculation.");
+  const finalAllocation = calculateMarketplaceHealthDeduction({ input, groups: intermediate.groups, credit: result.form8962, historicalLimit });
+  if (roundDollar(sumSourceMoney(deduction.specifiedDeduction, ...finalAllocation.businesses.map(row => row.allocatedCredit)))
+    .gt(roundDollar(sumSourceMoney(...deduction.businesses.map(row => row.specifiedPremiums))))) throw new Error("Pub974 final deduction plus actual allocated credit exceeds source premiums.");
+  result.marketplaceHealthInsurance = { ...deduction, step2Credit: intermediate.credit.ptcAllowed, finalCredit: result.form8962.ptcAllowed,
+    maximumDeduction: sumSourceMoney(deduction.maximumSpecifiedDeduction, deduction.nonspecifiedDeduction) };
+  result.allLines.push(...(historicalLimit?.lines ?? []), ...(reentered ? [] : orderedAudit.getLines()), ...deduction.lines);
+  return result;
+}
+
+type MarketplaceOrderedKind = "passive" | "ira" | "bond" | "studentLoan";
+interface MarketplaceOrderedState {
+  kinds: MarketplaceOrderedKind[];
+  calculating?: MarketplaceOrderedKind;
+  passive?: ReturnType<typeof calculateForm8582>;
+  ira?: NonNullable<TaxReturnResult["iraDeductionWorksheet"]>;
+  bond?: Form8815Result;
+  studentLoan?: { result: ReturnType<typeof calculateStudentLoanInterestDeduction>; modifiedAgi: Decimal };
+}
+type MarketplaceContext = ({ stage: "actual-paid"; actualPaidAdjustment?: MarketplaceActualPaidAdjustment } | { stage: "actual-cash" } | { stage: "full-repayment"; reportedPayment?: MarketplaceReportedRepaymentPayment } | { stage: "worksheet-w" } | { stage: "maximum"; historicalLimit?: MarketplaceHealthLimitResult }
+  | { stage: "ordered"; deduction: MarketplaceHealthDeductionResult }
+  | { stage: "final"; deduction: MarketplaceHealthDeductionResult }) & { ordered?: MarketplaceOrderedState; orderedDeductionInterim?: boolean };
+interface MarketplaceInterim {
+  passiveSpecialRequired: boolean;
+  groups: MarketplaceHealthPremiumGroup[];
+  credit: ReturnType<typeof calculatePremiumTaxCreditReturn>;
+  deductions: Omit<MarketplaceOrderedState, "kinds" | "calculating">;
+}
+function calculateFederalTaxWithNol(input: TaxYearInput, marketplace: MarketplaceContext & { stage: "worksheet-w" | "maximum" | "ordered" }): MarketplaceInterim;
+function calculateFederalTaxWithNol(input: TaxYearInput, marketplace?: MarketplaceContext & { stage: "final" | "full-repayment" | "actual-cash" | "actual-paid" }): TaxReturnResult;
+function calculateFederalTaxWithNol(input: TaxYearInput, marketplace?: MarketplaceContext): TaxReturnResult | MarketplaceInterim {
+  if (input.form172 && !input.netOperatingLoss) throw new Error("Form172 requires the actual complete prior regular and separate AMT carry packet");
+  const complete = (worksheet?: NetOperatingLossReturnResult): TaxReturnResult | MarketplaceInterim => {
+    const context = worksheet ? { stage: "final" as const, deduction: worksheet.deduction, modified: false as const, worksheet } : undefined;
+    return marketplace && marketplace.stage !== "final" && marketplace.stage !== "full-repayment" && marketplace.stage !== "actual-cash" && marketplace.stage !== "actual-paid"
+      ? calculateFederalTaxCore(input, marketplace, undefined, context)
+      : calculateFederalTaxCore(input, marketplace, undefined, context);
+  };
+  if (!input.netOperatingLoss) return complete();
+  // A statutory NOL replay recomputes enabled claims rather than freezing a
+  // Pub974 retained amount into a different AGI. Future ordered claims stay
+  // omitted; only actual final income retains completed Pub974 amounts.
+  const retained = marketplace?.ordered;
+  const refigured = retained && marketplace ? { ...marketplace, ordered: { kinds: retained.kinds.filter(kind =>
+    retained[kind] === undefined && retained.calculating !== kind) } } : marketplace;
+  const worksheet = calculateNetOperatingLossReturn(input, (deduction, modified, purpose, charitableContributionLimit, sourceInput) =>
+    calculateFederalTaxCore(sourceInput ?? input, sourceInput ? undefined : purpose === "final" ? marketplace : refigured, undefined, { stage: "income", deduction, modified, charitableContributionLimit }),
+  (deduction, modified, charitableContributionLimit, actualRegularNol, actualRegularDeductionMethod, actualRegularQbiDeduction, sourceInput) => calculateFederalTaxCore(sourceInput ?? input, sourceInput ? undefined : modified ? refigured : marketplace, undefined,
+    { stage: "alternative-income", deduction, modified, charitableContributionLimit, actualRegularNol, actualRegularDeductionMethod, actualRegularQbiDeduction }));
+  if (!worksheet.calculationComplete || worksheet.deduction === undefined) throw new Error("Actual NOL calculation is incomplete");
+  return complete(worksheet);
+}
+type ForeignTaxHypotheticalRequest = { purpose: "foreign-deduction-carryover" };
+type NolReturnContext = { stage: "income" | "alternative-income"; deduction: Decimal; modified: boolean; charitableContributionLimit?: CharitableNolContributionLimit;
+  actualRegularNol?: import("./forms/net-operating-loss.js").NetOperatingLossResult;
+  actualRegularDeductionMethod?: NolIncomeContext["deductionUsed"]; actualRegularQbiDeduction?: Decimal }
+  | { stage: "final"; deduction: Decimal; modified: false; worksheet: NetOperatingLossReturnResult };
+function calculateFederalTaxCore(input: TaxYearInput, marketplace: MarketplaceContext | undefined, hypothetical: undefined, nol: NolReturnContext & { stage: "income" }): NolIncomeContext;
+function calculateFederalTaxCore(input: TaxYearInput, marketplace: MarketplaceContext | undefined, hypothetical: undefined, nol: NolReturnContext & { stage: "alternative-income" }): NolAlternativeIncomeContext;
+function calculateFederalTaxCore(input: TaxYearInput, marketplace: (MarketplaceContext & { stage: "final" | "full-repayment" | "actual-cash" | "actual-paid" }) | undefined, hypothetical?: undefined, nol?: NolReturnContext & { stage: "final" }): TaxReturnResult;
+function calculateFederalTaxCore(input: TaxYearInput, marketplace: undefined, hypothetical: ForeignTaxHypotheticalRequest): ForeignTaxHypotheticalContext;
+function calculateFederalTaxCore(input: TaxYearInput, marketplace: MarketplaceContext & { stage: "worksheet-w" | "maximum" | "ordered" }, hypothetical?: undefined, nol?: NolReturnContext & { stage: "final" }): MarketplaceInterim;
+function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceContext & { stage: "final" | "full-repayment" | "actual-cash" | "actual-paid" }): TaxReturnResult;
+function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceContext, hypothetical?: ForeignTaxHypotheticalRequest, nol?: NolReturnContext): TaxReturnResult | MarketplaceInterim | ForeignTaxHypotheticalContext | NolIncomeContext | NolAlternativeIncomeContext {
+  validateForeignTaxDeductionScope(input);
+  const ordered = marketplace?.ordered;
+  const calculateOrdered = (kind: MarketplaceOrderedKind) => !ordered?.kinds.includes(kind) || ordered.calculating === kind || ordered[kind] !== undefined;
   const year = input.taxpayer.taxYear;
   const constants = getConstants(year);
   const filingStatus = input.taxpayer.filingStatus as FilingStatus;
   const audit = new AuditTrail();
+  if (nol?.stage === "final") audit.merge(nol.worksheet.lines);
 
   // ═══════════════════════════════════════════════════════════
   // Pre-aggregate input arrays in single passes to avoid
@@ -299,49 +609,143 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     qcdAnnualLimit: constants.qcd.annualLimit,
   });
   audit.merge(form1099R.lines);
-  const form4137 = input.form4137
-    ? calculateForm4137(input.form4137, constants, {
-      socialSecurityWagesAndTipsAlreadyReported: w2Agg.ssWages,
-      socialSecurityTipsAlreadyReported: w2Agg.ssTips,
-    })
-    : undefined;
-  if (form4137) {
-    audit.merge(form4137.lines);
+  const hasUnreportedPayroll = input.form4137 !== undefined || input.form4137ByOwner !== undefined || input.form8919 !== undefined;
+  const hasActualPayrollOwner = input.form4137?.accountHolder !== undefined || input.form8919?.accountHolder !== undefined;
+  if (hasUnreportedPayroll && filingStatus === "married_filing_jointly"
+    && (year >= 2026 || hasActualPayrollOwner) && input.w2s.some(w2 => w2.accountHolder === undefined)) {
+    throw new Error("Actual W-2 owner attribution is required with separately owned unreported payroll");
   }
+  if (hasUnreportedPayroll && year >= 2026 && input.w2s.some(w2 =>
+    w2.socialSecurityWages === undefined || w2.socialSecurityTips === undefined)) {
+    throw new Error("2026 unreported payroll requires actual W-2 Boxes3 and7, including known zero");
+  }
+  const payrollForOwner = (owner: "primary" | "spouse" | undefined) => {
+    const wages = owner === undefined ? input.w2s : input.w2s.filter(w2 =>
+      (w2.accountHolder ?? (filingStatus !== "married_filing_jointly" ? "primary" : undefined)) === owner);
+    return {
+      wages: sum(...wages.map(w2 => d(w2.socialSecurityWages))),
+      tips: sum(...wages.map(w2 => d(w2.socialSecurityTips))),
+    };
+  };
+  if (year >= 2026 && filingStatus === "married_filing_jointly"
+    && ((input.form4137 && !input.form4137.accountHolder) || (input.form8919 && !input.form8919.accountHolder))) {
+    throw new Error("2026 unreported payroll forms require actual taxpayer ownership");
+  }
+  const tipPayroll = calculateUnreportedTipPayroll(input, constants);
+  const form4137 = tipPayroll.singular;
+  audit.merge(tipPayroll.lines);
+  const unreportedPayroll = payrollForOwner(input.form8919?.accountHolder);
+  const sameOwnerTips = sum(...tipPayroll.forms.filter(form => !form.accountHolder || !input.form8919?.accountHolder || form.accountHolder === input.form8919.accountHolder).map(form => form.line10));
   const form8919 = input.form8919
     ? calculateForm8919(input.form8919, constants, {
-      socialSecurityWagesAndTipsAlreadyReported: w2Agg.ssWages,
-      w2SocialSecurityTipsAlreadyReported: w2Agg.ssTips,
-      form4137SocialSecurityTipsAlreadyReported: form4137?.line10 ?? new Decimal(0),
+      socialSecurityWagesAndTipsAlreadyReported: unreportedPayroll.wages,
+      w2SocialSecurityTipsAlreadyReported: unreportedPayroll.tips,
+      form4137SocialSecurityTipsAlreadyReported: sameOwnerTips,
     })
     : undefined;
   if (form8919) {
     audit.merge(form8919.lines);
   }
 
+  // PartIII precedes wages, business profits, SE/QBI and PartII. Source binding
+  // preserves amounts already reported and never fabricates a credit claim.
+  const form2441Benefits = input.dependentCareBenefits
+    ? calculateForm2441Benefits({ taxYear: year, filingStatus, facts: input.dependentCareBenefits }) : undefined;
+  const careBenefitSources = calculateDependentCareBenefitSources(input, form2441Benefits);
+  if (form2441Benefits) audit.merge(form2441Benefits.lines);
+  const taxableCareBenefits = form2441Benefits?.taxableBenefits ?? new Decimal(0);
+  audit.record("1040", "1e", "Taxable dependent-care benefits", taxableCareBenefits,
+    "Form 2441 line 26 after subtracting actual benefits already in W2 Box1");
+
   // Line 1: Wages
   const totalWagesBeforeExclusion = w2Agg.wages
-    .plus(form4137?.unreportedTipIncome ?? new Decimal(0))
+    .plus(tipPayroll.income)
     .plus(form8919?.line6 ?? new Decimal(0))
     .plus(form1099R.disabilityPensionWages);
 
+  audit.record("1040", "1a", "W-2 wages", w2Agg.wages, "Sum W-2 box 1");
+  audit.record("1040", "1c", "Unreported tips", tipPayroll.income, "Supported Form 4137 tips not included in line 1a");
+  audit.record("1040", "1g", "Wages from Form 8919", form8919?.line6 ?? new Decimal(0), "Form 8919 line 6");
+
   // ── Form 2555: Foreign Earned Income Exclusion ────────
-  // Must be computed before Line 1 is finalized because the exclusion
-  // reduces the wages amount entered on Form 1040 Line 1a.
+  // Compute before MAGI worksheets. Net line45 reduces Schedule1line8d;
+  // it never changes the gross wages reported on Form1040line1z.
+  if (input.form2555?.taxYear !== undefined && input.form2555.taxYear !== year) {
+    throw new Error("Foreign income source tax year does not match the return");
+  }
+  const foreignIncomeSources = resolveForm2555Sources(input);
+  audit.merge(foreignIncomeSources.lines);
   const form2555 = input.form2555
-    ? calculateForm2555(input.form2555, constants)
+    ? calculateForm2555({...input.form2555,taxYear:year}, constants)
     : undefined;
   if (form2555) {
+    form2555.sourceFactsVerified = form2555.sourceFactsVerified && foreignIncomeSources.sourceFactsVerified;
     audit.merge(form2555.lines);
   }
   const form2555IncomeReduction = form2555?.totalIncomeReduction ?? new Decimal(0);
   const form2555HousingDeduction = form2555?.housingDeduction ?? new Decimal(0);
+  const foreignEmploymentNotOnW2 = d(input.form2555?.incomeSources?.foreignEmploymentIncomeNotOnW2);
+  if (input.form2555?.incomeSources && input.form2555.incomeSourceMappingConfirmed !== true) {
+    throw new Error("Foreign income source mapping is unconfirmed");
+  }
+  if (d(input.form2555?.incomeSources?.foreignEmploymentIncomeIncludedOnW2).gt(w2Agg.wages)) {
+    throw new Error("Foreign employment attributed to W2 exceeds actual W2 wages");
+  }
+  if (!foreignEmploymentNotOnW2.isFinite() || foreignEmploymentNotOnW2.lt(0)) {
+    throw new Error("Foreign employment income absent from W2 must be finite and nonnegative");
+  }
+  audit.record("1040", "1h", "Other earned income", form1099R.disabilityPensionWages.plus(foreignEmploymentNotOnW2),
+    "Supported disability pensions and actual foreign employment income not reported on W2");
 
-  const totalWages = zeroFloor(totalWagesBeforeExclusion.minus(form2555IncomeReduction));
+  // Adoption benefit exclusion must precede AGI. The completed Part III MAGI
+  // worksheet is an actual input; final credit MAGI is calculated later from AGI.
+  const calculateAdoption = (creditAgi: Decimal, taxLiabilityLimit: Decimal) => input.form8839
+    ? calculateForm8839({
+      ...input.form8839,
+      taxYear: year, filingStatus, agi: creditAgi, taxLiabilityLimit,
+      sourceTaxpayer: input.taxpayer,
+      form2555Source: form2555,
+      foreignEarnedIncomeExclusion: form2555 ? form2555IncomeReduction : d(input.form8839.foreignEarnedIncomeExclusion),
+      foreignHousingExclusion: form2555 ? form2555HousingDeduction : d(input.form8839.foreignHousingExclusion),
+      possessionIncomeExclusion: d(input.form8839.possessionIncomeExclusion),
+      exclusionMagi: input.form8839.exclusionMagi === undefined ? undefined : d(input.form8839.exclusionMagi),
+      carryforwards: input.form8839.carryforwards?.map(entry => ({...entry,amount:d(entry.amount)})),
+      constants: constants.adoptionCredit,
+    }) : undefined;
+  if (year === 2026 && input.form8839?.children.some(child => child.sourceFactsComplete !== true)) {
+    throw new Error("Adoption classification, employer benefits or prior lifetime history is unknown");
+  }
+  const reportedAdoptionBenefits = sum(...input.w2s.map(w2 => d(w2.box12CodeT)));
+  if (reportedAdoptionBenefits.gt(0) && !input.form8839) throw new Error("Reported W-2 adoption benefits require actual Form 8839 facts");
+  if (reportedAdoptionBenefits.gt(0) && input.form8839 && !reportedAdoptionBenefits.eq(sum(...input.form8839.children.map(child => d(child.employerBenefits))))) {
+    throw new Error("Reported W-2 adoption benefits do not reconcile with actual child benefit amounts");
+  }
+  const hasAdoptionBenefitCalculation = input.form8839?.children.some(child =>
+    d(child.employerBenefits).gt(0) || d(child.priorYearForeignBenefits).gt(0) || child.priorYearForeignBenefitHistory !== undefined
+      || (child.isSpecialNeeds && child.employerPlanQualified === true)) ?? false;
+  if (hasAdoptionBenefitCalculation && input.form8839?.exclusionMagi === undefined) {
+    throw new Error("Adoption exclusion MAGI worksheet is unknown");
+  }
+  if (year === 2026 && input.form8839 && input.form8839.possessionIncomeExclusion === undefined) {
+    throw new Error("2026 adoption possession-income exclusion is unknown");
+  }
+  // Only Part III exclusion is consumed here. Credit calculations and audit are
+  // discarded until final AGI and actual credit limits are known.
+  const adoptionBenefitResult = hasAdoptionBenefitCalculation
+    ? calculateAdoption(d(input.form8839?.exclusionMagi), new Decimal(0)) : undefined;
+  const taxableAdoptionBenefits = adoptionBenefitResult?.adoptionIncomeAdjustment ?? new Decimal(0);
+  audit.record("1040", "1f", "Taxable adoption benefits", taxableAdoptionBenefits,
+    adoptionBenefitResult?.priorYearEmployerBenefits.gt(0)
+      ? "Form 8839 physical line31 less historical benefit worksheet9; signed reporting continuation from 2023 instructions"
+      : "Signed Form 8839 line 31");
+  const totalWages = totalWagesBeforeExclusion.plus(taxableAdoptionBenefits).plus(foreignEmploymentNotOnW2).plus(taxableCareBenefits);
   audit.record("1040", "1", "Wages, salaries, tips", totalWages,
     [
       "Sum of all W-2 Box 1",
-      form4137?.unreportedTipIncome.greaterThan(0)
+      taxableCareBenefits.isZero() ? undefined : `additional taxable dependent-care benefits $${taxableCareBenefits}`,
+      foreignEmploymentNotOnW2.isZero() ? undefined : "actual foreign employment income not reported on W2",
+      taxableAdoptionBenefits.isZero() ? undefined : `signed taxable adoption benefits $${taxableAdoptionBenefits}`,
+      tipPayroll.income.greaterThan(0)
         ? "supported Form 4137 unreported tip income"
         : undefined,
       form8919?.line6.greaterThan(0)
@@ -352,45 +756,65 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
         : form1099R.disabilityPensionPublicSafetyOfficerPremiumExclusion.greaterThan(0)
           ? "disability pensions taxable as wages before minimum retirement age, net of the retired public safety officer insurance premium exclusion"
           : "disability pensions taxable as wages before minimum retirement age",
-      form2555IncomeReduction.greaterThan(0)
-        ? `less Form 2555 foreign earned income exclusion and housing exclusion $${form2555IncomeReduction}`
-        : undefined,
     ].filter((part): part is string => part !== undefined).join(" plus "),
     {
       w2Count: input.w2s.length.toString(),
-      form4137UnreportedTipIncome: form4137?.unreportedTipIncome ?? new Decimal(0),
+      foreignEmploymentNotOnW2,
+      form4137UnreportedTipIncome: tipPayroll.income,
       form8919Wages: form8919?.line6 ?? new Decimal(0),
       disabilityPensionWages: form1099R.disabilityPensionWages,
       disabilityPensionPublicSafetyOfficerPremiumExclusion:
         form1099R.disabilityPensionPublicSafetyOfficerPremiumExclusion,
-      form2555IncomeReduction,
     });
 
   // ── Form 8814: Parents' Election To Report Child's Interest and Dividends ──
+  let parentTaxableIncomeWithoutChild: Decimal | undefined;
+  if (input.form8814?.some(child => ['married_separate', 'custodial_separate_stepparent', 'surviving_separate_stepparent', 'never_married_together_all_year'].includes(child.electionFacts?.parentSituation ?? ''))) {
+    // Parent selection uses this same completed return with every child election
+    // removed. Recursion terminates because the counterfactual has no elections.
+    // A claimed child's excess returns to the dependent MAGI worksheet; it does
+    // not disappear from the actual PTC household when the election is removed.
+    const dependentIdentities = new Set(input.taxpayer.dependents.map(child => child.ssn.replace(/-/g, '')));
+    const restoredDependentIncome = sum(...input.form8814.filter(child => dependentIdentities.has(child.electionFacts?.child.ssn.replace(/-/g, '') ?? '')).map(child =>
+      zeroFloor(sum(d(child.taxableInterest), d(child.ordinaryDividends), d(child.capitalGainDistributions)).minus(constants.form8814.baseAmount))));
+    const counterfactual: TaxYearInput = { ...input, form8814: [],
+      form8962: input.form8962 ? { ...input.form8962, taxpayerModifiedAGI: undefined,
+        requiredFilingDependentsModifiedAGI: input.form8962.requiredFilingDependentsModifiedAGI === undefined ? undefined
+          : d(input.form8962.requiredFilingDependentsModifiedAGI).plus(restoredDependentIncome).toFixed() } : undefined };
+    parentTaxableIncomeWithoutChild = calculateFederalTax(counterfactual).taxableIncome;
+  }
+  audit.merge(calculateForm8814Election(input.form8814 ?? [], input.taxpayer, constants, parentTaxableIncomeWithoutChild).lines);
+  const form8814IncomeCharacter = calculateForm8814IncomeCharacter(input.form8814 ?? [], constants);
+  audit.merge(form8814IncomeCharacter.lines);
+  if ((form8814IncomeCharacter.collectiblesGain.gt(0) || form8814IncomeCharacter.unrecapturedSection1250Gain.gt(0)) && !input.scheduleDSpecialGainSources) {
+    throw new Error("Child special gain netting requires the completed ScheduleD18/19 source worksheets");
+  }
   const form8814: AggregatedForm8814 | undefined = (input.form8814?.length ?? 0) > 0
     ? aggregateForm8814Results(input.form8814, constants)
     : undefined;
   if (form8814) {
     audit.merge(form8814.lines);
   }
+  const form8814AmtSources = calculateForm8814AmtSources(input.form8814 ?? [], year);
+  audit.merge(form8814AmtSources.lines);
 
-  // Line 2a: Tax-exempt interest (informational, not included in total income)
-  // Includes 1099-INT Box 8, 1099-DIV Box 12, 1099-OID Box 14 (net of Box 13), K-1 Box 18 Code A, K-1 1041 Box 14 Code A, and Form 8814 Line 1b
-  const taxExemptOID = sum(
-    ...(input.form1099OID ?? []).map((f) =>
-      zeroFloor(d(f.taxExemptOID).minus(d(f.taxExemptBondPremium)))
-    )
-  );
+  const form1099OID = calculateForm1099OID(input.form1099OID ?? [], year);
+  audit.merge(form1099OID.lines);
+  const form6251BondSources = calculateForm6251BondSources(input.form1099Int, input.form1099Div, year, filingStatus,
+    [...(input.form1099OID ?? []).flatMap(source => source.sourceId ? [source.sourceId] : []),
+      ...(input.form8814 ?? []).flatMap(child => child.amtSources?.statements.map(source => source.sourceId) ?? [])],
+    form1099OID.privateActivityBondInterest.toFixed());
+  audit.merge(form6251BondSources.lines);
+  // Line2a includes actual source-classified exempt OID and stated interest.
   const taxExemptInterest = sum(
     intAgg.taxExemptInterest,
     divAgg.exemptInterestDividends,
     k1Agg.taxExemptInterest,
     ...(input.scheduleK1Form1041 ?? []).map((k) => d(k.taxExemptInterest)),
-    taxExemptOID,
-    form8814?.totalTaxExemptInterest ?? new Decimal(0)
+    form1099OID.taxExemptInterest
   );
   audit.record("1040", "2a", "Tax-exempt interest", taxExemptInterest,
-    "Sum 1099-INT Box 8 + 1099-DIV Box 12 + 1099-OID Box 14 + K-1 Box 18A + K-1 1041 Box 14A + Form 8814 Line 1b");
+    "Sum 1099-INT Box 8 + 1099-DIV Box 12 + source-classified 1099-OID Box11 and stated interest + K-1 Box 18A + K-1 1041 Box 14A");
 
   // Lines 2b, 3a, 3b: Interest and dividends via Schedule B
   const preliminaryScheduleB = calculateScheduleB(input);
@@ -414,7 +838,12 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   const form1099SA = calculateForm1099SA(input.form1099SA ?? []);
   audit.merge(form1099SA.lines);
   // ── Form 8606 calculation ──────────────────────────────────────────
-  // Supports three modes:
+  // Actual source packets bind each owner's prior basis and every IRA account
+  // before entering the existing separate-owner calculation.
+  const iraBasisSources = calculateIraBasisSources(input);
+  if (iraBasisSources) audit.merge(iraBasisSources.lines);
+  const ownerForm8606Inputs = iraBasisSources?.form8606ByOwner ?? input.form8606ByOwner;
+  // Legacy source modes remain available:
   // 1. form8606ByOwner: Per-spouse Form 8606 on MFJ returns (each spouse's IRA basis computed independently)
   // 2. form8606: Single combined Form 8606 (backward-compatible, used for single filers or pre-split MFJ)
   // 3. Neither: No Form 8606, IRA taxable amounts come directly from Form 1099-R
@@ -437,7 +866,7 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   let ownerAmbiguousJointReturnIraGrossOutsideForm8606 = new Decimal(0);
   let ownerAmbiguousJointReturnIraTaxableOutsideForm8606 = new Decimal(0);
 
-  if (input.form8606ByOwner !== undefined) {
+  if (ownerForm8606Inputs !== undefined) {
     // ── Per-owner Form 8606 path ──────────────────────────────────
     const allForms = input.form1099R ?? [];
     const ownerSpecificMfJPath =
@@ -451,8 +880,8 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     const spouseForms = allForms.filter((f) => f.accountHolder === "spouse");
     form8606ByOwnerResults = {};
 
-    const primaryInput = input.form8606ByOwner.primary;
-    const spouseInput = input.form8606ByOwner.spouse;
+    const primaryInput = ownerForm8606Inputs.primary;
+    const spouseInput = ownerForm8606Inputs.spouse;
 
     if (primaryInput !== undefined) {
       const primaryHsa = input.form8889ByOwner?.primary ?? (input.form8889 ?? undefined);
@@ -755,6 +1184,7 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   // and including prior-year deferred amounts.
   let form8915FResult: Form8915FResult | undefined;
   let form982: ReturnType<typeof calculateForm982> | undefined;
+  let codAttributeReduction: TaxReturnResult["codAttributeReduction"];
   if (input.form8915F) {
     form8915FResult = calculateForm8915F(input.form8915F);
     audit.merge(form8915FResult.lines);
@@ -903,21 +1333,36 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   let donationResult: CryptoDonationResult | undefined;
   const cryptoDonations = cryptoInput?.donations ?? [];
   if (cryptoDonations.length > 0) {
-    donationResult = calculateCryptoDonations(cryptoDonations);
+    donationResult = calculateCryptoDonations(cryptoDonations, year);
     audit.merge(donationResult.lines);
   }
 
   // Separate 1099-DA transactions needing lot matching from those with broker-reported basis
   const needsLotMatching = form1099DAForms.some((form) =>
-    form.transactions.some((t) => !t.basisReportedToIRS && d(t.costBasis).isZero())
+    form.sourceFactsConfirmed !== true && form.transactions.some((t) => !t.basisReportedToIRS && d(t.costBasis).isZero())
   );
+
+  // Confirmed rows carry their own basis and consume no lot, so a lot path could reuse it.
+  const rowNames = (row: { ticker?: string; digitalAssetCode?: string; digitalAssetName: string }) => [row.ticker, row.digitalAssetCode, row.digitalAssetName].flatMap((name) => name?.trim() ? [name.trim().toUpperCase()] : []);
+  const confirmedRows = form1099DAForms.filter((form) => form.sourceFactsConfirmed === true).flatMap((form) => form.transactions);
+  const consumedAssets = new Set([
+    ...(cryptoInput?.tokenSwaps ?? []).map((swap) => swap.fromAsset.trim().toUpperCase()),
+    ...(cryptoInput?.lpPositions ?? []).flatMap((position) => position.underlyingAssetsDeposited.map((deposit) => deposit.asset.trim().toUpperCase())),
+    ...(cryptoInput?.liquidations ?? []).map((liquidation) => liquidation.collateralAsset.trim().toUpperCase()),
+    ...form1099DAForms.filter((form) => form.sourceFactsConfirmed !== true).flatMap((form) => form.transactions.filter((t) => !t.basisReportedToIRS && d(t.costBasis).isZero()).flatMap(rowNames)),
+  ]);
+  // A row with no ticker cannot be tied to a lot symbol, so any consumed lot could be its own.
+  if (allLots.some((lot) => consumedAssets.has(lot.asset.trim().toUpperCase())
+    && confirmedRows.some((row) => !row.ticker?.trim() || rowNames(row).includes(lot.asset.trim().toUpperCase())))) {
+    throw new Error("Form1099DA confirmed rows and lot-consuming crypto sources for the same asset need a separate lot method.");
+  }
 
   let lotMatchedBasis: Map<string, { costBasis: Decimal; dateAcquired: string }> | undefined;
   let lotMatchedDispositions: MatchedDisposition[] = [];
   if (needsLotMatching && allLots.length > 0) {
     const transactionsForMatching = form1099DAForms.flatMap((form) =>
       form.transactions
-        .filter((t) => !t.basisReportedToIRS && d(t.costBasis).isZero())
+        .filter((t) => form.sourceFactsConfirmed !== true && !t.basisReportedToIRS && d(t.costBasis).isZero())
         .map((t) => ({ transaction: t, broker: form.brokerName }))
     );
     const lotResult = matchLots(transactionsForMatching, allLots, cryptoBasisMethod);
@@ -961,50 +1406,21 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     ...liquidationTransactions,
   ];
 
-  const hasCryptoTransactions = form1099DAForms.length > 0 || phase2Dispositions.length > 0;
-  const inputWithCrypto = hasCryptoTransactions
-    ? {
-      ...input,
-      form1099B: [
-        ...input.form1099B,
-        ...form1099DAForms.map((form) => ({
-          broker: form.brokerName,
-          payerTin: form.brokerTin,
-          accountHolder: form.accountHolder,
-          stateWithheld: form.stateWithheld,
-          state: form.state,
-          transactions: form.transactions.map((t) => {
-            const desc = `${t.digitalAssetName}${t.ticker ? ` (${t.ticker})` : ""}`;
-            const matchKey = `${desc} via ${form.brokerName}|${t.dateSold}`;
-            const matched = lotMatchedBasis?.get(matchKey);
-            return {
-              description: desc,
-              dateAcquired: matched?.dateAcquired ?? t.dateAcquired,
-              dateSold: t.dateSold,
-              proceeds: t.proceeds,
-              costBasis: matched ? matched.costBasis.toString() : t.costBasis,
-              adjustments: t.adjustments,
-              basisReportedToIRS: t.basisReportedToIRS,
-              holdingPeriod: t.holdingPeriod,
-              washSale: t.washSale,
-              washSaleDisallowed: t.washSaleDisallowed,
-              digitalAsset: true,
-            };
-          }),
-        })),
-        // Phase 2 DeFi/NFT/liquidation dispositions as synthetic 1099-B entries
-        ...(phase2Dispositions.length > 0 ? [{
-          broker: "DeFi/NFT/Crypto",
-          stateWithheld: "0",
-          transactions: phase2Dispositions,
-        }] : []),
-      ],
-    }
-    : input;
+  const inputWithCrypto = normalizeDigitalAssetCapitalInput(input, {
+    resolvedLegacyBasis: lotMatchedBasis, additionalDispositions: phase2Dispositions,
+  });
+
+  const k1CharitableSources = calculateK1CharitableReturnSources(input);
+  if (k1CharitableSources) audit.merge(k1CharitableSources.lines);
 
   // Line 7: Capital gains/losses via Schedule D (includes Form 8949)
   const schedD = calculateScheduleD(inputWithCrypto, filingStatus, constants, form4797, {
+    k1CharitableSources,
+    originalDigitalAssetSources: input.form1099DA,
     form8824CapitalGainLoss: form8824?.totalCapitalRecognizedGainOrLoss ?? new Decimal(0),
+    childCapitalGainDistributions: form8814?.totalCapitalGains ?? new Decimal(0),
+    childCollectiblesGain: form8814IncomeCharacter.collectiblesGain,
+    childUnrecapturedSection1250Gain: form8814IncomeCharacter.unrecapturedSection1250Gain,
   });
   audit.merge(schedD.lines);
   // Track wash sale carryforward for crypto dispositions (IRC §1091)
@@ -1023,16 +1439,17 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     audit.merge(washSaleCarryforward.lines);
   }
 
-  // Form 8814 Line 10 capital gain distributions add to Schedule D Line 13 / Line 7
-  const form8814CapitalGains = form8814?.totalCapitalGains ?? new Decimal(0);
-  const capitalGainLoss = schedD.capitalLossDeduction.plus(form8814CapitalGains);
+  // Child line10 is already netted inside ScheduleD before losses/carryovers.
+  const capitalGainLoss = schedD.capitalLossDeduction;
   audit.record("1040", "7", "Capital gain or loss", capitalGainLoss,
-    form8814CapitalGains.greaterThan(0)
-      ? `Schedule D Line 21 + Form 8814 Line 10 capital gain distributions $${form8814CapitalGains}`
+    form8814?.totalCapitalGains.gt(0)
+      ? "Schedule D Line 21, including child election distributions once"
       : "Schedule D Line 21");
 
   // Schedule C: Self-employment income (net profit)
-  const schedC = calculateScheduleC(input, input.scheduleC);
+  const schedC = calculateScheduleC(input, input.scheduleC, {
+    dependentCareBenefitsAdjustment: careBenefitSources.scheduleCAdjustment,
+  });
   // Add crypto business income (mining/staking + NFT creator sales) to Schedule C net profit
   const cryptoBusinessGross = sum(
     cryptoIncomeResult?.businessMiningGrossReceipts ?? new Decimal(0),
@@ -1061,14 +1478,24 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     (cryptoBusinessNet.greaterThan(0) ? ` + crypto business net $${cryptoBusinessNet}` : ""));
 
   // Schedule F: Farm income (net profit)
-  const schedF = calculateScheduleF(input.scheduleF);
+  const schedF = calculateScheduleF(input.scheduleF, {
+    dependentCareBenefitsAdjustment: careBenefitSources.scheduleFAdjustment,
+  });
   const schedFNetProfit = schedF.netFarmProfit;
   audit.merge(schedF.lines);
   audit.record("1040", "8-sched-f", "Farm income (Schedule F)", schedFNetProfit, "Schedule F Line 34");
 
   // Schedule E: Supplemental income (rental + partnership)
-  const schedE = calculateScheduleE(input);
+  const schedE = calculateScheduleE(input, k1CharitableSources);
+  for (const { basisResult, name } of schedE.partnerships) {
+    // Legacy dollar rounding can move a small suspension between categories, so test the real shortfall.
+    if (basisResult?.totalSuspendedLosses.gt(0) && basisResult.lossCategories.some(row => row.key === 'foreignTax' && row.total.gt(0))) {
+      throw new Error(`${name} leaves foreign tax suspended by basis; a later allowance needs a separate method.`);
+    }
+  }
   audit.merge(schedE.lines);
+  const passiveCapital = calculateK1PassiveCapitalSources(input, schedE);
+  if (passiveCapital) audit.merge(passiveCapital.lines);
 
   // ── IRC §280F(b)(2) recapture: aggregate from Schedule C and Schedule E Form 4562 ──
   const section280FRecapture = sum(
@@ -1189,7 +1616,7 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
 
   // Other income (1099-MISC)
   // Note: royalties (Box 2) flow through Schedule E Part I, not here
-  // Crypto ordinary income → Schedule 1 Line 8z (or Schedule C if business)
+  // Crypto ordinary income → Schedule 1 Line 8v (or Schedule C if business)
   // Phase 1: mining/staking/airdrop hobby income
   // Phase 2: yield rewards, lending interest, NFT airdrop income
   const cryptoHobbyIncome = sum(
@@ -1201,9 +1628,9 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     nftResult?.airdropIncome ?? new Decimal(0),
   );
   if (cryptoHobbyIncome.greaterThan(0)) {
-    audit.record("Sched 1", "8z-crypto", "Crypto hobby income (mining/staking/airdrop)",
+    audit.record("Schedule1 Sources", "digital-assets", "Crypto hobby income (mining/staking/airdrop)",
       cryptoHobbyIncome,
-      "Digital asset ordinary income → Schedule 1 Line 8z (IRS Notice 2014-21, Rev. Rul. 2019-24, Rev. Rul. 2023-14)");
+      "Digital asset ordinary income → Schedule 1 Line 8v (IRS Notice 2014-21, Rev. Rul. 2019-24, Rev. Rul. 2023-14)");
   }
   const miscOtherIncome = sum(
     miscAgg.otherIncome,
@@ -1228,7 +1655,79 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   // Schedule SE for SE tax deduction
   // Pass Schedule C net profit (Line 31) and Schedule F net profit (Line 34)
   // so SE tax is assessed on net, not gross amounts.
-  const schedSE = calculateScheduleSE(input, constants, schedCNetProfit, schedFNetProfit);
+  const ordinaryK1SelfEmployment = calculateK1OrdinarySelfEmployment(input, schedE);
+  audit.merge(ordinaryK1SelfEmployment.lines);
+  const seSourceInput = ordinaryK1SelfEmployment.scheduleK1 === input.scheduleK1 ? input
+    : { ...input, scheduleK1: ordinaryK1SelfEmployment.scheduleK1 };
+  const schedSE = calculateScheduleSE(seSourceInput, constants, schedC.netProfit, schedFNetProfit, {
+    additionalNonfarmIncome: cryptoBusinessNet,
+    additionalNonfarmOwner: input.cryptoIncome?.businessAccountHolder,
+    auditOwners: input.form2210?.selfEmploymentOwnerPeriods === undefined ? undefined : ["primary", "spouse"],
+  });
+  // Spec: qbi-foreign-profit. Actual foreign business profit remains outside QBI.
+  const foreignQbiProfit = new Map(foreignIncomeSources.qbiForeignProfit.map((row) => [row.sourceId, row.amount]));
+  // Actual expense location determines foreign profit; a gross-receipts ratio cannot invent it.
+  const actualForeignBusinessExpenses = new Map<typeof foreignIncomeSources.scheduleCForeignShare[number], Decimal>();
+  for (const share of foreignIncomeSources.scheduleCForeignShare) {
+    const totalExpenses = share.grossIncome.minus(schedC.netProfit);
+    const allForeign = share.foreign.eq(share.grossIncome);
+    if (totalExpenses.lt(0)) throw new Error("Form2555 canonical business expenses must be nonnegative");
+    const expenses = share.foreignBusinessExpenses ?? (allForeign ? totalExpenses : totalExpenses.isZero() ? d("0") : undefined);
+    if (expenses === undefined) throw new Error("Form2555 mixed business requires actual foreign business expenses and their confirmed original source");
+    if (expenses.gt(totalExpenses) || expenses.gt(share.foreign) || (allForeign && !expenses.eq(totalExpenses))) throw new Error("Form2555 actual foreign business expenses contradict the canonical business or need a foreign loss method");
+    actualForeignBusinessExpenses.set(share, expenses);
+    foreignQbiProfit.set("scheduleC", share.foreign.minus(expenses));
+  }
+  if (foreignQbiProfit.get("scheduleC")?.gt(0) && (d(input.scheduleC?.w2WagesPaid).gt(0) || d(input.scheduleC?.ubiaQualifiedProperty).gt(0))) throw new Error("Form2555 foreign profit inside Schedule C QBI needs its wages and UBIA apportioned");
+  // Spec: se-deduction-allocation. Only the U.S. share of this deduction lowers QBI.
+  // A K-1 can only shed earnings it has, so adjustments below its receipts cap the share.
+  const foreignK1Earnings = new Map(foreignIncomeSources.qbiForeignProfit.map((row) => { const k1 = input.scheduleK1[Number(row.sourceId.replace("scheduleK1:", ""))];
+    return [row.sourceId, Decimal.min(row.receipts, k1 ? zeroFloor(k1SelfEmploymentAmount(k1)) : d("0"))] as const; }));
+  const foreignSelfEmployment = sum(foreignQbiProfit.get("scheduleC") ?? d("0"), ...foreignK1Earnings.values());
+  // QBI loses all the foreign profit, which can pass the earned receipts where capital is material.
+  const foreignK1QbiEarnings = new Map(foreignIncomeSources.qbiForeignProfit.map((row) => { const k1 = input.scheduleK1[Number(row.sourceId.replace("scheduleK1:", ""))];
+    return [row.sourceId, Decimal.min(Decimal.max(row.receipts, row.amount), k1 ? zeroFloor(k1SelfEmploymentAmount(k1)) : d("0"))] as const; }));
+  const foreignQbiSelfEmployment = sum(foreignQbiProfit.get("scheduleC") ?? d("0"), ...foreignK1QbiEarnings.values());
+  // A joint return's other spouse never stands in for an owner with no self-employment row.
+  const foreignSeOwner = schedSE.perTaxpayer.find((row) => row.accountHolder === input.form2555?.accountHolder)
+    ?? (filingStatus === "married_filing_jointly" ? undefined : schedSE.perTaxpayer[0]);
+  if (!foreignSeOwner && foreignSelfEmployment.gt(0) && schedSE.perTaxpayer.some((row) => row.accountHolder === undefined)) throw new Error("Form2555 foreign self-employment on a joint return needs an owner on every self-employment source");
+  const foreignSeShare = (foreign: Decimal) => foreignSeOwner && foreign.gt(0) && foreignSeOwner.netSEEarnings.gt(0)
+    ? foreignSeOwner.deductibleHalf.times(Decimal.min(1, foreign.div(foreignSeOwner.netSEEarnings))) : d("0");
+  const foreignSeDeduction = foreignSeShare(foreignSelfEmployment), foreignQbiSeDeduction = foreignSeShare(foreignQbiSelfEmployment);
+  // Spec: partnership-capital-limit. Thirty percent of the share of net profits after this K-1's deduction.
+  for (const row of foreignIncomeSources.qbiForeignProfit) {
+    if (!row.capitalMaterial) continue;
+    const k1 = input.scheduleK1[Number(row.sourceId.replace("scheduleK1:", ""))];
+    const share = d(k1?.ordinaryIncome).plus(d(k1?.guaranteedPayments));
+    const earnings = k1 ? zeroFloor(k1SelfEmploymentAmount(k1)) : d("0");
+    const deduction = foreignSeOwner?.netSEEarnings.gt(0) ? foreignSeOwner.deductibleHalf.times(Decimal.min(1, earnings.div(foreignSeOwner.netSEEarnings))) : d("0");
+    const limit = zeroFloor(share.minus(deduction)).times("0.3");
+    if (row.receipts.gt(limit)) throw new Error(`Form2555 partnership receipts exceed the 30 percent limit of ${limit.toDecimalPlaces(0, Decimal.ROUND_DOWN).toFixed()}`);
+  }
+  // Spec: business-capital-limit.
+  for (const share of foreignIncomeSources.scheduleCForeignShare) {
+    if (!share.capitalMaterialEarned) continue;
+    const profit = zeroFloor(schedC.netProfit);
+    if (profit.isZero()) throw new Error("Form2555 a business with no net profit where capital is material needs a separate method");
+    const limit = zeroFloor(profit.minus(foreignSeShare(profit))).times("0.3");
+    if (share.capitalMaterialEarned.gt(limit)) throw new Error(`Form2555 business receipts exceed the 30 percent limit of ${limit.toDecimalPlaces(0, Decimal.ROUND_DOWN).toFixed()}`);
+  }
+  // Spec: allocable-deduction-floor. Pub54 How To Report Deductions charges both to the excluded income.
+  // Reg1.911-6(a): exclusions include a pro rata share of each earned-income source.
+  const exclusionFraction = form2555 && form2555.foreignEarnedIncome.gt(0)
+    ? Decimal.min(1, form2555.foreignEarnedIncomeExclusion.div(form2555.foreignEarnedIncome)) : d("0");
+  const businessExpenseFloor = foreignIncomeSources.scheduleCForeignShare.reduce((total, share) => {
+    const expenses = actualForeignBusinessExpenses.get(share)!;
+    // Capital's allowance is only part of foreign gross; Pub54 Example3 uses that gross denominator.
+    const sourceFraction = share.foreign.isZero() ? d("0") : share.earned.div(share.foreign);
+    return total.plus(expenses.times(sourceFraction).times(exclusionFraction));
+  }, d("0"));
+  if (form2555 && form2555.foreignEarnedIncome.gt(0) && (foreignSeDeduction.gt(0) || businessExpenseFloor.gt(0))) {
+    const seFloor = foreignSeDeduction.times(exclusionFraction);
+    const minimum = roundDollar(seFloor.plus(businessExpenseFloor));
+    if (roundDollar(d(input.form2555?.deductionsAllocableToExcludedIncome)).lt(minimum)) throw new Error(`Form2555 deductions allocable to excluded income must include at least ${minimum.toFixed()} of the self-employment tax deduction and business expenses`);
+  }
   audit.merge(schedSE.lines);
   const netSEEarnings = schedSE.netSEEarnings;
 
@@ -1238,10 +1737,22 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   // Per IRS Schedule 1 Instructions, Line 17: "You can't deduct more than the net
   // profit you earned from the trade or business under which the insurance plan was
   // established (reduced by any deductions you claim on Schedule 1, lines 15 and 16)."
+  if (year >= 2026 && !input.form7206 && (input.seHealthInsuranceWorksheet || d(input.adjustments?.selfEmployedHealthInsurance).gt(0))) {
+    throw new Error("2026 SE health insurance requires actual Form7206 source facts and canonical business context.");
+  }
   const seCombinedNetProfit = schedCNetProfit.plus(schedFNetProfit);
   let seHealthInsurance: Decimal;
   let seHealthInsuranceWorksheetResult: SEHealthInsuranceWorksheetResult | undefined;
-  if (input.seHealthInsuranceWorksheet) {
+  let actualHealthInsurance: ReturnType<typeof calculateForm7206Return> | undefined;
+  if (input.form7206) {
+    actualHealthInsurance = calculateForm7206Return({ input: seSourceInput, scheduleCProfit: schedC.netProfit,
+      scheduleFProfit: schedFNetProfit, cryptoBusinessProfit: cryptoBusinessNet,
+      selfEmploymentDeductions: schedSE.perTaxpayer.map(row => ({ accountHolder: row.accountHolder, amount: row.deductibleHalf })),
+      foreignIncomeExclusion: form2555IncomeReduction, form2555Source: form2555, selfEmploymentSourcesVerified: schedSE.sourceFactsVerified, marketplace,
+      businessGrossIncomes: [{ sourceId: "scheduleC", amount: schedC.grossIncome }, { sourceId: "scheduleF", amount: schedF.grossFarmIncome }, { sourceId: "cryptoBusiness", amount: cryptoBusinessGross }] });
+    seHealthInsurance = actualHealthInsurance.form7206.deductionToSchedule1;
+    audit.merge(actualHealthInsurance.form7206.lines);
+  } else if (input.seHealthInsuranceWorksheet) {
     // Compute from detailed Pub 535 worksheet inputs
     seHealthInsuranceWorksheetResult = calculateSEHealthInsuranceWorksheet(
       {
@@ -1265,103 +1776,15 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   // Early withdrawal penalty: auto-sum from 1099-INT Box 2 + 1099-OID Box 3 + manual adjustments
   const earlyWithdrawalPenalty = sum(
     intAgg.earlyWithdrawalPenalty,
-    ...(input.form1099OID ?? []).map((f) => d(f.earlyWithdrawalPenalty)),
+    form1099OID.earlyWithdrawalPenalty,
     d(input.adjustments?.earlyWithdrawalPenalty)
   );
 
   // MFS filers cannot deduct alimony paid (pre-2019 divorce decrees)
   const alimonyPaid = d(input.adjustments?.alimonyPaid);
 
-  // ── IRA Deduction Worksheet ────────────────────────────────
-  // Per Pub 590-A, MAGI for IRA deduction = AGI computed without the IRA
-  // deduction itself. We approximate MAGI from pre-Schedule-1 income
-  // components minus non-IRA adjustments. Social Security taxable benefits
-  // and a few Schedule-1-only income items are not yet computed at this
-  // point but are typically small relative to total income for IRA
-  // contributors. The manual adjustments.iraDeduction fallback remains
-  // available when the worksheet is not provided.
-  let computedIraDeduction: Decimal | undefined;
+  // IRA deduction is coordinated once after all income components are known.
   let iraDeductionWorksheetResult: TaxReturnResult["iraDeductionWorksheet"];
-  if (input.iraDeductionWorksheet) {
-    const unemploymentForIraMagi = sum(
-      ...(input.form1099G ?? []).map((f) => d(f.unemploymentCompensation))
-    );
-    const preSchedule1Income = sum(
-      totalWages,
-      totalInterestBeforeSavingsBondExclusion,
-      totalDividends,
-      iraTaxable,
-      pensionTaxable,
-      capitalGainLoss,
-      schedCNetProfit,
-      adjustedScheduleETotal,
-      miscOtherIncome,
-      unemploymentForIraMagi,
-      totalGamblingWinnings,
-      form4797.ordinaryGainOrLoss,
-      section280FRecapture,
-    );
-    const preSchedule1NonIraAdjustments = sum(
-      schedSE.deductibleHalf,
-      seHealthInsurance,
-      earlyWithdrawalPenalty,
-      alimonyPaid,
-      d(input.adjustments?.hsaDeduction),
-      d(input.adjustments?.studentLoanInterest),
-      d(input.adjustments?.educatorExpenses),
-      d(input.adjustments?.primaryEducatorExpenses),
-      d(input.adjustments?.spouseEducatorExpenses),
-      d(input.adjustments?.archerMSADeduction),
-      d(input.adjustments?.armedForcesMovingExpenses),
-      d(input.adjustments?.businessExpenseAdjustments),
-      d(input.adjustments?.otherAdjustmentsTotal),
-    );
-    const iraMagi = preSchedule1Income.minus(preSchedule1NonIraAdjustments);
-
-    const ws = input.iraDeductionWorksheet;
-    const primaryAge50OrOlder = ws.primaryAge50OrOlder ?? isAge50OrOlder(input.taxpayer.primary.dateOfBirth, year);
-    const primaryResult = calculateIraDeduction({
-      filingStatus,
-      taxYear: year,
-      magi: iraMagi,
-      contributions: ws.primaryContributions,
-      isActiveParticipant: ws.primaryIsActiveParticipant,
-      isSpouseActiveParticipant: ws.spouseIsActiveParticipant ?? false,
-      age50OrOlder: primaryAge50OrOlder,
-      livedWithSpouseAtAnyTimeDuringYear: input.taxpayer.livedWithSpouseAtAnyTimeDuringYear,
-    });
-    audit.merge(primaryResult.lines);
-
-    let spouseResult: ReturnType<typeof calculateIraDeduction> | undefined;
-    let spouseDeduction = new Decimal(0);
-    if (
-      (filingStatus === "married_filing_jointly" || filingStatus === "qualifying_surviving_spouse") &&
-      d(ws.spouseContributions).greaterThan(0) &&
-      input.taxpayer.spouse
-    ) {
-      const spouseAge50OrOlder = ws.spouseAge50OrOlder ?? isAge50OrOlder(input.taxpayer.spouse.dateOfBirth, year);
-      spouseResult = calculateIraDeduction({
-        filingStatus,
-        taxYear: year,
-        magi: iraMagi,
-        contributions: ws.spouseContributions,
-        isActiveParticipant: ws.spouseIsActiveParticipant ?? false,
-        isSpouseActiveParticipant: ws.primaryIsActiveParticipant,
-        age50OrOlder: spouseAge50OrOlder,
-        livedWithSpouseAtAnyTimeDuringYear: input.taxpayer.livedWithSpouseAtAnyTimeDuringYear,
-      });
-      spouseDeduction = spouseResult.deductibleAmount;
-      audit.merge(spouseResult.lines);
-    }
-
-    computedIraDeduction = primaryResult.deductibleAmount.plus(spouseDeduction);
-    iraDeductionWorksheetResult = {
-      magi: iraMagi,
-      primary: primaryResult,
-      spouse: spouseResult,
-      totalDeduction: computedIraDeduction,
-    };
-  }
 
   // ── Form 1098-E aggregation (student loan interest) ──
   let form1098EResult: Form1098EResult | undefined;
@@ -1375,12 +1798,8 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     combinedStudentLoanInterest = form1098EResult.totalStudentLoanInterest.toString();
   }
 
-  // Build the input for Schedule 1, overriding iraDeduction if the worksheet computed one
-  // and studentLoanInterest if Form 1098-E aggregation produced a combined total
+  // Preserve actual aggregated student-loan source amounts for Schedule1.
   const adjustmentOverrides: Record<string, string> = {};
-  if (computedIraDeduction !== undefined) {
-    adjustmentOverrides.iraDeduction = computedIraDeduction.toString();
-  }
   if (combinedStudentLoanInterest !== undefined) {
     adjustmentOverrides.studentLoanInterest = combinedStudentLoanInterest;
   }
@@ -1394,20 +1813,52 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     }
     : input;
 
+  const form1099G = calculateForm1099G(input.form1099G ?? [], year, filingStatus);
+  if (form1099G.sources.some(source => source.accountHolder === "spouse") && !input.taxpayer.spouse) {
+    throw new Error("Government spouse sources require actual joint-return spouse facts");
+  }
+  const historicalRefundForms = (input.form1099G ?? []).map(form => {
+    const current = d(form.stateOrLocalTaxRefund), legacy = d(form.stateLocalIncomeTaxRefund);
+    if (![current, legacy].every(value => value.isFinite() && value.gte(0))
+      || (current.gt(0) && legacy.gt(0) && !current.eq(legacy))) {
+      throw new Error("Form1099G refund source aliases must be finite, nonnegative and reconciled");
+    }
+    if (current.plus(legacy).gt(0) && (form.refundExpenseTaxYear ?? form.refundTaxYear) === year
+      && !form1099G.refundSources.some(source => source.sourceId === form.sourceId)) {
+      throw new Error("Same-year refund requires complete actual government source facts");
+    }
+    return { stateLocalIncomeTaxRefund: Decimal.max(current, legacy).toString(), refundTaxYear: form.refundTaxYear, refundExpenseTaxYear: form.refundExpenseTaxYear };
+  }).filter(form => (form.refundExpenseTaxYear ?? form.refundTaxYear) !== year);
+  if (form1099G.refundSources.some(source => source.refundExpenseTaxYear < year && source.amount.gt(0))
+    && !input.taxableRefundWorksheet && !input.taxableStateRefundRecoveries) {
+    throw new Error("Actual prior-year refund requires its historical tax-benefit worksheet");
+  }
+
+  if ((input.form1099G ?? []).some(form => form.refundPaymentBasis !== undefined) && !input.taxableStateRefundRecoveries) {
+    throw new Error("Actual refund payment-basis allocations require their complete original recovery collection");
+  }
   // ── Taxable Refund Worksheet (Schedule 1 Line 1) ──
   let taxableRefundWorksheetResult: TaxableRefundWorksheetResult | undefined;
   let taxableStateRefund: Decimal | undefined;
-  if (input.taxableRefundWorksheet) {
+  let taxableStateRefundRecoveriesResult: TaxableStateRefundRecoveriesResult | undefined;
+  if (input.taxableStateRefundRecoveries) {
+    taxableStateRefundRecoveriesResult = calculateTaxableStateRefundRecoveries(input);
+    taxableStateRefund = taxableStateRefundRecoveriesResult.taxableRefund;
+    audit.merge(taxableStateRefundRecoveriesResult.lines);
+  } else if (input.taxableRefundWorksheet) {
     taxableRefundWorksheetResult = calculateTaxableRefundWorksheet(
-      input.form1099G ?? [],
-      input.taxableRefundWorksheet
+      historicalRefundForms,
+      input.taxableRefundWorksheet,
+      input.taxpayer.taxYear,
     );
     audit.merge(taxableRefundWorksheetResult.lines);
     taxableStateRefund = taxableRefundWorksheetResult.taxableRefund;
   }
 
   // Schedule 1 — formal line-by-line for audit trail
-  const sched1 = calculateSchedule1(sched1Input, {
+  const educatorBondSources = calculateEducatorBondSources(input);
+  const sched1Context = {
+    educatorBondSources,
     schedCNetProfit: schedCNetProfit,
     schedFNetProfit: schedFNetProfit,
     schedETotal: adjustedScheduleETotal,
@@ -1416,22 +1867,46 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     earlyWithdrawalPenalty,
     alimonyPaid,
     gamblingIncome: totalGamblingWinnings,
+    form2555IncomeReduction, form2555Source: form2555,
     form2555HousingDeduction,
-    seHealthInsurance: seHealthInsuranceWorksheetResult?.deductibleAmount,
+    seHealthInsurance: actualHealthInsurance?.form7206.deductionToSchedule1 ?? seHealthInsuranceWorksheetResult?.deductibleAmount,
     taxableStateRefund,
+    seRetirementContributions: d(input.adjustments?.seRetirementContributions),
+  };
+  let sched1 = calculateSchedule1(sched1Input, {
+    ...sched1Context,
+    iraDeductionOverride: input.iraDeductionWorksheet ? new Decimal(0) : undefined,
+    studentLoanDeductionOverride: new Decimal(0),
   }, form4797);
-  audit.merge(sched1.lines);
   // Form 8814 Line 12 other income flows to Schedule 1 Line 8z
   const form8814OtherIncome = form8814?.totalOtherIncome ?? new Decimal(0);
-  if (form8814OtherIncome.greaterThan(0)) {
-    audit.record("Sched 1", "8z", "Form 8814 other income", form8814OtherIncome,
-      "Form 8814 Line 12 — interest/dividend income at ordinary rates from child(ren)'s election");
-  }
 
   // ── Form 461: Excess Business Loss Limitation (IRC §461(l)) ──
   // Computed after Schedule 1 so SE deductions are known. The excess
   // is added back to other income on Schedule 1 Line 8p.
-  const form461 = calculateForm461(
+  const eblSources = input.form461;
+  const k1Form461Classification = calculateK1Form461Classification(input, {
+    scheduleE: schedE, scheduleCNetProfit: schedCNetProfit, capitalGainOrLoss: capitalGainLoss, deductibleSETax: schedSE.deductibleHalf,
+    seHealthInsurance: sched1.seHealthInsurance, seRetirementContributions: sched1.seRetirementContributions,
+  }, constants);
+  if (eblSources) {
+    if (eblSources.sourceTaxYear !== year || eblSources.sourceFactsConfirmed !== true
+      || !eblSources.sourceReference?.trim() || eblSources.atRiskAndPassiveLimitationsApplied !== true) {
+      throw new Error("Form461 requires current-year actual sources after at-risk and passive limitations");
+    }
+    for (const field of ["scheduleESupplementalIncome", "tradeOrBusinessCapitalGainNetIncome", "noncapitalNonbusinessIncome",
+      "noncapitalNonbusinessLoss", "noncapitalBusinessNet", "otherBusinessIncome", "otherBusinessDeductions"] as const) {
+      if (eblSources[field] === undefined) throw new Error(`Form461 actual source classification is required: ${field}`);
+    }
+    if (d(eblSources.otherBusinessIncome).lt(0) || d(eblSources.otherBusinessIncome).gt(zeroFloor(miscOtherIncome))
+      || d(eblSources.otherBusinessDeductions).gt(zeroFloor(sched1.earlyWithdrawalPenalty.plus(d(input.adjustments?.otherAdjustmentsTotal))))) {
+      throw new Error("Form461 other business sources must reconcile with separately reported income and deductions");
+    }
+  }
+  const eblHasPassiveOrRentalSources = schedE.rentalProperties.length > 0 || schedE.partnerships.some(partnership => partnership.isPassive)
+    || (input.priorYear?.suspendedPassiveLosses ?? []).some(loss => d(loss.amount).gt(0))
+    || (input.priorYear?.suspendedPTPLosses ?? []).some(loss => d(loss.amount).gt(0));
+  const form461 = k1Form461Classification?.form461 ?? calculateForm461(
     {
       totalWages,
       scheduleCNetProfit: schedCNetProfit,
@@ -1439,7 +1914,19 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
       form4797OrdinaryGainOrLoss: form4797.ordinaryGainOrLoss.plus(section280FRecapture),
       nonpassiveK1Income: schedE.totalNonpassiveIncome,
       nonpassiveK1Loss: schedE.totalNonpassiveLoss,
-      otherBusinessIncome: miscOtherIncome,
+      sourceFactsConfirmed: eblSources?.sourceFactsConfirmed ?? (input.form172 ? true : undefined),
+      atRiskAndPassiveLimitationsApplied: eblSources?.atRiskAndPassiveLimitationsApplied ?? (input.form172 ? true : undefined),
+      capitalGainOrLoss: capitalGainLoss,
+      tradeOrBusinessCapitalGainNetIncome: eblSources ? d(eblSources.tradeOrBusinessCapitalGainNetIncome) : form4797.longTermCapitalGain,
+      scheduleESupplementalIncome: eblSources ? d(eblSources.scheduleESupplementalIncome)
+        : eblHasPassiveOrRentalSources ? schedE.totalNonpassiveIncome.plus(schedE.totalNonpassiveLoss).minus(totalSection163jDeduction) : adjustedScheduleETotal,
+      noncapitalNonbusinessIncome: eblSources ? d(eblSources.noncapitalNonbusinessIncome) : new Decimal(0),
+      noncapitalNonbusinessLoss: eblSources ? d(eblSources.noncapitalNonbusinessLoss) : new Decimal(0),
+      noncapitalBusinessNet: eblSources ? d(eblSources.noncapitalBusinessNet)
+        : input.form172 ? roundDollar(schedCNetProfit).minus(roundDollar(sum(schedSE.deductibleHalf, sched1.seHealthInsurance, sched1.seRetirementContributions)))
+          : undefined,
+      otherBusinessIncome: eblSources ? d(eblSources.otherBusinessIncome) : new Decimal(0),
+      otherBusinessDeductions: eblSources ? d(eblSources.otherBusinessDeductions) : new Decimal(0),
       deductibleSETax: schedSE.deductibleHalf,
       seHealthInsurance: sched1.seHealthInsurance,
       seRetirementContributions: sched1.seRetirementContributions,
@@ -1448,27 +1935,57 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     filingStatus,
     constants
   );
+  if (!eblSources && !k1Form461Classification && eblHasPassiveOrRentalSources
+    && (form461.requiresForm461 || adjustedScheduleETotal.lt(constants.excessBusinessLoss.threshold.single.div(2).negated()))) {
+    throw new Error("Form461 material supplemental business loss requires actual post-passive source classification");
+  }
+  if (eblSources && eblHasPassiveOrRentalSources && eblSources.passiveLossModifiedAgi === undefined) {
+    throw new Error("Form461 passive coordination requires the actual completed passive-loss MAGI worksheet");
+  }
   audit.merge(form461.lines);
   const excessBusinessLossAddback = form461.line16ExcessBusinessLoss;
-  if (excessBusinessLossAddback.greaterThan(0)) {
-    audit.record("Sched 1", "8p", "Excess business loss (Form 461)", excessBusinessLossAddback,
-      "IRC §461(l) disallowed excess added back as income");
-  }
 
   // ── Form 1099-Q: Qualified Education Program Distributions ──
   const form1099QForms = input.form1099Q ?? [];
   const form1099Q = form1099QForms.length > 0
-    ? calculateForm1099Q(form1099QForms, input.qualifiedEducationExpenses)
+    ? calculateForm1099Q(form1099QForms, input.qualifiedEducationExpenses, {
+      taxYear: year,
+      taxpayer: input.taxpayer,
+      educationExpenses: input.educationExpenses ?? {aocStudents:[],llcExpenses:"0"},
+    })
     : undefined;
   if (form1099Q) {
+    if (form1099Q.sourceFactsVerified && (d(input.form5329?.educationAccountDistributionsIncludedInIncome).gt(0)
+      || d(input.form5329?.educationAccountDistributionsExcepted).gt(0))) {
+      throw new Error("Actual education distribution sources require reconciliation of legacy Form5329 education totals");
+    }
+    if (form1099Q.sourceFactsVerified && form1099Q.perRecipient.some(recipient => recipient.owner === "spouse")
+      && (filingStatus !== "married_filing_jointly" || !input.taxpayer.spouse)) {
+      throw new Error("Form1099Q spouse recipient requires an actual joint-return spouse");
+    }
+    if (!input.studentLoanInterestFacts && form1099Q.loanInterestSourceAdjustments.some(
+      item => item.owner !== "other" && item.interestClaimedElsewhere.gt(0))) {
+      throw new Error("Form1099Q own-return interest claims require actual student-loan source facts");
+    }
+    if (form1099Q.loanInterestAdjustments.some(item => item.owner !== "other" && item.taxFreeEarningsUsedForInterest.gt(0))
+      && d(combinedStudentLoanInterest ?? input.adjustments?.studentLoanInterest).gt(0) && !input.studentLoanInterestFacts) {
+      throw new Error("Form1099Q excluded earnings require actual student-loan interest source coordination before a deduction");
+    }
     audit.merge(form1099Q.lines);
   }
   const form1099QTaxableEarnings = form1099Q?.taxableEarnings ?? new Decimal(0);
-  if (form1099QTaxableEarnings.greaterThan(0)) {
-    audit.record("Sched 1", "8q", "Taxable distributions from QTP/Coverdell ESA",
-      form1099QTaxableEarnings,
-      "Form 1099-Q taxable earnings from distributions exceeding adjusted qualified education expenses");
+  const studentLoanSourceOptions = input.studentLoanInterestFacts ? {
+    taxYear: year, filingStatus, facts: input.studentLoanInterestFacts,
+    forms: input.form1098E, educationLoanInterest: form1099Q?.loanInterestSourceAdjustments,
+    legacyAdditionalInterest: input.adjustments?.studentLoanInterest,
+  } : undefined;
+  const studentLoanSourceResult = studentLoanSourceOptions
+    ? calculateStudentLoanInterestDeduction(studentLoanSourceOptions) : undefined;
+  if (year >= 2026 && !studentLoanSourceResult && d(combinedStudentLoanInterest ?? input.adjustments?.studentLoanInterest).gt(0)) {
+    throw new Error("Student-loan deduction requires actual borrower and loan source facts for2026");
   }
+  let studentLoanInterestWorksheetResult: ReturnType<typeof calculateStudentLoanInterestDeduction> | undefined;
+  let studentLoanWorksheetMagi: Decimal | undefined;
 
   // ── K-1 Form 1041: Estate/Trust Beneficiary Income ─────
   // Aggregate income items from trust/estate K-1s that route through
@@ -1477,19 +1994,12 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   const k1Form1041OtherPortfolio = sum(
     ...k1Form1041s.map((k) => d(k.otherPortfolioIncome))
   );
-  if (k1Form1041OtherPortfolio.greaterThan(0)) {
-    audit.record("Sched 1", "8z", "K-1 1041 other portfolio income", k1Form1041OtherPortfolio,
-      "K-1 (Form 1041) Box 5 — other portfolio and nonbusiness income from estates/trusts");
-  }
+
   // Box 11 Code A: §67(e) excess deductions on termination (above-the-line adjustment)
   const k1Form1041Section67eDeductions = sum(
     ...k1Form1041s.filter((k) => k.isFinalK1).map((k) => d(k.finalYearSection67eDeductions))
   );
-  if (k1Form1041Section67eDeductions.greaterThan(0)) {
-    audit.record("Sched 1", "24z", "K-1 1041 §67(e) excess deductions on termination",
-      k1Form1041Section67eDeductions.negated(),
-      "K-1 (Form 1041) Box 11 Code A — §67(e) above-the-line deduction per IRC §642(h) / TD 9918");
-  }
+
   // Box 11 Code E: NOL carryover from terminating estate/trust
   const k1Form1041FinalNOL = sum(
     ...k1Form1041s.filter((k) => k.isFinalK1).map((k) => d(k.finalYearNOLCarryover))
@@ -1528,7 +2038,18 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     totalQualifiedPTPIncome: sum(...k1Form1041s.map((k) => d(k.section199AQualifiedPTPIncome))),
   } : undefined;
 
+  const mortgageSourceResult = calculateHomeMortgageInterest(input);
+  const mortgageInterestRecovery = mortgageSourceResult.additionalTaxableInterestRecovery;
+  const nolCapitalLossModification = nol?.modified ? zeroFloor(capitalGainLoss.negated()) : d("0");
+  // Section172(d)(2)(A)/(B): restore excluded gains before limiting capital
+  // losses. The exclusion can overlap the already restored current loss; only
+  // its remaining increase in nonnegative capital income is added separately.
+  const nolSection1202Modification = nol?.modified
+    ? zeroFloor(schedD.netCapitalGainLoss.plus(schedD.section1202Exclusion)).minus(zeroFloor(schedD.netCapitalGainLoss)) : d("0");
   const otherIncome = sum(
+    nolCapitalLossModification, nolSection1202Modification, nol?.deduction.negated() ?? d("0"),
+    mortgageInterestRecovery,
+    form1099G.otherIncome,
     miscOtherIncome,
     sched1.taxableRefunds,
     sched1.otherGainsOrLosses,
@@ -1540,25 +2061,186 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     form1099SA.hsaReturnedExcessContributionEarnings,
     form1099SA.hsaPostDeathEarnings,
     d(input.form5329?.supportedHsaReturnedExcessContributionEarningsUnder9100Relief),
+    sched1.hsaReliefEarnings,
+    sched1.hsaExcessEmployerIncome,
     form8814OtherIncome,
     excessBusinessLossAddback,
     form1099QTaxableEarnings,
     section280FRecapture,
-    k1Form1041OtherPortfolio
+    k1Form1041OtherPortfolio,
+    sched1.foreignIncomeExclusion.negated()
   );
-  audit.record("1040", "8", "Other income", otherIncome,
-    excessBusinessLossAddback.greaterThan(0)
-      ? "Schedule 1 income + Form 461 excess business loss add-back + miscellaneous"
-      : form1099QTaxableEarnings.greaterThan(0)
-        ? "Schedule 1 income + Form 1099-Q taxable education program distribution earnings + miscellaneous"
-        : form8814OtherIncome.greaterThan(0)
-          ? "Schedule 1 taxable refund/Form 4797 ordinary/unemployment/alimony/gambling/HSA distribution amounts, Form 1099-SA excess-contribution and post-death earnings, Form 8814 Line 12 child election income, plus miscellaneous other income"
-          : "Schedule 1 taxable refund/Form 4797 ordinary/unemployment/alimony/gambling/HSA distribution amounts, Form 1099-SA excess-contribution and post-death earnings, plus miscellaneous other income");
 
   const socialSecurityBenefitsGross = sum(
     ...(input.formSSA1099 ?? []).map((form) => d(form.netBenefits)),
     ...(input.formRRB1099 ?? []).map((form) => d(form.netSocialSecurityEquivalentBenefitPortion))
   );
+  const possessionExclusions = input.socialSecurityFacts;
+  const requiresPossessionSources = possessionExclusions !== undefined || (year === 2026 && socialSecurityBenefitsGross.gt(0));
+  if (requiresPossessionSources) {
+    if (possessionExclusions?.sourceFactsConfirmed !== true
+      || possessionExclusions.puertoRicoIncomeExclusion === undefined
+      || possessionExclusions.americanSamoaIncomeExclusion === undefined) {
+      throw new Error("Social Security possession exclusion sources require both actual amounts and confirmation");
+    }
+    for (const value of [possessionExclusions.puertoRicoIncomeExclusion, possessionExclusions.americanSamoaIncomeExclusion]) {
+      if (!d(value).isFinite() || d(value).lt(0)) throw new Error("Social Security possession exclusions must be finite and nonnegative");
+    }
+  }
+  // Form8582 MAGI excludes taxable benefits and the IRA, student-loan and
+  // savings-bond adjustments. Resolve allowed passive income first so those
+  // later worksheets never use suspended rental losses as current deductions.
+  const passiveSourceAgi = sum(totalWages, totalInterestBeforeSavingsBondExclusion, totalDividends,
+    iraTaxable, pensionTaxable, capitalGainLoss, schedCNetProfit, schedFNetProfit, adjustedScheduleETotal, otherIncome)
+    .minus(sched1.totalAdjustments).minus(k1Form1041Section67eDeductions);
+  // ── Form 8582: Passive Activity Loss Limitations ────────
+  // Build passive activities from K-1s marked as passive
+  const passiveDistribution = calculateK1PassiveDistributionSources(input, schedE);
+  audit.merge(passiveDistribution.lines);
+  const passiveActivities: PassiveActivity[] = schedE.partnerships
+    .flatMap((partnership, k1Index) => partnership.isPassive ? [{
+      name: partnership.name,
+      reportingFormAndLine: "Schedule E, line 28",
+      income: passiveCapital?.rows.find(row => row.k1Index === k1Index)?.currentIncome
+        ?? partnership.passiveIncome.plus(passiveDistribution.rows.find(row => row.k1Index === k1Index)?.gain ?? 0),
+      loss: passiveCapital?.rows.find(row => row.k1Index === k1Index)?.currentLoss ?? partnership.passiveLoss,
+      isRentalRealEstate: partnership.isRentalRealEstate,
+      isActiveParticipant: partnership.isRentalRealEstate, // simplified assumption
+      isPubliclyTradedPartnership: partnership.isPubliclyTradedPartnership,
+      ptpFullyDisposedInTaxableTransaction: partnership.ptpFullyDisposedInTaxableTransaction,
+      ptpDispositionGainOrLoss: partnership.ptpDispositionGainOrLoss,
+    }] : []);
+
+  // Add rental properties from Schedule E Part I as passive activities
+  for (const rental of schedE.rentalProperties) {
+    const net = rental.netRentalIncome;
+    passiveActivities.push({
+      name: rental.description,
+      reportingFormAndLine: "Schedule E, line 22",
+      income: net.isPositive() ? net : new Decimal(0),
+      loss: net.isNegative() ? net : new Decimal(0),
+      isRentalRealEstate: true,
+      isActiveParticipant: rental.isActiveParticipant,
+    });
+  }
+
+  // Line6 removes the NET passive activity loss, not each property's gross
+  // loss. Replace the preliminary ScheduleE passive contribution before
+  // adding back the specifically excluded deductions and taxable benefits.
+  const k1PassiveCount = schedE.partnerships.filter(partnership => partnership.isPassive).length;
+  const preliminaryPassiveIncome = sum(...schedE.rentalProperties.map(rental => rental.netRentalIncome),
+    zeroFloor(schedE.totalPassiveIncome.plus(schedE.totalPassiveLoss)));
+  const regularPassiveNet = sum(...passiveActivities.filter(activity => !activity.isPubliclyTradedPartnership)
+    .map(activity => roundDollar(activity.income).plus(roundDollar(activity.loss))))
+    .minus(sum(...(input.priorYear?.suspendedPassiveLosses ?? []).map(loss => roundDollar(d(loss.amount)))));
+  // PTP net income includes its own prior losses before it enters regular
+  // Form8582 modified AGI. The PTP-only calculation never uses Part II; only
+  // the final combined calculation below contributes official form audits.
+  const ptpSourceResult = calculateForm8582({
+    activities: passiveActivities.filter(activity => activity.isPubliclyTradedPartnership),
+    agi: passiveSourceAgi, filingStatus,
+    priorYearPTPSuspendedLosses: input.priorYear?.suspendedPTPLosses?.map(loss => ({
+      name: loss.partnershipName, amount: d(loss.amount),
+    })),
+  });
+  // Disposition gain/loss source routing remains the separate existing path.
+  const currentPtpIncome = ptpSourceResult.ptpNetIncome.plus(sum(...passiveActivities
+    .filter(activity => activity.isPubliclyTradedPartnership && activity.ptpFullyDisposedInTaxableTransaction)
+    .map(activity => zeroFloor(activity.income.plus(activity.loss)))));
+  const form8582MAGI = eblSources?.passiveLossModifiedAgi !== undefined ? d(eblSources.passiveLossModifiedAgi) : passiveSourceAgi
+    .minus(preliminaryPassiveIncome).minus(passiveDistribution.gain).plus(zeroFloor(regularPassiveNet)).plus(currentPtpIncome)
+    .plus(sched1.iraDeduction).plus(sched1.studentLoanInterest).plus(schedSE.deductibleHalf)
+    .plus(adoptionBenefitResult?.allowableExclusion ?? new Decimal(0));
+
+  const calculatedForm8582 = passiveCapital ? { ...passiveCapital.passive, modifiedAgi: form8582MAGI } : calculateForm8582({
+    activities: passiveActivities,
+    agi: form8582MAGI,
+    filingStatus,
+    mfsLivedApartFromSpouseAllYear:
+      filingStatus === "married_filing_separately"
+        && input.taxpayer.livedWithSpouseAtAnyTimeDuringYear === false,
+    priorYearSuspendedLosses: input.priorYear?.suspendedPassiveLosses?.map((s) => ({
+      name: s.partnershipName,
+      amount: d(s.amount),
+    })),
+    priorYearPTPSuspendedLosses: input.priorYear?.suspendedPTPLosses?.map((s) => ({
+      name: s.partnershipName,
+      amount: d(s.amount),
+    })),
+  });
+  const passiveSpecialRequired = calculatedForm8582.netRental.lt(0) && calculatedForm8582.combinedLoss.lt(0);
+  if (marketplace && passiveSpecialRequired && (k1PassiveCount > 0 || eblSources !== undefined)) {
+    throw new Error("Pub974 passive ordering requires separate actual K1 participation, disposition or business-loss source coordination.");
+  }
+  const form8582 = ordered?.passive ?? calculatedForm8582;
+  for (const earlier of [k1Form461Classification?.passive, ordinaryK1SelfEmployment.passive, passiveCapital?.passive]) {
+    if (!earlier) continue;
+    const sourceRows = (value: typeof earlier) => value.activityRows.map(row => [row.sourceIndex, row.name,
+      row.sourceCurrentIncome.toFixed(), row.sourceCurrentLoss.toFixed(), row.sourcePriorYearSuspendedLoss.toFixed()]);
+    const allocations = (value: typeof earlier) => value.activityAllocations.map(row => [row.sourceIndex, row.name,
+      row.allowedLoss.toFixed(), row.suspendedLoss.toFixed(), row.specialAllowance.toFixed()]);
+    if (!form8582.allowedLoss.eq(earlier.allowedLoss) || !form8582.suspendedLoss.eq(earlier.suspendedLoss)
+      || !form8582.passiveIncome.eq(earlier.passiveIncome) || !form8582.rentalAllowance.isZero()
+      || JSON.stringify(sourceRows(form8582)) !== JSON.stringify(sourceRows(earlier))
+      || JSON.stringify(allocations(form8582)) !== JSON.stringify(allocations(earlier))) {
+      throw new Error("K1 calculated source classification must reconcile with final actual Form8582 sources and allowances");
+    }
+  }
+  // The first W/X/Simplified pass excludes losses, retaining positive rental
+  // income. Subsequent passes use the allowance fixed at preceding Step3.
+  const passiveLossForIncome = passiveSpecialRequired && !calculateOrdered("passive") ? new Decimal(0) : form8582.allowedLoss;
+  audit.merge(form8582.lines);
+
+  // Transfer all regular allowed current/prior losses once. The preliminary
+  // ScheduleE calculation has already limited K1 losses, but not rental losses.
+  // A signed replacement handles both suspended current losses and released
+  // prior losses, including activities whose current income is positive.
+  const allowedPassiveIncome = form8582.rentalIncome.plus(form8582.passiveIncome)
+    .minus(passiveLossForIncome).plus(currentPtpIncome).minus(passiveCapital?.ordinaryTransferExclusion ?? passiveDistribution.ordinaryTransferExclusion);
+  const passiveIncomeAdjustment = allowedPassiveIncome.minus(preliminaryPassiveIncome);
+  // ── PTP disposition: released losses reduce AGI (IRC §469(g)(1)) ──
+  // When a PTP is fully disposed of in a taxable transaction, accumulated
+  // suspended losses become nonpassive and reduce AGI directly.
+  const ptpReleasedTotal = form8582.ptpDispositionReleasedLosses.reduce(
+    (acc, p) => acc.plus(p.totalReleased), new Decimal(0)
+  );
+  if (ptpReleasedTotal.greaterThan(0)) {
+    audit.record("1040", "8-ptp-disposition", "PTP disposition released losses (nonpassive)",
+      ptpReleasedTotal.negated(),
+      `IRC §469(g)(1) — ${form8582.ptpDispositionReleasedLosses.length} PTP(s) fully disposed; $${ptpReleasedTotal} suspended losses released as nonpassive`,
+      Object.fromEntries(form8582.ptpDispositionReleasedLosses.map((p) => [p.name, p.totalReleased.negated()]))
+    );
+  }
+
+  const allowedScheduleETotal = adjustedScheduleETotal.plus(passiveIncomeAdjustment).minus(ptpReleasedTotal);
+
+  const incomeBeforeSocialSecurity = sum(totalWages,totalInterestBeforeSavingsBondExclusion,totalDividends,
+    iraTaxable,pensionTaxable,capitalGainLoss,schedCNetProfit,schedFNetProfit,allowedScheduleETotal,otherIncome);
+  if (input.iraDeductionWorksheet && calculateOrdered("ira")) {
+    const hasNol = sum(d(input.priorYear?.nolCarryforward),d(input.priorYear?.excessBusinessLossNOL),k1Form1041FinalNOL).gt(0);
+    if (hasNol && !nol) throw new Error("IRA and NOL coordination requires a supported completed source worksheet");
+    if (input.socialSecurityLumpSumElection) throw new Error("IRA and lump-sum Social Security coordination requires a supported completed source worksheet");
+    if (iraGrossReported.gt(0) && (d(input.iraDeductionWorksheet.primaryContributions).gt(0) || d(input.iraDeductionWorksheet.spouseContributions).gt(0))) {
+      throw new Error("IRA distributions and current contributions require Publication590-B taxable-distribution coordination");
+    }
+    const nonIraAdjustments = sched1.totalAdjustments.minus(sched1.iraDeduction).minus(sched1.studentLoanInterest).plus(k1Form1041Section67eDeductions);
+    const iraMagiBase = incomeBeforeSocialSecurity.minus(nonIraAdjustments);
+    const noIraSocialSecurity = socialSecurityBenefitsGross.gt(0) ? calculateSocialSecurityBenefitsWorksheet({
+      filingStatus,benefitsReceived:socialSecurityBenefitsGross,otherIncome:iraMagiBase,taxExemptInterest,
+      exclusionsAdjustments:sum(form2555IncomeReduction,form2555HousingDeduction,
+        adoptionBenefitResult?.allowableExclusion ?? new Decimal(0),d(possessionExclusions?.puertoRicoIncomeExclusion),d(possessionExclusions?.americanSamoaIncomeExclusion)),
+      livedWithSpouseAtAnyTimeDuringYear:input.taxpayer.livedWithSpouseAtAnyTimeDuringYear,
+    }).taxableBenefits : new Decimal(0);
+    const iraMagi = sum(iraMagiBase,noIraSocialSecurity,form2555IncomeReduction,form2555HousingDeduction,
+      adoptionBenefitResult?.allowableExclusion ?? new Decimal(0));
+    iraDeductionWorksheetResult = ordered?.ira ?? calculateIraReturnWorksheet(input,iraMagi);
+    audit.merge(iraDeductionWorksheetResult.primary.lines);
+    if (iraDeductionWorksheetResult.spouse) audit.merge(iraDeductionWorksheetResult.spouse.lines);
+    audit.record("IRA MAGI Worksheet","total","Complete IRA modified adjusted gross income",iraDeductionWorksheetResult.magi,
+      ordered?.ira ? "Retained Pub974 ordered IRA worksheet MAGI using its preceding Step3 health deduction"
+        : "Full pre-bond income less non-IRA/non-student-loan adjustments plus AppendixB benefits before IRA and actual foreign/adoption addbacks");
+    sched1 = calculateSchedule1(sched1Input,{ ...sched1Context,iraDeductionOverride:iraDeductionWorksheetResult.totalDeduction,studentLoanDeductionOverride:new Decimal(0) },form4797);
+  }
   const socialSecurityBenefitsWorksheet = socialSecurityBenefitsGross.greaterThan(0)
     ? calculateSocialSecurityBenefitsWorksheet({
       filingStatus,
@@ -1571,10 +2253,18 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
         pensionTaxable,
         capitalGainLoss,
         schedCNetProfit,
-        adjustedScheduleETotal,
+        schedFNetProfit,
+        allowedScheduleETotal,
         otherIncome
       ),
       taxExemptInterest,
+      exclusionsAdjustments: sum(
+        form2555IncomeReduction,
+        form2555HousingDeduction,
+        adoptionBenefitResult?.allowableExclusion ?? new Decimal(0),
+        d(possessionExclusions?.puertoRicoIncomeExclusion),
+        d(possessionExclusions?.americanSamoaIncomeExclusion)
+      ),
       livedWithSpouseAtAnyTimeDuringYear: input.taxpayer.livedWithSpouseAtAnyTimeDuringYear,
       adjustments: {
         businessExpenseAdjustments: sched1.businessExpenseAdjustments,
@@ -1588,7 +2278,7 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
         iraDeduction: sched1.iraDeduction,
         archerMSADeduction: sched1.archerMSADeduction,
         educatorExpenses: sched1.educatorExpenses,
-        otherAdjustmentsTotal: sched1.otherAdjustmentsTotal,
+        otherAdjustmentsTotal: sum(sched1.otherAdjustmentsTotal, k1Form1041Section67eDeductions),
         studentLoanInterest: sched1.studentLoanInterest,
       },
       lumpSumElection: input.socialSecurityLumpSumElection === undefined
@@ -1609,15 +2299,14 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
         },
     })
     : undefined;
-  if (socialSecurityBenefitsWorksheet) {
-    audit.merge(socialSecurityBenefitsWorksheet.lines);
-  }
   const socialSecurityBenefitsTaxable = socialSecurityBenefitsWorksheet?.taxableBenefits ?? new Decimal(0);
   audit.record("1040", "6a", "Social Security benefits", socialSecurityBenefitsGross,
     "Sum SSA-1099 Box 5 benefits and RRB-1099 tier 1 equivalent Box 5 benefits");
   audit.record("1040", "6b", "Taxable Social Security benefits", socialSecurityBenefitsTaxable,
     socialSecurityBenefitsWorksheet
-      ? totalInterestBeforeSavingsBondExclusion.eq(preliminaryScheduleB.taxableInterest)
+      ? socialSecurityBenefitsWorksheet.worksheetKind === "publication915"
+        ? "Publication 915 Worksheet 1 line 19, subject to any lower Worksheet 4 lump-sum election"
+        : totalInterestBeforeSavingsBondExclusion.eq(preliminaryScheduleB.taxableInterest)
         ? "Social Security Benefits Worksheet Line 18"
         : "Social Security Benefits Worksheet Line 18 using pre-exclusion Schedule B Line 2 interest because Form 8815 reduced Form 1040 Line 2b"
       : "No Social Security benefits reported");
@@ -1631,7 +2320,8 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     socialSecurityBenefitsTaxable,
     capitalGainLoss,
     schedCNetProfit,
-    adjustedScheduleETotal,
+    schedFNetProfit,
+    allowedScheduleETotal,
     otherIncome
   );
 
@@ -1640,26 +2330,85 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   // ═══════════════════════════════════════════════════════════
 
   // K-1 Form 1041 Box 11 Code A (§67(e) excess deductions) is above-the-line
-  const adjustments = sched1.totalAdjustments.plus(k1Form1041Section67eDeductions);
-  audit.record("1040", "10", "Adjustments to income", adjustments,
-    k1Form1041Section67eDeductions.greaterThan(0)
-      ? "SE deduction + other adjustments + K-1 1041 §67(e) excess deductions"
-      : "SE deduction + other adjustments");
+  let adjustments = sched1.totalAdjustments.plus(k1Form1041Section67eDeductions);
 
   // Form 8815 uses AGI before applying the savings bond exclusion on Schedule B Line 3.
   const preliminaryAgi = preliminaryTotalIncome.minus(adjustments);
 
   // ── Form 8815: Savings Bond Interest Exclusion ──────────
-  // Per IRS Form 8815 Instructions, Line 7: modified AGI = AGI + student loan
-  // interest deduction + foreign earned income exclusion + other add-backs.
+  // Per IRS Form 8815 Instructions, Line 9: modified AGI = AGI + student loan
+  // interest deduction + net foreign income/housing and adoption-benefit exclusions.
   // preliminaryAgi already has SLI subtracted, so we add it back for the MAGI.
   let form8815: Form8815Result | undefined;
   let savingsBondExclusion = new Decimal(0);
-  if (input.savingsBondRedemptions && input.savingsBondRedemptions.length > 0) {
-    const form8815MAGI = preliminaryAgi.plus(sched1.studentLoanInterest);
-    form8815 = calculateForm8815(input.savingsBondRedemptions, form8815MAGI, filingStatus);
+  if (input.savingsBondRedemptions && input.savingsBondRedemptions.length > 0 && calculateOrdered("bond")) {
+    validateSavingsBondReturnIdentity({
+      taxYear: year, filingStatus, primary: input.taxpayer.primary,
+      spouse: input.taxpayer.spouse, dependents: input.taxpayer.dependents,
+      redemptions: input.savingsBondRedemptions, facts: input.form8815,
+    });
+    const bondMagiFacts = input.form8815;
+    const verifiedBondFacts = filingStatus !== "married_filing_separately" && (year === 2026 || bondMagiFacts !== undefined);
+    if (verifiedBondFacts) {
+      for (const key of ["americanSamoaIncomeExclusion", "puertoRicoIncomeExclusion", "royaltyInterestAdjustment"] as const) {
+        const value = bondMagiFacts?.[key];
+        if (value === undefined || !d(value).isFinite() || (key !== "royaltyInterestAdjustment" && d(value).isNegative())) {
+          throw new Error(`Form 8815 requires an actual finite MAGI fact: ${key}`);
+        }
+      }
+    }
+    // Final Form8815 Line9 footnote: replace only the educator deduction
+    // with its amount before the bond-exclusion reduction. The original
+    // source declaration and completed deductions used elsewhere stay intact.
+    const preBondEducator = calculateEducatorExpensesDeduction(input.adjustments, filingStatus, year, { purpose: "form8815_magi" });
+    const educatorMagiChange = preBondEducator.amount.minus(sched1.educatorExpenses);
+    const form8815MAGI = sum(preliminaryAgi.minus(educatorMagiChange), sched1.studentLoanInterest,
+      form2555IncomeReduction, form2555HousingDeduction,
+      adoptionBenefitResult?.allowableExclusion ?? new Decimal(0),
+      d(bondMagiFacts?.americanSamoaIncomeExclusion), d(bondMagiFacts?.puertoRicoIncomeExclusion),
+      d(bondMagiFacts?.royaltyInterestAdjustment));
+    form8815 = ordered?.bond ?? calculateForm8815(input.savingsBondRedemptions, form8815MAGI, filingStatus, { taxYear: year, facts: bondMagiFacts, sourceTaxpayer: input.taxpayer });
+    if (input.adjustments?.educatorExpenseSources?.length) audit.record("Form 8815 MAGI Worksheet", "educator", "Educator deduction before bond exclusion reduction", preBondEducator.amount,
+      "Line9 footnote uses actual qualified educator expenses without the Form8815line14 reduction", {
+        ...preBondEducator.inputs, "Final Schedule1 educator deduction": sched1.educatorExpenses,
+        "Additional MAGI deduction": educatorMagiChange,
+      });
     savingsBondExclusion = form8815.excludableSavingsBondInterest;
+    if (form8815.sourceFactsVerified) {
+      const remainingStatementInterest = sum(...input.form1099Int.map(form => d(form.usSavingsBondInterest)))
+        .minus(preliminaryScheduleB.previouslyReportedSavingsBondInterest);
+      const sourcedCurrentInterest = form8815.reissueSourcesVerified
+        ? reportSavingsBondRatios(form8815.redemptionResults.map(redemption => redemption.currentYearInterestRatio
+          ?? { numerator: redemption.currentYearInterest ?? new Decimal(0), denominator: new Decimal(1) }))
+        : sum(...form8815.redemptionResults.map(redemption => redemption.currentYearInterest ?? new Decimal(0)));
+      const statementBound = form8815.reissueSourcesVerified ? reportSavingsBondRatios([
+        ...input.form1099Int.map(form => ({ numerator: d(form.usSavingsBondInterest), denominator: d(1) })),
+        { numerator: preliminaryScheduleB.previouslyReportedSavingsBondInterest.negated(), denominator: d(1) },
+      ]) : remainingStatementInterest;
+      const reportedExclusionBound = educatorBondSources && !form8815.reissueSourcesVerified
+        ? reportSavingsBondRatios([
+          ...input.form1099Int.map(form => ({ numerator: d(form.usSavingsBondInterest), denominator: d(1) })),
+          { numerator: preliminaryScheduleB.previouslyReportedSavingsBondInterest.negated(), denominator: d(1) },
+        ]) : statementBound;
+      if (savingsBondExclusion.gt(reportedExclusionBound) || sourcedCurrentInterest.gt(statementBound)) {
+        throw new Error("Form 8815 current bond interest and exclusion must reconcile to remaining reported Box 3 statement interest");
+      }
+    }
     audit.merge(form8815.lines);
+  }
+  if (input.adjustments?.educatorExpenseSources?.length && (!marketplace || marketplace.stage === "final" || marketplace.stage === "full-repayment" || marketplace.stage === "actual-cash" || marketplace.stage === "actual-paid" || (educatorBondSources && form8815))) {
+    const educatorExclusions = reconcileEducatorEducationExclusions({
+      taxYear: year,
+      filingStatus,
+      educatorSources: input.adjustments.educatorExpenseSources,
+      educationDistributions: form1099Q,
+      savingsBondResult: form8815,
+      savingsBondRedemptions: input.savingsBondRedemptions,
+      taxpayer: input.taxpayer,
+      form8815: input.form8815,
+      bondSourceContext: educatorBondSources,
+    });
+    audit.merge(educatorExclusions.lines);
   }
   const schedB = calculateScheduleB(input, savingsBondExclusion);
   audit.merge(schedB.lines);
@@ -1678,132 +2427,102 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     capitalGainLoss,
     schedCNetProfit,
     schedFNetProfit,
-    adjustedScheduleETotal,
+    allowedScheduleETotal,
     otherIncome
   );
-  audit.record("1040", "9", "Total income", totalIncome,
-    totalSection163jDeduction.greaterThan(0)
-      ? `Sum of Lines 1-8 (Schedule E reduced by $${totalSection163jDeduction} §163(j) partner-level EBIE deduction)`
-      : "Sum of Lines 1-8");
 
   let agi = totalIncome.minus(adjustments);
-  audit.record("1040", "11", "Adjusted gross income", agi,
-    "Line 9 - Line 10");
 
-  // ── Form 8582: Passive Activity Loss Limitations ────────
-  // Build passive activities from K-1s marked as passive
-  const passiveActivities: PassiveActivity[] = schedE.partnerships
-    .filter((partnership) => partnership.isPassive)
-    .map((partnership) => ({
-      name: partnership.name,
-      income: partnership.passiveIncome,
-      loss: partnership.passiveLoss,
-      isRentalRealEstate: partnership.isRentalRealEstate,
-      isActiveParticipant: partnership.isRentalRealEstate, // simplified assumption
-      isPubliclyTradedPartnership: partnership.isPubliclyTradedPartnership,
-      ptpFullyDisposedInTaxableTransaction: partnership.ptpFullyDisposedInTaxableTransaction,
-      ptpDispositionGainOrLoss: partnership.ptpDispositionGainOrLoss,
-    }));
-
-  // Add rental properties from Schedule E Part I as passive activities
-  for (const rental of schedE.rentalProperties) {
-    const net = rental.netRentalIncome;
-    passiveActivities.push({
-      name: rental.description,
-      income: net.isPositive() ? net : new Decimal(0),
-      loss: net.isNegative() ? net : new Decimal(0),
-      isRentalRealEstate: true,
-      isActiveParticipant: rental.isActiveParticipant,
-    });
+  if ((eblSources || k1Form461Classification) && !form461.line5ScheduleE.eq(roundDollar(adjustedScheduleETotal.plus(passiveIncomeAdjustment).minus(ptpReleasedTotal)))) {
+    throw new Error("Form461 actual supplemental income must reconcile with final post-passive Schedule1 line5");
   }
 
-  // Per IRS Form 8582 Instructions, the $25K rental allowance phase-out uses
-  // "modified adjusted gross income" (MAGI), NOT regular AGI. MAGI is AGI:
-  //   - Without regard to passive activity losses (add back net passive loss IN AGI)
-  //   - Plus IRA deduction (add back)
-  //   - Plus student loan interest deduction (add back)
-  //   - Plus savings bond exclusion from Form 8815 (add back)
-  //
-  // Note: Schedule E Part II (K-1) net passive losses are already EXCLUDED from
-  // totalPartnershipIncome (and hence from AGI) by schedule-e.ts. Only Part I
-  // rental losses flow through totalRentalIncome into AGI and need to be added back.
-  const partIRentalLossInAGI = schedE.rentalProperties.reduce(
-    (acc, p) => acc.plus(p.netRentalIncome.isNegative() ? p.netRentalIncome : new Decimal(0)),
-    new Decimal(0)
-  );
-  const rentalLossAddBack = partIRentalLossInAGI.isNegative()
-    ? partIRentalLossInAGI.negated()
-    : new Decimal(0);
-  const form8582MAGI = agi
-    .plus(rentalLossAddBack)
-    .plus(d(input.adjustments?.iraDeduction))
-    .plus(sched1.studentLoanInterest)
-    .plus(savingsBondExclusion);
-
-  const form8582 = calculateForm8582({
-    activities: passiveActivities,
-    agi: form8582MAGI,
-    filingStatus,
-    mfsLivedApartFromSpouseAllYear:
-      filingStatus === "married_filing_separately"
-        && input.taxpayer.livedWithSpouseAtAnyTimeDuringYear === false,
-    priorYearSuspendedLosses: input.priorYear?.suspendedPassiveLosses?.map((s) => ({
-      name: s.partnershipName,
-      amount: d(s.amount),
-    })),
-    priorYearPTPSuspendedLosses: input.priorYear?.suspendedPTPLosses?.map((s) => ({
-      name: s.partnershipName,
-      amount: d(s.amount),
-    })),
-  });
-  audit.merge(form8582.lines);
-
-  // ── AGI correction: remove Part I rental suspended losses ──
-  // Per IRS Form 1040 flow, Schedule E reports only the ALLOWED rental income/loss
-  // (after Form 8582 limitation). Part I rental losses that are suspended by Form 8582
-  // should NOT be in AGI. K-1 passive losses are already excluded by Schedule E's own
-  // computation (totalPartnershipIncome excludes net passive loss).
-  const k1PassiveCount = k1Agg.passiveCount;
-  const partIRentalCount = schedE.rentalProperties.length;
-  let partIRentalSuspended = new Decimal(0);
-  for (let i = k1PassiveCount; i < k1PassiveCount + partIRentalCount; i++) {
-    if (i < form8582.activityAllocations.length) {
-      partIRentalSuspended = partIRentalSuspended.plus(form8582.activityAllocations[i].suspendedLoss);
+  // Pub970 uses completed income after the bond exclusion and allowed passive
+  // losses. Those upstream worksheets add back or exclude this deduction.
+  if ((studentLoanSourceResult || d(combinedStudentLoanInterest ?? input.adjustments?.studentLoanInterest).gt(0)) && calculateOrdered("studentLoan")) {
+    if (!nol && studentLoanSourceResult?.qualifiedInterest.gt(0)
+      && sum(d(input.priorYear?.nolCarryforward), d(input.priorYear?.excessBusinessLossNOL), k1Form1041FinalNOL).gt(0)) {
+      throw new Error("Actual student-loan and NOL claims require the coupled NOL and deduction source computation");
     }
+    const studentLoanMagi = ordered?.studentLoan?.modifiedAgi ?? sum(agi, sched1.studentLoanInterest, form2555IncomeReduction,
+      form2555HousingDeduction, studentLoanSourceResult?.possessionIncomeAddback ?? new Decimal(0));
+    studentLoanWorksheetMagi = studentLoanMagi;
+    if (studentLoanSourceOptions) {
+      studentLoanInterestWorksheetResult = ordered?.studentLoan?.result ?? calculateStudentLoanInterestDeduction({
+        ...studentLoanSourceOptions, modifiedAgi: studentLoanMagi,
+      });
+      if (!studentLoanInterestWorksheetResult.calculationComplete) throw new Error("Student-loan canonical MAGI calculation is incomplete");
+      audit.merge(studentLoanInterestWorksheetResult.lines);
+    }
+    const previousDeduction = sched1.studentLoanInterest;
+    sched1 = calculateSchedule1(sched1Input, {
+      ...sched1Context, iraDeductionOverride: sched1.iraDeduction,
+      studentLoanDeductionOverride: studentLoanInterestWorksheetResult?.deduction,
+      studentLoanModifiedAgi: studentLoanMagi,
+    }, form4797);
+    const change = sched1.studentLoanInterest.minus(previousDeduction);
+    adjustments = adjustments.plus(change);
+    agi = agi.minus(change);
+    audit.record("Student Loan MAGI Worksheet", "magi", "Canonical student-loan modified AGI", studentLoanMagi,
+      ordered?.studentLoan ? "Retained Pub974 ordered student-loan worksheet using its preceding Step3 health deduction"
+        : "Complete income less non-student-loan adjustments plus actual foreign/housing and possession addbacks",
+      ordered?.studentLoan ? { "Retained source MAGI": studentLoanMagi } : { "Income after bond and passive worksheets": totalIncome,
+        "Other Schedule1 adjustments": adjustments.minus(sched1.studentLoanInterest),
+        "Form2555 excluded income": form2555IncomeReduction, "Housing deduction": form2555HousingDeduction,
+        "Actual possession exclusions": studentLoanSourceResult?.possessionIncomeAddback ?? new Decimal(0) });
   }
-  if (partIRentalSuspended.greaterThan(0)) {
-    agi = agi.plus(partIRentalSuspended);
-    audit.record("1040", "11-adj", "AGI corrected for Form 8582 suspended rental losses",
-      agi, `Added back $${partIRentalSuspended} suspended Part I rental losses`);
+  if (socialSecurityBenefitsWorksheet) {
+    // Benefits deliberately exclude this deduction. Attach its final source
+    // amount only after the canonical loan worksheet has been completed.
+    socialSecurityBenefitsWorksheet.lines = socialSecurityBenefitsWorksheet.lines.map(line =>
+      line.inputs["Excluded Schedule 1 student loan interest"] === undefined ? line : {
+        ...line, inputs: { ...line.inputs, "Excluded Schedule 1 student loan interest": sched1.studentLoanInterest },
+      });
+    audit.merge(socialSecurityBenefitsWorksheet.lines);
   }
+  audit.record("1040", "10", "Adjustments to income", adjustments,
+    k1Form1041Section67eDeductions.gt(0)
+      ? "SE deduction + other adjustments + K-1 1041 §67(e) excess deductions"
+      : "SE deduction + other adjustments");
 
-  // ── PTP disposition: released losses reduce AGI (IRC §469(g)(1)) ──
-  // When a PTP is fully disposed of in a taxable transaction, accumulated
-  // suspended losses become nonpassive and reduce AGI directly.
-  const ptpReleasedTotal = form8582.ptpDispositionReleasedLosses.reduce(
-    (acc, p) => acc.plus(p.totalReleased), new Decimal(0)
-  );
-  if (ptpReleasedTotal.greaterThan(0)) {
-    agi = agi.minus(ptpReleasedTotal);
-    totalIncome = totalIncome.minus(ptpReleasedTotal);
-    audit.record("1040", "8-ptp-disposition", "PTP disposition released losses (nonpassive)",
-      ptpReleasedTotal.negated(),
-      `IRC §469(g)(1) — ${form8582.ptpDispositionReleasedLosses.length} PTP(s) fully disposed; $${ptpReleasedTotal} suspended losses released as nonpassive`,
-      Object.fromEntries(form8582.ptpDispositionReleasedLosses.map((p) => [p.name, p.totalReleased.negated()]))
-    );
+  if (marketplace && marketplace.stage !== "final" && marketplace.stage !== "full-repayment" && marketplace.stage !== "actual-cash" && marketplace.stage !== "actual-paid" && (!nol || nol.stage === "final")) {
+    if (!actualHealthInsurance?.marketplacePremiums) throw new Error("Pub974 source calculation is incomplete.");
+    if (!nol && sum(d(input.priorYear?.nolCarryforward), d(input.priorYear?.excessBusinessLossNOL), k1Form1041FinalNOL).gt(0)) throw new Error("Pub974 NOL coordination requires the actual circular taxable-income worksheet.");
+    const repaymentLimit = marketplace.stage === "maximum" ? marketplace.historicalLimit?.repaymentLimit
+      : marketplace.stage === "ordered" && !marketplace.deduction.method.startsWith("ordinary-no-ptc-") ? marketplace.deduction.historicalLimit?.repaymentLimit : undefined;
+    const credit = calculatePremiumTaxCreditReturn({ input, agi, taxExemptInterest,
+      foreignIncomeReduction: form2555IncomeReduction, foreignHousingDeduction: form2555HousingDeduction,
+      socialSecurityBenefitsGross, socialSecurityBenefitsTaxable }, { method: year === 2025 ? "pub974-simplified-2025" : "pub974-simplified-2026", stage: marketplace.stage, repaymentLimit: repaymentLimit ?? undefined, orderedDeductionInterim: marketplace.orderedDeductionInterim
+        && (passiveSpecialRequired || ordered?.kinds.some(kind => kind !== "passive")) });
+    return { passiveSpecialRequired, groups: actualHealthInsurance.marketplacePremiums.groups, credit,
+      deductions: { passive: passiveSpecialRequired && calculateOrdered("passive") ? form8582 : undefined, ira: iraDeductionWorksheetResult, bond: form8815,
+      studentLoan: studentLoanInterestWorksheetResult && studentLoanWorksheetMagi ? { result: studentLoanInterestWorksheetResult, modifiedAgi: studentLoanWorksheetMagi } : undefined } };
   }
 
   // ═══════════════════════════════════════════════════════════
   // Phase 3: Deductions (Form 1040 Lines 12-15)
   // ═══════════════════════════════════════════════════════════
 
-  const standardDeduction = constants.standardDeduction[filingStatus];
+  const standardDeductionWorksheet = calculateStandardDeduction({
+    taxpayer: input.taxpayer, facts: input.standardDeductionFacts, constants,
+  });
+  audit.merge(standardDeductionWorksheet.lines);
+  const standardDeduction = standardDeductionWorksheet.standardDeduction;
+  const deductionElection = nol?.stage === "alternative-income" && nol.actualRegularDeductionMethod
+    ? nol.actualRegularDeductionMethod : input.deductionElection ?? "automatic";
+  if (deductionElection === "standard" && !standardDeductionWorksheet.eligibleForStandardDeduction) {
+    throw new Error("Standard deduction election is ineligible for the actual taxpayer facts");
+  }
 
   // Form 4952: Investment interest expense deduction
-  // Aggregate K-1 Box 13 Code D (investment interest expense),
-  // Box 20 Code A (investment income), partnership-only Box 20 Code AF
+  // Aggregate semantic K-1 investment interest (partnership Box 13 H or
+  // S-corporation Box 12 H),
+  // investment income (partnership Box 20 A or S-corporation Box 17 A),
+  // partnership-only Box 20 Code AF
   // (excess business interest income that also counts as Form 4952 investment
-  // income in this supported slice), and Box 20 Code B (investment expenses)
+  // income in this supported historical slice). Actual completed source
+  // worksheets already include these amounts; Box 20 Code B needs a separate
+  // determination that the expense is deductible on the return.
   const k1InvestmentInterestExpense = k1Agg.investmentInterestExpense;
   const k1InvestmentIncome = k1Agg.investmentIncome;
   const k1PartnershipExcessBusinessInterestIncomeForForm4952 = k1Agg.excessBusinessInterestIncomePartnership;
@@ -1816,22 +2535,53 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   // Compute Form 4952 when explicit input is provided OR K-1 investment amounts exist
   const form4952Input = input.form4952;
   const needsForm4952 = form4952Input !== undefined || hasK1InvestmentAmounts;
-  const form4952 = needsForm4952
-      ? calculateForm4952({
+  const form4952HasActualSources = year >= 2026
+    || form4952Input?.sourceFactsConfirmed !== undefined
+    || form4952Input?.sourceTaxYear !== undefined;
+  let form4952: ReturnType<typeof calculateForm4952> | undefined;
+  if (needsForm4952) {
+    if ((input.form8814?.length ?? 0) > 0 || form4952Input?.childIncomeSources) {
+      if (!form4952Input) throw new Error("Form4952 requires the actual child source partition");
+      audit.merge(calculateForm4952ChildSources(form4952Input, input.form8814 ?? [], constants).lines);
+    }
+    if (form4952HasActualSources) {
+      if (!form4952Input) throw new Error("Form4952 requires the actual completed investment source worksheet");
+      form4952 = calculateForm4952(form4952Input, year);
+    } else {
+      form4952 = calculateForm4952({
+        ...form4952Input,
         investmentInterestExpense: d(form4952Input?.investmentInterestExpense).plus(k1InvestmentInterestExpense).toString(),
         priorYearDisallowed: d(form4952Input?.priorYearDisallowed).toString(),
-        grossInvestmentIncome: d(form4952Input?.grossInvestmentIncome)
-          .plus(k1InvestmentIncome)
-          .plus(k1PartnershipExcessBusinessInterestIncomeForForm4952)
-          .toString(),
+        grossInvestmentIncome: sum(d(form4952Input?.grossInvestmentIncome), k1InvestmentIncome, k1PartnershipExcessBusinessInterestIncomeForForm4952).toString(),
         qualifiedDividendsIncluded: d(form4952Input?.qualifiedDividendsIncluded).toString(),
         netGainFromInvestmentProperty: d(form4952Input?.netGainFromInvestmentProperty).toString(),
         electedPreferentialIncome: d(form4952Input?.electedPreferentialIncome).toString(),
-        investmentExpenses: d(form4952Input?.investmentExpenses).plus(k1InvestmentExpenses).toString(),
-      })
-    : undefined;
+        investmentExpenses: d(form4952Input?.investmentExpenses).toString(),
+      }, year);
+    }
+  }
   if (form4952) {
     audit.merge(form4952.lines);
+  }
+  let form4952Amt: ReturnType<typeof calculateForm4952> | undefined;
+  if (input.form4952Amt) {
+    if (!form4952) throw new Error("AMT Form4952 requires the actual regular investment source worksheet");
+    if ((input.form8814?.length ?? 0) > 0 || input.form4952Amt.childIncomeSources) {
+      audit.merge(calculateForm4952ChildSources(input.form4952Amt, input.form8814 ?? [], constants, "amt").lines);
+    }
+    const calculated = calculateForm4952(input.form4952Amt, year);
+    if (!calculated.sourceFactsVerified) throw new Error("AMT Form4952 actual source facts are required");
+    const requiredElection = min(form4952.line4g, calculated.line4b.plus(calculated.line4e));
+    if (!calculated.line4g.eq(requiredElection)) {
+      throw new Error("AMT Form4952 election must equal the regular election limited to actual AMT preferential income");
+    }
+    form4952Amt = {
+      ...calculated,
+      lines: calculated.lines.map(line => ({...line,form:line.form.replace("Form 4952","Form 4952 AMT")})),
+    };
+    audit.merge(form4952Amt.lines);
+  } else if (form4952 && (year >= 2026 || (input.form8814?.length ?? 0) > 0 || form4952Input?.childIncomeSources)) {
+    throw new Error("AMT Form4952 requires separate actual investment source facts");
   }
   if (hasK1InvestmentAmounts) {
     audit.record("K-1", "inv", "K-1 investment amounts aggregated for Form 4952",
@@ -1839,11 +2589,11 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
         .plus(k1InvestmentIncome)
         .plus(k1PartnershipExcessBusinessInterestIncomeForForm4952)
         .plus(k1InvestmentExpenses),
-      "Box 13 Code D (interest expense) + Box 20 Code A (income) + partnership Box 20 Code AF (EBII investment income) + Box 20 Code B (expenses)", {
-        "Box 13 Code D (investment interest expense → Line 1)": k1InvestmentInterestExpense,
-        "Box 20 Code A (investment income → Line 4a)": k1InvestmentIncome,
+      form4952HasActualSources ? "Actual completed Form4952 includes source K1 amounts once; no second aggregation" : "Historical interest/income aggregation; investment-expense information retained pending actual deductible expense classification", {
+        "Investment interest expense (semantic amount → Line 1)": k1InvestmentInterestExpense,
+        "Investment income (semantic amount → Line 4a)": k1InvestmentIncome,
         "Partnership Box 20 Code AF (EBII → Line 4a)": k1PartnershipExcessBusinessInterestIncomeForForm4952,
-        "Box 20 Code B (investment expenses → Line 4f)": k1InvestmentExpenses,
+        "Investment expenses (semantic source information; actual deductible total on Line 5)": k1InvestmentExpenses,
       });
   }
 
@@ -1853,20 +2603,21 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     audit.merge(form4684.lines);
   }
 
-  // Aggregate K-1 Box 13 charitable contributions (Codes A, B, C) for Schedule A
-  const k1CashCharitable = k1Agg.charitableCash;
-  const k1AppreciatedProperty30 = k1Agg.charitableCapitalGain30;
-  const k1AppreciatedProperty20 = k1Agg.charitableCapitalGain20;
+  // Aggregate semantic charitable amounts for Schedule A; partnership Box 13
+  // and S-corporation Box 12 use A/E/F for these categories.
+  const k1CashCharitable = k1CharitableSources?.amounts.cashPublic ?? k1Agg.charitableCash;
+  const k1AppreciatedProperty30 = k1CharitableSources?.amounts.capitalGainPublic ?? k1Agg.charitableCapitalGain30;
+  const k1AppreciatedProperty20 = k1CharitableSources?.amounts.capitalGainPrivate ?? k1Agg.charitableCapitalGain20;
   const hasK1Charitable = !k1CashCharitable.isZero()
     || !k1AppreciatedProperty30.isZero()
     || !k1AppreciatedProperty20.isZero();
   if (hasK1Charitable) {
-    audit.record("K-1", "13", "K-1 Box 13 charitable contributions routed to Schedule A",
+    audit.record("K-1", "13", "K-1 semantic charitable amounts routed to Schedule A",
       k1CashCharitable.plus(k1AppreciatedProperty30).plus(k1AppreciatedProperty20),
-      "Code A (cash 60%) + Code B (CG property 30%) + Code C (CG property 20%)", {
-        "Code A (cash, 60% AGI limit)": k1CashCharitable,
-        "Code B (capital gain property, 30% AGI limit)": k1AppreciatedProperty30,
-        "Code C (capital gain property, 20% AGI limit)": k1AppreciatedProperty20,
+      "Cash (60%) + capital gain property (30%) + capital gain property (20%)", {
+        "Cash (60% AGI limit)": k1CashCharitable,
+        "Capital gain property (30% AGI limit)": k1AppreciatedProperty30,
+        "Capital gain property (20% AGI limit)": k1AppreciatedProperty20,
       });
   }
 
@@ -1887,11 +2638,7 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     // Determine whether to use sales tax or income tax
     if (input.salesTaxDeduction.autoCompare) {
       // Auto-compare: compute income taxes and use whichever is larger
-      const incomeTaxes = w2Agg.statePlusLocal.plus(
-        input.adjustments?.estimatedTaxPayments
-          ?.filter((p) => p.type === "state")
-          .reduce((acc, p) => acc.plus(d(p.amount)), new Decimal(0)) ?? new Decimal(0)
-      );
+      const incomeTaxes = calculateStateLocalIncomeTaxDeduction(input).total;
       salesTaxElectedForLine5a = salesTaxDeductionAmount.greaterThan(incomeTaxes);
       audit.record("Sales Tax WS", "cmp", "Income tax vs sales tax comparison",
         salesTaxElectedForLine5a ? salesTaxDeductionAmount : incomeTaxes,
@@ -1907,10 +2654,18 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   // Schedule A for itemized deductions
   const form4952DeductibleAmount = form4952?.deductibleAmount;
   const form4684DeductibleLoss = form4684?.deductibleLoss;
+  const nolContributionLimit = nol?.stage === "income" || nol?.stage === "alternative-income" ? nol.charitableContributionLimit : undefined;
+  if (nolContributionLimit && nolContributionLimit.ledger !== (nol?.stage === "alternative-income" ? "alternative" : "regular")) {
+    throw new Error("Charitable NOL comparison ledger must match the actual regular or alternative context");
+  }
   const hasScheduleAExtra = input.scheduleA !== undefined
+    || educatorBondSources !== undefined
+    || nolContributionLimit !== undefined
+    || input.form2555 !== undefined
     || form4952DeductibleAmount !== undefined
     || form4684DeductibleLoss !== undefined
     || hasK1Charitable
+    || donationResult !== undefined
     || salesTaxElectedForLine5a;
   const schedA = calculateScheduleA(
     input,
@@ -1920,15 +2675,20 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     !hasScheduleAExtra
       ? undefined
       : {
+        educatorBondSources,
         medicalExpenses: d(input.scheduleA?.medicalExpenses),
         personalPropertyTaxes: d(input.scheduleA?.personalPropertyTaxes),
+        saltMagiAdditions: form2555IncomeReduction.plus(form2555HousingDeduction),
         investmentInterestExpense: form4952DeductibleAmount ?? d(input.scheduleA?.investmentInterestExpense),
         casualtyLossDeduction: form4684DeductibleLoss,
         gamblingWinnings: totalGamblingWinnings,
         gamblingLosses: d(input.scheduleA?.gamblingLosses),
+        gamblingExpenses: d(input.scheduleA?.gamblingExpenses),
         k1CashCharitable: hasK1Charitable ? k1CashCharitable : undefined,
         k1AppreciatedProperty30: hasK1Charitable ? k1AppreciatedProperty30 : undefined,
         k1AppreciatedProperty20: hasK1Charitable ? k1AppreciatedProperty20 : undefined,
+        cryptoCharitableAmounts: donationResult?.contributionAmounts,
+        nolContributionLimit,
         salesTaxDeduction: salesTaxElectedForLine5a ? salesTaxDeductionAmount : undefined,
         salesTaxElected: salesTaxElectedForLine5a,
       }
@@ -1936,31 +2696,16 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   audit.merge(schedA.lines);
   // Add K-1 Form 1041 deductions to Schedule A
   let itemizedDeductions = schedA.totalItemized;
-  // Box 10: Estate tax deduction (IRC §691(c)) — not subject to 2% floor
-  if (k1Form1041EstateTaxDeduction.greaterThan(0)) {
-    itemizedDeductions = itemizedDeductions.plus(k1Form1041EstateTaxDeduction);
-    audit.record("Sched A", "16", "Estate tax deduction (IRC §691(c))", k1Form1041EstateTaxDeduction,
-      "K-1 (Form 1041) Box 10 — IRC §691(c) deduction for estate tax on income in respect of decedent");
-  }
   // Box 11 Code B: Non-miscellaneous itemized deductions from terminating trust/estate
   if (k1Form1041FinalNonMiscItemized.greaterThan(0)) {
     itemizedDeductions = itemizedDeductions.plus(k1Form1041FinalNonMiscItemized);
     audit.record("Sched A", "16b", "Final year non-misc itemized deductions (K-1 1041)", k1Form1041FinalNonMiscItemized,
       "K-1 (Form 1041) Box 11 Code B — non-miscellaneous itemized deductions on termination per IRC §642(h)");
   }
-  // Add crypto charitable donations to itemized deductions (Schedule A)
-  const cryptoDonationDeduction = donationResult?.totalDeduction ?? new Decimal(0);
-  if (cryptoDonationDeduction.greaterThan(0)) {
-    itemizedDeductions = itemizedDeductions.plus(cryptoDonationDeduction);
-    audit.record("Sched A", "12-crypto", "Crypto charitable contributions (IRC §170)",
-      cryptoDonationDeduction,
-      `${donationResult!.longTermDonations.length} long-term (FMV) + ${donationResult!.shortTermDonations.length} short-term (basis) crypto donations`);
-  }
   const hasK1Form1041ItemizedAdditions = k1Form1041EstateTaxDeduction.greaterThan(0) || k1Form1041FinalNonMiscItemized.greaterThan(0);
-  const hasCryptoDonations = cryptoDonationDeduction.greaterThan(0);
   audit.record("Sched A", "17", "Total itemized deductions", itemizedDeductions,
-    hasK1Form1041ItemizedAdditions || hasCryptoDonations
-      ? "Medical + SALT + mortgage + charitable + crypto donations + K-1 1041 estate/trust deductions"
+    hasK1Form1041ItemizedAdditions
+      ? "Medical + SALT + mortgage + limited charitable contributions + K-1 1041 estate/trust deductions"
       : "Medical + SALT + mortgage + charitable");
   // Collect all Form 8889 results for auto-deriving Form 5329 Part VII HSA excess contributions
   const allForm8889Results: Form8889Result[] = [
@@ -1977,104 +2722,130 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     input.form1099R ?? [],
     form8606,
     schedA.medicalDeduction,
-    allForm8889Results
+    input.form5329HsaByOwner ? [] : allForm8889Results
   );
 
-  const deductionUsed = itemizedDeductions.greaterThan(standardDeduction) ? "itemized" : "standard";
-  const deductionAmount = deductionUsed === "itemized" ? itemizedDeductions : standardDeduction;
-  audit.record(
-    "1040",
-    "12",
-    "Standard or itemized deduction",
-    deductionAmount,
-    `${deductionUsed} deduction selected`
-  );
+  const deductionSelection = calculateFederalDeductionSelection({ taxYear: year, election: deductionElection,
+    eligibleForStandardDeduction: standardDeductionWorksheet.eligibleForStandardDeduction, standardDeduction,
+    itemizedDeductions, nonitemizerCharitableDeduction: schedA.nonitemizerCharitableDeduction });
+  let { deductionUsed, deductionAmount } = deductionSelection;
 
-  // Line 13: Section 199A QBI Deduction (Form 8995)
-  // Collect QBI sources from Schedule C, Schedule F, and K-1s.
-  // Per IRS Form 8995 Instructions, QBI from Schedule C/F must be reduced by
-  // SE-related deductions attributable to the business:
-  // - Deductible half of SE tax (§164(f)) — allocated proportionally by SE earnings
-  // - SE health insurance deduction (§162(l)) — attributable to Sched C/F business
-  // - SE retirement contributions (§404) — not in input model, documented limitation
-  const qbiSources: QBISource[] = [];
-  const k1SEIncome = k1Agg.selfEmploymentEarnings;
-  const k1GuaranteedPayments = k1Agg.guaranteedPayments;
-  // Total positive SE earnings for proportional deductible-half allocation
-  const totalPositiveSE = sum(
-    zeroFloor(schedCNetProfit),
-    zeroFloor(schedFNetProfit),
-    zeroFloor(k1SEIncome),
-    zeroFloor(k1GuaranteedPayments)
-  );
-  if (schedCNetProfit && !schedCNetProfit.isZero()) {
-    // Allocate deductible half SE tax proportionally to Schedule C's contribution
-    // to total positive SE earnings. SE health insurance is fully Schedule C's.
-    let schedCQBIAdjustment = new Decimal(0);
-    if (totalPositiveSE.greaterThan(0) && schedCNetProfit.greaterThan(0)) {
-      const schedCShare = schedCNetProfit.dividedBy(totalPositiveSE);
-      const allocatedDeductibleHalf = roundDollar(schedSE.deductibleHalf.times(schedCShare));
-      schedCQBIAdjustment = allocatedDeductibleHalf.plus(seHealthInsurance);
-    }
-    const adjustedSchedCQBI = schedCNetProfit.minus(schedCQBIAdjustment);
-    qbiSources.push({ name: input.scheduleC?.businessName ?? "Schedule C", qbi: adjustedSchedCQBI });
+  // Section 199A deductions follow the individual and the contributing trade.
+  const k1QbiLosses = calculateK1QbiLossReturn(input, { scheduleE: schedE, form8582, form461 });
+  audit.merge(k1QbiLosses.lines);
+  const actualRegularNolForQbi = nol?.stage === "final" ? nol.worksheet
+    : nol?.stage === "alternative-income" && !nol.modified ? nol.actualRegularNol : undefined;
+  const eblQbi = calculateQbiEblNol(input, actualRegularNolForQbi ? { regular: actualRegularNolForQbi } : undefined);
+  if (nol?.stage === "alternative-income" && !nol.modified) {
+    if (eblQbi.vintages.length && !eblQbi.calculationComplete) throw new Error("Actual AMT QBI replay requires the completed regular EBL deduction by vintage");
+    audit.merge(eblQbi.lines);
   }
-  if (schedFNetProfit && !schedFNetProfit.isZero()) {
-    // Allocate deductible half SE tax proportionally to Schedule F's contribution
-    let schedFQBIAdjustment = new Decimal(0);
-    if (totalPositiveSE.greaterThan(0) && schedFNetProfit.greaterThan(0)) {
-      const schedFShare = schedFNetProfit.dividedBy(totalPositiveSE);
-      schedFQBIAdjustment = roundDollar(schedSE.deductibleHalf.times(schedFShare));
+  const ownerOf = (owner?: "primary" | "spouse") => owner ?? (filingStatus !== "married_filing_jointly" ? "primary" : undefined);
+  const necOwnersForQBI = new Set(input.form1099Nec.filter(f => !d(f.nonemployeeCompensation).isZero()).map(f => f.accountHolder));
+  const cOwnerForQBI = input.scheduleC?.accountHolder ?? (necOwnersForQBI.size === 1 ? [...necOwnersForQBI][0] : undefined);
+  const deductionSources: QBIDeductionSource[] = [];
+  if (input.scheduleC || !schedC.netProfit.isZero()) deductionSources.push({id:"scheduleC",name:input.scheduleC?.businessName ?? "Schedule C",
+    qbi:schedC.netProfit.minus(foreignQbiProfit.get("scheduleC") ?? d("0")),netSEEarnings:schedC.netProfit.minus(foreignQbiProfit.get("scheduleC") ?? d("0")),accountHolder:ownerOf(cOwnerForQBI),materiallyParticipated:input.scheduleC?.qbiMateriallyParticipated});
+  if (input.scheduleF || !schedFNetProfit.isZero()) deductionSources.push({id:"scheduleF",name:input.scheduleF?.principalCropOrActivity ?? "Schedule F",
+    qbi:schedFNetProfit,netSEEarnings:schedFNetProfit,accountHolder:ownerOf(input.scheduleF?.accountHolder),materiallyParticipated:input.scheduleF?.qbiMateriallyParticipated});
+  if (!cryptoBusinessNet.isZero()) deductionSources.push({id:"cryptoBusiness",name:"Cryptocurrency business",
+    qbi:cryptoBusinessNet,netSEEarnings:cryptoBusinessNet,accountHolder:ownerOf(input.cryptoIncome?.businessAccountHolder)});
+  seSourceInput.scheduleK1.forEach((k1,index)=>{
+    const qbi=(k1QbiLosses.activities.find(source=>source.k1Index===index)?.currentQbi ?? d(k1.section199AQBI)).minus(foreignQbiProfit.get(`scheduleK1:${index}`) ?? d("0"));
+    // Foreign earnings carry no U.S. share of the deduction, so they take none of it here.
+    const netSEEarnings=k1.entityType === "s_corporation" ? d("0") : (foreignK1Earnings.has(`scheduleK1:${index}`) ? k1SelfEmploymentAmount(k1) : d(k1.selfEmploymentNetEarningsAfterAdjustments ?? k1.selfEmploymentEarnings))
+      .minus(foreignK1QbiEarnings.get(`scheduleK1:${index}`) ?? d("0"));
+    if (!qbi.isZero() || !netSEEarnings.isZero()) deductionSources.push({id:`scheduleK1:${index}`,name:k1.partnershipName,
+      qbi,netSEEarnings,accountHolder:ownerOf(k1.accountHolder),materiallyParticipated:k1.qbiMateriallyParticipated,
+      excludedSEIncome:!d(k1.guaranteedPayments).isZero() || qbi.isZero()});
+  });
+  let qbiAllocation = input.qbiDeductionAllocations;
+  if (marketplace && nol && nol.stage !== "final" && actualHealthInsurance && qbiAllocation) {
+    // An actual final-return allocation is not a claim to the same health amount
+    // in every statutory income replay. Recompute its health column from this
+    // context's canonical gross-income allocation; validate the original at final.
+    const sources = actualHealthInsurance.healthSources;
+    if (deductionSources.some(source => source.excludedSEIncome && sources.some(row => row.sourceId === source.id && row.amount.gt(0)))) {
+      throw new Error("Pub974 NOL with mixed QBI income needs its context-specific health allocation method.");
     }
-    const adjustedSchedFQBI = schedFNetProfit.minus(schedFQBIAdjustment);
-    qbiSources.push({ name: input.scheduleF?.principalCropOrActivity ?? "Schedule F", qbi: adjustedSchedFQBI });
+    qbiAllocation = { ...qbiAllocation, rows: qbiAllocation.rows.map(row => ({ ...row,
+      selfEmployedHealthInsurance: sum(...sources.filter(source => source.accountHolder === row.accountHolder
+        && (row.sourceId === "nonQbi" ? source.nonQbi : !source.nonQbi && source.sourceId === row.sourceId)).map(source => source.amount)).toFixed(),
+    })) };
   }
-  for (const k1 of input.scheduleK1) {
-    const k1QBI = d(k1.section199AQBI);
-    if (!k1QBI.isZero()) {
-      qbiSources.push({ name: k1.partnershipName, qbi: k1QBI });
-    }
-  }
+  const qbiSourceDeductions=calculateQBISourceDeductions({taxYear:year,sources:deductionSources,
+    selfEmploymentDeductions:schedSE.perTaxpayer.map(row=>({accountHolder:row.accountHolder,amount:row===foreignSeOwner ? row.deductibleHalf.minus(foreignQbiSeDeduction) : row.deductibleHalf})),
+    healthInsuranceDeduction:seHealthInsurance,retirementPlanDeduction:d(input.adjustments?.seRetirementContributions),
+    sourceFactsVerified:schedSE.sourceFactsVerified,allocation:qbiAllocation,
+    healthInsuranceSources:actualHealthInsurance?.healthSources,retirementPlanSources:actualHealthInsurance?.retirementSources});
+  audit.merge(qbiSourceDeductions.lines);
+  if (foreignQbiProfit.get("scheduleC")?.gt(0) && input.schedule1A?.businessTips?.length) throw new Error("Schedule 1-A business tips with foreign Schedule C profit need a separate method");
+  const schedule1AReturn = input.schedule1A ? calculateSchedule1AReturn({
+    input, agi, foreignExcludedIncome: form2555IncomeReduction.plus(form2555HousingDeduction), tipPayroll, scheduleC: schedC,
+    businessSources: deductionSources, adjustedBusinessSources: qbiSourceDeductions.sources,
+    businessDeductionsVerified: qbiSourceDeductions.sourceFactsVerified,
+  }) : undefined;
+  const schedule1A = schedule1AReturn?.schedule1A;
+  let nonitemizerCharitableDeduction = deductionSelection.nonitemizerCharitableDeduction;
+  let additionalDeductions = (schedule1A?.totalDeduction ?? d("0")).plus(nonitemizerCharitableDeduction);
+  if (nol?.modified) additionalDeductions = additionalDeductions.minus(schedule1A?.seniorDeduction ?? d("0"));
+  if (schedule1A) audit.merge(schedule1A.lines);
+  if (schedule1AReturn) audit.merge(schedule1AReturn.lines);
+  audit.record("1040", "13b", "Additional deductions from Schedule 1-A", schedule1A?.totalDeduction ?? d("0"),
+    "Schedule 1-A line 38; no change to AGI or payroll taxes");
+  const qbiSources: QBISource[] = qbiSourceDeductions.sources.map(source => ({ ...source,
+    qbi: source.qbi.minus(schedule1AReturn?.businessQbiExclusions.find(row => row.sourceId === source.id)?.amount ?? d("0")),
+  })).filter(source=>!source.qbi.isZero());
   // K-1 Form 1041 Box 14 Code I: QBI from estates/trusts
   // Trust QBI is NOT self-employment income — no SE tax adjustment needed
   for (const k1 of k1Form1041s) {
     const k1QBI = d(k1.section199AQBI);
     if (!k1QBI.isZero()) {
-      qbiSources.push({ name: k1.estateTrustName, qbi: k1QBI });
+      qbiSources.push({ name: k1.estateTrustName, qbi: k1QBI, materiallyParticipated: k1.qbiMateriallyParticipated });
     }
   }
 
-  // Rental property QBI (Rev. Proc. 2019-38 safe harbor or case law qualification)
-  // QBI is limited to the rental income actually included in taxable income after
-  // Form 8582 passive loss limitation. Positive income is included in full.
-  // Passive losses use the Form 8582-allowed amount (not total loss).
+  // Prior released qualified losses retain their origin-year character and
+  // enter the separate prior-loss amount, not the current rental's QBI.
+  const rentalLossQbi = new Map<number, PassiveLossQBIResult>();
+  let releasedPriorQualifiedRentalLoss = k1QbiLosses.priorQualifiedLoss.plus(eblQbi.currentQualifiedDeduction ?? 0);
+  let releasedPriorActiveRentalLoss: Decimal | undefined = (eblQbi.currentQualifiedDeduction?.gt(0) && eblQbi.currentActiveQualifiedDeduction === undefined)
+    || k1QbiLosses.priorActiveQualifiedLoss === undefined ? undefined
+    : k1QbiLosses.priorActiveQualifiedLoss.plus(eblQbi.currentActiveQualifiedDeduction ?? 0);
+  for (const prior of input.priorYear?.suspendedPassiveLosses ?? []) {
+    if (prior.qbiLossTracking && !schedE.rentalProperties.some(rental => rental.description === prior.partnershipName)
+      && !k1QbiLosses.activities.some(source => input.scheduleK1[source.k1Index].partnershipName === prior.partnershipName)) {
+      throw new Error("Actual passive QBI tracking requires its supported rental source; partnership loss character needs its separate source method");
+    }
+  }
   for (let ri = 0; ri < schedE.rentalProperties.length; ri++) {
     const rental = schedE.rentalProperties[ri];
     const prop = (input.rentalProperties ?? [])[ri];
-    if (!prop?.qualifiesForQBI) continue;
-
-    let rentalQBI: Decimal;
-    if (rental.netRentalIncome.isPositive()) {
-      // Positive income: fully included as QBI
-      rentalQBI = rental.netRentalIncome;
-    } else {
-      // Loss: use Form 8582 allowed amount (look up by property description)
-      const alloc = form8582.activityAllocations.find((a) => a.name === rental.description);
-      if (alloc) {
-        // allowedLoss is the positive portion of the loss allowed into taxable income
-        rentalQBI = alloc.allowedLoss.isZero() ? new Decimal(0) : alloc.allowedLoss.negated();
-      } else {
-        // No allocation found (should not happen for loss activities)
-        rentalQBI = new Decimal(0);
-      }
+    const row = form8582.activityRows.find(activity => activity.sourceIndex === k1PassiveCount + ri);
+    const alloc = form8582.activityAllocations.find(activity => activity.sourceIndex === k1PassiveCount + ri);
+    const priorSources = (input.priorYear?.suspendedPassiveLosses ?? []).filter(prior => prior.partnershipName === rental.description);
+    const tracking = priorSources.find(prior => prior.qbiLossTracking)?.qbiLossTracking;
+    const actualQbiSource = prop?.qualifiesForQBI || prop?.sourceFactsConfirmed === true || tracking !== undefined
+      || (year === 2026 && row?.priorYearSuspendedLoss.gt(0));
+    if (!actualQbiSource) continue; // Historical unqualified 2025 preview remains unverified.
+    if (!row || (tracking && priorSources.length !== 1)) throw new Error("Passive QBI tracking requires unambiguous actual rental source identity");
+    const tracked = calculatePassiveLossQBI({ taxYear: year, activityName: rental.description,
+      currentIncome: row.currentIncome, currentLoss: row.currentLoss.abs(), priorLoss: row.priorYearSuspendedLoss,
+      totalAllowedLoss: alloc?.allowedLoss ?? d("0"), currentQualifiesForQbi: prop?.qualifiesForQBI === true, tracking });
+    if (tracked.priorQualifiedLoss.gt(0) && excessBusinessLossAddback.gt(0)) {
+      throw new Error("Released passive QBI losses require actual post-passive limitation allocation before entering QBI");
     }
+    rentalLossQbi.set(k1PassiveCount + ri, tracked);
+    audit.merge(tracked.lines);
+    releasedPriorQualifiedRentalLoss = releasedPriorQualifiedRentalLoss.plus(tracked.priorQualifiedLoss);
+    if (tracked.priorActiveQualifiedLoss === undefined) releasedPriorActiveRentalLoss = undefined;
+    else if (releasedPriorActiveRentalLoss !== undefined) releasedPriorActiveRentalLoss = releasedPriorActiveRentalLoss.plus(tracked.priorActiveQualifiedLoss);
+    const rentalQBI = tracked.currentYearQbi;
     if (!rentalQBI.isZero()) {
-      qbiSources.push({ name: rental.description, qbi: rentalQBI });
+      qbiSources.push({ name: rental.description, qbi: rentalQBI, materiallyParticipated: prop.qbiMateriallyParticipated });
       audit.record("1040", "13-QBI-rental", `Rental QBI: ${rental.description}`,
         rentalQBI,
-        rentalQBI.isPositive()
-          ? "Full net rental income (Rev. Proc. 2019-38 qualifying activity)"
-          : `Form 8582-allowed rental loss of $${rentalQBI} (suspended portion excluded from QBI)`);
+        "Qualified current income less current losses allowed after FIFO prior use; released prior qualified losses transferred separately");
     }
   }
 
@@ -2119,108 +2890,248 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     }
   }
 
-  let qbiDeduction = new Decimal(0);
-  const taxableIncomeBeforeQBI = zeroFloor(agi.minus(deductionAmount));
-  let form8995Result: import("./forms/form-8995.js").Form8995Result | undefined;
-  let form8995AResult: import("./forms/form-8995-a.js").Form8995AResult | undefined;
+  function computeQBI(selectedDeduction: Decimal, otherDeductions: Decimal) {
+    let qbiDeduction = new Decimal(0);
+    const taxableIncomeBeforeQBI = zeroFloor(agi.minus(selectedDeduction).minus(otherDeductions));
+    let form8995Result: import("./forms/form-8995.js").Form8995Result | undefined;
+    let form8995AResult: import("./forms/form-8995-a.js").Form8995AResult | undefined;
+    if (nol?.stage === "income" || (nol?.stage === "alternative-income" && nol.modified)) return { qbiDeduction, form8995Result, form8995AResult };
+    if (nol?.stage === "alternative-income" && nol.actualRegularQbiDeduction !== undefined) {
+      if (!nol.actualRegularQbiDeduction.isFinite() || nol.actualRegularQbiDeduction.lt(0)) throw new Error("Actual AMT replay requires the completed nonnegative regular199A deduction");
+      return { qbiDeduction: nol.actualRegularQbiDeduction, form8995Result, form8995AResult };
+    }
 
-  const hasQBISources = qbiSources.length > 0 || qualifiedReitDividends.greaterThan(0) || !qualifiedPTPIncome.isZero();
-  if (hasQBISources && taxableIncomeBeforeQBI.greaterThan(0)) {
-    const qbiThreshold = constants.qbi.simplifiedThreshold[filingStatus];
-    const priorQBILoss = input.priorYear?.qbiLossCarryforward
-      ? d(input.priorYear.qbiLossCarryforward)
-      : undefined;
+    const hasQBISources = qbiSources.length > 0 || qualifiedReitDividends.greaterThan(0) || !qualifiedPTPIncome.isZero()
+      || d(input.priorYear?.qbiLossCarryforward).gt(0) || releasedPriorQualifiedRentalLoss.gt(0);
+    if (hasQBISources && (year === 2026 || taxableIncomeBeforeQBI.greaterThan(0) || input.qbiLossSources !== undefined)) {
+      const qbiThreshold = constants.qbi.simplifiedThreshold[filingStatus];
+      const priorQBILoss = d(input.priorYear?.qbiLossCarryforward).plus(releasedPriorQualifiedRentalLoss);
+      const priorYearActiveQBILoss = releasedPriorActiveRentalLoss !== undefined
+        && (!d(input.priorYear?.qbiLossCarryforward).gt(0) || input.priorYear?.activeQbiLossCarryforward !== undefined)
+        ? d(input.priorYear?.activeQbiLossCarryforward).plus(releasedPriorActiveRentalLoss) : undefined;
 
-    if (taxableIncomeBeforeQBI.lte(qbiThreshold)) {
-      // Simplified Form 8995: no W-2/UBIA limitations, no SSTB phase-out
-      form8995Result = calculateForm8995({
-        qbiSources,
-        qualifiedReitDividends,
-        qualifiedPTPIncome,
-        priorYearQBILoss: priorQBILoss,
-        taxableIncomeBeforeQBI,
-        netCapitalGain: min(schedD.netLongTerm, schedD.netCapitalGainLoss),
-        qualifiedDividends,
-      });
-      audit.merge(form8995Result.lines);
-      qbiDeduction = form8995Result.qbiDeduction;
-    } else {
-      // Detailed Form 8995-A: W-2/UBIA limitations and SSTB phase-out apply
-      // Build per-business sources with W-2 wages, UBIA, and SSTB status
-      const qbiBusinessSources: QBIBusinessSource[] = qbiSources.map((source) => {
-        // Look up W-2/UBIA/SSTB metadata from original input
-        let w2Wages = new Decimal(0);
-        let ubia = new Decimal(0);
-        let isSST = false;
-        if (input.scheduleC && source.name === (input.scheduleC.businessName ?? "Schedule C")) {
-          w2Wages = d(input.scheduleC.w2WagesPaid ?? "0");
-          ubia = d(input.scheduleC.ubiaQualifiedProperty ?? "0");
-          isSST = input.scheduleC.isSST ?? false;
-        } else if (input.scheduleF && source.name === (input.scheduleF.principalCropOrActivity ?? "Schedule F")) {
-          w2Wages = d(input.scheduleF.w2WagesPaid ?? "0");
-          ubia = d(input.scheduleF.ubiaQualifiedProperty ?? "0");
-          // Farms are not SSTBs under IRC §199A(d)(2)
-        } else {
-          // Rental property source: look up by property description
-          const rental = (input.rentalProperties ?? []).find((rp) => rp.description === source.name);
-          if (rental?.qualifiesForQBI) {
-            w2Wages = d(rental.qbiW2Wages ?? "0");
-            ubia = d(rental.qbiUBIA ?? "0");
-            isSST = rental.qbiIsSST ?? false;
+      if (taxableIncomeBeforeQBI.lte(qbiThreshold)) {
+        // Simplified Form 8995: no W-2/UBIA limitations, no SSTB phase-out
+        form8995Result = calculateForm8995({
+          taxYear: year,
+          priorYearActiveQBILoss,
+          qbiSources,
+          qualifiedReitDividends,
+          qualifiedPTPIncome,
+          priorYearQBILoss: priorQBILoss,
+          taxableIncomeBeforeQBI,
+          netCapitalGain: min(schedD.netLongTerm, schedD.netCapitalGainLoss),
+          qualifiedDividends,
+        });
+        qbiDeduction = form8995Result.qbiDeduction;
+      } else {
+        // Detailed Form 8995-A: W-2/UBIA limitations and SSTB phase-out apply
+        // Build per-business sources with W-2 wages, UBIA, and SSTB status
+        const qbiBusinessSources: QBIBusinessSource[] = qbiSources.map((source) => {
+          // Look up W-2/UBIA/SSTB metadata from original input
+          let w2Wages = new Decimal(0);
+          let ubia = new Decimal(0);
+          let isSST = false;
+          if (input.scheduleC && source.name === (input.scheduleC.businessName ?? "Schedule C")) {
+            w2Wages = d(input.scheduleC.w2WagesPaid ?? "0");
+            ubia = d(input.scheduleC.ubiaQualifiedProperty ?? "0");
+            isSST = input.scheduleC.isSST ?? false;
+          } else if (input.scheduleF && source.name === (input.scheduleF.principalCropOrActivity ?? "Schedule F")) {
+            w2Wages = d(input.scheduleF.w2WagesPaid ?? "0");
+            ubia = d(input.scheduleF.ubiaQualifiedProperty ?? "0");
+            // Farms are not SSTBs under IRC §199A(d)(2)
           } else {
-            // K-1 source: look up by partnership name
-            const k1 = input.scheduleK1.find((k) => k.partnershipName === source.name);
-            if (k1) {
-              w2Wages = d(k1.section199AW2Wages ?? "0");
-              ubia = d(k1.section199AUBIA ?? "0");
-              isSST = k1.section199AIsSST ?? false;
+            // Rental property source: look up by property description
+            const rental = (input.rentalProperties ?? []).find((rp) => rp.description === source.name);
+            if (rental?.qualifiesForQBI) {
+              w2Wages = d(rental.qbiW2Wages ?? "0");
+              ubia = d(rental.qbiUBIA ?? "0");
+              isSST = rental.qbiIsSST ?? false;
             } else {
-              // K-1 Form 1041 source: look up by estate/trust name
-              const k1_1041 = k1Form1041s.find((k) => k.estateTrustName === source.name);
-              if (k1_1041) {
-                w2Wages = d(k1_1041.section199AW2Wages ?? "0");
-                ubia = d(k1_1041.section199AUBIA ?? "0");
-                isSST = k1_1041.section199AIsSST ?? false;
+              // K-1 source: look up by partnership name
+              const k1 = input.scheduleK1.find((k) => k.partnershipName === source.name);
+              if (k1) {
+                w2Wages = d(k1.section199AW2Wages ?? "0");
+                ubia = d(k1.section199AUBIA ?? "0");
+                isSST = k1.section199AIsSST ?? false;
+              } else {
+                // K-1 Form 1041 source: look up by estate/trust name
+                const k1_1041 = k1Form1041s.find((k) => k.estateTrustName === source.name);
+                if (k1_1041) {
+                  w2Wages = d(k1_1041.section199AW2Wages ?? "0");
+                  ubia = d(k1_1041.section199AUBIA ?? "0");
+                  isSST = k1_1041.section199AIsSST ?? false;
+                }
               }
             }
           }
-        }
-        return { name: source.name, qbi: source.qbi, w2Wages, ubia, isSST };
-      });
+          return { name: source.name, qbi: source.qbi, w2Wages, ubia, isSST, materiallyParticipated: source.materiallyParticipated };
+        });
 
-      // Part IV aggregation elections from taxpayer input
-      const aggregationElections = (input.priorYear?.qbiAggregationElections ?? []).map((e) => ({
-        name: e.name,
-        componentBusinessNames: e.componentBusinessNames,
-      }));
+        // Part IV aggregation elections from taxpayer input
+        const aggregationElections = (input.priorYear?.qbiAggregationElections ?? []).map((e) => ({
+          name: e.name,
+          componentBusinessNames: e.componentBusinessNames,
+        }));
 
-      form8995AResult = calculateForm8995A({
-        qbiSources: qbiBusinessSources,
-        ptpSources: ptpSources.length > 0 ? ptpSources : undefined,
-        qualifiedReitDividends,
-        aggregationElections: aggregationElections.length > 0 ? aggregationElections : undefined,
-        priorYearQBILoss: priorQBILoss,
-        taxableIncomeBeforeQBI,
-        netCapitalGain: min(schedD.netLongTerm, schedD.netCapitalGainLoss),
-        qualifiedDividends,
-        simplifiedThreshold: qbiThreshold,
-        phaseInRange: constants.qbi.phaseInRange[filingStatus],
+        form8995AResult = calculateForm8995A({
+          taxYear: year,
+          priorYearActiveQBILoss,
+          qbiSources: qbiBusinessSources,
+          ptpSources: ptpSources.length > 0 ? ptpSources : undefined,
+          qualifiedReitDividends,
+          aggregationElections: aggregationElections.length > 0 ? aggregationElections : undefined,
+          priorYearQBILoss: priorQBILoss,
+          taxableIncomeBeforeQBI,
+          netCapitalGain: min(schedD.netLongTerm, schedD.netCapitalGainLoss),
+          qualifiedDividends,
+          simplifiedThreshold: qbiThreshold,
+          phaseInRange: constants.qbi.phaseInRange[filingStatus],
+        });
+        qbiDeduction = form8995AResult.qbiDeduction;
+      }
+    }
+    return { qbiDeduction, form8995Result, form8995AResult };
+  }
+  let qbiCalculation = computeQBI(deductionAmount, additionalDeductions);
+  let itemizedDeductionReduction = new Decimal(0);
+  if (year === 2026) {
+    const availableHistoricalNol = d(input.priorYear?.nolCarryforward ?? input.priorYear?.excessBusinessLossNOL).plus(k1Form1041FinalNOL);
+    if (availableHistoricalNol.gt(0) && !nol) throw new Error("2026 NOL and deduction coordination is not yet supported");
+    if (deductionUsed === "itemized") {
+      const topBracket = constants.taxBrackets[filingStatus].find(bracket => bracket.rate.eq("0.37"));
+      if (!topBracket) throw new Error("Missing 37% bracket for itemized limitation");
+      const limitation = calculateItemizedDeductionLimit({
+        taxYear: year, itemizedDeductions,
+        taxableIncomeBeforeItemized: agi.minus(qbiCalculation.qbiDeduction).minus(schedule1A?.totalDeduction ?? d("0"))
+          .plus(nol?.modified ? schedule1A?.seniorDeduction ?? d("0") : d("0")),
+        topBracketThreshold: topBracket.min,
       });
-      audit.merge(form8995AResult.lines);
-      qbiDeduction = form8995AResult.qbiDeduction;
+      audit.merge(limitation.lines);
+      itemizedDeductionReduction = limitation.reduction;
+      itemizedDeductions = limitation.allowedDeduction;
+      if (deductionElection === "automatic" && standardDeductionWorksheet.eligibleForStandardDeduction
+        && itemizedDeductions.lte(standardDeduction.plus(schedA.nonitemizerCharitableDeduction))) {
+        deductionUsed = "standard";
+        deductionAmount = standardDeduction;
+        nonitemizerCharitableDeduction = schedA.nonitemizerCharitableDeduction;
+        additionalDeductions = (schedule1A?.totalDeduction ?? d("0")).plus(nonitemizerCharitableDeduction);
+        if (nol?.modified) additionalDeductions = additionalDeductions.minus(schedule1A?.seniorDeduction ?? d("0"));
+        qbiCalculation = computeQBI(deductionAmount, additionalDeductions);
+      } else {
+        deductionAmount = itemizedDeductions;
+      }
     }
   }
+  const { qbiDeduction, form8995Result, form8995AResult } = qbiCalculation;
+  if (year === 2026 && deductionUsed !== "itemized" && schedA.charitableCarryforward.gt(0)
+    && !schedA.nonitemizedCharitableCarryover && !schedA.currentCharitableCandidates && !schedA.priorCashCurrentProperty && !schedA.determinedCharitableFloor) {
+    throw new Error("Nonitemized charitable carry requires the complete supported otherwise-allowable source method; retained sources cannot bypass current/prior floor proof");
+  }
+  audit.merge(calculateFederalDeductionSelection({ taxYear: year, election: deductionElection,
+    eligibleForStandardDeduction: standardDeductionWorksheet.eligibleForStandardDeduction, standardDeduction,
+    itemizedDeductions, nonitemizerCharitableDeduction: schedA.nonitemizerCharitableDeduction }).lines);
+  if (input.charitableCarryoverSources) {
+    schedA.charitableTreatment = calculateSelectedCharitableCarryover({ taxYear: year, deductionMethod: deductionUsed, scheduleA: schedA });
+    audit.merge(schedA.charitableTreatment.lines);
+  }
+  // A newly suspended SSTB loss retains this year's applicable percentage.
+  // Future utilization must not substitute that future year's SSTB status.
+  const originatingQbiTaxableIncome = form8995Result?.taxableIncomeBeforeQBI ?? form8995AResult?.taxableIncomeBeforeQBI
+    ?? zeroFloor(agi.minus(deductionAmount).minus(additionalDeductions));
+  const originatingSstPercentage = Decimal.max(0, Decimal.min(1, d("1").minus(
+    Decimal.max(0, originatingQbiTaxableIncome.minus(constants.qbi.simplifiedThreshold[filingStatus]))
+      .div(constants.qbi.phaseInRange[filingStatus]))));
+  for (const [sourceIndex, tracked] of rentalLossQbi) {
+    const prop = input.rentalProperties[sourceIndex - k1PassiveCount];
+    if (!prop?.qualifiesForQBI || !prop.qbiIsSST) continue;
+    tracked.remainingVintages = tracked.remainingVintages.map(vintage => {
+      if (vintage.taxYear !== year) return vintage;
+      const qualifiedOriginalLoss = roundDollar(vintage.originalLoss.times(originatingSstPercentage));
+      // A new columnA vintage is only the loss actually suspended this year.
+      // No utilization precedes its opening columnI qualified balance.
+      const qualifiedRemainingLoss = qualifiedOriginalLoss;
+      audit.record("Passive Loss QBI", `${prop.description}:originating-SSTB`, "Originating-year suspended SSTB qualified loss", qualifiedOriginalLoss,
+        "Actual originating-year taxable income determines the fixed qualified percentage retained for future release",
+        { "Taxable income before QBI": originatingQbiTaxableIncome, "Applicable percentage": originatingSstPercentage,
+          "Original loss": vintage.originalLoss, "Qualified loss remaining": qualifiedRemainingLoss });
+      return { ...vintage, qualifiedOriginalLoss, qualifiedRemainingLoss };
+    });
+  }
+  for (const activity of k1QbiLosses.activities) {
+    if (!input.scheduleK1[activity.k1Index].section199AIsSST) continue;
+    for (const stage of activity.stages) {
+      stage.remainingVintages = stage.remainingVintages.map(vintage => {
+        if (vintage.taxYear !== year || stage.sourceCurrentLoss.isZero()) return vintage;
+        const rawSuspendedLoss = stage.sourceCurrentLoss.minus(stage.currentAllowedLoss);
+        const qualifiedOriginalLoss = roundDollar(rawSuspendedLoss.times(stage.sourceCurrentQualifiedLoss)
+          .div(stage.sourceCurrentLoss).times(originatingSstPercentage));
+        audit.record("QBI Loss Character", `${activity.sourceId}:${stage.limitation}:originating-SSTB`,
+          "Originating-year suspended SSTB qualified loss", qualifiedOriginalLoss,
+          "Actual original source fraction and originating taxable-income percentage; fixed character retained for future release",
+          { "Taxable income before QBI": originatingQbiTaxableIncome, "Applicable percentage": originatingSstPercentage,
+            "Original loss": vintage.originalLoss });
+        return { ...vintage, qualifiedOriginalLoss, qualifiedRemainingLoss: qualifiedOriginalLoss };
+      });
+    }
+    if (activity.excessBusinessLossVintage && activity.excessBusinessLossCurrentOrigin) {
+      const original = input.scheduleK1[activity.k1Index];
+      const vintage = activity.excessBusinessLossVintage;
+      const qualifiedOriginalLoss = roundDollar(vintage.originalLoss.times(d(original.section199AQBI).abs())
+        .div(d(original.ordinaryIncome).abs()).times(originatingSstPercentage));
+      activity.excessBusinessLossVintage = { ...vintage, qualifiedOriginalLoss, qualifiedRemainingLoss: qualifiedOriginalLoss };
+      audit.record("QBI EBL Character", `${activity.sourceId}:originating-SSTB`, "Originating-year EBL suspended SSTB character", qualifiedOriginalLoss,
+        "Actual current EBL source fraction and originating taxable-income percentage; prior released character is never requalified",
+        { "Original loss": vintage.originalLoss, "Applicable percentage": originatingSstPercentage });
+    }
+  }
+  if (form8995Result) audit.merge(form8995Result.lines);
+  if (form8995AResult) audit.merge(form8995AResult.lines);
+  audit.record("1040", "12", "Standard or itemized deduction", deductionAmount, `${deductionUsed} deduction selected after applicable limitations`);
+  audit.record("1040", "nonitemizer-charity", "Nonitemizer charitable deduction", nonitemizerCharitableDeduction,
+    "2026 current eligible cash under section170(p); actual nonitemization is distinct from standard deduction eligibility");
   audit.record("1040", "13", "Section 199A deduction", qbiDeduction,
     qbiDeduction.isZero() ? "No QBI sources or zero deduction" :
     form8995AResult ? `Form 8995-A: $${qbiDeduction}` : `Form 8995: $${qbiDeduction}`);
 
   // Line 14: Total deductions = Line 12 + Line 13
-  const totalDeduction = deductionAmount.plus(qbiDeduction);
-  audit.record("1040", "14", "Total deductions", totalDeduction, "Line 12 + Line 13");
+  const totalDeduction = deductionAmount.plus(qbiDeduction).plus(additionalDeductions);
+  audit.record("1040", "14", "Total deductions", totalDeduction, "Line 12 + Line 13a QBI + Line 13b Schedule 1-A");
 
   // Line 15: Taxable income (preliminary, before NOL deduction)
   const rawTaxableIncome = agi.minus(totalDeduction); // before zero-floor, needed by carryforward worksheet
   const preNolTaxableIncome = zeroFloor(rawTaxableIncome);
+  const amtIncomeInput = (income: Decimal, regularNolDeduction?: Decimal, alternativeTaxNolDeduction?: Decimal): Form6251IncomeInput => ({
+    taxableIncome: income, regularNolDeduction, alternativeTaxNolDeduction, totalDeductions: totalDeduction,
+    standardDeductionAmount: deductionUsed === "standard" ? deductionAmount : d("0"),
+    seniorDeduction: nol?.modified ? d("0") : schedule1A?.seniorDeduction,
+    saltDeduction: schedA.saltDeduction.plus(schedA.foreignIncomeTaxDeduction),
+    investmentInterestAdjustment: form4952Amt && form4952
+      ? deductionUsed === "itemized" ? form4952.line8.minus(form4952Amt.line8) : d("0") : undefined,
+    depletionAdjustment: k1Agg.amtDepletion,
+    specifiedPrivateActivityBondInterest: form6251BondSources.privateActivityBondInterest.plus(form8814AmtSources.privateActivityBondInterest),
+    section1202Preference: nol?.modified ? d("0") : schedD.section1202AmtPreference,
+    dispositionAdjustment: k1Agg.amtAdjustedGainOrLoss,
+    depreciationAdjustment: k1Agg.amtDepreciationAdjustment,
+    otherAdjustments: k1Agg.amtOtherItems.plus(k1Form1041AmtAdjustment)
+      .plus(nol?.stage === "final" ? nol.worksheet.priorCharitableAlternativeAdjustment?.amount ?? d("0") : d("0"))
+      .minus(deductionUsed === "itemized" ? itemizedDeductionReduction : d("0")),
+    filingStatus, isItemizing: deductionUsed === "itemized",
+  });
+  if (nol?.stage === "income") return {
+    agi, taxableIncome: rawTaxableIncome, iraDeduction: sched1.iraDeduction, socialSecurityBenefitsTaxable,
+    allowedPassiveLoss: form8582.allowedLoss, medicalDeduction: schedA.medicalDeduction,
+    charitableDeduction: schedA.charitableTotal, charitableCarryforward: schedA.charitableCarryforward,
+    deductionUsed,
+    currentExcessBusinessLoss: excessBusinessLossAddback,
+    seniorDeduction: nol.modified ? schedule1A?.seniorDeduction ?? d("0") : d("0"),
+    capitalLossModification: nolCapitalLossModification, section1202Modification: nolSection1202Modification,
+    lines: audit.getLines(),
+  };
+  if (nol?.stage === "alternative-income") return {
+    ...calculateForm6251(amtIncomeInput(rawTaxableIncome, nol.deduction, d("0")), constants, { incomeOnly: true }), qbiDeduction,
+  };
+  if (marketplace && marketplace.stage !== "final" && marketplace.stage !== "full-repayment" && marketplace.stage !== "actual-cash" && marketplace.stage !== "actual-paid") throw new Error("Interim Marketplace income must return before final tax calculations.");
 
   // ── IRC §172: Net Operating Loss Deduction ──────────────
   // For post-2017 NOLs, the deduction is limited to 80% of taxable income
@@ -2236,15 +3147,15 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
       .plus(k1Form1041FinalNOL)
   );
   const nolLimit = preNolTaxableIncome.times(new Decimal("0.8"));
-  const nolDeduction = Decimal.min(availableNOL, nolLimit);
+  const nolDeduction = nol?.deduction ?? Decimal.min(availableNOL, nolLimit);
 
   let taxableIncome = preNolTaxableIncome;
-  if (nolDeduction.greaterThan(0)) {
+  if (nolDeduction.greaterThan(0) && !nol) {
     taxableIncome = zeroFloor(preNolTaxableIncome.minus(nolDeduction));
     // Adjust AGI to reflect the NOL deduction for output purposes.
     // The NOL deduction enters Schedule 1 as negative other income, reducing AGI.
     agi = agi.minus(nolDeduction);
-    audit.record("Sched 1", "8a", "Net operating loss deduction", nolDeduction.negated(),
+    audit.record("NOL Deduction Worksheet", "deduction", "Net operating loss deduction", nolDeduction,
       "IRC §172 NOL deduction limited to 80% of pre-NOL taxable income",
       {
         "Available NOL carryforward": availableNOL,
@@ -2255,8 +3166,42 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     audit.record("1040", "11-nol", "AGI adjusted for NOL deduction", agi,
       `Reduced by $${nolDeduction} NOL deduction on Schedule 1 Line 8a`);
   }
+  sched1 = finalizeSchedule1(sched1, {
+    supplementalIncome: adjustedScheduleETotal.plus(passiveIncomeAdjustment).minus(ptpReleasedTotal),
+    nolDeduction,
+    excessBusinessLoss: excessBusinessLossAddback,
+    digitalAssetIncome: cryptoHobbyIncome,
+    estateTerminationDeduction: k1Form1041Section67eDeductions,
+    otherIncomeItems: [
+      { source: "Government RTAA", amount: form1099G.taxableRtaa },
+      { source: "Government nonbusiness taxable grants", amount: form1099G.taxableGrants },
+      { source: "State PFML family-leave benefits", amount: form1099G.taxableFamilyLeave },
+      { source: "Form1099-MISC other income", amount: miscAgg.otherIncome },
+      { source: "Form1099-MISC unclassified rents", amount: miscAgg.rents },
+      { source: "HSA returned-excess earnings", amount: form1099SA.hsaReturnedExcessContributionEarnings },
+      { source: "HSA post-death earnings", amount: form1099SA.hsaPostDeathEarnings },
+      { source: "HSA9100 returned-excess earnings", amount: d(input.form5329?.supportedHsaReturnedExcessContributionEarningsUnder9100Relief).plus(sched1.hsaReliefEarnings) },
+      { source: "HSA excess employer contributions not in wages", amount: sched1.hsaExcessEmployerIncome },
+      { source: "Form8814 child election income", amount: form8814OtherIncome },
+      { source: "QTP/Coverdell taxable earnings", amount: form1099QTaxableEarnings },
+      { source: "Actual prior-year mortgage interest recovery", amount: mortgageInterestRecovery },
+      { source: "Section280F recapture compatibility", amount: section280FRecapture },
+      { source: "K1(Form1041) other portfolio income", amount: k1Form1041OtherPortfolio },
+    ],
+  });
+  if (!nol) totalIncome = totalIncome.minus(nolDeduction);
+  const reconciledTotalIncome = sum(totalWages,totalTaxableInterest,totalDividends,iraTaxable,
+    pensionTaxable,socialSecurityBenefitsTaxable,capitalGainLoss,sched1.totalAdditionalIncome);
+  if (!totalIncome.eq(reconciledTotalIncome) || !sched1.totalAdjustments.eq(adjustments)
+    || !totalIncome.minus(adjustments).eq(agi)) {
+    throw new Error("Final Schedule1 income and adjustments must reconcile with Form1040");
+  }
+  audit.merge(sched1.lines);
+  audit.record("1040", "8", "Additional income", sched1.totalAdditionalIncome, "Final Schedule1line10");
+  audit.record("1040", "9", "Total income", totalIncome, "Sum final Lines1z,2b,3b,4b,5b,6b,7,8");
+  audit.record("1040", "11", "Adjusted gross income", agi, "Line 9 - Line 10");
   audit.record("1040", "15", "Taxable income", taxableIncome,
-    nolDeduction.greaterThan(0)
+    nolDeduction.greaterThan(0) && !nol
       ? "AGI - total deductions - NOL deduction"
       : "AGI - total deductions");
 
@@ -2275,23 +3220,38 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   // and only the net capital gain enters the preferential rate computation.
   // Form 8814 Line 10 capital gain distributions are long-term and must enter
   // the QDCG preferential-rate computation alongside Schedule D amounts.
-  const netLTCG = zeroFloor(min(schedD.netLongTerm, schedD.netCapitalGainLoss)).plus(form8814CapitalGains);
+  const netLTCG = zeroFloor(min(schedD.netLongTerm, schedD.netCapitalGainLoss));
 
   // Aggregate special-rate capital gains from 1099-DIV, K-1, home sale depreciation recapture,
   // and Form 4797 Part III unrecaptured section 1250 gain from business property sales
   const homeSaleDepreciationRecapture = schedD.homeSales?.totalDepreciationRecapture ?? new Decimal(0);
-  const section1250Gain = sum(
+  const section1250Gain = schedD.specialGainWorksheets?.unrecapturedSection1250Gain ?? sum(
+    form8814IncomeCharacter.unrecapturedSection1250Gain,
     divAgg.section1250Gain,
     k1Agg.unrecapturedSection1250Gain,
     ...(input.scheduleK1Form1041 ?? []).map((k) => d(k.unrecapturedSection1250Gain)),
     homeSaleDepreciationRecapture,
     form4797.totalUnrecapturedSection1250Gain
   );
-  const collectiblesGain = sum(
+  const collectiblesGain = schedD.specialGainWorksheets?.collectiblesGain ?? sum(
+    form8814IncomeCharacter.collectiblesGain,
     divAgg.collectiblesGain,
     k1Agg.collectiblesGain,
     ...(input.scheduleK1Form1041 ?? []).map((k) => d(k.collectiblesGain))
   );
+
+  if (form4952 && (form4952HasActualSources || form4952.line4g.gt(0))
+    && form4952.line4b.gt(roundDollar(qualifiedDividends))) {
+    throw new Error("Form4952 qualified-dividend sources exceed actual reported qualified dividends");
+  }
+  const investmentIncomeElection = form4952?.line4g ?? new Decimal(0);
+  const electionCapitalGainAmount = form4952?.hasExplicitCapitalGainElection
+    ? form4952.electedNetCapitalGain : form4952?.line4e ?? new Decimal(0);
+  const electedCapitalGain = form4952?.electedNetCapitalGain ?? new Decimal(0);
+  const electedQualifiedDividends = form4952?.electedQualifiedDividends ?? new Decimal(0);
+  if (investmentIncomeElection.gt(0) && (input.form8615 || input.scheduleJ)) {
+    throw new Error("Form4952 election requires separate Form8615 or ScheduleJ source coordination");
+  }
 
   // When Form 2555 is present, apply the Foreign Earned Income Tax Worksheet
   // stacking rule: compute tax as if excluded income were still included, then
@@ -2300,35 +3260,66 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   let incomeTax: Decimal;
   let ordinaryTax: Decimal;
   let preferentialTax: Decimal;
-  const form2555TotalExclusion = form2555?.totalExclusion ?? new Decimal(0);
+  let regularCapitalGainsWorksheet: ReturnType<typeof calculateCapitalGainsTax>;
+  const form2555WorksheetAmount = form2555IncomeReduction.plus(form2555HousingDeduction);
+  const foreignDisallowedDeductionsInput = input.form2555?.foreignEarnedIncomeTaxWorksheetDisallowedDeductions;
+  if (form2555 && year === 2026 && foreignDisallowedDeductionsInput === undefined) {
+    throw new Error("Foreign earned income tax worksheet disallowed deductions are unknown");
+  }
+  const foreignDisallowedDeductions = d(foreignDisallowedDeductionsInput);
+  if (!foreignDisallowedDeductions.isFinite() || foreignDisallowedDeductions.lt(0)) {
+    throw new Error("Foreign earned income tax worksheet disallowed deductions must be finite and nonnegative");
+  }
+  const form2555StackingAmount = zeroFloor(form2555WorksheetAmount.minus(foreignDisallowedDeductions));
 
-  if (form2555 && form2555TotalExclusion.greaterThan(0)) {
-    // Step 1: Tax on (taxable income + total exclusion) using QDCG worksheet
-    const stackedIncome = taxableIncome.plus(form2555TotalExclusion);
+  if (form2555 && form2555StackingAmount.greaterThan(0) && taxableIncome.gt(0)) {
+    const stackedIncome = taxableIncome.plus(form2555StackingAmount);
+    // Worksheet footnote: deductions may consume preferential income. Adding
+    // excluded foreign earnings must not restore those untaxed capital gains.
+    const postElectionPreferentialIncome = zeroFloor(qualifiedDividends.minus(electedQualifiedDividends)).plus(zeroFloor(netLTCG.minus(electedCapitalGain)));
+    const capitalGainExcess = zeroFloor(postElectionPreferentialIncome.minus(taxableIncome));
     const taxWithExclusion = calculateCapitalGainsTax(
       stackedIncome, qualifiedDividends, netLTCG, filingStatus, constants,
-      { section1250Gain, collectiblesGain }
+      {
+        section1250Gain: zeroFloor(section1250Gain.minus(capitalGainExcess)),
+        collectiblesGain: zeroFloor(collectiblesGain.minus(capitalGainExcess)),
+        investmentIncomeElection, electionCapitalGainAmount,
+        foreignCapitalGainExcess: capitalGainExcess,
+      }
     );
-    // Step 2: Tax on just the excluded amount using ordinary brackets
-    const taxOnExcluded = calculateTaxFromBrackets(
-      form2555TotalExclusion, constants.taxBrackets[filingStatus]
+    regularCapitalGainsWorksheet = taxWithExclusion;
+    const taxOnExcluded = calculateRegularIncomeTax(
+      form2555StackingAmount, filingStatus, constants
     );
-    // Step 3: Actual tax = step 1 - step 2 (floored at zero)
+    audit.merge(taxWithExclusion.lines);
     incomeTax = zeroFloor(taxWithExclusion.tax.minus(taxOnExcluded));
     ordinaryTax = zeroFloor(taxWithExclusion.ordinaryTax.minus(taxOnExcluded));
-    preferentialTax = taxWithExclusion.preferentialTax;
+    preferentialTax = incomeTax.minus(ordinaryTax);
+    for (const [line, label, value, formula] of [
+      ["1", "Taxable income", taxableIncome, "Form1040line15"],
+      ["2a", "Net exclusion and housing deduction", form2555WorksheetAmount, "Form2555lines45+50"],
+      ["2b", "Disallowed itemized deductions or exclusions", foreignDisallowedDeductions, "Actual source worksheet amount"],
+      ["2c", "Adjusted excluded amount", form2555StackingAmount, "max(0,line2a-line2b)"],
+      ["3", "Income including adjusted exclusion", stackedIncome, "line1+line2c"],
+      ["4", "Tax on income including exclusion", taxWithExclusion.tax, "Applicable tax computation after capital-gain-excess adjustment"],
+      ["5", "Tax on adjusted excluded amount", taxOnExcluded, "Ordinary tax on line2c"],
+      ["6", "Tax after foreign exclusion", incomeTax, "max(0,line4-line5)"],
+      ["capitalGainExcess", "Capital gain excess", capitalGainExcess, "max(0,preferential gains-line1)"],
+    ] as const) audit.record("FEI Tax WS",line,label,value,formula);
     audit.record("1040", "16", "Tax", incomeTax,
-      `Foreign Earned Income Tax Worksheet stacking rule: tax on $${stackedIncome} minus tax on excluded $${form2555TotalExclusion}`,
-      { stackedIncome, taxWithExclusion: taxWithExclusion.tax, taxOnExcluded, form2555TotalExclusion });
+      `Foreign Earned Income Tax Worksheet: tax on $${stackedIncome} minus tax on adjusted excluded $${form2555StackingAmount}`,
+      { stackedIncome, taxWithExclusion: taxWithExclusion.tax, taxOnExcluded, form2555StackingAmount });
   } else {
     const result = calculateCapitalGainsTax(
       taxableIncome, qualifiedDividends, netLTCG, filingStatus, constants,
-      { section1250Gain, collectiblesGain }
+      { section1250Gain, collectiblesGain, investmentIncomeElection, electionCapitalGainAmount }
     );
+    regularCapitalGainsWorksheet = result;
     incomeTax = result.tax;
     ordinaryTax = result.ordinaryTax;
     preferentialTax = result.preferentialTax;
-    audit.record("1040", "16", "Tax", incomeTax, "QDCG Worksheet (ordinary + preferential rates)");
+    audit.merge(result.lines);
+    audit.record("1040", "16", "Tax", incomeTax, `${result.method}; ${result.regularTaxSource}`);
   }
 
   // ── Form 8615: Kiddie Tax ────────────────────────────────
@@ -2391,38 +3382,250 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     }
   }
 
-  // ── Aggregate K-1 Box 17 AMT items for Form 6251 ────────
-  const k1AmtDepreciation = k1Agg.amtDepreciationAdjustment;
-  const k1AmtDisposition = k1Agg.amtAdjustedGainOrLoss;
-  const k1AmtDepletion = k1Agg.amtDepletion;
-  const k1AmtOther = k1Agg.amtOtherItems;
+  // A deduction-year carryover uses the credit-election regular tax and actual
+  // deduction choice, with no second complete return or hypothetical filing tax.
+  const foreignTaxOrdinaryIncomeOnly = totalIncome.eq(sum(totalWages, totalTaxableInterest, totalDividends))
+    && adjustments.isZero() && qualifiedDividends.isZero() && capitalGainLoss.isZero()
+    && nolDeduction.isZero() && qbiDeduction.isZero() && nonitemizerCharitableDeduction.isZero()
+    && additionalDeductions.eq(schedule1A?.seniorDeduction ?? d("0"))
+    && !marketplace && !input.form8962 && !input.form8936 && !input.form2555;
+  const foreignTaxOrdinaryContext = (): ForeignTaxHypotheticalContext => {
+    if (!foreignTaxOrdinaryIncomeOnly) throw new Error("Foreign credit requires the supported actual ordinary-income source method");
+    const sourceLine = (id: string): Decimal => {
+      const matches = schedA.lines.filter(line => line.form === "Sched A" && line.line === id);
+      if (matches.length !== 1) throw new Error(`Foreign credit requires unique actual ScheduleA line${id}`);
+      return matches[0].value;
+    };
+    return {
+      taxYear: year, filingStatus, totalIncome, agi, totalDeductions: totalDeduction,
+      seniorDeduction: schedule1A?.seniorDeduction ?? d("0"), deductionUsed, deductionAmount, incomeTax,
+      ordinaryIncomeOnly: foreignTaxOrdinaryIncomeOnly,
+      scheduleA: { medical: schedA.medicalDeduction, incomeOrSalesTaxes: sourceLine("5a"),
+        realPropertyTaxes: sourceLine("5b"), personalPropertyTaxes: sourceLine("5c"),
+        saltDeduction: schedA.saltDeduction, salesTaxElected: schedA.salesTaxElected,
+        mortgageInterest: schedA.mortgageInterest, investmentInterest: schedA.investmentInterestDeduction,
+        charitableContributions: schedA.charitableTotal,
+        otherDeductions: sum(schedA.otherItemizedDeductions, schedA.casualtyLossDeduction, schedA.mortgageInsurancePremiums),
+        itemizedReduction: itemizedDeductionReduction },
+    };
+  };
 
-  // Form 6251 feeds Schedule 2 Line 1, which in turn increases Form 1040 Line 18
+  let amtCapitalGainsSources: Form6251Input["capitalGainsSources"];
+  const amtGainFacts = input.amtCapitalGains ?? (schedD.specialGainWorksheets && input.scheduleDSpecialGainSources?.amtBasisAndCarryoversSameAsRegularConfirmed && qualifiedDividends.plus(netLTCG).gt(0) ? {
+    sourceFactsConfirmed: true, sourceTaxYear: year, sourceReference: "Verified same-basis ScheduleD source worksheets",
+    qualifiedDividends: qualifiedDividends.toFixed(), netCapitalGain: netLTCG.toFixed(),
+    section1250Gain: section1250Gain.toFixed(), collectiblesGain: collectiblesGain.toFixed(),
+  } : undefined);
+  if (amtGainFacts) {
+    if (amtGainFacts.sourceFactsConfirmed !== true || amtGainFacts.sourceTaxYear !== year || !amtGainFacts.sourceReference?.trim()) {
+      throw new Error("Actual AMT capital-gain source confirmation and matching source year are required");
+    }
+    if (form2555) throw new Error("Actual AMT foreign-income capital-gain source coordination is required");
+    if (form4952 && !form4952Amt) throw new Error("Actual AMT capital-gain sources require separate AMT Form4952");
+    const amount = (field: "qualifiedDividends" | "netCapitalGain" | "section1250Gain" | "collectiblesGain"): Decimal => {
+      const value = amtGainFacts[field];
+      if (value === undefined) throw new Error(`Actual AMT capital-gain source ${field} is unknown`);
+      const parsed = d(value);
+      if (!parsed.isFinite() || parsed.lt(0)) throw new Error(`Actual AMT capital-gain source ${field} must be finite and nonnegative`);
+      return roundDollar(parsed);
+    };
+    const amtQualifiedDividends = amount("qualifiedDividends");
+    const amtNetCapitalGain = amount("netCapitalGain");
+    const amt1250 = amount("section1250Gain");
+    const amtCollectibles = amount("collectiblesGain");
+    if (schedD.specialGainWorksheets && input.scheduleDSpecialGainSources?.amtBasisAndCarryoversSameAsRegularConfirmed
+      && (!amtQualifiedDividends.eq(roundDollar(qualifiedDividends)) || !amtNetCapitalGain.eq(roundDollar(netLTCG))
+        || !amt1250.eq(section1250Gain) || !amtCollectibles.eq(collectiblesGain))) {
+      throw new Error("Actual AMT gain sources conflict with the confirmed same-basis ScheduleD worksheets");
+    }
+    if (form4952Amt?.line4b.gt(amtQualifiedDividends)) {
+      throw new Error("AMT Form4952 dividend source exceeds the actual AMT gain worksheet");
+    }
+    const dividendsAfterElection = zeroFloor(amtQualifiedDividends.minus(form4952Amt?.electedQualifiedDividends ?? d("0")));
+    const gainsAfterElection = zeroFloor(amtNetCapitalGain.minus(form4952Amt?.electedNetCapitalGain ?? d("0")));
+    const totalPreferential = dividendsAfterElection.plus(gainsAfterElection);
+    const regularSource = (scheduleDLine: string): Decimal => {
+      if (regularCapitalGainsWorksheet.method === "ordinary") return taxableIncome;
+      const form = regularCapitalGainsWorksheet.method === "schedule-d" ? "Sched D Tax WS" : "QDCG WS";
+      const id = regularCapitalGainsWorksheet.method === "schedule-d" ? scheduleDLine : "5";
+      const entry = regularCapitalGainsWorksheet.lines.find(line => line.form === form && line.line === id);
+      if (!entry) throw new Error("Actual regular capital-gain tax worksheet is required for AMT");
+      return entry.value;
+    };
+    const preferentialIncome = totalPreferential.minus(min(gainsAfterElection,amt1250.plus(amtCollectibles)));
+    amtCapitalGainsSources = {
+      preferentialIncome,
+      section1250Gain: amt1250,
+      totalCapitalGainRatesIncome: min(preferentialIncome.plus(amt1250),totalPreferential),
+      regularZeroRateOrdinaryIncome: regularSource("14"),
+      regularFifteenRateOrdinaryIncome: regularSource("21"),
+    };
+  } else if (form4952Amt && qualifiedDividends.plus(netLTCG).gt(0)) {
+    throw new Error("Actual AMT capital-gain source worksheets are required with AMT investment interest");
+  }
+
+  // Form 6251 feeds Schedule 2 Line 2, which in turn increases Form 1040 Line 18
   // before the saver's credit limitation on Form 8880 Line 11 is applied.
-  const form6251 = calculateForm6251(
+  // Actual business-credit sources also determine whether no-AMT returns need
+  // net statutory TMT; the optional6251line8 skip must not reduce later credits.
+  const hasK1Box15Credits = input.scheduleK1.some((k1) =>
+    d(k1.lowIncomeHousingCredit42j5).greaterThan(0) ||
+    d(k1.lowIncomeHousingCreditOther).greaterThan(0) ||
+    d(k1.qualifiedRehabilitationExpenditures).greaterThan(0) ||
+    d(k1.otherRentalRealEstateCredits).greaterThan(0) ||
+    d(k1.otherRentalCredits).greaterThan(0) ||
+    d(k1.otherCredits).greaterThan(0)
+  );
+  const hasForm3800Input = input.form3800 !== undefined && (
+    d(input.form3800.currentYearCredits).greaterThan(0) ||
+    d(input.form3800.passiveActivityCredits).greaterThan(0) ||
+    d(input.form3800.carryforward).greaterThan(0)
+  );
+  const hasGBCCarryforward = d(input.priorYear?.generalBusinessCreditCarryforward).greaterThan(0);
+  const calculateReturnAMT = (directCredit?: Decimal, foreignCreditPartI = d("0"), ordinaryCredits?: Form6251Input["ordinaryForeignTaxCredits"]) => calculateForm6251(
     {
-      taxableIncome,
-      saltDeduction: schedA.saltDeduction,
-      depletionAdjustment: k1AmtDepletion,
-      dispositionAdjustment: k1AmtDisposition,
-      depreciationAdjustment: k1AmtDepreciation,
-      otherAdjustments: k1AmtOther.plus(k1Form1041AmtAdjustment),
+      // Form 6251 starts from AGI less deductions even when Form 1040 floors at zero.
+      ...amtIncomeInput(nol ? rawTaxableIncome : rawTaxableIncome.minus(nolDeduction),
+        nol ? nolDeduction : undefined, nol?.stage === "final" ? nol.worksheet.alternativeTax.deduction : undefined),
       // Per Form 6251 instructions: if Schedule J is used, Form 6251 must
       // use the tax computed WITHOUT Schedule J (income averaging does not
       // apply to AMT).
-      regularTax: taxWithoutScheduleJ,
+      regularTax: taxWithoutScheduleJ.plus(foreignCreditPartI),
+      directCreditElectionForeignTaxCredit: directCredit,
+      ordinaryForeignTaxCredits: ordinaryCredits,
+      requiresTentativeMinimumTaxForCredits: input.form8801 !== undefined || hasK1Box15Credits || hasForm3800Input || hasGBCCarryforward,
       filingStatus,
       isItemizing: deductionUsed === "itemized",
       qualifiedDividends,
       netLongTermCapitalGain: netLTCG,
       section1250Gain,
       collectiblesGain,
+      capitalGainsSources: amtCapitalGainsSources,
     },
     constants
   );
-  const amt = form6251.amt;
-  audit.merge(form6251.lines);
-  audit.record("Sched 2", "1", "Alternative Minimum Tax", amt, "Form 6251 Line 11");
+  if (hypothetical?.purpose === "foreign-deduction-carryover") {
+    const amtContext = calculateReturnAMT();
+    return { ...foreignTaxOrdinaryContext(), amt: { amti: amtContext.amti, grossIncome: totalIncome,
+      taxBeforeCredit: amtContext.tentativeMinimumTax, taxableExcess: amtContext.amtBase,
+      rate26Limit: constants.amt.rate26Limit[filingStatus] } };
+  }
+
+  // ── Form 8959: Additional Medicare Tax ────────────────
+  // Form 8959 Line 8 requires each person's Schedule SE line6 after the filing threshold.
+  // Using pre-multiplier netSEEarnings would overstate the SE contribution.
+  const form8959 = calculateForm8959(input, schedSE.earningsSubjectToSETax, filingStatus, constants);
+  const additionalMedicareTax = form8959.additionalMedicareTax;
+  audit.merge(form8959.lines);
+
+  // ── Line 27a: Earned Income Credit ──────────────────────
+  // Computed before Form 2210 so EIC is included in refundable credits for
+  // accurate estimated tax penalty calculation.
+  // Per IRC §32(c)(2): earned income = wages + net SE earnings − deductible half of SE tax.
+  const eicEarnedIncome = sum(totalWages, netSEEarnings).minus(schedSE.deductibleHalf);
+
+  // Pub. 596 Worksheet 1 lines 5–7 remove the Form 4797 business gain
+  // from capital gain net income. Form 4797 always computes line 9 here;
+  // without lookback losses, it is the positive line 7 amount.
+  const eicNetCapitalGain = Decimal.max(new Decimal(0), capitalGainLoss);
+  const eicBusinessCapitalGain = form4797.line9;
+  const eicInvestmentCapitalGain = Decimal.max(new Decimal(0), eicNetCapitalGain.minus(eicBusinessCapitalGain));
+  audit.record("EIC Investment Income Worksheet", "5", "Positive capital gain net income", eicNetCapitalGain,
+    "Form 1040 line 7a, floored at zero", { "Form 1040 line 7a": capitalGainLoss });
+  audit.record("EIC Investment Income Worksheet", "6", "Business gain excluded from investment capital", eicBusinessCapitalGain,
+    "Form 4797 line 9 after the section 1231 lookback", { "Form 4797 line 9": form4797.line9 });
+  audit.record("EIC Investment Income Worksheet", "7", "Investment capital gain", eicInvestmentCapitalGain,
+    "Worksheet line 5 minus line 6, floored at zero", {
+      "Line 5": eicNetCapitalGain, "Line 6": eicBusinessCapitalGain,
+    });
+
+  const eicTaxExemptInterest = taxExemptInterest.plus(form8814?.totalTaxExemptInterest ?? new Decimal(0));
+  const eicChildOrdinaryIncome = form8814IncomeCharacter.eicOrdinaryInvestmentIncome;
+  audit.record("EIC Investment Income Worksheet", "2", "Parent and child tax-exempt interest", eicTaxExemptInterest,
+    "Form 1040 line 2a plus each elected child's Form 8814 line 1b", {
+      "Parent exempt interest": taxExemptInterest,
+      "Child exempt interest": form8814?.totalTaxExemptInterest ?? new Decimal(0),
+    });
+  audit.record("EIC Investment Income Worksheet", "4", "Child ordinary investment income", eicChildOrdinaryIncome,
+    "Child Form 8814 line 12 after each applicable Publication 596 Worksheet 2 Alaska allocation");
+
+  const eicScheduleEInvestment = calculateEicScheduleEInvestment({ input: seSourceInput, scheduleE: schedE,
+    passive: form8582, allowedPassiveLoss: passiveLossForIncome, section163jDeduction: totalSection163jDeduction });
+  audit.merge(eicScheduleEInvestment.lines);
+  // Every known component is nonnegative. This is only a lower bound when
+  // an actual earned/passive source partition remains unresolved.
+  const eicKnownInvestmentIncome = sum(totalTaxableInterest, eicTaxExemptInterest, totalDividends,
+    eicChildOrdinaryIncome, eicInvestmentCapitalGain, eicScheduleEInvestment.royaltyIncome);
+  const eicInvestmentIncome = input.eic?.investmentIncomeOverride !== undefined
+    ? d(input.eic.investmentIncomeOverride)
+    : eicKnownInvestmentIncome.plus(eicScheduleEInvestment.passiveIncome ?? new Decimal(0));
+
+  // Actual Rule3 child qualification precedes the separate SSN amount count.
+  const eicSeparated = calculateEicSeparatedSpouseSources(input);
+  const eicCurrentInput = input.eic?.recertificationSources === undefined ? undefined : { ...input, sources: input.eic.recertificationSources };
+  const eicCurrent = eicCurrentInput ? calculateForm8862(eicCurrentInput) : undefined;
+  // Spec: return-agi. These source functions run before AGI exists in the guide, so the entered figure is tied here.
+  for (const row of [...(input.eic?.separatedSpouseSources?.children ?? []), ...(input.eic?.recertificationSources?.children ?? [])]) {
+    if (row.taxpayerTiebreakAgi !== undefined && !roundDollar(d(row.taxpayerTiebreakAgi)).eq(roundDollar(agi))) throw new Error(`EIC tiebreaker AGI must match Form 1040 line 11, currently ${roundDollar(agi).toFixed()}`);
+  }
+  const eicTiebreakLost = eicCurrent?.tiebreakLostChildSourceIds ?? eicSeparated.tiebreakLostChildSourceIds ?? [];
+  if (eicTiebreakLost.length > 0) {
+    audit.record("EIC", "tiebreaker", "Children treated as another claimant's qualifying child", new Decimal(eicTiebreakLost.length), "IRC152(c)(4) on the actual child sources");
+    // Dependent care is one of the five shared benefits and its people are entered separately.
+    const careIdentity = (taxId: string | undefined, firstName: string, lastName: string) => [taxId?.replace(/\D/g, ""), `${firstName} ${lastName}`.trim().toLowerCase()];
+    if (input.dependentCare && !input.dependentCare.qualifyingPersons) throw new Error("EIC child treated as another claimant's needs the dependent care person list, not a count");
+    const carePeople = (input.dependentCare?.qualifyingPersons ?? []).map((person) => careIdentity(person.taxId, person.firstName, person.lastName));
+    for (const sourceId of eicTiebreakLost) {
+      const child = input.taxpayer.dependents[Number(sourceId.replace("dependent:", ""))];
+      const [id, name] = child ? careIdentity(child.ssn, child.firstName, child.lastName) : [];
+      // Different identifiers are different people, even with one name.
+      if (carePeople.some(([taxId, personName]) => (id && taxId ? taxId === id : personName === name))) throw new Error("EIC child treated as another claimant's conflicts with its dependent care benefit");
+    }
+  }
+  const qualifyingEicChildren = eicCurrent?.ssnCountedChildSourceIds?.length ?? eicSeparated.ssnCountedChildSourceIds.length;
+  const actualEicChildPresent = eicCurrent?.qualifyingChildPresent ?? (eicSeparated.sourceFactsComplete ? eicSeparated.qualifyingChildPresent : undefined);
+  audit.merge(eicSeparated.lines);
+  const eicDisallowanceInput = { taxpayer: input.taxpayer, sources: input.eic?.disallowanceSources,
+    qualifyingChildPresent: actualEicChildPresent };
+
+  // IRC §32(c)(1)(C): Filing Form 2555 disqualifies the taxpayer from EIC
+  let eic: Decimal;
+  let scheduleEIC: ReturnType<typeof calculateEic> | undefined;
+  if (form2555) {
+    // A zero credit does not discard contradictory supplied source records.
+    audit.merge(calculateEicDisallowanceHistory(eicDisallowanceInput).lines);
+    eic = new Decimal(0);
+    audit.record("1040", "27a", "Earned Income Credit", eic,
+      "Disqualified: taxpayer filed Form 2555 (IRC §32(c)(1)(C))");
+  } else {
+    scheduleEIC = calculateEic({
+      filingStatus,
+      qualifyingChildren: qualifyingEicChildren,
+      qualifyingChildPresent: actualEicChildPresent,
+      marriedNonjoint: eicSeparated.sourceFactsComplete,
+      earnedIncome: eicEarnedIncome,
+      agi,
+      investmentIncome: eicInvestmentIncome,
+      claimantInput: input,
+      disallowanceInput: eicDisallowanceInput,
+      recertificationInput: eicCurrentInput,
+      mfsEicEligible: eicSeparated.separatedSpouseEligible ?? false,
+    }, constants);
+    if (input.eic?.investmentIncomeOverride === undefined && eicScheduleEInvestment.unresolved.length) {
+      if (scheduleEIC.credit.gt(0)) {
+        throw new Error(`EIC investment income requires a complete source method: ${eicScheduleEInvestment.unresolved.join('; ')}`);
+      }
+      // A zero from the known lower bound cannot become positive by adding
+      // unknown nonnegative investment income. Do not publish that bound as
+      // a completed worksheet or a made-up actual investment amount.
+      const unresolvedAudit = new AuditTrail();
+      unresolvedAudit.record('EIC','investmentSourceUnresolved','No credit independently of unresolved investment sources',new Decimal(0),
+        `Known eligibility/income rules produce zero; investment classification remains unresolved: ${eicScheduleEInvestment.unresolved.join('; ')}`);
+      scheduleEIC = { ...scheduleEIC, lines: unresolvedAudit.getLines() };
+    }
+    audit.merge(scheduleEIC.lines);
+    eic = scheduleEIC.credit;
+  }
 
   // ═══════════════════════════════════════════════════════════
   // Phase 5: Credits (Form 1040 Lines 19-21)
@@ -2490,12 +3693,43 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
 
   let foreignTaxCredit: Decimal;
   let foreignTaxCreditCarryforward = new Decimal(0);
+  let foreignTaxDeductionCarryover: TaxReturnResult["foreignTaxDeductionCarryover"];
+  let foreignTaxDirectCredit: TaxReturnResult["foreignTaxDirectCredit"];
+  let foreignTaxOrdinaryCredit: TaxReturnResult["foreignTaxOrdinaryCredit"];
+  const directCreditSources = schedA.foreignTaxElection.directCreditSources;
+  const ordinaryCreditSources = schedA.foreignTaxElection.ordinaryCreditSources;
   const foreignTaxCreditCarryforwardByCategory: Record<string, Array<{ taxYear: number; amount: Decimal }>> = {};
   const hasForeignTaxActivity = foreignTaxPaid.greaterThan(0) || hasLegacyCarryforward
     || hasPassiveActivity || hasGeneralActivity;
+  if (nol && hasForeignTaxActivity && !directCreditSources && schedA.foreignTaxElection.election !== "deduction"
+    && !(ordinaryCreditSources && hasCompleteEmptyForeignNolSources(input))) {
+    throw new Error("Actual NOL with general Form1116 requires the originating foreign-source loss allocation worksheet");
+  }
 
-  if (!hasForeignTaxActivity) {
+  if (directCreditSources || ordinaryCreditSources) {
+    // The exact elected credit requires actual PartI additions, computed below.
+    // Do not run the legacy foreign-income estimate or consume any prior carry.
+    foreignTaxCredit = d("0");
+  } else if (schedA.foreignTaxElection.election === "deduction" || !hasForeignTaxActivity) {
+    // The actual annual election remains a deduction, including when standard
+    // deduction is better. Only prior balances can be absorbed or expire here.
     foreignTaxCredit = new Decimal(0);
+    if (input.foreignTaxElection?.deductionYearCarryover) {
+      if (!foreignTaxOrdinaryIncomeOnly) throw new Error("Foreign carryover requires the supported actual ordinary-income hypothetical method");
+      // The original annual election has already reconciled the saved AMT
+      // ledger. This private request stops before any credit or carry use;
+      // only pre-credit income/tax are recomputed, so no saved credit is an input.
+      const hypotheticalInput: TaxYearInput = { ...input,
+        priorYear: input.priorYear ? { ...input.priorYear, amtForeignTaxCreditCarryforwardByCategory: undefined } : undefined,
+        foreignTaxElection: {
+        ...input.foreignTaxElection, election: "credit", sources: undefined, deductionYearCarryover: undefined,
+      } };
+      const context = calculateFederalTaxCore(hypotheticalInput, undefined, { purpose: "foreign-deduction-carryover" });
+      foreignTaxDeductionCarryover = calculateForeignTaxDeductionCarryover(input, context);
+      foreignTaxCreditCarryforward = foreignTaxDeductionCarryover.carryforward;
+      Object.assign(foreignTaxCreditCarryforwardByCategory, foreignTaxDeductionCarryover.carryforwardByCategory);
+      audit.merge(foreignTaxDeductionCarryover.lines);
+    }
   } else if (!isMultiCategory) {
     // Single category — backward-compatible path
     const foreignSourceIncome = estimateForeignSourceIncome(input);
@@ -2605,16 +3839,117 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     foreignTaxCreditCarryforward = totalCarryforward;
   }
 
+  // ── Form 8962: Premium Tax Credit ──────────────────────
+  let netPremiumTaxCredit = new Decimal(0);
+  let excessAPTCRepayment = new Decimal(0);
+  let form8962: ReturnType<typeof calculateForm8962> | undefined;
+  if (input.form1095A.length > 0 || input.form8962) {
+    form8962 = calculatePremiumTaxCreditReturn({
+      input, agi, taxExemptInterest, foreignIncomeReduction: form2555IncomeReduction, form2555Source: form2555,
+      foreignHousingDeduction: form2555HousingDeduction,
+      socialSecurityBenefitsGross, socialSecurityBenefitsTaxable,
+    }, marketplace?.stage === "actual-paid" ? { method: "ordinary-actual-paid-repayment", stage: "final" } : marketplace?.stage === "actual-cash" ? { method: "ordinary-actual-cash-zero-credit", stage: "final" } : marketplace?.stage === "full-repayment" ? { method: marketplace.reportedPayment ? "ordinary-reported-advance-repayment" : "ordinary-full-advance-repayment", stage: "final" } : marketplace ? { method: marketplace.deduction.method === "pub974-alternative-reentry-2026" ? marketplace.deduction.method
+      : year === 2025 ? "pub974-simplified-2025" : "pub974-simplified-2026", stage: marketplace.stage,
+      repaymentLimit: marketplace.deduction.method.startsWith("ordinary-no-ptc-") ? undefined : marketplace.deduction.historicalLimit?.repaymentLimit ?? undefined } : undefined);
+    netPremiumTaxCredit = form8962.netPTC;
+    excessAPTCRepayment = form8962.excessAPTCRepayment;
+    audit.merge(form8962.lines);
+  }
+  if (!marketplace && input.form7206?.plans?.some(plan => plan.marketplaceCoverage === true && plan.premiumTaxCreditInvolved === false)
+    && form8962 && (form8962.ptcAllowed.gt(0) || form8962.advancePTCTotal.gt(0))) {
+    throw new Error("Marketplace health sources contradict positive credit or advance payments; actual policy coordination is required.");
+  }
+
+
+  const vehicleClaims = [...(input.form8936?.newCleanVehicles ?? []), ...(input.form8936?.previouslyOwnedCleanVehicles ?? [])];
+  const verifiedVehicles = year === 2026 || vehicleClaims.some(vehicle => vehicle.datePlacedInService !== undefined);
+  if (verifiedVehicles && vehicleClaims.some(vehicle => vehicle.sourceFactsComplete !== true)) {
+    throw new Error("Original vehicle price, type, use or transfer facts are unknown");
+  }
+  const calculateVehicles = (taxLiabilityLimit: Decimal, incomeTaxBeforeCredits: Decimal) => input.form8936
+    ? calculateForm8936({
+      ...input.form8936, taxYear: year, filingStatus, agi,
+      foreignEarnedIncomeExclusion: form2555 ? form2555IncomeReduction : input.form8936.foreignEarnedIncomeExclusion,
+      foreignHousingDeduction: form2555 ? form2555HousingDeduction : input.form8936.foreignHousingDeduction,
+      constants: constants.cleanVehicleCredit, taxLiabilityLimit, incomeTaxBeforeCredits,
+    }) : undefined;
+  // Transfer repayments are independent of credit limits and enter Part I before
+  // credits. Discard this preliminary credit/audit; emit the final worksheet below.
+  const vehicleReconciliation = calculateVehicles(new Decimal(0), new Decimal(0));
+  if (vehicleReconciliation?.requiresTransferReconciliation) throw new Error("Actual vehicle transfer reconciliation facts are required");
+  const newVehicleTransferRepayment = vehicleReconciliation?.transferredNewVehicleCreditRepayment ?? new Decimal(0);
+  const usedVehicleTransferRepayment = vehicleReconciliation?.transferredPreviouslyOwnedCreditRepayment ?? new Decimal(0);
+  const partIAdditions = sum(excessAPTCRepayment, newVehicleTransferRepayment, usedVehicleTransferRepayment);
+
+  if (directCreditSources) {
+    foreignTaxDirectCredit = calculateForeignTaxDirectCredit(directCreditSources, incomeTax.plus(partIAdditions));
+    foreignTaxCredit = foreignTaxDirectCredit.creditAllowed;
+    foreignTaxCreditCarryforward = foreignTaxDirectCredit.carryforward;
+    Object.assign(foreignTaxCreditCarryforwardByCategory, foreignTaxDirectCredit.carryforwardByCategory);
+    audit.merge(foreignTaxDirectCredit.lines);
+  }
+  if (ordinaryCreditSources) {
+    if (!partIAdditions.isZero()) throw new Error("Ordinary foreign credit requires its separate actual Schedule2 PartI source method");
+    // Calculate actual AMTI and pre-credit tax once for both credit worksheets;
+    // only the final credit-aware6251 audit is added to the return.
+    const provisionalAMT = calculateReturnAMT();
+    foreignTaxOrdinaryCredit = calculateForeignTaxOrdinaryCredit({
+      taxYear: year, filingStatus, sourceFactsConfirmed: true, context: foreignTaxOrdinaryContext(),
+      countries: ordinaryCreditSources.countries, passiveGroup: ordinaryCreditSources.passiveGroup,
+      noCfcOrQbuIncomeConfirmed: true, itemizedAllocation: ordinaryCreditSources.itemizedAllocation,
+      regularCarryovers: ordinaryCreditSources.carryovers, amtCarryovers: ordinaryCreditSources.amtCarryovers,
+      regularCarryback: ordinaryCreditSources.regularCarryback, amtCarryback: ordinaryCreditSources.amtCarryback,
+      amt: { ...ordinaryCreditSources.amt, amti: provisionalAMT.amti, grossIncome: totalIncome,
+        taxBeforeCredit: provisionalAMT.tentativeMinimumTax, taxableExcess: provisionalAMT.amtBase,
+        rate26Limit: constants.amt.rate26Limit[filingStatus] },
+    });
+    foreignTaxCredit = foreignTaxOrdinaryCredit.regular.creditAllowed;
+    foreignTaxCreditCarryforward = foreignTaxOrdinaryCredit.regular.carryforward;
+    Object.assign(foreignTaxCreditCarryforwardByCategory, foreignTaxOrdinaryCredit.regular.carryforwardByCategory);
+    audit.merge(ordinaryCreditSources.lines);
+    audit.merge(foreignTaxOrdinaryCredit.lines);
+  }
+  const form6251 = calculateReturnAMT(directCreditSources ? foreignTaxCredit : undefined,
+    directCreditSources || ordinaryCreditSources ? partIAdditions : d("0"),
+    foreignTaxOrdinaryCredit ? { regular: foreignTaxOrdinaryCredit.regular.creditAllowed, amt: foreignTaxOrdinaryCredit.amt.creditAllowed } : undefined);
+  const amt = form6251.amt;
+  audit.merge(form6251.lines);
+  audit.record("Sched 2", "2", "Alternative Minimum Tax", amt, "Form 6251 Line 11");
+
+  // ── Line 17-18: Tax before credits includes Schedule 2 Part I ──
+  // Per IRS Form 1040: Line 17 = AMT + excess APTC (Schedule 2 Part I)
+  // Line 18 = Line 16 + Line 17. Nonrefundable credits reduce Line 18.
+  const taxBeforeCredits = incomeTax.plus(amt).plus(partIAdditions);
+  audit.record("1040", "17", "Schedule 2 Part I", amt.plus(partIAdditions),
+    `AMT $${amt} + APTC and actual vehicle transfer repayments $${partIAdditions}`);
+  audit.record("1040", "18", "Tax before credits", taxBeforeCredits,
+    `Line 16 $${incomeTax} + Line 17 $${amt.plus(partIAdditions)}`);
+
   // ── Form 2441: Dependent Care Credit ────────────────────
-  // MFS filers cannot claim dependent care credit (IRC §21(e)(2))
+  // Actual PartIII living-apart facts support the statutory MFS exception.
   let dependentCareCredit = new Decimal(0);
   let form2441: ReturnType<typeof calculateForm2441> | undefined;
-  if (input.dependentCare && filingStatus !== "married_filing_separately") {
+  if (input.dependentCare && (filingStatus !== "married_filing_separately" || form2441Benefits?.treatedAsUnmarried)) {
     // Per IRS Form 2441 Instructions (Lines 4-5), SE earned income =
     // Schedule SE Line 3 (net SE earnings) minus Schedule 1 Line 15
     // (deductible half of SE tax). IRC §21(d)(1) → §32(c)(2)(A)(i)(II).
-    const earnedIncome = sum(totalWages, netSEEarnings).minus(schedSE.deductibleHalf);
+    if (year === 2026 && input.dependentCare.primaryEarnedIncome === undefined) {
+      throw new Error("2026 dependent-care primary earned income is unknown");
+    }
+    const earnedIncome = input.dependentCare.primaryEarnedIncome === undefined
+      ? sum(totalWages, netSEEarnings).minus(schedSE.deductibleHalf).minus(form2555IncomeReduction).minus(form2555HousingDeduction)
+      : d(input.dependentCare.primaryEarnedIncome);
     form2441 = calculateForm2441({
+      dependentCareBenefits: input.dependentCareBenefits,
+      taxYear: year,
+      filingStatus,
+      eligibilityConfirmed: input.dependentCare.eligibilityConfirmed,
+      priorYearExpenseCredit: input.dependentCare.priorYearExpenseCredit === undefined ? undefined : d(input.dependentCare.priorYearExpenseCredit),
+      earnedIncomeFactsVerified: input.dependentCare.primaryEarnedIncome !== undefined
+        && (filingStatus !== "married_filing_jointly" || input.dependentCare.spouseEarnedIncome !== undefined),
+      spouseEarnedIncome: input.dependentCare.spouseEarnedIncome === undefined ? undefined : d(input.dependentCare.spouseEarnedIncome),
+      excludedDependentCareBenefits: input.dependentCare.excludedDependentCareBenefits === undefined ? undefined : d(input.dependentCare.excludedDependentCareBenefits),
+      taxLiabilityLimit: zeroFloor(taxBeforeCredits.minus(foreignTaxCredit)),
       careExpenses: d(input.dependentCare.expenses),
       qualifyingIndividuals: input.dependentCare.qualifyingIndividuals,
       earnedIncome,
@@ -2624,55 +3959,88 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     audit.merge(form2441.lines);
   }
 
-  // ── Form 8863: Education Credits ────────────────────────
+  // ── Schedule R: Credit for the Elderly or the Disabled ──
+  const scheduleR = input.scheduleR
+    ? calculateScheduleR({
+        taxYear: year,
+        creditLimitWorksheet: {taxBeforeCredits, foreignTaxCredit, dependentCareCredit,
+          // No Form8978/Schedule3 line6l input is admitted by this return model.
+          // The refundable section1341 credit belongs to line13b, not this worksheet.
+          schedule3Line6l: new Decimal(0)},
+        filingStatus,
+        agi,
+        nontaxableSocialSecurity: zeroFloor(socialSecurityBenefitsGross.minus(socialSecurityBenefitsTaxable)),
+        scheduleRInput: input.scheduleR,
+        livedWithSpouse: input.taxpayer.livedWithSpouseAtAnyTimeDuringYear,
+        constants: constants.elderlyOrDisabledCredit,
+      })
+    : undefined;
+  if (scheduleR) {
+    audit.merge(scheduleR.lines);
+  }
+  const elderlyOrDisabledCredit = scheduleR?.allowedCredit ?? new Decimal(0);
+
+  // ── Form 8863: actual education facts and Credit Limit Worksheet ──
   let educationNonrefundable = new Decimal(0);
   let educationRefundable = new Decimal(0);
+  let form8863: ReturnType<typeof calculateForm8863> | undefined;
   if (input.educationExpenses) {
-    const form8863 = calculateForm8863({
-      aocStudents: input.educationExpenses.aocStudents.map((s) => ({
-        name: s.name,
-        qualifiedExpenses: d(s.qualifiedExpenses),
-      })),
-      llcExpenses: d(input.educationExpenses.llcExpenses),
-      magi: agi,
+    const education = input.educationExpenses;
+    if (year >= 2026 && education.possessionIncomeExclusion === undefined) throw new Error("Form8863 actual possession-income exclusion is unknown");
+    if (year >= 2026) {
+      for (const student of [...education.aocStudents, ...(education.llcStudents ?? [])]) {
+        if (!d(student.qualifiedExpenses).gt(0) || !student.studentTaxId) continue;
+        const id = student.studentTaxId.replaceAll("-", "");
+        const actual = student.studentRole === "primary" ? [input.taxpayer.primary.ssn] : student.studentRole === "spouse" ? [input.taxpayer.spouse?.ssn] : input.taxpayer.dependents.map(dep => dep.ssn);
+        if (!actual.some(tin => tin?.replaceAll("-", "") === id)) throw new Error("Form8863 student identity does not match the actual return household role");
+      }
+    }
+    const educationPossession = d(education.possessionIncomeExclusion);
+    if (!educationPossession.isFinite() || educationPossession.isNegative()) throw new Error("Form8863 possession exclusion must be finite and nonnegative");
+    // Age is attained on the day before the birthday; January1 births attain
+    // their next age on December31 of the preceding year.
+    const dob = input.taxpayer.primary.dateOfBirth;
+    const educationAge = /^\d{4}-\d{2}-\d{2}$/.test(dob) ? year - Number(dob.slice(0, 4)) + (dob.slice(5) === "01-01" ? 1 : 0) : undefined;
+    form8863 = calculateForm8863({
+      ...education,
+      taxYear: year,
+      primarySsnEligible: education.primarySsnEligible ?? input.taxpayer.primary.employmentValidSsnIssuedByDueDate,
+      spouseSsnEligible: education.spouseSsnEligible ?? input.taxpayer.spouse?.employmentValidSsnIssuedByDueDate,
+      primaryTinEligible: education.primaryTinEligible ?? input.taxpayer.primary.tinIssuedByDueDate,
+      primaryAgeAtYearEnd: educationAge,
+      refundableAocFacts: education.refundableAocFacts ? {...education.refundableAocFacts,earnedIncome:d(education.refundableAocFacts.earnedIncome),totalSupport:d(education.refundableAocFacts.totalSupport)} : undefined,
+      aocStudents: education.aocStudents.map(student => ({...student,qualifiedExpenses:d(student.qualifiedExpenses)})),
+      llcStudents: education.llcStudents?.map(student => ({...student,qualifiedExpenses:d(student.qualifiedExpenses)})),
+      llcExpenses: d(education.llcExpenses),
+      magi: sum(agi,form2555IncomeReduction,form2555HousingDeduction,educationPossession),
       filingStatus,
+      taxLiabilityLimit: zeroFloor(taxBeforeCredits.minus(sum(foreignTaxCredit,dependentCareCredit,elderlyOrDisabledCredit))),
     });
     educationNonrefundable = form8863.totalNonrefundable;
     educationRefundable = form8863.totalRefundable;
     audit.merge(form8863.lines);
   }
-
-  // ── Form 8962: Premium Tax Credit ──────────────────────
-  let netPremiumTaxCredit = new Decimal(0);
-  let excessAPTCRepayment = new Decimal(0);
-  let form8962: ReturnType<typeof calculateForm8962> | undefined;
-  if (input.form1095A.length > 0) {
-    const taxFamilySize = 1 + (input.taxpayer.spouse ? 1 : 0) + input.taxpayer.dependents.length;
-    form8962 = calculateForm8962({
-      taxFamilySize,
-      modifiedAGI: agi,
-      filingStatus,
-      form1095A: input.form1095A,
-    });
-    netPremiumTaxCredit = form8962.netPTC;
-    excessAPTCRepayment = form8962.excessAPTCRepayment;
-    audit.merge(form8962.lines);
+  for (const allocation of form1099Q?.creditAllocations ?? []) {
+    if (!allocation.taxableEarningsCausedByCredit.gt(0)) continue;
+    const identity = input.qualifiedEducationExpenses?.sourceFacts?.beneficiaries
+      ?.find(beneficiary => beneficiary.id === allocation.beneficiaryId)?.studentTaxId?.replaceAll("-", "");
+    const aocIndex = input.educationExpenses?.aocStudents.findIndex(student => identity && student.studentTaxId?.replaceAll("-", "") === identity) ?? -1;
+    const llcIndex = input.educationExpenses?.llcStudents?.findIndex(student => identity && student.studentTaxId?.replaceAll("-", "") === identity) ?? -1;
+    const aocBenefit = aocIndex >= 0 && form8863?.aocPerStudent[aocIndex]?.tentativeCredit.gt(0)
+      && form8863.aocAfterPhaseOut.gt(0) && (form8863.totalRefundable.gt(0) || form8863.totalNonrefundable.gt(0));
+    const llcBenefit = llcIndex >= 0 && form8863?.llcPerStudent[llcIndex]?.eligibleExpenses.gt(0)
+      && form8863.llcAfterPhaseOut.gt(0) && form8863.totalNonrefundable.gt(0);
+    if (!aocBenefit && !llcBenefit) {
+      throw new Error("Form1099Q taxable credit allocation has no allowed linked education credit; actual expense allocation must be reconciled");
+    }
   }
-
-  // ── Line 17-18: Tax before credits includes Schedule 2 Part I ──
-  // Per IRS Form 1040: Line 17 = AMT + excess APTC (Schedule 2 Part I)
-  // Line 18 = Line 16 + Line 17. Nonrefundable credits reduce Line 18.
-  const taxBeforeCredits = incomeTax.plus(amt).plus(excessAPTCRepayment);
-  audit.record("1040", "17", "Schedule 2 Part I (AMT + excess APTC)", amt.plus(excessAPTCRepayment),
-    `AMT $${amt} + excess APTC $${excessAPTCRepayment}`);
-  audit.record("1040", "18", "Tax before credits", taxBeforeCredits,
-    `Line 16 $${incomeTax} + Line 17 $${amt.plus(excessAPTCRepayment)}`);
 
   // ── Excess Social Security Withholding ──────────────────
   const excessSSWithholding = calculateExcessSSWithholding(
     input.w2s,
     constants.selfEmploymentTax.socialSecurityWageBase,
-    constants.selfEmploymentTax.socialSecurityRate.dividedBy(2) // employee portion = half
+    constants.selfEmploymentTax.socialSecurityRate.dividedBy(2), // employee portion = half
+    { taxYear: year, filingStatus }
   );
 
   // ── Form 8880: Retirement Savings Contributions Credit ─
@@ -2689,8 +4057,8 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
       primaryDateOfBirth: input.taxpayer.primary.dateOfBirth,
       spouseDateOfBirth: input.taxpayer.spouse?.dateOfBirth,
       ...normalizedForm8880Input,
-      taxLiabilityBeforeCredit: incomeTax.plus(amt).plus(excessAPTCRepayment),
-      priorNonrefundableCredits: sum(foreignTaxCredit, dependentCareCredit, educationNonrefundable),
+      taxLiabilityBeforeCredit: taxBeforeCredits,
+      priorNonrefundableCredits: sum(foreignTaxCredit, dependentCareCredit, elderlyOrDisabledCredit, educationNonrefundable),
     })
     : undefined;
   const retirementSavingsCredit = form8880?.line12 ?? new Decimal(0);
@@ -2698,139 +4066,100 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     audit.merge(form8880.lines);
   }
 
-  // ── Form 5695: Residential Energy Credits ───────────────
-  const form5695 = calculateForm5695(input.energyCredits);
-  audit.merge(form5695.lines);
-
-  // ── Form 8936: Clean Vehicle Credits ───────────────────
-  const form8936 = input.form8936
-    ? calculateForm8936({
-        filingStatus,
-        agi,
-        constants: constants.cleanVehicleCredit,
-        newCleanVehicles: input.form8936.newCleanVehicles,
-        previouslyOwnedCleanVehicles: input.form8936.previouslyOwnedCleanVehicles,
-        priorYearAgi: input.form8936.priorYearAgi,
-        foreignEarnedIncomeExclusion: input.form8936.foreignEarnedIncomeExclusion,
-        foreignHousingDeduction: input.form8936.foreignHousingDeduction,
-        priorYearForeignEarnedIncomeExclusion: input.form8936.priorYearForeignEarnedIncomeExclusion,
-        priorYearForeignHousingDeduction: input.form8936.priorYearForeignHousingDeduction,
-      })
-    : undefined;
-  if (form8936) {
-    audit.merge(form8936.lines);
-  }
-
-  // ── Schedule R: Credit for the Elderly or the Disabled ──
-  const scheduleR = input.scheduleR
-    ? calculateScheduleR({
-        filingStatus,
-        agi,
-        nontaxableSocialSecurity: zeroFloor(socialSecurityBenefitsGross.minus(socialSecurityBenefitsTaxable)),
-        scheduleRInput: input.scheduleR,
-        livedWithSpouse: input.taxpayer.livedWithSpouseAtAnyTimeDuringYear,
-        constants: constants.elderlyOrDisabledCredit,
-      })
-    : undefined;
-  if (scheduleR) {
-    audit.merge(scheduleR.lines);
-  }
-  const elderlyOrDisabledCredit = scheduleR?.credit ?? new Decimal(0);
-
-  // ── Form 8839: Qualified Adoption Expenses ────────────
-  const form8839 = input.form8839
-    ? calculateForm8839({
-        filingStatus,
-        agi,
-        children: input.form8839.children,
-        foreignEarnedIncomeExclusion: d(input.form8839.foreignEarnedIncomeExclusion),
-        foreignHousingExclusion: d(input.form8839.foreignHousingExclusion),
-        constants: constants.adoptionCredit,
-      })
-    : undefined;
-  if (form8839) {
-    audit.merge(form8839.lines);
-  }
-  const adoptionCredit = form8839?.adoptionCredit ?? new Decimal(0);
-
-  // ── Form 8801: Credit for Prior Year Minimum Tax ──────
-  let priorYearMinimumTaxCredit = new Decimal(0);
-  let form8801: ReturnType<typeof calculateForm8801> | undefined;
-  if (input.form8801) {
-    form8801 = calculateForm8801({
-      priorYearFilingStatus: input.form8801.priorYearFilingStatus,
-      priorYearTaxableIncome: d(input.form8801.priorYearTaxableIncome),
-      priorYearExclusionItemAdjustments: d(input.form8801.priorYearExclusionItemAdjustments),
-      priorYearAMT: d(input.form8801.priorYearAMT),
-      priorYearRegularTax: d(input.form8801.priorYearRegularTax),
-      unusedMinimumTaxCreditCarryforward: d(input.form8801.unusedMinimumTaxCreditCarryforward),
-      currentYearRegularTaxBeforeCredits: incomeTax,
-      currentYearTMT: form6251.tentativeMinimumTax,
-    });
-    priorYearMinimumTaxCredit = form8801.creditAllowed;
-    audit.merge(form8801.lines);
-  }
-
-  // ── Schedule 3: Aggregate Credits ──────────────────────
-  const sched3 = calculateSchedule3(input, {
-    foreignTaxCredit,
-    childDependentCareCredit: dependentCareCredit,
-    educationCredits: educationNonrefundable,
-    retirementSavingsCredit,
-    residentialCleanEnergyCredit: form5695.residentialCleanEnergyCredit,
-    energyImprovementCredit: form5695.energyImprovementCredit,
-    priorYearMinimumTaxCredit,
-    adoptionCredit,
-    elderlyOrDisabledCredit,
-    newCleanVehicleCredit: form8936?.totalNewVehicleCredit,
-    previouslyOwnedCleanVehicleCredit: form8936?.totalPreviouslyOwnedCredit,
-    netPremiumTaxCredit,
-    excessSocialSecurityWithholding: excessSSWithholding,
+  const improvementTaxLiabilityLimit = zeroFloor(taxBeforeCredits.minus(sum(
+    foreignTaxCredit, dependentCareCredit, elderlyOrDisabledCredit, educationNonrefundable, retirementSavingsCredit)));
+  // Preliminary energy calculation determines the independent improvement credit
+  // and available clean-energy amount; only final calculated lines are emitted.
+  const preliminaryEnergy = calculateForm5695(input.energyCredits, {
+    taxYear: year, filingStatus, taxLiabilityLimit: new Decimal(0), improvementTaxLiabilityLimit,
   });
-  audit.merge(sched3.lines);
-
-  const otherCredits = sched3.totalNonrefundableCredits;
+  const vehicleTaxLiabilityLimit = zeroFloor(improvementTaxLiabilityLimit.minus(preliminaryEnergy.energyImprovementCredit));
+  const form8936 = calculateVehicles(vehicleTaxLiabilityLimit, taxBeforeCredits);
+  if (form8936?.requiresTransferReconciliation) throw new Error("Actual vehicle transfer reconciliation facts are required");
+  if (form8936?.requiresForm3800) throw new Error("Business clean-vehicle credit requires supported Form 3800 attribution");
+  if (form8936) audit.merge(form8936.lines);
 
   // ── Form 8812: Child Tax Credit (nonrefundable + refundable ACTC) ──
-  const qualifyingChildren = input.taxpayer.dependents.filter((dep) => dep.qualifiesForCTC).length;
-  const otherDependents = input.taxpayer.dependents.filter((dep) => dep.qualifiesForODC).length;
-  // Per IRS Form 8812 Line 14: tax liability = Line 18 (tax before credits) - other credits
-  const taxAfterOtherCredits = zeroFloor(taxBeforeCredits.minus(otherCredits));
-  const form8812 = calculateForm8812({
+  const {qualifyingChildren, otherDependents} = calculateChildCreditEligibility(input);
+  let childCreditPuertoRico = input.childTaxCredit?.puertoRicoExcludedIncome === undefined ? undefined : d(input.childTaxCredit.puertoRicoExcludedIncome);
+  let childCreditForm4563 = input.childTaxCredit?.form4563ExcludedIncome === undefined ? undefined : d(input.childTaxCredit.form4563ExcludedIncome);
+  let childCreditPossessionTotal = input.childTaxCredit?.possessionIncomeExclusion === undefined ? undefined : d(input.childTaxCredit.possessionIncomeExclusion);
+  if (childCreditPuertoRico !== undefined && childCreditForm4563 !== undefined) {
+    const componentTotal = childCreditPuertoRico.plus(childCreditForm4563);
+    if (childCreditPossessionTotal !== undefined && !childCreditPossessionTotal.eq(componentTotal)) throw new Error("Child-credit possession amounts do not reconcile");
+    childCreditPossessionTotal = componentTotal;
+  }
+  if (childCreditPossessionTotal?.isZero()) {
+    if (childCreditPuertoRico?.gt(0) || childCreditForm4563?.gt(0)) throw new Error("Child-credit possession amounts do not reconcile");
+    childCreditPuertoRico = new Decimal(0);
+    childCreditForm4563 = new Decimal(0);
+  }
+  if (year === 2026 && qualifyingChildren + otherDependents > 0) {
+    if (childCreditPossessionTotal === undefined) throw new Error("2026 child-credit possession-income exclusion is unknown");
+    if (childCreditPuertoRico === undefined || childCreditForm4563 === undefined) throw new Error("2026 child-credit possession source split is unknown");
+  }
+  if (year === 2026 && qualifyingChildren > 0 && input.childTaxCredit?.bonaFidePuertoRicoResident === undefined) {
+    throw new Error("2026 child-credit Puerto Rico residency is unknown");
+  }
+  const calculateChildCredit = (taxLiability: Decimal) => calculateForm8812({
+    taxYear: year,
+    filesForm2555: form2555 !== undefined,
+    bonaFidePuertoRicoResident: input.childTaxCredit?.bonaFidePuertoRicoResident,
+    payrollTaxes: sum(...input.w2s.map(w2 => d(w2.socialSecurityWithheld).plus(d(w2.medicareWithheld))))
+      .plus(form8959.lines.find(line => line.line === "7")?.value ?? new Decimal(0))
+      .minus(form8959.lines.find(line => line.line === "22")?.value ?? new Decimal(0))
+      .plus((form8959.lines.find(line => line.line === "13")?.value ?? new Decimal(0)).div(2)),
+    additionalPayrollTaxes: sum(schedSE.deductibleHalf, tipPayroll.tax, form8919?.line13 ?? new Decimal(0)),
+    earnedIncomeCredit: eic,
+    excessSocialSecurityWithholding: excessSSWithholding,
     qualifyingChildren,
     otherDependents,
-    agi,
+    adjustedGrossIncome: agi,
+    puertoRicoExcludedIncome: childCreditPuertoRico,
+    form4563ExcludedIncome: childCreditForm4563,
+    foreignExcludedIncome: form2555IncomeReduction.plus(form2555HousingDeduction), form2555Source: form2555,
+    agi: sum(agi, form2555IncomeReduction, form2555HousingDeduction, childCreditPossessionTotal ?? new Decimal(0)),
     // Per IRC §32(c)(2)(A)(i)(II) → §24(d)(1)(B)(i): earned income =
     // wages + net SE earnings - deductible half of SE tax (§164(f)).
     // IRS Form 8812 Lines 18a-18f: 18a(wages) + 18c(Sched C/F) - 18e(deductible half).
     // SE losses reduce earned income — no zero-floor on SE component.
-    earnedIncome: sum(totalWages, netSEEarnings).minus(schedSE.deductibleHalf),
-    taxLiability: taxAfterOtherCredits,
+    earnedIncome: sum(totalWages, netSEEarnings, d(input.childTaxCredit?.nonTaxableCombatPayElection)).minus(schedSE.deductibleHalf),
+    taxLiability,
     filingStatus,
   }, constants);
+
+  const potentialChildCredit = calculateChildCredit(new Decimal(0));
+  const preliminaryAdoption = calculateAdoption(agi, new Decimal(0));
+  const earlierPersonalCredits = sum(foreignTaxCredit, dependentCareCredit, elderlyOrDisabledCredit,
+    educationNonrefundable, retirementSavingsCredit, preliminaryEnergy.energyImprovementCredit,
+    form8936?.totalNewVehicleCredit ?? new Decimal(0), form8936?.totalPreviouslyOwnedCredit ?? new Decimal(0));
+  const personalCreditLimits = calculatePersonalCreditOrdering({
+    taxBeforeCredits, earlierCredits: earlierPersonalCredits,
+    ctcBeforeLimitation: potentialChildCredit.ctcBeforeLimitation, potentialActc: potentialChildCredit.potentialActc,
+    qualifyingChildren, filesForm2555: form2555 !== undefined,
+    adoptionAvailable: preliminaryAdoption?.nonrefundableCreditAvailable ?? new Decimal(0),
+    cleanEnergyAvailable: preliminaryEnergy.residentialCleanEnergyCreditBeforeLimit,
+  });
+  const form8839 = calculateAdoption(agi, personalCreditLimits.adoptionTaxLiability);
+  if (form8839) audit.merge(form8839.lines);
+  const adoptionCredit = form8839?.nonrefundableAdoptionCredit ?? new Decimal(0);
+  const refundableAdoptionCredit = form8839?.refundableAdoptionCredit ?? new Decimal(0);
+  const form5695 = calculateForm5695(input.energyCredits, {
+    taxYear: year, filingStatus, taxLiabilityLimit: personalCreditLimits.cleanEnergyTaxLiability, improvementTaxLiabilityLimit,
+  });
+  audit.merge(form5695.lines);
+  const form8812 = calculateChildCredit(personalCreditLimits.ctcTaxLiability);
   audit.merge(form8812.lines);
   const childTaxCredit = form8812.nonrefundableCTC;
   audit.record("1040", "19", "Child tax credit / ODC", childTaxCredit,
     `Nonrefundable CTC: ${childTaxCredit} (${qualifyingChildren} children, ${otherDependents} other dependents)`);
 
+
+  const otherCredits = sum(earlierPersonalCredits, adoptionCredit, form5695.residentialCleanEnergyCredit);
+
   // ── Form 3800: General Business Credit ──────────────────
   // Computed after CTC so the limitation can use CTC + other personal credits.
   // K-1 Box 15 credits and form3800 input are the sources.
-  const hasK1Box15Credits = input.scheduleK1.some((k1) =>
-    d(k1.lowIncomeHousingCredit42j5).greaterThan(0) ||
-    d(k1.lowIncomeHousingCreditOther).greaterThan(0) ||
-    d(k1.qualifiedRehabilitationExpenditures).greaterThan(0) ||
-    d(k1.otherRentalRealEstateCredits).greaterThan(0) ||
-    d(k1.otherRentalCredits).greaterThan(0) ||
-    d(k1.otherCredits).greaterThan(0)
-  );
-  const hasForm3800Input = input.form3800 !== undefined && (
-    d(input.form3800.currentYearCredits).greaterThan(0) ||
-    d(input.form3800.passiveActivityCredits).greaterThan(0) ||
-    d(input.form3800.carryforward).greaterThan(0)
-  );
-  const hasGBCCarryforward = d(input.priorYear?.generalBusinessCreditCarryforward).greaterThan(0);
-
   let form3800: ReturnType<typeof calculateForm3800> | undefined;
   let generalBusinessCredit = new Decimal(0);
   if (hasK1Box15Credits || hasForm3800Input || hasGBCCarryforward) {
@@ -2855,9 +4184,76 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     audit.merge(form3800.lines);
   }
 
-  // Update Schedule 3 total with GBC (Line 6b)
-  const totalOtherCredits = otherCredits.plus(generalBusinessCredit);
-  audit.record("1040", "20", "Schedule 3 nonrefundable credits", totalOtherCredits, "Schedule 3 Line 7");
+  let priorYearMinimumTaxCredit = new Decimal(0);
+  let form8801: ReturnType<typeof calculateForm8801> | undefined;
+  if (input.form8801) {
+    const facts = input.form8801;
+    if ((year === 2026 || facts.sourceFactsConfirmed !== undefined)
+      && [facts.priorYearAMT, facts.priorYearExclusionItemAdjustments, facts.unusedMinimumTaxCreditCarryforward].some(value => value === undefined)) {
+      throw new Error("Form 8801 original required source amounts are unknown");
+    }
+    const optionalAmount = (value: string | undefined) => value === undefined ? undefined : d(value);
+    form8801 = calculateForm8801({
+      taxYear: year, priorYear: facts.priorYear,
+      sourceFactsComplete: facts.sourceFactsComplete, sourceFactsConfirmed: facts.sourceFactsConfirmed,
+      priorYearFilingStatus: facts.priorYearFilingStatus,
+      priorYearTaxableIncome: optionalAmount(facts.priorYearTaxableIncome),
+      priorYearExclusionItemAdjustments: d(facts.priorYearExclusionItemAdjustments),
+      priorYearAMT: d(facts.priorYearAMT),
+      priorYearRegularTax: optionalAmount(facts.priorYearRegularTax),
+      unusedMinimumTaxCreditCarryforward: optionalAmount(facts.unusedMinimumTaxCreditCarryforward),
+      priorYearForm6251Line1And2e: optionalAmount(facts.priorYearForm6251Line1And2e),
+      priorYearMinimumTaxCreditNOLDeduction: optionalAmount(facts.priorYearMinimumTaxCreditNOLDeduction),
+      priorYearMinimumTaxForeignTaxCredit: optionalAmount(facts.priorYearMinimumTaxForeignTaxCredit),
+      priorYearForm6251Line10: optionalAmount(facts.priorYearForm6251Line10),
+      priorYearUnallowedQualifiedElectricVehicleCredit: optionalAmount(facts.priorYearUnallowedQualifiedElectricVehicleCredit),
+      priorYearFiledForm2555: facts.priorYearFiledForm2555,
+      priorYearFiledForm1040NR: facts.priorYearFiledForm1040NR,
+      priorYearNetUSRealPropertyGain: optionalAmount(facts.priorYearNetUSRealPropertyGain),
+      priorYearCapitalGainsRequired: facts.priorYearCapitalGainsRequired,
+      priorYearQualifiedDividends: optionalAmount(facts.priorYearQualifiedDividends),
+      priorYearNetLTCG: optionalAmount(facts.priorYearNetLTCG),
+      priorYearUnrecapturedSection1250Gain: optionalAmount(facts.priorYearUnrecapturedSection1250Gain),
+      priorYearCollectiblesGain: optionalAmount(facts.priorYearCollectiblesGain),
+      priorYearCapitalGainsWorksheet: facts.priorYearCapitalGainsWorksheet && {
+        method: facts.priorYearCapitalGainsWorksheet.method,
+        preferentialIncome: d(facts.priorYearCapitalGainsWorksheet.preferentialIncome),
+        ordinaryIncomeForZeroRate: d(facts.priorYearCapitalGainsWorksheet.ordinaryIncomeForZeroRate),
+        ordinaryIncomeForFifteenRate: d(facts.priorYearCapitalGainsWorksheet.ordinaryIncomeForFifteenRate),
+        section1250Gain: optionalAmount(facts.priorYearCapitalGainsWorksheet.section1250Gain),
+        scheduleDTaxWorksheetLine10: optionalAmount(facts.priorYearCapitalGainsWorksheet.scheduleDTaxWorksheetLine10),
+      },
+      priorYearForeignEarnedIncome: facts.priorYearForeignEarnedIncome && {
+        form2555Lines45And50: d(facts.priorYearForeignEarnedIncome.form2555Lines45And50),
+        disallowedDeductions: d(facts.priorYearForeignEarnedIncome.disallowedDeductions),
+        capitalGainAdjustmentsConfirmed: facts.priorYearForeignEarnedIncome.capitalGainAdjustmentsConfirmed,
+      },
+      currentYearRegularTaxAfterCredits: zeroFloor(incomeTax.plus(partIAdditions).minus(sum(childTaxCredit,otherCredits,generalBusinessCredit))),
+      currentYearTMT: form6251.tentativeMinimumTax,
+    });
+    priorYearMinimumTaxCredit = form8801.creditAllowed;
+    audit.merge(form8801.lines);
+  }
+  const currentMinimumTaxCredit = calculateCurrentMinimumTaxCredit(input, { form6251, form8801,
+    otherAdjustmentComponents: [k1Agg.amtOtherItems, k1Form1041AmtAdjustment,
+      nol?.stage === "final" ? nol.worksheet.priorCharitableAlternativeAdjustment?.amount ?? d("0") : d("0"),
+      deductionUsed === "itemized" ? itemizedDeductionReduction.negated() : d("0")] });
+  if (currentMinimumTaxCredit) audit.merge(currentMinimumTaxCredit.lines);
+  const codZeroMinimumTaxCreditBound = calculateCodZeroMinimumTaxCreditBound(input, { form6251, form8801 });
+  if (codZeroMinimumTaxCreditBound) audit.merge(codZeroMinimumTaxCreditBound.lines);
+  const qofInclusion = calculateQofInclusion(input);
+  if (qofInclusion) audit.merge(qofInclusion.lines);
+  const sched3 = calculateSchedule3(input, {
+    foreignTaxCredit, childDependentCareCredit: dependentCareCredit, educationCredits: educationNonrefundable,
+    retirementSavingsCredit, residentialCleanEnergyCredit: form5695.residentialCleanEnergyCredit,
+    energyImprovementCredit: form5695.energyImprovementCredit, priorYearMinimumTaxCredit, generalBusinessCredit,
+    adoptionCredit, elderlyOrDisabledCredit, newCleanVehicleCredit: form8936?.totalNewVehicleCredit,
+    previouslyOwnedCleanVehicleCredit: form8936?.totalPreviouslyOwnedCredit, netPremiumTaxCredit,
+    excessSocialSecurityWithholding: excessSSWithholding, section1341Credit: claimOfRightStage(input)?.credit,
+  });
+  audit.merge(sched3.lines);
+  const totalOtherCredits = sched3.totalNonrefundableCredits;
+  audit.record("1040", "20", "Schedule 3 nonrefundable credits", totalOtherCredits, "Schedule 3 line 8");
 
   const totalCredits = childTaxCredit.plus(totalOtherCredits);
   audit.record("1040", "21", "Total credits", totalCredits, "Line 19 + Line 20");
@@ -2870,32 +4266,50 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   // Phase 5b: Withholding & Estimated Payments (needed by Form 2210)
   // ═══════════════════════════════════════════════════════════
 
-  const federalWithholding = sum(
-    w2Agg.federalWithheld,
+  const brokerageWithholding = calculateBrokerageWithholding(input.form1099B, {
+    taxYear: year, filingStatus, spousePresent: input.taxpayer.spouse !== undefined,
+  });
+  audit.merge(brokerageWithholding.lines);
+  const digitalAssetSources = calculateForm1099DASources(input, { resolvedLegacyBasis: lotMatchedBasis });
+  audit.merge(digitalAssetSources.lines);
+  const withholdingFrom1099 = sum(
+    brokerageWithholding.federalWithheld,
+    digitalAssetSources.federalWithheld,
     intAgg.federalWithheld,
     divAgg.federalWithheld,
-    ...(input.form1099OID ?? []).map((f) => d(f.federalWithheld)),
+    form1099OID.federalWithheld,
     form1099R.federalWithholding,
     ...(input.formSSA1099 ?? []).map((f) => d(f.federalWithheld)),
     ...(input.formRRB1099 ?? []).map((f) => d(f.federalWithheld)),
     necAgg.federalWithheld,
     miscAgg.federalWithheld,
-    ...(input.form1099G ?? []).map((f) => d(f.federalWithheld)),
-    ...w2gForms.map((f) => d(f.federalWithheld)),
+    form1099G.federalWithheld,
     form1099KResult.federalWithholding
   );
+  const k1FederalWithholding = [...input.scheduleK1, ...k1Form1041s].map(k1 => d(k1.federalIncomeTaxWithheld));
+  if (k1FederalWithholding.some(value => !value.isFinite() || value.lt(0))) throw new Error("K-1 federal withholding must be finite and nonnegative");
+  const withholdingFromOtherForms = sum(form8959.withholdingCredit, ...w2gForms.map(f => d(f.federalWithheld)), ...k1FederalWithholding);
+  const federalWithholding = sum(w2Agg.federalWithheld, withholdingFrom1099, withholdingFromOtherForms);
+  audit.record("1040", "25a", "Federal withholding from Forms W-2", w2Agg.federalWithheld, "Sum W-2 box 2");
+  audit.record("1040", "25b", "Federal withholding from Forms 1099", withholdingFrom1099, "Forms 1099 including original Form1099-B and Form1099-DA Box4, Form 1099-K, SSA-1099 and RRB-1099");
+  audit.record("1040", "25c", "Federal withholding from other forms", withholdingFromOtherForms, "W-2G, reported K-1 federal withholding and Form 8959 line 24");
   audit.record(
     "1040",
     "25d",
     "Federal tax withheld",
     federalWithholding,
-    "Sum all W-2 Box 2 plus withholding from Forms 1099, 1099-OID, 1099-G, W-2G, 1099-K, SSA-1099, and RRB-1099"
+    "Lines 25a + 25b + 25c"
   );
 
-  const estimatedPayments = input.adjustments?.estimatedTaxPayments
+  const priorReturnAppliedPayments = (input.adjustments?.priorYearAppliedCredits ?? []).filter(payment => payment.type === "federal");
+  if (priorReturnAppliedPayments.some(payment => payment.sourceTaxYear !== year - 1)) {
+    throw new Error("Federal prior-return applied credit has an invalid source year");
+  }
+  const currentEstimatedPayments = input.adjustments?.estimatedTaxPayments
     ?.filter((p) => p.type === "federal")
     .reduce((acc, p) => acc.plus(d(p.amount)), new Decimal(0)) ?? new Decimal(0);
-  audit.record("1040", "26", "Estimated tax payments", estimatedPayments, "Sum federal estimated payments");
+  const estimatedPayments = currentEstimatedPayments.plus(sum(...priorReturnAppliedPayments.map(payment => d(payment.amount))));
+  audit.record("1040", "26", "Estimated tax payments and prior-year applied credit", estimatedPayments, "Actual federal estimates + prior return overpayment applied to this return");
 
   // ═══════════════════════════════════════════════════════════
   // Phase 6: Additional Taxes — Schedule 2 Part II (Form 1040 Line 23)
@@ -2906,13 +4320,6 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   const selfEmploymentTax = schedSE.totalSETax;
   audit.record("Sched SE", "12", "Self-employment tax", selfEmploymentTax, "SS portion + Medicare portion");
 
-  // ── Form 8959: Additional Medicare Tax ────────────────
-  // Form 8959 Line 8 requires post-multiplier SE (Schedule SE Line 4a = earnings × 0.9235).
-  // Using pre-multiplier netSEEarnings would overstate the SE contribution.
-  const form8959 = calculateForm8959(input, schedSE.taxableEarnings, filingStatus, constants);
-  const additionalMedicareTax = form8959.additionalMedicareTax;
-  audit.merge(form8959.lines);
-
   // ── Form 8960: Net Investment Income Tax ──────────────
   // Per IRS Form 8960 instructions, allowed passive losses (after Form 8582)
   // reduce NII. Suspended losses do NOT reduce NII.
@@ -2920,20 +4327,91 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   // netPassive/netRental include ALL losses; adding back suspendedLoss removes
   // the disallowed portion, leaving only allowed losses to reduce NII.
   const netAllowedPassive = sum(
-    form8582.netPassive, form8582.netRental, form8582.suspendedLoss
+    form8582.netPassive, form8582.netRental, form8582.suspendedLoss, form8582.ptpNetIncome
   );
+  const niitSources = input.form8960Sources;
+  if (niitSources && (niitSources.sourceTaxYear !== year || niitSources.sourceFactsConfirmed !== true || !niitSources.sourceReference?.trim())) {
+    throw new Error("Form8960 requires actual source year, reference and confirmation");
+  }
+  const niitAmount = (value: string | undefined, name: string) => {
+    const amount = d(value);
+    if (value === undefined || !amount.isFinite()) throw new Error(`Form8960 requires actual finite ${name}`);
+    return amount;
+  };
+  let niitFeieDeduction = d("0");
+  if (form2555) {
+    const line44 = form2555.lines.find(line => line.form === "2555" && line.line === "44")?.value ?? d("0");
+    if (niitSources?.feieAllocableDeductions !== undefined) {
+      niitFeieDeduction = niitAmount(niitSources.feieAllocableDeductions, "FEIE deduction allocation");
+      if (niitFeieDeduction.lt(0) || niitFeieDeduction.gt(line44)
+        || (form2555.housingExclusion.isZero() && !niitFeieDeduction.eq(line44))) throw new Error("Form8960 FEIE deduction allocation must reconcile with Form2555line44");
+    } else if (line44.isZero() || form2555.foreignEarnedIncomeExclusion.isZero()) {
+      niitFeieDeduction = d("0");
+    } else if (form2555.housingExclusion.isZero()) {
+      niitFeieDeduction = line44;
+    } else {
+      throw new Error("Form8960 requires an actual FEIE deduction allocation when line44 also covers housing exclusion");
+    }
+  } else if (niitSources?.feieAllocableDeductions !== undefined && !niitAmount(niitSources.feieAllocableDeductions, "FEIE allocation").isZero()) {
+    throw new Error("Form8960 FEIE allocation requires an actual Form2555 source");
+  }
+  const niitMagi = agi.plus(form2555?.foreignEarnedIncomeExclusion ?? d("0")).minus(niitFeieDeduction);
+  audit.record("Form8960 MAGI WS", "1", "Adjusted gross income", agi, "Actual Form1040 AGI");
+  audit.record("Form8960 MAGI WS", "2a", "Foreign earned income exclusion", form2555?.foreignEarnedIncomeExclusion ?? d("0"), "Form2555line42 only");
+  audit.record("Form8960 MAGI WS", "2b", "FEIE-allocable deductions", niitFeieDeduction, "Actual Form2555line44 allocation; housing excluded");
+  audit.record("Form8960 MAGI WS", "4", "Modified adjusted gross income", niitMagi, "Line1+2a-2b; no represented CFC/PFIC source");
+  const disposition = niitSources?.dispositions;
+  const hasBusinessDisposition = !form4797.ordinaryGainOrLoss.isZero()
+    || !form4797.longTermCapitalGain.isZero()
+    || form4797.propertyResults.some(property => !property.totalGainOrLoss.isZero())
+    || !form4797.supportedK1Section1231Gains.isZero()
+    || !form4797.supportedK1Section1231NonpassiveLosses.isZero();
+  if (hasBusinessDisposition && !disposition) throw new Error("Form8960 business disposition sources require the actual completed adjustment worksheet");
+  if (disposition && (!niitAmount(disposition.regularCapitalGainOrLoss, "regular capital gain/loss").eq(capitalGainLoss)
+    || !niitAmount(disposition.regularOrdinaryGainOrLoss, "regular ordinary gain/loss").eq(sched1.otherGainsOrLosses))) {
+    throw new Error("Form8960 disposition sources must reconcile with actual Form1040line7a and Schedule1line4");
+  }
+  const niitTaxSource = (lineNumber: string) => {
+    const lines = schedA.lines.filter(line => line.form === "Sched A" && line.line === lineNumber);
+    const actual = lines[0];
+    if (lines.length !== 1 || !actual || !actual.value.isFinite()) throw new Error(`Form8960 requires one actual ScheduleA${lineNumber} source`);
+    return actual.value;
+  };
+  const niitOrdinarySources = resolveForm8960OrdinarySources(input, {
+    filingStatus, magi: niitMagi, niitThreshold: constants.niit.threshold[filingStatus],
+    deductions: {
+      itemized: deductionUsed === "itemized", allowedItemizedDeductions: itemizedDeductions,
+      investmentInterest: schedA.investmentInterestDeduction, ordinaryLoss: schedA.oidOrdinaryLossDeduction,
+      saltDeduction: schedA.saltDeduction, incomeOrSalesTaxes: niitTaxSource("5a"),
+      realPropertyTaxes: niitTaxSource("5b"), personalPropertyTaxes: niitTaxSource("5c"),
+      salesTaxElected: schedA.salesTaxElected,
+      foreignIncomeTaxes: schedA.foreignIncomeTaxDeduction,
+      foreignInvestmentTaxes: schedA.foreignTaxElection.niitForeignIncomeTaxes,
+    },
+  });
+  audit.merge(niitOrdinarySources.lines);
+  const niitBusinessIncome = sum(sched1.businessIncome, sched1.supplementalIncome, sched1.farmIncome);
+  // Portfolio royalties are outside the section 469 pool but remain investment
+  // income under section 1411(c)(1)(A)(i). Line 4b must not remove them along
+  // with excluded active business income already included on line 4a.
+  const niitScheduleEIncome = netAllowedPassive.minus(passiveCapital?.ordinaryTransferExclusion ?? passiveDistribution.ordinaryTransferExclusion).plus(schedE.totalRoyaltyIncome);
+  audit.record("Form8960 Source", "portfolio-royalties", "Portfolio royalties retained in investment income", schedE.totalRoyaltyIncome,
+    "Completed Schedule E portfolio royalty component, included once outside the passive activity pool");
   const form8960 = calculateForm8960(
     {
       taxableInterest: totalTaxableInterest,
       ordinaryDividends: totalDividends,
-      // Per IRS Form 8960 Instructions, Line 4b: "This amount is generally the
-      // sum of Schedule D, line 7 and Schedule D, line 15. However, if either
-      // amount is a loss, enter only the gain, if any."
-      // Each category (ST/LT) is independently zero-floored before summing.
-      // This prevents cross-category netting for NII purposes.
-      netCapitalGain: zeroFloor(schedD.netShortTerm).plus(zeroFloor(schedD.netLongTerm)),
-      otherInvestmentIncome: netAllowedPassive,
-      magi: agi,
+      annuityIncome: niitOrdinarySources.annuityIncome,
+      netCapitalGain: capitalGainLoss.plus(sched1.otherGainsOrLosses),
+      excludedDispositionAdjustment: disposition ? niitAmount(disposition.excludedGainOrLossAdjustment, "excluded disposition adjustment") : d("0"),
+      passthroughDispositionAdjustment: disposition ? niitAmount(disposition.passthroughAdjustment, "pass-through disposition adjustment") : d("0"),
+      tradeOrBusinessIncome: niitBusinessIncome,
+      nonInvestmentBusinessAdjustment: niitScheduleEIncome.minus(niitBusinessIncome),
+      investmentInterestExpense: niitOrdinarySources.investmentInterestExpense,
+      investmentIncomeTaxes: niitOrdinarySources.investmentIncomeTaxes,
+      additionalModifications: niitOrdinarySources.ordinaryLossDeduction,
+      otherModifications: form8814IncomeCharacter.ordinaryInvestmentIncome.minus(nol?.stage === "final" ? nol.worksheet.section1411Deduction : d("0")),
+      magi: niitMagi,
     },
     filingStatus,
     constants
@@ -2942,85 +4420,16 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   audit.merge(form8960.lines);
 
   const form5329 = normalizedForm5329 ? calculateForm5329(normalizedForm5329) : undefined;
+  if (sched1.form5329HsaByOwner && filingStatus === "married_filing_jointly" && form5329?.totalAdditionalTax.gt(0)) {
+    throw new Error("Separate HSA5329 sources with other joint5329 taxes require actual owner allocation for those other parts");
+  }
   if (form5329) {
     audit.merge(form5329.lines);
   }
+  const hsaOwnerResults = Object.values(sched1.form5329HsaByOwner ?? {});
   const retirementPlanAdditionalTax = (form5329?.totalAdditionalTax ?? new Decimal(0))
+    .plus(sum(...hsaOwnerResults.map(value => value?.line49 ?? d("0"))))
     .plus(form1099Q?.netPenalty ?? new Decimal(0));
-
-  // ── Line 27a: Earned Income Credit ──────────────────────
-  // Computed before Form 2210 so EIC is included in refundable credits for
-  // accurate estimated tax penalty calculation.
-  // Per IRC §32(c)(2): earned income = wages + net SE earnings − deductible half of SE tax.
-  const eicEarnedIncome = sum(totalWages, netSEEarnings).minus(schedSE.deductibleHalf);
-
-  // Investment income for EIC disqualification: taxable + tax-exempt interest,
-  // dividends, capital gain net income (≥ $0), net rental/royalty income (if positive)
-  const eicInvestmentIncome = input.eic?.investmentIncomeOverride
-    ? d(input.eic.investmentIncomeOverride)
-    : sum(
-        totalTaxableInterest,
-        taxExemptInterest,
-        totalDividends,
-        Decimal.max(new Decimal(0), capitalGainLoss),
-        Decimal.max(new Decimal(0), adjustedScheduleETotal),
-      );
-
-  // Qualifying EIC children from dependents
-  const qualifyingEicChildren = input.taxpayer.dependents.filter((dep) => dep.qualifiesForEIC).length;
-
-  // Compute primary filer's age at end of tax year
-  const primaryBirth = new Date(input.taxpayer.primary.dateOfBirth);
-  const eicYearEnd = new Date(year, 11, 31);
-  const primaryAgeRaw = eicYearEnd.getFullYear() - primaryBirth.getFullYear();
-  const primaryBirthdayThisYear = new Date(year, primaryBirth.getMonth(), primaryBirth.getDate());
-  const primaryAge = primaryBirthdayThisYear <= eicYearEnd ? primaryAgeRaw : primaryAgeRaw - 1;
-
-  // IRC §32(c)(1)(C): Filing Form 2555 disqualifies the taxpayer from EIC
-  let eic: Decimal;
-  let scheduleEIC: ReturnType<typeof calculateEic> | undefined;
-  if (form2555) {
-    eic = new Decimal(0);
-    audit.record("1040", "27a", "Earned Income Credit", eic,
-      "Disqualified: taxpayer filed Form 2555 (IRC §32(c)(1)(C))");
-  } else {
-    scheduleEIC = calculateEic({
-      filingStatus,
-      qualifyingChildren: qualifyingEicChildren,
-      earnedIncome: eicEarnedIncome,
-      agi,
-      investmentIncome: eicInvestmentIncome,
-      primaryAge,
-      mfsEicEligible: input.eic?.mfsEligible ?? false,
-    }, constants);
-    audit.merge(scheduleEIC.lines);
-    eic = scheduleEIC.credit;
-  }
-
-  // ── Form 2210: Estimated Tax Penalty ──────────────────
-  // currentYearTax = 1040 Line 24 minus estimated tax penalty (excluded to avoid circularity).
-  // taxAfterCredits already includes AMT + excess APTC (they're in Line 18 which credits reduce).
-  // Line 24 = Line 22 (taxAfterCredits) + Schedule 2 Part II (SE + Medicare + NIIT).
-  const form2210 = calculateForm2210({
-    currentYearTax: taxAfterCredits.plus(sum(
-      amt,
-      selfEmploymentTax,
-      retirementPlanAdditionalTax,
-      form8919?.line13 ?? new Decimal(0),
-      additionalMedicareTax,
-      niitTax,
-      sched1.hsaAdditionalTax,
-      sched1.hsaRecaptureTax
-    )),
-    withholding: federalWithholding,
-    estimatedPayments,
-    refundableCredits: sum(educationRefundable, sched3.totalRefundableCredits, form8812.actc, eic),
-    priorYearTax: input.priorYear?.priorYearTax ? d(input.priorYear.priorYearTax) : undefined,
-    priorYearAGI: input.priorYear?.priorYearAGI ? d(input.priorYear.priorYearAGI) : undefined,
-    filingStatus,
-  });
-  audit.merge(form2210.lines);
-  const estimatedTaxPenalty = form2210.penalty;
 
   // ── Schedule H: Household Employment Taxes ──────────
   const scheduleH = input.scheduleH
@@ -3031,12 +4440,16 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
           isSpouse: emp.isSpouse,
           isChildUnder21: emp.isChildUnder21,
           isParent: emp.isParent,
+          parentCareExceptionApplies: emp.parentCareExceptionApplies,
           isUnder18NonPrincipal: emp.isUnder18NonPrincipal,
           federalIncomeTaxWithheld: emp.federalIncomeTaxWithheld,
         })),
+        taxYear: year,
         futaApplies: input.scheduleH.futaApplies,
         futaSectionA: input.scheduleH.futaSectionA,
         stateUnemploymentContributions: input.scheduleH.stateUnemploymentContributions,
+        futaStatePeriods: input.scheduleH.futaStatePeriods,
+        stateUnemploymentContributionsPaidLate: input.scheduleH.stateUnemploymentContributionsPaidLate,
         futaCreditReduction: input.scheduleH.futaCreditReduction,
         constants: constants.householdEmployment,
       })
@@ -3045,12 +4458,60 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     audit.merge(scheduleH.lines);
   }
 
+  // Form2210 uses only the other taxes enumerated in its line2 instructions.
+  // In particular, employee payroll tax and excess-contribution excise taxes
+  // are not estimated-tax liabilities merely because they appear on Schedule2.
+  const estimatedTaxBase = taxAfterCredits.plus(sum(selfEmploymentTax,
+    form5329?.line4 ?? d("0"), form5329?.line8 ?? d("0"), form1099Q?.netPenalty ?? d("0"),
+    additionalMedicareTax,niitTax,sched1.hsaAdditionalTax,sched1.hsaRecaptureTax));
+  const estimatedTaxRefundableCredits = sum(educationRefundable,refundableAdoptionCredit,netPremiumTaxCredit,form8812.actc,eic,sched3.section1341Credit);
+  const estimatedTaxInput = {
+    taxYear:year,incomeTaxAfterCredits:taxAfterCredits,currentYearTax:estimatedTaxBase,
+    withholding:federalWithholding.plus(excessSSWithholding),estimatedPayments,
+    refundableCredits:estimatedTaxRefundableCredits,
+    priorYearTax:input.priorYear?.priorYearTax === undefined ? undefined : d(input.priorYear.priorYearTax),
+    priorYearAGI:input.priorYear?.priorYearAGI === undefined ? undefined : d(input.priorYear.priorYearAGI),
+    filingStatus,facts:input.form2210,
+    scheduleAiReturn:{standardDeduction,agi,taxableIncome,itemizedDeductions:deductionUsed === "itemized" ? deductionAmount : undefined,
+      preferentialIncome:qualifiedDividends.gt(0) || netLTCG.gt(0),selfEmployedOwners:schedSE.perTaxpayer.filter(row => row.netSEEarnings.gt(0)).length,
+      specialTaxMethod:Boolean(input.form8615 || input.scheduleJ || input.form2555),schedule1ADeduction:schedule1A?.totalDeduction,
+      ownerSources:buildForm2210OwnerSourceContext(input,schedSE,
+        estimatedTaxBase.minus(taxAfterCredits).minus(selfEmploymentTax).plus(amt).plus(partIAdditions),
+        taxBeforeCredits.minus(taxAfterCredits).plus(estimatedTaxRefundableCredits))},
+    payments:[
+      ...(input.adjustments?.estimatedTaxPayments ?? []).filter(payment=>payment.type === "federal")
+        .map(payment=>({date:payment.date,amount:payment.amount,kind:"estimated" as const})),
+      ...(input.form2210?.priorYearCreditPayments ?? []).map(payment=>({...payment,kind:"prior-year-credit" as const})),
+      ...(input.adjustments?.extensionPayments ?? []).filter(payment=>payment.type === "federal")
+        .map(payment=>({date:payment.date,amount:payment.amount,kind:"extension" as const})),
+      ...(input.form2210?.returnPayments ?? []).map(payment=>({...payment,kind:"return" as const})),
+    ],
+  };
+  const householdTax = scheduleH?.totalTax ?? d("0");
+  let form2210: ReturnType<typeof calculateForm2210>;
+  if (householdTax.gt(0) && federalWithholding.gt(0)) {
+    form2210=calculateForm2210({...estimatedTaxInput,currentYearTax:estimatedTaxBase.plus(householdTax)});
+  } else {
+    // A waiver amount is tested against the final penalty, not this first pass.
+    const firstPass=householdTax.gt(0) && input.form2210 ? {...estimatedTaxInput,facts:{...input.form2210,waiverRequested:false}} : estimatedTaxInput;
+    form2210=calculateForm2210(firstPass);
+    const paymentsRequiredWithoutHousehold=estimatedTaxBase.minus(estimatedTaxRefundableCredits).gte(1000)
+      && form2210.requiredAnnualPayment.gt(0);
+    if (householdTax.gt(0)) {
+      form2210=calculateForm2210(paymentsRequiredWithoutHousehold ? {...estimatedTaxInput,currentYearTax:estimatedTaxBase.plus(householdTax)} : estimatedTaxInput);
+    }
+  }
+  audit.merge(form2210.lines);
+  const estimatedTaxPenalty=form2210.penalty;
+
   // ── Schedule 2: Aggregate Additional Taxes ───────────
   const sched2 = calculateSchedule2({
     amt,
     excessAPTCRepayment,
+    newVehicleTransferRepayment,
+    usedVehicleTransferRepayment,
     selfEmploymentTax,
-    unreportedSSTax: form4137?.line13,
+    unreportedSSTax: tipPayroll.tax,
     form8919Tax: form8919?.line13,
     penaltyTax: retirementPlanAdditionalTax,
     householdEmploymentTax: scheduleH?.totalTax,
@@ -3058,21 +4519,26 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     niitTax,
     hsaAdditionalTax: sched1.hsaAdditionalTax,
     hsaRecaptureTax: sched1.hsaRecaptureTax,
-    estimatedTaxPenalty,
   });
   audit.merge(sched2.lines);
 
-  // Line 23: Only Schedule 2 Part II (SE + Medicare + NIIT) and penalty.
+  // Line 23: Only Schedule 2 Part II; estimated-tax penalty belongs on line 38.
   // AMT and excess APTC (Part I) are already included in Line 17 → Line 18.
-  const totalAdditionalTaxes = sched2.partIITotal.plus(estimatedTaxPenalty);
-  audit.record("1040", "23", "Other taxes", totalAdditionalTaxes, "Schedule 2 Part II + penalty");
+  const totalAdditionalTaxes = sched2.partIITotal;
+  audit.record("1040", "23", "Other taxes", totalAdditionalTaxes, "Schedule 2 Part II only");
 
   // ═══════════════════════════════════════════════════════════
   // Phase 7: Total Tax (Form 1040 Line 24)
-  // Line 24 = Line 22 (taxAfterCredits) + Line 23 (Schedule 2 Part II + penalty)
+  // Line 24 = Line 22 (taxAfterCredits) + Line 23 (Schedule 2 Part II)
   // ═══════════════════════════════════════════════════════════
 
   const totalTax = taxAfterCredits.plus(totalAdditionalTaxes);
+  const paidInFullDate = input.form2210?.returnPaidInFullDate;
+  if (paidInFullDate) {
+    const paid = sum(estimatedTaxInput.withholding, ...estimatedTaxInput.payments.filter((payment) => payment.date <= paidInFullDate).map((payment) => d(payment.amount)));
+    const due = totalTax.minus(estimatedTaxRefundableCredits);
+    if (paid.lt(min(due, roundDollar(due)))) throw new Error("Form 2210 claimed full return payment does not reconcile to total tax due");
+  }
   audit.record("1040", "24", "Total tax", totalTax,
     `Line 22 $${taxAfterCredits} + Line 23 $${totalAdditionalTaxes}`);
 
@@ -3089,10 +4555,11 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   audit.record("1040", "28", "Additional Child Tax Credit", actc,
     "Form 8812 Line 27 (refundable ACTC)");
 
-  // Line 31: Schedule 3 refundable credits (AOC refundable + excess SS)
-  const refundableCredits = sum(educationRefundable, sched3.totalRefundableCredits);
-  audit.record("1040", "31", "Schedule 3 refundable credits", refundableCredits,
-    "Refundable AOC + excess SS withholding");
+  audit.record("1040", "29", "Refundable American opportunity credit", educationRefundable, "Form 8863 line 8");
+  audit.record("1040", "30", "Refundable adoption credit", refundableAdoptionCredit, "Form 8839 line 13; subject to applicable public-benefit limitations");
+  audit.record("1040", "31", "Schedule 3 refundable credits and other payments", sched3.totalRefundableCredits,
+    "Schedule 3 line 15; excludes American opportunity credit");
+  const refundableCredits = sum(educationRefundable, refundableAdoptionCredit, sched3.totalRefundableCredits);
 
   const totalPayments = sum(federalWithholding, estimatedPayments, eic, actc, refundableCredits);
   audit.record("1040", "33", "Total payments", totalPayments, "Withholding + estimated + EIC + ACTC + refundable credits");
@@ -3102,13 +4569,16 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   // ═══════════════════════════════════════════════════════════
 
   const difference = totalPayments.minus(totalTax);
-  const refund = zeroFloor(difference);
-  const amountOwed = zeroFloor(difference.negated());
+  const overpayment = zeroFloor(difference);
+  const refund = zeroFloor(difference.minus(estimatedTaxPenalty));
+  const amountOwed = zeroFloor(difference.negated().plus(estimatedTaxPenalty));
 
-  audit.record("1040", "34", "Overpayment (refund)", refund, "Total payments - Total tax (if positive)");
-  audit.record("1040", "37", "Amount you owe", amountOwed, "Total tax - Total payments (if positive)");
+  audit.record("1040", "34", "Overpayment before estimated-tax penalty", overpayment, "max(0, total payments - total tax)");
+  audit.record("1040", "35a", "Refund after estimated-tax penalty", refund, "max(0, total payments - total tax - line 38 penalty)");
+  audit.record("1040", "37", "Amount you owe", amountOwed, "max(0, total tax - total payments + line 38 penalty)");
+  audit.record("1040", "38", "Estimated-tax penalty", estimatedTaxPenalty, "Form 2210; excluded from total tax");
 
-  // ── Form 1040 Digital Asset Question (Line 1a) ──────────
+  // ── Form 1040 Digital Asset Question ──────────
   // "At any time during 2025, did you: (a) receive (as a reward, award, or
   // payment for property or services); or (b) sell, exchange, gift, or otherwise
   // dispose of a digital asset?"
@@ -3127,15 +4597,39 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
       || (cryptoInput.stakingIncome ?? []).length > 0
       || (cryptoInput.airdropIncome ?? []).length > 0
     ));
-  audit.record("1040", "1a", "Digital asset question", new Decimal(digitalAssetQuestion ? 1 : 0),
+  audit.record("1040", "digital-asset", "Digital asset question", new Decimal(digitalAssetQuestion ? 1 : 0),
     digitalAssetQuestion
       ? "Yes — taxpayer received, sold, exchanged, or disposed of digital assets"
       : "No digital asset activity reported");
 
+  if (input.form172 && nol?.stage !== "final") throw new Error("Form172 current origin requires the completed independent carry calculations");
+  const form172 = input.form172 && nol?.stage === "final" ? calculateForm172Return(input, {
+    agi, totalIncome, totalWages, taxableInterest: totalTaxableInterest, ordinaryDividends: totalDividends,
+    iraTaxable, pensionTaxable, taxableSocialSecurity: socialSecurityBenefitsTaxable, capitalGainLoss, scheduleD: schedD,
+    deductionUsed, deductionAmount, qbiDeduction, additionalDeductions, nonitemizerCharitableDeduction,
+    schedule1: sched1, scheduleA: schedA, currentExcessBusinessLoss: excessBusinessLossAddback,
+    alternativeTaxIncome: form6251.amti,
+    alternativeTaxPrivateActivityInterest: form6251BondSources.privateActivityBondInterest.plus(form8814AmtSources.privateActivityBondInterest),
+    investmentIncome: sum(totalTaxableInterest, totalDividends, niitOrdinarySources.annuityIncome),
+    unverifiedAnnuitySourceIds: niitOrdinarySources.unverifiedAnnuitySourceIds, priorLoss: nol.worksheet,
+  }) : undefined;
+  if (form172) audit.merge(form172.lines);
+  if ((ordinaryCreditSources || foreignTaxDeductionCarryover) && input.netOperatingLoss
+    && (excessBusinessLossAddback.gt(0) || form172?.regular.netOperatingLoss.gt(0) || form172?.alternativeTax.netOperatingLoss.gt(0))) {
+    throw new Error("Foreign empty-NOL composition cannot contain a newly calculated current regular or AMT loss");
+  }
+  const codNolReduction = input.form982NolSources && nol?.stage === "final"
+    ? calculateCodNolReduction(input, { priorLoss: nol.worksheet, currentOrigin: form172 }) : undefined;
+  if (codNolReduction) audit.merge(codNolReduction.lines);
+  const finalEblQbi = codNolReduction?.regular && nol?.stage === "final"
+    ? calculateQbiEblNol(input, { regular: nol.worksheet, codVintages: codNolReduction.regular.vintages }) : eblQbi;
+  if (finalEblQbi.currentQualifiedDeduction?.eq(eblQbi.currentQualifiedDeduction ?? 0) === false) throw new Error("After-tax EBL character reduction cannot change current QBI");
+  audit.merge(finalEblQbi.lines);
   const baseResult: TaxReturnResult = {
     taxYear: year,
     filingStatus,
     digitalAssetQuestion,
+    ...(input.qbiLossSources ? { qbiEblNol: finalEblQbi } : {}),
 
     totalWages,
     totalInterest: totalTaxableInterest,
@@ -3149,21 +4643,27 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     socialSecurityBenefitsGross,
     socialSecurityBenefitsTaxable,
     capitalGainLoss,
-    otherIncome: otherIncome.minus(nolDeduction),
+    otherIncome: sched1.totalAdditionalIncome,
     nolDeduction,
-    totalIncome: totalIncome.minus(nolDeduction),
+    netOperatingLoss: nol?.stage === "final" ? nol.worksheet : undefined,
+    form172,
+    codNolReduction,
+    totalIncome,
 
     adjustmentsToIncome: adjustments,
     agi,
 
     standardDeduction,
+    standardDeductionWorksheet,
     itemizedDeductions,
+    ...(year === 2026 ? { itemizedDeductionReduction } : {}),
     deductionUsed,
     deductionAmount,
     taxableIncome,
 
     ordinaryTax,
     capitalGainsTax: preferentialTax,
+    incomeTaxSourceStatus: regularIncomeTaxSource(constants),
     totalTaxBeforeCredits: incomeTax,
 
     childTaxCredit,
@@ -3195,66 +4695,238 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
         ? calculateForm1099C(form1099CForms, codExclusion, filingStatus, constants)
         : undefined;
       const hasCodExclusions = form1099CResult && form1099CResult.totalExclusions.greaterThan(0);
+      if (codNolReduction && (!form1099CResult
+        || !form1099CResult.totalCancelledDebt.eq(codNolReduction.sourceDischargedAmount)
+        || !form1099CResult.totalInterestIncluded.eq(codNolReduction.sourceIncludedInterest)
+        || !form1099CResult.totalExclusions.eq(codNolReduction.sourceExcludedAmount)
+        || !form1099CResult.taxableCodIncome.eq(codNolReduction.sourceTaxableAmount))) {
+        throw new Error("COD complete original discharge, included interest, exclusion and current taxable income must reconcile");
+      }
 
       // Pre-reduction carryforward values
-      let cfNol = zeroFloor(form461.nolCarryforward.minus(nolDeduction));
+      // Preserve the same selected prior source used for the deduction, including
+      // estate carry. Form461's aggregate also contains its prior EBL alias;
+      // add only the current disallowance here so that prior carry is not doubled.
+      let cfNol = (nol?.stage === "final" ? nol.worksheet.carryforward : zeroFloor(availableNOL.minus(nolDeduction)))
+        .plus(excessBusinessLossAddback).plus(form172?.regular.netOperatingLoss ?? d("0"));
       let cfGbc = form3800?.carryforwardToNextYear ?? new Decimal(0);
       let cfMtc = form8801?.carryforwardToNextYear ?? new Decimal(0);
-      let cfCapitalLoss = adjustedCarryforward.carryforwardShortTerm.plus(adjustedCarryforward.carryforwardLongTerm);
+      let cfShortTermCapitalLoss = adjustedCarryforward.carryforwardShortTerm;
+      let cfLongTermCapitalLoss = adjustedCarryforward.carryforwardLongTerm;
+      let cfCapitalLoss = cfShortTermCapitalLoss.plus(cfLongTermCapitalLoss);
+      let cfPassiveRows = form8582.activityAllocations
+        .filter((a) => a.suspendedLoss.greaterThan(0))
+        .map((a) => ({ partnershipName: a.name, amount: a.suspendedLoss,
+          qbiVintages: a.sourceIndex === undefined ? undefined : rentalLossQbi.get(a.sourceIndex)?.remainingVintages
+            ?? k1QbiLosses.activities.find(source => source.passiveSourceIndex === a.sourceIndex)?.stages.find(stage => stage.limitation === "469")?.remainingVintages }));
+      let cfForeignByCategory = foreignTaxCreditCarryforwardByCategory;
+      let cfAlternativeForeignByCategory = foreignTaxDirectCredit?.amtCarryforwardByCategory ?? foreignTaxOrdinaryCredit?.amt.carryforwardByCategory
+        ?? foreignTaxDeductionCarryover?.amt?.carryforwardByCategory;
       const cfPassive = sum(...form8582.activityAllocations.filter((a) => a.suspendedLoss.greaterThan(0)).map((a) => a.suspendedLoss));
       let cfFtc = foreignTaxCreditCarryforward;
 
       if (hasCodExclusions && codExclusion) {
-        form982 = calculateForm982({
-          bankruptcyExclusion: form1099CResult.bankruptcyExclusion,
-          insolvencyExclusion: form1099CResult.insolvencyExclusion,
-          qualifiedPrincipalResidenceExclusion: form1099CResult.qualifiedPrincipalResidenceExclusion,
-          qualifiedFarmExclusion: form1099CResult.qualifiedFarmExclusion,
-          qualifiedRealPropertyBusinessExclusion: form1099CResult.qualifiedRealPropertyBusinessExclusion,
-          electBasisReductionFirst: codExclusion.electBasisReductionFirst ?? false,
-          attributes: {
-            nolCarryforward: cfNol,
-            generalBusinessCreditCarryforward: cfGbc,
-            minimumTaxCreditCarryforward: cfMtc,
-            capitalLossCarryforward: cfCapitalLoss,
-            aggregateBasisOfProperty: d(codExclusion.aggregateBasisOfProperty),
-            passiveActivityLossCarryforward: cfPassive,
-            foreignTaxCreditCarryforward: cfFtc,
-            basisOfDepreciableProperty: d(codExclusion.basisOfDepreciableProperty),
-            basisOfPrincipalResidence: d(codExclusion.basisOfPrincipalResidence),
-            basisOfDepreciableRealProperty: d(codExclusion.basisOfDepreciableRealProperty),
-          },
-        });
-        audit.merge(form982.lines);
-        cfNol = form982.reducedAttributes.nolCarryforward;
-        cfGbc = form982.reducedAttributes.generalBusinessCreditCarryforward;
-        cfMtc = form982.reducedAttributes.minimumTaxCreditCarryforward;
-        cfCapitalLoss = form982.reducedAttributes.capitalLossCarryforward;
-        cfFtc = form982.reducedAttributes.foreignTaxCreditCarryforward;
-        // Note: passive loss reduction is applied to the aggregate; individual
-        // activity allocations are not rebalanced — the aggregate reduction is
-        // informational for the carryforward totals.
+        if (codNolReduction?.calculationComplete && codNolReduction.regular && codNolReduction.alternativeTax) {
+          if (!form1099CResult.totalExclusions.eq(codNolReduction.sourceExcludedAmount)
+            || !cfNol.eq(codNolReduction.regular.carryforwardBeforeReduction)) throw new Error("COD actual excluded debt and canonical loss carries must reconcile");
+          cfNol = codNolReduction.regular.carryforward;
+          if (input.form982AttributeSources) {
+            if ((input.scheduleK1Form1041 ?? []).some(row => row.isFinalK1
+              && (!d(row.finalYearShortTermCapitalLoss).isZero() || !d(row.finalYearLongTermCapitalLoss).isZero()))) {
+              throw new Error("COD transferred estate capital carry requires its actual original-year and use history");
+            }
+            // Sufficient zero-current-generation proof only. Form8801's current
+            // carry contains older generation, not a calculated discharge-year
+            // PartI difference. In particular an omitted physical6251line8 does
+            // not erase an actual904(j) AMT foreign credit.
+            const actualAlternativeForeignCredit = foreignTaxDirectCredit?.creditAllowed
+              ?? foreignTaxOrdinaryCredit?.amt.creditAllowed ?? d("0");
+            const currentMinimumTaxCreditZeroProven = amt.isZero() && actualAlternativeForeignCredit.isZero()
+              && nol?.stage === "final" && nol.worksheet.alternativeTax.deduction.isZero()
+              && !input.form2555 && form6251.investmentInterestAdjustment.isZero()
+              && form6251.depreciationAdjustment.isZero() && form6251.dispositionAdjustment.isZero()
+              && form6251.otherAdjustments.isZero()
+              && input.scheduleK1.every(row => [row.amtDepreciationAdjustment, row.amtAdjustedGainOrLoss, row.amtOtherItems].every(value => d(value).isZero()))
+              && (input.scheduleK1Form1041 ?? []).every(row => d(row.amtAdjustment).isZero())
+              && (!amtGainFacts || d(amtGainFacts.qualifiedDividends).eq(roundDollar(qualifiedDividends))
+                && d(amtGainFacts.netCapitalGain).eq(roundDollar(netLTCG))
+                && d(amtGainFacts.section1250Gain).eq(section1250Gain) && d(amtGainFacts.collectiblesGain).eq(collectiblesGain));
+            codAttributeReduction = calculateCodAttributeReturn(input, {
+              nol: codNolReduction, generalBusinessCredit: cfGbc, generalBusinessAvailable: form3800?.totalCredit ?? d("0"),
+              generalBusinessUsed: form3800?.allowableCredit ?? d("0"), minimumTaxCredit: cfMtc,
+              minimumTaxAvailable: form8801?.totalAvailableCredit ?? d("0"), minimumTaxUsed: form8801?.creditAllowed ?? d("0"),
+              currentMinimumTaxCreditZeroProven, currentMinimumTaxCredit, codZeroMinimumTaxCreditBound,
+              shortTermCapitalLoss: cfShortTermCapitalLoss, longTermCapitalLoss: cfLongTermCapitalLoss,
+              capitalOpenings: {
+                short: { prior: zeroFloor(d(input.priorYear?.shortTermCapitalLoss).negated()),
+                  current: zeroFloor(schedD.netShortTerm.minus(d(input.priorYear?.shortTermCapitalLoss)).negated()) },
+                long: { prior: zeroFloor(d(input.priorYear?.longTermCapitalLoss).negated()),
+                  current: zeroFloor(schedD.netLongTerm.minus(d(input.priorYear?.longTermCapitalLoss)).negated()) },
+              },
+              passiveLosses: cfPassiveRows.map(row => ({ name: row.partnershipName, amount: row.amount,
+                qualifiedCarryPresent: Boolean(row.qbiVintages?.some(vintage => vintage.remainingLoss.gt(0))) })),
+              passiveCreditUsed: d(input.form3800?.passiveActivityCredits), foreignCreditUsed: foreignTaxCredit,
+              alternativeForeignCreditUsed: actualAlternativeForeignCredit,
+              foreignCredit: cfFtc, foreignCreditByCategory: cfForeignByCategory,
+              alternativeForeignCreditByCategory: cfAlternativeForeignByCategory,
+              foreignDeemedAbsorption: foreignTaxDeductionCarryover?.amt ? {
+                regular: foreignTaxDeductionCarryover.details, alternativeTax: foreignTaxDeductionCarryover.amt.details,
+              } : undefined,
+            });
+            if (!codAttributeReduction) throw new Error("COD actual later-attribute calculation is missing");
+            const rows = codAttributeReduction.regular.records;
+            const closing = (kind: typeof rows[number]['kind']) => sumSourceMoneyRatios(rows.filter(row => row.kind === kind && row.expiredAfterReduction.isZero()).map(row => row.remainingRatio));
+            cfGbc = closing('general_business_credit');
+            cfMtc = codAttributeReduction.regular.minimumTaxCreditPool?.remaining ?? closing('minimum_tax_credit');
+            cfShortTermCapitalLoss = sumSourceMoney(...rows.filter(row => row.kind === 'capital_loss' && row.term === 'short').map(row => row.remaining)).negated();
+            cfLongTermCapitalLoss = sumSourceMoney(...rows.filter(row => row.kind === 'capital_loss' && row.term === 'long').map(row => row.remaining)).negated();
+            cfCapitalLoss = sumSourceMoney(cfShortTermCapitalLoss, cfLongTermCapitalLoss);
+            cfPassiveRows = cfPassiveRows.map(row => ({ ...row,
+              amount: sumSourceMoney(...rows.filter(source => source.kind === 'passive_loss' && source.activityName === row.partnershipName).map(source => source.remaining)),
+            })).filter(row => row.amount.gt(0));
+            cfFtc = closing('foreign_tax_credit');
+            const foreignRows = (ledger: NonNullable<typeof codAttributeReduction>['regular']) => {
+              const result: typeof cfForeignByCategory = {};
+              for (const row of ledger.records.filter(source => source.kind === 'foreign_tax_credit' && source.remaining.gt(0))) {
+                const category = row.foreignCategory!;
+                const group = result[category] ?? (result[category] = []);
+                const existing = group.find(source => source.taxYear === row.originTaxYear);
+                if (!existing) group.push({ taxYear: row.originTaxYear, amount: sumSourceMoneyRatios(ledger.records
+                  .filter(source => source.kind === 'foreign_tax_credit' && source.foreignCategory === category && source.originTaxYear === row.originTaxYear && source.expiredAfterReduction.isZero())
+                  .map(source => source.remainingRatio)) });
+              }
+              return result;
+            };
+            cfForeignByCategory = foreignRows(codAttributeReduction.regular);
+            cfAlternativeForeignByCategory = foreignRows(codAttributeReduction.alternativeTax);
+            for (const [taxSystem, ledger] of [['Regular', codAttributeReduction.regular], ['Alternative', codAttributeReduction.alternativeTax]] as const) {
+              for (const stage of ledger.stages) audit.record(`${taxSystem} COD Attribute Worksheet`, stage.kind,
+                'Excluded income applied to an original later attribute', stage.incomeApplied,
+                'After current tax and actual NOL reduction; original stage order and independent source records', { 'Attribute reduction': stage.attributeReduction });
+            }
+          }
+        } else {
+          if (nol) throw new Error("Actual NOL carry with current debt cancellation requires its regular and AMT vintage attribute-reduction worksheets");
+          if (form1099CResult.insolvencyExclusion.gt(0) && !codExclusion.bankruptcy && !codExclusion.electBasisReductionFirst
+            && form1099CResult.qualifiedPrincipalResidenceExclusion.isZero() && form1099CResult.qualifiedFarmExclusion.isZero()
+            && form1099CResult.qualifiedRealPropertyBusinessExclusion.isZero()) {
+            throw new Error("COD ordinary insolvency requires actual complete attribute sources before reducing or claiming exhausted balances");
+          }
+          form982 = calculateForm982({
+            bankruptcyExclusion: form1099CResult.bankruptcyExclusion,
+            insolvencyExclusion: form1099CResult.insolvencyExclusion,
+            qualifiedPrincipalResidenceExclusion: form1099CResult.qualifiedPrincipalResidenceExclusion,
+            qualifiedFarmExclusion: form1099CResult.qualifiedFarmExclusion,
+            qualifiedRealPropertyBusinessExclusion: form1099CResult.qualifiedRealPropertyBusinessExclusion,
+            electBasisReductionFirst: codExclusion.electBasisReductionFirst ?? false,
+            attributes: {
+              nolCarryforward: cfNol,
+              generalBusinessCreditCarryforward: cfGbc,
+              minimumTaxCreditCarryforward: cfMtc,
+              capitalLossCarryforward: cfCapitalLoss,
+              aggregateBasisOfProperty: d(codExclusion.aggregateBasisOfProperty),
+              passiveActivityLossCarryforward: cfPassive,
+              foreignTaxCreditCarryforward: cfFtc,
+              basisOfDepreciableProperty: d(codExclusion.basisOfDepreciableProperty),
+              basisOfPrincipalResidence: d(codExclusion.basisOfPrincipalResidence),
+              basisOfDepreciableRealProperty: d(codExclusion.basisOfDepreciableRealProperty),
+            },
+          });
+          audit.merge(form982.lines);
+          cfNol = form982.reducedAttributes.nolCarryforward;
+          cfGbc = form982.reducedAttributes.generalBusinessCreditCarryforward;
+          cfMtc = form982.reducedAttributes.minimumTaxCreditCarryforward;
+          cfCapitalLoss = form982.reducedAttributes.capitalLossCarryforward;
+          cfFtc = form982.reducedAttributes.foreignTaxCreditCarryforward;
+          // Note: passive loss reduction is applied to the aggregate; individual
+          // activity allocations are not rebalanced — the aggregate reduction is
+          // informational for the carryforward totals.
+        }
       }
 
+      const regularCharity = nol?.stage === "final" ? nol.worksheet.priorCharitableCarryover ?? nol.worksheet.charitableCarryover : undefined;
+      const determinedRegularCharity = nol?.stage === "final" ? nol.worksheet.determinedCharitableCarryover : undefined;
+      const determinedAlternativeCharity = nol?.stage === "final" ? nol.worksheet.determinedAlternativeCharitableCarryover : undefined;
+      const alternativeCharity = nol?.stage === "final" ? nol.worksheet.priorAlternativeCharitableCarryover ?? nol.worksheet.alternativeCharitableCarryover ?? regularCharity : undefined;
+      const alternativeCharityCarry = nol?.stage === "final"
+        ? nol.worksheet.priorAlternativeCharitableCarryover?.carryforward ?? nol.worksheet.alternativeCharitableCarryover?.carryforward
+          ?? nol.worksheet.charitableCarryover?.alternativeTaxCarryforward : undefined;
+      const regularCharityYear = nol?.stage === "final" ? nol.worksheet.priorCharitableCarryover?.contributionYear ?? year : year;
+      const alternativeCharityYear = nol?.stage === "final" ? nol.worksheet.priorAlternativeCharitableCarryover?.contributionYear ?? year : year;
+      if ((regularCharity?.carryforward.gt(0) && (!regularCharity.category || !regularCharity.medium))
+        || (alternativeCharityCarry?.gt(0) && (!alternativeCharity?.category || !alternativeCharity.medium))) {
+        throw new Error("Positive charitable NOL carry requires the actual category and medium");
+      }
       return {
         capitalLoss: cfCapitalLoss,
-        shortTermCapitalLoss: adjustedCarryforward.carryforwardShortTerm,
-        longTermCapitalLoss: adjustedCarryforward.carryforwardLongTerm,
-        suspendedPassiveLosses: form8582.activityAllocations
-          .filter((a) => a.suspendedLoss.greaterThan(0))
-          .map((a) => ({ partnershipName: a.name, amount: a.suspendedLoss })),
+        shortTermCapitalLoss: cfShortTermCapitalLoss,
+        longTermCapitalLoss: cfLongTermCapitalLoss,
+        suspendedPassiveLosses: cfPassiveRows,
+        ...(codAttributeReduction ? { suspendedPassiveCredits: codAttributeReduction.regular.records
+          .filter(row => row.kind === 'passive_credit' && row.remaining.gt(0))
+          .map(row => ({ sourceId: row.sourceId, activityName: row.activityName!, originTaxYear: row.originTaxYear,
+            creditKind: row.creditKind!, amount: row.remaining })) } : {}),
+        ...(passiveCapital ? { k1PassiveByCharacter: passiveCapital.rows.map(row => ({
+          k1SourceId: `scheduleK1:${row.k1Index}`, accountHolder: row.accountHolder,
+          taxYear: year, ordinary: row.ordinarySuspended, shortTermCapital: row.shortTermSuspended, longTermCapital: row.longTermSuspended,
+        })) } : {}),
         suspendedPTPLosses: form8582.ptpSuspendedLosses
           .filter((p) => p.netSuspended.greaterThan(0))
           .map((p) => ({ partnershipName: p.name, amount: p.netSuspended })),
         foreignTaxCreditCarryforward: cfFtc,
-        foreignTaxCreditCarryforwardByCategory,
+        foreignTaxCreditCarryforwardByCategory: cfForeignByCategory,
+        ...(cfAlternativeForeignByCategory ? { amtForeignTaxCreditCarryforwardByCategory: cfAlternativeForeignByCategory } : {}),
         qbiLossCarryforward: form8995Result?.qbiLossCarryforward ?? form8995AResult?.qbiLossCarryforward ?? new Decimal(0),
+        ...(input.qbiLossSources ? { qbiSuspendedLosses: k1QbiLosses.activities.flatMap(activity => [
+          ...activity.stages.filter(stage => stage.remainingVintages.length > 0).map(stage => ({
+            sourceId: activity.sourceId, accountHolder: activity.accountHolder, limitation: stage.limitation,
+            vintages: stage.remainingVintages,
+          })), ...(activity.excessBusinessLossVintage ? [{ sourceId: activity.sourceId, accountHolder: activity.accountHolder,
+            limitation: "461(l)" as const, vintages: [activity.excessBusinessLossVintage] }] : []),
+        ]) } : {}),
         investmentInterestExpense: form4952?.disallowedCarryforward ?? new Decimal(0),
         minimumTaxCredit: cfMtc,
-        charitableContributions: schedA?.charitableCarryforward ?? new Decimal(0),
-        charitableContributionsByYear: schedA?.charitableCarryforwardByYear ?? [],
+        charitableContributions: determinedRegularCharity ? determinedRegularCharity.carryforward : regularCharity
+          ? regularCharity.carryforward
+          : schedA.charitableTreatment ? sum(...schedA.charitableTreatment.carryforwards.map(row => row.amount)) : schedA.charitableCarryforward,
+        charitableContributionsByYear: determinedRegularCharity ? determinedRegularCharity.carryforwards.map(({taxYear, category, medium, amount}) => ({taxYear, category, medium, amount})) : regularCharity
+          ? regularCharity.carryforward.gt(0)
+            ? [{ taxYear: regularCharityYear, category: regularCharity.category, medium: regularCharity.medium, amount: regularCharity.carryforward }] : []
+          : schedA.charitableTreatment?.carryforwards ?? schedA.charitableCarryforwardByYear,
+        ...(k1CharitableSources?.statements.some(row => row.atRiskAllocation) ? { k1AtRiskByCharacter: k1CharitableSources.statements.flatMap(row => {
+          const risk = row.atRiskAllocation;
+          if (!risk) return [];
+          const identity = { k1SourceId: `scheduleK1:${row.k1Index}`, accountHolder: row.accountHolder };
+          return [{ ...identity, taxYear: year,
+            ordinary: risk.currentOrdinarySuspended, shortTermCapital: risk.currentShortTermSuspended, longTermCapital: risk.currentLongTermSuspended,
+            charitable: risk.charitable }, ...[...new Set(risk.prior.map(item => item.taxYear))].sort((a,b)=>a-b).map(taxYear => {
+              const priorRecords = risk.prior.filter(item=>item.taxYear===taxYear);
+              return { ...identity, taxYear,
+                ordinary: sum(...priorRecords.filter(item=>item.character==='ordinary').map(item=>item.suspended)),
+                shortTermCapital: sum(...priorRecords.filter(item=>item.character==='short_term_capital').map(item=>item.suspended)),
+                longTermCapital: sum(...priorRecords.filter(item=>item.character==='long_term_capital').map(item=>item.suspended)),
+                charitable: priorRecords.flatMap(item=>item.gift?[{ sourceId:item.gift.basisSourceId, basisOriginTaxYear:item.gift.basisOriginTaxYear,
+                  contributionDate:item.gift.contributionDate, category:item.gift.category, amountAfterBasis:item.remaining,
+                  allowed:item.allowed, suspended:item.suspended }]:[]), priorRecords };
+            })];
+        }) } : {}),
+        ...(determinedAlternativeCharity ? {
+          amtCharitableContributions: determinedAlternativeCharity.carryforward,
+          amtCharitableContributionsByYear: determinedAlternativeCharity.carryforwards.map(({taxYear, category, medium, amount}) => ({taxYear, category, medium, amount})),
+        } : alternativeCharityCarry !== undefined ? {
+          amtCharitableContributions: alternativeCharityCarry,
+          amtCharitableContributionsByYear: alternativeCharityCarry.gt(0)
+            ? [{ taxYear: alternativeCharityYear, category: alternativeCharity?.category, medium: alternativeCharity?.medium, amount: alternativeCharityCarry }] : [],
+        } : form172?.charitableSources ? {
+          // Only a validated same-basis current source with independently empty
+          // histories supplies this amount. An old-NOL comparison takes priority.
+          amtCharitableContributions: form172.charitableSources.percentageCarryforward,
+          amtCharitableContributionsByYear: form172.charitableSources.percentageCarryforwards,
+        } : {}),
         excessBusinessLossNOL: form461.nolCarryforward,
         nolCarryforward: cfNol,
+        ...(codNolReduction?.alternativeTax ? { alternativeTaxNolCarryforward: codNolReduction.alternativeTax.carryforward }
+          : form172 ? { alternativeTaxNolCarryforward: form172.alternativeClosingCarryforward } : {}),
         generalBusinessCredit: cfGbc,
         suspendedBusinessInterest: section163jCarryforward,
         partnerBasis: schedE.partnerships
@@ -3273,12 +4945,13 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
           })),
         cryptoWashSaleDisallowed: washSaleCarryforward?.totalDisallowedLoss ?? new Decimal(0),
         disasterDistributionDeferrals: form8915FResult?.carryforwardDeferrals ?? [],
+        hsaExcessByOwner: sched1.form5329HsaByOwner ? Object.fromEntries(Object.entries(sched1.form5329HsaByOwner).map(([owner, value]) => [owner, value?.line48 ?? d("0")])) : undefined,
         excessContributions: {
           traditionalIRA: form5329?.line16 ?? new Decimal(0),
           rothIRA: form5329?.line24 ?? new Decimal(0),
           coverdellESA: form5329?.line32 ?? new Decimal(0),
           archerMSA: form5329?.line40 ?? new Decimal(0),
-          hsa: form5329?.line48 ?? new Decimal(0),
+          hsa: (form5329?.line48 ?? d("0")).plus(sum(...hsaOwnerResults.map(value => value?.line48 ?? d("0")))),
           // ABLE section: total excess = max(0, Line 50 - Line 51) + Line 52
           able: form5329
             ? Decimal.max(new Decimal(0), form5329.line50.minus(form5329.line51)).plus(form5329.line52)
@@ -3288,10 +4961,11 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     })(),
 
     // Sub-results
+    foreignTaxDeductionCarryover,
+    foreignTaxDirectCredit,
+    foreignTaxOrdinaryCredit,
     scheduleA: schedA,
-    schedule1: nolDeduction.greaterThan(0)
-      ? { ...sched1, nolDeduction, totalAdditionalIncome: sched1.totalAdditionalIncome.minus(nolDeduction) }
-      : sched1,
+    schedule1: sched1,
     scheduleB: schedB,
     scheduleC: schedC,
     scheduleD: schedD,
@@ -3302,33 +4976,45 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     form8582,
     form1099R,
     form2441,
+    form2441Benefits,
     form1099SA,
     form4137,
+    form4137ByOwner: tipPayroll.forms.some(form => form.sourceFactsVerified) ? tipPayroll.byOwner : undefined,
     form8919,
     form4797,
     form5329,
+    form5329HsaByOwner: sched1.form5329HsaByOwner,
     form8880,
     form8606,
     form8606ByOwner: form8606ByOwnerResults,
     form8889: sched1.form8889,
     form8889ByOwner: sched1.form8889ByOwner,
     seHealthInsuranceWorksheet: seHealthInsuranceWorksheetResult,
+    form7206: actualHealthInsurance?.form7206,
     socialSecurityBenefitsWorksheet,
     iraDeductionWorksheet: iraDeductionWorksheetResult,
     form8959,
     form8962,
     form8960,
     form982,
+    codAttributeReduction,
     form8824,
     form2210,
     form8815,
     form8812,
+    form8863,
+    schedule1A,
+    nonitemizerCharitableDeduction,
     form8995: form8995Result,
     form8995A: form8995AResult,
     form8936,
     form8801,
+    currentMinimumTaxCredit,
+    codZeroMinimumTaxCreditBound,
+    qofInclusion,
     form4684,
     form4952,
+    form4952Amt,
     scheduleH,
     schedule2: sched2,
     schedule3: sched3,
@@ -3338,14 +5024,19 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     form8615: form8615Result,
     form8814,
     form8839,
+    form5695,
     form461,
     scheduleJ: scheduleJResult,
     form3800,
     form1099Q,
+    form1099OID: form1099OID.sources.length ? form1099OID : undefined,
     form1099K: form1099KResult.numberOfForms > 0 ? form1099KResult : undefined,
     form8915F: form8915FResult,
     form1098ESummary: form1098EResult,
+    studentLoanInterestWorksheet: studentLoanInterestWorksheetResult,
+    form1099G: (input.form1099G ?? []).length ? form1099G : undefined,
     taxableRefundWorksheet: taxableRefundWorksheetResult,
+    taxableStateRefundRecoveries: taxableStateRefundRecoveriesResult,
     salesTaxDeduction: salesTaxResult,
     scheduleK1Form1041Summary: k1Form1041Summary,
 
@@ -3367,6 +5058,8 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     return baseResult;
   }
 
+  assertQofStateMethod(input, "Illinois");
+  assertClaimOfRightStateMethod(input, "Illinois");
   return {
     ...baseResult,
     stateReturns: {
@@ -4565,7 +6258,7 @@ function deriveForm5329HsaDefaults(
     const rawOwnerExcess = Decimal.max(new Decimal(0), result.line2.plus(result.line11).minus(result.line8));
     currentYearExcess = currentYearExcess.plus(rawOwnerExcess);
     supportedReturnedExcessContributionsByDueDate = supportedReturnedExcessContributionsByDueDate.plus(
-      Decimal.min(rawOwnerExcess, result.supportedReturnedExcessContributions)
+      Decimal.min(rawOwnerExcess, result.supportedReturnedExcessContributionPrincipal)
     );
   }
 
@@ -5614,13 +7307,7 @@ function isReturnedContributionByDueDate(form: Form1099R): boolean {
 }
 
 /** Returns true if the person is age 50 or older by December 31 of the tax year. */
-function isAge50OrOlder(dateOfBirth: string, taxYear: number): boolean {
-  const birth = new Date(dateOfBirth);
-  const yearEnd = new Date(taxYear, 11, 31); // December 31
-  const ageAtYearEnd = yearEnd.getFullYear() - birth.getFullYear();
-  const birthdayThisYear = new Date(taxYear, birth.getMonth(), birth.getDate());
-  return birthdayThisYear <= yearEnd ? ageAtYearEnd >= 50 : ageAtYearEnd - 1 >= 50;
-}
+
 
 /**
  * Combine two per-spouse Form 8606 results into a single combined result.

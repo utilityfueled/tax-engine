@@ -1,0 +1,61 @@
+form: "Form1099Q actual K12 prepaid benefits"
+fullName: "Qualified prepaid benefits and the separate K12 cash-distribution cap"
+taxYear: [2025, 2026]
+irsReference: "https://uscode.house.gov/us/usc/119-118/t26/s529/"
+sources:
+  - "https://www.irs.gov/publications/p970"
+notes: |
+  Sources refreshed October25,2026. IRC529(b)(1)(A)(i) defines actual prepaid
+  tuition credits or certificates; institutional programs additionally need
+  the qualified trust and ruling/determination under529(b)(1). Clause(c)(3)(B)(i)
+  separately excludes qualifying benefits, while(e)(3)(A) limits cash
+  distributions from(b)(1)(A)(ii) savings programs to10000 in2025 and20000
+  in2026. Section(c)(7) expands eligible K12 expenses and its2025 amendment
+  applies to distributions afterJuly4. Existing category/date eligibility still
+  applies; this package does not turn a direct cash payment into a prepaid benefit.
+  Before using the distinct in-kind K12 treatment require actual program sponsor,
+  qualified-program source, redeemed tuition credit/certificate, and institutional
+  trust/determination when relevant. Preserve unknown and false. Outside-plan
+  amounts must be explicitly reconfirmed as cash only when this method is used;
+  historical amounts are neither relabeled nor silently converted. Benefit
+  allocation and cash allocation cannot double-use the same expense. These are
+  derived statutory controls, not published IRS numerical examples or human tax
+  qualification. Final2026 and filing gates remain closed.
+  Section529(c)(3)(B)(iv) treats the furnished benefit as its distribution.
+  Expanded2025 in-kind categories therefore use actual provided dates; an
+  explicit statement date or after-July4 answer must agree. Mixed pre/post
+  furnished dates require a separate allocation method and cannot be treated
+  as uniformly eligible. Cash distributions retain their own actual timing.
+lines:
+  - line: "furnished-date"
+    description: "Use the furnished benefit date for expanded2025 eligibility"
+    formula: "A July4 furnished benefit cannot be excluded using an August statement date or a conflicting all-after answer. Actual July5 benefits qualify without inventing a missing statement date. An early benefit and independently late cash leave800 prepaid earnings taxable plus200 cash earnings; mixed provided dates reject."
+    testRef: "tests/engine/forms/form-1099-q-in-kind-k12.test.ts::binds expanded eligibility to the actual furnished benefit dates"
+  - line: "return"
+    description: "Carry cash-limited earnings and additional tax to the actual recipient"
+    formula: "50000 wages plus 200 taxable cash earnings gives 50200 AGI and 20 additional tax; original recipient identities remain required and the 2026 production gate remains closed"
+    testRef: "tests/engine/education-in-kind-k12-return.test.ts::carries cash-limited earnings without taxing the qualified prepaid benefit"
+  - line: "cash-cap"
+    description: "Apply the beneficiary annual cap to cash distributions only"
+    formula: "Actual prepaid4000/earnings800 plus cash2000/earnings400, tuition6000 and outside cash19000 in2026 leave cashQEE1000; total excluded1000,taxable200,additional20. In2025 outsidecash9000 gives the same values. A qualified40000 in-kind benefit is not reduced by the separate cash cap."
+    testRef: "tests/engine/forms/form-1099-q-in-kind-k12.test.ts::keeps actual prepaid benefits outside the cash-only annual cap"
+  - line: "source"
+    description: "Require actual program qualification and cash-source confirmation"
+    formula: "Missing or false prepaid-program/credit facts, missing actual source reference, institutional trust or determination, and unknown outside cash confirmation reject. An actual cash statement cannot be relabeled with benefit facts. Source identities and exact allocation conservation remain required."
+    testRef: "tests/engine/forms/form-1099-q-in-kind-k12.test.ts::rejects unverified plan and outside-cash source facts"
+  - line: "boundaries"
+    description: "Retain exact cash rounding, category dates and known ineligibility"
+    formula: "Cash2000/earnings400 with remaining capacity997.50 excludes200; capacity997.49 excludes199. Reversing statements does not change amounts. Known ineligible benefit remains taxable; expanded2025 K12 categories still require distributions afterJuly4."
+    testRef: "tests/engine/forms/form-1099-q-in-kind-k12.test.ts::preserves cash rounding and actual category dates"
+  - line: "guide"
+    description: "Collect and preserve original prepaid program sources"
+    formula: "Guided actual source fields retain program sponsor, qualification, credit redemption, source reference and institutional evidence; clearing confirmation leaves unknown and blocks calculation. Existing saved amounts are not assigned new confirmation."
+    testRef: "tests/guided-interview/guided-in-kind-k12.test.ts::preserves original plan facts without backfilling confirmation"
+  - line: "review"
+    description: "Bind program and outside cash facts to the original review calculation"
+    formula: "Review requires the original program/cash source audit and private original-source context; changed confirmation or reference rejects before PDF I/O. Reference and Form5329 show200taxable,20additional, source amounts and review notices without original identifiers or source references."
+    testRef: "tests/pdf/form-1099-q-in-kind-k12.test.ts::binds the actual plan and cash-cap sources before review output"
+  - line: "browser"
+    description: "Preserve actual program facts and unknown answers in the browser"
+    formula: "Desktop and mobile collect the actual sponsor, institutional trust and determination; edits clear source confirmation, missing cash-only answers block calculation, reload preserves exact source values, and private references remain local"
+    testRef: "apps/web/tests/guided-in-kind-k12.spec.ts::preserves actual prepaid program facts and unknown cash sources"

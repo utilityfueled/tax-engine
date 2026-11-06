@@ -1,0 +1,76 @@
+form: "Form8960 ordinary annuity and tax sources"
+fullName: "Source reconciliation for individual NIIT lines3,9a,9b and10"
+taxYear: 2026
+irsReference: "https://www.irs.gov/instructions/i8960"
+sources:
+  - "https://www.irs.gov/instructions/i1099r"
+  - "https://www.ecfr.gov/current/title-26/section-1.1411-4"
+  - "https://uscode.house.gov/us/usc/119-118/t26/s1411/"
+  - "https://www.irs.gov/publications/p575"
+notes: |
+  Explicit annuity classifications bind the actual local account reference in
+  addition to payer identity, owner and monetary amounts. Equal-value accounts
+  from the same payer can have different plan status; a row index is not proof
+  of account identity. Missing or replaced references must remain unresolved.
+  Retrieved2026-10-25. Final2025 Form8960 instructions lines3 and9a-10;
+  final2026 Form1099R codeD; Regulations1.1411-4(f)(3)/(7) and(g)(1).
+  CodeD identifies a nonqualified annuity/insurance distribution potentially
+  subject to NIIT; actual taxable Box2a, not gross Box1, is included on line3.
+  Pub575 prohibits using the Simplified Method for a nonqualified annuity.
+  Unresolved General Rule amounts stay blocked; known Box2a remains supported.
+  A generic non-IRA pension code does not prove either inclusion or exemption.
+  Source classifications bind actual return-row identity, payer name/TIN,
+  owner and amounts so replacing a statement with equal amounts cannot reuse
+  a different payer's exempt-plan classification.
+  Unknown positive pension classifications remain unverified only below the
+  NIIT threshold; both2025/2026 above-threshold paths require actual classification.
+
+  Tax expenses must be allowed regular itemized deductions, allocable to NII,
+  and not already deducted in a business/rental subtotal. The completed actual
+  worksheet records a documented reasonable allocation method and separate
+  post-SALT regular deductions for5a/5b/5c; all three reconcile to actual5e.
+  Sales taxes cannot reduce NII. The bounded ordinary source contract covers
+  current state/local income, real property and personal property taxes.
+  Foreign tax deduction/credit elections and recovery-year worksheets require
+  their separate source contracts; no foreign deduction is inferred.
+  Interest9a, tax9b and TIPS ordinary loss10 share the final post-section68
+  itemized allowance, with actual component allocation when it binds multiple
+  components. Monetary calculations use Decimal; sum source cents before
+  rounding the physical tax-deduction line. No filing gate changes.
+lines:
+  - line: "review-identifiers"
+    description: "Keep actual account identity out of render-only review data"
+    formula: "Remove accountReference only from recursively cloned review inputs/results; retain the complete original account facts for calculation and encrypted backup"
+    testRef: "tests/pdf/review-identifier-redaction.test.ts::redacts actual account references from review copies without altering source records"
+  - line: "review-pdf"
+    description: "Preserve actual annuity and allowed tax deductions in the review PDF"
+    formula: "Final2025 physical lines3/9b/12/17 copy canonical audits10000/2501/27499/1045; reopened canonical fields and widgets agree and each page retains the review-only notice"
+    testRef: "tests/pdf/form-8960-ordinary-sources.test.ts::preserves audited ordinary sources in reopened canonical and widget fields"
+  - line: "schema"
+    description: "Preserve unknown source fields and actual source vectors"
+    formula: "Optional annuity and tax worksheets preserve omission; no missing amount, identity, owner, classification or allocation becomes zero"
+    testRef: "tests/engine/forms/form-8960-ordinary-sources.test.ts::preserves missing ordinary-source fields in the input schema"
+  - line: "3-code-d"
+    description: "Reported nonqualified annuity taxable income"
+    formula: "Sum actual taxable amounts for valid codeD source rows, after actual owner, finite amount and inconsistent IRA/qualified-plan checks; do not use Box1 or add the same income to regular AGI twice"
+    testRef: "tests/engine/forms/form-8960-ordinary-sources.test.ts::includes actual codeD taxable amounts once and keeps qualified distributions separate"
+  - line: "3-source-binding"
+    description: "Actual annuity classification binds the return statement"
+    formula: "Unique form1099R:index source IDs, actual payer name/TIN, account reference, owner, Box1 and taxable regular-source amount must reconcile; all non-IRA reported taxable amounts stay between zero and gross; positive above-threshold generic pension sources require actual classification in both supported years, and codeD cannot be overridden as exempt"
+    testRef: "tests/engine/forms/form-8960-ordinary-sources.test.ts::rejects missing conflicting duplicate or stale annuity classifications"
+  - line: "9b-source"
+    description: "Current allowed tax expenses allocable to NII"
+    formula: "Actual5a/5b/5c source amounts bind the worksheet; nonnegative regular deductible category amounts cannot exceed those sources and round(sum) must equal5e; actual NII allocations cannot exceed their deductible category; sum and round once for9b"
+    testRef: "tests/engine/forms/form-8960-ordinary-sources.test.ts::reconciles actual tax deductions and preserves source cents before rounding"
+  - line: "9b-eligibility"
+    description: "Exclude sales taxes and unavailable regular deductions"
+    formula: "A positive NII allocation to sales taxes rejects; standard deduction allows no itemized NIIT expense; blank method/source facts, duplicate use or allocations above actual source/regular limits reject"
+    testRef: "tests/engine/forms/form-8960-ordinary-sources.test.ts::rejects unavailable contradictory or unreconciled tax deductions"
+  - line: "combined-limit"
+    description: "One post-section68 allowance across ordinary deductions"
+    formula: "Combined allowed interest,taxes and ordinary loss equals min(combined source deductions,actual final itemized allowance); a binding limit across multiple positive components requires explicit actual allocation, never separate reuse of the cap"
+    testRef: "tests/engine/forms/form-8960-ordinary-sources.test.ts::shares the final itemized allowance across interest taxes and ordinary losses"
+  - line: "return"
+    description: "Canonical source handoff without duplicate ordinary income"
+    formula: "Existing Form1099R remains the only regular pension-income source; actual taxable annuities additionally enter NIIT3 and allowed taxes enter9b. Preserve existing disposition/MAGI/interest/TIPS routing and actual year."
+    testRef: "tests/engine/federal-niit-ordinary-sources.test.ts::includes actual annuity income and allowed tax expenses in canonical NIIT once"

@@ -1,0 +1,28 @@
+form: "PA Michigan Native Browser History"
+fullName: "Native Michigan agency settlement and independent filed originals in the actual browser"
+taxYear: 2025
+reference: "https://www.michigan.gov/-/media/Project/Websites/taxes/Forms/IIT/TY2025/MI-1040-Book.pdf"
+notes: |
+  Browser regression for the existing reviewed finite technical method, not new tax
+  interpretation. Actual local production bundle in independent Chromium contexts
+  at1280x900 and390x844. Only unrelated complete fictional general2025 records and
+  independently entered historical local return may be seeded. Michigan settlement
+  packet and webdraft start absent; every MI agency/history/correction field is
+  entered through actual labelled controls. No post-edit private source injection.
+  Frozen reviewed literal sources: current legalreceipt49.25->149.25; immutable
+  filed federal AGI211001 and filed royalty11001; current displayed AGI211001->
+  210901; exact original211000.50/current210900.50. Original PAreported tax6478
+  ->6475, cashMIwithheld80.20/printed80/actualreceived80.20/netpaid0/PAcredit0.
+  No fabricated tax-payment source: independently supplied expectedprincipal6475
+  is entered explicitly during ordinarysource reconciliation. No filing approval,
+  live agency/staging/provider operation or qualified human interpretation claimed.
+lines:
+  - line: "native-origination-and-correction"
+    formula: "Begin absent MIpacket/draft. Enter all actual remittance, publication-use, filed MI return, separate filed federal originals/use, submitted claim, agency determination, received cash and complete account viaUI. Confirm child then parent. Edit original receipt through originalUI; state disappears until actual PA current originals, ordinary payment facts and full MI expense/amendment/account correction are explicitly reconciled. Filed211001/49.25 stay immutable; current149.25 yields6475. Reopen preserves all sources."
+    testRef: "apps/web/tests/pa-mi-native-history.spec.ts::originates MI settlement and preserves filed history through actual expense correction"
+  - line: "privacy-and-viewports"
+    formula: "Desktop1280/mobile390 both run same source journey; no JSON editor/rawpacket entry, no source originals in request URLs/bodies, no browser page/console errors, no horizontal document overflow; retain screenshots at nativeconfirmed/corrected/reopened states."
+    testRef: "apps/web/tests/pa-mi-native-history.spec.ts::originates MI settlement and preserves filed history through actual expense correction"
+  - line: "normal-runner-collection"
+    formula: "Normal pnpm test:web --list must collect every existing browser test and both unchanged nativeMI desktop/mobile journeys from the committed configuration. Shared root fixtures use the existing web tsconfig for web and engine aliases throughout their import graph. Fixture originals, literal tax oracles, assertions, privacy checks, worker/retry limits, timeouts and normal runner prerequisites remain unchanged."
+    testRef: "apps/web/tests/pa-mi-native-history.spec.ts::originates MI settlement and preserves filed history through actual expense correction"

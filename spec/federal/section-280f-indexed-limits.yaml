@@ -1,0 +1,22 @@
+form: "Section-280F-Indexed-Limits"
+fullName: "Published passenger automobile depreciation limitation tables"
+taxYear: 2026
+reference: "https://www.irs.gov/irb/2025-11_IRB; https://www.irs.gov/pub/irs-drop/rp-26-15.pdf"
+notes: |
+  Rev. Proc. 2025-16 section 4.01 Tables 1 and 2 and Rev. Proc. 2026-15
+  section 4.01 Tables 1 and 2, printed page 7. Retrieved November 5, 2026.
+  Placement year selects the table; recovery year selects its column. The
+  fourth column is each succeeding recovery year, not a new placement-year
+  table. Values are whole-dollar statutory maxima at 100 percent use.
+  This is a table transcription correction only, not qualification of business
+  use, bonus or section179 eligibility, combined current deductions, remaining
+  basis, recapture, passenger-auto tails or unsupported historical years.
+lines:
+  - line: "published-cells"
+    description: "Exact 2025 and 2026 indexed annual dollar maxima"
+    formula: "2025 Table1 = 20200,19600,11800,7060 and Table2 = 12200,19600,11800,7060. 2026 Table1 = 20300,19800,11900,7160 and Table2 = 12300,19800,11900,7160. Store every value as Decimal. Table1 requires applicable additional first-year depreciation; do not infer eligibility from table availability."
+    testRef: "tests/utils/section-280f-indexed-limits.test.ts::matches every published indexed cell as Decimal"
+  - line: "original-placement-year"
+    description: "Retain the original placement-year table in later recovery years"
+    formula: "For explicit 100 percent use and a tentative regular deduction above the cap, select the original placement-year table and the recovery-year column. The current return year must not replace the original placement year. Keep the legacy source qualification status unchanged."
+    testRef: "tests/utils/section-280f-indexed-limits.test.ts::uses the original placement year through the actual listed-property calculator"

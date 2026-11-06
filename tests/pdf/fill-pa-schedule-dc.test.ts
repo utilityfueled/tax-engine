@@ -64,21 +64,26 @@ describe("Pennsylvania Schedule DC packet reference summary", () => {
   it("buildPAScheduleDCReferenceSummary keeps the packet artifact reference-only for supported resident dependent-care credits", () => {
     const taxInput = makePennsylvaniaResidentReturn("5000");
     const paResult = calculatePAReturn(taxInput);
-    const summary = buildPAScheduleDCReferenceSummary(paResult.scheduleDC!);
+    const scheduleDC = paResult.scheduleDC;
+    if (!scheduleDC) throw new Error("Actual PA Schedule DC is required");
+    const summary = buildPAScheduleDCReferenceSummary(scheduleDC);
 
     expect(summary.title).toBe("Pennsylvania Schedule DC Child and Dependent Care Credit Reference Summary");
     expect(summary.warningLabel).toBe("REFERENCE SUMMARY ONLY");
     expect(summary.totals).toContainEqual({
       label: "Line 1 qualifying persons",
       value: "1",
+      unit: "count",
     });
     expect(summary.totals).toContainEqual({
       label: "Federal Form 2441 Line 9a credit",
-      value: paResult.scheduleDC!.federalCredit.toString(),
+      value: scheduleDC.federalCredit.toString(),
+      unit: "USD",
     });
     expect(summary.totals).toContainEqual({
       label: "PA-40 Line 23 Schedule DC credit",
-      value: paResult.scheduleDC!.credit.toString(),
+      value: scheduleDC.credit.toString(),
+      unit: "USD",
     });
   });
 
@@ -104,8 +109,9 @@ describe("Pennsylvania Schedule DC packet reference summary", () => {
       const referencePath = filledForms.find((path) => path.endsWith(PA_SCHEDULE_DC_REFERENCE_FILENAME));
 
       expect(referencePath).toBeDefined();
-      await access(referencePath!);
-      const pdfBytes = await readFile(referencePath!);
+      if (!referencePath) throw new Error("Actual PA Schedule DC reference is required");
+      await access(referencePath);
+      const pdfBytes = await readFile(referencePath);
       expect(pdfBytes.length).toBeGreaterThan(0);
     } finally {
       await rm(outputDir, { recursive: true, force: true });
@@ -128,7 +134,8 @@ describe("Pennsylvania Schedule DC packet reference summary", () => {
       };
 
       expect(pennsylvania.scheduleDC).toBeDefined();
-      expect(pennsylvania.scheduleDC!.credit.isZero()).toBe(true);
+      if (!pennsylvania.scheduleDC) throw new Error("Actual zero-credit DC result is required");
+      expect(pennsylvania.scheduleDC.credit.isZero()).toBe(true);
 
       const { filledForms } = await fillReturn(taxInput, result, {
         blankFormsDir: "forms/blank",

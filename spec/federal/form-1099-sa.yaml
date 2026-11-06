@@ -3,97 +3,29 @@ fullName: "Distributions From an HSA, Archer MSA, or Medicare Advantage MSA"
 taxYear: 2025
 irsReference: "https://www.irs.gov/instructions/i1099sa"
 
+retrievedAt: "2026-10-25"
+reviewStatus: "independent-review-pending"
 notes: |
-  This worksheet aggregates Form 1099-SA data into the existing HSA flow. It
-  is currently limited to HSA-box-5 records and the ordinary account-holder
-  cases that flow into Form 8889 Part II plus Form 1040 other income.
-  When a year-of-death HSA distribution is reported to a validated surviving
-  spouse beneficiary, or when validated surviving-spouse beneficiary metadata
-  is attached to a later supported HSA distribution after the account has
-  become the spouse's HSA, this slice follows the Form 8889 instructions and
-  treats the account as the spouse's HSA rather than using the nonspouse death
-  branch. That means the spouse path keeps the ordinary Box 1 distribution
-  amount, ignores Box 4 for Form 8889 Line 14a support, and does not create
-  the automatic death exception or post-death-earnings other-income amounts
-  that apply to nonspouse beneficiaries and estates. In the supported local
-  input model, surviving-spouse beneficiary metadata can therefore continue to
-  infer the spouse Form 8889 owner for later valid HSA codes such as 1, 2, 3,
-  4, and 5, while code 6 stays invalid for a surviving spouse.
-  A surviving-spouse HSA record also cannot be explicitly tagged to the
-  primary owner in the local owner-attribution metadata, because the Form 8889
-  spouse-owner path must stay aligned with the beneficiary rule instead of
-  silently routing the spouse's inherited HSA activity onto the primary
-  taxpayer.
-  Nonspouse-beneficiary and estate metadata also stay limited to death-
-  distribution reporting codes 4 and 6 in the supported parser, because the
-  ordinary HSA owner codes 1, 2, 3, and 5 are reserved for the account owner
-  or a surviving spouse after the account becomes the spouse's HSA.
-  If a local draft still points the downstream Form 8889 at the spouse owner
-  but the current taxpayer payload no longer includes spouse taxpayer context,
-  the merge helper now remaps that supported HSA activity back onto the
-  primary owner before building the supported Form 8889 input so the engine
-  does not emit an internally inconsistent spouse-owned form it cannot
-  validate.
-
-  In the federal engine, these aggregated HSA values also seed a default
-  Form 8889 Part II input when the return includes HSA Form 1099-SA data but
-  no explicit `form8889` payload, so document-driven HSA distributions still
-  route into Schedule 1 and Schedule 2 for the supported slice. When the
-  attached HSA records include a consistent validated account-holder indicator,
-  that same metadata now defaults the generated Form 8889 account owner so the
-  downstream age-55 and age-65 tests use the correct taxpayer or spouse. A
-  validated surviving-spouse year-of-death Box 3 code 4 record can also infer
-  the spouse owner for that generated Form 8889 path when no separate local
-  account-holder tag is supplied. When attached HSA records span both spouses,
-  the engine now preserves each owner's distribution-side HSA activity by
-  either building separate supported Form 8889 statement forms when no
-  explicit `form8889` payload is present or by supplementing the selected
-  explicit Form 8889 with owner-specific statement forms for the other
-  spouse's tagged HSA records. That lets
-  Schedule 1 Line 8f and Schedule 2 Lines 17c/17d aggregate both spouses'
-  supported HSA distribution effects instead of dropping the unselected owner.
-  When any attached HSA record carries an explicit taxpayer-versus-spouse
-  account-holder tag, only those explicitly tagged records and the validated
-  surviving-spouse inference branch are treated as owner-attributable for the
-  owner-specific Form 8889 support totals. Remaining ordinary untagged HSA
-  records stay manual instead of silently defaulting onto the primary owner in
-  that mixed tagged-or-untagged path.
-  It still avoids collapsing mixed spouse-owned HSA records into one combined
-  Form 8889, and it still leaves contribution-side deduction defaults manual
-  in the mixed-owner document-only auto-build path because W-2 Box 12 code W
-  amounts do not identify which spouse's HSA received the employer
-  contributions.
-  It also keeps fully untagged ordinary HSA Form 1099-SA records manual when
-  the downstream taxpayer context includes a spouse but no validated owner tag
-  or surviving-spouse inference identifies which spouse owns the HSA, because
-  the Form 8889 instructions require spouse-specific forms instead of a single
-  combined auto-built distribution form.
-
-  Implemented in this slice:
-  - Box 1 HSA distributions flowing into Form 8889 Line 14a for ordinary HSA distributions
-  - Box 3 code 2 returned excess contributions flowing into Form 8889 Line 14b
-  - Box 2 earnings on returned excess contributions flowing to Form 1040 other income
-  - Box 3 code 3 disability distributions as an automatic Form 8889 Line 17a/17b exception base
-  - Box 4 fair market value at date of death for Box 3 codes 4 and 6 flowing into Form 8889 Line 14a and the automatic death exception base
-  - Explicit preservation of the validated `other_beneficiary` Box 4 subtotal so Form 8889 Line 15 only applies the 1-year-after-death medical-expense offset to records that are confirmed to belong to a non-estate beneficiary
-  - Post-death earnings on Box 3 codes 4 and 6 flowing to Form 1040 other income
-  - Year-of-death Box 3 code 4 HSA records for a surviving spouse beneficiary staying on the ordinary Box 1 HSA path instead of the nonspouse death branch
-  - After-year-of-death supported HSA records for a surviving spouse beneficiary inferring the spouse Form 8889 owner when no explicit local account-holder tag is supplied
-  - Box 3 code 5 prohibited transactions flowing into Form 8889 Line 14a and a separate deemed-distribution bucket that cannot be offset by qualified medical expenses on Line 15
-  - Input guardrails that reject nonspouse-beneficiary or estate metadata on unsupported ordinary HSA codes 1, 2, 3, and 5
-  - Consistent validated HSA account-holder metadata defaulting the generated Form 8889 account owner when the engine builds Form 8889 directly from Form 1099-SA support
-  - Validated surviving-spouse year-of-death Box 3 code 4 records inferring the spouse owner for the generated Form 8889 path when no separate local account-holder tag is supplied
-  - Mixed primary/spouse HSA document sets refusing to auto-build a single combined Form 8889, while either an explicit Form 8889 account owner plus supplemental owner-specific statement forms or the supported mixed-owner statement-form auto-build path can still keep each owner's HSA subtotals separate
-  - Mixed primary/spouse HSA document sets preserving Box 2 returned-excess-contribution earnings per owner for auditability even though those earnings still aggregate into Form 1040 other income outside Form 8889
-  - Mixed primary/spouse HSA document sets preserving post-death earnings per owner for auditability even though those earnings still aggregate into Form 1040 other income outside Form 8889
-  - Optional death-distribution timing metadata (`year_of_death` versus `after_year_of_death`) preserving the Form 1099-SA instruction distinction that year-of-death beneficiary distributions use Box 3 code 4, while after-year-of-death beneficiary distributions use code 4 for estates, code 6 for nonspouse beneficiaries other than estates, and ordinary HSA owner codes for surviving spouses once the account becomes the spouse's HSA
-  - Input guardrails that reject Box 4 fair-market-value values on ordinary non-death HSA distribution codes while still allowing the Form 1099-SA instructions' after-year-of-death surviving-spouse code 1 branch, when explicitly identified with after-year-of-death timing metadata, to carry Box 4 date-of-death value for auditability
-  - Input guardrails that reject trustee-to-trustee transfer markers on local Form 1099-SA records because the 2025 Instructions for Forms 1099-SA and 5498-SA say those transfers are not reported, and the 2025 Form 8889 instructions say they are not rollovers and do not go on Line 14a
-
-  Deferred in this slice:
-  - Archer MSA and Medicare Advantage MSA return branches
-  - Remaining beneficiary edge cases beyond supported death-timing metadata
-  - Mixed-owner contribution-side defaulting when no explicit owner-specific Form 8889 inputs are present to supply each spouse's own coverage and contribution facts
+  HSA Box 5 sources route to Form 8889 and other income. Actual beneficiary
+  relationship and the owner position on this return are separate facts.
+  A surviving spouse treats the inherited HSA as their own: the survivor can
+  be primary or spouse on the current return. Never infer the local spouse
+  owner from surviving-spouse status, or silently move an explicit spouse
+  source to primary when the spouse is removed from the return.
+  Actual primary/spouse tags determine separate owner support and age tests.
+  Missing tags remain visible as unattributed. All document-only previews and
+  2026 return calculation require actual owners; older untagged 2025 core
+  single-filer compatibility remains unqualified legacy behavior.
+  Surviving-spouse records retain ordinary Box 1 distribution treatment and
+  do not gain the nonspouse death exemption or post-death income split.
+  Codes 4/6 for nonspouse and estate distributions use actual Box 4; code 6
+  is not valid for a surviving spouse. Preserve the separate estate and
+  other-beneficiary subtotals and actual timing restrictions.
+  Mixed owners use separate Form 8889 statements. Document offsets must be
+  attributed to the actual owner and cannot combine a partial set of confirmed
+  sources with unknown amounts. Trustee-to-trustee transfers are not reportable.
+  Archer MSA/Medicare Advantage MSA branches, contribution eligibility and
+  other special source worksheets remain separately qualified scope.
 
 businessRuleValidation:
   - rule: "reference-summary-packet"
@@ -103,7 +35,7 @@ businessRuleValidation:
 lines:
   - line: "1"
     description: "HSA gross distributions reported on Form 8889 Line 14a"
-    formula: "Sum Form 1099-SA Box 1 for HSA records other than nonspouse or estate Box 3 codes 4 and 6 death distributions, then add Form 1099-SA Box 4 fair market value at date of death for HSA records with Box 3 code 4 or 6 only when the beneficiary is not a validated surviving spouse; surviving-spouse year-of-death code 4 records and later surviving-spouse HSA records with otherwise valid HSA codes stay on the ordinary Box 1 HSA path because the Form 8889 instructions treat the inherited account as the spouse's HSA, and when the federal engine must build or supplement Form 8889 from attached Form 1099-SA support it either carries forward a consistent validated HSA account-holder indicator, infers the spouse owner from a validated surviving-spouse HSA record when no local owner tag is supplied, filters the supported subtotals to the explicitly selected Form 8889 account owner, leaves fully untagged married-return HSA records manual when no owner can be identified safely, or builds separate owner-specific statement forms for mixed spouse-owned HSA distributions instead of collapsing them into one form"
+    formula: "Sum ordinary HSA Box 1, including surviving-spouse inherited accounts, plus Box 4 for nonspouse/estate death distributions. Attribute only through actual primary/spouse source tags; beneficiary relationship never establishes the return owner. Preserve missing tags as unattributed and require actual owners for 2026 calculations and document previews. Reject stale spouse ownership when no spouse exists rather than moving amounts to primary."
     irsRef: "Form 1099-SA Instructions, Boxes 1, 3, 4, and 5; Form 8889 Instructions, Line 14a"
     inputs:
       - "Form 1099-SA Box 1"
@@ -113,8 +45,8 @@ lines:
       - "Validated surviving-spouse beneficiary indicator"
       - "Validated death-distribution timing metadata when the record documents year-of-death versus after-year-of-death reporting"
       - "Validated HSA account-holder indicator for taxpayer or spouse when the federal engine must infer the downstream Form 8889 account owner"
-    notes: "Nonspouse-beneficiary and estate death distributions use Box 4 fair market value instead of Box 1 gross distributions for the Form 8889 Line 14a support total. A validated surviving-spouse year-of-death code 4 record stays on the ordinary Box 1 path, and validated surviving-spouse metadata can also infer the spouse owner for later supported HSA codes that belong on the spouse's HSA path. Validated surviving-spouse code 6 records stay invalid in the supported parser because the instructions route post-year-of-death spouse HSA activity through the ordinary code 1 path instead of the nonspouse death-distribution branch. When optional death-distribution timing metadata is present, the supported parser preserves the IRS coding rules for auditability: year-of-death beneficiary distributions use code 4, after-year-of-death estate distributions use code 4, after-year-of-death nonspouse beneficiary distributions use code 6, and after-year-of-death surviving-spouse records stay on the spouse-owned ordinary-code path. The supported parser therefore allows Box 4 on a code 1 HSA record only when validated surviving-spouse metadata plus `after_year_of_death` timing identifies that specific inherited-HSA branch; otherwise Box 4 stays invalid on ordinary code 1 records. A local record flagged as a trustee-to-trustee transfer is invalid in this supported parser because the 2025 Instructions for Forms 1099-SA and 5498-SA say those transfers are not reported on Form 1099-SA, and the 2025 Form 8889 instructions say not to include them on Line 14a. If primary-owned and spouse-owned HSA documents are mixed, the engine still does not auto-build a single combined Form 8889 because the instructions require separate spouse-specific forms; instead it can build separate owner-specific distribution-side statement forms when no explicit Form 8889 payload is present. Once any explicit owner tag exists in that mixed path, remaining ordinary untagged HSA records stay manual instead of defaulting to the primary owner. Even when no owner tags exist at all, a married return with spouse taxpayer context keeps ordinary untagged HSA records manual unless a validated surviving-spouse branch identifies the owner, so the engine does not fabricate a single spouse-agnostic Form 8889. The audit trail should preserve a concrete owner-attribution status for this line, distinguishing single-owner defaults from all-unattributed records, mixed tagged owners, and mixed tagged-plus-untagged records so document-only owner suppression stays reviewable. If the return already has an explicit primary-owner Form 8889 draft and attached HSA support is inferred exclusively to the spouse from validated surviving-spouse metadata, the merge helper keeps that explicit draft on the primary path so higher-level Schedule 1 and federal orchestration can surface the spouse HSA activity as a separate owner-specific statement form instead of folding it into the wrong owner. If a stale local draft requests the spouse owner after the spouse taxpayer context is no longer present, the supported merge helper remaps that spouse-only HSA support onto a primary-owned draft while preserving the spouse-inferred HSA amounts instead of returning an invalid spouse-owned draft."
-    testRef: "tests/engine/forms/form-1099-sa.test.ts::Form 1099-SA Line 1 - surviving-spouse inferred owner remaps to primary when the current taxpayer payload no longer includes a spouse"
+    notes: "Form 8889 Death of Account Beneficiary treats the surviving spouse as the account beneficiary, regardless of their primary/spouse position on this return. Separate owner statements preserve each actual age and source amount. Legacy untagged 2025 core behavior is not filing qualification. Codes/timing, Box 4 and trustee-transfer restrictions remain independent."
+    testRef: "tests/engine/forms/form-1099-sa-ownership.test.ts::uses actual primary ownership for a surviving spouse and applies that person age"
 
   - line: "2"
     description: "Returned excess contributions excluded on Form 8889 Line 14b"
@@ -124,8 +56,8 @@ lines:
       - "Form 1099-SA Box 1"
       - "Form 1099-SA Box 3 distribution code"
       - "Form 1099-SA Box 5 account type"
-    notes: "The returned excess contribution amount is still clamped by Form 8889 Line 14a after aggregation, including when the federal engine constructs the supported Form 8889 Part II input directly from Form 1099-SA data. When validated surviving-spouse beneficiary metadata is attached to a supported code 2 HSA record and no separate local account-holder tag is supplied, the supported merge path can still infer the spouse Form 8889 owner instead of defaulting the returned-excess branch onto the primary taxpayer."
-    testRef: "tests/engine/forms/form-1099-sa.test.ts::Form 1099-SA Line 2 - surviving-spouse code 2 records infer the spouse Form 8889 owner when explicit owner tags are absent"
+    notes: "Returned excess is capped by Form 8889 line 14a. An inherited account uses its actual primary/spouse source owner; beneficiary relationship is not an owner tag."
+    testRef: "tests/engine/forms/form-1099-sa-ownership.test.ts::retains actual owner attribution for returned excess and disability distributions"
 
   - line: "3"
     description: "Earnings on returned excess contributions reported as other income"
@@ -146,8 +78,8 @@ lines:
       - "Form 1099-SA Box 1"
       - "Form 1099-SA Box 3 distribution code"
       - "Form 1099-SA Box 5 account type"
-    notes: "The engine still caps the final exempt amount at Form 8889 Line 16 so the automatic exception cannot exceed the taxable HSA distributions remaining after medical-expense offsets. When validated surviving-spouse beneficiary metadata is attached to a supported code 3 HSA record and no separate local account-holder tag is supplied, the supported merge path can still infer the spouse Form 8889 owner so the downstream age tests run against the spouse, not the primary taxpayer."
-    testRef: "tests/engine/forms/form-1099-sa.test.ts::Form 1099-SA Line 4 - surviving-spouse code 3 records infer the spouse Form 8889 owner when explicit owner tags are absent"
+    notes: "Cap the exempt amount at Form 8889 line 16. Preserve actual owner attribution so age and disability facts apply to that person; do not infer a spouse owner from surviving-spouse relationship."
+    testRef: "tests/engine/forms/form-1099-sa-ownership.test.ts::retains actual owner attribution for returned excess and disability distributions"
 
   - line: "5"
     description: "Death-distribution fair market value routed into Form 8889"

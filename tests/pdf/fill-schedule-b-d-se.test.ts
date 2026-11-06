@@ -1,3 +1,5 @@
+import { useTemporaryPdfOutput } from "./temporary-output.js";
+const testOutputDir = useTemporaryPdfOutput();
 /**
  * Tests for Schedule B, D, and SE PDF filling.
  * Verifies that engine results are correctly mapped to PDF form fields.
@@ -38,9 +40,9 @@ function isChecked(doc: PDFDocument, fieldName: string): boolean {
   return false;
 }
 
-const BLANK_SB = "forms/blank/f1040sb.pdf";
-const BLANK_SD = "forms/blank/f1040sd.pdf";
-const BLANK_SSE = "forms/blank/f1040sse.pdf";
+const BLANK_SB = "forms/blank/2025/f1040sb.pdf";
+const BLANK_SD = "forms/blank/2025/f1040sd.pdf";
+const BLANK_SSE = "forms/blank/2025/f1040sse.pdf";
 
 // ─── Schedule B — MFJ with interest and dividends ─────────────────────────
 
@@ -144,8 +146,9 @@ describe("Schedule D PDF fill — MFJ complex filer", () => {
     expect(getFieldText(doc, SCHEDULE_D_FIELDS.ssn)).toBe("111223333");
   });
 
-  it("checks Form 8949 Yes checkbox", () => {
-    expect(isChecked(doc, SCHEDULE_D_FIELDS.form8949Yes)).toBe(true);
+  it("preserves the unknown QOF disposition answer", () => {
+    expect(isChecked(doc, SCHEDULE_D_FIELDS.qofDispositionYes)).toBe(false);
+    expect(isChecked(doc, SCHEDULE_D_FIELDS.qofDispositionNo)).toBe(false);
   });
 
   it("fills Line 7 with net short-term gain/loss", () => {
@@ -173,13 +176,14 @@ describe("Schedule D PDF fill — MFJ complex filer", () => {
     const sd = result.scheduleD!;
     const bothGains = sd.netLongTerm.gt(0) && sd.netCapitalGainLoss.gt(0);
     expect(isChecked(doc, SCHEDULE_D_FIELDS.line17Yes)).toBe(bothGains);
-    expect(isChecked(doc, SCHEDULE_D_FIELDS.line17No)).toBe(!bothGains);
+    expect(isChecked(doc, SCHEDULE_D_FIELDS.line17No)).toBe(sd.netCapitalGainLoss.gt(0) && !bothGains);
   });
 
-  it("fills Line 22 QDCG checkbox", () => {
-    // Complex filer has qualified dividends, so QDCG should be Yes
-    const useQDCG = result.scheduleD!.netCapitalGainLoss.gt(0) || result.qualifiedDividends.gt(0);
-    expect(isChecked(doc, SCHEDULE_D_FIELDS.line22Yes)).toBe(useQDCG);
+  it("skips Line22 when the printed both-gain path ends at20", () => {
+    expect(result.scheduleD!.netLongTerm.gt(0)).toBe(true);
+    expect(result.scheduleD!.netCapitalGainLoss.gt(0)).toBe(true);
+    expect(isChecked(doc, SCHEDULE_D_FIELDS.line22Yes)).toBe(false);
+    expect(isChecked(doc, SCHEDULE_D_FIELDS.line22No)).toBe(false);
   });
 });
 
@@ -194,14 +198,14 @@ describe("Schedule SE PDF fill — MFJ complex filer", () => {
     doc = await fillScheduleSE(complexMFJFixture, result, BLANK_SSE);
   });
 
-  it("fills header with taxpayer names and SSN", () => {
-    expect(getFieldText(doc, SCHEDULE_SE_FIELDS.name)).toBe("John Smith & Jane Smith");
-    expect(getFieldText(doc, SCHEDULE_SE_FIELDS.ssn)).toBe("111223333");
+  it("preserves an unknown joint-return SE owner", () => {
+    expect(getFieldText(doc, SCHEDULE_SE_FIELDS.name)).toBeUndefined();
+    expect(getFieldText(doc, SCHEDULE_SE_FIELDS.ssn)).toBeUndefined();
   });
 
-  it("fills Line 1b with net nonfarm profit", () => {
+  it("fills Line 2 with net nonfarm profit", () => {
     const se = result.scheduleSE!;
-    expect(getFieldText(doc, SCHEDULE_SE_FIELDS.line1b)).toBe(
+    expect(getFieldText(doc, SCHEDULE_SE_FIELDS.line2)).toBe(
       formatCurrency(se.netNonfarmProfit),
     );
   });
@@ -274,7 +278,7 @@ describe("fillReturn orchestrator with Schedule B, D, SE", () => {
     const result = calculateFederalTax(complexMFJFixture);
     const { filledForms } = await fillReturn(complexMFJFixture, result, {
       blankFormsDir: "forms/blank",
-      outputDir: "forms/filled",
+      outputDir: testOutputDir,
     });
     // Complex filer should have: 1040 + S1 + S2 + S3 + SB + SD + SSE
     expect(filledForms.length).toBeGreaterThanOrEqual(7);
@@ -288,7 +292,7 @@ describe("fillReturn orchestrator with Schedule B, D, SE", () => {
     const result = calculateFederalTax(simpleW2Fixture);
     const { filledForms } = await fillReturn(simpleW2Fixture, result, {
       blankFormsDir: "forms/blank",
-      outputDir: "forms/filled",
+      outputDir: testOutputDir,
     });
     // Simple W-2 filer: no self-employment income
     expect(filledForms.some((f) => f.includes("f1040sse-filled"))).toBe(false);

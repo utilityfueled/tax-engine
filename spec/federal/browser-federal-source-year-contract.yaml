@@ -1,0 +1,18 @@
+form: "Federal browser original-year fixture contract"
+fullName: "Explicit actual 2025 source years in existing loss and educator/bond browser originals"
+taxYear: 2025
+reference: "apps/web/src/lib/guided-investment-facts.ts; existing calendar2025 browser source scenarios"
+notes:
+  - "Test-only source metadata migration. No product, monetary oracle, privacy control or readiness gate change."
+  - "The four original interest rows belong to already explicit fictional calendar2025 scenarios. Record that original fact, never infer unknown source years in production."
+  - "Capital brokerage and composed educator-reissue sources already have actual years or inherit owned originals; do not duplicate or change them."
+lines:
+  - line: "original-year"
+    formula: "Each of four started actual investment originals must retain sourceTaxYear2025 and all original money/identity facts."
+    testRef: "tests/guided-interview/browser-federal-source-year-contract.test.ts::actual2025 browser original is admitted: %s"
+  - line: "missing-year"
+    formula: "Removing the actual year still blocks investment admission and leaves the original unchanged."
+    testRef: "tests/guided-interview/browser-federal-source-year-contract.test.ts::missing original year remains blocked: %s"
+  - line: "wrong-year"
+    formula: "A 2024 original cannot enter the 2025 scenario; no automatic year refresh is allowed."
+    testRef: "tests/guided-interview/browser-federal-source-year-contract.test.ts::wrong original year remains blocked: %s"

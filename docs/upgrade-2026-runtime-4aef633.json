@@ -1,0 +1,203 @@
+{
+  "recordedAt": "2026-10-25",
+  "sourceCommit": "4aef633349dbb39c2481b914730c309785cc8c41",
+  "scope": "Intermediate local synthetic runtime evidence; later source packages and final native platforms require verification.",
+  "platform": "linux/arm64",
+  "image": "sha256:535c87589d0dd979e0df15fbd0cf76fcd45949370c60a36a2205769c8dbb203f",
+  "imageArchiveBinding": {
+    "configSha256": "535c87589d0dd979e0df15fbd0cf76fcd45949370c60a36a2205769c8dbb203f",
+    "revisionLabel": "4aef633349dbb39c2481b914730c309785cc8c41",
+    "archivePath": "/private/tmp/tax-engine-4aef633-arm64.tar",
+    "sbomComponentId": "e471a635d2e7eec2",
+    "sbomComponentVersion": "sha256:068b13cd6cc3d0cc317799931478a4aac1148f9e0968fd3f57cbf2a71ba12512",
+    "note": "The CycloneDX component ID is not the runtime image ID. The Docker archive manifest and hashed config independently bind the image and revision."
+  },
+  "smoke": {
+    "result": "passed",
+    "nonrootUid": 1001,
+    "readOnly": true,
+    "healthy": true,
+    "assets": true,
+    "templates": 42,
+    "imageCacheWritable": true,
+    "cacheLimitBytes": 67108864,
+    "packageToolsPresent": false,
+    "providerKeysPresent": false,
+    "evidence": {
+      "path": ".local/upgrade-evidence/container-4aef633-arm64-smoke.log",
+      "sha256": "f9b15f749b4312a04381922ca316e6b6b22fec2542dc9838da8afdb6129abfcf"
+    }
+  },
+  "recovery": {
+    "result": "passed",
+    "previousDigest": "905d28422236c424b7a90bec9ff0d2d4d4d63fdc9ba689e51f38d0425549c393",
+    "candidateDigest": "535c87589d0dd979e0df15fbd0cf76fcd45949370c60a36a2205769c8dbb203f",
+    "phases": [
+      {
+        "phase": "previous",
+        "imageDigest": "905d28422236c424b7a90bec9ff0d2d4d4d63fdc9ba689e51f38d0425549c393",
+        "databaseSha256": "2ff57b44e35f90ca3827f09dcbbab7c85a056105b9911dcd36cefa5c84fce9d8",
+        "browserFactsSha256": "f767fc70844cf56888d32df1a686df2de10a555b28ea79446752eb86534e2dcb",
+        "documentSha256": "14d9bd21f095c6cfcdfe80a5244702b73a564a6860d5c53f3ed4b38a0e9622c0",
+        "readOnly": true,
+        "runtimeFacts": {
+          "uid": 1001,
+          "arch": "arm64",
+          "node": "v24.22.1",
+          "noNewPrivileges": true,
+          "noEffectiveCapabilities": true,
+          "noBoundingCapabilities": true,
+          "providerKeys": false
+        }
+      },
+      {
+        "phase": "upgrade",
+        "imageDigest": "535c87589d0dd979e0df15fbd0cf76fcd45949370c60a36a2205769c8dbb203f",
+        "databaseSha256": "2ff57b44e35f90ca3827f09dcbbab7c85a056105b9911dcd36cefa5c84fce9d8",
+        "browserFactsSha256": "f767fc70844cf56888d32df1a686df2de10a555b28ea79446752eb86534e2dcb",
+        "documentSha256": "14d9bd21f095c6cfcdfe80a5244702b73a564a6860d5c53f3ed4b38a0e9622c0",
+        "readOnly": true,
+        "runtimeFacts": {
+          "uid": 1001,
+          "arch": "arm64",
+          "node": "v24.22.1",
+          "noNewPrivileges": true,
+          "noEffectiveCapabilities": true,
+          "noBoundingCapabilities": true,
+          "providerKeys": false
+        }
+      },
+      {
+        "phase": "database-restart",
+        "imageDigest": "535c87589d0dd979e0df15fbd0cf76fcd45949370c60a36a2205769c8dbb203f",
+        "databaseSha256": "2ff57b44e35f90ca3827f09dcbbab7c85a056105b9911dcd36cefa5c84fce9d8",
+        "browserFactsSha256": "f767fc70844cf56888d32df1a686df2de10a555b28ea79446752eb86534e2dcb",
+        "documentSha256": "14d9bd21f095c6cfcdfe80a5244702b73a564a6860d5c53f3ed4b38a0e9622c0",
+        "readOnly": true,
+        "runtimeFacts": {
+          "uid": 1001,
+          "arch": "arm64",
+          "node": "v24.22.1",
+          "noNewPrivileges": true,
+          "noEffectiveCapabilities": true,
+          "noBoundingCapabilities": true,
+          "providerKeys": false
+        }
+      },
+      {
+        "phase": "database-dump-restore",
+        "imageDigest": "535c87589d0dd979e0df15fbd0cf76fcd45949370c60a36a2205769c8dbb203f",
+        "databaseSha256": "2ff57b44e35f90ca3827f09dcbbab7c85a056105b9911dcd36cefa5c84fce9d8",
+        "browserFactsSha256": "f767fc70844cf56888d32df1a686df2de10a555b28ea79446752eb86534e2dcb",
+        "documentSha256": "14d9bd21f095c6cfcdfe80a5244702b73a564a6860d5c53f3ed4b38a0e9622c0",
+        "readOnly": true,
+        "runtimeFacts": {
+          "uid": 1001,
+          "arch": "arm64",
+          "node": "v24.22.1",
+          "noNewPrivileges": true,
+          "noEffectiveCapabilities": true,
+          "noBoundingCapabilities": true,
+          "providerKeys": false
+        }
+      },
+      {
+        "phase": "rollback",
+        "imageDigest": "905d28422236c424b7a90bec9ff0d2d4d4d63fdc9ba689e51f38d0425549c393",
+        "databaseSha256": "2ff57b44e35f90ca3827f09dcbbab7c85a056105b9911dcd36cefa5c84fce9d8",
+        "browserFactsSha256": "f767fc70844cf56888d32df1a686df2de10a555b28ea79446752eb86534e2dcb",
+        "documentSha256": "14d9bd21f095c6cfcdfe80a5244702b73a564a6860d5c53f3ed4b38a0e9622c0",
+        "readOnly": true,
+        "runtimeFacts": {
+          "uid": 1001,
+          "arch": "arm64",
+          "node": "v24.22.1",
+          "noNewPrivileges": true,
+          "noEffectiveCapabilities": true,
+          "noBoundingCapabilities": true,
+          "providerKeys": false
+        }
+      },
+      {
+        "phase": "re-upgrade",
+        "imageDigest": "535c87589d0dd979e0df15fbd0cf76fcd45949370c60a36a2205769c8dbb203f",
+        "databaseSha256": "2ff57b44e35f90ca3827f09dcbbab7c85a056105b9911dcd36cefa5c84fce9d8",
+        "browserFactsSha256": "f767fc70844cf56888d32df1a686df2de10a555b28ea79446752eb86534e2dcb",
+        "documentSha256": "14d9bd21f095c6cfcdfe80a5244702b73a564a6860d5c53f3ed4b38a0e9622c0",
+        "readOnly": true,
+        "runtimeFacts": {
+          "uid": 1001,
+          "arch": "arm64",
+          "node": "v24.22.1",
+          "noNewPrivileges": true,
+          "noEffectiveCapabilities": true,
+          "noBoundingCapabilities": true,
+          "providerKeys": false
+        }
+      }
+    ],
+    "databaseRecovery": {
+      "result": "passed",
+      "evidence": "local-synthetic-postgresql-dump-restore",
+      "tables": 9,
+      "tenantWorkspaces": 2,
+      "exactCostRestored": true,
+      "metadataCleanupReapplied": true,
+      "metadataCleanupIdempotent": true,
+      "checksum": "46b8240e2d54346ffcab0e1898e6b5705c7692071719eea4cb21395bea41cc28"
+    },
+    "browserRecovery": {
+      "passed": true,
+      "encrypted": true,
+      "wrongPasswordRejected": true,
+      "tamperRejected": true,
+      "originalBytes": true,
+      "unknownYearPreserved": true,
+      "exactCents": true,
+      "deletion": true,
+      "networkObservation": {
+        "requests": 408,
+        "startsBeforeUpload": true,
+        "rawPrivateMarkersAbsent": true,
+        "limitation": "Checks raw request URLs and postData for the synthetic SSN, filename and PDF signature; not a general encoded or binary PII proof."
+      }
+    },
+    "evidence": {
+      "path": ".local/upgrade-evidence/container-4aef633-arm64-recovery.log",
+      "sha256": "c0d94f4fbf41e1634f0014db506164b79eb63aec32d8feba262831a43bc04ede"
+    }
+  },
+  "scan": {
+    "sbomComponents": 2930,
+    "matches": 157,
+    "distinctAdvisories": 67,
+    "severityCounts": {
+      "High": 54,
+      "Medium": 47,
+      "Negligible": 46,
+      "Low": 10
+    },
+    "critical": 0,
+    "npmMatches": 0,
+    "availableFixVersions": 0,
+    "databaseBuilt": "2026-10-25T06:27:34Z",
+    "databaseValid": true,
+    "sameExactPackageAdvisorySetAsPreviousRegister": true,
+    "ownerAcceptancePending": true,
+    "sbom": {
+      "path": ".local/upgrade-evidence/container-4aef633-arm64.cdx.json",
+      "sha256": "11eb225e2c4c80909e05ff46441393421c52c1891c9b9b8c0100e2242781193f"
+    },
+    "scan": {
+      "path": ".local/upgrade-evidence/container-4aef633-arm64.grype.json",
+      "sha256": "00df6b1876d3631e3d96d2de741a88eea23e1cabdb7077956485a3e1b78f6dbb"
+    },
+    "databaseRefresh": {
+      "path": ".local/upgrade-evidence/grype-db-refresh-4aef633.log",
+      "sha256": "601fe1343bea28c5dd6e0df464770fa231463823d02bf0bf84f2214686396ef1"
+    }
+  },
+  "published": false,
+  "stagingEvidence": false,
+  "releaseReady": false
+}

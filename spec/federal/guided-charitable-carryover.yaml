@@ -1,0 +1,49 @@
+form: "Guided charitable carryover sources"
+fullName: "Actual original contributions and intervening charitable carryover history"
+taxYear: 2026
+irsReference: "https://www.irs.gov/publications/p526"
+sources:
+  - url: "https://www.irs.gov/publications/p526"
+    section: "Carryovers, original percentage categories, intervening returns and additional carryover rules"
+    retrieved: "2026-10-25"
+  - url: "https://www.irs.gov/instructions/i1040sca"
+    section: "Line13 carryover from prior year"
+    retrieved: "2026-10-25"
+notes: |
+  Source collection only. The shared facts-only validator checks the actual
+  household, source year, original category and medium, opening balances and
+  every intervening year. The guide never supplies a fictional contribution
+  base, income, current deduction or closing carry to validate the packet.
+  Explicit empty lists differ from unknown lists. Calendar-year continuity and
+  ordinary-percentage facts are actual answers, not application defaults.
+  Current-year qualification, category ordering, selected deduction treatment,
+  NOL coordination and 2026 methods remain owned by the canonical calculator.
+lines:
+  - line: "sources"
+    description: "Actual original and intervening records survive source-only conversion"
+    formula: "Preserve original identifiers and exact decimal strings after validating actual supplied formatting; no income or deduction context"
+    testRef: "tests/guided-interview/guided-charitable-carryover.test.ts::preserves actual charitable history without calculating a deduction"
+  - line: "unknown"
+    description: "Missing history, category and identity cannot become defaults"
+    formula: "Validate explicit source year, unchanged household, category and medium, complete intervening years and opening conservation; unknown is not zero or an empty list"
+    testRef: "tests/guided-interview/guided-charitable-carryover.test.ts::rejects missing or contradictory original charitable sources"
+  - line: "canonical"
+    description: "Actual prior history reaches the canonical selected deduction exactly once"
+    formula: "Actual70000 public-cash opening carry and100000 contribution base yield60000 itemized charity and10000 closing carry; standard-year1000 opening has zero deduction and1000 treated as paid"
+    testRef: "tests/guided-interview/guided-charitable-carryover.test.ts::forwards actual carry history into canonical itemized and standard results"
+  - line: "household-year"
+    description: "Actual joint identity and source-year history remain separate facts"
+    formula: "Both original joint identities must match, and each source year requires actual intervening records through its preceding year; no copied future-year history"
+    testRef: "tests/guided-interview/guided-charitable-carryover.test.ts::binds actual joint identities and source-year history without filling gaps"
+  - line: "confirmation"
+    description: "Source edits require renewed confirmation without metadata cycles"
+    formula: "Changed household, current gifts, income and deductions revoke packet confirmation; metadata-only confirmation preserves adjacent source answers"
+    testRef: "tests/guided-interview/guided-charitable-carryover.test.ts::revokes charitable confirmation after substantive source edits"
+  - line: "controls"
+    description: "Source controls preserve explicit zero, false and unknown"
+    formula: "Added source/history fields start blank; explicit none creates only an empty list, and unsupported category selections remain visible"
+    testRef: "tests/apps/web/charitable-carryover-interactions.test.tsx::collects original charitable history without default years or balances"
+  - line: "persistence"
+    description: "Actual private carry records persist on desktop and mobile"
+    formula: "Save/reload preserves original amounts and history; clearing a required source suppresses preview and revokes confirmation; private records remain local"
+    testRef: "apps/web/tests/guided-charitable-carryover.spec.ts::preserves actual charitable carryover records"

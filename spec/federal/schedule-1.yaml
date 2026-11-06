@@ -9,6 +9,16 @@ notes: |
   1040 Line 8. Part II total goes to 1040 Line 10.
 
 lines:
+  - line: "8d"
+    description: "Foreign earned income and housing exclusions"
+    formula: "Enter net Form2555line45 as a negative amount; reduce Schedule1income and1040total income exactly once, preserving gross1040wages"
+    irsRef: "https://www.irs.gov/instructions/i2555"
+    testRef: "tests/engine/federal-foreign-income-routing.test.ts::routes foreign exclusion through Schedule1 while preserving gross wages and payroll taxes"
+  - line: "24j"
+    description: "Foreign housing deduction"
+    formula: "Actual Form2555line50 is a positive adjustment on Schedule1line24j, not line24d"
+    irsRef: "https://www.irs.gov/pub/irs-pdf/f2555.pdf"
+    testRef: "tests/engine/federal-foreign-income-routing.test.ts::routes housing deduction to the official Schedule1 adjustment line"
   # ── Part I: Additional Income ────────────────────────────
   - line: "1"
     description: "Taxable refunds of state/local taxes"
@@ -103,7 +113,7 @@ lines:
     inputs:
       - "Form W-2G Box 1: Reportable winnings"
       - "Manual gambling winnings from Schedule A input"
-    notes: "All gambling income is taxable regardless of source. W-2G forms report certain gambling winnings above IRS thresholds, but all winnings must be reported. Gambling losses are deductible only on Schedule A Line 28 and only up to total gambling winnings (IRC §165(d)). W-2G Box 4 federal withholding flows to Form 1040 Line 25d."
+    notes: "All gambling income is taxable regardless of source. W-2G forms report certain gambling winnings above IRS thresholds, but all winnings must be reported. Gambling losses are deductible only on Schedule A Line 16 and only up to total gambling winnings (IRC §165(d)). W-2G Box 4 federal withholding flows to Form 1040 Line 25c."
     edgeCases:
       - "Multiple W-2Gs from different sources are summed"
       - "Manual gambling winnings from Schedule A combine with W-2G winnings"
@@ -236,14 +246,14 @@ lines:
     description: "IRA deduction"
     formula: "When the IRA Deduction Worksheet is provided, use the computed deductible amount from Pub 590-A Worksheets 1-1 and 1-2 based on MAGI, filing status, employer plan participation, and contribution limits; otherwise use the validated manual IRA deduction amount"
     irsRef: "Schedule 1 Instructions, Line 20; Pub 590-A; Rev. Proc. 2024-40 §3.20"
-    notes: "The IRA Deduction Worksheet is now integrated into Schedule 1: when `iraDeductionWorksheet` input is provided, Schedule 1 computes the IRA MAGI from income and other adjustments, calls the worksheet for the primary (and spouse on MFJ returns), and uses the computed deduction. The IRA MAGI equals total income minus all adjustments except the IRA deduction and student loan interest, per Pub 590-A. Social Security taxable benefits are excluded from the IRA MAGI computation because they depend on the IRA deduction (circular); for the typical working-age taxpayer subject to IRA phase-out this is negligible. The computed IRA deduction flows into the student loan interest MAGI and total adjustments."
+    notes: "The federal return passes one canonical completed IRA deduction, using all return income and Pub590-A AppendixB Social Security coordination. Schedule1 must not recompute that deduction from an incomplete income subset. A standalone2026 worksheet requires actual modified AGI context. Historical standalone inputs without full source confirmation remain an unverified preview. The same result feeds line20, student-loan MAGI and total adjustments."
     edgeCases:
       - "Full deduction if no employer plan"
       - "Phase-out if covered by employer plan: Single $79K-$89K, MFJ $126K-$146K (2025)"
       - "Spouse not covered but other spouse is: MFJ $236K-$246K phase-out"
       - "MFS active participant: $0-$10K phase-out"
       - "Contribution limit: $7,000 (under 50), $8,000 (50+) for 2025"
-      - "Partial phase-out rounds reduction up to next $10 multiple with $200 minimum floor"
+      - "Partial phase-out rounds the remaining limit up to next $10 multiple with $200 minimum floor"
       - "MFJ: each spouse computed separately, total is sum"
       - "IRA worksheet deduction takes priority over manual iraDeduction adjustment"
       - "Other adjustments (HSA, SE deductions) reduce IRA MAGI and can increase the deductible amount"
@@ -253,7 +263,7 @@ lines:
     description: "Student loan interest deduction"
     formula: "Qualified student loan interest paid, limited to $2,500 before phase-out; if filing separately, $0; otherwise use the smaller of the paid interest or $2,500, compute the 2025 modified-AGI worksheet fraction as excess MAGI over the filing-status threshold divided by $15,000 ($30,000 if married filing jointly) rounded to at least three decimals and capped at 1.000, multiply the capped interest by that fraction, subtract the reduction from the capped interest, and round the final Schedule 1 Line 21 deduction to the nearest whole dollar"
     irsRef: "IRC §221(b)(2)(B); Rev. Proc. 2024-40 §2.30; Pub 970 Worksheet 4-1"
-    notes: "MAGI for SLI = AGI before student loan deduction (Pub 970: 'before subtracting any deduction for student loan interest'). The 2025 Form 1040 instructions Student Loan Interest Deduction Worksheet lines 7 through 9 require the worksheet fraction to be rounded to at least three decimal places before the final whole-dollar deduction is entered on Schedule 1 Line 21."
+    notes: "Full returns use one canonical source-qualified deduction after bond/passive computations; direct historical previews remain unverified. Actual2026 sources cannot be replaced by raw Form1098E or wage-only MAGI. MAGI for SLI = AGI before student loan deduction (Pub 970: 'before subtracting any deduction for student loan interest'). The 2025 Form 1040 instructions Student Loan Interest Deduction Worksheet lines 7 through 9 require the worksheet fraction to be rounded to at least three decimal places before the final whole-dollar deduction is entered on Schedule 1 Line 21."
     edgeCases:
       - "Max deduction: $2,500"
       - "2025 phase-out (Rev. Proc. 2024-40 §2.30): Single/HoH/QSS $85K-$100K ($15K range), MFJ $170K-$200K ($30K range)"
@@ -272,7 +282,7 @@ lines:
 
   - line: "25"
     description: "Total other adjustments"
-    formula: "Supported manual total of other Schedule 1 Part II adjustments reported on Lines 24a through 24z"
+    formula: "Actual other adjustment aggregate plus separately computed housing24j; final return also includes estate24k once"
     irsRef: "Schedule 1 Instructions, Line 25"
     notes: "This supported slice accepts a validated aggregate Line 25 amount instead of modeling each Line 24a-24z adjustment separately. That amount also feeds the Social Security Benefits Worksheet Line 6 add-back because the 2025 instructions explicitly add back Schedule 1 Line 25."
     testRef: "tests/engine/schedules/schedule-1.test.ts::Schedule 1 Line 25 - manual total other adjustments flow through Schedule 1 and the Social Security add-back path"
@@ -283,3 +293,9 @@ lines:
     irsRef: "Schedule 1 Instructions, Line 26"
     notes: "Goes to Form 1040 Line 10"
     testRef: "tests/engine/schedules/schedule-1.test.ts::Schedule 1 Line 26 - total adjustments"
+
+  - line: "2555-signed-addback"
+    description: "Preserve Form2555 negative line45"
+    formula: "Schedule1line8d is negative Form2555line45. A negative45 therefore produces a positive8d; do not reject or clamp it. Pub54 Example4: line4377000, line4490713, line45minus13713, positive8d13713."
+    irsRef: "Pub54 HowToReportDeductions Example4; retrieved2026-11-01"
+    testRef: "tests/engine/forms/form-2555-actual-expense-allocation.test.ts::preserves negative line45 instead of capping actual disallowed deductions"

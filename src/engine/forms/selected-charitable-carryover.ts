@@ -1,0 +1,86 @@
+/** Actual selected-year treatment, distinct from the ScheduleA candidate. */
+import Decimal from "decimal.js";
+import type { ScheduleAResult, CharitableCarryforwardEntry, CharitableCarryforwardYearDetail } from "@/engine/schedules/schedule-a.js";
+import type { CalculatedLine } from "@/models/outputs.js";
+import { AuditTrail } from "@/utils/audit.js";
+import { d, sum } from "@/utils/decimal.js";
+export interface SelectedCharitableCarryover {
+  deductionMethod: "standard" | "itemized" | "nonitemized";
+  deduction: Decimal;
+  priorDeduction: Decimal;
+  priorTreatedAsPaid: Decimal;
+  detail: CharitableCarryforwardYearDetail[];
+  carryforwards: CharitableCarryforwardEntry[];
+  lines: CalculatedLine[];
+}
+export function calculateSelectedCharitableCarryover(input: {
+  taxYear: number; deductionMethod: "standard" | "itemized" | "nonitemized"; scheduleA: ScheduleAResult;
+}): SelectedCharitableCarryover {
+  const currentNol = input.taxYear === 2026 && input.scheduleA.currentCharitableNol?.method === "2026_current_single_category_nol_itemized"
+    && input.scheduleA.currentCharitableNol.sourceDigest === input.scheduleA.charitableSourceDigest
+    && input.deductionMethod === "itemized" && input.scheduleA.charitableCarryforwardDetail.length === 0;
+  const nonitemized = input.scheduleA.nonitemizedCharitableCarryover;
+  const current = input.scheduleA.currentCharitableCandidates;
+  const priorCashProperty = input.scheduleA.priorCashCurrentProperty;
+  const separatePriorFloor = input.taxYear === 2026 && priorCashProperty?.method === "2026_prior_cash_current_property";
+  const determinedFloor = input.scheduleA.determinedCharitableFloor;
+  const separateDeterminedFloor = input.taxYear === 2026 && (determinedFloor?.method === "2026_determined_current_category_floor"
+    || determinedFloor?.method === "2026_single_prior_floor_no_excess")
+    && determinedFloor.sourceDigest === input.scheduleA.charitableSourceDigest;
+  if (determinedFloor && !separateDeterminedFloor) throw new Error("Selected determined charitable floor requires its actual original source proof");
+  const priorFloor = separateDeterminedFloor && determinedFloor.method === "2026_single_prior_floor_no_excess" ? determinedFloor : undefined;
+  if (priorFloor && (priorFloor.carryforwards.length !== 0 || priorFloor.nonitemizedCarryforwards.length !== 0
+    || input.scheduleA.charitableCarryforwardByYear.length !== 0 || priorFloor.detail.length !== input.scheduleA.charitableCarryforwardDetail.length)) {
+    throw new Error("Selected prior charitable floor requires its complete no-excess source reconciliation");
+  }
+  const currentOnly = input.taxYear === 2026 && (current?.method === "2026_current_public_cash_dual"
+    || current?.method === "2026_current_public_cash_and_property_dual"
+    || current?.method === "2026_current_public_and_other_cash_dual"
+    || current?.method === "2026_current_ordinary_receipts_dual")
+    && input.scheduleA.charitableCarryforwardDetail.length === 0;
+  if (input.taxYear !== 2025 && !currentOnly && !separatePriorFloor && !separateDeterminedFloor && !currentNol && (input.taxYear !== 2026 || !nonitemized
+    || (nonitemized.method !== "2026_nonitemized_public_cash" && nonitemized.method !== "2026_nonitemized_ordinary_categories") || input.deductionMethod === "itemized"
+    || nonitemized.deductionMethod !== input.deductionMethod)) {
+    throw new Error("Selected charitable history requires its separate2026 floor and nonitemizer method");
+  }
+  const detail = input.scheduleA.charitableCarryforwardDetail.map((row, index) => {
+    if (!row.medium || !row.category || row.treatedAsPaid === undefined || !row.treatedAsPaid.isFinite()
+      || row.treatedAsPaid.lt(0) || !row.amountAvailable.eq(row.treatedAsPaid.plus(row.amountRemaining).plus(row.amountExpired))) {
+      throw new Error("Selected charitable treatment requires complete actual source reconciliation");
+    }
+    if (priorFloor) {
+      const source = priorFloor.detail[index];
+      if (!source || row.sourceId !== source.sourceId || row.taxYear !== source.taxYear || row.category !== source.category || row.medium !== source.medium
+        || !Decimal.isDecimal(row.amountUsed) || !row.amountUsed.isFinite() || row.amountUsed.lt(0) || row.amountUsed.gt(row.treatedAsPaid)
+        || !row.treatedAsPaid.eq(source.treatedAsPaid)
+        || (['amountAvailable', 'amountUsed', 'amountRemaining', 'amountExpired'] as const).some(key => !row[key].eq(source[key]))) {
+        throw new Error("Selected prior charitable floor must retain each actual source and its deductible amount");
+      }
+    }
+    return { ...row, amountUsed: input.deductionMethod === "itemized" ? (priorFloor ? row.amountUsed : row.treatedAsPaid) : d("0") };
+  });
+  if (priorFloor) {
+    const priorFloorAmount = sum(...priorFloor.detail.map(row => row.treatedAsPaid.minus(row.amountUsed)));
+    if (!priorFloorAmount.gt(0) || !priorFloor.floorDisallowed.eq(priorFloorAmount.plus(sum(...Object.values(priorFloor.currentFloorByCategory))))
+      || !priorFloor.priorDeduction.eq(sum(...priorFloor.detail.map(row => row.amountUsed)))
+      || !priorFloor.priorTreatedAsPaid.eq(sum(...priorFloor.detail.map(row => row.treatedAsPaid)))) {
+      throw new Error("Selected prior charitable floor requires reconciled consumption and deductible source amounts");
+    }
+  }
+  const deduction = input.deductionMethod === "itemized" ? input.scheduleA.charitableTotal
+    : input.taxYear === 2026 ? input.scheduleA.nonitemizerCharitableDeduction : d("0");
+  const priorDeduction = sum(...detail.map(row => row.amountUsed));
+  const priorTreatedAsPaid = sum(...detail.map(row => row.treatedAsPaid ?? d("0")));
+  const carryforwards = input.scheduleA.charitableCarryforwardByYear;
+  const audit = new AuditTrail();
+  audit.record("Charitable Carryover", "selected-deduction", "Charity under the final deduction method", deduction,
+    input.deductionMethod === "itemized" ? "Selected itemized deduction retains actual prior use"
+      : input.taxYear === 2026 ? "Selected2026 nonitemization: current section170(p) deduction only; actual prior category capacity is treated as paid without a deduction"
+      : "Standard2025: no charitable deduction, but prior carry capacity is treated as paid",
+    { "Actual prior deduction": priorDeduction, "Prior treated as paid": priorTreatedAsPaid });
+  if (currentOnly || separatePriorFloor || separateDeterminedFloor) audit.record(separateDeterminedFloor ? "Charitable Determined Floor"
+    : separatePriorFloor ? "Prior Cash Current Property" : "Current Charitable Candidates", "selected-carry", "Charitable carry under the final deduction method", sum(...carryforwards.map(row => row.amount)),
+    "Otherwise-allowable carry retains eligible current floor independently of the selected current deduction");
+  return { deductionMethod: input.deductionMethod, deduction, priorDeduction, priorTreatedAsPaid, detail,
+    carryforwards: carryforwards.map(row => ({ ...row })), lines: audit.getLines() };
+}

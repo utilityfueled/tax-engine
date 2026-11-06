@@ -163,10 +163,9 @@ describe("IRA Deduction Worksheet", () => {
 
   // ── Round-up to next $10 ──────────────────────────────────────────
 
-  it("IRA Deduction Worksheet - reduction is rounded up to next $10 multiple", () => {
+  it("IRA Deduction Worksheet - remaining deduction is rounded up to next $10 multiple", () => {
     // MAGI $80,001, phase-out $79K-$89K
-    // excess = $1,001; ratio = 0.1001; reduction = 0.1001 × $7,000 = $700.70 → ceil to $10 = $710
-    // deduction = $7,000 - $710 = $6,290
+    // Worksheet1-2 line4: (89000-80001)*0.7=6299.30, roundedUP6300.
     const result = calculateIraDeduction({
       filingStatus: "single",
       taxYear: 2025,
@@ -176,7 +175,7 @@ describe("IRA Deduction Worksheet", () => {
       isSpouseActiveParticipant: false,
       age50OrOlder: false,
     });
-    expect(result.deductibleAmount.toNumber()).toBe(6290);
+    expect(result.deductibleAmount.toNumber()).toBe(6300);
   });
 
   // ── MFJ active participant phase-out ──────────────────────────────
@@ -579,9 +578,8 @@ describe("IRA Deduction Worksheet", () => {
     expect(result.deductibleAmount.toNumber()).toBe(7000);
   });
 
-  it("IRA Deduction Worksheet - MAGI $1 above phase-out start triggers reduction", () => {
-    // excess = $1; ratio = 0.0001; reduction = 0.0001 × $7,000 = $0.70 → ceil to $10 = $10
-    // deduction = $7,000 - $10 = $6,990
+  it("IRA Deduction Worksheet - MAGI $1 above phase-out start retains full deduction after rounding", () => {
+    // Worksheet1-2 line4: (89000-79001)*0.7=6999.30, roundedUP7000.
     const result = calculateIraDeduction({
       filingStatus: "single",
       taxYear: 2025,
@@ -591,7 +589,7 @@ describe("IRA Deduction Worksheet", () => {
       isSpouseActiveParticipant: false,
       age50OrOlder: false,
     });
-    expect(result.deductibleAmount.toNumber()).toBe(6990);
+    expect(result.deductibleAmount.toNumber()).toBe(7000);
   });
 
   // ── Age 50+ with phase-out ────────────────────────────────────────

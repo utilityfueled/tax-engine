@@ -1,0 +1,25 @@
+form: "Hosted workspace JSON transport limits"
+taxYear: 2026
+reference: "https://vercel.com/docs/functions/limitations#request-body-size"
+notes: |
+  Operational hosting contract; no tax formulas or readiness changes. Retrieved
+  2026-11-04: Vercel Functions rejects request bodies above4.5MB before the app.
+  The workspace JSON path is separate from multipart documents. Its previous
+  5MiB app limit exceeds the platform limit. Preserve complete input, local
+  recovery and non-Vercel5MiB behavior; never truncate facts to fit a request.
+lines:
+  - line: "vercel-bytes"
+    formula: "When VERCEL=1, workspace POST JSON is limited to4194304 UTF8 bytes, including the wrapper. Exactly the limit is accepted; one byte more returns private app413 before storage/reconciliation. Declared and measured lengths both apply; character count cannot admit oversized multibyte input."
+    testRef: "tests/apps/web/hosted-workspace-json-limits.test.ts::Vercel workspace JSON enforces exact UTF8 byte bounds %s"
+  - line: "other-platforms"
+    formula: "Absent VERCEL or values other than1 retain existing5242880 byte app limit; do not silently reduce other deployments or self-host local snapshots."
+    testRef: "tests/apps/web/hosted-workspace-json-limits.test.ts::other workspace servers retain the existing five MiB boundary %s"
+  - line: "declared"
+    formula: "A declared over-limit body on Vercel returns413 without consuming request data, writing the hosted store or reconciling blobs."
+    testRef: "tests/apps/web/hosted-workspace-json-limits.test.ts::declared oversized Vercel workspace JSON rejects before reading or writing"
+  - line: "platform-response"
+    formula: "POST persistence handles any413 status before reading/parsing its body. Fixed actionable full-backup guidance omits server payload, private text and tokens, leaves caller facts unchanged and does not claim a successful cloud save. Existing non413 structured errors remain unchanged."
+    testRef: "tests/apps/web/hosted-workspace-json-limits.test.ts::workspace save handles a platform413 without reading its body %s"
+  - line: "local-recovery"
+    formula: "Self-host workspace snapshots remain full fidelity and local, with no hosted fetch. A size error never truncates caller facts or manufactures facts/readiness."
+    testRef: "tests/apps/web/hosted-workspace-json-limits.test.ts::large self-host workspace stays local with all facts preserved"

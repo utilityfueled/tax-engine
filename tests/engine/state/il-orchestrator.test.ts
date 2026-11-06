@@ -181,7 +181,7 @@ describe("Illinois State Return Orchestrator", () => {
     const federal = calculateFederalTax({
       ...simpleW2Fixture,
       form1099Int: [
-        {
+        { privateActivityBondInterest: "0",
           payer: "Illinois Muni Fund",
           interestIncome: "0",
           federalWithheld: "0",

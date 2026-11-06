@@ -1,0 +1,44 @@
+form: "Guided mortgage balance source methods"
+fullName: "Actual first-last, monthly and interest-rate records for Publication 936"
+taxYear: 2026
+irsReference: "https://www.irs.gov/publications/p936"
+notes: |
+  Refreshed 2026-10-25. Publication 936, Average Mortgage Balance, permits
+  first/last balances only with the three stated payment/borrowing conditions;
+  lender monthly closing or average balances use actual qualified-home months;
+  interest/rate requires security throughout the year and at least monthly
+  interest payments. The actual lowest annual rate is a decimal, not a dollar
+  amount or an inferred ratio. This intake uses the existing canonical methods.
+  Original Form 1098 boxes and source payment shares remain unchanged. No source
+  facts are derived from the selected return year, Box 2 or payment differences.
+lines:
+  - line: "first-last"
+    description: "Actual first and last secured-day balances and eligibility"
+    formula: "Forward both exact source balances only with actual no-new-borrowing, no-over-one-month-prepayment and level-at-least-semiannual-payment answers; all three must be true. Unknown or false facts cannot establish this method."
+    irsRef: "Publication 936 Average of first and last balance method"
+    testRef: "tests/guided-interview/guided-mortgage-balance-methods.test.ts::binds actual first-last records without substituting Box 2 or a maximum"
+  - line: "monthly"
+    description: "Complete actual qualified-home months and lender balances"
+    formula: "Require actual closing/average statement basis, explicit qualified-home months and exactly one finite nonnegative source balance for every selected month. Do not manufacture twelve months or zero balances. Canonical sum divided by actual month count determines the average."
+    irsRef: "Publication 936 Statements provided by your lender"
+    testRef: "tests/guided-interview/guided-mortgage-balance-methods.test.ts::preserves actual monthly coverage and exact cents with canonical debt limits"
+  - line: "interest-rate"
+    description: "Actual current-year interest and lowest rate source reconciliation"
+    formula: "Collect original current-year interest, prior-paid current-year shares, other-return refunds, actual lowest annual decimal rate and both qualifying conditions. Canonical reconciliation compares all paid/refunded shares before computing the average; zero is explicit and no discrepancy becomes a source."
+    irsRef: "Publication 936 Interest paid divided by interest rate method and 2500 at 0.09 example"
+    testRef: "tests/guided-interview/guided-mortgage-balance-methods.test.ts::uses the published interest-rate example and rejects inconsistent original shares"
+  - line: "controls"
+    description: "Preserve unknown values, history and revoked confirmation"
+    formula: "Method changes retain previously entered records; newly selected methods start unknown. Actual amount, month and qualification edits revoke source confirmation. Confirmed zero, false and blank remain distinct, and decimal rates never use Number monetary conversion."
+    irsRef: "Publication 936 source-record requirements"
+    testRef: "tests/apps/web/mortgage-balance-method-interactions.test.tsx::retains actual balance-method records and invalidates source changes"
+  - line: "full-return"
+    description: "Transfer the canonical limited deduction once"
+    formula: "Actual100000 wage income and40000.10 current-year interest, with800000 actual average acquisition debt, use the published three-decimal0.938 ratio and37520 itemized deduction. Full-return taxable income is62480; original source cents remain in Form1098."
+    irsRef: "Publication 936 Table1; Schedule A line8a; Form1040 lines12 and15"
+    testRef: "tests/guided-interview/guided-mortgage-balance-methods.test.ts::transfers actual monthly source debt through the full return once"
+  - line: "persistence"
+    description: "Save actual method records locally without source network transport"
+    formula: "Desktop/mobile edits survive reload, clearing remains unknown, the original statement is retained and private source records do not enter request bodies."
+    irsRef: "Publication 936 supporting-source requirements; local workspace privacy contract"
+    testRef: "apps/web/tests/guided-mortgage-balances.spec.ts::preserves actual mortgage method sources"

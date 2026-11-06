@@ -1,0 +1,120 @@
+form: "K1 Passive Distribution Gain"
+fullName: "Actual single-activity cash distribution gain and ordinary passive loss handoff"
+taxYear: 2025
+irsReference: "https://www.irs.gov/publications/p925"
+retrievedAt: "2026-10-26"
+notes: |
+  Pub925 Partners and S corporation shareholders expressly includes money above
+  interest basis in the underlying-activity allocation for a partial disposition.
+  IRC731/1368 capital character does not itself establish passive character.
+  Reg1.469-2T(e)(3)(ii) allocates using actual underlying activities: appreciated
+  activity net-gain ratios, or FMV when that allocation cannot be made. With one
+  complete actual ordinary business and no portfolio or other activity, either
+  ratio is one. Require the complete original asset/valuation report, not a user
+  percentage or a calculated gain. Asset FMV and basis are the actual
+  holder-allocable shares on that report; retain any holder743(b) adjustment
+  separately. Either appreciation or fallback valuation assigns the entire
+  owner gain only because this source proves exactly one complete activity.
+  The cash/basis/holding method is unchanged.
+  https://www.ecfr.gov/current/title-26/section-1.469-2T
+  The entity selects beginning-year or disposition-date valuation. Actual activity
+  interest/property dispositions exceeding10% of beginning value, or holder
+  appreciated/depreciated contributions exceeding10% of beginning holder-interest
+  value, require the preceding day. Preserve actual event values and dates; exact
+  10% does not trigger. All source events before the distribution must be included. Each activity row
+  is the complete annual aggregate for one actual activity, with a distinct
+  actual activity identity. Splitting one activity into multiple source rows
+  cannot avoid the10% exception.
+  Owner participation and underlying property character are independent sources.
+  This branch requires <=100 actual combined owner/spouse participation hours,
+  no material-participation test met, continuing non-PTP/nonrental activity,
+  complete business assets continuously passive throughout the relevant holding,
+  with business_cash meaning actual noninvestment U.S. cash whose FMV equals
+  basis and has no holder basis adjustment. Interest-bearing reserves and
+  portfolio assets are not silently called business cash.
+  and no rental, oil/gas, intangible licensing, tiered or special allocation
+  recharacterization, recapture or special capital-gain lookthrough. Actual751
+  exchange exclusions in the original cash packet still apply. Unknown/other facts remain saved but cannot enter this branch.
+  Reg1.469-2(e)(3)(iii)(B), 1.469-2T(f), and1.469-5T control these boundaries.
+  https://www.ecfr.gov/current/title-26/section-1.469-2
+  https://www.ecfr.gov/current/title-26/section-1.469-5T
+  Require the existing exact owner/entity/source-index QBI and prior469 histories,
+  including an explicit empty history. Original Form6198 line2 and gain-item
+  reference reconcile to the derived owner gain; nonbinding capacity remains an
+  independent sufficient condition, not an exemption of charity from465.
+  Gain supplies Form8582 income but does not increase entity stock/outside basis
+  or become QBI. Current basis-blocked losses stay blocked. Ordinary losses
+  actually released retain ScheduleE and their original qualified character.
+  Continuing ownership never invokes a full-disposition469(g) release.
+  https://www.irs.gov/instructions/i8582
+  https://www.irs.gov/instructions/i6198
+  https://uscode.house.gov/us/usc/119-120/t26/s199A/
+  Capital gain already enters8949/D/AGI/8960 line5 and EIC Worksheet1 line7.
+  Exclude its Form8582 contribution from ordinary ScheduleE/8960 line4 and EIC
+  lines11-13, while retaining the actual ordinary loss allowance. The Form8582
+  combined source amount rounds at its existing activity line; the ordinary
+  component retains its own existing reported amount. Their difference is the
+  capital amount removed from the ordinary transfer, not a new capital gain.
+  Original cash/gain cents stay on the capital source. No per-medium gain or
+  loss allocation is inferred. Published form rules control; numeric controls
+  below are derived cases, not published worked distribution examples.
+  https://www.irs.gov/instructions/i8960
+  https://www.irs.gov/publications/p596
+  This package preserves all2026 calculation/export gates. Multiple activities,
+  PTP/rentals, nonpassive lookthrough, special property/history, binding465,
+  prior-basis releases and excess-business-loss business-capital attribution
+  remain separately represented methods. The existing annual NOL/charity guard
+  stays closed. No human qualification follows from agent source/software review.
+lines:
+  - line: "source-valuation"
+    description: "Actual entity date selection and original event values"
+    formula: "Exactly10% preserves the actual selected date; one cent above requires the day before the actual distribution. Unknown or replaced values/dates reject."
+    testRef: "tests/engine/forms/k1-passive-distribution-activity.test.ts::derives the actual valuation date from complete entity event sources"
+  - line: "source-character"
+    description: "Complete single passive activity and original asset character"
+    formula: "No inferred zero portfolio assets, participation, basis adjustment or activity history; duplicate/missing/unsupported sources reject."
+    testRef: "tests/engine/forms/k1-passive-distribution-activity.test.ts::requires complete actual passive property and participation evidence"
+  - line: "ordinary-loss"
+    description: "Owner capital gain releases only actual ordinary passive losses"
+    formula: "Cash1030/basis30 yields D1000. Prior4691500 gives E-1000 and remaining500; prior400 gives E-400 and net600; empty history gives E0 and net1000. Partner and S stock keep gain out of entity basis and QBI."
+    testRef: "tests/engine/federal-k1-passive-distribution.test.ts::routes positive zero and loss outcomes without duplicating capital gain"
+  - line: "basis-first"
+    description: "Distribution gain cannot restore entity basis"
+    formula: "With30 outside basis consumed by1030 cash, current ordinary loss50 stays basis-suspended even though the owner recognizes1000 capital gain."
+    testRef: "tests/engine/federal-k1-passive-distribution.test.ts::preserves basis-first current losses and actual prior QBI character"
+  - line: "tax-character"
+    description: "Independent capital ordinary NIIT and EIC routes"
+    formula: "Gain1000 and released prior ordinary400 gives NIIT4c-400,5a1000,net600; EIC capital1000 and ordinary passive floor0. Exact capital cents stay separate from reported8582 ordinary loss."
+    testRef: "tests/engine/federal-k1-passive-distribution.test.ts::keeps capital cents and passive loss separate in NIIT and EIC"
+  - line: "original-history"
+    description: "Actual history and future gates remain binding"
+    formula: "Missing or altered original prior469/QBI history and changed classification reject; source support does not open2026 calculation."
+    testRef: "tests/engine/federal-k1-passive-distribution.test.ts::requires linked actual histories and preserves the future-year gate"
+  - line: "complete-event-activity"
+    description: "Pre-distribution event aggregates retain actual activity identity"
+    formula: "Two6% rows for the same actual activity cannot each retain the selected date; duplicate actual activity identity rejects until one complete12% source aggregate is supplied."
+    testRef: "tests/engine/forms/k1-passive-distribution-activity.test.ts::rejects split or missing actual activity identities in the valuation event ledger"
+  - line: "reported-ordinary-component"
+    description: "Combined passive-income rounding never creates extra ordinary income"
+    formula: "Original ordinary50.40/50.60 and capital1000.25 supply combined8582 income1051, but ordinary transfer stays50/51 before400 prior loss. Capital1000.25 remains on ScheduleD and NIIT5a."
+    testRef: "tests/engine/federal-k1-passive-distribution.test.ts::retains the original reported ordinary component when combined income crosses a dollar"
+  - line: "original-source-index"
+    description: "The passive gain stays with the actual original K1 after reordering"
+    formula: "A different nonpassive original before the passive source must not receive the distribution or its prior loss; updated actual source indexes preserve total tax and source identities."
+    testRef: "tests/engine/federal-k1-passive-distribution.test.ts::retains original index binding around a separate nonpassive statement"
+  - line: "pdf-source-replay"
+    description: "The original activity gain enters the source-bound passive review"
+    formula: "Original cash1030/basis30 reports capital1000 on8949/D and Form8582 income1000/prior1500/allowed1000/remaining500. The appendix identifies passive character and actual valuation date without private references."
+    testRef: "tests/pdf/k1-passive-distribution-review.test.ts::saves original passive distribution character and separate capital and loss amounts"
+  - line: "pdf-source-binding"
+    description: "Changed valuation classification and retained transfer reject before I/O"
+    formula: "Only original or exact fully redacted source input and its original federal result can render. Changed valuation events, activity history, identity or retained capital/passive audits reject before template access."
+    testRef: "tests/pdf/k1-passive-distribution-review.test.ts::rejects stale passive sources and retained results before template access"
+  - line: "modified-income"
+    description: "Owner gain enters the net passive amount once for rental allowance MAGI"
+    formula: "Wages100000, passive capital1000, ordinary prior400 and separate rental loss30000 leave Form8582 modifiedAGI100000 and rental special allowance25000; do not add capital again outside the replaced net passive contribution."
+    testRef: "tests/engine/federal-k1-passive-distribution.test.ts::retains actual rental modified income when the passive gain offsets other losses"
+  - line: "cash-character"
+    description: "Business cash cannot conceal portfolio or currency appreciation"
+    formula: "Actual noninvestment U.S. business cash retains equal FMV and basis and zero743(b) adjustment. Contradictory cash valuation rejects; actual ordinary-property appreciation remains independent."
+    testRef: "tests/engine/forms/k1-passive-distribution-activity.test.ts::reconciles actual business cash without inventing appreciation"

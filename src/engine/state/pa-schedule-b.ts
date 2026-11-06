@@ -5,10 +5,14 @@
 
 import Decimal from "decimal.js";
 import { AuditTrail } from "@/utils/audit.js";
-import { roundDollar, sum, zeroFloor } from "@/utils/decimal.js";
+import { roundDollar } from "@/utils/decimal.js";
 import type { CalculatedLine } from "@/models/outputs.js";
 
 const SUPPORTED_TAX_YEARS = new Set([2024, 2025, 2026]);
+// Local precision preserves admitted source digits without changing other calculations.
+const Money=Decimal.clone({precision:100,rounding:Decimal.ROUND_HALF_UP});
+const sum=(...values:Decimal[]):Decimal=>values.reduce((total,value)=>total.plus(value),new Money(0));
+const zeroFloor=(value:Decimal):Decimal=>value.lt(0)?new Money(0):new Money(value);
 
 export interface PAScheduleBAdjustmentEntry {
   description: string;
@@ -51,7 +55,7 @@ export interface PAScheduleBResult {
 }
 
 function normalizeAmount(value?: Decimal): Decimal {
-  return zeroFloor(roundDollar(value ?? new Decimal(0)));
+  return zeroFloor(roundDollar(new Money(value ?? 0)));
 }
 
 function normalizeAdjustments(

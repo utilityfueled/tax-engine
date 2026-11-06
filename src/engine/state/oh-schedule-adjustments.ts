@@ -134,6 +134,9 @@ export interface OhioScheduleOfAdjustmentsInput {
 
   // --- Deductions ---
 
+  /** Official2025 line14; source qualification belongs to the canonical adapter. */
+  reciprocityWages?: Decimal | string | number;
+
   /** Line 15: Qualifying business income (gross, before deduction cap). */
   qualifyingBusinessIncome?: Decimal | string | number;
   /** Official 2025 line 26 / legacy alias line 16: federal interest exempt from Ohio. */
@@ -200,6 +203,7 @@ export interface OhioScheduleOfAdjustmentsResult {
   line14_totalAdditions: Decimal;
 
   // Deductions
+  line14_reciprocityWages: Decimal;
   line15_businessIncomeDeduction: Decimal;
   line26_federalInterestExempt: Decimal;
   line16_federalInterestExempt: Decimal;
@@ -798,8 +802,16 @@ export function calculateOhioScheduleOfAdjustments(
     "Sum of other uncommon deductions"
   );
 
+  const line14Reciprocity = d(input.reciprocityWages);
+  if (line14Reciprocity.isNegative() || !line14Reciprocity.isFinite() || (input.taxYear !== 2025 && !line14Reciprocity.isZero())) {
+    throw new Error('Ohio official2025 reciprocity wage deduction requires a nonnegative current-year amount');
+  }
+  if (input.reciprocityWages !== undefined) audit.record('OH-SCHEDULE-ADJ-2025', '14', 'Reciprocity wages', line14Reciprocity,
+    'Official2025 line14: eligible reciprocal-state employee compensation; canonical source admission required. Legacy addition-total alias is separate.');
+
   // Official 2025 Line 47 — Total deductions
   const line47 = sum(
+    line14Reciprocity,
     line15,
     line25,
     line16,
@@ -850,6 +862,7 @@ export function calculateOhioScheduleOfAdjustments(
     line6_medicalSavingsAccountAddBack: line6MedicalSavingsAccountAddBack,
     line6to13_otherAdditions: line6to13,
     line14_totalAdditions: line14,
+    line14_reciprocityWages: line14Reciprocity,
     line15_businessIncomeDeduction: line15,
     line26_federalInterestExempt: line16,
     line16_federalInterestExempt: line16,

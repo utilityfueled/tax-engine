@@ -11,6 +11,9 @@ import type { TaxYearInput, CapitalTransaction } from "@/models/inputs.js";
 import type { CalculatedLine } from "@/models/outputs.js";
 import { d } from "@/utils/decimal.js";
 import { AuditTrail } from "@/utils/audit.js";
+import { calculateSection1202Sources, type Section1202SourceResult } from "./section-1202-sources.js";
+import { normalizeDigitalAssetCapitalInput } from './digital-asset-capital-input.js';
+import { calculateK1CharitableReturnSources } from './k1-charitable-return-sources.js';
 
 export interface TransactionSummary {
   description: string;
@@ -35,10 +38,19 @@ export interface Form8949Result {
   /** Part I: Short-term */
   shortTermBoxA: CategoryTotals; // Basis reported to IRS
   shortTermBoxB: CategoryTotals; // Basis NOT reported to IRS
+  shortTermBoxC: CategoryTotals; // Other assets, neither1099-B nor1099-DA
+  shortTermBoxG: CategoryTotals; //1099-DA, basis reported
+  shortTermBoxH: CategoryTotals; //1099-DA, basis not reported
+  shortTermBoxI: CategoryTotals; // Digital assets, neither reporting document
 
   /** Part II: Long-term */
   longTermBoxD: CategoryTotals; // Basis reported to IRS
   longTermBoxE: CategoryTotals; // Basis NOT reported to IRS
+  longTermBoxF: CategoryTotals; // Other assets with neither document, including issuer Q adjustments
+  longTermBoxJ: CategoryTotals; //1099-DA, basis reported
+  longTermBoxK: CategoryTotals; //1099-DA, basis not reported
+  longTermBoxL: CategoryTotals; // Digital assets, neither reporting document
+  section1202?: Section1202SourceResult;
 
   /** Aggregate totals for Schedule D */
   totalShortTermGainLoss: Decimal;
@@ -47,7 +59,7 @@ export interface Form8949Result {
   lines: CalculatedLine[];
 }
 
-function processTransaction(t: CapitalTransaction): TransactionSummary {
+function processTransaction(t: CapitalTransaction, exclusion = new Decimal(0)): TransactionSummary {
   const proceeds = d(t.proceeds);
   const costBasis = d(t.costBasis);
   let adjustment = d(t.adjustments);
@@ -58,6 +70,12 @@ function processTransaction(t: CapitalTransaction): TransactionSummary {
     adjustment = adjustment.plus(d(t.washSaleDisallowed));
     adjustmentCode = "W";
   }
+  if (exclusion.gt(0)) {
+    adjustment = adjustment.minus(exclusion);
+    adjustmentCode = `Q${adjustmentCode}`;
+  }
+  if (t.qofInclusion) adjustmentCode = `Y${adjustmentCode}`;
+  if (t.adjustmentCodes) adjustmentCode = `${t.adjustmentCodes}${adjustmentCode}`;
 
   const gainLoss = proceeds.minus(costBasis).plus(adjustment);
 
@@ -82,97 +100,115 @@ function aggregateCategory(transactions: TransactionSummary[]): CategoryTotals {
   return { transactions, totalProceeds, totalCostBasis, totalAdjustments, totalGainLoss };
 }
 
+type ReportingBox = 'A' | 'B' | 'C' | 'G' | 'H' | 'I' | 'D' | 'E' | 'F' | 'J' | 'K' | 'L';
+
+function reportingBox(transaction: CapitalTransaction): ReportingBox {
+  // Older original1099-B records retain their collection's explicit meaning.
+  // Normalized DA and nonstatement rows must carry their actual source type.
+  const source = transaction.sourceDocumentType ?? '1099-b';
+  const short = transaction.holdingPeriod === 'short';
+  if (source === '1099-da') {
+    if (!transaction.digitalAsset) throw new Error('Form8949 source1099-DA must describe a digital asset');
+    return short ? (transaction.basisReportedToIRS ? 'G' : 'H') : (transaction.basisReportedToIRS ? 'J' : 'K');
+  }
+  if (source === 'not-reported') {
+    if (transaction.basisReportedToIRS) throw new Error('Form8949 source without a reporting document cannot claim reported basis');
+    return transaction.digitalAsset ? (short ? 'I' : 'L') : (short ? 'C' : 'F');
+  }
+  if (source !== '1099-b') throw new Error('Form8949 original reporting document is unsupported');
+  return short ? (transaction.basisReportedToIRS ? 'A' : 'B') : (transaction.basisReportedToIRS ? 'D' : 'E');
+}
+
 export function calculateForm8949(input: TaxYearInput): Form8949Result {
   const audit = new AuditTrail();
+  const capitalInput = normalizeDigitalAssetCapitalInput(input);
+  const section1202 = calculateSection1202Sources(input);
+  const brokerExclusions = new Map<string, Decimal>();
+  const fundAdjustments: TransactionSummary[] = [];
+  for (const binding of section1202?.bindings ?? []) {
+    const lot = section1202?.lots.find(row => row.sourceId === binding.lotId);
+    if (!lot) throw new Error('Section1202 computed source lot is incomplete');
+    if (binding.sourceKind === 'broker') brokerExclusions.set(binding.originalSourceId, lot.exclusion);
+    else if (lot.exclusion.gt(0)) fundAdjustments.push({
+      description: binding.issuerName, dateAcquired: '', dateSold: '', proceeds: new Decimal(0), costBasis: new Decimal(0),
+      adjustment: lot.exclusion.negated(), adjustmentCode: 'Q', gainLoss: lot.exclusion.negated(),
+    });
+  }
+  if (section1202) audit.merge(section1202.lines);
 
-  // Collect all transactions from all 1099-B forms
-  const allTransactions: Array<{ transaction: CapitalTransaction; broker: string }> = [];
-  for (const form of input.form1099B) {
-    for (const t of form.transactions) {
-      allTransactions.push({ transaction: t, broker: form.broker });
+  // Normalization appends originalDA sources without changing originalB indexes
+  // used by the independently bound Section1202 lots. Already normalized input
+  // has no rawDA rows and is not converted a second time.
+  const allTransactions: Array<{ transaction: CapitalTransaction; sourceId: string }> = [];
+  for (const [formIndex, form] of capitalInput.form1099B.entries()) {
+    for (const [transactionIndex, t] of form.transactions.entries()) {
+      allTransactions.push({ transaction: t, sourceId: `form1099B:${formIndex}:transaction:${transactionIndex}` });
     }
   }
 
-  // Categorize by holding period and basis reporting
-  const shortTermReported: TransactionSummary[] = [];
-  const shortTermNotReported: TransactionSummary[] = [];
-  const longTermReported: TransactionSummary[] = [];
-  const longTermNotReported: TransactionSummary[] = [];
-
-  for (const { transaction } of allTransactions) {
-    const summary = processTransaction(transaction);
-    if (transaction.holdingPeriod === "short") {
-      if (transaction.basisReportedToIRS) {
-        shortTermReported.push(summary);
-      } else {
-        shortTermNotReported.push(summary);
-      }
-    } else {
-      if (transaction.basisReportedToIRS) {
-        longTermReported.push(summary);
-      } else {
-        longTermNotReported.push(summary);
-      }
+  const transactions: Record<ReportingBox, TransactionSummary[]> = {
+    A: [], B: [], C: [], G: [], H: [], I: [], D: [], E: [], F: [...fundAdjustments], J: [], K: [], L: [],
+  };
+  for (const { transaction, sourceId } of allTransactions) {
+    transactions[reportingBox(transaction)].push(processTransaction(transaction, brokerExclusions.get(sourceId)));
+  }
+  // Owner-level distribution gains are separate from the entity's reported
+  // capital amounts and basis income. Original source validation determines
+  // character and reported columns; no synthetic1099-B statement is created.
+  if (input.k1CharitableSources?.statements?.some(source => source.cashDistribution !== undefined)) {
+    const source = calculateK1CharitableReturnSources(input);
+    for (const statement of source?.statements ?? []) {
+      const distribution = statement.distributionGain;
+      if (!distribution?.gain.gt(0)) continue;
+      transactions[distribution.holdingPeriod === 'short' ? 'C' : 'F'].push({
+        description: `${input.scheduleK1[statement.k1Index].partnershipName} - cash distribution`,
+        dateAcquired: distribution.acquisitionDate, dateSold: distribution.distributionDate,
+        proceeds: distribution.proceeds, costBasis: distribution.reportedBasis,
+        adjustment: new Decimal(0), adjustmentCode: '', gainLoss: distribution.gain,
+      });
     }
   }
+  const shortTermBoxA = aggregateCategory(transactions.A);
+  const shortTermBoxB = aggregateCategory(transactions.B);
+  const shortTermBoxC = aggregateCategory(transactions.C);
+  const shortTermBoxG = aggregateCategory(transactions.G);
+  const shortTermBoxH = aggregateCategory(transactions.H);
+  const shortTermBoxI = aggregateCategory(transactions.I);
+  const longTermBoxD = aggregateCategory(transactions.D);
+  const longTermBoxE = aggregateCategory(transactions.E);
+  const longTermBoxF = aggregateCategory(transactions.F);
+  const longTermBoxJ = aggregateCategory(transactions.J);
+  const longTermBoxK = aggregateCategory(transactions.K);
+  const longTermBoxL = aggregateCategory(transactions.L);
+  for (const [part, box, category] of [
+    ['I', 'A', shortTermBoxA], ['I', 'B', shortTermBoxB], ['I', 'C', shortTermBoxC],
+    ['I', 'G', shortTermBoxG], ['I', 'H', shortTermBoxH], ['I', 'I', shortTermBoxI],
+    ['II', 'D', longTermBoxD], ['II', 'E', longTermBoxE], ['II', 'F', longTermBoxF],
+    ['II', 'J', longTermBoxJ], ['II', 'K', longTermBoxK], ['II', 'L', longTermBoxL],
+  ] as const) {
+    audit.record('Form 8949', `Part ${part} Box ${box}`, `${part === 'I' ? 'Short' : 'Long'}-term original reporting category ${box}`,
+      category.totalGainLoss, `${category.transactions.length} transactions`,
+      { proceeds: category.totalProceeds, cost: category.totalCostBasis, adjustments: category.totalAdjustments });
+  }
 
-  const shortTermBoxA = aggregateCategory(shortTermReported);
-  const shortTermBoxB = aggregateCategory(shortTermNotReported);
-  const longTermBoxD = aggregateCategory(longTermReported);
-  const longTermBoxE = aggregateCategory(longTermNotReported);
-
-  // Audit Part I
-  audit.record(
-    "Form 8949",
-    "Part I Box A",
-    "Short-term, basis reported",
-    shortTermBoxA.totalGainLoss,
-    `${shortTermBoxA.transactions.length} transactions`,
-    { proceeds: shortTermBoxA.totalProceeds, cost: shortTermBoxA.totalCostBasis }
-  );
-  audit.record(
-    "Form 8949",
-    "Part I Box B",
-    "Short-term, basis not reported",
-    shortTermBoxB.totalGainLoss,
-    `${shortTermBoxB.transactions.length} transactions`,
-    { proceeds: shortTermBoxB.totalProceeds, cost: shortTermBoxB.totalCostBasis }
-  );
-
-  const totalShortTermGainLoss = shortTermBoxA.totalGainLoss.plus(shortTermBoxB.totalGainLoss);
+  const totalShortTermGainLoss = [shortTermBoxA, shortTermBoxB, shortTermBoxC, shortTermBoxG, shortTermBoxH, shortTermBoxI]
+    .reduce((total, category) => total.plus(category.totalGainLoss), new Decimal(0));
   audit.record(
     "Form 8949",
     "Part I totals",
     "Total short-term gain/loss",
     totalShortTermGainLoss,
-    "Box A + Box B"
+    "Box A + Box B + Box C + Box G + Box H + Box I"
   );
 
-  // Audit Part II
-  audit.record(
-    "Form 8949",
-    "Part II Box D",
-    "Long-term, basis reported",
-    longTermBoxD.totalGainLoss,
-    `${longTermBoxD.transactions.length} transactions`,
-    { proceeds: longTermBoxD.totalProceeds, cost: longTermBoxD.totalCostBasis }
-  );
-  audit.record(
-    "Form 8949",
-    "Part II Box E",
-    "Long-term, basis not reported",
-    longTermBoxE.totalGainLoss,
-    `${longTermBoxE.transactions.length} transactions`,
-    { proceeds: longTermBoxE.totalProceeds, cost: longTermBoxE.totalCostBasis }
-  );
-
-  const totalLongTermGainLoss = longTermBoxD.totalGainLoss.plus(longTermBoxE.totalGainLoss);
+  const totalLongTermGainLoss = [longTermBoxD, longTermBoxE, longTermBoxF, longTermBoxJ, longTermBoxK, longTermBoxL]
+    .reduce((total, category) => total.plus(category.totalGainLoss), new Decimal(0));
   audit.record(
     "Form 8949",
     "Part II totals",
     "Total long-term gain/loss",
     totalLongTermGainLoss,
-    "Box D + Box E"
+    "Box D + Box E + Box F + Box J + Box K + Box L"
   );
 
   // Wash sale summary
@@ -200,8 +236,17 @@ export function calculateForm8949(input: TaxYearInput): Form8949Result {
   return {
     shortTermBoxA,
     shortTermBoxB,
+    shortTermBoxC,
+    shortTermBoxG,
+    shortTermBoxH,
+    shortTermBoxI,
     longTermBoxD,
     longTermBoxE,
+    longTermBoxF,
+    longTermBoxJ,
+    longTermBoxK,
+    longTermBoxL,
+    section1202,
     totalShortTermGainLoss,
     totalLongTermGainLoss,
     lines: audit.getLines(),

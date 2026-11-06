@@ -7,6 +7,8 @@ dist/
 .env.*.local
 *.tgz
 coverage/
+!spec/coverage/
+!spec/coverage/inventory-2025.json
 .vitest/
 forms/filled/
 data/output/

@@ -1,0 +1,21 @@
+form: "Form1099Q actual allocated expense cap"
+fullName: "Qualified room and board capacity without unallocated expense dilution"
+taxYear: 2026
+irsReference: "https://www.irs.gov/publications/p970"
+notes: |
+  Refreshed October25,2026: IRC529(e)(3)(B) and Pub970 chapter7 qualified
+  room and board expenses and taxable-distribution calculation. Actual tuition
+  program distributions use actual adjusted qualified expenses, capped by the
+  school allowance or institution charge. Other paid expenses not allocated to
+  any education distribution do not dilute the qualifying source allocation.
+  Numerical cases below are independently derived, not published IRS examples.
+  This correction changes no original expense, source amount, election or gate.
+lines:
+  - line: "actual-capacity"
+    description: "Apply the qualified cap to the actual allocated expense group"
+    formula: "For an actual expense and confirmed allocations, sum requested amounts; each source receives its requested amount times min(1, category-qualified expense / sum requested). Unallocated ordinary spending is not in that denominator. Existing exact expense conservation and source eligibility remain mandatory."
+    testRef: "tests/engine/forms/form-1099-q-expense-cap.test.ts::uses actual room and board capacity without diluting it by unallocated spending"
+  - line: "source-conservation"
+    description: "Preserve original sources and group conservation"
+    formula: "Cash distributions2000 and2000 with earnings400 and800, actual10000room expense and3000allowance, receive1500qualified expense each; excludedearnings300 and600, taxable100 and200. Reversing sources changes no keyed result; half-timefalse giveszero and missing allowance rejects."
+    testRef: "tests/engine/forms/form-1099-q-expense-cap.test.ts::conserves the single category cap across actual distributions and source states"

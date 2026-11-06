@@ -1,0 +1,39 @@
+form: "Form8962 shared-policy review"
+fullName: "Original-source-bound PartIV and monthly reconciliation review"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i8962"
+retrievedAt: "2026-10-25"
+notes: |
+  Physical final2025 f8962.pdf created3/25/25 was inspected alongside its
+  AcroForm widgets. It has two pages and PartIV lines30-34. Source hash is
+  dc7d2c6b566cac66badae721e2ce47ac47bb4e8b71aafb01721ff7368d803099.
+  The actual shared-policy route uses this template plus a complete reference
+  statement. Other existing ordinary routes retain their reference output.
+  Every page remains review-only; no filing or2026 mapping qualification.
+  Full original return facts are calculated before redaction. A private opaque
+  token binds source identity/year/amounts and the retained credit/audit/transfer.
+  A user-supplied object cannot certify the sources. The renderer accepts only
+  the original input or its exact identifier-redacted copy for that token.
+  Taxpayer and other-taxpayer SSNs stay blank in this review output. Original
+  source identities remain private; source references are not printed.
+lines:
+  - line: "1-8b"
+    description: "Map completed household and contribution audits"
+    formula: "Use unique retained Form8962 lines1,2a,2b,3,4,5,7,8a,8b after original calculation reconciliation; line7 uses four decimals. Select actual FPL region. Blank SSN and nonapplicable married-separate exception."
+    testRef: "tests/pdf/form8962-shared-policy-review.test.ts::maps actual PartIV and monthly values in saved independent-reader fields"
+  - line: "9-29"
+    description: "Show allocated monthly credits and advances"
+    formula: "9Yes and10No;11blank;12-23(a-f) from actual monthly audits.24/25 actual totals;26 only when24>=25;27-29 only when25>24,28blank if no cap. Missing ineligible credit columns remain blank. Raw original advances and allocated advances are separate source totals."
+    testRef: "tests/pdf/form8962-shared-policy-review.test.ts::maps actual PartIV and monthly values in saved independent-reader fields"
+  - line: "30-34"
+    description: "Report each actual policy and consecutive percentage period"
+    formula: "30-33a=last15policycharacters,bblankforreview,c/dfirst/lastmonth,e/f/gsameactualfractiontotwoplaces.34Yesfor<=4periods,otherwiseNoandcompleteallperiodsonreferencecontinuation. PartVblank. Preserve exact original source cents in the reference."
+    testRef: "tests/pdf/form8962-shared-policy-review.test.ts::retains every allocation period and original cents without exposing private identifiers"
+  - line: "source-context"
+    description: "Reject stale sources calculation objects and forged review contexts"
+    formula: "Opaque context requires fresh original canonical calculation; exact complete-input digest or its redacted equivalent and retainedForm8962/1040Schedule2Schedule3transfer digest must match. Missing or forged contexts cannot restore redacted facts. Validate before creating a packet file."
+    testRef: "tests/pdf/form8962-shared-policy-review.test.ts::rejects stale sources altered calculations missing and forged review tokens"
+  - line: "gate"
+    description: "Retain review and year boundaries"
+    formula: "Only2025source-backed shared-policy review uses registered template;2026orfilingpurpose rejects before output. Existing ordinary reference remains separately tested."
+    testRef: "tests/pdf/form8962-shared-policy-review.test.ts::retains year and filing gates for shared-policy review"

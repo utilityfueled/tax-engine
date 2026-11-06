@@ -1,0 +1,27 @@
+form: "Form-4562-Asset-Basis-Reconciliation"
+fullName: "Finite first-year asset basis and Form4562 bridge consistency"
+taxYear: 2026
+reference: "https://www.irs.gov/instructions/i4562; https://www.irs.gov/publications/p946"
+notes: |
+  Pub946 chapter4 and Form4562 PartsI/II/V; retrieved November5,2026.
+  This reconciles complete finite ordinary first-year source packets with their
+  existing aggregate bridge. It does not establish section179 eligibility,
+  income/election facts, complete asset history or qualified final2026 forms.
+  Listed179/bonus allocation needs its separate PartV method and stays denied.
+lines:
+  - line: "ordinary-consistency"
+    description: "Actual per-asset reductions must match their aggregate deductions"
+    formula: "If any asset has the new documented basis packet, require every asset to have its valid first-year packet. Sum nonlisted business179 and bonus allocations with Decimal; require equality with calculated Form4562 lines12 and14 respectively before returning the form. Missing or contradictory aggregate values must not silently omit actual deductions."
+    testRef: "tests/engine/forms/form-4562-asset-basis-reconciliation.test.ts::reconciles actual ordinary allocations without silently dropping deductions"
+  - line: "listed-zero"
+    description: "Known zero listed depreciation cannot fall back to a stale scalar"
+    formula: "When the finite all-documented asset collection includes listed property, line21 equals the computed listed total even when0 and the results list is empty. Never reuse an unrelated older scalar as this known-zero deduction."
+    testRef: "tests/engine/forms/form-4562-asset-basis-reconciliation.test.ts::keeps a documented zero listed deduction zero instead of a legacy scalar"
+  - line: "unsupported-composition"
+    description: "Partial history and unimplemented PartV allocations fail explicitly"
+    formula: "Deny mixed documented/legacy asset collections on this new Form4562 source path. Deny positive listed179/bonus allocations pending their distinct PartV allocation method; a plausible total is not evidence that individual form lines are correct. Preserve legacy compatibility without marking it source-qualified."
+    testRef: "tests/engine/forms/form-4562-asset-basis-reconciliation.test.ts::denies partial source collections and unsupported listed allocations"
+  - line: "business-basis-audit"
+    description: "Audit the actual already-allocated depreciation basis"
+    formula: "For documented ordinary/listed results, expose gross, actual business basis, actual179, actualbonus and remaining regular MACRS basis as monetary audit inputs only. Apply the table percentage to that remaining business basis once. Do not describe a second business-use multiplication. A known-zero documented listed collection is computed, never a scalar bridge. Do not expose original source references."
+    testRef: "tests/engine/forms/form-4562-asset-basis-reconciliation.test.ts::audits the remaining business basis without implying a second allocation"

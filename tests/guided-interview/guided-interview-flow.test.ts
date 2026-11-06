@@ -1,3 +1,7 @@
+import { syntheticStudentLoanFacts } from "../fixtures/student-loan-source";
+import { completeNecSource, completeBusinessSection, completeBusinessExpenses } from "./complete-facts";
+import { completeInterestSource } from "./complete-facts";
+import { completePersonalInfo, completeW2Entry, completeSocialSecuritySource, completeSocialSecurityTreatment, completeUnemploymentSource } from "./complete-facts";
 import { describe, it, expect } from "vitest";
 import {
   type SegmentationAnswers,
@@ -366,7 +370,7 @@ describe("collectGuidedReviewIssues", () => {
     const withPartialW2 = updateSectionData(state, "income-w2", {
       entries: [
         {
-          ...emptyW2Entry,
+          ...completeW2Entry,
           employerName: "Northwind Co",
           wages: "",
           federalWithheld: "",
@@ -386,7 +390,7 @@ describe("collectGuidedReviewIssues", () => {
         sectionId: "income-w2",
         sectionLabel: "W-2 Wages",
         status: "needs-review",
-        message: "Some W-2 entries are missing wages.",
+        message: "Complete the actual W-2 identity, payroll and state facts.",
         actionLabel: "Review W-2 Wages",
       }),
     ]);
@@ -423,14 +427,14 @@ describe("computeFlowProgress", () => {
       sectionData: {
         deductions: emptyDeductionData,
         "personal-info": {
-          ...emptyPersonalInfo,
+          ...completePersonalInfo,
           firstName: "Jane",
           lastName: "Doe",
         },
         "income-w2": {
           entries: [
             {
-              ...emptyW2Entry,
+              ...completeW2Entry,
               employerName: "Acme",
               wages: "50000",
             },
@@ -478,7 +482,7 @@ describe("computeFlowProgress", () => {
         "income-w2": {
           entries: [
             {
-              ...emptyW2Entry,
+              ...completeW2Entry,
               employerName: "Acme",
               wages: "50000",
             },
@@ -511,7 +515,7 @@ describe("summarizeFlowCompletion", () => {
         "income-w2": {
           entries: [
             {
-              ...emptyW2Entry,
+              ...completeW2Entry,
               employerName: "Acme",
               wages: "50000",
             },
@@ -550,14 +554,15 @@ describe("summarizeFlowCompletion", () => {
       ],
       sectionData: {
         "personal-info": {
-          ...emptyPersonalInfo,
+          ...completePersonalInfo,
           firstName: "Jane",
           lastName: "Doe",
         },
         "income-self-employment": {
+          ...completeBusinessSection,
           necEntries: [],
           manualGrossReceipts: "12000",
-          expenses: emptyScheduleCExpenses,
+          expenses: completeBusinessExpenses,
         },
         deductions: emptyDeductionData,
       },
@@ -701,14 +706,14 @@ describe("updateSectionData", () => {
   });
 
   it("stores W-2 entries", () => {
-    const entries = [{ ...emptyW2Entry, employerName: "Acme", wages: "50000" }];
+    const entries = [{ ...completeW2Entry, employerName: "Acme", wages: "50000" }];
     const next = updateSectionData(base, "income-w2", { entries });
     expect(next.sectionData["income-w2"]).toEqual({ entries });
   });
 
   it("preserves other section data when updating one section", () => {
     const personalData = { ...emptyPersonalInfo, firstName: "Jane" };
-    const w2Entries = [{ ...emptyW2Entry, wages: "50000" }];
+    const w2Entries = [{ ...completeW2Entry, wages: "50000" }];
     const withPersonal = updateSectionData(base, "personal-info", personalData);
     const withBoth = updateSectionData(withPersonal, "income-w2", { entries: w2Entries });
     expect(withBoth.sectionData["personal-info"]).toEqual(personalData);
@@ -774,9 +779,9 @@ describe("navigation preserves sectionData", () => {
 
   it("goToPreviousSection keeps sectionData", () => {
     const state = goToNextSection(startInterview(simpleSegmentation));
-    const withData = updateSectionData(state, "income-w2", { entries: [{ ...emptyW2Entry, wages: "75000" }] });
+    const withData = updateSectionData(state, "income-w2", { entries: [{ ...completeW2Entry, wages: "75000" }] });
     const prev = goToPreviousSection(withData);
-    expect(getSectionData(prev, "income-w2")).toEqual({ entries: [{ ...emptyW2Entry, wages: "75000" }] });
+    expect(getSectionData(prev, "income-w2")).toEqual({ entries: [{ ...completeW2Entry, wages: "75000" }] });
   });
 
   it("jumpToSection keeps sectionData", () => {
@@ -888,7 +893,7 @@ describe("self-employment section data", () => {
       stateCode: null,
     });
     const withPersonal = updateSectionData(state, "personal-info", { ...emptyPersonalInfo, firstName: "Jane" });
-    const withW2 = updateSectionData(withPersonal, "income-w2", { entries: [{ ...emptyW2Entry, wages: "50000" }] });
+    const withW2 = updateSectionData(withPersonal, "income-w2", { entries: [{ ...completeW2Entry, wages: "50000" }] });
     const withSE = updateSectionData(withW2, "income-self-employment", {
       necEntries: [{ ...emptyNecEntry, nonemployeeCompensation: "20000" }],
       expenses: emptyScheduleCExpenses,
@@ -943,19 +948,20 @@ describe("self-employment section routing", () => {
       sectionData: {
         deductions: emptyDeductionData,
         "personal-info": {
-          ...emptyPersonalInfo,
+          ...completePersonalInfo,
           firstName: "Jane",
           lastName: "Doe",
         },
         "income-self-employment": {
+          ...completeBusinessSection,
           necEntries: [
             {
-              ...emptyNecEntry,
+              ...completeNecSource,
               payerName: "Client Co",
               nonemployeeCompensation: "12000",
             },
           ],
-          expenses: emptyScheduleCExpenses,
+          expenses: completeBusinessExpenses,
         },
       },
     };
@@ -993,16 +999,21 @@ describe("emptyDividendEntry", () => {
 });
 
 describe("emptyCapitalGainTransaction", () => {
-  it("has all fields initialized with defaults", () => {
+  it("leaves sale classification facts unanswered", () => {
     expect(emptyCapitalGainTransaction).toEqual({
       description: "",
       dateAcquired: "",
       dateSold: "",
       proceeds: "",
       costBasis: "",
-      holdingPeriod: "short",
-      basisReportedToIRS: true,
-      digitalAsset: false,
+      holdingPeriod: "",
+      specialGainCharacter: "",
+      basisReportedToIRS: null,
+      digitalAsset: null,
+      washSale: null,
+      washSaleDisallowed: "",
+      adjustments: "",
+      sourceClassificationConfirmed: null,
     });
   });
 });
@@ -1078,7 +1089,7 @@ describe("investment income section data", () => {
       stateCode: null,
     });
     const withPersonal = updateSectionData(state, "personal-info", { ...emptyPersonalInfo, firstName: "Jane" });
-    const withW2 = updateSectionData(withPersonal, "income-w2", { entries: [{ ...emptyW2Entry, wages: "50000" }] });
+    const withW2 = updateSectionData(withPersonal, "income-w2", { entries: [{ ...completeW2Entry, wages: "50000" }] });
     const withInvest = updateSectionData(withW2, "income-investments", {
       interestEntries: [{ ...emptyInterestEntry, interestIncome: "200" }],
       dividendEntries: [emptyDividendEntry],
@@ -1125,6 +1136,7 @@ describe("investment section routing", () => {
       stateCode: null,
     };
     const state: GuidedFlowState = {
+      taxYear: 2025,
       phase: "interview",
       segmentation: investSegmentation,
       currentSectionIndex: 3,
@@ -1132,14 +1144,14 @@ describe("investment section routing", () => {
       sectionData: {
         deductions: emptyDeductionData,
         "personal-info": {
-          ...emptyPersonalInfo,
+          ...completePersonalInfo,
           firstName: "Jane",
           lastName: "Doe",
         },
         "income-w2": {
           entries: [
             {
-              ...emptyW2Entry,
+              ...completeW2Entry,
               employerName: "Acme",
               wages: "50000",
             },
@@ -1148,7 +1160,7 @@ describe("investment section routing", () => {
         "income-investments": {
           interestEntries: [
             {
-              ...emptyInterestEntry,
+              ...completeInterestSource,
               payer: "Bank",
               interestIncome: "250",
             },
@@ -1160,9 +1172,9 @@ describe("investment section routing", () => {
     };
     const progress = computeFlowProgress(state);
     expect(progress.completedSections).toBe(3);
-    // personal, w2, investments, deductions, credits, payments, review, final-review = 8
-    expect(progress.totalSections).toBe(8);
-    expect(progress.percentComplete).toBe(38);
+    // personal, w2, investments, deductions, credits, other-taxes, payments, review, final-review = 9
+    expect(progress.totalSections).toBe(9);
+    expect(progress.percentComplete).toBe(33);
   });
 });
 
@@ -1215,7 +1227,7 @@ describe("review section in flow", () => {
     });
     // Enter personal info and W-2 data
     state = updateSectionData(state, "personal-info", { ...emptyPersonalInfo, firstName: "Jane", lastName: "Doe" });
-    state = updateSectionData(state, "income-w2", { entries: [{ ...emptyW2Entry, wages: "75000", federalWithheld: "10000" }] });
+    state = updateSectionData(state, "income-w2", { entries: [{ ...completeW2Entry, wages: "75000", federalWithheld: "10000" }] });
 
     // Navigate to review (last section for simple W-2 filer = index 5)
     const sections = buildSectionRoute(state.segmentation);
@@ -1318,7 +1330,7 @@ describe("deduction section data", () => {
   it("coexists with other section data", () => {
     let state = startInterview(simpleSegmentation);
     state = updateSectionData(state, "personal-info", { ...emptyPersonalInfo, firstName: "Jane" });
-    state = updateSectionData(state, "income-w2", { entries: [{ ...emptyW2Entry, wages: "50000" }] });
+    state = updateSectionData(state, "income-w2", { entries: [{ ...completeW2Entry, wages: "50000" }] });
     state = updateSectionData(state, "deductions", { ...emptyDeductionData, method: "itemized", mortgageInterest: "8000" });
     expect(getSectionData(state, "personal-info")?.firstName).toBe("Jane");
     expect(getSectionData(state, "income-w2")?.entries[0].wages).toBe("50000");
@@ -1541,8 +1553,8 @@ describe("retirement income section data", () => {
     expect(emptyRetirementEntry.grossDistribution).toBe("");
     expect(emptyRetirementEntry.taxableAmount).toBe("");
     expect(emptyRetirementEntry.federalWithheld).toBe("");
-    expect(emptyRetirementEntry.isIraSepSimple).toBe(false);
-    expect(emptyRetirementEntry.distributionCode).toBe("7");
+    expect(emptyRetirementEntry.isIraSepSimple).toBeNull();
+    expect(emptyRetirementEntry.distributionCode).toBe("");
   });
 });
 
@@ -1661,7 +1673,7 @@ describe("flow state persistence", () => {
       stateCode: null,
     });
     state = updateSectionData(state, "income-w2", {
-      entries: [{ ...emptyW2Entry, wages: "85000", federalWithheld: "12000" }],
+      entries: [{ ...completeW2Entry, wages: "85000", federalWithheld: "12000" }],
     });
     state = goToNextSection(state);
     saveGuidedFlowState(storage, workspaceId, state);
@@ -1930,7 +1942,7 @@ describe("syncGuidedFlowToWorkspace", () => {
       stateCode: null,
     });
     state = updateSectionData(state, "income-w2", {
-      entries: [{ ...emptyW2Entry, wages: "50000", federalWithheld: "5000" }],
+      entries: [{ ...completeW2Entry, wages: "50000", federalWithheld: "5000" }],
     });
     const docs = buildGuidedSyntheticDocuments(state);
     const answers = buildGuidedFactAnswers(state);
@@ -1949,7 +1961,7 @@ describe("syncGuidedFlowToWorkspace", () => {
       stateCode: null,
     });
     state = updateSectionData(state, "income-w2", {
-      entries: [{ ...emptyW2Entry, wages: "50000", federalWithheld: "5000" }],
+      entries: [{ ...completeW2Entry, wages: "50000", federalWithheld: "5000" }],
     });
     const docs = buildGuidedSyntheticDocuments(state);
     const answers = buildGuidedFactAnswers(state);
@@ -1989,7 +2001,7 @@ describe("syncGuidedFlowToWorkspace", () => {
           otherItemized: "",
         },
         "income-w2": {
-          entries: [{ ...emptyW2Entry, employerName: "Acme", wages: "50000", federalWithheld: "5000" }],
+          entries: [{ ...completeW2Entry, employerName: "Acme", wages: "50000", federalWithheld: "5000" }],
         },
       },
     };
@@ -2003,14 +2015,16 @@ describe("syncGuidedFlowToWorkspace", () => {
       skippedSectionCount: 1,
       needsReviewSectionCount: 0,
     });
-    expect(synced.summary.interviewQuestionsRemaining).toBe(1);
+    // One skipped personal section plus one unvisited final review remain pending.
+    expect(synced.summary.interviewQuestionsRemaining).toBe(2);
     expect(synced.returnSummary.status).not.toBe("ready-to-recompute");
     expect(synced.returnSummary.blockers).toContainEqual({
-      id: "needs-answer:guided-follow-up",
-      message: "1 guided section was skipped or still needs review before this return is ready.",
+      id: "guided:incomplete-facts",
+      message: "2 guided sections still need completion or review.",
       relatedFactIds: [],
-      sourceDocumentIds: ["guided:w2"],
+      sourceDocumentIds: [],
     });
+    expect(synced.returnSummary.blockers.some(blocker => blocker.id === "guided:missing-tax-year")).toBe(true);
     expect(synced.checklist.find((item) => item.id === "interview")?.status).toBe("needs-input");
     expect(synced.checklist.find((item) => item.id === "review")?.status).toBe("blocked");
   });
@@ -2065,7 +2079,7 @@ describe("syncGuidedFlowToWorkspace", () => {
       stateCode: null,
     });
     state = updateSectionData(state, "income-w2", {
-      entries: [{ ...emptyW2Entry, wages: "50000" }],
+      entries: [{ ...completeW2Entry, wages: "50000" }],
     });
 
     // First sync
@@ -2099,7 +2113,7 @@ describe("syncGuidedFlowToWorkspace", () => {
       stateCode: null,
     });
     state = updateSectionData(state, "income-w2", {
-      entries: [{ ...emptyW2Entry, wages: "75000", federalWithheld: "10000" }],
+      entries: [{ ...completeW2Entry, wages: "75000", federalWithheld: "10000" }],
     });
     const docs = buildGuidedSyntheticDocuments(state);
     const answers = buildGuidedFactAnswers(state);
@@ -2256,10 +2270,10 @@ describe("validateSection", () => {
     expect(result.fieldErrors).toHaveProperty("lastName");
   });
 
-  it("returns complete for personal-info with name filled", () => {
+  it("returns complete for personal-info with actual identity and residency facts", () => {
     let state = startInterview({ filingStatus: "single", incomeTypes: ["w2-wages"], lifeEvents: [], stateCode: null });
     state = updateSectionData(state, "personal-info", {
-      ...emptyPersonalInfo,
+      ...completePersonalInfo,
       firstName: "Jane",
       lastName: "Doe",
     });
@@ -2276,17 +2290,17 @@ describe("validateSection", () => {
   it("returns partial for W-2 with employer name but no wages", () => {
     let state = startInterview({ filingStatus: "single", incomeTypes: ["w2-wages"], lifeEvents: [], stateCode: null });
     state = updateSectionData(state, "income-w2", {
-      entries: [{ ...emptyW2Entry, employerName: "Acme" }],
+      entries: [{ ...completeW2Entry, employerName: "Acme", wages: "" }],
     });
     const result = validateSection(state, "income-w2");
     expect(result.status).toBe("partial");
     expect(Object.keys(result.fieldErrors).length).toBeGreaterThan(0);
   });
 
-  it("returns complete for W-2 with wages entered", () => {
+  it("returns complete for W-2 with complete actual source facts", () => {
     let state = startInterview({ filingStatus: "single", incomeTypes: ["w2-wages"], lifeEvents: [], stateCode: null });
     state = updateSectionData(state, "income-w2", {
-      entries: [{ ...emptyW2Entry, wages: "50000", employerName: "Acme" }],
+      entries: [{ ...completeW2Entry, wages: "50000", employerName: "Acme" }],
     });
     const result = validateSection(state, "income-w2");
     expect(result.status).toBe("complete");
@@ -2301,9 +2315,10 @@ describe("validateSection", () => {
   it("returns complete for self-employment with NEC data", () => {
     let state = startInterview({ filingStatus: "single", incomeTypes: ["self-employment"], lifeEvents: [], stateCode: null });
     state = updateSectionData(state, "income-self-employment", {
-      necEntries: [{ ...emptyNecEntry, nonemployeeCompensation: "5000" }],
-      manualGrossReceipts: "",
-      expenses: emptyScheduleCExpenses,
+      ...completeBusinessSection,
+      necEntries: [{ ...completeNecSource, nonemployeeCompensation: "5000" }],
+      manualGrossReceipts: "0",
+      expenses: completeBusinessExpenses,
     });
     const result = validateSection(state, "income-self-employment");
     expect(result.status).toBe("complete");
@@ -2312,9 +2327,10 @@ describe("validateSection", () => {
   it("returns complete for self-employment with manual gross receipts and no 1099-NEC", () => {
     let state = startInterview({ filingStatus: "single", incomeTypes: ["self-employment"], lifeEvents: [], stateCode: null });
     state = updateSectionData(state, "income-self-employment", {
+      ...completeBusinessSection,
       necEntries: [emptyNecEntry],
       manualGrossReceipts: "7200",
-      expenses: emptyScheduleCExpenses,
+      expenses: completeBusinessExpenses,
     });
     const result = validateSection(state, "income-self-employment");
     expect(result.status).toBe("complete");
@@ -2328,8 +2344,9 @@ describe("validateSection", () => {
 
   it("returns complete for investment section with interest income", () => {
     let state = startInterview({ filingStatus: "single", incomeTypes: ["investments"], lifeEvents: [], stateCode: null });
+    state.taxYear = 2025;
     state = updateSectionData(state, "income-investments", {
-      interestEntries: [{ ...emptyInterestEntry, interestIncome: "500" }],
+      interestEntries: [{ ...completeInterestSource, interestIncome: "500" }],
       dividendEntries: [emptyDividendEntry],
       brokerageEntries: [emptyBrokerageEntry],
     });
@@ -2349,13 +2366,14 @@ describe("validateSection", () => {
     expect(result.status).toBe("empty");
   });
 
-  it("returns complete for retirement section with taxable amount", () => {
+  it("returns partial for retirement section with only taxable amount", () => {
     let state = startInterview({ filingStatus: "single", incomeTypes: ["retirement"], lifeEvents: [], stateCode: null });
     state = updateSectionData(state, "income-retirement", {
       entries: [{ ...emptyRetirementEntry, taxableAmount: "15000" }],
     });
     const result = validateSection(state, "income-retirement");
-    expect(result.status).toBe("complete");
+    expect(result.status).toBe("partial");
+    expect(result.allowSkip).toBe(false);
   });
 
   it("returns empty for social security with no data", () => {
@@ -2364,11 +2382,11 @@ describe("validateSection", () => {
     expect(result.status).toBe("empty");
   });
 
-  it("returns complete for social security with benefits", () => {
+  it("returns complete for social security with actual source and treatment facts", () => {
     let state = startInterview({ filingStatus: "single", incomeTypes: ["social-security"], lifeEvents: [], stateCode: null });
+    state.sectionData["personal-info"] = completePersonalInfo;
     state = updateSectionData(state, "income-social-security", {
-      ...emptySocialSecurityData,
-      netBenefits: "18000",
+      ...emptySocialSecurityData, ...completeSocialSecurityTreatment, entries: [{ ...completeSocialSecuritySource, benefitsPaid: "18000", netBenefits: "18000" }],
     });
     const result = validateSection(state, "income-social-security");
     expect(result.status).toBe("complete");
@@ -2380,11 +2398,12 @@ describe("validateSection", () => {
     expect(result.status).toBe("empty");
   });
 
-  it("returns complete for unemployment with compensation", () => {
+  it("returns complete for unemployment with actual source and program facts", () => {
     let state = startInterview({ filingStatus: "single", incomeTypes: ["unemployment"], lifeEvents: [], stateCode: null });
+    state.sectionData["personal-info"] = completePersonalInfo;
     state = updateSectionData(state, "income-unemployment", {
       ...emptyUnemploymentData,
-      compensation: "12000",
+      compensation: "12000", entries: [{ ...completeUnemploymentSource, compensation: "12000" }],
     });
     const result = validateSection(state, "income-unemployment");
     expect(result.status).toBe("complete");
@@ -2407,17 +2426,17 @@ describe("validateSection", () => {
   });
 
   it("returns empty for adjustments with no values", () => {
-    let state = startInterview({ filingStatus: "single", incomeTypes: ["self-employment"], lifeEvents: ["student-loans"], stateCode: null });
+    let state = startInterview({ filingStatus: "single", incomeTypes: ["self-employment"], lifeEvents: [], stateCode: null });
     state = updateSectionData(state, "adjustments", emptyAdjustmentData);
     const result = validateSection(state, "adjustments");
     expect(result.status).toBe("empty");
   });
 
-  it("returns complete for adjustments with any value", () => {
-    let state = startInterview({ filingStatus: "single", incomeTypes: ["self-employment"], lifeEvents: ["student-loans"], stateCode: null });
+  it("returns complete for adjustments with actual student-loan sources", () => {
+    let state = startInterview({ filingStatus: "single", incomeTypes: ["self-employment"], lifeEvents: ["student-loans"], stateCode: null }, 2025);
     state = updateSectionData(state, "adjustments", {
       ...emptyAdjustmentData,
-      studentLoanInterest: "2500",
+      studentLoanInterest: "2500", studentLoanFacts: syntheticStudentLoanFacts(2025, "2500"),
     });
     const result = validateSection(state, "adjustments");
     expect(result.status).toBe("complete");
@@ -2473,7 +2492,7 @@ describe("shouldPromptBeforeAdvance", () => {
   it("returns null when section is complete", () => {
     let state = startInterview({ filingStatus: "single", incomeTypes: ["w2-wages"], lifeEvents: [], stateCode: null });
     state = updateSectionData(state, "personal-info", {
-      ...emptyPersonalInfo,
+      ...completePersonalInfo,
       firstName: "Jane",
       lastName: "Doe",
     });
@@ -2501,7 +2520,10 @@ describe("shouldPromptBeforeAdvance", () => {
     expect(result?.status).toBe("partial");
   });
 
-  it("requires confirming sample W-2 values before advancing", () => {
+  it.each([
+    { sourceLabel: "2026 Form W-2 (official info-copy PDF)", sourceType: undefined },
+    { sourceLabel: "2025 Form W-2", sourceType: "official-fixture" },
+  ])("requires confirming sample W-2 values before advancing: $sourceLabel", (source) => {
     let state = startInterview({ filingStatus: "single", incomeTypes: ["w2-wages"], lifeEvents: [], stateCode: null });
     state = updateSectionData(state, "personal-info", {
       ...emptyPersonalInfo,
@@ -2512,26 +2534,26 @@ describe("shouldPromptBeforeAdvance", () => {
     state = updateSectionData(state, "income-w2", {
       entries: [
         {
-          ...emptyW2Entry,
+          ...completeW2Entry,
           employerName: "Official fixture employer",
           employerEin: "12-3456789",
           wages: "52000",
           federalWithheld: "5000",
           aiSuggestedFields: {
             employerName: {
-              sourceLabel: "2026 Form W-2 (official info-copy PDF)",
+              ...source,
               status: "pending-confirmation",
             },
             employerEin: {
-              sourceLabel: "2026 Form W-2 (official info-copy PDF)",
+              ...source,
               status: "pending-confirmation",
             },
             wages: {
-              sourceLabel: "2026 Form W-2 (official info-copy PDF)",
+              ...source,
               status: "pending-confirmation",
             },
             federalWithheld: {
-              sourceLabel: "2026 Form W-2 (official info-copy PDF)",
+              ...source,
               status: "pending-confirmation",
             },
           },
@@ -2562,7 +2584,7 @@ describe("shouldPromptBeforeAdvance", () => {
     });
     state = goToNextSection(state);
     state = updateSectionData(state, "income-w2", {
-      entries: [{ ...emptyW2Entry, employerName: "Acme", wages: "50000" }],
+      entries: [{ ...completeW2Entry, employerName: "Acme", wages: "50000" }],
     });
     state = goToNextSection(state);
 
@@ -2574,27 +2596,27 @@ describe("shouldPromptBeforeAdvance", () => {
 
 describe("getStandardDeductionAmount", () => {
   it("returns 15750 for single filer", () => {
-    expect(getStandardDeductionAmount("single")).toBe(15750);
+    expect(getStandardDeductionAmount("single", 2025)).toBe(15750);
   });
 
   it("returns 31500 for married filing jointly", () => {
-    expect(getStandardDeductionAmount("mfj")).toBe(31500);
+    expect(getStandardDeductionAmount("mfj", 2025)).toBe(31500);
   });
 
   it("returns 15750 for married filing separately", () => {
-    expect(getStandardDeductionAmount("mfs")).toBe(15750);
+    expect(getStandardDeductionAmount("mfs", 2025)).toBe(15750);
   });
 
   it("returns 23625 for head of household", () => {
-    expect(getStandardDeductionAmount("hoh")).toBe(23625);
+    expect(getStandardDeductionAmount("hoh", 2025)).toBe(23625);
   });
 
   it("returns 31500 for qualifying surviving spouse", () => {
-    expect(getStandardDeductionAmount("qss")).toBe(31500);
+    expect(getStandardDeductionAmount("qss", 2025)).toBe(31500);
   });
 
   it("returns 0 for null filing status", () => {
-    expect(getStandardDeductionAmount(null)).toBe(0);
+    expect(getStandardDeductionAmount(null, 2025)).toBe(0);
   });
 });
 
@@ -2607,11 +2629,11 @@ describe("computeDeductionComparison", () => {
       method: "itemized",
       mortgageInterest: "8000",
       charitableContributions: "2000",
-    });
+    }, 2025);
     expect(result.standardAmount).toBe(15750);
-    expect(result.itemizedTotal).toBe(10000);
+    expect(result.itemizedTotal).toBe("10000");
     expect(result.recommendation).toBe("standard");
-    expect(result.savings).toBe(5750);
+    expect(result.savings).toBe("5750");
   });
 
   it("recommends itemized when itemized total exceeds standard deduction", () => {
@@ -2621,11 +2643,11 @@ describe("computeDeductionComparison", () => {
       mortgageInterest: "10000",
       stateLocalTaxes: "5000",
       charitableContributions: "3000",
-    });
+    }, 2025);
     expect(result.standardAmount).toBe(15750);
-    expect(result.itemizedTotal).toBe(18000);
+    expect(result.itemizedTotal).toBe("18000");
     expect(result.recommendation).toBe("itemized");
-    expect(result.savings).toBe(2250);
+    expect(result.savings).toBe("2250");
   });
 
   it("returns equal when totals match exactly", () => {
@@ -2634,11 +2656,11 @@ describe("computeDeductionComparison", () => {
       method: "itemized",
       mortgageInterest: "10000",
       charitableContributions: "5000",
-    });
+    }, 2025);
     expect(result.standardAmount).toBe(15750);
-    expect(result.itemizedTotal).toBe(15000);
+    expect(result.itemizedTotal).toBe("15000");
     expect(result.recommendation).toBe("standard");
-    expect(result.savings).toBe(750);
+    expect(result.savings).toBe("750");
   });
 
   it("uses MFJ standard deduction amount for joint filers", () => {
@@ -2646,19 +2668,19 @@ describe("computeDeductionComparison", () => {
       ...emptyDeductionData,
       method: "itemized",
       mortgageInterest: "20000",
-    });
+    }, 2025);
     expect(result.standardAmount).toBe(31500);
-    expect(result.itemizedTotal).toBe(20000);
+    expect(result.itemizedTotal).toBe("20000");
     expect(result.recommendation).toBe("standard");
-    expect(result.savings).toBe(11500);
+    expect(result.savings).toBe("11500");
   });
 
   it("handles undefined deduction data gracefully", () => {
-    const result = computeDeductionComparison("single", undefined);
+    const result = computeDeductionComparison("single", undefined, 2025);
     expect(result.standardAmount).toBe(15750);
-    expect(result.itemizedTotal).toBe(0);
+    expect(result.itemizedTotal).toBe("0");
     expect(result.recommendation).toBe("standard");
-    expect(result.savings).toBe(15750);
+    expect(result.savings).toBe("15750");
   });
 
   it("handles null filing status", () => {
@@ -2666,21 +2688,15 @@ describe("computeDeductionComparison", () => {
       ...emptyDeductionData,
       method: "itemized",
       mortgageInterest: "10000",
-    });
+    }, 2025);
     expect(result.standardAmount).toBe(0);
-    expect(result.itemizedTotal).toBe(10000);
+    expect(result.itemizedTotal).toBe("10000");
     expect(result.recommendation).toBe("itemized");
-    expect(result.savings).toBe(10000);
+    expect(result.savings).toBe("10000");
   });
 
-  it("ignores non-numeric values in deduction fields", () => {
-    const result = computeDeductionComparison("single", {
-      ...emptyDeductionData,
-      method: "itemized",
-      mortgageInterest: "abc",
-      charitableContributions: "5000",
-    });
-    expect(result.itemizedTotal).toBe(5000);
+  it("rejects malformed nonempty monetary inputs", () => {
+    expect(() => computeDeductionComparison("single", { ...emptyDeductionData, method: "itemized", mortgageInterest: "abc" }, 2025)).toThrow();
   });
 
   it("handles comma-formatted currency values", () => {
@@ -2689,8 +2705,8 @@ describe("computeDeductionComparison", () => {
       method: "itemized",
       mortgageInterest: "12,500",
       charitableContributions: "3,000",
-    });
-    expect(result.itemizedTotal).toBe(15500);
+    }, 2025);
+    expect(result.itemizedTotal).toBe("15500");
   });
 
   it("sums all seven itemized deduction fields", () => {
@@ -2703,9 +2719,9 @@ describe("computeDeductionComparison", () => {
       charitableContributions: "5000",
       casualtyLosses: "1000",
       otherItemized: "1000",
-    });
-    expect(result.itemizedTotal).toBe(17000);
+    }, 2025);
+    expect(result.itemizedTotal).toBe("17000");
     expect(result.recommendation).toBe("itemized");
-    expect(result.savings).toBe(1250);
+    expect(result.savings).toBe("1250");
   });
 });

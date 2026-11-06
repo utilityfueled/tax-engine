@@ -1,0 +1,55 @@
+form: "Form 8962 Marriage Return"
+fullName: "Canonical marriage-year alternative premium credit and actual Part V transfer"
+taxYear: [2025, 2026]
+irsReference: "https://www.irs.gov/publications/p974"
+notes: |
+  Refreshed2026-10-25. Actual source binding precedes use of Pub974 WorksheetsI–V.
+  The canonical income helper supplies actual AGI, exempt-interest/foreign/SSA
+  addbacks and required-filing dependent income; no marriage amount override is
+  accepted. The alternative method is used only when its actual eligible monthly
+  calculation reduces excess advances under the completed worksheet comparison.
+  Actual joint PartI income and poverty percentage stay unchanged. PartV and
+  monthly credit columns come from the completed actual-source worksheets.
+  When the alternative method does not apply, ordinary monthly results remain.
+  Step8 cannot create an additional credit from the elected method. If line25
+  does not exceed line24, lines27–29 stay blank and no repayment is transferred.
+  The2026 individual alternative-family400-percent limits are applied separately;
+  an applied alternative method can print credit columns while actual joint
+  line5 remains401. This does not change actual household income or reopen the
+  separately closed full-return/filing gate.
+  taxpayerEligible retains ordinary joint eligibility. Only the separately
+  source-validated marriageCalculation may explain pre-marriage credit columns
+  when that ordinary eligibility is false; post-marriage credit stays zero.
+lines:
+  - line: "canonical-source"
+    description: "Supply actual return income to completed marriage worksheets"
+    formula: "Actual2025wages117000, family4, July15marriage and original compatible published sources yield actualAGI117000, ordinarycredit5481, alternativecredit7021, advances8423, netcredit0 and repayment1402. The actual Schedule2 transfer occurs once, and the original sources remain unchanged."
+    testRef: "tests/engine/federal-marriage-return.test.ts::uses actual canonical household income and transfers marriage repayment once"
+  - line: "ordinary-retained"
+    description: "Retain the ordinary calculation when an alternative election gives no benefit"
+    formula: "The same actual117000 household with no advances has ordinarycredit5481/netcredit5481 and repayment0. No PartV rows are emitted. A source packet cannot force the election or erase the ordinary credit."
+    testRef: "tests/engine/federal-marriage-return.test.ts::retains actual ordinary credit when there is no excess advance"
+  - line: "actual-year-limit"
+    description: "Keep actual2026 joint poverty percentage and separate eligible family limits"
+    formula: "Actual2026 household130000/family4 keeps line5=401. Half income65000 leaves primaryfamily1 above400; spousefamily3 has243percent,0.0818figure,443monthlycontribution. Only spouse pre-marriage833−443=390 for7months gives2730credit,8423advances and5693fullrepayment. The full2026return gate remains closed."
+    testRef: "tests/engine/federal-marriage-return.test.ts::applies separate actual 2026 family limits without changing joint household income"
+  - line: "income-integrity"
+    description: "Require original household sources and actual canonical income"
+    formula: "A conflicting supplied taxpayer MAGI, missing original marriage sources, changed dependent/policy identity, conflicting source context year or attempted health coordination rejects. No retained calculation or supplied validation flag replaces actual source facts."
+    testRef: "tests/engine/federal-marriage-return.test.ts::rejects stale sources income overrides and conflicting coordination"
+  - line: "actual-part-v-review"
+    description: "Write the source-verified monthly method and actual Part V"
+    formula: "Final2025 physical fields print both alternative families,1/400/months01–07 and3/148/months01–07, monthly1500/1266/548/718/718/794 and actual7021credit/8423advances/1402repayment. PartIV remains blank. Saved bytes are read independently, with appearances and review notices retained."
+    testRef: "tests/pdf/form8962-marriage-review.test.ts::prints actual PartV and monthly repayment in saved independent-reader fields"
+  - line: "step-eight-zero"
+    description: "Keep elected additional credit zero and blank inapplicable repayment lines"
+    formula: "The same sources with6000advances have ordinary5481credit and applied alternative7021credit. Step8 prints line26zero and leaves27–29blank. With noadvances the ordinary5481credit remains and PartV/line9Yes are blank or false."
+    testRef: "tests/pdf/form8962-marriage-review.test.ts::preserves Step8 blank repayment lines and the ordinary no-election branch"
+  - line: "private-original-context"
+    description: "Bind complete originals and retained transfers before redacted rendering"
+    formula: "An unforgeable private context binds actual household/year, originals and final credit plus Sched2line1a/Sched3line9. Changed sources, contributions, transfers, missing or forged tokens reject before output. Structured SSN arrays are redacted in a render copy, while exact source amounts and private originals remain unchanged."
+    testRef: "tests/pdf/form8962-marriage-review.test.ts::rejects stale marriage sources transfers and forged contexts while preserving privacy"
+  - line: "workspace-download"
+    description: "Prepare original marriage sources before workspace render redaction"
+    formula: "The actual workspace download prepares its marriage review context before redacting any household identifiers. The saved packet includes physical PartV and completed worksheets with1402repayment, no SSNs, and unchanged original source facts. A stale original packet rejects before download."
+    testRef: "tests/apps/web/workspace-marriage-return.test.ts::exports a marriage review packet through the actual workspace source context"

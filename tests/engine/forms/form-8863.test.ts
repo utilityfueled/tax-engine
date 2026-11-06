@@ -22,14 +22,14 @@ function make(overrides: Partial<Form8863Input> = {}): Form8863Input {
 
 describe("Form 8863 - American Opportunity Credit", () => {
   // ── Line 1: AOC per student ──────────────────────────────
-  it("Form 8863 Line 1 - AOC per student: max $2,500", () => {
+  it("Form 8863 Line 30 - AOC per student: max $2,500", () => {
     const result = calculateForm8863(make({
       aocStudents: [{ name: "Student A", qualifiedExpenses: d(10000) }],
     }));
     expect(result.aocPerStudent[0].tentativeCredit.toNumber()).toBe(2500);
   });
 
-  it("Form 8863 Line 1 - AOC per student: $2K expenses", () => {
+  it("Form 8863 Line 30 - AOC per student: $2K expenses", () => {
     const result = calculateForm8863(make({
       aocStudents: [{ name: "Student A", qualifiedExpenses: d(2000) }],
     }));
@@ -37,7 +37,7 @@ describe("Form 8863 - American Opportunity Credit", () => {
     expect(result.aocPerStudent[0].tentativeCredit.toNumber()).toBe(2000);
   });
 
-  it("Form 8863 Line 1 - AOC per student: $3K expenses", () => {
+  it("Form 8863 Line 30 - AOC per student: $3K expenses", () => {
     const result = calculateForm8863(make({
       aocStudents: [{ name: "Student A", qualifiedExpenses: d(3000) }],
     }));
@@ -45,7 +45,7 @@ describe("Form 8863 - American Opportunity Credit", () => {
     expect(result.aocPerStudent[0].tentativeCredit.toNumber()).toBe(2250);
   });
 
-  it("Form 8863 Line 1 - AOC per student: $500 expenses", () => {
+  it("Form 8863 Line 30 - AOC per student: $500 expenses", () => {
     const result = calculateForm8863(make({
       aocStudents: [{ name: "Student A", qualifiedExpenses: d(500) }],
     }));
@@ -53,7 +53,7 @@ describe("Form 8863 - American Opportunity Credit", () => {
   });
 
   // ── Line 2: AOC total ────────────────────────────────────
-  it("Form 8863 Line 2 - AOC total for multiple students", () => {
+  it("Form 8863 Line 1 - AOC total for multiple students", () => {
     const result = calculateForm8863(make({
       aocStudents: [
         { name: "A", qualifiedExpenses: d(4000) },
@@ -112,7 +112,7 @@ describe("Form 8863 - American Opportunity Credit", () => {
   });
 
   // ── Lines 8 & 14: Refundable / nonrefundable split ──────
-  it("Form 8863 Line 8 - nonrefundable AOC is 60%", () => {
+  it("Form 8863 Line 9 - nonrefundable AOC is 60%", () => {
     const result = calculateForm8863(make({
       aocStudents: [{ name: "A", qualifiedExpenses: d(4000) }],
       magi: d(50000),
@@ -120,7 +120,7 @@ describe("Form 8863 - American Opportunity Credit", () => {
     expect(result.aocNonrefundable.toNumber()).toBe(1500); // 60% of $2,500
   });
 
-  it("Form 8863 Line 14 - refundable AOC is 40%", () => {
+  it("Form 8863 Line 8 - refundable AOC is 40%", () => {
     const result = calculateForm8863(make({
       aocStudents: [{ name: "A", qualifiedExpenses: d(4000) }],
       magi: d(50000),
@@ -130,7 +130,7 @@ describe("Form 8863 - American Opportunity Credit", () => {
 });
 
 describe("Form 8863 - Lifetime Learning Credit", () => {
-  it("Form 8863 Line 10 - LLC basic calculation", () => {
+  it("Form 8863 Line 18 - LLC basic calculation", () => {
     const result = calculateForm8863(make({
       llcExpenses: d(5000),
       magi: d(50000),
@@ -139,7 +139,7 @@ describe("Form 8863 - Lifetime Learning Credit", () => {
     expect(result.llcAfterPhaseOut.toNumber()).toBe(1000);
   });
 
-  it("Form 8863 Line 10 - LLC capped at $10K expenses", () => {
+  it("Form 8863 Line 18 - LLC capped at $10K expenses", () => {
     const result = calculateForm8863(make({
       llcExpenses: d(15000),
       magi: d(50000),
@@ -148,7 +148,7 @@ describe("Form 8863 - Lifetime Learning Credit", () => {
     expect(result.llcAfterPhaseOut.toNumber()).toBe(2000);
   });
 
-  it("Form 8863 Line 10 - LLC with phase-out (single)", () => {
+  it("Form 8863 Line 18 - LLC with phase-out (single)", () => {
     const result = calculateForm8863(make({
       llcExpenses: d(10000),
       magi: d(85000),
@@ -158,7 +158,7 @@ describe("Form 8863 - Lifetime Learning Credit", () => {
     expect(result.llcAfterPhaseOut.toNumber()).toBe(1000);
   });
 
-  it("Form 8863 Line 10 - LLC zero for MFS", () => {
+  it("Form 8863 Line 18 - LLC zero for MFS", () => {
     const result = calculateForm8863(make({
       llcExpenses: d(10000),
       filingStatus: "married_filing_separately",
@@ -202,7 +202,7 @@ describe("Form 8863 - Totals", () => {
 
 describe("Form 8863 - Additional AOC scenarios", () => {
   // ── AOC with expenses exactly $4,000 ─────────────────────
-  it("Form 8863 Line 1 - AOC with exactly $4,000 expenses yields full $2,500", () => {
+  it("Form 8863 Line 30 - AOC with exactly $4,000 expenses yields full $2,500", () => {
     const result = calculateForm8863(make({
       aocStudents: [{ name: "Student A", qualifiedExpenses: d(4000) }],
     }));
@@ -212,7 +212,7 @@ describe("Form 8863 - Additional AOC scenarios", () => {
   });
 
   // ── AOC with expenses $2,000 ──────────────────────────────
-  it("Form 8863 Line 1 - AOC with $2,000 expenses yields partial $2,000 credit", () => {
+  it("Form 8863 Line 30 - AOC with $2,000 expenses yields partial $2,000 credit", () => {
     const result = calculateForm8863(make({
       aocStudents: [{ name: "Student A", qualifiedExpenses: d(2000) }],
     }));
@@ -234,7 +234,7 @@ describe("Form 8863 - Additional AOC scenarios", () => {
   });
 
   // ── Multiple students: 3 students with varying expenses ──
-  it("Form 8863 Line 2 - three students with varying expenses sum correctly", () => {
+  it("Form 8863 Line 1 - three students with varying expenses sum correctly", () => {
     const result = calculateForm8863(make({
       aocStudents: [
         { name: "Student A", qualifiedExpenses: d(4000) }, // $2,000 + 25%×$2,000 = $2,500
@@ -284,7 +284,7 @@ describe("Form 8863 - Additional AOC scenarios", () => {
 
 describe("Form 8863 - Additional LLC scenarios", () => {
   // ── LLC with expenses exactly $10,000 ────────────────────
-  it("Form 8863 Line 10 - LLC with exactly $10,000 expenses yields max $2,000", () => {
+  it("Form 8863 Line 18 - LLC with exactly $10,000 expenses yields max $2,000", () => {
     const result = calculateForm8863(make({
       llcExpenses: d(10000),
       magi: d(50000),
@@ -294,7 +294,7 @@ describe("Form 8863 - Additional LLC scenarios", () => {
   });
 
   // ── MFJ LLC phase-out range: $160K–$180K ─────────────────
-  it("Form 8863 Line 10 - MFJ LLC no phase-out at exactly $160K (threshold boundary)", () => {
+  it("Form 8863 Line 18 - MFJ LLC no phase-out at exactly $160K (threshold boundary)", () => {
     const result = calculateForm8863(make({
       llcExpenses: d(10000),
       magi: d(160000),
@@ -304,7 +304,7 @@ describe("Form 8863 - Additional LLC scenarios", () => {
     expect(result.llcAfterPhaseOut.toNumber()).toBe(2000);
   });
 
-  it("Form 8863 Line 10 - MFJ LLC partial phase-out at $164K (20% reduction)", () => {
+  it("Form 8863 Line 18 - MFJ LLC partial phase-out at $164K (20% reduction)", () => {
     const result = calculateForm8863(make({
       llcExpenses: d(10000),
       magi: d(164000),
@@ -314,7 +314,7 @@ describe("Form 8863 - Additional LLC scenarios", () => {
     expect(result.llcAfterPhaseOut.toNumber()).toBe(1600);
   });
 
-  it("Form 8863 Line 10 - MFJ LLC fully phased out at $180K", () => {
+  it("Form 8863 Line 18 - MFJ LLC fully phased out at $180K", () => {
     const result = calculateForm8863(make({
       llcExpenses: d(10000),
       magi: d(180000),
@@ -325,18 +325,18 @@ describe("Form 8863 - Additional LLC scenarios", () => {
 });
 
 describe("Form 8863 - Audit trail line IDs", () => {
-  it("audit trail contains one Line 1 entry per AOC student", () => {
+  it("audit trail contains one Line 30 entry per AOC student", () => {
     const result = calculateForm8863(make({
       aocStudents: [
         { name: "Student A", qualifiedExpenses: d(4000) },
         { name: "Student B", qualifiedExpenses: d(3000) },
       ],
     }));
-    const line1Entries = result.lines.filter((l) => l.line === "1");
+    const line1Entries = result.lines.filter((l) => l.line === "30");
     expect(line1Entries).toHaveLength(2);
   });
 
-  it("audit trail Line 1 exposes AOC year-limit eligibility inputs for an exhausted student", () => {
+  it("audit trail Line 30 exposes AOC year-limit eligibility inputs for an exhausted student", () => {
     const result = calculateForm8863(make({
       aocStudents: [
         { name: "Senior", qualifiedExpenses: d(4000), priorYearsClaimed: 4 },
@@ -344,7 +344,7 @@ describe("Form 8863 - Audit trail line IDs", () => {
       magi: d(50000),
     }));
 
-    const line1 = result.lines.find((l) => l.line === "1" && l.description === "AOC for Senior");
+    const line1 = result.lines.find((l) => l.line === "30" && l.description === "AOC for Senior");
     expect(line1).toBeDefined();
     expect(line1!.value.toNumber()).toBe(0);
     expect((line1!.inputs["Qualified expenses"] as Decimal).toNumber()).toBe(4000);
@@ -367,13 +367,13 @@ describe("Form 8863 - Audit trail line IDs", () => {
     expect(lineIds).toContain("19");
   });
 
-  it("audit trail Line 10 value matches llcAfterPhaseOut result field", () => {
+  it("audit trail Line 18 value matches llcAfterPhaseOut result field", () => {
     const result = calculateForm8863(make({
       llcExpenses: d(10000),
       magi: d(85000),
       filingStatus: "single",
     }));
-    const line10 = result.lines.find((l) => l.line === "10");
+    const line10 = result.lines.find((l) => l.line === "18");
     expect(line10).toBeDefined();
     expect(line10!.value.toNumber()).toBe(result.llcAfterPhaseOut.toNumber());
   });
@@ -434,7 +434,7 @@ describe("Form 8863 - New coverage: 4-year limit, mixed credits, and more", () =
   });
 
   // ── AOC: 25% second-tier rate clearly isolated ────────────
-  it("Form 8863 Line 1 - AOC expenses of $2,500 yield $2,125 (100% first $2K + 25% of $500)", () => {
+  it("Form 8863 Line 30 - AOC expenses of $2,500 yield $2,125 (100% first $2K + 25% of $500)", () => {
     const result = calculateForm8863(make({
       aocStudents: [{ name: "A", qualifiedExpenses: d(2500) }],
       magi: d(50000),
@@ -444,7 +444,7 @@ describe("Form 8863 - New coverage: 4-year limit, mixed credits, and more", () =
   });
 
   // ── AOC: $1,000 max refundable per return (40% × max $2,500 × number of students) ──
-  it("Form 8863 Line 14 - two students at max AOC yield $2,000 total refundable (40% of $5,000)", () => {
+  it("Form 8863 Line 8 - two students at max AOC yield $2,000 total refundable (40% of $5,000)", () => {
     const result = calculateForm8863(make({
       aocStudents: [
         { name: "A", qualifiedExpenses: d(4000) },
@@ -512,7 +512,7 @@ describe("Form 8863 - New coverage: 4-year limit, mixed credits, and more", () =
   });
 
   // ── LLC: 20% rate verified on below-cap amount ───────────
-  it("Form 8863 Line 10 - LLC with $3,000 expenses yields $600 (20% rate clearly shown)", () => {
+  it("Form 8863 Line 18 - LLC with $3,000 expenses yields $600 (20% rate clearly shown)", () => {
     const result = calculateForm8863(make({
       llcExpenses: d(3000),
       magi: d(50000),
@@ -523,7 +523,7 @@ describe("Form 8863 - New coverage: 4-year limit, mixed credits, and more", () =
   });
 
   // ── LLC: single filer partial phase-out at $80K boundary ─
-  it("Form 8863 Line 10 - single MAGI exactly $80K gives full LLC credit with no phase-out reduction", () => {
+  it("Form 8863 Line 18 - single MAGI exactly $80K gives full LLC credit with no phase-out reduction", () => {
     const result = calculateForm8863(make({
       llcExpenses: d(10000),
       magi: d(80000),
@@ -551,19 +551,19 @@ describe("Form 8863 - New coverage: 4-year limit, mixed credits, and more", () =
     expect(result.totalRefundable.toNumber()).toBe(0);
   });
 
-  // ── Audit trail: Line 7 and Line 8 cross-check ───────────
-  it("audit trail Line 7 value matches aocAfterPhaseOut and Line 8 is exactly 60% of Line 7", () => {
+  // ── Audit trail: Line 7 and Line 9 cross-check ───────────
+  it("audit trail Line 7 value matches aocAfterPhaseOut and Line 9 is exactly 60% of Line 7", () => {
     const result = calculateForm8863(make({
       aocStudents: [{ name: "A", qualifiedExpenses: d(4000) }],
       magi: d(85000),
       filingStatus: "single",
     }));
     const line7 = result.lines.find((l) => l.line === "7");
-    const line8 = result.lines.find((l) => l.line === "8");
+    const line8 = result.lines.find((l) => l.line === "9");
     expect(line7).toBeDefined();
     expect(line8).toBeDefined();
     expect(line7!.value.toNumber()).toBe(result.aocAfterPhaseOut.toNumber());
-    // Line 8 must be exactly 60% of Line 7
+    // Line 9 must be exactly 60% of Line 7
     expect(line8!.value.toNumber()).toBe(
       new Decimal(line7!.value).times("0.6").toDecimalPlaces(0, Decimal.ROUND_HALF_UP).toNumber()
     );

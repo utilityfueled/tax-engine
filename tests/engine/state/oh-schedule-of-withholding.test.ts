@@ -212,11 +212,11 @@ describe("Ohio Schedule of Withholding", () => {
     const result = calculateOhioScheduleOfWithholding({
       w2s: [
         makeW2({ state: "OH", stateTaxWithheld: "1200" }),
-        makeW2({ stateTaxWithheld: "500" }),
+        makeW2({ state: "PA", stateTaxWithheld: "500" }),
       ],
       formW2Gs: [
         makeW2G({ state: "OH", stateWithheld: "75" }),
-        makeW2G({ stateWithheld: "40" }),
+        makeW2G({ state: "PA", stateWithheld: "40" }),
       ],
       form1099Gs: [
         make1099G({ state: "OH", stateWithheld: "55" }),

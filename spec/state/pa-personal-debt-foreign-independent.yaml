@@ -1,0 +1,51 @@
+form: "PA Personal COD and Foreign Bank Independent Review"
+fullName: "Independent finite personal unsecured debt and gross ordinary foreign interest controls"
+taxYear: 2025
+status: "internal-independent-review-no-filing-qualification"
+sources:
+  - url: "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/taxlawpoliciesbulletinsnotices/taxbulletins/pit/documents/pit_bulletin_2009-02.pdf"
+    section: "III and IV.A: actual personal unsecured use; separate property/employment/deduction methods"
+    retrieved: "2026-11-03"
+  - url: "https://www.pa.gov/agencies/revenue/forms-and-publications/pa-personal-income-tax-guide/interest"
+    section: "Gross ordinary interest and actual nonresident/partyear receipt allocation"
+    retrieved: "2026-11-03"
+  - url: "https://www.pa.gov/agencies/revenue/forms-and-publications/pa-personal-income-tax-guide/deductions-and-credits"
+    section: "Foreign countries excluded from resident-credit state definition from2014"
+    retrieved: "2026-11-03"
+  - url: "https://www.pa.gov/agencies/revenue/forms-and-publications/pa-personal-income-tax-guide/tax-forgiveness"
+    section: "Exclusions From Poverty Income: debt cancellation without new cash/property"
+    retrieved: "2026-11-03"
+notes: |
+  Separate independent controls never mutate author oracles or original raw federalJSON.
+  Current federal debt metadata can provide original identity and unsecured facts,
+  but explicit conflicts cannot be overwritten by a PA primary header. Without
+  federal security metadata, the PA evidence must itself explicitly establish
+  unsecured status; no-business security does not establish no personal collateral.
+  Liability/FMV controls test conflicting records of the same current original,
+  and do not infer a property transfer from an historical FMV alone.
+  Collector, workspace/PDF, actualbrowser, human and final2026 qualification remain open.
+lines:
+  - line: "composition"
+    description: "Gross interest and noncash personal debt remain distinct from federal exclusions"
+    formula: "95000+5000=100000, PA3070, originalWH4000 gives separately elected930, countrycredit0, SP100000 not100300. Federal foreign327/145 unaffected."
+    testRef: "tests/engine/state/pa-personal-debt-foreign-independent.test.ts::independent complete personal COD preserves gross interest no country credit and literal PA return"
+  - line: "receipt-dates"
+    description: "Tax payment date never substitutes for actual ordinary interest receipt"
+    formula: "Same interest3000March31+2000Sept30 gives resident5000/PY2000/NR0 regardless of a valid foreign tax receipt date. WorldwideSP100000 in all3."
+    testRef: "tests/engine/state/pa-personal-debt-foreign-independent.test.ts::independent tax receipt timing cannot allocate interest or create SP debt income"
+  - line: "debtor"
+    description: "Retained current debtor identity cannot contradict PA evidence"
+    formula: "A retained sourceId-linked original with spouse/different debtor name/different debtor SSNlast4 cannot be treated as current primary by a separately typed PA header."
+    testRef: "tests/engine/state/pa-personal-debt-foreign-independent.test.ts::independent COD rejects contradictory federal debtor identity: %s"
+  - line: "security"
+    description: "Finite unsecured and no-transfer source scope must be established"
+    formula: "Explicit retained unsecuredPersonalDebtConfirmed false or noPropertyTransferConfirmed false rejects. Missing optional federal metadata is not itself taxable but PA must supply actual unsecured qualification rather than infer it."
+    testRef: "tests/engine/state/pa-personal-debt-foreign-independent.test.ts::independent personal unsecured classification needs explicit security evidence in either source method"
+  - line: "original-boxes"
+    description: "Current original box contradictions remain unreconciled"
+    formula: "Linked federal personallyLiable/FMV facts must reconcile current original1099C; conflicting copied evidence cannot replace original. No security inference from positive FMV alone."
+    testRef: "tests/engine/state/pa-personal-debt-foreign-independent.test.ts::independent COD rejects conflicting current original debt boxes: %s"
+  - line: "exact-and-private"
+    description: "Charges and foreign receipt arithmetic preserve admitted cents and public privacy"
+    formula: "Cancelled250principal+30interest+20fees=300 once, Box3included30 not added again. Long foreign paid amounts retain every cent and stable public Decimal/global configuration; source references remain private."
+    testRef: "tests/engine/state/pa-personal-debt-foreign-independent.test.ts::independent foreign payment aggregation retains long source cents and shared Decimal outputs"

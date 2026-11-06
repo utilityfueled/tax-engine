@@ -1,0 +1,34 @@
+form: "Form 2441 return integration"
+fullName: "Actual dependent-care benefit sources, wages and business deductions"
+taxYear: 2026
+irsReference: "https://www.irs.gov/instructions/i2441"
+retrievedAt: "2026-10-25"
+reviewStatus: "independent-review-pending"
+notes: |
+  Final2025 instructions lines12/24/26 and current amended IRC129 apply.
+  Calculate actual PartIII before income/SE/QBI and retain the result without
+  inventing PartII inputs. W2 source ids are w2:<zero-based original index>;
+  supported business ids are scheduleC and scheduleF with actual owner.
+  Partnership/rental sources require separate SE/QBI/passive source coordination
+  and explicitly reject in this bounded integration; no source amounts inferred.
+lines:
+  - line: "reported-source"
+    description: "Bind actual reported benefits to the original owner and W2"
+    formula: "Every positive actual W2Box10 must have one exact source record; sourceId, owner and reported amount reconcile. Actual Box1 must contain any alreadyIncludedInWages amount.2026 missingBox10 is unknown; historical missingBox10 remains unverified."
+    testRef: "tests/engine/federal-care-benefits-integration.test.ts::rejects missing and contradictory original benefit sources"
+  - line: "1040-1e"
+    description: "Taxable benefits enter wages once"
+    formula: "Add actual Form2441line26 to Form1040line1e/1z and AGI; never add amounts already in Box1 again. Retain form2441Benefits even without PartII."
+    testRef: "tests/engine/federal-care-benefits-integration.test.ts::adds only additional taxable benefits and retains benefits-only results"
+  - line: "schedule-c-14"
+    description: "Deduct actual allowed benefits once before business tax worksheets"
+    formula: "Actual ScheduleC14 employeeBenefitPrograms plus source-allocated line24 minus actual alreadyDeducted; require alreadyDeducted not exceed actual reported expense. Net profit flows to SE and QBI."
+    testRef: "tests/engine/federal-care-benefits-integration.test.ts::reconciles ScheduleC benefits before SE and QBI without double deductions"
+  - line: "schedule-f-15"
+    description: "Deduct actual allowed farm benefits once"
+    formula: "Actual ScheduleF15 employeeBenefits plus allocated line24 minus alreadyDeducted; retain actual farm owner and use adjusted net profit for ScheduleSE."
+    testRef: "tests/engine/federal-care-benefits-integration.test.ts::reconciles actual farm benefits and refuses unimplemented ScheduleE attribution"
+  - line: "part-ii-handoff"
+    description: "Use validated PartIII credit expenses and living-apart exception"
+    formula: "Pass original PartIII source facts to PartII; line31 is already benefit-coordinated and is not reduced twice. Actual supported MFS treated-as-unmarried facts permit credit; no blanket waiver of other eligibility."
+    testRef: "tests/engine/federal-care-benefits-integration.test.ts::hands off net credit expenses once including actual MFS exception"

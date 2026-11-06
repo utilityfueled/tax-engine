@@ -37,7 +37,7 @@ function isChecked(doc: PDFDocument, fieldName: string): boolean {
   return false;
 }
 
-const BLANK_8889 = "forms/blank/f8889.pdf";
+const BLANK_8889 = "forms/blank/2025/f8889.pdf";
 const F = FORM_8889_FIELDS;
 
 // ─── Fixture 1: Single filer, self-only HDHP, full-year contributions ───

@@ -1,0 +1,31 @@
+form: "PA Ordinary Care Independent Review"
+fullName: "Independent actual receipt identity and refundable credit ordering"
+taxYear: 2025
+reference: "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40dc.pdf"
+notes: |
+  Independent source derivation frozen before candidate product/output inspection.
+  Fiscal Code1603-W(c),(e): 100% applicable2022section21 formula, refundable;
+  1604-W prohibits another taxpayer claiming same expenses. ScheduleDC sectionIII
+  line2 transfers Form2441line9a to PA40line23. Form2441line3 allows6000 for
+  two genuinely qualifying persons even when only one has expenses. Its provider
+  exclusion applies to taxpayer/spouse/dependent/parent of qualifying child.
+  Actual source records cannot contradict those eligibility requirements.
+  REV1630sectionIline2 includes PA40line23; no second reduction of line1a.
+  Sources refreshed2026-11-03: official FiscalCode1602–1605W,2025ScheduleDC,
+  2025Form2441+instructions,2025REV1630. No human/legal qualification claimed.
+lines:
+  - line: "600-once"
+    formula: "100120*.0307=3073.684→3074; 3000*.20=600; WH3074+DC600 produces refund600 exactly once. SP income100120; REV1630line1a3074/line23674."
+    testRef: "tests/engine/state/pa-ordinary-care-independent.test.ts::independent care600 is a refundable payment once with unchanged SP and REV liability"
+  - line: "fractional"
+    formula: "Actual3000.49 receipts reconcile exactly before Form2441cap3000; credit remains600."
+    testRef: "tests/engine/state/pa-ordinary-care-independent.test.ts::independent actual fractional care receipt preserves cents before statutory cap"
+  - line: "two-person"
+    formula: "Two actual verified under13 dependent originals, one with expense6000 and one0, produce1200. Zero-expense person still must actually qualify."
+    testRef: "tests/engine/state/pa-ordinary-care-independent.test.ts::independent second actual zero-expense qualifying person permits the two-person cap"
+  - line: "person-and-provider"
+    formula: "Every counted qualifying person and every provider must reconcile actual originals, even zero-expense person rows. SamepayerTIN+same receipt cannot be counted twice under a changed display name."
+    testRef: "tests/engine/state/pa-ordinary-care-independent.test.ts::independent care rejects contradictory actual identity or counted person %s"
+  - line: "other-guards"
+    formula: "Actual receipt amount/date/source ownership and retained snapshots cannot be repaired on read. Unsupported2026 remains denied."
+    testRef: "tests/engine/state/pa-ordinary-care-independent.test.ts::independent care preserves source date and original gates %s"

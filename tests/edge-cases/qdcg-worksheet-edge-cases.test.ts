@@ -84,11 +84,11 @@ describe("QDCG - ordinary income at 0% threshold pushes LTCG into 15%", () => {
   it("QDCG stacking - ordinary exactly at 0% threshold ($48,350), $10K LTCG → all at 15%", () => {
     // ordinaryPortion = $58,350 - $10,000 = $48,350 (= 0% threshold)
     // Stack: $48,350 base → zero room at 0% → all $10K LTCG at 15% = $1,500
-    // ordinaryTax($48,350) = $11,925 × 10% + $36,425 × 12% = $1,192.50 + $4,371 = $5,563.50 → $5,564
+    // Published48350–48400 single Tax Table:5567.
     const result = calculateCapitalGainsTax(d(58350), d(0), d(10000), "single", constants);
     expect(result.preferentialTax.toNumber()).toBe(1500);
-    expect(result.ordinaryTax.toNumber()).toBe(5564);
-    expect(result.tax.toNumber()).toBe(7064);
+    expect(result.ordinaryTax.toNumber()).toBe(5567);
+    expect(result.tax.toNumber()).toBe(7067);
   });
 });
 
@@ -102,11 +102,11 @@ describe("QDCG - LTCG spanning 0% and 15% brackets", () => {
     // ordinaryPortion = $40,000, effectivePreferential = $18,350
     // Stack: $40K base → room at 0% = $48,350 - $40,000 = $8,350
     // $8,350 at 0%, $10,000 at 15% = $1,500
-    // ordinaryTax($40K) = $11,925 × 10% + $28,075 × 12% = $1,192.50 + $3,369 = $4,561.50 → $4,562
+    // Published40000–40050 single Tax Table:4565.
     const result = calculateCapitalGainsTax(d(58350), d(0), d(18350), "single", constants);
     expect(result.preferentialTax.toNumber()).toBe(1500);
-    expect(result.ordinaryTax.toNumber()).toBe(4562);
-    expect(result.tax.toNumber()).toBe(6062);
+    expect(result.ordinaryTax.toNumber()).toBe(4565);
+    expect(result.tax.toNumber()).toBe(6065);
   });
 });
 
@@ -183,21 +183,21 @@ describe("QDCG - filing status divergence at same income", () => {
   it("QDCG stacking - HoH $60K total with $10K LTCG → all at 0% (HoH threshold $64,750)", () => {
     // ordinaryPortion = $50K, effectivePreferential = $10K
     // Stack: $50K base, room at 0% = $64,750 - $50K = $14,750 → all $10K at 0%
-    // ordinaryTax(HoH $50K) = $17K × 10% + $33K × 12% = $1,700 + $3,960 = $5,660
+    // Published50000–50050 HoH Tax Table:5663.
     const result = calculateCapitalGainsTax(d(60000), d(0), d(10000), "head_of_household", constants);
     expect(result.preferentialTax.toNumber()).toBe(0);
-    expect(result.ordinaryTax.toNumber()).toBe(5660);
-    expect(result.tax.toNumber()).toBe(5660);
+    expect(result.ordinaryTax.toNumber()).toBe(5663);
+    expect(result.tax.toNumber()).toBe(5663);
   });
 
   it("QDCG stacking - Single $60K total with $10K LTCG → all at 15% (single threshold $48,350)", () => {
     // ordinaryPortion = $50K, effectivePreferential = $10K
     // Stack: $50K base > $48,350 → zero room at 0% → all $10K at 15% = $1,500
-    // ordinaryTax(Single $50K) = $11,925 × 10% + $36,550 × 12% + $1,525 × 22% = $5,914
+    // Published50000–50050 single Tax Table:5920.
     const result = calculateCapitalGainsTax(d(60000), d(0), d(10000), "single", constants);
     expect(result.preferentialTax.toNumber()).toBe(1500);
-    expect(result.ordinaryTax.toNumber()).toBe(5914);
-    expect(result.tax.toNumber()).toBe(7414);
+    expect(result.ordinaryTax.toNumber()).toBe(5920);
+    expect(result.tax.toNumber()).toBe(7420);
   });
 
   it("QDCG stacking - HoH saves $1,500 vs single on identical $60K income with $10K LTCG", () => {
@@ -205,7 +205,7 @@ describe("QDCG - filing status divergence at same income", () => {
     const single = calculateCapitalGainsTax(d(60000), d(0), d(10000), "single", constants);
     // HoH: $0 preferential tax vs Single: $1,500 preferential tax
     // Plus different ordinary brackets → HoH total lower
-    expect(single.tax.minus(hoh.tax).toNumber()).toBe(1754);
+    expect(single.tax.minus(hoh.tax).toNumber()).toBe(1757);
   });
 });
 
@@ -359,26 +359,27 @@ describe("QDCG - high ordinary income forces all preferential into 20%", () => {
 // ═══════════════════════════════════════════════════════════
 
 describe("QDCG - §1250 gain at various bracket positions", () => {
-  it("QDCG §1250 - gain within 0% bracket taxed at 0%, not 25%", () => {
-    // Single, $30K all LTCG, §1250 = $10K — all fits within 0% bracket ($48,350)
+  it("ScheduleD1250 - low-income special gain uses ordinary tax", () => {
+    // Official line21=10000; published10000–10050 tax1003. Remaining20000 gains at0%.
     const result = calculateCapitalGainsTax(d(30000), d(0), d(30000), "single", constants, {
       section1250Gain: d(10000),
     });
     expect(result.preferentialTax.toNumber()).toBe(0);
-    expect(result.tax.toNumber()).toBe(0);
+    expect(result.ordinaryTax.toNumber()).toBe(1003);
+    expect(result.tax.toNumber()).toBe(1003);
   });
 
-  it("QDCG §1250 - gain spanning 15% threshold splits between 15% and 25%", () => {
+  it("ScheduleD1250 - ordinary-rate special gain and regular gains cross fifteen-percent ceiling", () => {
     // Single, $540K all LTCG, §1250 = $20K
-    // $48,350 at 0%, $485,050 at 15% = $72,757.50
-    // Remaining $6,600 above 15% threshold: §1250 portion = min($20K, $6,600) = $6,600 at 25% = $1,650
-    // Total = $72,757.50 + $1,650 = $74,407.50 → $74,408
+    // Official line21=20000 -> published table2165. Zero-rate gain28350;
+    // regular gain485050*15%=72758 and6600*20%=1320. Line39=0;
+    // the20000 special gain is already included in ordinary line21.
     const result = calculateCapitalGainsTax(d(540000), d(0), d(540000), "single", constants, {
       section1250Gain: d(20000),
     });
-    expect(result.preferentialTax.toNumber()).toBe(74408);
-    expect(result.ordinaryTax.toNumber()).toBe(0);
-    expect(result.tax.toNumber()).toBe(74408);
+    expect(result.preferentialTax.toNumber()).toBe(74078);
+    expect(result.ordinaryTax.toNumber()).toBe(2165);
+    expect(result.tax.toNumber()).toBe(76243);
   });
 
   it("QDCG §1250 - gain entirely above 15% threshold → full 25% rate", () => {
@@ -399,16 +400,16 @@ describe("QDCG - §1250 gain at various bracket positions", () => {
 // ═══════════════════════════════════════════════════════════
 
 describe("QDCG - collectibles gain at various bracket positions", () => {
-  it("QDCG collectibles - gain within 15% bracket taxed at 15%, not 28%", () => {
+  it("ScheduleD collectibles - ordinary-rate special gain preserves regular gain thresholds", () => {
     // Single, $100K all LTCG, collectibles = $10K
-    // All $100K fits in 0%/15% brackets (15% threshold = $533,400)
-    // $48,350 at 0%, $51,650 at 15% = $7,747.50 → $7,748
-    // Collectibles never reach above 15% threshold → no 28% tax
+    // Official line21=10000 -> table1003. Regular gains38350 at0%
+    // and51650*15%=7748. Line42=0, because special gain is in line21.
     const result = calculateCapitalGainsTax(d(100000), d(0), d(100000), "single", constants, {
       collectiblesGain: d(10000),
     });
     expect(result.preferentialTax.toNumber()).toBe(7748);
-    expect(result.tax.toNumber()).toBe(7748);
+    expect(result.ordinaryTax.toNumber()).toBe(1003);
+    expect(result.tax.toNumber()).toBe(8751);
   });
 
   it("QDCG collectibles - gain entirely above 15% threshold → full 28% rate", () => {
@@ -462,12 +463,12 @@ describe("QDCG - zero and negative preferential income", () => {
     expect(result.tax.toNumber()).toBe(16914);
   });
 
-  it("QDCG - net capital loss offsets qualified dividends → falls back to ordinary rates", () => {
-    // Single, $50K taxable, $5K QD but -$6K LTCG → net preferential = -$1K
-    // Falls through to all-ordinary path
+  it("QDCG - net capital loss does not erase actual qualified dividends", () => {
+    // Official QDCG3=0 for net loss; line2 retains5000 actual QD.
+    // Line5=45000 -> published table5165. QD3350 at0%,1650*15%=248.
     const result = calculateCapitalGainsTax(d(50000), d(5000), d(-6000), "single", constants);
-    expect(result.preferentialTax.toNumber()).toBe(0);
-    expect(result.ordinaryTax.toNumber()).toBe(5914);
-    expect(result.tax.toNumber()).toBe(5914);
+    expect(result.preferentialTax.toNumber()).toBe(248);
+    expect(result.ordinaryTax.toNumber()).toBe(5165);
+    expect(result.tax.toNumber()).toBe(5413);
   });
 });

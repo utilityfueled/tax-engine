@@ -59,7 +59,7 @@ const qssFixture: TaxYearInput = {
     },
   ],
   form1099Int: [
-    {
+    { privateActivityBondInterest: "0",
       payer: "First National Bank",
       interestIncome: "1500",
       federalWithheld: "0",
@@ -69,7 +69,7 @@ const qssFixture: TaxYearInput = {
     },
   ],
   form1099Div: [
-    {
+    { specifiedPrivateActivityBondInterest: "0",
       payer: "Schwab Index Fund",
       ordinaryDividends: "2000",
       qualifiedDividends: "1200",
@@ -167,14 +167,14 @@ describe("Qualifying Surviving Spouse full return", () => {
   });
 
   // ── Credits ───────────────────────────────────────────
-  it("CTC = $2,000 for one qualifying child", () => {
-    expect(federal.childTaxCredit.toNumber()).toBe(2000);
+  it("CTC = $2,200 for one qualifying child", () => {
+    expect(federal.childTaxCredit.toNumber()).toBe(2200);
   });
 
   it("CTC not phased out (AGI $123,500 well below QSS threshold of $200K)", () => {
     const threshold = c.childTaxCredit.phaseOutThreshold.qualifying_surviving_spouse;
     expect(federal.agi.lessThan(threshold)).toBe(true);
-    expect(federal.childTaxCredit.toNumber()).toBe(2000);
+    expect(federal.childTaxCredit.toNumber()).toBe(2200);
   });
 
   // ── Additional Taxes ──────────────────────────────────
@@ -293,8 +293,8 @@ describe("QSS with only W-2 income — simple return", () => {
     expect(federal.taxableIncome.toNumber()).toBe(43500);
   });
 
-  it("Form 1040 Line 19 — CTC = $2,000 for one child", () => {
-    expect(federal.childTaxCredit.toNumber()).toBe(2000);
+  it("Form 1040 Line 19 — CTC = $2,200 for one child", () => {
+    expect(federal.childTaxCredit.toNumber()).toBe(2200);
   });
 
   it("no capital gains tax, no investment income", () => {
@@ -727,8 +727,8 @@ describe("QSS with CTC for multiple children", () => {
 
   const federal = calculateFederalTax(input);
 
-  it("Form 8812 Line 12 — max CTC = $6,000 for three children", () => {
-    expect(federal.form8812!.ctcBeforeLimitation.toNumber()).toBe(6000);
+  it("Form 8812 Line 12 — max CTC = $6,600 for three children", () => {
+    expect(federal.form8812!.ctcBeforeLimitation.toNumber()).toBe(6600);
   });
 
   it("Form 8812 Line 14 — nonrefundable CTC limited to tax liability", () => {
@@ -806,7 +806,7 @@ describe("QSS with AMT triggered by large SALT", () => {
     ],
     form1095A: [],
     donations: [
-      {
+      { qualifiedOrganization: true, isPrivateFoundation: false,
         organization: "Denver Food Bank",
         type: "cash",
         amount: "5000",
@@ -964,7 +964,7 @@ describe("QSS with foreign tax credit", () => {
     ],
     form1099Int: [],
     form1099Div: [
-      {
+      { specifiedPrivateActivityBondInterest: "0",
         payer: "Vanguard International Fund",
         ordinaryDividends: "8000",
         qualifiedDividends: "5000",
@@ -1157,14 +1157,14 @@ describe("QSS at very high income ($500K+) — multiple surtaxes", () => {
       },
     ],
     form1099Int: [
-      {
+      { taxExemptInterest: "0", privateActivityBondInterest: "0",
         payer: "Treasury Direct",
         interestIncome: "10000",
         federalWithheld: "0",
       },
     ],
     form1099Div: [
-      {
+      { specifiedPrivateActivityBondInterest: "0",
         payer: "Vanguard Total Market",
         ordinaryDividends: "15000",
         qualifiedDividends: "12000",
@@ -1312,14 +1312,14 @@ describe("QSS with only investment income — no earned income", () => {
     },
     w2s: [],
     form1099Int: [
-      {
+      { taxExemptInterest: "0", privateActivityBondInterest: "0",
         payer: "Bank of America",
         interestIncome: "30000",
         federalWithheld: "3000",
       },
     ],
     form1099Div: [
-      {
+      { specifiedPrivateActivityBondInterest: "0",
         payer: "Vanguard Dividend Fund",
         ordinaryDividends: "25000",
         qualifiedDividends: "20000",

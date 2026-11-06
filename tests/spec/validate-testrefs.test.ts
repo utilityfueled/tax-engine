@@ -6,6 +6,7 @@
 import { describe, it, expect } from "vitest";
 import { readFileSync, readdirSync } from "fs";
 import { join } from "path";
+import ts from "typescript";
 
 interface SpecLine {
   line: string;
@@ -40,24 +41,30 @@ function parseSpecFiles(dir: string): Array<{ file: string; spec: SpecFile }> {
   return results;
 }
 
+function literalTestNames(content: string): Set<string> {
+  const names = new Set<string>();
+  // Only child traversal is needed. Parent links substantially increase V8
+  // coverage overhead without changing which literal test calls are found.
+  const source = ts.createSourceFile("spec-linked.test.ts", content, ts.ScriptTarget.Latest, false, ts.ScriptKind.TSX);
+  function baseName(expression: ts.Expression): string | undefined {
+    if (ts.isIdentifier(expression)) return expression.text;
+    if (ts.isPropertyAccessExpression(expression) || ts.isCallExpression(expression)) return baseName(expression.expression);
+    return undefined;
+  }
+  function visit(node: ts.Node): void {
+    if (ts.isCallExpression(node) && ["it", "test", "describe"].includes(baseName(node.expression) ?? "")) {
+      const label = node.arguments[0];
+      if (label && (ts.isStringLiteral(label) || ts.isNoSubstitutionTemplateLiteral(label))) names.add(label.text);
+    }
+    ts.forEachChild(node, visit);
+  }
+  visit(source);
+  return names;
+}
+
 function extractTestNames(filePath: string): Set<string> {
   try {
-    const content = readFileSync(filePath, "utf-8");
-    const names = new Set<string>();
-
-    // Match it("name", ...) and test("name", ...)
-    const matches = content.matchAll(/(?:it|test)\(\s*"([^"]+)"/g);
-    for (const m of matches) {
-      names.add(m[1]);
-    }
-
-    // Match describe("name", ...)
-    const descMatches = content.matchAll(/describe\(\s*"([^"]+)"/g);
-    for (const m of descMatches) {
-      names.add(m[1]);
-    }
-
-    return names;
+    return literalTestNames(readFileSync(filePath, "utf-8"));
   } catch {
     return new Set();
   }
@@ -66,6 +73,17 @@ function extractTestNames(filePath: string): Set<string> {
 const projectRoot = join(import.meta.dirname, "../..");
 
 describe("Spec testRef validation", () => {
+  it("finds actual literal test names regardless of quote style", () => {
+    expect([...literalTestNames("it('single', () => {}); test(\"double\", () => {}); describe(`template`, () => {});")])
+      .toEqual(["single", "double", "template"]);
+  });
+  it("does not accept commented examples or unrelated strings as existing tests", () => {
+    expect([...literalTestNames("// it(\"commented\", () => {});\nconst prose = 'test(\"quoted\")'; other(\"not a test\");")]).toEqual([]);
+  });
+  it("recognizes literal parameterized and modifier test names", () => {
+    expect([...literalTestNames("it.each([1, 2])('parameter %s', () => {}); describe.skip(\"suite\", () => {});")])
+      .toEqual(["parameter %s", "suite"]);
+  });
   const federalSpecs = parseSpecFiles(join(projectRoot, "spec/federal"));
   const stateSpecs = parseSpecFiles(join(projectRoot, "spec/state"));
   const allSpecs = [...federalSpecs, ...stateSpecs];
@@ -85,29 +103,30 @@ describe("Spec testRef validation", () => {
     }
   });
 
-  it("all testRefs point to existing test files and test names", () => {
+  // Keep each source document independently diagnosable. The AST work for the
+  // entire growing catalog must not share a single test's five-second budget.
+  // Every spec and reference is still checked, using the same cached AST names.
+  it.each(allSpecs)("testRefs in $file point to existing test files and test names", ({ file, spec }) => {
     const broken: string[] = [];
 
-    for (const { file, spec } of allSpecs) {
-      for (const line of spec.lines) {
-        if (!line.testRef) continue;
+    for (const line of spec.lines) {
+      if (!line.testRef) continue;
 
-        // Parse "tests/path/file.test.ts::test name"
-        const [testFile, testName] = line.testRef.split("::");
-        if (!testFile || !testName) {
-          broken.push(`${file} line ${line.line}: invalid testRef format "${line.testRef}"`);
-          continue;
-        }
+      // Parse "tests/path/file.test.ts::test name"
+      const [testFile, testName] = line.testRef.split("::");
+      if (!testFile || !testName) {
+        broken.push(`${file} line ${line.line}: invalid testRef format "${line.testRef}"`);
+        continue;
+      }
 
-        const names = getTestNames(testFile);
-        if (names.size === 0) {
-          broken.push(`${file} line ${line.line}: test file not found "${testFile}"`);
-          continue;
-        }
+      const names = getTestNames(testFile);
+      if (names.size === 0) {
+        broken.push(`${file} line ${line.line}: test file not found "${testFile}"`);
+        continue;
+      }
 
-        if (!names.has(testName)) {
-          broken.push(`${file} line ${line.line}: test "${testName}" not found in ${testFile}`);
-        }
+      if (!names.has(testName)) {
+        broken.push(`${file} line ${line.line}: test "${testName}" not found in ${testFile}`);
       }
     }
 

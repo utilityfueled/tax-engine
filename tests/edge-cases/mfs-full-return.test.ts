@@ -129,7 +129,7 @@ const mfsFixture: TaxYearInput = {
   ],
   form1095A: [],
   donations: [
-    {
+    { qualifiedOrganization: true, isPrivateFoundation: false,
       organization: "Red Cross",
       type: "cash",
       amount: "3000",
@@ -261,8 +261,7 @@ describe("MFS Full Return - filing status", () => {
 
   // ── CTC ─────────────────────────────────────────────
   it("CTC available for qualifying child", () => {
-    // AGI under $200K MFS phase-out → full $2,000
-    expect(federal.childTaxCredit.toNumber()).toBe(2000);
+    expect(federal.childTaxCredit.toNumber()).toBe(2200);
   });
 
   it("ACTC = $0 (high-income MFS filer, full CTC used nonrefundably)", () => {

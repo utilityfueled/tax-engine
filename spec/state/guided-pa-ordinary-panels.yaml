@@ -1,0 +1,58 @@
+form: "Guided-PA-Ordinary-State-Panels"
+fullName: "Actual PA ordinary and completion records in guided state section"
+taxYear: 2025
+reference: "docs/upgrade-2026-execution-brief.md"
+notes: |
+  Wires previously source-qualified collectors, no new monetary formula or default.
+  Preserve current W2/OH flow paths and exact actual source packets. Source-only
+  confirmation and navigation do not qualify positive unsupported credit methods,
+  completed returns, final2026 forms/law, filing or public/self-host release.
+lines:
+  - line: "source-context"
+    description: "Separate federal-only and PA residency-bound confirmation originals"
+    formula: |
+      Build actual federal-only canonical originals through the existing bridge;
+      replay only confirmed current PA residency and optional reciprocity before
+      ordinary-facts/completion confirmation. Do not require either ordinary packet
+      merely to confirm it. No composer, factual defaults or snapshot refresh on read.
+      Residency controls retain federal-only originals so they have no confirmation
+      cycle. Unknown federal or PA original sources leave ordinary context unavailable.
+    testRef: "tests/guided-interview/guided-pa-ordinary-panels.test.ts::PA ordinary source context is available before ordinary confirmation for all three residencies"
+  - line: "mandatory-navigation"
+    description: "Require fresh ordinary and completion source packets for PA"
+    formula: |
+      Selected PA state section cannot complete without current actual residency,
+      ordinary return facts and completion sources. Replay owner/year/private original
+      identity for all3 residency statuses. Unknown, malformed or stale originals block
+      navigation without inventing zero/none or automatically reconfirming them.
+      Valid positive reported credit/relief metadata stays retained and source-method
+      guarded downstream; source confirmation is never calculation readiness.
+    testRef: "tests/guided-interview/guided-pa-ordinary-panels.test.ts::PA state navigation requires both current complete ordinary packets"
+  - line: "invalidation"
+    description: "Retain records but clear affected confirmation on source edits"
+    formula: |
+      Changed upstream facts clear all PA packet headers. Changed PA residency,
+      reciprocity or legacy state payment fields clear ordinary/completion headers;
+      changed ordinary or completion actual fields clear their own header. Preserve
+      originals/rows/positive metadata. Confirmation metadata itself, no-op updates,
+      and unchanged saved reopening do not clear valid explicit confirmation.
+    testRef: "tests/guided-interview/guided-pa-ordinary-panels.test.ts::PA source edits invalidate confirmation while preserving all original records"
+  - line: "actual-panels"
+    description: "Expose structured ordinary and completion panels in state return"
+    formula: |
+      PA section renders both existing structured source collectors with the correct
+      source-only context. Explicit confirm binds actual current owner/year/originals.
+      Unknown inputs remain unknown. Editing retains original source rows and clears
+      confirmation. Shell must pass the residency-bound context to these panels while
+      retaining federal-only context for residency and reciprocity controls.
+    testRef: "tests/apps/web/guided-pa-ordinary-panels.test.tsx::PA state panel exposes and explicitly confirms actual ordinary and completion sources"
+  - line: "source-ledger-ui"
+    description: "Preserve old PA/OH ledger records without a second money-entry path"
+    formula: |
+      PA and OH use actual source panels for new amounts and dates. Preserve old
+      generic withholding totals/source rows and estimated payment rows as static
+      review records, showing original strings and permitting explicit removal of
+      any row or legacy total after checking sources. Never silently discard or
+      reclassify them as authoritative receipts. Other states retain existing generic
+      editors. Parent reconciler separately requires exact actual-source linkage.
+    testRef: "tests/apps/web/guided-pa-ordinary-panels.test.tsx::PA and OH legacy ledgers remain reviewable without generic amount entry"

@@ -1,0 +1,30 @@
+form: "Native RRTA original-source collector"
+fullName: "Explicit ordinary 2025 RRTA payroll originals and nonrailroad tips"
+taxYear: 2025
+reference: "https://www.irs.gov/instructions/i8959"
+notes: |
+  Reuse canonical ordinary-w2-rrta-v1, not a new tax method. Actual 2025
+  single/MFJ only; no dependents, railroad tips, CT2, corrections, combined
+  excess Tier1/FICA, self-employment or guessed missing amounts. No final2026,
+  filing or human qualification. Monetary source strings remain exact.
+lines:
+  - line: "native-originals"
+    description: "Explicit capture binds current owner, W2 and tip originals"
+    formula: "Only user-entered payroll bases, actual Additional Medicare withholding and each explicit eligibility answer enter the canonical source packet; user action captures immutable exact current taxpayer/W2/Form4137 originals after canonical proof; capture returns a draft only"
+    testRef: "tests/guided-interview/guided-rrta-payroll.test.ts::captures and emits the actual original RRTA source packet through the native bridge"
+  - line: "currentness"
+    description: "Documentary edits revoke native confirmation"
+    formula: "Any changed native source material including equal-money lexical references requires recapture and reconfirmation; preserve originals; direct stale/forged snapshots reject; an unchanged save retains confirmation"
+    testRef: "tests/guided-interview/guided-rrta-payroll.test.ts::rejects stale original sources and retains facts across native edits and reload"
+  - line: "finite-guard"
+    description: "Canonical payroll owns eligibility and arithmetic"
+    formula: "Re-run actual calculateRRTAPayrollSources before ordinary bridge emission; no UI assertion waives existing canonical exclusions; ordinary no-packet tip behavior unchanged; missing versus checked zero stay distinct"
+    testRef: "tests/guided-interview/guided-rrta-payroll.test.ts::preserves unknown zero owner year and unsupported payroll refusals"
+  - line: "native-controls"
+    description: "Original records are entered and explicitly captured"
+    formula: "Visible controls collect every packet and row fact with unknown initial answers, no monetary inference or automatic confirmation; capture button validates actual bridge originals; editing retains originals and clears confirmation"
+    testRef: "tests/apps/web/rrta-payroll-source-interactions.test.tsx::collects actual RRTA facts and captures only after explicit review"
+  - line: "combined-deduction-source"
+    description: "Retain nonrailroad tip deduction originals with RRTA proof"
+    formula: "Schedule1A may construct documentary tip facts for the RRTA source route; all ordinary tax inputs still require final RRTA canonical and snapshot proof; capture metadata alone does not change actual deduction source facts or create confirmation; actual entered edits remain invalidating"
+    testRef: "tests/guided-interview/guided-rrta-payroll.test.ts::reconciles original RRTA capture with actual nonrailroad Schedule1A sources without a confirmation cycle"

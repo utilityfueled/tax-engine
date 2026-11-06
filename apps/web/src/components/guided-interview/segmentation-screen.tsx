@@ -52,7 +52,8 @@ export function SegmentationScreen({
   useEffect(() => {
     if (prevStep.current !== step) {
       prevStep.current = step;
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      // Start the new section at a stable viewport before its controls are used.
+      window.scrollTo({ top: 0, behavior: "instant" });
       requestAnimationFrame(() => {
         stepContainerRef.current?.focus({ preventScroll: true });
       });
@@ -82,7 +83,7 @@ export function SegmentationScreen({
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [step, answers, onComplete]);
+  }, [step, answers, onComplete, uploadPending]);
 
   function setFilingStatus(value: FilingStatus) {
     setAnswers((prev) => ({ ...prev, filingStatus: value }));

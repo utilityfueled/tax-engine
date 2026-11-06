@@ -1,0 +1,20 @@
+form: "Current Form172 original mortgage-insurance classification"
+taxYear: 2026
+irsReference: "https://www.irs.gov/instructions/i172"
+sources:
+  - "IRC172(d)(4);56(b)(1)(B),(d)(2),(e);163(h)(3)(E),(F)(i)(III);PL119-21section70108(b)"
+  - "IRS Form172 instructions PartIline6;2016Form6251 eligible-mortgage worksheet as historical corroboration only"
+notes: "Finite current2026 original prepaid FHA/private main-residence source method only. Use actual canonical current annual allocation after ScheduleA phaseout/aggregate rounding; no second allocation, raw Box5 inference, or regular-to-AMT source copy. All positive reported insurance must have current original sources bound to a main-home loan; other methods remain denied. Current regular and alternative origins are recomputed independently. Engineering implementation remains subject to professional/final-form review; public2026 stays gated."
+lines:
+  - line: "positive-main-home"
+    description: "Classify actual original main-home PMI with separate regular and AMT components"
+    formula: "Actual9240 premium*8/min(180,84)=880. Wages20000+ordinary interest20000-current businessloss100000 =>AGI-60000. Maininterest5000+propertytax20000+PMI880=>regularitemized25880;regularPartI1=-85880,line6=25880,line7=20000,line9=5880,NOL80000. AMT excludes20000personalSALT, retains qualifiedmaininterest5000+PMI880;PartI1=-65880,line6=5880,line7=20000,line9=0,ATNOL65880;investment-originNOL0."
+    testRef: "tests/engine/federal-form-172-current-mortgage-insurance.test.ts::classifies original main-home PMI in independently recomputed regular and AMT origins"
+  - line: "reported-rounding"
+    description: "Consume the actual annual ScheduleA reported amount once"
+    formula: "Same source with actual originalpremium0 =>PMI0/regularitemized25000/ATNOL65000;original5.25 =>exact annual0.5=>reported1/regularitemized25001/ATNOL65001. Originalsource validation remains mandatory even when original or reportedamount0."
+    testRef: "tests/engine/federal-form-172-current-mortgage-insurance.test.ts::uses reported annual zero and half-dollar rounding exactly once"
+  - line: "separate-source-denial"
+    description: "Retain principal-residence and actual-original boundaries even without current interest"
+    formula: "PositivePMI cannot use a manual annual scalar alone, second-home dwelling inference, missing parent, changedaccount/year or unknownhistory. A zero-current-interest second-home claimedpremium still rejects. Actual source rows and prior regular/AMT carries stay unchanged; public2026 registry unavailable."
+    testRef: "tests/engine/federal-form-172-current-mortgage-insurance.test.ts::rejects second-home PMI even with zero current interest"

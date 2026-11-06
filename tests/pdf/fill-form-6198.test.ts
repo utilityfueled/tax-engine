@@ -117,34 +117,22 @@ describe("Form 6198 packet reference summary", () => {
     ]);
   });
 
-  it("fillReturn includes the Form 6198 reference summary only when supported Schedule K-1 at-risk inputs are present", async () => {
+  it.each([["included", true], ["omitted", false]] as const)("fillReturn includes the Form 6198 reference summary only when supported Schedule K-1 at-risk inputs are present: %s", async (_scenario, included) => {
+    const input = included ? atRiskFixture : simpleW2Fixture;
     const outputDir = await makeOutputDir();
-
     try {
-      const result = calculateFederalTax(atRiskFixture);
-      const included = await fillReturn(atRiskFixture, result, {
-        blankFormsDir: "forms/blank",
-        outputDir,
-      });
+      const result = calculateFederalTax(input);
+      const packet = await fillReturn(input, result, { blankFormsDir: "forms/blank", outputDir });
 
-      const referencePath = included.filledForms.find((path) =>
-        path.endsWith(FORM_6198_REFERENCE_FILENAME),
-      );
-
-      expect(referencePath).toBeDefined();
-      await access(referencePath!);
-      const pdfBytes = await readFile(referencePath!);
-      expect(pdfBytes.length).toBeGreaterThan(0);
-
-      const simpleResult = calculateFederalTax(simpleW2Fixture);
-      const omitted = await fillReturn(simpleW2Fixture, simpleResult, {
-        blankFormsDir: "forms/blank",
-        outputDir,
-      });
-
-      expect(
-        omitted.filledForms.some((path) => path.endsWith(FORM_6198_REFERENCE_FILENAME)),
-      ).toBe(false);
+      if (included) {
+        const referencePath = packet.filledForms.find((path) => path.endsWith(FORM_6198_REFERENCE_FILENAME));
+        expect(referencePath).toBeDefined();
+        await access(referencePath!);
+        const pdfBytes = await readFile(referencePath!);
+        expect(pdfBytes.length).toBeGreaterThan(0);
+      } else {
+        expect(packet.filledForms.some((path) => path.endsWith(FORM_6198_REFERENCE_FILENAME))).toBe(false);
+      }
     } finally {
       await rm(outputDir, { recursive: true, force: true });
     }

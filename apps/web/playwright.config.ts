@@ -39,11 +39,13 @@ const playwrightBaseUrl = process.env.PLAYWRIGHT_BASE_URL?.trim() || "http://127
 const disableManagedWebServer = process.env.PLAYWRIGHT_DISABLE_WEBSERVER === "true";
 
 export default defineConfig({
+  // Shared fixtures outside this app need the same web and engine alias map.
+  tsconfig: path.resolve(appDir, "tsconfig.json"),
   testDir: "./tests",
   timeout: 90_000,
-  /* Run tests serially to avoid overwhelming the dev server */
-  workers: 1,
-  /* Retry once to handle transient dev-server hiccups */
+  /* Exercise the production bundle; independent browser contexts isolate storage. */
+  workers: 2,
+  /* Retain one retry and its trace for investigating intermittent failures. */
   retries: 1,
   use: {
     baseURL: playwrightBaseUrl,
@@ -58,10 +60,12 @@ export default defineConfig({
   webServer: disableManagedWebServer
     ? undefined
     : {
-        command: "rm -rf .next && pnpm dev --port 3099",
+        command: process.env.PLAYWRIGHT_USE_DEV_SERVER === "true"
+          ? "pnpm dev --port 3099"
+          : "pnpm build && pnpm start --port 3099",
         port: 3099,
         reuseExistingServer: false,
-        timeout: 60_000,
+        timeout: 180_000,
         cwd: appDir
       }
 });

@@ -1,0 +1,39 @@
+form: "Guided shared Marketplace health sources"
+fullName: "Actual full-policy health payments and covered-person links"
+taxYear: 2025
+irsReference: "https://www.irs.gov/publications/p974"
+retrievedAt: "2026-10-26"
+notes: |
+  Use the source method in shared-marketplace-health.yaml after the independently
+  completed original policy allocation. This collector supplies no income,
+  credit, allowed deduction, owner repayment allocation or inferred paid share.
+  Full original gross/APTC and other-family payments remain unchanged.
+lines:
+  - line: "actual-source-transfer"
+    description: "Normalize actual full policy and person records once"
+    formula: "Confirm actual source year/reference and full original covered-person links. Preserve full monthly1000/APTC600 and independently paid200/200; existing shared allocation derives500/APTC300 for this family. Canonical monthly method gives health2340/AGI44127/PTC3480/repayment120."
+    testRef: "tests/guided-interview/guided-shared-marketplace-health.test.ts::transfers actual shared health sources once without replacing originals"
+  - line: "unknown-and-exact"
+    description: "Retain known false, unknown and exact source cents"
+    formula: "Normalize string years and complete original identities without defaults. Missing/false confirmation, wrong source identities and contradictory payments reject. Preserve source cents beyond binary precision and every full payment."
+    testRef: "tests/guided-interview/guided-shared-marketplace-health.test.ts::retains unknown false and exact shared payment facts"
+  - line: "reconfirmation"
+    description: "Recheck independent person links when consumed sources change"
+    formula: "Substantive household, policy or health changes invalidate outer and nested source confirmations while preserving values. Outer reconfirmation cannot restore nested confirmation. Confirmation-only edits do not invalidate the actual facts."
+    testRef: "tests/guided-interview/guided-shared-marketplace-health.test.ts::invalidates nested shared health confirmation after consumed source edits"
+  - line: "controls"
+    description: "Expose source controls within the existing health worksheet"
+    formula: "New records start with unknown year, reference, coverage answers, person links and confirmation. Existing actual controls collect them, preserve explicit false and zero, and revoke confirmation after a payment edit. No network or computed amount input."
+    testRef: "tests/apps/web/shared-marketplace-health-interactions.test.tsx::collects actual shared person links and revokes nested confirmation"
+  - line: "production-persistence"
+    description: "Recheck and retain original full policy sources in the live interview"
+    formula: "At desktop and mobile widths, actual shared records calculate44127AGI. Editing the person-link source revokes inner/outer confirmation, reconfirming restores the estimate, clearing an actual other-person payment stays unknown after reload, and original gross1000/APTC600 remain intact. No private source identifiers enter unrelated network requests."
+    testRef: "apps/web/tests/guided-shared-marketplace-health.spec.ts::preserves actual shared health records and independent confirmations"
+  - line: "workspace-download"
+    description: "Keep actual source context through the real workspace download"
+    formula: "The server validates complete original shared sources, prepares its private context, and only then redacts. The complete saved packet retains full1000/600 sources, allocated500/300, health2340 and final credit3480 without taxpayer identifiers."
+    testRef: "tests/apps/web/workspace-filled-return.test.ts::exports actual shared health through the original workspace source context"
+  - line: "linked-source-reachability"
+    description: "Keep independently invalidated Marketplace sources reachable from health"
+    formula: "A health edit invalidates the actual Marketplace and allocation confirmations. While Adjustments cannot advance, show the same saved Marketplace controls beside the health worksheet. Confirming those records must preserve full originals and restore the existing source validation without a navigation or validation bypass."
+    testRef: "tests/apps/web/shared-marketplace-health-interactions.test.tsx::reaches independent Marketplace confirmations before health validation permits Continue"

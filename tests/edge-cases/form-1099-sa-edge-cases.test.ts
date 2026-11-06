@@ -301,7 +301,9 @@ describe("Form 1099-SA edge cases", () => {
     expect(result.hsaGrossDistributions.toNumber()).toBe(10000);
     expect(result.hsaDeathDistributionDateOfDeathValue.toNumber()).toBe(0);
     expect(result.hsaPostDeathEarnings.toNumber()).toBe(0);
-    expect(result.defaultAccountOwner).toBe("spouse");
+    // Relationship to the decedent does not identify a return owner.
+    expect(result.defaultAccountOwner).toBeUndefined();
+    expect(result.unattributedSupport.hsaGrossDistributions.toString()).toBe("10000");
   });
 
   it("Form 1099-SA - non-spouse code 4 year-of-death uses death-distribution FMV path", () => {
@@ -577,7 +579,7 @@ describe("Form 1099-SA edge cases", () => {
     )).toBe(true);
   });
 
-  it("Form 1099-SA schema - rejects surviving-spouse with primary account-holder tag", () => {
+  it("Form 1099-SA schema - preserves the actual primary surviving-beneficiary owner", () => {
     const parsed = Form1099SASchema.safeParse({
       payer: "HSA Custodian",
       grossDistribution: "5000",
@@ -589,11 +591,10 @@ describe("Form 1099-SA edge cases", () => {
       accountType: "hsa",
     });
 
-    expect(parsed.success).toBe(false);
-    expect(parsed.error?.issues.some((issue) =>
-      issue.path.join(".") === "accountHolder"
-      && issue.message.includes("spouse owner path")
-    )).toBe(true);
+    expect(parsed.success).toBe(true);
+    if (!parsed.success) throw parsed.error;
+    expect(parsed.data.accountHolder).toBe("primary");
+    expect(calculateForm1099SA([parsed.data]).accountOwnerSupport.primary.hsaGrossDistributions.toString()).toBe("5000");
   });
 
   it("Form 1099-SA schema - requires Box 4 FMV for death codes 4 and 6", () => {

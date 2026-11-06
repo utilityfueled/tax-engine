@@ -1,0 +1,61 @@
+form: "Marketplace actual paid premiums after reported repayment"
+fullName: "One eligible owner/business source with actual zero credit and source/reporting advance cents"
+taxYear: 2025
+irsReference: "https://www.ecfr.gov/current/title-26/section-1.162(l)-1"
+notes: |
+  Refreshed 2026-10-26: IRC162(l)(1)-(2), Reg1.162(l)-1(a)(1)-(3),
+  Pub502 Premium Tax Credit and Pub974 coverage-family allocation and optional
+  computation methods. This is a derived payment-applicability method, not a
+  published example. Full original source amounts and independent PartIV amounts
+  remain unchanged. Admit one owner/business health plan whose complete allocated
+  costs are eligible. Actual coverage/noncoverage cash-plus-advance costs must
+  equal their independently calculated specified/nonspecified premium amounts.
+  For C=0, within those qualified components, sum(S-As+Rs,N-An+Rn)=cash+R.
+  The result does not depend on assigning the repayment between components,
+  because both belong to the same eligible owner/business and income limit.
+  Require the final computed R to equal reported original A, retain exact A,
+  and never claim an unpaid source-cent difference was repaid. Source cash+R
+  is capped at the original eligible premiums, then the actual own-business
+  income limit. A reported round-up cannot create expense above original cost.
+  Source-only amounts do not authorize an entered current deduction/credit/tax.
+  Recompute the complete actual return and verify C=0/R=reportedA after the paid
+  amount. Distinct repayment pools, partially eligible groups, actual cost versus
+  benchmark mismatch, positive credit and capped/partial reported repayment retain
+  their separate method boundaries. Production2026/readiness gates are unchanged.
+lines:
+  - line: "reported-payment"
+    description: "Actual cash and reported repayment retain source cents"
+    formula: "Own premiums18000, actualcash5994.12, sourceA12005.88: annual reportedR12006 permits min(18000,18000.12)=18000; monthly reportedR12000 permits17994.12, transferred17994. ActualsourceA0.12/reportedR0 permits17999.88, without treating0.12 as repaid. Shared original sources first retain their independent PartIV and actual paid shares."
+    testRef: "tests/engine/federal-marketplace-reported-repayment.test.ts::uses actual reported repayment without treating source cents as paid"
+  - line: "business-limit"
+    description: "Actual paid cost remains subject to the original owner's income"
+    formula: "An actual primary5000 business with its calculated SE deduction354 limits health to4646 even when spouse wages keep the finalcredit0. No spouse earnings or unchanged gross-premium deduction is substituted."
+    testRef: "tests/engine/federal-marketplace-reported-repayment.test.ts::keeps the actual owner business limit after the source payment calculation"
+  - line: "component-source"
+    description: "Distinct or unqualified payment components cannot use the additive proof"
+    formula: "Reject unknown actual cash/advances, incomplete or stale originals, mismatched actual coverage/noncoverage costs, partially eligible months and a second owner/business repayment pool. Retain original source data without selecting an allocation of reported repayment."
+    testRef: "tests/engine/federal-marketplace-reported-repayment.test.ts::requires one complete eligible payment source and determined component costs"
+  - line: "completed-proof"
+    description: "Only the completed canonical result proves actual repayment"
+    formula: "Final positive credit, partial reported repayment, duplicated audit or changed eligible cost cannot certify this method. The ordinary full-source-repayment method still rejects source0.12/reported0; the separate actual-paid method retains0.12 unpaid."
+    testRef: "tests/engine/federal-marketplace-reported-repayment.test.ts::requires the actual completed return and its unchanged payment proof"
+  - line: "intake"
+    description: "Original guide source cents reach the same derived payment method"
+    formula: "Preserve actual monthly1000.49 advances and499.51 cash with every person/policy original. Shared reported12000 yields17994.12 actual paid cost and17994 Schedule1; no entered repayment or deduction. Changes revoke source confirmation; blank remains unknown."
+    testRef: "tests/guided-interview/guided-marketplace-reported-repayment.test.ts::preserves source cents through actual guided payment records"
+  - line: "review"
+    description: "Private original binding and exact paid-cost review output"
+    formula: "Physical7206 prints17994 on1/14,8962 prints0/12000/12000 on24/25/29. Appendix retains original18000/cash5994.12/exactA12005.88/R12000/unpaid5.88/paid17994.12. Reject changed payment, omitted/forged proof or changed/duplicate audit before template I/O; redacted output has review notice on every page."
+    testRef: "tests/pdf/marketplace-reported-repayment-review.test.ts::prints reported repayment and unpaid source cents with private source binding"
+  - line: "isolated-2026"
+    description: "Current-law final eligibility follows the actual paid deduction"
+    formula: "The isolated indexed2026 calculation still computes final zero credit after the actual paid deduction and rejects any result restoring positive credit. No production readiness or export gate changes."
+    testRef: "tests/engine/federal-marketplace-reported-repayment-2026.test.ts::checks final2026 credit after actual reported payment"
+  - line: "workspace"
+    description: "Actual workspace export retains the complete source payment proof"
+    formula: "Guided shared source advances12005.88/report12000 preserve5.88 unpaid and17994.12 paid in the saved review packet. Original per-person amounts and all-page notices survive the private original context; no source identifier exposure."
+    testRef: "tests/apps/web/workspace-marketplace-reported-repayment.test.ts::downloads the actual source-cent payment review without replacing originals"
+  - line: "browser"
+    description: "Production source editing does not turn a benchmark into a paid share"
+    formula: "Desktop annual and mobile shared-monthly original cents calculate AGI267065/267071. Edited benchmark with unchanged component receipts remains incomplete even after confirmation; restoring actual500 benchmark and reconfirmation restores calculation. Reload retains original source cents; unknown MEC remains unknown and source data is not sent in requests."
+    testRef: "apps/web/tests/guided-marketplace-reported-repayment.spec.ts::retains actual source cents and requires consistent payment components"

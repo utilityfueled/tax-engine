@@ -1,0 +1,33 @@
+form: PA-Married-Residency-Sources
+taxYear: 2025
+reference: "https://www.pacodeandbulletin.gov/secure/pacode/data/061/chapter117/s117.2.html"
+description: Actual separate Pennsylvania source composition for one resident spouse and one nonresident or part-year spouse; federal MFJ remains unchanged.
+sources:
+  - https://www.pacodeandbulletin.gov/secure/pacode/data/061/chapter117/s117.2.html
+  - https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40in.pdf
+  - https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/pa-40nrh.pdf
+lines:
+  - line: "calendar-and-owner"
+    description: Full actual calendar domicile, abode, days and December31 principal-residence records bind both current original spouses; no joint resident election is inferred.
+    formula: "M only; exactly primary and spouse identities; contiguous actual domicile periods; derived resident/nonresident/part_year status must match source; unknown legacy summaries cannot substitute for the detailed sources. Finite nonresident and part-year admission requires actual aggregate PA presence below183 days; statutory and exactly183-day boundary cases remain unqualified rather than inferred."
+    testRef: "tests/engine/state/pa-married-residency-sources.test.ts::retains actual federal MFJ while taxing only original nonresident PA payroll"
+  - line: "taxable-compensation"
+    description: Resident-period cash gross is taxable from all sources; nonresident-period cash compensation is taxable only for actual Pennsylvania services.
+    formula: "Sum actual dated resident gross plus actual nonresident PA service cash; each paid/service window must lie inside one proved domicile period; gross equals PA plus outside service cash. Actual employer-required location review must exclude convenience allocations. No day ratio, NRH apportionment or reciprocity exemption is invented."
+    testRef: "tests/engine/state/pa-married-residency-sources.test.ts::uses actual part-year cash chronology rather than a day fraction"
+  - line: "separate-cash-and-worldwide-sp"
+    description: Separate owner wage withholding remains owner-only and the tax-forgiveness eligibility income includes both spouses' worldwide wages and actual additional SP income.
+    formula: "Box16 equals fresh owner PA-taxable payroll; Box17 is only actual PA withholding; SP joint eligibility includes both owners worldwide gross regardless of PA taxability; no cross-owner netting."
+    testRef: "tests/engine/state/pa-married-residency-sources.test.ts::includes excluded nonresident worldwide cash in both married SP worksheets"
+  - line: "currentness-and-unknowns"
+    description: Original taxpayer, W2, selected year and all timeline sources must remain current and complete.
+    formula: "Reject stale or malformed sources, competing confirmed legacy residency, missing/duplicate owners, unknown days, payroll crossing domicile boundaries and contradictory printed PA wages."
+    testRef: "tests/engine/state/pa-married-residency-sources.test.ts::rejects stale and incomplete actual mixed-residency sources"
+  - line: "export-and-year-gates"
+    description: This is a source composition calculation only. Mixed review paper additionally requires its original-bound reviewed owner residency, dates, school and worldwide SP projection.
+    formula: "Require prepared original-bound mixed paper context; deny forged or stale sources before IO. Preserve actual full federal year gate, review-only status, no filing qualification and all old no-packet J/M paths."
+    testRef: "tests/engine/state/pa-married-residency-sources.test.ts::requires actual original-bound mixed paper and retains unavailable year gates"
+  - line: "actual-presence-consistency"
+    description: Original physical-presence facts cannot contradict Pennsylvania services or an actual new Pennsylvania domicile.
+    formula: "A positive actual PA-service cash row requires more than zero actual PA presence days in the same proved domicile period containing its entire service/payment window. A part-year PA domicile period requires actual positive PA presence as well as confirmed abandonment/new-domicile facts. Never infer days, prorate cash or invent a payroll allocation; retain zero-presence nonresident periods when actual PA-service cash is zero."
+    testRef: "tests/engine/state/pa-married-residency-sources.test.ts::rejects zero physical presence contradicted by actual services or a PA domicile move"

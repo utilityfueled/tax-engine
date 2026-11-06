@@ -4,11 +4,19 @@ taxYear: 2025
 reference: "https://www.revenue.pa.gov/FormsandPublications/FormsforIndividuals/PIT/Pages/default.aspx"
 
 notes: |
+  Caller migration: historical reciprocal commuter examples now require refund
+  rejection; generic credit/packet/readiness examples use explicit fictional NY
+  source jurisdiction with unchanged money, privacy and readiness oracles.
+  Original caller files and their actual nine failures are retained in evidence.
+  Arithmetic-only primitive: caller classifications and scalar amounts do not
+  qualify originals or actual eligible income. The source-bound successor must
+  retain filed state returns, current owner/year/period/source and payments.
+  Source: https://www.pa.gov/agencies/revenue/forms-and-publications/pa-personal-income-tax-guide/deductions-and-credits
   PA Schedule G-L provides a credit for PA residents who paid income tax to
   another state on income that is also taxable by Pennsylvania.
 
   Key rules:
-    - Available only to PA residents
+    - Available only to PA residents and qualifying PA-resident periods of part-year residents
     - Computed separately for each state where tax was paid
     - For each state:
         Credit = lesser of (tax paid to other state, PA tax on that income)
@@ -18,10 +26,12 @@ notes: |
     - Income must be the SAME income taxable by both PA and the other state
     - Does not include local/city taxes paid to other jurisdictions
     - PA has reciprocal agreements with IN, MD, NJ, OH, VA, WV —
-      residents of those states working in PA (and vice versa) are
-      exempt from the other state's tax. If a PA resident paid tax to a
-      reciprocal state (e.g., failed to file exemption), they may still
-      claim the credit on Schedule G-L.
+      ordinary resident employees working in the other state are exempt
+      from that state income tax. Erroneous withholding needs refund, not
+      resident credit. Positive reciprocal entries without actual income
+      classification require a source successor. Explicit business/rental
+      arithmetic remains possible; dual-resident/shareholder exceptions
+      need their qualified actual-source method.
     - If the other state allows a credit for PA tax, you cannot claim
       credit in both states for the same income (no double-dipping).
 
@@ -67,12 +77,12 @@ lines:
 
   - line: "2"
     description: "Tax paid to the other state"
-    formula: "Actual income tax paid (not withheld, but net tax liability) to the other state on Line 1 income"
+    formula: "Source-qualified adjusted tax due and paid to the other state on Line 1 income; no withholding proxy"
     notes: |
       This is the tax actually paid to the other state on the income reported
-      on Line 1. Should be the net tax liability, not gross withholding
-      (though withholding is often used as a practical proxy when the
-      other state return hasn't been filed yet).
+      on Line 1. Use supported liability/payment evidence after the
+      actual G-L adjustments; withholding alone and an unfiled return
+      are not qualified resident-credit evidence.
     testRef: "tests/engine/state/pa-schedule-g-l.test.ts::PA Schedule G-L Line 2 - tax paid to other state"
 
   - line: "3"
@@ -109,3 +119,8 @@ lines:
       - "Sum exceeds PA tax liability: capped at PA tax liability"
       - "No other state taxes paid: $0 credit"
     testRef: "tests/engine/state/pa-schedule-g-l.test.ts::PA Schedule G-L total credit capped at PA tax liability"
+
+  - line: "reciprocal-source-guard"
+    description: "Reciprocal employee withholding cannot create resident credit"
+    formula: "For positive IN/MD/NJ/OH/VA/WV income and tax, compare the jurisdiction case-insensitively after whitespace trim and reject compensation and missing/unsupported incomeClass. Explicit business/rents scalar inputs remain arithmetic-only, without original-source qualification or inferred classification. Ordinary reciprocal employee taxes must be refunded, not credited; dual-resident/shareholder exceptions require separate source methods."
+    testRef: "tests/engine/state/pa-schedule-g-l.test.ts::PA Schedule G-L reciprocal employees and unknown classes require refund or actual source method"

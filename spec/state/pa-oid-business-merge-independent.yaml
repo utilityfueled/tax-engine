@@ -1,0 +1,21 @@
+form: "PA actual combined OID and separate-books business independent merge review"
+year: 2025
+status: independent-source-controls-before-runtime
+sources:
+  - https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40in.pdf
+  - https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40a.pdf
+  - https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/pa-40c.pdf
+notes: Fresh combined explicitly fictional original-source fixtures retain all existing actual dated OID and complete independent-center business evidence. Raw PA withholding W2+NEC.37+OID.10+MISC.20 is added once then printed. No sourceclassification or unknownzero inference. No human/final2026/filing qualification.
+lines:
+  - line: "normal-all3"
+    formula: resident base66320 tax2036 WH1540 due496; partyear base32540 tax999 WH800 due199; nonresident base12200 tax375 WH185 due190. Raw business15200/6200/6200 and PAearned6200/12200/12200 retained.
+    testRef: "tests/engine/state/pa-oid-business-merge-independent.test.ts::retains actual combined $status business income and each withholding once"
+  - line: "huge-worldwide"
+    formula: Actual TreasuryB+29.52 is PA-exempt but SP2 roundedB+30; actualoutsideincome0/33080/53120; PAclassbase65320/32240/12200 gives worldwideSP B+65350 in each residency. Businessonce/no-classoffset, rawcents once.
+    testRef: "tests/engine/state/pa-oid-business-merge-independent.test.ts::retains combined $status Treasury worldwide eligibility without taxing exempt interest"
+  - line: "huge-taxable"
+    formula: Actual residenttaxableOIDB+29.52 plus bank120+wages50000+business15200 givesreportedPA40baseB+65350, taxround(base*.0307), principal tax-1540 kept in departmenthelper.
+    testRef: "tests/engine/state/pa-oid-business-merge-independent.test.ts::retains high taxable OID plus actual business principal through final composer"
+  - line: "source-replay-guards"
+    formula: StaleOID andNECcurrentoriginals independently reject; positiveoutsideOIDWH cannotbe suppressedbyzero paymenthistory; all raworiginals/globalconfiguration immutable and entirepublicDecimalconstructor replay stable.
+    testRef: "tests/engine/state/pa-oid-business-merge-independent.test.ts::keeps combined full result constructor replay and all originals private and immutable"

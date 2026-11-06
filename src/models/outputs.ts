@@ -84,7 +84,7 @@ export interface TaxReturnResult {
   taxYear: number;
   filingStatus: string;
 
-  // Form 1040 digital asset question (Line 1a checkbox)
+  // Form 1040 digital asset question
   digitalAssetQuestion: boolean;
 
   // Income
@@ -100,8 +100,12 @@ export interface TaxReturnResult {
   socialSecurityBenefitsGross: Decimal;
   socialSecurityBenefitsTaxable: Decimal;
   capitalGainLoss: Decimal;
+  /** Form1040line8: final Schedule1line10, including business/farm/rental income. */
   otherIncome: Decimal;
   nolDeduction: Decimal;
+  netOperatingLoss?: import("@/engine/forms/net-operating-loss-return.js").NetOperatingLossReturnResult;
+  qbiEblNol?: import("@/engine/forms/qbi-ebl-nol.js").QbiEblNolResult;
+  form172?: import("@/engine/forms/form-172-return.js").Form172ReturnResult;
   totalIncome: Decimal;
 
   // Adjustments
@@ -110,12 +114,15 @@ export interface TaxReturnResult {
 
   // Deductions
   standardDeduction: Decimal;
+  standardDeductionWorksheet?: import("@/engine/forms/standard-deduction.js").StandardDeductionResult;
   itemizedDeductions: Decimal;
-  deductionUsed: "standard" | "itemized";
+  itemizedDeductionReduction?: Decimal;
+  deductionUsed: "standard" | "itemized" | "nonitemized";
   deductionAmount: Decimal;
   taxableIncome: Decimal;
 
   // Tax computation
+  incomeTaxSourceStatus?: import("@/utils/tax-math.js").RegularIncomeTaxSource;
   ordinaryTax: Decimal;
   capitalGainsTax: Decimal;
   totalTaxBeforeCredits: Decimal;
@@ -123,6 +130,11 @@ export interface TaxReturnResult {
   // Credits
   childTaxCredit: Decimal;
   foreignTaxCredit: Decimal;
+  /** Actual deduction-year prior-credit absorption; grants no current credit. */
+  foreignTaxDeductionCarryover?: import("@/engine/forms/foreign-tax-deduction-carryover.js").ForeignTaxDeductionCarryoverResult;
+  /** Actual904(j) election, including preserved regular and AMT prior histories. */
+  foreignTaxDirectCredit?: import("@/engine/forms/foreign-tax-direct-credit.js").ForeignTaxDirectCreditResult;
+  foreignTaxOrdinaryCredit?: import("@/engine/forms/foreign-tax-ordinary-credit.js").ForeignTaxOrdinaryCreditResult;
   otherCredits: Decimal;
   totalCredits: Decimal;
 
@@ -150,7 +162,14 @@ export interface TaxReturnResult {
     capitalLoss: Decimal;
     shortTermCapitalLoss: Decimal;
     longTermCapitalLoss: Decimal;
-    suspendedPassiveLosses: Array<{ partnershipName: string; amount: Decimal }>;
+    suspendedPassiveLosses: Array<{ partnershipName: string; amount: Decimal;
+      /** Calculated history for review; future input still needs its actual filed-source confirmation. */
+      qbiVintages?: import("@/engine/forms/passive-loss-qbi.js").PassiveLossQBIVintage[] }>;
+    /** Actual remaining section469 credits after the ordinary108 source method; not a current credit override. */
+    suspendedPassiveCredits?: Array<{ sourceId: string; activityName: string; originTaxYear: number; creditKind: string; amount: Decimal }>;
+    /** Derived section469 closing amounts; original source confirmation is still required next year. */
+    k1PassiveByCharacter?: Array<{ k1SourceId: string; accountHolder: "primary" | "spouse"; taxYear: number;
+      ordinary: Decimal; shortTermCapital: Decimal; longTermCapital: Decimal }>;
     /** Per-PTP suspended losses under IRC §469(k).
      *  PTP losses can only offset income from the same PTP, not other passive income. */
     suspendedPTPLosses: Array<{ partnershipName: string; amount: Decimal }>;
@@ -158,16 +177,31 @@ export interface TaxReturnResult {
     /** Per-category FTC carryforward for multi-category IRC §904(d) tracking.
      *  Each category has independent per-year FIFO reconciliation. */
     foreignTaxCreditCarryforwardByCategory: Record<string, Array<{ taxYear: number; amount: Decimal }>>;
+    amtForeignTaxCreditCarryforwardByCategory?: Record<string, Array<{ taxYear: number; amount: Decimal }>>;
     qbiLossCarryforward: Decimal;
+    /** Character remaining under each separate loss limit; never an ordinary/AMT NOL override. */
+    qbiSuspendedLosses?: Array<{ sourceId: string; accountHolder: "primary" | "spouse";
+      limitation: import("@/engine/forms/qbi-loss-character.js").QbiLossLimitation;
+      vintages: import("@/engine/forms/qbi-loss-character.js").QbiLossCharacterVintage[] }>;
     investmentInterestExpense: Decimal;
     minimumTaxCredit: Decimal;
     charitableContributions: Decimal;
     /** Per-year charitable contribution carryforward entries after FIFO reconciliation with 5-year expiration */
-    charitableContributionsByYear: Array<{ taxYear: number; amount: Decimal }>;
+    charitableContributionsByYear: Array<{ taxYear: number; category?: import("@/engine/forms/charitable-contribution-worksheet.js").CharitableCategory; medium?: "cash" | "noncash"; amount: Decimal }>;
+    /** Derived section465 suspensions, distinct from entity basis and section170 carry. */
+    k1AtRiskByCharacter?: Array<{ k1SourceId: string; accountHolder: "primary" | "spouse"; taxYear: number;
+      ordinary: Decimal; shortTermCapital: Decimal; longTermCapital: Decimal;
+      charitable: import("@/engine/forms/k1-charitable-at-risk.js").K1CharitableRiskRecord[];
+      priorRecords?: import("@/engine/forms/k1-charitable-at-risk.js").K1CharitableAtRiskResult['prior'] }>;
+    /** Separately reconciled current charitable carry using actual independent alternative NOL and charity histories. */
+    amtCharitableContributions?: Decimal;
+    amtCharitableContributionsByYear?: Array<{ taxYear: number; category?: import("@/engine/forms/charitable-contribution-worksheet.js").CharitableCategory; medium?: "cash" | "noncash"; amount: Decimal }>;
     /** NOL carryforward from excess business loss limitation (IRC §461(l)) */
     excessBusinessLossNOL: Decimal;
     /** Remaining NOL carryforward after the current-year IRC §172 deduction */
     nolCarryforward: Decimal;
+    /** Independent actual AMT carry including a separately computed current-year origin. */
+    alternativeTaxNolCarryforward?: Decimal;
     /** Unused general business credit carried forward (IRC §39, 20-year limit) */
     generalBusinessCredit: Decimal;
     /** Per-partnership suspended excess business interest expense under IRC
@@ -186,6 +220,8 @@ export interface TaxReturnResult {
     }>;
     /** Wash sale disallowed losses on crypto that carry forward to replacement lot basis (IRC §1091) */
     cryptoWashSaleDisallowed: Decimal;
+    /** Individual HSA carryforwards; aggregate hsa is only a display total. */
+    hsaExcessByOwner?: Partial<Record<"primary" | "spouse", Decimal>>;
     /** Form 5329 excess contribution carryforwards (6% excise tax base for next year).
      *  Each value is the total remaining excess after current-year reductions.
      *  Feed these into next year's Form 5329 prior-year excess inputs. */
@@ -212,11 +248,14 @@ export interface TaxReturnResult {
   form8582?: import("@/engine/forms/form-8582.js").Form8582Result;
   form1099R?: import("@/engine/forms/form-1099-r.js").Form1099RResult;
   form2441?: import("@/engine/forms/form-2441.js").Form2441Result;
+  form2441Benefits?: import("@/engine/forms/form-2441-benefits.js").Form2441BenefitsResult;
   form1099SA?: import("@/engine/forms/form-1099-sa.js").Form1099SAResult;
   form4137?: import("@/engine/forms/form-4137.js").Form4137Result;
+  form4137ByOwner?: Partial<Record<"primary" | "spouse", import("@/engine/forms/form-4137.js").Form4137Result>>;
   form8919?: import("@/engine/forms/form-8919.js").Form8919Result;
   form4797?: import("@/engine/forms/form-4797.js").Form4797Result;
   form5329?: import("@/engine/forms/form-5329.js").Form5329Result;
+  form5329HsaByOwner?: Partial<Record<"primary" | "spouse", import("@/engine/forms/form-5329-hsa.js").Form5329HsaResult>>;
   form8880?: import("@/engine/forms/form-8880.js").Form8880Result;
   form8606?: import("@/engine/forms/form-8606.js").Form8606Result;
   form8606ByOwner?: Partial<Record<
@@ -229,6 +268,14 @@ export interface TaxReturnResult {
     import("@/engine/forms/form-8889.js").Form8889Result
   >>;
   seHealthInsuranceWorksheet?: import("@/engine/forms/se-health-insurance-worksheet.js").SEHealthInsuranceWorksheetResult;
+  form7206?: ReturnType<typeof import("@/engine/forms/form-7206-return.js").calculateForm7206Return>["form7206"];
+  marketplaceReportedRepaymentHealth?: import("@/engine/forms/marketplace-reported-repayment-payment.js").MarketplaceReportedRepaymentPayment;
+  marketplaceFullRepaymentHealth?: import("@/engine/forms/marketplace-full-advance-repayment.js").MarketplaceFullRepaymentHealthResult;
+  marketplaceActualPaidRepaymentHealth?: import("@/engine/forms/marketplace-actual-paid-repayment.js").MarketplaceActualPaidRepaymentResult;
+  marketplaceActualCashHealth?: import("@/engine/forms/marketplace-actual-cash-health.js").MarketplaceActualCashHealthResult;
+  marketplaceHealthInsurance?: import("@/engine/forms/marketplace-health-deduction.js").MarketplaceHealthDeductionResult & {
+    step2Credit: Decimal; finalCredit: Decimal; maximumDeduction: Decimal;
+  };
   socialSecurityBenefitsWorksheet?: import("@/engine/forms/social-security-benefits-worksheet.js").SocialSecurityBenefitsWorksheetResult;
   iraDeductionWorksheet?: {
     magi: Decimal;
@@ -240,16 +287,27 @@ export interface TaxReturnResult {
   form8962?: import("@/engine/forms/form-8962.js").Form8962Result;
   form8960?: import("@/engine/forms/form-8960.js").Form8960Result;
   form982?: import("@/engine/forms/form-982.js").Form982Result;
+  /** Source-bound regular/alternative loss reductions after current tax under108(b). */
+  codNolReduction?: import("@/engine/forms/cod-nol-reductions.js").CodNolReductionResult;
+  codAttributeReduction?: import("@/engine/forms/cod-attribute-reductions.js").CodAttributeReductionResult;
   form8824?: import("@/engine/forms/form-8824.js").Form8824AggregateResult;
   form2210?: import("@/engine/forms/form-2210.js").Form2210Result;
   form8815?: import("@/engine/forms/form-8815.js").Form8815Result;
   form8812?: import("@/engine/forms/form-8812.js").Form8812Result;
+  form8863?: import("@/engine/forms/form-8863.js").Form8863Result;
+  nonitemizerCharitableDeduction?: Decimal;
+  schedule1A?: import("@/engine/schedules/schedule-1-a.js").Schedule1AResult;
   form8995?: import("@/engine/forms/form-8995.js").Form8995Result;
   form8995A?: import("@/engine/forms/form-8995-a.js").Form8995AResult;
   form8936?: import("@/engine/forms/form-8936.js").Form8936Result;
   form8801?: import("@/engine/forms/form-8801.js").Form8801Result;
+  qofInclusion?: import("@/engine/forms/qof-inclusion.js").QofInclusionResult;
+  claimOfRight?: import("@/engine/forms/claim-of-right.js").ClaimOfRightResult;
+  currentMinimumTaxCredit?: import("@/engine/forms/current-minimum-tax-credit.js").CurrentMinimumTaxCreditResult;
+  codZeroMinimumTaxCreditBound?: import("@/engine/forms/cod-zero-minimum-tax-credit-bound.js").CodZeroMinimumTaxCreditBound;
   form4684?: import("@/engine/forms/form-4684.js").Form4684Result;
   form4952?: import("@/engine/forms/form-4952.js").Form4952Result;
+  form4952Amt?: import("@/engine/forms/form-4952.js").Form4952Result;
   scheduleH?: import("@/engine/forms/schedule-h.js").ScheduleHResult;
   schedule2?: import("@/engine/schedules/schedule-2.js").Schedule2Result;
   schedule3?: import("@/engine/schedules/schedule-3.js").Schedule3Result;
@@ -258,19 +316,25 @@ export interface TaxReturnResult {
   form2555?: import("@/engine/forms/form-2555.js").Form2555Result;
   form8615?: import("@/engine/forms/form-8615.js").Form8615Result;
   form8814?: import("@/engine/forms/form-8814.js").AggregatedForm8814;
+  form5695?: import("@/engine/forms/form-5695.js").Form5695Result;
   form8839?: import("@/engine/forms/form-8839.js").Form8839Result;
   form461?: import("@/engine/forms/form-461.js").Form461Result;
   scheduleJ?: import("@/engine/forms/schedule-j.js").ScheduleJResult;
   form3800?: import("@/engine/forms/form-3800.js").Form3800Result;
   form1099Q?: import("@/engine/forms/form-1099-q.js").Form1099QResult;
+  form1099OID?: import("@/engine/forms/form-1099-oid.js").Form1099OIDResult;
   form1099K?: import("@/engine/forms/form-1099-k.js").Form1099KResult;
   partnerBasisSchedules?: import("@/engine/forms/partner-basis-schedule.js").PartnerBasisScheduleResult[];
   form8915F?: import("@/engine/forms/form-8915-f.js").Form8915FResult;
+  form1099G?: import("@/engine/forms/form-1099-g.js").Form1099GResult;
   taxableRefundWorksheet?: import("@/engine/forms/taxable-refund-worksheet.js").TaxableRefundWorksheetResult;
+  taxableStateRefundRecoveries?: import("@/engine/forms/taxable-state-refund-recoveries.js").TaxableStateRefundRecoveriesResult;
   /** State and local general sales tax deduction worksheet result */
   salesTaxDeduction?: import("@/engine/forms/state-sales-tax-deduction-worksheet.js").SalesTaxDeductionResult;
   /** Form 1098-E student loan interest aggregation summary */
   form1098ESummary?: import("@/engine/forms/form-1098-e.js").Form1098EResult;
+  /** Actual borrower, benefit and canonical MAGI source worksheet. */
+  studentLoanInterestWorksheet?: ReturnType<typeof import("@/engine/forms/student-loan-interest.js").calculateStudentLoanInterestDeduction>;
   /** K-1 Form 1041 trust/estate beneficiary income aggregation summary */
   scheduleK1Form1041Summary?: {
     numberOfK1s: number;
@@ -302,7 +366,9 @@ export interface TaxReturnResult {
     illinois?: import("@/engine/state/il-1040.js").IL1040Result;
     pennsylvania?:
       | import("@/engine/state/pa-orchestrator.js").PAOrchestratorResult
-      | import("@/engine/state/pa-nonresident-orchestrator.js").PANonresidentOrchestratorResult;
+      | import("@/engine/state/pa-nonresident-orchestrator.js").PANonresidentOrchestratorResult
+      | import("@/engine/state/pa-ordinary-return.js").PAOrdinaryReturnResult
+      | import("@/engine/state/pa-married-ordinary-return.js").PAMarriedOrdinaryReturnResult;
     newJersey?: import("@/engine/state/nj-1040.js").NJ1040Result;
     newYork?: import("@/engine/state/ny-it201-full-return.js").NYIT201FullReturnResult;
   };

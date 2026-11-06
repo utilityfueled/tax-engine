@@ -63,7 +63,7 @@ describe("Zero income scenarios", () => {
   });
 
   it("SALT deduction is zero when no taxes paid", () => {
-    const salt = calculateSALTDeduction(d(0), d(0), c);
+    const salt = calculateSALTDeduction(d(0), d(0), c, d(100000), "single");
     expect(salt.toNumber()).toBe(0);
   });
 });
@@ -101,16 +101,20 @@ describe("Very high income — top bracket", () => {
     expect(result.medicarePortion.toNumber()).toBe(13391);
   });
 
-  it("CTC fully phased out for single at $240K AGI", () => {
-    // 1 child. Excess = $40K → $40K/$1K × $50 = $2,000 reduction
-    const credit = calculateChildTaxCredit(1, 0, d(240000), "single", c);
+  it("CTC fully phased out for single at $244K AGI", () => {
+
+    const credit = calculateChildTaxCredit(1, 0, d(244000), "single", c);
+    // 2025 worksheet: child credit 0 + ODC 0 = 0.
+    // 2025 worksheet: child credit 0 + ODC 0 = 0.
     expect(credit.total.toNumber()).toBe(0);
   });
 
   it("CTC for 5 children with MFJ $450K", () => {
-    // Max = 5 × $2K = $10K. Excess = $50K → 50 × $50 = $2,500 reduction
+
     const credit = calculateChildTaxCredit(5, 0, d(450000), "married_filing_jointly", c);
-    expect(credit.total.toNumber()).toBe(7500);
+    // 2025 worksheet: child credit 8500 + ODC 0 = 8500.
+    // 2025 worksheet: child credit 8500 + ODC 0 = 8500.
+    expect(credit.total.toNumber()).toBe(8500);
   });
 });
 
@@ -141,17 +145,17 @@ describe("Small income edge values", () => {
   });
 
   it("SALT exactly at $10K cap", () => {
-    const salt = calculateSALTDeduction(d(5000), d(5000), c);
+    const salt = calculateSALTDeduction(d(5000), d(5000), c, d(100000), "single");
     expect(salt.toNumber()).toBe(10000);
   });
 
-  it("SALT $1 over cap", () => {
-    const salt = calculateSALTDeduction(d(5000), d(5001), c);
-    expect(salt.toNumber()).toBe(10000); // Capped
+  it("SALT $1 above the former $10K limit remains deductible in 2025", () => {
+    const salt = calculateSALTDeduction(d(5000), d(5001), c, d(100000), "single");
+    expect(salt.toNumber()).toBe(10001); // Capped
   });
 
   it("SALT well under cap", () => {
-    const salt = calculateSALTDeduction(d(2000), d(1000), c);
+    const salt = calculateSALTDeduction(d(2000), d(1000), c, d(100000), "single");
     expect(salt.toNumber()).toBe(3000);
   });
 });
@@ -848,10 +852,6 @@ describe("SE income at Social Security wage base boundary", () => {
 
 describe("Extreme number of dependents — 10 qualifying children", () => {
   it("MFJ with 10 qualifying children at $100K income — CTC partially or fully available", () => {
-    // Max CTC = 10 × $2,000 = $20,000. Phase-out threshold MFJ = $400,000.
-    // AGI $100K << threshold → no phase-out → full $20K CTC available
-    // Taxes on taxable income ($100K - $30K std = $70K) ≈ $7,830
-    // CTC nonrefundable is limited to tax liability; remainder becomes ACTC (refundable)
     const fixture = {
       ...simpleW2Fixture,
       taxpayer: {
@@ -885,10 +885,8 @@ describe("Extreme number of dependents — 10 qualifying children", () => {
       }],
     };
     const result = calculateFederalTax(fixture);
-    // 10 children × $2K = $20K max CTC; no phase-out at $100K AGI
-    // Total credits (CTC nonrefundable + ACTC refundable) should be $20K
     const totalCTCBenefit = result.childTaxCredit.plus(result.form8812!.actc);
-    expect(totalCTCBenefit.toNumber()).toBe(20000);
+    expect(totalCTCBenefit.toNumber()).toBe(22000);
     expect(result.taxableIncome.toNumber()).toBe(68500);
   });
 });

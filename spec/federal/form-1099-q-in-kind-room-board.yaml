@@ -1,0 +1,69 @@
+form: "Form1099Q in-kind room and board"
+fullName: "Actual prepaid room-and-board benefits limited by school source costs"
+taxYear: 2026
+irsReference: "https://uscode.house.gov/us/usc/119-118/t26/s529/"
+sources:
+  - "https://www.irs.gov/publications/p970"
+  - "https://www.irs.gov/instructions/i1099q"
+notes: |
+  Sources refreshed October 25, 2026. IRC529(e)(3)(B) limits room and board
+  to actual half-time enrollment and the greater of the school allowance or
+  actual institution-owned housing charge. Sections529(c)(3)(A),(B)(i),(iv)
+  govern the provided benefit and its recipient. Pub970 chapter7 supplies the
+  earnings fraction and additional tax; Form1099Q instructions include actual
+  in-kind benefits in Box1. Applying the limited qualified expense to the
+  original benefit uses the ordinary earnings fraction; this is a derived
+  statutory/instruction interpretation, not a published in-kind IRS example
+  or independent human qualification.
+  This partial method requires one actual distribution and one room-and-board
+  expense/allocation for that beneficiary, with known zero refunds, assistance,
+  credit and other-benefit reductions. It does not allocate a shared category
+  cap across mixed cash/ESA/other expense sources. Unrelated beneficiaries stay
+  separate. Full existing exclusions retain their prior source requirements.
+  K12 statutory language expressly describes cash distributions; no K12 prepaid
+  partial method or arbitrary annual cap interpretation is added here.
+lines:
+  - line: "school-cap"
+    description: "Apply the actual room-and-board category cap to a provided benefit"
+    formula: "Benefit4000, earnings800, basis3200, half-time true and school allowance3000/housing0 produce AQEE3000, excluded600, taxable200, additional tax20. Actual school housing3500 gives700/100/10. Expense10000 with benefit4000 does not dilute the cap. Original benefit and allocation remain4000."
+    testRef: "tests/engine/forms/form-1099-q-in-kind-room-board.test.ts::limits the original benefit using actual school costs"
+  - line: "known-zero-and-rounding"
+    description: "Preserve known zero, enrollment and exact Decimal boundaries"
+    formula: "Unknown half-time, allowance or housing rejects. Known false enrollment or known zero school costs excludes0, taxes800 and produces80additional tax. Allowance2997.50/2997.49 yields600/599excluded earnings. Exact original source amounts above Number.MAX_SAFE_INTEGER survive without floating point."
+    testRef: "tests/engine/forms/form-1099-q-in-kind-room-board.test.ts::preserves enrollment zero and exact monetary boundaries"
+  - line: "partial-source-boundary"
+    description: "Require the actual bounded source group without inventing allocations"
+    formula: "Positive refund/assistance/credit/other reductions, multiple beneficiary distributions or expenses, partial entered benefit costs, changed year and missing school facts remain unavailable. A separate beneficiary cannot consume this beneficiary's cap. Actual source facts remain unchanged."
+    testRef: "tests/engine/forms/form-1099-q-in-kind-room-board.test.ts::rejects missing facts and unsupported partial source groups"
+  - line: "canonical-recipient"
+    description: "Carry taxable earnings and additional tax to the actual recipient"
+    formula: "Actual primary wages50000 plus200earnings gives50200AGI and20additional tax in2025 and isolated2026 law tests. An actually different beneficiary remains outside the return; a false outside-owner label rejects. Existing unqualified2026 entry/export gates remain closed."
+    testRef: "tests/engine/education-in-kind-room-board-return.test.ts::carries school-limited benefit earnings and tax to the actual recipient"
+  - line: "source-bound-review"
+    description: "Bind school facts and original benefit costs before producing a review"
+    formula: "The saved2025 reference retains original4000benefit/allocation,3000qualified cost,600exclusion,200taxable earnings and20additional tax. Changes to enrollment, allowance or housing reject against the audit even if another school amount leaves the same maximum. Every page keeps its review notice and excludes private source identifiers."
+    testRef: "tests/pdf/form-1099-q-in-kind-room-board-summary.test.ts::binds school sources and reopens exact review amounts"
+  - line: "guided-school-facts"
+    description: "Preserve the actual school facts through the existing guided collector"
+    formula: "The collector retains original4000benefit/allocation, half-time true, allowance3000 and housing0 separately; missing school cost or enrollment blocks the source bridge. It does not replace the benefit with3000 or infer a school allowance."
+    testRef: "tests/guided-interview/guided-education-distributions.test.ts::preserves actual school facts for a limited in-kind benefit"
+  - line: "actual-beneficiary-identity"
+    description: "Reject aliases of the same actual student before using separate caps"
+    formula: "For a partial method with multiple source beneficiary IDs, require actual distinct normalized student tax IDs. Two IDs sharing one actual student, or missing identities that cannot establish separation, reject before income routing. Distinct actual students retain separate caps. No tax identifier is added to the audit."
+    testRef: "tests/engine/education-in-kind-room-board-return.test.ts::rejects duplicate actual student aliases before applying separate school limits"
+  - line: "private-review-context"
+    description: "Validate original identities before clearing review identifiers"
+    formula: "A private nonserializable context recomputes the original return and binds actual sources and education results. A render-only redacted copy may use that exact context; altered sources, retained results or a fabricated context reject. Original identifiers remain private and are never added to PDF fields or audit output."
+    testRef: "tests/pdf/education-review-context.test.ts::preserves distinct actual students across review redaction without accepting stale evidence"
+  - line: "packet-context-before-output"
+    description: "Validate the original education evidence before reading templates or writing a packet"
+    formula: "A redacted multi-student packet with its exact original private context preserves primary Form5329 income200 and additional tax20 and includes the source reference. Changed source facts, changed retained results or a fabricated context fail before template access and leave the output directory empty."
+    testRef: "tests/pdf/education-review-context.test.ts::validates education evidence before packet I/O and preserves redacted owner amounts"
+  - line: "workspace-original-identity"
+    description: "Preserve verified distinct students through the actual workspace download"
+    formula: "Two actual students with4000benefit/800earnings each and school caps3000/1000 retain600/200excluded earnings. The primary recipient contributes200taxable earnings and20additional tax; the outside recipient stays outside. Guided input stays unchanged and the saved merged PDF contains no student identifiers."
+    testRef: "tests/apps/web/workspace-filled-return.test.ts::binds distinct in-kind students before redacting the actual workspace packet"
+  - line: "rendering-taxpayer-binding"
+    description: "Bind the private context to the actual rendering taxpayer and filing facts"
+    formula: "The prepared context also binds original or exactly redacted taxpayer facts, including year, status and recipient identities. Changing the primary identity after preparing an otherwise identical education result rejects before either full-packet or direct Form5329 template access. Direct Form5329 without a context validates the original return rather than trusting an owner label. No identifier or its digest is exposed."
+    testRef: "tests/pdf/education-review-context.test.ts::rejects a prepared education context for a changed rendering taxpayer before I/O"

@@ -1,3 +1,5 @@
+import { readOhioResidentCreditSource, type OhioResidentCreditSourceContext } from "./oh-resident-credit-source.js";
+import type { OhioSchoolDistrictSourceProjection } from './oh-sd-100-sources.js';
 /**
  * Ohio Resident Return — Full orchestrator.
  *
@@ -15,9 +17,16 @@
  */
 
 import Decimal from "decimal.js";
+import { readOhioReciprocalWageSource, type OhioReciprocalWageContext } from "./oh-reciprocal-wage-source.js";
+import { calculateOhioDatedPaymentInterest } from "./oh-payment-dated-source.js";
+import type { OhioPaymentSourceProjection } from "./oh-payment-source.js";
+import type { OhioDatedPartIIResult } from "./oh-it-sd-2210-dated.js";
+import type { OhioCanonicalBusinessContext } from "./oh-business-source.js";
+import type {OhioResidencyFacts} from "@/models/ohio-residency.js";
+import {calculateOhioITNRC} from "./oh-it-nrc.js";
 import type { FilingStatus } from "@/models/constants.js";
 import type { CalculatedLine } from "@/models/outputs.js";
-import { d, zeroFloor } from "@/utils/decimal.js";
+import { d, roundDollar, zeroFloor } from "@/utils/decimal.js";
 import {
   type OhioCollegeGrantRoomAndBoardEntry,
   type OhioEducatorExpense,
@@ -62,6 +71,18 @@ import {
 // ---------------------------------------------------------------------------
 
 export interface OhioResidentReturnInput {
+  schoolDistrictSource?:OhioSchoolDistrictSourceProjection;
+  sdEstimatedPaymentSchedule?:EstimatedPaymentEntry[];
+  residency?:OhioResidencyFacts;
+  residencyBusinessSource?:OhioCanonicalBusinessContext;
+  residencyReciprocalWageSource?:OhioReciprocalWageContext;
+  residencyResidentCreditSource?:OhioResidentCreditSourceContext;
+  residencySourceDigest?:string;
+  paymentSourceDigest?:string;
+  paymentDatedSource?:OhioPaymentSourceProjection;
+  paymentMethodVersion?:string;
+  paymentTaxCoverage?:{status:'no_remaining_tax'|'expected_payment'|'actual_payment';date?:string;amountAppliedToTax?:Decimal|string|number};
+  paymentTiming?:{kind:'filed'|'expected';valuationDate:string;asOfDate:string};
   taxYear: number;
   filingStatus: FilingStatus;
   federalAgi: Decimal | string | number;
@@ -230,6 +251,8 @@ export interface OhioResidentReturnInput {
 // ---------------------------------------------------------------------------
 
 export interface OhioResidentReturnResult {
+  schoolDistrictSource?:OhioSchoolDistrictSourceProjection;
+  nonresidentCreditResult:ReturnType<typeof calculateOhioITNRC>|null;
   scheduleOfAdjustments: OhioScheduleOfAdjustmentsResult;
   it1040: OhioIT1040Result;
   scheduleOfCredits: OhioScheduleOfCreditsResult;
@@ -237,6 +260,7 @@ export interface OhioResidentReturnResult {
   residentCredit: OhioResidentCreditResult | null;
   /** IT/SD 2210 result, or null if underpayment penalty was not auto-computed. */
   itsd2210: OhioITSD2210Result | null;
+  itsd2210Dated: OhioDatedPartIIResult | null;
   /** SD 100 IT/SD 2210 result, or null if school district underpayment penalty was not auto-computed. */
   sdItsd2210: OhioITSD2210Result | null;
   /** SD 100 result, or null if no school districts were provided. */
@@ -252,7 +276,26 @@ export function calculateOhioResidentReturn(
   input: OhioResidentReturnInput,
 ): OhioResidentReturnResult {
   // Step 1: Schedule of Adjustments
+  const hasSourceQualifiedResidentCredit = (
+    input.residency !== undefined
+    || input.residencySourceDigest !== undefined
+    || input.paymentSourceDigest !== undefined
+  ) && (input.otherStateTaxes !== undefined || input.residentCredit !== undefined);
+  if ((input.residency?.residentCreditSources || hasSourceQualifiedResidentCredit)
+    && !input.residencyResidentCreditSource) {
+    throw new Error('Ohio actual resident-credit sources require current original context');
+  }
+  const residentSource = input.residencyResidentCreditSource && input.residency
+    ? readOhioResidentCreditSource(input.residencyResidentCreditSource,input.residency,input) : undefined;
+  if(input.residencyResidentCreditSource&&!residentSource)throw new Error('Ohio actual resident-credit sources require current owner facts');
+  if (input.residency?.reciprocalWageSources && !input.residencyReciprocalWageSource) {
+    throw new Error('Ohio actual reciprocal wages require their current unforgeable original context');
+  }
+  const reciprocal = input.residencyReciprocalWageSource && input.residency
+    ? readOhioReciprocalWageSource(input.residencyReciprocalWageSource, input.residency, input.federalAgi, input) : undefined;
+  if (input.residencyReciprocalWageSource && !reciprocal) throw new Error('Ohio actual reciprocal wage owner originals required');
   const adjustments = calculateOhioScheduleOfAdjustments({
+    reciprocityWages: reciprocal?.deduction,
     taxYear: input.taxYear,
     filingStatus: input.filingStatus,
     federalAgi: input.federalAgi,
@@ -293,6 +336,13 @@ export function calculateOhioResidentReturn(
     medicalCareExpenses: input.medicalCareExpenses,
     otherDeductions: input.otherDeductions,
   });
+
+  if (reciprocal && (!adjustments.line14_totalAdditions.isZero() || !adjustments.line47_totalDeductions.eq(reciprocal.deduction)
+    || !d(input.ohioWithholding).eq(reciprocal.withholding) || !d(input.estimatedPayments).isZero()
+    || !input.paymentSourceDigest || !input.residencySourceDigest || !input.paymentTiming
+    || input.residentCredit !== undefined || input.nonresidentCredit !== undefined || (input.otherStateTaxes?.length??0))) {
+    throw new Error('Ohio actual reciprocal wage return projections contradict current source context');
+  }
 
   // Step 2: IT 1040 first pass — compute tax before credits to feed the Schedule of Credits
   const firstPass = calculateOhioIT1040({
@@ -367,7 +417,7 @@ export function calculateOhioResidentReturn(
     affordableSingleFamilyHousingCredit:
       input.affordableSingleFamilyHousingCredit,
     otherSecondBatchCredits: input.otherSecondBatchCredits,
-    nonresidentCredit: input.nonresidentCredit,
+    nonresidentCredit: input.residency ? new Decimal(0) : input.nonresidentCredit,
     residentCredit: new Decimal(0),
     refundableHistoricPreservationCredit: input.refundableHistoricPreservationCredit,
     refundableJobCreationCredit: input.refundableJobCreationCredit,
@@ -377,6 +427,8 @@ export function calculateOhioResidentReturn(
     ventureCapitalCredit: input.ventureCapitalCredit,
   });
 
+  const nonresidentCreditResult=input.residency?calculateOhioITNRC({taxYear:input.taxYear,filingStatus:input.filingStatus,federalAgi:input.federalAgi,ohioAgi:firstPass.line3_ohioAgi,taxRemainingBeforeResidencyCredits:creditsPreview.line37_taxLessAllCredits,residencyFacts:reciprocal?.nrcFacts??input.residency,businessSource:input.residencyBusinessSource}):null;
+  const nonresidentCreditAmount=nonresidentCreditResult?.line20??input.nonresidentCredit;
   // Step 3b: Compute resident credit (if other-state taxes provided and no pass-through override)
   let residentCreditResult: OhioResidentCreditResult | null = null;
   let residentCreditAmount = input.residentCredit;
@@ -389,7 +441,7 @@ export function calculateOhioResidentReturn(
     residentCreditResult = calculateOhioResidentCredit({
       ohioAgi: firstPass.line3_ohioAgi,
       ohioTaxBeforeCredits: zeroFloor(
-        creditsPreview.line37_taxLessAllCredits.minus(creditsPreview.line38_nonresidentCredit)
+        creditsPreview.line37_taxLessAllCredits.minus(d(nonresidentCreditAmount))
       ),
       otherStates: input.otherStateTaxes,
     });
@@ -454,7 +506,7 @@ export function calculateOhioResidentReturn(
     affordableSingleFamilyHousingCredit:
       input.affordableSingleFamilyHousingCredit,
     otherSecondBatchCredits: input.otherSecondBatchCredits,
-    nonresidentCredit: input.nonresidentCredit,
+    nonresidentCredit: nonresidentCreditAmount,
     residentCredit: residentCreditAmount,
     refundableHistoricPreservationCredit: input.refundableHistoricPreservationCredit,
     refundableJobCreationCredit: input.refundableJobCreationCredit,
@@ -466,6 +518,7 @@ export function calculateOhioResidentReturn(
 
   // Step 3d: IT/SD 2210 — Compute underpayment penalty if requested
   let itsd2210: OhioITSD2210Result | null = null;
+  let itsd2210Dated: OhioDatedPartIIResult | null = null;
   let underpaymentPenalty = input.underpaymentPenalty;
 
   if (input.computeUnderpaymentPenalty && underpaymentPenalty === undefined) {
@@ -474,15 +527,37 @@ export function calculateOhioResidentReturn(
       firstPass.line8c_totalTax.minus(credits.line40_totalNonrefundableCredits)
     );
 
+    if(input.paymentSourceDigest && !input.paymentDatedSource){
+      const liability=roundDollar(line10Preview.minus(input.refundableCredits??credits.line47_totalRefundableCredits));
+      const withheld=roundDollar(d(input.ohioWithholding));
+      const schedule=input.estimatedPaymentSchedule??[];
+      const endpoints=[['2025-04-15','0.25'],['2025-06-16','0.50'],['2025-09-15','0.75'],['2026-01-15','1.00']] as const;
+      const estimatesThrough=(date:string)=>roundDollar(schedule.filter(row=>row.date<=date).reduce((sum,row)=>sum.plus(row.amount),new Decimal(0)));
+      const annualPaid=withheld.plus(estimatesThrough('2026-01-15'));
+      const covered=(required:Decimal)=>endpoints.every(([date,percentage])=>roundDollar(withheld.times(percentage)).plus(estimatesThrough(date)).gte(roundDollar(required.times(percentage))));
+      const currentRequired=roundDollar(liability.times('0.90'));
+      const priorRequired=roundDollar(d(input.priorYearTaxLiability));
+      if((annualPaid.gte(currentRequired)&&!covered(currentRequired))||(input.priorYearTimelyFiled&&annualPaid.gte(priorRequired)&&!covered(priorRequired))){
+        throw new Error('Ohio actual payment sources: actual timely installment coverage requires its separate dated payment method');
+      }
+    }
+
+    if (input.paymentDatedSource) {
+      const dated = calculateOhioDatedPaymentInterest(input.paymentDatedSource,
+        line10Preview.minus(input.refundableCredits ?? credits.line47_totalRefundableCredits), d(input.ohioWithholding));
+      itsd2210 = dated.worksheet;
+      itsd2210Dated = dated.partII;
+    } else {
     itsd2210 = calculateOhioITSD2210({
       taxYear: input.taxYear,
-      currentYearTaxLiability: line10Preview,
+      currentYearTaxLiability: line10Preview.minus(input.refundableCredits ?? credits.line47_totalRefundableCredits),
       ohioWithholding: d(input.ohioWithholding),
       estimatedPayments: d(input.estimatedPayments),
       priorYearTaxLiability: input.priorYearTaxLiability,
       priorYearTimelyFiled: input.priorYearTimelyFiled,
       estimatedPaymentSchedule: input.estimatedPaymentSchedule,
     });
+    }
 
     underpaymentPenalty = itsd2210.line17_totalPenalty;
   }
@@ -509,6 +584,15 @@ export function calculateOhioResidentReturn(
     creditCarryforward: input.creditCarryforward,
     donations: input.donations,
   });
+
+  if(input.paymentSourceDigest){
+    const coverage=input.paymentTaxCoverage;
+    const remaining=it1040.line10_taxAfterCredits.minus(it1040.line16_refundableCredits).minus(it1040.line14_ohioWithholding).minus(it1040.line15_estimatedPayments);
+    if(!coverage||(coverage.status==='no_remaining_tax'?remaining.gt(0):d(coverage.amountAppliedToTax).lt(Decimal.max(remaining,0))))throw new Error('Ohio actual payment sources: remaining-tax payment source does not cover actual remaining tax');
+  }
+  if(input.paymentSourceDigest&&d(input.creditCarryforward).plus(d(input.donations)).gt(it1040.line23_overpayment)){
+    throw new Error('Ohio actual payment sources: refund elections exceed actual overpayment');
+  }
 
   // Step 5: SD 100 — School District Income Tax (if districts provided)
   let sdItsd2210: OhioITSD2210Result | null = null;
@@ -539,6 +623,7 @@ export function calculateOhioResidentReturn(
         estimatedPayments: d(input.sdEstimatedPayments),
         priorYearTaxLiability: input.sdPriorYearTaxLiability,
         priorYearTimelyFiled: input.sdPriorYearTimelyFiled,
+        estimatedPaymentSchedule: input.sdEstimatedPaymentSchedule,
       });
 
       sdUnderpaymentPenalty = sdItsd2210.line17_totalPenalty;
@@ -560,23 +645,36 @@ export function calculateOhioResidentReturn(
     });
   }
 
+  if(input.schoolDistrictSource){
+    if(!itsd2210?.line17_totalPenalty.isZero()||!sdItsd2210?.line17_totalPenalty.isZero())throw new Error('Ohio actual school district sources: separate positive/combined2210 penalty method required');
+    if(!sd100||!sd100.line16_taxDue.isZero()||d(input.sdCreditCarryforward).gt(sd100.line19_overpayment))throw new Error('Ohio actual school district sources: remaining-tax coverage or outgoing election contradicts actual return');
+  }
   // Combine audit trails: Adjustments → Resident Credit → Credits → IT/SD 2210 → IT 1040 → SD 100
   const lines = [
     ...adjustments.lines,
     ...(residentCreditResult ? residentCreditResult.lines : []),
+    ...(nonresidentCreditResult?.lines??[]),
+    ...(residentSource?[{form:"OH-RESIDENT-CREDIT",line:"actual-resident-credit-source-commitment",description:"Actual current same-income paid other-state original sources",value:new Decimal(0),formula:"Complete actual private source commitment; no private references printed",inputs:{"Original source commitment":residentSource.sourceCommitment}}]:[]),
+    ...(input.residencySourceDigest?[{form:"OH-IT-NRC",line:"actual-source-commitment",description:"Actual Ohio owner residency original sources",value:new Decimal(0),formula:"Complete source commitment; no private source references printed",inputs:{"Original source commitment":input.residencySourceDigest}}]:[]),
+    ...(input.paymentSourceDigest?[{form:'OH-IT/SD-2210',line:'actual-payment-source-commitment',description:'Actual Ohio current account payment sources',value:new Decimal(0),formula:'Current actual private originals; digest only',inputs:{'Original source commitment':input.paymentSourceDigest,'State method version':input.paymentMethodVersion??'','Tax year':String(input.taxYear),'Timing kind':input.paymentTiming?.kind??'','Return filed/expected date':input.paymentTiming?.valuationDate??'','As of date':input.paymentTiming?.asOfDate??'','Remaining-tax payment kind':input.paymentTaxCoverage?.status??'','Remaining-tax payment date':input.paymentTaxCoverage?.date??''}}]:[]),
     ...credits.lines,
     ...(itsd2210 ? itsd2210.lines : []),
     ...it1040.lines,
     ...(sdItsd2210 ? sdItsd2210.lines : []),
     ...(sd100 ? sd100.lines : []),
+    ...(input.schoolDistrictSource?.residentIncome.lines??[]),
+    ...(input.schoolDistrictSource?.lines??[]),
   ];
 
   return {
+    ...(input.schoolDistrictSource?{schoolDistrictSource:input.schoolDistrictSource}:{}),
     scheduleOfAdjustments: adjustments,
     it1040,
     scheduleOfCredits: credits,
     residentCredit: residentCreditResult,
+    nonresidentCreditResult,
     itsd2210,
+    itsd2210Dated,
     sdItsd2210,
     sd100,
     lines,

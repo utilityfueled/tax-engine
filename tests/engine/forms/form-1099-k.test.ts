@@ -653,10 +653,11 @@ describe("Form 1099-K Payment Card and Third Party Network Transactions", () => 
       expect(form1099KLines.length).toBeGreaterThan(0);
 
       const withholdingLine = result.allLines.find(
-        (l) => l.form === "1040" && l.line === "25d"
+        (l) => l.form === "1040" && l.line === "25b"
       );
       expect(withholdingLine).toBeDefined();
       expect(withholdingLine!.formula).toContain("1099-K");
+      expect(withholdingLine?.value.toString()).toBe("18000");
     });
 
     it("Form 1099-K - backup withholding reduces amount owed", () => {

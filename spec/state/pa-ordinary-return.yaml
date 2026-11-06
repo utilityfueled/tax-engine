@@ -1,0 +1,72 @@
+form: "PA-Ordinary-Return"
+fullName: "Source-bound ordinary Pennsylvania return composition"
+taxYear: 2026
+reference: "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40in.pdf"
+notes: |
+  Source contract pinned before spec/tests/product in durable November2 evidence.
+  Replays unchanged source facts and pure forms for all three residency statuses.
+  This first composition retains single living unmarried ordinary household and
+  fixed April15 balance-payment boundary; richer methods remain internal work.
+  Local return obligations are explicit unresolved boundaries, never zero tax.
+  No complete-state, final2026form, humanqualification or filing promotion claim.
+lines:
+  - line: "classes"
+    description: Actual PA classes for resident, part-year resident and nonresident
+    formula: Replay actual residency sources and unchanged complete facts; feed exact compensation/interest to PA40 once. Other classes and adjustments require explicit actual confirmed-none residency sources. Never use federalAGI or synthesize a full orchestrator result.
+    testRef: "tests/engine/state/pa-ordinary-return.test.ts::PA ordinary return composes all three actual residency bases"
+  - line: "sp"
+    description: Worldwide Schedule SP and dependent claimant sources
+    formula: Actual PA taxable income plus every reported complete SP addition, including excluded outsidePA/reciprocal compensation and bank interest. Replay actual SP using actual household/dependent qualification, tax12 and actual residentcredit. Carry actual forgiveness into printed21 and REV2.
+    testRef: "tests/engine/state/pa-ordinary-return.test.ts::PA ordinary return retains worldwide SP rather than PA-only eligibility"
+  - line: "credits"
+    description: Actual credit absence must be established from original eligibility sources
+    formula: Require complete actual owner/year other-jurisdiction paid-tax histories, OC awards/transfers/carryforwards, original care-payment/benefit sources and NRK1 statement review. Unknown is not zero; no not-claim election. Any retained positive unsupported source requires its method; fresh federal care credit cannot be suppressed.
+    testRef: "tests/engine/state/pa-ordinary-return.test.ts::PA ordinary return guards unknown or positive unsupported credit sources %s"
+  - line: "wptc"
+    description: Fresh federal earned-income credit and actual PA service earnings
+    formula: Calculate federal return from unchanged actual input, then pure WPTC from its EIC and complete actual PA service compensation, including reciprocal-excluded earnings. 2025printed totals exclude processing-only WPTC; label estimated credit and tax/refund adjustment separately with no remapping of user refund elections.
+    testRef: "tests/engine/state/pa-ordinary-return.test.ts::PA ordinary return derives WPTC from fresh federal EIC independently of reciprocity"
+  - line: "use-tax"
+    description: Actual itemized use tax and independently reconciled principal
+    formula: Use frozen facts worksheet liability for25, no scalaroverride. Reconcile actual or expected April15 principal exactly against printed taxdue before penalties; zero principal requires explicit no-remaining-tax source. Never infer payment date or change source originals.
+    testRef: "tests/engine/state/pa-ordinary-return.test.ts::PA ordinary return includes actual use tax and reconciles payment principal"
+  - line: "rev1630"
+    description: Actual receipt timing and published fixed-endpoint worksheet
+    formula: Reported13+17+21+22+23 only forREV2; actual estimates by published due date and available priorcarryQ1. April15 extension never becomes January15Q4. Require separate dated method when a later receipt can satisfy earlier positive underpayment. Preserve actual priorreturn/fullforgiveness distinctions and no inferred 2027rate.
+    testRef: "tests/engine/state/pa-ordinary-return.test.ts::PA ordinary return keeps April15 extension out of Q4 and preserves prior-source distinction"
+  - line: "late-filing"
+    description: Actual statutory late-filing minimum with timely principal
+    formula: TaxReformCode352(a) and61PaCode121.26 require monthly5percent up to25percent with minimum5dollars for late filing. Firstmonthlybase reduces timely paid tax/credits. Under admitted fully paid April15 principal route, late filing still incurs5minimum absent actual waiver successor; timelyfiling0. Actual or expected is labelled; no lateinterest inferred and no arbitrary latepayment admitted.
+    testRef: "tests/engine/state/pa-ordinary-return.test.ts::PA ordinary return applies late-filing minimum despite timely paid tax"
+  - line: "disposition"
+    description: Fresh printed29 exact requested refund, next-year credit and donations
+    formula: Replay frozen explicit elections against final printed29 after use/REV/latepenalties; no automaticrefund. Actual2025 WPTC processing reference never changes printed allocation or masquerades as final refund. Penalty codes E/L/B derived from actual positive components.
+    testRef: "tests/engine/state/pa-ordinary-return.test.ts::PA ordinary return reconciles exact final refund allocation"
+  - line: "local-boundary"
+    description: Actual local obligation is retained separately from state return
+    formula: Require actual complete residence/work jurisdiction sources and explicit separate local return obligations; return jurisdiction references as private source-bound boundary and unresolved local readiness blocker. Do not invent local rate, taxzero or not-subject status. Missing/unknown local facts stop composition.
+    testRef: "tests/engine/state/pa-ordinary-return.test.ts::PA ordinary return preserves explicit separate local obligations"
+  - line: "commitment"
+    description: Typed packet digest binds all originals without leaking source data in audit
+    formula: SHA256 combines unchanged ordinaryfacts sourcecommitment and complete new sourcepacket; return typed PA40/SP/REV/WPTC/form selectors, no cast to fullPAOrchestratorResult. Digest-only audit excludes private originals; pure computation never mutates caller input/facts.
+    testRef: "tests/engine/state/pa-ordinary-return.test.ts::PA ordinary return binds sources and leaves originals unchanged"
+  - line: "readiness"
+    description: Review-only current and draft year readiness
+    formula: Actual2025 computation reviewonly. Fresh federal replay currently rejects the incomplete2026 global rulepack before state composition; never bypass it for a draft result. If independently completed later,2026 remains unqualified for final forms and positiveunexceptedREV1630 requires sourced2027daily rate. Frozen presentstateLocalSources guard persists until its independently reviewed row successor; no readinessgate weakened.
+    testRef: "tests/engine/state/pa-ordinary-return.test.ts::PA ordinary return retains draft2026 and actual source guards"
+  - line: "incomplete-completion-sources"
+    description: Current actual completion source identity and completeness
+    formula: Current owner/year/originals, exact complete-through-asof payment history and actual agency relief records required; missing facts and scalar penalty overrides are rejected before arithmetic.
+    testRef: "tests/engine/state/pa-ordinary-return.test.ts::PA ordinary return rejects incomplete completion source %s"
+  - line: "dated-successor-boundary"
+    description: Later endpoint payments can clear earlier outstanding principal
+    formula: Published fixed-endpoint pure REV1630 cannot substitute for a dated-payment ledger when a later positive estimate pays earlier underpayment. Guard this case rather than invent endpoint interest to April15.
+    testRef: "tests/engine/state/pa-ordinary-return.test.ts::PA ordinary return guards later payments against earlier actual underpayment"
+  - line: "late-filing-required-return"
+    description: Statutory minimum applies to required original returns
+    formula: PA40IN p4 requires annual return for actual PA gross taxable income over33 or loss. Under ordinary no-other-class source scope, late returns with at most33 taxable income and no actual loss must use their voluntary/filing-requirement successor; do not invent minimum5 on a reciprocal-only credit/refund claim.
+    testRef: "tests/engine/state/pa-ordinary-return.test.ts::PA ordinary return guards late voluntary reciprocal-only returns"
+  - line: "jurisdiction-payment-history"
+    description: Missing actual outside-state payment history cannot prove no resident credit
+    formula: A complete no-paid jurisdiction history must include every actual outsidePA domicile and retained state income withholding jurisdiction; outsidePA compensation needs an actual jurisdiction history. An empty array cannot establish no other-state tax when actual outsidePA work or domicile sources remain.
+    testRef: "tests/engine/state/pa-ordinary-return.test.ts::PA ordinary return requires actual outside-state payment history"

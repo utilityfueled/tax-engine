@@ -1,3 +1,10 @@
+import { guidedPABridgeComplete } from "../fixtures/guided-pa-bridge-complete";
+import { syntheticStudentLoanFacts } from "../fixtures/student-loan-source";
+import { energySource, sourceImprovement, sourceCleanProperty } from "../fixtures/energy-source";
+import { completeCareSource } from "./care-source-fixture";
+import { completeRentalSource, completeNecSource, completeBusinessSection, completeBusinessExpenses, completeMortgageSource, completeMortgageWorksheet, completeRetirementSource, completeSocialSecuritySource, completeSocialSecurityTreatment, completeUnemploymentSource } from "./complete-facts";
+import { completeBrokerageSource, completeDividendSource, completeInterestSource, completeTransactionSource } from "./complete-facts";
+import { completeHsaSources, completeW2Entry, startCompleteInterview as startInterview, completePersonalInfo, completeDependent, completeAocEligibility, completeEducationClaimant, completeHouseholdEmployee } from "./complete-facts";
 import { describe, it, expect } from "vitest";
 import {
   buildTaxInputFromGuidedData,
@@ -50,8 +57,8 @@ import {
   emptySocialSecurityData,
   emptyUnemploymentData,
   emptyStateReturnData,
+  type StateReturnData,
   emptyDependentEntry,
-  startInterview,
   updateSectionData,
 } from "@/lib/guided-interview-flow";
 
@@ -103,11 +110,11 @@ describe("buildW2Inputs", () => {
     expect(result[0].federalWithheld).toBe("5000");
   });
 
-  it("defaults employer name and EIN when empty", () => {
+  it("keeps missing employer identifiers empty", () => {
     const entry = { ...emptyW2Entry, wages: "50000" };
     const result = buildW2Inputs([entry]);
-    expect(result[0].employer.name).toBe("Employer");
-    expect(result[0].employer.ein).toBe("00-0000000");
+    expect(result[0].employer.name).toBe("");
+    expect(result[0].employer.ein).toBe("");
   });
 
   it("handles multiple W-2s", () => {
@@ -128,11 +135,11 @@ describe("buildW2Inputs", () => {
     expect(result[0].federalWithheld).toBe("5000");
   });
 
-  it("converts empty sub-fields to zero", () => {
+  it("preserves blank payroll sub-fields as unknown", () => {
     const entry = { ...emptyW2Entry, wages: "50000" };
     const result = buildW2Inputs([entry]);
-    expect(result[0].socialSecurityWages).toBe("0");
-    expect(result[0].medicareWages).toBe("0");
+    expect(result[0].socialSecurityWages).toBeUndefined();
+    expect(result[0].medicareWages).toBeUndefined();
   });
 
   it("ignores AI-filled wages and withholding until they are confirmed", () => {
@@ -210,12 +217,12 @@ describe("buildW2Inputs", () => {
       expect.objectContaining({
         wages: "52000",
         federalWithheld: "5000",
-        socialSecurityWages: "0",
-        socialSecurityWithheld: "0",
-        medicareWages: "0",
-        medicareWithheld: "0",
-        stateWages: "0",
-        stateTaxWithheld: "0",
+        socialSecurityWages: undefined,
+        socialSecurityWithheld: undefined,
+        medicareWages: undefined,
+        medicareWithheld: undefined,
+        stateWages: undefined,
+        stateTaxWithheld: undefined,
       }),
     ]);
   });
@@ -228,7 +235,7 @@ describe("buildNecInputs", () => {
     expect(buildNecInputs(undefined)).toEqual([]);
   });
 
-  it("skips entries with zero compensation", () => {
+  it("skips untouched entries without inventing a zero amount", () => {
     expect(buildNecInputs([emptyNecEntry])).toEqual([]);
   });
 
@@ -238,7 +245,7 @@ describe("buildNecInputs", () => {
     expect(result).toHaveLength(1);
     expect(result[0].payer).toBe("Client A");
     expect(result[0].nonemployeeCompensation).toBe("10000");
-    expect(result[0].stateWithheld).toBe("0");
+    expect(result[0].stateWithheld).toBeUndefined();
   });
 });
 
@@ -255,7 +262,7 @@ describe("buildScheduleCInput", () => {
       { ...emptyNecEntry, nonemployeeCompensation: "5000" },
       { ...emptyNecEntry, nonemployeeCompensation: "3000" },
     ];
-    const result = buildScheduleCInput(entries, undefined, emptyScheduleCExpenses);
+    const result = buildScheduleCInput(entries, "0", emptyScheduleCExpenses);
     expect(result?.grossReceipts).toBe("8000");
   });
 
@@ -271,107 +278,28 @@ describe("buildScheduleCInput", () => {
     const result = buildScheduleCInput(entries, undefined, expenses);
     expect(result?.expenses?.officeExpense).toBe("500");
     expect(result?.expenses?.travel).toBe("1200");
-    expect(result?.expenses?.advertising).toBe("0");
+    expect(result?.expenses?.advertising).toBeUndefined();
   });
 });
 
 // ── Dependents ──────────────────────────────────────────────────────────────
 
 describe("buildDependents", () => {
-  it("returns empty array for zero or empty", () => {
+  it("returns an empty list only for an explicit zero or no entries", () => {
     expect(buildDependents("0")).toEqual([]);
-    expect(buildDependents("")).toEqual([]);
     expect(buildDependents(undefined)).toEqual([]);
+    expect(() => buildDependents("")).toThrow();
   });
-
-  it("creates the right number of dependents", () => {
-    expect(buildDependents("2")).toHaveLength(2);
-    expect(buildDependents("3")).toHaveLength(3);
+  it("rejects missing details rather than making eligible children", () => {
+    for (const count of ["1", "2", "100", "-1", "2.5"]) expect(() => buildDependents(count)).toThrow();
+    expect(() => buildDependents("1", [emptyDependentEntry])).toThrow();
+    expect(() => buildDependents("1", [{ ...completeDependent, dateOfBirth: "" }])).toThrow();
   });
-
-  it("caps at 20", () => {
-    expect(buildDependents("100")).toHaveLength(20);
-  });
-
-  it("creates dependents with required fields including qualifiesForCTC", () => {
-    const deps = buildDependents("1");
-    expect(deps[0].firstName).toBe("Dependent");
-    expect(deps[0].relationship).toBe("child");
-    expect(deps[0].monthsLivedWithYou).toBe(12);
-    expect(deps[0].qualifiesForCTC).toBe(true);
-    expect(deps[0].qualifiesForODC).toBe(false);
-    expect(deps[0].qualifiesForEIC).toBe(false);
-  });
-
-  it("uses detailed dependent data when provided", () => {
-    const detailed = [
-      {
-        ...emptyDependentEntry,
-        firstName: "Alice",
-        lastName: "Smith",
-        ssn: "123-45-6789",
-        dateOfBirth: "2018-03-15",
-        relationship: "child" as const,
-        monthsLivedWithYou: "12",
-        qualifiesForCTC: true,
-        qualifiesForODC: false,
-        qualifiesForEIC: true,
-      },
-    ];
-    const deps = buildDependents("1", detailed);
-    expect(deps).toHaveLength(1);
-    expect(deps[0].firstName).toBe("Alice");
-    expect(deps[0].lastName).toBe("Smith");
-    expect(deps[0].ssn).toBe("123-45-6789");
-    expect(deps[0].dateOfBirth).toBe("2018-03-15");
-    expect(deps[0].relationship).toBe("child");
-    expect(deps[0].monthsLivedWithYou).toBe(12);
-    expect(deps[0].qualifiesForCTC).toBe(true);
-    expect(deps[0].qualifiesForODC).toBe(false);
-    expect(deps[0].qualifiesForEIC).toBe(true);
-  });
-
-  it("filters out dependents with empty names", () => {
-    const detailed = [
-      { ...emptyDependentEntry, firstName: "Bob", lastName: "Jones" },
-      { ...emptyDependentEntry, firstName: "", lastName: "" },
-    ];
-    const deps = buildDependents("2", detailed);
-    expect(deps).toHaveLength(1);
-    expect(deps[0].firstName).toBe("Bob");
-  });
-
-  it("falls back to placeholder generation when detailed array is empty", () => {
-    const deps = buildDependents("2", []);
-    expect(deps).toHaveLength(2);
-    expect(deps[0].firstName).toBe("Dependent");
-    expect(deps[0].qualifiesForCTC).toBe(true);
-  });
-
-  it("uses default dateOfBirth when not provided in detailed data", () => {
-    const detailed = [
-      { ...emptyDependentEntry, firstName: "Carol", lastName: "Lee", dateOfBirth: "" },
-    ];
-    const deps = buildDependents("1", detailed);
-    expect(deps[0].dateOfBirth).toBe("2015-01-01");
-  });
-
-  it("ODC dependent does not qualify for CTC", () => {
-    const detailed = [
-      {
-        ...emptyDependentEntry,
-        firstName: "David",
-        lastName: "Park",
-        dateOfBirth: "2006-06-01",
-        relationship: "child" as const,
-        qualifiesForCTC: false,
-        qualifiesForODC: true,
-        qualifiesForEIC: false,
-      },
-    ];
-    const deps = buildDependents("1", detailed);
-    expect(deps[0].qualifiesForCTC).toBe(false);
-    expect(deps[0].qualifiesForODC).toBe(true);
+  it("preserves supplied dependent identity and eligibility", () => {
+    expect(buildDependents("1", [completeDependent])).toEqual([{ ...completeDependent, monthsLivedWithYou: 12 }]);
+    const older = { ...completeDependent, dateOfBirth: "2006-06-01", qualifiesForCTC: false, qualifiesForODC: true };
+    expect(buildDependents("1", [older])[0].qualifiesForCTC).toBe(false);
+    expect(buildDependents("1", [older])[0].qualifiesForODC).toBe(true);
   });
 });
 
@@ -396,13 +324,13 @@ describe("buildInterestInputs", () => {
     expect(result).toHaveLength(1);
     expect(result[0].payer).toBe("Chase Bank");
     expect(result[0].interestIncome).toBe("150");
-    expect(result[0].federalWithheld).toBe("0");
+    expect(result[0].federalWithheld).toBeUndefined();
   });
 
-  it("defaults payer name when empty", () => {
+  it("preserves a missing payer name for validation", () => {
     const entry = { ...emptyInterestEntry, interestIncome: "100" };
     const result = buildInterestInputs([entry]);
-    expect(result[0].payer).toBe("Financial Institution");
+    expect(result[0].payer).toBe("");
   });
 
   it("handles multiple entries", () => {
@@ -448,7 +376,7 @@ describe("buildDividendInputs", () => {
     expect(result[0].payer).toBe("Vanguard");
     expect(result[0].ordinaryDividends).toBe("2000");
     expect(result[0].qualifiedDividends).toBe("1500");
-    expect(result[0].totalCapitalGainDistributions).toBe("0");
+    expect(result[0].totalCapitalGainDistributions).toBeUndefined();
     expect(result[0].section199ADividends).toBe("25");
     expect(result[0].foreignTaxPaid).toBe("10");
   });
@@ -460,10 +388,10 @@ describe("buildDividendInputs", () => {
     expect(result[0].totalCapitalGainDistributions).toBe("500");
   });
 
-  it("defaults payer name when empty", () => {
+  it("preserves a missing payer name for validation", () => {
     const entry = { ...emptyDividendEntry, ordinaryDividends: "100" };
     const result = buildDividendInputs([entry]);
-    expect(result[0].payer).toBe("Brokerage");
+    expect(result[0].payer).toBe("");
   });
 });
 
@@ -496,8 +424,8 @@ describe("buildBrokerageInputs", () => {
     expect(result[0].transactions[0].proceeds).toBe("15000");
     expect(result[0].transactions[0].costBasis).toBe("10000");
     expect(result[0].transactions[0].holdingPeriod).toBe("long");
-    expect(result[0].transactions[0].basisReportedToIRS).toBe(true);
-    expect(result[0].transactions[0].digitalAsset).toBe(false);
+    expect(result[0].transactions[0].basisReportedToIRS).toBeUndefined();
+    expect(result[0].transactions[0].digitalAsset).toBeUndefined();
   });
 
   it("preserves basis-reporting and digital-asset flags from guided transactions", () => {
@@ -523,7 +451,7 @@ describe("buildBrokerageInputs", () => {
     });
   });
 
-  it("defaults broker name and description when empty", () => {
+  it("preserves missing broker and property names for validation", () => {
     const entry = {
       broker: "",
       transactions: [
@@ -531,8 +459,8 @@ describe("buildBrokerageInputs", () => {
       ],
     };
     const result = buildBrokerageInputs([entry]);
-    expect(result[0].broker).toBe("Broker");
-    expect(result[0].transactions[0].description).toBe("Securities");
+    expect(result[0].broker).toBe("");
+    expect(result[0].transactions[0].description).toBe("");
   });
 
   it("filters out transactions with no proceeds or cost basis", () => {
@@ -584,7 +512,7 @@ describe("buildTaxInputFromGuidedData", () => {
     expect(buildTaxInputFromGuidedData(state)).toBeNull();
   });
 
-  it("builds a valid input with just filing status", () => {
+  it("builds an input from an explicit year and complete taxpayer facts", () => {
     const state = startInterview({
       filingStatus: "single",
       incomeTypes: ["w2-wages"],
@@ -606,7 +534,7 @@ describe("buildTaxInputFromGuidedData", () => {
       stateCode: "CA",
     });
     state = updateSectionData(state, "personal-info", {
-      ...emptyPersonalInfo,
+      ...completePersonalInfo,
       firstName: "Jane",
       middleName: "Quinn",
       lastName: "Doe",
@@ -629,7 +557,7 @@ describe("buildTaxInputFromGuidedData", () => {
       stateCode: null,
     });
     state = updateSectionData(state, "income-w2", {
-      entries: [{ ...emptyW2Entry, employerName: "Acme", wages: "75000", federalWithheld: "8000" }],
+      entries: [{ ...completeW2Entry, employerName: "Acme", wages: "75000", federalWithheld: "8000" }],
     });
     const input = buildTaxInputFromGuidedData(state);
     expect(input!.w2s).toHaveLength(1);
@@ -644,9 +572,10 @@ describe("buildTaxInputFromGuidedData", () => {
       stateCode: null,
     });
     state = updateSectionData(state, "income-self-employment", {
-      necEntries: [{ ...emptyNecEntry, payerName: "Client", nonemployeeCompensation: "50000" }],
-      manualGrossReceipts: "",
-      expenses: { ...emptyScheduleCExpenses, officeExpense: "1000" },
+      ...completeBusinessSection,
+      necEntries: [{ ...completeNecSource, payerName: "Client", nonemployeeCompensation: "50000" }],
+      manualGrossReceipts: "0",
+      expenses: { ...completeBusinessExpenses, officeExpense: "1000" },
     });
     const input = buildTaxInputFromGuidedData(state);
     expect(input!.form1099Nec).toHaveLength(1);
@@ -662,9 +591,10 @@ describe("buildTaxInputFromGuidedData", () => {
       stateCode: null,
     });
     state = updateSectionData(state, "income-self-employment", {
+      ...completeBusinessSection,
       necEntries: [emptyNecEntry],
       manualGrossReceipts: "18500",
-      expenses: { ...emptyScheduleCExpenses, supplies: "250" },
+      expenses: { ...completeBusinessExpenses, supplies: "250" },
     });
     const input = buildTaxInputFromGuidedData(state);
     expect(input!.form1099Nec).toEqual([]);
@@ -672,7 +602,7 @@ describe("buildTaxInputFromGuidedData", () => {
     expect(input!.scheduleC?.expenses?.supplies).toBe("250");
   });
 
-  it("includes dependents from personal info", () => {
+  it("includes explicitly supplied dependents from personal info", () => {
     let state = startInterview({
       filingStatus: "hoh",
       incomeTypes: ["w2-wages"],
@@ -680,8 +610,9 @@ describe("buildTaxInputFromGuidedData", () => {
       stateCode: null,
     });
     state = updateSectionData(state, "personal-info", {
-      ...emptyPersonalInfo,
+      ...completePersonalInfo,
       dependentCount: "2",
+      dependents: [completeDependent, { ...completeDependent, firstName: "Blair", ssn: "444-55-6666" }],
     });
     const input = buildTaxInputFromGuidedData(state);
     expect(input!.taxpayer.dependents).toHaveLength(2);
@@ -695,11 +626,12 @@ describe("buildTaxInputFromGuidedData", () => {
       stateCode: null,
     });
     state = updateSectionData(state, "income-investments", {
-      interestEntries: [{ ...emptyInterestEntry, payer: "Chase", interestIncome: "500" }],
-      dividendEntries: [{ ...emptyDividendEntry, payer: "Vanguard", ordinaryDividends: "2000", qualifiedDividends: "1500" }],
+      interestEntries: [{ ...completeInterestSource, payer: "Chase", interestIncome: "500" }],
+      dividendEntries: [{ ...completeDividendSource, payer: "Vanguard", ordinaryDividends: "2000", qualifiedDividends: "1500" }],
       brokerageEntries: [{
+        ...completeBrokerageSource,
         broker: "Fidelity",
-        transactions: [{ ...emptyCapitalGainTransaction, proceeds: "15000", costBasis: "10000", holdingPeriod: "long" as const }],
+        transactions: [{ ...completeTransactionSource, proceeds: "15000", costBasis: "10000", holdingPeriod: "long" as const }],
       }],
     });
     const input = buildTaxInputFromGuidedData(state);
@@ -768,7 +700,7 @@ describe("computeGuidedPreview", () => {
     });
     // Wages $30,000 with $5,000 withheld — should get a refund
     state = updateSectionData(state, "income-w2", {
-      entries: [{ ...emptyW2Entry, wages: "30000", federalWithheld: "5000" }],
+      entries: [{ ...completeW2Entry, wages: "30000", federalWithheld: "5000" }],
     });
     const preview = computeGuidedPreview(state);
     expect(preview).not.toBeNull();
@@ -786,7 +718,7 @@ describe("computeGuidedPreview", () => {
     });
     state = updateSectionData(state, "income-w2", {
       entries: [{
-        ...emptyW2Entry,
+        ...completeW2Entry,
         employerName: "Official fixture employer",
         employerEin: "12-3456789",
         wages: "52000",
@@ -813,13 +745,10 @@ describe("computeGuidedPreview", () => {
     });
 
     const preview = computeGuidedPreview(state);
-    expect(preview).not.toBeNull();
-    expect(preview!.totalIncome).toBe("0");
-    expect(preview!.totalPayments).toBe("0");
-    expect(preview!.refund).toBe("0");
+    expect(preview).toBeNull();
   });
 
-  it("computes preview for filer with dependents (placeholder path)", () => {
+  it("computes preview for filer with explicitly supplied dependents", () => {
     let state = startInterview({
       filingStatus: "mfj",
       incomeTypes: ["w2-wages"],
@@ -827,13 +756,14 @@ describe("computeGuidedPreview", () => {
       stateCode: null,
     });
     state = updateSectionData(state, "personal-info", {
-      ...emptyPersonalInfo,
+      ...completePersonalInfo,
       firstName: "Jane",
       lastName: "Doe",
       dependentCount: "2",
+      dependents: [completeDependent, { ...completeDependent, firstName: "Blair", ssn: "444-55-6666" }],
     });
     state = updateSectionData(state, "income-w2", {
-      entries: [{ ...emptyW2Entry, wages: "80000", federalWithheld: "10000" }],
+      entries: [{ ...completeW2Entry, wages: "80000", federalWithheld: "10000" }],
     });
     const preview = computeGuidedPreview(state);
     // This was previously null because of missing qualifiesForCTC field
@@ -849,12 +779,12 @@ describe("computeGuidedPreview", () => {
       stateCode: null,
     });
     state = updateSectionData(state, "personal-info", {
-      ...emptyPersonalInfo,
+      ...completePersonalInfo,
       firstName: "Jane",
       lastName: "Doe",
       dependentCount: "1",
       dependents: [{
-        ...emptyDependentEntry,
+        ...completeDependent,
         firstName: "Junior",
         lastName: "Doe",
         dateOfBirth: "2018-05-10",
@@ -866,7 +796,7 @@ describe("computeGuidedPreview", () => {
       }],
     });
     state = updateSectionData(state, "income-w2", {
-      entries: [{ ...emptyW2Entry, wages: "80000", federalWithheld: "10000" }],
+      entries: [{ ...completeW2Entry, wages: "80000", federalWithheld: "10000" }],
     });
     const preview = computeGuidedPreview(state);
     expect(preview).not.toBeNull();
@@ -883,7 +813,7 @@ describe("computeGuidedPreview", () => {
       stateCode: null,
     });
     state = updateSectionData(state, "income-w2", {
-      entries: [{ ...emptyW2Entry, wages: "200000", federalWithheld: "0" }],
+      entries: [{ ...completeW2Entry, wages: "200000", federalWithheld: "0" }],
     });
     const preview = computeGuidedPreview(state);
     expect(preview).not.toBeNull();
@@ -899,8 +829,9 @@ describe("computeGuidedPreview", () => {
       stateCode: null,
     });
     state = updateSectionData(state, "income-self-employment", {
-      necEntries: [{ ...emptyNecEntry, nonemployeeCompensation: "50000" }],
-      expenses: { ...emptyScheduleCExpenses, officeExpense: "5000" },
+      ...completeBusinessSection,
+      necEntries: [{ ...completeNecSource, nonemployeeCompensation: "50000" }],
+      expenses: { ...completeBusinessExpenses, officeExpense: "5000" },
     });
     const preview = computeGuidedPreview(state);
     expect(preview).not.toBeNull();
@@ -916,11 +847,12 @@ describe("computeGuidedPreview", () => {
       stateCode: null,
     });
     state = updateSectionData(state, "income-w2", {
-      entries: [{ ...emptyW2Entry, wages: "60000", federalWithheld: "8000" }],
+      entries: [{ ...completeW2Entry, wages: "60000", federalWithheld: "8000" }],
     });
     state = updateSectionData(state, "income-self-employment", {
-      necEntries: [{ ...emptyNecEntry, nonemployeeCompensation: "30000" }],
-      expenses: emptyScheduleCExpenses,
+      ...completeBusinessSection,
+      necEntries: [{ ...completeNecSource, nonemployeeCompensation: "30000" }],
+      expenses: completeBusinessExpenses,
     });
     const preview = computeGuidedPreview(state);
     expect(preview).not.toBeNull();
@@ -937,7 +869,7 @@ describe("computeGuidedPreview", () => {
     });
     // Use a large enough amount to exceed the standard deduction
     state = updateSectionData(state, "income-investments", {
-      interestEntries: [{ ...emptyInterestEntry, interestIncome: "25000" }],
+      interestEntries: [{ ...completeInterestSource, interestIncome: "25000" }],
       dividendEntries: [emptyDividendEntry],
       brokerageEntries: [emptyBrokerageEntry],
     });
@@ -956,7 +888,7 @@ describe("computeGuidedPreview", () => {
     });
     state = updateSectionData(state, "income-investments", {
       interestEntries: [emptyInterestEntry],
-      dividendEntries: [{ ...emptyDividendEntry, ordinaryDividends: "8000", qualifiedDividends: "6000" }],
+      dividendEntries: [{ ...completeDividendSource, ordinaryDividends: "8000", qualifiedDividends: "6000" }],
       brokerageEntries: [emptyBrokerageEntry],
     });
     const preview = computeGuidedPreview(state);
@@ -975,8 +907,9 @@ describe("computeGuidedPreview", () => {
       interestEntries: [emptyInterestEntry],
       dividendEntries: [emptyDividendEntry],
       brokerageEntries: [{
+        ...completeBrokerageSource,
         broker: "Fidelity",
-        transactions: [{ ...emptyCapitalGainTransaction, proceeds: "20000", costBasis: "10000", holdingPeriod: "long" as const }],
+        transactions: [{ ...completeTransactionSource, proceeds: "20000", costBasis: "10000", holdingPeriod: "long" as const }],
       }],
     });
     const preview = computeGuidedPreview(state);
@@ -993,11 +926,11 @@ describe("computeGuidedPreview", () => {
       stateCode: null,
     });
     state = updateSectionData(state, "income-w2", {
-      entries: [{ ...emptyW2Entry, wages: "80000", federalWithheld: "12000" }],
+      entries: [{ ...completeW2Entry, wages: "80000", federalWithheld: "12000" }],
     });
     state = updateSectionData(state, "income-investments", {
-      interestEntries: [{ ...emptyInterestEntry, interestIncome: "1000" }],
-      dividendEntries: [{ ...emptyDividendEntry, ordinaryDividends: "3000", qualifiedDividends: "2000" }],
+      interestEntries: [{ ...completeInterestSource, interestIncome: "1000" }],
+      dividendEntries: [{ ...completeDividendSource, ordinaryDividends: "3000", qualifiedDividends: "2000" }],
       brokerageEntries: [emptyBrokerageEntry],
     });
     const preview = computeGuidedPreview(state);
@@ -1014,8 +947,9 @@ describe("computeGuidedPreview", () => {
       stateCode: null,
     });
     state = updateSectionData(state, "income-self-employment", {
-      necEntries: [{ ...emptyNecEntry, nonemployeeCompensation: "100000" }],
-      expenses: emptyScheduleCExpenses,
+      ...completeBusinessSection,
+      necEntries: [{ ...completeNecSource, nonemployeeCompensation: "100000" }],
+      expenses: completeBusinessExpenses,
     });
     state = updateSectionData(state, "payments", {
       estimatedPayments: [
@@ -1037,16 +971,19 @@ describe("computeGuidedPreview", () => {
       stateCode: null,
     });
     state = updateSectionData(state, "income-self-employment", {
-      necEntries: [{ ...emptyNecEntry, nonemployeeCompensation: "80000" }],
-      expenses: emptyScheduleCExpenses,
+      ...completeBusinessSection,
+      necEntries: [{ ...completeNecSource, nonemployeeCompensation: "80000" }],
+      expenses: completeBusinessExpenses,
     });
-    // First compute without adjustments
+    // Actual zero HSA contributions establish the comparison baseline.
+    state = updateSectionData(state, "adjustments", { ...emptyAdjustmentData, hsaAccounts: [{ ...completeHsaSources, contributionsMade: "0" }] });
     const previewWithout = computeGuidedPreview(state);
 
     // Now add HSA deduction
     state = updateSectionData(state, "adjustments", {
       ...emptyAdjustmentData,
       hsaDeduction: "3600",
+      hsaAccounts: [{ ...completeHsaSources, contributionsMade: "3600" }],
     });
     const previewWith = computeGuidedPreview(state);
 
@@ -1082,8 +1019,9 @@ describe("buildScheduleAInput", () => {
     });
     expect(result).not.toBeUndefined();
     expect(result!.medicalExpenses).toBe("5000");
-    // State + real estate combined into personalPropertyTaxes
-    expect(result!.personalPropertyTaxes).toBe("11000");
+    expect(result!.additionalStateLocalIncomeTaxes).toBe("8000");
+    expect(result!.realEstateTaxes).toBe("3000");
+    expect(result!.personalPropertyTaxes).toBeUndefined();
   });
 });
 
@@ -1107,10 +1045,12 @@ describe("buildForm1098Inputs", () => {
       ...emptyDeductionData,
       method: "itemized",
       mortgageInterest: "12000",
-    });
+      mortgageEntries: [{ ...completeMortgageSource, lender: "Actual Lender", mortgageInterest: "12000", interestPaidByReturnAmount: "12000", outstandingPrincipal: "250000", originationDate: "2019-06-01" }],
+      mortgageWorksheet: { ...completeMortgageWorksheet },
+    }, 2025, "single");
     expect(result).toHaveLength(1);
     expect(result[0].mortgageInterestReceived).toBe("12000");
-    expect(result[0].lender).toBe("Mortgage Lender");
+    expect(result[0].lender).toBe("Actual Lender");
   });
 });
 
@@ -1134,11 +1074,12 @@ describe("buildDonationsInput", () => {
       ...emptyDeductionData,
       method: "itemized",
       charitableContributions: "5000",
+      donationEntries: [{ qualifiedOrganization: true, organization: "Actual Charity", type: "cash", amount: "5000", date: "2025-10-01", costBasis: "", isLongTermCapitalGain: null, isPrivateFoundation: false }],
     });
     expect(result).toHaveLength(1);
     expect(result[0].amount).toBe("5000");
     expect(result[0].type).toBe("cash");
-    expect(result[0].organization).toBe("Charitable Organization");
+    expect(result[0].organization).toBe("Actual Charity");
   });
 });
 
@@ -1153,7 +1094,7 @@ describe("itemized deductions in preview", () => {
       stateCode: null,
     });
     state = updateSectionData(state, "income-w2", {
-      entries: [{ ...emptyW2Entry, wages: "100000", federalWithheld: "15000" }],
+      entries: [{ ...completeW2Entry, wages: "100000", federalWithheld: "15000" }],
     });
 
     // Standard deduction baseline
@@ -1165,7 +1106,10 @@ describe("itemized deductions in preview", () => {
       ...emptyDeductionData,
       method: "itemized",
       mortgageInterest: "18000",
+      mortgageEntries: [{ ...completeMortgageSource, lender: "Actual Lender", mortgageInterest: "18000", interestPaidByReturnAmount: "18000", outstandingPrincipal: "250000", originationDate: "2019-06-01" }],
+      mortgageWorksheet: { ...completeMortgageWorksheet },
       charitableContributions: "5000",
+      donationEntries: [{ qualifiedOrganization: true, organization: "Actual Charity", type: "cash", amount: "5000", date: "2025-10-01", costBasis: "", isLongTermCapitalGain: null, isPrivateFoundation: false }],
       stateLocalTaxes: "10000",
     });
     const previewItemized = computeGuidedPreview(state);
@@ -1190,25 +1134,24 @@ describe("buildAdjustmentsInput", () => {
     expect(buildAdjustmentsInput(emptyAdjustmentData)).toBeUndefined();
   });
 
-  it("converts adjustment data", () => {
-    const result = buildAdjustmentsInput({
-      ...emptyAdjustmentData,
-      hsaDeduction: "3600",
-      studentLoanInterest: "2500",
-    });
-    expect(result).not.toBeUndefined();
-    expect(result!.hsaDeduction).toBe("3600");
-    expect(result!.studentLoanInterest).toBe("2500");
-    expect(result!.selfEmployedHealthInsurance).toBe("0");
-    expect(result!.primaryEducatorExpenses).toBe("0");
+  it("keeps actual HSA and student-loan worksheets outside raw adjustments", () => {
+    const sources = { ...emptyAdjustmentData, hsaDeduction: "3600",
+      hsaAccounts: [{ ...completeHsaSources, contributionsMade: "3600" }],
+      studentLoanInterest: "2500", studentLoanFacts: syntheticStudentLoanFacts(2025, "2500") };
+    expect(buildAdjustmentsInput(sources, "single", 2025)).toBeUndefined();
+    const state = startInterview({ filingStatus: "single", incomeTypes: [], lifeEvents: [], stateCode: null });
+    state.sectionData.adjustments = sources;
+    const input = buildTaxInputFromGuidedData(state);
+    expect(input?.studentLoanInterestFacts?.loans?.[0]?.interestPaid).toBe("2500");
+    expect(input?.form8889ByOwner?.primary?.contributionsMade).toBe("3600");
+    expect(input?.adjustments?.studentLoanInterest ?? "0").toBe("0");
   });
 
-  it("maps educator expenses to primaryEducatorExpenses", () => {
-    const result = buildAdjustmentsInput({
+  it("does not assign an unexplained educator aggregate to the primary taxpayer", () => {
+    expect(() => buildAdjustmentsInput({
       ...emptyAdjustmentData,
       educatorExpenses: "300",
-    });
-    expect(result!.primaryEducatorExpenses).toBe("300");
+    })).toThrow(/actual educator sources/);
   });
 });
 
@@ -1223,12 +1166,10 @@ describe("buildEstimatedPaymentsInput", () => {
     expect(buildEstimatedPaymentsInput(emptyPaymentData)).toEqual([]);
   });
 
-  it("skips entries with zero amounts", () => {
-    const result = buildEstimatedPaymentsInput({
-      estimatedPayments: [{ date: "2025-04-15", amount: "" }],
-      otherPayments: "",
-    });
-    expect(result).toEqual([]);
+  it("rejects an unknown payment amount", () => {
+    expect(() => buildEstimatedPaymentsInput({
+      estimatedPayments: [{ date: "2025-04-15", amount: "" }], otherPayments: "",
+    })).toThrow(/actual payment amount/i);
   });
 
   it("converts payment entries", () => {
@@ -1246,12 +1187,10 @@ describe("buildEstimatedPaymentsInput", () => {
     expect(result[1].date).toBe("2025-06-15");
   });
 
-  it("defaults date when empty", () => {
-    const result = buildEstimatedPaymentsInput({
-      estimatedPayments: [{ date: "", amount: "3000" }],
-      otherPayments: "",
-    });
-    expect(result[0].date).toBe("2025-04-15");
+  it("rejects an unknown payment date", () => {
+    expect(() => buildEstimatedPaymentsInput({
+      estimatedPayments: [{ date: "", amount: "3000" }], otherPayments: "",
+    })).toThrow(/actual payment date/i);
   });
 
   it("strips commas from amounts", () => {
@@ -1306,6 +1245,7 @@ describe("buildTaxInputFromGuidedData with deductions/adjustments/payments", () 
     state = updateSectionData(state, "adjustments", {
       ...emptyAdjustmentData,
       hsaDeduction: "3600",
+      hsaAccounts: [{ ...completeHsaSources, contributionsMade: "3600" }],
     });
     state = updateSectionData(state, "payments", {
       estimatedPayments: [{ date: "2025-04-15", amount: "5000" }],
@@ -1313,7 +1253,8 @@ describe("buildTaxInputFromGuidedData with deductions/adjustments/payments", () 
     });
     const input = buildTaxInputFromGuidedData(state);
     expect(input!.adjustments).toBeDefined();
-    expect(input!.adjustments!.hsaDeduction).toBe("3600");
+    expect(input!.adjustments!.hsaDeduction ?? "0").toBe("0");
+    expect(input!.form8889ByOwner!.primary!.contributionsMade).toBe("3600");
     expect(input!.adjustments!.estimatedTaxPayments).toHaveLength(1);
     expect(input!.adjustments!.estimatedTaxPayments[0].amount).toBe("5000");
   });
@@ -1360,12 +1301,17 @@ describe("buildDependentCareInput", () => {
   it("converts dependent care expenses and qualifying count", () => {
     const data = {
       ...emptyCreditsData,
-      dependentCare: { expenses: "5,000", qualifyingIndividuals: "2" },
+      dependentCare: completeCareSource({ expenses: "5,000", qualifyingIndividuals: "2", primaryEarnedIncome: "30000", spouseEarnedIncome: undefined, providers: completeCareSource().providers?.map(provider => ({ ...provider, amountPaid: "5000" })), qualifyingPersons: completeCareSource().qualifyingPersons?.map((person, index) => ({ ...person, qualifiedExpenses: index === 0 ? "5000" : "0" })) }),
     };
     const result = buildDependentCareInput(data);
     expect(result).toEqual({
       expenses: "5000",
       qualifyingIndividuals: 2,
+      primaryEarnedIncome: "30000",
+      excludedDependentCareBenefits: "0",
+      eligibilityConfirmed: true,
+      priorYearExpenseCredit: "0", sourceFactsConfirmed: true, receivedBenefits: false, usesDeemedIncome: false,
+      providers: data.dependentCare.providers, qualifyingPersons: data.dependentCare.qualifyingPersons,
     });
   });
 
@@ -1374,7 +1320,7 @@ describe("buildDependentCareInput", () => {
       ...emptyCreditsData,
       dependentCare: { expenses: "3000", qualifyingIndividuals: "" },
     };
-    expect(buildDependentCareInput(data)).toBeUndefined();
+    expect(() => buildDependentCareInput(data)).toThrow(/qualifying individuals/);
   });
 });
 
@@ -1393,8 +1339,10 @@ describe("buildEducationInput", () => {
     const data = {
       ...emptyCreditsData,
       education: {
+        ...completeEducationClaimant,
+        refundableAocEligible: false,
         aocStudents: [
-          { name: "Jane", qualifiedExpenses: "4,000", priorYearsClaimed: "1" },
+          { ...completeAocEligibility, name: "Jane", qualifiedExpenses: "4,000", priorYearsClaimed: "1" },
         ],
         llcExpenses: "",
       },
@@ -1406,27 +1354,30 @@ describe("buildEducationInput", () => {
     expect(result!.aocStudents[0].priorYearsClaimed).toBe(1);
   });
 
-  it("filters out students with no expenses", () => {
+  it("rejects a started student with unknown expenses", () => {
     const data = {
       ...emptyCreditsData,
       education: {
+        ...completeEducationClaimant,
+        refundableAocEligible: false,
         aocStudents: [
-          { name: "Jane", qualifiedExpenses: "4000", priorYearsClaimed: "0" },
+          { ...completeAocEligibility, name: "Jane", qualifiedExpenses: "4000", priorYearsClaimed: "0" },
           { name: "Empty", qualifiedExpenses: "", priorYearsClaimed: "0" },
         ],
         llcExpenses: "",
       },
     };
-    const result = buildEducationInput(data);
-    expect(result!.aocStudents).toHaveLength(1);
-    expect(result!.aocStudents[0].name).toBe("Jane");
+    expect(() => buildEducationInput(data)).toThrow(/actual qualified education expenses/i);
   });
 
   it("includes LLC expenses when filled", () => {
     const data = {
       ...emptyCreditsData,
       education: {
+        ...completeEducationClaimant,
+        refundableAocEligible: false,
         aocStudents: [],
+        llcStudents: [{ ...completeAocEligibility, name: "Jordan Example", qualifiedExpenses: "8500", courseEligibilityConfirmed: true }],
         llcExpenses: "8,500",
       },
     };
@@ -1435,16 +1386,17 @@ describe("buildEducationInput", () => {
     expect(result!.llcExpenses).toBe("8500");
   });
 
-  it("defaults student name when empty", () => {
+  it("requires the actual student name", () => {
     const data = {
       ...emptyCreditsData,
       education: {
+        ...completeEducationClaimant,
+        refundableAocEligible: false,
         aocStudents: [{ name: "", qualifiedExpenses: "2000", priorYearsClaimed: "0" }],
         llcExpenses: "",
       },
     };
-    const result = buildEducationInput(data);
-    expect(result!.aocStudents[0].name).toBe("Student");
+    expect(() => buildEducationInput(data)).toThrow(/actual student name/i);
   });
 });
 
@@ -1459,60 +1411,37 @@ describe("buildEnergyCreditsInput", () => {
     expect(buildEnergyCreditsInput(emptyCreditsData)).toBeUndefined();
   });
 
-  it("converts solar electric cost to Part I field", () => {
-    const data = {
-      ...emptyCreditsData,
-      energy: { ...emptyEnergyCreditData, solarElectricCost: "25,000" },
-    };
-    const result = buildEnergyCreditsInput(data);
-    expect(result!.solarElectricCost).toBe("25000");
-    expect(result!.solarWaterHeatingCost).toBeUndefined();
+  it("converts confirmed solar property without repeating the legacy total", () => {
+    const result = buildEnergyCreditsInput({ ...emptyCreditsData, energy: { ...emptyEnergyCreditData, ...energySource, qualifiedImprovements: [], carryforwardSourceTaxYear: "2024", solarElectricCost: "25,000", residenceEligibilityConfirmed: true, cleanEnergyProperties: [{ ...sourceCleanProperty, category: "solar_electric", qualifiedCost: "25,000", installationCompletedDate: "2025-06-01", qualificationConfirmed: true }] } }, 2025, "single");
+    expect(result?.cleanEnergyProperties?.[0].qualifiedCost).toBe("25000");
+    expect(result).not.toHaveProperty("solarElectricCost");
   });
 
-  it("aggregates insulation + doors/windows + roof into Part II insulationCost", () => {
-    const data = {
-      ...emptyCreditsData,
-      energy: {
-        ...emptyEnergyCreditData,
-        insulationCost: "1000",
-        exteriorDoorsWindowsCost: "2000",
-        roofCost: "3000",
-      },
-    };
-    const result = buildEnergyCreditsInput(data);
-    expect(result!.insulationCost).toBe("6000");
-    expect(result!.solarElectricCost).toBeUndefined();
+  it("keeps insulation and individual doors distinct and excludes confirmed ordinary roofing", () => {
+    const result = buildEnergyCreditsInput({ ...emptyCreditsData, energy: { ...emptyEnergyCreditData, ...energySource, cleanEnergyProperties: [], carryforwardSourceTaxYear: "2024", insulationCost: "1000", exteriorDoorsWindowsCost: "2000", roofCost: "3000", legacyRoofTreatment: "not_eligible", residenceEligibilityConfirmed: true, qualifiedImprovements: [
+      { ...sourceImprovement, sourceId: "insulation", category: "insulation", qualifiedCost: "1000", installationCompletedDate: "2025-06-01", qualificationConfirmed: true },
+      { ...sourceImprovement, category: "exterior_door", qualifiedCost: "2000", installationCompletedDate: "2025-06-01", qualificationConfirmed: true, manufacturerQualifiedId: "A1B2" },
+    ] } }, 2025, "single");
+    expect(result?.qualifiedImprovements?.map(({ category, qualifiedCost }) => ({ category, qualifiedCost }))).toEqual([{ category: "insulation", qualifiedCost: "1000" }, { category: "exterior_door", qualifiedCost: "2000" }]);
+    expect(result).not.toHaveProperty("insulationCost");
   });
 
-  it("aggregates HVAC + water heater into Part II energyPropertyCost", () => {
-    const data = {
-      ...emptyCreditsData,
-      energy: {
-        ...emptyEnergyCreditData,
-        energyEfficientHvacCost: "5,000",
-        waterHeaterHeatPumpCost: "3,000",
-      },
-    };
-    const result = buildEnergyCreditsInput(data);
-    expect(result!.energyPropertyCost).toBe("8000");
+  it("keeps HVAC and heat-pump expenses in their actual categories", () => {
+    const result = buildEnergyCreditsInput({ ...emptyCreditsData, energy: { ...emptyEnergyCreditData, ...energySource, cleanEnergyProperties: [], carryforwardSourceTaxYear: "2024", energyEfficientHvacCost: "5,000", waterHeaterHeatPumpCost: "3,000", residenceEligibilityConfirmed: true, qualifiedImprovements: [
+      { ...sourceImprovement, sourceId: "ac", category: "central_ac", qualifiedCost: "5,000", installationCompletedDate: "2025-06-01", qualificationConfirmed: true, manufacturerQualifiedId: "A1B2" },
+      { ...sourceImprovement, sourceId: "heat", category: "heat_pump", qualifiedCost: "3,000", installationCompletedDate: "2025-06-01", qualificationConfirmed: true, manufacturerQualifiedId: "A1B2" },
+    ] } }, 2025, "single");
+    expect(result?.qualifiedImprovements?.map(({ category, qualifiedCost }) => ({ category, qualifiedCost }))).toEqual([{ category: "central_ac", qualifiedCost: "5000" }, { category: "heat_pump", qualifiedCost: "3000" }]);
+    expect(result).not.toHaveProperty("energyPropertyCost");
   });
 
-  it("includes both Part I and Part II when both have values", () => {
-    const data = {
-      ...emptyCreditsData,
-      energy: {
-        solarElectricCost: "20000",
-        solarWaterHeatingCost: "",
-        insulationCost: "1500",
-        exteriorDoorsWindowsCost: "",
-        roofCost: "",
-        energyEfficientHvacCost: "",
-        waterHeaterHeatPumpCost: "",
-      },
-    };
-    const result = buildEnergyCreditsInput(data);
-    expect(result!.solarElectricCost).toBe("20000");
-    expect(result!.insulationCost).toBe("1500");
+  it("includes actual clean energy and home-efficiency records together", () => {
+    const result = buildEnergyCreditsInput({ ...emptyCreditsData, energy: { ...emptyEnergyCreditData, ...energySource, carryforwardSourceTaxYear: "2024", residenceEligibilityConfirmed: true,
+      cleanEnergyProperties: [{ ...sourceCleanProperty, category: "solar_electric", qualifiedCost: "20000", installationCompletedDate: "2025-06-01", qualificationConfirmed: true }],
+      qualifiedImprovements: [{ ...sourceImprovement, sourceId: "insulation", category: "insulation", qualifiedCost: "1500", installationCompletedDate: "2025-06-01", qualificationConfirmed: true }],
+    } }, 2025, "single");
+    expect(result?.cleanEnergyProperties?.[0].qualifiedCost).toBe("20000");
+    expect(result?.qualifiedImprovements?.[0].qualifiedCost).toBe("1500");
   });
 });
 
@@ -1528,12 +1457,18 @@ describe("buildTaxInputFromGuidedData — credits", () => {
     });
     state = updateSectionData(state, "credits", {
       ...emptyCreditsData,
-      dependentCare: { expenses: "6000", qualifyingIndividuals: "1" },
+      dependentCare: completeCareSource({ expenses: "6000", qualifyingIndividuals: "1", primaryEarnedIncome: "30000", spouseEarnedIncome: undefined, providers: completeCareSource().providers?.map(provider => ({ ...provider, amountPaid: "6000" })), qualifyingPersons: completeCareSource().qualifyingPersons?.slice(0, 1).map(person => ({ ...person, qualifiedExpenses: "6000" })) }),
     });
     const input = buildTaxInputFromGuidedData(state);
     expect(input!.dependentCare).toEqual({
       expenses: "6000",
       qualifyingIndividuals: 1,
+      primaryEarnedIncome: "30000",
+      excludedDependentCareBenefits: "0",
+      eligibilityConfirmed: true,
+      priorYearExpenseCredit: "0", sourceFactsConfirmed: true, receivedBenefits: false, usesDeemedIncome: false,
+      providers: completeCareSource().providers?.map(provider => ({ ...provider, amountPaid: "6000" })),
+      qualifyingPersons: completeCareSource().qualifyingPersons?.slice(0, 1).map(person => ({ ...person, qualifiedExpenses: "6000" })),
     });
   });
 
@@ -1547,7 +1482,9 @@ describe("buildTaxInputFromGuidedData — credits", () => {
     state = updateSectionData(state, "credits", {
       ...emptyCreditsData,
       education: {
-        aocStudents: [{ name: "Test", qualifiedExpenses: "4000", priorYearsClaimed: "0" }],
+        ...completeEducationClaimant,
+        refundableAocEligible: false,
+        aocStudents: [{ ...completeAocEligibility, name: "Test", qualifiedExpenses: "4000", priorYearsClaimed: "0" }],
         llcExpenses: "",
       },
     });
@@ -1565,11 +1502,11 @@ describe("buildTaxInputFromGuidedData — credits", () => {
     });
     state = updateSectionData(state, "credits", {
       ...emptyCreditsData,
-      energy: { ...emptyEnergyCreditData, solarElectricCost: "15000" },
+      energy: { ...emptyEnergyCreditData, ...energySource, qualifiedImprovements: [], carryforwardSourceTaxYear: "2024", solarElectricCost: "15000", residenceEligibilityConfirmed: true, cleanEnergyProperties: [{ ...sourceCleanProperty, category: "solar_electric", qualifiedCost: "15000", installationCompletedDate: "2025-06-01", qualificationConfirmed: true }] },
     });
     const input = buildTaxInputFromGuidedData(state);
     expect(input!.energyCredits).toBeDefined();
-    expect(input!.energyCredits!.solarElectricCost).toBe("15000");
+    expect(input!.energyCredits!.cleanEnergyProperties?.[0].qualifiedCost).toBe("15000");
   });
 
   it("omits all credit fields when credits section is empty", () => {
@@ -1603,7 +1540,7 @@ describe("buildRetirementInputs", () => {
 
   it("converts a 1099-R entry with distribution data", () => {
     const entry = {
-      ...emptyRetirementEntry,
+      ...completeRetirementSource,
       payer: "Fidelity",
       grossDistribution: "25000",
       taxableAmount: "25000",
@@ -1618,19 +1555,18 @@ describe("buildRetirementInputs", () => {
     expect(result[0].taxableAmount).toBe("25000");
     expect(result[0].federalWithheld).toBe("3000");
     expect(result[0].distributionCode).toBe("7");
-    expect(result[0].isIraSepSimple).toBe(true);
+    expect(result[0].iraSepSimple).toBe(true);
   });
 
-  it("defaults payer name when empty", () => {
+  it("requires the actual payer name", () => {
     const entry = { ...emptyRetirementEntry, grossDistribution: "10000", taxableAmount: "10000" };
-    const result = buildRetirementInputs([entry]);
-    expect(result[0].payer).toBe("Retirement Plan");
+    expect(() => buildRetirementInputs([entry])).toThrow(/actual retirement payer/i);
   });
 
   it("handles multiple 1099-Rs", () => {
     const entries = [
-      { ...emptyRetirementEntry, payer: "Vanguard", grossDistribution: "20000", taxableAmount: "20000" },
-      { ...emptyRetirementEntry, payer: "Schwab", grossDistribution: "15000", taxableAmount: "15000" },
+      { ...completeRetirementSource, accountReference: "Vanguard-source", distributionCode: "7", payer: "Vanguard", grossDistribution: "20000", taxableAmount: "20000" },
+      { ...completeRetirementSource, accountReference: "Schwab-source", distributionCode: "7", payer: "Schwab", grossDistribution: "15000", taxableAmount: "15000" },
     ];
     const result = buildRetirementInputs(entries);
     expect(result).toHaveLength(2);
@@ -1651,15 +1587,15 @@ describe("buildSocialSecurityInputs", () => {
   });
 
   it("converts SSA-1099 data with net benefits", () => {
-    const data = { netBenefits: "18000", federalWithheld: "2000" };
+    const data = { ...completeSocialSecurityTreatment, netBenefits: "18000", federalWithheld: "2000", entries: [{ ...completeSocialSecuritySource, benefitsPaid: "18000", netBenefits: "18000", federalWithheld: "2000" }] };
     const result = buildSocialSecurityInputs(data);
     expect(result).toHaveLength(1);
     expect(result[0].netBenefits).toBe("18000");
     expect(result[0].federalWithheld).toBe("2000");
   });
 
-  it("converts zero withholding", () => {
-    const data = { netBenefits: "22000", federalWithheld: "" };
+  it("converts an explicitly supplied zero withholding", () => {
+    const data = { ...completeSocialSecurityTreatment, netBenefits: "22000", federalWithheld: "0", entries: [{ ...completeSocialSecuritySource, benefitsPaid: "22000", netBenefits: "22000" }] };
     const result = buildSocialSecurityInputs(data);
     expect(result).toHaveLength(1);
     expect(result[0].federalWithheld).toBe("0");
@@ -1678,17 +1614,16 @@ describe("buildUnemploymentInputs", () => {
   });
 
   it("converts 1099-G data", () => {
-    const data = { compensation: "12000", federalWithheld: "1200" };
+    const data = { compensation: "12000", federalWithheld: "1200", entries: [{ ...completeUnemploymentSource, compensation: "12000", federalWithheld: "1200" }] };
     const result = buildUnemploymentInputs(data);
     expect(result).toHaveLength(1);
     expect(result[0].unemploymentCompensation).toBe("12000");
     expect(result[0].federalWithheld).toBe("1200");
   });
 
-  it("defaults payer to State Unemployment", () => {
+  it("rejects legacy government amounts without actual payer and withholding facts", () => {
     const data = { compensation: "8000", federalWithheld: "" };
-    const result = buildUnemploymentInputs(data);
-    expect(result[0].payer).toBe("State Unemployment");
+    expect(() => buildUnemploymentInputs(data)).toThrow();
   });
 });
 
@@ -1703,7 +1638,7 @@ describe("buildTaxInputFromGuidedData retirement and SS and unemployment", () =>
       stateCode: null,
     });
     state = updateSectionData(state, "income-retirement", {
-      entries: [{ ...emptyRetirementEntry, payer: "Fidelity", grossDistribution: "30000", taxableAmount: "30000", federalWithheld: "4500" }],
+      entries: [{ ...completeRetirementSource, distributionCode: "7", payer: "Fidelity", grossDistribution: "30000", taxableAmount: "30000", federalWithheld: "4500" }],
     });
     const input = buildTaxInputFromGuidedData(state);
     expect(input).not.toBeNull();
@@ -1719,8 +1654,7 @@ describe("buildTaxInputFromGuidedData retirement and SS and unemployment", () =>
       stateCode: null,
     });
     state = updateSectionData(state, "income-social-security", {
-      netBenefits: "20000",
-      federalWithheld: "2000",
+      ...completeSocialSecurityTreatment, netBenefits: "20000", federalWithheld: "2000", entries: [{ ...completeSocialSecuritySource, benefitsPaid: "20000", netBenefits: "20000", federalWithheld: "2000" }],
     });
     const input = buildTaxInputFromGuidedData(state);
     expect(input).not.toBeNull();
@@ -1738,6 +1672,7 @@ describe("buildTaxInputFromGuidedData retirement and SS and unemployment", () =>
     state = updateSectionData(state, "income-unemployment", {
       compensation: "15000",
       federalWithheld: "1500",
+      entries: [{ ...completeUnemploymentSource, compensation: "15000", federalWithheld: "1500" }],
     });
     const input = buildTaxInputFromGuidedData(state);
     expect(input).not.toBeNull();
@@ -1754,7 +1689,7 @@ describe("buildTaxInputFromGuidedData retirement and SS and unemployment", () =>
     });
     state = updateSectionData(state, "income-retirement", {
       entries: [{
-        ...emptyRetirementEntry,
+        ...completeRetirementSource,
         payer: "401k Plan",
         grossDistribution: "50000",
         taxableAmount: "50000",
@@ -1778,6 +1713,8 @@ describe("buildTaxInputFromGuidedData retirement and SS and unemployment", () =>
     state = updateSectionData(state, "other-taxes", {
       ...emptyOtherTaxesData,
       householdEmploymentWages: "5000",
+      householdEmployees: [{ ...completeHouseholdEmployee, cashWages: "5000" }],
+      futaApplies: false,
     });
     const input = buildTaxInputFromGuidedData(state);
     expect(input).not.toBeNull();
@@ -1841,9 +1778,12 @@ describe("buildScheduleHInput", () => {
     const result = buildScheduleHInput({
       ...emptyOtherTaxesData,
       householdEmploymentWages: "4500",
+      householdEmployees: [{ ...completeHouseholdEmployee, cashWages: "4500" }],
+      futaApplies: false,
     });
     expect(result).toEqual({
-      employees: [{ name: "Household Employee", cashWages: "4500" }],
+      employees: [{ ...completeHouseholdEmployee, cashWages: "4500" }],
+      futaApplies: false,
     });
   });
 
@@ -1851,9 +1791,12 @@ describe("buildScheduleHInput", () => {
     const result = buildScheduleHInput({
       ...emptyOtherTaxesData,
       householdEmploymentWages: "12,500",
+      householdEmployees: [{ ...completeHouseholdEmployee, cashWages: "12,500" }],
+      futaApplies: false,
     });
     expect(result).toEqual({
-      employees: [{ name: "Household Employee", cashWages: "12500" }],
+      employees: [{ ...completeHouseholdEmployee, cashWages: "12500" }],
+      futaApplies: false,
     });
   });
 
@@ -1861,9 +1804,12 @@ describe("buildScheduleHInput", () => {
     const result = buildScheduleHInput({
       ...emptyOtherTaxesData,
       householdEmploymentWages: "3200.50",
+      householdEmployees: [{ ...completeHouseholdEmployee, cashWages: "3200.50" }],
+      futaApplies: false,
     });
     expect(result).toEqual({
-      employees: [{ name: "Household Employee", cashWages: "3200.50" }],
+      employees: [{ ...completeHouseholdEmployee, cashWages: "3200.50" }],
+      futaApplies: false,
     });
   });
 });
@@ -1879,12 +1825,12 @@ describe("buildRentalPropertyInputs", () => {
     expect(buildRentalPropertyInputs([])).toEqual([]);
   });
 
-  it("filters out entries with no rents value", () => {
+  it("preserves started entries with unknown or zero rents", () => {
     const entries = [
       { ...emptyRentalPropertyEntry, description: "123 Main St", rents: "" },
       { ...emptyRentalPropertyEntry, description: "456 Oak Ave", rents: "0" },
     ];
-    expect(buildRentalPropertyInputs(entries)).toEqual([]);
+    expect(buildRentalPropertyInputs(entries).map(entry => entry.rents)).toEqual([undefined, "0"]);
   });
 
   it("converts a single rental property with all fields", () => {
@@ -1917,22 +1863,22 @@ describe("buildRentalPropertyInputs", () => {
     });
   });
 
-  it("defaults description to 'Rental Property' when empty", () => {
+  it("preserves an unknown property description", () => {
     const entries = [{ ...emptyRentalPropertyEntry, rents: "12000" }];
     const result = buildRentalPropertyInputs(entries);
-    expect(result[0].description).toBe("Rental Property");
+    expect(result[0].description).toBe("");
   });
 
-  it("converts empty expense fields to '0'", () => {
+  it("preserves empty expense fields as unknown", () => {
     const entries = [{ ...emptyRentalPropertyEntry, rents: "18000" }];
     const result = buildRentalPropertyInputs(entries);
-    expect(result[0].mortgageInterest).toBe("0");
-    expect(result[0].taxes).toBe("0");
-    expect(result[0].insurance).toBe("0");
-    expect(result[0].repairs).toBe("0");
-    expect(result[0].utilities).toBe("0");
-    expect(result[0].depreciation).toBe("0");
-    expect(result[0].otherExpenses).toBe("0");
+    expect(result[0].mortgageInterest).toBeUndefined();
+    expect(result[0].taxes).toBeUndefined();
+    expect(result[0].insurance).toBeUndefined();
+    expect(result[0].repairs).toBeUndefined();
+    expect(result[0].utilities).toBeUndefined();
+    expect(result[0].depreciation).toBeUndefined();
+    expect(result[0].otherExpenses).toBeUndefined();
   });
 
   it("strips commas from monetary values", () => {
@@ -1955,9 +1901,10 @@ describe("buildRentalPropertyInputs", () => {
       { ...emptyRentalPropertyEntry, description: "Property C", rents: "36000" },
     ];
     const result = buildRentalPropertyInputs(entries);
-    expect(result).toHaveLength(2);
+    expect(result).toHaveLength(3);
     expect(result[0].description).toBe("Property A");
-    expect(result[1].description).toBe("Property C");
+    expect(result[1].description).toBe("Property B");
+    expect(result[2].description).toBe("Property C");
   });
 
   it("preserves propertyType for different property types", () => {
@@ -1981,7 +1928,7 @@ describe("buildTaxInputFromGuidedData — rental income", () => {
     });
     state = updateSectionData(state, "income-rental", {
       entries: [{
-        ...emptyRentalPropertyEntry,
+        ...completeRentalSource,
         description: "123 Oak St",
         rents: "30000",
         mortgageInterest: "10000",
@@ -2008,7 +1955,7 @@ describe("buildTaxInputFromGuidedData — rental income", () => {
     expect(input!.rentalProperties).toEqual([]);
   });
 
-  it("filters out rental entries with zero rents", () => {
+  it("keeps an actual zero-rent property", () => {
     let state = startInterview({
       filingStatus: "single",
       incomeTypes: ["rental"],
@@ -2017,13 +1964,14 @@ describe("buildTaxInputFromGuidedData — rental income", () => {
     });
     state = updateSectionData(state, "income-rental", {
       entries: [
-        { ...emptyRentalPropertyEntry, description: "A", rents: "20000" },
-        { ...emptyRentalPropertyEntry, description: "B", rents: "" },
+        { ...completeRentalSource, description: "A", rents: "20000" },
+        { ...completeRentalSource, description: "B", rents: "0" },
       ],
     });
     const input = buildTaxInputFromGuidedData(state);
-    expect(input!.rentalProperties).toHaveLength(1);
+    expect(input!.rentalProperties).toHaveLength(2);
     expect(input!.rentalProperties[0].description).toBe("A");
+    expect(input!.rentalProperties[1].rents).toBe("0");
   });
 });
 
@@ -2037,7 +1985,7 @@ describe("computeGuidedPreview — rental income", () => {
     });
     state = updateSectionData(state, "income-rental", {
       entries: [{
-        ...emptyRentalPropertyEntry,
+        ...completeRentalSource,
         description: "Rental House",
         rents: "30000",
         mortgageInterest: "5000",
@@ -2048,12 +1996,8 @@ describe("computeGuidedPreview — rental income", () => {
     const preview = computeGuidedPreview(state);
     expect(preview).not.toBeNull();
     // Net rental income = 30000 - 5000 - 3000 - 1200 = 20800
-    // Should produce non-zero total income
-    const totalIncome = Number(preview!.totalIncome);
-    expect(totalIncome).toBeGreaterThan(0);
-    // AGI should reflect rental income
-    const agi = Number(preview!.agi);
-    expect(agi).toBeGreaterThan(0);
+    expect(preview!.totalIncome).toBe("20800");
+    expect(preview!.agi).toBe("20800");
   });
 
   it("computes preview with rental loss", () => {
@@ -2065,7 +2009,7 @@ describe("computeGuidedPreview — rental income", () => {
     });
     state = updateSectionData(state, "income-rental", {
       entries: [{
-        ...emptyRentalPropertyEntry,
+        ...completeRentalSource,
         description: "Rental Condo",
         rents: "12000",
         mortgageInterest: "15000",
@@ -2078,17 +2022,14 @@ describe("computeGuidedPreview — rental income", () => {
     expect(preview).not.toBeNull();
     // This is a loss scenario (12000 - 24000 = -12000)
     // Active participation allows up to $25k deduction
-    expect(preview!.refund).toBeDefined();
+    expect(preview!.totalIncome).toBe("-12000");
   });
 });
 
 // ── State return — preview with state estimated payments ────────────────────
 
 describe("computeGuidedPreview with state return data", () => {
-  function buildStateFlowState(stateReturnData?: {
-    stateEstimatedPayments: { date: string; amount: string }[];
-    additionalStateWithholding: string;
-  }): GuidedFlowState {
+  function buildIncompleteStateFlowState(stateReturnData?: StateReturnData): GuidedFlowState {
     let state = startInterview({
       filingStatus: "single",
       incomeTypes: ["w2-wages"],
@@ -2096,7 +2037,7 @@ describe("computeGuidedPreview with state return data", () => {
       stateCode: "PA",
     });
     state = updateSectionData(state, "personal-info", {
-      ...emptyPersonalInfo,
+      ...completePersonalInfo,
       firstName: "Jane",
       lastName: "Doe",
       state: "PA",
@@ -2104,11 +2045,11 @@ describe("computeGuidedPreview with state return data", () => {
     });
     state = updateSectionData(state, "income-w2", {
       entries: [{
-        ...emptyW2Entry,
+        ...completeW2Entry,
         employerName: "Acme Corp",
         wages: "60000",
         federalWithheld: "8000",
-        stateWages: "60000",
+        stateTaxReporting: "single", state: "PA", stateWages: "60000",
         stateWithheld: "2000",
       }],
     });
@@ -2118,7 +2059,11 @@ describe("computeGuidedPreview with state return data", () => {
     return state;
   }
 
-  it("computes state preview without state return section data", () => {
+  function buildStateFlowState(stateReturnData?: StateReturnData): GuidedFlowState {
+    return guidedPABridgeComplete(stateReturnData).state;
+  }
+
+  it("computes state preview without generic state payment entries", () => {
     const state = buildStateFlowState();
     const preview = computeGuidedPreview(state);
     expect(preview).not.toBeNull();
@@ -2131,6 +2076,7 @@ describe("computeGuidedPreview with state return data", () => {
     const state = buildStateFlowState({
       stateEstimatedPayments: [],
       additionalStateWithholding: "500",
+      additionalStateWithholdingEntries: [{ payer: "Example Pension", documentType: "1099-R", state: "PA", taxYear: "2025", amount: "500" }],
     });
     const preview = computeGuidedPreview(state);
     expect(preview).not.toBeNull();
@@ -2146,8 +2092,8 @@ describe("computeGuidedPreview with state return data", () => {
     });
     const stateWithPayments = buildStateFlowState({
       stateEstimatedPayments: [
-        { date: "2025-04-15", amount: "1000" },
-        { date: "2025-06-15", amount: "1000" },
+        { state: "PA", date: "2025-04-15", amount: "1000" },
+        { state: "PA", date: "2025-06-15", amount: "1000" },
       ],
       additionalStateWithholding: "",
     });
@@ -2177,6 +2123,19 @@ describe("computeGuidedPreview with state return data", () => {
     expect(previewDefault!.state!.stateAmountOwed).toBe(previewEmpty!.state!.stateAmountOwed);
     expect(previewDefault!.state!.stateWithholding).toBe(previewEmpty!.state!.stateWithholding);
   });
+  it("keeps the original absent and empty PA source flows incomplete", () => {
+    const originals: Array<StateReturnData | undefined> = [undefined, { ...emptyStateReturnData },
+      { stateEstimatedPayments: [], additionalStateWithholding: "500", additionalStateWithholdingEntries: [{ payer: "Example Pension", documentType: "1099-R", state: "PA", taxYear: "2025", amount: "500" }] },
+      { stateEstimatedPayments: [{ state: "PA", date: "2025-04-15", amount: "1000" }, { state: "PA", date: "2025-06-15", amount: "1000" }], additionalStateWithholding: "" }];
+    for (const data of originals) {
+      const state = buildIncompleteStateFlowState(data), before = JSON.stringify(state), preview = computeGuidedPreview(state);
+      expect(preview).not.toBeNull();
+      expect(preview?.state).toBeNull();
+      expect(JSON.stringify(state)).toBe(before);
+      expect(state.sectionData["income-w2"]?.entries[0]).toMatchObject({ employerName: "Acme Corp", wages: "60000", federalWithheld: "8000", stateWithheld: "2000" });
+      expect(state.sectionData["state-return"]?.paResidencySources).toBeUndefined();
+    }
+  });
 });
 
 // ── Guided → workspace fact sync ──────────────────────────────────────────
@@ -2200,7 +2159,7 @@ describe("buildGuidedFactAnswers", () => {
       stateCode: null,
     });
     state = updateSectionData(state, "income-w2", {
-      entries: [{ ...emptyW2Entry, wages: "52,000", federalWithheld: "6,000" }],
+      entries: [{ ...completeW2Entry, wages: "52,000", federalWithheld: "6,000" }],
     });
     const answers = buildGuidedFactAnswers(state);
     const factIds = answers.map((a) => a.factId);
@@ -2221,7 +2180,7 @@ describe("buildGuidedFactAnswers", () => {
     });
     state = updateSectionData(state, "income-w2", {
       entries: [{
-        ...emptyW2Entry,
+        ...completeW2Entry,
         employerName: "Official fixture employer",
         employerEin: "12-3456789",
         wages: "52,000",
@@ -2258,9 +2217,10 @@ describe("buildGuidedFactAnswers", () => {
       stateCode: null,
     });
     state = updateSectionData(state, "income-self-employment", {
-      necEntries: [{ ...emptyNecEntry, nonemployeeCompensation: "25000" }],
-      manualGrossReceipts: "",
-      expenses: emptyScheduleCExpenses,
+      ...completeBusinessSection,
+      necEntries: [{ ...completeNecSource, nonemployeeCompensation: "25000" }],
+      manualGrossReceipts: "0",
+      expenses: completeBusinessExpenses,
     });
     const answers = buildGuidedFactAnswers(state);
     const factIds = answers.map((a) => a.factId);
@@ -2276,15 +2236,16 @@ describe("buildGuidedFactAnswers", () => {
       stateCode: null,
     });
     state = updateSectionData(state, "income-self-employment", {
+      ...completeBusinessSection,
       necEntries: [emptyNecEntry],
       manualGrossReceipts: "9300",
-      expenses: emptyScheduleCExpenses,
+      expenses: completeBusinessExpenses,
     });
     const answers = buildGuidedFactAnswers(state);
     expect(answers).toEqual(expect.arrayContaining([
       expect.objectContaining({
         factId: "nonemployee-compensation",
-        answerText: expect.stringContaining("manual Schedule C gross receipts: $9,300"),
+        answerText: expect.stringContaining("Business gross receipts entered: $9,300"),
       }),
       expect.objectContaining({
         factId: "schedule-c-expense-review",
@@ -2300,7 +2261,7 @@ describe("buildGuidedFactAnswers", () => {
       stateCode: null,
     });
     state = updateSectionData(state, "income-investments", {
-      interestEntries: [{ ...emptyInterestEntry, interestIncome: "1500" }],
+      interestEntries: [{ ...completeInterestSource, interestIncome: "1500" }],
       dividendEntries: [emptyDividendEntry],
       brokerageEntries: [emptyBrokerageEntry],
     });
@@ -2318,7 +2279,7 @@ describe("buildGuidedFactAnswers", () => {
     });
     state = updateSectionData(state, "income-investments", {
       interestEntries: [emptyInterestEntry],
-      dividendEntries: [{ ...emptyDividendEntry, ordinaryDividends: "3000", qualifiedDividends: "2000", capitalGainDistributions: "500" }],
+      dividendEntries: [{ ...completeDividendSource, ordinaryDividends: "3000", qualifiedDividends: "2000", capitalGainDistributions: "500" }],
       brokerageEntries: [emptyBrokerageEntry],
     });
     const answers = buildGuidedFactAnswers(state);
@@ -2339,8 +2300,9 @@ describe("buildGuidedFactAnswers", () => {
       interestEntries: [emptyInterestEntry],
       dividendEntries: [emptyDividendEntry],
       brokerageEntries: [{
+        ...completeBrokerageSource,
         broker: "Fidelity",
-        transactions: [{ ...emptyCapitalGainTransaction, proceeds: "20000", costBasis: "15000" }],
+        transactions: [{ ...completeTransactionSource, proceeds: "20000", costBasis: "15000" }],
       }],
     });
     const answers = buildGuidedFactAnswers(state);
@@ -2402,15 +2364,16 @@ describe("buildGuidedFactAnswers", () => {
       stateCode: null,
     });
     state = updateSectionData(state, "income-w2", {
-      entries: [{ ...emptyW2Entry, wages: "80000", federalWithheld: "12000" }],
+      entries: [{ ...completeW2Entry, wages: "80000", federalWithheld: "12000" }],
     });
     state = updateSectionData(state, "income-self-employment", {
-      necEntries: [{ ...emptyNecEntry, nonemployeeCompensation: "40000" }],
-      expenses: emptyScheduleCExpenses,
+      ...completeBusinessSection,
+      necEntries: [{ ...completeNecSource, nonemployeeCompensation: "40000" }],
+      expenses: completeBusinessExpenses,
     });
     state = updateSectionData(state, "income-investments", {
-      interestEntries: [{ ...emptyInterestEntry, interestIncome: "1000" }],
-      dividendEntries: [{ ...emptyDividendEntry, ordinaryDividends: "2000" }],
+      interestEntries: [{ ...completeInterestSource, interestIncome: "1000" }],
+      dividendEntries: [{ ...completeDividendSource, ordinaryDividends: "2000" }],
       brokerageEntries: [emptyBrokerageEntry],
     });
     const answers = buildGuidedFactAnswers(state);
@@ -2457,7 +2420,7 @@ describe("buildGuidedSyntheticDocuments", () => {
       stateCode: null,
     });
     state = updateSectionData(state, "income-w2", {
-      entries: [{ ...emptyW2Entry, wages: "50000" }],
+      entries: [{ ...completeW2Entry, wages: "50000" }],
     });
     const docs = buildGuidedSyntheticDocuments(state);
     expect(docs).toHaveLength(1);
@@ -2477,7 +2440,7 @@ describe("buildGuidedSyntheticDocuments", () => {
     });
     state = updateSectionData(state, "income-w2", {
       entries: [{
-        ...emptyW2Entry,
+        ...completeW2Entry,
         employerName: "Official fixture employer",
         employerEin: "12-3456789",
         wages: "50000",
@@ -2514,13 +2477,13 @@ describe("buildGuidedSyntheticDocuments", () => {
       stateCode: null,
     });
     state = updateSectionData(state, "income-self-employment", {
-      necEntries: [{ ...emptyNecEntry, nonemployeeCompensation: "25000" }],
-      manualGrossReceipts: "",
-      expenses: emptyScheduleCExpenses,
+      ...completeBusinessSection,
+      necEntries: [{ ...completeNecSource, nonemployeeCompensation: "25000" }],
+      manualGrossReceipts: "0",
+      expenses: completeBusinessExpenses,
     });
     const docs = buildGuidedSyntheticDocuments(state);
-    expect(docs).toHaveLength(1);
-    expect(docs[0].id).toBe("guided:1099-nec");
+    expect(docs.map(document => document.id)).toEqual(["guided:1099-nec", "guided:schedule-c"]);
     expect(docs[0].kind).toBe("1099-nec");
   });
 
@@ -2532,9 +2495,10 @@ describe("buildGuidedSyntheticDocuments", () => {
       stateCode: null,
     });
     state = updateSectionData(state, "income-self-employment", {
+      ...completeBusinessSection,
       necEntries: [emptyNecEntry],
       manualGrossReceipts: "12000",
-      expenses: emptyScheduleCExpenses,
+      expenses: completeBusinessExpenses,
     });
     const docs = buildGuidedSyntheticDocuments(state);
     expect(docs).toEqual(expect.arrayContaining([
@@ -2553,11 +2517,12 @@ describe("buildGuidedSyntheticDocuments", () => {
       stateCode: null,
     });
     state = updateSectionData(state, "income-investments", {
-      interestEntries: [{ ...emptyInterestEntry, interestIncome: "500" }],
-      dividendEntries: [{ ...emptyDividendEntry, ordinaryDividends: "1000" }],
+      interestEntries: [{ ...completeInterestSource, interestIncome: "500" }],
+      dividendEntries: [{ ...completeDividendSource, ordinaryDividends: "1000" }],
       brokerageEntries: [{
+        ...completeBrokerageSource,
         broker: "Fidelity",
-        transactions: [{ ...emptyCapitalGainTransaction, proceeds: "10000", costBasis: "8000" }],
+        transactions: [{ ...completeTransactionSource, proceeds: "10000", costBasis: "8000" }],
       }],
     });
     const docs = buildGuidedSyntheticDocuments(state);
@@ -2619,14 +2584,15 @@ describe("buildGuidedSyntheticDocuments", () => {
       stateCode: null,
     });
     state = updateSectionData(state, "income-w2", {
-      entries: [{ ...emptyW2Entry, wages: "80000" }],
+      entries: [{ ...completeW2Entry, wages: "80000" }],
     });
     state = updateSectionData(state, "income-self-employment", {
-      necEntries: [{ ...emptyNecEntry, nonemployeeCompensation: "40000" }],
-      expenses: emptyScheduleCExpenses,
+      ...completeBusinessSection,
+      necEntries: [{ ...completeNecSource, nonemployeeCompensation: "40000" }],
+      expenses: completeBusinessExpenses,
     });
     state = updateSectionData(state, "income-investments", {
-      interestEntries: [{ ...emptyInterestEntry, interestIncome: "1000" }],
+      interestEntries: [{ ...completeInterestSource, interestIncome: "1000" }],
       dividendEntries: [emptyDividendEntry],
       brokerageEntries: [emptyBrokerageEntry],
     });
@@ -2663,10 +2629,10 @@ describe("buildGuidedSyntheticDocuments", () => {
       stateCode: null,
     });
     state = updateSectionData(state, "income-w2", {
-      entries: [{ ...emptyW2Entry, wages: "50000" }],
+      entries: [{ ...completeW2Entry, wages: "50000" }],
     });
     state = updateSectionData(state, "income-investments", {
-      interestEntries: [{ ...emptyInterestEntry, interestIncome: "500" }],
+      interestEntries: [{ ...completeInterestSource, interestIncome: "500" }],
       dividendEntries: [emptyDividendEntry],
       brokerageEntries: [emptyBrokerageEntry],
     });

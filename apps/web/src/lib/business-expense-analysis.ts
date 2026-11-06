@@ -1,4 +1,8 @@
 import { redactTextForAiAnalysis } from "@/lib/ai-document-redaction";
+import { containsUnsafeDirectIdentifier } from "@/lib/provider-request-privacy";
+import Decimal from "decimal.js";
+import { normalizeDocumentSourceFacts } from "./document-source-facts";
+import { parseGuidedCurrency } from "./guided-currency";
 import type {
   ScheduleCBankStatementAnalysis,
   ScheduleCBankStatementSuggestion,
@@ -62,8 +66,9 @@ function slugify(value: string) {
 }
 
 function normalizeCurrencyAmount(value: unknown) {
-  if (typeof value === "number" && Number.isFinite(value)) {
-    return value.toFixed(2);
+  if (typeof value === "number") {
+    if (!Number.isFinite(value) || new Decimal(value.toString()).abs().gt(Number.MAX_SAFE_INTEGER.toString())) return null;
+    value = value.toString();
   }
 
   if (typeof value !== "string") {
@@ -73,7 +78,7 @@ function normalizeCurrencyAmount(value: unknown) {
   const normalized = value.replace(/[$,\s]/g, "").trim();
 
   return /^\d+(\.\d{1,2})?$/.test(normalized)
-    ? Number(normalized).toFixed(2)
+    ? new Decimal(normalized).toFixed(2)
     : null;
 }
 
@@ -237,7 +242,9 @@ export function compactRedactedAiDocumentText(text: string, options?: {
   const includeAmountsOnly = options?.includeAmountsOnly ?? false;
   const maxLines = options?.maxLines ?? 220;
   const maxChars = options?.maxChars ?? 22000;
-  const lines = uniqueNonEmptyLines(text);
+  // Repeated merchants, dates and amounts may be separate purchases or refunds.
+  // Preserve them so reconciliation can inspect the original sequence.
+  const lines = nonEmptyLinesPreserveOrder(text);
   const kept: string[] = [];
   let totalChars = 0;
 
@@ -360,7 +367,7 @@ export function buildTransactionLevelBankStatementAnalysis(
     }
 
     const normalizedAmount = normalizeCurrencyAmount(amount);
-    if (!normalizedAmount || Number(normalizedAmount) <= 0) {
+    if (!normalizedAmount || new Decimal(normalizedAmount).lte(0)) {
       continue;
     }
 
@@ -434,7 +441,7 @@ export function buildFallbackBankStatementAnalysis(
       continue;
     }
 
-    const totalAmount = [...amounts].reverse().find((value) => Number(value) > 0);
+    const totalAmount = [...amounts].reverse().find((value) => new Decimal(value).gt(0));
     if (!totalAmount) {
       continue;
     }
@@ -444,7 +451,7 @@ export function buildFallbackBankStatementAnalysis(
       id: `${slugify(fileName) || "statement"}-fallback-${suggestions.length + 1}`,
       date: "",
       description: `${label} annual summary total`,
-      amount: Number(totalAmount).toFixed(2),
+      amount: new Decimal(totalAmount).toFixed(2),
       sourceSection: label,
       suggestedCategory: mapped.category,
       suggestedBusinessUse: mapped.businessUse,
@@ -520,7 +527,7 @@ export function normalizeBankStatementAnalysis(payload: unknown, fileName: strin
     const date = normalizeText(suggestion.date);
     const suggestedCategory = normalizeCategory(suggestion.suggestedCategory);
     const suggestedBusinessUse = suggestion.suggestedBusinessUse === true;
-    const reason = normalizeText(suggestion.reason) || "AI OCR flagged this line for review.";
+    const reason = normalizeText(suggestion.reason) || "Document text flagged this line for review.";
 
     return [{
       id: `${slugify(fileName) || "statement"}-${index + 1}`,
@@ -531,6 +538,7 @@ export function normalizeBankStatementAnalysis(payload: unknown, fileName: strin
       suggestedBusinessUse,
       confidence: normalizeConfidence(suggestion.confidence),
       reason,
+      sourceQuote: normalizeText(suggestion.sourceQuote) || undefined,
       appliedCategory: null,
     }];
   });
@@ -546,6 +554,7 @@ export function normalizeBankStatementAnalysis(payload: unknown, fileName: strin
     institution: normalizeText(candidate.institution) || undefined,
     statementPeriod: normalizeText(candidate.statementPeriod) || undefined,
     suggestions: normalizedSuggestions,
+    sourceFacts: normalizeDocumentSourceFacts(candidate),
   };
 }
 
@@ -579,6 +588,7 @@ export function normalizeSelfEmploymentIncomeDocumentAnalysis(
       amount,
       confidence: normalizeConfidence(suggestion.confidence),
       reason: normalizeText(suggestion.reason) || "AI review found a likely income amount.",
+      sourceQuote: normalizeText(suggestion.sourceQuote) || undefined,
       applied: false,
     }];
   });
@@ -594,14 +604,14 @@ export function normalizeSelfEmploymentIncomeDocumentAnalysis(
     payer: normalizeText(candidate.payer) || undefined,
     documentPeriod: normalizeText(candidate.documentPeriod) || undefined,
     suggestions: normalizedSuggestions,
+    sourceFacts: normalizeDocumentSourceFacts(candidate),
   };
 }
 
 export function addAmountToCurrencyValue(currentValue: string, amount: string) {
-  const current = Number(currentValue || "0");
-  const next = current + Number(amount || "0");
+  const next = parseGuidedCurrency(currentValue).plus(parseGuidedCurrency(amount));
 
-  return next > 0 ? next.toFixed(2) : "";
+  return next.toFixed(2, Decimal.ROUND_HALF_UP);
 }
 
 export function addAmountToExpenseValue(currentValue: string, amount: string) {
@@ -611,7 +621,7 @@ export function addAmountToExpenseValue(currentValue: string, amount: string) {
 export function summarizeBankStatementSuggestionsByCategory(
   analyses: ScheduleCBankStatementAnalysis[],
 ) {
-  const totals = new Map<keyof ScheduleCExpenseData, number>();
+  const totals = new Map<keyof ScheduleCExpenseData, Decimal>();
 
   for (const analysis of analyses) {
     for (const suggestion of analysis.suggestions) {
@@ -626,7 +636,7 @@ export function summarizeBankStatementSuggestionsByCategory(
       }
 
       const category = suggestion.suggestedCategory;
-      totals.set(category, (totals.get(category) ?? 0) + Number(suggestion.amount));
+      totals.set(category, (totals.get(category) ?? new Decimal(0)).plus(parseGuidedCurrency(suggestion.amount)));
     }
   }
 
@@ -636,48 +646,88 @@ export function summarizeBankStatementSuggestionsByCategory(
   }));
 }
 
-export async function analyzeBusinessExpenseStatements(files: File[]) {
-  if (files.length === 0) {
-    return [];
-  }
+/** Keep the original filename on the device, including when it contains a name or SSN. */
+export interface DocumentAnalysisOptions { signal?: AbortSignal }
 
+/** Release the caller immediately on cancellation; consume a late parser result
+ * without publishing it. PDF parsing itself remains bounded by upload limits. */
+function waitForLocalText(parsing: Promise<string>, signal?: AbortSignal): Promise<string> {
+  if (!signal) return parsing;
+  return new Promise((resolve, reject) => {
+    const abort = () => {
+      signal.removeEventListener("abort", abort);
+      reject(signal.reason ?? new DOMException("Analysis cancelled", "AbortError"));
+    };
+    signal.addEventListener("abort", abort, { once: true });
+    parsing.then(value => {
+      signal.removeEventListener("abort", abort);
+      resolve(value);
+    }, error => {
+      signal.removeEventListener("abort", abort);
+      reject(error);
+    });
+    if (signal.aborted) abort();
+  });
+}
+
+async function analyzeRedactedDocumentUploads<T extends { fileName: string; label: string }>(
+  files: File[], endpoint: string, failureLabel: string, options?: DocumentAnalysisOptions,
+): Promise<T[]> {
+  const signal = options?.signal;
+  signal?.throwIfAborted();
+  if (files.length === 0) return [];
+  const originals = new Map<string, File>();
   const documents = await Promise.all(files.map(async (file) => {
     const looksLikePdf = /\.pdf$/i.test(file.name) || /pdf/i.test(file.type || "");
-
     if (!looksLikePdf) {
       throw new Error(`${file.name} must be a PDF so we can redact sensitive text locally before AI analysis.`);
     }
-
-    const extractedText = await extractPdfTextFromFile(file);
+    const extractedText = await waitForLocalText(extractPdfTextFromFile(file), signal);
+    signal?.throwIfAborted();
     const { redactedText } = redactTextForAiAnalysis(extractedText);
-
-    return {
-      fileName: file.name,
-      redactedText,
-    };
+    if (!redactedText.trim()) throw new Error("Document did not produce readable text.");
+    if (containsUnsafeDirectIdentifier(redactedText)) {
+      throw new Error("Document analysis was blocked because direct identifiers remain.");
+    }
+    const fileName = `upload-${crypto.randomUUID()}.pdf`;
+    originals.set(fileName, file);
+    return { fileName, redactedText };
   }));
-
-  const response = await fetch("/api/business-expense-analysis", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
+  signal?.throwIfAborted();
+  const response = await fetch(endpoint, {
+    method: "POST", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ documents }),
+    signal,
   });
-
+  signal?.throwIfAborted();
   if (!response.ok) {
     const payload = await response.json().catch(() => null) as { error?: string } | null;
-    throw new Error(payload?.error || `Business expense analysis failed with status ${response.status}.`);
+    signal?.throwIfAborted();
+    throw new Error(payload?.error || `${failureLabel} failed with status ${response.status}.`);
   }
+  const payload = await response.json() as { analyses?: T[] };
+  signal?.throwIfAborted();
+  if (!Array.isArray(payload.analyses)) return [];
+  const seen = new Set<string>();
+  return payload.analyses.map((analysis) => {
+    const original = originals.get(analysis.fileName);
+    if (!original) throw new Error("Document analysis response could not be matched to an upload.");
+    if (seen.has(analysis.fileName)) throw new Error("Document analysis response contains duplicate upload results.");
+    seen.add(analysis.fileName);
+    return { ...analysis, fileName: original.name,
+      label: analysis.label === analysis.fileName ? original.name : analysis.label };
+  });
+}
 
-  const payload = await response.json() as { analyses?: ScheduleCBankStatementAnalysis[] };
-  return Array.isArray(payload.analyses) ? payload.analyses : [];
+export async function analyzeBusinessExpenseStatements(files: File[], options?: DocumentAnalysisOptions) {
+  return analyzeRedactedDocumentUploads<ScheduleCBankStatementAnalysis>(files,
+    "/api/business-expense-analysis", "Business expense analysis", options);
 }
 
 export function summarizeSelfEmploymentIncomeSuggestions(
   analyses: SelfEmploymentIncomeDocumentAnalysis[],
 ) {
-  let total = 0;
+  let total = new Decimal(0);
 
   for (const analysis of analyses) {
     for (const suggestion of analysis.suggestions) {
@@ -685,47 +735,14 @@ export function summarizeSelfEmploymentIncomeSuggestions(
         continue;
       }
 
-      total += Number(suggestion.amount || "0");
+      total = total.plus(parseGuidedCurrency(suggestion.amount));
     }
   }
 
   return total.toFixed(2);
 }
 
-export async function analyzeSelfEmploymentIncomeDocuments(files: File[]) {
-  if (files.length === 0) {
-    return [];
-  }
-
-  const documents = await Promise.all(files.map(async (file) => {
-    const looksLikePdf = /\.pdf$/i.test(file.name) || /pdf/i.test(file.type || "");
-
-    if (!looksLikePdf) {
-      throw new Error(`${file.name} must be a PDF so we can redact sensitive text locally before AI analysis.`);
-    }
-
-    const extractedText = await extractPdfTextFromFile(file);
-    const { redactedText } = redactTextForAiAnalysis(extractedText);
-
-    return {
-      fileName: file.name,
-      redactedText,
-    };
-  }));
-
-  const response = await fetch("/api/self-employment-income-analysis", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ documents }),
-  });
-
-  if (!response.ok) {
-    const payload = await response.json().catch(() => null) as { error?: string } | null;
-    throw new Error(payload?.error || `Income document analysis failed with status ${response.status}.`);
-  }
-
-  const payload = await response.json() as { analyses?: SelfEmploymentIncomeDocumentAnalysis[] };
-  return Array.isArray(payload.analyses) ? payload.analyses : [];
+export async function analyzeSelfEmploymentIncomeDocuments(files: File[], options?: DocumentAnalysisOptions) {
+  return analyzeRedactedDocumentUploads<SelfEmploymentIncomeDocumentAnalysis>(files,
+    "/api/self-employment-income-analysis", "Income document analysis", options);
 }

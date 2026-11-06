@@ -1,0 +1,26 @@
+form: "PA-Complete-Shared-Paths"
+fullName: Complete original-bound PA shared preview paths
+taxYear: 2025
+reference: https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40in.pdf
+notes: |
+  Integration only, no new tax formula. Source owner/year/raw originals are replayed
+  through existing residency, ordinary eligibility/payment and completion methods.
+  Complete-source composer printed values are used for all3 residency classes.
+  Missing/stale/unsupported state sources preserve federal preview and omit state.
+  No legacy scalar orchestrator fallback and no source confirmation refresh.
+lines:
+  - line: "source-admission"
+    description: Replay actual ordinary and completion alongside actual residency for all three residency categories without changing originals.
+    testRef: "tests/guided-interview/pa-complete-shared-paths.test.ts::complete PA shared paths replay actual canonical ordinary and completion packets all3"
+  - line: "preview"
+    description: Actual ordinary fixture wages50000 and interest120 give printed PA tax/payments1539 resident,799 part-year and184 nonresident; due/refund0.
+    testRef: "tests/guided-interview/pa-complete-shared-paths.test.ts::complete PA shared preview preserves all3 actual literal printed tax and payments"
+  - line: "missing"
+    description: Missing completion sources cannot enter any PA preview; federal AGI50120 remains available.
+    testRef: "tests/guided-interview/pa-complete-shared-paths.test.ts::complete PA shared preview cannot bypass missing completion sources"
+  - line: "stale"
+    description: Stale actual ordinary originals cannot enter a PA preview; federal AGI50120 remains available.
+    testRef: "tests/guided-interview/pa-complete-shared-paths.test.ts::complete PA shared preview cannot bypass stale ordinary original snapshots"
+  - line: "unsupported"
+    description: Preserve actual positive100.01 other-state paid tax while requiring its original-bound successor, without inferring zero or dropping records.
+    testRef: "tests/guided-interview/pa-complete-shared-paths.test.ts::complete PA shared paths preserve positive source histories and require supported methods"

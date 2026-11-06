@@ -1,0 +1,38 @@
+form: "MACRS-Asset-Basis-Sources"
+fullName: "Original-bound first-year personal-property basis sources"
+taxYear: 2026
+reference: "https://www.irs.gov/publications/p946; https://www.ecfr.gov/current/title-26/section-1.168(d)-1"
+notes: |
+  Publication 946 (2025), chapter 4 basis worksheet and table rules; section
+  1.168(d)-1(b)(4), retrieved November 5, 2026. This finite path documents only
+  current-year personal GDS 200DB classes 3/5/7/10 with constant business-only use, no disposition,
+  no changed use or recapture; explicit known absence of other basis adjustments and
+  conversion/carryover basis. Listed property must be nonpassenger and >50%.
+  It does not qualify bonus/section179 elections, all asset facts, the whole
+  return, native capture, history, final 2026 forms or filing. Absence of the
+  new source packet preserves legacy behavior, explicitly labeled unqualified.
+lines:
+  - line: "allocation-order"
+    description: "Business-only section179 is deducted after the business fraction"
+    formula: "Actual business basis=gross cost times actual business percentage/100. Mid-quarter basis=business basis minus actual business-only section179. Regular MACRS basis=mid-quarter basis minus actual bonus allocation. For gross10000/use60/1791000/bonus0 derive6000/5000/5000, never5400. Gross, use,179 andbonus require actual documented values including zero."
+    testRef: "tests/utils/macrs-asset-basis-sources.test.ts::derives business basis before section179 without a second business allocation"
+  - line: "pre-bonus-test"
+    description: "Bonus does not reduce the statutory mid-quarter test basis"
+    formula: "For actual Q4gross10000/use60/1791000, the40%test basis is5000 with either knownbonus0 or actualbonus2000. Paired with Q1ordinary7500,5000/12500=40%doesnottrigger. Bonus2000 leaves3000regularbasis and600firstyear half-year deduction."
+    testRef: "tests/utils/macrs-asset-basis-sources.test.ts::keeps bonus out of the strict mid-quarter test and uses it in regular depreciation"
+  - line: "legacy-meaning"
+    description: "The legacy scalar has an explicit source-bound meaning"
+    formula: "The new packet explicitly records legacyCostBasisMeaning=gross_basis_less_business_section179_before_bonus and requires legacy costBasis to equal gross minus the actual business-only179. Its exact asset snapshot must agree. Do not accept a conflicting scalar or silently redefine historical inputs. Legacy absence keeps existing amounts but labels their basis legacy_unqualified."
+    testRef: "tests/utils/macrs-asset-basis-sources.test.ts::rejects a conflicting legacy scalar and labels legacy compatibility results unqualified"
+  - line: "original-binding"
+    description: "Actual documents, source year and exact asset facts are required"
+    formula: "Require source references and confirmation, a real full calendar PISdate in the owner tax year, matching original asset snapshot/flags/businesspercentage and explicit unsupported-fact denials. Reject unknown or contradictory packets before every direct or aggregate zero/exclusion shortcut. Do not invent a day from legacyYYYY-MM."
+    testRef: "tests/utils/macrs-asset-basis-sources.test.ts::rejects stale malformed or unsupported packets before every calculation shortcut"
+  - line: "schema-preservation"
+    description: "Canonical parsing retains complete sources and rejects incomplete ones"
+    formula: "An absent packet preserves legacy parsing; a supplied packet requires every actual amount, source and confirmation. Preserve knownzero. Reject non-calendar dates, impossible source-year bindings, unsupported fields and unknown packet shapes."
+    testRef: "tests/models/macrs-asset-basis-sources.test.ts::preserves a complete original packet and rejects unknown missing or contradictory facts"
+  - line: "plain-original-basis"
+    description: "Require known absence of unmodeled basis adjustments and conversions"
+    formula: "The finite original-purchase cohort requires explicit source-confirmed noOtherBasisAdjustmentsConfirmed=true and noConversionOrCarryoverBasisConfirmed=true. Unknown, omitted or false assertions deny calculation; never infer zero other credit/deduction adjustments or ordinary original-purchase basis merely from the first-year date. Broader basis rules require a separate source path."
+    testRef: "tests/utils/macrs-asset-basis-sources.test.ts::requires explicit plain original basis and absence of other basis adjustments"

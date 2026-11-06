@@ -1,0 +1,66 @@
+form: "PA Zero-Income Business Pending Other-State Account"
+fullName: "Actual outstanding NY erroneous NEC remittance with mandatory zero same-income resident credit"
+taxYear: 2025
+reference: "https://www.pacodeandbulletin.gov/secure/pacode/data/061/chapter111/s111.4.html"
+notes: |
+  SOURCE-FIRST ONLY; finite technical inference awaiting qualified tax review, not tax qualification.
+  PA111.3/.4/.5, current PA credit guide, G-L SectionI3-6/PDFp3 and2025PA40IN21-22
+  require qualified same-income and paid-liability bounds. They do not expressly require every
+  foreign overpayment settled before a zero-credit PA return. No inference of NY refund entitlement,
+  sub-dollar administrative recovery, actual receipt, or final2026 law/form readiness is made.
+  Fresh official bytes/hashes are retained in nov03-pa-business-outstanding-overpayment-proposal.
+  Dedicated method: one actual primary cash-service business with complete zero gross/returns/costs/
+  otherincome/current costs, all currentNEC Box1/stateincome0, no NY operations/source income,
+  actual full-year non-NY domicile (including outsidePA periods in all3 PA statuses), actual filedIT203
+  withholding0/formrefund0/liability0, actual current beneficial-owner account credited.20 and
+  still outstanding.20. Complete evidence of no refunds, offsets, transfers, forfeiture or writeoff.
+  Current taxpayer cash net-paid.20 is never replaced by liability0 or a received refund.
+  No voluntary decline-credit switch, generic foreign-withholding bypass or fakeW2/payment kind.
+  Actual field statuses start unknown. Positive fictional records below are separately authored proof,
+  never inferred from rawNEC0/withholding.20. Source UI/disclosure remain later scope.
+lines:
+  - line: "baseline"
+    description: "Independent complete zero-business fixture sanity"
+    formula: "Complete existing allPA source method without pending account: gross/net0, actualPAWH0, tax0 for all3; all outside domicile periods DE, no NY source income. No new method required for this baseline."
+    testRef: "tests/engine/state/pa-business-pending-fixture-baseline.test.ts::complete all PA zero business remains an existing method for %s"
+  - line: "pending-admission"
+    description: "A documented pending remittance can accompany a mandatory zero PA credit"
+    formula: "Validate the actual current business and pending account originals, then PA class0; NYgrosspaid.20, receivedrefund0, netcash.20 and outstanding.20 remain distinct. NYtaxliability0 and eligible sameincome0 imply PAcredit min(0,.20,0*.0307)=0; no0/0 ratio. PAWH includes only actualPA.10, printed0; no refund assumed received and no NY paid amount included on PA13. All3 PAresidencies require full-year nonNY domicile/NYsource0 evidence."
+    testRef: "tests/engine/state/pa-business-pending-composition.test.ts::actual pending NY cents do not block a zero credit PA return for %s"
+  - line: "old-assertions"
+    description: "Preserve all original guided business positive and negative oracles"
+    formula: "Keep all8 originaltests and every monetary/method assertion byte-exact before any migration: PA.10+NY.20 gives rawPA.1/printed0; bothactualPA givesraw.3/printed0; duplicateextraPA.10 stillrejects. Retain incomplete-source negative. Any later complete-fictional setup requires explicit originals/confirmation, never read-refresh."
+    testRef: "tests/engine/state/pa-business-pending-composition.test.ts::incomplete old business originals cannot silently gain a pending account"
+  - line: "payment-v-liability"
+    description: "Current foreign history reconciles exact cash rather than substituting liability"
+    formula: "Completionstatus actual_payments, NYtaxPaid.20(actual net remittances), NYincomeTaxWithheld.20(gross actual source); neither none_paid nor taxPaid0 may hide the pending payment. Currentagency date exactly PAasof, complete owner/year/original coverage and every known foreign withholding family required."
+    testRef: "tests/engine/state/pa-business-pending-composition.test.ts::completion cash history cannot be replaced by zero liability: %s"
+  - line: "account-proof"
+    description: "Real submitted return, credited beneficial ownership and agency statement are required"
+    formula: "Actual current primary NEC originals/zero business books link each remittance once; sourcepayer explains compensation0 withholding error, taxpayerbeneficialowner/accountcredit/remittanceconfirmed, no reimbursement or recourse. Actual IT203original filed before current agency account with federalAGI equal current fresh original calculation, full nonNYresidency/NYsource0/tax0/withholding0/refundrequest0. Never claim NEC as IT203line62 withholding or an actual subdollar refund entitlement."
+    testRef: "tests/engine/state/pa-business-pending-account.test.ts::pending account requires actual source originals and account qualification: %s"
+  - line: "balances"
+    description: "Known outstanding balances do not imply received cash"
+    formula: "Netremittances=actualpaid.20-actuallyreceivedrefund0-offset0-transfer0=.20; liability0; unpaid0; outstanding.20. Actual account explicitly reviews all events including writeoffs/forfeiture and establishes zeros; absence alone does not. Unknown or unsupported positive event needs successor. Each amount/date/reference/owner/year and normalized unique receipt identity reconciles once. Preserve exact cents and stable public Decimal results/audits without global precision changes."
+    testRef: "tests/engine/state/pa-business-pending-account.test.ts::pending account cash balances remain exact and outstanding"
+  - line: "contradictions"
+    description: "Unknown, stale, inconsistent or broader source facts fail closed"
+    formula: "Reject missing/unknown account, remittance, owner, current original, full histories, NY residency/source absence or originalreturn; .19/.20 mismatch, fake line62/formrefund, received/offset/writeoff/forfeiture payment labelledpending, normalizedduplicates, hiddenknownfamilyNYWH, positive NYincome/liability, unsupportedbusinessamounts, future or stale asof. No fallbacks/zeros/confirmation refresh."
+    testRef: "tests/engine/state/pa-business-pending-account.test.ts::pending account rejects contradictory cash or source records: %s"
+  - line: "binding"
+    description: "Account proof and all current sources are retained in commitments"
+    formula: "Source commitment binds actual account/source metadata and current canonical original facts. A same-money source edit changes commitment or rejects stale confirmation; output exposes no private raworiginals/SSN/accountreference. Primitive retainedasof validation never implies currency for a later PAreturn. Existing filingfalse and source/human/form/readinessgates remain."
+    testRef: "tests/engine/state/pa-business-pending-account.test.ts::pending account replay is immutable private and source bound"
+  - line: "complete-known-family"
+    formula: "A finite NEC-only pending account cannot omit positive known NY R or its alias, G, K or W2G remittances; normalize state codes before checking."
+    testRef: "tests/engine/state/pa-business-pending-account.test.ts::pending account refuses omitted NY source family %s"
+  - line: "exact-large"
+    formula: "Actual remittance10^100+.20 and account outstanding10^100+.20 remain exact; two linked actual NY remittances aggregate without losing the .20 and without rounding form cash into account balances. Credit remains0 because actual sameincome/liability0."
+    testRef: "tests/engine/state/pa-business-pending-account.test.ts::pending account keeps actual100 digit cash and cents exact"
+  - line: "mixed-method"
+    formula: "Do not combine the finite pending business method with an independently supplied resident-credit or refunded-digital method without a separately qualified mixed-method successor."
+    testRef: "tests/engine/state/pa-business-pending-composition.test.ts::pending business cannot hide a different supplied payment method %s"
+  - line: "api-and-exact-cash-format"
+    description: "Correct harness API and explicit cent rendering; preserve literal monetary expectations"
+    formula: "Use established federal result agi, not nonexistent adjustedGrossIncome, for expected0 fixture sanity. Render the three huge cash assertions with toFixed(2), preserving exact10^100+.20; unscaled Decimal toFixed() correctly normalizes .20 to .2. This changes no source amounts or product arithmetic; original four failures are retained."
+    testRef: "tests/engine/state/pa-business-pending-account.test.ts::pending account keeps actual100 digit cash and cents exact"

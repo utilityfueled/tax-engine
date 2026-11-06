@@ -1,0 +1,42 @@
+form: "Ohio ordinary resident-credit native original sources"
+taxYear: 2025
+reference: "https://codes.ohio.gov/ohio-revised-code/section-5747.05"
+notes: |
+  Source-first exact cffef1ac. Native origination of the already reviewed canonical
+  single-primary under65/full-year Ohio ordinary one-W2 Virginia source adapter.
+  Existing IT RC calculation, model, private context and cash guards unchanged.
+  Actual filed VA763 and completed account originals are supplied facts, not a VA
+  tax calculation or authenticated agency retrieval. Missing facts are unknown.
+  Separate Ohio domicile and Ohio payment originals remain independently confirmed.
+  No PY/married/business/district/reciprocal/other-state/public2026/filing claim.
+  VA eForms filing confirmation does not automatically establish settled payment.
+  Equal same-day balance receipts require distinct actual bank trace AND agency
+  applied posting originals under the existing settled ACH-credit method.
+lines:
+  - line: "native-existing-api"
+    formula: "Actual typed resident-credit child composes existing guide input; fresh canonical federal and Ohio source replay gives OHAGI100000/exemption1900/taxable98100/tax2323; actual VAincome60000 -> truncated.6000 and OHlimit1394. Actual VA2500 less credits1500, WH1200 minus received refund200 -> paid tax1000, credit1000, OHtax1323; OHWH2000 -> requested Ohio refund677, not received cash."
+    testRef: "tests/guided-interview/guided-oh-resident-credit-sources.test.ts::originates actual resident credit through existing guide API %s"
+  - line: "distinct-transactions"
+    formula: "Actual WH1200 plus separately settled/applied250+250 less received VArefund700 -> net1000; distinct actual15digit bank traces and agency posting IDs, not renamed source refs, prove separate balance payments. Actual500.50 less700 plus1200 ->1000.50 round1001; Actual cap account filed tax3000 less nonrefundable credits1500 = net1500; applied WH1200 plus two distinct500 balance payments less received refund700 = paid1500, capped at Ohio1394. Requested Ohio refunds677/678/1071. Actual fully refunded Virginia liability0 with OHWH2500 -> credit0/OHtax2323/request177; an empty source amount is not this known0."
+    testRef: "tests/guided-interview/guided-oh-resident-credit-sources.test.ts::originates actual resident credit through existing guide API %s"
+  - line: "retained-replay"
+    formula: "Only explicit action captures full actual W2 and original canonical inventory, excluding exactly three Ohio packet roots. Source-packet commitment and safely retained own undefined metadata survive JSON reopen without refreshing current facts. No mount/build callbacks, snapshots or money edits."
+    testRef: "tests/guided-interview/guided-oh-resident-credit-sources.test.ts::replays retained native originals without refreshing or mutating them %s"
+  - line: "no-source-defaults"
+    formula: "Source year/identity/reference, exact cents, lists, completion and no-other-source facts remain actual. Unknown lists are not empty and missing amounts are not zero. No implicit settled payment, received refund, tax scalar, family owner or source year. Missing/stale/unsupported sources reject even direct saved-state edits."
+    testRef: "tests/guided-interview/guided-oh-resident-credit-sources.test.ts::rejects missing stale or unsupported native resident credit %s"
+  - line: "paired-identity"
+    formula: "Typed complete bank and agency originals must agree actual balance amount/year/owner/purpose/period/trace/dates/account. Reused either trace or posting rejects, including renamed receipts; refunds/withholding/estimates cannot borrow balance proof. Canonical adapter remains final authority."
+    testRef: "tests/guided-interview/guided-oh-resident-credit-sources.test.ts::rejects missing stale or unsupported native resident credit %s"
+  - line: "linked-invalidation"
+    formula: "Real owner/W2/residency/payment/child source edits preserve originals but revoke linked child and parent confirmation. A final unchanged explicit confirmation must not revoke itself or refresh stale original facts."
+    testRef: "tests/guided-interview/guided-oh-resident-credit-sources.test.ts::revokes linked resident credit after actual %s edit"
+  - line: "native-unknown"
+    formula: "Absent native child opens only on user action with blank actual fields, null confirmations and unknown receipt lists. Mount and remount have no callbacks/capture; child edits revoke dependent parent facts."
+    testRef: "tests/apps/web/oh-resident-credit-native.test.tsx::offers actual blank resident credit origination without defaults"
+  - line: "native-explicit-capture"
+    formula: "User types actual return/account/payroll and transaction originals from blank using readable fields; only explicit final action captures actual selected W2 and validates all current sources. Comma display normalization preserves1000.50 exact source cents. Parent source confirmation and Ohio payment confirmation remain separate."
+    testRef: "tests/apps/web/oh-resident-credit-native.test.tsx::captures typed actual resident credit and preserves confirmation lifecycle"
+  - line: "native-reopen"
+    formula: "Reopening retained drafts never calls onChange or recaptures. Same-cash source/reference/receipt edits clear child and parent confirmation; unchanged entered source records remain present."
+    testRef: "tests/apps/web/oh-resident-credit-native.test.tsx::reopens without callbacks and revokes after equal cash receipt identity edit"

@@ -1,0 +1,8 @@
+form: "Independent actual MI royalty full-settlement review"
+taxYear: 2025
+reference: "https://www.michigan.gov/-/media/Project/Websites/taxes/Forms/IIT/TY2025/MI-1040-Book.pdf"
+notes: "Distinct technical review; supplied actual source proofs remain necessary. Booklet whole-dollar filed return and below1 refund boundary; MCL206.114 copyright publication origin; 61PaCode111.4b actually refunded tax supplies zero PAcredit. No real agency evidence/human qualification is asserted."
+lines:
+  - line: "settlement"
+    formula: "Actual current original MIwithholding80.20, printedreturn80, separately actual fullclaim/award/received80.20 and finalaccount0 give PAcredit0. Retain all original source/payment history, finite MIcopyright method, correct source-year/owner/chronology/full coverage, strict snapshots, and adaptive cents. Exact1.00 allowed, .99 denied, 1.50 printed2. Two separate80.20 originals total160.40 distinct receipts; normalized duplicate receipt rejected."
+    testRef: "tests/engine/state/pa-royalty-refund-independent.test.ts::independent actual MI royalty settlement: %s"

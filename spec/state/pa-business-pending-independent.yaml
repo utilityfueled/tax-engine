@@ -1,0 +1,14 @@
+form: "PA Pending Business Independent Controls"
+taxYear: 2025
+reference: "https://www.pacodeandbulletin.gov/secure/pacode/data/061/chapter111/s111.4.html"
+notes: "Independent technical review only; qualified human interpretation and final forms remain open. Literal cash balances are not tax-liability substitutions."
+lines:
+  - line: "cash"
+    formula: "ActualNY payment.20 less actuallyreceived0 remains outstanding.20. Sameincome0 and NYliability0 bound credit0. PAactual.10 prints0. Preserve all3 residency and saved originals."
+    testRef: "tests/engine/state/pa-business-pending-independent.test.ts::independent cash and credit remain distinct for %s"
+  - line: "events"
+    formula: "A received refund, transfer, offset, writeoff or any unknown actual source/owner/calendar cannot be admitted as a complete outstanding account, even with matching displayed liability. Missing future/current dates are not guessed."
+    testRef: "tests/engine/state/pa-business-pending-independent.test.ts::independent pending account refuses altered evidence %s"
+  - line: "coverage"
+    formula: "AdditionalNY originals outside the finite actual NEC source cohort require a separate complete successor; zero tax liability does not erase those positive remittances. Source omission or normalized-state ambiguity cannot fabricate no-payment history."
+    testRef: "tests/engine/state/pa-business-pending-independent.test.ts::independent source coverage rejects NY %s"

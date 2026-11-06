@@ -1,0 +1,44 @@
+form: "State income tax recoveries"
+fullName: "Original-sourced multi-payment-year nonbusiness income-tax refund recoveries"
+taxYear: 2026
+reference: "https://www.irs.gov/publications/p525#en_US_2025_publink1000229426"
+notes: |
+  Finite source method for2025/2026 receipts and2024/2025 prior deductions.
+  Publication525 Recoveries, Example28 and Worksheets2/2a; IRC111.
+  Exact-cent pro-rata allocations only; fractional cents are unsupported,
+  never balanced silently. Earlier years/special treatments require a successor.
+  The original scalar worksheet API and guard remain unchanged. Public2026
+  constants, final forms, independent human qualification and filing stay gated.
+lines:
+  - line: "payment-year-allocation"
+    description: "Allocate actual original Box2 by actual cash-payment years"
+    formula: "sourceRefundCents * paymentYearBasisCents / allActualPaymentBasisCents; require exact integer cents per year and exact sum equal to original; no origin inferred from Box3"
+    testRef: "tests/engine/forms/taxable-state-refund-recoveries.test.ts::allocates official Example28 original payments to300 historical and100 current"
+  - line: "historical-origin-capacity"
+    description: "Evaluate historical tax benefit once for each deduction year"
+    formula: "Group all source allocations by origin year, validate actual historical standard/SALT/itemized/taxable-income facts and exclusions, then apply one existing worksheet per year; sum taxable results once"
+    testRef: "tests/engine/forms/taxable-state-refund-recoveries.test.ts::shares same-origin capacity and keeps different-year capacities separate"
+  - line: "original-currentness"
+    description: "Retain current actual government statements, owners and payment history"
+    formula: "Require exact parsed current taxpayers/original1099G snapshots, complete actual dated payment basis and distinct source/statement/payment identities; missing, changed, duplicate, unused or unsupported facts reject"
+    testRef: "tests/engine/forms/taxable-state-refund-recoveries.test.ts::rejects stale originals unknown payments and unsupported prior-return eligibility"
+  - line: "same-year-salt"
+    description: "Reduce current deduction rather than reporting current recovery as income"
+    formula: "Each current allocation binds an actual current state estimated/extension payment row; current-year source rows reduce ScheduleA income taxes once, historical taxable totals alone enter Schedule1line1"
+    testRef: "tests/engine/federal-taxable-state-refund-recoveries.test.ts::transfers300 toSchedule1 and reduces actual current payments1000 to900 once"
+  - line: "full-return-origin-transfer"
+    description: "Preserve original current return while transferring multi-year benefit once"
+    formula: "Existing canonical federal engine uses the new mutually exclusive source method; ordinary legacy route and incomplete2026 public gates remain unchanged"
+    testRef: "tests/engine/federal-taxable-state-refund-recoveries.test.ts::transfers different historical years once without opening the2026 public gate"
+  - line: "unknown-special-treatment"
+    description: "Require original history and known absence of all excluded treatments"
+    formula: "All AMT/credit/special-tax-computation/preferential/dependent/NRA/age/blind/death/carryover/other-recovery/changed-owner flags explicitly known false; verify independently sourced 2024/2025 ordinary standard deductions, ScheduleA/SALT and nonnegative taxable income"
+    testRef: "tests/engine/forms/taxable-state-refund-recoveries.test.ts::denies unknown special treatment and unreconciled historical returns"
+  - line: "cents-and-zero"
+    description: "Retain known zero and fail unresolved pro-rata fractions"
+    formula: "Amounts have at most twelve integer digits and two decimals; up to100sources and100payments per source; use80digit Decimal allocation; zero/zero basis yields explicit zero while positive refund requires positive sufficient original basis; no residual rounding"
+    testRef: "tests/engine/forms/taxable-state-refund-recoveries.test.ts::retains known zero and exact cents while denying fractional allocation"
+  - line: "historical-elections"
+    description: "Respect actual ordinary historical deduction elections and alternative sales tax"
+    formula: "Nonitemizers and income tax not deducted return zero; otherwise taxable amount cannot exceed actual income-tax deduction advantage over general sales taxes; actual standard and itemized return amounts must reconcile"
+    testRef: "tests/engine/forms/taxable-state-refund-recoveries.test.ts::uses actual standard sales and joint historical deduction facts"

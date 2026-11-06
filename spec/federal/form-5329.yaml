@@ -683,7 +683,7 @@ lines:
     inputs:
       - "Maximum allowable HSA contribution for 2025 (Form 8889 Line 8)"
       - "Actual 2025 HSA contributions (Form 8889 Line 2 + Line 11)"
-    notes: "The HSA contribution room equals max(0, Form 8889 Line 8 - Line 2 - Line 11) per owner, aggregated across both spouses on MFJ returns with per-owner Form 8889 results. When the federal orchestrator has computed Form 8889, these values are auto-derived from the Form 8889 results unless the caller provides an explicit manual override. The manual override remains available for cases where Form 8889 is not attached or the caller has corrected the room externally."
+    notes: "The actual-source path in form-5329-hsa-owner.yaml keeps each taxpayer separate and also adds absorbed prior excess to that owner's Form8889line13. Only the historical unqualified compatibility path aggregates room across spouses; it must not be used as a source-qualified joint form. The contribution room equals max(0, Form 8889 Line12 - Line2). When the federal orchestrator has computed Form 8889, these values are auto-derived from the Form 8889 results unless the caller provides an explicit manual override. The manual override remains available for cases where Form 8889 is not attached or the caller has corrected the room externally."
     testRef: "tests/engine/forms/form-5329.test.ts::Form 5329 Part VII Line 43 - unused HSA contribution room absorbs prior-year excess"
 
   - line: "44"
@@ -692,7 +692,7 @@ lines:
     irsRef: "Form 5329 Instructions, Part VII, Line 44"
     inputs:
       - "2025 taxable HSA distributions (Form 8889 Line 16)"
-    notes: "Taxable HSA distributions for the year reduce prior-year excess. This uses Form 8889 Line 16, which is the net taxable amount after qualified medical expense offsets, not the gross distribution amount. When the federal orchestrator has computed Form 8889, this value is auto-derived by aggregating Line 16 across all per-owner Form 8889 results unless the caller provides an explicit manual override."
+    notes: "Taxable HSA distributions for the year reduce prior-year excess. This uses Form 8889 Line 16, which is the net taxable amount after qualified medical expense offsets, not the gross distribution amount. The actual-source path uses only the same owner's Line16; historical aggregate compatibility remains unqualified and must not establish joint-source correctness."
     testRef: "tests/engine/forms/form-5329.test.ts::Form 5329 Part VII Line 44 - HSA distributions reduce prior-year excess"
 
   - line: "45"

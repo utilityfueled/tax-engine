@@ -1,0 +1,245 @@
+{
+  "schemaVersion": 1,
+  "recordedAt": "2026-10-28T19:13:17.442736+00:00",
+  "sourceCommit": "183c1bbcb9ed8d53265fb4f36317e291bc8134cc",
+  "releaseReady": false,
+  "published": false,
+  "scope": "Exact183c1bbc synthetic remote evidence through ordinary prior-QBI delivery. The current charitable floor and section108 source corrections remain separate internal work; coverage has12 retained timeouts. No staging, production, filing, provider or human-review qualification.",
+  "workflow": {
+    "runId": 40745155383,
+    "runAttempt": 1,
+    "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40745155383",
+    "artifactId": 12842173013,
+    "archive": {
+      "path": ".local/upgrade-evidence/183c1bbc-runtime.zip",
+      "sha256": "ba5e8d5d51244889a404ea05875254ea42ee4533b1c09702ac85d197cd363a94"
+    },
+    "archiveBytes": 62747037,
+    "archiveEntries": 437
+  },
+  "smoke": {
+    "result": "passed",
+    "image": "sha256:45b8d0cdf09d075614acec4a87c7b3b1b03f779d543304f2fd11ee2d300b79db",
+    "readOnly": true,
+    "healthy": true,
+    "assets": true,
+    "imageCacheWritten": true,
+    "selfHostAuth": true,
+    "uid": 1001,
+    "node": "v24.22.1",
+    "architecture": "x64",
+    "imageCacheFilesystem": 16914836,
+    "imageCacheLimitBytes": 67108864,
+    "packageTools": false,
+    "providerKeys": false,
+    "templates": 44
+  },
+  "rehearsal": {
+    "kind": "local-synthetic-compose-release-rehearsal",
+    "project": "tax-rehearsal-10217535",
+    "phases": [
+      {
+        "phase": "previous",
+        "imageDigest": "sha256:a28b7825880fc29838b8ebc7ff95b87781878649414453b85d1bfcf0c96e5e3a",
+        "databaseSha256": "2ff57b44e35f90ca3827f09dcbbab7c85a056105b9911dcd36cefa5c84fce9d8",
+        "browserFactsSha256": "f767fc70844cf56888d32df1a686df2de10a555b28ea79446752eb86534e2dcb",
+        "documentSha256": "648254095c6f784662619f428e030dcf387d1b0d5342cda56ac0033f60ba8ea8",
+        "readOnly": true,
+        "runtimeFacts": {
+          "uid": 1001,
+          "arch": "x64",
+          "node": "v24.22.1",
+          "noNewPrivileges": true,
+          "noEffectiveCapabilities": true,
+          "noBoundingCapabilities": true,
+          "providerKeys": false
+        }
+      },
+      {
+        "phase": "upgrade",
+        "imageDigest": "sha256:45b8d0cdf09d075614acec4a87c7b3b1b03f779d543304f2fd11ee2d300b79db",
+        "databaseSha256": "2ff57b44e35f90ca3827f09dcbbab7c85a056105b9911dcd36cefa5c84fce9d8",
+        "browserFactsSha256": "f767fc70844cf56888d32df1a686df2de10a555b28ea79446752eb86534e2dcb",
+        "documentSha256": "648254095c6f784662619f428e030dcf387d1b0d5342cda56ac0033f60ba8ea8",
+        "readOnly": true,
+        "runtimeFacts": {
+          "uid": 1001,
+          "arch": "x64",
+          "node": "v24.22.1",
+          "noNewPrivileges": true,
+          "noEffectiveCapabilities": true,
+          "noBoundingCapabilities": true,
+          "providerKeys": false
+        }
+      },
+      {
+        "phase": "database-restart",
+        "imageDigest": "sha256:45b8d0cdf09d075614acec4a87c7b3b1b03f779d543304f2fd11ee2d300b79db",
+        "databaseSha256": "2ff57b44e35f90ca3827f09dcbbab7c85a056105b9911dcd36cefa5c84fce9d8",
+        "browserFactsSha256": "f767fc70844cf56888d32df1a686df2de10a555b28ea79446752eb86534e2dcb",
+        "documentSha256": "648254095c6f784662619f428e030dcf387d1b0d5342cda56ac0033f60ba8ea8",
+        "readOnly": true,
+        "runtimeFacts": {
+          "uid": 1001,
+          "arch": "x64",
+          "node": "v24.22.1",
+          "noNewPrivileges": true,
+          "noEffectiveCapabilities": true,
+          "noBoundingCapabilities": true,
+          "providerKeys": false
+        }
+      },
+      {
+        "phase": "database-dump-restore",
+        "imageDigest": "sha256:45b8d0cdf09d075614acec4a87c7b3b1b03f779d543304f2fd11ee2d300b79db",
+        "databaseSha256": "2ff57b44e35f90ca3827f09dcbbab7c85a056105b9911dcd36cefa5c84fce9d8",
+        "browserFactsSha256": "f767fc70844cf56888d32df1a686df2de10a555b28ea79446752eb86534e2dcb",
+        "documentSha256": "648254095c6f784662619f428e030dcf387d1b0d5342cda56ac0033f60ba8ea8",
+        "readOnly": true,
+        "runtimeFacts": {
+          "uid": 1001,
+          "arch": "x64",
+          "node": "v24.22.1",
+          "noNewPrivileges": true,
+          "noEffectiveCapabilities": true,
+          "noBoundingCapabilities": true,
+          "providerKeys": false
+        }
+      },
+      {
+        "phase": "rollback",
+        "imageDigest": "sha256:a28b7825880fc29838b8ebc7ff95b87781878649414453b85d1bfcf0c96e5e3a",
+        "databaseSha256": "2ff57b44e35f90ca3827f09dcbbab7c85a056105b9911dcd36cefa5c84fce9d8",
+        "browserFactsSha256": "f767fc70844cf56888d32df1a686df2de10a555b28ea79446752eb86534e2dcb",
+        "documentSha256": "648254095c6f784662619f428e030dcf387d1b0d5342cda56ac0033f60ba8ea8",
+        "readOnly": true,
+        "runtimeFacts": {
+          "uid": 1001,
+          "arch": "x64",
+          "node": "v24.22.1",
+          "noNewPrivileges": true,
+          "noEffectiveCapabilities": true,
+          "noBoundingCapabilities": true,
+          "providerKeys": false
+        }
+      },
+      {
+        "phase": "re-upgrade",
+        "imageDigest": "sha256:45b8d0cdf09d075614acec4a87c7b3b1b03f779d543304f2fd11ee2d300b79db",
+        "databaseSha256": "2ff57b44e35f90ca3827f09dcbbab7c85a056105b9911dcd36cefa5c84fce9d8",
+        "browserFactsSha256": "f767fc70844cf56888d32df1a686df2de10a555b28ea79446752eb86534e2dcb",
+        "documentSha256": "648254095c6f784662619f428e030dcf387d1b0d5342cda56ac0033f60ba8ea8",
+        "readOnly": true,
+        "runtimeFacts": {
+          "uid": 1001,
+          "arch": "x64",
+          "node": "v24.22.1",
+          "noNewPrivileges": true,
+          "noEffectiveCapabilities": true,
+          "noBoundingCapabilities": true,
+          "providerKeys": false
+        }
+      }
+    ],
+    "platform": "linux/amd64",
+    "previousDigest": "sha256:a28b7825880fc29838b8ebc7ff95b87781878649414453b85d1bfcf0c96e5e3a",
+    "candidateDigest": "sha256:45b8d0cdf09d075614acec4a87c7b3b1b03f779d543304f2fd11ee2d300b79db",
+    "databaseRecovery": {
+      "result": "passed",
+      "evidence": "local-synthetic-postgresql-dump-restore",
+      "tables": 9,
+      "tenantWorkspaces": 2,
+      "exactCostRestored": true,
+      "metadataCleanupReapplied": true,
+      "metadataCleanupIdempotent": true,
+      "checksum": "352c6a65d8c7f8006cb40e084e4002fb5d0e7b3aafc80a2f59fdd0cee25ad6a9"
+    },
+    "browserRecovery": {
+      "passed": true,
+      "encrypted": true,
+      "wrongPasswordRejected": true,
+      "tamperRejected": true,
+      "originalBytes": true,
+      "unknownYearPreserved": true,
+      "exactCents": true,
+      "deletion": true,
+      "networkObservation": {
+        "requests": 411,
+        "startsBeforeUpload": true,
+        "rawPrivateMarkersAbsent": true,
+        "limitation": "Checks raw request URLs and postData for the synthetic SSN, filename and PDF signature; not a general encoded or binary PII proof."
+      }
+    },
+    "result": "passed"
+  },
+  "previousApplicationCommit": "d32cb8cf3d607c643c4c7f7e1b845fcace61563f",
+  "browser": {
+    "container": {
+      "job": 123016997780,
+      "passed": 520,
+      "hostedSkipped": 5,
+      "configuredRetries": 0,
+      "reportedFlaky": 0,
+      "duration": "19.6m",
+      "log": {
+        "path": ".local/upgrade-evidence/183c1bbc-container-job.log",
+        "sha256": "46d8fa9a6091c12d6be9bc4e11adb4a48392c037827263a27fe66635bc517579"
+      }
+    },
+    "selfHost": {
+      "job": 123016998187,
+      "passed": 520,
+      "hostedSkipped": 5,
+      "configuredRetries": 1,
+      "reportedFlaky": 0,
+      "duration": "26.6m",
+      "log": {
+        "path": ".local/upgrade-evidence/183c1bbc-browser.log",
+        "sha256": "a9d09a91ecc5b57b11bf06dd2a6c9306357802b1cf683de34089f5f17cca4a56"
+      }
+    }
+  },
+  "independentHumanSecurityReview": "pending",
+  "otherCi": "docs/upgrade-2026-ci-183c1bbc.json",
+  "runtimeScan": {
+    "sbomComponents": 2930,
+    "sbomTimestamp": "2026-10-28T18:51:34Z",
+    "scanner": "grype0.121.0",
+    "matches": 157,
+    "distinctAdvisories": 67,
+    "matchSeverities": {
+      "High": 54,
+      "Negligible": 46,
+      "Medium": 47,
+      "Low": 10
+    },
+    "npmMatches": 0,
+    "fixedVersionMatches": 0,
+    "exactAdvisoryTuplesUnchangedFrom76d93bb6": true,
+    "ownerConfirmation": "pending",
+    "reviewBy": "2026-11-07",
+    "databaseBuilt": "2026-10-28T06:23:30Z",
+    "databaseSchemaVersion": "v6.1.10",
+    "databaseValid": true,
+    "sbomGenerator": "syft1.42.3"
+  },
+  "artifacts": {
+    "container-smoke.log": {
+      "path": ".local/upgrade-evidence/183c1bbc-runtime/container-smoke.log",
+      "sha256": "9f2414dd061bc5428ac0ab057997c3ed491dadc575315cbceee5e37d9196bf5a"
+    },
+    "container-recovery.log": {
+      "path": ".local/upgrade-evidence/183c1bbc-runtime/container-recovery.log",
+      "sha256": "03cd4499b9c2e6a70ba6e9168c4e1acac0b2d9cd18864615aa71b6916445deb8"
+    },
+    "container-vulnerabilities.json": {
+      "path": ".local/upgrade-evidence/183c1bbc-runtime/container-vulnerabilities.json",
+      "sha256": "86aeb1cd98f1fe9c1a893ab85e2f145745b0c8f38f8ff25af032284e4c142be0"
+    },
+    "container.cdx.json": {
+      "path": ".local/upgrade-evidence/183c1bbc-runtime/container.cdx.json",
+      "sha256": "3e00473f55ff4cdf4a56204471e03306282a2e33671869c27015ca49aa85215b"
+    }
+  },
+  "verification": "ZIP hash matches GitHub artifact metadata. Source commit and candidate/previous image digests occur in completed build/smoke/recovery job. All six phases conserve database, browser facts and original document bytes with recorded runtime restrictions. No hosted skip is counted as passed."
+}

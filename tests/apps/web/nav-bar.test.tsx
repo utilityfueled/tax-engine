@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { renderToStaticMarkup } from "react-dom/server";
 import { NavBar } from "../../../apps/web/src/components/nav-bar";
 
 interface ElementLike {
@@ -133,9 +134,10 @@ describe("nav bar", () => {
       const tree = await NavBar();
 
       expect(tree).toBeTruthy();
-      // <nav> has implicit navigation role — no explicit role needed
-      expect(isElementLike(tree) && tree.type).toBe("nav");
-      expect(isElementLike(tree) && tree.props?.["aria-label"]).toBe("Main navigation");
+      // Check the rendered landmark, including the client scroll boundary.
+      const markup = renderToStaticMarkup(tree);
+      expect(markup).toMatch(/<nav\b[^>]*\baria-label="Main navigation"/);
+      expect(markup.match(/<nav\b/g)).toHaveLength(1);
     } finally {
       if (originalMode !== undefined) {
         process.env.TAX_ENGINE_DEPLOYMENT_MODE = originalMode;

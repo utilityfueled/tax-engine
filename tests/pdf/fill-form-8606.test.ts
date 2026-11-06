@@ -24,7 +24,7 @@ function getFieldText(doc: PDFDocument, fieldName: string): string | undefined {
   return undefined;
 }
 
-const BLANK_8606 = "forms/blank/f8606.pdf";
+const BLANK_8606 = "forms/blank/2025/f8606.pdf";
 const F = FORM_8606_FIELDS;
 
 // ─── Fixture 1: Single filer — nondeductible contribution + distribution ──

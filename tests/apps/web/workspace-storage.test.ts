@@ -1,3 +1,5 @@
+import { workspaceScenarioContext } from "../../helpers/workspace-calculation-context";
+import { workspaceTaxpayerFixture } from "../../helpers/workspace-taxpayer";
 import { describe, expect, it } from "vitest";
 import { officialSampleDocumentFixtures, supportMatrix } from "@tax-engine/contracts";
 import {
@@ -119,7 +121,7 @@ describe("workspace storage", () => {
     const storage = createMemoryStorage();
 
     const workspace = ingestFiles(storage, "supported-summary", [
-      { name: "fw2.pdf", size: 10 },
+      { name: "fw2--2026.pdf", size: 10 },
       { name: "f1099div.pdf", size: 11 }
     ]);
 
@@ -133,7 +135,7 @@ describe("workspace storage", () => {
         status: "pending",
         answeredAt: null,
         answerText: null,
-        sourceDocumentIds: ["irs-w2-2026:fw2.pdf:10"]
+        sourceDocumentIds: ["irs-w2-2026:fw2--2026.pdf:10"]
       },
       {
         id: "withholding",
@@ -141,7 +143,7 @@ describe("workspace storage", () => {
         status: "pending",
         answeredAt: null,
         answerText: null,
-        sourceDocumentIds: ["irs-w2-2026:fw2.pdf:10"]
+        sourceDocumentIds: ["irs-w2-2026:fw2--2026.pdf:10"]
       },
       {
         id: "ordinary-dividends",
@@ -789,7 +791,7 @@ describe("workspace storage", () => {
     expect(workspace.checklist.find((item) => item.id === "interview")?.status).toBe("needs-input");
   });
 
-  it("promotes answered 1099-NEC fixture prompts into a deterministic Schedule C recompute preview", async () => {
+  it("keeps answered NEC source records without inventing a complete business calculation", async () => {
     const storage = createMemoryStorage();
     const workspaceId = "self-employment-ready";
 
@@ -806,7 +808,7 @@ describe("workspace storage", () => {
       "schedule-c-expense-review",
       "No business expenses or home office deduction apply to this fixture."
     );
-    workspace = await refreshWorkspaceEnginePreview(workspace);
+    workspace = await refreshWorkspaceEnginePreview(workspace, workspaceTaxpayerFixture(), workspaceScenarioContext(workspace.structuredFacts, workspaceTaxpayerFixture()));
 
     expect(workspace.returnSummary).toEqual({
       status: "ready-to-recompute",
@@ -830,31 +832,7 @@ describe("workspace storage", () => {
         }
       ]
     });
-    expect(workspace.enginePreview).toMatchObject({
-      mode: "engine-recompute",
-      taxYear: 2025,
-      sourceDocumentIds: ["irs-1099-nec-2025:f1099nec.pdf:13"],
-      sourceFixtureIds: ["irs-1099-nec-2025"],
-      assumptions: [
-        "Uploaded PDFs are not parsed yet; this engine run uses fixture-derived facts captured in the workspace ledger.",
-        "The confirmed 2025 Form 1099-NEC upload contributes $18,000 of Schedule C gross receipts with no withholding.",
-        "This simple Schedule C preview assumes zero business expenses and no home office deduction unless a later fact model captures them explicitly."
-      ],
-      metrics: {
-        totalIncome: "18000",
-        totalPayments: "182"
-      }
-    });
-    expect(workspace.enginePreview?.highlightedLines).toEqual(expect.arrayContaining([
-      expect.objectContaining({
-        id: "Sched C:31",
-        value: "18000"
-      }),
-      expect.objectContaining({
-        id: "Sched 1:3",
-        value: "18000"
-      })
-    ]));
+    expect(workspace.enginePreview).toBeNull();
     expect(workspace.checklist.find((item) => item.id === "coverage")?.status).toBe("ready");
     expect(workspace.checklist.find((item) => item.id === "interview")?.status).toBe("ready");
     expect(workspace.checklist.find((item) => item.id === "review")?.status).toBe("ready");
@@ -877,7 +855,7 @@ describe("workspace storage", () => {
       "cost-basis-review",
       "Basis reporting and holding periods are confirmed."
     );
-    workspace = await refreshWorkspaceEnginePreview(workspace);
+    workspace = await refreshWorkspaceEnginePreview(workspace, workspaceTaxpayerFixture(), workspaceScenarioContext(workspace.structuredFacts, workspaceTaxpayerFixture()));
 
     expect(workspace.returnSummary).toEqual({
       status: "ready-to-recompute",
@@ -903,25 +881,22 @@ describe("workspace storage", () => {
     });
     expect(workspace.enginePreview).toMatchObject({
       mode: "engine-recompute",
-      title: "Deterministic engine recompute preview",
+      title: "Complete return recompute preview",
       taxYear: 2025,
       filingStatus: "single",
       filingState: "TX",
       sourceDocumentIds: ["irs-1099-b-2025:f1099b--2025.pdf:12"],
       sourceFixtureIds: ["irs-1099-b-2025"],
-      assumptions: [
-        "Uploaded PDFs are not parsed yet; this engine run uses fixture-derived transaction facts captured in the workspace ledger.",
-        "The confirmed 2025 Form 1099-B upload contributes 2 capital-gains transaction fact(s) with no withholding or carryforwards.",
-        "This preview only runs after the related capital-gains facts are fully confirmed in the interview loop."
-      ],
+      assumptions: ["This preview uses the supplied complete, reviewed return facts. Each selected original document record is reconciled to its actual calculation source; abbreviated summaries do not supply missing eligibility, identity, dates or amounts."],
       metrics: {
         totalIncome: "55000",
         agi: "55000",
+        // Published 2025 single row [14,250, 14,300): 1,475; the 25,000 gain is at 0%.
         taxableIncome: "39250",
-        totalTax: "1534",
+        totalTax: "1475",
         totalPayments: "0",
         refund: "0",
-        amountOwed: "1534"
+        amountOwed: "1537"
       },
       highlightedLines: expect.arrayContaining([
         {
@@ -929,7 +904,7 @@ describe("workspace storage", () => {
           form: "1040",
           line: "24",
           label: "Total tax",
-          value: "1534",
+          value: "1475",
           formula: expect.stringContaining("Line 22"),
           sourceFactIds: [
             "broker-proceeds:document-detected",
@@ -945,8 +920,8 @@ describe("workspace storage", () => {
           form: "1040",
           line: "37",
           label: "Amount you owe",
-          value: "1534",
-          formula: "Total tax - Total payments (if positive)",
+          value: "1537",
+          formula: "max(0, total tax - total payments + line 38 penalty)",
           sourceFactIds: [
             "broker-proceeds:document-detected",
             "broker-proceeds:fixture-long-term-sale",
@@ -992,7 +967,7 @@ describe("workspace storage", () => {
       "capital-gain-distributions",
       "Capital gain distributions are final and no basis review is needed."
     );
-    workspace = await refreshWorkspaceEnginePreview(workspace);
+    workspace = await refreshWorkspaceEnginePreview(workspace, workspaceTaxpayerFixture(), workspaceScenarioContext(workspace.structuredFacts, workspaceTaxpayerFixture()));
 
     expect(workspace.summary).toEqual({
       totalDocuments: 2,
@@ -1035,7 +1010,7 @@ describe("workspace storage", () => {
     });
     expect(workspace.enginePreview).toMatchObject({
       mode: "engine-recompute",
-      title: "Deterministic engine recompute preview",
+      title: "Complete return recompute preview",
       taxYear: 2025,
       filingStatus: "single",
       filingState: "TX",
@@ -1044,19 +1019,16 @@ describe("workspace storage", () => {
         "irs-1099-div-2024:f1099div.pdf:11"
       ],
       sourceFixtureIds: ["irs-1099-int-2024", "irs-1099-div-2024"],
-      assumptions: [
-        "Uploaded PDFs are not parsed yet; this engine run uses fixture-derived facts captured in the workspace ledger.",
-        "The confirmed 2025 Form 1099-INT upload contributes $20,000 of taxable interest with no withholding and no early-withdrawal penalty.",
-        "The confirmed 2025 Form 1099-DIV upload contributes $4,000 of ordinary dividends, including $3,000 of qualified dividends, plus $1,000 of capital gain distributions."
-      ],
+      assumptions: ["This preview uses the supplied complete, reviewed return facts. Each selected original document record is reconciled to its actual calculation source; abbreviated summaries do not supply missing eligibility, identity, dates or amounts."],
       metrics: {
         totalIncome: "25000",
         agi: "25000",
+        // Published single row [5,250, 5,300): 528; 4,000 preferential income is at 0%.
         taxableIncome: "9250",
-        totalTax: "525",
+        totalTax: "528",
         totalPayments: "0",
         refund: "0",
-        amountOwed: "525"
+        amountOwed: "528"
       },
       highlightedLines: expect.arrayContaining([
         {
@@ -1116,7 +1088,7 @@ describe("workspace storage", () => {
           line: "15",
           label: "Net long-term capital gain/loss",
           value: "1000",
-          formula: "Form 8949 Part II + K-1 Box 9a + K-1 1041 Box 4a + K-1 1041 Box 11D + Form 4797 Line 9 + 1099-DIV Box 2a + prior LT carryforward - §1202 exclusion + home sale gain + Form 6781 long-term + Form 6252 long-term",
+          formula: "Form 8949 Part II after Q adjustments + K-1 Box 9a + K-1 1041 Box 4a + K-1 1041 Box 11D + Form 4797 Line 9 + 1099-DIV Box 2a + prior LT carryforward + home sale gain + Form 6781 long-term + Form 6252 long-term",
           sourceFactIds: [
             "ordinary-dividends:document-detected",
             "ordinary-dividends:fixture-dividend-income",
@@ -1197,7 +1169,7 @@ describe("workspace storage", () => {
           form: "1040",
           line: "24",
           label: "Total tax",
-          value: "525",
+          value: "528",
           formula: expect.stringContaining("Line 22"),
           sourceFactIds: [
             "taxable-interest:document-detected",
@@ -1240,9 +1212,9 @@ describe("workspace storage", () => {
           id: "1040:34",
           form: "1040",
           line: "34",
-          label: "Overpayment (refund)",
+          label: "Overpayment before estimated-tax penalty",
           value: "0",
-          formula: "Total payments - Total tax (if positive)",
+          formula: "max(0, total payments - total tax)",
           sourceFactIds: [
             "taxable-interest:document-detected",
             "taxable-interest:fixture-interest-income",
@@ -1263,8 +1235,8 @@ describe("workspace storage", () => {
           form: "1040",
           line: "37",
           label: "Amount you owe",
-          value: "525",
-          formula: "Total tax - Total payments (if positive)",
+          value: "528",
+          formula: "max(0, total tax - total payments + line 38 penalty)",
           sourceFactIds: [
             "taxable-interest:document-detected",
             "taxable-interest:fixture-interest-income",
@@ -1307,7 +1279,7 @@ describe("workspace storage", () => {
       "cost-basis-review",
       "Basis reporting and holding periods are confirmed."
     );
-    workspace = await refreshWorkspaceEnginePreview(workspace);
+    workspace = await refreshWorkspaceEnginePreview(workspace, workspaceTaxpayerFixture(), workspaceScenarioContext(workspace.structuredFacts, workspaceTaxpayerFixture()));
 
     expect(workspace.returnSummary.status).toBe("ready-to-recompute");
     expect(workspace.returnSummary.items).toEqual([
@@ -1327,7 +1299,7 @@ describe("workspace storage", () => {
     ]);
     expect(workspace.enginePreview).toMatchObject({
       mode: "engine-recompute",
-      title: "Deterministic engine recompute preview",
+      title: "Complete return recompute preview",
       taxYear: 2025,
       filingStatus: "single",
       filingState: "TX",
@@ -1336,19 +1308,16 @@ describe("workspace storage", () => {
         "irs-1099-b-2025:f1099b--2025.pdf:18"
       ],
       sourceFixtureIds: ["irs-1099-b-2025"],
-      assumptions: [
-        "Uploaded PDFs are not parsed yet; this engine run uses fixture-derived transaction facts captured in the workspace ledger.",
-        "The confirmed 2025 Form 1099-B uploads contribute 4 capital-gains transaction fact(s) with no withholding or carryforwards.",
-        "This preview only runs after the related capital-gains facts are fully confirmed in the interview loop."
-      ],
+      assumptions: ["This preview uses the supplied complete, reviewed return facts. Each selected original document record is reconciled to its actual calculation source; abbreviated summaries do not supply missing eligibility, identity, dates or amounts."],
       metrics: {
         totalIncome: "110000",
         agi: "110000",
+        // Single row [44,250, 44,300): 5,075 + (50,000 - 4,100) × 15% = 11,960.
         taxableIncome: "94250",
-        totalTax: "12458",
+        totalTax: "11960",
         totalPayments: "0",
         refund: "0",
-        amountOwed: "12458"
+        amountOwed: "12461"
       },
       highlightedLines: expect.arrayContaining([
         {
@@ -1360,8 +1329,10 @@ describe("workspace storage", () => {
           formula: "Form 8949 Part I + K-1 Box 8 + K-1 1041 Box 3 + K-1 1041 Box 11C + prior ST carryforward + Form 6781 short-term + Form 6252 short-term",
           sourceFactIds: [
             "broker-proceeds:document-detected",
-            "broker-proceeds:fixture-long-term-sale",
-            "broker-proceeds:fixture-short-term-sale",
+            "broker-proceeds:fixture-long-term-sale:irs-1099-b-2025:f1099b--2025.pdf:12",
+            "broker-proceeds:fixture-long-term-sale:irs-1099-b-2025:f1099b--2025.pdf:18",
+            "broker-proceeds:fixture-short-term-sale:irs-1099-b-2025:f1099b--2025.pdf:12",
+            "broker-proceeds:fixture-short-term-sale:irs-1099-b-2025:f1099b--2025.pdf:18",
             "broker-proceeds:interview-answer",
             "cost-basis-review:document-detected",
             "cost-basis-review:interview-answer"
@@ -1373,11 +1344,13 @@ describe("workspace storage", () => {
           line: "15",
           label: "Net long-term capital gain/loss",
           value: "50000",
-          formula: "Form 8949 Part II + K-1 Box 9a + K-1 1041 Box 4a + K-1 1041 Box 11D + Form 4797 Line 9 + 1099-DIV Box 2a + prior LT carryforward - §1202 exclusion + home sale gain + Form 6781 long-term + Form 6252 long-term",
+          formula: "Form 8949 Part II after Q adjustments + K-1 Box 9a + K-1 1041 Box 4a + K-1 1041 Box 11D + Form 4797 Line 9 + 1099-DIV Box 2a + prior LT carryforward + home sale gain + Form 6781 long-term + Form 6252 long-term",
           sourceFactIds: [
             "broker-proceeds:document-detected",
-            "broker-proceeds:fixture-long-term-sale",
-            "broker-proceeds:fixture-short-term-sale",
+            "broker-proceeds:fixture-long-term-sale:irs-1099-b-2025:f1099b--2025.pdf:12",
+            "broker-proceeds:fixture-long-term-sale:irs-1099-b-2025:f1099b--2025.pdf:18",
+            "broker-proceeds:fixture-short-term-sale:irs-1099-b-2025:f1099b--2025.pdf:12",
+            "broker-proceeds:fixture-short-term-sale:irs-1099-b-2025:f1099b--2025.pdf:18",
             "broker-proceeds:interview-answer",
             "cost-basis-review:document-detected",
             "cost-basis-review:interview-answer"
@@ -1388,12 +1361,14 @@ describe("workspace storage", () => {
           form: "1040",
           line: "24",
           label: "Total tax",
-          value: "12458",
+          value: "11960",
           formula: expect.stringContaining("Line 22"),
           sourceFactIds: [
             "broker-proceeds:document-detected",
-            "broker-proceeds:fixture-long-term-sale",
-            "broker-proceeds:fixture-short-term-sale",
+            "broker-proceeds:fixture-long-term-sale:irs-1099-b-2025:f1099b--2025.pdf:12",
+            "broker-proceeds:fixture-long-term-sale:irs-1099-b-2025:f1099b--2025.pdf:18",
+            "broker-proceeds:fixture-short-term-sale:irs-1099-b-2025:f1099b--2025.pdf:12",
+            "broker-proceeds:fixture-short-term-sale:irs-1099-b-2025:f1099b--2025.pdf:18",
             "broker-proceeds:interview-answer",
             "cost-basis-review:document-detected",
             "cost-basis-review:interview-answer"
@@ -1404,12 +1379,14 @@ describe("workspace storage", () => {
           form: "1040",
           line: "37",
           label: "Amount you owe",
-          value: "12458",
-          formula: "Total tax - Total payments (if positive)",
+          value: "12461",
+          formula: "max(0, total tax - total payments + line 38 penalty)",
           sourceFactIds: [
             "broker-proceeds:document-detected",
-            "broker-proceeds:fixture-long-term-sale",
-            "broker-proceeds:fixture-short-term-sale",
+            "broker-proceeds:fixture-long-term-sale:irs-1099-b-2025:f1099b--2025.pdf:12",
+            "broker-proceeds:fixture-long-term-sale:irs-1099-b-2025:f1099b--2025.pdf:18",
+            "broker-proceeds:fixture-short-term-sale:irs-1099-b-2025:f1099b--2025.pdf:12",
+            "broker-proceeds:fixture-short-term-sale:irs-1099-b-2025:f1099b--2025.pdf:18",
             "broker-proceeds:interview-answer",
             "cost-basis-review:document-detected",
             "cost-basis-review:interview-answer"
@@ -1423,7 +1400,7 @@ describe("workspace storage", () => {
     const storage = createMemoryStorage();
     const workspaceId = "future-year-review";
 
-    ingestFiles(storage, workspaceId, [{ name: "fw2.pdf", size: 10 }]);
+    ingestFiles(storage, workspaceId, [{ name: "fw2--2026.pdf", size: 10 }]);
     answerInterviewQuestion(
       storage,
       workspaceId,
@@ -1460,7 +1437,7 @@ describe("workspace storage", () => {
           status: "ready",
           engineTargets: ["Form 1040 Lines 1 and 25a"],
           relatedFactIds: ["wages", "withholding"],
-          sourceDocumentIds: ["irs-w2-2026:fw2.pdf:10"],
+          sourceDocumentIds: ["irs-w2-2026:fw2--2026.pdf:10"],
           answeredFactCount: 2,
           factCount: 2
         }
@@ -1485,7 +1462,7 @@ describe("workspace storage", () => {
       "withholding",
       "Federal withholding matches the taxpayer copy."
     );
-    workspace = await refreshWorkspaceEnginePreview(workspace);
+    workspace = await refreshWorkspaceEnginePreview(workspace, workspaceTaxpayerFixture(), workspaceScenarioContext(workspace.structuredFacts, workspaceTaxpayerFixture()));
 
     expect(workspace.returnSummary).toEqual({
       status: "ready-to-recompute",
@@ -1511,23 +1488,21 @@ describe("workspace storage", () => {
     });
     expect(workspace.enginePreview).toMatchObject({
       mode: "engine-recompute",
-      title: "Deterministic engine recompute preview",
+      title: "Complete return recompute preview",
       taxYear: 2025,
       filingStatus: "single",
       filingState: "TX",
       sourceDocumentIds: ["irs-w2-2025:fw2--2025.pdf:10"],
       sourceFixtureIds: ["irs-w2-2025"],
-      assumptions: [
-        "Uploaded PDFs are not parsed yet; this engine run uses fixture-derived facts captured in the workspace ledger.",
-        "The confirmed 2025 Form W-2 upload contributes $52,000 of wages and $5,000 of federal withholding."
-      ],
+      assumptions: ["This preview uses the supplied complete, reviewed return facts. Each selected original document record is reconciled to its actual calculation source; abbreviated summaries do not supply missing eligibility, identity, dates or amounts."],
       metrics: {
         totalIncome: "52000",
         agi: "52000",
+        // Published single row [36,250, 36,300): 4,115; 5,000 withholding leaves 885.
         taxableIncome: "36250",
-        totalTax: "4112",
+        totalTax: "4115",
         totalPayments: "5000",
-        refund: "888",
+        refund: "885",
         amountOwed: "0"
       },
       highlightedLines: expect.arrayContaining([
@@ -1557,7 +1532,7 @@ describe("workspace storage", () => {
         }),
         expect.objectContaining({
           id: "1040:34",
-          value: "888",
+          value: "885",
           sourceFactIds: [
             "wages:document-detected",
             "wages:fixture-wages",
@@ -1672,7 +1647,7 @@ describe("workspace storage", () => {
     const storage = createMemoryStorage();
 
     const uploadedWorkspace = ingestFiles(storage, "remove-one", [
-      { name: "fw2.pdf", size: 10 },
+      { name: "fw2--2026.pdf", size: 10 },
       { name: "f1099int.pdf", size: 11 }
     ]);
 
@@ -1749,8 +1724,8 @@ describe("workspace storage", () => {
     const storage = createMemoryStorage();
 
     const uploadedWorkspace = ingestFiles(storage, "duplicate-uploads", [
-      { name: "fw2.pdf", size: 10 },
-      { name: "fw2.pdf", size: 10 }
+      { name: "fw2--2026.pdf", size: 10 },
+      { name: "fw2--2026.pdf", size: 10 }
     ]);
 
     expect(uploadedWorkspace.summary).toEqual({
@@ -1761,11 +1736,11 @@ describe("workspace storage", () => {
       interviewQuestionsRemaining: 2
     });
     expect(uploadedWorkspace.documents).toHaveLength(2);
-    expect(uploadedWorkspace.documents[0]?.id).toBe("irs-w2-2026:fw2.pdf:10");
-    expect(uploadedWorkspace.documents[1]?.id).toBe("irs-w2-2026:fw2.pdf:10#2");
+    expect(uploadedWorkspace.documents[0]?.id).toBe("irs-w2-2026:fw2--2026.pdf:10");
+    expect(uploadedWorkspace.documents[1]?.id).toBe("irs-w2-2026:fw2--2026.pdf:10#2");
     expect(uploadedWorkspace.documents.map((document) => document.id)).toEqual([
-      "irs-w2-2026:fw2.pdf:10",
-      "irs-w2-2026:fw2.pdf:10#2"
+      "irs-w2-2026:fw2--2026.pdf:10",
+      "irs-w2-2026:fw2--2026.pdf:10#2"
     ]);
     expect(uploadedWorkspace.seededReturn.facts).toEqual([
       {
@@ -1774,7 +1749,7 @@ describe("workspace storage", () => {
         status: "pending",
         answeredAt: null,
         answerText: null,
-        sourceDocumentIds: ["irs-w2-2026:fw2.pdf:10", "irs-w2-2026:fw2.pdf:10#2"]
+        sourceDocumentIds: ["irs-w2-2026:fw2--2026.pdf:10", "irs-w2-2026:fw2--2026.pdf:10#2"]
       },
       {
         id: "withholding",
@@ -1782,13 +1757,13 @@ describe("workspace storage", () => {
         status: "pending",
         answeredAt: null,
         answerText: null,
-        sourceDocumentIds: ["irs-w2-2026:fw2.pdf:10", "irs-w2-2026:fw2.pdf:10#2"]
+        sourceDocumentIds: ["irs-w2-2026:fw2--2026.pdf:10", "irs-w2-2026:fw2--2026.pdf:10#2"]
       }
     ]);
 
-    const nextWorkspace = removeDocument(storage, "duplicate-uploads", "irs-w2-2026:fw2.pdf:10");
+    const nextWorkspace = removeDocument(storage, "duplicate-uploads", "irs-w2-2026:fw2--2026.pdf:10");
 
-    expect(nextWorkspace.documents.map((document) => document.id)).toEqual(["irs-w2-2026:fw2.pdf:10#2"]);
+    expect(nextWorkspace.documents.map((document) => document.id)).toEqual(["irs-w2-2026:fw2--2026.pdf:10#2"]);
     expect(nextWorkspace.summary.totalDocuments).toBe(1);
     expect(nextWorkspace.seededReturn.facts).toEqual([
       {
@@ -1797,7 +1772,7 @@ describe("workspace storage", () => {
         status: "pending",
         answeredAt: null,
         answerText: null,
-        sourceDocumentIds: ["irs-w2-2026:fw2.pdf:10#2"]
+        sourceDocumentIds: ["irs-w2-2026:fw2--2026.pdf:10#2"]
       },
       {
         id: "withholding",
@@ -1805,7 +1780,7 @@ describe("workspace storage", () => {
         status: "pending",
         answeredAt: null,
         answerText: null,
-        sourceDocumentIds: ["irs-w2-2026:fw2.pdf:10#2"]
+        sourceDocumentIds: ["irs-w2-2026:fw2--2026.pdf:10#2"]
       }
     ]);
     expect(ensureWorkspace(storage, "duplicate-uploads")).toEqual(nextWorkspace);
@@ -1823,8 +1798,8 @@ describe("workspace storage", () => {
           storageMode: "local-browser",
           documents: [
             {
-              id: "irs-w2-2026:fw2.pdf:10",
-              name: "fw2.pdf",
+              id: "irs-w2-2026:fw2--2026.pdf:10",
+              name: "fw2--2026.pdf",
               size: 10,
               uploadedAt: "2026-03-11T00:00:00.000Z",
               kind: "w2",
@@ -1835,8 +1810,8 @@ describe("workspace storage", () => {
               seededFactIds: ["wages", "withholding"]
             },
             {
-              id: "irs-w2-2026:fw2.pdf:10",
-              name: "fw2.pdf",
+              id: "irs-w2-2026:fw2--2026.pdf:10",
+              name: "fw2--2026.pdf",
               size: 10,
               uploadedAt: "2026-03-11T00:01:00.000Z",
               kind: "w2",
@@ -1871,8 +1846,8 @@ describe("workspace storage", () => {
     const workspace = ensureWorkspace(storage, "legacy");
 
     expect(workspace.documents.map((document) => document.id)).toEqual([
-      "irs-w2-2026:fw2.pdf:10",
-      "irs-w2-2026:fw2.pdf:10#2"
+      "irs-w2-2026:fw2--2026.pdf:10",
+      "irs-w2-2026:fw2--2026.pdf:10#2"
     ]);
     expect(workspace.seededReturn.facts).toEqual([
       {
@@ -1881,7 +1856,7 @@ describe("workspace storage", () => {
         status: "pending",
         answeredAt: null,
         answerText: null,
-        sourceDocumentIds: ["irs-w2-2026:fw2.pdf:10", "irs-w2-2026:fw2.pdf:10#2"]
+        sourceDocumentIds: ["irs-w2-2026:fw2--2026.pdf:10", "irs-w2-2026:fw2--2026.pdf:10#2"]
       },
       {
         id: "withholding",
@@ -1889,7 +1864,7 @@ describe("workspace storage", () => {
         status: "pending",
         answeredAt: null,
         answerText: null,
-        sourceDocumentIds: ["irs-w2-2026:fw2.pdf:10", "irs-w2-2026:fw2.pdf:10#2"]
+        sourceDocumentIds: ["irs-w2-2026:fw2--2026.pdf:10", "irs-w2-2026:fw2--2026.pdf:10#2"]
       }
     ]);
   });
@@ -1906,8 +1881,8 @@ describe("workspace storage", () => {
           storageMode: "local-browser",
           documents: [
             {
-              id: "irs-w2-2026:fw2.pdf:10",
-              name: "fw2.pdf",
+              id: "irs-w2-2026:fw2--2026.pdf:10",
+              name: "fw2--2026.pdf",
               size: 10,
               uploadedAt: "2026-03-11T00:00:00.000Z",
               kind: "w2",
@@ -1935,7 +1910,7 @@ describe("workspace storage", () => {
                 status: "answered",
                 answeredAt: "2026-03-11T00:05:00.000Z",
                 answerText: "Legacy filer confirmed the final W-2 is complete.",
-                sourceDocumentIds: ["irs-w2-2026:fw2.pdf:10"]
+                sourceDocumentIds: ["irs-w2-2026:fw2--2026.pdf:10"]
               },
               {
                 id: "withholding",
@@ -1943,7 +1918,7 @@ describe("workspace storage", () => {
                 status: "pending",
                 answeredAt: null,
                 answerText: null,
-                sourceDocumentIds: ["irs-w2-2026:fw2.pdf:10"]
+                sourceDocumentIds: ["irs-w2-2026:fw2--2026.pdf:10"]
               }
             ],
             interviewQuestions: [],
@@ -1965,7 +1940,7 @@ describe("workspace storage", () => {
         status: "answered",
         answeredAt: "2026-03-11T00:05:00.000Z",
         answerText: "Legacy filer confirmed the final W-2 is complete.",
-        sourceDocumentIds: ["irs-w2-2026:fw2.pdf:10"]
+        sourceDocumentIds: ["irs-w2-2026:fw2--2026.pdf:10"]
       },
       {
         id: "withholding",
@@ -1973,7 +1948,7 @@ describe("workspace storage", () => {
         status: "pending",
         answeredAt: null,
         answerText: null,
-        sourceDocumentIds: ["irs-w2-2026:fw2.pdf:10"]
+        sourceDocumentIds: ["irs-w2-2026:fw2--2026.pdf:10"]
       }
     ]);
     expect(workspace.seededReturn.interviewQuestions).toEqual([
@@ -1984,7 +1959,7 @@ describe("workspace storage", () => {
         status: "answered",
         answeredAt: "2026-03-11T00:05:00.000Z",
         answerText: "Legacy filer confirmed the final W-2 is complete.",
-        sourceDocumentIds: ["irs-w2-2026:fw2.pdf:10"]
+        sourceDocumentIds: ["irs-w2-2026:fw2--2026.pdf:10"]
       },
       {
         id: "withholding",
@@ -1993,7 +1968,7 @@ describe("workspace storage", () => {
         status: "pending",
         answeredAt: null,
         answerText: null,
-        sourceDocumentIds: ["irs-w2-2026:fw2.pdf:10"]
+        sourceDocumentIds: ["irs-w2-2026:fw2--2026.pdf:10"]
       }
     ]);
     expect(workspace.structuredFacts).toContainEqual({
@@ -2004,7 +1979,7 @@ describe("workspace storage", () => {
       value: "Legacy filer confirmed the final W-2 is complete.",
       sourceType: "user-answer",
       confidence: "high",
-      sourceDocumentIds: ["irs-w2-2026:fw2.pdf:10"],
+      sourceDocumentIds: ["irs-w2-2026:fw2--2026.pdf:10"],
       questionId: "wages",
       updatedAt: "2026-03-11T00:05:00.000Z"
     });
@@ -2031,7 +2006,7 @@ describe("workspace storage", () => {
     ]);
 
     const uploadedWorkspace = ingestFiles(storage, workspaceId, [
-      { name: "fw2.pdf", size: 10 },
+      { name: "fw2--2026.pdf", size: 10 },
       { name: "f1099int.pdf", size: 11 }
     ]);
 
@@ -2041,7 +2016,7 @@ describe("workspace storage", () => {
       kind: "documents-ingested",
       message: "Stored 2 document(s) in local browser storage.",
       documentIds: [
-        "irs-w2-2026:fw2.pdf:10",
+        "irs-w2-2026:fw2--2026.pdf:10",
         "irs-1099-int-2024:f1099int.pdf:11"
       ],
       questionId: null,
@@ -2055,7 +2030,7 @@ describe("workspace storage", () => {
       occurredAt: expect.any(String),
       kind: "interview-answered",
       message: "Saved answer for Wages.",
-      documentIds: ["irs-w2-2026:fw2.pdf:10"],
+      documentIds: ["irs-w2-2026:fw2--2026.pdf:10"],
       questionId: "wages",
       answerText: wageAnswer
     });
@@ -2067,7 +2042,7 @@ describe("workspace storage", () => {
       occurredAt: expect.any(String),
       kind: "interview-reopened",
       message: "Reopened question for Wages.",
-      documentIds: ["irs-w2-2026:fw2.pdf:10"],
+      documentIds: ["irs-w2-2026:fw2--2026.pdf:10"],
       questionId: "wages",
       answerText: null
     });
@@ -2082,16 +2057,14 @@ describe("workspace storage", () => {
       "interview-reopened",
       "workspace-cleared"
     ]);
-    expect(clearedWorkspace.auditTrail[2]?.answerText).toBe(wageAnswer);
+    expect(clearedWorkspace.auditTrail[2]?.answerText).toBeNull();
+    expect(JSON.stringify(clearedWorkspace)).not.toContain(wageAnswer);
     expect(clearedWorkspace.auditTrail[4]).toEqual({
       id: expect.stringMatching(/^workspace-cleared:/),
       occurredAt: expect.any(String),
       kind: "workspace-cleared",
       message: "Reset local return and removed 2 document(s).",
-      documentIds: [
-        "irs-w2-2026:fw2.pdf:10",
-        "irs-1099-int-2024:f1099int.pdf:11"
-      ],
+      documentIds: [],
       questionId: null,
       answerText: null
     });
@@ -2102,7 +2075,7 @@ describe("workspace storage", () => {
     const wageAnswer = "Employer confirmed the final W-2 includes no corrected boxes or dependent care benefits.";
 
     ingestFiles(storage, "interview-loop", [
-      { name: "fw2.pdf", size: 10 },
+      { name: "fw2--2026.pdf", size: 10 },
       { name: "f1099int.pdf", size: 11 }
     ]);
 
@@ -2118,7 +2091,7 @@ describe("workspace storage", () => {
         value: "Detected from 1 uploaded document(s).",
         sourceType: "upload",
         confidence: "low",
-        sourceDocumentIds: ["irs-w2-2026:fw2.pdf:10"],
+        sourceDocumentIds: ["irs-w2-2026:fw2--2026.pdf:10"],
         questionId: null,
         updatedAt: expect.any(String)
       },
@@ -2127,17 +2100,23 @@ describe("workspace storage", () => {
         factId: "wages",
         label: "Wages",
         kind: "fixture-derived",
-        value: "Official fixture wages: Form W-2 box 1 wages $52,000 and box 2 federal withholding $5,000.",
+        value: "Official fixture wages: Form W-2 box 1 wages $52,000, box 2 federal withholding $5,000, and boxes 3 and 5 payroll wages $52,000.",
         sourceType: "official-fixture",
         confidence: "high",
-        sourceDocumentIds: ["irs-w2-2026:fw2.pdf:10"],
+        sourceDocumentIds: ["irs-w2-2026:fw2--2026.pdf:10"],
         questionId: null,
         updatedAt: expect.any(String),
         machineValue: {
-          entryKind: "w2-summary",
+          entryKind: "w2-summary", stateTaxReporting: "none",
           employerName: "Official fixture employer",
           employerEin: "12-3456789",
           wages: "52000",
+          socialSecurityWages: "52000",
+          socialSecurityTips: "0",
+          box10DependentCareBenefits: "0",
+          socialSecurityWithheld: "3224",
+          medicareWages: "52000",
+          medicareWithheld: "754",
           federalWithheld: "5000"
         }
       },
@@ -2149,7 +2128,7 @@ describe("workspace storage", () => {
         value: wageAnswer,
         sourceType: "user-answer",
         confidence: "high",
-        sourceDocumentIds: ["irs-w2-2026:fw2.pdf:10"],
+        sourceDocumentIds: ["irs-w2-2026:fw2--2026.pdf:10"],
         questionId: "wages",
         updatedAt: expect.any(String)
       },
@@ -2161,7 +2140,7 @@ describe("workspace storage", () => {
         value: "Detected from 1 uploaded document(s).",
         sourceType: "upload",
         confidence: "low",
-        sourceDocumentIds: ["irs-w2-2026:fw2.pdf:10"],
+        sourceDocumentIds: ["irs-w2-2026:fw2--2026.pdf:10"],
         questionId: null,
         updatedAt: expect.any(String)
       },
@@ -2173,7 +2152,7 @@ describe("workspace storage", () => {
         value: "Official fixture withholding: Form W-2 box 2 federal income tax withheld $5,000.",
         sourceType: "official-fixture",
         confidence: "high",
-        sourceDocumentIds: ["irs-w2-2026:fw2.pdf:10"],
+        sourceDocumentIds: ["irs-w2-2026:fw2--2026.pdf:10"],
         questionId: null,
         updatedAt: expect.any(String)
       },
@@ -2218,7 +2197,7 @@ describe("workspace storage", () => {
         status: "answered",
         answeredAt: expect.any(String),
         answerText: wageAnswer,
-        sourceDocumentIds: ["irs-w2-2026:fw2.pdf:10"]
+        sourceDocumentIds: ["irs-w2-2026:fw2--2026.pdf:10"]
       },
       {
         id: "withholding",
@@ -2226,7 +2205,7 @@ describe("workspace storage", () => {
         status: "pending",
         answeredAt: null,
         answerText: null,
-        sourceDocumentIds: ["irs-w2-2026:fw2.pdf:10"]
+        sourceDocumentIds: ["irs-w2-2026:fw2--2026.pdf:10"]
       },
       {
         id: "taxable-interest",
@@ -2245,7 +2224,7 @@ describe("workspace storage", () => {
         status: "answered",
         answeredAt: expect.any(String),
         answerText: wageAnswer,
-        sourceDocumentIds: ["irs-w2-2026:fw2.pdf:10"]
+        sourceDocumentIds: ["irs-w2-2026:fw2--2026.pdf:10"]
       },
       {
         id: "withholding",
@@ -2254,7 +2233,7 @@ describe("workspace storage", () => {
         status: "pending",
         answeredAt: null,
         answerText: null,
-        sourceDocumentIds: ["irs-w2-2026:fw2.pdf:10"]
+        sourceDocumentIds: ["irs-w2-2026:fw2--2026.pdf:10"]
       },
       {
         id: "taxable-interest",
@@ -2284,7 +2263,7 @@ describe("workspace storage", () => {
         value: "Detected from 1 uploaded document(s).",
         sourceType: "upload",
         confidence: "low",
-        sourceDocumentIds: ["irs-w2-2026:fw2.pdf:10"],
+        sourceDocumentIds: ["irs-w2-2026:fw2--2026.pdf:10"],
         questionId: null,
         updatedAt: expect.any(String)
       },
@@ -2293,17 +2272,23 @@ describe("workspace storage", () => {
         factId: "wages",
         label: "Wages",
         kind: "fixture-derived",
-        value: "Official fixture wages: Form W-2 box 1 wages $52,000 and box 2 federal withholding $5,000.",
+        value: "Official fixture wages: Form W-2 box 1 wages $52,000, box 2 federal withholding $5,000, and boxes 3 and 5 payroll wages $52,000.",
         sourceType: "official-fixture",
         confidence: "high",
-        sourceDocumentIds: ["irs-w2-2026:fw2.pdf:10"],
+        sourceDocumentIds: ["irs-w2-2026:fw2--2026.pdf:10"],
         questionId: null,
         updatedAt: expect.any(String),
         machineValue: {
-          entryKind: "w2-summary",
+          entryKind: "w2-summary", stateTaxReporting: "none",
           employerName: "Official fixture employer",
           employerEin: "12-3456789",
           wages: "52000",
+          socialSecurityWages: "52000",
+          socialSecurityTips: "0",
+          box10DependentCareBenefits: "0",
+          socialSecurityWithheld: "3224",
+          medicareWages: "52000",
+          medicareWithheld: "754",
           federalWithheld: "5000"
         }
       },
@@ -2315,7 +2300,7 @@ describe("workspace storage", () => {
         value: "Detected from 1 uploaded document(s).",
         sourceType: "upload",
         confidence: "low",
-        sourceDocumentIds: ["irs-w2-2026:fw2.pdf:10"],
+        sourceDocumentIds: ["irs-w2-2026:fw2--2026.pdf:10"],
         questionId: null,
         updatedAt: expect.any(String)
       },
@@ -2327,7 +2312,7 @@ describe("workspace storage", () => {
         value: "Official fixture withholding: Form W-2 box 2 federal income tax withheld $5,000.",
         sourceType: "official-fixture",
         confidence: "high",
-        sourceDocumentIds: ["irs-w2-2026:fw2.pdf:10"],
+        sourceDocumentIds: ["irs-w2-2026:fw2--2026.pdf:10"],
         questionId: null,
         updatedAt: expect.any(String)
       },
@@ -2372,7 +2357,7 @@ describe("workspace storage", () => {
       status: "pending",
       answeredAt: null,
       answerText: null,
-      sourceDocumentIds: ["irs-w2-2026:fw2.pdf:10"]
+      sourceDocumentIds: ["irs-w2-2026:fw2--2026.pdf:10"]
     });
     expect(reopenedWorkspace.seededReturn.interviewQueue).toEqual([
       "Confirm whether every W-2 is final and whether any boxes require follow-up questions.",
@@ -2385,7 +2370,7 @@ describe("workspace storage", () => {
     const storage = createMemoryStorage();
     const withholdingAnswer = "Federal withholding matches the taxpayer copy and there is no state withholding to add.";
 
-    ingestFiles(storage, "preserve-answers", [{ name: "fw2.pdf", size: 10 }]);
+    ingestFiles(storage, "preserve-answers", [{ name: "fw2--2026.pdf", size: 10 }]);
     answerInterviewQuestion(storage, "preserve-answers", "withholding", withholdingAnswer);
 
     const nextWorkspace = ingestFiles(storage, "preserve-answers", [{ name: "f1099div.pdf", size: 11 }]);
@@ -2398,7 +2383,7 @@ describe("workspace storage", () => {
         status: "pending",
         answeredAt: null,
         answerText: null,
-        sourceDocumentIds: ["irs-w2-2026:fw2.pdf:10"]
+        sourceDocumentIds: ["irs-w2-2026:fw2--2026.pdf:10"]
       },
       {
         id: "withholding",
@@ -2406,7 +2391,7 @@ describe("workspace storage", () => {
         status: "answered",
         answeredAt: expect.any(String),
         answerText: withholdingAnswer,
-        sourceDocumentIds: ["irs-w2-2026:fw2.pdf:10"]
+        sourceDocumentIds: ["irs-w2-2026:fw2--2026.pdf:10"]
       },
       {
         id: "ordinary-dividends",
@@ -2441,7 +2426,7 @@ describe("workspace storage", () => {
         status: "pending",
         answeredAt: null,
         answerText: null,
-        sourceDocumentIds: ["irs-w2-2026:fw2.pdf:10"]
+        sourceDocumentIds: ["irs-w2-2026:fw2--2026.pdf:10"]
       },
       {
         id: "withholding",
@@ -2450,7 +2435,7 @@ describe("workspace storage", () => {
         status: "answered",
         answeredAt: expect.any(String),
         answerText: withholdingAnswer,
-        sourceDocumentIds: ["irs-w2-2026:fw2.pdf:10"]
+        sourceDocumentIds: ["irs-w2-2026:fw2--2026.pdf:10"]
       },
       {
         id: "ordinary-dividends",
@@ -2487,7 +2472,7 @@ describe("workspace storage", () => {
   it("requires trimmed answer notes to persist and keeps them on unrelated updates", () => {
     const storage = createMemoryStorage();
 
-    ingestFiles(storage, "answer-notes", [{ name: "fw2.pdf", size: 10 }]);
+    ingestFiles(storage, "answer-notes", [{ name: "fw2--2026.pdf", size: 10 }]);
 
     const unchangedWorkspace = answerInterviewQuestion(storage, "answer-notes", "wages", "   ");
 
@@ -2499,7 +2484,7 @@ describe("workspace storage", () => {
       status: "pending",
       answeredAt: null,
       answerText: null,
-      sourceDocumentIds: ["irs-w2-2026:fw2.pdf:10"]
+      sourceDocumentIds: ["irs-w2-2026:fw2--2026.pdf:10"]
     });
 
     const answeredWorkspace = answerInterviewQuestion(
@@ -2516,7 +2501,7 @@ describe("workspace storage", () => {
       status: "answered",
       answeredAt: expect.any(String),
       answerText: "Verified the employer issued the final W-2 and no corrected copy is expected.",
-      sourceDocumentIds: ["irs-w2-2026:fw2.pdf:10"]
+      sourceDocumentIds: ["irs-w2-2026:fw2--2026.pdf:10"]
     });
     expect(answeredWorkspace.seededReturn.interviewQuestions[0]?.answerText).toBe(
       "Verified the employer issued the final W-2 and no corrected copy is expected."
@@ -2538,7 +2523,7 @@ describe("workspace storage", () => {
   it("lists and deletes saved local workspaces without disturbing other drafts", () => {
     const storage = createMemoryStorage();
 
-    ingestFiles(storage, "resume-me", [{ name: "fw2.pdf", size: 10 }]);
+    ingestFiles(storage, "resume-me", [{ name: "fw2--2026.pdf", size: 10 }]);
     ensureWorkspace(storage, "empty-draft");
 
     const listedWorkspaces = listWorkspaces(storage);
@@ -2554,5 +2539,45 @@ describe("workspace storage", () => {
     expect(remainingWorkspaces.map((workspace) => workspace.id)).toEqual(["resume-me"]);
     expect(ensureWorkspace(storage, "resume-me").summary.totalDocuments).toBe(1);
     expect(deleteWorkspace(storage, "missing-id").map((workspace) => workspace.id)).toEqual(["resume-me"]);
+  });
+
+  it("deletes guided taxpayer data and mode preferences even when the workspace record is missing", () => {
+    const storage = createMemoryStorage();
+    ensureWorkspace(storage, "delete-me");
+    for (const id of ["delete-me", "orphaned", "keep-me"]) {
+      storage.setItem(`tax-engine.guided-flow-state.v1:${id}`, JSON.stringify({ firstName: id, ssn: "900-70-0001" }));
+      storage.setItem(`tax-engine:guided-mode:${id}`, "true");
+    }
+    deleteWorkspace(storage, "delete-me");
+    deleteWorkspace(storage, "orphaned");
+    for (const id of ["delete-me", "orphaned"]) {
+      expect(storage.getItem(`tax-engine.guided-flow-state.v1:${id}`)).toBeNull();
+      expect(storage.getItem(`tax-engine:guided-mode:${id}`)).toBeNull();
+    }
+    expect(storage.getItem("tax-engine.guided-flow-state.v1:keep-me")).toContain("keep-me");
+    expect(storage.getItem("tax-engine:guided-mode:keep-me")).toBe("true");
+  });
+
+  it("does not infer a W-2 year or sample monetary facts from an unversioned IRS filename", () => {
+    const storage = createMemoryStorage();
+    const workspace = ingestFiles(storage, "unknown-w2-year", [{ name: "fw2.pdf", size: 10 }]);
+    expect(workspace.documents[0]?.matchedFixtureId).toBeNull();
+    expect(workspace.returnSummary.targetTaxYear).toBeNull();
+    expect(workspace.structuredFacts.filter((fact) => fact.sourceType === "official-fixture")).toEqual([]);
+    expect(getFutureYearSampleUploadMessage([{ name: "fw2.pdf", size: 10 }])).toBeNull();
+  });
+
+  it("does not calculate or restore a synthetic taxpayer preview after document questions are answered", async () => {
+    const storage = createMemoryStorage();
+    ingestFiles(storage, "facts-needed", [{ name: "fw2--2025.pdf", size: 10 }]);
+    answerInterviewQuestion(storage, "facts-needed", "wages", "The W-2 is final.");
+    const answered = answerInterviewQuestion(storage, "facts-needed", "withholding", "Withholding matches.");
+    expect(answered.returnSummary.status).toBe("ready-to-recompute");
+    expect(answered.enginePreview).toBeNull();
+    expect((await refreshWorkspaceEnginePreview(answered)).enginePreview).toBeNull();
+    const legacy = { ...answered, enginePreview: { mode: "engine-recompute", metrics: { refund: "99999" } } };
+    const restoredStorage = createMemoryStorage();
+    restoredStorage.setItem("tax-engine.return-workspaces.v1", JSON.stringify({ workspaces: { "facts-needed": legacy } }));
+    expect(getWorkspace(restoredStorage, "facts-needed")?.enginePreview).toBeNull();
   });
 });

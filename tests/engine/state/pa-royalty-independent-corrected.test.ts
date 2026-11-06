@@ -1,0 +1,14 @@
+// Spec: spec/state/pa-royalty-independent-corrected.yaml, identity.
+import {expect,it} from 'vitest';
+import {calculatePAResidencySources} from '@/engine/state/pa-residency-sources';
+import {paOrdinaryRoyaltyFixture} from '../../fixtures/pa-ordinary-royalty-sources';
+type F=ReturnType<typeof paOrdinaryRoyaltyFixture>;
+const run=(f:F)=>calculatePAResidencySources(f.input,f.residency);
+function bind(f:F){f.royaltySources.originalPropertySources=structuredClone(f.input.royaltyPropertySources);for(const row of f.royaltySources.originals)row.original=structuredClone(f.input.form1099Misc[row.originalIndex]);}
+const cases:Array<[string,()=>void]>=[
+ ...['missing','blank','incomplete'].map(kind=>[kind+' actual payerTIN stays unknown',()=>{const f=paOrdinaryRoyaltyFixture();if(kind==='missing')Reflect.deleteProperty(f.input.form1099Misc[0],'payerTin');else f.input.form1099Misc[0].payerTin=kind==='blank'?'':'12-3456';bind(f);expect(()=>run(f)).toThrow(/payer original identity required/);}]as[string,()=>void]),
+ ['same payerTIN/account with case-and-outer-space variants remains duplicate',()=>{const f=paOrdinaryRoyaltyFixture(),original=f.input.form1099Misc[0];if(!original.accountReference)throw Error('Actual original account required');const next={...structuredClone(original),sourceId:'Independent formatted repeated source',payer:'Formatted payer label',accountReference:'  '+original.accountReference.toUpperCase()+'  '};f.input.form1099Misc.push(next);const proof=f.royaltySources.originals[0];f.royaltySources.originals.push({...structuredClone(proof),originalIndex:1,original:structuredClone(next)});bind(f);expect(()=>run(f)).toThrow(/duplicate economic original account/);}],
+ ['single receipt copied with insignificant whitespace is duplicate',()=>{const f=paOrdinaryRoyaltyFixture(),p=f.input.royaltyPropertySources?.properties?.[0],receipt=p?.expenses?.[0],pa=p?.paTreatment?.expenses?.[0];if(!p?.expenses||!p.paTreatment?.expenses||!receipt||!pa)throw Error('Actual paired receipt required');receipt.sourceId='receipt legal';pa.sourceId='receipt legal';p.expenses.push({...structuredClone(receipt),sourceId:' RECEIPT   LEGAL '});p.paTreatment.expenses.push({...structuredClone(pa),sourceId:' RECEIPT   LEGAL '});bind(f);expect(()=>run(f)).toThrow(/actual PA receipt classification identity\/date\/amount changed/);}],
+ ['format-normalized single paired receipt retains raw spelling and original net',()=>{const f=paOrdinaryRoyaltyFixture(),p=f.input.royaltyPropertySources?.properties?.[0],receipt=p?.expenses?.[0],pa=p?.paTreatment?.expenses?.[0];if(!receipt||!pa)throw Error('Actual paired receipt required');receipt.sourceId='receipt legal';pa.sourceId=' RECEIPT   LEGAL ';bind(f);const before=structuredClone(f);expect(run(f).royaltySources?.reportedIncome.toFixed()).toBe('11000');expect(f).toEqual(before);}],
+];
+it.each(cases)('repaired royalty identity boundary: %s',(_name,check)=>check());

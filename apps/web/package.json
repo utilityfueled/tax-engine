@@ -2,37 +2,46 @@
   "name": "@tax-engine/web",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": ">=26.13.0 <27"
+  },
   "license": "AGPL-3.0-only",
   "type": "module",
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
+    "dev": "next dev --webpack",
+    "build": "next build --webpack",
     "start": "next start",
     "typecheck": "next typegen && tsc --noEmit",
     "test:e2e": "playwright test",
     "test:e2e:hosted:webhook": "node ./scripts/run-real-stripe-webhook-smoke.mjs"
   },
   "dependencies": {
-    "@sentry/nextjs": "^10.47.0",
+    "@sentry/nextjs": "10.76.2",
     "@tax-engine/contracts": "workspace:*",
     "@tax-engine/engine": "workspace:*",
-    "@upstash/ratelimit": "^2.0.8",
-    "@upstash/redis": "^1.37.0",
+    "@upstash/ratelimit": "2.2.0",
+    "@upstash/redis": "1.39.0",
     "@vercel/analytics": "^2.0.1",
-    "better-auth": "^1.5.5",
-    "kysely": "^0.28.15",
-    "next": "^15.0.0",
-    "pdfjs-dist": "^5.5.207",
-    "pg": "^8.20.0",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "stripe": "^21.0.1"
+    "@vercel/functions": "3.10.6",
+    "better-auth": "1.7.12",
+    "kysely": "0.29.7",
+    "next": "16.4.5",
+    "pdfjs-dist": "6.4.299",
+    "pg": "8.23.1",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "stripe": "23.0.1",
+    "@opentelemetry/api": "1.9.0",
+    "nodemailer": "10.2.1"
   },
   "devDependencies": {
-    "@playwright/test": "^1.50.0",
-    "@types/pg": "^8.20.0",
-    "@types/react": "^19.0.0",
-    "@types/react-dom": "^19.0.0",
-    "typescript": "^5.9.3"
+    "@playwright/test": "1.64.1",
+    "@types/pg": "8.23.1",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "typescript": "5.9.3",
+    "webpack": "5.112.0",
+    "@types/node": "24.19.2",
+    "@types/nodemailer": "8.0.2"
   }
 }

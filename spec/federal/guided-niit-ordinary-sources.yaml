@@ -1,0 +1,41 @@
+form: "Guided ordinary NIIT sources"
+fullName: "Actual annuity classifications and allocable tax worksheets"
+taxYear: 2026
+irsReference: "https://www.irs.gov/instructions/i8960"
+notes: |
+  Source collection supports the ordinary lines3/9b handoff in both2025/2026.
+  Classifications select an existing actual retirement statement and retain its
+  payer/owner/amount snapshot. No generic code7, default IRA checkbox or payer
+  name establishes exempt-plan status. CodeD with known taxable amount is an
+  ordinary nonqualified source; special retirement worksheets remain gated.
+  Actual tax worksheets retain source/category amounts, post-SALT allowed
+  deductions and documented NII allocation; final return reconciliation binds
+  ScheduleA5a/b/c/e and the actual post-section68 allowance. The collector does
+  not invent either a reasonable allocation ratio or a foreign-tax election.
+  Blank amounts and confirmations stay unknown. Source edits invalidate the
+  worksheet confirmation; confirming another source alone does not create a loop.
+lines:
+  - line: "route"
+    description: "Reach the source worksheet for potential investment income"
+    formula: "Include other-taxes after credits and before payments for actual retirement, investment, rental or self-employment routes; retain the simple wage-only route"
+    testRef: "tests/guided-interview/guided-niit-facts.test.ts::routes retirement investment and rental sources to the NIIT worksheet"
+  - line: "source"
+    description: "Collect exact actual source facts"
+    formula: "Preserve omission and source cents; validate year, confirmation, all entered tax categories and actual retirement row identity before forwarding the ordinary NIIT worksheet"
+    testRef: "tests/guided-interview/guided-niit-facts.test.ts::preserves unknown facts and exact entered NIIT source amounts"
+  - line: "binding"
+    description: "Bind classification to the selected actual statement"
+    formula: "Keep payer name/TIN, actual account reference, owner, gross and taxable amounts from the selected statement snapshot; unknown plan classification and stale/replaced statements reject, including equal-value accounts from one payer"
+    testRef: "tests/guided-interview/guided-niit-facts.test.ts::rejects stale or contradictory annuity and tax worksheets"
+  - line: "return"
+    description: "Section and return use the same collector"
+    formula: "Incomplete source facts prevent both section completion and return construction; supported actual codeD taxable amounts flow to canonical NIIT without changing ordinary income twice"
+    testRef: "tests/guided-interview/guided-niit-facts.test.ts::forwards actual NIIT sources and requires the same facts for completion"
+  - line: "invalidation"
+    description: "Require confirmation after substantive source edits"
+    formula: "Retirement/income/deduction/payment/household changes clear the NIIT worksheet confirmation; confirmation-only changes and unrelated acknowledgments preserve it"
+    testRef: "tests/guided-interview/guided-niit-facts.test.ts::invalidates NIIT confirmation after source edits without confirmation loops"
+  - line: "interaction"
+    description: "Actual source entry and editing"
+    formula: "New entries contain no assumed plan classification or allocation; selecting a real statement preserves its source snapshot and edits clear the confirmation"
+    testRef: "tests/apps/web/niit-source-interactions.test.tsx::collects actual NIIT source records and resets confirmation after edits"

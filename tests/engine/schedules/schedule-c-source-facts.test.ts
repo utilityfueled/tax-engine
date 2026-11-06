@@ -1,0 +1,35 @@
+// Spec: spec/federal/schedule-c.yaml#16-source-facts and ordinary-source-categories.
+import {expect,it} from 'vitest';
+import {calculateScheduleC} from '@/engine/schedules/schedule-c.js';
+import {TaxYearInputSchema} from '@/models/inputs.js';
+import {ordinaryExpenseSources,scheduleCSourceFacts,scheduleCSourceFixture} from '../../fixtures/schedule-c-source-facts.js';
+const facts=(input:ReturnType<typeof scheduleCSourceFixture>)=>(input.scheduleC! as unknown as {sourceFacts:typeof scheduleCSourceFacts}).sourceFacts;
+it('deducts classified actual aggregate interest once and conserves other expense reclassification',()=>{
+ const input=scheduleCSourceFixture(),r=calculateScheduleC(input,input.scheduleC);expect(r.totalExpenses.toFixed()).toBe('1500');expect(r.netProfit.toFixed()).toBe('38500');expect(r.lines.find(x=>x.line==='16a')?.value.toFixed()).toBe('300.1');expect(r.lines.find(x=>x.line==='16b')?.value.toFixed()).toBe('699.9');expect(input.scheduleC!.expenses!.businessInterest).toBe('1000');
+});
+it('rejects missing interest eligibility classification and double count sources',()=>{
+ const cases=[(p:typeof scheduleCSourceFacts)=>{p.sourceFactsConfirmed=false;},(p:typeof scheduleCSourceFacts)=>{p.sourceTaxYear=2024;},(p:typeof scheduleCSourceFacts)=>{p.interest.mortgageInterest='';},(p:typeof scheduleCSourceFacts)=>{p.interest.otherExpensesExcludingInterest='1500';},(p:typeof scheduleCSourceFacts)=>{p.interest.reclassification.remainingOtherExpenses='600';},(p:typeof scheduleCSourceFacts)=>{p.interest.grossReceiptsException.notTaxShelterConfirmed=false;},(p:typeof scheduleCSourceFacts)=>{p.interest.grossReceiptsException.noPriorDisallowedInterestOrPartnershipEbieConfirmed=false;},(p:typeof scheduleCSourceFacts)=>{p.interest.grossReceiptsException.history.pop();},(p:typeof scheduleCSourceFacts)=>{p.interest.grossReceiptsException.history[0].fullTaxYearConfirmed=false;},(p:typeof scheduleCSourceFacts)=>{p.interest.grossReceiptsException.history[0].grossReceipts='93000000.01';},(p:typeof scheduleCSourceFacts)=>{p.interest.noPersonalOrSchedule1AInterestConfirmed=false;},(p:typeof scheduleCSourceFacts)=>{p.interest.mortgageBank1098OrSimilarStatementConfirmed=false;}];
+ for(const mutate of cases){const input=scheduleCSourceFixture();mutate(facts(input));expect(()=>calculateScheduleC(input,input.scheduleC)).toThrow(/interest|source|expense|receipts/i);}
+ const legacy=scheduleCSourceFixture();Reflect.deleteProperty(legacy.scheduleC!,'sourceFacts');expect(()=>calculateScheduleC(legacy,legacy.scheduleC)).toThrow(/interest|source/i);
+ const zero=scheduleCSourceFixture();Reflect.deleteProperty(zero.scheduleC!,'sourceFacts');zero.scheduleC!.expenses!.businessInterest='0';expect(calculateScheduleC(zero,zero.scheduleC).netProfit.toFixed()).toBe('39500');
+});
+it('uses exact source-year gross receipt exception thresholds without floating point',()=>{
+ for(const [year,threshold] of [[2025,'31000000'],[2026,'32000000']] as const){const input=scheduleCSourceFixture(year),p=facts(input);p.interest.grossReceiptsException.history.forEach(row=>row.grossReceipts=threshold);expect(calculateScheduleC(input,input.scheduleC).netProfit.toFixed()).toBe('38500');p.interest.grossReceiptsException.history[0].grossReceipts=year===2025?'31000000.01':'32000000.01';expect(()=>calculateScheduleC(input,input.scheduleC)).toThrow(/receipts|interest|source/i);}
+});
+it('routes source classified ordinary categories once and rejects unspecified special methods',()=>{
+ const base=scheduleCSourceFixture();for(const key of ['commissionsAndFees','rentOnBusinessProperty','repairsAndMaintenance','taxes','wages','bankCharges','duesAndPublications','freight','laundryAndCleaning','managementFees','postage','telephone','pensionAndProfitSharing','amortization','depletion','badDebts','startupCostsDirectExpense','idcsAmortization','idcsCurrentExpensing','section179Expense']){const input=TaxYearInputSchema.parse(base);Object.assign(input.scheduleC!.expenses!,{[key]:'1'});expect(()=>calculateScheduleC(input,input.scheduleC),key).toThrow(/source|method|expense/i);}
+});
+
+it('routes complete actual ordinary current expense sources to official lines without duplication',()=>{
+ const input=scheduleCSourceFixture();Object.assign(facts(input),{ordinaryExpenses:structuredClone(ordinaryExpenseSources)});for(const row of ordinaryExpenseSources.rows)Object.assign(input.scheduleC!.expenses!,{[row.category]:row.amount});const r=calculateScheduleC(input,input.scheduleC);expect(r.totalExpenses.toFixed()).toBe('1658.57');expect(r.netProfit.toFixed()).toBe('38341.43');for(const [line,value] of [['10','10.1'],['20b','20.2'],['21','30.3'],['23','40.4'],['26','50.5'],['27b','507.07']])expect(r.lines.find(x=>x.line===line)?.value.toFixed()).toBe(value);
+});
+
+it('preserves known blank business identifiers and actual home omission without inferred source facts',()=>{
+ const blank=scheduleCSourceFixture();const p=blank.scheduleC!.sourceFacts!;blank.scheduleC!.businessName='';blank.scheduleC!.ein='';p.businessNameStatus='blank_original';p.businessName='';p.businessEINStatus='not_issued';p.businessEIN='';p.address={method:'home_at_return_address',homeAtReturnAddressConfirmed:true,homeReturnAddress:structuredClone(blank.taxpayer.address)};expect(calculateScheduleC(blank,blank.scheduleC).netProfit.toFixed()).toBe('38500');blank.taxpayer.address.street='Different actual home';expect(()=>calculateScheduleC(blank,blank.scheduleC)).toThrow(/address|source/);
+ for(const mutate of [(i:ReturnType<typeof scheduleCSourceFixture>)=>{i.scheduleC!.sourceFacts!.address=undefined;},(i:ReturnType<typeof scheduleCSourceFixture>)=>{i.scheduleC!.sourceFacts!.address!.unitStatus=undefined;},(i:ReturnType<typeof scheduleCSourceFixture>)=>{i.scheduleC!.businessName='Different actual business';},(i:ReturnType<typeof scheduleCSourceFixture>)=>{i.scheduleC!.sourceFacts!.businessEINStatus=undefined;},(i:ReturnType<typeof scheduleCSourceFixture>)=>{i.scheduleC!.sourceFacts!.interest!.vehicleLoanInterest='-1';}]){const input=scheduleCSourceFixture();mutate(input);expect(()=>calculateScheduleC(input,input.scheduleC)).toThrow(/source|address|interest|expense/);}
+});
+
+it('routes actual interest and ordinary sources through federal SE QBI and tax once',async()=>{
+ const {calculateFederalTax}=await import('@/engine/federal.js');
+ for(const [useOrdinary,expected] of [[false,['5440','2720','35780','4006','16024','1685','7125']],[true,['5418','2709','35632.43','3976','15906.43','1673','7091']]] as const){const input=scheduleCSourceFixture();if(useOrdinary){input.scheduleC!.sourceFacts!.ordinaryExpenses=structuredClone(ordinaryExpenseSources);for(const row of ordinaryExpenseSources.rows)Object.assign(input.scheduleC!.expenses!,{[row.category]:row.amount});}const r=calculateFederalTax(input);expect([r.selfEmploymentTax,r.scheduleSE!.deductibleHalf,r.agi,r.form8995!.qbiDeduction,r.taxableIncome,r.ordinaryTax,r.totalTax].map(x=>x.toFixed())).toEqual(expected);/* No Form2210/payment-history qualification or penalty-free balance assertion. */}
+});

@@ -1,0 +1,11 @@
+form: "PA guided royalty main integration"
+taxYear: 2025
+reference: "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40in.pdf"
+notes: "Technical source-bound history replay only; no human or filing qualification."
+lines:
+  - line: "current"
+    formula: "Actual W2 200000 plus copyright net11000.50 gives rawAGI211000.50; actualPA class211000 prints tax6478. Separately documented legal receipt increases100; rawAGI210900.50/printed210901 and PAtax6475. Preserve old MI return/claim/award/refund history."
+    testRef: "tests/guided-interview/pa-royalty-main-integration.test.ts::current main replays separately documented royalty history %s"
+  - line: "legacy"
+    formula: "An imported guided settlement with no actual filed history remains a saved unknown, denied without mutation. Canonical B engine conservation is independently tested unchanged."
+    testRef: "tests/guided-interview/pa-royalty-main-integration.test.ts::current main keeps undocumented history unknown"

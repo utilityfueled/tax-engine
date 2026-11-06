@@ -192,7 +192,7 @@ describe("Schedule J Edge Cases", () => {
       );
 
       // Non-farm income = 40000, tax should use QSS (=MFJ) brackets
-      expect(result.line4.toNumber()).toBe(taxAt2025(40000, "qualifying_surviving_spouse"));
+      expect(result.line4.toNumber()).toBe(4326); // Published40000–40050 MFJ/QSS table.
 
       // Base year taxes should use QSS brackets
       expect(result.line8.toNumber()).toBe(taxAt(2022, 50000, "qualifying_surviving_spouse"));
@@ -370,7 +370,7 @@ describe("Schedule J Edge Cases", () => {
   describe("Zero elected farm income", () => {
     it("Schedule J - zero EFI produces zero allocation and line 23 equals zero", () => {
       const taxableIncome = new Decimal(80000);
-      const regularTax = new Decimal(taxAt2025(80000));
+      const regularTax = new Decimal(12520); // Published80000–80050 single table.
       const input: ScheduleJInput = {
         electedFarmIncome: "0",
         baseYear1: { taxableIncome: "30000", filingStatus: "single", originalTax: `${taxAt(2022, 30000)}` },
@@ -390,7 +390,7 @@ describe("Schedule J Edge Cases", () => {
       // Line 17 - Line 22 = (line4 + sum of recomputed) - sum of original
       // Since each recomputed = original, the difference is just line4
       // line23 = line4 (tax on non-farm at 2025 rates) = regular tax
-      expect(result.line23.toNumber()).toBe(taxAt2025(80000));
+      expect(result.line23.toNumber()).toBe(12520); // Published80000–80050 single table.
       expect(result.isbeneficial).toBe(false);
     });
   });
@@ -636,7 +636,7 @@ describe("Schedule J Edge Cases", () => {
       );
 
       // MFS Line 4 on $40K non-farm
-      expect(result.line4.toNumber()).toBe(taxAt2025(40000, "married_filing_separately"));
+      expect(result.line4.toNumber()).toBe(4565); // Published40000–40050 MFS table.
       // Each base year: 40000 + 20000 = 60000 at MFS rates
       expect(result.line8.toNumber()).toBe(taxAt(2022, 60000, "married_filing_separately"));
     });

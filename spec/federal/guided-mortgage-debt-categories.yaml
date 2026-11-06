@@ -1,0 +1,46 @@
+form: "Guided mortgage debt-category sources"
+fullName: "Completed original-debt and refinancing worksheets for Publication 936"
+taxYear: 2026
+irsReference: "https://www.irs.gov/publications/p936"
+notes: |
+  Refreshed 2026-10-25. Publication 936 Refinanced home acquisition debt,
+  Refinanced grandfathered debt and Mixed-use mortgages require actual original
+  principal/use history and category-specific average balances. Principal
+  payments apply first to nonacquisition home-equity debt, then grandfathered
+  debt, then acquisition debt. This intake forwards completed source worksheets
+  to the existing category_worksheet method. It does not calculate original debt
+  character from Box 2, the refinancing date, or the taxpayer's selected label.
+  The source records separately establish the interest attributable to excluded
+  use. Reverse mortgages and special property/use methods remain outside this
+  completed ordinary source route. No calculation formula or law version changes.
+lines:
+  - line: "category-source"
+    description: "Actual completed category averages and source history"
+    formula: "Require original worksheet year/reference, all four finite nonnegative category averages, actual classification/payment-order confirmations and complete interest allocation. Refinancing requires actual original balance/use and term-limit history; positive grandfathered debt requires its actual continuous-security and remaining-term confirmation."
+    irsRef: "Publication 936 Refinanced home acquisition debt; Grandfathered Debt; Mixed-use mortgages"
+    testRef: "tests/guided-interview/guided-mortgage-debt-categories.test.ts::binds completed mixed-debt averages and actual ineligible interest without rewriting Form 1098"
+  - line: "unknown-and-conflict"
+    description: "Unknown source values and contradictory original records"
+    formula: "Missing amounts are not zero and a label cannot establish source classification. Wrong years, missing or false confirmations, invalid amounts, source categories above a known actual maximum and contradicted original-loan dates reject while records remain saved."
+    irsRef: "Publication 936 source history, debt classifications and average-balance rules"
+    testRef: "tests/guided-interview/guided-mortgage-debt-categories.test.ts::requires actual category histories and preserves explicit zero separately from unknown"
+  - line: "grandfathered"
+    description: "Actual grandfathered debt and source continuity"
+    formula: "An original pre-October 14 1987 loan may use its explicitly confirmed grandfathered average. Refinanced grandfathered debt requires the separate original-principal, remaining-term or balloon-exception history. No old date alone supplies that confirmation."
+    irsRef: "Publication 936 Grandfathered Debt and Refinanced grandfathered debt"
+    testRef: "tests/guided-interview/guided-mortgage-debt-categories.test.ts::uses actual grandfathered continuity without inferring it from an old date"
+  - line: "canonical-transfer"
+    description: "Canonical limited interest enters the return once"
+    formula: "Actual600000 older plus300000 newer acquisition average and100000 excluded average require a750000 qualified limit,0.833 ratio and7497 interest deduction from9000 eligible source interest. Original10000 Box1 and1000000 Box2 remain unchanged;100000 wage income produces92503 taxable income when itemizing is elected."
+    irsRef: "Publication 936 Table 1; Schedule A line 8a; Form1040 lines12 and15"
+    testRef: "tests/guided-interview/guided-mortgage-debt-categories.test.ts::transfers completed refinancing sources through the canonical return once"
+  - line: "controls"
+    description: "Actual history controls and confirmation revocation"
+    formula: "New category fields start blank, original Form1098 boxes stay intact, category and qualification edits revoke confirmation, and changing methods retains the actual prior records. Exact cents, explicit zero and unknown remain distinct."
+    irsRef: "Publication 936 supporting records"
+    testRef: "tests/apps/web/mortgage-debt-category-interactions.test.tsx::preserves completed mortgage category sources and revokes edited confirmations"
+  - line: "persistence"
+    description: "Local source persistence with original statements intact"
+    formula: "Desktop and mobile edits retain actual category cents and explicit false/unknown facts across reload; changing a source revokes confirmation and private history is absent from network request bodies."
+    irsRef: "Publication 936 source records; local workspace privacy contract"
+    testRef: "apps/web/tests/guided-mortgage-debt-categories.spec.ts::preserves actual completed mortgage debt categories"

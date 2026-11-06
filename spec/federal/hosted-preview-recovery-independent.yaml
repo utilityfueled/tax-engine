@@ -1,0 +1,17 @@
+form: Hosted-Preview-Recovery-Independent
+fullName: Independent mail origin authority and diagnostic privacy
+taxYear: 2026
+reference: https://vercel.com/docs/environment-variables/system-environment-variables
+lines:
+  - line: "generated-origin"
+    formula: Normalize valid platform DNS case; send only exact deployment HTTPS recovery fragment, never shared configured origin or SMTP credentials
+    testRef: "tests/apps/web/hosted-preview-recovery-independent.test.ts::uses only normalized platform origin in the actual plain message"
+  - line: "invalid-authority"
+    formula: Missing ambiguous and malformed platform metadata denies mail before transport even with valid configured app URL
+    testRef: "tests/apps/web/hosted-preview-recovery-independent.test.ts::denies ambiguous platform authority before transport: %s"
+  - line: "transport-policy"
+    formula: Exact Preview never permits plaintext loopback SMTP even under development
+    testRef: "tests/apps/web/hosted-preview-recovery-independent.test.ts::never treats Preview as a plaintext loopback deployment"
+  - line: "legacy-silence"
+    formula: Outside Preview preserve configured production origin and silent rejection of malformed development URL
+    testRef: "tests/apps/web/hosted-preview-recovery-independent.test.ts::preserves nonpreview origin and silent invalid configuration"

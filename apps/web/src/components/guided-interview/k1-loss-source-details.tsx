@@ -1,0 +1,207 @@
+"use client";
+
+import { updateK1LossSources } from '@/lib/guided-k1-qbi-sources';
+import type { K1ActivityData, K1EblHistoryData, K1LossSourcesData } from '@/lib/guided-qbi-loss-data';
+import type { NetOperatingLossData } from '@/lib/guided-net-operating-loss';
+import { BooleanFact, TextFact } from './fact-fields';
+import { CurrencyField } from './currency-field';
+
+type Field = readonly [string, string, 'text' | 'money' | 'signed' | 'boolean' | readonly (readonly [string, string])[]];
+function Fields<T extends object>({ prefix, data, fields, onChange }: { prefix: string; data?: T; fields: readonly Field[]; onChange: (patch: Partial<T>) => void }) {
+  const record = (data ?? {}) as Record<string, unknown>;
+  return <div className="guided-form-grid">{fields.map(([key, name, kind]) => {
+    const label = `${prefix} ${name}`, value = record[key];
+    const change = (next: unknown) => onChange({ [key]: next } as Partial<T>);
+    if (kind === 'boolean') return <BooleanFact key={key} label={label} value={value as boolean | null | undefined} onChange={change} />;
+    if (kind === 'money' || kind === 'signed') return <CurrencyField key={key} label={label} value={typeof value === 'string' ? value : ''} allowNegative={kind === 'signed'} onChange={change} />;
+    if (kind === 'text') return <TextFact key={key} label={label} value={typeof value === 'string' ? value : ''} onChange={change} />;
+    return <label className="guided-field" key={key}><span className="guided-field-label">{label}</span><select className="guided-input" value={typeof value === 'string' ? value : ''} onChange={event => change(event.target.value)}>
+      <option value="">Choose from actual records</option>{kind.map(([code, text]) => <option key={code} value={code}>{text}</option>)}
+    </select></label>;
+  })}</div>;
+}
+const evidence: readonly Field[] = [['sourceTaxYear', 'source year', 'text'], ['sourceReference', 'source reference', 'text'], ['sourceFactsConfirmed', 'checked after the last edit', 'boolean']];
+const owner: readonly (readonly [string, string])[] = [['primary', 'Primary taxpayer'], ['spouse', 'Spouse on the actual joint return']];
+const vintageFields: readonly Field[] = [['taxYear', 'origin year', 'text'], ['originalLoss', 'original loss', 'money'],
+  ['qualifiedOriginalLoss', 'original qualified loss', 'money'], ['remainingLoss', 'filed remaining loss', 'money'], ['qualifiedRemainingLoss', 'filed remaining qualified loss', 'money']];
+
+function PassiveHistory({ prefix, data, onChange }: { prefix: string; data?: K1ActivityData['passiveHistory']; onChange: (data: K1ActivityData['passiveHistory']) => void }) {
+  return !data ? <button type="button" className="utility-button" onClick={() => onChange({})}>Add {prefix} prior passive history</button> : <fieldset><legend>{prefix} prior passive history</legend>
+    <Fields prefix={`${prefix} prior passive history`} data={data} fields={evidence} onChange={patch => onChange({ ...data, ...patch })} />
+    {data.vintages === undefined && <p role="status">The prior passive vintage list is unknown.</p>}
+    {data.vintages?.length === 0 && <p>Explicitly recorded: no prior passive vintages.</p>}
+    {data.vintages?.map((row, index) => <div className="guided-w2-card" key={index}><Fields prefix={`${prefix} passive vintage ${index + 1}`} data={row}
+      fields={[...vintageFields, ['materiallyParticipatedInCurrentYear', 'current material participation', 'boolean']]}
+      onChange={patch => onChange({ ...data, vintages: data.vintages?.map((value, i) => i === index ? { ...value, ...patch } : value) })} />
+      <button type="button" className="utility-button" onClick={() => onChange({ ...data, vintages: data.vintages?.filter((_, i) => i !== index) })}>Remove {prefix} passive vintage {index + 1}</button></div>)}
+    <button type="button" className="utility-button" onClick={() => onChange({ ...data, vintages: [...(data.vintages ?? []), {}] })}>Add {prefix} passive vintage</button>
+    <button type="button" className="utility-button" onClick={() => onChange({ ...data, vintages: [] })}>Record no {prefix} prior passive vintages</button>
+    <button type="button" className="utility-button" onClick={() => onChange(undefined)}>Remove {prefix} prior passive history</button>
+  </fieldset>;
+}
+
+function K1Activity({ index, data, onChange }: { index: number; data: K1ActivityData; onChange: (next: K1ActivityData) => void }) {
+  const prefix = `K-1 ${index + 1}`, change = (patch: Partial<K1ActivityData>) => onChange({ ...data, ...patch });
+  const basis = data.basis, risk = data.atRisk, se = data.selfEmploymentTreatment;
+  return <details className="guided-expand"><summary className="guided-expand-trigger">{prefix} original and histories</summary><div className="guided-expand-body">
+    <Fields prefix={prefix} data={data} fields={[
+      ['sourceTaxYear', 'source year', 'text'], ['sourceReference', 'original source reference', 'text'],
+      ['accountHolder', 'owner', owner], ['entityType', 'entity type', [['partnership', 'Partnership'], ['s_corporation', 'S corporation']]],
+      ['entityName', 'entity name', 'text'], ['entityEIN', 'entity EIN', 'text'], ['recipientName', 'recipient name', 'text'], ['recipientTaxpayerIdLast4', 'recipient taxpayer ID last four', 'text'],
+      ['ordinaryBusinessOnlyConfirmed', 'ordinary business activity only', 'boolean'], ['continuingActivityConfirmed', 'continuing activity without a disposal', 'boolean'],
+      ['domesticNonPtpConfirmed', 'domestic activity and not a publicly traded partnership', 'boolean'],
+      ['allOtherAmountsZeroConfirmed', 'all other income, deduction, credit, distribution and withholding boxes are zero', 'boolean'],
+      ['allOtherNonCharitableAmountsZeroConfirmed', 'for a linked charitable attachment, all other noncharitable boxes are zero', 'boolean'],
+      ...(data.entityType === 's_corporation' ? [['noScorpDebtBasisOrElectionConfirmed', 'no shareholder debt basis or basis-ordering election', 'boolean'] as const] : []),
+      ['sameOwnerHistoryConfirmed', 'history belongs to the same current owner', 'boolean'], ['sameRegularAmtTreatmentConfirmed', 'independent regular and AMT basis and loss treatment are the same', 'boolean'],
+    ]} onChange={change} />
+    <fieldset><legend>{prefix} original ordinary and Section 199A statement</legend><Fields prefix={prefix} data={data.statement} fields={[
+      ['ordinaryIncome', 'ordinary income or loss', 'signed'], ['section199AQBI', 'original qualified income or loss', 'signed'],
+      ['section199AW2Wages', 'Section 199A W-2 wages', 'money'], ['section199AUBIA', 'Section 199A property basis', 'money'],
+      ['section199AIsSST', 'specified service business', 'boolean'], ['isPassiveActivity', 'passive activity for this owner', 'boolean'], ['qbiMateriallyParticipated', 'owner materially participated', 'boolean'],
+      ...(data.entityType === 'partnership' ? [['selfEmploymentEarnings', 'original Box 14 code A', 'signed'],
+        ['selfEmploymentIncomeType', 'self-employment income type', [['farm', 'Farm'], ['nonfarm', 'Nonfarm']]]] as readonly Field[] : []),
+    ]} onChange={patch => change({ statement: { ...data.statement, ...patch } })} /></fieldset>
+    {!basis ? <button type="button" className="utility-button" onClick={() => change({ basis: {} })}>Add {prefix} opening basis sources</button> : <fieldset><legend>{prefix} opening basis sources</legend>
+      <Fields prefix={`${prefix} basis`} data={basis} fields={[...evidence, ['beginningBasis', 'actual opening basis', 'money'],
+        ['priorSuspendedLoss', 'filed prior suspended basis loss', 'money'], ['noOtherBasisChangesConfirmed', 'no other basis changes beyond the reported ordinary result', 'boolean']]}
+        onChange={patch => change({ basis: { ...basis, ...patch } })} />
+      <p className="guided-hint">Use the preceding-year source. Positive prior basis losses require a separate release method and remain saved.</p>
+      <button type="button" className="utility-button" onClick={() => change({ basis: undefined })}>Remove {prefix} opening basis sources</button>
+    </fieldset>}
+    {!risk ? <button type="button" className="utility-button" onClick={() => change({ atRisk: {} })}>Add {prefix} at-risk sources</button> : <fieldset><legend>{prefix} simplified at-risk sources</legend>
+      <Fields prefix={`${prefix} at risk`} data={risk} fields={[...evidence, ['simplifiedMethodEligible', 'simplified method eligibility established', 'boolean'],
+        ['adjustedBasisAtEffectiveDate', 'adjusted basis at effective date', 'money'], ['priorYearAmountAtRisk', 'prior-year amount at risk', 'money'],
+        ['currentYearIncreases', 'current source increases', 'money'], ['currentYearDecreases', 'current source decreases', 'money'], ['priorSuspendedLoss', 'filed prior suspended at-risk loss', 'money']]}
+        onChange={patch => change({ atRisk: { ...risk, ...patch } })} />
+      <p className="guided-hint">The ordinary amount on Form 6198 comes from the calculated basis limit. Enter source movements above, not a current allowance.</p>
+      {!risk.priorLossHistory ? <button type="button" className="utility-button" onClick={() => change({ atRisk: { ...risk, priorLossHistory: {} } })}>Add {prefix} prior at-risk history</button> : <>
+        <Fields prefix={`${prefix} prior at-risk history`} data={risk.priorLossHistory} fields={evidence} onChange={patch => change({ atRisk: { ...risk, priorLossHistory: { ...risk.priorLossHistory, ...patch } } })} />
+        <p>{risk.priorLossHistory.vintages === undefined ? 'The preceding-year at-risk loss list is unknown.' : `Recorded prior at-risk vintages: ${risk.priorLossHistory.vintages.length}.`}</p>
+        <p className="guided-hint">For a prior release, link the original deduction history in the charitable attachment. Preserve the original qualified fraction here, even if the current K-1 has a different fraction.</p>
+        {risk.priorLossHistory.vintages?.map((row, i) => <div className="guided-w2-card" key={i}>
+          <Fields prefix={`${prefix} at-risk qualified vintage ${i + 1}`} data={row} fields={[...vintageFields, ['materiallyParticipatedInCurrentYear', 'current material participation', 'boolean']]}
+            onChange={patch => change({ atRisk: { ...risk, priorLossHistory: { ...risk.priorLossHistory, vintages: risk.priorLossHistory?.vintages?.map((value, n) => n === i ? { ...value, ...patch } : value) } } })} />
+          <button type="button" className="utility-button" onClick={() => change({ atRisk: { ...risk, priorLossHistory: { ...risk.priorLossHistory, vintages: risk.priorLossHistory?.vintages?.filter((_, n) => n !== i) } } })}>Remove {prefix} at-risk qualified vintage {i + 1}</button>
+        </div>)}
+        <button type="button" className="utility-button" onClick={() => change({ atRisk: { ...risk, priorLossHistory: { ...risk.priorLossHistory, vintages: [...(risk.priorLossHistory?.vintages ?? []), {}] } } })}>Add {prefix} at-risk qualified vintage</button>
+        <button type="button" className="utility-button" onClick={() => change({ atRisk: { ...risk, priorLossHistory: { ...risk.priorLossHistory, vintages: [] } } })}>Record no {prefix} prior at-risk vintages</button>
+      </>}
+      <button type="button" className="utility-button" onClick={() => change({ atRisk: undefined })}>Remove {prefix} at-risk sources</button>
+    </fieldset>}
+    <Fields prefix={prefix} data={data} fields={[[ 'priorPassiveLoss', 'filed prior passive loss', 'money' ]]} onChange={change} />
+    <PassiveHistory prefix={prefix} data={data.passiveHistory} onChange={passiveHistory => change({ passiveHistory })} />
+    {data.entityType === 'partnership' && (!se ? <button type="button" className="utility-button" onClick={() => change({ selfEmploymentTreatment: {} })}>Add {prefix} partner adjustment facts</button> : <fieldset><legend>{prefix} partner adjustment facts</legend>
+      <p className="guided-hint">Original negative Box 14 must have the same character as the original ordinary loss. Basis, at-risk and passive limits determine the current transfer. Different loss character, prior SE loss and other partner deductions require their separate method.</p>
+      <Fields prefix={`${prefix} SE`} data={se} fields={[...evidence, ['method', 'source method', [['ordinary_current', 'Ordinary current partner amounts']]],
+        ['noOtherPartnerAdjustmentsConfirmed', 'no other partner deductions or adjustments', 'boolean']]} onChange={patch => change({ selfEmploymentTreatment: { ...se, ...patch } })} />
+      {!se.priorLossHistory ? <button type="button" className="utility-button" onClick={() => change({ selfEmploymentTreatment: { ...se, priorLossHistory: {} } })}>Add {prefix} prior SE history</button> : <Fields prefix={`${prefix} prior SE history`} data={se.priorLossHistory}
+        fields={[...evidence, ['amount', 'actual suspended SE loss', 'money']]} onChange={patch => change({ selfEmploymentTreatment: { ...se, priorLossHistory: { ...se.priorLossHistory, ...patch } } })} />}
+      <button type="button" className="utility-button" onClick={() => change({ selfEmploymentTreatment: undefined })}>Remove {prefix} partner adjustment facts</button>
+    </fieldset>)}
+  </div></details>;
+}
+
+function EblHistory({ index, data, nol, onChange }: { index: number; data: K1EblHistoryData; nol?: NetOperatingLossData; onChange: (next: K1EblHistoryData) => void }) {
+  const prefix = `EBL history ${index + 1}`, change = (patch: Partial<K1EblHistoryData>) => onChange({ ...data, ...patch });
+  const original = nol?.vintages?.find(row => row.sourceId === data.nolSourceId);
+  return <details className="guided-expand"><summary className="guided-expand-trigger">{prefix}</summary><div className="guided-expand-body">
+    <Fields prefix={prefix} data={data} fields={[...evidence, ['nolSourceId', 'original regular NOL source', (nol?.vintages ?? []).filter(row => row.originKind === 'excess_business_loss' && row.sourceId).map(row => [row.sourceId ?? '', `${row.sourceId} — ${row.lossTaxYear ?? 'year unknown'}`] as const)],
+      ['accountHolder', 'owner', owner], ['recipientName', 'recipient name', 'text'], ['recipientTaxpayerIdLast4', 'recipient taxpayer ID last four', 'text'],
+      ['activityName', 'origin activity name', 'text'], ['activityEIN', 'origin activity EIN', 'text'], ['limitationSourceReference', 'origin Form 461 and character record', 'text'],
+      ['originalQualifiedLoss', 'filed original qualified loss', 'money'], ['qualifiedOpeningCarryforward', 'filed opening qualified carry', 'money'],
+      ['allHistoryIncluded', 'all intervening qualified history included', 'boolean'], ['materiallyParticipatedInCurrentYear', 'current material participation', 'boolean']]}
+      onChange={change} />
+    <button type="button" className="utility-button" disabled={!original} onClick={() => original && change({ originalNol: structuredClone(original), sourceFactsConfirmed: null })}>Copy {prefix} original regular NOL record</button>
+    {data.originalNol ? <p>Saved original: {data.originalNol.sourceId}, year {data.originalNol.lossTaxYear}, original loss {data.originalNol.originalLoss}, opening carry {data.originalNol.openingCarryforward}. The actual regular record and every history row must still match.</p> : <p role="status">The original regular NOL record has not been linked.</p>}
+    {data.history === undefined && <p role="status">The qualified use and reduction history is unknown.</p>}
+    {data.history?.length === 0 && <p>Explicitly recorded: no historical qualified use or reduction.</p>}
+    {data.history?.map((row, i) => <div className="guided-w2-card" key={i}><Fields prefix={`${prefix} use ${i + 1}`} data={row} fields={[
+      ['taxYear', 'actual year', 'text'], ['qualifiedNolAbsorption', 'qualified loss absorption', 'money'], ['qualifiedAttributeReduction', 'qualified attribute reduction', 'money'], ['sourceReference', 'source reference', 'text'],
+    ]} onChange={patch => change({ history: data.history?.map((value, n) => n === i ? { ...value, ...patch } : value) })} />
+      <button type="button" className="utility-button" onClick={() => change({ history: data.history?.filter((_, n) => n !== i) })}>Remove {prefix} use {i + 1}</button></div>)}
+    <button type="button" className="utility-button" onClick={() => change({ history: [...(data.history ?? []), {}] })}>Add {prefix} use or reduction</button>
+    <button type="button" className="utility-button" onClick={() => change({ history: [] })}>Record no {prefix} prior uses or reductions</button>
+  </div></details>;
+}
+
+export function K1LossSourceDetails({ data, nol, onChange }: { data?: K1LossSourcesData; nol?: NetOperatingLossData; onChange: (next: K1LossSourcesData | undefined) => void }) {
+  const change = (patch: Partial<K1LossSourcesData>) => onChange(updateK1LossSources(data ?? {}, patch));
+  const classification = data?.form461Classification;
+  return <details className="guided-expand"><summary className="guided-expand-trigger">K-1 and qualified loss sources</summary><div className="guided-expand-body">
+    <p className="guided-hint">Use original K-1 and Section 199A statements, opening basis and at-risk records, and filed qualified-loss histories. The return calculates the current deduction and carry. Prior EBL character uses its separate regular NOL record; AMT and ordinary QBI carries stay separate.</p>
+    <p className="guided-hint">This method covers continuing ordinary domestic K-1 activities. Prior at-risk releases need their original deduction history in the linked charitable attachment and their independent qualified history here. Other boxes, prior ordinary basis releases, differing AMT treatment and mixed loss pools under a new excess-business-loss limit need their additional methods. Keep their actual records; do not substitute zero.</p>
+    {!data ? <button type="button" className="utility-button" onClick={() => onChange({})}>Add K-1 and qualified loss sources</button> : <>
+      <Fields prefix="K-1 packet" data={data} fields={[...evidence, ['allK1ActivitiesIncluded', 'all original K-1 activities included', 'boolean']]} onChange={change} />
+      {data.activities === undefined && <p role="status">The original K-1 list is unknown.</p>}
+      {data.activities?.length === 0 && <p>Explicitly recorded: no original K-1s.</p>}
+      {data.activities?.map((row, index) => <div key={index}><K1Activity index={index} data={row} onChange={next => change({ activities: data.activities?.map((value, i) => i === index ? next : value) })} />
+        <button type="button" className="utility-button" onClick={() => change({ activities: data.activities?.filter((_, i) => i !== index) })}>Remove K-1 {index + 1}</button></div>)}
+      <button type="button" className="utility-button" onClick={() => change({ activities: [...(data.activities ?? []), {}] })}>Add original K-1</button>
+      <button type="button" className="utility-button" onClick={() => change({ activities: [] })}>Record no original K-1s</button>
+      {!classification ? <button type="button" className="utility-button" onClick={() => change({ form461Classification: {} })}>Add current business classification</button> : <fieldset><legend>Current business classification</legend>
+        <Fields prefix="Business classification" data={classification} fields={[...evidence,
+          ['method', 'source method', [['ordinary_k1_only', 'Ordinary K-1 businesses only'],['profitable_ordinary_c_and_k1','Profitable ordinary Schedule C and partnership K-1']]],
+          ['allNonEmployeeBusinessSourcesIncluded', 'all nonemployee business sources included', 'boolean'], ['capitalIncomeIsNonbusiness', 'capital income is nonbusiness investment income', 'boolean'],
+          ['otherBusinessIncome', 'actual other business income', 'money'], ['otherBusinessDeductions', 'actual other business deductions', 'money'],
+        ]} onChange={patch => change({ form461Classification: { ...classification, ...patch } })} />
+        {(classification.method==='profitable_ordinary_c_and_k1'||classification.scheduleCSource) && <>
+          {!classification.scheduleCSource ? <button type="button" className="utility-button" onClick={()=>change({form461Classification:{...classification,scheduleCSource:{}}})}>Add actual Schedule C classification source</button> : <fieldset><legend>Actual Schedule C classification source</legend>
+            <Fields prefix="Schedule C classification" data={classification.scheduleCSource} fields={[...evidence,
+              ['accountHolder','actual owner',owner],['recipientName','actual recipient name','text'],['recipientTaxpayerIdLast4','actual recipient taxpayer ID last four','text'],
+              ['businessNameStatus','original business name status',[['reported','Separate name reported'],['blank_original','No separate business name on original']]],['businessName','reported business name','text'],
+              ['businessEINStatus','original EIN status',[['reported','Actual issued EIN reported'],['not_issued','No EIN issued; original line blank']]],['businessEIN','reported EIN','text'],
+              ['allIncomeDomesticConfirmed','all income is domestic','boolean'],['ordinaryBusinessOnlyConfirmed','ordinary business only','boolean'],
+            ]} onChange={patch=>change({form461Classification:{...classification,scheduleCSource:{...classification.scheduleCSource,...patch}}})}/>
+            {!classification.scheduleCSource.necReceipts ? <button type="button" className="utility-button" onClick={()=>change({form461Classification:{...classification,scheduleCSource:{...classification.scheduleCSource,necReceipts:{}}}})}>Add actual NEC receipt reconciliation</button> : <fieldset><legend>Actual NEC receipt reconciliation</legend>
+              <Fields prefix="NEC receipts" data={classification.scheduleCSource.necReceipts} fields={[...evidence,['allNecSourcesIncluded','all actual NEC originals included','boolean'],['noDuplicateStatementsConfirmed','no duplicate statements in this receipt ledger','boolean'],['otherGrossReceiptsNotOnNec','actual gross receipts not already in NEC','money'],['otherGrossSourceReference','actual other-receipt ledger reference','text']]} onChange={patch=>change({form461Classification:{...classification,scheduleCSource:{...classification.scheduleCSource,necReceipts:{...classification.scheduleCSource?.necReceipts,...patch}}}})}/>
+              {classification.scheduleCSource.necReceipts.rows===undefined&&<p role="status">The actual original NEC linkage list is unknown.</p>}
+              {classification.scheduleCSource.necReceipts.rows?.map((row,index)=><fieldset key={index}><legend>Entered NEC source {Number(row.necSourceId?.split(':')[1]??index)+1} (blank cards skipped)</legend>
+                <Fields prefix={`NEC receipt ${index+1}`} data={row} fields={[...evidence,['payerTinStatus','original payer TIN status',[['reported','Payer TIN reported on original'],['blank_original','Payer TIN blank on actual original']]],['sameBusinessConfirmed','belongs to this actual Schedule C business','boolean'],['includedOnceConfirmed','included exactly once in gross receipts','boolean'],['currentOriginalNoCorrectionsOrVoidsConfirmed','current original with no corrections or voids','boolean'],['allUnmodeledBoxesZeroOrBlankConfirmed','other unrepresented boxes are actually zero or blank','boolean']]} onChange={patch=>change({form461Classification:{...classification,scheduleCSource:{...classification.scheduleCSource,necReceipts:{...classification.scheduleCSource?.necReceipts,rows:classification.scheduleCSource?.necReceipts?.rows?.map((value,i)=>i===index?{...value,...patch}:value)}}}})}/>
+                <button type="button" className="utility-button" onClick={()=>change({form461Classification:{...classification,scheduleCSource:{...classification.scheduleCSource,necReceipts:{...classification.scheduleCSource?.necReceipts,rows:classification.scheduleCSource?.necReceipts?.rows?.filter((_,i)=>i!==index)}}}})}>Remove original NEC receipt linkage {index+1}</button>
+              </fieldset>)}
+              <button type="button" className="utility-button" onClick={()=>{const rows=classification.scheduleCSource?.necReceipts?.rows??[];let index=0;while(rows.some(row=>row.necSourceId===`form1099Nec:${index}`))index++;change({form461Classification:{...classification,scheduleCSource:{...classification.scheduleCSource,necReceipts:{...classification.scheduleCSource?.necReceipts,rows:[...rows,{necSourceId:`form1099Nec:${index}`}]}}}});}}>Add original NEC receipt linkage</button>
+              <p className="guided-hint">Receipt link numbers count nonblank NEC entries in business-income order, ignoring entirely blank cards. They can differ from the card numbers shown there. Use that entered-source order when checking each original. Confirm each relationship from actual records. Copying an entered statement does not confirm that it belongs to this business. Corrected statements, unexplained receipt differences and separate businesses need their additional source method.</p>
+              <button type="button" className="utility-button" onClick={()=>change({form461Classification:{...classification,scheduleCSource:{...classification.scheduleCSource,necReceipts:undefined}}})}>Remove actual NEC receipt reconciliation</button>
+            </fieldset>}
+            <button type="button" className="utility-button" onClick={()=>change({form461Classification:{...classification,scheduleCSource:undefined}})}>Remove actual Schedule C classification source</button>
+          </fieldset>}
+          <p className="guided-hint">Use actual current original records. Blank name or no issued EIN needs its explicit original status. This method requires nonnegative C and partnership sources with no excess business loss. Other source compositions need their separate method.</p>
+        </>}
+        <p className="guided-hint">The supported classification requires actual zero other business sources. SE, health and retirement deductions are calculated separately from the return records.</p>
+        <button type="button" className="utility-button" onClick={() => change({ form461Classification: undefined })}>Remove current business classification</button>
+      </fieldset>}
+      {!data.priorQbiCarry ? <button type="button" className="utility-button" onClick={() => change({ priorQbiCarry: {} })}>Add prior ordinary QBI carry record</button> : <fieldset><legend>Prior ordinary QBI loss carry</legend>
+        <p className="guided-hint">Copy the preceding-year Form 8995 line 16 or Schedule C (Form 8995-A) line 6. A known zero needs an actual completed prior-return record. This balance is separate from suspended losses. Use the same individual or joint couple on both returns; changed ownership needs its separate source method. The spouse owner fields apply to a joint return.</p>
+        {data.priorQbiCarry.sameFilingUnit ? <>
+          <Fields prefix="Prior ordinary QBI" data={data.priorQbiCarry.sameFilingUnit} fields={[
+            ['priorFilingStatus', 'actual prior filing status', [['single', 'Single'], ['married_filing_jointly', 'Married filing jointly'],
+              ['married_filing_separately', 'Married filing separately'], ['head_of_household', 'Head of household'], ['qualifying_surviving_spouse', 'Qualifying surviving spouse']]],
+            ['sameTaxpayersConfirmed', 'same taxpayers on the prior and current returns', 'boolean'],
+          ]} onChange={patch => change({ priorQbiCarry: { ...data.priorQbiCarry, sameFilingUnit: { ...data.priorQbiCarry?.sameFilingUnit, ...patch } } })} />
+          <button type="button" className="utility-button" onClick={() => change({ priorQbiCarry: { ...data.priorQbiCarry, sameFilingUnit: undefined } })}>Use original NOL filing history</button>
+        </> : <button type="button" className="utility-button" onClick={() => change({ priorQbiCarry: { ...data.priorQbiCarry, sameFilingUnit: {} } })}>Use a prior return without NOL history</button>}
+        <Fields prefix="Prior ordinary QBI" data={data.priorQbiCarry} fields={[...evidence,
+          ['returnSourceId', 'original preceding-year return', data.priorQbiCarry.sameFilingUnit ? 'text'
+            : (nol?.filingUnitHistory?.returns ?? []).filter(row => row.sourceId).map(row => [row.sourceId ?? '', `${row.sourceId} — ${row.taxYear ?? 'year unknown'}`] as const)],
+          ['formKind', 'actual record', [['form_8995_line_16', 'Form 8995 line 16'], ['form_8995a_schedule_c_line_6', 'Schedule C (Form 8995-A) line 6'], ['completed_prior_return_no_carry', 'Completed prior-return records establish no carry']]],
+          ['primaryName', 'prior return primary name', 'text'], ['primaryTaxpayerIdLast4', 'prior primary taxpayer ID last four', 'text'],
+          ['spouseName', 'prior return spouse name', 'text'], ['spouseTaxpayerIdLast4', 'prior spouse taxpayer ID last four', 'text'],
+          ['lossCarryforward', 'filed ordinary loss carry', 'money'], ['activeLossCarryforward', 'independently recorded active portion (optional)', 'money'],
+          ['activeSourceReference', 'active portion source reference (optional)', 'text'],
+        ]} onChange={patch => change({ priorQbiCarry: { ...data.priorQbiCarry, ...patch } })} />
+        <p className="guided-hint">Leave the active portion unknown unless its separate source is available. A missing ordinary carry record cannot be replaced by an EBL completeness answer.</p>
+        <button type="button" className="utility-button" onClick={() => change({ priorQbiCarry: undefined })}>Remove prior ordinary QBI carry record</button>
+      </fieldset>}
+      <fieldset><legend>Prior EBL qualified character</legend>
+        <Fields prefix="EBL sources" data={data} fields={[[ 'allExcessBusinessLossHistoriesIncluded', 'all actual regular EBL histories included', 'boolean' ]]} onChange={change} />
+        {data.excessBusinessLossHistories === undefined && <p role="status">The prior qualified EBL history list is unknown.</p>}
+        {data.excessBusinessLossHistories?.map((row, index) => <div key={index}><EblHistory index={index} data={row} nol={nol} onChange={next => change({ excessBusinessLossHistories: data.excessBusinessLossHistories?.map((value, i) => i === index ? next : value) })} />
+          <button type="button" className="utility-button" onClick={() => change({ excessBusinessLossHistories: data.excessBusinessLossHistories?.filter((_, i) => i !== index) })}>Remove EBL history {index + 1}</button></div>)}
+        <button type="button" className="utility-button" onClick={() => change({ excessBusinessLossHistories: [...(data.excessBusinessLossHistories ?? []), {}] })}>Add prior EBL qualified history</button>
+        <button type="button" className="utility-button" onClick={() => change({ excessBusinessLossHistories: [] })}>Record no prior EBL qualified histories</button>
+      </fieldset>
+      <button type="button" className="utility-button" onClick={() => onChange(undefined)}>Remove K-1 and qualified loss sources</button>
+    </>}
+  </div></details>;
+}

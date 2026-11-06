@@ -1,0 +1,105 @@
+# Optional browser sampled-JavaScript diagnostic
+
+This package adds an opt-in, nonqualifying diagnostic for the 14 failed OH cases (7 `failed` and 7 `timedOut` outcomes) retained from the actual Linux container run. It does not change application, calculation, PDF, admission or qualification behavior. Private preparation is based on `27e8becb080a43db9418681b1b4abf985c5529b1`; the diagnosed application source is `cecb99444f63aca4ad8cc4411675c0fa2cf630de`. Root owns eventual adoption and CI execution. No browser, CDP, Docker, VM or provider execution was performed for this package's offline evidence.
+
+The original evidence remains 573 passed, 14 failed and 5 skipped. The compact manifest stores the canonical count/hash of all 592 collected cases plus the 14 exact failed IDs and full title paths. All 14 actual original deadlines were 30 seconds; other original cases retain their existing explicit deadlines. Four spec files change only their Playwright import module string, and only those four hashes change in the existing request audit. The qualification runner remains byte-identical. With the diagnostic environment absent, the optional fixture exports the exact original Playwright test object; the original runner also strips the diagnostic environment. No page or CDP session is activated by default.
+
+## Collection and request scope
+
+Offline Playwright 1.64.1 collection verified the same 592 IDs, titles, projects, declared deadlines and expected states with the optional fixture disabled and enabled. The installed CLI's `--test-list` consumes full title paths; the resulting actual IDs are reconciled to the 14 pinned IDs. The selected cases reuse the existing scheduler and its natural 61-second initial and inter-batch windows. Two workers, zero retries and 30-second target body deadlines remain fixed. The additional run has two request batches: six cases with at most 12 filled-return requests, then eight cases with at most 20. Every other protected scope is zero. The diagnostic adds no collector HTTP requests and does not enlarge the per-window service ceiling.
+
+## Sampling and privacy
+
+Only the existing synthetic local page's main JavaScript isolate is sampled. Setup and teardown add diagnostic overhead; results are not qualification evidence. The collector requests stop at 29 seconds, reserves up to one second for the stop response, and accepts only spans at most 30 seconds. It may omit the end of the test body. V8 timer intervals are sampling wall weights, not exact process CPU time or total browser CPU. Idle, program, garbage collection and other samples stay distinct. The original test body deadline is never changed. Setup and CDP cleanup each use a shared monotonic one-second bound; sanitized writing has a separate one-second bound inside the existing teardown slot. Timer scheduling is not a hard runtime guarantee.
+
+Only public JavaScript chunk SHA256, generated line/column, tree IDs, samples, timing weights and fixed categories can enter a sanitized profile. Source maps are deferred. Raw names, URLs, absolute profile timestamps, exception strings, locals, DOM, storage, payloads, script content and exports are never saved or uploaded. The raw CDP response is already materialized before caps, so this package does not claim a hard browser or transport peak-memory cap. Accepted evidence is limited to 20,000 nodes, 80,000 edges, 40,000 samples and 8 MiB per sanitized profile. Stored temporary profiles are reconstructed through the same whitelist before final output. Missing, invalid, unsupported or overlong observations become fixed unavailable records.
+
+The public chunk allowlist comes from the exact existing job-owned image, not a host `.next` build. A fixed read-only Node program visits only `/app/apps/web/.next/static`, rejects symlinks and unsafe names, and hashes bounded JavaScript files without importing application code or reading environment, configuration, documents or network. It limits entries to 10,000, depth to 16, JavaScript files to 4,096, each file to 32 MiB and total bytes to 128 MiB. The child command has a 15-second deadline and 2 MiB captured-output limit. The container/image/revision and original source snapshot are checked before and after inventory and between batches. These commands have been reviewed and tested against synthetic directories only; no actual Docker command has run.
+
+## CI integration boundary
+
+The new composite action defaults disabled and requires an explicit original failed outcome. Root will wire its outer workflow condition after independent review. Ordinary push/PR qualification remains inert. The original failed step keeps its failure and has no new continue-on-error or bypass condition. Diagnostic outcome and profile availability are separate from that original result. A 12-minute internal deadline aborts only diagnostic-owned children; each child has TERM, two-second KILL and half-second close-observation bounds. Missing close is unavailable, not confirmed cleanup. The outer CI step remains final containment. The diagnostic never creates, replaces or stops the application container.
+
+Only `artifacts/browser-cpu-diagnostics/` is intended for diagnostic upload. Raw Playwright reports, screenshots, exports and other transient outputs remain in an exclusive temporary directory and are removed. The final directory contains a safe plan, two projected batch receipts, fourteen sanitized profiles or fixed unavailable records, and a separate result. Source failures use a fixed unavailable record rather than raw stderr. No new runtime result is claimed before root executes the reviewed opt-in action.
+
+## Retained development evidence
+
+The first spec-linked helper run was 13 failed / 1 passed on unimplemented stubs. Additional retained reds exercised runner admission, accepted-span bounds, unresponsive child settlement, stored-record privacy, prototype-like native names and scheduler row-key preservation. An actual offline collection composition caught lost scheduler keys after selection; the correction preserves validated original rows. Initial strict lint and fixture type-resolution setup failures remain retained separately. None of these failures was converted to a qualification pass or used to weaken original browser assertions.
+
+The initial frozen packet’s offline validation passed 73 tests across three files with one worker, including 23 new diagnostic controls and the unchanged request-scheduler/natural-window controls. Strict owned lint has zero warnings/errors; scoped fixture typechecking passes; all eight new spec references resolve. The actual collection proof is 592 default / 592 enabled / 14 exact selected cases, and the disabled fixture has exact original test-object identity. The evidence directory records commands, exit codes, exact source hashes, original/import-only inverse checks and primary source references. This is software/collection review only; it provides no measured browser hotspot, native-runtime qualification, hosted-runtime qualification or filing readiness.
+
+## Inventory privacy correction
+
+The initial immutable `b86b58b10a8ef7c089c87f829016d766f803aa95` packet remains preserved. Independent offline review reproduced that an extra inventory-value field could reach the plan through a wholesale `Object.values` projection. A new spec-linked desired-denial regression failed on the unchanged implementation before this correction. The successor validates plain or null-prototype records with exactly the own enumerable data fields `sha256` and `bytes`, rejects inherited, polluted, symbol, hidden and accessor properties without reading getters, and projects only those two typed primitives into the plan. A second retained red covered coercible hash objects/arrays; hashes now require actual strings. The original 23 diagnostic and 50 scheduler controls, browser imports, deadlines, case selection and request bounds stay unchanged. This correction adds no runtime authority or browser execution.
+
+The corrected successor passes 74 offline tests across the same three files, strict owned lint with zero warnings/errors, scoped fixture types and all eight spec references. Fresh disabled/enabled/exact-selection collections again produce 592 / 592 / 14, with the original case hash and request budgets unchanged; default test-object identity is exact. No browser, CDP or Docker execution occurred.
+
+## November 6 working-checkout integration
+
+The successor closes an independently reproduced privacy defect before runtime use. The first frozen validator admitted an unexpected inventory field and the original plan projection forwarded it. The retained desired-denial test genuinely failed. The successor accepts only exact own enumerable data fields with primitive SHA/size values and rebuilds the uploaded metadata through an explicit whitelist. Hidden, inherited, symbol, accessor, prototype-polluted and coercible values reject without invoking supplied getters. The original freeze and independent HOLD remain retained.
+
+Distinct final review passes 16 adversarial controls plus all 74 retained tests; its report SHA256 is `2a9ca036a9074d76132b873cca4340d4bb564d6c9921146fdada9b21d5c19451`, manifest `5819483aeaf416e879ce5c81f99bc7c59c1c22a9207a160efaaf72966a4c9e4b`. The reviewer rehashes all 5,479 regular source files and six literal links before and after. One reviewer-only original-report pointer error is retained and corrected without changing source or assertions. ROOT independently rehashes all source and evidence members and reviews the exact correction.
+
+The working checkout passes 74 focused/adjacent tests and 24 inventory controls, all three typechecks, scoped fixture types, both builds, strict owned lint with zero warnings/errors and all 8,603 spec references. The initial inventory gate reports stale generated metadata; ordinary regeneration produces 930 entries, including one additional unsupported diagnostic contract, and the unchanged gate then passes. Actual list-only collection reconfirms 592 default /592 enabled /14 selected with canonical SHA256 `d198850bbaf6bb9aea91be6f252c185a2b1eb28c9bb2732bc9bbaa5ddc68c0e0`. These list commands launch no browser or CDP session.
+
+The reviewed workflow now exposes a default-false manual input and forwards explicit enabled/original-failure inputs to the action. Its original command, 90-minute job deadline, assertions, retries and request protections remain unchanged. Only the dedicated sanitized directory is added to artifact uploads. Full new-source unit/coverage/browser results and actual opt-in CI observations remain pending; the previous actual container failure is retained. This package establishes no timing improvement, completed distribution qualification or readiness promotion.
+
+ROOT preserves the original request audit’s UTF8 review text instead of the private serializer’s equivalent Unicode escape, and refreshes only its required raw-byte binding in the case manifest. The integrated audit SHA256 is `5738917f2cd4449185251ee32ae669a6b767ef20d89807fb518d47728770f383`; the four import source hashes are its only semantic changes. The 74 focused controls and fresh 592/592/14 collection proof pass again after that metadata correction, with the first results retained.
+
+
+## Exact ef7 execution and original failures
+
+Source `ef7cbac53ff5d28a04f7a694527d8900d5420e89`, tree
+`1186753e894b446e3634a2bb16d24a8e1338d2be`, completed the remaining local
+checks without source drift: model-ledger check, lint, 27,167 unit tests in
+1,953 files, coverage and the full managed browser suite. Coverage is91.82%
+statements/87.67% branches/90.91% functions/95.13% lines; the85% branch gate
+remains unchanged. The actual local browser result is587 passed, zero failed
+and five original hosted skips across592 cases, one attempt and zero retries.
+All5,480 source pins and4,773 runtime pins reconcile. The owned local server
+closure is recorded. Together with the earlier types/build/spec/inventory
+checks, the required local checks pass; this does not qualify skipped hosting
+or either remote distribution. Independent local-closure manifest is
+`461faad0c699cfcd9f66b7c10fe578de5f26a04200dbec31681df04a51a0027d`.
+
+Both exact-source GitHub CI runs pass all six jobs: push42218687142 and
+PR42218695445. Browser outcomes remain separate. PR Web42218695111 fails:
+managed592 cases/two RRTA saved-PDF inspector failures/five original skips;
+strict container592 cases/19 failures/five original skips. Its failures are
+18 original30s test timeouts and one original4s saved-PDF scanner timeout.
+Manual Web42218738783 has managed592/zero failures/five skips, but its separate
+strict container has562 passed/25 failed/five skips:23 original30s test
+timeouts and two original4s scanner timeouts. The manual managed pass does not
+erase the PR failures or establish their cause. The ordinary push browser run
+was cancelled by the existing concurrency policy.
+
+The manual optional sampling step executes and fails separately, preserving
+`originalFailureSuperseded=false`. All14 selected cases fail, eight timed out
+and six failed. Seven profiles pass the independent strict schema/privacy,
+source/image/case/tree/sample/weight reader; seven contain only fixed
+invalid-profile unavailable records. The dedicated artifact has18 approved
+JSON members,618,508 bytes and SHA256
+`67f04bd1bd51e162c592e435f73355909f1b65eca4580c0637843a713fa57ce4`.
+It binds the exact ef7 linux/amd64 image
+`2efaa4c5500b35b4d6fe5cc656f30f8225e74bfbe10553cdad9a3e31358c4564`.
+No complete container archive, raw CDP profile, URL, document or identifier was
+needed for this review. Sampling upload, SBOM/scan/source checks and the
+workflow's owned-container removal complete successfully. These are saved
+workflow cleanup observations, not an independent live process-absence probe.
+
+Accepted current-page-isolate weights total50,966,788 microseconds:
+18,478,994 public JavaScript,13,029,969 idle,12,404,686 program,1,153,298 GC
+and5,899,841 other. Spans range2.279–27.362 seconds. These are sampling wall
+intervals, not processCPU or complete test durations. Exact local public-chunk
+hash matches map recorded locations to the pinned SHA256 implementation,
+actual W2/Ohio source serialization and Decimal. This identifies executed work;
+it does not establish repeated equivalent inputs or a timeout cause. The
+browser sampler does not measure the separate Python scanner.
+
+Independent remote manifest is
+`437d51a3a319a8b419eab968bb8541e5c416f8b398dc6ffdd31653bae59348f4`
+(49 members), and the exact generated-location follow-up is
+`9d69e298675ef0fe00270f263d7910b576e876037aabc007097cb358319de52f`
+(three members). ROOT rehashes both and reads the complete reports. Source
+qualification remains failed. Bounded private scanner and validation changes
+are under separate review; none is counted as a remote performance fix here.

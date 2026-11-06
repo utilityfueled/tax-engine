@@ -1,0 +1,45 @@
+import type { TaxYearInput } from "@/models/inputs.js";
+import { validateQofDispositionFacts } from "@/engine/forms/qof-disposition-facts.js";
+import { calculateQofInclusion } from "@/engine/forms/qof-inclusion.js";
+import type { QofInvestmentSource } from "@/models/qof-investment-sources.js";
+import { parseGuidedCurrency } from "./guided-currency";
+
+export interface QofDispositionData {
+  sourceTaxYear: string;
+  sourceReference: string;
+  sourceFactsConfirmed: boolean | null;
+  allInvestmentsReviewed: boolean | null;
+  disposedOfQofInvestment: boolean | null;
+  deferredGainHeldAtYearEnd?: boolean | null;
+  investments?: QofInvestmentData[];
+}
+export type QofInvestmentData = { [K in keyof QofInvestmentSource]: K extends "sourceFactsConfirmed" | "entireInvestment" | "noSpecialGainCode" | "saleGainAllCapitalConfirmed" ? boolean | null : string };
+export const emptyQofInvestment: QofInvestmentData = { sourceId: "", sourceReference: "", sourceFactsConfirmed: null, qofEin: "", description: "", investmentDate: "",
+  interestType: "", gainCharacter: "", originalDeferredGain: "", remainingDeferredGain: "", event: "", eventDate: "", entireInvestment: null, noSpecialGainCode: null, saleGainAllCapitalConfirmed: null,
+  fairMarketValue: "", fullyTaxableDispositionGain: "", proceeds: "", basisBeforeInclusion: "" };
+const QOF_MONEY = new Set(["originalDeferredGain", "remainingDeferredGain", "fairMarketValue", "fullyTaxableDispositionGain", "proceeds", "basisBeforeInclusion"]);
+export const emptyQofDispositionFacts: QofDispositionData = {
+  sourceTaxYear: "", sourceReference: "", sourceFactsConfirmed: null,
+  allInvestmentsReviewed: null, disposedOfQofInvestment: null,
+};
+export function buildGuidedQofFacts(data: QofDispositionData | undefined, taxYear?: number | null): TaxYearInput["qofDispositionFacts"] {
+  if (!data) return undefined;
+  if (!Number.isInteger(taxYear) || !/^\d{4}$/.test(data.sourceTaxYear.trim())) throw new Error("QOF sources require the actual return and original source year.");
+  const investments = data.investments?.map(row => Object.fromEntries(Object.entries(row)
+    .filter(([, value]) => value !== null && value !== "" && !(typeof value === "string" && !value.trim()))
+    .map(([key, value]) => [key, typeof value === "string" ? QOF_MONEY.has(key) ? parseGuidedCurrency(value).toFixed() : value.trim() : value])) as QofInvestmentSource);
+  const facts = { sourceTaxYear: Number(data.sourceTaxYear), sourceReference: data.sourceReference,
+    sourceFactsConfirmed: data.sourceFactsConfirmed ?? undefined, allInvestmentsReviewed: data.allInvestmentsReviewed ?? undefined,
+    disposedOfQofInvestment: data.disposedOfQofInvestment ?? undefined,
+    ...(data.deferredGainHeldAtYearEnd !== undefined && data.deferredGainHeldAtYearEnd !== null ? { deferredGainHeldAtYearEnd: data.deferredGainHeldAtYearEnd } : {}),
+    ...(investments?.length ? { investments } : {}) };
+  validateQofDispositionFacts(facts, taxYear as number);
+  calculateQofInclusion({ taxpayer: { taxYear: taxYear as number }, qofDispositionFacts: facts });
+  return facts;
+}
+export function qofDispositionFactErrors(data: QofDispositionData | undefined, taxYear?: number | null, sectionStarted = true): Record<string, string> {
+  // All remaining deferred gain reaches inclusion in 2026, so silence cannot mean none.
+  if (taxYear === 2026 && !data && sectionStarted) return { qofDisposition: "Answer whether you held QOF deferred gain on December 31, 2026." };
+  try { buildGuidedQofFacts(data, taxYear); return {}; }
+  catch (error) { return { qofDisposition: error instanceof Error ? error.message : "Complete the actual QOF investment sources." }; }
+}

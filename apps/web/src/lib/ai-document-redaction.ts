@@ -15,19 +15,21 @@ const sensitiveHeaderPatterns: Array<{
   header: RegExp;
   leadingKind: RedactionKind;
 }> = [
-  { header: /employee'?s name(?:, address, and zip code)?/i, leadingKind: "person-name" },
+  { header: /employee(?:'?s)? name(?:, address, and zip code)?/i, leadingKind: "person-name" },
   { header: /employee name and address/i, leadingKind: "person-name" },
   { header: /prepared for\b/i, leadingKind: "person-name" },
   { header: /account holder\b/i, leadingKind: "person-name" },
   { header: /card member\b/i, leadingKind: "person-name" },
   { header: /member name\b/i, leadingKind: "person-name" },
   { header: /recipient name\b/i, leadingKind: "person-name" },
-  { header: /employer'?s name(?:, address, and zip code)?/i, leadingKind: "other" },
+  { header: /taxpayer name\b/i, leadingKind: "person-name" },
+  { header: /spouse name\b/i, leadingKind: "person-name" },
+  { header: /employer(?:'?s)? name(?:, address, and zip code)?/i, leadingKind: "other" },
 ];
 
 const streetAddressKeywords = /\b(?:street|st|road|rd|avenue|ave|boulevard|blvd|lane|ln|drive|dr|court|ct|circle|cir|way|place|pl|parkway|pkwy|terrace|ter|suite|ste|apt|apartment|unit|fl)\b/i;
 const stateZipPattern = /\b[A-Z]{2}\s+\d{5}(?:-\d{4})?\b/;
-const uppercaseNameLinePattern = /^(?:[A-Z][A-Z'.,-]+)(?: [A-Z][A-Z'.,-]+){1,4}$/;
+const nameLinePattern = /^[\p{L}][\p{L}\p{M}'.,-]*(?: [\p{L}][\p{L}\p{M}'.,-]*){0,6}$/u;
 const accountReferencePattern = /(account|card)\s*[-#:]*\s*\d{4,}/ig;
 const ssnLikePattern = /(?<!\d)(?:\d{3}[-_.\s]?\d{2}[-_.\s]?\d{4})(?!\d)/g;
 const einLikePattern = /(?<!\d)\d{2}[-_.\s]?\d{7}(?!\d)/g;
@@ -37,23 +39,6 @@ const dobContextPattern = /(?:\bDOB\b|\bdate of birth\b|\bbirth date\b)[:\s]+(?:
 const zipContextPattern = /(?:\b[A-Z]{2}\s+|\bZIP[:\s]+)\d{5}(?:-\d{4})?\b/gi;
 const routingPattern = /(?:\brouting\b|\bABA\b|\bRTN\b)[\s#:]*(?<!\d)\d{9}(?!\d)/gi;
 const bankAccountPattern = /(?:\baccount\b|\bacct\b)[\s#:]*(?<!\d)\d{6,17}(?!\d)/gi;
-const inlineLabeledNamePatterns: Array<{
-  pattern: RegExp;
-  kind: RedactionKind;
-}> = [
-  {
-    pattern: /(Prepared for\s+)([A-Z][A-Z'.,-]+(?: [A-Z][A-Z'.,-]+){1,4})(?=\s+(?:American Express|Visa|Mastercard|Card|Account)\b)/g,
-    kind: "person-name",
-  },
-  {
-    pattern: /((?:Card Member|Account Holder|Member Name|Recipient Name)\s+)([A-Z][A-Z'.,-]+(?: [A-Z][A-Z'.,-]+){1,4})/g,
-    kind: "person-name",
-  },
-  {
-    pattern: /((?:Employee'?s name|Employee Name|Taxpayer Name|Spouse Name)\s+)([A-Z][A-Z'.,-]+(?: [A-Z][A-Z'.,-]+){1,4})/g,
-    kind: "person-name",
-  },
-];
 
 function passesLuhn(digits: string) {
   let sum = 0;
@@ -89,13 +74,13 @@ function redactCreditCardNumbers(text: string, replaceWithToken: (kind: Redactio
 }
 
 function looksLikeAddressLine(line: string) {
-  return streetAddressKeywords.test(line) || stateZipPattern.test(line);
+  return streetAddressKeywords.test(line) || stateZipPattern.test(line) || /\[postal-code-\d+\]/.test(line);
 }
 
 function looksLikeNameLine(line: string) {
   const trimmed = line.trim();
 
-  return uppercaseNameLinePattern.test(trimmed) || /^[A-Z][a-z]+(?: [A-Z][a-z]+){1,4}$/.test(trimmed);
+  return nameLinePattern.test(trimmed);
 }
 
 export function redactTextForAiAnalysis(text: string): RedactedAiDocumentText {
@@ -131,12 +116,6 @@ export function redactTextForAiAnalysis(text: string): RedactedAiDocumentText {
     .replace(bankAccountPattern, (match) => replaceWithToken("other", match))
     .replace(accountReferencePattern, (match) => replaceWithToken("other", match));
 
-  for (const { pattern, kind } of inlineLabeledNamePatterns) {
-    redactedText = redactedText.replace(pattern, (_match, prefix, name) => (
-      `${prefix}${replaceWithToken(kind, name)}`
-    ));
-  }
-
   redactedText = redactCreditCardNumbers(redactedText, replaceWithToken);
 
   const lines = redactedText.split("\n");
@@ -149,6 +128,18 @@ export function redactTextForAiAnalysis(text: string): RedactedAiDocumentText {
       continue;
     }
 
+    // Labels also occur inline, with mixed case, punctuation and non-ASCII
+    // names. Treat the labelled value as private rather than guessing its
+    // capitalization. A token in untrusted document text is not evidence that
+    // its neighbouring text was redacted by this function.
+    const headerMatch = matchedHeader.header.exec(currentLine);
+    if (!headerMatch) continue;
+    const valueStart = headerMatch.index + headerMatch[0].length;
+    const inlineValue = currentLine.slice(valueStart).replace(/^[\t :=]+/, "").trim();
+    if (inlineValue) {
+      lines[index] = `${currentLine.slice(0, valueStart)} ${replaceWithToken(matchedHeader.leadingKind, inlineValue)}`;
+    }
+
     for (let lookahead = index + 1; lookahead < Math.min(lines.length, index + 5); lookahead += 1) {
       const candidateLine = lines[lookahead]?.trim() ?? "";
 
@@ -156,20 +147,21 @@ export function redactTextForAiAnalysis(text: string): RedactedAiDocumentText {
         break;
       }
 
-      if (/^[a-z]|\b(?:wages|federal|social security|medicare|state income tax|gross pay|page|account summary)\b/i.test(candidateLine)) {
+      if (/^[a-z][.)]\s+|\b(?:wages|federal|social security|medicare|state income tax|gross pay|page|account summary)\b/i.test(candidateLine)
+        || sensitiveHeaderPatterns.some(({ header }) => header.test(candidateLine))) {
         break;
-      }
-
-      if (looksLikeNameLine(candidateLine)) {
-        lines[lookahead] = replaceWithToken(matchedHeader.leadingKind, candidateLine);
-        continue;
       }
 
       if (looksLikeAddressLine(candidateLine)) {
         lines[lookahead] = replaceWithToken(
-          stateZipPattern.test(candidateLine) ? "postal-code" : "street-address",
+          stateZipPattern.test(candidateLine) || /\[postal-code-\d+\]/.test(candidateLine) ? "postal-code" : "street-address",
           candidateLine,
         );
+        continue;
+      }
+
+      if (looksLikeNameLine(candidateLine)) {
+        lines[lookahead] = replaceWithToken(matchedHeader.leadingKind, candidateLine);
         continue;
       }
 

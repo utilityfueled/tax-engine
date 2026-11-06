@@ -1,0 +1,11 @@
+# Ohio2026 PA reciprocal employee draft
+
+The explicit source-qualified draft now excludes qualifying PA reciprocal employee compensation from Ohio income and refunds actual Ohio withholding. It revalidates original domicile, taxpayer, employer, service and complete dated payroll records through opaque contexts. It never accepts a caller-supplied exclusion or duplicates nonresident/resident credits.
+
+This finite cohort is single, under65, no dependents, full-year PA domicile, one C-corporation W2 with one OH row and no local rows, ordinary OH services and timely withholding-only settlement. Broader households, other reciprocal states, mixed/PY sources, additional payment methods and complete selected-state coverage remain pending. Public full2026, final forms, filing and model gates remain closed.
+
+The spec precedes two genuine existing-API RED runs (5fail/1pass each). Final focused/current/historical224tests in7files, root types, scoped lint with zero warnings and770spec references pass. Independent engineering review passes35 distinct actual-source controls and separately derived Decimal rounding oracles. ROOT verified42 frozen evidence members and all8 current source pins. A suspected W2-index issue was refuted by the inherited literal-zero schema and two synchronized negative cases. No qualified human tax review is claimed.
+
+Primary sources refreshed November5: [RC5747.05](https://codes.ohio.gov/ohio-revised-code/section-5747.05), [OAC5703-7-03](https://codes.ohio.gov/ohio-administrative-code/rule-5703-7-03), and the [historical2025 booklet](https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/forms/ohio_individual/individual/2025/it1040-booklet.pdf), printed page20. Historical instructions do not establish final2026 line mapping.
+
+Private author evidence: `nov05-ohio-pa-reciprocal-2026-implementation`, manifest SHA256 `b5d4fc9aa4dab71d36a8ea84c3be0c990a2c70ccf87bcb92f66f07f76048f3cd`. Independent evidence: `nov05-ohio-pa-reciprocal-2026-independent`, manifest SHA256 `d0905ecdf518af1068e90681f7b7c21729e29406224a6f348c8f7d6052f213b9`. Contemporaneous RED logs are retained; a full contemporaneous RED test-source snapshot was not captured, so no exact RED source hash is asserted. Global/browser/distribution/staging/AI/human/final-form qualification remains required.

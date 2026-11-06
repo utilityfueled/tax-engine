@@ -1,0 +1,31 @@
+form: Schedule C source-bound passenger first year
+year: 2026
+status: partial
+authority:
+  - https://uscode.house.gov/us/usc/119-121/t26/s179/
+  - https://www.ecfr.gov/current/title-26/section-1.179-2
+  - https://www.irs.gov/instructions/i4562
+  - https://www.irs.gov/instructions/i1040sc
+  - https://www.irs.gov/publications/p946
+lines:
+  - line: "parent-income"
+    description: "Actual single-owner cash service Schedule C income adds back only section179, retaining bonus and regular depreciation"
+    formula: "P = actual gross receipts - six classified actual operating expenses; raw limit = max(0, P - (fresh Form4562 line22 - line12)); original raw PartI income and matching scalar must equal this; full actual election <= raw limit before reporting rounding"
+    testRef: "tests/engine/schedules/schedule-c-passenger-first-year.test.ts::canonical admission requires actual parent income instead of arbitrary standalone income"
+  - line: "original-completeness"
+    description: "Closed documentary amounts preserve known zero versus omitted canonical defaults; exact original owner, business, form, one asset, NEC and complete income scope"
+    formula: "Required source records + true confirmations + current canonical contradiction checks; no unsupported activity/source/deduction, rental packet or incomplete direct context"
+    testRef: "tests/models/passenger-auto-parent-sources.test.ts::closed original expense fields cover every actual canonical category with no defaults"
+  - line: "13"
+    description: "Parent expense and net profit replay prevents duplicate deduction and stale results"
+    formula: "Actual line13 = fresh line22 once; actual totalExpenses = source operating expenses + line22; actual netProfit = P - line22 >= 0; all actual breakdown and source commitment match"
+    testRef: "tests/engine/schedules/schedule-c-passenger-first-year.test.ts::saved final result cannot trust a source commitment while money or allocation was changed"
+  - line: "saved-projection"
+    description: "Saved passenger parent results must match the complete fresh actual financial result, typed allocations and audit tree"
+    formula: "After unchanged source admission, calculate a fresh ScheduleC result without a saved input; compare all returned financial fields, exact nested Form4562 worksheet/key/array/convention data, complete top/nested audit rows and their inputs; Decimal value and type are preserved; changed, omitted, duplicated or invented detail denies"
+    testRef: "tests/engine/schedules/schedule-c-passenger-first-year.test.ts::saved passenger replay rejects changed financial projection detail"
+notes:
+  - "Finite 2026 single primary-owner domestic cash service business; actual no-wage/no-other-activity scope. Exclusions are unsupported cohorts, not legal exclusions from section179 income."
+  - "No spouse, other activity, losses, partial election/carryover, changed use or history. Optional normalized defaults never prove actual source zero."
+  - "Standalone passenger source/cap rules and ordinary NONLISTED/NONPASSENGER zero179/bonus source meaning remain unchanged. No native/PDF/filing/year readiness promotion."
+  - "Indistinguishable duplicate NEC originals require a separate reconciled source method; distinct original coverage and annual receipts are not inferred from document counts."

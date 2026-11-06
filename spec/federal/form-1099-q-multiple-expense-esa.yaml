@@ -1,0 +1,53 @@
+form: "Form1099Q multiple-expense ESA allocation"
+fullName: "Actual prepaid tuition and Coverdell source allocations across distinct expenses"
+taxYear: [2025, 2026]
+irsReference: "https://uscode.house.gov/us/usc/119-118/t26/s529/"
+sources:
+  - "https://www.irs.gov/pub/irs-pdf/i1040tt.pdf"
+  - "https://www.irs.gov/pub/irs-pdf/f8959.pdf"
+  - "https://www.irs.gov/publications/p970"
+  - "https://uscode.house.gov/us/usc/119-118/t26/s530/"
+notes: |
+  Official sources refreshed October26,2026. IRC529(c)(3)(B)(v)/(vi) and
+  Pub970 chapter6 require coordination after assistance and credit reductions.
+  The taxpayer supplies the allocation; no ratio or election is chosen here.
+  Extend the existing single-expense method to distinct actual postsecondary
+  tuition expenses for one ordinary in-kind QTP and one ordinary ESA for the
+  same actual beneficiary and recipient. Each expense has one actual benefit,
+  explicit QTP/ESA expense and credit allocations, and known-zero refunds and
+  other benefits. Each pair conserves its adjusted expense and actual credit;
+  QTP allocation plus credit cannot exceed its linked benefit. All benefits
+  reconcile to original QTP Box1, and aggregate allocations plus credits cannot
+  exceed either original distribution. Actual ESA account basis/history remains
+  necessary. These are derived controls, not published examples or human review.
+  Extra accounts, other categories, missing original source groups and inferred
+  allocations are outside this method. Existing readiness and filing gates stay.
+lines:
+  - line: "multiple-expenses"
+    description: "Conserve each original expense and both original distributions"
+    formula: "Tuition4500/3500, aid500/500, credit500/500, benefits2500/1500; QTP allocations1000/500 with credit500/500, ESA allocations2500/2000. QTP4000 earnings800 excludes300; ESA6000 basis4200 excludes1350. Taxable950, credit exception200, additional tax75."
+    testRef: "tests/engine/forms/form-1099-q-multiple-expense-esa.test.ts::uses the actual multiple-expense election with distinct earnings ratios"
+  - line: "conservation"
+    description: "Preserve exact source capacity and reject omitted or conflicting facts"
+    formula: "Reject one-cent allocation/credit mismatch, aggregate ESA allocation above6000, benefit cost above its linked expense, missing benefit/allocation, duplicate identities, unknown reductions, wrong recipient or year. Zero allocation remains known zero."
+    testRef: "tests/engine/forms/form-1099-q-multiple-expense-esa.test.ts::rejects incomplete or conflicting original expense groups"
+  - line: "canonical"
+    description: "Route source earnings once through the recipient return"
+    formula: "Wages50000 plus950 taxable earnings gives50950AGI and75 additional tax. Moving500 of the first expense from ESA to QTP, as an actual source election, gives1000 taxable and80 additional tax. For2025 single with15750standard deduction, the35200-35250/35250-35300 tax-table rows give3989/3995 ordinary tax. Subtract200LLC and add75/80: total tax3864/3875. Browser source with20000federal and725Medicare withholding gives16136/16125refund. Direct fixture retains its original1232.50Medicare withholding: existing8959 adds508withholding, giving16644/16633refund. No input mutation or order dependence.2026 isolated calculation does not enable the year."
+    testRef: "tests/engine/education-multiple-esa-return.test.ts::routes the actual multiple-expense election once"
+  - line: "guide"
+    description: "Preserve saved actual expense groups and require fresh confirmation after editing"
+    formula: "Actual guided conversion retains both benefits, all four allocations and independent ESA basis history; changed amounts revoke confirmation, blank actual amounts reject. Reconfirmation preserves the taxpayer's revised election."
+    testRef: "tests/guided-interview/guided-multiple-esa.test.ts::preserves the actual multiple-expense election through saved guided state"
+  - line: "review"
+    description: "Bind each original expense before producing review PDFs"
+    formula: "Both expense audit lines retain their own amounts. Balanced source edits, removed second benefit/allocation, and missing second audit reject before PDF I/O. Physical5329 shows950 income,200 exception,75 tax, no original identifiers and a review notice on every page."
+    testRef: "tests/pdf/form-1099-q-multiple-expense-esa.test.ts::binds both original tuition expenses before producing the review packet"
+  - line: "workspace"
+    description: "Reopen the packet produced from the actual guided workspace"
+    formula: "Guided workspace download contains both original expense traces and950/200/75 education amounts, with privacy and review-only notices preserved on each page."
+    testRef: "tests/apps/web/multiple-esa-workspace-packet.test.ts::reopens the actual multiple-expense ESA guided workspace packet"
+  - line: "browser"
+    description: "Edit the actual allocation controls on desktop and mobile"
+    formula: "Both expenses, benefits and four allocations survive local reload; changed sources revoke confirmation, blank assistance blocks an estimate, actual restored facts permit calculation. Wait for exact settled refund16136 initially and16125 after the actual allocation edit, including after restoring assistance; an intermediate ticker animation is not a completed amount. Private originals are absent from request bodies."
+    testRef: "apps/web/tests/guided-multiple-esa.spec.ts::preserves both source expenses through correction and local reload"

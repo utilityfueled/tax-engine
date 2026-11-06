@@ -1,0 +1,284 @@
+form: "PA actual employee allocation and UE source successor"
+fullName: "Pennsylvania source-bound working-day compensation and direct employee expenses"
+taxYear: 2025
+reference: "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/pa-40nrh.pdf"
+notes: |
+  Finite actual-source, primary-owner ordinary cash employee method. This is a
+  review-only successor, not tax-review attestation or final2026 qualification.
+  Read the unmodified original W2, complete payroll/calendar, signed employer
+  statement and actual employee expense/reimbursement records. No free day
+  counters, scalar PA wage correction, missing-zero inference or read refresh.
+  NRH SectionII/business factors, employee business-volume wages, special
+  interstate occupations, deferred pay, employment crossing domicile periods,
+  and UE travel/home-office/moving/education/depreciation need their own methods.
+  Existing ScheduleNRH/UE arithmetic interfaces remain separate legacy surfaces.
+  Other PA classes and the AB/business/OID successors keep their existing gates.
+sourceAuthority:
+  - title: "Published continuous PA Schedule NRH and instructions, EX03-24"
+    url: "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/pa-40nrh.pdf"
+    sha256: "39254e3bd00841ff8c64445fea3ce869860993ca01f15b71ef1df10aede8e323"
+  - title: "2025 PA Schedule UE and instructions, EX04-25"
+    url: "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40ue.pdf"
+    sha256: "4e953c03cea74e9134724fac863ccf94ae3d0be2884a01777dcbbbb7c9bda7a8"
+  - title: "PA PIT Gross Compensation guide, DSM12 08-2025"
+    url: "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/papersonalincometaxguide/documents/pitguide_grosscompensation.pdf"
+    sha256: "0cb9a3850bb8687277849997dbb77b11652f201476980cfc3d5da33c920736af"
+sourceContract: |
+  Packet year/owner/original W2 snapshots, every index once, and current nonvoid
+  all-box ordinary wage facts must match the current canonical return. Each
+  employer needs actual name/EIN/address/telephone/job duties and complete dated
+  employment/payroll records. Statement provenance includes document reference,
+  explicitly signed=true, signer name/role and valid signature date; a label alone
+  proves nothing. The employer verifies all outside work dates. Any W2 PA wage
+  correction needs an explicit correction reason and this employer statement.
+  Calendar entries exactly cover all employed calendar dates, with no gap,
+  duplication, overlap or invented weekend default. Nonwork reasons distinguish
+  weekend/holiday, illness/disability, vacation/leave and other-employer work.
+  Compensable work is classified from actual physical location and employer
+  necessity. Personal-convenience outside work tied to a suitable PA workplace
+  counts as PA; commuting/transit alone does not. Unknown necessity/workplace or
+  mixed special occupations stays blocked. At least one actual working day is
+  required for positive wages. Paid payroll sums exactly to the original wages.
+  New packet payroll PA/outside amounts must agree with the source-derived
+  projection. The old PA payroll cannot silently override or erase an original.
+  UE receipts must be employer-required, paid, ordinary, reasonable, necessary
+  and directly related. Only required union dues, protective non-everyday work
+  clothing, consumed small tools/supplies, and required occupational licenses are
+  admitted. Other classes have explicit known-none proof, not empty-array proof.
+  Expense references/receipts and linked reimbursement records are unique and
+  complete. Exact accounted or fixed/per-diem non-W2 reimbursements suppress
+  their corresponding expense; no gap is deductible. Unaccounted partial/excess
+  reimbursements and taxable reimbursements need a separate complete method.
+  Each employer is separate; expenses never offset another employer's wages.
+  PY employment must remain within one verified domicile period; resident-period
+  expenses are fully considered, NR-period expenses follow the NRH fraction.
+  Reciprocal employee exclusions require the retained dedicated source method;
+  no NJ employee example is converted into NY qualification by relabeling.
+rounding: |
+  Use an isolated adaptive Decimal context (at least100 significant digits and
+  at least50 guard digits beyond the longest supplied numeric source), preserving
+  global precision and returning values from the public Decimal constructor.
+  Keep raw payroll/receipt cents and aggregate each printed UE category once;
+  round printed money HALF_UP to whole dollars. Preserve literal raw audit values.
+  NRH printed fraction has six decimals. Admit a rounded monetary result only
+  when that six-place fraction and the full Decimal ratio agree at the dollar;
+  disagreement remains guarded pending a reviewed precision treatment. No caller
+  chooses a precision method. A PA40 net compensation floor cannot create a
+  cross-employer loss deduction. No phaseout or federal 2percent/50percent limit
+  applies to these direct UE categories; each factual condition remains required.
+lines:
+  - line: "NRH1"
+    description: "Employed calendar days"
+    formula: "Count all explicitly documented employment calendar dates"
+    testRef: "tests/engine/state/pa-ordinary-employee-sources.test.ts::actual employee sources derive calendar and literal NRH lines from complete originals"
+  - line: "NRH2"
+    description: "Nonworking calendar days"
+    formula: "Count explicit nonwork classifications only"
+    testRef: "tests/engine/state/pa-ordinary-employee-sources.test.ts::actual employee sources derive calendar and literal NRH lines from complete originals"
+  - line: "NRH3"
+    description: "Working days"
+    formula: "NRH1 minus NRH2; reject impossible or zero-positive-wage case"
+    testRef: "tests/engine/state/pa-ordinary-employee-sources.test.ts::actual employee sources derive calendar and literal NRH lines from complete originals"
+  - line: "NRH4"
+    description: "PA working days"
+    formula: "Count actual PA compensable work plus applicable personal-convenience outside work"
+    testRef: "tests/engine/state/pa-ordinary-employee-sources.test.ts::actual employee sources derive calendar and literal NRH lines from complete originals"
+  - line: "NRH5"
+    description: "Working-day fraction"
+    formula: "NRH4 divided by NRH3; print six decimals; monetary precision agreement guard"
+    testRef: "tests/engine/state/pa-ordinary-employee-sources.test.ts::actual employee sources derive calendar and literal NRH lines from complete originals"
+  - line: "NRH6-8"
+    description: "Business-volume method"
+    formula: "Unavailable in this working-day source method; positive or unknown alternative rejects"
+    testRef: "tests/engine/state/pa-ordinary-employee-sources.test.ts::actual employee sources reject unsupported allocation and expense methods"
+  - line: "NRH9"
+    description: "Original gross wages requiring allocation"
+    formula: "Sum exact current payroll amounts; reconcile W2 Box1"
+    testRef: "tests/engine/state/pa-ordinary-employee-sources.test.ts::actual employee sources derive calendar and literal NRH lines from complete originals"
+  - line: "NRH10"
+    description: "Selected working-day fraction"
+    formula: "NRH5"
+    testRef: "tests/engine/state/pa-ordinary-employee-sources.test.ts::actual employee sources derive calendar and literal NRH lines from complete originals"
+  - line: "NRH11"
+    description: "Business-volume selection"
+    formula: "Not selected; selecting both or unknown rejects"
+    testRef: "tests/engine/state/pa-ordinary-employee-sources.test.ts::actual employee sources reject unsupported allocation and expense methods"
+  - line: "NRH12"
+    description: "Apportioned PA wages"
+    formula: "Rounded printed NRH9 multiplied by admitted NRH10; whole-dollar HALF_UP"
+    testRef: "tests/engine/state/pa-ordinary-employee-sources.test.ts::actual employee sources derive calendar and literal NRH lines from complete originals"
+  - line: "NRH13"
+    description: "Allowable UE total"
+    formula: "UE H for the same employer"
+    testRef: "tests/engine/state/pa-ordinary-employee-sources.test.ts::actual employee sources derive calendar and literal NRH lines from complete originals"
+  - line: "NRH14"
+    description: "Expense working-day fraction"
+    formula: "NRH5"
+    testRef: "tests/engine/state/pa-ordinary-employee-sources.test.ts::actual employee sources derive calendar and literal NRH lines from complete originals"
+  - line: "NRH15"
+    description: "Expense alternative fraction"
+    formula: "Not selected in this method"
+    testRef: "tests/engine/state/pa-ordinary-employee-sources.test.ts::actual employee sources reject unsupported allocation and expense methods"
+  - line: "NRH16"
+    description: "Apportioned UE"
+    formula: "Printed NRH13 multiplied by NRH14; whole-dollar HALF_UP"
+    testRef: "tests/engine/state/pa-ordinary-employee-sources.test.ts::actual employee sources derive calendar and literal NRH lines from complete originals"
+  - line: "NRH17"
+    description: "Correct original PA wages"
+    formula: "Use only if original correct and not also allocated via NRH18"
+    testRef: "tests/engine/state/pa-ordinary-employee-source-integration.test.ts::actual employee sources require an actual reason before correcting original PA wages"
+  - line: "NRH18"
+    description: "Allocated wages carried from partC"
+    formula: "NRH12 when correction/allocation is required"
+    testRef: "tests/engine/state/pa-ordinary-employee-sources.test.ts::actual employee sources derive calendar and literal NRH lines from complete originals"
+  - line: "NRH19"
+    description: "Unreported reimbursements"
+    formula: "Known zero after admitted exact/fixed exclusions; all other cases guarded"
+    testRef: "tests/engine/state/pa-ordinary-employee-sources.test.ts::actual employee sources suppress fixed allowance gap and exact reimbursement expenses"
+  - line: "NRH20"
+    description: "PA gross compensation"
+    formula: "NRH17 plus NRH18 plus NRH19"
+    testRef: "tests/engine/state/pa-ordinary-employee-sources.test.ts::actual employee sources derive calendar and literal NRH lines from complete originals"
+  - line: "NRH21"
+    description: "Allocated UE"
+    formula: "NRH16"
+    testRef: "tests/engine/state/pa-ordinary-employee-sources.test.ts::actual employee sources derive calendar and literal NRH lines from complete originals"
+  - line: "NRH22"
+    description: "PA net compensation"
+    formula: "NRH20 minus NRH21, employer net floor zero"
+    testRef: "tests/engine/state/pa-ordinary-employee-sources.test.ts::actual employee sources derive calendar and literal NRH lines from complete originals"
+  - line: "UE1"
+    description: "Required union dues"
+    formula: "Sum eligible original union receipt cents, then round once"
+    testRef: "tests/engine/state/pa-ordinary-employee-sources.test.ts::actual employee sources sum exact cents once per printed direct-expense line"
+  - line: "UE2"
+    description: "Required protective work clothing"
+    formula: "Sum eligible non-everyday employer-required clothing receipt cents, then round"
+    testRef: "tests/engine/state/pa-ordinary-employee-sources.test.ts::actual employee sources reject unknown required expense conditions"
+  - line: "UE3"
+    description: "Consumed required small tools and supplies"
+    formula: "Sum eligible original receipt cents, then round once"
+    testRef: "tests/engine/state/pa-ordinary-employee-sources.test.ts::actual employee sources derive calendar and literal NRH lines from complete originals"
+  - line: "UE4"
+    description: "Required occupational licenses"
+    formula: "Sum eligible job-required license receipt cents, then round"
+    testRef: "tests/engine/state/pa-ordinary-employee-sources.test.ts::actual employee sources reject unknown required expense conditions"
+  - line: "UE5"
+    description: "Direct expenses"
+    formula: "UE1 plus UE2 plus UE3 plus UE4"
+    testRef: "tests/engine/state/pa-ordinary-employee-sources.test.ts::actual employee sources derive calendar and literal NRH lines from complete originals"
+  - line: "UE6-25"
+    description: "Other expense sections"
+    formula: "Explicit complete known-none proof; retained positive/unknown methods reject"
+    testRef: "tests/engine/state/pa-ordinary-employee-sources.test.ts::actual employee sources reject unsupported allocation and expense methods"
+  - line: "UEA"
+    description: "Direct expenses summary"
+    formula: "UE5"
+    testRef: "tests/engine/state/pa-ordinary-employee-sources.test.ts::actual employee sources derive calendar and literal NRH lines from complete originals"
+  - line: "UEB-G"
+    description: "Other summaries"
+    formula: "Zero only from complete actual known-none evidence"
+    testRef: "tests/engine/state/pa-ordinary-employee-sources.test.ts::actual employee sources reject unknown complete expense history"
+  - line: "UEH"
+    description: "Allowable total"
+    formula: "Sum UEA through UEG for this employer only"
+    testRef: "tests/engine/state/pa-ordinary-employee-sources.test.ts::actual employee sources derive calendar and literal NRH lines from complete originals"
+  - line: "UEI"
+    description: "Included reimbursements"
+    formula: "Known zero after source-proven exact/fixed exclusions; unsupported positive methods reject"
+    testRef: "tests/engine/state/pa-ordinary-employee-sources.test.ts::actual employee sources suppress fixed allowance gap and exact reimbursement expenses"
+  - line: "UEJ"
+    description: "Net employee expense"
+    formula: "UEH minus UEI; no cross-employer wage offset"
+    testRef: "tests/engine/state/pa-ordinary-employee-sources.test.ts::actual employee sources derive calendar and literal NRH lines from complete originals"
+  - line: "PA40-1a"
+    description: "Source-qualified gross compensation"
+    formula: "Resident actual gross; NR allocated gross; PY verified per-period inclusion"
+    testRef: "tests/engine/state/pa-ordinary-employee-source-integration.test.ts::actual employee sources preserve all three residency tax boundaries"
+  - line: "PA40-1b"
+    description: "Admitted direct UE"
+    formula: "Resident whole allowable UE; NR fraction; PY actual resident or NR employment period"
+    testRef: "tests/engine/state/pa-ordinary-employee-source-integration.test.ts::actual employee sources preserve all three residency tax boundaries"
+  - line: "PA40-1c"
+    description: "Taxable net compensation"
+    formula: "Whole printed gross minus printed allowable UE, floor by employer"
+    testRef: "tests/engine/state/pa-ordinary-employee-source-integration.test.ts::actual employee sources preserve all three residency tax boundaries"
+
+businessRuleValidation:
+  - rule: "pa-actual-nrh-ordinary-workspace"
+    description: "Explicit actual employee originals use ordinary composition, preserve27000/360/26640/818 and both reference names/warnings; legacy NJ originals remain rejected"
+    testRef: "tests/apps/web/pa-nonresident-state-packet.test.ts::actual NY260-calendar-day originals carry PA27000 UE360 and818 tax into partial references"
+  - rule: "pa-actual-payroll-estimate-workspace"
+    description: "Actual physical PA wages50000 and original timely estimate400 produce principal1135, ordinary route, stronger partial/not-supported disclosure"
+    testRef: "tests/apps/web/pa-nonresident-state-packet.test.ts::actual NY50000 payroll and original April15 estimate400 use the ordinary review route"
+  - rule: "pa-actual-employee-all-residency-reference"
+    description: "Resident and PY actual packets include UE reference and no filing eligibility; raw employer proof stays private"
+    testRef: "tests/apps/web/pa-nonresident-state-packet.test.ts::actual employee %s workspace retains UE and review-only disclosure"
+
+  - rule: "pa-actual-nrh-precision-agreement"
+    description: "Original1000000.50 with1/3 working-day fraction guards333334 full-ratio versus333333 six-place printed difference; no caller precision selector"
+    testRef: "tests/engine/state/pa-ordinary-employee-sources.test.ts::actual employee sources guard six-place and full-ratio dollar disagreement"
+
+packetCompleteness: |
+  Source-derived employee UE and NRH projections remain reference summaries.
+  A distinct ordinary result must mark the packet partial for every required
+  employee UE/NRH reference, whether its artifact is present or missing. Count
+  artifacts per employer; one supplied reference cannot satisfy two employers.
+  Report the existing exact reference-versus-official warning when present and
+  a missing-artifact warning otherwise. All three residency paths retain
+  filingQualified=false and business-rule validation not-validated.
+  No legacy paResidentReturn/paNonresidentReturn scalar is fabricated.
+  Test: tests/utils/pa-ordinary-employee-readiness.test.ts.
+
+actualNRHArtifactTrigger: |
+  A nonresident employment projection with positive actual raw compensation
+  requires its NRH reference even when correctly reported PA Box16 goes through
+  NRH line17 and legacy grossCompensation/line9 is zero. Use actual raw gross
+  compensation to generate and count that employer reference; never infer no
+  allocation proof from a blank physical calculation line. The existing zero-UE
+  readiness control and unchanged actual50000/estimate400 workspace control apply.
+
+crossPeriodEmployeeBoundary:
+  sourceAuthority:
+    - url: "https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax/nonresidents-and-part-year-residents"
+      principle: "Resident-period all-source income and nonresident-period PA-source income are separately determined."
+    - url: "https://www.pa.gov/agencies/revenue/forms-and-publications/pa-personal-income-tax-guide/gross-compensation"
+      principle: "UE uses actual paid/incurred expense facts; full PY deduction requires PA services or residency when incurred."
+    - url: "https://www.pacodeandbulletin.gov/secure/pacode/data/061/chapter121/s121.8.html"
+      principle: "Resident and nonresident portions belong to their actual respective periods."
+  finiteMethod: |
+    This single-period employee method requires actual employment calendar,
+    payroll receipt dates and UE expense dates to remain in the same verified
+    domicile period. Receiving deferred compensation after becoming resident
+    does not establish that prior nonresident-period UE qualifies for100percent
+    deduction. Cross-period cash/expense allocation remains an explicit pending
+    source-derived method, not a completed capability or a zero-expense default.
+    Existing actual same-period resident/PY/NR positives remain unchanged.
+  testRef: "tests/engine/state/pa-ordinary-employee-cross-period.test.ts::actual NR employment and UE do not become resident-period expenses merely because wages arrive after the move"
+
+independentReviewRepairs:
+  reimbursementExcess: |
+    Official2025 UE instructions physical page4 and Gross Compensation guide
+    Reimbursements require reimbursement above allowable expense to enter
+    compensation. This finite non-W2 exact/fixed method must reject taxable
+    excess; suppressing expenses cannot omit that compensation. Aggregate all
+    retained reimbursement originals over each connected actual receipt group,
+    counting each receipt and record once. A disjoint cheap allowance cannot
+    hide an overpaid receipt group. Exact originals must each still reconcile.
+    W2-included or taxable partial/excess reimbursement methods remain an
+    explicitly pending actual cash/Box1/PA compensation reconciliation successor;
+    the current guard is not completion of that law method. Never double-add an
+    amount already included in actual wages or infer inclusion from a checkbox.
+  actualBox8: "Require actual allocatedTips amount, including explicit known0; all-box confirmation does not supply a missing monetary fact."
+  decimalPrecision: |
+    Derive local precision from the maximum supplied integer-digit span plus
+    maximum fractional scale plus aggregate carry digits and guard digits.
+    Max individual string length is insufficient for10^140 plus10^-141. Keep
+    all literal raw values and global Decimal unchanged; no arbitrary new bound.
+  tests:
+    - "tests/engine/state/pa-ordinary-employee-guard-repairs.test.ts::actual employee repair rejects taxable fixed allowance excess"
+    - "tests/engine/state/pa-ordinary-employee-guard-repairs.test.ts::actual employee repair rejects aggregate exact reimbursement excess"
+    - "tests/engine/state/pa-ordinary-employee-guard-repairs.test.ts::actual employee repair isolates connected receipt groups before aggregate excess"
+    - "tests/engine/state/pa-ordinary-employee-guard-repairs.test.ts::actual employee repair requires original Box8 monetary fact"
+    - "tests/engine/state/pa-ordinary-employee-guard-repairs.test.ts::actual employee repair preserves mixed integer and fractional raw sources"
+    - "tests/engine/state/pa-ordinary-employee-guard-repairs.test.ts::actual employee repair retains incomplete included-in-W2 method guard"

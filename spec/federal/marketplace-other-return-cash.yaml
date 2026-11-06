@@ -1,0 +1,125 @@
+form: "Marketplace outside-child cash with an actual other-return credit"
+fullName: "Separate taxpayer credit and receipt-level nonspecified cash"
+taxYear: 2025
+irsReference: "https://www.irs.gov/irb/2017-33_IRB"
+notes: |
+  Refreshed 2026-10-27: IRC162(l)(1),280C(g); final Reg1.162(l)-1(a)(1)-(3),
+  Reg1.36B-3(c)(3); TD9683 preamble section6 in2014-33IRB; TD9822 final
+  adoption in2017-33IRB; RevProc2014-41 sections3-4; Pub974 Nonspecified
+  Premiums/WorksheetP; final2025 i7206. The preamble describes the credit
+  limitation as the taxpayer's own credit. An under27 child outside the tax
+  family can be an eligible162(l) person without being an enrolled family
+  member for the payer's specified premiums. The completed other return is
+  original evidence; its credit is not this return's credit or a deduction
+  override. The cash method below is a source-backed derivation, not a
+  published combined numerical example or a universal other-return requirement.
+  Preserve the full original policy/APTC and independent PartIV allocation.
+  For positive outside credit or positive outside advances, require a complete
+  confirmed original cash trace for that child: exact premium-payment/payer
+  links, cash paid to insurer, dated same-year reimbursements/refunds and
+  source references, plus an independently complete other-return tax-payment
+  ledger (including known empty). Cash must equal the original person payment;
+  reimbursements cannot exceed it. Deduct only cash less actual reimbursements.
+  Never add outside advances, another return's repayment or tax payment, or
+  subtract that return's credit from the payer's cash. Unknown is not zero.
+  Existing zero-other-credit/zero-outside-advance sources remain supported;
+  supplied cash traces are validated even for that case. A later-year refund
+  needs its separate recovery method and is not silently deducted this year.
+  Keep gross cash plus outside advances bounded by the independently allocated
+  outside premium pool; a refund cannot cure an invalid original allocation.
+  Own-return specified/noncoverage credits and repayments retain their existing
+  methods, actual business/owner limits and final proof. Own zero-advance cash
+  can coexist with independently sourced outside advances; all originals must
+  be bound. Actual-paid full own-return repayment must still be proven after
+  the deduction. Other-return repayment is never transferred into that proof.
+  Ordinary, elected-marriage, actual monthly qualification and source cents
+  compose through the same source contract. Marriage requires actual child
+  relationship at payment/coverage, independent of PartV alternative families.
+  No inferred premarital facts, joint capped-repayment split, or deduction from
+  another taxpayer's repaid advance is established here. Monetary math is
+  Decimal; only existing reported form transfers round to whole dollars.
+lines:
+  - line: "positive-credit"
+    description: "The other taxpayer's credit does not replace actual outside cash"
+    formula: "Original outside cash100/month and actual other-return line24=3000 with complete cash trace retain ordinary health4200/AGI32974 or actual-family-cash health6600/AGI278465. Other credit0,3000,3000.01 changes no payer amount. No original record is mutated."
+    testRef: "tests/engine/federal-marketplace-other-return-cash.test.ts::retains actual outside cash independently of the other taxpayers positive credit"
+  - line: "outside-advances"
+    description: "Outside advances and tax payments never become the payer's cash"
+    formula: "Full original premium3000/month, own cash300, child cash100, other cash600, own advance1000 and outside advance1000: cash4800 plus final own repayment12000 yields health16800/AGI268265. Other-return credit5000 and actual other-return tax payment7000 remain independent evidence and add no expense."
+    testRef: "tests/engine/federal-marketplace-other-return-cash.test.ts::excludes outside advances and other return tax payments from actual paid costs"
+  - line: "net-cash"
+    description: "Actual reimbursements reduce cash without changing original premiums"
+    formula: "Cash100.01 less reimbursement25.02 per month gives outside899.88. Actual familycash5400 plus899.88 gives eligible6299.88 and reported6300; full original ownercash6600.12 and premiums22500 remain. Own business5000 caps the claim4646; spouse wages cannot increase it."
+    testRef: "tests/engine/federal-marketplace-other-return-cash.test.ts::derives net cash from actual reimbursements and preserves own business limits"
+  - line: "complete-proof"
+    description: "Actual original cash records bind every payment once"
+    formula: "Missing/unknown/false confirmation, omitted or duplicated receipt, wrong payer/date/amount, missing reimbursement history, excess refund, later-year refund and incomplete other-return tax payments reject. Explicit empty reimbursement/tax lists are known zero."
+    testRef: "tests/engine/federal-marketplace-other-return-cash.test.ts::rejects incomplete contradictory or duplicated outside cash evidence"
+  - line: "zero-own-advances"
+    description: "Complete outside advances may coexist with independently zero own advances"
+    formula: "An actual unshared1250/month policy with owncash450 and a separate shared1875/month policy with an actual zero own allocation, childcash100 and outsideadvance200 give health6600 and own finalcredit/repayment0. Both complete originals and every cash record remain distinct. Changing an own advance or omitting its full original record cannot use the zero-own-advance method."
+    testRef: "tests/engine/federal-marketplace-other-return-cash.test.ts::separates positive outside advances from a zero own advance cash method"
+  - line: "marriage-months"
+    description: "Actual relationship and monthly coverage remain separate from the other return"
+    formula: "Existing Jan-June actual childcash100 and completed othercredit1000 retain elected-marriage health6875/AGI86060/PTC5192/repayment808. Net cash100.01 minus0.01 keeps the same600. Source order does not change results; missing actual parent/coverage dates and unknown credit reject."
+    testRef: "tests/engine/federal-marketplace-other-return-cash.test.ts::composes positive other credit with actual marriage and monthly child qualification"
+  - line: "source-cents"
+    description: "Reported own repayment cents never convert outside advances to expense"
+    formula: "Own original advance1000.49/month has12005.88 exact source; the shared monthly return reports12000. Owncash3600 plus childcash1200 plus reported repayment12000 gives16800, preserving all24011.76 original advances. An ineligible month keeps the existing single-eligible-pool reporting boundary."
+    testRef: "tests/engine/federal-marketplace-other-return-cash.test.ts::preserves exact cash and reported own repayment cents without borrowing outside advances"
+  - line: "exact-reimbursements"
+    description: "Source validation compares complete original reimbursement precision"
+    formula: "Cash100 and two refunds99.999...(40 fractional nines) plus2e-40 exceed original cash by1e-40 and reject before reporting. The valid refund100-minus1e-40 retains net1e-40; an exact total100 retains zero. Use source-sized local Decimal arithmetic without changing global precision or original records."
+    testRef: "tests/engine/federal-marketplace-other-return-cash-precision.test.ts::compares exact reimbursement totals before reporting rounding"
+  - line: "canonical-reimbursement-bound"
+    description: "Canonical calculation cannot accept an exact over-refund"
+    formula: "The same original cash100 and exact total100-plus1e-40 refunds reject through the full federal source path independently of the helper control. No accepted deduction, changed input or global precision side effect is permitted."
+    testRef: "tests/engine/federal-marketplace-other-return-cash-precision.test.ts::rejects an exact excess reimbursement through the canonical return"
+  - line: "canonical-cash-rounding"
+    description: "Exact net cash survives annual aggregation until the actual form transfer"
+    formula: "Actual family cash5400 plus one outside child's net cash0.5-minus1e-40 gives a reported5400 deduction, while an exact0.5 gives5401. Original gross cash100 and refund99.5 plus1e-40 remain distinct. Reordering actual receipts or refunds cannot move the half-dollar boundary; all other outside receipts fully reimbursed contribute zero."
+    testRef: "tests/engine/federal-marketplace-other-return-cash-precision.test.ts::preserves exact net cash through the canonical annual reporting boundary"
+  - line: "canonical-paid-rounding"
+    description: "Reported own repayment does not discard exact outside net cash"
+    formula: "Actual own insurer cash3600 plus independently proven own repayment12000 plus outside net cash0.5-minus1e-40 reports15600, while exact outside0.5 reports15601. Outside advances and the other return's tax payment remain excluded. Preserve the same exact source through the actual-paid candidate and completed-return proof."
+    testRef: "tests/engine/federal-marketplace-other-return-cash-precision.test.ts::preserves exact outside net cash through the own repayment proof"
+  - line: "ordinary-exact-cash"
+    description: "Ordinary specified and nonspecified coordination retains exact cash"
+    formula: "Existing ordinary source has specified10000, family nonspecified5000 and Step2credit12000. Reimbursing all child cash except0.5-minus1e-40 gives combined3000.5-minus1e-40 and reported3000; exact0.5 gives3001. Preserve exact source totals through the worksheet and QBI reconciliation. Sum complementary finite specified/nonspecified benchmark pools without precision loss before the signed credit subtraction and final transfer; repeated monthly addition must not move an exact half-dollar boundary."
+    testRef: "tests/engine/federal-marketplace-other-return-cash-precision.test.ts::preserves exact outside net cash through ordinary worksheet coordination"
+  - line: "marriage-exact-cash"
+    description: "The marriage source method retains exact separately eligible cash"
+    formula: "A valid actual marriage source with child net0.5-minus1e-40 must retain that exact person cash through the completed worksheet, opaque output context and reported deduction calculation. Original person/month qualification and own marriage credit formulas remain unchanged; no source-conservation guard may compare a prematurely rounded nonspecified total."
+    testRef: "tests/engine/federal-marketplace-other-return-cash-precision.test.ts::retains exact outside cash in the actual marriage coordination sources"
+  - line: "intake"
+    description: "Actual cash records survive the guided source boundary"
+    formula: "Retain all original premium receipt identities, payer/date/cash, independent refunds and other-return tax-payment records. Blank amounts/lists/confirmations stay unknown; explicit empty lists are confirmed source facts. Every relevant edit revokes the nested cash, family, health and PTC confirmations without changing original values."
+    testRef: "tests/guided-interview/guided-marketplace-other-return-cash.test.ts::retains actual other return cash sources and invalidates nested confirmations"
+  - line: "controls"
+    description: "The actual interview reaches each source and never enters a calculated claim"
+    formula: "Edit the completed other credit, actual insurer receipt and reimbursement in the full shell; require source reconfirmation and preserve unknown versus zero through storage and reload. Cash300/month+child100/month+own12000 repayment retains16800; the other7000 tax payment is not a health expense."
+    testRef: "tests/apps/web/marketplace-other-return-cash-interactions.test.tsx::edits actual insurer cash and reimbursements with independent confirmations"
+  - line: "review"
+    description: "Physical review separates original cash, reimbursement, outside advances and other tax"
+    formula: "Actual cash100.01/refund25.02 gives net74.99/month and6300 physical7206 transfer. Retain all original amounts and source references. Any changed original payment, refund or completed other-return source invalidates opaque review context before file I/O; equal money does not authorize a changed source."
+    testRef: "tests/pdf/marketplace-other-return-cash-review.test.ts::prints gross cash refunds and other tax separately and rejects stale original context"
+  - line: "workspace"
+    description: "The completed source interview produces a review packet with original cash proof"
+    formula: "Actual marriage childcash600 with othercredit1000 reaches6875 through full original guided sources; a complete independently confirmed payment packet is retained. Review notices, masked identifiers and existing partial packet/Form2210 disclosure remain."
+    testRef: "tests/apps/web/workspace-marketplace-other-return-cash.test.ts::downloads completed actual other return sources without transferring its credit or repayment"
+  - line: "isolated-2026"
+    description: "Source semantics compose under isolated 2026 constants"
+    formula: "The exact same current cash, completed other return and own-return reported-repayment proof retain16800 with full original advances24011.76; only the isolated test supplies2026 constants. Production calculation and form qualification gates remain unchanged."
+    testRef: "tests/engine/federal-marketplace-other-return-cash-2026.test.ts::retains isolated2026 actual other return cash without changing year gates"
+  - line: "browser"
+    description: "Completed original cash and payment sources survive actual desktop/mobile download"
+    formula: "Real production controls retain positive other-return credit, insurer receipt100, explicit empty reimbursements and independent other-return tax payments. Source edits revoke nested and outer confirmations; blank cash blocks advancement and survives reload. Complete actual prior-return/payment sources are reconfirmed, every eligible section is visited and the actual PDF is downloaded and reopened. The review remains partial with Form2210 suppressed; no current tax or deduction override is entered."
+    testRef: "apps/web/tests/guided-marketplace-other-return-cash.spec.ts::retains separate other return cash evidence through actual download"
+  - line: "physical-nonspecified-rounding"
+    description: "Physical nonspecified Form7206 lines round the exact annual benchmark ratio"
+    formula: "Twelve actual tax-family premiums1250 with benchmark groups1000/500 produce exact annual nonspecified cost5000. Add actual outside netcash0.5-minus1e-40 before reporting: physical7206lines1/3/14 each5000; exact outside0.5 instead reports5001. Keep the separate signed coordinated Schedule1 transfers3000/3001. Retain actual monthly numerator/denominator sources and aggregate ratios before rounding; do not assign a residual to an arbitrary month or change shared Decimal precision."
+    testRef: "tests/pdf/marketplace-other-return-cash-review.test.ts::rounds physical nonspecified fields from exact annual source ratios"
+  - line: "physical-source-minimum"
+    description: "The exact annual source retains the actual business income minimum"
+    formula: "The same nonspecified5000.5-minus1e-40 source with actual primary ScheduleCprofit5000 has deductible SE tax354 and earned-income limit4646. Engine and physical7206line14 both retain4646 while source lines1/3 report5000. Source ratios do not bypass the actual business minimum or borrow spouse earnings."
+    testRef: "tests/pdf/marketplace-other-return-cash-review.test.ts::preserves the actual business minimum beside exact nonspecified source rounding"

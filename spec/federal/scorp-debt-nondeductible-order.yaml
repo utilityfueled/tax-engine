@@ -1,0 +1,38 @@
+form: "S Corporation Debt Nondeductible Ordering"
+fullName: "Form 7203 debt basis after actual nondeductible expenses"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i7203"
+retrievedAt: "2026-10-26"
+notes: |
+  Applies unchanged to supported 2025/2026. Form 7203 Basis of loans and lines 28–30
+  require nondeductible expenses in excess of stock basis to reduce direct debt
+  basis before deductible losses in the default order. Actual Reg. 1.1367-1(g)
+  election reverses loss/nondeductible ordering across both stock and debt.
+  Excess nondeductible costs after both bases do not carry without that election.
+  https://www.ecfr.gov/current/title-26/section-1.1367-1 (f),(g)
+  https://www.ecfr.gov/current/title-26/section-1.1367-2 (b),(c)
+  This is an ordinary correction to the existing basis module. It does not add
+  loan repayments, guarantees, multiple-loan allocation or property distributions.
+  Original lost basis restoration includes both loss and nondeductible reductions.
+  Distributions still reduce stock only; no amount creates negative debt basis.
+lines:
+  - line: "default-debt"
+    description: "Default debt reduction order"
+    formula: "Stock 0 / debt 100 / nondeductible 50 / charitable cash 80: apply 50 nondeductible to debt, permit 50 charity basis, suspend 30; debt 0, cumulative reduction 100. No nondeductible carry."
+    testRef: "tests/engine/forms/scorp-debt-nondeductible-order.test.ts::reduces debt for actual nondeductible costs before default losses"
+  - line: "elected-debt"
+    description: "Actual loss-first election"
+    formula: "Same actual amounts with election: permit 80 charity basis, then reduce remaining debt 20 for nondeductible costs; debt 0, unabsorbed and carried nondeductible 30."
+    testRef: "tests/engine/forms/scorp-debt-nondeductible-order.test.ts::applies the actual election across stock and debt before carrying nondeductible costs"
+  - line: "no-loss"
+    description: "Debt reductions without deductible losses"
+    formula: "Stock 20 / debt 100 / nondeductible 150 / no losses: stock 0/debt 0, unabsorbed 30, no default carry. Known zero debt and excess cash distributions do not invent capacity."
+    testRef: "tests/engine/forms/scorp-debt-nondeductible-order.test.ts::keeps unabsorbed costs separate from an election carry and stock distributions"
+  - line: "restoration"
+    description: "Actual next-year restoration of all prior debt reductions"
+    formula: "After debt 100 was reduced by nondeductible 50 and losses 50, actual next-year net income 80 restores 80 of that prior 100 reduction. Debt 80, stock 0, unrecovered reduction 20."
+    testRef: "tests/engine/forms/scorp-debt-nondeductible-order.test.ts::restores debt reduced by both nondeductible costs and deductible losses"
+  - line: "reference"
+    description: "Retained review record shows actual debt ordering and carry status"
+    formula: "Include nondeductible debt reduction and actual election carry audit lines in the saved basis reference; whole-dollar display does not replace exact source calculations."
+    testRef: "tests/pdf/scorp-debt-nondeductible-reference.test.ts::retains nondeductible debt reductions and actual carry status in the review record"

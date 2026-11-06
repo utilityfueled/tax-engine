@@ -1,0 +1,47 @@
+form: "QBI Subsequent EBL Limitation"
+fullName: "Qualified character of one canonically identified excess-business-loss pool"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i8995"
+notes: |
+  The context is calculated by the return engine, not supplied by the taxpayer.
+  Form461 and all positive business income/loss pools must reconcile. This
+  prerequisite does not add an intake field for currently allowable loss or an
+  allocation worksheet. Positive EBL is supported only for one identified pool
+  containing current losses only, or one released prior vintage only.
+  The IRS worksheet specifies re-suspended qualified character, but the sources
+  reviewed do not establish allocation of new aggregate EBL among multiple loss
+  activities or mixed current/prior portions. Those methods remain unfinished;
+  neither a pro-rata allocation nor prior-first allocation is invented here.
+  Current qualified loss is recomputed using the original source fraction and
+  the final calculated allowance. Re-suspended qualified loss is the difference
+  from the preceding printed qualified allowance, conserving that transfer.
+  Prior re-suspension follows Form8995 columnD and row3 using the actually
+  released qualified/nonqualified ratio. It is removed from row4 once and
+  opens a separate461(l) vintage in this year. This is a QBI-character ledger;
+  the canonical regular and AMT NOL computations are not replaced by it.
+lines:
+  - line: "current"
+    description: "Current loss partially limited again by canonical Form461"
+    formula: "Actual current433000/346400 with333000 allowed beforeEBL; canonical461 disallows20000; final current loss313000*80%=250400; newly re-suspended qualified loss16000"
+    irsRef: "Reg1.199A-3(b)(1)(iv)(B); Form461 lines14-16; Form8995 columnD"
+    testRef: "tests/engine/forms/qbi-loss-relimitation.test.ts::derives the current qualified re-suspension from canonical Form461 once"
+  - line: "prior"
+    description: "A released prior qualified loss is limited again"
+    formula: "Canonical prior release333000/266400 less20000 EBL; qualified re-suspension=20000*(266400/333000)=16000; prior qualified transfer250400; separate461 loss20000/16000"
+    irsRef: "Form8995 columnD, row3 qualified formula and row4; Reg1.199A-3(b)(1)(iv)(A)"
+    testRef: "tests/engine/forms/qbi-loss-relimitation.test.ts::retains prior origin character when one released vintage is limited again"
+  - line: "none"
+    description: "Zero EBL preserves otherwise valid current and prior FIFO outcomes"
+    formula: "No re-suspension when canonical461 addback=0; no prior/EBL/NOL balance is invented"
+    irsRef: "Form461 line16; Form8995 row4"
+    testRef: "tests/engine/forms/qbi-loss-relimitation.test.ts::preserves mixed current and prior loss transfers when EBL is zero"
+  - line: "conservation"
+    description: "Require an actual unique calculated business loss pool"
+    formula: "Verified461 year; sum positive business income minus complete calculated loss pools equals461line14; one positive pool equals the preceding loss allowance; computed461 addback does not exceed it"
+    irsRef: "Form461 complete business aggregation and loss-limit ordering; Form8995 separate loss tracking worksheets"
+    testRef: "tests/engine/forms/qbi-loss-relimitation.test.ts::rejects stale or unreconciled canonical loss contexts"
+  - line: "allocation-boundary"
+    description: "Do not manufacture an unsupported EBL allocation"
+    formula: "Positive aggregateEBL with multiple loss pools, mixed current/prior portions, or multiple released origin vintages requires its separate allocation method"
+    irsRef: "No controlling allocation method established by reviewed461/8995 instructions or Reg1.199A-3; explicit implementation boundary"
+    testRef: "tests/engine/forms/qbi-loss-relimitation.test.ts::keeps unresolved cross-pool and mixed-origin EBL allocation explicit"

@@ -1,0 +1,89 @@
+form: "Ohio SD100 specifically identified part-year wage sources"
+fullName: "Finite 2025 Hillsdale0302 single-primary dated payroll source admission"
+taxYear: 2025
+reference: "https://dam.assets.ohio.gov/image/upload/v1767095693/tax.ohio.gov/forms/ohio_individual/individual/2025/it1040-booklet.pdf"
+notes: |
+  Source first: NEW fictionally supplied actual originals, never values inferred
+  from tax output. Official 2025 booklet printed56 and59-60: complete calendar
+  includes outside-Ohio periods with prescribed9999; specifically identified
+  income received while resident controls. Proration is not selected here.
+  Existing full-year source packets, original oracles and monetary arithmetic
+  remain intact. New explicit optional partYearWageSources method is distinct:
+  one single primary ordinary W2, one Hillsdale0302 period Jan1-Jul31(212days),
+  then Virginia Aug1-Dec31(153days), no other taxing district/business/SE/
+  adjustments/otherincome/senior/spouse/municipal/special/late/combined method.
+  Actual home addresses and the0302lookup original are distinct from mailing.
+  VA9999 is prescribed outsideOhio reporting, never a fabricated Ohio lookup.
+  Dated ordinary payroll originals bind current owner/employer/W2 index/year,
+  pay date/service dates/service state and actual OH-service-none confirmation
+  for the VA period. Every original payroll is included exactly once; unknown
+  is not zero. Annual payroll gross/federal/state/local amounts reconcile the
+  actual current original W2 and all printed rows. Receipt IDs remain private.
+  The current private federal snapshot, independently confirmed owner-residency
+  and separate IT payment originals replay. A school read never captures or
+  refreshes source originals. Parent residency wages remain specifically40000;
+  the VA services do not silently become Ohio-source merely from a W2 scalar.
+  The new model's optional packet retains calendar/address/payroll originals.
+  Removing packet never converts PY to full-year or converts unknown resident
+  income to zero. Full-year packets containing this distinct method reject.
+  Specific40000 is not round(60000*212/365). ResidencyFactor.5808 is printed
+  calendar metadata, not a shortcut for already identified wages/MAGI.
+  Two independent tax accounts retain OhioWH2000 and SDWH600; no double counting.
+  Expected SD tax500/overpayment100 does not imply received refund cash. Both
+  current IT and SD penalty methods must independently support zero.
+  No new physical PY output is qualified: existing365-day-only SD renderer must
+  omit this method before template/output I/O. Existing full-year SD output is
+  preserved. Public2026, municipal and filing/e-file gates remain unchanged.
+lines:
+  - line: "precondition"
+    description: "Independent actual source and pure worksheet precondition"
+    formula: "Gross40000+20000=60000; FITW4000+2000=6000; OHWH2000 and SDWH600 are separate; exact resident receipts40000; complete212/153-day calendar"
+    testRef: "tests/engine/state/oh-school-district-part-year-sources.test.ts::OH PY SD originals and existing resident worksheet independently reconcile"
+  - line: "29-33"
+    description: "Specifically identified earned income and MAGI"
+    formula: "29=40000 resident compensation;30=0 knownnoSE;31=40000;32=40000 specifically identified resident MAGI;33=min(31,32)=40000; factor=truncate(212/365,4)=.5808 is unused for these identified amounts"
+    testRef: "tests/engine/state/oh-school-district-part-year-sources.test.ts::OH PY SD canonical uses actual dated wages without day proration"
+  - line: "cash"
+    description: "Separate actual tax accounts, liability and refund election"
+    formula: "Official0302 earned rate.0125; tax=round(40000*.0125)=500; SDWH600 estimates0 prior0 yields overpayment100/outgoing0/refund100; SDWH500 yields0 refund; ITWH2000 is never SD cash"
+    testRef: "tests/engine/state/oh-school-district-part-year-sources.test.ts::OH PY SD keeps Ohio and district cash separate"
+  - line: "source-replay"
+    description: "Dated originals, precise classification and current immutable snapshots"
+    formula: "Each current owner/year/W2/employer/payroll identity/date/service/amount replays once; complete annual totals and two address calendars agree; equal-cash identity/service/pay-date edits invalidate captured originals"
+    testRef: "tests/engine/state/oh-school-district-part-year-sources.test.ts::OH PY SD rejects changed or unsupported actual source %s"
+  - line: "native"
+    description: "Blank actual source controls, explicit confirmation and JSON recovery"
+    formula: "Part-year method is explicitly selected; all blank source fields remain unknown; confirmation captures current raw originals only on explicit action; read/edit/reopen preserve original captures and reject stale evidence"
+    testRef: "tests/engine/state/oh-school-district-part-year-sources.test.ts::OH PY SD native confirms complete current originals and rejects stale reads"
+  - line: "physical-boundary"
+    description: "Preserve full-year mapper without false365-day PY output"
+    formula: "Complete actual new PY packet produces no old full-year official SD files and no template/output I/O; old full-year source controls remain unchanged; no guessed paper dates or header"
+    testRef: "tests/engine/state/oh-school-district-part-year-sources.test.ts::OH PY SD omits unqualified physical projection before any IO"
+
+  - line: specific-resident-MAGI-replay
+    description: "Replay specifically identified resident MAGI without a scalar override"
+    formula: "For the separately admitted2025 earned-income method, replay complete original district calendar and specific resident wages/SE/MAGI via the resident-income worksheet; verify actual annualMAGI/year/district/factor/wages/SE agreement before using line32. Preserve all legacy absent-source calculations. No line32 scalar override."
+    testRef: "tests/engine/state/oh-school-district-part-year-sources.test.ts::OH PY SD calculator replays specific resident MAGI with the actual calendar factor"
+
+  - line: native-part-year-originals
+    description: "Actual blank records originate before explicit confirmation"
+    formula: "Add separate PY method, original home rows and payroll rows with blank identities/years/money and null knowledge; preserve already-entered originals; display/read/edit never capture. Grouped valid money normalizes only money fields and year strings become years on explicit schema replay."
+    testRef: "tests/engine/state/oh-school-district-part-year-sources.test.ts::OH PY SD native mounted blank records remain unknown until explicit action"
+
+  - line: physical-source-validation-order
+    description: "PY omission follows current original validation, never bypasses stale source checks"
+    formula: "Actual complete PY payroll projection returns no official SD companion before template read, mkdir, write or document load; stale actual source still rejects before these effects. Old full-year path unchanged."
+    testRef: "tests/engine/state/oh-school-district-part-year-sources.test.ts::OH PY SD omits unqualified physical projection before any IO"
+
+
+
+
+  - line: physical-negative-filesystem-invariants
+    description: "Actual forbidden template path and untouched output boundary replace ineffective native module counters"
+    formula: "No actual template directory exists; the pre-guard mapper genuinely fails ENOENT. A valid omitted packet must return[] with missing template/output directories still absent and its temporary root empty; stale packet must reject with the same invariants. Real source order separately establishes the guard before all template/output functions. Earlier mocking counters are not independent filesystem instrumentation evidence."
+    testRef: "tests/engine/state/oh-school-district-part-year-sources.test.ts::OH PY SD omits unqualified physical projection before any IO"
+
+  - line: finite-no-municipal-py-boundary
+    description: "New part-year family does not silently inherit the older full-year municipal-composition method"
+    formula: "A valid independently classified current municipal local original remains retained but requires its separate method for PY admission; do not alter old full-year classified municipal support or any local/Ohio cash."
+    testRef: "tests/engine/state/oh-school-district-part-year-sources.test.ts::OH PY SD rejects retained actual municipal originals outside its finite method"

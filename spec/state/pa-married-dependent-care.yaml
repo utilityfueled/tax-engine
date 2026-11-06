@@ -1,0 +1,55 @@
+form: PA-Married-Dependent-Care-Sources
+fullName: Actual dependent children and joint current paid care in the ordinary married PA composer
+taxYear: 2026
+status: source-bound-calculation-successor
+reference: https://www.palegis.us/statutes/unconsolidated/law-information/view-statute?act=176&chpt=16W&iFrame=true&sessInd=0&smthLwInd=0&txtType=HTM&yr=1929
+notes: |
+  Actual source-bound child and joint-care composition. Public2026 federal calculation remains unavailable until its existing rule-pack gate qualifies.
+  Reuse existing Schedule SP and frozen-2022 Schedule DC calculations; no new
+  federal calculation, synthetic single household, section129 benefit method,
+  final2026 form qualification, filing promotion or monetary approximation.
+  The engine successor alone cannot qualify the native/export lifecycle.
+  Current Tax Reform Code304(d), official SP instructions and DOR OBBBA
+  conformity guidance support these rules. Official REV1630 line2 includes
+  PA40 line23 care once; the legacy refundableCredits field is not line23.
+lines:
+  - line: "dependent-originals"
+    description: Complete actual child sources bind each retained dependent
+    formula: Require selected original index, exact original federal dependent snapshot, source reference, actual federal claim, no adverse agreement/decree, actual supported PA relationship and current confirmation. Each original is covered once, distinct valid identity differs from BOTH spouses, exact retained relationship/DOB must agree. Do not infer qualification from count or CTC/EIC flags. First cohort rejects retained nonchild dependents explicitly; no silent omission. Legacy no-dependent packets remain valid only with their known-none assertion and no contradictory new rows.
+    testRef: "tests/engine/state/pa-married-dependent-care.test.ts::binds complete actual married child originals"
+  - line: "shared-sp"
+    description: Same married child count and joint eligibility income on J or M
+    formula: Feed validated child count into existing Schedule SP on each actual return, preserving Table2 and category rounding. Married threshold13000+9500*count; increase250 per ten percentage point reduction, zero above threshold+2250. M applies the identical count and joint eligibility to each owner's actual tax; do not split children, clone federal returns or add a spouse as a dependent. Positive M federal EIC remains rejected by the existing allocation guard.
+    testRef: "tests/engine/state/pa-married-dependent-care.test.ts::preserves literal married child SP boundaries and owner rounding %s"
+  - line: "coverage"
+    description: Actual source statuses must replace known-none claims honestly
+    formula: Permit allDependentSourcesKnownNoneConfirmed=false only with a complete confirmed child collection and explicit complete-dependent-review proof. Permit allCareExpensesAndEmployerBenefitsKnownNoneConfirmed=false only with complete actual paid-care sources plus explicit known-zero benefits. Null/unknown remains invalid. True known-none contradicts retained children, care, benefits, receipts or canonical blocks. All other coverage gates remain unchanged.
+    testRef: "tests/engine/state/pa-married-dependent-care.test.ts::rejects contradictory and unknown child coverage %s"
+  - line: "joint-care"
+    description: Cohabiting full-year married care uses the actual joint PA return
+    formula: Actual current expenses in this cohabiting married method require PA filingMode J, actual federal MFJ and positive fresh Form2441 current credit with nonbinding liability worksheet. Retain M-care rejection; do not divide or duplicate a joint care credit across PA owner returns. Separate/living-apart eligibility is outside this cohabiting method.
+    testRef: "tests/engine/state/pa-married-dependent-care.test.ts::reconciles both actual payer identities and rejects ineligible care sources %s"
+  - line: "separate-earned-income"
+    description: Preserve each spouse's actual earned-income limitation
+    formula: Reconcile primaryEarnedIncome and spouseEarnedIncome independently to their validated original W2 owner totals, together to fresh federal wages/AGI with no SE, adjustments or unsupported income. Never supply household wages to both spouses. With both actual totals and all existing no129/noDeemed/noPriorCredit conditions, pass spouseEarnedIncome explicitly to Schedule DC source2022Conformity.federal.
+    testRef: "tests/engine/state/pa-married-dependent-care.test.ts::limits care using the actual lesser spouse earned income"
+  - line: "receipts"
+    description: Full actual paid-care identity and current receipt reconciliation
+    formula: Preserve existing complete provider/person/receipt/date/amount checks and full-year under13 cohort. Exclude BOTH spouses and all claimed dependents from provider identities. Add explicit primary/spouse payer assignment per receipt, verified against original document recipient and owner identity; each receipt included once on J. Every counted person maps uniquely to an admitted actual dependent, including legitimate zero-expense second persons. No assumed payer or copied primary identity. Existing single care method stays single.
+    testRef: "tests/engine/state/pa-married-dependent-care.test.ts::reconciles both actual payer identities and rejects ineligible care sources %s"
+  - line: "2026-conformity"
+    description: Pennsylvania retains2022 percentages despite current federal2026 credit
+    formula: Reuse existing calculateScheduleDC2026 actual source branch. Expense base is min(actual eligible current care less knownzero excluded benefits,3000 forone or6000 fortwoormore,actual primary earnedincome,actual spouse earnedincome). Frozen PA rate max(.20,.35-ceil(max(AGI-15000,0)/2000)*.01); credit nearestwholeDollar(base*rate). Fresh current Form2441 verifies federal source facts, but its enhanced percentage is not the PA percentage. No historical PA-income chart substitution for2026.
+    testRef: "tests/engine/state/pa-married-dependent-care.test.ts::keeps federal2026 enhancement separate from frozen PA credit"
+  - line: "return-credit-order"
+    description: Care is refundable PA40 line23 and does not alter SP or REV base
+    formula: Feed the validated care amount into PA40 otherCredits (printed line23) on the joint return, reconcile actual requested refund against fresh netOverpayment, and include care audit lines once. SP remains calculated from tax after resident credit, and REV line1a remains actual tax liability and line2 includes actual reported withholding, forgiveness and line23 care once, as the official REV form directs; no invented prior exemption or safe harbor. Existing positive-penalty source guard remains.
+    testRef: "tests/engine/state/pa-married-dependent-care.test.ts::keeps SP tax base and includes care once in REV line2 and actual disposition"
+  - line: "current-state-privacy"
+    description: Exact original commitment and explicit current confirmation remain required
+    formula: Changing either spouse, child, receipt payer, raw amount, date, source reference, care original or confirmation invalidates the snapshot or commitment. Key order alone does not. Do not auto-confirm imported source facts, mutate inputs or leak child/provider identifiers into numeric audit lines.
+    testRef: "tests/engine/state/pa-married-dependent-care.test.ts::invalidates stale household proofs without audit leakage"
+  - line: "paper-boundary"
+    description: Qualified no-care child paper is separate from unqualified care attachments
+    formula: The separately specified pa-married-child-local-official-review successor admits actual no-care dependent SP rows/count with original replay and qualified physical mapping. Actual care inputs and care source packets still require a separately qualified ScheduleDC attachment successor and remain denied. Existing credit/penalty, final2026 export/filing and all readiness gates remain unchanged. More than four public federal dependents retain the existing attachment denial.
+    testRef: "tests/pdf/pa-married-dependent-care-boundary.test.ts::admits qualified no-care child paper while retaining care projection denial"

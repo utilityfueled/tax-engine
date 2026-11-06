@@ -34,6 +34,17 @@ const PHILADELPHIA_WAGE_TAX_CONSTANTS: Record<number, PhiladelphiaWageTaxRates> 
     },
     reducedRate: new Decimal("0.015"),
   },
+  2026: {
+    resident: {
+      preJuly: new Decimal("0.0374"),
+      postJuly: new Decimal("0.03735"),
+    },
+    nonresident: {
+      preJuly: new Decimal("0.0343"),
+      postJuly: new Decimal("0.03425"),
+    },
+    reducedRate: new Decimal("0.015"),
+  },
 };
 
 function cents(value: Decimal): Decimal {
@@ -88,7 +99,7 @@ export function calculatePhiladelphiaWageTax(
   audit.record(
     "PA-Philadelphia-Wage-Tax",
     "1",
-    "Taxable compensation paid January 1 through June 30, 2025",
+    `Taxable compensation paid January 1 through June 30, ${input.taxYear}`,
     taxableCompensationPreJuly,
     "Input pre-July taxable compensation, floored at 0 and rounded to cents",
   );
@@ -96,7 +107,7 @@ export function calculatePhiladelphiaWageTax(
   audit.record(
     "PA-Philadelphia-Wage-Tax",
     "2",
-    "Taxable compensation paid on or after July 1, 2025",
+    `Taxable compensation paid on or after July 1, ${input.taxYear}`,
     taxableCompensationPostJuly,
     "Input post-July taxable compensation, floored at 0 and rounded to cents",
   );
@@ -104,20 +115,20 @@ export function calculatePhiladelphiaWageTax(
   audit.record(
     "PA-Philadelphia-Wage-Tax",
     "3-pre",
-    "Applicable pre-July 2025 rate",
+    `Applicable pre-July ${input.taxYear} rate`,
     periodRates.preJuly,
     input.residencyStatus === "resident"
-      ? "2025 Philadelphia resident rate through June 30, 2025"
-      : "2025 Philadelphia nonresident rate through June 30, 2025",
+      ? `${input.taxYear} Philadelphia resident rate through June 30, ${input.taxYear}`
+      : `${input.taxYear} Philadelphia nonresident rate through June 30, ${input.taxYear}`,
   );
   audit.record(
     "PA-Philadelphia-Wage-Tax",
     "3-post",
-    "Applicable post-July 2025 rate",
+    `Applicable post-July ${input.taxYear} rate`,
     periodRates.postJuly,
     input.residencyStatus === "resident"
-      ? "2025 Philadelphia resident rate on and after July 1, 2025"
-      : "2025 Philadelphia nonresident rate on and after July 1, 2025",
+      ? `${input.taxYear} Philadelphia resident rate on and after July 1, ${input.taxYear}`
+      : `${input.taxYear} Philadelphia nonresident rate on and after July 1, ${input.taxYear}`,
   );
 
   const preJulyTax = cents(taxableCompensationPreJuly.times(periodRates.preJuly));

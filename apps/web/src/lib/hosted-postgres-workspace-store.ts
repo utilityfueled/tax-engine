@@ -14,10 +14,9 @@ function sortByUpdatedAtDescending(workspaces: ReturnWorkspaceRecord[]) {
 }
 
 function normalizeHostedWorkspace(workspace: ReturnWorkspaceRecord): ReturnWorkspaceRecord {
-  return {
-    ...workspace,
-    storageMode: "hosted-postgres"
-  };
+  // Old rows may predate the shell allowlist. Never return their filenames,
+  // free text or extra private fields to a new browser session.
+  return sanitizeWorkspaceForHostedStorage(workspace);
 }
 
 class PostgresHostedWorkspaceStore implements HostedWorkspaceStore {

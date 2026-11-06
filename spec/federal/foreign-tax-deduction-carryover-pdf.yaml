@@ -1,0 +1,30 @@
+form: "Foreign deduction-year carryover review record"
+fullName: "Audit-bound review of deemed absorption without a current foreign tax credit"
+taxYear: 2025
+irsReference: "https://www.irs.gov/publications/p514"
+sources:
+  - url: "https://www.irs.gov/publications/p514"
+    section: "Unused taxes carried to deduction year"
+    retrieved: "2026-10-25"
+  - url: "https://www.irs.gov/instructions/i1116sb"
+    section: "Actual prior balance, absorption, expiration and remaining carry"
+    retrieved: "2026-10-25"
+notes: |
+  This is a source-bound internal review record, not an official Form1116 or
+  ScheduleB. It grants no current credit or deduction of prior foreign tax.
+  Only the existing historical export policy may attach it; no2026 mapping or
+  filing qualification follows from this record. Source identifiers are not
+  printed. The canonical input and encrypted backup retain their actual facts.
+lines:
+  - line: "record"
+    description: "Separate deduction-year review record"
+    formula: "When the canonical return has actual deduction-year carry results, attach its uniquely audited hypothetical limit and balance movement, explicitly label zero current credit and no deduction of prior carry."
+    testRef: "tests/pdf/foreign-tax-carryover-reference.test.ts::labels the deduction-year record separately from a current credit"
+  - line: "audit-binding"
+    description: "Reject missing or conflicting calculated balances"
+    formula: "Require exactly one canonical audit for every copied calculation, matching source-result amount/formula/description and exact balance conservation; require zero actual FTC and identical remaining carry records."
+    testRef: "tests/pdf/foreign-tax-carryover-reference.test.ts::rejects missing duplicate conflicting or inconsistent carryover audits"
+  - line: "saved-record"
+    description: "Reopen actual review packet and preserve privacy"
+    formula: "The saved historical review packet includes the deduction-year record, retains one review notice per page, prints actual73absorption/127remaining, and omits rawpayer/account/TIN/source references."
+    testRef: "tests/pdf/foreign-tax-carryover-reference.test.ts::saves a visibly marked audit-bound carryover record without source identifiers"

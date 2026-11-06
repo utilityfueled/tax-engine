@@ -1,4 +1,12 @@
 "use client";
+import { QofDispositionDetails } from "./qof-disposition-details";
+import { BrokerageWithholdingDetails } from "./brokerage-withholding-details";
+import { ScheduleDSourceDetails } from "./schedule-d-source-details";
+import { QsbsSourceDetails } from "./qsbs-source-details";
+import type { QsbsSourceData } from "@/lib/guided-qsbs-sources";
+import type { ScheduleDSourceData } from "@/lib/guided-schedule-d-sources";
+import type { QofDispositionData } from "@/lib/guided-qof-facts";
+import { changePrivateActivitySource } from "@/lib/guided-private-activity-facts";
 
 import { RetroShell } from "@/components/retro-shell";
 import {
@@ -12,6 +20,14 @@ import {
   emptyInterestEntry,
 } from "@/lib/guided-interview-flow";
 import { CurrencyField } from "./currency-field";
+import { BooleanFact } from "./fact-fields";
+import { DividendSourceDetails, InterestSourceDetails, InvestmentSourceIdentity } from "./investment-source-details";
+import { OidSourceCards } from "./oid-source-details";
+import { DigitalAssetSourceCards } from "./digital-asset-source-details";
+import type { DigitalAssetEntryData } from "@/lib/guided-digital-asset-facts";
+import type { OidEntryData } from "@/lib/guided-oid-facts";
+import { ChildElectionCards } from "./child-election-details";
+import type { ChildElectionData } from "@/lib/guided-child-election-facts";
 
 // ── 1099-INT Card ─────────────────────────────────────────────────────────
 
@@ -67,11 +83,13 @@ function InterestCard({
         />
         <CurrencyField
           label="Box 4 — Federal tax withheld"
-          hint="Usually $0, but check your form."
+          hint="Enter the actual amount; a blank is unknown, not zero."
           value={entry.federalWithheld}
           onChange={(v) => onUpdate("federalWithheld", v)}
         />
       </div>
+      <InterestSourceDetails data={entry} onChange={onUpdate} />
+      <InvestmentSourceIdentity data={entry} onChange={patch => { for (const [field, value] of Object.entries(patch)) onUpdate(field as keyof InterestEntryData, value); }} />
     </div>
   );
 }
@@ -164,6 +182,8 @@ function DividendCard({
           onChange={(v) => onUpdate("foreignTaxPaid", v)}
         />
       </div>
+      <DividendSourceDetails data={entry} onChange={onUpdate} />
+      <InvestmentSourceIdentity data={entry} onChange={patch => { for (const [field, value] of Object.entries(patch)) onUpdate(field as keyof DividendEntryData, value); }} />
     </div>
   );
 }
@@ -179,7 +199,7 @@ function TransactionRow({
 }: {
   index: number;
   transaction: CapitalGainTransactionData;
-  onUpdate: (field: keyof CapitalGainTransactionData, value: string | boolean) => void;
+  onUpdate: (field: keyof CapitalGainTransactionData, value: string | boolean | null) => void;
   onRemove: () => void;
   removable: boolean;
 }) {
@@ -256,6 +276,7 @@ function TransactionRow({
           value={transaction.holdingPeriod}
           onChange={(e) => onUpdate("holdingPeriod", e.target.value)}
         >
+          <option value="">Confirm from source</option>
           <option value="short">Short-term (held 1 year or less)</option>
           <option value="long">Long-term (held more than 1 year)</option>
         </select>
@@ -265,29 +286,17 @@ function TransactionRow({
       </label>
 
       <div className="guided-form-grid">
-        <label className="guided-field">
-          <span className="guided-field-label">Basis reported to IRS</span>
-          <input
-            type="checkbox"
-            checked={transaction.basisReportedToIRS}
-            onChange={(e) => onUpdate("basisReportedToIRS", e.target.checked)}
-          />
-          <span className="guided-field-hint">
-            Uncheck this for crypto and other sales where basis was not reported.
-          </span>
-        </label>
-        <label className="guided-field">
-          <span className="guided-field-label">Digital asset / crypto sale</span>
-          <input
-            type="checkbox"
-            checked={transaction.digitalAsset}
-            onChange={(e) => onUpdate("digitalAsset", e.target.checked)}
-          />
-          <span className="guided-field-hint">
-            Marks the sale for the Form 1040 digital asset question.
-          </span>
-        </label>
+        <BooleanFact label="Was the actual cost basis reported to the IRS?" value={transaction.basisReportedToIRS} onChange={value => onUpdate("basisReportedToIRS", value)} />
+        <BooleanFact label="Was this a digital-asset or crypto sale?" value={transaction.digitalAsset} onChange={value => onUpdate("digitalAsset", value)} />
+        <BooleanFact label="Was a wash-sale loss disallowed?" value={transaction.washSale} onChange={value => onUpdate("washSale", value)} />
+        <CurrencyField label="Actual wash-sale loss disallowed" value={transaction.washSaleDisallowed ?? ""} onChange={value => onUpdate("washSaleDisallowed", value)} />
+        <CurrencyField allowNegative label="Other Form 8949 adjustment amount" hint="Exclude the wash-sale amount above. Nonzero other adjustments need codes and a supporting worksheet that this guided path does not yet support." value={transaction.adjustments ?? ""} onChange={value => onUpdate("adjustments", value)} />
       </div>
+      {transaction.holdingPeriod === "long" && <label className="guided-field"><span className="guided-field-label">Actual long-term asset character</span><select className="guided-input" value={transaction.specialGainCharacter ?? ""} onChange={event => onUpdate("specialGainCharacter", event.target.value)}>
+        <option value="">Choose from actual asset records</option><option value="ordinary">Ordinary capital asset</option><option value="collectible">Collectible</option><option value="qsbs">Qualified small business stock requiring issuer history</option><option value="other">Another special asset or method</option>
+      </select><span className="guided-field-hint">Holding a property for more than one year does not establish its capital-gain character.</span></label>}
+      <BooleanFact label="Have you checked these sale classifications against the actual source records?" value={transaction.sourceClassificationConfirmed} onChange={value => onUpdate("sourceClassificationConfirmed", value)} />
+
     </div>
   );
 }
@@ -312,10 +321,10 @@ function BrokerageCard({
   function updateTransaction(
     tIndex: number,
     field: keyof CapitalGainTransactionData,
-    value: string | boolean,
+    value: string | boolean | null,
   ) {
     const next = transactions.map((t, i) =>
-      i === tIndex ? { ...t, [field]: value } : t
+      i === tIndex ? { ...t, [field]: value, ...(field === "sourceClassificationConfirmed" ? {} : { sourceClassificationConfirmed: null }) } : t
     );
     onUpdate({ ...entry, transactions: next });
   }
@@ -359,6 +368,9 @@ function BrokerageCard({
         />
       </label>
 
+      <InvestmentSourceIdentity data={entry} onChange={patch => onUpdate({ ...entry, ...patch })} />
+      <BrokerageWithholdingDetails data={entry} onChange={onUpdate} />
+
       <div className="guided-w2-stack" style={{ marginTop: "8px" }}>
         {transactions.map((t, tIndex) => (
           <TransactionRow
@@ -367,7 +379,7 @@ function BrokerageCard({
             transaction={t}
             onUpdate={(field, value) => updateTransaction(tIndex, field, value)}
             onRemove={() => removeTransaction(tIndex)}
-            removable={transactions.length > 1}
+            removable={transactions.length > 1 || entry.withholdingOnlyOpenShortSale !== undefined}
           />
         ))}
       </div>
@@ -393,6 +405,19 @@ export function SectionInvestmentIncome({
   onInterestEntriesChange,
   onDividendEntriesChange,
   onBrokerageEntriesChange,
+  oidEntries,
+  stateCode,
+  onOidEntriesChange,
+  digitalAssetEntries,
+  onDigitalAssetEntriesChange,
+  childElections,
+  onChildElectionsChange,
+  qofDispositionFacts,
+  onQofDispositionFactsChange,
+  scheduleDSources,
+  onScheduleDSourcesChange,
+  section1202Sources,
+  onSection1202SourcesChange,
 }: {
   interestEntries: InterestEntryData[];
   dividendEntries: DividendEntryData[];
@@ -400,6 +425,19 @@ export function SectionInvestmentIncome({
   onInterestEntriesChange: (entries: InterestEntryData[]) => void;
   onDividendEntriesChange: (entries: DividendEntryData[]) => void;
   onBrokerageEntriesChange: (entries: BrokerageEntryData[]) => void;
+  oidEntries?: OidEntryData[];
+  stateCode?: string | null;
+  onOidEntriesChange?: (entries: OidEntryData[]) => void;
+  digitalAssetEntries?: DigitalAssetEntryData[];
+  onDigitalAssetEntriesChange?: (entries: DigitalAssetEntryData[]) => void;
+  childElections?: ChildElectionData[];
+  onChildElectionsChange?: (entries: ChildElectionData[]) => void;
+  qofDispositionFacts?: QofDispositionData;
+  onQofDispositionFactsChange?: (data: QofDispositionData | undefined) => void;
+  scheduleDSources?: ScheduleDSourceData;
+  onScheduleDSourcesChange?: (data: ScheduleDSourceData | undefined) => void;
+  section1202Sources?: QsbsSourceData;
+  onSection1202SourcesChange?: (data: QsbsSourceData | undefined) => void;
 }) {
   const currentInterest = interestEntries.length > 0 ? interestEntries : [emptyInterestEntry];
   const currentDividends = dividendEntries.length > 0 ? dividendEntries : [emptyDividendEntry];
@@ -407,7 +445,7 @@ export function SectionInvestmentIncome({
 
   // ── Interest helpers ──
   function updateInterest(index: number, field: keyof InterestEntryData, value: string) {
-    const next = currentInterest.map((e, i) => (i === index ? { ...e, [field]: value } : e));
+    const next = currentInterest.map((e, i) => (i === index ? changePrivateActivitySource(e, field, value) : e));
     onInterestEntriesChange(next);
   }
   function addInterest() {
@@ -420,7 +458,7 @@ export function SectionInvestmentIncome({
 
   // ── Dividend helpers ──
   function updateDividend(index: number, field: keyof DividendEntryData, value: string) {
-    const next = currentDividends.map((e, i) => (i === index ? { ...e, [field]: value } : e));
+    const next = currentDividends.map((e, i) => (i === index ? changePrivateActivitySource(e, field, value) : e));
     onDividendEntriesChange(next);
   }
   function addDividend() {
@@ -449,8 +487,8 @@ export function SectionInvestmentIncome({
       <div className="guided-question">
         <p className="guided-prompt">Let&apos;s capture your investment income.</p>
         <p className="guided-hint">
-          Enter info from your 1099-INT (interest), 1099-DIV (dividends), and
-          1099-B (stock sales). If you don&apos;t have one of these, leave it blank
+          Enter info from your 1099-INT (interest), 1099-DIV (dividends),
+          1099-OID (original issue discount), 1099-B (brokerage sales) and 1099-DA (digital-asset statements). If you don&apos;t have one of these, leave it blank
           and we&apos;ll skip it.
         </p>
 
@@ -473,6 +511,13 @@ export function SectionInvestmentIncome({
         <button type="button" className="utility-button" onClick={addInterest}>
           + Add another 1099-INT
         </button>
+
+        {onOidEntriesChange && <OidSourceCards entries={oidEntries} stateCode={stateCode} onChange={onOidEntriesChange} />}
+        {onDigitalAssetEntriesChange && <DigitalAssetSourceCards entries={digitalAssetEntries} stateCode={stateCode} onChange={onDigitalAssetEntriesChange} />}
+        {onChildElectionsChange && <ChildElectionCards entries={childElections} onChange={onChildElectionsChange} />}
+        {onQofDispositionFactsChange && <QofDispositionDetails data={qofDispositionFacts} onChange={onQofDispositionFactsChange} />}
+        {onScheduleDSourcesChange && <ScheduleDSourceDetails data={scheduleDSources} investments={{ brokerageEntries, dividendEntries, digitalAssetEntries }} onChange={onScheduleDSourcesChange} />}
+        {onSection1202SourcesChange && <QsbsSourceDetails data={section1202Sources} investments={{ brokerageEntries, dividendEntries }} onChange={onSection1202SourcesChange} />}
 
         {/* ── 1099-DIV: Dividends ── */}
         <h3 className="guided-w2-card-title" style={{ marginTop: "24px", marginBottom: "8px" }}>
@@ -500,8 +545,8 @@ export function SectionInvestmentIncome({
           <div className="guided-expand-body">
             <p className="guided-hint">
               Enter each brokerage&apos;s 1099-B and the individual transactions.
-              For many transactions, you can enter a summary line per holding period
-              (short-term total and long-term total).
+              Use actual acquisition and sale dates. A source may identify multiple
+              acquisition dates as VARIOUS; do not invent dates for summary totals.
             </p>
             <div className="guided-w2-stack">
               {currentBrokerage.map((entry, index) => (

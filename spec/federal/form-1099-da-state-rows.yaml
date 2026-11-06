@@ -1,0 +1,41 @@
+form: Form1099DAStateRows
+taxYear: 2025
+source: https://www.irs.gov/instructions/i1099da
+sourceRevision: "2026 Boxes14-16; retrieved2026-11-01; historical2025 row layout also two states"
+lines:
+  - line: "original-rows"
+    description: "Preserve two actual state rows without duplicating dispositions or federal withholding"
+    formula: "Multiple reporting requires exactly2 distinct PA/OH state abbreviations (other pairs remain a named unsupported source method), actual filerstateID or explicit blank, and finite nonnegative Box16 values. PA0.10 and OH0.20 retain both and total0.30, capital gain10.25 once, Box4 0.10once. Scalar state conflicts reject; an optional scalar total must reconcile."
+    testRef: "tests/engine/forms/form-1099-da-state-rows.test.ts::preserves separate state originals and one federal disposition"
+  - line: "state-view"
+    description: "Use only the selected state's original withholding"
+    formula: "PA0.10 and OH0.20 give PA0.10 and OH0.20 while both use the same original disposition. No income allocation is inferred. Existing state basis/support gates remain."
+    testRef: "tests/engine/forms/form-1099-da-state-rows.test.ts::selects only matching original withholding in each state view"
+  - line: "missing-conflicting"
+    description: "Reject missing, duplicate, contradictory and unconfirmed row sources"
+    formula: "Missing rows/IDs/amounts, duplicates, more than2rows, single/none with positive rows, nonfinite/negative or scalar contradictions reject. Explicit blankID and0withholding remain known."
+    testRef: "tests/engine/forms/form-1099-da-state-rows.test.ts::rejects incomplete or contradictory original state rows"
+  - line: "guided-rows"
+    description: "Collect exact actual rows and reconfirm edits"
+    formula: "Guided two-row sources preserve exact cents/zero and actual blank IDs, unknown stays unknown; editing any row clears statement confirmation."
+    testRef: "tests/guided-interview/guided-digital-asset-state-rows.test.ts::preserves actual state rows through the guide and invalidates edits"
+
+  - line: "source-trigger-and-residency"
+    description: "New original state rows cannot pass a legacy or unsupported residency path"
+    formula: "Presence of state rows or scalar stateID activates complete original source validation, including2025 legacy shapes. PA nonresident/partyear calculations reject this new two-state composition before output until actual gain sourcing is implemented."
+    testRef: "tests/engine/forms/form-1099-da-state-rows.test.ts::rejects legacy row bypass and conflicting scalar state IDs"
+
+  - line: "unsupported-residency"
+    description: "Keep unavailable residency source methods explicit"
+    formula: "Two-state PA/OH originals on PA nonresident/partyear routes reject by name before calculation rather than dropping withholding or assuming gain sourcing."
+    testRef: "tests/engine/forms/form-1099-da-state-rows.test.ts::rejects unsupported Pennsylvania residency before calculation"
+
+  - line: "no-state-retained-id"
+    description: "Do not discard an original state identifier under a no-state answer"
+    formula: "A nonblank original scalar Box15 state identification number contradicts stateTaxReporting=none even with zero withholding and absent state code. Reject before calculation; guided adapters preserve a retained scalar identifier so validation sees it. Missing and explicitly blank/whitespace identifiers remain distinct and may accompany no-state reporting."
+    testRef: "tests/engine/forms/form-1099-da-state-rows.test.ts::rejects no-state reporting with a retained nonblank original ID"
+
+  - line: "guided-scalar-id-recovery"
+    description: "Allow explicit recovery from a retained scalar state identifier"
+    formula: "Expose the scalar Box15 identifier in single-state mode or whenever retained. Changing to two-state reporting preserves it and causes no inferred deletion. An explicit Remove single-state ID action removes only that obsolete scalar field, including an explicitly blank one, retains both original row IDs/amounts and all transactions, and clears source confirmation."
+    testRef: "tests/apps/web/digital-asset-state-rows-interactions.test.tsx::explicitly removes a retained single-state ID without changing original rows (%j)"

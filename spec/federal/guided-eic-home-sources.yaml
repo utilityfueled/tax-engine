@@ -1,0 +1,37 @@
+form: "Guided EIC and Form1040 home sources"
+fullName: "Actual main-home and military facts for every relevant filer"
+taxYear: 2026
+irsReference: "https://www.irs.gov/instructions/i1040gi"
+notes: |
+  Refreshed2026-10-26: final2025 i1040gi 2025 Residency asks for the primary
+  home and both joint filers' homes, regardless of qualifying children.
+  Pub596 Rules8/14 and IRC32(c)(4) govern qualifying extended active duty.
+  Home facts do not become an extra EIC claimant restriction for a filer with
+  a qualifying child. The childless dependency exception remains conditional.
+  Preserve existing primaryChildless/spouseChildless storage keys and unknown
+  saved records. Missing home answers stay unknown and do not check page1.
+  If a source answer counts military duty abroad, require its actual reference
+  and known qualifying order; do not infer a period from residency months.
+  Source edits revoke confirmation. Other eligibility, computation, form-year
+  and filing qualification gates remain separate and unchanged.
+lines:
+  - line: "homeControls"
+    description: "Main-home controls remain reachable with qualifying children"
+    formula: "Show both applicable home and military source questions; dependency exceptions remain childless-only; unknown and false survive edits"
+    irsRef: "2025 i1040gi 2025 Residency; Pub596 Rules8/12/14"
+    testRef: "tests/apps/web/eic-home-source-interactions.test.tsx::collects both home sources with a qualifying child without a dependency exception"
+  - line: "sourceBinding"
+    description: "Preserve unknown and false without adding a childful restriction"
+    formula: "Forward actual home answers; false home does not remove childful EIC; source edits revoke confirmation and do not mutate originals"
+    irsRef: "2025 i1040gi 2025 Residency; Pub596 chapter2 versus chapter3"
+    testRef: "tests/guided-interview/guided-eic-home-sources.test.ts::preserves actual childful home facts without applying childless restrictions"
+  - line: "military"
+    description: "Military home source evidence applies independently of child count"
+    formula: "Known counted foreign duty requires actual source reference and a qualifying extended-duty order, including when the filer has a qualifying child"
+    irsRef: "IRC32(c)(4); Pub596 Rule8 extended active duty"
+    testRef: "tests/guided-interview/guided-eic-home-sources.test.ts::requires actual counted military evidence with a qualifying child"
+  - line: "persistence"
+    description: "Local source collection reaches saved review PDFs at both viewport sizes"
+    formula: "Preserve true, false and blank through local reload; reopen downloaded page1 and27c; source POST only to the explicitly requested same-origin review download, with no source identifiers in the PDF"
+    irsRef: "2025 Form1040 page1 Residency; application source privacy contract"
+    testRef: "apps/web/tests/guided-eic-home-sources.spec.ts::saves and prints actual childful home facts without changing EIC eligibility"

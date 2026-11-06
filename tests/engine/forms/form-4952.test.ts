@@ -93,7 +93,7 @@ describe("Form 4952 Investment Interest Expense Deduction", () => {
     expect(result.line4d).toEqual(new Decimal(0));
   });
 
-  it("Form 4952 Line 4e - election increases net investment income", () => {
+  it("Form 4952 Line 4g - election increases net investment income", () => {
     const result = calculateForm4952(form4952({
       investmentInterestExpense: "12000",
       grossInvestmentIncome: "8000",
@@ -101,46 +101,46 @@ describe("Form 4952 Investment Interest Expense Deduction", () => {
       electedPreferentialIncome: "3000",
     }));
     // 4c = 8000 - 3000 = 5000
-    // 4g = 5000 + 0 + 3000 - 0 = 8000
-    expect(result.line4e).toEqual(new Decimal(3000));
-    expect(result.line4g).toEqual(new Decimal(8000));
+    // Line 6 = 5000 + 0 + 3000 - 0 = 8000
+    expect(result.line4g).toEqual(new Decimal(3000));
+    expect(result.line6).toEqual(new Decimal(8000));
     expect(result.deductibleAmount).toEqual(new Decimal(8000));
   });
 
-  it("Form 4952 Line 4f - investment expenses reduce net income", () => {
+  it("Form 4952 Line 5 - investment expenses reduce net income", () => {
     const result = calculateForm4952(form4952({
       investmentInterestExpense: "1000",
       grossInvestmentIncome: "5000",
       investmentExpenses: "1500",
     }));
-    // 4g = 5000 - 0 + 0 + 0 - 1500 = 3500
-    expect(result.line4g).toEqual(new Decimal(3500));
+    // Line 6 = 5000 - 0 + 0 + 0 - 1500 = 3500
+    expect(result.line6).toEqual(new Decimal(3500));
     expect(result.deductibleAmount).toEqual(new Decimal(1000));
   });
 
-  it("Form 4952 Line 4g - net investment income floored at zero", () => {
+  it("Form 4952 Line 6 - net investment income floored at zero", () => {
     const result = calculateForm4952(form4952({
       investmentInterestExpense: "5000",
       grossInvestmentIncome: "1000",
       investmentExpenses: "2000",
     }));
-    // 4g = max(0, 1000 + 0 + 0 - 2000) = 0
-    expect(result.line4g).toEqual(new Decimal(0));
+    // Line 6 = max(0, 1000 + 0 + 0 - 2000) = 0
+    expect(result.line6).toEqual(new Decimal(0));
     expect(result.deductibleAmount).toEqual(new Decimal(0));
   });
 
   // ── Part III: Deduction and Carryforward ────────────────────────
-  it("Form 4952 Line 5 - deduction limited to net investment income", () => {
+  it("Form 4952 Line 8 - deduction limited to net investment income", () => {
     const result = calculateForm4952(form4952({
       investmentInterestExpense: "10000",
       grossInvestmentIncome: "6000",
     }));
-    // 4g = 6000
+    // Line 6 = 6000
     // deduction = min(10000, 6000) = 6000
     expect(result.deductibleAmount).toEqual(new Decimal(6000));
   });
 
-  it("Form 4952 Line 5 - full deduction when income exceeds expense", () => {
+  it("Form 4952 Line 8 - full deduction when income exceeds expense", () => {
     const result = calculateForm4952(form4952({
       investmentInterestExpense: "3000",
       grossInvestmentIncome: "8000",
@@ -179,11 +179,11 @@ describe("Form 4952 Investment Interest Expense Deduction", () => {
     }));
     // Line 3 = 8000 + 3000 = 11000
     // 4c = 12000 - 4000 = 8000
-    // 4g = max(0, 8000 + 1500 + 0 - 500) = 9000
+    // Line 6 = max(0, 8000 + 1500 + 0 - 500) = 9000
     // deduction = min(11000, 9000) = 9000
     // carryforward = 11000 - 9000 = 2000
     expect(result.line3).toEqual(new Decimal(11000));
-    expect(result.line4g).toEqual(new Decimal(9000));
+    expect(result.line6).toEqual(new Decimal(9000));
     expect(result.deductibleAmount).toEqual(new Decimal(9000));
     expect(result.disallowedCarryforward).toEqual(new Decimal(2000));
   });
@@ -200,10 +200,10 @@ describe("Form 4952 Investment Interest Expense Deduction", () => {
     }));
     // Line 3 = 11000
     // 4c = 8000
-    // 4g = max(0, 8000 + 1500 + 4000 - 500) = 13000
+    // Line 6 = max(0, 8000 + 1500 + 4000 - 500) = 13000
     // deduction = min(11000, 13000) = 11000
     // carryforward = 0
-    expect(result.line4g).toEqual(new Decimal(13000));
+    expect(result.line6).toEqual(new Decimal(13000));
     expect(result.deductibleAmount).toEqual(new Decimal(11000));
     expect(result.disallowedCarryforward).toEqual(new Decimal(0));
   });
@@ -234,8 +234,8 @@ describe("Form 4952 Investment Interest Expense Deduction", () => {
       grossInvestmentIncome: "3000",
       investmentExpenses: "4000",
     }));
-    // 4g = max(0, 3000 + 0 + 0 - 4000) = 0
-    expect(result.line4g).toEqual(new Decimal(0));
+    // Line 6 = max(0, 3000 + 0 + 0 - 4000) = 0
+    expect(result.line6).toEqual(new Decimal(0));
     expect(result.deductibleAmount).toEqual(new Decimal(0));
     expect(result.disallowedCarryforward).toEqual(new Decimal(5000));
   });
@@ -252,12 +252,12 @@ describe("Form 4952 Investment Interest Expense Deduction", () => {
     }));
     // Line 3 = 15000 + 5000 = 20000
     // 4c = 20000 - 6000 = 14000
-    // 4g = max(0, 14000 + 3000 + 2000 - 1000) = 18000
+    // Line 6 = max(0, 14000 + 3000 + 2000 - 1000) = 18000
     // deduction = min(20000, 18000) = 18000
     // carryforward = 20000 - 18000 = 2000
     expect(result.line3).toEqual(new Decimal(20000));
     expect(result.line4c).toEqual(new Decimal(14000));
-    expect(result.line4g).toEqual(new Decimal(18000));
+    expect(result.line6).toEqual(new Decimal(18000));
     expect(result.deductibleAmount).toEqual(new Decimal(18000));
     expect(result.disallowedCarryforward).toEqual(new Decimal(2000));
   });
@@ -272,9 +272,9 @@ describe("Form 4952 Investment Interest Expense Deduction", () => {
       electedPreferentialIncome: "1000",
       investmentExpenses: "300",
     }));
-    const formNames = result.lines.map((l) => l.form);
-    expect(formNames.every((n) => n === "Form 4952")).toBe(true);
-    const lineNumbers = result.lines.map((l) => l.line);
+    const printedLines = result.lines.filter((line) => line.form === "Form 4952");
+    expect(printedLines).toHaveLength(15);
+    const lineNumbers = printedLines.map((l) => l.line);
     expect(lineNumbers).toContain("1");
     expect(lineNumbers).toContain("3");
     expect(lineNumbers).toContain("4c");
@@ -284,16 +284,16 @@ describe("Form 4952 Investment Interest Expense Deduction", () => {
   });
 
   // ── Edge cases ──────────────────────────────────────────────────
-  it("qualified dividends cannot exceed gross investment income", () => {
-    // If someone enters more qualified dividends than gross income,
-    // the 4c floor at 0 prevents negative base
+  it("printed line4c preserves the signed difference before line6 zero floor", () => {
+    // The printed form subtracts on4c without a floor; its line6 floors netincome.
     const result = calculateForm4952(form4952({
       investmentInterestExpense: "5000",
       grossInvestmentIncome: "3000",
       qualifiedDividendsIncluded: "5000",
     }));
-    // 4c = max(0, 3000 - 5000) = 0 (floored)
-    expect(result.line4c).toEqual(new Decimal(0));
+    // 4c = 3000 - 5000 = -2000; line6 alone applies the zero floor.
+    expect(result.line4c).toEqual(new Decimal(-2000));
+    expect(result.line6).toEqual(new Decimal(0));
   });
 
   it("large margin interest with small dividend income", () => {
@@ -304,7 +304,7 @@ describe("Form 4952 Investment Interest Expense Deduction", () => {
       qualifiedDividendsIncluded: "2500",
     }));
     // 4c = 4000 - 2500 = 1500
-    // 4g = 1500
+    // Line 6 = 1500
     // deduction = min(25000, 1500) = 1500
     // carryforward = 25000 - 1500 = 23500
     expect(result.deductibleAmount).toEqual(new Decimal(1500));

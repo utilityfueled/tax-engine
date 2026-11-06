@@ -1,0 +1,38 @@
+form: "RRTA-payroll-review-paper"
+taxYear: 2025
+status: "partial-review-only"
+reference: "https://www.irs.gov/instructions/i8959"
+notes: |
+  Historical ordinary-W2 single/MFJ RRTA source method only. Actual complete
+  originals and fresh federal replay required. No payroll-law eligibility,
+  2026, filing, or human-review qualification is added. Form4137 is companion
+  source proof, never an excuse to emit private employer identifiers.
+lines:
+  - line: "parts-I-II"
+    description: "Preserve actual wage and self-employment audit columns"
+    formula: "Map applicable actual original-bound audited wage lines1-7 without treating RRTA compensation as Medicare wages. Current finite source method requires known no self-employment, so skip PartII lines8-13 as the official instructions direct; no Form8919 means line3 blank. Show applicable computed known-zero cells as0, including zero excess/tax and wage withholding. Individual tax and withholding rounding is performed by the existing engine."
+    testRef: "tests/pdf/rrta-payroll-review-paper.test.ts::maps separate original wage and railroad lines in the public review packet"
+  - line: "14-18"
+    description: "Map actual separately sourced RRTA compensation and tax"
+    formula: "14=rounded actual original Tier1 Medicare compensation;15=filing-status threshold200000 single/250000 MFJ;16=max(0,14-15);17=roundDollar(16*0.009);18=7+13+17. No combined wage/RRTA threshold."
+    testRef: "tests/pdf/rrta-payroll-review-paper.test.ts::maps separate original wage and railroad lines in the public review packet"
+  - line: "19-24"
+    description: "Keep actual wage and railroad withholding separate"
+    formula: "19=rounded actual W2Box6 sum;20=1;21=roundDollar(20*0.0145);22=max(0,19-21);23=rounded actual original W2Box14 Additional Medicare withholding;24=22+23. Never write combined24 into22; include actual8959 even when tax18 is zero. Existing unsupported codeB/N and corrections remain outside finite source qualification."
+    testRef: "tests/pdf/rrta-payroll-review-paper.test.ts::keeps zero-tax railroad withholding in a review-only companion"
+  - line: "original-context"
+    description: "Require opaque actual originals and complete retained result replay before I/O"
+    formula: "Prepare only complete actual2025 canonical originals; capture immutable originals. On every mapper/public preflight accept only exact structured-redacted render copy, opaque live token, and complete unchanged fresh federal result. Unknown/forged/missing/stale/lexically-changed originals or altered result deny before any file/template/output operation. Existing no-context RRTA denials remain."
+    testRef: "tests/pdf/rrta-payroll-review-paper.test.ts::denies missing forged stale and altered source contexts before output"
+  - line: "private-physical-companions"
+    description: "Render identifiers privately and verify actual physical outputs"
+    formula: "Original employer EINs, personal identifiers and source references stay private. Form4137 source assertions use complete private originals; its display-only employer names are scrubbed and EIN cells blank. Header/address text embedding identifiers or source references denies before public output. Original inputs/results never rewritten. Official2025 widgets, appearances, pages and rendered money are reviewed; every page is review-only and filing/2026 deny."
+    testRef: "tests/pdf/rrta-payroll-review-paper.test.ts::preserves private originals while redacting every companion employer identifier"
+  - line: "applicable-known-zero"
+    description: "Distinguish known zero from inapplicable rows on the physical form"
+    formula: "Display computed known-zero wage excess, RRTA excess/tax, total tax and wage withholding as0. Current source method confirms no SE, so official PartII skip applies; no Form8919 means its cell blank. Unknown source cash never becomes0."
+    testRef: "tests/pdf/rrta-payroll-review-paper.test.ts::shows known-zero computed excess and tax while skipping inapplicable self-employment"
+  - line: "ordinary-uncollected-withholding"
+    description: "Do not infer absent ordinary Box12B/N Medicare adjustments"
+    formula: "Official line19 additionally includes ordinary uncollected Medicare codesB/N. Existing finite engine has no such positive adjustment input. Therefore paper preparation requires separately referenced actual2025 documentary confirmation no such amounts apply, bound to every exact original W2; absent/unknown/false/year/snapshot conflict denies. Positive/uncertain adjustments need a future calculation/model successor, never guessed0. No calculation eligibility is expanded."
+    testRef: "tests/pdf/rrta-payroll-review-paper.test.ts::requires actual paper-only ordinary uncollected Medicare absence evidence"

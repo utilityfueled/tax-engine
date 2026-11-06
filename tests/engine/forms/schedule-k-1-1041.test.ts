@@ -72,7 +72,7 @@ describe("K-1 Form 1041 income routing", () => {
 
   test("K-1 1041 Box 2b qualified dividends flow to Form 1040 Line 3a", () => {
     const result = calculateFederalTax(makeInput({
-      form1099Div: [{ payer: "Brokerage", ordinaryDividends: "2000", qualifiedDividends: "1500" }],
+      form1099Div: [{ exemptInterestDividends: "0", specifiedPrivateActivityBondInterest: "0", payer: "Brokerage", ordinaryDividends: "2000", qualifiedDividends: "1500" }],
       scheduleK1Form1041: [{
         estateTrustName: "Grandma Trust",
         estateTrustEIN: "98-7654321",
@@ -160,7 +160,7 @@ describe("K-1 Form 1041 income routing", () => {
 
   test("K-1 1041 interest aggregates with 1099-INT and partnership K-1 interest", () => {
     const result = calculateFederalTax(makeInput({
-      form1099Int: [{ payer: "Bank", interestIncome: "1000" }],
+      form1099Int: [{ taxExemptInterest: "0", privateActivityBondInterest: "0", payer: "Bank", interestIncome: "1000" }],
       scheduleK1: [{
         partnershipName: "ABC LP",
         partnershipEIN: "66-6666666",
@@ -269,6 +269,19 @@ describe("K-1 Form 1041 deductions and other items", () => {
     expect(new Decimal(line16!.value).toNumber()).toBe(3000);
   });
 
+  test("combines estate tax and gambling in one canonical ScheduleA16", () => {
+    const result = calculateFederalTax(makeInput({
+      scheduleA: {gamblingLosses:"2000"},
+      formW2G:[{payer:"Synthetic casino",reportableWinnings:"5000",federalWithheld:"0"}],
+      scheduleK1Form1041:[{estateTrustName:"Synthetic estate",estateTrustEIN:"11-1111111",estateTaxDeduction:"3000"}],
+    }));
+    const rows=result.allLines.filter(line=>line.form==="Sched A"&&line.line==="16");
+    expect(rows).toHaveLength(1);
+    expect(rows[0].value.toString()).toBe("5000");
+    expect(result.scheduleA.otherItemizedDeductions.toString()).toBe("5000");
+    expect(result.scheduleA.totalItemized.toString()).toBe("5000"); // No other itemized amounts in this fixture.
+  });
+
   test("estate tax deduction from multiple K-1s aggregates", () => {
     const result = calculateFederalTax(makeInput({
       scheduleA: {
@@ -307,10 +320,11 @@ describe("K-1 Form 1041 deductions and other items", () => {
       }],
     }));
 
-    const line24z = findLine(result, "Sched 1", "24z");
-    expect(line24z).toBeDefined();
-    // Deduction is negative (reduces income)
-    expect(new Decimal(line24z!.value).toNumber()).toBe(-4000);
+    const line24k = findLine(result, "Sched 1", "24k");
+    expect(line24k).toBeDefined();
+    // Positive PartII adjustment reduces AGI through1040line10.
+    expect(new Decimal(line24k!.value).toNumber()).toBe(4000);
+    expect(result.schedule1?.totalAdjustments.toNumber()).toBe(4000);
 
     // AGI should reflect the deduction: 50K wages + 10K interest - 4K §67(e) = 56K
     expect(result.agi.toNumber()).toBe(56000);
@@ -423,7 +437,7 @@ describe("K-1 Form 1041 deductions and other items", () => {
 
   test("K-1 1041 tax-exempt interest aggregates with 1099-INT and partnership K-1", () => {
     const result = calculateFederalTax(makeInput({
-      form1099Int: [{ payer: "Bank", interestIncome: "1000", taxExemptInterest: "500" }],
+      form1099Int: [{ privateActivityBondInterest: "0", payer: "Bank", interestIncome: "1000", taxExemptInterest: "500" }],
       scheduleK1: [{
         partnershipName: "LP",
         partnershipEIN: "20-2020202",
@@ -664,7 +678,7 @@ describe("K-1 Form 1041 Section 199A QBI (Box 14 Code I)", () => {
   test("K-1 1041 REIT dividends aggregate with 1099-DIV REIT dividends", () => {
     const result = calculateFederalTax(makeInput({
       w2s: [{ ...simpleW2Fixture.w2s[0], wages: "60000", federalWithheld: "9000" }],
-      form1099Div: [{
+      form1099Div: [{ exemptInterestDividends: "0", specifiedPrivateActivityBondInterest: "0",
         payer: "Vanguard REIT Fund",
         ordinaryDividends: "5000",
         qualifiedDividends: "0",

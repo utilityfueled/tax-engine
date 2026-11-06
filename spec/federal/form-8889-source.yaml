@@ -1,0 +1,33 @@
+form: "Form 8889 source elections"
+fullName: "Actual HSA contribution method and recapture sources"
+taxYear: 2026
+irsReference: "https://www.irs.gov/instructions/i8889"
+notes: |
+  Sources refreshed 2026-10-25: Form 8889 instructions, Publication 969,
+  and the final 2025 Form 8889 lines 18-21. Review is automated and agent-derived;
+  independent professional and final 2026 form qualification remain pending.
+  An explicit monthly-method choice does not assume future testing-period
+  eligibility. Unknown 2026 choice cannot silently increase the deduction.
+  Historical 2025 omitted choice retains the prior preview behavior; this is
+  unqualified compatibility, not evidence of taxpayer election or eligibility.
+lines:
+  - line: "last-month-rule-choice"
+    description: "Use the actual selected contribution-limit method"
+    formula: "Sum the twelve monthly annual limits first and divide once by twelve; avoid rounding each monthly fraction. Explicit false uses the ordinary monthly limit. Explicit true permits the December-based annual limit when eligible; preserve the choice through source merging. For 2026 an omitted choice fails when applying the rule would change the contribution limit."
+    irsRef: "Form 8889 instructions, Eligible Individual, Testing period, Line 3; Publication 969, Last-month rule"
+    testRef: "tests/engine/forms/form-8889-source.test.ts::honors the actual monthly-method choice and preserves it through distribution merging"
+  - line: "unknown-election"
+    description: "Do not create a 2026 last-month-rule choice"
+    formula: "Reject unknown choice only when the December rule changes the computed limit; an unchanged full-year limit does not depend on a choice."
+    irsRef: "Form 8889 instructions, Testing period and Line 3"
+    testRef: "tests/engine/forms/form-8889-source.test.ts::requires an actual 2026 last-month-rule choice when it changes the limit"
+  - line: "unknown-recapture-limit"
+    description: "Known recapture contributions require an actual redetermined limit"
+    formula: "For 2026 positive last-month-rule recapture contributions, require either the actual prior-year redetermined limit or the supported prior-year worksheet, unless the death/disability exception applies. Missing facts cannot produce zero recapture."
+    irsRef: "Form 8889 instructions, Part III Line 18"
+    testRef: "tests/engine/forms/form-8889-source.test.ts::does not suppress known 2026 testing-period recapture when the redetermined limit is missing"
+  - line: "recapture-tax"
+    description: "Apply the additional tax to both recapture sources"
+    formula: "Line 21 = (line 18 + line 19) * 0.10, with the death/disability exception applied before the sum."
+    irsRef: "2025 Form 8889 printed lines 18-21; https://www.irs.gov/pub/irs-pdf/f8889.pdf"
+    testRef: "tests/engine/forms/form-8889-source.test.ts::taxes both recapture sources using the printed line 20 base"

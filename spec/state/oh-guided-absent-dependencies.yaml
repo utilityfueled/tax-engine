@@ -1,0 +1,23 @@
+form: Ohio guided inactive source dependency work
+fullName: Preserve confirmation semantics while skipping unused packet projections
+taxYear: 2026
+reference: docs/upgrade-2026-execution-brief.md
+notes: |
+  UI dependency scheduling only. No tax formula, Decimal arithmetic, source
+  validation, readiness or confirmation rule changes. Business and resident-credit
+  dependency projections are used only to invalidate their respective current
+  incoming child packets. Evaluate those child-only projections lazily behind
+  the same current-packet condition. General residency/payment/school/reciprocal
+  and header comparisons continue unchanged, including packet removal.
+  Keep active, stale and malformed packet comparisons and all original snapshots.
+  No retained cache, object identity shortcut or automatic source confirmation.
+lines:
+  - line: "business-active"
+    formula: Active actual business source changes still revoke current child and parent confirmation without replacing retained originals.
+    testRef: "tests/apps/web/ohio-business-details.test.tsx::captures actual entered business originals only after explicit confirmation"
+  - line: "credit-active"
+    formula: Active resident-credit provenance edits with equal cash still revoke child and parent confirmation and preserve originals.
+    testRef: "tests/apps/web/oh-resident-credit-native.test.tsx::reopens without callbacks and revokes after equal cash receipt identity edit"
+  - line: "source-absence"
+    formula: Absent child source packets stay absent and unknown; no parent callback or default source fact is created on render.
+    testRef: "tests/apps/web/ohio-business-details.test.tsx::offers blank actual business source origination in the existing state section"

@@ -1,0 +1,23 @@
+form: "W2-State-Local-Validation-Cost"
+fullName: "Preserve original-bound W-2 validation without a discarded commitment digest"
+taxYear: 2026
+reference: "spec/federal/w2-state-local.yaml"
+notes: |
+  Software-only separation of the existing source validation and commitment.
+  No formula, original-source cohort, serialization, monetary rounding or tax
+  readiness changes. TY2025 and TY2026 original-bound row guards remain exact.
+  Federal validation of a retained packet must perform every existing check,
+  audit, original final amount conversion, stable full-input/rawSources/v1
+  serialization and TextEncoder materialization. It may omit only an unused
+  SHA256 digest. Consumers of calculateW2StateLocalSources retain the identical
+  ordered result, private sourceCommitment bytes and all existing failures.
+lines:
+  - line: "discarded-federal-commitment"
+    formula: "The existing public calculateFederalTax path validates retained W-2 actual row packets without producing and discarding a complete source result/digest. Other actual consumers still calculate the original committed result."
+    testRef: "tests/engine/w2-state-local-validation-cost.test.ts::does not discard a calculated W2 source commitment in the public federal guard"
+  - line: "same-ordered-committed-result"
+    formula: "For each admitted2025/2026 original, exact zero and reported rows, original calculation returns byte-identical JSON and key order, including the same v1 SHA256 over encoded stable full input and rawSources. No cache or optional proof bypass exists."
+    testRef: "tests/engine/w2-state-local-validation-cost.test.ts::preserves original committed bytes and key order for supported years and verified zero"
+  - line: "same-refusals-and-order"
+    formula: "The void assertion performs all original checks in original order, including final amount conversions, audit record/getLines and stable serialization/encoding. Stale, unknown, malformed, cyclic, BigInt, throwing-getter and final-amount inputs retain original refusals; successful assertion returns undefined without a public commitment."
+    testRef: "tests/engine/w2-state-local-validation-cost.test.ts::preserves baseline refusals and observable serialization order: %s"

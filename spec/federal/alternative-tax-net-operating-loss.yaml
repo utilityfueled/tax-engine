@@ -1,0 +1,37 @@
+form: "Alternative tax NOL carry worksheets"
+fullName: "Separate current ATNOLD and modified-AMTI carry absorption"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i6251"
+notes: |
+  Form6251 line2f and IRC56(a)(4),(d) replace the regular deduction with the
+  separate alternative-tax deduction. Ordinary ATNOL carry is limited to90%
+  of AMTI before ATNOLD. Section56(d)(1)(B)(ii) requires the corresponding
+  modified-income carry adjustment. Reg1.55-1(b) retains regular-tax AGI/MAGI
+  for individual AGI-based items. Separate source histories are required;
+  regular carry is never copied into the AMT ledger. Exceptional historical
+  disaster/extended-carryback amounts and unrepresented AMT basis/loss-limit
+  differences require their actual separate method.
+  These numerical examples are derived applications of the sources, not
+  published IRS worked examples. The90% limit is rounded once; the complementary
+  reserve is the modified base less that rounded limit, conserving form dollars.
+lines:
+  - line: "modified-qbi"
+    description: "Remove the section199A deduction only in modified carry income"
+    formula: "ScheduleC100000 less7065halfSE gives92935business AGI before capital loss/NOL. Regularclaim59348 leaves30587AGI and2967QBI. Current AMTI before ATNOLD86968 allows78271. Modified carry removes capital loss and199A, yielding92935AMTI and83642absorption."
+    irsRef: "IRC172(d)(8),56(d)(1)(B)(ii); Form172PartIIline5; Reg1.55-1(b)"
+    testRef: "tests/engine/federal-nol-return.test.ts::removes QBI from modified alternative carry income without removing it from current AMTI"
+  - line: "current-and-carry"
+    description: "Keep alternative-tax deduction and absorption separate"
+    formula: "AMTI97000 permits87300 current ATNOLD. ModifiedAMTI100000 absorbs90000 from an actual100000 carry, leaving10000."
+    irsRef: "Form6251line2f; IRC56(d)(1)(A),(B)(ii); Reg1.172-5"
+    testRef: "tests/engine/forms/alternative-tax-net-operating-loss.test.ts::uses separate actual and modified AMTI limits"
+  - line: "fifo-and-expiry"
+    description: "Apply the modified90% capacity once across actual vintages"
+    formula: "ActualAMTI100000 and modified103000 give90000claimed and92700absorbed: first100000vintage retains7300, next100000retains100000. An unused2005carry expires after2025."
+    irsRef: "IRC56(d)(1)(B)(ii),172(b)(2); Form6251line2f"
+    testRef: "tests/engine/forms/alternative-tax-net-operating-loss.test.ts::conserves oldest-first source balances and actual expiry"
+  - line: "canonical"
+    description: "Derive AMTI from original return income and actual AMT adjustments"
+    formula: "Wages100000, capital loss3000 and regularNOL65000 give final regularAGI32000. Restore65000 on2e; the97000AMTI before ATNOLD allows87300 on2f. ModifiedAMTI100000 absorbs90000; finalAMTI9700 and independentAMTcarry10000."
+    irsRef: "Form6251lines1–4; Reg1.55-1(b); IRC56(d)"
+    testRef: "tests/engine/federal-nol-return.test.ts::calculates the separate ATNOL from canonical current and modified AMTI"

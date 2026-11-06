@@ -1,3 +1,4 @@
+import { fillRequiredTaxpayerFacts, reachFilingStatus } from "./guided-fixtures";
 import { expect, test } from "@playwright/test";
 
 /**
@@ -10,9 +11,11 @@ import { expect, test } from "@playwright/test";
 
 /** Complete segmentation with Single / W-2 wages / no events / no state. */
 async function completeSegmentation(page: import("@playwright/test").Page) {
-  await expect(page.getByText(/let's figure out your tax situation/i)).toBeVisible();
+  await expect(page.getByText(/let's tailor your return/i)).toBeVisible();
 
+  await reachFilingStatus(page);
   await page.getByRole("radio", { name: /single/i }).click();
+  await page.getByRole("button", { name: "Continue" }).click();
   await expect(page.getByText(/what types of income/i)).toBeVisible({ timeout: 5000 });
 
   await page.getByRole("checkbox", { name: /w-2 wages/i }).check();
@@ -31,11 +34,12 @@ async function completeSegmentation(page: import("@playwright/test").Page) {
 async function createReturn(page: import("@playwright/test").Page) {
   await page.goto("/");
   await page.getByRole("button", { name: /start your tax return/i }).click();
-  await expect(page).toHaveURL(/\/returns\/[a-z0-9-]+/i);
+  await expect(page).toHaveURL(/\/returns\/(?!new(?:[/?#]|$))[a-z0-9-]+/i);
 }
 
 /** Advance past personal info to W-2 section. */
 async function advancePastPersonalInfo(page: import("@playwright/test").Page) {
+  await fillRequiredTaxpayerFacts(page);
   await page.getByRole("textbox", { name: /first name/i }).fill("Test");
   await page.getByRole("textbox", { name: /last name/i }).fill("User");
   await page.getByRole("button", { name: "Continue" }).click();
@@ -150,6 +154,7 @@ test.describe("Progress bar click navigation", () => {
 
   test("jump back then forward preserves data in both sections", async ({ page }) => {
     // Fill personal info and advance
+    await fillRequiredTaxpayerFacts(page);
     await page.getByRole("textbox", { name: /first name/i }).fill("JumpTest");
     await page.getByRole("textbox", { name: /last name/i }).fill("Navigator");
     await page.getByRole("button", { name: "Continue" }).click();
@@ -188,7 +193,7 @@ test.describe("Keyboard shortcuts in guided interview", () => {
     await expect(page.getByText(/let's start with the basics/i)).toBeVisible();
 
     // Click on the section body (not an input) to ensure focus is outside inputs
-    await page.locator(".guided-interview-phase").click();
+    await page.getByRole("heading", { level: 2 }).last().click();
 
     // Press Enter — should trigger advance (shows skip prompt since fields empty)
     await page.keyboard.press("Enter");
@@ -219,7 +224,7 @@ test.describe("Keyboard shortcuts in guided interview", () => {
     await expect(page.getByText(/w-2 #1/i)).toBeVisible();
 
     // Click on section body to ensure focus is outside inputs
-    await page.locator(".guided-interview-phase").click();
+    await page.getByRole("heading", { level: 2 }).last().click();
 
     // Press Escape — should go back to personal info
     await page.keyboard.press("Escape");
@@ -245,7 +250,7 @@ test.describe("Keyboard shortcuts in guided interview", () => {
     await expect(page.getByRole("button", { name: "Back" })).toBeDisabled();
 
     // Click section body and press Escape
-    await page.locator(".guided-interview-phase").click();
+    await page.getByRole("heading", { level: 2 }).last().click();
     await page.keyboard.press("Escape");
 
     // Should still be on personal info (can't go back from first section)

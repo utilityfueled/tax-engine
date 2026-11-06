@@ -3,6 +3,15 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=64m
+      # The non-root image optimizer needs only this disposable, bounded cache.
+      - /app/apps/web/.next/cache:rw,noexec,nosuid,nodev,size=64m,mode=1777
     depends_on:
       postgres:
         condition: service_healthy
@@ -11,13 +20,12 @@ services:
       DATABASE_URL: ${DATABASE_URL}
       MODEL_PROVIDER_API_KEY: ${MODEL_PROVIDER_API_KEY:-}
       MODEL_PROVIDER_BASE_URL: ${MODEL_PROVIDER_BASE_URL:-https://api.openai.com/v1}
-      MODEL_PROVIDER_MODEL: ${MODEL_PROVIDER_MODEL:-gpt-5-mini}
       TAX_ENGINE_DEPLOYMENT_MODE: ${TAX_ENGINE_DEPLOYMENT_MODE:-self-host}
       # Local preview default only. Hosted production must set postgres-s3 explicitly.
       TAX_ENGINE_HOSTED_PERSISTENCE_BACKEND: ${TAX_ENGINE_HOSTED_PERSISTENCE_BACKEND:-preview-memory}
       TAX_ENGINE_BILLING_MODE: ${TAX_ENGINE_BILLING_MODE:-test}
-      # Local preview default only. Hosted production must set the public app origin.
-      TAX_ENGINE_APP_URL: ${TAX_ENGINE_APP_URL:-http://localhost:3000}
+      # Exact browser origin; change this with WEB_PORT or the public hostname.
+      TAX_ENGINE_APP_URL: ${TAX_ENGINE_APP_URL:-http://127.0.0.1:3000}
       BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:-}
       BETTER_AUTH_TRUSTED_ORIGINS: ${BETTER_AUTH_TRUSTED_ORIGINS:-}
       STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}

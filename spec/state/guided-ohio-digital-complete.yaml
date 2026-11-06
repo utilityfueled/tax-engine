@@ -1,0 +1,39 @@
+form: "Guided Ohio digital withholding complete-source successor"
+fullName: "Preserve exact digital source cents and Ohio printed withholding"
+taxYear: 2025
+reference: "https://dam.assets.ohio.gov/image/upload/v1767095693/tax.ohio.gov/forms/ohio_individual/individual/2025/it1040-booklet.pdf"
+notes: |
+  New explicitly fictional full-year resident source records only. No real user
+  facts, application defaults, payment-method changes, foreign-tax calculation,
+  qualification, PDF authoring or2026 promotion. Official2025 booklet printed
+  page4 requires nearest-dollar reporting; page17 excludes another state's WH;
+  page17 exemption2150 for MAGI50030.75; page18 tax342+2.75% above26050.
+  ORC5703.055 rounds .50 upward. W2.40+OH DA.10+.20=.70 exact and1 reported.
+  Original VA.30 is retained and excluded, with no inferred VA refund/finaltax.
+  Federal50000+3*(100.49-90.24)=50030.75; OH exemption2150; taxable47880.75;
+  taxround(342+(47880.75-26050)*.0275)=942; reportedWH1; principal941.
+  Independently supplied actual Ohio originals document calendar2025 fullOH
+  domicile, no taxing school-district residency, no business/relief, complete
+  no-estimate/no-prior-return/no-carry account, original return intendedApril15,
+  and separately planned remaining-tax payment941 onApril15 asofApril1.
+  Retain the older unbound raw flow as a negative, plus a positive legacy/raw
+  adapter.70 assertion. The historical preview.70 expectation is a wrong
+  printed boundary: first run it unchanged against complete sources to retain
+  genuine actual1-vs-expected.7 proof, then narrowly correct to1, keeping raw.70.
+lines:
+  - line: "legacy-printed-oracle-proof"
+    description: "Capture the historical cents preview oracle against complete actual sources"
+    formula: "Retained red-v2 proves historical.7 wrong; actual canonical reportedWH is1 with all source amounts unchanged."
+    testRef: "tests/guided-interview/guided-ohio-digital-complete.test.ts::complete fictional Ohio sources expose the historical cents preview oracle"
+  - line: "raw-and-reported"
+    description: "Raw source cents and printed Ohio payments have distinct explicit assertions"
+    formula: "OriginalW2.40+DA.10+.20=.70; exclude originalVA.30; canonicalreported1; federal50030.75."
+    testRef: "tests/guided-interview/guided-ohio-digital-complete.test.ts::complete fictional Ohio digital sources retain exact cents and reported withholding"
+  - line: "original-incomplete"
+    description: "No source packets are fabricated for old incomplete federal facts"
+    formula: "OriginalrawOH federal50030.75 remainsnonnull; missingactualOH residency/payments keeps state null."
+    testRef: "tests/guided-interview/guided-ohio-digital-complete.test.ts::original incomplete Ohio digital flow remains blocked with exact raw source cents"
+  - line: "current-originals"
+    description: "Current actual year owner amounts and payment timing are required without read refresh"
+    formula: "Missing, unknown and stale original sources reject; reads preserve every retained source."
+    testRef: "tests/guided-interview/guided-ohio-digital-complete.test.ts::Ohio digital reads preserve unknown missing and stale actual sources"

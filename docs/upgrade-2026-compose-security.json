@@ -1,0 +1,155 @@
+{
+  "recordedAt": "2026-10-25",
+  "scope": "Actual shipped Compose controls using retained intermediate arm64 images; not final application qualification or staging",
+  "releaseReady": false,
+  "configuration": {
+    "path": "compose.yaml",
+    "sha256": "2f9a4ad7fb2d83b36d8c584f1aaa9f21cc9a7448139726fc7a91725d17e9f401"
+  },
+  "harness": {
+    "path": "scripts/rehearse-self-host-release.mjs",
+    "sha256": "9325c145617e6b787afe49d8d6d8c500fbda48d7fddd0b92c5259db3356a8085"
+  },
+  "log": {
+    "path": ".local/upgrade-evidence/compose-default-security-rehearsal-reviewed.log",
+    "sha256": "f7ed9fad4884aebdd6f8c6b525f3040fc83f64d467b4b2ecdacb2ce2a2ef40f5"
+  },
+  "rehearsal": {
+    "kind": "local-synthetic-compose-release-rehearsal",
+    "project": "tax-rehearsal-2affe50c",
+    "phases": [
+      {
+        "phase": "previous",
+        "imageDigest": "905d28422236c424b7a90bec9ff0d2d4d4d63fdc9ba689e51f38d0425549c393",
+        "databaseSha256": "2ff57b44e35f90ca3827f09dcbbab7c85a056105b9911dcd36cefa5c84fce9d8",
+        "browserFactsSha256": "f767fc70844cf56888d32df1a686df2de10a555b28ea79446752eb86534e2dcb",
+        "documentSha256": "904a2ccc62fbc90ef0cc5b1355cd95487bb783eada33ca9c025169ccac662cfa",
+        "readOnly": true,
+        "runtimeFacts": {
+          "uid": 1001,
+          "arch": "arm64",
+          "node": "v24.22.1",
+          "noNewPrivileges": true,
+          "noEffectiveCapabilities": true,
+          "noBoundingCapabilities": true,
+          "providerKeys": false
+        }
+      },
+      {
+        "phase": "upgrade",
+        "imageDigest": "c018a5100f6553355472519c05694d4cd54a40e974abef62431d5e9eaafe6598",
+        "databaseSha256": "2ff57b44e35f90ca3827f09dcbbab7c85a056105b9911dcd36cefa5c84fce9d8",
+        "browserFactsSha256": "f767fc70844cf56888d32df1a686df2de10a555b28ea79446752eb86534e2dcb",
+        "documentSha256": "904a2ccc62fbc90ef0cc5b1355cd95487bb783eada33ca9c025169ccac662cfa",
+        "readOnly": true,
+        "runtimeFacts": {
+          "uid": 1001,
+          "arch": "arm64",
+          "node": "v24.22.1",
+          "noNewPrivileges": true,
+          "noEffectiveCapabilities": true,
+          "noBoundingCapabilities": true,
+          "providerKeys": false
+        }
+      },
+      {
+        "phase": "database-restart",
+        "imageDigest": "c018a5100f6553355472519c05694d4cd54a40e974abef62431d5e9eaafe6598",
+        "databaseSha256": "2ff57b44e35f90ca3827f09dcbbab7c85a056105b9911dcd36cefa5c84fce9d8",
+        "browserFactsSha256": "f767fc70844cf56888d32df1a686df2de10a555b28ea79446752eb86534e2dcb",
+        "documentSha256": "904a2ccc62fbc90ef0cc5b1355cd95487bb783eada33ca9c025169ccac662cfa",
+        "readOnly": true,
+        "runtimeFacts": {
+          "uid": 1001,
+          "arch": "arm64",
+          "node": "v24.22.1",
+          "noNewPrivileges": true,
+          "noEffectiveCapabilities": true,
+          "noBoundingCapabilities": true,
+          "providerKeys": false
+        }
+      },
+      {
+        "phase": "database-dump-restore",
+        "imageDigest": "c018a5100f6553355472519c05694d4cd54a40e974abef62431d5e9eaafe6598",
+        "databaseSha256": "2ff57b44e35f90ca3827f09dcbbab7c85a056105b9911dcd36cefa5c84fce9d8",
+        "browserFactsSha256": "f767fc70844cf56888d32df1a686df2de10a555b28ea79446752eb86534e2dcb",
+        "documentSha256": "904a2ccc62fbc90ef0cc5b1355cd95487bb783eada33ca9c025169ccac662cfa",
+        "readOnly": true,
+        "runtimeFacts": {
+          "uid": 1001,
+          "arch": "arm64",
+          "node": "v24.22.1",
+          "noNewPrivileges": true,
+          "noEffectiveCapabilities": true,
+          "noBoundingCapabilities": true,
+          "providerKeys": false
+        }
+      },
+      {
+        "phase": "rollback",
+        "imageDigest": "905d28422236c424b7a90bec9ff0d2d4d4d63fdc9ba689e51f38d0425549c393",
+        "databaseSha256": "2ff57b44e35f90ca3827f09dcbbab7c85a056105b9911dcd36cefa5c84fce9d8",
+        "browserFactsSha256": "f767fc70844cf56888d32df1a686df2de10a555b28ea79446752eb86534e2dcb",
+        "documentSha256": "904a2ccc62fbc90ef0cc5b1355cd95487bb783eada33ca9c025169ccac662cfa",
+        "readOnly": true,
+        "runtimeFacts": {
+          "uid": 1001,
+          "arch": "arm64",
+          "node": "v24.22.1",
+          "noNewPrivileges": true,
+          "noEffectiveCapabilities": true,
+          "noBoundingCapabilities": true,
+          "providerKeys": false
+        }
+      },
+      {
+        "phase": "re-upgrade",
+        "imageDigest": "c018a5100f6553355472519c05694d4cd54a40e974abef62431d5e9eaafe6598",
+        "databaseSha256": "2ff57b44e35f90ca3827f09dcbbab7c85a056105b9911dcd36cefa5c84fce9d8",
+        "browserFactsSha256": "f767fc70844cf56888d32df1a686df2de10a555b28ea79446752eb86534e2dcb",
+        "documentSha256": "904a2ccc62fbc90ef0cc5b1355cd95487bb783eada33ca9c025169ccac662cfa",
+        "readOnly": true,
+        "runtimeFacts": {
+          "uid": 1001,
+          "arch": "arm64",
+          "node": "v24.22.1",
+          "noNewPrivileges": true,
+          "noEffectiveCapabilities": true,
+          "noBoundingCapabilities": true,
+          "providerKeys": false
+        }
+      }
+    ],
+    "platform": "linux/arm64",
+    "previousDigest": "905d28422236c424b7a90bec9ff0d2d4d4d63fdc9ba689e51f38d0425549c393",
+    "candidateDigest": "c018a5100f6553355472519c05694d4cd54a40e974abef62431d5e9eaafe6598",
+    "databaseRecovery": {
+      "result": "passed",
+      "evidence": "local-synthetic-postgresql-dump-restore",
+      "tables": 9,
+      "tenantWorkspaces": 2,
+      "exactCostRestored": true,
+      "metadataCleanupReapplied": true,
+      "metadataCleanupIdempotent": true,
+      "checksum": "bc7ccfcb2b0964eb4eee1bb572bf069bb2e549e4c6237a555ac7405a8733c51b"
+    },
+    "browserRecovery": {
+      "passed": true,
+      "encrypted": true,
+      "wrongPasswordRejected": true,
+      "tamperRejected": true,
+      "originalBytes": true,
+      "unknownYearPreserved": true,
+      "exactCents": true,
+      "deletion": true,
+      "networkObservation": {
+        "requests": 405,
+        "startsBeforeUpload": true,
+        "rawPrivateMarkersAbsent": true,
+        "limitation": "Checks raw request URLs and postData for the synthetic SSN, filename and PDF signature; not a general encoded or binary PII proof."
+      }
+    },
+    "result": "passed"
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "observedAt": "2026-11-04T05:33:21.009Z",
+  "kind": "one-preview-function-runtime-observation",
+  "sourceCommit": "3a959a3d7c19ac1c00dd6a134f9b5d6927dc684e",
+  "deployment": "dpl_7rze8ijvhyHRLHJ6zCRjbAVqz54L",
+  "environment": "preview",
+  "region": "iad1",
+  "health": { "method": "GET", "path": "/api/health", "body": { "status": "ok" } },
+  "functionLogAt": "2026-11-04T05:33:05.014Z",
+  "startupRecord": {
+    "event": "hosted-preview-runtime-identity-v1",
+    "node": "26.13.0",
+    "undici": "8.12.2",
+    "arch": "x64"
+  },
+  "source": "Vercel deployment metadata, browser health response and owner-scoped Preview function runtime logs",
+  "savedObservationSHA256": "02a3d4f5af8338115a07fb1192d4e1aaaafdb35e561a4efd97a38d8a64b2ba12",
+  "releaseReady": false,
+  "limits": [
+    "One actual startup/invocation; no claim for all instances, regions or future provider patches.",
+    "No production change, hosted outage/security/billing/recovery qualification or filing readiness."
+  ]
+}

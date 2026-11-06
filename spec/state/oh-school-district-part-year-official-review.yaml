@@ -1,0 +1,66 @@
+form: "Ohio actual part-year SD 100 physical review"
+fullName: "Finite 2025 single ordinary W2 specific-payroll212OH153VA Hillsdale0302 review companions"
+taxYear: 2025
+reference: "https://dam.assets.ohio.gov/image/upload/v1767095693/tax.ohio.gov/forms/ohio_individual/individual/2025/it1040-booklet.pdf"
+notes: |
+  SOURCE FIRST. Separate actual county/Finder/header originals are supplied before
+  all source confirmations. No inferred county from address, district or ZIP.
+  Actual Ohio home212days is the majority of2025; county Ashland/ASHL.
+  Pinned blank4b065c66... actual5pages/265widgets; orphan template removal and
+  source hash guard remain unchanged. Legacy field IDs differ from printed lines.
+  Current schema/raw known facts preserved; no new money or rate calculations.
+  Annual wages60000/FITW6000, actual OH-received40000, VA-received20000,
+  no Ohio services outside Ohio; dates/home/payroll/current originals all replay.
+  Specific resident wages/MAGI40000, NOT60000*.5808; SD tax500, separate IT811.
+  Row0 fixed printed01 01, end07-31,0302,212,.5808; row1 starts08-01,
+  ends12-31,9999,153,.4191. Source AA truncates days/365 four places.
+  Source row1 factor MaxLen5 accepts lossless .4191; no factor MaxLen change.
+  Preserve the already reviewed COLA37 exact .0125 source exception4to5 only.
+  Each primary residency box is selected; spouse and remaining row boxes off.
+  Current VA mailing address remains mailing; Ohio physical address stays private.
+  Explicit employer EIN91-7400302 remains printed per existing structured-EIN
+  policy and source Schedule withholding; personal SSN remains blank. No claim
+  general free-text anonymization. Every known private reference/currentSSN guarded.
+  Default no-header PY remains omitted. Only new independently validated factual
+  header plus complete current source replay may admit these physical companions.
+  Booklet printed15 County,51 Hillsdale row,58-60 earned specific receipt guidance;
+  actual blank printed1 residency/9999,2 amounts,3 schedule,4 withholding control.
+  Existing68 and full-year six paper fixtures unchanged. Final2026,filing,
+  SD2210 physical, other district/county/calendar/owner/source methods excluded.
+lines:
+  - line: "no-header-baseline"
+    description: "Complete existing canonical sources first"
+    formula: "No-header existing family yields AGI60000/IT811/refund1189/SD500/refund100; actual original snapshots immutable."
+    testRef: "tests/engine/state/oh-school-district-part-year-official-review.test.ts::SD PY paper existing no-header canonical precondition remains exact"
+  - line: "header-source"
+    description: "Separate original majority county and current header"
+    formula: "Actual supplied Ashland county/Finder same Ohio home212days and official0302/.0125/E row project ASHL/0302/PY; owner/current source and all confirmations retained."
+    testRef: "tests/engine/state/oh-school-district-part-year-official-review.test.ts::SD PY paper existing header API derives actual ASHL and0302 without mailing inference"
+  - line: "header-financial-separation"
+    description: "Only validated separate root excluded from federal originals"
+    formula: "Attaching actual separately confirmed header preserves every current federal input and500/100 district result; no source recapture or generic exclusions."
+    testRef: "tests/engine/state/oh-school-district-part-year-official-review.test.ts::SD PY paper existing canonical API accepts separate current header without rebinding originals"
+  - line: "literal-matrix"
+    description: "Independent complete physical cells and statuses"
+    formula: "Literal matrix derives from actual pinned page widgets not runtime output; both cash cases, all text cells/blank statuses, county/dates/factors and structuredEIN retained."
+    testRef: "tests/engine/state/oh-school-district-part-year-official-review.test.ts::SD PY paper literal source matrices preserve complete field and status inventories"
+  - line: "saved-public"
+    description: "Actual public saved companions"
+    formula: "RAW and redacted-with-original opaque context return exactly SD1003pages and schoolWH1page with current source money/status/privacy; default5000ms."
+    testRef: "tests/engine/state/oh-school-district-part-year-official-review.test.ts::SD PY paper existing public API emits saved actual212-day companions %s"
+  - line: "guards"
+    description: "Current complete original qualification before I/O"
+    formula: "Changed actual owner/currentW2/samecashsource/payroll/county/address/date/header/hash/unknown/forged/serialized/stale federal deny or safe omit without template/output reads or mkdir, preserving source snapshots."
+    testRef: "tests/engine/state/oh-school-district-part-year-official-review.test.ts::SD PY paper source conflicts deny before physical output %s"
+  - line: "raw-optional"
+    description: "Optional context for actual complete raw originals"
+    formula: "RAWcomplete original context remains legitimate; no blanket token required. Redacted valid opaque original context renders same private-safe cells."
+    testRef: "tests/engine/state/oh-school-district-part-year-official-review.test.ts::SD PY paper existing public API emits saved actual212-day companions %s"
+  - line: "old-no-header"
+    description: "No generic removal of omission"
+    formula: "Actual original no-header PY has no new qualified county original and continues to return zero official SD companion paths before forbidden template/output access."
+    testRef: "tests/engine/state/oh-school-district-part-year-official-review.test.ts::SD PY paper old no-header source stays omitted before template access"
+  - line: "old-year"
+    description: "Existing physical method preserved"
+    formula: "Existing six full-year independent fixture packets retain old arithmetic,source statuses and dates; no new method guard permits other years."
+    testRef: "tests/engine/state/oh-school-district-part-year-official-review.test.ts::SD PY paper preserves old full-year source result and header method"

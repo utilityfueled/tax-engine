@@ -337,7 +337,7 @@ describe("Schedule R remaining eligibility boxes", () => {
     expect(result.adjustedInitialAmount.toNumber()).toBe(3500);
   });
 
-  it("Schedule R Part I box 6 - MFJ one 65+ and one under 65 not disabled gets $5,000", () => {
+  it("Schedule R Part I box 7 - MFJ one 65+ and one under 65 not disabled gets $5,000", () => {
     const result = calculateScheduleR(makeParams({
       filingStatus: "married_filing_jointly",
       primaryQualifies: true,
@@ -347,13 +347,13 @@ describe("Schedule R remaining eligibility boxes", () => {
       agi: 8000,
     }));
 
-    expect(result.box).toBe(6);
+    expect(result.box).toBe(7);
     expect(result.initialAmount.toNumber()).toBe(5000);
     // No disability cap for age-based box
     expect(result.adjustedInitialAmount.toNumber()).toBe(5000);
   });
 
-  it("Schedule R Part I box 6 - MFJ spouse 65+ and primary under 65 not disabled gets $5,000", () => {
+  it("Schedule R Part I box 7 - MFJ spouse 65+ and primary under 65 not disabled gets $5,000", () => {
     const result = calculateScheduleR(makeParams({
       filingStatus: "married_filing_jointly",
       primaryQualifies: false,
@@ -363,11 +363,11 @@ describe("Schedule R remaining eligibility boxes", () => {
       agi: 8000,
     }));
 
-    expect(result.box).toBe(6);
+    expect(result.box).toBe(7);
     expect(result.initialAmount.toNumber()).toBe(5000);
   });
 
-  it("Schedule R Part I box 7 - MFJ one 65+ and one disabled gets $7,500 with disability income cap", () => {
+  it("Schedule R Part I box 6 - MFJ one 65+ and one disabled gets $7,500 with disability income cap", () => {
     const result = calculateScheduleR(makeParams({
       filingStatus: "married_filing_jointly",
       primaryQualifies: true,
@@ -378,13 +378,13 @@ describe("Schedule R remaining eligibility boxes", () => {
       agi: 8000,
     }));
 
-    expect(result.box).toBe(7);
+    expect(result.box).toBe(6);
     expect(result.initialAmount.toNumber()).toBe(7500);
-    // Disability income from the disabled spouse caps: min(7500, 4000) = 4000
-    expect(result.adjustedInitialAmount.toNumber()).toBe(4000);
+    // Box6 line11=5000+4000=9000; min(7500,9000)=7500.
+    expect(result.adjustedInitialAmount.toNumber()).toBe(7500);
   });
 
-  it("Schedule R Part I box 7 - MFJ primary disabled and spouse 65+ uses primary disability income", () => {
+  it("Schedule R Part I box 6 - MFJ primary disabled and spouse 65+ uses primary disability income", () => {
     const result = calculateScheduleR(makeParams({
       filingStatus: "married_filing_jointly",
       primaryQualifies: true,
@@ -395,10 +395,10 @@ describe("Schedule R remaining eligibility boxes", () => {
       agi: 8000,
     }));
 
-    expect(result.box).toBe(7);
+    expect(result.box).toBe(6);
     expect(result.initialAmount.toNumber()).toBe(7500);
-    // Primary is disabled: min(7500, 6000) = 6000
-    expect(result.adjustedInitialAmount.toNumber()).toBe(6000);
+    // Box6 line11=5000+6000=11000; min(7500,11000)=7500.
+    expect(result.adjustedInitialAmount.toNumber()).toBe(7500);
   });
 
   it("Schedule R Part I box 9 - MFS under 65 disabled lived apart gets $3,750", () => {
