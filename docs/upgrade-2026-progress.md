@@ -3542,3 +3542,8 @@ Eight test helpers now share a read-only exact-one control snapshot, preserving 
 ### November6: separate Ohio earned-school draft accounts
 
 The finite2026 single full-year earned-school employee method now composes actual school and state originals with separate withholding and explicit whole-dollar reporting. Main540/14 and distinct63 cases pass; types3/builds2/spec/inventory/lint/audit1825+153 and590-case collection pass. The audit's actual missing-fixture failure is retained and corrected with its exact reviewed hash. See [the state ledger](upgrade-2026-ohio-earned-school-draft-work.md). Newinventory923/68supported preserves922oldrows; final2026/human/filing/distribution gates remain open. Browser6787fa88 is pushed.
+
+
+### November6: actual PA married prior-year originals
+
+The finite2025 separate-M ordinary method now validates paired actual2024 PA-40/SP originals, explicit zero/unknown facts and current captured provenance. Main181/6 and the label-preservation replay pass; independent source review adds19 controls. Types3/builds2/spec8576/inventory924/lint/audit1828+153 and unchanged590-case default/strict collection pass. All923old inventory rows and68supported statuses remain exact; the new row is partial. See [the package ledger](upgrade-2026-pa-married-prior-history-work.md). No new actual browser/PDF, global, professional or filing qualification follows; preceding4fb4ccf2 is pushed.

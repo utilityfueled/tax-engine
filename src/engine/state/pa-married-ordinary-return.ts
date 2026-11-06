@@ -1,5 +1,6 @@
 /** Pure two-owner ordinary PA household composition. Spec: state/pa-married-ordinary-return.yaml. */
 import Decimal from 'decimal.js';
+import {calculatePAMarriedPriorHistory} from './pa-married-prior-history.js';
 import {calculatePAMarriedResidencySources} from './pa-married-residency-sources.js';
 import {sha256} from '@noble/hashes/sha2.js';
 import {bytesToHex} from '@noble/hashes/utils.js';
@@ -70,6 +71,7 @@ export function calculatePAMarriedOrdinaryReturn(input:TaxYearInput,raw:unknown)
  const residency=sources.residencySources===undefined?undefined:calculatePAMarriedResidencySources(input,sources);
  if(!/^\d{9}$/u.test(ssn(people.primary.ssn))||!/^\d{9}$/u.test(ssn(people.spouse.ssn))||ssn(people.primary.ssn)===ssn(people.spouse.ssn))return fail('actual household owners must have distinct complete identities');
  if(input.taxpayer.livedWithSpouseAtAnyTimeDuringYear===false||(!residency&&input.taxpayer.stateResidency!==undefined&&input.taxpayer.stateResidency!=='full-year'))return fail('actual canonical marital/residency facts contradict the living fullresident household');
+ const priorHistory=sources.priorYearHistory===undefined?undefined:calculatePAMarriedPriorHistory(input,sources);
  const dependentCount=calculatePAMarriedDependentSources(input,sources);
  const start=`${y}-01-01`,end=`${y}-12-31`;
  const daysInYear=(Date.parse(`${y+1}-01-01T00:00:00Z`)-Date.parse(start+'T00:00:00Z'))/86400000;
@@ -148,10 +150,11 @@ export function calculatePAMarriedOrdinaryReturn(input:TaxYearInput,raw:unknown)
   const base:PA40Input={taxYear:y,compensation,unreimbursedExpenses:zero(),interest:zero(),dividends:zero(),netBusinessIncome:zero(),netGainOrLoss:zero(),netRentalIncome:zero(),estateTrustIncome:zero(),gamblingIncome:zero(),otherDeductions:zero(),taxForgivenessEligibilityIncome:jointSp,useTax:zero(),stateWithholding:withheld,creditFromPriorYear:payments?.creditFromPriorYear??zero(),estimatedPayments:payments?.estimatedPayments??zero(),extensionPayment:payments?.extensionPayment??zero(),nonresidentTaxWithheld:zero(),refundableCredits:zero(),taxForgivenessCredit:zero(),residentCredit:zero(),otherCredits:zero(),underpaymentPenalty:zero(),lateFilingOrPaymentPenalty:zero(),latePaymentInterest:zero()};
   const before=calculatePA40(base),ownExtra=tag==='joint'?jointSp.minus(compensation):roundDollar(ownerTotals(tag).sp);
   const sp=calculateScheduleSP({taxYear:y,filingCategory:'married',dependents:dependentCount,paTaxableIncome:before.totalPATaxableIncome,nontaxableIncome:ownExtra,additionalEligibilityIncome:tag==='joint'?zero():jointSp.minus(before.totalPATaxableIncome).minus(ownExtra),taxLiability:before.taxLiability,taxPaidToOtherStates:zero()});
-  const rev=calculateREV1630({taxYear:y,taxLiability:before.taxLiability,withholdingAndCredits:new Money(before.stateWithholding).plus(sp.taxForgivenessCredit).plus(scheduleDC?.credit??zero()),quarterlyEstimatedPayments:payments?.quarterlyEstimatedPayments??[zero(),zero(),zero(),zero()]});
-  // The prior100percentSP exemption is independent of filing history. This
-  // packet has no prior eligibility worksheet: no_return cannot establish false.
-  if(rev.penaltyRequired)return fail('actual prior exemption/forgiveness eligibility source history is required before a positive penalty; prior-SP worksheet successor unavailable');
+  const rev=calculateREV1630({taxYear:y,taxLiability:before.taxLiability,withholdingAndCredits:new Money(before.stateWithholding).plus(sp.taxForgivenessCredit).plus(scheduleDC?.credit??zero()),quarterlyEstimatedPayments:payments?.quarterlyEstimatedPayments??[zero(),zero(),zero(),zero()],...(tag==='joint'?{}:priorHistory?.get(tag))});
+  // The prior100percentSP exemption is independent of filing history.
+  // Without actual prior history, no_return cannot establish prior eligibility.
+  const priorQuarterRelief=priorHistory!==undefined&&rev.priorYearTaxAtCurrentRate!==undefined&&rev.totalInterest.isZero()&&rev.quarters.every(q=>q.underpayment.isZero()||q.exception1Met);
+  if(rev.penaltyRequired&&!priorQuarterRelief)return fail('actual prior exemption/forgiveness eligibility source history is required before a positive penalty; prior-SP worksheet successor unavailable');
   const pa40=calculatePA40({...base,taxForgivenessCredit:sp.taxForgivenessCredit,otherCredits:scheduleDC?.credit??zero(),underpaymentPenalty:rev.totalInterest}),d=dispositionMap.get(tag);if(!d)return fail('actual output return source election is missing');
   const refund=whole(d.refundRequested),credit=whole(d.nextYearCreditRequested),codes=new Set<string>();if(d.donations.length>5)return fail('actual donation election exceeds five printed rows');const donations=d.donations.map(row=>{if(!['A','B','C','D','E','F','G','I','J'].includes(row.code)||codes.has(row.code))return fail('unsupported or duplicate actual donation election');codes.add(row.code);const amount=whole(row.amount);if(!amount.gt(0))return fail('actual donation must be positive');return {code:row.code,amount:publicOrdinaryMoney(amount)};});
   if(!refund.plus(credit).plus(sum(donations.map(v=>v.amount))).eq(pa40.netOverpayment))return fail('actual per-return refund/credit/donation election does not reconcile fresh printed overpayment');

@@ -22008,5 +22008,46 @@
     "humanReview": false,
     "filingQualified": false,
     "precedingCommit": "6787fa88"
+  },
+  "nov06PAMarriedPriorHistory": {
+    "status": "PASS_FINITE_NINE_PATH_PRIOR_HISTORY_MAIN",
+    "evidence": "nov06-pa-married-prior-history-main-integration",
+    "authorManifestSHA256": "e8f88a03328a17def54d112275f54e2323e829a897f92763816d16c4403653d0",
+    "distinctLabelManifestSHA256": "a143d7fba3bec5302466c3717fb0d8695aa019405f24721e737c7b809e9e3a71",
+    "focusedTests": 181,
+    "files": 6,
+    "newPublicTests": 32,
+    "additionalDistinctControls": 19,
+    "labelSuccessorTaxLogicUnchanged": true,
+    "packageChecks": 12,
+    "productTypeChecks": 3,
+    "builds": 2,
+    "specLines": 8576,
+    "lint": {
+      "errors": 0,
+      "existingWarnings": 11863
+    },
+    "sourceAudit": 1828,
+    "changedRuntimeHashes": 4,
+    "addedRuntimeHashes": 3,
+    "contracts": 153,
+    "collection": 590,
+    "all590PriorRowsExactBothModes": true,
+    "existingSkipped": 5,
+    "browserCasesExecuted": 0,
+    "inventory": {
+      "rows": 924,
+      "old923Exact": true,
+      "supported": 68,
+      "newStatus": "partial"
+    },
+    "genuineOriginalPublicDispatchFailures": 2,
+    "actualBrowserQualified": false,
+    "actualPDFQualified": false,
+    "fullCurrentGlobalQualified": false,
+    "humanReview": false,
+    "filingQualified": false,
+    "final2026FormsQualified": false,
+    "precedingCommit": "4fb4ccf29f957c7e31ba556dd6cc3c2eb8222059"
   }
 }

@@ -1,5 +1,6 @@
 /** Private actual two-owner sources. Draft unknowns never default to tax facts. */
 import {z} from 'zod';
+import {PAMarriedPriorHistorySchema} from './pa-married-prior-history.js';
 import {PAMarriedResidencySourcesSchema} from './pa-married-residency-sources.js';
 import {PAMarriedPaymentSourcesSchema} from './pa-married-payment-sources.js';
 import {PAOrdinaryReturnFactsSchema} from './pa-ordinary-return-facts.js';
@@ -18,6 +19,7 @@ const wage=z.object({originalIndex:z.number().int().nullable(),sourceTaxYear:yea
 export const PAMarriedOrdinarySourcesSchema=z.object({sourceTaxYear:year,sourceReference:z.string(),sourceFactsConfirmed:answer,originalFederalSources:original,filingMode:z.enum(['','J','M']),owners:z.array(person),wages:z.array(wage),
  residencySources:PAMarriedResidencySourcesSchema.optional(),
  paymentSources:PAMarriedPaymentSourcesSchema.optional(),
+ priorYearHistory:PAMarriedPriorHistorySchema.optional(),
  dependentChildren:PAOrdinaryReturnFactsSchema.shape.filing.shape.dependentChildren.optional(),allDependentSourcesReviewedConfirmed:answer.optional(),
  care:PAOrdinaryReturnCompletionSourcesSchema.shape.care.extend({payerAssignments:z.array(z.object({sourceReference:z.string(),accountHolder:owner}).strict())}).strict().optional(),
  coverage:z.object({sourceReference:z.string(),allOtherIncomeClassesKnownNoneConfirmed:answer,allEmployeeExpensesAndOtherDeductionsKnownNoneConfirmed:answer,allOtherStateTaxesKnownNoneConfirmed:answer,allRestrictedCreditsKnownNoneConfirmed:answer,allCareExpensesAndEmployerBenefitsKnownNoneConfirmed:answer,allNrkStatementsKnownNoneConfirmed:answer,allUseTaxPurchasesKnownNoneConfirmed:answer,allAgencyReliefKnownNoneConfirmed:answer,allDependentSourcesKnownNoneConfirmed:answer,localJurisdictions:z.array(z.object({name:z.string(),sourceReference:z.string(),separateReturnRequired:answer}).strict())}).strict(),
