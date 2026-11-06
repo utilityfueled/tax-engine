@@ -1,4 +1,5 @@
 // Spec: spec/state/oh-reciprocal-native-browser.yaml. Actual originals; no post-origin storage writes.
+import { nativeControlTag } from './helpers/native-control-snapshot';
 import {expect,test,type Locator,type Page,type TestInfo} from '@playwright/test';
 import {execFileSync} from 'node:child_process';
 import {readFile,writeFile} from 'node:fs/promises';
@@ -7,7 +8,7 @@ import {buildSectionRoute,type GuidedFlowState} from '../src/lib/guided-intervie
 import type {OhioReciprocalWagesDraft} from '../src/lib/guided-oh-reciprocal-wages';
 import {reciprocalBrowserCases,reciprocalNativeBrowserFixture,reciprocalBrowserDocumentFields,reciprocalBrowserPayrollFields,requiredReciprocalBrowser as required,reciprocalBrowserConfirm,reciprocalBrowserReference,reciprocalBrowserOriginalId,reciprocalBrowserRevisedId,type ReciprocalBrowserCase} from '../../../tests/fixtures/oh-reciprocal-native-browser';
 function control(page:Page,label:string):Locator{return page.locator('label').filter({has:page.getByText(label,{exact:true})}).locator('input,select');}
-async function enter(page:Page,label:string,value:string){const field=control(page,label);await expect(field).toHaveCount(1);if(await field.evaluate(n=>n.tagName)==='SELECT')await field.selectOption(value);else{await field.fill(value);await field.press('Tab');}}
+async function enter(page:Page,label:string,value:string){const field=control(page,label);const tagName=await nativeControlTag(field);if(tagName==='SELECT')await field.selectOption(value);else{await field.fill(value);await field.press('Tab');}}
 function normalizePrivacyText(text:string){return text.replace(/[\u200b\u00ad]/g,'').trim().replace(/\s+/g,' ');}
 async function expectPrivateValuesAbsent(scope:Locator,values:readonly string[]){let observed='';await expect.poll(async()=>{const text=await scope.textContent();if(text===null)return['missing scope text'];observed=normalizePrivacyText(text);return values.filter(value=>observed.includes(normalizePrivacyText(value)));}).toEqual([]);for(const value of values)expect(observed).not.toContain(normalizePrivacyText(value));}
 async function clickProgress(page:Page,name:RegExp){const target=page.locator('.guided-progress-step').filter({hasText:name});await target.evaluate(node=>node.scrollIntoView({block:'center',inline:'center'}));await target.click();}

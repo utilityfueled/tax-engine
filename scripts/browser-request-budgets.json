@@ -549,7 +549,8 @@
     "apps/web/tests/guided-vehicle-refinancing.spec.ts": "cf0915a79c9811c10c366fe4b6034413840f5c895f1a2777d31ac3e11291efb1",
     "apps/web/tests/guided-wagering-expenses.spec.ts": "10192142a79120ce84a0ae5ad0134d3319001f0710b242359add40fe44b9e0d8",
     "apps/web/tests/help.spec.ts": "61cfa7c774aa6e96b6490f7f2de6f5b8f57e9094c5bce77eee604a020bfd6274",
-    "apps/web/tests/helpers/oh-resident-credit-browser.ts": "1e3b7c2bb9de400a4e2382ead6cbf48cd6b6122dc831a701f028454d86a77d27",
+    "apps/web/tests/helpers/native-control-snapshot.ts": "32f9e54c0af82befbfc2f64d230f29448ef71ce40e1b31955c2730e4c2abfa30",
+    "apps/web/tests/helpers/oh-resident-credit-browser.ts": "a70192aad91262d79fa68e0c851344fe9277198d200f85c37766db50803f392b",
     "apps/web/tests/helpers/pa-married-review-inspection.ts": "96505b1b359d765aeb12059a6567a40a2457e2680de897261648203a9c9ab0b8",
     "apps/web/tests/helpers/rrta-paper-review-fixture.ts": "d232480e24ebd3b8d14f9a1c475087149d0ecf8124b080891ec6596064d72409",
     "apps/web/tests/helpers/rrta-paper-review-privacy.py": "765ec80ec85a4c1e70fe1269e961abbd204bb4e3df531c704074e97adb3e006e",
@@ -573,19 +574,19 @@
     "apps/web/tests/nonitemized-allowable-carry.spec.ts": "773d240c9c36e8fa67641c6abc40c151e215525565c3b2c844af405731812950",
     "apps/web/tests/nonitemized-charity.spec.ts": "f92935fafb3ea8e0a2faec532425d942f7dc2cdc197e1136cccd2e81a1e1c88b",
     "apps/web/tests/oh-2026-school-native.spec.ts": "5ece43d0a270c76e7764a6da3606b3c19ffdf426869963f20f057a4b74403a5c",
-    "apps/web/tests/oh-business-native.spec.ts": "bcf82f4f4f09152e8d61af7cf7ebc9460fc12c4ab0b9beeff23be55828949e56",
-    "apps/web/tests/oh-business-part-year-native.spec.ts": "d8229c7fc2777381283f080b6093326e37874b8218cb7ab4156819bfd57cd366",
-    "apps/web/tests/oh-reciprocal-native.spec.ts": "c6d2afe90c48e2b1c565d0218c1cc533f63e72033fd162b118057e7489689b32",
+    "apps/web/tests/oh-business-native.spec.ts": "f2fd8513b115935a140efb26f4729d550c5f63a58385b07ad593e87e3545957e",
+    "apps/web/tests/oh-business-part-year-native.spec.ts": "1b289ea42c57f108f810d84c8993e452380cbdf738c6f015e5dfe2526fbc1760",
+    "apps/web/tests/oh-reciprocal-native.spec.ts": "fbabb235a1803f1487e2f4db0e61fe8cba43c06dcf649d52da9598910626366b",
     "apps/web/tests/oh-resident-credit-native.spec.ts": "a63c81e7604477a2bbdb0f4e7bc340d407f2d9f67f4a4995f15e28b304b7582d",
     "apps/web/tests/oh-school-district-native-geometry.spec.ts": "1d4347a190f740b5dee4af113c52b2dc5457ffe32da1c9bc9f5930c60d2b2070",
     "apps/web/tests/oh-school-district-native.spec.ts": "333113c448f6dca3246f157b202e4946bcfdac867298fddc70e4bf9b89cd64ed",
-    "apps/web/tests/oh-school-district-part-year-native.spec.ts": "5dab20f2eed9e737fe1d4fff75cf12dcb81b4926e6b9a41bc7b75af989abe239",
+    "apps/web/tests/oh-school-district-part-year-native.spec.ts": "3b23e50ffa61e4fe5307e9134f8fda8bffa0baec1bf1977a1d2d183e77c0cf5b",
     "apps/web/tests/pa-married-native.spec.ts": "1b26eeb3e440311d37967124e21c1826b48f4e7f7fb4ddbc47478a7920f0ed0c",
-    "apps/web/tests/pa-married-payment-native.spec.ts": "ca928d6961f51795d3c0783eb4e9348eb4bf58cbde69ff56164d3bf83f247347",
+    "apps/web/tests/pa-married-payment-native.spec.ts": "e451ac03af5712073ffd344565d9b73f80cdc7b99aa3aed07a4f8fd4c8fe6f1a",
     "apps/web/tests/pa-mi-native-history.spec.ts": "c775255187bd24cc188ea80dd6d58bcec0e6961fb39a8b216f47972fb0f20d6f",
     "apps/web/tests/pa-ordinary-care-native.spec.ts": "bb1646bfd9b4d753f1f5d14bccac8c84aaa8ceb43d6648832543d47cb0bac349",
-    "apps/web/tests/pa-royalty-sources.spec.ts": "8ccd02d2bbf27724e9959d2123dc15512969acd5889f3c3dcfd6ebd9462ba706",
-    "apps/web/tests/passenger-native-source-collector.spec.ts": "164caf2b98fb50bf7237176cfb9fd20f0fbfa35657bc5e8994ba0c094d30029e",
+    "apps/web/tests/pa-royalty-sources.spec.ts": "e4b1bfe81cd3d41cfbcdd6e8fe807c0005982875736531fde6ba4f7a7a1e9d90",
+    "apps/web/tests/passenger-native-source-collector.spec.ts": "fda1a652cadca53600ce997c69a13b0d13332b9f19c10f897fbd2c5061285dcf",
     "apps/web/tests/payments-section.spec.ts": "b47f7733c91a62c6109903f066061c113e1f0b3c9d00ebd43a494f7d445733a7",
     "apps/web/tests/prior-qbi-ordinary.spec.ts": "ceeb361ae06e9c7828591ecad79dcbcff0f11418a893214ebba69f4bb5c18661",
     "apps/web/tests/progress-navigation.spec.ts": "a44458a7ffea4244582ac30ae20395e1f5a5c4104311955c215e678aa471b7a6",
@@ -3457,10 +3458,10 @@
         "self-employment-income-analysis": 0
       },
       "requestSourceLines": [
-        47,
-        50,
-        74,
-        75
+        48,
+        51,
+        75,
+        76
       ],
       "reviewBasis": "Reviewed fixed actual download action and helper invocation sites; expected400 filing POSTs included; conservative per-file bound applies to every registered case",
       "skippedTitles": []
@@ -3474,8 +3475,8 @@
         "self-employment-income-analysis": 0
       },
       "requestSourceLines": [
-        142,
-        155
+        143,
+        156
       ],
       "reviewBasis": "Reviewed fixed actual download action and helper invocation sites; expected400 filing POSTs included; conservative per-file bound applies to every registered case",
       "skippedTitles": []
@@ -3489,10 +3490,10 @@
         "self-employment-income-analysis": 0
       },
       "requestSourceLines": [
-        46,
-        51,
-        76,
-        77
+        47,
+        52,
+        77,
+        78
       ],
       "reviewBasis": "Reviewed fixed actual download action and helper invocation sites; expected400 filing POSTs included; conservative per-file bound applies to every registered case",
       "skippedTitles": []
@@ -3546,9 +3547,9 @@
         "self-employment-income-analysis": 0
       },
       "requestSourceLines": [
-        184,
-        195,
-        196
+        185,
+        196,
+        197
       ],
       "reviewBasis": "Reviewed fixed actual download action and helper invocation sites; expected400 filing POSTs included; conservative per-file bound applies to every registered case",
       "skippedTitles": []

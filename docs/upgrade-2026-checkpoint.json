@@ -21955,5 +21955,35 @@
     "filingEnabled": false,
     "taxYear2026ExportEnabled": false,
     "overallUpgradeComplete": false
+  },
+  "nov06NativeControlSnapshot": {
+    "status": "PASS_FINITE_MAIN_SOURCE_AND_ACTUAL_LOCAL_BROWSER",
+    "sourceReview": "nov06-browser-enter-snapshot-root-review/v2/review.json",
+    "sourcePins": 5427,
+    "browser": {
+      "status": "PASS",
+      "error": null,
+      "cleanup": true,
+      "batchesCompleted": 2,
+      "caseCount": 24,
+      "failed": 0,
+      "skipped": 0
+    },
+    "closure": {
+      "ownedServerPid": 66050,
+      "external": false,
+      "closed": true
+    },
+    "exit": {
+      "exitCode": 0,
+      "elapsedSeconds": 339.22126441594446,
+      "sourceDrift": [],
+      "directChildClosed": true
+    },
+    "sourceHashCount": 1822,
+    "contracts": 153,
+    "collection": 590,
+    "containerQualified": false,
+    "precedingCommit": "7a562763"
   }
 }

@@ -1,4 +1,5 @@
 // Spec: spec/state/guided-pa-royalty-sources.yaml.
+import { nativeControlTag } from './helpers/native-control-snapshot';
 import {expect,test,type Page} from '@playwright/test';
 import {nativeMIRoyaltyFixture,nativeMICorrectionEntries} from '../../../tests/fixtures/guided-pa-royalty-native';
 import {buildSectionRoute,type GuidedFlowState} from '../src/lib/guided-interview-flow';
@@ -10,8 +11,8 @@ const w2={employerName:'Fictional royalty employer',employerEin:'12-3456789',acc
  box10DependentCareBenefits:'0',box12CodeW:'0',stateTaxReporting:'none'};
 function control(page:Page,label:string){return page.getByRole('textbox',{name:label,exact:true}).or(page.getByRole('combobox',{name:label,exact:true})).or(page.getByRole('spinbutton',{name:label,exact:true}));}
 async function enter(page:Page,label:string,value:string){
- const field=control(page,label);await expect(field).toHaveCount(1);
- if(await field.evaluate(node=>node.tagName)==='SELECT')await field.selectOption(value);
+ const field=control(page,label);const tagName=await nativeControlTag(field);
+ if(tagName==='SELECT')await field.selectOption(value);
  else{await field.fill(value);await field.press('Tab');}
 }
 async function savedState(page:Page,id:string):Promise<GuidedFlowState>{return page.evaluate(id=>JSON.parse(localStorage.getItem(`tax-engine.guided-flow-state.v1:${id}`)??'null')as GuidedFlowState,id);}

@@ -8832,6 +8832,26 @@
       ]
     },
     {
+      "key": "federal/native-control-snapshot",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "Installed Playwright 1.64.1 Locator and expect.poll implementation; exact source pins in private verification evidence",
+      "specPath": "spec/browser/native-control-snapshot.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/navigation-scroll-boundary",
       "jurisdiction": "federal",
       "taxYear": 2025,

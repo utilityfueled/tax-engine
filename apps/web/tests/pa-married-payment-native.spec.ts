@@ -1,4 +1,5 @@
 // Spec: spec/state/pa-married-payment-native-browser.yaml. No target source injection after entry.
+import { nativeControlTag } from './helpers/native-control-snapshot';
 import {expect,test,type Page,type TestInfo} from '@playwright/test';
 import {paMarriedPaymentNativeBrowserFixture} from '../../../tests/fixtures/pa-married-payment-native-browser';
 import {buildSectionRoute,type GuidedFlowState} from '../src/lib/guided-interview-flow';
@@ -9,7 +10,7 @@ import {calculatePAMarriedOrdinaryReturn} from '../../../src/engine/state/pa-mar
 
 function required<T>(value:T|null|undefined):T{if(value===null||value===undefined)throw Error('Explicit actual synthetic source required');return value;}
 function control(page:Page,label:string){return page.getByRole('textbox',{name:label,exact:true}).or(page.getByRole('combobox',{name:label,exact:true}));}
-async function enter(page:Page,label:string,value:string){const field=control(page,label);await expect(field).toHaveCount(1);if(await field.evaluate(node=>node.tagName)==='SELECT')await field.selectOption(value);else{await field.fill(value);await field.press('Tab');}}
+async function enter(page:Page,label:string,value:string){const field=control(page,label);const tagName=await nativeControlTag(field);if(tagName==='SELECT')await field.selectOption(value);else{await field.fill(value);await field.press('Tab');}}
 async function saved(page:Page,id:string):Promise<GuidedFlowState>{return page.evaluate(id=>JSON.parse(localStorage.getItem(`tax-engine.guided-flow-state.v1:${id}`)??'null'),id);}
 function source(state:GuidedFlowState){return required(state.sectionData['state-return']?.paMarriedOrdinarySources);}
 async function assertResults(page:Page,state:GuidedFlowState){

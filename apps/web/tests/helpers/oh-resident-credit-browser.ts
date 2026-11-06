@@ -1,4 +1,5 @@
 /** Spec: state/oh-resident-credit-native-browser.yaml. Fictional originals; no calculated RC seed. */
+import { nativeControlTag } from './native-control-snapshot';
 import { expect, type Locator, type Page, type TestInfo } from '@playwright/test';
 import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
@@ -31,8 +32,8 @@ export function control(page: Page, label: string): Locator {
 }
 export async function enter(page: Page, label: string, value: string) {
   const field = control(page, label);
-  await expect(field).toHaveCount(1);
-  if (await field.evaluate(node => node.tagName) === 'SELECT') await field.selectOption(value);
+  const tagName = await nativeControlTag(field);
+  if (tagName === 'SELECT') await field.selectOption(value);
   else { await field.fill(value); await field.press('Tab'); }
 }
 export async function saved(page: Page, id: string): Promise<GuidedFlowState> {

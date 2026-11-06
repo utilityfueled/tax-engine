@@ -3532,3 +3532,8 @@ global/remote/runtime checks and external qualification remain open.
 ### November6: separate native railroad paper originals
 
 Actual2025 paper year/reference/Box12B-N absence and confirmation are now separate from payroll custody. The workspace prepares the existing opaque context against current originals before redaction. Spec-first RED,120focused tests/all static checks and4actual desktop/mobile recovery journeys pass with unchanged limits; independent2PDF/32page/96printed-line review passes. The bounded typed privacy inspector preserves every marker and hidden-string/graph check while distinguishing parsed coordinate substrings. See [the package ledger](upgrade-2026-rrta-paper-native-work.md). Filing/final2026, qualified human review and final-artifact/distribution/staging gates remain open.
+
+
+### November6: current native control inspection
+
+Eight test helpers now share a read-only exact-one control snapshot, preserving real actions and all existing limits. Main25 focused controls/types3/spec/inventory/lint/audit1822+153 and590-case collection parity pass. Actual24 desktop/mobile affected cases pass30s/2workers/0retry/0skip, all source pins stable and owned server closed. See [the verification ledger](upgrade-2026-native-control-snapshot-work.md). The previous container22 timeouts require a fresh actual run; other qualification gates remain open. Railroad paper7a562763 is pushed.

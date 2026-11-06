@@ -1,4 +1,5 @@
 // Spec: spec/federal/passenger-native-source-collector-browser.yaml. No post-entry proof injection.
+import { nativeControlTag } from './helpers/native-control-snapshot';
 import {expect,test,type Page} from '@playwright/test';
 import {passengerNativeFixture} from '../../../tests/fixtures/passenger-native';
 import {buildSectionRoute,type GuidedFlowState} from '../src/lib/guided-interview-flow';
@@ -12,7 +13,7 @@ function required<T>(value:T|null|undefined):T{if(value===null||value===undefine
 async function saved(page:Page,id:string):Promise<GuidedFlowState>{return page.evaluate(id=>JSON.parse(localStorage.getItem(`tax-engine.guided-flow-state.v1:${id}`)??'null'),id);}
 function draft(state:GuidedFlowState){return required(required(state.sectionData['income-self-employment']?.businessFacts).passengerSources);}
 function labelControl(page:Page,label:string){return page.locator('label').getByText(label,{exact:true}).locator('..').locator('input,select');}
-async function enterControl(field:ReturnType<Page['locator']>,value:string){await expect(field).toHaveCount(1);if(await field.evaluate(n=>n.tagName)==='SELECT')await field.selectOption(value);else{await field.fill(value);await field.press('Tab');}}
+async function enterControl(field:ReturnType<Page['locator']>,value:string){const tagName=await nativeControlTag(field);if(tagName==='SELECT')await field.selectOption(value);else{await field.fill(value);await field.press('Tab');}}
 function leaves(value:unknown,path:string[]=[]):Array<[string,unknown]>{return value!==null&&typeof value==='object'?Object.entries(value).flatMap(([key,child])=>leaves(child,[...path,key])):[[path.join('.'),value]];}
 const protectedRequest=/^\/api\/(?:workspace\/filled-return|provider(?:\/.*)?|business-expense-analysis|self-employment-income-analysis)\/?$/u;
 for(const {width,bonus,profit,deduction} of [{width:1280,bonus:false,profit:'3775',deduction:'9225'},{width:390,bonus:true,profit:'4775',deduction:'15225'}] as const){

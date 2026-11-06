@@ -1,4 +1,5 @@
 // Spec: spec/state/oh-school-district-part-year-native-browser.yaml. Source-first actual native originals.
+import { nativeControlTag } from './helpers/native-control-snapshot';
 import {expect,test,type Page,type Locator,type TestInfo} from '@playwright/test';
 import {readFile,writeFile} from 'node:fs/promises';
 import {execFileSync} from 'node:child_process';
@@ -13,7 +14,7 @@ const paperDisclosure='Experimental SD 100 and school withholding review PDFs co
 const parentConfirm='Confirm actual Ohio residency sources',paymentConfirm='Confirm actual Ohio payment sources',headerConfirm='Confirm actual Ohio resident return header sources';
 function required<T>(v:T|null|undefined):T{if(v==null)throw Error('Actual supplied PY school source required');return v;}
 function control(page:Page,label:string){const span=page.locator('label').getByText(label,{exact:true});return span.locator('..').locator('input,select');}
-async function enter(page:Page,label:string,value:string){const field=control(page,label);await Promise.all([expect(field).toHaveCount(1),expect(page.locator('label').getByText(label,{exact:true}).locator('..').getByText(label,{exact:true})).toHaveCount(1)]);if(await field.evaluate(n=>n.tagName)==='SELECT')await field.selectOption(value);else{await field.fill(value);await field.press('Tab');}}
+async function enter(page:Page,label:string,value:string){const field=control(page,label);const [tagName]=await Promise.all([nativeControlTag(field),expect(page.locator('label').getByText(label,{exact:true}).locator('..').getByText(label,{exact:true})).toHaveCount(1)]);if(tagName==='SELECT')await field.selectOption(value);else{await field.fill(value);await field.press('Tab');}}
 async function fields(page:Page,rows:readonly(readonly[string,string])[]){for(const[label,value]of rows)await enter(page,label,value);}
 async function saved(page:Page,id:string):Promise<GuidedFlowState>{return required(await page.evaluate(id=>{const raw=localStorage.getItem(`tax-engine.guided-flow-state.v1:${id}`);return raw?JSON.parse(raw)as GuidedFlowState:null;},id));}
 async function stateData(page:Page,id:string){return required((await saved(page,id)).sectionData['state-return']);}
