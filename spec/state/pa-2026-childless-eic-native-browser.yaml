@@ -1,0 +1,31 @@
+form: "PA-2026-Childless-EIC-Native-Browser"
+fullName: "Actual native complete no-EIC-child source lifecycle, without a combined2026 calculation"
+taxYear: 2026
+reference: "https://www.irs.gov/pub/irs-drop/rp-25-32.pdf"
+notes: |
+  Operational browser contract for the separately reviewed source model/method.
+  No new tax interpretation or calculated native2026 preview. Two prospective
+  cases, desktop1280/mobile390, normal30s/2workers/0retry, no timeout overrides.
+lines:
+  - line: "original-lifecycle"
+    description: "Target facts originate only through visible native controls"
+    formula: |
+      Seed unrelated current2026 household/W2/residency/ordinary completion once;
+      never seed child draft/captured originals/review/confirmation. Actual source
+      capture while unknown and confirmation before recapture must refuse.
+      Enter year/reference/two explicit reviewed-none answers through native
+      controls. Capture, separately child-confirm, separately parent-confirm.
+      Compare exact owner/federal/residency/review snapshots against current
+      saved originals. Save/reload/reopen exact. Reference edit invalidates both,
+      preserves snapshots, and requires recapture/child/parent reconfirmation.
+    testRef: "apps/web/tests/pa-2026-childless-eic-native.spec.ts::captures confirms edits and reopens actual child sources while2026 output stays gated"
+  - line: "privacy-gates"
+    description: "Source lifecycle remains local and does not qualify public2026 output"
+    formula: |
+      Fullfederal and review/filing guards refuse2026; visible advanced2026
+      unsupported state remains and no PDF/download occurs. All four protected
+      request scopes exactly zero. All observed URL/body raw and up to three
+      decoded layers refuse actual source references, owner identifiers, original
+      name/address census, full snapshots and password. Geometry bounded at both
+      widths, no page/console errors. No API interception or target result seed.
+    testRef: "apps/web/tests/pa-2026-childless-eic-native.spec.ts::captures confirms edits and reopens actual child sources while2026 output stays gated"

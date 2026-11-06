@@ -3635,3 +3635,11 @@ and actual image558/27/5 remains unqualified. Sixphase recovery and immutable
 SBOM/scan binding pass;182matches/81IDs remain unchanged/open. No30smanaged
 global or imageprivacy verdict is inferred. See [the runtime ledger](upgrade-2026-6e15-runtime-evidence.md)
 and [remaining external actions](upgrade-2026-external-actions.md).
+# November6: actual PA2026 child-inventory source lifecycle
+
+Two desktop/mobile journeys pass at30s with zero retries through native entry,
+capture, separate confirmations, edit invalidation and reopen. Seven scoped
+checks pass; four action buttons receive the existing larger button style after
+screenshot review, followed by three passing checks and viewed final layouts.
+No target facts are seeded and2026 output stays gated. See [the browser ledger](upgrade-2026-pa-2026-childless-eic-browser-work.md).
+Final combined/runtime, hosted/native, human and final-form gates remain open.
