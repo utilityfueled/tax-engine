@@ -23,8 +23,10 @@ Source-only diagnosis continues. Both distribution qualification gates stay open
 The separately reviewed [PA field batch](upgrade-2026-pa40-field-batch-work.md)
 and [RRTA name verdict reuse](upgrade-2026-rrta-name-verdict-work.md) are included
 in the passing 4ee5 checks. Earlier source-specific results below remain historical.
-New tax endpoint packages are still private and under review, with their original
-failed oracles and harness attempts retained; no adoption is implied here.
+The [complete COD loss-pool endpoint](upgrade-2026-cod-full-pool-exhaustion-work.md)
+is adopted with 93 affected passes and three independent controls. Later tax
+source changes require a new integrated run. Other endpoint work remains private;
+original failed oracles and harness attempts are retained.
 
 Fresh [official Next advisory metadata](upgrade-2026-next-1645-security-work.md)
 now resolves the seven affected/patched-range contradictions: installed16.4.5

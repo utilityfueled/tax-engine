@@ -15,6 +15,8 @@ export interface CodNolVintageReduction {
   sourceId: string; lossTaxYear: number; originalLoss: Decimal;
   beforeReduction: Decimal; currentTaxUse: Decimal; modifiedAbsorption: Decimal; modifiedAvailableBeforeReduction: Decimal;
   attributeReduction: Decimal; expiredAfterReduction: Decimal; remainingCarryforward: Decimal;
+  /** Portion of a complete108 pool reduction already absent from modified carry. */
+  modifiedAbsorptionOverlap?: Decimal;
   charitableComparison?: { modifiedAbsorption: Decimal; beforeReduction: Decimal; expiredAfterReduction: Decimal; remainingCarryforward: Decimal };
   section1411OriginalLoss?: Decimal; section1411RemainingCarryforward?: Decimal;
 }
@@ -193,6 +195,8 @@ export function calculateCodNolReduction(input: CodNolSourceInput, context?: {
     || Boolean(input.form172) !== Boolean(currentOrigin) || (currentOrigin && (currentOrigin.taxYear !== year || !currentOrigin.calculationComplete))) {
     throw new Error('COD requires completed canonical regular and alternative current-tax and original-loss contexts');
   }
+  const completePoolEndpoints: boolean[] = [];
+  let usedCompletePoolEndpoint = false;
   const ledger = (alternative: boolean): CodNolLedgerReduction => {
     const priorRows = alternative ? prior.alternativeTax.vintages : prior.vintages;
     const sources = alternative ? input.netOperatingLoss?.alternativeTax?.vintages : input.netOperatingLoss?.vintages;
@@ -282,18 +286,37 @@ export function calculateCodNolReduction(input: CodNolSourceInput, context?: {
       throw new Error('COD charitable comparison aggregate does not reconcile with the complete original vector');
     }
     if (reportedExcludedAmount.gt(beforeReduction) && !input.form982AttributeSources) throw new Error('COD NOL is insufficient in an independent tax system; later-attribute reduction requires its separate actual worksheet');
+    // Spec: spec/federal/cod-full-pool-exhaustion.yaml. This terminal proof is
+    // independent of a partial108/172 allocation: no NOL attribute survives.
+    // Both independent systems must prove this same endpoint before return.
+    const completePoolEndpoint = !title11 && !currentOrigin && !input.form982AttributeSources
+      && !comparison && !charity && rows.length === 1 && rows[0].lossTaxYear >= 2018
+      && sourceExcludedAmount.eq(reportedExcludedAmount) && reportedExcludedAmount.gt(0)
+      && reportedExcludedAmount.eq(beforeReduction)
+      && rows[0].modifiedAbsorption.gte(rows[0].currentTaxUse);
+    completePoolEndpoints.push(completePoolEndpoint);
     let remaining = reportedExcludedAmount;
     const vintages = rows.map((row): CodNolVintageReduction => {
-      // The same determined108 vector must fit both modified vectors. No
-      // invented exhaustion priority or post-COD charitable revival is used.
+      // The determined108 vector fits each modified vector unless the entire
+      // independent current-tax pools are proven exhausted. No partial
+      // exhaustion priority or post-COD charitable revival is invented.
       const attributeReduction = Decimal.min(row.beforeReduction, remaining);
-      if (attributeReduction.gt(row.modifiedAvailableBeforeReduction)) {
+      const exceedsModifiedCarry = attributeReduction.gt(row.modifiedAvailableBeforeReduction);
+      if (exceedsModifiedCarry && !completePoolEndpoint) {
         throw new Error('COD modified-loss exhaustion requires its separate current-use and absorption composition method');
       }
       if (row.comparison && attributeReduction.gt(row.comparison.beforeReduction)) {
         throw new Error('COD charitable comparison exhaustion requires its separate after-tax composition method');
       }
-      const afterReduction = row.modifiedAvailableBeforeReduction.minus(attributeReduction);
+      // B=U+R and B=A+M at complete exhaustion; R=M+(A-U). The overlap
+      // reconciles two measurements of the same loss, never another use.
+      const modifiedAbsorptionOverlap = exceedsModifiedCarry
+        ? attributeReduction.minus(row.modifiedAvailableBeforeReduction) : undefined;
+      if (modifiedAbsorptionOverlap && !modifiedAbsorptionOverlap.eq(row.modifiedAbsorption.minus(row.currentTaxUse))) {
+        throw new Error('COD complete-pool overlap must conserve its independent current and modified measurements');
+      }
+      if (exceedsModifiedCarry) usedCompletePoolEndpoint = true;
+      const afterReduction = exceedsModifiedCarry ? d('0') : row.modifiedAvailableBeforeReduction.minus(attributeReduction);
       const expires = row.lossTaxYear < 2018 && year === row.lossTaxYear + 20;
       const expiredAfterReduction = expires ? afterReduction : d('0'), remainingCarryforward = expires ? d('0') : afterReduction;
       const comparedAfter = row.comparison?.beforeReduction.minus(attributeReduction);
@@ -305,9 +328,12 @@ export function calculateCodNolReduction(input: CodNolSourceInput, context?: {
       const section1411RemainingCarryforward = row.section1411OriginalLoss === undefined ? undefined
         : row.originalLoss.isZero() ? d('0') : remainingCarryforward.times(row.section1411OriginalLoss).div(row.originalLoss);
       audit.record(alternative ? 'Alternative COD NOL Worksheet' : 'Regular COD NOL Worksheet', row.sourceId, 'After-tax NOL attribute reduction', attributeReduction,
-        'Current loss first, then oldest current-tax carryover; the same reduction fits the separate modified residual before expiry', {
+        exceedsModifiedCarry
+          ? 'Entire current-tax NOL pool exhausted; modified residual plus already-absorbed overlap equals the108 reduction; no attribute survives'
+          : 'Current loss first, then oldest current-tax carryover; the same reduction fits the separate modified residual before expiry', {
           'Origin year': String(row.lossTaxYear), 'Original loss': row.originalLoss, 'Before reduction': row.beforeReduction,
           'Actual current-tax use': row.currentTaxUse, 'Modified absorption': row.modifiedAbsorption,
+          ...(modifiedAbsorptionOverlap === undefined ? {} : { 'Already-absorbed modified overlap': modifiedAbsorptionOverlap }),
           'Modified available before reduction': row.modifiedAvailableBeforeReduction,
           'Expired after reduction': expiredAfterReduction, 'Remaining carry': remainingCarryforward,
           ...(charitableComparison ? { 'Comparison modified absorption': charitableComparison.modifiedAbsorption,
@@ -319,6 +345,7 @@ export function calculateCodNolReduction(input: CodNolSourceInput, context?: {
       return { sourceId: row.sourceId, lossTaxYear: row.lossTaxYear, originalLoss: row.originalLoss, beforeReduction: row.beforeReduction,
         currentTaxUse: row.currentTaxUse, modifiedAbsorption: row.modifiedAbsorption, modifiedAvailableBeforeReduction: row.modifiedAvailableBeforeReduction,
         attributeReduction, expiredAfterReduction, remainingCarryforward,
+        ...(modifiedAbsorptionOverlap === undefined ? {} : { modifiedAbsorptionOverlap }),
         ...(charitableComparison ? { charitableComparison } : {}),
         ...(row.section1411OriginalLoss === undefined ? {} : { section1411OriginalLoss: row.section1411OriginalLoss, section1411RemainingCarryforward }) };
     });
@@ -345,6 +372,9 @@ export function calculateCodNolReduction(input: CodNolSourceInput, context?: {
       expiredAfterReduction, carryforward, vintages, ...(charitableComparison ? { charitableComparison } : {}) };
   };
   const regular = ledger(false), alternativeTax = ledger(true);
+  if (usedCompletePoolEndpoint && !completePoolEndpoints.every(value => value)) {
+    throw new Error('COD complete-pool exhaustion requires exact full current-tax pools in both independent tax systems');
+  }
   audit.record('Form 982', '6', 'Excluded debt applied to regular net operating losses', regular.reduction,
     'After current tax; current-year NOL first, then prior vintages in origin-year order', { 'Remaining regular NOL': regular.carryforward, 'Remaining alternative NOL': alternativeTax.carryforward });
   return { ...base, calculationComplete: true, regular, alternativeTax, lines: audit.getLines() };

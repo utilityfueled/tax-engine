@@ -1,0 +1,60 @@
+form: "COD complete current-tax NOL pool exhaustion"
+fullName: "Exact complete independent section108 pools with no surviving loss attribute"
+taxYear: 2025
+irsReference: "https://uscode.house.gov/us/usc/119-118/t26/s108/"
+sources:
+  - url: "https://uscode.house.gov/us/usc/119-118/t26/s108/"
+    section: "108(b)(2)(A), (b)(3)(A), (b)(4): current-year tax first, then dollar-for-dollar NOL attribute reduction"
+    retrieved: "2026-11-06"
+  - url: "https://www.govinfo.gov/content/pkg/CFR-2025-title26-vol2/pdf/CFR-2025-title26-vol2-sec1-108-7.pdf"
+    section: "1.108-7(a)-(b): ordered attribute reduction after taking carryovers into account for current tax"
+    retrieved: "2026-11-06"
+  - url: "https://www.irs.gov/publications/p4681"
+    section: "All other tax attributes item1: carryover to2025 after taxable-income use, earliest loss first, never below zero"
+    retrieved: "2026-11-06"
+  - url: "https://uscode.house.gov/us/usc/119-118/t26/s172/"
+    section: "172(a)(2), (b)(2), (d)(2): separate current deduction and modified-income carry absorption"
+    retrieved: "2026-11-06"
+  - url: "https://uscode.house.gov/us/usc/119-118/t26/s1017/"
+    section: "1017(a): basis reduction applies only to a portion assigned to basis under108; this endpoint assigns the entire exclusion to NOL"
+    retrieved: "2026-11-06"
+notes: |
+  Derived terminal-attribute endpoint, not a published combined numerical example.
+  Continuing individual insolvency, no title11, current origin or later-attribute
+  packet, one post2017 prior original per independent regular/AMT ledger, no
+  charitable history/comparison. Existing complete original sources remain mandatory.
+  Let B be original opening available, U actual current-tax use, A modified
+  absorption, P=B-U and M=B-A. Admit a crossing ONLY when the reported exclusion
+  equals the entire P in BOTH ledgers and A>=U. Then108 reduces the entire actual
+  remaining NOL attribute to zero. No surviving attribute can carry forward.
+  The overlap O=P-M=A-U records the part of the108 reduction already absent from
+  the independent modified carry. It is not another tax deduction, reduction,
+  transfer to a later attribute, expiry or reclaimed loss. Separate identities:
+  B=U+P; B=A+M; P=M+O; finalNOL=0. No generic max(carry-COD,0), partial overshoot,
+  vintage migration or charitable revival is established. Existing sufficient
+  capacity method stays unchanged. Source-only and public2026 gates stay unchanged.
+lines:
+  - line: "complete"
+    description: "Entire independent current-tax pools vanish after current tax"
+    formula: "Wages100000 less capital loss3000 gives97000; standard15750; regular use .8*(97000-15750)=65000. Regular opening77700 gives P12700; modified .8*(100000-15750)=67400 gives M10300/O2400. Independent AMT opening100000; current use .9*97000=87300 gives P12700; modified .9*100000=90000 gives M10000/O2700. COD12700 exhausts both P; each carry0 and reduction12700; current deductions/tax unchanged."
+    testRef: "tests/engine/federal-cod-full-pool-exhaustion.test.ts::exhausts exact independent current-tax pools without reviving modified carry"
+  - line: "boundaries"
+    description: "Do not extrapolate a complete-pool endpoint to partial reductions"
+    formula: "COD12699 remains refused where it crosses either modified pool;12701 exceeds original capacity and remains refused. One differently sized pool, multiple vintages, charitable comparison, missing originals or public2026 remain outside the endpoint."
+    testRef: "tests/engine/federal-cod-full-pool-exhaustion.test.ts::retains partial overshoot and incomplete independent-pool refusals"
+  - line: "both-systems"
+    description: "One exhausted system does not establish the other endpoint"
+    formula: "AMT opening110000 leaves current-tax pool22700 and modified20000; COD12700 fits modified capacity but does not exhaust that attribute. Retain refusal when regular requires the terminal endpoint."
+    testRef: "tests/engine/federal-cod-full-pool-exhaustion.test.ts::requires the complete-pool endpoint in the other tax system even when that modified carry is sufficient"
+  - line: "whole-source"
+    description: "Retain cents and multi-original unresolved boundaries"
+    formula: "This endpoint requires exact excluded source dollars equal reported dollars;12700.49 is outside this finite proof even though reported12700. Multiple regular originals cannot use the one-original endpoint."
+    testRef: "tests/engine/federal-cod-full-pool-exhaustion.test.ts::does not infer an endpoint from rounded source cents or multiple original vintages"
+  - line: "existing-gates"
+    description: "No charitable, stale-original or future readiness widening"
+    formula: "Retain51393 charitable comparison exhaustion, differing debt original refusal and full2026 readiness denial. The future negative first supplies internally consistent2026 source years/discharge date and2025 adjusted-through carry originals, so an unrelated stale-year guard is not mislabeled readiness."
+    testRef: "tests/engine/federal-cod-full-pool-exhaustion.test.ts::retains charitable exhaustion and original source and current-year gates"
+  - line: "source-only"
+    description: "No source-only closing or detached derived-vector trust"
+    formula: "Source-only calculation remains incomplete; a changed absorbed vector without corresponding closing values fails the existing conservation guards."
+    testRef: "tests/engine/federal-cod-full-pool-exhaustion.test.ts::validates original-source facts without inventing a completed endpoint or accepting forged absorption"

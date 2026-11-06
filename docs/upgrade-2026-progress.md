@@ -3829,3 +3829,14 @@ only; the retained mfr8 High/Medium severity conflict, missed old deadline, imag
 advisories, runtime exposure and independent human review remain open. No package
 installation, new audit, risk acceptance or readiness claim. See
 [the security ledger](upgrade-2026-next-1645-security-work.md).
+
+
+### November 6: complete independent COD NOL-pool endpoint
+
+A complete, single-origin remaining NOL attribute can now be exhausted after
+current tax when the exact excluded amount consumes both independent regular
+and AMT pools. The modified/current-use overlap is reconciliation only; partial,
+charitable, multi-vintage and unproved cases remain refused. Main genuine guard
+RED precedes93/10PASS, types3/spec/inventory/strictlint/build; distinct3controls
+pass. Human review and full successor qualification remain open. See
+[the tax ledger](upgrade-2026-cod-full-pool-exhaustion-work.md).

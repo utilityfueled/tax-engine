@@ -22902,5 +22902,28 @@
     "releaseReady": false,
     "receiptSHA256": "3946a855f42038b4437e0d446c288aa42d7512bd78b8428f788061bef0c0a5a1",
     "independentManifestSHA256": "914d399c89f9d3e4633fb898eee155d9935e0a98f5689c67da443973675defc7"
+  },
+  "nov06CODFullPoolEndpoint": {
+    "baseCommit": "7be69147",
+    "runtimeSHA256": "ab6f8697c737e11e15e47fc0794b00caa64b30d5a39baf329425dcbc282ce88c",
+    "mainRED": {
+      "genuineGuardFailures": 1,
+      "messageSpecificityFailures": 1,
+      "passed": 4
+    },
+    "mainAffectedPassed": 93,
+    "mainAffectedFiles": 10,
+    "independentControlsPassed": 3,
+    "specLines": 8638,
+    "newInventoryStatus": "unsupported",
+    "productTypes": true,
+    "contractTypes": true,
+    "webTypes": true,
+    "ownedLintWarnings": 0,
+    "engineBuild": true,
+    "fullIntegratedSuccessorPending": true,
+    "humanTaxReviewPending": true,
+    "releaseReady": false,
+    "ledger": "docs/upgrade-2026-cod-full-pool-exhaustion-work.md"
   }
 }

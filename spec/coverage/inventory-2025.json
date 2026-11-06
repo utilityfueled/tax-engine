@@ -815,6 +815,26 @@
       ]
     },
     {
+      "key": "federal/cod-full-pool-exhaustion",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "https://uscode.house.gov/us/usc/119-118/t26/s108/",
+      "specPath": "spec/federal/cod-full-pool-exhaustion.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/cod-nol-reductions",
       "jurisdiction": "federal",
       "taxYear": 2025,
