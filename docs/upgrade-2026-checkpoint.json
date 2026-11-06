@@ -21812,5 +21812,33 @@
     "filingQualified": false,
     "humanTaxReviewComplete": false,
     "document": "docs/upgrade-2026-guided-refund-payment-years-work.md"
+  },
+  "nov05ActualNativeCapacityDiagnostic": {
+    "status": "PASS_CAPACITY_OBSERVED_OWNED_STOPPED_ROUTE_RESTORED_ONLY",
+    "actualManifestSha256": "fc7408cf5b7b233cc48f149f454f1128939351ae6074625efb876edbffce8863",
+    "sourceManifestSha256": "c75fa38aad9b22873cceb192e6b0b58f5f7a3aac3f38ece718408aa2577dbe73",
+    "independentReviewManifestSha256": "c8c9f5ff199e3b66bb079831540fd7514e868de8a19fa724fcd425b30ea01a8a",
+    "elapsedSeconds": 12.44904358300846,
+    "boundedCommands": 28,
+    "newStarts": 1,
+    "newStops": 1,
+    "cumulativeReservedStarts": 3,
+    "cumulativeReservedStops": 3,
+    "guestCapacity": {
+      "observedAtUnix": 1793931074.503189,
+      "bootId": "f6aba6ee-efc7-4ded-a511-94e68625fe09",
+      "freeGuestBytes": 76500168704,
+      "freeMemoryBytes": 7599566848,
+      "architecture": "aarch64",
+      "cpus": 2,
+      "uid": 501,
+      "hostMounts": "NONE",
+      "guestPodmanVersion": "podman version 6.0.2"
+    },
+    "ownedStoppedProcessesAbsentRouteRestored": true,
+    "diagnosticApprovalConsumed": true,
+    "runtimeQualified": false,
+    "fullControllerReady": false,
+    "document": "docs/upgrade-2026-native-capacity-diagnostic-work.md"
   }
 }
