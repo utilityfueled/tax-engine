@@ -22454,6 +22454,73 @@
     "retries": 0,
     "skips": 0,
     "monetaryCalculationChanged": false,
-    "finalRuntimeQualified": false
+    "finalRuntimeQualified": false,
+    "commit": "cecb99444f63aca4ad8cc4411675c0fa2cf630de"
+  },
+  "nov06CecbCombinedLocalVerification": {
+    "status": "all_local_checks_and_remote_ci_managed_pass_image_fourteen_deadline_failures_pending",
+    "sourceHead": "cecb99444f63aca4ad8cc4411675c0fa2cf630de",
+    "sourceTree": "94ec345bb3f5cca1fc348560fd15ba0008f80c24",
+    "ledger": "docs/upgrade-2026-cecb-local-verification.md",
+    "localChecksPassed": 12,
+    "unitPassed": 27143,
+    "unitFiles": 1952,
+    "coveragePassed": 27143,
+    "coverageFiles": 1952,
+    "branchCoveragePercent": "87.67",
+    "unchangedBranchGatePercent": 85,
+    "browserPassed": 587,
+    "browserOriginalHostedSkips": 5,
+    "browserDeclaredCases": 592,
+    "browserFailures": 0,
+    "browserRetries": 0,
+    "browserConfiguredWorkers": 2,
+    "normalCollectionTimeoutMS": 90000,
+    "actualTimeoutCounts": {
+      "90000": 579,
+      "180000": 11,
+      "240000": 2
+    },
+    "strict30000GlobalClaim": false,
+    "sourceRegularPins": 5467,
+    "sourceLiteralLinks": 6,
+    "sourceDrift": [],
+    "ownedServerPID": 78204,
+    "ownedServerClosed": true,
+    "lintErrors": 0,
+    "lintWarnings": 11873,
+    "localSyntheticPostgresConfigured": true,
+    "runnerProviderCallsAuthorized": false,
+    "distinctClosureManifestSHA256": "2def44f1fc692a7efdfa6d0f1ed171292b182dad311d624a20dd4f492830ae31",
+    "remoteCI": 42202025531,
+    "remoteCISixJobsPassed": true,
+    "remoteWeb": 42202025336,
+    "remoteWebQualified": false,
+    "remoteWebContainerBrowserStepFailed": true,
+    "nativeRuntimeQualified": false,
+    "hostedRuntimeQualified": false,
+    "filingEnabled": false,
+    "modelPromotion": false,
+    "remoteManagedBrowser": {
+      "passed": 587,
+      "failed": 0,
+      "originalSkips": 5
+    },
+    "remoteContainerBrowser": {
+      "passed": 573,
+      "failed": 14,
+      "originalSkips": 5,
+      "case30000DeadlineFailures": 14,
+      "inspector4000Failures": 0,
+      "rrtaPaperCasesPassed": 2,
+      "causeEstablished": false,
+      "artifactReviewComplete": false
+    },
+    "pdfPrerequisites": {
+      "python": "3.14.6",
+      "pypdf": "6.10.0",
+      "hashPinnedRequirements": true,
+      "retainedOfficialSamples": 15
+    }
   }
 }

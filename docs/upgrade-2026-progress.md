@@ -3653,3 +3653,18 @@ main non-browser checks pass. An initial sandbox bind denial starts no cases;
 the permission-enabled follow-up passes both actual journeys at30s/0retries.
 See [the diagnostics ledger](upgrade-2026-rrta-phase-diagnostics-work.md).
 No Linux timeout cause or final qualification is claimed; combined checks follow.
+
+
+### November 6: current combined local verification
+
+Exact cecb9944 passes all twelve local checks: 27,143 unit and coverage tests
+across 1,952 files, 87.67% branches against the unchanged 85% gate, and 587 browser
+passes with five original hosted skips. Distinct reconciliation verifies all
+592 one-attempt results, retained 90/180/240-second deadlines, owned-server
+closure and 5,467 regular source files plus six links. Lint retains zero errors
+and 11,873 warnings. Remote CI also passes all six jobs; the separate Web
+workflow closes with managed 587/0/5 and container 573/14/5; the 14 unchanged
+30-second deadline failures remain under trace review. See
+[the exact-source verification ledger](upgrade-2026-cecb-local-verification.md).
+Hosted/native execution, human reviews, final forms, advisory ownership and AI
+settlement remain open. No readiness gate is changed.
