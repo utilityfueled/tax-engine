@@ -15563,6 +15563,30 @@
       ]
     },
     {
+      "key": "state/pa-2026-childless-eic-dependency",
+      "jurisdiction": "state",
+      "taxYear": 2026,
+      "sourceAuthority": "https://www.irs.gov/pub/irs-drop/rp-25-32.pdf",
+      "specPath": "spec/state/pa-2026-childless-eic-dependency.yaml",
+      "enginePath": "src/engine/state/pa-2026-ordinary-dependencies.ts",
+      "packetPath": null,
+      "implementationTestRefs": [
+        "tests/engine/state/pa-2026-childless-eic.test.ts::PA2026 childless draft composes literal FY PY NR taxes",
+        "tests/engine/state/pa-2026-childless-eic.test.ts::PA2026 childless draft preserves old cohorts and public gates"
+      ],
+      "implementationNote": "The shared helper validates the complete original no-EIC-child inventory and a conservative raw-and-reported >=19540 finite zero-credit proof for the separately typed PA2026 ordinary draft. Native capture is separate from combined calculation; no positive EIC, final2026 physical output, filing or human qualification.",
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "state/pa-2026-ordinary-dependencies",
       "jurisdiction": "state",
       "taxYear": null,
@@ -15589,16 +15613,20 @@
       "taxYear": 2026,
       "sourceAuthority": "https://www.legis.state.pa.us/WU01/LI/LI/US/HTM/1971/0/0002..HTM#19710002u302s",
       "specPath": "spec/state/pa-2026-ordinary-draft.yaml",
-      "enginePath": null,
+      "enginePath": "src/engine/state/pa-ordinary-return.ts",
       "packetPath": null,
+      "implementationTestRefs": [
+        "tests/engine/state/pa-2026-ordinary-draft.test.ts::PA2026 draft composes all actual residency sources without full federal admission",
+        "tests/engine/state/pa-2026-ordinary-draft.test.ts::PA2026 draft retains actual public federal ordinary and PDF gates"
+      ],
+      "implementationNote": "The exported calculatePA2026OrdinaryDraft in this shared composer invokes the source-bound dependency helper and existing PA arithmetic. This finite FY/PY/NR state-only draft does not establish full federal admission, final2026 physical output, filing or human review.",
       "specExists": true,
-      "engineExists": false,
+      "engineExists": true,
       "packetGenerationExists": false,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
         "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]

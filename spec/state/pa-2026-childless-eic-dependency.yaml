@@ -1,0 +1,54 @@
+form: "PA-2026-Childless-EIC-Dependency"
+fullName: "Complete original no-qualifying-child source inventory for the finite PA2026 ordinary draft"
+taxYear: 2026
+reference: "https://www.irs.gov/pub/irs-drop/rp-25-32.pdf"
+notes: |
+  RevProc2025-32 section4.06 printed14-15: completed nonjoint zero-child EIC
+  phaseout19540; at or above the applicable amount no EIC is allowed. Current
+  Pub596(2025) Rule8 supplies source-completeness context only, not2026 amounts.
+  Existing PA rate/SP/WPTC laws and the PA2026 wage-only method stay unchanged.
+  Finite single living owner, no candidates and no claimed dependents only.
+  No positive EIC, child/tiebreaker decision, filing or final2026 admission.
+lines:
+  - line: "inventory"
+    description: "Separate complete actual child inventory, never an inferred empty dependent list"
+    formula: |
+      Optional completion packet requires actual2026 year/reference/owner, explicit
+      complete review of ALL potential EIC children including unclaimed children,
+      explicit no qualifying children, and an explicitly retained empty candidate
+      inventory. Empty taxpayer dependents alone prove nothing. Unknown/false,
+      nonempty candidate/dependent, wrong owner/year, extra unknown keys and
+      current-original disagreement deny even when income exceeds the old cutoff.
+    testRef: "tests/engine/state/pa-2026-childless-eic.test.ts::PA2026 childless draft requires complete original child sources"
+  - line: "zero-proof"
+    description: "Independent exact-dollar completed-phaseout proof within the current wage-only cohort"
+    formula: |
+      Sum actual W2 box1 wages with Decimal before a single IRS roundDollar.
+      Raw sum AND reported wage AGI must be at least19540 for the complete
+      confirmed no-child packet.19539.49/.50/.99 stay unsupported;19540/19540.01
+      prove zero. Require existing no-adjustment/no-other-income/no-care/benefits,
+      withholding coverage and all FY/PY/NR source guards. No final EIC table is
+      guessed. Without this packet preserve the old exact >70244 method.
+      Retain known zero PA-source wages; do not infer missing original amounts.
+    testRef: "tests/engine/state/pa-2026-childless-eic.test.ts::PA2026 childless draft composes literal FY PY NR taxes"
+  - line: "native-currentness"
+    description: "Actual native controls capture and explicitly confirm unchanged originals"
+    formula: |
+      Enter actual source reference/year and review answers in native PA completion
+      controls. Capture preserves answers/unknowns and binds current complete
+      canonical originals without confirmation. Separate explicit confirmation
+      validates the captured owner/year/entire original snapshot; reads never
+      refresh it. Child edits invalidate child and parent confirmation, preserving
+      captured originals. Parent confirmation never confirms the child. Saved
+      replay is exact; original/source/reference/election edits require actual
+      recapture/reconfirmation and parent confirmation. No client trusted flag.
+    testRef: "tests/apps/web/pa-2026-childless-eic-native.test.tsx::PA2026 native child inventory captures confirms and retains saved originals"
+  - line: "gates"
+    description: "Separately typed draft only; unchanged public and historical gates"
+    formula: |
+      Existing high-income no-packet output and2025 composer remain unchanged;
+      full federal/default ordinary/guided combined preview/prepared PDF/filing
+      guards stay closed for2026. Source-bound no-child capture is not a combined
+      preview result, human tax qualification or Form8862 recertification rule.
+      Projection/audit omit actual identities and documentary references.
+    testRef: "tests/engine/state/pa-2026-childless-eic.test.ts::PA2026 childless draft preserves old cohorts and public gates"

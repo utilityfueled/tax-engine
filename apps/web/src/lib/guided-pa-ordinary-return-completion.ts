@@ -1,3 +1,5 @@
+import {PA2026EicChildInventorySchema,type PA2026EicChildInventory} from '@/models/pa-2026-eic-child-inventory';
+import {snapshotPA2026EicChildReview,validatePA2026EicChildInventory} from '@/engine/state/pa-2026-ordinary-dependencies';
 import {buildGuidedPACareSources} from './guided-pa-care-sources';
 import {buildGuidedPAOIDPendingOHAccount} from './guided-pa-oid-pending-oh-account';
 import {PAOrdinaryReturnFactsSchema} from '@/models/pa-ordinary-return-facts';
@@ -36,6 +38,7 @@ export function emptyGuidedPAOrdinaryReturnCompletionSources():Sources{return {
 export function updateGuidedPAOrdinaryReturnCompletionSources(data:Sources,patch:Partial<Sources>):Sources{return {...data,...patch,sourceFactsConfirmed:null};}
 function records(rows:Array<Record<string,unknown>>,kind:PACompletionOriginalRecord['recordKind']):void{for(const raw of rows){const parsed=PACompletionOriginalRecordSchema.safeParse(raw);if(!parsed.success)return fail('retain reported original as typed document metadata requiring its source method');const r=parsed.data;if(r.recordKind!==kind)fail('original metadata record kind does not match its source group');ref(r.sourceReference);ref(r.documentName);ref(r.issuerName);if(r.originalAvailableConfirmed!==true)fail('confirm actual original document availability before source confirmation');if(r.sourceTaxYear!==null&&(r.sourceTaxYear<1900||r.sourceTaxYear>9999))fail('actual original metadata year is invalid');if(r.recordDate)date(r.recordDate);if(r.recipientTin&&!/^\d{9}$/.test(ssn(r.recipientTin)))fail('actual original recipient identifier is invalid');}}
 function actualSources(input:TaxYearInput,data:Sources):void{
+ if(data.eitcChildInventory!==undefined)buildGuidedPA2026EicChildInventory(input,data.eitcChildInventory);
  const t=input.taxpayer.primary,y=input.taxpayer.taxYear;
  if(![2025,2026].includes(y)||data.sourceTaxYear!==y)fail('actual source year is unknown or differs from the current return');
  if(!t.firstName.trim()||!t.lastName.trim()||!/^\d{9}$/.test(ssn(t.ssn)))fail('actual current taxpayer owner is unknown');ref(data.sourceReference);
@@ -81,3 +84,16 @@ export function confirmGuidedPAOrdinaryReturnCompletionSources(input:TaxYearInpu
 export function buildGuidedPAOrdinaryReturnCompletionSources(input:TaxYearInput,draft:unknown,ordinaryFacts?:unknown):PAOrdinaryReturnCompletionSources{const {data}=canonicalSources(input,draft,ordinaryFacts);actualSources(input,data);if(data.sourceFactsConfirmed!==true)fail('confirm actual sources after the last edit');const t=input.taxpayer.primary;if(stable(data.owner)!==stable({firstName:t.firstName,lastName:t.lastName,ssn:t.ssn}))fail('current actual owner changed; reconfirm original sources');if(stable(data.originalFederalSources)!==stable(snapshotPAOrdinaryReturnCompletionOriginals(input)))fail('current original sources changed; retained original snapshot is stale');return data;}
 /** Explicit method boundaries only; this is never a calculation-readiness result. */
 export function paOrdinaryReturnCompletionMethodWarnings(data:Sources):string[]{const warnings:string[]=[];if(data.otherStateTaxes.status==='actual_payments')warnings.push('other-state-tax-credit-source-method-required');if(data.restrictedCredits.status==='actual_awards')warnings.push('restricted-credit-source-method-required');if(data.care.status==='actual_expenses'&&data.care.careSources?.sourceFactsConfirmed!==true)warnings.push('care-credit-source-method-required');if(data.nrk1.status==='actual_statements')warnings.push('nrk1-credit-source-method-required');if(data.lateFilingRelief.status==='actual_relief')warnings.push('late-filing-relief-source-method-required');warnings.push(data.local.status==='unknown'?'local-obligation-sources-unknown':'separate-local-return-required');return warnings;}
+
+/** Separate documentary child inventory: no factual defaults or parent confirmation. */
+export function emptyGuidedPA2026EicChildInventory():PA2026EicChildInventory{return {sourceTaxYear:null,sourceReference:'',sourceFactsConfirmed:null,allPotentialQualifyingChildrenReviewedConfirmed:null,noQualifyingEitcChildrenConfirmed:null,candidateChildren:[],owner:{firstName:'',lastName:'',ssn:''},originalFederalSources:{},originalPAResidencySources:{},capturedReview:{}};}
+export function updateGuidedPA2026EicChildInventory(data:PA2026EicChildInventory,patch:Partial<PA2026EicChildInventory>):PA2026EicChildInventory{return {...data,...patch,sourceFactsConfirmed:null};}
+/** Explicit capture copies current originals and entered review facts only; unknown answers remain unknown. */
+export function captureGuidedPA2026EicChildInventory(input:TaxYearInput,raw:unknown):PA2026EicChildInventory{
+ const data=PA2026EicChildInventorySchema.parse(raw),t=input.taxpayer.primary;
+ if(input.taxpayer.taxYear!==2026||input.taxpayer.filingStatus!=='single'||input.taxpayer.spouse)fail('no-child source capture requires actual2026 single originals');
+ return {...data,sourceFactsConfirmed:null,owner:{firstName:t.firstName,lastName:t.lastName,ssn:t.ssn},originalFederalSources:snapshotPAOrdinaryReturnCompletionOriginals(input),originalPAResidencySources:structuredClone(input.paResidencySources??{}),capturedReview:snapshotPA2026EicChildReview(data)};
+}
+/** Confirmation never recaptures edited originals, guesses an answer or confirms the parent. */
+export function confirmGuidedPA2026EicChildInventory(input:TaxYearInput,raw:unknown):PA2026EicChildInventory{return {...validatePA2026EicChildInventory(input,raw,false),sourceFactsConfirmed:true};}
+export function buildGuidedPA2026EicChildInventory(input:TaxYearInput,raw:unknown):PA2026EicChildInventory{return validatePA2026EicChildInventory(input,raw);}

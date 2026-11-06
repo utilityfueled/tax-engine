@@ -1639,6 +1639,24 @@
       "note": "Links the transient complete-material equality implementation and its own-spec compatibility/source-integrity regressions. Existing source guards and durable SHA256 commitments remain required. Compatibility hashes are unchanged-source oracles, not independent tax-law qualification; this entry supplies no packet or filing readiness."
     },
     {
+      "key": "state/pa-2026-childless-eic-dependency",
+      "enginePath": "src/engine/state/pa-2026-ordinary-dependencies.ts",
+      "testRefs": [
+        "tests/engine/state/pa-2026-childless-eic.test.ts::PA2026 childless draft composes literal FY PY NR taxes",
+        "tests/engine/state/pa-2026-childless-eic.test.ts::PA2026 childless draft preserves old cohorts and public gates"
+      ],
+      "note": "The shared helper validates the complete original no-EIC-child inventory and a conservative raw-and-reported >=19540 finite zero-credit proof for the separately typed PA2026 ordinary draft. Native capture is separate from combined calculation; no positive EIC, final2026 physical output, filing or human qualification."
+    },
+    {
+      "key": "state/pa-2026-ordinary-draft",
+      "enginePath": "src/engine/state/pa-ordinary-return.ts",
+      "testRefs": [
+        "tests/engine/state/pa-2026-ordinary-draft.test.ts::PA2026 draft composes all actual residency sources without full federal admission",
+        "tests/engine/state/pa-2026-ordinary-draft.test.ts::PA2026 draft retains actual public federal ordinary and PDF gates"
+      ],
+      "note": "The exported calculatePA2026OrdinaryDraft in this shared composer invokes the source-bound dependency helper and existing PA arithmetic. This finite FY/PY/NR state-only draft does not establish full federal admission, final2026 physical output, filing or human review."
+    },
+    {
       "key": "state/pa-actual-care-official-review",
       "enginePath": "src/engine/state/pa-married-ordinary-return.ts",
       "packetPath": "src/pdf/mappings/2025/fill-pa-care-official-review.ts",

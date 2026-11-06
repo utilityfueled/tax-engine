@@ -22289,5 +22289,29 @@
     "successorRuntimeQualified": false,
     "ledger": "docs/upgrade-2026-b1-runtime-evidence.md",
     "advisoryRegister": "docs/upgrade-2026-image-advisories-20261106.json"
+  },
+  "nov06PA2026ChildlessEIC": {
+    "status": "implemented_finite_state_only_draft_pending_global_browser_human_final_forms",
+    "sourceBase": "6e15b4fea86eafc2f2b0bb19aed692448ad37e1e",
+    "ledger": "docs/upgrade-2026-pa-2026-childless-eic-work.md",
+    "specFirstActualRed": true,
+    "authorFocusedPassed": 138,
+    "distinctFocusedPassed": 152,
+    "mainUnitPassed": 27126,
+    "mainUnitFiles": 1951,
+    "mainUnitSourceDrift": [],
+    "mainSpecLines": 8586,
+    "mainLintErrors": 0,
+    "mainLintWarnings": 11873,
+    "inventoryInitialFailurePreserved": true,
+    "inventoryFollowupPassed": true,
+    "inventoryRows": 927,
+    "supportedRowsUnchanged": 68,
+    "sourceAuditHashes": 1832,
+    "requestContractsUnchanged": 153,
+    "actualNewBrowser": "pending",
+    "nativeCalculatedPreview": false,
+    "filingEnabled": false,
+    "humanApproval": false
   }
 }

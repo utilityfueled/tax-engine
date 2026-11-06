@@ -3603,3 +3603,14 @@ none reports a fixed version. Owner acceptance and overdue recheck remain open.
 See [the exact-source runtime ledger](upgrade-2026-b1-runtime-evidence.md) and
 [current advisory register](upgrade-2026-image-advisories-20261106.json).
 RRTA successor fb37032b is separately committed and pushed; it needs fresh runs.
+
+
+### November6: actual childless PA2026 dependency sources
+
+The separate wage-only draft accepts complete original-bound no-EIC-child
+sources at the19540 completed phaseout, using Decimal aggregation and explicit
+capture/confirmation. Author138/distinct152 focused tests and main27,126/1,951
+pass; three types/builds2/spec8586/lint and reviewed inventory follow-up pass.
+All68supported rows,153request contracts, combined2026/filing guards remain.
+Native collection/save/replay is distinct from a calculated preview; actual
+desktop/mobile browser follow-up continues separately. See [the state ledger](upgrade-2026-pa-2026-childless-eic-work.md).
