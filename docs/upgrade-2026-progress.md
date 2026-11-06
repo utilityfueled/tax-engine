@@ -3738,3 +3738,8 @@ success and final combined qualification remain open.
 ### November 6: finite tuition and loan-interest composition
 
 The [education method](upgrade-2026-education-mixed-interest-work.md) now handles one complete nonbinding annual cash tuition/interest composition using exact Decimal ratios. The genuine failing tests precede implementation; independent source review and current88 tests in15files pass, with18 spec references and inventory checks. The original PDF findings remain preserved and require the separately reviewed security/export changes. Rule versions2025.224 and2026.222 remain unqualified for filing; broader allocations and human/final-form gates remain open.
+
+
+### November 6: annual-interest review binds the full result
+
+The [security change](upgrade-2026-education-review-result-binding-work.md) rejects a changed complete calculation before template access, preserving exact original and identifier-redacted review results. Genuine desired failures and independent25-control review are retained; current99 tests in15files,3 spec references and inventory checks pass. Implementation commit `fb938c8e` remains separate from the tax calculation. This adds no final-form or human-review qualification.

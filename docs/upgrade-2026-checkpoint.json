@@ -22695,5 +22695,15 @@
     "originalPdfArtifacts": "held-unmodified",
     "securityAndExport": "separate-dependent-packages",
     "ledger": "docs/upgrade-2026-education-mixed-interest-work.md"
+  },
+  "nov06EducationReviewResultIntegrity": {
+    "status": "bounded-agent-review-and-local-checks-passed",
+    "commit": "fb938c8e",
+    "testsPassed": 99,
+    "testFiles": 15,
+    "specReferences": 3,
+    "independentControls": 25,
+    "humanSecurityReview": "not-supplied",
+    "ledger": "docs/upgrade-2026-education-review-result-binding-work.md"
   }
 }
