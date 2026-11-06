@@ -1,6 +1,6 @@
 // Spec: spec/state/oh-reciprocal-native-browser.yaml. Actual originals; no post-origin storage writes.
 import { nativeControlTag } from './helpers/native-control-snapshot';
-import {expect,test,type Locator,type Page,type TestInfo} from '@playwright/test';
+import {expect,test,type Locator,type Page,type TestInfo} from '../scripts/browser-cpu-diagnostics/fixture';
 import {execFileSync} from 'node:child_process';
 import {readFile,writeFile} from 'node:fs/promises';
 import {createHash} from 'node:crypto';

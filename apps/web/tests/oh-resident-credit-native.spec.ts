@@ -1,5 +1,5 @@
 /** Spec: spec/state/oh-resident-credit-native-browser.yaml. Actual native sources, not injected RC cash. */
-import { expect, test } from '@playwright/test';
+import { expect, test } from '../scripts/browser-cpu-diagnostics/fixture';
 import { writeFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import {

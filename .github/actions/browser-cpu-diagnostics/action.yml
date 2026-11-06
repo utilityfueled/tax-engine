@@ -1,0 +1,26 @@
+name: Optional sampled JavaScript diagnostics
+description: Nonqualifying opt-in observations for fourteen original local container failures
+inputs:
+  enabled:
+    description: Explicit opt-in; ordinary workflows remain inert
+    required: false
+    default: 'false'
+  original-outcome:
+    description: Original unchanged container qualification step outcome
+    required: true
+  qualification-directory:
+    description: Optional exact rate-window directory basename; otherwise require one matching failed complete run
+    required: false
+    default: ''
+runs:
+  using: composite
+  steps:
+    - name: Collect bounded nonqualifying sampled JavaScript observations
+      if: ${{ inputs.enabled == 'true' && inputs.original-outcome == 'failure' }}
+      shell: bash
+      env:
+        TAX_BROWSER_CPU_DIAGNOSTICS: '1'
+        TAX_BROWSER_CPU_ORIGINAL_OUTCOME: ${{ inputs.original-outcome }}
+        TAX_BROWSER_CPU_QUALIFICATION_DIRECTORY: ${{ inputs.qualification-directory }}
+        PLAYWRIGHT_BASE_URL: http://127.0.0.1:3109
+      run: node scripts/browser-cpu-diagnostics/runner.mjs

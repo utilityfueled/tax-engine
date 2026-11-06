@@ -1,6 +1,6 @@
 // Spec: spec/state/oh-business-part-year-native-browser.yaml. Source-first NEW212 actual-parent journey.
 import { nativeControlTag } from './helpers/native-control-snapshot';
-import {expect,test,type Page,type Locator,type TestInfo} from '@playwright/test';
+import {expect,test,type Page,type Locator,type TestInfo} from '../scripts/browser-cpu-diagnostics/fixture';
 import {readFile,writeFile} from 'node:fs/promises';
 import {execFileSync} from 'node:child_process';
 import {createHash} from 'node:crypto';

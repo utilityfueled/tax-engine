@@ -22603,5 +22603,25 @@
     "qualifiedHumanInterpretation": false,
     "existingUnsupportedBranchImplemented": false,
     "releaseReady": false
+  },
+  "nov06OptionalBrowserCpuDiagnostic": {
+    "status": "SOURCE_REVIEWED_DEFAULT_OFF_RUNTIME_PENDING",
+    "authorTree": "2f5887a4555febf3b4627b3ba22a374d59494cf3",
+    "authorManifestSHA256": "f7587167280d4f946346d5f47495d89ed1da7b27d8454d172f513d9f9ed358f4",
+    "independentManifestSHA256": "5819483aeaf416e879ce5c81f99bc7c59c1c22a9207a160efaaf72966a4c9e4b",
+    "independentControlsPassed": 16,
+    "mainFocusedAndInventoryPassed": 98,
+    "specReferences": 8603,
+    "fullCollection": 592,
+    "selectedCases": 14,
+    "targetDeadlineMS": 30000,
+    "workers": 2,
+    "retries": 0,
+    "originalPrivacyRedRetained": true,
+    "initialInventoryStaleFailureRetained": true,
+    "originalQualificationFailureSuperseded": false,
+    "actualDiagnosticRuntimeExecuted": false,
+    "fullNewSourceVerificationPending": true,
+    "ledger": "docs/upgrade-2026-browser-cpu-diagnostics-work.md"
   }
 }

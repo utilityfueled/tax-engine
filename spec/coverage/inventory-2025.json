@@ -9213,6 +9213,26 @@
       ]
     },
     {
+      "key": "federal/optional-cpu-diagnostics",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "Chrome DevTools Protocol Profiler.Profile / ProfileNode; Playwright TestCase.id, automatic fixtures and --test-list",
+      "specPath": "spec/browser/optional-cpu-diagnostics.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/partner-basis-schedule",
       "jurisdiction": "federal",
       "taxYear": 2025,

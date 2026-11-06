@@ -4,6 +4,12 @@ on:
   push:
     branches: [main, upgrade/2026-baseline]
   workflow_dispatch:
+    inputs:
+      cpu_diagnostics:
+        description: Run bounded synthetic browser sampling after container qualification fails
+        type: boolean
+        required: false
+        default: false
   pull_request:
     branches: [main]
 
@@ -152,11 +158,29 @@ jobs:
           done
           exit 1
       - name: Browser flows against the actual runtime image
+        id: container_browser
         env:
           CANDIDATE_IMAGE_ID: ${{ steps.candidate.outputs.image_id }}
           PLAYWRIGHT_DISABLE_WEBSERVER: "true"
           PLAYWRIGHT_BASE_URL: http://127.0.0.1:3109
         run: pnpm test:web --retries=0 --timeout=30000 --trace=retain-on-failure
+      - name: Sample the fourteen retained deadline cases
+        id: browser_cpu_diagnostic
+        if: ${{ !cancelled() && github.event_name == 'workflow_dispatch' && inputs.cpu_diagnostics && steps.container_browser.outcome == 'failure' }}
+        timeout-minutes: 12
+        uses: ./.github/actions/browser-cpu-diagnostics
+        with:
+          enabled: "true"
+          original-outcome: ${{ steps.container_browser.outcome }}
+        env:
+          CANDIDATE_IMAGE_ID: ${{ steps.candidate.outputs.image_id }}
+      - name: Retain sanitized browser sampling diagnostics
+        if: ${{ !cancelled() && github.event_name == 'workflow_dispatch' && inputs.cpu_diagnostics && steps.browser_cpu_diagnostic.outcome != 'skipped' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-cpu-diagnostics
+          path: artifacts/browser-cpu-diagnostics/
+          if-no-files-found: warn
       - uses: anchore/sbom-action/download-syft@v0
         id: syft
         if: ${{ !cancelled() && steps.candidate.outcome == 'success' }}

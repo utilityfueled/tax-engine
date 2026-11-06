@@ -3703,3 +3703,7 @@ Current 1040/8995-A instructions remain 2025 and 2026 Form 8995 instructions
 remain draft. This is an unresolved internal derivation obligation; no guard is
 counted as implementation and no split is invented. See [the source decision](upgrade-2026-mixed-tips-method-decision.md).
 The profiling implementation and other qualification work continue separately.
+
+### November 6: reviewed optional browser sampling
+
+The [default-off diagnostic](upgrade-2026-browser-cpu-diagnostics-work.md) preserves all592 original contracts and strict30s deadlines on14 retained Linux failures. A genuine inventory privacy RED is corrected before runtime; distinct16 controls and current98 focused/inventory checks pass, along with types3, scoped fixture types, builds2, strict owned lint and8,603 spec references. The original stale generated inventory failure remains retained before ordinary regeneration/check success. Actual592/592/14 list-only collection launches no browser. The separate manual CI action never supersedes the original failure; full new-source verification and actual diagnostic observations remain open. No application calculation, filing/model or readiness gate changes.
