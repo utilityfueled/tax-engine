@@ -1,32 +1,47 @@
 # Current 2026 upgrade continuation
 
-Current crosswalk, November 6 UTC: PA 2026 state-only draft `b4d6f00d`,
-PA prior-history `7788a750`, Ohio earned-school
-draft `4fb4ccf2`, native control inspection `6787fa88` and railroad paper originals
-`7a562763` are committed and pushed with their separate package checks. The
-[latest complete local baseline](upgrade-2026-d510-runtime-evidence.md) binds
-`d5109917`: all twelve checks, 26,917 tests and 87.66% branch coverage pass.
-Later packages require a fresh combined run. The same baseline's remote
-self-host browser passes, while its container browser retains 22 timeouts.
-The later [24 affected native cases](upgrade-2026-native-control-snapshot-work.md)
-pass locally; that does not replace a fresh container run.
+Current crosswalk, November 6 UTC: the reviewed education composition
+`1591838e`, complete-result review binding `fb938c8e`, historical export routing
+`218512a8`, W-2 validation work reduction `ce5f8768`, and pure self-employment
+Form 8959 applicability `42d358a6` are committed and pushed separately. Each
+package passes its relevant checks and distinct agent review; the linked
+[progress ledger](upgrade-2026-progress.md) records scope and saved evidence.
+A combined current-source run remains required. No package changes filing,
+model-promotion or human-review gates.
 
-The [isolated hosted replacement](upgrade-2026-isolated-hosted-replacement-evidence.md)
-has two synthetic no-card trials and a successful baseline submission. Its
-read-only continuation connects and returns its query, then fails result validation
-and closes normally at 1,203 of 1,793 operations. All nine inspection operations
-are consumed; the exact failing predicate is unknown because raw rows/errors were
-discarded. No fault has run. A separately reviewed, explicitly authorized safe
-predicate diagnostic is needed before outage/restoration and automatic retry.
-Its deployed `fe1d1462` source is distinct from the current branch.
+The previous exact-cecb baseline passes all twelve local checks: 27,143 tests
+and 87.67% branch coverage against the unchanged 85% gate, plus 587 managed
+browser passes and five original hosted skips. Its six remote CI jobs pass.
+The actual Linux image retains 573 passes, 14 strict 30-second failures and five
+hosted skips. Image/source/SBOM/scan and six recovery-phase bindings pass
+saved-evidence reconciliation; the [runtime ledger](upgrade-2026-cecb-runtime-evidence.md)
+retains those limits. These results do not qualify the later application source.
 
-The [provider refresh](upgrade-2026-provider-refresh-20261106.md) makes no paid
-call or promotion. The [security refresh](upgrade-2026-security-refresh-20261105.md)
-retains zero registry findings and unresolved primary advisory conflicts.
-Native final-source preparation, current artifact/recovery checks, complete
-state methods, final 2026 forms, independent human tax/AI/security reviews and
-owned image advisories remain open. The execution brief still controls every
-completion criterion; the upgrade remains unqualified for release.
+The isolated hosted replacement has consumed 1,205 of 1,793 operations. The
+approved two-operation predicate diagnostic closed naturally without a signal:
+all predicates except exact statement and lock timeouts passed, but the original
+validation still failed. No successful original-ID snapshot, outage or automatic
+retry is established. A one-line fixed-options adapter candidate passes
+independent source review and replay of 13 offline serializer/strict-validator
+controls; actual deployed cause and a hosted correction remain unproved. Its
+separate two-operation recheck is being prepared, preserving all counters and
+failures. The approved third Preview build is still unconsumed; its exact-cecb
+source needs a reviewed current-source binding before execution.
+
+The approved native V13 scope covers the test VM's persistent 80→384 GiB growth
+and one fourth boot/normal-stop pair within 270 minutes. Neither resize nor boot
+has occurred. A current-source selector successor is being prepared before
+consuming that single attempt. Fresh stopped-state custody, host/guest capacity,
+cleanup and the original process/resource limits remain required.
+
+[Provider source observations](upgrade-2026-provider-refresh-20261106.md) do not
+make paid calls or qualify models. Known provider usage remains 0.26282160 USD,
+with 0.022384 USD held for unresolved settlement (combined 0.28520560 USD). No new
+API key is needed. All 81 image advisory IDs remain open and unaccepted; human
+tax, AI-case and security/privacy review, complete final 2026 forms and
+artifact-specific hosted/native qualification remain open. The
+[execution brief](upgrade-2026-execution-brief.md) retains every completion
+criterion; the upgrade is not release-ready.
 
 ## Earlier source-specific continuation records
 

@@ -96,36 +96,33 @@ The earlier remaining-Preview row now has additional exact-source evidence: READ
 
 ### November 6: current execution and remaining runtime authority
 
-Exact cecb passes all twelve local checks and six remote CI jobs. The managed
-browser passes 587 cases with five original hosted skips. The actual Linux
-image passes 573, fails fourteen original 30-second case deadlines and retains
-five original hosted skips. Both RRTA cases pass; image/source/SBOM/scan and
-six-phase recovery bindings pass distinct saved-artifact reconciliation. The
-[exact runtime ledger](upgrade-2026-cecb-runtime-evidence.md) preserves those
-limits. Trace accounting has not established a safe fix. The bounded profiling
-proposal continues independently; historical failed runs stay failed.
+The [current continuation](upgrade-2026-current-status.md) distinguishes the
+latest reviewed packages from the previous exact-cecb all-twelve-check baseline
+and retained 14 strict container failures. No agent/source-only review supplies
+independent human tax, AI-case or security/privacy approval.
 
-The isolated hosted replacement has consumed 1203 of 1793 operations and both
-original Preview build slots. Its read-only inspection closed with a validation
-HOLD; no actual outage, automatic retry or successful durable baseline follows.
-A combined current-cecb supplement awaits authorization: two fixed-predicate
-read-only diagnostic operations, one additional protected Preview build and 184
-bounded operations (186 additional, projected total 1389). The reviewed current
-source stage is ready; it needs no new API key or mailbox setup. No action under
-this supplement has occurred. Original failures, credentials and counters stay
-preserved.
+The current-cecb hosted supplement and native V13 proposal are now explicitly
+approved. The hosted two-operation diagnostic was executed once and closed
+naturally without TERM/KILL. Its original validator still fails only the exact
+statement/lock timeout predicates. The total is 1,205/1,793; old inspection and
+diagnostic allowances are consumed. No raw values were retained and no durable
+original-ID success, outage or automatic retry follows. The fixed-options
+candidate passes independent source review and 13 offline control replays; it
+needs a separately reviewed and authorized two-operation recheck. Its deployed
+cause/correction remains unproved. The approved third protected Preview build
+and fourth native boot remain unconsumed. Both exact-cecb bindings require a
+reviewed successor for the later application code before execution; existing
+credentials, safeguards, limits and failed evidence stay intact.
 
-The native current-cecb V13 controller, concrete bindings and root reviews are
-complete. Its replacement proposal awaits explicit authority for only
-`tax-native-ns-20261105` to grow persistently from 80 to 384 GiB and make one
-fourth bounded boot/normal-stop pair, sharing 270 minutes including cleanup.
-Earlier boot grants are consumed. Fresh stopped-state custody and actual
-post-boot capacity remain mandatory. No resize or boot has occurred under this
-proposal; permission to stop the default VM does not supply those new grants.
-Later documentation-only commits do not change either selected cecb source.
+No test-VM resize/boot has occurred. The native scope still requires fresh
+stopped-state custody and host/guest capacity before its persistent 80→384 GiB
+growth and single fourth boot/normal-stop pair, sharing 270 minutes including
+cleanup. Permission to stop the default VM does not supply a repeated test boot.
 
-The independent human tax, AI-case and security/privacy reviews remain
+The independent human tax, AI-case and security/privacy reviewers remain
 unassigned. Final provider settlement or authoritative cost-status for the
 0.022384 USD AI reserve, complete final 2026 forms, advisory ownership/acceptance
-and artifact-specific hosted/native qualification remain open. Passing agent
-reviews or local checks cannot supply those external facts.
+and artifact-specific hosted/native qualification remain open. The source
+research and review packets are prepared; no owner tax-math choice or new
+provider key is requested. Passing agent reviews or local checks cannot supply
+those external facts.
