@@ -1,8 +1,28 @@
 # Remaining 2026 upgrade execution checklist
 
-The [November 4 current continuation](upgrade-2026-current-status.md) reconciles
+The [November 6 current continuation](upgrade-2026-current-status.md) reconciles
 the latest source, checks, active work and external inputs. The dated entries
 below retain their original evidence boundaries.
+
+## Active continuation — November 6 UTC
+
+- [x] PA prior-history `7788a750`: 181 focused tests and all relevant package
+  checks pass; actual prior originals and separate confirmations remain required.
+- [x] Ohio earned-school draft `4fb4ccf2`, railroad paper `7a562763` and native
+  test inspection `6787fa88` are pushed with their separate evidence ledgers.
+- [x] Fresh provider documents and full/production registry audits are recorded;
+  advisory conflicts and the unresolved usage reserve remain open.
+- [ ] Finish the isolated hosted read-only continuation within its remaining two
+  inspection operations, then approved outage/restoration, automatic Stripe retry
+  and cleanup. Preserve the actual 1,201-operation HOLD and all failed attempts.
+- [ ] Complete the bounded source-derived 2026 PA ordinary draft dependency work
+  and all other remaining source methods in the execution brief.
+- [ ] Run all twelve checks on final combined source and obtain fresh remote
+  container/browser and native recovery/image evidence. Historical d510 container
+  failures are not cleared by later local selected cases.
+- [ ] Obtain final-form, qualified human tax/AI/security, exact billing and owned
+  advisory dispositions. Keep filing and model promotion disabled until their
+  authorization and evidence pass.
 
 ## Active continuation — November 2, 2026
 

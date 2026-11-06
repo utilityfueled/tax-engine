@@ -3557,3 +3557,8 @@ Full539 and production447 registry audits report zero findings. Ten official pub
 ### November6: candidate provider documents refreshed
 
 Seven official public responses return200 and16 source checks pass for current model capabilities/prices, January Gemini pricing, cache/context/regional charges and Node index. No authenticated or paid provider request occurred. Known usage0.26282160USD plus0.022384USD held reserve remains0.28520560USD; human case review, held-out repeats and exact settlement remain open. See [the provider ledger](upgrade-2026-provider-refresh-20261106.md). Promotion remains disabled.
+
+
+### November6: isolated hosted baseline and safe inspection stop
+
+The exactfe1d1462 protected Preview completes endpoint4/create11/baseline8 requests with two synthetic no-card trials. Read-only inspect stops naturally after7 attempts and returned rollback; cumulative1201/1793, no fault or inspection mutation. OriginalHOLD remains unchanged. Old emitted SQL fails6 namespace controls; actual local successor passes14, including complete combined original-row SQL and rollback absence. See [the hosted evidence ledger](upgrade-2026-isolated-hosted-replacement-evidence.md). The proposed two-operation continuation and actual outage/retry/recovery remain pending, with current-source qualification open.

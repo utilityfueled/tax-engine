@@ -1,5 +1,32 @@
 # Current 2026 upgrade continuation
 
+Current crosswalk, November 6 UTC: PA prior-history `7788a750`, Ohio earned-school
+draft `4fb4ccf2`, native control inspection `6787fa88` and railroad paper originals
+`7a562763` are committed and pushed with their separate package checks. The
+[latest complete local baseline](upgrade-2026-d510-runtime-evidence.md) binds
+`d5109917`: all twelve checks, 26,917 tests and 87.66% branch coverage pass.
+Later packages require a fresh combined run. The same baseline's remote
+self-host browser passes, while its container browser retains 22 timeouts.
+The later [24 affected native cases](upgrade-2026-native-control-snapshot-work.md)
+pass locally; that does not replace a fresh container run.
+
+The [isolated hosted replacement](upgrade-2026-isolated-hosted-replacement-evidence.md)
+has two synthetic no-card trials and a successful baseline submission. Its
+read-only inspection stops safely at 1,201 of 1,793 operations; no fault has run.
+The corrected complete SQL passes 14 real local database checks. A separately
+reviewed two-operation continuation, outage/restoration and automatic retry
+remain in progress. Its deployed `fe1d1462` source is distinct from the current branch.
+
+The [provider refresh](upgrade-2026-provider-refresh-20261106.md) makes no paid
+call or promotion. The [security refresh](upgrade-2026-security-refresh-20261105.md)
+retains zero registry findings and unresolved primary advisory conflicts.
+Native final-source preparation, current artifact/recovery checks, complete
+state methods, final 2026 forms, independent human tax/AI/security reviews and
+owned image advisories remain open. The execution brief still controls every
+completion criterion; the upgrade remains unqualified for release.
+
+## Earlier source-specific continuation records
+
 Updated November 5 UTC, 2026, on `upgrade/2026-baseline`. The latest full unit and
 coverage runs bind exact `7d93fd67`: [26,262 tests and 87.61% branch coverage pass](upgrade-2026-7d93-global-verification-work.md),
 with all 53 real PostgreSQL cases on each run and no reported skips or source drift.

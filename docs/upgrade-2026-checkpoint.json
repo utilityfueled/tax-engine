@@ -22086,5 +22086,40 @@
     "manifestSha256": "dfc485d032ba1ee4c91639ae2df9b355e9008ede17894d6d5d6773d40d2630ea",
     "ledger": "docs/upgrade-2026-provider-refresh-20261106.md",
     "precedingCommit": "5ea1266b"
+  },
+  "nov06IsolatedHostedReplacement": {
+    "status": "BASELINE_SUBMITTED_INSPECT_CLOSED_HOLD_NO_REISSUE",
+    "sourceCommit": "fe1d14620f3f93f8ef7111e01a20fdada612bab9",
+    "sourceTree": "dfe96f9fdd28f3fa768c0e180e35d428e7513e3a",
+    "endpointReturnedRequests": 4,
+    "createRequests": 11,
+    "syntheticNoCardTrials": 2,
+    "baselineRequests": 8,
+    "inspectionConsumed": 7,
+    "inspectionLimit": 9,
+    "cumulativeOperations": 1201,
+    "operationLimit": 1793,
+    "journalRows": 2122,
+    "journalSha256": "421d9f6cf01387b76072b598d7adb77c435aa5369b0f64edc48e3f4c72102321",
+    "inspectionMutationAttempts": 0,
+    "rollbackReturned": true,
+    "faultExecuted": false,
+    "uniqueHostedFailureCause": "UNKNOWN_RAW_ERROR_DISCARDED",
+    "oldSourceRealLocalProof": {
+      "namespacePassed": true,
+      "sourceQualificationFailures": 6
+    },
+    "successorRealLocalProof": {
+      "checksPassed": 14,
+      "failed": 0,
+      "localConnections": 1,
+      "hostedConnections": 0,
+      "actualCombinedSQLExecuted": true,
+      "transactionRollbackSchemaAbsent": true
+    },
+    "hostedContinuationExecuted": false,
+    "currentMainQualified": false,
+    "ledger": "docs/upgrade-2026-isolated-hosted-replacement-evidence.md",
+    "precedingCommit": "fefa9019"
   }
 }
