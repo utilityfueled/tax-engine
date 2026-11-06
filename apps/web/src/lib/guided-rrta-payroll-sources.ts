@@ -1,3 +1,4 @@
+import type {GuidedRRTAPaperDraft} from './guided-rrta-paper-sources';
 /** Native documentary handoff only. Spec: spec/federal/guided-rrta-payroll.yaml. */
 import {TaxYearInputSchema, type TaxYearInput} from '@/models/inputs';
 import {RRTAPayrollSourcesSchema} from '@/models/rrta-payroll-sources';
@@ -12,6 +13,7 @@ export interface GuidedRRTARow {
  tier1SocialSecurityCompensation:string;tier1MedicareCompensation:string;additionalMedicareTaxWithheld:string;
 }
 export interface GuidedRRTADraft {
+ paperSources?:GuidedRRTAPaperDraft;
  sourceTaxYear:string;sourceReference:string;sourceFactsConfirmed:Answer;
  allRRTASourcesIncludedConfirmed:Answer;noEmployeeRepresentativeCompensationConfirmed:Answer;noCorrectionsConfirmed:Answer;noOtherRRTATaxAdjustmentsConfirmed:Answer;noSelfEmploymentIncomeConfirmed:Answer;
  sources:GuidedRRTARow[];
@@ -21,7 +23,8 @@ export const emptyGuidedRRTARow=():GuidedRRTARow=>({sourceId:'',w2SourceId:'',ow
 export const emptyGuidedRRTA=():GuidedRRTADraft=>({sourceTaxYear:'',sourceReference:'',sourceFactsConfirmed:null,allRRTASourcesIncludedConfirmed:null,noEmployeeRepresentativeCompensationConfirmed:null,noCorrectionsConfirmed:null,noOtherRRTATaxAdjustmentsConfirmed:null,noSelfEmploymentIncomeConfirmed:null,sources:[]});
 function ordered(value:unknown):unknown{if(Array.isArray(value))return value.map(ordered);if(value!==null&&typeof value==='object')return Object.fromEntries(Object.entries(value).filter(([,v])=>v!==undefined).sort(([a],[b])=>a.localeCompare(b)).map(([k,v])=>[k,ordered(v)]));return value;}
 function exact(value:unknown){return JSON.stringify(ordered(value));}
-export function rrtaDraftValues(draft:GuidedRRTADraft){const{capturedOriginal:_original,sourceFactsConfirmed:_confirmed,...facts}=draft;return exact(facts);}
+export function rrtaPaperDraftValues(draft:GuidedRRTAPaperDraft){const{capturedOriginal:_original,sourceFactsConfirmed:_confirmation,...facts}=draft;return exact(facts);}
+export function rrtaDraftValues(draft:GuidedRRTADraft){const{capturedOriginal:_original,sourceFactsConfirmed:_confirmed,paperSources:_paper,...facts}=draft;return exact(facts);}
 export function rrtaParentValues(state:GuidedFlowState){
  const additional=state.sectionData['additional-deductions'],government=state.sectionData['income-unemployment'];
  // Only the refund collection's saved custody and group confirmation are not
@@ -33,7 +36,7 @@ export function rrtaParentValues(state:GuidedFlowState){
   'income-unemployment':government&&refund?{...government,refundRecoveries:{...refund,originalSources:undefined,originalDraft:undefined,sourceFactsConfirmed:undefined}}:government,
  }});
 }
-export function updateGuidedRRTA(previous:GuidedRRTADraft,next:GuidedRRTADraft):GuidedRRTADraft{return rrtaDraftValues(previous)===rrtaDraftValues(next)?next:{...next,sourceFactsConfirmed:null};}
+export function updateGuidedRRTA(previous:GuidedRRTADraft,next:GuidedRRTADraft):GuidedRRTADraft{return rrtaDraftValues(previous)===rrtaDraftValues(next)?next:{...next,sourceFactsConfirmed:null,...(next.paperSources?{paperSources:{...next.paperSources,sourceFactsConfirmed:null}}:{})};}
 /** Validate actual UI monetary grammar before the strict canonical handoff.
  * Saved lexical drafts and their custody snapshots remain unchanged. */
 function payrollMoney(value:string,label:string):string{
@@ -46,7 +49,7 @@ function sourcePacket(raw:unknown,draft:GuidedRRTADraft){
  const input=TaxYearInputSchema.parse(raw);
  if(input.taxpayer.taxYear!==2025||draft.sourceTaxYear!=='2025')throw Error('Native RRTA sources currently require the actual2025 return.');
  const tips=input.form4137?[input.form4137]:Object.values(input.form4137ByOwner??{}).filter(v=>v!==undefined);
- const {capturedOriginal:_saved,...facts}=draft;
+ const {capturedOriginal:_saved,paperSources:_paper,...facts}=draft;
  const packet=RRTAPayrollSourcesSchema.parse({...facts,methodVersion:'ordinary-w2-rrta-v1',sourceTaxYear:2025,sourceFactsConfirmed:true,originalTaxpayer:structuredClone(input.taxpayer),originalTipForms:tips.map(original=>({owner:original.accountHolder,original:structuredClone(original)})),sources:draft.sources.map(row=>{
   if(row.sourceTaxYear!=='2025'||!/^formW2:(0|[1-9][0-9]*)$/.test(row.w2SourceId))throw Error('Choose the actual2025 RRTA W2 source.');
   const index=Number(row.w2SourceId.slice(7));if(!Number.isSafeInteger(index)||!input.w2s[index])throw Error('Actual RRTA W2 source is missing.');

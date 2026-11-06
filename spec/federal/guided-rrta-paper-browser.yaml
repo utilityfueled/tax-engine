@@ -1,0 +1,23 @@
+form: Guided railroad paper browser lifecycle
+taxYear: 2025
+reference: "https://www.irs.gov/instructions/i8959"
+status: partial
+lines:
+  - line: "actual-paper-original-controls"
+    formula: "Desktop and mobile begin without paper facts, collect explicit original Box12 B/N absence visibly, capture and separately confirm; unknown and stale documentary evidence remains refused without confirming tax facts."
+    testRef: "apps/web/tests/rrta-paper-review-native.spec.ts::collects separate paper originals downloads real review and preserves recovery privacy and year gates"
+  - line: "actual-review-response"
+    formula: "The actual draft-bundle not-filing and experimental-draft notices remain visible with unrelated guided sections unfinished. One genuine local review POST returns200, private no-store application/pdf review headers and saved PDF bytes with flattened fields and one review marker on every page. Original-bound4137/8959 are included. Filing POST remains400. Actual printed geometry/privacy requires separately retained physical review."
+    testRef: "apps/web/tests/rrta-paper-review-native.spec.ts::collects separate paper originals downloads real review and preserves recovery privacy and year gates"
+  - line: "saved-paper-recovery-and-privacy"
+    formula: "Reload and encrypted restore retain exact actual paper originals and source custody; wrong-password restore denies; raw and decoded request surfaces exclude private originals outside review body and exclude passwords everywhere. Final2026 visible guard hides review; both owned returns delete."
+    testRef: "apps/web/tests/rrta-paper-review-native.spec.ts::collects separate paper originals downloads real review and preserves recovery privacy and year gates"
+  - line: "saved-pdf-typed-privacy"
+    formula: "Saved review bytes retain all strict raw bytes, names, dictionary keys, PDF strings/hex and literal/hex strings decoded from every stream. A bounded isolated Python child additionally validates the full object graph and typed actual page/Form content: only strictly embedded fractional cm/Tm coordinate substrings may be distinguished from identifiers; integer identifiers, identifier hits in unknown/unreferenced streams or hidden/UTF16/encoded values, unknown content operators, raw matches, malformed parsing and untrusted child output deny. Every original private marker remains checked; structural flattening and one review notice per page remain required. Child deadline4s/output64KiB and browser30s/2workers/zero retries stay unchanged."
+    testRef: "tests/pdf/rrta-saved-review-privacy.test.ts::distinguishes compressed geometry in the actual saved-review inspector"
+  - line: "saved-pdf-hidden-encoding-denials"
+    formula: "Every representative literal, hex, UTF16, nested, hidden-name, unknown and unreferenced encoded stream, integer identifier, invalid operator, raw match and uncompressed numeric collision remains denied through the actual bounded parser; each distinct case keeps the ordinary5s unit deadline."
+    testRef: "tests/pdf/rrta-saved-review-privacy.test.ts::denies hidden saved-review identifier case %s"
+  - line: "saved-pdf-child-and-derived-surface-boundary"
+    formula: "Legacy PDFLib strict derived string checks deny before any child result can admit the document; child timeout, signal, error, stderr, excessive output, malformed or inconsistent projection denies. Markers travel on stdin only; no provider environment is inherited."
+    testRef: "tests/pdf/rrta-saved-review-privacy.test.ts::rejects malformed saved PDFs and untrusted bounded child outcomes"

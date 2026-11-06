@@ -1,3 +1,5 @@
+import {prepareRRTAPayrollReview,requiresRRTAPayrollReview} from '@/pdf/rrta-payroll-review-context';
+import {readGuidedRRTAPaperSources} from './guided-rrta-paper-sources';
 import {prepareForm2210Review,requiresForm2210ScheduleAiReview,hasSavedForm2210Review,type SavedForm2210Review} from '@/pdf/form-2210-review-context.js';
 import {assertNoPAMarriedPaperExport,isPAMarriedOrdinaryReturnResult} from '@/engine/state/pa-return-result';
 import {calculatePAMarriedOrdinaryReturn} from '@/engine/state/pa-married-ordinary-return';
@@ -719,6 +721,8 @@ export async function buildWorkspaceFilledReturnDownload(
   const ohioOriginalReview = stateCode === "OH" ? prepareOhioResidencyReview(resolved.taxInput) : undefined;
   const ohioSourceOverlay = stateCode === "OH" ? buildGuidedOhioOverlay(resolved.taxInput, guidedFlowState, completeResult.taxExemptInterest) : undefined;
   const form2210Review=requiresForm2210ScheduleAiReview(resolved.taxInput,completeResult)?prepareForm2210Review(resolved.taxInput):undefined;
+  const rrtaPayrollReview=requiresRRTAPayrollReview(resolved.taxInput,completeResult)
+    ?prepareRRTAPayrollReview(resolved.taxInput,readGuidedRRTAPaperSources(resolved.taxInput,guidedFlowState)):undefined;
   const redactedTaxInput = redactReviewIdentifiers(resolved.taxInput);
   const result = redactReviewIdentifiers(completeResult);
   const blankFormsDir = await resolveBlankFormsDir();
@@ -728,6 +732,7 @@ export async function buildWorkspaceFilledReturnDownload(
   try {
     await mkdir(outputDir, { recursive: true });
     const fillResult = await fillReturn(redactedTaxInput, result, {
+      rrtaPayrollReview,
       capitalGainReview,
       codNolReview,
       charitableReview,

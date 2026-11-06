@@ -1,6 +1,7 @@
 "use client";
 /** Native originals only. Spec: spec/federal/guided-rrta-payroll.yaml. */
 import {useState} from 'react';
+import {emptyGuidedRRTAPaper,captureGuidedRRTAPaper,updateGuidedRRTAPaper,type GuidedRRTAPaperDraft} from '@/lib/guided-rrta-paper-sources';
 import type {GuidedFlowState} from '@/lib/guided-interview-flow';
 import {captureGuidedRRTAPayrollSources} from '@/lib/guided-interview-bridge';
 import {emptyGuidedRRTA,emptyGuidedRRTARow,updateGuidedRRTA,type GuidedRRTADraft,type GuidedRRTARow} from '@/lib/guided-rrta-payroll-sources';
@@ -11,6 +12,7 @@ const checks=[['allRRTASourcesIncludedConfirmed','All railroad compensation sour
 export function RRTAPayrollSourceDetails({state,data,onChange}:{state:GuidedFlowState;data?:GuidedRRTADraft;onChange:(next:GuidedRRTADraft|undefined)=>void}){
  const[status,setStatus]=useState('');
  function set(patch:Partial<GuidedRRTADraft>){if(!data)return;onChange(updateGuidedRRTA(data,{...data,...patch}));setStatus('');}
+ function paperSet(patch:Partial<GuidedRRTAPaperDraft>){if(data?.paperSources)set({paperSources:updateGuidedRRTAPaper(data.paperSources,{...data.paperSources,...patch})});}
  function capture(){try{const current={...state,sectionData:{...state.sectionData,'additional-deductions':{...state.sectionData['additional-deductions'],rrtaPayrollSources:data}}};onChange(captureGuidedRRTAPayrollSources(current));setStatus('Original payroll sources captured. Confirm after reviewing the last edit.');}catch(error){setStatus(error instanceof Error?error.message:'Reconcile actual RRTA original sources.');}}
  const w2s=tipIncomeW2Options(state.sectionData['income-w2']?.entries);
  return <section aria-label="Original railroad payroll sources"><h4>Original railroad payroll sources</h4><p>Use actual W-2 Box 14 and annual railroad payroll records. This source method supports one railroad employer per tip owner on an ordinary2025 single or joint return. Railroad-covered tips, employee representatives, corrections, excess Tier1 withholding and self-employment require another method. Enter checked zeros explicitly. A regular Tier1 tax payment is not Additional Medicare withholding.</p>
@@ -28,6 +30,15 @@ export function RRTAPayrollSourceDetails({state,data,onChange}:{state:GuidedFlow
  <button type="button" disabled={data.sources.length>=2} onClick={()=>set({sources:[...data.sources,emptyGuidedRRTARow()]})}>Add actual railroad original</button>
  <button type="button" onClick={capture}>Capture reviewed original railroad payroll sources</button>
  <BooleanFact label="RRTA originals confirmed after capture and the last edit" value={data.sourceFactsConfirmed} onChange={sourceFactsConfirmed=>set({sourceFactsConfirmed})}/>
+ <fieldset><legend>Original railroad paper review evidence</legend><p>Review every actual ordinary W-2 Box 12 for codes B and N. Payroll amounts of zero do not establish that no uncollected Medicare adjustment applies. Unknown or positive adjustments require another method. Paper confirmation never confirms payroll facts.</p>
+ {!data.paperSources?<button type="button" onClick={()=>set({paperSources:emptyGuidedRRTAPaper()})}>Add original railroad paper evidence</button>:<>
+ <TextFact label="Railroad paper original tax year" value={data.paperSources.sourceTaxYear} onChange={sourceTaxYear=>paperSet({sourceTaxYear})}/>
+ <TextFact label="Railroad paper original reference" value={data.paperSources.sourceReference} onChange={sourceReference=>paperSet({sourceReference})}/>
+ <BooleanFact label="Actual ordinary W-2 originals establish no Box 12 B or N uncollected Medicare adjustments" value={data.paperSources.noOrdinaryUncollectedMedicareCodesBOrNConfirmed} onChange={noOrdinaryUncollectedMedicareCodesBOrNConfirmed=>paperSet({noOrdinaryUncollectedMedicareCodesBOrNConfirmed})}/>
+ <button type="button" onClick={()=>{try{if(!data.paperSources)return;const current={...state,sectionData:{...state.sectionData,'additional-deductions':{...state.sectionData['additional-deductions'],rrtaPayrollSources:data}}};set({paperSources:captureGuidedRRTAPaper(current,data.paperSources)});setStatus('Original paper evidence captured. Confirm it separately after reviewing the last edit.');}catch(error){setStatus(error instanceof Error?error.message:'Reconcile actual paper originals.');}}}>Capture reviewed railroad paper originals</button>
+ <BooleanFact label="Railroad paper originals confirmed after capture and the last edit" value={data.paperSources.sourceFactsConfirmed} onChange={sourceFactsConfirmed=>paperSet({sourceFactsConfirmed})}/>
+ <button type="button" onClick={()=>set({paperSources:undefined})}>Remove railroad paper evidence</button>
+ </>}</fieldset>
  <button type="button" onClick={()=>{onChange(undefined);setStatus('');}}>Remove railroad source method</button>
  </>}{status&&<p role="status">{status}</p>}</section>;
 }

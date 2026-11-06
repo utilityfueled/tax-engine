@@ -21905,5 +21905,55 @@
     "laterSourceQualified": false,
     "releaseQualified": false,
     "document": "docs/upgrade-2026-d510-runtime-evidence.md"
+  },
+  "nov06RRTAPaperNative": {
+    "status": "LOCAL_SOURCE_FOCUSED_STATIC_NATIVE_BROWSER_AND_FINITE_PHYSICAL_PASS",
+    "sourceParent": "ac8150e55d102173415a6fefa4978045610d50f9",
+    "ledger": "docs/upgrade-2026-rrta-paper-native-work.md",
+    "sourceManifestSHA256": "3f42238a54159aa00a14b8bb13b2bb80a39f935d3d3d05691b7a362d8efae861",
+    "privacyManifestSHA256": "9ce84f3495129af720c544740d9b027eb223cf1f64709ee1e9fd5824098a2863",
+    "privacyROOTTests": 24,
+    "focusedTests": 120,
+    "focusedFiles": 11,
+    "types": 3,
+    "builds": 2,
+    "specInventoryLint": "PASS",
+    "sourceAudit": {
+      "hashes": 1821,
+      "contracts": 153,
+      "windowMs": 60000,
+      "maxRequests": 20,
+      "caseCollection": 590,
+      "initialFailure": "map ordering only; no value changes; original failure retained"
+    },
+    "browser": {
+      "run": "rate-window-1793941155764-61721",
+      "cases": 4,
+      "failed": 0,
+      "skipped": 0,
+      "retries": 0,
+      "timeoutMs": 30000,
+      "workers": 2,
+      "testSeconds": 11.7,
+      "totalSeconds": 97.86731583299115,
+      "sourcePins": 5423,
+      "sourceDrift": [],
+      "ownedServer61902Closed": true
+    },
+    "physical": {
+      "newPDFs": 2,
+      "pages": 32,
+      "literalPrintedChecks": 96,
+      "all18MarkersPreserved": true,
+      "fullGraphAndActiveContent": "PASS",
+      "textAndRGBPriorParity": 32,
+      "qualifiedHumanReview": false,
+      "manifestSHA256": "886907260bd1ee150946d8ad8a9c848d16ae993ec40e685faf0a7990fb84b7f8",
+      "membersVerified": 110
+    },
+    "canonicalTaxCalculationsChanged": false,
+    "filingEnabled": false,
+    "taxYear2026ExportEnabled": false,
+    "overallUpgradeComplete": false
   }
 }

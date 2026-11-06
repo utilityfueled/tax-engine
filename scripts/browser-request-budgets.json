@@ -178,7 +178,7 @@
     "apps/web/src/components/guided-interview/qsbs-source-details.tsx": "6766cac678c5a07785195f987053223e05d1b78776c37d0aba2692f69f4e4311",
     "apps/web/src/components/guided-interview/rental-carry-source-details.tsx": "fc16f74f1375e20e35fd88326cb03656f498852e8b26155fe92f51378d2a98b3",
     "apps/web/src/components/guided-interview/retirement-source-fields.tsx": "dd0b2294095a918badf59ce10b83a7358d341aeca199813a5149441e7e6b3840",
-    "apps/web/src/components/guided-interview/rrta-payroll-source-details.tsx": "ccf1ab006c28dcf22f920ffeea6da05a21d211eeefafec32f24dd47eb0683227",
+    "apps/web/src/components/guided-interview/rrta-payroll-source-details.tsx": "529c20c9ae69ec0f8f3b17bc29ed25dbb36f2ff129953f329609454e3a8e585e",
     "apps/web/src/components/guided-interview/savings-bond-reissue-details.tsx": "fb6d4b327a3fd90e98d853dc62a817e9439619bcd82737f4dcb9c5f68894e3f9",
     "apps/web/src/components/guided-interview/savings-bond-source-details.tsx": "22c0f6017877f86d66d89905e606faaff42a2dc5a6874f039fc87c844855fac6",
     "apps/web/src/components/guided-interview/schedule-1-a-source-details.tsx": "2954c36e5d455f52ad5aa909bb4872ab09aa3d10f0ca7f0f0bb0986e695812f4",
@@ -283,7 +283,7 @@
     "apps/web/src/lib/guided-hsa-distribution-facts.ts": "e9ce96eb9f2c2297fca1dd53ca311b2b42545da4a3a2ec257fcf702daac9060f",
     "apps/web/src/lib/guided-hsa-facts.ts": "bad97489b43ff81ed079b9c193f1f77f6fd62950ee159256456a79a6d009654e",
     "apps/web/src/lib/guided-interview-bridge.ts": "d76b0a99aa478dd4bf727ff7eb170ecd63691bbf6cb28ef793335a36838569ae",
-    "apps/web/src/lib/guided-interview-flow.ts": "f313366e5a5caa458d45a6fb904932b0186b5f7c5a57f7bffd113c0f381f2a4f",
+    "apps/web/src/lib/guided-interview-flow.ts": "da52a507d6914ba6864d2368cca5812cd967ce33094eaed43bf0d00d91a649a7",
     "apps/web/src/lib/guided-investment-facts.ts": "c05786de5c12a4341371294d2a926ec64aae99eeeb8ffcbe5595c6fe9c3727dc",
     "apps/web/src/lib/guided-investment-interest.ts": "3f55441684455777dac810e9122e14345944f6f5e4262e1f2e4447eff1b1118b",
     "apps/web/src/lib/guided-ira-basis.ts": "b6dff39b2a47ff2c56d233b91e9fa52fa35a75443577b2b33754edaa65c18473",
@@ -348,7 +348,8 @@
     "apps/web/src/lib/guided-retirement-source-inputs.ts": "5d4417e007af44fddaadc91e875f24704b58f0b4fbd6862308833ff07eba4771",
     "apps/web/src/lib/guided-retirement-withholding-reconciliation.ts": "7a3a85da5022cde89a5901c983b66eea0e9ef74b72880a43ef4a3d4225b7d1c2",
     "apps/web/src/lib/guided-royalty-sources.ts": "3923cefcccbb07ef173bd9db9a9c5493195fe5b6f23873adf64b67287bfe50ab",
-    "apps/web/src/lib/guided-rrta-payroll-sources.ts": "defd899bda00c0658f7ec754fa686059562d71894cd79e1dd9be39d5d8d59c2e",
+    "apps/web/src/lib/guided-rrta-paper-sources.ts": "6f3df196cbe44799e95b69459330d28e5d81ab527fd257419388eaac03bbd04b",
+    "apps/web/src/lib/guided-rrta-payroll-sources.ts": "d3d581734afe870c5aa317bde17fe3ec8830e69a628278b182cf52a14ce6a60e",
     "apps/web/src/lib/guided-salt-facts.ts": "8d0f002ba230e852608f81834b244df77f26e204f136001102da8d40165dc80a",
     "apps/web/src/lib/guided-savings-bond-facts.ts": "b294042f2ca4d1b77520c95616a66f596cc06e0d766080ad3e82fd721c2e47e3",
     "apps/web/src/lib/guided-savings-bond-reissues.ts": "930c90b3b17c0929c972bfdc6ebb04bc72738d183fa71b7f79c008b2e0b5a80b",
@@ -426,7 +427,7 @@
     "apps/web/src/lib/workspace-assistant.ts": "f2eaf60fc3bf8d2ab5dff56a4e30187184c8a94cefa74f064e9f01bc5a787381",
     "apps/web/src/lib/workspace-document-file-cache.ts": "e1ebe57bd1e193ab49054ba3291409bb5c505140631056d8c19101497ad0145d",
     "apps/web/src/lib/workspace-filing-pack.ts": "3b69dd8c026ef99c4337f119d1e51ce2e691c15b8f013738750c8c2cfdb9ec80",
-    "apps/web/src/lib/workspace-filled-return.ts": "6bf2522ded369456da3a9d8c6cb7088fe22be092a44e75d4009c5eaf0b144c0d",
+    "apps/web/src/lib/workspace-filled-return.ts": "8c606180d3cfb9dd2676199a4d8698dcdbb9b24e44151d397e0f52695bb4e481",
     "apps/web/src/lib/workspace-guided-state.ts": "09d2fcdecf5554e777bd27453a6bc8928ce1e6e688e1163b5388d617a0e5e53b",
     "apps/web/src/lib/workspace-local-recovery.ts": "97ac669fc834646487fbf31cc3533263ddac30c14899ce160e14d1c3e2671ba8",
     "apps/web/src/lib/workspace-persistence.ts": "9c7166201156914b717cfd83225f9727400779b08dae39b9136df044e498bbc9",
@@ -550,6 +551,8 @@
     "apps/web/tests/help.spec.ts": "61cfa7c774aa6e96b6490f7f2de6f5b8f57e9094c5bce77eee604a020bfd6274",
     "apps/web/tests/helpers/oh-resident-credit-browser.ts": "1e3b7c2bb9de400a4e2382ead6cbf48cd6b6122dc831a701f028454d86a77d27",
     "apps/web/tests/helpers/pa-married-review-inspection.ts": "96505b1b359d765aeb12059a6567a40a2457e2680de897261648203a9c9ab0b8",
+    "apps/web/tests/helpers/rrta-paper-review-fixture.ts": "d232480e24ebd3b8d14f9a1c475087149d0ecf8124b080891ec6596064d72409",
+    "apps/web/tests/helpers/rrta-paper-review-privacy.py": "765ec80ec85a4c1e70fe1269e961abbd204bb4e3df531c704074e97adb3e006e",
     "apps/web/tests/home.spec.ts": "ea34470836aa022bcff755c41e089d699bd0c69bfb20e05f0e88c063718d2b33",
     "apps/web/tests/hosted-happy-paths.spec.ts": "d17f88c96b8ddb230f04e0ebc52d2eb000cb53a46c849066cd7ab531d6e0ce1b",
     "apps/web/tests/k1-cash-distribution.spec.ts": "1703d235f07cb5905a72417b62401a1c7a3e36ba5e9dd85015d1e03148e8794f",
@@ -592,6 +595,7 @@
     "apps/web/tests/responsive.spec.ts": "5f8833eadedb99b43a750b077bb678a2f5fff1a0d4d3c4f93aa2789932491f72",
     "apps/web/tests/review-completion.spec.ts": "0cd8aead847741c74bfbb9757c1616570a986f51738a0859ef8faaf47bcd5187",
     "apps/web/tests/royalty-sources.spec.ts": "05bf8388b12fa39ae16093040bf372a971c7f2a0117bb39f019180d1e8c86237",
+    "apps/web/tests/rrta-paper-review-native.spec.ts": "feaddb2f299af1b183de8efdcf02bdf3cc1d380e8cecfd4f477826d55685743a",
     "apps/web/tests/rrta-payroll-native.spec.ts": "39267294249435d85d276fcac295f71cb471290b366ba1ea2ccf26a6cb3ceb31",
     "apps/web/tests/self-host-flows.spec.ts": "5f0d52521e2e65f0fe1692a329d5b734e87c71250038a9fa1e30ca9605ab031a",
     "apps/web/tests/workspace-guided-year.spec.ts": "8683248504cbf2b14750b7032242429e15c9e29393a8b3dec5c5a24596e5e6d6",
@@ -3871,6 +3875,22 @@
         73
       ],
       "reviewBasis": "Reviewed current source: observer26; all four protected scopes asserted zero and every URL/body checked72; attachment73. Visible original capture, save/reopen and source edits are local, no PDF action.",
+      "skippedTitles": []
+    },
+    "rrta-paper-review-native.spec.ts": {
+      "caseCount": 2,
+      "bounds": {
+        "filled-return": 2,
+        "provider": 0,
+        "business-expense-analysis": 0,
+        "self-employment-income-analysis": 0
+      },
+      "requestSourceLines": [
+        37,
+        41,
+        49
+      ],
+      "reviewBasis": "Actual visible review click at37 requires200 and exact saved response/download bytes; purpose-only real filing POST at41 requires400. Exact all-scope census and raw/decoded privacy at49. Capture, backup, wrong-password restore and deletion are local. No provider or analysis action. Existing negative RRTA cases remain separate.",
       "skippedTitles": []
     }
   }

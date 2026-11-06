@@ -3527,3 +3527,8 @@ See [the browser ledger](upgrade-2026-payroll-refund-browser-work.md). Full curr
 global/remote/runtime checks and external qualification remain open.
 
 - November6 UTC: [d510 baseline/runtime evidence](upgrade-2026-d510-runtime-evidence.md) records all12 local checks,26,917tests/1,941files and87.66%branches at unchanged85%gate. RemoteCI6jobs/selfhost583+5skip pass; exact source-bound container561pass/22timeouts/5skip remains failed. Sixphase recovery/rollback and image/SBOM binding pass; scan181matches/80IDs includes61Highmatches/18HighIDs, nofixedversions or acceptance. ROOT verifies124artifact+44trace members. Later application/hosted/native/human/AI/final-form qualification remains open.
+
+
+### November6: separate native railroad paper originals
+
+Actual2025 paper year/reference/Box12B-N absence and confirmation are now separate from payroll custody. The workspace prepares the existing opaque context against current originals before redaction. Spec-first RED,120focused tests/all static checks and4actual desktop/mobile recovery journeys pass with unchanged limits; independent2PDF/32page/96printed-line review passes. The bounded typed privacy inspector preserves every marker and hidden-string/graph check while distinguishing parsed coordinate substrings. See [the package ledger](upgrade-2026-rrta-paper-native-work.md). Filing/final2026, qualified human review and final-artifact/distribution/staging gates remain open.
