@@ -3748,3 +3748,8 @@ The [security change](upgrade-2026-education-review-result-binding-work.md) reje
 ### November 6: historical education export components corrected
 
 The [export correction](upgrade-2026-form-8959-review-selection-work.md) includes the existing Medicare withholding-credit component and routes supported Schedule2 audit values to their printed2025 lines. Current350 tests in25files,8 spec links and inventory checks pass. Independent review reopens51PDFs/102pages with32,504 checks and completes visual review; the prior failed artifacts remain immutable. Three spec year labels now match2025. Pure-SE applicability, final2026 forms and human gates remain separate.
+
+
+### November 6: W-2 guard avoids an unused source digest
+
+The [W-2 validation change](upgrade-2026-w2-validation-cost-work.md) preserves every original check, encoded input, failure and actual consumer commitment while omitting a digest discarded by the federal guard. Distinct58 tests in9files pass, including10 independent controls and a genuine original-API failure; current34 tests in7files,3 spec references and inventory checks pass. No Linux/browser performance or tax/readiness qualification is inferred.

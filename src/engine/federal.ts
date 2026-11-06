@@ -1,4 +1,4 @@
-import { calculateW2StateLocalSources } from "./forms/w2-state-local.js";
+import { assertW2StateLocalSources } from "./forms/w2-state-local.js";
 import { buildForm2210OwnerSourceContext } from './forms/form-2210-owner-source.js';
 import { calculateMarketplaceActualPaidRepayment, type MarketplaceActualPaidAdjustment } from "./forms/marketplace-actual-paid-repayment.js";
 import { calculateMarketplaceActualPaidSources } from "./forms/marketplace-actual-paid-sources.js";
@@ -220,7 +220,7 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   // Validate retained actual row packets even when Schedule A is not selected.
   input.w2s.forEach((w2, index) => {
     const packet = (w2 as typeof w2 & { stateLocalSources?: unknown }).stateLocalSources;
-    if (packet !== undefined) calculateW2StateLocalSources(input, index, packet);
+    if (packet !== undefined) assertW2StateLocalSources(input, index, packet);
   });
   const claim = claimOfRightStage(input) ? undefined : calculateClaimOfRightSources(input);
   if (!claim) return calculateFederalTaxForSources(input);

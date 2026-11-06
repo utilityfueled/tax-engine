@@ -22723,5 +22723,16 @@
     "pureSEApplicability": "separate-investigation",
     "humanAnd2026FilingQualified": false,
     "ledger": "docs/upgrade-2026-form-8959-review-selection-work.md"
+  },
+  "nov06W2ValidationCost": {
+    "status": "finite-behavior-preservation-reviewed-and-local-tested",
+    "mainTestsPassed": 34,
+    "mainTestFiles": 7,
+    "independentTestsPassed": 58,
+    "independentTestFiles": 9,
+    "independentNewControls": 10,
+    "specReferences": 3,
+    "remoteRuntimeQualification": "pending",
+    "ledger": "docs/upgrade-2026-w2-validation-cost-work.md"
   }
 }

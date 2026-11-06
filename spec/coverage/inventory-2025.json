@@ -11428,6 +11428,26 @@
       ]
     },
     {
+      "key": "federal/w2-state-local-validation-cost",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "spec/federal/w2-state-local.yaml",
+      "specPath": "spec/federal/w2-state-local-validation-cost.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/workspace-calculation-context",
       "jurisdiction": "federal",
       "taxYear": 2026,

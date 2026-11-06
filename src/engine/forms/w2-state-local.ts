@@ -40,8 +40,8 @@ export interface W2StateLocalSourcesResult {
   localRows: Array<{ printedRow: number; localityNameStatus: "reported" | "blank_original"; wages: Decimal; withheld: Decimal }>;
   totalStateWithheld: Decimal; totalLocalWithheld: Decimal; sourceCommitment: string; lines: CalculatedLine[];
 }
-/** Does not calculate state/local liability, deductibility, resident credit or filing eligibility. */
-export function calculateW2StateLocalSources(input: W2StateLocalSourceContext, index: number, rawSources: unknown): W2StateLocalSourcesResult {
+/** Shared checked preparation; the encoded commitment input never escapes an exported API. */
+function prepareW2StateLocalSources(input: W2StateLocalSourceContext, index: number, rawSources: unknown): { commitmentBytes: Uint8Array; finish: () => Omit<W2StateLocalSourcesResult, "sourceCommitment"> } {
   const parsed = W2StateLocalSourcesSchema.safeParse(rawSources);
   if (!parsed.success) return error("complete actual source packet shape required");
   const source = parsed.data, year = input.taxpayer.taxYear, w2 = input.w2s[index];
@@ -90,9 +90,27 @@ export function calculateW2StateLocalSources(input: W2StateLocalSourceContext, i
   } else return error("actual legacy scalar projection disposition must be explicit");
   const totalStateWithheld = stateRows.reduce((sum, row) => sum.plus(row.withheld), new Decimal(0));
   const totalLocalWithheld = localRows.reduce((sum, row) => sum.plus(row.withheld), new Decimal(0));
-  const sourceCommitment = bytesToHex(sha256(new TextEncoder().encode(stable({ version: "w2-state-local-source-v1", year, index, input, rawSources }))));
-  const audit = new AuditTrail();
-  audit.record("W2-State-Local-Sources", "reported-state-withholding", "Actual distinct reported state withholding", totalStateWithheld, "Sum each admitted printed row once; no extra legacy scalar credit or state liability claim");
-  audit.record("W2-State-Local-Sources", "reported-local-withholding", "Actual distinct reported local withholding", totalLocalWithheld, "Actual printed source amounts only; no inferred jurisdiction, rate, resident credit or deductibility");
-  return { federalWages: amount(w2.wages), federalWithheld: amount(w2.federalWithheld), stateRows, localRows, totalStateWithheld, totalLocalWithheld, sourceCommitment, lines: audit.getLines() };
+  const commitmentBytes = new TextEncoder().encode(stable({ version: "w2-state-local-source-v1", year, index, input, rawSources }));
+  // Both wrappers finish synchronously exactly once. This retains the original
+  // serialize/encode -> calculated digest -> audit/final amount/getLines order.
+  return { commitmentBytes, finish: () => {
+    const audit = new AuditTrail();
+    audit.record("W2-State-Local-Sources", "reported-state-withholding", "Actual distinct reported state withholding", totalStateWithheld, "Sum each admitted printed row once; no extra legacy scalar credit or state liability claim");
+    audit.record("W2-State-Local-Sources", "reported-local-withholding", "Actual distinct reported local withholding", totalLocalWithheld, "Actual printed source amounts only; no inferred jurisdiction, rate, resident credit or deductibility");
+    return { federalWages: amount(w2.wages), federalWithheld: amount(w2.federalWithheld), stateRows, localRows, totalStateWithheld, totalLocalWithheld, lines: audit.getLines() };
+  } };
+}
+
+/** Does not calculate state/local liability, deductibility, resident credit or filing eligibility. */
+export function calculateW2StateLocalSources(input: W2StateLocalSourceContext, index: number, rawSources: unknown): W2StateLocalSourcesResult {
+  const prepared = prepareW2StateLocalSources(input, index, rawSources);
+  const sourceCommitment = bytesToHex(sha256(prepared.commitmentBytes));
+  const result = prepared.finish();
+  return { federalWages: result.federalWages, federalWithheld: result.federalWithheld, stateRows: result.stateRows, localRows: result.localRows, totalStateWithheld: result.totalStateWithheld, totalLocalWithheld: result.totalLocalWithheld, sourceCommitment, lines: result.lines };
+}
+
+/** Same original checks and encoded input, without an unused public digest/result. */
+export function assertW2StateLocalSources(input: W2StateLocalSourceContext, index: number, rawSources: unknown): void {
+  const prepared = prepareW2StateLocalSources(input, index, rawSources);
+  prepared.finish();
 }
