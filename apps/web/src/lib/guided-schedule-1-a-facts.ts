@@ -5,7 +5,7 @@ import type { GuidedFlowState } from "./guided-interview-flow";
 import { amountError, hasEnteredAmount } from "./guided-required-facts";
 import { parseGuidedCurrency } from "./guided-currency";
 import { isStartedNec } from "./guided-business-facts";
-import { buildTipIncomeInputs } from "./guided-tip-income-facts";
+import { buildTipIncomeInputs, buildTipIncomeSourceOriginals } from "./guided-tip-income-facts";
 import { buildStandardDeductionFacts } from "./guided-standard-deduction-facts";
 import Decimal from "decimal.js";
 type Owner = "primary" | "spouse";
@@ -52,7 +52,8 @@ export function buildSchedule1AInput(data: Schedule1AData | undefined, state: Gu
   const sources = schedule1ACompensationSources(state); const usedReportedTips = new Map<string, Decimal>(); const usedOvertime = new Map<string, Decimal>();
   const findSource = (id: string, owner: Owner) => { const source = sources.find(row => row.sourceId === id); if (!source || source.accountHolder !== owner) throw new Error("Deduction compensation source is missing or belongs to another owner."); sourceYear(source.entry.sourceTaxYear, year); if (source.kind === "w2" && Object.values(source.entry.aiSuggestedFields ?? {}).some(field => field?.status === "pending-confirmation")) throw new Error("Confirm the original W2 source before claiming its deduction."); return source; };
   const qualify = (entry: TipQualificationData) => ({ owner: requireOwner(entry.owner), occupationCode: text(entry.occupationCode, "tipped occupation code"), eligibleOccupation: flag(entry.eligibleOccupation, "listed tipped occupation"), voluntaryCashTips: flag(entry.voluntaryCashTips, "voluntary cash or charge tips"), lawfulActivity: flag(entry.lawfulActivity, "lawful activity"), meetsSstbRuleOrTransition: flag(entry.meetsSstbRuleOrTransition, "applicable service-business rule or current-year transition") });
-  const tipInputs = data.employeeTips.some(entry => entry.form4137EmployerSourceId.trim() || money(entry.qualifiedForm4137Tips, "qualified total Form4137 tips").gt(0)) ? buildTipIncomeInputs(state.sectionData["additional-deductions"]?.tipIncomeAccounts, state.segmentation.filingStatus, year, state.sectionData["income-w2"]?.entries) : undefined;
+  // Documentary input only; the ordinary bridge still requires full canonical RRTA proof.
+  const tipInputs = data.employeeTips.some(entry => entry.form4137EmployerSourceId.trim() || money(entry.qualifiedForm4137Tips, "qualified total Form4137 tips").gt(0)) ? (state.sectionData['additional-deductions']?.rrtaPayrollSources ? buildTipIncomeSourceOriginals : buildTipIncomeInputs)(state.sectionData["additional-deductions"]?.tipIncomeAccounts, state.segmentation.filingStatus, year, state.sectionData["income-w2"]?.entries) : undefined;
   const employeeTips = data.employeeTips.map(entry => {
     const qualification = qualify(entry); const w2Tips = money(entry.qualifiedW2Tips, "qualified employer-reported tips"); const formTips = money(entry.qualifiedForm4137Tips, "qualified total Form4137 tips");
     const linked = entry.w2SourceIds.map(id => { const source = findSource(id, qualification.owner); if (source.kind !== "w2" || normal(source.name) !== normal(entry.employer)) throw new Error("Actual employee tips must link to the same employer's W2 source."); return source; });

@@ -1,4 +1,5 @@
 "use client";
+import {RRTAPayrollSourceDetails} from "./rrta-payroll-source-details";
 import { RetroShell } from "@/components/retro-shell";
 import { tipIncomeW2Options, type AdditionalDeductionsData } from "@/lib/guided-tip-income-facts";
 import { schedule1ACompensationSources } from "@/lib/guided-schedule-1-a-facts";
@@ -10,5 +11,6 @@ export function SectionAdditionalDeductions({ data, state, w2Entries, onChange }
     <p className="guided-hint">Enter original sources before eligibility and income limits. Tip income and payroll tax are calculated separately from any deduction.</p>
     <Schedule1ASourceDetails data={data?.schedule1A} compensationSources={schedule1ACompensationSources(state)} businessOwner={state.sectionData["income-self-employment"]?.businessFacts?.accountHolder} businessName={state.sectionData["income-self-employment"]?.businessFacts?.businessName} onChange={schedule1A => onChange({ ...data, schedule1A })} />
     <TipIncomeSourceDetails accounts={data?.tipIncomeAccounts} w2Sources={tipIncomeW2Options(w2Entries)} onChange={tipIncomeAccounts => onChange({ ...data, tipIncomeAccounts })} />
+    <RRTAPayrollSourceDetails state={state} data={data?.rrtaPayrollSources} onChange={rrtaPayrollSources=>onChange({...data,rrtaPayrollSources})}/>
   </div></RetroShell>;
 }

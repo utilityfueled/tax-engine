@@ -1,3 +1,5 @@
+import {captureGuidedRRTA,bindGuidedRRTA,rrtaParentValues,type GuidedRRTADraft} from './guided-rrta-payroll-sources';
+import {buildTipIncomeSourceOriginals} from './guided-tip-income-facts';
 import {buildGuidedPassengerForm,bindGuidedPassengerInput,type GuidedPassengerDraft} from './guided-passenger-sources';
 import {buildGuidedMacrsAssets} from "./guided-macrs-assets";
 import {reconcileGuidedRetirementWithholding}from "./guided-retirement-withholding-reconciliation";
@@ -715,7 +717,14 @@ export function captureGuidedPassengerSources(state:GuidedFlowState):GuidedPasse
  const captureInput=structuredClone(raw);if(captureInput.scheduleC?.sourceFacts)delete captureInput.scheduleC.sourceFacts.passengerFirstYear;
  const bound=bindGuidedPassengerInput(captureInput,facts,true);if(!bound)throw new Error('Actual passenger sources required');return bound.draft;
 }
-function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false): GuidedTaxInputSources | null {
+/** Explicit capture returns documentary sources, not an ordinary input or readiness result. */
+export function captureGuidedRRTAPayrollSources(state:GuidedFlowState):GuidedRRTADraft{
+ const draft=state.sectionData['additional-deductions']?.rrtaPayrollSources;
+ if(!draft)throw Error('Enter actual RRTA original sources first.');
+ const raw=buildGuidedSourceInput(state,false,true);if(!raw)throw Error('Complete actual native household, payroll and tip originals before RRTA capture.');
+ return captureGuidedRRTA(raw,draft,rrtaParentValues(state));
+}
+function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,captureRRTA=false): GuidedTaxInputSources | null {
   const { segmentation, sectionData } = state;
 
   if (!segmentation.filingStatus || !Number.isInteger(state.taxYear) || state.taxYear == null) return null;
@@ -740,7 +749,8 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false):
   let loanEducation: StudentLoanEducationSources = [];
   try {
     assertKnownFacts(royaltySourceFactErrors(state));
-    assertKnownFacts(tipIncomeFactErrors(state));
+    if(sectionData['additional-deductions']?.rrtaPayrollSources)buildTipIncomeSourceOriginals(sectionData['additional-deductions']?.tipIncomeAccounts,segmentation.filingStatus,state.taxYear,w2Data?.entries);
+    else assertKnownFacts(tipIncomeFactErrors(state));
     assertKnownFacts(schedule1AFactErrors(state));
     assertKnownFacts(w2FactErrors(w2Data?.entries, segmentation.filingStatus, state.taxYear));
     assertKnownFacts(investmentFactErrors(investData, segmentation.filingStatus, state.taxYear, stateReturnData, segmentation.stateCode, personalInfo));
@@ -898,7 +908,7 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false):
     section1202Sources: buildGuidedQsbsSources(investData, state.taxYear, segmentation.filingStatus, personalInfo),
     form8801: buildMinimumTaxCreditInput(creditsData?.minimumTaxCredit, state.taxYear, segmentation.filingStatus, personalInfo),
     schedule1A: buildSchedule1AInput(sectionData["additional-deductions"]?.schedule1A, state),
-    form4137ByOwner: buildTipIncomeInputs(sectionData["additional-deductions"]?.tipIncomeAccounts, segmentation.filingStatus, state.taxYear, w2Data?.entries),
+    form4137ByOwner: (sectionData['additional-deductions']?.rrtaPayrollSources?buildTipIncomeSourceOriginals:buildTipIncomeInputs)(sectionData["additional-deductions"]?.tipIncomeAccounts, segmentation.filingStatus, state.taxYear, w2Data?.entries),
     ...buildHsaInputs(adjustmentData?.hsaAccounts, personalInfo),
     form7206: healthInsurance,
     form1099Nec: necs,
@@ -974,6 +984,7 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false):
       context.w2s.forEach((entry, index) => { if (entry.stateLocalSources !== undefined) calculateW2StateLocalSources(context, index, entry.stateLocalSources); });
     } catch { return null; }
   }
+  if(sectionData['additional-deductions']?.rrtaPayrollSources&&!captureRRTA){try{input.rrtaPayrollSources=bindGuidedRRTA(input,sectionData['additional-deductions'].rrtaPayrollSources,rrtaParentValues(state));}catch{return null;}}
   return input;
 }
 

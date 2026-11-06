@@ -1,3 +1,4 @@
+import type {GuidedRRTADraft} from './guided-rrta-payroll-sources';
 import type { Schedule1AData } from "./guided-schedule-1-a-facts";
 import { Form4137Schema, type Form4137Input } from "@/models/inputs";
 import { getConstants } from "@/models/constants";
@@ -41,7 +42,7 @@ export function tipIncomeW2Sources(entries: W2EntryData[] = []): Form4137Payroll
       allocatedTips: hasEnteredAmount(allocated) ? money(allocated, "W2 Box8") : undefined };
   });
 }
-export function buildTipIncomeInputs(accounts: TipIncomeAccountData[] | undefined, filingStatus?: FilingStatus | null, taxYear?: number | null, w2Entries: W2EntryData[] = []) {
+function buildTipOriginals(accounts: TipIncomeAccountData[] | undefined, filingStatus?: FilingStatus | null, taxYear?: number | null, w2Entries: W2EntryData[] = []) {
   if (!accounts) return undefined;
   if ((taxYear !== 2025 && taxYear !== 2026) || !filingStatus) throw new Error("Choose the actual return year and filing status for tip sources.");
   const result: Partial<Record<Owner, Form4137Input>> = {};
@@ -67,18 +68,26 @@ export function buildTipIncomeInputs(accounts: TipIncomeAccountData[] | undefine
           totalCashAndChargeTips: money(month.totalCashAndChargeTips, "actual employer-month tips").toFixed(), tipsReportedToEmployer: money(month.tipsReportedToEmployer, "actual employer-month reported tips").toFixed() })),
       })),
     } });
-    if (money(account.railroadRetirementCompensation, "actual railroad compensation").gt(0)) throw new Error("RRTA compensation requires its separate Medicare source worksheet before this guided return can calculate it.");
     calculateForm4137(facts, taxYear === 2026 ? FEDERAL_2026_CONSTANTS : getConstants(2025), { sourcePayroll: { accountHolder: owner, w2s: payroll.filter(row => row.accountHolder === owner) } });
     result[owner] = facts;
   }
   return result;
 }
 
-export interface AdditionalDeductionsData { tipIncomeAccounts?: TipIncomeAccountData[]; schedule1A?: Schedule1AData }
+/** Documentary source-only builder: canonical RRTA proof is still required by its caller. */
+export const buildTipIncomeSourceOriginals = buildTipOriginals;
+export function buildTipIncomeInputs(...args:Parameters<typeof buildTipOriginals>){
+ const records=buildTipOriginals(...args);
+ if(Object.values(records??{}).some(record=>record?.sourceFacts&&money(record.sourceFacts.railroadRetirementCompensation,'actual railroad compensation').gt(0)))throw Error('RRTA compensation requires its separate Medicare source worksheet before this guided return can calculate it.');
+ return records;
+}
+export interface AdditionalDeductionsData { rrtaPayrollSources?: GuidedRRTADraft; tipIncomeAccounts?: TipIncomeAccountData[]; schedule1A?: Schedule1AData }
 export function tipIncomeW2Options(entries: W2EntryData[] = []) {
   return entries.filter(entry => hasEnteredAmount(entry.wages) || hasEnteredAmount(entry.federalWithheld)).map((entry, index) => ({ sourceId: `formW2:${index}`, accountHolder: entry.accountHolder ?? "", employerName: entry.employerName, employerEin: entry.employerEin }));
 }
 export function tipIncomeFactErrors(state: GuidedFlowState): Record<string, string> {
-  try { buildTipIncomeInputs(state.sectionData["additional-deductions"]?.tipIncomeAccounts, state.segmentation.filingStatus, state.taxYear, state.sectionData["income-w2"]?.entries); return {}; }
+  try { const rrta=state.sectionData['additional-deductions']?.rrtaPayrollSources;
+    if(rrta){if(rrta.sourceFactsConfirmed!==true||!rrta.capturedOriginal)throw Error('Capture and confirm actual RRTA originals after the last edit.');buildTipIncomeSourceOriginals(state.sectionData['additional-deductions']?.tipIncomeAccounts,state.segmentation.filingStatus,state.taxYear,state.sectionData['income-w2']?.entries);return {};}
+    buildTipIncomeInputs(state.sectionData["additional-deductions"]?.tipIncomeAccounts, state.segmentation.filingStatus, state.taxYear, state.sectionData["income-w2"]?.entries); return {}; }
   catch (error) { return { tipSources: error instanceof Error ? error.message : "Complete the actual tip sources before calculating." }; }
 }

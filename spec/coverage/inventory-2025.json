@@ -6458,6 +6458,26 @@
       ]
     },
     {
+      "key": "federal/guided-rrta-payroll",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.irs.gov/instructions/i8959",
+      "specPath": "spec/federal/guided-rrta-payroll.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/guided-savings-bond-reissues",
       "jurisdiction": "federal",
       "taxYear": 2026,

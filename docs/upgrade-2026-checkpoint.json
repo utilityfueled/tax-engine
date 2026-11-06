@@ -21745,5 +21745,19 @@
     "budgetChanged": false,
     "remoteMixedResidencyTimeoutResolved": false,
     "releaseQualified": false
+  },
+  "nov05NativeRRTAPayrollOriginals": {
+    "status": "FINITE_2025_COLLECTOR",
+    "mainManifest": "d92e2af34a0dca6f5e80cfd34a4db4bcd1ba99afb3ef4620bc761ce36c2d51df",
+    "testsPassed": 94,
+    "testFiles": 9,
+    "metadataPassed": 850,
+    "inventoryTotal": 914,
+    "supportedInventory": 68,
+    "auditSourceHashes": 1811,
+    "declaredBrowserCases": 584,
+    "actualNewBrowserExecuted": false,
+    "humanReview": false,
+    "releaseQualified": false
   }
 }
