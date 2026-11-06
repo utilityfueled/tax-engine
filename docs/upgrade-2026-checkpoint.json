@@ -22522,5 +22522,33 @@
       "hashPinnedRequirements": true,
       "retainedOfficialSamples": 15
     }
+  },
+  "nov06AIClosedDayCostReconciliation": {
+    "status": "exact_key_scoped_as_of_match_final_settlement_pending_reserve_held",
+    "ledger": "docs/upgrade-2026-ai-closed-day-cost-work.md",
+    "closedDayUTC": "2026-11-05",
+    "csvBytes": 383,
+    "csvSHA256": "7bd2979a40373d0e124c850e163ea067baad25fa56a3197b19a1a0d20230fa54",
+    "knownSuccessfulCalls": 174,
+    "reportedProviderUSD": "0.26282160",
+    "heldUnknownUSD": "0.022384",
+    "knownPlusReservedUSD": "0.28520560",
+    "freshMinusPriorUSD": "0",
+    "freshMinusKnownUSD": "0",
+    "minuteReconstructionUSD": "0.26282160",
+    "apiKeyIdentityMatchesMinuteActivity": true,
+    "organizationMatchesPriorCost": true,
+    "rawProjectUserLineItemFieldsBlank": true,
+    "rowLevelProjectAttribution": false,
+    "providerFinalityEstablished": false,
+    "failedAttemptZeroUsageEstablished": false,
+    "requestIDMandatoryForCompleteAggregateProof": false,
+    "reserveReleased": false,
+    "newPaidCalls": 0,
+    "credentialsRead": false,
+    "humanQualification": false,
+    "modelPromotion": false,
+    "authorManifestSHA256": "d5cbcd36e6924ed27ca573b9b87b6c300db82e3554f2b6f65851f33580ad8436",
+    "distinctManifestSHA256": "c9fd00c0896b3f21ed0fba50929fcfc7e06c6faf795ff8ce00dddd3976a17646"
   }
 }

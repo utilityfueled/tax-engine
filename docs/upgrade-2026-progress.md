@@ -3668,3 +3668,15 @@ workflow closes with managed 587/0/5 and container 573/14/5; the 14 unchanged
 [the exact-source verification ledger](upgrade-2026-cecb-local-verification.md).
 Hosted/native execution, human reviews, final forms, advisory ownership and AI
 settlement remain open. No readiness gate is changed.
+
+
+### November 6: exact closed-day AI cost reconciliation
+
+A fresh API-key-grouped export exactly matches all 174 known successful calls
+at 0.26282160 USD. Separate Decimal reconstruction of the retained minute data
+and distinct review confirm zero as-of residual and matching key/organization
+identities. Raw project, user and line-item fields remain blank. The 0.022384 USD
+reserve stays held, with 0.28520560 USD known plus reserved; no finality, zero
+failed-attempt usage or model qualification is inferred. See [the accounting
+ledger](upgrade-2026-ai-closed-day-cost-work.md). No new paid call, credential
+change, reserve release or human review occurred.
