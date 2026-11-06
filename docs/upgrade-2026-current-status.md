@@ -6,7 +6,9 @@ Current crosswalk, November 6 UTC: the reviewed education composition
 Form 8959 applicability `42d358a6` are committed and pushed separately. Each
 package passes its relevant checks and distinct agent review; the linked
 [progress ledger](upgrade-2026-progress.md) records scope and saved evidence.
-The exact `9283c5f1` source now passes all twelve local checks: 27,276
+The subsequent [PA-40 mapper batch](upgrade-2026-pa40-field-batch-work.md) passes
+its focused/static checks and independent review; a new full integrated run is
+required for that change. The exact `9283c5f1` source passes all twelve local checks: 27,276
 unit tests, 87.68% branch coverage against the unchanged 85% gate, and 587
 managed browser passes with five original hosted skips. All 5,496 source pins
 remained unchanged and the owned browser server closed. The original sandbox

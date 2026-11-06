@@ -22810,5 +22810,30 @@
     "allOriginalFailuresRetained": true,
     "releaseReady": false,
     "documentation": "docs/upgrade-2026-9283-runtime-evidence.md"
+  },
+  "nov06PA40BoundedFieldResolution": {
+    "baseCommit": "9283c5f16ebc4398fac99037ce3e24552a0fcfd9",
+    "mapperSHA256": "c74a3f47f267e33a04bf50eabe9a7677b149b83178c51bb369e7abc2ee71c6e7",
+    "authorManifestSHA256": "7589c3de2a9f85df0ecb5664af678b4586db5473aeef689f4a3642f9871ace23",
+    "independentManifestSHA256": "780b4a427bc03183a96bfe7a6a7da91b37f9153ede35fa236ebaf2034be94c0a",
+    "mainFocusedPassed": 78,
+    "mainFocusedFiles": 6,
+    "independentMapperControlsPassed": 7,
+    "originalMoneyLookups": 30,
+    "candidateMoneyLookups": 0,
+    "fieldTreeTraversalsSaved": 28,
+    "savedPdfs": 18,
+    "savedPages": 36,
+    "textValuesCompared": 1198,
+    "statusValuesCompared": 412,
+    "decodedStreamsCompared": 2326,
+    "savedBytesEqualExceptTwoMetadataDates": true,
+    "allTenMainPackageChecksPassed": true,
+    "originalFailureAndIntermediateDonationFailureRetained": true,
+    "malformedPartialStateMayDiffer": true,
+    "remoteTimeoutFixQualified": false,
+    "finalIntegratedVerificationPending": true,
+    "taxAndReadinessGatesUnchanged": true,
+    "documentation": "docs/upgrade-2026-pa40-field-batch-work.md"
   }
 }

@@ -24,7 +24,7 @@ import type { PA40Result } from "@/engine/state/pa-40.js";
 import {
   loadReviewTemplate,
   setTextField,
-  setCurrencyField,
+  createPdfFieldBatch,
   setCheckBox,
 } from "../../pdf-utils.js";
 
@@ -426,48 +426,50 @@ function fillIncome(
   pa40: PA40Result,
 ): void {
   const F = PA_40_FIELDS;
+  const mappedFields = createPdfFieldBatch(form);
 
   // Line 1a: Gross compensation
-  setCurrencyField(form, F.line1a, pa40.compensation);
+  mappedFields.setCurrency(F.line1a, pa40.compensation);
 
   // Line 1b: Unreimbursed expenses
-  setCurrencyField(form, F.line1b, pa40.unreimbursedExpenses);
+  mappedFields.setCurrency(F.line1b, pa40.unreimbursedExpenses);
 
   // Line 1c: Net compensation (1a - 1b)
-  setCurrencyField(form, F.line1c, pa40.netCompensation);
+  mappedFields.setCurrency(F.line1c, pa40.netCompensation);
 
   // Line 2: Interest income
-  setCurrencyField(form, F.line2, pa40.interest);
+  mappedFields.setCurrency(F.line2, pa40.interest);
 
   // Line 3: Dividends
-  setCurrencyField(form, F.line3, pa40.dividends);
+  mappedFields.setCurrency(F.line3, pa40.dividends);
 
   // Line 4: Net business income (check loss box if negative)
-  setCurrencyField(form, F.line4, pa40.netBusinessIncome.abs());
+  mappedFields.setCurrency(F.line4, pa40.netBusinessIncome.abs());
   setCheckBox(form, F.line4Loss, pa40.netBusinessIncome.isNeg());
 
   // Line 5: Net gain/loss (check loss box if negative)
-  setCurrencyField(form, F.line5, pa40.netGainOrLoss.abs());
+  mappedFields.setCurrency(F.line5, pa40.netGainOrLoss.abs());
   setCheckBox(form, F.line5Loss, pa40.netGainOrLoss.isNeg());
 
   // Line 6: Net rental income (check loss box if negative)
-  setCurrencyField(form, F.line6, pa40.netRentalIncome.abs());
+  mappedFields.setCurrency(F.line6, pa40.netRentalIncome.abs());
   setCheckBox(form, F.line6Loss, pa40.netRentalIncome.isNeg());
 
   // Line 7: Estate/trust income
-  setCurrencyField(form, F.line7, pa40.estateTrustIncome);
+  mappedFields.setCurrency(F.line7, pa40.estateTrustIncome);
 
   // Line 8: Gambling/lottery winnings
-  setCurrencyField(form, F.line8, pa40.gamblingIncome);
+  mappedFields.setCurrency(F.line8, pa40.gamblingIncome);
 
   // Line 9: Total PA taxable income
-  setCurrencyField(form, F.line9, pa40.totalPATaxableIncome);
+  mappedFields.setCurrency(F.line9, pa40.totalPATaxableIncome);
 
   // Line 10: Other deductions
-  setCurrencyField(form, F.line10, pa40.otherDeductions);
+  mappedFields.setCurrency(F.line10, pa40.otherDeductions);
 
   // Line 11: Adjusted PA taxable income
-  setCurrencyField(form, F.line11, pa40.adjustedPATaxableIncome);
+  mappedFields.setCurrency(F.line11, pa40.adjustedPATaxableIncome);
+  mappedFields.apply();
 }
 
 function fillTaxAndPayments(
@@ -476,81 +478,83 @@ function fillTaxAndPayments(
   facts?: PA40DiagnosticRenderFacts,
 ): void {
   const F = PA_40_FIELDS;
+  const mappedFields = createPdfFieldBatch(form);
 
   // Line 12: PA tax liability (3.07%)
-  setCurrencyField(form, F.line12, pa40.taxLiability);
+  mappedFields.setCurrency(F.line12, pa40.taxLiability);
 
   // Line 13: State withholding
-  setCurrencyField(form, F.line13, pa40.stateWithholding);
+  mappedFields.setCurrency(F.line13, pa40.stateWithholding);
 
   // Line 14: Credit from prior year
-  setCurrencyField(form, F.line14, pa40.creditFromPriorYear);
+  mappedFields.setCurrency(F.line14, pa40.creditFromPriorYear);
 
   // Line 15: Estimated payments
-  setCurrencyField(form, F.line15, pa40.estimatedPayments);
+  mappedFields.setCurrency(F.line15, pa40.estimatedPayments);
 
   // Line 16: Extension payment
-  setCurrencyField(form, F.line16, pa40.extensionPayment);
+  mappedFields.setCurrency(F.line16, pa40.extensionPayment);
 
   // Line 17: Nonresident tax withheld
-  setCurrencyField(form, F.line17, pa40.nonresidentTaxWithheld);
+  mappedFields.setCurrency(F.line17, pa40.nonresidentTaxWithheld);
 
   // Line 18: Total estimated payments and credits
-  setCurrencyField(form, F.line18, pa40.totalEstimatedPaymentsAndCredits);
+  mappedFields.setCurrency(F.line18, pa40.totalEstimatedPaymentsAndCredits);
 
   // Line 20: Total eligibility income (from Schedule SP)
-  setCurrencyField(form, F.line20, pa40.taxForgivenessEligibilityIncome);
+  mappedFields.setCurrency(F.line20, pa40.taxForgivenessEligibilityIncome);
 
   // Line 21: Tax forgiveness credit (from Schedule SP)
-  setCurrencyField(form, F.line21, pa40.taxForgivenessCredit);
+  mappedFields.setCurrency(F.line21, pa40.taxForgivenessCredit);
 
   // Line 22: Resident credit (from Schedule G-L)
-  setCurrencyField(form, F.line22, pa40.residentCredit);
+  mappedFields.setCurrency(F.line22, pa40.residentCredit);
 
   // Line 23: Total other credits (from Schedule OC, DC, etc.)
-  setCurrencyField(form, F.line23, pa40.otherCredits);
+  mappedFields.setCurrency(F.line23, pa40.otherCredits);
 
   // Line 24: Total payments and credits
-  setCurrencyField(form, F.line24, pa40.totalPaymentsAndCredits);
+  mappedFields.setCurrency(F.line24, pa40.totalPaymentsAndCredits);
 
   // Line 25: Use tax
-  setTextField(form, F.line25, pa40.useTax.toFixed(0));
+  mappedFields.setText(F.line25, pa40.useTax.toFixed(0));
 
   // Line 26: Tax due
-  setCurrencyField(form, F.line26, pa40.taxDue);
+  mappedFields.setCurrency(F.line26, pa40.taxDue);
 
   // Line 27: Penalties and interest
-  setCurrencyField(form, F.line27, pa40.penaltiesAndInterest);
+  mappedFields.setCurrency(F.line27, pa40.penaltiesAndInterest);
   const estimated = pa40.underpaymentPenalty.gt(0);
   const late = pa40.lateFilingOrPaymentPenalty.gt(0) || pa40.latePaymentInterest.gt(0);
   if (pa40.penaltiesAndInterest.gt(0)) {
     if (!estimated && !late) throw new Error("PA40 positive line27 requires actual penalty components");
-    setTextField(form,F.line27Code,estimated ? late ? "B" : "E" : "L");
+    mappedFields.setText(F.line27Code,estimated ? late ? "B" : "E" : "L");
   }
 
   // Line 28: Total payment due
-  setCurrencyField(form, F.line28, pa40.totalAmountDue);
+  mappedFields.setCurrency(F.line28, pa40.totalAmountDue);
 
   // Line 29: Overpayment
-  setCurrencyField(form, F.line29, pa40.netOverpayment);
+  mappedFields.setCurrency(F.line29, pa40.netOverpayment);
 
   // An overpayment does not establish the taxpayer's actual refund election.
   if (facts?.requestedRefund !== undefined) {
     if (!/^\d+(?:\.\d{1,2})?$/.test(facts.requestedRefund)) throw new Error("PA40 actual requested refund is invalid");
     const refund = new Decimal(facts.requestedRefund).toDecimalPlaces(0,Decimal.ROUND_HALF_UP);
     if (refund.gt(pa40.netOverpayment)) throw new Error("PA40 requested refund exceeds reported overpayment");
-    setCurrencyField(form,F.line30,refund);
+    mappedFields.setCurrency(F.line30,refund);
   }
   if(facts?.nextYearCredit!==undefined){
     if(!/^\d+$/.test(facts.nextYearCredit))throw new Error("PA40 actual next-year credit election is invalid");
-    setCurrencyField(form,F.line31,new Decimal(facts.nextYearCredit));
+    mappedFields.setCurrency(F.line31,new Decimal(facts.nextYearCredit));
   }
   if(facts?.donations!==undefined){
     if(facts.donations.length>5)throw new Error("PA40 donation continuation method is required");
     const fields=[[F.line32Code,F.line32],[F.line33Code,F.line33],[F.line34Code,F.line34],[F.line35Code,F.line35],[F.line36Code,F.line36]] as const;
     for(const [index,row]of facts.donations.entries()){
       if(!/^[A-GIJ]$/.test(row.code)||!/^\d+$/.test(row.amount)||!new Decimal(row.amount).gt(0))throw new Error("PA40 actual donation election is invalid");
-      setTextField(form,fields[index][0],row.code);setCurrencyField(form,fields[index][1],new Decimal(row.amount));
+      mappedFields.setText(fields[index][0],row.code);mappedFields.setCurrency(fields[index][1],new Decimal(row.amount));
     }
   }
+  mappedFields.apply();
 }
