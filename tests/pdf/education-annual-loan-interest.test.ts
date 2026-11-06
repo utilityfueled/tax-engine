@@ -11,7 +11,8 @@ import { FORM_1040_FIELDS as F1040 } from '@/pdf/fill-form-1040.js';
 import { FORM_5329_FIELDS as F5329 } from '@/pdf/fill-form-5329.js';
 import { SCHEDULE_1_FIELDS as S1 } from '@/pdf/fill-schedule-1.js';
 import { redactReviewIdentifiers } from '@/pdf/redact-review-identifiers.js';
-import { prepareEducationReview } from '@/pdf/education-review-context.js';
+import { prepareEducationReview, assertPreparedEducationReturn } from '@/pdf/education-review-context.js';
+import { fillForm5329 } from '@/pdf/mappings/2025/fill-form-5329.js';
 import { annualLoanInterestFixture, mixedAnnualLoanInterestFixture } from '../fixtures/education-annual-loan-interest.js';
 
 it('binds original lender records and the calculated deduction before rendering', async () => {
@@ -86,5 +87,67 @@ it('binds mixed-purpose originals and the full return before PDF output', async 
       .toEqual(['700', '56500', '700', '7200', '720']);
     expect(fields[2]?.[F5329.ssn]).toBe('');
     expect(JSON.stringify(input)).toBe(original);
+  } finally { await rm(directory, { recursive: true, force: true }); }
+});
+
+// Spec: education-review-full-result-binding.yaml before-io-result.
+it.each(['agi', 'total-income', 'taxable-income', 'total-tax', 'refund', 'withholding', 'carryforward', 'audit', 'digital-asset'])('rejects annual-interest full-result mutations before every PDF entry point: %s', async mode => {
+  const directory = await mkdtemp(join(tmpdir(), 'education-full-result-denial-'));
+  try {
+    for (const fixture of [annualLoanInterestFixture(), mixedAnnualLoanInterestFixture()]) {
+      const input = fixture.input, result = calculateFederalTax(input), token = prepareEducationReview(input);
+      const originalInput = JSON.stringify(input), originalResult = JSON.stringify(result);
+      const changed = { ...result };
+      if (mode === 'agi') changed.agi = result.agi.plus(1);
+      if (mode === 'total-income') changed.totalIncome = result.totalIncome.plus(1);
+      if (mode === 'taxable-income') changed.taxableIncome = result.taxableIncome.plus(1);
+      if (mode === 'total-tax') changed.totalTax = result.totalTax.plus(1);
+      if (mode === 'refund') changed.refund = result.refund.plus(1);
+      if (mode === 'withholding') changed.totalWithholding = result.totalWithholding.plus(1);
+      if (mode === 'carryforward') changed.carryforwards = { ...result.carryforwards, capitalLoss: result.carryforwards.capitalLoss.plus(1) };
+      if (mode === 'audit') changed.allLines = result.allLines.map((line, index) => index === 0 ? { ...line, description: line.description + ' altered' } : line);
+      if (mode === 'digital-asset') changed.digitalAssetQuestion = !result.digitalAssetQuestion;
+      const displayed = redactReviewIdentifiers(changed), renderInput = redactReviewIdentifiers(input);
+      const absent = join(directory, 'absent-templates'), outputDir = join(directory, 'never-created');
+      for (const prepared of [token, undefined]) {
+        await expect(fillReturn(renderInput, displayed, { blankFormsDir: absent, outputDir, educationReview: prepared }), mode)
+          .rejects.toThrow(/annual.*(?:full|result)|education.*(?:full|result).*reconcile/i);
+        await expect(access(outputDir)).rejects.toThrow();
+      }
+      await expect(fillForm5329(renderInput, displayed, join(absent, 'f5329.pdf'), 'primary', token), mode)
+        .rejects.toThrow(/annual.*(?:full|result)|education.*(?:full|result).*reconcile/i);
+      expect(JSON.stringify(input)).toBe(originalInput); expect(JSON.stringify(result)).toBe(originalResult);
+    }
+  } finally { await rm(directory, { recursive: true, force: true }); }
+});
+
+// Spec: education-review-full-result-binding.yaml exact-render-copy.
+it('accepts exact original and redacted annual-interest results with private full-result binding', () => {
+  for (const fixture of [annualLoanInterestFixture(), mixedAnnualLoanInterestFixture()]) {
+    const input = fixture.input, result = calculateFederalTax(input), token = prepareEducationReview(input);
+    const education = result.form1099Q;
+    if (!education) throw new Error('Missing actual original education result');
+    expect(Object.keys(token)).toEqual([]);
+    expect(() => assertPreparedEducationReturn(input, education, token, result.schedule1?.studentLoanInterest, result)).not.toThrow();
+    const redacted = redactReviewIdentifiers(result), redactedEducation = redacted.form1099Q;
+    if (!redactedEducation) throw new Error('Missing redacted original education result');
+    expect(() => assertPreparedEducationReturn(redactReviewIdentifiers(input), redactedEducation, token, redacted.schedule1?.studentLoanInterest, redacted)).not.toThrow();
+    expect(() => assertPreparedEducationReturn(input, education, token, result.schedule1?.studentLoanInterest)).toThrow(/annual.*(?:full|result)|education.*(?:full|result)/i);
+  }
+});
+
+// Spec: education-review-full-result-binding.yaml fresh-auto-preparation.
+it('retains fresh auto-preparation for exact annual-interest render results', async () => {
+  const { input } = mixedAnnualLoanInterestFixture(), result = calculateFederalTax(input);
+  const originalInput = JSON.stringify(input), originalResult = JSON.stringify(result);
+  const renderedInput = redactReviewIdentifiers(input), renderedResult = redactReviewIdentifiers(result);
+  const directory = await mkdtemp(join(tmpdir(), 'education-full-result-fresh-'));
+  try {
+    const outputDir = join(directory, 'fresh');
+    await fillReturn(renderedInput, renderedResult, { blankFormsDir: 'forms/blank/2025', outputDir });
+    await expect(access(join(outputDir, 'f1040-filled.pdf'))).resolves.toBeUndefined();
+    const direct = await fillForm5329(renderedInput, renderedResult, 'forms/blank/2025/f5329.pdf', 'primary');
+    expect(direct.getForm().getTextField(F5329.line5).getText()).toBe('7200');
+    expect(JSON.stringify(input)).toBe(originalInput); expect(JSON.stringify(result)).toBe(originalResult);
   } finally { await rm(directory, { recursive: true, force: true }); }
 });

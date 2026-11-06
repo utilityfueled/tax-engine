@@ -1,0 +1,26 @@
+form: "Annual interest education full-result review integrity"
+fullName: "Opaque original and complete result binding before template I/O"
+taxYear: 2026
+irsReference: "https://uscode.house.gov/us/usc/119-118/t26/s221/"
+notes: |
+  Engineering review integrity, not a new tax formula or filing qualification.
+  Annual-interest source contexts already recompute from actual full originals
+  but previously retained only QTP and deduction result digests. On the delivered
+  sole-interest and finite mixed-interest cohort, retain the complete computed
+  result privately and accept only its exact original or exact existing
+  identifier-redacted representation. No hash, source, raw result or extra token
+  property enters rendered output. Do not add recomputation to assertion or
+  widen prepaid/room-board contexts. Existing year and filing gates remain.
+lines:
+  - line: "before-io-result"
+    description: "Reject every changed full result before template or output access"
+    formula: "AGI, total income, taxable income, total tax, refund, withholding, carryforward, audit or digital-asset answer changes cannot self-certify with unchanged QTP/deduction. Both fillReturn and direct Form5329 reject against a private prepared result; fresh auto-preparation retains the same check. Original and output sources remain unchanged."
+    testRef: "tests/pdf/education-annual-loan-interest.test.ts::rejects annual-interest full-result mutations before every PDF entry point: %s"
+  - line: "exact-render-copy"
+    description: "Permit only the exact original or existing structured identifier redaction"
+    formula: "Preparation derives full result once from original input. Assertion compares private original/redacted full-result digests; absent full result denies annual-interest use. Original result and its exact existing redaction pass. No other cohort acquires a new full-result requirement."
+    testRef: "tests/pdf/education-annual-loan-interest.test.ts::accepts exact original and redacted annual-interest results with private full-result binding"
+  - line: "fresh-auto-preparation"
+    description: "Retain successful fresh preparation from complete originals"
+    formula: "An exact redacted original input and exact redacted recomputed result still produce the ordinary review-only return without a supplied token; the direct5329 mapper also prepares its fresh private context. Physical taxable7200 remains unchanged. Missing required originals and invalid tokens remain denied."
+    testRef: "tests/pdf/education-annual-loan-interest.test.ts::retains fresh auto-preparation for exact annual-interest render results"

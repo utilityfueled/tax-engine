@@ -1,17 +1,18 @@
 /** Private original education evidence survives render-only identity removal.
- * Specs: form-1099-q-in-kind-room-board.yaml; form-1099-q-in-kind-assistance.yaml. */
+ * Specs: form-1099-q-in-kind-room-board.yaml; form-1099-q-in-kind-assistance.yaml; education-review-full-result-binding.yaml. */
 import { createHash } from 'node:crypto';
 import type Decimal from 'decimal.js';
 import { calculateFederalTax } from '@/engine/federal.js';
 import type { Form1099Q, QualifiedEducationExpenseSummary, TaxYearInput } from '@/models/inputs.js';
 import type { Form1099QResult } from '@/engine/forms/form-1099-q.js';
+import type { TaxReturnResult } from '@/models/outputs.js';
 import { redactReviewIdentifiers } from './redact-review-identifiers.js';
 
 const brand = Symbol('prepared actual education review');
 export interface PreparedEducationReview { readonly [brand]: true }
 const contexts = new WeakMap<PreparedEducationReview, {
   original: string; redacted: string; calculation: string; taxpayer: string; redactedTaxpayer: string;
-  annualLoanInterest?: { original: string; redacted: string; deduction: string };
+  annualLoanInterest?: { original: string; redacted: string; deduction: string; resultOriginal: string; resultRedacted: string };
 }>();
 const digest = (value: unknown) => createHash('sha256').update(JSON.stringify(value)).digest('hex');
 export function hasInKindEducationReviewSources(input: TaxYearInput): boolean {
@@ -31,7 +32,8 @@ export function prepareEducationReview(input: TaxYearInput): PreparedEducationRe
   // Keep the entire original return private, permitting only its exact redaction.
   const annualLoanInterest = result.loanInterestSourceAdjustments.some(source => source.annualInterestOnlyReporting)
     ? { original: digest(input), redacted: digest(redactReviewIdentifiers(input)),
-      deduction: calculated.schedule1?.studentLoanInterest.toFixed() ?? '0' } : undefined;
+      deduction: calculated.schedule1?.studentLoanInterest.toFixed() ?? '0',
+      resultOriginal: digest(calculated), resultRedacted: digest(redactReviewIdentifiers(calculated)) } : undefined;
   const token: PreparedEducationReview = Object.freeze({ [brand]: true as const });
   contexts.set(token, { original: digest(sources), redacted: digest(redactReviewIdentifiers(sources)), calculation: digest(redactReviewIdentifiers(result)),
     taxpayer: digest(input.taxpayer), redactedTaxpayer: digest(redactReviewIdentifiers(input.taxpayer)), annualLoanInterest });
@@ -49,7 +51,7 @@ export function assertPreparedEducationReview(forms: Form1099Q[], summary: Quali
 
 /** Renderers that receive taxpayer facts must also retain the original recipient. */
 export function assertPreparedEducationReturn(input: TaxYearInput, result: Form1099QResult, token: PreparedEducationReview,
-  studentLoanInterest?: Decimal): void {
+  studentLoanInterest?: Decimal, fullResult?: TaxReturnResult): void {
   assertPreparedEducationReview(input.form1099Q ?? [], input.qualifiedEducationExpenses, result, token);
   const context = contexts.get(token);
   const taxpayer = digest(input.taxpayer);
@@ -62,5 +64,10 @@ export function assertPreparedEducationReturn(input: TaxYearInput, result: Form1
       throw new Error('Annual interest-only education review original return and lender sources are stale or conflicting');
     if ((studentLoanInterest?.toFixed() ?? '0') !== context.annualLoanInterest.deduction)
       throw new Error('Annual interest-only education review student loan deduction does not reconcile');
+    // The same original income determines section221 MAGI and the rendered return.
+    // Accept only the computed original result or its exact existing render redaction.
+    const fullCalculation = fullResult && digest(fullResult);
+    if (fullCalculation !== context.annualLoanInterest.resultOriginal && fullCalculation !== context.annualLoanInterest.resultRedacted)
+      throw new Error('Annual interest-only education review full return result does not reconcile');
   }
 }

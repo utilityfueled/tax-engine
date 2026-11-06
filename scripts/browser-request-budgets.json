@@ -1153,7 +1153,7 @@
     "src/pdf/adoption-review-context.ts": "fc3cb9316608c39f4c90d38d74ff142a3a016cab9a9815ab9cd164eac5d37a06",
     "src/pdf/charitable-review-context.ts": "2379e63a5a62601d37d29377f9bc74c03c8dd6c1b3a21507aed383a08e1de974",
     "src/pdf/cod-nol-review-context.ts": "627d71de41603c9e6dc943c29ecb7805e5b847714237fdcf6d8a4c9649f5efa1",
-    "src/pdf/education-review-context.ts": "71abdd2b4856a5669b0810ec02e0a28458c697f1e0cd8a227fa46a39f8a26d21",
+    "src/pdf/education-review-context.ts": "286cfc2934d5cfcb45f4a1ceeb5646e72f085ded671743f5a89e2c2947b9b45d",
     "src/pdf/eic-review-checkboxes.ts": "4d0db7850412c51e4c9afd8e9820329800b13baa3c4bf0d1a1c64bfd40ac1573",
     "src/pdf/eic-review-context.ts": "e563180b8721e578863c08a66c8b22f1376b2600053b1f148d50587de9a0ce31",
     "src/pdf/export-policy.ts": "af79ca06ca3a4a376d1d5846a0335ee25dcc745d3d3a91864b3e247f9b4086c4",
@@ -1235,7 +1235,7 @@
     "src/pdf/fill-pa-schedule-t.ts": "3b86b841b02667443dc4ebdc5ec3308f16e46969ec05bd0986c1be1506cb9188",
     "src/pdf/fill-pa-schedule-ue.ts": "577962b1ed3b16ac3c92745994455dab226add2ee4ea5e87d7ce049c7456bd42",
     "src/pdf/fill-partner-basis-schedule.ts": "e793705679ca40a6e526f0f8baa1059040f8b04ac39038c5ce69ec36b75f1340",
-    "src/pdf/fill-return.ts": "5cc4eb1428c09fa802e71ecbdb5274ccef8e8d790d4f0e8611c668d15e77b988",
+    "src/pdf/fill-return.ts": "df730e8ddb1902e743451200ca0495cd5546b7cb7e9c62b69f33a7ce11347993",
     "src/pdf/fill-schedule-1.ts": "19b8fee77d0411f6f5c85f7c75df6a2490ea851678ef688d62abb9b466754715",
     "src/pdf/fill-schedule-2.ts": "8967104b5a9da5bb523f0a6452610a6625d61f76d20fd654c712d1394b43be5f",
     "src/pdf/fill-schedule-3.ts": "f54e8c7ac167a80a072c97061d605e91118ba8c17b4ffec9e127d823be642c0c",
@@ -1277,7 +1277,7 @@
     "src/pdf/mappings/2025/fill-form-4684.ts": "97f6fe425e89a7a848cf3d75659a2f5cba5ab8928ac5d62382435807206b6573",
     "src/pdf/mappings/2025/fill-form-4797.ts": "829238369660e47bb03a41294823136fea0727b3805415d47fc8c0f5f20421c0",
     "src/pdf/mappings/2025/fill-form-4952.ts": "14dbe3d9b976bd1185777e4c393cb645b247294a45fa00c615ea0449d5cbd489",
-    "src/pdf/mappings/2025/fill-form-5329.ts": "7e60885f9ed11a086802e80814b8edcd22d7face7744044fd3c87c61b9f5a508",
+    "src/pdf/mappings/2025/fill-form-5329.ts": "6588e57f591c93f17f4f71cb4d499c0d7b6f6bafbe29ca3d230006c3f501de31",
     "src/pdf/mappings/2025/fill-form-5695.ts": "bb35bc630357b211b52f8d4ca1cf10a31d9b7f7e65a0a2eef7192c1d914c8b34",
     "src/pdf/mappings/2025/fill-form-6198.ts": "2adc8a0d326614a081dab837ad543f7cc4f5c6669ad922424eccf844ef2dc22c",
     "src/pdf/mappings/2025/fill-form-6251.ts": "fb25d7b35d25f6c572b0fb03d1f79ab0d09530185f4ec7b766cf3cca7922e4b5",
@@ -3871,7 +3871,7 @@
         107,
         109
       ],
-      "reviewBasis": "Exact frozen V2: one awaited review click/400 refusal per case at95–96; exact all-scope census107 and request privacy109; backup/recovery is local. No provider or analysis action.",
+      "reviewBasis": "Exact frozen V2: one awaited review click/400 refusal per case at95\u201396; exact all-scope census107 and request privacy109; backup/recovery is local. No provider or analysis action.",
       "skippedTitles": []
     },
     "guided-refund-payment-years.spec.ts": {

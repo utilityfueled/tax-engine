@@ -525,7 +525,7 @@ export async function fillReturn(
     ? options.educationReview ?? prepareEducationReview(input) : undefined;
   if (educationReview) {
     if (!result.form1099Q || !input.form1099Q?.length) throw new Error("Education review requires the original distribution calculation");
-    assertPreparedEducationReturn(input, result.form1099Q, educationReview, result.schedule1?.studentLoanInterest);
+    assertPreparedEducationReturn(input, result.form1099Q, educationReview, result.schedule1?.studentLoanInterest, result);
     buildForm1099QReferenceSummary(input.form1099Q, result.form1099Q, input.qualifiedEducationExpenses, educationReview);
   }
   const savingsBondReview = hasSavingsBondReviewSources(input) || result.form8815?.reissueSourcesVerified || options.savingsBondReview
