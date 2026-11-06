@@ -41,6 +41,12 @@ partial and capped methods remain outside this endpoint. Eighteen lint warnings
 are disclosed, seven introduced. Independent saved-PDF review keeps its strict
 raw numeric-stream marker HOLD explicit. Human and full successor gates stay open.
 
+The [combined browser source audit](upgrade-2026-combined-browser-audit-work.md)
+now binds exactly seven reviewed runtime hashes and one new fixture, preserving
+all154 contracts/592 cases/five skips and every request/deadline control. Existing
+protocol controls pass51/3. Later remote72 recovery passes; managed and container
+browser jobs stop before cases, so source-bound browser qualification is still open.
+
 Fresh [official Next advisory metadata](upgrade-2026-next-1645-security-work.md)
 now resolves the seven affected/patched-range contradictions: installed16.4.5
 is patched. The mfr8 severity disagreement remains conservatively High; image

@@ -3875,3 +3875,14 @@ owner7206 outputs and historical8962 companion are retained in13 saved PDFs.
 Independent review is recorded in [the health ledger](upgrade-2026-marketplace-binding-owner-full-repayment.md);
 the strict raw numeric-stream marker hold, qualified human review, broader
 partial/capped methods and current global/distribution qualification remain open.
+
+
+### November6: reviewed browser source-audit reconciliation
+
+The correctly closed stale-source guard now binds seven reviewed runtime hashes
+and one new health fixture. Independent review preserves all154 action contracts,
+592 cases, five original skips and every limit/deadline. Actual stale denial,
+new source admission and51/3 protocol controls pass. See
+[the audit ledger](upgrade-2026-combined-browser-audit-work.md). Health8e54457d is
+pushed; remote72 recovery passes but both browser jobs stop before cases. Current
+full and exact distribution qualifications remain open.
