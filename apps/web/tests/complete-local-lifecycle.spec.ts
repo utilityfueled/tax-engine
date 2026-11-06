@@ -4,6 +4,7 @@ import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { assertEncryptedRecoveryOriginals } from './helpers/encrypted-recovery-review';
 import { fillRequiredTaxpayerFacts, fillRequiredW2Facts, reachFilingStatus } from './guided-fixtures';
 
 // Explicit synthetic suggestions attached to a BLANK IRS template; never extracted taxpayer truth.
@@ -46,6 +47,7 @@ async function keyboardActivate(page: Page, target: Locator) {
 async function stored(page: Page, id: string) {
   return page.evaluate((id) => ({
     guidedRaw: localStorage.getItem(`tax-engine.guided-flow-state.v1:${id}`),
+    guidedMode: localStorage.getItem(`tax-engine:guided-mode:${id}`),
     workspace: JSON.parse(localStorage.getItem('tax-engine.return-workspaces.v1') ?? '{}').workspaces?.[id],
     keys: Object.keys(localStorage).filter(key => key.includes(id)),
   }), id);
@@ -58,7 +60,7 @@ async function cachedFiles(page: Page) {
       const request = indexedDB.open('tax-engine-workspace-document-cache', 1);
       request.onsuccess = () => resolve(request.result); request.onerror = () => reject(request.error);
     });
-    const records = await new Promise<Array<{ workspaceId: string; documentId: string; fileName: string; file: Blob }>>((resolve, reject) => {
+    const records = await new Promise<Array<{ workspaceId: string; documentId: string; fileName: string; mediaType: string; lastModified: number; file: Blob }>>((resolve, reject) => {
       const request = db.transaction('workspace-document-files', 'readonly').objectStore('workspace-document-files').getAll();
       request.onsuccess = () => resolve(request.result); request.onerror = () => reject(request.error);
     }); db.close();
@@ -66,7 +68,7 @@ async function cachedFiles(page: Page) {
     return Promise.all(records.map(async record => {
       const bytes = new Uint8Array(await record.file.arrayBuffer()); let binary = '';
       for (let start = 0; start < bytes.length; start += 16384) binary += String.fromCharCode(...bytes.subarray(start, start + 16384));
-      return { workspaceId: record.workspaceId, documentId: record.documentId, fileName: record.fileName, bytesBase64: btoa(binary) };
+      return { workspaceId: record.workspaceId, documentId: record.documentId, fileName: record.fileName, type: record.mediaType, lastModified: record.lastModified, bytesBase64: btoa(binary) };
     }));
   });
   return files.map(({ bytesBase64, ...record }) => ({ ...record, bytes: Buffer.from(bytesBase64, 'base64') }));
@@ -210,8 +212,7 @@ print(json.dumps({'pages':len(texts),'physicalCells':12,'reviewNotices':len(text
   const backupDownload = page.waitForEvent('download'); await page.keyboard.press('Enter');
   const backupPath = testInfo.outputPath('encrypted-full-backup.json'); await (await backupDownload).saveAs(backupPath);
   const encrypted = await readFile(backupPath, 'utf8'); mark('encrypted-backup-downloaded');
-  expect(JSON.parse(encrypted)).toMatchObject({ format: 'tax-engine-encrypted-recovery', cipher: 'AES-256-GCM', kdf: 'PBKDF2-SHA256', iterations: 600000 });
-  for (const secret of [original.ssn, original.firstName, backupPassword, '%PDF-']) expect(encrypted).not.toContain(secret);
+  assertEncryptedRecoveryOriginals(encrypted, backupPassword, { workspace: before.workspace, guidedFlowRaw: before.guidedRaw, guidedMode: before.guidedMode, files: originalFiles });
   await activate(card.getByRole('button', { name: `Delete tax return ${id}`, exact: true }));
   await expect(card).toHaveCount(0); await page.reload();
   expect((await stored(page, id)).guidedRaw).toBeNull(); expect((await stored(page, id)).workspace).toBeUndefined(); expect((await stored(page, id)).keys).toEqual([]); expect(await cachedFiles(page)).toEqual([]);

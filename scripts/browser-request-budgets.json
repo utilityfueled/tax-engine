@@ -451,7 +451,7 @@
     "apps/web/tests/charitable-prior-nol.spec.ts": "ed890b912693b24884470e45a9717ca636dbd5830096ced0a94a3c71298bbc2c",
     "apps/web/tests/cod-empty-nol-foreign.spec.ts": "a3428d2bec73f40a2dc34ff884d695985b4814bb465a24fac70991a1b0e5e09e",
     "apps/web/tests/cod-ordinary-attributes.spec.ts": "dd1ab672d4e302756e28c103ba1dfb5d219c8cd360e354bf3b96eb15ab952a48",
-    "apps/web/tests/complete-local-lifecycle.spec.ts": "a69b47c27cb03ab904430c946f0c0f37c44738463e67b4a05afe324c7633fef7",
+    "apps/web/tests/complete-local-lifecycle.spec.ts": "b209ee99cf65494d67b7f711218dcc9aa1341691015d9e2e9dc3c07ed33e9843",
     "apps/web/tests/current-minimum-tax-credit.spec.ts": "2423107b10c6a8c4c4395beb2711d9b48f02101a6df7d1458147a42ae9f8960f",
     "apps/web/tests/deductions-credits.spec.ts": "13eb12d68a7064c14bf7ac3da788d734f168020f610f804e68ba8c874d76cea0",
     "apps/web/tests/eic-history-fixtures.ts": "7119a117e826059dd25fd920636ff318f10872917e7b79d463d02fda3538e457",
@@ -550,6 +550,7 @@
     "apps/web/tests/guided-vehicle-refinancing.spec.ts": "cf0915a79c9811c10c366fe4b6034413840f5c895f1a2777d31ac3e11291efb1",
     "apps/web/tests/guided-wagering-expenses.spec.ts": "10192142a79120ce84a0ae5ad0134d3319001f0710b242359add40fe44b9e0d8",
     "apps/web/tests/help.spec.ts": "61cfa7c774aa6e96b6490f7f2de6f5b8f57e9094c5bce77eee604a020bfd6274",
+    "apps/web/tests/helpers/encrypted-recovery-review.ts": "6920e88da5401f428f403e08d21afaa9b4d2ecedc360e733033629f2bb4a2097",
     "apps/web/tests/helpers/native-control-snapshot.ts": "32f9e54c0af82befbfc2f64d230f29448ef71ce40e1b31955c2730e4c2abfa30",
     "apps/web/tests/helpers/oh-resident-credit-browser.ts": "a70192aad91262d79fa68e0c851344fe9277198d200f85c37766db50803f392b",
     "apps/web/tests/helpers/pa-married-review-inspection.ts": "96505b1b359d765aeb12059a6567a40a2457e2680de897261648203a9c9ab0b8",
@@ -2037,10 +2038,10 @@
         "self-employment-income-analysis": 0
       },
       "requestSourceLines": [
-        108,
-        195,
-        202,
-        241
+        110,
+        197,
+        204,
+        242
       ],
       "reviewBasis": "Reviewed fixed actual download action and helper invocation sites; expected400 filing POSTs included; conservative per-file bound applies to every registered case",
       "skippedTitles": []

@@ -22312,6 +22312,34 @@
     "actualNewBrowser": "pending",
     "nativeCalculatedPreview": false,
     "filingEnabled": false,
-    "humanApproval": false
+    "humanApproval": false,
+    "commit": "8ec7a6f3645f07aa26d3c4a6ee70e1a50dc72de8"
+  },
+  "nov06EncryptedRecoveryEvidence": {
+    "status": "implemented_and_focused_browser_verified_pending_final_global_remote",
+    "sourceBase": "8ec7a6f3645f07aa26d3c4a6ee70e1a50dc72de8",
+    "ledger": "docs/upgrade-2026-encrypted-recovery-evidence-work.md",
+    "productionCryptoChanged": false,
+    "historicalFailurePreserved": true,
+    "authorPassed": 19,
+    "distinctPassed": 28,
+    "mainFocusedUnitPassed": 19,
+    "mainChecksPassed": 8,
+    "mainSpecLines": 8591,
+    "mainSourcePins": 5461,
+    "sourceDrift": [],
+    "actualBrowserPassed": 2,
+    "actualBrowserSkipped": 0,
+    "browserTimeoutMS": 30000,
+    "configuredWorkers": 2,
+    "actualWorkers": 1,
+    "retries": 0,
+    "browserSeconds": 16.7,
+    "ownedServerClosed": true,
+    "sourceAuditHashes": 1833,
+    "contractsUnchanged": 153,
+    "inventoryRows": 928,
+    "supportedRowsUnchanged": 68,
+    "finalRuntimeQualified": false
   }
 }

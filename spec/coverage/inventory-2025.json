@@ -1942,6 +1942,26 @@
       ]
     },
     {
+      "key": "federal/encrypted-recovery-browser-evidence",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "apps/web/src/lib/workspace-recovery.ts",
+      "specPath": "spec/federal/encrypted-recovery-browser-evidence.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/energy-return-sources",
       "jurisdiction": "federal",
       "taxYear": 2025,

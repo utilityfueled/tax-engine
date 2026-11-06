@@ -3614,3 +3614,13 @@ pass; three types/builds2/spec8586/lint and reviewed inventory follow-up pass.
 All68supported rows,153request contracts, combined2026/filing guards remain.
 Native collection/save/replay is distinct from a calculated preview; actual
 desktop/mobile browser follow-up continues separately. See [the state ledger](upgrade-2026-pa-2026-childless-eic-work.md).
+
+
+### November6: authenticated encrypted-recovery evidence
+
+The actual random-ciphertext name match is replaced with strict canonical
+envelope validation and independent authenticated full-original comparison.
+Production crypto stays unchanged. Author19/distinct28 and main8checks pass;
+both actual desktop/mobile journeys pass explicit30s/0retry with closed server.
+The old6e15failure remains failed. See [the recovery evidence ledger](upgrade-2026-encrypted-recovery-evidence-work.md).
+PA8ec7a6f3 is pushed; current global/remote/image/hosted/native/human gates remain.
