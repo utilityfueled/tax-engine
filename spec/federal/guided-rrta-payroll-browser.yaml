@@ -1,0 +1,19 @@
+form: "Guided RRTA native browser lifecycle"
+taxYear: 2025
+reference: "https://www.irs.gov/instructions/i8959"
+status: "prospective-native-browser-only"
+filingQualified: false
+notes: |
+  Two actual browser journeys for the already admitted ordinary2025 source cohort.
+  No monetary rule, source confirmation, original packet or computed result is seeded.
+  New actions require independent audit of exactly one denied review POST per case.
+lines:
+  - line: "visible-original-entry"
+    formula: "Seed only unrelated household, W2 and separately supplied nonrailroad tip diary. Start without RRTA collector or confirmed railroad compensation. Enter the positive summary and all source owners, years, compensation, actual withholding and finite exclusion checks through visible controls; explicit capture and later confirmation are separate. Missing correction facts cannot become a checked zero. Actual zero withholding survives capture; supplied270 produces Additional Medicare270, withholding credit270, Form4137tax15 and total withholding60270 from the independently supplied230000 railroad/1000 nonrailroad tip cohort."
+    testRef: "apps/web/tests/rrta-payroll-native.spec.ts::captures actual payroll originals and preserves stale recovery and unsupported-year gates"
+  - line: "currentness-and-recovery"
+    formula: "Save/reload and no-op blur preserve exact source proof. A same-cash original reference edit revokes collection/row confirmation while retaining the previous original. Reconfirming without recapture cannot admit stale facts. Explicit recapture restores admission. Through visible native controls download encrypted backup, delete original, reject wrong password, restore as a distinct local return, await its exact restored return URL before reloading so reload cannot cancel the client navigation, compare exact original proof/answers, and delete restored return. Only pre-entry unrelated setup writes are allowed."
+    testRef: "apps/web/tests/rrta-payroll-native.spec.ts::captures actual payroll originals and preserves stale recovery and unsupported-year gates"
+  - line: "review-privacy-and-year-gates"
+    formula: "Current supported2025 canonical input is calculated through the real public API. The existing app review action sends exactly one same-origin filled-return POST, expects400 and no PDF download; no prepared paper context is forged. After restored return is visibly changed to2026, actual native bridge/public constants/PDF review and filing policies retain refusal and advanced UI hides PDF actions. Both desktop/mobile observe provider/business/SEanalysis zero, no outside-origin request; explicitly census all fixture household identity/address, actual W2/tip employer identities and source references, entered collection/row references and labels, plus edited reference. Reject raw and decoded private URL surfaces on every route; only the exact same-origin review POST may carry private tax facts in its body. Both correct and incorrect backup passwords are forbidden in every URL/body surface. Reject malformed encoded surfaces rather than treating them as checked clean. Preserve no private body outside the one local review POST, bounded control geometry, and no page error. Original584cases/150contracts and all deadlines/retries remain unchanged until root-reviewed additive audit."
+    testRef: "apps/web/tests/rrta-payroll-native.spec.ts::captures actual payroll originals and preserves stale recovery and unsupported-year gates"

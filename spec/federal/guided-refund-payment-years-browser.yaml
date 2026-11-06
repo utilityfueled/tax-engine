@@ -1,0 +1,27 @@
+form: "native mixed-payment-year refund browser source journey"
+fullName: "Visible original state refund payment-year collection and recovery"
+taxYear: 2025
+reference: "https://www.irs.gov/publications/p525#en_US_2025_publink1000229426"
+notes: |
+  Prospective desktop/mobile native browser regression only. No browser run,
+  filing, export, human review or full2026 qualification is conferred by source.
+  Requires the separately reviewed native payment-year collector and composed
+  RRTA/refund bridge. All old cases, limits, workers, zero retry execution policy,
+  protected request ceilings and runtime overrides remain unchanged.
+lines:
+  - line: "visible-original-entry"
+    description: "Collect actual statement, payment and historical originals visibly"
+    formula: "The sole pre-entry setup seeds only unrelated household/W2/deductions/current estimated payment records. No income-unemployment target, refund original snapshot, confirmation or result is seeded. Type each target statement/history/payment fact through actual visible controls before explicit capture and confirmation."
+    testRef: "apps/web/tests/guided-refund-payment-years.spec.ts::collects actual dated refund originals and preserves source-bound recovery"
+  - line: "literal-example28"
+    description: "Replay the actual source-bound builder and canonical recovery APIs"
+    formula: "Four actual1000 payments include3000 paid2024 and1000 paid2025. A400 refund allocates300 taxable historical recovery and100 current-year deduction reduction; current1000 state estimated payment produces900 state/local income-tax deduction. No income or payment is inferred."
+    testRef: "apps/web/tests/guided-refund-payment-years.spec.ts::collects actual dated refund originals and preserves source-bound recovery"
+  - line: "unknown-zero-currentness"
+    description: "Keep blank distinct from documentary zero and retain originals on edits"
+    formula: "Unknown historical property tax denies, literal known0 can be explicitly recaptured/reconfirmed. Unchanged blur preserves source snapshot; same-cash payment provenance edit revokes confirmation without overwriting original snapshot. Reconfirmation alone cannot replay stale originals; explicit recapture is required. Reload/reopen preserves the actual saved facts."
+    testRef: "apps/web/tests/guided-refund-payment-years.spec.ts::collects actual dated refund originals and preserves source-bound recovery"
+  - line: "privacy-and-bounds"
+    description: "Keep every target original on the local native route"
+    formula: "Both1280 and390 layouts retain visible field geometry. Require exactly one reserved Next route-announcer ID inside its actual NEXT-ROUTE-ANNOUNCER shadow host; every other application alert must be absent, including empty alerts and duplicate reserved IDs. Observe all requests and page errors; bodies AND URLs including decoded surfaces must omit every entered source-reference and actual synthetic SSN/EIN formatted/compact spelling, with zero filledReturn/provider/businessExpenseAnalysis/selfEmploymentIncomeAnalysis requests and no downloads. No localStorage writes occur after the single pre-entry setup. No test timeout/retry/quota override is introduced."
+    testRef: "apps/web/tests/guided-refund-payment-years.spec.ts::collects actual dated refund originals and preserves source-bound recovery"

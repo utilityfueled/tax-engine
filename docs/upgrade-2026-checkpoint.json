@@ -21840,5 +21840,36 @@
     "runtimeQualified": false,
     "fullControllerReady": false,
     "document": "docs/upgrade-2026-native-capacity-diagnostic-work.md"
+  },
+  "nov05PayrollRefundActualBrowser": {
+    "status": "FINITE_2025_FOUR_ACTUAL_JOURNEYS_PASS",
+    "ledger": "docs/upgrade-2026-payroll-refund-browser-work.md",
+    "actualManifest": "ec3ce1d09427973b1feeb5d690bf7bbd5277b57a675be6eaeea79151420f007e",
+    "currencyDistinctManifest": "1a0b78074e7b1798245e963c9226e3ede27bc1886952f3a29655cd251c5297ea",
+    "actualCases": 4,
+    "deadlineMs": 30000,
+    "workers": 2,
+    "retries": 0,
+    "durationsMs": {
+      "rrtaDesktop": 8229,
+      "rrtaMobile": 3666,
+      "refundDesktop": 8240,
+      "refundMobile": 4173
+    },
+    "focusedTests": 34,
+    "metadataTests": 865,
+    "ownedServerClosed": true,
+    "sourceDrift": false,
+    "collection": 588,
+    "old584RowsPreserved": true,
+    "old150RequestContractsPreserved": true,
+    "contracts": 152,
+    "auditedSources": 1817,
+    "inventory": 919,
+    "old916InventoryRowsPreserved": true,
+    "supportedUnchanged": 68,
+    "fullCurrentGlobalPassed": false,
+    "filingQualified": false,
+    "releaseQualified": false
   }
 }

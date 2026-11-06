@@ -3512,3 +3512,16 @@ Full 7bcc unit and coverage runs each retain 26,452 passing tests and one failur
 - November5local evening: [actual refund payment-year intake](upgrade-2026-guided-refund-payment-years-work.md) collects dated source payments/history and resolves genuine combined RRTA capture deadlock/optional-key mismatch. Both canonical proof guards and explicit confirmation remain. Main152/21+852metadata/all12packagechecksPASS; ROOT54/9 anddistinct59/9/16auditcontrolsPASS. Frozenmain32manifest3e25bc17; exact10hashdelta retains150contracts/584cases, all914oldinventoryrows/68supported unchanged. Newbrowser/currentglobal/distribution/human/final2026 gates remain open; securitydocs9aac328d pushed.
 
 - November5local evening: [bounded native capacity diagnostic](upgrade-2026-native-capacity-diagnostic-work.md) passes actual12.449seconds/28commands/one normal boot and stop. Guest reports76500168704disk/7599566848memory bytes, nohostmounts; actual stopped/processabsent/route-restored readbacks pass. Source74controls and ROOT89actualpins verified. Diagnostic consumed/history3/3; final-source full release rehearsal, authorization and qualification remain open. Refund/composition89a47b88 is pushed.
+
+
+### November 5: actual payroll/refund browser recovery
+
+Formatted payroll originals now cross the strict Decimal handoff without altering
+saved lexical originals or confirmation gates. Genuine initial failures precede
+the correction and separate 47-test review. All four actual desktop/mobile
+journeys pass at 30 seconds, two workers and zero retries, including encrypted
+recovery, deletion, privacy and 2026 refusal. Main focused34/metadata865, types,
+spec/inventory, lint and builds pass. Collection588 preserves all584old rows and
+150old contracts; inventory919 preserves916old rows and68supported statuses.
+See [the browser ledger](upgrade-2026-payroll-refund-browser-work.md). Full current
+global/remote/runtime checks and external qualification remain open.

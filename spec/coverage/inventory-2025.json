@@ -6398,6 +6398,26 @@
       ]
     },
     {
+      "key": "federal/guided-refund-payment-years-browser",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.irs.gov/publications/p525#en_US_2025_publink1000229426",
+      "specPath": "spec/federal/guided-refund-payment-years-browser.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/guided-render-analysis",
       "jurisdiction": "federal",
       "taxYear": null,
@@ -6458,11 +6478,51 @@
       ]
     },
     {
+      "key": "federal/guided-rrta-currency-handoff",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.irs.gov/instructions/i8959",
+      "specPath": "spec/federal/guided-rrta-currency-handoff.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/guided-rrta-payroll",
       "jurisdiction": "federal",
       "taxYear": 2025,
       "sourceAuthority": "https://www.irs.gov/instructions/i8959",
       "specPath": "spec/federal/guided-rrta-payroll.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "federal/guided-rrta-payroll-browser",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.irs.gov/instructions/i8959",
+      "specPath": "spec/federal/guided-rrta-payroll-browser.yaml",
       "enginePath": null,
       "packetPath": null,
       "specExists": true,

@@ -4,6 +4,7 @@ import {RRTAPayrollSourcesSchema} from '@/models/rrta-payroll-sources';
 import {calculateRRTAPayrollSources} from '@/engine/forms/rrta-payroll-sources';
 import {getConstants} from '@/models/constants';
 import type {GuidedFlowState} from './guided-interview-flow';
+import {parseGuidedCurrency} from './guided-currency';
 type Answer=boolean|null;
 export interface GuidedRRTARow {
  sourceId:string;w2SourceId:string;owner:''|'primary'|'spouse';sourceTaxYear:string;sourceReference:string;
@@ -33,6 +34,14 @@ export function rrtaParentValues(state:GuidedFlowState){
  }});
 }
 export function updateGuidedRRTA(previous:GuidedRRTADraft,next:GuidedRRTADraft):GuidedRRTADraft{return rrtaDraftValues(previous)===rrtaDraftValues(next)?next:{...next,sourceFactsConfirmed:null};}
+/** Validate actual UI monetary grammar before the strict canonical handoff.
+ * Saved lexical drafts and their custody snapshots remain unchanged. */
+function payrollMoney(value:string,label:string):string{
+ if(typeof value!=='string'||value.trim()==='')throw Error(`Enter the actual ${label}; enter 0 only if it is zero.`);
+ const text=value.trim(),amount=parseGuidedCurrency(text);
+ if(amount.isNegative()||(text.split('.')[1]?.length??0)>2)throw Error(`Enter actual nonnegative ${label} with at most two decimal places.`);
+ return amount.toFixed();
+}
 function sourcePacket(raw:unknown,draft:GuidedRRTADraft){
  const input=TaxYearInputSchema.parse(raw);
  if(input.taxpayer.taxYear!==2025||draft.sourceTaxYear!=='2025')throw Error('Native RRTA sources currently require the actual2025 return.');
@@ -41,7 +50,7 @@ function sourcePacket(raw:unknown,draft:GuidedRRTADraft){
  const packet=RRTAPayrollSourcesSchema.parse({...facts,methodVersion:'ordinary-w2-rrta-v1',sourceTaxYear:2025,sourceFactsConfirmed:true,originalTaxpayer:structuredClone(input.taxpayer),originalTipForms:tips.map(original=>({owner:original.accountHolder,original:structuredClone(original)})),sources:draft.sources.map(row=>{
   if(row.sourceTaxYear!=='2025'||!/^formW2:(0|[1-9][0-9]*)$/.test(row.w2SourceId))throw Error('Choose the actual2025 RRTA W2 source.');
   const index=Number(row.w2SourceId.slice(7));if(!Number.isSafeInteger(index)||!input.w2s[index])throw Error('Actual RRTA W2 source is missing.');
-  return {...row,sourceTaxYear:2025,originalW2:structuredClone(input.w2s[index])};
+  return {...row,sourceTaxYear:2025,tier1SocialSecurityCompensation:payrollMoney(row.tier1SocialSecurityCompensation,'Tier1 Social Security compensation'),tier1MedicareCompensation:payrollMoney(row.tier1MedicareCompensation,'Tier1 Medicare compensation'),additionalMedicareTaxWithheld:payrollMoney(row.additionalMedicareTaxWithheld,'Additional Medicare tax withheld'),originalW2:structuredClone(input.w2s[index])};
  })});
  calculateRRTAPayrollSources({...input,rrtaPayrollSources:packet},getConstants(2025));return packet;
 }

@@ -348,7 +348,7 @@
     "apps/web/src/lib/guided-retirement-source-inputs.ts": "5d4417e007af44fddaadc91e875f24704b58f0b4fbd6862308833ff07eba4771",
     "apps/web/src/lib/guided-retirement-withholding-reconciliation.ts": "7a3a85da5022cde89a5901c983b66eea0e9ef74b72880a43ef4a3d4225b7d1c2",
     "apps/web/src/lib/guided-royalty-sources.ts": "3923cefcccbb07ef173bd9db9a9c5493195fe5b6f23873adf64b67287bfe50ab",
-    "apps/web/src/lib/guided-rrta-payroll-sources.ts": "3dfa811993ebd758a950f1be8c98cc7f9bdc0951494cd0f59a31c79c8c4648db",
+    "apps/web/src/lib/guided-rrta-payroll-sources.ts": "defd899bda00c0658f7ec754fa686059562d71894cd79e1dd9be39d5d8d59c2e",
     "apps/web/src/lib/guided-salt-facts.ts": "8d0f002ba230e852608f81834b244df77f26e204f136001102da8d40165dc80a",
     "apps/web/src/lib/guided-savings-bond-facts.ts": "b294042f2ca4d1b77520c95616a66f596cc06e0d766080ad3e82fd721c2e47e3",
     "apps/web/src/lib/guided-savings-bond-reissues.ts": "930c90b3b17c0929c972bfdc6ebb04bc72738d183fa71b7f79c008b2e0b5a80b",
@@ -530,6 +530,7 @@
     "apps/web/tests/guided-pa-married-mixed-residency.spec.ts": "c6a8c667f3e373886e68f07475925670be566cfcf07ae576dc32e2c2830e0650",
     "apps/web/tests/guided-private-activity-sources.spec.ts": "5e4c7c17de28702b6c12ada123a9915b9252861cec7fe9a34f43b3671f48452f",
     "apps/web/tests/guided-qsbs-sources.spec.ts": "7a87f7caca53e13fbfaa81ad35cc28cf278e4bc629333d3445a0af75f860144d",
+    "apps/web/tests/guided-refund-payment-years.spec.ts": "459eae20a2b019d20179e295f286f509319b0a784f6a8df21d2e6bd52870bd9b",
     "apps/web/tests/guided-rental-carry-sources.spec.ts": "204b4d60a1f4df5847fdc4d6e2dcec41be1780d40d2bf535e84ffaecb3191110",
     "apps/web/tests/guided-room-board-periods.spec.ts": "ad28bf2440f7cff816ba69e7fc2bdeb46ce21ab9d01416a23da3444300bc7710",
     "apps/web/tests/guided-room-board-prior-use.spec.ts": "d7154ff328f4ce49244f38816ffcd31f9e660ea5c0ccd2072bd5784f8b71a822",
@@ -591,6 +592,7 @@
     "apps/web/tests/responsive.spec.ts": "5f8833eadedb99b43a750b077bb678a2f5fff1a0d4d3c4f93aa2789932491f72",
     "apps/web/tests/review-completion.spec.ts": "0cd8aead847741c74bfbb9757c1616570a986f51738a0859ef8faaf47bcd5187",
     "apps/web/tests/royalty-sources.spec.ts": "05bf8388b12fa39ae16093040bf372a971c7f2a0117bb39f019180d1e8c86237",
+    "apps/web/tests/rrta-payroll-native.spec.ts": "39267294249435d85d276fcac295f71cb471290b366ba1ea2ccf26a6cb3ceb31",
     "apps/web/tests/self-host-flows.spec.ts": "5f0d52521e2e65f0fe1692a329d5b734e87c71250038a9fa1e30ca9605ab031a",
     "apps/web/tests/workspace-guided-year.spec.ts": "8683248504cbf2b14750b7032242429e15c9e29393a8b3dec5c5a24596e5e6d6",
     "apps/web/tests/workspace-lifecycle.spec.ts": "5b00c5d2e59c506c3ddc4f2c74fb90923038190a105db84a1d9c09cd1018a8d2",
@@ -1614,6 +1616,7 @@
     "tests/fixtures/guided-prior-qbi-ordinary-browser.json": "397a16d620f949bc6fbc083765e6a0736a63702ff34d9af1bcaec806e5a03d1a",
     "tests/fixtures/guided-prior-qbi-ordinary.ts": "39a7b3ddc68d071febf37d58db0b8abdccf181d34e58f23b22371e10abcfe124",
     "tests/fixtures/guided-qsbs.ts": "2af050d3ac0343ba7918f21ed8aa5e2a501763ef1e2633cb6945cfadc084c7a3",
+    "tests/fixtures/guided-refund-payment-years-browser.ts": "3ccf461176fc7ce6abf0ce74ff46a04c4ed4a85593ac13f1c59f25366d68a702",
     "tests/fixtures/guided-rental-carry.ts": "1317cc5c9a8d27c5dbd45dc0916a6f7281c45595b9eab236fa01c8ac1935a1e1",
     "tests/fixtures/guided-room-board-periods.ts": "51dd744f65ac32b7740f7504d77c2772003036cc05b6ee7c0a7e2f053af9c2c2",
     "tests/fixtures/guided-room-board-prior-use.ts": "3d0680863cc9791b4434fa3141cde9b04b433c8855e58e71b8e9497ecfc73386",
@@ -3835,6 +3838,39 @@
         "business-expense-analysis": 0,
         "self-employment-income-analysis": 0
       },
+      "skippedTitles": []
+    },
+    "rrta-payroll-native.spec.ts": {
+      "caseCount": 2,
+      "bounds": {
+        "filled-return": 1,
+        "provider": 0,
+        "business-expense-analysis": 0,
+        "self-employment-income-analysis": 0
+      },
+      "requestSourceLines": [
+        95,
+        96,
+        107,
+        109
+      ],
+      "reviewBasis": "Exact frozen V2: one awaited review click/400 refusal per case at95\u201396; exact all-scope census107 and request privacy109; backup/recovery is local. No provider or analysis action.",
+      "skippedTitles": []
+    },
+    "guided-refund-payment-years.spec.ts": {
+      "caseCount": 2,
+      "bounds": {
+        "filled-return": 0,
+        "provider": 0,
+        "business-expense-analysis": 0,
+        "self-employment-income-analysis": 0
+      },
+      "requestSourceLines": [
+        26,
+        72,
+        73
+      ],
+      "reviewBasis": "Reviewed current source: observer26; all four protected scopes asserted zero and every URL/body checked72; attachment73. Visible original capture, save/reopen and source edits are local, no PDF action.",
       "skippedTitles": []
     }
   }
