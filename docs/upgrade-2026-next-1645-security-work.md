@@ -68,3 +68,45 @@ That clock deadline is future at this refresh; no extension or risk acceptance
 is made. These registry results do not qualify image/OS/source reachability,
 current artifacts, recovery, independent human security/privacy or release.
 No dependency, lockfile or readiness gate changes in this evidence update.
+
+
+## November 6: affected/patched metadata corrected by the producer
+
+Fresh official advisory API records, requested at 17:42 UTC, now consistently
+exclude the installed Next 16.4.5 from their affected ranges and name 16.4.5 as
+the patched 16.x version. The records were updated at 10:20:02–10:20:20 UTC.
+This resolves the seven earlier affected/patched-field contradictions; the
+original observations and the missed November 4 follow-up deadline remain
+historical evidence. No dependency or lockfile change is needed.
+
+| Official advisory | Current affected 16.x range | Patched version |
+|---|---|---|
+| [GHSA-7qx7-33qx-rqx2](https://github.com/vercel/next.js/security/advisories/GHSA-7qx7-33qx-rqx2) | `>= 16.0.0, <= 16.4.4` | `16.4.5` |
+| [GHSA-f3mh-rxg3-f5g2](https://github.com/vercel/next.js/security/advisories/GHSA-f3mh-rxg3-f5g2) | `>= 16.0.0, <= 16.4.4` | `16.4.5` |
+| [GHSA-mfr8-8qww-v76h](https://github.com/vercel/next.js/security/advisories/GHSA-mfr8-8qww-v76h) | `>= 16.3.0, <= 16.4.4` | `16.4.5` |
+| [GHSA-pc58-hwjq-p385](https://github.com/vercel/next.js/security/advisories/GHSA-pc58-hwjq-p385) | `>= 16.0.0, <= 16.4.4` | `16.4.5` |
+| [GHSA-rhh4-g77r-r9qj](https://github.com/vercel/next.js/security/advisories/GHSA-rhh4-g77r-r9qj) | `>= 16.0.0, <= 16.4.4` | `16.4.5` |
+| [GHSA-vc7v-qv4w-wrv8](https://github.com/vercel/next.js/security/advisories/GHSA-vc7v-qv4w-wrv8) | `>= 16.2.0, <= 16.4.4` | `16.4.5` |
+| [GHSA-vvgp-ww4w-46vf](https://github.com/vercel/next.js/security/advisories/GHSA-vvgp-ww4w-46vf) | `>= 16.4.0, <= 16.4.4` | `16.4.5` |
+
+The current registry record identifies `next@16.4.5`; its distribution integrity
+matches the unchanged lockfile at `4ee5e082`. Independent file review passes 95
+assertions covering all seven complete vulnerability projections, raw response
+hashes, official repository/package identities, timestamps and the lock binding.
+These are metadata checks, with no new package audit, package installation or
+runtime security test.
+
+All seven API records still classify severity as Medium. The retained producer
+notice classified GHSA-mfr8-8qww-v76h as High, and a new retrieval of that notice
+still fails. Its severity difference remains unresolved and is treated as High
+conservatively. The earlier exposure observations, Sentry external-proxy caveat,
+all image-advisory decisions and required independent human security/privacy
+review remain separate. This update supplies no risk acceptance, new expiry,
+staging qualification or release-readiness claim.
+
+Evidence: `.local/upgrade-evidence/nov06-midday-next-primary-metadata/receipt.json`
+(SHA256 `3946a855f42038b4437e0d446c288aa42d7512bd78b8428f788061bef0c0a5a1`),
+`root-version-disposition.json`, and distinct
+`nov06-midday-next-primary-independent-review/manifest.json`
+(SHA256 `914d399c89f9d3e4633fb898eee155d9935e0a98f5689c67da443973675defc7`).
+The response receipt records request-start times, not response-completion times.

@@ -3818,3 +3818,14 @@ SBOM and scan bindings reconcile but its 81 advisory IDs remain unaccepted. The
 approved native disk growth passes; controller admission stops before boot. See
 [the runtime ledger](upgrade-2026-4ee5-runtime-evidence.md). No replay or readiness
 claim; exact-source staging/native, human, final-form and AI gates remain open.
+
+
+### November 6: corrected official Next affected-version metadata
+
+Seven fresh producer advisory API records now exclude installed16.4.5 and name
+it as patched; registry integrity matches the unchanged lock. Independent review
+passes95 metadata assertions. This resolves the affected/patched contradictions
+only; the retained mfr8 High/Medium severity conflict, missed old deadline, image
+advisories, runtime exposure and independent human review remain open. No package
+installation, new audit, risk acceptance or readiness claim. See
+[the security ledger](upgrade-2026-next-1645-security-work.md).

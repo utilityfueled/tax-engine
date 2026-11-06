@@ -22883,5 +22883,24 @@
     "hostedOperationCeiling": 1793,
     "releaseReady": false,
     "ledger": "docs/upgrade-2026-4ee5-runtime-evidence.md"
+  },
+  "nov06NextPrimaryMetadataCorrection": {
+    "retrievalUTC": "2026-11-06T17:42Z",
+    "sourceHead": "4ee5e082969c5847059b8518eb3d36c0572f24dd",
+    "officialRecords": 7,
+    "affectedThrough": "16.4.4",
+    "patched": "16.4.5",
+    "installed": "16.4.5",
+    "registryIntegrityMatchesLock": true,
+    "lockChanged": false,
+    "independentAssertions": 95,
+    "affectedPatchedContradictions": "RESOLVED",
+    "mfr8Severity": "HIGH_CONSERVATIVE_UNRESOLVED_MEDIUM_API_CONFLICT",
+    "oldFollowupDeadline": "MISSED_RETAINED",
+    "newRiskAcceptance": false,
+    "imageAdvisoriesOpen": 81,
+    "releaseReady": false,
+    "receiptSHA256": "3946a855f42038b4437e0d446c288aa42d7512bd78b8428f788061bef0c0a5a1",
+    "independentManifestSHA256": "914d399c89f9d3e4633fb898eee155d9935e0a98f5689c67da443973675defc7"
   }
 }

@@ -26,6 +26,11 @@ in the passing 4ee5 checks. Earlier source-specific results below remain histori
 New tax endpoint packages are still private and under review, with their original
 failed oracles and harness attempts retained; no adoption is implied here.
 
+Fresh [official Next advisory metadata](upgrade-2026-next-1645-security-work.md)
+now resolves the seven affected/patched-range contradictions: installed16.4.5
+is patched. The mfr8 severity disagreement remains conservatively High; image
+findings, exposure checks and required human review are separate open gates.
+
 [Provider source observations](upgrade-2026-provider-refresh-20261106.md) do not
 qualify models. Known usage remains 0.26282160 USD plus 0.022384 USD held for
 unresolved settlement, combined 0.28520560 USD. Final 2026 forms, independent
