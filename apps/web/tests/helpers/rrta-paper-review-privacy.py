@@ -38,6 +38,8 @@ MAX_PDF=32*1024*1024
 # Per-inspection parser memo only; capacity exhaustion falls back to full parsing.
 PARSE_CACHE_BYTES=8*1024*1024
 PARSE_CACHE_ENTRIES=4096
+# Successful context-free operand verdicts only; entries never cross inspect calls.
+OPERAND_CACHE_ENTRIES=4096
 NUM=re.compile(rb'[+-]?(?:\d+(?:\.\d*)?|\.\d+)\Z')
 FRAC=re.compile(rb'[+-]?(?:\d+\.\d*|\.\d+)\Z')
 # PDF-defined content operators only. BI consumes its whole ID/EI image using
@@ -158,8 +160,8 @@ def inspect(raw,markers):
    ops,spans=parse_content(combined,reader)
    if len(parse_cache)<PARSE_CACHE_ENTRIES and parse_cache_bytes+len(combined)<=PARSE_CACHE_BYTES:
     parse_cache[combined]=(ops,spans);parse_cache_bytes+=len(combined)
-  # Context/resource resolution, ambiguity, cycles and operand scans still run
-  # for every reference; only the context-free exact-byte parser is reused.
+  # Context/resource resolution, ambiguity and cycles still run for every
+  # reference. Parsed operations are retained unchanged until operand scanning.
   groups.append(ops)
   for k,start,data in chunks:
    local=[(a-start,b-start,t) for a,b,t in spans if start<=a and b<=start+len(data)]
@@ -188,8 +190,15 @@ def inspect(raw,markers):
    for x in a:argscan(x)
   elif isinstance(a,IndirectObject):raise Deny('content-reference')
  _phase('operand_strings')
+ operand_scanned=set()
  for ops in groups:
+  # Every list is retained in groups, so identities cannot be recycled here.
+  # Operands are immutable after parsing; argscan uses only this call's markers.
+  identity=id(ops)
+  if identity in operand_scanned:continue
   for args,op in ops:argscan(args)
+  # Retain only a complete successful verdict. Capacity exhaustion scans fully.
+  if len(operand_scanned)<OPERAND_CACHE_ENTRIES:operand_scanned.add(identity)
  def visit(v,label):
   nonlocal decoded_total
   if isinstance(v,IndirectObject):

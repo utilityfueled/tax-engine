@@ -3721,3 +3721,15 @@ failure. Independent manifests, source/image custody, exact outcomes and scope
 limits are recorded in [the execution ledger](upgrade-2026-browser-cpu-diagnostics-work.md).
 The failed strict browser gate, hosted/native qualification and human/form/AI
 review gates remain open. Separate implementation continues from this evidence.
+
+
+### November 6: bounded RRTA operand work reuse
+
+The [scanner change](upgrade-2026-rrta-operand-scan-work.md) removes repeated
+context-free operand checks within one inspection while retaining all privacy
+surfaces and the4s child deadline. Genuine desiredRED precedes54 privacyPASS;
+distinct8 controls and current78 affected/inventory controls pass. Inventory930
+is byte-identical, lint has zero warnings/errors, and scoped types preserve one
+exact pre-existing fixture diagnostic. All six same-saved-PDF comparison runs
+pass with identical projections; local timing ranges overlap. Actual Linux
+success and final combined qualification remain open.

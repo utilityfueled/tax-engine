@@ -44,15 +44,24 @@ def counted(data,reader):
 m.parse_content=counted
 if p.get('fallback')=='bytes':m.PARSE_CACHE_BYTES=0
 if p.get('fallback')=='entries':m.PARSE_CACHE_ENTRIES=0
+if 'operandLimit' in p:m.OPERAND_CACHE_ENTRIES=p['operandLimit']
+operand_calls=0
+def count_operand(frame,event,arg):
+ global operand_calls
+ if event=='call' and frame.f_code.co_name=='argscan':operand_calls+=1
+if p.get('countOperands'):sys.setprofile(count_operand)
 results=[]
 for i in range(p['inspections']):
- try:results.append(m.inspect(raw,markers)['status'])
+ try:results.append(m.inspect(raw,p.get('markerSets',[markers]*p['inspections'])[i])['status'])
  except m.Deny as e:results.append('DENY:'+str(e))
-print(json.dumps({'results':results,'parseCalls':calls}))`;
-async function runProbe(data:{pdf:string;markers:string[];inspections:number;fallback?:'bytes'|'entries'}){
+sys.setprofile(None)
+out={'results':results,'parseCalls':calls}
+if p.get('countOperands'):out['operandCalls']=operand_calls
+print(json.dumps(out))`;
+async function runProbe(data:{pdf:string;markers:string[];inspections:number;fallback?:'bytes'|'entries';countOperands?:boolean;operandLimit?:number;markerSets?:string[][]}){
  const real=await vi.importActual<typeof import('node:child_process')>('node:child_process');
  const r=real.spawnSync(python,['-I','-B','-c',probe,pySource],{input:JSON.stringify(data),encoding:'utf8',timeout:4000,maxBuffer:65536,env:{PATH:process.env.PATH??'/usr/bin:/bin'}});
- expect(r.error).toBeUndefined();expect(r.status).toBe(0);expect(r.signal).toBeNull();expect(r.stderr).toBe('');return JSON.parse(r.stdout)as{results:string[];parseCalls:number};
+ expect(r.error).toBeUndefined();expect(r.status).toBe(0);expect(r.signal).toBeNull();expect(r.stderr).toBe('');return JSON.parse(r.stdout)as{results:string[];parseCalls:number;operandCalls?:number};
 }
 describe('Spec guided-rrta-paper-browser bounded parser reuse and safe categories',()=>{
  it.each(cases)('classifies bounded child failure %s without raw data',(category,value)=>{
@@ -65,6 +74,19 @@ describe('Spec guided-rrta-paper-browser bounded parser reuse and safe categorie
   const pdf=await sample(),markers=['111111111','標記','é'];
   expect(await runProbe({pdf,markers,inspections:2})).toEqual({results:['PASS','PASS'],parseCalls:2});
   for(const fallback of ['bytes','entries']as const)expect(await runProbe({pdf,markers,inspections:2,fallback})).toEqual({results:['PASS','PASS'],parseCalls:8});
+ });
+ it('reuses only successfully scanned immutable operands within one inspection and retains full fallback',async()=>{
+  const doc=await PDFDocument.create();
+  for(let i=0;i<4;i++){const page=doc.addPage([200,200]);page.node.set(PDFName.of('Contents'),doc.context.register(doc.context.flateStream(i%2===0?'q Q':'q q Q Q')));}
+  const pdf=Buffer.from(await doc.save({useObjectStreams:false})).toString('base64'),data={pdf,markers:['111111111'],inspections:2,countOperands:true};
+  expect(await runProbe(data)).toEqual({results:['PASS','PASS'],parseCalls:4,operandCalls:12});
+  expect(await runProbe({...data,operandLimit:1})).toEqual({results:['PASS','PASS'],parseCalls:4,operandCalls:20});
+  expect(await runProbe({...data,operandLimit:0})).toEqual({results:['PASS','PASS'],parseCalls:4,operandCalls:24});
+  expect(await runProbe({...data,fallback:'entries'})).toEqual({results:['PASS','PASS'],parseCalls:8,operandCalls:24});
+ });
+ it('does not reuse an operand verdict across inspections with changed markers',async()=>{
+  const r=await runProbe({pdf:await sample(false,'é'),markers:['111111111'],markerSets:[['111111111'],['é']],inspections:2,countOperands:true});
+  expect(r.results).toEqual(['PASS','DENY:private-marker']);expect(r.parseCalls).toBe(2);
  });
  it.each(['é','標記','١١١١١١١١١','𝟙𝟙𝟙'])('retains encoded non-ASCII marker denial for %s',async marker=>{expect((await runProbe({pdf:await sample(false,marker),markers:[marker],inspections:1})).results).toEqual(['DENY:private-marker']);});
  it('retains cycle denial for repeated identical syntax',async()=>{expect((await runProbe({pdf:await sample(true,undefined,true),markers:['111111111'],inspections:1})).results).toEqual(['DENY:content-cycle']);});
