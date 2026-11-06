@@ -21759,5 +21759,15 @@
     "actualNewBrowserExecuted": false,
     "humanReview": false,
     "releaseQualified": false
+  },
+  "nov05ContainerJobEvidenceRetention": {
+    "status": "JOB_ENVELOPE_AND_ARTIFACT_ATTEMPT_ONLY",
+    "mainManifest": "cdbf7e2714d99c9586fcfc19ed389f4db8680801fc211a5362c20c9d3647392c",
+    "controlsPassed": 58,
+    "overallContainerMinutes": 90,
+    "ordinaryBrowserMillisecondsUnchanged": 30000,
+    "remote6a5cBrowserFailures": 25,
+    "remote6a5cScan": "CANCELED_UNQUALIFIED",
+    "releaseQualified": false
   }
 }
