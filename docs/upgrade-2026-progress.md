@@ -3577,3 +3577,15 @@ The separately reviewed V11 continuation returns its read-only connection and co
 ### November6: official Node image rebuild pinned separately
 
 The same Node26.13.0 official multiarch index is refreshed in both Docker stages, CI preload and smoke proof. Actual old/new ARM64 layer/package reconstruction identifies APT/libapt3.0.4 security fix and tzdata2026f; all36 registered runtime vulnerable versions and80unaccepted IDs remain unchanged. Spec/test first gives2RED then7PASS; spec/inventory/lint/syntax and distinct source review pass. Lock/platform/assertions/timeouts remain unchanged. New application-image/runtime/SBOM/scan/recovery qualification remains required. See [the dependency ledger](upgrade-2026-node-base-refresh-20261106.md).
+
+
+### November6: bounded RRTA saved-PDF inspection reuse
+
+Spec-first actual31PASS/11FAIL precedes42PASS, preserving24old privacy controls.
+Same-reader exact-byte parser reuse and precompiled marker variants retain every
+context/graph/string check and original4s/64KiB bounds; fixed child-failure labels
+expose no raw data. Both real saved remote PDFs retain identical verdicts, while
+parser calls646→193 and all measured visits stay exact. Nine static checks and
+both actual desktop/mobile journeys pass with original limits and closed server.
+See [the inspector ledger](upgrade-2026-rrta-inspector-efficiency-work.md). Remote
+cause/successor qualification and human/final2026/staging gates remain open.

@@ -51,14 +51,18 @@ export interface SavedReviewPrivacyInspection {
 }
 /** Fixed saved-byte inspector. Child output never supplies trusted bytes, scope or source facts. */
 export function inspectSavedPrivacy(path:string,identifiers:readonly string[],expected:{sha256:string;bytes:number;pages:number}):SavedReviewPrivacyInspection{
- const fail=()=>new Error('Bounded saved-PDF privacy inspection failed');
+ const fail=(category:'timeout'|'spawn'|'signal'|'exit'|'stderr'|'output'|'json'|'projection')=>new Error(`Bounded saved-PDF privacy inspection failed [${category}]`);
  const env:NodeJS.ProcessEnv={};for(const key of ['PATH','SystemRoot','WINDIR','TMPDIR','TMP','TEMP','LANG','LC_ALL'])if(process.env[key]!==undefined)env[key]=process.env[key];
- let child:SpawnSyncReturns<string>;try{child=spawnSync(process.env.TAX_ENGINE_PDF_TEST_PYTHON??'python3',['-I','-B',fileURLToPath(new URL('./rrta-paper-review-privacy.py',import.meta.url)),path],{input:JSON.stringify(identifiers),encoding:'utf8',timeout:4000,maxBuffer:65536,env,stdio:['pipe','pipe','pipe']});}catch{throw fail();}
- if(child.error||child.status!==0||child.signal!==null||typeof child.stdout!=='string'||typeof child.stderr!=='string'||child.stderr.length||Buffer.byteLength(child.stdout,'utf8')>65536)throw fail();
- let parsed:unknown;try{parsed=JSON.parse(child.stdout);}catch{throw fail();}
- if(!parsed||typeof parsed!=='object'||Array.isArray(parsed))throw fail();const value=parsed as Record<string,unknown>;
- const keys=['schemaVersion','status','sha256','bytes','pages','markersChecked','geometrySubstringExemptions','scope'];if(Object.keys(value).length!==keys.length||keys.some(key=>!Object.hasOwn(value,key)))throw fail();
- if(value.schemaVersion!==1||value.status!=='PASS'||value.scope!=='full-graph-typed-content'||value.sha256!==expected.sha256||value.bytes!==expected.bytes||value.pages!==expected.pages||value.markersChecked!==identifiers.length||!Number.isSafeInteger(value.geometrySubstringExemptions)||(value.geometrySubstringExemptions as number)<0)throw fail();
+ let child:SpawnSyncReturns<string>;try{child=spawnSync(process.env.TAX_ENGINE_PDF_TEST_PYTHON??'python3',['-I','-B',fileURLToPath(new URL('./rrta-paper-review-privacy.py',import.meta.url)),path],{input:JSON.stringify(identifiers),encoding:'utf8',timeout:4000,maxBuffer:65536,env,stdio:['pipe','pipe','pipe']});}catch{throw fail('spawn');}
+ if(child.error)throw fail((child.error as NodeJS.ErrnoException).code==='ETIMEDOUT'?'timeout':'spawn');
+ if(child.signal!==null)throw fail('signal');
+ if(child.status!==0)throw fail('exit');
+ if(typeof child.stdout!=='string'||typeof child.stderr!=='string'||Buffer.byteLength(child.stdout,'utf8')>65536)throw fail('output');
+ if(child.stderr.length)throw fail('stderr');
+ let parsed:unknown;try{parsed=JSON.parse(child.stdout);}catch{throw fail('json');}
+ if(!parsed||typeof parsed!=='object'||Array.isArray(parsed))throw fail('projection');const value=parsed as Record<string,unknown>;
+ const keys=['schemaVersion','status','sha256','bytes','pages','markersChecked','geometrySubstringExemptions','scope'];if(Object.keys(value).length!==keys.length||keys.some(key=>!Object.hasOwn(value,key)))throw fail('projection');
+ if(value.schemaVersion!==1||value.status!=='PASS'||value.scope!=='full-graph-typed-content'||value.sha256!==expected.sha256||value.bytes!==expected.bytes||value.pages!==expected.pages||value.markersChecked!==identifiers.length||!Number.isSafeInteger(value.geometrySubstringExemptions)||(value.geometrySubstringExemptions as number)<0)throw fail('projection');
  return value as unknown as SavedReviewPrivacyInspection;
 }
 /** Saved bytes only: structural/identifier checks; ROOT separately inspects actual printed pages. */

@@ -10,6 +10,9 @@ from pypdf._utils import read_non_whitespace,read_until_regex
 
 class Deny(Exception):pass
 MAX_PDF=32*1024*1024
+# Per-inspection parser memo only; capacity exhaustion falls back to full parsing.
+PARSE_CACHE_BYTES=8*1024*1024
+PARSE_CACHE_ENTRIES=4096
 NUM=re.compile(rb'[+-]?(?:\d+(?:\.\d*)?|\.\d+)\Z')
 FRAC=re.compile(rb'[+-]?(?:\d+\.\d*|\.\d+)\Z')
 # PDF-defined content operators only. BI consumes its whole ID/EI image using
@@ -59,20 +62,27 @@ def inspect(raw,markers):
  require(type(raw) is bytes and 0<len(raw)<=MAX_PDF and raw.startswith(b'%PDF-'),'pdf-input')
  require(type(markers) is list and 0<len(markers)<=128 and len(set(markers))==len(markers) and all(type(m) is str and 0<len(m)<=512 for m in markers),'markers-input')
  reader=PdfReader(io.BytesIO(raw),strict=True);require(not reader.is_encrypted,'encrypted-pdf');require(0<len(reader.pages)<=100,'page-limit')
+ # Marker encodings and the exact ASCII-only geometry eligibility are immutable
+ # for this invocation. No markers, scan surfaces or occurrences are omitted.
+ compiled=[]
+ for m in markers:
+  variants={m.encode('utf8'),m.encode('utf-16-be'),m.encode('utf-16-le')}
+  try:variants.add(m.encode('latin1'))
+  except UnicodeError:pass
+  ascii_numeric=m.encode('ascii') if m.isascii() and m.isdecimal() else None
+  compiled.append((variants,ascii_numeric,Decimal(m) if ascii_numeric is not None else None))
  known={};parsed={};active=set();visiting=set();exemptions=set();seenrefs=set();seenobjects=set();decoded_total=0
+ parse_cache={};parse_cache_bytes=0
  def scan_bytes(data,label,spans=()):
-  for mi,m in enumerate(markers):
-   variants={m.encode('utf8'),m.encode('utf-16-be'),m.encode('utf-16-le')}
-   try:variants.add(m.encode('latin1'))
-   except UnicodeError:pass
+  for mi,(variants,ascii_numeric,numeric_value) in enumerate(compiled):
    for pattern in variants:
     start=0
     while True:
      at=data.find(pattern,start)
      if at<0:break
      start=at+1;eligible=[]
-     if m.isascii() and m.isdecimal() and pattern==m.encode('ascii'):
-      eligible=[(a,b,t) for a,b,t in spans if a<=at and at+len(pattern)<=b and (at>a or at+len(pattern)<b) and Decimal(t.decode())!=Decimal(m)]
+     if ascii_numeric is not None and pattern==ascii_numeric:
+      eligible=[(a,b,t) for a,b,t in spans if a<=at and at+len(pattern)<=b and (at>a or at+len(pattern)<b) and Decimal(t.decode())!=numeric_value]
      if eligible:exemptions.add((label,mi,at))
      else:raise Deny('private-marker')
  def scan_string(value):
@@ -109,13 +119,22 @@ def inspect(raw,markers):
     scan_bytes(decoded,'decoded-stream-string');scan_string(create_string_object(decoded))
  groups=[]
  def content_group(values,resources,depth=0):
+  nonlocal parse_cache_bytes
   require(depth<=50,'content-depth');items=[(v,resolved(v)) for v in values]
   require(all(isinstance(obj,StreamObject) for v,obj in items),'content-type')
   groupkey=tuple(key(v) for v,obj in items);require(groupkey not in visiting,'content-cycle');visiting.add(groupkey)
   chunks=[];offset=0
   for v,obj in items:
    data=obj.get_data();require(len(data)<=64*1024*1024,'stream-size');chunks.append((key(v),offset,data));offset+=len(data)+1
-  combined=b'\n'.join(d for k,start,d in chunks);ops,spans=parse_content(combined,reader);groups.append(ops)
+  combined=b'\n'.join(d for k,start,d in chunks)
+  if combined in parse_cache:ops,spans=parse_cache[combined]
+  else:
+   ops,spans=parse_content(combined,reader)
+   if len(parse_cache)<PARSE_CACHE_ENTRIES and parse_cache_bytes+len(combined)<=PARSE_CACHE_BYTES:
+    parse_cache[combined]=(ops,spans);parse_cache_bytes+=len(combined)
+  # Context/resource resolution, ambiguity, cycles and operand scans still run
+  # for every reference; only the context-free exact-byte parser is reused.
+  groups.append(ops)
   for k,start,data in chunks:
    local=[(a-start,b-start,t) for a,b,t in spans if start<=a and b<=start+len(data)]
    if k in known:require(known[k]==local,'ambiguous-content-context')

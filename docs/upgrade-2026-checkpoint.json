@@ -22210,5 +22210,38 @@
     "newScanQualified": false,
     "ownerAcceptance": false,
     "ledger": "docs/upgrade-2026-node-base-refresh-20261106.md"
+  },
+  "nov06RRTASavedInspectorEfficiency": {
+    "status": "LOCAL_PACKAGE_PASSED_REMOTE_CAUSE_UNKNOWN",
+    "baseCommit": "b1d3ccdce52670575d5061be35c418cb774cd462",
+    "mainRed": {
+      "passed": 31,
+      "failed": 11
+    },
+    "mainGreen": 42,
+    "oldPrivacyTestsPreserved": 24,
+    "staticChecksPassed": 9,
+    "specReferences": 8582,
+    "browserCasesPassed": 2,
+    "browserFailures": 0,
+    "browserRetries": 0,
+    "browserSkips": 0,
+    "ownedServerClosed": true,
+    "childTimeoutMilliseconds": 4000,
+    "childOutputMaximumBytes": 65536,
+    "parseMemoMaximumKeyBytes": 8388608,
+    "parseMemoMaximumEntries": 4096,
+    "actualSavedPDFsWithExactVerdictParity": 2,
+    "actualParseCallsBeforeAfter": [
+      646,
+      193
+    ],
+    "allMeasuredInspectionVisitCountsUnchanged": true,
+    "authorManifestSHA256": "9aae41a537fa5113024e3d63c71a4f6b97079a1fe8548fb790e9c1875437b874",
+    "rootReviewManifestSHA256": "862877b95e7742457a41301b17930621e6c50d7e0ca732666bd6e9e4eedefc71",
+    "remoteCauseEstablished": false,
+    "remoteFixQualified": false,
+    "readinessChanged": false,
+    "ledger": "docs/upgrade-2026-rrta-inspector-efficiency-work.md"
   }
 }
