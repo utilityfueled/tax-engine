@@ -16,6 +16,14 @@ import { calculateOhio2026ReciprocalWageSource, readOhio2026ReciprocalWageSource
 import { calculateOhio2026ResidentCreditSource, readOhio2026ResidentCreditSource, type Ohio2026ResidentCreditSourceContext } from './oh-2026-resident-credit-source.js';
 import { roundDollar } from '@/utils/decimal.js';
 
+const federalDocumentCollections: ReadonlySet<string> = new Set([
+  'form1099Int', 'form1099Div', 'form1099B', 'form1099DA', 'form1099Nec',
+  'form1099Misc', 'form1099G', 'form1099OID', 'formW2G', 'form1099K', 'form1099C',
+  'form1099Q', 'scheduleK1', 'scheduleK1Form1041', 'form1098', 'form1098E',
+  'form1095A', 'donations', 'rentalProperties', 'savingsBondRedemptions',
+  'form6252', 'form8814', 'homeSales', 'form8824',
+] satisfies Array<keyof TaxYearInput>);
+
 function stable(value: unknown): unknown {
   if (Decimal.isDecimal(value)) return value.toString();
   if (Array.isArray(value)) return value.map(stable);
@@ -106,14 +114,11 @@ function qualifyEmployee(input: TaxYearInput, raw: unknown, reciprocal?: Ohio202
   for (const snapshot of [source.originalFederalSources, facts.originalFederalSources, payments.originalFederalSources]) {
     if (!snapshot || digest(snapshot) !== digest(originals)) fail('current complete original source snapshot is missing or changed');
   }
-  // Only these explicit empty historical input collections can accompany this
-  // finite wage-only method. Any retained unhandled object rejects even at zero.
-  const emptyArrays = new Set(['form1099Int', 'form1099Div', 'form1099B', 'form1099Nec', 'form1099Misc', 'scheduleK1', 'form1098', 'form1095A', 'donations']);
   const allowed = new Set(['taxpayer', 'w2s', 'standardDeductionFacts', 'ohioResidency', 'ohioPayments']);
   for (const [key, value] of Object.entries(input)) {
     if (value === undefined || allowed.has(key)) continue;
     if(school)continue; // The current opaque school proof has independently checked every original key.
-    if (emptyArrays.has(key) && Array.isArray(value) && value.length === 0) continue;
+    if (federalDocumentCollections.has(key) && Array.isArray(value) && value.length === 0) continue;
     fail('retained other originals require their separate actual method even at zero');
   }
   if (!Array.isArray(input.w2s) || !input.w2s.length || input.w2s.length > 20 || source.employmentOriginals.length !== input.w2s.length) fail('complete bounded current W2 and employment inventory required');

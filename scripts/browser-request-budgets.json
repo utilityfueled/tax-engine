@@ -998,7 +998,7 @@
     "src/engine/state/oh-2026-baseline.ts": "e6658839feab37af6d5396a6c8acbf781afb4a4c52bead83b922ca1bdd727da9",
     "src/engine/state/oh-2026-business-draft.ts": "5bfda50acf62f56c4b359b90b9df6e96eb197af7543ce8c814e945e8dd175f59",
     "src/engine/state/oh-2026-earned-school-draft.ts": "9166f56f3869bcdfa05af695b6db1136bdca9333bbf9c34a21937205ace5418b",
-    "src/engine/state/oh-2026-ordinary-source.ts": "178dcfa97906d015a3f33a93bacec94a24aac2f00a393f99f2d24b1d9729d948",
+    "src/engine/state/oh-2026-ordinary-source.ts": "51b9bfef6c9263d8fa41e5d336fcdaba0588cb9a2142b7033272bdf6a6e7f14a",
     "src/engine/state/oh-2026-payment-source.ts": "f1fd4fa7a3305d69aa4e984227bcff34580ceb8821c63079e1b4cde9121ca7b3",
     "src/engine/state/oh-2026-reciprocal-source.ts": "d0f345efa57f8d1bfc7d1b7ffafbded51904ae1e45ce2d7eec9e4a034e1dc2a1",
     "src/engine/state/oh-2026-resident-credit-source.ts": "44a64c07e72f256bb251b74e9d1c0f65b6b9be9cd888929c84a469349d190972",

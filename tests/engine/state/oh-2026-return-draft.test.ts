@@ -5,6 +5,7 @@ import { calculateFederalTax } from '@/engine/federal.js';
 import { OHIO_TAX_CONSTANTS, TAX_CONSTANTS } from '@/models/constants.js';
 import { calculateOhio2026OrdinarySource } from '@/engine/state/oh-2026-ordinary-source.js';
 import { calculateOhio2026ReturnDraft } from '@/engine/state/oh-2026-return-draft.js';
+import { Form1099GSchema, TaxYearInputSchema } from '@/models/inputs.js';
 import { ohio2026OrdinaryFixture, rebindOhio2026Ordinary } from '../../fixtures/oh-2026-ordinary-return.js';
 
 type Packet = ReturnType<typeof ohio2026OrdinaryFixture>;
@@ -73,6 +74,30 @@ describe('Ohio2026 current ordinary source-to-return draft', () => {
     expect(r.nonresidentRatio.toFixed(4)).toBe('0.6666');
     expect(r.nonresidentCredit.toFixed()).toBe('621');
     expect(r.incomeTax.toFixed()).toBe('311');
+  });
+
+  it.each([
+    ['full_year_resident', '50000', '68'],
+    ['part_year_resident', '30000', '441'],
+    ['nonresident', '10000', '814'],
+  ] as const)('accepts the canonical federal input for %s without admitting a retained zero original', (status, wages, refund) => {
+    const p = ohio2026OrdinaryFixture(status, '50000', wages);
+    const parsed = TaxYearInputSchema.parse(p.input);
+    expect(parsed.form1099G).toEqual([]);
+    p.input = parsed;
+    expect(() => run(p)).toThrow(/snapshot/);
+    rebindOhio2026Ordinary(p);
+    expect(run(p).refund.toFixed()).toBe(refund);
+    p.input.form1099G = [Form1099GSchema.parse({ payer: 'Fictional original', unemploymentCompensation: '0' })];
+    rebindOhio2026Ordinary(p);
+    expect(() => run(p)).toThrow(/retained other originals/);
+  });
+
+  it('refuses a source key outside the canonical document allowlist even if empty', () => {
+    const p = ohio2026OrdinaryFixture();
+    Object.assign(p.input, { unrecognizedSourceCollection: [] });
+    rebindOhio2026Ordinary(p);
+    expect(() => run(p)).toThrow(/retained other originals/);
   });
 
   it.each([
