@@ -30,6 +30,21 @@ has a verified field map and two fictional saved specimens. It stays outside
 the public review and filing registries pending final companion sources and
 qualified review.
 
+Exact `320a69fc` passed all 12 local commands with 87.71% branch coverage,
+27,373 unit and coverage tests and 587 managed browser passes. The five
+hosted-only skips remain. The next archived commit `acb776cb` failed the
+unit job. The Ohio audit compatibility and Pennsylvania spec-reference
+repairs passed all 1,030 affected checks. The next archived full run covers
+through `a1349ad8`, including the signed Pennsylvania wage allowance and
+guided Form 3903 intake. The separate disabled final 2026 Form 8606
+physical candidate is `49785e57`. [Local package evidence](upgrade-2026-progress.md).
+
+The current public Git references still point to `59248889` on `main`
+and `3024b848` on the merged upgrade branch. Local successor commits
+are held as directed until the owner disables automatic production
+deployment. No successor remote CI, Preview or native execution is
+implied by the local evidence.
+
 ## Historical November 6 evidence
 
 Current crosswalk, November 6 UTC: exact `4ee5e082` passes all twelve local

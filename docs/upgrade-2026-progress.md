@@ -4038,3 +4038,47 @@ cases in 154 files. The optional diagnostics audit digest now matches the
 exact reviewed audit bytes. Its new regression failed on the stale digest.
 All 186 focused browser protocol and inspector tests passed. Full browser
 execution and current image qualification require separate evidence.
+
+### November 12 · archived local checks and Pennsylvania payroll
+
+- Exact `320a69fc` passed all 12 local commands. Unit and coverage each
+  passed 27,373 tests in 1,968 files, with 87.71% branch coverage against
+  the 85% gate. Managed Chromium passed 587 cases with five original
+  hosted-only skips. The archived source was stable and the owned
+  PostgreSQL cluster stopped normally.
+- Exact `acb776cb` passed nine commands and failed unit tests. There were
+  22 Ohio source-proof mismatches after federal audit metadata changed
+  when moving excess was zero. One spec validation test also found two
+  stale Pennsylvania meal test references. Coverage and browsers did
+  not run. Commits `3da04749` and `1b1e4b2d` restored the prior no-excess
+  audit and corrected the literal test references. All 1,030 affected
+  tests passed. The archived failure remains recorded.
+- Commit `0e3de271` implements the finite Pennsylvania allowance cohort
+  with signed payroll reconciliation and matching taxable W-2 Boxes 1
+  and 16. The 262 scoped tests passed, and a separate replay checked
+  23 controls and 67 tests. Outside-Box-16 excess and other partial,
+  split or mixed-work sources remain open. [Payroll ledger](upgrade-2026-pa-taxable-employee-reimbursement-work.md).
+
+### November 12 · guided moving facts and final Form 8606
+
+- Commit `73a376f8` adds the 2026 Form 3903 guided source route.
+  It retains original facts and explicit zero through encrypted recovery.
+  Edited records, W-2s and taxpayer identity clear confirmation.
+  Removal keeps the route in place, and restored records remain reachable
+  without the original route selection. All 127 scoped tests passed.
+  Separate engineering review passed 33 probes and 24 tests. Government
+  reimbursement remains taxpayer-attested from original records and
+  applicable W-2 Box 12 code P. The annual calculation, PDF and filing
+  gates remain closed. [Final IRS instructions](https://www.irs.gov/pub/irs-pdf/i3903.pdf).
+- Commit `a1349ad8` rebinds 13 changed browser audit entries with 1,842
+  total source hashes. Request budgets, deadlines and case contracts
+  match the prior audit. All 78 protocol tests passed, and default and
+  30-second list-only commands each collected 592 cases in 154 files.
+  The archived full run for this commit has started. Hosted and native
+  runtime evidence still requires separate execution.
+- Commit `49785e57` maps all 47 fields of the final 2026 Form 8606
+  as a disabled physical candidate. All 121 scoped tests passed.
+  Both fictional PDFs reopened with matching logical and physical
+  fields and four verified page renders. Final instructions and
+  the annual calculation and export gates remain pending.
+  [Physical candidate ledger](upgrade-2026-form-8606-physical-candidate-work.md).
