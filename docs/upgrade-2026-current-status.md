@@ -6,6 +6,17 @@ The public refs were refreshed. `origin/main` still points to `59248889`
 and `origin/upgrade/2026-baseline` to `3024b848`. Successor commits stay on
 local `main` while automatic production deployment is being disabled.
 
+`2f317cb4` limits workspace AI requests to the fields consumed by the task.
+It redacts the user question and conversation alongside the workspace before
+transport. Audit history, structured facts, preview values, and unselected
+documents stay out of that request. The failing synthetic test reproduced
+an unredacted name and email in helper text. The fix passed 238 focused
+tests, 40 production-build Chromium cases, all type checks, both builds,
+lint, inventory and the model registry check. The browser test now pins
+synthetic metadata and verifies the existing default of zero provider
+requests. All 12 checks are running on an immutable source archive. No
+live provider calls or route promotion were involved.
+
 `14ad47f1` accepts individual 2026 cash-slot W-2G originals in the
 professional wagering interview. The source test retains $8,000.05 of
 annual gross gains and $1,200.01 of federal withholding across two original

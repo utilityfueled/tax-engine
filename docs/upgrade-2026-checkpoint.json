@@ -23966,6 +23966,22 @@
     "exactArchiveEvidence": ".local/upgrade-evidence/nov13-main-combined-pa-oh-wage",
     "filingQualified": false
   },
+  "nov13WorkspaceAiTaskProjection": {
+    "commit": "2f317cb4982edf10db4c0841e864448907c2dc3e",
+    "tree": "70f52d07f8babbd1284016a61f296b41679826dc",
+    "focusedPassed": 238,
+    "focusedFiles": 8,
+    "baselineSha256": "002a4a471c9d58f806203e954b2012a1eff8de5d926e1704bcbfb17f979d142d",
+    "focusedSha256": "ce199e0501e4a4b0d432a2eb1a8d0cc876340bd14a3840f8d5e21beaf4979a23",
+    "chromiumPassed": 40,
+    "chromiumRetries": 0,
+    "chromiumReportSha256": "1a8f09dd0d01dc7ae59099be7977c7b36898123022566138ae38ae9557fee053",
+    "auditSha256": "ff800aa5ec06973322cc139a1790697d6ed3560cb721d0ff241233c537b74727",
+    "exactArchiveEvidence": ".local/upgrade-evidence/nov13-main-combined-guided-w2g-privacy",
+    "liveProviderCalls": 0,
+    "modelPromoted": false,
+    "evidence": ".local/upgrade-evidence/nov13-provider-task-projection"
+  },
   "nov13GuidedW2GOriginals": {
     "commit": "14ad47f18a00765a510ab6fdec2f9778e29fc6ca",
     "tree": "e571ca956cd40cd6414048754ddbe41e59595d25",

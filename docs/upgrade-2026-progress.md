@@ -4,6 +4,17 @@ Current source, verification and remaining work are summarized in the
 [current continuation](upgrade-2026-current-status.md). Historical results
 below apply to their named revisions.
 
+- November 13: `2f317cb4` restricts the workspace AI client request to
+  the declared task fields and includes the question and conversation in
+  the same redaction pass as the workspace. A synthetic regression first
+  showed the original name and email in the transport body. The fix passed
+  238 focused tests, 40 production-build Chromium cases without retries,
+  all types, both builds, lint, inventory and model registry checks. The
+  workspace browser test now verifies the exact five source redactions
+  with fixed synthetic metadata and zero provider requests. A separately
+  archived global run is in progress. The historical redaction-count
+  failure is retained. No live call or promotion occurred.
+
 - November 13: `14ad47f1` reuses the exact federal W-2G reconciliation in
   guided professional wagering. The failing test first established the
   missing original-statement control. The source test verified explicit

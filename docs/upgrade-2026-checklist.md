@@ -6,6 +6,9 @@ below retain their original evidence boundaries.
 
 ## Active continuation — November 13 Eastern
 
+- [x] Project only consumed workspace AI fields and redact the question and
+  conversation before transport in `2f317cb4`. Pass 238 focused and 40
+  production-build Chromium checks with unchanged browser budgets.
 - [x] Collect individual original Form W-2G records and ledger links in the
   federal professional wagering guide in `14ad47f1`. Pass 5,163 focused
   tests and four Chromium cases with private facts excluded from shared
