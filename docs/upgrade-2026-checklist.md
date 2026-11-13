@@ -32,6 +32,9 @@ below retain their original evidence boundaries.
 - [x] Verify the Pennsylvania union-dues interview in managed desktop and
   mobile Chromium. Confirm zero versus unknown, source edits and saved-return
   replay, plus exact tax and refund. Preserve the 30-second test deadlines.
+- [x] Remove detached XFA and stale Reader rights from trusted review copies.
+  Reopen the registered 2025 templates, actual standalone outputs and an
+  actual workspace packet. Keep the registered source bytes intact.
 - [x] Complete the archived `a1349ad8` local verification. All 12 commands,
   27,434 unit and coverage tests, 87.71% branch coverage and 587 Chromium
   cases passed. The five hosted-only skips remain.

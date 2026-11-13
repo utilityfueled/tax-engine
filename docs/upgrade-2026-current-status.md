@@ -68,6 +68,14 @@ Schedule SE review pages (`b65a71b3`), collect finite PA union dues
 (`840bd598`) and bind actual Ohio Akron school-district and county
 evidence (`3f2c236c`). Focused tests and distinct review passed.
 
+Two managed Chromium cases now verify the original Pennsylvania union-dues
+interview and saved-return replay (`b99cde43`). The full collection has 594
+cases, including the same five hosted skips. The final 2026 Form 8824
+and Form 6252 physical maps passed independent checks and stay outside the
+export registries. Trusted 2025 review PDFs now remove legacy active data
+and stale Reader rights at verified template load (`e4025f63`). All 46
+registered templates passed saved-object inspection. [Package evidence](upgrade-2026-progress.md).
+
 Hosted commits `d39209de` and `8357ed99` add an opt-in Preview-only
 Stripe delivery receipt and settle purchased AI credits only after
 confirmed payment. The purchase grant and event receipt commit in one

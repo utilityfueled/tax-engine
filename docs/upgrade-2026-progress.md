@@ -4,6 +4,20 @@ Current source, verification and remaining work are summarized in the
 [current continuation](upgrade-2026-current-status.md). Historical results
 below apply to their named revisions.
 
+- November 12: `e4025f63` removes legacy Reader rights and detached XFA from
+  official templates after the registered hash check. Reopening the real
+  standalone Form 1040 and a workspace review packet preserved their notices,
+  values and privacy behavior. A distinct check reopened all 46 registered
+  2025 templates and inspected 53,698 serialized objects. All 460 targeted
+  source references were absent and 4,783 widget positions and identities
+  were preserved. The broader PDF and spec run passed 3,191 tests in 329 files.
+  Independent review ran the actual standalone renderer and local hosted POST
+  handler from separate parent and candidate archives. Both standalone modes
+  dropped 13 objects and preserved their values and appearances. All 18
+  compared pages matched pixel for pixel. The local hosted control used mock
+  authentication and request protection. The 25 additional graph and
+  regression checks covered shared references, cycles and retained rights.
+
 - November 12: `34d81934` maps the 68 physical fields on the final
   2026 Form 8824. The final blank and instructions are pinned separately.
   The PDF and spec suite passed 3,180 tests. Distinct review passed 76

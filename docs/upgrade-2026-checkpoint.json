@@ -23246,6 +23246,21 @@
     "exportsEnabled": false,
     "filingQualified": false
   },
+  "nov12TrustedReviewTemplatePrivacy": {
+    "commit": "e4025f63ac473cedc84e634b75904cccfc12cff6",
+    "registeredTemplatesReopened": 46,
+    "serializedObjectsInspected": 53698,
+    "detachedSourceReferencesAbsent": 460,
+    "widgetsPreserved": 4783,
+    "pdfAndSpecPassed": 3191,
+    "distinctCensusSha256": "c087449071e8a8e58b2e67b75b3ae597811be29599397b5875e92afa7254e613",
+    "pdfAndSpecLogSha256": "a51db69b5e1a6b3caa7a20fdbb9511ed64fb6241cb4ab6cee70a2dd5958f5944",
+    "independentSavedArtifactReportSha256": "aa62e3e154cf54bca454c0a9a07a9b552471e1e10b7aad64ce7637f47c1f2360",
+    "independentGraphAndRegressionPassed": 25,
+    "independentPixelMatchedPages": 18,
+    "hostedStagingQualified": false,
+    "filingQualified": false
+  },
   "nov12Form6252PhysicalCandidate": {
     "commit": "fe7b3279",
     "taxYear": 2026,
