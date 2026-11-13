@@ -4185,6 +4185,25 @@
       ]
     },
     {
+      "key": "federal/form-4972",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://www.irs.gov/pub/irs-pdf/f4972.pdf",
+      "specPath": "spec/federal/form-4972.yaml",
+      "enginePath": "src/engine/forms/form-4972.ts",
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/form-5329",
       "jurisdiction": "federal",
       "taxYear": 2025,

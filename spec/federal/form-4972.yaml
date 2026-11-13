@@ -1,0 +1,60 @@
+form: "Form 4972"
+fullName: "Tax on Lump-Sum Distributions"
+taxYear: 2026
+irsReference: "https://www.irs.gov/pub/irs-pdf/f4972.pdf"
+notes: |
+  Internal single-participant, single-recipient worksheet for the participant's
+  own qualified plan. Original Code 7 and A and explicit source confirmations
+  are required. A beneficiary, alternate payee, multiple distributions or
+  recipients, deferred NUA, estate tax, or actuarial annuity value needs separate
+  qualification. No current-year return or export registration is implied.
+lines:
+  - line: "1-5"
+    description: "Eligibility and source reconciliation"
+    formula: >-
+      Require one current qualified plan distribution from the participant's own
+      plan, born before January 2, 1936, five qualifying years of participation,
+      entire required balance distributed, no partial or full rollover, no prior
+      disqualifying election, and explicit confirmation from all related records
+      that the other disqualifications do not apply. Use the original current
+      source's determined Box 2a, Box 3, and confirmed zero Boxes 6 and 8a.
+      Box 3 cannot exceed Box 2a and Box 2a cannot exceed Box 1.
+    testRef: "tests/engine/forms/form-4972.test.ts::requires actual eligibility and determined source amounts"
+  - line: "6-7"
+    description: "Twenty-percent capital gain election"
+    formula: "Line 6 is Box 3 when Part II is elected and positive; line 7 is line 6 times 0.20."
+    testRef: "tests/engine/forms/form-4972.test.ts::computes the separate Part II charge and ordinary pension remainder"
+  - line: "8-12"
+    description: "Adjusted total taxable amount"
+    formula: >-
+      For Part III, line 8 is Box 2a minus elected Part II Box 3, or all of Box
+      2a without Part II. Lines 9 and 11 are confirmed zero for this cohort.
+      Line 10 equals line 8 and line 12 equals line 10.
+    testRef: "tests/engine/forms/form-4972.test.ts::splits the combined election and computes the separate ten-year tax"
+  - line: "13-17"
+    description: "Minimum distribution allowance"
+    formula: >-
+      At line 12 of $70,000 or more, lines 13 through 16 are omitted and line
+      17 equals line 12. Otherwise line 13 is the lesser of half of line 12 and
+      $10,000. Line 14 is the positive excess over $20,000, line 15 is 20% of
+      line 14, line 16 is line 13 minus line 15, and line 17 is line 12 minus
+      line 16. Preserve cents before the rate calculation.
+    testRef: "tests/engine/forms/form-4972.test.ts::applies the allowance boundaries before the tax rate"
+  - line: "18-29"
+    description: "Ten-year separate tax"
+    formula: >-
+      Line 18 is confirmed zero, line 19 equals line 17, and zero line 11 means
+      lines 20 through 22 and 26 through 28 are omitted. Line 23 is line 19
+      times 0.10. Line 24 uses the final 2026 Form 4972 fixed tax rate schedule
+      for that amount. Line 25 is line 24 times 10 and line 29 equals line 25.
+    testRef: "tests/engine/forms/form-4972.test.ts::uses the printed rate table across every band boundary"
+  - line: "30"
+    description: "Separate tax and proposed federal transfer"
+    formula: >-
+      When Part III is elected line 30 sums lines 7 and 29, treating absent
+      Part II as zero. Part II alone transfers line 7 to Form 1040 line 16 and
+      Box 2a less Box 3 to ordinary pension income. Either Part III election
+      excludes this source from Form 1040 lines 5a and 5b. Keep the proposed
+      transfer separate from the current federal calculator and exports until
+      their source eligibility and interaction checks are qualified.
+    testRef: "tests/engine/forms/form-4972.test.ts::splits the combined election and computes the separate ten-year tax"
