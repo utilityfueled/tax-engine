@@ -110,6 +110,15 @@ describe('native operational provenance — source-and-custody/live-runtime',()=
     expect(await inspect()).toEqual(await inspect());
     f.file='other';await expect(inspect()).rejects.toThrow('source bytes');
   });
+  it('admits the browser file URL directory terminator without admitting other root aliases',async()=>{
+    const f=fixture();
+    f.io.realpath=async name=>name===f.args.root+'/'?f.args.root:name;
+    const inspect=await createNativeInspector({...f.args,root:f.args.root+'/'},f.io);
+    expect(await inspect()).toMatchObject({commit:f.p.commit});
+    for (const root of [f.args.root+'//',f.args.root+'/.',f.args.root.replace('/source','/other/../source')]) {
+      await expect(createNativeInspector({...f.args,root},f.io)).rejects.toThrow();
+    }
+  });
   it.each([false,true])('checks literal tracked in-tree symlink with escape=%s',async escape=>{
     const f=fixture();f.p.inventory.push({path:'b',mode:'120000',bytes:5,oid:object('blob','a.txt')});
     f.p.tree=sourceTree(f.p.inventory);f.p.commitBody=f.p.commitBody.replace(/^tree [a-f0-9]{40}/u,`tree ${f.p.tree}`);f.p.commit=object('commit',f.p.commitBody);

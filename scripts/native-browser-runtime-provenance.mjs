@@ -170,11 +170,12 @@ const actualIo = {lstat:fs.lstat,realpath:fs.realpath,readdir:fs.readdir,readlin
  * @param {{root:string,env:Record<string,string|undefined>,signal?:AbortSignal}} options
  * @param {NativeIo} io
  */
-export async function createNativeInspector({root, env, signal}, io = actualIo) {
+export async function createNativeInspector({root: sourceRoot, env, signal}, io = actualIo) {
     need(nativeAdmission(env,true), 'Explicit native mode required');
     const proofSha256 = env.TAX_ENGINE_NATIVE_BROWSER_PROOF_SHA256;
     const uid = io.uid(); need(integer(uid), 'Native POSIX ownership unavailable');
-    need(path.isAbsolute(root) && path.basename(root) === 'source' && await io.realpath(root) === root, 'Native source must be fixed fresh export');
+    const root = sourceRoot.endsWith('/') ? sourceRoot.slice(0,-1) : sourceRoot;
+    need(path.isAbsolute(root) && !root.endsWith('/') && path.normalize(root) === root && path.basename(root) === 'source' && await io.realpath(root) === root, 'Native source must be fixed fresh export');
     const parent = path.dirname(root), proofPath = path.join(parent,'native-browser-provenance.json');
     await noSymlinkParents(root,io);
     const parentStat = await io.lstat(parent), rootStat = await io.lstat(root);
