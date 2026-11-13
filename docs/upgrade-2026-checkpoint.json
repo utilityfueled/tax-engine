@@ -23552,6 +23552,47 @@
     "checksSha256": "3d52aaf6a4347da7d9279b575d272c1df8764a24f6ad8b7031d65a013528ba06",
     "chromiumTranscriptSha256": "6c9b015924174bae5189a4ffbf83a3a5a2a6dbd9f5fecc445c2cda80e99f4bde"
   },
+  "nov13ScheduleAiGuidedSourceConfirmation": {
+    "commit": "addd768897c129390cce693dd380910294d16e6f",
+    "focusedPassed": 69,
+    "unitTranscriptSha256": "ad7ee76f7d1bb726163759dbec86ec95ce2cc6296ab8dc6849317c8934e7b261",
+    "browserOrchestratorPassed": 42,
+    "chromiumPassed": 24,
+    "chromiumReportSha256": "2289936c5640cb2cfb82f40ee3081d251e3503fb16aa67656eedbee9c5afa5e2",
+    "collectionCases": 600,
+    "hostedOnlySkips": 5,
+    "diagnosticCases": 14,
+    "specReferences": 8812,
+    "auditSha256": "2362a63491fb24337a78f8f4c2364f5e54fa5c388deacc1663d61c320f2a90e9"
+  },
+  "nov13RecoveryAndAtsCombined": {
+    "sourceCommit": "e31e9745201657723148c728cfa8bdf59b2cf84e",
+    "tree": "0c75829452687c10de7fbc3b09443167f60e7146",
+    "checksPassed": 12,
+    "unitAndCoverageTestsEach": 27610,
+    "testFiles": 1994,
+    "branchCoveragePercent": "87.80",
+    "chromiumPassed": 592,
+    "hostedOnlySkips": 5,
+    "checksSha256": "5011d59a897cb479208f87626990e537bda9d72cb5709793cf5aa0d84485032d",
+    "chromiumTranscriptSha256": "e052d7f569b60bb606dc9d03237e26d0ef9bab5850e7947e5cb9a5a04aa9f34b"
+  },
+  "nov13DraftPublication1040": {
+    "source": "https://www.irs.gov/pub/irs-dft/p1040--dft.pdf",
+    "revision": "2026-08-28",
+    "retrieved": "2026-11-13",
+    "sourceSha256": "407bc35ab09aaf034689341d7469b9b082cd2ceaa652e38ca5874c1dd1c3f12e",
+    "ordinaryCells": 8248,
+    "eicCells": 11240,
+    "partialIntervalFootnotes": 8,
+    "worksheetValues": 63,
+    "tableMethodMismatches": 0,
+    "statutoryPreviewMismatchesAtEachOrdinaryEndpoint": 8236,
+    "parserComparisonSha256": "42b85f655a6e5ae915d794346ec7da03ea48be45cc5e3456cd63f10f9fd0c757",
+    "decimalComparisonSha256": "a61e039300f6dfbb1f949fe28881f95496fd0632bd5e1948a1d5e160678e2bdc",
+    "finalQualified": false,
+    "humanReviewed": false
+  },
   "nov12HostedCreditSettlement": {
     "previewReceiptCommit": "d39209dec302d249a5f01fe8baf23cc4ca2130f8",
     "settlementCommit": "8357ed9929766a8e5ed0ac7c45321cdccd44d35a",

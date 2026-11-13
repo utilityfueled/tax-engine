@@ -29,6 +29,28 @@ final tables and professional review remain open. [Final 2025 instructions](http
 [2025 Publication 505, Worksheet 2-8](https://www.irs.gov/pub/irs-prior/p505--2025.pdf) ·
 [2026 Publication 505, Worksheet 2-10](https://www.irs.gov/publications/p505).
 
+`addd7688` clears the guided confirmation if underlying return facts or the
+worksheet reference change, even when period amounts match the previous
+values. The two regressions failed before the fix. Payments-only changes
+preserve the confirmation, and source or method changes preserve the amounts
+for review. The mobile production case covered exact cents, known zero, an
+unknown blank, reload and reconfirmation. The case also checked that the
+worksheet reference and fixture personal identifiers did not enter POST
+bodies. All 69 focused tests and 24 actual Chromium cases passed. The
+separate strict audit covers 600 cases, retaining the five hosted-only
+skips and the 14 diagnostic cases.
+
+Publication 505's 2026 estimated-tax worksheet adds the nonitemizer cash
+charitable amount to its standard-deduction row and puts Schedule 1-A on line
+9b. The draft Form 2210 still describes line 7 as the standard deduction
+from Form 1040 and refers line 9b to instructions. On November 13 its
+instruction endpoint still served 2025. The two publications serve
+different calculations. Actual-year routing and earlier-period treatment
+need the 2026 Form 2210 instructions and review.
+[Publication 505, Worksheet 2-9](https://www.irs.gov/publications/p505) ·
+[Draft 2026 Form 2210](https://www.irs.gov/pub/irs-dft/f2210--dft.pdf) ·
+[Form 2210 instructions](https://www.irs.gov/instructions/i2210).
+
 ## Original package
 
 The annualized income method was rejected. It lowers or removes the penalty for taxpayers whose income arrives late in the year, so the regular method overstated their penalty. This package calculates Schedule AI for calendar-year individuals.
@@ -39,7 +61,7 @@ Form 2210 (2025) page 3 fixes the multipliers (4, 2.4, 1.5, 1), applicable perce
 
 ## Limits
 
-- The instructions do not say whether the line 14 worksheet's qualified dividends and net capital gain are annualized. A positive amount rejects instead of choosing a convention.
+- The original package rejected a positive qualified dividend or net capital gain. The November 13 follow-up documents the supported ordinary method and remaining special cases.
 - Lines 9, 16 and 18 are actual entered amounts because each depends on its own period worksheet.
 - Schedule 1-A follows the line 14 instruction, which lets a filer adjust taxable income for a provision with no line elsewhere and names Schedule 1-A, but gives no period rule. So each period is an actual entered amount, and the guide asks for the deduction through that period, not annualized, until a reviewer rules. Column (d) must equal the deduction on the return, and earlier columns cannot exceed it. Entering 0 for an earlier period is allowed and can only raise the required installment. Whether an earlier amount should be annualized is a reviewer question.
 - Two self-employed spouses need separate Part II sheets and reject. A joint return must answer this explicitly.

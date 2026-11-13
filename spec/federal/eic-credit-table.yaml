@@ -17,7 +17,10 @@ notes: |
   (but not starting at) the phase-out start, and the shortened midpoint in
   each last eligible interval. All 10,992
   published cells must match, not only selected examples. This reproduces the
-  final 2025 table; it does not assume an unpublished 2026 table is qualified.
+  final 2025 table. The August 28 draft Publication 1040 (2026) matches all
+  11,240 cells under this method using 2026 constants, including eight last
+  intervals. See docs/upgrade-2026-draft-federal-tables-work.md. The final 2026
+  table remains unqualified.
   Isolated 2026 uses the correctly limited statutory formula rounded to dollars
   and the independently indexed constants. Public 2026 availability stays gated
   until final table/form and human qualification. No 2025 table is reused in2026.

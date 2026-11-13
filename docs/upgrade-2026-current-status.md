@@ -105,9 +105,23 @@ return. The 230 affected tests include the actual 2025 review PDF and isolated
 2026 indexed arithmetic. Special capital methods, final 2026 forms and
 qualified review remain open. [Schedule AI evidence](upgrade-2026-form-2210-schedule-ai-work.md).
 
+`addd7688` preserves entered period amounts and clears confirmation after
+an original payer or worksheet reference changes, including when the amounts
+stay the same. The 69 focused tests and 24 production Chromium cases passed.
+The browser audit binds 600 cases with the five hosted-only skips and all
+prior request limits. [Schedule AI evidence](upgrade-2026-form-2210-schedule-ai-work.md).
+
 Exact `2ad7edea` passed all 12 archived local checks, including 27,606 unit
 and coverage tests at 87.80% branch coverage and 592 Chromium cases with
-five original hosted-only skips. A newer archived run is in progress.
+five original hosted-only skips. Exact `e31e9745` subsequently passed all 12,
+with 27,610 unit and coverage tests at 87.80% branches. Chromium completed
+597 collected cases, with 592 passing and five original hosted-only skips.
+The runner and its disposable PostgreSQL closed normally.
+
+Two separate PDF extractions agree on 8,248 ordinary-tax and 11,240 EIC cells
+in draft 2026 Publication 1040. Decimal comparison matched every draft cell
+using the table methods with 2026 indexed values. The final endpoint still
+serves 2025 and 2026 remains gated. [Draft reconciliation](upgrade-2026-draft-federal-tables-work.md).
 
 `a6c4fd18` adds IRS-published expected values for 2026 Schedule SE and 8812.
 The 147 affected tests passed. The checks use the worksheet inputs the IRS

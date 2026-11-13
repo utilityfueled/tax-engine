@@ -29,6 +29,16 @@ below retain their original evidence boundaries.
 - [x] Apply the exact $400 Schedule AI threshold in `06f43988`. Add the
   confirmed ordinary preferential-income method in `656fb5f8` and verify the
   2025 review PDF. Final 2026 and special-method qualification remain open.
+- [x] Verify `addd7688` clears Schedule AI confirmation after source changes
+  and preserves entered amounts. Pass the affected unit and mobile browser
+  checks without widening request ceilings.
+- [x] Close all 12 archived `e31e9745` checks. Unit and coverage pass 27,610
+  tests at 87.80% branch coverage. Chromium passes 592 with five original
+  hosted-only skips.
+- [x] Reconcile draft 2026 federal Tax and EIC Table cells and 63 Tax
+  Computation Worksheet values. [Draft evidence](upgrade-2026-draft-federal-tables-work.md).
+- [ ] Bind and reverify final federal Tax and EIC Table methods and Form 2210
+  upon publication. Obtain qualified human review before enabling 2026.
 - [x] Match the IRS-published Schedule SE and 8812 worksheet outputs in
   `a6c4fd18`. Retain the independent human and final-form qualification gates.
 - [ ] Finish independent review of the AI credit-issuance and recovery candidate.

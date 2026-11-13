@@ -22,7 +22,7 @@ lines:
   - line: "year-source"
     description: "Keep unpublished 2026 calculations distinct from a final Tax Table"
     formula: "2026 uses statutory indexed rate arithmetic only as an expressly labeled preview. No generated interval amounts are represented as published 2026 tax. Unknown years reject. getConstants(2026), filing and final qualification remain blocked."
-    notes: "The current IRS publication is final 2025; the 2026 Tax Table was unavailable at refresh. This source gate remains open even when rate calculations pass."
+    notes: "The final endpoint still served 2025 at the November 13 refresh. The August 28 draft Publication 1040 (2026) matches the indexed midpoint method in all 8,248 cells. Draft source reconciliation is recorded in docs/upgrade-2026-draft-federal-tables-work.md and does not qualify the final table."
     testRef: "tests/utils/federal-tax-table.test.ts::labels the unpublished 2026 calculation as a statutory preview"
   - line: "return-integration"
     description: "Form1040 uses actual table and publishes source status"

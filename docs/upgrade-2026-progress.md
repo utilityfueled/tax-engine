@@ -4490,3 +4490,24 @@ execution and current image qualification require separate evidence.
 - The read-only Vercel settings check still showed Automatic for Ignored
   Build Step and Production tracking `main`. Commits remain local at the
   owner's direction. [External actions](upgrade-2026-external-actions.md).
+- `addd7688` requires fresh guided Schedule AI confirmation when the payer
+  or worksheet reference changes with the same amounts. Entered values
+  remain available for review. Both regressions failed on the prior code.
+  The 69 focused tests, 42 browser-orchestrator tests, 24 production
+  Chromium cases, three type checks and 8,812 spec references passed.
+  Browser report SHA-256
+  `2289936c5640cb2cfb82f40ee3081d251e3503fb16aa67656eedbee9c5afa5e2`.
+  The strict 600-case audit retains the five hosted-only skips, 14
+  diagnostics and every existing request limit.
+  [Schedule AI evidence](upgrade-2026-form-2210-schedule-ai-work.md).
+- Exact `e31e9745` passed all 12 archived local commands. Unit and coverage
+  each passed 27,610 in 1,994 files with 87.80% branch coverage. Chromium
+  passed 592 with five hosted-only skips. The runner and its disposable
+  PostgreSQL closed normally. Check manifest SHA-256
+  `5011d59a897cb479208f87626990e537bda9d72cb5709793cf5aa0d84485032d`.
+- Independent PDF parsers agree on every draft federal ordinary and EIC
+  table cell. Existing Decimal methods with 2026 indexed values match all
+  8,248 ordinary cells, 11,240 EIC cells and 63 printed computation
+  worksheet sample points. Production still requires the final 2026
+  publication and qualified human review.
+  [Source and checksums](upgrade-2026-draft-federal-tables-work.md).
