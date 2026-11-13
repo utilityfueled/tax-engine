@@ -24,6 +24,21 @@ it('PA2026 draft preserves exact cents known zero and complete withholding',()=>
  const under=pa2026OrdinaryDraftFixture();under.input.w2s[0].stateTaxWithheld='2302.49';rebindPA2026Draft(under);expect(()=>calculatePA2026OrdinaryDraft(under.input,under.facts,under.sources)).toThrow(/withholding/i);
  const half=pa2026OrdinaryDraftFixture();half.input.w2s[0].stateTaxWithheld='2302.50';rebindPA2026Draft(half);expect(calculatePA2026OrdinaryDraft(half.input,half.facts,half.sources).pa.pa40.stateWithholding.toFixed()).toBe('2303');
 });
+it('PA2026 draft checks retained death facts before income-based EIC proofs', () => {
+  for (const status of ['resident', 'part_year', 'nonresident'] as const) {
+    const f = pa2026OrdinaryDraftFixture(status);
+    for (const primaryDeathDate of ['2026-12-30', '2027-02-01', '']) {
+      f.input.standardDeductionFacts = { primaryDeathDate };
+      rebindPA2026Draft(f);
+      expect(() => calculatePA2026OrdinaryDraft(f.input, f.facts, f.sources)).toThrow(/death date/);
+    }
+    f.input.standardDeductionFacts = { primaryDeathDate: null };
+    rebindPA2026Draft(f);
+    const result = calculatePA2026OrdinaryDraft(f.input, f.facts, f.sources);
+    expect(result.dependencyProof.federalEarnedIncomeCredit.toFixed()).toBe('0');
+    expect(result.readiness.filingEligible).toBe(false);
+  }
+});
 it.each(['70244','70243.99','0'])('PA2026 draft denies unproven all-child-count EIC zero at %s',value=>{const f=pa2026OrdinaryDraftFixture();wage(f,value,'2303');expect(()=>calculatePA2026OrdinaryDraft(f.input,f.facts,f.sources)).toThrow(/phaseout|wage/i);});
 it.each(['year','owner','unconfirmed','duplicate','payroll','unknownGross','unknownWithholding','unknownCare','positiveCare','benefit','retainedInterest','retainedAdjustment','retainedEIC','retainedForeign','unknownEmptyRoot','unreviewedOther','sourceExtension','spUnknown','sourceUnknown','married','late'])('PA2026 draft rejects unsupported or unknown actual source %s',kind=>{
  const f=pa2026OrdinaryDraftFixture();

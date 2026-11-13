@@ -52,6 +52,9 @@ export function calculatePA2026OrdinaryDependencies(input:TaxYearInput,p:PAOrdin
  const emptyDocumentRoots=new Set(['form1099Int','form1099Div','form1099B','form1099DA','form1099Nec','form1099Misc','form1099G','form1099OID','formW2G','form1099K','form1099C','form1099Q','form1099R','form1099SA','formSSA1099','formRRB1099','paScheduleGLStatements','paScheduleJStatements','paPassThroughStatements','scheduleK1','scheduleK1Form1041','form1098','form1098E','form1095A','donations','rentalProperties','savingsBondRedemptions','form6252','form8814','homeSales','form8824']);
  for(const[key,value]of Object.entries(input))if(!roots.has(key)&&value!==undefined&&!(emptyDocumentRoots.has(key)&&Array.isArray(value)&&value.length===0))fail('retained unsupported original or federal dependency: '+key);
  if(input.standardDeductionFacts!==undefined&&!StandardDeductionFactsSchema.strict().safeParse(input.standardDeductionFacts).success)fail('retained standard-deduction context is unsupported');
+ if (typeof input.standardDeductionFacts?.primaryDeathDate === 'string') {
+  fail('actual federal death date requires a separate method from the confirmed living owner draft');
+ }
  if(input.deductionElection!==undefined&&!['automatic','standard','itemized','nonitemized'].includes(input.deductionElection))fail('retained deduction election is unknown');
  const r=PAResidencySourcesSchema.parse(input.paResidencySources);
  const allowed=new Set(['sourceTaxYear','sourceReference','sourceFactsConfirmed','owner','residency','wages','interest','otherPAIncomeClassesConfirmedNone','otherPAAdjustmentsConfirmedNone']);
@@ -98,9 +101,6 @@ export function calculatePA2026OrdinaryDependencies(input:TaxYearInput,p:PAOrdin
  if (wages.gte(childlessCutoff) && reportedWageAgi.gte(childlessCutoff)) {
   proof.confirmedChildlessCompletedEitcPhaseout = publicOrdinaryMoney(childlessCutoff);
   return proof;
- }
- if (typeof input.standardDeductionFacts?.primaryDeathDate === 'string') {
-  fail('actual federal death date conflicts with the confirmed living owner');
  }
  if (meetsEicChildlessAgeTest(input.taxpayer.primary.dateOfBirth, null, input.taxpayer.taxYear, true, 'primary')) {
   fail('actual no-child wage income is below the finite completed EIC phaseout source boundary');

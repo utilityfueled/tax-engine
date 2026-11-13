@@ -62,6 +62,18 @@ lines:
     description: "Deny specialized income when the neutral Form 8812 route is used"
     formula: "Neutral context never establishes an unknown wage original or converts actual excluded income or combat pay into zero. Sources refreshed 2026-11-13: https://www.irs.gov/instructions/i1040s8 and https://www.irs.gov/instructions/iw2w3."
     testRef: "tests/engine/state/pa-2026-childless-eic.test.ts::PA2026 draft validates retained Form 8812 context without inferring compensation sources"
+  - line: "living-owner-currentness"
+    description: "Check retained federal death facts before selecting a zero-credit proof"
+    formula: |
+      The calendar-year wage draft requires the confirmed full-year living owner.
+      Reject a retained federal death-date string before any income or age shortcut.
+      This draft has no decedent or post-year death method and preserves the actual
+      source for review. Omitted or explicitly null federal dates can accompany the
+      separate affirmative PA full-year living confirmation. See the Pennsylvania
+      DFO-02 deceased-filer and Schedule SP annualization instructions at
+      https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/dfo-02.pdf
+      and federal reporting at https://www.irs.gov/instructions/i1040gi.
+    testRef: "tests/engine/state/pa-2026-ordinary-draft.test.ts::PA2026 draft checks retained death facts before income-based EIC proofs"
   - line: "local-obligation-inventory"
     description: "Keep confirmed local filing decisions separate from PA-40"
     formula: |
