@@ -24468,6 +24468,24 @@
       "https://www.irs.gov/instructions/i1099r"
     ]
   },
+  "nov13Form4972BeneficiaryPhysicalReview": {
+    "commit": "cdada76814206731153de9be621ded704bdd275e",
+    "initialRed": 3,
+    "focusedTestsPassed": 1148,
+    "specReferencesValidated": 8919,
+    "redSha256": "a2573b8c2013a8ff1e57afdb7da530844a798beb815254e3b5a14f656d05fd35",
+    "greenSha256": "224e8f90d55faa2e4078e83f1df71f058175f58838cf4fb29ec6a54886754297",
+    "pdfSha256": "9add919939a60cc08df610ceda93cc52d87d83505624ef73de825d9dd8f62bbd",
+    "strictReadbackSha256": "ce26128ba3cbd7e068378816f2f3a09e5134c95cf636116125bf01e8dccfcfb6",
+    "widgetsVerified": 58,
+    "filledMoneyFields": 18,
+    "checkedBoxes": 6,
+    "pagesRenderedAndVisuallyReviewed": 4,
+    "identityBlank": true,
+    "independentQualifiedReviewRecorded": false,
+    "exportsEnabled": false,
+    "source": "https://www.irs.gov/pub/irs-pdf/f4972.pdf"
+  },
   "nov13PensionTaxability": {
     "commit": "005394da914b62d23bfb735e40f99583589cd0b9",
     "focusedTestsPassed": 646,

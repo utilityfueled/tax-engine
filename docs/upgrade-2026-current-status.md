@@ -9,6 +9,15 @@ The read-only Vercel check still finds the production project linked to
 `main`, with automatic custom-domain assignment and no build-ignore command.
 The isolated rehearsal project has no Git link and protects all deployments.
 
+`cdada768` projects the confirmed death-beneficiary election on the final
+Form 4972 review candidate. It uses separate answers for the beneficiary's
+prior own-plan and beneficiary elections. Three tests failed before the
+mapper was added and all 1,148 affected tests passed. A second reader
+verified 18 printed amounts, six selected boxes and all 58 widgets.
+All four pages were rendered and visually checked. The form remains
+unavailable through current-year exports.
+[Final 2026 Form 4972](https://www.irs.gov/pub/irs-pdf/f4972.pdf).
+
 `e6a34ac3` adds the internal own-plan annuity adjustment for a confirmed
 Form 1099-R Box 8a. It apportions the allowance, removes the annuity's
 separate tax and preserves the ordinary pension transfer. Six regressions
@@ -24,9 +33,8 @@ death-beneficiary distribution with confirmed zero attributable estate tax.
 It uses the participant's birth and death records and the beneficiary's
 election history for that participant. Three tests failed before the method
 was added. All 115 affected tests passed, with engine types, lint, inventory,
-8,918 spec references and unchanged browser request limits. The physical
-candidate still covers only the participant's own plan. Federal integration
-and filing qualification remain open.
+8,918 spec references and unchanged browser request limits. Federal
+integration and filing qualification remain open.
 [Final 2026 Form 4972](https://www.irs.gov/pub/irs-pdf/f4972.pdf) ·
 [Publication 575](https://www.irs.gov/publications/p575).
 

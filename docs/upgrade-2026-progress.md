@@ -4,6 +4,14 @@ Current source, verification and remaining work are summarized in the
 [current continuation](upgrade-2026-current-status.md). Historical results
 below apply to their named revisions.
 
+- November 13 — `cdada768` maps the confirmed death-beneficiary election
+  onto the disabled final Form 4972. Three failing tests preceded the mapper
+  and 1,148 affected tests passed. Strict saved-PDF readback verified
+  18 amounts, six selected boxes and all 58 widgets. All four pages were
+  rendered and reviewed with blank identity and the review notice visible.
+  Types, lint, inventory, 8,919 spec references and the unchanged browser
+  request budget passed. [Final 2026 Form 4972](https://www.irs.gov/pub/irs-pdf/f4972.pdf).
+
 - November 13 — `e6a34ac3` calculates the Form 4972 annuity adjustment from
   confirmed own-plan Box 8a, including a recurring ratio, the $70,000
   boundary and the separate Part II transfer. Six regressions failed
