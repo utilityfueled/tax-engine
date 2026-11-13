@@ -2,6 +2,7 @@ import Decimal from "decimal.js";
 import type { Pool, PoolClient } from "pg";
 import { calculateAiCost, type AiTokenUsage } from "@tax-engine/engine/src/ai-pricing";
 import { AI_PROFILES, AI_TASKS, type AiProfileId, type AiTask } from "@tax-engine/engine/src/ai-task-registry";
+import { withHostedAiStorageMode, type StripeBillingMode } from "./hosted-ai-storage-mode";
 
 const Money = Decimal.clone({ precision: 80 });
 
@@ -38,19 +39,12 @@ function view(row: ReservationRow) {
 }
 
 /** All balance-changing operations serialize on the owner, across billing cycles and requests. */
-export function createHostedAiLedger(pool: Pick<Pool, "connect">) {
-  async function transaction<T>(ownerId: string, operation: (client: PoolClient) => Promise<T>): Promise<T> {
-    const client = await pool.connect();
-    try {
-      await client.query("BEGIN");
+export function createHostedAiLedger(pool: Pick<Pool, "connect">, mode: StripeBillingMode) {
+  async function transaction<T>(ownerId: string, operation: (client: PoolClient) => Promise<T>, initialize = false): Promise<T> {
+    return withHostedAiStorageMode(pool, mode, initialize, async client => {
       await client.query("SELECT pg_advisory_xact_lock(hashtextextended($1, 2026))", [ownerId]);
-      const result = await operation(client);
-      await client.query("COMMIT");
-      return result;
-    } catch (error) {
-      await client.query("ROLLBACK");
-      throw error;
-    } finally { client.release(); }
+      return operation(client);
+    });
   }
   async function row(client: PoolClient, input: AiReservationIdentity) {
     const result = await client.query<ReservationRow>(
@@ -92,7 +86,7 @@ export function createHostedAiLedger(pool: Pick<Pool, "connect">) {
           VALUES ($1,$2,$3,$4,$5,$6,$7,'reserved') RETURNING *`,
         [input.ownerId, input.requestId, input.payloadDigest, input.cycleKey, input.includedBudgetCents, included.toFixed(), purchased.toFixed()]);
         return { accepted: true as const, created: true, reservation: view(result.rows[0]) };
-      });
+      }, true);
     },
     async start(input: AiReservationIdentity & { attempt: 1 | 2; task: AiTask; profileId: AiProfileId; startedAt: string }) {
       identity(input);

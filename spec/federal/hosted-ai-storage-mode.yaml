@@ -1,0 +1,30 @@
+form: "Hosted AI accounting database mode"
+fullName: "Isolate test and live AI credit accounting in PostgreSQL"
+taxYear: 2026
+reference: "docs/upgrade-2026-execution-brief.md; https://docs.stripe.com/keys"
+notes: |
+  Each hosted PostgreSQL application schema has one persistent test or live
+  mode for AI accounting. Operators use separate test and live storage. An
+  unbound schema with historical AI rows requires reviewed provenance and
+  migration before use. A configuration change alone cannot reclassify rows.
+lines:
+  - line: "settlement-and-spend"
+    description: "Bind original Checkout, balances and provider accounting to the database mode"
+    formula: "Before reading credits, recording a credit, issuing a credit Checkout or reserving provider spend, require the immutable database binding to equal configured billing mode. A stored test grant cannot authorize live spend or a live checkout. Leave account and subscription state accessible."
+    testRef: "tests/apps/web/hosted-ai-storage-mode.test.ts::rejects live access to exact test grants on the same schema"
+  - line: "concurrent-first-use"
+    description: "Bind an empty schema exactly once"
+    formula: "Serialize initialization for an empty schema. A concurrent opposing mode loses before it reads or changes AI accounting. The marker cannot be updated, deleted or truncated through ordinary database operations."
+    testRef: "tests/apps/web/hosted-ai-storage-mode.test.ts::chooses one database mode under concurrent first use"
+  - line: "legacy-migration"
+    description: "Preserve and hold unclassified historical AI records"
+    formula: "Leave an unbound nonempty schema untouched. Do not infer storage mode from checkout IDs, environment, missing signed evidence, or current users. Existing rows and their archive remain available for operator review; neither mode can spend them."
+    testRef: "tests/apps/web/hosted-ai-storage-mode.test.ts::holds historical AI rows without assigning either mode"
+  - line: "read-only-first-access"
+    description: "An empty display cannot claim the schema for one mode"
+    formula: "A read-only budget view on an empty schema may display a zero purchased balance without creating the marker. A valid first write may bind live or test. Once live is bound, test cannot read balances."
+    testRef: "tests/apps/web/hosted-ai-storage-mode.test.ts::keeps an empty budget read neutral and prevents test access to a live binding"
+  - line: "recovery"
+    description: "Restore the original mode with the database archive"
+    formula: "A real PostgreSQL archive restores the original mode and preserves exact issued and spent credits, idempotent replay and the mode restriction. A pre-mode historical archive restores all rows without guessing an AI mode."
+    testRef: "tests/runtime/hosted-ai-credit-recovery.test.ts::restores original issuance and migrates an actual pre-issuance archive"

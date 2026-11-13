@@ -9,7 +9,8 @@ import { spawnSync } from "node:child_process";
 import { ensureHostedAppSchema, getHostedServerDatabase } from "../apps/web/src/lib/hosted-server-db";
 import { createHostedAiCreditIssuance, bindHostedAiCreditIssuance } from "../apps/web/src/lib/hosted-ai-credit-issuance";
 import { ensureHostedAiCreditIssuanceSchema } from "../apps/web/src/lib/hosted-ai-credit-issuance-schema";
-import { recordHostedAiCreditPurchase } from "../apps/web/src/lib/hosted-ai-usage-db";
+import { ensureHostedAiStorageModeSchema } from "../apps/web/src/lib/hosted-ai-storage-mode";
+import { getHostedAiBudgetSnapshot, recordHostedAiCreditPurchase } from "../apps/web/src/lib/hosted-ai-usage-db";
 import { migrateHostedWorkspaceMetadata } from "../apps/web/src/lib/hosted-workspace-metadata-migration";
 import { createWorkspaceRecord } from "../apps/web/src/lib/workspace-storage";
 
@@ -55,6 +56,7 @@ async function main() {
     await ensureHostedAppSchema(env);
     runtime = await getHostedServerDatabase(env);
     const { pool } = runtime;
+    const issuance = await createHostedAiCreditIssuance(env, { ownerId: "synthetic-owner-a", stripeCustomerId: "cus_issued", livemode: false, amountPaidCents: 700, creditedBudgetCents: 500 });
     const workspace = createWorkspaceRecord("synthetic-shared-return", { now: "2026-10-24T12:00:00.000Z" });
     workspace.returnSummary.targetTaxYear = null;
     Object.assign(workspace, { legacyPrivateNotes: "Synthetic Person 123-45-6789" });
@@ -69,7 +71,6 @@ async function main() {
     await pool.query("INSERT INTO hosted_ai_usage_ledger (request_id,owner_id,cycle_key,task,provider,estimated_cost_cents,included_charge_cents) VALUES ('legacy_synthetic','synthetic-owner-a','2026-10','summary','synthetic',1,1)");
     await pool.query("INSERT INTO hosted_ai_reservations (owner_id,request_id,payload_digest,cycle_key,included_budget_cents,included_reserved_cents,purchased_reserved_cents,included_charge_cents,state) VALUES ('synthetic-owner-a','request_synthetic','digest_synthetic','2026-10',100,1,0,1,'settled')");
     await pool.query("INSERT INTO hosted_ai_attempts (owner_id,request_id,attempt,task,profile_id,model_id,state,started_at,completed_at,usage,provider_cost_usd,pricing_effective_from) VALUES ('synthetic-owner-a','request_synthetic',1,'summary','synthetic','synthetic','accepted','2026-10-24T12:00:00Z','2026-10-24T12:00:01Z','{\"inputTokens\":1,\"outputTokens\":1}',0.0000006,'2026-10-24')");
-    const issuance = await createHostedAiCreditIssuance(env, { ownerId: "synthetic-owner-a", stripeCustomerId: "cus_issued", livemode: false, amountPaidCents: 700, creditedBudgetCents: 500 });
     const issuedSession = { id: "cs_test_issued", object: "checkout.session", mode: "payment", customer: "cus_issued",
       client_reference_id: issuance.issuanceId, livemode: false, currency: "usd", amount_subtotal: 700, amount_total: 700,
       created: Math.floor(Date.now()/1000), expires_at: issuance.expiresAt, metadata: { purchaseKind: "ai-credit-issuance-v1" },
@@ -83,7 +84,9 @@ async function main() {
     assert.equal(await recordHostedAiCreditPurchase(env, paid), true);
     await createHostedAiCreditIssuance(env, { ownerId: "synthetic-owner-b", stripeCustomerId: "cus_pending", livemode: false, amountPaidCents: 900, creditedBudgetCents: 600 });
     const tables = (await pool.query("SELECT tablename FROM pg_tables WHERE schemaname=$1 ORDER BY tablename", [schema])).rows.map(row => String(row.tablename));
-    assert.equal(tables.length, 10);
+    assert.equal(tables.length, 11);
+    const budgetInput = { ownerId: "synthetic-owner-a", cycleKey: "2026-10", includedBudgetCents: 100 };
+    const liveEnv = { ...env, TAX_ENGINE_BILLING_MODE: "live" };
     async function snapshot() {
       const result: Record<string, string[]> = {};
       for (const table of tables) {
@@ -114,20 +117,26 @@ async function main() {
     assert.equal((await migrateHostedWorkspaceMetadata(pool, { apply: true })).changed, 0);
     assert.equal(await recordHostedAiCreditPurchase(env, paid), false);
     assert.deepEqual(await snapshot(), after);
+    assert.equal((await getHostedAiBudgetSnapshot(env, budgetInput)).purchasedRemainingCents, 600);
+    await assert.rejects(getHostedAiBudgetSnapshot(liveEnv, budgetInput), /database mode/i);
     await assert.rejects(pool.query("UPDATE hosted_ai_credit_issuances SET credited_budget_cents=1"), /immutable/);
     // Actual old-schema backup and restore, then the same additive schema hook
     // invoked by fresh application initialization. Existing nine tables survive.
     await pool.query("DROP TABLE hosted_ai_credit_issuances");
     await pool.query("DROP FUNCTION hosted_ai_credit_issuance_immutable()");
+    await pool.query("DROP TABLE hosted_ai_storage_mode");
+    await pool.query("DROP FUNCTION hosted_ai_storage_mode_immutable()");
     const legacyBackup=path.join(directory,"legacy.dump");
     runPg("pg_dump",["--dbname",rawUrl,"--schema",schema,"--format=custom","--no-owner","--no-privileges","--file",legacyBackup]);
     await chmod(legacyBackup,0o600);
     await admin.query(`DROP SCHEMA ${schema} CASCADE`);
     runPg("pg_restore",["--dbname",rawUrl,"--no-owner","--no-privileges","--exit-on-error","--single-transaction",legacyBackup]);
     await ensureHostedAiCreditIssuanceSchema(pool);await ensureHostedAiCreditIssuanceSchema(pool);
+    await ensureHostedAiStorageModeSchema(pool);await ensureHostedAiStorageModeSchema(pool);
     const upgraded=await snapshot();
-    assert.deepEqual(upgraded.hosted_ai_credit_issuances,[]);
-    for(const table of tables.filter(name=>name!=="hosted_ai_credit_issuances")) assert.deepEqual(upgraded[table],after[table]);
+    const addedTables = new Set(["hosted_ai_credit_issuances", "hosted_ai_storage_mode"]);
+    for (const table of tables) assert.deepEqual(upgraded[table], addedTables.has(table) ? [] : after[table]);
+    for (const deployment of [env, liveEnv]) await assert.rejects(getHostedAiBudgetSnapshot(deployment, budgetInput), /historical AI accounting/i);
     // Restore the full source-bound archive again so the final checksum includes
     // the original bound and unbound issuance, never fabricated replacements.
     await admin.query(`DROP SCHEMA ${schema} CASCADE`);
@@ -135,7 +144,7 @@ async function main() {
     await migrateHostedWorkspaceMetadata(pool,{apply:true});
     assert.deepEqual(await snapshot(),after);
     const digest = createHash("sha256").update(JSON.stringify(after)).digest("hex");
-    console.log(JSON.stringify({ result: "passed", evidence: "local-synthetic-postgresql-dump-restore", tables: tables.length, issuanceRestored: true, issuanceReplayIdempotent: true, oldSchemaUpgradePreserved: true, tenantWorkspaces: 2, exactCostRestored: true, metadataCleanupReapplied: true, metadataCleanupIdempotent: true, checksum: digest }));
+    console.log(JSON.stringify({ result: "passed", evidence: "local-synthetic-postgresql-dump-restore", tables: tables.length, issuanceRestored: true, issuanceReplayIdempotent: true, modeRestored: true, oldSchemaUpgradePreserved: true, tenantWorkspaces: 2, exactCostRestored: true, metadataCleanupReapplied: true, metadataCleanupIdempotent: true, checksum: digest }));
   } finally {
     if (runtime) await closeRecoveryRuntime(runtime);
     if (created) await admin.query(`DROP SCHEMA IF EXISTS ${schema} CASCADE`);

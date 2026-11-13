@@ -39,6 +39,16 @@ Independent engineering review against `c94971cd` passed 219 focused and 49 adja
 
 The integrated local main candidate repeated all 219 focused tests on disposable PostgreSQL 16.16 and closed that database normally. Three type checks, scoped lint, 8,782 spec references and the 959-row inventory check passed. The focused transcript SHA-256 is `ef76c2d58e088969685dd72bd31b6117a797b49d7ff5d6118a4670c592752229`.
 
+## Separate test and live AI accounting
+
+The successor stores one immutable test/live marker per PostgreSQL application schema. Use a separate database or application schema for each mode. A budget read does not claim an empty schema. First writes serialize, and the matching mode is verified before the application reads balances, creates or binds a Checkout issuance, grants credits, reserves provider spend or reconciles usage. Existing AI rows without a marker require an operator to establish provenance before migration. The application keeps those rows intact and withholds their balances and spend in both modes. The billing page continues to offer ordinary subscription management when this specific guard blocks AI accounting.
+
+Pause AI sales and provider usage during the migration and drain old writers before admitting a current writer. Earlier releases lack this enforcement and must not run against the same AI data during rollout or rollback. Preserve the marker and original rows in backups. For a legacy database, determine the source mode from independently corroborated deployment and Stripe evidence, account for all outstanding reservations and credits, and have the owner review the proposed migration before running it. When provenance is mixed or unknown, leave it held. Do not use Session ID text or the current deployment setting as proof.
+
+The recovery rehearsal now checks all eleven application tables. It restores and enforces the original mode, confirms a 600-cent balance after restoring the original grants and their idempotent replay, and restores the historical nine-table archive without classifying its retained AI rows. This is a local synthetic database check. Neither an operator migration nor a contradictory signed payment refund has occurred.
+
+Three spec-linked regressions failed before the guard. The final PostgreSQL 16.16 cohort passed 247 tests in 13 files, including both mode directions, an empty nonbinding balance read, concurrent first writes, an exact 1,000-cent hold followed by a one-cent charge, and the archive rehearsal. Scoped lint, three type checks, 8,787 spec references and the 960-row inventory check passed. The retained before and after transcript SHA-256 values are `ac0a38ea2c19ff0cc4eb62cd093bc9c2d9ffb47a0669999d896ea49e3cb41a1f` and `8eb791ad9028ba1709c4ba3cc919dc41911174f01121932d7e38fcae2d26c18b`.
+
 ## Primary API references
 
 - [Create Checkout Session](https://docs.stripe.com/api/checkout/sessions/create): internal `client_reference_id`, expiry and Session creation.

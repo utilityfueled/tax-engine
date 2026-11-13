@@ -1,6 +1,7 @@
 import { ensureHostedAppSchema, getHostedServerDatabase } from "./hosted-server-db";
 import Decimal from "decimal.js";
 import { validateAndBindHostedAiCreditIssuance, type HostedAiCreditCheckoutProof } from "./hosted-ai-credit-issuance";
+import { configuredStripeBillingMode, withHostedAiStorageMode } from "./hosted-ai-storage-mode";
 
 type HostedAiEnvironment = Record<string, string | undefined>;
 
@@ -49,31 +50,22 @@ export async function getHostedAiBudgetSnapshot(
 ): Promise<HostedAiBudgetSnapshot> {
   await ensureHostedAppSchema(env);
   const { pool } = await getHostedServerDatabase(env);
-  const [purchaseResult, usageResult] = await Promise.all([
-    pool.query(
+  const { rows: [balance] } = await withHostedAiStorageMode(pool, configuredStripeBillingMode(env), false,
+    client => client.query(
       `
         SELECT
-          COALESCE(SUM(credited_budget_cents), 0) AS purchased_budget_cents
-        FROM hosted_ai_credit_purchases
-        WHERE owner_id = $1;
-      `,
-      [ownerId]
-    ),
-    pool.query(
-      `
-        SELECT
+          (SELECT COALESCE(SUM(credited_budget_cents), 0) FROM hosted_ai_credit_purchases WHERE owner_id=$1) AS purchased_budget_cents,
           (SELECT COALESCE(SUM(included_charge_cents), 0) FROM hosted_ai_usage_ledger WHERE owner_id=$1 AND cycle_key=$2)
             + (SELECT COALESCE(SUM(included_charge_cents - included_refund_cents + included_reserved_cents),0) FROM hosted_ai_reservations WHERE owner_id=$1 AND cycle_key=$2) AS included_used_cents,
           (SELECT COALESCE(SUM(purchased_charge_cents), 0) FROM hosted_ai_usage_ledger WHERE owner_id=$1)
             + (SELECT COALESCE(SUM(purchased_charge_cents - purchased_refund_cents + purchased_reserved_cents),0) FROM hosted_ai_reservations WHERE owner_id=$1) AS purchased_used_cents;
       `,
       [ownerId, cycleKey]
-    )
-  ]);
+    ));
 
-  const purchasedBudgetCents = coerceCount(purchaseResult.rows[0]?.purchased_budget_cents);
-  const includedUsedCents = coerceCount(usageResult.rows[0]?.included_used_cents);
-  const purchasedUsedCents = coerceCount(usageResult.rows[0]?.purchased_used_cents);
+  const purchasedBudgetCents = coerceCount(balance.purchased_budget_cents);
+  const includedUsedCents = coerceCount(balance.included_used_cents);
+  const purchasedUsedCents = coerceCount(balance.purchased_used_cents);
   const includedRemainingCents = coerceCount(Decimal.max(0, new Decimal(includedBudgetCents).minus(includedUsedCents)).toFixed());
   const purchasedRemainingCents = coerceCount(Decimal.max(0, new Decimal(purchasedBudgetCents).minus(purchasedUsedCents)).toFixed());
 
@@ -96,12 +88,9 @@ export async function recordHostedAiCreditPurchase(
 ) {
   await ensureHostedAppSchema(env);
   const { pool } = await getHostedServerDatabase(env);
-  const client = await pool.connect();
-  let discard = false;
-  const onClientError = () => { discard = true; };
-  client.on("error", onClientError);
-  try {
-    await client.query("BEGIN");
+  const mode = configuredStripeBillingMode(env);
+  if (input.checkoutProof && input.checkoutProof.livemode !== (mode === "live")) throw new Error("Checkout proof has the wrong billing mode.");
+  return withHostedAiStorageMode(pool, mode, true, async client => {
     await validateAndBindHostedAiCreditIssuance(client, input);
     const receipt = await client.query(`
       INSERT INTO hosted_billing_events (event_id, event_type, created_at)
@@ -117,7 +106,6 @@ export async function recordHostedAiCreditPurchase(
         FROM hosted_ai_credit_purchases WHERE checkout_session_id=$1
       `, [input.checkoutSessionId,input.ownerId,input.stripeCustomerId,input.amountPaidCents,input.creditedBudgetCents,input.currency]);
       if(rows[0]?.matches !== true) throw new Error("Checkout receipt conflicts with retained purchase.");
-      await client.query("COMMIT");
       return false;
     }
     const terms = [input.checkoutSessionId, input.ownerId, input.stripeCustomerId,
@@ -138,13 +126,6 @@ export async function recordHostedAiCreditPurchase(
       `, terms);
       if (rows[0]?.matches !== true) throw new Error("Paid Checkout facts conflict with the retained credit purchase.");
     }
-    if (discard) throw new Error("Credit settlement connection was lost.");
-    await client.query("COMMIT");
     return inserted.rows.length > 0;
-  } catch (error) {
-    try { await client.query("ROLLBACK"); } catch { discard = true; }
-    throw error;
-  } finally {
-    try { client.release(discard); } finally { client.removeListener("error", onClientError); }
-  }
+  });
 }

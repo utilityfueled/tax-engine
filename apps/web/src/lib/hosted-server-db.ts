@@ -4,6 +4,7 @@ import { Pool, type PoolClient } from "pg";
 import { resolveDeploymentMode } from "./deployment-mode";
 import { ensureHostedAiCreditIssuanceSchema } from "./hosted-ai-credit-issuance-schema";
 import { ensureHostedAiLedgerSchema } from "./hosted-ai-ledger-schema";
+import { ensureHostedAiStorageModeSchema } from "./hosted-ai-storage-mode";
 
 type HostedDbEnvironment = Record<string, string | undefined>;
 
@@ -425,6 +426,7 @@ async function createHostedAppTables(pool: Pool) {
   `);
   await ensureHostedAiLedgerSchema(pool);
   await ensureHostedAiCreditIssuanceSchema(pool);
+  await ensureHostedAiStorageModeSchema(pool);
 }
 
 export async function ensureHostedAppSchema(

@@ -13,6 +13,7 @@ import { resolveHostedWorkspaceActor } from "@/lib/hosted-auth";
 import { getHostedEntitlementByOwnerId } from "@/lib/hosted-billing-db";
 import { resolveDeploymentMode } from "@/lib/deployment-mode";
 import { canPurchaseHostedAiCredits } from "@/lib/hosted-ai-availability";
+import { HostedAiStorageModeError } from "@/lib/hosted-ai-storage-mode";
 
 export const metadata: Metadata = {
   title: "Billing — Viva La Tax"
@@ -69,7 +70,7 @@ export default async function BillingPage() {
   }
 
   const { subscription } = await getHostedEntitlementByOwnerId(process.env, actor.id);
-  const aiHelperAvailable = canPurchaseHostedAiCredits();
+  let aiHelperAvailable = canPurchaseHostedAiCredits();
   const aiBudget = subscription?.planId
     ? await getHostedAiBudgetSnapshot(process.env, {
         ownerId: actor.id,
@@ -79,6 +80,10 @@ export default async function BillingPage() {
           currentPeriodEnd: subscription.currentPeriodEnd
         }),
         includedBudgetCents: resolveHostedAiIncludedBudgetCents(subscription.planId, process.env)
+      }).catch(error => {
+        if (!(error instanceof HostedAiStorageModeError)) throw error;
+        aiHelperAvailable = false;
+        return null;
       })
     : null;
 

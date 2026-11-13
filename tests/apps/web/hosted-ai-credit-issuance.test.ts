@@ -27,6 +27,7 @@ describe.skipIf(!originalUrl)("immutable AI credit issuance", () => {
     expect((await admin.query("SHOW server_version")).rows[0].server_version).toMatch(/^16\.16(?:\s|$)/);
     await admin.query(`CREATE SCHEMA ${schema}`);
     await ensureHostedAppSchema(env);
+    await admin.query(`INSERT INTO ${schema}.hosted_ai_storage_mode (mode) VALUES ('test')`);
   });
   beforeEach(async () => { await admin.query(`TRUNCATE ${schema}.hosted_ai_credit_purchases, ${schema}.hosted_billing_events, ${schema}.hosted_ai_credit_issuances`); });
   afterAll(async () => {

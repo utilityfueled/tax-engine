@@ -5,6 +5,7 @@ import { AI_PROFILES, AI_TASKS } from "@tax-engine/engine/src/ai-task-registry";
 import type { AiTaskExecution } from "./ai-task-adapter";
 import { createHostedAiLedger } from "./hosted-ai-ledger";
 import { ensureHostedAppSchema, getHostedServerDatabase } from "./hosted-server-db";
+import { configuredStripeBillingMode } from "./hosted-ai-storage-mode";
 
 /** Bind billing to a server-authenticated owner. No input/response text is stored in the ledger. */
 export function hostedAiTaskAccounting(input: {
@@ -15,7 +16,7 @@ export function hostedAiTaskAccounting(input: {
   const identity = { ownerId: input.ownerId, requestId: input.requestId };
   async function ledger() {
     await ensureHostedAppSchema(env);
-    return createHostedAiLedger((await getHostedServerDatabase(env)).pool);
+    return createHostedAiLedger((await getHostedServerDatabase(env)).pool, configuredStripeBillingMode(env));
   }
   return {
     async beforeAttempt(attempt) {

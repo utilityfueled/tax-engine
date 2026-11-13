@@ -36,6 +36,7 @@ describe.skipIf(!disposable)("paid Stripe Checkout atomic credit persistence", (
     await admin.query(`CREATE SCHEMA ${schema}`);
     created = true;
     await ensureHostedAppSchema(env);
+    await admin.query(`INSERT INTO ${schema}.hosted_ai_storage_mode (mode) VALUES ('test')`);
   });
   beforeEach(async () => {
     await admin.query(`TRUNCATE ${schema}.hosted_ai_credit_purchases, ${schema}.hosted_billing_events`);

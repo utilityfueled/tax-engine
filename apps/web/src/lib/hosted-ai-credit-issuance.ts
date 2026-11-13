@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import type { PoolClient } from "pg";
 import { ensureHostedAppSchema, getHostedServerDatabase, getHostedServerDatabaseConfig } from "./hosted-server-db";
 import { isPositiveHostedCreditCents } from "./hosted-ai-helper-billing";
+import { configuredStripeBillingMode, withHostedAiStorageMode } from "./hosted-ai-storage-mode";
 
 type Environment = Record<string, string | undefined>;
 export const HOSTED_AI_CREDIT_KIND = "ai-credit-issuance-v1";
@@ -76,26 +77,32 @@ export async function findHostedAiCreditIssuance(env: Environment, sessionId: st
   const {pool}=await getHostedServerDatabase(env);
   return lookup(pool,sessionId,reference,false);
 }
-export async function pruneHostedAiCreditIssuances(env: Environment) {
-  await ensureHostedAppSchema(env);
-  const {pool}=await getHostedServerDatabase(env);
-  const result=await pool.query(`WITH abandoned AS (
+async function pruneAbandonedIssuances(client: PoolClient) {
+  const result = await client.query(`WITH abandoned AS (
     SELECT issuance_id FROM hosted_ai_credit_issuances WHERE checkout_session_id IS NULL
       AND expires_at < NOW()-INTERVAL '32 days' ORDER BY expires_at,issuance_id LIMIT 100 FOR UPDATE SKIP LOCKED
     ) DELETE FROM hosted_ai_credit_issuances i USING abandoned a
       WHERE i.issuance_id=a.issuance_id AND i.checkout_session_id IS NULL RETURNING i.issuance_id`);
   return result.rowCount ?? 0;
 }
-export async function createHostedAiCreditIssuance(env: Environment, terms: HostedAiCreditTerms): Promise<HostedAiCreditIssuance> {
-  if (!validTerms(terms)) throw new Error("Invalid Checkout issuance terms.");
+export async function pruneHostedAiCreditIssuances(env: Environment) {
   await ensureHostedAppSchema(env);
-  await pruneHostedAiCreditIssuances(env);
-  const {pool}=await getHostedServerDatabase(env);
-  const {rows}=await pool.query<IssuanceRow>(`INSERT INTO hosted_ai_credit_issuances
-    (issuance_id,owner_id,stripe_customer_id,livemode,amount_paid_cents,credited_budget_cents,expires_at)
-    VALUES($1,$2,$3,$4,$5,$6,to_timestamp(floor(extract(epoch FROM clock_timestamp()))+3600)) RETURNING *`,
-    [`${REFERENCE_PREFIX}v1_${randomUUID()}`,terms.ownerId,terms.stripeCustomerId,terms.livemode,terms.amountPaidCents,terms.creditedBudgetCents]);
-  return fromRow(rows[0]);
+  const { pool } = await getHostedServerDatabase(env);
+  return withHostedAiStorageMode(pool, configuredStripeBillingMode(env), false, pruneAbandonedIssuances);
+}
+export async function createHostedAiCreditIssuance(env: Environment, terms: HostedAiCreditTerms): Promise<HostedAiCreditIssuance> {
+  const mode = configuredStripeBillingMode(env);
+  if (!validTerms(terms) || terms.livemode !== (mode === "live")) throw new Error("Invalid Checkout issuance terms.");
+  await ensureHostedAppSchema(env);
+  const { pool } = await getHostedServerDatabase(env);
+  return withHostedAiStorageMode(pool, mode, true, async client => {
+    await pruneAbandonedIssuances(client);
+    const { rows } = await client.query<IssuanceRow>(`INSERT INTO hosted_ai_credit_issuances
+      (issuance_id,owner_id,stripe_customer_id,livemode,amount_paid_cents,credited_budget_cents,expires_at)
+      VALUES($1,$2,$3,$4,$5,$6,to_timestamp(floor(extract(epoch FROM clock_timestamp()))+3600)) RETURNING *`,
+      [`${REFERENCE_PREFIX}v1_${randomUUID()}`,terms.ownerId,terms.stripeCustomerId,terms.livemode,terms.amountPaidCents,terms.creditedBudgetCents]);
+    return fromRow(rows[0]);
+  });
 }
 export interface HostedAiCreditSettlementTerms {
   checkoutSessionId: string; ownerId: string; stripeCustomerId: string | null;
@@ -137,10 +144,8 @@ export async function bindHostedAiCreditIssuance(env: Environment, issuanceId: s
     throw new Error("Invalid issued Checkout Session.");
   }
   await ensureHostedAppSchema(env);
-  const {pool}=await getHostedServerDatabase(env);const client=await pool.connect();let discard=false;
-  const lost=()=>{discard=true;};client.on("error",lost);
-  try {
-    await client.query("BEGIN");
+  const { pool } = await getHostedServerDatabase(env);
+  return withHostedAiStorageMode(pool, configuredStripeBillingMode(env), false, async client => {
     const original=await lookup(client,session.id,issuanceId,true);
     if (!original || session.customer!==original.stripeCustomerId) throw new Error("Checkout issuance customer conflict.");
     await validateAndBindHostedAiCreditIssuance(client,{checkoutSessionId:session.id,ownerId:original.ownerId,
@@ -148,24 +153,16 @@ export async function bindHostedAiCreditIssuance(env: Environment, issuanceId: s
       creditedBudgetCents:original.creditedBudgetCents,currency:session.currency ?? "",
       checkoutProof:{clientReferenceId:session.client_reference_id,livemode:session.livemode,created:session.created,
         expiresAt:session.expires_at,amountSubtotal:session.amount_subtotal,metadata:session.metadata}});
-    if(discard)throw new Error("Checkout issuance connection lost.");
-    await client.query("COMMIT");
-  } catch(error) {try {await client.query("ROLLBACK");}catch {discard=true;}throw error;}
-  finally {try {client.release(discard);}finally {client.removeListener("error",lost);}}
+  });
 }
 
 // Preserve a verified unpaid completion after response loss so bounded abandoned
 // intent cleanup cannot discard a real Session awaiting delayed payment.
 export async function retainHostedAiCreditCheckout(env: Environment, input: HostedAiCreditSettlementTerms) {
   await ensureHostedAppSchema(env);
-  const {pool}=await getHostedServerDatabase(env);const client=await pool.connect();let discard=false;
-  const lost=()=>{discard=true;};client.on("error",lost);
-  try {
-    await client.query("BEGIN");
+  const { pool } = await getHostedServerDatabase(env);
+  return withHostedAiStorageMode(pool, configuredStripeBillingMode(env), false, async client => {
     if (!input.checkoutProof) throw new Error("Missing original Checkout proof.");
     await validateAndBindHostedAiCreditIssuance(client,input);
-    if(discard)throw new Error("Checkout issuance connection lost.");
-    await client.query("COMMIT");
-  } catch(error) {try {await client.query("ROLLBACK");}catch {discard=true;}throw error;}
-  finally {try {client.release(discard);}finally {client.removeListener("error",lost);}}
+  });
 }

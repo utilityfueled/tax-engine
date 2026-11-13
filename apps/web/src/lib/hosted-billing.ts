@@ -30,6 +30,7 @@ import {
 import { safeParseJsonBody } from "./safe-body-parser";
 import { resolveHostedAppBaseUrl } from "./hosted-runtime-safety";
 import { canPurchaseHostedAiCredits } from "./hosted-ai-availability";
+import { configuredStripeBillingMode } from "./hosted-ai-storage-mode";
 
 type BillingEnvironment = Record<string, string | undefined>;
 
@@ -84,9 +85,7 @@ function resolveHostedBillingMode(
     return "disabled";
   }
 
-  return env.TAX_ENGINE_BILLING_MODE?.trim().toLowerCase() === "live"
-    ? "live"
-    : "test";
+  return configuredStripeBillingMode(env);
 }
 
 function isHostedPlanId(value: string): value is HostedPlanId {

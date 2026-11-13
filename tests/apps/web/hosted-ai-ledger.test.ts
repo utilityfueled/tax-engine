@@ -2,17 +2,18 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vites
 import { createRequire } from "node:module";
 import { createHostedAiLedger } from "../../../apps/web/src/lib/hosted-ai-ledger";
 import { ensureHostedAiLedgerSchema } from "../../../apps/web/src/lib/hosted-ai-ledger-schema";
+import { ensureHostedAiStorageModeSchema } from "../../../apps/web/src/lib/hosted-ai-storage-mode";
 
 const base = { ownerId: "synthetic-owner", requestId: "request-1", payloadDigest: "a".repeat(64), cycleKey: "2026-10", includedBudgetCents: 3, maximumChargeCents: 2 };
 describe("AI ledger input boundary", () => {
   it.each([-1, 0.5, Number.NaN, Number.POSITIVE_INFINITY, Number.MAX_SAFE_INTEGER + 1])("rejects invalid reserve cents %s before DB access", async cents => {
     const connect = vi.fn();
-    await expect(createHostedAiLedger({ connect } as never).reserve({ ...base, maximumChargeCents: cents })).rejects.toThrow();
+    await expect(createHostedAiLedger({ connect } as never, "test").reserve({ ...base, maximumChargeCents: cents })).rejects.toThrow();
     expect(connect).not.toHaveBeenCalled();
   });
   it.each([{ ownerId: "" }, { payloadDigest: "raw taxpayer contents" }, { cycleKey: "" }, { maximumChargeCents: 0 }])("rejects invalid metadata %j", async fields => {
     const connect = vi.fn();
-    await expect(createHostedAiLedger({ connect } as never).reserve({ ...base, ...fields })).rejects.toThrow();
+    await expect(createHostedAiLedger({ connect } as never, "test").reserve({ ...base, ...fields })).rejects.toThrow();
     expect(connect).not.toHaveBeenCalled();
   });
 });
@@ -23,7 +24,7 @@ describe.skipIf(!databaseUrl)("AI credits against isolated PostgreSQL", () => {
   const require = createRequire(new URL("../../../apps/web/package.json", import.meta.url));
   const { Pool } = require("pg") as typeof import("../../../apps/web/node_modules/pg");
   const pool = new Pool({ connectionString: databaseUrl, max: 10 });
-  const ledger = createHostedAiLedger(pool);
+  const ledger = createHostedAiLedger(pool, "test");
   const usage = { inputTokens: 1000, outputTokens: 1000, cachedInputTokens: 200 };
   const first = { ownerId: base.ownerId, requestId: base.requestId, attempt: 1 as const };
   async function start(fields = {}) {
@@ -32,8 +33,12 @@ describe.skipIf(!databaseUrl)("AI credits against isolated PostgreSQL", () => {
   beforeAll(async () => {
     if (!databaseUrl || !/^postgres(?:ql)?:\/\/(?:ai_test@)?(?:127\.0\.0\.1|localhost):/.test(databaseUrl)) throw new Error("Use a disposable loopback PostgreSQL database.");
     await pool.query(`CREATE TABLE IF NOT EXISTS hosted_ai_credit_purchases (checkout_session_id TEXT PRIMARY KEY, owner_id TEXT, credited_budget_cents BIGINT);
-      CREATE TABLE IF NOT EXISTS hosted_ai_usage_ledger (request_id TEXT PRIMARY KEY, owner_id TEXT, cycle_key TEXT, included_charge_cents BIGINT, purchased_charge_cents BIGINT);`);
+      CREATE TABLE IF NOT EXISTS hosted_ai_usage_ledger (request_id TEXT PRIMARY KEY, owner_id TEXT, cycle_key TEXT, included_charge_cents BIGINT, purchased_charge_cents BIGINT);
+      CREATE TABLE IF NOT EXISTS hosted_ai_credit_issuances (issuance_id TEXT PRIMARY KEY);`);
     await ensureHostedAiLedgerSchema(pool);
+    await ensureHostedAiStorageModeSchema(pool);
+    // This disposable fixture's existing grants and charges are synthetic test rows.
+    await pool.query("INSERT INTO hosted_ai_storage_mode (mode) VALUES ('test') ON CONFLICT DO NOTHING");
   });
   beforeEach(async () => { await pool.query("TRUNCATE hosted_ai_attempts, hosted_ai_reservations, hosted_ai_credit_purchases, hosted_ai_usage_ledger"); });
   afterAll(async () => { await pool.end(); });

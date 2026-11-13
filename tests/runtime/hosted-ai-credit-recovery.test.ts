@@ -10,6 +10,6 @@ describe.skipIf(!url)("AI credit issuance backup and migration",()=>{
     const lastLine=result.stdout.trim().split("\n").at(-1);
     if(!lastLine) throw new Error("Recovery rehearsal did not emit its receipt.");
     const receipt=JSON.parse(lastLine);
-    expect(receipt).toMatchObject({result:"passed",tables:10,issuanceRestored:true,issuanceReplayIdempotent:true,oldSchemaUpgradePreserved:true});
+    expect(receipt).toMatchObject({result:"passed",tables:11,issuanceRestored:true,issuanceReplayIdempotent:true,modeRestored:true,oldSchemaUpgradePreserved:true});
   });
 });
