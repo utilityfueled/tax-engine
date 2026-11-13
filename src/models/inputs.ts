@@ -3692,6 +3692,8 @@ const EicChildlessClaimantSchema = z.object({
 });
 
 export const EicConfigSchema = z.object({
+  /** Each actual filer may elect all of their original W-2 Code Q amounts. */
+  combatPayElection: z.object({ primary: z.boolean().optional(), spouse: z.boolean().optional() }).strict().optional(),
   /** Actual claimant facts for IRC32. Omission preserves unknown historical sources. */
   claimantEligibility: z.object({
     sourceTaxYear: z.number().int().optional(),

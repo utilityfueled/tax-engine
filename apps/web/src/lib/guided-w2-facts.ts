@@ -1,9 +1,9 @@
 import { W2Schema } from "@/models/inputs";
 import { W2StateLocalSourcesSchema } from "@/models/w2-state-local";
 import { compensationReportingErrors } from "./guided-compensation-reporting";
-import type { FilingStatus, W2EntryData } from "./guided-interview-flow";
+import type { EicCombatPayElection, FilingStatus, W2EntryData } from "./guided-interview-flow";
 import { amountError, hasEnteredAmount } from "./guided-required-facts";
-import { parseGuidedCurrency } from "./guided-currency";
+import { parseGuidedCurrency, parseGuidedDisplayAmount } from "./guided-currency";
 
 /** Existing modeled Box12 originals: missing is not an actual zero for a source packet. */
 export const W2_SOURCE_BOX12_FIELDS = ["box12CodeW", "box12CodeD", "box12CodeE", "box12CodeF", "box12CodeG", "box12CodeH", "box12CodeS", "box12CodeAA", "box12CodeBB", "box12CodeEE", "box12CodeT"] as const;
@@ -16,6 +16,58 @@ export function enteredCodeP(entry: W2EntryData): string | undefined {
   if (!hasEnteredAmount(entry.box12CodeP)) return undefined;
   parseGuidedCurrency(entry.box12CodeP);
   return W2Schema.shape.box12CodeP.parse(entry.box12CodeP?.trim().replaceAll(",", ""));
+}
+
+function reportedCodeQ(entry: W2EntryData) {
+  const text = entry.box12CodeQ?.trim();
+  if (!text || !parseGuidedDisplayAmount(text).isFinite()) return undefined;
+  return W2Schema.shape.box12CodeQ.safeParse(text.replaceAll(",", "")).data;
+}
+
+const combatPayOwners = ["primary", "spouse"] as const;
+
+export function reportedCombatPayOwners(entries: W2EntryData[] | undefined) {
+  const owners = new Set<typeof combatPayOwners[number]>();
+  for (const entry of entries ?? []) {
+    const owner = entry.accountHolder;
+    const amount = reportedCodeQ(entry);
+    if ((owner === "primary" || owner === "spouse") && parseGuidedCurrency(amount).gt(0)) owners.add(owner);
+  }
+  return combatPayOwners.filter(owner => owners.has(owner));
+}
+
+export function combatPayElectionErrors(entries: W2EntryData[] | undefined, election: EicCombatPayElection | undefined, filingStatus: FilingStatus | null | undefined) {
+  const errors: Record<string, string> = {};
+  const owners = reportedCombatPayOwners(entries);
+  if (owners.length) {
+    for (const [index, entry] of (entries ?? []).entries()) {
+      if (isStartedW2(entry) && !hasEnteredAmount(entry.box12CodeQ)) {
+        errors[`w2-${index}-box12CodeQ`] = "Check the original W-2 for Code Q. Enter zero if the original has no Code Q.";
+      }
+    }
+  }
+  for (const owner of owners) {
+    if (typeof election?.[owner] !== "boolean") errors[`combatPayElection-${owner}`] = owner === "primary"
+      ? "Choose whether to include your nontaxable combat pay in the Earned Income Credit."
+      : "Confirm whether your spouse elects to include their nontaxable combat pay in the Earned Income Credit.";
+  }
+  if (election?.spouse !== undefined && filingStatus !== "mfj") errors["combatPayElection-spouse"] = "A spouse combat pay choice belongs on a joint return.";
+  for (const owner of combatPayOwners) {
+    if (election?.[owner] === true && !owners.includes(owner)) errors[`combatPayElection-${owner}`] = "An election to include combat pay requires a current W-2 reporting it for that filer.";
+  }
+  return errors;
+}
+
+export function retainCombatPayElection(previous: W2EntryData[] | undefined, next: W2EntryData[], election: EicCombatPayElection | undefined) {
+  if (!election) return undefined;
+  const retained: EicCombatPayElection = {};
+  const originals = (entries: W2EntryData[] | undefined, owner: keyof EicCombatPayElection) => (entries ?? [])
+    .filter(entry => entry.accountHolder === owner && hasEnteredAmount(entry.box12CodeQ))
+    .map(entry => JSON.stringify([entry.sourceTaxYear, entry.employerEin, entry.box12CodeQ])).sort();
+  for (const owner of reportedCombatPayOwners(next)) {
+    if (typeof election[owner] === "boolean" && JSON.stringify(originals(previous, owner)) === JSON.stringify(originals(next, owner))) retained[owner] = election[owner];
+  }
+  return Object.keys(retained).length ? retained : undefined;
 }
 
 export function w2FactErrors(entries: W2EntryData[] | undefined, filingStatus?: FilingStatus | null, returnYear?: number | null, options?: { forSourceConfirmation?: boolean }): Record<string, string> {
@@ -43,9 +95,9 @@ export function w2FactErrors(entries: W2EntryData[] | undefined, filingStatus?: 
       }
     }
     if (hasEnteredAmount(entry.box12CodeQ)) {
-      const amount = W2Schema.shape.box12CodeQ.safeParse(entry.box12CodeQ?.trim().replaceAll(",", ""));
-      if (!amount.success) errors[`${prefix}-box12CodeQ`] = "Enter actual nonnegative Box 12 Code Q in dollars and cents.";
-      else if (parseGuidedCurrency(amount.data).gt(0)) {
+      const amount = reportedCodeQ(entry);
+      if (amount === undefined) errors[`${prefix}-box12CodeQ`] = "Enter actual nonnegative Box 12 Code Q in dollars and cents.";
+      else if (parseGuidedCurrency(amount).gt(0)) {
         if (!returnYear || entry.sourceTaxYear?.trim() !== String(returnYear)) {
           errors[`${prefix}-sourceTaxYear`] = "Enter the original W-2 year for Box 12 Code Q and match it to this return.";
         }

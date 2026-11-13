@@ -74,7 +74,7 @@ import {reconcileGuidedZeroIncomeMiscOriginalClaims} from './guided-zero-income-
 import { buildCareBenefitsInput, careBenefitsFactErrors, guidedCareBenefitSources, type CareBenefitSource } from "./guided-dependent-care-benefits";
 import { careFactErrors } from "./guided-credit-facts";
 import { buildActualEnergyInput, energyFactErrors } from "./guided-energy-facts";
-import { isStartedW2, w2FactErrors } from "./guided-w2-facts";
+import { combatPayElectionErrors, isStartedW2, w2FactErrors } from "./guided-w2-facts";
 import { businessFactErrors, hasBusinessSourceData, isStartedNec, sumKnownBusinessAmounts, type BusinessSourceData } from "./guided-business-facts";
 import { readGuidedBusinessMileage } from "./guided-business-mileage";
 import { readGuidedProfessionalWagering } from "./guided-professional-wagering";
@@ -774,7 +774,7 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
 
   const personalInfo = sectionData["personal-info"] as PersonalInfoData | undefined;
   if (!personalInfo?.dateOfBirth || Object.keys(personalFactErrors(personalInfo, segmentation.filingStatus, state.taxYear)).length) return null;
-  const w2Data = sectionData["income-w2"] as { entries: W2EntryData[] } | undefined;
+  const w2Data = sectionData["income-w2"];
   const seData = sectionData["income-self-employment"];
   const investData = sectionData["income-investments"];
   const retirementData = sectionData["income-retirement"];
@@ -800,6 +800,7 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
     else assertKnownFacts(tipIncomeFactErrors(state));
     assertKnownFacts(schedule1AFactErrors(state));
     assertKnownFacts(w2FactErrors(w2Data?.entries, segmentation.filingStatus, state.taxYear));
+    assertKnownFacts(combatPayElectionErrors(w2Data?.entries, w2Data?.combatPayElection, segmentation.filingStatus));
     assertKnownFacts(investmentFactErrors(investData, segmentation.filingStatus, state.taxYear, stateReturnData, segmentation.stateCode, personalInfo));
     assertKnownFacts(businessFactErrors(seData, segmentation.filingStatus, w2Data?.entries, stateReturnData, state.taxYear, state));
     standardMileage = readGuidedBusinessMileage(seData, state);
@@ -920,6 +921,7 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
   const currentCapitalCarry = form172?.capitalSources?.priorCapitalLosses;
 
   const healthInsurance = buildHealthInsuranceInput(adjustmentData?.healthInsuranceFacts, segmentation.filingStatus, state.taxYear, adjustmentData?.selfEmployedHealthInsurance);
+  const eic = buildGuidedEicClaimantEligibility(personalInfo, segmentation.filingStatus, state.taxYear);
   let input: GuidedTaxInputSources = {
     taxpayer: {
       taxYear: state.taxYear,
@@ -1009,7 +1011,7 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
     } : undefined,
     dependentCare,
     dependentCareBenefits,
-    eic: buildGuidedEicClaimantEligibility(personalInfo, segmentation.filingStatus, state.taxYear),
+    eic: w2Data?.combatPayElection === undefined ? eic : { ...eic, combatPayElection: w2Data.combatPayElection },
     standardDeductionFacts: buildStandardDeductionFacts(personalInfo?.standardDeductionFacts, segmentation.filingStatus, state.taxYear, personalInfo),
     deductionElection: deductionData?.method ?? "automatic",
     ...buildGuidedInvestmentInterestInputs(deductionData, investData?.childElections, state.taxYear),

@@ -58,6 +58,7 @@ import { calculateForm8812 } from "./forms/form-8812.js";
 import { calculatePersonalCreditOrdering } from "./forms/personal-credit-ordering.js";
 import { calculateChildCreditEligibility } from "./forms/child-credit-eligibility.js";
 import { resolveForm8812CombatPay } from "./child-credit-combat-pay.js";
+import { resolveEicCombatPay } from "./eic-combat-pay.js";
 import { calculateForm8959 } from "./forms/form-8959.js";
 import { calculateForm1099G } from "./forms/form-1099-g.js";
 import { calculateForm8960 } from "./forms/form-8960.js";
@@ -3572,8 +3573,11 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   // ── Line 27a: Earned Income Credit ──────────────────────
   // Computed before Form 2210 so EIC is included in refundable credits for
   // accurate estimated tax penalty calculation.
-  // Per IRC §32(c)(2): earned income = wages + net SE earnings − deductible half of SE tax.
-  const eicEarnedIncome = sum(totalWages, netSEEarnings).minus(schedSE.deductibleHalf);
+  const eicCombatPay = resolveEicCombatPay(input);
+  // IRC §32(c)(2) includes all elected section 112 pay for each electing filer.
+  const eicEarnedIncome = sum(totalWages, netSEEarnings, eicCombatPay ?? d(0)).minus(schedSE.deductibleHalf);
+  if (eicCombatPay !== undefined) audit.record("1040", "1i", "Nontaxable combat pay election", eicCombatPay,
+    "Actual W-2 Box 12 Code Q total for electing filers under IRC32(c)(2)(B)(vi)");
 
   // Pub. 596 Worksheet 1 lines 5–7 remove the Form 4797 business gain
   // from capital gain net income. Form 4797 always computes line 9 here;

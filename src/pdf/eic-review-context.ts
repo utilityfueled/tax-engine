@@ -17,7 +17,7 @@ function calculationDigest(result: TaxReturnResult): string {
   return digest(redactReviewIdentifiers({ taxYear: result.taxYear, filingStatus: result.filingStatus, agi: result.agi,
     totalIncome: result.totalIncome, earnedIncomeCredit: result.earnedIncomeCredit, scheduleEIC: result.scheduleEIC,
     lines: result.allLines.filter(row => row.form === 'EIC' || row.form === 'Schedule EIC' || row.form === '8862'
-      || (row.form === '1040' && row.line === '27a')) }));
+      || (row.form === '1040' && (row.line === '1i' || row.line === '27a'))) }));
 }
 function freeze<T>(value: T): T {
   if (value !== null && typeof value === 'object') { for (const child of Object.values(value)) freeze(child); Object.freeze(value); }

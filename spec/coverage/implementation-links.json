@@ -349,6 +349,16 @@
       "note": "The named method is exercised through this shared engine module by this specification's own regression references. The linked historical review output does not qualify any 2026 form. This association neither changes scenario exclusions nor establishes independent human review."
     },
     {
+      "key": "federal/eic-combat-pay-election",
+      "enginePath": "src/engine/eic-combat-pay.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-1040.ts",
+      "testRefs": [
+        "tests/engine/federal-eic-combat-pay.test.ts::combines the two filers independently and keeps Code Q out of taxable wages",
+        "tests/pdf/fill-form-1040.test.ts::prints elected combat pay on 2025 Form 1040 line 1i only"
+      ],
+      "note": "The federal EIC calculation consumes the exact per-filer election; only the 2025 review mapping is linked."
+    },
+    {
       "key": "federal/eic-disallowance-canonical",
       "enginePath": "src/engine/federal.ts",
       "testRefs": [

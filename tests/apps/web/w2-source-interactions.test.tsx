@@ -5,7 +5,7 @@ import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { SectionW2Income } from "@/components/guided-interview/section-w2-income";
 import { createWorkspaceRecord } from "@/lib/workspace-storage";
-import { emptyW2Entry } from "@/lib/guided-interview-flow";
+import { emptyW2Entry, type EicCombatPayElection } from "@/lib/guided-interview-flow";
 import { w2FactErrors } from "@/lib/guided-w2-facts";
 import { buildW2Inputs } from "@/lib/guided-interview-bridge";
 import { getCachedWorkspaceDocumentFile, hasCachedWorkspaceDocumentFile } from "@/lib/workspace-document-file-cache";
@@ -30,6 +30,31 @@ beforeEach(() => { vi.clearAllMocks(); vi.mocked(hasCachedWorkspaceDocumentFile)
 afterEach(async () => { await act(async () => root.unmount()); container.remove(); });
 
 describe("W-2 source entry interactions", () => {
+  it("collects separate combat pay choices for the two filers", async () => {
+    const workspace = createWorkspaceRecord("fictional-combat-pay");
+    const choices = vi.fn();
+    function Harness() {
+      const [election, setElection] = useState<EicCombatPayElection>({});
+      return <SectionW2Income workspace={workspace} entries={[
+        { ...emptyW2Entry, accountHolder: "primary", box12CodeQ: "1000.10" },
+        { ...emptyW2Entry, accountHolder: "spouse", box12CodeQ: "2250.50" },
+      ]} combatPayElection={election} onEntriesChange={vi.fn()} onCombatPayElectionChange={value => {
+        choices(value);
+        setElection(value);
+      }} />;
+    }
+    await act(async () => root.render(<Harness />));
+    const primary = "Your combat pay election for the Earned Income Credit";
+    const spouse = "Spouse’s combat pay election for the Earned Income Credit";
+    expect(control(primary).value).toBe("");
+    expect(control(spouse).value).toBe("");
+    await change(primary, "false");
+    await change(spouse, "true");
+    expect(choices).toHaveBeenLastCalledWith({ primary: false, spouse: true });
+    await change(spouse, "");
+    expect(choices).toHaveBeenLastCalledWith({ primary: false, spouse: undefined });
+  });
+
   it("collects Code P from a 2026 original without converting a blank to zero", async () => {
     let latest = [{ ...emptyW2Entry, sourceTaxYear: "2026", wages: "0", federalWithheld: "0" }];
     const workspace = createWorkspaceRecord("manual-code-p");

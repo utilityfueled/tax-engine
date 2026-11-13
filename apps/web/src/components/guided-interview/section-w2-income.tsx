@@ -1,6 +1,6 @@
 "use client";
 import type { W2StateLocalSourceContext } from "@/engine/forms/w2-state-local";
-import { W2_SOURCE_BOX12_FIELDS } from "@/lib/guided-w2-facts";
+import { reportedCombatPayOwners, W2_SOURCE_BOX12_FIELDS } from "@/lib/guided-w2-facts";
 import { buildW2Inputs } from "@/lib/guided-interview-bridge";
 import { W2StateLocalDetails } from "./w2-state-local-details";
 
@@ -13,6 +13,7 @@ import type {
 import { RetroShell } from "@/components/retro-shell";
 import {
   type GuidedSuggestedFieldState,
+  type EicCombatPayElection,
   type W2SuggestedField,
   type W2EntryData,
   emptyW2Entry,
@@ -711,6 +712,8 @@ export function SectionW2Income({
   workspace,
   onUploadDocuments,
   onEntriesChange,
+  combatPayElection,
+  onCombatPayElectionChange,
 }: {
   originalInput?: W2StateLocalSourceContext | null;
   entries: W2EntryData[];
@@ -718,6 +721,8 @@ export function SectionW2Income({
   workspace: ReturnWorkspaceRecord;
   onUploadDocuments?: (files: File[]) => Promise<string>;
   onEntriesChange: (entries: W2EntryData[]) => void;
+  combatPayElection?: EicCombatPayElection;
+  onCombatPayElectionChange?: (election: EicCombatPayElection) => void;
 }) {
   const current = entries.length > 0 ? entries : [emptyW2Entry];
   const workspaceSuggestions = useMemo(
@@ -1031,6 +1036,19 @@ export function SectionW2Income({
         >
           + Add another W-2
         </button>
+        {onCombatPayElectionChange && reportedCombatPayOwners(current).map(owner => (
+          <label className="guided-field" key={owner}>
+            <span className="guided-field-label">{owner === "primary" ? "Your" : "Spouse’s"} combat pay election for the Earned Income Credit</span>
+            <select className="guided-select" value={combatPayElection?.[owner] === undefined ? "" : String(combatPayElection[owner])}
+              onChange={event => onCombatPayElectionChange({ ...combatPayElection,
+                [owner]: event.target.value === "" ? undefined : event.target.value === "true" })}>
+              <option value="">Not answered</option>
+              <option value="true">Include all nontaxable combat pay</option>
+              <option value="false">Do not include nontaxable combat pay</option>
+            </select>
+            <small>Each filer chooses for their own pay. The choice can increase or decrease the credit.</small>
+          </label>
+        ))}
       </div>
     </RetroShell>
   );

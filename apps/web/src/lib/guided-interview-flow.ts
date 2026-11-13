@@ -73,7 +73,7 @@ import { guidedOhioInterestFactErrors, type OhioInterestAllocation } from "./gui
 import { careBenefitsFactErrors, guidedCareBenefitSources, type CareBenefitsData } from "./guided-dependent-care-benefits";
 import { careFactErrors } from "./guided-credit-facts";
 import { energyFactErrors } from "./guided-energy-facts";
-import { isStartedW2, w2FactErrors } from "./guided-w2-facts";
+import { combatPayElectionErrors, isStartedW2, retainCombatPayElection, w2FactErrors } from "./guided-w2-facts";
 import { investmentFactErrors, investmentRowsStarted, type InvestmentSourceData, type InvestmentData } from "./guided-investment-facts";
 import { businessFactErrors, hasBusinessSourceData, type BusinessSourceData } from "./guided-business-facts";
 import { clearWageringConfirmations, professionalWageringDraftSchema } from "./guided-professional-wagering";
@@ -668,6 +668,8 @@ export const emptyPersonalInfo: PersonalInfoData = {
   dependentCount: "0",
   dependents: [],
 };
+
+export type EicCombatPayElection = Partial<Record<"primary" | "spouse", boolean>>;
 
 export interface W2EntryData {
   stateLocalSources?: W2StateLocalSources;
@@ -1387,7 +1389,7 @@ export const emptyStateReturnData: StateReturnData = {
 
 export interface SectionDataMap {
   "personal-info"?: PersonalInfoData;
-  "income-w2"?: { entries: W2EntryData[] };
+  "income-w2"?: { entries: W2EntryData[]; combatPayElection?: EicCombatPayElection };
   "income-self-employment"?: {
     necEntries: NecEntryData[];
     manualGrossReceipts: string;
@@ -1899,8 +1901,12 @@ export function updateSectionData(
       || (nextCredits.savingsBondEducation?.reissueSources !== undefined && savingsBondSourceValuesChanged(credits?.savingsBondEducation, nextCredits.savingsBondEducation))))
   );
   const nextW2 = sectionId === "income-w2" ? data as SectionDataMap["income-w2"] : state.sectionData["income-w2"];
+  const previousW2 = state.sectionData["income-w2"];
   const invalidatedW2 = nextW2 && (sectionId === "income-w2" || sectionId === "personal-info" && sourceValuesChanged) ? {
-    ...nextW2, entries: nextW2.entries.map((entry, index) => entry.stateLocalSources && (sectionId === "personal-info" || guidedSourceValuesChanged(w2OriginalFields(state.sectionData["income-w2"]?.entries[index]), w2OriginalFields(entry)))
+    ...nextW2,
+    ...(nextW2.combatPayElection !== undefined ? { combatPayElection: sectionId === "personal-info" ? undefined
+      : retainCombatPayElection(previousW2?.entries, nextW2.entries, nextW2.combatPayElection) } : {}),
+    entries: nextW2.entries.map((entry, index) => entry.stateLocalSources && (sectionId === "personal-info" || guidedSourceValuesChanged(w2OriginalFields(previousW2?.entries[index]), w2OriginalFields(entry)))
       ? { ...entry, stateLocalSources: { ...entry.stateLocalSources, sourceFactsConfirmed: null } } : entry),
   } : undefined;
   const ohioStateReturn = state.sectionData["state-return"];
@@ -2204,14 +2210,14 @@ function validatePersonalInfo(data: PersonalInfoData | undefined, status: Filing
   return VALID_SECTION;
 }
 
-function validateW2Section(data: { entries: W2EntryData[] } | undefined, filingStatus?: FilingStatus | null, returnYear?: number | null, state?: GuidedFlowState): SectionValidationResult {
+function validateW2Section(data: SectionDataMap["income-w2"], filingStatus?: FilingStatus | null, returnYear?: number | null, state?: GuidedFlowState): SectionValidationResult {
   if (!data?.entries || data.entries.length === 0) return EMPTY_SECTION("W-2 info");
 
   const filledEntries = data.entries.filter(isStartedW2);
 
   if (filledEntries.length === 0) return EMPTY_SECTION("W-2 info");
 
-  const errors = w2FactErrors(data.entries, filingStatus, returnYear);
+  const errors = { ...w2FactErrors(data.entries, filingStatus, returnYear), ...combatPayElectionErrors(data.entries, data.combatPayElection, filingStatus) };
 
   const pendingSuggestionConfirmations = filledEntries.flatMap((entry, index) =>
     Object.entries(entry.aiSuggestedFields ?? {}).flatMap(([field, suggestion]) =>

@@ -1772,6 +1772,29 @@
       ]
     },
     {
+      "key": "federal/eic-combat-pay-election",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "https://uscode.house.gov/us/usc/t26/s32/",
+      "specPath": "spec/federal/eic-combat-pay-election.yaml",
+      "enginePath": "src/engine/eic-combat-pay.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-1040.ts",
+      "implementationTestRefs": [
+        "tests/engine/federal-eic-combat-pay.test.ts::combines the two filers independently and keeps Code Q out of taxable wages",
+        "tests/pdf/fill-form-1040.test.ts::prints elected combat pay on 2025 Form 1040 line 1i only"
+      ],
+      "implementationNote": "The federal EIC calculation consumes the exact per-filer election; only the 2025 review mapping is linked.",
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": true,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/eic-credit-table",
       "jurisdiction": "federal",
       "taxYear": 2025,

@@ -217,3 +217,20 @@ describe("fillReturn orchestrator", () => {
     expect(filledForms[0]).toContain("f1040-filled.pdf");
   });
 });
+
+it("prints elected combat pay on 2025 Form 1040 line 1i only", async () => {
+  const input = structuredClone(simpleW2Fixture);
+  input.w2s[0] = { ...input.w2s[0], taxYear: 2025, accountHolder: "primary", box12CodeQ: "1250.50" };
+  const elected = { ...input, eic: { primaryIsFullTimeStudent: false, combatPayElection: { primary: true } } };
+  const original = calculateFederalTax(elected);
+  const pdf = await fillForm1040(elected, original, BLANK_PDF);
+  const reopened = await PDFDocument.load(await pdf.save());
+  const line1i = "topmostSubform[0].Page1[0].f1_56[0]";
+  expect(getFieldText(reopened, line1i)).toBe("1251");
+  expect(getFieldText(reopened, FORM_1040_FIELDS.line1z)).toBe("85000");
+  expect(getFieldText(reopened, FORM_1040_FIELDS.line11)).toBe("85000");
+  const declined = { ...elected, eic: { ...elected.eic, combatPayElection: { primary: false } } };
+  await expect(fillForm1040(declined, original, BLANK_PDF)).rejects.toThrow(/combat pay.*match|combat pay.*current/i);
+  const blank = await fillForm1040(declined, calculateFederalTax(declined), BLANK_PDF);
+  expect(getFieldText(blank, line1i)).toBeUndefined();
+});

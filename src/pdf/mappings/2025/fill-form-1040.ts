@@ -12,6 +12,7 @@ import { PDFDocument } from "pdf-lib";
 import Decimal from "decimal.js";
 import type { TaxReturnResult } from "@/models/outputs.js";
 import type { TaxYearInput } from "@/models/inputs.js";
+import { resolveEicCombatPay } from "@/engine/eic-combat-pay.js";
 import { calculateEicReviewCheckboxes } from "../../eic-review-checkboxes.js";
 import { eicReviewOriginalSourceInput, hasEicReviewSources, type PreparedEicReview } from "../../eic-review-context.js";
 import { assertPdfExportAllowed } from "../../export-policy.js";
@@ -97,6 +98,7 @@ const FIELDS = {
   line1g: p1("f1_53[0]"), // Wages from Form 8919
   line1hType: p1("f1_54[0]"),
   line1h: p1("f1_55[0]"),
+  line1i: p1("f1_56[0]"),
   line1z: p1("f1_57[0]"),
   line2a: p1("f1_58[0]"),
   line2b: p1("f1_59[0]"),
@@ -176,6 +178,11 @@ export async function fillForm1040(
   eicReview?: PreparedEicReview,
 ): Promise<PDFDocument> {
   assertPdfExportAllowed(input.taxpayer.taxYear, result.taxYear);
+  const electedCombatPay = resolveEicCombatPay(input);
+  const auditedCombatPay = getLineValue(result, "1040", "1i");
+  if (electedCombatPay === undefined ? auditedCombatPay !== undefined : !auditedCombatPay?.eq(electedCombatPay)) {
+    throw new Error("The Form 1040 combat pay election must match the current original sources and calculation");
+  }
   if (input.deductionElection === "nonitemized" || result.deductionUsed === "nonitemized") throw new Error("Nonitemized election is available only for 2026 and has no supported review PDF mapping");
   if (input.taxpayer.dependents.length > 4) {
     throw new Error("Form 1040 dependent attachment mapping is required for more than four dependents.");
@@ -260,6 +267,7 @@ export async function fillForm1040(
   for (const line of ["1b", "1d", "1e", "1f"] as const) {
     fields.setCurrency(F[`line${line}`], getLineValue(result, "1040", line) ?? new Decimal(0));
   }
+  if (electedCombatPay !== undefined) fields.setCurrency(F.line1i, electedCombatPay);
   fields.setCurrency(F.line1z, getLineValue(result, "1040", "1z") ?? result.totalWages);
   fields.setCurrency(F.line2a, result.taxExemptInterest);
   fields.setCurrency(F.line2b, result.totalInterest);

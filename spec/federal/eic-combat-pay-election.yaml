@@ -1,0 +1,40 @@
+form: "Form 1040 line 1i and EIC earned-income worksheet"
+fullName: "Per-filer election for nontaxable combat pay"
+taxYear: 2025
+irsReference: "https://uscode.house.gov/us/usc/t26/s32/"
+sources:
+  - "https://www.irs.gov/instructions/i1040gi"
+  - "https://www.irs.gov/publications/p596"
+  - "https://www.irs.gov/instructions/iw2w3"
+  - "https://www.irs.gov/pub/irs-dft/f1040--dft.pdf"
+notes: |
+  Verified 2026-11-13. IRC32(c)(2)(B)(vi) permits each actual filer to
+  elect all section112 pay. Use final2025 line1i and EIC worksheet. The
+  same source law applies to isolated2026 calculations with the draft
+  line1i designation and existing statutory EIC calculation. Final2026
+  parent form, tables and public gate are unchanged.
+lines:
+  - line: "election-originals"
+    description: "Resolve each choice against the actual complete W-2 inventory"
+    formula: "Use exact original Box12 Code Q, with matching original year and actual owner for each positive amount. A reported positive or a positive election needs an entered amount or confirmed zero for each W2. A true choice requires a positive source for that filer. A spouse choice requires an actual joint return. Preserve the prior no-election behavior if election facts were never supplied. Never elect automatically, accept a partial-dollar election, or apply a spouse source to a nonjoint filer. Each filer makes their own choice."
+    testRef: "tests/engine/federal-eic-combat-pay.test.ts::requires complete actual W-2 originals and a valid owner for each election"
+  - line: "eic-earned-income"
+    description: "Apply the exact elected amount only to the federal EIC calculation"
+    formula: "EIC earned income = existing EIC earned-income components plus the sum of all exact Code Q amounts for electing owners. No change to taxable wages, line1z, AGI, self-employment or other taxable income. Keep ACTC treatment independent under IRC24(d)(1). Apply the existing EIC phase-in/phase-out, claimant and history requirements to adjusted earned income and unchanged AGI."
+    testRef: "tests/engine/federal-eic-combat-pay.test.ts::combines the two filers independently and keeps Code Q out of taxable wages"
+  - line: "phase-out"
+    description: "Preserve the user's choice when the election reduces the credit"
+    formula: "The election can increase, decrease or eliminate the EIC. Use the elected amount and the existing table or statutory rules without substituting another choice."
+    testRef: "tests/engine/federal-eic-combat-pay.test.ts::keeps an election that reduces the credit"
+  - line: "1i"
+    description: "Report the elected amount on the parent return"
+    formula: "Audit exact elected pay on line1i. Report it in the 2025 review PDF, rounded once at the whole-dollar display boundary. Keep the field blank when no positive amount is elected. Do not change the 2026 template registry."
+    testRef: "tests/pdf/fill-form-1040.test.ts::prints elected combat pay on 2025 Form 1040 line 1i only"
+  - line: "guided-election"
+    description: "Retain actual choices separately from the original W-2 amounts"
+    formula: "Show one election per filer with reported Code Q. Require an explicit include-all or decline choice for each such filer in the guided calculation, and confirm absent Code Q on other originals. Preserve choices through save and reload. Remove or invalidate choices when the owner or their original reported amounts change. Confirming W2 source rows remains independent of an EIC election."
+    testRef: "tests/guided-interview/guided-w2-eic-combat-pay.test.ts::requires an actual election for each owner and preserves exact source cents"
+  - line: "guided-code-q-format"
+    description: "Validate the entered source amount before interpreting it"
+    formula: "Accept valid ungrouped or thousands-grouped whole dollars and cents. A malformed grouping is not a confirmed original, an elected amount, or a confirmed zero."
+    testRef: "tests/guided-interview/guided-w2-eic-combat-pay.test.ts::rejects malformed grouping in a reported Code Q original"

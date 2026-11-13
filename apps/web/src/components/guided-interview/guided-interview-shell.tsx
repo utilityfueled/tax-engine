@@ -519,8 +519,12 @@ function SectionContent({
           entries={entries}
           workspace={workspace}
           onUploadDocuments={onUploadDocuments}
+          combatPayElection={w2Data?.combatPayElection}
+          onCombatPayElectionChange={combatPayElection =>
+            onStateChange(updateSectionData(state, "income-w2", { entries, combatPayElection }))
+          }
           onEntriesChange={(next: W2EntryData[]) =>
-            onStateChange(updateSectionData(state, "income-w2", { entries: next }))
+            onStateChange(updateSectionData(state, "income-w2", { ...w2Data, entries: next }))
           }
         />
       );
