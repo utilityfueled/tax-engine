@@ -23392,7 +23392,13 @@
     "exactCombinedUnitPassed": 27601,
     "exactCombinedUnitFiles": 1994,
     "officialSamplePrerequisiteFilesCopied": 15,
-    "exactCombinedChecksRunning": true,
+    "exactCombinedChecksRunning": false,
+    "exactCombinedChecksPassed": 12,
+    "exactCombinedBranchCoveragePercent": 87.79,
+    "exactCombinedBrowserPassed": 591,
+    "exactCombinedBrowserHostedSkips": 5,
+    "exactCombinedChecksSha256": "264bf33d6c05b1603dc42a5e501994fa804ef3e407959e0c81d7555a1a4b0af2",
+    "exactCombinedBrowserSha256": "3b7724bd0ed85d9470baa188c0019c19b0eb425f47eb2038b0595cf9bc78725f",
     "nativeRuntimeExecuted": false,
     "stripeAutomaticSandboxRetryVerified": false,
     "pushHeldAtOwnerRequest": true
@@ -23435,6 +23441,36 @@
     "specReferences": 8797,
     "browserAuditSha256": "eb81c760f744c0c5f1b4516ddcb6ba4f37627c466406e88cf16ca4f430edeec7",
     "humanTaxReviewComplete": false
+  },
+  "nov13LocalRecoveryAcrossTabs": {
+    "commit": "fe8fcd69afac5d54c3647e7dcecce9cf6b191137",
+    "redFailed": 2,
+    "redSha256": "93303d55a3205482499d5587e8c5125c029b0de36d8ca582eb6a77d91a37a907",
+    "focusedPassed": 125,
+    "focusedFiles": 8,
+    "focusedSha256": "75062294e6d98b86e3529d4a6723eb4e1f89c2f7adb4d0a1d01f85be9a44be7d",
+    "firstBrowserPassed": 12,
+    "firstBrowserFailed": 1,
+    "firstBrowserTranscriptSha256": "1cc220629ab49a18e0aa7b1f593b5a2e1761ee955612fa57c35ef9f0e64fb2ac",
+    "browserPassed": 13,
+    "browserSkipped": 0,
+    "browserRetries": 0,
+    "browserReportSha256": "3c4b8c3e900963801c179979740a2eba8c6105fcfb6c417cede332877c46a6c7",
+    "runtimeImageRehearsalPassed": false,
+    "pushHeldAtOwnerRequest": true
+  },
+  "nov13IrsAtsWorksheetExamples": {
+    "commit": "a6c4fd18f35a50a2ed572540d3ac480c94853ae1",
+    "focusedPassed": 147,
+    "focusedFiles": 6,
+    "specReferences": 8801,
+    "focusedSha256": "26c9caa01439c4206b52709af403f63c0985bac7b975738f61572e538727bb6f",
+    "sources": [
+      "https://www.irs.gov/pub/irs-efile/ty26-1040-ats-scenario-12.pdf",
+      "https://www.irs.gov/pub/irs-efile/ty26-1040-ats-scenario-14.pdf"
+    ],
+    "humanTaxReviewComplete": false,
+    "filingQualified": false
   },
   "nov12HostedCreditSettlement": {
     "previewReceiptCommit": "d39209dec302d249a5f01fe8baf23cc4ca2130f8",

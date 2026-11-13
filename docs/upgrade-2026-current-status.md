@@ -28,9 +28,10 @@ withholding in guided review. Two real Chromium cases covered edit,
 reconfirmation, saved-return replay, review download and deletion. The
 browser audit for the successor `9215736d` covers all 596 cases and retains
 the five hosted-only skips and the existing request limits. The exact-source
-combined run for `9215736d` passed all 27,601 unit tests, with coverage and
-the managed browser run still in progress. Qualified human review and 2026
-public output remain open. [Package evidence](upgrade-2026-progress.md).
+combined run for `9215736d` passed all 12 local checks. Unit and coverage
+each passed 27,601 tests, with 87.79% branch coverage. Managed Chromium passed
+591 cases and retained five hosted-only skips. Qualified human review and
+2026 public output remain open. [Package evidence](upgrade-2026-progress.md).
 
 `d93621a3` collects actual benefit status and dated evidence for each fully
 taxable Conservation Reserve Program annual rental payment. The worksheet
@@ -39,6 +40,10 @@ evidence when the payment date changes. The 223 affected tests and three
 actual Chromium cases passed, including saved Schedule SE values and private
 reference checks. The finite method remains federal-only. [Schedule SE
 instructions](https://www.irs.gov/instructions/i1040sse).
+The combined source passed nine static checks and 27,604 unit and coverage
+tests with 87.80% branch coverage. Its initial browser run hit a loopback-port
+conflict and the first retry stopped on a missing Python setting. The unchanged
+suite is running again on the free port with pinned pypdf.
 
 `0411dab9` binds hosted AI credit fulfillment to the original Checkout issuance.
 `c4998c56` separates test and live accounting with a PostgreSQL storage marker.
@@ -63,6 +68,20 @@ without hyphens identifies the same payer. Joint-return recipients can each
 use the same local account label. The focused 164-test cohort passed, preserving
 the entered TIN, original account reference and exact amounts.
 [IRS Form 1099-R instructions](https://www.irs.gov/instructions/i1099r).
+
+`fe8fcd69` fixes the browser storage cache that could lose a restored return
+or bring back a deleted one when an older tab saved a different return. A save
+now preserves other entries' stored fields. Both regressions failed on the
+previous code. All 125 focused tests and 13 local production-browser tests
+passed, including a two-tab restore with matching original PDF bytes and guided
+answers. Simultaneous writes in different browser processes still depend on
+Web Storage scheduling. [HTML standard](https://html.spec.whatwg.org/multipage/webstorage.html#introduction-16).
+
+`a6c4fd18` adds IRS-published expected values for 2026 Schedule SE and 8812.
+The 147 affected tests passed. The checks use the worksheet inputs the IRS
+supplied. Full-return testing still requires final tables and professional
+review. [IRS ATS scenario 12](https://www.irs.gov/pub/irs-efile/ty26-1040-ats-scenario-12.pdf) ·
+[IRS ATS scenario 14](https://www.irs.gov/pub/irs-efile/ty26-1040-ats-scenario-14.pdf).
 
 The official npm registry reported zero advisories for the 539 dependencies in
 the checked lockfile. Runtime-image advisories remain open. The IRS final

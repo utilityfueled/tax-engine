@@ -4416,3 +4416,30 @@ execution and current image qualification require separate evidence.
   were existing. Focused test transcript SHA-256
   `a536b351c7fabab7e896f7fa0791386ffe8e1cfccf96dd46937844b5db0073c8`.
   [IRS Form 1099-R instructions](https://www.irs.gov/instructions/i1099r).
+- Exact `9215736d` passed all 12 local checks. Unit and coverage passed
+  27,601 in 1,994 files with 87.79% branches against 85%. Chromium passed
+  591 of 596 with five original hosted skips and no failures. Combined
+  result SHA-256 `264bf33d6c05b1603dc42a5e501994fa804ef3e407959e0c81d7555a1a4b0af2`.
+  The separate exact `d93621a3` archive passed 27,604 unit and coverage tests
+  in 1,994 files, with 87.80% branches. The original browser attempt hit
+  `EADDRINUSE` on 3099. The first rerun lacked the pypdf environment setting.
+  Both outcomes are retained while a separate unchanged managed run proceeds.
+- `fe8fcd69` fixes local storage overwrites when a tab with cached returns
+  saves another return after an encrypted restore or deletion. Two genuine
+  regressions failed first. Affected checks passed 125 in eight files and
+  13 Chromium production cases on loopback with zero retries/skips. The first
+  browser run passed 12 and failed on the added tab's advanced-mode locator.
+  The corrected test uses the visible mode switch. The final browser JSON
+  SHA-256 is `3c4b8c3e900963801c179979740a2eba8c6105fcfb6c417cede332877c46a6c7`.
+  Web typecheck, production build, spec 8,799, inventory, source audit and
+  lint passed with 13 existing fixture warnings. True simultaneous Web
+  Storage writes have no standard locking guarantee. The native image and
+  staged rehearsal remain open. [HTML Web Storage](https://html.spec.whatwg.org/multipage/webstorage.html).
+- `a6c4fd18` adds independent expected values from IRS test packets for
+  Schedule SE and Schedule 8812. The scenarios passed alongside 145 other
+  affected checks across six files. Engine types, spec 8,801 and inventory
+  passed. Transcript SHA-256 `26c9caa01439c4206b52709af403f63c0985bac7b975738f61572e538727bb6f`.
+  The worksheets use published Schedule C profit or the supplied Credit
+  Limit Worksheet A figure. Final full-return and human review gates
+  remain open. [IRS ATS 12](https://www.irs.gov/pub/irs-efile/ty26-1040-ats-scenario-12.pdf) ·
+  [IRS ATS 14](https://www.irs.gov/pub/irs-efile/ty26-1040-ats-scenario-14.pdf).
