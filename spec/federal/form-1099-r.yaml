@@ -282,6 +282,20 @@ lines:
     irsRef: "2026 Instructions for Forms 1099-R and 5498, Box 7a Code A; 2026 Form 4972 Parts I–III"
     testRef: "tests/guided-interview/guided-interview-bridge.test.ts::2026 guided qualified lump-sum decision"
 
+  - line: "2026-lump-sum-ordinary-box-3"
+    description: "Retain the included capital gain for ordinary Code A reporting"
+    formula: >-
+      For the explicit ordinary method on a 2026 non-IRA Code A distribution,
+      retain the original nonnegative Box 3 amount and reconcile it to determined
+      Box 2a. Report all of Box 2a as pension income because it already includes
+      Box 3. Preserve federal withholding separately. Missing or conflicting
+      guided facts, a positive Box 3 on another unsupported guided source, and
+      unresolved special worksheets remain held.
+    irsRef: "2026 Instructions for Forms 1099-R and 5498, Box 3; 2026 Form 4972 instructions, Where to report and Capital Gain Election"
+    testRef: "tests/guided-interview/guided-interview-bridge.test.ts::retains included Box 3 for an explicit ordinary Code A distribution"
+    testRefs:
+      - "tests/engine/federal-pension-sources-2026.test.ts::reports included Box 3 only once when the ordinary method is chosen"
+
   - line: "2026-ira-source"
     description: "Form 1040 Lines 4a and 4b require owner evidence for ordinary traditional IRA taxability in tax year 2026"
     formula: >-

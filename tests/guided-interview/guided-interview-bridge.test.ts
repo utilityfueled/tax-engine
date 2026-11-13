@@ -1589,6 +1589,15 @@ describe("buildRetirementInputs", () => {
       const entry = { ...source, distributionCode: "7", qualifiedLumpSumReporting: "ordinary_pension" as const };
       expect(buildRetirementInputs([entry], "single", 2026)[0].qualifiedLumpSumReporting).toBeUndefined();
     });
+
+    it("retains included Box 3 for an explicit ordinary Code A distribution", () => {
+      const entry = { ...source, qualifiedLumpSumReporting: "ordinary_pension" as const, capitalGainIncluded: "125.25" };
+      expect(buildRetirementInputs([entry], "single", 2026)[0]).toMatchObject({ taxableAmount: "1000", capitalGainIncluded: "125.25" });
+      expect(() => buildRetirementInputs([{ ...entry, capitalGainIncluded: "1000.01" }], "single", 2026)).toThrow(/Box 3.*Box 2a/u);
+      expect(() => buildRetirementInputs([{ ...entry, capitalGainIncluded: "" }], "single", 2026)).toThrow();
+      expect(() => buildRetirementInputs([{ ...entry, netUnrealizedAppreciation: "0.01" }], "single", 2026)).toThrow(/worksheet/u);
+      expect(() => buildRetirementInputs([{ ...entry, distributionCode: "7" }], "single", 2026)).toThrow(/worksheet/u);
+    });
   });
 
   it("handles multiple 1099-Rs", () => {

@@ -125,7 +125,15 @@ export function retirementFactErrors(entries: RetirementEntryData[] | undefined,
     if (entry.eligibleGovernmental457bPlan === false && hasEnteredAmount(entry.governmental457bTransferredTaxableAmount) && (amountError(entry.governmental457bTransferredTaxableAmount, "457(b) transferred amount") || !parseGuidedCurrency(entry.governmental457bTransferredTaxableAmount).isZero())) fail("457-transfer", "Reconcile saved 457(b) transferred funds with the answer that this is not a governmental 457(b) plan.");
     if (entry.isIraSepSimple === true && entry.militaryPensionOrSurvivorBenefit === true) fail("military-plan", "An IRA distribution is not a U.S. military pension or survivor benefit. Reconcile the actual source classification.");
     if (entry.isIraSepSimple === false && entry.taxableAmountNotDetermined === true) fail("taxable-worksheet", "A pension with taxable amount not determined needs the actual Simplified Method or General Rule worksheet; this ordinary route cannot use a guessed Box 2a.");
-    for (const field of ["capitalGainIncluded", "netUnrealizedAppreciation", "otherSourceAmount", "inPlanRothRolloverAmount"] as const) if (!amountError(entry[field], field) && parseGuidedCurrency(entry[field]).gt(0)) fail(field, "Preserve this actual source amount; it needs its additional retirement worksheet before calculation.");
+    if (qualifiedLumpSum && entry.qualifiedLumpSumReporting === "ordinary_pension") {
+      if (!amountError(entry.capitalGainIncluded, "Box 3") && !amountError(entry.taxableAmount, "Box 2a")
+        && parseGuidedCurrency(entry.capitalGainIncluded).gt(parseGuidedCurrency(entry.taxableAmount))) {
+        fail("capitalGainIncluded", "Box 3 cannot exceed the taxable amount in Box 2a.");
+      }
+    } else if (!amountError(entry.capitalGainIncluded, "Box 3") && parseGuidedCurrency(entry.capitalGainIncluded).gt(0)) {
+      fail("capitalGainIncluded", "Preserve this actual source amount; it needs its additional retirement worksheet before calculation.");
+    }
+    for (const field of ["netUnrealizedAppreciation", "otherSourceAmount", "inPlanRothRolloverAmount"] as const) if (!amountError(entry[field], field) && parseGuidedCurrency(entry[field]).gt(0)) fail(field, "Preserve this actual source amount; it needs its additional retirement worksheet before calculation.");
     if (entry.isIraSepSimple === true && !amountError(entry.employeeContributions, "employee contributions") && parseGuidedCurrency(entry.employeeContributions).gt(0)) fail("ira-employee-contributions", "Positive IRA contribution/basis amounts need their actual Form 8606 history.");
     if (["G", "H"].includes(code)) {
       if (entry.directRolloverConfirmed !== true) fail("rollover", "Confirm the actual direct rollover destination and completion from source records.");

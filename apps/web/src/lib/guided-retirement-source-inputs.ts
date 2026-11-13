@@ -22,6 +22,7 @@ export function retirementSourceInput(entry: RetirementEntryData) {
     grossDistribution: amount(entry.grossDistribution), taxableAmount: amount(entry.taxableAmount), federalWithheld: amount(entry.federalWithheld),
     iraSepSimple: entry.isIraSepSimple ?? undefined, distributionCode: entry.distributionCode.trim().toUpperCase(),
     qualifiedLumpSumReporting: isGuidedQualifiedLumpSum(entry) ? entry.qualifiedLumpSumReporting ?? undefined : undefined,
+    capitalGainIncluded: isGuidedQualifiedLumpSum(entry) ? amount(entry.capitalGainIncluded) : undefined,
     iraBasisConfirmedZero: entry.isIraSepSimple === true ? entry.iraBasisConfirmedZero ?? undefined : undefined,
     taxableAmountNotDetermined: entry.taxableAmountNotDetermined ?? undefined, employeeContributions: amount(entry.employeeContributions),
     eligibleGovernmental457bPlan: entry.eligibleGovernmental457bPlan ?? undefined,

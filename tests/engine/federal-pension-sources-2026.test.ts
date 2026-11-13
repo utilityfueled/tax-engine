@@ -155,6 +155,18 @@ describe("2026 original pension source facts", () => {
   });
 
   describe("2026 qualified lump-sum reporting decision", () => {
+    it("reports included Box 3 only once when the ordinary method is chosen", () => {
+      const entry = { distributionCode: "7A", taxableAmount: "9000.01", qualifiedLumpSumReporting: "ordinary_pension" as const,
+        capitalGainIncluded: "2000.02", taxableAmountNotDetermined: false };
+      const result = calculate(entry);
+      expect(result.pensionDistributionsTaxable.toFixed(2)).toBe("9000.01");
+      expect(result.form1099R?.federalWithholding.toFixed(2)).toBe("99.09");
+      for (const change of [{ capitalGainIncluded: "9000.02" }, { capitalGainIncluded: "-0.01" }, { capitalGainIncluded: "" },
+        { capitalGainIncluded: "invalid" }, { taxableAmount: undefined }, { taxableAmountNotDetermined: true }]) {
+        expect(() => calculate({ ...entry, ...change })).toThrow(/Box 3.*Box 2a/u);
+      }
+      expect(() => calculate({ ...entry, distributionCode: "F" })).toThrow(/Box 3.*separate method/u);
+    });
     it.each(["4A", "A4", "7A", "A7"])("requires the reporting decision for Code %s before using Box 2a", (distributionCode) => {
       const entry = { distributionCode, taxableAmount: "9000.01" };
       expect(() => calculate(entry)).toThrow(/reporting decision/);

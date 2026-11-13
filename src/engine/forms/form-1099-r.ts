@@ -529,6 +529,18 @@ function assert2026PensionTaxability(form: Form1099R): void {
     || (taxable && (!taxable.isFinite() || taxable.lt(0) || taxable.gt(gross)))) {
     throw new Error("2026 Form 1099-R pension requires valid Box 1 and Box 2a amounts");
   }
+  if (form.capitalGainIncluded !== undefined) {
+    if (!/^\d+(?:\.\d{1,2})?$/u.test(form.capitalGainIncluded)) {
+      throw new Error("2026 Form 1099-R requires Box 3 to reconcile to determined Box 2a");
+    }
+    const gain = d(form.capitalGainIncluded);
+    if (code.includes("A") && (!taxable || form.taxableAmountNotDetermined || gain.gt(taxable))) {
+      throw new Error("2026 Form 1099-R Code A requires Box 3 to reconcile to determined Box 2a");
+    }
+    if (!code.includes("A") && !gain.isZero()) {
+      throw new Error("2026 Form 1099-R Box 3 on a source other than Code A requires a separate method");
+    }
+  }
 
   if (isPriorYearTaxableDistribution(form)) return;
   if (code.includes("6") || isDesignatedRothDirectRolloverToRothIra(form)

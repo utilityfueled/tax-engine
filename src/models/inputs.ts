@@ -1131,6 +1131,7 @@ export const Form1099RSchema = z.object({
   retiredPublicSafetyOfficerInsurancePremiums: optionalDecimal, // Validated accident, health, or long-term care premiums paid directly from an eligible retirement plan
   distributionCode: z.string().optional(), // Box 7
   qualifiedLumpSumReporting: z.enum(["ordinary_pension", "form_4972"]).optional(), // Actual reporting choice for a potentially eligible Code A distribution
+  capitalGainIncluded: decimal.optional(), // Original Box 3 is included in the taxable amount in Box 2a
   distributionDate: z.string().optional(), // Validated actual distribution date used for Form 5329 exception-12 age tests
   separationFromServiceAfterAge55ExceptionApplies: z.boolean().default(false), // Validated Form 5329 exception 01 for a non-IRA qualified-plan code 1 distribution
   qualifiedPublicSafetyEmployeeOrPrivateSectorFirefighterExceptionApplies: z.boolean().default(false), // Validated Form 5329 exception 01 for qualified public safety employees or private-sector firefighters on supported non-IRA code 1 distributions
