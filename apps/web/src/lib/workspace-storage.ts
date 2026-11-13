@@ -26,6 +26,8 @@ import {
 } from "@tax-engine/engine";
 import {
   clearGuidedFlowState,
+  getGuidedFlowStorageKey,
+  LEGACY_GUIDED_FLOW_STORAGE_KEY,
   loadGuidedFlowState,
   summarizeFlowCompletion,
   type GuidedFlowState
@@ -266,6 +268,42 @@ function saveWorkspaceRecord(storage: Storage, workspaceId: string, workspace: R
     storageCache.delete(storage);
     throw error;
   }
+}
+
+function writeLocalRemoval(
+  storage: Storage, workspaceId: string, next: ReturnWorkspaceRecord | null, scopedKeys: string[] = [],
+) {
+  const prior = parseStorage(storage.getItem(STORAGE_KEY)).workspaces[workspaceId];
+  const savedKeys = scopedKeys.map(key => ({ key, value: storage.getItem(key) }));
+  const clearedKeys: typeof savedKeys = [];
+  const changed = next !== null || prior !== undefined;
+  const undo = () => {
+    const stored = parseStorage(storage.getItem(STORAGE_KEY));
+    const attempted = next ?? undefined;
+    // A later edit or deletion of this return owns the new state. Preserve
+    // other returns by changing only this entry in the latest saved object.
+    if (JSON.stringify(stored.workspaces[workspaceId]) !== JSON.stringify(attempted)) return;
+    if (changed) {
+      if (prior === undefined) delete stored.workspaces[workspaceId];
+      else stored.workspaces[workspaceId] = prior;
+      try { storage.setItem(STORAGE_KEY, JSON.stringify(stored)); }
+      finally { invalidateWorkspaceStorageCache(storage); }
+    }
+    for (const { key, value } of clearedKeys) {
+      if (value !== null && storage.getItem(key) === null) storage.setItem(key, value);
+    }
+  };
+  if (changed) saveWorkspaceRecord(storage, workspaceId, next);
+  try {
+    for (const saved of savedKeys) {
+      storage.removeItem(saved.key);
+      clearedKeys.push(saved);
+    }
+  } catch (error) {
+    undo();
+    throw error;
+  }
+  return undo;
 }
 
 function createChecklist(
@@ -1392,22 +1430,10 @@ export function removeDocument(storage: Storage, workspaceId: string, documentId
 export async function removeLocalDocumentFile(storage: Storage, workspaceId: string, documentId: string) {
   let result: ReturnWorkspaceRecord | undefined;
   await deleteCachedWorkspaceDocumentFiles(workspaceId, [documentId], () => {
-    const prior = parseStorage(storage.getItem(STORAGE_KEY)).workspaces[workspaceId];
     const current = loadStorage(storage).workspaces[workspaceId];
-    if (!prior || !current) throw new Error("This return is no longer available.");
-    const next = removeDocumentFromWorkspace(current, documentId);
-    if (next !== current) saveWorkspaceRecord(storage, workspaceId, next);
-    result = next;
-    return () => {
-      if (next === current) return;
-      const stored = parseStorage(storage.getItem(STORAGE_KEY));
-      // Do not overwrite a later edit or deletion of this return. Read the
-      // current storage object to preserve entries changed in another tab.
-      if (JSON.stringify(stored.workspaces[workspaceId]) !== JSON.stringify(next)) return;
-      stored.workspaces[workspaceId] = prior;
-      try { storage.setItem(STORAGE_KEY, JSON.stringify(stored)); }
-      finally { invalidateWorkspaceStorageCache(storage); }
-    };
+    if (!current) throw new Error("This return is no longer available.");
+    result = removeDocumentFromWorkspace(current, documentId);
+    return result === current ? () => {} : writeLocalRemoval(storage, workspaceId, result);
   });
   if (!result) throw new Error("Could not save the document removal.");
   return result;
@@ -1485,6 +1511,28 @@ export function clearWorkspace(storage: Storage, workspaceId: string) {
 export function clearWorkspaceGuidedData(storage: Storage, workspaceId: string) {
   clearGuidedFlowState(storage, workspaceId);
   storage.removeItem(`tax-engine:guided-mode:${workspaceId}`);
+}
+
+function localGuidedRemovalKeys(workspaceId: string) {
+  return [getGuidedFlowStorageKey(workspaceId), `tax-engine:guided-mode:${workspaceId}`, LEGACY_GUIDED_FLOW_STORAGE_KEY];
+}
+
+export async function resetLocalWorkspaceFiles(storage: Storage, workspaceId: string) {
+  let result: ReturnWorkspaceRecord | undefined;
+  await deleteCachedWorkspaceDocumentFiles(workspaceId, undefined, () => {
+    const current = loadStorage(storage).workspaces[workspaceId];
+    if (!current) throw new Error("This return is no longer available.");
+    result = clearWorkspaceRecord(current);
+    return writeLocalRemoval(storage, workspaceId, result, localGuidedRemovalKeys(workspaceId));
+  });
+  if (!result) throw new Error("Could not save the cleared return.");
+  return result;
+}
+
+export async function deleteLocalWorkspaceFiles(storage: Storage, workspaceId: string) {
+  const keys = [...localGuidedRemovalKeys(workspaceId), getLocalRecoveryStorageKey(workspaceId)];
+  await deleteCachedWorkspaceDocumentFiles(workspaceId, undefined, () => writeLocalRemoval(storage, workspaceId, null, keys));
+  return listWorkspaces(storage);
 }
 
 function updateInterviewQuestionStateInWorkspace(

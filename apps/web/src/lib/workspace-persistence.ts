@@ -639,7 +639,7 @@ export async function createWorkspacePersistenceAdapter(
 
   if (descriptor.deploymentMode === "self-host") {
     const {
-      deleteWorkspace: deleteLocalWorkspace,
+      deleteLocalWorkspaceFiles,
       getWorkspace: getLocalWorkspace,
       listWorkspaces: listLocalWorkspaces,
       saveWorkspaceSnapshot
@@ -665,7 +665,7 @@ export async function createWorkspacePersistenceAdapter(
         );
       },
       async deleteWorkspace(workspaceId) {
-        return deleteLocalWorkspace(requireBrowserStorage(options.browserStorage), workspaceId);
+        return deleteLocalWorkspaceFiles(requireBrowserStorage(options.browserStorage), workspaceId);
       }
     };
   }
@@ -956,7 +956,6 @@ export async function deletePersistedWorkspace(
 
   const adapter = await createWorkspacePersistenceSession(options);
 
-  await deleteCachedWorkspaceDocumentFiles(options.workspaceId);
   return {
     adapter,
     workspaces: await adapter.deleteWorkspace(options.workspaceId)

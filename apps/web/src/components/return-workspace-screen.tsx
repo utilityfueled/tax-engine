@@ -62,7 +62,6 @@ import { cacheWorkspaceDocumentFiles, deleteCachedWorkspaceDocumentFiles } from 
 import {
   answerInterviewQuestion,
   answerWorkspaceInterviewQuestion,
-  clearWorkspace,
   clearWorkspaceRecord,
   clearWorkspaceGuidedData,
   confirmWorkspaceDocumentTaxYear,
@@ -73,6 +72,7 @@ import {
   removeLocalDocumentFile,
   reopenWorkspaceInterviewQuestion,
   reopenInterviewQuestion,
+  resetLocalWorkspaceFiles,
   seededFactLabels,
   syncGuidedFlowToWorkspace
 } from "@/lib/workspace-storage";
@@ -780,8 +780,7 @@ export function ReturnWorkspaceScreen({
 
     void (async () => {
       try {
-        await deleteCachedWorkspaceDocumentFiles(workspaceId);
-        const nextWorkspace = clearWorkspace(requireBrowserStorage(), workspaceId);
+        const nextWorkspace = await resetLocalWorkspaceFiles(requireBrowserStorage(), workspaceId);
         resetWorkspaceUi();
         setWorkspace(nextWorkspace);
         setStorageMessage("Return reset.");

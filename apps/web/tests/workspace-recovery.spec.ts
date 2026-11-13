@@ -1,4 +1,5 @@
 import { readFile } from "node:fs/promises";
+import { createHash } from "node:crypto";
 import { expect, test } from "@playwright/test";
 import { PDFDocument, StandardFonts } from "pdf-lib";
 import { taxpayerFacts2025 } from "./guided-fixtures";
@@ -127,6 +128,120 @@ test("reset removes saved guided facts before a return is reopened", async ({ pa
   await page.reload();
   await expect(page.getByRole("heading", { name: /let's tailor your return/i })).toBeVisible();
   expect(await page.content()).not.toContain("ResetPrivateName");
+});
+
+async function checkReturnRemovalFailure(page: import("@playwright/test").Page, fault: "reset-quota" | "delete-guided" | "delete-transaction") {
+  const reset = fault === "reset-quota";
+  const bytes = await readFile(new URL("../../../sample-documents/downloads/irs-w2-2025.pdf", import.meta.url));
+  await page.goto("/");
+  await page.evaluate(() => localStorage.setItem("tax-engine:guided-mode", "false"));
+  await page.getByRole("button", { name: /start your tax return/i }).click();
+  await expect(page).toHaveURL(/\/returns\/(?!new)[a-z0-9-]+/i);
+  const id = new URL(page.url()).pathname.split("/").at(-1)!;
+  await page.locator('input[type="file"]').setInputFiles({ name: "irs-w2-2025.pdf", mimeType: "application/pdf", buffer: bytes });
+  await expect(page.getByRole("status", { name: "Return status" })).toHaveText("1 docs stored locally.");
+  const workspaceKey = "tax-engine.return-workspaces.v1";
+  const guidedKey = `tax-engine.guided-flow-state.v1:${id}`;
+  const legacyGuidedKey = "tax-engine.guided-flow-state.v1";
+  const modeKey = `tax-engine:guided-mode:${id}`;
+  const recoveryKey = `tax-engine:local-recovery:v1:${id}`;
+  await page.evaluate(({ guidedKey, legacyGuidedKey, modeKey, recoveryKey }) => {
+    localStorage.setItem(guidedKey, '{"syntheticSource":"saved answers","amount":"12.34"}');
+    localStorage.setItem(legacyGuidedKey, '{"syntheticSource":"legacy unscoped answers"}');
+    localStorage.setItem(modeKey, "false");
+    localStorage.setItem(recoveryKey, "local-only");
+  }, { guidedKey, legacyGuidedKey, modeKey, recoveryKey });
+  if (!reset) await page.goto("/");
+  const readState = () => page.evaluate(async ({ id, workspaceKey, guidedKey, legacyGuidedKey, modeKey, recoveryKey }) => {
+    const workspaces = JSON.parse(localStorage.getItem(workspaceKey) ?? "{}").workspaces ?? {};
+    const db = await new Promise<IDBDatabase>((resolve, reject) => {
+      const request = indexedDB.open("tax-engine-workspace-document-cache", 1);
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+    try {
+      const rows = await new Promise<Array<{ workspaceId: string; file: Blob }>>((resolve, reject) => {
+        const request = db.transaction("workspace-document-files").objectStore("workspace-document-files").getAll();
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+      return {
+        workspace: workspaces[id],
+        unrelated: workspaces["unrelated-synthetic"],
+        guided: localStorage.getItem(guidedKey),
+        legacyGuided: localStorage.getItem(legacyGuidedKey),
+        mode: localStorage.getItem(modeKey),
+        marker: localStorage.getItem(recoveryKey),
+        originals: await Promise.all(rows.filter(row => row.workspaceId === id).map(async row => {
+          const hash = await crypto.subtle.digest("SHA-256", await row.file.arrayBuffer());
+          return Array.from(new Uint8Array(hash), byte => byte.toString(16).padStart(2, "0")).join("");
+        })),
+      };
+    } finally { db.close(); }
+  }, { id, workspaceKey, guidedKey, legacyGuidedKey, modeKey, recoveryKey });
+  const before = await readState();
+  expect(before.originals).toEqual([createHash("sha256").update(bytes).digest("hex")]);
+  await page.evaluate(({ id, workspaceKey, guidedKey, fault }) => {
+    const setItem = Storage.prototype.setItem;
+    const removeItem = Storage.prototype.removeItem;
+    const removeOriginal = IDBObjectStore.prototype.delete;
+    let deletion: IDBTransaction | undefined;
+    let injected = false;
+    IDBObjectStore.prototype.delete = function (key) {
+      if (this.name === "workspace-document-files") deletion = this.transaction;
+      return removeOriginal.call(this, key);
+    };
+    Storage.prototype.removeItem = function (key) {
+      if (!injected && fault === "delete-guided" && key === guidedKey) {
+        injected = true;
+        throw new DOMException("Cannot remove saved answers for this test", "SecurityError");
+      }
+      removeItem.call(this, key);
+    };
+    Storage.prototype.setItem = function (key, value) {
+      const data = key === workspaceKey ? JSON.parse(value) : null;
+      if (!injected && fault === "reset-quota" && data?.workspaces?.[id]?.documents?.length === 0) {
+        injected = true;
+        throw new DOMException("Full for this reset", "QuotaExceededError");
+      }
+      if (!injected && fault === "delete-transaction" && data?.workspaces && !(id in data.workspaces)) {
+        injected = true;
+        data.workspaces["unrelated-synthetic"] = { retainedExtension: "new unrelated saved value" };
+        setItem.call(this, key, JSON.stringify(data));
+        queueMicrotask(() => {
+          try { deletion?.abort(); } catch (error) {
+            if (!(error instanceof DOMException && error.name === "InvalidStateError")) throw error;
+          }
+        });
+        return;
+      }
+      setItem.call(this, key, value);
+    };
+  }, { id, workspaceKey, guidedKey, fault });
+  const action = page.getByRole("button", { name: reset ? "Reset Return" : `Delete tax return ${id}`, exact: true });
+  await action.click();
+  await expect(page.getByText(reset ? "Could not reset the return. Please try again." : "Could not delete the return. Please try again.", { exact: true })).toBeVisible();
+  const afterFailure = await readState();
+  expect(afterFailure).toEqual({ ...before, unrelated: fault === "delete-transaction" ? { retainedExtension: "new unrelated saved value" } : undefined });
+  await page.reload();
+  await action.click();
+  await expect(page.getByText(reset ? "Return reset." : `Deleted return ${id}.`, { exact: true })).toBeVisible();
+  const afterRetry = await readState();
+  expect(afterRetry).toMatchObject({ guided: null, legacyGuided: null, mode: null, marker: reset ? "local-only" : null, originals: [], unrelated: afterFailure.unrelated });
+  if (reset) expect(afterRetry.workspace.documents).toEqual([]);
+  else expect(afterRetry.workspace).toBeUndefined();
+}
+
+test("keeps saved facts and originals when local reset cannot publish", async ({ page }) => {
+  await checkReturnRemovalFailure(page, "reset-quota");
+});
+
+test("keeps saved facts and originals when local deletion cannot clear guided answers", async ({ page }) => {
+  await checkReturnRemovalFailure(page, "delete-guided");
+});
+
+test("restores scoped saved data when local return deletion aborts", async ({ page }) => {
+  await checkReturnRemovalFailure(page, "delete-transaction");
 });
 
 test("cannot reopen an original after another tab deletes the return", async ({ page }) => {

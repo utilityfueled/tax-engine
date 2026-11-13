@@ -2560,15 +2560,15 @@ export function getNextSegmentationStep(answers: SegmentationAnswers): Segmentat
 
 // ── Flow state persistence ─────────────────────────────────────────────────
 
-const GUIDED_FLOW_STORAGE_KEY_PREFIX = "tax-engine.guided-flow-state.v1";
+export const LEGACY_GUIDED_FLOW_STORAGE_KEY = "tax-engine.guided-flow-state.v1";
 
 export function getGuidedFlowStorageKey(workspaceId: string): string {
-  return `${GUIDED_FLOW_STORAGE_KEY_PREFIX}:${workspaceId}`;
+  return `${LEGACY_GUIDED_FLOW_STORAGE_KEY}:${workspaceId}`;
 }
 
 function clearLegacyGuidedFlowState(storage: Storage): void {
   try {
-    storage.removeItem(GUIDED_FLOW_STORAGE_KEY_PREFIX);
+    storage.removeItem(LEGACY_GUIDED_FLOW_STORAGE_KEY);
   } catch {
     // Silently ignore
   }
