@@ -339,6 +339,25 @@ describe("hosted document opaque identities", () => {
   it("C07 IDB-only former key format resolves alias only with exact stored ownership/key consistency", async () => { const row = cachedRow(wid, rawId, true); const fixture = idbFixture([row]); const cache = await cacheApi();
     await assertFile(await cache.getCachedWorkspaceDocumentFile(wid, expected.filename));
     await assertFile(await cache.getCachedWorkspaceDocumentFile(wid, rawId)); expect(fixture.writes).not.toHaveBeenCalled(); });
+  it("does not read a durable original deleted by another tab", async () => {
+    const fixture = idbFixture([]);
+    const cache = await cacheApi();
+    await cache.cacheWorkspaceDocumentFiles(wid, [{ documentId: rawId, file: originalFile() }]);
+    await assertFile(await cache.getCachedWorkspaceDocumentFile(wid, rawId));
+    await assertFile(await cache.getCachedWorkspaceDocumentFile(wid, expected.filename));
+    expect(fixture.rows.delete(JSON.stringify([wid, rawId]))).toBe(true);
+    const byRawId = await cache.getCachedWorkspaceDocumentFile(wid, rawId);
+    const byAlias = await cache.getCachedWorkspaceDocumentFile(wid, expected.filename);
+    expect([byRawId, byAlias].map(file => file === null)).toEqual([true, true]);
+  });
+  it("does not read an encrypted-recovery original deleted from durable storage", async () => {
+    const fixture = idbFixture([]);
+    const cache = await cacheApi();
+    await cache.restoreWorkspaceDocumentFiles(wid, [{ documentId: rawId, file: originalFile() }]);
+    await assertFile(await cache.getCachedWorkspaceDocumentFile(wid, rawId));
+    expect(fixture.rows.delete(JSON.stringify([wid, rawId]))).toBe(true);
+    expect(await cache.hasCachedWorkspaceDocumentFile(wid, rawId)).toBe(false);
+  });
   it("C08 malformed key/record ownership mismatch cannot return cached bytes", async () => {
     const wrongKey = { ...cachedRow(), key: JSON.stringify([wid, "different-raw-id"]) };
     const wrongOwner = { ...cachedRow(), workspaceId: "other-workspace" };

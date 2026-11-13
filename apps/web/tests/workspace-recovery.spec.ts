@@ -128,3 +128,42 @@ test("reset removes saved guided facts before a return is reopened", async ({ pa
   await expect(page.getByRole("heading", { name: /let's tailor your return/i })).toBeVisible();
   expect(await page.content()).not.toContain("ResetPrivateName");
 });
+
+test("cannot reopen an original after another tab deletes the return", async ({ page }) => {
+  await page.goto("/");
+  await page.evaluate(() => localStorage.setItem("tax-engine:guided-mode", "false"));
+  await page.getByRole("button", { name: /start your tax return/i }).click();
+  await expect(page).toHaveURL(/\/returns\/(?!new)[a-z0-9-]+/i);
+  const id = new URL(page.url()).pathname.split("/").at(-1);
+  if (!id) throw new Error("Expected a local return");
+  const pdf = await PDFDocument.create();
+  pdf.addPage().drawText("Synthetic supporting document");
+  await page.locator('input[type="file"]').setInputFiles({
+    name: "synthetic-attached-source.pdf",
+    mimeType: "application/pdf",
+    buffer: Buffer.from(await pdf.save()),
+  });
+  await expect(page.getByRole("status", { name: "Return status" })).toHaveText("1 docs stored locally.");
+  await page.evaluate(({ id, personal }) => {
+    localStorage.setItem(`tax-engine.guided-flow-state.v1:${id}`, JSON.stringify({
+      factsVersion: 2, phase: "interview", taxYear: 2025, currentSectionIndex: 1,
+      completedSections: ["personal-info"],
+      segmentation: { filingStatus: "single", incomeTypes: ["w2-wages"], lifeEvents: [], stateCode: null },
+      sectionData: { "personal-info": personal },
+    }));
+  }, { id, personal: taxpayerFacts2025 });
+  // Enter the saved interview in the uploading tab without reloading its
+  // JavaScript state.
+  await page.getByRole("button", { name: "Start guided interview", exact: true }).click();
+  const review = page.getByRole("button", { name: "Try selected attached PDFs", exact: true });
+  await expect(review).toBeEnabled();
+
+  const otherTab = await page.context().newPage();
+  await otherTab.goto("/");
+  const deleteButton = otherTab.getByRole("button", { name: `Delete tax return ${id}`, exact: true });
+  await deleteButton.click();
+  await expect(deleteButton).toHaveCount(0);
+  await review.click();
+  await expect(page.getByText(/could not be reopened because their raw bytes are no longer cached locally/i)).toBeVisible();
+  await otherTab.close();
+});

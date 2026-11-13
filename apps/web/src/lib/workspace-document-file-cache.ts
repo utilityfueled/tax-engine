@@ -19,6 +19,8 @@ export interface WorkspaceDocumentFileUpload {
 
 const DB_NAME = "tax-engine-workspace-document-cache";
 const STORE_NAME = "workspace-document-files";
+// Only keep files that could not be committed. A durable file must be read
+// from IndexedDB so deletion from another tab takes effect here as well.
 const memoryCache = new Map<string, CachedWorkspaceDocumentFileRecord>();
 
 function buildCacheKey(workspaceId: string, documentId: string) {
@@ -61,41 +63,51 @@ function openCacheDatabase(): Promise<IDBDatabase | null> {
 }
 
 async function putRecord(record: CachedWorkspaceDocumentFileRecord) {
-  memoryCache.set(record.key, record);
-
   const database = await openCacheDatabase();
   if (!database) {
+    memoryCache.set(record.key, record);
     return;
   }
 
-  await new Promise<void>((resolve) => {
-    const transaction = database.transaction(STORE_NAME, "readwrite");
-    transaction.oncomplete = () => { database.close(); resolve(); };
-    transaction.onerror = () => { database.close(); resolve(); };
-    transaction.onabort = () => { database.close(); resolve(); };
-    transaction.objectStore(STORE_NAME).put(record);
-  });
+  try {
+    await new Promise<void>((resolve, reject) => {
+      const transaction = database.transaction(STORE_NAME, "readwrite");
+      transaction.oncomplete = () => resolve();
+      transaction.onabort = () => reject(transaction.error);
+      try {
+        transaction.objectStore(STORE_NAME).put(record);
+      } catch {
+        transaction.abort();
+      }
+    });
+    memoryCache.delete(record.key);
+  } catch {
+    memoryCache.set(record.key, record);
+  } finally {
+    database.close();
+  }
 }
 
 async function getRecord(key: string): Promise<CachedWorkspaceDocumentFileRecord | null> {
-  const memoryRecord = memoryCache.get(key);
-  if (memoryRecord) {
-    return memoryRecord;
-  }
-
+  const fallback = () => memoryCache.get(key) ?? null;
   const database = await openCacheDatabase();
   if (!database) {
-    return null;
+    return fallback();
   }
 
-  return new Promise((resolve) => {
-    const transaction = database.transaction(STORE_NAME, "readonly");
-    const request = transaction.objectStore(STORE_NAME).get(key);
-    request.onerror = () => resolve(null);
-    request.onsuccess = () => resolve((request.result as CachedWorkspaceDocumentFileRecord | undefined) ?? null);
-    transaction.oncomplete = () => database.close();
-    transaction.onabort = () => { database.close(); resolve(null); };
-  });
+  try {
+    const record = await new Promise<CachedWorkspaceDocumentFileRecord | undefined>((resolve, reject) => {
+      const transaction = database.transaction(STORE_NAME, "readonly");
+      const request = transaction.objectStore(STORE_NAME).get(key);
+      transaction.oncomplete = () => resolve(request.result);
+      transaction.onabort = () => reject(transaction.error);
+    });
+    return record ?? fallback();
+  } catch {
+    return fallback();
+  } finally {
+    database.close();
+  }
 }
 
 function isOwnedRecord(value: unknown, workspaceId: string, storedKey: unknown): value is CachedWorkspaceDocumentFileRecord {
@@ -151,7 +163,7 @@ async function getAliasedRecord(workspaceId: string, documentId: string) {
       const durableRecords = await readOwnedPrefix(workspaceId, prefix);
       // An unavailable/aborted inventory cannot prove the memory match unique.
       if (durableRecords === null) return null;
-      for (const record of durableRecords) if (!records.has(record.key)) records.set(record.key, record);
+      for (const record of durableRecords) records.set(record.key, record);
     }
   }
   const matches = aliasMatches(records, workspaceId, documentId);
@@ -246,7 +258,7 @@ async function writeDurableWorkspaceDocumentFiles(
   } finally {
     database.close();
   }
-  for (const record of records) memoryCache.set(record.key, record);
+  for (const record of records) memoryCache.delete(record.key);
 }
 
 /** Add a new batch atomically, without replacing an original another tab saved. */

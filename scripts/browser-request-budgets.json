@@ -437,7 +437,7 @@
     "apps/web/src/lib/uploaded-document-detection.ts": "2f67b296095770ac6cc5dbe3d01212fe39e0241a65179f8acdd394a4e2be10bf",
     "apps/web/src/lib/workspace-ai-preferences.ts": "343258a7d476c42be709533389e53760062c4e9678c7e77230ca6db3cfbfb11d",
     "apps/web/src/lib/workspace-assistant.ts": "f2eaf60fc3bf8d2ab5dff56a4e30187184c8a94cefa74f064e9f01bc5a787381",
-    "apps/web/src/lib/workspace-document-file-cache.ts": "9e237af6f451945f092a4b401710017d62e3dedc3bf049386cb02623e1356fdb",
+    "apps/web/src/lib/workspace-document-file-cache.ts": "41a69dc8c630788dcd6d8edc5ee929364d08a4389389a9f883d3ef3b97792564",
     "apps/web/src/lib/workspace-filing-pack.ts": "3b69dd8c026ef99c4337f119d1e51ce2e691c15b8f013738750c8c2cfdb9ec80",
     "apps/web/src/lib/workspace-filled-return.ts": "8c606180d3cfb9dd2676199a4d8698dcdbb9b24e44151d397e0f52695bb4e481",
     "apps/web/src/lib/workspace-guided-state.ts": "09d2fcdecf5554e777bd27453a6bc8928ce1e6e688e1163b5388d617a0e5e53b",
@@ -618,7 +618,7 @@
     "apps/web/tests/self-host-flows.spec.ts": "5f0d52521e2e65f0fe1692a329d5b734e87c71250038a9fa1e30ca9605ab031a",
     "apps/web/tests/workspace-guided-year.spec.ts": "8683248504cbf2b14750b7032242429e15c9e29393a8b3dec5c5a24596e5e6d6",
     "apps/web/tests/workspace-lifecycle.spec.ts": "5b00c5d2e59c506c3ddc4f2c74fb90923038190a105db84a1d9c09cd1018a8d2",
-    "apps/web/tests/workspace-recovery.spec.ts": "7b81115dca973091ee325e778b56a5e7e15fd52355633e4faf7a3c9af68c1e15",
+    "apps/web/tests/workspace-recovery.spec.ts": "91c5dead365d97c9d23301b3855a79fa52bb40a855d935af994c2e5e97879611",
     "apps/web/tests/workspace-upload.spec.ts": "a7c049900ceaf7205856d95dfc3bd302f97e0839717f6b70b991e10743b886b7",
     "packages/contracts/package.json": "57053526d9dca0fab4f4d3ceeaf009a15472700a5886b3bed921a4c2c65ad3c7",
     "packages/contracts/src/index.ts": "a8dfe5de0d403af83e2700716479812cfe0acc21b388960e8a40bfbbc5227158",
@@ -1878,7 +1878,7 @@
     "tests/fixtures/tax-tables/2023.json": "062f13ddaa29b3d720d145f31b0f64d58d2998f8bddd96836f2eac73820a7d9f",
     "tests/fixtures/tax-tables/2024.json": "0a41b3c1ab289d51f31a6397062fb7507c9fb3520a6dce7182511eca0d6f6590",
     "tests/fixtures/tax-tables/2025.json": "7e8a7511823cbdddc11aaf499b3b18dcf7e9532ab238191cb44e26d27eab6fa5",
-    "tests/fixtures/tax-tables/README.md": "9e1d445ac7e963291432671d0f2ac69af28d384c4b5a885f46222cc5fa609505",
+    "tests/fixtures/tax-tables/README.md": "ab108cfae71b14441cfc7091f1700066c96569ea4a37ea3715d7bd8ebce76435",
     "tests/fixtures/taxable-state-refund-recoveries.ts": "b72f80aca85761827d81864371a4781c5b153ea1ea50eadbaec23b11531d3d27",
     "tests/fixtures/two-owner-schedule-ai.ts": "66086d6cb78a1c981d5ae455b5e188fc75a5f0531bd7c85248deca0c485964f7",
     "tests/fixtures/vehicle-refinancing.ts": "1b058c9c00f71ac20b21e95fb7a2cb70ec30415e7e7bed37bbde03a041427b3d",
@@ -3859,7 +3859,7 @@
       "skippedTitles": []
     },
     "workspace-recovery.spec.ts": {
-      "caseCount": 2,
+      "caseCount": 3,
       "bounds": {
         "filled-return": 0,
         "provider": 0,
