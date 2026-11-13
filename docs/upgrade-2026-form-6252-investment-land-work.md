@@ -1,5 +1,28 @@
 # 2026 Form 6252 investment-land projection
 
+## Later installment years
+
+Commit `8d666cc1` extends the internal projection to a confirmed prior-year
+domestic investment-land sale under its unchanged fixed-price agreement.
+The source ledger explicitly covers every prior year, including zero years.
+The specimen retains `0.625000` from the original sale-year return. It has
+$30,000 of prior payments, $30,000 of current payments and $18,750 of current
+long-term gain. Zero-payment and final-payment controls pass. A retained
+percentage that would change the engine's whole-dollar gain is rejected.
+[Final IRS Form 6252 and instructions](https://www.irs.gov/pub/irs-prior/f6252--2026.pdf).
+
+Both new projection tests failed before implementation. The final 124 scoped
+tests, engine and web types, lint, inventory and all 8,890 spec references
+passed. A separate Decimal derivation and strict PDF reader verified 25 text
+values, two selections, all 49 original widgets, blank identity, four review
+marks and removal of inherited active content. All four pages rendered and the
+filled form page was visually checked. The readback specimen SHA-256 is
+`8b089b4850815b6bdf24edf0d42808bbd4ffd3829c02159336a3f738fd92ade9`.
+The specimen is private synthetic evidence. Public review and filing export
+are still disabled. The dated ledger and printed precision requirements apply
+to this projection only. Changed obligations, debt, deemed payments and
+related parties require additional methods and qualified review.
+
 Commit `a68f71ab1a6e3b9b95a4f2deb9e1941eb037ea93`, tree
 `381d638501f8c011c701289afca7942031420d84`, projects one current-year,
 fixed-price sale of domestic investment land to an unrelated buyer. The

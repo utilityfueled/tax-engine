@@ -5,6 +5,20 @@
 The public refs were refreshed. `origin/main` still points to `59248889`
 and `origin/upgrade/2026-baseline` to `3024b848`. Successor commits stay on
 local `main` while automatic production deployment is being disabled.
+The read-only Vercel check still finds the production project linked to
+`main`, with automatic custom-domain assignment and no build-ignore command.
+The isolated rehearsal project has no Git link and protects all deployments.
+
+`8d666cc1` projects confirmed later installment years on the final 2026
+Form 6252. All 124 focused tests passed. The saved specimen preserves the
+original sale-year ratio and $18,750 of current long-term gain. `f4b0b608`
+adds the deferred investment-land specimen to final Form 8824. The day 45,
+day 180 and ordinary filing-deadline controls passed, including a valid
+extension. All 115 focused checks and 8,891 spec references passed. A separate
+reader verified both pages and all 68 widgets. Both annual projections are
+disabled in public exports and await independent qualified tax review.
+[Form 6252 evidence](upgrade-2026-form-6252-investment-land-work.md) ·
+[IRS Form 8824 instructions](https://www.irs.gov/instructions/i8824).
 
 `6ba7ce71` corrects Form 8824 lines 15 and 18 for both supported calculation
 years. It accounts for cash paid and expenses applied against cash, other
@@ -43,8 +57,10 @@ run on `2e258445` passed its first nine checks and failed one unit test because
 the optional diagnostic still pinned the old audit. `115cbb52` rebinds that
 diagnostic and its full 621-case collection. Its exact archive passed unit
 and coverage checks with 27,738 tests in 2,006 files and 87.85% branch
-coverage. Its managed browser suite and the combined check of `f94bb638`
-are running separately.
+coverage. Its managed browser suite passed 621 cases with five hosted-only
+skips and no failures. All 12 checks passed. The combined check of `f94bb638`
+passed unit tests with 27,746 in 2,006 files. Its coverage and browser checks
+and the separate exact `f4b0b608` suite are in progress.
 [Care and IRA evidence](upgrade-2026-care-ira-combat-pay-work.md).
 
 The actual ARM64 `2e258445` image passed import, smoke, six Compose phases

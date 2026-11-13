@@ -39,11 +39,11 @@ engineering cannot substitute for that review.
 | --- | --- | --- |
 | Assign independent human tax reviewers | Reviewer identity and relevant qualifications; reviewed commit, rules/scenarios, official authority, independently checked expected outputs, findings and disposition. The current specs and package ledgers are the review material; passing tests and agent reviews are not human approval. | Complete federal rules, actual facts, historical corrections and qualified scenarios. |
 | Launch selection received; state work continues internally | The owner selected Pennsylvania and Ohio, each for full-year resident, part-year resident and nonresident returns. The [state gap analysis](upgrade-2026-state-gaps.md) records the decision and existing implementation gaps. | Selection is resolved. Actual facts, law, local-tax/source methods, forms and six state/residency qualifications still require implementation and evidence; no support or filing activation is inferred. |
-| Complete the remaining authorized Preview rehearsal | Preview-only Neon/Redis and Zoho SMTP are connected. The isolated test account is created. Actual source-bound b42afbf5 Preview sign-in, delivered email with exact Preview origin, reset200, old-session revocation, token-replay400, old-password401 and new-password200 passed November3. This is bounded auth evidence, not whole hosted qualification. The old exposed automation token is revoked; its private replacement is explicitly authorized to remain active, including its project-wide system-environment designation, and is reserved for the Stripe sandbox webhook. No production deployment or real payment is authorized. Actual80bc752f Preview test checkout, signed checkout.session.completed delivery200 and same-event manual replay200 now pass; authenticated Starter remains active after both. The [sandbox ledger](upgrade-2026-staging-sandbox-billing-work.md) preserves that checkout evidence. The later [5996 successor](upgrade-2026-staging-subscription-successor-work.md) now also verifies exact Preview receipt counts1/1, named current subscription state1, wrong-owner0 and both approved accounts' zero AI ledger effects. This read-only observation resolves that MFA/query step. Subscription crash/rollback handling is implemented and passes eight actual local PostgreSQL controls in the [atomicity ledger](upgrade-2026-hosted-subscription-atomicity-work.md); deployed failure recovery, credit-pack/provider reconciliation, automatic failed retries and final-artifact qualification remain open. Remaining integrated rehearsal continues internally; do not paste credentials into chat or Git. | Remaining tenant isolation, persistence/deletion, telemetry/limits, outages, Stripe retry/reconciliation, migrations, restore and rollback on the final artifact; repeat auth as needed for final source identity. |
+| Rehearse the final protected Preview artifact | Earlier exact Preview runs verified recovery email, session revocation, token replay denial, Stripe Sandbox checkout and duplicate delivery, and isolated workspace persistence/deletion. The November 13 rehearsal verified two-tenant isolation, the same Stripe event's automatic retry after database access was restored, one receipt, zero scoped AI effects, and fail-closed behavior during an actual Upstash credential rejection. See the [November 13 rehearsal](upgrade-2026-nov13-release-rehearsals.md) and [earlier checkout](upgrade-2026-staging-sandbox-billing-work.md). The legacy exposed bypass was revoked. Its authorized replacement remains private. | Exact final-source hosted auth and recovery, tenant/workspace lifecycle, telemetry and limits, outages, credit-pack/provider reconciliation, migration, restore and rollback. |
 | Provider access received; qualification continues | The supplied testing credential worked in actual November5 synthetic runs. The later authorization permits testing strictly below140USD. Current calculated cost is0.26282160USD plus0.022384USD held for one unresolved usage record, totaling0.28520560USD; the [latest SSA development smoke](upgrade-2026-ssa-v3-live-smoke-work.md) preserves metadata and human-qualification limits. The [actual local ledger rehearsal](upgrade-2026-ai-live-local-ledger-work.md) verifies three provider attempts and two one-cent logical charges, including an engineered rejection and explicit escalation. No key is needed from the owner for these continuing OpenAI tests. The owner sign-in and [minute activity export](upgrade-2026-ai-minute-usage-reconciliation-work.md) are complete. The November 6 [closed-day cost reconciliation](upgrade-2026-ai-closed-day-cost-work.md) exactly matches 174 known calls at 0.26282160 USD, with zero as-of residual, matching API-key identity and the same organization scope; raw project, user and line-item fields are blank. The 0.022384 USD reserve remains held (0.28520560 USD known plus reserved) pending final provider settlement or authoritative cost-status. A request ID is not mandatory for sufficiently scoped aggregate proof. See [the live classification ledger](upgrade-2026-classification-live-smoke-work.md). | Representative independently human-reviewed cases, repeated held-out evaluation, natural failure/escalation quality, provider invoice and hosted retail-ledger reconciliation, Google access and final qualification remain open. The development smoke is not model promotion. |
 | Assign independent human AI-case reviewers | Review the 240 draft cases, original synthetic inputs, expected monetary/date fields, answerability and safety labels; preserve the held-out partition and record reviewer provenance. Revise or remove unsuitable cases without counting generated variants as independent review. | Representative 200–300-case corpus and qualification metrics. The [executor guide](ai-evaluation-executor.md) describes the evidence and approval boundaries. |
-| Assign an independent security/privacy reviewer and an advisory owner | Review the exact application/runtime revisions and staging evidence; provide findings and their disposition. For each remaining image advisory, record the accountable owner and an evidence-backed fix or acceptance with expiry. The actual b1 AMD64 image reports 182 matches across 81 advisory IDs, including 62 High matches across 19 High IDs, with zero Critical or fixed-version matches. All 81 primary Debian trixie rows remain open and unaccepted as of November 6. See the [current advisory register](upgrade-2026-image-advisories-20261106.json) and [source-bound runtime ledger](upgrade-2026-b1-runtime-evidence.md). Earlier 80-ID/181-match candidates are historical. Owner acceptance and the overdue November 4 recheck remain open; no deadline extension is inferred. Exact final-source ARM64/AMD64 qualification remains required. | Independent security/privacy review and resolved or owned, expiring advisories. No acceptance is implied by the existing component exposure notes. |
-| Qualify final official forms as they become available | Final published year/revision PDFs, authoritative hashes and line/field mapping review for each enabled scenario, plus the required independent signoff. The November 1 refresh found final 2026 Schedules C/R; disabled physical candidates are committed in `6ea8907b`. That does not qualify their scenarios or supply final Form 1040/Tax Table. The [source refresh](upgrade-2026-release-source-refresh.md) distinguishes available historical, draft and final forms. | Final physical maps and complete-data filing exports. Draft or historical mappings cannot be approved into a different year. |
+| Assign an independent security/privacy reviewer and an advisory owner | Review the exact application/runtime revisions and staging evidence. Record findings, accountable owners and evidence-backed fixes or acceptance with expiry. The November 13 ARM64 scan found 197 Debian matches across 86 advisory IDs, including 60 High matches across 17 IDs, with zero Critical or fixed-version matches. The 86 trixie tracker rows remain open. See the [current ARM64 register](upgrade-2026-image-advisories-20261113-arm64.json) and [historical AMD64 register](upgrade-2026-image-advisories-20261106.json). | Independent security/privacy review, resolved or owned expiring advisories, and exact final-source ARM64 and AMD64 scan and rehearsal evidence. |
+| Qualify final official forms as they become available | Verify each enabled scenario against the final year/revision PDF, its pinned hash and a reviewed line and field map. The November 13 official Form 1040 and Tax/EIC table endpoints still supply 2025. Available final 2026 schedules have disabled physical candidates while the parent packet and scenario approvals are incomplete. See the [source refresh](upgrade-2026-refresh-20261112.md). | Final physical maps, independent signoff and complete-data filing exports for enabled scenarios. |
 
 ## Tax interpretation handoff
 
@@ -95,12 +95,12 @@ independently checked outputs, findings, limitations and disposition. Record an
 actual result or a review reference; leave missing reviews explicitly pending.
 Do not populate approval fields merely to make a readiness check pass.
 
-After required implementation and evidence pass, versioned artifact publication,
-filing enablement and model promotion still require their applicable explicit
-authorization. The existing approval covers normal pushes to the public
-`utilityfueled/tax-engine` repository's `upgrade/2026-baseline` branch. It does
-not authorize production deployment, spending beyond the later under140USD testing
-authorization, main-branch merges or force-pushes.
+The owner authorizes bounded isolated Preview and native rehearsals and their
+ordinary reruns and cleanup. The public repository's local `main` commits stay
+local while automatic production deployments are enabled. Versioned artifact
+publication, filing enablement and model promotion still require qualification
+and applicable explicit authorization. The approved live provider testing limit
+and the isolated Redis limits continue to apply.
 
 November3 current local source/advisory/PostgreSQL receipts and limits are in the
 [refresh record](upgrade-2026-refresh-20261103.md). All45existing DB-file cases pass
@@ -157,31 +157,23 @@ production-domain assignment enabled and Ignored Build Step set to Automatic.
 [Build and Deployment](https://vercel.com/utility-fueled-llc/tax-engine/settings/build-and-deployment#ignored-build-step).
 
 The November 13 Debian refresh checks all 81 historical AMD64 tracker rows.
-Three zlib rows now have the exact trixie security fix already pinned in
-the current Dockerfile. The remaining 78 tracker rows are unchanged and
-open. The historical artifact still had the older package, and the current
-images still need an actual SBOM, scan and owner dispositions.
-[Debian refresh evidence](upgrade-2026-debian-advisory-refresh-20261113.md).
+Three zlib rows now have the exact trixie security fix pinned in the current
+Dockerfile. The remaining 78 historical tracker rows stay open. The actual
+ARM64 scan confirms the three zlib IDs are absent and identifies 86 current
+IDs for disposition. [Debian refresh](upgrade-2026-debian-advisory-refresh-20261113.md) ·
+[ARM64 register](upgrade-2026-image-advisories-20261113-arm64.json).
 
-The earlier isolated Neon branch expired. The proposed replacement rehearsal
-for `db974a65` required passing local checks on that exact source. Its unit run
-failed 22 Ohio compatibility assertions, so the proposed rehearsal made no
-external changes. The Schedule SE compatibility fix passed the original Ohio
-assertions. The approved successor `ab47d87f` passed all 12 exact-source checks.
-A new free schema-only branch and restricted app login passed, and its
-credential was installed only in the isolated Preview. Two protected builds
-ran, and the second passed tenant isolation with the configured backend. The
-same event whose signed delivery returned 503 is scheduled for automatic retry.
-Recovery of the database login is verified. The local TLS rehearsal separately passed 13 HTTP
-checks. [Hosted HTTP evidence](upgrade-2026-hosted-http-fault-rehearsal-work.md).
+The `db974a65` unit precondition failed before external changes. The corrected
+`ab47d87f` source passed all 12 local checks. Its protected Preview completed
+the two-owner, Stripe automatic-retry and Redis credential-failure checks.
+The test subscriptions, Preview builds/settings and Redis cache were cleaned
+up. The isolated Neon branch has a November 14 automatic expiry. The local
+TLS rehearsal separately passed 13 HTTP checks. [Actual isolated rehearsal](upgrade-2026-nov13-release-rehearsals.md) ·
+[Local HTTP rehearsal](upgrade-2026-hosted-http-fault-rehearsal-work.md).
 
-The authorized native `acb776cb` source failed its precondition before a boot.
-The separately prepared `c94971cd` candidate passed its exact local checks.
-The corrected approved custody observation passed. Its file-only constructor
-rejected the source-review witness key before any VM action. The corrected
-offline replay passed all eight constructor bindings. A later boot reached
-native Linux but found only 76.5 GB available inside the resized disk and
-stopped normally before a build. The fresh isolated VM provisioned at 384 GiB
-has 401.8 GB available. The build and recovery rehearsal continues. See the
-[current continuation](upgrade-2026-current-status.md) for the running source
-checks and remaining release evidence.
+The `c94971cd` native attempt stopped normally at the guest capacity floor.
+A fresh isolated VM with 401.8 GB available allowed the exact `3b5b2ca6`
+ARM64 runtime to pass the separate image import, smoke, six recovery phases
+and 621 Chromium cases with five hosted-only skips. Later source changes
+and the final AMD64 runtime require their own evidence. See the
+[current continuation](upgrade-2026-current-status.md) for the latest results.

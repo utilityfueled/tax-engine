@@ -24211,5 +24211,28 @@
     "widgetCount": 68,
     "specimenSha256": "1cb35cd1d5494febcbecdb16c458a39dcca74c0ad0dd90b71838ca31b334057e",
     "filingQualified": false
+  },
+  "nov13LocalPodmanAudit": {
+    "commit": "115cbb52626603efd17fa7aa3ac276d92df5f2ce",
+    "exactChecksPassed": 12,
+    "unitAndCoveragePassed": 27738,
+    "testFiles": 2006,
+    "branchCoveragePercent": 87.85,
+    "browserPassed": 621,
+    "browserHostedOnlySkipped": 5,
+    "checksSha256": "aa02fe3bd4204bee1fcde42548276cad11f7d59e10f33da14a2787671ec11220",
+    "browserSha256": "0428bbf5a9f1133336a7b73cbf96d60bddbe720b85f226d93f603727cafac924"
+  },
+  "nov13LaterInstallmentsAndDeferredExchangeCandidates": {
+    "laterInstallments": "8d666cc1",
+    "laterInstallmentsFocusedPasses": 124,
+    "deferredExchange": "f4b0b608",
+    "deferredExchangeFocusedPasses": 115,
+    "latestSpecReferences": 8891,
+    "installmentSpecimenSha256": "8b089b4850815b6bdf24edf0d42808bbd4ffd3829c02159336a3f738fd92ade9",
+    "deferredExchangeSpecimenSha256": "41086871eacc2ea6d975730937d118f7b00f77a137ea3cbeb012a756f2c9bc51",
+    "reviewExportsEnabled": false,
+    "filingQualified": false,
+    "humanTaxReviewComplete": false
   }
 }

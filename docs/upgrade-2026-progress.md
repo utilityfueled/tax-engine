@@ -4,6 +4,26 @@ Current source, verification and remaining work are summarized in the
 [current continuation](upgrade-2026-current-status.md). Historical results
 below apply to their named revisions.
 
+- November 13 — `f4b0b608` projects a confirmed deferred land exchange on
+  final Form 8824. All 115 focused tests passed. The separate saved-PDF
+  readback found 18 text fields, one selected box, 68 widgets, blank identity
+  and both review marks. The specimen shows $35,000 recognized, $160,000
+  deferred and $100,000 replacement basis. The 45-day and 180-day boundaries
+  and both ordinary filing deadlines have explicit controls.
+  [IRS instructions](https://www.irs.gov/instructions/i8824).
+
+- November 13 — Exact `115cbb52` passed all 12 local checks with PostgreSQL
+  16.16. Unit and coverage passed 27,738 tests in 2,006 files, with 87.85%
+  branch coverage. Managed Chromium passed 621 cases with five hosted-only
+  skips and no failures. The checks and browser log SHA-256 values are
+  `aa02fe3bd4204bee1fcde42548276cad11f7d59e10f33da14a2787671ec11220` and
+  `0428bbf5a9f1133336a7b73cbf96d60bddbe720b85f226d93f603727cafac924`.
+
+- November 13 — `8d666cc1` extends the disabled final Form 6252 projection
+  to confirmed later installment years. All 124 focused tests and independent
+  saved-PDF readback passed. The specimen preserves the original ratio and
+  records $18,750 of long-term gain. [Form 6252 evidence](upgrade-2026-form-6252-investment-land-work.md).
+
 - November 13 — `6cccc932` refreshes dependent care worksheets after income
   changes. All 299 focused checks passed. The earlier exact `439d4c87`
   archive passed all 12 checks including 87.85% branch coverage and 621
