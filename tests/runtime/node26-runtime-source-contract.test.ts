@@ -86,7 +86,7 @@ describe("Node 26 runtime source contract", () => {
     expect(smoke).toContain('assert.equal(processEvidence.packageTools, false)');
   });
   it("preserves the reviewed dependency lock exactly", () => {
-    expect(createHash("sha256").update(read("pnpm-lock.yaml")).digest("hex")).toBe("268026058217dd84aee4e9b1c691fa1bac7d3049e6cb68d7fd16ef3af7a76dea");
+    expect(createHash("sha256").update(read("pnpm-lock.yaml")).digest("hex")).toBe("64cccb8d87c0bfb6422210ecf5b4c12e6a1ef468976d7d68a466e5e5a744c4a2");
   });
   it("updates active operational prerequisites without rewriting historical receipts", () => {
     expect(read("README.md")).toContain("Node.js 26.13.1");

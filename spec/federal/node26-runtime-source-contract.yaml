@@ -16,8 +16,11 @@ notes: |
   The Node26 package preserved historical lock d199e2344fa6cf61402330f216e3f7ccf6bc9b5e7a568670b29a9fe27dc8c23f.
   Subsequent separately reviewed Vercel Functions dependency commit1fef5041 adds
   only its web importer and17 package/snapshot entries, retaining every old entry.
-  Bind current approved lock268026058217dd84aee4e9b1c691fa1bac7d3049e6cb68d7fd16ef3af7a76dea;
-  future dependency changes require their own source review and exact successor.
+  The Vercel Functions lock hash was 268026058217dd84aee4e9b1c691fa1bac7d3049e6cb68d7fd16ef3af7a76dea.
+  The separately reviewed Next.js 16.4.6 successor 651fa206 updates only
+  the Next family and peer references. Bind lock SHA-256
+  64cccb8d87c0bfb6422210ecf5b4c12e6a1ef468976d7d68a466e5e5a744c4a2.
+  Future dependency changes require their own source review and exact successor.
   The November 11 Node security update includes high-severity HTTP/2 and TLS
   fixes and upgrades bundled Undici to 8.12.4. The November 12 image refresh pins
   official index e6bedef217677b276c591795e169840edd9096dbf13f29df8ef8d1856b8820bc
@@ -51,7 +54,7 @@ lines:
     formula: "Both Docker stages install only zlib1g 1:1.3.dfsg+really1.3.1-1+deb13u1 using exact SHA-256 and size for the base's amd64, arm64, ppc64el and s390x package archives. Install using dpkg and verify the resulting package version and status."
     testRef: "tests/runtime/node26-runtime-source-contract.test.ts::installs the exact Debian zlib fix in both image stages"
   - line: "frozen-dependencies"
-    formula: "Root engine change and web engines addition preserved historical lock; separately reviewed dependency successor1fef5041 supplies the current exact frozen lock. Do not accept arbitrary lock drift."
+    formula: "Preserve the historical runtime lock evidence and bind the reviewed Next.js 16.4.6 successor to its exact frozen lock hash. Reject arbitrary lock drift."
     testRef: "tests/runtime/node26-runtime-source-contract.test.ts::preserves the reviewed dependency lock exactly"
   - line: "operational-docs"
     formula: "Current setup documentation names 26.13.1/26; historical Node 24 and 26.13.0 evidence remains unchanged."
