@@ -52,11 +52,30 @@ distribution checks for the successor remain separate.
 Commit `19948573` pins PostgreSQL 16.16 for Compose and CI. Its 125
 focused tests, types, scoped lint and Compose configuration passed.
 The macOS ARM64 recovery tools were built separately from the 16.16
-source archive. The combined run uses those tools and an owned synthetic
-loopback database. The approved `acb776cb` native attempt remains unused
-because its combined run failed. A later ARM64 rehearsal still needs
-eligible source and execution evidence.
+source archive. All 12 archived checks passed. Unit and coverage each
+passed 27,475 tests in 1,983 files with 87.73% branch coverage. Managed
+Chromium passed 587 cases with five hosted-only skips. The separate local recovery
+rehearsal restored nine tables across two synthetic tenants and preserved
+the exact provider cost of USD 0.0000006. The owned server stopped normally.
+The approved `acb776cb` native attempt used zero boots because its unit
+run failed. The current ARM64 image, strict browser and recovery rehearsal
+still require eligible source and execution evidence.
 [PostgreSQL 16.16 release notes](https://www.postgresql.org/docs/release/16.16/).
+
+Subsequent commits correct regular Schedule SE's exact threshold and
+wage-base aggregation (`bb9a326f`), attach only qualifying owners' 2025
+Schedule SE review pages (`b65a71b3`), collect finite PA union dues
+(`840bd598`) and bind actual Ohio Akron school-district and county
+evidence (`3f2c236c`). Focused tests and distinct review passed.
+
+Hosted commits `d39209de` and `8357ed99` add an opt-in Preview-only
+Stripe delivery receipt and settle purchased AI credits only after
+confirmed payment. The purchase grant and event receipt commit in one
+PostgreSQL transaction. Local signed fixtures and PostgreSQL 16.16 tests
+passed. Commit `34eec376` validates the Stripe catalog price and Checkout
+session before returning its URL. The isolated live retry, webhook event
+subscription and credit-sales qualification remain open.
+[Package checks and source links](upgrade-2026-progress.md).
 
 The current public Git references still point to `59248889` on `main`
 and `3024b848` on the merged upgrade branch. Local successor commits

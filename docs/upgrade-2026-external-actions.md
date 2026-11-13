@@ -8,9 +8,11 @@ The merged source is `59248889`. The hosted outage supplement and fourth
 native boot remain unperformed. The isolated November 6 database lease has
 elapsed. Current-source Preview evidence requires a working isolated database
 and fresh scoped staging execution. The test VM was already resized to
-384 GiB while stopped. The conditional native authorization named `032b329d`
-and its prerequisite check failed on that source before any boot. The current
-release candidate still needs its target image and browser/recovery rehearsal.
+384 GiB while stopped. The conditional native authorizations named `032b329d`
+and later `acb776cb`. Both failed prerequisite checks before any boot.
+The current release candidate still needs its target image and strict
+browser/recovery rehearsal. The later synthetic recovery pass used a
+local PostgreSQL 16.16 server.
 The separate human reviews, final form qualification and provider settlement
 described below remain pending. See [the current continuation](upgrade-2026-current-status.md)
 and [the November 12 official source refresh](upgrade-2026-refresh-20261112.md).

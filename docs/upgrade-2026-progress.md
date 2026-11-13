@@ -1,8 +1,56 @@
 # 2026 upgrade implementation evidence
 
 Current source, verification and remaining work are summarized in the
-[November 4 continuation](upgrade-2026-current-status.md). Historical results
+[current continuation](upgrade-2026-current-status.md). Historical results
 below apply to their named revisions.
+
+- November 12: `bb9a326f` applies the regular Schedule SE threshold to
+  exact net earnings and sums each owner's W-2 and Tier 1 originals before
+  rounding. The focused run passed 843 with 12 expected skips. The archived
+  unit run encountered a sandbox loopback bind error. `b65a71b3` preserves
+  both spouses' business sources and attaches a Schedule SE only for each
+  qualifying owner in 2025 review output. It passed 201 focused tests.
+  Six fictional PDFs reopened, with 22 nonblank field and appearance matches.
+  [2026 Schedule SE](https://www.irs.gov/pub/irs-prior/f1040sse--2026.pdf)
+  and [26 USC 1402](https://uscode.house.gov/us/usc/119-134/t26/s1402/).
+
+- November 12: `840bd598` collects original Pennsylvania union dues
+  for the bounded full-year resident case. A fictional USD 300.60 receipt
+  produced USD 301 on Schedule UE and USD 1,529 Pennsylvania tax. The
+  focused run passed 71. `3f2c236c` binds a documented Akron district
+  and separate county source. It passed 178 focused tests. Four independent
+  PDF specimens confined all raster changes to the intended header cells.
+  [PA Schedule UE](https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40ue.pdf)
+  and [Ohio IT 1040 booklet](https://dam.assets.ohio.gov/image/upload/v1767095693/tax.ohio.gov/forms/ohio_individual/individual/2025/it1040-booklet.pdf).
+
+- November 12: `d39209de` adds a per-invocation opaque receipt for signed
+  Preview sandbox subscription deliveries. The focused suite passed 152
+  and distinct receipt review passed 21 controls. `8357ed99` waits for
+  a paid Checkout Session and reconciles the grant and webhook receipt in
+  one transaction. The exact PostgreSQL 16.16 run passed 209 tests,
+  including five database cases covering rollback, concurrent delivery,
+  legacy grants and connection loss. Distinct review passed seven controls.
+  `34eec376` verifies the fixed USD price and the created session total
+  before returning the Checkout URL. Its focused run passed 223 tests.
+  Provider retry provenance, actual catalog validation, event subscription
+  and credit-sales qualification remain open. [Stripe Price](https://docs.stripe.com/api/prices/object),
+  [Checkout fulfillment](https://docs.stripe.com/checkout/fulfillment.md?ui=full-page)
+  and [Stripe delivery retries](https://docs.stripe.com/webhooks#automatic-retries).
+
+- November 12: the local synthetic recovery script from `19948573`
+  restored nine tables across two tenants. It preserved USD 0.0000006 in
+  provider cost, reapplied migrations idempotently and stopped its own
+  PostgreSQL 16.16 server normally. The first invocation lacked the web
+  aliases and stopped before recovery. The corrected invocation used the
+  documented web TypeScript configuration. Native Compose recovery
+  remains open. [PostgreSQL 16.16](https://www.postgresql.org/docs/release/16.16/).
+
+- November 12: all 12 archived commands passed on `19948573` with 5,584
+  tracked source pins and no detected drift. Unit and coverage each passed
+  27,475 tests in 1,983 files with 87.73% branch coverage against 85%.
+  Managed Chromium passed 587 with five original hosted-only skips across
+  eight natural request windows. PostgreSQL and the managed server closed.
+  The [checkpoint](upgrade-2026-checkpoint.json) records receipt digests.
 
 - November5: [original-bound 2025 railroad review PDFs](upgrade-2026-rrta-review-paper-work.md) preserve separate wage/RRTA lines and withholding, private-original replay, explicit ordinary B/N absence facts and redacted identifiers. Main 92 focused/1,106 metadata checks and all package static checks pass; inventory adds one unsupported slice, with 68 supported unchanged. Human, final-2026, filing and distribution qualification remain open.
 

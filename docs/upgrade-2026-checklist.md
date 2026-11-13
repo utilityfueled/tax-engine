@@ -33,8 +33,22 @@ below retain their original evidence boundaries.
 - [x] Pin the PostgreSQL 16.16 Compose/CI image and verify the recovery
   client version gate in `19948573`. Build isolated ARM64 PostgreSQL
   16.16 tools for local verification. Native image execution is pending.
-- [ ] Run all 12 commands and repeat runtime qualification after the
-  PostgreSQL 16.16 pin and currently scoped guided intake are verified.
+- [x] Restore nine tables and exact fractional provider cost in the
+  synthetic PostgreSQL 16.16 recovery rehearsal. Retain the local archive
+  and normal server-stop receipt. Native Compose recovery remains open.
+- [x] Verify regular Schedule SE exact thresholds and owner-specific 2025
+  review forms, finite PA union dues source composition, and actual Akron
+  school-district and county provenance. Complete the new native guided
+  browser cases and combined checks on the successor.
+- [x] Verify synthetic signed Stripe Preview receipts and atomic paid
+  AI-credit fulfillment on PostgreSQL 16.16. Verify exact configured
+  price and session guards locally. Hosted retry and credit-sales
+  qualification remain open.
+- [x] Pass all 12 archived checks on `19948573`, including 27,475 unit
+  and coverage tests, 87.73% branch coverage and 587 managed Chromium
+  passes with the five original hosted-only skips.
+- [ ] Run all 12 commands on the successor and repeat runtime
+  qualification after the new guided intake browser cases pass.
 - [ ] Prove the installed package, complete strict browser and recovery,
   and rescan final runtime images on Linux ARM64 and AMD64. Keep remaining
   advisory dispositions and independent security/privacy review open.

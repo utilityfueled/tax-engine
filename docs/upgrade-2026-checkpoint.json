@@ -23212,5 +23212,35 @@
     "approvedAcb776cbNativeInvocationCount": 0,
     "releaseReady": false,
     "ledger": "docs/upgrade-2026-progress.md"
+  },
+  "nov12Postgres1616LocalVerification": {
+    "sourceCommit": "19948573876cbb2686b27b8426ca0e9423f1d58e",
+    "checksPassed": 12,
+    "unitPassed": 27475,
+    "coveragePassed": 27475,
+    "unitAndCoverageFiles": 1983,
+    "branchCoveragePercent": 87.73,
+    "browserPassed": 587,
+    "originalHostedOnlySkips": 5,
+    "trackedSourcePins": 5584,
+    "ownedPostgresStopped": true,
+    "checksSha256": "06ec800a9ce2821fd5da81715a46108146b26fbe7f82454334d06c8a9d2d1fa8",
+    "sourcePinsSha256": "35c7d81cc4eb91144b04235fe4695962101654086e3da9479fa84fafe7a65c9c",
+    "browserSummarySha256": "0fb0b19312e2f3a2d824f48f0b29b3f6a1ba57fc6d753d5c4f75c13f99313724",
+    "browserCleanupSha256": "f7df0db8367086f4ed8df92117a3d8c43f5e09c39403eb489fcf0becdba95e89",
+    "localRecoveryReceiptSha256": "dd0ef2589a86a4ed70fbf29237ef54429842eca04cac8ca6c089460023c59ccb",
+    "releaseReady": false
+  },
+  "nov12HostedCreditSettlement": {
+    "previewReceiptCommit": "d39209dec302d249a5f01fe8baf23cc4ca2130f8",
+    "settlementCommit": "8357ed9929766a8e5ed0ac7c45321cdccd44d35a",
+    "checkoutPriceCommit": "34eec376e19127164c7e3148fb31bfca20ea57f4",
+    "postgresFocusedPassed": 209,
+    "postgresFocusedSha256": "57e66ee649daa21af5f12c78f41ff7fb0bd0ead6ddf3fafd09219597eac7e82b",
+    "settlementIndependentReportSha256": "761f03dd4a0f3509ebfa83f8315b7cf1957a5f954c75d8dde4356287e96ad8da",
+    "checkoutPriceFocusedPassed": 223,
+    "checkoutPriceImplementationReportSha256": "9906c0080637fa5fa0e811078256360ed65e43b208e379aa4fb88029f822d9bf",
+    "liveProviderOrStagingVerified": false,
+    "creditSalesQualified": false
   }
 }
