@@ -1,5 +1,33 @@
 # Current 2026 upgrade continuation
 
+## November 12 on `main`
+
+PR #13 merged as `59248889`. The merge has the same source tree as
+`3024b848`, which passed all 12 local checks. Coverage was 87.71% against an
+85% branch threshold, with 27,334 unit and coverage tests. Managed local
+browser verification passed 587 cases with five pre-existing hosted skips.
+On the merge SHA, GitHub's coverage, managed browser and Docker build jobs
+passed. The separate unit job timed out on one Pennsylvania saved-PDF test.
+The strict runtime-container browser job recorded 27 failed cases, including
+two bounded RRTA PDF privacy inspection timeouts. See [GitHub CI](https://github.com/utilityfueled/tax-engine/actions/runs/42292813045)
+and [GitHub Web](https://github.com/utilityfueled/tax-engine/actions/runs/42292813115).
+
+The owner directed subsequent commits to local `main` and asked to keep
+them local while automatic Vercel production deployments are disabled.
+Vercel's history records the PR merge as an automatic production deployment.
+Prepared education review integrity is committed as `397ef68c`. The Node
+26.13.1 security update is committed as `6fe8dcac`. The [progress log](upgrade-2026-progress.md)
+and [external actions](upgrade-2026-external-actions.md) track later local
+commits, exact-source rehearsals and the remaining gates.
+
+The mapped PDF privacy fix `9c72d014`, PA-40 field lookup update `540a6ce4`
+and their browser source bindings `f29ddc28` are verified locally. The
+[November 12 source refresh](upgrade-2026-refresh-20261112.md) records the
+newly final Schedule 8812, the outstanding federal and state form revisions,
+and current documented provider availability and pricing.
+
+## Historical November 6 evidence
+
 Current crosswalk, November 6 UTC: exact `4ee5e082` passes all twelve local
 checks and the remote unit, coverage, static/build and managed browser jobs.
 Each engine run passes 27,284 tests in 1,959 files; branches are 87.68% against

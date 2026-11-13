@@ -1,5 +1,22 @@
 # External actions needed to finish the 2026 upgrade
 
+## November 12 update
+
+The owner merged PR #13, directed subsequent commits to `main`, and asked
+to hold pushes while they disable automatic Vercel production deployments.
+The merged source is `59248889`. The hosted outage supplement and fourth
+native boot remain unperformed. The isolated November 6 database lease has
+elapsed. Current-source Preview evidence requires a working isolated database
+and fresh scoped staging execution. The test VM was already resized to
+384 GiB while stopped. The conditional native authorization named `032b329d`
+and its prerequisite check failed on that source before any boot. The current
+release candidate still needs its target image and browser/recovery rehearsal.
+The separate human reviews, final form qualification and provider settlement
+described below remain pending. See [the current continuation](upgrade-2026-current-status.md)
+and [the November 12 official source refresh](upgrade-2026-refresh-20261112.md).
+
+## Prior evidence and open external gates
+
 Prepared October 26, 2026, after `e3dcc3f`, and rechecked October 31 after
 `a3e43a9f`, with public sources refreshed November 1 and current Form1040/Tax Table endpoints rechecked November 2. The owner selected PA and Ohio for all three residency categories on November 2; the remaining external inputs and current internal work are distinguished below. Form 2555 corrections (`5293f451`), two-state source work
 (`8d74350d`), the PDF annotation correction (`e3da672b`) and the new-marriage

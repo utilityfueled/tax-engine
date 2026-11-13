@@ -1,6 +1,6 @@
 # Remaining 2026 upgrade execution checklist
 
-The [November 6 current continuation](upgrade-2026-current-status.md) reconciles
+The [current continuation on `main`](upgrade-2026-current-status.md) reconciles
 the latest source, checks, active work and external inputs. The dated entries
 below retain their original evidence boundaries.
 
