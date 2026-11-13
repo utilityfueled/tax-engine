@@ -6,6 +6,14 @@ The public refs were refreshed. `origin/main` still points to `59248889`
 and `origin/upgrade/2026-baseline` to `3024b848`. Successor commits stay on
 local `main` while automatic production deployment is being disabled.
 
+`07d9bcde` projects a confirmed wagering-loss-only ledger onto the disabled
+final 2026 Schedule C candidate. Its $12,000 income, $9,000 deductible loss
+and $3,000 net reconcile across Parts I, II and V. The 2,522 focused checks
+passed. A separate strict parser verified 11 field values, widgets and
+appearances, and both pages were rendered and inspected. State and mixed
+expenses, disagreements after rounding and missing sources are held.
+[Final Schedule C](https://www.irs.gov/pub/irs-prior/f1040sc--2026.pdf).
+
 `9068658e` links an original domestic cash slot W-2G to a confirmed
 professional wagering ledger entry only when its independently entered
 recognized gain equals Box 1. Schedule C receipts and Form 1040 withholding

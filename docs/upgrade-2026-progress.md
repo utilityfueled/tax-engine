@@ -4,6 +4,20 @@ Current source, verification and remaining work are summarized in the
 [current continuation](upgrade-2026-current-status.md). Historical results
 below apply to their named revisions.
 
+- November 13: `07d9bcde` maps a confirmed 2026 wagering-loss-only ledger to
+  Parts I, II and V of the disabled final Schedule C candidate. Both tests
+  failed before the projector existed. The final 2,522 focused tests in
+  341 files, three type checks, build, scoped lint, inventory and 8,844 spec
+  references passed. A separate strict `pypdf` inspection matched all 11
+  filled fields and appearances at the pinned widget locations, and both
+  pages were rendered and inspected. The $9,000 allowed loss transfers to
+  lines 48, 27b and 28, and $3,000 net transfers to line 31. The diagnostic
+  excludes the private reference and leaves unrelated fields blank. It
+  refuses mixed costs, state composition and mismatched rounded totals.
+  The candidate stays unavailable for public review or filing.
+  [Final Schedule C](https://www.irs.gov/pub/irs-prior/f1040sc--2026.pdf) ·
+  [Draft Schedule C instructions](https://www.irs.gov/pub/irs-dft/i1040sc--dft.pdf).
+
 - November 13: `9068658e` reconciles individual domestic cash slot W-2G
   originals to the sole proprietor's complete 2026 wagering ledger. It
   requires the actual recognized gain separately from Box 1 and holds

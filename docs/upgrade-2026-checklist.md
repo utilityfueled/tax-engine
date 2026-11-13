@@ -65,6 +65,9 @@ below retain their original evidence boundaries.
 - [x] Link supported individual slot W-2G originals in `9068658e`. Verify
   exact taxable gains and Box 4 once, including zero withholding, in 8,483
   focused tests and 12 Chromium cases.
+- [x] Project the bounded wagering-loss-only ledger to the disabled Schedule
+  C candidate in `07d9bcde`. Verify 11 physical values and appearances and
+  pass 2,522 focused checks.
 - [ ] Complete broader W-2G and recognized session-gain methods, mixed or joint
   professional wagering, guided sources and qualified annual physical output.
 - [x] Honor committed original deletion in open tabs in `6a38aadd`. Keep

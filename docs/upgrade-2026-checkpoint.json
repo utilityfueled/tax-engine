@@ -23830,6 +23830,22 @@
     "diagnosticCases": 14,
     "auditSha256": "33e1aa072e049862556f1d580f37da874773955ab2fff6bca2a5478cbce99699"
   },
+  "nov13ScheduleCWageringCandidate": {
+    "commit": "07d9bcde1cfc4e7eb4bc853a9b03cc8572244e71",
+    "beforeFixFailures": 2,
+    "focusedPassed": 2522,
+    "focusedFiles": 341,
+    "focusedSha256": "6df042e2ba42c8987f72b15e1cdf474762b835df883f5e9ffc741a42c5453ba4",
+    "specReferences": 8844,
+    "auditSha256": "aad0f8a2f9eaae775472eed71b011b0e46cdf7e42389aa50fa62bd3c9e433cff",
+    "artifactSha256": "b1e036a3bb6f1d56bc5b161266740da754574198afe8eebb722b91023318ff92",
+    "physicalInspectionSha256": "7e25966909babe83a4f48a0e627c8dc25d44b30f924e0a924eca3abe40a170d7",
+    "verifiedFields": 11,
+    "visuallyInspectedPages": 2,
+    "humanTaxReviewComplete": false,
+    "reviewExportsEnabled": false,
+    "filingQualified": false
+  },
   "nov13ProfessionalW2G": {
     "commit": "9068658ebf3b3638bf63be658494791ea889cec7",
     "focusedPassed": 8483,
