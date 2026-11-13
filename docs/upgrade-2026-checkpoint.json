@@ -24443,6 +24443,20 @@
       "https://www.irs.gov/instructions/i8606"
     ]
   },
+  "nov13QualifiedLumpSumReporting": {
+    "commit": "f42a83524f79a5b89024777fa047b4b06978a472",
+    "focusedTestsPassed": 417,
+    "initialRed": 7,
+    "specReferencesValidated": 8904,
+    "redSha256": "902ea0bfa05ba5500c8fa57aaccd0cba0f58e2838d8e9933f957a8aa3462aac0",
+    "greenSha256": "41baf087087693cd1e44e5661723de2e2fb9444302c639a110c1bc6145a93fe1",
+    "form4972ElectionAdmitted": false,
+    "sources": [
+      "https://www.irs.gov/instructions/i1099r",
+      "https://www.irs.gov/pub/irs-pdf/f4972.pdf",
+      "https://www.irs.gov/instructions/i1040gi"
+    ]
+  },
   "nov13PaSuccessorVerification": {
     "b7ffd2c1Combined": {
       "source": "b7ffd2c1848521f4e9b3f3a4396b867661df436e",

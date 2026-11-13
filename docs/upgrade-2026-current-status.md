@@ -9,6 +9,17 @@ The read-only Vercel check still finds the production project linked to
 `main`, with automatic custom-domain assignment and no build-ignore command.
 The isolated rehearsal project has no Git link and protects all deployments.
 
+`f42a8352` requires an explicit ordinary reporting decision before using
+the known taxable amount on a 2026 qualified lump-sum Code A statement.
+An actual Form 4972 election stays held for its separate method. Seven
+regressions failed before the fix and all 417 affected tests passed, with
+types, lint, 8,904 spec references, inventory and the browser request audit.
+The IRS now publishes final 2026 Form 4972. Its final 2026 Form 1040 and
+Tax/EIC tables remain pending at the official endpoints.
+[2026 Form 4972](https://www.irs.gov/pub/irs-pdf/f4972.pdf) ·
+[Form 1040](https://www.irs.gov/pub/irs-pdf/f1040.pdf) ·
+[Tax/EIC tables](https://www.irs.gov/pub/irs-pdf/i1040tt.pdf).
+
 `cd5dd249` requires actual owner evidence for ordinary 2026 traditional IRA
 taxability. The guided zero-basis confirmation now reaches the calculation.
 Alternatively, the engine validates the separate Form 8606 source packet

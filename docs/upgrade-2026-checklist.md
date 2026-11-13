@@ -6,6 +6,9 @@ below retain their original evidence boundaries.
 
 ## Active continuation — November 13 Eastern
 
+- [x] Guard the 2026 Code A qualified lump-sum reporting decision in
+  `f42a8352`. Pass 417 affected tests. Hold the actual Form 4972 election
+  for its separate worksheet and review.
 - [x] Require actual 2026 ordinary IRA basis evidence in `cd5dd249`. Pass
   677 affected tests, including the guided bridge, original Form 8606
   owner binding and unchanged historical calculation.
