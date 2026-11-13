@@ -2,6 +2,27 @@
 
 ## November 13 on `main`
 
+`ebd57bdf` allows ordinary business expenses alongside the confirmed
+Schedule C mileage log when the generic vehicle expense is zero. The
+previous build failed the parsed-input control. The successor passed
+5,075 focused checks and still refuses a competing nonzero vehicle expense.
+
+`6fbd2b74` calculates the single taxpayer's 2026 Schedule A medical mileage
+from confirmed, eligible, unreimbursed trips. The rate is 20.5 cents through
+June 30 and 23.5 cents from July 1. All 404 focused checks passed, including
+exact Schedule A floor arithmetic. Guided intake, official physical output
+and independent tax review remain open.
+[IRS Announcement 2026-11](https://www.irs.gov/irb/2026-29_irb).
+
+`aeace85a` refuses stale advanced answer and reopen writes after a local
+return is deleted or reset. Both controls failed on the earlier production
+build and passed on the successor. The focused cohort passed 179 checks and
+all 35 production Chromium cases without skips or retries.
+
+Archived `e4734fb1` passed all 12 local checks. Unit and coverage each passed
+27,620 tests at 87.78% branch coverage. Managed Chromium passed 601 cases and
+retained five original hosted-only skips.
+
 `4db383ba` calculates the federal Schedule C deduction for an eligible
 first-use owned vehicle from confirmed mileage and parking and toll records.
 The business rate changes from 72.5 to 76 cents on July 1. The 573 focused

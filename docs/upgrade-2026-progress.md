@@ -4,6 +4,36 @@ Current source, verification and remaining work are summarized in the
 [current continuation](upgrade-2026-current-status.md). Historical results
 below apply to their named revisions.
 
+- November 13: `ebd57bdf` preserves ordinary Schedule C expenses alongside
+  the confirmed mileage log when the generic line 9 scalar is zero. The
+  regression failed on the previous build. The successor passed all 5,075
+  focused checks, three type checks, scoped lint, inventory and 8,837 spec
+  references. A competing nonzero scalar still fails. The browser audit
+  binds the changed Schedule C source under the existing request ceilings.
+
+- November 13: `6fbd2b74` applies 20.5 cents through June 30 and 23.5 cents
+  from July 1 to the single taxpayer's documented eligible, unreimbursed
+  medical mileage. The seven baseline controls failed. The successor passed
+  all 404 focused checks, three type checks, inventory and 8,836 spec
+  references. Scoped lint reported zero errors and one existing warning.
+  The separate Decimal calculation produced $1,506.613750 on Schedule A
+  line 1 and $6.613750 after the line 3 floor. Guided intake, broader filing
+  units, official physical output and human tax review remain open.
+  [26 USC 213](https://uscode.house.gov/us/usc/119-120/t26/s213/) ·
+  [IRS Announcement 2026-11](https://www.irs.gov/irb/2026-29_irb) ·
+  [Publication 502](https://www.irs.gov/publications/p502).
+
+- November 13: `aeace85a` prevents stale advanced answers or reopen actions
+  from recreating a deleted return or saving against a reset generation.
+  The prior production build failed both controls. The successor passed
+  all 35 Chromium cases, 179 focused checks, Web types and build, inventory
+  and 8,833 spec references. The audit retains five hosted-only skips, 14
+  fixed diagnostics, eight batches and existing request ceilings.
+
+- November 13: archived `e4734fb1` passed all 12 local checks. Unit and
+  coverage each passed 27,620 tests in 1,994 files at 87.78% branch coverage.
+  Managed Chromium passed 601 cases with five original hosted-only skips.
+
 - November 13: `4db383ba` adds the 2026 federal Schedule C business standard
   mileage calculation for one owned first-use vehicle. It applies 72.5 cents
   through June 30 and 76 cents from July 1, adds eligible parking and tolls

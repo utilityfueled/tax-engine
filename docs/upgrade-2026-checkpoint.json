@@ -23753,6 +23753,64 @@
     "checksSha256": "abe5d7e0d58e3a095eda1d5521032e4ca32cdfc5128a811d72ddd04a40fc9b0c",
     "chromiumTranscriptSha256": "7b45b041f4d3166c169847ab9978dc2f78114a6aa6ccd55a9c7ab2bc8381378c"
   },
+  "nov13AdvancedEditorGeneration": {
+    "commit": "aeace85acad715cea9f52dd95dee15620a4a684c",
+    "tree": "e650931e52c4e42a299652b682792e0be6f4345c",
+    "beforeFixBrowserFailures": 2,
+    "beforeFixBrowserReportSha256": "aad1445f87597907f54cd4b4c7519aeb50bf6368fecf96eb449cca1d951fea42",
+    "focusedPassed": 179,
+    "focusedSha256": "cdec69643db95ac9f76c62f2e634b6457d3e3e256c822a62b6f253788c36c6f1",
+    "chromiumPassed": 35,
+    "chromiumSkipped": 0,
+    "chromiumRetries": 0,
+    "chromiumReportSha256": "0a29094168e85c9daa90300c6a592577d1e6ddee1131fd6b8261acee79fa14bc",
+    "specReferences": 8833,
+    "browserCollectionCases": 612,
+    "auditSha256": "3e958ff04d338c3a11233685c9653547b16e8cd093c41a95ee17115babf181fe"
+  },
+  "nov13MedicalMileage": {
+    "commit": "6fbd2b7426caa5d2bf82b9a32addf15d0a44525d",
+    "tree": "bd9fdf19459298ef5f42228573f8a5fc8cb8aedb",
+    "rulePack": "2026.226-law-integration-draft",
+    "beforeFixFocusedFailures": 7,
+    "beforeFixSha256": "21a0ff7f9b256f614b1efbcfd8b73464cb6b5663a3f98d0e7ad55eb556b0b95d",
+    "focusedPassed": 404,
+    "focusedSha256": "9da0d877d6bbb1e12e955db60d624083318b0a828d4b5871ffafda6bc138c4da",
+    "oracleSha256": "123da4bd1a34e6224c4077e82973f03ba21532c50569e779c742c6f431d3b865",
+    "specReferences": 8836,
+    "browserCollectionCases": 612,
+    "auditSha256": "d7103698fb4e6b48dafd5ab90d213222cf0753b57597795384f33b24ec44c939",
+    "sources": [
+      "https://uscode.house.gov/us/usc/119-120/t26/s213/",
+      "https://www.irs.gov/irb/2026-29_irb",
+      "https://www.irs.gov/publications/p502",
+      "https://www.irs.gov/pub/irs-dft/f1040sa--dft.pdf"
+    ],
+    "humanTaxReviewComplete": false,
+    "filingQualified": false
+  },
+  "nov13MileageOrdinaryExpenses": {
+    "commit": "ebd57bdf9c1fdaf9f328c8219f5cf366bce05d88",
+    "tree": "481d38b19acb887e15c3b8e5399049f0f190aa39",
+    "beforeFixFocusedFailures": 1,
+    "beforeFixSha256": "9c5419121b4466b2d7cc1c7ecac8b688d77a3711854b564308a8588b32d9ff48",
+    "focusedPassed": 5075,
+    "focusedSha256": "043ef262209de309d01e8a6ef0e9a3c0890c3a72915e3cc2765713bd29f329ab",
+    "specReferences": 8837,
+    "auditSha256": "147eacf4a22bfe12acf5ddf5d54a907d57f63b7e5c5623b895ecfecd2cbe5753"
+  },
+  "nov13ReturnRemovalCombined": {
+    "sourceCommit": "e4734fb1d23c42f4346ec830aebe63459f152257",
+    "tree": "fe1aaa31a5efd358c57bd17a39aa7e5412436780",
+    "checksPassed": 12,
+    "unitAndCoverageTestsEach": 27620,
+    "testFiles": 1994,
+    "branchCoveragePercent": "87.78",
+    "chromiumPassed": 601,
+    "hostedOnlySkips": 5,
+    "checksSha256": "30198128829bcddaade369442f14de254de330aef72db8c4e210b74a2716a6b4",
+    "chromiumTranscriptSha256": "0b1b15a8a406e0df790fa8d79effe2239da2e8f4393493f9f0f6d40ea80311f1"
+  },
   "nov12HostedCreditSettlement": {
     "previewReceiptCommit": "d39209dec302d249a5f01fe8baf23cc4ca2130f8",
     "settlementCommit": "8357ed9929766a8e5ed0ac7c45321cdccd44d35a",
