@@ -5,8 +5,9 @@ import type {
   WorkspaceDocumentRecord,
   WorkspaceUnsupportedRoute
 } from "@tax-engine/contracts";
-import { buildProviderFacingWorkspacePayload } from "@tax-engine/engine/src/provider-facing-workspace-payload";
 import { collectProviderDirectIdentifiersFromWorkspace } from "@tax-engine/engine/src/provider-direct-identifiers";
+import { redactProviderPayload } from "@tax-engine/engine/src/provider-payload-redactor";
+import { buildWorkspaceUnsupportedRoutes } from "@tax-engine/engine/src/workspace-unsupported-routes";
 import { readWorkspaceAiOptOut } from "./workspace-ai-preferences";
 import { buildLocalProviderWorkspaceResponse } from "./provider-workspace-local";
 
@@ -151,9 +152,14 @@ export function buildProviderWorkspaceRequest(
     ...collectProviderDirectIdentifiersFromWorkspace(requestWorkspace),
     ...(options.directIdentifiers ?? [])
   ];
-  const payload = buildProviderFacingWorkspacePayload(requestWorkspace, {
-    directIdentifiers
-  });
+  const context = options.assistantContext;
+  const { payload, redactions, replacementCount } = redactProviderPayload({
+    workspace: requestWorkspace,
+    question: options.question,
+    currentSectionLabel: context?.currentSectionLabel,
+    conversation: context?.conversation?.map(({ role, text }) => ({ role, text })),
+  }, { directIdentifiers });
+  const { id, updatedAt, storageMode, summary, seededReturn, returnSummary } = payload.workspace;
   const requestedAt = options.now ?? new Date().toISOString();
   const selectedDocumentIdSet = new Set(options.selectedDocumentIds ?? []);
   const selectedDocuments = selectedDocumentIdSet.size > 0
@@ -163,28 +169,33 @@ export function buildProviderWorkspaceRequest(
           : []
       ))
     : [];
-  const assistantContext = options.assistantContext
-    ? {
-        ...options.assistantContext,
-        ...(selectedDocuments.length > 0 ? { selectedDocuments } : {})
-      }
-    : selectedDocuments.length > 0
-      ? {
-          mode: "workspace" as const,
-          selectedDocuments
-        }
-      : undefined;
+  const assistantContext = context || selectedDocuments.length > 0 ? {
+    mode: context?.mode ?? "workspace" as const,
+    ...(context?.currentSectionId !== undefined ? { currentSectionId: context.currentSectionId } : {}),
+    ...(payload.currentSectionLabel !== undefined ? { currentSectionLabel: payload.currentSectionLabel } : {}),
+    ...(payload.conversation ? { conversation: payload.conversation } : {}),
+    ...(selectedDocuments.length ? { selectedDocuments: selectedDocuments.map(document => ({
+      id: document.id, name: document.name, kind: document.kind, coverage: document.coverage,
+      label: document.label, notes: document.notes, matchedFixtureId: document.matchedFixtureId,
+      seededFactIds: document.seededFactIds, detectedFacts: document.detectedFacts,
+    })) } : {}),
+  } : undefined;
 
   return {
     task: options.task ?? "workspace-summary",
-    requestId: `provider-workspace:${payload.workspace.id}:${requestedAt}`,
+    requestId: `provider-workspace:${id}:${requestedAt}`,
     requestedAt,
-    workspace: payload.workspace,
-    unsupportedRoutes: adaptUnsupportedRoutesForProviderRequest(payload.unsupportedRoutes),
-    redactions: payload.redactions,
-    replacementCount: payload.replacementCount,
+    workspace: { id, updatedAt, storageMode, summary: { totalDocuments: summary.totalDocuments },
+      seededReturn: { interviewQuestions: seededReturn.interviewQuestions.map(({ status, prompt }) => ({ status, prompt })) },
+      returnSummary: { status: returnSummary.status, targetTaxYear: returnSummary.targetTaxYear },
+    },
+    unsupportedRoutes: adaptUnsupportedRoutesForProviderRequest(buildWorkspaceUnsupportedRoutes(payload.workspace)).map(({ id, title, description, reasons }) => ({
+      id, title, description, reasons,
+    })),
+    redactions,
+    replacementCount,
     ...(options.optedOut ? { optedOut: true } : {}),
-    ...(options.question ? { question: options.question } : {}),
+    ...(payload.question ? { question: payload.question } : {}),
     ...(assistantContext ? { assistantContext } : {})
   };
 }

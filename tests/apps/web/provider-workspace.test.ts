@@ -353,12 +353,8 @@ describe("provider workspace request path", () => {
     expect(result.request.unsupportedRoutes).toEqual([
       {
         id: "continue-interview",
-        urgency: "now",
         title: "Answer remaining questions",
         description: "You have 1 unanswered question that may affect your return.",
-        blockerIds: ["needs-answer:wages-and-withholding"],
-        relatedFactIds: ["wages", "withholding"],
-        sourceDocumentIds: ["doc-1"],
         reasons: [
           "Wages and withholding still has 1 unanswered interview confirmation(s).",
           "Confirm federal and state withholding amounts from each wage statement."
@@ -366,12 +362,8 @@ describe("provider workspace request path", () => {
       },
       {
         id: "review-filing-pack",
-        urgency: "next",
         title: "Download your draft return packet",
         description: "Re-download your draft packet after making changes so the notes and action items stay up to date.",
-        blockerIds: ["needs-answer:wages-and-withholding", "needs-review:manual-mapping"],
-        relatedFactIds: ["wages", "withholding"],
-        sourceDocumentIds: ["doc-1", "doc-2"],
         reasons: [
           "Wages and withholding still has 1 unanswered interview confirmation(s).",
           "[person-name-1] uploaded a broker packet that still needs manual coverage review before deterministic recompute can run.",
@@ -380,12 +372,8 @@ describe("provider workspace request path", () => {
       },
       {
         id: "partner-review-later",
-        urgency: "later",
         title: "Consider outside review",
         description: "Download a summary you can share with a tax professional or other advisor you engage separately. This app does not contact, assign, or engage a reviewer for you.",
-        blockerIds: ["needs-review:manual-mapping"],
-        relatedFactIds: [],
-        sourceDocumentIds: ["doc-2"],
         reasons: [
           "[person-name-1] uploaded a broker packet that still needs manual coverage review before deterministic recompute can run.",
           "[person-name-1] broker packet is marked unsupported."
@@ -440,6 +428,31 @@ describe("provider workspace request path", () => {
       matchedFixtureId: "irs-1099-int-2026"
     });
     expect(JSON.stringify(request.assistantContext?.selectedDocuments)).not.toContain("Jane Doe");
+  });
+
+  it("shares only the task projection and redacts helper question and conversation before transport", async () => {
+    const workspace = createWorkspace({
+      auditTrail: [{ ...createWorkspace().auditTrail[0], message: "synthetic-private-audit-marker" }],
+      structuredFacts: [{ ...createWorkspace().structuredFacts[0], value: "synthetic-private-fact-marker" }],
+    });
+    let sent: unknown;
+    await requestProviderWorkspace(workspace, {
+      optedOut: false,
+      task: "workspace-help",
+      question: "Can Jane Doe use this form?",
+      assistantContext: { mode: "guided", conversation: [{ role: "user", text: "Jane Doe at jane.doe@example.com" }] },
+      fetchFn: async (_url, init) => {
+        sent = JSON.parse(String(init?.body));
+        return new Response(JSON.stringify({ answer: "Synthetic reply" }));
+      },
+    });
+    expect(sent).toMatchObject({
+      question: "Can [person-name-1] use this form?",
+      assistantContext: { conversation: [{ role: "user", text: "[person-name-1] at [email-1]" }] },
+    });
+    const payload = JSON.stringify(sent);
+    expect(payload).not.toMatch(/Jane Doe|jane\.doe@example\.com|synthetic-private-(?:audit|fact)-marker|"auditTrail"|"structuredFacts"|"enginePreview"|"documents"|"sourceDocumentIds"/);
+    expect(sent).toHaveProperty("workspace.seededReturn.interviewQuestions.1.prompt");
   });
 
   it("keeps configured but unqualified provider routes deterministic", async () => {
@@ -653,10 +666,9 @@ describe("provider workspace request path", () => {
       now: "2026-03-12T00:00:00.000Z"
     });
 
-    unsafeRequest.workspace.auditTrail[0] = {
-      ...unsafeRequest.workspace.auditTrail[0]!,
+    Object.assign(unsafeRequest.workspace, { auditTrail: [{
       message: "Call Jane Doe at 512-555-0100 or email jane.doe@example.com."
-    };
+    }] });
     unsafeRequest.redactions = [];
     unsafeRequest.replacementCount = 0;
 
@@ -705,9 +717,9 @@ describe("provider workspace request path", () => {
       now: "2026-03-12T00:00:00.000Z"
     });
 
-    unsafeRequest.workspace.seededReturn.reviewNotes = [
+    Object.assign(unsafeRequest.workspace.seededReturn, { reviewNotes: [
       "Verify date of birth: 1988-02-14 and mail the summary to 12 Main Street, Austin TX 78701."
-    ];
+    ] });
     unsafeRequest.redactions = [];
     unsafeRequest.replacementCount = 0;
 
@@ -730,11 +742,10 @@ describe("provider workspace request path", () => {
       now: "2026-03-12T00:00:00.000Z"
     });
 
-    unsafeRequest.workspace.documents[0] = {
-      ...unsafeRequest.workspace.documents[0]!,
+    Object.assign(unsafeRequest.workspace, { documents: [{
       name: "redacted-holder-123456789-w2.pdf",
       notes: "Reach the filer after verifying copy 123456789."
-    };
+    }] });
     unsafeRequest.redactions = [];
     unsafeRequest.replacementCount = 0;
 
@@ -758,10 +769,9 @@ describe("provider workspace request path", () => {
     });
 
     unsafeRequest.requestId = "provider-workspace:workspace-jane-doe:2026-03-12T00:00:00.000Z";
-    unsafeRequest.workspace.auditTrail[0] = {
-      ...unsafeRequest.workspace.auditTrail[0]!,
+    Object.assign(unsafeRequest.workspace, { auditTrail: [{
       message: "Jane Doe confirmed the withholding amount."
-    };
+    }] });
     unsafeRequest.redactions = [];
     unsafeRequest.replacementCount = 0;
 

@@ -425,7 +425,7 @@
     "apps/web/src/lib/provider-interview-request.ts": "417ffb5b3756c51ec4368da016615400e99bc4694d43d89eeb4254047ef21f5e",
     "apps/web/src/lib/provider-request-privacy.ts": "74e0b0e7cc98c84b346159230ae1aa6ec9712e00fbd40c5c7a0cd8f092aa40de",
     "apps/web/src/lib/provider-workspace-local.ts": "f169c9bb774418b63346f62fd44083f51cd4d33e72a545648c005c9484a26a72",
-    "apps/web/src/lib/provider-workspace-request.ts": "200b741f6095c53f210c6e0f83f458ad6b11c348bac416c4770e58f303926216",
+    "apps/web/src/lib/provider-workspace-request.ts": "8a8b483f38cc37f4f586351df5c957a214383664c2ba4009d79c217ac7532b9b",
     "apps/web/src/lib/provider-workspace-responder.ts": "715f2f1cf048ca8f9cfff2942191c3c45173d706959b8e6fc7ee048d8af0d424",
     "apps/web/src/lib/provider-workspace-route.ts": "913700819d2fe1b84a75c59a094958dc1920882ef29bda9dd0d3437ab9428752",
     "apps/web/src/lib/rate-limit.ts": "8610c1a1be697edda47729ef8d235d265112102bd94d7f74a828533d62f07de2",
@@ -628,7 +628,7 @@
     "apps/web/tests/workspace-guided-year.spec.ts": "8683248504cbf2b14750b7032242429e15c9e29393a8b3dec5c5a24596e5e6d6",
     "apps/web/tests/workspace-lifecycle.spec.ts": "5b00c5d2e59c506c3ddc4f2c74fb90923038190a105db84a1d9c09cd1018a8d2",
     "apps/web/tests/workspace-recovery.spec.ts": "915b8b7b0249702d0afe1f70dac70c899006c22f76edb8789c6d6514a647e972",
-    "apps/web/tests/workspace-upload.spec.ts": "bc5fae810b05d59e45baddb569fa15c5a0741d740503e87d87889283baa22280",
+    "apps/web/tests/workspace-upload.spec.ts": "905c24f1a6cb7854cc03a43bef4c4f8b28c52f0c1c5ebdc435ef7eb47fab8786",
     "packages/contracts/package.json": "57053526d9dca0fab4f4d3ceeaf009a15472700a5886b3bed921a4c2c65ad3c7",
     "packages/contracts/src/index.ts": "a8dfe5de0d403af83e2700716479812cfe0acc21b388960e8a40bfbbc5227158",
     "packages/engine/package.json": "7b7310b15b3aef79dd78c97c5c4152c8eb240f47ba9d6c985e331e912cd4d0c3",
@@ -3892,7 +3892,7 @@
         "self-employment-income-analysis": 0
       },
       "requestSourceLines": [],
-      "reviewBasis": "No filled-return URL/download action/helper in this spec; source search and helper inventory retained. Added three local guided cross-tab checks for deletion, reset and upload. They use the existing local upload path and open no review or provider endpoints. Added advanced answer and reopen cross-tab controls using the same local upload path and no protected requests. Two upload/reset controls use local PDF parsing and IndexedDB, and exercise a successful local retry after reload without protected requests.",
+      "reviewBasis": "No filled-return URL/download action/helper in this spec; source search and helper inventory retained. Added three local guided cross-tab checks for deletion, reset and upload. They use the existing local upload path and open no review or provider endpoints. Added advanced answer and reopen cross-tab controls using the same local upload path and no protected requests. Two upload/reset controls use local PDF parsing and IndexedDB, and exercise a successful local retry after reload without protected requests. The summary control fixes synthetic browser metadata and verifies the existing default of zero provider requests.",
       "skippedTitles": []
     },
     "pa-married-payment-native.spec.ts": {

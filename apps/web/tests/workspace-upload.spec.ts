@@ -698,6 +698,17 @@ test("a stale advanced question cannot be reopened after reset", async ({ page }
 });
 
 test("workspace screen can send a provider-safe summary through the redaction boundary", async ({ page }, testInfo) => {
+  // The redactor also scans application-generated metadata. Use fixed synthetic
+  // browser metadata so this test measures the five known source redactions.
+  await page.clock.setFixedTime(new Date("2026-03-12T12:00:00Z"));
+  await page.addInitScript(() => {
+    Object.defineProperty(crypto, "randomUUID", { value: () => "abcdefab-cdef-4abc-abcd-abcdefabcdef" });
+  });
+  const providerRequests: string[] = [];
+  page.on("request", request => {
+    const pathname = new URL(request.url()).pathname;
+    if (pathname.startsWith("/api/provider/")) providerRequests.push(pathname);
+  });
   await page.goto("/");
   await enableAdvancedMode(page);
 
@@ -716,7 +727,7 @@ test("workspace screen can send a provider-safe summary through the redaction bo
   await aiSummary.getByRole("button", { name: /get ai summary/i }).click();
 
   await expect(summaryStat(aiSummary, /powered by/i)).toContainText("mock-local");
-  await expect(summaryStat(aiSummary, /details protected/i)).toContainText("5");
+  await expect(summaryStat(aiSummary, /details protected/i).locator("strong")).toHaveText("5");
   await expect(summaryStat(aiSummary, /questions left/i)).toContainText("2");
   await expect(summaryStat(aiSummary, /return bundle ready/i)).toContainText("no");
   await expect(
@@ -726,6 +737,8 @@ test("workspace screen can send a provider-safe summary through the redaction bo
   ).toBeVisible();
   await expect(aiSummary.getByText("Name (1)", { exact: true })).toBeVisible();
   await expect(aiSummary.getByText("SSN (1)", { exact: true })).toBeVisible();
+  await expect(aiSummary.getByText("Other identifiers (3)", { exact: true })).toBeVisible();
+  expect(providerRequests).toEqual([]);
 });
 
 test("confirmed document answers still require explicit taxpayer facts", async ({ page }) => {
