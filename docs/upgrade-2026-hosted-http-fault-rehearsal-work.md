@@ -78,3 +78,19 @@ the required integrated checks on final source and staging, complete the
 approved Preview-schema recovery rehearsal, qualify final runtime images and
 obtain independent human security/privacy review. No filing, deployment,
 production or model-promotion authorization follows from this package.
+
+## November 13 exact-source replay
+
+The clean tracked archive of `db974a65c79b1f0ee1e22c1840c2a2b96c7c095d`
+passed all 13 production HTTP checks on Node 26.13.1 with build ID
+`by77bfa1Xg_7xT8cZgYvu`. Three database sessions used TLS 1.3 with the
+owned certificate. Both Next processes stopped, four ports closed, and
+the temporary cluster was removed. Receipt SHA-256
+`c3dc4802827916f3487bf2c5b3c930108972437de4f598cdad66367fb510c9e0`.
+Retained setup failures cover package-manager discovery in the disposable
+home, sandbox denial of loopback listeners and a PostgreSQL build without
+SSL. The passing replay uses locally pinned pnpm 10.34.8 and a separate TLS
+build of the same official PostgreSQL 16.16 archive. It still uses local
+synthetic auth, no SMTP, and the controlled rate-limit REST transport.
+Stripe automatic retry, provider failure and hosted migration qualification
+require their own deployed evidence.

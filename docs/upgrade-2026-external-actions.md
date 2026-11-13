@@ -69,7 +69,7 @@ implemented behavior awaiting tax review. The current source audit confirms:
 | Delivered route with residual source-proof question | The Form 8962 living-apart HOH route is implemented. Its policy/counterparty identity is bound, but a separate taxpayer spouse object is checked only when present. The stronger HOH spouse-proof requirement remains a qualification question. |
 | Guarded source methods | Situation 2 months covering only one family; K-1 foreign tax with a basis shortfall and later release/payment-year treatment; joint/community insolvency and attribute allocation; compared joint or equal-AGI EIC filers and a nonclaiming parent at or above the filer's AGI; and Schedule AI preferential gains/dividends remain rejected pending their precise treatment. |
 | Qualified-statement condition already implemented | A partnership route without Form 1116 requires an actual Schedule K-3 qualified statement. A bare Form 1065 K-1 does not qualify; the old question must not imply it is accepted. |
-| Implemented foreign-income conventions requiring review | The 30-percent Form 2555 calculation remains after allocated half-SE and includes guaranteed payments. The separate expense/FEIE attribution and signed line 45 defects were corrected in `5293f451`. Foreign-plan health/retirement deductions passed to QBI still need the stated full-versus-foreign-share interpretation review. The separate independently proven domestic-F-only health method is delivered in `80ee9cc2`; it conserves signed C income and proves F-specific foreign zero without deciding foreign-plan attribution. The ordinary interview cannot originate F, and this method requires canonical typed/imported actual farm sources. |
+| Implemented foreign-income conventions requiring review | The 30-percent Form 2555 calculation remains after allocated half-SE and includes guaranteed payments. The separate expense/FEIE attribution and signed line 45 defects were corrected in `5293f451`. Foreign-plan health/retirement deductions passed to QBI still need the stated full-versus-foreign-share interpretation review. The domestic-F-only health method in `80ee9cc2` conserves signed C income and proves F-specific foreign zero. The interview now originates a narrow ordinary federal-only Box 7 cash farm in `b8247aaa`. The full Form 7206 and other farm scenarios still require their matching actual records. |
 | Other implemented conventions requiring review | A higher-AGI nonparent claiming no child benefit does not displace the filer. Earlier Schedule AI periods use actual cumulative Schedule 1-A deduction amounts without annualizing that adjustment. The section 1341 claim-of-right comparison uses refund minus amount owed after credits/payments. Schedule AI's $400 test uses net earnings. These are existing calculations, not missing credentials or absent collectors. |
 
 The [method register](upgrade-2026-unsupported-method-register.md) and linked
@@ -145,3 +145,23 @@ and artifact-specific hosted/native qualification remain open. The source
 research and review packets are prepared; no owner tax-math choice or new
 provider key is requested. Passing agent reviews or local checks cannot supply
 those external facts.
+
+### November 13 on local `main`
+
+The owner directed work onto `main` after merging PR #13 and asked that commits
+stay local while they disable automatic Vercel production deployments. Pushing
+and the resulting remote CI remain on hold.
+
+The earlier isolated Neon branch expired. The proposed replacement rehearsal
+for `db974a65` required passing local checks on that exact source. Its unit run
+failed 22 Ohio compatibility assertions, so the proposed rehearsal made no
+external changes. The Schedule SE compatibility fix passed the original Ohio
+assertions. The automatic retry still requires a fresh, isolated database and
+qualified Preview source. The local TLS rehearsal separately passed 13 HTTP
+checks. [Hosted HTTP evidence](upgrade-2026-hosted-http-fault-rehearsal-work.md).
+
+The authorized native `acb776cb` source failed its precondition before a boot.
+The separately prepared `c94971cd` candidate passed its exact local checks and
+still awaits authorization for the unused ARM64 rehearsal. See the
+[current continuation](upgrade-2026-current-status.md) for the running source
+checks and remaining release evidence.

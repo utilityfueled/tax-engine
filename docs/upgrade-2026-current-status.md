@@ -2,18 +2,44 @@
 
 ## November 13 on `main`
 
-`be6fc326` verifies sanitized Stripe subscription retry errors and their actual
-database effects. `c94971cd` verifies the two documented Ohio local tax header
-jurisdictions. Both predecessor archives stopped on the same 21 stale test
-expectations. Exact `c94971cd` passed nine static commands and all 27,558 unit
-tests. Its coverage and browser run and its separate conditional native
-rehearsal are pending.
+Exact `c94971cd` passed all 12 archived local commands. Unit and coverage
+each passed 27,558 tests in 1,988 files, with 87.76% branch coverage against
+85%. Managed Chromium passed 589 cases and skipped five hosted-only tests.
+Its own server and disposable PostgreSQL shut down normally. Its separate
+conditional ARM64 runtime rehearsal still awaits authorization for this
+source. The previous authorized `acb776cb` condition failed before any boot.
 
-`85e34a0d` adds the original-bound cash-farm CRP exclusion and 2025 review
-attachment, including preflight before any output when the facts changed or
-whole dollars would show a contradictory attachment threshold. Its 1,535
-focused and adjacent tests passed. Positive Form 1099-G Box 7 intake and
-qualified review are still open. See the [package evidence](upgrade-2026-progress.md).
+`948e8d69` reconciles actual Form 1099-G Box 7 originals to dated cash-farm
+receipts. `b8247aaa` adds guided entry for an ordinary, profitable federal-only
+cash farm. It preserves missing amounts and blocks unresolved program types,
+losses and state farm returns. `0b18a4f8` restores the existing no-CRP Schedule
+SE output shape, fixing 22 Ohio whole-result regressions found in the `db974a65`
+archive. The 85-test compatibility cohort passed with its original expected
+hashes. The 15-case guided cohort and three type checks passed. The combined
+successor `2f836a2b` passed nine static checks and 27,595 unit tests. One
+unit check caught a stale browser diagnostic audit hash. `8e4375e3` updates
+that binding, and all 25 diagnostic tests pass. The archived combined check
+set for `8e4375e3` is running. Qualified human review and 2026 public output
+remain open. [Package evidence](upgrade-2026-progress.md).
+
+`0411dab9` binds hosted AI credit fulfillment to the original Checkout issuance.
+`c4998c56` separates test and live accounting with a PostgreSQL storage marker.
+The focused PostgreSQL 16.16 cohort passed 247 tests and restored 11 tables.
+The `db974a65` production build separately passed 13 local HTTP checks using
+TLS PostgreSQL and a controlled loopback rate-limit transport. The automatic
+Stripe retry needs a new isolated Preview database because the prior branch
+expired. Staged paid credit conflict reconciliation, credit-sales qualification,
+and security/privacy signoff remain open. [Hosted HTTP evidence](upgrade-2026-hosted-http-fault-rehearsal-work.md) ·
+[AI credit ledger](upgrade-2026-ai-credit-issuance-work.md).
+
+The official npm registry reported zero advisories for the 539 dependencies in
+the checked lockfile. Runtime-image advisories remain open. The IRS final
+endpoints for Form 1040 and Schedules A and F still serve 2025, and the
+Pennsylvania and Ohio annual filing indexes still show 2025 individual returns.
+The IRS final 2026 Schedule SE and Form 4952 PDFs are available and already have
+disabled physical candidates in the repository. [IRS final forms](https://www.irs.gov/downloads/irs-pdf) ·
+[Pennsylvania Personal Income Tax](https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax) ·
+[Ohio filing eligibility](https://tax.ohio.gov/individual/ohtax-eligibility).
 
 ## November 12 on `main`
 

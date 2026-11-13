@@ -4306,3 +4306,43 @@ execution and current image qualification require separate evidence.
   cohort passed 247 tests in 13 files on disposable PostgreSQL 16.16. Credit
   sales, paid conflict reconciliation, operator migration and staging remain
   open. [AI credit ledger](upgrade-2026-ai-credit-issuance-work.md).
+- Exact `db974a65` passed nine static commands. Its unit job passed 27,571
+  tests and failed 22 whole-result compatibility cases in two Ohio files.
+  Every Ohio tax assertion preceding the digest passed. The ordinary Schedule
+  SE response contained new CRP-only zero and attachment fields.
+  `0b18a4f8` omits CRP-only metadata when no actual exclusion applies and
+  preserves all original Ohio output expectations. The two Ohio suites plus
+  the CRP engine and saved-PDF cohorts passed 85 tests in four files.
+  Failed archive stderr SHA-256 `44eef4c483bc233b788a2b91be6ce63625817301eeee46006f9ee5ed9871545c`.
+  Passing compatibility transcript SHA-256 `ad5fe44550700b4fb0d135a5f28bfb42c3393bb0334624649cb4ee1f18ebc5d1`.
+- `b8247aaa` collects actual annual USDA statements and original dated
+  receipts in the guided interview. It binds payer TIN and local statement
+  reference to the actual owner's current records after a reorder, preserves
+  exact cents, requires a complete ordinary cash-farm ledger, and revokes
+  confirmation after source changes. The finite scope is one profitable
+  federal-only farm with ordinary taxable subsidies. CRP, cost share, loans,
+  crop insurance, loss and state farm-source composition require separate
+  guided methods. The three new spec lines, 15 focused and adjacent tests,
+  8,791 spec references, 960 inventory entries and all three type checks
+  passed. The 2026 test asserts the existing full-return gate and checks
+  isolated component math. The 2025 test calculates a full federal return.
+  [Publication 225](https://www.irs.gov/publications/p225) ·
+  [Schedule F instructions](https://www.irs.gov/instructions/i1040sf) ·
+  [Form 1099-G instructions](https://www.irs.gov/instructions/i1099g).
+- `2f836a2b` updates 29 browser-audited source hashes from exact reviewed Git
+  changes. Request counts, observation windows, case routing and deadlines
+  are identical. Its exact archive passed nine static checks and 27,595 unit
+  tests. The existing CPU diagnostic binding test correctly caught a stale
+  audit hash. The disposable PostgreSQL shut down normally. `8e4375e3` updates
+  the one hash and passes all 25 diagnostic tests. Its archived combined suite
+  is running. The retained failed unit transcript SHA-256 is
+  `4f5a5100a53cbe2adef86f5f2c0a99b2fbfe79af2ffb60ad0ff4d16f1d65ccf2`.
+- Exact `db974a65` separately passed all 13 synthetic hosted HTTP checks on a
+  clean production build and PostgreSQL 16.16 over TLS. All owned processes
+  closed. [HTTP rehearsal](upgrade-2026-hosted-http-fault-rehearsal-work.md).
+  The official npm registry reported zero findings for 539 locked
+  dependencies on November 13. Audit report SHA-256
+  `2bd34d50bec6f2f16e90551fcae80e94f898eabc4c169417a21a74f3fdf42d1f`.
+  This covers the npm lockfile. Runtime image advisories, staging and remote
+  CI remain open. Pushes to `main` are held at the owner's request while
+  automatic production deployment is addressed.
