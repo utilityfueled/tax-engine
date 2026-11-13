@@ -153,4 +153,22 @@ describe("2026 original pension source facts", () => {
   it("retains the historical calculation for a blank Box 2a with Box 5", () => {
     expect(calculate({ employeeContributions: "2000.11" }, 2025).pensionDistributionsTaxable.eq("10000.01")).toBe(true);
   });
+
+  describe("2026 qualified lump-sum reporting decision", () => {
+    it.each(["4A", "A4", "7A", "A7"])("requires the reporting decision for Code %s before using Box 2a", (distributionCode) => {
+      const entry = { distributionCode, taxableAmount: "9000.01" };
+      expect(() => calculate(entry)).toThrow(/reporting decision/);
+      const electForm4972 = { ...entry, qualifiedLumpSumReporting: "form_4972" as const };
+      expect(() => calculate(electForm4972)).toThrow(/Form 4972 election/);
+      const reportOrdinary = { ...entry, qualifiedLumpSumReporting: "ordinary_pension" as const };
+      expect(calculate(reportOrdinary).pensionDistributionsTaxable.eq("9000.01")).toBe(true);
+    });
+    it.each(["A", "1A", "PA", "AG"])("rejects an incompatible Code A combination %s", (distributionCode) => {
+      const reportOrdinary = { distributionCode, taxableAmount: "9000.01", qualifiedLumpSumReporting: "ordinary_pension" as const };
+      expect(() => calculate(reportOrdinary)).toThrow(/Box 7a code combination/);
+    });
+    it("rejects a Code A record classified as an IRA", () => {
+      expect(() => calculate({ distributionCode: "7A", iraSepSimple: true })).toThrow(/non-IRA qualified plan/);
+    });
+  });
 });

@@ -169,6 +169,9 @@ export function calculateForm1099R(
       if (form.excessContributionEarnings !== undefined && !d(form.excessContributionEarnings).isZero()) {
         throw new Error("2026 Form 1099-R Box 7d earnings require a separate method");
       }
+      if (form.qualifiedLumpSumReporting === "form_4972") {
+        throw new Error("The Form 4972 election requires a separate qualified lump-sum method");
+      }
       if (isIraForm1099RDistribution(form)) {
         assert2026IraTaxability(form, options.hasValidatedIraBasisSources === true, options.hasJointSpouse === true);
       } else {
@@ -477,6 +480,7 @@ function assert2026IraTaxability(form: Form1099R, basisPacketBound: boolean, has
   if (!/^[1-9ABCDEFGHJKLMNPQRSTUWY]{1,2}$/u.test(code) || (code.length === 2 && code[0] === code[1])) {
     throw new Error("2026 Form 1099-R IRA requires the actual Box 7a distribution code");
   }
+  if (code.includes("A")) throw new Error("2026 Form 1099-R Code A requires a non-IRA qualified plan");
   if (!/^[1247S]$/u.test(code) || isReturnedContributionByDueDate(form) || isNontaxableExcessContributionReturn(form)) return;
   // The packet only binds original Code 7 records with the IRA checkbox set.
   if (basisPacketBound && code === "7" && form.iraSepSimple === true) {
@@ -511,8 +515,12 @@ function assert2026PensionTaxability(form: Form1099R): void {
   }
   if ((code.includes("6") && !/^(?:6W?|W6)$/u.test(code))
     || (code.includes("H") && !/^(?:H4?|4H)$/u.test(code))
-    || (code.includes("P") && !/^(?:P[124B]?|[124B]P)$/u.test(code))) {
+    || (code.includes("P") && !/^(?:P[124B]?|[124B]P)$/u.test(code))
+    || (code.includes("A") && !/^(?:A[47]|[47]A)$/u.test(code))) {
     throw new Error("2026 Form 1099-R pension requires a valid Box 7a code combination");
+  }
+  if (code.includes("A") && form.qualifiedLumpSumReporting !== "ordinary_pension") {
+    throw new Error("2026 Form 1099-R Code A requires the actual lump-sum reporting decision");
   }
 
   const gross = d(form.grossDistribution);

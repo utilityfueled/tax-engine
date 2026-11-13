@@ -258,6 +258,18 @@ lines:
       - "Completed Simplified Method inputs or validated qualified Roth account distribution, where applicable"
     testRef: "tests/engine/federal-pension-sources-2026.test.ts::2026 original pension source facts"
 
+  - line: "2026-lump-sum-election"
+    description: "Resolve the ordinary reporting decision for original Form 1099-R Code A"
+    formula: >-
+      Code A with Code 4 or 7 identifies a potentially eligible qualified
+      lump-sum distribution. Require an explicit decision to use ordinary
+      Form 1040 pension reporting before using its determined Box 2a.
+      Missing decisions and actual Form 4972 elections require the separate
+      worksheet and cannot silently enter ordinary pension income. Code A
+      alone or with an incompatible code is not a valid source combination.
+    irsRef: "2026 Instructions for Forms 1099-R and 5498, Box 7a Code A; 2026 Form 4972 Parts I–III; Form 1040 instructions, Lines 5a, 5b and 16"
+    testRef: "tests/engine/federal-pension-sources-2026.test.ts::2026 qualified lump-sum reporting decision"
+
   - line: "2026-ira-source"
     description: "Form 1040 Lines 4a and 4b require owner evidence for ordinary traditional IRA taxability in tax year 2026"
     formula: >-
