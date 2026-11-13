@@ -56,7 +56,7 @@ describe("hosted subscription atomic reconciliation source-first", () => {
   }
   function harness(authoritativeStatuses: ("active" | "past-due")[] = ["active"]) {
     let saved: Record | null = null;
-    const receipts = new Set<string>();
+    const receipts = new Map<string, { type: string; createdAt: string }>();
     const persistSubscription = vi.fn<typeof persistHostedStripeSubscription>(async (_env, input) => {
       saved = { subscriptionId: input.stripeSubscriptionId, customerId: input.stripeCustomerId,
         workspaceOwnerId: input.ownerId, planId: input.planId, status: input.status,
@@ -66,7 +66,7 @@ describe("hosted subscription atomic reconciliation source-first", () => {
     });
     const markEventProcessed = vi.fn<typeof markStripeEventProcessed>(async (_env, event) => {
       if (receipts.has(event.id)) return false;
-      receipts.add(event.id);
+      receipts.set(event.id, event);
       return true;
     });
     const string = (values: unknown[], index: number) => {
@@ -81,6 +81,10 @@ describe("hosted subscription atomic reconciliation source-first", () => {
         if (receipts.has(id)) return { rows: [], rowCount: 0 };
         pending = { id, type: string(values, 1), createdAt: string(values, 2) };
         return { rows: [{ event_id: id }], rowCount: 1 };
+      }
+      if (/FROM hosted_billing_events/.test(sql)) {
+        const receipt = receipts.get(string(values, 0));
+        return { rows: receipt ? [{ matches: receipt.type === values[1] && receipt.createdAt === values[2] }] : [], rowCount: receipt ? 1 : 0 };
       }
       if (/FROM hosted_billing_subscriptions/.test(sql)) {
         return { rows: saved ? [{ stripe_subscription_id: saved.subscriptionId, stripe_customer_id: saved.customerId,
@@ -118,7 +122,7 @@ describe("hosted subscription atomic reconciliation source-first", () => {
     expect(h.saved()).toMatchObject({ subscriptionId: "sub_atomic", customerId: "cus_atomic",
       workspaceOwnerId: "owner-atomic", planId: "starter", status: "active", lastEventId: "evt_atomic_first" });
     expect(h.persistSubscription).toHaveBeenCalledTimes(1);
-    expect([...h.receipts]).toEqual(["evt_atomic_first"]);
+    expect([...h.receipts.keys()]).toEqual(["evt_atomic_first"]);
   });
 
   it("keeps a pre-write failure retryable without an event receipt", async () => {
@@ -131,7 +135,7 @@ describe("hosted subscription atomic reconciliation source-first", () => {
     expect(h.markEventProcessed).not.toHaveBeenCalled();
     vi.setSystemTime((now + 10) * 1000);
     expect((await h.POST(request(payload()))).status).toBe(200);
-    expect([...h.receipts]).toEqual(["evt_atomic_first"]);
+    expect([...h.receipts.keys()]).toEqual(["evt_atomic_first"]);
   });
 
   it("completes the receipt after a post-write receipt failure and fresh retry", async () => {
@@ -162,7 +166,7 @@ describe("hosted subscription atomic reconciliation source-first", () => {
     const original = payload();
     expect((await h.POST(request(original))).status).toBe(200);
     expect((await h.POST(request(original))).status).toBe(200);
-    expect([...h.receipts]).toEqual(["evt_atomic_first"]);
+    expect([...h.receipts.keys()]).toEqual(["evt_atomic_first"]);
     expect(h.persistSubscription).toHaveBeenCalledTimes(1);
   });
 

@@ -49,6 +49,30 @@ The recovery rehearsal now checks all eleven application tables. It restores and
 
 Three spec-linked regressions failed before the guard. The final PostgreSQL 16.16 cohort passed 247 tests in 13 files, including both mode directions, an empty nonbinding balance read, concurrent first writes, an exact 1,000-cent hold followed by a one-cent charge, and the archive rehearsal. Scoped lint, three type checks, 8,787 spec references and the 960-row inventory check passed. The retained before and after transcript SHA-256 values are `ac0a38ea2c19ff0cc4eb62cd093bc9c2d9ffb47a0669999d896ea49e3cb41a1f` and `8eb791ad9028ba1709c4ba3cc919dc41911174f01121932d7e38fcae2d26c18b`.
 
+## November 13 receipt identity and recovery
+
+New paid AI-credit receipts retain their Checkout Session ID and product. New
+subscription receipts retain their own product. Paid duplicates must match
+the stored Session, event type, original creation time, and exact purchase
+terms. A previously unclassified receipt can acknowledge a matching already
+settled purchase without granting credits, binding an intent or backfilling a
+historical association. A receipt already identified as one product cannot
+acknowledge the other. The original issuance lock, grant and receipt remain
+within the same transaction.
+
+Two original failures on PostgreSQL 16.16 showed that an event could be
+acknowledged against a different already settled Session, and that an unbound
+historical receipt could acknowledge a changed event type. The retained failed
+transcript SHA-256 is `c516ec59517e0680a7654fed421fc733fa3ee2ba14e3872a2ae043cb27cc65d5`.
+The corrected cohort passed 252 tests in 12 files on disposable PostgreSQL
+16.16. A real 11-table archive retained the new receipt binding. A historical
+nine-table archive preserved its original receipt values and left both new
+columns unknown. The rehearsal database stopped normally. The passing
+transcript SHA-256 is `84c3a17a4a2db7ba31f61225958e491f3bc94d1ddc9f926672271519a51768cc`.
+Automatic retry in isolated Preview and repair of contradictory paid Stripe
+snapshots still require separate evidence. The receipt binding does not
+authorize refunds or enable credit sales.
+
 ## Primary API references
 
 - [Create Checkout Session](https://docs.stripe.com/api/checkout/sessions/create): internal `client_reference_id`, expiry and Session creation.

@@ -109,6 +109,17 @@ describe.skipIf(!disposable)("hosted subscription transaction in disposable Post
     expect(load).toHaveBeenCalledTimes(1);
     const saved = await rows(); expect(saved.events).toHaveLength(1); expect(saved.subscriptions).toHaveLength(1); expect(saved.writes).toHaveLength(1);
   });
+  it("rejects a subscription replay using a credit receipt with the same type and time", async () => {
+    const input = { ...event(), eventType: "checkout.session.completed" as const };
+    await admin.query(`INSERT INTO ${schema}.hosted_billing_events
+      (event_id,event_type,created_at,event_product,credit_checkout_session_id) VALUES($1,$2,$3,'ai-credit','cs_test_credit')`,
+      [input.eventId, input.eventType, input.eventCreatedAt]);
+    const before = await rows();
+    const load = vi.fn(async () => current());
+    await expect(reconcileHostedStripeSubscriptionEvent(env, input, load)).rejects.toThrow(/retained receipt/i);
+    expect(load).not.toHaveBeenCalled();
+    expect(await rows()).toEqual(before);
+  });
   it("serializes authoritative reads and state commits", async () => {
     let releaseFirst: () => void = () => { throw new Error("first load not entered"); };
     const firstBarrier = new Promise<void>((resolve) => { releaseFirst = resolve; });

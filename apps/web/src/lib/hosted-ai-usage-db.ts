@@ -1,6 +1,6 @@
 import { ensureHostedAppSchema, getHostedServerDatabase } from "./hosted-server-db";
 import Decimal from "decimal.js";
-import { validateAndBindHostedAiCreditIssuance, type HostedAiCreditCheckoutProof } from "./hosted-ai-credit-issuance";
+import { bindLockedHostedAiCreditIssuance, lockAndValidateHostedAiCreditIssuance, type HostedAiCreditCheckoutProof } from "./hosted-ai-credit-issuance";
 import { configuredStripeBillingMode, withHostedAiStorageMode } from "./hosted-ai-storage-mode";
 
 type HostedAiEnvironment = Record<string, string | undefined>;
@@ -91,25 +91,33 @@ export async function recordHostedAiCreditPurchase(
   const mode = configuredStripeBillingMode(env);
   if (input.checkoutProof && input.checkoutProof.livemode !== (mode === "live")) throw new Error("Checkout proof has the wrong billing mode.");
   return withHostedAiStorageMode(pool, mode, true, async client => {
-    await validateAndBindHostedAiCreditIssuance(client, input);
+    const original = await lockAndValidateHostedAiCreditIssuance(client, input);
     const receipt = await client.query(`
-      INSERT INTO hosted_billing_events (event_id, event_type, created_at)
-      VALUES ($1, $2, $3::timestamptz)
+      INSERT INTO hosted_billing_events (event_id, event_type, created_at, event_product, credit_checkout_session_id)
+      VALUES ($1, $2, $3::timestamptz, 'ai-credit', $4)
       ON CONFLICT (event_id) DO NOTHING RETURNING event_id
-    `, [input.eventId, input.eventType, input.createdAt]);
-    if (receipt.rows.length === 0) {
-      // A concurrent duplicate has now committed. Verify its retained purchase
-      // before acknowledging; an unrelated reused event must not bind an intent.
-      const { rows } = await client.query<{ matches: boolean }>(`
-        SELECT owner_id=$2 AND stripe_customer_id IS NOT DISTINCT FROM $3::text
-          AND amount_paid_cents=$4 AND credited_budget_cents=$5 AND currency=$6 AS matches
-        FROM hosted_ai_credit_purchases WHERE checkout_session_id=$1
-      `, [input.checkoutSessionId,input.ownerId,input.stripeCustomerId,input.amountPaidCents,input.creditedBudgetCents,input.currency]);
-      if(rows[0]?.matches !== true) throw new Error("Checkout receipt conflicts with retained purchase.");
-      return false;
-    }
+    `, [input.eventId, input.eventType, input.createdAt, input.checkoutSessionId]);
     const terms = [input.checkoutSessionId, input.ownerId, input.stripeCustomerId,
       input.amountPaidCents, input.creditedBudgetCents, input.currency];
+    if (receipt.rows.length === 0) {
+      // ON CONFLICT has waited for the original transaction. Historical rows
+      // lack a Session binding; even with an exact purchase they authorize no write.
+      const { rows } = await client.query<{ matches: boolean }>(`
+        SELECT purchase.owner_id=$2 AND purchase.stripe_customer_id IS NOT DISTINCT FROM $3::text
+          AND purchase.amount_paid_cents=$4 AND purchase.credited_budget_cents=$5 AND purchase.currency=$6
+          AND receipt.event_type=$8 AND receipt.created_at=$9::timestamptz
+          AND ((receipt.event_product='ai-credit' AND receipt.credit_checkout_session_id=$1)
+            OR (receipt.event_product IS NULL AND receipt.credit_checkout_session_id IS NULL)) AS matches
+        FROM hosted_billing_events receipt
+        JOIN hosted_ai_credit_purchases purchase ON purchase.checkout_session_id=$1
+        WHERE receipt.event_id=$7
+      `, [...terms, input.eventId, input.eventType, input.createdAt]);
+      if (rows[0]?.matches !== true || original?.checkoutSessionId === null) {
+        throw new Error("Checkout receipt conflicts with retained purchase or issuance.");
+      }
+      return false;
+    }
+    await bindLockedHostedAiCreditIssuance(client, original, input.checkoutSessionId);
     const inserted = await client.query(`
       INSERT INTO hosted_ai_credit_purchases (checkout_session_id, owner_id, stripe_customer_id,
         amount_paid_cents, credited_budget_cents, currency, created_at)

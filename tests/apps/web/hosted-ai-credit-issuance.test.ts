@@ -76,6 +76,48 @@ describe.skipIf(!originalUrl)("immutable AI credit issuance", () => {
     const state = await saved(); expect(state.purchases).toHaveLength(1);expect(state.events).toHaveLength(2);
     expect(state.issuances[0].checkout_session_id).toBe(session.id);
   });
+  it("rejects an event replay against another already settled Checkout Session", async () => {
+    const { purchase: first } = await original();
+    const { purchase: second } = await original();
+    const other = { ...second, checkoutSessionId: "cs_test_other_settled", eventId: "evt_other_settled" };
+    expect(await recordHostedAiCreditPurchase(env, first)).toBe(true);
+    expect(await recordHostedAiCreditPurchase(env, other)).toBe(true);
+    const baseline = await saved();
+    expect(baseline.events.map(row => [row.event_id, row.event_product, row.credit_checkout_session_id])).toEqual([
+      [first.eventId, "ai-credit", first.checkoutSessionId], [other.eventId, "ai-credit", other.checkoutSessionId],
+    ]);
+    expect(await recordHostedAiCreditPurchase(env, first)).toBe(false);
+    await expect(recordHostedAiCreditPurchase(env, { ...other, eventId: first.eventId, createdAt: first.createdAt })).rejects.toThrow(/receipt.*conflict/i);
+    await expect(recordHostedAiCreditPurchase(env, { ...first, eventType: "checkout.session.async_payment_succeeded" })).rejects.toThrow(/receipt.*conflict/i);
+    await expect(recordHostedAiCreditPurchase(env, { ...first, createdAt: "2026-01-01T00:00:00.000Z" })).rejects.toThrow(/receipt.*conflict/i);
+    expect(await saved()).toEqual(baseline);
+  });
+
+  it("rejects a credit replay using a subscription receipt with the same type and time", async () => {
+    const { purchase } = await original();
+    const { checkoutProof: _proof, ...legacy } = { ...purchase, checkoutSessionId: "cs_legacy_subscription_conflict" };
+    expect(await recordHostedAiCreditPurchase(env, { ...legacy, eventId: "evt_legacy_purchase" })).toBe(true);
+    await admin.query(`INSERT INTO ${schema}.hosted_billing_events (event_id,event_type,created_at,event_product)
+      VALUES($1,$2,$3,'subscription')`, [legacy.eventId, legacy.eventType, legacy.createdAt]);
+    const baseline = await saved();
+    await expect(recordHostedAiCreditPurchase(env, legacy)).rejects.toThrow(/receipt.*conflict/i);
+    expect(await saved()).toEqual(baseline);
+  });
+
+  it("preserves unknown historical receipt bindings without granting or rebinding", async () => {
+    const { purchase } = await original();
+    const { checkoutProof: _proof, ...legacy } = { ...purchase, checkoutSessionId: "cs_legacy_historical" };
+    await admin.query(`INSERT INTO ${schema}.hosted_ai_credit_purchases
+      (checkout_session_id,owner_id,stripe_customer_id,amount_paid_cents,credited_budget_cents,currency)
+      VALUES($1,$2,$3,$4,$5,$6)`, [legacy.checkoutSessionId, legacy.ownerId, legacy.stripeCustomerId, legacy.amountPaidCents, legacy.creditedBudgetCents, legacy.currency]);
+    await admin.query(`INSERT INTO ${schema}.hosted_billing_events(event_id,event_type,created_at) VALUES($1,$2,$3)`,
+      [legacy.eventId, legacy.eventType, legacy.createdAt]);
+    const baseline = await saved();
+    expect(await recordHostedAiCreditPurchase(env, legacy)).toBe(false);
+    await expect(recordHostedAiCreditPurchase(env, purchase)).rejects.toThrow(/receipt.*conflict/i);
+    await expect(recordHostedAiCreditPurchase(env, { ...legacy, eventType: "checkout.session.async_payment_succeeded" })).rejects.toThrow(/receipt.*conflict/i);
+    expect(await saved()).toEqual(baseline);
+  });
   it("rolls back a failed outbound binding commit before a successful retry", async () => {
     const { issuance, session } = await original();
     const before = await saved();

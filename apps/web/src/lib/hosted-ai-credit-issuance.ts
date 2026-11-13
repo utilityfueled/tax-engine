@@ -109,14 +109,13 @@ export interface HostedAiCreditSettlementTerms {
   amountPaidCents: number; creditedBudgetCents: number; currency: string;
   checkoutProof?: HostedAiCreditCheckoutProof;
 }
-// Called inside the grant/receipt transaction, including replay. A read used to
-// route the webhook never substitutes for this locked comparison.
-export async function validateAndBindHostedAiCreditIssuance(client: PoolClient, input: HostedAiCreditSettlementTerms) {
+// A read used to route the webhook never substitutes for this locked comparison.
+export async function lockAndValidateHostedAiCreditIssuance(client: PoolClient, input: HostedAiCreditSettlementTerms) {
   const proof=input.checkoutProof;
   const original=await lookup(client,input.checkoutSessionId,proof?.clientReferenceId ?? null,true);
   if (!original) {
     if (proof?.metadata?.purchaseKind === HOSTED_AI_CREDIT_KIND) throw new Error("Unknown Checkout issuance.");
-    return; // Existing unmarked legacy terms remain the authenticated authority.
+    return null; // Existing unmarked legacy terms remain the authenticated authority.
   }
   const metadata=proof?.metadata;
   if (!proof || !isIssuedHostedCheckoutSessionId(input.checkoutSessionId, original.livemode)
@@ -131,7 +130,18 @@ export async function validateAndBindHostedAiCreditIssuance(client: PoolClient, 
     || (metadata?.aiCreditCents !== undefined && metadata.aiCreditCents!==String(original.creditedBudgetCents))) {
     throw new Error("Checkout issuance facts conflict with the original terms.");
   }
-  if (original.checkoutSessionId===null) await client.query(`UPDATE hosted_ai_credit_issuances SET checkout_session_id=$2 WHERE issuance_id=$1`,[original.issuanceId,input.checkoutSessionId]);
+  return original;
+}
+
+export async function bindLockedHostedAiCreditIssuance(client: PoolClient, original: HostedAiCreditIssuance | null, sessionId: string) {
+  if (original?.checkoutSessionId === null) {
+    await client.query("UPDATE hosted_ai_credit_issuances SET checkout_session_id=$2 WHERE issuance_id=$1", [original.issuanceId, sessionId]);
+  }
+}
+
+async function validateAndBindHostedAiCreditIssuance(client: PoolClient, input: HostedAiCreditSettlementTerms) {
+  const original = await lockAndValidateHostedAiCreditIssuance(client, input);
+  await bindLockedHostedAiCreditIssuance(client, original, input.checkoutSessionId);
 }
 export interface HostedAiCreditCreatedSession {
   id: string; object: string; mode: string | null; customer: unknown; client_reference_id: string | null;

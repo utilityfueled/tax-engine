@@ -5,6 +5,7 @@ import { resolveDeploymentMode } from "./deployment-mode";
 import { ensureHostedAiCreditIssuanceSchema } from "./hosted-ai-credit-issuance-schema";
 import { ensureHostedAiLedgerSchema } from "./hosted-ai-ledger-schema";
 import { ensureHostedAiStorageModeSchema } from "./hosted-ai-storage-mode";
+import { ensureHostedBillingEventBindingSchema } from "./hosted-billing-event-schema";
 
 type HostedDbEnvironment = Record<string, string | undefined>;
 
@@ -374,6 +375,8 @@ async function createHostedAppTables(pool: Pool) {
       processed_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
   `);
+
+  await ensureHostedBillingEventBindingSchema(pool);
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS hosted_reminder_settings (

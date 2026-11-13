@@ -10,6 +10,7 @@ import { ensureHostedAppSchema, getHostedServerDatabase } from "../apps/web/src/
 import { createHostedAiCreditIssuance, bindHostedAiCreditIssuance } from "../apps/web/src/lib/hosted-ai-credit-issuance";
 import { ensureHostedAiCreditIssuanceSchema } from "../apps/web/src/lib/hosted-ai-credit-issuance-schema";
 import { ensureHostedAiStorageModeSchema } from "../apps/web/src/lib/hosted-ai-storage-mode";
+import { ensureHostedBillingEventBindingSchema } from "../apps/web/src/lib/hosted-billing-event-schema";
 import { getHostedAiBudgetSnapshot, recordHostedAiCreditPurchase } from "../apps/web/src/lib/hosted-ai-usage-db";
 import { migrateHostedWorkspaceMetadata } from "../apps/web/src/lib/hosted-workspace-metadata-migration";
 import { createWorkspaceRecord } from "../apps/web/src/lib/workspace-storage";
@@ -116,6 +117,8 @@ async function main() {
     assert.deepEqual(await snapshot(), after);
     assert.equal((await migrateHostedWorkspaceMetadata(pool, { apply: true })).changed, 0);
     assert.equal(await recordHostedAiCreditPurchase(env, paid), false);
+    const { rows: [restoredReceipt] } = await pool.query("SELECT event_product, credit_checkout_session_id FROM hosted_billing_events WHERE event_id=$1", [paid.eventId]);
+    assert.deepEqual(restoredReceipt, { event_product: "ai-credit", credit_checkout_session_id: issuedSession.id });
     assert.deepEqual(await snapshot(), after);
     assert.equal((await getHostedAiBudgetSnapshot(env, budgetInput)).purchasedRemainingCents, 600);
     await assert.rejects(getHostedAiBudgetSnapshot(liveEnv, budgetInput), /database mode/i);
@@ -126,6 +129,7 @@ async function main() {
     await pool.query("DROP FUNCTION hosted_ai_credit_issuance_immutable()");
     await pool.query("DROP TABLE hosted_ai_storage_mode");
     await pool.query("DROP FUNCTION hosted_ai_storage_mode_immutable()");
+    await pool.query("ALTER TABLE hosted_billing_events DROP COLUMN event_product, DROP COLUMN credit_checkout_session_id");
     const legacyBackup=path.join(directory,"legacy.dump");
     runPg("pg_dump",["--dbname",rawUrl,"--schema",schema,"--format=custom","--no-owner","--no-privileges","--file",legacyBackup]);
     await chmod(legacyBackup,0o600);
@@ -133,9 +137,15 @@ async function main() {
     runPg("pg_restore",["--dbname",rawUrl,"--no-owner","--no-privileges","--exit-on-error","--single-transaction",legacyBackup]);
     await ensureHostedAiCreditIssuanceSchema(pool);await ensureHostedAiCreditIssuanceSchema(pool);
     await ensureHostedAiStorageModeSchema(pool);await ensureHostedAiStorageModeSchema(pool);
+    await ensureHostedBillingEventBindingSchema(pool);await ensureHostedBillingEventBindingSchema(pool);
     const upgraded=await snapshot();
     const addedTables = new Set(["hosted_ai_credit_issuances", "hosted_ai_storage_mode"]);
-    for (const table of tables) assert.deepEqual(upgraded[table], addedTables.has(table) ? [] : after[table]);
+    for (const table of tables) {
+      const expected = table === "hosted_billing_events"
+        ? after[table].map(row => JSON.stringify({ ...JSON.parse(row), event_product: null, credit_checkout_session_id: null })).sort()
+        : addedTables.has(table) ? [] : after[table];
+      assert.deepEqual(upgraded[table], expected);
+    }
     for (const deployment of [env, liveEnv]) await assert.rejects(getHostedAiBudgetSnapshot(deployment, budgetInput), /historical AI accounting/i);
     // Restore the full source-bound archive again so the final checksum includes
     // the original bound and unbound issuance, never fabricated replacements.
@@ -144,7 +154,7 @@ async function main() {
     await migrateHostedWorkspaceMetadata(pool,{apply:true});
     assert.deepEqual(await snapshot(),after);
     const digest = createHash("sha256").update(JSON.stringify(after)).digest("hex");
-    console.log(JSON.stringify({ result: "passed", evidence: "local-synthetic-postgresql-dump-restore", tables: tables.length, issuanceRestored: true, issuanceReplayIdempotent: true, modeRestored: true, oldSchemaUpgradePreserved: true, tenantWorkspaces: 2, exactCostRestored: true, metadataCleanupReapplied: true, metadataCleanupIdempotent: true, checksum: digest }));
+    console.log(JSON.stringify({ result: "passed", evidence: "local-synthetic-postgresql-dump-restore", tables: tables.length, issuanceRestored: true, issuanceReplayIdempotent: true, receiptBindingRestored: true, oldReceiptBindingUnknown: true, modeRestored: true, oldSchemaUpgradePreserved: true, tenantWorkspaces: 2, exactCostRestored: true, metadataCleanupReapplied: true, metadataCleanupIdempotent: true, checksum: digest }));
   } finally {
     if (runtime) await closeRecoveryRuntime(runtime);
     if (created) await admin.query(`DROP SCHEMA IF EXISTS ${schema} CASCADE`);

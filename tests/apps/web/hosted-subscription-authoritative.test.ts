@@ -76,7 +76,9 @@ describe("hosted authoritative subscription reconciliation", () => {
     expect(mocks.retrieve).toHaveBeenCalledTimes(2); expect(savedStateWrites()).toHaveLength(2);
   });
   it("does not retrieve a durably processed duplicate", async () => {
-    mocks.query.mockResolvedValue({ rows: [], rowCount: 0 });
+    mocks.query.mockImplementation(async (sql: string) => /FROM hosted_billing_events/.test(sql)
+      ? { rows: [{ matches: true }], rowCount: 1 }
+      : { rows: [], rowCount: 0 });
     expect((await post(payload())).status).toBe(200);
     expect(mocks.retrieve).not.toHaveBeenCalled(); expect(savedStateWrites()).toEqual([]);
     expect(mocks.release).toHaveBeenCalledTimes(1);

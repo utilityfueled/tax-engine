@@ -82,12 +82,20 @@ export async function reconcileHostedStripeSubscriptionEvent(
       await client.query("SELECT pg_advisory_xact_lock(hashtextextended($1, 0))", [key]);
     }
     const claimed = await client.query(
-      `INSERT INTO hosted_billing_events (event_id, event_type, created_at)
-       VALUES ($1, $2, $3::timestamptz)
+      `INSERT INTO hosted_billing_events (event_id, event_type, created_at, event_product)
+       VALUES ($1, $2, $3::timestamptz, 'subscription')
        ON CONFLICT (event_id) DO NOTHING RETURNING event_id`,
       [input.eventId, input.eventType, input.eventCreatedAt]
     );
     if ((claimed.rowCount ?? 0) === 0) {
+      const { rows: [receipt] } = await client.query<{ matches: boolean }>(
+        `SELECT event_type=$2 AND created_at=$3::timestamptz
+          AND (event_product='subscription' OR event_product IS NULL)
+          AND credit_checkout_session_id IS NULL AS matches
+         FROM hosted_billing_events WHERE event_id=$1`,
+        [input.eventId, input.eventType, input.eventCreatedAt]
+      );
+      if (receipt?.matches !== true) throw new Error("Subscription event conflicts with the retained receipt.");
       await client.query("COMMIT");
       return { outcome: "duplicate" };
     }
