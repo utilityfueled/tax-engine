@@ -63,6 +63,42 @@ for (const width of [1280, 390]) {
     await losses.fill('10000.50');
     for (const control of confirmationControls) await expect(control).toHaveValue('');
     await expect(page.getByText(/Enter the complete professional ledger/)).toBeVisible();
+    if (width === 390) {
+      const statement = `synthetic-private-slot-statement-${width}`;
+      const payer = 'Synthetic Private Slot Payer';
+      const payerTin = '95-8765432';
+      await page.getByRole('button', { name: 'Add Form W-2G original', exact: true }).click();
+      const fields = {
+        'Private statement reference': statement, 'Private linked ledger entry': 'synthetic-private-slot-ledger-entry',
+        'Payer name': payer, 'Payer TIN': payerTin,
+        'Recipient TIN last four digits': original.sectionData['personal-info'].ssn.slice(-4),
+        'Date won (box 2)': '2026-03-12',
+      };
+      for (const [label, value] of Object.entries(fields)) await page.getByLabel(`W-2G 1: ${label}`, { exact: true }).fill(value);
+      await page.getByRole('textbox', { name: 'W-2G 1: Reportable winnings (box 1)', exact: true }).fill('5000.01');
+      await page.getByRole('textbox', { name: 'W-2G 1: Recognized gain in your ledger', exact: true }).fill('5000.01');
+      const withheld = page.getByRole('textbox', { name: 'W-2G 1: Federal withholding (box 4)', exact: true });
+      await withheld.fill('1200.04');
+      const others = page.getByRole('textbox', { name: 'Other gross taxable wagering gains', exact: true });
+      await others.fill('7000.14');
+      const allOriginals = page.getByRole('combobox', { name: 'These are all original individual 2026 domestic cash slot payments, with no state or local reporting', exact: true });
+      for (const control of confirmationControls.slice(0, -1)) await control.selectOption('true');
+      await allOriginals.selectOption('true');
+      await expect(page.getByText(/Enter the complete professional ledger/)).toHaveCount(0);
+      await page.reload();
+      await expect(page.getByLabel('W-2G 1: Private statement reference', { exact: true })).toHaveValue(statement);
+      await expect(withheld).toHaveValue('1,200.04');
+      await expect(allOriginals).toHaveValue('true');
+      await expect(permission).toBeDisabled();
+      await others.fill('7000.15');
+      await expect(allOriginals).toHaveValue('');
+      for (const control of confirmationControls.slice(0, -1)) await control.selectOption('true');
+      await allOriginals.selectOption('true');
+      await expect(page.getByText(/W-2G and other gains do not reconcile to the annual ledger/)).toBeVisible();
+      for (const marker of [statement, payer, payerTin, 'synthetic-private-slot-ledger-entry', '1200.04']) {
+        expect(requests.join('\n')).not.toContain(marker);
+      }
+    }
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     await page.getByRole('button', { name: 'Switch to advanced mode', exact: true }).click();
     await expect(page.getByRole('region', { name: 'Return Summary', exact: true })).toContainText('2026 not supported yet');

@@ -179,7 +179,7 @@
     "apps/web/src/components/guided-interview/partnership-health-gross-details.tsx": "86dddc9d2d8b69b2dfc0a73cf8f642d55b9154b8036a4ee453099f4933874b5e",
     "apps/web/src/components/guided-interview/passenger-source-details.tsx": "86befb3438066dba9f83aecf0ea1ce36ad8ca5b014533c6b1109cec8065eca2a",
     "apps/web/src/components/guided-interview/premium-tax-credit-source-details.tsx": "9a257fa47a6abbe93582ec2597c9912618547755d88a9dabf28d567955fdc1c8",
-    "apps/web/src/components/guided-interview/professional-wagering-details.tsx": "32b5794e07b13c7bc14d4b68fac8efaddbe1a55ba33f89c9e3ecb8bcc8eb9351",
+    "apps/web/src/components/guided-interview/professional-wagering-details.tsx": "ce4c59de663842fb8bb0c4c72e9be58605d7c427fadfdd457e57aeb7569eb47b",
     "apps/web/src/components/guided-interview/qof-disposition-details.tsx": "87a5dbb34f1fcc92f393763b0761d53b1912ae389ac902b4d37f06fe877ef4d9",
     "apps/web/src/components/guided-interview/qsbs-source-details.tsx": "6766cac678c5a07785195f987053223e05d1b78776c37d0aba2692f69f4e4311",
     "apps/web/src/components/guided-interview/rental-carry-source-details.tsx": "fc16f74f1375e20e35fd88326cb03656f498852e8b26155fe92f51378d2a98b3",
@@ -199,7 +199,7 @@
     "apps/web/src/components/guided-interview/section-personal-info.tsx": "754ef1b358b44c18973b425704be40b2c4d20d9615d9c369d4a7999eb91ad3c0",
     "apps/web/src/components/guided-interview/section-rental-income.tsx": "ef3e430db8d597f1b80664a3ae5917dc13f47a4981a930d049847181f03d3964",
     "apps/web/src/components/guided-interview/section-retirement-income.tsx": "834a6d8a4ae92a159926152b3dfa6b6d51c6f9d3f5b5fbc2f5aa6bb30b784e9d",
-    "apps/web/src/components/guided-interview/section-review.tsx": "411525815a8d4e61e931cce6fddaf29a55167a5ac1c29945e7750471b895fb86",
+    "apps/web/src/components/guided-interview/section-review.tsx": "62220eaeaa211bbe0fe070603b9685ff2b12bd43bdb20ac3ad0ecf436d8cd133",
     "apps/web/src/components/guided-interview/section-royalty-income.tsx": "ee20c868ced113be82bd998f0f50b61716ff6c5d891fb744b2659ce9d49112aa",
     "apps/web/src/components/guided-interview/section-self-employment.tsx": "34f5ef0c3a507686d86fc8eea7dd727999ee4e214ba19dc372a1b46ea3ba57b5",
     "apps/web/src/components/guided-interview/section-social-security.tsx": "e71707b901168efbfe34b2d23a77eac856f074d8ce7f53fe17ee10d1b513dc2d",
@@ -290,7 +290,7 @@
     "apps/web/src/lib/guided-health-insurance-facts.ts": "08c785a3a31d07d96932840afba8cb23c914c22a4213abafc2ac6531b811ae4b",
     "apps/web/src/lib/guided-hsa-distribution-facts.ts": "e9ce96eb9f2c2297fca1dd53ca311b2b42545da4a3a2ec257fcf702daac9060f",
     "apps/web/src/lib/guided-hsa-facts.ts": "bad97489b43ff81ed079b9c193f1f77f6fd62950ee159256456a79a6d009654e",
-    "apps/web/src/lib/guided-interview-bridge.ts": "a22c3fa2aba4a1ec18650081f2db223e07b3625a9e5d2d50893db1a43c201625",
+    "apps/web/src/lib/guided-interview-bridge.ts": "4d18ea7c8e8baa8da9a309f6d2318e3fbf8594e2b14e7e1f3e720134755fd5af",
     "apps/web/src/lib/guided-interview-flow.ts": "0847467e540da730bda799495a33dd2a7494f4a6c7d05cfdc0064276224df860",
     "apps/web/src/lib/guided-investment-facts.ts": "c05786de5c12a4341371294d2a926ec64aae99eeeb8ffcbe5595c6fe9c3727dc",
     "apps/web/src/lib/guided-investment-interest.ts": "3f55441684455777dac810e9122e14345944f6f5e4262e1f2e4447eff1b1118b",
@@ -350,7 +350,7 @@
     "apps/web/src/lib/guided-premium-tax-credit-facts.ts": "1c0b035c6d9f5d06e84a082a17d64fce804646ffb9742a7aeff912a081d611ef",
     "apps/web/src/lib/guided-preview-compute.ts": "3827f1cbe1d759c358373c64069acc2daba9f97e261597cb48f433513a2e6762",
     "apps/web/src/lib/guided-private-activity-facts.ts": "640327f963d0b9daae2427cc845017bde6809d062b471eb2af864b8fb0bae41f",
-    "apps/web/src/lib/guided-professional-wagering.ts": "eb7678875dee9d5c337a10cb6d9874b98f8ae7e35e3dc5fb2d4cb596ec5c7161",
+    "apps/web/src/lib/guided-professional-wagering.ts": "bfd577e9994f809031961ae212fbbb1cf6daf95ec1f327a68f22c132f85c092d",
     "apps/web/src/lib/guided-qbi-loss-data.ts": "480a8ee1f63d92b524eeb1c2c2db38a39ea004a1d9fed94c9f8950c6e4f160fb",
     "apps/web/src/lib/guided-qof-facts.ts": "379edd6cafd2740c5f1c530662168e8663b03230b5bd3a7cfa0c83b53b6ed57f",
     "apps/web/src/lib/guided-qsbs-sources.ts": "1b9cefb336edc3c905f6c13ef056df145f3ea6dd7e69ca4e7f987a1316cd4752",
@@ -551,7 +551,7 @@
     "apps/web/tests/guided-overlapping-policies.spec.ts": "d7b320911e6dcfdb3ca2d69222ebb550820bbabca8030956e633840be788ecb6",
     "apps/web/tests/guided-pa-married-mixed-residency.spec.ts": "c6a8c667f3e373886e68f07475925670be566cfcf07ae576dc32e2c2830e0650",
     "apps/web/tests/guided-private-activity-sources.spec.ts": "5e4c7c17de28702b6c12ada123a9915b9252861cec7fe9a34f43b3671f48452f",
-    "apps/web/tests/guided-professional-wagering.spec.ts": "a226c6ecddcdb97fa142d8cdb4e9b41f53e65a37b0c7e89899d132ff785004e4",
+    "apps/web/tests/guided-professional-wagering.spec.ts": "5ac81dc6f38657c3764825b5f55d2553d3a6a99b4508e1bb4c14552a6e04d6fc",
     "apps/web/tests/guided-qsbs-sources.spec.ts": "7a87f7caca53e13fbfaa81ad35cc28cf278e4bc629333d3445a0af75f860144d",
     "apps/web/tests/guided-refund-payment-years.spec.ts": "459eae20a2b019d20179e295f286f509319b0a784f6a8df21d2e6bd52870bd9b",
     "apps/web/tests/guided-rental-carry-sources.spec.ts": "204b4d60a1f4df5847fdc4d6e2dcec41be1780d40d2bf535e84ffaecb3191110",
@@ -900,7 +900,7 @@
     "src/engine/schedules/schedule-b.ts": "224e4e22d976eb945531fc64fb9f01a1b3fa689048f9f093c5d9bf180ae59279",
     "src/engine/schedules/schedule-c-passenger-first-year-sources.ts": "c7de260c2820ca4c7e38a323c01a34e2848913a3a3d0144826b027bbbf12ae87",
     "src/engine/schedules/schedule-c-source-facts.ts": "39f644296cb4e32f33f4d66bc65a9c6bef03d2dca2d890248bc55bccafd76b0f",
-    "src/engine/schedules/schedule-c-wagering-sources.ts": "0d2ad590e34926f172d6e1908e6fe8b24b2c897bf0baa2e728f4d5cc5269ebcd",
+    "src/engine/schedules/schedule-c-wagering-sources.ts": "ddc58e22599dec0d149997d177485611f0ff5b2b769ff5b805fe5e0ba0a66bf7",
     "src/engine/schedules/schedule-c.ts": "32561a87960375399f9271b4cd0548306a74c581363be8ba2be26d5aa2e5f1f1",
     "src/engine/schedules/schedule-d-source-binding.ts": "e81d7609077f88c02ab2a6d406e9ad4695824b69f3af5cf3aababae18546efb1",
     "src/engine/schedules/schedule-d-special-gains.ts": "30e05f8d4c3780e121a90afb1da01317a91873fa83d45e12e9efa717fbc93756",
@@ -4045,7 +4045,7 @@
         "self-employment-income-analysis": 0
       },
       "requestSourceLines": [],
-      "reviewBasis": "Both local viewport journeys verify reload, explicit input, opt-out and zero protected requests."
+      "reviewBasis": "Both local viewport journeys verify reload, explicit input, opt-out and zero protected requests. The mobile journey also verifies original W-2G linkage, persistence, change invalidation and source privacy."
     }
   }
 }

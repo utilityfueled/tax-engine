@@ -1,9 +1,13 @@
 import type { ScheduleCProfessionalWagering, TaxYearInput } from '@/models/inputs.js';
 import { d } from '@/utils/decimal.js';
 
+type WageringStatementInput = Partial<Pick<TaxYearInput, 'formW2G' | 'stateReturns' | 'ohioResidency' | 'paResidencySources'>> & {
+  taxpayer: { taxYear: number; primary: { ssn: string } };
+};
+
 /** Bind the reported subset to its original ledger and retain federal withholding. */
 export function reconcileProfessionalWageringStatements(
-  input: TaxYearInput,
+  input: WageringStatementInput,
   sources: ScheduleCProfessionalWagering['w2gSources'],
   annualGains: string,
 ) {

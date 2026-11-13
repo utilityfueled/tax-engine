@@ -251,7 +251,7 @@ export function buildScheduleCInput(
   qbiMateriallyParticipated?: boolean | null,
   businessFacts?: BusinessSourceData,
   standardMileage?: NonNullable<ReturnType<typeof readGuidedBusinessMileage>>["packet"],
-  professionalWagering?: ReturnType<typeof readGuidedProfessionalWagering>,
+  professionalWagering?: NonNullable<ReturnType<typeof readGuidedProfessionalWagering>>["ledger"],
 ) {
   const sources = (necEntries ?? []).filter(isStartedNec);
   if (!sources.length && !hasEnteredAmount(manualGrossReceipts) && !Object.values(expenses ?? {}).some(hasEnteredAmount) && !businessFacts) return undefined;
@@ -848,7 +848,7 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
   const stateCode = segmentation.stateCode;
   const w2s = buildW2Inputs(w2Data?.entries);
   const necs = buildNecInputs(seData?.necEntries);
-  const scheduleC = buildScheduleCInput(seData?.necEntries, seData?.manualGrossReceipts, seData?.expenses, seData?.qbiMateriallyParticipated, seData?.businessFacts, standardMileage?.packet, professionalWagering);
+  const scheduleC = buildScheduleCInput(seData?.necEntries, seData?.manualGrossReceipts, seData?.expenses, seData?.qbiMateriallyParticipated, seData?.businessFacts, standardMileage?.packet, professionalWagering?.ledger);
   let actualMacrs:ReturnType<typeof buildGuidedMacrsAssets>;
   let passengerForm:ReturnType<typeof buildGuidedPassengerForm>;
   try{actualMacrs=buildGuidedMacrsAssets(seData?.businessFacts,state.taxYear,!!rentalData?.entries?.length||!!sectionData["income-royalties"]);passengerForm=buildGuidedPassengerForm(seData?.businessFacts,state.taxYear);}catch{return null;}
@@ -966,6 +966,7 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
     ...buildHsaInputs(adjustmentData?.hsaAccounts, personalInfo),
     form7206: healthInsurance,
     form1099Nec: necs,
+    ...(professionalWagering?.forms ? { formW2G: professionalWagering.forms } : {}),
     scheduleC: scheduleC ?? undefined,
     form4562:actualMacrs?.form4562 ?? passengerForm,
     form1099Int,

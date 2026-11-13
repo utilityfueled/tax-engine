@@ -64,7 +64,8 @@ lines:
       accept the actual private reference and separately confirmed taxable gains,
       wagering losses and otherwise allowable expenses from the complete domestic
       professional ledger. Require actual zero where applicable and affirmative
-      confirmation that no W-2G originals require reconciliation in this intake.
+      confirmation that no W-2G originals require reconciliation, or use the
+      individually linked original-statement intake below.
       Preserve the ordinary header and eligibility facts. Reject competing
       receipts, documented expenses, recreational entries and other methods.
       Reconfirm on changes to the owner, business identity, source or overlapping
@@ -75,3 +76,19 @@ lines:
       for public results, AI review or filing.
     irsRef: "26 USC 165(d); IRS Publication 525, Gambling winnings; 2026 Schedule C and draft instructions"
     testRef: "tests/apps/web/guided-professional-wagering.test.tsx::preserves confirmed professional ledger facts in the guided Schedule C input"
+  - line: "guided Form W-2G originals"
+    description: "Collect individual cash slot payments and their ledger entries locally"
+    formula: >
+      Require an affirmative choice between no originals and complete individually
+      linked originals. For each 2026 original require the statement and ledger
+      references, payer name and TIN, the recipient TIN's last four digits, winning
+      date, actual boxes 1 and 4, and the separately entered ledger gain. Require
+      actual other gross taxable gains including zero and confirmation that these
+      are all the eligible originals, with no state or local reporting fields,
+      group, aggregate, noncash, corrected or void statements. Use the canonical
+      reconciliation to reject mismatches, duplicates and incomplete totals before
+      the draft can advance. Clear confirmations after material source edits.
+      Preserve each original and its linked amount for the federal calculation
+      and omit original identifiers and amounts from synced fact answers and AI.
+    irsRef: "Final 2026 Form W-2G; Instructions for Forms W-2G and 5754, section 3; 2026 Publication 505"
+    testRef: "tests/apps/web/guided-professional-wagering.test.tsx::reconciles guided W-2G originals before retaining federal withholding"

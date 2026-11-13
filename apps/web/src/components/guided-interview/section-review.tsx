@@ -2,8 +2,8 @@
 import {isSeparateStatePreview} from '@/lib/guided-interview-bridge';
 import {PASeparateReturnPreview} from '@/components/pa-separate-return-preview';
 
-import { isStartedNec, sumKnownBusinessAmounts, type BusinessSourceData } from "@/lib/guided-business-facts";
-import { professionalWageringDraftSchema, readProfessionalWageringAmount } from "@/lib/guided-professional-wagering";
+import { isStartedNec, sumKnownBusinessAmounts } from "@/lib/guided-business-facts";
+import { professionalWageringDraftSchema, readGuidedProfessionalWagering, readProfessionalWageringAmount } from "@/lib/guided-professional-wagering";
 import { isStartedRental, knownRentalExpenses } from "@/lib/guided-rental-facts";
 import { unemploymentEntries, isStartedUnemployment, governmentSourceTotal } from "@/lib/guided-unemployment-facts";
 import { socialSecurityEntries, isStartedSocialSecurity, socialSecuritySourceTotal } from "@/lib/guided-social-security-facts";
@@ -26,12 +26,11 @@ import {
   type PersonalInfoData,
   type RentalPropertyEntryData,
   type RetirementEntryData,
-  type ScheduleCExpenseData,
+  type SelfEmploymentSectionData,
   type SocialSecurityData,
   type StateReturnData,
   type UnemploymentData,
   type W2EntryData,
-  type NecEntryData,
   type InterestEntryData,
   type DividendEntryData,
   type BrokerageEntryData,
@@ -131,15 +130,15 @@ function W2Summary({ entries }: { entries: W2EntryData[] | undefined }) {
   );
 }
 
-function SelfEmploymentSummary({ necEntries, manualGrossReceipts, expenses, businessFacts }: {
-  necEntries: NecEntryData[] | undefined;
-  manualGrossReceipts: string | undefined;
-  expenses: ScheduleCExpenseData | undefined;
-  businessFacts: BusinessSourceData | undefined;
-}) {
+function SelfEmploymentSummary({ data, state }: { data: SelfEmploymentSectionData | undefined; state: GuidedFlowState }) {
+  const { necEntries, manualGrossReceipts, expenses, businessFacts } = data ?? {};
   if (businessFacts?.professionalWagering !== undefined) {
     const saved = professionalWageringDraftSchema.safeParse(businessFacts.professionalWagering);
     if (!saved.success) return <p className="guided-review-empty">Review the saved professional wagering ledger.</p>;
+    let reconciled: ReturnType<typeof readGuidedProfessionalWagering> = undefined;
+    try { reconciled = data && readGuidedProfessionalWagering(data, state); }
+    catch { /* The review row directs the taxpayer back to incomplete sources. */ }
+    const withholding = reconciled?.forms && sumKnownBusinessAmounts(reconciled.forms.map(form => form.federalWithheld));
     const fields = [
       ["Gross taxable wagering gains", saved.data.grossTaxableWageringGains],
       ["Wagering losses", saved.data.wageringLosses],
@@ -151,7 +150,10 @@ function SelfEmploymentSummary({ necEntries, manualGrossReceipts, expenses, busi
         <span className="guided-review-label">{label}</span>
         <span className="guided-review-value">{amount === undefined ? "Review source amount" : formatCurrency(amount)}</span>
       </div>;
-    })}</div>;
+    })}{saved.data.w2gSources && <div className="guided-review-row">
+      <span className="guided-review-label">Form W-2G federal withholding</span>
+      <span className="guided-review-value">{withholding == null ? "Review original statements" : formatCurrency(withholding)}</span>
+    </div>}</div>;
   }
   const entries = (necEntries ?? []).filter(isStartedNec);
   const hasMileageLog = businessFacts?.standardMileage !== undefined;
@@ -651,12 +653,7 @@ export function SectionReview({
       case "income-self-employment": {
         const seData = getSectionData(state, "income-self-employment");
         return (
-            <SelfEmploymentSummary
-              necEntries={seData?.necEntries}
-              manualGrossReceipts={seData?.manualGrossReceipts}
-              expenses={seData?.expenses}
-              businessFacts={seData?.businessFacts}
-            />
+            <SelfEmploymentSummary data={seData} state={state} />
         );
       }
       case "income-investments": {
