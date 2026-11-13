@@ -10,11 +10,17 @@ below apply to their named revisions.
   managed Chromium cases. [Care and IRA evidence](upgrade-2026-care-ira-combat-pay-work.md).
 
 - November 13 — The protected `ab47d87f` Preview passed two-owner workspace
-  isolation. An actual Stripe Sandbox delivery returned 503 while the
-  isolated database login was suspended. Login was restored and the same
-  event is scheduled for retry. The first ARM64 disk file enlargement left
-  the guest partition unchanged. A new VM provisioned at full size has
-  401,849,769,984 bytes available. [Rehearsal evidence](upgrade-2026-nov13-release-rehearsals.md).
+  isolation, a genuine Stripe Sandbox 503 followed by automatic 200 with
+  exactly one receipt, and a fail-closed Redis credential fault. The native
+  ARM64 `3b5b2ca6` image passed build, smoke, six recovery phases and 621
+  Chromium cases with five hosted-only skips. Normal stop and socket
+  restoration passed. [Rehearsal evidence](upgrade-2026-nov13-release-rehearsals.md).
+
+- November 13 — `c2907701` and `f94bb638` apply confirmed Section 1245 and
+  Section 1250 recapture, split Form 8824 basis by actual replacement FMV
+  and retain potential future Section 1250 recapture. The reference PDF
+  presents supported split basis without private source references. The
+  packages passed 532 and 569 focused checks respectively. [IRS instructions](https://www.irs.gov/instructions/i8824).
 
 - November 13 — `439d4c87` applies each filer's EIC combat pay election.
   The 206 targeted checks and 27,715 archived unit tests passed. The
@@ -4949,5 +4955,5 @@ execution and current image qualification require separate evidence.
   encrypted original-document recovery. `93d6b26e` adds the independently
   checked Podman metadata profile. `115cbb52` pins the unchanged 14 optional
   diagnostic cases against the reviewed audit and 621-case collection.
-  The exact successor full suite and ARM64 rehearsal are running.
+  The later `3b5b2ca6` ARM64 rehearsal completed as recorded above.
   [Rehearsal evidence](upgrade-2026-nov13-release-rehearsals.md).

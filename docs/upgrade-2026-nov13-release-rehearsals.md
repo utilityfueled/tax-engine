@@ -16,15 +16,42 @@ marker while pooled connections were still open. After the pool drained,
 the restricted test login was suspended and a connection received SQLSTATE
 28000. Stripe Workbench records the original marker's signed delivery
 returning 503 at 14:32:17 UTC. The restricted login was restored at
-14:33:02 UTC. Workbench shows a scheduled retry. The same-event success,
-database readback and isolated resource cleanup are still open.
+14:33:02 UTC. At 15:31:58 UTC, Workbench shows that Stripe retried the
+same signed event and received 200. Stripe reported zero pending webhooks
+for the event. Read-only verification found one receipt for the retry,
+one receipt for each original event, only the first account's subscription
+marker updated and all five scoped AI effect counts at zero. There were no
+manual resends. Both no-card trials were canceled without invoicing or
+proration. The original Sandbox webhook URL and enablement were restored
+and read back. Vercel removed the three disposable Preview deployments
+and both test-only configuration rows. The other Preview settings matched
+before and after that cleanup. The isolated Neon branch is scheduled to
+expire November 14 at 08:45 ET. Its final removal has yet to be observed.
 [Stripe retry behavior](https://docs.stripe.com/webhooks#automatic-retries).
+
+A third protected Preview of `ab47d87f` used a deployment-local synthetic
+invalid Redis REST token with the isolated Upstash endpoint. Its unauthenticated
+platform request redirected to Vercel Authentication. With platform access,
+the application returned its `rate-limit-unavailable` 503, `Retry-After: 5`
+and `Cache-Control: no-store`. The healthy Preview returned a private 401
+before and after. The fault was a Redis credential rejection. No provider
+rotation, cross-project Redis access or live AI calls were needed.
+Readback verified that the isolated cache's only connection was removed.
+The targeted cache deletion then returned 200 and a subsequent lookup
+returned 404. The remaining isolated project settings matched.
+[Upstash REST authentication](https://upstash.com/docs/redis/features/restapi).
 
 | Evidence | SHA-256 |
 | --- | --- |
 | Two original Stripe receipts | `a03843153e88de9d1539852f91c25b478441d5f120f466e0fb015c064b609b7d` |
 | Protected workspace isolation | `1bed58e9b8d89912411d06d84ae11650ab5d9820e7b6fac87b669a81e5ace664` |
 | Actual first 503 and verified role restoration | `ae715734697dfc4c4a8442419d5e707029612483bc4d84418aeb003a4f53a345` |
+| Stripe Workbench automatic 200 | `834351799c78fe0d60d9eddef571bbe1ab8642366236004d6b16fe96ec76ae88` |
+| Exact event, receipt count, tenant and ledger readback | `c9f45653d318c54cf1fe039b849b95ee127484184f671fa28eac2a89f1131416` |
+| Stripe Sandbox cleanup receipt | `cd30e603263f990a723d858bae6b2e8b584441967f2167a98517cdc288a8e6a8` |
+| Isolated Redis credential fault and healthy controls | `7e7092451ba2782e735029646bb89e7f0c01b1a982127219b2ac1e0b6dd3d785` |
+| Removed disposable Preview deployments and settings | `6f1fc655b1517e4c44b5841f0ddf6860bb63f42392939378e1110b9f23fb58d4` |
+| Exact isolated Redis disconnection and deletion | `c17d296f9fc3ca51ffbc77dacdaa4d8f93f023108fc947ff72ac3f77af58fade` |
 
 ## ARM64 self-host
 
@@ -68,9 +95,26 @@ checks passed. `115cbb52` also binds the optional CPU diagnostic to the current
 unchanged, and the 25 diagnostic tests passed.
 [Podman 6.0.2 inspect source](https://github.com/containers/podman/blob/v6.0.2/libpod/container_inspect.go#L178-L181).
 
-The exact `115cbb52` tracked archive is undergoing a new ARM64 build, recovery
-run and full Chromium suite. Full native Chromium, current-source AMD64
-evidence and release qualification are open.
+The exact `115cbb52` tracked archive passed native import, smoke, scan and
+Compose recovery. The browser runner's canonical directory URL has one
+trailing slash. The inspector rejected it before browser collection.
+`3b5b2ca6` accepts that exact URL path and continues to reject aliases and
+relative segments. All 196 focused checks passed. Its replacement ARM64
+image passed import, smoke, scan and all six Compose phases. Host Chromium
+against that native Linux ARM64 image passed 621 cases in eight batches,
+with five existing hosted-only skips and zero failures. The VM stopped
+normally and the user socket route was restored. That rehearsal is tied
+to `3b5b2ca6`. Later calculation changes and exact-source AMD64 evidence
+remain to be qualified.
+
+| ARM64 `3b5b2ca6` evidence | SHA-256 |
+| --- | --- |
+| Runtime image ID | `de3f45da4a9ef062a2776954934f3222d52de2d60b3eb8434344ad391d952e36` |
+| Runtime image archive | `ba34754984e081235d4866a5ce09a1ee9441c140e223a3fb0b8855a62c388001` |
+| CycloneDX SBOM | `22fa562af6bc0c52bea7c464e10245b1108478a07dc819d6df04985b45e86b2a` |
+| Grype scan | `906ae6a5f098a60a8cfc94cb6918974a600cd1ec5c38e70ef6f9f69dd4857cfd` |
+| Complete rehearsal receipt | `dcd259d918a346942a412d21db0fa202b9736e11f3de5a04e05f2966e25af328` |
+| Normal stop and socket restoration | `cd32053478e94fc27e16e991280a6f3de2d3580c6280dd1e44122dc93d318b40` |
 
 | ARM64 `2e258445` evidence | SHA-256 |
 | --- | --- |

@@ -1,18 +1,18 @@
 # External actions needed to finish the 2026 upgrade
 
-## November 12 update
+## November 13 update
 
 The owner merged PR #13, directed subsequent commits to `main`, and asked
 to hold pushes while they disable automatic Vercel production deployments.
-The merged source is `59248889`. The hosted outage supplement and fourth
-native boot remain unperformed. The isolated November 6 database lease has
-elapsed. Current-source Preview evidence requires a working isolated database
-and fresh scoped staging execution. The test VM was already resized to
-384 GiB while stopped. The conditional native authorizations named `032b329d`
-and later `acb776cb`. Both failed prerequisite checks before any boot.
-The current release candidate still needs its target image and strict
-browser/recovery rehearsal. The later synthetic recovery pass used a
-local PostgreSQL 16.16 server.
+The merged source is `59248889`. The isolated `ab47d87f` Preview passed
+tenant isolation, a real Stripe retry after a database outage and a Redis
+credential failure that blocked access with 503. The Stripe test resources,
+temporary Vercel builds/settings and isolated Redis cache were cleaned up.
+The temporary Neon branch has a November 14 automatic expiry. The native
+ARM64 image from `3b5b2ca6` passed all six recovery phases and 621 Chromium
+cases with five hosted-only skips. A release artifact still needs its own
+exact-source evidence on both target architectures and in hosted staging.
+[Rehearsal evidence](upgrade-2026-nov13-release-rehearsals.md).
 The separate human reviews, final form qualification and provider settlement
 described below remain pending. See [the current continuation](upgrade-2026-current-status.md)
 and [the November 12 official source refresh](upgrade-2026-refresh-20261112.md).

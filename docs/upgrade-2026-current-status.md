@@ -13,10 +13,24 @@ All 535 targeted tests passed. `f5e5a80c` adds a disabled 2026 physical
 projection for a confirmed simultaneous exchange of domestic investment
 land. All 88 focused tests passed. A separate reader reopened 18 text values
 and one checkbox across 68 widgets, with blank identity and both review
-watermarks. Both pages were rendered and visually checked. Specialized
-recapture, parent return transfer, broader exchanges and qualified review
-remain open. [Final 2026 Form 8824](https://www.irs.gov/pub/irs-prior/f8824--2026.pdf) ·
+watermarks. Both pages were rendered and visually checked. `c2907701` adds
+single-class Section 1245 and Section 1250 recapture for confirmed original
+amounts. All 532 focused checks passed, including the IRS Taylor and Finley
+cases and the federal ordinary-income transfer. Mixed relinquished recapture
+classes, broader physical forms and qualified review remain open.
+[Final 2026 Form 8824](https://www.irs.gov/pub/irs-prior/f8824--2026.pdf) ·
 [IRS instructions](https://www.irs.gov/instructions/i8824).
+
+`f94bb638` calculates Form 8824 lines 25a through 25c from a complete
+confirmed replacement appraisal and keeps deferred Section 1250 recapture
+out of current income. The IRS Finley example yields $131,250 on line 25a,
+$43,750 on line 25b and $5,000 of potential future ordinary recapture.
+The non-filing reference summary shows the applicable basis lines and
+omits private appraisal references. Three regressions failed before the
+fixes. All 569 focused tests and 8,889 spec references passed, along with
+types, lint and coverage inventory. Per-asset allocations and broader
+physical projections still require their own evidence.
+[IRS basis and recapture example](https://www.irs.gov/instructions/i8824).
 
 `6cccc932` documents the full W-2 Code Q amount in IRA compensation and the
 separate elections for Form 2441 Parts II and III. Changing W-2 or business
@@ -27,16 +41,21 @@ archive passed 11 of 12 checks, including 27,717 unit and coverage tests and
 collection. `8052fac5` rebinds the changed reviewed files. The next combined
 run on `2e258445` passed its first nine checks and failed one unit test because
 the optional diagnostic still pinned the old audit. `115cbb52` rebinds that
-diagnostic and its full 621-case collection. The exact successor is running
-the combined suite and a native ARM64 rehearsal.
+diagnostic and its full 621-case collection. Its exact archive passed unit
+and coverage checks with 27,738 tests in 2,006 files and 87.85% branch
+coverage. Its managed browser suite and the combined check of `f94bb638`
+are running separately.
 [Care and IRA evidence](upgrade-2026-care-ira-combat-pay-work.md).
 
 The actual ARM64 `2e258445` image passed import, smoke, six Compose phases
 and encrypted browser backup/restore. The security scan found 86 open Debian
 advisories that still need owner disposition. `93d6b26e` verifies the
 observed Podman 6 capability, tmpfs and environment metadata while retaining
-the hardened profile and exact source checks. Final ARM64 Chromium and
-exact-source AMD64 remain open.
+the hardened profile and exact source checks. `3b5b2ca6` passed native ARM64
+build, smoke, scan and six recovery phases. Host Chromium against that
+image passed 621 cases with five hosted-only skips and zero failures.
+The test VM stopped normally and its socket route was restored. Release
+evidence is still required for the newer calculation source and AMD64.
 [Self-host evidence](upgrade-2026-nov13-release-rehearsals.md) ·
 [Advisory register](upgrade-2026-image-advisories-20261113-arm64.json).
 
@@ -60,9 +79,15 @@ database setting was updated. A second protected build enabled the workspace
 backend. Two test owners wrote and reopened distinct workspaces under the same
 return ID. Anonymous requests returned 401 with private no-store headers.
 A signed Stripe Sandbox event received a 503 at 14:32:17 UTC during the
-database login outage. Login was restored at 14:33:02 UTC. Workbench shows
-an automatic retry scheduled for that event. Delivery and database readback
-remain open. No manual resend was issued.
+database login outage. Login was restored at 14:33:02 UTC. Stripe's automatic
+retry returned 200 at 15:31:58 UTC. Database readback found exactly one receipt
+for the retried event, no change to the second account and zero scoped AI
+effects. No manual resend was issued. Both trials were canceled without
+invoicing or proration. The original Sandbox webhook settings were restored.
+An isolated build of the same source used a synthetic invalid Upstash REST
+token. The protected workspace route returned a 503 with `Retry-After: 5`
+and `Cache-Control: no-store`. The healthy Preview returned 401 before and
+after the fault test. This exercises an actual credential failure at Redis.
 [Hosted and native rehearsal evidence](upgrade-2026-nov13-release-rehearsals.md).
 
 `6e7b046b` requires a separate military compensation method for a positive
