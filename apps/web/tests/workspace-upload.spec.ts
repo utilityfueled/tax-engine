@@ -84,6 +84,99 @@ test("removes only pending original files when local upload metadata cannot be s
   await checkUploadFailure(page, "return-storage", /could not save the uploaded document/i);
 });
 
+async function checkRemovalFailure(page: Page, fault: "metadata" | "transaction") {
+  await page.goto("/");
+  await enableAdvancedMode(page);
+  await page.getByRole("button", { name: /start your tax return/i }).click();
+  await expect(page).toHaveURL(/\/returns\/(?!new(?:[/?#]|$))[a-z0-9-]+$/i);
+  const workspaceId = new URL(page.url()).pathname.split("/").at(-1)!;
+  const status = page.getByRole("status", { name: "Return status" });
+  await page.locator('input[type="file"]').setInputFiles([
+    path.join(sampleDocsDir, "irs-w2-2025.pdf"),
+    path.join(sampleDocsDir, "irs-1099-int-2024.pdf"),
+  ]);
+  await expect(status).toHaveText("2 docs stored locally.");
+  const snapshot = () => page.evaluate(async id => {
+    const stored = JSON.parse(localStorage.getItem("tax-engine.return-workspaces.v1") ?? "{}");
+    const db = await new Promise<IDBDatabase>((resolve, reject) => {
+      const request = indexedDB.open("tax-engine-workspace-document-cache", 1);
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+    try {
+      const rows = await new Promise<Array<{ workspaceId: string; documentId: string; fileName: string; file: Blob }>>((resolve, reject) => {
+        const request = db.transaction("workspace-document-files").objectStore("workspace-document-files").getAll();
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+      return {
+        workspace: stored.workspaces[id],
+        unrelated: stored.workspaces["unrelated-synthetic"],
+        files: await Promise.all(rows.filter(row => row.workspaceId === id).map(async row => ({
+          id: row.documentId, name: row.fileName,
+          sha256: Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256", await row.file.arrayBuffer()))),
+        }))),
+      };
+    } finally { db.close(); }
+  }, workspaceId);
+  const before = await snapshot();
+  expect(before.files).toHaveLength(2);
+  await page.evaluate(({ fault, workspaceId }) => {
+    const key = "tax-engine.return-workspaces.v1";
+    const setItem = Storage.prototype.setItem;
+    const removeOriginal = IDBObjectStore.prototype.delete;
+    let deletion: IDBTransaction | undefined;
+    IDBObjectStore.prototype.delete = function (keyOrRange) {
+      if (this.name === "workspace-document-files") deletion = this.transaction;
+      return removeOriginal.call(this, keyOrRange);
+    };
+    let injected = false;
+    Storage.prototype.setItem = function (name, value) {
+      const data = name === key ? JSON.parse(value) : null;
+      if (injected || data?.workspaces?.[workspaceId]?.documents?.length !== 1) {
+        setItem.call(this, name, value);
+        return;
+      }
+      injected = true;
+      if (fault === "metadata") throw new DOMException("Full for this removal", "QuotaExceededError");
+      data.workspaces["unrelated-synthetic"] = { retainedExtension: "new unrelated saved value" };
+      setItem.call(this, name, JSON.stringify(data));
+      // Queue after the successful metadata write, while the deletion still has
+      // pending IndexedDB work. The old code already completed its transaction.
+      queueMicrotask(() => {
+        try { deletion?.abort(); } catch (error) {
+          if (!(error instanceof DOMException && error.name === "InvalidStateError")) throw error;
+        }
+      });
+    };
+  }, { fault, workspaceId });
+  const remove = page.getByRole("button", { name: "Remove 2025 Form W-2", exact: true });
+  await remove.click();
+  await expect(status).toHaveText(/could not remove the document/i);
+  await page.reload();
+  await expect(remove).toBeVisible();
+  const afterFailure = await snapshot();
+  expect(afterFailure).toEqual({
+    ...before,
+    unrelated: fault === "transaction" ? { retainedExtension: "new unrelated saved value" } : undefined,
+  });
+  await remove.click();
+  await expect(status).toHaveText("Removed 2025 Form W-2.");
+  await page.reload();
+  await expect(remove).toHaveCount(0);
+  const afterRetry = await snapshot();
+  expect(afterRetry.files).toEqual(before.files.filter(file => file.name !== "irs-w2-2025.pdf"));
+  expect(afterRetry.unrelated).toEqual(afterFailure.unrelated);
+}
+
+test("preserves the selected original when local removal metadata cannot be stored", async ({ page }) => {
+  await checkRemovalFailure(page, "metadata");
+});
+
+test("restores local document metadata when its original deletion aborts", async ({ page }) => {
+  await checkRemovalFailure(page, "transaction");
+});
+
 test("local workspace stores uploaded official IRS fixtures across reloads", async ({ page }, testInfo) => {
   await page.goto("/");
   await enableAdvancedMode(page);

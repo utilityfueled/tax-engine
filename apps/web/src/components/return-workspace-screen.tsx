@@ -69,8 +69,8 @@ import {
   getFutureYearSampleUploadMessage,
   ingestFilesIntoWorkspace,
   ingestLocalDocumentFiles,
-  removeDocument,
   removeDocumentFromWorkspace,
+  removeLocalDocumentFile,
   reopenWorkspaceInterviewQuestion,
   reopenInterviewQuestion,
   seededFactLabels,
@@ -812,8 +812,7 @@ export function ReturnWorkspaceScreen({
 
     void (async () => {
       try {
-        await deleteCachedWorkspaceDocumentFiles(workspaceId, [documentId]);
-        const nextWorkspace = removeDocument(requireBrowserStorage(), workspaceId, documentId);
+        const nextWorkspace = await removeLocalDocumentFile(requireBrowserStorage(), workspaceId, documentId);
         setWorkspace(nextWorkspace);
         setStorageMessage(`Removed ${documentLabel}.`);
       } catch {

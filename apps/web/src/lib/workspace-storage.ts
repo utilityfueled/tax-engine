@@ -1388,6 +1388,31 @@ export function removeDocument(storage: Storage, workspaceId: string, documentId
   return nextWorkspace;
 }
 
+/** Keep an original recoverable until its local return metadata has been saved. */
+export async function removeLocalDocumentFile(storage: Storage, workspaceId: string, documentId: string) {
+  let result: ReturnWorkspaceRecord | undefined;
+  await deleteCachedWorkspaceDocumentFiles(workspaceId, [documentId], () => {
+    const prior = parseStorage(storage.getItem(STORAGE_KEY)).workspaces[workspaceId];
+    const current = loadStorage(storage).workspaces[workspaceId];
+    if (!prior || !current) throw new Error("This return is no longer available.");
+    const next = removeDocumentFromWorkspace(current, documentId);
+    if (next !== current) saveWorkspaceRecord(storage, workspaceId, next);
+    result = next;
+    return () => {
+      if (next === current) return;
+      const stored = parseStorage(storage.getItem(STORAGE_KEY));
+      // Do not overwrite a later edit or deletion of this return. Read the
+      // current storage object to preserve entries changed in another tab.
+      if (JSON.stringify(stored.workspaces[workspaceId]) !== JSON.stringify(next)) return;
+      stored.workspaces[workspaceId] = prior;
+      try { storage.setItem(STORAGE_KEY, JSON.stringify(stored)); }
+      finally { invalidateWorkspaceStorageCache(storage); }
+    };
+  });
+  if (!result) throw new Error("Could not save the document removal.");
+  return result;
+}
+
 export function confirmWorkspaceDocumentTaxYear(
   workspace: ReturnWorkspaceRecord,
   documentId: string,

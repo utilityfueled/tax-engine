@@ -293,41 +293,59 @@ function selectedCacheKeys(
  * Resolve every selected alias before the first delete, within the same IDB
  * write transaction. Ambiguous identities leave both durable and memory data intact.
  */
-export async function deleteCachedWorkspaceDocumentFiles(workspaceId: string, documentIds?: string[]) {
+export async function deleteCachedWorkspaceDocumentFiles(
+  workspaceId: string,
+  documentIds?: string[],
+  writeMetadata?: () => () => void,
+) {
   const records = ownedMemoryRecords(workspaceId);
   const database = await openCacheDatabase();
   let selected: string[];
   if (database) {
-    selected = await new Promise<string[]>((resolve, reject) => {
-      const transaction = database.transaction(STORE_NAME, "readwrite");
-      const store = transaction.objectStore(STORE_NAME);
-      const cursor = store.openCursor();
-      let keys: string[] = [];
-      let ambiguity: Error | null = null;
-      cursor.onsuccess = () => {
-        const item = cursor.result;
-        if (item) {
-          if (isOwnedRecord(item.value, workspaceId, item.primaryKey) && !records.has(item.value.key)) {
-            records.set(item.value.key, item.value);
+    try {
+      selected = await new Promise<string[]>((resolve, reject) => {
+        const transaction = database.transaction(STORE_NAME, "readwrite");
+        const store = transaction.objectStore(STORE_NAME);
+        let keys: string[] = [];
+        let failure: unknown;
+        let undoMetadata: (() => void) | undefined;
+        transaction.oncomplete = () => resolve(keys);
+        transaction.onabort = () => {
+          try { undoMetadata?.(); }
+          catch (cause) {
+            reject(new Error("Could not restore document metadata. Reopen the return before retrying deletion.", { cause }));
+            return;
           }
-          item.continue();
-          return;
-        }
-        try { keys = selectedCacheKeys(records, workspaceId, documentIds); }
-        catch (error) {
-          ambiguity = error instanceof Error ? error : new Error("Could not uniquely identify stored documents. No documents were deleted.");
-          transaction.abort();
-          return;
-        }
-        for (const key of keys) store.delete(key);
-      };
-      transaction.oncomplete = () => { database.close(); resolve(keys); };
-      transaction.onerror = () => { database.close(); reject(new Error("Could not delete stored documents. Please retry deletion.")); };
-      transaction.onabort = () => { database.close(); reject(ambiguity ?? new Error("Document deletion was interrupted. Please retry.")); };
-    });
+          reject(failure ?? new Error("Document deletion was interrupted. Please retry."));
+        };
+        const cursor = store.openCursor();
+        cursor.onsuccess = () => {
+          const item = cursor.result;
+          if (item) {
+            if (isOwnedRecord(item.value, workspaceId, item.primaryKey) && !records.has(item.value.key)) {
+              records.set(item.value.key, item.value);
+            }
+            item.continue();
+            return;
+          }
+          try {
+            keys = selectedCacheKeys(records, workspaceId, documentIds);
+            for (const key of keys) store.delete(key);
+            // The synchronous storage write can still abort this transaction.
+            undoMetadata = writeMetadata?.();
+          } catch (error) {
+            failure = error;
+            transaction.abort();
+          }
+        };
+      });
+    } finally {
+      database.close();
+    }
   } else {
     if (getIndexedDbFactory()) throw new Error("Document storage could not be opened. Please retry deletion.");
     selected = selectedCacheKeys(records, workspaceId, documentIds);
+    writeMetadata?.();
   }
   // A failed/ambiguous durable transaction must not partially remove memory data.
   for (const key of selected) memoryCache.delete(key);
