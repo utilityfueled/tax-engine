@@ -4,6 +4,19 @@ Current source, verification and remaining work are summarized in the
 [current continuation](upgrade-2026-current-status.md). Historical results
 below apply to their named revisions.
 
+- November 13: `14ad47f1` reuses the exact federal W-2G reconciliation in
+  guided professional wagering. The failing test first established the
+  missing original-statement control. The source test verified explicit
+  zero Box 4, independent linked gain, recipient matching, duplicate refusal
+  and confirmation invalidation. All 5,163 focused tests in 679 files passed
+  with loopback TLS available, with 65 unrelated skips. All three type
+  checks, both builds, lint, 8,852 spec references and inventory passed.
+  Four Chromium cases passed without retries after two retained locator
+  failures were corrected. The mobile journey verified reload, source
+  revalidation, zero protected requests and exclusion of private markers.
+  [Final W-2G](https://www.irs.gov/pub/irs-prior/fw2g--2026.pdf) ·
+  [2026 Publication 505](https://www.irs.gov/publications/p505).
+
 - November 13: `dc98bc06` replays the confirmed 2026 professional wagering
   Schedule C and projects regular-method Schedule SE when the taxpayer
   confirms the complete SE/payroll inventory and regular-method eligibility.

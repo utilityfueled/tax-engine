@@ -6,6 +6,19 @@ The public refs were refreshed. `origin/main` still points to `59248889`
 and `origin/upgrade/2026-baseline` to `3024b848`. Successor commits stay on
 local `main` while automatic production deployment is being disabled.
 
+`14ad47f1` accepts individual 2026 cash-slot W-2G originals in the
+professional wagering interview. The source test retains $8,000.05 of
+annual gross gains and $1,200.01 of federal withholding across two original
+statements, including a confirmed zero. The editor requires an independent
+ledger gain for each payment and reuses the federal reconciliation before
+the section can advance. The 5,163 focused tests, four Chromium cases, all
+three type checks, both builds, lint, inventory and 8,852 spec references
+passed. The mobile case verified reload, edit invalidation and zero protected
+requests. The 65 unrelated focused skips include database-dependent cases.
+Broader statement types, state composition and human review remain open.
+[Final W-2G](https://www.irs.gov/pub/irs-prior/fw2g--2026.pdf) ·
+[Instructions](https://www.irs.gov/instructions/iw2g).
+
 `dc98bc06` projects the verified profit of one 2026 wagering business onto
 the disabled final Schedule SE. It requires explicit regular-method and
 complete-source confirmations. The $3,000 profit gives $2,771 adjusted
@@ -55,8 +68,8 @@ restore the draft, revoke confirmations on edits and make zero protected
 requests. All 2,005 focused tests and seven production Chromium cases passed,
 along with types, builds, lint, inventory and 8,845 spec references. The
 620-case audit retains five hosted-only skips and existing request limits.
-The exact archive is running. Linked W-2G guided entry, other filing units,
-states and human review remain open.
+The exact archive is running. Other filing units, states and human review
+remain open.
 [26 USC 165(d)](https://uscode.house.gov/us/usc/119-120/t26/s165/).
 
 `07d9bcde` projects a confirmed wagering-loss-only ledger onto the disabled
@@ -74,8 +87,11 @@ each count once. Reconciliation rejects missing Box 4, changed or duplicate
 originals, other statement types and state composition. The 8,483 focused
 tests, 12 production Chromium cases, types, builds, inventory and 8,842 spec
 references passed. The 618-case browser audit preserves its limits and five
-hosted-only skips. The exact archive is running. Broader methods and human
-review remain open. [IRS W-2G instructions](https://www.irs.gov/instructions/iw2g) ·
+hosted-only skips. The exact archive passed its first 11 checks, including
+27,656 tests at 87.77% branch coverage. Its browser run had one unrelated
+workspace redaction-count failure, with 612 passing cases and five hosted
+skips. Broader methods and human review remain open.
+[IRS W-2G instructions](https://www.irs.gov/instructions/iw2g) ·
 [IRS Publication 505](https://www.irs.gov/publications/p505).
 
 `57a7da97` collects original business mileage for one primary-owned cash

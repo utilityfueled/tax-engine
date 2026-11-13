@@ -6,6 +6,10 @@ below retain their original evidence boundaries.
 
 ## Active continuation — November 13 Eastern
 
+- [x] Collect individual original Form W-2G records and ledger links in the
+  federal professional wagering guide in `14ad47f1`. Pass 5,163 focused
+  tests and four Chromium cases with private facts excluded from shared
+  answers and zero protected requests in the source-entry journeys.
 - [x] Accept parsed Ohio wage originals in all three residency classes in
   `34168bdc`. Pass 4,840 focused checks and retain unsupported-source and
   stale-snapshot refusal. Keep explicit Schedule C expense evidence.

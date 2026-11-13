@@ -23966,6 +23966,24 @@
     "exactArchiveEvidence": ".local/upgrade-evidence/nov13-main-combined-pa-oh-wage",
     "filingQualified": false
   },
+  "nov13GuidedW2GOriginals": {
+    "commit": "14ad47f18a00765a510ab6fdec2f9778e29fc6ca",
+    "tree": "e571ca956cd40cd6414048754ddbe41e59595d25",
+    "focusedPassed": 5163,
+    "focusedFiles": 679,
+    "focusedSkipped": 65,
+    "baselineSha256": "e357df66e7760dd2b071ae7ccce907ed499a12ecd9b6d915de5a38e1239fd128",
+    "focusedSha256": "ee298428a25ba94af344946b35beb4c77e98579f6511c5839de5597707eaa917",
+    "chromiumPassed": 4,
+    "chromiumRetries": 0,
+    "chromiumReportSha256": "5b06dd156b025252516dfb2531d8dc1a95a45eed0ffd50f0439237e1216cfa77",
+    "specReferences": 8852,
+    "auditSha256": "a6a2d817512faa67dd39d00a4c2089ed233605db1fa5f62ea33b2ca09b7c6bce",
+    "annualGrossGains": "8000.05",
+    "federalWithholding": "1200.01",
+    "humanTaxReviewComplete": false,
+    "evidence": ".local/upgrade-evidence/nov13-guided-w2g"
+  },
   "nov13ScheduleSEWageringCandidate": {
     "commit": "dc98bc0625a38e2d069c95a60655ae9a2436a4cf",
     "tree": "f5c9479e90c764e3648cebd02b00a965f359c543",
