@@ -1,0 +1,38 @@
+form: "Form 1040-V final 2026 physical candidate"
+fullName: "Payment Voucher for Individuals, final 2026 physical field contract"
+taxYear: 2026
+reference: "https://www.irs.gov/pub/irs-prior/f1040v--2026.pdf"
+revision: "Created 8/19/26"
+notes: |
+  The IRS Form 1040-V product page links the current PDF, which is byte-identical
+  to the 2026 entry in the IRS year-specific archive. The general downloads
+  catalog displayed a 2025 revision label for its November 10, 2026 posting.
+  Form 1040-V is the optional voucher for a check or money order for the 2026
+  balance due on Form 1040, 1040-SR or 1040-NR. The form instructs online payers
+  to leave the voucher uncompleted. This candidate covers physical fields only.
+  Page 2 contains printed payment options and mailing information.
+lines:
+  - line: "source"
+    description: "Pin the official final 2026 annual PDF"
+    formula: "Require SHA-256 7533914c5674c1486e4c60dba1e852d65669aece7b840c3644761bac64e64335, 97210 bytes, two pages and the 2026 annual title."
+    testRef: "tests/pdf/form-1040-v-2026-candidate.test.ts::pins the official annual source"
+  - line: "1"
+    description: "Primary identifier on the voucher"
+    formula: "Use the first taxpayer identifier shown on the return, using the ITIN where applicable. One text widget, MaxLen 11."
+    testRef: "tests/pdf/form-1040-v-2026-candidate.test.ts::maps each exact printed field"
+  - line: "2"
+    description: "Spouse identifier on a joint return"
+    formula: "Use the second identifier shown on the joint return. Leave blank on other returns. One text widget, MaxLen 11."
+    testRef: "tests/pdf/form-1040-v-2026-candidate.test.ts::maps each exact printed field"
+  - line: "3"
+    description: "Amount actually paid by check or money order"
+    formula: "One right-aligned text widget. Preserve the supplied exact amount and cents. The voucher does not calculate the balance due or initiate a payment."
+    testRef: "tests/pdf/form-1040-v-2026-candidate.test.ts::reopens all diagnostic values and widget appearances"
+  - line: "4"
+    description: "Name and address information as shown on the return"
+    formula: "Use separate primary and spouse name cells, street, apartment, city, state, ZIP, and three foreign address cells. State MaxLen 2. ZIP MaxLen 10. All 15 widgets for lines 1 through 4 are on page 1."
+    testRef: "tests/pdf/form-1040-v-2026-candidate.test.ts::maps each exact printed field"
+  - line: "release"
+    description: "Preserve the closed PDF, filing and payment gates"
+    formula: "Require the form to remain outside the review template registry and filing/export gates. This package enables no payment action."
+    testRef: "tests/pdf/form-1040-v-2026-candidate.test.ts::keeps exports filing and payments disabled"

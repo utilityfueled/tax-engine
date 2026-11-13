@@ -1,0 +1,43 @@
+form: "Form 2555 final 2026 physical candidate"
+fullName: "Final 2026 Foreign Earned Income form physical fields"
+taxYear: 2026
+irsReference: "https://www.irs.gov/pub/irs-prior/f2555--2026.pdf"
+revision: "Created 9/18/26, IRS final index posted 11/05/2026"
+retrievedAt: "2026-11-13"
+reviewStatus: "independent-qualified-tax-review-pending"
+notes: |
+  Final 2026 instructions are separately published. This candidate binds the
+  physical blank and fields only. Residence, travel, employer, source,
+  election and attachment facts must be separately qualified before use.
+lines:
+  - line: "source"
+    description: "Pin the final annual blank"
+    formula: "Require 151196 bytes, SHA-256 a88984fa3dd5b5846cc446032aaa2e0a6489d5efc8ac63f62632613c7e3d6b11, three pages and the 2026 form title."
+    testRef: "tests/pdf/form-2555-2026-candidate.test.ts::pins the final blank and its revision"
+  - line: "I–IV"
+    description: "Bind original identification, eligibility, travel and receipts"
+    formula: >-
+      Identify each leaf by its printed purpose, page, rectangle and field type.
+      Line 14 has two four-row blocks with four columns each. Line 18 has four
+      six-column rows. Yes and no controls have separate leaf names and on states.
+    testRef: "tests/pdf/form-2555-2026-candidate.test.ts::matches every field and widget to the official physical layout"
+  - line: "V–IX"
+    description: "Bind housing and exclusion calculation cells"
+    formula: >-
+      Lines 35 and 39 each have separate integer and fractional widgets. Preserve
+      the printed decimal point, the 2026 annual exclusion and the published
+      daily and annual housing base. Line 45 uses Schedule 1 line 8d and line 50
+      uses Schedule 1 line 24j. The prior-year line 45 attachment notation
+      has no dedicated widget and is outside this physical exercise.
+    testRef: "tests/pdf/form-2555-2026-candidate.test.ts::records the printed factors, split ratios and transfers"
+  - line: "diagnostic"
+    description: "Exercise the saved form without taxpayer identifiers"
+    formula: >-
+      Write fictional amounts and eligibility details to distinct text and check
+      boxes, exercise the boundaries of both travel tables, and preserve the
+      original name and SSN fields blank. Reopen with appearances and notices.
+    testRef: "tests/pdf/form-2555-2026-candidate.test.ts::reopens a marked diagnostic with distinct fields and blank identifiers"
+  - line: "release"
+    description: "Keep annual export unavailable"
+    formula: "The blank and field map stay outside the public review and filing paths."
+    testRef: "tests/pdf/form-2555-2026-candidate.test.ts::keeps all annual export gates closed"
