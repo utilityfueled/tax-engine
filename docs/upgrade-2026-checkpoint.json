@@ -24000,6 +24000,25 @@
     "humanTaxReviewComplete": false,
     "evidence": ".local/upgrade-evidence/nov13-guided-w2g"
   },
+  "nov13ScheduleSECoveredPayroll": {
+    "commit": "1c8dabe5841ed33d71757111cd3fbb6ddb01e6e3",
+    "tree": "1d7c85f497f0074916bf79a94bdfcd3e3902fc0a",
+    "focusedPassed": 3141,
+    "focusedFiles": 361,
+    "baselineSha256": "69478b6d5349aea5f7fb32664ec22b003320315d050a97062f8732dcec8e1eab",
+    "sourceValidationBaselineSha256": "1c4228a4aec1ed2b3bde0aa1b338760fa3ab0577cbe5e639b6facb0286c49012",
+    "focusedSha256": "d545b328718e31b51a4dab8055f7bc27103b6c78acc90c00e8b3bf94394caf91",
+    "specReferences": 8853,
+    "capPdfSha256": "9b7e4707f8ed165e8fd6084c9d6a136f527cb830acb35a356ffaa226b462e332",
+    "strictInspectionSha256": "cda5219ce1992d2cbb847b0eec6fc77fbaf5650ed1a5d4f3378eb424494bbd9c",
+    "filledFields": 9,
+    "verifiedWidgets": 27,
+    "renderedPages": 2,
+    "reviewExportsEnabled": false,
+    "filingQualified": false,
+    "humanTaxReviewComplete": false,
+    "evidence": ".local/upgrade-evidence/nov13-schedule-se-payroll"
+  },
   "nov13ScheduleSEWageringCandidate": {
     "commit": "dc98bc0625a38e2d069c95a60655ae9a2436a4cf",
     "tree": "f5c9479e90c764e3648cebd02b00a965f359c543",

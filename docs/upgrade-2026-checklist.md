@@ -6,6 +6,9 @@ below retain their original evidence boundaries.
 
 ## Active continuation — November 13 Eastern
 
+- [x] Project the current original W-2 Boxes 3 and 7 onto the disabled
+  Schedule SE candidate in `1c8dabe5`. Pass 3,141 targeted tests and verify
+  the saved PDF at the wage cap, with blank lines 8b through 10.
 - [x] Project only consumed workspace AI fields and redact the question and
   conversation before transport in `2f317cb4`. Pass 238 focused and 40
   production-build Chromium checks with unchanged browser budgets.

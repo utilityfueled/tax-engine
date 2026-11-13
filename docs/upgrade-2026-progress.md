@@ -4,6 +4,18 @@ Current source, verification and remaining work are summarized in the
 [current continuation](upgrade-2026-current-status.md). Historical results
 below apply to their named revisions.
 
+- November 13: `1c8dabe5` reconciles the 2026 Schedule SE wage-base branch
+  to actual primary W-2 Boxes 3 and 7 alongside the confirmed wagering
+  ledger. A source at the $184,500 cutoff retains Medicare tax and skips
+  lines 8b through 10. The W-2 source validations and projection failed
+  in two baseline runs before their fixes. All 3,141 targeted tests in 361
+  files, three type checks, engine build, scoped lint, inventory and 8,853
+  spec references passed. A separate Decimal calculation and strict PDF
+  parser verified the nine saved values and all 27 widget positions. Both
+  pages were visually checked. The PDF candidate remains disabled.
+  [Final Schedule SE](https://www.irs.gov/pub/irs-prior/f1040sse--2026.pdf) ·
+  [Final instructions](https://www.irs.gov/pub/irs-prior/i1040sse--2026.pdf).
+
 - November 13: `2f317cb4` restricts the workspace AI client request to
   the declared task fields and includes the question and conversation in
   the same redaction pass as the workspace. A synthetic regression first

@@ -6,6 +6,19 @@ The public refs were refreshed. `origin/main` still points to `59248889`
 and `origin/upgrade/2026-baseline` to `3024b848`. Successor commits stay on
 local `main` while automatic production deployment is being disabled.
 
+`1c8dabe5` fills the disabled 2026 Schedule SE candidate from current primary
+W-2 Boxes 3 and 7 and the reconciled wagering business, including linked
+W-2Gs. The $183,500 test leaves $1,000 of wage base and yields $204 tax and a
+$102 deduction. At $184,500, the saved PDF leaves lines 8b through 10 empty
+and shows $80 tax and a $40 deduction. An independent Decimal calculation
+and strict parser reproduced nine written values, all 27 widget locations,
+blank identity and two review notices. Both pages were rendered and examined.
+All 3,141 targeted tests, three type checks, engine build, scoped lint,
+inventory and 8,853 spec references passed. Distinct employer originals,
+exact amounts and separate payroll-source confirmation are required.
+[Final Schedule SE](https://www.irs.gov/pub/irs-prior/f1040sse--2026.pdf) ·
+[W-2 instructions](https://www.irs.gov/pub/irs-prior/iw2w3--2026.pdf).
+
 `2f317cb4` limits workspace AI requests to the fields consumed by the task.
 It redacts the user question and conversation alongside the workspace before
 transport. Audit history, structured facts, preview values, and unselected
