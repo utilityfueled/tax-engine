@@ -617,6 +617,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   // ═══════════════════════════════════════════════════════════
 
   const form1099R = calculateForm1099R(input.form1099R ?? [], {
+    taxYear: year,
     qcdAnnualLimit: constants.qcd.annualLimit,
   });
   audit.merge(form1099R.lines);

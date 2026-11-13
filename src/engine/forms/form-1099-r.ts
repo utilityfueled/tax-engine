@@ -156,8 +156,13 @@ function resolveQualifiedCharitableDistributionLimit(
 
 export function calculateForm1099R(
   forms: Form1099R[] = [],
-  options: { qcdAnnualLimit?: Decimal } = {}
+  options: { qcdAnnualLimit?: Decimal; taxYear?: number } = {}
 ): Form1099RResult {
+  if (options.taxYear === 2026) {
+    for (const form of forms) {
+      if (!isIraForm1099RDistribution(form)) assert2026PensionTaxability(form);
+    }
+  }
   const audit = new AuditTrail();
   const iraForms = forms.filter(isIraForm1099RDistribution);
   const disabilityPensionForms = forms.filter(isDisabilityPensionTaxableAsWages);
@@ -451,6 +456,49 @@ export function resolveForm1099RTaxableAmount(form: Form1099R): Decimal {
   const taxableAmountBeforeQcd = resolveTaxableAmountBeforeQcd(form);
 
   return Decimal.max(new Decimal(0), taxableAmountBeforeQcd.minus(qualifiedCharitableDistribution));
+}
+
+function assert2026PensionTaxability(form: Form1099R): void {
+  if (form.taxYear !== undefined && form.taxYear !== 2026) {
+    throw new Error("Form 1099-R pension source year must match the 2026 return");
+  }
+
+  const code = getUpperDistributionCode(form).replace(/\s+/g, "");
+  if (!/^[1-9ABCDEFGHJKLMNPQRSTUWY]{1,2}$/u.test(code) || (code.length === 2 && code[0] === code[1])) {
+    throw new Error("2026 Form 1099-R pension requires the actual Box 7a distribution code");
+  }
+  if ((code.includes("6") && !/^(?:6W?|W6)$/u.test(code))
+    || (code.includes("H") && !/^(?:H4?|4H)$/u.test(code))
+    || (code.includes("P") && !/^(?:P[124B]?|[124B]P)$/u.test(code))) {
+    throw new Error("2026 Form 1099-R pension requires a valid Box 7a code combination");
+  }
+
+  const gross = d(form.grossDistribution);
+  const taxable = form.taxableAmount === undefined ? undefined : d(form.taxableAmount);
+  if (!form.grossDistribution.trim() || form.taxableAmount?.trim() === "" || !gross.isFinite() || gross.lt(0)
+    || (taxable && (!taxable.isFinite() || taxable.lt(0) || taxable.gt(gross)))) {
+    throw new Error("2026 Form 1099-R pension requires valid Box 1 and Box 2a amounts");
+  }
+
+  if (isPriorYearTaxableDistribution(form)) return;
+  if (code.includes("6") || isDesignatedRothDirectRolloverToRothIra(form)
+    || isQualifiedDesignatedRothAccountDistribution(form)) {
+    if (taxable?.gt(0) || usesSimplifiedMethodForTaxableAmount(form)) {
+      throw new Error("2026 Form 1099-R pension has contradictory facts for its tax-free distribution code");
+    }
+    return;
+  }
+
+  if (usesSimplifiedMethodForTaxableAmount(form)) {
+    const cost = d(form.simplifiedMethodCostInPlan);
+    const priorRecovery = form.simplifiedMethodPriorYearRecovered;
+    const payments = form.simplifiedMethodPaymentsReceivedThisYear;
+    if (form.simplifiedMethodCostInPlan?.trim() && cost.isFinite() && cost.gte(0) && priorRecovery?.trim() && d(priorRecovery).isFinite()
+      && d(priorRecovery).gte(0) && payments !== undefined && Number.isInteger(payments) && payments >= 0) return;
+  } else if (gross.isZero() || (taxable !== undefined && !form.taxableAmountNotDetermined)) {
+    return;
+  }
+  throw new Error("2026 Form 1099-R pension requires a determined Box 2a or a complete supported Simplified Method worksheet");
 }
 
 function resolveTaxableAmountBeforeQcd(form: Form1099R): Decimal {

@@ -238,6 +238,26 @@ lines:
       - "For the 1998-or-later joint-life table, combined age 140 still yields 260 expected payments but combined age 141 drops to 210 on the next bracket"
     testRef: "tests/engine/forms/form-1099-r.test.ts::Form 1099-R Lines 3 and 4 - validated qualified designated Roth account code B distributions stay gross on 5a and zero on 5b even when Box 2a is blank"
 
+  - line: "2026-pension-source"
+    description: "Form 1040 Lines 1h, 5a and 5b require known non-IRA distribution sources for tax year 2026"
+    formula: >-
+      Before aggregating non-IRA Form 1099-R income, require the original Box 7a
+      distribution code. Reject an explicitly different source year. For a
+      positive gross distribution, use the known Box 2a amount, including zero,
+      only when the payer determined it, or use the complete supported Simplified
+      Method worksheet including known prior-year recovery. Do not infer the
+      taxable amount from gross, Box 5 or a missing amount on a Code G direct
+      rollover. Code G can identify a taxable direct rollover to a Roth IRA.
+      Retain the separately identified no-current-tax branches for prior-year
+      Code P, tax-free Code 6, Code H, and a validated qualified Code B distribution.
+      Historical methods continue to follow their existing year-specific rules.
+    irsRef: "2026 Instructions for Forms 1099-R and 5498, Boxes 2a, 2b, 5 and 7a; Publication 575, Taxation of Periodic Payments and Rollovers"
+    inputs:
+      - "Return tax year and original Form 1099-R year when supplied"
+      - "Form 1099-R Boxes 1, 2a, 2b, 5 and 7a"
+      - "Completed Simplified Method inputs or validated qualified Roth account distribution, where applicable"
+    testRef: "tests/engine/federal-pension-sources-2026.test.ts::2026 original pension source facts"
+
   - line: "5"
     description: "Federal income tax withheld from retirement distributions"
     formula: "Sum Form 1099-R Box 4 withholding for all Forms 1099-R"
