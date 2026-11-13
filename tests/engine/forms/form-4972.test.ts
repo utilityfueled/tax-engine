@@ -21,6 +21,52 @@ const beneficiary = {
   netUnrealizedAppreciation: "0", actuarialValue: "0",
 } satisfies Form4972Input;
 
+describe("2026 Form 4972 own-plan annuity adjustment", () => {
+  const annuity = {
+    ...source, grossDistribution: "25000", taxableAmount: "20000", capitalGain: "5000",
+    actuarialValue: "5000", lumpSumAnnuityValueConfirmed: true,
+  };
+  const worksheetValues = (input: Form4972Input, lines: string[]) => {
+    const result = calculateForm4972(input);
+    return lines.map(line => result.lines.find(row => row.line === line)?.value.toFixed());
+  };
+
+  it("apportions the allowance to a confirmed annuity contract", () => {
+    expect(worksheetValues(annuity, ["11", "12", "16", "20", "21", "22", "25", "28", "29", "30"]))
+      .toEqual(["5000", "20000", "10000", "0.25", "2500", "2500", "1100", "275", "825", "1825"]);
+  });
+
+  it("uses zero allowance at the adjusted total threshold", () => {
+    const input = { ...annuity, grossDistribution: "65000", taxableAmount: "65000", capitalGain: "0", election: "ten_year" as const };
+    expect(worksheetValues(input, ["12", "16", "17", "21", "22", "25", "28", "29", "30"]))
+      .toEqual(["70000", undefined, "70000", "0", "5000", "9505", "550", "8955", "8955"]);
+  });
+
+  it("retains precision for a recurring actuarial ratio", () => {
+    const result = calculateForm4972({ ...annuity, actuarialValue: "3000" });
+    expect(result.lines.find(row => row.line === "20")?.value.toFixed(6)).toBe("0.166667");
+    expect(result.lines.find(row => row.line === "21")?.value.toFixed(6)).toBe("1500.000000");
+    expect(result.line29?.toFixed(6)).toBe("825.000000");
+  });
+
+  it("keeps actuarial value out of the Part II pension transfer", () => {
+    const result = calculateForm4972({ ...annuity, election: "capital_gain" });
+    expect(result.separateTax.toFixed()).toBe("1000");
+    expect(result.ordinaryPensionTransfer.toFixed()).toBe("15000");
+    expect(result.lines.map(line => line.line)).toEqual(["6", "7"]);
+  });
+
+  it("requires an actual qualified lump-sum annuity value in Box 8a", () => {
+    for (const input of [
+      { ...annuity, lumpSumAnnuityValueConfirmed: undefined },
+      { ...annuity, lumpSumAnnuityValueConfirmed: false },
+      { ...annuity, actuarialValue: "" },
+      { ...annuity, actuarialValue: "-0.01" },
+      { ...beneficiary, actuarialValue: "1", lumpSumAnnuityValueConfirmed: true },
+    ]) expect(() => calculateForm4972(input)).toThrow(/Box 8a/u);
+  });
+});
+
 describe("2026 Form 4972 death-beneficiary worksheet", () => {
   it("computes a beneficiary election on the first day without a death exclusion", () => {
     const result = calculateForm4972(beneficiary);

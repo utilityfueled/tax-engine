@@ -7,8 +7,9 @@ notes: |
   own qualified plan and a single qualifying death-beneficiary distribution
   with confirmed zero federal estate tax have separate original-source rules.
   Alternate payees, multiple distributions or recipients, earlier deaths,
-  deferred NUA, positive estate tax and actuarial annuity value need separate
-  qualification. No current-year return or export registration is implied.
+  deferred NUA, positive estate tax and a beneficiary's actuarial annuity
+  value need separate qualification. No current-year return or export
+  registration is implied.
 lines:
   - line: "1-5"
     description: "Eligibility and source reconciliation"
@@ -18,8 +19,12 @@ lines:
       entire required balance distributed, no partial or full rollover, no prior
       disqualifying election, and explicit confirmation from all related records
       that the other disqualifications do not apply. Use the original current
-      source's determined Box 2a, Box 3, and confirmed zero Boxes 6 and 8a.
-      Box 3 cannot exceed Box 2a and Box 2a cannot exceed Box 1.
+      source's determined Box 2a, Box 3, and confirmed zero Box 6. Box 3
+      cannot exceed Box 2a and Box 2a cannot exceed Box 1. Require the actual
+      Box 8a amount. A positive amount requires confirmation that it is the
+      current actuarial value of an annuity contract included in the qualified
+      lump sum and excluded from both Boxes 1 and 2a. A blank, an unknown
+      amount or an unrelated Box 8a value cannot establish this method.
     testRef: "tests/engine/forms/form-4972.test.ts::requires actual eligibility and determined source amounts"
   - line: "1-5-beneficiary"
     description: "Eligibility for a single death-beneficiary distribution without death benefit exclusion or estate tax"
@@ -50,8 +55,9 @@ lines:
     description: "Adjusted total taxable amount"
     formula: >-
       For Part III, line 8 is Box 2a minus elected Part II Box 3, or all of Box
-      2a without Part II. Lines 9 and 11 are confirmed zero for these cohorts.
-      Line 10 equals line 8 and line 12 equals line 10.
+      2a without Part II. Line 9 is confirmed zero for these cohorts.
+      Line 10 equals line 8. Line 11 is the confirmed Box 8a value and
+      line 12 is the sum of lines 10 and 11.
     testRef: "tests/engine/forms/form-4972.test.ts::splits the combined election and computes the separate ten-year tax"
   - line: "13-17"
     description: "Minimum distribution allowance"
@@ -61,15 +67,29 @@ lines:
       $10,000. Line 14 is the positive excess over $20,000, line 15 is 20% of
       line 14, line 16 is line 13 minus line 15, and line 17 is line 12 minus
       line 16. Preserve cents before the rate calculation.
-    testRef: "tests/engine/forms/form-4972.test.ts::applies the allowance boundaries before the tax rate"
+    testRef: "tests/engine/forms/form-4972.test.ts::applies the allowance boundaries before the tax rate for %s"
   - line: "18-29"
     description: "Ten-year separate tax"
     formula: >-
       Line 18 is confirmed zero, line 19 equals line 17, and zero line 11 means
-      lines 20 through 22 and 26 through 28 are omitted. Line 23 is line 19
-      times 0.10. Line 24 uses the final 2026 Form 4972 fixed tax rate schedule
-      for that amount. Line 25 is line 24 times 10 and line 29 equals line 25.
-    testRef: "tests/engine/forms/form-4972.test.ts::uses the printed rate table across every band boundary"
+      lines 20 through 22 and 26 through 28 are omitted. When line 11 is
+      positive, line 20 divides line 11 by line 12 using Decimal precision
+      with at least three fractional places of accuracy. Line 21 is the
+      line 16 allowance times line 20, with a skipped allowance treated as
+      zero. Line 22 is line 11 minus line 21. Line 23 is line 19 times 0.10.
+      Line 24 uses the final 2026 Form 4972 fixed tax rate schedule for that
+      amount and line 25 is line 24 times 10. When line 22 is present, line
+      26 is line 22 times 0.10, line 27 uses the same schedule and line 28
+      is line 27 times 10. Line 29 is line 25 minus any line 28. Do not add
+      Box 8a to the capital gain election or ordinary pension transfer.
+      The disabled own-plan physical candidate still requires zero Box 8a.
+    testRef: "tests/engine/forms/form-4972.test.ts::uses the printed rate table across every band boundary for %s"
+    testRefs:
+      - "tests/engine/forms/form-4972.test.ts::apportions the allowance to a confirmed annuity contract"
+      - "tests/engine/forms/form-4972.test.ts::uses zero allowance at the adjusted total threshold"
+      - "tests/engine/forms/form-4972.test.ts::retains precision for a recurring actuarial ratio"
+      - "tests/engine/forms/form-4972.test.ts::keeps actuarial value out of the Part II pension transfer"
+      - "tests/engine/forms/form-4972.test.ts::requires an actual qualified lump-sum annuity value in Box 8a"
   - line: "30"
     description: "Separate tax and proposed federal transfer"
     formula: >-

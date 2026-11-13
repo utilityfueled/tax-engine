@@ -23,6 +23,7 @@ export type Form4972Input = Form4972CommonInput & ({
   ownQualifiedPlan?: boolean;
   fiveParticipationYearsConfirmed?: boolean;
   priorDisqualifyingElection?: boolean;
+  lumpSumAnnuityValueConfirmed?: boolean;
 } | {
   sourceKind: "death_beneficiary";
   qualifiedPlanConfirmed?: boolean;
@@ -90,8 +91,11 @@ export function calculateForm4972(input: Form4972Input) {
   const gain = sourceAmount(input.capitalGain, "Box 3");
   const nua = sourceAmount(input.netUnrealizedAppreciation, "Box 6");
   const actuarialValue = sourceAmount(input.actuarialValue, "Box 8a");
-  if (taxable.gt(gross) || gain.gt(taxable) || !nua.isZero() || !actuarialValue.isZero()) {
-    throw new Error("Form 4972 requires reconciled Boxes 1, 2a and 3 and confirmed zero Boxes 6 and 8a");
+  if (taxable.gt(gross) || gain.gt(taxable) || !nua.isZero()) {
+    throw new Error("Form 4972 requires reconciled Boxes 1, 2a and 3 and confirmed zero Box 6");
+  }
+  if (actuarialValue.gt(0) && (input.sourceKind === "death_beneficiary" || input.lumpSumAnnuityValueConfirmed !== true)) {
+    throw new Error("Form 4972 requires a confirmed own-plan lump-sum annuity value in Box 8a, excluded from Boxes 1 and 2a");
   }
 
   const partII = input.election === "capital_gain" || input.election === "both";
@@ -130,10 +134,22 @@ export function calculateForm4972(input: Form4972Input) {
   const line18 = record("18", "Estate tax attributable to this distribution", zero,
     input.sourceKind === "death_beneficiary" ? "Confirmed zero from estate records" : "Participant's own plan");
   const line19 = record("19", "Amount for the ten-year computation", line17.minus(line18), "Line 17 less line 18");
+  let line22: Decimal | undefined;
+  if (line11.gt(0)) {
+    const line20 = record("20", "Actuarial share of adjusted taxable amount", line11.dividedBy(line12), "Line 11 divided by line 12");
+    const line21 = record("21", "Actuarial share of minimum distribution allowance", (line16 ?? zero).times(line20), "Any line 16 allowance × line 20");
+    line22 = record("22", "Actuarial value after allowance", line11.minus(line21), "Line 11 less line 21");
+  }
   const line23 = record("23", "One-tenth of the taxable amount", line19.times("0.10"), "Line 19 × 10%");
   const line24 = record("24", "Tax on one-tenth of the taxable amount", scheduleTax(line23), "2026 Form 4972 Tax Rate Schedule");
   const line25 = record("25", "Ten times the computed tax", line24.times(10), "Line 24 × 10");
-  const line29 = record("29", "Ten-year option tax", line25, "Line 25 when the actuarial value is zero");
+  let line28: Decimal | undefined;
+  if (line22) {
+    const line26 = record("26", "One-tenth of actuarial value after allowance", line22.times("0.10"), "Line 22 × 10%");
+    const line27 = record("27", "Tax on one-tenth of the actuarial amount", scheduleTax(line26), "2026 Form 4972 Tax Rate Schedule");
+    line28 = record("28", "Ten times the actuarial tax", line27.times(10), "Line 27 × 10");
+  }
+  const line29 = record("29", "Ten-year option tax", line25.minus(line28 ?? zero), "Line 25 less any tax on line 28");
   const line30 = record("30", "Tax on the lump-sum distribution", line29.plus(line7 ?? zero), "Lines 7 and 29");
 
   return {

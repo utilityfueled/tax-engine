@@ -32,6 +32,11 @@ it("holds the beneficiary method outside the own-plan physical map", () => {
   })).toThrow(/physical.*participant's own plan/u);
 });
 
+it("holds positive Box 8a outside the zero-value physical candidate", () => {
+  const annuity = { ...election, actuarialValue: "2500", lumpSumAnnuityValueConfirmed: true };
+  expect(() => projectForm49722026OwnPlan(annuity)).toThrow(/physical.*zero Box 8a/u);
+});
+
 it("pins the final form and every original widget", async () => {
   const [bytes, fixture] = await Promise.all([
     readFile(blank), readFile(new URL("../fixtures/pdf-2026/form-4972-source.json", import.meta.url), "utf8"),

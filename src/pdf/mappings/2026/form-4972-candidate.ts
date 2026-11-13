@@ -78,6 +78,9 @@ export function projectForm49722026OwnPlan(source: Form4972Input) {
     throw new Error("The Form 4972 physical candidate requires the participant's own plan");
   }
   const exact = calculateForm4972(source);
+  if (!d(source.actuarialValue).isZero()) {
+    throw new Error("The Form 4972 physical candidate requires confirmed zero Box 8a");
+  }
   const rounded = (value: string) => roundDollar(d(value)).toFixed(0);
   const capitalGain = rounded(source.capitalGain);
   const reconciliationError = "Form 4972 cannot reconcile the elected parts in whole dollars";

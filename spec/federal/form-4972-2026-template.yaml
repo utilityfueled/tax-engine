@@ -29,6 +29,7 @@ lines:
     testRef: "tests/pdf/form-4972-2026-candidate.test.ts::projects only the applicable cells of each election"
     testRefs:
       - "tests/pdf/form-4972-2026-candidate.test.ts::holds amounts that cannot reconcile in whole dollars"
+      - "tests/pdf/form-4972-2026-candidate.test.ts::holds positive Box 8a outside the zero-value physical candidate"
   - line: "diagnostic"
     description: "Reopen a marked synthetic specimen"
     formula: "Verify text and checkbox values and appearances, all inactive cells and the review notice on all four pages. Remove XFA, Reader rights and active actions."
