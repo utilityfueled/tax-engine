@@ -60,6 +60,18 @@ Stop receipt SHA-256
 [Vercel archive upload](https://vercel.com/docs/rest-api/deployments/upload-deployment-files) ·
 [Vercel deployment API](https://vercel.com/docs/rest-api/deployments/create-a-new-deployment).
 
+The CLI refreshed its existing session successfully. The second counted
+run uploaded the same archive and created one protected Preview. After
+the first poll the build left the expected active states without reaching
+READY. The run made zero application requests. It confirmed deployment
+removal by 404, restored all eight prior Preview settings and confirmed an
+empty disposable Redis cache. An additional read-only build-events request
+after removal returned 404, so the build cause is unverified. The retry
+and cleanup used 24 requests, with one later read. The conservative ledger
+is at 1,782 of 1,793. That balance cannot cover a full new build, runtime
+checks and cleanup. Retry receipt SHA-256
+`825db02805411a7c590adb3cbac47cb1a6051e0d505b844349e2502bf6a5e96b`.
+
 ### Actual Stripe retry and workspace isolation on `ab47d87f`
 
 The tracked archive at `ab47d87f44597b4b43228ce17076098eccdecff9` passed
@@ -167,6 +179,28 @@ before collection when source extraction left its staging root at mode
 | Grype scan | `21569762dce01d598ed98df8d53b3cd68b93959b82087c829e52c237f254b0ba` |
 | Compose recovery | `49426f76f1c8325b1f09968d0d09a60bb9de9f4844fb7feac0f86a65b839f8bc` |
 | Rehearsal and cleanup | `7570bd038ab3a9a7ddaa3788323836a1047add8e4575a20ec572988f37b70ab0` |
+
+### Corrected private staging on `ef86f0cb`
+
+The separately imported runtime passed smoke with zero set-ID regular
+files. It passed six Compose recovery phases, private browser admission
+and 616 Chromium cases with five hosted-only skips. Normal stop and user
+socket restoration passed. The scan still reports 197 matches, including
+60 High and zero Critical. The scan result does not record risk acceptance.
+The exact managed run on the same archive exposed a stale browser diagnostic
+digest and two abbreviated parameterized spec references. The failure is
+retained, and the successor `e6a34ac3` passes both affected checks.
+
+| ARM64 evidence | SHA-256 |
+| --- | --- |
+| Runtime image ID | `b19f390e623e0cb3a3682afe3ffb8c60150e724bb4ca76aeb44250f0e7c472d9` |
+| Runtime image archive | `27bad15ce9870c6ce1d006997d1237335f6ab43b0579269551682669e05f256d` |
+| CycloneDX SBOM | `41b911c6a8d02a244f686e1002b4f902b7f842be637d45392fde0d74c73c0db1` |
+| Grype scan | `23e22d1fffff61982fd04c352494eacf0f8eaf2e47ee3877ed0b353c26226d37` |
+| Compose recovery | `4593f90f5dae22887f098190ae2273c36e4c0bed45b25adef617ef68970a5115` |
+| Chromium transcript | `2ed4e8db8d3da287d56e445a6e7939e161b83bf004138de3f265607be852ea01` |
+| Complete rehearsal receipt | `36cb9f4db5d940c75618153af2b2bb2208a03ff59658f3f0419fe0fc2a1c2dce` |
+| Normal stop and socket restoration | `cd32053478e94fc27e16e991280a6f3de2d3580c6280dd1e44122dc93d318b40` |
 
 ### Redis pseudonym archive at `a022a2ec`
 

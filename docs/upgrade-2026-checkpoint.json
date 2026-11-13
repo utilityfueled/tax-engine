@@ -24436,6 +24436,38 @@
     "uploaded": false,
     "deployed": false
   },
+  "nov13SuccessorPreviewBuildStop": {
+    "commit": "40c447d8bda9e22d411d37c3a7b88f5f575bb71f",
+    "reusedCliSessionRefreshed": true,
+    "httpOperations": 24,
+    "buildEventsReadOperations": 1,
+    "buildEventsStatusAfterCleanup": 404,
+    "cumulativeConservativeOperations": 1782,
+    "operationCeiling": 1793,
+    "archiveUploaded": true,
+    "protectedPreviewCreated": true,
+    "readyObserved": false,
+    "applicationRequests": 0,
+    "deploymentRemoved": true,
+    "previewEnvironmentRestored": true,
+    "redisEmpty": true,
+    "receiptSha256": "825db02805411a7c590adb3cbac47cb1a6051e0d505b844349e2502bf6a5e96b"
+  },
+  "nov13Form4972OwnPlanAnnuity": {
+    "commit": "e6a34ac3f0a21da6e81702782d52d0084566c579",
+    "focusedTestsPassed": 1152,
+    "initialRed": 6,
+    "specReferencesValidated": 8918,
+    "redSha256": "04b01d8c3c864024e55f946912e2e04171149948e94628669a4130e206291b20",
+    "greenSha256": "8ce05df2f079804572c81bbdf4d0418279effd5947b55b375a72ae2010c61039",
+    "browserRequestBudgetChanged": false,
+    "federalElectionEnabled": false,
+    "positiveBox8aPdfAdmitted": false,
+    "sources": [
+      "https://www.irs.gov/pub/irs-pdf/f4972.pdf",
+      "https://www.irs.gov/instructions/i1099r"
+    ]
+  },
   "nov13PensionTaxability": {
     "commit": "005394da914b62d23bfb735e40f99583589cd0b9",
     "focusedTestsPassed": 646,
@@ -24552,6 +24584,27 @@
       "scanSha256": "21569762dce01d598ed98df8d53b3cd68b93959b82087c829e52c237f254b0ba",
       "composeRecoverySha256": "49426f76f1c8325b1f09968d0d09a60bb9de9f4844fb7feac0f86a65b839f8bc",
       "receiptSha256": "7570bd038ab3a9a7ddaa3788323836a1047add8e4575a20ec572988f37b70ab0"
+    },
+    "correctedArm64PrivateSource": {
+      "source": "ef86f0cbbd03249713e3b130eea7120e26c0c613",
+      "image": "b19f390e623e0cb3a3682afe3ffb8c60150e724bb4ca76aeb44250f0e7c472d9",
+      "imageArchiveSha256": "27bad15ce9870c6ce1d006997d1237335f6ab43b0579269551682669e05f256d",
+      "setIdRegularFiles": 0,
+      "composeRecoveryPhasesPassed": 6,
+      "chromiumCollected": 621,
+      "chromiumPassed": 616,
+      "chromiumHostedOnlySkipped": 5,
+      "advisoryMatches": 197,
+      "highAdvisoryMatches": 60,
+      "criticalAdvisoryMatches": 0,
+      "riskAccepted": false,
+      "cleanupVerified": true,
+      "sbomSha256": "41b911c6a8d02a244f686e1002b4f902b7f842be637d45392fde0d74c73c0db1",
+      "scanSha256": "23e22d1fffff61982fd04c352494eacf0f8eaf2e47ee3877ed0b353c26226d37",
+      "composeRecoverySha256": "4593f90f5dae22887f098190ae2273c36e4c0bed45b25adef617ef68970a5115",
+      "browserSha256": "2ed4e8db8d3da287d56e445a6e7939e161b83bf004138de3f265607be852ea01",
+      "receiptSha256": "36cb9f4db5d940c75618153af2b2bb2208a03ff59658f3f0419fe0fc2a1c2dce",
+      "cleanupSha256": "cd32053478e94fc27e16e991280a6f3de2d3580c6280dd1e44122dc93d318b40"
     },
     "localHosted": {
       "source": "f42a83524f79a5b89024777fa047b4b06978a472",

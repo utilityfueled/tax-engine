@@ -4,6 +4,19 @@ Current source, verification and remaining work are summarized in the
 [current continuation](upgrade-2026-current-status.md). Historical results
 below apply to their named revisions.
 
+- November 13 — `e6a34ac3` calculates the Form 4972 annuity adjustment from
+  confirmed own-plan Box 8a, including a recurring ratio, the $70,000
+  boundary and the separate Part II transfer. Six regressions failed
+  before the change. All 1,152 affected tests, types, lint, inventory and
+  8,918 spec references passed. It also corrected the two stale bindings
+  exposed by `ef86f0cb`'s managed unit run. Federal and PDF expansion
+  remains gated. [Final 2026 Form 4972](https://www.irs.gov/pub/irs-pdf/f4972.pdf).
+
+- November 13 — Corrected native ARM64 `ef86f0cb` passed image import,
+  zero set-ID files, smoke, SBOM and scanning, all six Compose recovery
+  phases and 616 Chromium cases with five hosted-only skips. Normal VM
+  stop and socket restoration passed. [Rehearsal evidence](upgrade-2026-nov13-release-rehearsals.md).
+
 - November 13 — `40c447d8` adds the single death-beneficiary Form 4972
   worksheet with original Code 4 and A, confirmed post-August 20, 1996
   death and zero estate tax. Three failing cases preceded the change and

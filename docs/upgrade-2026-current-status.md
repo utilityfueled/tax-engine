@@ -9,6 +9,16 @@ The read-only Vercel check still finds the production project linked to
 `main`, with automatic custom-domain assignment and no build-ignore command.
 The isolated rehearsal project has no Git link and protects all deployments.
 
+`e6a34ac3` adds the internal own-plan annuity adjustment for a confirmed
+Form 1099-R Box 8a. It apportions the allowance, removes the annuity's
+separate tax and preserves the ordinary pension transfer. Six regressions
+failed before the change and all 1,152 affected tests passed. Engine types,
+lint, inventory, 8,918 spec references and the existing browser request and
+diagnostic settings passed. The own-plan PDF candidate still requires zero
+Box 8a. The exact full managed run is in progress.
+[Final 2026 Form 4972](https://www.irs.gov/pub/irs-pdf/f4972.pdf) ·
+[Form 1099-R Box 8a](https://www.irs.gov/instructions/i1099r).
+
 `40c447d8` calculates the internal Form 4972 election for a single
 death-beneficiary distribution with confirmed zero attributable estate tax.
 It uses the participant's birth and death records and the beneficiary's
@@ -67,8 +77,10 @@ inspection container, including private image directories. The `4593c4ec`
 ARM64 smoke found no set-ID files, and all six Compose recovery phases
 passed. Its Chromium preflight refused the source staging directory after
 archive extraction changed its permissions. The corrected `ef86f0cb`
-rehearsal passed that preflight. The package versions and existing advisory
-dispositions remain open.
+archive passed the preflight, six recovery phases and 616 Chromium cases,
+with five hosted-only skips. Normal stop and socket restoration passed.
+The separate managed run on that revision found two stale verification
+bindings, corrected in `e6a34ac3`. Image advisory dispositions remain open.
 [Rehearsal evidence](upgrade-2026-nov13-release-rehearsals.md) ·
 [Debian privileged mount advisory](https://security-tracker.debian.org/tracker/CVE-2026-76642).
 
