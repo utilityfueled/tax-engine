@@ -82,6 +82,7 @@ async function request(server, route, { cookie, client = "198.51.100.73", ...opt
 const privateMarker = "PRIVATE-HTTP-ONLY-900-71-8891";
 let mode = "normal", transportCalls = 0;
 const counters = new Map(), sockets = new Set();
+let allRedisBucketKeysPseudonymous = true;
 try {
   receipt.sourceHead = await command("source-head", "git", ["rev-parse", "HEAD"]);
   receipt.buildId = (await readFile(path.join(root, "apps/web/.next/BUILD_ID"), "utf8")).trim();
@@ -107,6 +108,9 @@ try {
         assert.ok(["eval", "evalsha"].includes(String(command[0]).toLowerCase()), "Unexpected controlled transport command");
         const count = Number(command[2]); assert.equal(count, 2);
         const [current, previous] = command.slice(3, 5), [limit, now, window, increment] = command.slice(5).map(Number);
+        if (![current, previous].every(key => /^http-synthetic-[a-f0-9-]+:v1:[a-f0-9]{64}:[0-9]+$/.test(key))) {
+          allRedisBucketKeysPseudonymous = false;
+        }
         assert.ok([limit, now, window, increment].every(Number.isFinite)); assert.equal(increment, 1);
         const used = (counters.get(current) || 0) + Math.floor((1 - now % window / window) * (counters.get(previous) || 0));
         if (used >= limit) return { result: [-1, limit] };
@@ -239,6 +243,9 @@ try {
   });
   await check("finite response and application-log privacy", async () => {
     for (const logfile of logs) assert.ok(!(await readFile(logfile, "utf8")).includes(privateMarker));
+  });
+  await check("shared Redis REST bucket identifiers are pseudonymous", async () => {
+    assert.ok(counters.size > 0 && allRedisBucketKeysPseudonymous);
   });
   receipt.transportCalls = transportCalls;
 } catch (error) { receipt.failures.push({ name: "prerequisite or setup", message: String(error.message) }); }

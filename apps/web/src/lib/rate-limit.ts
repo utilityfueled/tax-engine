@@ -1,3 +1,4 @@
+import { createHmac } from "node:crypto";
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
 
@@ -6,7 +7,8 @@ import { Redis } from "@upstash/redis";
  *
  * Hosted deployments can also use Upstash Redis by setting
  * `UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN` (or the Vercel KV
- * aliases) together with an optional `TAX_ENGINE_RATE_LIMIT_PREFIX`.
+ * aliases), the server-side `BETTER_AUTH_SECRET` and an optional
+ * `TAX_ENGINE_RATE_LIMIT_PREFIX`.
  */
 
 export interface RateLimitConfig {
@@ -53,8 +55,12 @@ export function requiresSharedRateLimit(env: RateLimitEnvironment): boolean {
 }
 
 export function validateHostedRateLimitConfig(env: RateLimitEnvironment = process.env): void {
-  if (requiresSharedRateLimit(env) && resolveRateLimitBackendConfig(env).backend !== "upstash-redis") {
+  if (!requiresSharedRateLimit(env)) return;
+  if (resolveRateLimitBackendConfig(env).backend !== "upstash-redis") {
     throw new Error("Hosted production requires shared rate limits. Configure both Upstash Redis REST URL and token.");
+  }
+  if (!env.BETTER_AUTH_SECRET?.trim()) {
+    throw new Error("Hosted production requires BETTER_AUTH_SECRET to protect shared rate-limit identifiers.");
   }
 }
 
@@ -294,9 +300,21 @@ export async function checkRateLimitForEnvironment(
     return checkRateLimit(store, key, config, now);
   }
 
+  const secret = env.BETTER_AUTH_SECRET?.trim();
+  if (!secret) {
+    if (sharedRequired) return unavailableRateLimit();
+    warnOnce(
+      "rate-limit-missing-pseudonym-secret",
+      "[security] Shared rate limiting requires BETTER_AUTH_SECRET. Falling back to in-memory limits for this local deployment."
+    );
+    return checkRateLimit(store, key, config, now);
+  }
+
+  // Keep the raw client identifier within the application process.
+  const digest = createHmac("sha256", secret).update("tax-engine:rate-limit:v1\0").update(key).digest("hex");
   try {
     const limiter = getRedisRateLimiter(config, backend);
-    const result = mapRedisRateLimitResult(await limiter.limit(key), now);
+    const result = mapRedisRateLimitResult(await limiter.limit(`v1:${digest}`), now);
     if (result.unavailable && !sharedRequired) return checkRateLimit(store, key, config, now);
     return result;
   } catch {

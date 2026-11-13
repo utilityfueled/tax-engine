@@ -128,6 +128,10 @@ Hosted production requires shared rate limiting. Add one of these Redis configur
 - Direct Upstash REST credentials: set `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN`.
 - Optional: `TAX_ENGINE_RATE_LIMIT_PREFIX=tax-engine:staging:ratelimit` so staging and production do not share buckets.
 
+Shared rate limiting also uses the existing server-only `BETTER_AUTH_SECRET`
+to derive keyed identifiers for Redis. Keep that secret stable across replicas.
+The first upgrade to keyed identifiers or a secret rotation starts new Redis
+quota buckets. Previous buckets expire according to their configured windows.
 Missing shared configuration blocks hosted production startup. During Redis
 errors or timeouts, protected routes return retryable HTTP 503 responses before
 auth, billing, upload, or AI work. Self-host mode can use process-local limits.

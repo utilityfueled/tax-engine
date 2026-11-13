@@ -426,7 +426,7 @@
     "apps/web/src/lib/provider-workspace-request.ts": "b281a8a1273820bf1fac1abb4ef2876e012d1f9e4bac4bad7409249a2dce164b",
     "apps/web/src/lib/provider-workspace-responder.ts": "b8b989fbc8d7609fd08ef7044f6916f38053c3dde49f357cf5f2ede8165a82af",
     "apps/web/src/lib/provider-workspace-route.ts": "f0511cc2091d6994dca61747d13f6ebe757cfc3fad75e19d949cb1a8f7fde8ea",
-    "apps/web/src/lib/rate-limit.ts": "8610c1a1be697edda47729ef8d235d265112102bd94d7f74a828533d62f07de2",
+    "apps/web/src/lib/rate-limit.ts": "c709531e6404db48d32a8ed7289786249faf439de55420ee75a30f32cfd0fb3c",
     "apps/web/src/lib/safe-body-parser.ts": "11b2a5a0a69173d832e220bbaeb085656947426ff70f777112f16b31bd275e40",
     "apps/web/src/lib/sentry.ts": "607246d4002d8519e9902c7b6b631b26dd658a1e9a35ea608acf1fdd5f883085",
     "apps/web/src/lib/structured-fact-copy.ts": "4e50fbb7ed1e2fac1e137fe2b8bf0430bd703076079a78663d213e15d62b9e5b",
