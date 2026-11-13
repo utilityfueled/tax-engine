@@ -82,3 +82,14 @@ export function calculateAiCost(model: string, at: string, usage: AiTokenUsage) 
   if (retailCharge.gt(Number.MAX_SAFE_INTEGER)) throw new Error("Charge exceeds the supported ledger range.");
   return { providerCostUsd: providerCostUsd.toFixed(), retailChargeCents: retailCharge.toNumber(), pricingEffectiveFrom: price.effectiveFrom };
 }
+
+/** Upper bound for the standard text request, independent of the eventual usage report. */
+export function maximumAiRequestCost(model: string, at: string, inputTokens: number, outputTokens: number) {
+  const price = getAiPrice(model, at);
+  const base = { inputTokens, outputTokens, regionalProcessing: price.provider === "openai" };
+  const usages: AiTokenUsage[] = [base, { ...base, cachedInputTokens: inputTokens }];
+  if (price.cacheWrite30m) usages.push({ ...base, cacheWrite30mTokens: inputTokens });
+  if (price.cacheWrite12h) usages.push({ ...base, cacheWrite12hTokens: inputTokens });
+  return usages.map(usage => calculateAiCost(model, at, usage)).reduce((maximum, cost) =>
+    new Money(cost.providerCostUsd).gt(maximum.providerCostUsd) ? cost : maximum);
+}

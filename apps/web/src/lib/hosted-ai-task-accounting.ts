@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import Decimal from "decimal.js";
-import { calculateAiCost } from "@tax-engine/engine/src/ai-pricing";
+import { maximumAiRequestCost } from "@tax-engine/engine/src/ai-pricing";
 import { AI_PROFILES, AI_TASKS } from "@tax-engine/engine/src/ai-task-registry";
 import type { AiTaskExecution } from "./ai-task-adapter";
 import { createHostedAiLedger } from "./hosted-ai-ledger";
@@ -23,9 +23,8 @@ export function hostedAiTaskAccounting(input: {
       const db = await ledger();
       if (attempt.attempt === 2 && !input.escalationApprovalReference?.trim()) throw new Error("A second attempt requires explicit escalation authorization.");
       const escalationBudget = input.escalationApprovalReference?.trim() && attempt.attempt === 1
-        ? calculateAiCost(AI_PROFILES["sol-high"].model, attempt.startedAt, {
-          inputTokens: AI_TASKS["complex-reconciliation"].maxInputTokens, outputTokens: AI_TASKS["complex-reconciliation"].maxOutputTokens,
-        }).retailChargeCents : 0;
+        ? maximumAiRequestCost(AI_PROFILES["sol-high"].model, attempt.startedAt,
+          AI_TASKS["complex-reconciliation"].maxInputTokens, AI_TASKS["complex-reconciliation"].maxOutputTokens).retailChargeCents : 0;
       const result = await db.reserve({ ...identity, cycleKey: input.cycleKey, includedBudgetCents: input.includedBudgetCents,
         payloadDigest: createHash("sha256").update(JSON.stringify(input.requestPayload)).digest("hex"),
         maximumChargeCents: new Decimal(attempt.maximumChargeCents).plus(escalationBudget).toNumber() });

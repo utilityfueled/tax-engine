@@ -1,6 +1,6 @@
 import "server-only";
 import { z } from "zod";
-import { calculateAiCost, type AiTokenUsage } from "@tax-engine/engine/src/ai-pricing";
+import { calculateAiCost, maximumAiRequestCost, type AiTokenUsage } from "@tax-engine/engine/src/ai-pricing";
 import { resolveCandidateAiRoute, type AiProvider, type AiTask, type AiProfileId } from "@tax-engine/engine/src/ai-task-registry";
 import { containsUnsafeDirectIdentifier } from "./provider-request-privacy";
 import { selectQualifiedAiRoute, type AiRolloutState } from "./ai-rollout";
@@ -149,7 +149,7 @@ export async function executeAiTask<T>(request: AiTaskRequest<T>, execution: AiT
   };
   const startedAt = (execution.now ?? (() => new Date().toISOString()))();
   const attempt: AiAttemptMetadata = { task: request.task, profileId: profile.id, modelId: profile.model, startedAt,
-    maximumChargeCents: calculateAiCost(profile.model, startedAt, { inputTokens: policy.maxInputTokens, outputTokens: policy.maxOutputTokens }).retailChargeCents,
+    maximumChargeCents: maximumAiRequestCost(profile.model, startedAt, policy.maxInputTokens, policy.maxOutputTokens).retailChargeCents,
     attempt: execution.escalationCount === 1 ? 2 : 1 };
   await execution.beforeAttempt?.(attempt);
   const started = performance.now();

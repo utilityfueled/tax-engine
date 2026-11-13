@@ -1,6 +1,6 @@
 import Decimal from "decimal.js";
 import { z } from "zod";
-import { AI_PRICES, calculateAiCost, getAiPrice, type AiTokenUsage } from "../../packages/engine/src/ai-pricing";
+import { AI_PRICES, calculateAiCost, maximumAiRequestCost, type AiTokenUsage } from "../../packages/engine/src/ai-pricing";
 import { AI_TASKS, type AiTask } from "../../packages/engine/src/ai-task-registry";
 import { AI_PROVIDER_DOCUMENTATION, publicModelLifecycle } from "../../packages/engine/src/ai-provider-documentation";
 import { providerModelCandidates, summarizeProviderModelLiveEvalTemplate,
@@ -125,13 +125,7 @@ function requestFor(item: EvalProfile, fixture: ProviderEvalFixture | undefined,
 }
 /** Bound every supported cache treatment and regional uplift, even though no cache writes are requested. */
 export function maximumProviderAttemptUsd(request: ProviderEvalRequest, at: string): string {
-  const price = getAiPrice(request.profile.model, at);
-  const common = { inputTokens: request.maxInputTokens, outputTokens: request.maxOutputTokens,
-    regionalProcessing: request.profile.provider === "openai" };
-  const usages: AiTokenUsage[] = [common, { ...common, cachedInputTokens: request.maxInputTokens }];
-  if (price.cacheWrite30m) usages.push({ ...common, cacheWrite30mTokens: request.maxInputTokens });
-  if (price.cacheWrite12h) usages.push({ ...common, cacheWrite12hTokens: request.maxInputTokens });
-  return Money.max(...usages.map(usage => calculateAiCost(request.profile.model, at, usage).providerCostUsd)).toFixed();
+  return maximumAiRequestCost(request.profile.model, at, request.maxInputTokens, request.maxOutputTokens).providerCostUsd;
 }
 export function summarizeProviderEvalJournal(plan: ProviderEvalPlan, records: readonly EvalJournalRecord[]) {
   validatePlan(plan);

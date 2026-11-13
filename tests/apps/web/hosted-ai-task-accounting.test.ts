@@ -35,7 +35,7 @@ describe("authenticated provider task accounting", () => {
     expect(mocks.reserve).not.toHaveBeenCalled();
     const hooks = hostedAiTaskAccounting({ ...input, escalationApprovalReference: "operator-approved-synthetic" }, {});
     await hooks.beforeAttempt!(attempt);
-    expect(mocks.reserve.mock.calls[0]![0].maximumChargeCents).toBe(23);
+    expect(mocks.reserve.mock.calls[0]![0].maximumChargeCents).toBe(33);
     await hooks.recordAttempt!(attempt, { accepted: false, usage: { inputTokens: 100, outputTokens: 200 } });
     expect(mocks.settle.mock.calls[0]![0].final).toBe(false);
     mocks.reserve.mockResolvedValue({ accepted: true, created: false });

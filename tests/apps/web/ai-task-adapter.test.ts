@@ -118,6 +118,13 @@ describe("task-based candidate AI adapter", () => {
     expect(result?.accepted).toBe(false);
     expect(order).toEqual(["reserve", "dispatch", "settle"]);
   });
+  it("reserves the highest priced Sol usage before dispatch", async () => {
+    const taxContext = { taxYear: 2026, ruleVersion: "synthetic", excerpts: [{ id: "s", taxYear: 2026, text: "Synthetic excerpt" }], auditEntries: [{ id: "a", taxYear: 2026, value: "0", explanation: "Synthetic audit" }] };
+    const beforeAttempt = vi.fn();
+    const result = await executeAiTask(request({ task: "tax-explanation", taxContext }), { ...execution(), beforeAttempt });
+    expect(beforeAttempt).toHaveBeenCalledWith(expect.objectContaining({ modelId: "gpt-6.1-sol", maximumChargeCents: 23 }));
+    expect(result?.accounting).toMatchObject({ providerCostUsd: "0.020124", retailChargeCents: 3 });
+  });
   it("does not dispatch when reservation fails, and does not return success when settlement fails", async () => {
     const deps = execution();
     await expect(executeAiTask(request(), { ...deps, beforeAttempt: async () => { throw new Error("credit exhausted"); } })).rejects.toThrow(/credit exhausted/);
