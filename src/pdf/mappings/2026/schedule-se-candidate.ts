@@ -1,15 +1,23 @@
 /**
  * Final 2026 Schedule SE physical mapping candidate, Created 4/27/26.
  * Spec: spec/federal/schedule-se-2026-template.yaml.
- * No calculation, export registry or filing qualification is enabled.
+ * The bounded projection is internal and excluded from both export registries.
  */
+import Decimal from 'decimal.js';
+import { calculateScheduleSE } from '@/engine/schedules/schedule-se.js';
+import { FEDERAL_2026_CONSTANTS } from '@/models/federal-2026-indexed.js';
+import type { TaxYearInput } from '@/models/inputs.js';
+import { roundDollar } from '@/utils/decimal.js';
+import { SCHEDULE_C_2026_CANDIDATE } from './schedule-c-candidate.js';
+import { projectScheduleC2026WageringFields } from './schedule-c-wagering-projection.js';
+
 const page1 = "topmostSubform[0].Page1[0].";
 const page2 = "topmostSubform[0].Page2[0].";
 
 export const SCHEDULE_SE_2026_CANDIDATE = Object.freeze({
   taxYear: 2026,
   mappingVersion: "2026.1-candidate",
-  sourceUrl: "https://www.irs.gov/pub/irs-pdf/f1040sse.pdf",
+  sourceUrl: "https://www.irs.gov/pub/irs-prior/f1040sse--2026.pdf",
   sourceRevision: "Created 4/27/26",
   retrievedAt: "2026-11-06T00:18:55.962869Z",
   sha256: "a42f5a19c0e84a966a49b5f4ca021d3f49c4fda2e087da0b00bf2003525f8655",
@@ -51,3 +59,65 @@ export const SCHEDULE_SE_2026_CANDIDATE = Object.freeze({
     line17: `${page2}f2_4[0]`,
   }),
 });
+
+interface ScheduleSEWageringConfirmations {
+  allSelfEmploymentAndCoveredPayrollSourcesReviewed?: boolean;
+  noExemptionChurchIncomeOrOptionalMethodConfirmed?: boolean;
+}
+
+const allowedInput = new Set<keyof TaxYearInput>(['taxpayer', 'scheduleC', 'standardDeductionFacts', 'deductionElection']);
+const emptyDocumentCollections = new Set<keyof TaxYearInput>([
+  'w2s', 'formW2G', 'form1099Int', 'form1099Div', 'form1099B', 'form1099DA',
+  'form1099Nec', 'form1099Misc', 'form1099G', 'form1099OID', 'form1099K',
+  'form1099C', 'form1099Q', 'scheduleK1', 'scheduleK1Form1041', 'form1098',
+  'form1098E', 'form1095A', 'donations', 'rentalProperties', 'savingsBondRedemptions',
+  'form6252', 'form8814', 'homeSales', 'form8824',
+]);
+
+/** Populate the disabled regular-method candidate from one confirmed wagering business. */
+export function projectScheduleSE2026WageringFields(
+  input: TaxYearInput, confirmations: ScheduleSEWageringConfirmations,
+): Record<string, string> {
+  if (confirmations.allSelfEmploymentAndCoveredPayrollSourcesReviewed !== true
+    || confirmations.noExemptionChurchIncomeOrOptionalMethodConfirmed !== true) {
+    throw new Error('Confirm the complete Schedule SE source inventory and regular-method eligibility');
+  }
+  if (Object.keys(input).some(key => {
+    const field = key as keyof TaxYearInput;
+    const value = input[field];
+    return value !== undefined && !allowedInput.has(field)
+      && !(emptyDocumentCollections.has(field) && Array.isArray(value) && value.length === 0);
+  })) throw new Error('This Schedule SE candidate requires wagering-only sources without payroll or other returns');
+
+  const scheduleC = projectScheduleC2026WageringFields(input);
+  const profit = new Decimal(scheduleC[SCHEDULE_C_2026_CANDIDATE.fields.line31]);
+  const result = calculateScheduleSE(input, FEDERAL_2026_CONSTANTS);
+  const [owner] = result.perTaxpayer;
+  if (!result.sourceFactsVerified || result.perTaxpayer.length !== 1 || owner?.accountHolder !== 'primary'
+    || owner.earningsSubjectToSETax.lt('400')) {
+    throw new Error('This Schedule SE candidate requires verified primary earnings at the exact $400 threshold or higher');
+  }
+
+  const { earningsMultiplier, socialSecurityWageBase, socialSecurityRate, medicareRate, deductiblePortion } =
+    FEDERAL_2026_CONSTANTS.selfEmploymentTax;
+  const displayedEarnings = profit.times(earningsMultiplier);
+  const earnings = roundDollar(displayedEarnings);
+  const socialSecurity = roundDollar(Decimal.min(earnings, socialSecurityWageBase).times(socialSecurityRate));
+  const medicare = roundDollar(earnings.times(medicareRate));
+  const tax = socialSecurity.plus(medicare);
+  const deduction = roundDollar(tax.times(deductiblePortion));
+  if (displayedEarnings.lt('400') || !earnings.eq(owner.earningsSubjectToSETax)
+    || !socialSecurity.eq(owner.socialSecurityPortion) || !medicare.eq(owner.medicarePortion)
+    || !tax.eq(owner.totalSETax) || !deduction.eq(owner.deductibleHalf)) {
+    throw new Error('The rounded Schedule C transfer cannot reconcile the printed Schedule SE calculation');
+  }
+
+  const fields = SCHEDULE_SE_2026_CANDIDATE.fields;
+  return {
+    [fields.line2]: profit.toFixed(0), [fields.line3]: profit.toFixed(0),
+    [fields.line4a]: earnings.toFixed(0), [fields.line4c]: earnings.toFixed(0), [fields.line6]: earnings.toFixed(0),
+    [fields.line8a]: '0', [fields.line8d]: '0', [fields.line9]: socialSecurityWageBase.toFixed(0),
+    [fields.line10]: socialSecurity.toFixed(0), [fields.line11]: medicare.toFixed(0),
+    [fields.line12]: tax.toFixed(0), [fields.line13]: deduction.toFixed(0),
+  };
+}

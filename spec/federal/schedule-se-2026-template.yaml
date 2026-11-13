@@ -1,12 +1,15 @@
 form: "schedule-se final 2026 physical candidate"
 fullName: "Final 2026 Schedule SE physical field source contract"
 taxYear: 2026
-reference: "https://www.irs.gov/pub/irs-pdf/f1040sse.pdf"
+reference: "https://www.irs.gov/pub/irs-prior/f1040sse--2026.pdf"
+sources:
+  - "https://www.irs.gov/pub/irs-prior/i1040sse--2026.pdf"
 revision: "Created 4/27/26; final annual source, not export-qualified"
 retrievedAt: "2026-11-06T00:18:55.962869Z"
 notes: |
-  Physical asset and field-location validation only. No tax calculation, optional
-  method eligibility, filing qualification or export route is enabled. The 2025
+  Physical asset, field-location validation and a disabled regular-method
+  source projection. Optional methods, filing qualification and export remain
+  unavailable. The 2025
   asset and all existing registries remain unchanged. Printed line 7 ($184,500)
   and line 14 ($7,560) have one-point-wide empty text anchors in the original;
   these anchors are inventoried but are not writable amount cells. Diagnostic
@@ -24,6 +27,25 @@ lines:
     description: "Save and reopen fictional field probes"
     formula: "Preserve every writable text value and both minister-checkbox states, nonempty saved appearances, empty printed-amount anchors and a review notice on both pages. Use REDACTED instead of any SSN; no tax calculation is invoked."
     testRef: "tests/pdf/schedule-se-2026-candidate.test.ts::retains diagnostic values and both checkbox states after save"
+  - line: "regular-method-source"
+    description: "Project one 2026 wagering business and carry the printed tax and deduction"
+    formula: |
+      Replay the complete current primary-owner professional wagering Schedule C
+      ledger. Require explicit review of all self-employment and covered payroll
+      sources and confirmation of no exemption, church income or optional method.
+      This candidate supports no Forms W-2 or W-2G, farm, partnerships, other SE
+      sources or state returns. Lines 2 and 3 transfer rounded Schedule C line 31. Determine
+      eligibility using exact line 3 times 0.9235 and the $400 threshold. Print
+      lines 4a, 4c and 6 only if they reconcile to the rounded line 3. Line 8a
+      and line 8d are zero, line 9 is $184,500. Round line 10 at 12.4% of the
+      smaller of lines 6 and 9, line 11 at 2.9% of line 6, line 12 as their
+      sum and line 13 at 50% of line 12. Verify fresh Schedule SE outputs.
+      Keep both identities, unavailable line inputs and Part II blank.
+    testRef: "tests/pdf/schedule-se-2026-wagering-candidate.test.ts::projects the current wagering profit into the final regular Schedule SE"
+  - line: "regular-method-refusal"
+    description: "Hold threshold, unrelated sources and inconsistent whole-dollar arithmetic"
+    formula: "Deny incomplete or contradictory confirmations, a retained unhandled source even at zero, under-threshold profit and a rounded result that cannot reproduce the printed line calculations."
+    testRef: "tests/pdf/schedule-se-2026-wagering-candidate.test.ts::refuses other sources and a nonreconciling regular-method projection"
   - line: "closed-exports"
     description: "Keep physical availability separate from qualification"
     formula: "The frozen candidate is absent from qualified review and filing template packs; both public 2026 export modes continue to refuse, and 2026 bytes are rejected by the 2025 hash allowlist."

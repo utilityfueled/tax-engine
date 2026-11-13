@@ -11279,7 +11279,7 @@
       "key": "federal/schedule-se-2026-template",
       "jurisdiction": "federal",
       "taxYear": 2026,
-      "sourceAuthority": "https://www.irs.gov/pub/irs-pdf/f1040sse.pdf",
+      "sourceAuthority": "https://www.irs.gov/pub/irs-prior/f1040sse--2026.pdf",
       "specPath": "spec/federal/schedule-se-2026-template.yaml",
       "enginePath": null,
       "packetPath": null,
