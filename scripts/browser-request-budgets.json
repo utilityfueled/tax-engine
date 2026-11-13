@@ -683,7 +683,7 @@
     "src/engine/forms/charitable-net-operating-loss.ts": "63354048420166a55296ee254bbae263b5f61d62c6f6c290ad26b51d8cc677ed",
     "src/engine/forms/charitable-prior-net-operating-loss.ts": "6e1ec3547ea95aa01f55866d151a4b567c67eff19da54009bae99dd05a746e30",
     "src/engine/forms/charitable-private-media.ts": "785840e4ab4f8562669413fd6f92616a92906a4b2d70efb8315fcc498da3cc67",
-    "src/engine/forms/child-credit-eligibility.ts": "41abff937c6cbc01e2dac0c17e29134de2103d8792b65509e17ebfc46dcb66e1",
+    "src/engine/forms/child-credit-eligibility.ts": "83da08b2b75c4bdd7a587abbef66eb6d374edc433d3d55bbb801225270165381",
     "src/engine/forms/claim-of-right.ts": "4309ba2f6efd73db07805ee09d4989ea9c23d2973ce509356cc263476ff041b7",
     "src/engine/forms/cod-attribute-reductions.ts": "72733860cabfddc0cdb2cbb89b717af3379f047ab8ce6077e13f7e39bb3f66cc",
     "src/engine/forms/cod-attribute-return.ts": "f106469bba0632a8db9fcb4b1a2ed0ba29e3a75701a260db48666647ac945012",

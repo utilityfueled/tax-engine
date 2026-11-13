@@ -115,6 +115,12 @@ lines:
     irsRef: "https://www.irs.gov/instructions/i1040s8, Taxpayer Identification Number Requirements, Credit Limit Worksheet B, Earned Income Worksheet"
     testRef: "tests/engine/federal-ctc-facts.test.ts::Schedule 8812 actual identity and payroll facts"
 
+  - line: "2026-qualifying-child-age"
+    description: "Validate the actual date of birth before counting a claimed child on line 4"
+    formula: "A 2026 CTC or ACTC claim needs a real calendar birth date no later than December 31, 2026. Rev. Rul. 2003-72 applies age attainment on the child's birthday for section 24. A child born December 31, 2009 has reached age 17 by year end and conflicts with an affirmative CTC claim. A child born January 1, 2010 reaches age 17 in 2027. Reject missing, impossible and future dates and conflicting affirmative claims. Do not infer an ODC claim. Continue to recognize an independently confirmed ODC claim with a timely TIN and preserve the child SSN and newborn exception requirements. Historical calculation is unchanged."
+    irsRef: "https://uscode.house.gov/us/usc/t26/s24/; https://www.irs.gov/pub/irs-drop/rr-03-72.pdf; https://www.irs.gov/pub/irs-prior/f1040s8--2026.pdf, lines 4 and 6"
+    testRef: "tests/engine/federal-ctc-facts.test.ts::Schedule 8812 2026 claimed child's age"
+
   - line: "source-magi-lines"
     description: "Audit actual source amounts on lines1 and2a-2d without fabricating a possession-income split"
     formula: "Line1=AGI;2a=actual PuertoRico excluded income;2b=Form2555lines45+50;2c=Form4563line15;2d=sum2a-2c;3=1+2d. Known nonnegative possession total0 implies both components0; positive total requires actual source split for2026. Unknown legacy components stay absent from audit."

@@ -1,5 +1,8 @@
 /** Actual identity eligibility for Schedule 8812; spec/federal/form-8812.yaml. */
+import { z } from "zod";
 import type { TaxYearInput } from "@/models/inputs.js";
+
+const birthDate = z.iso.date();
 
 export function calculateChildCreditEligibility(input: TaxYearInput): {qualifyingChildren:number;otherDependents:number} {
   const {taxpayer} = input;
@@ -21,6 +24,16 @@ export function calculateChildCreditEligibility(input: TaxYearInput): {qualifyin
   const parentsCtcEligible = parentsTinEligible && (strict ? ssnKnownEligible : !ssnKnownIneligible);
   let qualifyingChildren = 0;
   for (const child of ctcClaims) {
+    if (strict) {
+      const year = taxpayer.taxYear;
+      if (!birthDate.safeParse(child.dateOfBirth).success || child.dateOfBirth > `${year}-12-31`) {
+        throw new Error("Schedule 8812 requires a valid birth date for a claimed qualifying child");
+      }
+      // Rev. Rul. 2003-72 uses the child's birthday for section 24.
+      if (child.dateOfBirth <= `${year - 17}-12-31`) {
+        throw new Error("Schedule 8812 CTC requires a child under age 17 at year end");
+      }
+    }
     if (!parentsCtcEligible) continue;
     if (strict && child.ctcSsnEligible === undefined) throw new Error("Qualifying child SSN eligibility is unknown for Schedule 8812");
     if (child.ctcSsnEligible !== false) qualifyingChildren++;

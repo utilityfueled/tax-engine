@@ -5,6 +5,7 @@ vi.mock("@/models/constants.js",async(importOriginal)=>{
   const {FEDERAL_2026_CONSTANTS}=await import("@/models/federal-2026-indexed.js");
   return {...original,getConstants:(year:number)=>year===2026?FEDERAL_2026_CONSTANTS:original.getConstants(year)};
 });
+
 import { calculateFederalTax } from "@/engine/federal.js";
 import { TaxYearInputSchema } from "@/models/inputs.js";
 import { simpleW2Fixture } from "../fixtures/simple-w2.js";
@@ -76,4 +77,23 @@ describe("Schedule 8812 actual identity and payroll facts",()=>{
     expect(zero.form8812?.lines.find(line=>line.line==="2c")?.value.toString()).toBe("0");
   });
 
+});
+
+describe("Schedule 8812 2026 claimed child's age", () => {
+  it.each(["", "2010-02-29", "2027-01-01"])("rejects the missing or invalid birth date %j", dateOfBirth => {
+    const input = fixture({ dependents: [{ ...child, dateOfBirth }] });
+    expect(() => calculateFederalTax(input)).toThrow(/valid birth date/i);
+  });
+
+  it("rejects CTC for a child who turns 17 on December 31 without inferring ODC", () => {
+    const olderChild = { ...child, dateOfBirth: "2009-12-31" };
+    expect(() => calculateFederalTax(fixture({ dependents: [olderChild] }))).toThrow(/under age 17/i);
+    const confirmedOdc = { ...olderChild, qualifiesForCTC: false, qualifiesForODC: true, odcTinEligible: true };
+    expect(calculateFederalTax(fixture({ dependents: [confirmedOdc] })).childTaxCredit.toString()).toBe("500");
+  });
+
+  it.each(["2010-01-01", "2026-12-31"])("counts a qualifying child born on %s", dateOfBirth => {
+    const input = fixture({ dependents: [{ ...child, dateOfBirth }] });
+    expect(calculateFederalTax(input).childTaxCredit.toString()).toBe("2200");
+  });
 });
