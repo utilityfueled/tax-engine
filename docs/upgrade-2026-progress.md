@@ -4,6 +4,21 @@ Current source, verification and remaining work are summarized in the
 [current continuation](upgrade-2026-current-status.md). Historical results
 below apply to their named revisions.
 
+- November 13: `65764509` projects one confirmed domestic 2026 move by a
+  single taxpayer onto the disabled final Form 3903. The two new tests
+  failed before the projector was implemented. Separate Decimal arithmetic
+  verifies $70.44 travel and the $89.94 deduction, $20 excess or zero
+  difference. Positive reimbursements require the actual Code P original and
+  an explicit documented omitted excess, including zero. Inconsistent rounded
+  amounts stay held. The 49 focused tests and three type checks, both builds,
+  scoped lint, refreshed inventory and 8,847 spec references passed. The
+  strict `pypdf` check confirmed 30 widgets across three saved forms, with
+  blank identity, correct checkbox appearances and no private references.
+  All three rendered pages were visually checked. Final parent-form
+  composition, human review and public output remain open.
+  [Final Form 3903](https://www.irs.gov/pub/irs-prior/f3903--2026.pdf) ·
+  [Final instructions](https://www.irs.gov/pub/irs-prior/i3903--2026.pdf).
+
 - November 13: `cf42abf2` collects the complete 2026 professional wagering
   ledger in guided Schedule C for one federal-only cash-basis owner without
   Forms W-2G. The initial mounted controls failed before the editor existed

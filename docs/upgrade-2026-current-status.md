@@ -6,6 +6,16 @@ The public refs were refreshed. `origin/main` still points to `59248889`
 and `origin/upgrade/2026-baseline` to `3024b848`. Successor commits stay on
 local `main` while automatic production deployment is being disabled.
 
+`65764509` projects the confirmed federal-only 2026 single-taxpayer move
+onto the disabled final Form 3903. Its original Code P and omitted excess
+must reconcile when line 4 is positive. An independent Decimal calculation
+reproduced $70.44 of travel and each line 5 branch. A separate strict parser
+checked 30 widgets on three saved forms, and all three pages were rendered
+and inspected. The 49 focused checks, types, builds, lint, inventory and
+8,847 spec references passed. The parent mapping and public review and
+filing remain gated. [Final 2026 Form 3903](https://www.irs.gov/pub/irs-prior/f3903--2026.pdf) ·
+[Final 2026 instructions](https://www.irs.gov/pub/irs-prior/i3903--2026.pdf).
+
 `cf42abf2` collects a complete no-W-2G professional wagering ledger in the
 federal-only guided return for one cash-basis owner. The mounted regression
 confirms $12,000.15 of gains, $10,000.25 of losses, zero other expenses and

@@ -23830,6 +23830,24 @@
     "diagnosticCases": 14,
     "auditSha256": "33e1aa072e049862556f1d580f37da874773955ab2fff6bca2a5478cbce99699"
   },
+  "nov13Form3903Projection": {
+    "commit": "6576450958c39a7489a0cb8bd3cd10c7bad8b939",
+    "tree": "b636eba553ab8a5f19a490201e76bcf05ecae2d3",
+    "beforeFixFailures": 2,
+    "beforeFixSha256": "aa4c5d0aee1a3a675a727bd28155c5d721ccb878c8525fa76c4de7b037dbc123",
+    "focusedPassed": 49,
+    "focusedFiles": 7,
+    "focusedSha256": "80f11c65eae2d214767f0e2211a77c4a29e50f85cc71a8aed1914f78784f3aa8",
+    "staticSha256": "2332551e37eff54e66a53b7814ae86055aab426edec833ba1347ec1989c3526b",
+    "specReferences": 8847,
+    "auditSha256": "ca806d4cc7c16d0a0e0dce43a6fb829a6f4518958fce357f5441c0288cf780e2",
+    "physicalInspectionSha256": "0714f4bb08f8ac1e2b986bcfb6b5dc726a5392b27eb503c3138ba1b9c886b24e",
+    "verifiedWidgets": 30,
+    "visuallyInspectedPages": 3,
+    "humanTaxReviewComplete": false,
+    "reviewExportsEnabled": false,
+    "filingQualified": false
+  },
   "nov13GuidedProfessionalWagering": {
     "commit": "cf42abf25c0ced83591256b218f6e650b42ea75e",
     "tree": "df8ae49b3c0b8f161ce556de4929e7f3ef81e222",
