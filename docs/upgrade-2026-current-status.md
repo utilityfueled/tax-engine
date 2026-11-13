@@ -9,11 +9,36 @@ The read-only Vercel check still finds the production project linked to
 `main`, with automatic custom-domain assignment and no build-ignore command.
 The isolated rehearsal project has no Git link and protects all deployments.
 
+`4593c4ec` calculates the 2026 Form 4972 capital gain and ten-year elections
+for an eligible participant's own single distribution. It requires confirmed
+eligibility and reconciled original amounts. All 125 focused checks passed,
+including Decimal boundary amounts on both sides of every printed rate band.
+Engine types, lint, 8,911 spec references, inventory and the browser request
+audit passed. Beneficiary, shared-distribution and other special worksheets,
+federal integration and export qualification are open.
+[Final 2026 Form 4972 and instructions](https://www.irs.gov/pub/irs-pdf/f4972.pdf).
+
+`18104818` collects the actual 2026 Code A reporting choice, requires a
+determined taxable amount and clears the choice when the source year, code or
+IRA classification changes. The choice and follow-up were verified in 305
+focused tests, including the actual component, with web types, lint and 8,905
+spec references. The separate Form 4972 federal route remains held.
+
+`797dc60a` removes set-user-ID and set-group-ID bits from regular files in the
+standalone image. The earlier ARM64 image contained 11 such files. `55ac0ee7`
+checks the exact imported image in a separate read-only, network-disabled
+inspection container, including private image directories. Native rehearsal is
+still required. The package versions and existing advisory dispositions remain
+open. [Debian privileged mount advisory](https://security-tracker.debian.org/tracker/CVE-2026-76642).
+
 `f42a8352` requires an explicit ordinary reporting decision before using
 the known taxable amount on a 2026 qualified lump-sum Code A statement.
 An actual Form 4972 election stays held for its separate method. Seven
 regressions failed before the fix and all 417 affected tests passed, with
 types, lint, 8,904 spec references, inventory and the browser request audit.
+The exact archive separately passed 14 synthetic hosted HTTP checks against
+local TLS PostgreSQL and controlled Redis, then restored all 11 synthetic
+PostgreSQL tables with exact cost, billing idempotency and metadata cleanup.
 The IRS now publishes final 2026 Form 4972. Its final 2026 Form 1040 and
 Tax/EIC tables remain pending at the official endpoints.
 [2026 Form 4972](https://www.irs.gov/pub/irs-pdf/f4972.pdf) ·

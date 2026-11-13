@@ -6,6 +6,17 @@ below retain their original evidence boundaries.
 
 ## Active continuation — November 13 Eastern
 
+- [x] Collect the actual 2026 Code A reporting choice in `18104818`. Pass
+  305 focused checks, including changing the original and renewing the choice.
+- [x] Calculate the finite own-plan 2026 Form 4972 worksheet in `4593c4ec`.
+  Pass 125 focused checks. Federal integration, other cohorts and export
+  qualification remain open.
+- [x] Remove set-ID permission bits from the runner and add an exact-image
+  read-only audit in `797dc60a` and `55ac0ee7`. Rehearse the hardened image on
+  both target architectures before qualifying it.
+- [x] Rehearse exact `f42a8352` hosted HTTP and dump/restore locally. Pass 14
+  HTTP checks and the synthetic 11-table restoration, including exact AI cost
+  and billing replay. Protected staging remains a separate gate.
 - [x] Guard the 2026 Code A qualified lump-sum reporting decision in
   `f42a8352`. Pass 417 affected tests. Hold the actual Form 4972 election
   for its separate worksheet and review.
