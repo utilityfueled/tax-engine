@@ -24356,6 +24356,17 @@
     "source": "a022a2ec6c889078fc057fe0f40c38e04616b56c",
     "focusedApplicationTestsPassed": 141,
     "orchestrationTestsPassed": 204,
+    "combined": {
+      "checksPassed": 12,
+      "unitAndCoverageTestsEachPassed": 27763,
+      "branchCoveragePercent": 87.87,
+      "chromiumPassed": 616,
+      "chromiumHostedOnlySkipped": 5,
+      "postgresStopped": true,
+      "checksSha256": "0fa0c840ab70eb166bfae611443861c825bebde19ea39452a96a9996309a2e66",
+      "browserSha256": "dcbcbe577005b6dc1abed5c32497de20c542cc5d0e6ed901745c8606d8367a19",
+      "cleanupSha256": "d90a36c17694c34785e66c7c4e5cc902d20b68e3cfbbdc2681ef570bd540c1c7"
+    },
     "hostedHttpLocalChecksPassed": 14,
     "hostedHttpLocalResultSha256": "daf8302e3a1e7b60e4a515da881b52b8988c56fdd3b5daa648f2b9510bc454d6",
     "trackedSourceArchiveSha256": "497137cc6fbda01e941efab53120ebeebad4dea182a5e43b3fcf6e6112d91e62",
@@ -24400,6 +24411,30 @@
       "receiptSha256": "a4b77174c50b7ab448e08cfc5dd445219619ed460df87256b323a3e704874c44"
     },
     "ledger": "docs/upgrade-2026-nov13-release-rehearsals.md"
+  },
+  "nov13Form4972DeathBeneficiary": {
+    "commit": "40c447d8bda9e22d411d37c3a7b88f5f575bb71f",
+    "focusedTestsPassed": 115,
+    "initialRed": 3,
+    "specReferencesValidated": 8918,
+    "redSha256": "bf7862ae2b4f389f0f295f2a2efdf83781e15fdd43795c49fb270b1a07c31341",
+    "greenSha256": "a611bc7a1a70d7e8c9145ac9fd94abdb66732bf9f3279f7b274a153124113947",
+    "federal2026ProductionAdmitted": false,
+    "pdfBeneficiaryAdmitted": false,
+    "sources": [
+      "https://www.irs.gov/pub/irs-pdf/f4972.pdf",
+      "https://www.irs.gov/publications/p575"
+    ]
+  },
+  "nov13SuccessorPreviewAuthenticationStop": {
+    "commit": "40c447d8bda9e22d411d37c3a7b88f5f575bb71f",
+    "verifiedTrackedBlobs": 5687,
+    "sourceArchiveSha256": "59acfbd9e14a4d1e1faa9d92d2cc42f4d6f754ff78c5dfd22d4fdd2ea3d2bab0",
+    "receiptSha256": "439f66ebfc758da04a6cd71f18f47f04e15cdf618c69c97dc9abc5c7fef4953d",
+    "httpOperations": 1,
+    "firstStatus": 403,
+    "uploaded": false,
+    "deployed": false
   },
   "nov13PensionTaxability": {
     "commit": "005394da914b62d23bfb735e40f99583589cd0b9",

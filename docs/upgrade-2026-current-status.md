@@ -9,6 +9,17 @@ The read-only Vercel check still finds the production project linked to
 `main`, with automatic custom-domain assignment and no build-ignore command.
 The isolated rehearsal project has no Git link and protects all deployments.
 
+`40c447d8` calculates the internal Form 4972 election for a single
+death-beneficiary distribution with confirmed zero attributable estate tax.
+It uses the participant's birth and death records and the beneficiary's
+election history for that participant. Three tests failed before the method
+was added. All 115 affected tests passed, with engine types, lint, inventory,
+8,918 spec references and unchanged browser request limits. The physical
+candidate still covers only the participant's own plan. Federal integration
+and filing qualification remain open.
+[Final 2026 Form 4972](https://www.irs.gov/pub/irs-pdf/f4972.pdf) ·
+[Publication 575](https://www.irs.gov/publications/p575).
+
 `eda990d4` binds the ordinary Code A decision to the actual 2026 original,
 unchecked IRA box and determined Box 2a, including explicit zero. It rejects
 a retained decision after the code changes and prevents periodic-payment
@@ -39,8 +50,8 @@ for an eligible participant's own single distribution. It requires confirmed
 eligibility and reconciled original amounts. All 125 focused checks passed,
 including Decimal boundary amounts on both sides of every printed rate band.
 Engine types, lint, 8,911 spec references, inventory and the browser request
-audit passed. Beneficiary, shared-distribution and other special worksheets,
-federal integration and export qualification are open.
+audit passed. Shared-distribution and other special worksheets, federal
+integration and export qualification are open.
 [Final 2026 Form 4972 and instructions](https://www.irs.gov/pub/irs-pdf/f4972.pdf).
 
 `18104818` collects the actual 2026 Code A reporting choice, requires a
@@ -117,7 +128,9 @@ lockfile production and full registry audits reported zero advisories across
 447 and 539 dependencies respectively. The exact ARM64 image passed import,
 smoke, SBOM and scan, six Compose recovery phases and 616 Chromium cases
 with five hosted-only skips. Normal stop and socket restoration passed.
-The combined suite is queued behind the prior archive.
+All 12 managed checks also passed on the exact archive. Unit and coverage
+each passed 27,763 tests at 87.87% branch coverage. Chromium passed 616
+cases with five hosted-only skips, and the isolated PostgreSQL stopped.
 [Hosted and recovery evidence](upgrade-2026-nov13-release-rehearsals.md).
 
 `29fb2d29` adds Ohio's $50 senior credit to the internal withholding-only

@@ -4,6 +4,18 @@ Current source, verification and remaining work are summarized in the
 [current continuation](upgrade-2026-current-status.md). Historical results
 below apply to their named revisions.
 
+- November 13 — `40c447d8` adds the single death-beneficiary Form 4972
+  worksheet with original Code 4 and A, confirmed post-August 20, 1996
+  death and zero estate tax. Three failing cases preceded the change and
+  all 115 affected tests passed. Types, lint, inventory, 8,918 spec
+  references and browser source audit passed. The PDF and federal holds
+  remain in place. [Final 2026 form and instructions](https://www.irs.gov/pub/irs-pdf/f4972.pdf).
+
+- November 13 — The exact managed `a022a2ec` archive passed all 12 checks.
+  Unit and coverage each passed 27,763 tests with 87.87% branch coverage.
+  Chromium passed 616 cases with five hosted-only skips. The isolated
+  PostgreSQL stopped. [Rehearsal evidence](upgrade-2026-nov13-release-rehearsals.md).
+
 - November 13 — `eda990d4` requires original 2026 non-IRA Code A evidence
   and determined Box 2a for an ordinary choice. It holds stale choices and
   unknown lump-sum taxability. Three cases reproduced the earlier admission

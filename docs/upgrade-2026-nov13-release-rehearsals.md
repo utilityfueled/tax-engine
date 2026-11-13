@@ -38,12 +38,29 @@ payment, provider inference or email was invoked.
 | Exact local HTTP result | `daf8302e3a1e7b60e4a515da881b52b8988c56fdd3b5daa648f2b9510bc454d6` |
 | Initial attempt and cleanup, 12 HTTP operations | `0091447f2c884758d4de0b8ef6708fbc4b7c9b7cbbcbb5b53a839d508970ec51` |
 | Protected Preview and cleanup, 37 HTTP operations plus CLI archive submission | `e6ecf3d1339204a35d54d4bb901c45916d09b5cb0ab4847020f94d11612d80c5` |
+| Exact managed checks, 12 passed | `0fa0c840ab70eb166bfae611443861c825bebde19ea39452a96a9996309a2e66` |
+| Exact managed Chromium, 616 passed and five hosted-only skipped | `dcbcbe577005b6dc1abed5c32497de20c542cc5d0e6ed901745c8606d8367a19` |
+| Exact managed cleanup, PostgreSQL stopped | `d90a36c17694c34785e66c7c4e5cc902d20b68e3cfbbdc2681ef570bd540c1c7` |
 
 The full tenant workspace lifecycle and automatic Stripe retry are recorded
 against the earlier source below. The healthy Preview above verifies current
 auth, entitlement enforcement and shared Redis privacy only.
 [Upstash ephemeral resource retention](https://upstash.com/blog/redis-database-for-agents) ·
 [Vercel request headers](https://vercel.com/docs/headers/request-headers).
+
+### Successor archive and Preview authentication
+
+The `40c447d8` archive was verified against 5,687 tracked Git blobs.
+Its counted controller received HTTP 403 on the first read-only isolated
+project request and stopped before uploading the archive, deploying or
+changing any environment setting. Source archive SHA-256
+`59acfbd9e14a4d1e1faa9d92d2cc42f4d6f754ff78c5dfd22d4fdd2ea3d2bab0`.
+Stop receipt SHA-256
+`439f66ebfc758da04a6cd71f18f47f04e15cdf618c69c97dc9abc5c7fef4953d`.
+[Vercel archive upload](https://vercel.com/docs/rest-api/deployments/upload-deployment-files) ·
+[Vercel deployment API](https://vercel.com/docs/rest-api/deployments/create-a-new-deployment).
+
+### Actual Stripe retry and workspace isolation on `ab47d87f`
 
 The tracked archive at `ab47d87f44597b4b43228ce17076098eccdecff9` passed
 all 12 local checks before deployment to the isolated protected Preview.
