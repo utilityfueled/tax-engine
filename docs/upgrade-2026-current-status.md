@@ -6,6 +6,42 @@ The public refs were refreshed. `origin/main` still points to `59248889`
 and `origin/upgrade/2026-baseline` to `3024b848`. Successor commits stay on
 local `main` while automatic production deployment is being disabled.
 
+`c699bfde` includes the full original W-2 Code Q amount in Schedule 8812
+earned income and records it separately on line 18b for 2025 and 2026.
+The guided interview preserves exact cents and distinguishes an unchecked
+box from confirmed zero. A synthetic $2,250.50 source increased ACTC to $263
+with $2,000 taxable wages. All 597 targeted tests passed, including reopening
+the 2025 review PDF. EIC elections and final 2026 projection are separate work.
+[Combat pay evidence](upgrade-2026-ctc-combat-pay-work.md).
+
+`ab47d87f` validates a claimed child's birth date before counting the child
+for the 2026 CTC or ACTC. The direct engine rejected four new invalid cases
+after previously accepting them. It distinguishes December 31, 2009 from
+January 1, 2010 and accepts a qualifying December 31, 2026 newborn. An
+independent ODC claim still requires its own timely TIN. All 519 focused
+federal and PDF tests passed. [Final Schedule 8812](https://www.irs.gov/pub/irs-prior/f1040s8--2026.pdf) ·
+[Revenue Ruling 2003-72](https://www.irs.gov/pub/irs-drop/rr-03-72.pdf).
+
+`e4e56480` keeps guided review and original document parsing in the browser.
+The production browser reproduced an automatic review POST before the change.
+The first successor exposed Next.js parsing multipart data at the unmatched
+URL. Both retired URLs now return 404 before parsing. All 36 production-build
+Chromium cases, 63 middleware and parser tests, web types, lint, model artifacts,
+inventory and 8,859 spec references passed.
+[Local review and upload evidence](upgrade-2026-local-review-upload-work.md).
+
+`9f9a5598` projects a confirmed paper payment onto the disabled final Form
+1040-V. The $1,234.56 partial payment against a $1,500 balance fills one field.
+A strict PDF readback and visual check confirmed both pages, exact cents,
+blank identity and address, and review watermarks. All 52 targeted tests passed.
+[Form 1040-V evidence](upgrade-2026-form-1040-v-paper-work.md).
+
+All 12 checks passed on the exact `2f317cb4` archive with PostgreSQL 16.16.
+Unit and coverage each passed 27,670 tests across 2,004 files and reached
+87.80% branch coverage. Managed Chromium collected 620 cases, passed 615
+and skipped five hosted-only cases. The checks receipt SHA-256 is
+`675f8e321cc520629f534cef78518b1f823ee2d12ad2fc068394980dcf3417c9`.
+
 `e4189ec7` projects ordinary 2026 IRA distributions onto two separate
 disabled Form 8606 specimens. The primary and spouse examples show $668 and
 $1,600 of taxable distributions. The separate Decimal and PDF readback
@@ -29,9 +65,12 @@ lint and inventory passed. Both npm audits returned zero advisories. The
 full archive passed the first nine checks and failed two unit assertions.
 `85a5cff4` pins the verified new lockfile hash, and `74b7f092` checks that
 the previous explanation prompt stays ineligible even with the same schema.
-The 91 focused tests passed with one environment-dependent skip. The exact
-`e4189ec7` successor is running all 12 checks. Container qualification and
-Debian advisory dispositions remain open.
+The 91 focused tests passed with one environment-dependent skip. Exact
+`e4189ec7` passed 11 checks, including 27,675 unit and coverage tests across
+2,004 files at 87.81% branch coverage. Its first browser invocation collected
+620 and stopped before execution because the archive lacked the untracked
+public samples. The same-source browser rerun uses the byte-checked samples.
+Container qualification and Debian advisory dispositions remain open.
 [Next.js 16.4.6](https://github.com/vercel/next.js/releases/tag/v16.4.6) ·
 [Next.js security advisories](https://github.com/vercel/next.js/security/advisories).
 

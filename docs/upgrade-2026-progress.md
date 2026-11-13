@@ -4,6 +4,34 @@ Current source, verification and remaining work are summarized in the
 [current continuation](upgrade-2026-current-status.md). Historical results
 below apply to their named revisions.
 
+- November 13: `c699bfde` carries original W-2 Code Q into Schedule 8812
+  lines 18a and 18b. The corrected baseline reproduced eight federal and
+  one guided failure. All 597 targeted tests passed, including actual
+  cents, joint sum, missing sources and saved 2025 PDF readback.
+  [Combat pay evidence](upgrade-2026-ctc-combat-pay-work.md).
+
+- November 13: `ab47d87f` checks actual dependent birth dates for direct
+  2026 CTC/ACTC claims. Four new baseline failures covered empty, impossible,
+  future and age-conflicting dates. All 519 targeted federal and PDF tests
+  passed after correction. Valid boundary dates and a separately confirmed
+  ODC claim passed. [Revenue Ruling 2003-72](https://www.irs.gov/pub/irs-drop/rr-03-72.pdf).
+
+- November 13: `e4e56480` retires the ungated guided summary and old multipart
+  detection endpoints. The original review POST and successor framework
+  multipart parse failure are retained. Local review and upload cases pass
+  with both former URLs returning 404. Pass 36 production-build Chromium
+  cases, 63 middleware/parser tests and static checks.
+  [Local review and upload evidence](upgrade-2026-local-review-upload-work.md).
+
+- November 13: `9f9a5598` projects the exact confirmed paper payment onto the
+  disabled final Form 1040-V. Pass 52 targeted tests and verify one amount,
+  blank identity, two marked pages and no active content in the saved PDF.
+  [Form 1040-V evidence](upgrade-2026-form-1040-v-paper-work.md).
+
+- November 13: exact `2f317cb4` passed all 12 checks on isolated PostgreSQL
+  16.16. Unit and coverage each passed 27,670 in 2,004 files at 87.80% branch
+  coverage. Managed Chromium passed 615 with five hosted-only skips.
+
 - November 13: `e4189ec7` builds separate, disabled 2026 Form 8606 ordinary
   IRA projections from original basis, account and distribution records.
   All 109 scoped tests, types, engine build, lint, inventory and 8,855
@@ -14,8 +42,13 @@ below apply to their named revisions.
   two outdated test inputs. `85a5cff4` preserves the lockfile check and pins
   its verified new hash. `74b7f092` adds an explicit stale-prompt rejection.
   The 91 focused tests passed, with one environment-dependent skip. Spec,
-  inventory, lint and model registry passed. The `e4189ec7` archive reruns
-  all 12 checks. No release gate changes or provider calls were made.
+  inventory, lint and model registry passed. Exact `e4189ec7` passed 11
+  checks, including 27,675 unit and coverage tests at 87.81% branches. The
+  browser run stopped after collection because the archive lacked the public
+  sample directory. Its receipt SHA-256 is
+  `23474e4e21027fc3b74496225fd4c398eb9b9a1bcadad84afe3eb22ea5afd98d`.
+  A same-source browser rerun uses the byte-checked samples. No release gate
+  changes or provider calls were made.
 
 - November 13: `a68f71ab` projects source-confirmed ordinary investment-land
   sales on the disabled final 2026 Form 6252. The separate Decimal readback
