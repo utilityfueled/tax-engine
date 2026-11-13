@@ -1,0 +1,16 @@
+form: "Runtime-Scanner-Source-Contract"
+fullName: "Pinned runtime image software inventory and vulnerability scanning"
+taxYear: 2026
+reference: "https://github.com/anchore/syft/releases/tag/v1.57.1; https://github.com/anchore/grype/releases/tag/v0.121.3; https://oss.anchore.com/docs/guides/vulnerability/database/"
+notes: |
+  Operational source contract. Syft 1.57.1 and Grype 0.121.3 are the
+  November 9 maintenance releases with embedded dependency security fixes.
+  Scanner changes retain the existing image source binding, evidence
+  collection, and vulnerability severity policy.
+lines:
+  - line: "scanner-pins"
+    formula: "The container job explicitly pins Syft v1.57.1 and Grype v0.121.3 and verifies the actual tool versions recorded in the evidence."
+    testRef: "tests/runtime/runtime-scanner-source-contract.test.ts::pins and checks the exact patched Syft and Grype versions"
+  - line: "scanner-source-and-threshold"
+    formula: "Produce both SBOM formats from the immutable candidate and preserve its source verification. Use the same Syft SBOM for Grype, retain every reported match, and continue failing on critical findings."
+    testRef: "tests/runtime/runtime-scanner-source-contract.test.ts::retains the immutable image binding and critical vulnerability policy"

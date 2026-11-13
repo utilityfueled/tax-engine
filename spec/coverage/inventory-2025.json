@@ -10075,6 +10075,26 @@
       ]
     },
     {
+      "key": "federal/runtime-scanner-source-contract",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://github.com/anchore/syft/releases/tag/v1.57.1; https://github.com/anchore/grype/releases/tag/v0.121.3; https://oss.anchore.com/docs/guides/vulnerability/database/",
+      "specPath": "spec/federal/runtime-scanner-source-contract.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/savings-bond-income-ownership",
       "jurisdiction": "federal",
       "taxYear": 2026,

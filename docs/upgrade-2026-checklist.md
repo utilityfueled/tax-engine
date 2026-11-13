@@ -13,6 +13,9 @@ below retain their original evidence boundaries.
   package in both image stages. The zlib source contract passes 8 cases, and
   all four downloaded package archives match their signed package index.
   [Zlib security evidence](upgrade-2026-debian-zlib-security-work.md).
+- [x] Refresh Syft and Grype to their patched releases. Both upstream Node
+  OCI archives scan with zero Critical matches. Application image scans are
+  pending. [Scanner evidence](upgrade-2026-runtime-scanner-pins-work.md).
 - [x] Bind final 2026 Schedule 8812 to its exact 41 physical fields and
   verify two fictional PDFs in both sets of checkbox states. Keep review and
   filing disabled until final companion instructions, parent mappings and

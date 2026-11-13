@@ -184,6 +184,8 @@ jobs:
       - uses: anchore/sbom-action/download-syft@v0
         id: syft
         if: ${{ !cancelled() && steps.candidate.outcome == 'success' }}
+        with:
+          syft-version: v1.57.1
       - name: Generate both SBOM formats from the immutable candidate
         id: sbom
         if: ${{ !cancelled() && steps.syft.outcome == 'success' }}
@@ -193,6 +195,7 @@ jobs:
           SYFT_CHECK_FOR_APP_UPDATE: "false"
         run: |
           "$SYFT_CMD" version > container-syft-tool.txt
+          grep -Eq '^Version:[[:space:]]+1[.]57[.]1$' container-syft-tool.txt
           sha256sum "$SYFT_CMD" >> container-syft-tool.txt
           "$SYFT_CMD" scan "docker:$CANDIDATE_IMAGE_ID" -o json=container.syft.json -o cyclonedx-json=container.cdx.json
       - name: Verify immutable SBOM source
@@ -245,7 +248,7 @@ jobs:
         if: ${{ !cancelled() && steps.source_binding.outcome == 'success' }}
         with:
           sbom: container.syft.json
-          grype-version: v0.121.0
+          grype-version: v0.121.3
           output-format: json
           output-file: container-vulnerabilities.json
           # Keep every finding in the report. Noncritical findings still require
@@ -284,6 +287,7 @@ jobs:
           verify(metadata)
           if Path("container-vulnerabilities.json").exists():
               scan = json.loads(Path("container-vulnerabilities.json").read_text())
+              assert scan["descriptor"]["version"] == "0.121.3"
               assert scan["source"]["type"] == "image"
               verify(scan["source"]["target"])
           else:
