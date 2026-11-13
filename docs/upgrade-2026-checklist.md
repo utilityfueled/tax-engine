@@ -6,6 +6,18 @@ below retain their original evidence boundaries.
 
 ## Active continuation — November 13 Eastern
 
+- [x] Verify ordinary investment-land installments and separate owner IRA
+  distributions on disabled final Forms 6252 and 8606 in `a68f71ab` and
+  `e4189ec7`. Preserve current source and all export gates.
+- [x] Repair exact test bindings for the reviewed Next.js lockfile and the
+  current AI prompt in `85a5cff4` and `74b7f092`. Preserve the failed
+  `651fa206` run and run all checks on the `e4189ec7` successor.
+- [x] Recheck all 81 historical AMD64 Debian advisory rows. Three zlib fixes
+  match the pinned package and 78 rows remain open. Verify both actual
+  target-platform images and obtain accountable dispositions before release.
+  [Debian refresh](upgrade-2026-debian-advisory-refresh-20261113.md).
+- [x] Close all 12 archived `bf85d34a` checks. Unit and coverage each pass
+  27,666 at 87.79% branches. Chromium passes 615 with five hosted-only skips.
 - [x] Pin Next.js 16.4.6 in `651fa206`. Verify frozen install, both
   advisory scans, 632 targeted tests and 40 production-build browser cases.
   Keep target-platform scans and advisory dispositions open.

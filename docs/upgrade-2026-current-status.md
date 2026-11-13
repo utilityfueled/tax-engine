@@ -35,6 +35,12 @@ Debian advisory dispositions remain open.
 [Next.js 16.4.6](https://github.com/vercel/next.js/releases/tag/v16.4.6) ·
 [Next.js security advisories](https://github.com/vercel/next.js/security/advisories).
 
+The Debian refresh matched all 81 advisories from the November 6 AMD64
+artifact. Three zlib rows now list the security package already pinned in
+both Docker stages. The remaining 78 trixie rows are open and unchanged.
+Current image scans and accountable dispositions remain pending.
+[Debian refresh evidence](upgrade-2026-debian-advisory-refresh-20261113.md).
+
 `3c93d1ad` enforces the workspace AI request projection on the server and
 keeps only kind and coverage for selected documents. The raw request still
 passes the existing direct-identifier check. The provider receives no route

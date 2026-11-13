@@ -156,6 +156,13 @@ production-domain assignment enabled and Ignored Build Step set to Automatic.
 [Production environment](https://vercel.com/utility-fueled-llc/tax-engine/settings/environments/production) ·
 [Build and Deployment](https://vercel.com/utility-fueled-llc/tax-engine/settings/build-and-deployment#ignored-build-step).
 
+The November 13 Debian refresh checks all 81 historical AMD64 tracker rows.
+Three zlib rows now have the exact trixie security fix already pinned in
+the current Dockerfile. The remaining 78 tracker rows are unchanged and
+open. The historical artifact still had the older package, and the current
+images still need an actual SBOM, scan and owner dispositions.
+[Debian refresh evidence](upgrade-2026-debian-advisory-refresh-20261113.md).
+
 The earlier isolated Neon branch expired. The proposed replacement rehearsal
 for `db974a65` required passing local checks on that exact source. Its unit run
 failed 22 Ohio compatibility assertions, so the proposed rehearsal made no
