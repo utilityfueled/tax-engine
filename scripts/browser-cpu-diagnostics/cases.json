@@ -4,6 +4,8 @@
   "applicationSource": "cecb99444f63aca4ad8cc4411675c0fa2cf630de",
   "originalFullListSha256": "b15051ef3a45fa837b72268af3deb638e6732ca415a0bd2448a9e6b06452aaec",
   "fullCaseCount": 592,
+  "currentFullCaseCount": 594,
+  "currentFullCollectionSha256": "132ea729e23611b8bad0b18becaf65488d055c9bd6add751bdd9d0a13cb3919c",
   "originalOutcome": {
     "passed": 573,
     "failed": 14,
@@ -12,7 +14,7 @@
   "workers": 2,
   "retries": 0,
   "targetDeadlineMs": 30000,
-  "auditSha256": "f2339f48b9e0bcb7996bc63b30029f85b0993e152ecc463cf06842f397d2b0c6",
+  "auditSha256": "d1d982aa0f69c5b6a21202c0131556c66c219fd42e869d735b94e7a5967af0f7",
   "targets": [
     {
       "id": "b728893f573b6d85455a-44bacf3413917e38c444",

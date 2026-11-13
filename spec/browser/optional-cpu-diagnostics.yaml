@@ -21,7 +21,7 @@ lines:
     testRef: "tests/scripts/browser-cpu-diagnostics.test.ts::remains inert unless explicitly enabled"
   - line: "exact-collection"
     description: "Preserve the complete original collection and select exactly fourteen"
-    formula: "Verify the immutable 592 IDs, title paths, projects, deadlines, expected states and original request-audit source hash; with the four import-only fixture changes the complete collection must match its immutable canonical hash. Resolve --test-list to the exact 14 original IDs, 2 workers, 0 retries and 30000ms deadline. Preserve validated original scheduler row keys through the selected cases and reuse original request budget batches and natural windows."
+    formula: "Keep the original 592-case collection identity as historical evidence. For a current failed qualification, verify the current pinned collection count and canonical hash over IDs, title paths, projects, deadlines and expected states and bind the current request-audit hash. With the four import-only fixture changes the complete current collection must match. Resolve --test-list to the exact 14 original IDs, 2 workers, 0 retries and 30000ms deadline. Preserve validated original scheduler row keys through the selected cases and reuse current request budget batches and natural windows."
     testRef: "tests/scripts/browser-cpu-diagnostics.test.ts::rejects changed identity selection deadline or audit"
   - line: "import-only-overlay"
     description: "Keep every actual test action and assertion intact"

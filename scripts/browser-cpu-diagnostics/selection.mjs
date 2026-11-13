@@ -5,7 +5,8 @@ const canonical = row => ({ id: row.id, file: row.file, titles: row.titles, proj
 export const collectionHash = rows => sha(JSON.stringify(rows.map(canonical).sort((a, b) => a.id.localeCompare(b.id))));
 export function selectCases(rows, manifest, auditHash) {
   need(manifest.version === 1 && manifest.fullCaseCount === 592 && manifest.targets.length === 14 && manifest.workers === 2 && manifest.retries === 0 && manifest.targetDeadlineMs === 30000 && auditHash === manifest.auditSha256);
-  need(rows.length === 592 && new Set(rows.map(r => r.id)).size === 592 && collectionHash(rows) === manifest.fullCollectionSha256);
+  need(Number.isSafeInteger(manifest.currentFullCaseCount) && manifest.currentFullCaseCount >= manifest.fullCaseCount);
+  need(rows.length === manifest.currentFullCaseCount && new Set(rows.map(r => r.id)).size === rows.length && collectionHash(rows) === manifest.currentFullCollectionSha256);
   const byId = new Map(rows.map(r => [r.id, r]));
   need(new Set(manifest.targets.map(r => r.id)).size === 14);
   for (const target of manifest.targets) need(target.timeout === 30000 && target.expectedStatus === 'passed' && target.project === 'chromium' && JSON.stringify(canonical(byId.get(target.id) ?? {})) === JSON.stringify(canonical(target)));

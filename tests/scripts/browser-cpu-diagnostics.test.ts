@@ -9,9 +9,9 @@ const chunk = '/_next/static/chunks/1234-abcdef.js';
 const chunkHash = 'a'.repeat(64);
 const inventory = { [chunk]: { sha256: chunkHash, bytes: 1200 } };
 const realManifest = JSON.parse(readFileSync(new URL('../../scripts/browser-cpu-diagnostics/cases.json', import.meta.url), 'utf8'));
-const fullCases = [...realManifest.targets, ...Array.from({ length: 578 }, (_, i) => ({ id: `unit-${i}`, file: 'independent-collection.spec.ts', titles: [`literal case ${i}`], project: 'chromium', timeout: 30000, expectedStatus: i < 5 ? 'skipped' : 'passed' }))];
+const fullCases = [...realManifest.targets, ...Array.from({ length: realManifest.currentFullCaseCount - realManifest.targets.length }, (_, i) => ({ id: `unit-${i}`, file: 'independent-collection.spec.ts', titles: [`literal case ${i}`], project: 'chromium', timeout: 30000, expectedStatus: i < 5 ? 'skipped' : 'passed' }))];
 const fullDigest = createHash('sha256').update(JSON.stringify([...fullCases].sort((a,b) => a.id.localeCompare(b.id)))).digest('hex');
-const manifest = { ...realManifest, fullCases, fullCollectionSha256: fullDigest };
+const manifest = { ...realManifest, fullCases, currentFullCollectionSha256: fullDigest };
 const sha = (text: string) => createHash('sha256').update(text).digest('hex');
 const frame = (id: number, functionName: string, url = '', children: number[] = []) => ({ id, callFrame: { functionName, url, scriptId: `${id}`, lineNumber: url ? 3 : -1, columnNumber: url ? 17 : -1 }, children });
 const profile = () => ({ startTime: 10000, endTime: 18000, nodes: [frame(1, '(root)', '', [2, 3, 4, 5, 6]), frame(2, '(idle)'), frame(3, 'private_name_MUST_NOT_ESCAPE', `${origin}${chunk}`), frame(4, '(program)'), frame(5, '(garbage collector)'), frame(6, 'unknown')], samples: [3, 3, 2, 4, 5], timeDeltas: [1000, 2000, 1000, 500, 1500] });
@@ -118,6 +118,7 @@ describe('Optional-Browser-CPU-Diagnostics', () => {
     ]) { const rows = structuredClone(manifest.fullCases); mutate(rows); expect(() => selectCases(rows, manifest, manifest.auditSha256)).toThrow(); }
     expect(() => selectCases(manifest.fullCases, manifest, 'b'.repeat(64))).toThrow();
     expect(() => selectCases(manifest.fullCases, { ...manifest, targets: manifest.targets.slice(1) }, manifest.auditSha256)).toThrow();
+    expect(() => selectCases(manifest.fullCases, { ...manifest, currentFullCaseCount: manifest.fullCaseCount }, manifest.auditSha256)).toThrow();
   });
   it('permits only the pinned import-only overlay', () => {
     const original = "import { test, expect, type Page } from '@playwright/test';\nconst fact = '100.01';\ntest('unchanged', async ({page}) => { await page.fill('#actual', fact); expect(fact).toBe('100.01'); });\n";

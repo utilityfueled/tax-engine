@@ -74,7 +74,7 @@ async function originalQualification(root, directory, manifest, audit, image) {
     try {
       const summary = await readJson(path.join(dir, 'summary.json'));
       const source = await readJson(path.join(dir, 'source-build.json'));
-      if (source.externalImageId !== image || summary.caseCount !== 592 || summary.status !== 'FAIL' || summary.failed < 1 || summary.skipped !== 5 || summary.error || !summary.cleanup) continue;
+      if (source.externalImageId !== image || summary.caseCount !== manifest.currentFullCaseCount || summary.status !== 'FAIL' || summary.failed < 1 || summary.skipped !== 5 || summary.error || !summary.cleanup) continue;
       const full = rowsFromReport(await readJson(path.join(dir, 'full-list.stdout')));
       selectCases(full, manifest, manifest.auditSha256); auditCollection(full, audit);
       const batches = planBatches(full, audit), rows = [];
@@ -89,7 +89,7 @@ async function originalQualification(root, directory, manifest, audit, image) {
       const actual = projectCaseResults(rows);
       need(actual.filter(r => r.status === 'failed' || r.status === 'timedOut').length === summary.failed);
       need(JSON.stringify(await snapshot(root, [], Object.keys(source.source))) === JSON.stringify(source.source));
-      found.push({ source, summary: { passed: 592 - summary.failed - 5, failed: summary.failed, skipped: 5 }, full });
+      found.push({ source, summary: { passed: full.length - summary.failed - summary.skipped, failed: summary.failed, skipped: summary.skipped }, full });
     } catch { /* Ignore incomplete/unrelated original directories, never expose raw errors. */ }
   }
   need(found.length === 1); return found[0];
