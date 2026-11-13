@@ -10823,6 +10823,31 @@
       ]
     },
     {
+      "key": "federal/schedule-c-standard-mileage-2026",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://www.irs.gov/irb/2026-29_irb",
+      "specPath": "spec/federal/schedule-c-standard-mileage-2026.yaml",
+      "enginePath": "src/engine/schedules/schedule-c.ts",
+      "packetPath": null,
+      "implementationTestRefs": [
+        "tests/engine/schedules/schedule-c-standard-mileage-2026.test.ts::uses both rates across June 30 and July 1 and adds confirmed parking and tolls once",
+        "tests/engine/schedules/schedule-c-standard-mileage-2026.test.ts::rejects incomplete conflicting and out of scope vehicle evidence",
+        "tests/engine/schedules/schedule-c-standard-mileage-2026.test.ts::routes the deduction through Schedule SE and preserves historical and full year gates"
+      ],
+      "implementationNote": "Links the finite 2026 federal Line 9 arithmetic and evidence checks. Guided entry, physical Part IV, basis, state composition and filing qualification remain open.",
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/schedule-c-wagering-2026",
       "jurisdiction": "federal",
       "taxYear": 2026,

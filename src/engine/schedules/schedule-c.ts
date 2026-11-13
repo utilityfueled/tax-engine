@@ -9,7 +9,15 @@ import {assertScheduleCPassengerResult} from './schedule-c-passenger-first-year-
 
 import Decimal from "decimal.js";
 import {calculateScheduleCSourceFacts} from "./schedule-c-source-facts.js";
-import { ScheduleCProfessionalWageringSchema, type Form8829Input, type TaxYearInput, type ScheduleCSourceFacts, type ScheduleCProfessionalWagering } from "@/models/inputs.js";
+import {
+  ScheduleCProfessionalWageringSchema,
+  ScheduleCStandardMileageSchema,
+  type Form8829Input,
+  type TaxYearInput,
+  type ScheduleCSourceFacts,
+  type ScheduleCProfessionalWagering,
+  type ScheduleCStandardMileage,
+} from "@/models/inputs.js";
 import type { CalculatedLine } from "@/models/outputs.js";
 import { d as legacyAmount, min, roundDollar } from "@/utils/decimal.js";
 import { AuditTrail } from "@/utils/audit.js";
@@ -58,6 +66,7 @@ export interface ScheduleCInput {
   accountHolder?: "primary"|"spouse";
   sourceFacts?: ScheduleCSourceFacts;
   professionalWagering?: ScheduleCProfessionalWagering;
+  standardMileage?: ScheduleCStandardMileage;
   businessName?: string;
   otherExpenseDescription?: string;
   businessCode?: string; // NAICS code
@@ -119,7 +128,7 @@ function calculateProfessionalWagering(
     }
   }
   const recreationalWagering = [input.scheduleA?.gamblingWinnings, input.scheduleA?.gamblingLosses, input.scheduleA?.gamblingExpenses];
-  const otherBusinessSources = [business.sourceFacts, business.grossReceipts, business.expenses,
+  const otherBusinessSources = [business.sourceFacts, business.standardMileage, business.grossReceipts, business.expenses,
     business.homeOffice, input.form4562, input.form2555, input.dependentCareBenefits, input.cryptoIncome];
   const otherBusinessAmounts = [business.returnsAndAllowances, business.costOfGoodsSold, business.otherIncome];
   if (otherBusinessSources.some(source => source !== undefined) || (careBenefitAdjustment && !careBenefitAdjustment.isZero())
@@ -140,13 +149,56 @@ function calculateProfessionalWagering(
   return { gains, deduction };
 }
 
+function calculateStandardMileage(input: TaxYearInput, business: ScheduleCInput | undefined) {
+  const retained = input.scheduleC?.standardMileage;
+  const packet = business?.standardMileage;
+  if (packet === undefined && retained === undefined) return undefined;
+  const parsed = ScheduleCStandardMileageSchema.safeParse(packet);
+  if (!parsed.success || input.taxpayer.taxYear !== parsed.data.taxYear || input.taxpayer.filingStatus !== "single"
+    || input.taxpayer.spouse || business?.accountHolder !== "primary" || business.accountingMethod !== "cash") {
+    throw new Error("Schedule C standard mileage requires a complete original log for the single 2026 cash-basis proprietor");
+  }
+  const { data: facts } = parsed;
+  if (input.scheduleC && input.scheduleC !== business) {
+    const original = ScheduleCStandardMileageSchema.safeParse(retained);
+    if (!original.success || JSON.stringify(original.data) !== JSON.stringify(facts)) {
+      throw new Error("Schedule C standard mileage differs from the retained log");
+    }
+  }
+  const expenses = business.expenses;
+  if (expenses?.carAndTruck !== undefined || input.form4562 || input.form2555
+    || business.sourceFacts?.interest || business.sourceFacts?.depreciation || business.sourceFacts?.passengerFirstYear
+    || [expenses?.depreciation, expenses?.businessInterest].some(amount => !legacyAmount(amount).isZero())) {
+    throw new Error("Schedule C standard mileage requires separate methods for other vehicle expenses, depreciation, interest or foreign use");
+  }
+
+  let beforeJuly = new Decimal(0);
+  let fromJuly = new Decimal(0);
+  for (const entry of facts.entries) {
+    if (entry.date < facts.placedInService) {
+      throw new Error("Schedule C standard mileage cannot precede the vehicle's first business-use date");
+    }
+    if (entry.date < "2026-07-01") beforeJuly = beforeJuly.plus(entry.miles);
+    else fromJuly = fromJuly.plus(entry.miles);
+  }
+  const businessMiles = beforeJuly.plus(fromJuly);
+  if (!businessMiles.plus(facts.commutingMiles).plus(facts.otherPersonalMiles).eq(facts.totalMiles)) {
+    throw new Error("Schedule C standard mileage must reconcile to the complete vehicle mileage total");
+  }
+  const parkingAndTolls = legacyAmount(facts.parkingAndTolls);
+  const deduction = beforeJuly.times("0.725").plus(fromJuly.times("0.76")).plus(parkingAndTolls);
+  return { deduction, beforeJuly, fromJuly, parkingAndTolls };
+}
+
 export function calculateScheduleC(
   input: TaxYearInput,
-  scheduleCInput: ScheduleCInput | undefined = input.scheduleC?.professionalWagering === undefined ? undefined : input.scheduleC,
+  scheduleCInput: ScheduleCInput | undefined = input.scheduleC?.professionalWagering !== undefined
+    || input.scheduleC?.standardMileage !== undefined ? input.scheduleC : undefined,
   options: { dependentCareBenefitsAdjustment?: Decimal } = {},
 ): ScheduleCResult {
   const audit = new AuditTrail();
   const wagering = calculateProfessionalWagering(input, scheduleCInput, options.dependentCareBenefitsAdjustment, audit);
+  const mileage = calculateStandardMileage(input, scheduleCInput);
   const sources = calculateScheduleCSourceFacts(input, scheduleCInput);
   // Only the admitted documentary passenger path needs the100-character exact
   // projection. Keep historical caller precision/behavior for all other inputs.
@@ -200,7 +252,16 @@ export function calculateScheduleC(
 
   let totalExpenses = d(0);
   totalExpenses = totalExpenses.plus(addExpense("8", "Advertising", expenses.advertising));
-  totalExpenses = totalExpenses.plus(addExpense("9", "Car and truck", expenses.carAndTruck));
+  if (mileage) {
+    expenseBreakdown["Car and truck"] = mileage.deduction;
+    audit.record("Sched C", "9", "Car and truck", mileage.deduction,
+      "January through June business miles × $0.725 + July through December business miles × $0.76 + business parking and tolls", {
+        "January through June business miles": mileage.beforeJuly,
+        "July through December business miles": mileage.fromJuly,
+        "Business parking and tolls": mileage.parkingAndTolls,
+      });
+  }
+  totalExpenses = totalExpenses.plus(mileage?.deduction ?? addExpense("9", "Car and truck", expenses.carAndTruck));
   totalExpenses = totalExpenses.plus(addExpense("10", "Commissions and fees", expenses.commissionsAndFees));
   totalExpenses = totalExpenses.plus(addExpense("11", "Contract labor", expenses.contractLabor));
   const depreciationAndSection179Deduction = form4562?.line22 ?? d(expenses.depreciation);

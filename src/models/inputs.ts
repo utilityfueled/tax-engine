@@ -3378,9 +3378,33 @@ export const ScheduleCProfessionalWageringSchema = z.strictObject({
 });
 export type ScheduleCProfessionalWagering = z.infer<typeof ScheduleCProfessionalWageringSchema>;
 
+const scheduleCMileageDistance = z.string().regex(/^\d{1,9}(?:\.\d{1,3})?$/, "Expected a supported nonnegative mileage distance");
+const scheduleCMileageDate = z.iso.date().refine(date => date.startsWith("2026-"), "Expected an actual 2026 date");
+export const ScheduleCStandardMileageSchema = z.strictObject({
+  taxYear: z.literal(2026),
+  logReference: z.string().trim().min(1).max(250),
+  placedInService: scheduleCMileageDate,
+  ownedVehicleFirstBusinessYearAndElectionConfirmed: z.literal(true),
+  writtenCompleteMileageLogConfirmed: z.literal(true),
+  eligibleBusinessParkingAndTollsConfirmed: z.literal(true),
+  noOtherActivityAllocationReimbursementsOrVehicleDeductionsConfirmed: z.literal(true),
+  noDispositionInServiceYearConfirmed: z.literal(true),
+  commutingMiles: scheduleCMileageDistance,
+  otherPersonalMiles: scheduleCMileageDistance,
+  totalMiles: scheduleCMileageDistance,
+  parkingAndTolls: nonnegativeDollarsAndCents,
+  entries: z.array(z.strictObject({
+    date: scheduleCMileageDate,
+    miles: scheduleCMileageDistance.refine(miles => /[1-9]/.test(miles), "Business miles must be positive"),
+  })).min(1).max(365).refine(entries => new Set(entries.map(entry => entry.date)).size === entries.length,
+    "Enter one reconciled business mileage total per date"),
+});
+export type ScheduleCStandardMileage = z.infer<typeof ScheduleCStandardMileageSchema>;
+
 export const ScheduleCInputSchema = z.object({
   sourceFacts:ScheduleCSourceFactsSchema.optional(),
   professionalWagering: ScheduleCProfessionalWageringSchema.optional(),
+  standardMileage: ScheduleCStandardMileageSchema.optional(),
   qbiMateriallyParticipated: z.boolean().optional(),
   principalBusinessActivity: z.string().optional(),
   allInvestmentAtRisk: z.boolean().optional(),

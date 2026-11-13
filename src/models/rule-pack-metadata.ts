@@ -258,11 +258,12 @@ export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = fr
   },
   2026: {
     taxYear: 2026,
-    ruleVersion: "2026.224-law-integration-draft",
+    ruleVersion: "2026.225-law-integration-draft",
     calculationStatus: "incomplete",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.irs.gov/irb/2026-29_irb", section: "Announcement 2026-11, business standard mileage date transition", revision: "Notice 2026-10 as modified by Announcement 2026-11, with Rev. Proc. 2019-46 section 4. One confirmed first-use owned vehicle, dated business log and separately reconciled personal mileage and eligible parking and tolls for one Schedule C. Retain exact Line 9 and Schedule SE projection. Physical Part IV, basis, state composition, full 2026 and filing remain unqualified.", retrievedAt: "2026-11-13" },
       { url: "https://uscode.house.gov/us/usc/119-120/t26/s165/", section: "Section 165(d)(1)–(2), professional wagering losses and otherwise deductible expenses", revision: "P.L. 119-21 §70114. A separate single-proprietor 2026 ledger applies the 90% limit to combined costs, capped at actual gains, before Schedule SE. No W-2G, mixed activities, joint allocation, state return, final form, or filing qualification.", retrievedAt: "2026-11-13" },
       { url: "https://www.irs.gov/pub/irs-pdf/i3903.pdf", section: "Qualifying military and nonmilitary intelligence-community assignment relocations, Lines 1–5, Schedule 1 Line 14, Form 1040 Line 1h", revision: "Final 2026 instructions dated September 28, 2026 and P.L. 119-21 §70113. Confirm per-move eligibility and original expense/reimbursement amounts. Separate Form 2555 allocation, prior-year storage and special spouse/dependent methods require further qualification.", retrievedAt: "2026-11-13" },
       { url: "https://www.irs.gov/irb/2026-29_irb", section: "Announcement 2026-11, moving standard mileage date transition", revision: "Notice 2026-10 as modified by Announcement 2026-11. Apply 20.5 or 23.5 cents to deductible transportation expenses according to when paid or incurred. Line 4 accepts confirmed amounts after the separate mileage allowance substantiation rules.", retrievedAt: "2026-11-13" },

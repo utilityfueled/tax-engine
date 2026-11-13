@@ -53,6 +53,7 @@ export function calculateOhioCanonicalBusinessSource(args: { taxInput: TaxYearIn
   if (source.taxYear !== year || source.facts.taxYear !== year || facts.taxYear !== year) fail('current actual source year differs');
   if (facts.allFederalSourcesIncludedConfirmed !== true || facts.noBusinessIncomeConfirmed !== false) fail('business and complete federal source classification must be explicit');
   if (!input.scheduleC || input.scheduleC.accountHolder !== 'primary' || input.scheduleC.accountingMethod === undefined || input.scheduleC.grossReceipts === undefined) fail('actual current primary C and accounting records are required');
+  if (input.scheduleC.standardMileage) fail('standard mileage requires its separate Ohio business source method');
   // This finite cohort does not manufacture classification for other business/income families.
   if ((input.form1099Nec?.length ?? 0) || input.scheduleF || (input.scheduleK1?.length ?? 0) || (input.scheduleK1Form1041?.length ?? 0) || (input.rentalProperties?.length ?? 0)
     || input.w2s.length || input.form1099Int.length || input.form1099Div.length || input.form1099B.length || input.form1099Misc.length || (input.form1099R?.length ?? 0)

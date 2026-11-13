@@ -1,0 +1,58 @@
+form: "Schedule C"
+fullName: "2026 business standard mileage for one owned vehicle"
+taxYear: 2026
+irsReference: "https://www.irs.gov/irb/2026-29_irb"
+sources:
+  - url: "https://www.irs.gov/pub/irs-drop/n-26-10.pdf"
+    revision: "Notice 2026-10, sections 3 and 4"
+    retrieved: "2026-11-13"
+  - url: "https://www.irs.gov/irb/2026-29_irb"
+    revision: "Announcement 2026-11, July 1 rate change"
+    retrieved: "2026-11-13"
+  - url: "https://www.irs.gov/pub/irs-drop/rp-19-46.pdf"
+    revision: "Rev. Proc. 2019-46, section 4"
+    retrieved: "2026-11-13"
+  - url: "https://www.irs.gov/pub/irs-prior/f1040sc--2026.pdf"
+    revision: "Final 2026 Schedule C, lines 9 and 43–47"
+    retrieved: "2026-11-13"
+  - url: "https://www.irs.gov/pub/irs-dft/i1040sc--dft.pdf"
+    revision: "October 8 draft 2026 Schedule C instructions, line 9"
+    retrieved: "2026-11-13"
+reviewStatus: "independent human review and filing qualification pending"
+lines:
+  - line: "9"
+    description: "Business standard mileage and eligible parking and tolls"
+    formula: >
+      From the confirmed mileage log of one eligible owned automobile first
+      placed in service for the primary proprietor's domestic 2026 cash business,
+      multiply documented January 1 through June 30 eligible business miles by
+      0.725 and July 1 through December 31 business miles by 0.76. Add actual
+      eligible business parking and tolls once. Keep exact Decimal amounts
+      through line 31 and Schedule SE. Retain both periods in the audit and
+      keep the private log reference out of the audit.
+    testRef: "tests/engine/schedules/schedule-c-standard-mileage-2026.test.ts::uses both rates across June 30 and July 1 and adds confirmed parking and tolls once"
+  - line: "43-47"
+    description: "Evidence and reconciliation before line 9"
+    formula: >
+      Require actual first business-use date, a confirmed standard-mileage
+      election and written substantiation, one reconciled business mileage total
+      per driven date, actual year-to-date commuting and other personal miles
+      including explicit zero, and a separately retained complete mileage total
+      for the service period. Accept eligible trips on or after the service
+      date, with no duplicate date or business mileage over the reported total.
+      The eligible miles and the two personal classifications must reconcile to
+      that total exactly. Require confirmation that the method and costs are
+      exclusive and that reimbursements, other vehicle deductions and mixed
+      activity allocation are absent. A precomputed line 9, Form 4562, separate
+      depreciation, foreign use and professional wagering require separate
+      treatment. No claim is generated from unknowns. Leased vehicles, previous
+      elections, separate interest, property taxes, basis, disposition, and
+      physical Part IV and state output require separate qualification.
+    testRef: "tests/engine/schedules/schedule-c-standard-mileage-2026.test.ts::rejects incomplete conflicting and out of scope vehicle evidence"
+  - line: "31"
+    description: "Single source projection with unchanged year admission"
+    formula: >
+      Subtract line 9 once. Route current Schedule C profit through the ordinary
+      Schedule SE engine with the actual primary owner. Preserve historical
+      precomputed line 9 and existing full-year calculation and output gates.
+    testRef: "tests/engine/schedules/schedule-c-standard-mileage-2026.test.ts::routes the deduction through Schedule SE and preserves historical and full year gates"

@@ -1696,6 +1696,16 @@
       "note": "Links only the pure documentary provider/person identity-source validator and its own-spec source/kind/gate regressions. It returns officialPaperQualified=false and filingEligible=false; optional collection and guided/native tests do not themselves admit a paper packet. The separate original-bound 2025 actual-care review successor has its own inventory entry; no 2026 or filing qualification is claimed."
     },
     {
+      "key": "federal/schedule-c-standard-mileage-2026",
+      "enginePath": "src/engine/schedules/schedule-c.ts",
+      "testRefs": [
+        "tests/engine/schedules/schedule-c-standard-mileage-2026.test.ts::uses both rates across June 30 and July 1 and adds confirmed parking and tolls once",
+        "tests/engine/schedules/schedule-c-standard-mileage-2026.test.ts::rejects incomplete conflicting and out of scope vehicle evidence",
+        "tests/engine/schedules/schedule-c-standard-mileage-2026.test.ts::routes the deduction through Schedule SE and preserves historical and full year gates"
+      ],
+      "note": "Links the finite 2026 federal Line 9 arithmetic and evidence checks. Guided entry, physical Part IV, basis, state composition and filing qualification remain open."
+    },
+    {
       "key": "federal/schedule-c-wagering-2026",
       "enginePath": "src/engine/schedules/schedule-c.ts",
       "testRefs": [
