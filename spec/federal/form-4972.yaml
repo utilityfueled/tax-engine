@@ -5,9 +5,9 @@ irsReference: "https://www.irs.gov/pub/irs-pdf/f4972.pdf"
 notes: |
   Internal single-participant, single-recipient worksheet. The participant's
   own qualified plan and a single qualifying death-beneficiary distribution
-  with confirmed zero federal estate tax have separate original-source rules.
+  have separate original-source rules for attributable federal estate tax.
   Alternate payees, multiple distributions or recipients, earlier deaths,
-  securities dispositions after NUA deferral, positive estate tax and a
+  securities dispositions after NUA deferral, positive estate tax with Part II and a
   beneficiary's actuarial annuity value need separate qualification. No current-year return or export
   registration is implied.
 lines:
@@ -29,7 +29,7 @@ lines:
       amount or an unrelated Box 8a value cannot establish this method.
     testRef: "tests/engine/forms/form-4972.test.ts::requires actual eligibility and determined source amounts"
   - line: "1-5-beneficiary"
-    description: "Eligibility for a single death-beneficiary distribution without death benefit exclusion or estate tax"
+    description: "Eligibility for a single death-beneficiary distribution without death benefit exclusion"
     formula: >-
       Require original Code 4 with A and an actual 2026 distribution made to
       the beneficiary because of the participant's death. Use the participant's
@@ -41,10 +41,11 @@ lines:
       qualified plan balance, no rollover, no prior disqualifying beneficiary
       election, no other disqualification, one distribution and one recipient,
       and the same reconciled Boxes 1, 2a and 3 and confirmed zero Boxes 6 and
-      8a. Require estate records confirming zero attributable federal estate
-      tax. Lines 9 and 18 are zero for this limited route. Apply the same
-      Part II and III formulas. The own-plan physical candidate does not
-      project beneficiary answers.
+      8a. Require the administrator's confirmed attributable federal estate
+      tax from estate records. A positive amount is allowed only for a sole
+      Part III election and only when supported by line 17. Line 9 is zero
+      for this cohort. The own-plan physical candidate does not project
+      beneficiary answers.
     testRef: "tests/engine/forms/form-4972.test.ts::computes a beneficiary election on the first day without a death exclusion"
     testRefs:
       - "tests/engine/forms/form-4972.test.ts::holds a beneficiary election with incomplete or conflicting originals"
@@ -91,8 +92,11 @@ lines:
   - line: "18-29"
     description: "Ten-year separate tax"
     formula: >-
-      Line 18 is confirmed zero, line 19 equals line 17, and zero line 11 means
-      lines 20 through 22 and 26 through 28 are omitted. When line 11 is
+      Line 18 is the confirmed attributable estate tax for a beneficiary
+      electing only Part III and zero for the own-plan or zero-estate-tax
+      routes. Subtract line 18 from line 17 for line 19. Hold a deduction
+      exceeding line 17 because the printed schedule starts at zero.
+      Zero line 11 means lines 20 through 22 and 26 through 28 are omitted. When line 11 is
       positive, line 20 divides line 11 by line 12 using Decimal precision
       with at least three fractional places of accuracy. Line 21 is the
       line 16 allowance times line 20, with a skipped allowance treated as
@@ -111,6 +115,8 @@ lines:
       - "tests/engine/forms/form-4972.test.ts::retains precision for a recurring actuarial ratio"
       - "tests/engine/forms/form-4972.test.ts::keeps actuarial value out of the Part II pension transfer"
       - "tests/engine/forms/form-4972.test.ts::requires an actual qualified lump-sum annuity value in Box 8a"
+      - "tests/engine/forms/form-4972.test.ts::subtracts the confirmed estate tax for a beneficiary electing only Part III"
+      - "tests/engine/forms/form-4972.test.ts::holds a positive estate tax requiring a separate allocation or a negative tax base"
   - line: "30"
     description: "Separate tax and proposed federal transfer"
     formula: >-

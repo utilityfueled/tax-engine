@@ -96,6 +96,27 @@ describe("2026 Form 4972 death-beneficiary worksheet", () => {
     expect(() => calculateForm4972({ ...beneficiary, election: "capital_gain", federalEstateTax: "0.01" }))
       .toThrow(/Form 4972.*estate tax/u);
   });
+
+  it("subtracts the confirmed estate tax for a beneficiary electing only Part III", () => {
+    const input = { ...beneficiary, election: "ten_year" as const, taxableAmount: "20000", capitalGain: "5000",
+      federalEstateTax: "2000" };
+    const result = calculateForm4972(input);
+    expect(result.lines.filter(row => ["8", "17", "18", "19", "23", "24", "30"].includes(row.line))
+      .map(row => row.value.toFixed())).toEqual(["20000", "10000", "2000", "8000", "800", "88", "880"]);
+    expect(result.ordinaryPensionTransfer.isZero()).toBe(true);
+    const fullyOffset = calculateForm4972({ ...input, federalEstateTax: "10000" });
+    expect(fullyOffset.separateTax.isZero()).toBe(true);
+    expect(fullyOffset.line6).toBeUndefined();
+    expect(calculateForm4972({ ...input, federalEstateTax: "2000.25" }).separateTax.toFixed(4)).toBe("879.9725");
+  });
+
+  it("holds a positive estate tax requiring a separate allocation or a negative tax base", () => {
+    for (const election of ["both", "capital_gain"] as const) {
+      expect(() => calculateForm4972({ ...beneficiary, election, federalEstateTax: "0.01" })).toThrow(/estate tax.*Part II/u);
+    }
+    expect(() => calculateForm4972({ ...beneficiary, election: "ten_year", taxableAmount: "20000", capitalGain: "0",
+      federalEstateTax: "10000.01" })).toThrow(/estate tax.*line 17/u);
+  });
 });
 
 describe("2026 Form 4972 own-plan net unrealized appreciation", () => {

@@ -68,13 +68,15 @@ lines:
       2 No, 3 Yes, 4 No and 5b No. Mark 5a from the separate own-plan history.
       That history cannot disqualify this death-beneficiary distribution.
       Leave 9 blank because the death-benefit exclusion is unavailable to
-      this cohort. For Part III, show the confirmed zero attributable estate
-      tax on line 18 and zero on line 11. Preserve election branches and
+      this cohort. For Part III, show the confirmed attributable estate
+      tax on line 18 and zero on line 11. Hold positive estate tax with
+      Part II or when printed line 19 cannot reconcile. Preserve election branches and
       whole-dollar reconciliation. Leave identity and instruction fields blank.
     testRef: "tests/pdf/form-4972-2026-candidate.test.ts::projects the confirmed beneficiary and separate own-plan answers"
     testRefs:
       - "tests/pdf/form-4972-2026-candidate.test.ts::holds beneficiary projection with incomplete physical answers"
       - "tests/pdf/form-4972-2026-candidate.test.ts::reopens the marked beneficiary specimen"
+      - "tests/pdf/form-4972-2026-candidate.test.ts::projects the confirmed beneficiary estate tax on a Part III only election"
   - line: "diagnostic"
     description: "Reopen a marked synthetic specimen"
     formula: "Verify text and checkbox values and appearances, all inactive cells and the review notice on all four pages. Remove XFA, Reader rights and active actions."

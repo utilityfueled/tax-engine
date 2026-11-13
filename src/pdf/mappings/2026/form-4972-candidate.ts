@@ -101,11 +101,12 @@ function projectElectionAmounts(source: Form4972Input) {
     capitalGain,
     netUnrealizedAppreciation,
     actuarialValue: rounded(source.actuarialValue),
+    ...(source.sourceKind === "death_beneficiary" && { federalEstateTax: rounded(source.federalEstateTax) }),
   });
   const sameLines = exact.lines.length === printed.lines.length && exact.lines.every((line, index) =>
     line.line === printed.lines[index].line && (line.line === "20" || roundDollar(line.value).eq(roundDollar(printed.lines[index].value))));
   const {
-    line6, line7, line8, line10, line11, line12, line13, line14, line15, line16, line17, line19,
+    line6, line7, line8, line10, line11, line12, line13, line14, line15, line16, line17, line18, line19,
     line21, line22, line23, line24, line25, line26, line27, line28, line29, line30,
   } = Object.fromEntries(
     exact.lines.map(({ line, value }) => [`line${line}`, roundDollar(value)]),
@@ -116,7 +117,8 @@ function projectElectionAmounts(source: Form4972Input) {
     && (!line13 || (line13.minus(line15).eq(line16) && roundDollar(line14.times("0.20")).eq(line15)))
     && (!line8 || (roundDollar(d(source.taxableAmount)).plus(shownIncludedNua).minus(line6 ?? d(0)).eq(line8)
       && line10.plus(line11).eq(line12)
-      && line12.minus(shownAllowance).eq(line17) && line19.times("0.10").eq(line23)
+      && line12.minus(shownAllowance).eq(line17) && line17.minus(line18).eq(line19)
+      && line19.times("0.10").eq(line23)
       && line24.times(10).eq(line25)));
   const annuityAgrees = !line22 || (line11.minus(line21).eq(line22) && line22.times("0.10").eq(line26)
     && line27.times(10).eq(line28) && line25.minus(line28).eq(line29));

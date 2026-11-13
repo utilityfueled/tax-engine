@@ -65,6 +65,8 @@ function isCalendarDate(value: string): boolean {
 /** Internal 2026 worksheet for one qualifying plan distribution to one recipient. */
 export function calculateForm4972(input: Form4972Input) {
   const code = input.distributionCode.trim().toUpperCase();
+  const zero = new Decimal(0);
+  let federalEstateTax = zero;
   if (input.taxYear !== 2026 || !isCalendarDate(input.participantBirthDate) || input.participantBirthDate >= "1936-01-02"
     || input.entireBalanceConfirmed !== true || input.rolloverOccurred !== false || input.otherDisqualifications !== false
     || input.onlyDistributionAndRecipientConfirmed !== true || input.taxableAmountNotDetermined !== false) {
@@ -79,8 +81,9 @@ export function calculateForm4972(input: Form4972Input) {
       || participantDeathDate > distributionDate) {
       throw new Error("Form 4972 requires confirmed death-beneficiary eligibility and matching original dates");
     }
-    if (!sourceAmount(input.federalEstateTax, "federal estate tax").isZero()) {
-      throw new Error("Form 4972 beneficiary worksheet requires confirmed zero federal estate tax");
+    federalEstateTax = sourceAmount(input.federalEstateTax, "federal estate tax");
+    if (federalEstateTax.gt(0) && input.election !== "ten_year") {
+      throw new Error("Form 4972 positive federal estate tax with Part II requires a separate allocation");
     }
   } else if (!/^(?:7A|A7)$/.test(code) || input.ownQualifiedPlan !== true
     || input.fiveParticipationYearsConfirmed !== true || input.priorDisqualifyingElection !== false) {
@@ -116,7 +119,6 @@ export function calculateForm4972(input: Form4972Input) {
   const audit = new AuditTrail();
   const record = (line: string, description: string, amount: Decimal, formula: string) =>
     audit.record("Form 4972", line, description, amount, formula);
-  const zero = new Decimal(0);
   const includeNua = input.sourceKind !== "death_beneficiary" && input.nuaTreatment === "include" && nua.gt(0);
   const includedNua = includeNua ? nua : zero;
   let capitalNua = zero;
@@ -159,8 +161,11 @@ export function calculateForm4972(input: Form4972Input) {
     line16 = record("16", "Minimum distribution allowance", line13.minus(line15), "Line 13 less line 15");
   }
   const line17 = record("17", "Taxable amount after allowance", line12.minus(line16 ?? zero), "Line 12 less any allowance on line 16");
-  const line18 = record("18", "Estate tax attributable to this distribution", zero,
-    input.sourceKind === "death_beneficiary" ? "Confirmed zero from estate records" : "Participant's own plan");
+  if (federalEstateTax.gt(line17)) {
+    throw new Error("Form 4972 federal estate tax exceeds the supported line 17 amount");
+  }
+  const line18 = record("18", "Estate tax attributable to this distribution", federalEstateTax,
+    input.sourceKind === "death_beneficiary" ? "Confirmed attributable amount from estate records" : "Participant's own plan");
   const line19 = record("19", "Amount for the ten-year computation", line17.minus(line18), "Line 17 less line 18");
   let line22: Decimal | undefined;
   if (line11.gt(0)) {

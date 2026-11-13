@@ -179,6 +179,21 @@ it("holds beneficiary projection with incomplete physical answers", () => {
   expect(() => project({ ...beneficiaryElection, taxableAmount: "25010" }, beneficiaryAnswers)).toThrow(/reconcile/u);
 });
 
+it("projects the confirmed beneficiary estate tax on a Part III only election", () => {
+  const project = form4972Candidate.projectForm49722026DeathBeneficiary;
+  const input = { ...beneficiaryElection, election: "ten_year" as const, taxableAmount: "20000", federalEstateTax: "2000" };
+  const { text, annotations } = project(input, beneficiaryAnswers);
+  expect(text).toMatchObject({
+    [fields.line8]: "20000", [fields.line17]: "10000", [fields.line18]: "2000", [fields.line19]: "8000",
+    [fields.line23]: "800", [fields.line24]: "88", [fields.line30]: "880",
+  });
+  expect(text[fields.line6]).toBeUndefined();
+  expect(text[fields.line9]).toBeUndefined();
+  expect(annotations).toEqual([]);
+  expect(project({ ...input, federalEstateTax: "2000.49" }, beneficiaryAnswers).text).toEqual(text);
+  expect(() => project({ ...input, federalEstateTax: "2000.50" }, beneficiaryAnswers)).toThrow(/reconcile/u);
+});
+
 async function verifySavedSpecimen(projection: ReturnType<typeof projectForm49722026OwnPlan>, filename: string) {
   const pdf = await PDFDocument.load(await readFile(blank));
   const acro = pdf.catalog.getAcroForm()?.dict;
@@ -245,6 +260,8 @@ it("reopens the marked beneficiary specimen", async () => {
   const project = form4972Candidate.projectForm49722026DeathBeneficiary;
   expect(project).toBeTypeOf("function");
   await verifySavedSpecimen(project(beneficiaryElection, beneficiaryAnswers), "form-4972-beneficiary-review.pdf");
+  await verifySavedSpecimen(project({ ...beneficiaryElection, election: "ten_year", taxableAmount: "20000", federalEstateTax: "2000" },
+    beneficiaryAnswers), "form-4972-beneficiary-estate-tax-review.pdf");
 });
 
 it("reopens the marked own-plan annuity specimen", async () => {
