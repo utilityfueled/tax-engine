@@ -6,6 +6,9 @@ below retain their original evidence boundaries.
 
 ## Active continuation — November 13 Eastern
 
+- [x] Project and validate workspace AI requests again at the server boundary
+  in `3c93d1ad`. Pass 284 targeted tests and 40 production-build Chromium
+  cases. Bind both updated prompts to fresh qualification evidence.
 - [x] Project the current original W-2 Boxes 3 and 7 onto the disabled
   Schedule SE candidate in `1c8dabe5`. Pass 3,141 targeted tests and verify
   the saved PDF at the wage cap, with blank lines 8b through 10.

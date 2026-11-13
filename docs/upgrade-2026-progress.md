@@ -4,6 +4,16 @@ Current source, verification and remaining work are summarized in the
 [current continuation](upgrade-2026-current-status.md). Historical results
 below apply to their named revisions.
 
+- November 13: `3c93d1ad` uses the parsed request throughout the workspace
+  AI route. The client sends selected form classifications without names,
+  IDs or detected facts. The provider prompt omits route IDs and the route
+  still rejects unredacted direct identifiers anywhere in the original body.
+  Two baseline failures verified the client and mocked provider leak paths.
+  All 284 targeted tests in 10 files and 40 production Chromium cases passed
+  with no retries. All three types, both builds, scoped lint and the model
+  registry passed. Prompt versions advanced for workspace summaries and tax
+  explanations. Existing evaluations cannot qualify the updated prompts.
+
 - November 13: `1c8dabe5` reconciles the 2026 Schedule SE wage-base branch
   to actual primary W-2 Boxes 3 and 7 alongside the confirmed wagering
   ledger. A source at the $184,500 cutoff retains Medicare tax and skips

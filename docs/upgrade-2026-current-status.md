@@ -6,6 +6,16 @@ The public refs were refreshed. `origin/main` still points to `59248889`
 and `origin/upgrade/2026-baseline` to `3024b848`. Successor commits stay on
 local `main` while automatic production deployment is being disabled.
 
+`3c93d1ad` enforces the workspace AI request projection on the server and
+keeps only kind and coverage for selected documents. The raw request still
+passes the existing direct-identifier check. The provider receives no route
+IDs, section IDs, document names, detected amounts or unrecognized fields.
+A crafted synthetic request reproduced the prior leakage into mocked provider
+transport. The successor passed 284 targeted tests and 40 production-build
+Chromium cases, plus types, builds, scoped lint and model registry checks.
+The summary and explanation prompts moved to version 4 and require matching
+evaluation evidence. No live provider call or promotion occurred.
+
 `1c8dabe5` fills the disabled 2026 Schedule SE candidate from current primary
 W-2 Boxes 3 and 7 and the reconciled wagering business, including linked
 W-2Gs. The $183,500 test leaves $1,000 of wage base and yields $204 tax and a
