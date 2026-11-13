@@ -23,6 +23,21 @@ const amounts = (p: Packet) => current(owner(p).amounts);
 const employment = (p: Packet) => current(p.sources.employmentOriginals[0]);
 const service = (p: Packet) => current(employment(p).serviceRows[0]);
 const payments = (p: Packet) => current(p.input.ohioPayments);
+function withSeniorHistory(p: Packet, joint = false) {
+  p.input.taxpayer.primary.dateOfBirth = '1961-12-31';
+  if (joint) current(p.input.taxpayer.spouse).dateOfBirth = '1957-06-01';
+  const ownerHistory = (accountHolder: 'primary' | 'spouse', dateOfBirth: string) => ({
+    accountHolder, dateOfBirth, sourceReference: `PRIVATE-OH-SENIOR-HISTORY-${accountHolder}`,
+    completeOhioCreditHistoryConfirmed: true, noPriorSeniorLumpSumElectionConfirmed: true,
+    noRetirementCreditCarryforwardConfirmed: true,
+  });
+  const history = [ownerHistory('primary', p.input.taxpayer.primary.dateOfBirth)];
+  if (joint) history.push(ownerHistory('spouse', current(p.input.taxpayer.spouse).dateOfBirth));
+  const sources = { ...p.sources, seniorCreditHistory: history };
+  const packet = { input: p.input, sources };
+  rebindOhio2026Ordinary(packet);
+  return packet;
+}
 
 describe('Ohio2026 current ordinary source-to-return draft', () => {
   it('derives current ordinary wage AGI without a fabricated federal return', () => {
@@ -51,6 +66,82 @@ describe('Ohio2026 current ordinary source-to-return draft', () => {
     expect(result.refund.toFixed()).toBe(refund);
     expect(result.underpaymentPenalty.toFixed()).toBe('0');
     expect(result.latePaymentInterest.toFixed()).toBe('0');
+  });
+
+  it.each([
+    ['full_year_resident', '50000', '0', '882', '118'],
+    ['part_year_resident', '30000', '353', '529', '471'],
+    ['nonresident', '10000', '706', '176', '824'],
+  ] as const)('applies the Ohio senior credit before residency relief for %s', (status, ohio, nrc, net, refund) => {
+    const packet = withSeniorHistory(ohio2026OrdinaryFixture(status, '50000', ohio));
+    const result = run(packet);
+    expect(result.seniorCitizenCredit?.toFixed()).toBe('50');
+    expect(result.nonresidentCredit.toFixed()).toBe(nrc);
+    expect(result.incomeTax.toFixed()).toBe(net);
+    expect(result.refund.toFixed()).toBe(refund);
+    expect(result.filingQualified).toBe(false);
+  });
+
+  it('uses one senior credit, available tax and the strict Ohio income limit', () => {
+    const joint = run(withSeniorHistory(ohio2026OrdinaryFixture('full_year_resident', '21000', '21000', true), true));
+    expect(joint.seniorCitizenCredit?.toFixed()).toBe('50');
+    expect(joint.taxBeforeCredits.toFixed()).toBe('652');
+    expect(joint.jointFilingCredit.toFixed()).toBe('90');
+    expect(joint.incomeTax.toFixed()).toBe('512');
+    const spouseOnly = withSeniorHistory(ohio2026OrdinaryFixture('full_year_resident', '21000', '21000', true), true);
+    spouseOnly.input.taxpayer.primary.dateOfBirth = '1962-01-02';
+    current(spouseOnly.sources.seniorCreditHistory[0]).dateOfBirth = '1962-01-02';
+    rebindOhio2026Ordinary(spouseOnly);
+    expect(run(spouseOnly).seniorCitizenCredit?.toFixed()).toBe('50');
+    const zero = run(withSeniorHistory(ohio2026OrdinaryFixture('full_year_resident', '28450')));
+    expect(zero.seniorCitizenCredit?.toFixed()).toBe('0');
+    const personal = run(withSeniorHistory(ohio2026OrdinaryFixture('full_year_resident', '28451')));
+    expect(personal.personalExemptionCredit.toFixed()).toBe('20');
+    expect(personal.incomeTax.toFixed()).toBe('262');
+    const below = run(withSeniorHistory(ohio2026OrdinaryFixture('nonresident', '101899', '20000')));
+    const at = run(withSeniorHistory(ohio2026OrdinaryFixture('nonresident', '101900', '20000')));
+    expect(below.seniorCitizenCredit?.toFixed()).toBe('50');
+    expect(at.seniorCitizenCredit?.toFixed()).toBe('0');
+    expect(run(ohio2026OrdinaryFixture()).seniorCitizenCredit).toBeUndefined();
+  });
+
+  it('requires complete owner-bound Ohio senior credit history', () => {
+    const make = () => withSeniorHistory(ohio2026OrdinaryFixture('full_year_resident', '21000', '21000', true), true);
+    const missing = make();
+    Reflect.deleteProperty(missing.sources, 'seniorCreditHistory');
+    expect(() => run(missing)).toThrow(/credit history/i);
+    const spouseMissing = make();
+    spouseMissing.sources.seniorCreditHistory.pop();
+    expect(() => run(spouseMissing)).toThrow(/credit history/i);
+    const mismatched = make();
+    current(mismatched.sources.seniorCreditHistory[0]).dateOfBirth = '1961-12-30';
+    expect(() => run(mismatched)).toThrow(/credit history/i);
+    const duplicate = make();
+    current(duplicate.sources.seniorCreditHistory[1]).accountHolder = 'primary';
+    expect(() => run(duplicate)).toThrow(/credit history/i);
+    const jointRecord = make();
+    for (const row of jointRecord.sources.seniorCreditHistory) row.sourceReference = 'PRIVATE-JOINT-CREDIT-HISTORY';
+    expect(run(jointRecord).seniorCitizenCredit?.toFixed()).toBe('50');
+    const election = make();
+    current(election.sources.seniorCreditHistory[0]).noPriorSeniorLumpSumElectionConfirmed = false;
+    expect(() => run(election)).toThrow();
+    const carry = make();
+    current(carry.sources.seniorCreditHistory[1]).noRetirementCreditCarryforwardConfirmed = false;
+    expect(() => run(carry)).toThrow();
+    const boundary = make();
+    boundary.input.taxpayer.primary.dateOfBirth = '1962-01-01';
+    current(boundary.sources.seniorCreditHistory[0]).dateOfBirth = '1962-01-01';
+    rebindOhio2026Ordinary(boundary);
+    expect(() => run(boundary)).toThrow(/age/i);
+    const under65 = withSeniorHistory(ohio2026OrdinaryFixture());
+    under65.input.taxpayer.primary.dateOfBirth = '1962-01-02';
+    current(under65.sources.seniorCreditHistory[0]).dateOfBirth = '1962-01-02';
+    rebindOhio2026Ordinary(under65);
+    expect(() => run(under65)).toThrow(/eligible owner/i);
+    const before = make();
+    const context = calculateOhio2026OrdinarySource(before.input, before.sources);
+    current(before.sources.seniorCreditHistory[0]).sourceReference += '-different';
+    expect(() => calculateOhio2026ReturnDraft(before.input, before.sources, context)).toThrow(/stale/);
   });
 
   it('retains credit order caps and strict personal-credit boundary', () => {

@@ -48,6 +48,7 @@ interface Projection {
   filingStatus: 'single' | 'married_filing_jointly';
   federalAgi: string; reciprocalWageExclusion?: string; residentCreditIncome?: string; residentCreditTaxPaid?: string; withholding: string; eligibleExemptions: number;
   primaryQualifyingIncome: string; spouseQualifyingIncome?: string;
+  seniorCreditEligibleByAge?: true;
   actualBalancePayment?: true;
   originalWithholding?: string;
   residency: OhioResidencyFacts;
@@ -103,13 +104,22 @@ function qualifyEmployee(input: TaxYearInput, raw: unknown, reciprocal?: Ohio202
   const sf = standard.data;
   if (sf.primaryCanBeClaimedAsDependent !== false || sf.primaryDeathDate !== null || sf.nonresidentAlien !== false || sf.dualStatusAlien !== false || sf.shortTaxYear !== false
     || filingStatus === 'married_filing_jointly' && (sf.spouseCanBeClaimedAsDependent !== false || sf.spouseDeathDate !== null)) fail('actual completed owner exemption and calendar eligibility required');
+  const ownerBirthDates = new Map<'primary' | 'spouse', string>();
   for (const holder of holders) {
     const person = holder === 'primary' ? input.taxpayer.primary : input.taxpayer.spouse;
     if (!person || !/^\d{9}$/.test(tin(person.ssn))) fail('actual current owner identity required');
     day(person.dateOfBirth);
-    // Older owners' age-based credits require their separate complete eligibility method.
-    if (person.dateOfBirth <= '1962-01-01' || person.dateOfBirth > '2008-12-31') fail('actual ordinary adult under65 cohort required');
+    if (person.dateOfBirth === '1962-01-01' || person.dateOfBirth > '2008-12-31') fail('actual ordinary adult age within the supported range required');
+    ownerBirthDates.set(holder, person.dateOfBirth);
   }
+  const seniorCreditEligibleByAge = [...ownerBirthDates.values()].some(birthDate => birthDate <= '1961-12-31');
+  const seniorCreditHistory = 'seniorCreditHistory' in source ? source.seniorCreditHistory : undefined;
+  if (seniorCreditEligibleByAge) {
+    if (reciprocal || residentCredit || school || payments.remainingTaxPayment.status !== 'no_remaining_tax') fail('Ohio senior credit requires the ordinary withholding-only method');
+    if (!seniorCreditHistory || seniorCreditHistory.length !== holders.length
+      || new Set(seniorCreditHistory.map(row => row.accountHolder)).size !== holders.length
+      || seniorCreditHistory.some(row => ownerBirthDates.get(row.accountHolder) !== row.dateOfBirth)) fail('complete owner-bound Ohio senior credit history required');
+  } else if (seniorCreditHistory) fail('Ohio senior credit history requires an eligible owner');
   const { ohioResidency: _residency, ohioPayments: _payments, ...originals } = input;
   for (const snapshot of [source.originalFederalSources, facts.originalFederalSources, payments.originalFederalSources]) {
     if (!snapshot || digest(snapshot) !== digest(originals)) fail('current complete original source snapshot is missing or changed');
@@ -194,6 +204,7 @@ function qualifyEmployee(input: TaxYearInput, raw: unknown, reciprocal?: Ohio202
   const currentDigest = digest({ input, sources: raw });
   const context: Ohio2026OrdinaryContext = Object.freeze({ methodId: school ? 'oh-2026-earned-school-employee-draft-v1' : reciprocal ? 'oh-2026-pa-reciprocal-employee-draft-v1' : residentCredit ? 'oh-2026-va-resident-credit-employee-draft-v1' : 'oh-2026-ordinary-employee-draft-v1', sourceCommitment: currentDigest });
   contexts.set(context, { currentDigest, projection: { ...(actualBalancePayment ? {actualBalancePayment: true as const, originalWithholding: withholding.toFixed()} : {}), filingStatus: filingStatus as Projection['filingStatus'], federalAgi: federalAgi.toFixed(), ...(reciprocal ? { reciprocalWageExclusion: federalAgi.toFixed() } : {}), ...(paidResident ? { residentCreditIncome: paidResident.income, residentCreditTaxPaid: paidResident.taxPaid } : {}), withholding: roundDollar(withholding).toFixed(), eligibleExemptions: holders.length,
-    primaryQualifyingIncome: wageTotals.primary.toFixed(), ...(filingStatus === 'married_filing_jointly' ? { spouseQualifyingIncome: wageTotals.spouse.toFixed() } : {}), residency: structuredClone(facts) } });
+    ...(seniorCreditEligibleByAge ? { seniorCreditEligibleByAge: true as const } : {}), primaryQualifyingIncome: wageTotals.primary.toFixed(),
+    ...(filingStatus === 'married_filing_jointly' ? { spouseQualifyingIncome: wageTotals.spouse.toFixed() } : {}), residency: structuredClone(facts) } });
   return context;
 }

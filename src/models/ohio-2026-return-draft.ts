@@ -17,6 +17,12 @@ export const Ohio2026OrdinarySourcesSchema = z.object({
   noOtherStateTaxOnOhioResidentIncomeConfirmed: z.literal(true),
   noTaxingSchoolDistrictResidencyConfirmed: z.literal(true),
   noOtherPaymentOrRefundableCreditSourcesConfirmed: z.literal(true),
+  seniorCreditHistory: z.array(z.object({
+    accountHolder: z.enum(['primary', 'spouse']), dateOfBirth: date, sourceReference: reference,
+    completeOhioCreditHistoryConfirmed: z.literal(true),
+    noPriorSeniorLumpSumElectionConfirmed: z.literal(true),
+    noRetirementCreditCarryforwardConfirmed: z.literal(true),
+  }).strict()).min(1).max(2).optional(),
   employmentOriginals: z.array(z.object({
     w2Index: z.number().int().nonnegative(), sourceReference: reference, sourceTaxYear: z.literal(2026),
     accountHolder: z.enum(['primary', 'spouse']), employerTin: reference, employerName: reference,
@@ -31,7 +37,7 @@ export const Ohio2026OrdinarySourcesSchema = z.object({
 export type Ohio2026OrdinarySources = z.infer<typeof Ohio2026OrdinarySourcesSchema>;
 
 /** Separate current documentary method; ordinary packets keep their strict schema. */
-export const Ohio2026PaReciprocalSourcesSchema = Ohio2026OrdinarySourcesSchema.extend({
+export const Ohio2026PaReciprocalSourcesSchema = Ohio2026OrdinarySourcesSchema.omit({ seniorCreditHistory: true }).extend({
   methodId: z.literal('oh-2026-pa-reciprocal-employee-draft-v1'),
   reciprocalWageSources: OhioReciprocalWageSourcesSchema.extend({
     sourceTaxYear: z.literal(2026), payrollRows: OhioReciprocalWageSourcesSchema.shape.payrollRows.max(366),
@@ -42,6 +48,7 @@ export const Ohio2026PaReciprocalSourcesSchema = Ohio2026OrdinarySourcesSchema.e
 export const Ohio2026VaResidentCreditSourcesSchema = Ohio2026OrdinarySourcesSchema.omit({
   noOtherOhioCreditSourcesConfirmed: true,
   noOtherStateTaxOnOhioResidentIncomeConfirmed: true,
+  seniorCreditHistory: true,
 }).extend({
   methodId: z.literal('oh-2026-va-resident-credit-employee-draft-v1'),
   noOtherStateTaxBeyondDocumentedVirginiaConfirmed: z.literal(true),
