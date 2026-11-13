@@ -38,7 +38,7 @@ lines:
     testRef: "tests/engine/provider-eval-application.test.ts::rejects forged preflight evidence and resumes without fabricated measurements"
   - line: "corpus-provenance"
     description: "Measured and deterministic results bind to the actual current request corpus"
-    formula: "Recompute the complete corpus and individual fixture digest including request context and expected contract, excluding human review metadata; stale or missing bindings cannot count as qualification. Plan digest remains correlation, not proof of live authorization."
+    formula: "Recompute the corpus and fixture digests including request context and the expected contract, excluding human review metadata. Reject stale or missing bindings. A tax-explanation result using the prior prompt cannot qualify even when the output schema is unchanged. A plan digest correlates evidence without establishing live authorization."
     testRef: "tests/engine/provider-eval-application.test.ts::rejects stale corpus and changed request context for model and preflight results"
   - line: "reported-model"
     description: "The actual responding model must match the final attempted profile"

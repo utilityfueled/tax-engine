@@ -84,8 +84,12 @@ describe("actual application evaluation", () => {
     const entry: ProviderModelLiveEvalEntry = { profileId: "luna-high", fixtureId: f.id, fixtureVersion: 1, repeat: 1, elapsedMs: 1, applicationSchemaValid: true, output: validated.output,
       independentReview: { method: "human", reviewer: "unit-test-only-not-real-review", grounded: true, qualityAccepted: true, piiLeak: false },
       attempts: [{ profileId: "luna-high", startedAt: at, usage: { inputTokens: 100, outputTokens: 100 } }],
-      measurement: { runPurpose: "qualification", ...provenance(f), bindingVersion: PROVIDER_EVAL_BINDING_VERSION, promptVersion: "tax-explanation/3", schemaVersion: "tax-explanation/3", normalizationStatus: "bound", applicationOutput: payload, privacyFailure: false, responseReference: "test-only", reportedModel: "gpt-6-luna" } };
+      measurement: { runPurpose: "qualification", ...provenance(f), bindingVersion: PROVIDER_EVAL_BINDING_VERSION, promptVersion: "tax-explanation/4", schemaVersion: "tax-explanation/3", normalizationStatus: "bound", applicationOutput: payload, privacyFailure: false, responseReference: "test-only", reportedModel: "gpt-6-luna" } };
     expect(scoreProviderEvalEntry(entry, f).accepted).toBe(true);
+    const stalePrompt = structuredClone(entry);
+    if (!stalePrompt.measurement) throw new Error("Missing measurement.");
+    stalePrompt.measurement.promptVersion = "tax-explanation/3";
+    expect(scoreProviderEvalEntry(stalePrompt, f).accepted).toBe(false);
     const stale = structuredClone(entry);
     if (!stale.measurement) throw new Error("Missing measurement.");
     stale.measurement.corpusDigest = "stale-unrelated-corpus";
