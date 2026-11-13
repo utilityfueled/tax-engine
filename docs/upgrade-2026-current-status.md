@@ -6,6 +6,19 @@ The public refs were refreshed. `origin/main` still points to `59248889`
 and `origin/upgrade/2026-baseline` to `3024b848`. Successor commits stay on
 local `main` while automatic production deployment is being disabled.
 
+`cf42abf2` collects a complete no-W-2G professional wagering ledger in the
+federal-only guided return for one cash-basis owner. The mounted regression
+confirms $12,000.15 of gains, $10,000.25 of losses, zero other expenses and
+$2,999.925 of exact net profit. Review displays the actual amounts and
+synced answers omit them and the ledger reference. Both viewport journeys
+restore the draft, revoke confirmations on edits and make zero protected
+requests. All 2,005 focused tests and seven production Chromium cases passed,
+along with types, builds, lint, inventory and 8,845 spec references. The
+620-case audit retains five hosted-only skips and existing request limits.
+The exact archive is running. Linked W-2G guided entry, other filing units,
+states and human review remain open.
+[26 USC 165(d)](https://uscode.house.gov/us/usc/119-120/t26/s165/).
+
 `07d9bcde` projects a confirmed wagering-loss-only ledger onto the disabled
 final 2026 Schedule C candidate. Its $12,000 income, $9,000 deductible loss
 and $3,000 net reconcile across Parts I, II and V. The 2,522 focused checks

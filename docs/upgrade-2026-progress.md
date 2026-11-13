@@ -4,6 +4,22 @@ Current source, verification and remaining work are summarized in the
 [current continuation](upgrade-2026-current-status.md). Historical results
 below apply to their named revisions.
 
+- November 13: `cf42abf2` collects the complete 2026 professional wagering
+  ledger in guided Schedule C for one federal-only cash-basis owner without
+  Forms W-2G. The initial mounted controls failed before the editor existed
+  and again before its review summary used the ledger. The final 2,005
+  focused tests in 250 files and seven production Chromium tests passed.
+  Both viewport journeys retained the draft and explicit zero across reload,
+  invalidated confirmations after a source edit and made zero protected
+  requests. The saved review displays $12,000.15 of gains, $10,000.25 of
+  losses and $0 other expenses. Synced fact answers omit these amounts and
+  the private reference. The exact net is $2,999.925. All three type checks,
+  both builds, scoped lint, inventory and 8,845 spec references passed.
+  The audit has 620 cases, five original hosted-only skips, 14 fixed
+  diagnostics and eight batches under the original ceilings. The exact
+  archive is running. Public output and model access remain gated.
+  [26 USC 165(d)](https://uscode.house.gov/us/usc/119-120/t26/s165/).
+
 - November 13: `07d9bcde` maps a confirmed 2026 wagering-loss-only ledger to
   Parts I, II and V of the disabled final Schedule C candidate. Both tests
   failed before the projector existed. The final 2,522 focused tests in

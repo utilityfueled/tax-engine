@@ -23830,6 +23830,25 @@
     "diagnosticCases": 14,
     "auditSha256": "33e1aa072e049862556f1d580f37da874773955ab2fff6bca2a5478cbce99699"
   },
+  "nov13GuidedProfessionalWagering": {
+    "commit": "cf42abf25c0ced83591256b218f6e650b42ea75e",
+    "tree": "df8ae49b3c0b8f161ce556de4929e7f3ef81e222",
+    "focusedPassed": 2005,
+    "focusedFiles": 250,
+    "focusedSha256": "adba2a0aa2e5b5d69cf2faa2d5decd97cee357be1c48becc90a440b4489e435f",
+    "staticSha256": "df849ec74aa059a46b503cf9f98dd3c1a81ce06b698887f8fd490d8782336a47",
+    "chromiumPassed": 7,
+    "chromiumSkipped": 0,
+    "chromiumRetries": 0,
+    "chromiumReportSha256": "d5abc9c77431a3c694777d62f20bfc6e207c4dae8be54582b29f47aad06e8db2",
+    "specReferences": 8845,
+    "browserCollectionCases": 620,
+    "hostedOnlySkips": 5,
+    "diagnosticCases": 14,
+    "auditSha256": "4698e1b50b20441c779e478a7edc9a6a1f6fb6e954ec144987bb46d0d6b606b5",
+    "exactArchiveEvidence": ".local/upgrade-evidence/nov13-main-combined-guided-wagering",
+    "humanTaxReviewComplete": false
+  },
   "nov13ScheduleCWageringCandidate": {
     "commit": "07d9bcde1cfc4e7eb4bc853a9b03cc8572244e71",
     "beforeFixFailures": 2,
