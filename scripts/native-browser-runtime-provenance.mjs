@@ -14,6 +14,20 @@ const same = isDeepStrictEqual;
 const gitObject = (kind, body) => hash('sha1', Buffer.concat([Buffer.from(`${kind} ${body.length}\0`), body]));
 const id = value => typeof value === 'string' && /^(?:sha256:)?[a-f0-9]{64}$/u.test(value) ? value.replace(/^sha256:/u, '') : null;
 const integer = value => Number.isSafeInteger(value) && value >= 0;
+const inspectionRoutes = new Map([
+    ['containers', '/containers'],
+    ['images', '/images'],
+    ['podman-containers', '/v6.0.0/libpod/containers'],
+]);
+const podmanCapDrop = ['CHOWN','DAC_OVERRIDE','FOWNER','FSETID','KILL','NET_BIND_SERVICE','SETFCAP','SETGID','SETPCAP','SETUID','SYS_CHROOT'];
+const dockerTmpfs = {
+    '/tmp': ['noexec','nosuid','rw','size=64m'],
+    '/app/apps/web/.next/cache': ['mode=1777','nodev','noexec','nosuid','rw','size=64m'],
+};
+const podmanTmpfs = {
+    '/tmp': ['nodev','noexec','nosuid','rprivate','rw','size=64m','tmpcopyup'],
+    '/app/apps/web/.next/cache': ['mode=1777','nodev','noexec','nosuid','rprivate','rw','size=64m','tmpcopyup'],
+};
 const metadata = s => ({dev:s.dev, ino:s.ino, uid:s.uid, mode:s.mode, nlink:s.nlink});
 const publicPath = value => typeof value === 'string' && value.length > 0 && value.length <= 1024 && !value.includes('\\') && !value.includes('\0') && !path.posix.isAbsolute(value) && value.split('/').every(v => v && v !== '.' && v !== '..' && !['.git','.local','node_modules'].includes(v) && (!v.startsWith('.env') || /^\.env\.[a-z.-]*example$/u.test(v)));
 
@@ -30,7 +44,7 @@ export function nativeAdmission(env, external) {
 /** @typedef {import('node:events').EventEmitter & {statusCode?:number, headers:Record<string,string|string[]|undefined>, complete:boolean, destroy:()=>unknown}} RelayResponse */
 /** @typedef {import('node:events').EventEmitter & {end:()=>unknown, destroy:()=>unknown}} RelayRequest */
 /** @typedef {(options:object, callback:(response:RelayResponse)=>void)=>RelayRequest} RelayTransport */
-/** Only these two bounded read-only routes exist; no command/URL/path input.
+/** Only the fixed bounded read-only routes exist; no command/URL/path input.
  * @param {string} socketPath
  * @param {string} kind
  * @param {string} objectId
@@ -39,7 +53,8 @@ export function nativeAdmission(env, external) {
  * @returns {Promise<object>}
  */
 export function relayJson(socketPath, kind, objectId, signal, transport = request) {
-    need(kind === 'containers' || kind === 'images', 'Invalid native inspection kind');
+    const route = inspectionRoutes.get(kind);
+    need(route !== undefined, 'Invalid native inspection kind');
     need(hex64.test(objectId), 'Invalid native inspection identity');
     need(/^\/private\/tmp\/tax-ze-[a-f0-9]{32}\/api\.sock$/u.test(socketPath), 'Invalid native relay path');
     return new Promise((resolve, reject) => {
@@ -59,7 +74,7 @@ export function relayJson(socketPath, kind, objectId, signal, transport = reques
         signal?.addEventListener('abort', abort, {once:true});
         timer = setTimeout(() => done(true), 2500);
         try {
-            req = transport({socketPath, method:'GET', path:`/${kind}/${objectId}/json`, agent:false, headers:{Accept:'application/json'}}, res => {
+            req = transport({socketPath, method:'GET', path:`${route}/${objectId}/json`, agent:false, headers:{Accept:'application/json'}}, res => {
                 response = res;
                 res.on('error', () => done(true));
                 if (finished) {res.destroy(); return;}
@@ -251,8 +266,12 @@ export async function createNativeInspector({root, env, signal}, io = actualIo) 
         need(image.Os === 'linux' && image.Architecture === 'arm64' && image.Config?.User === 'appuser' && container.Config?.User === image.Config.User && same(image.Config.Cmd,['node','apps/web/server.js']) && same(container.Config.Cmd,image.Config.Cmd) && same(container.Config.Entrypoint,image.Config.Entrypoint), 'Native image runtime changed');
         need(image.Config.Labels?.['org.opencontainers.image.revision'] === p.commit && container.Config.Labels?.['org.opencontainers.image.revision'] === p.commit && container.Config.Labels?.['io.vivalatax.native-browser.operation'] === p.operation, 'Native source or operation label changed');
         const h = container.HostConfig;
-        need(h?.ReadonlyRootfs === true && h.Privileged === false && (h.CapAdd === null || same(h.CapAdd,[])) && Array.isArray(h.CapDrop) && h.CapDrop.includes('ALL') && h.CapDrop.every(v=>typeof v==='string') && Array.isArray(h.SecurityOpt) && h.SecurityOpt.some(v=>v==='no-new-privileges'||v==='no-new-privileges:true') && (h.Binds === null || same(h.Binds,[])), 'Native container hardening changed');
-        const tmpfs = {'/tmp':['noexec','nosuid','rw','size=64m'], '/app/apps/web/.next/cache':['mode=1777','nodev','noexec','nosuid','rw','size=64m']};
+        const capDrop = h?.CapDrop;
+        const stringDrops = Array.isArray(capDrop) && capDrop.every(value => typeof value === 'string');
+        const podman = stringDrops && same([...capDrop].sort(), podmanCapDrop);
+        const docker = stringDrops && capDrop.includes('ALL');
+        need(h?.ReadonlyRootfs === true && h.Privileged === false && (h.CapAdd === null || same(h.CapAdd,[])) && (docker || podman) && Array.isArray(h.SecurityOpt) && h.SecurityOpt.some(v=>v==='no-new-privileges'||v==='no-new-privileges:true') && (h.Binds === null || same(h.Binds,[])), 'Native container hardening changed');
+        const tmpfs = podman ? podmanTmpfs : dockerTmpfs;
         need(h.Tmpfs && same(Object.keys(h.Tmpfs).sort(),Object.keys(tmpfs).sort()) && Object.entries(tmpfs).every(([name,flags])=>typeof h.Tmpfs[name]==='string' && same(h.Tmpfs[name].replace('size=67108864','size=64m').split(',').sort(),flags)), 'Native tmpfs layout changed');
         const ports = {'3000/tcp':[{HostIp:'127.0.0.1',HostPort:'3109'}]};
         need(same(h.PortBindings,ports) && same(container.NetworkSettings?.Ports,ports), 'Native localhost port binding changed');
@@ -260,8 +279,20 @@ export async function createNativeInspector({root, env, signal}, io = actualIo) 
         const envMap = rows => {need(Array.isArray(rows),'Native runtime environment missing'); const m=new Map(); for(const value of rows){need(typeof value==='string'&&value.includes('='),'Invalid native runtime environment');const split=value.indexOf('='),key=value.slice(0,split);need(!m.has(key),'Duplicate native runtime environment');m.set(key,value.slice(split+1));}return m;};
         const expectedEnv = envMap(image.Config.Env), actualEnv = envMap(container.Config.Env);
         expectedEnv.set('TAX_ENGINE_DEPLOYMENT_MODE','self-host'); expectedEnv.set('TAX_ENGINE_APP_URL','http://127.0.0.1:3109');
+        if (podman) {
+            need(!expectedEnv.has('HOME') && !expectedEnv.has('container'), 'Native image environment overlaps Podman defaults');
+            expectedEnv.set('HOME','/home/appuser');
+            expectedEnv.set('container','podman');
+        }
         need(same([...expectedEnv].sort(),[...actualEnv].sort()),'Native runtime environment changed');
         need(Array.isArray(image.RootFS?.Layers) && image.RootFS.Layers.length>0 && image.RootFS.Layers.every(v=>/^sha256:[a-f0-9]{64}$/u.test(v)), 'Native image layers unavailable');
+        if (podman) {
+            const native = await io.get(socketPath,'podman-containers',p.containerId,signal);
+            need(native && id(native.Id) === p.containerId && id(native.Image) === p.imageId && native.State?.Running === true && native.State?.Status === 'running', 'Native Podman container identity changed');
+            // Libpod serializes the empty Go slices as null. Missing fields
+            // are undefined and cannot satisfy either exact comparison.
+            need((native.EffectiveCaps === null || same(native.EffectiveCaps,[])) && (native.BoundingCaps === null || same(native.BoundingCaps,[])), 'Native Podman capabilities are not empty');
+        }
         await custody();
         return {mode:'operator-owned-native',operation:p.operation,containerId:p.containerId,imageId:`sha256:${p.imageId}`,commit:p.commit,tree:p.tree,proofSha256,socket:p.socket};
     };

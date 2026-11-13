@@ -80,6 +80,28 @@ function fixture() {
   return {p,io,args,container,image,calls,set file(v:string){file=v;},set extra(v:boolean){extra=v;},set inode(v:number){socketInode=v;},set socketMode(v:number){socketMode=v;},set sourceMode(v:number){sourceMode=v;},set sourceUid(v:number){sourceUid=v;},rebind(){proof=Buffer.from(JSON.stringify(p));env.TAX_ENGINE_NATIVE_BROWSER_PROOF_SHA256=digest('sha256',proof);}};
 }
 
+function podmanFixture() {
+  const f = fixture();
+  Object.assign(f.container.HostConfig, {
+    CapAdd: [], Binds: [],
+    CapDrop: ['CHOWN','DAC_OVERRIDE','FOWNER','FSETID','KILL','NET_BIND_SERVICE','SETFCAP','SETGID','SETPCAP','SETUID','SYS_CHROOT'],
+    Tmpfs: {
+      '/tmp': 'rw,noexec,nosuid,size=64m,rprivate,nodev,tmpcopyup',
+      '/app/apps/web/.next/cache': 'rw,noexec,nosuid,nodev,size=64m,mode=1777,rprivate,tmpcopyup',
+    },
+  });
+  f.container.Config.Env.push('container=podman','HOME=/home/appuser');
+  const native: Record<string, unknown> = {Id:f.container.Id, Image:f.p.imageId, State:{Running:true,Status:'running'}, EffectiveCaps:null, BoundingCaps:null};
+  const compat = f.io.get;
+  f.io.get = async (socket, kind, identity, signal) => {
+    if (kind !== 'podman-containers') return compat(socket,kind,identity,signal);
+    f.calls.push(kind);
+    expect(identity).toBe(f.p.containerId);
+    return native as unknown as Awaited<ReturnType<typeof compat>>;
+  };
+  return {...f,native};
+}
+
 describe('native operational provenance — source-and-custody/live-runtime',()=>{
   it('independently checks complete source and socket custody before and after live inspection',async()=>{
     const f=fixture(), inspect=await createNativeInspector(f.args,f.io);
@@ -105,6 +127,32 @@ describe('native operational provenance — source-and-custody/live-runtime',()=
   it('requires actual container and image observations rather than the sidecar',async()=>{
     const f=fixture(),inspect=await createNativeInspector(f.args,f.io);
     f.io.get=async()=>{throw Error('offline');};await expect(inspect()).rejects.toThrow('offline');
+  });
+  it('admits the observed Podman 6 profile only with an independently empty native capability report',async()=>{
+    const f=podmanFixture(), inspect=await createNativeInspector(f.args,f.io);
+    expect(await inspect()).toMatchObject({commit:f.p.commit});
+    expect(f.calls).toEqual(['containers','images','podman-containers']);
+    f.native.EffectiveCaps=[];
+    f.native.BoundingCaps=[];
+    expect(await inspect()).toMatchObject({commit:f.p.commit});
+  });
+  it.each(['missing-effective','effective','bounding','wrong-id','wrong-image','stopped','incomplete-drop','wrong-home','extra-environment','cache-mode','tmpfs-devices'])('denies Podman %s mutation',async kind=>{
+    const f=podmanFixture();
+    switch (kind) {
+      case 'missing-effective':delete f.native.EffectiveCaps;break;
+      case 'effective':f.native.EffectiveCaps=['CAP_CHOWN'];break;
+      case 'bounding':f.native.BoundingCaps=['CAP_SYS_ADMIN'];break;
+      case 'wrong-id':f.native.Id='0'.repeat(64);break;
+      case 'wrong-image':f.native.Image='0'.repeat(64);break;
+      case 'stopped':f.native.State={Running:false,Status:'exited'};break;
+      case 'incomplete-drop':f.container.HostConfig.CapDrop.pop();break;
+      case 'wrong-home':f.container.Config.Env[4]='HOME=/root';break;
+      case 'extra-environment':f.container.Config.Env.push('OPENAI_API_KEY=synthetic-forbidden');break;
+      case 'cache-mode':f.container.HostConfig.Tmpfs['/app/apps/web/.next/cache']=f.container.HostConfig.Tmpfs['/app/apps/web/.next/cache'].replace('mode=1777','mode=777');break;
+      case 'tmpfs-devices':f.container.HostConfig.Tmpfs['/tmp']=f.container.HostConfig.Tmpfs['/tmp'].replace('nodev','dev');break;
+    }
+    const inspect=await createNativeInspector(f.args,f.io);
+    await expect(inspect()).rejects.toThrow();
   });
   it.each(['container-id','image-id','not-running','status','revision','image-revision','operation','name','architecture','os','user','cmd','entrypoint','read-only','privileged','cap-add','cap-drop','security','bind','port','network-port','mount','environment','duplicate-environment','layers','tmpfs-missing','tmpfs-mask','tmpfs-executable'])('denies live %s mutation',async kind=>{
     const f=fixture();
@@ -196,6 +244,13 @@ describe('native operational provenance — fail-closed transport',()=>{
     const f=transportFixture(),c=new AbortController();
     expect(await relayJson(`/private/tmp/tax-ze-${'a'.repeat(32)}/api.sock`,'containers','c'.repeat(64),c.signal,f.send)).toEqual({Id:'safe'});
     expect(f.requests).toEqual([{socketPath:`/private/tmp/tax-ze-${'a'.repeat(32)}/api.sock`,method:'GET',path:`/containers/${'c'.repeat(64)}/json`,agent:false,headers:{Accept:'application/json'}}]);expect(f.ended).toBe(1);expect(f.destroyed).toBe(2);
+  });
+  it('uses the fixed versioned read-only Podman route for one full container ID',async()=>{
+    const f=transportFixture(), socketPath=`/private/tmp/tax-ze-${'a'.repeat(32)}/api.sock`, identity='c'.repeat(64);
+    await expect(relayJson(socketPath,'podman-containers',identity,undefined,f.send)).resolves.toEqual({Id:'safe'});
+    expect(f.requests).toEqual([{socketPath,method:'GET',path:`/v6.0.0/libpod/containers/${identity}/json`,agent:false,headers:{Accept:'application/json'}}]);
+    expect(()=>relayJson(socketPath,'v6.0.0/libpod/containers',identity,undefined,f.send)).toThrow();
+    expect(f.requests).toHaveLength(1);
   });
   it.each(['redirect','length','oversize','malformed','error'])('closes bounded request on %s without raw error disclosure',async kind=>{
     const f=transportFixture(kind);await expect(relayJson(`/private/tmp/tax-ze-${'a'.repeat(32)}/api.sock`,'images','d'.repeat(64),undefined,f.send)).rejects.toThrow('Native read-only inspection unavailable');expect(f.destroyed).toBe(2);
