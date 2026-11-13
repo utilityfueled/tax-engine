@@ -18,6 +18,8 @@ try {
   const metadata = JSON.parse(docker("inspect", container))[0];
   assert.equal(metadata.HostConfig.ReadonlyRootfs, true);
   assert.ok(metadata.Config.Healthcheck?.Test?.length, "Runtime image must retain the Dockerfile health check.");
+  const setIdFiles = docker("exec", "--user", "0", container, "/usr/bin/find", "/", "-xdev", "-type", "f", "-perm", "/6000", "-print");
+  assert.equal(setIdFiles, "", "The runtime filesystem must have no set-user-ID or set-group-ID files.");
   const port = docker("port", container, "3000/tcp").split(":").at(-1);
   const origin = `http://127.0.0.1:${port}`;
   let ready = false;
@@ -148,7 +150,7 @@ try {
   }
   assert.ok(healthy, "Runtime health check never reported healthy.");
   console.log(JSON.stringify({ result: "passed", image: metadata.Image, readOnly: true,
-    healthy, assets: true, imageCacheWritten, selfHostAuth: true, runnerPackageProof, ...processEvidence }));
+    healthy, assets: true, imageCacheWritten, selfHostAuth: true, setIdFiles: [], runnerPackageProof, ...processEvidence }));
 } catch (error) {
   console.error(docker("logs", container));
   throw error;

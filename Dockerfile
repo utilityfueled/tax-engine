@@ -55,6 +55,10 @@ COPY --from=builder --chown=appuser:appgroup /app/apps/web/.next/standalone ./
 COPY --from=builder --chown=appuser:appgroup /app/apps/web/.next/static ./apps/web/.next/static
 COPY --from=builder --chown=appuser:appgroup /app/apps/web/public ./apps/web/public
 COPY --from=builder --chown=appuser:appgroup /app/forms/blank ./forms/blank
+# The standalone app has no need for executables that change user or group identity.
+RUN find / -xdev -type f -perm /6000 -exec chmod a-s {} + \
+    && set_id_files="$(find / -xdev -type f -perm /6000 -print)" \
+    && test -z "$set_id_files"
 USER appuser
 EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
