@@ -11077,6 +11077,26 @@
       ]
     },
     {
+      "key": "federal/schedule-se-review-selection",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.irs.gov/pub/irs-prior/i1040sse--2025.pdf",
+      "specPath": "spec/federal/schedule-se-review-selection.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/scorp-debt-nondeductible-order",
       "jurisdiction": "federal",
       "taxYear": 2025,

@@ -1,0 +1,32 @@
+form: "Schedule SE review owner selection"
+fullName: "Select the official 2025 regular-method review schedule for each owner"
+taxYear: 2025
+irsReference: "https://www.irs.gov/pub/irs-prior/i1040sse--2025.pdf"
+notes: |
+  The 2025 Schedule SE instructions require separate schedules for spouses with
+  self-employment income. See Who Must File, Joint Returns and Lines 4a Through
+  4c. IRC 1402(b)(2) and 26 CFR 1.1402(b)-1(c) exclude each individual's exact
+  net earnings below $400 from self-employment income. The regular-method slice
+  has no church employee income, optional method election or CRP adjustment.
+  The 2025 Form 1040 instructions and 26 CFR 301.6102-1 distinguish reporting
+  whole dollars from computing underlying eligibility. Apply the same whole
+  dollar presentation to each included owner. Retain the original business
+  sources, exact audit amounts and signed business losses in the calculations.
+  No 2026 export, filing qualification or tax computation change.
+lines:
+  - line: "regular-owner-attachment"
+    description: "Omit the below-threshold owner's official schedule from a joint review packet"
+    formula: "Regular profit $433.13 gives exact line 4c $399.995555, whole-dollar audit $400 and line 6 zero. Omit this owner from the official Schedule SE even when the other spouse has positive tax. The qualifying owner occupies the original template, and only additional qualifying owners get copied forms. Schedule 1 keeps both signed business amounts and the qualifying deduction. Schedule 2 keeps combined SE tax."
+    testRef: "tests/pdf/fill-schedule-se-source.test.ts::attaches only the taxable spouse to the saved joint packet when %s is below the exact cutoff"
+  - line: "exact-boundary-wage-cap"
+    description: "Include qualifying owner even when the Social Security wage base is already used"
+    formula: "Regular profit $433.14 gives exact line 4c $400.00479, reported line 4c and line 6 $400. With $176100 of that owner's W-2 Social Security wages, line 10 is blank for zero, line 11 and line 12 are $12, and line 13 is $6. A second qualifying owner still gets a separate complete schedule."
+    testRef: "tests/pdf/fill-schedule-se-source.test.ts::retains both qualifying spouses when the boundary owner already used the Social Security wage base"
+  - line: "loss-and-blank-template"
+    description: "Keep a signed business loss on its income schedule"
+    formula: "No official owner copy for a spouse with a $1000 Schedule F loss and zero Schedule SE tax. Schedule F and Schedule 1 retain the signed amount and do not offset the other spouse's Schedule SE. A direct call with no qualifying owner keeps the blank historical template, while the packet omits Schedule SE."
+    testRef: "tests/pdf/fill-schedule-se-source.test.ts::preserves the signed farm loss and omits the nonqualifying owner from Schedule SE"
+  - line: "validate-omitted-owner"
+    description: "Omitting a nonqualifying owner cannot bypass original audit consistency"
+    formula: "Check every owner against existing canonical amounts and require unique, finite mapped audit lines before selecting positive-tax owners. Reject a contradictory omitted owner. Missing current SE or no qualifying owner still allows the standalone blank preview."
+    testRef: "tests/pdf/fill-schedule-se-source.test.ts::rejects incomplete or contradictory audit lines for an omitted owner"

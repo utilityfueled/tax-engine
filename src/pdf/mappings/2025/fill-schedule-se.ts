@@ -1,4 +1,4 @@
-/** Official 2025 Schedule SE review mapping. Spec: spec/federal/schedule-se.yaml. */
+/** Official 2025 Schedule SE review mapping. Specs: schedule-se.yaml and schedule-se-review-selection.yaml. */
 import { PDFDocument, PDFObjectCopier, PDFPage, PDFPageLeaf } from "pdf-lib";
 import Decimal from "decimal.js";
 import type { TaxReturnResult } from "@/models/outputs.js";
@@ -17,16 +17,8 @@ export const SCHEDULE_SE_FIELDS={
   line9:p1("f1_18[0]"),line10:p1("f1_19[0]"),line11:p1("f1_20[0]"),line12:p1("f1_21[0]"),line13:p1("f1_22[0]"),
 } as const;
 const amounts: Array<Exclude<keyof ScheduleSEAmounts,"lines">>=["netFarmProfit","netNonfarmProfit","netSEEarnings","taxableEarnings","earningsSubjectToSETax","socialSecurityPortion","medicarePortion","totalSETax","deductibleHalf"];
-function fillIndividual(doc:PDFDocument,input:TaxYearInput,se?:ScheduleSEPerTaxpayer):void {
-  const form=doc.getForm();
-  const owner=se?.accountHolder ?? (input.taxpayer.filingStatus!=="married_filing_jointly"?"primary":undefined);
-  const person=owner==="spouse"?input.taxpayer.spouse:owner==="primary"?input.taxpayer.primary:undefined;
-  if(owner==="spouse"&&!person)throw new Error("Schedule SE spouse source is missing");
-  if(person) {
-    setTextField(form,SCHEDULE_SE_FIELDS.name,`${person.firstName} ${person.lastName}`);
-    setTextField(form,SCHEDULE_SE_FIELDS.ssn,person.ssn.replaceAll("-",""));
-  }
-  if(!se)return;
+const mappedLines=["1a","1b","2","3","4a","4b","4c","5a","5b","6","8a","8b","8c","8d","9","10","11","12","13"] as const;
+function prepareIndividual(se:ScheduleSEPerTaxpayer) {
   const audited=(line:string)=>{
     const entries=se.lines.filter(entry=>entry.form==="Sched SE"&&entry.line===line);
     if(entries.length!==1||!entries[0].value.isFinite())throw new Error(`Missing, duplicate or invalid Schedule SE audit ${line}`);
@@ -36,8 +28,25 @@ function fillIndividual(doc:PDFDocument,input:TaxYearInput,se?:ScheduleSEPerTaxp
     if(!audited(line).eq(se[key]))throw new Error(`Schedule SE result does not reconcile with audit ${line}`);
   }
   if(!audited("7").eq(176100))throw new Error("Schedule SE wage base does not match the 2025 template");
-  for(const line of ["1a","1b","2","3","4a","4b","4c","5a","5b","6","8a","8b","8c","8d","9","10","11","12","13"] as const) {
-    setCurrencyField(form,SCHEDULE_SE_FIELDS[`line${line}`],audited(line));
+  const lines=mappedLines.map(line=>({line,value:audited(line)}));
+  const {earningsSubjectToSETax,totalSETax}=se;
+  if(totalSETax.lt(0)||(!earningsSubjectToSETax.isZero()&&earningsSubjectToSETax.lt(400))
+    ||earningsSubjectToSETax.isZero()!==totalSETax.isZero()){
+    throw new Error("Schedule SE regular-method tax and taxable earnings do not reconcile");
+  }
+  return {accountHolder:se.accountHolder,lines,taxable:totalSETax.gt(0)};
+}
+
+function fillIndividual(doc:PDFDocument,input:TaxYearInput,individual?:ReturnType<typeof prepareIndividual>):void {
+  const form=doc.getForm();
+  const owner=individual?.accountHolder ?? (input.taxpayer.filingStatus!=="married_filing_jointly"?"primary":undefined);
+  const person=owner==="spouse"?input.taxpayer.spouse:owner==="primary"?input.taxpayer.primary:undefined;
+  if(person) {
+    setTextField(form,SCHEDULE_SE_FIELDS.name,`${person.firstName} ${person.lastName}`);
+    setTextField(form,SCHEDULE_SE_FIELDS.ssn,person.ssn.replaceAll("-",""));
+  }
+  for(const {line,value} of individual?.lines??[]) {
+    setCurrencyField(form,SCHEDULE_SE_FIELDS[`line${line}`],value);
   }
 }
 
@@ -68,10 +77,13 @@ export async function fillScheduleSE(input:TaxYearInput,result:TaxReturnResult,b
     const owners=se.perTaxpayer.map(row=>row.accountHolder);
     if(new Set(owners).size!==owners.length)throw new Error("Duplicate Schedule SE taxpayer owners");
     if(owners.length>1&&owners.includes(undefined))throw new Error("Separate Schedule SE forms require actual owners");
+    if(owners.includes("spouse")&&!input.taxpayer.spouse)throw new Error("Schedule SE spouse source is missing");
   }
+  // The exact threshold has already been applied to each owner's canonical line 6.
+  const taxableOwners=se?.perTaxpayer.map(prepareIndividual).filter(row=>row.taxable)??[];
   const doc=await loadReviewTemplate(blankPdfPath,2025);
-  fillIndividual(doc,input,se?.perTaxpayer[0]);
-  for(const row of se?.perTaxpayer.slice(1)??[]) {
+  fillIndividual(doc,input,taxableOwners[0]);
+  for(const row of taxableOwners.slice(1)) {
     const source=await loadReviewTemplate(blankPdfPath,2025);
     fillIndividual(source,input,row);
     await appendIndividual(doc,source,row.accountHolder ?? "unknown");
