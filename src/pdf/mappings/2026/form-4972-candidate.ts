@@ -73,10 +73,7 @@ export const FORM_4972_2026_CANDIDATE = Object.freeze({
   ]),
 });
 
-export function projectForm49722026OwnPlan(source: Form4972Input) {
-  if (source.sourceKind === "death_beneficiary") {
-    throw new Error("The Form 4972 physical candidate requires the participant's own plan");
-  }
+function projectElectionAmounts(source: Form4972Input) {
   const exact = calculateForm4972(source);
   if (!d(source.actuarialValue).isZero()) {
     throw new Error("The Form 4972 physical candidate requires confirmed zero Box 8a");
@@ -108,13 +105,42 @@ export function projectForm49722026OwnPlan(source: Form4972Input) {
     throw new Error(reconciliationError);
   }
 
-  const { fields } = FORM_4972_2026_CANDIDATE;
   const text: Record<string, string> = {};
   for (const { line, value } of exact.lines) {
-    if (line === "9" || line === "18") continue;
+    if (line === "9" || (line === "18" && source.sourceKind !== "death_beneficiary")) continue;
     const key = `line${line}`;
     if (!Object.hasOwn(page1Money, key)) throw new Error(`Unmapped Form 4972 line ${line}`);
     text[page1Money[key as keyof typeof page1Money]] = roundDollar(value).toFixed(0);
   }
-  return { text, checked: [fields.line1Yes, fields.line2No, fields.line3No, fields.line4Yes, fields.line5aNo] };
+  return text;
+}
+
+export function projectForm49722026OwnPlan(source: Form4972Input) {
+  if (source.sourceKind === "death_beneficiary") {
+    throw new Error("The Form 4972 physical candidate requires the participant's own plan");
+  }
+  const { fields } = FORM_4972_2026_CANDIDATE;
+  return {
+    text: projectElectionAmounts(source),
+    checked: [fields.line1Yes, fields.line2No, fields.line3No, fields.line4Yes, fields.line5aNo],
+  };
+}
+
+export function projectForm49722026DeathBeneficiary(source: Form4972Input, answers: {
+  recipientIsParticipantForThisDistribution?: boolean;
+  recipientUsedForm4972ForOwnPlanAfter1986?: boolean;
+}) {
+  if (source.sourceKind !== "death_beneficiary") throw new Error("Form 4972 requires a death-beneficiary distribution");
+  if (answers.recipientIsParticipantForThisDistribution !== false) {
+    throw new Error("Form 4972 requires confirmation of the beneficiary recipient's relationship to this distribution");
+  }
+  if (typeof answers.recipientUsedForm4972ForOwnPlanAfter1986 !== "boolean") {
+    throw new Error("Form 4972 requires the recipient's actual own-plan history to complete question 5a");
+  }
+  const { fields } = FORM_4972_2026_CANDIDATE;
+  const ownPlanHistory = answers.recipientUsedForm4972ForOwnPlanAfter1986 ? fields.line5aYes : fields.line5aNo;
+  return {
+    text: projectElectionAmounts(source),
+    checked: [fields.line1Yes, fields.line2No, fields.line3Yes, fields.line4No, ownPlanHistory, fields.line5bNo],
+  };
 }

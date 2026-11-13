@@ -30,6 +30,22 @@ lines:
     testRefs:
       - "tests/pdf/form-4972-2026-candidate.test.ts::holds amounts that cannot reconcile in whole dollars"
       - "tests/pdf/form-4972-2026-candidate.test.ts::holds positive Box 8a outside the zero-value physical candidate"
+  - line: "1-30-beneficiary"
+    description: "Project the confirmed single death-beneficiary election"
+    formula: >-
+      Require the finite death-beneficiary worksheet, explicit confirmation
+      that the recipient is not the participant for this distribution and
+      the recipient's actual own-plan Form 4972 use after 1986. Mark 1 Yes,
+      2 No, 3 Yes, 4 No and 5b No. Mark 5a from the separate own-plan history.
+      That history cannot disqualify this death-beneficiary distribution.
+      Leave 9 blank because the death-benefit exclusion is unavailable to
+      this cohort. For Part III, show the confirmed zero attributable estate
+      tax on line 18 and zero on line 11. Preserve election branches and
+      whole-dollar reconciliation. Leave identity and instruction fields blank.
+    testRef: "tests/pdf/form-4972-2026-candidate.test.ts::projects the confirmed beneficiary and separate own-plan answers"
+    testRefs:
+      - "tests/pdf/form-4972-2026-candidate.test.ts::holds beneficiary projection with incomplete physical answers"
+      - "tests/pdf/form-4972-2026-candidate.test.ts::reopens the marked beneficiary specimen"
   - line: "diagnostic"
     description: "Reopen a marked synthetic specimen"
     formula: "Verify text and checkbox values and appearances, all inactive cells and the review notice on all four pages. Remove XFA, Reader rights and active actions."

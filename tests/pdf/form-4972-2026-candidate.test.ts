@@ -6,11 +6,12 @@ import { PDFArray, PDFBool, PDFCheckBox, PDFDict, PDFDocument, PDFName, PDFRef, 
 import { expect, it } from "vitest";
 import type { Form4972Input } from "@/engine/forms/form-4972.js";
 import { assertPdfExportAllowed, markReviewPdf, PDF_MAPPING_PACKS } from "@/pdf/export-policy.js";
-import { FORM_4972_2026_CANDIDATE, projectForm49722026OwnPlan } from "@/pdf/mappings/2026/form-4972-candidate.js";
+import * as form4972Candidate from "@/pdf/mappings/2026/form-4972-candidate.js";
 import { REVIEW_TEMPLATE_PACKS } from "@/pdf/template-registry.js";
 
 const blank = new URL("../../forms/blank/2026/f4972.pdf", import.meta.url);
 const digest = "2968f25a528882666de3dab99ed9cf48ea8841e0fdbf6f409a71a4b419d4aa99";
+const { FORM_4972_2026_CANDIDATE, projectForm49722026OwnPlan } = form4972Candidate;
 const { fields, instructionFields } = FORM_4972_2026_CANDIDATE;
 
 type Location = [page: number, name: string, kind: "/Tx" | "/Btn", rect: number[], states: string[]];
@@ -24,12 +25,15 @@ const election: Form4972Input = {
   netUnrealizedAppreciation: "0", actuarialValue: "0",
 };
 
+const beneficiaryElection = {
+  ...election, distributionCode: "4A", sourceKind: "death_beneficiary",
+  participantDeathDate: "1996-08-21", distributionDate: "2026-12-31", qualifiedPlanConfirmed: true,
+  receivedBecauseOfDeath: true, priorBeneficiaryElectionForParticipant: false, federalEstateTax: "0",
+} satisfies Form4972Input;
+const beneficiaryAnswers = { recipientIsParticipantForThisDistribution: false, recipientUsedForm4972ForOwnPlanAfter1986: false };
+
 it("holds the beneficiary method outside the own-plan physical map", () => {
-  expect(() => projectForm49722026OwnPlan({
-    ...election, distributionCode: "4A", sourceKind: "death_beneficiary",
-    participantDeathDate: "1996-08-21", distributionDate: "2026-12-31", qualifiedPlanConfirmed: true,
-    receivedBecauseOfDeath: true, priorBeneficiaryElectionForParticipant: false, federalEstateTax: "0",
-  })).toThrow(/physical.*participant's own plan/u);
+  expect(() => projectForm49722026OwnPlan(beneficiaryElection)).toThrow(/physical.*participant's own plan/u);
 });
 
 it("holds positive Box 8a outside the zero-value physical candidate", () => {
@@ -93,7 +97,32 @@ it("holds amounts that cannot reconcile in whole dollars", () => {
   expect(() => projectForm49722026OwnPlan({ ...election, entireBalanceConfirmed: false })).toThrow(/confirmed eligibility/u);
 });
 
-it("reopens a marked specimen with blank identity and instruction fields", async () => {
+it("projects the confirmed beneficiary and separate own-plan answers", () => {
+  const project = form4972Candidate.projectForm49722026DeathBeneficiary;
+  expect(project).toBeTypeOf("function");
+  const combined = project(beneficiaryElection, { ...beneficiaryAnswers, recipientUsedForm4972ForOwnPlanAfter1986: true });
+  expect(combined.checked).toEqual([fields.line1Yes, fields.line2No, fields.line3Yes, fields.line4No, fields.line5aYes, fields.line5bNo]);
+  expect(combined.text).toEqual({ ...projectForm49722026OwnPlan(election).text, [fields.line18]: "0" });
+  const gain = project({ ...beneficiaryElection, election: "capital_gain" }, beneficiaryAnswers);
+  expect(gain.checked).toEqual([fields.line1Yes, fields.line2No, fields.line3Yes, fields.line4No, fields.line5aNo, fields.line5bNo]);
+  expect(gain.text).toEqual({ [fields.line6]: "5000", [fields.line7]: "1000" });
+});
+
+it("holds beneficiary projection with incomplete physical answers", () => {
+  const project = form4972Candidate.projectForm49722026DeathBeneficiary;
+  expect(project).toBeTypeOf("function");
+  expect(() => project(election, beneficiaryAnswers)).toThrow(/death-beneficiary/u);
+  expect(() => project(beneficiaryElection, { ...beneficiaryAnswers, recipientIsParticipantForThisDistribution: true }))
+    .toThrow(/recipient/u);
+  expect(() => project(beneficiaryElection, { ...beneficiaryAnswers, recipientUsedForm4972ForOwnPlanAfter1986: undefined }))
+    .toThrow(/own-plan history/u);
+  expect(() => project({ ...beneficiaryElection, priorBeneficiaryElectionForParticipant: true }, beneficiaryAnswers))
+    .toThrow(/eligibility/u);
+  expect(() => project({ ...beneficiaryElection, federalEstateTax: "0.01" }, beneficiaryAnswers)).toThrow(/estate tax/u);
+  expect(() => project({ ...beneficiaryElection, taxableAmount: "25010" }, beneficiaryAnswers)).toThrow(/reconcile/u);
+});
+
+async function verifySavedSpecimen(projection: ReturnType<typeof projectForm49722026OwnPlan>, filename: string) {
   const pdf = await PDFDocument.load(await readFile(blank));
   const acro = pdf.catalog.getAcroForm()?.dict;
   const packets = acro?.lookupMaybe(PDFName.of("XFA"), PDFArray)?.asArray()
@@ -108,7 +137,6 @@ it("reopens a marked specimen with blank identity and instruction fields", async
   if (permissions instanceof PDFRef) pdf.context.delete(permissions);
   if (readerRights instanceof PDFRef) pdf.context.delete(readerRights);
 
-  const projection = projectForm49722026OwnPlan(election);
   const form = pdf.getForm();
   for (const [name, value] of Object.entries(projection.text)) form.getTextField(name).setText(value);
   for (const name of projection.checked) form.getCheckBox(name).check();
@@ -140,7 +168,17 @@ it("reopens a marked specimen with blank identity and instruction fields", async
     }
   }
   const diagnostics = process.env.TAX_ENGINE_FORM4972_DIAGNOSTIC_DIR;
-  if (diagnostics) await writeFile(join(diagnostics, "form-4972-review-diagnostic.pdf"), bytes);
+  if (diagnostics) await writeFile(join(diagnostics, filename), bytes);
+}
+
+it("reopens a marked specimen with blank identity and instruction fields", async () => {
+  await verifySavedSpecimen(projectForm49722026OwnPlan(election), "form-4972-review-diagnostic.pdf");
+});
+
+it("reopens the marked beneficiary specimen", async () => {
+  const project = form4972Candidate.projectForm49722026DeathBeneficiary;
+  expect(project).toBeTypeOf("function");
+  await verifySavedSpecimen(project(beneficiaryElection, beneficiaryAnswers), "form-4972-beneficiary-review.pdf");
 });
 
 it("keeps annual review and filing exports unavailable", () => {
