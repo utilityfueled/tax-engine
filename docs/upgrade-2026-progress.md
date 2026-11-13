@@ -4,6 +4,26 @@ Current source, verification and remaining work are summarized in the
 [current continuation](upgrade-2026-current-status.md). Historical results
 below apply to their named revisions.
 
+- November 13: `4db383ba` adds the 2026 federal Schedule C business standard
+  mileage calculation for one owned first-use vehicle. It applies 72.5 cents
+  through June 30 and 76 cents from July 1, adds eligible parking and tolls
+  once and preserves exact Decimal results through Schedule SE. Seven
+  controls failed before implementation. The successor passed 573 focused
+  checks, all three type checks, scoped lint, inventory and 8,831 spec
+  references. The independent Decimal calculation reproduces line 9
+  $3.366655, line 31 $9,996.633345 and Schedule SE $1,413. The source audit
+  changes five hashes under the existing 610-case collection and request
+  limits. Basis, state methods, guided facts and official Part IV output
+  remain open. [IRS Notice 2026-10](https://www.irs.gov/pub/irs-drop/n-26-10.pdf) ·
+  [Announcement 2026-11](https://www.irs.gov/irb/2026-29_irb) ·
+  [Rev. Proc. 2019-46](https://www.irs.gov/pub/irs-drop/rp-19-46.pdf).
+
+- November 13: archived `6a38aadd` passed all 12 local checks after correcting
+  the tax-table README binding. Unit and coverage each passed 27,620 tests
+  in 1,994 files with 87.80% branch coverage. Managed Chromium passed 596
+  and retained five original hosted-only skips. The archive's PostgreSQL
+  stopped normally before the browser checks.
+
 - November 13: `95d7da8e` binds local guided answers and mode changes to the
   current return and reset event. Guided projection uses the current saved
   originals. The earlier production build restored deleted return facts,

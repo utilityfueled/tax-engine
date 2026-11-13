@@ -2,12 +2,25 @@
 
 ## November 13 on `main`
 
+`4db383ba` calculates the federal Schedule C deduction for an eligible
+first-use owned vehicle from confirmed mileage and parking and toll records.
+The business rate changes from 72.5 to 76 cents on July 1. The 573 focused
+checks cover Schedule SE, exact dates and Pennsylvania and Ohio refusal of
+the federal-only packet. A separate Decimal calculation reproduced the
+example. Guided collection, vehicle basis and official Part IV remain open.
+[IRS Announcement 2026-11](https://www.irs.gov/irb/2026-29_irb).
+
 `95d7da8e` rejects guided writes from a tab opened before a local return was
 deleted or reset. Switching to advanced mode preserves original documents
 added by another tab. The earlier production build failed all three controls.
 The successor passed 179 focused checks and 33 production Chromium cases with
 zero retries or skips. Simultaneous answer writes within the same reset
 generation remain subject to Web Storage scheduling.
+
+Archived `6a38aadd` passed all 12 local checks after the earlier draft-table
+audit failure was corrected. Unit and coverage each passed 27,620 tests at
+87.80% branch coverage. Managed Chromium passed 596 cases and skipped the
+five hosted-only tests.
 
 Exact `c94971cd` passed all 12 archived local commands. Unit and coverage
 each passed 27,558 tests in 1,988 files, with 87.76% branch coverage against

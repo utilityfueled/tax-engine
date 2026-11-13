@@ -39,6 +39,11 @@ below retain their original evidence boundaries.
   Computation Worksheet values. [Draft evidence](upgrade-2026-draft-federal-tables-work.md).
 - [x] Apply the 2026 professional wagering cap to confirmed single-owner
   Schedule C and SE sources in `d10cc135`. The 396 focused checks pass.
+- [x] Apply the midyear 2026 federal Schedule C mileage rate to a confirmed
+  first-use owned vehicle in `4db383ba`. Verify dated boundaries, exact
+  expense and SE routing, and deny unqualified PA and Ohio composition.
+- [ ] Complete guided mileage facts, state and other federal schedule
+  composition, basis tracking, and qualified Schedule C Part IV output.
 - [ ] Finish and review W-2G linkage, mixed or joint professional wagering,
   guided sources and qualified annual physical output.
 - [x] Honor committed original deletion in open tabs in `6a38aadd`. Keep
@@ -55,6 +60,9 @@ below retain their original evidence boundaries.
   Verify all three failures and the 33-case successor cohort in Chromium.
 - [x] Record the `b76cf211` archived browser preflight failure and repair its
   tax-table README source binding in `6a38aadd`.
+- [x] Close all 12 archived `6a38aadd` checks. Unit and coverage each
+  pass 27,620 at 87.80% branch coverage. Chromium passes 596 cases with
+  five hosted-only skips.
 - [x] Complete the 12 archived `656fb5f8` checks. Unit and coverage each
   pass 27,617 tests with 87.79% branch coverage. Chromium passes 594
   with five original hosted-only skips.

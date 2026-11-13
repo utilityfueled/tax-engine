@@ -23719,6 +23719,40 @@
     "diagnosticCases": 14,
     "auditSha256": "fffbb7819b7c0168cd5a96453e2089d3e32f5fe65019fa7d629322dfa1f823b3"
   },
+  "nov13ScheduleCStandardMileage": {
+    "commit": "4db383ba771a95625926b45e8cadcaba9d3ed21d",
+    "tree": "7577613da089d64e6ff1ff4355171a3bd6093446",
+    "rulePack": "2026.225-law-integration-draft",
+    "beforeFixFocusedFailures": 7,
+    "beforeFixSha256": "fd85d1534a36a4a010a9788e518c0d2a19cce2cdcc602afc486fe3dca00c1a08",
+    "focusedPassed": 573,
+    "focusedSha256": "1fb555a1972a019904e9789346e2cb0c868f7a1ca903bc672deef40faf32d5a2",
+    "oracleSha256": "d4fc0f68d5a2df63c5d10d9cb4d0d3849bcad4d3345c3d4fe95aba11691b3135",
+    "specReferences": 8831,
+    "browserCollectionCases": 610,
+    "auditSha256": "d2feb6b92411ddcfc1facebe5e11798829e66fc5b8249739deb98a78ebf10290",
+    "sources": [
+      "https://www.irs.gov/pub/irs-drop/n-26-10.pdf",
+      "https://www.irs.gov/irb/2026-29_irb",
+      "https://www.irs.gov/pub/irs-drop/rp-19-46.pdf",
+      "https://www.irs.gov/pub/irs-prior/f1040sc--2026.pdf",
+      "https://www.irs.gov/pub/irs-dft/i1040sc--dft.pdf"
+    ],
+    "humanTaxReviewComplete": false,
+    "filingQualified": false
+  },
+  "nov13CrossTabOriginalCombined": {
+    "sourceCommit": "6a38aadd7ab89865b3d297be81e22ede6d9880e3",
+    "tree": "58fe1b29d35cd4b5f110259bce57baf2fd638846",
+    "checksPassed": 12,
+    "unitAndCoverageTestsEach": 27620,
+    "testFiles": 1994,
+    "branchCoveragePercent": "87.80",
+    "chromiumPassed": 596,
+    "hostedOnlySkips": 5,
+    "checksSha256": "abe5d7e0d58e3a095eda1d5521032e4ca32cdfc5128a811d72ddd04a40fc9b0c",
+    "chromiumTranscriptSha256": "7b45b041f4d3166c169847ab9978dc2f78114a6aa6ccd55a9c7ab2bc8381378c"
+  },
   "nov12HostedCreditSettlement": {
     "previewReceiptCommit": "d39209dec302d249a5f01fe8baf23cc4ca2130f8",
     "settlementCommit": "8357ed9929766a8e5ed0ac7c45321cdccd44d35a",
