@@ -20,6 +20,9 @@ below retain their original evidence boundaries.
   verify two fictional PDFs in both sets of checkbox states. Keep review and
   filing disabled until final companion instructions, parent mappings and
   qualified review are available. [Evidence](upgrade-2026-schedule-8812-physical-candidate-work.md).
+- [x] Bind the final 2026 Form 3903 to its exact ten widgets. Two fictional
+  specimens pass reopening and render checks. The candidate remains outside
+  the review and filing registries. [Evidence](upgrade-2026-form-3903-physical-candidate-work.md).
 - [ ] Prove the installed package, complete strict browser and recovery,
   and rescan final runtime images on Linux ARM64 and AMD64. Keep remaining
   advisory dispositions and independent security/privacy review open.
