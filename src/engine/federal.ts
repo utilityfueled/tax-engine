@@ -1842,7 +1842,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     }
     : input;
 
-  const form1099G = calculateForm1099G(input.form1099G ?? [], year, filingStatus);
+  const form1099G = calculateForm1099G(input.form1099G ?? [], year, filingStatus, input);
   if (form1099G.sources.some(source => source.accountHolder === "spouse") && !input.taxpayer.spouse) {
     throw new Error("Government spouse sources require actual joint-return spouse facts");
   }

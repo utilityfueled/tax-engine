@@ -433,6 +433,14 @@
       "note": "The named method is exercised through this shared engine module by this specification's own regression references. No additional packet or filing support is claimed. This association neither changes scenario exclusions nor establishes independent human review."
     },
     {
+      "key": "federal/form-1099-g-cash-farm-box7",
+      "enginePath": "src/engine/forms/form-1099-g.ts",
+      "testRefs": [
+        "tests/engine/schedules/schedule-se-crp-cash-farm.test.ts::reconciles Box 7 originals to the farm ledger before calculating the return"
+      ],
+      "note": "Actual dated cash-farm receipts reconcile to every original Box 7 and stay in Schedule F. The federal integration preserves separate withholding. Guided entry, final forms and filing remain outside this method."
+    },
+    {
       "key": "federal/form-1099-g-return",
       "enginePath": "src/engine/federal.ts",
       "packetPath": "src/pdf/mappings/2025/fill-schedule-1.ts",

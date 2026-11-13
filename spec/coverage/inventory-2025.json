@@ -2609,6 +2609,29 @@
       ]
     },
     {
+      "key": "federal/form-1099-g-cash-farm-box7",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://www.irs.gov/instructions/i1099g",
+      "specPath": "spec/federal/form-1099-g-cash-farm-box7.yaml",
+      "enginePath": "src/engine/forms/form-1099-g.ts",
+      "packetPath": null,
+      "implementationTestRefs": [
+        "tests/engine/schedules/schedule-se-crp-cash-farm.test.ts::reconciles Box 7 originals to the farm ledger before calculating the return"
+      ],
+      "implementationNote": "Actual dated cash-farm receipts reconcile to every original Box 7 and stay in Schedule F. The federal integration preserves separate withholding. Guided entry, final forms and filing remain outside this method.",
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/form-1099-g-return",
       "jurisdiction": "federal",
       "taxYear": 2026,

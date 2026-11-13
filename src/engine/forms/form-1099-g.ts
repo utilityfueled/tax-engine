@@ -3,6 +3,7 @@ import Decimal from "decimal.js";
 import type { Form1099G, TaxYearInput } from "@/models/inputs.js";
 import type { CalculatedLine } from "@/models/outputs.js";
 import { AuditTrail } from "@/utils/audit.js";
+import { resolveCashFarmCrp, type CashFarmSourceInput } from "@/engine/schedules/schedule-se-crp-sources.js";
 
 type Owner = "primary" | "spouse";
 export interface GovernmentPaymentSource {
@@ -96,8 +97,15 @@ function allocateRefund(form: Form1099G, refund: Decimal, taxYear: number): Arra
   });
 }
 
-export function calculateForm1099G(forms: Form1099G[], taxYear = 2025, filingStatus?: TaxYearInput["taxpayer"]["filingStatus"]): Form1099GResult {
+export function calculateForm1099G(forms: Form1099G[], taxYear = 2025, filingStatus?: TaxYearInput["taxpayer"]["filingStatus"],
+  farmContext?: Omit<CashFarmSourceInput, "form1099G">,
+): Form1099GResult {
   if (![2022, 2023, 2024, 2025, 2026].includes(taxYear)) throw new Error(`Form1099G source worksheet does not support tax year ${taxYear}.`);
+  const farmTotals = farmContext?.taxpayer.taxYear === taxYear
+    && farmContext.taxpayer.filingStatus === filingStatus
+    && forms.some(form => form.agriculturePayments !== undefined && amount(form.agriculturePayments, "Box7 agriculture payments").gt(0))
+    ? resolveCashFarmCrp({ ...farmContext, form1099G: forms }).box7Totals
+    : undefined;
   const audit = new AuditTrail();
   const seenIds = new Set<string>(), seenStatements = new Set<string>();
   const sources: GovernmentPaymentSource[] = [];
@@ -155,7 +163,10 @@ export function calculateForm1099G(forms: Form1099G[], taxYear = 2025, filingSta
       rtaa = amount(form.rtaaPayments, "Box5 RTAA");
       grants = amount(form.taxableGrants, "Box6 taxable grants");
       if (grants.gt(0) && form.grantIncomeCategory !== "nonbusiness") throw new Error("Form1099G taxable grant requires actual nonbusiness classification or separate business/farm worksheet.");
-      if (amount(form.agriculturePayments, "Box7 agriculture payments").gt(0) || amount(form.marketGain, "Box9 market gain").gt(0)) throw new Error("Form1099G agriculture or CCC payments require the separate farm worksheet.");
+      const agricultural = amount(form.agriculturePayments, "Box7 agriculture payments");
+      if (amount(form.marketGain, "Box9 market gain").gt(0) || (agricultural.gt(0) && !farmTotals?.get(sourceId)?.eq(agricultural))) {
+        throw new Error("Form1099G agriculture or CCC payments require the separate farm worksheet.");
+      }
       if (typeof form.tradeOrBusinessRefund !== "boolean") throw new Error("Form1099G requires actual Box8 business-refund status.");
       const refund = amount(form.stateOrLocalTaxRefund, "Box2 refund"), alias = amount(form.stateLocalIncomeTaxRefund, "legacy Box2 refund alias");
       if (refund.gt(0) && alias.gt(0) && !refund.eq(alias)) throw new Error("Form1099G refund aliases do not reconcile.");
@@ -176,6 +187,13 @@ export function calculateForm1099G(forms: Form1099G[], taxYear = 2025, filingSta
       }
       family = taxYear === 2026 ? amount(form.familyLeaveBenefits, "Box10 family leave") : amount(form.familyLeaveBenefits ?? "0", "family leave source");
       if (family.gt(0) && (taxYear !== 2026 || form.familyLeaveProgramType !== "state-pfml-family")) throw new Error("Form1099G family benefits require the actual 2026 source and state family-leave classification; medical/private benefits need separate treatment.");
+      if (agricultural.gt(0)) {
+        if (form.programType !== "other-government" || form.tradeOrBusinessRefund || form.refundPaymentBasis
+          || form.priorYearRepaymentSource || [box1, repayment, balance, refundAmount, rtaa, grants, family].some(value => !value.isZero())) {
+          throw new Error("Form1099G Box 7 mixed sources require a separate worksheet.");
+        }
+        record("7", "Actual Box 7 agricultural payments", agricultural, "Reconciled to individual receipts and included only on Schedule F");
+      }
       const stateTax = amount(form.stateWithheld, "state withholding");
       if (form.stateTaxReporting === "none") {
         if (!stateTax.isZero() || form.state?.trim() || form.statePayerId?.trim()) throw new Error("Form1099G saved state information contradicts no state reporting.");

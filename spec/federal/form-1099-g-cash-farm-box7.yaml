@@ -1,0 +1,22 @@
+form: "Form 1099-G Box 7, actual cash-farm agricultural payments"
+fullName: "Reconcile annual agriculture statements to individual Schedule F receipts"
+taxYear: 2026
+reference: "https://www.irs.gov/instructions/i1099g"
+revision: "March 2024 and December 2026 statements, Box 7; 2025 Publication 225, Chapter 3; checked 2026-11-13"
+notes: |
+  Box 7 reports agricultural subsidy payments to their actual owner. This
+  route covers 2025 and 2026 fully taxable USDA payments of an identified
+  materially participating domestic cash farmer. An annual amount does not
+  establish the actual receipt date, program type or Social Security status.
+  Cost-share exclusions, nominee payments, Box 9 and ambiguous statements
+  with other income need separate treatment. Federal withholding is separate.
+  Guided entry and annual filing qualification are outside this source method.
+lines:
+  - line: "7-4a-4b"
+    description: "Match exact annual totals to the actual dated cash-farm receipts"
+    formula: "When any Box 7 statement is provided for the farm, each original receipt must link to exactly one statement of the same year and owner. Each positive Box 7 equals the sum of its linked receipt amounts to the cent. Require an actual other-government statement with Box 9 and other income boxes known zero. A complete manual Schedule F source ledger without a Box 7 statement retains its earlier limited method. A supplied unbound or duplicate positive statement must fail."
+    testRef: "tests/engine/schedules/schedule-se-crp-cash-farm.test.ts::reconciles Box 7 originals to the farm ledger before calculating the return"
+  - line: "federal-route"
+    description: "Include agriculture payments once as farm income and apply only actual withholding"
+    formula: "The reconciled amount stays in Schedule F and flows once to Schedule 1 line 6. It is excluded from unemployment and other government income. Keep actual Form 1099-G Box 4 on Form 1040 line 25b. A qualifying CRP receipt separately reduces only self-employment and earned-income bases."
+    testRef: "tests/engine/schedules/schedule-se-crp-cash-farm.test.ts::reconciles Box 7 originals to the farm ledger before calculating the return"

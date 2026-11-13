@@ -3431,6 +3431,7 @@ export const FarmExpensesSchema = z.object({
 const FarmAgriculturalPaymentSchema = z.object({
   sourceId: z.string().trim().min(1),
   sourceReference: z.string().trim().min(1),
+  form1099GSourceId: z.string().trim().min(1).optional(),
   receivedDate: z.iso.date(),
   taxableAmount: nonnegativeDollarsAndCents,
   accountHolder: z.enum(["primary", "spouse"]),

@@ -126,3 +126,41 @@ it("distinguishes the special $434 attachment threshold from the ordinary $400 e
     expect(result.totalSETax.toFixed()).toBe(expected === "regular-tax" ? "62" : "0");
   }
 });
+
+it("reconciles Box 7 originals to the farm ledger before calculating the return", () => {
+  const statement = { payer: "Synthetic USDA agency", payerTin: "12-3456789", accountHolder: "primary",
+    sourceId: "usda-7", accountReference: "synthetic USDA statement", taxYear: 2025, sourceFormRevision: "2024-03",
+    sourceFactsConfirmed: true, actualReceiptConfirmed: true, additionalWorksheetRequired: false,
+    programType: "other-government", unemploymentCompensation: "0", federalWithheld: "35.00", stateOrLocalTaxRefund: "0",
+    rtaaPayments: "0", taxableGrants: "0", agriculturePayments: "2400.25", marketGain: "0", tradeOrBusinessRefund: false,
+    currentYearRepaid: "0", priorYearRepaid: "0", unrecoveredAfterTaxContributions: "0", stateTaxReporting: "none", stateWithheld: "0" };
+  const receipts = [farmPayment("payment-1", "900.10"), farmPayment("payment-2", "1500.15", "2025-07-31")]
+    .map(receipt => ({ ...receipt, form1099GSourceId: statement.sourceId }));
+  const farm = { ...cashFarmPayments("2400.25", receipts), salesOfProductsRaised: "3200" };
+  const result = calculateFederalTax(single(farm, { form1099G: [statement] }));
+  expect(result.scheduleF?.netFarmProfit.toFixed()).toBe("5600.25");
+  expect(result.schedule1?.farmIncome.toFixed()).toBe("5600.25");
+  expect(result.schedule1?.unemploymentCompensation.toFixed()).toBe("0");
+  expect(result.form1099G?.otherIncome.toFixed()).toBe("0");
+  expect(result.form1099G?.federalWithheld.toFixed()).toBe("35");
+  expect(result.allLines.find(line => line.form === "1040" && line.line === "25b")?.value.toFixed()).toBe("35");
+  expect(result.scheduleSE?.excludedCashFarmCrp.toFixed()).toBe("2400.25");
+  for (const changes of [{ agriculturePayments: "2400.24" }, { marketGain: "0.01" },
+    { taxableGrants: "0.01", grantIncomeCategory: "nonbusiness" }, { accountHolder: "spouse" }, { taxYear: 2024 }]) {
+    expect(() => calculateFederalTax(single(farm, { form1099G: [{ ...statement, ...changes }] }))).toThrow(/Form1099G|Box 7|farm/i);
+  }
+  expect(() => calculateFederalTax(single(farm))).toThrow(/Box 7|statement/i);
+  expect(() => calculateFederalTax(single(farm, { form1099G: [statement, { ...statement }] }))).toThrow(/duplicate/i);
+  expect(() => calculateFederalTax(single(cashFarmPayments("2400.25"), { form1099G: [statement] }))).toThrow(/Box 7|statement/i);
+
+  const secondStatement = { ...statement, sourceId: "usda-7-second", accountReference: "second USDA statement",
+    agriculturePayments: "1500.15", federalWithheld: "2.03" };
+  const firstStatement = { ...statement, agriculturePayments: "900.10" };
+  const linkedReceipts = [receipts[0], { ...receipts[1], form1099GSourceId: secondStatement.sourceId }];
+  const separateFarm = { ...cashFarmPayments("2400.25", linkedReceipts), salesOfProductsRaised: "3200" };
+  const separate = calculateFederalTax(single(separateFarm, { form1099G: [secondStatement, firstStatement] }));
+  expect(separate.scheduleF?.netFarmProfit.toFixed()).toBe("5600.25");
+  expect(separate.form1099G?.federalWithheld.toFixed()).toBe("37.03");
+  expect(() => calculateFederalTax(single(separateFarm, { form1099G: [firstStatement,
+    { ...secondStatement, accountReference: firstStatement.accountReference }] }))).toThrow(/duplicate|corrected/i);
+});

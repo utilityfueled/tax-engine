@@ -312,7 +312,7 @@ export function calculateSchedule1(
   const farmIncome = extra?.schedFNetProfit ?? new Decimal(0);
   audit.record("Sched 1", "6", "Farm income or loss", farmIncome, "Schedule F Line 34");
 
-  const governmentPayments = calculateForm1099G(input.form1099G ?? [], input.taxpayer.taxYear, filingStatus);
+  const governmentPayments = calculateForm1099G(input.form1099G ?? [], input.taxpayer.taxYear, filingStatus, input);
   audit.merge(governmentPayments.lines);
   const unemploymentCompensation = governmentPayments.taxableUnemployment;
   audit.record("Sched 1", "7", "Unemployment compensation", unemploymentCompensation,

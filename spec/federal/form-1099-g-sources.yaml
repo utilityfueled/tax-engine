@@ -54,7 +54,7 @@ lines:
     testRef: "tests/engine/forms/form-1099-g-sources.test.ts::rejects unclassified or separately routed payments and unsupported repayments"
   - line: "7-9"
     description: "Agriculture payments and CCC market gain"
-    formula: "Preserve known zero. Positive agriculture payments or market gain require actual farm/CCC sources and fail this nonfarm worksheet explicitly."
+    formula: "Preserve known zero. A positive Box 7 is eligible only through the separate actual cash-farm receipt method. Positive Box 9 market gain and unbound or mixed agriculture statements still fail this nonfarm worksheet explicitly."
     testRef: "tests/engine/forms/form-1099-g-sources.test.ts::rejects unclassified or separately routed payments and unsupported repayments"
   - line: "10"
     description: "State PFML family benefits"
