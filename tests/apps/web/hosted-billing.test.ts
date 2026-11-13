@@ -624,14 +624,17 @@ describe("hosted billing", () => {
       reconcileSubscription: createHostedBillingRouteForwardingAdapter({ persistSubscription, markEventProcessed })
     });
 
-    await expect(POST(new Request("http://localhost/api/billing/webhook", {
+    const failedResponse = await POST(new Request("http://localhost/api/billing/webhook", {
       method: "POST",
       headers: {
         "content-type": "application/json",
         "stripe-signature": signature
       },
       body: payload
-    }))).rejects.toThrow("transient postgres failure");
+    }));
+    expect(failedResponse.status).toBe(503);
+    expect(failedResponse.headers.get("cache-control")).toBe("no-store");
+    await expect(failedResponse.json()).resolves.toEqual({ error: "Hosted billing is temporarily unavailable." });
     expect(markedEvents).toEqual([]);
 
     const retryResponse = await POST(new Request("http://localhost/api/billing/webhook", {

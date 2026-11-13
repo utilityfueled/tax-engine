@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import Stripe from "stripe";
 import { NextResponse } from "next/server";
 import type { HostedPlanId } from "@tax-engine/contracts";
@@ -368,6 +369,21 @@ function createStripeClient(secretKey: string) {
   });
 }
 
+function subscriptionReconciliationResponse(status: 200 | 503, deliveryReceipt: string | undefined) {
+  const body = status === 200 ? { acknowledged: true } : { error: "Hosted billing is temporarily unavailable." };
+  if (deliveryReceipt) {
+    const logEntry = JSON.stringify({ event: "stripe_sandbox_delivery", deliveryReceipt, status });
+    if (status === 200) console.info(logEntry);
+    else console.warn(logEntry);
+    return NextResponse.json({ ...body, deliveryReceipt }, { status, headers: { "Cache-Control": "no-store" } });
+  }
+  if (status === 503) {
+    console.warn("Hosted Stripe subscription reconciliation failed.");
+    return NextResponse.json(body, { status, headers: { "Cache-Control": "no-store" } });
+  }
+  return NextResponse.json(body);
+}
+
 export function createHostedBillingWebhookRouteHandlers(
   dependencies: HostedBillingWebhookRouteDependencies = {}
 ) {
@@ -574,40 +590,49 @@ export function createHostedBillingWebhookRouteHandlers(
         return NextResponse.json({ acknowledged: true });
       }
 
-      if (!subscriptionChange.customerId) {
-        throw new Error("A signed subscription customer is required for reconciliation.");
-      }
-      let reconcile = dependencies.reconcileSubscription;
-      if (!reconcile) {
-        const key = env.STRIPE_SECRET_KEY?.trim();
-        if (!key) throw new Error("A configured Stripe key is required for subscription reconciliation.");
-        const stripe = createStripeClient(key);
-        reconcile = (facts, input) => reconcileHostedStripeSubscriptionEvent(facts, input, async () => {
-          const current = await stripe.subscriptions.retrieve(input.stripeSubscriptionId, {}, {
-            timeout: 2000,
-            maxNetworkRetries: 0
+      // Workbench can display this response body. Keep the correlation value
+      // independent of all provider and account identifiers, even on failure.
+      const deliveryReceipt = env.VERCEL_ENV === "preview" && config.mode === "test"
+        && env.TAX_ENGINE_BILLING_MODE === "test"
+        && env.TAX_ENGINE_STAGING_STRIPE_DELIVERY_RECEIPTS === "true"
+        && event.type === "customer.subscription.updated" && event.data.object.object === "subscription"
+        && event.id.startsWith("evt_") && isValidStripeId(event.id) && subscriptionChange.customerId
+        ? randomUUID() : undefined;
+      try {
+        if (!subscriptionChange.customerId) {
+          throw new Error("A signed subscription customer is required for reconciliation.");
+        }
+        let reconcile = dependencies.reconcileSubscription;
+        if (!reconcile) {
+          const key = env.STRIPE_SECRET_KEY?.trim();
+          if (!key) throw new Error("A configured Stripe key is required for subscription reconciliation.");
+          const stripe = createStripeClient(key);
+          reconcile = (facts, input) => reconcileHostedStripeSubscriptionEvent(facts, input, async () => {
+            const current = await stripe.subscriptions.retrieve(input.stripeSubscriptionId, {}, {
+              timeout: 2000,
+              maxNetworkRetries: 0
+            });
+            return normalizeCurrentSubscription(current, facts);
           });
-          return normalizeCurrentSubscription(current, facts);
+        }
+        await reconcile(env, {
+          ownerId: subscriptionChange.workspaceOwnerId,
+          stripeSubscriptionId: subscriptionChange.subscriptionId,
+          stripeCustomerId: subscriptionChange.customerId,
+          planId: subscriptionChange.planId,
+          status: subscriptionChange.status,
+          cancelAtPeriodEnd: subscriptionChange.cancelAtPeriodEnd,
+          currentPeriodEnd: subscriptionChange.currentPeriodEnd,
+          eventId: event.id,
+          eventType: event.type,
+          eventCreatedAt: new Date(event.created * 1000).toISOString(),
+          updatedAt: dependencies.now ?? new Date().toISOString(),
+          livemode: event.livemode
         });
+      } catch {
+        return subscriptionReconciliationResponse(503, deliveryReceipt);
       }
-      await reconcile(env, {
-        ownerId: subscriptionChange.workspaceOwnerId,
-        stripeSubscriptionId: subscriptionChange.subscriptionId,
-        stripeCustomerId: subscriptionChange.customerId,
-        planId: subscriptionChange.planId,
-        status: subscriptionChange.status,
-        cancelAtPeriodEnd: subscriptionChange.cancelAtPeriodEnd,
-        currentPeriodEnd: subscriptionChange.currentPeriodEnd,
-        eventId: event.id,
-        eventType: event.type,
-        eventCreatedAt: new Date(event.created * 1000).toISOString(),
-        updatedAt: dependencies.now ?? new Date().toISOString(),
-        livemode: event.livemode
-      });
-
-      return NextResponse.json({
-        acknowledged: true
-      });
+      return subscriptionReconciliationResponse(200, deliveryReceipt);
     }
   };
 }

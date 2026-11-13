@@ -63,7 +63,10 @@ describe("hosted Stripe signed delivery recovery", () => {
     const { POST, persistSubscription, markEventProcessed } = persistentHandler();
     persistSubscription.mockRejectedValueOnce(new Error("synthetic database outage"));
     const payload = subscriptionPayload(now);
-    await expect(POST(request(payload))).rejects.toThrow("synthetic database outage");
+    const unavailable = await POST(request(payload));
+    expect(unavailable.status).toBe(503);
+    expect(unavailable.headers.get("cache-control")).toBe("no-store");
+    await expect(unavailable.json()).resolves.toEqual({ error: "Hosted billing is temporarily unavailable." });
     expect(markEventProcessed).not.toHaveBeenCalled();
     vi.setSystemTime((now + 86400) * 1000);
     expect((await POST(request(payload))).status).toBe(200);

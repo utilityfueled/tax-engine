@@ -97,7 +97,8 @@ function payload(kind: EventKind, mode: unknown, created = now) {
 }
 function signed(raw: string, timestamp = now, original = raw) {
   return new Request("https://tax.example/api/billing/webhook", { method: "POST",
-    headers: { "content-type": "application/json", "stripe-signature": signHostedBillingWebhookPayload(original, secret, timestamp) }, body: raw });
+    headers: { "content-type": "application/json", "x-real-ip": "192.0.2.2",
+      "stripe-signature": signHostedBillingWebhookPayload(original, secret, timestamp) }, body: raw });
 }
 function webhook(facts: Env, constructor?: (raw: string) => ReturnType<typeof JSON.parse>) {
   return createHostedBillingWebhookRouteHandlers({ env: facts, nowUnixSeconds: now,
@@ -113,6 +114,7 @@ beforeEach(() => {
   vi.clearAllMocks(); vi.useFakeTimers({ toFake: ["Date"] }); vi.setSystemTime(now * 1000);
   vi.spyOn(console, "error").mockImplementation(() => {});
   vi.spyOn(console, "warn").mockImplementation(() => {});
+  vi.spyOn(console, "info").mockImplementation(() => {});
   mocks.actor.mockResolvedValue({ id: "owner-mode-binding", label: "Fictional Owner", email: "fictional@example.invalid" });
   mocks.subscription.mockResolvedValue(null); mocks.entitlement.mockResolvedValue({ entitlement: { workspaceAccess: true } });
   mocks.rate.mockResolvedValue({ allowed: true, remaining: 29, retryAfterMs: null });
@@ -123,6 +125,69 @@ beforeEach(() => {
   mocks.mark.mockResolvedValue(true); mocks.credit.mockResolvedValue(true); mocks.remove.mockResolvedValue(undefined);
 });
 afterEach(() => { vi.useRealTimers(); vi.restoreAllMocks(); });
+
+describe("Stripe sandbox Preview delivery receipts", () => {
+  const optIn = "TAX_ENGINE_STAGING_STRIPE_DELIVERY_RECEIPTS";
+  const previewEnv = {
+    ...env(), VERCEL_ENV: "preview", VERCEL_URL: "isolated-preview.vercel.app",
+    TAX_ENGINE_STAGING_DATABASE_DATABASE_URL: "postgresql://synthetic.invalid/preview",
+    [optIn]: "true",
+  };
+  function subscriptionUpdate(livemode = false) {
+    return JSON.stringify({ id: "evt_private_test_event", type: "customer.subscription.updated", created: now,
+      livemode, data: { object: { object: "subscription", id: "sub_private_test_subscription",
+        customer: "cus_private_test_customer", status: "trialing", metadata: {
+          hostedOwnerId: "owner-private-test", planId: "starter", unrelated: "fictional-private-marker",
+        },
+      } },
+    });
+  }
+
+  it("joins distinct signed deliveries by opaque receipts and redacts transient failures", async () => {
+    const raw = subscriptionUpdate();
+    mocks.persist.mockRejectedValueOnce(new Error("fictional-database-password-at-private-host"));
+    const { POST } = webhook(previewEnv);
+    const failed = await POST(signed(raw));
+    expect(mocks.mark).not.toHaveBeenCalled();
+    const recovered = await POST(signed(raw));
+    expect(mocks.mark).toHaveBeenCalledTimes(1);
+    const failedBody = await failed.json();
+    const recoveredBody = await recovered.json();
+    expect([failed.status, recovered.status]).toEqual([503, 200]);
+    expect([failed.headers.get("cache-control"), recovered.headers.get("cache-control")]).toEqual(["no-store", "no-store"]);
+    expect(failedBody).toEqual({ error: "Hosted billing is temporarily unavailable.", deliveryReceipt: expect.any(String) });
+    expect(recoveredBody).toEqual({ acknowledged: true, deliveryReceipt: expect.any(String) });
+    expect(new Set([failedBody.deliveryReceipt, recoveredBody.deliveryReceipt]).size).toBe(2);
+    for (const body of [failedBody, recoveredBody]) {
+      expect(body.deliveryReceipt).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
+    }
+    expect(console.info).toHaveBeenCalledExactlyOnceWith(JSON.stringify({ event: "stripe_sandbox_delivery", deliveryReceipt: recoveredBody.deliveryReceipt, status: 200 }));
+    expect(console.warn).toHaveBeenCalledExactlyOnceWith(JSON.stringify({ event: "stripe_sandbox_delivery", deliveryReceipt: failedBody.deliveryReceipt, status: 503 }));
+    expect(console.error).not.toHaveBeenCalled();
+  });
+
+  it("omits receipts outside explicitly enabled, verified Preview subscription updates", async () => {
+    const raw = subscriptionUpdate();
+    const live = { ...previewEnv, TAX_ENGINE_BILLING_MODE: "live", STRIPE_SECRET_KEY: "sk_live_fictional" };
+    const cases = [
+      { facts: { ...previewEnv, [optIn]: undefined }, request: signed(raw), status: 200 },
+      { facts: { ...previewEnv, TAX_ENGINE_BILLING_MODE: undefined }, request: signed(raw), status: 200 },
+      { facts: { ...previewEnv, VERCEL_ENV: "production" }, request: signed(raw), status: 200 },
+      { facts: live, request: signed(subscriptionUpdate(true)), status: 200 },
+      { facts: previewEnv, request: signed(subscriptionUpdate(true)), status: 400 },
+      { facts: previewEnv, request: signed(raw, now, "different payload"), status: 400 },
+      { facts: previewEnv, request: signed(payload("credit", false)), status: 200 },
+      { facts: previewEnv, request: signed(payload("subscription", false)), status: 200 },
+    ];
+    for (const testCase of cases) {
+      const response = await webhook(testCase.facts).POST(testCase.request);
+      expect(response.status).toBe(testCase.status);
+      expect(await response.json()).not.toHaveProperty("deliveryReceipt");
+    }
+    expect(console.info).not.toHaveBeenCalled();
+    expect(console.warn).not.toHaveBeenCalled();
+  });
+});
 
 describe("hosted Stripe mode binding source-first controls", () => {
   it.each(routes)("blocks incompatible keys before each outbound SDK operation (%s)", async (route) => {
