@@ -67,6 +67,30 @@ it("counts actual local withholding in the allocation once and rejects duplicate
   expect(() => buildRetirementInputs([source, { ...source }], "single", 2025)).toThrow(/duplicate/);
 });
 
+it("binds retirement duplicate identity to the actual recipient and normalized payer TIN", () => {
+  const state = startCompleteInterview({ filingStatus: "mfj", incomeTypes: ["retirement"], lifeEvents: [], stateCode: null });
+  const primary = { ...completeRetirementSource, accountReference: " Plan 0123 ",
+    grossDistribution: "1500.10", taxableAmount: "1250.10", federalWithheld: "10.01" };
+  const spouse = { ...primary, accountHolder: "spouse" as const,
+    grossDistribution: "600.20", taxableAmount: "500.20", federalWithheld: "0.00" };
+  const alternatePunctuation = { ...primary, payerTin: "123456789", accountReference: "plan 0123" };
+
+  expect(() => buildRetirementInputs([primary, alternatePunctuation], "mfj", 2025)).toThrow(/duplicate/i);
+  state.sectionData["income-retirement"] = { entries: [primary, alternatePunctuation] };
+  expect(buildTaxInputFromGuidedData(state)).toBeNull();
+  expect(buildGuidedSyntheticDocuments(state).filter(document => document.kind === "1099-r").some(
+    document => document.coverage === "partially-supported")).toBe(true);
+
+  state.sectionData["income-retirement"].entries = [primary, spouse];
+  const input = buildTaxInputFromGuidedData(state);
+  expect(input?.form1099R).toMatchObject([
+    { accountHolder: "primary", payerTin: "12-3456789", accountReference: "Plan 0123", taxableAmount: "1250.10" },
+    { accountHolder: "spouse", payerTin: "12-3456789", accountReference: "Plan 0123", taxableAmount: "500.20", federalWithheld: "0.00" },
+  ]);
+  const result = calculateFederalTax(TaxYearInputSchema.parse(input));
+  expect(result.pensionDistributionsTaxable.toFixed(2)).toBe("1750.30");
+});
+
 it("preserves legacy unchecked IRA answers as unconfirmed and leaves actual source answers unchanged on reload", () => {
   const state = startCompleteInterview({ filingStatus: "single", incomeTypes: ["retirement"], lifeEvents: [], stateCode: null });
   const legacy = { payer: "Old plan", grossDistribution: "0", taxableAmount: "0", federalWithheld: "0", distributionCode: "7", isIraSepSimple: false };

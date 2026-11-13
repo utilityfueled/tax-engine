@@ -80,14 +80,22 @@ export function retirementFactErrors(entries: RetirementEntryData[] | undefined,
     const boundIra = basisBound && entry.isIraSepSimple === true;
     const fail = (key: string, message: string) => { errors[`retirement-${index}-${key}`] = message; };
     if (!entry.payer.trim()) fail("payer", "Enter the actual retirement payer.");
-    if (!/^\d{9}$/.test(entry.payerTin?.replace(/-/g, "") ?? "")) fail("payer-tin", "Enter the actual nine-digit payer TIN from the source form.");
-    if (!entry.accountReference?.trim()) fail("account", "Enter a local account reference that distinguishes this retirement statement.");
-    const sourceId = `${entry.payerTin}|${entry.accountReference?.trim().toLowerCase()}`;
-    if (entry.accountReference?.trim() && sourceIds.has(sourceId)) fail("duplicate", "Reconcile duplicate or corrected statements for this retirement account before calculating.");
-    sourceIds.add(sourceId);
-    if (!["2025", "2026"].includes(entry.sourceTaxYear ?? "") || (taxYear != null && entry.sourceTaxYear !== String(taxYear))) fail("year", "Confirm the actual retirement statement year matches this return.");
-    if (!["primary", "spouse"].includes(entry.accountHolder ?? "")) fail("owner", "Confirm the actual retirement distribution recipient.");
+    const payerTin = entry.payerTin?.replaceAll("-", "") ?? "";
+    const validPayerTin = /^\d{9}$/.test(payerTin);
+    if (!validPayerTin) fail("payer-tin", "Enter the actual nine-digit payer TIN from the source form.");
+    const accountReference = entry.accountReference?.trim();
+    if (!accountReference) fail("account", "Enter a local account reference that distinguishes this retirement statement.");
+    const validYear = ["2025", "2026"].includes(entry.sourceTaxYear ?? "")
+      && (taxYear == null || entry.sourceTaxYear === String(taxYear));
+    if (!validYear) fail("year", "Confirm the actual retirement statement year matches this return.");
+    const validRecipient = entry.accountHolder === "primary" || entry.accountHolder === "spouse";
+    if (!validRecipient) fail("owner", "Confirm the actual retirement distribution recipient.");
     if (filingStatus && filingStatus !== "mfj" && entry.accountHolder === "spouse") fail("owner", "A spouse's retirement income requires a joint return or their separate return.");
+    if (validPayerTin && accountReference && validYear && validRecipient) {
+      const sourceId = JSON.stringify([entry.sourceTaxYear, entry.accountHolder, payerTin, accountReference.toLowerCase()]);
+      if (sourceIds.has(sourceId)) fail("duplicate", "Reconcile duplicate or corrected statements for this retirement account before calculating.");
+      sourceIds.add(sourceId);
+    }
     const code = entry.distributionCode.trim().toUpperCase();
     if (!/^[1-9ABCDEFGHJKLMNPQRSTUWY]{1,2}$/.test(code)) fail("code", "Enter the actual Form 1099-R distribution code from Box 7 (2026 Box 7a).");
     else if (!["1", "2", "4", "7", "G", "H", "1D", "2D", "4D", "7D", "D1", "D2", "D4", "D7"].includes(code)) fail("code", "This distribution code needs its actual basis, Roth, disability, QCD or other special worksheet; the ordinary guided route cannot calculate it yet.");
