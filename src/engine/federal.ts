@@ -707,10 +707,11 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     throw new Error("Form 3903 requires confirmed line amounts before reporting excess moving reimbursement.");
   }
   const movingReimbursement = form3903?.totalTaxableReimbursement ?? new Decimal(0);
-  audit.record("1040", "1h", "Other earned income",
-    sum(form1099R.disabilityPensionWages, foreignEmploymentNotOnW2, movingReimbursement),
-    "Supported disability pensions, foreign employment and taxable Form 3903 reimbursements absent from W-2 wages",
-    { disabilityPensionWages: form1099R.disabilityPensionWages, foreignEmploymentNotOnW2, movingReimbursement });
+  const otherWages = form1099R.disabilityPensionWages.plus(foreignEmploymentNotOnW2);
+  audit.record("1040", "1h", "Other earned income", movingReimbursement.isZero() ? otherWages : otherWages.plus(movingReimbursement),
+    movingReimbursement.isZero() ? "Supported disability pensions and actual foreign employment income not reported on W2"
+      : "Supported disability pensions, foreign employment and taxable Form 3903 reimbursements absent from W-2 wages",
+    movingReimbursement.isZero() ? undefined : { disabilityPensionWages: form1099R.disabilityPensionWages, foreignEmploymentNotOnW2, movingReimbursement });
 
   // Adoption benefit exclusion must precede AGI. The completed Part III MAGI
   // worksheet is an actual input; final credit MAGI is calculated later from AGI.
@@ -753,7 +754,8 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     adoptionBenefitResult?.priorYearEmployerBenefits.gt(0)
       ? "Form 8839 physical line31 less historical benefit worksheet9; signed reporting continuation from 2023 instructions"
       : "Signed Form 8839 line 31");
-  const totalWages = sum(totalWagesBeforeExclusion, taxableAdoptionBenefits, foreignEmploymentNotOnW2, taxableCareBenefits, movingReimbursement);
+  const totalWagesWithoutMovingReimbursement = totalWagesBeforeExclusion.plus(taxableAdoptionBenefits).plus(foreignEmploymentNotOnW2).plus(taxableCareBenefits);
+  const totalWages = movingReimbursement.isZero() ? totalWagesWithoutMovingReimbursement : totalWagesWithoutMovingReimbursement.plus(movingReimbursement);
   audit.record("1040", "1", "Wages, salaries, tips", totalWages,
     [
       "Sum of all W-2 Box 1",
@@ -776,7 +778,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     {
       w2Count: input.w2s.length.toString(),
       foreignEmploymentNotOnW2,
-      movingReimbursement,
+      ...(movingReimbursement.isZero() ? {} : { movingReimbursement }),
       form4137UnreportedTipIncome: tipPayroll.income,
       form8919Wages: form8919?.line6 ?? new Decimal(0),
       disabilityPensionWages: form1099R.disabilityPensionWages,
