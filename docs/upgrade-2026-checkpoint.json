@@ -23416,6 +23416,18 @@
     "browserPdfSelectorFailureSha256": "9f14846b2d18d81ed508e1e59671e06b022b58b5d9288ced91759e270a823b20",
     "browserFinalSha256": "253b63da226f08d3cd5a8296390e53c6faf1115d77e90314e7f8cb7387d72bc4",
     "browserStrictCollection": 597,
+    "combinedLocal": {
+      "staticChecksPassed": 9,
+      "unitAndCoverageTestsEach": 27604,
+      "branchCoveragePct": 87.8,
+      "originalChecksSha256": "2b31d5cd4dca119643e827b5e94b61f27002fb444baeb3682b76130b576f4513",
+      "originalBrowserFailure": "EADDRINUSE",
+      "firstRerunFailure": "Pinned pypdf environment missing before startup",
+      "correctedBrowserPassed": 592,
+      "correctedBrowserSkipped": 5,
+      "correctedBrowserTranscriptSha256": "28ab3b5ee0c6efdbaccb7da4026b02578c933c9335afc1c2ccc30d18f31bf361",
+      "managedLoopbackListenerClosed": true
+    },
     "browserStrictCollectionSha256": "18e169135a9e903bb9541f6c2fd516a7a7f5f8894cc9b20d8348aaee492d8a4e",
     "humanTaxReviewComplete": false,
     "filingQualified": false
@@ -23468,6 +23480,22 @@
     "browserTranscriptSha256": "f3efab90e3805e338763e704cbb0ed8a7c6209bd81f50c0936eb04dd6957e9d1",
     "actualLocalBackupAccepted": true,
     "wrongPasswordAndExactCentsMismatchRejected": true,
+    "runtimeImageRehearsalPassed": false
+  },
+  "nov13LocalUploadDurability": {
+    "commit": "75e1faf5b486583c578ac35b9cf736dccf72c237",
+    "beforeFixBrowserFailures": 1,
+    "beforeFixBrowserReportSha256": "c744ef1032f469fceb0db9bf071bb796b930a61223114b649998688fffe1eabf",
+    "focusedPassed": 142,
+    "focusedFiles": 7,
+    "focusedSha256": "28462817c0220e67f2b536fcc77bfedeb46f12ebcf2b5db8a87f4dd05f134302",
+    "browserPassed": 23,
+    "browserSkipped": 0,
+    "browserRetries": 0,
+    "browserReportSha256": "7a528a810c48a3818c8d1045193ffba7fc602dd10de7ffc2941b64dde34fff99",
+    "specReferences": 8804,
+    "productionBuildTranscriptSha256": "4d81e1025e365ca049d78ae7befa68a1ba73eb76cf222d4d9ee8333442e86ba0",
+    "browserSourceAuditSha256": "c3f2b443aaf40c9d6d8aac5ab6ddc42a5ab140e1c415a439b1c024ab4636cf0d",
     "runtimeImageRehearsalPassed": false
   },
   "nov13IrsAtsWorksheetExamples": {

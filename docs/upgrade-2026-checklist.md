@@ -21,6 +21,8 @@ below retain their original evidence boundaries.
 - [x] Fix cross-tab saved-return recovery in `fe8fcd69` and independently
   authenticate the self-host rehearsal's downloaded archive in `3b2b3a68`.
   Verify both with actual local Chromium. Final Compose execution remains open.
+- [x] Prevent false local upload success and verify original-file rollback in
+  `75e1faf5`. Run the full affected upload/recovery/browser cohort.
 - [x] Match the IRS-published Schedule SE and 8812 worksheet outputs in
   `a6c4fd18`. Retain the independent human and final-form qualification gates.
 - [ ] Finish independent review of the AI credit-issuance and recovery candidate.

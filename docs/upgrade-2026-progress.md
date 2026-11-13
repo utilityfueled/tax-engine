@@ -4,6 +4,16 @@ Current source, verification and remaining work are summarized in the
 [current continuation](upgrade-2026-current-status.md). Historical results
 below apply to their named revisions.
 
+- November 13: `75e1faf5` requires committed IndexedDB originals before a
+  local upload reports success. The prior production build reported three
+  saved documents when IndexedDB aborted the new two-file batch. The same
+  browser test now preserves the previous return exactly and can retry after
+  storage recovers. A separate quota fault after the new originals commit
+  exercises rollback of only that batch. Production build, 142 focused
+  tests, 23 Chromium cases without retries/skips, Web types, 8,804 spec
+  references, inventory, lint and unchanged protected-request limits passed.
+  The checks do not simulate an abrupt browser exit between the two stores.
+
 - November 13: `3b2b3a68` strengthens the self-host release harness with an
   independent authenticated comparison against the complete pre-backup
   browser snapshot. The source ordering test failed before the change and
@@ -4431,7 +4441,10 @@ execution and current image qualification require separate evidence.
   The separate exact `d93621a3` archive passed 27,604 unit and coverage tests
   in 1,994 files, with 87.80% branches. The original browser attempt hit
   `EADDRINUSE` on 3099. The first rerun lacked the pypdf environment setting.
-  Both outcomes are retained while a separate unchanged managed run proceeds.
+  Both outcomes are retained. The corrected unchanged run passed 592 of 597
+  Chromium cases with the five hosted-only skips and no failures. It closed
+  its loopback listener. The transcript SHA-256 is
+  `28ab3b5ee0c6efdbaccb7da4026b02578c933c9335afc1c2ccc30d18f31bf361`.
 - `fe8fcd69` fixes local storage overwrites when a tab with cached returns
   saves another return after an encrypted restore or deletion. Two genuine
   regressions failed first. Affected checks passed 125 in eight files and

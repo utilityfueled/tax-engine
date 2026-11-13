@@ -43,7 +43,8 @@ instructions](https://www.irs.gov/instructions/i1040sse).
 The combined source passed nine static checks and 27,604 unit and coverage
 tests with 87.80% branch coverage. Its initial browser run hit a loopback-port
 conflict and the first retry stopped on a missing Python setting. The unchanged
-suite is running again on the free port with pinned pypdf.
+suite then passed 592 Chromium cases with five hosted-only skips and closed
+its loopback listener.
 
 `0411dab9` binds hosted AI credit fulfillment to the original Checkout issuance.
 `c4998c56` separates test and live accounting with a PostgreSQL storage marker.
@@ -83,6 +84,13 @@ preference and original PDF before deleting the synthetic return. The 45
 focused checks passed. Local production Chromium accepted the real download
 and rejected both a one-cent change to the expected answers and a wrong
 password. The final Compose image rehearsal remains open.
+
+`75e1faf5` saves new local original files in one IndexedDB transaction before
+publishing the upload. When the return metadata write fails, it removes only
+the pending batch. New local originals have independent IDs, so cleanup cannot
+select a same-named file from an older upload. The 142 focused tests and 23
+Chromium cases passed, including actual file-transaction abort, metadata quota
+failure and retry. IndexedDB and Web Storage remain separate persistence systems.
 
 `a6c4fd18` adds IRS-published expected values for 2026 Schedule SE and 8812.
 The 147 affected tests passed. The checks use the worksheet inputs the IRS
