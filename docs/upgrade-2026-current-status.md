@@ -11,6 +11,27 @@ The isolated rehearsal project has no Git link and protects all deployments.
 The team is on Pro, whose Sandbox credits are shared and can incur overage.
 No Sandbox was started. [Vercel Sandbox pricing](https://vercel.com/docs/sandbox/pricing).
 
+`c2520fd5` uses the same exact provider ceiling for hosted credit holds
+and the paid evaluation runner. For Sol Low, two tests showed that the
+old 13-cent hold missed supported cache-write and regional pricing. The
+new ceiling is 23 cents. The separately approved Sol High attempt adds
+32 cents to its first-attempt hold. Settlement continues to use reported
+usage. All 83 affected tests passed with real PostgreSQL and the isolated
+cluster stopped. [OpenAI cache write rates](https://developers.openai.com/api/docs/guides/prompt-caching#cache-lifetime).
+
+`021b2881` filters optional upstream request metadata before handing it
+to hosted accounting. It retains bounded OpenAI identifiers matching the
+documented examples, ignores unrelated headers and discards unexpected
+metadata without changing known usage. Two regressions failed first and
+all 61 affected tests passed. OpenAI permits opaque identifier formats to
+change. A new format may leave a request without this reconciliation
+identifier until reviewed. [OpenAI request debugging](https://developers.openai.com/api/reference/overview#debugging-requests).
+
+The exact `e6a34ac3` managed archive passed all 12 checks with 27,895 tests
+in both unit and coverage, 87.91% branch coverage, and 616 Chromium passes
+with five hosted-only skips. Its owned PostgreSQL stopped. The managed
+`f25ec56c` and `021b2881` runs have started.
+
 `3a5c8375` preserves the provider's request identifier through a retry of
 unknown-usage recording and through later settlement. It rejects contradictory
 identifiers and settlement evidence without releasing or double-charging the

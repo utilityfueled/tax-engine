@@ -24468,6 +24468,45 @@
       "https://www.irs.gov/instructions/i1099r"
     ]
   },
+  "nov13AiProviderReservationCeiling": {
+    "commit": "c2520fd5183e40394426d9be3e959ad42a53bb0d",
+    "initialRed": 2,
+    "realPostgresTestsPassed": 83,
+    "validatedSpecReferences": 8924,
+    "redSha256": "d50ed9b21c4fc3fc7b3e6502373ba197dad9fe65b34eb011675fec4142f133fc",
+    "greenSha256": "59356a56947e935951836cf1f986ed0b930a2ef32602356add01eae0ec1641f5",
+    "cleanupSha256": "78053b59062b3fffb41962907699d6f87295508fc6f0763860fde9f892391115",
+    "solLowMaximumCents": 23,
+    "solHighMaximumCents": 32,
+    "firstLunaAndAuthorizedSolHighMaximumCents": 33,
+    "providerRequests": 0,
+    "source": "https://developers.openai.com/api/docs/guides/prompt-caching#cache-lifetime"
+  },
+  "nov13AiProviderIdentifierBoundary": {
+    "commit": "021b28813347647e4fef47a5ed1dc139773dd7e6",
+    "initialRed": 2,
+    "focusedTestsPassed": 61,
+    "validatedSpecReferences": 8926,
+    "redSha256": "5d0d7a4461aed8f2b4a37a74bea604a574533298b27eaf2e83430d371161f8b1",
+    "greenSha256": "b8f8b4718f7d31b97af0d7639587fed4bde84e994da7eb67438031c1b051e00b",
+    "providerRequests": 0,
+    "sources": [
+      "https://developers.openai.com/api/reference/overview#debugging-requests",
+      "https://developers.openai.com/api/reference/resources/responses/methods/retrieve"
+    ]
+  },
+  "nov13ExactE6a34ac3Managed": {
+    "commit": "e6a34ac3f0a21da6e81702782d52d0084566c579",
+    "checksPassed": 12,
+    "unitAndCoverageTestsPassedEach": 27895,
+    "branchesPercent": "87.91",
+    "chromiumPassed": 616,
+    "chromiumHostedOnlySkipped": 5,
+    "ownedPostgresStopped": true,
+    "checksSha256": "dbd8f15c70afa8fd1f289e0ff3699a2b24b38adf9405e1d6a3f10815fb6977e5",
+    "chromiumSha256": "a01418eb368fa5fec00f02a17bc4382fe2dd8850745b5f5859f1c3bc5bde58d3",
+    "cleanupSha256": "d90a36c17694c34785e66c7c4e5cc902d20b68e3cfbbdc2681ef570bd540c1c7"
+  },
   "nov13Form4972AppreciationPhysicalReview": {
     "commit": "70aa593f5143c950bd3b74737d83992241faccf9",
     "initialRed": 3,

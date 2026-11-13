@@ -4,6 +4,18 @@ Current source, verification and remaining work are summarized in the
 [current continuation](upgrade-2026-current-status.md). Historical results
 below apply to their named revisions.
 
+- November 13 — `c2520fd5` bounds the hosted AI hold for cache writes and
+  regional processing. Two regressions failed first and all 83 affected
+  tests passed with PostgreSQL. The cluster stopped.
+  [OpenAI cache write rates](https://developers.openai.com/api/docs/guides/prompt-caching#cache-lifetime).
+- November 13 — `021b2881` protects hosted AI accounting from malformed
+  upstream request identifiers while retaining known usage. Two failures
+  preceded the fix and 61 affected tests passed. Web types, strict lint and
+  8,926 spec references passed.
+- November 13 — Exact managed `e6a34ac3` passed all 12 checks with 27,895
+  tests in both unit and coverage, 87.91% branches, 616 Chromium cases and
+  five hosted-only skips. The owned PostgreSQL stopped.
+
 - November 13 — `3a5c8375` retains provider identifiers during unknown-usage
   reconciliation and settlement. One real PostgreSQL regression failed first.
   All 97 affected integration tests passed. Both owned clusters stopped.
