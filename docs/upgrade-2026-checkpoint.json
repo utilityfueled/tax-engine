@@ -24128,6 +24128,12 @@
     "focusedFiles": 22,
     "unitPassed": 27715,
     "unitFiles": 2006,
+    "exactChecksPassed": 12,
+    "branchCoveragePercent": 87.85,
+    "browserPassed": 621,
+    "browserHostedOnlySkipped": 5,
+    "checksSha256": "61d7fad352e44777961be89c1cc531873ecbfd7275c4f97edf8d4686306f7b1e",
+    "browserSha256": "1403a242ab1457f122cd2cc244c80b84a00abfcf027d2a2d6dbe685550add9ab",
     "specReferences": 8878,
     "focusedSha256": "1ac982c61fbdfb6a6a6ee374868d49fd1c9b447aec2e7bbda65915e4615c8d01",
     "humanTaxReviewComplete": false,
@@ -24146,5 +24152,28 @@
     "browserSha256": "7e04851651431dc73ff9aece0ffc3fe66a4d4d9bd6fc4ff9ac657982503f0237",
     "protectedPreviewSubmitted": true,
     "automaticRetryQualified": false
+  },
+  "nov13CareIraCombatPay": {
+    "commit": "6cccc932f9d3322383ea0eda692868d567d8049f",
+    "tree": "a22af2a76613b5538178621821c4a05006e4faee",
+    "focusedPassed": 299,
+    "focusedFiles": 9,
+    "specReferences": 8880,
+    "inventoryRows": 966,
+    "combinedStatus": "in progress",
+    "humanTaxReviewComplete": false,
+    "ledger": "docs/upgrade-2026-care-ira-combat-pay-work.md"
+  },
+  "nov13ReleaseRehearsals": {
+    "hostedSource": "ab47d87f44597b4b43228ce17076098eccdecff9",
+    "workspaceIsolationPassed": true,
+    "firstSignedStripeStatus": 503,
+    "databaseLoginRestored": true,
+    "stripeAutomaticRetryDelivered": false,
+    "manualResends": 0,
+    "initialResizedNativeGuestFreeBytes": 76500164608,
+    "freshNativeGuestFreeBytes": 401849769984,
+    "actualNativeRuntimeQualified": false,
+    "ledger": "docs/upgrade-2026-nov13-release-rehearsals.md"
   }
 }

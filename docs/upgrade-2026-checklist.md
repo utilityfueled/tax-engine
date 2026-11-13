@@ -6,14 +6,24 @@ below retain their original evidence boundaries.
 
 ## Active continuation — November 13 Eastern
 
+- [x] Reconfirm the dependent-care worksheet after income-source changes and
+  document the separate Code Q treatment for care and IRA compensation in
+  `6cccc932`. Pass 299 targeted tests. The exact combined run is in progress.
+- [x] Close all 12 archived `439d4c87` checks. Unit and coverage pass 27,715
+  at 87.85% branches. Chromium passes 621 with five hosted-only skips.
 - [x] Implement separate per-filer EIC combat pay elections in `439d4c87`.
   Pass 206 targeted checks and preserve exact amounts and the saved 2025 PDF
   line 1i. [Election evidence](upgrade-2026-eic-combat-pay-work.md).
 - [x] Close all 12 archived `ab47d87f` checks. Unit and coverage pass 27,684
   tests at 87.83% branches. Chromium passes 616 with five hosted-only skips.
 - [ ] Finish the isolated automatic Stripe retry on the approved `ab47d87f`
-  Preview. The free schema-only branch, restricted login and Preview-only
-  binding passed. One protected build was submitted.
+  Preview. Verify the original event's scheduled delivery after the actual
+  503, one durable receipt, both scoped subscription states and cleanup.
+  The protected workspace backend already passed same-ID tenant isolation.
+- [ ] Build and verify the current ARM64 image in the fresh empty VM.
+  First-boot guest free space was 401,849,769,984 bytes. Compose recovery,
+  full native browser tests and a same-image scan remain open.
+  [Rehearsal evidence](upgrade-2026-nov13-release-rehearsals.md).
 
 - [x] Preserve the ordinary state scope for actual combat-pay originals in
   `6e7b046b`. Pass 7,348 targeted state and Ohio PDF tests, including all

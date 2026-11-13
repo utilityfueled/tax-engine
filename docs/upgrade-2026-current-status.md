@@ -6,11 +6,19 @@ The public refs were refreshed. `origin/main` still points to `59248889`
 and `origin/upgrade/2026-baseline` to `3024b848`. Successor commits stay on
 local `main` while automatic production deployment is being disabled.
 
+`6cccc932` documents the full W-2 Code Q amount in IRA compensation and the
+separate elections for Form 2441 Parts II and III. Changing W-2 or business
+income sources requires confirming the Part II worksheet again. The original
+answers stay available for review. All 299 focused tests passed. The exact
+successor archive is running the full local suite.
+[Care and IRA evidence](upgrade-2026-care-ira-combat-pay-work.md).
+
 `439d4c87` implements each filer's separate EIC election for all original
 W-2 Code Q amounts, preserves exact cents and renders elected pay on
 2025 Form 1040 line 1i. All 206 targeted checks passed. Its exact archive
-passed the unit job with 27,715 tests across 2,006 files. Full coverage and
-managed Chromium are in progress. [Election evidence](upgrade-2026-eic-combat-pay-work.md).
+passed all 12 checks with PostgreSQL 16.16. Unit and coverage each passed
+27,715 tests across 2,006 files at 87.85% branch coverage. Managed Chromium
+passed 621 cases with five hosted-only skips. [Election evidence](upgrade-2026-eic-combat-pay-work.md).
 
 The exact `ab47d87f` archive passed all 12 checks. Unit and coverage passed
 27,684 tests across 2,004 files at 87.83% branch coverage. Managed Chromium
@@ -21,7 +29,14 @@ SHA-256 values are
 The approved isolated Preview build was submitted from that tracked
 archive. The new free schema-only Neon branch and restricted database login
 passed TLS/channel-binding checks. Only the isolated sensitive Preview
-database setting was updated. Signed automatic Stripe retry evidence is pending.
+database setting was updated. A second protected build enabled the workspace
+backend. Two test owners wrote and reopened distinct workspaces under the same
+return ID. Anonymous requests returned 401 with private no-store headers.
+A signed Stripe Sandbox event received a 503 at 14:32:17 UTC during the
+database login outage. Login was restored at 14:33:02 UTC. Workbench shows
+an automatic retry scheduled for that event. Delivery and database readback
+remain open. No manual resend was issued.
+[Hosted and native rehearsal evidence](upgrade-2026-nov13-release-rehearsals.md).
 
 `6e7b046b` requires a separate military compensation method for a positive
 actual W-2 Code Q on the covered ordinary PA and Ohio paths. Nine baseline

@@ -4,6 +4,18 @@ Current source, verification and remaining work are summarized in the
 [current continuation](upgrade-2026-current-status.md). Historical results
 below apply to their named revisions.
 
+- November 13 — `6cccc932` refreshes dependent care worksheets after income
+  changes. All 299 focused checks passed. The earlier exact `439d4c87`
+  archive passed all 12 checks including 87.85% branch coverage and 621
+  managed Chromium cases. [Care and IRA evidence](upgrade-2026-care-ira-combat-pay-work.md).
+
+- November 13 — The protected `ab47d87f` Preview passed two-owner workspace
+  isolation. An actual Stripe Sandbox delivery returned 503 while the
+  isolated database login was suspended. Login was restored and the same
+  event is scheduled for retry. The first ARM64 disk file enlargement left
+  the guest partition unchanged. A new VM provisioned at full size has
+  401,849,769,984 bytes available. [Rehearsal evidence](upgrade-2026-nov13-release-rehearsals.md).
+
 - November 13 — `439d4c87` applies each filer's EIC combat pay election.
   The 206 targeted checks and 27,715 archived unit tests passed. The
   saved 2025 review PDF records the elected amount on Form 1040 line 1i.
