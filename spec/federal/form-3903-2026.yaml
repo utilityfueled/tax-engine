@@ -1,0 +1,90 @@
+form: "Form 3903"
+fullName: "2026 moving expenses and reimbursement"
+taxYear: 2026
+irsReference: "https://www.irs.gov/pub/irs-pdf/i3903.pdf"
+sourceRevision: "2026 final instructions dated 2026-09-28; P.L. 119-21 §70113; Notice 2026-10 as modified by Announcement 2026-11"
+retrievedAt: "2026-11-13"
+reviewStatus: "independent-qualified-tax-review-pending"
+notes: |
+  This method supports actual 2026 domestic calendar-year qualified moves
+  with all relevant expenses and reimbursements in the same return year. A move's
+  eligibility and travel records establish the amounts for that move. Preserve
+  separate moves and count related government-directed household relocations
+  as one move. Source confirmation excludes nonqualifying costs, duplicate trips,
+  separately exempt allowances and government-provided services. Remove costs
+  paid with separately exempt allowances from Lines 1 and 2. Keep ordinary
+  Line 4 reimbursements in the comparison once. Additional
+  rules for special spouse/dependent and separation moves, earlier-year storage,
+  cross-year reimbursements, foreign relocation and reimbursement
+  allowance substantiation and Form 2555 allocations require their own inputs
+  and methods. No filing or parent-return route is enabled by this spec.
+lines:
+  - line: "eligibility"
+    description: "Original facts establish the qualifying assignment for each move"
+    formula: >-
+      Require a 2026 relocation date and actual domestic, same-year facts.
+      A military move requires active duty and
+      military-ordered permanent change of station. An intelligence-community
+      move requires nonmilitary employee or new-appointee status in an element
+      covered by 50 U.S.C. 3003 and a change of assignment requiring relocation.
+      Confirm the move scope and qualifying costs from actual records. Permit
+      both eligibility branches in a household with separate qualifying moves.
+      Identify the return owner and use a unique original move reference for
+      each move. An opaque reference identifies the relocation record without
+      disclosing assignment details. Multiple rows for the same owner and move
+      date require one reconciled original record or a separate method.
+      Reject a 2025 intelligence-community claim or a 2026 bare military flag.
+    irsRef: "https://www.govinfo.gov/content/pkg/PLAW-119publ21/pdf/PLAW-119publ21.pdf, §70113"
+    testRef: "tests/engine/forms/form-3903-2026.test.ts::requires each move to establish its own 2026 eligibility"
+  - line: "1"
+    description: "Qualifying household goods transport and storage"
+    formula: "Use the explicit qualified Line 1 amount, including actual zero, from the move's confirmed source records."
+    testRef: "tests/engine/forms/form-3903-2026.test.ts::computes exact mileage, travel, deduction and excess per move"
+  - line: "2"
+    description: "Eligible moving travel and lodging using actual or mileage method"
+    formula: >-
+      Add actual eligible nonvehicle transportation and lodging to one
+      personal-vehicle method. Add actual eligible parking and tolls for
+      either personal-vehicle method. For standard mileage, confirm and enter
+      one total per date across eligible trip legs and vehicles. Multiply each
+      qualifying daily distance by 0.205 before July 1 or 0.235 from July 1
+      based on the date the expense was paid or incurred. Use Decimal
+      throughout without rounding individual mileage entries. The actual
+      method uses out-of-pocket gas and oil. Require explicit original amounts
+      and reject missing, negative, wrong-year or competing expense inputs.
+      Source amounts are supported through 12 whole-dollar digits and two
+      decimal places. Mileage records support up to nine whole-mile digits
+      and three decimal places. This retains exact intermediate precision.
+      This rule does not value reimbursement allowances. For their mileage
+      substantiation the higher rate requires both the payment and the
+      transportation expense dates to be July 1 or later.
+    irsRef: "https://www.irs.gov/irb/2026-04_IRB, Notice 2026-10; https://www.irs.gov/irb/2026-29_irb, Announcement 2026-11"
+    testRef: "tests/engine/forms/form-3903-2026.test.ts::validates dates, zeros and the exclusive travel methods"
+  - line: "3"
+    description: "Total confirmed qualifying expenses"
+    formula: "Add Line 1 and Line 2 with Decimal."
+    testRef: "tests/engine/forms/form-3903-2026.test.ts::computes exact mileage, travel, deduction and excess per move"
+  - line: "4"
+    description: "Qualifying reimbursement not in W-2 wages"
+    formula: >-
+      Require an explicit confirmed amount including zero. Exclude amounts
+      in W-2 Box 1, government-furnished services and separately exempt allowances.
+      Use the actual Line 4 amount after applicable allowance substantiation.
+    testRef: "tests/engine/forms/form-3903-2026.test.ts::validates dates, zeros and the exclusive travel methods"
+  - line: "5"
+    description: "Deduction or excess by move"
+    formula: >-
+      Sum positive Line 3 minus Line 4 amounts for Schedule 1 Line 14 and
+      positive Line 4 minus Line 3 amounts for Form 1040 Line 1h. Do not net
+      a taxable move against a deductible move. Preserve existing W-2
+      wages. Keep 2026 Form 2555 interactions that require allocations outside
+      this method.
+    testRef: "tests/engine/federal-moving-2026.test.ts::routes 2026 deduction and excess through separate draft return lines"
+  - line: "readiness"
+    description: "Keep the canonical 2026 return and 2025 reference mapping separate"
+    formula: "Keep the existing unavailable-year federal guard. Reject mixed historical and annual facts rather than dropping annual fields, including when a saved packet omits its explicit year. Refuse 2026 facts in the historical military reference renderer."
+    testRef: "tests/engine/forms/form-3903-2026.test.ts::keeps the canonical return and historical reference export closed to 2026 sources"
+  - line: "parent-year"
+    description: "Bind the annual source contract to the parent return"
+    formula: "Reject a source year that differs from the parent return. A 2026 return requires annual sources instead of the historical shape or a nonzero manual adjustment."
+    testRef: "tests/engine/forms/form-3903-2026.test.ts::keeps the canonical return and historical reference export closed to 2026 sources"

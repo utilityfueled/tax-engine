@@ -3,6 +3,15 @@
   "purpose": "Explicit implementation traceability; not legal review, scenario qualification, filing readiness or e-file support.",
   "entries": [
     {
+      "key": "federal/form-3903-2026",
+      "enginePath": "src/engine/forms/form-3903.ts",
+      "testRefs": [
+        "tests/engine/forms/form-3903-2026.test.ts::computes exact mileage, travel, deduction and excess per move",
+        "tests/engine/federal-moving-2026.test.ts::routes 2026 deduction and excess through separate draft return lines"
+      ],
+      "note": "Standalone domestic same-year method and closed-return draft integration. No qualified annual packet, public route, filing, or human review."
+    },
+    {
       "key": "federal/amt-investment-interest",
       "enginePath": "src/engine/federal.ts",
       "packetPath": "src/pdf/mappings/2025/fill-form-6251.ts",

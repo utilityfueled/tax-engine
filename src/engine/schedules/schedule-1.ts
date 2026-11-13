@@ -581,22 +581,26 @@ export function calculateSchedule1(
   const hsaAdditionalTax = sum(...combinedForm8889Results.map((result) => result.line17b));
   const hsaRecaptureTax = sum(...combinedForm8889Results.map((result) => result.line21));
 
-  // Form 3903 moving expenses (Armed Forces only, 2018–2025)
+  // Form 3903 qualifying moving expenses.
   let form3903Result: Form3903Result | undefined;
   let armedForcesMovingExpenses: Decimal;
+  const manualMovingExpenses = d(adjustments?.armedForcesMovingExpenses);
+  if (input.taxpayer.taxYear === 2026 && !manualMovingExpenses.isZero()) {
+    throw new Error("2026 moving expenses require confirmed Form 3903 sources without a separate manual adjustment.");
+  }
   if (input.form3903) {
-    form3903Result = precomputedForm3903 ?? calculateForm3903(input.form3903);
+    form3903Result = precomputedForm3903 ?? calculateForm3903(input.form3903, input.taxpayer.taxYear);
     audit.merge(form3903Result.lines);
     armedForcesMovingExpenses = form3903Result.totalDeductible;
     audit.record(
       "Sched 1",
       "14",
-      "Armed Forces moving expenses",
+      input.form3903.taxYear === 2026 ? "Qualifying moving expenses" : "Armed Forces moving expenses",
       armedForcesMovingExpenses,
       `Deductible moving expenses from Form 3903 (${input.form3903.moves.length} move${input.form3903.moves.length > 1 ? "s" : ""})`
     );
   } else {
-    armedForcesMovingExpenses = d(adjustments?.armedForcesMovingExpenses);
+    armedForcesMovingExpenses = manualMovingExpenses;
     audit.record(
       "Sched 1",
       "14",

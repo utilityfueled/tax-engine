@@ -103,7 +103,8 @@ function formatAmountString(value: string) {
 }
 
 export function buildForm3903ReferenceSummary(input: Form3903Input): Form3903ReferenceSummary {
-  const result = calculateForm3903(input);
+  if (input.taxYear === 2026) throw new Error("The 2025 Form 3903 reference only accepts historical military moving expenses.");
+  const result = calculateForm3903(input, 2025);
 
   return {
     title: "Form 3903 Moving Expenses Reference Summary",

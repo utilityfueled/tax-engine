@@ -3832,6 +3832,30 @@
       "knownGaps": []
     },
     {
+      "key": "federal/form-3903-2026",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://www.irs.gov/pub/irs-pdf/i3903.pdf",
+      "specPath": "spec/federal/form-3903-2026.yaml",
+      "enginePath": "src/engine/forms/form-3903.ts",
+      "packetPath": null,
+      "implementationTestRefs": [
+        "tests/engine/forms/form-3903-2026.test.ts::computes exact mileage, travel, deduction and excess per move",
+        "tests/engine/federal-moving-2026.test.ts::routes 2026 deduction and excess through separate draft return lines"
+      ],
+      "implementationNote": "Standalone domestic same-year method and closed-return draft integration. No qualified annual packet, public route, filing, or human review.",
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/form-3903-2026-template",
       "jurisdiction": "federal",
       "taxYear": 2026,

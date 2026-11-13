@@ -4291,15 +4291,10 @@ export const Form3800Schema = z.object({
 export type Form3800Input = z.infer<typeof Form3800Schema>;
 
 /**
- * Form 3903 — Moving Expenses (Armed Forces only, 2018–2025)
- *
- * IRC §217(k): Only active-duty Armed Forces members moving pursuant
- * to a military order for permanent change of station may deduct
- * moving expenses during the TCJA suspension period.
- *
- * Each entry represents one move during the tax year.
+ * Historical Form 3903 moving-expense worksheet. Each entry represents
+ * one move. The annual 2026 source contract below requires original facts.
  */
-export const Form3903MoveSchema = z.object({
+export const Form3903MoveSchema = z.strictObject({
   /** Transportation and storage of household goods and personal effects */
   transportationAndStorage: optionalDecimalInput,
   /** Travel and lodging from old home to new home (meals NOT deductible post-2017) */
@@ -4309,12 +4304,69 @@ export const Form3903MoveSchema = z.object({
   /** Original Lines 1, 2 and 4 are complete. Line 4 excludes Box 1 amounts and separately exempt allowances or services. */
   lineAmountsConfirmed: z.boolean().optional(),
 });
-export const Form3903Schema = z.object({
+const Form3903HistoricalSchema = z.strictObject({
+  taxYear: z.literal(2025).optional(),
   /** Must be true — only active-duty military moves are deductible 2018–2025 */
   military: z.literal(true),
   /** One or more moves during the tax year */
   moves: z.array(Form3903MoveSchema).min(1),
 });
+
+const form3903Amount = z.string().regex(/^\d{1,12}(?:\.\d{1,2})?$/, "Expected a supported nonnegative amount in dollars and cents");
+const form3903Miles = z.string().regex(/^\d{1,9}(?:\.\d{1,3})?$/, "Expected a supported nonnegative mileage distance");
+const form3903Date2026 = z.iso.date().refine(date => date.startsWith("2026-"), "Expected an actual 2026 date");
+const Form3903Move2026Schema = z.strictObject({
+  moveReference: z.string().trim().regex(/^[a-zA-Z0-9_-]{1,80}$/),
+  accountHolder: z.enum(["primary", "spouse"]),
+  /** Domestic move, with all relevant expenses and reimbursements reconciled within this return year. */
+  domesticSameYearConfirmed: z.literal(true),
+  date: form3903Date2026,
+  eligibility: z.discriminatedUnion("kind", [
+    z.strictObject({
+      kind: z.literal("military"),
+      activeDuty: z.literal(true),
+      permanentChangeOfStationOrdered: z.literal(true),
+    }),
+    z.strictObject({
+      kind: z.literal("intelligence-community"),
+      employmentStatus: z.enum(["employee", "new-appointee"]),
+      qualifyingElement: z.literal(true),
+      nonMilitary: z.literal(true),
+      assignmentRequiresRelocation: z.literal(true),
+    }),
+  ]),
+  transportationAndStorage: form3903Amount,
+  reimbursementsExcludedFromIncome: form3903Amount,
+  /** Actual eligible Lines 1 and 2 exclude costs covered by separately exempt allowances or provided by the government. Line 4 excludes separately exempt allowances and Box 1 amounts. */
+  lineAmountsConfirmed: z.literal(true),
+  travel: z.strictObject({
+    /** Eligible nonvehicle transportation and lodging. */
+    transportationAndLodging: form3903Amount,
+    vehicle: z.discriminatedUnion("method", [
+      z.strictObject({ method: z.literal("none") }),
+      z.strictObject({
+        method: z.literal("actual"),
+        gasAndOil: form3903Amount,
+        parkingAndTolls: form3903Amount,
+      }),
+      z.strictObject({
+        method: z.literal("mileage"),
+        parkingAndTolls: form3903Amount,
+        entries: z.array(z.strictObject({ date: form3903Date2026, miles: form3903Miles })).min(1)
+          .refine(entries => new Set(entries.map(entry => entry.date)).size === entries.length,
+            "Enter one reconciled moving mileage total per date"),
+      }),
+    ]),
+  }),
+});
+export const Form3903Sources2026Schema = z.strictObject({
+  taxYear: z.literal(2026),
+  moves: z.array(Form3903Move2026Schema).min(1),
+}).refine(input => new Set(input.moves.map(move => move.moveReference.toLowerCase())).size === input.moves.length,
+  { path: ["moves"], message: "Each Form 3903 move requires a distinct original move reference" })
+  .refine(input => new Set(input.moves.map(move => `${move.accountHolder}:${move.date}`)).size === input.moves.length,
+    { path: ["moves"], message: "Multiple moves for the same owner and date require a separate source method" });
+export const Form3903Schema = z.union([Form3903HistoricalSchema, Form3903Sources2026Schema]);
 export type Form3903Move = z.infer<typeof Form3903MoveSchema>;
 export type Form3903Input = z.infer<typeof Form3903Schema>;
 
@@ -6374,6 +6426,16 @@ export const TaxYearInputSchema = z.object({
   value.rentalProperties.forEach((property, index) => {
     if (property.form4562?.passengerFirstYearSources !== undefined) ctx.addIssue({ code: "custom", path: ["rentalProperties", index, "form4562", "passengerFirstYearSources"], message: "Standalone passenger worksheet requires a separate rental owner/activity bridge" });
   });
+  if (value.form3903 && (value.form3903.taxYear ?? 2025) !== value.taxpayer.taxYear) {
+    ctx.addIssue({ code: "custom", path: ["form3903", "taxYear"], message: "Form 3903 source year must match the return year" });
+  }
+  if (value.form3903?.taxYear === 2026 && value.form3903.moves.some(move => move.accountHolder === "spouse")
+    && (!value.taxpayer.spouse || value.taxpayer.filingStatus !== "married_filing_jointly")) {
+    ctx.addIssue({ code: "custom", path: ["form3903", "moves"], message: "Spouse moving expenses require the spouse on an actual joint return" });
+  }
+  if (value.taxpayer.taxYear === 2026 && !d(value.adjustments?.armedForcesMovingExpenses).isZero()) {
+    ctx.addIssue({ code: "custom", path: ["adjustments", "armedForcesMovingExpenses"], message: "2026 moving expenses require confirmed Form 3903 sources" });
+  }
   if (value.form4137 !== undefined && value.form4137ByOwner !== undefined) {
     ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["form4137ByOwner"], message: "Use either form4137 or form4137ByOwner, not both" });
   }

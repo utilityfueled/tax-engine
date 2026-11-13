@@ -1,23 +1,20 @@
 /**
- * Form 3903 — Moving Expenses (Armed Forces only, 2018–2025)
- * Spec: spec/federal/form-3903.yaml
- *
- * Computes the deductible moving expenses for active-duty Armed Forces
- * members moving pursuant to a military order for a permanent change of
- * station. IRC §217(k) preserves this deduction during the TCJA
- * suspension period (2018–2025).
- *
- * Multiple moves in a tax year are aggregated into one deduction on
- * Schedule 1 Line 14.
+ * Form 3903 — Moving expenses and taxable reimbursements.
+ * Specs: spec/federal/form-3903.yaml and spec/federal/form-3903-2026.yaml.
  */
 
 import Decimal from "decimal.js";
-import type { Form3903Input, Form3903Move } from "@/models/inputs.js";
+import { Form3903Schema, type Form3903Input, type Form3903Move } from "@/models/inputs.js";
 import type { CalculatedLine } from "@/models/outputs.js";
 import { d } from "@/utils/decimal.js";
 import { AuditTrail } from "@/utils/audit.js";
 
 const ZERO = new Decimal(0);
+const JULY_2026 = "2026-07-01";
+const MOVING_MILEAGE_BEFORE_JULY = new Decimal("0.205");
+const MOVING_MILEAGE_FROM_JULY = new Decimal("0.235");
+
+type AnnualMove = Extract<Form3903Input, { taxYear: 2026 }>["moves"][number];
 
 export interface Form3903MoveResult {
   line1: Decimal; // Transportation and storage
@@ -39,24 +36,55 @@ export interface Form3903Result {
   lines: CalculatedLine[];
 }
 
-function calculateMove(move: Form3903Move): Form3903MoveResult {
+function calculateMove(move: Form3903Move, travel?: Decimal): Form3903MoveResult {
   const line1 = Decimal.max(ZERO, d(move.transportationAndStorage));
-  const line2 = Decimal.max(ZERO, d(move.travelAndLodging));
+  const line2 = travel ?? Decimal.max(ZERO, d(move.travelAndLodging));
   const line3 = line1.plus(line2);
   const line4 = Decimal.max(ZERO, d(move.reimbursementsExcludedFromIncome));
   const line5 = Decimal.max(ZERO, line3.minus(line4));
 
   const excess = Decimal.max(ZERO, line4.minus(line3));
   const complete = move.lineAmountsConfirmed === true
-    && [move.transportationAndStorage, move.travelAndLodging, move.reimbursementsExcludedFromIncome]
+    && [move.transportationAndStorage, travel ?? move.travelAndLodging, move.reimbursementsExcludedFromIncome]
       .every(value => value !== undefined && d(value).isFinite() && d(value).gte(0));
   const taxableReimbursement = excess.isZero() || complete ? excess : undefined;
   return { line1, line2, line3, line4, line5, taxableReimbursement };
 }
 
-export function calculateForm3903(input: Form3903Input): Form3903Result {
+function calculateTravel({ transportationAndLodging, vehicle }: AnnualMove["travel"]): {
+  total: Decimal;
+  inputs: Record<string, Decimal>;
+} {
+  const otherTravel = d(transportationAndLodging);
+  if (vehicle.method === "none") return { total: otherTravel, inputs: { otherTravel } };
+  const parkingAndTolls = d(vehicle.parkingAndTolls);
+  if (vehicle.method === "actual") {
+    const gasAndOil = d(vehicle.gasAndOil);
+    return { total: otherTravel.plus(parkingAndTolls).plus(gasAndOil), inputs: { otherTravel, parkingAndTolls, gasAndOil } };
+  }
+  let milesBeforeJuly = ZERO;
+  let milesFromJuly = ZERO;
+  for (const entry of vehicle.entries) {
+    if (entry.date < JULY_2026) milesBeforeJuly = milesBeforeJuly.plus(entry.miles);
+    else milesFromJuly = milesFromJuly.plus(entry.miles);
+  }
+  const mileageBeforeJuly = milesBeforeJuly.times(MOVING_MILEAGE_BEFORE_JULY);
+  const mileageFromJuly = milesFromJuly.times(MOVING_MILEAGE_FROM_JULY);
+  return {
+    total: otherTravel.plus(parkingAndTolls).plus(mileageBeforeJuly).plus(mileageFromJuly),
+    inputs: { otherTravel, parkingAndTolls, milesBeforeJuly, milesFromJuly, mileageBeforeJuly, mileageFromJuly },
+  };
+}
+
+export function calculateForm3903(input: Form3903Input, taxYear: number = input.taxYear ?? 2025): Form3903Result {
+  if (input.taxYear !== undefined && input.taxYear !== taxYear) throw new Error("Form 3903 source year differs from the return year.");
+  if (taxYear !== 2025 && taxYear !== 2026) throw new Error("Form 3903 calculation is unavailable for this return year.");
+  if (taxYear === 2026 && input.taxYear !== 2026) throw new Error("2026 moving expenses require confirmed Form 3903 sources.");
+  const sources = Form3903Schema.parse(input);
   const audit = new AuditTrail();
-  const moveResults = input.moves.map((move) => calculateMove(move));
+  const annualMoves = sources.taxYear === 2026 ? sources.moves : undefined;
+  const travel = annualMoves?.map(move => calculateTravel(move.travel));
+  const moveResults = sources.moves.map((move, index) => calculateMove(move, travel?.[index]?.total));
   let totalTaxableReimbursement: Decimal | undefined = ZERO;
 
   for (const [i, mr] of moveResults.entries()) {
@@ -66,9 +94,13 @@ export function calculateForm3903(input: Form3903Input): Form3903Result {
       "Transportation and storage of household goods and personal effects",
       mr.line1, "Qualified transportation and storage costs");
 
+    const annualMove = annualMoves?.[i];
+    if (annualMove) audit.record("Form 3903", `eligibility${label}`, "Confirmed moving eligibility",
+      new Decimal(1), annualMove.eligibility.kind, { moveDate: annualMove.date });
     audit.record("Form 3903", `2${label}`,
       "Travel and lodging from old home to new home",
-      mr.line2, "Qualified travel and lodging (meals not deductible post-2017)");
+      mr.line2, annualMove ? `Confirmed travel, vehicle method: ${annualMove.travel.vehicle.method}` : "Qualified travel and lodging (meals not deductible post-2017)",
+      travel?.[i]?.inputs);
 
     audit.record("Form 3903", `3${label}`,
       "Total moving expenses",

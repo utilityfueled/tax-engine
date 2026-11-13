@@ -448,6 +448,13 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   const calculateOrdered = (kind: MarketplaceOrderedKind) => !ordered?.kinds.includes(kind) || ordered.calculating === kind || ordered[kind] !== undefined;
   const year = input.taxpayer.taxYear;
   const constants = getConstants(year);
+  if (year === 2026 && input.form3903 && input.form2555) {
+    throw new Error("Form 3903 and Form 2555 require a separate allocation from the original foreign income and moving expense records.");
+  }
+  if (input.form3903?.taxYear === 2026 && input.form3903.moves.some(move => move.accountHolder === "spouse")
+    && (!input.taxpayer.spouse || input.taxpayer.filingStatus !== "married_filing_jointly")) {
+    throw new Error("Spouse moving expenses require the spouse on an actual joint return.");
+  }
   const filingStatus = input.taxpayer.filingStatus as FilingStatus;
   const audit = new AuditTrail();
   if (nol?.stage === "final") audit.merge(nol.worksheet.lines);
@@ -695,7 +702,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   if (!foreignEmploymentNotOnW2.isFinite() || foreignEmploymentNotOnW2.lt(0)) {
     throw new Error("Foreign employment income absent from W2 must be finite and nonnegative");
   }
-  const form3903 = input.form3903 ? calculateForm3903(input.form3903) : undefined;
+  const form3903 = input.form3903 ? calculateForm3903(input.form3903, year) : undefined;
   if (form3903 && form3903.totalTaxableReimbursement === undefined) {
     throw new Error("Form 3903 requires confirmed line amounts before reporting excess moving reimbursement.");
   }
