@@ -1,6 +1,7 @@
 import type { TaxYearInput } from "@/models/inputs";
 import { PAResidencySourcesSchema, type PAResidencySources } from "@/models/pa-residency";
 import { calculatePAResidencySources } from "@/engine/state/pa-residency-sources";
+import { validateGuidedPAUnionDues } from "@/engine/state/pa-guided-union-dues";
 
 /** Empty draft only; no source amount/year/answer is inferred from the current return. */
 export function emptyGuidedPAResidencySources(): PAResidencySources {
@@ -22,6 +23,7 @@ export function updateGuidedPAResidencySources(data: PAResidencySources, patch: 
 /** Only an explicit user confirmation may replace the privately retained originals. */
 export function confirmGuidedPAResidencySources(input: TaxYearInput, draft: unknown): PAResidencySources {
   const data = PAResidencySourcesSchema.parse(draft);
+  if (data.employeeSources?.collectionMethod === "guided_union_dues_2025") validateGuidedPAUnionDues(input, data);
   const owner = data.owner.accountHolder === "primary" ? input.taxpayer.primary
     : data.owner.accountHolder === "spouse" ? input.taxpayer.spouse : undefined;
   if (!owner) throw new Error("PA residency sources require the actual selected taxpayer owner");

@@ -16641,6 +16641,25 @@
       ]
     },
     {
+      "key": "state/pa-guided-union-dues",
+      "jurisdiction": "state",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40ue.pdf",
+      "specPath": "spec/state/pa-guided-union-dues.yaml",
+      "enginePath": "src/engine/state/pa-guided-union-dues.ts",
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "state/pa-investment-account-independent",
       "jurisdiction": "state",
       "taxYear": 2025,

@@ -5,6 +5,7 @@ import type { PAResidencySources } from "@/models/pa-residency";
 import type { PAOrdinaryDividendSource } from "@/models/pa-ordinary-investment-sources";
 import { BooleanFact, TextFact } from "./fact-fields";
 import { CurrencyField } from "./currency-field";
+import { PAUnionDuesDetails } from "./pa-union-dues-details";
 import { confirmGuidedPAResidencySources, emptyGuidedPAResidencySources, updateGuidedPAResidencySources } from "@/lib/guided-pa-residency-facts";
 import { emptyGuidedPADividendSource, emptyGuidedPADividendCredit, updateGuidedPADividendSource } from "@/lib/guided-pa-dividend-sources";
 
@@ -111,6 +112,7 @@ export function PAResidencyDetails({ originalInput, data, onChange }: {
       <button type="button" onClick={() => update({ interest: current.interest.filter((_, i) => i !== index) })}>Remove bank source {index + 1}</button>
     </fieldset>)}
     <button type="button" onClick={() => update({ interest: [...current.interest, { originalIndex: null, sourceTaxYear: null, sourceReference: "", sourceFactsConfirmed: null, ordinaryPersonalBankInterestConfirmed: null, currentUncorrectedNonvoidOriginalConfirmed: null, allOriginalBoxesKnownConfirmed: null, credits: [] }] })}>Add actual bank-interest source</button>
+    <PAUnionDuesDetails input={originalInput} data={current} onChange={onChange} />
     <h4>Actual personal dividend distributions</h4>
     <p className="guided-hint">Cover each entered 1099-DIV original exactly once, including an actual zero statement. Enter the ordinary dividends and regulated investment company capital gain distributions from each dated credit record. Actual receipt dates determine the resident-period allocation; a fund address or an estimated percentage does not. Leave unknown amounts blank and enter zero only when supported by the records. Business investments, exempt-interest dividends, return of capital and other special adjustments require their corresponding methods.</p>
     {(current.dividends ?? []).map((row, index) => <fieldset className="guided-card" key={index}><legend>Dividend source {index + 1}</legend>

@@ -71,6 +71,7 @@ const employer = z.object({
   }).strict(),
 }).strict();
 export const PAOrdinaryEmployeeSourcesSchema = z.object({
+  collectionMethod: z.literal('guided_union_dues_2025').optional(),
   sourceTaxYear: sourceYear, sourceReference: z.string(), sourceFactsConfirmed: answer, asOfDate: z.string(),
   owner: z.object({ accountHolder: z.enum(['', 'primary', 'spouse']), originalTaxpayer: z.object({ firstName: z.string(), lastName: z.string(), ssn: z.string() }).strict().optional() }).strict(),
   employers: z.array(employer),

@@ -11,6 +11,7 @@ import type {PAScheduleCResult} from "./pa-schedule-c.js";
 import {ordinarySourcePrecision,publicOrdinaryMoney,publicOrdinaryLines} from "./pa-ordinary-source-precision.js";
 import {calculatePAOrdinaryOIDSources,type PAOrdinaryOIDSourcesResult} from "./pa-ordinary-oid-sources.js";
 import { calculatePAOrdinaryEmployeeSources, type PAOrdinaryEmployeeSourcesResult } from "./pa-ordinary-employee-sources.js";
+import { validateGuidedPAUnionDues } from "./pa-guided-union-dues.js";
 import { calculateW2StateLocalSources } from "../forms/w2-state-local.js";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { bytesToHex } from "@noble/hashes/utils.js";
@@ -137,6 +138,7 @@ function amount(value: unknown): Decimal {
   const parsed = PAResidencySourcesSchema.safeParse(rawSources);
   if (!parsed.success) return error("actual source packet shape is incomplete or contains unsupported facts");
   const source = parsed.data, year = input.taxpayer?.taxYear;
+  if (source.employeeSources?.collectionMethod === "guided_union_dues_2025") validateGuidedPAUnionDues(input, source);
   if (![2025, 2026].includes(year) || source.sourceTaxYear !== year || source.sourceFactsConfirmed !== true) return error("confirm actual sources for the supported selected year");
   reference(source.sourceReference);
   if (source.owner.accountHolder !== "primary" || input.taxpayer.filingStatus === "married_filing_jointly" || input.taxpayer.filingStatus === "married_filing_separately" || input.taxpayer.spouse !== undefined) return error("spouse/joint/separate/mixed residency requires its actual per-owner successor method");

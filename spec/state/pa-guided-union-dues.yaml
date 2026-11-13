@@ -1,0 +1,41 @@
+form: "Guided Pennsylvania unreimbursed union dues"
+fullName: "Actual 2025 Pennsylvania Schedule UE union dues in the guided state return"
+taxYear: 2025
+irsReference: "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40ue.pdf"
+notes: |
+  Pennsylvania Schedule UE line 1 uses actual required union dues paid. The
+  Department's Unreimbursed Business Expenses guidance requires detailed
+  originals and employer support for necessity and non-reimbursement.
+  https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax/unreimbursed-business-expenses
+  The normal 2025 PA guided route exposes the existing ordinary employee source
+  method for one primary W-2 of a full-year PA domiciliary with only physical
+  PA work and no reimbursements or other employee expense classes. This does
+  not enable filing, change tax arithmetic or expand the existing PDF scope.
+lines:
+  - line: "native-union-dues"
+    description: "Create and confirm an original-bound employee packet through normal Pennsylvania residency controls"
+    formula: |
+      Copy only actual reviewed parent payroll references, dates, amounts and W-2
+      identity explicitly. Collect the signed employer verification, independently
+      entered actual employment dates and fully classified original dated work
+      calendar. The signed original must cover the submitted dated receipts and
+      payroll. An explicitly classified original range expands only those days
+      with date-specific source locators. No work/leave dates are defaulted. Require
+      actual union name/receipt, date, amount and expense eligibility including
+      required membership and known no reimbursements. A blank amount is unknown.
+      An explicit original zero retains zero. The existing state engine owns UE 1,
+      H/J and PA-40 compensation and source validation.
+    testRef: "tests/apps/web/guided-pa-union-dues.test.tsx::collects actual Pennsylvania union dues through the state section and replays the saved original"
+  - line: "confirm-and-replay"
+    description: "Keep employee originals private, preserve other methods and invalidate stale source edits"
+    formula: |
+      A changed employee source clears the employee and parent confirmations but
+      keeps the original values. Both confirmation paths and the canonical
+      calculator match the complete originally selected W-2, taxpayer identity,
+      original reference and actual payroll. A changed original requires a fresh
+      employee packet. A repeated original receipt cannot create a second expense through
+      casing or surrounding whitespace. An unchanged saved draft does not
+      refresh any source.
+      Retain employee packets outside this collector, including unsupported saved
+      drafts, with explicit removal only.
+    testRef: "tests/apps/web/guided-pa-union-dues.test.tsx::collects actual Pennsylvania union dues through the state section and replays the saved original"

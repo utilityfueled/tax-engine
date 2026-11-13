@@ -5,6 +5,7 @@ import { bytesToHex } from '@noble/hashes/utils.js';
 import { W2Schema, type TaxYearInput } from '@/models/inputs.js';
 import { PAOrdinaryEmployeeSourcesSchema, type PAOrdinaryEmployeeSources } from '@/models/pa-ordinary-employee-sources.js';
 import { calculateW2StateLocalSources } from '../forms/w2-state-local.js';
+import { assertGuidedPAUnionDuesPacket } from './pa-guided-union-dues.js';
 import type { PAScheduleNRHResult } from './pa-schedule-nrh.js';
 import type { ScheduleUEResult } from './pa-schedule-ue.js';
 import type { CalculatedLine } from '@/models/outputs.js';
@@ -135,6 +136,7 @@ export function calculatePAOrdinaryEmployeeSources(input: TaxYearInput, raw: unk
   const parsed = PAOrdinaryEmployeeSourcesSchema.safeParse(raw);
   if (!parsed.success) return fail('actual employee packet shape is unknown or unsupported');
   const source = parsed.data, year = input.taxpayer.taxYear;
+  if (source.collectionMethod === 'guided_union_dues_2025') assertGuidedPAUnionDuesPacket(source);
   if (![2025, 2026].includes(year) || source.sourceTaxYear !== year || source.sourceFactsConfirmed !== true) return fail('confirm complete actual employee source year');
   ref(source.sourceReference);
   const asOf = date(source.asOfDate), actualOwner = input.taxpayer.primary, originalOwner = source.owner.originalTaxpayer;
