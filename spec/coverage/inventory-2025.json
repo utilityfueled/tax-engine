@@ -10682,6 +10682,25 @@
       ]
     },
     {
+      "key": "federal/schedule-3-a-draft",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://www.irs.gov/pub/irs-dft/f1040s3a--dft.pdf",
+      "specPath": "spec/federal/schedule-3-a-draft.yaml",
+      "enginePath": "src/engine/schedules/schedule-3-a-draft.ts",
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/schedule-8812-2026-template",
       "jurisdiction": "federal",
       "taxYear": 2026,

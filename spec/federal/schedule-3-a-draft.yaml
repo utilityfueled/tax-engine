@@ -1,0 +1,64 @@
+form: "Schedule 3-A (Form 1040) 2026 draft worksheet"
+fullName: "Federal Public Benefit, 2026 draft worksheet for Form 1040 and 1040-SR"
+taxYear: 2026
+reference: "https://www.irs.gov/pub/irs-dft/f1040s3a--dft.pdf"
+revision: "Created 6/24/26; IRS draft catalog posted 8/20/26"
+notes: |
+  Draft form and proposed REG-119882-25, reviewed against official sources on
+  2026-11-13. No final rule or final Schedule 3-A was verified. This is an
+  isolated worksheet, without live tax, filing, export, or guided intake wiring.
+  Limit this draft to Form 1040 and 1040-SR. Form 1040-NR and Form 1040-SS have
+  different line paths and need their own final-source qualification. Read all
+  supplied line amounts on a consistent reporting basis and retain exact Decimal
+  values. This worksheet does not determine credit eligibility or immigration
+  status. Confirmed benefit eligibility at first claim and any election to
+  receive the benefit are separate from Form 1040 page 1's work authorization
+  question, tax residency, and SSN eligibility. Do not collect documentation or
+  store sensitive classifications in this draft worksheet's audit trail.
+lines:
+  - line: "1a"
+    description: "Total credits and other payments before benefit adjustment"
+    formula: "1040/1040-SR draft line 32a = lines 27a + 28 + 29 + 30 + 31. Supply the confirmed earned income credit, ACTC, refundable American opportunity credit, refundable adoption credit, and Schedule 3 payments separately. If none of the four affected credits is positive, omit the worksheet."
+    testRef: "tests/engine/schedules/schedule-3-a-draft.test.ts::keeps unaffected payments outside the benefit and skips when no covered credit is claimed"
+  - line: "1b"
+    description: "Other Schedule 3 payments"
+    formula: "Use 1040/1040-SR line 31 only. Withholding and estimated payments are outside both lines 1a and 1b."
+    testRef: "tests/engine/schedules/schedule-3-a-draft.test.ts::keeps unaffected payments outside the benefit and skips when no covered credit is claimed"
+  - line: "2"
+    description: "Aggregate covered refundable credits"
+    formula: "Line 1a minus line 1b. Exclude Schedule 3 payments including net PTC from this draft worksheet; separate PTC rules require independent review."
+    testRef: "tests/engine/schedules/schedule-3-a-draft.test.ts::aggregates the four affected credits before testing the liability floor"
+  - line: "3"
+    description: "Tax before the Form 1062 transfer"
+    formula: "Use draft 1040/1040-SR line 24a. The later Form 1062 transfer belongs on line 24b, and the combined line 24c does not enter this worksheet."
+    testRef: "tests/engine/schedules/schedule-3-a-draft.test.ts::deducts only Schedule 2 line 20 from the supplied line 24a"
+  - line: "4"
+    description: "Schedule 2 line 20 tax"
+    formula: "Use confirmed Schedule 2 draft line 20, which cannot exceed 1040/1040-SR line 24a. Do not subtract Schedule 2 line 21 or exempt all other taxes."
+    testRef: "tests/engine/schedules/schedule-3-a-draft.test.ts::deducts only Schedule 2 line 20 from the supplied line 24a"
+  - line: "5"
+    description: "Liability for the benefit comparison"
+    formula: "Line 3 minus line 4."
+    testRef: "tests/engine/schedules/schedule-3-a-draft.test.ts::deducts only Schedule 2 line 20 from the supplied line 24a"
+  - line: "6"
+    description: "Refunded portion of covered refundable credits"
+    formula: "max(0, line 2 minus line 5). If zero, stop and use zero on Form 1040/1040-SR line 32b. IRS proposed section 1.32-4(f) examples 6 through 8 provide separate arithmetic controls."
+    irsRef: "https://www.irs.gov/irb/2026-38_irb, proposed 26 CFR 1.32-4(f)(6)–(8)"
+    testRef: "tests/engine/schedules/schedule-3-a-draft.test.ts::reproduces the Treasury examples and stops at the liability boundary"
+  - line: "7"
+    description: "Election to receive the benefit"
+    formula: "An explicit decline stops the worksheet and transfers line 6 to Form 1040/1040-SR line 32b. An explicit request goes to line 8. Missing or unknown election leaves line 32b and line 32c unresolved even when an eligibility answer is known."
+    testRef: "tests/engine/schedules/schedule-3-a-draft.test.ts::keeps a missing election unresolved and applies an explicit decline"
+  - line: "8"
+    description: "Confirmed eligibility at first claim"
+    formula: "After an explicit request, use an independently confirmed yes/no/unknown for the filer and, only for a joint return, the spouse. One yes qualifies a joint return. A confirmed no for each applicable filer transfers line 6 to Form 1040/1040-SR line 32b. With no yes and at least one unknown, leave lines 8, 32b and 32c unresolved. A qualified claimant enters zero."
+    irsRef: "https://www.irs.gov/newsroom/treasury-irs-proposes-rules-to-protect-refundable-tax-credits-from-abuse-by-illegal-aliens; 8 USC 1611 and 1641"
+    testRef: "tests/engine/schedules/schedule-3-a-draft.test.ts::requires an explicit qualification answer and accepts either qualified spouse on a joint return"
+  - line: "1040-32c"
+    description: "Draft credits and other payments after benefit adjustment"
+    formula: "Line 32a minus the determined line 32b. The unaffected Schedule 3 amounts stay in line 32c, and credits that offset the applicable tax are retained."
+    testRef: "tests/engine/schedules/schedule-3-a-draft.test.ts::keeps unaffected payments outside the benefit and skips when no covered credit is claimed"
+  - line: "source-boundary"
+    description: "Bounded review-only worksheet"
+    formula: "Require 2026, Form 1040 or 1040-SR, a recognized filing status, and explicit finite nonnegative cent amounts with up to 12 dollar digits for every supplied source, including zero. Reject a spouse eligibility answer for a nonjoint return. Audit amounts and line references only, with no underlying classification or identifier."
+    testRef: "tests/engine/schedules/schedule-3-a-draft.test.ts::rejects incompatible sources and keeps eligibility answers out of the audit"
