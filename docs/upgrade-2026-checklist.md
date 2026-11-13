@@ -60,8 +60,8 @@ below retain their original evidence boundaries.
 - [x] Project Schedule C lines 9 and 43–47 from actual, whole-mile source
   data and explicit vehicle availability answers in `e141bdf5`. Verify
   15 saved fields and widgets while the candidate stays disabled.
-- [ ] Complete guided mileage facts, state and other federal schedule
-  composition, basis tracking, and qualify Schedule C Part IV output.
+- [ ] Complete state and other federal schedule composition, vehicle basis
+  tracking, and qualify Schedule C Part IV output.
 - [ ] Finish and review W-2G linkage, mixed or joint professional wagering,
   guided sources and qualified annual physical output.
 - [x] Honor committed original deletion in open tabs in `6a38aadd`. Keep
@@ -73,6 +73,9 @@ below retain their original evidence boundaries.
 - [x] Stop a stale local document-year edit from recreating a deleted return
   in `12dd9a10`. Verify the failure on the earlier build and the preserved
   deletion on the successor in Chromium.
+- [x] Close all 12 archived `9e381f83` checks. Unit and coverage each pass
+  27,649 tests at 87.77% branches. Chromium passes 609 cases with five
+  original hosted-only skips.
 - [x] Keep stale guided writes from restoring deleted or reset return data
   and merge guided changes with the current original list in `95d7da8e`.
   Verify all three failures and the 33-case successor cohort in Chromium.

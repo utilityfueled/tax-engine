@@ -23830,6 +23830,18 @@
     "diagnosticCases": 14,
     "auditSha256": "33e1aa072e049862556f1d580f37da874773955ab2fff6bca2a5478cbce99699"
   },
+  "nov13LocalUploadCombined": {
+    "sourceCommit": "9e381f83ee71b4181c70478224f54f5e5757ab7d",
+    "tree": "192142520d603767e116cb3126e488d9048ec5b7",
+    "checksPassed": 12,
+    "unitAndCoverageTestsEach": 27649,
+    "testFiles": 1997,
+    "branchCoveragePercent": "87.77",
+    "chromiumPassed": 609,
+    "hostedOnlySkips": 5,
+    "checksSha256": "61eec9374d745e0e1db89f6a29f984ce2a57c785f17731c72f93fdef17668c8b",
+    "chromiumTranscriptSha256": "469a15f744d857db21a5cb0392eb886dbba99839a9f13e41dd988668d0c15ddd"
+  },
   "nov13ScheduleCMileageCandidate": {
     "commit": "e141bdf51b9c9648720ed397345e3e611c9f0651",
     "tree": "0b5f026ab6b3eca5a4a48e96d0217f6677599747",

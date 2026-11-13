@@ -45,7 +45,10 @@ qualification remains open.
 or while the browser parses the PDF. The old build stored the new PDF and
 metadata in both cases. The successor keeps both empty after reset and
 saves one original on a fresh retry. All 37 production Chromium cases and
-283 focused checks passed. The archived 12-command run is in progress.
+283 focused checks passed. The exact archive passed all 12 checks. Unit and
+coverage each passed 27,649 tests in 1,997 files at 87.77% branch coverage.
+Managed Chromium passed 609 cases and retained five hosted-only skips. Its
+browser server and disposable PostgreSQL closed normally.
 
 `ebd57bdf` allows ordinary business expenses alongside the confirmed
 Schedule C mileage log when the generic vehicle expense is zero. The
