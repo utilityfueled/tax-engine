@@ -97,3 +97,68 @@ describe("Schedule 8812 2026 claimed child's age", () => {
     expect(calculateFederalTax(input).childTaxCredit.toString()).toBe("2200");
   });
 });
+
+describe("Schedule 8812 original W-2 combat pay", () => {
+  function combatReturn(year: 2025 | 2026, codeQ?: string, legacyAmount?: string) {
+    const original = fixture();
+    return {
+      ...original,
+      taxpayer: { ...original.taxpayer, taxYear: year, primary: { ...original.taxpayer.primary, dateOfBirth: "2004-05-20" } },
+      childTaxCredit: { ...original.childTaxCredit, nonTaxableCombatPayElection: legacyAmount },
+      w2s: [{ ...original.w2s[0], taxYear: year, wages: "2000", box12CodeQ: codeQ }],
+    };
+  }
+
+  it.each([2025, 2026] as const)("includes every dollar once and records exact line 18b in %i", year => {
+    const input = combatReturn(year, "2250.50", "0");
+    const result = calculateFederalTax(TaxYearInputSchema.parse(input));
+    const amount = (line: string) => result.form8812?.lines.find(entry => entry.line === line)?.value.toFixed();
+    expect(result.agi.toFixed()).toBe("2000");
+    expect(amount("18a")).toBe("4250.5");
+    expect(amount("18b")).toBe("2250.5");
+    expect(amount("19")).toBe("1750.5");
+    expect(amount("27")).toBe("263");
+    expect(result.earnedIncomeCredit.isZero()).toBe(true);
+  });
+
+  it("sums actual joint code Q sources and reconciles the matching legacy total without doubling", () => {
+    const original = combatReturn(2026, "1200.10", "2250.50");
+    const input = TaxYearInputSchema.parse({
+      ...original,
+      taxpayer: { ...original.taxpayer, filingStatus: "married_filing_jointly", spouse: { ...original.taxpayer.primary, ssn: "999-88-6666" } },
+      w2s: [...original.w2s, { ...original.w2s[0], accountHolder: "spouse", wages: "0", box12CodeQ: "1050.40" }],
+    });
+    const result = calculateFederalTax(input);
+    expect(result.form8812?.lines.find(entry => entry.line === "18b")?.value.toFixed(2)).toBe("2250.50");
+    expect(result.form8812?.actc.toFixed()).toBe("263");
+  });
+
+  it.each([
+    [undefined, "2250.50"],
+    ["0", "2250.50"],
+    ["2250.49", "2250.50"],
+  ])("rejects the missing or conflicting original %j for saved amount %j", (codeQ, legacyAmount) => {
+    const input = TaxYearInputSchema.parse(combatReturn(2026, codeQ, legacyAmount));
+    expect(() => calculateFederalTax(input)).toThrow(/combat pay|code Q/i);
+  });
+
+  it("rejects a reported amount with unknown original year, missing owner or incomplete remaining W-2s", () => {
+    const original = combatReturn(2026, "2250.50");
+    for (const w2s of [
+      [{ ...original.w2s[0], taxYear: undefined }],
+      [{ ...original.w2s[0], accountHolder: undefined }],
+      [...original.w2s, { ...original.w2s[0], box12CodeQ: undefined }],
+    ]) {
+      const input = TaxYearInputSchema.parse({ ...original, w2s });
+      expect(() => calculateFederalTax(input)).toThrow(/combat pay|code Q/i);
+    }
+  });
+
+  it("requires an amount or confirmed zero for a W-2 flagged with combat or hazardous duty pay", () => {
+    const original = combatReturn(2026);
+    const w2 = { ...original.w2s[0], militaryService: { activeDuty: true, combatOrHazardousDutyPay: true } };
+    expect(() => calculateFederalTax(TaxYearInputSchema.parse({ ...original, w2s: [w2] }))).toThrow(/combat pay|code Q/i);
+    const zero = calculateFederalTax(TaxYearInputSchema.parse({ ...original, w2s: [{ ...w2, box12CodeQ: "0" }] }));
+    expect(zero.form8812?.lines.find(entry => entry.line === "18b")?.value.toFixed()).toBe("0");
+  });
+});

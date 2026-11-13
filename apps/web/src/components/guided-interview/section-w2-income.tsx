@@ -636,6 +636,9 @@ function W2Card({
               hint="Use the original 2026 W-2 and confirm its recipient and year. Leave unknown amounts blank."
               value={entry.box12CodeP ?? ""} onChange={value => onUpdate("box12CodeP", value)} />
           )}
+          <CurrencyField label="Box 12 Code Q — Nontaxable combat pay"
+            hint="Copy the original amount. If you received combat pay, check each W-2 and enter zero on those without Code Q."
+            value={entry.box12CodeQ ?? ""} onChange={value => onUpdate("box12CodeQ", value)} />
           <div className="guided-form-grid">
             <label className="guided-field">
               <span className="guided-field-label">State reporting on this W-2</span>

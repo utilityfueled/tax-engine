@@ -128,6 +128,7 @@ export const W2Schema = z.object({
   federalWithheld: decimal, // Box 2
   box12CodeW: optionalDecimal, // Box 12 code W employer and salary-reduction HSA contributions
   box12CodeP: nonnegativeDollarsAndCents.optional(), // Actual excludable moving reimbursements; absent stays unknown.
+  box12CodeQ: nonnegativeDollarsAndCents.optional(), // Actual nontaxable combat pay; absent stays unknown.
   box12CodeD: optionalDecimal, // Box 12 code D elective deferrals under section 401(k)
   box12CodeE: optionalDecimal, // Box 12 code E elective deferrals under section 403(b)
   box12CodeF: optionalDecimal, // Box 12 code F elective deferrals under section 408(k)(6) salary-reduction SEP
@@ -6435,6 +6436,7 @@ export const TaxYearInputSchema = z.object({
     puertoRicoExcludedIncome: decimal.refine(value => d(value).gte(0), "Must be nonnegative").optional(),
     form4563ExcludedIncome: decimal.refine(value => d(value).gte(0), "Must be nonnegative").optional(),
     possessionIncomeExclusion: decimal.refine(value => d(value).gte(0), "Must be nonnegative").optional(),
+    /** Legacy interview value for reconciliation with original W-2 Code Q, never an ACTC election. */
     nonTaxableCombatPayElection: decimal.refine(value => d(value).gte(0), "Must be nonnegative").optional(),
   }).optional(),
   w2s: z.array(W2Schema).default([]),

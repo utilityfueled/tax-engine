@@ -57,6 +57,7 @@ import { calculateQBISourceDeductions, type QBIDeductionSource } from "./forms/q
 import { calculateForm8812 } from "./forms/form-8812.js";
 import { calculatePersonalCreditOrdering } from "./forms/personal-credit-ordering.js";
 import { calculateChildCreditEligibility } from "./forms/child-credit-eligibility.js";
+import { resolveForm8812CombatPay } from "./child-credit-combat-pay.js";
 import { calculateForm8959 } from "./forms/form-8959.js";
 import { calculateForm1099G } from "./forms/form-1099-g.js";
 import { calculateForm8960 } from "./forms/form-8960.js";
@@ -4131,6 +4132,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
 
   // ── Form 8812: Child Tax Credit (nonrefundable + refundable ACTC) ──
   const {qualifyingChildren, otherDependents} = calculateChildCreditEligibility(input);
+  const nontaxableCombatPay = qualifyingChildren > 0 ? resolveForm8812CombatPay(input) : undefined;
   let childCreditPuertoRico = input.childTaxCredit?.puertoRicoExcludedIncome === undefined ? undefined : d(input.childTaxCredit.puertoRicoExcludedIncome);
   let childCreditForm4563 = input.childTaxCredit?.form4563ExcludedIncome === undefined ? undefined : d(input.childTaxCredit.form4563ExcludedIncome);
   let childCreditPossessionTotal = input.childTaxCredit?.possessionIncomeExclusion === undefined ? undefined : d(input.childTaxCredit.possessionIncomeExclusion);
@@ -4169,11 +4171,9 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     form4563ExcludedIncome: childCreditForm4563,
     foreignExcludedIncome: form2555IncomeReduction.plus(form2555HousingDeduction), form2555Source: form2555,
     agi: sum(agi, form2555IncomeReduction, form2555HousingDeduction, childCreditPossessionTotal ?? new Decimal(0)),
-    // Per IRC §32(c)(2)(A)(i)(II) → §24(d)(1)(B)(i): earned income =
-    // wages + net SE earnings - deductible half of SE tax (§164(f)).
-    // IRS Form 8812 Lines 18a-18f: 18a(wages) + 18c(Sched C/F) - 18e(deductible half).
-    // SE losses reduce earned income — no zero-floor on SE component.
-    earnedIncome: sum(totalWages, netSEEarnings, d(input.childTaxCredit?.nonTaxableCombatPayElection)).minus(schedSE.deductibleHalf),
+    // Schedule 8812 includes section 112 combat pay once, independently of EIC treatment.
+    earnedIncome: sum(totalWages, netSEEarnings, nontaxableCombatPay ?? new Decimal(0)).minus(schedSE.deductibleHalf),
+    nontaxableCombatPay,
     taxLiability,
     filingStatus,
   }, constants);

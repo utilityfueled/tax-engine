@@ -199,7 +199,7 @@ describe("required fact interaction boundaries", () => {
     expect(buildVehicleCreditInput(latest, 2026, "mfj")).toBeUndefined();
   });
   it("records child credit identity as unknown false and true without guessing from an SSN", async () => {
-    let latest: PersonalInfoData = { ...completePersonalInfo, employmentValidSsnIssuedByDueDate: null, tinIssuedByDueDate: null, childTaxCredit: undefined, dependentCount: "1", dependents: [{ ...completeDependent, ctcSsnEligible: null }] };
+    let latest: PersonalInfoData = { ...completePersonalInfo, employmentValidSsnIssuedByDueDate: null, tinIssuedByDueDate: null, childTaxCredit: { nonTaxableCombatPayElection: "0.20" }, dependentCount: "1", dependents: [{ ...completeDependent, ctcSsnEligible: null }] };
     function Harness() { const [data, setData] = useState(latest); return <SectionPersonalInfo data={data} filingStatus="mfj" onDataChange={(next) => { latest = next; setData(next); }} />; }
     await act(async () => root.render(<Harness />));
     expect(Object.keys(personalFactErrors(latest, "mfj", 2026))).toContain("dependent-0-ctcSsn");
@@ -209,7 +209,7 @@ describe("required fact interaction boundaries", () => {
     await change("Were you a bona fide resident of Puerto Rico during the tax year?", "false");
     await change("Puerto Rico income excluded from federal income", "0");
     await change("American Samoa income excluded on Form 4563", "0");
-    await change("Nontaxable combat pay elected for the additional child credit", "0.10");
+    await change("Saved nontaxable combat pay to reconcile", "0.10");
     expect(latest).toMatchObject({ employmentValidSsnIssuedByDueDate: false, tinIssuedByDueDate: true, childTaxCredit: { bonaFidePuertoRicoResident: false, puertoRicoExcludedIncome: "0", form4563ExcludedIncome: "0", nonTaxableCombatPayElection: "0.10" } });
     expect(personalFactErrors(latest, "mfj", 2026)).toEqual({});
     await change("Does this child meet the timely employment-valid SSN requirement (or documented born-and-died exception)?", "");

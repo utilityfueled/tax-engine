@@ -20,6 +20,8 @@ export interface Form8812Input {
   form2555Source?: Form2555Result;
   form4563ExcludedIncome?: Decimal;
   earnedIncome: Decimal;
+  /** Actual section 112 amount already included in earnedIncome. */
+  nontaxableCombatPay?: Decimal;
   /** Credit Limit Worksheet A line 5, after the Worksheet B interaction if applicable. */
   taxLiability: Decimal;
   filingStatus: FilingStatus;
@@ -57,6 +59,9 @@ export function calculateForm8812(input: Form8812Input, constants: YearConstants
   }
   for (const amount of [input.agi, input.earnedIncome, input.taxLiability]) {
     if (!amount.isFinite()) throw new Error("Schedule 8812 amount must be finite");
+  }
+  if (input.nontaxableCombatPay !== undefined && (!input.nontaxableCombatPay.isFinite() || input.nontaxableCombatPay.lt(0))) {
+    throw new Error("Invalid Schedule 8812 nontaxable combat pay");
   }
   const foreignSource = input.foreignExcludedIncome;
   if (foreignSource !== undefined) {
@@ -124,6 +129,7 @@ export function calculateForm8812(input: Form8812Input, constants: YearConstants
     ["16b", "Refundable cap for qualifying children", maxRefundable, "Qualifying children × indexed refundable amount"],
     ["17", "Credit available for ACTC", Decimal.min(unusedCTC,maxRefundable), "min(lines 16a,16b)"],
     ["18a", "Earned income for ACTC", input.earnedIncome, "Earned income worksheet"],
+    ["18b", "Nontaxable combat pay", input.nontaxableCombatPay, "Sum of original Forms W-2 Box 12 Code Q"],
     ["19", "Earned income above $2,500", earnedIncomeExcess, "max(0, line 18a - 2500)"],
     ["20", "Earned-income ACTC limit", fifteenPercent, "round(line 19 × 0.15)"],
     ["21", "Payroll taxes", alternateApplies ? payroll : new Decimal(0), "Additional Medicare/RRTA worksheet if applicable"],
@@ -133,6 +139,6 @@ export function calculateForm8812(input: Form8812Input, constants: YearConstants
     ["25", "Payroll alternative", payrollAlternative, "max(0, line 23 - line 24), when eligible"],
     ["26", "Larger ACTC income limit", incomeLimit, "max(lines 20,25)"],
     ["27", "Additional Child Tax Credit", actc, input.filesForm2555 ? "Form 2555 disallows ACTC" : "min(lines 17,26)"],
-  ] as const) audit.record("Form 8812", line, description, value, formula);
+  ] as const) if (value !== undefined) audit.record("Form 8812", line, description, value, formula);
   return {ctcBeforeLimitation, nonrefundableCTC, unusedCTC, earnedIncomeExcess, fifteenPercent, payrollAlternative, potentialActc, creditLimitWorksheetBReservation, actc, lines:audit.getLines()};
 }

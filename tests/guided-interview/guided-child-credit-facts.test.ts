@@ -1,7 +1,8 @@
 // Spec: spec/federal/guided-input.yaml, child-credit-identity
 import { describe, expect, it } from "vitest";
-import { buildTaxInputFromGuidedData } from "@/lib/guided-interview-bridge";
+import { buildTaxInputFromGuidedData, buildW2Inputs } from "@/lib/guided-interview-bridge";
 import { personalFactErrors } from "@/lib/guided-taxpayer-facts";
+import { w2FactErrors } from "@/lib/guided-w2-facts";
 import { type PersonalInfoData } from "@/lib/guided-interview-flow";
 import { completeDependent, completePersonalInfo, startCompleteInterview } from "./complete-facts";
 
@@ -15,6 +16,18 @@ function input(facts: PersonalInfoData, year: number, status: "single" | "mfj" =
   return buildTaxInputFromGuidedData({ ...state, taxYear: year, sectionData: { "personal-info": facts } });
 }
 describe("guided child credit identity facts", () => {
+  it("preserves actual code Q and requires a matching year and owner for a positive amount", () => {
+    const original = { employerName: "Synthetic employer", employerEin: "99-8887777", wages: "2000", federalWithheld: "0", box12CodeQ: "2,250.50" };
+    expect(w2FactErrors([original], "single", 2026)).toHaveProperty("w2-0-sourceTaxYear");
+    expect(w2FactErrors([original], "single", 2026)).toHaveProperty("w2-0-accountHolder");
+    const complete = { ...original, sourceTaxYear: "2026", accountHolder: "primary" as const };
+    expect(w2FactErrors([complete], "single", 2026)).not.toHaveProperty("w2-0-box12CodeQ");
+    expect(buildW2Inputs([complete])[0]).toMatchObject({ taxYear: 2026, accountHolder: "primary", box12CodeQ: "2250.50" });
+    expect(buildW2Inputs([{ ...complete, box12CodeQ: "0" }])[0]).toMatchObject({ box12CodeQ: "0" });
+    expect(buildW2Inputs([{ ...complete, box12CodeQ: "" }])[0]).not.toHaveProperty("box12CodeQ");
+    expect(w2FactErrors([{ ...complete, box12CodeQ: "-0.01" }], "single", 2026)).toHaveProperty("w2-0-box12CodeQ");
+  });
+
   it("requires actual identity facts for claimed child credits in either guided year", () => {
     for (const year of [2025, 2026]) {
       const facts = actualFacts();

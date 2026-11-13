@@ -472,6 +472,19 @@ describe("Schedule 8812 PDF fill — low-income HoH with 2 children (ACTC)", () 
     expect(getFieldText(doc, F.line18a)).toBe("25000");
   });
 
+  it("reports original Box 12 Code Q separately in a saved Schedule 8812", async () => {
+    const input: TaxYearInput = {
+      ...lowIncomeHoHFixture,
+      w2s: [{ ...lowIncomeHoHFixture.w2s[0], taxYear: 2025, accountHolder: "primary", box12CodeQ: "2250.50" }],
+    };
+    const calculated = calculateFederalTax(input);
+    const filled = await fillForm8812(input, calculated, BLANK_8812);
+    const saved = await PDFDocument.load(await filled.save());
+    expect(getFieldText(saved, F.line18a)).toBe("27251");
+    expect(getFieldText(saved, F.line18b)).toBe("2251");
+    expect(getFieldText(doc, F.line18b)).toBeUndefined();
+  });
+
   it("Line 19 — earned income excess over $2,500", () => {
     const f8812 = result.form8812!;
     expect(getFieldText(doc, F.line19)).toBe(formatCurrency(f8812.earnedIncomeExcess));

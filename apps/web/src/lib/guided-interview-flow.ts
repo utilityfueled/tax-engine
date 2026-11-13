@@ -677,6 +677,7 @@ export interface W2EntryData {
   box12CodeD?: string; box12CodeE?: string; box12CodeF?: string; box12CodeG?: string; box12CodeH?: string; box12CodeS?: string; box12CodeAA?: string; box12CodeBB?: string; box12CodeEE?: string; box12CodeT?: string;
   box12CodeW?: string;
   box12CodeP?: string;
+  box12CodeQ?: string;
   box10DependentCareBenefits?: string;
   accountHolder?: "primary" | "spouse" | "";
   stateTaxReporting?: "none" | "single" | "multiple" | "";

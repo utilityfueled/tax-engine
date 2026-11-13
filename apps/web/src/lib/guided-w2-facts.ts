@@ -42,6 +42,18 @@ export function w2FactErrors(entries: W2EntryData[] | undefined, filingStatus?: 
         errors[`${prefix}-accountHolder`] = "Identify the actual W-2 Code P owner.";
       }
     }
+    if (hasEnteredAmount(entry.box12CodeQ)) {
+      const amount = W2Schema.shape.box12CodeQ.safeParse(entry.box12CodeQ?.trim().replaceAll(",", ""));
+      if (!amount.success) errors[`${prefix}-box12CodeQ`] = "Enter actual nonnegative Box 12 Code Q in dollars and cents.";
+      else if (parseGuidedCurrency(amount.data).gt(0)) {
+        if (!returnYear || entry.sourceTaxYear?.trim() !== String(returnYear)) {
+          errors[`${prefix}-sourceTaxYear`] = "Enter the original W-2 year for Box 12 Code Q and match it to this return.";
+        }
+        if (entry.accountHolder !== "primary" && (entry.accountHolder !== "spouse" || filingStatus !== "mfj")) {
+          errors[`${prefix}-accountHolder`] = "Identify the actual W-2 Code Q owner.";
+        }
+      }
+    }
     if (entry.stateLocalSources !== undefined) {
       for (const key of [...W2_SOURCE_BOX12_FIELDS, "allocatedTips"] as const) {
         const error = amountError(entry[key], key === "allocatedTips" ? "actual Box 8 allocated tips" : `actual Box 12 code ${key.slice(9)}`);
