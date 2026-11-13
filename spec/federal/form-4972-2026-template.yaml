@@ -25,9 +25,11 @@ lines:
       5b, 9 and 18 blank for the participant's own distribution. Leave the
       instruction worksheets and both identity fields blank. Reject rounding
       that changes the branch or prevents the printed amounts from reconciling.
+      Hold positive Box 6 pending worksheet and dotted-line annotation mapping.
     testRef: "tests/pdf/form-4972-2026-candidate.test.ts::projects only the applicable cells of each election"
     testRefs:
       - "tests/pdf/form-4972-2026-candidate.test.ts::holds amounts that cannot reconcile in whole dollars"
+      - "tests/pdf/form-4972-2026-candidate.test.ts::holds positive Box 6 outside the physical review map"
   - line: "11, 20-22, 26-29"
     description: "Project a confirmed own-plan actuarial adjustment"
     formula: >-

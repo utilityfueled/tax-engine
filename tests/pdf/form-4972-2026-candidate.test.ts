@@ -125,6 +125,11 @@ it("holds amounts that cannot reconcile in whole dollars", () => {
   expect(() => projectForm49722026OwnPlan({ ...election, entireBalanceConfirmed: false })).toThrow(/confirmed eligibility/u);
 });
 
+it("holds positive Box 6 outside the physical review map", () => {
+  expect(() => projectForm49722026OwnPlan({ ...annuityElection, netUnrealizedAppreciation: "1000", nuaTreatment: "include" }))
+    .toThrow(/physical.*zero Box 6/u);
+});
+
 it("projects the confirmed beneficiary and separate own-plan answers", () => {
   const project = form4972Candidate.projectForm49722026DeathBeneficiary;
   expect(project).toBeTypeOf("function");

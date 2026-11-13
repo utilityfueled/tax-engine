@@ -98,6 +98,51 @@ describe("2026 Form 4972 death-beneficiary worksheet", () => {
   });
 });
 
+describe("2026 Form 4972 own-plan net unrealized appreciation", () => {
+  const appreciation = { ...source, netUnrealizedAppreciation: "9000", nuaTreatment: "include" as const };
+
+  it("allocates included appreciation across Part II and ordinary income", () => {
+    const combined = calculateForm4972(appreciation);
+    expect(combined.nuaWorksheet?.map(row => [row.line, row.value.toFixed(2)])).toEqual([
+      ["A", "20000.00"], ["B", "90000.00"], ["C", "0.22"], ["D", "9000.00"],
+      ["E", "2000.00"], ["F", "7000.00"], ["G", "22000.00"],
+    ]);
+    expect(combined.line6?.toFixed(2)).toBe("22000.00");
+    expect(combined.line8?.toFixed(2)).toBe("77000.00");
+    expect(combined.separateTax.toFixed(2)).toBe("15025.00");
+    expect(combined.ordinaryPensionTransfer.isZero()).toBe(true);
+    expect(combined.deferredNua.isZero()).toBe(true);
+
+    const capitalOnly = calculateForm4972({ ...appreciation, election: "capital_gain" });
+    expect(capitalOnly.separateTax.toFixed(2)).toBe("4400.00");
+    expect(capitalOnly.ordinaryPensionTransfer.toFixed(2)).toBe("77000.00");
+    expect(capitalOnly.lines.map(row => row.line)).toEqual(["6", "7"]);
+  });
+
+  it("uses the elected appreciation treatment for Part III only", () => {
+    const tenYear = { ...appreciation, election: "ten_year" as const, grossDistribution: "10000", taxableAmount: "8000",
+      capitalGain: "0", netUnrealizedAppreciation: "2000" };
+    const included = calculateForm4972(tenYear);
+    expect(included.line8?.toFixed()).toBe("10000");
+    expect(included.separateTax.toFixed()).toBe("550");
+    expect(included.nuaWorksheet).toBeUndefined();
+    const deferred = calculateForm4972({ ...tenYear, nuaTreatment: "defer" });
+    expect(deferred.line8?.toFixed()).toBe("8000");
+    expect(deferred.separateTax.toFixed()).toBe("440");
+    expect(deferred.deferredNua.toFixed()).toBe("2000");
+    const deferredCapital = calculateForm4972({ ...appreciation, election: "capital_gain", nuaTreatment: "defer" });
+    expect(deferredCapital.ordinaryPensionTransfer.toFixed()).toBe("70000");
+    expect(deferredCapital.nuaWorksheet).toBeUndefined();
+  });
+
+  it("holds conflicting or missing Box 6 treatment", () => {
+    expect(() => calculateForm4972({ ...appreciation, nuaTreatment: undefined })).toThrow(/choose.*Box 6/u);
+    expect(() => calculateForm4972({ ...appreciation, netUnrealizedAppreciation: "10000.01" })).toThrow(/reconciled.*Box/u);
+    expect(() => calculateForm4972({ ...beneficiary, netUnrealizedAppreciation: "1" })).toThrow(/beneficiary.*zero Box 6/u);
+    expect(() => calculateForm4972({ ...appreciation, taxableAmount: "0", capitalGain: "0" })).toThrow(/positive Box 3/u);
+  });
+});
+
 describe("2026 Form 4972 own-plan worksheet", () => {
   it("requires actual eligibility and determined source amounts", () => {
     for (const incomplete of [

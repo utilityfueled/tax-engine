@@ -7,8 +7,8 @@ notes: |
   own qualified plan and a single qualifying death-beneficiary distribution
   with confirmed zero federal estate tax have separate original-source rules.
   Alternate payees, multiple distributions or recipients, earlier deaths,
-  deferred NUA, positive estate tax and a beneficiary's actuarial annuity
-  value need separate qualification. No current-year return or export
+  securities dispositions after NUA deferral, positive estate tax and a
+  beneficiary's actuarial annuity value need separate qualification. No current-year return or export
   registration is implied.
 lines:
   - line: "1-5"
@@ -19,8 +19,10 @@ lines:
       entire required balance distributed, no partial or full rollover, no prior
       disqualifying election, and explicit confirmation from all related records
       that the other disqualifications do not apply. Use the original current
-      source's determined Box 2a, Box 3, and confirmed zero Box 6. Box 3
-      cannot exceed Box 2a and Box 2a cannot exceed Box 1. Require the actual
+      source's determined Box 2a, Box 3, and actual Box 6. Box 3 cannot
+      exceed Box 2a. The sum of Boxes 2a and 6 cannot exceed Box 1. A
+      positive Box 6 for the own plan requires an explicit choice to defer
+      or include the appreciation in the distribution year. Require the actual
       Box 8a amount. A positive amount requires confirmation that it is the
       current actuarial value of an annuity contract included in the qualified
       lump sum and excluded from both Boxes 1 and 2a. A blank, an unknown
@@ -49,13 +51,31 @@ lines:
       - "tests/pdf/form-4972-2026-candidate.test.ts::holds the beneficiary method outside the own-plan physical map"
   - line: "6-7"
     description: "Twenty-percent capital gain election"
-    formula: "Line 6 is Box 3 when Part II is elected and positive; line 7 is line 6 times 0.20."
+    formula: >-
+      Line 6 is positive Box 3 when Part II is elected. Add NUA Worksheet E
+      if the taxpayer elected to include a positive Box 6 in the distribution
+      year. Line 7 is line 6 times 0.20.
     testRef: "tests/engine/forms/form-4972.test.ts::computes the separate Part II charge and ordinary pension remainder"
+  - line: "NUA A-G"
+    description: "Allocate included own-plan net unrealized appreciation when Part II applies"
+    formula: >-
+      When both current inclusion and Part II are elected, record A as Box 3,
+      B as Box 2a, C as A divided by B at Decimal precision, D as Box 6, E
+      as C times D, F as D minus E, and G as A plus E. Part II requires
+      positive Box 3, so B is positive. Use G for line 6 and add F to the
+      ordinary portion. For current inclusion without Part II add all of
+      Box 6 to line 8 without dividing. For deferral use only Box 2a for
+      distribution-year income and retain the actual Box 6 separately.
+      Do not infer an election or calculate any securities disposition.
+    testRef: "tests/engine/forms/form-4972.test.ts::allocates included appreciation across Part II and ordinary income"
+    testRefs:
+      - "tests/engine/forms/form-4972.test.ts::uses the elected appreciation treatment for Part III only"
+      - "tests/engine/forms/form-4972.test.ts::holds conflicting or missing Box 6 treatment"
   - line: "8-12"
     description: "Adjusted total taxable amount"
     formula: >-
-      For Part III, line 8 is Box 2a minus elected Part II Box 3, or all of Box
-      2a without Part II. Line 9 is confirmed zero for these cohorts.
+      For Part III, line 8 is Box 2a plus current-year included Box 6 less
+      any line 6 amount. Line 9 is confirmed zero for these cohorts.
       Line 10 equals line 8. Line 11 is the confirmed Box 8a value and
       line 12 is the sum of lines 10 and 11.
     testRef: "tests/engine/forms/form-4972.test.ts::splits the combined election and computes the separate ten-year tax"
@@ -96,7 +116,7 @@ lines:
     formula: >-
       When Part III is elected line 30 sums lines 7 and 29, treating absent
       Part II as zero. Part II alone transfers line 7 to Form 1040 line 16 and
-      Box 2a less Box 3 to ordinary pension income. Either Part III election
+      Box 2a plus included Box 6 less line 6 to ordinary pension income. Either Part III election
       excludes this source from Form 1040 lines 5a and 5b. Keep the proposed
       transfer separate from the current federal calculator and exports until
       their source eligibility and interaction checks are qualified.

@@ -75,6 +75,9 @@ export const FORM_4972_2026_CANDIDATE = Object.freeze({
 
 function projectElectionAmounts(source: Form4972Input) {
   const exact = calculateForm4972(source);
+  if (!d(source.netUnrealizedAppreciation).isZero()) {
+    throw new Error("The Form 4972 physical candidate requires confirmed zero Box 6");
+  }
   const rounded = (value: string) => roundDollar(d(value)).toFixed(0);
   const capitalGain = rounded(source.capitalGain);
   const reconciliationError = "Form 4972 cannot reconcile the elected parts in whole dollars";

@@ -24,6 +24,7 @@ export type Form4972Input = Form4972CommonInput & ({
   fiveParticipationYearsConfirmed?: boolean;
   priorDisqualifyingElection?: boolean;
   lumpSumAnnuityValueConfirmed?: boolean;
+  nuaTreatment?: "defer" | "include";
 } | {
   sourceKind: "death_beneficiary";
   qualifiedPlanConfirmed?: boolean;
@@ -91,8 +92,16 @@ export function calculateForm4972(input: Form4972Input) {
   const gain = sourceAmount(input.capitalGain, "Box 3");
   const nua = sourceAmount(input.netUnrealizedAppreciation, "Box 6");
   const actuarialValue = sourceAmount(input.actuarialValue, "Box 8a");
-  if (taxable.gt(gross) || gain.gt(taxable) || !nua.isZero()) {
-    throw new Error("Form 4972 requires reconciled Boxes 1, 2a and 3 and confirmed zero Box 6");
+  if (taxable.plus(nua).gt(gross) || gain.gt(taxable)) {
+    throw new Error("Form 4972 requires reconciled Boxes 1, 2a, 3 and 6");
+  }
+  if (nua.gt(0)) {
+    if (input.sourceKind === "death_beneficiary") {
+      throw new Error("Form 4972 beneficiary worksheet requires confirmed zero Box 6");
+    }
+    if (input.nuaTreatment !== "include" && input.nuaTreatment !== "defer") {
+      throw new Error("Form 4972 requires the taxpayer to choose whether to include or defer positive Box 6");
+    }
   }
   if (actuarialValue.gt(0) && (input.sourceKind === "death_beneficiary" || input.lumpSumAnnuityValueConfirmed !== true)) {
     throw new Error("Form 4972 requires a confirmed own-plan lump-sum annuity value in Box 8a, excluded from Boxes 1 and 2a");
@@ -108,16 +117,35 @@ export function calculateForm4972(input: Form4972Input) {
   const record = (line: string, description: string, amount: Decimal, formula: string) =>
     audit.record("Form 4972", line, description, amount, formula);
   const zero = new Decimal(0);
-  const line6 = partII ? record("6", "Capital gain elected", gain, "Form 1099-R Box 3") : undefined;
+  const includeNua = input.sourceKind !== "death_beneficiary" && input.nuaTreatment === "include" && nua.gt(0);
+  const includedNua = includeNua ? nua : zero;
+  let capitalNua = zero;
+  let nuaWorksheet: ReturnType<AuditTrail["getLines"]> | undefined;
+  if (includeNua && partII) {
+    const worksheet = new AuditTrail();
+    const worksheetLine = (line: string, description: string, amount: Decimal, formula: string) =>
+      worksheet.record("Form 4972 NUA Worksheet", line, description, amount, formula);
+    worksheetLine("A", "Reported capital gain", gain, "Form 1099-R Box 3");
+    worksheetLine("B", "Reported taxable amount", taxable, "Form 1099-R Box 2a");
+    const share = worksheetLine("C", "Capital gain share", gain.dividedBy(taxable), "A divided by B");
+    worksheetLine("D", "Reported net unrealized appreciation", nua, "Form 1099-R Box 6");
+    capitalNua = worksheetLine("E", "Capital gain portion of NUA", share.times(nua), "C × D");
+    worksheetLine("F", "Ordinary income portion of NUA", nua.minus(capitalNua), "D less E");
+    worksheetLine("G", "Total capital gain", gain.plus(capitalNua), "A plus E");
+    nuaWorksheet = worksheet.getLines();
+  }
+  const line6 = partII ? record("6", "Capital gain elected", gain.plus(capitalNua),
+    nuaWorksheet ? "NUA Worksheet G" : "Form 1099-R Box 3") : undefined;
   const line7 = line6 ? record("7", "Capital gain election tax", line6.times("0.20"), "Line 6 × 20%") : undefined;
-  const remaining = taxable.minus(line6 ?? zero);
-  const partIIResult = { line6, line7 };
+  const remaining = taxable.plus(includedNua).minus(line6 ?? zero);
+  const partIIResult = { line6, line7, nuaWorksheet, deferredNua: includeNua ? zero : nua };
 
   if (!partIII) {
     return { ...partIIResult, separateTax: line7 ?? zero, ordinaryPensionTransfer: remaining, lines: audit.getLines() };
   }
 
-  const line8 = record("8", "Amount subject to the ten-year option", remaining, "Box 2a less any amount on line 6");
+  const line8 = record("8", "Amount subject to the ten-year option", remaining,
+    includeNua ? "Box 2a plus included Box 6 less any amount on line 6" : "Box 2a less any amount on line 6");
   const line9 = record("9", "Death benefit exclusion", zero,
     input.sourceKind === "death_beneficiary" ? "Death on or after August 21, 1996" : "Participant's own plan");
   const line10 = record("10", "Total taxable amount", line8.minus(line9), "Line 8 less line 9");
