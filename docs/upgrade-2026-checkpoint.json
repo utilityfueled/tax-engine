@@ -24468,6 +24468,84 @@
       "https://www.irs.gov/instructions/i1099r"
     ]
   },
+  "nov13Form4972AppreciationPhysicalReview": {
+    "commit": "70aa593f5143c950bd3b74737d83992241faccf9",
+    "initialRed": 3,
+    "focusedTestsPassed": 1229,
+    "specReferencesValidated": 8922,
+    "redSha256": "20e4642c3f6331a2653b4187d795aed98829d3a235ebb57f3d1d36f39b7b66d1",
+    "greenSha256": "a78c8f0cc90fb860471c54e8c0214bf1724fa208fe17e14ae03894b09ce7c0a5",
+    "pdfSha256": "ab27d23fe6d0c4faf1030c7620e774cade563a36c1070a69bc85ff40a4e8effa",
+    "strictReadbackSha256": "9cfa57293f6132117cfb93dea09dd092d49ac9e881b68660616f30404a0d271a",
+    "widgetsVerified": 58,
+    "filledFields": 25,
+    "checkedBoxes": 5,
+    "reviewNoticePages": 4,
+    "renderedPages": 4,
+    "visualInspectionPages": [
+      1,
+      3
+    ],
+    "exportsEnabled": false,
+    "source": "https://www.irs.gov/pub/irs-pdf/f4972.pdf",
+    "appreciationAnnotationPage": 1
+  },
+  "nov13Form4972BeneficiaryEstateTax": {
+    "commit": "b49d48a80505abb9f44040490ef15244965e0e2e",
+    "initialRed": 3,
+    "focusedTestsPassed": 1232,
+    "specReferencesValidated": 8922,
+    "redSha256": "4d196399a84611724ebf65e459c2fe0064bfd80824998d45f5d19862d233ca57",
+    "greenSha256": "9cd15d0598fdafcc32fbc4f95bce18b53c87753fa31eb6620791f0a66e3bdeff",
+    "pdfSha256": "ed2685fda149e68c01b998f815776c9d662bc2c5f43774ba9604d8ccc3052900",
+    "strictReadbackSha256": "89ec396019d9a4c562813d922f9d3c89c0ca40d17f79c2e1be7ae763852a7ed8",
+    "widgetsVerified": 58,
+    "filledFields": 16,
+    "checkedBoxes": 6,
+    "reviewNoticePages": 4,
+    "renderedPages": 4,
+    "visualInspectionPages": [
+      1
+    ],
+    "exportsEnabled": false,
+    "source": "https://www.irs.gov/pub/irs-pdf/f4972.pdf",
+    "partIIIOnlyEstateTaxExample": {
+      "confirmedEstateTax": "2000",
+      "netAfterEstateTax": "8000",
+      "partIIITax": "880"
+    }
+  },
+  "nov13ExactE6a34ac3Arm64": {
+    "commit": "e6a34ac3f0a21da6e81702782d52d0084566c579",
+    "trackedBlobsVerified": 5687,
+    "supplementalFilesVerified": 15,
+    "sourceArchiveSha256": "b4f4d4d14c379c2e2d3651df06c06e34fd99d095384af40879e036f677e48e9e",
+    "imageId": "8657b96327e45811973ccefe375b9ace67fd48e7f21138f5417817354c0be8f0",
+    "imageArchiveSha256": "5f1727e291ff7e6ac2266b3e2a2abf2f4dc902e739373eaf8dc095d42f1d1372",
+    "sbomSha256": "fa964099818175b2e07b8a70e063264b1292d52573e56ea76edd72a3536f75af",
+    "scanSha256": "50ba66a19ec8cbdc2bf91c5ba0a5dc2756bbd38f6fb5d01032660a7c918c6fc1",
+    "matchedAdvisories": 86,
+    "highMatches": 60,
+    "criticalMatches": 0,
+    "riskAccepted": false,
+    "composePhasesPassed": 6,
+    "chromiumPassed": 616,
+    "chromiumHostedOnlySkipped": 5,
+    "composeSha256": "fffacc42da1e926725ccd9d0dcfe2cdadf04c8847a4e5687c446add2d4ddab76",
+    "chromiumSha256": "90f82abdeff0b96fd2a591bf680ab037581e0e9fdda5b68e4ce32bcf53c4288c",
+    "receiptSha256": "100a898014c8ef8b4386e7e79f275809e703bb8c1994edbc6638062b0ba99ee2",
+    "cleanupSha256": "cd32053478e94fc27e16e991280a6f3de2d3580c6280dd1e44122dc93d318b40"
+  },
+  "nov13AiLedgerProviderReference": {
+    "commit": "3a5c8375ae99a6f0e996ce5700c0fd55c58bffe3",
+    "initialRed": 1,
+    "realPostgresTestsPassed": 97,
+    "redSha256": "ea09e7d742a63c6758103f3e62fe7d6ce03f2383a49250373f0564dd454207fe",
+    "greenSha256": "9bc02fca75234550fb52f8d82cc72708bb99271e9849204d998ede1ec313ac3a",
+    "greenReceiptSha256": "a1531f5fbb8c5d9a65e2f3d019c05c0a62aa9bcebd8b3cacbef60f08c2c46372",
+    "productionOrProviderRequests": 0,
+    "paidEvaluationTimeoutReconciled": false
+  },
   "nov13Form4972OwnPlanAnnuityPhysicalReview": {
     "commit": "739178b7f28cab7eff1eb3a4d7cc5fd620f5ce47",
     "initialRed": 3,

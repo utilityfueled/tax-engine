@@ -160,6 +160,30 @@ with OpenSSL and the same verified release source before the rerun.
 
 ## ARM64 self-host
 
+### App and annuity archive at `e6a34ac3`
+
+The source archive matched all 5,687 tracked blobs and 15 supplemental
+sample PDFs. The separate runtime store imported the exact ARM64 image,
+with zero set-ID regular files at smoke. The prior image, upgrade, database
+restart, dump and restore, rollback and re-upgrade all passed. Chromium
+passed 616 cases with five hosted-only skips. The VM stopped normally.
+Cleanup restored the user socket route and verified the original root
+route and default connection. Grype recorded 197 matches across 86 Debian
+advisories. It reported 60 High matches, zero Critical and no available
+fix in that scan. Security-owner disposition remains open.
+
+| ARM64 evidence | SHA-256 |
+| --- | --- |
+| Source archive | `b4f4d4d14c379c2e2d3651df06c06e34fd99d095384af40879e036f677e48e9e` |
+| Runtime image ID | `8657b96327e45811973ccefe375b9ace67fd48e7f21138f5417817354c0be8f0` |
+| Runtime image archive | `5f1727e291ff7e6ac2266b3e2a2abf2f4dc902e739373eaf8dc095d42f1d1372` |
+| CycloneDX SBOM | `fa964099818175b2e07b8a70e063264b1292d52573e56ea76edd72a3536f75af` |
+| Grype scan | `50ba66a19ec8cbdc2bf91c5ba0a5dc2756bbd38f6fb5d01032660a7c918c6fc1` |
+| Compose recovery | `fffacc42da1e926725ccd9d0dcfe2cdadf04c8847a4e5687c446add2d4ddab76` |
+| Chromium transcript | `90f82abdeff0b96fd2a591bf680ab037581e0e9fdda5b68e4ce32bcf53c4288c` |
+| Complete rehearsal receipt | `100a898014c8ef8b4386e7e79f275809e703bb8c1994edbc6638062b0ba99ee2` |
+| Normal stop and socket restoration | `cd32053478e94fc27e16e991280a6f3de2d3580c6280dd1e44122dc93d318b40` |
+
 ### Set-ID hardening and retirement worksheet archive at `4593c4ec`
 
 The separately imported runtime passed smoke with zero set-ID regular files.

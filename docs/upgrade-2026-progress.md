@@ -4,6 +4,23 @@ Current source, verification and remaining work are summarized in the
 [current continuation](upgrade-2026-current-status.md). Historical results
 below apply to their named revisions.
 
+- November 13 — `3a5c8375` retains provider identifiers during unknown-usage
+  reconciliation and settlement. One real PostgreSQL regression failed first.
+  All 97 affected integration tests passed. Both owned clusters stopped.
+- November 13 — `b49d48a8` applies confirmed estate tax to line 18 of the
+  finite single-beneficiary Part III method. Three regressions failed first
+  and 1,232 affected tests passed. Strict readback verified 58 widgets, 16
+  filled fields and six selections. All four review pages rendered.
+  [Final 2026 Form 4972](https://www.irs.gov/pub/irs-pdf/f4972.pdf).
+- November 13 — `70aa593f` maps the appreciation worksheet and line 6/8
+  notes. Three regressions failed first and 1,229 affected tests passed.
+  The strict reader verified all 58 widgets and both annotations.
+  [Final 2026 Form 4972](https://www.irs.gov/pub/irs-pdf/f4972.pdf).
+- November 13 — Exact ARM64 `e6a34ac3` passed independent import, smoke,
+  six Compose recovery phases and 616 Chromium cases with five hosted-only
+  skips. The VM stopped and restored its socket route. Advisory disposition
+  remains open. [Rehearsal evidence](upgrade-2026-nov13-release-rehearsals.md).
+
 - November 13 — `f25ec56c` implements the confirmed own-plan Box 6 election
   and the Part II appreciation worksheet. Four targeted tests failed first.
   All 343 affected tests passed, plus types, lint, inventory and 8,921 spec

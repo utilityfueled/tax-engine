@@ -11,12 +11,40 @@ The isolated rehearsal project has no Git link and protects all deployments.
 The team is on Pro, whose Sandbox credits are shared and can incur overage.
 No Sandbox was started. [Vercel Sandbox pricing](https://vercel.com/docs/sandbox/pricing).
 
+`3a5c8375` preserves the provider's request identifier through a retry of
+unknown-usage recording and through later settlement. It rejects contradictory
+identifiers and settlement evidence without releasing or double-charging the
+reservation. One regression failed before the fix and 97 real PostgreSQL
+tests passed after it. Both owned test clusters stopped. No provider requests
+ran, and the live evaluation timeout remains unreconciled.
+
+`b49d48a8` admits confirmed attributable estate tax for the finite
+single-beneficiary, ten-year-only Form 4972 method. A $2,000 deduction on
+line 18 leaves $8,000 on line 19 and $880 of tax. Part II with positive
+estate tax remains held. Three regressions failed first and 1,232 affected
+tests passed. The saved four-page PDF passed strict readback for all 58
+widgets, 16 filled fields and six selections. Its first rendered page
+shows the expected amounts. [Final 2026 Form 4972](https://www.irs.gov/pub/irs-pdf/f4972.pdf).
+
+`70aa593f` fills the A–G appreciation worksheet on the disabled Form 4972
+candidate and prints the two required line 6 and 8 notes when the election
+includes the appreciation. Three regressions failed first and 1,229 affected
+tests passed. The second reader verified 58 widgets, 25 filled fields, five
+selections and the two note positions. All four pages rendered. Pages 1 and
+3 were visually checked. [Final 2026 Form 4972](https://www.irs.gov/pub/irs-pdf/f4972.pdf).
+
+Exact ARM64 `e6a34ac3` passed independent runtime import, smoke, all
+six Compose recovery phases and 616 Chromium cases with five hosted-only
+skips. The named test VM stopped normally and the original user socket
+route was restored. The image scan found 197 matches including 60 High and
+zero Critical. [Rehearsal evidence](upgrade-2026-nov13-release-rehearsals.md).
+
 `f25ec56c` calculates the confirmed own-plan Box 6 inclusion or deferral
 and retains the A–G worksheet for Part II. Four regressions failed before
 the calculation and physical guard were added. All 343 affected tests
 passed, along with types, lint, inventory and 8,921 spec references. The
-PDF still holds positive Box 6 pending the printed annotations. The exact
-archive has entered the full local checks.
+later physical candidate adds the printed annotations. The exact archive
+has entered the full local checks.
 [Final 2026 Form 4972](https://www.irs.gov/pub/irs-pdf/f4972.pdf) ·
 [Form 1099-R instructions](https://www.irs.gov/instructions/i1099r).
 
