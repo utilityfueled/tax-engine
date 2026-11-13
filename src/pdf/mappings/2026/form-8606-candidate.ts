@@ -1,8 +1,13 @@
 /**
  * Final 2026 Form 8606 physical mapping candidate, Created 4/21/26.
  * Spec: spec/federal/form-8606-2026-template.yaml.
- * No calculation or export integration is enabled.
+ * The internal projection stays outside the export registry.
  */
+import { calculateForm8606 } from "@/engine/forms/form-8606.js";
+import { calculateIraBasisSources } from "@/engine/forms/ira-basis-sources.js";
+import type { TaxYearInput } from "@/models/inputs.js";
+import { d } from "@/utils/decimal.js";
+
 const page1 = "topmostSubform[0].Page1[0].";
 const page2 = "topmostSubform[0].Page2[0].";
 const taxableTransfer = "2026 Form 1040 / 1040-SR / 1040-NR line 4b";
@@ -76,3 +81,37 @@ export const FORM_8606_2026_CANDIDATE = Object.freeze({
     preparerSelfEmployed: `${page2}c2_1[0]`,
   }),
 });
+
+export function projectForm86062026OrdinaryDistribution(
+  input: TaxYearInput,
+  owner: "primary" | "spouse",
+): Record<string, string> {
+  if (input.taxpayer.taxYear !== 2026 || input.form8915F || input.form5329
+    || input.form1099R?.some(form => form.iraSepSimple !== true)) {
+    throw new Error("The Form 8606 candidate requires a 2026 return with only ordinary IRA statements");
+  }
+  const bound = calculateIraBasisSources(input)?.form8606ByOwner[owner];
+  const history = input.iraBasisSources?.owners.find(source => source.accountHolder === owner)?.basisHistory;
+  if (!bound || history?.method !== "prior_form_8606" || !d(history.line15cWorksheetAdjustment).isZero()) {
+    throw new Error("The Form 8606 candidate requires an original prior basis without a repayment adjustment");
+  }
+
+  const result = calculateForm8606(bound);
+  if (result.line2.lte(0) || result.line7.lte(0)) {
+    throw new Error("The Form 8606 candidate requires positive prior basis and an ordinary distribution");
+  }
+  if (result.line13.gt(result.line3)) {
+    throw new Error("The Form 8606 candidate cannot reconcile the printed ratio with available basis");
+  }
+
+  const { fields } = FORM_8606_2026_CANDIDATE;
+  const [integer, fraction] = result.line10.toFixed(3).split(".");
+  const text: Record<string, string> = {
+    [fields.line10Integer]: integer,
+    [fields.line10Fraction]: fraction,
+  };
+  const moneyLines = ["line1", "line2", "line3", "line4", "line5", "line6", "line7", "line8", "line9",
+    "line11", "line12", "line13", "line14", "line15a", "line15b", "line15c"] as const;
+  for (const line of moneyLines) text[fields[line]] = result[line].toFixed(0);
+  return text;
+}

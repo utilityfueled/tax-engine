@@ -5,12 +5,11 @@ reference: "https://www.irs.gov/pub/irs-pdf/f8606.pdf"
 revision: "Created 4/21/26, IRS final index posted 11/10/2026"
 retrievedAt: "2026-11-13T02:27:21Z"
 notes: |
-  This is the physical field contract. Existing Form 8606 line calculations
-  are specified in form-8606.yaml. The English instructions endpoint still
-  served 2025. The 2026 instructions were a draft. Final 2026 instructions,
-  disaster and repayment methods, account exclusions and parent-return
-  transfers require review before any calculation or export route can use
-  this candidate.
+  Existing Form 8606 line calculations are specified in form-8606.yaml.
+  The English instructions endpoint still served 2025. The 2026 instructions
+  were a draft. The ordinary source projection is an internal candidate.
+  Final 2026 instructions, special methods, account exclusions and the
+  parent-return transfer remain outside its scope.
 lines:
   - line: "revision"
     description: "Pin the official final annual PDF"
@@ -32,6 +31,29 @@ lines:
     description: "Save and reopen fictional physical probes"
     formula: "Require exact saved values and appearances for the calculation cells, both parts of line 10, a fictional owner label and redacted identifier. Address and standalone filing/preparer controls remain blank. Every page has the review notice."
     testRef: "tests/pdf/form-8606-2026-candidate.test.ts::retains diagnostic fields and blank standalone controls after save"
+  - line: "1–15c ordinary distributions"
+    description: "Project one owner's actual ordinary traditional IRA basis and distributions"
+    formula: >-
+      Require confirmed 2026 owner, all traditional, SEP and SIMPLE account
+      values, matching current original code 7 IRA 1099-R statements and a
+      positive basis from the most recent earlier Form 8606 line 14. Require
+      an explicit zero prior repayment worksheet adjustment and no current
+      contributions, conversions, repayments, account exclusions, inherited
+      basis or other special methods. Require a positive rounded distribution.
+      Compute each owner separately using the existing source reconciliation
+      and the fresh Form 8606 calculation. Lines 1, 4, 8, 11 and 15b are zero.
+      Line 2 is prior basis, line 3 its sum with line 1, and line 5 is line 3
+      minus line 4. Lines 6 and 7 use the separately aggregated account value
+      and distributions. Line 9 is the sum of lines 6 through 8. Split the
+      three-place capped ratio from line 10 across its two widgets. Apply it
+      to line 7 on line 12. Line 13 equals line 12, line 14 is line 3 minus
+      line 13, and lines 15a and 15c equal line 7 minus line 12. Refuse a
+      ratio whose printed amount would use more basis than exists. Leave
+      Part II, Part III, identity and preparer fields blank. Preserve separate
+      spouse amounts and never write source references or account identifiers.
+      Remove the official blank's obsolete Reader signature before saving the
+      marked synthetic specimen.
+    testRef: "tests/pdf/form-8606-2026-candidate.test.ts::projects separate owners from the confirmed ordinary IRA originals"
   - line: "closed-exports"
     description: "Keep the diagnostic source outside the public and filing registries"
     formula: "Reject the final 2026 source in the historical Form 8606 template slot and leave annual review and filing blocked."

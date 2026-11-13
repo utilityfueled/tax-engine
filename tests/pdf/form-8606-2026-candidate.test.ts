@@ -2,10 +2,12 @@
 import { createHash } from "node:crypto";
 import { lstat, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import { PDFCheckBox, PDFDocument, PDFName, PDFRawStream, PDFTextField, decodePDFRawStream } from "pdf-lib";
+import { PDFCheckBox, PDFDict, PDFDocument, PDFName, PDFRawStream, PDFRef, PDFTextField, decodePDFRawStream } from "pdf-lib";
 import { describe, expect, it } from "vitest";
+import { TaxYearInputSchema } from "@/models/inputs.js";
 import { assertPdfExportAllowed, markReviewPdf, PDF_MAPPING_PACKS, REVIEW_PDF_NOTICE } from "@/pdf/export-policy.js";
 import { assertReviewTemplateBytes, REVIEW_TEMPLATE_PACKS } from "@/pdf/template-registry.js";
+import { ordinaryIraBasisFixture } from "../fixtures/ira-basis.js";
 
 const blank = new URL("../../forms/blank/2026/f8606.pdf", import.meta.url);
 const officialSha = "eeb2c5a11da6903e30c468572da0242c28f19ee135b9853562d7ce9fc037cb56";
@@ -144,5 +146,89 @@ describe("Final 2026 Form 8606 physical candidate", () => {
     expect(() => assertPdfExportAllowed(2026, 2026, "filing")).toThrow(/unavailable/);
     expect(() => assertReviewTemplateBytes("f8606.pdf", source, 2025)).toThrow(/Unreviewed template revision/);
     expect(() => assertReviewTemplateBytes("f8606.pdf", source, 2026)).toThrow(/No qualified review/);
+  });
+
+  it("projects separate owners from the confirmed ordinary IRA originals", async () => {
+    const { projectForm86062026OrdinaryDistribution, FORM_8606_2026_CANDIDATE: { fields } } =
+      await import("@/pdf/mappings/2026/form-8606-candidate.js");
+    const source = ordinaryIraBasisFixture();
+    source.taxpayer.taxYear = 2026;
+    source.iraBasisSources.taxYear = 2026;
+    for (const owner of source.iraBasisSources.owners) {
+      owner.basisHistory.taxYear = 2025;
+      for (const account of owner.accounts) account.taxYear = 2026;
+    }
+    for (const form of source.form1099R) {
+      form.taxYear = 2026;
+      form.trumpAccount = false;
+      form.excessContributionEarnings = "0";
+    }
+    for (const distribution of source.iraBasisSources.distributions) distribution.taxYear = 2026;
+    const input = TaxYearInputSchema.parse(source);
+    const keys = [fields.line1, fields.line2, fields.line3, fields.line4, fields.line5, fields.line6, fields.line7, fields.line8,
+      fields.line9, fields.line10Integer, fields.line10Fraction, fields.line11, fields.line12, fields.line13, fields.line14,
+      fields.line15a, fields.line15b, fields.line15c];
+    const expected = {
+      primary: ["0", "1000", "1000", "0", "1000", "2002", "1001", "0", "3003", "0", "333", "0", "333", "333", "667", "668", "0", "668"],
+      spouse: ["0", "2000", "2000", "0", "2000", "8000", "2000", "0", "10000", "0", "200", "0", "400", "400", "1600", "1600", "0", "1600"],
+    };
+    for (const owner of ["primary", "spouse"] as const) {
+      const fieldsToFill = projectForm86062026OrdinaryDistribution(input, owner);
+      expect(fieldsToFill).toEqual(Object.fromEntries(keys.map((key, index) => [key, expected[owner][index]])));
+      const pdf = await PDFDocument.load(await readFile(blank));
+      const permissionsKey = PDFName.of("Perms");
+      const permissions = pdf.catalog.get(permissionsKey);
+      const readerRights = pdf.context.lookupMaybe(permissions, PDFDict)?.get(PDFName.of("UR3"));
+      expect(permissions).toBeInstanceOf(PDFRef);
+      expect(readerRights).toBeInstanceOf(PDFRef);
+      // Rewriting the pinned blank invalidates its Reader rights signature.
+      pdf.catalog.delete(permissionsKey);
+      if (permissions instanceof PDFRef) pdf.context.delete(permissions);
+      if (readerRights instanceof PDFRef) pdf.context.delete(readerRights);
+      pdf.catalog.getAcroForm()?.dict.delete(PDFName.of("SigFlags"));
+      const form = pdf.getForm();
+      for (const [name, value] of Object.entries(fieldsToFill)) form.getTextField(name).setText(value);
+      await markReviewPdf(pdf);
+      const bytes = await pdf.save();
+      const saved = await PDFDocument.load(bytes);
+      expect(saved.catalog.get(permissionsKey)).toBeUndefined();
+      expect(saved.context.lookup(permissions)).toBeUndefined();
+      expect(saved.context.lookup(readerRights)).toBeUndefined();
+      expect(saved.catalog.getAcroForm()?.dict.get(PDFName.of("SigFlags"))).toBeUndefined();
+      const reopened = saved.getForm();
+      for (const field of reopened.getFields()) {
+        if (field instanceof PDFTextField) expect(field.getText()).toBe(fieldsToFill[field.getName()]);
+        if (field instanceof PDFCheckBox) expect(field.isChecked()).toBe(false);
+      }
+      const directory = process.env.TAX_CANDIDATE_ARTIFACT_DIR;
+      if (directory) await writeFile(join(directory, `form-8606-ordinary-${owner}.pdf`), bytes, { flag: "wx", mode: 0o600 });
+    }
+
+    for (const modify of [
+      (value: typeof source) => { value.taxpayer.taxYear = 2025; },
+      (value: typeof source) => { value.iraBasisSources.owners[0].basisHistory.line14 = "0"; },
+      (value: typeof source) => { value.iraBasisSources.owners[0].basisHistory.line15cWorksheetAdjustment = "1"; },
+      (value: typeof source) => { value.iraBasisSources.owners[0].ordinaryFacts.conversionsPresent = true; },
+      (value: typeof source) => { value.form1099R[0].grossDistribution = "1001.50"; },
+      (value: typeof source) => { value.form1099R[0].grossDistribution = "0.01"; value.iraBasisSources.distributions[0].grossDistribution = "0.01"; },
+    ]) {
+      const changed = structuredClone(source);
+      modify(changed);
+      expect(() => projectForm86062026OrdinaryDistribution(TaxYearInputSchema.parse(changed), "primary")).toThrow(/IRA|8606/iu);
+    }
+    const full = structuredClone(source);
+    full.iraBasisSources.owners[0].accounts[0].yearEndValue = "0";
+    full.iraBasisSources.owners[0].basisHistory.line14 = "1100";
+    expect(projectForm86062026OrdinaryDistribution(TaxYearInputSchema.parse(full), "primary")).toMatchObject({
+      [fields.line10Integer]: "1", [fields.line10Fraction]: "000", [fields.line14]: "99", [fields.line15c]: "0",
+    });
+    full.iraBasisSources.owners[0].basisHistory.line14 = "1000";
+    full.form1099R[0].grossDistribution = "10000";
+    full.iraBasisSources.distributions[0].grossDistribution = "10000";
+    full.iraBasisSources.owners[0].accounts[0].yearEndValue = "-1";
+    expect(() => projectForm86062026OrdinaryDistribution(TaxYearInputSchema.parse(full), "primary")).toThrow();
+    full.iraBasisSources.owners[0].accounts[0].yearEndValue = "0";
+    full.iraBasisSources.owners[0].basisHistory.line14 = "9999";
+    expect(() => projectForm86062026OrdinaryDistribution(TaxYearInputSchema.parse(full), "primary")).toThrow(/basis/iu);
   });
 });
