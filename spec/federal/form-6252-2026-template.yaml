@@ -1,0 +1,48 @@
+form: "Form 6252 final 2026 physical candidate"
+fullName: "Final 2026 Installment Sale Income form physical fields"
+taxYear: 2026
+irsReference: "https://www.irs.gov/pub/irs-prior/f6252--2026.pdf"
+revision: "Created 6/16/26, IRS final index posted 10/16/2026"
+retrievedAt: "2026-11-13"
+reviewStatus: "independent-qualified-tax-review-pending"
+notes: |
+  The final annual IRS PDF includes the instructions on pages 2 through 4.
+  This specification identifies physical fields. It does not compute
+  installment sale income, determine eligibility, or qualify a filing export.
+lines:
+  - line: "source"
+    description: "Pin the final annual form and integral instructions"
+    formula: >-
+      Require the 119676-byte official blank with SHA-256
+      efecc62a9ed84ba8328eaceecc71305b7176ffa072ad24a30bb9cb4d5ded9310,
+      the 2026 form title and four pages. Pages 2 through 4 are the official
+      instructions and contain no form widgets.
+    testRef: "tests/pdf/form-6252-2026-candidate.test.ts::pins the final blank and its integral instructions"
+  - line: "1–37"
+    description: "Bind the installment sale and related-party widgets"
+    formula: >-
+      Identify name and identification number, description and both dates,
+      three yes/no pairs, line amounts, the decimal entry on line 19, both
+      rows on line 27, five exception checkboxes on line 29 and its distinct
+      disposition date. Preserve the exact physical positions, types and
+      checkbox appearance states for all 49 widgets on page 1.
+    testRef: "tests/pdf/form-6252-2026-candidate.test.ts::matches every official page-one field and widget location"
+  - line: "19, 27–29"
+    description: "Keep nearby controls separately addressable"
+    formula: >-
+      Preserve the physical decimal entry for the gross profit percentage,
+      both rows for the combined related-party details, the yes/no pair, and
+      each exception box apart from the separate date under 29a.
+    testRef: "tests/pdf/form-6252-2026-candidate.test.ts::binds the decimal, related-party rows and exception date separately"
+  - line: "diagnostic"
+    description: "Reopen a review-marked synthetic diagnostic"
+    formula: >-
+      Verify synthetic dates, text, checkbox selections and a decimal
+      appearance after reopening. Keep all identity fields blank and retain
+      the integral instructions. Remove inherited executable content and the
+      obsolete signature from the edited diagnostic only.
+    testRef: "tests/pdf/form-6252-2026-candidate.test.ts::reopens the marked diagnostic without identity data or inherited active content"
+  - line: "release"
+    description: "Keep annual review and filing exports unavailable"
+    formula: "The final blank and physical candidate map stay outside the public review and filing paths."
+    testRef: "tests/pdf/form-6252-2026-candidate.test.ts::keeps annual review and filing exports unavailable"
