@@ -10,6 +10,52 @@ Fulfillment finds the original issuance by retained Session ID even when mutable
 
 A commit with an unknown outcome may already have persisted all three effects. The same valid signed event safely reconciles that outcome. A separate client Checkout POST creates a fresh issuance, and may create another Session. A contradictory signed snapshot keeps returning 503 without granting credits. Editing the underlying Session does not change that snapshot on resend. A paid conflict needs original Stripe records and separately reviewed settlement or refund authority before any repair. Keep credit sales gated.
 
+### Read-only paid conflict inspection
+
+Obtain the original Stripe Event, the current PaymentIntent referenced by its
+Checkout Session, and that PaymentIntent's latest Charge from the same Stripe
+account and mode. Retrieve the Charge through the PaymentIntent. If there is no
+latest Charge, use `null`. Keep the three objects in a private JSON file under
+`event`, `paymentIntent` and `latestCharge`, with reference fields represented as
+IDs. The command compares provided records and cannot authenticate an edited or
+stale file. For a live decision, verify their origin and current refund or dispute
+activity independently in Stripe. [Event snapshot](https://docs.stripe.com/api/events/object) ·
+[PaymentIntent](https://docs.stripe.com/api/payment_intents/object) ·
+[Charge](https://docs.stripe.com/api/charges/object).
+
+Run from the repository root with a TLS-verified credential injected through
+`TAX_ENGINE_CREDIT_CONFLICT_READONLY_DATABASE_URL`. Use a role with only SELECT
+on `hosted_ai_storage_mode`, `hosted_ai_credit_issuances`,
+`hosted_ai_credit_purchases` and `hosted_billing_events` in the selected application
+schema. The schema must already have a verified mode marker. Choose `test` or
+`live` explicitly.
+
+```sh
+node --import tsx scripts/inspect-hosted-ai-credit-conflict.ts --mode=test < "$private_evidence_packet"
+```
+
+The command reads one consistent PostgreSQL snapshot and prints only fixed
+statuses and booleans. It distinguishes a missing grant, a grant matching the
+retained issuance, an unverified grant without the original Session binding,
+and a conflict. An older unbound receipt stays unknown. `chargeMatchesEvent`
+checks linkage and the originally captured amount. Read `refundObserved` and
+`disputeObserved` separately. `null` means no linked Charge provided that
+observation. This command performs no Stripe requests, event replay, credits,
+refunds or migrations. Use the results and the authoritative Stripe records in
+the separately reviewed settlement or refund decision.
+
+The final focused run passed 290 tests across ten files with disposable
+PostgreSQL 16.16, including actual archive recovery and the existing browser
+orchestration controls. A separate CLI check connected over verified TLS using
+a SELECT-only role. It rejected an untrusted certificate, suppressed malformed
+input and driver details, and returned no identifiers or amounts. Both clusters
+closed normally. The earlier missing implementation, test assertion error,
+sandbox shared-memory denial and non-TLS build startup are retained separately.
+Focused test transcript SHA-256
+`aa3175f0f7666cdc0a54c7fba064ff8710a177ba3732920ce6d80655d0d4b87b`.
+CLI output SHA-256
+`d1b30c4a402adebc1b7c9aabc20586fe52d69584850a1817e739705ea5910eaf`.
+
 ## Rollout, rollback and legacy URLs
 
 Deploy compatible fulfillment before enabling issuance-aware Checkout. Old instances draining during rollout may still mint unmarked legacy Sessions. Those Sessions retain their original signed terms, including their historical credit offer, and existing purchased rows remain replayable. Table creation is not a time cutover.

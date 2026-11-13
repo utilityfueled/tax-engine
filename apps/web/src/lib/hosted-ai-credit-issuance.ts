@@ -55,15 +55,21 @@ function validTerms(terms: HostedAiCreditTerms) {
     && typeof terms.livemode === "boolean" && isPositiveHostedCreditCents(terms.amountPaidCents)
     && isPositiveHostedCreditCents(terms.creditedBudgetCents);
 }
-async function lookup(client: Pick<PoolClient,"query">, sessionId: string, reference: string | null, lock: boolean) {
-  const { rows } = await client.query<IssuanceRow>(`SELECT * FROM hosted_ai_credit_issuances
+export async function readHostedAiCreditIssuanceCandidates(client: Pick<PoolClient, "query">, sessionId: string, reference: string | null, lock = false) {
+  const { rows } = await client.query<IssuanceRow>(`SELECT issuance_id, checkout_session_id, owner_id,
+    stripe_customer_id, livemode, amount_paid_cents, credited_budget_cents, expires_at FROM hosted_ai_credit_issuances
     WHERE checkout_session_id = $1 OR issuance_id = $2 ${lock ? "FOR UPDATE" : ""}`, [sessionId,reference]);
-  if (rows.length > 1) throw new Error("Checkout issuance conflict.");
-  if (!rows[0]) {
+  return rows.map(fromRow);
+}
+
+async function lookup(client: Pick<PoolClient, "query">, sessionId: string, reference: string | null, lock: boolean) {
+  const candidates = await readHostedAiCreditIssuanceCandidates(client, sessionId, reference, lock);
+  if (candidates.length > 1) throw new Error("Checkout issuance conflict.");
+  const [original] = candidates;
+  if (!original) {
     if (hasHostedAiCreditReference(reference)) throw new Error("Unknown Checkout issuance.");
     return null;
   }
-  const original = fromRow(rows[0]);
   if ((reference !== null && reference !== original.issuanceId)
     || (original.checkoutSessionId !== null && original.checkoutSessionId !== sessionId)) throw new Error("Checkout issuance conflict.");
   return original;
@@ -109,6 +115,25 @@ export interface HostedAiCreditSettlementTerms {
   amountPaidCents: number; creditedBudgetCents: number; currency: string;
   checkoutProof?: HostedAiCreditCheckoutProof;
 }
+
+export function matchesHostedAiCreditIssuance(original: HostedAiCreditIssuance, input: HostedAiCreditSettlementTerms) {
+  const proof = input.checkoutProof;
+  const metadata = proof?.metadata;
+  const reference = proof?.clientReferenceId ?? null;
+  return Boolean(proof && isIssuedHostedCheckoutSessionId(input.checkoutSessionId, original.livemode)
+    && (original.checkoutSessionId === null || original.checkoutSessionId === input.checkoutSessionId)
+    && (reference === null || reference === original.issuanceId)
+    && original.ownerId === input.ownerId && original.stripeCustomerId === input.stripeCustomerId
+    && original.livemode === proof.livemode && original.amountPaidCents === input.amountPaidCents
+    && original.creditedBudgetCents === input.creditedBudgetCents && input.currency === "usd"
+    && proof.amountSubtotal === original.amountPaidCents && proof.expiresAt === original.expiresAt
+    && Number.isSafeInteger(proof.created) && proof.created > 0 && proof.created < original.expiresAt
+    && (metadata?.purchaseKind === undefined || metadata.purchaseKind === HOSTED_AI_CREDIT_KIND)
+    && (metadata?.hostedOwnerId === undefined || metadata.hostedOwnerId === original.ownerId)
+    && (metadata?.workspaceOwnerId === undefined || metadata.workspaceOwnerId === original.ownerId)
+    && (metadata?.aiCreditCents === undefined || metadata.aiCreditCents === String(original.creditedBudgetCents)));
+}
+
 // A read used to route the webhook never substitutes for this locked comparison.
 export async function lockAndValidateHostedAiCreditIssuance(client: PoolClient, input: HostedAiCreditSettlementTerms) {
   const proof=input.checkoutProof;
@@ -117,17 +142,7 @@ export async function lockAndValidateHostedAiCreditIssuance(client: PoolClient, 
     if (proof?.metadata?.purchaseKind === HOSTED_AI_CREDIT_KIND) throw new Error("Unknown Checkout issuance.");
     return null; // Existing unmarked legacy terms remain the authenticated authority.
   }
-  const metadata=proof?.metadata;
-  if (!proof || !isIssuedHostedCheckoutSessionId(input.checkoutSessionId, original.livemode)
-    || original.ownerId!==input.ownerId || original.stripeCustomerId!==input.stripeCustomerId
-    || original.livemode!==proof.livemode || original.amountPaidCents!==input.amountPaidCents
-    || original.creditedBudgetCents!==input.creditedBudgetCents || input.currency!=="usd"
-    || proof.amountSubtotal!==original.amountPaidCents || proof.expiresAt!==original.expiresAt
-    || !Number.isSafeInteger(proof.created) || proof.created<=0 || proof.created>=original.expiresAt
-    || (metadata?.purchaseKind !== undefined && metadata.purchaseKind!==HOSTED_AI_CREDIT_KIND)
-    || (metadata?.hostedOwnerId !== undefined && metadata.hostedOwnerId!==original.ownerId)
-    || (metadata?.workspaceOwnerId !== undefined && metadata.workspaceOwnerId!==original.ownerId)
-    || (metadata?.aiCreditCents !== undefined && metadata.aiCreditCents!==String(original.creditedBudgetCents))) {
+  if (!matchesHostedAiCreditIssuance(original, input)) {
     throw new Error("Checkout issuance facts conflict with the original terms.");
   }
   return original;

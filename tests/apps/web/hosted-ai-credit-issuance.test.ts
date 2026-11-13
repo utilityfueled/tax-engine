@@ -8,6 +8,7 @@ import { createHostedBillingWebhookRouteHandlers, signHostedBillingWebhookPayloa
 import { createRateLimitStore } from "../../../apps/web/src/lib/rate-limit";
 import { recordHostedAiCreditPurchase } from "../../../apps/web/src/lib/hosted-ai-usage-db";
 import { ensureHostedAppSchema, getHostedServerDatabase } from "../../../apps/web/src/lib/hosted-server-db";
+import { inspectHostedAiCreditConflict } from "../../../apps/web/src/lib/hosted-ai-credit-conflict";
 
 // Spec: federal/hosted-ai-credit-issuance.yaml. Actual disposable PostgreSQL16.16 only.
 const originalUrl = process.env.TAX_ENGINE_TEST_AI_LEDGER_DATABASE_URL;
@@ -91,6 +92,60 @@ describe.skipIf(!originalUrl)("immutable AI credit issuance", () => {
     await expect(recordHostedAiCreditPurchase(env, { ...first, eventType: "checkout.session.async_payment_succeeded" })).rejects.toThrow(/receipt.*conflict/i);
     await expect(recordHostedAiCreditPurchase(env, { ...first, createdAt: "2026-01-01T00:00:00.000Z" })).rejects.toThrow(/receipt.*conflict/i);
     expect(await saved()).toEqual(baseline);
+  });
+
+  it("compares a conflicting paid snapshot without changing any retained record", async () => {
+    const { issuance, session, purchase } = await original();
+    await bindHostedAiCreditIssuance(env, issuance.issuanceId, session);
+    const payment = { id: "pi_fixture", object: "payment_intent", status: "succeeded",
+      amount: 1499, amount_received: 1499, currency: "usd", customer: session.customer,
+      livemode: false, latest_charge: "ch_fixture" };
+    const charge = { id: "ch_fixture", object: "charge", status: "succeeded", paid: true,
+      captured: true, amount: 1499, amount_captured: 1499, amount_refunded: 0, refunded: false,
+      currency: "usd", customer: session.customer, livemode: false, payment_intent: payment.id, disputed: false };
+    const event = { id: purchase.eventId, object: "event", type: purchase.eventType, livemode: false,
+      created: Math.floor(Date.now() / 1000), data: { object: { ...session, amount_total: 1499,
+        payment_status: "paid", payment_intent: payment.id, customer_details: { email: "fiction@example.invalid" } } } };
+    const packet = { event, paymentIntent: payment, latestCharge: charge };
+    const { pool } = await getHostedServerDatabase(env);
+    const baseline = await saved();
+    const report = await inspectHostedAiCreditConflict(pool, "test", packet);
+    expect(report).toMatchObject({ issuance: "bound", eventMatchesIssuance: false, purchase: "missing",
+      receipt: "missing", intentMatchesEvent: true, chargeMatchesEvent: true,
+      refundObserved: false, disputeObserved: false });
+    for (const marker of [session.id, session.customer, event.id, payment.id, charge.id, issuance.issuanceId,
+      terms.ownerId, "fiction@example.invalid", "1499"]) expect(JSON.stringify(report)).not.toContain(marker);
+    expect(await inspectHostedAiCreditConflict(pool, "test", { ...packet, latestCharge: { ...charge,
+      amount_refunded: 1, disputed: true } })).toMatchObject({ refundObserved: true, disputeObserved: true });
+    expect(await inspectHostedAiCreditConflict(pool, "test", { ...packet, latestCharge: { ...charge,
+      payment_intent: "pi_unrelated", amount_refunded: 1, disputed: true } })).toMatchObject({ chargeMatchesEvent: false,
+      refundObserved: null, disputeObserved: null });
+    await expect(inspectHostedAiCreditConflict(pool, "live", packet)).rejects.toThrow(/wrong billing mode/i);
+    await expect(inspectHostedAiCreditConflict(pool, "test", { ...packet, event: { ...event,
+      data: { object: { ...event.data.object, amount_total: 1499.01 } } } })).rejects.toThrow(/invalid paid Checkout evidence/i);
+    expect(await saved()).toEqual(baseline);
+
+    const correctPayment = { ...payment, amount: 1500, amount_received: 1500 };
+    const correctCharge = { ...charge, amount: 1500, amount_captured: 1500 };
+    const correctEvent = { ...event, data: { object: { ...event.data.object, amount_total: 1500 } } };
+    const correctPacket = { event: correctEvent, paymentIntent: correctPayment, latestCharge: correctCharge };
+    await recordHostedAiCreditPurchase(env, { ...purchase, createdAt: new Date(event.created * 1000).toISOString() });
+    const paidBaseline = await saved();
+    expect(await inspectHostedAiCreditConflict(pool, "test", correctPacket)).toEqual({ issuance: "bound",
+      eventMatchesIssuance: true, purchase: "matches-issuance", receipt: "matches-event", intentMatchesEvent: true,
+      chargeMatchesEvent: true, refundObserved: false, disputeObserved: false });
+    expect(await inspectHostedAiCreditConflict(pool, "test", { ...correctPacket, event: { ...correctEvent,
+      created: event.created + 1 } })).toMatchObject({ receipt: "conflict" });
+    await expect(inspectHostedAiCreditConflict(pool, "live", { ...correctPacket, event: { ...correctEvent,
+      livemode: true, data: { object: { ...correctEvent.data.object, id: "cs_live_fixture", livemode: true } } }
+    })).rejects.toThrow(/storage mode is unverified or mismatched/i);
+    expect(await saved()).toEqual(paidBaseline);
+    await admin.query(`UPDATE ${schema}.hosted_billing_events SET event_product = NULL, credit_checkout_session_id = NULL`);
+    expect(await inspectHostedAiCreditConflict(pool, "test", correctPacket)).toMatchObject({ receipt: "historical-unbound" });
+    const second = await createHostedAiCreditIssuance(env, { ...terms, ownerId: "second_private_owner" });
+    expect(await inspectHostedAiCreditConflict(pool, "test", { ...correctPacket, event: { ...correctEvent,
+      data: { object: { ...correctEvent.data.object, client_reference_id: second.issuanceId } } } })).toMatchObject({
+      issuance: "ambiguous", eventMatchesIssuance: null, purchase: "unverified", receipt: "historical-unbound" });
   });
 
   it("rejects a credit replay using a subscription receipt with the same type and time", async () => {

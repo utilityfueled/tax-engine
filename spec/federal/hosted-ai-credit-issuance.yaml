@@ -49,3 +49,8 @@ lines:
     description: "Keep subscription and AI credit receipts distinct"
     formula: "Write a product tag for new subscription and paid credit receipts. The same event type and creation time do not allow one product to reuse the other product's receipt. Restore the product and Session from a current archive. Add nullable columns to old archives without inferring historical bindings."
     testRef: "tests/apps/web/hosted-subscription-transaction.test.ts::rejects a subscription replay using a credit receipt with the same type and time"
+  - line: "operator-conflict-evidence"
+    description: "Compare a paid Stripe snapshot with retained original and payment records without granting credit"
+    reference: "https://docs.stripe.com/api/events/object; https://docs.stripe.com/api/payment_intents/object; https://docs.stripe.com/api/charges/object"
+    formula: "Use one already-migrated, mode-bound PostgreSQL snapshot in a read-only transaction, with exact original Session/reference, customer, USD cents and expiry. Compare only the selected purchase and event receipt, distinguishing a historical unknown receipt from an exact credit receipt and a contradiction. Check the separately retrieved PaymentIntent and latest Charge against the immutable event and identify observed partial or full refunds and disputes independently. Report fixed statuses and booleans only. No grant, receipt, refund, event replay or deployment is authorized by this evidence."
+    testRef: "tests/apps/web/hosted-ai-credit-issuance.test.ts::compares a conflicting paid snapshot without changing any retained record"
