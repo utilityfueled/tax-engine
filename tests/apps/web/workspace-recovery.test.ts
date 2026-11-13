@@ -1,7 +1,8 @@
 import { describe, it, expect, vi } from "vitest";
 import { exportWorkspaceRecovery, importWorkspaceRecovery, type RecoveryDocumentStore } from "../../../apps/web/src/lib/workspace-recovery";
-import { ensureWorkspace, getWorkspace, ingestFiles, WORKSPACE_STORAGE_KEY } from "../../../apps/web/src/lib/workspace-storage";
+import { deleteWorkspace, ensureWorkspace, getWorkspace, ingestFiles, listWorkspaces, WORKSPACE_STORAGE_KEY } from "../../../apps/web/src/lib/workspace-storage";
 import { getGuidedFlowStorageKey, initialFlowState } from "../../../apps/web/src/lib/guided-interview-flow";
+import { getLocalRecoveryStorageKey } from "../../../apps/web/src/lib/workspace-local-recovery";
 
 function storage() {
   const values = new Map<string, string>();
@@ -32,6 +33,12 @@ function fixture() {
   return { local, files, documents, workspace, file };
 }
 const password = "synthetic-recovery-password";
+
+function requireStoredReturns(local: Storage) {
+  const raw = local.getItem(WORKSPACE_STORAGE_KEY);
+  if (raw === null) throw new Error("Expected saved returns");
+  return JSON.parse(raw);
+}
 
 describe("full-fidelity encrypted local recovery", () => {
   it("round trips exact facts, unknowns, source bytes, dates and explicit year into a separate local return", async () => {
@@ -70,6 +77,51 @@ describe("full-fidelity encrypted local recovery", () => {
     const archive = await exportWorkspaceRecovery(f.local, "original", password, { documents: f.documents });
     const result = await importWorkspaceRecovery(f.local, archive, password, { documents: f.documents });
     expect(JSON.parse(f.local.getItem(getGuidedFlowStorageKey(result.workspaceId))!)).not.toHaveProperty("taxYear");
+  });
+  it("preserves a restored return when another tab saves an unrelated return", async () => {
+    const f = fixture();
+    const otherTab = { ...f.local };
+    ensureWorkspace(otherTab, "unrelated");
+    const raw = requireStoredReturns(f.local);
+    raw.workspaces.original.privateExtension = { exactZero: "0.00", unknown: null };
+    raw.futureStorageField = "preserve";
+    f.local.setItem(WORKSPACE_STORAGE_KEY, JSON.stringify(raw));
+    expect(listWorkspaces(otherTab)).toHaveLength(2);
+
+    const archive = await exportWorkspaceRecovery(f.local, "original", password, { documents: f.documents });
+    const restored = await importWorkspaceRecovery(f.local, archive, password, { documents: f.documents });
+    const before = requireStoredReturns(f.local);
+    expect(listWorkspaces(f.local)).toHaveLength(3);
+
+    ingestFiles(otherTab, "unrelated", [{ name: "unrelated.pdf", size: 10 }]);
+    const after = requireStoredReturns(f.local);
+    expect(after.workspaces.original).toEqual(before.workspaces.original);
+    expect(after.workspaces[restored.workspaceId]).toEqual(before.workspaces[restored.workspaceId]);
+    expect(after.workspaces[restored.workspaceId].privateExtension).toEqual({ exactZero: "0.00", unknown: null });
+    expect(after.futureStorageField).toBe("preserve");
+    expect(getWorkspace(otherTab, restored.workspaceId)?.documents).toHaveLength(1);
+    expect(getWorkspace(f.local, "unrelated")?.documents).toHaveLength(1);
+    expect(f.local.getItem(getGuidedFlowStorageKey(restored.workspaceId))).toBe(f.local.getItem(getGuidedFlowStorageKey("original")));
+    expect(f.files.get(`${restored.workspaceId}/${f.workspace.documents[0].id}`)?.size).toBe(f.file.size);
+  });
+  it("does not bring back a deleted return when a previously opened tab saves another", async () => {
+    const f = fixture();
+    const archive = await exportWorkspaceRecovery(f.local, "original", password, { documents: f.documents });
+    const restored = await importWorkspaceRecovery(f.local, archive, password, { documents: f.documents });
+    const otherTab = { ...f.local };
+    ensureWorkspace(otherTab, "unrelated");
+    expect(getWorkspace(otherTab, restored.workspaceId)?.documents).toHaveLength(1);
+
+    await f.documents.remove(restored.workspaceId);
+    deleteWorkspace(f.local, restored.workspaceId);
+    ingestFiles(otherTab, "unrelated", [{ name: "unrelated.pdf", size: 10 }]);
+
+    expect(getWorkspace(otherTab, restored.workspaceId)).toBeNull();
+    expect(getWorkspace(f.local, "unrelated")?.documents).toHaveLength(1);
+    expect(requireStoredReturns(f.local).workspaces).not.toHaveProperty(restored.workspaceId);
+    expect(f.local.getItem(getGuidedFlowStorageKey(restored.workspaceId))).toBeNull();
+    expect(f.local.getItem(getLocalRecoveryStorageKey(restored.workspaceId))).toBeNull();
+    expect(f.files.get(`${restored.workspaceId}/${f.workspace.documents[0].id}`)).toBeUndefined();
   });
   it("uses fresh salt and IV each time", async () => {
     const f = fixture();

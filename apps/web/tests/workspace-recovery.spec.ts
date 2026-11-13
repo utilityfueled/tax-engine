@@ -50,6 +50,13 @@ test("encrypted backup restores original bytes and private local answers after d
       request.onsuccess = () => { resolve(request.result); db.close(); };
     });
   })).toBe(0);
+  const otherTab = await page.context().newPage();
+  otherTab.on("request", (request) => sent.push(`${request.url()}\n${request.postData() ?? ""}`));
+  await otherTab.goto("/");
+  await otherTab.getByRole("button", { name: /start your tax return/i }).click();
+  await expect(otherTab).toHaveURL(/\/returns\/(?!new)[a-z0-9-]+/i);
+  await otherTab.getByRole("button", { name: "Switch to advanced mode", exact: true }).click();
+  await expect(otherTab.getByRole("button", { name: "Reset Return", exact: true })).toBeVisible();
   const restore = page.locator("details").filter({ has: page.getByText("Restore an encrypted backup", { exact: true }) });
   await restore.getByText("Restore an encrypted backup", { exact: true }).click();
   await restore.getByLabel("Encrypted recovery file").setInputFiles(archivePath);
@@ -62,6 +69,10 @@ test("encrypted backup restores original bytes and private local answers after d
   await expect(link).toBeVisible();
   const recoveredId = (await link.getAttribute("href"))!.split("/").at(-1)!.split("?")[0];
   expect(recoveredId).not.toBe(id);
+  // This tab loaded the workspace list before the other tab completed recovery.
+  await otherTab.locator('input[type="file"]').setInputFiles({ name: "unrelated-source.pdf", mimeType: "application/pdf", buffer: bytes });
+  await expect(otherTab.getByText("unrelated-source.pdf", { exact: true }).first()).toBeVisible();
+  await otherTab.close();
   await link.click();
   await expect(page).toHaveURL(new RegExp(`/returns/${recoveredId}\\?local=1$`));
   await page.reload();

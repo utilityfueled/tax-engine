@@ -122,11 +122,9 @@ export function invalidateWorkspaceStorageCache(storage: Storage) {
   storageCache.delete(storage);
 }
 
-// In-memory cache keyed by Storage instance. Avoids re-parsing the full JSON
-// blob (+ hydrating every workspace) on every read within the same page
-// lifecycle.  All writes go through saveStorage() which keeps the cache in
-// sync.  WeakMap ensures the cache is GC'd when the Storage reference is.
-const storageCache = new WeakMap<object, StorageShape>();
+// A different tab can change the underlying data without changing this tab's
+// Storage object. Cache hydrated workspaces only while the stored string agrees.
+const storageCache = new WeakMap<Storage, { raw: string | null; data: StorageShape }>();
 
 export const seededFactLabels: Record<SeededFactId, string> = {
   ...Object.fromEntries(
@@ -211,50 +209,59 @@ function tokensContainAlias(nameTokens: string[], alias: string) {
   return false;
 }
 
-function loadStorage(storage: Storage): StorageShape {
-  const cached = storageCache.get(storage);
-  if (cached) return cached;
-
-  const raw = storage.getItem(STORAGE_KEY);
-
-  if (!raw) {
-    const empty: StorageShape = { workspaces: {} };
-    storageCache.set(storage, empty);
-    return empty;
-  }
+function parseStorage(raw: string | null): StorageShape & Record<string, unknown> {
+  if (!raw) return { workspaces: {} };
 
   try {
-    const parsed = JSON.parse(raw) as StorageShape;
-
-    if (!parsed.workspaces || typeof parsed.workspaces !== "object") {
-      const empty: StorageShape = { workspaces: {} };
-      storageCache.set(storage, empty);
-      return empty;
+    const parsed = JSON.parse(raw) as (StorageShape & Record<string, unknown>) | null;
+    if (parsed?.workspaces && typeof parsed.workspaces === "object" && !Array.isArray(parsed.workspaces)) {
+      return parsed;
     }
+  } catch { /* Treat an unreadable record as empty, as before. */ }
 
+  return { workspaces: {} };
+}
+
+function loadStorage(storage: Storage): StorageShape {
+  const raw = storage.getItem(STORAGE_KEY);
+  const cached = storageCache.get(storage);
+  if (cached && cached.raw === raw) return cached.data;
+
+  let data: StorageShape;
+  try {
     const workspaces = Object.fromEntries(
-      Object.entries(parsed.workspaces).map(([workspaceId, workspace]) => [
+      Object.entries(parseStorage(raw).workspaces).map(([workspaceId, workspace]) => [
         workspaceId,
         hydrateWorkspaceRecord(workspaceId, workspace)
       ])
     );
-
-    const result: StorageShape = { workspaces };
-    storageCache.set(storage, result);
-    return result;
+    data = { workspaces };
   } catch {
-    const empty: StorageShape = { workspaces: {} };
-    storageCache.set(storage, empty);
-    return empty;
+    data = { workspaces: {} };
   }
+  storageCache.set(storage, { raw, data });
+  return data;
 }
 
-function saveStorage(storage: Storage, data: StorageShape) {
+function saveWorkspaceRecord(storage: Storage, workspaceId: string, workspace: ReturnWorkspaceRecord | null) {
   try {
-    storage.setItem(STORAGE_KEY, JSON.stringify(data));
-    storageCache.set(storage, data);
+    const raw = storage.getItem(STORAGE_KEY);
+    const cached = storageCache.get(storage);
+    // Save only this return. Other entries may contain fields that hydration
+    // doesn't recognize, or changes made while this return was being built.
+    const stored = parseStorage(raw);
+    if (workspace === null) delete stored.workspaces[workspaceId];
+    else stored.workspaces = { ...stored.workspaces, [workspaceId]: workspace };
+    const nextRaw = JSON.stringify(stored);
+    storage.setItem(STORAGE_KEY, nextRaw);
+    if (cached && cached.raw === raw) {
+      if (workspace === null) delete cached.data.workspaces[workspaceId];
+      else cached.data.workspaces = { ...cached.data.workspaces, [workspaceId]: workspace };
+      storageCache.set(storage, { raw: nextRaw, data: cached.data });
+    } else {
+      storageCache.delete(storage);
+    }
   } catch (error) {
-    // Callers may have mutated a cached record before the durable write failed.
     storageCache.delete(storage);
     throw error;
   }
@@ -1231,8 +1238,7 @@ export function ensureWorkspace(storage: Storage, workspaceId: string) {
   }
 
   const workspace = createWorkspace(workspaceId);
-  data.workspaces[workspaceId] = workspace;
-  saveStorage(storage, data);
+  saveWorkspaceRecord(storage, workspaceId, workspace);
   return workspace;
 }
 
@@ -1290,8 +1296,7 @@ export function ingestFiles(storage: Storage, workspaceId: string, files: Upload
   const current = data.workspaces[workspaceId] ?? createWorkspace(workspaceId);
   const nextWorkspace = ingestFilesIntoWorkspace(current, files);
 
-  data.workspaces[workspaceId] = nextWorkspace;
-  saveStorage(storage, data);
+  saveWorkspaceRecord(storage, workspaceId, nextWorkspace);
   return nextWorkspace;
 }
 
@@ -1336,8 +1341,7 @@ export function removeDocument(storage: Storage, workspaceId: string, documentId
   const current = data.workspaces[workspaceId] ?? createWorkspace(workspaceId);
   const nextWorkspace = removeDocumentFromWorkspace(current, documentId);
 
-  data.workspaces[workspaceId] = nextWorkspace;
-  saveStorage(storage, data);
+  saveWorkspaceRecord(storage, workspaceId, nextWorkspace);
   return nextWorkspace;
 }
 
@@ -1406,8 +1410,7 @@ export function clearWorkspace(storage: Storage, workspaceId: string) {
   const nextWorkspace = clearWorkspaceRecord(current);
   clearWorkspaceGuidedData(storage, workspaceId);
 
-  data.workspaces[workspaceId] = nextWorkspace;
-  saveStorage(storage, data);
+  saveWorkspaceRecord(storage, workspaceId, nextWorkspace);
   return nextWorkspace;
 }
 
@@ -1487,8 +1490,7 @@ function updateInterviewQuestionState(
     answerText
   );
 
-  data.workspaces[workspaceId] = nextWorkspace;
-  saveStorage(storage, data);
+  saveWorkspaceRecord(storage, workspaceId, nextWorkspace);
   return nextWorkspace;
 }
 
@@ -1521,14 +1523,12 @@ export function reopenInterviewQuestion(storage: Storage, workspaceId: string, q
 }
 
 export function saveWorkspaceSnapshot(storage: Storage, workspace: ReturnWorkspaceRecord) {
-  const data = loadStorage(storage);
   const nextWorkspace = reconcileWorkspaceGuidedState(hydrateWorkspaceRecord(workspace.id, {
     ...workspace,
     storageMode: "local-browser"
   }), loadGuidedFlowState(storage, workspace.id));
 
-  data.workspaces[nextWorkspace.id] = nextWorkspace;
-  saveStorage(storage, data);
+  saveWorkspaceRecord(storage, nextWorkspace.id, nextWorkspace);
   return nextWorkspace;
 }
 
@@ -1599,11 +1599,8 @@ export function deleteWorkspace(storage: Storage, workspaceId: string) {
     return listWorkspaces(storage);
   }
 
-  delete data.workspaces[workspaceId];
-  saveStorage(storage, data);
-  return Object.values(data.workspaces).map(workspace => reconcileWorkspaceGuidedState(workspace, loadGuidedFlowState(storage, workspace.id))).sort((left, right) =>
-    right.updatedAt.localeCompare(left.updatedAt)
-  );
+  saveWorkspaceRecord(storage, workspaceId, null);
+  return listWorkspaces(storage);
 }
 
 /**

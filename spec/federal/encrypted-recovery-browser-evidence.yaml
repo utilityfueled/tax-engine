@@ -3,7 +3,8 @@ schedule: Local recovery test infrastructure
 taxYear: 2026
 reference: apps/web/src/lib/workspace-recovery.ts
 notes: |
-  Test-only evidence validation; no change to production AES-GCM/PBKDF2 or recovery.
+  Evidence validation and cross-tab saved-record preservation. No change to
+  production AES-GCM/PBKDF2 or the backup format.
   A random base64 ciphertext may contain a short plaintext-looking token by chance.
   The envelope has exactly eight canonical JSON fields: fixed public algorithm/version
   fields and three canonical base64 binary fields (salt16/iv12/ciphertext+tag).
@@ -26,3 +27,9 @@ lines:
   - line: "browser-preservation"
     formula: "Complete native upload/reopen/wrong-password/restore/delete/PDF/privacy/year journey remains; only randomized-text substring assertions become canonical authenticated source comparison. Original case count/deadline/requests/retries unchanged."
     testRef: "tests/apps/web/encrypted-recovery-review.test.ts::checks actual production export and import preserve the complete source packet"
+  - line: "cross-tab-save"
+    formula: "After an encrypted restore in one tab, a tab with an older storage cache can save a different return without replacing the restored return, original documents, scoped guided answers, or unrecognized saved fields. Both tabs read the new saved return list from browser storage."
+    testRef: "tests/apps/web/workspace-recovery.test.ts::preserves a restored return when another tab saves an unrelated return"
+  - line: "cross-tab-deletion"
+    formula: "Deleting a return in one tab removes its entry, scoped guided data, and recovery marker. Saving a different return from a previously opened tab must preserve that deletion and keep its old data out of durable storage."
+    testRef: "tests/apps/web/workspace-recovery.test.ts::does not bring back a deleted return when a previously opened tab saves another"
