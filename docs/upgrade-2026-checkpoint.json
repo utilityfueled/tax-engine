@@ -24053,6 +24053,27 @@
     "humanTaxReviewComplete": false,
     "evidence": ".local/upgrade-evidence/nov13-schedule-se-payroll"
   },
+  "nov13Form6252InvestmentLand": {
+    "commit": "a68f71ab1a6e3b9b95a4f2deb9e1941eb037ea93",
+    "tree": "381d638501f8c011c701289afca7942031420d84",
+    "finalFocusedPassed": 97,
+    "finalFocusedFiles": 4,
+    "priorBroaderPassed": 2354,
+    "priorBroaderFiles": 330,
+    "specReferences": 8854,
+    "firstBaselineSha256": "c719a5d5b3945a1e55cd0c1c7038781431069159d2425d4f4851707912857893",
+    "propertyCodeBaselineSha256": "d410c2d3647b972c79851be93d8a3c3f230bbd51cf3d5dd2741e4cceca83026f",
+    "pdfSha256": "af864cd0ed184f05ffa95e2f37f707d83c0834950d05592d406b56c1260ca477",
+    "strictInspectionSha256": "b880f90b512bb11b7b92be8e8347f047130bf75bfc5a1f709b3ca3a2ac85595d",
+    "writtenText": 25,
+    "checkedBoxes": 2,
+    "verifiedWidgets": 49,
+    "renderedPages": 4,
+    "reviewExportsEnabled": false,
+    "filingQualified": false,
+    "humanTaxReviewComplete": false,
+    "ledger": "docs/upgrade-2026-form-6252-investment-land-work.md"
+  },
   "nov13ScheduleSEWageringCandidate": {
     "commit": "dc98bc0625a38e2d069c95a60655ae9a2436a4cf",
     "tree": "f5c9479e90c764e3648cebd02b00a965f359c543",

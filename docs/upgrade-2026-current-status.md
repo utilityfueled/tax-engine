@@ -6,6 +6,14 @@ The public refs were refreshed. `origin/main` still points to `59248889`
 and `origin/upgrade/2026-baseline` to `3024b848`. Successor commits stay on
 local `main` while automatic production deployment is being disabled.
 
+`a68f71ab` projects an ordinary current-year installment sale of investment
+land onto the disabled final Form 6252. The $120,000 sale has $75,000 gross
+profit, a 0.6250 ratio and $18,750 current long-term gain. Actual dates, basis,
+current principal and one later payment are required. A strict parser checked
+25 text values, two marked boxes, all 49 widget locations and blank identity
+on a four-page saved specimen. Both PDF previews and filing stay gated.
+[Form 6252 evidence](upgrade-2026-form-6252-investment-land-work.md).
+
 `651fa206` pins Next.js and its lint plugin to 16.4.6. The lockfile delta
 updates only the Next.js family and its peer references. Frozen install,
 632 targeted tests, 40 production-build Chromium cases, all types, builds,
@@ -46,7 +54,8 @@ an unredacted name and email in helper text. The fix passed 238 focused
 tests, 40 production-build Chromium cases, all type checks, both builds,
 lint, inventory and the model registry check. The browser test now pins
 synthetic metadata and verifies the existing default of zero provider
-requests. All 12 checks are running on an immutable source archive. No
+requests. Unit and coverage each passed all 27,670 tests in 2,004 files,
+with 87.80% branches. The full browser check is still running. No
 live provider calls or route promotion were involved.
 
 `14ad47f1` accepts individual 2026 cash-slot W-2G originals in the
@@ -89,7 +98,9 @@ unsupported zero-value document is still rejected. The 4,840 focused tests,
 types, builds, lint, inventory and 8,848 spec references passed. Parsed
 Schedule C amounts still need source proof because the schema can default
 unreported expense fields to zero. The exact archive of both state changes
-and the preceding Form 3903 candidate is running.
+and the preceding Form 3903 candidate passed all 12 checks at `bf85d34a`.
+Unit and coverage each passed 27,666 tests in 2,003 files at 87.79% branch
+coverage. Managed Chromium passed 615 cases with five hosted-only skips.
 [Ohio Revised Code §5747.02](https://codes.ohio.gov/ohio-revised-code/section-5747.02).
 
 `65764509` projects the confirmed federal-only 2026 single-taxpayer move

@@ -4,6 +4,13 @@ Current source, verification and remaining work are summarized in the
 [current continuation](upgrade-2026-current-status.md). Historical results
 below apply to their named revisions.
 
+- November 13: `a68f71ab` projects source-confirmed ordinary investment-land
+  sales on the disabled final 2026 Form 6252. The separate Decimal readback
+  confirms $18,750 of long-term gain, 49 widgets and four marked pages. The
+  final 97 scoped tests, earlier 2,354 PDF and engine checks, type checks,
+  engine build, lint and 8,854 spec references passed.
+  [Form 6252 evidence](upgrade-2026-form-6252-investment-land-work.md).
+
 - November 13: `651fa206` pins the Next.js 16.4.6 patch and matching ESLint
   plugin. An isolated frozen install passed. The production and full npm
   audits returned zero advisories across 447 and 539 dependencies. All 632
