@@ -6,6 +6,14 @@ The public refs were refreshed. `origin/main` still points to `59248889`
 and `origin/upgrade/2026-baseline` to `3024b848`. Successor commits stay on
 local `main` while automatic production deployment is being disabled.
 
+`e4189ec7` projects ordinary 2026 IRA distributions onto two separate
+disabled Form 8606 specimens. The primary and spouse examples show $668 and
+$1,600 of taxable distributions. The separate Decimal and PDF readback
+confirmed 36 written values, 94 widgets, four review notices and blank
+identity. All 109 targeted tests, types, engine build, lint, inventory and
+8,855 spec references passed. Final instructions, parent-return transfer and
+qualified review remain open. [Form 8606 evidence](upgrade-2026-form-8606-ordinary-work.md).
+
 `a68f71ab` projects an ordinary current-year installment sale of investment
 land onto the disabled final Form 6252. The $120,000 sale has $75,000 gross
 profit, a 0.6250 ratio and $18,750 current long-term gain. Actual dates, basis,
@@ -18,7 +26,11 @@ on a four-page saved specimen. Both PDF previews and filing stay gated.
 updates only the Next.js family and its peer references. Frozen install,
 632 targeted tests, 40 production-build Chromium cases, all types, builds,
 lint and inventory passed. Both npm audits returned zero advisories. The
-full exact-source local run is in progress. Container qualification and
+full archive passed the first nine checks and failed two unit assertions.
+`85a5cff4` pins the verified new lockfile hash, and `74b7f092` checks that
+the previous explanation prompt stays ineligible even with the same schema.
+The 91 focused tests passed with one environment-dependent skip. The exact
+`e4189ec7` successor is running all 12 checks. Container qualification and
 Debian advisory dispositions remain open.
 [Next.js 16.4.6](https://github.com/vercel/next.js/releases/tag/v16.4.6) ·
 [Next.js security advisories](https://github.com/vercel/next.js/security/advisories).

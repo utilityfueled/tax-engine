@@ -4,6 +4,19 @@ Current source, verification and remaining work are summarized in the
 [current continuation](upgrade-2026-current-status.md). Historical results
 below apply to their named revisions.
 
+- November 13: `e4189ec7` builds separate, disabled 2026 Form 8606 ordinary
+  IRA projections from original basis, account and distribution records.
+  All 109 scoped tests, types, engine build, lint, inventory and 8,855
+  references passed. A separate readback verified both saved PDFs, 94
+  widgets and $668/$1,600 taxable. [Form 8606 evidence](upgrade-2026-form-8606-ordinary-work.md).
+
+- November 13: the `651fa206` exact local run reached unit tests and found
+  two outdated test inputs. `85a5cff4` preserves the lockfile check and pins
+  its verified new hash. `74b7f092` adds an explicit stale-prompt rejection.
+  The 91 focused tests passed, with one environment-dependent skip. Spec,
+  inventory, lint and model registry passed. The `e4189ec7` archive reruns
+  all 12 checks. No release gate changes or provider calls were made.
+
 - November 13: `a68f71ab` projects source-confirmed ordinary investment-land
   sales on the disabled final 2026 Form 6252. The separate Decimal readback
   confirms $18,750 of long-term gain, 49 widgets and four marked pages. The

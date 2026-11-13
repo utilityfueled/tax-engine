@@ -24053,6 +24053,35 @@
     "humanTaxReviewComplete": false,
     "evidence": ".local/upgrade-evidence/nov13-schedule-se-payroll"
   },
+  "nov13CombinedFixtureRebind": {
+    "failedArchiveCommit": "651fa2067fe29aa9dda74fa343b5756b0d3e4994",
+    "passedChecksBeforeUnit": 9,
+    "unitPassed": 27671,
+    "unitFailed": 2,
+    "coverageAndBrowserRun": false,
+    "failedCheckManifestSha256": "a1d2eb34c61b787571c951972020ca1b524bd1af0bb4b1d77bf1ecfcd96694b8",
+    "unitStderrSha256": "91b6a63abbfec8446dd49dd11ee03314986e443ba4f3a2275107ab79ca257749",
+    "lockGuardCommit": "85a5cff4099433e5636086dd91caaa647667ec5d",
+    "promptGuardCommit": "74b7f09261c28a97e3f5323bc344f1841262f934",
+    "reviewedLockSha256": "64cccb8d87c0bfb6422210ecf5b4c12e6a1ef468976d7d68a466e5e5a744c4a2",
+    "focusedPassed": 91,
+    "focusedSkipped": 1,
+    "successorCombinedRunning": "e4189ec734117d9728eaeb10c2c455155cc725c9"
+  },
+  "nov13Form8606Ordinary": {
+    "commit": "e4189ec734117d9728eaeb10c2c455155cc725c9",
+    "tree": "c30cdf0b9c2c37cc75f840b43c3c974702c4b330",
+    "focusedPassed": 109,
+    "specReferences": 8855,
+    "verifiedWidgets": 94,
+    "writtenValues": 36,
+    "renderedPages": 4,
+    "strictReadbackSha256": "fd7f92f4788185805ac1be3401dee9b80f228a1f450346068663f91681f2686c",
+    "reviewExportsEnabled": false,
+    "filingQualified": false,
+    "humanTaxReviewComplete": false,
+    "ledger": "docs/upgrade-2026-form-8606-ordinary-work.md"
+  },
   "nov13Form6252InvestmentLand": {
     "commit": "a68f71ab1a6e3b9b95a4f2deb9e1941eb037ea93",
     "tree": "381d638501f8c011c701289afca7942031420d84",
