@@ -4,6 +4,12 @@ Current source, verification and remaining work are summarized in the
 [current continuation](upgrade-2026-current-status.md). Historical results
 below apply to their named revisions.
 
+- November 13 — `3d8f674a` records an OpenAI client trace before new
+  evaluation dispatches. Three regressions failed first and 36 affected
+  tests passed, along with the evaluator type check, strict lint and 8,927
+  spec references. The historical request contract is byte-equivalent.
+  The November 5 timeout reserve remains open and no paid request ran.
+  [OpenAI request tracing](https://developers.openai.com/api/reference/overview#supplying-your-own-request-id-with-x-client-request-id).
 - November 13 — `cd4b3e29` allocates estate tax on Form 4972 when a
   confirmed death beneficiary elects both Parts II and III. Three
   regressions failed first and 4,565 affected tests passed. `9758b773`

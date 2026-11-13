@@ -24468,6 +24468,20 @@
       "https://www.irs.gov/instructions/i1099r"
     ]
   },
+  "nov13AiEvaluationClientTrace": {
+    "commit": "3d8f674a3fc58c4c85a074d2c092ac21f6166a74",
+    "initialRed": 3,
+    "affectedTestsPassed": 36,
+    "specReferencesValidated": 8927,
+    "redSha256": "2813e03f257829b3a4fa720b2e1b0c2290bd87e433f1043dd40e96026838e8a8",
+    "greenSha256": "970a3c4dbc5be8c7623d16dae1ef7e02b38b0a512fa065c67e319a6af3a7a454",
+    "historicalRequestContractByteEquivalent": true,
+    "retainedOldPlanRequiresArchivedBindings": true,
+    "paidProviderRequests": 0,
+    "priorTimeoutReconciled": false,
+    "managedArchiveSha256": "496c4631f3c1756ecf037133fb452729269fba2865a840137fd0504404ccea4b",
+    "source": "https://developers.openai.com/api/reference/overview#supplying-your-own-request-id-with-x-client-request-id"
+  },
   "nov13Form4972CombinedEstateTax": {
     "commit": "cd4b3e29e3af458e1c25a74467c0e1530367ad8c",
     "initialRed": 3,

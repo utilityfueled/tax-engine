@@ -11,6 +11,16 @@ The isolated rehearsal project has no Git link and protects all deployments.
 The team is on Pro, whose Sandbox credits are shared and can incur overage.
 No Sandbox was started. [Vercel Sandbox pricing](https://vercel.com/docs/sandbox/pricing).
 
+`3d8f674a` gives new OpenAI evaluation plans a private client trace per
+attempt. The journal syncs it before dispatch, and the transport sends it
+in the OpenAI request header. The scoring report excludes the trace.
+Three regressions failed first and all 36 affected tests passed with
+Node 26.13.1. The prior wire contract is byte-equivalent. The November 5
+classification plan still needs its archived runner because its task
+policies, application instructions and response schemas have since
+changed. The older timeout still has no trace or settlement. No paid
+requests ran. [OpenAI request tracing](https://developers.openai.com/api/reference/overview#supplying-your-own-request-id-with-x-client-request-id).
+
 `cd4b3e29` allocates confirmed attributable estate tax for a single death
 beneficiary electing both Parts II and III of Form 4972. The worksheet
 subtracts the capital share on line 6 and the remainder on line 18. Line 8
@@ -53,7 +63,11 @@ identifier until reviewed. [OpenAI request debugging](https://developers.openai.
 The exact `e6a34ac3` managed archive passed all 12 checks with 27,895 tests
 in both unit and coverage, 87.91% branch coverage, and 616 Chromium passes
 with five hosted-only skips. Its owned PostgreSQL stopped. The managed
-`021b2881` run is in progress.
+`021b2881` run is in progress. The `e3c90730` managed unit suite passed
+27,918 tests and its exact ARM64 smoke, scan and Compose recovery passed.
+The browser suite is running on that image. The first ARM64 preflight
+stopped before boot because the staged public sample registry had mode
+0600. Its bytes matched Git and the retry restored the required mode.
 
 `3a5c8375` preserves the provider's request identifier through a retry of
 unknown-usage recording and through later settlement. It rejects contradictory

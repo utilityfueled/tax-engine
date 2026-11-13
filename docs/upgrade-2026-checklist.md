@@ -6,6 +6,9 @@ below retain their original evidence boundaries.
 
 ## Active continuation — November 13 Eastern
 
+- [x] Preserve a private, durable OpenAI trace for future evaluation
+  attempts in `3d8f674a`. Pass 36 affected tests and keep the prior
+  request contract byte-equivalent. Retain the unresolved historical reserve.
 - [x] Allocate confirmed beneficiary estate tax between Parts II and III
   in `cd4b3e29` and map the disabled paper candidate in `9758b773`. Pass
   4,565 affected engine/PDF tests, then 2,355 PDF and Form 4972 tests.

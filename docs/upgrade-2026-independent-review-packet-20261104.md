@@ -87,6 +87,51 @@ The existing packet and individual decision ledgers preserve the precise origina
 frames and source passages. Engineers should prepare one question sheet per
 decision, with the original competing calculations and any source search limits.
 
+## November 13 companion for qualified lump-sum distributions
+
+Use the final 2026 Form 4972. Check the later, local `cd4b3e29` calculation
+and `9758b773` physical review mapping separately from the fixed November 4
+packet. The finite worksheet covers one qualifying participant, one
+distribution and one confirmed recipient. For the beneficiary estate-tax
+case, the participant died on or after August 21, 1996. The administrator's
+original record must establish the attributable amount.
+[Final Form 4972](https://www.irs.gov/pub/irs-pdf/f4972.pdf).
+
+Derive the capital and ordinary allocation independently for the synthetic
+case with Box 2a of $20,000, Box 3 of $5,000, and $2,000 of estate tax.
+Boxes 6 and 8a are zero. Compare elections for Part II alone, Part III
+alone and both. For Part II alone, resolve the ordinary income and any
+separate deduction on Schedule A under section 691(c). Verify that
+the same dollar of estate tax cannot reduce line 6 and also enter an
+itemized deduction. Include one itemizing return, one standard-deduction
+return and a return subject to the 2026 limitation on itemized deductions.
+[26 U.S.C. § 691](https://uscode.house.gov/us/usc/119-124/t26/s691/) ·
+[IRS Publication 559](https://www.irs.gov/publications/p559) ·
+[Schedule A instructions](https://www.irs.gov/instructions/i1040sca).
+
+Verify the separate-tax amount and ordinary pension transfer against the
+published annual return when it becomes available. The current 2025
+Form 6251 removes the Form 4972 tax in the regular tax comparison on
+line 10. The current Form 1116 instructions exclude it from the ordinary
+foreign-credit limit and use a separate category g worksheet for foreign
+lump-sum distributions. The current Form 2210 instructions include it
+on Schedule AI line 16 for periods that contain the actual event.
+Confirm each rule against the final 2026 revisions and derive one
+positive and one unaffected control for each applicable interaction.
+[Form 6251](https://www.irs.gov/pub/irs-pdf/f6251.pdf) ·
+[Form 1116 instructions](https://www.irs.gov/instructions/i1116) ·
+[Form 2210 instructions](https://www.irs.gov/instructions/i2210).
+
+On November 13 the IRS current-form endpoints still served 2025 Forms
+1040, 6251, 1116 and 2210 and 2025 Schedule A. The IRS lists a draft 2026
+Form 1040. Pennsylvania's filing page still links its 2025 PA-40 and
+Ohio's forms page lists the 2025 IT 1040 and SD 100 as current top returns.
+Record the exact final revisions when they become available.
+[Form 1040](https://www.irs.gov/pub/irs-pdf/f1040.pdf) ·
+[IRS draft index](https://www.irs.gov/draft-tax-forms?find=Individual+Income+Tax+Return) ·
+[Pennsylvania forms](https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax) ·
+[Ohio forms](https://tax.ohio.gov/home/forms).
+
 ## How to record your result
 
 For every method actually examined, record:
