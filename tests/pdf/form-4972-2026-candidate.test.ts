@@ -175,7 +175,7 @@ it("holds beneficiary projection with incomplete physical answers", () => {
     .toThrow(/own-plan history/u);
   expect(() => project({ ...beneficiaryElection, priorBeneficiaryElectionForParticipant: true }, beneficiaryAnswers))
     .toThrow(/eligibility/u);
-  expect(() => project({ ...beneficiaryElection, federalEstateTax: "0.01" }, beneficiaryAnswers)).toThrow(/estate tax/u);
+  expect(() => project({ ...beneficiaryElection, federalEstateTax: "0.01" }, beneficiaryAnswers)).toThrow(/reconcile/u);
   expect(() => project({ ...beneficiaryElection, taxableAmount: "25010" }, beneficiaryAnswers)).toThrow(/reconcile/u);
 });
 
@@ -192,6 +192,32 @@ it("projects the confirmed beneficiary estate tax on a Part III only election", 
   expect(annotations).toEqual([]);
   expect(project({ ...input, federalEstateTax: "2000.49" }, beneficiaryAnswers).text).toEqual(text);
   expect(() => project({ ...input, federalEstateTax: "2000.50" }, beneficiaryAnswers)).toThrow(/reconcile/u);
+});
+
+const combinedEstateTax = { ...beneficiaryElection, taxableAmount: "20000", federalEstateTax: "2000" };
+
+it("projects both beneficiary elections and the estate tax allocation worksheet", () => {
+  const { text, annotations } = form4972Candidate.projectForm49722026DeathBeneficiary(combinedEstateTax, beneficiaryAnswers);
+  expect(text).toMatchObject({
+    [fields.line6]: "4500", [fields.line7]: "900", [fields.line8]: "15000", [fields.line17]: "7500",
+    [fields.line18]: "1500", [fields.line19]: "6000", [fields.line30]: "1560",
+  });
+  expect(instructionFields.filter(name => Object.hasOwn(text, name)).map(name => text[name]))
+    .toEqual(["5000", "20000", "0", "250"]);
+  expect(annotations).toEqual([]);
+  expect(() => form4972Candidate.projectForm49722026DeathBeneficiary({ ...combinedEstateTax, election: "capital_gain" }, beneficiaryAnswers))
+    .toThrow(/estate tax.*Part II/u);
+});
+
+it("uses a longer estate allocation ratio only when required by the printed amounts", () => {
+  const project = form4972Candidate.projectForm49722026DeathBeneficiary;
+  const input = { ...combinedEstateTax, taxableAmount: "12000", capitalGain: "2000", federalEstateTax: "2400" };
+  const { text } = project(input, beneficiaryAnswers);
+  expect(text).toMatchObject({ [fields.line6]: "1600", [fields.line7]: "320", [fields.line8]: "10000",
+    [fields.line18]: "2000", [fields.line19]: "3000", [fields.line30]: "650" });
+  expect(instructionFields.filter(name => Object.hasOwn(text, name)).map(name => text[name]))
+    .toEqual(["2000", "12000", "0", "1667"]);
+  expect(() => project({ ...input, federalEstateTax: "2400.50" }, beneficiaryAnswers)).toThrow(/reconcile/u);
 });
 
 async function verifySavedSpecimen(projection: ReturnType<typeof projectForm49722026OwnPlan>, filename: string) {
@@ -262,6 +288,11 @@ it("reopens the marked beneficiary specimen", async () => {
   await verifySavedSpecimen(project(beneficiaryElection, beneficiaryAnswers), "form-4972-beneficiary-review.pdf");
   await verifySavedSpecimen(project({ ...beneficiaryElection, election: "ten_year", taxableAmount: "20000", federalEstateTax: "2000" },
     beneficiaryAnswers), "form-4972-beneficiary-estate-tax-review.pdf");
+});
+
+it("reopens the marked beneficiary estate allocation specimen", async () => {
+  const projection = form4972Candidate.projectForm49722026DeathBeneficiary(combinedEstateTax, beneficiaryAnswers);
+  await verifySavedSpecimen(projection, "form-4972-beneficiary-estate-allocation-review.pdf");
 });
 
 it("reopens the marked own-plan annuity specimen", async () => {

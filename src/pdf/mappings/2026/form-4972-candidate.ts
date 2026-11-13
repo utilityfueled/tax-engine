@@ -10,6 +10,8 @@ const page1 = "topmostSubform[0].Page1[0].";
 const page3 = "topmostSubform[0].Page3[0].";
 const nuaWorksheetFields = Array.from({ length: 8 }, (_, offset) =>
   `${page3}NUAWorksheet_ReadOrder[0].f3_${String(offset + 4).padStart(2, "0")}[0]`);
+const deathBenefitWorksheetFields = Array.from({ length: 7 }, (_, offset) =>
+  `${page3}DeathBenefitsWorksheet_ReadOrder[0].f3_${offset + 12}[0]`);
 type NuaAnnotation = { line: "6" | "8"; text: string };
 const page1Money = {
   line6: `${page1}f1_03[0]`,
@@ -73,7 +75,7 @@ export const FORM_4972_2026_CANDIDATE = Object.freeze({
     `${page3}Col3[0].B[0].f3_02[0]`,
     `${page3}Col3[0].C[0].f3_03[0]`,
     ...nuaWorksheetFields,
-    ...Array.from({ length: 7 }, (_, offset) => `${page3}DeathBenefitsWorksheet_ReadOrder[0].f3_${offset + 12}[0]`),
+    ...deathBenefitWorksheetFields,
   ]),
 });
 
@@ -88,21 +90,22 @@ function displayedRatio(ratio: ReturnType<typeof d>, base: ReturnType<typeof d>,
 
 function projectElectionAmounts(source: Form4972Input) {
   const exact = calculateForm4972(source);
-  if (exact.deathBenefitWorksheet) throw new Error("Form 4972 estate tax allocation worksheet is outside this physical mapping");
   const rounded = (value: string) => roundDollar(d(value)).toFixed(0);
+  const taxableAmount = rounded(source.taxableAmount);
   const capitalGain = rounded(source.capitalGain);
   const netUnrealizedAppreciation = rounded(source.netUnrealizedAppreciation);
+  const estateTax = source.sourceKind === "death_beneficiary" ? rounded(source.federalEstateTax) : undefined;
   const includesNua = source.sourceKind !== "death_beneficiary" && source.nuaTreatment === "include"
     && d(source.netUnrealizedAppreciation).gt(0);
   if ((exact.line6 && capitalGain === "0") || (includesNua && netUnrealizedAppreciation === "0")) throw new Error(reconciliationError);
   const printed = calculateForm4972({
     ...source,
     grossDistribution: rounded(source.grossDistribution),
-    taxableAmount: rounded(source.taxableAmount),
+    taxableAmount,
     capitalGain,
     netUnrealizedAppreciation,
     actuarialValue: rounded(source.actuarialValue),
-    ...(source.sourceKind === "death_beneficiary" && { federalEstateTax: rounded(source.federalEstateTax) }),
+    ...(estateTax !== undefined && { federalEstateTax: estateTax }),
   });
   const sameLines = exact.lines.length === printed.lines.length && exact.lines.every((line, index) =>
     line.line === printed.lines[index].line && (line.line === "20" || roundDollar(line.value).eq(roundDollar(printed.lines[index].value))));
@@ -114,9 +117,21 @@ function projectElectionAmounts(source: Form4972Input) {
   );
   const shownAllowance = line16 ?? d(0);
   const shownIncludedNua = includesNua ? d(netUnrealizedAppreciation) : d(0);
-  const roundedFormulasAgree = (!line6 || (line6.gt(0) && roundDollar(line6.times("0.20")).eq(line7)))
+  let shownCapital = line6 ?? d(0);
+  let estateWorksheetValues: string[] | undefined;
+  if (exact.deathBenefitWorksheet && source.sourceKind === "death_beneficiary") {
+    const [exactGain, exactTaxable] = exact.deathBenefitWorksheet.map(row => row.value);
+    const capitalEstateTax = roundDollar(d(source.federalEstateTax).times(exactGain).dividedBy(exactTaxable));
+    const shownEstateTax = d(estateTax ?? "0");
+    shownCapital = d(capitalGain);
+    if (!printed.deathBenefitWorksheet || !shownCapital.minus(capitalEstateTax).eq(line6)
+      || !shownEstateTax.minus(capitalEstateTax).eq(line18)) throw new Error(reconciliationError);
+    const [whole, fraction] = displayedRatio(shownCapital.dividedBy(taxableAmount), shownEstateTax, capitalEstateTax);
+    estateWorksheetValues = [capitalGain, taxableAmount, whole, fraction];
+  }
+  const roundedFormulasAgree = (!line6 || ((line6.gt(0) || estateWorksheetValues !== undefined) && roundDollar(line6.times("0.20")).eq(line7)))
     && (!line13 || (line13.minus(line15).eq(line16) && roundDollar(line14.times("0.20")).eq(line15)))
-    && (!line8 || (roundDollar(d(source.taxableAmount)).plus(shownIncludedNua).minus(line6 ?? d(0)).eq(line8)
+    && (!line8 || (d(taxableAmount).plus(shownIncludedNua).minus(shownCapital).eq(line8)
       && line10.plus(line11).eq(line12)
       && line12.minus(shownAllowance).eq(line17) && line17.minus(line18).eq(line19)
       && line19.times("0.10").eq(line23)
@@ -143,6 +158,7 @@ function projectElectionAmounts(source: Form4972Input) {
     text[fields.line20Whole] = whole;
     text[fields.line20Fraction] = fraction;
   }
+  estateWorksheetValues?.forEach((value, index) => { text[deathBenefitWorksheetFields[index]] = value; });
 
   const annotations: NuaAnnotation[] = [];
   let ordinaryNua = shownIncludedNua;
