@@ -123,6 +123,22 @@ in draft 2026 Publication 1040. Decimal comparison matched every draft cell
 using the table methods with 2026 indexed values. The final endpoint still
 serves 2025 and 2026 remains gated. [Draft reconciliation](upgrade-2026-draft-federal-tables-work.md).
 
+`6a38aadd` makes later original-file reads honor another tab's committed
+deletion. Two unit regressions and an already-open Chromium W-2 review
+reproduced the old read. The 188 focused checks and 24 Chromium cases passed.
+The fix applies to subsequent reads. A File already handed to a reader or
+suggestions already displayed remain outside this change.
+
+`bdd31ea1` keeps a local document's original and saved metadata together
+when either write fails during individual removal. The earlier build lost
+the original on a quota fault and reported success when the same test
+attempted to abort the already committed deletion. The successor passed
+127 focused checks and 26 Chromium cases with no skips or retries. Recovery
+also preserved an unrelated saved return field during a forced abort. The
+full collection now contains 603 cases, with five hosted-only skips, 14
+fixed diagnostics and the same request limits. The two browser stores do
+not share a crash-atomic commit. [IndexedDB transaction lifecycle](https://w3c.github.io/IndexedDB/#transaction-lifetime).
+
 `a6c4fd18` adds IRS-published expected values for 2026 Schedule SE and 8812.
 The 147 affected tests passed. The checks use the worksheet inputs the IRS
 supplied. Full-return testing still requires final tables and professional

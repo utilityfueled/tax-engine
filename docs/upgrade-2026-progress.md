@@ -4,6 +4,27 @@ Current source, verification and remaining work are summarized in the
 [current continuation](upgrade-2026-current-status.md). Historical results
 below apply to their named revisions.
 
+- November 13: `bdd31ea1` coordinates local individual document removal
+  with the pending IndexedDB transaction. A quota failure leaves both
+  originals and metadata in place. A transaction abort restores exact
+  scoped metadata and preserves a later unrelated saved value. Both actual
+  Chromium controls failed on `6a38aadd` and passed on the successor, as
+  did the 26-case production-browser upload and recovery cohort and 127
+  focused tests. Web type checking, 8,817 spec references, inventory and
+  the Web build passed. Scoped lint reported zero errors and one existing
+  warning. The audit verifies 603 cases and eight batches, with all 14
+  fixed diagnostics, five hosted-only skips and the prior request bounds.
+  These cases exercise individual document removal while the tab is open.
+  [IndexedDB transaction lifecycle](https://w3c.github.io/IndexedDB/#transaction-lifetime).
+
+- November 13: `6a38aadd` prevents an open tab from reusing an in-memory
+  copy of a committed original deleted by a second tab. The actual older
+  build reopened the sample W-2. The fixed build reports the original
+  unavailable. Tests cover raw and hosted alias lookup and encrypted
+  recovery. The 188 focused checks, 24 browser cases, Web types, 8,815
+  spec references, inventory and production build passed. A File already
+  handed out can still be held by its reader.
+
 - November 13: `75e1faf5` requires committed IndexedDB originals before a
   local upload reports success. The prior production build reported three
   saved documents when IndexedDB aborted the new two-file batch. The same

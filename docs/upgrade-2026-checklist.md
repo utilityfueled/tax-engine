@@ -37,6 +37,11 @@ below retain their original evidence boundaries.
   hosted-only skips.
 - [x] Reconcile draft 2026 federal Tax and EIC Table cells and 63 Tax
   Computation Worksheet values. [Draft evidence](upgrade-2026-draft-federal-tables-work.md).
+- [x] Honor committed original deletion in open tabs in `6a38aadd`. Keep
+  individually removed originals recoverable on metadata failure in
+  `bdd31ea1`. Verify both failures and a successful retry with actual Chromium.
+- [ ] Exercise reset and whole-return deletion under browser-storage failure
+  and confirm the surviving scoped facts and original bytes.
 - [ ] Bind and reverify final federal Tax and EIC Table methods and Form 2210
   upon publication. Obtain qualified human review before enabling 2026.
 - [x] Match the IRS-published Schedule SE and 8812 worksheet outputs in
