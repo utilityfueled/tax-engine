@@ -82,8 +82,8 @@ export function calculateForm4972(input: Form4972Input) {
       throw new Error("Form 4972 requires confirmed death-beneficiary eligibility and matching original dates");
     }
     federalEstateTax = sourceAmount(input.federalEstateTax, "federal estate tax");
-    if (federalEstateTax.gt(0) && input.election !== "ten_year") {
-      throw new Error("Form 4972 positive federal estate tax with Part II requires a separate allocation");
+    if (federalEstateTax.gt(0) && input.election === "capital_gain") {
+      throw new Error("Form 4972 positive federal estate tax with Part II alone requires separate ordinary-income treatment");
     }
   } else if (!/^(?:7A|A7)$/.test(code) || input.ownQualifiedPlan !== true
     || input.fiveParticipationYearsConfirmed !== true || input.priorDisqualifyingElection !== false) {
@@ -136,18 +136,34 @@ export function calculateForm4972(input: Form4972Input) {
     worksheetLine("G", "Total capital gain", gain.plus(capitalNua), "A plus E");
     nuaWorksheet = worksheet.getLines();
   }
-  const line6 = partII ? record("6", "Capital gain elected", gain.plus(capitalNua),
-    nuaWorksheet ? "NUA Worksheet G" : "Form 1099-R Box 3") : undefined;
+  const capitalBeforeEstateTax = gain.plus(capitalNua);
+  const ordinaryBeforeEstateTax = taxable.plus(includedNua).minus(partII ? capitalBeforeEstateTax : zero);
+  let capitalEstateTax = zero;
+  let deathBenefitWorksheet: ReturnType<AuditTrail["getLines"]> | undefined;
+  if (partII && federalEstateTax.gt(0)) {
+    // The capital share exceeds Box 3 exactly when total estate tax exceeds Box 2a.
+    if (federalEstateTax.gt(taxable)) throw new Error("Form 4972 estate tax allocation exceeds Box 3");
+    const worksheet = new AuditTrail();
+    const name = "Form 4972 Death Benefit Worksheet";
+    worksheet.record(name, "A", "Reported capital gain", gain, "Form 1099-R Box 3");
+    worksheet.record(name, "B", "Reported taxable amount", taxable, "Form 1099-R Box 2a");
+    worksheet.record(name, "C", "Capital gain share", gain.dividedBy(taxable), "A divided by B");
+    capitalEstateTax = federalEstateTax.times(gain).dividedBy(taxable);
+    deathBenefitWorksheet = worksheet.getLines();
+  }
+  const line6 = partII ? record("6", "Capital gain elected", capitalBeforeEstateTax.minus(capitalEstateTax),
+    deathBenefitWorksheet ? "Form 1099-R Box 3 less the capital gain share of attributable estate tax"
+      : nuaWorksheet ? "NUA Worksheet G" : "Form 1099-R Box 3") : undefined;
   const line7 = line6 ? record("7", "Capital gain election tax", line6.times("0.20"), "Line 6 × 20%") : undefined;
-  const remaining = taxable.plus(includedNua).minus(line6 ?? zero);
-  const partIIResult = { line6, line7, nuaWorksheet, deferredNua: includeNua ? zero : nua };
+  const partIIResult = { line6, line7, nuaWorksheet, deathBenefitWorksheet, deferredNua: includeNua ? zero : nua };
 
   if (!partIII) {
-    return { ...partIIResult, separateTax: line7 ?? zero, ordinaryPensionTransfer: remaining, lines: audit.getLines() };
+    return { ...partIIResult, separateTax: line7 ?? zero, ordinaryPensionTransfer: ordinaryBeforeEstateTax, lines: audit.getLines() };
   }
 
-  const line8 = record("8", "Amount subject to the ten-year option", remaining,
-    includeNua ? "Box 2a plus included Box 6 less any amount on line 6" : "Box 2a less any amount on line 6");
+  const line8 = record("8", "Amount subject to the ten-year option", ordinaryBeforeEstateTax,
+    includeNua ? "Box 2a plus included Box 6 less the capital portion elected in Part II"
+      : "Box 2a less Box 3 when Part II is elected");
   const line9 = record("9", "Death benefit exclusion", zero,
     input.sourceKind === "death_beneficiary" ? "Death on or after August 21, 1996" : "Participant's own plan");
   const line10 = record("10", "Total taxable amount", line8.minus(line9), "Line 8 less line 9");
@@ -161,11 +177,13 @@ export function calculateForm4972(input: Form4972Input) {
     line16 = record("16", "Minimum distribution allowance", line13.minus(line15), "Line 13 less line 15");
   }
   const line17 = record("17", "Taxable amount after allowance", line12.minus(line16 ?? zero), "Line 12 less any allowance on line 16");
-  if (federalEstateTax.gt(line17)) {
+  const ordinaryEstateTax = federalEstateTax.minus(capitalEstateTax);
+  if (ordinaryEstateTax.gt(line17)) {
     throw new Error("Form 4972 federal estate tax exceeds the supported line 17 amount");
   }
-  const line18 = record("18", "Estate tax attributable to this distribution", federalEstateTax,
-    input.sourceKind === "death_beneficiary" ? "Confirmed attributable amount from estate records" : "Participant's own plan");
+  const line18 = record("18", "Estate tax attributable to this distribution", ordinaryEstateTax,
+    deathBenefitWorksheet ? "Confirmed attributable estate tax less the capital gain share used on line 6"
+      : input.sourceKind === "death_beneficiary" ? "Confirmed attributable amount from estate records" : "Participant's own plan");
   const line19 = record("19", "Amount for the ten-year computation", line17.minus(line18), "Line 17 less line 18");
   let line22: Decimal | undefined;
   if (line11.gt(0)) {

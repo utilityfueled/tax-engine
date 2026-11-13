@@ -88,6 +88,7 @@ function displayedRatio(ratio: ReturnType<typeof d>, base: ReturnType<typeof d>,
 
 function projectElectionAmounts(source: Form4972Input) {
   const exact = calculateForm4972(source);
+  if (exact.deathBenefitWorksheet) throw new Error("Form 4972 estate tax allocation worksheet is outside this physical mapping");
   const rounded = (value: string) => roundDollar(d(value)).toFixed(0);
   const capitalGain = rounded(source.capitalGain);
   const netUnrealizedAppreciation = rounded(source.netUnrealizedAppreciation);

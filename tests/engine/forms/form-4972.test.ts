@@ -88,7 +88,7 @@ describe("2026 Form 4972 death-beneficiary worksheet", () => {
       { distributionDate: "2025-12-31" }, { distributionDate: "2026-02-30" }, { distributionDate: undefined },
       { qualifiedPlanConfirmed: undefined }, { receivedBecauseOfDeath: undefined }, { receivedBecauseOfDeath: false },
       { priorBeneficiaryElectionForParticipant: undefined }, { priorBeneficiaryElectionForParticipant: true },
-      { federalEstateTax: "0.01" }, { federalEstateTax: "" }, { federalEstateTax: undefined },
+      { federalEstateTax: "" }, { federalEstateTax: undefined },
       { entireBalanceConfirmed: undefined }, { rolloverOccurred: true }, { otherDisqualifications: true },
       { onlyDistributionAndRecipientConfirmed: false }, { taxableAmountNotDetermined: true },
       { capitalGain: "90000.01" }, { netUnrealizedAppreciation: "0.01" }, { actuarialValue: "0.01" },
@@ -110,10 +110,28 @@ describe("2026 Form 4972 death-beneficiary worksheet", () => {
     expect(calculateForm4972({ ...input, federalEstateTax: "2000.25" }).separateTax.toFixed(4)).toBe("879.9725");
   });
 
-  it("holds a positive estate tax requiring a separate allocation or a negative tax base", () => {
-    for (const election of ["both", "capital_gain"] as const) {
-      expect(() => calculateForm4972({ ...beneficiary, election, federalEstateTax: "0.01" })).toThrow(/estate tax.*Part II/u);
-    }
+  it("allocates estate tax across both elected parts without increasing ordinary income", () => {
+    const result = calculateForm4972({ ...beneficiary, taxableAmount: "20000", capitalGain: "5000", federalEstateTax: "2000" });
+    expect(result.deathBenefitWorksheet?.map(row => [row.line, row.value.toFixed()]))
+      .toEqual([["A", "5000"], ["B", "20000"], ["C", "0.25"]]);
+    expect(result.lines.filter(row => ["6", "7", "8", "17", "18", "19", "30"].includes(row.line))
+      .map(row => row.value.toFixed())).toEqual(["4500", "900", "15000", "7500", "1500", "6000", "1560"]);
+    expect(result.ordinaryPensionTransfer.toFixed()).toBe("0");
+  });
+
+  it("retains cents when the estate allocation ratio recurs", () => {
+    const result = calculateForm4972({ ...beneficiary, federalEstateTax: "2000" });
+    expect(result.lines.filter(row => ["6", "7", "8", "18", "29", "30"].includes(row.line))
+      .map(row => row.value.toFixed(4))).toEqual(["19555.5556", "3911.1111", "70000.0000", "1555.5556", "9256.1111", "13167.2222"]);
+  });
+
+  it("holds Part II alone with positive estate tax and a deduction exceeding either base", () => {
+    expect(() => calculateForm4972({ ...beneficiary, election: "capital_gain", federalEstateTax: "0.01" }))
+      .toThrow(/estate tax.*Part II/u);
+    expect(() => calculateForm4972({ ...beneficiary, taxableAmount: "20000", capitalGain: "5000", federalEstateTax: "20000.01" }))
+      .toThrow(/estate tax.*Box 3/u);
+    expect(() => calculateForm4972({ ...beneficiary, taxableAmount: "20000", capitalGain: "5000", federalEstateTax: "10000.01" }))
+      .toThrow(/estate tax.*line 17/u);
     expect(() => calculateForm4972({ ...beneficiary, election: "ten_year", taxableAmount: "20000", capitalGain: "0",
       federalEstateTax: "10000.01" })).toThrow(/estate tax.*line 17/u);
   });
