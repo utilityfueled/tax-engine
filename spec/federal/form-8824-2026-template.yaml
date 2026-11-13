@@ -7,10 +7,11 @@ retrievedAt: "2026-11-13"
 reviewStatus: "independent-qualified-tax-review-pending"
 notes: |
   The final annual instructions were posted on 11/10/2026 and are available at
-  https://www.irs.gov/pub/irs-prior/i8824--2026.pdf. The candidate identifies
-  physical fields only. It does not decide exchange qualification, compute gain
-  or basis, produce attachments, or implement section 1043, section 1062, or QOF
-  tax treatment.
+  https://www.irs.gov/pub/irs-prior/i8824--2026.pdf. The isolated projection
+  accepts a confirmed simultaneous exchange of long-term domestic investment
+  land between unrelated parties, without debt, other property or recapture.
+  Other exchanges, related-party reporting, special basis allocations and
+  sections 1043, 1062 and QOF treatment require their own qualification.
 lines:
   - line: "source"
     description: "Pin the final annual blank and instructions"
@@ -42,6 +43,22 @@ lines:
       text and checkbox appearance values, remove active content, and leave all
       taxpayer and related-party identifiers blank.
     testRef: "tests/pdf/form-8824-2026-candidate.test.ts::reopens a marked diagnostic with separate fields and blank identifiers"
+  - line: "I and III investment land specimen"
+    description: "Project a confirmed simultaneous exchange of ordinary investment land"
+    formula: >-
+      Require actual descriptions and qualifying documentary records. Both
+      transfers occur on the same day in 2026 and the relinquished land was
+      acquired more than one year earlier. Use the actual receipt date for line 5
+      under the timely receipt rule. Mark line 7 No. Apply exact Decimal cash
+      and qualified expense amounts to lines 15 and 18, and calculate the other
+      Part III amounts through line 25. Allow cash in one direction only and
+      require a realized gain. Leave identity, Part II, other property fields,
+      special basis allocations and Part IV blank. Require all printed arithmetic
+      to reconcile after rounding the exact Decimal amounts to whole dollars.
+    testRef: "tests/pdf/form-8824-2026-candidate.test.ts::projects confirmed simultaneous investment land exchanges on the final candidate"
+  - line: "investment land evidence boundary"
+    formula: "Reject missing source confirmations, an ambiguous or unsupported exchange chronology, extra fields, cash in both directions, an exact gain absent in whole dollars, or inconsistent printed whole-dollar arithmetic."
+    testRef: "tests/pdf/form-8824-2026-candidate.test.ts::rejects unsupported investment land exchanges and unreconciled printed amounts"
   - line: "release"
     description: "Keep annual export unavailable"
     formula: "The final blank and its physical candidate map stay outside the public review and filing paths."
