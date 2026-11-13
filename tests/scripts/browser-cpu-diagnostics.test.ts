@@ -227,6 +227,11 @@ it('preserves validated scheduler row keys through exact selected batches', () =
   expect(batches.flatMap(b => b.rows).map(r => r.id)).toEqual(manifest.targets.map(r => r.id));
 });
 
+it('binds the optional diagnostic selection to the current browser audit bytes', () => {
+  const audit = readFileSync(new URL('../../scripts/browser-request-budgets.json', import.meta.url));
+  expect(realManifest.auditSha256).toBe(createHash('sha256').update(audit).digest('hex'));
+});
+
 // Spec: Optional-Browser-CPU-Diagnostics public-code-only.
 it('rejects extra or non-data inventory fields without invoking accessors', () => {
   let calls = 0;

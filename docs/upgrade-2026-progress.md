@@ -4013,3 +4013,28 @@ employee mileage rate based on the state's published annual method and the
 midyear federal update. The focused run passed 347 tests. Final Pennsylvania
 forms, human review and distribution evidence remain open. See [the
 Pennsylvania mileage ledger](upgrade-2026-pa-schedule-ue-mileage-work.md).
+
+### November 12 · Pennsylvania overnight meals and 2026 moving rules
+
+Local commit `f737bbd9` applies Pennsylvania's full allowance to actual
+qualifying overnight business meals after explicit confirmation. The
+focused run passed 382 tests. This corrects the typed path. Guided intake
+and the separate reimbursement rules remain open. See [the Pennsylvania
+meals ledger](upgrade-2026-pa-schedule-ue-meals-work.md).
+
+Local commit `87bcd85d` calculates confirmed 2026 domestic same-year
+moving expenses, including the two published mileage rates and the new
+intelligence-community eligibility rule. All 633 scoped tests and 43
+independently rerun tests passed. The 2026 calculation gate and physical
+candidate remain closed. See [the 2026 moving ledger](upgrade-2026-form-3903-law-work.md).
+
+### November 12 · current browser audit and optional diagnostics
+
+The stale source audit correctly rejected the changed files. The successor
+binds ten modified and four newly added files, with 1,840 audited source
+entries. All per-case budgets, timing declarations and five hosted skips
+remain as recorded. Default and strict list-only runs both collected 592
+cases in 154 files. The optional diagnostics audit digest now matches the
+exact reviewed audit bytes. Its new regression failed on the stale digest.
+All 186 focused browser protocol and inspector tests passed. Full browser
+execution and current image qualification require separate evidence.
