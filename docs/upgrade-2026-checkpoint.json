@@ -24468,6 +24468,26 @@
       "https://www.irs.gov/instructions/i1099r"
     ]
   },
+  "nov13DraftSchedule3A": {
+    "commit": "7924a91d3b19a1429e8fa9813d03c3e14c8beb0c",
+    "initialMissingImplementationSuite": true,
+    "focusedTestsPassed": 1388,
+    "specReferencesValidated": 8938,
+    "redSha256": "2daf611a22a8ec6149872e0a934291ef7e38a0fa2a13540c1ef0cf27e7658df2",
+    "focusedSha256": "5912a4e608edab9a2f2940103278a2d865d3a0a4fe33eab0627bcced5e1267e0",
+    "publishedExamples": ["821", "3021"],
+    "returnForms": ["1040", "1040-SR"],
+    "productionCalculationOrExportEnabled": false,
+    "finalRegulationVerified": false,
+    "sources": [
+      "https://www.irs.gov/pub/irs-dft/f1040s3a--dft.pdf",
+      "https://www.irs.gov/pub/irs-dft/f1040--dft.pdf",
+      "https://www.irs.gov/pub/irs-dft/f1040s2--dft.pdf",
+      "https://www.irs.gov/irb/2026-38_irb",
+      "https://uscode.house.gov/us/usc/119-118/t8/s1611/",
+      "https://uscode.house.gov/us/usc/119-118/t8/s1641/"
+    ]
+  },
   "nov13AiEvaluationClientTrace": {
     "commit": "3d8f674a3fc58c4c85a074d2c092ac21f6166a74",
     "initialRed": 3,

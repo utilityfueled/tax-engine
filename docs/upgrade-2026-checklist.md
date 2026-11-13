@@ -6,6 +6,13 @@ below retain their original evidence boundaries.
 
 ## Active continuation — November 13 Eastern
 
+- [x] Verify the 2026 draft Schedule 3-A worksheet in `7924a91d` against
+  Treasury's published examples and cent boundaries. Pass 1,388 affected
+  tests and keep live calculation, intake, filing and export disconnected.
+- [ ] Reconcile final Schedule 3-A, Form 1040 instructions and the applicable
+  final rule before activation. Obtain qualified review of the four-credit
+  aggregation, first-claim attestation, separate work-authorization question,
+  and any PTC, Form 1040-NR and 1040-SS interactions.
 - [x] Preserve a private, durable OpenAI trace for future evaluation
   attempts in `3d8f674a`. Pass 36 affected tests and keep the prior
   request contract byte-equivalent. Retain the unresolved historical reserve.

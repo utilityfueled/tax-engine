@@ -11,6 +11,17 @@ The isolated rehearsal project has no Git link and protects all deployments.
 The team is on Pro, whose Sandbox credits are shared and can incur overage.
 No Sandbox was started. [Vercel Sandbox pricing](https://vercel.com/docs/sandbox/pricing).
 
+`7924a91d` verifies the 2026 draft Schedule 3-A arithmetic in an isolated
+worksheet for Forms 1040 and 1040-SR. It aggregates the four covered
+refundable credits, preserves other payments, and leaves an unknown election
+or eligibility unresolved. The published Treasury examples reproduce $821
+and $3,021. The new suite failed before implementation and 1,388 affected
+tests passed. Types, strict lint, inventory and all 8,938 spec references
+passed. Treasury's effective date depends on publication of final regulations.
+The draft has no live calculation, intake, filing or export path.
+[Draft Schedule 3-A](https://www.irs.gov/pub/irs-dft/f1040s3a--dft.pdf) ·
+[Proposed rule and examples](https://www.irs.gov/irb/2026-38_irb).
+
 `3d8f674a` gives new OpenAI evaluation plans a private client trace per
 attempt. The journal syncs it before dispatch, and the transport sends it
 in the OpenAI request header. The scoring report excludes the trace.
@@ -62,8 +73,10 @@ identifier until reviewed. [OpenAI request debugging](https://developers.openai.
 
 The exact `e6a34ac3` managed archive passed all 12 checks with 27,895 tests
 in both unit and coverage, 87.91% branch coverage, and 616 Chromium passes
-with five hosted-only skips. Its owned PostgreSQL stopped. The managed
-`021b2881` run is in progress. The `e3c90730` managed unit suite passed
+with five hosted-only skips. Its owned PostgreSQL stopped. Exact `021b2881`
+passed 11 managed checks with 27,913 tests in both unit and coverage and
+87.92% branches. Its browser guard rejected stale source digests before
+runtime and the owned database stopped. The `e3c90730` managed unit suite passed
 27,918 tests and its exact ARM64 smoke, scan and Compose recovery passed.
 The browser suite is running on that image. The first ARM64 preflight
 stopped before boot because the staged public sample registry had mode

@@ -4,6 +4,11 @@ Current source, verification and remaining work are summarized in the
 [current continuation](upgrade-2026-current-status.md). Historical results
 below apply to their named revisions.
 
+- November 13 — `7924a91d` adds the isolated 2026 draft Schedule 3-A
+  worksheet. The new suite failed before implementation and all 1,388
+  affected tests passed, along with types, strict lint, inventory and
+  8,938 spec references. The working draft has no live calculation or
+  export path. [Treasury's published examples](https://www.irs.gov/irb/2026-38_irb).
 - November 13 — `3d8f674a` records an OpenAI client trace before new
   evaluation dispatches. Three regressions failed first and 36 affected
   tests passed, along with the evaluator type check, strict lint and 8,927
