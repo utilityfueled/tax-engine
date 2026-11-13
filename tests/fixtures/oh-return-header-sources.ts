@@ -14,6 +14,17 @@ export const ohioHeaderLabels = {
  countySource:'County original reference',countyYear:'County original tax year',countyDate:'County original record date',countyName:'Actual county name',countyStreet:'County original residential street',countyCity:'County original residential city',countyState:'County original residential state',countyZip:'County original residential ZIP',
  inventoryPublication:'Actual official district list publication',inventorySource:'Official district list original reference',inventoryYear:'Official district list tax year',inventoryPage:'Official district list printed page',inventoryCode:'District number in official list',inventoryName:'District name in official list',inventoryRate:'Rate shown in official district list',inventoryBase:'Tax base shown in official district list',inventoryReviewed:'I reviewed the actual official district list row',
 } as const;
+/** New fictional retained originals. The official row and county name are independently sourced. */
+const akronResidenceAddress={street:'825 FICTIONAL AKRON RESIDENCE LANE',city:'Akron',state:'OH',zip:'44308'};
+export function withOhioAkronHeaderOriginals<T extends {residence:object;finderOriginal:object;countyOriginal:object;officialInventoryOriginal:object}>(header:T){
+ return{
+  ...header,
+  residence:{...header.residence,sourceReference:'PRIVATE-FICTIONAL-AKRON-RESIDENTIAL-LEDGER',originalAddress:structuredClone(akronResidenceAddress)},
+  finderOriginal:{...header.finderOriginal,sourceReference:'PRIVATE-FICTIONAL-AKRON-FINDER-ORIGINAL',originalAddress:structuredClone(akronResidenceAddress),districtCode:'7701',districtName:'Akron CSD',countyName:'Summit'},
+  countyOriginal:{...header.countyOriginal,sourceReference:'PRIVATE-FICTIONAL-SUMMIT-COUNTY-RECORD',originalAddress:structuredClone(akronResidenceAddress),countyName:'Summit'},
+  officialInventoryOriginal:{...header.officialInventoryOriginal,sourceReference:'PRIVATE-FICTIONAL-RETAINED-BOOKLET-49-AKRON-ROW',printedPage:49,districtCode:'7701',districtName:'Akron CSD'},
+ };
+}
 export function ohioReturnHeaderFixture(){
  const native=guidedResidentCreditFixture('ordinary');
  // Replay the existing current native sources in normal production order; no header helper exists yet.
@@ -49,6 +60,18 @@ export function ohioHeaderNativeFields(){const f=ohioReturnHeaderFixture(),h=f.h
  [L.countySource,h.countyOriginal.sourceReference],[L.countyYear,'2025'],[L.countyDate,'2026-01-15'],[L.countyName,'Franklin'],[L.countyStreet,h.countyOriginal.originalAddress.street],[L.countyCity,'Columbus'],[L.countyState,'OH'],[L.countyZip,'43215'],
  [L.inventoryPublication,'ohio_2025_it1040_booklet'],[L.inventorySource,h.officialInventoryOriginal.sourceReference],[L.inventoryYear,'2025'],[L.inventoryPage,'50'],[L.inventoryCode,'2503'],[L.inventoryName,'Columbus CSD'],[L.inventoryRate,'-'],[L.inventoryBase,'-'],[L.inventoryReviewed,'true'],
  ] as const;}
+
+export function ohioAkronHeaderNativeFields(){
+ const h=withOhioAkronHeaderOriginals(ohioReturnHeaderFixture().header),L=ohioHeaderLabels,a=h.residence.originalAddress;
+ const actual=new Map<string,string>([
+  [L.residenceSource,h.residence.sourceReference],[L.street,a.street],[L.city,a.city],[L.zip,a.zip],
+  [L.finderSource,h.finderOriginal.sourceReference],[L.finderStreet,a.street],[L.finderCity,a.city],[L.finderZip,a.zip],
+  [L.district,h.finderOriginal.districtCode],[L.districtName,h.finderOriginal.districtName],[L.finderCounty,h.finderOriginal.countyName],
+  [L.countySource,h.countyOriginal.sourceReference],[L.countyStreet,a.street],[L.countyCity,a.city],[L.countyZip,a.zip],[L.countyName,h.countyOriginal.countyName],
+  [L.inventorySource,h.officialInventoryOriginal.sourceReference],[L.inventoryPage,String(h.officialInventoryOriginal.printedPage)],[L.inventoryCode,h.officialInventoryOriginal.districtCode],[L.inventoryName,h.officialInventoryOriginal.districtName],
+ ]);
+ return ohioHeaderNativeFields().map(([label,value])=>[label,actual.get(label)??value] as const);
+}
 
 /** Explicit current independent parent sources, not captured or refreshed by reading the header. */
 export function ohioNavigationHeaderParent(){return structuredClone(ohioReturnHeaderFixture().native.residency);}

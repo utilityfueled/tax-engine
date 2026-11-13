@@ -5,15 +5,86 @@ import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {execFileSync} from 'node:child_process';
 import {calculateFederalTax} from '@/engine/federal';
+import {calculateOhioResidentReturnFromFederal} from '@/engine/state/oh-engine';
 import {prepareOhioResidencyReview} from '@/engine/state/oh-residency-source';
 import {fillOhioReferenceForms} from '@/pdf/mappings/2025/fill-oh-reference-forms';
 import {redactReviewIdentifiers} from '@/pdf/redact-review-identifiers';
 import {calculateOhioReturnHeaderSource} from '@/engine/state/oh-return-header-source';
-import {ohioReturnHeaderFixture} from '../../fixtures/oh-return-header-sources';
+import {ohioReturnHeaderFixture,withOhioAkronHeaderOriginals} from '../../fixtures/oh-return-header-sources';
 import {ohioReturnHeaderPublicReviewFixture} from '../../fixtures/oh-return-header-public-review';
+import {julyHeaderPacket} from '../../fixtures/oh-business-part-year-header';
 it('Ohio header derives actual2503 and FRAN without using mailing geography',()=>{
  const f=ohioReturnHeaderFixture(),before=structuredClone(f),r=calculateOhioReturnHeaderSource(f.input,f.header);
  expect(r.header).toEqual({schoolDistrictNumber:'2503',ohioCounty:'FRAN',residency:'resident'});expect(r.residentDays).toBe(365);expect(r.methodVersion).toBe('oh-2025-resident-header-v1');expect(r.sourceCommitment).toMatch(/^[a-f0-9]{64}$/);expect(f).toEqual(before);
+});
+it('Ohio header derives actual7701 and SUMM without changing the current Ohio return',()=>{
+ const f=ohioReturnHeaderFixture(),header=withOhioAkronHeaderOriginals(f.header),input={...f.input,ohioReturnHeaderSources:header},before=structuredClone(input);
+ const actual=calculateOhioReturnHeaderSource(input,header);
+ const result=calculateOhioResidentReturnFromFederal({taxInput:input,federalResult:calculateFederalTax(input)});
+ expect(actual.header).toEqual({schoolDistrictNumber:'7701',ohioCounty:'SUMM',residency:'resident'});
+ expect(actual.residentDays).toBe(365);
+ expect(input.taxpayer.address.street).not.toBe(header.residence.originalAddress.street);
+ expect(result.it1040.line3_ohioAgi.toFixed(0)).toBe('100000');
+ expect(result.it1040.line10_taxAfterCredits.toFixed(0)).toBe('1323');
+ expect(result.residentCredit?.line7_residentCredit.toFixed(0)).toBe('1000');
+ expect(result.it1040.line14_ohioWithholding.toFixed(0)).toBe('2000');
+ expect(result.it1040.line26_refund.toFixed(0)).toBe('677');
+ expect(result.sd100).toBeNull();
+ expect(input).toEqual(before);
+});
+it.each([
+ ['one mismatched county',/county/i],
+ ['two wrong counties',/county/i],
+ ['wrong official page',/exact official 2025 district-list row/i],
+ ['positive official rate',/exact official 2025 district-list row/i],
+ ['taxing Finder classification',/district originals/i],
+ ['mismatched Finder name',/district originals/i],
+ ['unsupported 2026',/complete confirmed actual header/i],
+] as const)('Ohio header rejects Akron originals with %s',(defect,error)=>{
+ const f=ohioReturnHeaderFixture(),header=withOhioAkronHeaderOriginals(f.header);
+ if(defect==='one mismatched county')header.countyOriginal.countyName='Franklin';
+ if(defect==='two wrong counties'){header.countyOriginal.countyName='Franklin';header.finderOriginal.countyName='Franklin';}
+ if(defect==='wrong official page')header.officialInventoryOriginal.printedPage=50;
+ if(defect==='positive official rate')header.officialInventoryOriginal.rateDisplay='.0125';
+ if(defect==='taxing Finder classification')header.finderOriginal.schoolIncomeTax='reported';
+ if(defect==='mismatched Finder name')header.finderOriginal.districtName='Columbus CSD';
+ if(defect==='unsupported 2026')header.taxYear=2026;
+ const before=structuredClone({input:f.input,header});
+ expect(()=>calculateOhioReturnHeaderSource(f.input,header)).toThrow(error);
+ expect({input:f.input,header}).toEqual(before);
+});
+it('Ohio header does not widen the separate 212-day business residence method to Akron',()=>{
+ const f=julyHeaderPacket(),header=withOhioAkronHeaderOriginals(f.header),before=structuredClone({input:f.withHeader,header});
+ expect(()=>calculateOhioReturnHeaderSource(f.withHeader,header)).toThrow(/county|district originals/i);
+ expect({input:f.withHeader,header}).toEqual(before);
+});
+it('Ohio header rejects a Finder lookup before the requested tax year',()=>{
+ const {input,header:columbus}=ohioReturnHeaderFixture();
+ const header=withOhioAkronHeaderOriginals(columbus);
+ header.finderOriginal.lookupDate='2024-12-31';
+ const before=structuredClone({input,header});
+ expect(()=>calculateOhioReturnHeaderSource(input,header)).toThrow(/Finder lookup.*tax year/i);
+ expect({input,header}).toEqual(before);
+});
+it('Ohio header rejects a shared Finder and county original reference despite case and spacing',()=>{
+ const {input,header:columbus}=ohioReturnHeaderFixture();
+ const header=withOhioAkronHeaderOriginals(columbus);
+ header.finderOriginal.sourceReference='Fictional original document 987';
+ header.countyOriginal.sourceReference='  FICTIONAL\toriginal  document 987  ';
+ const before=structuredClone({input,header});
+ expect(()=>calculateOhioReturnHeaderSource(input,header)).toThrow(/separate Finder and county original/i);
+ expect({input,header}).toEqual(before);
+});
+it('Ohio header preserves an older independent county record with a current-year Finder lookup',()=>{
+ const {input,header:columbus}=ohioReturnHeaderFixture();
+ const header=withOhioAkronHeaderOriginals(columbus);
+ header.finderOriginal.lookupDate='2025-01-01';
+ header.countyOriginal.recordDate='1998-09-14';
+ const before=structuredClone({input,header});
+ expect(calculateOhioReturnHeaderSource(input,header).header).toEqual({
+  schoolDistrictNumber:'7701',ohioCounty:'SUMM',residency:'resident',
+ });
+ expect({input,header}).toEqual(before);
 });
 const defects=['absent source','false confirmation','unknown year','wrong2026','wrong owner','wrong SSN','wrong birth','missing actual address','Finder address mismatch','county address mismatch','county name mismatch','gapped calendar','second residence','false complete calendar','invalid date','future Finder date','wrong Finder year','unknown district','wrong district name','taxing district','unknown tax status','noTax flag only','missing official row','wrong official hash','wrong official page','positive official rate','unknown county','stale federal','stale parent','wrong parent status','wrong parent year'] as const;
 it.each(defects)('Ohio header retains and rejects inconsistent actual original %s',kind=>{

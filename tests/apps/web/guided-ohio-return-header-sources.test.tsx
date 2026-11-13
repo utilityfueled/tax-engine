@@ -8,7 +8,7 @@ import {emptyOhioReturnHeaderDraft,confirmGuidedOhioReturnHeaderSources,buildGui
 import {confirmGuidedOhioPaymentFacts} from '@/lib/guided-ohio-payment-facts';
 import {confirmGuidedOhioResidentCreditSources} from '@/lib/guided-ohio-resident-credit-sources';
 import {mountGuidedPanel} from './guided-panel-dom';
-import {ohioReturnHeaderFixture,enteredOhioHeaderDraft,currentHeaderDraft,ohioHeaderLabels as L,ohioHeaderNativeFields,requiredHeader} from '../../fixtures/oh-return-header-sources';
+import {ohioReturnHeaderFixture,enteredOhioHeaderDraft,currentHeaderDraft,ohioHeaderLabels as L,ohioHeaderNativeFields,ohioAkronHeaderNativeFields,requiredHeader,withOhioAkronHeaderOriginals} from '../../fixtures/oh-return-header-sources';
 import {ohioNavigationHeaderParent,ohioNavigationHeaderPayments} from '../../fixtures/oh-return-header-sources';
 it('Ohio header draft empty and pending JSON records remain unknown',()=>{
  const empty=emptyOhioReturnHeaderDraft();expect(empty.taxYear).toBe('');expect(empty.owner.accountHolder).toBe('');expect(empty.sourceFactsConfirmed).not.toBe(true);expect(empty.originalFederalSources).toBeUndefined();expect(empty.originalOhioPaymentSources).toBeUndefined();expect(empty.confirmedHeaderSources).toBeUndefined();expect(empty.finderOriginal.districtCode).toBe('');expect(empty.countyOriginal.countyName).toBe('');expect(empty.finderOriginal.schoolIncomeTax).toBe('');expect(empty.officialInventoryOriginal.rateDisplay).toBe('');
@@ -30,6 +30,28 @@ async function mounted(initial:ReturnType<typeof enteredOhioHeaderDraft>|undefin
 }
 it('Ohio header panel complete native source entry confirms explicit originals',async()=>{
  const request=vi.fn(()=>{throw Error('Native header sources cannot transfer to a provider');});vi.stubGlobal('fetch',request);const h=await mounted(undefined);try{expect(h.optional()).toBeUndefined();expect(h.updates()).toBe(0);await h.panel.click(L.add);expect(h.data().taxYear).toBe('');expect(h.data().sourceFactsConfirmed).not.toBe(true);await h.panel.click('Add actual Ohio residential period');for(const[label,value]of ohioHeaderNativeFields())await h.panel.change(label,value);await h.panel.click(L.confirm);expect(h.data().sourceFactsConfirmed).toBe(true);expect(buildGuidedOhioReturnHeaderSources(h.f.original,h.data(),h.parent,h.payments)).toEqual(h.f.header);expect(h.panel.container.querySelector('textarea')).toBeNull();expect(h.panel.container.textContent).not.toContain(h.f.input.taxpayer.primary.ssn);expect(request).not.toHaveBeenCalled();}finally{await h.panel.dispose();vi.unstubAllGlobals();}
+});
+it('Ohio header panel confirms entered Akron originals and rejects edited saved evidence',async()=>{
+ const h=await mounted(undefined);
+ try{
+  const draftFields=ohioAkronHeaderNativeFields();
+  await h.panel.click(L.add);
+  expect(h.data().finderOriginal.districtCode).toBe('');
+  expect(h.data().countyOriginal.countyName).toBe('');
+  await h.panel.click('Add actual Ohio residential period');
+  for(const[label,value]of draftFields)await h.panel.change(label,value);
+  await h.panel.click(L.confirm);
+  expect(h.data().sourceFactsConfirmed).toBe(true);
+  expect(h.panel.container.textContent).toContain('Akron CSD (7701), Summit County');
+  const saved=JSON.parse(JSON.stringify(h.data())) as ReturnType<typeof enteredOhioHeaderDraft>;
+  expect(buildGuidedOhioReturnHeaderSources(h.f.original,saved,h.parent,h.payments)).toEqual(withOhioAkronHeaderOriginals(h.f.header));
+  await h.panel.change(L.countyName,'Franklin');
+  expect(h.data().sourceFactsConfirmed).not.toBe(true);
+  expect(h.data().confirmedHeaderSources).toEqual(saved.confirmedHeaderSources);
+  expect(()=>buildGuidedOhioReturnHeaderSources(h.f.original,h.data(),h.parent,h.payments)).toThrow();
+  saved.finderOriginal.countyName='Franklin';
+  expect(()=>buildGuidedOhioReturnHeaderSources(h.f.original,saved,h.parent,h.payments)).toThrow(/separately confirmed originals/i);
+ }finally{await h.panel.dispose();}
 });
 it('Ohio header panel blank failed confirmation retains all unknown facts',async()=>{
  const h=await mounted(undefined);try{await h.panel.click(L.add);await h.panel.click(L.confirm);expect(h.data().sourceFactsConfirmed).not.toBe(true);expect(h.data().finderOriginal.districtCode).toBe('');expect(h.data().countyOriginal.countyName).toBe('');expect(h.data().originalFederalSources).toBeUndefined();expect(h.data().originalOhioPaymentSources).toBeUndefined();expect(h.data().confirmedHeaderSources).toBeUndefined();}finally{await h.panel.dispose();}

@@ -13,6 +13,7 @@ import {prepareOhioResidencyReview} from '@/engine/state/oh-residency-source';
 import {fillOhioReferenceForms} from '@/pdf/mappings/2025/fill-oh-reference-forms';
 import {redactReviewIdentifiers} from '@/pdf/redact-review-identifiers';
 import {ohioNonResidentCreditHeaderReferenceFixture,ohioResidentCreditRawWithholdingFixture,residentCreditRawWithholdingCells,ohioResidentCreditOfficialReviewFixture,residentCreditPhysicalCash,residentCreditPhysicalCells,residentCreditPhysicalFiles,replaceResidentCreditPhysicalEmployerAccount,requireResidentCreditOriginal,type ResidentCreditPhysicalCase} from '../fixtures/oh-resident-credit-official-review';
+import {withOhioAkronHeaderOriginals} from '../fixtures/oh-return-header-sources';
 const cohorts=['distinct','cents'] as const;
 function fixture(kind:ResidentCreditPhysicalCase='distinct'){const input=ohioResidentCreditOfficialReviewFixture(kind),federal=calculateFederalTax(input);return{input,federal};}
 it.each(cohorts)('Ohio resident credit physical existing source baseline %s',kind=>{
@@ -145,17 +146,28 @@ for entry in files:
  out.append({'name':entry['name'],'pages':len(r.pages),'objects':len(seen),'fields':0,'annotations':0,'actions':0,'cells':observed})
 print(json.dumps(out))`;
 type PhysicalReport={name:string;pages:number;objects:number;fields:number;annotations:number;actions:number;cells:Array<{name:string;page:number;rect:number[];text:string;paint:boolean}>};
-it.each(cohorts)('Ohio resident credit physical existing API emits complete original-bound official companions %s',async kind=>{
- const {input,federal}=fixture(kind),before=structuredClone(input),context=prepareOhioResidencyReview(input),dir=await mkdtemp(join(tmpdir(),'oh-resident-physical-')),snapshots:LogicalSnapshot[]=[],spy=logicalObserver(snapshots);
+it.each(['distinct','cents','akron'] as const)('Ohio resident credit physical existing API emits complete original-bound official companions %s',async scenario=>{
+ const kind=scenario==='cents'?'cents':'distinct';
+ const {input,federal}=fixture(kind);
+ if(scenario==='akron')input.ohioReturnHeaderSources=withOhioAkronHeaderOriginals(requireResidentCreditOriginal(input.ohioReturnHeaderSources));
+ const before=structuredClone(input),context=prepareOhioResidencyReview(input),dir=await mkdtemp(join(tmpdir(),'oh-resident-physical-')),snapshots:LogicalSnapshot[]=[],spy=logicalObserver(snapshots);
+ const valueFor=(cell:typeof residentCreditPhysicalCells[number])=>{
+  if(scenario==='akron'&&cell.file==='oh-it-1040-review.pdf'){
+   if(cell.name==='SD_NUM')return '7701';
+   if(cell.name==='COUNTY')return 'SUMM';
+  }
+  return cell[kind];
+ };
  try{
   const packet=await fillOhioReferenceForms(redactReviewIdentifiers(input),federal,dir,{},context),names=packet.filledForms.map(path=>basename(path));
   for(const name of Object.keys(residentCreditPhysicalFiles))expect(names).toContain(name);
   expect(names).not.toContain('oh-it-nrc-review.pdf');
+  expect(names.some(name=>name.startsWith('oh-sd-100'))).toBe(false);
   const entries=Object.entries(residentCreditPhysicalFiles).map(([name,pages])=>({name,pages,path:join(dir,name)}));
   const reports=JSON.parse(execFileSync(process.env.TAX_ENGINE_PDF_TEST_PYTHON??'python3',['-c',reader,JSON.stringify(entries),JSON.stringify(residentCreditPhysicalCells)],{encoding:'utf8'})) as PhysicalReport[];
   expect(reports).toHaveLength(4);expect(reports.flatMap(row=>row.cells)).toHaveLength(336);
   for(const expected of residentCreditPhysicalCells){
-   const report=requireResidentCreditOriginal(reports.find(row=>row.name===expected.file)),cell=requireResidentCreditOriginal(report.cells.find(row=>row.page===expected.page&&row.name===expected.name&&row.rect.every((n,index)=>n===expected.rect[index]))),value=expected[kind];
+   const report=requireResidentCreditOriginal(reports.find(row=>row.name===expected.file)),cell=requireResidentCreditOriginal(report.cells.find(row=>row.page===expected.page&&row.name===expected.name&&row.rect.every((n,index)=>n===expected.rect[index]))),value=valueFor(expected);
    if(expected.type==='/Tx')expect(cell.text,`${kind} actual saved ${expected.file}/${expected.page}/${expected.name}`).toBe(value.replace(/\s+/g,''));
    else expect(cell.paint,`${kind} actual selected mark ${expected.name}`).toBe(value!=='/Off');
    const logical=requireResidentCreditOriginal(snapshots.find(row=>expected.file==='oh-it-rc-review.pdf'?'SUM_A' in row.text:'SD_NUM' in row.text));
@@ -169,8 +181,8 @@ it.each(cohorts)('Ohio resident credit physical existing API emits complete orig
   for(const entry of entries)expect(reports.find(row=>row.name===entry.name)?.pages).toBe(entry.pages);
   expect(input).toEqual(before);
   const retain=process.env.TAX_ENGINE_OH_RC_OFFICIAL_REVIEW_OUTPUT_DIR;
-  if(retain){const out=join(retain,kind);await mkdir(out,{recursive:true});for(const entry of entries)await copyFile(entry.path,join(out,entry.name));await writeFile(join(out,'safe-physical-reader-report.json'),JSON.stringify(reports,null,2));}
- }finally{spy.mockRestore();const retain=process.env.TAX_ENGINE_OH_RC_OFFICIAL_REVIEW_OUTPUT_DIR;if(retain){const out=join(retain,kind);await mkdir(out,{recursive:true});for(const name of await readdir(dir))if(name.endsWith('.pdf'))await copyFile(join(dir,name),join(out,name));}await rm(dir,{recursive:true,force:true});}
+  if(retain){const out=join(retain,scenario);await mkdir(out,{recursive:true});for(const entry of entries)await copyFile(entry.path,join(out,entry.name));await writeFile(join(out,'safe-physical-reader-report.json'),JSON.stringify(reports,null,2));}
+ }finally{spy.mockRestore();const retain=process.env.TAX_ENGINE_OH_RC_OFFICIAL_REVIEW_OUTPUT_DIR;if(retain){const out=join(retain,scenario);await mkdir(out,{recursive:true});for(const name of await readdir(dir))if(name.endsWith('.pdf'))await copyFile(join(dir,name),join(out,name));}await rm(dir,{recursive:true,force:true});}
 });
 const conflicts=['forged context','redacted without context','stale federal','changed same-money owner','changed same-money payer','changed same-money receipt','changed header original reference','absent RC with retained header','missing header source record','header false confirmation','header wrong county','header district9999','stale header federal original','stale header residency original','stale header payment original','other retained zero-income form','unsupported spouse','unsupported2026','nonresident source'] as const;
 it.each(conflicts)('Ohio resident credit physical rejects conflicting actual original before output %s',async kind=>{

@@ -1,13 +1,15 @@
 form: "Ohio actual resident return header sources"
-fullName: "Finite 2025 primary single full-resident Columbus2503 actual residential originals"
+fullName: "Finite 2025 Ohio actual residential originals for supported return headers"
 taxYear: 2025
 reference: "https://dam.assets.ohio.gov/image/upload/v1767095693/tax.ohio.gov/forms/ohio_individual/individual/2025/it1040-booklet.pdf"
 notes: |
   Source-first factual header successor, not tax arithmetic or filing qualification.
   Booklet printed15 requires actual majority-year resident district;9999 is only
-  full-year nonresident. Printed50 lists Columbus CSD2503 with no tax rate/base.
+  full-year nonresident. Printed49 lists Akron CSD7701 with no tax rate/base;
+  printed50 lists Columbus CSD2503 with no tax rate/base.
   Reuse existing official code/name index and rate metadata. Null rate alone is
-  insufficient. First finite verified non-tax row2503 only; all other districts
+  insufficient. Full-year residents support the verified non-tax district and
+  county pairs Columbus CSD2503/Franklin and Akron CSD7701/Summit. Other districts
   retain originals and require separately verified inventory/method. No geography
   lookup, ZIP/address inference, default county/code/year or no-tax boolean proof.
   A user explicitly selects the actual2025 instructions as the list original; its
@@ -15,7 +17,17 @@ notes: |
   Actual one residential location covers365 days2025; mailing may differ. Actual
   owner/year/address/date-linked residence, Finder, county and official inventory
   originals must reconcile. Current Ohio fullresident source replay is separate.
-  First method explicitly supports actual Franklin only, confirmed as an Ohio county by the official Secretary of State directory and Revised Code2301.02. Coherent bogus or other unsupported county originals reject without claiming other actual counties legally invalid. Actual code2503 and actual county Franklin project2503/FRAN, not9999. County formatting
+  Ohio's Finder guidance uses the actual residence and date for the relevant
+  tax year. The source contract requires a 2025 Finder lookup date from the
+  first day of the tax year through the stated review endpoint. A separate
+  older county record can establish the same actual address. Matching locator
+  text after case and whitespace normalization cannot prove separate originals.
+  Finder guidance: https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/self_help/sddq7004wpayments.pdf
+  Actual Franklin and actual Summit are Ohio counties listed by the official
+  Secretary of State directory and Revised Code2301.02. Coherent bogus or other
+  unsupported county originals reject without claiming other actual counties
+  legally invalid. Actual Columbus and Franklin project2503/FRAN; actual Akron and
+  Summit project7701/SUMM. County formatting
   only after actual county original validation; no county inferred from district.
   Draft unknown fields persist; explicit confirm alone captures current raw federal
   and full independently replayed current Ohio residency/payment originals. Replay current parent, payments and native resident-credit child using their existing converters. A bare parent omits its separately converted child and cannot substitute for full canonical residency. Reads never refresh. Current
@@ -52,6 +64,18 @@ lines:
     description: "Complete original identity date and jurisdiction relationships"
     formula: "Require all actual owner/year/address/date/county/Finder/inventory/currentOhio matches; reject gapped/multiple/unknown residential periods, malformed dates, taxing or unknown codes, wrong name and unsupported2026 before any projection."
     testRef: "tests/engine/state/oh-return-header-source.test.ts::Ohio header retains and rejects inconsistent actual original %s"
+  - line: "finder-lookup-date"
+    description: "The actual Finder lookup for the return year cannot predate that year"
+    formula: "Require an actual calendar lookup date at or after January 1 of the recorded tax year and at or before the stated review endpoint. Keep an independently supplied older county record if it still matches the actual address and passes all other guards."
+    testRef: "tests/engine/state/oh-return-header-source.test.ts::Ohio header rejects a Finder lookup before the requested tax year"
+  - line: "independent-county-original"
+    description: "Finder and county locator text must identify separate originals"
+    formula: "For comparison only, trim, collapse whitespace and ignore case. Reject equal Finder and county original references. Preserve both original locators, dates and distinct valid proof, including historic county documents."
+    testRef: "tests/engine/state/oh-return-header-source.test.ts::Ohio header rejects a shared Finder and county original reference despite case and spacing"
+  - line: "historic-county-record"
+    description: "Preserve actual historic county proof for the same residence"
+    formula: "Allow an independently supplied historic county record for the same actual address with a separate locator and valid date. Allow a Finder lookup on the first day of the tax year. The input and county original remain immutable."
+    testRef: "tests/engine/state/oh-return-header-source.test.ts::Ohio header preserves an older independent county record with a current-year Finder lookup"
   - line: "source-digest"
     description: "Identity significance independent of printed equality"
     formula: "Changing actual source reference with identical printed jurisdiction changes private source commitment only after separately valid explicit originals; stale saved snapshots never accepted."
@@ -106,7 +130,7 @@ lines:
     testRef: "tests/engine/state/oh-return-header-source.test.ts::Ohio header rejects coherent bogus county originals without inventing jurisdiction"
   - line: "unsupported-actual-county"
     description: "Preserve actual unsupported geography without qualification"
-    formula: "Both retained actual county originals naming Delaware remain unchanged and are denied by this finite Franklin-only method; no claim Delaware is legally invalid."
+    formula: "Both retained actual county originals naming Delaware remain unchanged and are denied by this finite method; no claim Delaware is legally invalid."
     testRef: "tests/engine/state/oh-return-header-source.test.ts::Ohio header retains other actual county originals as unsupported"
   - line: "complete-current-parent-payment-child"
     description: "Full prepared source context includes separately converted native method"
@@ -122,3 +146,15 @@ lines:
     description: "Separate actual212-day majority-year taxable district and county originals"
     formula: "Single primary ordinary W2 current PY school method; explicitly supplied Ashland county/Finder same212-day Ohio home, official2025 booklet51 Hillsdale0302/.0125/E; complete parent/payment/school replay. Preserve full-year2503 and distinct PY business header methods. No county from district/address/ZIP, no amount allowlist or snapshot refresh."
     testRef: "tests/engine/state/oh-school-district-part-year-official-review.test.ts::SD PY paper existing header API derives actual ASHL and0302 without mailing inference"
+  - line: "akron-full-year-originals"
+    description: "Separate actual full-year Akron CSD and Summit County records"
+    formula: "Single primary ordinary W2, current independently confirmed Ohio domicile, payment and resident-credit sources, and one actual Ohio residence for all 365 days. Residential, Finder and county originals agree on address; the county records both name Summit. The actual Finder and matching final booklet printed49 row identify Akron CSD7701 with -/- rate/base, and the 2025 index agrees. Output 7701/SUMM/resident. The fictional address and Finder fixture do not represent an address lookup. Reject mismatched county, unknown/bogus county, other row, taxing classification and the Akron pair for the existing part-year business method. No 2026 inference."
+    testRef: "tests/engine/state/oh-return-header-source.test.ts::Ohio header derives actual7701 and SUMM without changing the current Ohio return"
+  - line: "akron-native-confirmation"
+    description: "Explicit guided entry and saved replay for the Akron originals"
+    formula: "Blank guided originals stay blank; explicit actual Akron entries and confirmation bind the current sources. Saved replay preserves the complete originals; edits invalidate confirmation and never refresh the retained snapshot."
+    testRef: "tests/apps/web/guided-ohio-return-header-sources.test.tsx::Ohio header panel confirms entered Akron originals and rejects edited saved evidence"
+  - line: "akron-physical-review"
+    description: "Official review packet uses actual Akron header without changing cash or disclosure"
+    formula: "Saved 2025 IT1040 paints SD_NUM7701 and COUNTY SUMM on the exact official cells. Resident status and all remaining reviewed return, resident-credit, credits and withholding cells remain as in the same-money Columbus cohort. No SD100 for the complete non-tax Akron residence. Preserve review-only notices, original-source privacy and filing gates."
+    testRef: "tests/pdf/oh-resident-credit-official-review.test.ts::Ohio resident credit physical existing API emits complete original-bound official companions %s"

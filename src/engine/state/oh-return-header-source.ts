@@ -11,6 +11,9 @@ import {buildOhioPaymentSource} from './oh-payment-source.js';
 import {buildOhioResidentCreditSource} from './oh-resident-credit-source.js';
 import {calculateOhioCanonicalBusinessSource} from './oh-business-source.js';
 import {lookupOhioSchoolDistrictMetadata,lookupOhioSchoolDistrictNumberByName} from './oh-school-district-lookup.js';
+const columbusHeaderRow={county:'FRANKLIN',district:'2503',printedPage:50};
+const akronHeaderRow={county:'SUMMIT',district:'7701',printedPage:49};
+const hillsdaleHeaderRow={county:'ASHLAND',district:'0302',printedPage:51};
 function fail(message:string):never{throw Error(`Ohio actual return header sources: ${message}`);}
 /** Same defined-field semantics as canonical Ohio validators, after native lossless original replay. */
 function stable(value:unknown):unknown{
@@ -73,13 +76,21 @@ export function calculateOhioReturnHeaderSource(input:TaxYearInput,raw:unknown):
  }
  const address=source.residence.originalAddress,finder=source.finderOriginal,county=source.countyOriginal,list=source.officialInventoryOriginal;
  if(address.state!=='OH'||!same(address,finder.originalAddress)||!same(address,county.originalAddress))return fail('actual residential, queried Finder and county original addresses must agree');
- const asOf=date(source.asOfDate);if(asOf<date('2025-12-31')||date(finder.lookupDate)>asOf||date(county.recordDate)>asOf)return fail('actual header source dates exceed the stated review endpoint');
- const expectedCounty=partYearSchool?'ASHLAND':'FRANKLIN',expectedDistrict=partYearSchool?'0302':'2503';
+ const asOf=date(source.asOfDate),lookupDate=date(finder.lookupDate);
+ if(asOf<date('2025-12-31')||lookupDate>asOf||date(county.recordDate)>asOf)return fail('actual header source dates exceed the stated review endpoint');
+ if(lookupDate<date(`${finder.taxYear}-01-01`))return fail('the actual Finder lookup cannot predate its tax year');
+ const normalizeReference=(reference:string)=>reference.trim().replace(/\s+/g,' ').toLowerCase();
+ if(normalizeReference(finder.sourceReference)===normalizeReference(county.sourceReference))return fail('supply separate Finder and county original references');
+ let expectedRow=columbusHeaderRow;
+ if(partYearSchool)expectedRow=hillsdaleHeaderRow;
+ else if(!partYear&&finder.districtCode===akronHeaderRow.district)expectedRow=akronHeaderRow;
+ // The supported pair checks compatibility. Both independent county originals still determine the county.
+ const {county:expectedCounty,district:expectedDistrict,printedPage}=expectedRow;
  if(finder.countyName.trim().toUpperCase()!==expectedCounty||county.countyName.trim().toUpperCase()!==expectedCounty)return fail('actual county originals require the separately supported county method');
  // Explicit official row evidence is required in addition to the taxing-rate index; null alone proves nothing.
  const metadata=lookupOhioSchoolDistrictMetadata(2025,finder.districtCode);
  if(finder.districtCode!==expectedDistrict||lookupOhioSchoolDistrictNumberByName(finder.districtName)!==expectedDistrict||(partYearSchool?finder.schoolIncomeTax!=='reported'||metadata?.taxType!=='earned_income'||!metadata.rate.eq('0.0125'):finder.schoolIncomeTax!=='none'||metadata!==null))return fail('actual district originals require their separately supported official row');
- if(list.publication!=='ohio_2025_it1040_booklet'||list.publicationSha256!==OHIO_HEADER_2025_BOOKLET_SHA256||list.printedPage!==(partYearSchool?51:50)||list.districtCode!==expectedDistrict||lookupOhioSchoolDistrictNumberByName(list.districtName)!==expectedDistrict||list.rateDisplay!==(partYearSchool?'.0125':'-')||list.taxBaseDisplay!==(partYearSchool?'E':'-'))return fail('review the exact official 2025 district-list row matching the actual Finder original');
+ if(list.publication!=='ohio_2025_it1040_booklet'||list.publicationSha256!==OHIO_HEADER_2025_BOOKLET_SHA256||list.printedPage!==printedPage||list.districtCode!==expectedDistrict||lookupOhioSchoolDistrictNumberByName(list.districtName)!==expectedDistrict||list.rateDisplay!==(partYearSchool?'.0125':'-')||list.taxBaseDisplay!==(partYearSchool?'E':'-'))return fail('review the exact official 2025 district-list row matching the actual Finder original');
  return{methodVersion:partYearSchool?'oh-2025-py-school-header-212-v1':partYearBusiness?'oh-2025-py-business-header-212-v1':'oh-2025-resident-header-v1',header:{schoolDistrictNumber:finder.districtCode,ohioCounty:county.countyName.trim().slice(0,4).toUpperCase(),residency:partYear?'part_year_resident':'resident'},residentDays,
  sourceCommitment:bytesToHex(sha256(new TextEncoder().encode(encoded({context,source})))),
  audit:[{rule:'actual-resident-header',description:partYear?'Current owner and complete212-day majority-year residential originals match the supported official district and county sources.':'Current owner and complete full-year residential originals match the supported official district and county sources.',status:'validated'}]};
