@@ -2,6 +2,10 @@
 
 ## November 13 on `main`
 
+The public refs were refreshed. `origin/main` still points to `59248889`
+and `origin/upgrade/2026-baseline` to `3024b848`. Successor commits stay on
+local `main` while automatic production deployment is being disabled.
+
 `e141bdf5` verifies the disabled final 2026 Schedule C mileage and Part IV
 fields from the documented log and the taxpayer's separate vehicle answers.
 All 444 focused checks passed. A separate strict PDF parser confirmed 15
@@ -227,14 +231,38 @@ supplied. Full-return testing still requires final tables and professional
 review. [IRS ATS scenario 12](https://www.irs.gov/pub/irs-efile/ty26-1040-ats-scenario-12.pdf) ·
 [IRS ATS scenario 14](https://www.irs.gov/pub/irs-efile/ty26-1040-ats-scenario-14.pdf).
 
-The official npm registry reported zero advisories for the 539 dependencies in
-the checked lockfile. Runtime-image advisories remain open. The IRS final
-endpoints for Form 1040 and Schedules A and F still serve 2025, and the
-Pennsylvania and Ohio annual filing indexes still show 2025 individual returns.
-The IRS final 2026 Schedule SE and Form 4952 PDFs are available and already have
-disabled physical candidates in the repository. [IRS final forms](https://www.irs.gov/downloads/irs-pdf) ·
+The November 13 npm production and full audits both exited zero across 447
+and 539 dependency records, respectively. The lockfile Git blob is
+`24444f81fec0dbd9ed94f39cb94a239514844b76`. The production audit SHA-256 is
+`802c55f7c0fed74cd44169b476634570a7f531cdf59d8a8688e396513ae3e5ce` and the full
+audit SHA-256 is `2bd34d50bec6f2f16e90551fcae80e94f898eabc4c169417a21a74f3fdf42d1f`.
+The Next advisory index still shows the November 3 batch. The current pin
+16.4.5 addresses those advisories. Release 16.4.6 includes a compression fix,
+a Tailwind starter fix and a Turbopack development fix. Both image stages
+install Debian's fixed zlib in `f502f328`. The composed AMD64 and ARM64
+images still need scans, and outstanding findings need owner and expiry.
+[Next advisories](https://github.com/vercel/next.js/security/advisories) ·
+[Next 16.4.6](https://github.com/vercel/next.js/releases/tag/v16.4.6) ·
+[Debian DSA-6613-1](https://security-tracker.debian.org/tracker/DSA-6613-1).
+
+The IRS final endpoints for Form 1040, Publication 1040 tax and EIC tables,
+Schedules A and F, and Forms 2210, 2441, 6781, 8863, 8889 and 8949 still
+serve 2025. Final 2026 Schedule 8812, Schedule SE and Form 4952 already have
+disabled physical candidates. Pennsylvania's annual filing index still
+shows 2025. Ohio's alerts search indexed a 2026 draft announcement, and
+the direct alert returned 404. Final 2026 state filing sources remain open.
+[IRS final forms](https://www.irs.gov/downloads/irs-pdf) ·
 [Pennsylvania Personal Income Tax](https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax) ·
 [Ohio filing eligibility](https://tax.ohio.gov/individual/ohtax-eligibility).
+
+The official provider pages still list short-context standard input, output
+and cached input per million tokens at $0.10, $0.50 and $0.01 for Luna and
+$2, $10 and $0.10 for Sol. Gemini 3.8 Flash lists $0.75, $3.75 and $0.075
+through December 31 and $1.50, $7.50 and $0.15 from January 1. The last
+authenticated OpenAI observations and unresolved usage reserve retain their
+previous scope. Google credential access and model qualification remain open.
+[OpenAI pricing](https://developers.openai.com/api/docs/pricing) ·
+[Google Gemini pricing](https://aistudio.google.com/docs/pricing#gemini-3.8-flash).
 
 ## November 12 on `main`
 
