@@ -156,11 +156,24 @@ function resolveQualifiedCharitableDistributionLimit(
 
 export function calculateForm1099R(
   forms: Form1099R[] = [],
-  options: { qcdAnnualLimit?: Decimal; taxYear?: number } = {}
+  options: {
+    qcdAnnualLimit?: Decimal;
+    taxYear?: number;
+    hasValidatedIraBasisSources?: boolean;
+    hasJointSpouse?: boolean;
+  } = {}
 ): Form1099RResult {
   if (options.taxYear === 2026) {
     for (const form of forms) {
-      if (!isIraForm1099RDistribution(form)) assert2026PensionTaxability(form);
+      if (form.trumpAccount === true) throw new Error("2026 Form 1099-R Trump account distributions require a separate method");
+      if (form.excessContributionEarnings !== undefined && !d(form.excessContributionEarnings).isZero()) {
+        throw new Error("2026 Form 1099-R Box 7d earnings require a separate method");
+      }
+      if (isIraForm1099RDistribution(form)) {
+        assert2026IraTaxability(form, options.hasValidatedIraBasisSources === true, options.hasJointSpouse === true);
+      } else {
+        assert2026PensionTaxability(form);
+      }
     }
   }
   const audit = new AuditTrail();
@@ -456,6 +469,35 @@ export function resolveForm1099RTaxableAmount(form: Form1099R): Decimal {
   const taxableAmountBeforeQcd = resolveTaxableAmountBeforeQcd(form);
 
   return Decimal.max(new Decimal(0), taxableAmountBeforeQcd.minus(qualifiedCharitableDistribution));
+}
+
+function assert2026IraTaxability(form: Form1099R, basisPacketBound: boolean, hasJointSpouse: boolean): void {
+  if (form.taxYear !== 2026) throw new Error("Form 1099-R IRA source year must match the 2026 return");
+  const code = getUpperDistributionCode(form).replace(/\s+/g, "");
+  if (!/^[1-9ABCDEFGHJKLMNPQRSTUWY]{1,2}$/u.test(code) || (code.length === 2 && code[0] === code[1])) {
+    throw new Error("2026 Form 1099-R IRA requires the actual Box 7a distribution code");
+  }
+  if (!/^[1247S]$/u.test(code) || isReturnedContributionByDueDate(form) || isNontaxableExcessContributionReturn(form)) return;
+  // The packet only binds original Code 7 records with the IRA checkbox set.
+  if (basisPacketBound && code === "7" && form.iraSepSimple === true) {
+    if (form.iraBasisConfirmedZero !== undefined) {
+      throw new Error("Reconcile the ordinary IRA basis confirmation with the bound Form 8606 owner packet");
+    }
+    return;
+  }
+  if (form.accountHolder !== "primary" && !(form.accountHolder === "spouse" && hasJointSpouse)) {
+    throw new Error("2026 Form 1099-R IRA requires an actual return owner");
+  }
+  if (form.trumpAccount !== false) throw new Error("2026 ordinary IRA requires the actual Box 7c classification");
+  if (!form.excessContributionEarnings?.trim()) throw new Error("2026 ordinary IRA requires a known zero for Box 7d");
+  if (form.iraBasisConfirmedZero !== true || !d(form.employeeContributions).isZero()) {
+    throw new Error("2026 Form 1099-R requires confirmed zero nondeductible IRA basis or a validated Form 8606 owner packet");
+  }
+  const gross = d(form.grossDistribution);
+  if (!form.grossDistribution.trim() || !gross.isFinite() || gross.lt(0)
+    || (form.taxableAmount !== undefined && (!form.taxableAmount.trim() || !d(form.taxableAmount).eq(gross)))) {
+    throw new Error("2026 ordinary zero-basis IRA requires valid Box 1 and a consistent Box 2a when entered");
+  }
 }
 
 function assert2026PensionTaxability(form: Form1099R): void {

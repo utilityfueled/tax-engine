@@ -65,7 +65,7 @@ it("preserves actual state and local withholding and reopens changed special-dis
     await change("Retirement local tax withheld (Box 17)", "0.20");
     await change("Retirement local distribution (Box 19)", "1000");
     await change(confirm, "true");
-    expect(buildRetirementInputs(latest(), "single", 2025)[0]).toMatchObject({ iraSepSimple: true, state: "PA", stateWithheld: "0.10", localTaxWithheld: "0.20", locality: "Actual locality" });
+    expect(buildRetirementInputs(latest(), "single", 2025)[0]).toMatchObject({ iraSepSimple: true, iraBasisConfirmedZero: true, state: "PA", stateWithheld: "0.10", localTaxWithheld: "0.20", locality: "Actual locality" });
     await change("Distribution code (Box 7)", "G");
     await change("Do actual records confirm the completed direct rollover and its destination?", "true");
     await change(confirm, "true");

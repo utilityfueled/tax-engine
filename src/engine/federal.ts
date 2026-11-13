@@ -616,9 +616,13 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   // Phase 1: Income Assembly (Form 1040 Lines 1-9)
   // ═══════════════════════════════════════════════════════════
 
+  // Bind the original IRA owner packet before admitting unresolved payer amounts.
+  const iraBasisSources = calculateIraBasisSources(input);
   const form1099R = calculateForm1099R(input.form1099R ?? [], {
     taxYear: year,
     qcdAnnualLimit: constants.qcd.annualLimit,
+    hasValidatedIraBasisSources: iraBasisSources !== undefined,
+    hasJointSpouse: filingStatus === "married_filing_jointly" && input.taxpayer.spouse !== undefined,
   });
   audit.merge(form1099R.lines);
   const hasUnreportedPayroll = input.form4137 !== undefined || input.form4137ByOwner !== undefined || input.form8919 !== undefined;
@@ -865,7 +869,6 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   // ── Form 8606 calculation ──────────────────────────────────────────
   // Actual source packets bind each owner's prior basis and every IRA account
   // before entering the existing separate-owner calculation.
-  const iraBasisSources = calculateIraBasisSources(input);
   if (iraBasisSources) audit.merge(iraBasisSources.lines);
   const ownerForm8606Inputs = iraBasisSources?.form8606ByOwner ?? input.form8606ByOwner;
   // Legacy source modes remain available:

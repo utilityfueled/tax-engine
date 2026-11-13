@@ -258,6 +258,26 @@ lines:
       - "Completed Simplified Method inputs or validated qualified Roth account distribution, where applicable"
     testRef: "tests/engine/federal-pension-sources-2026.test.ts::2026 original pension source facts"
 
+  - line: "2026-ira-source"
+    description: "Form 1040 Lines 4a and 4b require owner evidence for ordinary traditional IRA taxability in tax year 2026"
+    formula: >-
+      Ordinary traditional IRA Codes 1, 2, 4, 7 and S require a confirmed
+      current source year and either the validated Form 8606 owner packet or
+      confirmation from the owner's complete records of zero nondeductible
+      basis. The ordinary no-basis path requires known Box 7c false and Box 7d
+      zero. When Box 2a is present it must agree with the ordinary fully taxable
+      Box 1 amount before separately supported exclusions. The payer's
+      Box 2a amount or Box 2b by itself is insufficient to establish zero
+      basis. Reject a confirmed Trump account or nonzero Box 7d until its
+      separate method is supported. Existing separately identified rollover,
+      contribution-return, prior-year and Roth distribution branches remain
+      subject to their own source rules.
+    irsRef: "2026 Instructions for Forms 1099-R and 5498, Traditional IRA and Boxes 7a–7d; Publication 590-B, Distributions Fully or Partly Taxable; Instructions for Form 8606, Purpose of Form"
+    inputs:
+      - "Original Form 1099-R year, distribution code, Boxes 1, 2a, 2b, 7c and 7d"
+      - "Explicit owner confirmation of zero nondeductible basis or original bound Form 8606 inputs"
+    testRef: "tests/engine/federal-pension-sources-2026.test.ts::2026 ordinary IRA owner facts"
+
   - line: "5"
     description: "Federal income tax withheld from retirement distributions"
     formula: "Sum Form 1099-R Box 4 withholding for all Forms 1099-R"

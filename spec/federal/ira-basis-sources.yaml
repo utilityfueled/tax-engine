@@ -23,7 +23,7 @@ lines:
     testRef: "tests/engine/forms/ira-basis-sources.test.ts::binds separate owners and aggregates exact original account and distribution cents"
   - line: "original-distributions"
     description: "Match original current-year Forms1099-R without inferring taxability"
-    formula: "Each ordinary source must match its original index, year, owner, payer/TIN/account identity, code7, IRA checkbox, gross and printed Box2a/2b facts exactly. Code7 must be consistent with actual age59.5 by year end. Include every original IRA1099-R once; aggregate gross before Form8606 line rounding. Missing printed taxable amount is allowed only when the actual unknown flag is true."
+    formula: "Each ordinary source must match its original index, year, owner, payer/TIN/account identity, code7, IRA checkbox, gross and printed Box2a/2b facts exactly. Code7 must be consistent with actual age59.5 by year end. Include every original IRA1099-R once, including statements identified as IRA from the distribution code. Any separately classified IRA needs its own method. Aggregate gross before Form8606 line rounding. Missing printed taxable amount is allowed only when the actual unknown flag is true."
     testRef: "tests/engine/forms/ira-basis-sources.test.ts::rejects stale missing duplicate or conflicting original distribution sources"
   - line: "complete-history"
     description: "Missing confirmation, identity, amounts and history never become zero"

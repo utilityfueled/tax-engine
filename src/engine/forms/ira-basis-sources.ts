@@ -3,6 +3,7 @@ import { Form8606Schema, type Form8606Input, type TaxYearInput } from '@/models/
 import { IraBasisSourcesSchema } from '@/models/ira-basis-sources.js';
 import { AuditTrail } from '@/utils/audit.js';
 import { d, sum } from '@/utils/decimal.js';
+import { isIraForm1099RDistribution } from './form-1099-r.js';
 
 type Owner = 'primary' | 'spouse';
 /** Source binding needs no fabricated address, income or unrelated return facts. */
@@ -108,7 +109,8 @@ export function calculateIraBasisSources(input: IraBasisSourceContext) {
     grossByOwner[source.accountHolder] = grossByOwner[source.accountHolder].plus(source.grossDistribution);
   }
   for (const [index, original] of (input.form1099R ?? []).entries()) {
-    if (original.iraSepSimple && !seen.has(`form1099R:${index}`)) fail('every original IRA distribution needs a complete owner source link');
+    if ((facts.taxYear === 2026 ? isIraForm1099RDistribution(original) : original.iraSepSimple)
+      && !seen.has(`form1099R:${index}`)) fail('every original IRA distribution needs a complete owner source link');
   }
   for (const owner of ownerSet) {
     const ownerInput = form8606ByOwner[owner];

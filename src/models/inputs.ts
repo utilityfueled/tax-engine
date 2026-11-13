@@ -1101,6 +1101,7 @@ export const Form1099RSchema = z.object({
   grossDistribution: decimal, // Box 1
   taxableAmount: decimal.optional(), // Box 2a
   taxableAmountNotDetermined: z.boolean().default(false), // Box 2b checkbox
+  iraBasisConfirmedZero: z.boolean().optional(), // Confirmed complete traditional IRA owner records, never inferred from Box 2a
   eligibleGovernmental457bPlan: z.boolean().default(false), // Validated eligible governmental section 457(b) distribution for Form 5329 defaulting
   eligibleGovernmental457bTransferredFromQualifiedPlanTaxableAmount: optionalDecimal, // Taxable portion attributable to prior qualified-plan transfers that can still stay on Form 5329 Part I
   rothConversionAmount: optionalDecimal, // Validated net amount converted from a traditional/SEP/SIMPLE IRA to a Roth IRA

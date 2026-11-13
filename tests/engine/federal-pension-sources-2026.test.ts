@@ -2,12 +2,87 @@
 import { describe, expect, it, vi } from "vitest";
 import { calculateFederalTax } from "@/engine/federal.js";
 import type { TaxYearInput } from "@/models/inputs.js";
+import { ordinaryIraBasisFixture } from "../fixtures/ira-basis.js";
 import { simpleW2Fixture } from "../fixtures/simple-w2.js";
 
 vi.mock("@/models/constants.js", async (importOriginal) => {
   const original = await importOriginal<typeof import("@/models/constants.js")>();
   const { FEDERAL_2026_CONSTANTS } = await import("@/models/federal-2026-indexed.js");
   return { ...original, getConstants: (year: number) => year === 2026 ? FEDERAL_2026_CONSTANTS : original.getConstants(year) };
+});
+
+describe("2026 ordinary IRA owner facts", () => {
+  type Retirement = NonNullable<TaxYearInput["form1099R"]>[number] & { iraBasisConfirmedZero?: boolean };
+  const source = {
+    payer: "Fictional IRA trustee", accountHolder: "primary" as const, taxYear: 2026,
+    grossDistribution: "12000.12", iraSepSimple: true, distributionCode: "7",
+    trumpAccount: false, excessContributionEarnings: "0", taxableAmountNotDetermined: true,
+  };
+  function calculate(changes: Partial<Retirement> = {}, year = 2026) {
+    return calculateFederalTax({
+      ...simpleW2Fixture,
+      taxpayer: { ...simpleW2Fixture.taxpayer, taxYear: year },
+      form1099R: [{ ...source, taxYear: year, ...changes }],
+    });
+  }
+
+  it.each([
+    {}, { taxableAmount: "12000.12" }, { taxableAmount: "0", taxableAmountNotDetermined: false },
+    { taxableAmount: "12000.12", taxableAmountNotDetermined: false, iraBasisConfirmedZero: false },
+    { distributionCode: "S", iraSepSimple: false },
+  ])("requires affirmative applicable basis evidence %j", (changes) => {
+    expect(() => calculate(changes)).toThrow(/zero nondeductible IRA basis/);
+  });
+
+  it.each([undefined, "12000.12"])("uses exact fully taxable gross for confirmed zero basis with printed amount %s", (taxableAmount) => {
+    const result = calculate({ iraBasisConfirmedZero: true, taxableAmount });
+    expect(result.iraDistributionsTaxable.eq("12000.12")).toBe(true);
+  });
+
+  it.each([
+    [{ taxYear: undefined }, /source year/],
+    [{ taxYear: 2025 }, /source year/],
+    [{ distributionCode: undefined }, /Box 7a/],
+    [{ iraBasisConfirmedZero: true, taxableAmount: "12000.11" }, /Box 2a/],
+    [{ iraBasisConfirmedZero: true, employeeContributions: "0.01" }, /basis/],
+    [{ iraBasisConfirmedZero: true, accountHolder: undefined }, /owner/],
+    [{ iraBasisConfirmedZero: true, accountHolder: "spouse" }, /owner/],
+    [{ iraBasisConfirmedZero: true, trumpAccount: undefined }, /Box 7c/],
+    [{ iraBasisConfirmedZero: true, trumpAccount: true }, /Trump account/],
+    [{ iraBasisConfirmedZero: true, excessContributionEarnings: undefined }, /Box 7d/],
+    [{ iraBasisConfirmedZero: true, excessContributionEarnings: "0.01" }, /Box 7d/],
+  ] as const)("rejects missing or conflicting original facts %j", (changes, error) => {
+    expect(() => calculate(changes)).toThrow(error);
+  });
+
+  it("takes taxable amounts from the validated, separately bound owner worksheets", () => {
+    const input = ordinaryIraBasisFixture();
+    input.taxpayer.taxYear = 2026;
+    input.w2s = input.w2s.map(w2 => ({ ...w2, accountHolder: "primary" as const }));
+    input.iraBasisSources.taxYear = 2026;
+    for (const owner of input.iraBasisSources.owners) for (const account of owner.accounts) account.taxYear = 2026;
+    for (const distribution of input.iraBasisSources.distributions) distribution.taxYear = 2026;
+    input.form1099R = input.form1099R.map((form) => ({
+      ...form, taxYear: 2026, trumpAccount: false, excessContributionEarnings: "0",
+    }));
+    expect(calculateFederalTax(input).iraDistributionsTaxable.eq("2268")).toBe(true);
+
+    input.form1099R.push({ ...input.form1099R[0], iraSepSimple: false, distributionCode: "S" });
+    expect(() => calculateFederalTax(input)).toThrow(/every original IRA distribution/);
+    input.form1099R.pop();
+
+    input.iraBasisSources.distributions[0].grossDistribution = "1001.50";
+    expect(() => calculateFederalTax(input)).toThrow(/original distribution/);
+  });
+
+  it.each(["Q", "G", "Y7", "N", "R", "1P"])("preserves separately identified Code %s with no current taxable amount", (distributionCode) => {
+    const result = calculate({ distributionCode });
+    expect(result.iraDistributionsTaxable.isZero()).toBe(true);
+  });
+
+  it("retains the historical ordinary IRA fallback", () => {
+    expect(calculate({}, 2025).iraDistributionsTaxable.eq("12000.12")).toBe(true);
+  });
 });
 
 describe("2026 original pension source facts", () => {

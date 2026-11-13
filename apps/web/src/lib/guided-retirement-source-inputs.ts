@@ -17,6 +17,7 @@ export function retirementSourceInput(entry: RetirementEntryData) {
     accountReference: entry.accountReference?.trim() || undefined,
     grossDistribution: amount(entry.grossDistribution), taxableAmount: amount(entry.taxableAmount), federalWithheld: amount(entry.federalWithheld),
     iraSepSimple: entry.isIraSepSimple ?? undefined, distributionCode: entry.distributionCode.trim().toUpperCase(),
+    iraBasisConfirmedZero: entry.isIraSepSimple === true ? entry.iraBasisConfirmedZero ?? undefined : undefined,
     taxableAmountNotDetermined: entry.taxableAmountNotDetermined ?? undefined, employeeContributions: amount(entry.employeeContributions),
     eligibleGovernmental457bPlan: entry.eligibleGovernmental457bPlan ?? undefined,
     eligibleGovernmental457bTransferredFromQualifiedPlanTaxableAmount: entry.eligibleGovernmental457bPlan === true ? amount(entry.governmental457bTransferredTaxableAmount) : undefined,
