@@ -2,7 +2,7 @@
 import { createHash } from "node:crypto";
 import { readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import { PDFCheckBox, PDFDict, PDFDocument, PDFName, PDFRef, PDFTextField } from "pdf-lib";
+import { PDFArray, PDFCheckBox, PDFDict, PDFDocument, PDFName, PDFRef, PDFTextField } from "pdf-lib";
 import { expect, it } from "vitest";
 import { assertPdfExportAllowed, markReviewPdf, PDF_MAPPING_PACKS } from "@/pdf/export-policy.js";
 import { REVIEW_TEMPLATE_PACKS } from "@/pdf/template-registry.js";
@@ -81,7 +81,17 @@ it("preserves the write-in, basis breakdown and split certificate cells", async 
 });
 
 it("reopens a marked diagnostic with separate fields and blank identifiers", async () => {
-  const [pdf, { fields }] = await Promise.all([readBlank(), candidate()]);
+  const [bytes, { fields }] = await Promise.all([readFile(blank), candidate()]);
+  const pdf = await PDFDocument.load(bytes);
+  const acro = pdf.catalog.getAcroForm()?.dict;
+  const xfaKey = PDFName.of("XFA");
+  const xfaPackets = acro?.lookupMaybe(xfaKey, PDFArray)?.asArray()
+    .filter((packet): packet is PDFRef => packet instanceof PDFRef) ?? [];
+  expect(xfaPackets).toHaveLength(10);
+  // The pinned blank's packet streams are referenced only by this array.
+  acro?.delete(xfaKey);
+  acro?.delete(PDFName.of("SigFlags"));
+  for (const packet of xfaPackets) pdf.context.delete(packet);
   // A rewritten diagnostic cannot retain the blank's byte-bound Reader rights signature.
   const permissionsKey = PDFName.of("Perms");
   const permissions = pdf.catalog.get(permissionsKey);
@@ -112,8 +122,11 @@ it("reopens a marked diagnostic with separate fields and blank identifiers", asy
   const checks = [fields.line7Yes, fields.line9Yes, fields.line10No, fields.line11b];
   for (const name of checks) form.getCheckBox(name).check();
   await markReviewPdf(pdf);
-  const bytes = await pdf.save();
-  const reopenedPdf = await PDFDocument.load(bytes);
+  const diagnostic = await pdf.save();
+  const reopenedPdf = await PDFDocument.load(diagnostic);
+  expect(reopenedPdf.catalog.getAcroForm()?.dict.get(xfaKey)).toBeUndefined();
+  for (const packet of xfaPackets) expect(reopenedPdf.context.lookup(packet)).toBeUndefined();
+  expect(reopenedPdf.catalog.getAcroForm()?.dict.get(PDFName.of("SigFlags"))).toBeUndefined();
   expect(permissions).toBeInstanceOf(PDFRef);
   expect(readerRights).toBeInstanceOf(PDFRef);
   expect(reopenedPdf.catalog.get(permissionsKey)).toBeUndefined();
@@ -134,7 +147,7 @@ it("reopens a marked diagnostic with separate fields and blank identifiers", asy
     expect(reopened.getTextField(name).getText()).toBeUndefined();
   }
   const evidence = process.env.TAX_ENGINE_FORM8824_CANDIDATE_EVIDENCE_DIR;
-  if (evidence) await writeFile(join(evidence, "form-8824-diagnostic.pdf"), bytes, { mode: 0o600 });
+  if (evidence) await writeFile(join(evidence, "form-8824-diagnostic.pdf"), diagnostic, { mode: 0o600 });
 });
 
 it("keeps annual review and filing exports unavailable", async () => {
