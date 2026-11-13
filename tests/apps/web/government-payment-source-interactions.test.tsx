@@ -2,7 +2,9 @@
 // Spec: spec/federal/guided-input.yaml, government-payment-source-records
 import React, { act, useState } from "react";
 import { createRoot } from "react-dom/client";
+import { renderToStaticMarkup } from "react-dom/server";
 import { expect, it } from "vitest";
+import { SectionReview } from "@/components/guided-interview/section-review";
 import { SectionUnemployment } from "@/components/guided-interview/section-unemployment";
 import { calculateForm1099G } from "@/engine/forms/form-1099-g";
 import { buildTaxInputFromGuidedData } from "@/lib/guided-interview-bridge";
@@ -24,6 +26,25 @@ async function render(initial: UnemploymentData, run: (context: { latest: () => 
   finally { await act(async () => root.unmount()); container.remove(); }
 }
 const confirmation = "Have you checked this government-payment source after the last edit?";
+
+it("shows original Box 7 separately and keeps missing amounts unknown in review", () => {
+  const state = startCompleteInterview({ filingStatus: "single", incomeTypes: ["unemployment"], lifeEvents: [], stateCode: null });
+  const first = { ...completeUnemploymentSource, agriculturePayments: "500.01", federalWithheld: "31.27" };
+  const second = { ...completeUnemploymentSource, accountReference: "private second source", agriculturePayments: "500.40" };
+  const readReview = () => {
+    const container = document.createElement("div");
+    container.innerHTML = renderToStaticMarkup(<SectionReview state={state} preview={null} onJumpToSection={() => {}} />);
+    const row = [...container.querySelectorAll(".guided-review-row")].find(row => row.firstElementChild?.textContent === "Original USDA agriculture payments (Box 7)");
+    return { amount: row?.lastElementChild?.textContent, text: container.textContent };
+  };
+  state.sectionData["income-unemployment"] = { compensation: "0", federalWithheld: "31.27", entries: [first, second],
+    cashFarm: { farmReference: "private farm original", sourceFactsConfirmed: null } };
+  expect(readReview().amount).toBe("$1,000.41");
+  expect(readReview().text).toContain("Cash-farm originals need confirmation");
+  expect(readReview().text).not.toMatch(/private farm original|private second source/);
+  state.sectionData["income-unemployment"].entries = [first, { ...second, agriculturePayments: "" }];
+  expect(readReview().amount).toBe("Unknown");
+});
 
 it("collects and reconfirms original cash-farm Box 7 receipts", async () => {
   const statement = { ...completeUnemploymentSource, programType: "other-government" as const, compensation: "0", agriculturePayments: "800.24", federalWithheld: "0" };

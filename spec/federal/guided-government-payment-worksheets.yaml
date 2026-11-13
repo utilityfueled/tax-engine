@@ -46,3 +46,9 @@ lines:
     description: "Collect the original receipts and reconfirm after edits"
     formula: "Show the local worksheet for a positive original Box 7 or saved draft. Keep unknown source entries blank and explicit zero amounts. Require actual date, original program selection and matched statement identifiers. Changes revoke confirmation before recalculation."
     testRef: "tests/apps/web/government-payment-source-interactions.test.tsx::collects and reconfirms original cash-farm Box 7 receipts"
+  - line: "cash-farm-box7-review"
+    description: "Review confirmed and incomplete USDA records before downloading a historical return"
+    formula: "Show original annual Box 7 amounts apart from Box 1 and Box 4, and indicate whether the cash-farm originals still need confirmation. Reopening must preserve source edits and require reconfirmation before restoring the estimate. A historical review must reflect the reconciled Schedule F values and omit private record references. Filing remains gated."
+    testRef: "apps/web/tests/guided-cash-farm-box7.spec.ts::reconfirms and reopens exact USDA cash-farm sources and downloads the historical review"
+    testRefs:
+      - "tests/apps/web/government-payment-source-interactions.test.tsx::shows original Box 7 separately and keeps missing amounts unknown in review"

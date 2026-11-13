@@ -413,10 +413,17 @@ function UnemploymentSummary({ data }: { data: UnemploymentData | undefined }) {
   if (!entries.length) return <p className="guided-review-empty">No government-payment records entered.</p>;
   const total = governmentSourceTotal(entries, "compensation");
   const withheld = governmentSourceTotal(entries, "federalWithheld");
+  const farm = data?.cashFarm;
+  const showAgriculture = Boolean(farm) || entries.some(entry => parseGuidedDisplayAmount(entry.agriculturePayments).gt(0));
+  const agriculture = showAgriculture ? governmentSourceTotal(entries, "agriculturePayments") : null;
   return <div className="guided-review-card">
     {entries.map((entry, index) => <div className="guided-review-row" key={index}><span className="guided-review-label">{entry.payer || `Government statement ${index + 1}`}</span><span className="guided-review-value">{entry.sourceFactsConfirmed === true ? "Source checked" : "Source facts need review"}</span></div>)}
     <div className="guided-review-row"><span className="guided-review-label">Original unemployment compensation</span><span className="guided-review-value">{total === null ? "Unknown" : formatCurrency(total)}</span></div>
     <div className="guided-review-row"><span className="guided-review-label">Government federal withholding</span><span className="guided-review-value">{withheld === null ? "Unknown" : formatCurrency(withheld)}</span></div>
+    {showAgriculture && <>
+      <div className="guided-review-row"><span className="guided-review-label">Original USDA agriculture payments (Box 7)</span><span className="guided-review-value">{agriculture === null ? "Unknown" : formatCurrency(agriculture)}</span></div>
+      <p>{farm?.sourceFactsConfirmed === true ? "Cash-farm originals checked" : "Cash-farm originals need confirmation"}</p>
+    </>}
   </div>;
 }
 

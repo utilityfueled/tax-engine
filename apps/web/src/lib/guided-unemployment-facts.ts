@@ -76,7 +76,7 @@ export function unemploymentEntries(data: UnemploymentData | undefined): Unemplo
   if (data.entries?.some(isStartedUnemployment)) return data.entries;
   return hasEnteredAmount(data.compensation) || hasEnteredAmount(data.federalWithheld) ? [{ compensation: data.compensation, federalWithheld: data.federalWithheld }] : data.entries ?? [];
 }
-export function governmentSourceTotal(entries: UnemploymentEntryData[], field: "compensation" | "federalWithheld"): Decimal | null {
+export function governmentSourceTotal(entries: UnemploymentEntryData[], field: "compensation" | "federalWithheld" | "agriculturePayments"): Decimal | null {
   const sources = entries.filter(isStartedUnemployment);
   if (sources.some(entry => !["primary", "spouse"].includes(entry.accountHolder ?? "") || amountError(entry[field], field))) return null;
   return sources.reduce((sum, entry) => sum.plus(parseGuidedCurrency(entry[field])), new Decimal(0));
