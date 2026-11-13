@@ -181,6 +181,8 @@ function amount(value: unknown): Decimal {
   let compensation = new Money(0), excludedCompensation = new Money(0), interest = new Money(0), excludedInterest = new Money(0);
   const employeeSources = source.employeeSources === undefined ? undefined : calculatePAOrdinaryEmployeeSources(input, source.employeeSources);
   const actualEmployees = new Map(employeeSources?.perEmployer.map(row => [row.originalIndex, row]));
+  if (employeeSources?.perEmployer.some(employee => employee.outsideBox16MealsPerDiem !== undefined)
+    && (residency.status !== 'resident' || source.residency.domicilePeriods[0]?.state !== 'PA')) return error('excluded meals per diem requires a full-year Pennsylvania resident domiciliary');
   let unreimbursedEmployeeExpenses = new Money(0), excludedNonPAEmployeeExpenses = new Money(0), actualPAServiceCompensation = new Money(0), employeeNetTotal = new Money(0);
   const actualW2Rows = new Map<number, ReturnType<typeof calculateW2StateLocalSources>>();
   const verifyRows = (rows: PAResidencySources["wages"] | PAResidencySources["interest"], originals: unknown[], kind: "wage" | "interest") => {
@@ -197,7 +199,7 @@ function amount(value: unknown): Decimal {
       if (packet !== undefined) actualW2Rows.set(index, calculateW2StateLocalSources(input, index, packet));
       const strictOriginal = packet === undefined ? current : Object.fromEntries(Object.entries(current).filter(([key]) => key !== "stateLocalSources"));
       if (!(kind === "wage" ? W2Schema.strict() : Form1099IntSchema.strict()).safeParse(strictOriginal).success) return error("original source shape contains missing or unsupported facts/status");
-      const monetaryKeys = kind === "wage" ? ["wages", "federalWithheld", "socialSecurityWages", "socialSecurityTips", "allocatedTips", "socialSecurityWithheld", "medicareWages", "medicareWithheld", "box10DependentCareBenefits", "stateTaxWithheld", "localWages", "localTaxWithheld", "stateWages", "box12CodeW", "box12CodeD", "box12CodeE", "box12CodeF", "box12CodeG", "box12CodeH", "box12CodeS", "box12CodeAA", "box12CodeBB", "box12CodeEE", "box12CodeT", "box12CodeTP", "box12CodeTT"]
+      const monetaryKeys = kind === "wage" ? ["wages", "federalWithheld", "socialSecurityWages", "socialSecurityTips", "allocatedTips", "socialSecurityWithheld", "medicareWages", "medicareWithheld", "box10DependentCareBenefits", "stateTaxWithheld", "localWages", "localTaxWithheld", "stateWages", "box12CodeW", "box12CodeD", "box12CodeE", "box12CodeF", "box12CodeG", "box12CodeH", "box12CodeS", "box12CodeAA", "box12CodeBB", "box12CodeEE", "box12CodeP", "box12CodeT", "box12CodeTP", "box12CodeTT"]
         : ["interestIncome", "earlyWithdrawalPenalty", "usSavingsBondInterest", "federalWithheld", "foreignTaxPaid", "taxExemptInterest", "privateActivityBondInterest", "paDirectObligationInterest", "stateWithheld"];
       for (const key of monetaryKeys) if (current[key] !== undefined) amount(current[key]);
       if (stable(row.original) !== stable(current) || (current.taxYear !== undefined && current.taxYear !== year) || current.accountHolder !== "primary") return error("current original identity, source year, owner or content changed; reconfirm actual sources");
@@ -209,19 +211,23 @@ function amount(value: unknown): Decimal {
   const reciprocal = reciprocalPacket === undefined ? undefined : calculatePAReciprocalCompensation(input, source, reciprocalPacket);
   let excludedReciprocalCompensation = new Money(0);
   for (const row of source.wages) {
-    if (row.ordinaryCashCompensationOnlyConfirmed !== true || row.noPAFederalCompensationDifferencesConfirmed !== true || !row.payroll.length) return error("actual ordinary cash payroll and PA/federal compensation facts required");
+    if (row.ordinaryCashCompensationOnlyConfirmed !== true || !row.payroll.length) return error("actual ordinary cash payroll and PA/federal compensation facts required");
     const w2 = input.w2s[row.originalIndex as number];
-    for (const key of ["box12CodeD", "box12CodeE", "box12CodeF", "box12CodeG", "box12CodeH", "box12CodeS", "box12CodeW", "box12CodeT", "box10DependentCareBenefits", "allocatedTips"] as const) if (w2[key] !== undefined && !amount(w2[key]).isZero()) return error("retained nonordinary PA/federal wage adjustment requires its actual source method");
+    for (const key of ["box12CodeD", "box12CodeE", "box12CodeF", "box12CodeG", "box12CodeH", "box12CodeS", "box12CodeW", "box12CodeP", "box12CodeT", "box10DependentCareBenefits", "allocatedTips"] as const) if (w2[key] !== undefined && !amount(w2[key]).isZero()) return error("retained nonordinary PA/federal wage adjustment requires its actual source method");
     if (w2.militaryService?.activeDuty === true) return error("military compensation requires its actual PA source method");
     const employee = actualEmployees.get(row.originalIndex as number);
     const employeeOriginal = source.employeeSources?.employers.find(actual => actual.originalIndex === row.originalIndex);
     const hasTaxableReimbursements = employeeOriginal?.ue.reimbursements.some(record => record.method === "included_in_w2");
+    const perDiem = employee?.outsideBox16MealsPerDiem;
+    const hasPAOnlyExcess = perDiem?.rawAdditionalPACompensation.gt(0) ?? false;
+    if (row.noPAFederalCompensationDifferencesConfirmed !== !hasPAOnlyExcess) return error("actual PA/federal compensation difference attestation must reconcile to the retained ordinary sources");
+    if (perDiem && reciprocalPacket !== undefined) return error("excluded meals per diem with reciprocal compensation requires a separate source method");
     if (employee) {
       if (employee.payroll.length !== row.payroll.length || employee.employmentPeriods.some(period => domicilePeriodAt(day(period.from, year)) !== domicilePeriodAt(day(period.through, year))) || (residency.status === "part_year" && new Set(employee.employmentPeriods.map(period => domicilePeriodAt(day(period.from, year)))).size !== 1)) return error("actual employee employment crossing domicile periods requires its separate method");
       for (const [index, payroll] of row.payroll.entries()) {
         const derived = employee.payroll[index];
         if (!derived || payroll.paidOn !== derived.paidOn || payroll.serviceFrom !== derived.serviceFrom || payroll.serviceThrough !== derived.serviceThrough || !amount(payroll.grossCompensation).eq(derived.grossCompensation) || !amount(payroll.paServicesCompensation).eq(derived.paServicesCompensation) || !amount(payroll.outsidePAServicesCompensation).eq(derived.outsidePAServicesCompensation)) return error("actual calendar-derived payroll amounts/dates do not reconcile retained PA payroll; no free source override");
-        if (hasTaxableReimbursements && payroll.sourceReference !== employeeOriginal?.payroll[index]?.sourceReference) return error("wage-included reimbursement requires the same original payroll in the employee and residency sources");
+        if ((hasTaxableReimbursements || perDiem) && payroll.sourceReference !== employeeOriginal?.payroll[index]?.sourceReference) return error("verified reimbursement requires the same original payroll in the employee and residency sources");
       }
     }
     let gross = new Money(0), included = new Money(0), excluded = new Money(0), reciprocalExcluded = new Money(0);
@@ -252,16 +258,17 @@ function amount(value: unknown): Decimal {
       const firstPay = row.payroll[0]; if (!firstPay) return error("actual employee payroll is missing");
       const residentJob = residentAt(day(firstPay.paidOn, year));
       employee.residentPeriod = residentJob;
-      const eligible = residentJob ? employee.scheduleUE.lineJ : employee.scheduleNRH.line16;
-      const reportedJobGross = roundDollar(included.minus(reciprocalExcluded));
+      const eligible = residentJob ? employee.scheduleUE.netUnreimbursedExpenses : employee.scheduleNRH?.line16;
+      if (!eligible) return error("nonresident employee compensation requires its actual Schedule NRH");
+      const reportedJobGross = roundDollar(included.minus(reciprocalExcluded)).plus(perDiem?.additionalPACompensation ?? 0);
       const deduction = Money.min(reportedJobGross, eligible);
       unreimbursedEmployeeExpenses = unreimbursedEmployeeExpenses.plus(deduction);
       employeeNetTotal = employeeNetTotal.plus(Money.max(0, reportedJobGross.minus(deduction)));
-      const worldwideDeduction = Money.min(roundDollar(gross), employee.scheduleUE.lineJ);
+      const worldwideDeduction = Money.min(roundDollar(gross), employee.scheduleUE.netUnreimbursedExpenses);
       excludedNonPAEmployeeExpenses = excludedNonPAEmployeeExpenses.plus(Money.min(roundDollar(excluded.plus(reciprocalExcluded)), Money.max(0, worldwideDeduction.minus(deduction))));
-      actualPAServiceCompensation = actualPAServiceCompensation.plus(Money.max(0, new Money(employee.rawPAServiceCompensation).minus(employee.rawPAAllowableExpenses).minus(reciprocalExcluded)));
+      actualPAServiceCompensation = actualPAServiceCompensation.plus(Money.max(0, new Money(employee.rawPAServiceCompensation).plus(perDiem?.rawAdditionalPACompensation ?? 0).minus(employee.rawPAAllowableExpenses).minus(reciprocalExcluded)));
     }
-    compensation = compensation.plus(included.minus(reciprocalExcluded)); excludedCompensation = excludedCompensation.plus(excluded); excludedReciprocalCompensation = excludedReciprocalCompensation.plus(reciprocalExcluded);
+    compensation = compensation.plus(included.minus(reciprocalExcluded)).plus(perDiem?.rawAdditionalPACompensation ?? 0); excludedCompensation = excludedCompensation.plus(excluded); excludedReciprocalCompensation = excludedReciprocalCompensation.plus(reciprocalExcluded);
   }
   for (const row of source.interest) {
     if (row.ordinaryPersonalBankInterestConfirmed !== true || !row.credits.length) return error("actual nonbusiness bank-interest classification and dated credit ledger required");

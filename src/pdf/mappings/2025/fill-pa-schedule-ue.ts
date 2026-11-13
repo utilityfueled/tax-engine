@@ -8,6 +8,9 @@ import {
   type PDFPage,
 } from "pdf-lib";
 import type { ScheduleUEResult } from "@/engine/state/pa-schedule-ue.js";
+import type { PAActualEmployeeUEResult } from "@/engine/state/pa-ordinary-employee-sources.js";
+
+type UEReferenceResult = ScheduleUEResult & Pick<PAActualEmployeeUEResult, "additionalPACompensation">;
 
 const PAGE_WIDTH = 612;
 const PAGE_HEIGHT = 792;
@@ -96,12 +99,13 @@ export function shouldIncludePAScheduleUEReferenceSummary(result: ScheduleUEResu
 }
 
 export function buildPAScheduleUEReferenceSummary(
-  result: ScheduleUEResult,
+  result: UEReferenceResult,
 ): PAScheduleUEReferenceSummary {
   if (!shouldIncludePAScheduleUEReferenceSummary(result)) {
     throw new Error("PA Schedule UE reference summary requires supported Schedule UE amounts");
   }
 
+  const excess = result.additionalPACompensation;
   return {
     title: "Pennsylvania Schedule UE Employee Business Expense Reference Summary",
     warningLabel: "REFERENCE SUMMARY ONLY",
@@ -109,17 +113,19 @@ export function buildPAScheduleUEReferenceSummary(
     filingTrigger: "Attach when the Pennsylvania return reports supported PA Schedule UE expenses or employer reimbursements for one employer.",
     totals: [
       { label: "Section II vehicle expenses", value: result.totalVehicleExpenses.toString() },
-      { label: "Section III travel expenses", value: result.totalTravelExpenses.toString() },
+      { label: excess ? "Section II travel expenses" : "Section III travel expenses", value: result.totalTravelExpenses.toString() },
       { label: "Section I and miscellaneous expenses", value: result.totalOtherExpenses.toString() },
       { label: "Line H total expenses", value: result.totalExpenses.toString() },
       { label: "Line I employer reimbursements", value: result.employerReimbursements.toString() },
-      { label: "Line J net unreimbursed expenses", value: result.netUnreimbursedExpenses.toString() },
+      excess
+        ? { label: "Line J taxable reimbursement to PA-40 line 1a", value: excess.toString() }
+        : { label: "Line J net unreimbursed expenses", value: result.netUnreimbursedExpenses.toString() },
     ],
   };
 }
 
 export async function fillPAScheduleUEReference(
-  result: ScheduleUEResult,
+  result: UEReferenceResult,
   outputDir: string,
 ) {
   const doc = await PDFDocument.create();

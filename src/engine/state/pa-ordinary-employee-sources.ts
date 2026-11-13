@@ -3,7 +3,7 @@ import Decimal from 'decimal.js';
 import { sha256 } from '@noble/hashes/sha2.js';
 import { bytesToHex } from '@noble/hashes/utils.js';
 import { W2Schema, type TaxYearInput } from '@/models/inputs.js';
-import { PAOrdinaryEmployeeSourcesSchema } from '@/models/pa-ordinary-employee-sources.js';
+import { PAOrdinaryEmployeeSourcesSchema, type PAOrdinaryEmployeeSources } from '@/models/pa-ordinary-employee-sources.js';
 import { calculateW2StateLocalSources } from '../forms/w2-state-local.js';
 import type { PAScheduleNRHResult } from './pa-schedule-nrh.js';
 import type { ScheduleUEResult } from './pa-schedule-ue.js';
@@ -13,6 +13,7 @@ import { AuditTrail } from '@/utils/audit.js';
 export interface PAActualEmployeeUEResult extends ScheduleUEResult {
   line1: Decimal; line2: Decimal; line3: Decimal; line4: Decimal; line5: Decimal;
   lineH: Decimal; lineI: Decimal; lineJ: Decimal;
+  additionalPACompensation?: Decimal;
 }
 export interface PAActualEmployeeNRHResult extends PAScheduleNRHResult {
   line9: Decimal; line12: Decimal; line13: Decimal; line16: Decimal; line17: Decimal;
@@ -26,7 +27,8 @@ export interface PAActualEmployeeResult {
   employmentPeriods: Array<{ from: string; through: string }>;
   payroll: Array<{ paidOn: string; serviceFrom: string; serviceThrough: string; grossCompensation: Decimal; paServicesCompensation: Decimal; outsidePAServicesCompensation: Decimal }>;
   expenses: Array<{ paidOn: string; allowableAmount: Decimal }>;
-  scheduleUE: PAActualEmployeeUEResult; scheduleNRH: PAActualEmployeeNRHResult;
+  scheduleUE: PAActualEmployeeUEResult; scheduleNRH?: PAActualEmployeeNRHResult;
+  outsideBox16MealsPerDiem?: { rawAdditionalPACompensation: Decimal; additionalPACompensation: Decimal };
 }
 export interface PAOrdinaryEmployeeSourcesResult {
   sourceCommitment: string; perEmployer: PAActualEmployeeResult[]; lines: CalculatedLine[];
@@ -68,6 +70,67 @@ function sourcePrecision(value: unknown): number {
 /** The public values use the repository Decimal constructor; extra precision stays local. */
 const publicMoney = (value: Decimal) => new Decimal(value.toFixed());
 
+type Employer = PAOrdinaryEmployeeSources['employers'][number];
+
+function verifyOutsideBox16MealsPerDiem(ue: Employer['ue'], statement: Employer['statement'], workingDates: Set<string>, signedOn: number, money: (value: unknown) => Decimal): void {
+  const proof = ue.outsideBox16MealsPerDiem;
+  const [remittance] = ue.reimbursements;
+  if (!proof || ue.reimbursements.length !== 1 || !remittance || remittance.method !== 'fixed_allowance_not_w2'
+    || remittance.sourceReference !== proof.remittanceReference || remittance.includedInW2Confirmed !== false || remittance.taxablePayroll !== undefined) {
+    return fail('excluded meals per diem requires one distinct original fixed remittance outside wages');
+  }
+  if (proof.excludedFromFederalBox1AndPABox16Confirmed !== true) return fail('original federal Box 1 and PA Box 16 exclusion must be confirmed');
+  const payrollVerification = statement.outsideBox16MealsPerDiemVerification;
+  if (payrollVerification?.accountablePlanPolicyAndTimelyAccountingVerifiedConfirmed !== true
+    || payrollVerification.federalBox1AndPABox16ExclusionsVerifiedConfirmed !== true
+    || payrollVerification.employerPolicyReference !== proof.employerPolicyReference
+    || payrollVerification.remittanceReference !== remittance.sourceReference) {
+    return fail('signed employer statement must verify the original accountable-plan policy and payroll exclusions for this remittance');
+  }
+  if (proof.accountablePlanAndTimelyAccountingConfirmed !== true || proof.gsaLocalityMealsAndIncidentalsOnlyWith75PercentPartialDaysConfirmed !== true) {
+    return fail('actual timely accountable-plan accounting and GSA locality first/last-day method are required');
+  }
+  if (proof.unrelatedPrivateEmployerConfirmed !== true || proof.overnightBusinessTravelAwayFromTaxHomeConfirmed !== true
+    || proof.employerPaidLodgingDirectlyConfirmed !== true || proof.noOtherPaymentsIncidentalCostsAdvanceRefundOrWageSubstitutionConfirmed !== true) {
+    return fail('actual private employment, required overnight travel, employer-paid lodging and complete exclusive remittance proof are required');
+  }
+  if (proof.taxHomeState !== 'PA' || !proof.taxHomeCity.trim() || normalize(proof.taxHomeCity) === 'PHILADELPHIA'
+    || proof.destinationState !== 'PA' || normalize(proof.destinationCounty) !== 'PHILADELPHIA' || normalize(proof.destinationCity) !== 'PHILADELPHIA') {
+    return fail('verified locality coverage requires a distinct Pennsylvania tax home and Philadelphia business destination');
+  }
+  const lodging = proof.lodgingLocation;
+  if (lodging.state !== 'PA' || normalize(lodging.county) !== 'PHILADELPHIA' || normalize(lodging.city) !== 'PHILADELPHIA') {
+    return fail('original employer-paid lodging and sleep/rest locality must be Philadelphia, Philadelphia County');
+  }
+  const [first, last] = proof.days;
+  if (proof.days.length !== 2 || !first || !last || date(last.date, 2025) !== date(first.date, 2025) + 1
+    || last.date > '2025-09-30' || !workingDates.has(first.date) || !workingDates.has(last.date)) {
+    return fail('Philadelphia per diem requires two consecutive actual PA working dates in the verified GSA rate period');
+  }
+  const paid = date(remittance.paidOn, 2025);
+  if (paid < date(last.date, 2025) || paid > signedOn) return fail('actual final remittance date must follow the documented trip and precede or match signed verification');
+  const originals = [proof.tripReference, proof.employerPolicyReference, proof.lodgingPaymentReference, proof.remittanceReference, first.accountingReference, last.accountingReference];
+  for (const reference of originals) ref(reference);
+  if (new Set(originals.map(reference => reference.trim())).size !== originals.length) return fail('separate dated per diem original references must be distinct');
+  if (ue.expenses.length !== 2 || remittance.expenseReferences.length !== 2 || first.expenseReference === last.expenseReference) return fail('one distinct original meals receipt per travel date must pair to the fixed remittance');
+  // GSA FY 2025 Pennsylvania table, Philadelphia/Philadelphia County, $92 M&IE and $69 on each partial travel day.
+  const partialDayCap = money('92').times('0.75');
+  const directions = [first, last].map(day => {
+    const expense = ue.expenses.find(record => record.sourceReference === day.expenseReference);
+    if (!expense || expense.category !== 'overnight_meals' || expense.paidOn !== day.date || expense.reimbursementMethod !== remittance.method
+      || expense.reimbursementReferences.length !== 1 || expense.reimbursementReferences[0] !== remittance.sourceReference || !remittance.expenseReferences.includes(day.expenseReference)) {
+      return fail('original meal receipt dates and links must pair with the per diem remittance and day accounting');
+    }
+    const payment = money(day.amount), receipt = money(expense.amount);
+    if ([day.amount, expense.amount, remittance.amount].some(value => !/^\d+(\.\d{1,2})?$/.test(value))) return fail('original meals and payment amounts must use exact dollars and cents');
+    if (!receipt.gt(0)) return fail('an actual positive meals receipt is required on each travel date');
+    if (!payment.gt(0) || payment.gt(partialDayCap)) return fail('Philadelphia day payment exceeds the $69 federal partial-day cap or is not positive');
+    return payment.comparedTo(receipt);
+  });
+  if (directions.includes(1) && directions.includes(-1)) return fail('opposite day-level per diem directions require a separate reimbursement grouping method');
+  if (!money(first.amount).plus(money(last.amount)).eq(money(remittance.amount))) return fail('actual day payments must reconcile to the original final remittance');
+}
+
 export function calculatePAOrdinaryEmployeeSources(input: TaxYearInput, raw: unknown): PAOrdinaryEmployeeSourcesResult {
   const parsed = PAOrdinaryEmployeeSourcesSchema.safeParse(raw);
   if (!parsed.success) return fail('actual employee packet shape is unknown or unsupported');
@@ -104,14 +167,14 @@ export function calculatePAOrdinaryEmployeeSources(input: TaxYearInput, raw: unk
     if (!w2 || !W2Schema.strict().safeParse(w2).success || w2.taxYear !== year || w2.accountHolder !== 'primary' || !row.originalW2 || stable(row.originalW2) !== stable(w2)) return fail('current original W2 owner/year/identity is missing or stale');
     if (w2.allocatedTips === undefined) return fail('actual original W2 Box8 amount is unknown; complete-box confirmation cannot supply zero');
     const actualStates = w2.stateLocalSources === undefined ? undefined : calculateW2StateLocalSources(input, index, w2.stateLocalSources);
-    for (const key of ['wages', 'federalWithheld', 'socialSecurityWages', 'socialSecurityTips', 'allocatedTips', 'socialSecurityWithheld', 'medicareWages', 'medicareWithheld', 'box10DependentCareBenefits', 'stateTaxWithheld', 'localWages', 'localTaxWithheld', 'stateWages', 'box12CodeW', 'box12CodeD', 'box12CodeE', 'box12CodeF', 'box12CodeG', 'box12CodeH', 'box12CodeS', 'box12CodeAA', 'box12CodeBB', 'box12CodeEE', 'box12CodeT', 'box12CodeTP', 'box12CodeTT'] as const) if (w2[key] !== undefined) money(w2[key]);
+    for (const key of ['wages', 'federalWithheld', 'socialSecurityWages', 'socialSecurityTips', 'allocatedTips', 'socialSecurityWithheld', 'medicareWages', 'medicareWithheld', 'box10DependentCareBenefits', 'stateTaxWithheld', 'localWages', 'localTaxWithheld', 'stateWages', 'box12CodeW', 'box12CodeD', 'box12CodeE', 'box12CodeF', 'box12CodeG', 'box12CodeH', 'box12CodeS', 'box12CodeAA', 'box12CodeBB', 'box12CodeEE', 'box12CodeP', 'box12CodeT', 'box12CodeTP', 'box12CodeTT'] as const) if (w2[key] !== undefined) money(w2[key]);
     const economic = Object.fromEntries(Object.entries(w2).filter(([key]) => !['stateLocalSources', 'state', 'stateWages', 'stateTaxWithheld', 'localWages', 'localTaxWithheld', 'localityName'].includes(key)));
     const identity = stable({ ...economic, employer: { name: normalize(w2.employer.name), ein: identifier(w2.employer.ein) } });
     if (identities.has(identity)) return fail('indistinguishable duplicate economic W2 originals need actual separate proof'); identities.add(identity);
     for (const value of Object.values(row.employer)) ref(value);
     if (normalize(row.employer.name) !== normalize(w2.employer.name) || identifier(row.employer.ein) !== identifier(w2.employer.ein) || !/^\d{9}$/.test(identifier(row.employer.ein))) return fail('actual employer identity does not reconcile original W2');
     if (row.allocationMethod !== 'working_days' || row.workplaceBasis === '' || row.specialInterstateOccupation !== 'none') return fail('unknown workplace, business-volume or special interstate employee method requires its successor');
-    for (const key of ['box12CodeD', 'box12CodeE', 'box12CodeF', 'box12CodeG', 'box12CodeH', 'box12CodeS', 'box12CodeW', 'box12CodeT', 'box10DependentCareBenefits', 'allocatedTips'] as const) if (w2[key] !== undefined && !money(w2[key]).isZero()) return fail('nonordinary wage adjustment requires its actual source method');
+    for (const key of ['box12CodeD', 'box12CodeE', 'box12CodeF', 'box12CodeG', 'box12CodeH', 'box12CodeS', 'box12CodeW', 'box12CodeP', 'box12CodeT', 'box10DependentCareBenefits', 'allocatedTips'] as const) if (w2[key] !== undefined && !money(w2[key]).isZero()) return fail('nonordinary wage adjustment requires its actual source method');
     if (w2.militaryService?.activeDuty === true) return fail('military employee allocation requires its actual source method');
     const statement = row.statement;
     for (const text of [statement.documentReference, statement.signerName, statement.signerRole]) ref(text);
@@ -179,6 +242,15 @@ export function calculatePAOrdinaryEmployeeSources(input: TaxYearInput, raw: unk
     if (actualPA === undefined || !whole(actualPA).eq(allocatedGross)) ref(statement.w2CorrectionExplanation);
     const ue = row.ue; ref(ue.sourceReference);
     if (ue.allExpenseAndReimbursementSourcesReviewedConfirmed !== true || ue.otherExpenseClassesConfirmedNone !== true) return fail('complete actual expense/reimbursement history and other-class none proof are unknown');
+    const excludedMealsPerDiem = ue.outsideBox16MealsPerDiem !== undefined;
+    if (excludedMealsPerDiem) {
+      if (year !== 2025 || source.employers.length !== 1 || row.workplaceBasis !== 'suitable_PA' || paWorkingDays !== workingDays || outsideDates.length > 0) return fail('excluded meals per diem requires the verified 2025 method and one actual all-PA employer');
+      if (!actualPA?.eq(gross) || (actualStates !== undefined && actualStates.stateRows.length !== 1)) return fail('excluded meals per diem requires one actual PA Box 16 equal to original Box 1 wages');
+      if (row.payroll.some(pay => date(pay.paidOn, year) > signedOn)) return fail('signed excluded per diem proof predates an original wage payment');
+      verifyOutsideBox16MealsPerDiem(ue, statement, new Set(row.calendar.filter(day => day.kind === 'working').map(day => day.date)), signedOn, money);
+    } else if (statement.outsideBox16MealsPerDiemVerification !== undefined) {
+      return fail('signed employer per diem verification requires the matching original trip and remittance');
+    }
     const hasTaxableReimbursements = ue.reimbursements.some(record => record.method === 'included_in_w2');
     if (hasTaxableReimbursements && (statement.taxablePayrollInclusionVerifiedConfirmed !== true || !actualPA?.eq(gross) || paWorkingDays !== workingDays || outsideDates.length > 0)) return fail('wage-included reimbursement requires signed payroll inclusion proof, equal original Box 1 and PA Box 16, and only actual PA work');
     const payrollByReference = new Map(row.payroll.map(pay => [pay.sourceReference, pay]));
@@ -212,7 +284,7 @@ export function calculatePAOrdinaryEmployeeSources(input: TaxYearInput, raw: unk
       if (expenseRefs.has(expense.sourceReference.trim()) || receipts.has(expense.receiptReference.trim())) return fail('duplicate actual employee expense or original receipt');
       expenseRefs.add(expense.sourceReference.trim()); receipts.add(expense.receiptReference.trim());
       verifyUniqueOriginal(originalExpenseReceipts, expense.receiptReference, expense.reimbursementMethod === 'included_in_w2');
-      if (!(expense.category in categories)) return fail('unsupported actual UE category requires its separate method');
+      if (!(expense.category in categories) && !(excludedMealsPerDiem && expense.category === 'overnight_meals')) return fail('unsupported actual UE category requires its separate method');
       for (const key of ['ordinaryCustomaryConfirmed', 'actuallyPaidConfirmed', 'reasonableConfirmed', 'necessaryConfirmed', 'directlyRelatedConfirmed', 'employerRequiredConfirmed', 'notProvidedByEmployerConfirmed'] as const) if (expense[key] !== true) return fail('actual required eligible employee expense conditions are unknown');
       if (expense.category === 'small_tools_supplies' && expense.usefulLifeAtMostOneYearConfirmed !== true) return fail('actual tool useful life needs the depreciation successor');
       if (expense.category === 'work_clothing' && expense.notEverydayClothingConfirmed !== true) return fail('actual required clothing must not be adaptable for everyday use');
@@ -230,7 +302,7 @@ export function calculatePAOrdinaryEmployeeSources(input: TaxYearInput, raw: unk
         }
         if (expense.reimbursementMethod !== 'included_in_w2') allowable = zero();
       }
-      categories[expense.category] = categories[expense.category].plus(allowable);
+      if (expense.category !== 'overnight_meals') categories[expense.category] = categories[expense.category].plus(allowable);
       expenses.push({ paidOn: expense.paidOn, allowableAmount: publicMoney(allowable) });
     }
     for (const reimbursement of reimbursements.values()) {
@@ -245,6 +317,7 @@ export function calculatePAOrdinaryEmployeeSources(input: TaxYearInput, raw: unk
     // Aggregate each connected group of actual originals; disjoint receipt
     // costs cannot conceal excess paid against a different receipt group.
     const remainingReimbursements = new Set([...reimbursements.values()].filter(record => record.method !== 'included_in_w2').map(record => record.sourceReference));
+    let meals = zero(), rawMealsReimbursement = zero(), mealsReimbursement = zero(), rawAdditionalPACompensation = zero(), additionalPACompensation = zero();
     while (remainingReimbursements.size > 0) {
       const firstReference = remainingReimbursements.values().next().value;
       if (firstReference === undefined) return fail('actual reimbursement group is incomplete');
@@ -267,23 +340,33 @@ export function calculatePAOrdinaryEmployeeSources(input: TaxYearInput, raw: unk
           }
         }
       }
-      if (reimbursed.gt(covered)) return fail('actual aggregate reimbursement exceeds paired receipt cost; taxable excess requires its actual cash/wage inclusion successor');
+      if (reimbursed.gt(covered)) {
+        if (!excludedMealsPerDiem) return fail('actual aggregate reimbursement exceeds paired receipt cost; taxable excess requires its actual cash/wage inclusion successor');
+        meals = covered;
+        rawMealsReimbursement = reimbursed;
+        mealsReimbursement = whole(reimbursed);
+        rawAdditionalPACompensation = reimbursed.minus(covered);
+        additionalPACompensation = mealsReimbursement.minus(whole(meals));
+        if (!additionalPACompensation.gt(0) || !grossPrinted.plus(additionalPACompensation).eq(whole(gross.plus(rawAdditionalPACompensation)))) return fail('actual per diem excess whole-dollar precision requires a separate method');
+      }
     }
     const direct = Object.fromEntries(Object.entries(categories).map(([key, amount]) => [key, whole(amount)]));
     const total = Object.values(direct).reduce((sum, n) => sum.plus(n), zero());
     const rawTotal = Object.values(categories).reduce((sum, n) => sum.plus(n), zero());
     const allocatedExpense = admittedPrintedAllocation(total), net = Money.max(0, allocatedGross.minus(allocatedExpense));
     const p = publicMoney, z = () => p(zero());
+    const printedMeals = whole(meals), totalUEExpenses = total.plus(printedMeals);
     const scheduleUE: PAActualEmployeeUEResult = {
       totalMiles: 0, businessMiles: 0, businessUsePercentage: z(), vehicleMethod: 'none', standardMileageDeduction: z(), actualVehicleDeduction: z(), parkingAndTolls: z(), totalVehicleExpenses: z(),
-      lodging: z(), mealsBeforeLimitation: z(), mealsAfterLimitation: z(), otherTravel: z(), totalTravelExpenses: z(),
+      lodging: z(), mealsBeforeLimitation: p(meals), mealsAfterLimitation: p(printedMeals), otherTravel: z(), totalTravelExpenses: p(printedMeals),
       unionDues: p(direct.union_dues), toolsAndSupplies: p(direct.small_tools_supplies), workClothing: p(direct.work_clothing), education: z(), licenseFees: p(direct.occupational_license), subscriptions: z(), homeOffice: z(), otherExpenses: z(), totalOtherExpenses: p(total),
-      totalExpenses: p(total), employerReimbursements: z(), netUnreimbursedExpenses: p(total),
-      line1: p(direct.union_dues), line2: p(direct.work_clothing), line3: p(direct.small_tools_supplies), line4: p(direct.occupational_license), line5: p(total), lineH: p(total), lineI: z(), lineJ: p(total), lines: [],
+      totalExpenses: p(totalUEExpenses), employerReimbursements: p(mealsReimbursement), netUnreimbursedExpenses: p(total),
+      line1: p(direct.union_dues), line2: p(direct.work_clothing), line3: p(direct.small_tools_supplies), line4: p(direct.occupational_license), line5: p(total), lineH: p(totalUEExpenses), lineI: p(mealsReimbursement), lineJ: p(total.minus(additionalPACompensation)), lines: [],
+      ...(additionalPACompensation.gt(0) ? { additionalPACompensation: p(additionalPACompensation) } : {}),
     };
     const correctReported = actualPA !== undefined && whole(actualPA).eq(allocatedGross);
     const correctReportedAmount = correctReported && actualPA !== undefined ? whole(actualPA) : zero();
-    const scheduleNRH: PAActualEmployeeNRHResult = {
+    const scheduleNRH: PAActualEmployeeNRHResult | undefined = excludedMealsPerDiem ? undefined : {
       workingDays, workingDayFraction: p(printedFraction), businessVolumeFraction: z(), selectedApportionmentFraction: p(printedFraction),
       employerReportedPAGrossCompensation: correctReported ? p(correctReportedAmount) : z(), grossCompensation: correctReported ? z() : p(grossPrinted), apportionedGrossCompensation: correctReported ? z() : p(allocatedGross),
       unreimbursedEmployeeBusinessExpenses: p(total), apportionedEmployeeBusinessExpenses: p(allocatedExpense), employerReimbursementsNotInW2: z(), apportionedExpenseReimbursements: z(), totalPAGrossCompensation: p(allocatedGross), netPATaxableCompensation: p(net), businessApplicableFactorCount: 0,
@@ -291,8 +374,17 @@ export function calculatePAOrdinaryEmployeeSources(input: TaxYearInput, raw: unk
     };
     audit.record('PA-Actual-Employee', `${index + 1}-working-days`, 'Source-derived PA working days', p(new Money(paWorkingDays)), 'Complete signed employer calendar and documented outside necessity');
     audit.record('PA-Actual-Employee', `${index + 1}-gross`, 'Source-derived PA service compensation', p(allocate(gross)), 'Original payroll multiplied by complete PA-working-day ratio');
-    audit.record('PA-Actual-Employee', `${index + 1}-ue`, 'Printed apportioned direct employee expenses', p(allocatedExpense), 'Whole-dollar UE categories multiplied by admitted NRH fraction');
-    perEmployer.push({ originalIndex: index, calendarDays: expectedDates.length, nonworkingDays, workingDays, paWorkingDays, workingDayFraction: p(printedFraction), rawGrossCompensation: p(gross), rawPAServiceCompensation: p(allocate(gross)), rawAllowableExpenses: p(rawTotal), rawPAAllowableExpenses: p(allocate(rawTotal)), employmentPeriods, payroll, expenses, scheduleUE, scheduleNRH });
+    if (excludedMealsPerDiem) {
+      audit.record('PA-Actual-Employee', `${index + 1}-ue-meals`, 'Actual eligible meals included in UE H', p(meals), 'Actual paired overnight receipts are included in the excess computation only');
+      audit.record('PA-Actual-Employee', `${index + 1}-ue-remittance-exact`, 'Exact employer remittance used for the PA excess', p(rawMealsReimbursement), 'Qualified original reimbursement retained in cents when an excess is present');
+      audit.record('PA-Actual-Employee', `${index + 1}-ue-remittance`, 'Excluded employer remittance reported on UE I', p(mealsReimbursement), 'Full qualified original reimbursement rounded for the Pennsylvania schedule');
+      audit.record('PA-Actual-Employee', `${index + 1}-ue-excess`, 'Exact additional Pennsylvania compensation', p(rawAdditionalPACompensation), 'Excluded remittance less paired eligible actual receipts; state return only');
+      audit.record('PA-Actual-Employee', `${index + 1}-ue-excess-reported`, 'Taxable reimbursement transferred to PA-40 line 1a', p(additionalPACompensation), 'Printed UE I less H; no Schedule NRH or PA-40 line 1b deduction');
+    } else audit.record('PA-Actual-Employee', `${index + 1}-ue`, 'Printed apportioned direct employee expenses', p(allocatedExpense), 'Whole-dollar UE categories multiplied by admitted NRH fraction');
+    perEmployer.push({ originalIndex: index, calendarDays: expectedDates.length, nonworkingDays, workingDays, paWorkingDays, workingDayFraction: p(printedFraction), rawGrossCompensation: p(gross), rawPAServiceCompensation: p(allocate(gross)), rawAllowableExpenses: p(rawTotal), rawPAAllowableExpenses: p(allocate(rawTotal)), employmentPeriods, payroll, expenses, scheduleUE,
+      ...(scheduleNRH ? { scheduleNRH } : {}),
+      ...(excludedMealsPerDiem ? { outsideBox16MealsPerDiem: { rawAdditionalPACompensation: p(rawAdditionalPACompensation), additionalPACompensation: p(additionalPACompensation) } } : {}),
+    });
   }
   const sourceCommitment = bytesToHex(sha256(new TextEncoder().encode(stable({ method: 'pa-actual-employee-v1', source, currentOriginals: input.w2s }))));
   return { sourceCommitment, perEmployer, lines: audit.getLines() };

@@ -5,6 +5,18 @@ const answer = z.boolean().nullable();
 const sourceYear = z.number().int().nullable();
 const original = z.record(z.string(), z.unknown()).optional();
 const state = W2StateLocalSourcesSchema.shape.stateRows.element.shape.state;
+const outsideBox16MealsPerDiem = z.object({
+  tripReference: z.string(), employerPolicyReference: z.string(), lodgingPaymentReference: z.string(),
+  remittanceReference: z.string(), taxHomeState: state, taxHomeCity: z.string(),
+  destinationState: state, destinationCounty: z.string(), destinationCity: z.string(),
+  lodgingLocation: z.object({ state, county: z.string(), city: z.string() }).strict(),
+  unrelatedPrivateEmployerConfirmed: answer, overnightBusinessTravelAwayFromTaxHomeConfirmed: answer,
+  employerPaidLodgingDirectlyConfirmed: answer, accountablePlanAndTimelyAccountingConfirmed: answer,
+  gsaLocalityMealsAndIncidentalsOnlyWith75PercentPartialDaysConfirmed: answer,
+  excludedFromFederalBox1AndPABox16Confirmed: answer,
+  noOtherPaymentsIncidentalCostsAdvanceRefundOrWageSubstitutionConfirmed: answer,
+  days: z.array(z.object({ date: z.string(), accountingReference: z.string(), expenseReference: z.string(), amount: z.string() }).strict()),
+}).strict();
 const expense = z.object({
   sourceReference: z.string(), receiptReference: z.string(), paidOn: z.string(),
   category: z.enum(['', 'union_dues', 'work_clothing', 'small_tools_supplies', 'occupational_license', 'overnight_meals', 'travel', 'home_office', 'moving', 'education', 'depreciation', 'other']),
@@ -29,6 +41,11 @@ const employer = z.object({
     documentReference: z.string(), documentAvailableConfirmed: answer, signed: answer,
     signerName: z.string(), signerRole: z.string(), signedOn: z.string(), fullCalendarAndOutsideDaysVerifiedConfirmed: answer,
     taxablePayrollInclusionVerifiedConfirmed: answer.optional(),
+    outsideBox16MealsPerDiemVerification: z.object({
+      employerPolicyReference: z.string(), remittanceReference: z.string(),
+      accountablePlanPolicyAndTimelyAccountingVerifiedConfirmed: answer,
+      federalBox1AndPABox16ExclusionsVerifiedConfirmed: answer,
+    }).strict().optional(),
     outsideWorkDates: z.array(z.string()), w2CorrectionExplanation: z.string(),
   }).strict(),
   calendar: z.array(z.object({
@@ -44,6 +61,7 @@ const employer = z.object({
   ue: z.object({
     sourceReference: z.string(), allExpenseAndReimbursementSourcesReviewedConfirmed: answer,
     otherExpenseClassesConfirmedNone: answer, expenses: z.array(expense),
+    outsideBox16MealsPerDiem: outsideBox16MealsPerDiem.optional(),
     reimbursements: z.array(z.object({
       sourceReference: z.string(), paidOn: z.string(), amount: z.string(),
       method: z.enum(['', 'exact_accounted_not_w2', 'fixed_allowance_not_w2', 'included_in_w2', 'unaccounted_partial', 'unaccounted_excess']),

@@ -319,3 +319,66 @@ taxablePayrollReimbursements:
     - "tests/engine/state/pa-ordinary-employee-taxable-reimbursement.test.ts::PA taxable payroll does not admit the same original receipt or allowance under another employer"
     - "tests/engine/state/pa-ordinary-employee-taxable-reimbursement.test.ts::PA taxable payroll rejects a different parent payroll reference even when amounts match"
     - "tests/engine/state/pa-ordinary-employee-taxable-reciprocity.test.ts::defers the ordinary return when wages with an included allowance are excluded by reciprocity"
+outsideBox16MealsPerDiem:
+  sources:
+    - "https://www.pacodeandbulletin.gov/secure/pacode/data/061/chapter101/s101.6.html (§101.6(c)(5), (d))"
+    - "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforbusinesses/employerwithholding/documents/rev-415.pdf (printed page 7)"
+    - "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40ue.pdf (lines 13, 15, B, H, I and J)"
+    - "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40in.pdf (PA-40 rounding and Schedule UE lines I and J)"
+    - "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/dfo-02.pdf (printed page 34)"
+    - "https://www.irs.gov/pub/irs-drop/rp-19-48.pdf (§§3.01, 3.02(2), 4.02, 6.04, 7.01–7.03)"
+    - "https://www.gsa.gov/travel/plan-book/per-diem-rates/per-diem-rates-results?category=935&fiscal_year=2025&state=PA (Philadelphia, Philadelphia County)"
+  scope: |
+    One full-year Pennsylvania domiciliary, one primary owner, one unrelated
+    private W-2 employer and one two-consecutive-date required overnight business
+    trip away from the tax home to Philadelphia, Philadelphia County. All paid
+    services and the normal worksite are in PA. Support trips entirely between
+    January 1 and September 30, 2025, the overlap of tax year 2025 and the
+    verified federal fiscal-year rate. The employer pays the hotel directly
+    and documents the actual sleep/rest locality separately from the business
+    destination. Both must be Philadelphia, Philadelphia County, PA for this
+    method. Use the original lodging payment's locality and apply the GSA
+    M&IE-only rate with federal first and last day proration (75% of the $92
+    locality rate, $69 per day). Preserve the
+    separate final remittance and day-level accounting originals, reconcile
+    each payment to the dated trip and independently verify the cap on each
+    date. Require the signed employer statement to explicitly identify and
+    verify the actual accountable-plan policy and the original remittance's
+    exclusion from both W-2 boxes. A signature for the work calendar alone
+    supplies neither fact. Require a complete timely accountable-plan record of time,
+    place and business purpose, and no other payments, incidental costs,
+    advance, refund or wage substitution. Require actual equal original Box 1
+    and PA Box 16, complete reconciled wages, and matching parent payroll
+    references. Preserve federal and PA wage/withholding originals unchanged.
+    For a positive state-only excess, explicitly deny the parent ordinary
+    no-PA/federal-compensation-difference attestation. For a neutral paired
+    group, continue to require the no-difference attestation.
+    Require personally paid, ordinary, reasonable and necessary required
+    meals with distinct original receipt links and dates, one eligible original
+    per supported travel day. Original payments and expenses use exact cents.
+    Defer opposite day-level reimbursement directions pending a distinct
+    grouping method. Other expense classes, reimbursement methods,
+    overlapping groups, unknown payments and wages, other employers, correction
+    methods, mixed residency, reciprocal, special and nonresident composition
+    are outside this method. Do not produce or route NRH for this resident case.
+  lines: |
+    If actual paired costs are equal to or exceed the excluded remittance,
+    omit the covered group from UE and do not deduct the uncovered balance.
+    If remittance exceeds eligible actual costs, UE 13, 15, B and H use
+    eligible actual meals rounded to whole dollars. I uses the full excluded
+    payment rounded to whole dollars, and J is H minus I. A negative J is a
+    positive compensation excess on PA-40 1a and zero deduction on 1b.
+    Compare the reported wages plus the printed excess with a final rounding
+    of raw wages plus the exact raw excess. Defer if the two whole-dollar
+    results disagree or the positive exact excess does not produce a positive
+    printed excess. Keep the raw excess and printed difference distinct and
+    include them once in Pennsylvania compensation, never federal wages or
+    PA withholding. This is a review-only 2025 method. No 2026 form, e-file
+    or tax qualification follows from the federal rate table.
+    The private-input-free UE reference labels the positive J as a taxable
+    reimbursement to PA-40 line 1a, after H and I, and remains review-only.
+  tests:
+    - "tests/engine/state/pa-ordinary-employee-meals-per-diem.test.ts::routes a verified excluded Philadelphia meals per diem excess only to PA compensation"
+    - "tests/engine/state/pa-ordinary-employee-meals-per-diem.test.ts::suppresses a verified below-cost or exact Philadelphia meals per diem group"
+    - "tests/engine/state/pa-ordinary-employee-meals-per-diem.test.ts::rejects unsupported or contradictory Philadelphia per diem originals and calculations"
+    - "tests/engine/state/pa-ordinary-employee-meals-per-diem.test.ts::requires actual Philadelphia lodging and a signed employer verification of the original excluded remittance"

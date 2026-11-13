@@ -1354,7 +1354,7 @@ export async function fillReturn(
         if (shouldIncludePAScheduleUEReferenceSummary(employee.scheduleUE)) {
           filledForms.push(await fillPAScheduleUEReference(employee.scheduleUE, employerDir));
         }
-        if (employee.residentPeriod === false && (employee.rawGrossCompensation.gt(0) || employee.scheduleUE.totalExpenses.gt(0))) {
+        if (employee.residentPeriod === false && employee.scheduleNRH && (employee.rawGrossCompensation.gt(0) || employee.scheduleUE.totalExpenses.gt(0))) {
           filledForms.push(await fillPAScheduleNRHReference(input, employee.scheduleNRH, employerDir, employee));
         }
       }
