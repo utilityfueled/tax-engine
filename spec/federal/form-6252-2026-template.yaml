@@ -60,6 +60,27 @@ lines:
       Identity, related-party fields, source references and instructions are
       outside the writable projection.
     testRef: "tests/pdf/form-6252-2026-candidate.test.ts::projects a confirmed current investment-land installment sale"
+  - line: "1–26 ordinary subsequent year"
+    description: "Project a later year of a confirmed domestic investment-land installment contract"
+    formula: >-
+      Bind a pre-2026 long-term sale to the actual original closing, basis,
+      gross profit percentage, complete dated ledger and unchanged fixed-price
+      contract. The original sale year must have deferred principal. Each prior
+      payment year must be present explicitly from the sale through 2025, even
+      when no principal was paid. Line 19 carries the original sale-year
+      percentage as reported with four to six places, including any trailing
+      zero. Verify that the retained percentage agrees at its precision with
+      both the exact and printed gross-profit/contract-price amounts. Line 20
+      is zero. Enter actual 2026 principal on line 21 and earlier principal on
+      line 23. Exclude interest. Require a positive balance entering 2026;
+      admit no-payment years and the final principal payment in 2026. Reject
+      missing years, excess principal, recapture, new contract terms and a
+      carried ratio that would change the printed recognized gain. Leave all
+      identity and related-party fields blank and keep public exports disabled.
+    reference: "Final 2026 Form 6252 instructions, Which Parts To Complete and Lines 19, 21, 23–26"
+    testRef: "tests/pdf/form-6252-2026-candidate.test.ts::projects a confirmed later investment-land installment year and retains the original ratio"
+    testRefs:
+      - "tests/pdf/form-6252-2026-candidate.test.ts::admits zero and final installments and rejects inconsistent prior sale and ledger evidence"
   - line: "diagnostic"
     description: "Reopen a review-marked synthetic diagnostic"
     formula: >-

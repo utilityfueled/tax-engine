@@ -26,6 +26,17 @@ const investmentLand = {
   ordinaryInstallmentMethodWithoutAssumedDebtOrSpecialPaymentsConfirmed: true,
 };
 
+const subsequentYear = {
+  acquiredDate: "2019-02-28", soldDate: "2024-05-12",
+  sellingPrice: "120000", costBasis: "42000", sellingExpenses: "3000", currentPrincipal: "30000",
+  saleYearGrossProfitPercentage: "0.625000",
+  priorPrincipalByYear: [{ year: 2024, principal: "20000" }, { year: 2025, principal: "10000" }],
+  closingBasisAndPaymentRecordsConfirmed: true,
+  investmentLandAndUnrelatedFixedPriceSaleConfirmed: true,
+  ordinaryInstallmentMethodWithoutAssumedDebtOrSpecialPaymentsConfirmed: true,
+  originalRatioAndUnchangedAgreementConfirmed: true,
+};
+
 it("pins the final blank and its integral instructions", async () => {
   const bytes = await readFile(blank);
   expect(bytes).toHaveLength(119676);
@@ -228,4 +239,52 @@ it("projects a confirmed current investment-land installment sale", async () => 
   }
   const evidence = process.env.TAX_ENGINE_FORM6252_CANDIDATE_EVIDENCE_DIR;
   if (evidence) await writeFile(join(evidence, "form-6252-investment-land.pdf"), bytes, { mode: 0o600 });
+});
+
+it("projects a confirmed later investment-land installment year and retains the original ratio", async () => {
+  const { projectForm62522026SubsequentInvestmentLand, FORM_6252_2026_CANDIDATE: { fields } } =
+    await import("@/pdf/mappings/2026/form-6252-candidate.js");
+  const { text, checked } = projectForm62522026SubsequentInvestmentLand(subsequentYear);
+  expect(text).toMatchObject({
+    [fields.line1PropertyDescription]: "4 - Investment land", [fields.line2aAcquiredDate]: "02/28/2019", [fields.line2bSoldDate]: "05/12/2024",
+    [fields.line5]: "120000", [fields.line13]: "45000", [fields.line16]: "75000", [fields.line18]: "120000",
+    [fields.line19GrossProfitPercentage]: "0.625000", [fields.line20]: "0", [fields.line21]: "30000", [fields.line22]: "30000",
+    [fields.line23]: "30000", [fields.line24]: "18750", [fields.line25]: "0", [fields.line26]: "18750",
+  });
+  expect(checked).toEqual([fields.line3No, fields.line4Yes]);
+
+  const { pdf } = await editableAnnualBlank();
+  const form = pdf.getForm();
+  for (const [name, value] of Object.entries(text)) form.getTextField(name).setText(value);
+  for (const name of checked) form.getCheckBox(name).check();
+  await markReviewPdf(pdf);
+  const bytes = await pdf.save();
+  const reopened = await PDFDocument.load(bytes);
+  expect(reopened.getPageCount()).toBe(4);
+  for (const field of reopened.getForm().getFields()) {
+    if (field instanceof PDFTextField) expect(field.getText()).toBe(text[field.getName()]);
+    if (field instanceof PDFCheckBox) expect(field.isChecked()).toBe(checked.includes(field.getName()));
+  }
+  const evidence = process.env.TAX_ENGINE_FORM6252_CANDIDATE_EVIDENCE_DIR;
+  if (evidence) await writeFile(join(evidence, "form-6252-subsequent-investment-land.pdf"), bytes, { mode: 0o600 });
+});
+
+it("admits zero and final installments and rejects inconsistent prior sale and ledger evidence", async () => {
+  const { projectForm62522026SubsequentInvestmentLand, FORM_6252_2026_CANDIDATE: { fields } } =
+    await import("@/pdf/mappings/2026/form-6252-candidate.js");
+  const project = (changes: object) => projectForm62522026SubsequentInvestmentLand({ ...subsequentYear, ...changes }).text;
+  const zero = project({ currentPrincipal: "0", priorPrincipalByYear: [{ year: 2024, principal: "20000" }, { year: 2025, principal: "0" }] });
+  expect([fields.line21, fields.line23, fields.line24].map(field => zero[field])).toEqual(["0", "20000", "0"]);
+  expect(project({ currentPrincipal: "90000" })[fields.line26]).toBe("56250");
+  expect(project({ sellingPrice: "120003", saleYearGrossProfitPercentage: "0.6250" })[fields.line19GrossProfitPercentage]).toBe("0.6250");
+  for (const changes of [
+    { soldDate: "2026-05-12" }, { acquiredDate: "2023-05-12" }, { originalRatioAndUnchangedAgreementConfirmed: false },
+    { saleYearGrossProfitPercentage: "0.625" }, { saleYearGrossProfitPercentage: "0.625001" },
+    { sellingPrice: "120003", currentPrincipal: "90000", saleYearGrossProfitPercentage: "0.6250" },
+    { priorPrincipalByYear: [{ year: 2024, principal: "20000" }] },
+    { priorPrincipalByYear: [{ year: 2024, principal: "20000" }, { year: 2024, principal: "10000" }] },
+    { priorPrincipalByYear: [{ year: 2024, principal: "120000" }, { year: 2025, principal: "0" }] },
+    { priorPrincipalByYear: [{ year: 2024, principal: "50000" }, { year: 2025, principal: "70000" }], currentPrincipal: "0" },
+    { currentPrincipal: "90000.01" }, { depreciationRecapture: "1" }, { currentPrincipal: undefined },
+  ]) expect(() => project(changes)).toThrow(/installment sale/i);
 });
