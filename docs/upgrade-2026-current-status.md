@@ -6,6 +6,15 @@ The public refs were refreshed. `origin/main` still points to `59248889`
 and `origin/upgrade/2026-baseline` to `3024b848`. Successor commits stay on
 local `main` while automatic production deployment is being disabled.
 
+`651fa206` pins Next.js and its lint plugin to 16.4.6. The lockfile delta
+updates only the Next.js family and its peer references. Frozen install,
+632 targeted tests, 40 production-build Chromium cases, all types, builds,
+lint and inventory passed. Both npm audits returned zero advisories. The
+full exact-source local run is in progress. Container qualification and
+Debian advisory dispositions remain open.
+[Next.js 16.4.6](https://github.com/vercel/next.js/releases/tag/v16.4.6) ·
+[Next.js security advisories](https://github.com/vercel/next.js/security/advisories).
+
 `3c93d1ad` enforces the workspace AI request projection on the server and
 keeps only kind and coverage for selected documents. The raw request still
 passes the existing direct-identifier check. The provider receives no route

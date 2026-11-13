@@ -6,6 +6,9 @@ below retain their original evidence boundaries.
 
 ## Active continuation — November 13 Eastern
 
+- [x] Pin Next.js 16.4.6 in `651fa206`. Verify frozen install, both
+  advisory scans, 632 targeted tests and 40 production-build browser cases.
+  Keep target-platform scans and advisory dispositions open.
 - [x] Project and validate workspace AI requests again at the server boundary
   in `3c93d1ad`. Pass 284 targeted tests and 40 production-build Chromium
   cases. Bind both updated prompts to fresh qualification evidence.

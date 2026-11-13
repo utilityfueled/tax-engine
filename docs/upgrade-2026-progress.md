@@ -4,6 +4,14 @@ Current source, verification and remaining work are summarized in the
 [current continuation](upgrade-2026-current-status.md). Historical results
 below apply to their named revisions.
 
+- November 13: `651fa206` pins the Next.js 16.4.6 patch and matching ESLint
+  plugin. An isolated frozen install passed. The production and full npm
+  audits returned zero advisories across 447 and 539 dependencies. All 632
+  targeted tests in 21 files and 40 production Chromium cases passed without
+  retries. Types, builds, lint and inventory passed. The full archived run
+  uses PostgreSQL 16.16 and starts after the frozen source is verified.
+  [Next.js release](https://github.com/vercel/next.js/releases/tag/v16.4.6).
+
 - November 13: `3c93d1ad` uses the parsed request throughout the workspace
   AI route. The client sends selected form classifications without names,
   IDs or detected facts. The provider prompt omits route IDs and the route
