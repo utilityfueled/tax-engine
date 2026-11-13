@@ -7240,6 +7240,26 @@
       "knownGaps": []
     },
     {
+      "key": "federal/hosted-ai-credit-issuance",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://docs.stripe.com/api/checkout/sessions/create; https://docs.stripe.com/api/checkout/sessions/update; https://docs.stripe.com/webhooks",
+      "specPath": "spec/federal/hosted-ai-credit-issuance.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/hosted-billing-mode-binding",
       "jurisdiction": "federal",
       "taxYear": 2026,

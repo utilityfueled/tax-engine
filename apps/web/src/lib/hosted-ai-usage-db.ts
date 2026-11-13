@@ -1,5 +1,6 @@
 import { ensureHostedAppSchema, getHostedServerDatabase } from "./hosted-server-db";
 import Decimal from "decimal.js";
+import { validateAndBindHostedAiCreditIssuance, type HostedAiCreditCheckoutProof } from "./hosted-ai-credit-issuance";
 
 type HostedAiEnvironment = Record<string, string | undefined>;
 
@@ -25,6 +26,7 @@ export interface RecordHostedAiCreditPurchaseInput {
   createdAt: string;
   eventId: string;
   eventType: "checkout.session.completed" | "checkout.session.async_payment_succeeded";
+  checkoutProof?: HostedAiCreditCheckoutProof;
 }
 
 function coerceCount(value: unknown) {
@@ -100,12 +102,21 @@ export async function recordHostedAiCreditPurchase(
   client.on("error", onClientError);
   try {
     await client.query("BEGIN");
+    await validateAndBindHostedAiCreditIssuance(client, input);
     const receipt = await client.query(`
       INSERT INTO hosted_billing_events (event_id, event_type, created_at)
       VALUES ($1, $2, $3::timestamptz)
       ON CONFLICT (event_id) DO NOTHING RETURNING event_id
     `, [input.eventId, input.eventType, input.createdAt]);
     if (receipt.rows.length === 0) {
+      // A concurrent duplicate has now committed. Verify its retained purchase
+      // before acknowledging; an unrelated reused event must not bind an intent.
+      const { rows } = await client.query<{ matches: boolean }>(`
+        SELECT owner_id=$2 AND stripe_customer_id IS NOT DISTINCT FROM $3::text
+          AND amount_paid_cents=$4 AND credited_budget_cents=$5 AND currency=$6 AS matches
+        FROM hosted_ai_credit_purchases WHERE checkout_session_id=$1
+      `, [input.checkoutSessionId,input.ownerId,input.stripeCustomerId,input.amountPaidCents,input.creditedBudgetCents,input.currency]);
+      if(rows[0]?.matches !== true) throw new Error("Checkout receipt conflicts with retained purchase.");
       await client.query("COMMIT");
       return false;
     }

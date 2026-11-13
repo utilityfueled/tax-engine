@@ -2,6 +2,7 @@ import { attachDatabasePool } from "@vercel/functions/db-connections";
 import { Kysely, PostgresDialect } from "kysely";
 import { Pool, type PoolClient } from "pg";
 import { resolveDeploymentMode } from "./deployment-mode";
+import { ensureHostedAiCreditIssuanceSchema } from "./hosted-ai-credit-issuance-schema";
 import { ensureHostedAiLedgerSchema } from "./hosted-ai-ledger-schema";
 
 type HostedDbEnvironment = Record<string, string | undefined>;
@@ -423,6 +424,7 @@ async function createHostedAppTables(pool: Pool) {
       ON hosted_ai_usage_ledger (owner_id, cycle_key, created_at DESC);
   `);
   await ensureHostedAiLedgerSchema(pool);
+  await ensureHostedAiCreditIssuanceSchema(pool);
 }
 
 export async function ensureHostedAppSchema(

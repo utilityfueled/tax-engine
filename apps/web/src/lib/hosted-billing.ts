@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import Decimal from "decimal.js";
+import { createHostedAiCreditIssuance, bindHostedAiCreditIssuance, HOSTED_AI_CREDIT_KIND, isIssuedHostedCheckoutSessionId, isHostedCheckoutUrl } from "./hosted-ai-credit-issuance";
 import Stripe from "stripe";
 import {
   hostedPlanCatalog,
@@ -577,9 +578,13 @@ async function createStripeAiCreditCheckoutSession(
     throw new Error("The Stripe price does not match the hosted AI credit offer.");
   }
   const customerId = await ensureStripeCustomerId(stripe, actor, existingSubscription);
+  const issuance = await createHostedAiCreditIssuance(env, { ownerId: actor.id, stripeCustomerId: customerId,
+    livemode, amountPaidCents: priceCents, creditedBudgetCents });
 
   const session = await stripe.checkout.sessions.create({
     mode: "payment",
+    client_reference_id: issuance.issuanceId,
+    expires_at: issuance.expiresAt,
     currency: "usd",
     adaptive_pricing: { enabled: false },
     automatic_tax: { enabled: false },
@@ -592,23 +597,19 @@ async function createStripeAiCreditCheckoutSession(
     allow_promotion_codes: false,
     success_url: request.successUrl,
     cancel_url: request.cancelUrl,
-    metadata: {
-      purchaseKind: "ai-credit-pack",
-      hostedOwnerId: actor.id,
-      aiCreditCents: String(creditedBudgetCents)
-    },
-    payment_intent_data: {
-      metadata: {
-        purchaseKind: "ai-credit-pack",
-        hostedOwnerId: actor.id,
-        aiCreditCents: String(creditedBudgetCents)
-      }
-    }
-  });
+    // No legacy grant authority: old consumers must not interpret this as a
+    // metadata-authorized purchase during a controlled rollout.
+    metadata: { purchaseKind: HOSTED_AI_CREDIT_KIND },
+    payment_intent_data: { metadata: { purchaseKind: HOSTED_AI_CREDIT_KIND } }
+  }, { idempotencyKey: issuance.issuanceId });
   if (session.object !== "checkout.session" || session.mode !== "payment" || session.livemode !== livemode
-    || session.currency !== "usd" || session.amount_subtotal !== priceCents || session.amount_total !== priceCents || !session.url) {
+    || session.currency !== "usd" || session.amount_subtotal !== priceCents || session.amount_total !== priceCents
+    || !isIssuedHostedCheckoutSessionId(session.id, livemode) || !isHostedCheckoutUrl(session.url)
+    || session.customer !== customerId || session.client_reference_id !== issuance.issuanceId
+    || session.expires_at !== issuance.expiresAt) {
     throw new Error("The Stripe Checkout Session does not match the hosted AI credit offer.");
   }
+  await bindHostedAiCreditIssuance(env, issuance.issuanceId, session);
   return session;
 }
 
@@ -726,6 +727,9 @@ export function createHostedAiCreditCheckoutRouteHandlers(
       const priceCents = resolveHostedAiTopUpPriceCents(env);
       const creditedBudgetCents = resolveHostedAiTopUpCreditCents(env);
 
+      if (dependencies.createCheckoutSession && env.NODE_ENV === "production") {
+        throw new Error("Production credit checkout requires persisted Stripe issuance.");
+      }
       const session = await (dependencies.createCheckoutSession
         ? dependencies.createCheckoutSession({
             actor,

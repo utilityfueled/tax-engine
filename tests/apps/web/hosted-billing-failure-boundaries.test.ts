@@ -4,7 +4,11 @@ vi.mock("../../../apps/web/src/lib/hosted-ai-availability", () => ({ canPurchase
 
 const mocks = vi.hoisted(() => ({
   actor: vi.fn(), subscription: vi.fn(), entitlement: vi.fn(), rate: vi.fn(),
-  price: vi.fn(), customer: vi.fn(), checkout: vi.fn(), portal: vi.fn(),
+  issuance: vi.fn(), bind: vi.fn(), price: vi.fn(), customer: vi.fn(), checkout: vi.fn(), portal: vi.fn(),
+}));
+vi.mock("../../../apps/web/src/lib/hosted-ai-credit-issuance", async (importOriginal) => ({
+  ...await importOriginal<typeof import("../../../apps/web/src/lib/hosted-ai-credit-issuance")>(),
+  createHostedAiCreditIssuance: mocks.issuance, bindHostedAiCreditIssuance: mocks.bind,
 }));
 vi.mock("../../../apps/web/src/lib/hosted-auth", () => ({
   resolveHostedWorkspaceActor: mocks.actor,
@@ -48,8 +52,9 @@ const fixedCreditPrice = {
   custom_unit_amount: null, transform_quantity: null,
 };
 const fixedCreditSession = {
-  id: "cs_synthetic", url: "https://checkout.stripe.com/synthetic", object: "checkout.session",
+  id: "cs_test_synthetic", url: "https://checkout.stripe.com/synthetic", object: "checkout.session",
   mode: "payment", currency: "usd", amount_subtotal: 1500, amount_total: 1500, livemode: false,
+  customer: "cus_synthetic", client_reference_id: "tax_ai_credit_v1_original", created: 1800000000, expires_at: 1800003600,
 };
 const routeCases = [
   { name: "subscription", factory: createHostedBillingCheckoutRouteHandlers, body: checkoutBody },
@@ -70,7 +75,9 @@ beforeEach(() => {
   mocks.rate.mockResolvedValue({ allowed: true, remaining: 29, retryAfterMs: null });
   mocks.price.mockResolvedValue(fixedCreditPrice);
   mocks.customer.mockResolvedValue({ id: "cus_synthetic" });
-  mocks.checkout.mockResolvedValue(fixedCreditSession);
+  mocks.issuance.mockImplementation(async (_env, terms) => ({ ...terms, issuanceId: "tax_ai_credit_v1_original", checkoutSessionId: null, expiresAt: 1800003600 }));
+  mocks.bind.mockResolvedValue(undefined);
+  mocks.checkout.mockImplementation(async (params) => ({ ...fixedCreditSession, customer: params.customer }));
   mocks.portal.mockResolvedValue({ url: "https://billing.stripe.com/synthetic" });
 });
 
@@ -240,6 +247,13 @@ describe("hosted billing failure boundaries (synthetic dependencies, no provider
     expect(mocks.customer).toHaveBeenCalledWith({ email: undefined, name: undefined, metadata: { hostedOwnerId: "user_synthetic" } });
   });
 
+  it.each([{ id: "not_a_session" }, { id: "cs_live_wrongMode" }, { url: "http://checkout.stripe.com/unsafe" }, { url: "https://user:pass@checkout.stripe.com/unsafe" }])("rejects unbound or unsafe actual credit Session before returning a URL (%j)", async (change) => {
+    mocks.checkout.mockResolvedValue({ ...fixedCreditSession, ...change });
+    const response = await createHostedAiCreditCheckoutRouteHandlers({ env, rateLimitStore: createRateLimitStore() }).POST(request(checkoutBody));
+    expect(response.status).toBe(503);
+    expect(await response.json()).not.toHaveProperty("checkoutUrl");
+  });
+
   it("requires workspace entitlement before selling AI credits", async () => {
     mocks.entitlement.mockResolvedValue({ entitlement: { workspaceAccess: false } });
     const response = await createHostedAiCreditCheckoutRouteHandlers({ env, rateLimitStore: createRateLimitStore() }).POST(request(checkoutBody));
@@ -253,13 +267,24 @@ describe("hosted billing failure boundaries (synthetic dependencies, no provider
     const response = await createHostedAiCreditCheckoutRouteHandlers({ env, rateLimitStore: createRateLimitStore() }).POST(request(checkoutBody));
     expect(response.status).toBe(200);
     expect(mocks.customer).not.toHaveBeenCalled();
-    const metadata = { purchaseKind: "ai-credit-pack", hostedOwnerId: "user_synthetic", aiCreditCents: "1000" };
+    const metadata = { purchaseKind: "ai-credit-issuance-v1" };
     expect(mocks.price).toHaveBeenCalledExactlyOnceWith("price_credit", {}, { timeout: 2000, maxNetworkRetries: 0 });
-    expect(mocks.checkout).toHaveBeenCalledWith({ mode: "payment", customer: "cus_existing", allowed_payment_method_types: undefined,
+    expect(mocks.checkout).toHaveBeenCalledWith({ mode: "payment", client_reference_id: "tax_ai_credit_v1_original", expires_at: 1800003600, customer: "cus_existing", allowed_payment_method_types: undefined,
       currency: "usd", adaptive_pricing: { enabled: false }, automatic_tax: { enabled: false },
       line_items: [{ price: "price_credit", quantity: 1 }], allow_promotion_codes: false,
-      success_url: checkoutBody.successUrl, cancel_url: checkoutBody.cancelUrl, metadata, payment_intent_data: { metadata } });
+      success_url: checkoutBody.successUrl, cancel_url: checkoutBody.cancelUrl, metadata, payment_intent_data: { metadata } }, { idempotencyKey: "tax_ai_credit_v1_original" });
     expect(await response.json()).toMatchObject({ creditedBudgetCents: 1000, priceCents: 1500 });
+  });
+
+  it("withholds the URL on issuance persistence failure and supports genuine custom HTTPS checkout domains", async () => {
+    mocks.checkout.mockResolvedValue({ ...fixedCreditSession, url: "https://pay.example.invalid/checkout" });
+    mocks.bind.mockRejectedValueOnce(new Error("synthetic binding outage"));
+    const run=()=>createHostedAiCreditCheckoutRouteHandlers({env,rateLimitStore:createRateLimitStore()}).POST(request(checkoutBody));
+    expect((await run()).status).toBe(503);
+    const response=await run(); expect(response.status).toBe(200);
+    expect((await response.json()).checkoutUrl).toBe("https://pay.example.invalid/checkout");
+    expect(mocks.issuance.mock.invocationCallOrder[0]).toBeLessThan(mocks.checkout.mock.invocationCallOrder[0]);
+    expect(mocks.checkout.mock.invocationCallOrder[0]).toBeLessThan(mocks.bind.mock.invocationCallOrder[0]);
   });
 
   it.each([

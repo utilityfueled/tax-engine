@@ -9,6 +9,12 @@ const mocks = vi.hoisted(() => ({
   price: vi.fn(), customer: vi.fn(), checkout: vi.fn(), portal: vi.fn(), adapter: vi.fn(),
   persist: vi.fn(), mark: vi.fn(), credit: vi.fn(), remove: vi.fn(), existing: vi.fn(),
 }));
+vi.mock("../../../apps/web/src/lib/hosted-ai-credit-issuance", async (importOriginal) => ({
+  ...await importOriginal<typeof import("../../../apps/web/src/lib/hosted-ai-credit-issuance")>(),
+  findHostedAiCreditIssuance: async () => null,
+  createHostedAiCreditIssuance: async (_env: unknown, terms: object) => ({ ...terms, issuanceId: "tax_ai_credit_v1_mode", checkoutSessionId: null, expiresAt: 1800003600 }),
+  bindHostedAiCreditIssuance: async () => {},
+}));
 vi.mock("../../../apps/web/src/lib/hosted-auth", () => ({ resolveHostedWorkspaceActor: mocks.actor }));
 vi.mock("../../../apps/web/src/lib/hosted-billing-db", () => ({
   getHostedSubscriptionByOwnerId: mocks.subscription,
@@ -127,9 +133,9 @@ beforeEach(() => {
     type: "one_time", recurring: null, custom_unit_amount: null, transform_quantity: null,
   }));
   mocks.customer.mockResolvedValue({ id: "cus_fictional" });
-  mocks.checkout.mockImplementation(async ({ mode }) => ({
-    id: "cs_fictional", url: "https://checkout.stripe.com/fictional", object: "checkout.session",
-    mode, livemode: mocks.key.mock.lastCall?.[0].includes("_live_"), currency: "usd", amount_subtotal: 1500, amount_total: 1500,
+  mocks.checkout.mockImplementation(async ({ mode, customer, client_reference_id, expires_at }) => ({
+    id: `cs_${mocks.key.mock.lastCall?.[0].includes("_live_") ? "live" : "test"}_fictional`, url: "https://checkout.stripe.com/fictional", object: "checkout.session",
+    mode, customer, client_reference_id, expires_at, created: now, livemode: mocks.key.mock.lastCall?.[0].includes("_live_"), currency: "usd", amount_subtotal: 1500, amount_total: 1500,
   }));
   mocks.portal.mockResolvedValue({ url: "https://billing.stripe.com/fictional" });
   mocks.existing.mockResolvedValue(null); mocks.persist.mockResolvedValue(undefined);
@@ -228,7 +234,8 @@ describe("hosted Stripe mode binding source-first controls", () => {
         expect(mocks.checkout).toHaveBeenCalledTimes(1);
         expect(mocks.checkout).toHaveBeenCalledWith(expect.objectContaining({ mode: route === "subscription" ? "subscription" : "payment",
           line_items: [{ price: route === "subscription" ? "price_starter" : "price_credit", quantity: 1 }],
-          success_url: "https://tax.example/success", cancel_url: "https://tax.example/cancel" }));
+          success_url: "https://tax.example/success", cancel_url: "https://tax.example/cancel" }),
+          ...(route === "topup" ? [{ idempotencyKey: "tax_ai_credit_v1_mode" }] : []));
       }
     }
   });

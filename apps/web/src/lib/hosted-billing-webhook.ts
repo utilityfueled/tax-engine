@@ -16,6 +16,7 @@ import {
   type HostedSubscriptionReconciliationResult,
   type VerifiedCurrentHostedSubscription
 } from "./hosted-billing-reconciliation";
+import { retainHostedAiCreditCheckout, findHostedAiCreditIssuance, hasHostedAiCreditReference, HOSTED_AI_CREDIT_KIND, type HostedAiCreditIssuance } from "./hosted-ai-credit-issuance";
 import { recordHostedAiCreditPurchase } from "./hosted-ai-usage-db";
 import { isPositiveHostedCreditCents } from "./hosted-ai-helper-billing";
 import { getHostedServerDatabaseConfig } from "./hosted-server-db";
@@ -288,7 +289,7 @@ function normalizeSubscriptionChange(
   return null;
 }
 
-function normalizeAiCreditPurchase(event: Stripe.Event) {
+function normalizeAiCreditPurchase(event: Stripe.Event, issuance: HostedAiCreditIssuance | null) {
   if (event.type !== "checkout.session.completed" && event.type !== "checkout.session.async_payment_succeeded") {
     return null;
   }
@@ -296,15 +297,14 @@ function normalizeAiCreditPurchase(event: Stripe.Event) {
   const session = event.data.object as Stripe.Checkout.Session;
   const metadata = session.metadata ?? {};
 
-  if (metadata.purchaseKind !== "ai-credit-pack") {
-    return null;
-  }
+  if (!issuance && (hasHostedAiCreditReference(session.client_reference_id) || metadata.purchaseKind === HOSTED_AI_CREDIT_KIND)) return { status: "invalid" } as const;
+  if (!issuance && metadata.purchaseKind !== "ai-credit-pack") return null;
 
   const checkoutSessionId = readOptionalString(session.id);
-  const ownerId = readOptionalString(metadata.hostedOwnerId ?? metadata.workspaceOwnerId);
+  const ownerId = issuance?.ownerId ?? readOptionalString(metadata.hostedOwnerId ?? metadata.workspaceOwnerId);
   const stripeCustomerId = readOptionalString(session.customer);
-  const creditedBudgetCents = typeof metadata.aiCreditCents === "string" && /^\d{1,10}$/.test(metadata.aiCreditCents)
-    ? Number(metadata.aiCreditCents) : null;
+  const creditedBudgetCents = issuance?.creditedBudgetCents ?? (typeof metadata.aiCreditCents === "string" && /^\d{1,10}$/.test(metadata.aiCreditCents)
+    ? Number(metadata.aiCreditCents) : null);
   const amountPaidCents = session.amount_total;
   if (session.object !== "checkout.session" || session.mode !== "payment" || session.currency !== "usd"
     || !checkoutSessionId?.startsWith("cs_") || !isValidStripeId(checkoutSessionId)
@@ -313,13 +313,16 @@ function normalizeAiCreditPurchase(event: Stripe.Event) {
     || !isPositiveHostedCreditCents(creditedBudgetCents) || !isPositiveHostedCreditCents(amountPaidCents)) {
     return { status: "invalid" } as const;
   }
-  if (session.payment_status === "unpaid" && event.type === "checkout.session.completed") return { status: "pending" } as const;
-  if (session.payment_status !== "paid") return { status: "invalid" } as const;
+  const pending = session.payment_status === "unpaid" && event.type === "checkout.session.completed";
+  if (!pending && session.payment_status !== "paid") return { status: "invalid" } as const;
 
   return {
-    status: "paid",
+    status: pending ? "pending" : "paid",
     purchase: { checkoutSessionId, ownerId, stripeCustomerId, amountPaidCents, creditedBudgetCents,
-      currency: session.currency, eventId: event.id, eventType: event.type }
+      currency: session.currency, eventId: event.id, eventType: event.type,
+      ...(issuance ? { checkoutProof: { clientReferenceId: readOptionalString(session.client_reference_id),
+        livemode: session.livemode, created: session.created, expiresAt: session.expires_at,
+        amountSubtotal: session.amount_subtotal, metadata: session.metadata } } : {}) }
   } as const;
 }
 
@@ -351,6 +354,8 @@ interface HostedBillingWebhookRouteDependencies {
   getExistingPersistedSubscriptionByCustomerId?: typeof getHostedSubscriptionByCustomerId;
   deletePersistedSubscription?: typeof deleteHostedSubscriptionBySubscriptionId;
   recordAiCreditPurchase?: typeof recordHostedAiCreditPurchase;
+  findAiCreditIssuance?: typeof findHostedAiCreditIssuance;
+  retainAiCreditCheckout?: typeof retainHostedAiCreditCheckout;
   reconcileSubscription?: (
     env: BillingEnvironment,
     input: Readonly<ReconcileHostedSubscriptionInput>
@@ -514,10 +519,32 @@ export function createHostedBillingWebhookRouteHandlers(
         );
       }
 
-      const creditPurchase = normalizeAiCreditPurchase(event);
+      let issuance: HostedAiCreditIssuance | null = null;
+      if (event.type === "checkout.session.completed" || event.type === "checkout.session.async_payment_succeeded") {
+        const session = event.data.object as Stripe.Checkout.Session;
+        if (session.mode === "payment" || hasHostedAiCreditReference(session.client_reference_id)
+          || session.metadata?.purchaseKind === HOSTED_AI_CREDIT_KIND) {
+          try {
+            issuance = await (dependencies.findAiCreditIssuance ?? findHostedAiCreditIssuance)(env,
+              readOptionalString(session.id) ?? "", readOptionalString(session.client_reference_id));
+          } catch {
+            return NextResponse.json({ error: "Hosted billing is temporarily unavailable." },
+              { status: 503, headers: { "Cache-Control": "no-store" } });
+          }
+        }
+      }
+      const creditPurchase = normalizeAiCreditPurchase(event, issuance);
       if (creditPurchase) {
         if (creditPurchase.status === "invalid") {
           return NextResponse.json({ error: "Invalid hosted billing webhook payload." }, { status: 400 });
+        }
+        if (creditPurchase.status === "pending" && issuance) {
+          try {
+            await (dependencies.retainAiCreditCheckout ?? retainHostedAiCreditCheckout)(env, creditPurchase.purchase);
+          } catch {
+            return NextResponse.json({ error: "Hosted billing is temporarily unavailable." },
+              { status: 503, headers: { "Cache-Control": "no-store" } });
+          }
         }
         if (creditPurchase.status === "paid") {
           try {

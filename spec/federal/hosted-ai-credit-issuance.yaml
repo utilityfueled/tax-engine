@@ -1,0 +1,43 @@
+form: "Hosted-AI-Credit-Issuance"
+fullName: "Immutable original Stripe AI credit issuance and atomic settlement"
+taxYear: 2026
+reference: "https://docs.stripe.com/api/checkout/sessions/create; https://docs.stripe.com/api/checkout/sessions/update; https://docs.stripe.com/webhooks"
+notes: |
+  A private database issuance and create-only namespaced client_reference_id bind
+  exact original purchase terms. Mutable metadata is not new credit authority.
+  Deploy compatible fulfillment before checkout. Keep compatible fulfillment on
+  rollback or pause checkout and retain/replay affected events. No automatic time
+  cutoff rejects URLs minted by a draining legacy instance. No refund policy.
+lines:
+  - line: "outbound-binding"
+    description: "Persist actual Session binding before returning its URL"
+    formula: "Retain original owner/customer/mode/paid USD cents/credit cents before create. Use a namespaced client_reference_id and stable per-intent idempotency key. Validate actual Session ID, HTTPS without credentials including custom Stripe Checkout domains, customer, reference, mode, USD subtotal/total and expiry. Persist one actual Session before returning URL. A write failure returns redacted retryable503 without URL."
+    testRef: "tests/apps/web/hosted-ai-credit-issuance.test.ts::binds one actual Session without rewriting original terms"
+  - line: "new-signed-authority"
+    description: "Resolve original issuance even after mutable metadata removal"
+    formula: "Look up retained Session ID first, then namespaced reference for a response-loss race. Unknown new reference or conflicting retained facts cannot fall back to legacy. Validate and bind under the same PostgreSQL transaction as grant and receipt. Missing metadata is harmless only for matched original issuance. Signed unpaid completion acknowledges without grant; paid async success grants once."
+    testRef: "tests/apps/web/hosted-ai-credit-issuance.test.ts::recovers a lost create response and grants once across racing paid events"
+  - line: "legacy-coexistence"
+    description: "Preserve historical grants and old-instance Checkout sessions"
+    formula: "Existing unmarked legacy Sessions use their original signed terms and remain replayable across upgrade even if current offer differs. New namespace never uses legacy fallback; event.created never establishes Session issuance. New metadata kind is distinct from legacy grant metadata."
+    testRef: "tests/apps/web/hosted-ai-credit-issuance.test.ts::preserves an existing historical purchase and draining legacy checkout"
+  - line: "transaction-rollback"
+    description: "An intent binding, purchase and receipt commit or roll back together"
+    formula: "A deferred constraint or tested precommit backend termination leaves no new binding, purchase or receipt. If the commit result is unknown, retry the same valid signed event to reconcile either atomic outcome. Conflicting replays cannot mutate original grant or add a receipt."
+    testRef: "tests/apps/web/hosted-ai-credit-issuance.test.ts::rolls back binding grant and receipt on deferred PostgreSQL failure"
+  - line: "retention"
+    description: "Bound abandoned intent retention without invalidating delayed paid fulfillment"
+    formula: "Delete at most100 expired unbound intents per call after32 days beyond Checkout expiry, locking skipped races. Never delete bound Sessions through this cleanup. Pruned new references still fail closed; no no-charge inference or refund follows expiry."
+    testRef: "tests/apps/web/hosted-ai-credit-issuance.test.ts::prunes only a bounded batch of old unbound intents and preserves paid recovery"
+  - line: "backup-and-migration"
+    description: "Restore original bound and unbound issuance with the actual database archive"
+    formula: "Actual PostgreSQL16.16 dump/restore preserves all10 hosted tables including original issuance terms, pending rows and immutable trigger. Same-event paid replay adds no grant after restore. Restoring a real pre-issuance nine-table dump then applying the additive migration twice preserves all existing rows and creates only the new empty table; unknown new references still fail closed."
+    testRef: "tests/runtime/hosted-ai-credit-recovery.test.ts::restores original issuance and migrates an actual pre-issuance archive"
+  - line: "outbound-commit-failure"
+    description: "A failed actual Session-binding commit cannot publish a URL"
+    formula: "A deferred binding failure leaves the original intent unbound. The route returns no URL. A valid signed webhook or binding retry for that issuance can bind the same verified Session after storage recovers. A fresh Checkout POST creates a separate issuance and may create a different Session."
+    testRef: "tests/apps/web/hosted-ai-credit-issuance.test.ts::rolls back a failed outbound binding commit before a successful retry"
+  - line: "cleanup-settlement-race"
+    description: "Cleanup skips a locked reconciliation and preserves late bound payment"
+    formula: "An expired original intent locked for verified Session binding is not deleted by cleanup. Once bound, it remains available for a delayed signed payment even after the unbound retention window."
+    testRef: "tests/apps/web/hosted-ai-credit-issuance.test.ts::skips a binding lock during cleanup and settles the retained expired Session"

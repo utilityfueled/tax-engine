@@ -1,3 +1,7 @@
+vi.mock("../../../apps/web/src/lib/hosted-ai-credit-issuance", async (importOriginal) => ({
+  ...await importOriginal<typeof import("../../../apps/web/src/lib/hosted-ai-credit-issuance")>(),
+  findHostedAiCreditIssuance: async () => null,
+}));
 import { createHostedBillingRouteForwardingAdapter } from "../../fixtures/hosted-billing-route-forwarding-adapter";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 vi.mock("server-only", () => ({}));

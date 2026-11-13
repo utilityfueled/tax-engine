@@ -1,3 +1,7 @@
+vi.mock("../../../apps/web/src/lib/hosted-ai-credit-issuance", async (importOriginal) => ({
+  ...await importOriginal<typeof import("../../../apps/web/src/lib/hosted-ai-credit-issuance")>(),
+  findHostedAiCreditIssuance: async () => null,
+}));
 import { createHostedBillingRouteForwardingAdapter, type HostedBillingRouteCustomer } from "../../fixtures/hosted-billing-route-forwarding-adapter";
 import { describe, expect, it, vi } from "vitest";
 // Synthetic availability lets this suite exercise Stripe adapter behavior.
