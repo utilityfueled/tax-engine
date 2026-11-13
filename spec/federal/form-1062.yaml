@@ -1,0 +1,59 @@
+form: "Form 1062"
+fullName: "Deferral of Tax on Gain From the Sale or Exchange of Qualified Farmland Property to Qualified Farmers"
+taxYear: 2026
+reference: "https://www.irs.gov/instructions/i1062"
+revision: "Final instructions Rev. December 2025; draft form Rev. December 2026, created 7/16/26"
+notes: |
+  26 USC 1062 applies to taxable years beginning after July 4, 2025. The
+  isolated 2026 Form 1040 worksheet covers one already qualified, direct
+  sale and already redetermined tax and credit inputs. The caller supplies
+  a confirmed positive current-year Schedule A line 13 gain and election
+  with covenant evidence. This does not decide eligibility or recompute
+  preferential rates, additional taxes or credits from a tax return.
+  Other sales, exchanges, partial-property allocations, installment sales,
+  pass-throughs, estates, later installments and acceleration require separate
+  qualification. No live federal, filing, estimated payment or PDF transfer.
+  Research checked on 2026-11-13. December 2026 form still marked draft.
+sources:
+  - "https://uscode.house.gov/us/usc/119-120/t26/s1062/"
+  - "https://www.irs.gov/pub/irs-pdf/f1062.pdf"
+  - "https://www.irs.gov/pub/irs-dft/f1062--dft.pdf"
+  - "https://www.irs.gov/pub/irs-efile/ty26-1040-ats-scenario-13.pdf"
+  - "https://www.irs.gov/pub/irs-drop/n-26-03.pdf"
+lines:
+  - line: "1-3"
+    description: "Regular tax liability including the elected gain"
+    formula: "Line 1 is supplied regular income tax; line 2 is supplied applicable additions under section 26(b)(2); line 3 adds both."
+    testRef: "tests/engine/forms/form-1062.test.ts::reproduces the Form 1062 lines in IRS ATS scenario 13"
+  - line: "4a-5"
+    description: "Applicable credits and net income tax including the gain"
+    formula: "Line 4a is FTC; 4b is nonrefundable personal credits in the applicable subparts, 4c is GBC, and 4d is the remaining allowed nonoverlapping credits under subparts A, B and D. Line 4z sums these confirmed credits; the amount may not exceed line 3. Line 5 is line 3 minus 4z."
+    testRef: "tests/engine/forms/form-1062.test.ts::replays each credit group and limits the redetermined credit total"
+  - line: "6-8"
+    description: "Taxable income for the comparison"
+    formula: "Line 6 is the supplied taxable income; line 7 is the one confirmed elected Schedule A line 13 gain; line 8 floors line 6 minus line 7 at zero. Both tax determinations use the same return year and election."
+    testRef: "tests/engine/forms/form-1062.test.ts::floors comparison taxable income and applicable liability separately"
+  - line: "9-11"
+    description: "Regular tax liability recomputed without the elected gain"
+    formula: "Require the caller's redetermination to have used the exact line 8 taxable income. Record the recomputed regular income tax and additions from that redetermination on lines 9 and 10, and add both for line 11."
+    testRef: "tests/engine/forms/form-1062.test.ts::rejects an incomplete or unreconciled election and tax determination"
+  - line: "12a-13"
+    description: "Applicable credits and net income tax without the gain"
+    formula: "Enter the four refigured credit groups on lines 12a through 12d. Limit their aggregate at line 12z to line 11. Line 13 is line 11 minus line 12z."
+    testRef: "tests/engine/forms/form-1062.test.ts::replays each credit group and limits the redetermined credit total"
+  - line: "14"
+    description: "Tax liability attributable to the elected gain"
+    formula: "max(0, line 5 minus line 13). Keep the exact amount before any presentation rounding."
+    testRef: "tests/engine/forms/form-1062.test.ts::floors comparison taxable income and applicable liability separately"
+  - line: "15"
+    description: "First installment and deferred remainder"
+    formula: "The exact first installment is line 14 multiplied by 0.25. For whole-dollar worksheet presentation round the first installment half up; keep the exact remainder separately so the four equal shares conserve line 14. This is not a future payment schedule."
+    testRef: "tests/engine/forms/form-1062.test.ts::reproduces the Form 1062 lines in IRS ATS scenario 13"
+  - line: "notice-2026-3"
+    description: "Amount potentially excluded from required estimated payments"
+    formula: "For a proper election, Notice 2026-3 section 4.02 permits excluding the deferred 75% from the required annual payment calculation in the sale year. Preserve the exact three-quarter amount; this worksheet does not alter Form 2210, Form 2210-F, or a required payment."
+    testRef: "tests/engine/forms/form-1062.test.ts::conserves the exact first installment and potential estimate exclusion"
+  - line: "scope"
+    description: "Confirmed direct-sale source boundary"
+    formula: "Require tax year 2026, direct sale, confirmed qualified sale, covenant included, a confirmed election, one positive source gain and explicit nonnegative dollar and cent inputs including zero. Use at most 12 whole-dollar digits and never log covenant contents or owner identity."
+    testRef: "tests/engine/forms/form-1062.test.ts::rejects an incomplete or unreconciled election and tax determination"
