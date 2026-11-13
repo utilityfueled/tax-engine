@@ -1,5 +1,5 @@
 import {Ohio2026EarnedSchoolDraftSourcesSchema} from '@/models/ohio-2026-earned-school-draft.js';
-import {calculateOhio2026SchoolSource,readOhio2026SchoolSource,type Ohio2026SchoolSourceContext} from './oh-2026-school-source.js';
+import {calculateOhio2026SchoolDraftSource,readOhio2026SchoolSource,type Ohio2026SchoolSourceContext} from './oh-2026-school-source.js';
 /** Spec: state/oh-2026-return-draft.yaml. Finite current employee originals only. */
 import Decimal from 'decimal.js';
 import {validateOhio2026ActualBalancePaymentSources} from './oh-2026-payment-source.js';
@@ -79,7 +79,7 @@ export function calculateOhio2026VaResidentCreditEmployeeSource(input: TaxYearIn
 export function calculateOhio2026EarnedSchoolEmployeeSource(input:TaxYearInput,raw:unknown):Ohio2026OrdinaryContext {
  const parsed=Ohio2026EarnedSchoolDraftSourcesSchema.safeParse(raw);
  if(!parsed.success)fail('complete distinct earned-school parent packet required');
- const school=calculateOhio2026SchoolSource(input,parsed.data.schoolSources);
+ const school=calculateOhio2026SchoolDraftSource(input,parsed.data.schoolSources);
  return qualifyEmployee(input,raw,undefined,undefined,school);
 }
 function qualifyEmployee(input: TaxYearInput, raw: unknown, reciprocal?: Ohio2026ReciprocalWageContext, residentCredit?: Ohio2026ResidentCreditSourceContext, school?:Ohio2026SchoolSourceContext): Ohio2026OrdinaryContext {
@@ -115,7 +115,7 @@ function qualifyEmployee(input: TaxYearInput, raw: unknown, reciprocal?: Ohio202
   const seniorCreditEligibleByAge = [...ownerBirthDates.values()].some(birthDate => birthDate <= '1961-12-31');
   const seniorCreditHistory = 'seniorCreditHistory' in source ? source.seniorCreditHistory : undefined;
   if (seniorCreditEligibleByAge) {
-    if (reciprocal || residentCredit || school || payments.remainingTaxPayment.status !== 'no_remaining_tax') fail('Ohio senior credit requires the ordinary withholding-only method');
+    if (reciprocal || residentCredit || payments.remainingTaxPayment.status !== 'no_remaining_tax') fail('Ohio senior credit requires the ordinary withholding-only method');
     if (!seniorCreditHistory || seniorCreditHistory.length !== holders.length
       || new Set(seniorCreditHistory.map(row => row.accountHolder)).size !== holders.length
       || seniorCreditHistory.some(row => ownerBirthDates.get(row.accountHolder) !== row.dateOfBirth)) fail('complete owner-bound Ohio senior credit history required');

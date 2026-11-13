@@ -11,6 +11,70 @@ import {ohio2026EarnedSchoolDraftFixture,rebindOhio2026EarnedSchoolDraft} from '
 it('composes independent literal school and state drafts',()=>{const p=ohio2026EarnedSchoolDraftFixture();const before=JSON.stringify(p);const r=calculateOhio2026ReturnDraftFromSources({taxInput:p.input,sources:p.sources}) as unknown as {state:{incomeTax:{toString():string};withholding:{toString():string};refund:{toString():string}};school:{incomeTax:{toString():string};withholding:{toString():string};refund:{toString():string}}};expect(r.state.incomeTax.toString()).toBe('932');expect(r.state.withholding.toString()).toBe('1000');expect(r.state.refund.toString()).toBe('68');expect(r.school.incomeTax.toString()).toBe('625');expect(r.school.withholding.toString()).toBe('625');expect(r.school.refund.toString()).toBe('0');expect(JSON.stringify(p)).toBe(before);});
 
 const run=(p:ReturnType<typeof ohio2026EarnedSchoolDraftFixture>)=>calculateOhio2026ReturnDraftFromSources({taxInput:p.input,sources:p.sources});
+
+function withSeniorSchoolOwner(wages: string, schoolWithholding: string, birthDate = '1961-12-31') {
+  const p = ohio2026EarnedSchoolDraftFixture(wages, schoolWithholding, '10000');
+  p.input.taxpayer.primary.dateOfBirth = birthDate;
+  p.sources.schoolSources.owner.originalTaxpayer.dateOfBirth = birthDate;
+  p.sources.schoolPaymentSources.owner.originalTaxpayer.dateOfBirth = birthDate;
+  const sources = { ...p.sources, seniorCreditHistory: [{
+    accountHolder: 'primary' as const, dateOfBirth: birthDate, sourceReference: 'PRIVATE-SENIOR-HISTORY',
+    completeOhioCreditHistoryConfirmed: true as const, noPriorSeniorLumpSumElectionConfirmed: true as const,
+    noRetirementCreditCarryforwardConfirmed: true as const,
+  }] };
+  const packet = { input: p.input, sources };
+  rebindOhio2026EarnedSchoolDraft(packet);
+  return packet;
+}
+
+it('applies school and state senior credits separately', () => {
+  const result = run(withSeniorSchoolOwner('50000', '575'));
+  expect(result.state.seniorCitizenCredit?.toFixed()).toBe('50');
+  expect(result.state.incomeTax.toFixed()).toBe('882');
+  expect(result.school.taxBeforeCredits.toFixed()).toBe('625');
+  expect(result.school.seniorCredit.toFixed()).toBe('50');
+  expect(result.school.incomeTax.toFixed()).toBe('575');
+  expect(result.school.refund.toFixed()).toBe('0');
+
+  const overStateLimit = run(withSeniorSchoolOwner('101900', '1224'));
+  expect(overStateLimit.state.seniorCitizenCredit?.toFixed()).toBe('0');
+  expect(overStateLimit.school.taxBeforeCredits.toFixed()).toBe('1274');
+  expect(overStateLimit.school.seniorCredit.toFixed()).toBe('50');
+  expect(overStateLimit.school.incomeTax.toFixed()).toBe('1224');
+  expect(overStateLimit.school.refund.toFixed()).toBe('0');
+});
+
+it('caps the school senior credit at the district liability', () => {
+  const p = withSeniorSchoolOwner('19540', '0');
+  const w2 = p.input.w2s[0];
+  const row = w2?.stateLocalSources?.localRows[0];
+  const classifiedRow = p.sources.schoolSources.w2Sources[0]?.localRows[0];
+  if (!w2 || !row || !classifiedRow) throw Error('Fictional actual school withholding sources required');
+  const { residence } = p.sources.schoolSources;
+  residence.districtCode = '1704';
+  Object.assign(residence.finder, { districtCode: '1704', districtName: 'Crestline EVSD', rate: '0.0025' });
+  p.sources.schoolPaymentSources.districtCode = '1704';
+  w2.localityName = '1704 Crestline EVSD';
+  row.localityName = w2.localityName;
+  classifiedRow.districtCode = '1704';
+  rebindOhio2026EarnedSchoolDraft(p);
+  const result = run(p);
+  expect(result.school.rawTaxLevy.toFixed()).toBe('48.85');
+  expect(result.school.taxBeforeCredits.toFixed()).toBe('49');
+  expect(result.school.seniorCredit.toFixed()).toBe('49');
+  expect(result.school.incomeTax.toFixed()).toBe('0');
+  expect(result.school.refund.toFixed()).toBe('0');
+});
+
+it('requires exact separate withholding and complete senior source history', () => {
+  expect(() => run(withSeniorSchoolOwner('50000.01', '575'))).toThrow(/raw and reported/);
+  const p = withSeniorSchoolOwner('50000', '625.25');
+  const { seniorCreditHistory: _history, ...sources } = p.sources;
+  expect(() => run({ ...p, sources })).toThrow(/senior credit history/);
+  expect(() => run(withSeniorSchoolOwner('50000', '625.25', '1962-01-01'))).toThrow(/age|under65/);
+  expect(() => calculateOhio2026SchoolSource(p.input, p.sources.schoolSources)).toThrow(/under65/);
+});
+
 it.each([{"wages": "19540", "schoolWithholding": "245", "rawLevy": "244.2500", "reportedBase": "19540", "schoolTax": "244", "schoolReportedWithholding": "245", "schoolRefund": "1", "stateTax": "0", "stateWithholding": "10000", "stateRefund": "10000"}, {"wages": "40000", "schoolWithholding": "501", "rawLevy": "500.0000", "reportedBase": "40000", "schoolTax": "500", "schoolReportedWithholding": "501", "schoolRefund": "1", "stateTax": "650", "stateWithholding": "10000", "stateRefund": "9350"}, {"wages": "50000.49", "schoolWithholding": "626", "rawLevy": "625.006125", "reportedBase": "50000", "schoolTax": "625", "schoolReportedWithholding": "626", "schoolRefund": "1", "stateTax": "932", "stateWithholding": "10000", "stateRefund": "9068"}, {"wages": "50000.50", "schoolWithholding": "625.50", "rawLevy": "625.006250", "reportedBase": "50001", "schoolTax": "625", "schoolReportedWithholding": "626", "schoolRefund": "1", "stateTax": "932", "stateWithholding": "10000", "stateRefund": "9068"}, {"wages": "50039.49", "schoolWithholding": "626", "rawLevy": "625.493625", "reportedBase": "50039", "schoolTax": "625", "schoolReportedWithholding": "626", "schoolRefund": "1", "stateTax": "933", "stateWithholding": "10000", "stateRefund": "9067"}, {"wages": "50039.50", "schoolWithholding": "626", "rawLevy": "625.493750", "reportedBase": "50040", "schoolTax": "626", "schoolReportedWithholding": "626", "schoolRefund": "0", "stateTax": "933", "stateWithholding": "10000", "stateRefund": "9067"}, {"wages": "80000", "schoolWithholding": "1000", "rawLevy": "1000.0000", "reportedBase": "80000", "schoolTax": "1000", "schoolReportedWithholding": "1000", "schoolRefund": "0", "stateTax": "1757", "stateWithholding": "10000", "stateRefund": "8243"}, {"wages": "80000.50", "schoolWithholding": "1001", "rawLevy": "1000.006250", "reportedBase": "80001", "schoolTax": "1000", "schoolReportedWithholding": "1001", "schoolRefund": "1", "stateTax": "1763", "stateWithholding": "10000", "stateRefund": "8237"}])('uses literal independent base and rounding boundaries %s',row=>{const p=ohio2026EarnedSchoolDraftFixture(row.wages,row.schoolWithholding,row.stateWithholding),r=run(p);expect(r.school.rawTaxLevy.toString()).toBe(new Decimal(row.rawLevy).toString());expect(r.school.reportedTaxBase.toString()).toBe(row.reportedBase);expect(r.school.incomeTax.toString()).toBe(row.schoolTax);expect(r.school.withholding.toString()).toBe(row.schoolReportedWithholding);expect(r.school.refund.toString()).toBe(row.schoolRefund);expect(r.state.incomeTax.toString()).toBe(row.stateTax);expect(r.state.refund.toString()).toBe(row.stateRefund);expect(r.school.underpaymentPenalty.toString()).toBe('0');expect(r.school.latePaymentInterest.toString()).toBe('0');expect(r.school.externalAccountSettlement).toBeNull();});
 function present<T>(v:T|null|undefined):T{if(v===undefined||v===null)throw Error('complete actual fixture required');return v;}
 type Packet=ReturnType<typeof ohio2026EarnedSchoolDraftFixture>;

@@ -58,6 +58,15 @@ export function readOhio2026SchoolSource(context: Ohio2026SchoolSourceContext, i
 }
 /** Validates current actual inputs without inferring liability, payment coverage or final form rules. */
 export function calculateOhio2026SchoolSource(input: TaxYearInput, raw: unknown): Ohio2026SchoolSourceContext {
+    return qualifyOhio2026SchoolSource(input, raw, false);
+}
+
+/** Documentary source proof for the paired state and school calculation. */
+export function calculateOhio2026SchoolDraftSource(input: TaxYearInput, raw: unknown): Ohio2026SchoolSourceContext {
+    return qualifyOhio2026SchoolSource(input, raw, true);
+}
+
+function qualifyOhio2026SchoolSource(input: TaxYearInput, raw: unknown, allowSenior: boolean): Ohio2026SchoolSourceContext {
     const parsed = Ohio2026SchoolSourcesSchema.safeParse(raw), taxpayer = TaxpayerSchema.strict().safeParse(input.taxpayer), resident = OhioResidencyFactsSchema.safeParse(input.ohioResidency), standard = StandardDeductionFactsSchema.strict().safeParse(input.standardDeductionFacts);
     if (!parsed.success || !taxpayer.success || !resident.success || !standard.success)
         fail('complete actual source packet required');
@@ -69,8 +78,9 @@ export function calculateOhio2026SchoolSource(input: TaxYearInput, raw: unknown)
     if (t.taxYear !== 2026 || facts.taxYear !== 2026 || t.filingStatus !== 'single' || t.spouse || t.dependents.length || !/^\d{9}$/.test(tin(t.primary.ssn)))
         fail('actual2026 single primary no-dependent owner required');
     day(t.primary.dateOfBirth);
-    if (t.primary.dateOfBirth <= '1962-01-01' || t.primary.dateOfBirth > '2008-12-31')
-        fail('ordinary adult under65 cohort required');
+    if (t.primary.dateOfBirth === '1962-01-01' || t.primary.dateOfBirth > '2008-12-31')
+        fail('ordinary adult age within the supported range required');
+    if (!allowSenior && t.primary.dateOfBirth < '1962-01-01') fail('ordinary adult under65 cohort required');
     if (sf.primaryCanBeClaimedAsDependent !== false || sf.primaryDeathDate !== null || sf.nonresidentAlien !== false || sf.dualStatusAlien !== false || sf.shortTaxYear !== false)
         fail('actual ordinary calendar owner eligibility required');
     const { ohioResidency: _residency, ohioPayments: _payments, ...originals } = input;
@@ -170,7 +180,7 @@ export function calculateOhio2026SchoolSource(input: TaxYearInput, raw: unknown)
     contexts.set(context, { currentDigest, projection: { taxYear: 2026, districtCode: district.code, districtName: district.name, taxBase: 'earned', rate: district.rate,
             residentCompensation: wages.toFixed(), schoolWithholding: withheld.toFixed(), taxLiability: null, payments: null, refund: null, underpaymentPenalty: null, lateInterest: null,
             filingQualified: false, calculationStatus: 'source-only-incomplete', limitations: [
-                'Actual single full-year under65 ordinary Ohio W2 earned-district source projection only; no PY, nonresident, traditional, joint, SE or specialized compensation method.',
+                `Actual single full-year ${allowSenior ? 'adult' : 'under65'} ordinary Ohio W2 earned-district source projection only; no PY, nonresident, traditional, joint, SE or specialized compensation method.`,
                 'Source wages and withholding are exact documentary amounts; no school liability, payment, refund, penalty, late-interest or final2026 SD100 qualification is inferred.',
                 'Actual school payments and prior accounts require a separate current method; ordinary-return no-school guards and all filing/paper/native gates remain closed.',
             ] } });
