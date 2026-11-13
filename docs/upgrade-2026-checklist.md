@@ -17,6 +17,9 @@ below retain their original evidence boundaries.
 - [x] Rehearse exact `f42a8352` hosted HTTP and dump/restore locally. Pass 14
   HTTP checks and the synthetic 11-table restoration, including exact AI cost
   and billing replay. Protected staging remains a separate gate.
+- [x] Pass exact `cd5dd249` ARM64 import, smoke, SBOM/scan, all six Compose
+  recovery phases and 616 Chromium cases with five hosted-only skips. Verify
+  normal stop, socket restoration and unmodified default connection.
 - [x] Guard the 2026 Code A qualified lump-sum reporting decision in
   `f42a8352`. Pass 417 affected tests. Hold the actual Form 4972 election
   for its separate worksheet and review.

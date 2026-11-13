@@ -24457,6 +24457,46 @@
       "https://www.irs.gov/instructions/i1040gi"
     ]
   },
+  "nov13RetirementSuccessorVerification": {
+    "guidedLumpSum": {
+      "source": "18104818cfa3abbbadb083c02aa287b4ec9633de",
+      "focusedTestsPassed": 305,
+      "initialRed": 6,
+      "specReferencesValidated": 8905
+    },
+    "form4972OwnPlan": {
+      "source": "4593c4ecc00b446bd72be03aa2741ce3f5ad4967",
+      "focusedTestsPassed": 125,
+      "specReferencesValidated": 8911,
+      "federalIntegrationEnabled": false,
+      "sourceAuthority": "https://www.irs.gov/pub/irs-pdf/f4972.pdf"
+    },
+    "localHosted": {
+      "source": "f42a83524f79a5b89024777fa047b4b06978a472",
+      "httpChecksPassed": 14,
+      "restoredPostgresTables": 11,
+      "httpReceiptSha256": "1ecc7111bd0f962e44b9f60947585ee78cbf28952145666160b18f9d89b89e3f",
+      "recoveryReceiptSha256": "df9c27aa13f5b6619953d9f8c35599013c07031df4ff7e276fbb8af62279e68f"
+    },
+    "arm64": {
+      "source": "cd5dd249be50e8047c665ac2777c734079e25fc2",
+      "image": "b47f36b84cf0e2b99c7463139c41ef318939a4a501221962a65f57df5fd66469",
+      "imageArchiveSha256": "530fbfa616de0d9991fc28490f0656fd9d564e7fc2c13c55f86f731fc76ae3a4",
+      "sbomSha256": "add0ea4de7b29c0834718e7560a4845967f7f2299890530b828f85f2995aca33",
+      "scanSha256": "9e09aa542a908c9c6cefa6234fac7ff1c2a2e66e9edcb564e836fd8bdb43ba31",
+      "browserTranscriptSha256": "80fa0535239ea1d810121255d93ddf9709567bbc1e5c7bbf9952646dc806452e",
+      "composeRecoverySha256": "c1556fbb6efe456d71cb1d904a530075a8b494cc66de140fe0c256f30653c13f",
+      "chromiumCollected": 621,
+      "chromiumPassed": 616,
+      "chromiumHostedOnlySkipped": 5,
+      "composeRecoveryPhasesPassed": 6,
+      "advisoryMatches": 197,
+      "highAdvisoryMatches": 60,
+      "riskAccepted": false,
+      "receiptSha256": "d46c0c4ce861f4f9ed84a0a90ee0014e50095b2f10e349f29a7470a5fd500a59",
+      "cleanupSha256": "cd32053478e94fc27e16e991280a6f3de2d3580c6280dd1e44122dc93d318b40"
+    }
+  },
   "nov13PaSuccessorVerification": {
     "b7ffd2c1Combined": {
       "source": "b7ffd2c1848521f4e9b3f3a4396b867661df436e",
