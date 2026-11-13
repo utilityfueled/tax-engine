@@ -1470,6 +1470,14 @@ export function confirmWorkspaceDocumentTaxYear(
     workspace.guidedCompletion ?? null);
 }
 
+export function confirmLocalDocumentTaxYear(storage: Storage, workspaceId: string, documentId: string, taxYear: number | null) {
+  const current = loadStorage(storage).workspaces[workspaceId];
+  if (!current) throw new Error("This return is no longer available.");
+  const next = confirmWorkspaceDocumentTaxYear(current, documentId, taxYear);
+  if (next !== current) saveWorkspaceRecord(storage, workspaceId, next);
+  return next;
+}
+
 export function clearWorkspaceRecord(workspace: ReturnWorkspaceRecord) {
   const occurredAt = new Date().toISOString();
   const resetLabel = workspace.storageMode === "hosted-postgres"

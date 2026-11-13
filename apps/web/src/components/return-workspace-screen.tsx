@@ -64,6 +64,7 @@ import {
   answerWorkspaceInterviewQuestion,
   clearWorkspaceRecord,
   clearWorkspaceGuidedData,
+  confirmLocalDocumentTaxYear,
   confirmWorkspaceDocumentTaxYear,
   getFutureYearSampleUploadMessage,
   ingestFilesIntoWorkspace,
@@ -822,8 +823,11 @@ export function ReturnWorkspaceScreen({
 
   async function confirmDocumentYear(documentId: string, year: number | null) {
     if (!workspace) throw new Error("The return is not available.");
-    const nextWorkspace = confirmWorkspaceDocumentTaxYear(workspace, documentId, year);
-    await persistHostedWorkspace(nextWorkspace);
+    if (localWorkspaceEditingEnabled) {
+      setWorkspace(confirmLocalDocumentTaxYear(requireBrowserStorage(), workspaceId, documentId, year));
+    } else {
+      await persistHostedWorkspace(confirmWorkspaceDocumentTaxYear(workspace, documentId, year));
+    }
     setStorageMessage("Document year saved. Review the related answers again.");
   }
 

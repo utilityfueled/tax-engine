@@ -177,6 +177,39 @@ test("restores local document metadata when its original deletion aborts", async
   await checkRemovalFailure(page, "transaction");
 });
 
+test("a stale document-year editor cannot recreate a deleted local return", async ({ page }) => {
+  const pdf = await PDFDocument.create();
+  pdf.addPage();
+  await page.goto("/");
+  await enableAdvancedMode(page);
+  await page.getByRole("button", { name: /start your tax return/i }).click();
+  await expect(page).toHaveURL(/\/returns\/(?!new(?:[/?#]|$))[a-z0-9-]+$/i);
+  const id = new URL(page.url()).pathname.split("/").at(-1)!;
+  await page.locator('input[type="file"]').setInputFiles({
+    name: "fictional-year-source.pdf", mimeType: "application/pdf", buffer: Buffer.from(await pdf.save()),
+  });
+  await expect(page.getByRole("status", { name: "Return status" })).toHaveText("1 docs stored locally.");
+  const documents = page.getByRole("region", { name: "Your Documents", exact: true });
+  const expand = documents.getByRole("button", { name: "Expand", exact: true });
+  if (await expand.isVisible()) await expand.click();
+  await documents.getByLabel("Tax year shown on this document").fill("2025");
+
+  const otherTab = await page.context().newPage();
+  await otherTab.goto("/");
+  const card = otherTab.getByRole("listitem").filter({ hasText: `Tax Return ${id}` });
+  await card.getByRole("button", { name: `Delete tax return ${id}`, exact: true }).click();
+  await expect(card).toHaveCount(0);
+  await documents.getByRole("button", { name: "Confirm document year", exact: true }).click();
+  await expect(documents.getByRole("alert")).toHaveText("Could not save this document's tax year. Please try again.");
+  expect(await page.evaluate(id => {
+    const raw = localStorage.getItem("tax-engine.return-workspaces.v1");
+    return Object.hasOwn(JSON.parse(raw ?? "{}").workspaces ?? {}, id);
+  }, id)).toBe(false);
+  await otherTab.reload();
+  await expect(card).toHaveCount(0);
+  await otherTab.close();
+});
+
 test("local workspace stores uploaded official IRS fixtures across reloads", async ({ page }, testInfo) => {
   await page.goto("/");
   await enableAdvancedMode(page);
