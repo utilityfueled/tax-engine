@@ -6,8 +6,10 @@ import { access, mkdtemp, readFile, rm } from "fs/promises";
 import { tmpdir } from "os";
 import { join } from "path";
 import { describe, expect, it } from "vitest";
+import Decimal from "decimal.js";
 import { calculateFederalTax } from "@/engine/federal.js";
 import { calculatePAReturn } from "@/engine/state/pa-orchestrator.js";
+import { calculateScheduleUE } from "@/engine/state/pa-schedule-ue.js";
 import { TaxYearInputSchema } from "@/models/inputs.js";
 import {
   buildPAScheduleUEReferenceSummary,
@@ -21,11 +23,13 @@ async function makeOutputDir() {
 }
 
 function makePennsylvaniaResidentReturnWithScheduleUE({
+  taxYear = 2025,
   businessMiles = 4000,
   parkingAndTolls = "200",
   unionDues = "300",
   employerReimbursements,
 }: {
+  taxYear?: number;
   businessMiles?: number;
   parkingAndTolls?: string;
   unionDues?: string;
@@ -35,6 +39,7 @@ function makePennsylvaniaResidentReturnWithScheduleUE({
     ...simpleW2Fixture,
     taxpayer: {
       ...simpleW2Fixture.taxpayer,
+      taxYear,
       address: {
         ...simpleW2Fixture.taxpayer.address,
         state: "PA",
@@ -64,6 +69,23 @@ function makePennsylvaniaResidentReturnWithScheduleUE({
 }
 
 describe("Pennsylvania Schedule UE packet reference summary", () => {
+  it("shows preliminary 2026 mileage in the Schedule UE reference summary", () => {
+    const schedule = calculateScheduleUE({
+      taxYear: 2026,
+      vehicle: { method: "standard", totalMiles: 12000, businessMiles: 4000, parkingAndTolls: new Decimal("200") },
+      otherExpenses: { unionDues: new Decimal("300") },
+    });
+    const summary = buildPAScheduleUEReferenceSummary(schedule);
+    expect(summary.warningLabel).toBe("REFERENCE SUMMARY ONLY");
+    expect(summary.totals).toContainEqual({ label: "Section II vehicle expenses", value: "3240" });
+    expect(summary.totals).toContainEqual({ label: "Line J net unreimbursed expenses", value: "3540" });
+  });
+
+  it("keeps the incomplete 2026 full return unavailable with typed Schedule UE mileage", () => {
+    const input = makePennsylvaniaResidentReturnWithScheduleUE({ taxYear: 2026 });
+    expect(() => calculatePAReturn(input)).toThrow(/Tax year 2026 rule pack .* is incomplete/);
+  });
+
   it("buildPAScheduleUEReferenceSummary keeps the packet artifact reference-only for supported employee business expenses", () => {
     const input = makePennsylvaniaResidentReturnWithScheduleUE();
 

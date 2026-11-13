@@ -56,6 +56,17 @@ describe("PA 2026 tax year support", () => {
     expect(result.taxLiability.toNumber()).toBe(3070);
   });
 
+  it("uses the preliminary annual Schedule UE mileage deduction at PA-40 Line 1b", () => {
+    const schedule = calculateScheduleUE({
+      taxYear: 2026,
+      vehicle: { method: "standard", totalMiles: 12000, businessMiles: 4000, parkingAndTolls: d("200") },
+      otherExpenses: { unionDues: d("300") },
+    });
+    const result = calculatePA40(makePA40Input({ compensation: d("85000"), unreimbursedExpenses: schedule.netUnreimbursedExpenses }));
+    expect(result.unreimbursedExpenses.toFixed()).toBe("3540");
+    expect(result.netCompensation.toFixed()).toBe("81460");
+  });
+
   it("PA Schedule A through Schedule F support tax year 2026", () => {
     expect(calculatePAScheduleA({ taxYear: 2026 }).line16.toNumber()).toBe(0);
     expect(calculatePAScheduleB({ taxYear: 2026 }).line12.toNumber()).toBe(0);

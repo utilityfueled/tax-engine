@@ -59,6 +59,28 @@ describe("Pennsylvania Schedule UE", () => {
       expect(result.standardMileageDeduction.toNumber()).toBe(6700);
     });
 
+    it("applies the higher 2026 Pennsylvania allowance to annual business miles", () => {
+      const result = calculateScheduleUE(makeInput({
+        taxYear: 2026,
+        vehicle: { method: "standard", totalMiles: 16000, businessMiles: 6001 },
+      }));
+      // The Pennsylvania annual calculation is $4,560.76 before whole-dollar reporting.
+      expect(result.businessMiles).toBe(6001);
+      expect(result.standardMileageDeduction.toFixed()).toBe("4561");
+      expect(result.actualVehicleDeduction.toFixed()).toBe("0");
+      expect(result.netUnreimbursedExpenses.toFixed()).toBe("4561");
+    });
+
+    it("keeps the 2026 Pennsylvania actual vehicle expense method on the business-use fraction", () => {
+      const result = calculateScheduleUE(makeInput({
+        taxYear: 2026,
+        vehicle: { method: "actual", totalMiles: 16000, businessMiles: 6000, actualExpenses: d("4000.99") },
+      }));
+      expect(result.businessUsePercentage.toFixed()).toBe("0.375");
+      expect(result.standardMileageDeduction.toFixed()).toBe("0");
+      expect(result.actualVehicleDeduction.toFixed()).toBe("1500");
+    });
+
     it("PA Schedule UE Part A - actual vehicle expenses", () => {
       const result = calculateScheduleUE(makeInput({
         vehicle: {

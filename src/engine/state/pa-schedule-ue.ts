@@ -19,7 +19,7 @@ import type { CalculatedLine } from "@/models/outputs.js";
 // ---------------------------------------------------------------------------
 
 export interface PAScheduleUEConstants {
-  /** IRS standard mileage rate for business use */
+  /** Highest IRS business standard mileage rate for the tax year under PA Schedule UE Line 6 */
   standardMileageRate: Decimal;
   /** Meal expense limitation percentage (0.50 = 50%) */
   mealLimitationRate: Decimal;
@@ -35,7 +35,8 @@ export const PA_SCHEDULE_UE_CONSTANTS: Record<number, PAScheduleUEConstants> = {
     mealLimitationRate: new Decimal("0.50"),
   },
   2026: {
-    standardMileageRate: new Decimal("0.70"),
+    // Preliminary annual rate under published PA Line 6 guidance and IRS Announcement 2026-11.
+    standardMileageRate: new Decimal("0.76"),
     mealLimitationRate: new Decimal("0.50"),
   },
 };

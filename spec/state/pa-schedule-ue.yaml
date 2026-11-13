@@ -16,9 +16,18 @@ notes: |
     - Employer reimbursements reduce total expenses dollar for dollar
     - Net unreimbursed expenses cannot exceed gross compensation
 
-  Standard mileage rates (IRS):
+  Pennsylvania Schedule UE standard mileage rates:
     2024: $0.67 per business mile
     2025: $0.70 per business mile
+    2026: $0.76 per business mile, preliminary pending final 2026 Pennsylvania instructions
+
+  Pennsylvania's latest published Line 6 instructions use the higher federal
+  allowance on all annual qualifying business miles if the IRS changes its
+  rate during the tax year. PA Department of Revenue's March 23, 2026 mileage
+  FAQ lists the original federal $0.725 rate. The federal June announcement
+  raised the rate to $0.76 on July 1. The September 14, 2026 Pennsylvania
+  Schedule UE FAQ continues to direct taxpayers to the federal standard for
+  the year. This supports the preliminary 2026 annual rate only.
 
 packetRules:
   packetBehavior: "reference-summary-pdf"
@@ -75,13 +84,19 @@ lines:
 
   - line: "A4a"
     description: "Standard mileage rate deduction"
-    formula: "Line A2 × standard mileage rate for the tax year"
+    formula: "Round Line A2 × the highest IRS business standard mileage rate for the tax year to whole dollars. Apply one annual Pennsylvania rate to total qualifying business miles."
     notes: |
       Standard mileage rate method. Cannot be used if:
         - Taxpayer claims actual expenses (mutually exclusive)
         - Vehicle is used for hire (taxi, rideshare)
         - Fleet of 5+ vehicles used simultaneously
     testRef: "tests/engine/state/pa-schedule-ue.test.ts::PA Schedule UE Part A - vehicle expense using standard mileage rate"
+
+  - line: "A4a-2026-preliminary"
+    description: "Pennsylvania 2026 annual standard mileage calculation"
+    formula: "Annual business miles × $0.76, rounded to whole dollars. The actual vehicle expense method continues to use the existing business-use fraction."
+    irsRef: "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40ue.pdf (Section II Line 6); https://revenue-pa.custhelp.com/app/answers/detail/a_id/3205; https://www.irs.gov/irb/2026-29_IRB (Announcement 2026-11)"
+    testRef: "tests/engine/state/pa-schedule-ue.test.ts::applies the higher 2026 Pennsylvania allowance to annual business miles"
 
   - line: "A4b"
     description: "Actual vehicle expenses"
