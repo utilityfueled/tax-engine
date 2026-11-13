@@ -44,3 +44,23 @@ lines:
       stops the candidate. Keep private log references out of output and leave
       review and filing gates closed.
     testRef: "tests/pdf/schedule-c-2026-mileage-candidate.test.ts::maps the official vehicle fields from one reconciled log and explicit Part IV answers"
+  - line: "1, 3, 5, 7, 27b, 28, 29, 31, and Part V line 48"
+    description: "Project the bounded professional wagering loss candidate"
+    irsRef: "Final 2026 Schedule C, Parts I, II and V; draft 2026 Schedule C instructions, What's New and Part V; 26 USC 165(d)"
+    formula: >
+      Use the existing 2026 federal-only sole-proprietor wagering calculation
+      with confirmed losses and explicit zero other wagering expenses. Set the
+      single actual Part V category to wagering losses and use the allowed
+      loss once as the category amount, Part V total, and lines 27b and 28.
+      Transfer canonical income and profit to the corresponding fields. Leave
+      irrelevant lines blank. Only report a whole-dollar diagnostic when all
+      printed arithmetic reconciles after rounding the canonical lines once.
+      Mixed expense categories, state returns and rounding mismatches require
+      separate treatment. Keep ledger and statement references out of the
+      diagnostic. Public review and filing remain gated.
+    testRef: "tests/pdf/schedule-c-2026-wagering-candidate.test.ts::writes the confirmed wagering loss to Part V and transfers it once"
+  - line: "professional wagering physical projection boundary"
+    description: "Refuse unconfirmed or ambiguous physical output"
+    formula: "Do not output source amounts from a missing ledger, an unqualified state or mixed-expense return, or when independently rounded income, deduction and net cannot satisfy the printed subtraction."
+    irsRef: "Final 2026 Schedule C line 29; Form 1040 Instructions, Rounding Off to Whole Dollars"
+    testRef: "tests/pdf/schedule-c-2026-wagering-candidate.test.ts::refuses missing sources mixed expenses and nonreconciling rounded totals"
