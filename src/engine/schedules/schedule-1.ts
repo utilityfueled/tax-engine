@@ -276,7 +276,8 @@ function calculateStudentLoanInterestDeduction(
 export function calculateSchedule1(
   input: TaxYearInput,
   extra?: Schedule1Input,
-  precomputedForm4797?: Form4797Result
+  precomputedForm4797?: Form4797Result,
+  precomputedForm3903?: Form3903Result,
 ): Schedule1Result {
   const audit = new AuditTrail();
   const adjustments = input.adjustments;
@@ -584,7 +585,7 @@ export function calculateSchedule1(
   let form3903Result: Form3903Result | undefined;
   let armedForcesMovingExpenses: Decimal;
   if (input.form3903) {
-    form3903Result = calculateForm3903(input.form3903);
+    form3903Result = precomputedForm3903 ?? calculateForm3903(input.form3903);
     audit.merge(form3903Result.lines);
     armedForcesMovingExpenses = form3903Result.totalDeductible;
     audit.record(

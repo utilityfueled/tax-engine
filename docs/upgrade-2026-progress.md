@@ -3992,3 +3992,24 @@ The browser audit binds four changed PDF source hashes from `397ef68c`,
 updated audit admitted it with the same 1,836 source keys and identical
 non-hash values. All 156 orchestrator, window and runtime provenance tests
 passed. Browser journey results remain a separate runtime check.
+
+### November 12 · local lifecycle inspection and Form 3903
+
+Local commit `20aaf604` removes duplicate lifecycle PDF text extraction,
+preserving the original saved-packet and privacy checks. Three baseline
+failures precede the change. The inspector controls and the browser CPU
+diagnostic suites pass 28 tests. Replay of the six saved desktop and
+mobile PDFs produced 24 identical inspection receipts. See [the lifecycle
+ledger](upgrade-2026-lifecycle-inspector-work.md).
+
+The Form 3903 engine now routes confirmed taxable moving reimbursement
+excess to Form 1040 line 1h and leaves Schedule 1 line 14 deductions separate.
+The final scoped run passed 651 tests, including two saved Form 1040 checks
+at the exact printed fields. Legacy positive excess requires confirmation of
+all three original amounts. See [the Form 3903 ledger](upgrade-2026-form3903-excess-work.md).
+
+Local commit `e842119e` applies the preliminary 76-cent Pennsylvania
+employee mileage rate based on the state's published annual method and the
+midyear federal update. The focused run passed 347 tests. Final Pennsylvania
+forms, human review and distribution evidence remain open. See [the
+Pennsylvania mileage ledger](upgrade-2026-pa-schedule-ue-mileage-work.md).

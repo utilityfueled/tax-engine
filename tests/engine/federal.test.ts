@@ -12635,7 +12635,7 @@ describe("Form 3903 moving expenses through federal pipeline", () => {
     expect(base.agi.minus(withMoving.agi).toNumber()).toBe(6000);
   });
 
-  it("Excess reimbursements result in zero deduction, no AGI change", () => {
+  it("Excess reimbursements absent from W-2 wages result in zero deduction and additional AGI", () => {
     const base = calculateFederalTax(simpleW2Fixture);
     const withExcessReimb = calculateFederalTax({
       ...simpleW2Fixture,
@@ -12646,13 +12646,14 @@ describe("Form 3903 moving expenses through federal pipeline", () => {
             transportationAndStorage: "2000",
             travelAndLodging: "1000",
             reimbursementsExcludedFromIncome: "5000",
+            lineAmountsConfirmed: true,
           },
         ],
       },
     });
 
-    // Expenses $3,000 < reimbursements $5,000 → deduction is $0
-    expect(withExcessReimb.agi.toNumber()).toBe(base.agi.toNumber());
+    expect(withExcessReimb.schedule1.armedForcesMovingExpenses.toString()).toBe("0");
+    expect(withExcessReimb.agi.minus(base.agi).toString()).toBe("2000");
   });
 });
 

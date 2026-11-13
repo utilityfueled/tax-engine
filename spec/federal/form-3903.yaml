@@ -1,7 +1,7 @@
 form: "Form 3903"
 fullName: "Moving Expenses"
 taxYear: 2025
-irsReference: "https://www.irs.gov/instructions/i3903"
+irsReference: "https://www.irs.gov/pub/irs-prior/i3903--2025.pdf"
 
 notes: |
   Form 3903 computes the deductible moving expenses for members of the
@@ -27,16 +27,12 @@ notes: |
       excluded from gross income and should not be included as income.
     - Any reimbursement received for deductible expenses must reduce the
       deduction dollar-for-dollar.
-    - If the reimbursement exceeds actual expenses, the excess is taxable
-      income (reported as wages on Form W-2).
+    - Excess that the government has already reported in W-2 Box 1 stays in
+      wages. An excess derived from Line 4, which excludes Box 1 amounts,
+      is additional earned income on Form 1040 Line 1h.
 
-  The form has two boxes that must be checked when applicable:
-    Box A: Move related to start of work at a new principal workplace.
-    Box B: Member of the Armed Forces on active duty, moving pursuant
-           to a military order for permanent change of station.
-
-  Only Box B moves are deductible for 2018–2025 returns under TCJA.
-  The engine requires military = true on the input.
+  The final 2025 form has one eligibility certification checkbox. The
+  existing input uses military = true for a qualifying active-duty move.
 
 businessRuleValidation:
   - rule: "reference-summary-packet"
@@ -67,7 +63,7 @@ lines:
       Includes the cost of transportation and lodging for the taxpayer and
       household members traveling from the old home to the new home. Does
       NOT include meals (suspended by TCJA for all taxpayers, military
-      included). Standard mileage rate for moving is 22 cents per mile for
+      included). Standard mileage rate for moving is 21 cents per mile for
       2025. Only one trip per person is deductible.
     edgeCases:
       - "Meals are never deductible for post-2017 moves"
@@ -96,8 +92,7 @@ lines:
       employer reported reimbursements in W-2 Box 12 Code P, those amounts
       are excluded from W-2 income and must be entered on Line 4.
     edgeCases:
-      - "If reimbursement exceeds expenses, the excess should have been included in W-2 wages by the employer"
-      - "Government dislocation allowance (DLA) is a reimbursement"
+      - "Exclude dislocation allowances, temporary lodging expenses or allowances, move-in housing allowances, and the value of government-provided moving or storage services."
     testRef: "tests/engine/forms/form-3903.test.ts::Form 3903 line-by-line"
 
   - line: "5"
@@ -110,13 +105,21 @@ lines:
     notes: >
       This amount flows to Schedule 1 Line 14 as an above-the-line
       adjustment to income. If reimbursements exceed expenses, the deduction
-      is $0 (the excess reimbursement is taxable income on W-2, not handled
-      here).
+      is $0 and the separate Line 1h transfer applies.
     edgeCases:
       - "When reimbursements exceed expenses, the deduction is $0"
-      - "The excess reimbursement scenario is handled on W-2, not on Form 3903"
       - "Multiple moves in the same year: file a separate Form 3903 for each move, sum deductions"
     testRef: "tests/engine/forms/form-3903.test.ts::Form 3903 line-by-line"
+
+  - line: "excess-reimbursement"
+    description: "Additional earned income on Form 1040 Line 1h"
+    formula: "For each move derive max(0, Line 4 minus Line 3) using Decimal. A positive excess requires confirmed Line 1, 2 and 4 facts, with Line 4 excluding W-2 Box 1 and separately exempt allowances. Require all three explicit nonnegative amounts, including zeros, since an older unconfirmed record may have included allowances or omitted costs. Add confirmed positive results to Form 1040 Line 1h and the wage total exactly once. Sum deduction and income separately across moves and preserve cents until ordinary return presentation."
+    irsRef: "Final 2025 and 2026 Form 3903 Instructions, Lines 4 and 5; https://www.irs.gov/pub/irs-pdf/i3903.pdf"
+    testRef: "tests/engine/forms/form-3903.test.ts::derives per-move excess independently and adds it to Form 1040 once"
+  - line: "excess-confirmation"
+    description: "Require explicit actual costs and reimbursements for a positive excess"
+    formula: "An unconfirmed or incomplete legacy positive excess stops for original facts before a tax result. False and missing confirmation do not establish eligibility, and omitted costs are distinct from actual zero."
+    testRef: "tests/engine/forms/form-3903.test.ts::requires complete confirmed facts before taxing a legacy excess"
 
   - line: "packet"
     description: "Draft packet inclusion rule for supported Form 3903 military moving-expense inputs"

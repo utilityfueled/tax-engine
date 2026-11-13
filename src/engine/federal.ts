@@ -102,6 +102,7 @@ import { calculateK1QbiLossReturn } from "./forms/k1-qbi-loss-return.js";
 import type { PassiveActivity } from "./forms/form-8582.js";
 import { calculateForm2441 } from "./forms/form-2441.js";
 import { calculateForm2441Benefits } from "./forms/form-2441-benefits.js";
+import { calculateForm3903 } from "./forms/form-3903.js";
 import { calculateDependentCareBenefitSources } from "./forms/dependent-care-benefit-sources.js";
 import { calculateForm8863 } from "./forms/form-8863.js";
 import type { calculateForm8962 } from "./forms/form-8962.js";
@@ -694,8 +695,15 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   if (!foreignEmploymentNotOnW2.isFinite() || foreignEmploymentNotOnW2.lt(0)) {
     throw new Error("Foreign employment income absent from W2 must be finite and nonnegative");
   }
-  audit.record("1040", "1h", "Other earned income", form1099R.disabilityPensionWages.plus(foreignEmploymentNotOnW2),
-    "Supported disability pensions and actual foreign employment income not reported on W2");
+  const form3903 = input.form3903 ? calculateForm3903(input.form3903) : undefined;
+  if (form3903 && form3903.totalTaxableReimbursement === undefined) {
+    throw new Error("Form 3903 requires confirmed line amounts before reporting excess moving reimbursement.");
+  }
+  const movingReimbursement = form3903?.totalTaxableReimbursement ?? new Decimal(0);
+  audit.record("1040", "1h", "Other earned income",
+    sum(form1099R.disabilityPensionWages, foreignEmploymentNotOnW2, movingReimbursement),
+    "Supported disability pensions, foreign employment and taxable Form 3903 reimbursements absent from W-2 wages",
+    { disabilityPensionWages: form1099R.disabilityPensionWages, foreignEmploymentNotOnW2, movingReimbursement });
 
   // Adoption benefit exclusion must precede AGI. The completed Part III MAGI
   // worksheet is an actual input; final credit MAGI is calculated later from AGI.
@@ -738,12 +746,13 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     adoptionBenefitResult?.priorYearEmployerBenefits.gt(0)
       ? "Form 8839 physical line31 less historical benefit worksheet9; signed reporting continuation from 2023 instructions"
       : "Signed Form 8839 line 31");
-  const totalWages = totalWagesBeforeExclusion.plus(taxableAdoptionBenefits).plus(foreignEmploymentNotOnW2).plus(taxableCareBenefits);
+  const totalWages = sum(totalWagesBeforeExclusion, taxableAdoptionBenefits, foreignEmploymentNotOnW2, taxableCareBenefits, movingReimbursement);
   audit.record("1040", "1", "Wages, salaries, tips", totalWages,
     [
       "Sum of all W-2 Box 1",
       taxableCareBenefits.isZero() ? undefined : `additional taxable dependent-care benefits $${taxableCareBenefits}`,
       foreignEmploymentNotOnW2.isZero() ? undefined : "actual foreign employment income not reported on W2",
+      movingReimbursement.isZero() ? undefined : "taxable Form 3903 reimbursements absent from W-2 wages",
       taxableAdoptionBenefits.isZero() ? undefined : `signed taxable adoption benefits $${taxableAdoptionBenefits}`,
       tipPayroll.income.greaterThan(0)
         ? "supported Form 4137 unreported tip income"
@@ -760,6 +769,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     {
       w2Count: input.w2s.length.toString(),
       foreignEmploymentNotOnW2,
+      movingReimbursement,
       form4137UnreportedTipIncome: tipPayroll.income,
       form8919Wages: form8919?.line6 ?? new Decimal(0),
       disabilityPensionWages: form1099R.disabilityPensionWages,
@@ -1877,7 +1887,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     ...sched1Context,
     iraDeductionOverride: input.iraDeductionWorksheet ? new Decimal(0) : undefined,
     studentLoanDeductionOverride: new Decimal(0),
-  }, form4797);
+  }, form4797, form3903);
   // Form 8814 Line 12 other income flows to Schedule 1 Line 8z
   const form8814OtherIncome = form8814?.totalOtherIncome ?? new Decimal(0);
 
@@ -2239,7 +2249,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     audit.record("IRA MAGI Worksheet","total","Complete IRA modified adjusted gross income",iraDeductionWorksheetResult.magi,
       ordered?.ira ? "Retained Pub974 ordered IRA worksheet MAGI using its preceding Step3 health deduction"
         : "Full pre-bond income less non-IRA/non-student-loan adjustments plus AppendixB benefits before IRA and actual foreign/adoption addbacks");
-    sched1 = calculateSchedule1(sched1Input,{ ...sched1Context,iraDeductionOverride:iraDeductionWorksheetResult.totalDeduction,studentLoanDeductionOverride:new Decimal(0) },form4797);
+    sched1 = calculateSchedule1(sched1Input,{ ...sched1Context,iraDeductionOverride:iraDeductionWorksheetResult.totalDeduction,studentLoanDeductionOverride:new Decimal(0) },form4797,form3903);
   }
   const socialSecurityBenefitsWorksheet = socialSecurityBenefitsGross.greaterThan(0)
     ? calculateSocialSecurityBenefitsWorksheet({
@@ -2459,7 +2469,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
       ...sched1Context, iraDeductionOverride: sched1.iraDeduction,
       studentLoanDeductionOverride: studentLoanInterestWorksheetResult?.deduction,
       studentLoanModifiedAgi: studentLoanMagi,
-    }, form4797);
+    }, form4797, form3903);
     const change = sched1.studentLoanInterest.minus(previousDeduction);
     adjustments = adjustments.plus(change);
     agi = agi.minus(change);

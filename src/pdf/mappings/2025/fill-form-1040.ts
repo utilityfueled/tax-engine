@@ -95,6 +95,7 @@ const FIELDS = {
   line1e: p1("f1_51[0]"), // Taxable dependent care benefits
   line1f: p1("f1_52[0]"), // Employer-provided adoption benefits
   line1g: p1("f1_53[0]"), // Wages from Form 8919
+  line1hType: p1("f1_54[0]"),
   line1h: p1("f1_55[0]"),
   line1z: p1("f1_57[0]"),
   line2a: p1("f1_58[0]"),
@@ -243,6 +244,18 @@ export async function fillForm1040(
     const value = getLineValue(result, "1040", line);
     if (value === undefined) throw new Error(`Missing audited Form 1040 line ${line}.`);
     fields.setCurrency(F[`line${line}`], value);
+  }
+  const otherEarnedIncome = result.allLines.find(line => line.form === "1040" && line.line === "1h")?.inputs;
+  const otherEarnedIncomeTypes = [
+    [otherEarnedIncome?.movingReimbursement, "Moving reimbursement", "Move reimb."],
+    [otherEarnedIncome?.disabilityPensionWages, "Disability pension", "disability"],
+    [otherEarnedIncome?.foreignEmploymentNotOnW2, "Foreign wages", "foreign wages"],
+  ] as const;
+  const reportedIncomeTypes = otherEarnedIncomeTypes.filter(([value]) => value instanceof Decimal && value.gt(0));
+  if (reportedIncomeTypes.length === 1) {
+    fields.setText(F.line1hType, reportedIncomeTypes[0][1]);
+  } else if (reportedIncomeTypes.length > 1) {
+    fields.setText(F.line1hType, reportedIncomeTypes.map(([, , shortLabel]) => shortLabel).join(", "));
   }
   for (const line of ["1b", "1d", "1e", "1f"] as const) {
     fields.setCurrency(F[`line${line}`], getLineValue(result, "1040", line) ?? new Decimal(0));

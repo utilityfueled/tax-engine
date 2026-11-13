@@ -23,8 +23,10 @@ export interface Form3903MoveResult {
   line1: Decimal; // Transportation and storage
   line2: Decimal; // Travel and lodging
   line3: Decimal; // Total expenses (Line 1 + Line 2)
-  line4: Decimal; // Reimbursements excluded from income
+  line4: Decimal; // Qualifying reimbursements absent from W-2 Box 1
   line5: Decimal; // Deductible moving expenses (max(0, Line 3 - Line 4))
+  /** Excess on Form 1040 Line 1h, unavailable for an unconfirmed positive difference. */
+  taxableReimbursement?: Decimal;
 }
 
 export interface Form3903Result {
@@ -32,6 +34,8 @@ export interface Form3903Result {
   moveResults: Form3903MoveResult[];
   /** Combined deductible amount → Schedule 1 Line 14 */
   totalDeductible: Decimal;
+  /** Unavailable if a positive difference needs confirmation from the original sources. */
+  totalTaxableReimbursement?: Decimal;
   lines: CalculatedLine[];
 }
 
@@ -42,12 +46,18 @@ function calculateMove(move: Form3903Move): Form3903MoveResult {
   const line4 = Decimal.max(ZERO, d(move.reimbursementsExcludedFromIncome));
   const line5 = Decimal.max(ZERO, line3.minus(line4));
 
-  return { line1, line2, line3, line4, line5 };
+  const excess = Decimal.max(ZERO, line4.minus(line3));
+  const complete = move.lineAmountsConfirmed === true
+    && [move.transportationAndStorage, move.travelAndLodging, move.reimbursementsExcludedFromIncome]
+      .every(value => value !== undefined && d(value).isFinite() && d(value).gte(0));
+  const taxableReimbursement = excess.isZero() || complete ? excess : undefined;
+  return { line1, line2, line3, line4, line5, taxableReimbursement };
 }
 
 export function calculateForm3903(input: Form3903Input): Form3903Result {
   const audit = new AuditTrail();
   const moveResults = input.moves.map((move) => calculateMove(move));
+  let totalTaxableReimbursement: Decimal | undefined = ZERO;
 
   for (const [i, mr] of moveResults.entries()) {
     const label = moveResults.length === 1 ? "" : ` (Move ${i + 1})`;
@@ -68,7 +78,7 @@ export function calculateForm3903(input: Form3903Input): Form3903Result {
       });
 
     audit.record("Form 3903", `4${label}`,
-      "Reimbursements excluded from income",
+      "Qualifying reimbursements absent from W-2 wages",
       mr.line4, "Employer/government reimbursements not included in W-2 wages (e.g., W-2 Box 12 Code P)");
 
     audit.record("Form 3903", `5${label}`,
@@ -77,6 +87,13 @@ export function calculateForm3903(input: Form3903Input): Form3903Result {
         "Line 3": mr.line3,
         "Line 4": mr.line4,
       });
+    if (mr.taxableReimbursement === undefined) {
+      totalTaxableReimbursement = undefined;
+    } else if (mr.taxableReimbursement.gt(0)) {
+      totalTaxableReimbursement = totalTaxableReimbursement?.plus(mr.taxableReimbursement);
+      audit.record("Form 3903", `excess${label}`, "Taxable reimbursement → Form 1040 Line 1h",
+        mr.taxableReimbursement, "max(0, Line 4 - Line 3)", { "Line 4": mr.line4, "Line 3": mr.line3 });
+    }
   }
 
   const totalDeductible = moveResults.reduce(
@@ -94,6 +111,7 @@ export function calculateForm3903(input: Form3903Input): Form3903Result {
   return {
     moveResults,
     totalDeductible,
+    totalTaxableReimbursement,
     lines: audit.getLines(),
   };
 }

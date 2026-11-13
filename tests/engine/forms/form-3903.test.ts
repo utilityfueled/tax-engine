@@ -332,7 +332,7 @@ describe("Form 3903 Schedule 1 integration", () => {
     expect(result.agi.toNumber()).toBe(82000);
   });
 
-  it("Form 3903 with zero deductible does not affect AGI", () => {
+  it("Form 3903 with zero deductible includes the positive reimbursement difference in AGI", () => {
     const input = {
       ...simpleW2Fixture,
       form3903: {
@@ -340,13 +340,49 @@ describe("Form 3903 Schedule 1 integration", () => {
         moves: [{
           transportationAndStorage: "3000",
           reimbursementsExcludedFromIncome: "5000",
+          travelAndLodging: "0",
+          lineAmountsConfirmed: true,
         }],
       },
     };
 
     const result = calculateFederalTax(input);
     expect(result.schedule1.armedForcesMovingExpenses.toNumber()).toBe(0);
-    expect(result.agi.toNumber()).toBe(85000);
+    expect(result.agi.toString()).toBe("87000");
+  });
+
+  it("derives per-move excess independently and adds it to Form 1040 once", () => {
+    const form3903 = {
+      military: true as const,
+      moves: [
+        { transportationAndStorage: "300", travelAndLodging: "20.01", reimbursementsExcludedFromIncome: "340.78", lineAmountsConfirmed: true },
+        { transportationAndStorage: "200", travelAndLodging: "0", reimbursementsExcludedFromIncome: "180" },
+        { transportationAndStorage: "50", travelAndLodging: "0", reimbursementsExcludedFromIncome: "50" },
+      ],
+    };
+    const moving = calculateForm3903(form3903);
+    expect(moving.moveResults.map(move => move.taxableReimbursement?.toString())).toEqual(["20.77", "0", "0"]);
+    expect(moving.totalTaxableReimbursement?.toString()).toBe("20.77");
+    expect(moving.totalDeductible.toString()).toBe("20");
+    const withoutMoving = calculateFederalTax(simpleW2Fixture);
+    const result = calculateFederalTax({ ...simpleW2Fixture, form3903 });
+    expect(result.totalWages.minus(withoutMoving.totalWages).toString()).toBe("20.77");
+    expect(result.agi.minus(withoutMoving.agi).toString()).toBe("0.77");
+    expect(result.schedule1.armedForcesMovingExpenses.toString()).toBe("20");
+    expect(result.allLines.find(line => line.form === "1040" && line.line === "1h")?.value.toString()).toBe("20.77");
+  });
+
+  it("requires complete confirmed facts before taxing a legacy excess", () => {
+    const move = { transportationAndStorage: "300", travelAndLodging: "0", reimbursementsExcludedFromIncome: "500" };
+    const unconfirmed = calculateForm3903({ military: true, moves: [move] });
+    expect(unconfirmed.moveResults[0].taxableReimbursement).toBeUndefined();
+    expect(unconfirmed.totalTaxableReimbursement).toBeUndefined();
+    for (const facts of [move, { ...move, lineAmountsConfirmed: false },
+      { ...move, lineAmountsConfirmed: true, travelAndLodging: undefined },
+      { ...move, lineAmountsConfirmed: true, travelAndLodging: "-1" }]) {
+      expect(() => calculateFederalTax({ ...simpleW2Fixture, form3903: { military: true, moves: [facts] } }))
+        .toThrow(/Form 3903.*confirmed.*line amounts/i);
+    }
   });
 });
 
@@ -360,19 +396,19 @@ describe("Form 3903 realistic scenarios", () => {
         // Professional movers: $4,200
         // 30-day storage at destination: $800
         transportationAndStorage: "5000",
-        // Drive 1,100 miles ($242 at 22¢/mile) + 2 nights lodging ($300)
-        travelAndLodging: "542",
-        // DLA and partial moving allowance excluded from income
+        // Drive 1,100 miles ($231 at 21¢/mile) + 2 nights lodging ($300)
+        travelAndLodging: "531",
+        // Qualifying Line 4 reimbursement, excluding dislocation allowance
         reimbursementsExcludedFromIncome: "3200",
       }],
     });
 
-    // Total expenses: 5000 + 542 = 5542
+    // Total expenses: 5000 + 531 = 5531
     // Reimbursement: 3200
-    // Deductible: 2342
-    expect(result.moveResults[0].line3.toNumber()).toBe(5542);
-    expect(result.moveResults[0].line5.toNumber()).toBe(2342);
-    expect(result.totalDeductible.toNumber()).toBe(2342);
+    // Deductible: 2331
+    expect(result.moveResults[0].line3.toNumber()).toBe(5531);
+    expect(result.moveResults[0].line5.toNumber()).toBe(2331);
+    expect(result.totalDeductible.toNumber()).toBe(2331);
   });
 
   it("officer with overseas PCS — two moves in one year (CONUS to OCONUS, temporary to permanent)", () => {

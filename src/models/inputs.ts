@@ -4299,11 +4299,13 @@ export type Form3800Input = z.infer<typeof Form3800Schema>;
  */
 export const Form3903MoveSchema = z.object({
   /** Transportation and storage of household goods and personal effects */
-  transportationAndStorage: optionalDecimal,
+  transportationAndStorage: optionalDecimalInput,
   /** Travel and lodging from old home to new home (meals NOT deductible post-2017) */
-  travelAndLodging: optionalDecimal,
-  /** Employer/government reimbursements excluded from W-2 income (e.g., W-2 Box 12 Code P, DLA) */
-  reimbursementsExcludedFromIncome: optionalDecimal,
+  travelAndLodging: optionalDecimalInput,
+  /** Qualifying reimbursements absent from W-2 Box 1. Exclude dislocation, temporary lodging and move-in housing allowances. */
+  reimbursementsExcludedFromIncome: optionalDecimalInput,
+  /** Original Lines 1, 2 and 4 are complete. Line 4 excludes Box 1 amounts and separately exempt allowances or services. */
+  lineAmountsConfirmed: z.boolean().optional(),
 });
 export const Form3903Schema = z.object({
   /** Must be true — only active-duty military moves are deductible 2018–2025 */

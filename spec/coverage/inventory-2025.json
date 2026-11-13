@@ -3819,7 +3819,7 @@
       "key": "federal/form-3903",
       "jurisdiction": "federal",
       "taxYear": 2025,
-      "sourceAuthority": "https://www.irs.gov/instructions/i3903",
+      "sourceAuthority": "https://www.irs.gov/pub/irs-prior/i3903--2025.pdf",
       "specPath": "spec/federal/form-3903.yaml",
       "enginePath": "src/engine/forms/form-3903.ts",
       "packetPath": "src/pdf/fill-form-3903.ts",

@@ -11,6 +11,42 @@ const p2 = "topmostSubform[0].Page2[0].";
 const blank = "forms/blank/2025/f1040.pdf";
 
 describe("official 2025 Form 1040 field locations", () => {
+  it("saves Form 3903 excess at the official Line 1h field without changing W-2 wages", async () => {
+    const input = {
+      ...simpleW2Fixture,
+      form3903: { military: true as const, moves: [
+        { transportationAndStorage: "2000", travelAndLodging: "1000", reimbursementsExcludedFromIncome: "5000", lineAmountsConfirmed: true },
+      ] },
+    };
+    const doc = await fillForm1040(input, calculateFederalTax(input), blank);
+    const form = (await PDFDocument.load(await doc.save())).getForm();
+    expect(form.getTextField(p1 + "f1_47[0]").getText()).toBe("85000");
+    expect(form.getTextField(p1 + "f1_54[0]").getText()).toBe("Moving reimbursement");
+    expect(form.getTextField(p1 + "f1_55[0]").getText()).toBe("2000");
+    expect(form.getTextField(p1 + "f1_57[0]").getText()).toBe("87000");
+    expect(form.getTextField(p1 + "f1_75[0]").getText()).toBe("87000");
+  });
+
+  it("saves the combined moving reimbursement and disability pension on Line 1h", async () => {
+    const input = {
+      ...simpleW2Fixture,
+      form1099R: [{
+        payer: "Fictional Disability Pension", grossDistribution: "12000", taxableAmount: "9000",
+        taxableAmountNotDetermined: true, federalWithheld: "0", distributionCode: "3",
+        iraSepSimple: false, disabilityPensionBeforeMinimumRetirementAge: true,
+      }],
+      form3903: { military: true as const, moves: [
+        { transportationAndStorage: "2000", travelAndLodging: "1000", reimbursementsExcludedFromIncome: "5000", lineAmountsConfirmed: true },
+      ] },
+    };
+    const doc = await fillForm1040(input, calculateFederalTax(input), blank);
+    const form = (await PDFDocument.load(await doc.save())).getForm();
+    expect(form.getTextField(p1 + "f1_47[0]").getText()).toBe("85000");
+    expect(form.getTextField(p1 + "f1_54[0]").getText()).toBe("Move reimb., disability");
+    expect(form.getTextField(p1 + "f1_55[0]").getText()).toBe("11000");
+    expect(form.getTextField(p1 + "f1_57[0]").getText()).toBe("96000");
+  });
+
   it("places simple return values on official 2025 printed lines after serialization", async () => {
     const input = { ...simpleW2Fixture, w2s: [{ ...simpleW2Fixture.w2s[0], wages: "150000", federalWithheld: "30000" }] };
     const doc = await fillForm1040(input, calculateFederalTax(input), blank);
