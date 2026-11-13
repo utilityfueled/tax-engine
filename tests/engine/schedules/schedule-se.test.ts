@@ -7,6 +7,7 @@ import { describe, it, expect } from "vitest";
 import Decimal from "decimal.js";
 import { calculateScheduleSE } from "@/engine/schedules/schedule-se.js";
 import { getConstants } from "@/models/constants.js";
+import { FEDERAL_2026_CONSTANTS } from "@/models/federal-2026-indexed.js";
 import { simpleW2Fixture, complexMFJFixture } from "../../fixtures/simple-w2.js";
 import type { TaxYearInput } from "@/models/inputs.js";
 
@@ -31,6 +32,19 @@ function makeFixtureWith1099NEC(amount: string, w2SSWages = "0"): TaxYearInput {
 // ═══════════════════════════════════════════════════════════
 
 describe("Schedule SE - Net Earnings", () => {
+  it("matches the IRS 2026 ATS scenario 12 regular Schedule SE", () => {
+    const input = makeFixtureWith1099NEC("0", "105878");
+    input.taxpayer = { ...input.taxpayer, taxYear: 2026 };
+    // The test packet supplies the Schedule C profit and has no W-2 Box 7 tips.
+    input.w2s = [{ ...input.w2s[0], socialSecurityTips: "0" }];
+    const result = calculateScheduleSE(input, FEDERAL_2026_CONSTANTS, d("8661"));
+
+    const line = (id: string) => result.lines.find(row => row.line === id)?.value.toFixed();
+    expect([line("2"), line("3"), line("4a"), line("4c"), line("6")]).toEqual(["8661", "8661", "7998", "7998", "7998"]);
+    expect([line("7"), line("8a"), line("8d"), line("9")]).toEqual(["184500", "105878", "105878", "78622"]);
+    expect([line("10"), line("11"), line("12"), line("13")]).toEqual(["992", "232", "1224", "612"]);
+  });
+
   it("Schedule SE Line 1a - uses Schedule F net farm profit when farm input is present", () => {
     const result = calculateScheduleSE({
       ...simpleW2Fixture,

@@ -5,6 +5,24 @@ import { FEDERAL_2026_CONSTANTS } from "@/models/federal-2026-indexed.js";
 import { d } from "@/utils/decimal.js";
 const base = {taxYear:2026, qualifyingChildren:3, otherDependents:0, agi:d("10000"), earnedIncome:d("10000"), taxLiability:d(0), filingStatus:"single" as const, payrollTaxes:d("2500"), additionalPayrollTaxes:d(0), earnedIncomeCredit:d("500"), excessSocialSecurityWithholding:d("100")};
 describe("Schedule 8812 payroll and reservation worksheets", () => {
+  it("matches the IRS 2026 ATS scenario 14 child credit worksheet", () => {
+    const result = calculateForm8812({
+      taxYear: 2026,
+      filingStatus: "single",
+      qualifyingChildren: 2,
+      otherDependents: 0,
+      agi: d("35000"),
+      earnedIncome: d("35000"),
+      taxLiability: d("2023"),
+      bonaFidePuertoRicoResident: false,
+    }, FEDERAL_2026_CONSTANTS);
+
+    const line = (id: string) => result.lines.find(row => row.line === id)?.value.toFixed();
+    expect([line("12"), line("13"), line("14")]).toEqual(["4400", "2023", "2023"]);
+    expect([line("16a"), line("16b"), line("17")]).toEqual(["2377", "3400", "2377"]);
+    expect([line("18a"), line("19"), line("20"), line("27")]).toEqual(["35000", "32500", "4875", "2377"]);
+  });
+
   it("uses payroll net of EIC/excess SS when larger than the earned-income amount", () => {
     const r=calculateForm8812(base,FEDERAL_2026_CONSTANTS);
     // $2,500 payroll - $500 EIC - $100 excess SS = $1,900, above $1,125 earned amount.

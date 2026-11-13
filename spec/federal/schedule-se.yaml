@@ -16,6 +16,11 @@ notes: |
   under 26 U.S.C. § 1402(b)(2) to exact adjusted net earnings. Whole-dollar
   presentation under 26 CFR § 301.6102-1(c) does not determine eligibility.
 lines:
+  - line: "2026-irs-ats-12"
+    description: "Reproduce the regular Schedule SE result published in 2026 IRS ATS scenario 12, page 11"
+    formula: "Schedule C line 31 of $8,661 and W-2 Social Security wages of $105,878 give rounded earnings of $7,998, remaining Social Security wage base of $78,622, tax portions of $992 and $232, total SE tax of $1,224 and deductible half of $612. The scenario supplies Schedule C profit and uses draft pages. This checks regular Schedule SE against the example and final Schedule SE lines, without qualifying the other forms."
+    irsRef: "https://www.irs.gov/pub/irs-efile/ty26-1040-ats-scenario-12.pdf; https://www.irs.gov/pub/irs-pdf/f1040sse.pdf"
+    testRef: "tests/engine/schedules/schedule-se.test.ts::matches the IRS 2026 ATS scenario 12 regular Schedule SE"
   - line: "1a"
     description: "Farm earnings"
     formula: "This person's Schedule F line34 plus adjusted farming K-1 Box14A"
