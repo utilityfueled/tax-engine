@@ -1660,11 +1660,11 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     cryptoHobbyIncome
   );
 
-  // Gambling income: sum W-2G reportable winnings + any manual gambling winnings
-  // from the Schedule A input. Both W-2G and manual winnings are taxable income
-  // per IRC §61(a) and must be reported on Schedule 1 Line 8b.
+  // Schedule C already includes every reconciled professional W-2G payment.
+  // The remaining W-2G and manual winnings flow to Schedule 1 line 8b.
   const w2gForms = input.formW2G ?? [];
-  const w2gWinnings = sum(...w2gForms.map((f) => d(f.reportableWinnings)));
+  const w2gWinnings = schedC.professionalW2GWithholding === undefined
+    ? sum(...w2gForms.map((f) => d(f.reportableWinnings))) : d(0);
   const manualGamblingWinnings = d(input.scheduleA?.gamblingWinnings);
   const totalGamblingWinnings = w2gWinnings.plus(manualGamblingWinnings);
 
@@ -4338,7 +4338,9 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   );
   const k1FederalWithholding = [...input.scheduleK1, ...k1Form1041s].map(k1 => d(k1.federalIncomeTaxWithheld));
   if (k1FederalWithholding.some(value => !value.isFinite() || value.lt(0))) throw new Error("K-1 federal withholding must be finite and nonnegative");
-  const withholdingFromOtherForms = sum(form8959.withholdingCredit, ...w2gForms.map(f => d(f.federalWithheld)), ...k1FederalWithholding);
+  const w2gWithholding = schedC.professionalW2GWithholding === undefined
+    ? w2gForms.map(f => d(f.federalWithheld)) : [schedC.professionalW2GWithholding];
+  const withholdingFromOtherForms = sum(form8959.withholdingCredit, ...w2gWithholding, ...k1FederalWithholding);
   const federalWithholding = sum(w2Agg.federalWithheld, withholdingFrom1099, withholdingFromOtherForms);
   audit.record("1040", "25a", "Federal withholding from Forms W-2", w2Agg.federalWithheld, "Sum W-2 box 2");
   audit.record("1040", "25b", "Federal withholding from Forms 1099", withholdingFrom1099, "Forms 1099 including original Form1099-B and Form1099-DA Box4, Form 1099-K, SSA-1099 and RRB-1099");

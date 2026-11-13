@@ -984,6 +984,9 @@ function assertPAAmortizationSource(input:TaxYearInput):void{
 }
 export function calculatePAScheduleCNetIncome(input: TaxYearInput): Decimal {
   assertPAAmortizationSource(input);
+  if (input.scheduleC?.professionalWagering) {
+    throw new Error("Pennsylvania professional wagering requires its separate state source method");
+  }
   if (input.scheduleC?.standardMileage) {
     throw new Error("Pennsylvania Schedule C standard mileage requires its separate state source method");
   }

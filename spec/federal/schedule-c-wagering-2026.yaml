@@ -4,8 +4,8 @@ taxYear: 2026
 irsReference: "https://uscode.house.gov/us/usc/119-120/t26/s165/"
 notes: |
   Source calculation for one owner and one exclusively professional domestic
-  wagering activity. Separate Schedule A activity, Form W-2G or 1099 receipt
-  reconciliation, mixed businesses, joint returns, and physical forms require
+  wagering activity. Separate Schedule A activity, other forms of W-2G
+  or 1099 receipt reconciliation, mixed businesses, joint returns, and physical forms require
   separate methods. The full 2026 return remains unavailable. Publication 525
   explains the historical Schedule C and self-employment treatment. The final
   2026 Schedule C identifies lines 1, 27b, 28 and 31 and Part V; the October 2026
@@ -14,7 +14,7 @@ notes: |
 lines:
   - line: "original-sources"
     description: "Require current, complete and separate facts"
-    formula: "Require an explicitly confirmed complete calendar-year ledger for the primary owner on a single return; separately preserve nonnegative gross taxable wagering gains, wagering losses and otherwise deductible wagering expenses with exact cents. Require original ledger reference and actual zero where applicable. Reject other Schedule C receipts, expenses and schedules that would duplicate or reallocate the same activity, including W-2G and recreational wagering sources. Never derive professional status or gross gains from net profit."
+    formula: "Require an explicitly confirmed complete calendar-year ledger for the primary owner on a single return; separately preserve nonnegative gross taxable wagering gains, wagering losses and otherwise deductible wagering expenses with exact cents. Require original ledger reference and actual zero where applicable. Reject other Schedule C receipts, expenses and schedules that would duplicate or reallocate the same activity, including unmatched W-2G and recreational wagering sources. Never derive professional status or gross gains from net profit."
     irsRef: "IRS Publication 525, Gambling winnings; final 2026 Schedule C lines A, F and G; 26 USC 165(d)(2)"
     testRef: "tests/engine/schedules/schedule-c-wagering-2026.test.ts::requires the exact current original and separate source classifications"
   - line: "1"
@@ -32,3 +32,28 @@ lines:
     formula: "Subtract the allowed line 27b deduction once. Never create a professional wagering loss, carry disallowed wagering costs, or repeat the gain or deduction as recreational wagering. Schedule SE uses the exact source profit; the federal readiness gate remains in force."
     irsRef: "26 USC 165(d), 1402; 2026 Schedule C line 31 and Schedule SE line 2"
     testRef: "tests/engine/schedules/schedule-c-wagering-2026.test.ts::carries only Schedule C profit into Schedule SE and leaves the full-year gate closed"
+  - line: "1 / Form W-2G boxes 1, 2, 4 and 9 / Form 1040 line 25c"
+    description: "Reconcile originally reported domestic cash slot winnings and withholding"
+    formula: >
+      For the existing single-owner professional method, link each current W-2G
+      exactly once to its actual individual cash slot payment in the annual
+      ledger. Require a unique local statement ID and ledger entry, original payer
+      identity and date, confirmation of the recipient, actual box 1 and actual
+      box 4 including zero. Require the actual recognized taxable gain for the
+      linked ledger entry separately from the reported payment. Sum those gains
+      and the separately documented other taxable gains and require equality to the annual
+      gross gains. Do not add the reported subset again or use the reporting
+      threshold to establish taxable income. Hold cases where slot-session
+      accounting changes the gross amount represented by a linked payment.
+      Report the supported subset only within
+      Schedule C receipts. Retain verified box 4 once as federal withholding
+      on line 25c. Hold mixed professional and recreational records, state
+      composition, aggregate statements, shared winners, noncash prizes, other
+      wager types, unmatched or duplicate statements, and amended overlap.
+    irsRef: "January 2026 Instructions for Forms W-2G and 5754, section 3; 2026 Publication 505, Gambling Winnings; Publication 525, Gambling winnings; IRS Internal Revenue Manual 4.19.15.28.1 on the distinction between reporting and recognized slot income"
+    testRef: "tests/engine/federal-professional-w2g-2026.test.ts::counts confirmed slot statements in Schedule C once and preserves exact federal withholding"
+  - line: "W-2G statement linkage validation"
+    description: "Reject stale, incomplete or overlapping originals"
+    formula: "Require matching year, payer, owner, date, amounts and complete federal-only source classifications. Reject additional fields on linked forms, including unqualified local-tax amounts. Do not default absent box 4 or treat two copies of one payment as two statements."
+    irsRef: "January 2026 Instructions for Forms W-2G and 5754, section 3"
+    testRef: "tests/engine/federal-professional-w2g-2026.test.ts::rejects changed or duplicated statements and unqualified state compositions"

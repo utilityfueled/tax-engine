@@ -786,17 +786,15 @@ export const Form1099OIDSchema = z.preprocess((value) => {
 }, Form1099OIDFieldsSchema);
 export type Form1099OID = z.infer<typeof Form1099OIDSchema>;
 
-export const FormW2GSchema = z.object({
+const formW2GFields = z.object({
   payer: z.string(),
   payerTin: z.string().optional(), // Payer identification number for IL Schedule IL-WIT Column B auto-attachment
   accountHolder: z.enum(["primary", "spouse"]).optional(), // Local owner tag for taxpayer vs spouse attribution on shared returns
   reportableWinnings: decimal, // Box 1
   typeOfWager: z.string().optional(), // Box 3 — e.g., "lottery", "slots", "poker", "horse_racing"
-  prizeType: z.enum(["cash", "noncash", "mixed"]).default("cash"),
-  federalWithheld: optionalDecimal, // Box 4
   stateWinnings: decimal.optional(), // Box 14 — state winnings for IL Schedule IL-WIT Column D
   stateWithheld: optionalDecimal, // Box 15 — state income tax withheld
-  state: z.string().optional(), // Box 16 — state
+  state: z.string().optional(), // Box 13 — state
   winningsCategory: z.enum([
     "other_gambling",
     "new_jersey_lottery",
@@ -804,6 +802,29 @@ export const FormW2GSchema = z.object({
     "out_of_state_lottery",
   ]).default("other_gambling"), // NJ uses the lottery category to exclude certain <=$10,000 prizes
 });
+
+const wageringStatementId = z.string().trim().min(1).max(250);
+const wageringPayerTin = z.string().regex(/^\d{2}-?\d{7}$/);
+const wageringWinningDate2026 = z.iso.date().refine(date => date.startsWith("2026-"));
+export const FormW2GSchema = z.union([
+  formW2GFields.extend({
+    sourceId: wageringStatementId,
+    taxYear: z.literal(2026),
+    winningDate: wageringWinningDate2026,
+    accountHolder: z.literal("primary"),
+    payer: z.string().trim().min(1).max(250),
+    payerTin: wageringPayerTin,
+    typeOfWager: z.literal("slots"),
+    prizeType: z.literal("cash"),
+    reportableWinnings: nonnegativeDollarsAndCents,
+    federalWithheld: nonnegativeDollarsAndCents,
+  }).strict(),
+  formW2GFields.extend({
+    sourceId: z.undefined().optional(),
+    prizeType: z.enum(["cash", "noncash", "mixed"]).default("cash"),
+    federalWithheld: optionalDecimal, // Box 4
+  }),
+]);
 
 export const Form1099KSchema = z.object({
   taxYear: z.number().int().optional(),
@@ -3375,6 +3396,21 @@ export const ScheduleCProfessionalWageringSchema = z.strictObject({
   grossTaxableWageringGains: nonnegativeDollarsAndCents,
   wageringLosses: nonnegativeDollarsAndCents,
   otherwiseDeductibleWageringExpenses: nonnegativeDollarsAndCents,
+  w2gSources: z.strictObject({
+    individualOriginalsAndLedgerInclusionConfirmed: z.literal(true),
+    otherGrossTaxableWageringGains: nonnegativeDollarsAndCents,
+    statements: z.array(z.strictObject({
+      sourceId: wageringStatementId,
+      ledgerEntry: wageringStatementId,
+      payer: z.string().trim().min(1).max(250),
+      payerTin: wageringPayerTin,
+      recipientTinLast4: z.string().regex(/^\d{4}$/),
+      winningDate: wageringWinningDate2026,
+      reportableWinnings: nonnegativeDollarsAndCents,
+      recognizedLedgerGain: nonnegativeDollarsAndCents,
+      federalWithheld: nonnegativeDollarsAndCents,
+    })).min(1).max(500),
+  }).optional(),
 });
 export type ScheduleCProfessionalWagering = z.infer<typeof ScheduleCProfessionalWageringSchema>;
 

@@ -9,6 +9,7 @@ import {assertScheduleCPassengerResult} from './schedule-c-passenger-first-year-
 
 import Decimal from "decimal.js";
 import {calculateScheduleCSourceFacts} from "./schedule-c-source-facts.js";
+import { reconcileProfessionalWageringStatements } from "./schedule-c-wagering-sources.js";
 import {
   ScheduleCProfessionalWageringSchema,
   ScheduleCStandardMileageSchema,
@@ -99,6 +100,7 @@ export interface ScheduleCResult {
   homeOfficeDeduction: Decimal; // Line 30
   netProfit: Decimal; // Line 31
   form4562?: Form4562Result;
+  professionalW2GWithholding?: Decimal;
 
   lines: CalculatedLine[];
 }
@@ -115,7 +117,8 @@ function calculateProfessionalWagering(
   audit: AuditTrail,
 ) {
   const packet = business?.professionalWagering;
-  if (packet === undefined && input.scheduleC?.professionalWagering === undefined) return undefined;
+  if (packet === undefined && input.scheduleC?.professionalWagering === undefined
+    && !input.formW2G?.some(form => form.sourceId !== undefined)) return undefined;
   const parsed = ScheduleCProfessionalWageringSchema.safeParse(packet);
   if (!parsed.success || input.taxpayer.taxYear !== parsed.data.taxYear || input.taxpayer.filingStatus !== "single"
     || input.taxpayer.spouse || business?.accountHolder !== "primary" || business.accountingMethod !== "cash") {
@@ -124,7 +127,7 @@ function calculateProfessionalWagering(
   const { data: facts } = parsed;
   if (input.scheduleC !== undefined && input.scheduleC !== business) {
     const retained = ScheduleCProfessionalWageringSchema.safeParse(input.scheduleC.professionalWagering);
-    if (!retained.success || Object.entries(facts).some(([key, value]) => retained.data[key as keyof ScheduleCProfessionalWagering] !== value)) {
+    if (!retained.success || JSON.stringify(retained.data) !== JSON.stringify(facts)) {
       throw new Error("Schedule C professional wagering differs from the retained ledger facts");
     }
   }
@@ -134,10 +137,11 @@ function calculateProfessionalWagering(
   const otherBusinessAmounts = [business.returnsAndAllowances, business.costOfGoodsSold, business.otherIncome];
   if (otherBusinessSources.some(source => source !== undefined) || (careBenefitAdjustment && !careBenefitAdjustment.isZero())
     || [...recreationalWagering, ...otherBusinessAmounts].some(amount => !legacyAmount(amount).isZero())
-    || [input.formW2G, input.form1099Nec, input.form1099Misc, input.form1099K].some(forms => forms?.length)) {
+    || [input.form1099Nec, input.form1099Misc, input.form1099K].some(forms => forms?.length)) {
     throw new Error("Schedule C professional wagering requires separate methods for other receipts, expenses or overlapping activity");
   }
   const gains = legacyAmount(facts.grossTaxableWageringGains);
+  const withholding = reconcileProfessionalWageringStatements(input, facts.w2gSources, facts.grossTaxableWageringGains);
   const losses = legacyAmount(facts.wageringLosses);
   const expenses = legacyAmount(facts.otherwiseDeductibleWageringExpenses);
   const deduction = min(gains, losses.plus(expenses).times("0.90"));
@@ -147,7 +151,7 @@ function calculateProfessionalWagering(
       "Wagering losses": losses,
       "Otherwise deductible wagering expenses": expenses,
     });
-  return { gains, deduction };
+  return { gains, deduction, withholding };
 }
 
 function calculateStandardMileage(input: TaxYearInput, business: ScheduleCInput | undefined) {
@@ -358,6 +362,7 @@ export function calculateScheduleC(
     homeOfficeDeduction,
     netProfit,
     form4562,
+    ...(wagering?.withholding !== undefined ? { professionalW2GWithholding: wagering.withholding } : {}),
     lines: audit.getLines(),
   };
   if(sources?.passenger)assertScheduleCPassengerResult(sources.passenger,result,sources.commitment);

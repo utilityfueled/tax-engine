@@ -750,6 +750,9 @@ export function buildOhioResidentReturnInput(
   federalResult: TaxReturnResult,
   overlay: OhioOverlayInput = {},
 ): OhioResidentReturnInput {
+  if (taxInput.scheduleC?.professionalWagering) {
+    throw new Error("Ohio professional wagering requires its separate state source method");
+  }
   if(overlay.nonresidentCredit!==undefined&&!d(overlay.nonresidentCredit).isZero())throw new Error("Ohio nonresident credit requires actual owner residency sources, not a credit override");
   const canonical=(taxInput as TaxYearInput&{ohioResidency?:OhioResidencyFacts}).ohioResidency;
   if(canonical&&overlay.residency&&JSON.stringify(canonical)!==JSON.stringify(overlay.residency))throw new Error("Ohio canonical and overlay residency originals conflict");
