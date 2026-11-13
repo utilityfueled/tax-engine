@@ -131,6 +131,26 @@ with OpenSSL and the same verified release source before the rerun.
 
 ## ARM64 self-host
 
+### Set-ID hardening and retirement worksheet archive at `4593c4ec`
+
+The separately imported runtime passed smoke with zero set-ID regular files.
+The exact SBOM and Grype scan reported 197 matches, including 60 High and
+zero Critical. All six Compose recovery phases passed. Chromium stopped
+before collection when source extraction left its staging root at mode
+0755. Normal VM stop and socket restoration passed. The corrective run on
+`ef86f0cb` uses the same permission floor and stages its source at mode
+0700. Advisory disposition remains open.
+
+| ARM64 evidence | SHA-256 |
+| --- | --- |
+| Runtime image ID | `4be3c1cf780f733624e80b64553de54fa9f24dcc93a962d23ef4eb2779d5d564` |
+| Runtime image archive | `59b9c9e5a7883f48ab1ca2d28646fef98db0d2568b13ed159b0a017cfc4be6b7` |
+| Smoke | `325818c6952e19f24f19610e277e994962e9f2b57ba9102273e31e1e3b88a3eb` |
+| CycloneDX SBOM | `f7290d6cea6777680fd8110f00d279062acd6866a815ac10f39467bcb97bf3f3` |
+| Grype scan | `21569762dce01d598ed98df8d53b3cd68b93959b82087c829e52c237f254b0ba` |
+| Compose recovery | `49426f76f1c8325b1f09968d0d09a60bb9de9f4844fb7feac0f86a65b839f8bc` |
+| Rehearsal and cleanup | `7570bd038ab3a9a7ddaa3788323836a1047add8e4575a20ec572988f37b70ab0` |
+
 ### Redis pseudonym archive at `a022a2ec`
 
 The native image passed separate image-store import, smoke, SBOM and Grype

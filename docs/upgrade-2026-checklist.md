@@ -6,6 +6,14 @@ below retain their original evidence boundaries.
 
 ## Active continuation — November 13 Eastern
 
+- [x] Bind ordinary Code A reporting to confirmed original year, non-IRA
+  classification and determined Box 2a in `eda990d4`. Pass 392 tests,
+  including unknown versus zero, stale decision and 2025 control cases.
+- [x] Preserve the included Box 3 amount on ordinary Code A statements in
+  `33fc07a2`. Pass 394 focused tests without double-counting Box 2a.
+- [x] Map final Form 4972 as a disabled own-plan review candidate in
+  `ef86f0cb`. Pass 51 focused tests and strict readback of all 58 fields.
+  Federal election integration and filing qualification remain open.
 - [x] Collect the actual 2026 Code A reporting choice in `18104818`. Pass
   305 focused checks, including changing the original and renewing the choice.
 - [x] Calculate the finite own-plan 2026 Form 4972 worksheet in `4593c4ec`.

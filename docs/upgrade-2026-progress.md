@@ -4,6 +4,27 @@ Current source, verification and remaining work are summarized in the
 [current continuation](upgrade-2026-current-status.md). Historical results
 below apply to their named revisions.
 
+- November 13 — `eda990d4` requires original 2026 non-IRA Code A evidence
+  and determined Box 2a for an ordinary choice. It holds stale choices and
+  unknown lump-sum taxability. Three cases reproduced the earlier admission
+  and all 392 affected tests passed on Node 26.13.1, with engine types,
+  lint, 8,917 spec references and the browser audit. An initial rerun under
+  the shell's Node 22 could not load the required browser test dependency.
+  [Form 1099-R instructions](https://www.irs.gov/instructions/i1099r).
+
+- November 13 — `33fc07a2` preserves the original Form 1099-R Box 3 amount
+  for explicit ordinary Code A reporting and includes it once in Box 2a.
+  The two regressions and 394 focused checks passed after the fix. Types,
+  inventory and 8,917 spec references passed. The browser request limits
+  are unchanged. [Form 1099-R instructions](https://www.irs.gov/instructions/i1099r).
+
+- November 13 — `ef86f0cb` projects the finite own-plan worksheet on the
+  final four-page Form 4972. All 51 focused tests passed. A strict separate
+  reader verified 58 field and widget values, with blank identifiers and
+  visible review notices on all pages. The source blank SHA-256 is
+  `2968f25a528882666de3dab99ed9cf48ea8841e0fdbf6f409a71a4b419d4aa99`.
+  The candidate remains disabled. [Final 2026 form and instructions](https://www.irs.gov/pub/irs-pdf/f4972.pdf).
+
 - November 13 — `00f5a9b1` projects both IRS simultaneous building exchanges
   on the disabled final Form 8824. All 162 focused tests passed. A separate
   strict reader verified 19 Taylor fields and 20 Finley fields across the

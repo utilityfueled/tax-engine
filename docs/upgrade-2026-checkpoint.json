@@ -24471,6 +24471,53 @@
       "federalIntegrationEnabled": false,
       "sourceAuthority": "https://www.irs.gov/pub/irs-pdf/f4972.pdf"
     },
+    "form4972PhysicalCandidate": {
+      "source": "ef86f0cbbd03249713e3b130eea7120e26c0c613",
+      "focusedTestsPassed": 51,
+      "specReferencesValidated": 8916,
+      "strictReadbackFields": 58,
+      "reviewNoticePages": 4,
+      "registryEnabled": false,
+      "sourcePdfSha256": "2968f25a528882666de3dab99ed9cf48ea8841e0fdbf6f409a71a4b419d4aa99",
+      "specimenSha256": "50c69c5f17992e6f412d9dda8bdc6c9cba0df05374306bed49278095377fcd0b",
+      "focusedTranscriptSha256": "8488df4d88e1e0fc3d83a0566077bc5bfa4f04466aa0080a5907341ac41c0b4c"
+    },
+    "ordinaryLumpSumBox3": {
+      "source": "33fc07a29934068e1d4b0c73fe500c126e9776c2",
+      "initialRed": 2,
+      "focusedTestsPassed": 394,
+      "specReferencesValidated": 8917,
+      "federalElectionEnabled": false
+    },
+    "ordinaryLumpSumOriginalEvidence": {
+      "source": "eda990d401eab7a10519d9668cac26b73453cb12",
+      "initialRed": 3,
+      "focusedTestsPassed": 392,
+      "node": "26.13.1",
+      "specReferencesValidated": 8917,
+      "browserRequestBudgetChanged": false,
+      "federalElectionEnabled": false,
+      "redTranscriptSha256": "7ce5862d9661387f1e80bb861e93200b44db9e391adb242e60ea185b6e4ead40",
+      "greenTranscriptSha256": "c965a6afae3abc7c7a16dc015ce2ce6e3d1d32791d230a8473db8bd488d8be8f"
+    },
+    "setIdHardenedArm64": {
+      "source": "4593c4ecc00b446bd72be03aa2741ce3f5ad4967",
+      "image": "4be3c1cf780f733624e80b64553de54fa9f24dcc93a962d23ef4eb2779d5d564",
+      "imageArchiveSha256": "59b9c9e5a7883f48ab1ca2d28646fef98db0d2568b13ed159b0a017cfc4be6b7",
+      "setIdRegularFiles": 0,
+      "composeRecoveryPhasesPassed": 6,
+      "chromiumCompleted": false,
+      "chromiumBlocker": "Private source root mode changed during extraction",
+      "advisoryMatches": 197,
+      "highAdvisoryMatches": 60,
+      "riskAccepted": false,
+      "cleanupVerified": true,
+      "smokeSha256": "325818c6952e19f24f19610e277e994962e9f2b57ba9102273e31e1e3b88a3eb",
+      "sbomSha256": "f7290d6cea6777680fd8110f00d279062acd6866a815ac10f39467bcb97bf3f3",
+      "scanSha256": "21569762dce01d598ed98df8d53b3cd68b93959b82087c829e52c237f254b0ba",
+      "composeRecoverySha256": "49426f76f1c8325b1f09968d0d09a60bb9de9f4844fb7feac0f86a65b839f8bc",
+      "receiptSha256": "7570bd038ab3a9a7ddaa3788323836a1047add8e4575a20ec572988f37b70ab0"
+    },
     "localHosted": {
       "source": "f42a83524f79a5b89024777fa047b4b06978a472",
       "httpChecksPassed": 14,

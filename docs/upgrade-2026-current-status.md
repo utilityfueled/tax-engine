@@ -9,6 +9,31 @@ The read-only Vercel check still finds the production project linked to
 `main`, with automatic custom-domain assignment and no build-ignore command.
 The isolated rehearsal project has no Git link and protects all deployments.
 
+`eda990d4` binds the ordinary Code A decision to the actual 2026 original,
+unchecked IRA box and determined Box 2a, including explicit zero. It rejects
+a retained decision after the code changes and prevents periodic-payment
+inputs from filling an unknown lump-sum amount. Three new regressions failed
+before the change and 392 affected tests passed on Node 26.13.1. Types,
+scoped lint, inventory, 8,917 spec references and the browser source audit
+passed. The 2025 path and 2026 election hold were verified.
+[Form 1099-R instructions](https://www.irs.gov/instructions/i1099r) ·
+[Final 2026 Form 4972](https://www.irs.gov/pub/irs-pdf/f4972.pdf).
+
+`33fc07a2` preserves the original Box 3 amount for an explicit ordinary
+2026 Code A decision. It reconciles to determined Box 2a and remains part
+of that amount, with withholding carried separately. Two regressions failed
+before the fix. All 394 affected tests passed, with engine and web types,
+8,917 spec references, inventory and the existing browser request budget.
+[Form 1099-R instructions](https://www.irs.gov/instructions/i1099r).
+
+`ef86f0cb` maps the final four-page 2026 Form 4972 as a disabled review
+candidate for the finite own-plan worksheet. All 51 focused tests passed.
+The separately saved specimen passed strict readback for all 58 fields,
+with review notices on all four pages. Identity fields were blank and the
+output contained no XFA, JavaScript or reader-rights data. There is no
+enabled federal election or filing export.
+[Final 2026 Form 4972](https://www.irs.gov/pub/irs-pdf/f4972.pdf).
+
 `4593c4ec` calculates the 2026 Form 4972 capital gain and ten-year elections
 for an eligible participant's own single distribution. It requires confirmed
 eligibility and reconciled original amounts. All 125 focused checks passed,
@@ -27,9 +52,14 @@ spec references. The separate Form 4972 federal route remains held.
 `797dc60a` removes set-user-ID and set-group-ID bits from regular files in the
 standalone image. The earlier ARM64 image contained 11 such files. `55ac0ee7`
 checks the exact imported image in a separate read-only, network-disabled
-inspection container, including private image directories. Native rehearsal is
-still required. The package versions and existing advisory dispositions remain
-open. [Debian privileged mount advisory](https://security-tracker.debian.org/tracker/CVE-2026-76642).
+inspection container, including private image directories. The `4593c4ec`
+ARM64 smoke found no set-ID files, and all six Compose recovery phases
+passed. Its Chromium preflight refused the source staging directory after
+archive extraction changed its permissions. The corrected `ef86f0cb`
+rehearsal passed that preflight. The package versions and existing advisory
+dispositions remain open.
+[Rehearsal evidence](upgrade-2026-nov13-release-rehearsals.md) ·
+[Debian privileged mount advisory](https://security-tracker.debian.org/tracker/CVE-2026-76642).
 
 `f42a8352` requires an explicit ordinary reporting decision before using
 the known taxable amount on a 2026 qualified lump-sum Code A statement.
