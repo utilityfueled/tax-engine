@@ -23830,6 +23830,23 @@
     "diagnosticCases": 14,
     "auditSha256": "33e1aa072e049862556f1d580f37da874773955ab2fff6bca2a5478cbce99699"
   },
+  "nov13ProfessionalW2G": {
+    "commit": "9068658ebf3b3638bf63be658494791ea889cec7",
+    "focusedPassed": 8483,
+    "focusedFiles": 328,
+    "focusedSha256": "6a1db5f5f5c5706a7f8784fcea95160be1bb9757ad286934f62075e53eba4a45",
+    "recognizedGainBeforeFixSha256": "bf3425c405dbb9308edbaba63981b3834ee45232ec7c0e6b738e6de1bcd94a04",
+    "chromiumPassed": 12,
+    "chromiumSkipped": 0,
+    "chromiumRetries": 0,
+    "chromiumReportSha256": "9c5b642e679c2332571b9de94c204ca713ae896b43d3b8b9ffe35ffdeaab1141",
+    "specReferences": 8842,
+    "browserCollectionCases": 618,
+    "hostedOnlySkips": 5,
+    "diagnosticCases": 14,
+    "auditSha256": "b2bc890596d9d9e5d014c0e6b7a285d9b644d5834cda5df461491a6e877babcf",
+    "humanTaxReviewComplete": false
+  },
   "nov13LocalUploadCombined": {
     "sourceCommit": "9e381f83ee71b4181c70478224f54f5e5757ab7d",
     "tree": "192142520d603767e116cb3126e488d9048ec5b7",

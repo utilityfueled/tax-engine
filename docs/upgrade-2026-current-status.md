@@ -6,6 +6,17 @@ The public refs were refreshed. `origin/main` still points to `59248889`
 and `origin/upgrade/2026-baseline` to `3024b848`. Successor commits stay on
 local `main` while automatic production deployment is being disabled.
 
+`9068658e` links an original domestic cash slot W-2G to a confirmed
+professional wagering ledger entry only when its independently entered
+recognized gain equals Box 1. Schedule C receipts and Form 1040 withholding
+each count once. Reconciliation rejects missing Box 4, changed or duplicate
+originals, other statement types and state composition. The 8,483 focused
+tests, 12 production Chromium cases, types, builds, inventory and 8,842 spec
+references passed. The 618-case browser audit preserves its limits and five
+hosted-only skips. The exact archive is running. Broader methods and human
+review remain open. [IRS W-2G instructions](https://www.irs.gov/instructions/iw2g) ·
+[IRS Publication 505](https://www.irs.gov/publications/p505).
+
 `57a7da97` collects original business mileage for one primary-owned cash
 business in the single-taxpayer federal guide. The June and July example
 produces a $21.81 deduction and $9,878.19 net profit. Mileage participates
@@ -219,8 +230,8 @@ serves 2025 and 2026 remains gated. [Draft reconciliation](upgrade-2026-draft-fe
 calculation and Schedule SE handoff. The 396 affected checks passed. The
 source uses the current ledger's gross gains, losses and otherwise
 deductible expenses and applies the statutory cap before rounding.
-W-2G reconciliation, joint and mixed activity, guided intake, physical
-output and human review remain open. [26 USC 165(d)](https://uscode.house.gov/us/usc/119-120/t26/s165/).
+Joint and mixed activity, guided intake, physical output and human review
+remain open. [26 USC 165(d)](https://uscode.house.gov/us/usc/119-120/t26/s165/).
 
 `6a38aadd` makes later original-file reads honor another tab's committed
 deletion. Two unit regressions and an already-open Chromium W-2 review

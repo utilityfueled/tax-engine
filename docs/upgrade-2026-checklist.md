@@ -62,8 +62,11 @@ below retain their original evidence boundaries.
   15 saved fields and widgets while the candidate stays disabled.
 - [ ] Complete state and other federal schedule composition, vehicle basis
   tracking, and qualify Schedule C Part IV output.
-- [ ] Finish and review W-2G linkage, mixed or joint professional wagering,
-  guided sources and qualified annual physical output.
+- [x] Link supported individual slot W-2G originals in `9068658e`. Verify
+  exact taxable gains and Box 4 once, including zero withholding, in 8,483
+  focused tests and 12 Chromium cases.
+- [ ] Complete broader W-2G and recognized session-gain methods, mixed or joint
+  professional wagering, guided sources and qualified annual physical output.
 - [x] Honor committed original deletion in open tabs in `6a38aadd`. Keep
   individually removed originals recoverable on metadata failure in
   `bdd31ea1`. Verify both failures and a successful retry with actual Chromium.

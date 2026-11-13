@@ -4,6 +4,25 @@ Current source, verification and remaining work are summarized in the
 [current continuation](upgrade-2026-current-status.md). Historical results
 below apply to their named revisions.
 
+- November 13: `9068658e` reconciles individual domestic cash slot W-2G
+  originals to the sole proprietor's complete 2026 wagering ledger. It
+  requires the actual recognized gain separately from Box 1 and holds
+  nonmatching session amounts. The hand calculation gives $12,000.15
+  gross, a $10,800.045 deduction and $1,200.105 net. The canonical federal
+  return includes $1,200.01 withholding once and the all-zero control still
+  keeps winnings out of Schedule 1. The baseline failed the missing source
+  and original linkage controls, including silently discarded local tax
+  facts before linked input became strict. The final build passed 8,483
+  focused tests in 328 files, 12 Chromium cases with no skips or retries,
+  three type checks, both builds, inventory and 8,842 spec references. Scoped
+  lint reported 11 existing warnings and zero errors. The 618-case browser
+  audit preserves five hosted-only skips, 14 diagnostic targets, eight
+  batches and existing ceilings. The exact archive is running. Broader
+  methods, human review and public output remain pending.
+  [IRS W-2G instructions](https://www.irs.gov/instructions/iw2g) ·
+  [IRS Publication 505](https://www.irs.gov/publications/p505) ·
+  [IRS discussion of reported versus recognized slot income](https://www.irs.gov/irm/part4/irm_04-019-015r).
+
 - November 13: `57a7da97` records original 2026 Schedule C vehicle mileage in
   the federal-only guide. The mounted baseline failed because the control did
   not exist. IRS Notice 2026-10 and Announcement 2026-11 give 72.5 and 76 cents
