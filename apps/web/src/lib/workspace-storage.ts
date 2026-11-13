@@ -1288,6 +1288,19 @@ export function getWorkspace(storage: Storage, workspaceId: string) {
   return workspace ? reconcileWorkspaceGuidedState(workspace, loadGuidedFlowState(storage, workspaceId)) : null;
 }
 
+/** Require the same local return and reset generation before an open editor writes. */
+export function requireCurrentLocalWorkspace(storage: Storage, expected: ReturnWorkspaceRecord): ReturnWorkspaceRecord {
+  const current = loadStorage(storage).workspaces[expected.id];
+  const lastReset = (record: ReturnWorkspaceRecord) => record.auditTrail.filter(event => event.kind === "workspace-cleared").at(-1);
+  const previousReset = lastReset(expected);
+  const currentReset = current && lastReset(current);
+  if (!current || current.createdAt !== expected.createdAt || previousReset?.id !== currentReset?.id
+    || previousReset?.occurredAt !== currentReset?.occurredAt) {
+    throw new Error("This return changed in another tab. Reload before continuing.");
+  }
+  return current;
+}
+
 export function listWorkspaces(storage: Storage) {
   const data = loadStorage(storage);
 
@@ -1712,6 +1725,19 @@ export function syncGuidedFlowToWorkspace(
   }
 
   return reconcileWorkspaceGuidedState(result, guidedFlowState);
+}
+
+export function syncLocalGuidedFlowToWorkspace(
+  storage: Storage,
+  expected: ReturnWorkspaceRecord,
+  syntheticDocuments: WorkspaceDocumentRecord[],
+  factAnswers: { factId: string; answerText: string }[],
+  guidedFlowState: GuidedFlowState,
+) {
+  const current = requireCurrentLocalWorkspace(storage, expected);
+  const result = syncGuidedFlowToWorkspace(current, syntheticDocuments, factAnswers, guidedFlowState);
+  saveWorkspaceRecord(storage, current.id, result);
+  return result;
 }
 
 export function deleteWorkspace(storage: Storage, workspaceId: string) {

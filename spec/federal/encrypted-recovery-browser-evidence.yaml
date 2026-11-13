@@ -12,6 +12,16 @@ notes: |
   must equal the actual pre-backup workspace, raw guided answers/mode and originals.
   Zero user or provider credentials; these controls use only fictional local returns.
 lines:
+  - line: "stale-guided-editor"
+    description: "Reject edits from a guided tab after a local return is deleted or reset"
+    formula: "Check the current browser return before saving guided facts, guided-mode preference or the guided projection. Reject missing or reset sources before writing and merge a valid projection into the currently saved documents. Do not recreate a removed return or revive its removed facts."
+    testRef: "apps/web/tests/workspace-upload.spec.ts::a stale guided editor cannot recreate deleted return facts"
+  - line: "stale-guided-reset"
+    formula: "A local reset preserves the return identity but invalidates an already open guided editor's source generation. Stale year and projection saves cannot reattach the removed original or answers."
+    testRef: "apps/web/tests/workspace-upload.spec.ts::a stale guided editor cannot revive reset return data"
+  - line: "guided-sync-current-documents"
+    formula: "A still-current guided editor merges into the latest local return and preserves an original uploaded in another tab after the editor opened."
+    testRef: "apps/web/tests/workspace-upload.spec.ts::guided sync keeps originals added in another tab"
   - line: "saved-artifact"
     formula: "A valid authenticated archive is not rejected solely because random ciphertext contains a short marker; validation never returns ciphertext or decoded private payload."
     testRef: "tests/apps/web/encrypted-recovery-review.test.ts::accepts authenticated ciphertext with a deterministic short-marker coincidence"

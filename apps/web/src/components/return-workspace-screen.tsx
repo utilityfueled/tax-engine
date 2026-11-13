@@ -73,9 +73,11 @@ import {
   removeLocalDocumentFile,
   reopenWorkspaceInterviewQuestion,
   reopenInterviewQuestion,
+  requireCurrentLocalWorkspace,
   resetLocalWorkspaceFiles,
   seededFactLabels,
-  syncGuidedFlowToWorkspace
+  syncGuidedFlowToWorkspace,
+  syncLocalGuidedFlowToWorkspace,
 } from "@/lib/workspace-storage";
 import { buildWorkspaceFilingPackDownload } from "@/lib/workspace-filing-pack";
 import { buildProviderPartnerReviewRequestDownload } from "@/lib/partner-review-request";
@@ -443,12 +445,20 @@ export function ReturnWorkspaceScreen({
     return browserStorage ? readGuidedModePreference(browserStorage, workspaceId) : true;
   });
   function setGuidedMode(value: boolean) {
-    setGuidedModeRaw(value);
     const browserStorage = getBrowserStorage();
 
     if (browserStorage) {
+      if (localWorkspaceEditingEnabled && workspace) {
+        try {
+          requireCurrentLocalWorkspace(browserStorage, workspace);
+        } catch (error) {
+          setStorageMessage(resolveUiErrorMessage(error, "Could not change guided mode."));
+          return;
+        }
+      }
       browserStorage.setItem(getWorkspaceGuidedModeStorageKey(workspaceId), String(value));
     }
+    setGuidedModeRaw(value);
   }
   const localWorkspaceEditingEnabled = effectiveDeploymentMode === "self-host";
 
@@ -1560,6 +1570,9 @@ export function ReturnWorkspaceScreen({
       <div className="workspace-grid">
         <GuidedInterviewShell
           workspace={workspace}
+          beforeGuidedWrite={localWorkspaceEditingEnabled ? () => {
+            requireCurrentLocalWorkspace(requireBrowserStorage(), workspace);
+          } : undefined}
           onExitGuided={() => {
             setGuidedMode(false);
             setGuidedResumeSectionId(null);
@@ -1567,9 +1580,13 @@ export function ReturnWorkspaceScreen({
           onUploadDocuments={handleGuidedUpload}
           resumeSectionId={guidedResumeSectionId}
           onSyncToWorkspace={(syntheticDocuments, factAnswers, guidedFlowState) => {
-            const synced = syncGuidedFlowToWorkspace(workspace, syntheticDocuments, factAnswers, guidedFlowState);
-            setWorkspace(synced);
-            void persistHostedWorkspace(synced);
+            if (localWorkspaceEditingEnabled) {
+              setWorkspace(syncLocalGuidedFlowToWorkspace(requireBrowserStorage(), workspace, syntheticDocuments, factAnswers, guidedFlowState));
+            } else {
+              const synced = syncGuidedFlowToWorkspace(workspace, syntheticDocuments, factAnswers, guidedFlowState);
+              setWorkspace(synced);
+              void persistHostedWorkspace(synced);
+            }
             setGuidedMode(false);
             setGuidedResumeSectionId(null);
           }}

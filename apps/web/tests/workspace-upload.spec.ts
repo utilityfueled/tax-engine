@@ -210,6 +210,79 @@ test("a stale document-year editor cannot recreate a deleted local return", asyn
   await otherTab.close();
 });
 
+async function startGuidedWithOriginal(page: Page) {
+  await page.goto("/");
+  await page.getByRole("button", { name: /start your tax return/i }).click();
+  await expect(page).toHaveURL(/\/returns\/(?!new(?:[/?#]|$))[a-z0-9-]+$/i);
+  const id = new URL(page.url()).pathname.split("/").at(-1)!;
+  const year = page.getByLabel("Tax year for this interview");
+  await year.selectOption("2025");
+  await page.locator('input.guided-doc-upload-input[type="file"]').setInputFiles(path.join(sampleDocsDir, "irs-w2-2025.pdf"));
+  await expect(page.getByText("1 document already stored locally.", { exact: true })).toBeVisible();
+  return { id, year };
+}
+
+test("a stale guided editor cannot recreate deleted return facts", async ({ page }) => {
+  const { id, year } = await startGuidedWithOriginal(page);
+
+  const otherTab = await page.context().newPage();
+  await otherTab.goto("/");
+  const deleteReturn = otherTab.getByRole("button", { name: `Delete tax return ${id}`, exact: true });
+  await deleteReturn.click();
+  await expect(deleteReturn).toHaveCount(0);
+  await year.selectOption("2026");
+  await page.getByRole("button", { name: "Switch to advanced mode", exact: true }).click();
+  expect(await page.evaluate(id => {
+    const raw = localStorage.getItem("tax-engine.return-workspaces.v1");
+    return {
+      returnExists: Object.hasOwn(JSON.parse(raw ?? "{}").workspaces ?? {}, id),
+      factsExist: localStorage.getItem(`tax-engine.guided-flow-state.v1:${id}`) !== null,
+      preferenceExists: localStorage.getItem(`tax-engine:guided-mode:${id}`) !== null,
+    };
+  }, id)).toEqual({ returnExists: false, factsExist: false, preferenceExists: false });
+  await expect(page.getByRole("alert").filter({ hasText: "This return changed in another tab." })).toBeVisible();
+  await otherTab.reload();
+  await expect(deleteReturn).toHaveCount(0);
+  await otherTab.close();
+});
+
+test("a stale guided editor cannot revive reset return data", async ({ page }) => {
+  const { id, year } = await startGuidedWithOriginal(page);
+  const otherTab = await page.context().newPage();
+  await otherTab.goto(page.url());
+  await otherTab.getByRole("button", { name: "Switch to advanced mode", exact: true }).click();
+  await otherTab.getByRole("button", { name: "Reset Return", exact: true }).click();
+  await expect(otherTab.getByRole("status", { name: "Return status" })).toHaveText("Return reset.");
+  await year.selectOption("2026");
+  await page.getByRole("button", { name: "Switch to advanced mode", exact: true }).click();
+  expect(await page.evaluate(id => {
+    const raw = localStorage.getItem("tax-engine.return-workspaces.v1");
+    return {
+      originalCount: JSON.parse(raw ?? "{}").workspaces?.[id]?.documents?.length,
+      factsExist: localStorage.getItem(`tax-engine.guided-flow-state.v1:${id}`) !== null,
+      preferenceExists: localStorage.getItem(`tax-engine:guided-mode:${id}`) !== null,
+    };
+  }, id)).toEqual({ originalCount: 0, factsExist: false, preferenceExists: false });
+  await expect(page.getByRole("alert").filter({ hasText: "This return changed in another tab." })).toBeVisible();
+  await otherTab.close();
+});
+
+test("guided sync keeps originals added in another tab", async ({ page }) => {
+  const { id } = await startGuidedWithOriginal(page);
+  const otherTab = await page.context().newPage();
+  await otherTab.goto(page.url());
+  await otherTab.locator('input.guided-doc-upload-input[type="file"]').setInputFiles(path.join(sampleDocsDir, "irs-1099-int-2024.pdf"));
+  await expect(otherTab.getByText("2 documents already stored locally.", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Switch to advanced mode", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Start guided interview", exact: true })).toBeVisible();
+  const filenames = await page.evaluate(id => {
+    const raw = localStorage.getItem("tax-engine.return-workspaces.v1");
+    return JSON.parse(raw ?? "{}").workspaces?.[id]?.documents?.map((document: { name: string }) => document.name);
+  }, id);
+  expect(filenames).toEqual(["irs-w2-2025.pdf", "irs-1099-int-2024.pdf"]);
+  await otherTab.close();
+});
+
 test("local workspace stores uploaded official IRS fixtures across reloads", async ({ page }, testInfo) => {
   await page.goto("/");
   await enableAdvancedMode(page);

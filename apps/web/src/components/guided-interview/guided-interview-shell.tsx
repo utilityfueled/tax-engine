@@ -1213,6 +1213,7 @@ export function GuidedInterviewShell({
   onExitGuided,
   onUploadDocuments,
   onSyncToWorkspace,
+  beforeGuidedWrite,
   resumeSectionId,
 }: {
   workspace: ReturnWorkspaceRecord;
@@ -1224,8 +1225,10 @@ export function GuidedInterviewShell({
     factAnswers: ReturnType<typeof buildGuidedFactAnswers>,
     flowState: GuidedFlowState
   ) => void;
+  beforeGuidedWrite?: () => void;
   resumeSectionId?: InterviewSectionId | null;
 }) {
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [flowState, setFlowState] = useState<GuidedFlowState>(() => {
     const browserStorage = getBrowserStorage();
     return browserStorage ? loadGuidedFlowState(browserStorage, workspace.id) ?? { ...initialFlowState, taxYear: workspace.returnSummary.targetTaxYear } : { ...initialFlowState, taxYear: workspace.returnSummary.targetTaxYear };
@@ -1246,13 +1249,21 @@ export function GuidedInterviewShell({
 
   // Persist state on every change
   const handleFlowStateChange = useCallback((next: GuidedFlowState) => {
+    try {
+      beforeGuidedWrite?.();
+    } catch (error) {
+      setSaveError(error instanceof Error ? error.message : "Could not save guided answers.");
+      return false;
+    }
+    setSaveError(null);
     setFlowState(next);
     const browserStorage = getBrowserStorage();
 
     if (browserStorage) {
       saveGuidedFlowState(browserStorage, workspace.id, next);
     }
-  }, [workspace.id]);
+    return true;
+  }, [beforeGuidedWrite, workspace.id]);
 
   // Compute live preview from the guided interview data. This runs the
   // tax engine on every state change so the refund ticker updates in
@@ -1272,6 +1283,13 @@ export function GuidedInterviewShell({
   }
 
   function handleRestart() {
+    try {
+      beforeGuidedWrite?.();
+    } catch (error) {
+      setSaveError(error instanceof Error ? error.message : "Could not reset guided answers.");
+      return;
+    }
+    setSaveError(null);
     const browserStorage = getBrowserStorage();
 
     if (browserStorage) {
@@ -1281,13 +1299,17 @@ export function GuidedInterviewShell({
   }
 
   const syncAndExit = useCallback((nextFlowState: GuidedFlowState) => {
-    if (nextFlowState !== flowState) handleFlowStateChange(nextFlowState);
-    if (onSyncToWorkspace) {
-      const syntheticDocs = buildGuidedSyntheticDocuments(nextFlowState);
-      const factAnswers = buildGuidedFactAnswers(nextFlowState);
-      onSyncToWorkspace(syntheticDocs, factAnswers, nextFlowState);
-    } else {
-      onExitGuided();
+    if (nextFlowState !== flowState && !handleFlowStateChange(nextFlowState)) return;
+    try {
+      if (onSyncToWorkspace) {
+        const syntheticDocs = buildGuidedSyntheticDocuments(nextFlowState);
+        const factAnswers = buildGuidedFactAnswers(nextFlowState);
+        onSyncToWorkspace(syntheticDocs, factAnswers, nextFlowState);
+      } else {
+        onExitGuided();
+      }
+    } catch (error) {
+      setSaveError(error instanceof Error ? error.message : "Could not save guided answers.");
     }
   }, [flowState, handleFlowStateChange, onSyncToWorkspace, onExitGuided]);
 
@@ -1296,6 +1318,7 @@ export function GuidedInterviewShell({
 
   return (
     <div className="guided-interview-shell">
+      {saveError && <p role="alert">{saveError}</p>}
       <div className="guided-mode-toggle">
         <button className="utility-button utility-button-small" type="button" onClick={handleSyncAndExit}>
           Switch to advanced mode
