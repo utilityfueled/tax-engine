@@ -24468,6 +24468,60 @@
       "https://www.irs.gov/instructions/i1099r"
     ]
   },
+  "nov13Form4972OwnPlanAnnuityPhysicalReview": {
+    "commit": "739178b7f28cab7eff1eb3a4d7cc5fd620f5ce47",
+    "initialRed": 3,
+    "focusedTestsPassed": 278,
+    "specReferencesValidated": 8920,
+    "redSha256": "780952036f7d1a393aa1225f953ac1ec3b0722c3f455816c10081b646fcc8d02",
+    "greenSha256": "e2675e55227f5e36af0740bc9b94764edeb6412ecdac24b2892242364f56baae",
+    "pdfSha256": "df950258b1a211f37c840d46966b2b35ffb7feac9bafc6c7fa25d2c67291f05c",
+    "strictReadbackSha256": "f7dfcfcbd231c2dac011f4f920793c81e42cf47992f9dfc5b55bee1e8793d198",
+    "widgetsVerified": 58,
+    "filledFields": 24,
+    "checkedBoxes": 5,
+    "reviewNoticePages": 4,
+    "renderedPages": 4,
+    "visualInspectionPages": [1],
+    "exportsEnabled": false,
+    "source": "https://www.irs.gov/pub/irs-pdf/f4972.pdf"
+  },
+  "nov13Form4972OwnPlanAppreciation": {
+    "commit": "f25ec56cf2c335da701507696393dbda84814133",
+    "initialRed": 4,
+    "focusedTestsPassed": 343,
+    "specReferencesValidated": 8921,
+    "redSha256": "a89d734e47a9895062ff6d5f37e0e45019a8b8392a9a7b43bed2f732522ea611",
+    "greenSha256": "d35d8382e989a26d96922099ac9e05799cd22f21c64cf10c491aea4794d15a92",
+    "positiveBox6PhysicalMappingEnabled": false,
+    "federalTransferEnabled": false,
+    "sources": [
+      "https://www.irs.gov/pub/irs-pdf/f4972.pdf",
+      "https://www.irs.gov/instructions/i1099r"
+    ]
+  },
+  "nov13AdditionalCombinedManagedChecks": [
+    {
+      "commit": "55ac0ee7eb6bf58501c1bec80ce91d149a2d8d99",
+      "checksPassed": 12,
+      "checksSha256": "d9e804fffdb803a0d8a25abb3d413ed12345cf4d058d7a88dc40bdf35c436af4",
+      "unitAndCoverageTestsPassedEach": 27828,
+      "branchesPercent": "87.89",
+      "chromiumPassed": 616,
+      "chromiumHostedOnlySkipped": 5,
+      "ownedPostgresStopped": true
+    },
+    {
+      "commit": "18104818cfa3abbbadb083c02aa287b4ec9633de",
+      "checksPassed": 12,
+      "checksSha256": "cc31f877f76ddcca24ef4f74d34b24e4dcb23cd5ec0908c4a700f9ab95f57bc6",
+      "unitAndCoverageTestsPassedEach": 27836,
+      "branchesPercent": "87.89",
+      "chromiumPassed": 616,
+      "chromiumHostedOnlySkipped": 5,
+      "ownedPostgresStopped": true
+    }
+  ],
   "nov13Form4972BeneficiaryPhysicalReview": {
     "commit": "cdada76814206731153de9be621ded704bdd275e",
     "initialRed": 3,

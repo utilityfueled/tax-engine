@@ -8,6 +8,30 @@ local `main` while automatic production deployment is being disabled.
 The read-only Vercel check still finds the production project linked to
 `main`, with automatic custom-domain assignment and no build-ignore command.
 The isolated rehearsal project has no Git link and protects all deployments.
+The team is on Pro, whose Sandbox credits are shared and can incur overage.
+No Sandbox was started. [Vercel Sandbox pricing](https://vercel.com/docs/sandbox/pricing).
+
+`f25ec56c` calculates the confirmed own-plan Box 6 inclusion or deferral
+and retains the A–G worksheet for Part II. Four regressions failed before
+the calculation and physical guard were added. All 343 affected tests
+passed, along with types, lint, inventory and 8,921 spec references. The
+PDF still holds positive Box 6 pending the printed annotations. The exact
+archive has entered the full local checks.
+[Final 2026 Form 4972](https://www.irs.gov/pub/irs-pdf/f4972.pdf) ·
+[Form 1099-R instructions](https://www.irs.gov/instructions/i1099r).
+
+`739178b7` maps the confirmed own-plan annuity adjustment for the disabled
+Form 4972 candidate when its visible whole-dollar arithmetic reconciles.
+Three cases failed before implementation and 278 affected tests passed.
+A second reader verified all 58 widgets, five selections and 24 populated
+fields. The rendered page shows the split ratio `0.1667`, $1,000 on line 21
+and $1,550 on line 30. All four pages retain the review notice.
+[Final 2026 Form 4972](https://www.irs.gov/pub/irs-pdf/f4972.pdf).
+
+The exact `55ac0ee7` and `18104818` archives each passed all 12 local
+checks, with 27,828 and 27,836 tests respectively, 87.89% branch coverage,
+and 616 Chromium passes with five hosted-only skips each. Both owned
+PostgreSQL instances stopped. These results cover their named sources.
 
 `cdada768` projects the confirmed death-beneficiary election on the final
 Form 4972 review candidate. It uses separate answers for the beneficiary's

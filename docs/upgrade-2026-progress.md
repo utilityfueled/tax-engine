@@ -4,6 +4,21 @@ Current source, verification and remaining work are summarized in the
 [current continuation](upgrade-2026-current-status.md). Historical results
 below apply to their named revisions.
 
+- November 13 — `f25ec56c` implements the confirmed own-plan Box 6 election
+  and the Part II appreciation worksheet. Four targeted tests failed first.
+  All 343 affected tests passed, plus types, lint, inventory and 8,921 spec
+  references. Positive Box 6 remains outside the physical candidate.
+  [Final 2026 Form 4972](https://www.irs.gov/pub/irs-pdf/f4972.pdf).
+- November 13 — `739178b7` maps the reconciled own-plan annuity fields on the
+  disabled final Form 4972 candidate. Three regressions failed first and 278
+  affected tests passed. Strict readback verified 58 widgets, five selections
+  and 24 filled fields. PDFKit showed the four-digit split ratio and the
+  expected allowance and tax. [Final 2026 Form 4972](https://www.irs.gov/pub/irs-pdf/f4972.pdf).
+- November 13 — Exact `55ac0ee7` and `18104818` each passed all 12 local
+  checks, including 27,828 and 27,836 tests respectively and 87.89% branch
+  coverage. Both Chromium runs passed 616 cases with five hosted-only skips.
+  Both isolated databases stopped.
+
 - November 13 — `cdada768` maps the confirmed death-beneficiary election
   onto the disabled final Form 4972. Three failing tests preceded the mapper
   and 1,148 affected tests passed. Strict saved-PDF readback verified
