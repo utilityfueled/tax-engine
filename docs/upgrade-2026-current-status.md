@@ -126,6 +126,13 @@ in draft 2026 Publication 1040. Decimal comparison matched every draft cell
 using the table methods with 2026 indexed values. The final endpoint still
 serves 2025 and 2026 remains gated. [Draft reconciliation](upgrade-2026-draft-federal-tables-work.md).
 
+`d10cc135` adds the single-proprietor professional wagering source
+calculation and Schedule SE handoff. The 396 affected checks passed. The
+source uses the current ledger's gross gains, losses and otherwise
+deductible expenses and applies the statutory cap before rounding.
+W-2G reconciliation, joint and mixed activity, guided intake, physical
+output and human review remain open. [26 USC 165(d)](https://uscode.house.gov/us/usc/119-120/t26/s165/).
+
 `6a38aadd` makes later original-file reads honor another tab's committed
 deletion. Two unit regressions and an already-open Chromium W-2 review
 reproduced the old read. The 188 focused checks and 24 Chromium cases passed.

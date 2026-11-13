@@ -4,6 +4,20 @@ Current source, verification and remaining work are summarized in the
 [current continuation](upgrade-2026-current-status.md). Historical results
 below apply to their named revisions.
 
+- November 13: `d10cc135` applies the enacted professional wagering
+  deduction to one documented 2026 Schedule C activity. A separate
+  Decimal comparison reproduces the 90% combined-cost limit, actual
+  winnings cap and $169 Schedule SE example. The original focused run
+  had eight failures and one pass. The successor passed 396 focused
+  checks, all three type checks, lint, 8,825 spec references and inventory.
+  The source audit changes three hashes under the same 607-case collection
+  and request limits. W-2G reconciliation, mixed activities, joint returns,
+  guided collection and physical output remain unqualified.
+  [26 USC 165(d)](https://uscode.house.gov/us/usc/119-120/t26/s165/) ·
+  [Publication 525](https://www.irs.gov/publications/p525) ·
+  [Final 2026 Schedule C](https://www.irs.gov/pub/irs-prior/f1040sc--2026.pdf) ·
+  [Draft 2026 instructions](https://www.irs.gov/pub/irs-dft/i1040sc--dft.pdf).
+
 - November 13: `12dd9a10` checks the live local return and document before
   saving a document-year edit. The older production build reported success
   and recreated a return deleted in another tab. The successor refused

@@ -23682,6 +23682,26 @@
     "checksSha256": "99019acee55fc17d7dc6c50332b2f4d3a2a2bae8e495536918990b09d2e7b1b8",
     "browserStderrSha256": "0e7f731f9f8856458099f061cab98f7d526d85a7951975dbda5e63941bbcbb7a"
   },
+  "nov13ProfessionalWagering": {
+    "commit": "d10cc135017b76514c59a043f8bfa5a310158204",
+    "tree": "6b4547023a4590c75d3f79db198ca70e285b96ba",
+    "rulePack": "2026.224-law-integration-draft",
+    "beforeFixFocusedFailures": 8,
+    "beforeFixSha256": "aadfed3f68b7a549d288d6f70f270dc3e2e6477bcd0a3eadf2d04c6053127e78",
+    "focusedPassed": 396,
+    "focusedSha256": "b8171de443721252fc335f31e59be3a3dbfce125a433bcc7fb27c1311f784b0d",
+    "oracleSha256": "4b63c9ba400585f771bdf7b1ade281f7d640f4430d39004588bbd562e3bb925f",
+    "specReferences": 8825,
+    "auditSha256": "a633e17e2e7609e88db9718e5977e1b2e987986ea228992a44dbd34d9d6ad243",
+    "sources": [
+      "https://uscode.house.gov/us/usc/119-120/t26/s165/",
+      "https://www.irs.gov/publications/p525",
+      "https://www.irs.gov/pub/irs-prior/f1040sc--2026.pdf",
+      "https://www.irs.gov/pub/irs-dft/i1040sc--dft.pdf"
+    ],
+    "humanTaxReviewComplete": false,
+    "filingQualified": false
+  },
   "nov12HostedCreditSettlement": {
     "previewReceiptCommit": "d39209dec302d249a5f01fe8baf23cc4ca2130f8",
     "settlementCommit": "8357ed9929766a8e5ed0ac7c45321cdccd44d35a",

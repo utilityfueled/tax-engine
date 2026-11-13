@@ -37,6 +37,10 @@ below retain their original evidence boundaries.
   hosted-only skips.
 - [x] Reconcile draft 2026 federal Tax and EIC Table cells and 63 Tax
   Computation Worksheet values. [Draft evidence](upgrade-2026-draft-federal-tables-work.md).
+- [x] Apply the 2026 professional wagering cap to confirmed single-owner
+  Schedule C and SE sources in `d10cc135`. The 396 focused checks pass.
+- [ ] Finish and review W-2G linkage, mixed or joint professional wagering,
+  guided sources and qualified annual physical output.
 - [x] Honor committed original deletion in open tabs in `6a38aadd`. Keep
   individually removed originals recoverable on metadata failure in
   `bdd31ea1`. Verify both failures and a successful retry with actual Chromium.
