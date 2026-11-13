@@ -69,3 +69,21 @@ connection termination/recovery and acknowledgement-loss retry. See the
 items above concern actual deployed failure/recovery qualification and broader
 credit-pack/provider settlement. They do not describe missing subscription
 transaction implementation. No staging failure injection is claimed here.
+
+## November 12 isolated Workbench readout
+
+The existing `tax-engine-outage-8487` sandbox has one active destination
+listening to two event types. The four visible delivery entries were
+successful subscription updates from November 5 and 6. Two inspected
+details displayed delivery status, attempt date, event ID, origin date,
+origin source, response status and the response body. The displayed
+`Source: API` describes event origin. Neither observed detail displayed
+an attempt ID or identified its delivery as automatic or manual. No
+failed or pending attempt was present in the observed list.
+
+The Stripe connector search returned no public API operation for
+individual delivery attempts or pending retry identities. Workbench's
+observed response body supports the opaque receipt added in `d39209de`.
+Automatic retry still needs independently attributable provider evidence.
+This read-only observation sent no event and changed no destination.
+[Stripe delivery and retry documentation](https://docs.stripe.com/webhooks#view-event-deliveries).

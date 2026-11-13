@@ -32,6 +32,13 @@ closed.
   [Schedule C](https://www.irs.gov/pub/irs-pdf/f1040sc.pdf),
   [Schedule R](https://www.irs.gov/pub/irs-pdf/f1040sr.pdf),
   [Schedule SE](https://www.irs.gov/pub/irs-pdf/f1040sse.pdf).
+- The IRS annual catalog lists final 2026 Form 8824 and instructions, posted
+  November 3 and 10. The final Form 6252 package, posted October 16, includes
+  three instruction pages following the one-page form. These individual
+  publications do not complete parent-return qualification.
+  [Form 8824](https://www.irs.gov/pub/irs-prior/f8824--2026.pdf),
+  [Form 8824 instructions](https://www.irs.gov/pub/irs-prior/i8824--2026.pdf),
+  [Form 6252](https://www.irs.gov/pub/irs-prior/f6252--2026.pdf).
 - The Schedule 3-A search returned the proposed rule and the hearing
   cancellation. No final rule was located in this bounded search. The Form
   172 instructions remain December 2024. They still exclude section 1202
@@ -57,6 +64,9 @@ offers separate 2026 estimated-payment forms. Ohio's current individual
 form index lists 2025 IT 1040 and SD 100 with 2026 estimated payment coupons.
 The bounded checks did not locate final 2026 annual forms for the selected
 states. The existing resident, part-year and nonresident scope remains.
+The indexed Ohio November 6 announcement refers to drafts. Its direct
+route and the tested 2026 return and school district PDF paths returned
+404 during the refresh.
 [Pennsylvania personal income tax](https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax),
 [Pennsylvania forms](https://www.pa.gov/agencies/revenue/forms-and-publications),
 [Ohio individual forms](https://tax.ohio.gov/individual/get-a-form).
