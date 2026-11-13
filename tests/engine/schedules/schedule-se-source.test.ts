@@ -1,11 +1,18 @@
 // Spec: spec/federal/schedule-se.yaml, final IRS form and instructions.
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { TaxYearInputSchema } from '@/models/inputs.js';
 import { calculateFederalTax } from '@/engine/federal.js';
 import { calculateScheduleSE } from '@/engine/schedules/schedule-se.js';
 import { getConstants } from '@/models/constants.js';
 import { FEDERAL_2026_CONSTANTS } from '@/models/federal-2026-indexed.js';
 import { simpleW2Fixture, complexMFJFixture } from '../../fixtures/simple-w2.js';
+
+vi.mock('@/models/constants.js', async importOriginal => {
+  const original = await importOriginal<typeof import('@/models/constants.js')>();
+  const { FEDERAL_2026_CONSTANTS } = await import('@/models/federal-2026-indexed.js');
+  return { ...original, getConstants: (year: number) => year === 2026 ? FEDERAL_2026_CONSTANTS : original.getConstants(year) };
+});
+
 const c = getConstants(2025);
 const joint = () => TaxYearInputSchema.parse({ ...complexMFJFixture, scheduleK1: [], form1099Nec: [],
   w2s: [{ ...simpleW2Fixture.w2s[0], accountHolder: 'primary', socialSecurityWages: '176100', socialSecurityTips: '0' }],
@@ -36,6 +43,52 @@ describe('Schedule SE actual source attribution', () => {
     expect(result.socialSecurityPortion.toString()).toBe('12');
     const line=(id:string)=>result.lines.find(row=>row.form==='Sched SE'&&row.line===id)?.value.toString();
     expect(['1a','1b','2','3','4a','4b','4c','5a','5b','6','7','8a','8b','8c','8d','9','10','11','12','13'].map(line)).toEqual(['0','0','10000','10000','9235','0','9235','0','0','9235','176100','176000','0','0','176000','100','12','268','280','140']);
+  });
+  it('aggregates exact W2 and Tier 1 amounts before rounding line 8a', () => {
+    const makeInput = (socialSecurityWages: string) => TaxYearInputSchema.parse({
+      ...simpleW2Fixture,
+      taxpayer: { ...simpleW2Fixture.taxpayer, taxYear: 2026 },
+      w2s: [{ ...simpleW2Fixture.w2s[0], socialSecurityWages, socialSecurityTips: '0.24' }],
+      scheduleC: { grossReceipts: '10000' },
+      form8919: { accountHolder: 'primary', wagesNotReportedOnW2: '0', rrtaCompensationSubjectToSocialSecurityTax: '0.49' },
+    });
+    const result = calculateScheduleSE(makeInput('183999.25'), FEDERAL_2026_CONSTANTS);
+    const line = (id: string) => result.lines.find(row => row.line === id);
+    expect(line('8a')?.value.toString()).toBe('184000');
+    expect(line('8a')?.inputs['Exact combined Social Security wages, tips and Tier 1 compensation']?.toString()).toBe('183999.98');
+    expect(line('8d')?.value.toString()).toBe('184000');
+    expect(line('9')?.value.toString()).toBe('500');
+
+    // At $504 of remaining wage base, the rounded Social Security portion is $62.
+    // Premature component rounding instead leaves $505 and produces $63.
+    const taxBoundary = calculateScheduleSE(makeInput('183995.25'), FEDERAL_2026_CONSTANTS);
+    expect(taxBoundary.socialSecurityPortion.toString()).toBe('62');
+    expect(taxBoundary.totalSETax.toString()).toBe('330');
+    expect(taxBoundary.deductibleHalf.toString()).toBe('165');
+  });
+  it.each([
+    ['433.13', '399.995555', '0', '0'],
+    ['433.14', '400.00479', '62', '31'],
+  ])('routes $%s of 2026 net profit through Schedule 2 and Schedule 1', (profit, adjusted, tax, half) => {
+    const result = calculateFederalTax(TaxYearInputSchema.parse({
+      ...simpleW2Fixture,
+      taxpayer: {
+        ...simpleW2Fixture.taxpayer,
+        taxYear: 2026,
+        primary: { ...simpleW2Fixture.taxpayer.primary, employmentValidSsnIssuedByDueDate: false },
+      },
+      w2s: [],
+      scheduleC: { accountHolder: 'primary', grossReceipts: profit },
+    }));
+    expect(result.taxYear).toBe(2026);
+    expect(result.scheduleC?.netProfit.toString()).toBe(profit);
+    expect(result.selfEmploymentTax.toString()).toBe(tax);
+    expect(result.schedule2?.lines.find(line => line.line === '4')?.value.toString()).toBe(tax);
+    expect(result.schedule1?.lines.find(line => line.line === '15')?.value.toString()).toBe(half);
+    expect(result.adjustmentsToIncome.toString()).toBe(half);
+    const threshold = result.scheduleSE?.lines.find(line => line.line === '4c');
+    expect(threshold?.value.toString()).toBe('400');
+    expect(threshold?.inputs['Exact adjusted earnings']?.toString()).toBe(adjusted);
   });
   it('uses K1 Box14A once and requires adjusted source facts for 2026', () => {
     const input=TaxYearInputSchema.parse({...simpleW2Fixture,w2s:[],scheduleK1:[{partnershipName:'Actual partnership',partnershipEIN:'12-3456789',ordinaryIncome:'10000',guaranteedPayments:'5000',selfEmploymentEarnings:'15000'}]});

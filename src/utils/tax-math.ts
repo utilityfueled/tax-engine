@@ -233,10 +233,10 @@ export function calculateSelfEmploymentTax(
   constants: YearConstants
 ): { tax: Decimal; deductibleHalf: Decimal; socialSecurityPortion: Decimal; medicarePortion: Decimal } {
   const se = constants.selfEmploymentTax;
-  const taxableEarnings = roundDollar(netSEEarnings.times(se.earningsMultiplier));
+  const exactAdjustedEarnings = netSEEarnings.times(se.earningsMultiplier);
 
   // IRC §1402(b)(2): SE tax only applies when post-multiplier earnings ≥ $400
-  if (taxableEarnings.lt(new Decimal(400))) {
+  if (exactAdjustedEarnings.lt(400)) {
     return {
       tax: new Decimal(0),
       deductibleHalf: new Decimal(0),
@@ -244,6 +244,7 @@ export function calculateSelfEmploymentTax(
       medicarePortion: new Decimal(0),
     };
   }
+  const taxableEarnings = roundDollar(exactAdjustedEarnings);
 
   // Social Security portion (capped at wage base minus W-2 wages)
   const ssRemaining = zeroFloor(se.socialSecurityWageBase.minus(w2SocialSecurityWages));

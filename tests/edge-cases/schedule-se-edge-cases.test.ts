@@ -398,16 +398,16 @@ describe("Schedule SE - post-multiplier $400 threshold boundary", () => {
     expect(result.totalSETax.toNumber()).toBe(0);
   });
 
-  it("SE income $433: post-multiplier exactly $400, SE tax applies", () => {
+  it("SE income $433: exact post-multiplier earnings below $400, no SE tax", () => {
     const result = calculateScheduleSE(makeSEFixture({
       form1099Nec: [{ payer: "Client", nonemployeeCompensation: "433", federalWithheld: "0" }],
     }), c);
-    // $433 × 0.9235 = $399.8555 → roundDollar = $400 ≥ $400 → SE tax applies
+    // $433 × 0.9235 = $399.8755. The reported $400 does not trigger tax.
     expect(result.taxableEarnings.toNumber()).toBe(400);
-    expect(result.totalSETax.toNumber()).toBe(62);
-    expect(result.socialSecurityPortion.toNumber()).toBe(50);
-    expect(result.medicarePortion.toNumber()).toBe(12);
-    expect(result.deductibleHalf.toNumber()).toBe(31);
+    expect(result.totalSETax.toNumber()).toBe(0);
+    expect(result.socialSecurityPortion.toNumber()).toBe(0);
+    expect(result.medicarePortion.toNumber()).toBe(0);
+    expect(result.deductibleHalf.toNumber()).toBe(0);
   });
 
   it("SE income $399: post-multiplier $368 < $400, no SE tax", () => {
@@ -943,14 +943,14 @@ describe("Schedule SE - Additional Medicare Tax on high SE income (Form 8959)", 
 });
 
 // ═══════════════════════════════════════════════════════════
-// Minimal SE Income Just Above Threshold ($401)
+// Minimal SE Income Just Above Threshold
 // ═══════════════════════════════════════════════════════════
 
-describe("Schedule SE - minimal SE income at post-multiplier threshold ($433)", () => {
-  it("Sched SE - $433 is first pre-multiplier amount that triggers SE tax", () => {
-    // $433 × 0.9235 = $399.8555 → roundDollar = $400 ≥ $400 → SE tax applies
+describe("Schedule SE - minimal cent-denominated income at post-multiplier threshold", () => {
+  it("Sched SE - $433.14 is the first cent-denominated profit that triggers SE tax", () => {
+    // $433.14 × 0.9235 = $400.00479.
     const result = calculateScheduleSE(makeSEFixture({
-      form1099Nec: [{ payer: "Client", nonemployeeCompensation: "433", federalWithheld: "0" }],
+      form1099Nec: [{ payer: "Client", nonemployeeCompensation: "433.14", federalWithheld: "0" }],
     }), c);
     expect(result.taxableEarnings.toNumber()).toBe(400);
     expect(result.totalSETax.toNumber()).toBe(62);

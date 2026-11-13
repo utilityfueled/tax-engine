@@ -11,6 +11,10 @@ notes: |
   calculations are explicitly unverified. Optional methods, CRP exclusions,
   church/ministry exemptions and community-property adjustments need their
   applicable source worksheets before those scenarios can be qualified.
+  The final 2026 form https://www.irs.gov/pub/irs-prior/f1040sse--2026.pdf
+  confirms the ordinary line 4c test and line 8a sources. Apply the $400 floor
+  under 26 U.S.C. § 1402(b)(2) to exact adjusted net earnings. Whole-dollar
+  presentation under 26 CFR § 301.6102-1(c) does not determine eligibility.
 lines:
   - line: "1a"
     description: "Farm earnings"
@@ -30,7 +34,7 @@ lines:
     testRef: "tests/engine/schedules/schedule-se-source.test.ts::does not offset one spouse profit with the other spouse loss"
   - line: "4a"
     description: "Net earnings adjustment"
-    formula: "If line3 is positive, round(line3 times0.9235); otherwise retain signed line3"
+    formula: "If line3 is positive, calculate line3 times0.9235 in Decimal. Keep exact adjusted earnings for the threshold and report the nearest dollar. Otherwise retain signed line3."
     testRef: "tests/engine/schedules/schedule-se-source.test.ts::audits the official regular-method lines and includes W2 tips"
   - line: "4b"
     description: "Optional-method earnings"
@@ -38,8 +42,8 @@ lines:
     testRef: "tests/engine/schedules/schedule-se-source.test.ts::audits the official regular-method lines and includes W2 tips"
   - line: "4c"
     description: "Adjusted earnings and filing threshold"
-    formula: "4a plus4b; stop if below400 unless applicable church-employee exception"
-    testRef: "tests/engine/schedules/schedule-se.test.ts::$433 SE income: SE tax applies (post-multiplier exactly $400)"
+    formula: "Stop when the exact line4a plus line4b is below400 unless the church-employee exception applies. At cent precision $433.13 ordinary net profit gives $399.995555 and $433.14 gives $400.00479. Both display as $400."
+    testRef: "tests/engine/schedules/schedule-se.test.ts::keeps exact line 4c earnings separate from the printed $400"
   - line: "5a-5b"
     description: "Church employee earnings"
     formula: "Actual church employee income times0.9235 with100 minimum; outside this regular business slice"
@@ -54,8 +58,8 @@ lines:
     testRef: "tests/engine/schedules/schedule-se-source.test.ts::keeps each spouse Social Security wage base separate"
   - line: "8a"
     description: "This person's Social Security wages and tips"
-    formula: "Sum of this person's W2 Boxes3 and7 plus applicable Tier1 RRTA compensation"
-    testRef: "tests/engine/schedules/schedule-se-source.test.ts::audits the official regular-method lines and includes W2 tips"
+    formula: "Sum the exact amounts in this person's W2 Boxes3 and7 and applicable Tier1 RRTA compensation, then round the combined line once for reporting."
+    testRef: "tests/engine/schedules/schedule-se-source.test.ts::aggregates exact W2 and Tier 1 amounts before rounding line 8a"
   - line: "8b-8d"
     description: "Additional covered wages"
     formula: "8b is this person's Form4137line10;8c Form8919line10;8d=8a+8b+8c"

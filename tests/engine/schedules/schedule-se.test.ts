@@ -130,15 +130,27 @@ describe("Schedule SE - $400 minimum threshold", () => {
     expect(result.totalSETax.toNumber()).toBe(0);
   });
 
-  it("$433 SE income: SE tax applies (post-multiplier exactly $400)", () => {
-    // $433 × 0.9235 = $399.8555 → roundDollar = $400 ≥ $400 → SE tax applies
-    // SS: $400 × 0.124 = $49.60 → $50. Medicare: $400 × 0.029 = $11.60 → $12
+  it("$433 SE income remains below the statutory threshold", () => {
+    // $433 × 0.9235 = $399.8755, which displays as $400.
     const result = calculateScheduleSE(makeFixtureWith1099NEC("433", "0"), c);
     expect(result.taxableEarnings.toNumber()).toBe(400);
-    expect(result.totalSETax.toNumber()).toBe(62);
-    expect(result.socialSecurityPortion.toNumber()).toBe(50);
-    expect(result.medicarePortion.toNumber()).toBe(12);
-    expect(result.deductibleHalf.toNumber()).toBe(31);
+    expect(result.earningsSubjectToSETax.toNumber()).toBe(0);
+    expect(result.totalSETax.toNumber()).toBe(0);
+    expect(result.socialSecurityPortion.toNumber()).toBe(0);
+    expect(result.medicarePortion.toNumber()).toBe(0);
+    expect(result.deductibleHalf.toNumber()).toBe(0);
+  });
+
+  it("keeps exact line 4c earnings separate from the printed $400", () => {
+    const rows = [["433.13", "399.995555", "0", "0"], ["433.14", "400.00479", "62", "31"]];
+    for (const [profit, adjusted, tax, half] of rows) {
+      const result = calculateScheduleSE(makeFixtureWith1099NEC(profit), c);
+      const line = result.lines.find(row => row.line === "4c");
+      expect(line?.value.toString()).toBe("400");
+      expect(line?.inputs["Exact adjusted earnings"]?.toString()).toBe(adjusted);
+      expect(result.totalSETax.toString()).toBe(tax);
+      expect(result.deductibleHalf.toString()).toBe(half);
+    }
   });
 
   it("$1 SE income: no SE tax", () => {
@@ -430,9 +442,9 @@ describe("Schedule SE - Line 11 at threshold boundary", () => {
     expect(result.medicarePortion.toNumber()).toBe(0);
   });
 
-  it("Line 11 - $433 SE income produces positive Medicare (post-multiplier $400 = threshold)", () => {
-    // $433 × 0.9235 = $400. Medicare: $400 × 0.029 = $11.60 → $12
-    const result = calculateScheduleSE(makeFixtureWith1099NEC("433", "0"), c);
+  it("Line 11 - $433.14 SE income produces positive Medicare", () => {
+    // $433.14 × 0.9235 = $400.00479. Medicare displays as $12.
+    const result = calculateScheduleSE(makeFixtureWith1099NEC("433.14", "0"), c);
     expect(result.medicarePortion.toNumber()).toBe(12);
   });
 });

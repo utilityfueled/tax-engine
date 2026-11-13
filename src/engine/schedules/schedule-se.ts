@@ -40,14 +40,14 @@ function calculateIndividual(
   const netFarmProfit = sum(...profits.filter(p => p.kind === "farm").map(p => p.amount));
   const netNonfarmProfit = sum(...profits.filter(p => p.kind === "nonfarm").map(p => p.amount));
   const netSEEarnings = netFarmProfit.plus(netNonfarmProfit);
-  const line4a = netSEEarnings.gt(0) ? roundDollar(netSEEarnings.times(se.earningsMultiplier)) : netSEEarnings;
+  const exactAdjustedEarnings = netSEEarnings.gt(0) ? netSEEarnings.times(se.earningsMultiplier) : netSEEarnings;
+  const line4a = netSEEarnings.gt(0) ? roundDollar(exactAdjustedEarnings) : exactAdjustedEarnings;
   const taxableEarnings = zeroFloor(line4a);
-  const earningsSubjectToSETax = taxableEarnings.gte(400) ? taxableEarnings : new Decimal(0);
+  const earningsSubjectToSETax = exactAdjustedEarnings.gte(400) ? taxableEarnings : new Decimal(0);
   const belongs = (sourceOwner?: Owner) => aggregateLegacy || (sourceOwner ?? (input.taxpayer.filingStatus !== "married_filing_jointly" ? "primary" : undefined)) === owner;
   const w2s = input.w2s.filter(w2 => belongs(w2.accountHolder));
   const w2SSWages = sum(...w2s.map(w2 => d(w2.socialSecurityWages)));
   const w2SSTips = sum(...w2s.map(w2 => d(w2.socialSecurityTips)));
-  const w2SSWagesAndTips = roundDollar(w2SSWages.plus(w2SSTips));
   const tips = sum(...tipPayroll.forms.filter(form => belongs(form.accountHolder)).map(form => form.line10));
   const wages = input.form8919 && belongs(input.form8919.accountHolder) ? calculateForm8919(input.form8919, constants, {
     socialSecurityWagesAndTipsAlreadyReported: w2SSWages,
@@ -56,7 +56,8 @@ function calculateIndividual(
   }).line10 : new Decimal(0);
   const rrta = input.form8919 && belongs(input.form8919.accountHolder)
     ? zeroFloor(d(input.form8919.rrtaCompensationSubjectToSocialSecurityTax)) : new Decimal(0);
-  const line8a = w2SSWagesAndTips.plus(roundDollar(rrta));
+  const exactCoveredWagesAndTips = sum(w2SSWages, w2SSTips, rrta);
+  const line8a = roundDollar(exactCoveredWagesAndTips);
   const line8d = sum(line8a, roundDollar(tips), roundDollar(wages));
   const ssRemaining = zeroFloor(se.socialSecurityWageBase.minus(line8d));
   const ssTaxable = min(earningsSubjectToSETax, ssRemaining);
@@ -75,12 +76,16 @@ function calculateIndividual(
   record("3", "Combined net profit", netSEEarnings, "Line1a - line1b + line2 for this person", { "Line 1a": netFarmProfit, "Line 2": netNonfarmProfit });
   record("4a", "Adjusted net earnings", line4a, "Positive line3 times0.9235, rounded; otherwise signed line3");
   record("4b", "Optional-method earnings", new Decimal(0), "Regular method");
-  record("4c", "Combined adjusted earnings", line4a, "Lines4a +4b; stop below400");
+  record("4c", "Combined adjusted earnings", line4a, "Lines4a +4b; stop below400",
+    line4a.eq(exactAdjustedEarnings) ? {} : { "Exact adjusted earnings": exactAdjustedEarnings });
   record("5a", "Church employee income", new Decimal(0), "No church-employee income represented in this slice");
   record("5b", "Adjusted church employee income", new Decimal(0), "No church-employee income represented in this slice");
   record("6", "Earnings subject to SE tax", earningsSubjectToSETax, "Lines4c +5b after the filing threshold");
   record("7", "Social Security wage base", se.socialSecurityWageBase, "Year-specific statutory limit");
-  record("8a", "Social Security wages and tips", line8a, "This person's W2 Boxes3 +7 and applicable Tier1 compensation");
+  record("8a", "Social Security wages and tips", line8a, "This person's W2 Boxes3 +7 and applicable Tier1 compensation",
+    profits.length > 0 && !line8a.eq(exactCoveredWagesAndTips)
+      ? { "Exact combined Social Security wages, tips and Tier 1 compensation": exactCoveredWagesAndTips }
+      : {});
   record("8b", "Unreported tips subject to Social Security", roundDollar(tips), "This person's Form4137line10");
   record("8c", "Unreported employee wages subject to Social Security", roundDollar(wages), "This person's Form8919line10");
   record("8d", "Total covered employee compensation", line8d, "Lines8a +8b +8c");

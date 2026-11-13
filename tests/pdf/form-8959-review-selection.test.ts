@@ -41,16 +41,17 @@ const cases=[
  ['ordinary below threshold','single',['50000'],['725'],false],
  ['existing positive tax','single',['300000'],['4350'],true],
  ['eighty digit original tail','single',['100000.'+'0'.repeat(79)+'1','100000'],['1450','1450'],true],
- ['wages plus actual SE line6','single',['199601'],['2894.21'],true],
+ ['wages plus actual SE line6','single',['199601'],['2894.21'],true,'433.14'],
+ ['wages plus SE profit below line4c','single',['199601'],['2894.21'],false,'433.13'],
 ] as const;
-it.each(cases)('selects the component at the independently derived original threshold: %s',async(name,status,wages,withheld,included)=>{
+it.each(cases)('selects the component at the independently derived original threshold: %s',async(name,status,wages,withheld,included,seProfit?:string)=>{
  const input=structuredClone(simpleW2Fixture);input.taxpayer.filingStatus=status;
  if(status==='married_filing_jointly'||status==='married_filing_separately')input.taxpayer.spouse=structuredClone(complexMFJFixture.taxpayer.spouse);
  const source=input.w2s[0];if(!source)throw new Error('Missing explicit synthetic W2');
  input.w2s=wages.map((amount,index)=>({...source,employer:{name:'Synthetic employer '+index,ein:'12-345678'+index},wages:amount,medicareWages:amount,medicareWithheld:withheld[index]??'0',socialSecurityWages:'50000',socialSecurityWithheld:'3100',federalWithheld:'20000'}));
- if(name==='wages plus actual SE line6')input.scheduleC=ScheduleCInputSchema.parse({businessName:'Synthetic consulting',businessCode:'541990',accountingMethod:'cash',grossReceipts:'433',expenses:{}});
+ if(seProfit!==undefined)input.scheduleC=ScheduleCInputSchema.parse({businessName:'Synthetic consulting',businessCode:'541990',accountingMethod:'cash',grossReceipts:seProfit,expenses:{}});
  const original=JSON.stringify(input),precision=Decimal.precision,result=calculateFederalTax(input);
- if(name==='wages plus actual SE line6')expect(result.form8959?.selfEmploymentEarnings.toFixed()).toBe('400');
+ if(seProfit!==undefined)expect(result.form8959?.selfEmploymentEarnings.toFixed()).toBe(included?'400':'0');
  if(name!=='existing positive tax')expect(result.form8959?.additionalMedicareTax.toFixed()).toBe('0');
  expect(result.form8959?.withholdingCredit.toFixed()).toBe('0');
  const dir=await mkdtemp(join(tmpdir(),'8959-threshold-review-'));

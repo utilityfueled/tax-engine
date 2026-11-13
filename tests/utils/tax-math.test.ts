@@ -354,6 +354,13 @@ describe("Self-employment tax", () => {
     expect(result.deductibleHalf.minus(expectedHalf).abs().lessThan(1)).toBe(true);
   });
 
+  it("SE tax - checks the exact Schedule SE line 4c threshold", () => {
+    const below = calculateSelfEmploymentTax(d("433.13"), d("0"), constants);
+    const above = calculateSelfEmploymentTax(d("433.14"), d("0"), constants);
+    expect([below.tax.toString(), below.deductibleHalf.toString()]).toEqual(["0", "0"]);
+    expect([above.tax.toString(), above.deductibleHalf.toString()]).toEqual(["62", "31"]);
+  });
+
   it("SE tax - zero earnings produces zero tax", () => {
     const result = calculateSelfEmploymentTax(d(0), d(0), constants);
     expect(result.tax.toNumber()).toBe(0);
