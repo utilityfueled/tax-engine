@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import Decimal from "decimal.js";
 import Stripe from "stripe";
 import {
   hostedPlanCatalog,
@@ -543,7 +544,8 @@ async function createStripeAiCreditCheckoutSession(
   env: BillingEnvironment,
   actor: NonNullable<Awaited<ReturnType<typeof resolveHostedWorkspaceActor>>>,
   request: HostedAiCreditCheckoutRequest,
-  existingSubscription: ExistingHostedSubscription
+  existingSubscription: ExistingHostedSubscription,
+  { priceCents, creditedBudgetCents, livemode }: { priceCents: number; creditedBudgetCents: number; livemode: boolean }
 ) {
   const secretKey = getStripeSecretKey(env);
   const priceId = getStripeAiTopUpPriceId(env);
@@ -567,11 +569,20 @@ async function createStripeAiCreditCheckoutSession(
   }
 
   const stripe = createStripeClient(secretKey);
+  const price = await stripe.prices.retrieve(priceId, {}, { timeout: 2000, maxNetworkRetries: 0 });
+  if (price.object !== "price" || price.id !== priceId || price.active !== true || price.livemode !== livemode
+    || price.currency !== "usd" || price.unit_amount !== priceCents || price.billing_scheme !== "per_unit"
+    || price.type !== "one_time" || price.recurring !== null || price.custom_unit_amount !== null || price.transform_quantity !== null
+    || (price.unit_amount_decimal !== null && !new Decimal(price.unit_amount_decimal.toString()).eq(priceCents))) {
+    throw new Error("The Stripe price does not match the hosted AI credit offer.");
+  }
   const customerId = await ensureStripeCustomerId(stripe, actor, existingSubscription);
-  const creditedBudgetCents = resolveHostedAiTopUpCreditCents(env);
 
-  return stripe.checkout.sessions.create({
+  const session = await stripe.checkout.sessions.create({
     mode: "payment",
+    currency: "usd",
+    adaptive_pricing: { enabled: false },
+    automatic_tax: { enabled: false },
     customer: customerId,
     allowed_payment_method_types: getStripeCheckoutPaymentMethodTypes(env),
     line_items: [{
@@ -594,6 +605,11 @@ async function createStripeAiCreditCheckoutSession(
       }
     }
   });
+  if (session.object !== "checkout.session" || session.mode !== "payment" || session.livemode !== livemode
+    || session.currency !== "usd" || session.amount_subtotal !== priceCents || session.amount_total !== priceCents || !session.url) {
+    throw new Error("The Stripe Checkout Session does not match the hosted AI credit offer.");
+  }
+  return session;
 }
 
 export function createHostedAiCreditCheckoutRouteHandlers(
@@ -707,6 +723,8 @@ export function createHostedAiCreditCheckoutRouteHandlers(
       }
 
       const existingSubscription = await lookupExistingHostedSubscription(env, actor.id);
+      const priceCents = resolveHostedAiTopUpPriceCents(env);
+      const creditedBudgetCents = resolveHostedAiTopUpCreditCents(env);
 
       const session = await (dependencies.createCheckoutSession
         ? dependencies.createCheckoutSession({
@@ -715,14 +733,16 @@ export function createHostedAiCreditCheckoutRouteHandlers(
             env,
             existingSubscription
           })
-        : createStripeAiCreditCheckoutSession(env, actor, parsed.data, existingSubscription));
+        : createStripeAiCreditCheckoutSession(env, actor, parsed.data, existingSubscription, {
+            priceCents, creditedBudgetCents, livemode: config.mode === "live"
+          }));
 
       return NextResponse.json({
         checkoutUrl: session.url,
         sessionId: session.id,
         purchaseKind: "ai-credit-pack",
-        creditedBudgetCents: resolveHostedAiTopUpCreditCents(env),
-        priceCents: resolveHostedAiTopUpPriceCents(env)
+        creditedBudgetCents,
+        priceCents
       });
     })
   };

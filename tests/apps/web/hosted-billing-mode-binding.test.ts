@@ -6,7 +6,7 @@ vi.mock("server-only", () => ({}));
 vi.mock("../../../apps/web/src/lib/hosted-ai-availability", () => ({ canPurchaseHostedAiCredits: () => true }));
 const mocks = vi.hoisted(() => ({
   key: vi.fn(), actor: vi.fn(), subscription: vi.fn(), entitlement: vi.fn(), rate: vi.fn(),
-  customer: vi.fn(), checkout: vi.fn(), portal: vi.fn(), adapter: vi.fn(),
+  price: vi.fn(), customer: vi.fn(), checkout: vi.fn(), portal: vi.fn(), adapter: vi.fn(),
   persist: vi.fn(), mark: vi.fn(), credit: vi.fn(), remove: vi.fn(), existing: vi.fn(),
 }));
 vi.mock("../../../apps/web/src/lib/hosted-auth", () => ({ resolveHostedWorkspaceActor: mocks.actor }));
@@ -29,6 +29,7 @@ vi.mock("../../../apps/web/node_modules/stripe", async (importOriginal) => {
   return { ...actual, default: class {
     static webhooks = actual.default.webhooks;
     webhooks = actual.default.webhooks;
+    prices = { retrieve: mocks.price };
     customers = { create: mocks.customer };
     checkout = { sessions: { create: mocks.checkout } };
     billingPortal = { sessions: { create: mocks.portal } };
@@ -79,6 +80,7 @@ async function outbound(route: Route, facts: Env, custom = false) {
 }
 function noOutbound() {
   expect(mocks.key).not.toHaveBeenCalled(); expect(mocks.customer).not.toHaveBeenCalled();
+  expect(mocks.price).not.toHaveBeenCalled();
   expect(mocks.checkout).not.toHaveBeenCalled(); expect(mocks.portal).not.toHaveBeenCalled();
   expect(mocks.adapter).not.toHaveBeenCalled();
 }
@@ -119,8 +121,16 @@ beforeEach(() => {
   mocks.actor.mockResolvedValue({ id: "owner-mode-binding", label: "Fictional Owner", email: "fictional@example.invalid" });
   mocks.subscription.mockResolvedValue(null); mocks.entitlement.mockResolvedValue({ entitlement: { workspaceAccess: true } });
   mocks.rate.mockResolvedValue({ allowed: true, remaining: 29, retryAfterMs: null });
+  mocks.price.mockImplementation(async () => ({
+    id: "price_credit", object: "price", active: true, livemode: mocks.key.mock.lastCall?.[0].includes("_live_"),
+    currency: "usd", unit_amount: 1500, unit_amount_decimal: "1500.0", billing_scheme: "per_unit",
+    type: "one_time", recurring: null, custom_unit_amount: null, transform_quantity: null,
+  }));
   mocks.customer.mockResolvedValue({ id: "cus_fictional" });
-  mocks.checkout.mockResolvedValue({ id: "cs_fictional", url: "https://checkout.stripe.com/fictional" });
+  mocks.checkout.mockImplementation(async ({ mode }) => ({
+    id: "cs_fictional", url: "https://checkout.stripe.com/fictional", object: "checkout.session",
+    mode, livemode: mocks.key.mock.lastCall?.[0].includes("_live_"), currency: "usd", amount_subtotal: 1500, amount_total: 1500,
+  }));
   mocks.portal.mockResolvedValue({ url: "https://billing.stripe.com/fictional" });
   mocks.existing.mockResolvedValue(null); mocks.persist.mockResolvedValue(undefined);
   mocks.mark.mockResolvedValue(true); mocks.credit.mockResolvedValue(true); mocks.remove.mockResolvedValue(undefined);
@@ -210,6 +220,8 @@ describe("hosted Stripe mode binding source-first controls", () => {
       vi.clearAllMocks(); const key = `${family}_${mode}_fictional`;
       expect((await outbound(route, env(mode, key))).status).toBe(200);
       expect(mocks.key).toHaveBeenCalledExactlyOnceWith(key);
+      if (route === "topup") expect(mocks.price).toHaveBeenCalledTimes(1);
+      else expect(mocks.price).not.toHaveBeenCalled();
       if (route === "portal") expect(mocks.portal).toHaveBeenCalledExactlyOnceWith({ customer: "cus_fictional", return_url: "https://tax.example/billing" });
       else {
         expect(mocks.customer).toHaveBeenCalledTimes(1);
