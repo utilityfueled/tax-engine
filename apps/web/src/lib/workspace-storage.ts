@@ -32,6 +32,7 @@ import {
 } from "./guided-interview-flow";
 import { reconcileWorkspaceGuidedState } from "./workspace-guided-state";
 import { getLocalRecoveryStorageKey } from "./workspace-local-recovery";
+import { deleteCachedWorkspaceDocumentFiles, storeNewWorkspaceDocumentFiles } from "./workspace-document-file-cache";
 
 // The preview helper is cached so refresh calls can avoid repeating the
 // dynamic import work when a caller explicitly asks for a recomputed preview.
@@ -1259,10 +1260,16 @@ export function listWorkspaces(storage: Storage) {
 
 export function ingestFilesIntoWorkspace(
   workspace: ReturnWorkspaceRecord,
-  files: UploadableFile[]
+  files: UploadableFile[],
+  options?: { newLocalOriginals: true },
 ) {
   const usedIds = new Set(workspace.documents.map((document) => document.id));
-  const appendedDocuments = files.map((file) => classifyUploadedDocument(file, usedIds));
+  const appendedDocuments = files.map((file) => {
+    const document = classifyUploadedDocument(file, usedIds);
+    // A new upload needs an identity independent of the file's name/size and
+    // any uncommitted batch in another tab. Preserve older source identities.
+    return options?.newLocalOriginals ? { ...document, id: crypto.randomUUID() } : document;
+  });
   const nextDocuments = [
     ...workspace.documents,
     ...appendedDocuments
@@ -1297,6 +1304,42 @@ export function ingestFiles(storage: Storage, workspaceId: string, files: Upload
   const nextWorkspace = ingestFilesIntoWorkspace(current, files);
 
   saveWorkspaceRecord(storage, workspaceId, nextWorkspace);
+  return nextWorkspace;
+}
+
+/** Save originals before adding metadata to an existing local return. */
+export async function ingestLocalDocumentFiles(storage: Storage, workspaceId: string, prepared: UploadableFile[], files: File[]) {
+  const failure = "Could not save the uploaded document. Please try again.";
+  const changed = "This return changed during the upload. Reopen it and try again.";
+  const initial = parseStorage(storage.getItem(STORAGE_KEY)).workspaces[workspaceId];
+  const current = loadStorage(storage).workspaces[workspaceId];
+  if (!initial || !current) throw new Error(changed);
+  if (prepared.length !== files.length || files.length === 0 || files.some((file, index) => (
+    file.name !== prepared[index]?.name || file.size !== prepared[index]?.size
+  ))) throw new Error(failure);
+  const nextWorkspace = ingestFilesIntoWorkspace(current, prepared, { newLocalOriginals: true });
+  const uploads = nextWorkspace.documents.slice(-files.length).map((document, index) => {
+    const file = files[index];
+    if (!file) throw new Error(failure);
+    return { documentId: document.id, uploadedAt: document.uploadedAt, file };
+  });
+  await storeNewWorkspaceDocumentFiles(workspaceId, uploads);
+
+  let failureMessage = failure;
+  try {
+    const latest = parseStorage(storage.getItem(STORAGE_KEY)).workspaces[workspaceId];
+    if (JSON.stringify(initial) !== JSON.stringify(latest)) {
+      failureMessage = changed;
+      throw new Error(changed);
+    }
+    saveWorkspaceRecord(storage, workspaceId, nextWorkspace);
+  } catch (error) {
+    try { await deleteCachedWorkspaceDocumentFiles(workspaceId, uploads.map(({ documentId }) => documentId)); }
+    catch {
+      throw new Error("Could not finish saving or clean up the uploaded originals. Reopen this return before retrying.", { cause: error });
+    }
+    throw new Error(failureMessage, { cause: error });
+  }
   return nextWorkspace;
 }
 

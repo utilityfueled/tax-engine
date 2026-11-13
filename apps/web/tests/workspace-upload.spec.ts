@@ -18,6 +18,69 @@ async function enableAdvancedMode(page: import("@playwright/test").Page) {
   });
 }
 
+for (const [fault, title, message] of [
+  ["indexed-db", "keeps local upload metadata unchanged when the original cannot be stored", /could not save the original documents/i],
+  ["return-storage", "removes only pending original files when local upload metadata cannot be stored", /could not save the uploaded document/i],
+] as const) {
+  test(title, async ({ page }) => {
+    await page.goto("/");
+    await enableAdvancedMode(page);
+    await page.getByRole("button", { name: /start your tax return/i }).click();
+    await expect(page).toHaveURL(/\/returns\/(?!new(?:[/?#]|$))[a-z0-9-]+$/i);
+    const upload = page.locator('input[type="file"]');
+    const status = page.getByRole("status", { name: "Return status" });
+    await upload.setInputFiles(path.join(sampleDocsDir, "irs-w2-2025.pdf"));
+    await expect(status).toHaveText("1 docs stored locally.");
+    const snapshot = () => page.evaluate(async () => {
+      const saved = localStorage.getItem("tax-engine.return-workspaces.v1");
+      const db = await new Promise<IDBDatabase>((resolve, reject) => {
+        const request = indexedDB.open("tax-engine-workspace-document-cache", 1);
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+      try {
+        const rows = await new Promise<Array<{ fileName: string; file: Blob }>>((resolve, reject) => {
+          const request = db.transaction("workspace-document-files").objectStore("workspace-document-files").getAll();
+          request.onsuccess = () => resolve(request.result);
+          request.onerror = () => reject(request.error);
+        });
+        return { saved, files: await Promise.all(rows.map(async row => ({ name: row.fileName, bytes: (await row.file.arrayBuffer()).byteLength }))) };
+      } finally { db.close(); }
+    });
+    const before = await snapshot();
+    expect(before.files).toHaveLength(1);
+    await page.evaluate(fault => {
+      if (fault === "indexed-db") {
+        const transaction = IDBDatabase.prototype.transaction;
+        IDBDatabase.prototype.transaction = function (names, mode, options) {
+          const pending = transaction.call(this, names, mode, options);
+          if (this.name === "tax-engine-workspace-document-cache" && mode === "readwrite") {
+            queueMicrotask(() => pending.abort());
+          }
+          return pending;
+        };
+      } else {
+        const setItem = Storage.prototype.setItem;
+        Storage.prototype.setItem = function (name, value) {
+          if (name === "tax-engine.return-workspaces.v1") throw new DOMException("Full for this upload", "QuotaExceededError");
+          setItem.call(this, name, value);
+        };
+      }
+    }, fault);
+    const selection = [path.join(sampleDocsDir, "irs-1099-int-2024.pdf"), path.join(sampleDocsDir, "irs-w2-2025.pdf")];
+    await upload.setInputFiles(selection);
+    await expect(status).toHaveText(message);
+    await page.reload();
+    await expect(page.getByRole("listitem").filter({ hasText: /^1 uploaded document stored locally$/ })).toBeVisible();
+    expect(await snapshot()).toEqual(before);
+    await upload.setInputFiles(selection);
+    await expect(status).toHaveText("3 docs stored locally.");
+    await page.reload();
+    await expect(page.getByRole("listitem").filter({ hasText: /^3 uploaded documents stored locally$/ })).toBeVisible();
+    expect((await snapshot()).files).toHaveLength(3);
+  });
+}
+
 test("local workspace stores uploaded official IRS fixtures across reloads", async ({ page }, testInfo) => {
   await page.goto("/");
   await enableAdvancedMode(page);

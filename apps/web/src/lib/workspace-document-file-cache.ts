@@ -40,17 +40,23 @@ function openCacheDatabase(): Promise<IDBDatabase | null> {
   }
 
   return new Promise((resolve) => {
-    const request = factory.open(DB_NAME, 1);
+    let request: IDBOpenDBRequest;
+    try { request = factory.open(DB_NAME, 1); }
+    catch { resolve(null); return; }
 
     request.onerror = () => resolve(null);
-    request.onblocked = () => resolve(null);
+    let blocked = false;
+    request.onblocked = () => { blocked = true; resolve(null); };
     request.onupgradeneeded = () => {
       const database = request.result;
       if (!database.objectStoreNames.contains(STORE_NAME)) {
         database.createObjectStore(STORE_NAME, { keyPath: "key" });
       }
     };
-    request.onsuccess = () => resolve(request.result);
+    request.onsuccess = () => {
+      if (blocked) request.result.close();
+      else resolve(request.result);
+    };
   });
 }
 
@@ -201,28 +207,56 @@ export async function hasCachedWorkspaceDocumentFile(
   return (await getCachedWorkspaceDocumentFile(workspaceId, documentId)) !== null;
 }
 
-/** Recovery must not report success after falling back to an in-memory cache. */
-export async function restoreWorkspaceDocumentFiles(
+async function writeDurableWorkspaceDocumentFiles(
   workspaceId: string,
   uploads: WorkspaceDocumentFileUpload[],
+  mode: "restore" | "upload",
 ) {
   if (uploads.length === 0) return;
   const database = await openCacheDatabase();
-  if (!database) throw new Error("Durable document storage is unavailable. Recovery was not saved.");
+  const uploadFailure = "Could not save the original documents in this browser. Keep your files and try again.";
+  if (!database) throw new Error(mode === "upload" ? uploadFailure : "Durable document storage is unavailable. Recovery was not saved.");
   const records = uploads.map((upload): CachedWorkspaceDocumentFileRecord => ({
     key: buildCacheKey(workspaceId, upload.documentId), workspaceId,
     documentId: upload.documentId, fileName: upload.file.name,
-    mediaType: upload.file.type, uploadedAt: upload.uploadedAt ?? new Date().toISOString(),
+    mediaType: mode === "upload" ? (upload.file.type.trim() || "application/pdf") : upload.file.type,
+    uploadedAt: upload.uploadedAt ?? new Date().toISOString(),
     lastModified: upload.file.lastModified, file: upload.file,
   }));
-  await new Promise<void>((resolve, reject) => {
-    const transaction = database.transaction(STORE_NAME, "readwrite");
-    transaction.oncomplete = () => { database.close(); resolve(); };
-    transaction.onerror = () => { database.close(); reject(new Error("Document recovery failed. Your existing returns were not changed.")); };
-    transaction.onabort = () => { database.close(); reject(new Error("Document recovery was interrupted.")); };
-    for (const record of records) transaction.objectStore(STORE_NAME).put(record);
-  });
+  try {
+    await new Promise<void>((resolve, reject) => {
+      const transaction = database.transaction(STORE_NAME, "readwrite");
+      transaction.oncomplete = () => resolve();
+      transaction.onabort = () => reject(transaction.error
+        ? new Error("Document recovery failed. Your existing returns were not changed.")
+        : new Error("Document recovery was interrupted."));
+      try {
+        const store = transaction.objectStore(STORE_NAME);
+        for (const record of records) {
+          if (mode === "upload") store.add(record);
+          else store.put(record);
+        }
+      } catch {
+        transaction.abort();
+      }
+    });
+  } catch (error) {
+    if (mode === "upload") throw new Error(uploadFailure, { cause: error });
+    throw error;
+  } finally {
+    database.close();
+  }
   for (const record of records) memoryCache.set(record.key, record);
+}
+
+/** Add a new batch atomically, without replacing an original another tab saved. */
+export function storeNewWorkspaceDocumentFiles(workspaceId: string, uploads: WorkspaceDocumentFileUpload[]) {
+  return writeDurableWorkspaceDocumentFiles(workspaceId, uploads, "upload");
+}
+
+/** Recovery must not report success after falling back to an in-memory cache. */
+export function restoreWorkspaceDocumentFiles(workspaceId: string, uploads: WorkspaceDocumentFileUpload[]) {
+  return writeDurableWorkspaceDocumentFiles(workspaceId, uploads, "restore");
 }
 
 function selectedCacheKeys(

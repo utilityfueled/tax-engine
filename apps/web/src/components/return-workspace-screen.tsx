@@ -67,8 +67,8 @@ import {
   clearWorkspaceGuidedData,
   confirmWorkspaceDocumentTaxYear,
   getFutureYearSampleUploadMessage,
-  ingestFiles,
   ingestFilesIntoWorkspace,
+  ingestLocalDocumentFiles,
   removeDocument,
   removeDocumentFromWorkspace,
   reopenWorkspaceInterviewQuestion,
@@ -715,28 +715,14 @@ export function ReturnWorkspaceScreen({
     }
 
     try {
-      const nextWorkspace = ingestFiles(requireBrowserStorage(), workspaceId, preparedFiles);
-      const appendedDocuments = nextWorkspace.documents.slice(-files.length);
-      await cacheWorkspaceDocumentFiles(workspaceId, appendedDocuments.map((document, index) => {
-        const file = files[index];
-
-        if (!file) {
-          throw new Error("Upload state lost track of a selected file.");
-        }
-
-        return {
-          documentId: document.id,
-          uploadedAt: document.uploadedAt,
-          file,
-        };
-      }));
+      const nextWorkspace = await ingestLocalDocumentFiles(requireBrowserStorage(), workspaceId, preparedFiles, files);
       const message = `${nextWorkspace.summary.totalDocuments} docs stored locally.`;
 
       setWorkspace(nextWorkspace);
       setStorageMessage(message);
       return message;
     } catch (error) {
-      const message = "Could not save the uploaded document. Please try again.";
+      const message = resolveUiErrorMessage(error, "Could not save the uploaded document. Please try again.");
       setStorageMessage(message);
       throw new Error(message, { cause: error });
     }
