@@ -23702,6 +23702,23 @@
     "humanTaxReviewComplete": false,
     "filingQualified": false
   },
+  "nov13StaleLocalGuidedEditor": {
+    "commit": "95d7da8e80dc854628e8ee43e9b64b6a60b8f78c",
+    "tree": "7578ca464d4537fad8371eed7320fcbd190dcceb",
+    "beforeFixBrowserFailures": 3,
+    "beforeFixBrowserReportSha256": "a9642aa1798efe12833283057cd016f98fc958ed8f42a15177fa4a012040a671",
+    "focusedPassed": 179,
+    "focusedSha256": "80377c21bda11a1ec19b241dbd7fbd95c21af014753c0141246ea2687fc64a4f",
+    "chromiumPassed": 33,
+    "chromiumSkipped": 0,
+    "chromiumRetries": 0,
+    "chromiumReportSha256": "9ebebbcd963bc9472e505898107bc41542a8cee1e77903822471aa09c179cc85",
+    "specReferences": 8828,
+    "browserCollectionCases": 610,
+    "hostedOnlySkips": 5,
+    "diagnosticCases": 14,
+    "auditSha256": "fffbb7819b7c0168cd5a96453e2089d3e32f5fe65019fa7d629322dfa1f823b3"
+  },
   "nov12HostedCreditSettlement": {
     "previewReceiptCommit": "d39209dec302d249a5f01fe8baf23cc4ca2130f8",
     "settlementCommit": "8357ed9929766a8e5ed0ac7c45321cdccd44d35a",

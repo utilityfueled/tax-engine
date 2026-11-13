@@ -4,6 +4,16 @@ Current source, verification and remaining work are summarized in the
 [current continuation](upgrade-2026-current-status.md). Historical results
 below apply to their named revisions.
 
+- November 13: `95d7da8e` binds local guided answers and mode changes to the
+  current return and reset event. Guided projection uses the current saved
+  originals. The earlier production build restored deleted return facts,
+  restored reset document metadata, and dropped a PDF added in another tab.
+  All three controls and the complete 33-case production Chromium cohort
+  passed on the successor, with 179 focused checks, Web types, build,
+  inventory and 8,828 spec references. Scoped lint reported zero errors and
+  three existing warnings. The 610-case audit preserves the five hosted-only
+  skips, 14 fixed diagnostics, eight batches and existing request ceilings.
+
 - November 13: `d10cc135` applies the enacted professional wagering
   deduction to one documented 2026 Schedule C activity. A separate
   Decimal comparison reproduces the 90% combined-cost limit, actual

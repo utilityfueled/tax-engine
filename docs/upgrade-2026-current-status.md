@@ -2,6 +2,13 @@
 
 ## November 13 on `main`
 
+`95d7da8e` rejects guided writes from a tab opened before a local return was
+deleted or reset. Switching to advanced mode preserves original documents
+added by another tab. The earlier production build failed all three controls.
+The successor passed 179 focused checks and 33 production Chromium cases with
+zero retries or skips. Simultaneous answer writes within the same reset
+generation remain subject to Web Storage scheduling.
+
 Exact `c94971cd` passed all 12 archived local commands. Unit and coverage
 each passed 27,558 tests in 1,988 files, with 87.76% branch coverage against
 85%. Managed Chromium passed 589 cases and skipped five hosted-only tests.

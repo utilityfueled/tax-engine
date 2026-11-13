@@ -50,6 +50,9 @@ below retain their original evidence boundaries.
 - [x] Stop a stale local document-year edit from recreating a deleted return
   in `12dd9a10`. Verify the failure on the earlier build and the preserved
   deletion on the successor in Chromium.
+- [x] Keep stale guided writes from restoring deleted or reset return data
+  and merge guided changes with the current original list in `95d7da8e`.
+  Verify all three failures and the 33-case successor cohort in Chromium.
 - [x] Record the `b76cf211` archived browser preflight failure and repair its
   tax-table README source binding in `6a38aadd`.
 - [x] Complete the 12 archived `656fb5f8` checks. Unit and coverage each
