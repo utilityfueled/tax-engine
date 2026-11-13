@@ -23087,5 +23087,43 @@
     "ledger": "docs/upgrade-2026-nonitemizer-prior-only-verification.md",
     "readiness": false,
     "conditionalNativeActivated": false
+  },
+  "nov12MergedMainBaseline": {
+    "branch": "main",
+    "mergeCommit": "5924888957445a1e3791b34eb7116a9ae62d8e38",
+    "verifiedApplicationCommit": "3024b8487162b8daba793fe70d5716e28793e87c",
+    "sameTree": "1e9fc16a158c22fde080d48cb068937f3fe8b339",
+    "localEvidence": "nov06-combined-canonical-successor-global",
+    "localChecksPassed": 12,
+    "unitTestsPassed": 27334,
+    "branchCoveragePercent": "87.71",
+    "branchThresholdPercent": "85",
+    "browserTestsPassed": 587,
+    "existingHostedBrowserSkips": 5,
+    "remoteRuns": {
+      "ci": { "id": 42292813045, "coverage": "passed", "unit": "failed" },
+      "web": { "id": 42292813115, "managedBrowser": "passed", "containerBrowser": "failed" },
+      "docker": { "id": 42292813072, "build": "passed" }
+    },
+    "productionDeployFromMergeObserved": true,
+    "native032bConditionalActivated": false,
+    "releaseReady": false
+  },
+  "nov12EducationPreparedReturnIntegrity": {
+    "sourceBaseline": "5924888957445a1e3791b34eb7116a9ae62d8e38",
+    "baselinePassed": 6,
+    "baselineExpectedFailures": 14,
+    "focusedPassed": 20,
+    "affectedPassed": 91,
+    "affectedFiles": 28,
+    "staticChecksPassed": 8,
+    "specLines": 8673,
+    "independentFocusedPassed": 20,
+    "independentActualPdfTestsPassed": 5,
+    "independentManifestSha256": "a999df85f3f8d39f87a5a7a528848f6848ffdc23606fe8db5dbecadbe9e1021d",
+    "evidence": "nov06-education-full-result-integrity-main",
+    "ledger": "docs/upgrade-education-prepared-return-integrity.md",
+    "independentHumanReview": false,
+    "releaseReady": false
   }
 }

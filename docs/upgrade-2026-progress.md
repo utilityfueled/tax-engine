@@ -3920,3 +3920,29 @@ unchanged taxable10000. Focused15/4, types, spec8665, inventory and strict lint
 pass; two new-test access-path failures remain retained. See [the verification
 ledger](upgrade-2026-nonitemizer-prior-only-verification.md). Coverage was
 interrupted and browser never started; full successor/distribution gates remain.
+
+### November 12 · merged baseline and prepared education returns
+
+The user merged PR #13. The checkout now uses `main` at merge `59248889`,
+with the same tree as `3024b848`. All 12 combined local checks passed on that
+tree, including 27,334 unit and coverage tests, 87.71% branch coverage against
+the 85% threshold, and 587 browser tests with five existing hosted skips. On
+the merge commit GitHub coverage, managed browser and Docker build passed.
+The separate unit and runtime-container browser jobs failed and remain open.
+See [CI](https://github.com/utilityfueled/tax-engine/actions/runs/42292813045),
+[Web](https://github.com/utilityfueled/tax-engine/actions/runs/42292813115) and
+[Docker](https://github.com/utilityfueled/tax-engine/actions/runs/42292813072).
+Vercel recorded a production deployment from the merge SHA. Local work is
+committed to `main`. A push requires authorization for that production effect
+or a verified change to automatic production deployment.
+
+Prepared prepaid-tuition, academic-period room-and-board and annual-cash
+PDF paths now reject changed original return sources and changed federal
+results before template access. The spec-first adoption recorded six baseline
+passes and 14 expected failures, then 20 focused and 91 affected passes, all
+three type checks, 8,673 validated spec references, inventory, strict scoped
+lint and engine build. Independent software review passed 20 focused and
+five actual PDF checks. See [the education ledger](upgrade-education-prepared-return-integrity.md).
+The conditional `032b329d` native rehearsal never started after that source's
+unit failure. Final-form, human, current-source staging and native release
+qualification remain open.

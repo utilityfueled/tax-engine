@@ -1409,6 +1409,26 @@
       ]
     },
     {
+      "key": "federal/education-prepared-return-integrity",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.irs.gov/publications/p970",
+      "specPath": "spec/federal/education-prepared-return-integrity.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/education-review-full-result-binding",
       "jurisdiction": "federal",
       "taxYear": 2026,

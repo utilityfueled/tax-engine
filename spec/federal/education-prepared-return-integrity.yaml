@@ -1,0 +1,52 @@
+form: "Prepared education return integrity"
+fullName: "Complete nonannual original and federal-result binding before PDF access"
+taxYear: 2025
+irsReference: "https://www.irs.gov/publications/p970"
+notes: |
+  Engineering integrity for already supported prepaid tuition, actual academic
+  room-and-board periods, and annual cash-distribution source cohorts. This adds
+  no tax formula, allocation method, qualification or filing readiness. IRS
+  Publication 970 (2025), chapter 7, Taxable Earnings, supplies the unchanged
+  AQEE proportion used to derive the literal positive controls. Retrieved
+  November 6, 2026. The existing annual-interest complete-result and deduction
+  checks remain unchanged, as do every year, original-source and PDF gate.
+  A whole-return consumer must bind the complete original input and every
+  federal result field, not just the Form1099-Q subresult. Separately attached
+  stateReturns remain under their state-owned source/output gates and are the
+  only excluded federal-result field. This check does not validate state tax.
+  Low-level education-only source/reference consumers retain their narrower
+  API and need no invented complete-return argument. Private context tokens
+  expose no original, digest, identifier or additional serialized property.
+lines:
+  - line: "literal-originals"
+    description: "Preserve actual source-derived tax and both exact render representations"
+    formula: "Prepaid G4000 E800 tuition4000 assistance1000 gives AQEE3000, exclusion600, taxable200 and wage-only AGI50200. Actual period G10000 E2000 receipts10000 allowance6000 gives taxable800 and AGI50800. Two cash originals G20000 E5000 with AQEE6000 give taxable3500 and AGI53500. Complete originals and exact existing structured identifier redaction pass; low-level source/reference APIs remain usable without a full-result argument."
+    testRef: "tests/pdf/education-prepared-return-integrity.test.ts::preserves literal originals and education-only APIs: %s"
+  - line: "all-entrypoints-before-io"
+    description: "Reject a forged federal AGI before either PDF consumer touches templates or output"
+    formula: "Holding every source and education subresult unchanged, adding one dollar to AGI is rejected by fillReturn and direct fillForm5329, with either an original prepared token or fresh auto-preparation from complete originals. Exact redacted copies use their original token when actual identity is required to prepare. The prepaid control changes only50200 to50201. Absent templates must not supply the rejection and no output directory is created."
+    testRef: "tests/pdf/education-prepared-return-integrity.test.ts::rejects forged AGI before template access: %s %s"
+  - line: "whole-federal-result"
+    description: "Bind federal payments, refund, carryforward and audit beyond education"
+    formula: "A changed withholding, refund, carryforward or federal audit must reject against the exact private result even when Form1099-Q is unchanged. No client-supplied result proves itself."
+    testRef: "tests/pdf/education-prepared-return-integrity.test.ts::rejects other altered federal fields: %s"
+  - line: "whole-original-return"
+    description: "Preserve original noneducation source records, including their exact representation"
+    formula: "Changing original wages or only their lexical representation with the old token and result rejects. Complete input digests are derived before redaction, not manufactured from entered tax totals."
+    testRef: "tests/pdf/education-prepared-return-integrity.test.ts::rejects stale complete original sources: %s"
+  - line: "required-whole-result"
+    description: "Do not silently accept a missing complete result at a whole-return consumer"
+    formula: "A prepared nonannual whole-return assertion requires the complete federal result. Only the distinct low-level education-only API permits its absence. Existing annual-interest missing-result denial is preserved."
+    testRef: "tests/pdf/education-prepared-return-integrity.test.ts::requires the full result only at whole-return assertions"
+  - line: "state-owned-boundary"
+    description: "Keep separately attached state output outside this federal proof"
+    formula: "Attaching a stateReturns envelope does not invalidate an unchanged canonical federal result. A changed federal AGI still rejects with that envelope. This is only a federal boundary control, not state qualification or permission to bypass state-owned PDF guards."
+    testRef: "tests/pdf/education-prepared-return-integrity.test.ts::preserves the separate state envelope while binding every federal field"
+  - line: "retained-context-boundaries"
+    description: "Preserve actual context ownership and the existing annual-interest proof"
+    formula: "A different original taxpayer token rejects; annual-interest original and redacted results still pass and missing results still reject. An ordinary return without prepared education sources does not acquire a new education gate."
+    testRef: "tests/pdf/education-prepared-return-integrity.test.ts::preserves annual-interest and unrelated-return context boundaries"
+  - line: "missing-original-identity"
+    description: "Never reconstruct required actual recipient identity from a redacted copy"
+    formula: "Prepaid and academic-period in-kind originals require actual recipient identity to prepare a new context. A redacted input without its original token continues to deny before template I/O, rather than inventing source identity or relaxing the existing validator."
+    testRef: "tests/pdf/education-prepared-return-integrity.test.ts::retains missing-identity denial for fresh redacted in-kind input: %s"

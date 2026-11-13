@@ -1,5 +1,6 @@
 /** Private original education evidence survives render-only identity removal.
- * Specs: form-1099-q-in-kind-room-board.yaml; form-1099-q-in-kind-assistance.yaml; education-review-full-result-binding.yaml. */
+ * Specs: form-1099-q-in-kind-room-board.yaml; form-1099-q-in-kind-assistance.yaml;
+ * education-review-full-result-binding.yaml; education-prepared-return-integrity.yaml. */
 import { createHash } from 'node:crypto';
 import type Decimal from 'decimal.js';
 import { calculateFederalTax } from '@/engine/federal.js';
@@ -13,8 +14,17 @@ export interface PreparedEducationReview { readonly [brand]: true }
 const contexts = new WeakMap<PreparedEducationReview, {
   original: string; redacted: string; calculation: string; taxpayer: string; redactedTaxpayer: string;
   annualLoanInterest?: { original: string; redacted: string; deduction: string; resultOriginal: string; resultRedacted: string };
+  nonAnnualReturn?: { original: string; redacted: string; resultOriginal: string; resultRedacted: string };
 }>();
 const digest = (value: unknown) => createHash('sha256').update(JSON.stringify(value)).digest('hex');
+function federalResultDigest(result: TaxReturnResult): string {
+  // The workspace attaches state returns after federal calculation. Their own
+  // source/output contexts remain responsible for them. Preserve every federal
+  // value and audit here, excluding only that separately attached state object.
+  const federalResult = { ...result };
+  delete federalResult.stateReturns;
+  return digest(federalResult);
+}
 export function hasInKindEducationReviewSources(input: TaxYearInput): boolean {
   return (input.form1099Q ?? []).some(form => form.distributionMedium === 'in_kind_prepaid_tuition')
     || input.qualifiedEducationExpenses?.sourceFacts?.roomBoardPeriods !== undefined
@@ -34,9 +44,14 @@ export function prepareEducationReview(input: TaxYearInput): PreparedEducationRe
     ? { original: digest(input), redacted: digest(redactReviewIdentifiers(input)),
       deduction: calculated.schedule1?.studentLoanInterest.toFixed() ?? '0',
       resultOriginal: digest(calculated), resultRedacted: digest(redactReviewIdentifiers(calculated)) } : undefined;
+  const nonAnnualReturn = annualLoanInterest ? undefined : {
+    original: digest(input), redacted: digest(redactReviewIdentifiers(input)),
+    resultOriginal: federalResultDigest(calculated),
+    resultRedacted: federalResultDigest(redactReviewIdentifiers(calculated)),
+  };
   const token: PreparedEducationReview = Object.freeze({ [brand]: true as const });
   contexts.set(token, { original: digest(sources), redacted: digest(redactReviewIdentifiers(sources)), calculation: digest(redactReviewIdentifiers(result)),
-    taxpayer: digest(input.taxpayer), redactedTaxpayer: digest(redactReviewIdentifiers(input.taxpayer)), annualLoanInterest });
+    taxpayer: digest(input.taxpayer), redactedTaxpayer: digest(redactReviewIdentifiers(input.taxpayer)), annualLoanInterest, nonAnnualReturn });
   return token;
 }
 /** Only validates; no original identifier or its digest leaves this private map. */
@@ -57,6 +72,14 @@ export function assertPreparedEducationReturn(input: TaxYearInput, result: Form1
   const taxpayer = digest(input.taxpayer);
   if (!context || (taxpayer !== context.taxpayer && taxpayer !== context.redactedTaxpayer)) {
     throw new Error('Education review rendering taxpayer identity and filing facts are stale or conflicting');
+  }
+  if (context.nonAnnualReturn) {
+    const sources = digest(input);
+    if (sources !== context.nonAnnualReturn.original && sources !== context.nonAnnualReturn.redacted)
+      throw new Error('Education review original return sources are stale or conflicting');
+    const fullCalculation = fullResult && federalResultDigest(fullResult);
+    if (fullCalculation !== context.nonAnnualReturn.resultOriginal && fullCalculation !== context.nonAnnualReturn.resultRedacted)
+      throw new Error('Education review full federal result does not reconcile');
   }
   if (context.annualLoanInterest) {
     const sources = digest(input);
