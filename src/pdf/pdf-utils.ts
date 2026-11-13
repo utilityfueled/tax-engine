@@ -9,6 +9,7 @@ import { readFile, writeFile, mkdir } from "fs/promises";
 import { basename, dirname } from "path";
 import Decimal from "decimal.js";
 import { assertReviewTemplateBytes } from "./template-registry.js";
+import { removeTrustedTemplateLegacyFormData } from "./trusted-review-template-cleanup.js";
 import { assertPdfExportAllowed, markReviewPdf } from "./export-policy.js";
 
 const PDF_LIB_XFA_WARNING =
@@ -184,6 +185,7 @@ export async function loadReviewTemplate(pdfPath: string, taxYear: number): Prom
   const bytes = await readFile(pdfPath);
   assertReviewTemplateBytes(basename(pdfPath), bytes, taxYear);
   const doc = await loadPdfDocumentQuietly(bytes);
+  removeTrustedTemplateLegacyFormData(doc);
   await markReviewPdf(doc);
   return doc;
 }

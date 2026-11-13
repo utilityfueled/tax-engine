@@ -9755,6 +9755,26 @@
       ]
     },
     {
+      "key": "federal/pdf-trusted-review-template-cleanup",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "forms/blank/2025/f1040.pdf; src/pdf/template-registry.ts",
+      "specPath": "spec/federal/pdf-trusted-review-template-cleanup.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/personal-credit-ordering",
       "jurisdiction": "federal",
       "taxYear": null,

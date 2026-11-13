@@ -1,0 +1,35 @@
+form: "Trusted review PDF template cleanup"
+fullName: "Remove stale Reader rights and detached XFA packets from registered review copies"
+taxYear: 2025
+reference: "forms/blank/2025/f1040.pdf; src/pdf/template-registry.ts"
+notes: |
+  This is a review copy presentation and privacy contract. Verify registered
+  template bytes before cleanup. Preserve the source and the general PDF load
+  and save APIs. Filing and tax calculation are outside this contract.
+lines:
+  - line: "standalone"
+    description: "Scrub the official Form 1040 in both standalone output modes"
+    formula: >-
+      Before pdf-lib can detach the XFA entry, remove the referenced isolated
+      packet objects. Remove the obsolete Reader rights signature and its
+      signature-only flag. Keep interactive appearances and populated fields,
+      or preserve their flattened rendering, with a review notice on each page.
+    testRef: "tests/pdf/trusted-review-template-cleanup.test.ts::scrubs official standalone review outputs and leaves the original unchanged"
+  - line: "retained-references"
+    description: "Preserve shared objects and legitimate signature structures"
+    formula: >-
+      Delete only indirect objects named by the removed XFA and Reader rights
+      entries that have no surviving references. Keep shared packet streams,
+      other permissions, signature fields, and unrelated form and page content.
+    testRef: "tests/pdf/trusted-review-template-cleanup.test.ts::preserves references shared by surviving objects and other signature structures"
+  - line: "packaged"
+    description: "Preserve the hosted-style merged review download"
+    formula: >-
+      Reopen an actual 2025 workspace review download with the federal Form
+      1040. Keep review notices and form values and exclude source scripts,
+      stale permissions, and original identifiers.
+    testRef: "tests/pdf/trusted-review-template-cleanup.test.ts::keeps the actual workspace packet clean and redacted"
+  - line: "untrusted-load"
+    description: "Keep arbitrary input outside trusted cleanup"
+    formula: "Require original, unchanged bytes for the trusted loader. Keep the general blank loader nonmutating."
+    testRef: "tests/pdf/trusted-review-template-cleanup.test.ts::limits cleanup to the verified template loader"
