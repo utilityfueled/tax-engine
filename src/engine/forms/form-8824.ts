@@ -3,7 +3,7 @@
  * Spec: spec/federal/form-8824.yaml
  *
  * Computes Part III (Lines 12–25): realized gain, recognized gain
- * (limited by boot), depreciation recapture allocation, deferred gain,
+ * before and after depreciation recapture, deferred gain,
  * and replacement property basis.
  *
  * Post-TCJA (2018+), §1031 applies only to real property.
@@ -17,7 +17,7 @@
 import Decimal from "decimal.js";
 import type { Form8824Input } from "@/models/inputs.js";
 import type { CalculatedLine } from "@/models/outputs.js";
-import { d, min, zeroFloor } from "@/utils/decimal.js";
+import { d, max, min, zeroFloor } from "@/utils/decimal.js";
 import { AuditTrail } from "@/utils/audit.js";
 
 const ZERO = new Decimal(0);
@@ -169,12 +169,28 @@ export function calculateForm8824(
     { "Boot (Line 15)": line15, "Realized gain (Line 19)": line19 });
 
   // ── Line 21: Ordinary income under depreciation recapture ──
-  // min(§1250 recapture, boot-limited gain)
-  const depreciationRecapture = d(input.depreciationRecapture);
-  const line21 = min(depreciationRecapture, line20);
+  const sources = input.recaptureSources;
+  let saleRecapture = d(input.depreciationRecapture);
+  let recognitionLimit = line20;
+  let method = "Legacy boot limit";
+  if (sources?.kind === "section1245") {
+    saleRecapture = d(sources.saleRecapture);
+    recognitionLimit = line20.plus(sources.nonSection1245ReplacementFmv);
+    method = "Section 1245(b)(4): Line 20 plus non-Section 1245 like-kind FMV";
+  } else if (sources?.kind === "section1250") {
+    saleRecapture = d(sources.saleRecapture);
+    recognitionLimit = max(line20, saleRecapture.minus(sources.section1250ReplacementFmv));
+    method = "Section 1250(d)(4): greater of Line 20 or sale recapture less Section 1250 replacement FMV";
+  }
+  const line21 = min(saleRecapture, min(zeroFloor(line19), recognitionLimit));
   audit.record(label, "21", "Ordinary income under depreciation recapture", line21,
-    `min(recapture ${depreciationRecapture}, Line 20 ${line20})`,
-    { "Depreciation recapture": depreciationRecapture, "Boot-limited gain (Line 20)": line20 });
+    `${method}. Lesser of sale recapture, positive realized gain and recognition limit`,
+    {
+      "Ordinary recapture if sold": saleRecapture,
+      "Realized gain (Line 19)": line19,
+      "Boot-limited gain (Line 20)": line20,
+      "Recapture recognition limit": recognitionLimit,
+    });
 
   // ── Line 22: Capital gain portion ──
   const line22 = zeroFloor(line20.minus(line21));

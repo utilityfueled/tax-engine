@@ -5334,6 +5334,12 @@ export type Form8915FInput = z.infer<typeof Form8915FSchema>;
  *
  * Ref: IRS Form 8824 Instructions (2025); IRC §1031; Pub 544.
  */
+const form8824RecaptureConfirmation = {
+  sourceReference: z.string().trim().min(1).max(240),
+  factsConfirmed: z.literal(true),
+  saleRecapture: nonnegativeDollarsAndCents,
+};
+
 export const Form8824Schema = z.object({
   /** Description of relinquished property */
   description: z.string().default("Like-kind real property exchange"),
@@ -5363,10 +5369,38 @@ export const Form8824Schema = z.object({
   fmvLikeKindPropertyReceived: decimal,
   /** Adjusted basis of like-kind property given up (Line 18) */
   adjustedBasisLikeKindPropertyGivenUp: decimal,
-  /** §1250 depreciation recapture amount from Form 4797 Part III */
+  /** Historical single recapture amount, treated as limited to ordinary boot. */
   depreciationRecapture: optionalDecimal,
+  /** Confirmed ordinary recapture if sold, paired with actual replacement FMV by class. */
+  recaptureSources: z.discriminatedUnion("kind", [
+    z.strictObject({
+      ...form8824RecaptureConfirmation,
+      kind: z.literal("section1245"),
+      nonSection1245ReplacementFmv: nonnegativeDollarsAndCents,
+    }),
+    z.strictObject({
+      ...form8824RecaptureConfirmation,
+      kind: z.literal("section1250"),
+      section1250ReplacementFmv: nonnegativeDollarsAndCents,
+    }),
+  ]).optional(),
   /** Whether this is a related party exchange (IRC §1031(f)) */
   isRelatedParty: z.boolean().default(false),
+}).superRefine((exchange, context) => {
+  const sources = exchange.recaptureSources;
+  if (!sources) return;
+  const replacement = sources.kind === "section1245"
+    ? sources.nonSection1245ReplacementFmv
+    : sources.section1250ReplacementFmv;
+  const total = nonnegativeDollarsAndCents.safeParse(exchange.fmvLikeKindPropertyReceived);
+  if (!total.success) {
+    context.addIssue({ code: "custom", path: ["fmvLikeKindPropertyReceived"], message: "Enter the total like-kind FMV in dollars and cents." });
+  } else if (nonnegativeDollarsAndCents.safeParse(replacement).success && d(replacement).gt(d(total.data))) {
+    context.addIssue({ code: "custom", path: ["recaptureSources"], message: "Replacement class FMV exceeds the total like-kind FMV." });
+  }
+  if (decimal.safeParse(exchange.depreciationRecapture).success && !d(exchange.depreciationRecapture).isZero()) {
+    context.addIssue({ code: "custom", path: ["depreciationRecapture"], message: "Use either the class-specific recapture facts or the legacy amount." });
+  }
 });
 export type Form8824Input = z.infer<typeof Form8824Schema>;
 const IllinoisScheduleMRecaptureOutOfStateDetailSchema = z.object({

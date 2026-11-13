@@ -6,7 +6,7 @@
 import { describe, it, expect } from "vitest";
 import Decimal from "decimal.js";
 import { calculateFederalTax } from "@/engine/federal.js";
-import type { TaxYearInput } from "@/models/inputs.js";
+import { Form8824Schema, type TaxYearInput } from "@/models/inputs.js";
 import { simpleW2Fixture, complexMFJFixture } from "../fixtures/simple-w2.js";
 import { actualPartialPersonalCodInput } from "../fixtures/cod-partial-personal.js";
 import { partialPersonalLegacyNolZeroPoolInput } from "../fixtures/cod-zero-minimum-tax-credit-bound.js";
@@ -2414,6 +2414,39 @@ describe("Form 8824 federal integration", () => {
     const result = calculateFederalTax({ ...simpleW2Fixture, form8824: [exchange] });
     expect(result.allLines.find(line => line.form === "Sched D" && line.line === "15")?.value.toFixed(2)).toBe("30000.00");
     expect(result.allLines.find(line => line.form === "1040" && line.line === "7")?.value.toFixed(2)).toBe("30000.00");
+  });
+
+  it("routes typed Form 8824 recapture above line 20 once through ordinary income", () => {
+    const exchange = Form8824Schema.parse({
+      fmvLikeKindPropertyReceived: "80000",
+      adjustedBasisLikeKindPropertyGivenUp: "20000",
+      recaptureSources: {
+        kind: "section1245",
+        saleRecapture: "10000.01",
+        nonSection1245ReplacementFmv: "80000",
+        sourceReference: "Synthetic depreciation worksheet and property appraisal",
+        factsConfirmed: true,
+      },
+    });
+    const result = calculateFederalTax({
+      ...simpleW2Fixture,
+      form8824: [exchange],
+      form8960Sources: {
+        sourceTaxYear: 2025,
+        sourceReference: "Synthetic passive exchange disposition worksheet",
+        sourceFactsConfirmed: true,
+        dispositions: {
+          regularCapitalGainOrLoss: "0",
+          regularOrdinaryGainOrLoss: "10000.01",
+          excludedGainOrLossAdjustment: "0",
+          passthroughAdjustment: "0",
+        },
+      },
+    });
+    expect(result.form8824?.totalOrdinaryIncome.toFixed(2)).toBe("10000.01");
+    expect(result.form8824?.totalSection1231RecognizedGainOrLoss.toFixed(2)).toBe("0.00");
+    expect(result.allLines.find(line => line.form === "Sched 1" && line.line === "4")?.value.toFixed(2)).toBe("10000.01");
+    expect(result.allLines.find(line => line.form === "1040" && line.line === "8")?.value.toFixed(2)).toBe("10000.01");
   });
 
   it("Form 1040 Line 8 and Schedule 1 - Form 8824 line 21 ordinary recapture flows through Schedule 1 Line 4", () => {

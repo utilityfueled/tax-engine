@@ -134,19 +134,27 @@ lines:
 
   - line: "21"
     description: Ordinary income under depreciation recapture rules
-    formula: "min(depreciationRecapture, Line 20)"
+    formula: |
+      Explicit §1245 real-property method:
+      min(confirmed hypothetical-sale recapture, max(Line 19, 0), Line 20 + FMV of non-§1245 like-kind property received).
+      Explicit §1250 method:
+      min(confirmed hypothetical-sale recapture, max(Line 19, 0), max(Line 20, hypothetical-sale recapture - FMV of §1250 property received)).
+      Historical single-amount input without class or replacement facts retains its boot-limited calculation.
     notes: |
-      §1250 recapture for real property: the lesser of the recapture amount
-      (from Form 4797 Part III) or the boot-limited gain. This portion is
-      ordinary income; the remainder of Line 20 is capital gain.
-      For post-1986 real property using straight-line depreciation, §1250
-      recapture is typically zero (unrecaptured §1250 gain at 25% rate applies
-      instead, handled through the QDCG worksheet). The 2025 Form 8824
-      instructions report this amount on Form 4797 as ordinary income even
-      when the remaining recognized exchange gain follows the capital-asset
-      route.
-    reference: "Form 8824 Line 21; IRC §1250"
+      Use a confirmed hypothetical-sale ordinary recapture amount from the property
+      schedule and the corresponding actual category of replacement property.
+      Accept a single explicitly reported recapture class and preserve confirmed zero.
+      Reject duplicate positive legacy recapture or a replacement subset above the
+      total like-kind FMV. Line 21 may exceed Line 20 but not positive realized gain.
+      Mixed relinquished recapture classes, separate asset allocations and installment
+      recapture require their own methods. This does not compute unrecaptured §1250 gain.
+    reference: "2025 and 2026 Instructions for Form 8824 Line 21; IRC §1245(b)(4), §1250(d)(4)"
     testRef: "tests/engine/federal.test.ts::Form 1040 Line 8 and Schedule 1 - Form 8824 line 21 ordinary recapture flows through Schedule 1 Line 4"
+    testRefs:
+      - "tests/engine/forms/form-8824.test.ts::matches IRS Taylor section 1245 recapture above line 20"
+      - "tests/engine/forms/form-8824.test.ts::matches IRS Finley section 1250 recapture and handles insufficient replacement FMV"
+      - "tests/engine/forms/form-8824.test.ts::preserves confirmed zero and rejects missing or conflicting recapture facts"
+      - "tests/engine/federal.test.ts::routes typed Form 8824 recapture above line 20 once through ordinary income"
 
   - line: "22"
     description: Capital gain portion of recognized gain from like-kind exchange
@@ -184,8 +192,7 @@ lines:
       subtracting only the exchange gain recognized on Line 23. Gain or loss
       from other property given up on Line 14 is already recognized separately
       and does not reduce or increase the deferred exchange gain.
-      If the exchange produces a realized loss, the loss is deferred too
-      (enters as zero on the form; the loss lives in the inflated basis).
+      If the exchange produces a realized loss, enter the loss on Line 24.
     reference: "Form 8824 Line 24; IRC §1031(a)"
     testRef: "tests/engine/forms/form-8824.test.ts::pure like-kind swap defers entire realized gain"
 
@@ -256,7 +263,7 @@ edge_cases:
 
   - name: Depreciation recapture
     description: "§1250 recapture on relinquished property"
-    expected: "Recapture limited to boot-limited gain; classified as ordinary income"
+    expected: "The actual replacement §1250 FMV can increase ordinary recognition above Line 20."
 
   - name: Federal routing by character
     description: "Recognized gain from Line 23 uses explicit section 1231 versus capital routing"

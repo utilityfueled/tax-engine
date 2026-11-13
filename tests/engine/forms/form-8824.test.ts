@@ -12,7 +12,7 @@
 import { Decimal } from "decimal.js";
 import { describe, expect, it } from "vitest";
 import { calculateForm8824, calculateForm8824Aggregate } from "@/engine/forms/form-8824.js";
-import type { Form8824Input } from "@/models/inputs.js";
+import { Form8824Schema, type Form8824Input } from "@/models/inputs.js";
 
 // ═══════════════════════════════════════════════════════════
 // Helpers
@@ -304,6 +304,55 @@ describe("Form 8824 — realized loss", () => {
 // ═══════════════════════════════════════════════════════════
 
 describe("Form 8824 — depreciation recapture (Line 21)", () => {
+  const confirmation = { sourceReference: "Synthetic exchange recapture and replacement appraisal", factsConfirmed: true };
+
+  it("matches IRS Taylor section 1245 recapture above line 20", () => {
+    const result = calculateForm8824(Form8824Schema.parse({
+      fmvLikeKindPropertyReceived: "250000",
+      adjustedBasisLikeKindPropertyGivenUp: "100000",
+      cashReceived: "40000",
+      liabilitiesRelinquished: "80000",
+      liabilitiesAssumed: "150000",
+      recaptureSources: { ...confirmation, kind: "section1245", saleRecapture: "50000", nonSection1245ReplacementFmv: "250000" },
+    }));
+    expect([result.line20RecognizedGain, result.line21OrdinaryIncome, result.line22CapitalGain,
+      result.line23TotalRecognizedGain, result.line24DeferredGainLoss, result.line25BasisLikeKindPropertyReceived]
+      .map(value => value.toFixed(2))).toEqual(["40000.00", "50000.00", "0.00", "50000.00", "70000.00", "180000.00"]);
+  });
+
+  it("matches IRS Finley section 1250 recapture and handles insufficient replacement FMV", () => {
+    const facts = {
+      fmvLikeKindPropertyReceived: "220000", adjustedBasisLikeKindPropertyGivenUp: "175000",
+      liabilitiesRelinquished: "150000", liabilitiesAssumed: "80000", cashPaid: "40000",
+      recaptureSources: { ...confirmation, kind: "section1250", saleRecapture: "35000", section1250ReplacementFmv: "165000" },
+    };
+    const finley = calculateForm8824(Form8824Schema.parse(facts));
+    expect([finley.line21OrdinaryIncome, finley.line24DeferredGainLoss, finley.line25BasisLikeKindPropertyReceived]
+      .map(value => value.toFixed(2))).toEqual(["30000.00", "45000.00", "175000.00"]);
+    const smallReplacement = calculateForm8824(Form8824Schema.parse({
+      ...facts, recaptureSources: {...facts.recaptureSources, section1250ReplacementFmv: "4999.99"},
+    }));
+    expect([smallReplacement.line21OrdinaryIncome, smallReplacement.line22CapitalGain, smallReplacement.line24DeferredGainLoss]
+      .map(value => value.toFixed(2))).toEqual(["30000.01", "0.00", "44999.99"]);
+  });
+
+  it("preserves confirmed zero and rejects missing or conflicting recapture facts", () => {
+    const sources = { ...confirmation, kind: "section1245", saleRecapture: "100.01", nonSection1245ReplacementFmv: "0" };
+    const base = { fmvLikeKindPropertyReceived: "1000", adjustedBasisLikeKindPropertyGivenUp: "900" };
+    expect(calculateForm8824(Form8824Schema.parse({...base, recaptureSources:sources})).line21OrdinaryIncome.toFixed(2)).toBe("0.00");
+    const capped = calculateForm8824(Form8824Schema.parse({
+      ...base, recaptureSources:{...sources, nonSection1245ReplacementFmv:"1000"},
+    }));
+    expect(capped.line21OrdinaryIncome.toFixed(2)).toBe("100.00");
+    expect(Form8824Schema.safeParse({...base, recaptureSources:{...sources, nonSection1245ReplacementFmv:undefined}}).success).toBe(false);
+    expect(Form8824Schema.safeParse({...base, recaptureSources:{...sources, nonSection1245ReplacementFmv:"1000.01"}}).success).toBe(false);
+    expect(Form8824Schema.safeParse({...base, depreciationRecapture:"0.01", recaptureSources:sources}).success).toBe(false);
+    expect(Form8824Schema.safeParse({...base, recaptureSources:{...sources, sourceReference:" "}}).success).toBe(false);
+    expect(Form8824Schema.safeParse({...base, recaptureSources:{...sources, factsConfirmed:false}}).success).toBe(false);
+    expect(Form8824Schema.safeParse({...base, fmvLikeKindPropertyReceived:"unknown", recaptureSources:sources}).success).toBe(false);
+    expect(Form8824Schema.safeParse({...base, recaptureSources:{...sources, nonSection1245ReplacementFmv:"unknown"}}).success).toBe(false);
+  });
+
   it("recapture is limited to boot-limited gain", () => {
     const result = calculateForm8824(makeExchange({
       cashReceived: "40000",
