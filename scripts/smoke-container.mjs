@@ -18,8 +18,6 @@ try {
   const metadata = JSON.parse(docker("inspect", container))[0];
   assert.equal(metadata.HostConfig.ReadonlyRootfs, true);
   assert.ok(metadata.Config.Healthcheck?.Test?.length, "Runtime image must retain the Dockerfile health check.");
-  const setIdFiles = docker("exec", "--user", "0", container, "/usr/bin/find", "/", "-xdev", "-type", "f", "-perm", "/6000", "-print");
-  assert.equal(setIdFiles, "", "The runtime filesystem must have no set-user-ID or set-group-ID files.");
   const port = docker("port", container, "3000/tcp").split(":").at(-1);
   const origin = `http://127.0.0.1:${port}`;
   let ready = false;
@@ -94,6 +92,11 @@ try {
   const baseline = JSON.parse(docker("image", "inspect", runnerBaseReference))[0];
   const candidate = JSON.parse(docker("image", "inspect", metadata.Image))[0];
   assert.equal(candidate.Id, metadata.Image);
+  // Inspect private image directories separately from the application, which runs with all capabilities dropped.
+  const setIdFiles = docker("run", "--rm", "--network", "none", "--read-only", "--cap-drop", "ALL",
+    "--cap-add", "DAC_OVERRIDE", "--security-opt", "no-new-privileges", "--user", "0",
+    "--entrypoint", "/usr/bin/find", candidate.Id, "/", "-xdev", "-type", "f", "-perm", "/6000", "-print");
+  assert.equal(setIdFiles, "", "The runtime filesystem must have no set-user-ID or set-group-ID files.");
   assert.match(baseline.Id, /^(?:sha256:)?[0-9a-f]{64}$/u);
   assert.equal(baseline.Os, candidate.Os);
   assert.equal(baseline.Architecture, candidate.Architecture);
