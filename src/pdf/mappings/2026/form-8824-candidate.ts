@@ -11,7 +11,7 @@ const page2 = "topmostSubform[0].Page2[0].";
 
 export const FORM_8824_2026_CANDIDATE = Object.freeze({
   taxYear: 2026,
-  mappingVersion: "2026.1-candidate",
+  mappingVersion: "2026.2-candidate",
   sourceUrl: "https://www.irs.gov/pub/irs-prior/f8824--2026.pdf",
   sourceRevision: "Created 10/30/26",
   posted: "2026-11-03",
@@ -115,6 +115,22 @@ const investmentLandSources = z.strictObject({
   domesticInvestmentLandAndUnrelatedPartiesConfirmed: z.literal(true),
   noDebtOtherPropertyOrSpecialTreatmentConfirmed: z.literal(true),
 });
+const deferredInvestmentLandSources = investmentLandSources.extend({
+  filingDeadline: z.enum(["2027-04-15", "2027-10-15"]),
+  filingDeadlineAndExtensionStatusConfirmed: z.literal(true),
+  qualifiedIntermediaryAgreementAndNoEarlyAccessConfirmed: z.literal(true),
+  writtenIdentification: z.strictObject({
+    date: z.iso.date(),
+    signedDeliveredAndMatchesReplacementConfirmed: z.literal(true),
+  }).optional(),
+});
+
+const millisecondsPerDay = 24 * 60 * 60 * 1000;
+
+interface InvestmentLandProjection {
+  text: Record<string, string>;
+  checked: string[];
+}
 
 function formDate(isoDate: string): string {
   const [year, month, day] = isoDate.split("-");
@@ -122,17 +138,43 @@ function formDate(isoDate: string): string {
 }
 
 /** Isolated projection for one simultaneous exchange of ordinary investment land. */
-export function projectForm88242026InvestmentLand(sources: unknown): { text: Record<string, string>; checked: string[] } {
+export function projectForm88242026InvestmentLand(sources: unknown): InvestmentLandProjection {
   const parsed = investmentLandSources.safeParse(sources);
   if (!parsed.success) throw new Error("The Form 8824 candidate requires complete confirmed investment-land sources");
+  if (parsed.data.receivedDate !== parsed.data.transferredDate) {
+    throw new Error("The Form 8824 candidate requires a simultaneous exchange");
+  }
+  return projectInvestmentLand(parsed.data, parsed.data.receivedDate);
+}
+
+/** One confirmed deferred exchange with an ordinary individual return deadline. */
+export function projectForm88242026DeferredInvestmentLand(sources: unknown): InvestmentLandProjection {
+  const parsed = deferredInvestmentLandSources.safeParse(sources);
+  if (!parsed.success) throw new Error("The Form 8824 candidate requires confirmed deferred exchange and deadline records");
   const exchange = parsed.data;
+  const transferTime = Date.parse(exchange.transferredDate);
+  const receiptTime = Date.parse(exchange.receivedDate);
+  const identificationDeadline = transferTime + 45 * millisecondsPerDay;
+  const exchangeDeadline = Math.min(transferTime + 180 * millisecondsPerDay, Date.parse(exchange.filingDeadline));
+  if (receiptTime <= transferTime || receiptTime > exchangeDeadline) {
+    throw new Error("The Form 8824 candidate requires receipt within the deferred exchange period");
+  }
+  if (receiptTime <= identificationDeadline) return projectInvestmentLand(exchange, exchange.receivedDate);
+
+  const written = exchange.writtenIdentification;
+  if (!written || written.date < exchange.transferredDate || Date.parse(written.date) > identificationDeadline) {
+    throw new Error("The Form 8824 candidate requires timely written identification of the replacement property");
+  }
+  return projectInvestmentLand(exchange, written.date);
+}
+
+function projectInvestmentLand(exchange: z.infer<typeof investmentLandSources>, identifiedDate: string): InvestmentLandProjection {
   const cashReceived = d(exchange.cashReceived);
   const cashPaid = d(exchange.cashPaid);
-  if (!exchange.transferredDate.startsWith("2026-") || exchange.receivedDate !== exchange.transferredDate
-    || exchange.acquiredDate >= `2025${exchange.transferredDate.slice(4)}`
+  if (!exchange.transferredDate.startsWith("2026-") || exchange.acquiredDate >= `2025${exchange.transferredDate.slice(4)}`
     || exchange.relinquishedDescription === exchange.replacementDescription
     || (cashReceived.gt(0) && cashPaid.gt(0)) || d(exchange.replacementFmv).lte(0)) {
-    throw new Error("The Form 8824 candidate requires a simultaneous 2026 exchange of distinct long-term investment land");
+    throw new Error("The Form 8824 candidate requires a 2026 exchange of distinct long-term investment land");
   }
   const result = calculateForm8824({
     description: exchange.relinquishedDescription,
@@ -175,7 +217,7 @@ export function projectForm88242026InvestmentLand(sources: unknown): { text: Rec
     [fields.line2PropertyReceived]: exchange.replacementDescription,
     [fields.line3AcquiredDate]: formDate(exchange.acquiredDate),
     [fields.line4TransferredDate]: formDate(exchange.transferredDate),
-    [fields.line5IdentifiedDate]: formDate(exchange.receivedDate),
+    [fields.line5IdentifiedDate]: formDate(identifiedDate),
     [fields.line6ReceivedDate]: formDate(exchange.receivedDate),
     ...(cashReceived.gt(0) ? { [fields.line15aDescriptionFirst]: "Cash" } : {}),
   };

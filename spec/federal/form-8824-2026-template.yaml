@@ -59,6 +59,27 @@ lines:
   - line: "investment land evidence boundary"
     formula: "Reject missing source confirmations, an ambiguous or unsupported exchange chronology, extra fields, cash in both directions, an exact gain absent in whole dollars, or inconsistent printed whole-dollar arithmetic."
     testRef: "tests/pdf/form-8824-2026-candidate.test.ts::rejects unsupported investment land exchanges and unreconciled printed amounts"
+  - line: "I and III deferred investment land specimen"
+    description: "Project one deferred exchange of domestic investment land through a confirmed qualified intermediary"
+    formula: >-
+      Use original closing and basis records for one long-term investment parcel
+      relinquished in 2026 and one replacement parcel actually received later.
+      Require the confirmed qualified-intermediary agreement and absence of access
+      to proceeds before receipt of the replacement. Require confirmation of the
+      applicable ordinary 2026 calendar-year individual return deadline, April
+      15, 2027 or October 15, 2027 with a valid extension. Accept actual receipt
+      through the earlier of day 180 or that confirmed deadline. For receipt
+      through day 45 enter the receipt date on line 5. Later receipt requires
+      a signed, timely delivered written identification of that same property
+      between transfer and day 45 inclusive. Use the actual written date on
+      line 5 and the actual receipt on line 6. Apply the same lines 15 through
+      25 and printed-dollar checks as the simultaneous investment-land case.
+      Preserve the export gates. No late, special-deadline, multiple-property,
+      related-party or other unsupported deferred exchanges enter this cohort.
+    reference: "Final 2026 Instructions for Form 8824, Lines 5 and 6; 26 CFR 1.1031(k)-1(b), (c), (d), and (g)(4)"
+    testRef: "tests/pdf/form-8824-2026-candidate.test.ts::projects confirmed deferred investment land dates and amounts on the final candidate"
+    testRefs:
+      - "tests/pdf/form-8824-2026-candidate.test.ts::applies the separate 45-day, 180-day and filing-deadline boundaries"
   - line: "release"
     description: "Keep annual export unavailable"
     formula: "The final blank and its physical candidate map stay outside the public review and filing paths."

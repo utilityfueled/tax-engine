@@ -229,6 +229,69 @@ it("rejects unsupported investment land exchanges and unreconciled printed amoun
   ]) expect(() => projectForm88242026InvestmentLand({ ...investmentLand, ...overrides })).toThrow(/Form 8824/u);
 });
 
+const deferredLand = {
+  ...investmentLand,
+  receivedDate: "2026-10-01",
+  filingDeadline: "2027-04-15",
+  filingDeadlineAndExtensionStatusConfirmed: true,
+  qualifiedIntermediaryAgreementAndNoEarlyAccessConfirmed: true,
+  writtenIdentification: { date: "2026-07-30", signedDeliveredAndMatchesReplacementConfirmed: true },
+};
+
+it("projects confirmed deferred investment land dates and amounts on the final candidate", async () => {
+  const { projectForm88242026DeferredInvestmentLand, FORM_8824_2026_CANDIDATE: { fields } } =
+    await import("@/pdf/mappings/2026/form-8824-candidate.js");
+  const { text, checked } = projectForm88242026DeferredInvestmentLand(deferredLand);
+  expect(text).toEqual({ ...projectForm88242026InvestmentLand(investmentLand).text,
+    [fields.line4TransferredDate]: "06/15/2026",
+    [fields.line5IdentifiedDate]: "07/30/2026",
+    [fields.line6ReceivedDate]: "10/01/2026",
+  });
+  expect(checked).toEqual([fields.line7No]);
+  const { pdf } = await openDiagnosticTemplate();
+  const form = pdf.getForm();
+  const dateFields = new Set<string>([fields.line3AcquiredDate, fields.line4TransferredDate, fields.line5IdentifiedDate, fields.line6ReceivedDate]);
+  for (const [name, value] of Object.entries(text)) {
+    const field = form.getTextField(name);
+    if (dateFields.has(name)) field.acroField.getWidgets()[0].getOrCreateAppearanceCharacteristics().setBackgroundColor([1, 1, 1]);
+    field.setText(value);
+  }
+  for (const name of checked) form.getCheckBox(name).check();
+  await markReviewPdf(pdf);
+  const bytes = await pdf.save();
+  const saved = (await PDFDocument.load(bytes)).getForm();
+  for (const field of saved.getFields()) {
+    const name = field.getName();
+    if (field instanceof PDFTextField) expect(field.getText()).toBe(text[name]);
+    if (field instanceof PDFCheckBox) expect(field.isChecked()).toBe(checked.includes(name));
+  }
+  const evidence = process.env.TAX_ENGINE_FORM8824_CANDIDATE_EVIDENCE_DIR;
+  if (evidence) await writeFile(join(evidence, "form-8824-deferred-investment-land.pdf"), bytes, { mode: 0o600 });
+});
+
+it("applies the separate 45-day, 180-day and filing-deadline boundaries", async () => {
+  const { projectForm88242026DeferredInvestmentLand, FORM_8824_2026_CANDIDATE: { fields } } =
+    await import("@/pdf/mappings/2026/form-8824-candidate.js");
+  const project = (changes: object) => projectForm88242026DeferredInvestmentLand({ ...deferredLand, ...changes }).text;
+  const promptWritten = (date: string) => ({ date, signedDeliveredAndMatchesReplacementConfirmed: true });
+  expect(project({ receivedDate: "2026-07-30", writtenIdentification: undefined })[fields.line5IdentifiedDate]).toBe("07/30/2026");
+  expect(project({ receivedDate: "2026-12-12" })[fields.line6ReceivedDate]).toBe("12/12/2026");
+  const yearEnd = { transferredDate: "2026-12-31", writtenIdentification: promptWritten("2027-02-14") };
+  expect(project({ ...yearEnd, receivedDate: "2027-04-15" })[fields.line6ReceivedDate]).toBe("04/15/2027");
+  expect(project({ ...yearEnd, receivedDate: "2027-06-29", filingDeadline: "2027-10-15" })[fields.line6ReceivedDate]).toBe("06/29/2027");
+  for (const changes of [
+    { ...yearEnd, receivedDate: "2027-04-16" },
+    { ...yearEnd, receivedDate: "2027-06-30", filingDeadline: "2027-10-15" },
+    { filingDeadline: "2027-12-31" }, { filingDeadlineAndExtensionStatusConfirmed: false },
+    { qualifiedIntermediaryAgreementAndNoEarlyAccessConfirmed: false },
+    { receivedDate: "2026-06-15" }, { receivedDate: "2026-06-14" },
+    { receivedDate: "2026-07-31", writtenIdentification: undefined },
+    { writtenIdentification: promptWritten("2026-07-31") }, { writtenIdentification: promptWritten("2026-06-14") },
+    { writtenIdentification: { ...promptWritten("2026-07-30"), signedDeliveredAndMatchesReplacementConfirmed: false } },
+    { nonLikeKindProperty: "100" },
+  ]) expect(() => project(changes)).toThrow(/Form 8824/u);
+});
+
 it("keeps annual review and filing exports unavailable", async () => {
   expect(await candidate()).toMatchObject({
     filingQualified: false, exportsEnabled: false, reviewStatus: "independent-review-pending",
