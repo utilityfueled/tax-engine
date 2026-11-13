@@ -1,0 +1,48 @@
+form: "Form 8824 final 2026 physical candidate"
+fullName: "Final 2026 Like-Kind Exchanges form physical fields"
+taxYear: 2026
+irsReference: "https://www.irs.gov/pub/irs-prior/f8824--2026.pdf"
+revision: "Created 10/30/26, IRS final index posted 11/03/2026"
+retrievedAt: "2026-11-13"
+reviewStatus: "independent-qualified-tax-review-pending"
+notes: |
+  The final annual instructions were posted on 11/10/2026 and are available at
+  https://www.irs.gov/pub/irs-prior/i8824--2026.pdf. The candidate identifies
+  physical fields only. It does not decide exchange qualification, compute gain
+  or basis, produce attachments, or implement section 1043, section 1062, or QOF
+  tax treatment.
+lines:
+  - line: "source"
+    description: "Pin the final annual blank and instructions"
+    formula: >-
+      Require a 101694-byte blank with SHA-256
+      7f9da3429cffd9469b8268665c376051abe0ed09be93445b607cf74229df5542,
+      the 2026 form title and two pages. Record the final 218840-byte
+      instruction SHA-256 f4f7efe4cf14ce01282032c5f5b9866f7f3f11367dfa73024e4ff21469cf5685.
+    testRef: "tests/pdf/form-8824-2026-candidate.test.ts::pins the final blank and instructions revision"
+  - line: "I–IV"
+    description: "Bind every printed cell to its original page widget"
+    formula: >-
+      Identify both pages' names and identifying numbers, property and date
+      fields, the related-party identity and address cells, the yes/no pairs and
+      the three exception boxes, gain and basis fields, and the section 1043
+      inputs. Preserve the exact page, rectangle, field type and checkbox state.
+    testRef: "tests/pdf/form-8824-2026-candidate.test.ts::matches all official field and widget locations"
+  - line: "19, 25a–25c, 26–28"
+    description: "Preserve physically separate write-in and split fields"
+    formula: >-
+      Preserve the line 19 write-in area separately from the amount. Bind the
+      three basis classifications, the two certificate-number cells divided by
+      a printed dash, and both description rows for each divestiture property.
+    testRef: "tests/pdf/form-8824-2026-candidate.test.ts::preserves the write-in, basis breakdown and split certificate cells"
+  - line: "diagnostic"
+    description: "Reopen a review-marked synthetic diagnostic"
+    formula: >-
+      Exercise two pages and separate nearby controls, retain exact diagnostic
+      text and checkbox appearance values, remove active content, and leave all
+      taxpayer and related-party identifiers blank.
+    testRef: "tests/pdf/form-8824-2026-candidate.test.ts::reopens a marked diagnostic with separate fields and blank identifiers"
+  - line: "release"
+    description: "Keep annual export unavailable"
+    formula: "The final blank and its physical candidate map stay outside the public review and filing paths."
+    testRef: "tests/pdf/form-8824-2026-candidate.test.ts::keeps annual review and filing exports unavailable"
