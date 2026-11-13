@@ -17,6 +17,15 @@ async function candidate() {
   return FORM_6252_2026_CANDIDATE;
 }
 
+const investmentLand = {
+  acquiredDate: "2023-02-28", soldDate: "2026-05-12",
+  firstFuturePayment: { date: "2027-05-12", principal: "40000" },
+  sellingPrice: "120000", costBasis: "42000", sellingExpenses: "3000", currentPrincipal: "30000",
+  closingBasisAndPaymentRecordsConfirmed: true,
+  investmentLandAndUnrelatedFixedPriceSaleConfirmed: true,
+  ordinaryInstallmentMethodWithoutAssumedDebtOrSpecialPaymentsConfirmed: true,
+};
+
 it("pins the final blank and its integral instructions", async () => {
   const bytes = await readFile(blank);
   expect(bytes).toHaveLength(119676);
@@ -85,9 +94,8 @@ it("binds the decimal, related-party rows and exception date separately", async 
   ].map(name => fieldPrefix + name));
 });
 
-it("reopens the marked diagnostic without identity data or inherited active content", async () => {
-  const [source, { fields }] = await Promise.all([readFile(blank), candidate()]);
-  const pdf = await PDFDocument.load(source);
+async function editableAnnualBlank() {
+  const pdf = await PDFDocument.load(await readFile(blank));
   const acro = pdf.catalog.getAcroForm()?.dict;
   const xfaKey = PDFName.of("XFA");
   const xfaPackets = acro?.lookupMaybe(xfaKey, PDFArray)?.asArray()
@@ -107,7 +115,12 @@ it("reopens the marked diagnostic without identity data or inherited active cont
   pdf.catalog.delete(permissionsKey);
   if (permissions instanceof PDFRef) pdf.context.delete(permissions);
   if (readerRights instanceof PDFRef) pdf.context.delete(readerRights);
+  return { pdf, xfaKey, xfaPackets, permissionsKey, permissions, readerRights };
+}
 
+it("reopens the marked diagnostic without identity data or inherited active content", async () => {
+  const [{ fields }, { pdf, xfaKey, xfaPackets, permissionsKey, permissions, readerRights }] =
+    await Promise.all([candidate(), editableAnnualBlank()]);
   const form = pdf.getForm();
   const texts = new Map<string, string>([
     [fields.line1PropertyDescription, "Synthetic equipment"],
@@ -167,4 +180,52 @@ it("keeps annual review and filing exports unavailable", async () => {
   expect(Object.hasOwn(REVIEW_TEMPLATE_PACKS, 2026)).toBe(false);
   expect(() => assertPdfExportAllowed(2026, 2026)).toThrow(/No qualified/u);
   expect(() => assertPdfExportAllowed(2026, 2026, "filing")).toThrow(/Filing exports are unavailable/u);
+});
+
+it("projects a confirmed current investment-land installment sale", async () => {
+  const { projectForm62522026InvestmentLand, FORM_6252_2026_CANDIDATE: { fields } } =
+    await import("@/pdf/mappings/2026/form-6252-candidate.js");
+  const result = projectForm62522026InvestmentLand(investmentLand);
+  expect(result).toEqual({
+    text: {
+      [fields.line1PropertyDescription]: "4 - Investment land", [fields.line2aAcquiredDate]: "02/28/2023", [fields.line2bSoldDate]: "05/12/2026",
+      [fields.line5]: "120000", [fields.line6]: "0", [fields.line7]: "120000", [fields.line8]: "42000", [fields.line9]: "0",
+      [fields.line10]: "42000", [fields.line11]: "3000", [fields.line12]: "0", [fields.line13]: "45000", [fields.line14]: "75000",
+      [fields.line15]: "0", [fields.line16]: "75000", [fields.line17]: "0", [fields.line18]: "120000",
+      [fields.line19GrossProfitPercentage]: "0.6250", [fields.line20]: "0", [fields.line21]: "30000", [fields.line22]: "30000",
+      [fields.line23]: "0", [fields.line24]: "18750", [fields.line25]: "0", [fields.line26]: "18750",
+    },
+    checked: [fields.line3No, fields.line4Yes],
+  });
+  const zeroCurrent = projectForm62522026InvestmentLand({ ...investmentLand, currentPrincipal: "0" });
+  expect([fields.line21, fields.line22, fields.line24, fields.line26].map(name => zeroCurrent.text[name])).toEqual(["0", "0", "0", "0"]);
+  const precision = projectForm62522026InvestmentLand({ ...investmentLand, sellingPrice: "120003" });
+  expect(precision.text[fields.line19GrossProfitPercentage]).toBe("0.625009");
+  expect(precision.text[fields.line24]).toBe("18750");
+  expect(projectForm62522026InvestmentLand({ ...investmentLand, acquiredDate: "2025-05-11" }).text[fields.line2aAcquiredDate]).toBe("05/11/2025");
+  for (const change of [
+    { acquiredDate: "2025-05-12" }, { acquiredDate: "2025-05-13" }, { acquiredDate: "2024-02-30" }, { soldDate: "2025-05-12" },
+    { closingBasisAndPaymentRecordsConfirmed: false }, { investmentLandAndUnrelatedFixedPriceSaleConfirmed: false },
+    { ordinaryInstallmentMethodWithoutAssumedDebtOrSpecialPaymentsConfirmed: false }, { currentPrincipal: undefined },
+    { firstFuturePayment: { date: "2026-12-31", principal: "40000" } }, { firstFuturePayment: { date: "2027-01-01", principal: "0" } },
+    { firstFuturePayment: { date: "2027-01-01", principal: "90000.01" } }, { currentPrincipal: "120000" }, { assumedLiabilities: "1" },
+    { sellingExpenses: "78000" }, { sellingExpenses: "3000.49", costBasis: "42000.49" },
+    { sellingPrice: "120000.49" }, { currentPrincipal: "119999.99", firstFuturePayment: { date: "2027-05-12", principal: "0.01" } },
+    { currentPrincipal: "2e4" }, { sellingExpenses: "0.001" },
+  ]) expect(() => projectForm62522026InvestmentLand({ ...investmentLand, ...change })).toThrow(/installment sale/i);
+
+  const { pdf } = await editableAnnualBlank();
+  const form = pdf.getForm();
+  for (const [name, value] of Object.entries(result.text)) form.getTextField(name).setText(value);
+  for (const name of result.checked) form.getCheckBox(name).check();
+  await markReviewPdf(pdf);
+  const bytes = await pdf.save();
+  const reopened = await PDFDocument.load(bytes);
+  expect(reopened.getPageCount()).toBe(4);
+  for (const field of reopened.getForm().getFields()) {
+    if (field instanceof PDFTextField) expect(field.getText()).toBe(result.text[field.getName()]);
+    if (field instanceof PDFCheckBox) expect(field.isChecked()).toBe(result.checked.includes(field.getName()));
+  }
+  const evidence = process.env.TAX_ENGINE_FORM6252_CANDIDATE_EVIDENCE_DIR;
+  if (evidence) await writeFile(join(evidence, "form-6252-investment-land.pdf"), bytes, { mode: 0o600 });
 });

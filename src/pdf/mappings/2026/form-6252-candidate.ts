@@ -2,6 +2,10 @@
  * Final 2026 Form 6252 physical mapping candidate, Created 6/16/26.
  * Spec: spec/federal/form-6252-2026-template.yaml.
  */
+import { z } from "zod";
+import { calculateForm6252 } from "@/engine/forms/form-6252.js";
+import { d, roundDollar } from "@/utils/decimal.js";
+
 const page1 = "topmostSubform[0].Page1[0].";
 
 export const FORM_6252_2026_CANDIDATE = Object.freeze({
@@ -68,3 +72,95 @@ export const FORM_6252_2026_CANDIDATE = Object.freeze({
     line37: `${page1}f1_38[0]`,
   }),
 });
+
+const amount = z.string().regex(/^\d{1,12}(?:\.\d{1,2})?$/u);
+const investmentLandSources = z.strictObject({
+  acquiredDate: z.iso.date(),
+  soldDate: z.iso.date(),
+  firstFuturePayment: z.strictObject({ date: z.iso.date(), principal: amount }),
+  sellingPrice: amount,
+  costBasis: amount,
+  sellingExpenses: amount,
+  currentPrincipal: amount,
+  closingBasisAndPaymentRecordsConfirmed: z.literal(true),
+  investmentLandAndUnrelatedFixedPriceSaleConfirmed: z.literal(true),
+  ordinaryInstallmentMethodWithoutAssumedDebtOrSpecialPaymentsConfirmed: z.literal(true),
+});
+
+function formDate(isoDate: string): string {
+  const [year, month, day] = isoDate.split("-");
+  return `${month}/${day}/${year}`;
+}
+
+export function projectForm62522026InvestmentLand(sources: unknown): {
+  text: Record<string, string>;
+  checked: string[];
+} {
+  const parsed = investmentLandSources.safeParse(sources);
+  if (!parsed.success) throw new Error("The Form 6252 installment sale requires complete confirmed sources");
+  const sale = parsed.data;
+  // In this annual candidate, only a 2025 acquisition can be on the one-year boundary.
+  if (!sale.soldDate.startsWith("2026-") || sale.acquiredDate >= `2025${sale.soldDate.slice(4)}`
+    || sale.firstFuturePayment.date <= "2026-12-31") {
+    throw new Error("The Form 6252 installment sale requires a long-term 2026 sale with later principal");
+  }
+
+  const description = "4 - Investment land";
+  const result = calculateForm6252({
+    description,
+    propertyType: "other",
+    gainCharacter: "long_term_capital",
+    isYearOfSale: true,
+    sellingPrice: sale.sellingPrice,
+    costBasis: sale.costBasis,
+    sellingExpenses: sale.sellingExpenses,
+    paymentsReceived: sale.currentPrincipal,
+    assumedLiabilities: "0",
+    depreciation: "0",
+    depreciationRecapture: "0",
+    section121Exclusion: "0",
+    priorYearPayments: "0",
+    remainingOrdinaryRecapture: "0",
+  });
+  const futurePrincipal = d(sale.firstFuturePayment.principal);
+  if (result.line14.lte(0) || futurePrincipal.lte(0) || futurePrincipal.gt(result.line18.minus(result.line21))) {
+    throw new Error("The Form 6252 installment sale requires a gain and an open contract balance");
+  }
+
+  const sellingPrice = roundDollar(result.line5);
+  const basis = roundDollar(result.line10);
+  const expenses = roundDollar(result.line11);
+  const installmentBasis = roundDollar(result.line13);
+  const grossProfit = roundDollar(result.line16);
+  const contractPrice = roundDollar(result.line18);
+  const currentPrincipal = roundDollar(result.line21);
+  if (!basis.plus(expenses).eq(installmentBasis) || !sellingPrice.minus(installmentBasis).eq(grossProfit)
+    || grossProfit.lte(0) || currentPrincipal.gte(contractPrice)) {
+    throw new Error("The Form 6252 installment sale does not reconcile in whole dollars");
+  }
+  const ratio = grossProfit.div(contractPrice).toDecimalPlaces(6);
+  if (ratio.lte(0) || !ratio.eq(result.line19.toDecimalPlaces(6))
+    || !roundDollar(currentPrincipal.times(ratio)).eq(result.line24)) {
+    throw new Error("The Form 6252 installment sale does not reconcile at the printed ratio precision");
+  }
+
+  const { fields } = FORM_6252_2026_CANDIDATE;
+  const text: Record<string, string> = {
+    [fields.line1PropertyDescription]: description,
+    [fields.line2aAcquiredDate]: formDate(sale.acquiredDate),
+    [fields.line2bSoldDate]: formDate(sale.soldDate),
+    [fields.line19GrossProfitPercentage]: ratio.toFixed(Math.max(4, ratio.decimalPlaces())),
+  };
+  const money = {
+    line5: result.line5, line6: result.line6, line7: result.line7,
+    line8: basis, line9: d(0), line10: result.line10, line11: result.line11,
+    line12: result.line12, line13: result.line13, line14: result.line14,
+    line15: result.line15, line16: result.line16, line17: result.line17, line18: result.line18,
+    line20: result.line20, line21: result.line21, line22: result.line22, line23: result.line23,
+    line24: result.line24, line25: result.line25, line26: result.line26,
+  };
+  for (const line of Object.keys(money) as (keyof typeof money)[]) {
+    text[fields[line]] = roundDollar(money[line]).toFixed(0);
+  }
+  return { text, checked: [fields.line3No, fields.line4Yes] };
+}

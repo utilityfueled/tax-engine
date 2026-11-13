@@ -7,8 +7,8 @@ retrievedAt: "2026-11-13"
 reviewStatus: "independent-qualified-tax-review-pending"
 notes: |
   The final annual IRS PDF includes the instructions on pages 2 through 4.
-  This specification identifies physical fields. It does not compute
-  installment sale income, determine eligibility, or qualify a filing export.
+  The physical map and the bounded original-source projection remain disabled
+  in public review and filing exports.
 lines:
   - line: "source"
     description: "Pin the final annual form and integral instructions"
@@ -34,6 +34,32 @@ lines:
       both rows for the combined related-party details, the yes/no pair, and
       each exception box apart from the separate date under 29a.
     testRef: "tests/pdf/form-6252-2026-candidate.test.ts::binds the decimal, related-party rows and exception date separately"
+  - line: "1–26 ordinary current sale"
+    description: "Project a confirmed current installment sale of domestic investment land"
+    formula: >-
+      Require the actual closing, basis and payment records for a fixed-price,
+      unrelated-buyer sale in calendar year 2026. The land was held for investment
+      more than one year and was never depreciated, held for customers, or used
+      as a home or in a business. Confirm the ordinary installment method, no
+      special interest, deemed payment or recapture methods, no assumed debt,
+      and the complete current principal separate from interest. Prove at least
+      one positive scheduled principal payment after 2026 from the original
+      agreement. Its date must follow the sale and its amount must fit the
+      outstanding principal. Zero current principal is allowed. Use actual
+      dates and the line 1 category code 4 with the neutral description
+      Investment land. Lines 3 and 4 select
+      No and Yes. Preserve the line 14 gain gate and confirm an open contract
+      balance. Lines 5 through 18 derive from the closing/basis amounts; line 19
+      is the line 16/18 ratio shown as a decimal with at least four places. Line
+      20 is zero, line 21 is actual 2026 principal, line 22 is its sum with line
+      20, and line 23 is zero. Line 24 is line 22 times line 19, rounded to
+      dollars. Line 25 is zero and line 26 equals line 24, a long-term capital
+      gain. Round the printed money and check that the printed whole-dollar
+      arithmetic and bounded-precision ratio reproduce the fresh exact-source
+      calculation. Refuse contradictory, unconfirmed or nonreconciling inputs.
+      Identity, related-party fields, source references and instructions are
+      outside the writable projection.
+    testRef: "tests/pdf/form-6252-2026-candidate.test.ts::projects a confirmed current investment-land installment sale"
   - line: "diagnostic"
     description: "Reopen a review-marked synthetic diagnostic"
     formula: >-
