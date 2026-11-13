@@ -1032,7 +1032,7 @@
     "src/engine/state/oh-sd-100-resident-income.ts": "b6fffdab7ca9dd6243e1146e128973fa8a6c91887ce1edcbcfd675cfdff0b7c8",
     "src/engine/state/oh-sd-100-sources.ts": "9bd77d9b7876ed91453f3060478968c25db9fe891e3b285d427c937c31e35d15",
     "src/engine/state/oh-sd-100.ts": "fe91369e4c0479eef788087e9db0ef5b55b4113570dbd89fd12630e75c427603",
-    "src/engine/state/pa-2026-ordinary-dependencies.ts": "c3f4cb7ef282b5d0beb2f5db1635692f6532084e7d87583b4eee465189e3b2cf",
+    "src/engine/state/pa-2026-ordinary-dependencies.ts": "0bde15817b67a9f6499c361dd587e9565714c8b6172c25b36d516fd0f15b2c94",
     "src/engine/state/pa-40.ts": "41b43cf95a6d0944a8f4c4b8bbc5795b5012c2f0fc100a11fdb1fc52c4cf3a51",
     "src/engine/state/pa-business-pending-account.ts": "947c40dfa2cea2740fe7c093e93dc37963cac13499f14239362768ccb1274d09",
     "src/engine/state/pa-care-paper-sources.ts": "fc817801506010985224091570cbe4d3621fa8ee7dfc0787ac2d0dcafa440314",
