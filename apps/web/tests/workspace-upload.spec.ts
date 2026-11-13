@@ -210,6 +210,76 @@ test("a stale document-year editor cannot recreate a deleted local return", asyn
   await otherTab.close();
 });
 
+for (const timing of ["before selection", "while parsing"] as const) {
+  test(`a local upload cannot revive a return reset ${timing}`, async ({ page }) => {
+    await page.goto("/");
+    await enableAdvancedMode(page);
+    await page.getByRole("button", { name: /start your tax return/i }).click();
+    await expect(page).toHaveURL(/\/returns\/(?!new(?:[/?#]|$))[a-z0-9-]+$/i);
+    const id = new URL(page.url()).pathname.split("/").at(-1);
+    if (!id) throw new Error("Expected a local return ID.");
+    const upload = page.locator('input[type="file"]');
+    const status = page.getByRole("status", { name: "Return status" });
+    const original = path.join(sampleDocsDir, "irs-w2-2025.pdf");
+    const incoming = path.join(sampleDocsDir, "irs-1099-int-2024.pdf");
+    await upload.setInputFiles(original);
+    await expect(status).toHaveText("1 docs stored locally.");
+
+    if (timing === "while parsing") {
+      await page.evaluate(() => {
+        const arrayBuffer = File.prototype.arrayBuffer;
+        File.prototype.arrayBuffer = async function () {
+          if (this.name === "irs-1099-int-2024.pdf") {
+            await new Promise<void>(resolve => {
+              document.addEventListener("resume-local-upload-test", () => resolve(), { once: true });
+              document.documentElement.dataset.localUploadTest = "reading";
+            });
+          }
+          return arrayBuffer.call(this);
+        };
+      });
+      await upload.setInputFiles(incoming);
+      await expect(page.locator("html")).toHaveAttribute("data-local-upload-test", "reading");
+    }
+
+    const otherTab = await page.context().newPage();
+    await otherTab.goto(page.url());
+    await otherTab.getByRole("button", { name: "Reset Return", exact: true }).click();
+    await expect(otherTab.getByRole("status", { name: "Return status" })).toHaveText("Return reset.");
+    if (timing === "before selection") await upload.setInputFiles(incoming);
+    else await page.evaluate(() => document.dispatchEvent(new Event("resume-local-upload-test")));
+
+    await expect(upload).toHaveValue("");
+    const snapshot = () => page.evaluate(async id => {
+      const saved = JSON.parse(localStorage.getItem("tax-engine.return-workspaces.v1") ?? "{}");
+      const db = await new Promise<IDBDatabase>((resolve, reject) => {
+        const request = indexedDB.open("tax-engine-workspace-document-cache", 1);
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+      try {
+        const rows = await new Promise<Array<{ workspaceId: string; fileName: string }>>((resolve, reject) => {
+          const request = db.transaction("workspace-document-files").objectStore("workspace-document-files").getAll();
+          request.onsuccess = () => resolve(request.result);
+          request.onerror = () => reject(request.error);
+        });
+        return {
+          documents: saved.workspaces?.[id]?.documents?.map((document: { name: string }) => document.name),
+          originals: rows.filter(row => row.workspaceId === id).map(row => row.fileName),
+        };
+      } finally { db.close(); }
+    }, id);
+    expect(await snapshot()).toEqual({ documents: [], originals: [] });
+    await expect(status).toContainText("This return changed");
+    await page.reload();
+    await page.getByRole("button", { name: "Switch to advanced mode", exact: true }).click();
+    await upload.setInputFiles(incoming);
+    await expect(status).toHaveText("1 docs stored locally.");
+    expect(await snapshot()).toEqual({ documents: ["irs-1099-int-2024.pdf"], originals: ["irs-1099-int-2024.pdf"] });
+    await otherTab.close();
+  });
+}
+
 async function startGuidedWithOriginal(page: Page) {
   await page.goto("/");
   await page.getByRole("button", { name: /start your tax return/i }).click();

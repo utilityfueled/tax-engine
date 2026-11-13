@@ -1359,12 +1359,13 @@ export function ingestFiles(storage: Storage, workspaceId: string, files: Upload
 }
 
 /** Save originals before adding metadata to an existing local return. */
-export async function ingestLocalDocumentFiles(storage: Storage, workspaceId: string, prepared: UploadableFile[], files: File[]) {
+export async function ingestLocalDocumentFiles(storage: Storage, expected: ReturnWorkspaceRecord, prepared: UploadableFile[], files: File[]) {
   const failure = "Could not save the uploaded document. Please try again.";
   const changed = "This return changed during the upload. Reopen it and try again.";
+  const workspaceId = expected.id;
   const initial = parseStorage(storage.getItem(STORAGE_KEY)).workspaces[workspaceId];
-  const current = loadStorage(storage).workspaces[workspaceId];
-  if (!initial || !current) throw new Error(changed);
+  if (!initial) throw new Error(changed);
+  const current = requireCurrentLocalWorkspace(storage, expected);
   if (prepared.length !== files.length || files.length === 0 || files.some((file, index) => (
     file.name !== prepared[index]?.name || file.size !== prepared[index]?.size
   ))) throw new Error(failure);

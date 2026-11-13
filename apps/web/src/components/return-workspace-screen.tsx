@@ -678,22 +678,15 @@ export function ReturnWorkspaceScreen({
       return "";
     }
 
-    const preparedFiles = await prepareUploadableFiles(files);
-    const futureYearSampleUploadMessage = getFutureYearSampleUploadMessage(preparedFiles);
+    try {
+      if (!workspace) throw new Error(localWorkspaceEditingEnabled ? "Reopen this return to upload documents." : "Sign in to upload documents.");
+      const browserStorage = localWorkspaceEditingEnabled ? requireBrowserStorage() : null;
+      if (browserStorage) requireCurrentLocalWorkspace(browserStorage, workspace);
+      const preparedFiles = await prepareUploadableFiles(files);
+      const futureYearSampleUploadMessage = getFutureYearSampleUploadMessage(preparedFiles);
+      if (futureYearSampleUploadMessage) throw new Error(futureYearSampleUploadMessage);
 
-    if (futureYearSampleUploadMessage) {
-      setStorageMessage(futureYearSampleUploadMessage);
-      throw new Error(futureYearSampleUploadMessage);
-    }
-
-    if (!localWorkspaceEditingEnabled) {
-      if (!workspace) {
-        const message = "Sign in to upload documents.";
-        setStorageMessage(message);
-        throw new Error(message);
-      }
-
-      try {
+      if (!browserStorage) {
         const nextWorkspace = ingestFilesIntoWorkspace(workspace, preparedFiles);
         const appendedDocuments = nextWorkspace.documents.slice(-files.length);
         await cacheWorkspaceDocumentFiles(workspaceId, appendedDocuments.map((document, index) => {
@@ -715,18 +708,9 @@ export function ReturnWorkspaceScreen({
         setWorkspace(savedWorkspace);
         setStorageMessage(message);
         return message;
-      } catch (error) {
-        const message = resolveUiErrorMessage(
-          error,
-          "Could not save the uploaded document. Please try again."
-        );
-        setStorageMessage(message);
-        throw new Error(message, { cause: error });
       }
-    }
 
-    try {
-      const nextWorkspace = await ingestLocalDocumentFiles(requireBrowserStorage(), workspaceId, preparedFiles, files);
+      const nextWorkspace = await ingestLocalDocumentFiles(browserStorage, workspace, preparedFiles, files);
       const message = `${nextWorkspace.summary.totalDocuments} docs stored locally.`;
 
       setWorkspace(nextWorkspace);

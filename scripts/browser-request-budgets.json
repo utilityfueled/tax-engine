@@ -226,7 +226,7 @@
     "apps/web/src/components/refund-ticker.tsx": "d54a6b94e483ea14d5773891d47101aa89caccf808c3b6f5fa44d4634d08baaf",
     "apps/web/src/components/retro-shell.tsx": "5d8538ca08cecbe51b45b6e7d7573a89a504e97e038f1703ee5ab4cb6e42d9c2",
     "apps/web/src/components/return-help-dock.tsx": "9cbf88ebe8f3a8e33a4d206fa926d0f7e62fec182eac68ed729995ea37200bf2",
-    "apps/web/src/components/return-workspace-screen.tsx": "0772ebaff0fc693fbb49a8ef45e5f0386f504170430e4f24811595c90cd83902",
+    "apps/web/src/components/return-workspace-screen.tsx": "0a06078943d769f6438d1a3cf30496e1c7e788a9ede442ea074b2d9818464254",
     "apps/web/src/components/site-footer.tsx": "cb86ba68290eb6d1aa61a4f3593544a9f3a2d4ac90332322301986116b385871",
     "apps/web/src/components/start-workspace-button.tsx": "4f78c8ff61ff5d0b2d9eaeee12548204a2e6c660e5ff5b3977ae08d41a7c0399",
     "apps/web/src/components/workspace-recovery-controls.tsx": "1aee999ff12171a074406f445e63bfb1bd35723f218b287d1af2d5d258faca41",
@@ -445,7 +445,7 @@
     "apps/web/src/lib/workspace-persistence.ts": "0cbd9bd9cbf2e30659898ffdd2ab2a426f6bd4463ff8562965b4a9828aef0966",
     "apps/web/src/lib/workspace-recovery.ts": "290a3b3d17b7349ca93a8ad5cdf88dc4faf5b3f128d843c66bb4d63482e248c2",
     "apps/web/src/lib/workspace-status-copy.ts": "dc543e7ae65f2de125f88476701970b409e8e475a7129148b764920ecaeafa48",
-    "apps/web/src/lib/workspace-storage.ts": "13c6e100b2d18b4e8eb01f79c5c58c3c0e1ecc6cafcfcd8b7caa20b8576aaef9",
+    "apps/web/src/lib/workspace-storage.ts": "aaf3d1a73f41b709c48508c2851e4d7a94356771804483703c9c10b73d822a8e",
     "apps/web/src/middleware.ts": "aa96410899c2a73fdea48cd91468c24d779a0a6138bfdde682c77b27d28dfc0e",
     "apps/web/src/sentry.edge.config.ts": "0a8b2bfcae20d71760e166270a2a973bdaf73dbca94bc25a7392918e11062030",
     "apps/web/src/sentry.server.config.ts": "0a8b2bfcae20d71760e166270a2a973bdaf73dbca94bc25a7392918e11062030",
@@ -619,7 +619,7 @@
     "apps/web/tests/workspace-guided-year.spec.ts": "8683248504cbf2b14750b7032242429e15c9e29393a8b3dec5c5a24596e5e6d6",
     "apps/web/tests/workspace-lifecycle.spec.ts": "5b00c5d2e59c506c3ddc4f2c74fb90923038190a105db84a1d9c09cd1018a8d2",
     "apps/web/tests/workspace-recovery.spec.ts": "915b8b7b0249702d0afe1f70dac70c899006c22f76edb8789c6d6514a647e972",
-    "apps/web/tests/workspace-upload.spec.ts": "bdde4f3180c257ae53f8871c370e58458fd35b617c0dc16b260fe5f1ea17b8bf",
+    "apps/web/tests/workspace-upload.spec.ts": "bc5fae810b05d59e45baddb569fa15c5a0741d740503e87d87889283baa22280",
     "packages/contracts/package.json": "57053526d9dca0fab4f4d3ceeaf009a15472700a5886b3bed921a4c2c65ad3c7",
     "packages/contracts/src/index.ts": "a8dfe5de0d403af83e2700716479812cfe0acc21b388960e8a40bfbbc5227158",
     "packages/engine/package.json": "7b7310b15b3aef79dd78c97c5c4152c8eb240f47ba9d6c985e331e912cd4d0c3",
@@ -3871,7 +3871,7 @@
       "skippedTitles": []
     },
     "workspace-upload.spec.ts": {
-      "caseCount": 27,
+      "caseCount": 29,
       "bounds": {
         "filled-return": 0,
         "provider": 0,
@@ -3879,7 +3879,7 @@
         "self-employment-income-analysis": 0
       },
       "requestSourceLines": [],
-      "reviewBasis": "No filled-return URL/download action/helper in this spec; source search and helper inventory retained. Added three local guided cross-tab checks for deletion, reset and upload. They use the existing local upload path and open no review or provider endpoints. Added advanced answer and reopen cross-tab controls using the same local upload path and no protected requests.",
+      "reviewBasis": "No filled-return URL/download action/helper in this spec; source search and helper inventory retained. Added three local guided cross-tab checks for deletion, reset and upload. They use the existing local upload path and open no review or provider endpoints. Added advanced answer and reopen cross-tab controls using the same local upload path and no protected requests. Two upload/reset controls use local PDF parsing and IndexedDB, and exercise a successful local retry after reload without protected requests.",
       "skippedTitles": []
     },
     "pa-married-payment-native.spec.ts": {
