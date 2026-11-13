@@ -6,8 +6,7 @@ import { parseGuidedCurrency } from "./guided-currency";
 import { amountError, hasEnteredAmount } from "./guided-required-facts";
 import { buildGuidedIraBasisSources, type GuidedIraBasisContext } from "./guided-ira-basis";
 import {reconcileGuidedRetirementWithholding}from "./guided-retirement-withholding-reconciliation";
-import {retirementSourceInput}from "./guided-retirement-source-inputs";
-import { isStartedRetirement } from "./guided-retirement-source-inputs";
+import { isGuidedQualifiedLumpSum, isStartedRetirement, retirementSourceInput } from "./guided-retirement-source-inputs";
 export { isStartedRetirement } from "./guided-retirement-source-inputs";
 
 export interface RetirementSourceData {
@@ -31,6 +30,7 @@ export interface RetirementSourceData {
   localTaxWithheld?: string;
   localDistribution?: string;
   iraBasisConfirmedZero?: boolean | null;
+  qualifiedLumpSumReporting?: "ordinary_pension" | "form_4972" | null;
   eligibleGovernmental457bPlan?: boolean | null;
   governmental457bTransferredTaxableAmount?: string;
   directRolloverConfirmed?: boolean | null;
@@ -97,17 +97,24 @@ export function retirementFactErrors(entries: RetirementEntryData[] | undefined,
       sourceIds.add(sourceId);
     }
     const code = entry.distributionCode.trim().toUpperCase();
+    const qualifiedLumpSum = isGuidedQualifiedLumpSum(entry);
     if (!/^[1-9ABCDEFGHJKLMNPQRSTUWY]{1,2}$/.test(code)) fail("code", "Enter the actual Form 1099-R distribution code from Box 7 (2026 Box 7a).");
-    else if (!["1", "2", "4", "7", "G", "H", "1D", "2D", "4D", "7D", "D1", "D2", "D4", "D7"].includes(code)) fail("code", "This distribution code needs its actual basis, Roth, disability, QCD or other special worksheet; the ordinary guided route cannot calculate it yet.");
+    else if (!qualifiedLumpSum && !["1", "2", "4", "7", "G", "H", "1D", "2D", "4D", "7D", "D1", "D2", "D4", "D7"].includes(code)) fail("code", "This distribution code needs its actual basis, Roth, disability, QCD or other special worksheet; the ordinary guided route cannot calculate it yet.");
+    if (qualifiedLumpSum) {
+      if (entry.isIraSepSimple !== false) fail("lump-sum-source", "The Code A reporting decision requires an actual non-IRA source.");
+      if (entry.qualifiedLumpSumReporting === "form_4972") fail("lump-sum-reporting", "The separate Form 4972 calculation is required for this election.");
+      else if (entry.qualifiedLumpSumReporting !== "ordinary_pension") fail("lump-sum-reporting", "Choose the actual reporting method for this qualified lump-sum distribution.");
+    }
     if (code.includes("D") && (entry.isIraSepSimple !== false || entry.eligibleGovernmental457bPlan !== false)) fail("nonqualified-plan", "Code D identifies a nonqualified source; reconcile the actual IRA and governmental-plan classifications.");
     if (entry.requiresIraConfirmation) fail("isIraSepSimple", "Reconfirm the actual IRA checkbox; older versions prefilled an unchecked answer.");
     if (entry.requiresCodeConfirmation) fail("code", "Reconfirm the saved distribution code from the actual Form 1099-R; older versions prefilled code 7.");
-    for (const [field, label] of [["grossDistribution", "gross distribution"], ...((requireTaxableAmount && !boundIra) || hasEnteredAmount(entry.taxableAmount) ? [["taxableAmount", "taxable amount; unknown amounts need their actual worksheet"]] : []), ["federalWithheld", "federal tax withheld"], ...retirementSourceAmounts] as [keyof RetirementEntryData, string][]) {
+    const needsConfirmedTaxableAmount = qualifiedLumpSum || (requireTaxableAmount && !boundIra);
+    for (const [field, label] of [["grossDistribution", "gross distribution"], ...(needsConfirmedTaxableAmount || hasEnteredAmount(entry.taxableAmount) ? [["taxableAmount", "taxable amount; unknown amounts need their actual worksheet"]] : []), ["federalWithheld", "federal tax withheld"], ...retirementSourceAmounts] as [keyof RetirementEntryData, string][]) {
       const message = amountError(entry[field] as string | undefined, label); if (message) fail(field, message);
     }
     if (hasEnteredAmount(entry.taxableAmount) && !amountError(entry.taxableAmount, "taxable amount") && !amountError(entry.grossDistribution, "gross distribution") && parseGuidedCurrency(entry.taxableAmount).gt(parseGuidedCurrency(entry.grossDistribution))) fail("taxableAmount", "Taxable amount cannot exceed gross distribution; review the source form.");
     for (const field of ["isIraSepSimple", "taxableAmountNotDetermined", "eligibleGovernmental457bPlan", "militaryPensionOrSurvivorBenefit", "qualifiedJointSurvivorAnnuity"] as const) if (typeof entry[field] !== "boolean") fail(field, "Confirm the actual retirement source checkbox or classification; blank is not no.");
-    if (requireTaxableAmount && !boundIra && entry.taxableAmountConfirmed !== true) fail("taxable-confirmation", "Confirm taxability from the actual source and applicable basis records; Box 2a or a default zero alone cannot establish it.");
+    if (needsConfirmedTaxableAmount && entry.taxableAmountConfirmed !== true) fail("taxable-confirmation", "Confirm taxability from the actual source and applicable basis records; Box 2a or a default zero alone cannot establish it.");
     if (entry.isIraSepSimple === true && !boundIra && entry.iraBasisConfirmedZero !== true) fail("ira-basis", "An IRA with unknown or positive nondeductible basis requires the actual Form 8606 owner worksheet before calculation.");
     if (entry.eligibleGovernmental457bPlan === true) {
       if (entry.isIraSepSimple !== false) fail("457-plan", "A governmental 457(b) distribution cannot also be an IRA distribution.");

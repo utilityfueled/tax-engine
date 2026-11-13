@@ -114,7 +114,13 @@ export function SectionRetirementIncome({
     value: RetirementEntryData[K],
   ) {
     const next = entries.map((entry, i) =>
-      i === index ? { ...entry, sourceFactsConfirmed: null, [field]: value, ...(field === "distributionCode" ? { requiresCodeConfirmation: false } : {}), ...(field === "isIraSepSimple" ? { requiresIraConfirmation: false } : {}) } : entry
+      i === index ? {
+        ...entry, sourceFactsConfirmed: null, [field]: value,
+        ...(field === "distributionCode" ? { requiresCodeConfirmation: false } : {}),
+        ...(field === "isIraSepSimple" ? { requiresIraConfirmation: false } : {}),
+        ...((field === "sourceTaxYear" || field === "distributionCode" || field === "isIraSepSimple") && entry[field] !== value
+          ? { qualifiedLumpSumReporting: null } : {}),
+      } : entry
     );
     onEntriesChange(next);
   }

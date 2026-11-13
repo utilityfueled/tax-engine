@@ -1,6 +1,10 @@
 import type { RetirementEntryData } from './guided-interview-flow';
 import { parseGuidedCurrency } from './guided-currency';
 
+export function isGuidedQualifiedLumpSum(entry: RetirementEntryData): boolean {
+  return entry.sourceTaxYear === '2026' && /^(?:[47]A|A[47])$/.test(entry.distributionCode.trim().toUpperCase());
+}
+
 export function isStartedRetirement(entry: RetirementEntryData): boolean {
   return Object.entries(entry).some(([key, value]) => !['requiresCodeConfirmation', 'requiresIraConfirmation'].includes(key) && (typeof value === 'string' ? value.trim() !== '' : value === true));
 }
@@ -17,6 +21,7 @@ export function retirementSourceInput(entry: RetirementEntryData) {
     accountReference: entry.accountReference?.trim() || undefined,
     grossDistribution: amount(entry.grossDistribution), taxableAmount: amount(entry.taxableAmount), federalWithheld: amount(entry.federalWithheld),
     iraSepSimple: entry.isIraSepSimple ?? undefined, distributionCode: entry.distributionCode.trim().toUpperCase(),
+    qualifiedLumpSumReporting: isGuidedQualifiedLumpSum(entry) ? entry.qualifiedLumpSumReporting ?? undefined : undefined,
     iraBasisConfirmedZero: entry.isIraSepSimple === true ? entry.iraBasisConfirmedZero ?? undefined : undefined,
     taxableAmountNotDetermined: entry.taxableAmountNotDetermined ?? undefined, employeeContributions: amount(entry.employeeContributions),
     eligibleGovernmental457bPlan: entry.eligibleGovernmental457bPlan ?? undefined,

@@ -26,6 +26,24 @@ async function render(initial: RetirementEntryData[], run: (context: { latest: (
 }
 const confirm = "Have you checked all retirement source and taxability facts after the last edit?";
 
+it("records the qualified lump-sum reporting choice and clears it after a code edit", async () => {
+  const method = "Qualified lump-sum reporting method";
+  const source = { ...completeRetirementSource, sourceTaxYear: "2026", distributionCode: "4A" };
+  await render([source], async ({ latest, change }) => {
+    expect(latest()[0]?.qualifiedLumpSumReporting).toBeUndefined();
+    await change(method, "form_4972");
+    await change(confirm, "true");
+    expect(latest()[0]?.qualifiedLumpSumReporting).toBe("form_4972");
+    expect(() => buildRetirementInputs(latest(), "single", 2026)).toThrow(/separate Form 4972/i);
+    await change(method, "ordinary_pension");
+    await change(confirm, "true");
+    expect(buildRetirementInputs(latest(), "single", 2026)[0]?.qualifiedLumpSumReporting).toBe("ordinary_pension");
+    await change("Distribution code (Box 7a)", "7A");
+    expect(latest()[0]?.qualifiedLumpSumReporting).toBeNull();
+    expect(latest()[0]?.sourceFactsConfirmed).toBeNull();
+  });
+});
+
 it("collects an actual ordinary retirement record without defaulting the checkbox, taxability or source zeros", async () => {
   await render([{ ...emptyRetirementEntry }], async ({ latest, container, change }) => {
     expect(latest()[0]?.isIraSepSimple).toBeNull();

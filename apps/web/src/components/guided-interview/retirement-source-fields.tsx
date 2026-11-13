@@ -2,6 +2,7 @@
 
 import type { RetirementEntryData } from "@/lib/guided-interview-flow";
 import { retirementSourceAmounts } from "@/lib/guided-retirement-facts";
+import { isGuidedQualifiedLumpSum } from "@/lib/guided-retirement-source-inputs";
 import { CurrencyField } from "./currency-field";
 
 function Fact({ label, value, onChange }: { label: string; value: boolean | null | undefined; onChange: (value: boolean | null) => void }) {
@@ -18,6 +19,17 @@ export function RetirementSourceFields({ entry, onUpdate, basisMode = false }: {
     <Text label="Retirement account reference (last four digits or local statement label)" value={entry.accountReference} onChange={value => onUpdate("accountReference", value)} />
     <label className="guided-field"><span className="guided-field-label">Actual retirement distribution recipient</span><select className="guided-input" value={entry.accountHolder ?? ""} onChange={event => onUpdate("accountHolder", event.target.value as RetirementEntryData["accountHolder"])}><option value="">Choose actual recipient</option><option value="primary">Primary taxpayer</option><option value="spouse">Spouse</option></select></label>
     <Fact label={`IRA / SEP / SIMPLE checkbox (${entry.sourceTaxYear === "2026" ? "Box 7b" : "Box 7"})`} value={entry.requiresIraConfirmation ? null : entry.isIraSepSimple} onChange={value => onUpdate("isIraSepSimple", value)} />
+    {isGuidedQualifiedLumpSum(entry) && entry.isIraSepSimple === false && <label className="guided-field">
+      <span className="guided-field-label">Qualified lump-sum reporting method</span>
+      <select className="guided-input" value={entry.qualifiedLumpSumReporting ?? ""} onChange={event => {
+        const value = event.target.value;
+        onUpdate("qualifiedLumpSumReporting", value === "ordinary_pension" || value === "form_4972" ? value : null);
+      }}>
+        <option value="">Choose actual reporting method</option>
+        <option value="ordinary_pension">Ordinary pension reporting on Form 1040</option>
+        <option value="form_4972">Special tax election on Form 4972</option>
+      </select>
+    </label>}
     <Fact label="Is taxable amount not determined checked in Box 2b?" value={entry.taxableAmountNotDetermined} onChange={value => onUpdate("taxableAmountNotDetermined", value)} />
     {!basisMode && <Fact label="Have you established the actual taxable amount from the source and applicable basis records?" value={entry.taxableAmountConfirmed} onChange={value => onUpdate("taxableAmountConfirmed", value)} />}
     {retirementSourceAmounts.map(([field, label]) => <CurrencyField key={field} label={label} value={entry[field] ?? ""} onChange={value => onUpdate(field, value)} required />)}

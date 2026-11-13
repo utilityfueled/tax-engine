@@ -270,6 +270,18 @@ lines:
     irsRef: "2026 Instructions for Forms 1099-R and 5498, Box 7a Code A; 2026 Form 4972 Parts I–III; Form 1040 instructions, Lines 5a, 5b and 16"
     testRef: "tests/engine/federal-pension-sources-2026.test.ts::2026 qualified lump-sum reporting decision"
 
+  - line: "2026-guided-lump-sum-election"
+    description: "Preserve the taxpayer's explicit reporting choice on a 2026 guided pension source"
+    formula: >-
+      For an original non-IRA Code 4 or 7 combined with Code A, require an
+      explicit ordinary reporting choice and confirmed, determined Box 2a.
+      A blank answer or an actual Form 4972 election remains incomplete in
+      the ordinary guided route. Preserve the chosen method in the saved
+      original and forward it only with the matching source year and code.
+      Editing the source year or code requires a new reporting choice.
+    irsRef: "2026 Instructions for Forms 1099-R and 5498, Box 7a Code A; 2026 Form 4972 Parts I–III"
+    testRef: "tests/guided-interview/guided-interview-bridge.test.ts::2026 guided qualified lump-sum decision"
+
   - line: "2026-ira-source"
     description: "Form 1040 Lines 4a and 4b require owner evidence for ordinary traditional IRA taxability in tax year 2026"
     formula: >-

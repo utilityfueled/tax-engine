@@ -1563,6 +1563,34 @@ describe("buildRetirementInputs", () => {
     expect(() => buildRetirementInputs([entry])).toThrow(/actual retirement payer/i);
   });
 
+  describe("2026 guided qualified lump-sum decision", () => {
+    const source = { ...completeRetirementSource, sourceTaxYear: "2026", distributionCode: "7A" };
+
+    it.each(["4A", "A4", "7A", "A7"])("keeps the explicit ordinary decision for %s", distributionCode => {
+      const entry = { ...source, distributionCode, qualifiedLumpSumReporting: "ordinary_pension" as const };
+      expect(buildRetirementInputs([entry], "single", 2026)).toMatchObject([{
+        taxYear: 2026, distributionCode, taxableAmount: "1000", qualifiedLumpSumReporting: "ordinary_pension",
+      }]);
+    });
+
+    it("holds an unknown choice or a Form 4972 election", () => {
+      expect(() => buildRetirementInputs([source], "single", 2026)).toThrow(/choose.*reporting/i);
+      expect(() => buildRetirementInputs([{ ...source, qualifiedLumpSumReporting: "form_4972" }], "single", 2026)).toThrow(/separate Form 4972/i);
+    });
+
+    it("requires a determined taxable amount and a non-IRA source", () => {
+      const entry = { ...source, qualifiedLumpSumReporting: "ordinary_pension" as const };
+      expect(() => buildRetirementInputs([{ ...entry, taxableAmount: "" }], "single", 2026)).toThrow(/taxable amount/i);
+      expect(() => buildRetirementInputs([{ ...entry, taxableAmountConfirmed: null }], "single", 2026)).toThrow(/confirm taxability/i);
+      expect(() => buildRetirementInputs([{ ...entry, isIraSepSimple: true }], "single", 2026)).toThrow(/non-IRA/i);
+    });
+
+    it("does not forward a retained choice on a different source code", () => {
+      const entry = { ...source, distributionCode: "7", qualifiedLumpSumReporting: "ordinary_pension" as const };
+      expect(buildRetirementInputs([entry], "single", 2026)[0].qualifiedLumpSumReporting).toBeUndefined();
+    });
+  });
+
   it("handles multiple 1099-Rs", () => {
     const entries = [
       { ...completeRetirementSource, accountReference: "Vanguard-source", distributionCode: "7", payer: "Vanguard", grossDistribution: "20000", taxableAmount: "20000" },
