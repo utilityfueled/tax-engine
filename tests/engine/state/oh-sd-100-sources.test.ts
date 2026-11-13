@@ -422,3 +422,13 @@ it.each(retainedNonwageOriginals)('OH SD helper rejects retained source family b
   expect(invoke).toThrow('the finite ordinaryW2-only source method does not support other income/local originals');
   expect(input).toEqual(before);
 });
+
+it('requires the separate Ohio SD 100 method for reported combat pay', async () => {
+  const input = schoolDistrictSourcesFixture();
+  schoolW2(input).box12CodeQ = '0.00';
+  bindSchoolDistrictFixture(input);
+  await expect(source(input)).resolves.toBeDefined();
+  schoolW2(input).box12CodeQ = '0.01';
+  bindSchoolDistrictFixture(input);
+  await rejectSource(input, /military.*method/i);
+});

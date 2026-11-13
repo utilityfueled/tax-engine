@@ -138,3 +138,13 @@ it.each(changedPaymentMetadata)('denies changed finite payment identity or chron
   const changed={...adapted};mutate(changed);expect(changed.residencyReciprocalWageSource).toBe(context);
   expect(()=>calculateOhioResidentReturn(changed)).toThrow();expect(JSON.stringify(packet)).toBe(before);
 });
+
+it('requires the separate Ohio reciprocal method for reported combat pay', () => {
+  const p = reciprocalOhioWageFixture();
+  reciprocalW2(p).box12CodeQ = '0.00';
+  explicitlyReplaceReciprocalW2(p);
+  expect(run(p).it1040.line26_refund.toFixed()).toBe('2001');
+  reciprocalW2(p).box12CodeQ = '0.01';
+  explicitlyReplaceReciprocalW2(p);
+  expect(() => run(p)).toThrow(/separate.*method/i);
+});

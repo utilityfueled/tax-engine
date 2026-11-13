@@ -126,3 +126,16 @@ it("PA reciprocity - rejects incomplete coverage and keeps raw exclusion cents b
   expect(r.excludedReciprocalCompensation.toString()).toBe("0.49"); expect(r.compensation.toString()).toBe("16.49");
   expect(r.reportedCompensation.toString()).toBe("16"); expect(r.taxBeforeCredits.toString()).toBe("0");
 });
+
+it('requires the separate PA reciprocal method for reported combat pay', () => {
+  const f = paReciprocityFixture();
+  const run = () => calculatePAReciprocalCompensation(f.input, f.residencySources, f.reciprocalSources);
+  for (const codeQ of ['0.00', '0.01']) {
+    const w = f.input.w2s[0];
+    w.box12CodeQ = codeQ;
+    f.residencySources.wages[0].original = structuredClone(w);
+    f.reciprocalSources.originals[0].originalW2 = structuredClone(w);
+    if (codeQ === '0.00') expect(run().totalExcludedPACompensation.toFixed()).toBe('50000');
+    else expect(run).toThrow(/military.*method/i);
+  }
+});

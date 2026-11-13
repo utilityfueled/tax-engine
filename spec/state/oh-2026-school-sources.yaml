@@ -8,6 +8,10 @@ sources:
   - https://codes.ohio.gov/ohio-revised-code/section-5748.01
   - https://codes.ohio.gov/ohio-revised-code/section-5748.02
 lines:
+  - line: "w2-code-q-admission"
+    description: "Require the separate state military compensation method when combat pay is reported"
+    formula: "Positive actual W2 Box 12 Code Q identifies nontaxable combat pay from a military employer and contradicts the finite ordinary employee admission. Reject even with matching originals and no retained duty classification. Code Q alone establishes neither duty location nor the treatment of Box 1 or 16. Preserve historical absent Code Q and confirmed zero when all other ordinary facts qualify. Sources verified 2026-11-13: https://www.irs.gov/instructions/iw2w3 and https://tax.ohio.gov/individual/military."
+    testRef: "tests/engine/state/oh-2026-school-source.test.ts::requires the separate Ohio school method for reported combat pay"
   - line: "annual-catalog"
     description: 'Rev3/26 annual214 taxing districts,68earned and146traditional; code/rate/base valid only2026. Unknown or expired lookup is absent, never a no-tax residence conclusion.'
     formula: 'Exact annual authority; no guessed future levy end dates.'

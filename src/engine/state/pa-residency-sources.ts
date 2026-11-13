@@ -216,6 +216,7 @@ function amount(value: unknown): Decimal {
     if (row.ordinaryCashCompensationOnlyConfirmed !== true || !row.payroll.length) return error("actual ordinary cash payroll and PA/federal compensation facts required");
     const w2 = input.w2s[row.originalIndex as number];
     for (const key of ["box12CodeD", "box12CodeE", "box12CodeF", "box12CodeG", "box12CodeH", "box12CodeS", "box12CodeW", "box12CodeP", "box12CodeT", "box10DependentCareBenefits", "allocatedTips"] as const) if (w2[key] !== undefined && !amount(w2[key]).isZero()) return error("retained nonordinary PA/federal wage adjustment requires its actual source method");
+    if (w2.box12CodeQ !== undefined && amount(w2.box12CodeQ).gt(0)) return error("reported combat pay requires its actual military compensation method");
     if (w2.militaryService?.activeDuty === true) return error("military compensation requires its actual PA source method");
     const employee = actualEmployees.get(row.originalIndex as number);
     const employeeOriginal = source.employeeSources?.employers.find(actual => actual.originalIndex === row.originalIndex);

@@ -222,3 +222,14 @@ it('actual employee sources guard six-place and full-ratio dollar disagreement',
   // Printed gross1000001 /3 =>333334; printed six-place .333333 =>333333.
   expect(() => calculate(f)).toThrow(/precision|six|fraction/i);
 });
+
+it('requires the separate PA employee method for reported combat pay', () => {
+  const f = paOrdinaryEmployeeFixture(), w = f.input.w2s[0];
+  if (!w) throw new Error('Fixture requires the actual employer original');
+  w.box12CodeQ = '0.00';
+  employer(f).originalW2 = structuredClone(w);
+  expect(calculate(f).perEmployer[0]?.rawPAServiceCompensation.toFixed()).toBe('27000');
+  w.box12CodeQ = '0.01';
+  employer(f).originalW2 = structuredClone(w);
+  expect(() => calculate(f)).toThrow(/military.*method/i);
+});

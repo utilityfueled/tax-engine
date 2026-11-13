@@ -10,6 +10,10 @@ notes: |
   recalculated Virginia qualification. No PY/joint/business/SD/reciprocal/native/
   physical/2026/readiness/human qualification. Exact private originals digest only.
 lines:
+  - line: "w2-code-q-admission"
+    description: "Require the separate state military compensation method when combat pay is reported"
+    formula: "Positive actual W2 Box 12 Code Q identifies nontaxable combat pay from a military employer and contradicts the finite ordinary employee admission. Reject even with matching originals and no retained duty classification. Code Q alone establishes neither duty location nor the treatment of Box 1 or 16. Preserve historical absent Code Q and confirmed zero when all other ordinary facts qualify. Sources verified 2026-11-13: https://www.irs.gov/instructions/iw2w3 and https://tax.ohio.gov/individual/military."
+    testRef: "tests/engine/state/oh-resident-credit-sources.test.ts::requires the separate Ohio resident credit method for reported combat pay"
   - line: "actual-credit"
     formula: "OhioAGI100000/exemption1900/taxable98100 yields2323. ActualVAincome60000 is already in same OhioAGI; ratio truncate4(.6)=.6000; line6 roundDollar2323*.6=1394; actualnetpaid1000 after credits/refund -> credit1000, Ohio tax1323. ActualOhioWH2000 -> requestedrefund677; no refundreceived inferred."
     testRef: "tests/engine/state/oh-resident-credit-sources.test.ts::admits actual resident same-income Virginia tax with complete paid account"

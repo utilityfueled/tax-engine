@@ -143,6 +143,7 @@ function qualifyEmployee(input: TaxYearInput, raw: unknown, reciprocal?: Ohio202
     withholding = withholding.plus(actual.stateRows.filter(row => row.state === 'OH').reduce((sum, row) => sum.plus(row.withheld), new Decimal(0)));
     for (const key of ['socialSecurityTips', 'allocatedTips', 'box10DependentCareBenefits', 'box12CodeW', 'box12CodeD', 'box12CodeE', 'box12CodeF', 'box12CodeG', 'box12CodeH', 'box12CodeS', 'box12CodeAA', 'box12CodeBB', 'box12CodeEE', 'box12CodeT'] as const) if (!cash(w2[key]).isZero()) fail('actual nonspecial W2 boxes including known zero required');
     for (const key of ['federalWithheld', 'socialSecurityWages', 'socialSecurityWithheld', 'medicareWages', 'medicareWithheld'] as const) cash(w2[key]);
+    if (w2.box12CodeQ !== undefined && cash(w2.box12CodeQ).gt(0)) fail('reported combat pay requires its separate military compensation method');
     if (w2.militaryService || (w2.box12CodeP !== undefined && !cash(w2.box12CodeP).isZero()) || w2.box12CodeTP !== undefined || w2.box12CodeTT !== undefined || w2.treasuryTippedOccupationCodes !== undefined) fail('special compensation requires its separate source method');
     let wages = new Decimal(0), next = day('2026-01-01');
     for (const row of [...employment.serviceRows].sort((a, b) => a.from.localeCompare(b.from))) {

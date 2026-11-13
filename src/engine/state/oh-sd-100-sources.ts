@@ -139,6 +139,7 @@ export function buildOhioSchoolDistrictSource(input: TaxYearInput, federal: TaxR
     if (w2.accountHolder !== 'primary') fail('actual W2 owner differs');
     if (!w2.stateLocalSources) fail('complete current actual W2 original packet is required');
     if (coverage.box14SchoolDistrictReporting.status !== 'none') fail('actual box14 school reporting is unknown or requires its separate method');
+    if (w2.box12CodeQ !== undefined && money(w2.box12CodeQ, 'Box 12 Code Q').gt(0)) fail('reported combat pay requires its separate military compensation method');
     if (w2.militaryService?.activeDuty || money(w2.allocatedTips ?? '', 'allocated tips').gt(0)) fail('special ordinary wage/tip or military method is unsupported');
     const checked = calculateW2StateLocalSources(input, coverage.w2Index, w2.stateLocalSources);
     actualWages = actualWages.plus(money(w2.wages, 'W2 wages'));

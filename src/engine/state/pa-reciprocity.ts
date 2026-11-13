@@ -116,6 +116,7 @@ export function calculatePAReciprocalCompensation(input:TaxYearInput, rawOrdinar
   const originalIdentity=stable(semantic(w2,year));if(identities.has(originalIdentity)) return error("indistinguishable duplicate actual originals");identities.add(originalIdentity);
   for(const [key,value] of Object.entries(w2)) if(typeof value==="string" && /wages|withheld|tips|benefits|box12Code/i.test(key)) amount(value);
   for(const key of ["box12CodeD","box12CodeE","box12CodeF","box12CodeG","box12CodeH","box12CodeS","box12CodeW","box12CodeT","box12CodeP","box10DependentCareBenefits","allocatedTips"] as const) if(w2[key]!==undefined && !amount(w2[key]).isZero()) return error("nonordinary PA wage adjustment needs actual method");
+  if(w2.box12CodeQ!==undefined&&amount(w2.box12CodeQ).gt(0))return error("reported combat pay requires its actual military compensation method");
   if(w2.militaryService?.activeDuty===true || !row.payroll.length) return error("ordinary actual payroll source method required");
   let gross=new Decimal(0);const refs=new Set<string>();
   for(const [j,pay] of row.payroll.entries()){

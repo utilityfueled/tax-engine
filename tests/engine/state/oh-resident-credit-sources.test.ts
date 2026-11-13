@@ -54,3 +54,18 @@ it('retains actual zero tax and exact raw account sums without inventing paid ta
  const zero=ohioResidentCreditFixture('60000','0','2500');const z=run(zero);expect(z.residentCredit?.line1_totalDoubleTaxedIncome.toString()).toBe('0');expect(z.residentCredit?.line2_totalOtherStateTax.toString()).toBe('0');expect(z.residentCredit?.totalResidentCredit.toString()).toBe('0');expect(z.it1040.line10_taxAfterCredits.toString()).toBe('2323');expect(z.it1040.line26_refund.toString()).toBe('177');
  const p=ohioResidentCreditFixture(),first=p.source.completedAccount.payments[0];if(!first)throw new Error('Actual fixture receipt required');first.amount='600.24';const second=structuredClone(first);second.amount='599.76';second.date='2025-12-30';second.sourceId='PRIVATE-VA-SECOND-APPLIED-RECEIPT';second.sourceReference='PRIVATE-VA-SECOND-APPLIED-ORIGINAL';p.source.completedAccount.payments.push(second);const a=run(p);expect(a.residentCredit?.line2_totalOtherStateTax.toString()).toBe('1000');p.source.completedAccount.payments.reverse();const b=run(p);expect(b.it1040.line26_refund.toString()).toBe('677');expect(a.lines).not.toEqual(b.lines);
 });
+
+it('requires the separate Ohio resident credit method for reported combat pay', () => {
+  const p = ohioResidentCreditFixture(), w = p.input.w2s[0];
+  if (!w?.stateLocalSources) throw new Error('Fixture requires actual W2 rows');
+  const rows = w.stateLocalSources;
+  for (const codeQ of ['0.00', '0.01']) {
+    w.box12CodeQ = codeQ;
+    const { stateLocalSources: _rows, ...original } = w;
+    rows.originalW2 = structuredClone(original);
+    p.source.originalW2 = structuredClone(w);
+    rebindResidentCreditOuter(p);
+    if (codeQ === '0.00') expect(run(p).it1040.line26_refund.toFixed()).toBe('677');
+    else expect(() => run(p)).toThrow(/separate.*method/i);
+  }
+});

@@ -222,3 +222,20 @@ describe('Ohio2026 current ordinary source-to-return draft', () => {
     expect(() => run(p)).toThrow(/reciprocal/);
   });
 });
+
+it('routes reported combat pay to a separate method for each Ohio residency', () => {
+  for (const [status, wages, refund] of [
+    ['full_year_resident', '50000', '68'], ['part_year_resident', '30000', '441'], ['nonresident', '10000', '814'],
+  ] as const) {
+    const p = ohio2026OrdinaryFixture(status, '50000', wages);
+    const w = w2(p), rows = current(w.stateLocalSources);
+    for (const codeQ of ['0.00', '0.01']) {
+      w.box12CodeQ = codeQ;
+      const { stateLocalSources: _rows, ...original } = w;
+      rows.originalW2 = structuredClone(original);
+      rebindOhio2026Ordinary(p);
+      if (codeQ === '0.00') expect(run(p).refund.toFixed()).toBe(refund);
+      else expect(() => run(p)).toThrow(/separate.*method/i);
+    }
+  }
+});

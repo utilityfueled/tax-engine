@@ -74,6 +74,7 @@ export function calculateOhioReciprocalWageSource(input:TaxYearInput,result:TaxR
   for(const key of ['socialSecurityTips','allocatedTips','box10DependentCareBenefits','box12CodeW','box12CodeD','box12CodeE','box12CodeF','box12CodeG','box12CodeH','box12CodeS','box12CodeAA','box12CodeBB','box12CodeEE','box12CodeT'] as const){
     const value=w2[key];if(value===undefined||!new Decimal(value).isZero())fail('actual all-box known zero and ordinary compensation classification required');
   }
+  if(w2.box12CodeQ!==undefined&&new Decimal(w2.box12CodeQ).gt(0))fail('reported combat pay requires its separate military compensation method');
   if((w2.box12CodeP!==undefined&&!new Decimal(w2.box12CodeP).isZero())||w2.box12CodeTP!==undefined||w2.box12CodeTT!==undefined||(w2.treasuryTippedOccupationCodes?.length??0)>0)fail('special compensation needs its separate source method');
   if(!result.totalIncome.eq(w2.wages)||!result.totalWages.eq(w2.wages)||!result.agi.eq(w2.wages)||!result.adjustmentsToIncome.isZero())fail('actual complete federal wage and adjustment totals differ');
   const domicile=source.domicileOriginal,entity=source.employerEntityOriginal,services=source.serviceOriginal;

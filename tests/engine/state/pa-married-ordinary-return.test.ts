@@ -63,3 +63,16 @@ it('PA married ordinary does not infer priorSP ineligibility from actual no retu
  const before=JSON.stringify(f);expect(()=>calculatePAMarriedOrdinaryReturn(f.input,f.sources)).toThrow(/prior.*(?:exemption|forgiveness|eligibility)/i);expect(JSON.stringify(f)).toBe(before);
  const fullyWithheld=paMarriedOrdinaryFixture();const r=calculatePAMarriedOrdinaryReturn(fullyWithheld.input,fullyWithheld.sources);expect(r.returns[0].rev1630.penaltyRequired).toBe(false);expect(r.returns[0].pa40.penaltiesAndInterest.toString()).toBe('0');expect(r.returns[0].pa40.taxLiability.toString()).toBe('2456');
 });
+
+it('requires the separate PA married method for reported combat pay', () => {
+  for (const mode of ['J', 'M'] as const) {
+    const f = fixture(mode), w = f.input.w2s[1];
+    for (const codeQ of ['0.00', '0.01']) {
+      w.box12CodeQ = codeQ;
+      f.sources.wages[1].original = structuredClone(w);
+      refresh(f);
+      if (codeQ === '0.00') expect(calculatePAMarriedOrdinaryReturn(f.input, f.sources).filingMode).toBe(mode);
+      else expect(() => calculatePAMarriedOrdinaryReturn(f.input, f.sources)).toThrow(/military.*successor/i);
+    }
+  }
+});

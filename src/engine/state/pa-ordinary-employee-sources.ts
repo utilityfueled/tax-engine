@@ -177,6 +177,7 @@ export function calculatePAOrdinaryEmployeeSources(input: TaxYearInput, raw: unk
     if (normalize(row.employer.name) !== normalize(w2.employer.name) || identifier(row.employer.ein) !== identifier(w2.employer.ein) || !/^\d{9}$/.test(identifier(row.employer.ein))) return fail('actual employer identity does not reconcile original W2');
     if (row.allocationMethod !== 'working_days' || row.workplaceBasis === '' || row.specialInterstateOccupation !== 'none') return fail('unknown workplace, business-volume or special interstate employee method requires its successor');
     for (const key of ['box12CodeD', 'box12CodeE', 'box12CodeF', 'box12CodeG', 'box12CodeH', 'box12CodeS', 'box12CodeW', 'box12CodeP', 'box12CodeT', 'box10DependentCareBenefits', 'allocatedTips'] as const) if (w2[key] !== undefined && !money(w2[key]).isZero()) return fail('nonordinary wage adjustment requires its actual source method');
+    if (w2.box12CodeQ !== undefined && money(w2.box12CodeQ).gt(0)) return fail('reported combat pay requires its actual military compensation method');
     if (w2.militaryService?.activeDuty === true) return fail('military employee allocation requires its actual source method');
     const statement = row.statement;
     for (const text of [statement.documentReference, statement.signerName, statement.signerRole]) ref(text);

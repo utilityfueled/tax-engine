@@ -14,6 +14,10 @@ notes: |
   actual 2025 PA40 IN pp4-7,14,42-43; current DOR OBBBA conformity table. PA tax
   is independent of federal AGI and personal/QBI/SALT/tips/overtime deductions.
 lines:
+  - line: "w2-code-q-admission"
+    description: "Require the separate state military compensation method when combat pay is reported"
+    formula: "Positive actual W2 Box 12 Code Q identifies nontaxable combat pay from a military employer and contradicts the finite ordinary employee admission. Reject even with matching originals and no retained duty classification. Code Q alone establishes neither duty location nor the treatment of Box 1 or 16. Preserve historical absent Code Q and confirmed zero when all other ordinary facts qualify. Sources verified 2026-11-13: https://www.irs.gov/instructions/iw2w3 and https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax/military-pay."
+    testRef: "tests/engine/state/pa-residency-sources.test.ts::routes reported combat pay to a separate method for each PA residency"
   - line: "residency"
     description: "Derive actual owner residency from domicile, abode and physical-presence records"
     formula: |

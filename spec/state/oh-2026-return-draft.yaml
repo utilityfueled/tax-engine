@@ -30,6 +30,10 @@ notes: |
   Calculation status remains incomplete, filingQualified=false, review pending;
   final2026 form identities/numbering and professional review are separate gates.
 lines:
+  - line: "w2-code-q-admission"
+    description: "Require the separate state military compensation method when combat pay is reported"
+    formula: "Positive actual W2 Box 12 Code Q identifies nontaxable combat pay from a military employer and contradicts the finite ordinary employee admission. Reject even with matching originals and no retained duty classification. Code Q alone establishes neither duty location nor the treatment of Box 1 or 16. Preserve historical absent Code Q and confirmed zero when all other ordinary facts qualify. Sources verified 2026-11-13: https://www.irs.gov/instructions/iw2w3 and https://tax.ohio.gov/individual/military."
+    testRef: "tests/engine/state/oh-2026-return-draft.test.ts::routes reported combat pay to a separate method for each Ohio residency"
   - line: "source-admission"
     description: "Bind a current ordinary employee packet to all current originals"
     formula: "Require taxYear2026, actual filing/owner identities, all-original-source-family inventory (reject unknown/unhandled even if zero), W2 source validation, complete Ohio residency periods/categories, exact original snapshot and source commitments. Derive wages/withholding from actual W2 rows once; state wages are not a substitute for services allocation. Require all unknown adjustment/credit/payment facts, never optional defaults."

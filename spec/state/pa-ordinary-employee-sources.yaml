@@ -68,6 +68,10 @@ rounding: |
   cross-employer loss deduction. No phaseout or federal 2percent/50percent limit
   applies to these direct UE categories; each factual condition remains required.
 lines:
+  - line: "w2-code-q-admission"
+    description: "Require the separate state military compensation method when combat pay is reported"
+    formula: "Positive actual W2 Box 12 Code Q identifies nontaxable combat pay from a military employer and contradicts the finite ordinary employee admission. Reject even with matching originals and no retained duty classification. Code Q alone establishes neither duty location nor the treatment of Box 1 or 16. Preserve historical absent Code Q and confirmed zero when all other ordinary facts qualify. Sources verified 2026-11-13: https://www.irs.gov/instructions/iw2w3 and https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax/military-pay."
+    testRef: "tests/engine/state/pa-ordinary-employee-sources.test.ts::requires the separate PA employee method for reported combat pay"
   - line: "NRH1"
     description: "Employed calendar days"
     formula: "Count all explicitly documented employment calendar dates"

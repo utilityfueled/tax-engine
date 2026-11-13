@@ -122,6 +122,7 @@ export function calculateOhio2026SchoolSource(input: TaxYearInput, raw: unknown)
                 fail('actual nonspecial compensation including known zero required');
         for (const key of ['wages', 'federalWithheld', 'socialSecurityWages', 'socialSecurityWithheld', 'medicareWages', 'medicareWithheld'] as const)
             cash(w[key]);
+        if (w.box12CodeQ !== undefined && cash(w.box12CodeQ).gt(0)) fail('reported combat pay requires its separate military compensation method');
         if (w.militaryService || (w.box12CodeP !== undefined && !cash(w.box12CodeP).isZero()) || w.box12CodeTP !== undefined || w.box12CodeTT !== undefined || w.treasuryTippedOccupationCodes !== undefined)
             fail('special compensation requires separate method');
         if (school.localRows.length !== actual.localRows.length || new Set(school.localRows.map(v => v.printedRow)).size !== school.localRows.length)

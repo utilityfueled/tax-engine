@@ -186,3 +186,16 @@ describe("PA actual ordinary residency sources", () => {
   });
 
 });
+
+it('routes reported combat pay to a separate method for each PA residency', () => {
+  for (const [status, expected] of [['resident', '50000'], ['part_year', '26000'], ['nonresident', '6000']] as const) {
+    const { input, sources } = paOrdinaryResidencyFixture(status, 2026);
+    const w = input.w2s[0], source = sources.wages[0];
+    for (const codeQ of ['0.00', '0.01']) {
+      w.box12CodeQ = codeQ;
+      source.original = structuredClone(w);
+      if (codeQ === '0.00') expect(calculatePAResidencySources(input, sources).compensation.toFixed()).toBe(expected);
+      else expect(() => calculatePAResidencySources(input, sources)).toThrow(/military.*method/i);
+    }
+  }
+});

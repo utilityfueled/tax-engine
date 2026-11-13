@@ -13,6 +13,10 @@ notes: |
   allocation absent its actual separate-PA successor. Printed request is not cash.
   No native/public/PDF integration or final2026/fullreturn qualification claim.
 lines:
+  - line: "w2-code-q-admission"
+    description: "Require the separate state military compensation method when combat pay is reported"
+    formula: "Positive actual W2 Box 12 Code Q identifies nontaxable combat pay from a military employer and contradicts the finite ordinary employee admission. Reject even with matching originals and no retained duty classification. Code Q alone establishes neither duty location nor the treatment of Box 1 or 16. Preserve historical absent Code Q and confirmed zero when all other ordinary facts qualify. Sources verified 2026-11-13: https://www.irs.gov/instructions/iw2w3 and https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax/military-pay."
+    testRef: "tests/engine/state/pa-married-ordinary-return.test.ts::requires the separate PA married method for reported combat pay"
   - line: "household"
     description: Both current actual owners and original household facts
     formula: Require two distinct original current identities, actual full-year PA domicile/abode/day facts, living/cohabiting marital sources, calendar years and complete worldwide source proof. No absent owner default or cloned single federal return. Explicit contradictory canonical marital/residency facts reject. Retained other nonempty source blocks, even net-zero business or offsetting adjustments, cannot be omitted by a worldwide-known-none answer.

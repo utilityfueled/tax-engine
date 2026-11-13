@@ -97,3 +97,13 @@ it.each(canonicalDefaultArrays)('admits named canonical array only when empty: %
 it.each(canonicalDefaultArrays)('rejects a nonempty retained canonical source array: %s',key=>{const p=parsedCanonical();Reflect.set(p.input,key,[{amount:'0',sourceReference:'ACTUAL-NONEMPTY-UNSUPPORTED'}]);rebindOhio2026School(p);expect(()=>run(p)).toThrow(/other retained/);});
 it.each(canonicalDefaultArrays)('rejects null or nonarray source values at named canonical keys: %s',key=>{for(const value of [null,{},'',0]){const p=parsedCanonical();Reflect.set(p.input,key,value);rebindOhio2026School(p);expect(()=>run(p)).toThrow(/other retained/);}});
 it('rejects unknown empty arrays rather than inferring harmless source types',()=>{const p=parsedCanonical();Reflect.set(p.input,'unknownFutureIncomeOriginals',[]);rebindOhio2026School(p);expect(()=>run(p)).toThrow(/other retained/);});
+
+it('requires the separate Ohio school method for reported combat pay', () => {
+  const p = ohio2026SchoolFixture();
+  current(p.input.w2s[0]).box12CodeQ = '0.00';
+  rebindOhio2026School(p);
+  expect(readOhio2026SchoolSource(run(p), p.input, p.sources).schoolWithholding).toBe('625.25');
+  current(p.input.w2s[0]).box12CodeQ = '0.01';
+  rebindOhio2026School(p);
+  expect(() => run(p)).toThrow(/separate.*method/i);
+});
