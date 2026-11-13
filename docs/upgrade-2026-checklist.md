@@ -6,6 +6,13 @@ below retain their original evidence boundaries.
 
 ## Active continuation — November 13 Eastern
 
+- [x] Project the IRS Taylor and Finley building-exchange examples on the
+  disabled final Form 8824 in `00f5a9b1`. Pass 162 focused checks, 8,892 spec
+  references and separate readback and visual inspection of four pages.
+- [ ] Complete the exact `00f5a9b1` combined suite and the final-source hosted
+  and ARM64/AMD64 rehearsals. Keep commits local while the production push
+  hold is in effect.
+
 - [x] Reconfirm the dependent-care worksheet after income-source changes and
   document the separate Code Q treatment for care and IRA compensation in
   `6cccc932`. Pass 299 targeted tests. The exact combined run is in progress.
@@ -16,13 +23,14 @@ below retain their original evidence boundaries.
   line 1i. [Election evidence](upgrade-2026-eic-combat-pay-work.md).
 - [x] Close all 12 archived `ab47d87f` checks. Unit and coverage pass 27,684
   tests at 87.83% branches. Chromium passes 616 with five hosted-only skips.
-- [ ] Finish the isolated automatic Stripe retry on the approved `ab47d87f`
-  Preview. Verify the original event's scheduled delivery after the actual
-  503, one durable receipt, both scoped subscription states and cleanup.
-  The protected workspace backend already passed same-ID tenant isolation.
-- [ ] Build and verify the current ARM64 image in the fresh empty VM.
-  First-boot guest free space was 401,849,769,984 bytes. Compose recovery,
-  full native browser tests and a same-image scan remain open.
+- [x] Finish the isolated automatic Stripe retry on `ab47d87f`. Verify
+  automatic delivery after an actual 503, one durable receipt, both scoped
+  subscription states and cleanup. Confirm tenant isolation and the
+  separate fail-closed Upstash credential exercise.
+- [x] Verify the `f4b0b608` ARM64 image after separate import. Pass smoke,
+  six Compose recovery phases, the scan and 621 Chromium cases with five
+  hosted-only skips. Verify normal VM stop and original socket restoration
+  through a separate cleanup after the tool interruption.
   [Rehearsal evidence](upgrade-2026-nov13-release-rehearsals.md).
 
 - [x] Preserve the ordinary state scope for actual combat-pay originals in

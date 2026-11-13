@@ -138,3 +138,41 @@ disposition. [ARM64 advisory register](upgrade-2026-image-advisories-20261113-ar
 
 The earlier normal-stop receipt SHA-256 is
 `c307ba49ff828bf86ff27c39ea89f2f66d4c22b6b08ed8be7eba1f1d784ea60b`.
+
+### ARM64 follow-up on `f4b0b608`
+
+The first `8d666cc1` transfer stopped when the system Python lacked
+`hashlib.file_digest`. A second attempt passed image import, smoke, scan
+and recovery. Browser collection rejected the supplemental fixture registry
+mode. The next stage verified mode 0644 and all fixture hashes. An
+`f4b0b608` preflight then stopped at the existing host-space floor before
+boot. Removing generated dependencies and builds from six completed
+temporary checkouts freed enough space for the retry.
+
+The admitted `f4b0b608` run built and imported the native image into the
+separate runtime store, passed smoke, recovered through all six Compose
+phases and passed 621 Chromium cases with the original five hosted-only
+skips and zero failures. The encrypted recovery captured 401 synthetic
+requests and found none of the checked raw markers in their URLs or bodies.
+The scan matched all 197 earlier findings by advisory, package, version,
+severity and fix status. The 86 advisories still require owner disposition.
+
+The tool interrupted the outer controller after the browser success log.
+The original controller did not write its final receipt. A separate
+cleanup verified the candidate image and operation label, normally stopped
+and removed only the owned browser container, stopped the named test VM,
+and verified the original user socket route, root link and default
+connection. Two separate interrupted local suites left disposable
+PostgreSQL clusters, which also shut down normally after PID and data
+directory verification.
+
+| ARM64 `f4b0b608` evidence | SHA-256 |
+| --- | --- |
+| Tracked source archive | `330a80e4274c45914bd04250b254052b73a00db4127870b94d0dabdc62b3b596` |
+| Runtime image ID | `d6386f125e767bf8147dc0991f3e2f6e8dc1ffcc440eb0bde6a3a6b18b2337cc` |
+| Runtime image archive | `098270332392e3115bd7df577326302a10a66a702f02ae68ddc14c1a030200ca` |
+| CycloneDX SBOM | `8b3b5fa5808b6372993dba5ad92b45ffa192aa989a4fbe6ecb65f678a182967a` |
+| Grype scan | `91bc9b36481a135ee87d20a47fdff1e962ef381dbbfbbd7e34d0d724bf53e754` |
+| Compose recovery log | `b734df13865ffb44387f74d0a208d8aefc142dd181c396cde4b25d896bbcacea` |
+| Native browser log | `b3fdbd29761fda0ad922af43f9c666d379c80a55992c0f0019dd8d5acd1d0fcd` |
+| Separately verified cleanup | `b94026ddfbd4b762807e0023a4b0e20851218f70a2a7368269986efa3507c529` |

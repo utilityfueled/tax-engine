@@ -9,6 +9,13 @@ The read-only Vercel check still finds the production project linked to
 `main`, with automatic custom-domain assignment and no build-ignore command.
 The isolated rehearsal project has no Git link and protects all deployments.
 
+`00f5a9b1` projects the IRS Taylor and Finley building-exchange examples on
+the disabled final Form 8824. All 162 focused checks passed. Independent
+Decimal derivations and a second PDF reader verified the two ordinary
+recapture methods, the $131,250 and $43,750 split for Finley, blank identity
+and review marks. All four pages were rendered and visually checked.
+[IRS examples](https://www.irs.gov/instructions/i8824).
+
 `8d666cc1` projects confirmed later installment years on the final 2026
 Form 6252. All 124 focused tests passed. The saved specimen preserves the
 original sale-year ratio and $18,750 of current long-term gain. `f4b0b608`
@@ -58,9 +65,12 @@ the optional diagnostic still pinned the old audit. `115cbb52` rebinds that
 diagnostic and its full 621-case collection. Its exact archive passed unit
 and coverage checks with 27,738 tests in 2,006 files and 87.85% branch
 coverage. Its managed browser suite passed 621 cases with five hosted-only
-skips and no failures. All 12 checks passed. The combined check of `f94bb638`
-passed unit tests with 27,746 in 2,006 files. Its coverage and browser checks
-and the separate exact `f4b0b608` suite are in progress.
+skips and no failures. All 12 checks passed. Unit and coverage output for
+`f94bb638` show 27,746 passes in 2,006 files and 87.86% branch coverage. The
+`f4b0b608` unit output shows 27,750 passes in 2,006 files. Their combined
+controllers were interrupted before a terminal receipt. Both disposable
+databases were stopped normally. An exact combined run on `00f5a9b1` is
+underway with a frozen install and separate PostgreSQL 16.16 instance.
 [Care and IRA evidence](upgrade-2026-care-ira-combat-pay-work.md).
 
 The actual ARM64 `2e258445` image passed import, smoke, six Compose phases
@@ -70,8 +80,12 @@ observed Podman 6 capability, tmpfs and environment metadata while retaining
 the hardened profile and exact source checks. `3b5b2ca6` passed native ARM64
 build, smoke, scan and six recovery phases. Host Chromium against that
 image passed 621 cases with five hosted-only skips and zero failures.
-The test VM stopped normally and its socket route was restored. Release
-evidence is still required for the newer calculation source and AMD64.
+The test VM stopped normally and its socket route was restored. The later
+`f4b0b608` ARM64 run also passed smoke, all six recovery phases and 621
+Chromium cases with five hosted-only skips and zero failures. A separate
+cleanup verified the VM stopped and the original socket route was restored
+after the controller interruption. Release evidence is still required for
+the newer source and AMD64.
 [Self-host evidence](upgrade-2026-nov13-release-rehearsals.md) ·
 [Advisory register](upgrade-2026-image-advisories-20261113-arm64.json).
 

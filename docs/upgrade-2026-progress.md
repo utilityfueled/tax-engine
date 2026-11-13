@@ -4,6 +4,22 @@ Current source, verification and remaining work are summarized in the
 [current continuation](upgrade-2026-current-status.md). Historical results
 below apply to their named revisions.
 
+- November 13 — `00f5a9b1` projects both IRS simultaneous building exchanges
+  on the disabled final Form 8824. All 162 focused tests passed. A separate
+  strict reader verified 19 Taylor fields and 20 Finley fields across the
+  respective 68 widgets, blank identifiers, one selected box and both
+  review marks. All four pages were visually checked. The Taylor and Finley
+  specimen SHA-256 values are
+  `3ec8f48d70ee366eb31184c0365b538003ee37d941c0e9c82f0a0badd6d1600f` and
+  `84388bdc01878b38e3df09748644284740e6a7c2cc9cebb0eb0ea76fec6cd9c2`.
+  [Final annual instructions](https://www.irs.gov/instructions/i8824).
+
+- November 13 — The native `f4b0b608` image passed separate import, smoke,
+  scanning, all six Compose recovery phases and 621 Chromium cases with
+  five hosted-only skips. Verified separate cleanup restored the user
+  Podman socket route after an interruption. The scan findings match
+  `3b5b2ca6` exactly. [Rehearsal evidence](upgrade-2026-nov13-release-rehearsals.md).
+
 - November 13 — `f4b0b608` projects a confirmed deferred land exchange on
   final Form 8824. All 115 focused tests passed. The separate saved-PDF
   readback found 18 text fields, one selected box, 68 widgets, blank identity

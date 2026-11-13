@@ -24234,5 +24234,28 @@
     "reviewExportsEnabled": false,
     "filingQualified": false,
     "humanTaxReviewComplete": false
+  },
+  "nov13SimultaneousBuildingExchangeCandidate": {
+    "commit": "00f5a9b112f17aa4bf79db1807223cea648a9922",
+    "focusedPasses": 162,
+    "specReferences": 8892,
+    "visualPagesChecked": 4,
+    "taylorSpecimenSha256": "3ec8f48d70ee366eb31184c0365b538003ee37d941c0e9c82f0a0badd6d1600f",
+    "finleySpecimenSha256": "84388bdc01878b38e3df09748644284740e6a7c2cc9cebb0eb0ea76fec6cd9c2",
+    "reviewExportsEnabled": false,
+    "filingQualified": false
+  },
+  "nov13Arm64DeferredExchangeRehearsal": {
+    "commit": "f4b0b608ae1560e7eaf03d891d3973e7b91bb25b",
+    "imageId": "d6386f125e767bf8147dc0991f3e2f6e8dc1ffcc440eb0bde6a3a6b18b2337cc",
+    "browserPassed": 621,
+    "browserHostedOnlySkipped": 5,
+    "composeRecoveryPhasesPassed": 6,
+    "advisoryMatches": 197,
+    "uniqueAdvisories": 86,
+    "originalControllerReceiptAvailable": false,
+    "normalStopAndSocketVerifiedSeparately": true,
+    "cleanupSha256": "b94026ddfbd4b762807e0023a4b0e20851218f70a2a7368269986efa3507c529",
+    "qualifiedForRelease": false
   }
 }
