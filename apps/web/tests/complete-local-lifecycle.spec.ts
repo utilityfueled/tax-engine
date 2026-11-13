@@ -115,7 +115,23 @@ for (const width of [1280, 390]) test(`complete unseeded local upload/review/rec
 from pypdf import PdfReader
 import json,sys
 r=PdfReader(sys.argv[1],strict=True); blank=PdfReader(sys.argv[2],strict=True)
-texts=[p.extract_text() or '' for p in r.pages]
+# Printed cells from the official blank2025Form1040; amounts pinned independently before output.
+expected=[{'f1_47[0]':'52000','f1_75[0]':'52000'},{'f2_01[0]':'52000','f2_02[0]':'15750','f2_06[0]':'36250','f2_08[0]':'4115','f2_16[0]':'4115','f2_17[0]':'5000','f2_20[0]':'5000','f2_29[0]':'5000','f2_30[0]':'885','f2_31[0]':'885'}]
+coordinates=[{field:next([float(x) for x in a.get_object()['/Rect']] for a in blank.pages[i]['/Annots'] if a.get_object().get('/T')==field) for field in fields} for i,fields in enumerate(expected)]
+texts=[]; selected=[]
+for p in r.pages:
+ if len(selected)==len(expected):
+  texts.append(p.extract_text() or '')
+  continue
+ # Visit possible primary pages until the first heading, then visit its immediate companion.
+ boxes=coordinates[len(selected)]
+ actual={field:[] for field in boxes}
+ def visit(text,cm,tm,font,size):
+  for field,box in boxes.items():
+   if abs(cm[4]-box[0])<.02 and abs(cm[5]-box[1])<.02 and text.strip(): actual[field].append(text.strip())
+ t=p.extract_text(visitor_text=visit) or ''
+ texts.append(t)
+ if selected or ('1040' in t and 'Filing Status' in t): selected.append(actual)
 assert r.get_fields() is None
 for p,t in zip(r.pages,texts):
  assert 'FOR REVIEW ONLY - NOT FOR FILING' in t
@@ -123,16 +139,8 @@ for p,t in zip(r.pages,texts):
   obj=a.get_object(); assert obj is not None and obj.get('/Subtype')!='/Widget'
 alltext='\\n'.join(texts)
 for secret in ['900-70-0311','900700311']: assert secret not in alltext
-first=next(i for i,t in enumerate(texts) if '1040' in t and 'Filing Status' in t)
-# Printed cells from the official blank2025Form1040; amounts pinned independently before output.
-expected={0:{'f1_47[0]':'52000','f1_75[0]':'52000'},1:{'f2_01[0]':'52000','f2_02[0]':'15750','f2_06[0]':'36250','f2_08[0]':'4115','f2_16[0]':'4115','f2_17[0]':'5000','f2_20[0]':'5000','f2_29[0]':'5000','f2_30[0]':'885','f2_31[0]':'885'}}
-for templatepage,fields in expected.items():
- boxes={field:next([float(x) for x in a.get_object()['/Rect']] for a in blank.pages[templatepage]['/Annots'] if a.get_object().get('/T')==field) for field in fields}
- actual={field:[] for field in fields}
- def visit(text,cm,tm,font,size):
-  for field,box in boxes.items():
-   if abs(cm[4]-box[0])<.02 and abs(cm[5]-box[1])<.02 and text.strip(): actual[field].append(text.strip())
- r.pages[first+templatepage].extract_text(visitor_text=visit)
+assert len(selected)==len(expected)
+for fields,actual in zip(expected,selected):
  for field,value in fields.items():
   values=actual[field]
   assert values==[value],(field,values,value)
