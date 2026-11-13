@@ -3399,6 +3399,11 @@ export const ScheduleCStandardMileageSchema = z.strictObject({
   totalMiles: mileageDistance,
   parkingAndTolls: nonnegativeDollarsAndCents,
   entries: mileageLog2026,
+  partIV: z.strictObject({
+    offDutyPersonalUseAvailable: z.boolean(),
+    otherPersonalVehicleAvailable: z.boolean(),
+    notRequiredToFileForm4562ForBusiness: z.literal(true),
+  }).optional(),
 });
 export type ScheduleCStandardMileage = z.infer<typeof ScheduleCStandardMileageSchema>;
 
