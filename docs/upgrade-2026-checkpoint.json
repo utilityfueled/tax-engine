@@ -24468,6 +24468,52 @@
       "https://www.irs.gov/instructions/i1099r"
     ]
   },
+  "nov13Form4972CombinedEstateTax": {
+    "commit": "cd4b3e29e3af458e1c25a74467c0e1530367ad8c",
+    "initialRed": 3,
+    "affectedTestsPassed": 4565,
+    "redSha256": "a162b3f3a5383360de75ad2b6af9071f3c51e10914365f75b2e0bd50968b903d",
+    "greenSha256": "4880222a3d66a0ee11b7ac13b0a7800aae980adc10abd37dd665768ee628806c",
+    "partIIOnlyPositiveEstateTaxEnabled": false,
+    "federalTransferEnabled": false,
+    "source": "https://www.irs.gov/pub/irs-pdf/f4972.pdf"
+  },
+  "nov13Form4972CombinedEstateTaxPhysicalReview": {
+    "commit": "9758b77315cf11cdd15b8897272ef73d4896254d",
+    "focusedTestsPassed": 71,
+    "affectedTestsPassed": 2355,
+    "redSha256": "b9d511c6961ed8fcb2b897a9858d482ad285cb7ef258e4cb0f68b1723a28d16b",
+    "greenSha256": "ba6551b8c9428b5fb928561d4e428a6382623df4bb1711ce02fdeffb611f7f28",
+    "pdfSha256": "7d8634f03aa18f67eb67f61df7cba0037f2b65b472e90100a60be799279b542a",
+    "strictReadbackSha256": "247cdb81a33c32b47fc696251e2745112fdc0f2b7a23fdd37b63fa673f5ad1e6",
+    "widgetsVerified": 58,
+    "filledFields": 22,
+    "checkedBoxes": 6,
+    "renderedPages": 4,
+    "visualInspectionPages": [1, 3],
+    "exportsEnabled": false,
+    "source": "https://www.irs.gov/pub/irs-pdf/f4972.pdf"
+  },
+  "nov13ExactF25ec56cManaged": {
+    "commit": "f25ec56cf2c335da701507696393dbda84814133",
+    "checksPassed": 11,
+    "unitAndCoverageTestsPassedEach": 27904,
+    "branchesPercent": "87.92",
+    "browserReachedRuntime": false,
+    "browserHold": "stale source digests",
+    "ownedPostgresStopped": true,
+    "checksSha256": "23ed6a1e94b21ead53772e04c25bd1801af6cd04d77c3f0ddbaaa5d44eb6cb6f",
+    "cleanupSha256": "fceb5e3c3ee51d75c8b724e5e0b8090539dc718540e264b3f12f06a39717d115"
+  },
+  "nov13EstateAndBillingBrowserAudit": {
+    "commit": "e3c9073083558706a3a9aad5d67767271e3251db",
+    "sourceDigestsRebound": 6,
+    "orchestrationTestsPassed": 58,
+    "browserRequestBudgetChanged": false,
+    "managedArchiveSha256": "79c24e9d761c11de4fe561cec6114d7be64fb8dc558721d5137c47e9c948d6f1",
+    "managedArchiveGitBlobsVerified": 5687,
+    "managedArchiveOfficialSamplesVerified": 15
+  },
   "nov13AiProviderReservationCeiling": {
     "commit": "c2520fd5183e40394426d9be3e959ad42a53bb0d",
     "initialRed": 2,

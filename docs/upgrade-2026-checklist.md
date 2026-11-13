@@ -6,6 +6,17 @@ below retain their original evidence boundaries.
 
 ## Active continuation — November 13 Eastern
 
+- [x] Allocate confirmed beneficiary estate tax between Parts II and III
+  in `cd4b3e29` and map the disabled paper candidate in `9758b773`. Pass
+  4,565 affected engine/PDF tests, then 2,355 PDF and Form 4972 tests.
+  Verify strict readback and render all four review pages. Hold Part II-only
+  positive estate tax, annual transfer and export qualification.
+- [x] Close all 12 managed checks and six native ARM64 Compose recovery
+  phases on `e6a34ac3`. Both Chromium runs passed 616 cases with five
+  hosted-only skips. Verify normal VM stop and socket restoration.
+- [x] Rebind the browser source digests in `e3c90730` after the
+  `f25ec56c` archive was rejected by the stale-audit guard. Pass 58
+  orchestration checks with the original browser request limits.
 - [x] Bind ordinary Code A reporting to confirmed original year, non-IRA
   classification and determined Box 2a in `eda990d4`. Pass 392 tests,
   including unknown versus zero, stale decision and 2025 control cases.

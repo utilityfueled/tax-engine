@@ -4,6 +4,18 @@ Current source, verification and remaining work are summarized in the
 [current continuation](upgrade-2026-current-status.md). Historical results
 below apply to their named revisions.
 
+- November 13 — `cd4b3e29` allocates estate tax on Form 4972 when a
+  confirmed death beneficiary elects both Parts II and III. Three
+  regressions failed first and 4,565 affected tests passed. `9758b773`
+  maps the reconciled worksheet on the disabled review PDF. The broader
+  PDF and Form 4972 suite passed 2,355 tests. Strict readback verified 58
+  widgets and 22 filled fields. Four pages rendered and two were inspected.
+  [Final 2026 Form 4972](https://www.irs.gov/pub/irs-pdf/f4972.pdf).
+- November 13 — Exact `f25ec56c` passed 11 managed checks, including 27,904
+  unit and coverage tests at 87.92% branch coverage. The browser gate
+  rejected stale digests before runtime. PostgreSQL stopped. `e3c90730`
+  refreshes the digests and passed 58 browser orchestration tests with the
+  same request limits and timeouts.
 - November 13 — `c2520fd5` bounds the hosted AI hold for cache writes and
   regional processing. Two regressions failed first and all 83 affected
   tests passed with PostgreSQL. The cluster stopped.

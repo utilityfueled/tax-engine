@@ -11,6 +11,29 @@ The isolated rehearsal project has no Git link and protects all deployments.
 The team is on Pro, whose Sandbox credits are shared and can incur overage.
 No Sandbox was started. [Vercel Sandbox pricing](https://vercel.com/docs/sandbox/pricing).
 
+`cd4b3e29` allocates confirmed attributable estate tax for a single death
+beneficiary electing both Parts II and III of Form 4972. The worksheet
+subtracts the capital share on line 6 and the remainder on line 18. Line 8
+uses the original capital gain. Three regressions failed first and 4,565
+affected engine and PDF tests passed. The Part II-only case with positive
+estate tax still needs its own treatment. [Final 2026 Form 4972](https://www.irs.gov/pub/irs-pdf/f4972.pdf).
+
+`9758b773` maps the same worksheet to the disabled physical candidate and
+requires the printed whole-dollar amounts to reconcile. The second reader
+verified 58 widgets, 22 filled fields, six selections, blank identity
+fields and a review notice on each page. All four pages rendered and
+pages 1 and 3 were inspected. The broader PDF and Form 4972 suite passed
+2,355 tests. Federal election integration and export qualification remain
+open. [Final 2026 Form 4972](https://www.irs.gov/pub/irs-pdf/f4972.pdf).
+
+Exact `f25ec56c` passed 11 of the 12 managed checks, including 27,904 tests
+in both unit and coverage at 87.92% branch coverage. The browser gate
+rejected stale source digests before server startup. The owned PostgreSQL
+stopped. `e3c90730` updates six source digests and their dependent audit
+digest. Request budgets, timeouts, collection and test windows match the
+prior audit. Direct audit verification and 58 orchestration tests passed.
+Its full managed checks are running from a verified archive.
+
 `c2520fd5` uses the same exact provider ceiling for hosted credit holds
 and the paid evaluation runner. For Sol Low, two tests showed that the
 old 13-cent hold missed supported cache-write and regional pricing. The
@@ -30,7 +53,7 @@ identifier until reviewed. [OpenAI request debugging](https://developers.openai.
 The exact `e6a34ac3` managed archive passed all 12 checks with 27,895 tests
 in both unit and coverage, 87.91% branch coverage, and 616 Chromium passes
 with five hosted-only skips. Its owned PostgreSQL stopped. The managed
-`f25ec56c` and `021b2881` runs have started.
+`021b2881` run is in progress.
 
 `3a5c8375` preserves the provider's request identifier through a retry of
 unknown-usage recording and through later settlement. It rejects contradictory
