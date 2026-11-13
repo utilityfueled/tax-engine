@@ -3378,26 +3378,27 @@ export const ScheduleCProfessionalWageringSchema = z.strictObject({
 });
 export type ScheduleCProfessionalWagering = z.infer<typeof ScheduleCProfessionalWageringSchema>;
 
-const scheduleCMileageDistance = z.string().regex(/^\d{1,9}(?:\.\d{1,3})?$/, "Expected a supported nonnegative mileage distance");
-const scheduleCMileageDate = z.iso.date().refine(date => date.startsWith("2026-"), "Expected an actual 2026 date");
+const mileageDistance = z.string().regex(/^\d{1,9}(?:\.\d{1,3})?$/, "Expected a supported nonnegative mileage distance");
+const mileageDate2026 = z.iso.date().refine(date => date.startsWith("2026-"), "Expected an actual 2026 date");
+const mileageLog2026 = z.array(z.strictObject({
+  date: mileageDate2026,
+  miles: mileageDistance.refine(miles => /[1-9]/.test(miles), "Logged miles must be positive"),
+})).min(1).max(365).refine(entries => new Set(entries.map(entry => entry.date)).size === entries.length,
+  "Enter one reconciled mileage total per date");
 export const ScheduleCStandardMileageSchema = z.strictObject({
   taxYear: z.literal(2026),
   logReference: z.string().trim().min(1).max(250),
-  placedInService: scheduleCMileageDate,
+  placedInService: mileageDate2026,
   ownedVehicleFirstBusinessYearAndElectionConfirmed: z.literal(true),
   writtenCompleteMileageLogConfirmed: z.literal(true),
   eligibleBusinessParkingAndTollsConfirmed: z.literal(true),
   noOtherActivityAllocationReimbursementsOrVehicleDeductionsConfirmed: z.literal(true),
   noDispositionInServiceYearConfirmed: z.literal(true),
-  commutingMiles: scheduleCMileageDistance,
-  otherPersonalMiles: scheduleCMileageDistance,
-  totalMiles: scheduleCMileageDistance,
+  commutingMiles: mileageDistance,
+  otherPersonalMiles: mileageDistance,
+  totalMiles: mileageDistance,
   parkingAndTolls: nonnegativeDollarsAndCents,
-  entries: z.array(z.strictObject({
-    date: scheduleCMileageDate,
-    miles: scheduleCMileageDistance.refine(miles => /[1-9]/.test(miles), "Business miles must be positive"),
-  })).min(1).max(365).refine(entries => new Set(entries.map(entry => entry.date)).size === entries.length,
-    "Enter one reconciled business mileage total per date"),
+  entries: mileageLog2026,
 });
 export type ScheduleCStandardMileage = z.infer<typeof ScheduleCStandardMileageSchema>;
 
@@ -3827,8 +3828,21 @@ export const AdjustmentsSchema = z.object({
   seRetirementContributions: optionalDecimal,
 });
 
+export const ScheduleAMedicalMileageSchema = z.strictObject({
+  taxYear: z.literal(2026),
+  logReference: z.string().trim().min(1).max(250),
+  taxpayerOwnEssentialQualifiedCareConfirmed: z.literal(true),
+  singleVehicleMileageAndEligibleParkingTollsConfirmed: z.literal(true),
+  allTransportationCostsPaidAndUnreimbursedConfirmed: z.literal(true),
+  noActualVehicleCostsOrDuplicatedTaxBenefitsConfirmed: z.literal(true),
+  otherEligibleUnreimbursedMedicalExpenses: nonnegativeDollarsAndCents,
+  parkingAndTolls: nonnegativeDollarsAndCents,
+  entries: mileageLog2026,
+});
+
 export const ScheduleAInputSchema = z.object({
   medicalExpenses: optionalDecimal,
+  medicalMileage: ScheduleAMedicalMileageSchema.optional(),
   /** Qualified payments not already counted on a Form 1098. */
   realEstateTaxes: optionalDecimal,
   /** Qualified income tax payments not already counted in withholding or estimates. */

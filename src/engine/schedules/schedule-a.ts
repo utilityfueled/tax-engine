@@ -15,7 +15,7 @@ import type { EducatorBondSourceContext } from "../forms/educator-bond-sources.j
 import { calculateForm1099OID } from "../forms/form-1099-oid.js";
 import { calculateStateLocalIncomeTaxDeduction } from "../forms/state-local-income-tax-deduction.js";
 import { resolveForeignTaxElection, type ForeignTaxElectionResult } from "../forms/foreign-tax-election.js";
-import type { TaxYearInput } from "@/models/inputs.js";
+import { ScheduleAMedicalMileageSchema, type TaxYearInput } from "@/models/inputs.js";
 import type { CalculatedLine } from "@/models/outputs.js";
 import type { FilingStatus, YearConstants } from "@/models/constants.js";
 import { d, sum, zeroFloor, min, roundDollar } from "@/utils/decimal.js";
@@ -142,6 +142,42 @@ export interface ScheduleAResult {
 
 const ZERO = new Decimal(0);
 
+function calculateMedicalExpenses(
+  input: TaxYearInput,
+  filingStatus: FilingStatus,
+  constants: YearConstants,
+  legacyExpenses: Decimal | undefined,
+  audit: AuditTrail,
+) {
+  const source = input.scheduleA?.medicalMileage;
+  if (source === undefined) {
+    return audit.record("Sched A", "1", "Medical expenses", legacyExpenses ?? ZERO, "Total unreimbursed");
+  }
+  const parsed = ScheduleAMedicalMileageSchema.safeParse(source);
+  if (!parsed.success || input.taxpayer.taxYear !== 2026 || constants.taxYear !== 2026
+    || filingStatus !== "single" || input.taxpayer.filingStatus !== filingStatus || input.taxpayer.spouse
+    || !d(input.scheduleA?.medicalExpenses).isZero() || (legacyExpenses && !legacyExpenses.isZero())) {
+    throw new Error("Schedule A medical mileage requires complete current single-taxpayer sources and no overlapping medical amount");
+  }
+  const facts = parsed.data;
+  let beforeJuly = new Decimal(0);
+  let fromJuly = new Decimal(0);
+  for (const entry of facts.entries) {
+    if (entry.date < "2026-07-01") beforeJuly = beforeJuly.plus(entry.miles);
+    else fromJuly = fromJuly.plus(entry.miles);
+  }
+  const other = d(facts.otherEligibleUnreimbursedMedicalExpenses);
+  const parkingAndTolls = d(facts.parkingAndTolls);
+  const total = beforeJuly.times("0.205").plus(fromJuly.times("0.235")).plus(parkingAndTolls).plus(other);
+  return audit.record("Sched A", "1", "Medical expenses", total,
+    "January through June medical miles × $0.205 + July through December medical miles × $0.235 + eligible parking and tolls + other eligible medical expenses", {
+      "January through June medical miles": beforeJuly,
+      "July through December medical miles": fromJuly,
+      "Medical parking and tolls": parkingAndTolls,
+      "Other eligible unreimbursed medical expenses": other,
+    });
+}
+
 export function calculateScheduleA(
   input: TaxYearInput,
   agi: Decimal,
@@ -158,12 +194,11 @@ export function calculateScheduleA(
   const audit = new AuditTrail();
 
   // ── Medical (Lines 1-4) ────────────────────────────────
-  const medicalExpenses = extra?.medicalExpenses ?? new Decimal(0);
+  const medicalExpenses = calculateMedicalExpenses(input, filingStatus, constants, extra?.medicalExpenses, audit);
   // Section213(a) allows actual expenses paid. A negative AGI cannot create
   // additional expenses; retain signed return AGI but floor this limitation.
   const medicalThreshold = roundDollar(zeroFloor(agi).times(new Decimal("0.075")));
   const medicalDeduction = zeroFloor(medicalExpenses.minus(medicalThreshold));
-  audit.record("Sched A", "1", "Medical expenses", medicalExpenses, "Total unreimbursed");
   audit.record("Sched A", "4", "Medical deduction", medicalDeduction,
     `Line 1 - (7.5% × AGI = ${medicalThreshold})`);
 

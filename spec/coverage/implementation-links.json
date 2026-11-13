@@ -1696,6 +1696,16 @@
       "note": "Links only the pure documentary provider/person identity-source validator and its own-spec source/kind/gate regressions. It returns officialPaperQualified=false and filingEligible=false; optional collection and guided/native tests do not themselves admit a paper packet. The separate original-bound 2025 actual-care review successor has its own inventory entry; no 2026 or filing qualification is claimed."
     },
     {
+      "key": "federal/schedule-a-medical-mileage-2026",
+      "enginePath": "src/engine/schedules/schedule-a.ts",
+      "testRefs": [
+        "tests/engine/schedules/schedule-a-medical-mileage-2026.test.ts::applies both rate periods and eligible parking and tolls before the medical floor",
+        "tests/engine/schedules/schedule-a-medical-mileage-2026.test.ts::rejects unknown eligibility contradictory sources and mismatched years",
+        "tests/engine/schedules/schedule-a-medical-mileage-2026.test.ts::keeps known zero distinct and preserves the historical and full year gates"
+      ],
+      "note": "Links the finite 2026 federal source-backed Line 1 and 4 calculations. Final templates, guided facts, mixed reimbursement and family qualification remain open."
+    },
+    {
       "key": "federal/schedule-c-standard-mileage-2026",
       "enginePath": "src/engine/schedules/schedule-c.ts",
       "testRefs": [

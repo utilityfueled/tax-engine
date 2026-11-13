@@ -1,0 +1,54 @@
+form: "Schedule A"
+fullName: "2026 standard mileage for the taxpayer's own medical care"
+taxYear: 2026
+irsReference: "https://uscode.house.gov/us/usc/119-120/t26/s213/"
+sources:
+  - url: "https://uscode.house.gov/us/usc/119-120/t26/s213/"
+    revision: "26 USC 213(a) and (d)(1)(B), amounts paid and essential transportation"
+    retrieved: "2026-11-13"
+  - url: "https://www.irs.gov/pub/irs-drop/n-26-10.pdf"
+    revision: "Notice 2026-10, section 3"
+    retrieved: "2026-11-13"
+  - url: "https://www.irs.gov/irb/2026-29_irb"
+    revision: "Announcement 2026-11, July 1 rate change"
+    retrieved: "2026-11-13"
+  - url: "https://www.irs.gov/publications/p502"
+    revision: "2025 final, Transportation Expenses, Car expenses"
+    retrieved: "2026-11-13"
+  - url: "https://www.irs.gov/pub/irs-dft/f1040sa--dft.pdf"
+    revision: "Draft 2026 Schedule A, lines 1–4"
+    retrieved: "2026-11-13"
+reviewStatus: "independent human review and filing qualification pending"
+lines:
+  - line: "1"
+    description: "Add the standard medical mileage and parking and tolls once"
+    formula: >
+      For one confirmed vehicle used for essential transportation for the
+      single taxpayer's own qualified care, sum documented eligible miles
+      paid or incurred January through June at 0.205 and July through December
+      at 0.235. Add separately retained eligible parking and tolls once.
+      Add the result to explicitly known other eligible unreimbursed medical
+      expenses, which exclude the mileage claim and its parking and tolls.
+      Preserve Decimal precision, keep private references out of the audit
+      and retain both mileage periods.
+    testRef: "tests/engine/schedules/schedule-a-medical-mileage-2026.test.ts::applies both rate periods and eligible parking and tolls before the medical floor"
+  - line: "1-source"
+    description: "Confirm eligible and nonoverlapping actual expenses"
+    formula: >
+      Require a current dated original ledger with one eligible mileage
+      subtotal per date, positive mileage and explicit parking and tolls,
+      including known zero. Keep the separate other medical amount in the
+      same source packet and reject nonzero legacy aggregates or overrides.
+      Require confirmation the trips were primarily for
+      and essential to qualifying care of the taxpayer, expense payments
+      and reimbursement status are complete, and neither actual vehicle
+      expenses nor costs included in another tax benefit are repeated. Reject
+      cross-year, missing or conflicting amounts. Other patient, mixed
+      reimbursement, actual cost, and physical output methods are separate.
+    testRef: "tests/engine/schedules/schedule-a-medical-mileage-2026.test.ts::rejects unknown eligibility contradictory sources and mismatched years"
+  - line: "4"
+    description: "Apply the medical expense threshold to the combined Line 1"
+    formula: >
+      Apply the existing 7.5 percent AGI floor once to the combined
+      medical expenses. Preserve legacy medical totals and full-year gates.
+    testRef: "tests/engine/schedules/schedule-a-medical-mileage-2026.test.ts::keeps known zero distinct and preserves the historical and full year gates"
