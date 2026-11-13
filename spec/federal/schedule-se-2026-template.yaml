@@ -4,6 +4,7 @@ taxYear: 2026
 reference: "https://www.irs.gov/pub/irs-prior/f1040sse--2026.pdf"
 sources:
   - "https://www.irs.gov/pub/irs-prior/i1040sse--2026.pdf"
+  - "https://www.irs.gov/pub/irs-prior/iw2w3--2026.pdf"
 revision: "Created 4/27/26; final annual source, not export-qualified"
 retrievedAt: "2026-11-06T00:18:55.962869Z"
 notes: |
@@ -33,15 +34,33 @@ lines:
       Replay the complete current primary-owner professional wagering Schedule C
       ledger. Require explicit review of all self-employment and covered payroll
       sources and confirmation of no exemption, church income or optional method.
-      This candidate supports no Forms W-2 or W-2G, farm, partnerships, other SE
-      sources or state returns. Lines 2 and 3 transfer rounded Schedule C line 31. Determine
+      Reconcile any linked Form W-2G originals through the same Schedule C ledger.
+      W-2G withholding and gross amounts do not transfer independently to Schedule SE.
+      Farm, partnerships, other SE sources and state returns require separate methods.
+      Lines 2 and 3 transfer rounded Schedule C line 31. Determine
       eligibility using exact line 3 times 0.9235 and the $400 threshold. Print
-      lines 4a, 4c and 6 only if they reconcile to the rounded line 3. Line 8a
-      and line 8d are zero, line 9 is $184,500. Round line 10 at 12.4% of the
-      smaller of lines 6 and 9, line 11 at 2.9% of line 6, line 12 as their
-      sum and line 13 at 50% of line 12. Verify fresh Schedule SE outputs.
+      lines 4a, 4c and 6 only if they reconcile to the rounded line 3. Round
+      line 11 at 2.9% of line 6, line 12 as the sum of applicable tax and line
+      13 at 50% of line 12. Verify fresh Schedule SE outputs.
       Keep both identities, unavailable line inputs and Part II blank.
     testRef: "tests/pdf/schedule-se-2026-wagering-candidate.test.ts::projects the current wagering profit into the final regular Schedule SE"
+  - line: "8a-10"
+    description: "Apply the wage-base limit using actual primary W-2 payroll"
+    formula: |
+      Require confirmation that every current primary W-2 original is included
+      once, with no Tier 1 railroad compensation or Form 4137 or 8919 amounts.
+      Each original explicitly supplies its year, owner and exact nonnegative
+      Boxes 3 and 7, including known zeroes. Their sum per original cannot
+      exceed the wage base. Require one ordinary original per distinct Box b
+      employer EIN for this candidate. Nonzero allocated tips require a
+      separate source method. Add Boxes 3 and 7 across all originals before
+      rounding to line 8a. With no covered wages, lines 8a and 8d are zero.
+      At or above $184,500 skip lines 8b through 10 and enter only Medicare tax
+      on line 11. Below the limit, line 8d equals line 8a, line 9 is $184,500
+      less line 8d, and line 10 is 12.4% of the smaller of lines 6 and 9,
+      rounded to dollars. Refuse when exact and displayed wages select different
+      branches. Keep lines 8b and 8c blank for this source slice.
+    testRef: "tests/pdf/schedule-se-2026-wagering-candidate.test.ts::projects covered wages from original W-2 boxes and omits lines at the wage base"
   - line: "regular-method-refusal"
     description: "Hold threshold, unrelated sources and inconsistent whole-dollar arithmetic"
     formula: "Deny incomplete or contradictory confirmations, a retained unhandled source even at zero, under-threshold profit and a rounded result that cannot reproduce the printed line calculations."

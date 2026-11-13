@@ -1410,7 +1410,7 @@
     "src/pdf/mappings/2026/schedule-c-source-projection.ts": "c5ccff23fd168bb97bcae08932de45ed098db0d35c91457583785b0c0ec7dea7",
     "src/pdf/mappings/2026/schedule-c-wagering-projection.ts": "27b22eb2a73c691daea60e2b7ddd9dd86c875375c00a48237050f924cd5db818",
     "src/pdf/mappings/2026/schedule-r-candidate.ts": "79f789aececafe266874b83134ac2690ca5fe9884f538341a83da14a0b891810",
-    "src/pdf/mappings/2026/schedule-se-candidate.ts": "9aec7f8cca6b511b5629160a3bdd50c338d2073a3f36f730f471ee2d6e5c9ed7",
+    "src/pdf/mappings/2026/schedule-se-candidate.ts": "7b6d8601c781b3352d259a6ebbc9ff3c203ecbadff27324b16b0ef1a7a82b61a",
     "src/pdf/nol-filing-unit-review-context.ts": "3db492f5defba69cc1342f476ddfa9e6f619d044b7286b289e50e0cc3634375b",
     "src/pdf/pa-care-review-facts.ts": "9cc5758fcd8fb774873e15ed1afaae734ad87e6a6ed5b297f61e1c717b54ad7d",
     "src/pdf/pa-married-return-review-context.ts": "ce37c866115a8dfd7330c494322f379e27f6354e1c42e919a39a05968145ea96",
