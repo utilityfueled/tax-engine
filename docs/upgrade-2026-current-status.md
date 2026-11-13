@@ -6,6 +6,19 @@ The public refs were refreshed. `origin/main` still points to `59248889`
 and `origin/upgrade/2026-baseline` to `3024b848`. Successor commits stay on
 local `main` while automatic production deployment is being disabled.
 
+`57a7da97` collects original business mileage for one primary-owned cash
+business in the single-taxpayer federal guide. The June and July example
+produces a $21.81 deduction and $9,878.19 net profit. Mileage participates
+in the loss limitation check, and changes to the log or owner require
+reconfirmation. The optional Part IV answers preserve explicit No values.
+All 1,862 focused tests, 241 script checks, nine production Chromium cases,
+three type checks, webpack build, lint, inventory and 8,840 spec references
+passed. Both viewport cases kept the private reference local and made zero
+protected requests. The 618-case request audit retains its original ceilings
+and five hosted-only skips. State composition, full-year public calculation
+and filing are still gated.
+[IRS mileage rate change](https://www.irs.gov/irb/2026-29_irb).
+
 `efcd5c54` collects the actual 2026 medical mileage log for the single
 taxpayer's own eligible care in guided Schedule A. Changes to the original
 log or taxpayer clear the confirmations. A standard deduction preserves the
@@ -24,8 +37,8 @@ browser processes closed normally.
 fields from the documented log and the taxpayer's separate vehicle answers.
 All 444 focused checks passed. A separate strict PDF parser confirmed 15
 saved field and widget values and appearances, and both pages were rendered
-and inspected. This covers the whole-mile candidate. Guided collection and
-the public export gates remain open for qualification.
+and inspected. This covers the whole-mile candidate. Public export
+qualification remains open.
 [Final 2026 Schedule C](https://www.irs.gov/pub/irs-prior/f1040sc--2026.pdf).
 
 `9e381f83` refuses local uploads against a return reset before file selection
@@ -60,7 +73,7 @@ first-use owned vehicle from confirmed mileage and parking and toll records.
 The business rate changes from 72.5 to 76 cents on July 1. The 573 focused
 checks cover Schedule SE, exact dates and Pennsylvania and Ohio refusal of
 the federal-only packet. A separate Decimal calculation reproduced the
-example. Guided collection, vehicle basis and official Part IV remain open.
+example. Vehicle basis, state composition and public output remain open.
 [IRS Announcement 2026-11](https://www.irs.gov/irb/2026-29_irb).
 
 `95d7da8e` rejects guided writes from a tab opened before a local return was

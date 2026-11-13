@@ -4,6 +4,26 @@ Current source, verification and remaining work are summarized in the
 [current continuation](upgrade-2026-current-status.md). Historical results
 below apply to their named revisions.
 
+- November 13: `57a7da97` records original 2026 Schedule C vehicle mileage in
+  the federal-only guide. The mounted baseline failed because the control did
+  not exist. IRS Notice 2026-10 and Announcement 2026-11 give 72.5 and 76 cents
+  per mile. A separate multiplication of 10 and 15 miles yields $7.25 and
+  $11.40. Adding $3.16 eligible parking and tolls gives $21.81. With $10,000
+  gross and $100 office expense the expected net is $9,878.19. With $110 gross
+  and no material participation the same expenses require a loss worksheet.
+  The first web type check caught a readonly tuple mismatch, which was fixed.
+  All 1,862 focused tests, 241 script tests and nine Chromium cases then
+  passed with three type checks, webpack build, scoped lint, inventory and
+  8,840 spec references. Desktop and mobile both retained the entered zeros,
+  date and Part IV No, cleared confirmations on edit and observed zero
+  protected requests. The audited collection has 618 cases, five original
+  hosted-only skips, 14 retained diagnostic targets and eight batches under
+  the existing request limits. Form 4562, vehicle interest, care-benefit
+  adjustments, foreign and state composition require separate qualification.
+  [IRS Notice 2026-10](https://www.irs.gov/pub/irs-drop/n-26-10.pdf) ·
+  [IRS Announcement 2026-11](https://www.irs.gov/irb/2026-29_irb) ·
+  [Final Schedule C](https://www.irs.gov/pub/irs-prior/f1040sc--2026.pdf).
+
 - November 13: `efcd5c54` records the single taxpayer's 2026 medical mileage
   in guided deductions. The first mounted test failed before the control
   existed. The canonical calculation produced $4.40 for 10 miles on each

@@ -6,6 +6,10 @@ below retain their original evidence boundaries.
 
 ## Active continuation — November 13 Eastern
 
+- [x] Collect 2026 Schedule C business mileage and optional Part IV answers
+  from guided originals in `57a7da97`. Pass 1,862 focused tests, 241 script
+  checks, 8,840 spec references and nine Chromium cases. Keep the tax-year
+  and state gates and preserve the existing request ceilings.
 - [x] Update the signed Stripe subscription tests to verify sanitized 503
   responses, transaction rollback and a fresh retry. Verify both documented
   Ohio local header jurisdictions in the state review copy. Earlier archived
