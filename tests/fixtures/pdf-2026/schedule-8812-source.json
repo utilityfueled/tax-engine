@@ -1,0 +1,468 @@
+{
+  "filename": "f1040s8.pdf",
+  "sha256": "05b96bd809b37cfd0c223ac0909d2d82645eb8bfd6244701189f40ab8a4ab45c",
+  "bytes": 96696,
+  "pages": 2,
+  "leafWidgets": 41,
+  "canonicalFieldsIncludingGroups": 45,
+  "locations": {
+    "name": {
+      "fieldName": "topmostSubform[0].Page1[0].f1_1[0]",
+      "page": 1,
+      "rect": [
+        "36",
+        "672.498",
+        "460.05",
+        "685.999"
+      ],
+      "type": "/Tx"
+    },
+    "ssn": {
+      "fieldName": "topmostSubform[0].Page1[0].f1_2[0]",
+      "page": 1,
+      "rect": [
+        "461.55",
+        "672.498",
+        "576",
+        "685.999"
+      ],
+      "type": "/Tx"
+    },
+    "line1": {
+      "fieldName": "topmostSubform[0].Page1[0].f1_3[0]",
+      "page": 1,
+      "rect": [
+        "504.75",
+        "648",
+        "576",
+        "659.999"
+      ],
+      "type": "/Tx"
+    },
+    "line2a": {
+      "fieldName": "topmostSubform[0].Page1[0].f1_4[0]",
+      "page": 1,
+      "rect": [
+        "411.15",
+        "636.001",
+        "481.65",
+        "648"
+      ],
+      "type": "/Tx"
+    },
+    "line2b": {
+      "fieldName": "topmostSubform[0].Page1[0].f1_5[0]",
+      "page": 1,
+      "rect": [
+        "411.15",
+        "624.002",
+        "481.65",
+        "636.001"
+      ],
+      "type": "/Tx"
+    },
+    "line2c": {
+      "fieldName": "topmostSubform[0].Page1[0].f1_6[0]",
+      "page": 1,
+      "rect": [
+        "411.15",
+        "612",
+        "481.65",
+        "623.999"
+      ],
+      "type": "/Tx"
+    },
+    "line2d": {
+      "fieldName": "topmostSubform[0].Page1[0].f1_7[0]",
+      "page": 1,
+      "rect": [
+        "504.75",
+        "600.001",
+        "576",
+        "612"
+      ],
+      "type": "/Tx"
+    },
+    "line3": {
+      "fieldName": "topmostSubform[0].Page1[0].f1_8[0]",
+      "page": 1,
+      "rect": [
+        "504.75",
+        "588.002",
+        "576",
+        "600.001"
+      ],
+      "type": "/Tx"
+    },
+    "line4": {
+      "fieldName": "topmostSubform[0].Page1[0].f1_9[0]",
+      "page": 1,
+      "rect": [
+        "411.15",
+        "576",
+        "481.65",
+        "587.999"
+      ],
+      "type": "/Tx"
+    },
+    "line5": {
+      "fieldName": "topmostSubform[0].Page1[0].f1_10[0]",
+      "page": 1,
+      "rect": [
+        "504.75",
+        "564.001",
+        "576",
+        "576"
+      ],
+      "type": "/Tx"
+    },
+    "line6": {
+      "fieldName": "topmostSubform[0].Page1[0].Line6ReadOrder[0].f1_11[0]",
+      "page": 1,
+      "rect": [
+        "411.15",
+        "540",
+        "481.65",
+        "551.999"
+      ],
+      "type": "/Tx"
+    },
+    "line7": {
+      "fieldName": "topmostSubform[0].Page1[0].f1_12[0]",
+      "page": 1,
+      "rect": [
+        "504.75",
+        "504",
+        "576",
+        "515.999"
+      ],
+      "type": "/Tx"
+    },
+    "line8": {
+      "fieldName": "topmostSubform[0].Page1[0].f1_13[0]",
+      "page": 1,
+      "rect": [
+        "504.75",
+        "492.001",
+        "576",
+        "504"
+      ],
+      "type": "/Tx"
+    },
+    "line9": {
+      "fieldName": "topmostSubform[0].Page1[0].f1_14[0]",
+      "page": 1,
+      "rect": [
+        "504.75",
+        "456.001",
+        "576",
+        "468"
+      ],
+      "type": "/Tx"
+    },
+    "line10": {
+      "fieldName": "topmostSubform[0].Page1[0].f1_15[0]",
+      "page": 1,
+      "rect": [
+        "504.75",
+        "408.002",
+        "576",
+        "420.001"
+      ],
+      "type": "/Tx"
+    },
+    "line11": {
+      "fieldName": "topmostSubform[0].Page1[0].f1_16[0]",
+      "page": 1,
+      "rect": [
+        "504.75",
+        "396",
+        "576",
+        "407.999"
+      ],
+      "type": "/Tx"
+    },
+    "line12": {
+      "fieldName": "topmostSubform[0].Page1[0].f1_17[0]",
+      "page": 1,
+      "rect": [
+        "504.75",
+        "384.001",
+        "576",
+        "396"
+      ],
+      "type": "/Tx"
+    },
+    "line13": {
+      "fieldName": "topmostSubform[0].Page1[0].f1_18[0]",
+      "page": 1,
+      "rect": [
+        "504.75",
+        "348.001",
+        "576",
+        "360"
+      ],
+      "type": "/Tx"
+    },
+    "line14": {
+      "fieldName": "topmostSubform[0].Page1[0].f1_19[0]",
+      "page": 1,
+      "rect": [
+        "504.75",
+        "336.002",
+        "576",
+        "348.001"
+      ],
+      "type": "/Tx"
+    },
+    "line15Reserved": {
+      "fieldName": "topmostSubform[0].Page2[0].f2_1[0]",
+      "page": 2,
+      "rect": [
+        "504.75",
+        "708.001",
+        "576",
+        "720"
+      ],
+      "type": "/Tx",
+      "readOnly": true
+    },
+    "line16a": {
+      "fieldName": "topmostSubform[0].Page2[0].f2_2[0]",
+      "page": 2,
+      "rect": [
+        "504.75",
+        "696.002",
+        "576",
+        "708.001"
+      ],
+      "type": "/Tx"
+    },
+    "line16bCount": {
+      "fieldName": "topmostSubform[0].Page2[0].f2_3[0]",
+      "page": 2,
+      "rect": [
+        "381.6",
+        "684",
+        "439.2",
+        "695.999"
+      ],
+      "type": "/Tx"
+    },
+    "line16b": {
+      "fieldName": "topmostSubform[0].Page2[0].f2_4[0]",
+      "page": 2,
+      "rect": [
+        "504.75",
+        "672.001",
+        "576",
+        "684"
+      ],
+      "type": "/Tx"
+    },
+    "line17": {
+      "fieldName": "topmostSubform[0].Page2[0].f2_5[0]",
+      "page": 2,
+      "rect": [
+        "504.75",
+        "648",
+        "576",
+        "659.999"
+      ],
+      "type": "/Tx"
+    },
+    "line18a": {
+      "fieldName": "topmostSubform[0].Page2[0].f2_6[0]",
+      "page": 2,
+      "rect": [
+        "411.15",
+        "636.001",
+        "481.65",
+        "648"
+      ],
+      "type": "/Tx"
+    },
+    "line18b": {
+      "fieldName": "topmostSubform[0].Page2[0].f2_7[0]",
+      "page": 2,
+      "rect": [
+        "317.55",
+        "624.002",
+        "388.05",
+        "636.001"
+      ],
+      "type": "/Tx"
+    },
+    "line19": {
+      "fieldName": "topmostSubform[0].Page2[0].f2_8[0]",
+      "page": 2,
+      "rect": [
+        "411.15",
+        "588.002",
+        "481.65",
+        "600.001"
+      ],
+      "type": "/Tx"
+    },
+    "line20": {
+      "fieldName": "topmostSubform[0].Page2[0].f2_9[0]",
+      "page": 2,
+      "rect": [
+        "504.75",
+        "576",
+        "576",
+        "587.999"
+      ],
+      "type": "/Tx"
+    },
+    "line21": {
+      "fieldName": "topmostSubform[0].Page2[0].f2_10[0]",
+      "page": 2,
+      "rect": [
+        "411.15",
+        "456.001",
+        "481.65",
+        "468"
+      ],
+      "type": "/Tx"
+    },
+    "line22": {
+      "fieldName": "topmostSubform[0].Page2[0].f2_11[0]",
+      "page": 2,
+      "rect": [
+        "411.15",
+        "432",
+        "481.65",
+        "443.999"
+      ],
+      "type": "/Tx"
+    },
+    "line23": {
+      "fieldName": "topmostSubform[0].Page2[0].f2_12[0]",
+      "page": 2,
+      "rect": [
+        "411.15",
+        "420.001",
+        "481.65",
+        "432"
+      ],
+      "type": "/Tx"
+    },
+    "line24": {
+      "fieldName": "topmostSubform[0].Page2[0].f2_13[0]",
+      "page": 2,
+      "rect": [
+        "411.15",
+        "372.002",
+        "481.65",
+        "384.001"
+      ],
+      "type": "/Tx"
+    },
+    "line25": {
+      "fieldName": "topmostSubform[0].Page2[0].f2_14[0]",
+      "page": 2,
+      "rect": [
+        "504.75",
+        "360",
+        "576",
+        "371.999"
+      ],
+      "type": "/Tx"
+    },
+    "line26": {
+      "fieldName": "topmostSubform[0].Page2[0].f2_15[0]",
+      "page": 2,
+      "rect": [
+        "504.75",
+        "348.001",
+        "576",
+        "360"
+      ],
+      "type": "/Tx"
+    },
+    "line27": {
+      "fieldName": "topmostSubform[0].Page2[0].f2_16[0]",
+      "page": 2,
+      "rect": [
+        "504.75",
+        "312.001",
+        "576",
+        "324"
+      ],
+      "type": "/Tx"
+    },
+    "line12No": {
+      "fieldName": "topmostSubform[0].Page1[0].c1_1[0]",
+      "page": 1,
+      "rect": [
+        "65.2",
+        "374.002",
+        "73.2",
+        "382.002"
+      ],
+      "type": "/Btn",
+      "onState": "/1"
+    },
+    "line12Yes": {
+      "fieldName": "topmostSubform[0].Page1[0].c1_1[1]",
+      "page": 1,
+      "rect": [
+        "65.2",
+        "362",
+        "73.2",
+        "370"
+      ],
+      "type": "/Btn",
+      "onState": "/2"
+    },
+    "line19No": {
+      "fieldName": "topmostSubform[0].Page2[0].c2_1[0]",
+      "page": 2,
+      "rect": [
+        "66.8",
+        "602.001",
+        "74.8",
+        "610.001"
+      ],
+      "type": "/Btn",
+      "onState": "/1"
+    },
+    "line19Yes": {
+      "fieldName": "topmostSubform[0].Page2[0].c2_1[1]",
+      "page": 2,
+      "rect": [
+        "66.8",
+        "590.002",
+        "74.8",
+        "598.002"
+      ],
+      "type": "/Btn",
+      "onState": "/2"
+    },
+    "nextNo": {
+      "fieldName": "topmostSubform[0].Page2[0].c2_2[0]",
+      "page": 2,
+      "rect": [
+        "66.8",
+        "554.002",
+        "74.8",
+        "562.002"
+      ],
+      "type": "/Btn",
+      "onState": "/1"
+    },
+    "nextYes": {
+      "fieldName": "topmostSubform[0].Page2[0].c2_2[1]",
+      "page": 2,
+      "rect": [
+        "66.8",
+        "530.001",
+        "74.8",
+        "538.001"
+      ],
+      "type": "/Btn",
+      "onState": "/2"
+    }
+  }
+}

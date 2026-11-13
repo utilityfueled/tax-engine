@@ -23178,5 +23178,23 @@
     "ledger": "docs/upgrade-2026-debian-zlib-security-work.md",
     "actualRuntimeImageRequired": true,
     "releaseReady": false
+  },
+  "nov12Schedule8812PhysicalCandidate": {
+    "officialFinalPublicationDate": "2026-11-09",
+    "taxYear": 2026,
+    "assetBytes": 96696,
+    "assetSha256": "05b96bd809b37cfd0c223ac0909d2d82645eb8bfd6244701189f40ab8a4ab45c",
+    "evidenceManifestSha256": "bc5edb095eccb20fc76e22428a12f0122ec8cd2357d430deb1343b2c955e3768",
+    "leafWidgets": 41,
+    "checkboxes": 6,
+    "baselineExpectedFailures": 1,
+    "affectedPassed": 53,
+    "affectedFiles": 6,
+    "savedFictionalPdfs": 2,
+    "renderedPages": 4,
+    "finalCompanionInstructionsAvailable": false,
+    "exportsEnabled": false,
+    "filingQualified": false,
+    "ledger": "docs/upgrade-2026-schedule-8812-physical-candidate-work.md"
   }
 }

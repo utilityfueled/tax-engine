@@ -1,0 +1,33 @@
+form: "schedule-8812 final 2026 physical candidate"
+fullName: "Final 2026 Schedule 8812 physical field source contract"
+taxYear: 2026
+reference: "https://www.irs.gov/pub/irs-pdf/f1040s8.pdf"
+revision: "Created 8/18/26, IRS final index posted 11/09/2026"
+retrievedAt: "2026-11-13T01:11:08Z"
+notes: |
+  Physical source and diagnostic field placement only. The final English
+  instructions endpoint served 2025 instructions when checked. The 2026
+  instructions identified themselves as a draft. Review final instructions,
+  worksheets and the final parent-form mappings before wiring either revised
+  cross-reference or enabling review output.
+lines:
+  - line: "revision"
+    description: "Pin the official final annual PDF"
+    formula: "Require SHA-256 05b96bd809b37cfd0c223ac0909d2d82645eb8bfd6244701189f40ab8a4ab45c, 96696 bytes, two US Letter pages, 2026 title and printed Created 8/18/26."
+    testRef: "tests/pdf/schedule-8812-2026-candidate.test.ts::pins the exact final annual source"
+  - line: "physical-locations"
+    description: "Bind every original leaf to its annual physical cell"
+    formula: "Require a bijection for all 41 leaf widgets, 35 text and six checkboxes, including the nested line 6 count, the two line 16b cells, and the reserved read-only line 15. Verify full names, field types, pages, rectangles and the native on-state of each button."
+    testRef: "tests/pdf/schedule-8812-2026-candidate.test.ts::maps every leaf to its exact 2026 physical location"
+  - line: "annual-printed-references"
+    description: "Record the revised 2026 lines 1 and 22 without creating a calculation mapping"
+    formula: "Line 1 points to Form 1040, 1040-SR or 1040-NR line 11b rather than 11a. Line 22 retains Schedule 1 line 15 and points to Schedule 2 lines 16c and 17c rather than lines 5, 6 and 13. Printed maximum child credit $2200, refundable amount per child $1700 and other-dependent credit $500 remain the observed amounts. Rev. Proc. 2025-32 section 2.05 corroborates the first two."
+    testRef: "tests/pdf/schedule-8812-2026-candidate.test.ts::records the annual printed transfer references and amounts"
+  - line: "saved-diagnostics"
+    description: "Save and reopen two fictional physical probes"
+    formula: "Verify every writable leaf, all six on and off checkbox appearances, the unfilled reserved line, and the review notice on each page after saving and reopening. Probe cells independently without interpreting any sample as a taxpayer calculation."
+    testRef: "tests/pdf/schedule-8812-2026-candidate.test.ts::retains diagnostic values and both states of every checkbox after save"
+  - line: "closed-exports"
+    description: "Keep public review and filing disabled"
+    formula: "The versioned candidate is separate from the qualified review and filing packs. The 2026 physical source fails the 2025 hash allowlist and public 2026 review and filing requests remain denied."
+    testRef: "tests/pdf/schedule-8812-2026-candidate.test.ts::keeps every export gate closed"

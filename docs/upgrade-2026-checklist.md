@@ -13,6 +13,10 @@ below retain their original evidence boundaries.
   package in both image stages. The zlib source contract passes 8 cases, and
   all four downloaded package archives match their signed package index.
   [Zlib security evidence](upgrade-2026-debian-zlib-security-work.md).
+- [x] Bind final 2026 Schedule 8812 to its exact 41 physical fields and
+  verify two fictional PDFs in both sets of checkbox states. Keep review and
+  filing disabled until final companion instructions, parent mappings and
+  qualified review are available. [Evidence](upgrade-2026-schedule-8812-physical-candidate-work.md).
 - [ ] Prove the installed package, complete strict browser and recovery,
   and rescan final runtime images on Linux ARM64 and AMD64. Keep remaining
   advisory dispositions and independent security/privacy review open.

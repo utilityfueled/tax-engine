@@ -25,6 +25,10 @@ and their browser source bindings `f29ddc28` are verified locally. The
 [November 12 source refresh](upgrade-2026-refresh-20261112.md) records the
 newly final Schedule 8812, the outstanding federal and state form revisions,
 and current documented provider availability and pricing.
+The [2026 Schedule 8812 physical candidate](upgrade-2026-schedule-8812-physical-candidate-work.md)
+has a verified field map and two fictional saved specimens. It stays outside
+the public review and filing registries pending final companion sources and
+qualified review.
 
 ## Historical November 6 evidence
 
