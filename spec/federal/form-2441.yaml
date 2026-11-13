@@ -58,7 +58,10 @@ lines:
       Actual taxpayer worksheet earned income, including permitted signed losses.
       The minimum of expenses and separate spouse incomes belongs on line 6.
       For 2026 MFJ, combined household income is not a substitute for separate earned-income facts.
-      Earned income = wages (Form 1040 Line 1z) + SE earned income.
+      The basic worksheet uses wages (Form 1040 Line 1z) and SE earned income.
+      Each eligible filer can include all of their actual W-2 Box 12 Code Q
+      in their completed Part II amount by a separate election, independent of
+      the EIC and Part III choices. The engine uses the completed amount once.
       SE earned income = Schedule SE Line 3 (net SE earnings, pre-0.9235 multiplier)
       minus Schedule 1 Line 15 (deductible half of SE tax).
       Per IRC §21(d)(1) → §32(c)(2)(A)(i)(II): net SE earnings "shall be determined
@@ -76,6 +79,11 @@ lines:
     description: "Separate spouse earned income for MFJ; otherwise line 4"
     formula: "Actual spouse worksheet income for MFJ; line 4 for other filing statuses. Historical combined-income adapters are explicitly unverified and cannot populate individual-income PDF fields."
     testRef: "tests/engine/forms/form-2441-audit-source.test.ts::care audit preserves separate earned incomes and tentative credit"
+  - line: "guided-earned-income-originals"
+    description: "Require current payroll or business sources for the completed Part II worksheet"
+    formula: "If original payroll entries or business facts change, revoke confirmation and retain the entered worksheet. An EIC-only election edit does not change the original payroll entries."
+    irsRef: "Form 2441 instructions lines 4 and 5; https://www.irs.gov/instructions/i2441"
+    testRef: "tests/guided-interview/guided-care-source-facts.test.ts::requires a new Part II confirmation after original earned-income sources change"
   - line: "6"
     description: "Earned-income-limited qualifying expenses"
     formula: "max(0,min(line 3,line 4,line 5))"

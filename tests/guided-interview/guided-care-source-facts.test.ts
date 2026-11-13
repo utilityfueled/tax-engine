@@ -2,9 +2,10 @@
 import { describe, expect, it } from "vitest";
 import { buildDependentCareInput } from "@/lib/guided-interview-bridge";
 import { careFactErrors } from "@/lib/guided-credit-facts";
-import { emptyCreditsData } from "@/lib/guided-interview-flow";
+import { emptyCreditsData, updateSectionData } from "@/lib/guided-interview-flow";
 import { DependentCareSchema } from "@/models/inputs.js";
 import { completeCareSource } from "./care-source-fixture";
+import { completeW2Entry, startCompleteInterview } from "./complete-facts";
 
 describe("actual care source facts", () => {
   it("preserves actual care source records and prior-year credit", () => {
@@ -14,6 +15,27 @@ describe("actual care source facts", () => {
       sourceFactsConfirmed: true, receivedBenefits: false, usesDeemedIncome: false,
       providers: source.providers, qualifyingPersons: source.qualifyingPersons });
     expect(DependentCareSchema.parse(result)).toMatchObject({ providers: source.providers, qualifyingPersons: source.qualifyingPersons });
+  });
+  it("requires a new Part II confirmation after original earned-income sources change", () => {
+    const state = startCompleteInterview({ filingStatus: "single", incomeTypes: ["w2-wages"], lifeEvents: [], stateCode: null });
+    const original = { ...completeW2Entry, sourceTaxYear: "2025", box12CodeQ: "500.12" };
+    state.sectionData["income-w2"] = { entries: [original], combatPayElection: { primary: false } };
+    const care = completeCareSource({ primaryEarnedIncome: "30500.12" });
+    state.sectionData.credits = { ...emptyCreditsData, dependentCare: care };
+
+    const eic = updateSectionData(state, "income-w2", { entries: [original], combatPayElection: { primary: true } });
+    expect(eic.sectionData.credits?.dependentCare.sourceFactsConfirmed).toBe(true);
+
+    for (const edit of [{ box12CodeQ: "500.13" }, { sourceTaxYear: "2026" }, { wages: "30001" }]) {
+      const changed = updateSectionData(state, "income-w2", { entries: [{ ...original, ...edit }] });
+      const updatedCare = changed.sectionData.credits?.dependentCare;
+      expect(updatedCare).toEqual({ ...care, sourceFactsConfirmed: null });
+      if (!updatedCare) throw new Error("The previously entered care worksheet was lost");
+      expect(careFactErrors(updatedCare, "single")).toHaveProperty("careSourceFacts");
+    }
+    const business = updateSectionData(state, "income-self-employment", { grossReceipts: "240.01" });
+    expect(business.sectionData.credits?.dependentCare).toEqual({ ...care, sourceFactsConfirmed: null });
+    expect(state.sectionData.credits.dependentCare.sourceFactsConfirmed).toBe(true);
   });
   it("requires source records and explicit zero answers without mutating old saved care facts", () => {
     const legacy = { expenses: "5000", qualifyingIndividuals: "2", primaryEarnedIncome: "30000", excludedDependentCareBenefits: "0", eligibilityConfirmed: true };

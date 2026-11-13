@@ -1902,6 +1902,12 @@ export function updateSectionData(
   );
   const nextW2 = sectionId === "income-w2" ? data as SectionDataMap["income-w2"] : state.sectionData["income-w2"];
   const previousW2 = state.sectionData["income-w2"];
+  const care = nextCredits?.dependentCare;
+  const careEarnedIncomeChanged = care?.sourceFactsConfirmed === true && (
+    (sectionId === "income-w2" && guidedSourceValuesChanged(
+      previousW2?.entries.map(w2OriginalFields), nextW2?.entries.map(w2OriginalFields),
+    )) || (sectionId === "income-self-employment" && sourceValuesChanged)
+  );
   const invalidatedW2 = nextW2 && (sectionId === "income-w2" || sectionId === "personal-info" && sourceValuesChanged) ? {
     ...nextW2,
     ...(nextW2.combatPayElection !== undefined ? { combatPayElection: sectionId === "personal-info" ? undefined
@@ -2030,9 +2036,10 @@ export function updateSectionData(
         ...(currentLossSourcesChanged ? { currentLossOrigin: invalidateCurrentLossOrigin(currentLossSourcesChanged) } : {}),
         ...(nolSourcesChanged ? { netOperatingLossSources: invalidateNetOperatingLossSources(nolSourcesChanged) } : {}),
         ...(foreignIncomeSourcesChanged ? { foreignIncome: { ...foreignIncomeSourcesChanged, sourceFactsConfirmed: null } } : {}), ...(healthSourcesChanged ? { healthInsuranceFacts: invalidateHealthInsuranceSources(healthSourcesChanged) } : {}), ...(studentLoanSourcesChanged ? { studentLoanFacts: { ...studentLoanSourcesChanged, sourceFactsConfirmed: null } } : {}), ...(iraSourcesChanged ? { iraContributions: { ...iraSourcesChanged, sourceFactsConfirmed: null } } : {}), ...(hsaSourcesChanged ? { hsaAccounts: hsaSourcesChanged.map(account => ({ ...account, sourceFactsConfirmed: null })) } : {}), ...(educatorSourcesChanged ? { educatorExpenseSources: educatorSourcesChanged.map(source => ({ ...source, sourceFactsConfirmed: null })) } : {}) } } : {}),
-      ...((benefitSourcesChanged || educationSourcesChanged || bondSourcesChanged || premiumTaxCreditSourcesChanged || minimumTaxCreditSourcesChanged || adoptionHistoryChanged) && nextCredits ? { credits: { ...nextCredits,
+      ...((careEarnedIncomeChanged || benefitSourcesChanged || educationSourcesChanged || bondSourcesChanged || premiumTaxCreditSourcesChanged || minimumTaxCreditSourcesChanged || adoptionHistoryChanged) && nextCredits ? { credits: { ...nextCredits,
         ...(adoptionHistoryChanged ? { adoption: invalidateAdoptionHistories(adoptionHistoryChanged) } : {}),
         ...(minimumTaxCreditSourcesChanged ? { minimumTaxCredit: { ...minimumTaxCreditSourcesChanged, sourceFactsConfirmed: null } } : {}),
+        ...(careEarnedIncomeChanged ? { dependentCare: { ...care, sourceFactsConfirmed: null } } : {}),
         ...(benefitSourcesChanged ? { dependentCareBenefits: { ...nextCredits.dependentCareBenefits, sourceFactsConfirmed: null, earnedIncomeWorksheetConfirmed: null, creditExpenseCoordinationConfirmed: null } } : {}),
         ...(educationSourcesChanged ? { educationDistributions: invalidateEducationPeriodSources(nextCredits.educationDistributions) } : {}),
         ...(premiumTaxCreditSourcesChanged ? { premiumTaxCredit: { ...premiumTaxCreditSourcesChanged, sourceFactsConfirmed: null, ...(premiumTaxCreditSourcesChanged.sharedPolicyAllocations ? { sharedPolicyAllocations: invalidateSharedPolicySources(premiumTaxCreditSourcesChanged.sharedPolicyAllocations) } : {}), ...(premiumTaxCreditSourcesChanged.marriageSources ? { marriageSources: invalidateMarriageSources(premiumTaxCreditSourcesChanged.marriageSources) } : {}) } } : {}),

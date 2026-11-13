@@ -24,6 +24,12 @@ async function render(initial: AdjustmentData, filingStatus: FilingStatus, run: 
   finally { await act(async () => root.unmount()); container.remove(); }
 }
 
+it("explains the independent IRA treatment of Code Q", async () => {
+  await render({ ...emptyAdjustmentData, iraContributions: completeIraSources }, "single", async () => {
+    expect(document.body.textContent).toContain("Include all of each person's nontaxable combat pay from W-2 Box 12 Code Q, regardless of the Earned Income Credit choice.");
+  });
+});
+
 it("collects paid IRA source facts without promoting a legacy deduction or blank compensation", async () => {
   await render({ ...emptyAdjustmentData, iraDeduction: "100" }, "single", async ({ latest, change, click }) => {
     const state = startCompleteInterview({ filingStatus: "single", incomeTypes: [], lifeEvents: [], stateCode: null });
