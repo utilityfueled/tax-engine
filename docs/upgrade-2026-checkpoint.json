@@ -24257,5 +24257,17 @@
     "normalStopAndSocketVerifiedSeparately": true,
     "cleanupSha256": "b94026ddfbd4b762807e0023a4b0e20851218f70a2a7368269986efa3507c529",
     "qualifiedForRelease": false
+  },
+  "nov13SelectedStateWageDrafts": {
+    "ohioSeniorCreditCommit": "29fb2d29da9393600e3d5924c051c244a1e3151b",
+    "ohioFocusedPassed": 348,
+    "ohioInitialRed": 5,
+    "ohioJanuary1AgeBoundaryQualified": false,
+    "pennsylvaniaGuidedContextCommit": "e414cb0e4f3caf79dc0a35e1ff192b8c951980b1",
+    "pennsylvaniaFocusedPassed": 73,
+    "pennsylvaniaInitialRed": 2,
+    "combinedSpecReferences": 8897,
+    "stateFilingQualified": false,
+    "evidence": "docs/upgrade-2026-state-gaps.md"
   }
 }

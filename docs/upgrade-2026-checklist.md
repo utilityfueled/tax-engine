@@ -6,12 +6,18 @@ below retain their original evidence boundaries.
 
 ## Active continuation — November 13 Eastern
 
+- [x] Compute the Ohio senior citizen credit for confirmed withholding-only
+  wage drafts in `29fb2d29`. Pass 348 affected checks across all three
+  residency categories and adjacent specialized methods.
+- [x] Restore the Pennsylvania guided state-only wage handoff in `e414cb0e`.
+  Pass 73 affected checks, including unknown and positive Form 8812 values,
+  combat pay and stale confirmation. [State sources and evidence](upgrade-2026-state-gaps.md).
 - [x] Project the IRS Taylor and Finley building-exchange examples on the
   disabled final Form 8824 in `00f5a9b1`. Pass 162 focused checks, 8,892 spec
   references and separate readback and visual inspection of four pages.
-- [ ] Complete the exact `00f5a9b1` combined suite and the final-source hosted
-  and ARM64/AMD64 rehearsals. Keep commits local while the production push
-  hold is in effect.
+- [ ] Close the `00f5a9b1` combined suite and run the later `e414cb0e`
+  exact-source suite. Complete the final-source hosted and ARM64/AMD64
+  rehearsals. Keep commits local while the production push hold is in effect.
 
 - [x] Reconfirm the dependent-care worksheet after income-source changes and
   document the separate Code Q treatment for care and IRA compensation in

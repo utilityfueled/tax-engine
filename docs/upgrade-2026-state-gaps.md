@@ -16,6 +16,29 @@ output. Dedicated components may require structured inputs absent from the UI;
 the page does not advertise them as a complete guided filing flow. All 2026 full
 returns remain unavailable. The owner selection does not activate any unqualified path.
 
+## November 13 draft progress
+
+`29fb2d29` covers an ordinary no-school, withholding-only Ohio wage return
+with at least one senior. It requires complete Ohio credit history for each
+actual owner, including confirmation of no previous senior lump-sum election
+and no retirement credit carryforward. The $50 nonrefundable credit applies
+once per return below $100,000 of MAGI less exemptions and before personal,
+joint and residency credits. The January 1, 1962 age boundary, older taxpayers
+with specialized income or school district facts, and credit carryforwards
+remain held. Five new regressions failed before the implementation. The seven
+affected suites passed 348 tests, including the $100,000 boundary and all three
+residencies. [Ohio R.C. 5747.055](https://codes.ohio.gov/ohio-revised-code/section-section-5747.055) · [Credit order](https://codes.ohio.gov/ohio-revised-code/section-5747.98).
+
+`e414cb0e` restores the finite Pennsylvania wage draft from actual saved
+interview data containing neutral Form 8812 answers. The checked fixture
+computes $1,535 state liability and zero federal EIC dependency from current
+originals and the confirmed child inventory. Positive exclusions, actual combat
+pay, malformed values and unrecognized fields reject. Owner edits still make
+the previous confirmation stale. Two new regressions failed before the fix and
+all 73 affected tests passed. Engine and web types, strict scoped lint, the
+inventory and all 8,897 combined spec references passed. Full state and federal
+filing qualification remains pending. [Schedule 8812 instructions](https://www.irs.gov/instructions/i1040s8) · [2026 W-2 instructions](https://www.irs.gov/instructions/iw2w3).
+
 ## Official sources refreshed
 
 - [Ohio R.C. 5747.02](https://codes.ohio.gov/ohio-revised-code/section-5747.02),

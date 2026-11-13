@@ -9,6 +9,18 @@ The read-only Vercel check still finds the production project linked to
 `main`, with automatic custom-domain assignment and no build-ignore command.
 The isolated rehearsal project has no Git link and protects all deployments.
 
+`29fb2d29` adds Ohio's $50 senior credit to the internal withholding-only
+wage draft across all three residency categories. It binds prior credit
+history to the actual owners and applies the senior credit before personal,
+joint and residency credits. The January 1, 1962 age boundary remains held
+for Ohio-specific confirmation. Five regressions reproduced the missing method
+and all 348 affected checks passed. `e414cb0e` fixes a Pennsylvania guided
+handoff that rejected a saved return solely because it retained a neutral
+Form 8812 interview object. Two regressions reproduced that failure and all
+73 affected checks passed. Positive exclusions, combat pay and unknown fields
+still require separate source methods. Both drafts await qualified review and
+final state form qualification. [State sources and evidence](upgrade-2026-state-gaps.md).
+
 `00f5a9b1` projects the IRS Taylor and Finley building-exchange examples on
 the disabled final Form 8824. All 162 focused checks passed. Independent
 Decimal derivations and a second PDF reader verified the two ordinary
