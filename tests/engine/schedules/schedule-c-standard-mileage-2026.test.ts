@@ -60,6 +60,19 @@ describe("2026 Schedule C standard mileage", () => {
     expect(calculateScheduleC(input).totalExpenses.toFixed()).toBe(expected);
   });
 
+  it("allows ordinary business expenses alongside the parsed line 9 zero default", () => {
+    for (const carAndTruck of [undefined, "0.00"]) {
+      const input = TaxYearInputSchema.parse({ ...fixture, scheduleC: { ...scheduleC, expenses: {
+        officeExpense: "13.01", carAndTruck,
+      } } });
+      const result = calculateScheduleC(input);
+      expect(result.expenseBreakdown["Car and truck"]?.toFixed()).toBe("3.366655");
+      expect(result.expenseBreakdown["Office expense"]?.toFixed()).toBe("13.01");
+      expect(result.totalExpenses.toFixed()).toBe("16.376655");
+      expect(result.netProfit.toFixed()).toBe("9983.623345");
+    }
+  });
+
   it("rejects incomplete conflicting and out of scope vehicle evidence", () => {
     for (const change of [
       { taxYear: 2025 }, { logReference: " " }, { commutingMiles: undefined }, { otherPersonalMiles: "-1" },
@@ -77,7 +90,7 @@ describe("2026 Schedule C standard mileage", () => {
     for (const change of [
       { taxpayer: { ...taxpayer, taxYear: 2025 } }, { taxpayer: { ...taxpayer, filingStatus: "married_filing_jointly" } },
       { scheduleC: { ...scheduleC, accountHolder: "spouse" } }, { scheduleC: { ...scheduleC, accountingMethod: "accrual" } },
-      { scheduleC: { ...scheduleC, expenses: { carAndTruck: "0" } } },
+      { scheduleC: { ...scheduleC, expenses: { carAndTruck: "0.01" } } },
       { scheduleC: { ...scheduleC, expenses: { depreciation: "1" } } },
       { scheduleC: { ...scheduleC, expenses: { businessInterest: "1" } } },
       { scheduleC: { ...scheduleC, standardMileage: { ...log, placedInService: "2026-07-01" } } },

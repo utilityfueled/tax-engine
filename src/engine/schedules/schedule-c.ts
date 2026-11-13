@@ -166,9 +166,10 @@ function calculateStandardMileage(input: TaxYearInput, business: ScheduleCInput 
     }
   }
   const expenses = business.expenses;
-  if (expenses?.carAndTruck !== undefined || input.form4562 || input.form2555
+  if (input.form4562 || input.form2555
     || business.sourceFacts?.interest || business.sourceFacts?.depreciation || business.sourceFacts?.passengerFirstYear
-    || [expenses?.depreciation, expenses?.businessInterest].some(amount => !legacyAmount(amount).isZero())) {
+    || [expenses?.carAndTruck, expenses?.depreciation, expenses?.businessInterest]
+      .some(amount => !legacyAmount(amount).isZero())) {
     throw new Error("Schedule C standard mileage requires separate methods for other vehicle expenses, depreciation, interest or foreign use");
   }
 

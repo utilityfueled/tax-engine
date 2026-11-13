@@ -43,12 +43,22 @@ lines:
       The eligible miles and the two personal classifications must reconcile to
       that total exactly. Require confirmation that the method and costs are
       exclusive and that reimbursements, other vehicle deductions and mixed
-      activity allocation are absent. A precomputed line 9, Form 4562, separate
-      depreciation, foreign use and professional wagering require separate
-      treatment. No claim is generated from unknowns. Leased vehicles, previous
-      elections, separate interest, property taxes, basis, disposition, and
-      physical Part IV and state output require separate qualification.
+      activity allocation are absent. A nonzero precomputed line 9, Form 4562,
+      separate depreciation, foreign use and professional wagering require
+      separate treatment. The mileage log supplies all of line 9. The generic
+      expense record's default zero for line 9 can coexist with the log and
+      ordinary business expenses. No claim is generated from unknowns.
+      Leased vehicles, previous elections, separate interest, property taxes,
+      basis, disposition, and physical Part IV and state output require
+      separate qualification.
     testRef: "tests/engine/schedules/schedule-c-standard-mileage-2026.test.ts::rejects incomplete conflicting and out of scope vehicle evidence"
+  - line: "9, 18, 28"
+    description: "Standard mileage with ordinary business expenses"
+    formula: >
+      Add the log's line 9 deduction and each eligible independent expense to
+      total expenses once. Do not treat the generic line 9 default as evidence
+      of an expense or use it in place of the log.
+    testRef: "tests/engine/schedules/schedule-c-standard-mileage-2026.test.ts::allows ordinary business expenses alongside the parsed line 9 zero default"
   - line: "31"
     description: "Single source projection with unchanged year admission"
     formula: >
