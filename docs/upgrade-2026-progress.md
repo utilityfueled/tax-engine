@@ -4,6 +4,22 @@ Current source, verification and remaining work are summarized in the
 [current continuation](upgrade-2026-current-status.md). Historical results
 below apply to their named revisions.
 
+- November 13: `12dd9a10` checks the live local return and document before
+  saving a document-year edit. The older production build reported success
+  and recreated a return deleted in another tab. The successor refused
+  the stale edit and preserved the deletion across reload. All 206
+  focused checks and 30 Chromium cases passed without skips or retries.
+  Web types, 8,821 spec references, inventory and the Web build passed.
+  Scoped lint reported zero errors and two existing warnings. The browser
+  audit binds 607 cases, five original hosted-only skips and 14 fixed
+  diagnostics under the existing request limits.
+
+- November 13: archived `b76cf211` passed nine static commands and 27,618
+  unit and coverage tests at 87.79% branch coverage. The browser command
+  stopped during source preflight because the changed tax-table fixture
+  README was missing from the source audit. `6a38aadd` updates that binding.
+  No browser journey ran on the archived `b76cf211` source.
+
 - November 13: `1a44d113` extends failure recovery to local reset and
   whole-return deletion. Before the fix, a quota failure lost original PDF
   and guided data, and two other fault tests observed unexpected success.

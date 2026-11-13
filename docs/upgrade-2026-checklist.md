@@ -43,6 +43,11 @@ below retain their original evidence boundaries.
 - [x] Keep saved facts and original bytes recoverable after failed local
   reset or whole-return deletion in `1a44d113`. Verify exact rollback
   and successful retries in Chromium.
+- [x] Stop a stale local document-year edit from recreating a deleted return
+  in `12dd9a10`. Verify the failure on the earlier build and the preserved
+  deletion on the successor in Chromium.
+- [x] Record the `b76cf211` archived browser preflight failure and repair its
+  tax-table README source binding in `6a38aadd`.
 - [x] Complete the 12 archived `656fb5f8` checks. Unit and coverage each
   pass 27,617 tests with 87.79% branch coverage. Chromium passes 594
   with five original hosted-only skips.

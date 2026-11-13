@@ -23653,6 +23653,35 @@
     "checksSha256": "f7105cc49a1ad38f0e078a78019a3c94bd23e28eb5f2cd39e6fc126d4aab6465",
     "chromiumTranscriptSha256": "adab4cbfe1a75857d5dfbfd6322b3a38e33ffaa9c1aace2b5438f208dd8ca552"
   },
+  "nov13StaleLocalDocumentYear": {
+    "commit": "12dd9a107c3e069e3dfc125a5d9c577166e5e64c",
+    "tree": "4157a9b5e3500ed2966df3c831e4eb1a94c0f41c",
+    "beforeFixBrowserFailures": 1,
+    "beforeFixBrowserReportSha256": "d5a3a1b7cfad0c20d5517c1d10a4cb9178004dfcaa613956f6877b16e8e11016",
+    "focusedPassed": 206,
+    "focusedSha256": "53a1448f66b86e3849443da205b3d4f4e4b4c5980891da9640189c62403d446d",
+    "chromiumPassed": 30,
+    "chromiumSkipped": 0,
+    "chromiumRetries": 0,
+    "chromiumReportSha256": "e783859efa910fe695c6b6ff4e8c99095e6bb79b091d7258ace6afe3a7c369a5",
+    "buildTranscriptSha256": "e651baa8294432cde550acaa1cea6a31fc12939eb96b8545f0523642b52810cd",
+    "specReferences": 8821,
+    "browserCollectionCases": 607,
+    "hostedOnlySkips": 5,
+    "diagnosticCases": 14,
+    "auditSha256": "8f4db20408360de85402d5b9912a0f0ca802d957557b224e170a1866a079f716"
+  },
+  "nov13DraftFederalTablesCombined": {
+    "sourceCommit": "b76cf211373603fa3f9624686cd795e693cabf95",
+    "checksPassed": 11,
+    "unitAndCoverageTestsEach": 27618,
+    "testFiles": 1994,
+    "branchCoveragePercent": "87.79",
+    "browserPreflightFailure": "The browser audit omitted the changed tests/fixtures/tax-tables/README.md source hash. No browser journey executed.",
+    "browserSourceAuditRepairCommit": "6a38aadd7ab89865b3d297be81e22ede6d9880e3",
+    "checksSha256": "99019acee55fc17d7dc6c50332b2f4d3a2a2bae8e495536918990b09d2e7b1b8",
+    "browserStderrSha256": "0e7f731f9f8856458099f061cab98f7d526d85a7951975dbda5e63941bbcbb7a"
+  },
   "nov12HostedCreditSettlement": {
     "previewReceiptCommit": "d39209dec302d249a5f01fe8baf23cc4ca2130f8",
     "settlementCommit": "8357ed9929766a8e5ed0ac7c45321cdccd44d35a",

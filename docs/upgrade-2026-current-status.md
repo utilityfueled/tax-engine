@@ -151,6 +151,14 @@ clears the relevant data. The 206 focused checks and 29 production Chromium
 cases passed. The browser collection retains the five hosted-only skips,
 14 fixed diagnostics and unchanged request limits.
 
+`12dd9a10` refuses a stale document-year edit after another local tab
+deletes the return. The old Chromium case reproduced the resurrection.
+All 206 focused checks and 30 production Chromium cases passed on the
+successor. The collection now covers 607 cases under the same request
+limits. The archived `b76cf211` source separately passed 11 checks and
+87.79% branch coverage. Its browser preflight rejected an outdated source
+binding for the tax-table fixture README, which `6a38aadd` repairs.
+
 `a6c4fd18` adds IRS-published expected values for 2026 Schedule SE and 8812.
 The 147 affected tests passed. The checks use the worksheet inputs the IRS
 supplied. Full-return testing still requires final tables and professional
