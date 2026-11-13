@@ -45,6 +45,23 @@ lines:
       scope and unsupported retained originals deny even when their nominal tax
       result would be zero. No fake completed federal return or trusted client flag.
     testRef: "tests/engine/state/pa-2026-ordinary-draft.test.ts::PA2026 draft preserves actual guided source capture and stale original denial"
+  - line: "guided-federal-child-credit-context"
+    description: "Allow neutral retained Form 8812 interview context in the PA wage-only draft"
+    formula: |
+      The native interview can retain an empty or explicitly negative Puerto Rico
+      residency answer and zero legacy Form 8812 values. Validate the entire
+      current shape. Only absent or false residence and absent or exactly zero
+      Form 8812 exclusion/election amounts are neutral to the separate state
+      wage and federal EIC phaseout proofs. Reject true residence, any positive
+      or malformed amount, and unknown fields. A positive original W-2 Code Q
+      requires its separate compensation method regardless of neutral Form 8812
+      context. Keep the actual context in the original snapshot and require
+      recapture after an edit. Do not compute or imply a federal child credit.
+    testRef: "tests/engine/state/pa-2026-childless-eic.test.ts::PA2026 native inventory survives actual guided state handoff save and parent invalidation"
+  - line: "guided-federal-child-credit-special-sources"
+    description: "Deny specialized income when the neutral Form 8812 route is used"
+    formula: "Neutral context never establishes an unknown wage original or converts actual excluded income or combat pay into zero. Sources refreshed 2026-11-13: https://www.irs.gov/instructions/i1040s8 and https://www.irs.gov/instructions/iw2w3."
+    testRef: "tests/engine/state/pa-2026-childless-eic.test.ts::PA2026 draft validates retained Form 8812 context without inferring compensation sources"
   - line: "local-obligation-inventory"
     description: "Keep confirmed local filing decisions separate from PA-40"
     formula: |

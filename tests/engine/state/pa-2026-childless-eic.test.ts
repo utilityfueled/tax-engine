@@ -72,12 +72,66 @@ it.each(['missingWage','negativeWage','malformedWage','unknownCare','positiveCar
  const f=pa2026ChildlessEicFixture();if(kind==='missingWage')f.input.w2s[0].wages='';if(kind==='negativeWage')f.input.w2s[0].wages='-1';if(kind==='malformedWage')f.input.w2s[0].wages='50,000';if(kind==='unknownCare')Reflect.set(f.sources.care,'allCarePaymentSourcesReviewedConfirmed',null);if(kind==='positiveCare')f.input.w2s[0].box10DependentCareBenefits='1';if(kind==='adjustment')Reflect.set(f.input,'adjustments',{iraDeduction:'0'});rebindPA2026Childless(f);f.sources.eitcChildInventory=native.confirmGuidedPA2026EicChildInventory(f.input,native.captureGuidedPA2026EicChildInventory(f.input,f.sources.eitcChildInventory));expect(()=>calculatePA2026OrdinaryDraft(f.input,f.facts,f.sources)).toThrow();
 });
 
-it('PA2026 native inventory survives actual guided state handoff save and parent invalidation',()=>{
- const g=guidedPAOrdinaryPanelFixture(),f=pa2026ChildlessEicFixture();g.state.taxYear=2026;g.state.segmentation.incomeTypes=['w2-wages'];delete g.state.sectionData['income-investments'];g.state.sectionData['state-return']={stateEstimatedPayments:[],additionalStateWithholding:''};const entry=g.state.sectionData['income-w2']!.entries[0];Object.assign(entry,{sourceTaxYear:'2026',stateWages:'50000',stateWithheld:'1535'});
- const raw=buildTaxInputFromGuidedData(g.state);expect(raw).not.toBeNull();const input=TaxYearInputSchema.parse(raw);f.input.paResidencySources.wages[0].original=structuredClone(input.w2s[0]);const residency=confirmGuidedPAResidencySources(input,f.input.paResidencySources),current={...input,paResidencySources:residency};
- const facts=confirmGuidedPAOrdinaryReturnFacts(current,f.facts),child=native.confirmGuidedPA2026EicChildInventory(current,native.captureGuidedPA2026EicChildInventory(current,f.sources.eitcChildInventory)),completion=native.confirmGuidedPAOrdinaryReturnCompletionSources(current,{...f.sources,eitcChildInventory:child},facts);
- g.state.sectionData['state-return']={stateEstimatedPayments:[],additionalStateWithholding:'',paResidencySources:residency,paOrdinaryReturnFacts:facts,paOrdinaryReturnCompletionSources:completion};
- const saved=JSON.parse(JSON.stringify(g.state)) as flow.GuidedFlowState,bound=buildGuidedStateOriginals(TaxYearInputSchema.parse(buildTaxInputFromGuidedData(saved)),saved);expect(bound.paOrdinaryReturnCompletionSources?.eitcChildInventory).toEqual(child);expect(()=>calculatePA2026OrdinaryDraft(bound,bound.paOrdinaryReturnFacts,bound.paOrdinaryReturnCompletionSources)).toThrow(/childTaxCredit/);expect(flow.validateSection(saved,'state-return').status).toBe('complete');
- const unchanged=flow.updateSectionData(saved,'state-return',structuredClone(saved.sectionData['state-return']!));expect(unchanged.sectionData['state-return']?.paOrdinaryReturnCompletionSources).toEqual(completion);
- const edited=flow.updateSectionData(saved,'personal-info',{...saved.sectionData['personal-info']!,lastName:'Actual changed owner'});expect(edited.sectionData['state-return']?.paOrdinaryReturnCompletionSources?.sourceFactsConfirmed).toBeNull();expect(edited.sectionData['state-return']?.paOrdinaryReturnCompletionSources?.eitcChildInventory?.originalFederalSources).toEqual(child.originalFederalSources);expect(flow.validateSection(edited,'state-return').status).toBe('partial');expect(()=>buildGuidedStateOriginals(TaxYearInputSchema.parse(buildTaxInputFromGuidedData(edited)),edited)).toThrow();
+it('PA2026 native inventory survives actual guided state handoff save and parent invalidation', () => {
+  const { state } = guidedPAOrdinaryPanelFixture();
+  const f = pa2026ChildlessEicFixture();
+  state.taxYear = 2026;
+  state.segmentation.incomeTypes = ['w2-wages'];
+  delete state.sectionData['income-investments'];
+  state.sectionData['state-return'] = { stateEstimatedPayments: [], additionalStateWithholding: '' };
+  const entry = state.sectionData['income-w2']?.entries[0];
+  if (!entry) throw new Error('Missing fictional W-2');
+  Object.assign(entry, { sourceTaxYear: '2026', stateWages: '50000', stateWithheld: '1535' });
+  const input = TaxYearInputSchema.parse(buildTaxInputFromGuidedData(state));
+  f.input.paResidencySources.wages[0].original = structuredClone(input.w2s[0]);
+  const residency = confirmGuidedPAResidencySources(input, f.input.paResidencySources);
+  const current = { ...input, paResidencySources: residency };
+  const facts = confirmGuidedPAOrdinaryReturnFacts(current, f.facts);
+  const child = native.confirmGuidedPA2026EicChildInventory(current, native.captureGuidedPA2026EicChildInventory(current, f.sources.eitcChildInventory));
+  const completion = native.confirmGuidedPAOrdinaryReturnCompletionSources(current, { ...f.sources, eitcChildInventory: child }, facts);
+  state.sectionData['state-return'] = {
+    stateEstimatedPayments: [], additionalStateWithholding: '', paResidencySources: residency,
+    paOrdinaryReturnFacts: facts, paOrdinaryReturnCompletionSources: completion,
+  };
+
+  const saved = JSON.parse(JSON.stringify(state)) as flow.GuidedFlowState;
+  const bound = buildGuidedStateOriginals(TaxYearInputSchema.parse(buildTaxInputFromGuidedData(saved)), saved);
+  expect(bound.paOrdinaryReturnCompletionSources?.eitcChildInventory).toEqual(child);
+  expect(bound.childTaxCredit).toBeDefined();
+  const calculated = calculatePA2026OrdinaryDraft(bound, bound.paOrdinaryReturnFacts, bound.paOrdinaryReturnCompletionSources);
+  expect(calculated.pa.pa40.taxLiability.toFixed()).toBe('1535');
+  expect(calculated.dependencyProof.federalEarnedIncomeCredit.toFixed()).toBe('0');
+  expect(calculated.readiness.filingEligible).toBe(false);
+  expect(flow.validateSection(saved, 'state-return').status).toBe('complete');
+
+  const savedStateReturn = saved.sectionData['state-return'];
+  const savedPersonalInfo = saved.sectionData['personal-info'];
+  if (!savedStateReturn || !savedPersonalInfo) throw new Error('Missing fictional saved originals');
+  const unchanged = flow.updateSectionData(saved, 'state-return', structuredClone(savedStateReturn));
+  expect(unchanged.sectionData['state-return']?.paOrdinaryReturnCompletionSources).toEqual(completion);
+  const edited = flow.updateSectionData(saved, 'personal-info', { ...savedPersonalInfo, lastName: 'Actual changed owner' });
+  expect(edited.sectionData['state-return']?.paOrdinaryReturnCompletionSources?.sourceFactsConfirmed).toBeNull();
+  expect(edited.sectionData['state-return']?.paOrdinaryReturnCompletionSources?.eitcChildInventory?.originalFederalSources).toEqual(child.originalFederalSources);
+  expect(flow.validateSection(edited, 'state-return').status).toBe('partial');
+  expect(() => buildGuidedStateOriginals(TaxYearInputSchema.parse(buildTaxInputFromGuidedData(edited)), edited)).toThrow();
+});
+
+it('PA2026 draft validates retained Form 8812 context without inferring compensation sources', () => {
+  const withContext = (credit: unknown, combatPay?: string) => {
+    const f = pa2026ChildlessEicFixture();
+    Reflect.set(f.input, 'childTaxCredit', credit);
+    if (combatPay !== undefined) f.input.w2s[0].box12CodeQ = combatPay;
+    rebindPA2026Childless(f);
+    f.sources.eitcChildInventory = native.confirmGuidedPA2026EicChildInventory(f.input, native.captureGuidedPA2026EicChildInventory(f.input, f.sources.eitcChildInventory));
+    return () => calculatePA2026OrdinaryDraft(f.input, f.facts, f.sources);
+  };
+  expect(withContext({})().pa.pa40.taxLiability.toFixed()).toBe('1535');
+  expect(withContext({ bonaFidePuertoRicoResident: false, puertoRicoExcludedIncome: '0.00', form4563ExcludedIncome: '0', possessionIncomeExclusion: '0', nonTaxableCombatPayElection: '0' }, '0')().pa.pa40.taxLiability.toFixed()).toBe('1535');
+  expect(withContext({ bonaFidePuertoRicoResident: true })).toThrow(/Form 8812/);
+  for (const field of ['puertoRicoExcludedIncome', 'form4563ExcludedIncome', 'possessionIncomeExclusion', 'nonTaxableCombatPayElection']) {
+    expect(withContext({ [field]: '0.01' })).toThrow(/Form 8812/);
+  }
+  expect(withContext({ possessionIncomeExclusion: 'unknown' })).toThrow(/Form 8812/);
+  expect(withContext({ unexpected: '0' })).toThrow(/Form 8812/);
+  expect(withContext({ bonaFidePuertoRicoResident: false }, '0.01')).toThrow(/combat pay/i);
 });

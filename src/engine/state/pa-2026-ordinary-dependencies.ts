@@ -2,6 +2,7 @@ import {PA2026EicChildInventorySchema,type PA2026EicChildInventory} from '@/mode
 import {snapshotPAOrdinaryReturnOriginals} from './pa-ordinary-return-facts.js';
 /** Limited state-only dependency proof. Spec: state/pa-2026-ordinary-draft.yaml. */
 import Decimal from 'decimal.js';
+import { z } from 'zod';
 import {roundDollar} from '@/utils/decimal.js';
 import {StandardDeductionFactsSchema,type TaxYearInput} from '@/models/inputs.js';
 import {FEDERAL_2026_INDEXED} from '@/models/federal-2026-indexed.js';
@@ -16,6 +17,14 @@ export interface PA2026OrdinaryDependencyProof {
  confirmedChildlessCompletedEitcPhaseout?:Decimal;reportedWageAgi?:Decimal;
 }
 const fail=(detail:string):never=>{throw new Error('PA2026 ordinary draft dependency sources: '+detail);};
+const retainedCreditAmount = z.string().regex(/^\d+(?:\.\d+)?$/).optional();
+const childCreditContext = z.strictObject({
+ bonaFidePuertoRicoResident: z.boolean().optional(),
+ puertoRicoExcludedIncome: retainedCreditAmount,
+ form4563ExcludedIncome: retainedCreditAmount,
+ possessionIncomeExclusion: retainedCreditAmount,
+ nonTaxableCombatPayElection: retainedCreditAmount,
+} satisfies Record<keyof NonNullable<TaxYearInput['childTaxCredit']>, z.ZodType>);
 function stable(value:unknown):string{if(Array.isArray(value))return '['+value.map(stable).join(',')+']';if(value&&typeof value==='object')return '{'+Object.entries(value).filter(([,v])=>v!==undefined).sort(([a],[b])=>a.localeCompare(b)).map(([k,v])=>JSON.stringify(k)+':'+stable(v)).join(',')+'}';return JSON.stringify(value)??'null';}
 /** Documentary review inputs; neither PA/SP child count nor empty normalized dependents establish these facts. */
 export function snapshotPA2026EicChildReview(data:PA2026EicChildInventory):Record<string,unknown>{return structuredClone({sourceTaxYear:data.sourceTaxYear,sourceReference:data.sourceReference,allPotentialQualifyingChildrenReviewedConfirmed:data.allPotentialQualifyingChildrenReviewedConfirmed,noQualifyingEitcChildrenConfirmed:data.noQualifyingEitcChildrenConfirmed,candidateChildren:data.candidateChildren});}
@@ -38,7 +47,7 @@ export function calculatePA2026OrdinaryDependencies(input:TaxYearInput,p:PAOrdin
  if(input.taxpayer.filingStatus!=='single'||p.facts.filing.maritalStatus!=='unmarried'||p.facts.filing.aliveEntireYear!==true)fail('only actual single living unmarried owners are supported');
  // Empty document arrays are normalization only. They never establish the complete
  // none facts: those are independently replayed from the confirmed source packets.
- const roots=new Set(['taxpayer','w2s','paResidencySources','paOrdinaryReturnFacts','paOrdinaryReturnCompletionSources','standardDeductionFacts','deductionElection']);
+ const roots=new Set(['taxpayer','w2s','paResidencySources','paOrdinaryReturnFacts','paOrdinaryReturnCompletionSources','standardDeductionFacts','deductionElection','childTaxCredit']);
  const emptyDocumentRoots=new Set(['form1099Int','form1099Div','form1099B','form1099DA','form1099Nec','form1099Misc','form1099G','form1099OID','formW2G','form1099K','form1099C','form1099Q','form1099R','form1099SA','formSSA1099','formRRB1099','paScheduleGLStatements','paScheduleJStatements','paPassThroughStatements','scheduleK1','scheduleK1Form1041','form1098','form1098E','form1095A','donations','rentalProperties','savingsBondRedemptions','form6252','form8814','homeSales','form8824']);
  for(const[key,value]of Object.entries(input))if(!roots.has(key)&&value!==undefined&&!(emptyDocumentRoots.has(key)&&Array.isArray(value)&&value.length===0))fail('retained unsupported original or federal dependency: '+key);
  if(input.standardDeductionFacts!==undefined&&!StandardDeductionFactsSchema.strict().safeParse(input.standardDeductionFacts).success)fail('retained standard-deduction context is unsupported');
@@ -50,7 +59,19 @@ export function calculatePA2026OrdinaryDependencies(input:TaxYearInput,p:PAOrdin
  const Money=Decimal.clone({precision:ordinarySourcePrecision(input,p,sources),rounding:Decimal.ROUND_HALF_UP});
  const amount=(raw:unknown):Decimal=>{if(typeof raw!=='string'||!/^\d+(\.\d+)?$/.test(raw))return fail('actual wage/benefit amount is unknown');const n=new Money(raw);return n.isFinite()?n:fail('actual wage amount is nonfinite');};
  let wages=new Money(0);
- for(const w of input.w2s){wages=wages.plus(amount(w.wages));if(!amount(w.box10DependentCareBenefits).isZero())fail('actual employer benefits require their source method');}
+ for (const w of input.w2s) {
+  wages = wages.plus(amount(w.wages));
+  if (!amount(w.box10DependentCareBenefits).isZero()) fail('actual employer benefits require their source method');
+  if (w.box12CodeQ !== undefined && !amount(w.box12CodeQ).isZero()) fail('actual combat pay requires its separate compensation method');
+ }
+ if (input.childTaxCredit !== undefined) {
+  const parsed = childCreditContext.safeParse(input.childTaxCredit);
+  if (!parsed.success) return fail('retained Form 8812 context has unknown or invalid facts');
+  const { bonaFidePuertoRicoResident, ...amounts } = parsed.data;
+  if (bonaFidePuertoRicoResident === true || Object.values(amounts).some(value => value !== undefined && !new Money(value).isZero())) {
+   fail('retained Form 8812 context requires its separate federal source method');
+  }
+ }
  const care=sources.care;
  if(care.status!=='no_qualifying_expenses'||care.allCarePaymentSourcesReviewedConfirmed!==true||care.allEmployerBenefitsIncludedConfirmed!==true||care.originalCarePayments.length||care.careSources!==undefined)fail('complete actual no-care/no-benefit originals are required');
  if(Object.values(p.facts.sp.categories).some(row=>row.status!=='known_none'||row.entries.length))fail('other worldwide SP income requires its actual successor');
