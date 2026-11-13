@@ -6,6 +6,36 @@ The public refs were refreshed. `origin/main` still points to `59248889`
 and `origin/upgrade/2026-baseline` to `3024b848`. Successor commits stay on
 local `main` while automatic production deployment is being disabled.
 
+`dc98bc06` projects the verified profit of one 2026 wagering business onto
+the disabled final Schedule SE. It requires explicit regular-method and
+complete-source confirmations. The $3,000 profit gives $2,771 adjusted
+earnings, $424 tax and a $212 deduction. A separate Decimal calculation and
+strict parser reproduced the 12 filled values, verified all 27 widget
+positions and confirmed blank identity. Both pages and their review notices
+were rendered and inspected. The 1,712 focused checks, types, builds, lint,
+inventory and 8,851 spec references passed. A conflicting whole-dollar
+transfer stays held. Wages, other SE sources and filing are outside this
+candidate. [Final Schedule SE](https://www.irs.gov/pub/irs-prior/f1040sse--2026.pdf) ·
+[Final instructions](https://www.irs.gov/pub/irs-prior/i1040sse--2026.pdf).
+
+`bf85d34a` preserves a documented Yes and No in the same Pennsylvania local
+filing inventory. A reported local W-2 row can link to either documented
+decision. Its $500.25 of local withholding stays outside the $1,197 PA
+withholding. Unknown or all-No inventories remain held. The 3,474 focused
+checks, types, builds, lint, inventory and 8,849 spec references passed.
+[PA local withholding](https://dced.pa.gov/local-government/local-income-tax-information/local-withholding-tax-faqs/) ·
+[PA local EIT regulations](https://dced.pa.gov/download/local-earned-income-tax-regulations-9-1-2018/?wpdmdl=56769).
+
+`34168bdc` accepts parsed original wage packets for Ohio residents,
+part-year residents and nonresidents. The cases retain the same $68, $441 and
+$814 refunds. A stale snapshot, unrecognized empty key or retained
+unsupported zero-value document is still rejected. The 4,840 focused tests,
+types, builds, lint, inventory and 8,848 spec references passed. Parsed
+Schedule C amounts still need source proof because the schema can default
+unreported expense fields to zero. The exact archive of both state changes
+and the preceding Form 3903 candidate is running.
+[Ohio Revised Code §5747.02](https://codes.ohio.gov/ohio-revised-code/section-5747.02).
+
 `65764509` projects the confirmed federal-only 2026 single-taxpayer move
 onto the disabled final Form 3903. Its original Code P and omitted excess
 must reconcile when line 4 is positive. An independent Decimal calculation

@@ -4,6 +4,36 @@ Current source, verification and remaining work are summarized in the
 [current continuation](upgrade-2026-current-status.md). Historical results
 below apply to their named revisions.
 
+- November 13: `dc98bc06` replays the confirmed 2026 professional wagering
+  Schedule C and projects regular-method Schedule SE when the taxpayer
+  confirms the complete SE/payroll inventory and regular-method eligibility.
+  Both new tests failed before the projector existed. The 1,712 focused
+  tests in 211 files, three type checks, both builds, scoped lint, inventory
+  and 8,851 spec references passed. A separate Decimal calculation and
+  strict parser verified 12 filled fields, all 27 original widgets and
+  absent identity. Both pages rendered with their review notice. The
+  initial Poppler run lacked a usable font cache. The corrected run used
+  a private cache and produced no stderr. Exact and displayed threshold
+  disagreements remain held, and the candidate is disabled.
+  [Final Schedule SE](https://www.irs.gov/pub/irs-prior/f1040sse--2026.pdf) ·
+  [Final instructions](https://www.irs.gov/pub/irs-prior/i1040sse--2026.pdf).
+
+- November 13: `34168bdc` accepts canonical Ohio employee originals across
+  the three supported residency categories. The older build rejected all
+  three parsed cases. The fix admits only the specified empty document
+  collections and preserves source-snapshot checks and retained original
+  refusal. All 4,840 focused tests in 354 files passed. The Ohio business
+  candidate retains the separate expense proof requirement.
+  [Ohio Revised Code §5747.02](https://codes.ohio.gov/ohio-revised-code/section-5747.02).
+  `bf85d34a` accepts the guided Pennsylvania part-year case with both a
+  reviewed separate filing obligation and a reviewed No. The baseline
+  rejected the No. The corrected state calculation still reports $1,197
+  PA tax and withholding, and retains $500.25 only in the local W-2
+  inventory. All 3,474 focused tests in 230 files passed. Both commits
+  passed the three type checks, both builds, scoped lint, spec and
+  inventory checks. Their exact integrated checks are running.
+  [Pennsylvania withholding guidance](https://dced.pa.gov/local-government/local-income-tax-information/local-withholding-tax-faqs/).
+
 - November 13: `65764509` projects one confirmed domestic 2026 move by a
   single taxpayer onto the disabled final Form 3903. The two new tests
   failed before the projector was implemented. Separate Decimal arithmetic

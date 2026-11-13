@@ -6,6 +6,15 @@ below retain their original evidence boundaries.
 
 ## Active continuation — November 13 Eastern
 
+- [x] Accept parsed Ohio wage originals in all three residency classes in
+  `34168bdc`. Pass 4,840 focused checks and retain unsupported-source and
+  stale-snapshot refusal. Keep explicit Schedule C expense evidence.
+- [x] Keep documented Yes and No local filing obligations in the same PA
+  return packet in `bf85d34a`. Pass 3,474 focused tests with local W-2 amounts
+  separate from PA-40. Final annual state forms remain pending.
+- [x] Verify the disabled regular-method 2026 Schedule SE physical candidate
+  for confirmed wagering in `dc98bc06`. Pass 1,712 focused tests and verify
+  12 filled values and 27 widgets across both reviewed pages.
 - [x] Collect 2026 Schedule C business mileage and optional Part IV answers
   from guided originals in `57a7da97`. Pass 1,862 focused tests, 241 script
   checks, 8,840 spec references and nine Chromium cases. Keep the tax-year

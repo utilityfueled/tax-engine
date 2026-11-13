@@ -23940,5 +23940,48 @@
     "checkoutPriceImplementationReportSha256": "9906c0080637fa5fa0e811078256360ed65e43b208e379aa4fb88029f822d9bf",
     "liveProviderOrStagingVerified": false,
     "creditSalesQualified": false
+  },
+  "nov13OhioCanonicalEmployee": {
+    "commit": "34168bdcc4037e223f048390be41def2130c96d3",
+    "tree": "67a7ff3c11580f7086270aab704ce3ccb4a0fc55",
+    "focusedPassed": 4840,
+    "focusedFiles": 354,
+    "baselineSha256": "106854ad82e5f9d1b60cd1f240e566650762f2eb44016e8c92791cf1529a6798",
+    "focusedSha256": "3fba3e1e9c7498fe3ba6e3fe58492d2afdda414af99aa1f2f3e30ade98d24a5e",
+    "specReferences": 8848,
+    "originalWageResidencies": 3,
+    "preservesUnknownBusinessExpenses": true,
+    "filingQualified": false
+  },
+  "nov13PaMixedLocalObligations": {
+    "commit": "bf85d34a207e94ce7fc00357fd00897d41e05eac",
+    "tree": "63702cec574012cff587b851b6b0fc30e9f820bf",
+    "focusedPassed": 3474,
+    "focusedFiles": 230,
+    "baselineSha256": "f16d2d1c83eb65217edb1d25a33c55c6e580e6fbc0a0218d19b8063f07e93d98",
+    "focusedSha256": "d4fd9a03b76526a449ffccf256444e0d66b1efe1c656ede90e9d910cee162a69",
+    "specReferences": 8849,
+    "paTaxAndWithholding": "1197",
+    "localW2Withholding": "500.25",
+    "exactArchiveEvidence": ".local/upgrade-evidence/nov13-main-combined-pa-oh-wage",
+    "filingQualified": false
+  },
+  "nov13ScheduleSEWageringCandidate": {
+    "commit": "dc98bc0625a38e2d069c95a60655ae9a2436a4cf",
+    "tree": "f5c9479e90c764e3648cebd02b00a965f359c543",
+    "focusedPassed": 1712,
+    "focusedFiles": 211,
+    "baselineSha256": "a01136e5670b0997bdbb679a36ac3a95543f899f26b464dcef6497f9d7b559fd",
+    "focusedSha256": "c673db30e01086e1ed62cbbefb19ca1df3ef3d8a841c18617304aaa7a412bfc7",
+    "specReferences": 8851,
+    "pdfSha256": "158407b467204eb174ce7f2dc98f83a5c196e83e8da5f7cc1d722ab8a0f2569c",
+    "physicalInspectionSha256": "ba3025c4bd0c533c363720a58125bcdae8fcfaa6bad1deae6d41c11a9e6ca907",
+    "renderNoticeEvidenceSha256": "d19687d94166b5f6b5f0431642a1e109b3ab9406b715602def9b2939320e2815",
+    "filledFields": 12,
+    "verifiedWidgets": 27,
+    "renderedPages": 2,
+    "reviewExportsEnabled": false,
+    "filingQualified": false,
+    "humanTaxReviewComplete": false
   }
 }
