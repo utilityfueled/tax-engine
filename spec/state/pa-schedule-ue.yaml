@@ -12,7 +12,7 @@ notes: |
     - Only W-2 employees may claim (not self-employed / Schedule C filers)
     - Expenses must be ordinary, necessary, and unreimbursed
     - Vehicle: choose standard mileage rate OR actual expenses (not both)
-    - Meals: limited to 50% (aligns with federal)
+    - Meals: 100% of actual allowable expenses during employer-required overnight business travel
     - Employer reimbursements reduce total expenses dollar for dollar
     - Net unreimbursed expenses cannot exceed gross compensation
 
@@ -120,31 +120,33 @@ lines:
   - line: "B1"
     description: "Lodging"
     formula: "Input: lodging expenses while away from home overnight for business"
-    testRef: "tests/engine/state/pa-schedule-ue.test.ts::PA Schedule UE Part B - travel expenses with meal limitation"
+    testRef: "tests/engine/state/pa-schedule-ue.test.ts::PA Schedule UE Part B - travel expenses with qualifying overnight meals"
 
   - line: "B2"
-    description: "Meals (before limitation)"
-    formula: "Input: meal expenses while traveling away from home for business"
-    testRef: "tests/engine/state/pa-schedule-ue.test.ts::PA Schedule UE Part B - travel expenses with meal limitation"
+    description: "Actual eligible overnight business meals"
+    formula: "Positive amounts require actual eligible meals paid and employer-required overnight business travel both explicitly confirmed."
+    notes: "Use actual expenses. Federal per diem, same-day travel and meals while working late do not qualify. A positive amount without either confirmation is unresolved."
+    testRef: "tests/engine/state/pa-schedule-ue.test.ts::PA Schedule UE Part B - positive meals require explicit eligibility"
 
   - line: "B3"
-    description: "Meals (after 50% limitation)"
-    formula: "Line B2 × 50%"
-    notes: "PA limits employee business meal deduction to 50%, same as federal."
+    description: "Allowable overnight meals"
+    formula: "Round 100% of Line B2 to the nearest dollar."
+    notes: "2024 and 2025 PA Schedule UE Section II Line 13 explicitly allows the full amount. The Pennsylvania Department of Revenue's ongoing guidance supports the same preliminary 2026 calculation, pending final 2026 instructions."
+    irsRef: "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2024/2024_pa-40ue.pdf (Section II Line 13); https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40ue.pdf (Section II Line 13); https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax/unreimbursed-business-expenses"
     edgeCases:
-      - "Zero meals: $0 after limitation"
+      - "Zero or absent meal amount: $0 without eligibility confirmations"
       - "Odd-cent meals: round to nearest dollar"
-    testRef: "tests/engine/state/pa-schedule-ue.test.ts::PA Schedule UE Part B - travel expenses with meal limitation"
+    testRef: "tests/engine/state/pa-schedule-ue.test.ts::PA Schedule UE Part B - allows all qualifying overnight meals"
 
   - line: "B4"
     description: "Other travel expenses"
     formula: "Input: airfare, car rental, train, taxi, etc."
-    testRef: "tests/engine/state/pa-schedule-ue.test.ts::PA Schedule UE Part B - travel expenses with meal limitation"
+    testRef: "tests/engine/state/pa-schedule-ue.test.ts::PA Schedule UE Part B - travel expenses with qualifying overnight meals"
 
   - line: "B5"
     description: "Total travel expenses"
     formula: "Line B1 + Line B3 + Line B4"
-    testRef: "tests/engine/state/pa-schedule-ue.test.ts::PA Schedule UE Part B - travel expenses with meal limitation"
+    testRef: "tests/engine/state/pa-schedule-ue.test.ts::PA Schedule UE Part B - travel expenses with qualifying overnight meals"
 
   # Part C — Other Employee Business Expenses
 

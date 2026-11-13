@@ -14,6 +14,7 @@ import {
 } from "@/engine/state/pa-schedule-ue.js";
 
 const d = (n: number | string) => new Decimal(n);
+const qualifyingOvernightMeals = { overnightBusinessTravelConfirmed: true, actualMealsPaidConfirmed: true };
 
 /** Minimal input with defaults */
 function makeInput(overrides: Partial<ScheduleUEInput> = {}): ScheduleUEInput {
@@ -201,45 +202,57 @@ describe("Pennsylvania Schedule UE", () => {
   // =================================================================
 
   describe("Part B — Travel Expenses", () => {
-    it("PA Schedule UE Part B - travel expenses with meal limitation", () => {
+    it("PA Schedule UE Part B - travel expenses with qualifying overnight meals", () => {
       const result = calculateScheduleUE(makeInput({
         travel: {
           lodging: d(2000),
           meals: d(1200),
+          ...qualifyingOvernightMeals,
           otherTravel: d(800),
         },
       }));
-      // Meals after 50% limitation: $1,200 × 50% = $600
-      // Total: $2,000 + $600 + $800 = $3,400
+      // Total: $2,000 + $1,200 + $800 = $4,000
       expect(result.lodging.toNumber()).toBe(2000);
       expect(result.mealsBeforeLimitation.toNumber()).toBe(1200);
-      expect(result.mealsAfterLimitation.toNumber()).toBe(600);
+      expect(result.mealsAfterLimitation.toNumber()).toBe(1200);
       expect(result.otherTravel.toNumber()).toBe(800);
-      expect(result.totalTravelExpenses.toNumber()).toBe(3400);
+      expect(result.totalTravelExpenses.toNumber()).toBe(4000);
     });
 
-    it("PA Schedule UE Part B - meals only with 50% limitation", () => {
+    it.each([2024, 2025, 2026])("PA Schedule UE Part B - allows all qualifying overnight meals in %i", (taxYear) => {
       const result = calculateScheduleUE(makeInput({
+        taxYear,
         travel: {
           meals: d(500),
+          ...qualifyingOvernightMeals,
         },
       }));
-      // $500 × 50% = $250
-      expect(result.mealsAfterLimitation.toNumber()).toBe(250);
-      expect(result.totalTravelExpenses.toNumber()).toBe(250);
+      expect(result.mealsAfterLimitation.toFixed()).toBe("500");
+      expect(result.totalTravelExpenses.toFixed()).toBe("500");
+      expect(result.netUnreimbursedExpenses.toFixed()).toBe("500");
     });
 
-    it("PA Schedule UE Part B - odd-cent meal amount rounds correctly", () => {
-      const result = calculateScheduleUE(makeInput({
-        travel: {
-          meals: d(333),
-        },
-      }));
-      // $333 × 50% = $166.50 → rounds to $167
-      expect(result.mealsAfterLimitation.toNumber()).toBe(167);
+    it.each([["333.49", "333"], ["333.50", "334"]])("PA Schedule UE Part B - rounds actual meal amount %s to %s", (meals, rounded) => {
+      const result = calculateScheduleUE(makeInput({ travel: { meals: d(meals), ...qualifyingOvernightMeals } }));
+      expect(result.mealsBeforeLimitation.toFixed(2)).toBe(meals);
+      expect(result.mealsAfterLimitation.toFixed()).toBe(rounded);
     });
 
-    it("PA Schedule UE Part B - zero meals produces zero after limitation", () => {
+    it.each([
+      { label: "unknown source facts" },
+      { label: "same-day travel", overnightBusinessTravelConfirmed: false, actualMealsPaidConfirmed: true },
+      { label: "per diem", overnightBusinessTravelConfirmed: true, actualMealsPaidConfirmed: false },
+      { label: "unconfirmed overnight travel", actualMealsPaidConfirmed: true },
+      { label: "unconfirmed actual payment", overnightBusinessTravelConfirmed: true },
+    ])("PA Schedule UE Part B - positive meals require explicit eligibility for $label", ({ label: _label, ...facts }) => {
+      expect(() => calculateScheduleUE(makeInput({ travel: { meals: d("300"), ...facts } }))).toThrow(/actual eligible meals.*overnight business travel/);
+    });
+
+    it.each(["-1", "NaN", "Infinity"])("PA Schedule UE Part B - rejects invalid meal amount %s", (meals) => {
+      expect(() => calculateScheduleUE(makeInput({ travel: { meals: d(meals), ...qualifyingOvernightMeals } }))).toThrow(/finite nonnegative/);
+    });
+
+    it("PA Schedule UE Part B - zero meals produces zero without eligibility facts", () => {
       const result = calculateScheduleUE(makeInput({
         travel: {
           lodging: d(1500),
@@ -271,13 +284,13 @@ describe("Pennsylvania Schedule UE", () => {
         travel: {
           lodging: d(8000),
           meals: d(4000),
+          ...qualifyingOvernightMeals,
           otherTravel: d(6000), // airfare, car rental
         },
       }));
-      // Meals: $4,000 × 50% = $2,000
-      // Total: $8,000 + $2,000 + $6,000 = $16,000
-      expect(result.mealsAfterLimitation.toNumber()).toBe(2000);
-      expect(result.totalTravelExpenses.toNumber()).toBe(16000);
+      // Total: $8,000 + $4,000 + $6,000 = $18,000
+      expect(result.mealsAfterLimitation.toNumber()).toBe(4000);
+      expect(result.totalTravelExpenses.toNumber()).toBe(18000);
     });
   });
 
@@ -368,6 +381,7 @@ describe("Pennsylvania Schedule UE", () => {
         travel: {
           lodging: d(1500),
           meals: d(800),
+          ...qualifyingOvernightMeals,
           otherTravel: d(600),
         },
         otherExpenses: {
@@ -376,15 +390,15 @@ describe("Pennsylvania Schedule UE", () => {
         },
       }));
       // Vehicle: 10,000 × $0.70 = $7,000 + $500 = $7,500
-      // Travel: $1,500 + ($800 × 50%) + $600 = $1,500 + $400 + $600 = $2,500
+      // Travel: $1,500 + $800 + $600 = $2,900
       // Other: $400 + $1,000 = $1,400
-      // Total: $7,500 + $2,500 + $1,400 = $11,400
+      // Total: $7,500 + $2,900 + $1,400 = $11,800
       expect(result.totalVehicleExpenses.toNumber()).toBe(7500);
-      expect(result.totalTravelExpenses.toNumber()).toBe(2500);
+      expect(result.totalTravelExpenses.toNumber()).toBe(2900);
       expect(result.totalOtherExpenses.toNumber()).toBe(1400);
-      expect(result.totalExpenses.toNumber()).toBe(11400);
+      expect(result.totalExpenses.toNumber()).toBe(11800);
       expect(result.employerReimbursements.toNumber()).toBe(0);
-      expect(result.netUnreimbursedExpenses.toNumber()).toBe(11400);
+      expect(result.netUnreimbursedExpenses.toNumber()).toBe(11800);
     });
 
     it("PA Schedule UE Part D - employer reimbursements offset", () => {
@@ -435,6 +449,7 @@ describe("Pennsylvania Schedule UE", () => {
         travel: {
           lodging: d(3000),
           meals: d(1600),
+          ...qualifyingOvernightMeals,
           otherTravel: d(2500),
         },
         otherExpenses: {
@@ -450,15 +465,15 @@ describe("Pennsylvania Schedule UE", () => {
         employerReimbursements: d(1500),
       }));
       // Vehicle: $8,000 × 60% = $4,800 + $750 = $5,550
-      // Travel: $3,000 + ($1,600 × 50%) + $2,500 = $3,000 + $800 + $2,500 = $6,300
+      // Travel: $3,000 + $1,600 + $2,500 = $7,100
       // Other: 720 + 500 + 250 + 3000 + 175 + 120 + 2000 + 150 = $6,915
-      // Total: $5,550 + $6,300 + $6,915 = $18,765
-      // Net: $18,765 - $1,500 = $17,265
+      // Total: $5,550 + $7,100 + $6,915 = $19,565
+      // Net: $19,565 - $1,500 = $18,065
       expect(result.totalVehicleExpenses.toNumber()).toBe(5550);
-      expect(result.totalTravelExpenses.toNumber()).toBe(6300);
+      expect(result.totalTravelExpenses.toNumber()).toBe(7100);
       expect(result.totalOtherExpenses.toNumber()).toBe(6915);
-      expect(result.totalExpenses.toNumber()).toBe(18765);
-      expect(result.netUnreimbursedExpenses.toNumber()).toBe(17265);
+      expect(result.totalExpenses.toNumber()).toBe(19565);
+      expect(result.netUnreimbursedExpenses.toNumber()).toBe(18065);
     });
 
     it("PA Schedule UE Part D - no inputs produces zero net", () => {
@@ -486,6 +501,7 @@ describe("Pennsylvania Schedule UE", () => {
         travel: {
           lodging: d(5000),
           meals: d(3000),
+          ...qualifyingOvernightMeals,
           otherTravel: d(1200),
         },
         otherExpenses: {
@@ -494,12 +510,12 @@ describe("Pennsylvania Schedule UE", () => {
         },
       }));
       // Vehicle: 38,000 × $0.70 = $26,600 + $2,400 = $29,000
-      // Travel: $5,000 + $1,500 + $1,200 = $7,700
+      // Travel: $5,000 + $3,000 + $1,200 = $9,200
       // Other: $200 + $150 = $350
-      // Total: $29,000 + $7,700 + $350 = $37,050
+      // Total: $29,000 + $9,200 + $350 = $38,550
       expect(result.standardMileageDeduction.toNumber()).toBe(26600);
-      expect(result.totalExpenses.toNumber()).toBe(37050);
-      expect(result.netUnreimbursedExpenses.toNumber()).toBe(37050);
+      expect(result.totalExpenses.toNumber()).toBe(38550);
+      expect(result.netUnreimbursedExpenses.toNumber()).toBe(38550);
     });
 
     it("PA Schedule UE - teacher with education and supply expenses", () => {
@@ -622,6 +638,7 @@ describe("Pennsylvania Schedule UE", () => {
         travel: {
           lodging: d(500),
           meals: d(200),
+          ...qualifyingOvernightMeals,
           otherTravel: d(300),
         },
         otherExpenses: {

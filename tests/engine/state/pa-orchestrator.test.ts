@@ -4061,6 +4061,8 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
             travel: {
               lodging: d(1000),
               meals: d(400),
+              overnightBusinessTravelConfirmed: true,
+              actualMealsPaidConfirmed: true,
               otherTravel: d(500),
             },
             otherExpenses: {
@@ -4072,21 +4074,46 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
         },
       );
 
-      // Travel: $1,000 + ($400 × 50%) + $500 = $1,700
+      // Travel: $1,000 + $400 + $500 = $1,900
       // Other: $2,000 + $500 + $100 = $2,600
-      // Total UE: $4,300
-      expect(result.scheduleUE!.netUnreimbursedExpenses.toNumber()).toBe(4300);
+      // Total UE: $4,500
+      expect(result.scheduleUE!.netUnreimbursedExpenses.toNumber()).toBe(4500);
 
-      // Compensation: $55,000 - $4,300 = $50,700
-      expect(result.pa40.netCompensation.toNumber()).toBe(50700);
-      expect(result.pa40.totalPATaxableIncome.toNumber()).toBe(50700);
+      // Compensation: $55,000 - $4,500 = $50,500
+      expect(result.pa40.netCompensation.toNumber()).toBe(50500);
+      expect(result.pa40.totalPATaxableIncome.toNumber()).toBe(50500);
 
-      // Tax: $50,700 × 3.07% = $1,556.49 → $1,556
-      expect(result.pa40.taxLiability.toNumber()).toBe(1556);
+      // Tax: $50,500 × 3.07% = $1,550.35 → $1,550
+      expect(result.pa40.taxLiability.toNumber()).toBe(1550);
 
-      // Withholding: $1,689, Net tax: $1,556
-      // Overpayment: $1,689 - $1,556 = $133
-      expect(result.pa40.overpayment.toNumber()).toBe(133);
+      // Overpayment: $1,689 - $1,550 = $139
+      expect(result.pa40.overpayment.toNumber()).toBe(139);
+    });
+
+    it("PA orchestrator requires eligible meal facts in the original typed Schedule UE input", () => {
+      const w2s = [{
+        employer: { name: "School District", ein: "12-3456789" },
+        wages: "55000",
+        federalWithheld: "7000",
+        stateWages: "55000",
+        stateTaxWithheld: "1689",
+        state: "PA",
+      }];
+      const original = makeInput({ w2s, paResidentReturn: { scheduleUE: { travel: { meals: "225.50" } } } });
+      expect(() => calculatePAReturn(original)).toThrow(/actual eligible meals.*overnight business travel/);
+
+      const confirmed = makeInput({
+        w2s,
+        paResidentReturn: { scheduleUE: { travel: {
+          meals: "225.50",
+          overnightBusinessTravelConfirmed: true,
+          actualMealsPaidConfirmed: true,
+        } } },
+      });
+      const result = calculatePAReturn(confirmed);
+      expect(result.scheduleUE?.mealsAfterLimitation.toFixed()).toBe("226");
+      expect(result.pa40.unreimbursedExpenses.toFixed()).toBe("226");
+      expect(result.pa40.netCompensation.toFixed()).toBe("54774");
     });
 
     it("PA orchestrator Schedule UE with home office and high-mileage", () => {

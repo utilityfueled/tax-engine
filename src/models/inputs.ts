@@ -1993,6 +1993,8 @@ const PAScheduleUEVehicleSchema = z.object({
 const PAScheduleUETravelSchema = z.object({
   lodging: optionalDecimal,
   meals: optionalDecimal,
+  overnightBusinessTravelConfirmed: z.boolean().optional(),
+  actualMealsPaidConfirmed: z.boolean().optional(),
   otherTravel: optionalDecimal,
 });
 

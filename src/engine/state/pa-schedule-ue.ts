@@ -21,23 +21,18 @@ import type { CalculatedLine } from "@/models/outputs.js";
 export interface PAScheduleUEConstants {
   /** Highest IRS business standard mileage rate for the tax year under PA Schedule UE Line 6 */
   standardMileageRate: Decimal;
-  /** Meal expense limitation percentage (0.50 = 50%) */
-  mealLimitationRate: Decimal;
 }
 
 export const PA_SCHEDULE_UE_CONSTANTS: Record<number, PAScheduleUEConstants> = {
   2024: {
     standardMileageRate: new Decimal("0.67"),
-    mealLimitationRate: new Decimal("0.50"),
   },
   2025: {
     standardMileageRate: new Decimal("0.70"),
-    mealLimitationRate: new Decimal("0.50"),
   },
   2026: {
     // Preliminary annual rate under published PA Line 6 guidance and IRS Announcement 2026-11.
     standardMileageRate: new Decimal("0.76"),
-    mealLimitationRate: new Decimal("0.50"),
   },
 };
 
@@ -64,8 +59,12 @@ export interface ScheduleUEVehicleInput {
 export interface ScheduleUETravelInput {
   /** Lodging expenses while away from home overnight */
   lodging?: Decimal;
-  /** Meal expenses while traveling (before 50% limitation) */
+  /** Actual eligible meal expenses on employer-required overnight business travel */
   meals?: Decimal;
+  /** The meals were incurred while away from home overnight for employer-required business. */
+  overnightBusinessTravelConfirmed?: boolean;
+  /** The amount reflects actual eligible expenses paid, excluding any estimated or per diem amounts. */
+  actualMealsPaidConfirmed?: boolean;
   /** Other travel expenses (airfare, car rental, train, taxi) */
   otherTravel?: Decimal;
 }
@@ -115,6 +114,7 @@ export interface ScheduleUEResult {
   // Part B — Travel
   lodging: Decimal;
   mealsBeforeLimitation: Decimal;
+  /** Whole-dollar eligible meals on Pennsylvania Schedule UE, Section II Line 13. */
   mealsAfterLimitation: Decimal;
   otherTravel: Decimal;
   totalTravelExpenses: Decimal;
@@ -210,13 +210,18 @@ export function calculateScheduleUE(input: ScheduleUEInput): ScheduleUEResult {
   const travel = input.travel;
   const lodging = roundDollar(d(travel?.lodging));
   const mealsBeforeLimitation = d(travel?.meals);
-  const mealsAfterLimitation = roundDollar(mealsBeforeLimitation.times(constants.mealLimitationRate));
+  if (!mealsBeforeLimitation.isFinite() || mealsBeforeLimitation.lt(0)) {
+    throw new Error("PA Schedule UE meals must be a finite nonnegative amount.");
+  }
+  if (mealsBeforeLimitation.gt(0) && (travel?.actualMealsPaidConfirmed !== true || travel.overnightBusinessTravelConfirmed !== true)) {
+    throw new Error("PA Schedule UE requires actual eligible meals paid and employer-required overnight business travel to be confirmed.");
+  }
+  const mealsAfterLimitation = roundDollar(mealsBeforeLimitation);
   const otherTravel = roundDollar(d(travel?.otherTravel));
 
   audit.record("PA-UE", "B1", "Lodging", lodging, "Input");
-  audit.record("PA-UE", "B2", "Meals (before limitation)", mealsBeforeLimitation, "Input");
-  audit.record("PA-UE", "B3", "Meals (after 50% limitation)", mealsAfterLimitation,
-    `$${mealsBeforeLimitation} × ${constants.mealLimitationRate.times(100)}%`);
+  audit.record("PA-UE", "B2", "Actual eligible overnight meals", mealsBeforeLimitation, "Input");
+  audit.record("PA-UE", "B3", "Allowable overnight meals", mealsAfterLimitation, "100% of eligible actual amount, rounded to whole dollars");
   audit.record("PA-UE", "B4", "Other travel expenses", otherTravel, "Input");
 
   const totalTravelExpenses = sum(lodging, mealsAfterLimitation, otherTravel);

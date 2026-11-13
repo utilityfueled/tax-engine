@@ -439,6 +439,8 @@ function resolvePAResidentOverrides(
         ? {
             lodging: d(residentReturn.scheduleUE.travel.lodging),
             meals: d(residentReturn.scheduleUE.travel.meals),
+            overnightBusinessTravelConfirmed: residentReturn.scheduleUE.travel.overnightBusinessTravelConfirmed,
+            actualMealsPaidConfirmed: residentReturn.scheduleUE.travel.actualMealsPaidConfirmed,
             otherTravel: d(residentReturn.scheduleUE.travel.otherTravel),
           }
         : undefined,
