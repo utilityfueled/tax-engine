@@ -6,6 +6,7 @@ import { describe, expect, it } from "vitest";
 import { PDFArray, PDFCheckBox, PDFDict, PDFDocument, PDFName, PDFRawStream, PDFTextField, decodePDFRawStream } from "pdf-lib";
 import { assertPdfExportAllowed, markReviewPdf, PDF_MAPPING_PACKS, REVIEW_PDF_NOTICE } from "@/pdf/export-policy.js";
 import { assertReviewTemplateBytes, REVIEW_TEMPLATE_PACKS } from "@/pdf/template-registry.js";
+import { removeTrustedTemplateLegacyFormData } from "@/pdf/trusted-review-template-cleanup.js";
 
 const blank = new URL("../../forms/blank/2026/f1040s8.pdf", import.meta.url);
 type SourceContract = {
@@ -24,6 +25,82 @@ async function mapping() {
   const { SCHEDULE_8812_2026_CANDIDATE } = await import("@/pdf/mappings/2026/schedule-8812-candidate.js");
   return SCHEDULE_8812_2026_CANDIDATE;
 }
+
+async function projection(sources: unknown) {
+  const { projectSchedule8812WageOnly2026 } = await import("@/pdf/mappings/2026/schedule-8812-candidate.js");
+  return projectSchedule8812WageOnly2026(sources);
+}
+
+describe("Final 2026 Schedule 8812 wage-only specimen", () => {
+  const sources = {
+    taxYear: 2026, parentForm: "1040", annualSourcesConfirmed: true,
+    wageOnlyNoExclusionsOrWorksheetBConfirmed: true, nonPuertoRicoResidentConfirmed: true,
+    filingStatus: "single", qualifyingChildren: 2, qualifyingChildSourcesConfirmed: true,
+    otherDependents: 0, adjustedGrossIncome: "35000", worksheetALine5: "2023", worksheetAConfirmed: true,
+    w2s: [{ taxYear: 2026, owner: "primary", employerEin: "99-8887777", box1: "35000", codeQ: "0" }],
+  };
+
+  it("places the published ATS scenario 14 credit amounts and branch marks on the saved final form", async () => {
+    const fields = await mapping().then(candidate => candidate.fields);
+    const projected = await projection(sources);
+    const values = { line1: "35000", line3: "35000", line4: "2", line5: "4400", line12: "4400", line13: "2023", line14: "2023", line16a: "2377", line16bCount: "2", line16b: "3400", line17: "2377", line18a: "35000", line18b: "0", line19: "32500", line20: "4875", line27: "2377" } as const;
+    for (const [key, value] of Object.entries(values)) expect(projected.text[fields[key as keyof typeof values]]).toBe(value);
+    expect(projected.checked).toEqual([fields.line12Yes, fields.line19Yes, fields.nextNo]);
+    const pdf = await PDFDocument.load(await readFile(blank));
+    removeTrustedTemplateLegacyFormData(pdf);
+    const form = pdf.getForm();
+    for (const [name, value] of Object.entries(projected.text)) form.getTextField(name).setText(value);
+    for (const name of projected.checked) form.getCheckBox(name).check();
+    await markReviewPdf(pdf);
+    const bytes = await pdf.save();
+    if (process.env.TAX_ENGINE_SCHEDULE_8812_WAGE_PROBE_DIRECTORY) {
+      await writeFile(join(process.env.TAX_ENGINE_SCHEDULE_8812_WAGE_PROBE_DIRECTORY, "schedule-8812-wage-review.pdf"), bytes, { flag: "wx" });
+    }
+    const saved = (await PDFDocument.load(bytes)).getForm();
+    expect(saved.getFields()).toHaveLength(41);
+    for (const [name, value] of Object.entries(projected.text)) expect(saved.getTextField(name).getText()).toBe(value);
+    for (const name of projected.checked) expect(saved.getCheckBox(name).isChecked()).toBe(true);
+    for (const key of ["name", "ssn", "line15Reserved", "line21", "line22", "line23", "line24", "line25", "line26"] as const) {
+      expect(saved.getTextField(fields[key]).getText()).toBeUndefined();
+    }
+  });
+
+  it("includes actual combat pay once and respects the exact $2,500 branch", async () => {
+    const { fields } = await mapping();
+    const lowIncome = { ...sources, qualifyingChildren: 1, adjustedGrossIncome: "2000", worksheetALine5: "0" };
+    const w2 = { ...sources.w2s[0], box1: "2000" };
+    const combat = await projection({ ...lowIncome, w2s: [{ ...w2, codeQ: "2250.50" }] });
+    expect(combat.text).toMatchObject({ [fields.line18a]: "4251", [fields.line18b]: "2251", [fields.line19]: "1751", [fields.line27]: "263" });
+    const atLimit = await projection({ ...lowIncome, w2s: [{ ...w2, codeQ: "500" }] });
+    expect(atLimit.checked).toEqual([fields.line12Yes, fields.line19No, fields.nextNo]);
+    expect(atLimit.text[fields.line19]).toBeUndefined();
+    expect(atLimit.text[fields.line20]).toBe("0");
+    await expect(projection({ ...lowIncome, w2s: [{ ...w2, codeQ: "500.01" }] })).rejects.toThrow(/printed|rounded/i);
+  });
+
+  it("stops after line 12 when phased out and after line 16a when the nonrefundable credit uses the balance", async () => {
+    const { fields } = await mapping();
+    const phasedOut = await projection({ ...sources, adjustedGrossIncome: "300000", w2s: [{ ...sources.w2s[0], box1: "300000" }] });
+    expect(phasedOut.checked).toEqual([fields.line12No]);
+    for (const name of [fields.line12, fields.line13, fields.line14, fields.line16a, fields.line27]) expect(phasedOut.text[name]).toBeUndefined();
+    const exhausted = await projection({ ...sources, worksheetALine5: "4400" });
+    expect(exhausted.checked).toEqual([fields.line12Yes]);
+    expect(exhausted.text[fields.line16a]).toBe("0");
+    expect(exhausted.text[fields.line16b]).toBeUndefined();
+    expect(exhausted.text[fields.line27]).toBeUndefined();
+    await expect(projection({ ...sources, adjustedGrossIncome: "200000.01", w2s: [{ ...sources.w2s[0], box1: "200000.01" }] })).rejects.toThrow(/printed|rounded/i);
+  });
+
+  it("rejects incomplete and out-of-cohort sources", async () => {
+    for (const patch of [
+      { taxYear: 2025 }, { parentForm: "1040-NR" }, { qualifyingChildren: 3 }, { otherDependents: 1 },
+      { nonPuertoRicoResidentConfirmed: false }, { worksheetAConfirmed: false }, { adjustedGrossIncome: "34999.99" },
+      { w2s: [{ ...sources.w2s[0], codeQ: undefined }] }, { w2s: [{ ...sources.w2s[0], owner: "spouse" }] },
+      { w2s: [sources.w2s[0], sources.w2s[0]] }, { wageOnlyNoExclusionsOrWorksheetBConfirmed: false },
+      { qualifyingChildSourcesConfirmed: false }, { annualSourcesConfirmed: false },
+    ]) await expect(projection({ ...sources, ...patch })).rejects.toThrow(/source|W-2|Schedule 8812/i);
+  });
+});
 
 describe("Final 2026 Schedule 8812 physical candidate", () => {
   it("pins the exact final annual source", async () => {

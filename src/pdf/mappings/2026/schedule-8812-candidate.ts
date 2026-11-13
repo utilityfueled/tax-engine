@@ -1,8 +1,14 @@
 /**
  * Final 2026 Schedule 8812 physical mapping candidate, Created 8/18/26.
  * Spec: spec/federal/schedule-8812-2026-template.yaml.
- * No calculation, export registry or filing qualification is enabled.
+ * Internal wage-only projection. Public review and filing stay disabled.
  */
+import { z } from "zod";
+import { calculateForm8812 } from "@/engine/forms/form-8812.js";
+import { FEDERAL_2026_CONSTANTS } from "@/models/federal-2026-indexed.js";
+import { FilingStatusSchema } from "@/models/inputs.js";
+import { d, roundDollar, sumStrings } from "@/utils/decimal.js";
+
 const page1 = "topmostSubform[0].Page1[0].";
 const page2 = "topmostSubform[0].Page2[0].";
 
@@ -67,3 +73,78 @@ export const SCHEDULE_8812_2026_CANDIDATE = Object.freeze({
     line27: `${page2}f2_16[0]`,
   }),
 });
+
+const dollarsAndCents = z.string().regex(/^\d{1,12}(?:\.\d{1,2})?$/u);
+const wageSources = z.strictObject({
+  taxYear: z.literal(2026),
+  parentForm: z.literal("1040"),
+  annualSourcesConfirmed: z.literal(true),
+  wageOnlyNoExclusionsOrWorksheetBConfirmed: z.literal(true),
+  nonPuertoRicoResidentConfirmed: z.literal(true),
+  filingStatus: FilingStatusSchema,
+  qualifyingChildren: z.union([z.literal(1), z.literal(2)]),
+  qualifyingChildSourcesConfirmed: z.literal(true),
+  otherDependents: z.literal(0),
+  adjustedGrossIncome: dollarsAndCents,
+  worksheetALine5: dollarsAndCents,
+  worksheetAConfirmed: z.literal(true),
+  w2s: z.array(z.strictObject({
+    taxYear: z.literal(2026),
+    owner: z.enum(["primary", "spouse"]),
+    employerEin: z.string().regex(/^\d{2}-?\d{7}$/u),
+    box1: dollarsAndCents,
+    codeQ: dollarsAndCents,
+  })).min(1).max(40),
+});
+
+export function projectSchedule8812WageOnly2026(sources: unknown): { text: Record<string, string>; checked: string[] } {
+  const parsed = wageSources.safeParse(sources);
+  if (!parsed.success) throw new Error("Schedule 8812 requires confirmed 2026 wage-only source records");
+  const { filingStatus, qualifyingChildren, adjustedGrossIncome, worksheetALine5, w2s } = parsed.data;
+  const employerOwners = w2s.map(w2 => `${w2.owner}/${w2.employerEin.replace("-", "")}`);
+  if (new Set(employerOwners).size !== w2s.length || (filingStatus !== "married_filing_jointly" && w2s.some(w2 => w2.owner === "spouse"))) {
+    throw new Error("Schedule 8812 requires distinct W-2 sources per employer and return owner");
+  }
+  const wages = sumStrings(...w2s.map(w2 => w2.box1));
+  if (!wages.eq(adjustedGrossIncome)) throw new Error("Schedule 8812 Form 1040 line 11b must reconcile to original W-2 Box 1 wages");
+  const combatPay = sumStrings(...w2s.map(w2 => w2.codeQ));
+  const zero = d(0);
+  const input = {
+    taxYear: 2026, filingStatus, qualifyingChildren, otherDependents: 0,
+    agi: wages, adjustedGrossIncome: wages, puertoRicoExcludedIncome: zero, form4563ExcludedIncome: zero,
+    foreignExcludedIncome: zero, earnedIncome: wages.plus(combatPay), nontaxableCombatPay: combatPay,
+    taxLiability: d(worksheetALine5), filesForm2555: false, bonaFidePuertoRicoResident: false,
+  };
+  const exact = calculateForm8812(input, FEDERAL_2026_CONSTANTS);
+  // Line 18a rounds the complete earned-income amount, including the amount on 18b.
+  const printed = calculateForm8812({ ...input, agi: roundDollar(wages), adjustedGrossIncome: roundDollar(wages),
+    earnedIncome: roundDollar(input.earnedIncome), nontaxableCombatPay: roundDollar(combatPay) }, FEDERAL_2026_CONSTANTS);
+  const exactActcWorksheet = exact.unusedCTC.gt(0);
+  if (!exact.ctcBeforeLimitation.eq(printed.ctcBeforeLimitation) || !exact.nonrefundableCTC.eq(printed.nonrefundableCTC)
+    || !exact.actc.eq(printed.actc) || (exactActcWorksheet && exact.earnedIncomeExcess.gt(0) !== printed.earnedIncomeExcess.gt(0))) {
+    throw new Error("Exact Schedule 8812 amounts cannot reconcile to the printed rounded worksheet");
+  }
+
+  const { fields } = SCHEDULE_8812_2026_CANDIDATE;
+  const audit = new Map(printed.lines.map(line => [line.line, line.value]));
+  const text: Record<string, string> = {};
+  const checked: string[] = [];
+  const write = (lines: readonly ("1" | "2a" | "2b" | "2c" | "2d" | "3" | "4" | "5" | "6" | "7" | "8" | "9" | "10" | "11" | "12" | "13" | "14" | "16a" | "16b" | "17" | "18a" | "18b" | "19" | "20" | "27")[]) => {
+    for (const line of lines) {
+      const value = audit.get(line);
+      if (value === undefined) throw new Error(`Missing Schedule 8812 line ${line} calculation`);
+      text[fields[`line${line}`]] = roundDollar(value).toFixed(0);
+    }
+  };
+  write(["1", "2a", "2b", "2c", "2d", "3", "4", "5", "6", "7", "8", "9", "10", "11"]);
+  if (printed.ctcBeforeLimitation.isZero()) return { text, checked: [fields.line12No] };
+  checked.push(fields.line12Yes);
+  write(["12", "13", "14", "16a"]);
+  if (printed.unusedCTC.isZero()) return { text, checked };
+  text[fields.line16bCount] = String(qualifyingChildren);
+  write(["16b", "17", "18a", "18b", "20", "27"]);
+  const earnedIncomeExceedsMinimum = printed.earnedIncomeExcess.gt(0);
+  checked.push(earnedIncomeExceedsMinimum ? fields.line19Yes : fields.line19No, fields.nextNo);
+  if (earnedIncomeExceedsMinimum) write(["19"]);
+  return { text, checked };
+}
