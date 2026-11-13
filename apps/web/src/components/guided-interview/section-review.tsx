@@ -3,6 +3,7 @@ import {isSeparateStatePreview} from '@/lib/guided-interview-bridge';
 import {PASeparateReturnPreview} from '@/components/pa-separate-return-preview';
 
 import { isStartedNec, sumKnownBusinessAmounts, type BusinessSourceData } from "@/lib/guided-business-facts";
+import { professionalWageringDraftSchema, readProfessionalWageringAmount } from "@/lib/guided-professional-wagering";
 import { isStartedRental, knownRentalExpenses } from "@/lib/guided-rental-facts";
 import { unemploymentEntries, isStartedUnemployment, governmentSourceTotal } from "@/lib/guided-unemployment-facts";
 import { socialSecurityEntries, isStartedSocialSecurity, socialSecuritySourceTotal } from "@/lib/guided-social-security-facts";
@@ -136,6 +137,22 @@ function SelfEmploymentSummary({ necEntries, manualGrossReceipts, expenses, busi
   expenses: ScheduleCExpenseData | undefined;
   businessFacts: BusinessSourceData | undefined;
 }) {
+  if (businessFacts?.professionalWagering !== undefined) {
+    const saved = professionalWageringDraftSchema.safeParse(businessFacts.professionalWagering);
+    if (!saved.success) return <p className="guided-review-empty">Review the saved professional wagering ledger.</p>;
+    const fields = [
+      ["Gross taxable wagering gains", saved.data.grossTaxableWageringGains],
+      ["Wagering losses", saved.data.wageringLosses],
+      ["Otherwise deductible wagering expenses", saved.data.otherwiseDeductibleWageringExpenses],
+    ];
+    return <div className="guided-review-card">{fields.map(([label, value]) => {
+      const amount = readProfessionalWageringAmount(value);
+      return <div key={label} className="guided-review-row">
+        <span className="guided-review-label">{label}</span>
+        <span className="guided-review-value">{amount === undefined ? "Review source amount" : formatCurrency(amount)}</span>
+      </div>;
+    })}</div>;
+  }
   const entries = (necEntries ?? []).filter(isStartedNec);
   const hasMileageLog = businessFacts?.standardMileage !== undefined;
   if (!hasMileageLog && !entries.length && !hasEnteredAmount(manualGrossReceipts) && !Object.values(expenses ?? {}).some(hasEnteredAmount)) return <p className="guided-review-empty">No self-employment source amounts entered.</p>;

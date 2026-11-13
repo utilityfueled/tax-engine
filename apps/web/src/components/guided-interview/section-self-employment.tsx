@@ -39,6 +39,8 @@ import { CompensationReportingFields } from "./compensation-reporting-fields";
 import { BooleanFact, TextFact } from "./fact-fields";
 import { BusinessSourceDetails } from "./business-source-details";
 import { BusinessMileageDetails } from "./business-mileage-details";
+import { ProfessionalWageringDetails } from "./professional-wagering-details";
+import { supportsGuidedProfessionalWagering } from "@/lib/guided-professional-wagering";
 import { supportsBusinessMileage } from "@/lib/guided-business-mileage";
 import { DocumentSourceFacts } from "./document-source-facts";
 import { isStartedNec, sumKnownBusinessAmounts, type BusinessSourceData } from "@/lib/guided-business-facts";
@@ -253,6 +255,7 @@ export function SectionSelfEmployment({
   const currentExpenses = expenses ?? emptyScheduleCExpenses;
   const currentAnalyses = bankStatementAnalyses ?? [];
   const currentIncomeAnalyses = incomeDocumentAnalyses ?? [];
+  const hasWageringLedger = businessFacts?.professionalWagering !== undefined;
   const uploadInputRef = useRef<HTMLInputElement>(null);
   const incomeUploadInputRef = useRef<HTMLInputElement>(null);
   const [analysisPending, setAnalysisPending] = useState(false);
@@ -260,9 +263,10 @@ export function SectionSelfEmployment({
   const [incomeAnalysisPending, setIncomeAnalysisPending] = useState(false);
   const [incomeAnalysisMessage, setIncomeAnalysisMessage] = useState<string | null>(null);
   const [aiReviewAllowed, setAiReviewAllowed] = useState(false);
+  const canReviewBusinessDocuments = aiReviewAllowed && !hasWageringLedger;
   const reviewJobs = useRef<Partial<Record<"income" | "expense", { controller: AbortController; workspaceId: string }>>>({});
-  const latestSection = useRef({ workspaceId: workspace.id, aiReviewAllowed, onSectionChange, value: { necEntries: currentEntries, manualGrossReceipts, expenses: currentExpenses, bankStatementAnalyses: currentAnalyses, incomeDocumentAnalyses: currentIncomeAnalyses, qbiMateriallyParticipated, businessFacts } });
-  latestSection.current = { workspaceId: workspace.id, aiReviewAllowed, onSectionChange, value: { necEntries: currentEntries, manualGrossReceipts, expenses: currentExpenses, bankStatementAnalyses: currentAnalyses, incomeDocumentAnalyses: currentIncomeAnalyses, qbiMateriallyParticipated, businessFacts } };
+  const latestSection = useRef({ workspaceId: workspace.id, aiReviewAllowed: canReviewBusinessDocuments, onSectionChange, value: { necEntries: currentEntries, manualGrossReceipts, expenses: currentExpenses, bankStatementAnalyses: currentAnalyses, incomeDocumentAnalyses: currentIncomeAnalyses, qbiMateriallyParticipated, businessFacts } });
+  latestSection.current = { workspaceId: workspace.id, aiReviewAllowed: canReviewBusinessDocuments, onSectionChange, value: { necEntries: currentEntries, manualGrossReceipts, expenses: currentExpenses, bankStatementAnalyses: currentAnalyses, incomeDocumentAnalyses: currentIncomeAnalyses, qbiMateriallyParticipated, businessFacts } };
   const [cachedAttachedIncomeDocumentIds, setCachedAttachedIncomeDocumentIds] = useState<Set<string>>(new Set());
   const [selectedAttachedIncomeDocumentIds, setSelectedAttachedIncomeDocumentIds] = useState<string[]>(
     [],
@@ -692,13 +696,13 @@ export function SectionSelfEmployment({
           The difference is your net self-employment income.
         </p>
         <label className="guided-field">
-          <span><input type="checkbox" aria-label="Allow AI review of selected business documents" checked={aiReviewAllowed} onChange={(event) => {
+          <span><input type="checkbox" aria-label="Allow AI review of selected business documents" checked={canReviewBusinessDocuments} disabled={hasWageringLedger} onChange={(event) => {
             const allowed = event.target.checked;
             setAiReviewAllowed(allowed);
             latestSection.current.aiReviewAllowed = allowed;
             if (!allowed) { cancelReview("income"); cancelReview("expense"); }
           }} /> Allow AI review of selected business documents</span>
-          <span className="guided-field-hint">When you request a review, locally redacted document text is sent for AI analysis. Suggestions require your acceptance. This permission resets when you leave this section or change returns.</span>
+          <span className="guided-field-hint">{hasWageringLedger ? "Review your professional wagering ledger from your own records." : "When you request a review, locally redacted document text is sent for AI analysis. Suggestions require your acceptance. This permission resets when you leave this section or change returns."}</span>
         </label>
 
         <div className="guided-w2-card">
@@ -726,7 +730,7 @@ export function SectionSelfEmployment({
                 type="button"
                 className="utility-button utility-button-small guided-doc-upload-button"
                 onClick={() => incomeUploadInputRef.current?.click()}
-                disabled={incomeAnalysisPending || !aiReviewAllowed}
+                disabled={incomeAnalysisPending || !canReviewBusinessDocuments}
               >
                 {incomeAnalysisPending ? "Analyzing..." : "Upload paystubs or invoices"}
               </button>
@@ -737,7 +741,7 @@ export function SectionSelfEmployment({
                 accept="application/pdf"
                 multiple
                 onChange={handleIncomeDocumentUpload}
-                disabled={!aiReviewAllowed || incomeAnalysisPending}
+                disabled={!canReviewBusinessDocuments || incomeAnalysisPending}
               />
               {incomeAnalysisPending && <button type="button" className="utility-button" onClick={() => cancelReview("income")}>Cancel income review</button>}
             </div>
@@ -790,7 +794,7 @@ export function SectionSelfEmployment({
                   type="button"
                   className="utility-button utility-button-small guided-doc-upload-button"
                   onClick={() => void reviewSelectedAttachedIncomeDocuments()}
-                  disabled={!aiReviewAllowed || incomeAnalysisPending || selectedAttachedIncomeDocumentIds.length === 0}
+                  disabled={!canReviewBusinessDocuments || incomeAnalysisPending || selectedAttachedIncomeDocumentIds.length === 0}
                 >
                   {incomeAnalysisPending ? "Analyzing attached docs..." : "Review selected attached docs"}
                 </button>
@@ -975,12 +979,23 @@ export function SectionSelfEmployment({
             <span className="guided-review-value">{sourceAmount(manualIncome)}</span>
           </div>
           <div className="guided-review-row guided-review-row-total">
-            <span className="guided-review-label">Total gross receipts</span>
+            <span className="guided-review-label">{hasWageringLedger ? "Ordinary gross receipts" : "Total gross receipts"}</span>
             <span className="guided-review-value">{sourceAmount(totalIncome)}</span>
           </div>
         </div>
 
         <BusinessSourceDetails data={businessFacts} onChange={value => commitSection({ businessFacts: value })} onCapturePassenger={facts=>{if(!flowState)throw new Error('Current complete interview required');return captureGuidedPassengerSources({...flowState,sectionData:{...flowState.sectionData,'income-self-employment':{...latestSection.current.value,businessFacts:facts}}});}} />
+        <ProfessionalWageringDetails data={businessFacts?.professionalWagering} available={supportsGuidedProfessionalWagering(flowState, businessFacts)}
+          error={hasWageringLedger && flowState ? validateSection(flowState, "income-self-employment").fieldErrors?.professionalWagering : undefined}
+          onChange={professionalWagering => {
+            if (professionalWagering && !hasWageringLedger) {
+              setAiReviewAllowed(false);
+              latestSection.current.aiReviewAllowed = false;
+              cancelReview("income");
+              cancelReview("expense");
+            }
+            commitSection({ businessFacts: { ...latestSection.current.value.businessFacts, professionalWagering } });
+          }} />
         <details className="guided-expand" style={{ marginTop: "16px" }}>
           <summary className="guided-expand-trigger">Schedule C — Business Expenses</summary>
           <BooleanFact label="Did you materially participate in this business under the section 469 rules?" value={qbiMateriallyParticipated} onChange={(value) => commitSection({ qbiMateriallyParticipated: value })} />
@@ -1012,7 +1027,7 @@ export function SectionSelfEmployment({
                   type="button"
                   className="utility-button utility-button-small guided-doc-upload-button"
                   onClick={() => uploadInputRef.current?.click()}
-                  disabled={analysisPending || !aiReviewAllowed}
+                  disabled={analysisPending || !canReviewBusinessDocuments}
                 >
                   {analysisPending ? "Analyzing..." : "Upload bank statements"}
                 </button>
@@ -1023,7 +1038,7 @@ export function SectionSelfEmployment({
                   accept="application/pdf"
                   multiple
                   onChange={handleStatementUpload}
-                  disabled={!aiReviewAllowed || analysisPending}
+                  disabled={!canReviewBusinessDocuments || analysisPending}
                 />
                 {analysisPending && <button type="button" className="utility-button" onClick={() => cancelReview("expense")}>Cancel expense review</button>}
               </div>
@@ -1167,8 +1182,8 @@ export function SectionSelfEmployment({
         </details>
 
         <div className="guided-ticker-grid" style={{ marginTop: "16px" }}>
-          <div className="guided-ticker-item"><span className="guided-ticker-label">Entered gross receipts</span><strong className="guided-ticker-value">{sourceAmount(totalIncome)}</strong></div>
-          <div className="guided-ticker-item"><span className="guided-ticker-label">Entered expense amounts before tax limits</span><strong className="guided-ticker-value">{hasMileageLog ? "Includes a vehicle log for calculation" : sourceAmount(totalExpenses)}</strong></div>
+          <div className="guided-ticker-item"><span className="guided-ticker-label">{hasWageringLedger ? "Entered ordinary gross receipts" : "Entered gross receipts"}</span><strong className="guided-ticker-value">{sourceAmount(totalIncome)}</strong></div>
+          <div className="guided-ticker-item"><span className="guided-ticker-label">Entered expense amounts before tax limits</span><strong className="guided-ticker-value">{hasWageringLedger ? "Uses the professional wagering ledger" : hasMileageLog ? "Includes a vehicle log for calculation" : sourceAmount(totalExpenses)}</strong></div>
         </div>
 
       </div>

@@ -1,9 +1,10 @@
 import {guidedPassengerDisplayAmount} from "./guided-passenger-sources";
 import {guidedMacrsFactErrors,guidedMacrsDisplayAmount,type GuidedMacrsAssetsDraft} from "./guided-macrs-assets";
-import { actualCompensationSourceYear, compensationReportingErrors } from "./guided-compensation-reporting";
+import { actualCompensationSourceYear, compensationReportingErrors, isStartedNec } from "./guided-compensation-reporting";
 import Decimal from "decimal.js";
 import type { FilingStatus, GuidedFlowState, NecEntryData, SelfEmploymentSectionData, StateReturnData, W2EntryData } from "./guided-interview-flow";
 import { readGuidedBusinessMileage, type BusinessMileageDraft } from "./guided-business-mileage";
+import { readGuidedProfessionalWagering, type ProfessionalWageringDraft } from "./guided-professional-wagering";
 import { parseGuidedCurrency, sumGuidedDisplayAmounts } from "./guided-currency";
 import { amountError, hasEnteredAmount } from "./guided-required-facts";
 
@@ -11,6 +12,7 @@ import type {ScheduleCSourceFacts} from "@/models/inputs";
 
 export interface BusinessSourceData {
   standardMileage?: BusinessMileageDraft;
+  professionalWagering?: ProfessionalWageringDraft;
   depreciationMethod?: "manual" | "assets" | "passenger";
   passengerSources?: import("./guided-passenger-sources").GuidedPassengerDraft;
   macrsAssets?: GuidedMacrsAssetsDraft;
@@ -57,9 +59,7 @@ export function sumKnownBusinessAmounts(values: Array<string | undefined>): Deci
   return total.isFinite() ? total : null;
 }
 
-export function isStartedNec(entry: NecEntryData): boolean {
-  return Object.values(entry).some(value => (typeof value === "string" && value.trim() !== "") || Array.isArray(value));
-}
+export { isStartedNec };
 
 export function hasBusinessSourceData(data: SelfEmploymentSectionData | undefined): boolean {
   return !!data && (data.businessFacts?.standardMileage !== undefined || data.necEntries.some(isStartedNec) || hasEnteredAmount(data.manualGrossReceipts) || Object.values(data.expenses).some(hasEnteredAmount) || Object.values(data.businessFacts ?? {}).some(value => value !== undefined && value !== null && value !== ""));
@@ -69,6 +69,9 @@ export function businessFactErrors(data: SelfEmploymentSectionData | undefined, 
   const errors: Record<string, string> = {};
   if (!hasBusinessSourceData(data) || !data) return errors;
   const facts = data.businessFacts ?? {};
+  const wageringStarted = facts.professionalWagering !== undefined;
+  try { readGuidedProfessionalWagering(data, flow); }
+  catch (error) { errors.professionalWagering = error instanceof Error ? error.message : "Check the professional wagering ledger."; }
   let mileage: ReturnType<typeof readGuidedBusinessMileage>;
   try { mileage = readGuidedBusinessMileage(data, flow); }
   catch (error) { errors.standardMileage = error instanceof Error ? error.message : "Check the business mileage log."; }
@@ -78,14 +81,18 @@ export function businessFactErrors(data: SelfEmploymentSectionData | undefined, 
   if (!/^\d{6}$/.test(facts.businessCode ?? "")) errors.businessCode = "Enter the actual six-digit principal business activity code.";
   if (facts.ein?.trim() && !/^\d{2}-?\d{7}$/.test(facts.ein.trim())) errors.businessEin = "Enter the business EIN, or leave blank if no EIN was issued.";
   if (!["cash", "accrual"].includes(facts.accountingMethod ?? "")) errors.accountingMethod = "Confirm the actual accounting method; another method requires additional support.";
-  for (const field of ["singleBusinessConfirmed", "incomeReconciled", "expensesReconciled"] as const) if (facts[field] !== true) errors[field] = field === "singleBusinessConfirmed" ? "This interview supports one actual business activity; separate activities cannot be combined." : "Review and reconcile the actual source amounts before calculating.";
-  for (const [field, label] of businessSourceAmounts) { const error = amountError(facts[field], label); if (error) errors[field] = error; }
+  const confirmations = wageringStarted ? ["singleBusinessConfirmed"] as const : ["singleBusinessConfirmed", "incomeReconciled", "expensesReconciled"] as const;
+  for (const field of confirmations) if (facts[field] !== true) errors[field] = field === "singleBusinessConfirmed" ? "This interview supports one actual business activity; separate activities cannot be combined." : "Review and reconcile the actual source amounts before calculating.";
+  for (const [field, label] of businessSourceAmounts) {
+    if (wageringStarted && !["w2WagesPaid", "ubiaQualifiedProperty", "priorYearUnallowedLoss"].includes(field)) continue;
+    const error = amountError(facts[field], label); if (error) errors[field] = error;
+  }
   if(facts.businessInterest !== undefined){const error=amountError(facts.businessInterest,"actual aggregate business interest");if(error)errors.businessInterest=error;}
   if(facts.scheduleCSourceFacts?.sourceFactsConfirmed !== true && (facts.scheduleCSourceFacts || (hasEnteredAmount(facts.businessInterest) && parseGuidedCurrency(facts.businessInterest).gt(0)))) errors.scheduleCSourceFacts="Confirm actual Schedule C interest, expense and address source facts.";
-  const manualError = amountError(data.manualGrossReceipts, "gross receipts not already included on Forms 1099-NEC"); if (manualError) errors.manualGrossReceipts = manualError;
+  const manualError = wageringStarted ? undefined : amountError(data.manualGrossReceipts, "gross receipts not already included on Forms 1099-NEC"); if (manualError) errors.manualGrossReceipts = manualError;
   if (hasEnteredAmount(data.expenses.employeeBenefitPrograms)) { const error = amountError(data.expenses.employeeBenefitPrograms, "actual employee-benefit program expense"); if (error) errors.employeeBenefitPrograms = error; }
   const enteredCategories = expenseCategories.filter(field => field !== "carAndTruck" || facts.standardMileage === undefined);
-  for (const field of enteredCategories) { const error = amountError(data.expenses[field], `${field} business expenses`); if (error) errors[`expense-${field}`] = error; }
+  if (!wageringStarted) for (const field of enteredCategories) { const error = amountError(data.expenses[field], `${field} business expenses`); if (error) errors[`expense-${field}`] = error; }
   for (const field of ["isSST", "allInvestmentAtRisk", "additionalWorksheetRequired"] as const) if (typeof facts[field] !== "boolean") errors[field] = "Answer this business qualification from the actual facts.";
   if (typeof data.qbiMateriallyParticipated !== "boolean") errors.materialParticipation = "Confirm actual material participation under the section 469 rules.";
   if (facts.additionalWorksheetRequired === true || (!errors.priorYearUnallowedLoss && parseGuidedCurrency(facts.priorYearUnallowedLoss).gt(0))) errors.additionalWorksheets = "Prior-loss or other additional business worksheets require separate support before this guided calculation can proceed.";
@@ -113,7 +120,7 @@ export function businessFactErrors(data: SelfEmploymentSectionData | undefined, 
   const incomeReductions = [facts.returnsAndAllowances, facts.costOfGoodsSold];
   const expenseAmounts = [...enteredCategories.filter(field => field !== "meals").map(field => data.expenses[field]), facts.contractLabor, facts.depreciationMethod==='assets'?guidedMacrsDisplayAmount(facts):facts.depreciationMethod==='passenger'?guidedPassengerDisplayAmount(facts):facts.depreciation, facts.legalAndProfessional, ...(facts.businessInterest===undefined?[]:[facts.businessInterest]), ...(facts.scheduleCSourceFacts?.ordinaryExpenses?.rows?.map(row=>row.amount)??[])];
   if (mileage && hasEnteredAmount(data.expenses.employeeBenefitPrograms)) expenseAmounts.push(data.expenses.employeeBenefitPrograms);
-  if (!errors.standardMileage && [...businessIncome, ...incomeReductions, ...expenseAmounts, data.expenses.meals].every(value => !amountError(value, "business amount"))) {
+  if (!wageringStarted && !errors.standardMileage && [...businessIncome, ...incomeReductions, ...expenseAmounts, data.expenses.meals].every(value => !amountError(value, "business amount"))) {
     const total = (values: Array<string | undefined>) => values.reduce((sum, value) => sum.plus(parseGuidedCurrency(value)), new Decimal(0));
     const tentative = total(businessIncome).minus(total(incomeReductions)).minus(total(expenseAmounts))
       .minus(parseGuidedCurrency(data.expenses.meals).times("0.5").toDecimalPlaces(0, Decimal.ROUND_HALF_UP))

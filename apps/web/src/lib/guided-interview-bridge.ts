@@ -77,6 +77,7 @@ import { buildActualEnergyInput, energyFactErrors } from "./guided-energy-facts"
 import { isStartedW2, w2FactErrors } from "./guided-w2-facts";
 import { businessFactErrors, hasBusinessSourceData, isStartedNec, sumKnownBusinessAmounts, type BusinessSourceData } from "./guided-business-facts";
 import { readGuidedBusinessMileage } from "./guided-business-mileage";
+import { readGuidedProfessionalWagering } from "./guided-professional-wagering";
 import { isStartedRental, rentalFactErrors, rentalExpenseFields } from "./guided-rental-facts";
 import { buildGuidedRentalCarryovers } from "./guided-rental-carry-sources";
 import { paRentalAmountFields } from "./guided-pa-rental-facts";
@@ -250,6 +251,7 @@ export function buildScheduleCInput(
   qbiMateriallyParticipated?: boolean | null,
   businessFacts?: BusinessSourceData,
   standardMileage?: NonNullable<ReturnType<typeof readGuidedBusinessMileage>>["packet"],
+  professionalWagering?: ReturnType<typeof readGuidedProfessionalWagering>,
 ) {
   const sources = (necEntries ?? []).filter(isStartedNec);
   if (!sources.length && !hasEnteredAmount(manualGrossReceipts) && !Object.values(expenses ?? {}).some(hasEnteredAmount) && !businessFacts) return undefined;
@@ -261,7 +263,8 @@ export function buildScheduleCInput(
   return {
     sourceFacts: businessFacts?.scheduleCSourceFacts,
     ...(standardMileage ? { standardMileage } : {}),
-    grossReceipts: totalGross?.toFixed(),
+    ...(professionalWagering ? { professionalWagering } : {}),
+    grossReceipts: professionalWagering ? undefined : totalGross?.toFixed(),
     accountHolder: businessFacts?.accountHolder === "primary" || businessFacts?.accountHolder === "spouse" ? businessFacts.accountHolder : undefined,
     principalBusinessActivity: businessFacts?.activityDescription?.trim() || undefined,
     allInvestmentAtRisk: businessFacts?.allInvestmentAtRisk ?? undefined,
@@ -277,7 +280,7 @@ export function buildScheduleCInput(
     ubiaQualifiedProperty: toOptionalDecimalString(businessFacts?.ubiaQualifiedProperty),
     isSST: businessFacts?.isSST ?? undefined,
     qbiMateriallyParticipated: qbiMateriallyParticipated ?? undefined,
-    expenses: expenses
+    expenses: expenses && !professionalWagering
       ? {
           ...(businessFacts?.scheduleCSourceFacts?.ordinaryExpenses?.rows? Object.fromEntries(businessFacts.scheduleCSourceFacts.ordinaryExpenses.rows.flatMap(row=>row.category?[[row.category,toOptionalDecimalString(row.amount)]]:[])) : {}),
           businessInterest:toOptionalDecimalString(businessFacts?.businessInterest),
@@ -788,6 +791,7 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
   let loanEducation: StudentLoanEducationSources = [];
   let form3903: ReturnType<typeof buildMovingExpenses>;
   let standardMileage: ReturnType<typeof readGuidedBusinessMileage>;
+  let professionalWagering: ReturnType<typeof readGuidedProfessionalWagering>;
   try {
     form3903 = buildMovingExpenses(state);
     assertKnownFacts(royaltySourceFactErrors(state));
@@ -798,6 +802,7 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
     assertKnownFacts(investmentFactErrors(investData, segmentation.filingStatus, state.taxYear, stateReturnData, segmentation.stateCode, personalInfo));
     assertKnownFacts(businessFactErrors(seData, segmentation.filingStatus, w2Data?.entries, stateReturnData, state.taxYear, state));
     standardMileage = readGuidedBusinessMileage(seData, state);
+    professionalWagering = seData && readGuidedProfessionalWagering(seData, state);
     assertKnownFacts(rentalFactErrors(rentalData?.entries, segmentation.filingStatus, state.taxYear, segmentation.stateCode, personalInfo));
     assertKnownFacts(nonitemizedElectionFactErrors(state));
     assertKnownFacts(deductionFactErrors(deductionData, state.taxYear, segmentation.filingStatus, personalInfo.spouse));
@@ -843,7 +848,7 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
   const stateCode = segmentation.stateCode;
   const w2s = buildW2Inputs(w2Data?.entries);
   const necs = buildNecInputs(seData?.necEntries);
-  const scheduleC = buildScheduleCInput(seData?.necEntries, seData?.manualGrossReceipts, seData?.expenses, seData?.qbiMateriallyParticipated, seData?.businessFacts, standardMileage?.packet);
+  const scheduleC = buildScheduleCInput(seData?.necEntries, seData?.manualGrossReceipts, seData?.expenses, seData?.qbiMateriallyParticipated, seData?.businessFacts, standardMileage?.packet, professionalWagering);
   let actualMacrs:ReturnType<typeof buildGuidedMacrsAssets>;
   let passengerForm:ReturnType<typeof buildGuidedPassengerForm>;
   try{actualMacrs=buildGuidedMacrsAssets(seData?.businessFacts,state.taxYear,!!rentalData?.entries?.length||!!sectionData["income-royalties"]);passengerForm=buildGuidedPassengerForm(seData?.businessFacts,state.taxYear);}catch{return null;}
@@ -1116,9 +1121,17 @@ export function buildGuidedFactAnswers(
 
   const seData = state.sectionData["income-self-employment"];
   if (seData && hasBusinessSourceData(seData)) {
-    const receipts = sumKnownBusinessAmounts([seData.manualGrossReceipts, ...seData.necEntries.filter(isStartedNec).map(entry => entry.nonemployeeCompensation)]);
-    answers.push({ factId: "nonemployee-compensation", answerText: receipts === null ? "Business income source amounts still need review." : `Business gross receipts entered: $${fmtNum(receipts)}.` });
-    answers.push({ factId: "schedule-c-expense-review", answerText: seData.businessFacts?.expensesReconciled === true ? "Business expense amounts and qualification checked against source records." : "Business expense amounts and qualification still need source review." });
+    if (seData.businessFacts?.professionalWagering !== undefined) {
+      let confirmed = false;
+      try { confirmed = readGuidedProfessionalWagering(seData, state) !== undefined; }
+      catch { /* A partial ledger is still private and requires review. */ }
+      answers.push({ factId: "nonemployee-compensation", answerText: confirmed ? "Professional wagering gains confirmed from the annual ledger." : "Professional wagering gains still need ledger review." });
+      answers.push({ factId: "schedule-c-expense-review", answerText: confirmed ? "Professional wagering losses and otherwise deductible expenses confirmed from the annual ledger." : "Professional wagering losses and expenses still need ledger review." });
+    } else {
+      const receipts = sumKnownBusinessAmounts([seData.manualGrossReceipts, ...seData.necEntries.filter(isStartedNec).map(entry => entry.nonemployeeCompensation)]);
+      answers.push({ factId: "nonemployee-compensation", answerText: receipts === null ? "Business income source amounts still need review." : `Business gross receipts entered: $${fmtNum(receipts)}.` });
+      answers.push({ factId: "schedule-c-expense-review", answerText: seData.businessFacts?.expensesReconciled === true ? "Business expense amounts and qualification checked against source records." : "Business expense amounts and qualification still need source review." });
+    }
   }
 
   // Record source totals only when every contributing amount is known.
@@ -1231,6 +1244,7 @@ export function buildGuidedSyntheticDocuments(
     });
   }
   if (seData && (hasEnteredAmount(seData.manualGrossReceipts) || Object.values(seData.expenses).some(hasEnteredAmount) || seData.businessFacts)) {
+    const wagering = seData.businessFacts?.professionalWagering !== undefined;
     docs.push({
       id: "guided:schedule-c",
       name: "Guided Interview — Schedule C",
@@ -1239,7 +1253,7 @@ export function buildGuidedSyntheticDocuments(
       kind: "schedule-c-support",
       coverage: Object.keys(businessFactErrors(seData, state.segmentation.filingStatus, state.sectionData["income-w2"]?.entries, state.sectionData["state-return"], state.taxYear, state)).length ? "partially-supported" : "supported",
       label: "Schedule C (guided interview)",
-      notes: "Manual Schedule C gross receipts and expenses entered via guided interview.",
+      notes: wagering ? "Professional wagering ledger entered via guided interview." : "Manual Schedule C gross receipts and expenses entered via guided interview.",
       matchedFixtureId: null,
       seededFactIds: ["nonemployee-compensation", "schedule-c-expense-review"],
     });

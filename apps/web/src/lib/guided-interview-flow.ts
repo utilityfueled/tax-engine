@@ -76,6 +76,7 @@ import { energyFactErrors } from "./guided-energy-facts";
 import { isStartedW2, w2FactErrors } from "./guided-w2-facts";
 import { investmentFactErrors, investmentRowsStarted, type InvestmentSourceData, type InvestmentData } from "./guided-investment-facts";
 import { businessFactErrors, hasBusinessSourceData, type BusinessSourceData } from "./guided-business-facts";
+import { clearWageringConfirmations, professionalWageringDraftSchema } from "./guided-professional-wagering";
 import { businessMileageDraftSchema, businessMileageOriginals, clearBusinessMileageConfirmations } from "./guided-business-mileage";
 import { isStartedRental, rentalFactErrors, type RentalSourceData } from "./guided-rental-facts";
 import { nonW2TaxAllocationErrors } from "./guided-salt-facts";
@@ -1777,6 +1778,17 @@ export function updateSectionData(
   const sourceValuesChanged = guidedSourceValuesChanged(documentaryValues(state.sectionData[sectionId as keyof SectionDataMap]),documentaryValues(data));
   const nextBusiness = sectionId === "income-self-employment" ? data as SelfEmploymentSectionData : state.sectionData["income-self-employment"];
   const previousBusiness = state.sectionData["income-self-employment"];
+  const wageringDraft = professionalWageringDraftSchema.safeParse(nextBusiness?.businessFacts?.professionalWagering);
+  const wageringOriginals = (value: SelfEmploymentSectionData | undefined) => {
+    if (!value) return undefined;
+    const draft = professionalWageringDraftSchema.safeParse(value.businessFacts?.professionalWagering);
+    return { ...value, bankStatementAnalyses: undefined, incomeDocumentAnalyses: undefined,
+      businessFacts: { ...value.businessFacts, professionalWagering: draft.success ? clearWageringConfirmations(draft.data) : undefined } };
+  };
+  const wageringSourcesChanged = wageringDraft.success && (
+    (sectionId === "income-self-employment" && guidedSourceValuesChanged(wageringOriginals(previousBusiness), wageringOriginals(nextBusiness)))
+    || (sourceValuesChanged && ["personal-info", "deductions", "adjustments", "credits", "state-return"].includes(sectionId))
+  );
   const mileageDraft = businessMileageDraftSchema.safeParse(nextBusiness?.businessFacts?.standardMileage);
   const mileageSourcesChanged = mileageDraft.success && (
     (sectionId === "personal-info" && sourceValuesChanged)
@@ -1946,7 +1958,7 @@ export function updateSectionData(
       [sectionId]: data,
       ...((invalidatedOhioStateReturn ?? invalidatedPAStateReturn) ? { "state-return": invalidatedOhioStateReturn ?? invalidatedPAStateReturn } : {}),
       ...(invalidatedW2 ? { "income-w2": invalidatedW2 } : {}),
-      ...((scheduleCSourcesChanged || macrsSourcesChanged || passengerSourcesChanged || mileageSourcesChanged) && nextBusiness ? {
+      ...((scheduleCSourcesChanged || macrsSourcesChanged || passengerSourcesChanged || mileageSourcesChanged || wageringSourcesChanged) && nextBusiness ? {
         "income-self-employment": {
           ...nextBusiness,
           businessFacts: {
@@ -1955,6 +1967,7 @@ export function updateSectionData(
             ...(macrsSourcesChanged ? { macrsAssets: { ...macrsSourcesChanged, sourceFactsConfirmed: null } } : {}),
             ...(passengerSourcesChanged ? { passengerSources: { ...passengerSourcesChanged, sourceFactsConfirmed: null } } : {}),
             ...(mileageSourcesChanged ? { standardMileage: clearBusinessMileageConfirmations(mileageDraft.data) } : {}),
+            ...(wageringSourcesChanged ? { professionalWagering: clearWageringConfirmations(wageringDraft.data) } : {}),
           },
         },
       } : {}),

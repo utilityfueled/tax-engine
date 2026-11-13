@@ -1,4 +1,9 @@
 import { amountError, hasEnteredAmount } from "./guided-required-facts";
+import type { NecEntryData } from "./guided-interview-flow";
+
+export function isStartedNec(entry: NecEntryData): boolean {
+  return Object.values(entry).some(value => (typeof value === "string" && value.trim() !== "") || Array.isArray(value));
+}
 
 export interface CompensationReportingData {
   sourceTaxYear?: string;

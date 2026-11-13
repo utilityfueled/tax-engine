@@ -57,3 +57,21 @@ lines:
     formula: "Require matching year, payer, owner, date, amounts and complete federal-only source classifications. Reject additional fields on linked forms, including unqualified local-tax amounts. Do not default absent box 4 or treat two copies of one payment as two statements."
     irsRef: "January 2026 Instructions for Forms W-2G and 5754, section 3"
     testRef: "tests/engine/federal-professional-w2g-2026.test.ts::rejects changed or duplicated statements and unqualified state compositions"
+  - line: "guided exclusive professional ledger"
+    description: "Preserve confirmed calendar-year wagering sources in guided Schedule C"
+    formula: >
+      In a federal-only 2026 single return with one primary-owner cash business,
+      accept the actual private reference and separately confirmed taxable gains,
+      wagering losses and otherwise allowable expenses from the complete domestic
+      professional ledger. Require actual zero where applicable and affirmative
+      confirmation that no W-2G originals require reconciliation in this intake.
+      Preserve the ordinary header and eligibility facts. Reject competing
+      receipts, documented expenses, recreational entries and other methods.
+      Reconfirm on changes to the owner, business identity, source or overlapping
+      facts. Review the three amounts separately, preserving explicit zero and
+      identifying missing or invalid entries. Omit the private reference from
+      review summaries and use nonfinancial labels when syncing fact answers.
+      Use the canonical Schedule C calculation once, with no implied qualification
+      for public results, AI review or filing.
+    irsRef: "26 USC 165(d); IRS Publication 525, Gambling winnings; 2026 Schedule C and draft instructions"
+    testRef: "tests/apps/web/guided-professional-wagering.test.tsx::preserves confirmed professional ledger facts in the guided Schedule C input"
