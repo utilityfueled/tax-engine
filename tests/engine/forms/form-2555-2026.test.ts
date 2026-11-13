@@ -121,6 +121,13 @@ describe("Form2555 source-backed 2026", () => {
     // 2026 maximum132900 + (30000-21264) housing8736 =141636; line45=141636-200000.
     expect(result.netExclusion.toFixed()).toBe("-58364");
   });
+  it("Form2555 rejects line44 when no reported exclusion supports it", () => {
+    const noClaims = { claimForeignEarnedIncomeExclusion: false, claimHousingExclusionOrDeduction: false };
+    expect(calc(noClaims).netExclusion.toFixed()).toBe("0");
+    expect(() => calc({ ...noClaims, deductionsAllocableToExcludedIncome: "700" })).toThrow(/allocable.*exclusion/i);
+    expect(() => calc({ ...noClaims, deductionsAllocableToExcludedIncome: "0.01" })).toThrow(/allocable.*exclusion/i);
+    expect(() => calc({ ...selfEmployed(), claimForeignEarnedIncomeExclusion: false, deductionsAllocableToExcludedIncome: "700" })).toThrow(/allocable.*exclusion/i);
+  });
   it("Form2555 zero income has finite ratios and zero benefits", () => {
     const base = facts();
     const result = calc({ foreignEarnedIncome: "0", employerProvidedForeignEarnedIncome: "0", partIV: { ...base.partIV, wages: "0" }, incomeSources: { ...base.incomeSources, foreignEmploymentIncomeIncludedOnW2: "0" } });
@@ -135,13 +142,39 @@ describe("Form2555 source-backed 2026", () => {
     expect(result.housingDeductionCarryover.toFixed()).toBe("0");
   });
   it("Form2555 prior-year income uses a confirmed separate statement and cannot invent the exclusion", () => {
-    const statement = { priorYearIncomeExclusion: "4000", priorYearIncomeExclusionTaxYear: 2025, priorYearIncomeStatementConfirmed: true, priorYearIncomeAlreadyReportedConfirmed: true, priorYearIncomeReceived: "5000", priorYearUnusedExclusion: "4000" };
+    const statement = { priorYearIncomeExclusion: "4000", priorYearIncomeExclusionTaxYear: 2025, priorYearIncomeStatementConfirmed: true, priorYearIncomeAlreadyReportedConfirmed: true, priorYearIncomeReceived: "5000", priorYearUnusedExclusion: "4000", priorYearEligibilityAndElectionConfirmed: true, priorYearIncomeReference: "Synthetic service-year recomputation" };
     const base = calc();
     const result = calc(statement);
     expect(result.foreignEarnedIncome.eq(base.foreignEarnedIncome)).toBe(true);
     expect(result.netExclusion.minus(base.netExclusion).toFixed()).toBe("4000");
     expect(() => calc({ ...statement, priorYearUnusedExclusion: "3999" })).toThrow(/reconcile/);
     expect(() => calc({ ...statement, priorYearIncomeExclusionTaxYear: 2024 })).toThrow(/preceding-year/);
+  });
+  it("Form2555 checks the exact prior-service amount and the preceding-year maximum", () => {
+    const statement = { priorYearIncomeExclusionTaxYear: 2025, priorYearIncomeStatementConfirmed: true,
+      priorYearIncomeAlreadyReportedConfirmed: true, priorYearEligibilityAndElectionConfirmed: true,
+      priorYearIncomeReference: "Synthetic service-year recomputation" };
+    expect(() => calc({ ...statement, priorYearIncomeExclusion: "130000.01", priorYearIncomeReceived: "140000", priorYearUnusedExclusion: "130000.01" })).toThrow(/preceding-year.*limit/i);
+    expect(() => calc({ ...statement, priorYearIncomeExclusion: "4000.12", priorYearIncomeReceived: "5000", priorYearUnusedExclusion: "4000.13" })).toThrow(/exact.*reconcile|reconcile.*exact/i);
+    expect(calc({ ...statement, priorYearIncomeExclusion: "4000.50", priorYearIncomeReceived: "5000", priorYearUnusedExclusion: "4000.50" }).priorYearIncomeExclusion?.toFixed()).toBe("4001");
+  });
+  it("Form2555 includes the supported prior-service exclusion with zero current qualifying days", () => {
+    const base = facts();
+    const preceding = { foreignEarnedIncome: "0", qualifyingDays: 0, qualifiedHousingExpenses: "0", housingLocationPeriods: [],
+      employerProvidedForeignEarnedIncome: "0", claimHousingExclusionOrDeduction: false,
+      partIV: { ...base.partIV, wages: "0" }, incomeSources: { ...base.incomeSources, foreignEmploymentIncomeIncludedOnW2: "0" },
+      priorYearIncomeExclusion: "8000", priorYearIncomeExclusionTaxYear: 2025, priorYearIncomeStatementConfirmed: true,
+      priorYearIncomeAlreadyReportedConfirmed: true, priorYearIncomeReceived: "10000", priorYearUnusedExclusion: "8000",
+      priorYearEligibilityAndElectionConfirmed: true, priorYearIncomeReference: "Synthetic service-year recomputation" };
+    const result = calc(preceding);
+    expect(["19", "27", "38", "43", "44", "45"].map(id => line(result, id))).toEqual(["0", "0", "0", "0", "0", "8000"]);
+    expect(result.totalIncomeReduction.toFixed()).toBe("8000");
+    expect(result.foreignEarnedIncomeTaxWorksheetAmount.toFixed()).toBe("8000");
+    expect(line(calc({ ...preceding, deductionsAllocableToExcludedIncome: "700" }), "45")).toBe("7300");
+    expect(line(calc({ ...preceding, eligibilityConfirmed: false, claimForeignEarnedIncomeExclusion: false }), "45")).toBe("8000");
+    expect(() => calc({ ...preceding, electionsValidConfirmed: false })).toThrow(/prior.*invalid.*election/i);
+    expect(() => calc({ ...preceding, priorYearEligibilityAndElectionConfirmed: false })).toThrow(/preceding-year.*eligibility.*election/i);
+    expect(() => calc({ ...preceding, priorYearIncomeStatementConfirmed: false })).toThrow(/preceding-year/);
   });
   it("Form2555 notice elections require actual previous labels when locations are regrouped", () => {
     const period = { locationId: "Australia / Melbourne", days: 365, noticeTaxYear: 2026 };

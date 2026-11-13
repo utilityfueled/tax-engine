@@ -3,9 +3,9 @@ fullName: "Foreign Earned Income"
 taxYear: 2026
 irsReference: "https://www.irs.gov/instructions/i2555"
 notes: |
-  Calendar tax years 2025 and 2026. Final 2025 instructions and Notice 2025-16,
-  Notice 2026-25 and IRC 911 support the calculations. The 2026 form/instructions
-  remain drafts; this implementation does not qualify filing or release readiness.
+  Calendar tax years 2025 and 2026. Final 2025 and 2026 instructions, Notice
+  2025-16, Notice 2026-25 and IRC 911 support the calculations. Filing and release
+  qualification require separate evidence.
   Actual Part IV USD source amounts, eligibility/elections, source routing and
   allocable deductions are required for 2026. No US-government wages, pensions,
   investment income, duplicate spouse housing, unqualified days or unverified
@@ -209,14 +209,27 @@ lines:
     testRef: "tests/engine/forms/form-2555-2026.test.ts::Form2555 2026 computes every source line and net exclusion"
   - line: "44"
     description: "Disallowed AGI deductions"
-    formula: "Actual supported computation of deductions allocable to excluded income;0<=44;44 may exceed43 and makes45 negative; excluded housing deduction and section119 are not allocable"
-    irsRef: "Form2555 same numbered line; IRC911; Pub54; Notices2025-16/2026-25"
-    testRef: "tests/engine/forms/form-2555-2026.test.ts::Form2555 2026 computes every source line and net exclusion"
+    formula: "Use the actual supported computation of current deductions attributable to a positive reported housing or foreign earned income exclusion, including an actual prior-service exclusion. Verified sources with no such exclusion require zero line44. Line44 may exceed exclusions; a housing deduction and section119 exclusion cannot support line44."
+    irsRef: "Final 2025/2026 Instructions for Form 2555 Part VIII line 44; IRC 911(d)(6); 26 CFR 1.911-6(a); Pub54 Example 4"
+    testRef: "tests/engine/forms/form-2555-2026.test.ts::Form2555 rejects line44 when no reported exclusion supports it"
   - line: "45"
     description: "Net exclusion"
-    formula: "43-44 plus verified prior-year income statement exclusion; negative amount goes Schedule1line8d"
-    irsRef: "Form2555 same numbered line; IRC911; Pub54; Notices2025-16/2026-25"
-    testRef: "tests/engine/forms/form-2555-2026.test.ts::Form2555 2026 computes every source line and net exclusion"
+    formula: "43-44 plus the verified preceding-service-year statement amount, including when current qualifying days are zero. Keep current gross receipts on their original return line and prior-service receipts out of Part IV. Report the opposite sign on Schedule 1 line 8d. A verified positive claim requires a separately confirmed valid service-year section911(a)(1) election and eligibility, with the actual recomputation reference."
+    irsRef: "Final 2025/2026 Instructions for Form 2555 Income earned in prior year and Part VIII line 45; IRC 911(b)(1); 26 CFR 1.911-3(e)(1)"
+    testRef: "tests/engine/forms/form-2555-2026.test.ts::Form2555 includes the supported prior-service exclusion with zero current qualifying days"
+  - line: "45-prior-limit"
+    description: "Validate the preceding-year FEIE from exact source amounts before form rounding"
+    formula: "Compare the claimed amount to the lesser of exact receipts and exact available exclusion. The actual preceding-year computation cannot have a remaining amount above the full annual limit of $126500 for 2024 or $130000 for 2025. Only round the verified transfer."
+    irsRef: "26 CFR 1.911-3(d)(2) and (e)(1); Rev. Proc. 2023-34 §3.39 and Rev. Proc. 2024-40 §3.39; IRS Figuring the Foreign Earned Income Exclusion"
+    testRef: "tests/engine/forms/form-2555-2026.test.ts::Form2555 checks the exact prior-service amount and the preceding-year maximum"
+  - line: "45-prior-election-source"
+    description: "Confirm the actual preceding-year eligibility and exclusion election"
+    formula: "For a verified positive claim preserve actual reference and confirmation of the earned-income exclusion election applicable to the receipt, eligible preceding service and remaining limit calculation. Current-year ineligibility from zero qualifying days does not invalidate that claim. An expressly invalid or revoked current election requires separate review."
+    testRef: "tests/guided-interview/guided-foreign-income.test.ts::requires a separate service-year exclusion election and persists its actual reference"
+  - line: "45-prior-payroll-binding"
+    description: "Require original W-2 sources for a positive prior-service claim"
+    formula: "A positive claim on the return requires explicit worksheet confirmation and the original owner-bound and year-bound W-2 receipts. Legacy aggregates cannot establish these receipts. Where prior receipts include business sources, require their separate receipt-year expense allocation before calculating a positive claim. Preserve current-year and nonclaiming source handling."
+    testRef: "tests/engine/forms/form-2555-source-binding.test.ts::requires bound payroll before applying a positive prior-service claim"
   - line: "46"
     description: "Self-employment housing amount"
     formula: "max(0,33-36)"

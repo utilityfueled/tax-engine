@@ -4360,14 +4360,20 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     if (value === undefined || !amount.isFinite()) throw new Error(`Form8960 requires actual finite ${name}`);
     return amount;
   };
+  // Section 1411(d) includes the section 911(a)(1) exclusion in the receipt year.
+  const niitPriorServiceExclusion = form2555?.priorYearIncomeExclusion ?? d("0");
+  const niitFeie = (form2555?.foreignEarnedIncomeExclusion ?? d("0")).plus(niitPriorServiceExclusion);
   let niitFeieDeduction = d("0");
   if (form2555) {
     const line44 = form2555.lines.find(line => line.form === "2555" && line.line === "44")?.value ?? d("0");
     if (niitSources?.feieAllocableDeductions !== undefined) {
       niitFeieDeduction = niitAmount(niitSources.feieAllocableDeductions, "FEIE deduction allocation");
       if (niitFeieDeduction.lt(0) || niitFeieDeduction.gt(line44)
-        || (form2555.housingExclusion.isZero() && !niitFeieDeduction.eq(line44))) throw new Error("Form8960 FEIE deduction allocation must reconcile with Form2555line44");
-    } else if (line44.isZero() || form2555.foreignEarnedIncomeExclusion.isZero()) {
+        || (niitFeie.isZero() && !niitFeieDeduction.isZero())
+        || (niitFeie.gt(0) && form2555.housingExclusion.isZero() && !niitFeieDeduction.eq(line44))) {
+        throw new Error("Form8960 FEIE deduction allocation must reconcile with the actual exclusion and Form2555line44");
+      }
+    } else if (line44.isZero() || niitFeie.isZero()) {
       niitFeieDeduction = d("0");
     } else if (form2555.housingExclusion.isZero()) {
       niitFeieDeduction = line44;
@@ -4377,9 +4383,10 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   } else if (niitSources?.feieAllocableDeductions !== undefined && !niitAmount(niitSources.feieAllocableDeductions, "FEIE allocation").isZero()) {
     throw new Error("Form8960 FEIE allocation requires an actual Form2555 source");
   }
-  const niitMagi = agi.plus(form2555?.foreignEarnedIncomeExclusion ?? d("0")).minus(niitFeieDeduction);
+  const niitMagi = agi.plus(niitFeie).minus(niitFeieDeduction);
   audit.record("Form8960 MAGI WS", "1", "Adjusted gross income", agi, "Actual Form1040 AGI");
-  audit.record("Form8960 MAGI WS", "2a", "Foreign earned income exclusion", form2555?.foreignEarnedIncomeExclusion ?? d("0"), "Form2555line42 only");
+  audit.record("Form8960 MAGI WS", "2a", "Foreign earned income exclusion", niitFeie,
+    niitPriorServiceExclusion.isZero() ? "Form2555line42 only" : "Form2555line42 plus the prior-service exclusion from the line45 statement");
   audit.record("Form8960 MAGI WS", "2b", "FEIE-allocable deductions", niitFeieDeduction, "Actual Form2555line44 allocation; housing excluded");
   audit.record("Form8960 MAGI WS", "4", "Modified adjusted gross income", niitMagi, "Line1+2a-2b; no represented CFC/PFIC source");
   const disposition = niitSources?.dispositions;

@@ -41,6 +41,7 @@ export interface ForeignIncomeData {
   priorYearHousingDeductionCarryover: string; priorYearHousingCarryoverTaxYear: string; priorYearHousingCarryoverConfirmed: boolean | null; priorYearHousingReference: string;
   priorYearIncomeExclusion: string; priorYearIncomeExclusionTaxYear: string; priorYearUnusedExclusion: string;
   priorYearIncomeStatementConfirmed: boolean | null; priorYearIncomeAlreadyReportedConfirmed: boolean | null; priorYearIncomeReference: string;
+  priorYearEligibilityAndElectionConfirmed?: boolean | null;
 }
 export const emptyForeignIncomeSource: ForeignIncomeSourceData = { sourceId: "", sourceTaxYear: "", accountHolder: "", sourceReference: "", payerName: "", payerEin: "", foreignEarnedIncome: "", priorYearIncomeReceived: "", notIncludedInW2Confirmed: null, businessGrossReceipts: "", businessReturnsAndAllowances: "", businessCostOfGoodsSold: "", businessOtherIncome: "" };
 export const emptyForeignIncome: ForeignIncomeData = {
@@ -55,6 +56,7 @@ export const emptyForeignIncome: ForeignIncomeData = {
   deductionsAllocableToExcludedIncome: "", foreignEarnedIncomeTaxWorksheetDisallowedDeductions: "", deductionWorksheetReference: "",
   priorYearHousingDeductionCarryover: "", priorYearHousingCarryoverTaxYear: "", priorYearHousingCarryoverConfirmed: null, priorYearHousingReference: "",
   priorYearIncomeExclusion: "", priorYearIncomeExclusionTaxYear: "", priorYearUnusedExclusion: "", priorYearIncomeStatementConfirmed: null, priorYearIncomeAlreadyReportedConfirmed: null, priorYearIncomeReference: "",
+  priorYearEligibilityAndElectionConfirmed: null,
 };
 function money(value: string | undefined, label: string): string {
   const error = amountError(value, label); if (error) throw new Error(error);
@@ -211,10 +213,12 @@ export function buildForeignIncomeInput(data: ForeignIncomeData | undefined, sta
   if (!data.deductionWorksheetReference.trim()) throw new Error("Retain the completed actual worksheet for deductions allocable to excluded income, including known zero.");
   const carry = money(data.priorYearHousingDeductionCarryover, "prior-year housing deduction carryover");
   const priorExclusion = money(data.priorYearIncomeExclusion, "prior-year income exclusion");
+  const priorClaim = new Decimal(priorExclusion).gt(0);
   const priorHousingApplies = new Decimal(carry).gt(0) || !!data.priorYearHousingCarryoverTaxYear || !!data.priorYearHousingReference || typeof data.priorYearHousingCarryoverConfirmed === "boolean";
-  const priorIncomeApplies = priorReceived.gt(0) || new Decimal(priorExclusion).gt(0) || !!data.priorYearIncomeExclusionTaxYear || !!data.priorYearUnusedExclusion || !!data.priorYearIncomeReference || typeof data.priorYearIncomeStatementConfirmed === "boolean" || typeof data.priorYearIncomeAlreadyReportedConfirmed === "boolean";
+  const priorIncomeApplies = priorReceived.gt(0) || priorClaim || !!data.priorYearIncomeExclusionTaxYear || !!data.priorYearUnusedExclusion || !!data.priorYearIncomeReference || typeof data.priorYearIncomeStatementConfirmed === "boolean" || typeof data.priorYearIncomeAlreadyReportedConfirmed === "boolean";
   if (priorHousingApplies && (!data.priorYearHousingReference.trim() || data.priorYearHousingCarryoverConfirmed !== true)) throw new Error("Confirm the actual prior-year housing carryover worksheet and source reference.");
   if (priorIncomeApplies && (!data.priorYearIncomeReference.trim() || data.priorYearIncomeStatementConfirmed !== true || data.priorYearIncomeAlreadyReportedConfirmed !== true)) throw new Error("Confirm the actual prior-year income statement and its inclusion in this year's original gross source.");
+  if (priorClaim && data.priorYearEligibilityAndElectionConfirmed !== true) throw new Error("Confirm preceding-year eligibility and the valid earned income exclusion election using the actual prior-service computation.");
   const result = Form2555Schema.parse({ taxYear: year, accountHolder: owner, sourceFactsConfirmed: true, eligibilityConfirmed: eligible,
     electionsValidConfirmed: known(data.electionsValidConfirmed, "exclusion election validity including revocations and IRS consent"),
     claimForeignEarnedIncomeExclusion: known(data.claimForeignEarnedIncomeExclusion, "foreign earned income exclusion election"),
@@ -229,7 +233,7 @@ export function buildForeignIncomeInput(data: ForeignIncomeData | undefined, sta
     foreignEarnedIncomeTaxWorksheetDisallowedDeductions: money(data.foreignEarnedIncomeTaxWorksheetDisallowedDeductions, "itemized deductions disallowed for excluded foreign income"),
     priorYearHousingDeductionCarryover: carry, priorYearIncomeExclusion: priorExclusion, priorYearIncomeReceived: priorReceived.toFixed(),
     ...(priorHousingApplies ? { priorYearHousingCarryoverTaxYear: integer(data.priorYearHousingCarryoverTaxYear, "prior housing source year", year - 1, year - 1), priorYearHousingCarryoverConfirmed: true } : {}),
-    ...(priorIncomeApplies ? { priorYearIncomeExclusionTaxYear: integer(data.priorYearIncomeExclusionTaxYear, "prior service source year", year - 1, year - 1), priorYearIncomeStatementConfirmed: true, priorYearIncomeAlreadyReportedConfirmed: true, priorYearUnusedExclusion: money(data.priorYearUnusedExclusion, "actual prior unused exclusion") } : {}),
+    ...(priorIncomeApplies ? { priorYearIncomeExclusionTaxYear: integer(data.priorYearIncomeExclusionTaxYear, "prior service source year", year - 1, year - 1), priorYearIncomeStatementConfirmed: true, priorYearIncomeAlreadyReportedConfirmed: true, priorYearUnusedExclusion: money(data.priorYearUnusedExclusion, "actual prior unused exclusion"), priorYearIncomeReference: data.priorYearIncomeReference.trim(), priorYearEligibilityAndElectionConfirmed: data.priorYearEligibilityAndElectionConfirmed ?? undefined } : {}),
   });
   resolveForm2555Sources({ ...context, form2555: result });
   calculateForm2555(result, year === 2026 ? FEDERAL_2026_CONSTANTS : getConstants(2025));

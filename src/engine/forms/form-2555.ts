@@ -51,6 +51,7 @@ function sourceAmount(value: string | undefined, name: string, required = true):
   return result;
 }
 const amount = (value: string | undefined, name: string, required = true) => roundDollar(sourceAmount(value, name, required));
+const priorServiceAnnualLimit = { 2024: "126500", 2025: "130000" } as const;
 
 function housingLimit(input: Form2555Input, year: 2025 | 2026): Decimal {
   const defaults = year === 2025 ? { annual: "39000", daily: "106.85" } : { annual: "39870", daily: "109.23" };
@@ -162,16 +163,27 @@ export function calculateForm2555(input: Form2555Input, constants: YearConstants
   const incomeAvailableForExclusion = zeroFloor(foreignEarnedIncome.minus(housingExclusion));
   const foreignEarnedIncomeExclusion = claimFEIE ? min(incomeAvailableForExclusion, proratedMaximumExclusion) : d(0);
   const totalExclusion = foreignEarnedIncomeExclusion.plus(housingExclusion);
-  const allocableDeductions = amount(input.deductionsAllocableToExcludedIncome, "deductions allocable to excluded income", strict);
+  const rawAllocableDeductions = sourceAmount(input.deductionsAllocableToExcludedIncome, "deductions allocable to excluded income", strict);
   // Pub54 Example4 permits line44 above43: signed45 is a positive Schedule1 addback.
-  const priorIncome = amount(input.priorYearIncomeExclusion, "prior-year income exclusion", strict);
-  if (priorIncome.gt(0)) {
+  const rawPriorIncome = sourceAmount(input.priorYearIncomeExclusion, "prior-year income exclusion", strict);
+  if (rawPriorIncome.gt(0)) {
     if (input.priorYearIncomeExclusionTaxYear !== taxYear - 1 || input.priorYearIncomeStatementConfirmed !== true || input.priorYearIncomeAlreadyReportedConfirmed !== true) throw new Error("Form2555 prior-year income exclusion requires the actual preceding-year computation statement");
-    const received = amount(input.priorYearIncomeReceived, "prior-year earned income received this year");
-    const available = amount(input.priorYearUnusedExclusion, "prior-year remaining exclusion from actual recomputation");
-    if (!priorIncome.eq(min(received, available))) throw new Error("Form2555 prior-year statement exclusion does not reconcile to received income and unused exclusion");
+    if (input.electionsValidConfirmed === false) throw new Error("Form2555 prior-service exclusion with an invalid or revoked current election requires separate review");
+    if (input.priorYearEligibilityAndElectionConfirmed !== true || !input.priorYearIncomeReference?.trim()) {
+      throw new Error("Form2555 requires actual preceding-year eligibility and a valid earned income exclusion election with the recomputation reference");
+    }
+    const received = sourceAmount(input.priorYearIncomeReceived, "prior-year earned income received this year");
+    const available = sourceAmount(input.priorYearUnusedExclusion, "prior-year remaining exclusion from actual recomputation");
+    const serviceYearLimit = priorServiceAnnualLimit[taxYear === 2025 ? 2024 : 2025];
+    if (available.gt(serviceYearLimit)) throw new Error("Form2555 preceding-year unused exclusion exceeds the annual limit");
+    if (!rawPriorIncome.eq(min(received, available))) throw new Error("Form2555 prior-year statement exclusion does not reconcile to exact received income and unused exclusion");
   }
-  const netExclusion = eligible ? totalExclusion.minus(allocableDeductions).plus(priorIncome) : d(0);
+  const priorIncome = strict || eligible ? roundDollar(rawPriorIncome) : d(0);
+  if (strict && rawAllocableDeductions.gt(0) && totalExclusion.isZero() && rawPriorIncome.isZero()) {
+    throw new Error("Form2555 deductions allocable to excluded income require a reported exclusion");
+  }
+  const allocableDeductions = eligible || priorIncome.gt(0) ? roundDollar(rawAllocableDeductions) : d(0);
+  const netExclusion = totalExclusion.minus(allocableDeductions).plus(priorIncome);
   record("37", "Maximum foreign earned income exclusion", maximumExclusion, `Indexed limit for${taxYear}`);
   record("38", "Qualifying days", d(input.qualifyingDays), "Actual days in calendar tax year");
   record("39", "Qualifying fraction", fraction, "38/365, twelve decimal places");
@@ -179,7 +191,7 @@ export function calculateForm2555(input: Form2555Input, constants: YearConstants
   record("41", "Income available for earned income exclusion", incomeAvailableForExclusion, "27-36; no housing deduction subtraction");
   record("42", "Foreign earned income exclusion", foreignEarnedIncomeExclusion, "min40,41 if eligible and elected");
   record("43", "Gross combined exclusions", totalExclusion, "36+42");
-  record("44", "Deductions allocable to excluded income", eligible ? allocableDeductions : d(0), "Actual disallowed AGI deductions computation");
+  record("44", "Deductions allocable to excluded income", allocableDeductions, "Actual disallowed AGI deductions computation");
   record("45", "Net foreign income exclusion", netExclusion, "43-44 plus actual prior-year exclusion statement; negative Schedule1line8d");
   const selfEmploymentHousing = input.isSelfEmployed ? zeroFloor(housingAmount.minus(housingExclusion)) : d(0);
   const deductionLimit = zeroFloor(foreignEarnedIncome.minus(totalExclusion));

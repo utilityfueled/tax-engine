@@ -18,6 +18,29 @@ describe('Form8960 actual return sources', () => {
     expect(result.form8960.niitTax.toString()).toBe('760');
     expect(() => calculateFederalTax(TaxYearInputSchema.parse({ ...actual, form8960Sources: { ...actual.form8960Sources, feieAllocableDeductions: '8000' } }))).toThrow(/allocation|allocable/);
   });
+
+  it('rejects an FEIE deduction allocation for a housing-only exclusion', () => {
+    const base = input('20000', '40000');
+    const form2555 = {
+      foreignEarnedIncome: '150000', qualifyingDays: 365, totalDaysInYear: 365,
+      qualifiedHousingExpenses: '30000', employerProvidedForeignEarnedIncome: '150000', isSelfEmployed: false,
+      claimForeignEarnedIncomeExclusion: false, deductionsAllocableToExcludedIncome: '7000',
+      foreignEarnedIncomeTaxWorksheetDisallowedDeductions: '0',
+    };
+    const result = calculateFederalTax({ ...base, form2555 });
+    expect(result.form2555?.housingExclusion.toFixed()).toBe('9200');
+    expect(result.form2555?.foreignEarnedIncomeExclusion.toFixed()).toBe('0');
+    expect(result.form8960.magi.eq(result.agi)).toBe(true);
+    const allocation = {
+      sourceTaxYear: 2025, sourceReference: 'Synthetic NIIT worksheet', sourceFactsConfirmed: true,
+      feieAllocableDeductions: '7000',
+    };
+    const claimed = TaxYearInputSchema.parse({ ...base, form2555, form8960Sources: allocation });
+    expect(() => calculateFederalTax(claimed)).toThrow(/allocation.*exclusion/i);
+    const confirmedZero = TaxYearInputSchema.parse({ ...base, form2555, form8960Sources: { ...allocation, feieAllocableDeductions: '0' } });
+    expect(calculateFederalTax(confirmedZero).form8960.magi.eq(result.agi)).toBe(true);
+  });
+
   it('requires actual business-disposition adjustments and reconciles both return components', () => {
     const base = TaxYearInputSchema.parse({ ...input('20000', '40000'), form4797: { propertySales: [{ description: 'Actual nonpassive business equipment', costOrBasis: '10000', depreciationAllowed: '8000', grossSalesPrice: '6000', propertyType: 'section1245', heldMoreThanOneYear: true }] } });
     expect(() => calculateFederalTax(base)).toThrow(/disposition.*source|source.*disposition/i);

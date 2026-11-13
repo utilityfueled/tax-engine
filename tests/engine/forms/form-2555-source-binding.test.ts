@@ -1,4 +1,4 @@
-// Spec: spec/federal/form-2555-source-binding.yaml. Actual synthetic USD sources.
+// Specs: spec/federal/form-2555-source-binding.yaml and spec/federal/form-8960.yaml.
 import { expect, it } from "vitest";
 import Decimal from "decimal.js";
 import { resolveForm2555Sources } from "@/engine/forms/form-2555-source-binding.js";
@@ -38,7 +38,7 @@ it("binds actual owner year and canonical source identity", () => {
 });
 it("conserves exact current and prior receipts without duplicate income", () => {
   const facts = source(); facts.priorYearIncomeExclusion = "10000";
-  Object.assign(facts, { priorYearIncomeExclusionTaxYear: 2024, priorYearIncomeStatementConfirmed: true, priorYearIncomeAlreadyReportedConfirmed: true, priorYearIncomeReceived: "10000", priorYearUnusedExclusion: "10000" });
+  Object.assign(facts, { priorYearIncomeExclusionTaxYear: 2024, priorYearIncomeStatementConfirmed: true, priorYearIncomeAlreadyReportedConfirmed: true, priorYearIncomeReceived: "10000", priorYearUnusedExclusion: "10000", priorYearEligibilityAndElectionConfirmed: true, priorYearIncomeReference: "Synthetic service-year recomputation" });
   Object.assign(facts.sourceMapping.rows[0], { priorYearIncomeReceived: "10000" });
   expect(resolveForm2555Sources(input({ form2555: facts })).priorYearIncomeReceived.toFixed()).toBe("10000");
   const short = input({ form2555: facts }); if (!short.w2s[0]) throw new Error("Missing W2"); short.w2s[0].wages = "129999.99";
@@ -98,6 +98,35 @@ it("preserves unknown legacy sources and rejects incomplete actual records", () 
   const missing = source() as Record<string, unknown>; delete missing.accountHolder;
   expect(() => resolveForm2555Sources(input({ form2555: missing }))).toThrow(/owner/i);
 });
+it("requires bound payroll before applying a positive prior-service claim", () => {
+  const facts = source();
+  Object.assign(facts, {
+    priorYearIncomeExclusion: "8000", priorYearIncomeExclusionTaxYear: 2024, priorYearIncomeStatementConfirmed: true,
+    priorYearIncomeAlreadyReportedConfirmed: true, priorYearIncomeReceived: "10000", priorYearUnusedExclusion: "8000",
+    priorYearEligibilityAndElectionConfirmed: true, priorYearIncomeReference: "Synthetic service-year recomputation",
+  });
+  facts.sourceMapping.rows[0].priorYearIncomeReceived = "10000";
+  expect(resolveForm2555Sources(input({ form2555: facts })).priorYearIncomeReceived.toFixed()).toBe("10000");
+  expect(() => calculateFederalTax(input({ form2555: { ...facts, sourceFactsConfirmed: false } }))).toThrow(/prior.*confirmed/i);
+  const { accountHolder: _owner, sourceMapping: _mapping, ...legacy } = facts;
+  expect(() => calculateFederalTax(input({ form2555: legacy }))).toThrow(/prior.*original.*W2/i);
+
+  facts.isSelfEmployed = true;
+  facts.employerProvidedForeignEarnedIncome = "0";
+  facts.incomeSources.foreignEmploymentIncomeIncludedOnW2 = "0";
+  facts.incomeSources.foreignBusinessIncomeAlreadyReported = "120000";
+  facts.partIV.wages = "0";
+  facts.partIV.businessPersonalServices = "120000";
+  Object.assign(facts.sourceMapping.rows[0], {
+    sourceId: "scheduleC", payerName: "Synthetic Services", capitalMaterialIncomeFactor: false,
+    businessGrossReceipts: "140000", businessReturnsAndAllowances: "0", businessCostOfGoodsSold: "0", businessOtherIncome: "0",
+  });
+  const business = input({ form2555: facts, scheduleC: {
+    businessName: "Synthetic Services", accountHolder: "primary", ein: "12-3456789", grossReceipts: "140000",
+    returnsAndAllowances: "0", costOfGoodsSold: "0", otherIncome: "0",
+  } });
+  expect(() => resolveForm2555Sources(business)).toThrow(/prior.*business.*allocation/i);
+});
 it("validates actual sources before canonical exclusion and tax stacking", () => {
   const result = calculateFederalTax(input());
   expect(result.totalWages.toFixed()).toBe("160000"); expect(result.agi.toFixed()).toBe("40000");
@@ -108,6 +137,53 @@ it("validates actual sources before canonical exclusion and tax stacking", () =>
   expect(calculateFederalTax(other).totalWages.toFixed()).toBe("160000");
   const changed = input(); if (!changed.w2s[0]) throw new Error("Missing W2"); changed.w2s[0].accountHolder = "spouse";
   expect(() => calculateFederalTax(changed)).toThrow(/owner/i);
+});
+
+it("reports prior-service exclusion in the receipt year without removing original gross wages", () => {
+  const base = source();
+  const facts = { ...base, foreignEarnedIncome: "0", qualifyingDays: 0, employerProvidedForeignEarnedIncome: "0",
+    partIV: { ...base.partIV, wages: "0" }, incomeSources: { ...base.incomeSources, foreignEmploymentIncomeIncludedOnW2: "0" },
+    priorYearIncomeExclusion: "8000", priorYearIncomeExclusionTaxYear: 2024, priorYearIncomeStatementConfirmed: true,
+    priorYearIncomeAlreadyReportedConfirmed: true, priorYearIncomeReceived: "10000", priorYearUnusedExclusion: "8000",
+    priorYearEligibilityAndElectionConfirmed: true, priorYearIncomeReference: "Synthetic service-year recomputation",
+    sourceMapping: { ...base.sourceMapping, rows: [{ ...base.sourceMapping.rows[0], foreignEarnedIncome: "0", priorYearIncomeReceived: "10000" }] } };
+  const result = calculateFederalTax(input({ form2555: facts }));
+  expect(result.totalWages.toFixed()).toBe("160000");
+  expect(result.form2555?.foreignEarnedIncome.toFixed()).toBe("0");
+  expect(result.form2555?.netExclusion.toFixed()).toBe("8000");
+  expect(result.schedule1.lines.find(line => line.form === "Sched 1" && line.line === "8d")?.value.toFixed()).toBe("-8000");
+  expect(result.agi.toFixed()).toBe("152000");
+  expect(result.allLines.find(line => line.form === "FEI Tax WS" && line.line === "2a")?.value.toFixed()).toBe("8000");
+  const noClaims = { ...base, claimForeignEarnedIncomeExclusion: false, deductionsAllocableToExcludedIncome: "700" };
+  expect(() => calculateFederalTax(input({ form2555: noClaims }))).toThrow(/allocable.*exclusion/i);
+});
+
+it("adds back the preceding-year services exclusion when calculating NIIT", () => {
+  const original = input({ form1099Int: [{ payer: "Synthetic Bank", interestIncome: "10000" }] });
+  const w2 = original.w2s[0];
+  const facts = original.form2555;
+  if (!w2 || !facts?.partIV || !facts.incomeSources) throw new Error("Missing source fixture");
+  w2.wages = "195000";
+  w2.medicareWages = "195000";
+  w2.medicareWithheld = "2827.50";
+  const withoutExclusion = calculateFederalTax({ ...original, form2555: undefined });
+  expect(withoutExclusion.agi.toFixed()).toBe("205000");
+  expect(withoutExclusion.niitTax.toFixed()).toBe("190");
+
+  Object.assign(facts, {
+    foreignEarnedIncome: "0", employerProvidedForeignEarnedIncome: "0", qualifyingDays: 0,
+    priorYearIncomeExclusion: "8000", priorYearIncomeExclusionTaxYear: 2024,
+    priorYearIncomeStatementConfirmed: true, priorYearIncomeAlreadyReportedConfirmed: true,
+    priorYearIncomeReceived: "10000", priorYearUnusedExclusion: "8000",
+    priorYearEligibilityAndElectionConfirmed: true, priorYearIncomeReference: "Synthetic service-year recomputation",
+  });
+  facts.partIV.wages = facts.incomeSources.foreignEmploymentIncomeIncludedOnW2 = "0";
+  Object.assign(firstSource(facts), { foreignEarnedIncome: "0", priorYearIncomeReceived: "10000" });
+  const result = calculateFederalTax(original);
+  expect(result.agi.toFixed()).toBe("197000");
+  expect(result.form2555?.foreignEarnedIncomeExclusion.toFixed()).toBe("0");
+  expect(result.form8960.magi.toFixed()).toBe("205000");
+  expect(result.niitTax.toFixed()).toBe("190");
 });
 
 it("supports one actual spouse source and rejects household substitution", () => {

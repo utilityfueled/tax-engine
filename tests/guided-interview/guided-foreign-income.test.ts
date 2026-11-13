@@ -72,10 +72,25 @@ it("preserves housing and prior-income sources without inferred amounts", () => 
   expect(() => build({ ...data, housingLocationPeriods: [] })).toThrow(/location|housing/i);
   data.sources[0].priorYearIncomeReceived = "1000.50"; data.priorYearIncomeExclusion = "1000.50"; data.priorYearIncomeExclusionTaxYear = "2024";
   data.priorYearIncomeStatementConfirmed = true; data.priorYearIncomeAlreadyReportedConfirmed = true; data.priorYearUnusedExclusion = "2000"; data.priorYearIncomeReference = "Actual prior-year exclusion statement";
+  Object.assign(data, { priorYearEligibilityAndElectionConfirmed: true });
   expect(build(data)?.priorYearIncomeReceived).toBe("1000.5");
   expect(() => build({ ...data, priorYearUnusedExclusion: "" })).toThrow(/prior|unused/i);
   expect(() => build({ ...data, housingNoDuplicateClaimConfirmed: false })).toThrow(/duplicate|housing/i);
   expect(() => build({ ...data, nontaxableGovernmentHousingAllowance: "1" })).toThrow(/government|allowance/i);
+});
+it("requires a separate service-year exclusion election and persists its actual reference", () => {
+  const data = foreignIncomeFixture();
+  data.sources[0].priorYearIncomeReceived = "1000.50";
+  Object.assign(data, {
+    priorYearIncomeExclusion: "1000.50", priorYearIncomeExclusionTaxYear: "2024", priorYearUnusedExclusion: "2000",
+    priorYearIncomeStatementConfirmed: true, priorYearIncomeAlreadyReportedConfirmed: true,
+    priorYearIncomeReference: "Synthetic service-year exclusion recomputation",
+  });
+  expect(() => build(data)).toThrow(/preceding-year.*eligibility.*election/i);
+  Object.assign(data, { priorYearEligibilityAndElectionConfirmed: true });
+  expect(build(data)).toMatchObject({
+    priorYearEligibilityAndElectionConfirmed: true, priorYearIncomeReference: data.priorYearIncomeReference,
+  });
 });
 it("calculates actual foreign income once through the canonical return", () => {
   const state = foreignIncomeState(); expect(validateSection(state, "adjustments").status).toBe("complete");

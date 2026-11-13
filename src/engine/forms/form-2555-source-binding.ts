@@ -31,7 +31,15 @@ export function resolveForm2555Sources(input: Form2555SourceContext) {
   if (!facts) return empty;
   const year = input.taxpayer.taxYear;
   const source = facts.sourceMapping;
-  if (!source && facts.accountHolder === undefined && year === 2025) return empty;
+  const priorExclusion = facts.priorYearIncomeExclusion === undefined ? new Decimal(0)
+    : amount(facts.priorYearIncomeExclusion, "prior-year income exclusion");
+  if (!source && facts.accountHolder === undefined && year === 2025) {
+    if (priorExclusion.gt(0)) throw new Error("Form2555 prior-service exclusion requires the original W2 income sources");
+    return empty;
+  }
+  if (priorExclusion.gt(0) && facts.sourceFactsConfirmed !== true) {
+    throw new Error("Form2555 prior-service exclusion requires the original worksheet to be confirmed");
+  }
   if (!source || !source.sourceReference.trim() || source.sourceFactsConfirmed !== true || source.allSourcesIncluded !== true || source.oneOwnerOnlyConfirmed !== true) {
     throw new Error("Form2555 requires complete confirmed original sources for one taxpayer; two-owner claims need separate forms");
   }
@@ -71,6 +79,9 @@ export function resolveForm2555Sources(input: Form2555SourceContext) {
       if (combined.gt(amount(original.wages, "original W2 Box1 wages"))) throw new Error("Form2555 current and prior foreign receipts exceed the original W2 income");
       key = "foreignEmploymentIncomeIncludedOnW2";
     } else if (row.sourceId === "scheduleC") {
+      if (priorExclusion.gt(0) && priorReceived.gt(0)) {
+        throw new Error("Form2555 prior business services require a separate receipt-year expense allocation");
+      }
       const business = input.scheduleC;
       if (!business || business.accountHolder !== owner) throw new Error("Form2555 requires the actual ScheduleC owner");
       if (!sameName(row.payerName, business.businessName) || (row.payerEin !== undefined && ein(row.payerEin) !== ein(business.ein))) throw new Error("Form2555 actual business identity does not reconcile");
@@ -139,7 +150,7 @@ export function resolveForm2555Sources(input: Form2555SourceContext) {
   for (const key of incomeKeys) if (!sums[key].eq(mapped[key])) throw new Error(`Form2555 original sources do not reconcile ${key}`);
   const current = Object.values(sums).reduce((total, value) => total.plus(value), new Decimal(0));
   if (!current.eq(amount(facts.foreignEarnedIncome, "current foreign earned income"))) throw new Error("Form2555 original receipts do not reconcile current foreign earned income");
-  const priorExclusion = amount(facts.priorYearIncomeExclusion, "prior-year income exclusion");
+  if (facts.priorYearIncomeExclusion === undefined) throw new Error("Form2555 requires actual prior-year income exclusion, including known zero");
   if (facts.priorYearIncomeReceived !== undefined || prior.gt(0) || priorExclusion.gt(0)) {
     if (!prior.eq(amount(facts.priorYearIncomeReceived, "prior-year services received this year"))) throw new Error("Form2555 original sources do not reconcile prior-year income received");
     if (priorExclusion.gt(prior)) throw new Error("Form2555 prior exclusion exceeds income actually included in current gross income");

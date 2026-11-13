@@ -5059,6 +5059,8 @@ export const Form2555Schema = z.preprocess(value => {
   priorYearIncomeExclusion: decimal.optional(),
   priorYearIncomeExclusionTaxYear: z.number().int().optional(),
   priorYearIncomeStatementConfirmed: z.boolean().optional(),
+  priorYearEligibilityAndElectionConfirmed: z.boolean().optional(),
+  priorYearIncomeReference: z.string().min(1).optional(),
   priorYearIncomeAlreadyReportedConfirmed: z.boolean().optional(),
   priorYearIncomeReceived: decimal.optional(),
   priorYearUnusedExclusion: decimal.optional(),
