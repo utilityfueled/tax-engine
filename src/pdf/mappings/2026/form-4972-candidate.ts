@@ -2,11 +2,15 @@
  * Final 2026 Form 4972 physical mapping candidate, Created 11/6/26.
  * Spec: spec/federal/form-4972-2026-template.yaml.
  */
+import { StandardFonts, type PDFDocument } from "pdf-lib";
 import { calculateForm4972, type Form4972Input } from "@/engine/forms/form-4972.js";
 import { d, roundDollar } from "@/utils/decimal.js";
 
 const page1 = "topmostSubform[0].Page1[0].";
 const page3 = "topmostSubform[0].Page3[0].";
+const nuaWorksheetFields = Array.from({ length: 8 }, (_, offset) =>
+  `${page3}NUAWorksheet_ReadOrder[0].f3_${String(offset + 4).padStart(2, "0")}[0]`);
+type NuaAnnotation = { line: "6" | "8"; text: string };
 const page1Money = {
   line6: `${page1}f1_03[0]`,
   line7: `${page1}f1_04[0]`,
@@ -68,25 +72,34 @@ export const FORM_4972_2026_CANDIDATE = Object.freeze({
     `${page3}Col3[0].A[0].f3_01[0]`,
     `${page3}Col3[0].B[0].f3_02[0]`,
     `${page3}Col3[0].C[0].f3_03[0]`,
-    ...Array.from({ length: 8 }, (_, offset) => `${page3}NUAWorksheet_ReadOrder[0].f3_${String(offset + 4).padStart(2, "0")}[0]`),
+    ...nuaWorksheetFields,
     ...Array.from({ length: 7 }, (_, offset) => `${page3}DeathBenefitsWorksheet_ReadOrder[0].f3_${offset + 12}[0]`),
   ]),
 });
 
+const reconciliationError = "Form 4972 cannot reconcile the elected parts in whole dollars";
+
+function displayedRatio(ratio: ReturnType<typeof d>, base: ReturnType<typeof d>, result: ReturnType<typeof d>) {
+  const displayed = [3, 4, 5, 6].map(places => ratio.toFixed(places)).find(candidate =>
+    roundDollar(base.times(candidate)).eq(result));
+  if (!displayed) throw new Error(reconciliationError);
+  return displayed.split(".");
+}
+
 function projectElectionAmounts(source: Form4972Input) {
   const exact = calculateForm4972(source);
-  if (!d(source.netUnrealizedAppreciation).isZero()) {
-    throw new Error("The Form 4972 physical candidate requires confirmed zero Box 6");
-  }
   const rounded = (value: string) => roundDollar(d(value)).toFixed(0);
   const capitalGain = rounded(source.capitalGain);
-  const reconciliationError = "Form 4972 cannot reconcile the elected parts in whole dollars";
-  if (exact.line6 && capitalGain === "0") throw new Error(reconciliationError);
+  const netUnrealizedAppreciation = rounded(source.netUnrealizedAppreciation);
+  const includesNua = source.sourceKind !== "death_beneficiary" && source.nuaTreatment === "include"
+    && d(source.netUnrealizedAppreciation).gt(0);
+  if ((exact.line6 && capitalGain === "0") || (includesNua && netUnrealizedAppreciation === "0")) throw new Error(reconciliationError);
   const printed = calculateForm4972({
     ...source,
     grossDistribution: rounded(source.grossDistribution),
     taxableAmount: rounded(source.taxableAmount),
     capitalGain,
+    netUnrealizedAppreciation,
     actuarialValue: rounded(source.actuarialValue),
   });
   const sameLines = exact.lines.length === printed.lines.length && exact.lines.every((line, index) =>
@@ -98,9 +111,10 @@ function projectElectionAmounts(source: Form4972Input) {
     exact.lines.map(({ line, value }) => [`line${line}`, roundDollar(value)]),
   );
   const shownAllowance = line16 ?? d(0);
+  const shownIncludedNua = includesNua ? d(netUnrealizedAppreciation) : d(0);
   const roundedFormulasAgree = (!line6 || (line6.gt(0) && roundDollar(line6.times("0.20")).eq(line7)))
     && (!line13 || (line13.minus(line15).eq(line16) && roundDollar(line14.times("0.20")).eq(line15)))
-    && (!line8 || (roundDollar(d(source.taxableAmount)).minus(line6 ?? d(0)).eq(line8)
+    && (!line8 || (roundDollar(d(source.taxableAmount)).plus(shownIncludedNua).minus(line6 ?? d(0)).eq(line8)
       && line10.plus(line11).eq(line12)
       && line12.minus(shownAllowance).eq(line17) && line19.times("0.10").eq(line23)
       && line24.times(10).eq(line25)));
@@ -121,16 +135,40 @@ function projectElectionAmounts(source: Form4972Input) {
     text[page1Money[key as keyof typeof page1Money]] = roundDollar(value).toFixed(0);
   }
   if (line21) {
-    const ratio = line11.dividedBy(line12);
-    const displayed = [3, 4, 5, 6].map(places => ratio.toFixed(places)).find(candidate =>
-      roundDollar(shownAllowance.times(candidate)).eq(line21));
-    if (!displayed) throw new Error(reconciliationError);
-    const [whole, fraction] = displayed.split(".");
+    const [whole, fraction] = displayedRatio(line11.dividedBy(line12), shownAllowance, line21);
     const { fields } = FORM_4972_2026_CANDIDATE;
     text[fields.line20Whole] = whole;
     text[fields.line20Fraction] = fraction;
   }
-  return text;
+
+  const annotations: NuaAnnotation[] = [];
+  let ordinaryNua = shownIncludedNua;
+  if (exact.nuaWorksheet) {
+    const printedWorksheet = printed.nuaWorksheet;
+    const [a, b, , box6, capital, ordinary, total] = exact.nuaWorksheet.map(row => roundDollar(row.value));
+    if (!printedWorksheet || !exact.nuaWorksheet.every((row, index) =>
+      row.line === "C" || roundDollar(row.value).eq(roundDollar(printedWorksheet[index].value)))
+      || !box6.minus(capital).eq(ordinary) || !a.plus(capital).eq(total)) throw new Error(reconciliationError);
+    const [whole, fraction] = displayedRatio(a.dividedBy(b), box6, capital);
+    const values = [a.toFixed(0), b.toFixed(0), whole, fraction, box6.toFixed(0), capital.toFixed(0), ordinary.toFixed(0), total.toFixed(0)];
+    nuaWorksheetFields.forEach((field, index) => { text[field] = values[index]; });
+    annotations.push({ line: "6", text: `NUA ${capital.toFixed(0)}` });
+    ordinaryNua = ordinary;
+  }
+  if (line8 && includesNua) annotations.push({ line: "8", text: `NUA ${ordinaryNua.toFixed(0)}` });
+  return { text, annotations };
+}
+
+export async function drawForm49722026Annotations(pdf: PDFDocument, annotations: readonly NuaAnnotation[]) {
+  if (!annotations.length) return;
+  const font = await pdf.embedFont(StandardFonts.Helvetica);
+  const page = pdf.getPage(0);
+  const size = 7;
+  for (const { line, text } of annotations) {
+    const width = font.widthOfTextAtSize(text, size);
+    if (width > 60) throw new Error("Form 4972 appreciation annotation exceeds the printed space");
+    page.drawText(text, { x: 481 - width, y: line === "6" ? 485 : 389, font, size });
+  }
 }
 
 export function projectForm49722026OwnPlan(source: Form4972Input) {
@@ -139,7 +177,7 @@ export function projectForm49722026OwnPlan(source: Form4972Input) {
   }
   const { fields } = FORM_4972_2026_CANDIDATE;
   return {
-    text: projectElectionAmounts(source),
+    ...projectElectionAmounts(source),
     checked: [fields.line1Yes, fields.line2No, fields.line3No, fields.line4Yes, fields.line5aNo],
   };
 }
@@ -158,7 +196,7 @@ export function projectForm49722026DeathBeneficiary(source: Form4972Input, answe
   const { fields } = FORM_4972_2026_CANDIDATE;
   const ownPlanHistory = answers.recipientUsedForm4972ForOwnPlanAfter1986 ? fields.line5aYes : fields.line5aNo;
   return {
-    text: projectElectionAmounts(source),
+    ...projectElectionAmounts(source),
     checked: [fields.line1Yes, fields.line2No, fields.line3Yes, fields.line4No, ownPlanHistory, fields.line5bNo],
   };
 }

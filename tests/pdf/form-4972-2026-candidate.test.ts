@@ -2,7 +2,7 @@
 import { createHash } from "node:crypto";
 import { readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import { PDFArray, PDFBool, PDFCheckBox, PDFDict, PDFDocument, PDFName, PDFRef, PDFStream, PDFTextField } from "pdf-lib";
+import { PDFArray, PDFBool, PDFCheckBox, PDFDict, PDFDocument, PDFName, PDFRawStream, PDFRef, PDFStream, PDFTextField, decodePDFRawStream } from "pdf-lib";
 import { expect, it } from "vitest";
 import type { Form4972Input } from "@/engine/forms/form-4972.js";
 import { assertPdfExportAllowed, markReviewPdf, PDF_MAPPING_PACKS } from "@/pdf/export-policy.js";
@@ -33,6 +33,10 @@ const beneficiaryElection = {
 const beneficiaryAnswers = { recipientIsParticipantForThisDistribution: false, recipientUsedForm4972ForOwnPlanAfter1986: false };
 const annuityElection = {
   ...election, sourceKind: "own_plan", taxableAmount: "11000", actuarialValue: "2000", lumpSumAnnuityValueConfirmed: true,
+} satisfies Form4972Input;
+const appreciationElection = {
+  ...annuityElection, taxableAmount: "8000", capitalGain: "2000", actuarialValue: "0",
+  netUnrealizedAppreciation: "8000", nuaTreatment: "include",
 } satisfies Form4972Input;
 
 it("holds the beneficiary method outside the own-plan physical map", () => {
@@ -125,9 +129,29 @@ it("holds amounts that cannot reconcile in whole dollars", () => {
   expect(() => projectForm49722026OwnPlan({ ...election, entireBalanceConfirmed: false })).toThrow(/confirmed eligibility/u);
 });
 
-it("holds positive Box 6 outside the physical review map", () => {
-  expect(() => projectForm49722026OwnPlan({ ...annuityElection, netUnrealizedAppreciation: "1000", nuaTreatment: "include" }))
-    .toThrow(/physical.*zero Box 6/u);
+it("projects the elected own-plan appreciation and printed annotations", () => {
+  const combined = projectForm49722026OwnPlan(appreciationElection);
+  expect(combined.annotations).toEqual([{ line: "6", text: "NUA 2000" }, { line: "8", text: "NUA 6000" }]);
+  expect(combined.text).toMatchObject({ [fields.line6]: "4000", [fields.line8]: "12000", [fields.line30]: "1460" });
+  expect(instructionFields.slice(3, 11).map(name => combined.text[name])).toEqual([
+    "2000", "8000", "0", "250", "8000", "2000", "6000", "4000",
+  ]);
+  const partII = projectForm49722026OwnPlan({ ...appreciationElection, election: "capital_gain" });
+  expect(partII.annotations).toEqual([{ line: "6", text: "NUA 2000" }]);
+  expect(partII.text[fields.line8]).toBeUndefined();
+  const partIII = projectForm49722026OwnPlan({ ...appreciationElection, election: "ten_year" });
+  expect(partIII.annotations).toEqual([{ line: "8", text: "NUA 8000" }]);
+  expect(partIII.text[fields.line8]).toBe("16000");
+  expect(instructionFields.every(name => !Object.hasOwn(partIII.text, name))).toBe(true);
+  const deferred = projectForm49722026OwnPlan({ ...appreciationElection, nuaTreatment: "defer" });
+  expect(deferred.annotations).toEqual([]);
+  expect(deferred.text).toMatchObject({ [fields.line6]: "2000", [fields.line8]: "6000", [fields.line30]: "730" });
+  expect(instructionFields.every(name => !Object.hasOwn(deferred.text, name))).toBe(true);
+});
+
+it("holds a rounded appreciation election that changes the shown amounts", () => {
+  expect(() => projectForm49722026OwnPlan({ ...appreciationElection, netUnrealizedAppreciation: "7999.49" }))
+    .toThrow(/reconcile/u);
 });
 
 it("projects the confirmed beneficiary and separate own-plan answers", () => {
@@ -173,6 +197,7 @@ async function verifySavedSpecimen(projection: ReturnType<typeof projectForm4972
   const form = pdf.getForm();
   for (const [name, value] of Object.entries(projection.text)) form.getTextField(name).setText(value);
   for (const name of projection.checked) form.getCheckBox(name).check();
+  if (projection.annotations?.length) await form4972Candidate.drawForm49722026Annotations(pdf, projection.annotations);
   await markReviewPdf(pdf);
   const bytes = await pdf.save();
   const reopened = await PDFDocument.load(bytes);
@@ -187,6 +212,14 @@ async function verifySavedSpecimen(projection: ReturnType<typeof projectForm4972
       const stream = reopened.context.lookup(ref);
       return stream instanceof PDFStream && stream.dict.get(PDFName.of("TaxEngineReviewNotice")) === PDFBool.True;
     })).toBe(true);
+  }
+  const firstPageContents = reopened.getPage(0).node.normalizedEntries().Contents?.asArray() ?? [];
+  const pageTextOperators = firstPageContents.map(ref => reopened.context.lookup(ref))
+    .filter((stream): stream is PDFRawStream => stream instanceof PDFRawStream)
+    .map(stream => Buffer.from(decodePDFRawStream(stream).decode()).toString("ascii")).join("\n");
+  for (const { text } of projection.annotations ?? []) {
+    const hex = Buffer.from(text, "ascii").toString("hex").toUpperCase();
+    expect(pageTextOperators).toContain(`<${hex}> Tj`);
   }
   for (const field of result.getFields()) {
     const name = field.getName();
@@ -217,6 +250,10 @@ it("reopens the marked beneficiary specimen", async () => {
 it("reopens the marked own-plan annuity specimen", async () => {
   await verifySavedSpecimen(projectForm49722026OwnPlan({ ...annuityElection, taxableAmount: "15000", actuarialValue: "2000" }),
     "form-4972-own-plan-annuity-review.pdf");
+});
+
+it("reopens the marked own-plan appreciation specimen", async () => {
+  await verifySavedSpecimen(projectForm49722026OwnPlan(appreciationElection), "form-4972-own-plan-appreciation-review.pdf");
 });
 
 it("keeps annual review and filing exports unavailable", () => {

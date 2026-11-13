@@ -25,11 +25,25 @@ lines:
       5b, 9 and 18 blank for the participant's own distribution. Leave the
       instruction worksheets and both identity fields blank. Reject rounding
       that changes the branch or prevents the printed amounts from reconciling.
-      Hold positive Box 6 pending worksheet and dotted-line annotation mapping.
     testRef: "tests/pdf/form-4972-2026-candidate.test.ts::projects only the applicable cells of each election"
     testRefs:
       - "tests/pdf/form-4972-2026-candidate.test.ts::holds amounts that cannot reconcile in whole dollars"
-      - "tests/pdf/form-4972-2026-candidate.test.ts::holds positive Box 6 outside the physical review map"
+  - line: "6, 8 and NUA A-G"
+    description: "Project the confirmed own-plan appreciation election"
+    formula: >-
+      For deferral leave the dotted-line annotations and worksheet blank.
+      For inclusion with Part II, retain the worksheet A through G on page 3
+      of the review specimen. Split C across the whole and fraction widgets
+      with three through six fractional digits, preserving displayed line E.
+      Mark the dotted line next to line 6 with NUA and E. For a combined
+      election mark next to line 8 with NUA and F. For Part III only mark next
+      to line 8 with NUA and the included Box 6. Require all shown amounts
+      to reconcile at whole dollars and keep the annotations on the printed
+      dotted lines beside the amounts, outside original widgets and text.
+    testRef: "tests/pdf/form-4972-2026-candidate.test.ts::projects the elected own-plan appreciation and printed annotations"
+    testRefs:
+      - "tests/pdf/form-4972-2026-candidate.test.ts::holds a rounded appreciation election that changes the shown amounts"
+      - "tests/pdf/form-4972-2026-candidate.test.ts::reopens the marked own-plan appreciation specimen"
   - line: "11, 20-22, 26-29"
     description: "Project a confirmed own-plan actuarial adjustment"
     formula: >-
