@@ -7,8 +7,9 @@ notes: |
   Full-year Hillsdale0302 and separately qualified212OH153VA specific payroll
   admit experimental SD100/school withholding review copies only. The PY method
   requires actual Ashland/Hillsdale header originals; no-header remains omitted.
-  Full-year and212-day ordinary-business headers use Columbus2503/Franklin;
-  PY payroll uses Hillsdale0302/Ashland. No inferred jurisdiction or all-method
+  The single-location full-year header covers Columbus2503/Franklin and
+  Akron7701/Summit. The 212-day ordinary-business header uses Columbus2503/Franklin
+  and part-year payroll uses Hillsdale0302/Ashland. No inferred jurisdiction or all-method
   qualification. Other scenarios require their separate supported source method.
   This package changes no arithmetic/source validation/privacy/readiness/year gates.
   Actual UI school/source/header/state-review/final-review and public support
@@ -25,7 +26,7 @@ lines:
     testRef: "tests/apps/web/oh-review-method-disclosures.test.tsx::Ohio school source copy distinguishes qualified review and unavailable broader methods %s"
   - line: "header-native"
     description: "Header source panel distinguishes actual jurisdictions"
-    formula: "Columbus2503/Franklin full-year and212-business versus Hillsdale0302/Ashland212-payroll; actual documents/no lookup inference, experimental only, filing unavailable."
+    formula: "A single resident at one full-year location in Columbus2503/Franklin or Akron7701/Summit. The 212OH153VA ordinary-business method uses Columbus and payroll uses Hillsdale0302/Ashland. Actual source documents are required and filing is unavailable."
     testRef: "tests/apps/web/oh-review-method-disclosures.test.tsx::Ohio header source copy distinguishes actual business and payroll jurisdictions"
   - line: "state-review"
     description: "Actual state preview displays current qualified review limits"
