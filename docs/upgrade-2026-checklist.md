@@ -6,6 +6,15 @@ below retain their original evidence boundaries.
 
 ## Active continuation — November 13 Eastern
 
+- [x] Implement separate per-filer EIC combat pay elections in `439d4c87`.
+  Pass 206 targeted checks and preserve exact amounts and the saved 2025 PDF
+  line 1i. [Election evidence](upgrade-2026-eic-combat-pay-work.md).
+- [x] Close all 12 archived `ab47d87f` checks. Unit and coverage pass 27,684
+  tests at 87.83% branches. Chromium passes 616 with five hosted-only skips.
+- [ ] Finish the isolated automatic Stripe retry on the approved `ab47d87f`
+  Preview. The free schema-only branch, restricted login and Preview-only
+  binding passed. One protected build was submitted.
+
 - [x] Preserve the ordinary state scope for actual combat-pay originals in
   `6e7b046b`. Pass 7,348 targeted state and Ohio PDF tests, including all
   nine new boundary cases. [State evidence](upgrade-2026-state-combat-pay-boundary-work.md).
@@ -80,8 +89,10 @@ below retain their original evidence boundaries.
   `d93621a3`. Final forms and qualified human review remain open.
 - [x] Finish all 12 archived `c94971cd` local checks. Unit and coverage pass
   27,558 tests at 87.76% branch coverage. Chromium passes 589 cases with five
-  hosted-only skips. The native rehearsal still needs exact-source authority
-  and fresh custody and capacity checks.
+  hosted-only skips. The approved corrected custody check passed, and the
+  constructor stopped before boot on a wrong witness key. The corrected
+  offline replay passed. Actual ARM64 runtime, recovery and image scan remain
+  open.
 - [x] Fix cross-tab saved-return recovery in `fe8fcd69` and independently
   authenticate the self-host rehearsal's downloaded archive in `3b2b3a68`.
   Verify both with actual local Chromium. Final Compose execution remains open.

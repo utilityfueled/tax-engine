@@ -8,7 +8,7 @@ positive amount requires the actual owner and matching W-2 year. When combat
 pay is reported, every W-2 needs its amount or confirmed zero. Previously
 saved positive ACTC amounts require reconciliation or correction. A saved
 zero cannot override positive original amounts. The federal EIC calculation
-still needs its separate per-filer election workflow. [26 USC §24](https://uscode.house.gov/us/usc/t26/s24/) ·
+uses a [separate per-filer election](upgrade-2026-eic-combat-pay-work.md). [26 USC §24](https://uscode.house.gov/us/usc/t26/s24/) ·
 [2025 Schedule 8812 instructions](https://www.irs.gov/instructions/i1040s8) ·
 [2026 final Schedule 8812](https://www.irs.gov/pub/irs-prior/f1040s8--2026.pdf) ·
 [2026 draft instructions](https://www.irs.gov/pub/irs-dft/i1040s8--dft.pdf) ·

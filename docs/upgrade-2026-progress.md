@@ -4,6 +4,17 @@ Current source, verification and remaining work are summarized in the
 [current continuation](upgrade-2026-current-status.md). Historical results
 below apply to their named revisions.
 
+- November 13 — `439d4c87` applies each filer's EIC combat pay election.
+  The 206 targeted checks and 27,715 archived unit tests passed. The
+  saved 2025 review PDF records the elected amount on Form 1040 line 1i.
+  [Election evidence](upgrade-2026-eic-combat-pay-work.md).
+
+- November 13 — All 12 exact `ab47d87f` checks passed. The approved
+  isolated Preview build was submitted after a restricted Neon test login
+  and verified Preview-only environment update. The ARM64 corrected custody
+  check passed, followed by a file-only handoff failure before any VM boot.
+  [Current evidence and remaining work](upgrade-2026-current-status.md).
+
 - November 13 — `6e7b046b` requires a separate state military compensation
   method for an actual positive Code Q. Nine baseline failures and 7,348
   passing state and Ohio PDF tests cover the ordinary employee paths.

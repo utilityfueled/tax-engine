@@ -6,6 +6,23 @@ The public refs were refreshed. `origin/main` still points to `59248889`
 and `origin/upgrade/2026-baseline` to `3024b848`. Successor commits stay on
 local `main` while automatic production deployment is being disabled.
 
+`439d4c87` implements each filer's separate EIC election for all original
+W-2 Code Q amounts, preserves exact cents and renders elected pay on
+2025 Form 1040 line 1i. All 206 targeted checks passed. Its exact archive
+passed the unit job with 27,715 tests across 2,006 files. Full coverage and
+managed Chromium are in progress. [Election evidence](upgrade-2026-eic-combat-pay-work.md).
+
+The exact `ab47d87f` archive passed all 12 checks. Unit and coverage passed
+27,684 tests across 2,004 files at 87.83% branch coverage. Managed Chromium
+passed 616 cases with five hosted-only skips. The checks and browser receipt
+SHA-256 values are
+`29693b651db91d9ef9d0662664f73690a446e8ca54944bfed4efb3ff8ee028c7` and
+`7e04851651431dc73ff9aece0ffc3fe66a4d4d9bd6fc4ff9ac657982503f0237`.
+The approved isolated Preview build was submitted from that tracked
+archive. The new free schema-only Neon branch and restricted database login
+passed TLS/channel-binding checks. Only the isolated sensitive Preview
+database setting was updated. Signed automatic Stripe retry evidence is pending.
+
 `6e7b046b` requires a separate military compensation method for a positive
 actual W-2 Code Q on the covered ordinary PA and Ohio paths. Nine baseline
 failures reproduced the admission gap. All 7,348 targeted tests passed,
@@ -22,7 +39,7 @@ earned income and records it separately on line 18b for 2025 and 2026.
 The guided interview preserves exact cents and distinguishes an unchecked
 box from confirmed zero. A synthetic $2,250.50 source increased ACTC to $263
 with $2,000 taxable wages. All 597 targeted tests passed, including reopening
-the 2025 review PDF. The EIC election remains separate work.
+the 2025 review PDF. The separate EIC election is covered above.
 [Combat pay evidence](upgrade-2026-ctc-combat-pay-work.md).
 
 `ab47d87f` validates a claimed child's birth date before counting the child
@@ -305,9 +322,15 @@ five hosted-only tests.
 Exact `c94971cd` passed all 12 archived local commands. Unit and coverage
 each passed 27,558 tests in 1,988 files, with 87.76% branch coverage against
 85%. Managed Chromium passed 589 cases and skipped five hosted-only tests.
-Its own server and disposable PostgreSQL shut down normally. Its separate
-conditional ARM64 runtime rehearsal still awaits authorization for this
-source. The previous authorized `acb776cb` condition failed before any boot.
+Its own server and disposable PostgreSQL shut down normally. The previous
+authorized `acb776cb` condition failed before any boot. The first approved
+`c94971cd` observation found a temporary-directory mismatch. The corrected
+observation passed on the next approved attempt, then its file-only
+constructor rejected an incorrectly named source-review field. A replay of
+the actual handoff reproduced the failure, and the corrected offline
+handoff produced all eight expected bindings under the strict constructor.
+Neither attempt booted the VM or modified the shared socket route. The
+runtime and image scan still need a valid rehearsal window.
 
 `948e8d69` reconciles actual Form 1099-G Box 7 originals to dated cash-farm
 receipts. `b8247aaa` adds guided entry for an ordinary, profitable federal-only

@@ -24120,5 +24120,31 @@
     "reviewExportsEnabled": false,
     "filingQualified": false,
     "humanTaxReviewComplete": false
+  },
+  "nov13EicCombatPay": {
+    "commit": "439d4c878f9494f3e5d5d09041310a2d82d9c0b0",
+    "tree": "6d6d750d13d1fbdf36487ff5709606aa11c03525",
+    "focusedPassed": 206,
+    "focusedFiles": 22,
+    "unitPassed": 27715,
+    "unitFiles": 2006,
+    "specReferences": 8878,
+    "focusedSha256": "1ac982c61fbdfb6a6a6ee374868d49fd1c9b447aec2e7bbda65915e4615c8d01",
+    "humanTaxReviewComplete": false,
+    "ledger": "docs/upgrade-2026-eic-combat-pay-work.md"
+  },
+  "nov13IsolatedPreviewExactSource": {
+    "commit": "ab47d87f44597b4b43228ce17076098eccdecff9",
+    "tree": "064f6b6401bf0ea3f289bee984104217bc97a3e8",
+    "exactChecksPassed": 12,
+    "unitAndCoveragePassed": 27684,
+    "testFiles": 2004,
+    "branchCoveragePercent": 87.83,
+    "browserPassed": 616,
+    "browserHostedOnlySkipped": 5,
+    "checksSha256": "29693b651db91d9ef9d0662664f73690a446e8ca54944bfed4efb3ff8ee028c7",
+    "browserSha256": "7e04851651431dc73ff9aece0ffc3fe66a4d4d9bd6fc4ff9ac657982503f0237",
+    "protectedPreviewSubmitted": true,
+    "automaticRetryQualified": false
   }
 }

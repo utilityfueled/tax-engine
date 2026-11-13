@@ -167,12 +167,17 @@ The earlier isolated Neon branch expired. The proposed replacement rehearsal
 for `db974a65` required passing local checks on that exact source. Its unit run
 failed 22 Ohio compatibility assertions, so the proposed rehearsal made no
 external changes. The Schedule SE compatibility fix passed the original Ohio
-assertions. The automatic retry still requires a fresh, isolated database and
-qualified Preview source. The local TLS rehearsal separately passed 13 HTTP
+assertions. The approved successor `ab47d87f` passed all 12 exact-source checks.
+A new free schema-only branch and restricted app login passed, and its
+credential was installed only in the isolated Preview. One protected build
+was submitted. Signed automatic retry and cleanup are pending. The local TLS rehearsal separately passed 13 HTTP
 checks. [Hosted HTTP evidence](upgrade-2026-hosted-http-fault-rehearsal-work.md).
 
 The authorized native `acb776cb` source failed its precondition before a boot.
-The separately prepared `c94971cd` candidate passed its exact local checks and
-still awaits authorization for the unused ARM64 rehearsal. See the
+The separately prepared `c94971cd` candidate passed its exact local checks.
+The corrected approved custody observation passed. Its file-only constructor
+rejected the source-review witness key before any VM action. The corrected
+offline replay passed all eight constructor bindings. An actual runtime
+rehearsal remains open. See the
 [current continuation](upgrade-2026-current-status.md) for the running source
 checks and remaining release evidence.
