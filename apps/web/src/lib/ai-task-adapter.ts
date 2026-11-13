@@ -83,8 +83,15 @@ async function readBoundedResponse(response: Response): Promise<unknown> {
 }
 
 const usageCount = z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER);
+const openAiRequestId = /^req_[a-zA-Z0-9]{1,128}$/;
+const openAiResponseId = /^resp_[a-zA-Z0-9]{1,128}$/;
+
+function readProviderIdentifier(value: unknown, format: RegExp) {
+  return typeof value === "string" && format.test(value) && !containsUnsafeDirectIdentifier(value) ? value : undefined;
+}
+
 const openAiEnvelope = z.object({
-  id: z.string().optional(),
+  id: z.unknown().optional(),
   service_tier: z.string().optional(),
   status: z.string(),
   output_text: z.string().optional(),
@@ -164,12 +171,12 @@ export async function executeAiTask<T>(request: AiTaskRequest<T>, execution: AiT
       : { "Content-Type": "application/json", "x-goog-api-key": apiKey },
     body: JSON.stringify(body),
   });
-  providerRequestId = providerResponse.headers.get("x-request-id") ?? undefined;
+  if (openai) providerRequestId = readProviderIdentifier(providerResponse.headers.get("x-request-id"), openAiRequestId);
   const payload = await readBoundedResponse(providerResponse);
   if (openai) {
     const envelope = openAiEnvelope.parse(payload);
+    providerRequestId ??= readProviderIdentifier(envelope.id, openAiResponseId);
     if (envelope.service_tier && envelope.service_tier !== "default") throw new Error("Unpriced provider service tier.");
-    providerRequestId ??= envelope.id;
     completed = envelope.status === "completed" && !envelope.output?.some(item => item.content?.some(part => part.type === "refusal"));
     outputText = envelope.output_text ?? envelope.output?.flatMap(item => item.type === "message"
       ? item.content?.filter(part => part.type === "output_text").map(part => part.text ?? "") ?? [] : []).join("") ?? "";

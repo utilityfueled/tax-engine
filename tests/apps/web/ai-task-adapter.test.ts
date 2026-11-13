@@ -44,15 +44,17 @@ describe("task-based candidate AI adapter", () => {
   });
   it("uses Google only when selected and counts its reasoning once at January prices", async () => {
     const deps = execution();
+    const recordAttempt = vi.fn();
     deps.fetchFn.mockResolvedValue(Response.json({
       candidates: [{ finishReason: "STOP", content: { parts: [{ thought: true, text: "private reasoning" }, { text: '{"summary":"Review W-2."}' }] } }],
       usageMetadata: { promptTokenCount: 1000, cachedContentTokenCount: 200, candidatesTokenCount: 100, thoughtsTokenCount: 900 },
-    }));
-    const result = await executeAiTask(request(), { ...deps, provider: "google" });
+    }, { headers: { "x-request-id": "req_undocumented" } }));
+    const result = await executeAiTask(request(), { ...deps, provider: "google", recordAttempt });
     expect(result).toMatchObject({ accepted: true, accounting: { providerCostUsd: "0.00873", pricingEffectiveFrom: "2027-01-01",
       usage: { outputTokens: 1000 } } });
     const [url, options] = deps.fetchFn.mock.calls[0];
     expect(url).toContain("gemini-3.8-flash:generateContent");
+    expect(recordAttempt).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ providerRequestId: undefined }));
     expect(url).not.toContain("fixture-key");
     expect(JSON.parse(options.body).generationConfig).toMatchObject({ thinkingConfig: { thinkingLevel: "HIGH" }, maxOutputTokens: 4096 });
   });
@@ -136,6 +138,33 @@ describe("task-based candidate AI adapter", () => {
     deps.fetchFn.mockRejectedValue(new Error("provider echoed SSN 123-45-6789 and secret-key"));
     await expect(executeAiTask(request(), { ...deps, recordUnknownAttempt })).rejects.toThrow("AI provider request failed; usage requires reconciliation.");
     expect(recordUnknownAttempt).toHaveBeenCalledOnce();
+  });
+  it("uses only a safe provider identifier without losing known usage", async () => {
+    const deps = execution();
+    const recordAttempt = vi.fn();
+    const runs = [
+      { header: "req_ab123cd", id: "resp_e456fg", expected: "req_ab123cd" },
+      { header: "synthetic-person@example.com", id: "resp_e456fg", expected: "resp_e456fg" },
+      { header: `req_${"a".repeat(200)}`, id: "resp_123-45-6789", expected: undefined },
+      { header: "req_x123456789z", id: { raw: "synthetic-person@example.com" }, expected: undefined },
+    ];
+    for (const { header, id, expected } of runs) {
+      deps.fetchFn.mockResolvedValueOnce(Response.json(envelope(undefined, { id }), { headers: { "x-request-id": header } }));
+      const result = await executeAiTask(request(), { ...deps, recordAttempt });
+      expect(result?.accounting.providerCostUsd).toBe("0.0010064");
+      expect(recordAttempt).toHaveBeenLastCalledWith(expect.anything(), {
+        accepted: true, usage: { inputTokens: 100, outputTokens: 2000, cachedInputTokens: 40 }, providerRequestId: expected,
+      });
+    }
+  });
+  it("holds unknown usage without retaining arbitrary error response headers", async () => {
+    const deps = execution();
+    const recordUnknownAttempt = vi.fn();
+    for (const [header, expected] of [["req_good", "req_good"], ["Bearer synthetic-secret", undefined]] as const) {
+      deps.fetchFn.mockResolvedValueOnce(new Response(null, { status: 503, headers: { "x-request-id": header } }));
+      await expect(executeAiTask(request(), { ...deps, recordUnknownAttempt })).rejects.toThrow(/usage requires reconciliation/);
+      expect(recordUnknownAttempt).toHaveBeenLastCalledWith(expect.anything(), { providerRequestId: expected });
+    }
   });
   it("uses official cache-write detail fields and counts both lifetimes exactly once", async () => {
     const deps = execution(envelope(undefined, { usage: { input_tokens: 12000, output_tokens: 100,
