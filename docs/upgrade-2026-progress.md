@@ -3303,7 +3303,6 @@ frozen members and8 source pins. See [the draft ledger](upgrade-2026-ohio-pa-rec
 Broader selected-state software, public2026/final forms, human and distribution
 qualification remain open.
 
-
 ### November5 UTC: PA actual child/local review paper and privacy preflight
 
 Original-bound child rows and counts now reach2025 PA40/SP review paper while
@@ -3959,3 +3958,15 @@ ranges recognize the installed patch. PostgreSQL's current official 16 image
 resolves to 16.16. The Node image still contains the older Debian zlib
 package, so the Debian fix and an exact application image run remain open.
 See [the runtime security ledger](upgrade-2026-node26-131-security-work.md).
+
+### November 12 · mapped PDF appearance privacy
+
+The review exporter omits only pdf-lib's empty combed text-position pairs.
+Malformed and shared appearance dictionaries fail before live changes. The
+original candidate failed two independent mutation probes. Those findings
+and the sparse-copy fixture collection error are retained. With corrected
+source, main recorded three baseline passes and 13 expected failures, then
+32 affected passes, type checks, spec, inventory and strict lint. Independent
+software review passed 62 tests. All 13 synthetic health PDFs and 29 pages
+passed the unchanged privacy gate, with 12 exact official-blank coincidences,
+zero excess and pixel equality. See [the appearance ledger](upgrade-2026-empty-combed-review-appearances.md).

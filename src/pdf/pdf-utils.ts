@@ -3,7 +3,8 @@
  * Formatting and field-setting helpers for IRS fillable PDFs.
  */
 
-import { PDFDocument, PDFForm, PDFTextField, PDFCheckBox, StandardFonts, ParseSpeeds, PDFArray, PDFDict, PDFName, PDFObject, PDFRef, PDFStream } from "pdf-lib";
+import { PDFDocument, PDFForm, PDFTextField, PDFCheckBox, StandardFonts, ParseSpeeds, PDFArray, PDFDict, PDFName, PDFObject, PDFRef, PDFStream,
+  PDFString, PDFHexString, PDFAcroText, PDFWidgetAnnotation, defaultTextFieldAppearanceProvider, type PDFOperator } from "pdf-lib";
 import { readFile, writeFile, mkdir } from "fs/promises";
 import { basename, dirname } from "path";
 import Decimal from "decimal.js";
@@ -15,6 +16,10 @@ const PDF_LIB_XFA_WARNING =
 
 let xfaWarningSuppressionDepth = 0;
 let originalConsoleWarn: typeof console.warn | null = null;
+
+// Only forms already accessed by typed mapping code participate. In particular,
+// saving an untouched document must not create a form/font or remove its XFA.
+const mappedForms = new WeakMap<PDFDocument, PDFForm>();
 
 function installPdfLibXfaWarningFilter() {
   if (xfaWarningSuppressionDepth === 0) {
@@ -91,6 +96,7 @@ export function createPdfFieldBatch(form: PDFForm): {
   setCheckBox(fieldName: string, checked: boolean): void;
   apply(): void;
 } {
+  mappedForms.set(form.doc, form);
   type Write = { kind: "text"; fieldName: string; value: string }
     | { kind: "checkbox"; fieldName: string; value: boolean };
   const writes: Write[] = [];
@@ -139,6 +145,7 @@ export function setTextField(
   const field = form.getFieldMaybe(fieldName);
   if (!field) throw new Error(`Missing mapped PDF field: ${fieldName}`);
   if (!(field instanceof PDFTextField)) throw new Error(`Mapped PDF text field has the wrong type: ${fieldName}`);
+  mappedForms.set(form.doc, form);
   field.setText(value);
 }
 
@@ -160,6 +167,7 @@ export function setCheckBox(
   const field = form.getFieldMaybe(fieldName);
   if (!field) throw new Error(`Missing mapped PDF field: ${fieldName}`);
   if (!(field instanceof PDFCheckBox)) throw new Error(`Mapped PDF checkbox has the wrong type: ${fieldName}`);
+  mappedForms.set(form.doc, form);
   if (checked) field.check();
   else field.uncheck();
 }
@@ -178,6 +186,175 @@ export async function loadReviewTemplate(pdfPath: string, taxYear: number): Prom
   const doc = await loadPdfDocumentQuietly(bytes);
   await markReviewPdf(doc);
   return doc;
+}
+
+/** Spec: pdf-empty-combed-appearance.yaml. This is not a stream sanitizer. */
+function emptyCombedValue(field: PDFTextField): boolean {
+  const context = field.doc.context, visited = new Set<PDFDict>();
+  let current: PDFDict | undefined = field.acroField.dict;
+  let value: PDFObject | undefined;
+  let rich = false;
+  while (current) {
+    if (visited.has(current) || visited.size >= 64) throw new Error("Empty combed appearance has an unsupported parent chain");
+    visited.add(current);
+    if (value === undefined && current.has(PDFName.of("V"))) {
+      value = context.lookup(current.get(PDFName.of("V")));
+      if (!(value instanceof PDFString) && !(value instanceof PDFHexString))
+        throw new Error("Empty combed appearance has an unsupported canonical value");
+    }
+    rich ||= current.has(PDFName.of("RV"));
+    const parent: PDFObject | undefined = current.get(PDFName.of("Parent"));
+    if (parent === undefined) break;
+    if (!(parent instanceof PDFRef)) throw new Error("Empty combed appearance has an ambiguous parent");
+    const dictionary: PDFObject | undefined = context.lookup(parent);
+    if (!(dictionary instanceof PDFDict)) throw new Error("Empty combed appearance has an unsupported parent");
+    current = dictionary;
+  }
+  if ((value instanceof PDFString || value instanceof PDFHexString) && value.decodeText() !== "") return false;
+  if (rich || field.isRichFormatted()) throw new Error("Empty combed appearance has unsupported rich text");
+  for (const widget of field.acroField.getWidgets()) {
+    if (widget.dict.has(PDFName.of("RV"))) throw new Error("Empty combed appearance has unsupported widget rich text");
+    if (widget.dict.has(PDFName.of("V"))) {
+      const widgetValue = context.lookup(widget.dict.get(PDFName.of("V")));
+      if (!(widgetValue instanceof PDFString) && !(widgetValue instanceof PDFHexString))
+        throw new Error("Empty combed appearance has an unsupported widget value");
+      if (widgetValue.decodeText() !== "") throw new Error("Empty combed appearance has an ambiguous nonempty widget");
+    }
+  }
+  return true;
+}
+
+function omitEmptyCombedPositions(operators: PDFOperator[], cells: number): PDFOperator[] {
+  if (operators.length > 10000) throw new Error("Empty combed appearance has an unsupported operator count");
+  const strings = operators.map(operator => operator.toString());
+  const numeric = (token: string) => /^-?(?:\d+(?:\.\d*)?|\.\d+)$/.test(token) && Number.isFinite(Number(token));
+  const args = (line: string, name: string, count: number) => {
+    const parts = line.split(" ");
+    return parts.length === count + 1 && parts[count] === name && parts.slice(0, count).every(numeric);
+  };
+  const outsideNumbers: Readonly<Record<string, number>> = { cm: 6, w: 1, m: 2, l: 2, g: 1, G: 1, rg: 3, RG: 3, k: 4, K: 4 };
+  const outsideNoArgs = new Set(["h", "W", "n", "f", "S", "B"]);
+  const omitted = new Set<number>();
+  let graphics = 0, marked = 0, textBlocks = 0;
+  for (let index = 0; index < strings.length; index++) {
+    const line = strings[index];
+    if (line.length > 4096) throw new Error("Empty combed appearance has an unsupported operator size");
+    if (line === "q") { graphics++; continue; }
+    if (line === "Q") {
+      if (--graphics < 0) throw new Error("Empty combed appearance has unbalanced graphics");
+      continue;
+    }
+    if (line === "/Tx BMC") { if (++marked !== 1) throw new Error("Empty combed appearance has unsupported marking"); continue; }
+    if (line === "EMC") { if (--marked !== 0) throw new Error("Empty combed appearance has unbalanced marking"); continue; }
+    if (line === "BT") {
+      if (++textBlocks !== 1 || graphics === 0 || marked !== 1) throw new Error("Empty combed appearance has an unsupported text group");
+      const color = strings[++index] ?? "";
+      if (!args(color, "g", 1) && !args(color, "rg", 3) && !args(color, "k", 4))
+        throw new Error("Empty combed appearance has an unsupported text color");
+      const font = (strings[++index] ?? "").split(" ");
+      if (font.length !== 3 || font[0] !== "/Helvetica" || !numeric(font[1]) || font[2] !== "Tf")
+        throw new Error("Empty combed appearance has an unsupported text font");
+      for (let cell = 0; cell < cells; cell++) {
+        const matrixIndex = ++index, matrix = strings[matrixIndex] ?? "";
+        if (!args(matrix, "Tm", 6) || !matrix.startsWith("1 0 0 1 "))
+          throw new Error("Empty combed appearance has an unsupported text position");
+        const showIndex = ++index;
+        if (strings[showIndex] !== "<> Tj") throw new Error("Empty combed appearance has unsupported or nonempty text");
+        omitted.add(matrixIndex); omitted.add(showIndex);
+      }
+      if (strings[++index] !== "ET") throw new Error("Empty combed appearance has an unsupported or unbalanced text group");
+      continue;
+    }
+    if (outsideNoArgs.has(line) || line === "[] 0 d") continue;
+    const operatorName = line.slice(line.lastIndexOf(" ") + 1);
+    if (Object.hasOwn(outsideNumbers, operatorName) && args(line, operatorName, outsideNumbers[operatorName])) continue;
+    throw new Error("Empty combed appearance has an unsupported operator");
+  }
+  if (graphics !== 0 || marked !== 0 || textBlocks !== 1) throw new Error("Empty combed appearance has unbalanced groups");
+  return operators.filter((_, index) => !omitted.has(index));
+}
+
+/** Validate all targets on clones before changing any live font, DA or AP. */
+async function prepareMappedEmptyCombedAppearances(doc: PDFDocument): Promise<void> {
+  const form = mappedForms.get(doc);
+  if (!form) return;
+  const scratch = await PDFDocument.create(), stagingFont = scratch.getForm().getDefaultFont();
+  const fields = form.getFields();
+  const plans = new Map<PDFTextField, { fieldDictionary: PDFDict; widgets: Map<PDFDict, { dictionary: PDFDict; operators: PDFOperator[] }> }>();
+  const targetedWidgets = new Set<PDFDict>();
+  const appearanceKey = PDFName.of("AP");
+  const appearanceOwners = new Map<PDFDict, PDFDict>();
+  const assertAppearanceOwner = (widget: PDFDict) => {
+    const appearance = widget.lookup(appearanceKey);
+    const owner = appearance instanceof PDFDict ? appearanceOwners.get(appearance) : undefined;
+    if (owner && owner !== widget) throw new Error("Empty combed appearance has a shared appearance dictionary");
+  };
+  for (const field of fields) {
+    if (!(field instanceof PDFTextField) || !field.needsAppearancesUpdate() || !field.isCombed() || !emptyCombedValue(field)) continue;
+    const cells = field.getMaxLength();
+    if (cells === undefined || !Number.isSafeInteger(cells) || cells <= 0 || cells > 4096)
+      throw new Error("Empty combed appearance has an unsupported cell count");
+    const fieldDictionary = field.acroField.dict.clone();
+    const stagedField = PDFTextField.of(PDFAcroText.fromDict(fieldDictionary, field.ref), field.ref, doc);
+    const widgets = new Map<PDFDict, { dictionary: PDFDict; operators: PDFOperator[] }>();
+    for (const widget of field.acroField.getWidgets()) {
+      if (targetedWidgets.has(widget.dict)) throw new Error("Empty combed appearance has an ambiguous shared widget");
+      targetedWidgets.add(widget.dict);
+      if (widget.dict.has(appearanceKey)) {
+        const appearance = widget.dict.lookup(appearanceKey);
+        if (!(appearance instanceof PDFDict)) throw new Error("Empty combed appearance has an unsupported appearance dictionary");
+        assertAppearanceOwner(widget.dict);
+        appearanceOwners.set(appearance, widget.dict);
+      }
+      const dictionary = widget.dict === field.acroField.dict ? fieldDictionary : widget.dict.clone();
+      const generated = defaultTextFieldAppearanceProvider(stagedField, PDFWidgetAnnotation.fromDict(dictionary), stagingFont);
+      if (!Array.isArray(generated)) throw new Error("Empty combed appearance has an unsupported provider mapping");
+      widgets.set(widget.dict, { dictionary, operators: omitEmptyCombedPositions(generated, cells) });
+    }
+    plans.set(field, { fieldDictionary, widgets });
+  }
+  if (plans.size === 0) return;
+  for (const field of fields) {
+    for (const widget of field.acroField.getWidgets()) {
+      if (targetedWidgets.has(widget.dict) && (!(field instanceof PDFTextField) || !plans.get(field)?.widgets.has(widget.dict)))
+        throw new Error("Empty combed appearance has an ambiguous widget owner");
+      assertAppearanceOwner(widget.dict);
+    }
+  }
+  if (appearanceOwners.size > 0) {
+    // Page-only widgets can share an AP dictionary without appearing in /Fields.
+    const widgetSubtype = PDFName.of("Widget"), subtypeKey = PDFName.of("Subtype");
+    for (const page of doc.getPages()) {
+      const annotations = page.node.Annots();
+      if (!annotations) continue;
+      for (let index = 0; index < annotations.size(); index++) {
+        const annotation = doc.context.lookup(annotations.get(index));
+        if (annotation instanceof PDFDict && annotation.get(subtypeKey) === widgetSubtype) assertAppearanceOwner(annotation);
+      }
+    }
+  }
+  // No awaits or caller callbacks separate validation from these known provider
+  // writes. The library still marks updated fields clean and save still checks
+  // ordinary default appearances; it must not recreate the empty positions.
+  const font = form.getDefaultFont(), defaultAppearanceKey = PDFName.of("DA");
+  const applyDefault = (live: PDFDict, staged: PDFDict) => {
+    const value = staged.get(defaultAppearanceKey);
+    if (value === undefined) live.delete(defaultAppearanceKey);
+    else live.set(defaultAppearanceKey, value);
+  };
+  for (const field of fields) {
+    if (!field.needsAppearancesUpdate()) continue;
+    const plan = field instanceof PDFTextField ? plans.get(field) : undefined;
+    if (field instanceof PDFTextField && plan) {
+      applyDefault(field.acroField.dict, plan.fieldDictionary);
+      for (const [live, staged] of plan.widgets) applyDefault(live, staged.dictionary);
+      field.updateAppearances(font, (_field, widget) => {
+        const appearance = plan.widgets.get(widget.dict);
+        if (!appearance) throw new Error("Empty combed appearance has an ambiguous changed widget");
+        return appearance.operators;
+      });
+    } else field.defaultUpdateAppearances(font);
+  }
 }
 
 /** Save a filled PDF to disk, creating directories as needed. */
@@ -226,6 +403,7 @@ export async function savePdf(
       if (annotations.size() === 0) page.node.delete(PDFName.of("Annots"));
     }
   }
+  await prepareMappedEmptyCombedAppearances(output);
   await mkdir(dirname(outputPath), { recursive: true });
   const bytes = await output.save({ objectsPerTick: 500, useObjectStreams: options.useObjectStreams ?? true });
   await writeFile(outputPath, bytes);

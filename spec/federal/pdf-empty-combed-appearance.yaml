@@ -1,0 +1,44 @@
+form: "Empty combed PDF appearance integrity"
+fullName: "Preserve typed field data and graphics while omitting provably empty text positioning"
+taxYear: 2025
+irsReference: "https://www.irs.gov/pub/irs-pdf/f1040.pdf"
+notes: |
+  Engineering output rule, no tax formula or filing qualification. Official
+  template bytes and every source/monetary field remain unchanged. The pinned
+  pdf-lib1.17.1 default provider emits Tm/empty Tj pairs for all comb cells, even
+  with no text; those fractions can coincide with a literal synthetic marker.
+  The existing strict raw gate remains the exact per-template stream
+  hash/size/marker/multiplicity Counter subtraction. No new scanner exemption,
+  generic stream cleanup, coordinate rounding, flattening or field clearing.
+  Only already-mapped forms and provably empty typed combed fields needing
+  appearance updates are eligible. Stage and validate all targets before any
+  live document change. Final default save appearance generation stays enabled.
+lines:
+  - line: "empty-comb-raw-regression"
+    description: "Do not emit meaningless empty comb text positions"
+    formula: "A real mapped empty nine-cell107-unit field keeps its canonical value, widget and normal appearance, but has no Tm/empty Tj pairs. The literal555555555 marker is absent from every newly generated decoded stream without rounding or a scanner exclusion."
+    testRef: "tests/pdf/pdf-empty-combed-appearance.test.ts::omits empty comb positioning through the actual save path"
+  - line: "graphics-and-values"
+    description: "Preserve every nontext operator and all original nonempty behavior"
+    formula: "Rotation, borders, backgrounds, clipping, marking, q/Q and BT/ET/color/font operations remain exact. Nonempty/combed/noncombed and checkbox values/appearances remain on their original provider, with no money or field-value change."
+    testRef: "tests/pdf/pdf-empty-combed-appearance.test.ts::preserves graphics and nonempty typed fields"
+  - line: "atomic-target-denial"
+    description: "An unsupported later target must not partially modify the document"
+    formula: "Reject nonempty text from the purported empty provider, unknown or unbalanced groups, rich/ambiguous/malformed source values before any live DA/font/AP/object or dirty-state change. Output must not be created."
+    testRef: "tests/pdf/pdf-empty-combed-appearance.test.ts::rejects unsupported later appearances atomically: %s"
+  - line: "appearance-dictionary-integrity"
+    description: "Validate appearance containers before entering the live update"
+    formula: "A mapped empty combed target may have no appearance dictionary or one valid, uniquely owned appearance dictionary. Reject a malformed direct or referenced AP container, a dangling AP reference, and any AP dictionary also owned by another field or page widget. Distinct AP dictionaries may point to the same normal stream. Rejection precedes any live DA/font/AP/object or dirty-state change and leaves no output."
+    testRef: "tests/pdf/pdf-empty-combed-appearance.test.ts::rejects an invalid later appearance dictionary atomically: %s"
+  - line: "shared-appearance-dictionary"
+    description: "Protect a clean widget that uses a target's appearance dictionary"
+    formula: "The alias check compares resolved appearance dictionary identity. When a clean widget and a dirty target share one indirect AP dictionary, reject the save without changing the clean normal appearance or any live object. This includes page widgets omitted from the form field tree."
+    testRef: "tests/pdf/pdf-empty-combed-appearance.test.ts::rejects an appearance dictionary shared with a clean widget: %s"
+  - line: "inherited-value"
+    description: "An inherited actual nonempty field is not empty"
+    formula: "Preserve the inherited nonempty value and original appearance operations. A contradictory nonempty widget with an empty canonical field cannot qualify for empty omission."
+    testRef: "tests/pdf/pdf-empty-combed-appearance.test.ts::retains inherited nonempty values and rejects contradictory widgets"
+  - line: "untouched-document"
+    description: "Do not materialize forms or remove XFA on untouched documents"
+    formula: "The already-mapped document registry is private and weakly held. No getForm call, default font, AcroForm or XFA mutation is introduced for an untouched document. Existing final save behavior remains enabled."
+    testRef: "tests/pdf/pdf-empty-combed-appearance.test.ts::leaves untouched document and XFA custody unchanged"
