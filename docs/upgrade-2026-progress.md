@@ -4261,8 +4261,14 @@ execution and current image qualification require separate evidence.
   uncached 503, the actual failed dependency and the exact effects of rollback
   and a fresh successful retry. `c94971cd` checks both qualified Ohio header
   examples, distinct business and school-payroll locations, and the continued
-  filing denial. The successor passed all 27,558 unit tests in 1,988 files.
-  Coverage and browser evidence is recorded separately as it closes.
+  filing denial. The exact successor passed all twelve checks with 5,606
+  unchanged source hashes. Both unit runs passed 27,558 tests in 1,988 files.
+  Coverage reached 87.76% branches against the 85% gate, with 91.86% statements,
+  90.96% functions and 95.16% lines. The browser run passed 589 cases with five
+  original hosted-only skips and closed the owned browser server. The
+  disposable PostgreSQL 16.16 server stopped normally. The checks manifest
+  SHA-256 is `2afc672821a3b00d2a5e3e504943748a30083523bd03bc52682e94461df009ce`.
+  Exact-source ARM64 and hosted rehearsals remain pending.
 - `85e34a0d` requires actual same-owner dated CRP receipts, evidence of Social
   Security benefit type and timing, a reconciled annual SSA-1099 and confirmation
   of zero attributable Schedule F deductions. It retains the taxable farm
@@ -4277,10 +4283,26 @@ execution and current image qualification require separate evidence.
   presentation hold, with 16 matching rendered pages and a separate test
   demonstrating the earlier $433.99 display ambiguity. Its report SHA-256 is
   `c175bc18ed42924b627366f472dc35c7d12f67774e3cf446f40b27633584fab8`.
-  Positive typed Form 1099-G Box 7 integration, guided intake, final 2026 forms
-  and qualified human tax review remain open.
+  Guided intake, final 2026 forms and qualified human tax review remain open.
   [2026 Schedule SE instructions](https://www.irs.gov/pub/irs-prior/i1040sse--2026.pdf) ·
   [26 USC §1402](https://uscode.house.gov/us/usc/119-134/t26/s1402/) ·
   [Publication 225](https://www.irs.gov/publications/p225) ·
   [Publication 596](https://www.irs.gov/publications/p596) ·
   [2025 EIC table](https://www.irs.gov/instructions/i1040gi).
+- `948e8d69` reconciles complete actual typed Form 1099-G Box 7 statements to
+  exact same-owner dated farm receipts. Tests verify both multiple originals
+  and duplicate refusal, a single Schedule F income entry, separate federal
+  withholding and no unemployment income. All 185 affected tests in five
+  files, three type checks and 8,774 spec references passed. The inventory
+  links the method as partial. Guided origin and filing qualification remain
+  open. [Form 1099-G instructions](https://www.irs.gov/instructions/i1099g).
+- `0411dab9` binds an actual Stripe Checkout Session to retained original
+  credit terms before returning the URL and reconciles the signed paid event
+  atomically. An independent engineering review found a cross-mode credit
+  leak and a separate unreconciled contradictory paid snapshot. `c4998c56`
+  closes the cross-mode path with an immutable PostgreSQL marker, preserves
+  unclassified historic rows for review and restores all eleven application
+  tables. The initial mode tests failed as expected and the final focused
+  cohort passed 247 tests in 13 files on disposable PostgreSQL 16.16. Credit
+  sales, paid conflict reconciliation, operator migration and staging remain
+  open. [AI credit ledger](upgrade-2026-ai-credit-issuance-work.md).
