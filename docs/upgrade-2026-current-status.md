@@ -9,6 +9,16 @@ The read-only Vercel check still finds the production project linked to
 `main`, with automatic custom-domain assignment and no build-ignore command.
 The isolated rehearsal project has no Git link and protects all deployments.
 
+`a022a2ec` replaces raw shared Redis identifiers with application-keyed
+pseudonyms. The exact webpack build passed 14 local hosted HTTP checks,
+including cross-process quota and outage/recovery. The protected Preview
+passed both synthetic sign-in and session checks, denied their canceled
+trial entitlements, and stored only two versioned Redis keys. The Preview,
+its four temporary settings and those Redis buckets were removed. Current
+lockfile production and full registry audits reported zero advisories across
+447 and 539 dependencies respectively. Exact combined and ARM64 checks
+continue. [Hosted and recovery evidence](upgrade-2026-nov13-release-rehearsals.md).
+
 `29fb2d29` adds Ohio's $50 senior credit to the internal withholding-only
 wage draft across all three residency categories. It binds prior credit
 history to the actual owners and applies the senior credit before personal,

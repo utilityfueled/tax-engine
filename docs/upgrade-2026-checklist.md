@@ -38,6 +38,11 @@ below retain their original evidence boundaries.
   retained death facts in `f7953115`. Pass 76 affected tests and bind the
   existing browser windows and collection to the corrected source in
   `0fb0c9a5`. Pass 179 audit and orchestration controls.
+- [x] Replace shared Redis raw identifiers with keyed pseudonyms in
+  `a022a2ec`. Pass 141 focused application tests, 204 orchestration controls,
+  14 exact local hosted HTTP checks and the protected Preview privacy and
+  auth checks. Verify removal of the Preview, temporary settings and both
+  pseudonymous buckets. Refresh both registry audits at the current lockfile.
 - [ ] Close the combined and ARM64 successor checks and qualify the final
   source on protected staging and native AMD64. Keep commits local while the
   production push hold is in effect.

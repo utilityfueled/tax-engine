@@ -2,6 +2,49 @@
 
 ## Hosted Preview
 
+### Healthy isolated Preview and Redis privacy on `a022a2ec`
+
+The hosted limiter now derives a versioned HMAC identifier from the existing
+server-side auth secret before sending each request bucket to Redis. This
+keeps raw client IPs and application identifiers out of shared Redis keys.
+The change starts fresh quotas on first deployment or secret rotation. Earlier
+keys age out under the existing window. Hosted startup requires both shared
+Redis credentials and the app secret.
+
+Two new unit regressions reproduced the raw identifiers and missing-secret
+admission. The fix passed 141 focused application tests and 204 audit and
+orchestration tests. The exact webpack build passed 14 local hosted HTTP
+checks across two Next processes and TLS PostgreSQL. The controlled Redis
+transport verified only versioned pseudonymous bucket keys, a shared quota
+and the existing fail-closed and recovery responses.
+
+The protected Preview ran the exact tracked archive against the existing
+synthetic Neon branch and a free disposable Upstash database. Unauthenticated
+health access returned the Vercel protection redirect. Protected health
+returned 200 and the anonymous workspace list returned 401. Both existing
+synthetic users signed in, reopened distinct sessions with secure HTTP-only
+cookies and received 403 for their canceled trial entitlements. Redis
+contained two expected pseudonymous bucket keys. The controller removed them,
+verified an empty Redis database, removed the Preview and confirmed 404,
+then verified restoration of the eight original Preview settings. The
+disposable Redis instance expires automatically on November 16. The first
+attempt stopped before deployment on Vercel's environment-create response
+wrapper and verified cleanup of its one setting and empty cache. No
+payment, provider inference or email was invoked.
+
+| Evidence | SHA-256 |
+| --- | --- |
+| Tracked archive | `497137cc6fbda01e941efab53120ebeebad4dea182a5e43b3fcf6e6112d91e62` |
+| Exact local HTTP result | `daf8302e3a1e7b60e4a515da881b52b8988c56fdd3b5daa648f2b9510bc454d6` |
+| Initial attempt and cleanup, 12 HTTP operations | `0091447f2c884758d4de0b8ef6708fbc4b7c9b7cbbcbb5b53a839d508970ec51` |
+| Protected Preview and cleanup, 37 HTTP operations plus CLI archive submission | `e6ecf3d1339204a35d54d4bb901c45916d09b5cb0ab4847020f94d11612d80c5` |
+
+The full tenant workspace lifecycle and automatic Stripe retry are recorded
+against the earlier source below. The healthy Preview above verifies current
+auth, entitlement enforcement and shared Redis privacy only.
+[Upstash ephemeral resource retention](https://upstash.com/blog/redis-database-for-agents) ·
+[Vercel request headers](https://vercel.com/docs/headers/request-headers).
+
 The tracked archive at `ab47d87f44597b4b43228ce17076098eccdecff9` passed
 all 12 local checks before deployment to the isolated protected Preview.
 The second build enabled the Preview-only workspace backend. Both synthetic

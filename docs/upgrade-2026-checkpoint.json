@@ -24351,5 +24351,39 @@
     "cleanupSha256": "cd32053478e94fc27e16e991280a6f3de2d3580c6280dd1e44122dc93d318b40",
     "normalStopAndSocketRestored": true,
     "ledger": "docs/upgrade-2026-nov13-release-rehearsals.md"
+  },
+  "nov13SharedRedisPseudonymQualification": {
+    "source": "a022a2ec6c889078fc057fe0f40c38e04616b56c",
+    "focusedApplicationTestsPassed": 141,
+    "orchestrationTestsPassed": 204,
+    "hostedHttpLocalChecksPassed": 14,
+    "hostedHttpLocalResultSha256": "daf8302e3a1e7b60e4a515da881b52b8988c56fdd3b5daa648f2b9510bc454d6",
+    "trackedSourceArchiveSha256": "497137cc6fbda01e941efab53120ebeebad4dea182a5e43b3fcf6e6112d91e62",
+    "protectedPreview": {
+      "signedInSyntheticUsers": 2,
+      "canceledTrialWorkspaceDenials": [
+        403,
+        403
+      ],
+      "redisVersionedPseudonymousKeysDeleted": 2,
+      "redisAutomaticallyExpires": "2026-11-16",
+      "deploymentAndTemporarySettingsRemovalVerified": true,
+      "redisEmptyReadback": true,
+      "httpOperations": 37,
+      "initialNoBuildAttemptHttpOperations": 12,
+      "initialAttemptReceiptSha256": "0091447f2c884758d4de0b8ef6708fbc4b7c9b7cbbcbb5b53a839d508970ec51",
+      "receiptSha256": "e6ecf3d1339204a35d54d4bb901c45916d09b5cb0ab4847020f94d11612d80c5",
+      "fullStagingQualified": false
+    },
+    "packageAdvisories": {
+      "lockfileGitBlob": "fd20053777d90ddd5bf99815ea597a6a434d07bb",
+      "lockfileSha256": "64cccb8d87c0bfb6422210ecf5b4c12e6a1ef468976d7d68a466e5e5a744c4a2",
+      "prodDependencyRecords": 447,
+      "fullDependencyRecords": 539,
+      "advisories": 0,
+      "prodAuditSha256": "802c55f7c0fed74cd44169b476634570a7f531cdf59d8a8688e396513ae3e5ce",
+      "fullAuditSha256": "2bd34d50bec6f2f16e90551fcae80e94f898eabc4c169417a21a74f3fdf42d1f"
+    },
+    "ledger": "docs/upgrade-2026-nov13-release-rehearsals.md"
   }
 }
