@@ -21,6 +21,21 @@ Form 8812 interview object. Two regressions reproduced that failure and all
 still require separate source methods. Both drafts await qualified review and
 final state form qualification. [State sources and evidence](upgrade-2026-state-gaps.md).
 
+`813242a5` adds a zero-credit proof to the Pennsylvania wage draft for
+confirmed childless, living single filers outside the federal EIC age range.
+It reuses the federal calendar rule and keeps the within-age, below-cutoff
+case unavailable. Confirmed income of $15,000 with a birth date of December
+31, 1961 or January 2, 2002 produces $461 in state tax before credits and
+zero federal EIC and Pennsylvania working credit. The adjacent eligible
+birth dates, stale or missing child evidence, invalid dates and contradictory
+death facts cannot use this proof. Two failing tests preceded the fix.
+All 81 focused checks and 8,899 spec references passed, with types, inventory
+and scoped lint. `b7ffd2c1` binds the reviewed changes to the unchanged browser
+request budget. All 178 orchestration and runtime proof checks passed.
+The full `b7ffd2c1` archive verification is in progress.
+[IRS Publication 596 Rule 11](https://www.irs.gov/publications/p596) ·
+[Pennsylvania Act 45 of 2025](https://www.palegis.us/statutes/unconsolidated/law-information/view-statute?ActNum=0045.&SessInd=0&SessYr=2025&txtType=PDF).
+
 `00f5a9b1` projects the IRS Taylor and Finley building-exchange examples on
 the disabled final Form 8824. All 162 focused checks passed. Independent
 Decimal derivations and a second PDF reader verified the two ordinary

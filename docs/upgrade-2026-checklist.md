@@ -12,6 +12,13 @@ below retain their original evidence boundaries.
 - [x] Restore the Pennsylvania guided state-only wage handoff in `e414cb0e`.
   Pass 73 affected checks, including unknown and positive Form 8812 values,
   combat pay and stale confirmation. [State sources and evidence](upgrade-2026-state-gaps.md).
+- [x] Verify the separate childless age zero-credit proof for Pennsylvania in
+  `813242a5`. Pass 81 focused checks and 8,899 spec references, including
+  adjacent eligible dates, changed and invalid records, and unchanged
+  filing and federal calculation gates.
+- [x] Bind the state changes to the existing browser request ceilings in
+  `a445aad7` and `b7ffd2c1`. Pass 178 targeted orchestration checks and
+  match the complete 621-case collection on `a445aad7`.
 - [x] Project the IRS Taylor and Finley building-exchange examples on the
   disabled final Form 8824 in `00f5a9b1`. Pass 162 focused checks, 8,892 spec
   references and separate readback and visual inspection of four pages.
