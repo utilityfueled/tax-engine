@@ -26,6 +26,12 @@ below retain their original evidence boundaries.
 - [x] Bind the final 2026 Form 8824 blank and instructions. Verify all 68
   physical fields and both diagnostic pages independently. Keep the annual
   candidate outside the review and filing registries.
+- [x] Bind the final 2026 Form 6252 and its integral instructions. Independently
+  verify the 49 widgets and all four diagnostic pages. Keep annual exports
+  unavailable.
+- [x] Verify the Pennsylvania union-dues interview in managed desktop and
+  mobile Chromium. Confirm zero versus unknown, source edits and saved-return
+  replay, plus exact tax and refund. Preserve the 30-second test deadlines.
 - [x] Complete the archived `a1349ad8` local verification. All 12 commands,
   27,434 unit and coverage tests, 87.71% branch coverage and 587 Chromium
   cases passed. The five hosted-only skips remain.

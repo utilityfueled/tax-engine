@@ -15,6 +15,12 @@ below apply to their named revisions.
   A separate audit reopened every serialized object and confirmed the stale
   signature and packet streams were absent. Both rendered pages were identical.
 
+- November 12: `fe7b3279` binds the final 2026 Form 6252 and its integral
+  instructions. Independent review matched all 49 widgets, reopened the
+  diagnostic and compared four rendered pages. Eight tests and five spec
+  references passed. Annual review and filing exports remain disabled.
+  [Final IRS form and instructions](https://www.irs.gov/pub/irs-prior/f6252--2026.pdf).
+
 - November 12: The actual locked Stripe SDK passed 18 offline transport
   checks for `34eec376`. It encoded the fixed USD offer and payment controls
   as expected. The configured Price read timeout applies per request. The SDK
@@ -23,6 +29,14 @@ below apply to their named revisions.
   Report SHA-256 `69ef613302677faf8bd5a5469a24745e41b01af7c0dbd0991d8aa38f121f0fcb`.
   [Checkout Session object](https://docs.stripe.com/api/checkout/sessions/object)
   and [Stripe update API](https://docs.stripe.com/api/checkout/sessions/update).
+
+- November 12: `b99cde43` adds two Pennsylvania union-dues browser cases.
+  Both passed in managed Chromium at 1280 and 390 pixels with zero protected
+  requests or page errors. The cases verified a $1,529 tax and $10 refund,
+  original-source replay and invalidation after edits. The focused runner
+  checks passed 79 tests. The previous 592 cases retain their identities and
+  the strict 30-second deadlines. The full 594-case run is pending.
+  Managed summary SHA-256 `dc0f59b2a73c030c2c3d71ac7fd69e36b85ea208c32b1317aa9736156aa379e8`.
 
 - November 12: `bb9a326f` applies the regular Schedule SE threshold to
   exact net earnings and sums each owner's W-2 and Tier 1 originals before

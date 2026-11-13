@@ -23246,6 +23246,33 @@
     "exportsEnabled": false,
     "filingQualified": false
   },
+  "nov12Form6252PhysicalCandidate": {
+    "commit": "fe7b3279",
+    "taxYear": 2026,
+    "blankSha256": "efecc62a9ed84ba8328eaceecc71305b7176ffa072ad24a30bb9cb4d5ded9310",
+    "widgets": 49,
+    "pages": 4,
+    "independentFocusedPassed": 8,
+    "independentReportSha256": "6b8dce5ce7f3fc3a34a21da7c1e4e7b21c50c05eefc8412a8d3410fa83ff8326",
+    "exportsEnabled": false,
+    "filingQualified": false
+  },
+  "nov12PaUnionDuesBrowser": {
+    "commit": "b99cde43",
+    "testSha256": "8a823ff2efce46d0b39d1abc3e45128e4d436fa7b98fa23fcce99a539f796e5c",
+    "verifiedSummarySha256": "dc0f59b2a73c030c2c3d71ac7fd69e36b85ea208c32b1317aa9736156aa379e8",
+    "currentStrictCollectionSha256": "132ea729e23611b8bad0b18becaf65488d055c9bd6add751bdd9d0a13cb3919c",
+    "viewports": [1280, 390],
+    "managedPassed": 2,
+    "originalHostedSkips": 5,
+    "deadlineMs": 30000,
+    "retries": 0,
+    "protectedRequests": 0,
+    "syntheticTax": "1529",
+    "syntheticRefund": "10",
+    "fullUpdatedCollectionQualified": false,
+    "filingQualified": false
+  },
   "nov12HostedCreditSettlement": {
     "previewReceiptCommit": "d39209dec302d249a5f01fe8baf23cc4ca2130f8",
     "settlementCommit": "8357ed9929766a8e5ed0ac7c45321cdccd44d35a",
