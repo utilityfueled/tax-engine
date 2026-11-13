@@ -31,14 +31,42 @@ const beneficiaryElection = {
   receivedBecauseOfDeath: true, priorBeneficiaryElectionForParticipant: false, federalEstateTax: "0",
 } satisfies Form4972Input;
 const beneficiaryAnswers = { recipientIsParticipantForThisDistribution: false, recipientUsedForm4972ForOwnPlanAfter1986: false };
+const annuityElection = {
+  ...election, sourceKind: "own_plan", taxableAmount: "11000", actuarialValue: "2000", lumpSumAnnuityValueConfirmed: true,
+} satisfies Form4972Input;
 
 it("holds the beneficiary method outside the own-plan physical map", () => {
   expect(() => projectForm49722026OwnPlan(beneficiaryElection)).toThrow(/physical.*participant's own plan/u);
 });
 
-it("holds positive Box 8a outside the zero-value physical candidate", () => {
-  const annuity = { ...election, actuarialValue: "2500", lumpSumAnnuityValueConfirmed: true };
-  expect(() => projectForm49722026OwnPlan(annuity)).toThrow(/physical.*zero Box 8a/u);
+it("projects the confirmed own-plan actuarial adjustment", () => {
+  const { text } = projectForm49722026OwnPlan(annuityElection);
+  expect(text).toMatchObject({
+    [fields.line11]: "2000", [fields.line12]: "8000", [fields.line16]: "4000",
+    [fields.line20Whole]: "0", [fields.line20Fraction]: "250", [fields.line21]: "1000", [fields.line22]: "1000",
+    [fields.line25]: "440", [fields.line26]: "100", [fields.line27]: "11", [fields.line28]: "110",
+    [fields.line29]: "330", [fields.line30]: "1330",
+  });
+  const capitalOnly = projectForm49722026OwnPlan({ ...annuityElection, election: "capital_gain" });
+  expect(capitalOnly.text).toEqual({ [fields.line6]: "5000", [fields.line7]: "1000" });
+  expect(() => projectForm49722026OwnPlan({ ...annuityElection, lumpSumAnnuityValueConfirmed: false })).toThrow(/Box 8a/u);
+});
+
+it("uses additional decimal places when the printed ratio would change the allowance", () => {
+  const { text } = projectForm49722026OwnPlan({ ...annuityElection, taxableAmount: "15000", actuarialValue: "2000" });
+  expect(text).toMatchObject({
+    [fields.line20Whole]: "0", [fields.line20Fraction]: "1667", [fields.line21]: "1000", [fields.line22]: "1000",
+    [fields.line25]: "660", [fields.line26]: "100", [fields.line27]: "11", [fields.line28]: "110",
+    [fields.line29]: "550", [fields.line30]: "1550",
+  });
+  const aboveThreshold = projectForm49722026OwnPlan({ ...annuityElection, grossDistribution: "100000", taxableAmount: "92050", actuarialValue: "5000" });
+  expect(aboveThreshold.text).toMatchObject({
+    [fields.line12]: "92050", [fields.line20Whole]: "0", [fields.line20Fraction]: "054", [fields.line21]: "0",
+    [fields.line22]: "5000", [fields.line25]: "13040", [fields.line28]: "550", [fields.line30]: "13490",
+  });
+  expect(aboveThreshold.text[fields.line16]).toBeUndefined();
+  expect(() => projectForm49722026OwnPlan({ ...annuityElection, taxableAmount: "20000", actuarialValue: "3000" })).toThrow(/reconcile/u);
+  expect(() => projectForm49722026OwnPlan({ ...annuityElection, actuarialValue: "0.49" })).toThrow(/reconcile/u);
 });
 
 it("pins the final form and every original widget", async () => {
@@ -179,6 +207,11 @@ it("reopens the marked beneficiary specimen", async () => {
   const project = form4972Candidate.projectForm49722026DeathBeneficiary;
   expect(project).toBeTypeOf("function");
   await verifySavedSpecimen(project(beneficiaryElection, beneficiaryAnswers), "form-4972-beneficiary-review.pdf");
+});
+
+it("reopens the marked own-plan annuity specimen", async () => {
+  await verifySavedSpecimen(projectForm49722026OwnPlan({ ...annuityElection, taxableAmount: "15000", actuarialValue: "2000" }),
+    "form-4972-own-plan-annuity-review.pdf");
 });
 
 it("keeps annual review and filing exports unavailable", () => {

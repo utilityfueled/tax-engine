@@ -22,14 +22,27 @@ lines:
     formula: >-
       Use the finite Form 4972 calculator and preserve its elected parts and
       whole-dollar arithmetic. Mark 1 Yes, 2 No, 3 No, 4 Yes and 5a No. Leave
-      5b, 9 and 18 blank for the participant's own distribution. Carry line 11
-      zero when Part III applies. Leave line 20 and the other actuarial fields,
+      5b, 9 and 18 blank for the participant's own distribution. Leave the
       instruction worksheets and both identity fields blank. Reject rounding
       that changes the branch or prevents the printed amounts from reconciling.
     testRef: "tests/pdf/form-4972-2026-candidate.test.ts::projects only the applicable cells of each election"
     testRefs:
       - "tests/pdf/form-4972-2026-candidate.test.ts::holds amounts that cannot reconcile in whole dollars"
-      - "tests/pdf/form-4972-2026-candidate.test.ts::holds positive Box 8a outside the zero-value physical candidate"
+  - line: "11, 20-22, 26-29"
+    description: "Project a confirmed own-plan actuarial adjustment"
+    formula: >-
+      For Part III, show line 11 zero with 20 through 22 and 26 through 28
+      blank when Box 8a is zero. Otherwise show line 11 and split the ratio of
+      printed lines 11 and 12 into the whole and fraction widgets on line 20.
+      Use the shortest precision from three through six places for which the
+      shown line 16 times the displayed ratio rounds to the calculated line 21.
+      If line 16 is blank at or above $70,000, use zero allowance. Require the
+      displayed actuarial amounts and separate tax to reconcile in whole dollars.
+      Leave all actuarial fields blank for a Part II only election.
+    testRef: "tests/pdf/form-4972-2026-candidate.test.ts::projects the confirmed own-plan actuarial adjustment"
+    testRefs:
+      - "tests/pdf/form-4972-2026-candidate.test.ts::uses additional decimal places when the printed ratio would change the allowance"
+      - "tests/pdf/form-4972-2026-candidate.test.ts::reopens the marked own-plan annuity specimen"
   - line: "1-30-beneficiary"
     description: "Project the confirmed single death-beneficiary election"
     formula: >-

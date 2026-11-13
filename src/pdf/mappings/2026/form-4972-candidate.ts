@@ -75,9 +75,6 @@ export const FORM_4972_2026_CANDIDATE = Object.freeze({
 
 function projectElectionAmounts(source: Form4972Input) {
   const exact = calculateForm4972(source);
-  if (!d(source.actuarialValue).isZero()) {
-    throw new Error("The Form 4972 physical candidate requires confirmed zero Box 8a");
-  }
   const rounded = (value: string) => roundDollar(d(value)).toFixed(0);
   const capitalGain = rounded(source.capitalGain);
   const reconciliationError = "Form 4972 cannot reconcile the elected parts in whole dollars";
@@ -87,19 +84,27 @@ function projectElectionAmounts(source: Form4972Input) {
     grossDistribution: rounded(source.grossDistribution),
     taxableAmount: rounded(source.taxableAmount),
     capitalGain,
+    actuarialValue: rounded(source.actuarialValue),
   });
   const sameLines = exact.lines.length === printed.lines.length && exact.lines.every((line, index) =>
-    line.line === printed.lines[index].line && roundDollar(line.value).eq(roundDollar(printed.lines[index].value)));
-  const { line6, line7, line8, line12, line13, line14, line15, line16, line17, line19, line23, line24, line25, line29, line30 } = Object.fromEntries(
+    line.line === printed.lines[index].line && (line.line === "20" || roundDollar(line.value).eq(roundDollar(printed.lines[index].value))));
+  const {
+    line6, line7, line8, line10, line11, line12, line13, line14, line15, line16, line17, line19,
+    line21, line22, line23, line24, line25, line26, line27, line28, line29, line30,
+  } = Object.fromEntries(
     exact.lines.map(({ line, value }) => [`line${line}`, roundDollar(value)]),
   );
   const shownAllowance = line16 ?? d(0);
   const roundedFormulasAgree = (!line6 || (line6.gt(0) && roundDollar(line6.times("0.20")).eq(line7)))
     && (!line13 || (line13.minus(line15).eq(line16) && roundDollar(line14.times("0.20")).eq(line15)))
     && (!line8 || (roundDollar(d(source.taxableAmount)).minus(line6 ?? d(0)).eq(line8)
+      && line10.plus(line11).eq(line12)
       && line12.minus(shownAllowance).eq(line17) && line19.times("0.10").eq(line23)
       && line24.times(10).eq(line25)));
+  const annuityAgrees = !line22 || (line11.minus(line21).eq(line22) && line22.times("0.10").eq(line26)
+    && line27.times(10).eq(line28) && line25.minus(line28).eq(line29));
   if (!sameLines || !roundedFormulasAgree
+    || !annuityAgrees
     || (line30 && !(line7 ?? d(0)).plus(line29).eq(line30))
     || !roundDollar(printed.ordinaryPensionTransfer).eq(roundDollar(exact.ordinaryPensionTransfer))) {
     throw new Error(reconciliationError);
@@ -107,10 +112,20 @@ function projectElectionAmounts(source: Form4972Input) {
 
   const text: Record<string, string> = {};
   for (const { line, value } of exact.lines) {
-    if (line === "9" || (line === "18" && source.sourceKind !== "death_beneficiary")) continue;
+    if (line === "9" || line === "20" || (line === "18" && source.sourceKind !== "death_beneficiary")) continue;
     const key = `line${line}`;
     if (!Object.hasOwn(page1Money, key)) throw new Error(`Unmapped Form 4972 line ${line}`);
     text[page1Money[key as keyof typeof page1Money]] = roundDollar(value).toFixed(0);
+  }
+  if (line21) {
+    const ratio = line11.dividedBy(line12);
+    const displayed = [3, 4, 5, 6].map(places => ratio.toFixed(places)).find(candidate =>
+      roundDollar(shownAllowance.times(candidate)).eq(line21));
+    if (!displayed) throw new Error(reconciliationError);
+    const [whole, fraction] = displayed.split(".");
+    const { fields } = FORM_4972_2026_CANDIDATE;
+    text[fields.line20Whole] = whole;
+    text[fields.line20Fraction] = fraction;
   }
   return text;
 }

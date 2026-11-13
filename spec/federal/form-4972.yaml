@@ -82,7 +82,8 @@ lines:
       26 is line 22 times 0.10, line 27 uses the same schedule and line 28
       is line 27 times 10. Line 29 is line 25 minus any line 28. Do not add
       Box 8a to the capital gain election or ordinary pension transfer.
-      The disabled own-plan physical candidate still requires zero Box 8a.
+      The disabled own-plan physical candidate checks that the printed ratio
+      and whole-dollar amounts reconcile before showing the adjustment.
     testRef: "tests/engine/forms/form-4972.test.ts::uses the printed rate table across every band boundary for %s"
     testRefs:
       - "tests/engine/forms/form-4972.test.ts::apportions the allowance to a confirmed annuity contract"
