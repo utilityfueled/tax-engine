@@ -88,6 +88,33 @@ with OpenSSL and the same verified release source before the rerun.
 
 ## ARM64 self-host
 
+### Completed archive at `a445aad7`
+
+The native Linux ARM64 runtime passed separate image-store import and
+smoke, SBOM generation and Grype scanning, six Compose recovery phases,
+and the browser rehearsal. Chromium collected 621 cases, passed 616 and
+recorded five hosted-only skips. The test VM stopped normally with zero
+cleanup errors. Its user socket route was restored and the root socket
+route and default VM were verified unchanged.
+
+Grype recorded 197 matches across 86 IDs, including 60 High and zero
+Critical or available-fix matches. The findings remain open for the
+security owner's disposition. The evidence belongs to the tested archive.
+
+| ARM64 evidence | SHA-256 |
+| --- | --- |
+| Tracked source archive | `7b339c8ec9af57bff12fd9158fb7a619ee35513a7a2e8cf3a890232dbb48ab67` |
+| Runtime image ID | `1253a46fbfeb9ee12f2a9ea7eb05e745af591a407ee7eafca8e59e1be54f6dd3` |
+| Runtime image archive | `c358b5bcdcd52ca6310db0e548b2aa42d4a1afc2487994afd02117c50db3869f` |
+| CycloneDX SBOM | `d4b76f4ab1eedfd78786ae0687fa88b97da0475d1494d7e8b582966c23c2d646` |
+| Grype scan | `03c0da2cf21b11747e51fd4510c29c5c821b57f8e51d8b02152bf67f3fa24265` |
+| Compose recovery | `4c15a8f73bc344f935b3dace6eb5175583819920a3d81207478183590a802492` |
+| Chromium transcript | `1684afe7f97cd6f2bf584b93b544de4d57164c71bac099881aef684ec7ea82af` |
+| Complete rehearsal receipt | `92614bc2a3f0c7a143b119ba12a783bb3887db82c5aeccdfe975c88d7b7806f2` |
+| Normal stop and socket restoration | `cd32053478e94fc27e16e991280a6f3de2d3580c6280dd1e44122dc93d318b40` |
+
+### Earlier ARM64 runs
+
 The `c94971cd` rehearsal booted a native Linux aarch64 guest without host
 filesystem exports, then stopped normally and restored the original user
 socket route. It found 76,500,164,608 available guest bytes and stopped before

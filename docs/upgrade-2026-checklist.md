@@ -31,9 +31,16 @@ below retain their original evidence boundaries.
   fail-closed response using isolated builds. Verify both deletions and
   the separate 13-check local PostgreSQL TLS rehearsal.
   [Rehearsal evidence](upgrade-2026-nov13-release-rehearsals.md).
-- [ ] Finish the exact `b7ffd2c1` combined and ARM64 checks, then qualify
-  the final source on protected staging and native AMD64. Keep commits
-  local while the production push hold is in effect.
+- [x] Finish the exact `a445aad7` ARM64 rehearsal. Pass image smoke, SBOM
+  generation and scan, six Compose recovery phases and 616 Chromium
+  cases with five hosted-only skips. Verify normal stop and socket restoration.
+- [x] Guard all Pennsylvania wage-draft proof branches against contradictory
+  retained death facts in `f7953115`. Pass 76 affected tests and bind the
+  existing browser windows and collection to the corrected source in
+  `0fb0c9a5`. Pass 179 audit and orchestration controls.
+- [ ] Close the combined and ARM64 successor checks and qualify the final
+  source on protected staging and native AMD64. Keep commits local while the
+  production push hold is in effect.
 
 - [x] Reconfirm the dependent-care worksheet after income-source changes and
   document the separate Code Q treatment for care and IRA compensation in

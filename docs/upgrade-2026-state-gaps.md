@@ -27,7 +27,7 @@ joint and residency credits. The January 1, 1962 age boundary, older taxpayers
 with specialized income or school district facts, and credit carryforwards
 remain held. Five new regressions failed before the implementation. The seven
 affected suites passed 348 tests, including the $100,000 boundary and all three
-residencies. [Ohio R.C. 5747.055](https://codes.ohio.gov/ohio-revised-code/section-section-5747.055) · [Credit order](https://codes.ohio.gov/ohio-revised-code/section-5747.98).
+residencies. [Ohio R.C. 5747.055](https://codes.ohio.gov/ohio-revised-code/section-5747.055) · [Credit order](https://codes.ohio.gov/ohio-revised-code/section-5747.98).
 
 `e414cb0e` restores the finite Pennsylvania wage draft from actual saved
 interview data containing neutral Form 8812 answers. The checked fixture

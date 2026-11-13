@@ -36,6 +36,18 @@ The full `b7ffd2c1` archive verification is in progress.
 [IRS Publication 596 Rule 11](https://www.irs.gov/publications/p596) ·
 [Pennsylvania Act 45 of 2025](https://www.palegis.us/statutes/unconsolidated/law-information/view-statute?ActNum=0045.&SessInd=0&SessYr=2025&txtType=PDF).
 
+`f7953115` applies the Pennsylvania retained death-date guard before both
+the high-income and childless proof branches. Omitted or null dates still
+work with a confirmed full-year living fact. A retained date must go through
+a separately qualified method. The regression reproduced the unguarded
+high-income path and now checks contradictory records across all three
+residency categories. All 76 focused checks, 8,900 spec references, engine
+and web types, inventory and scoped lint passed. `0fb0c9a5` binds the browser
+audit to that change with unchanged windows and collection. All 179
+orchestration and provenance checks passed.
+[Pennsylvania DFO-02](https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/dfo-02.pdf) ·
+[IRS Form 1040 instructions](https://www.irs.gov/instructions/i1040gi).
+
 `00f5a9b1` projects the IRS Taylor and Finley building-exchange examples on
 the disabled final Form 8824. All 162 focused checks passed. Independent
 Decimal derivations and a second PDF reader verified the two ordinary
