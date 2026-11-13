@@ -1,7 +1,8 @@
 // Spec: spec/federal/form-2210-schedule-ai.yaml guide.
 import { expect, it } from 'vitest';
 import { buildEstimatedTaxFacts, emptyAnnualizedPeriods, emptyEstimatedTaxFacts, hasOrdinaryPreferentialPeriodAmounts } from '@/lib/guided-estimated-tax-facts';
-import { emptyPaymentData } from '@/lib/guided-interview-flow';
+import { emptyPaymentData, updateSectionData } from '@/lib/guided-interview-flow';
+import { completeDividendSource, startCompleteInterview } from './complete-facts';
 
 const periods = () => emptyAnnualizedPeriods().map(period => Object.fromEntries(Object.keys(period).map(key => [key, '0'])) as typeof period);
 function firstPeriod(rows: ReturnType<typeof periods>) {
@@ -44,4 +45,35 @@ it('collects farmer and waiver facts without defaults', () => {
   const waiver = { ...regular, waiverRequested: true, waiverKind: 'partial' as const, waiverReason: 'retirement_or_disability' as const, waiverStatementReference: 'Fictional statement' };
   expect(() => buildEstimatedTaxFacts(data(waiver), 2025)).toThrow(/waiver kind/);
   expect(buildEstimatedTaxFacts(data({ ...waiver, waiverAmount: '1,000' }), 2025)).toMatchObject({ waiverAmount: '1000', waiverKind: 'partial' });
+});
+
+it('revokes ordinary period confirmation when its return sources change', () => {
+  const state = startCompleteInterview({ filingStatus: 'single', incomeTypes: ['investments'], lifeEvents: [], stateCode: null });
+  const rows = periods();
+  firstPeriod(rows).qualifiedDividends = '1234.56';
+  const payments = data({ annualizedIncomePeriods: rows, ordinaryPreferentialPeriodsConfirmed: true });
+  state.sectionData.payments = payments;
+  const firstPayer = { ...completeDividendSource, ordinaryDividends: '1800', qualifiedDividends: '1234.56' };
+  state.sectionData['income-investments'] = { interestEntries: [], dividendEntries: [firstPayer], brokerageEntries: [] };
+
+  const withPayment = updateSectionData(state, 'payments', { ...payments, estimatedPayments: [{ date: '2025-04-15', amount: '100' }] });
+  expect(withPayment.sectionData.payments?.estimatedTaxFacts?.ordinaryPreferentialPeriodsConfirmed).toBe(true);
+  const changedReference = updateSectionData(state, 'payments', {
+    ...payments, estimatedTaxFacts: { ...payments.estimatedTaxFacts, sourceReference: 'Replacement worksheet reference' },
+  });
+  expect(changedReference.sectionData.payments?.estimatedTaxFacts?.ordinaryPreferentialPeriodsConfirmed).toBeNull();
+  const changed = updateSectionData(withPayment, 'income-investments', {
+    ...state.sectionData['income-investments'], dividendEntries: [{ ...firstPayer, payer: 'Replacement synthetic fund' }],
+  });
+  const retained = changed.sectionData.payments?.estimatedTaxFacts;
+  expect(retained?.annualizedIncomePeriods).toEqual(rows);
+  expect(retained?.sourceFactsConfirmed).toBeNull();
+  expect(retained?.ordinaryPreferentialPeriodsConfirmed).toBeNull();
+  expect(buildEstimatedTaxFacts(payments, 2025)?.ordinaryPreferentialPeriodsConfirmed).toBe(true);
+
+  if (!changed.sectionData.payments || !retained) throw new Error('Missing retained source history');
+  const onlyOverallReconfirmed = updateSectionData(changed, 'payments', {
+    ...changed.sectionData.payments, estimatedTaxFacts: { ...retained, sourceFactsConfirmed: true },
+  });
+  expect(() => buildEstimatedTaxFacts(onlyOverallReconfirmed.sectionData.payments, 2025)).toThrow(/confirm the ordinary preferential/i);
 });

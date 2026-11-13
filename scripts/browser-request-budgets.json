@@ -101,7 +101,7 @@
     "apps/web/src/components/guided-interview/eic-disallowance-history-details.tsx": "396ffeaf5cc03610a07fd2cf99d37f8a86cecfe2e395b54f8b968f6a0a41ffce",
     "apps/web/src/components/guided-interview/eic-separated-spouse-details.tsx": "f99f9fb9f8b22163dd1eeaf0f95d4f478756c2ba52bd08ba60a3eb5a1af7ace6",
     "apps/web/src/components/guided-interview/energy-source-details.tsx": "83176550278e3b7cc799fe08bbc61e376fafedb26af4704cefa6edf2176288df",
-    "apps/web/src/components/guided-interview/estimated-tax-source-details.tsx": "01df2cc965b6249adf3ddfe327d0a03fe4cc851b6a739c8a56c499a762a01c8a",
+    "apps/web/src/components/guided-interview/estimated-tax-source-details.tsx": "98db7b668d77ef6774c7a5c1e1a35827a0f9f6bbfc66c9d51214189a0f11dced",
     "apps/web/src/components/guided-interview/fact-fields.tsx": "32f389e83a0cf2c60102ef69c2e5e6711a12da27b38149ac17f0ae1fb5bdfc72",
     "apps/web/src/components/guided-interview/foreign-income-details.tsx": "e8445b24b8c82756d3afae4635cb38db7c1ad12e1007cdfe4e1607e85a544844",
     "apps/web/src/components/guided-interview/foreign-tax-carryover-details.tsx": "f180bcb693b02d344023f4c0aef67c20512ec379b30dd0103e041f621e2d6989",
@@ -287,7 +287,7 @@
     "apps/web/src/lib/guided-hsa-distribution-facts.ts": "e9ce96eb9f2c2297fca1dd53ca311b2b42545da4a3a2ec257fcf702daac9060f",
     "apps/web/src/lib/guided-hsa-facts.ts": "bad97489b43ff81ed079b9c193f1f77f6fd62950ee159256456a79a6d009654e",
     "apps/web/src/lib/guided-interview-bridge.ts": "a59463f2307afd0e5ed121fb9495cf9d46d6fcce4f760d336478adb3743cad15",
-    "apps/web/src/lib/guided-interview-flow.ts": "8227e595fb3d91fad80b03b25724386474592ca084b463e1ac520f9808e93b9d",
+    "apps/web/src/lib/guided-interview-flow.ts": "deba1575400b1d3f62437b86dc49ae910ad770915f94146c434b24093703c2fc",
     "apps/web/src/lib/guided-investment-facts.ts": "c05786de5c12a4341371294d2a926ec64aae99eeeb8ffcbe5595c6fe9c3727dc",
     "apps/web/src/lib/guided-investment-interest.ts": "3f55441684455777dac810e9122e14345944f6f5e4262e1f2e4447eff1b1118b",
     "apps/web/src/lib/guided-ira-basis.ts": "b6dff39b2a47ff2c56d233b91e9fa52fa35a75443577b2b33754edaa65c18473",
@@ -550,6 +550,7 @@
     "apps/web/tests/guided-room-board-prior-use.spec.ts": "d7154ff328f4ce49244f38816ffcd31f9e660ea5c0ccd2072bd5784f8b71a822",
     "apps/web/tests/guided-savings-bond-reissue-fixture.ts": "d7e8f9e581f3b0d852f591cd60f804488448f33d62b41575dbb8048e293bd9ae",
     "apps/web/tests/guided-savings-bond-reissues.spec.ts": "74763712b1ba036dc10b11e9a288c5d6db8ff9d88694639baef1bc31e7f9ea08",
+    "apps/web/tests/guided-schedule-ai.spec.ts": "691380825d67a4c6d345fcfac5a81dcb537c44ee6f953a9a17db7aaff6b218e5",
     "apps/web/tests/guided-schedule-d-sources.spec.ts": "7bd96c86ec8792aa09749c9f37c9259fd3cf838c437f70ece2e905a972db0185",
     "apps/web/tests/guided-shared-health-other-allocations.spec.ts": "a722ee20dc914860076f615eb62fed788d44713daa1c9f729cdfe218b73e9f45",
     "apps/web/tests/guided-shared-marketplace-health.spec.ts": "f19645d55c12bcb9609b037b714bfa795aebb8d21a089f210b721d9c2de80395",
@@ -3097,6 +3098,18 @@
         78
       ],
       "reviewBasis": "Reviewed fixed actual download action and helper invocation sites; expected400 filing POSTs included; conservative per-file bound applies to every registered case",
+      "skippedTitles": []
+    },
+    "guided-schedule-ai.spec.ts": {
+      "caseCount": 1,
+      "bounds": {
+        "filled-return": 0,
+        "provider": 0,
+        "business-expense-analysis": 0,
+        "self-employment-income-analysis": 0
+      },
+      "requestSourceLines": [],
+      "reviewBasis": "New local synthetic return, estimated-tax fields and reload only. No calculation, download or provider actions.",
       "skippedTitles": []
     },
     "guided-schedule-d-sources.spec.ts": {

@@ -15,7 +15,7 @@ export function EstimatedTaxSourceDetails({ data, appliedCredits = [], taxYear, 
     const changedMethod = patch.calculationMethod !== undefined && patch.calculationMethod !== data.calculationMethod;
     const next = { ...data, ...patch };
     if (changedMethod) next.selfEmploymentOwnerPeriods = data.selfEmploymentOwnerPeriods?.map(row => ({ ...row, sourceFactsConfirmed: null }));
-    if (changedMethod || patch.sourceTaxYear !== undefined || patch.annualizedIncomePeriods !== undefined) {
+    if (changedMethod || patch.sourceTaxYear !== undefined || patch.sourceReference !== undefined || patch.annualizedIncomePeriods !== undefined) {
       next.ordinaryPreferentialPeriodsConfirmed = null;
     }
     if (Object.keys(patch).some(key => key !== "sourceFactsConfirmed")) next.sourceFactsConfirmed = null;
