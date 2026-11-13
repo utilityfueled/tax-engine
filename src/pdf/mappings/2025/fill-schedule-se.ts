@@ -28,7 +28,7 @@ export function assertCashFarmCrpReview(input:TaxYearInput,result:TaxReturnResul
   if(!input.scheduleF?.agriculturalPaymentSources&&!se?.excludedCashFarmCrp?.gt(0)
     && !se?.perTaxpayer.some(row=>row.reviewAttachment==="crp-zero"))return;
   const crp=resolveCashFarmCrp(input);
-  if(!se?.excludedCashFarmCrp?.eq(crp.excluded))throw new Error("Schedule SE CRP review requires the current original receipt and benefit sources");
+  if(!se||!d(se.excludedCashFarmCrp).eq(crp.excluded))throw new Error("Schedule SE CRP review requires the current original receipt and benefit sources");
   assertCashFarmPaymentTotal(input,result);
   if(crp.excluded.isZero())return;
   const owners=se.perTaxpayer.filter(row=>row.accountHolder===crp.accountHolder);

@@ -42,7 +42,7 @@ it("requires actual dated receipts and benefit facts that reconcile to the taxab
     expect(() => calculateScheduleSE(single(valid, { formSSA1099: annual }), getConstants(2025))).toThrow(/annual.*SSA-1099/i);
   }
   const repaid = calculateScheduleSE(single(valid, { formSSA1099: [annualFarmBenefit("primary", 2025, "0")] }), getConstants(2025));
-  expect(repaid.excludedCashFarmCrp.toFixed()).toBe("1000");
+  expect(repaid.excludedCashFarmCrp?.toFixed()).toBe("1000");
 
   const legacy = single({ agriculturalProgramPayments: "1000" });
   const result = calculateScheduleSE(legacy, getConstants(2025));
@@ -144,7 +144,7 @@ it("reconciles Box 7 originals to the farm ledger before calculating the return"
   expect(result.form1099G?.otherIncome.toFixed()).toBe("0");
   expect(result.form1099G?.federalWithheld.toFixed()).toBe("35");
   expect(result.allLines.find(line => line.form === "1040" && line.line === "25b")?.value.toFixed()).toBe("35");
-  expect(result.scheduleSE?.excludedCashFarmCrp.toFixed()).toBe("2400.25");
+  expect(result.scheduleSE?.excludedCashFarmCrp?.toFixed()).toBe("2400.25");
   for (const changes of [{ agriculturePayments: "2400.24" }, { marketGain: "0.01" },
     { taxableGrants: "0.01", grantIncomeCategory: "nonbusiness" }, { accountHolder: "spouse" }, { taxYear: 2024 }]) {
     expect(() => calculateFederalTax(single(farm, { form1099G: [{ ...statement, ...changes }] }))).toThrow(/Form1099G|Box 7|farm/i);

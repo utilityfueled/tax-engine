@@ -26,12 +26,12 @@ export interface ScheduleSEAmounts {
 }
 export interface ScheduleSEPerTaxpayer extends ScheduleSEAmounts {
   accountHolder?: Owner;
-  reviewAttachment: "none" | "regular-tax" | "crp-zero";
+  reviewAttachment?: "none" | "regular-tax" | "crp-zero";
 }
 export interface ScheduleSEResult extends ScheduleSEAmounts {
   /** Source attribution and payroll/K-1 facts verified for the regular-method slice, not filing qualification. */
   sourceFactsVerified: boolean;
-  excludedCashFarmCrp: Decimal;
+  excludedCashFarmCrp?: Decimal;
   perTaxpayer: ScheduleSEPerTaxpayer[];
 }
 interface ProfitSource { amount: Decimal; owner?: Owner; kind: "farm" | "nonfarm"; label: string }
@@ -112,7 +112,7 @@ function calculateIndividual(
   record("13", "Deductible half", deductibleHalf, "round(line12 times0.5)", { "Line 12": totalSETax });
   const reviewAttachment = totalSETax.gt(0) ? "regular-tax"
     : excludedCrp.gt(0) && profitBeforeCrp.gte(434) ? "crp-zero" : "none";
-  return { accountHolder: owner, reviewAttachment, netFarmProfit, netNonfarmProfit, netSEEarnings, taxableEarnings,
+  return { accountHolder: owner, ...(excludedCrp.gt(0) ? { reviewAttachment } : {}), netFarmProfit, netNonfarmProfit, netSEEarnings, taxableEarnings,
     earningsSubjectToSETax, socialSecurityPortion, medicarePortion, totalSETax, deductibleHalf, lines: audit.getLines() };
 }
 
@@ -208,7 +208,7 @@ export function calculateScheduleSE(
   const lines = perTaxpayer.length > 1
     ? perTaxpayer.flatMap(row => row.lines.map(line => ({...line,form:`Sched SE (${row.accountHolder})`})))
     : perTaxpayer[0]?.lines ?? empty.lines;
-  return { sourceFactsVerified, excludedCashFarmCrp: crp.excluded, perTaxpayer, netFarmProfit:total("netFarmProfit"),netNonfarmProfit:total("netNonfarmProfit"),
+  return { sourceFactsVerified, ...(crp.excluded.gt(0) ? { excludedCashFarmCrp: crp.excluded } : {}), perTaxpayer, netFarmProfit:total("netFarmProfit"),netNonfarmProfit:total("netNonfarmProfit"),
     netSEEarnings:total("netSEEarnings"),taxableEarnings:total("taxableEarnings"),earningsSubjectToSETax:total("earningsSubjectToSETax"),
     socialSecurityPortion:total("socialSecurityPortion"),medicarePortion:total("medicarePortion"),totalSETax:total("totalSETax"),
     deductibleHalf:total("deductibleHalf"),lines };

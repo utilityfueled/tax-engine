@@ -39,6 +39,10 @@ notes: |
   Reviewed expected results and source mechanics do not establish filing
   qualification, and the human tax review is pending.
 lines:
+  - line: "ordinary-result-compatibility"
+    description: "Keep ordinary Schedule SE output and existing commitments stable"
+    formula: "Publish CRP exclusion and owner attachment metadata only where an actual exclusion applies. When there is no exclusion, derive the ordinary review attachment from the existing owner tax and omit CRP-only fields. Keep the existing no-CRP amounts and audit lines unchanged."
+    testRef: "tests/engine/state/oh-source-material-equality.test.ts::preserves complete baseline output and commitments for %s"
   - line: "cash-farm-source"
     description: "Reconcile actual taxable program payments to the same owner's Schedule F"
     formula: "Require a complete receipt ledger with unique source references, the actual in-year payment date, exact positive amount and program, plus confirmation that the gross payment total is fully taxable. Sum to Schedule F lines 4a and 4b. Each CRP receipt requires a confirmed benefit status as of receipt. Link qualifying receipts to a unique same-owner same-year annual statement. A known-zero total uses an empty ledger; a missing total with a ledger is invalid. Cross-owner or unsupported source classification fails."
