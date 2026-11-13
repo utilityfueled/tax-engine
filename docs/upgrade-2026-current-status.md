@@ -97,8 +97,22 @@ skips and no failures. All 12 checks passed. Unit and coverage output for
 `f4b0b608` unit output shows 27,750 passes in 2,006 files. Their combined
 controllers were interrupted before a terminal receipt. Both disposable
 databases were stopped normally. An exact combined run on `00f5a9b1` is
-underway with a frozen install and separate PostgreSQL 16.16 instance.
+complete. All 12 checks passed, with 27,752 tests in 2,006 files and 87.87%
+branch coverage. Chromium collected 621 cases, passed 616 and recorded the
+five original hosted-only skips. The `391e2d92` archive passed its unit
+and coverage runs with 27,758 tests and 87.87% branch coverage. Its browser
+check refused the stale audit before starting the server. Both disposable
+PostgreSQL instances were stopped and their cleanup verified.
 [Care and IRA evidence](upgrade-2026-care-ira-combat-pay-work.md).
+
+Two isolated protected Previews tested the `b7ffd2c1` archive. The first
+confirmed that the startup guard refuses to boot when shared Redis settings
+are absent. The second used a synthetic unreachable loopback Redis endpoint.
+Liveness returned 200 with no-store, and auth and workspace returned private
+503 responses. The workspace response included a five-second retry header.
+Both builds were removed and absence was verified. A separate rehearsal
+with two local Next production processes and PostgreSQL 16.16 TLS passed
+13 HTTP checks and verified cleanup. [Rehearsal evidence](upgrade-2026-nov13-release-rehearsals.md).
 
 The actual ARM64 `2e258445` image passed import, smoke, six Compose phases
 and encrypted browser backup/restore. The security scan found 86 open Debian

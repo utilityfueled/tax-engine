@@ -22,9 +22,18 @@ below retain their original evidence boundaries.
 - [x] Project the IRS Taylor and Finley building-exchange examples on the
   disabled final Form 8824 in `00f5a9b1`. Pass 162 focused checks, 8,892 spec
   references and separate readback and visual inspection of four pages.
-- [ ] Close the `00f5a9b1` combined suite and run the later `e414cb0e`
-  exact-source suite. Complete the final-source hosted and ARM64/AMD64
-  rehearsals. Keep commits local while the production push hold is in effect.
+- [x] Close all 12 archived `00f5a9b1` checks. Unit and coverage pass
+  27,752 tests at 87.87% branches. Chromium collects 621, passes 616 and
+  records five hosted-only skips. The later `391e2d92` archive passes
+  27,758 unit and coverage checks at 87.87% branches. Its browser run
+  rejects the stale request audit before starting the server.
+- [x] Confirm the protected `b7ffd2c1` Preview startup guard and runtime
+  fail-closed response using isolated builds. Verify both deletions and
+  the separate 13-check local PostgreSQL TLS rehearsal.
+  [Rehearsal evidence](upgrade-2026-nov13-release-rehearsals.md).
+- [ ] Finish the exact `b7ffd2c1` combined and ARM64 checks, then qualify
+  the final source on protected staging and native AMD64. Keep commits
+  local while the production push hold is in effect.
 
 - [x] Reconfirm the dependent-care worksheet after income-source changes and
   document the separate Code Q treatment for care and IRA compensation in

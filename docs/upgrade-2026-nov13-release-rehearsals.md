@@ -53,6 +53,39 @@ returned 404. The remaining isolated project settings matched.
 | Removed disposable Preview deployments and settings | `6f1fc655b1517e4c44b5841f0ddf6860bb63f42392939378e1110b9f23fb58d4` |
 | Exact isolated Redis disconnection and deletion | `c17d296f9fc3ca51ffbc77dacdaa4d8f93f023108fc947ff72ac3f77af58fade` |
 
+### Protected Preview startup and runtime faults on `b7ffd2c1`
+
+Two earlier `a445aad7` protected builds returned 500 on liveness, auth and
+workspace. Both were removed. An isolated `b7ffd2c1` build reproduced the
+failure with runtime logs enabled. All four captured records identify the
+instrumentation guard that requires both Redis REST settings before a hosted
+runtime starts. The harness had originally expected the route-level 503.
+The captured startup failure and its assertions are retained.
+
+A second protected build of the same source used a deployment-only
+synthetic token and a loopback Redis URL on an unreachable port. Vercel
+Authentication returned a 302 before access. With the private bypass,
+liveness returned 200 and no-store, workspace returned the private no-store
+503 with `Retry-After: 5`, and auth returned its private no-store 503 without
+the auth database. The isolated project settings were unchanged. Each build
+was deleted by its exact deployment ID and subsequently returned 404.
+Each controller recorded 18 HTTP operations. This covers hosted startup and
+fail-closed fault behavior. Exact-source healthy staging qualification still
+needs reachable isolated services and the full end-to-end run.
+
+The same source separately passed 13 production HTTP checks through two
+local Next processes, Better Auth, a TLS-enabled PostgreSQL 16.16 instance
+and controlled REST failures. Cleanup passed. Its first run exited on the
+PostgreSQL SSL precondition. The replacement PostgreSQL build was compiled
+with OpenSSL and the same verified release source before the rerun.
+
+| Evidence | SHA-256 |
+| --- | --- |
+| Missing Redis startup receipt | `c68586d68e6947dc9d1825ab1e8c1ef263dcbdf5885bd5cc0cfeacaa5aca1688` |
+| Missing Redis runtime logs | `cc6615bfcc0be552d6716434df6d67f3217326f5c93df972718adcabdb0f26ce` |
+| Loopback fault and verified deletion | `570052e5ae06a34a9c9902f878d2167dc2d91c21d927338aa8b345a27554c83d` |
+| Local production HTTP and TLS cleanup | `1392d150f40f9cba76fd4bc54485352adcbb400404ec9bf5e8808ebceef8dd2a` |
+
 ## ARM64 self-host
 
 The `c94971cd` rehearsal booted a native Linux aarch64 guest without host

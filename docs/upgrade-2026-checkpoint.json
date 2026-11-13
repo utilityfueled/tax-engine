@@ -24280,5 +24280,50 @@
     "completeFederalCalculated": false,
     "stateFilingQualified": false,
     "evidence": "docs/upgrade-2026-current-status.md"
+  },
+  "nov13ArchiveAndHostedFaultChecks": {
+    "combinedPassed": {
+      "source": "00f5a9b112f17aa4bf79db1807223cea648a9922",
+      "checksPassed": 12,
+      "unitAndCoverageTestsEach": 27752,
+      "testFiles": 2006,
+      "branchCoveragePercent": 87.87,
+      "chromiumCollected": 621,
+      "chromiumPassed": 616,
+      "chromiumHostedOnlySkipped": 5,
+      "postgresStopped": true,
+      "checksSha256": "a027ad330c09579a8d0de05f5bcee8bcdcfa9a958528492a64fed36300c6fa71",
+      "browserSummarySha256": "1403a242ab1457f122cd2cc244c80b84a00abfcf027d2a2d6dbe685550add9ab"
+    },
+    "combinedStaleAudit": {
+      "source": "391e2d924975ec0bd2a33324bdf5034f0a4c2819",
+      "checksPassed": 11,
+      "unitAndCoverageTestsEach": 27758,
+      "branchCoveragePercent": 87.87,
+      "browserResult": "Rejected stale request audit before server start.",
+      "postgresStopped": true,
+      "checksSha256": "2838b2b1b66be309b828af76eb5e5d459bd68d684eff4995b414f4eb78bb726c"
+    },
+    "protectedHostedFaults": {
+      "source": "b7ffd2c1848521f4e9b3f3a4396b867661df436e",
+      "startupWithoutRedisStatus": 500,
+      "startupRuntimeRecords": 4,
+      "loopbackProtectionRedirect": 302,
+      "loopbackLiveness": 200,
+      "loopbackWorkspaceStatus": 503,
+      "loopbackWorkspaceRetryAfterSeconds": 5,
+      "loopbackAuthWithoutDatabaseStatus": 503,
+      "bothDeploymentsRemovedAndAbsent": true,
+      "startupReceiptSha256": "c68586d68e6947dc9d1825ab1e8c1ef263dcbdf5885bd5cc0cfeacaa5aca1688",
+      "loopbackReceiptSha256": "570052e5ae06a34a9c9902f878d2167dc2d91c21d927338aa8b345a27554c83d",
+      "healthyStagingQualified": false
+    },
+    "localHostedHttpTls": {
+      "source": "b7ffd2c1848521f4e9b3f3a4396b867661df436e",
+      "checksPassed": 13,
+      "cleanupVerified": true,
+      "receiptSha256": "1392d150f40f9cba76fd4bc54485352adcbb400404ec9bf5e8808ebceef8dd2a"
+    },
+    "evidence": "docs/upgrade-2026-nov13-release-rehearsals.md"
   }
 }
