@@ -12,6 +12,7 @@ import { setTimeout as delay } from "node:timers/promises";
 import { promisify } from "node:util";
 import { PDFDocument, StandardFonts } from "pdf-lib";
 import { ensureHostedAppSchema, getHostedServerDatabase } from "../apps/web/src/lib/hosted-server-db.ts";
+import { assertEncryptedRecoveryOriginals } from "../apps/web/tests/helpers/encrypted-recovery-review.ts";
 import { resolveLocalContainerRuntime } from "./local-container-runtime.mjs";
 import { collectRehearsalPageState, createRehearsalBrowserDiagnostics } from "./rehearsal-browser-diagnostics.mjs";
 
@@ -103,7 +104,7 @@ async function databaseSnapshot() {
   assert.equal(costs.rows[0].cost, "0.0000006");
   return hash(JSON.stringify({ workspaces: rows.rows, costs: costs.rows }));
 }
-async function documentBytes(page, id) {
+async function documentSources(page, id) {
   return page.evaluate(async id => {
     const db = await new Promise((resolve, reject) => {
       const request = globalThis.indexedDB.open("tax-engine-workspace-document-cache", 1);
@@ -115,10 +116,30 @@ async function documentBytes(page, id) {
         request.onsuccess = () => resolve(request.result); request.onerror = () => reject(request.error);
       });
       if (id === null) return records.length;
-      const record = records.find(record => record.workspaceId === id);
-      return record ? [...new Uint8Array(await record.file.arrayBuffer())] : null;
+      return Promise.all(records.filter(record => record.workspaceId === id).map(async record => ({
+        documentId: record.documentId, fileName: record.fileName, type: record.mediaType,
+        lastModified: record.lastModified, bytes: [...new Uint8Array(await record.file.arrayBuffer())],
+      })));
     } finally { db.close(); }
   }, id);
+}
+async function documentBytes(page, id) {
+  const sources = await documentSources(page, id);
+  return id === null ? sources : (sources[0]?.bytes ?? null);
+}
+
+async function captureRecoveryOriginals(page, id, originalFlow, originalBytes) {
+  const snapshot = await page.evaluate(id => ({
+    workspace: JSON.parse(globalThis.localStorage.getItem("tax-engine.return-workspaces.v1") ?? "{}").workspaces?.[id],
+    guidedFlowRaw: globalThis.localStorage.getItem(`tax-engine.guided-flow-state.v1:${id}`),
+    guidedMode: globalThis.localStorage.getItem(`tax-engine:guided-mode:${id}`),
+  }), id);
+  const sources = await documentSources(page, id);
+  assert.ok(snapshot.workspace?.id === id && snapshot.guidedFlowRaw === originalFlow, "Saved recovery originals are incomplete.");
+  assert.equal(sources.length, 1, "The synthetic return must have exactly one original PDF.");
+  const { bytes, ...metadata } = sources[0];
+  assert.ok(Buffer.from(bytes).equals(originalBytes), "Cached PDF differs from the original upload.");
+  return { ...snapshot, files: [{ ...metadata, bytes: originalBytes }] };
 }
 
 try {
@@ -243,14 +264,17 @@ try {
   browserDiagnostics.setPhase(phase);
   browserDiagnostics.navigationResponse(await page.goto("/"));
   const card = page.getByRole("listitem").filter({ hasText: `Tax Return ${id}` });
+  const originals = await captureRecoveryOriginals(page, id, originalFlow, originalBytes);
+  const backupPassword = "synthetic-release-password";
   await card.getByText("Back up this return", { exact: true }).click();
-  await card.getByLabel("Backup password (at least 12 characters)").fill("synthetic-release-password");
+  await card.getByLabel("Backup password (at least 12 characters)").fill(backupPassword);
   const downloadPromise = page.waitForEvent("download");
   await card.getByRole("button", { name: "Download encrypted backup", exact: true }).click();
   const archive = path.join(work, "synthetic-backup.json");
   await (await downloadPromise).saveAs(archive);
   const encrypted = await readFile(archive, "utf8");
   assert.ok(!encrypted.includes("900-70-0033"));
+  assertEncryptedRecoveryOriginals(encrypted, backupPassword, originals);
   const envelope = JSON.parse(encrypted);
   assert.equal(envelope.cipher, "AES-256-GCM");
   assert.equal(envelope.kdf, "PBKDF2-SHA256");
@@ -274,13 +298,13 @@ try {
   const tampered = path.join(work, "tampered-backup.json");
   await writeFile(tampered, JSON.stringify(corrupted));
   await restore.getByLabel("Encrypted recovery file").setInputFiles(tampered);
-  await restore.getByLabel("Backup password (at least 12 characters)").fill("synthetic-release-password");
+  await restore.getByLabel("Backup password (at least 12 characters)").fill(backupPassword);
   await restore.getByRole("button", { name: "Restore as new local return", exact: true }).click();
   await expect(restore.getByRole("status")).toContainText("damaged");
   await expect(page.getByRole("button", { name: /^Delete tax return / })).toHaveCount(0);
   assert.equal(await documentBytes(page, null), 0);
   await restore.getByLabel("Encrypted recovery file").setInputFiles(archive);
-  await restore.getByLabel("Backup password (at least 12 characters)").fill("synthetic-release-password");
+  await restore.getByLabel("Backup password (at least 12 characters)").fill(backupPassword);
   await restore.getByRole("button", { name: "Restore as new local return", exact: true }).click();
   const link = restore.getByRole("link", { name: "Open restored return", exact: true });
   await expect(link).toBeVisible();
@@ -295,7 +319,7 @@ try {
   await expect(page.getByRole("listitem").filter({ hasText: `Tax Return ${recoveredId}` })).toHaveCount(0);
   assert.equal(await documentBytes(page, recoveredId), null);
   for (const privateValue of ["900-70-0033", "synthetic-release-source.pdf", "%PDF-"]) assert.ok(!requests.join("\n").includes(privateValue));
-  evidence.browserRecovery = { passed: true, encrypted: true, wrongPasswordRejected: true, tamperRejected: true,
+  evidence.browserRecovery = { passed: true, encrypted: true, authenticatedOriginals: true, wrongPasswordRejected: true, tamperRejected: true,
     originalBytes: true, unknownYearPreserved: true, exactCents: true, deletion: true,
     networkObservation: { requests: requests.length, startsBeforeUpload: true, rawPrivateMarkersAbsent: true,
       limitation: "Checks raw request URLs and postData for the synthetic SSN, filename and PDF signature; not a general encoded or binary PII proof." } };

@@ -34,6 +34,20 @@ describe("PostgreSQL 16.16 self-host recovery", () => {
     expect(artifact?.with?.path).toContain("container-postgres-client-versions.txt");
   });
 
+  it("authenticates the self-host download against originals before deleting the source", () => {
+    const source = readFileSync("scripts/rehearse-self-host-release.mjs", "utf8");
+    const phase = source.indexOf('phase = "browser-backup-restore-delete"');
+    const snapshot = source.indexOf("await captureRecoveryOriginals(page, id, originalFlow, originalBytes)", phase);
+    const download = source.indexOf("await readFile(archive,", phase);
+    const verification = source.indexOf("assertEncryptedRecoveryOriginals(encrypted, backupPassword, originals)", phase);
+    const deletion = source.indexOf("Delete tax return ${id}", phase);
+    expect(phase).toBeGreaterThan(0);
+    expect(snapshot).toBeGreaterThan(phase);
+    expect(download).toBeGreaterThan(snapshot);
+    expect(verification).toBeGreaterThan(download);
+    expect(deletion).toBeGreaterThan(verification);
+  });
+
   it.each([
     { dump: "16.16", restore: "16.16", passes: true },
     { dump: "16.17", restore: "16.20", passes: true },

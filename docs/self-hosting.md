@@ -138,7 +138,10 @@ assertions intact when choosing a provider. See the
 [bounded ARM64 evidence](upgrade-2026-runtime-ad23-arm64.json).
 It uses loopback ports, synthetic facts and no provider or payment keys. It checks
 upgrade, database restart, dump/restore, rollback, browser backup/restore and
-deletion, including original document bytes and exact values.
+deletion, including original document bytes and exact values. Before deleting
+the synthetic source return, the rehearsal independently authenticates the
+downloaded archive and compares its complete contents with the saved browser
+workspace, guided answers, preference and original PDF.
 
 This verifies local recovery with the current application schema. It does not
 verify historical hosted-schema downgrade, hosted authentication or staging.
