@@ -18,11 +18,14 @@ notes: |
   $2 for tax after credits because the return rounds Schedule SE parts separately. A mismatch rejects, which also stops Schedule 1-A and other deductions with
   no line here. A return's own qualified dividends, net capital gain, Schedule J, Form
   8615 or Form 2555 reject, whatever the periods say. Two self-employed owners require separately confirmed actual owner worksheets and canonical per-owner reconciliation.
-  The $400 test uses net earnings, following IRC1402(b) and Schedule SE line4c. The
-  instructions say self-employment income, so a human reviewer should confirm this.
+  The ordinary $400 test uses exact adjusted net earnings before whole-dollar
+  reporting, following IRC1402(b), Schedule SE line4c and the Schedule AI line28
+  instructions. Test each owner's own earnings on a separate Part II.
 sources:
   - "https://www.irs.gov/pub/irs-pdf/f2210.pdf"
   - "https://www.irs.gov/instructions/i2210"
+  - "https://www.irs.gov/pub/irs-pdf/f1040sse.pdf"
+  - "https://uscode.house.gov/us/usc/119-118/t26/s1402/"
 lines:
   - line: "part-i-columns"
     description: "Annualize income and tax for all four periods"
@@ -41,9 +44,14 @@ lines:
     testRef: "tests/engine/forms/form-2210-schedule-ai.test.ts::uses the larger annualized itemized or standard deduction"
   - line: "part-ii"
     description: "Annualize self-employment tax with the prorated wage base"
-    formula: "Profit40000, wages0, column a: 36940*.496+36940*.116=22607.28. Column b wages50000: limit73375, 23375*.2976+36940*.0696=9527.424. Net earnings round first as on Schedule SE: profit432.50 gives399 and0; profit432.60 gives400 and244.8. 2026 limits use 184500 prorated by .25,5/12,2/3,1."
-    irsRef: "Schedule AI lines28-36"
+    formula: "Profit40000, wages0, column a: 36940*.496+36940*.116=22607.28. Column b wages50000: limit73375, 23375*.2976+36940*.0696=9527.424. Compare exact adjusted earnings to400 before rounding the line28 reporting amount. Profit433.13 gives399.995555 and zero tax; profit433.14 gives400.004790, reported400 and tax244.8 in column a. 2026 limits use 184500 prorated by .25,5/12,2/3,1."
+    irsRef: "Schedule AI lines28-36; IRC1402(b)(2); Schedule SE line4c"
     testRef: "tests/engine/forms/form-2210-schedule-ai.test.ts::annualizes self-employment tax around its limits"
+  - line: "part-ii-exact-owner-minimum"
+    description: "Test the statutory minimum for each owner before whole-dollar reporting"
+    formula: "With wages0, exact net earnings399.995555 for the primary and400.004790 for the spouse produce line28 0 and400 respectively. Column a line15 is244.8."
+    irsRef: "Schedule AI lines15 and28; IRC1402(b)(2)"
+    testRef: "tests/engine/forms/form-2210-two-owner.test.ts::applies the exact $400 minimum independently to each owner"
   - line: "penalty"
     description: "Use Schedule AI line27 as Form2210 line10 in the dated penalty"
     formula: "One payment33361 on2026-01-15: regular exact penalty 8340*.07*611/365=977.27; Schedule AI exact 744.22, rounded744. Days after each due date are275,214,122 and0."

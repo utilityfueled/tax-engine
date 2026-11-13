@@ -30,6 +30,11 @@ function amount(value: string | undefined, label: string, signed = false): Decim
   return new Decimal(value);
 }
 
+function periodEarningsSubjectToSelfEmploymentTax(profit: Decimal, earningsMultiplier: Decimal): Decimal {
+  const exactEarnings = profit.times(earningsMultiplier);
+  return exactEarnings.lt(400) ? new Decimal(0) : roundDollar(exactEarnings);
+}
+
 export function calculateForm2210ScheduleAi(input: Form2210ScheduleAiInput): Form2210ScheduleAiResult {
   const { taxYear, filingStatus, facts, returnContext } = input, periods = facts.annualizedIncomePeriods;
   if (periods?.length !== 4) throw new Error('Form 2210 Schedule AI requires all four actual cumulative periods');
@@ -71,11 +76,12 @@ export function calculateForm2210ScheduleAi(input: Form2210ScheduleAiInput): For
     const taxable = Decimal.max(0, line13.minus(adjustment));
     const tax = calculateRegularIncomeTax(taxable, filingStatus, constants);
     const profit = amount(period.netProfitFromSelfEmployment, 'period self-employment profit', true);
-    // Schedule SE rounds net earnings before its $400 test, and column (d) must match it.
-    const netEarnings = roundDollar(Decimal.max(0, profit.times('0.9235'))), line28 = netEarnings.lt(400) ? new Decimal(0) : netEarnings;
+    const line28 = periodEarningsSubjectToSelfEmploymentTax(profit, constants.selfEmploymentTax.earningsMultiplier);
     const periodWageBase = wageBase.times(WAGE_LIMIT_TWELFTHS[index]!).div(12), ssRate = SOCIAL_SECURITY[index]!, medicareRate = MEDICARE[index]!;
-    const line31 = Decimal.max(0, periodWageBase.minus(amount(period.socialSecurityWages, 'period social security wages')));
-    let line36 = Decimal.min(line28, line31).times(ssRate).plus(line28.times(medicareRate));
+    const periodWages = amount(period.socialSecurityWages, 'period social security wages');
+    const line31 = Decimal.max(0, periodWageBase.minus(periodWages));
+    const line33 = Decimal.min(line28, line31).times(ssRate), line35 = line28.times(medicareRate);
+    let line36 = line33.plus(line35);
     if(ownerFacts&&ownerContext){
       let totalProfit=new Decimal(0),totalWages=new Decimal(0);line36=new Decimal(0);
       for(const owner of ['primary','spouse'] as const){
@@ -83,15 +89,21 @@ export function calculateForm2210ScheduleAi(input: Form2210ScheduleAiInput): For
         if(!row)throw new Error('Form2210 requires all actual owner periods');
         const p=amount(row.netProfitFromSelfEmployment,`${owner} period net profit`,true),w=amount(row.socialSecurityWages,`${owner} period SocialSecurity payroll`);
         totalProfit=totalProfit.plus(p);totalWages=totalWages.plus(w);
-        const earnings=roundDollar(Decimal.max(0,p.times('0.9235'))),n=earnings.lt(400)?new Decimal(0):earnings;
+        const n = periodEarningsSubjectToSelfEmploymentTax(p, constants.selfEmploymentTax.earningsMultiplier);
         const cap=Decimal.max(0,periodWageBase.minus(w));
         const ss=Decimal.min(n,cap).times(ssRate),med=n.times(medicareRate),tax=ss.plus(med);
         line36=line36.plus(tax);
         for(const [id,value,label] of [['28',n,'Actual owner net earnings'],['29',periodWageBase,'Owner prorated wage base'],['30',w,'Actual owner SocialSecurity payroll'],['31',cap,'Owner remaining wage base'],['33',ss,'Owner annualized SocialSecurity tax'],['35',med,'Owner annualized Medicare tax'],['36',tax,'Owner annualized self-employment tax']] as const)audit.record(FORM,`${id}${column}-${owner}`,label,value,`Separate actual ${owner} PartII`,{'Taxpayer owner':owner});
       }
-      if(!totalProfit.eq(profit)||!totalWages.eq(amount(period.socialSecurityWages,'period social security wages')))throw new Error('Form2210 combined period profit/payroll contradict actual owner source sums');
+      if(!totalProfit.eq(profit)||!totalWages.eq(periodWages))throw new Error('Form2210 combined period profit/payroll contradict actual owner source sums');
       audit.record(FORM,`15${column}`,'Combined separate-owner self-employment tax',line36,'Sum each actual owner PartII line36 once');
       if(index===3&&(!amount(period.otherTaxes,'full-year other taxes').eq(ownerContext.otherTaxes)||!amount(period.credits,'full-year credits').eq(ownerContext.credits)))throw new Error('Form2210 full-year other taxes and credits must separately reconcile to actual canonical sources');
+    } else {
+      for (const [line, value, description] of [
+        ['28', line28, 'Net earnings subject to self-employment tax'], ['30', periodWages, 'Social Security wages'],
+        ['31', line31, 'Remaining Social Security wage base'], ['33', line33, 'Annualized Social Security tax'],
+        ['35', line35, 'Annualized Medicare tax'],
+      ] as const) audit.record(FORM, `${line}${column}`, description, value, `Schedule AI line${line}`);
     }
     const line16 = amount(period.otherTaxes, 'period other taxes'), line18 = amount(period.credits, 'period credits');
     const line17 = tax.plus(line36).plus(line16);

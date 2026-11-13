@@ -54,6 +54,30 @@ it.each(cases)('AI physical source cells match independent printed originals %s'
  for(const [i,key]of ['line10a','line10b','line10c','line10d'].entries())expect(form.getTextField(F[key as 'line10a']).getText()).toBe(required(required(values[required('abcd'[i])])['27']));
  expect(JSON.stringify(input)).toBe(before);
 });
+it('prints zero ordinary Part II tax just below the exact minimum', async () => {
+  const input = aiPhysicalFixture('single');
+  input.scheduleC = TaxYearInputSchema.parse({ ...input, scheduleC: {
+    accountHolder: 'primary', businessName: 'Synthetic Services', grossReceipts: '433.13', expenses: {},
+    materialParticipation: true, qbiMateriallyParticipated: true,
+  } }).scheduleC;
+  const facts = required(input.form2210);
+  const periods = required(facts.annualizedIncomePeriods);
+  const ordinary = calculateFederalTax({ ...input, form2210: undefined });
+  required(periods[0]).netProfitFromSelfEmployment = '433.13';
+  Object.assign(required(periods[3]), {
+    adjustedGrossIncome: ordinary.agi.toFixed(),
+    qbiDeduction: ordinary.agi.minus(ordinary.standardDeduction).minus(ordinary.taxableIncome).toFixed(),
+    netProfitFromSelfEmployment: '433.13',
+    socialSecurityWages: '176100',
+  });
+  const result = calculateFederalTax(input);
+  expect(result.scheduleSE?.totalSETax.toFixed()).toBe('0');
+  const form = (await fillForm2210(input, result, blank)).getForm();
+  for (const line of [15, 28, 33, 35, 36]) {
+    const widget = required(aiPhysicalSourceWidgets.find(row => row.column === 'a' && row.line === line));
+    expect(form.getTextField(widget.field).getText(), `printed line ${line}`).toBe('0');
+  }
+});
 it.each(cases)('AI physical redacted source cells require actual original context %s',async(_name,kind)=>{
  const input=aiPhysicalFixture(kind),before=JSON.stringify(input),result=calculateFederalTax(input),token=await prepared(input),doc=await fillForm2210(redactReviewIdentifiers(input),result,blank,qbi(input),token),form=(await PDFDocument.load(await doc.save())).getForm(),values=aiPhysicalExpected(kind);
  for(const row of aiPhysicalSourceWidgets)expect(form.getTextField(row.field).getText()??'',row.field).toBe(required(required(values[row.column])[String(row.line)]));

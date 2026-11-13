@@ -9,6 +9,23 @@ const D=(v:string)=>new Decimal(v);
 const owner=(accountHolder:string,profits:string[],wages:string[])=>({accountHolder,sourceTaxYear:2025,sourceReference:`Actual ${accountHolder} private ledger`,sourceFactsConfirmed:true,periods:profits.map((netProfitFromSelfEmployment,i)=>({netProfitFromSelfEmployment,socialSecurityWages:wages[i]}))});
 export const twoOwnerUnitInput=()=>({taxYear:2025,filingStatus:'married_filing_jointly',requiredAnnualPayment:D('60000'),taxAfterRefundableCredits:D('64265.83'),returnContext:{standardDeduction:D('31500'),agi:D('200000'),taxableIncome:D('168500'),preferentialIncome:false,selfEmployedOwners:2,specialTaxMethod:false,ownerSources:{sourceCommitment:'a'.repeat(64),owners:[{accountHolder:'primary',netProfit:D('100000'),socialSecurityWages:D('80000')},{accountHolder:'spouse',netProfit:D('160000'),socialSecurityWages:D('0')}],otherTaxes:D('631'),credits:D('0')}},facts:{bothSpousesSelfEmployed:true,selfEmploymentOwnerPeriods:[owner('primary',['40000','60000','80000','100000'],['50000','60000','70000','80000']),owner('spouse',['40000','80000','120000','160000'],['0','0','0','0'])],annualizedIncomePeriods:['50000','100000','150000','200000'].map((adjustedGrossIncome,i)=>({adjustedGrossIncome,itemizedDeductions:'0',qbiDeduction:'0',qualifiedDividends:'0',netCapitalGain:'0',netProfitFromSelfEmployment:['80000','140000','200000','260000'][i],socialSecurityWages:['50000','60000','70000','80000'][i],otherTaxes:i===3?'631':'0',credits:'0'}))}} as unknown as Form2210ScheduleAiInput);
 it('computes two actual owner Part II worksheets before adding line 15',()=>{const result=calculateForm2210ScheduleAi(twoOwnerUnitInput());expect(['a','b','c','d'].map(c=>result.lines.find(r=>r.line===`15${c}`)?.value.toFixed())).toEqual(['26892.32','34815.384','37463.37','36736.83']);expect(result.lines.find(r=>r.line==='36a-primary')?.value.toFixed()).toBe('4285.04');expect(result.lines.find(r=>r.line==='36a-spouse')?.value.toFixed()).toBe('22607.28');});
+it('applies the exact $400 minimum independently to each owner', () => {
+  const input = twoOwnerUnitInput();
+  const [primary, spouse] = input.facts.selfEmploymentOwnerPeriods ?? [];
+  const primaryPeriod = primary?.periods?.[0], spousePeriod = spouse?.periods?.[0];
+  const combinedPeriod = input.facts.annualizedIncomePeriods?.[0];
+  if (!primaryPeriod || !spousePeriod || !combinedPeriod) throw new Error('Missing synthetic owner periods');
+  Object.assign(primaryPeriod, {
+    netProfitFromSelfEmployment: '433.13', socialSecurityWages: '0',
+  });
+  spousePeriod.netProfitFromSelfEmployment = '433.14';
+  Object.assign(combinedPeriod, {
+    netProfitFromSelfEmployment: '866.27', socialSecurityWages: '0',
+  });
+  const { lines } = calculateForm2210ScheduleAi(input);
+  expect(['28a-primary', '28a-spouse', '15a'].map(line => lines.find(row => row.line === line)?.value.toFixed()))
+    .toEqual(['0', '400', '244.8']);
+});
 it('rejects incomplete owner sources and independently binds annual payroll taxes and credits',()=>{for(const mutate of [(x:ReturnType<typeof twoOwnerUnitInput>)=>{x.facts.selfEmploymentOwnerPeriods![0]!.sourceFactsConfirmed=false;},(x:ReturnType<typeof twoOwnerUnitInput>)=>{x.facts.selfEmploymentOwnerPeriods![0]!.periods![3]!.socialSecurityWages='0';x.facts.selfEmploymentOwnerPeriods![1]!.periods![3]!.socialSecurityWages='80000';},(x:ReturnType<typeof twoOwnerUnitInput>)=>{x.facts.annualizedIncomePeriods![3]!.otherTaxes='0';x.facts.annualizedIncomePeriods![3]!.credits='-631';}]){const x=twoOwnerUnitInput();mutate(x);expect(()=>calculateForm2210ScheduleAi(x)).toThrow(/owner|source|payroll|tax|credit|actual/i);}});
 it('keeps separate wage caps and earlier losses without erasing zero annual owners',()=>{
  const noWages=twoOwnerUnitInput();noWages.facts.selfEmploymentOwnerPeriods![0]!.periods![0]!.socialSecurityWages='0';noWages.facts.annualizedIncomePeriods![0]!.socialSecurityWages='0';expect(calculateForm2210ScheduleAi(noWages).lines.find(r=>r.line==='15a')?.value.toFixed()).toBe('45214.56');

@@ -53,7 +53,10 @@ describe('Form 2210 Schedule AI', () => {
     expect(line(run(twoColumns), '36a')).toBe('22607.28');
     expect(line(run(twoColumns), '36b')).toBe('9527.424');
     expect(line(run([period('30000', { netProfitFromSelfEmployment: '432.50' }), ...rising().slice(1)]), '36a')).toBe('0');
-    expect(line(run([period('30000', { netProfitFromSelfEmployment: '432.60' }), ...rising().slice(1)]), '36a')).toBe('244.8');
+    expect(line(run([period('30000', { netProfitFromSelfEmployment: '432.60' }), ...rising().slice(1)]), '36a')).toBe('0');
+    expect(line(run([period('30000', { netProfitFromSelfEmployment: '433.13' }), ...rising().slice(1)]), '36a')).toBe('0');
+    expect(line(run([period('30000', { netProfitFromSelfEmployment: '433.14' }), ...rising().slice(1)]), '36a')).toBe('244.8');
+    expect(line(run([...rising().slice(0, 3), period('200000', { netProfitFromSelfEmployment: '433.13' })]), '36d')).toBe('0');
     const wages = period('200000', { netProfitFromSelfEmployment: '10000', socialSecurityWages: '176100' });
     expect(line(run([...rising().slice(0, 3), wages], { taxAfterRefundableCredits: new Decimal(37334.815) }), '36d')).toBe('267.815');
     const negative = run([period('-30000'), ...rising().slice(1)]);

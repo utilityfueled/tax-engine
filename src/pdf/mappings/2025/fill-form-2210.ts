@@ -59,16 +59,8 @@ function fillScheduleAiPage(form:PDFForm,input:TaxYearInput,result:TaxReturnResu
    else if(line===12)printed=new Decimal(0);
    else if(line===15)printed=value('36'+suffix);
    else if(line===17)printed=value('14'+suffix).plus(value('36'+suffix)).plus(value('16'+suffix));
-   else if(line>=28){
-    if(both)printed=value(String(line)+suffix+'-'+owner);
-    else{
-     const raw=actualAmount(period.netProfitFromSelfEmployment).times('0.9235');
-     const rounded=Decimal.max(0,raw).toDecimalPlaces(0,Decimal.ROUND_HALF_UP),earnings=rounded.lt(400)?new Decimal(0):rounded;
-     const wage=actualAmount(period.socialSecurityWages),cap=Decimal.max(0,new Decimal(['44025','73375','117400','176100'][column]??'0').minus(wage));
-     const amounts:Record<number,Decimal>={28:earnings,30:wage,31:cap,33:Decimal.min(earnings,cap).times(['0.496','0.2976','0.186','0.124'][column]??'0'),35:earnings.times(['0.116','0.0696','0.0435','0.029'][column]??'0'),36:value('36'+suffix)};
-     printed=amounts[line];if(!printed)throw new Error('Form2210 missing source Part II physical row');
-    }
-   }else printed=value(String(line)+suffix);
+   else if(line>=28&&both)printed=value(String(line)+suffix+'-'+owner);
+   else printed=value(String(line)+suffix);
   }
   setTextField(form,field,printed===undefined?'':printed.isZero()?'0':formatCurrency(printed));
  }
