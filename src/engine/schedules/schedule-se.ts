@@ -7,6 +7,7 @@ import { calculateUnreportedTipPayroll } from "@/engine/forms/unreported-tip-pay
 import { calculateForm8919 } from "@/engine/forms/form-8919.js";
 import { calculateScheduleC } from "./schedule-c.js";
 import { calculateScheduleF } from "./schedule-f.js";
+import { resolveCashFarmCrp } from "./schedule-se-crp-sources.js";
 import { d, zeroFloor, min, roundDollar, sum } from "@/utils/decimal.js";
 import { AuditTrail } from "@/utils/audit.js";
 
@@ -23,10 +24,14 @@ export interface ScheduleSEAmounts {
   deductibleHalf: Decimal; // Line 13
   lines: CalculatedLine[];
 }
-export interface ScheduleSEPerTaxpayer extends ScheduleSEAmounts { accountHolder?: Owner }
+export interface ScheduleSEPerTaxpayer extends ScheduleSEAmounts {
+  accountHolder?: Owner;
+  reviewAttachment: "none" | "regular-tax" | "crp-zero";
+}
 export interface ScheduleSEResult extends ScheduleSEAmounts {
   /** Source attribution and payroll/K-1 facts verified for the regular-method slice, not filing qualification. */
   sourceFactsVerified: boolean;
+  excludedCashFarmCrp: Decimal;
   perTaxpayer: ScheduleSEPerTaxpayer[];
 }
 interface ProfitSource { amount: Decimal; owner?: Owner; kind: "farm" | "nonfarm"; label: string }
@@ -34,12 +39,14 @@ interface ProfitSource { amount: Decimal; owner?: Owner; kind: "farm" | "nonfarm
 function calculateIndividual(
   input: TaxYearInput, constants: YearConstants, profits: ProfitSource[],
   owner: Owner | undefined, aggregateLegacy: boolean, tipPayroll: ReturnType<typeof calculateUnreportedTipPayroll>,
+  excludedCrp: Decimal,
 ): ScheduleSEPerTaxpayer {
   const audit = new AuditTrail();
   const se = constants.selfEmploymentTax;
   const netFarmProfit = sum(...profits.filter(p => p.kind === "farm").map(p => p.amount));
   const netNonfarmProfit = sum(...profits.filter(p => p.kind === "nonfarm").map(p => p.amount));
-  const netSEEarnings = netFarmProfit.plus(netNonfarmProfit);
+  const profitBeforeCrp = netFarmProfit.plus(netNonfarmProfit);
+  const netSEEarnings = profitBeforeCrp.minus(excludedCrp);
   const exactAdjustedEarnings = netSEEarnings.gt(0) ? netSEEarnings.times(se.earningsMultiplier) : netSEEarnings;
   const line4a = netSEEarnings.gt(0) ? roundDollar(exactAdjustedEarnings) : exactAdjustedEarnings;
   const taxableEarnings = zeroFloor(line4a);
@@ -68,12 +75,16 @@ function calculateIndividual(
   const record = (line: string, description: string, value: Decimal, formula: string, inputs: Record<string, Decimal | string> = {}) =>
     audit.record("Sched SE", line, description, value, formula, { ...inputs, "Taxpayer owner": owner ?? "unverified legacy aggregate" });
   record("1a", "Net farm profit or loss", netFarmProfit, "Schedule F line34 plus adjusted farming K-1 Box14A");
-  record("1b", "Excluded CRP payments", new Decimal(0), "No CRP adjustment represented in the regular-method slice");
+  record("1b", "Excluded CRP payments", excludedCrp, excludedCrp.gt(0)
+    ? "Same owner's taxable cash-farm CRP payments while receiving qualifying Social Security benefits"
+    : "No CRP adjustment represented in the regular-method slice");
   record("2", "Net nonfarm profit", netNonfarmProfit, "Schedule C line31 plus adjusted nonfarm K-1 Box14A and other business earnings; Box4 not added twice", {
     "Schedule C Line 31 net profit": sum(...profits.filter(p => p.label === "Schedule C").map(p => p.amount)),
     "K-1 self-employment earnings": sum(...profits.filter(p => p.label === "K-1" && p.kind === "nonfarm").map(p => p.amount)),
   });
-  record("3", "Combined net profit", netSEEarnings, "Line1a - line1b + line2 for this person", { "Line 1a": netFarmProfit, "Line 2": netNonfarmProfit });
+  record("3", "Combined net profit", netSEEarnings, "Line1a - line1b + line2 for this person", {
+    "Line 1a": netFarmProfit, "Line 2": netNonfarmProfit, ...(excludedCrp.gt(0) ? { "Line 1b": excludedCrp } : {}),
+  });
   record("4a", "Adjusted net earnings", line4a, "Positive line3 times0.9235, rounded; otherwise signed line3");
   record("4b", "Optional-method earnings", new Decimal(0), "Regular method");
   record("4c", "Combined adjusted earnings", line4a, "Lines4a +4b; stop below400",
@@ -99,7 +110,9 @@ function calculateIndividual(
   record("11", "Medicare portion", medicarePortion, "round(line6 times0.029)");
   record("12", "Total SE tax", totalSETax, "Line10 +line11", { "Line 10": socialSecurityPortion, "Line 11": medicarePortion });
   record("13", "Deductible half", deductibleHalf, "round(line12 times0.5)", { "Line 12": totalSETax });
-  return { accountHolder: owner, netFarmProfit, netNonfarmProfit, netSEEarnings, taxableEarnings,
+  const reviewAttachment = totalSETax.gt(0) ? "regular-tax"
+    : excludedCrp.gt(0) && profitBeforeCrp.gte(434) ? "crp-zero" : "none";
+  return { accountHolder: owner, reviewAttachment, netFarmProfit, netNonfarmProfit, netSEEarnings, taxableEarnings,
     earningsSubjectToSETax, socialSecurityPortion, medicarePortion, totalSETax, deductibleHalf, lines: audit.getLines() };
 }
 
@@ -120,7 +133,8 @@ export function calculateScheduleSE(
   const tipPayroll = calculateUnreportedTipPayroll(input, constants);
   const strict = input.taxpayer.taxYear >= 2026;
   const joint = input.taxpayer.filingStatus === "married_filing_jointly";
-  let sourceFactsVerified = tipPayroll.sourceFactsVerified;
+  const crp = resolveCashFarmCrp(input);
+  let sourceFactsVerified = tipPayroll.sourceFactsVerified && crp.verified;
   const resolveOwner = (owner: Owner | undefined, label: string): Owner | undefined => {
     if (!joint) {
       if (owner === "spouse") throw new Error(`${label}: spouse-owned SE source requires a joint return`);
@@ -160,9 +174,13 @@ export function calculateScheduleSE(
       if (strict) throw new Error("2026 K-1 SE requires actual Box14A, adjusted partner earnings and farm/nonfarm source facts");
     }
     const amount = d(verified ? k1.selfEmploymentNetEarningsAfterAdjustments : k1.selfEmploymentEarnings);
+    if (crp.excluded.gt(0) && k1.selfEmploymentIncomeType === "farm" && !amount.isZero()) {
+      throw new Error("Cash-farm CRP combined with farm partnership SE earnings requires its own source method.");
+    }
     add(amount,k1.accountHolder,k1.selfEmploymentIncomeType ?? "nonfarm","K-1");
   }
-  if (rawProfits.length) {
+  const needsPayroll = rawProfits.length > 0 || crp.excluded.gt(0);
+  if (needsPayroll) {
     for (const w2 of input.w2s) {
       resolveOwner(w2.accountHolder,"W-2");
       for (const key of ["socialSecurityWages","socialSecurityTips"] as const) {
@@ -179,16 +197,18 @@ export function calculateScheduleSE(
     || input.w2s.some(w => w.accountHolder === undefined)
     || (input.form4137 !== undefined && input.form4137.accountHolder === undefined)
     || (input.form8919 !== undefined && input.form8919.accountHolder === undefined));
+  if (hasUnknownOwner && crp.excluded.gt(0)) throw new Error("Schedule SE cash-farm CRP requires actual joint owner attribution for every profit and payroll source.");
   const perTaxpayer = hasUnknownOwner && rawProfits.length
-    ? [calculateIndividual(input,constants,rawProfits,undefined,true,tipPayroll)]
-    : (["primary","spouse"] as const).filter(owner => rawProfits.some(p => p.owner === owner) || options.auditOwners?.includes(owner))
-      .map(owner => calculateIndividual(input,constants,rawProfits.filter(p => p.owner === owner),owner,false,tipPayroll));
-  const empty = calculateIndividual(input,constants,[],joint ? undefined : "primary",false,tipPayroll);
+    ? [calculateIndividual(input,constants,rawProfits,undefined,true,tipPayroll,d(0))]
+    : (["primary","spouse"] as const).filter(owner => rawProfits.some(p => p.owner === owner) || options.auditOwners?.includes(owner)
+        || (crp.accountHolder === owner && crp.excluded.gt(0)))
+      .map(owner => calculateIndividual(input,constants,rawProfits.filter(p => p.owner === owner),owner,false,tipPayroll,crp.accountHolder === owner ? crp.excluded : d(0)));
+  const empty = calculateIndividual(input,constants,[],joint ? undefined : "primary",false,tipPayroll,d(0));
   const total = (key: Exclude<keyof ScheduleSEAmounts,"lines">) => sum(...perTaxpayer.map(row => row[key]));
   const lines = perTaxpayer.length > 1
     ? perTaxpayer.flatMap(row => row.lines.map(line => ({...line,form:`Sched SE (${row.accountHolder})`})))
     : perTaxpayer[0]?.lines ?? empty.lines;
-  return { sourceFactsVerified, perTaxpayer, netFarmProfit:total("netFarmProfit"),netNonfarmProfit:total("netNonfarmProfit"),
+  return { sourceFactsVerified, excludedCashFarmCrp: crp.excluded, perTaxpayer, netFarmProfit:total("netFarmProfit"),netNonfarmProfit:total("netNonfarmProfit"),
     netSEEarnings:total("netSEEarnings"),taxableEarnings:total("taxableEarnings"),earningsSubjectToSETax:total("earningsSubjectToSETax"),
     socialSecurityPortion:total("socialSecurityPortion"),medicarePortion:total("medicarePortion"),totalSETax:total("totalSETax"),
     deductibleHalf:total("deductibleHalf"),lines };

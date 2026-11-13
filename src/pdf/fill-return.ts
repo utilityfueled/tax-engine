@@ -36,7 +36,7 @@ import { fillScheduleC } from "./fill-schedule-c.js";
 import { fillScheduleD } from "./fill-schedule-d.js";
 import { fillScheduleE } from "./fill-schedule-e.js";
 import { requiresScheduleEReview, prepareScheduleEReview, assertScheduleEReview, type PreparedScheduleEReview } from "./schedule-e-review-context.js";
-import { fillScheduleSE } from "./fill-schedule-se.js";
+import { assertCashFarmCrpReview, fillScheduleSE } from "./fill-schedule-se.js";
 import { fillForm8949 } from "./fill-form-8949.js";
 import { fillForm8959 } from "./fill-form-8959.js";
 import { fillForm8960 } from "./fill-form-8960.js";
@@ -462,6 +462,7 @@ export async function fillReturn(
   options: FillReturnOptions,
 ): Promise<FillReturnResult> {
   assertPdfExportAllowed(input.taxpayer.taxYear, result.taxYear, options.purpose);
+  assertCashFarmCrpReview(input,result);
   const rrtaRequested=requiresRRTAPayrollReview(input,result)||options.rrtaPayrollReview!==undefined;
   const rrtaOriginal=rrtaRequested?rrtaPayrollReviewOriginalInput(input,result,options.rrtaPayrollReview):undefined;
   // Validate actual companion sources before any output/template operation.
@@ -697,8 +698,8 @@ export async function fillReturn(
     filledForms.push(outputPathSJ);
   }
 
-  // ── Schedule SE (if applicable — only when there's actual SE tax) ──
-  if (result.scheduleSE?.totalSETax.gt(0)) {
+  // Schedule SE is also required for the documented CRP zero-tax attachment.
+  if (result.scheduleSE?.totalSETax.gt(0) || result.scheduleSE?.perTaxpayer.some(row => row.reviewAttachment === "crp-zero")) {
     const ssePath = join(blankFormsDir, "f1040sse.pdf");
     const docSSE = await fillScheduleSE(input, result, ssePath);
     if (flatten) await flattenForm(docSSE.getForm());

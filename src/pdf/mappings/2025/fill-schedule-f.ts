@@ -16,6 +16,8 @@ import { assertPdfExportAllowed } from "../../export-policy.js";
 import { PDFDocument } from "pdf-lib";
 import type { TaxReturnResult } from "@/models/outputs.js";
 import type { TaxYearInput } from "@/models/inputs.js";
+import { resolveCashFarmCrp } from "@/engine/schedules/schedule-se-crp-sources.js";
+import { d } from "@/utils/decimal.js";
 import {
   loadReviewTemplate,
   setTextField,
@@ -157,30 +159,39 @@ const EXPENSE_FIELD_MAP: Record<string, string> = {
 
 // ─── Fill Logic ────────────────────────────────────────────────────────────
 
-/**
- * Fill IRS Schedule F PDF from engine calculation results.
- * Returns the filled PDFDocument (caller saves it).
- */
+/** Verify the original payment total before any CRP review pages are saved. */
+export function assertCashFarmPaymentTotal(input: TaxYearInput, result: TaxReturnResult): void {
+  const entries = result.scheduleF?.lines.filter(line => line.form === "Sched F" && line.line === "4b") ?? [];
+  if (entries.length !== 1 || !entries[0].value.eq(d(input.scheduleF?.agriculturalProgramPayments))) {
+    throw new Error("Schedule F agricultural payment totals do not reconcile with the original receipts.");
+  }
+}
+
+/** Fill the IRS Schedule F review PDF from engine results. */
 export async function fillScheduleF(
   input: TaxYearInput,
   result: TaxReturnResult,
   blankPdfPath: string,
 ): Promise<PDFDocument> {
   assertPdfExportAllowed(input.taxpayer.taxYear, result.taxYear);
+  const sfInput = input.scheduleF;
+  const farmPaymentSource = sfInput?.agriculturalPaymentSources ? resolveCashFarmCrp(input) : undefined;
+  if (farmPaymentSource) assertCashFarmPaymentTotal(input, result);
   const doc = await loadReviewTemplate(blankPdfPath, 2025);
   const form = doc.getForm();
   const F = FIELDS;
   const sf = result.scheduleF;
 
   // ── Header ──
-  const name = input.taxpayer.spouse
+  const proprietor = farmPaymentSource?.accountHolder === "spouse" ? input.taxpayer.spouse : input.taxpayer.primary;
+  if (!proprietor) throw new Error("Schedule F review requires the actual proprietor.");
+  const name = !farmPaymentSource && input.taxpayer.spouse
     ? `${input.taxpayer.primary.firstName} ${input.taxpayer.primary.lastName} & ${input.taxpayer.spouse.firstName} ${input.taxpayer.spouse.lastName}`
-    : `${input.taxpayer.primary.firstName} ${input.taxpayer.primary.lastName}`;
+    : `${proprietor.firstName} ${proprietor.lastName}`;
   setTextField(form, F.name, name);
-  setTextField(form, F.ssn, input.taxpayer.primary.ssn.replace(/-/g, ""));
+  setTextField(form, F.ssn, proprietor.ssn.replace(/-/g, ""));
 
   // ── Farm info from input ──
-  const sfInput = input.scheduleF;
   if (sfInput) {
     setTextField(form, F.principalCropOrActivity, sfInput.principalCropOrActivity ?? "");
     setTextField(form, F.activityCode, sfInput.activityCode ?? "");
@@ -205,6 +216,7 @@ export async function fillScheduleF(
   // ── Part I: Farm Income (Lines 1-9) ──
   // Use engine audit trail to fill individual income lines.
   const auditValue = (line: string) => sf.lines.find(l => l.line === line)?.value;
+  if (farmPaymentSource) setCurrencyField(form, F.line4a, d(sfInput?.agriculturalProgramPayments));
 
   const incomeLineMap: Array<[string, string]> = [
     ["1a", F.line1a],

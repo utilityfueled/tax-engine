@@ -1686,6 +1686,12 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     additionalNonfarmOwner: input.cryptoIncome?.businessAccountHolder,
     auditOwners: input.form2210?.selfEmploymentOwnerPeriods === undefined ? undefined : ["primary", "spouse"],
   });
+  if (schedSE.excludedCashFarmCrp.gt(0) && (input.form2210?.calculationMethod === "annualized"
+    || input.form2210?.selfEmploymentOwnerPeriods || input.form2555 || marketplace
+    || d(input.adjustments?.seRetirementContributions).gt(0))) {
+    throw new Error("Schedule F CRP with annualized, foreign, Marketplace or retirement-plan sources needs its own attribution method.");
+  }
+  const farmSeNetProfit = schedFNetProfit.minus(schedSE.excludedCashFarmCrp);
   // Spec: qbi-foreign-profit. Actual foreign business profit remains outside QBI.
   const foreignQbiProfit = new Map(foreignIncomeSources.qbiForeignProfit.map((row) => [row.sourceId, row.amount]));
   // Actual expense location determines foreign profit; a gross-receipts ratio cannot invent it.
@@ -1759,8 +1765,9 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   // Per IRS Schedule 1 Instructions, Line 17: "You can't deduct more than the net
   // profit you earned from the trade or business under which the insurance plan was
   // established (reduced by any deductions you claim on Schedule 1, lines 15 and 16)."
-  if (year >= 2026 && !input.form7206 && (input.seHealthInsuranceWorksheet || d(input.adjustments?.selfEmployedHealthInsurance).gt(0))) {
-    throw new Error("2026 SE health insurance requires actual Form7206 source facts and canonical business context.");
+  if ((year >= 2026 || schedSE.excludedCashFarmCrp.gt(0)) && !input.form7206
+    && (input.seHealthInsuranceWorksheet || d(input.adjustments?.selfEmployedHealthInsurance).gt(0))) {
+    throw new Error("SE health insurance requires actual Form7206 source facts and canonical business context for 2026 or a cash-farm CRP exclusion.");
   }
   const seCombinedNetProfit = schedCNetProfit.plus(schedFNetProfit);
   let seHealthInsurance: Decimal;
@@ -2769,7 +2776,8 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   if (input.scheduleC || !schedC.netProfit.isZero()) deductionSources.push({id:"scheduleC",name:input.scheduleC?.businessName ?? "Schedule C",
     qbi:schedC.netProfit.minus(foreignQbiProfit.get("scheduleC") ?? d("0")),netSEEarnings:schedC.netProfit.minus(foreignQbiProfit.get("scheduleC") ?? d("0")),accountHolder:ownerOf(cOwnerForQBI),materiallyParticipated:input.scheduleC?.qbiMateriallyParticipated});
   if (input.scheduleF || !schedFNetProfit.isZero()) deductionSources.push({id:"scheduleF",name:input.scheduleF?.principalCropOrActivity ?? "Schedule F",
-    qbi:schedFNetProfit,netSEEarnings:schedFNetProfit,accountHolder:ownerOf(input.scheduleF?.accountHolder),materiallyParticipated:input.scheduleF?.qbiMateriallyParticipated});
+    qbi:schedFNetProfit,netSEEarnings:farmSeNetProfit,accountHolder:ownerOf(input.scheduleF?.accountHolder),
+    materiallyParticipated:schedSE.excludedCashFarmCrp.gt(0) ? true : input.scheduleF?.qbiMateriallyParticipated});
   if (!cryptoBusinessNet.isZero()) deductionSources.push({id:"cryptoBusiness",name:"Cryptocurrency business",
     qbi:cryptoBusinessNet,netSEEarnings:cryptoBusinessNet,accountHolder:ownerOf(input.cryptoIncome?.businessAccountHolder)});
   seSourceInput.scheduleK1.forEach((k1,index)=>{
@@ -2782,6 +2790,25 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
       excludedSEIncome:!d(k1.guaranteedPayments).isZero() || qbi.isZero()});
   });
   let qbiAllocation = input.qbiDeductionAllocations;
+  if (schedSE.excludedCashFarmCrp.gt(0)) {
+    const farmOwner = input.scheduleF?.accountHolder;
+    const farmOwnerDeduction = schedSE.perTaxpayer.find(row => row.accountHolder === farmOwner)?.deductibleHalf ?? d(0);
+    if (farmOwnerDeduction.gt(0)) {
+      const sameOrUnassigned = (owner?: "primary" | "spouse") => ownerOf(owner) === undefined || ownerOf(owner) === farmOwner;
+      const hasOtherTrade = (sameOrUnassigned(cOwnerForQBI) && (!schedC.grossIncome.isZero() || !schedC.netProfit.isZero()))
+        || (sameOrUnassigned(input.cryptoIncome?.businessAccountHolder) && (!cryptoBusinessGross.isZero() || !cryptoBusinessNet.isZero()))
+        || seSourceInput.scheduleK1.some(k1 => k1.entityType !== "s_corporation" && sameOrUnassigned(k1.accountHolder));
+      if (!farmSeNetProfit.gt(0) || hasOtherTrade) {
+        throw new Error("Cash-farm CRP requires separate QBI gross income attribution for the owner's contributing trades.");
+      }
+      if (qbiAllocation) {
+        const amounts = qbiAllocation.rows.filter(row => row.accountHolder === farmOwner && d(row.deductibleSelfEmploymentTax).gt(0));
+        if (amounts.length !== 1 || amounts[0].sourceId !== "scheduleF" || !d(amounts[0].deductibleSelfEmploymentTax).eq(farmOwnerDeduction)) {
+          throw new Error("Cash-farm CRP QBI deduction must reconcile to the owner's contributing trade.");
+        }
+      }
+    }
+  }
   if (marketplace && nol && nol.stage !== "final" && actualHealthInsurance && qbiAllocation) {
     // An actual final-return allocation is not a claim to the same health amount
     // in every statutory income replay. Recompute its health column from this

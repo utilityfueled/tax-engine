@@ -1,0 +1,69 @@
+form: "Schedule SE cash-farm CRP source and regular-method calculation"
+fullName: "Cash-method Schedule F payments and Conservation Reserve Program exclusion"
+taxYear: 2026
+reference: "https://www.irs.gov/pub/irs-prior/i1040sse--2026.pdf"
+revision: "2025 and final 2026 Schedule SE and instructions, lines 1b and 4a through 4c; retrieved 2026-11-12"
+notes: |
+  IRC 1402(a)(1) and the annual IRS Schedule SE instructions tie this exclusion
+  to qualifying Social Security retirement or disability benefits the same
+  owner actually received at the time of the CRP payment. Schedule F, line 4b,
+  and Publication 225 keep the taxable payment in farm income. An annual
+  SSA-1099 total or an age does not prove the benefit kind or timing.
+  In this finite complete-return method link each qualifying receipt to the
+  same owner's annual SSA-1099 original as well as separate dated evidence.
+  The signed net amount on the annual statement can be zero after repayments.
+  This method accepts the documented own retirement/disability routes and
+  documented absence of benefits. Other Title II benefit classifications need
+  their own source method.
+  This method covers actual receipts from an actively operated domestic
+  cash-method farm when the original establishes all are fully taxable.
+  The source confirms payments belong to that same nonpassive farming trade
+  in its ordinary course. Separate passive or rental sources are outside this
+  method. The active trade remains outside net investment income.
+  The domestic active-farm confirmation includes section 469(h) material
+  participation. An explicit contradictory QBI participation record is rejected. The
+  Schedule F receipt ledger does not route a separate Form 1099-G Box 7
+  input or enable guided intake of that form.
+  Partially excluded receipts need separate gross and taxable records.
+  The CRP subclass is the annual rental payment under 16 USC 3833(a)(2).
+  Require confirmation of zero associated deductions on Schedule F for each
+  excluded receipt, since section 1402(a)(1) also removes attributable expenses.
+  Preserve the historical aggregate on an old
+  return with an incomplete classification. The independent source facts are
+  required before treating that calculation as verified. Partnership AQ,
+  combinations with a farm partnership, accrual, farm rental, and annualized-period attribution need separate
+  source methods. The paper scope is the registered 2025 review form only.
+  Official references also include IRC 1402(a)(1), 2025 and 2026 Schedule SE
+  forms and instructions, Publication 225 chapter 3, Publication 596 Rule 7,
+  Schedule 8812 earned income worksheet line 2c, and Form 7206 lines 4 and 5.
+  Reviewed expected results and source mechanics do not establish filing
+  qualification, and the human tax review is pending.
+lines:
+  - line: "cash-farm-source"
+    description: "Reconcile actual taxable program payments to the same owner's Schedule F"
+    formula: "Require a complete receipt ledger with unique source references, the actual in-year payment date, exact positive amount and program, plus confirmation that the gross payment total is fully taxable. Sum to Schedule F lines 4a and 4b. Each CRP receipt requires a confirmed benefit status as of receipt. Link qualifying receipts to a unique same-owner same-year annual statement. A known-zero total uses an empty ledger; a missing total with a ledger is invalid. Cross-owner or unsupported source classification fails."
+    testRef: "tests/engine/schedules/schedule-se-crp-cash-farm.test.ts::requires actual dated receipts and benefit facts that reconcile to the taxable total"
+  - line: "se-1b-4c"
+    description: "Apply the exclusion only to the actual owner for Chapter 2 tax"
+    formula: "Line 1a retains the owner's unadjusted farm profit. Line 1b is the sum of qualifying taxable receipts. Subtract once from line 1a plus 2 to compute line 3, then apply the ordinary .9235 formula and exact $400 test. Example $5,000 farm profit plus $3,000 nonfarm profit, $2,400 excluded, gives line 3 $5,600, exact line 4a $5,171.6, line 12 $791 and line 13 $396."
+    testRef: "tests/engine/schedules/schedule-se-crp-cash-farm.test.ts::excludes only the same owner's qualifying taxable receipts from net earnings"
+  - line: "federal-income-and-credits"
+    description: "Retain ordinary taxable farm income and remove qualifying payments from earned income"
+    formula: "Schedule 1 line 6 preserves the full Schedule F profit. EIC and ACTC use the post-exclusion owner earnings minus deductible SE tax. Taxable ordinary income from the same nonpassive domestic farm stays in section 199A QBI. For an owner with a positive section 164(f) deduction, this method requires a single contributing trade and checks any supplied allocation against it. Another same-owner SE trade with gross receipts or a net loss, including a gross-positive trade that broke even, needs a separate proportionate gross income method."
+    testRef: "tests/engine/schedules/schedule-se-crp-cash-farm.test.ts::keeps taxable farm profit and uses adjusted earned income for ACTC"
+  - line: "health-income-limit"
+    description: "Exclude CRP payments from the actual trade's earned-income limit"
+    formula: "Form 7206 lines 4 and 5 take the farm profit after the verified exempt payment exclusion. Require actual business and plan evidence if a health claim is made alongside this exclusion. Schedule F and total taxable income retain the actual receipts."
+    testRef: "tests/engine/schedules/schedule-se-crp-cash-farm.test.ts::uses the farm profit after the exclusion for the actual Form 7206 limit"
+  - line: "eic-table"
+    description: "Use adjusted earned income in the official 2025 EIC table"
+    formula: "For the single eligible filer with one qualifying child, $5,600 of taxable farm profit, $2,400 qualifying CRP exclusion and $226 deductible SE tax give $2,974 of earned income. The $2,950 to $3,000 row in the official 2025 table gives $1,012."
+    testRef: "tests/engine/schedules/schedule-se-crp-cash-farm.test.ts::uses post-exclusion earnings in the official EIC table"
+  - line: "zero-tax-attachment"
+    description: "Select the special zero-tax Schedule SE attachment when required"
+    formula: "For regular-method adjusted earnings below $400 with positive line 1b, exact line 1a plus 2 of at least $434 requires Schedule SE through line 4c and zero on Schedule 2 line 4 unless another owner owes tax. At $433.99 omit the attachment. The ordinary above-threshold route stays unchanged."
+    testRef: "tests/engine/schedules/schedule-se-crp-cash-farm.test.ts::distinguishes the special $434 attachment threshold from the ordinary $400 exact test"
+  - line: "saved-review"
+    description: "Save the special zero-tax attachment and its required zero on the 2025 review copy"
+    formula: "Render the qualifying owner's audit through line 4c, leaving later lines blank. Show Schedule 2 line 4 zero if no other owner owes tax, after verifying the original sources and matching the canonical tax. Keep the normal separate owner form for any owner with positive tax. Show the same actual proprietor and one verified original payment total on each applicable Schedule F line. Validate the current originals and threshold before any packet output. Require a separate presentation method when a stop below $400 rounds to a printed $400 or an omitted attachment below $434 would appear required from the rounded profit lines."
+    testRef: "tests/pdf/fill-schedule-se-crp.test.ts::saves the required zero-tax owner schedule and explicit zero on Schedule 2"

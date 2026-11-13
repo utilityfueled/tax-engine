@@ -10,6 +10,7 @@ import { PDFDocument } from "pdf-lib";
 import Decimal from "decimal.js";
 import type { TaxReturnResult } from "@/models/outputs.js";
 import type { TaxYearInput } from "@/models/inputs.js";
+import { assertCashFarmCrpReview } from "./fill-schedule-se.js";
 import {
   loadReviewTemplate,
   createPdfFieldBatch,
@@ -97,6 +98,7 @@ export async function fillSchedule2(
   blankPdfPath: string,
 ): Promise<PDFDocument> {
   assertPdfExportAllowed(input.taxpayer.taxYear, result.taxYear);
+  assertCashFarmCrpReview(input, result);
   const s2 = result.schedule2;
   const canonicalLine = (line: string): Decimal => {
     const entries = s2?.lines.filter(entry => entry.form === "Sched 2" && entry.line === line) ?? [];
@@ -111,6 +113,12 @@ export async function fillSchedule2(
     line1b: canonicalLine("1b"), line1c: canonicalLine("1c"), line1z: canonicalLine("1z"),
     line8: canonicalLine("8"), line13: canonicalLine("13"), line18: canonicalLine("18"),
   } : null;
+  const se = result.scheduleSE;
+  const crpZeroAttachment = se?.perTaxpayer.some(row => row.reviewAttachment === "crp-zero") ?? false;
+  if (se && crpZeroAttachment && (!s2 || !s2.selfEmploymentTax.eq(se.totalSETax)
+    || !s2.selfEmploymentTax.eq(canonicalLine("4")))) {
+    throw new Error("Schedule 2 CRP review requires the actual self-employment tax from the owner schedules.");
+  }
   const doc = await loadReviewTemplate(blankPdfPath, 2025);
   const fields = createPdfFieldBatch(doc.getForm());
   const F = FIELDS;
@@ -133,7 +141,8 @@ export async function fillSchedule2(
   fields.setCurrency(F.line3, s2.partITotal);
 
   // ── Part II: Other Taxes ──
-  fields.setCurrency(F.line4, s2.selfEmploymentTax);
+  if (s2.selfEmploymentTax.isZero() && crpZeroAttachment) fields.setText(F.line4, "0");
+  else fields.setCurrency(F.line4, s2.selfEmploymentTax);
   fields.setCurrency(F.line5, s2.unreportedSSTax);
   fields.setCurrency(F.line6, s2.form8919Tax);
   fields.setCurrency(F.line7, s2.unreportedSSTax.plus(s2.form8919Tax));

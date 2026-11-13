@@ -20,6 +20,7 @@ import { calculateMarketplaceOwnerDeductions } from "./marketplace-health-owners
 import { calculateMarketplaceNonspecifiedStop } from "./marketplace-nonspecified-stop.js";
 import { calculateMarketplaceNegativeLimit } from "./marketplace-health-negative-limit.js";
 import { readMarketplacePartnershipGrossIncome } from "./marketplace-health-business-gross.js";
+import { resolveCashFarmCrp } from "@/engine/schedules/schedule-se-crp-sources.js";
 
 type Owner = "primary" | "spouse";
 interface Params {
@@ -111,6 +112,10 @@ export function calculateForm7206Return(params: Params) {
   const partnershipGross = readMarketplacePartnershipGrossIncome(input);
   const businessGrossIncomes = [...params.businessGrossIncomes ?? [], ...partnershipGross];
   const year = input.taxpayer.taxYear, joint = input.taxpayer.filingStatus === "married_filing_jointly";
+  const crp = resolveCashFarmCrp(input);
+  if (crp.excluded.gt(0) && (params.marketplace || input.form2555 || d(input.adjustments?.seRetirementContributions).gt(0))) {
+    throw new Error("Form7206 cash-farm CRP with foreign, Marketplace or retirement-plan sources requires its own attribution method.");
+  }
   if (input.seHealthInsuranceWorksheet || !d(input.adjustments?.selfEmployedHealthInsurance).isZero()) throw new Error("Reconcile legacy health-insurance amounts with actual Form7206; duplicate claim representations are unsupported.");
   const reportedPayment = params.marketplace?.stage === "full-repayment" ? params.marketplace.reportedPayment : undefined;
   const actualPaidAdjustment = params.marketplace?.stage === "actual-paid" ? params.marketplace.actualPaidAdjustment : undefined;
@@ -147,7 +152,7 @@ export function calculateForm7206Return(params: Params) {
   const cOwner = input.scheduleC?.accountHolder ?? (necOwners.size === 1 ? [...necOwners][0] : undefined);
   if (necOwners.size > 1 || [...necOwners].some(value => value !== undefined && cOwner !== undefined && value !== cOwner)) throw new Error("Form7206 ScheduleC source contains contradictory owners.");
   if (input.scheduleC || !params.scheduleCProfit.isZero()) add("scheduleC", params.scheduleCProfit, cOwner, "self_employed");
-  if (input.scheduleF || !params.scheduleFProfit.isZero()) add("scheduleF", params.scheduleFProfit, input.scheduleF?.accountHolder, "self_employed");
+  if (input.scheduleF || !params.scheduleFProfit.isZero()) add("scheduleF", params.scheduleFProfit.minus(crp.excluded), input.scheduleF?.accountHolder, "self_employed");
   if (!params.cryptoBusinessProfit.isZero() || facts.plans?.some(plan => plan.businessSourceId === "cryptoBusiness")) add("cryptoBusiness", params.cryptoBusinessProfit, input.cryptoIncome?.businessAccountHolder, "self_employed");
   input.scheduleK1.forEach((k1,index) => {
     if (k1.entityType === "s_corporation") return;

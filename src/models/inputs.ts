@@ -1598,6 +1598,9 @@ export const Form1099SASchema = z.object({
 });
 
 export const FormSSA1099Schema = z.object({
+  sourceId: z.string().trim().min(1).optional(),
+  sourceTaxYear: z.number().int().optional(),
+  accountHolder: z.enum(["primary", "spouse"]).optional(),
   recipient: z.string().optional(),
   netBenefits: decimal, // Box 5
   federalWithheld: optionalDecimal, // Box 6
@@ -3425,6 +3428,32 @@ export const FarmExpensesSchema = z.object({
   otherExpenses: optionalDecimal,         // Line 32f
 });
 
+const FarmAgriculturalPaymentSchema = z.object({
+  sourceId: z.string().trim().min(1),
+  sourceReference: z.string().trim().min(1),
+  receivedDate: z.iso.date(),
+  taxableAmount: nonnegativeDollarsAndCents,
+  accountHolder: z.enum(["primary", "spouse"]),
+});
+const FarmAgriculturalPaymentSourcesSchema = z.object({
+  sourceTaxYear: z.number().int(),
+  sourceFactsConfirmed: z.literal(true),
+  completeTaxablePaymentsConfirmed: z.literal(true),
+  allGrossPaymentsTaxableConfirmed: z.literal(true),
+  // All receipts arose in the ordinary course of this same materially participated domestic farm.
+  activeDomesticFarmConfirmed: z.literal(true),
+  payments: z.array(z.discriminatedUnion("program", [
+    FarmAgriculturalPaymentSchema.extend({ program: z.literal("other") }).strict(),
+    FarmAgriculturalPaymentSchema.extend({
+      program: z.literal("crp-annual-rental"),
+      benefitAtReceipt: z.enum(["ssa-retirement", "ssa-disability", "none"]),
+      benefitSourceReference: z.string().trim().min(1),
+      annualBenefitStatementSourceId: z.string().trim().min(1).optional(),
+      noAttributableScheduleFDeductionsConfirmed: z.literal(true),
+    }).strict(),
+  ])),
+}).strict();
+
 export const ScheduleFInputSchema = z.object({
   qbiMateriallyParticipated: z.boolean().optional(),
   principalCropOrActivity: z.string().optional(),
@@ -3439,7 +3468,8 @@ export const ScheduleFInputSchema = z.object({
   salesOfProductsRaised: optionalDecimal,            // Line 2
   cooperativeDistributions: optionalDecimal,         // Line 3b (taxable amount)
   cooperativeNonIncomeItems: optionalDecimal,        // PA Schedule F Line 5b
-  agriculturalProgramPayments: optionalDecimal,      // Line 4b / Section III Line 41a
+  agriculturalProgramPayments: optionalDecimalInput, // Line 4b / Section III Line 41a
+  agriculturalPaymentSources: FarmAgriculturalPaymentSourcesSchema.optional(),
   agriculturalProgramMaterialsServices: optionalDecimal, // PA Schedule F Line 7b / Section III Line 41b
   cccLoansElected: optionalDecimal,                  // Line 5a / Section III Line 42
   cccLoansForfeited: optionalDecimal,                // Line 5c (taxable amount) / Section III Line 42
