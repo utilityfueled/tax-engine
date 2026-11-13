@@ -618,7 +618,7 @@
     "apps/web/tests/workspace-guided-year.spec.ts": "8683248504cbf2b14750b7032242429e15c9e29393a8b3dec5c5a24596e5e6d6",
     "apps/web/tests/workspace-lifecycle.spec.ts": "5b00c5d2e59c506c3ddc4f2c74fb90923038190a105db84a1d9c09cd1018a8d2",
     "apps/web/tests/workspace-recovery.spec.ts": "7b81115dca973091ee325e778b56a5e7e15fd52355633e4faf7a3c9af68c1e15",
-    "apps/web/tests/workspace-upload.spec.ts": "f2ac5b80147d36a3e311abd67e7c14f487d2556723203f26bdbec44489a31c39",
+    "apps/web/tests/workspace-upload.spec.ts": "a7c049900ceaf7205856d95dfc3bd302f97e0839717f6b70b991e10743b886b7",
     "packages/contracts/package.json": "57053526d9dca0fab4f4d3ceeaf009a15472700a5886b3bed921a4c2c65ad3c7",
     "packages/contracts/src/index.ts": "a8dfe5de0d403af83e2700716479812cfe0acc21b388960e8a40bfbbc5227158",
     "packages/engine/package.json": "7b7310b15b3aef79dd78c97c5c4152c8eb240f47ba9d6c985e331e912cd4d0c3",
