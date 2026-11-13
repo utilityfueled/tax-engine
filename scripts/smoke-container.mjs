@@ -74,8 +74,8 @@ try {
   assert.equal(processEvidence.uid, 1001);
   assert.equal(processEvidence.imageCacheFilesystem, 0x01021994, "Image cache must be a disposable tmpfs.");
   assert.equal(processEvidence.imageCacheLimitBytes, 64 * 1024 * 1024, "Image cache must remain bounded to64MiB.");
-  assert.equal(processEvidence.node, "v26.13.0");
-  assert.equal(processEvidence.undici, "8.12.2");
+  assert.equal(processEvidence.node, "v26.13.1");
+  assert.equal(processEvidence.undici, "8.12.4");
   assert.equal(processEvidence.libatomicInstalled, true, "Retain the official Node 26 Linux libatomic runtime dependency.");
   assert.equal(processEvidence.packageTools, false);
   assert.deepEqual(processEvidence.aptPackageRecords, [], "APT packages must be purged through dpkg, with no installed or residual records.");
@@ -88,7 +88,7 @@ try {
   // The exact filesystem-layer prefix proves shared base contents; a tag alone does not.
   const runnerBaseReference = readFileSync(new URL("../Dockerfile", import.meta.url), "utf8")
     .match(/^FROM (\S+) AS runner$/mu)?.[1];
-  assert.equal(runnerBaseReference, "node:26.13.0-trixie-slim@sha256:5adad64f9a1fca2d51972caa65983634c8a774eb300d72b20f7f2a0f60368072", "Use the shipped fixed runner base for the package proof.");
+  assert.equal(runnerBaseReference, "node:26.13.1-trixie-slim@sha256:e6bedef217677b276c591795e169840edd9096dbf13f29df8ef8d1856b8820bc", "Use the shipped fixed runner base for the package proof.");
   const baseline = JSON.parse(docker("image", "inspect", runnerBaseReference))[0];
   const candidate = JSON.parse(docker("image", "inspect", metadata.Image))[0];
   assert.equal(candidate.Id, metadata.Image);

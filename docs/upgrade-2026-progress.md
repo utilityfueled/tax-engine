@@ -3303,6 +3303,7 @@ frozen members and8 source pins. See [the draft ledger](upgrade-2026-ohio-pa-rec
 Broader selected-state software, public2026/final forms, human and distribution
 qualification remain open.
 
+
 ### November5 UTC: PA actual child/local review paper and privacy preflight
 
 Original-bound child rows and counts now reach2025 PA40/SP review paper while
@@ -3946,3 +3947,15 @@ five actual PDF checks. See [the education ledger](upgrade-education-prepared-re
 The conditional `032b329d` native rehearsal never started after that source's
 unit failure. Final-form, human, current-source staging and native release
 qualification remain open.
+
+### November 12 · Node security update
+
+The local development and CI pins and both Docker stages now use Node
+26.13.1, which includes the November 11 HTTP/2 and TLS fixes. The updated
+Docker index and both target platform manifests were verified, and 183
+focused and adjacent tests, three type checks, spec, inventory and scoped
+lint passed. The lockfile was preserved. The refreshed Next.js advisory
+ranges recognize the installed patch. PostgreSQL's current official 16 image
+resolves to 16.16. The Node image still contains the older Debian zlib
+package, so the Debian fix and an exact application image run remain open.
+See [the runtime security ledger](upgrade-2026-node26-131-security-work.md).

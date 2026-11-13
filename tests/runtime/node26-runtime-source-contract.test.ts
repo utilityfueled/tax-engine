@@ -4,14 +4,14 @@ import { describe, expect, it } from "vitest";
 import { createHash } from "node:crypto";
 // spec/federal/node26-runtime-source-contract.yaml; source-only controls.
 const read = (name: string) => readFileSync(resolve(process.cwd(), name), "utf8");
-const base = "node:26.13.0-trixie-slim@sha256:5adad64f9a1fca2d51972caa65983634c8a774eb300d72b20f7f2a0f60368072";
+const base = "node:26.13.1-trixie-slim@sha256:e6bedef217677b276c591795e169840edd9096dbf13f29df8ef8d1856b8820bc";
 const integrity = "sha512-9ieo6XE0Ov5J39D2PQKCNCAd+oMdXLWIcz4eX42ya/FpiaMhYatcG02zsf28NzFgYGtbieAC323RmoWt+R/FqA==";
 describe("Node 26 runtime source contract", () => {
   it("declares Node 26 at both deployable package roots without changing retained pins", () => {
     const root = JSON.parse(read("package.json"));
     const web = JSON.parse(read("apps/web/package.json"));
-    expect(root.engines.node).toBe(">=26.13.0 <27");
-    expect(web.engines.node).toBe(">=26.13.0 <27");
+    expect(root.engines.node).toBe(">=26.13.1 <27");
+    expect(web.engines.node).toBe(">=26.13.1 <27");
     expect(root.packageManager).toBe("pnpm@10.34.8");
     expect(root.devDependencies.typescript).toBe("5.9.3");
     expect(web.devDependencies.typescript).toBe("5.9.3");
@@ -21,8 +21,8 @@ describe("Node 26 runtime source contract", () => {
     expect(web.devDependencies["@types/node"]).toBe("24.19.2");
   });
   it("pins local and inherited CI Node versions consistently", () => {
-    expect(read(".node-version").trim()).toBe("26.13.0");
-    expect(read(".nvmrc").trim()).toBe("26.13.0");
+    expect(read(".node-version").trim()).toBe("26.13.1");
+    expect(read(".nvmrc").trim()).toBe("26.13.1");
     expect(read(".github/workflows/ci.yml").match(/node-version-file: \.node-version/g)).toHaveLength(6);
     expect(read(".github/workflows/web.yml").match(/node-version-file: \.node-version/g)).toHaveLength(3);
   });
@@ -44,8 +44,8 @@ describe("Node 26 runtime source contract", () => {
   });
   it("retains source guards for actual runtime identity and Linux dependency proof", () => {
     const smoke = read("scripts/smoke-container.mjs");
-    expect(smoke).toContain('assert.equal(processEvidence.node, "v26.13.0")');
-    expect(smoke).toContain('assert.equal(processEvidence.undici, "8.12.2")');
+    expect(smoke).toContain('assert.equal(processEvidence.node, "v26.13.1")');
+    expect(smoke).toContain('assert.equal(processEvidence.undici, "8.12.4")');
     expect(smoke).toContain('"libatomic1"');
     expect(smoke).toContain(`assert.equal(runnerBaseReference, "${base}"`);
     expect(smoke).toContain('const targets = new Set(["apt", "libapt-pkg7.0"])');
@@ -57,8 +57,8 @@ describe("Node 26 runtime source contract", () => {
     expect(createHash("sha256").update(read("pnpm-lock.yaml")).digest("hex")).toBe("268026058217dd84aee4e9b1c691fa1bac7d3049e6cb68d7fd16ef3af7a76dea");
   });
   it("updates active operational prerequisites without rewriting historical receipts", () => {
-    expect(read("README.md")).toContain("Node.js 26.13.0");
-    expect(read("docs/self-hosting.md")).toContain("Node 26.13.0");
+    expect(read("README.md")).toContain("Node.js 26.13.1");
+    expect(read("docs/self-hosting.md")).toContain("Node 26.13.1");
     expect(read("docs/hosted-metadata-migration.md")).toContain("Node 26");
     expect(read("docs/upgrade-2026-runtime-package-minimization-work.md")).toContain("fixed Node 24.22.1 base");
   });
