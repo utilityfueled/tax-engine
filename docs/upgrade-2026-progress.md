@@ -4,6 +4,11 @@ Current source, verification and remaining work are summarized in the
 [current continuation](upgrade-2026-current-status.md). Historical results
 below apply to their named revisions.
 
+- November 13 — `6e7b046b` requires a separate state military compensation
+  method for an actual positive Code Q. Nine baseline failures and 7,348
+  passing state and Ohio PDF tests cover the ordinary employee paths.
+  [State evidence](upgrade-2026-state-combat-pay-boundary-work.md).
+
 - November 13 — `5c6633e2` projects the confirmed-wage case on final 2026
   Schedule 8812. All 78 focused tests, separate saved-PDF readback and visual
   checks passed. Full qualification remains open.
@@ -52,8 +57,10 @@ below apply to their named revisions.
   browser run stopped after collection because the archive lacked the public
   sample directory. Its receipt SHA-256 is
   `23474e4e21027fc3b74496225fd4c398eb9b9a1bcadad84afe3eb22ea5afd98d`.
-  A same-source browser rerun uses the byte-checked samples. No release gate
-  changes or provider calls were made.
+  The same-source browser rerun with byte-checked samples passed 615 cases
+  with five hosted-only skips. The rerun log SHA-256 is
+  `b7fcaec1d622e951cd170662074dc526d80cb646b9f051e093b26a907b086aff`.
+  The combined 12 checks passed. Release gates stayed closed.
 
 - November 13: `a68f71ab` projects source-confirmed ordinary investment-land
   sales on the disabled final 2026 Form 6252. The separate Decimal readback

@@ -6,6 +6,9 @@ below retain their original evidence boundaries.
 
 ## Active continuation — November 13 Eastern
 
+- [x] Preserve the ordinary state scope for actual combat-pay originals in
+  `6e7b046b`. Pass 7,348 targeted state and Ohio PDF tests, including all
+  nine new boundary cases. [State evidence](upgrade-2026-state-combat-pay-boundary-work.md).
 - [x] Project the bounded confirmed-wage case on final 2026 Schedule 8812 in
   `5c6633e2`. Pass 78 focused tests, separate PDF readback and visual checks.
   Full qualification remains open. [Projection evidence](upgrade-2026-schedule-8812-wage-projection-work.md).
@@ -14,9 +17,10 @@ below retain their original evidence boundaries.
   reopen the 2025 review PDF. [Combat pay evidence](upgrade-2026-ctc-combat-pay-work.md).
 - [x] Enforce the claimed-child birth-date and age boundary in direct 2026
   federal calculation in `ab47d87f`. Pass 519 targeted federal and PDF tests.
-- [ ] Close all 12 checks on the successor of the privacy and age changes.
-  Exact `e4189ec7` passed the first 11. The browser prerequisite was absent
-  from the archive and has been restored for a same-source rerun.
+- [x] Close all 12 checks on exact `e4189ec7`. The same-source browser rerun
+  passed after restoring the byte-checked public samples. The first attempt
+  remains recorded. The successor with the privacy and age changes has a
+  separate full run in progress.
 - [x] Keep guided review and raw document parsing in the browser in `e4e56480`.
   Verify both retired URLs reject before parsing. Pass 36 production Chromium
   cases, 63 middleware/parser cases and scoped static checks.

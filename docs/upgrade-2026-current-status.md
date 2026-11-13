@@ -6,6 +6,12 @@ The public refs were refreshed. `origin/main` still points to `59248889`
 and `origin/upgrade/2026-baseline` to `3024b848`. Successor commits stay on
 local `main` while automatic production deployment is being disabled.
 
+`6e7b046b` requires a separate military compensation method for a positive
+actual W-2 Code Q on the covered ordinary PA and Ohio paths. Nine baseline
+failures reproduced the admission gap. All 7,348 targeted tests passed,
+including zero controls and cases across all three residency statuses.
+[State evidence](upgrade-2026-state-combat-pay-boundary-work.md).
+
 `5c6633e2` projects a bounded confirmed-wage case on the final 2026 Schedule
 8812. All 78 focused tests passed. A separate reader verified the saved
 specimen and both pages rendered. Full qualification, companion instructions
@@ -74,7 +80,8 @@ The 91 focused tests passed with one environment-dependent skip. Exact
 `e4189ec7` passed 11 checks, including 27,675 unit and coverage tests across
 2,004 files at 87.81% branch coverage. Its first browser invocation collected
 620 and stopped before execution because the archive lacked the untracked
-public samples. The same-source browser rerun uses the byte-checked samples.
+public samples. The same-source browser rerun passed 615 with five hosted-only
+skips after restoring the byte-checked samples. The combined 12 checks are green.
 Container qualification and Debian advisory dispositions remain open.
 [Next.js 16.4.6](https://github.com/vercel/next.js/releases/tag/v16.4.6) ·
 [Next.js security advisories](https://github.com/vercel/next.js/security/advisories).
