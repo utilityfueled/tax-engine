@@ -46,12 +46,23 @@ The focused PostgreSQL 16.16 cohort passed 247 tests and restored 11 tables.
 `5595f396` also binds the stored receipt to the Checkout Session and product.
 Its PostgreSQL 16.16 cohort passed 252 tests, including backup and restore of
 the current schema and an actual historical archive.
+`aac4667d` adds an operator-only, read-only comparison for a conflicting paid
+Stripe event. It reports retained issuance, purchase, receipt, PaymentIntent,
+Charge, refund and dispute evidence without emitting identifiers or amounts.
+The focused 290-test cohort and a separate SELECT-only verified-TLS invocation
+passed. Staging remediation and the credit-sales gate remain open.
 The `db974a65` production build separately passed 13 local HTTP checks using
 TLS PostgreSQL and a controlled loopback rate-limit transport. The automatic
 Stripe retry needs a new isolated Preview database because the prior branch
 expired. Staged paid credit conflict reconciliation, credit-sales qualification,
 and security/privacy signoff remain open. [Hosted HTTP evidence](upgrade-2026-hosted-http-fault-rehearsal-work.md) ·
 [AI credit ledger](upgrade-2026-ai-credit-issuance-work.md).
+
+`f3117ed1` corrects guided Form 1099-R duplicate identity. A payer TIN with or
+without hyphens identifies the same payer. Joint-return recipients can each
+use the same local account label. The focused 164-test cohort passed, preserving
+the entered TIN, original account reference and exact amounts.
+[IRS Form 1099-R instructions](https://www.irs.gov/instructions/i1099r).
 
 The official npm registry reported zero advisories for the 539 dependencies in
 the checked lockfile. Runtime-image advisories remain open. The IRS final

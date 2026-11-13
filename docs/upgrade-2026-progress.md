@@ -4401,3 +4401,18 @@ execution and current image qualification require separate evidence.
   actions. Qualified human review and final filing remain open.
   [Schedule SE instructions](https://www.irs.gov/instructions/i1040sse) ·
   [26 USC §1402](https://uscode.house.gov/us/usc/119-134/t26/s1402/).
+- `aac4667d` adds a read-only operator command for conflicting paid Stripe
+  snapshots. The 290 affected tests include real PostgreSQL 16.16 and archive
+  recovery. A separate verified-TLS run passed using a SELECT-only role.
+  The command reports fixed evidence statuses and leaves all records intact.
+  External settlement/refund decisions and staging credit qualification remain
+  open. [Operator steps](upgrade-2026-ai-credit-issuance-work.md).
+- `f3117ed1` prevents double counting the same retirement statement when only
+  payer TIN punctuation differs. Joint spouses with the same local label retain
+  their own distinct source records. One genuine regression failed before the
+  change, and 164 affected tests across 11 files passed. The test reconciled
+  $1,250.10 and $500.20 to $1,750.30 in taxable pension income. Web types, 8,797
+  spec references, inventory and scoped lint passed. The five lint warnings
+  were existing. Focused test transcript SHA-256
+  `a536b351c7fabab7e896f7fa0791386ffe8e1cfccf96dd46937844b5db0073c8`.
+  [IRS Form 1099-R instructions](https://www.irs.gov/instructions/i1099r).

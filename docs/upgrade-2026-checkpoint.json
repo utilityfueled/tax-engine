@@ -23414,6 +23414,28 @@
     "humanTaxReviewComplete": false,
     "filingQualified": false
   },
+  "nov13PaidCreditConflictInspection": {
+    "commit": "aac4667d9acd0133aeeb8edc73fb33bec9368d14",
+    "postgresVersion": "16.16",
+    "focusedPassed": 290,
+    "focusedFiles": 10,
+    "focusedTranscriptSha256": "aa3175f0f7666cdc0a54c7fba064ff8710a177ba3732920ce6d80655d0d4b87b",
+    "selectOnlyVerifiedTls": true,
+    "cliOutputSha256": "d1b30c4a402adebc1b7c9aabc20586fe52d69584850a1817e739705ea5910eaf",
+    "stagingRun": false,
+    "refundOrGrantPerformed": false
+  },
+  "nov13GuidedRetirementIdentity": {
+    "commit": "f3117ed1eca507e93c0c65f303078b753d7feed9",
+    "beforeFixFailures": 1,
+    "beforeFixSha256": "9481c7f6515a4e524b0b1ff1d85f967f894b244419768dbedbcb5df88464325b",
+    "focusedPassed": 164,
+    "focusedFiles": 11,
+    "focusedTranscriptSha256": "a536b351c7fabab7e896f7fa0791386ffe8e1cfccf96dd46937844b5db0073c8",
+    "specReferences": 8797,
+    "browserAuditSha256": "eb81c760f744c0c5f1b4516ddcb6ba4f37627c466406e88cf16ca4f430edeec7",
+    "humanTaxReviewComplete": false
+  },
   "nov12HostedCreditSettlement": {
     "previewReceiptCommit": "d39209dec302d249a5f01fe8baf23cc4ca2130f8",
     "settlementCommit": "8357ed9929766a8e5ed0ac7c45321cdccd44d35a",
