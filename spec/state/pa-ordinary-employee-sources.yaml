@@ -47,8 +47,9 @@ sourceContract: |
   admitted. Other classes have explicit known-none proof, not empty-array proof.
   Expense references/receipts and linked reimbursement records are unique and
   complete. Exact accounted or fixed/per-diem non-W2 reimbursements suppress
-  their corresponding expense; no gap is deductible. Unaccounted partial/excess
-  reimbursements and taxable reimbursements need a separate complete method.
+  their corresponding expense; no gap is deductible. The separately sourced
+  taxable-wage cohort below admits only allowances fully included in Box 1 and
+  PA Box 16. Unaccounted or split-inclusion partial/excess methods stay pending.
   Each employer is separate; expenses never offset another employer's wages.
   PY employment must remain within one verified domicile period; resident-period
   expenses are fully considered, NR-period expenses follow the NRH fraction.
@@ -133,7 +134,7 @@ lines:
     testRef: "tests/engine/state/pa-ordinary-employee-sources.test.ts::actual employee sources derive calendar and literal NRH lines from complete originals"
   - line: "NRH19"
     description: "Unreported reimbursements"
-    formula: "Known zero after admitted exact/fixed exclusions; all other cases guarded"
+    formula: "Known zero after admitted exact/fixed exclusions or full original Box 16 inclusion"
     testRef: "tests/engine/state/pa-ordinary-employee-sources.test.ts::actual employee sources suppress fixed allowance gap and exact reimbursement expenses"
   - line: "NRH20"
     description: "PA gross compensation"
@@ -185,7 +186,7 @@ lines:
     testRef: "tests/engine/state/pa-ordinary-employee-sources.test.ts::actual employee sources derive calendar and literal NRH lines from complete originals"
   - line: "UEI"
     description: "Included reimbursements"
-    formula: "Known zero after source-proven exact/fixed exclusions; unsupported positive methods reject"
+    formula: "Known zero after source-proven exact/fixed exclusions or full original Box 16 inclusion; unsupported positive methods reject"
     testRef: "tests/engine/state/pa-ordinary-employee-sources.test.ts::actual employee sources suppress fixed allowance gap and exact reimbursement expenses"
   - line: "UEJ"
     description: "Net employee expense"
@@ -265,10 +266,9 @@ independentReviewRepairs:
     retained reimbursement originals over each connected actual receipt group,
     counting each receipt and record once. A disjoint cheap allowance cannot
     hide an overpaid receipt group. Exact originals must each still reconcile.
-    W2-included or taxable partial/excess reimbursement methods remain an
-    explicitly pending actual cash/Box1/PA compensation reconciliation successor;
-    the current guard is not completion of that law method. Never double-add an
-    amount already included in actual wages or infer inclusion from a checkbox.
+    The incomplete W2-inclusion packet stays denied. The source-bound cohort
+    below requires actual cash/Box1/PA Box16 compensation reconciliation. Never
+    double-add an amount included in wages or infer inclusion from a checkbox.
   actualBox8: "Require actual allocatedTips amount, including explicit known0; all-box confirmation does not supply a missing monetary fact."
   decimalPrecision: |
     Derive local precision from the maximum supplied integer-digit span plus
@@ -282,3 +282,40 @@ independentReviewRepairs:
     - "tests/engine/state/pa-ordinary-employee-guard-repairs.test.ts::actual employee repair requires original Box8 monetary fact"
     - "tests/engine/state/pa-ordinary-employee-guard-repairs.test.ts::actual employee repair preserves mixed integer and fractional raw sources"
     - "tests/engine/state/pa-ordinary-employee-guard-repairs.test.ts::actual employee repair retains incomplete included-in-W2 method guard"
+taxablePayrollReimbursements:
+  years: [2025, 2026]
+  sourceRetrieved: "2026-11-12"
+  reviewStatus: "2025 source-supported review only; 2026 preliminary; qualified review pending"
+  authorities:
+    - "2025 PA Schedule UE, general instructions and lines H, I and J"
+    - "https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax/unreimbursed-business-expenses"
+    - "https://www.irs.gov/publications/p463"
+    - "https://www.irs.gov/instructions/iw2w3"
+  formula: |
+    Admit this cohort only when every compensable day for the employer is PA
+    work with no outside compensated work, the retained original Pennsylvania
+    Box 16 equals Box 1 at full precision, and signed complete original payroll
+    verifies inclusion and reconciles each gross payment to its separately entered cash wages before
+    reimbursements plus the sum of its same-date allowances. Each allowance
+    confirms full inclusion in both boxes and links distinct actual expense
+    receipts and the corresponding original payroll. The signature must be on
+    or after the last original payroll in the cohort. A linked receipt or
+    taxable allowance original cannot be reused in a different employer row.
+    Exclude unknown or split inclusion, mismatched dates, duplicate references,
+    and wage corrections in this cohort. When composed with residency, the
+    actual parent payroll must bind the same original source reference as
+    the employee packet. A positive reciprocal compensation exclusion with
+    this allowance requires a separate source method to keep the PA-40 and
+    NRH consistent. Existing ordinary source residency and reciprocal gates apply.
+    A linked, otherwise allowable receipt enters UE category totals and H once.
+    The allowance stays in original compensation and contributes zero to UE I
+    and NRH 19. UE J is H for these receipts, even when the fully wage-included
+    allowance is greater or less than actual eligible receipts. NRH 13 and 16
+    use the existing H and working-day method, with the allowance already in
+    reported gross. No new filing or form availability follows.
+  tests:
+    - "tests/engine/state/pa-ordinary-employee-taxable-reimbursement.test.ts::PA fully wage-included reimbursement stays in wages and eligible receipts reach UE and NRH"
+    - "tests/engine/state/pa-ordinary-employee-taxable-reimbursement.test.ts::PA fully wage-included reimbursement requires actual Box 16 and payroll reconciliation"
+    - "tests/engine/state/pa-ordinary-employee-taxable-reimbursement.test.ts::PA taxable payroll does not admit the same original receipt or allowance under another employer"
+    - "tests/engine/state/pa-ordinary-employee-taxable-reimbursement.test.ts::PA taxable payroll rejects a different parent payroll reference even when amounts match"
+    - "tests/engine/state/pa-ordinary-employee-taxable-reciprocity.test.ts::defers the ordinary return when wages with an included allowance are excluded by reciprocity"

@@ -214,11 +214,14 @@ function amount(value: unknown): Decimal {
     for (const key of ["box12CodeD", "box12CodeE", "box12CodeF", "box12CodeG", "box12CodeH", "box12CodeS", "box12CodeW", "box12CodeT", "box10DependentCareBenefits", "allocatedTips"] as const) if (w2[key] !== undefined && !amount(w2[key]).isZero()) return error("retained nonordinary PA/federal wage adjustment requires its actual source method");
     if (w2.militaryService?.activeDuty === true) return error("military compensation requires its actual PA source method");
     const employee = actualEmployees.get(row.originalIndex as number);
+    const employeeOriginal = source.employeeSources?.employers.find(actual => actual.originalIndex === row.originalIndex);
+    const hasTaxableReimbursements = employeeOriginal?.ue.reimbursements.some(record => record.method === "included_in_w2");
     if (employee) {
       if (employee.payroll.length !== row.payroll.length || employee.employmentPeriods.some(period => domicilePeriodAt(day(period.from, year)) !== domicilePeriodAt(day(period.through, year))) || (residency.status === "part_year" && new Set(employee.employmentPeriods.map(period => domicilePeriodAt(day(period.from, year)))).size !== 1)) return error("actual employee employment crossing domicile periods requires its separate method");
       for (const [index, payroll] of row.payroll.entries()) {
         const derived = employee.payroll[index];
         if (!derived || payroll.paidOn !== derived.paidOn || payroll.serviceFrom !== derived.serviceFrom || payroll.serviceThrough !== derived.serviceThrough || !amount(payroll.grossCompensation).eq(derived.grossCompensation) || !amount(payroll.paServicesCompensation).eq(derived.paServicesCompensation) || !amount(payroll.outsidePAServicesCompensation).eq(derived.outsidePAServicesCompensation)) return error("actual calendar-derived payroll amounts/dates do not reconcile retained PA payroll; no free source override");
+        if (hasTaxableReimbursements && payroll.sourceReference !== employeeOriginal?.payroll[index]?.sourceReference) return error("wage-included reimbursement requires the same original payroll in the employee and residency sources");
       }
     }
     let gross = new Money(0), included = new Money(0), excluded = new Money(0), reciprocalExcluded = new Money(0);
@@ -241,11 +244,11 @@ function amount(value: unknown): Decimal {
     const reportedPAWages = actualRows === undefined ? (w2.state === "PA" ? amount(w2.stateWages) : undefined) : actualRows.stateRows.find(state => state.state === "PA")?.wages;
     if (reportedPAWages !== undefined && !reportedPAWages.eq(included)) {
       if (!employee) return error("PA payroll and original reported compensation differ; actual NRH/source correction required");
-      const employeeOriginal = source.employeeSources?.employers.find(actual => actual.originalIndex === row.originalIndex);
       if (!employeeOriginal) return error("actual original employer correction proof is missing");
       reference(employeeOriginal.statement.w2CorrectionExplanation);
     }
     if (employee) {
+      if (hasTaxableReimbursements && reciprocalExcluded.gt(0)) return error("wage-included reimbursement with a reciprocal compensation exclusion requires its own source method");
       const firstPay = row.payroll[0]; if (!firstPay) return error("actual employee payroll is missing");
       const residentJob = residentAt(day(firstPay.paidOn, year));
       employee.residentPeriod = residentJob;

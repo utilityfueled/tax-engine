@@ -28,6 +28,7 @@ const employer = z.object({
   statement: z.object({
     documentReference: z.string(), documentAvailableConfirmed: answer, signed: answer,
     signerName: z.string(), signerRole: z.string(), signedOn: z.string(), fullCalendarAndOutsideDaysVerifiedConfirmed: answer,
+    taxablePayrollInclusionVerifiedConfirmed: answer.optional(),
     outsideWorkDates: z.array(z.string()), w2CorrectionExplanation: z.string(),
   }).strict(),
   calendar: z.array(z.object({
@@ -36,7 +37,10 @@ const employer = z.object({
     travelClassification: z.enum(['', 'none', 'commute_only', 'transit_only', 'between_worksites']),
     locations: z.array(z.object({ state, compensatedWorkConfirmed: answer, employerRequiredOutsideWork: answer, transitOnly: answer }).strict()),
   }).strict()),
-  payroll: z.array(z.object({ sourceReference: z.string(), paidOn: z.string(), serviceFrom: z.string(), serviceThrough: z.string(), grossCompensation: z.string() }).strict()),
+  payroll: z.array(z.object({
+    sourceReference: z.string(), paidOn: z.string(), serviceFrom: z.string(), serviceThrough: z.string(), grossCompensation: z.string(),
+    cashWagesBeforeReimbursements: z.string().optional(),
+  }).strict()),
   ue: z.object({
     sourceReference: z.string(), allExpenseAndReimbursementSourcesReviewedConfirmed: answer,
     otherExpenseClassesConfirmedNone: answer, expenses: z.array(expense),
@@ -44,6 +48,7 @@ const employer = z.object({
       sourceReference: z.string(), paidOn: z.string(), amount: z.string(),
       method: z.enum(['', 'exact_accounted_not_w2', 'fixed_allowance_not_w2', 'included_in_w2', 'unaccounted_partial', 'unaccounted_excess']),
       expenseReferences: z.array(z.string()), includedInW2Confirmed: answer,
+      taxablePayroll: z.object({ payrollSourceReference: z.string(), federalBox1InclusionConfirmed: answer }).strict().optional(),
     }).strict()),
   }).strict(),
 }).strict();

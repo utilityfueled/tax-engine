@@ -86,6 +86,13 @@ export function calculatePAOrdinaryEmployeeSources(input: TaxYearInput, raw: unk
   }
   const whole = (n: Decimal) => new Money(n).toDecimalPlaces(0, Decimal.ROUND_HALF_UP);
   const refs = new Set<string>(), indices = new Set<number>(), identities = new Set<string>();
+  const originalExpenseReceipts = new Map<string, boolean>(), originalAllowanceRefs = new Map<string, boolean>();
+  function verifyUniqueOriginal(seen: Map<string, boolean>, reference: string, wageIncluded: boolean): void {
+    const normalized = reference.trim();
+    const previous = seen.get(normalized);
+    if (previous !== undefined && (previous || wageIncluded)) fail('duplicate actual original shared with a wage-included reimbursement');
+    seen.set(normalized, wageIncluded);
+  }
   const audit = new AuditTrail(), perEmployer: PAActualEmployeeResult[] = [];
   for (const row of source.employers) {
     const index = row.originalIndex;
@@ -172,18 +179,39 @@ export function calculatePAOrdinaryEmployeeSources(input: TaxYearInput, raw: unk
     if (actualPA === undefined || !whole(actualPA).eq(allocatedGross)) ref(statement.w2CorrectionExplanation);
     const ue = row.ue; ref(ue.sourceReference);
     if (ue.allExpenseAndReimbursementSourcesReviewedConfirmed !== true || ue.otherExpenseClassesConfirmedNone !== true) return fail('complete actual expense/reimbursement history and other-class none proof are unknown');
+    const hasTaxableReimbursements = ue.reimbursements.some(record => record.method === 'included_in_w2');
+    if (hasTaxableReimbursements && (statement.taxablePayrollInclusionVerifiedConfirmed !== true || !actualPA?.eq(gross) || paWorkingDays !== workingDays || outsideDates.length > 0)) return fail('wage-included reimbursement requires signed payroll inclusion proof, equal original Box 1 and PA Box 16, and only actual PA work');
+    const payrollByReference = new Map(row.payroll.map(pay => [pay.sourceReference, pay]));
+    const taxableByPayroll = new Map<string, Decimal>();
     const expenseRefs = new Set<string>(), receipts = new Set<string>(), reimbursements = new Map<string, typeof ue.reimbursements[number]>();
+    const reimbursementRefs = new Set<string>();
     for (const reimbursement of ue.reimbursements) {
       ref(reimbursement.sourceReference);
-      if (reimbursements.has(reimbursement.sourceReference) || !['exact_accounted_not_w2', 'fixed_allowance_not_w2'].includes(reimbursement.method) || reimbursement.includedInW2Confirmed !== false || !reimbursement.expenseReferences.length || new Set(reimbursement.expenseReferences).size !== reimbursement.expenseReferences.length || !money(reimbursement.amount).gt(0) || date(reimbursement.paidOn, year) > asOf) return fail('actual complete reimbursement method is unsupported, duplicate or contradictory');
+      const amount = money(reimbursement.amount), included = reimbursement.method === 'included_in_w2';
+      if (reimbursementRefs.has(reimbursement.sourceReference.trim()) || !['exact_accounted_not_w2', 'fixed_allowance_not_w2', 'included_in_w2'].includes(reimbursement.method) || reimbursement.includedInW2Confirmed !== included || !reimbursement.expenseReferences.length || new Set(reimbursement.expenseReferences).size !== reimbursement.expenseReferences.length || !amount.gt(0) || date(reimbursement.paidOn, year) > asOf) return fail('actual complete reimbursement method is unsupported, duplicate or contradictory');
+      reimbursementRefs.add(reimbursement.sourceReference.trim());
+      verifyUniqueOriginal(originalAllowanceRefs, reimbursement.sourceReference, included);
+      const evidence = reimbursement.taxablePayroll;
+      if (included) {
+        const pay = evidence && payrollByReference.get(evidence.payrollSourceReference);
+        if (!evidence || !pay || evidence.federalBox1InclusionConfirmed !== true || pay.paidOn !== reimbursement.paidOn) return fail('actual wage-included reimbursement must match its Box 1 payroll original and payment date');
+        taxableByPayroll.set(pay.sourceReference, (taxableByPayroll.get(pay.sourceReference) ?? zero()).plus(amount));
+      } else if (evidence !== undefined) return fail('nonwage reimbursement contradicts retained taxable payroll evidence');
       reimbursements.set(reimbursement.sourceReference, reimbursement);
     }
+    if (hasTaxableReimbursements) {
+      for (const pay of row.payroll) {
+        if (date(pay.paidOn, year) > signedOn) return fail('signed payroll inclusion proof predates an original wage payment');
+        if (!money(pay.cashWagesBeforeReimbursements).plus(taxableByPayroll.get(pay.sourceReference) ?? zero()).eq(money(pay.grossCompensation))) return fail('actual cash wages and included reimbursements must reconcile to the original gross payroll');
+      }
+    } else if (statement.taxablePayrollInclusionVerifiedConfirmed === true || row.payroll.some(pay => pay.cashWagesBeforeReimbursements !== undefined)) return fail('taxable payroll evidence requires the retained wage-included reimbursements');
     const categories: Record<string, Decimal> = { union_dues: zero(), work_clothing: zero(), small_tools_supplies: zero(), occupational_license: zero() };
     const expenses: PAActualEmployeeResult['expenses'] = [];
     for (const expense of ue.expenses) {
       for (const text of [expense.sourceReference, expense.receiptReference, expense.description]) ref(text);
-      if (expenseRefs.has(expense.sourceReference) || receipts.has(expense.receiptReference)) return fail('duplicate actual employee expense or original receipt');
-      expenseRefs.add(expense.sourceReference); receipts.add(expense.receiptReference);
+      if (expenseRefs.has(expense.sourceReference.trim()) || receipts.has(expense.receiptReference.trim())) return fail('duplicate actual employee expense or original receipt');
+      expenseRefs.add(expense.sourceReference.trim()); receipts.add(expense.receiptReference.trim());
+      verifyUniqueOriginal(originalExpenseReceipts, expense.receiptReference, expense.reimbursementMethod === 'included_in_w2');
       if (!(expense.category in categories)) return fail('unsupported actual UE category requires its separate method');
       for (const key of ['ordinaryCustomaryConfirmed', 'actuallyPaidConfirmed', 'reasonableConfirmed', 'necessaryConfirmed', 'directlyRelatedConfirmed', 'employerRequiredConfirmed', 'notProvidedByEmployerConfirmed'] as const) if (expense[key] !== true) return fail('actual required eligible employee expense conditions are unknown');
       if (expense.category === 'small_tools_supplies' && expense.usefulLifeAtMostOneYearConfirmed !== true) return fail('actual tool useful life needs the depreciation successor');
@@ -195,12 +223,12 @@ export function calculatePAOrdinaryEmployeeSources(input: TaxYearInput, raw: unk
       if (expense.reimbursementMethod === 'none') {
         if (expense.reimbursementReferences.length) return fail('no-reimbursement fact contradicts retained original reimbursements');
       } else {
-        if (!['exact_accounted_not_w2', 'fixed_allowance_not_w2'].includes(expense.reimbursementMethod) || !expense.reimbursementReferences.length || new Set(expense.reimbursementReferences).size !== expense.reimbursementReferences.length) return fail('actual partial/excess/taxable reimbursement method requires its source successor');
+        if (!['exact_accounted_not_w2', 'fixed_allowance_not_w2', 'included_in_w2'].includes(expense.reimbursementMethod) || !expense.reimbursementReferences.length || new Set(expense.reimbursementReferences).size !== expense.reimbursementReferences.length) return fail('actual split or unaccounted reimbursement requires its source successor');
         for (const reference of expense.reimbursementReferences) {
           const record = reimbursements.get(reference);
           if (!record || record.method !== expense.reimbursementMethod || !record.expenseReferences.includes(expense.sourceReference)) return fail('actual receipt/reimbursement source pairing is incomplete');
         }
-        allowable = zero();
+        if (expense.reimbursementMethod !== 'included_in_w2') allowable = zero();
       }
       categories[expense.category] = categories[expense.category].plus(allowable);
       expenses.push({ paidOn: expense.paidOn, allowableAmount: publicMoney(allowable) });
@@ -216,7 +244,7 @@ export function calculatePAOrdinaryEmployeeSources(input: TaxYearInput, raw: unk
     }
     // Aggregate each connected group of actual originals; disjoint receipt
     // costs cannot conceal excess paid against a different receipt group.
-    const remainingReimbursements = new Set(reimbursements.keys());
+    const remainingReimbursements = new Set([...reimbursements.values()].filter(record => record.method !== 'included_in_w2').map(record => record.sourceReference));
     while (remainingReimbursements.size > 0) {
       const firstReference = remainingReimbursements.values().next().value;
       if (firstReference === undefined) return fail('actual reimbursement group is incomplete');
