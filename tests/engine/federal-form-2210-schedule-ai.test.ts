@@ -17,6 +17,32 @@ it('reconciles the full year column to the completed return', () => {
   expect(() => calculateFederalTax(base([zero, zero, zero, zero], dividends))).toThrow(/separate period worksheet/);
 });
 
+it('binds ordinary period dividends and gains to the federal return and rejects special methods', () => {
+  const periods = [
+    { ...zero, adjustedGrossIncome: '30000', qualifiedDividends: '5000' },
+    { ...zero, adjustedGrossIncome: '60000', qualifiedDividends: '10000', netCapitalGain: '2500' },
+    { ...zero, adjustedGrossIncome: '120000', qualifiedDividends: '20000', netCapitalGain: '6000' },
+    { ...zero, adjustedGrossIncome: '200000', qualifiedDividends: '40000', netCapitalGain: '10000' },
+  ];
+  const w2 = { ...simpleW2Fixture.w2s[0], wages: '150000', federalWithheld: '0', socialSecurityWages: '150000', medicareWages: '150000' };
+  const statement = { payer: 'Fictional Fund', ordinaryDividends: '40000', qualifiedDividends: '40000', totalCapitalGainDistributions: '10000' };
+  const build = (overrides = {}) => {
+    const input = base(periods, { w2s: [w2], form1099Div: [{ ...statement, ...overrides }] });
+    return TaxYearInputSchema.parse({
+      ...input, form2210: { ...input.form2210, ordinaryPreferentialPeriodsConfirmed: true },
+    });
+  };
+  const result = calculateFederalTax(build());
+  expect(result.totalTaxBeforeCredits.toFixed()).toBe('32567');
+  expect(result.form2210?.lines.filter(row => /^14[abcd]$/.test(row.line) && row.form === 'Form 2210 Schedule AI')
+    .map(row => row.value.toFixed())).toEqual(['16455', '21035', '28757', '32567']);
+  expect(() => calculateFederalTax(build({ qualifiedDividends: '39999.99' }))).toThrow(/must each reconcile/);
+  for (const special of [{ collectiblesGain: '1000' }, { section1250Gain: '1000' }]) {
+    expect(() => calculateFederalTax(build(special))).toThrow(/separate period worksheet/);
+  }
+  expect(() => calculateFederalTax(build({ section1202Gain: '1000' }))).toThrow(/requires actual issuer/);
+});
+
 it('passes return facts into Schedule AI', () => {
   const k1 = (partnershipName: string, accountHolder: string) => ({ partnershipName, partnershipEIN: '12-3456789', accountHolder, ordinaryIncome: '100000', entityType: 'partnership',
     selfEmploymentEarnings: '100000', selfEmploymentFactsConfirmed: true, selfEmploymentNetEarningsAfterAdjustments: '100000', selfEmploymentIncomeType: 'nonfarm' });

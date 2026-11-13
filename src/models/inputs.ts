@@ -3662,6 +3662,7 @@ const Form2210SelfEmploymentOwnerSchema = z.object({
 export const Form2210Schema = z.object({
   selfEmploymentOwnerPeriods: z.array(Form2210SelfEmploymentOwnerSchema).optional(),
   annualizedIncomePeriods: z.array(Form2210AnnualizedPeriodSchema).optional(),
+  ordinaryPreferentialPeriodsConfirmed: z.boolean().optional(),
   farmingIncomeTwoThirdsConfirmed: z.boolean().optional(),
   waiverKind: z.enum(["full", "partial"]).optional(),
   waiverAmount: z.string().optional(),

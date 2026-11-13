@@ -125,7 +125,8 @@ function validateScope(facts: NonNullable<Form2210Input["facts"]>): void {
   for (const key of ["farmerOrFisher", "waiverRequested"] as const) if (facts[key] === undefined) throw new Error(`Form 2210 requires ${key}`);
   if (facts.calculationMethod === undefined) throw new Error("Form 2210 requires calculationMethod");
   if (facts.calculationMethod !== "regular" && !facts.annualizedIncomePeriods) throw new Error("Form 2210 annualized-income method requires actual Schedule AI period facts");
-  if (facts.calculationMethod === "regular" && (facts.annualizedIncomePeriods || facts.selfEmploymentOwnerPeriods)) throw new Error("Form 2210 regular method conflicts with its Schedule AI period facts");
+  if (facts.calculationMethod === "regular" && (facts.annualizedIncomePeriods || facts.selfEmploymentOwnerPeriods
+    || facts.ordinaryPreferentialPeriodsConfirmed !== undefined)) throw new Error("Form 2210 regular method conflicts with its Schedule AI period facts");
   if (facts.withholdingMethod === undefined) throw new Error("Form 2210 requires withholdingMethod");
 }
 

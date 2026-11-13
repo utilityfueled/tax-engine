@@ -76,6 +76,10 @@ export async function fillForm2210(input: TaxYearInput, result: TaxReturnResult,
   if(qbiLossReview){try{qbiLossReviewOriginalSourceInput(input,result,qbiLossReview);}catch(error){throw new Error('Form 2210 current actual owner sources cannot be reconciled to the original QBI review context',{cause:error});}}
   const calculation = result.form2210;
   if (!calculation) throw new Error("Form 2210 review requires its calculation audit");
+  if (!actualOriginal && (input.form2210?.ordinaryPreferentialPeriodsConfirmed === true
+      || calculation.scheduleAi?.returnContext.ordinaryPreferentialIncome !== undefined)) {
+    throw new Error("Form 2210 preferential review requires the current original period sources");
+  }
   const actualBusinessOwners = new Set([
     input.scheduleC?.accountHolder, input.scheduleF?.accountHolder,
     ...input.form1099Nec.map(row => row.accountHolder),

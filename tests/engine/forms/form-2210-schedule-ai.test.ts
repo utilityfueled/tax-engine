@@ -32,6 +32,33 @@ describe('Form 2210 Schedule AI', () => {
     expect(() => run([period('30000', { itemizedDeductions: '50000' }), ...rising().slice(1)])).toThrow(/only to a return that itemizes/);
   });
 
+  it('annualizes actual ordinary preferential inputs and reconciles both full-year components', () => {
+    const rows = [
+      period('30000', { qualifiedDividends: '5000' }),
+      period('60000', { qualifiedDividends: '10000', netCapitalGain: '2500' }),
+      period('120000', { qualifiedDividends: '20000', netCapitalGain: '6000' }),
+      period('260000', { qualifiedDividends: '40000', netCapitalGain: '10000' }),
+    ];
+    const options = {
+      taxAfterRefundableCredits: new Decimal('46967'),
+      returnContext: context({
+        agi: new Decimal('260000'), taxableIncome: new Decimal('244250'), preferentialIncome: true,
+        ordinaryPreferentialIncome: { qualifiedDividends: new Decimal('40000'), netCapitalGain: new Decimal('10000') },
+      }),
+    };
+    const evaluate = (periods: typeof rows, confirmed?: boolean) => run(periods, {
+      ...options, facts: { annualizedIncomePeriods: periods, ordinaryPreferentialPeriodsConfirmed: confirmed },
+    });
+    const result = evaluate(rows, true);
+    expect(['a', 'b', 'c', 'd'].map(column => line(result, `14${column}`))).toEqual(['16455', '21035', '28757', '46967']);
+    expect(['a', 'b', 'c', 'd'].map(column => line(result, `14-qualified-dividends-${column}`))).toEqual(['20000', '24000', '30000', '40000']);
+    expect(['a', 'b', 'c', 'd'].map(column => line(result, `14-net-capital-gain-${column}`))).toEqual(['0', '6000', '9000', '10000']);
+    expect(() => evaluate(rows)).toThrow(/confirmed ordinary period worksheet/);
+    expect(() => evaluate(rows, false)).toThrow(/confirmed ordinary period worksheet/);
+    const swapped = [...rows.slice(0, 3), period('260000', { qualifiedDividends: '39999.99', netCapitalGain: '10000.01' })];
+    expect(() => evaluate(swapped, true)).toThrow(/must each reconcile/);
+  });
+
   it('adjusts line 14 tax for Schedule 1-A from entered amounts', () => {
     const adjust = (...amounts: (string | undefined)[]) => rising().map((row, index) => ({ ...row, schedule1AAdjustment: amounts[index] }));
     const onReturn = (total = '6000') => ({ taxAfterRefundableCredits: new Decimal(35627), returnContext: context({ taxableIncome: new Decimal(178250), schedule1ADeduction: new Decimal(total) }) });
@@ -80,6 +107,7 @@ describe('Form 2210 Schedule AI', () => {
     expect(regular.requiresForm2210).toBe(false);
     expect(() => calculateForm2210({ ...base, scheduleAiReturn: undefined, facts: { ...facts, calculationMethod: 'annualized', annualizedIncomePeriods: rising() } })).toThrow(/completed return/);
     expect(() => calculateForm2210({ ...base, facts: { ...facts, calculationMethod: 'regular', annualizedIncomePeriods: rising() } })).toThrow(/conflicts/);
+    expect(() => calculateForm2210({ ...base, facts: { ...facts, calculationMethod: 'regular', ordinaryPreferentialPeriodsConfirmed: true } })).toThrow(/conflicts/);
     expect(() => calculateForm2210({ ...base, facts: { ...facts, calculationMethod: 'annualized' } })).toThrow(/Schedule AI period facts/);
   });
 

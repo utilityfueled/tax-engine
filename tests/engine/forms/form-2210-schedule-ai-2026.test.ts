@@ -26,3 +26,23 @@ it('uses the 2026 wage base under isolated constants', () => {
   expect(value(run('184500'))).toBe('267.815');
   expect(value(run('184499'))).toBe('267.939');
 });
+
+it('uses the 2026 statutory brackets for confirmed ordinary preferential periods in isolation', () => {
+  const periods = [
+    period('30000', { qualifiedDividends: '5000' }),
+    period('60000', { qualifiedDividends: '10000', netCapitalGain: '2500' }),
+    period('120000', { qualifiedDividends: '20000', netCapitalGain: '6000' }),
+    period('200000', { qualifiedDividends: '40000', netCapitalGain: '10000' }),
+  ];
+  const result = calculateForm2210ScheduleAi({
+    taxYear: 2026, filingStatus: 'single', requiredAnnualPayment: new Decimal('29010.6'), taxAfterRefundableCredits: new Decimal('32234'),
+    returnContext: {
+      standardDeduction: new Decimal('16100'), agi: new Decimal('200000'), taxableIncome: new Decimal('183900'),
+      preferentialIncome: true, selfEmployedOwners: 0, specialTaxMethod: false,
+      ordinaryPreferentialIncome: { qualifiedDividends: new Decimal('40000'), netCapitalGain: new Decimal('10000') },
+    },
+    facts: { annualizedIncomePeriods: periods, ordinaryPreferentialPeriodsConfirmed: true },
+  });
+  expect(result.lines.filter(row => /^14[abcd]$/.test(row.line)).map(row => row.value.toFixed()))
+    .toEqual(['16170', '20750', '28424', '32234']);
+});

@@ -2,13 +2,14 @@ import Decimal from "decimal.js";
 import { Form2210Schema, type TaxYearInput } from "@/models/inputs";
 import type { EstimatedPaymentEntry, PaymentData } from "./guided-interview-flow";
 import { amountError, isActualDate } from "./guided-required-facts";
-import { parseGuidedCurrency } from "./guided-currency";
+import { parseGuidedCurrency, parseGuidedDisplayAmount } from "./guided-currency";
 
 export interface EstimatedTaxFactsData {
   sourceTaxYear: string; sourceReference: string; sourceFactsConfirmed: boolean | null; allPaymentRecordsIncluded: boolean | null;
   calendarYearTaxpayer: boolean | null; residentReturn: boolean | null; farmerOrFisher: boolean | null; disasterReliefClaimed: boolean | null; waiverRequested: boolean | null;
   calculationMethod: "" | "regular" | "annualized"; withholdingMethod: "" | "equal-installments" | "actual-dates";
   annualizedIncomePeriods?: AnnualizedPeriodData[]; bothSpousesSelfEmployed?: boolean | null; selfEmploymentOwnerPeriods?: AnnualizedOwnerData[];
+  ordinaryPreferentialPeriodsConfirmed?: boolean | null;
   farmingIncomeTwoThirdsConfirmed?: boolean | null; waiverKind?: "" | "full" | "partial"; waiverAmount?: string;
   waiverReason?: "" | "retirement_or_disability" | "casualty_disaster_or_unusual_circumstance"; waiverStatementReference?: string;
   priorYearTaxStatus: "" | "return-filed" | "no-return" | "no-tax-liability";
@@ -62,13 +63,18 @@ function buildOwnerPeriods(facts:EstimatedTaxFactsData,taxYear:number){
 }
 export const emptyAnnualizedPeriods = (): AnnualizedPeriodData[] => Array.from({ length: 4 }, () =>
   Object.fromEntries(ANNUALIZED_PERIOD_FIELDS.map(([key]) => [key, ""])) as AnnualizedPeriodData);
+export function hasOrdinaryPreferentialPeriodAmounts(periods: readonly AnnualizedPeriodData[]): boolean {
+  return periods.some(period => [period.qualifiedDividends, period.netCapitalGain]
+    .some(value => parseGuidedDisplayAmount(value).gt(0)));
+}
 function buildAnnualizedPeriods(facts: EstimatedTaxFactsData): AnnualizedPeriodData[] {
   if (facts.annualizedIncomePeriods?.length !== 4) throw new Error("Annualized income needs all four actual cumulative periods.");
-  if (facts.annualizedIncomePeriods.some(period => [period.qualifiedDividends, period.netCapitalGain].some(value => value?.trim() && parseGuidedCurrency(value).gt(0)))) {
-    throw new Error("Annualized income with qualified dividends or net capital gain cannot be calculated here. Use the regular method or a separate Schedule AI worksheet.");
-  }
-  return facts.annualizedIncomePeriods.map((period, index) => Object.fromEntries(ANNUALIZED_PERIOD_FIELDS.map(([key, label, signed]) =>
+  const periods = facts.annualizedIncomePeriods.map((period, index) => Object.fromEntries(ANNUALIZED_PERIOD_FIELDS.map(([key, label, signed]) =>
     [key, money(period[key], `period ${index + 1} ${label.toLowerCase()}`, true, signed)])) as AnnualizedPeriodData);
+  if (hasOrdinaryPreferentialPeriodAmounts(periods) && facts.ordinaryPreferentialPeriodsConfirmed !== true) {
+    throw new Error("Confirm the ordinary preferential period sources for qualified dividends or net capital gain.");
+  }
+  return periods;
 }
 export function buildEstimatedTaxFacts(data: PaymentData | undefined, taxYear?: number | null): TaxYearInput["form2210"] {
   const facts = data?.estimatedTaxFacts; if (!facts) return undefined;
@@ -138,6 +144,7 @@ export function buildEstimatedTaxFacts(data: PaymentData | undefined, taxYear?: 
     calendarYearTaxpayer: facts.calendarYearTaxpayer, residentReturn: facts.residentReturn, farmerOrFisher: facts.farmerOrFisher,
     disasterReliefClaimed: facts.disasterReliefClaimed, waiverRequested: facts.waiverRequested, calculationMethod: facts.calculationMethod, withholdingMethod: facts.withholdingMethod,
     annualizedIncomePeriods, selfEmploymentOwnerPeriods:buildOwnerPeriods(facts,year), bothSpousesSelfEmployed: facts.bothSpousesSelfEmployed ?? undefined,
+    ordinaryPreferentialPeriodsConfirmed: annualizedIncomePeriods ? facts.ordinaryPreferentialPeriodsConfirmed ?? undefined : undefined,
     farmingIncomeTwoThirdsConfirmed: facts.farmingIncomeTwoThirdsConfirmed ?? undefined, waiverKind: facts.waiverKind || undefined,
     waiverAmount: facts.waiverAmount?.trim() ? parseGuidedCurrency(facts.waiverAmount).toFixed() : undefined, waiverReason: facts.waiverReason || undefined,
     waiverStatementReference: facts.waiverStatementReference?.trim() || undefined,

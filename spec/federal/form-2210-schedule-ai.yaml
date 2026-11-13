@@ -9,15 +9,18 @@ notes: |
   form is not final; only its wage base differs here, from SSA 184500.
   https://www.irs.gov/pub/irs-pdf/f2210.pdf https://www.irs.gov/instructions/i2210
   Bounded method. Period amounts are the taxpayer's actual cumulative figures.
-  Lines 9, 16 and 18 are collected as filed amounts, because they depend on
-  period-specific worksheets. The instructions do not state whether the line14
-  worksheet's qualified dividends and net capital gain are annualized, so a
-  positive amount in any period rejects instead of choosing a convention.
+  Lines 9, 16 and 18 are collected as reported amounts from period worksheets.
+  Publication 505 describes separately annualizing the ordinary preferential
+  inputs. Final 2025 Form 2210 instructions direct line 14 to the applicable
+  return worksheet. This path requires confirmed ordinary period sources and
+  canonical full-year agreement on each component. Special gains and elections
+  retain their separate method boundary.
   Column (d) covers the full year, so its AGI, taxable income, itemized deductions and
   tax after credits must reconcile to the completed return, in whole dollars and within
   $2 for tax after credits because the return rounds Schedule SE parts separately. A mismatch rejects, which also stops Schedule 1-A and other deductions with
-  no line here. A return's own qualified dividends, net capital gain, Schedule J, Form
-  8615 or Form 2555 reject, whatever the periods say. Two self-employed owners require separately confirmed actual owner worksheets and canonical per-owner reconciliation.
+  no line here. Schedule J, Form 8615 and Form 2555 require their separate tax
+  methods. Two self-employed owners require separately confirmed actual owner
+  worksheets and canonical per-owner reconciliation.
   The ordinary $400 test uses exact adjusted net earnings before whole-dollar
   reporting, following IRC1402(b), Schedule SE line4c and the Schedule AI line28
   instructions. Test each owner's own earnings on a separate Part II.
@@ -25,6 +28,8 @@ sources:
   - "https://www.irs.gov/pub/irs-pdf/f2210.pdf"
   - "https://www.irs.gov/instructions/i2210"
   - "https://www.irs.gov/pub/irs-pdf/f1040sse.pdf"
+  - "https://www.irs.gov/pub/irs-prior/p505--2025.pdf"
+  - "https://www.irs.gov/publications/p505"
   - "https://uscode.house.gov/us/usc/119-118/t26/s1402/"
 lines:
   - line: "part-i-columns"
@@ -42,6 +47,21 @@ lines:
     formula: "Period itemized5000 with multiplier4 gives20000 against standard15750, so line8 is20000. Itemized3000 gives12000, so line8 is15750."
     irsRef: "Schedule AI lines4-8"
     testRef: "tests/engine/forms/form-2210-schedule-ai.test.ts::uses the larger annualized itemized or standard deduction"
+  - line: "ordinary-preferential-periods"
+    description: "Annualize actual ordinary qualified dividends and net capital gain separately"
+    formula: "Multiply each eligible cumulative amount by the same column factor as AGI, then use the return's ordinary Qualified Dividends and Capital Gain Tax Worksheet on the period taxable income. Single2025 AGI30000/60000/120000/260000, QD5000/10000/20000/40000, gains0/2500/6000/10000: report annualized QD20000/24000/30000/40000, gains0/6000/9000/10000 and tax16455/21035/28757/46967. Column (d) requires exact canonical equality of both components."
+    irsRef: "Final 2025 Form2210 instructions Schedule AI line14; IRS Pub505 2025 Worksheet2-8 and 2026 Worksheet2-10"
+    testRef: "tests/engine/forms/form-2210-schedule-ai.test.ts::annualizes actual ordinary preferential inputs and reconciles both full-year components"
+  - line: "ordinary-preferential-boundary"
+    description: "Require actual ordinary preferential sources before using period rates"
+    formula: "Positive QD or net capital gain in any column or on the return requires affirmative confirmation of ordinary eligible period amounts and independently derived canonical return inputs. The separate-method gate remains for positive special-rate capital components, section1202 or a Form4952 investment election, Schedule J, Form8615 and Form2555. An exact offsetting reclassification of the final inputs rejects."
+    irsRef: "Form2210 Schedule AI line14, applicable return worksheet; Pub505 annualized worksheet inputs"
+    testRef: "tests/engine/federal-form-2210-schedule-ai.test.ts::binds ordinary period dividends and gains to the federal return and rejects special methods"
+  - line: "ordinary-preferential-2026-preview"
+    description: "Exercise the 2026 indexed worksheet and preserve the final-table gate"
+    formula: "Isolated 2026 single statutory rates with standard16100, AGI30000/60000/120000/200000 and the same early ordinary gains and dividends produce provisional line14 tax16170/20750/28424/32234. Final tax tables and filing stay gated."
+    irsRef: "IRS Pub505 2026 Worksheet2-10 and Rev. Proc. 2025-32"
+    testRef: "tests/engine/forms/form-2210-schedule-ai-2026.test.ts::uses the 2026 statutory brackets for confirmed ordinary preferential periods in isolation"
   - line: "part-ii"
     description: "Annualize self-employment tax with the prorated wage base"
     formula: "Profit40000, wages0, column a: 36940*.496+36940*.116=22607.28. Column b wages50000: limit73375, 23375*.2976+36940*.0696=9527.424. Compare exact adjusted earnings to400 before rounding the line28 reporting amount. Profit433.13 gives399.995555 and zero tax; profit433.14 gives400.004790, reported400 and tax244.8 in column a. 2026 limits use 184500 prorated by .25,5/12,2/3,1."
@@ -59,12 +79,12 @@ lines:
     testRef: "tests/engine/forms/form-2210-schedule-ai.test.ts::replaces regular installments in the dated penalty"
   - line: "unknown"
     description: "Reject missing facts and unresolved branches"
-    formula: "Fewer than four periods, a blank amount, positive preferential income in the periods or on the return, two spouses without complete separate-owner sources, an unanswered joint self-employment question, or periods supplied with the regular method reject. Entered zero stays zero."
+    formula: "Fewer than four periods, a blank amount, positive preferential income without the confirmed ordinary method, two spouses without complete separate-owner sources, an unanswered joint self-employment question, or periods supplied with the regular method reject. Entered zero stays zero."
     irsRef: "Original-source contract; Schedule AI all-dates rule"
     testRef: "tests/engine/forms/form-2210-schedule-ai.test.ts::rejects missing facts and unresolved branches"
   - line: "guide"
     description: "Collect four cumulative periods without defaults"
-    formula: "Choosing annualized requires all four periods. Blank stays unknown, zero stays zero, and a positive preferential amount shows a specific error before calculation."
+    formula: "Choosing annualized requires all four periods. Blank stays unknown and zero stays zero. A positive preferential amount requires confirmation that the actual period sources belong to the ordinary qualified-dividend/capital-gain method. Regular method omits the inactive confirmation."
     irsRef: "Schedule AI PartI and PartII columns"
     testRef: "tests/guided-interview/guided-estimated-tax-schedule-ai.test.ts::builds four complete periods and keeps blanks unknown"
   - line: "review"

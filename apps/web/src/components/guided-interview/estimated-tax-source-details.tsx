@@ -1,6 +1,6 @@
 "use client";
 
-import { ANNUALIZED_PERIOD_FIELDS, emptyAnnualizedPeriods, emptyAnnualizedOwner, emptyEstimatedTaxFacts, type EstimatedTaxFactsData, type AnnualizedOwnerData } from "@/lib/guided-estimated-tax-facts";
+import { ANNUALIZED_PERIOD_FIELDS, emptyAnnualizedPeriods, emptyAnnualizedOwner, emptyEstimatedTaxFacts, hasOrdinaryPreferentialPeriodAmounts, type EstimatedTaxFactsData, type AnnualizedOwnerData } from "@/lib/guided-estimated-tax-facts";
 import type { EstimatedPaymentEntry, PaymentData } from "@/lib/guided-interview-flow";
 import { BooleanFact, TextFact } from "./fact-fields";
 import { CurrencyField } from "./currency-field";
@@ -11,7 +11,16 @@ export function EstimatedTaxSourceDetails({ data, appliedCredits = [], taxYear, 
   data?: EstimatedTaxFactsData; appliedCredits?: PaymentData["priorYearAppliedCredits"]; taxYear?: number | null; onChange: (data: EstimatedTaxFactsData | undefined) => void;
 }) {
   if (!data) return <section><h4>Estimated-tax penalty history</h4><p className="guided-hint">Prior-year tax and actual payment timing can change an underpayment penalty. Add the source worksheet when those facts are needed; estimated payments entered above remain separate.</p><button type="button" onClick={() => onChange(structuredClone(emptyEstimatedTaxFacts))}>Add estimated-tax worksheet</button></section>;
-  const update = (patch: Partial<EstimatedTaxFactsData>) => onChange({ ...data, ...patch, ...(patch.calculationMethod !== undefined && patch.calculationMethod !== data.calculationMethod ? { selfEmploymentOwnerPeriods: data.selfEmploymentOwnerPeriods?.map(row => ({ ...row, sourceFactsConfirmed: null })) } : {}), ...(Object.keys(patch).every(key => key === "sourceFactsConfirmed") ? {} : { sourceFactsConfirmed: null }) });
+  const update = (patch: Partial<EstimatedTaxFactsData>) => {
+    const changedMethod = patch.calculationMethod !== undefined && patch.calculationMethod !== data.calculationMethod;
+    const next = { ...data, ...patch };
+    if (changedMethod) next.selfEmploymentOwnerPeriods = data.selfEmploymentOwnerPeriods?.map(row => ({ ...row, sourceFactsConfirmed: null }));
+    if (changedMethod || patch.sourceTaxYear !== undefined || patch.annualizedIncomePeriods !== undefined) {
+      next.ordinaryPreferentialPeriodsConfirmed = null;
+    }
+    if (Object.keys(patch).some(key => key !== "sourceFactsConfirmed")) next.sourceFactsConfirmed = null;
+    onChange(next);
+  };
   const dateRows = (key: "withholdingPayments" | "returnPayments", title: string) => <fieldset><legend>{title}</legend>{data[key].map((payment, index) => {
     const prefix = `${title} ${index + 1}`;
     const set = (patch: Partial<EstimatedPaymentEntry>) => update({ [key]: data[key].map((row, i) => i === index ? { ...row, ...patch } : row) });
@@ -76,12 +85,18 @@ const ANNUALIZED_LABELS = ["January 1 to March 31", "January 1 to May 31", "Janu
 function AnnualizedPeriods({ data, update }: { data: EstimatedTaxFactsData; update: (patch: Partial<EstimatedTaxFactsData>) => void }) {
   const periods = data.annualizedIncomePeriods ?? emptyAnnualizedPeriods();
   return <fieldset style={{ minWidth: 0 }}><legend>Schedule AI cumulative income by period</legend>
-    <p className="guided-hint">Enter income, deductions and wages as actual totals from January 1 through each period end, including 0 where that is the amount. Figure lines 9, 16 and 18 as the Schedule AI instructions describe, because some of those amounts are annualized first. The full-year column must match your return. Returns with qualified dividends or net capital gain cannot be calculated here. Use the same Schedule AI method for all four dates.</p>
+    <p className="guided-hint">Enter income, deductions and wages as actual totals from January 1 through each period end, including 0 where that is the amount. Figure lines 9, 16 and 18 as the Schedule AI instructions describe. The full-year column must match your return. Use the same Schedule AI method for all four dates.</p>
     <BooleanFact label="Both spouses had self-employment earnings" value={data.bothSpousesSelfEmployed ?? null} onChange={bothSpousesSelfEmployed => update({ bothSpousesSelfEmployed })} />
     {periods.map((period, index) => <fieldset key={ANNUALIZED_LABELS[index]} style={{ minWidth: 0 }}><legend>{ANNUALIZED_LABELS[index]}</legend><div className="guided-form-grid">
       {ANNUALIZED_PERIOD_FIELDS.map(([key, label, signed]) => <CurrencyField key={key} label={`Period ${index + 1}: ${label}`} allowNegative={signed} value={period[key]}
         onChange={value => update({ annualizedIncomePeriods: periods.map((row, at) => at === index ? { ...row, [key]: value } : row) })} />)}
     </div></fieldset>)}
+    {hasOrdinaryPreferentialPeriodAmounts(periods) && <>
+      <p className="guided-hint">Enter qualified dividends and eligible net capital gain before annualizing. Net capital gain is the positive net long-term gain after any net short-term loss. Collectibles, unrecaptured section 1250 gain, qualified small-business stock and investment-interest elections require a separate method.</p>
+      <BooleanFact label="All four periods use the ordinary qualified dividend and capital gain worksheet"
+        value={data.ordinaryPreferentialPeriodsConfirmed ?? null}
+        onChange={ordinaryPreferentialPeriodsConfirmed => update({ ordinaryPreferentialPeriodsConfirmed })} />
+    </>}
     <p className="guided-hint">When both spouses have self-employment sources, keep separate actual Part II records. Enter combined profit and payroll above as the sum of the two owner records. Full-year payroll must match each owner's reported Schedule SE line 8d: W-2 boxes 3 plus 7 and applicable Forms 4137/8919 and railroad compensation, using each line's reporting and rounding rules. These are reported worksheet amounts, not an unrounded grand total. Additional Medicare Tax belongs in line 16 other taxes.</p>
     {(data.selfEmploymentOwnerPeriods??[]).map((row,index)=>{
       const set=(patch:Partial<AnnualizedOwnerData>)=>update({selfEmploymentOwnerPeriods:(data.selfEmploymentOwnerPeriods??[]).map((entry,i)=>i===index?{...entry,...patch,...(Object.keys(patch).every(key=>key==='sourceFactsConfirmed')?{}:{sourceFactsConfirmed:null})}:entry)});

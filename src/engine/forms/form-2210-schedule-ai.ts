@@ -6,7 +6,7 @@ import type { TaxYearInput } from '@/models/inputs.js';
 import type { CalculatedLine } from '@/models/outputs.js';
 import { AuditTrail } from '@/utils/audit.js';
 import { roundDollar } from '@/utils/decimal.js';
-import { calculateRegularIncomeTax } from '@/utils/tax-math.js';
+import { calculateCapitalGainsTax, calculateRegularIncomeTax } from '@/utils/tax-math.js';
 
 const FORM = 'Form 2210 Schedule AI', COLUMNS = ['a', 'b', 'c', 'd'] as const;
 const MULTIPLIERS = ['4', '2.4', '1.5', '1'], PERCENTS = ['0.225', '0.45', '0.675', '0.9'];
@@ -17,6 +17,7 @@ const MONEY = /^\d+(\.\d+)?$/, SIGNED = /^-?\d+(\.\d+)?$/;
 /** Completed return facts. Column (d) covers the full year, so it must reconcile. */
 export interface Form2210ScheduleAiReturn {
   standardDeduction: Decimal; agi: Decimal; taxableIncome: Decimal; itemizedDeductions?: Decimal; preferentialIncome: boolean;
+  ordinaryPreferentialIncome?: { qualifiedDividends: Decimal; netCapitalGain: Decimal };
   selfEmployedOwners: number; specialTaxMethod: boolean; schedule1ADeduction?: Decimal; ownerSources?: Form2210OwnerSourceContext;
 }
 export interface Form2210ScheduleAiInput {
@@ -38,7 +39,12 @@ function periodEarningsSubjectToSelfEmploymentTax(profit: Decimal, earningsMulti
 export function calculateForm2210ScheduleAi(input: Form2210ScheduleAiInput): Form2210ScheduleAiResult {
   const { taxYear, filingStatus, facts, returnContext } = input, periods = facts.annualizedIncomePeriods;
   if (periods?.length !== 4) throw new Error('Form 2210 Schedule AI requires all four actual cumulative periods');
-  if (returnContext.preferentialIncome) throw new Error('Form 2210 Schedule AI with qualified dividends or net capital gain needs its separate period worksheet method');
+  const ordinaryPreferentialIncome = facts.ordinaryPreferentialPeriodsConfirmed === true
+    ? returnContext.ordinaryPreferentialIncome : undefined;
+  const preferentialError = 'Form 2210 Schedule AI with qualified dividends or net capital gain needs its separate period worksheet method or confirmed ordinary period worksheet sources';
+  if ((returnContext.preferentialIncome || facts.ordinaryPreferentialPeriodsConfirmed === true) && !ordinaryPreferentialIncome) {
+    throw new Error(preferentialError);
+  }
   if (returnContext.specialTaxMethod) throw new Error('Form 2210 Schedule AI with Schedule J, Form 8615 or foreign earned income needs its separate tax method');
   if (returnContext.selfEmployedOwners > 1 && facts.selfEmploymentOwnerPeriods === undefined) throw new Error('Form 2210 Schedule AI needs a separate PartII for each self-employed spouse with actual owner sources');
   if (filingStatus === 'married_filing_jointly' && typeof facts.bothSpousesSelfEmployed !== 'boolean') {
@@ -60,8 +66,13 @@ export function calculateForm2210ScheduleAi(input: Form2210ScheduleAiInput): For
   let priorInstallments = new Decimal(0), line25 = new Decimal(0);
   periods.forEach((period, index) => {
     const column = COLUMNS[index]!, multiplier = MULTIPLIERS[index]!;
-    if (amount(period.qualifiedDividends, 'period qualified dividends').gt(0) || amount(period.netCapitalGain, 'period net capital gain').gt(0)) {
-      throw new Error('Form 2210 Schedule AI with qualified dividends or net capital gain needs its separate period worksheet method');
+    const qualifiedDividends = amount(period.qualifiedDividends, 'period qualified dividends');
+    const netCapitalGain = amount(period.netCapitalGain, 'period net capital gain');
+    if (!ordinaryPreferentialIncome && (qualifiedDividends.gt(0) || netCapitalGain.gt(0))) throw new Error(preferentialError);
+    if (index === 3 && ordinaryPreferentialIncome
+      && (!qualifiedDividends.eq(ordinaryPreferentialIncome.qualifiedDividends)
+        || !netCapitalGain.eq(ordinaryPreferentialIncome.netCapitalGain))) {
+      throw new Error('Form 2210 Schedule AI column (d) qualified dividends and net capital gain must each reconcile to the completed return');
     }
     const annualized = amount(period.adjustedGrossIncome, 'period adjusted gross income', true).times(multiplier);
     const itemized = amount(period.itemizedDeductions, 'period itemized deductions').times(multiplier);
@@ -74,7 +85,14 @@ export function calculateForm2210ScheduleAi(input: Form2210ScheduleAiInput): For
     if (adjustment.gt(schedule1A)) throw new Error('Form 2210 Schedule AI period Schedule 1-A adjustment cannot exceed the deduction on the return');
     if (index === 3 && !adjustment.eq(schedule1A)) throw new Error('Form 2210 Schedule AI column (d) Schedule 1-A adjustment must equal the deduction on the return');
     const taxable = Decimal.max(0, line13.minus(adjustment));
-    const tax = calculateRegularIncomeTax(taxable, filingStatus, constants);
+    const annualizedDividends = qualifiedDividends.times(multiplier), annualizedGain = netCapitalGain.times(multiplier);
+    const tax = qualifiedDividends.gt(0) || netCapitalGain.gt(0)
+      ? calculateCapitalGainsTax(taxable, annualizedDividends, annualizedGain, filingStatus, constants).tax
+      : calculateRegularIncomeTax(taxable, filingStatus, constants);
+    if (ordinaryPreferentialIncome) {
+      audit.record(FORM, `14-qualified-dividends-${column}`, 'Annualized qualified dividends', annualizedDividends, 'Actual cumulative qualified dividends times the annualization factor');
+      audit.record(FORM, `14-net-capital-gain-${column}`, 'Annualized net capital gain', annualizedGain, 'Actual cumulative net capital gain times the annualization factor');
+    }
     const profit = amount(period.netProfitFromSelfEmployment, 'period self-employment profit', true);
     const line28 = periodEarningsSubjectToSelfEmploymentTax(profit, constants.selfEmploymentTax.earningsMultiplier);
     const periodWageBase = wageBase.times(WAGE_LIMIT_TWELFTHS[index]!).div(12), ssRate = SOCIAL_SECURITY[index]!, medicareRate = MEDICARE[index]!;

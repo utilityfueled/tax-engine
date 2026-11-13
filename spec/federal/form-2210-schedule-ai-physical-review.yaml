@@ -7,7 +7,8 @@ sourceRetrievedAt: "2026-11-04"
 notes: |
   Presentation of the already implemented bounded ordinary calendar-year method only.
   Ordinary Part II cells use the calculated audit, including the exact earnings minimum.
-  Preferential and special methods, filing and 2026 export remain gated.
+  Confirmed ordinary preferential periods use the same calculated line14 audit
+  as the engine. Special methods, filing and 2026 export remain gated.
   Pinned f2210 SHA6899ce672648b280bf00ab47200f1b0fbf40368cfbf137df507b945b8577159a.
   Page3 has144 actual widgets:120 normal-width writable cells and24 one-point placeholders
   beside printed constants. Print source values only; keep skipped/inactive/constant cells blank.
@@ -33,6 +34,11 @@ lines:
     formula: "On an actual single-owner source, period profit433.13 gives exact net earnings399.995555. Print zero on PartII lines28,33,35,36 and PartI line15. Printed tax components and their sum come from the calculated audit."
     irsRef: "2025 Form2210 Schedule AI lines15,28,33,35,36; IRC1402(b)(2)"
     testRef: "tests/pdf/form-2210-schedule-ai-physical-review.test.ts::prints zero ordinary Part II tax just below the exact minimum"
+  - line: "ordinary-preferential-line14"
+    description: "Print annualized ordinary preferential tax from current sources"
+    formula: "Print line14 16455/21035/28757/32567 for the confirmed single2025 dividend and ordinary gain fixture. Require original-source review before opening the template. An offsetting one-cent change in the two canonical full-year amounts rejects even when worksheet tax is unchanged."
+    irsRef: "Final 2025 Form2210 Schedule AI line14 and applicable Form1040 worksheet"
+    testRef: "tests/pdf/form-2210-schedule-ai-physical-review.test.ts::prints confirmed ordinary preferential tax and rejects same-total source changes"
   - line: "1"
     description: "Printed ScheduleAI line1"
     formula: "Actual cumulative period AGI, including an explicitly negative entered amount; no inferred quarter split."

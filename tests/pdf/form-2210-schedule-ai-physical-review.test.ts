@@ -78,6 +78,33 @@ it('prints zero ordinary Part II tax just below the exact minimum', async () => 
     expect(form.getTextField(widget.field).getText(), `printed line ${line}`).toBe('0');
   }
 });
+it('prints confirmed ordinary preferential tax and rejects same-total source changes', async () => {
+  const original = aiPhysicalFixture('single');
+  const input = TaxYearInputSchema.parse({
+    ...original,
+    w2s: original.w2s.map(wage => ({ ...wage, wages: '150000', socialSecurityWages: '150000',
+      socialSecurityWithheld: '9300', medicareWages: '150000', medicareWithheld: '2175' })),
+    form1099Div: [{ payer: 'Synthetic Fund', ordinaryDividends: '40000', qualifiedDividends: '40000', totalCapitalGainDistributions: '10000' }],
+    form2210: {
+      ...original.form2210,
+      ordinaryPreferentialPeriodsConfirmed: true,
+      annualizedIncomePeriods: required(original.form2210?.annualizedIncomePeriods).map((row, index) => ({
+        ...row, qualifiedDividends: ['5000', '10000', '20000', '40000'][index],
+        netCapitalGain: ['0', '2500', '6000', '10000'][index],
+      })),
+    },
+  });
+  const result = calculateFederalTax(input);
+  const token = await prepared(input);
+  const form = (await fillForm2210(redactReviewIdentifiers(input), result, blank, undefined, token)).getForm();
+  const taxCells = aiPhysicalSourceWidgets.filter(row => row.line === 14);
+  expect(taxCells.map(row => form.getTextField(row.field).getText())).toEqual(['16455', '21035', '28757', '32567']);
+  expect(form.getTextField(F.ssn).getText() ?? '').toBe('');
+  await expect(fillForm2210(redactReviewIdentifiers(input), result, 'missing-template.pdf')).rejects.toThrow(/requires.*original.*sources/i);
+  const changed = structuredClone(input);
+  Object.assign(required(changed.form1099Div[0]), { qualifiedDividends: '39999.99', totalCapitalGainDistributions: '10000.01' });
+  await expect(fillForm2210(redactReviewIdentifiers(changed), result, blank, undefined, token)).rejects.toThrow(/stale or conflicting/);
+});
 it.each(cases)('AI physical redacted source cells require actual original context %s',async(_name,kind)=>{
  const input=aiPhysicalFixture(kind),before=JSON.stringify(input),result=calculateFederalTax(input),token=await prepared(input),doc=await fillForm2210(redactReviewIdentifiers(input),result,blank,qbi(input),token),form=(await PDFDocument.load(await doc.save())).getForm(),values=aiPhysicalExpected(kind);
  for(const row of aiPhysicalSourceWidgets)expect(form.getTextField(row.field).getText()??'',row.field).toBe(required(required(values[row.column])[String(row.line)]));
