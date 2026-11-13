@@ -3984,3 +3984,11 @@ sets. All 36 rendered pages matched at 75 dpi, canonical fields and saved
 object reports agreed, and the independent marker scan found no hits.
 The original deadline and assertions remain in place. Remote performance
 still requires a successor run. See [the failed merge unit job](https://github.com/utilityfueled/tax-engine/actions/runs/42292813045/job/128150342757).
+
+### November 12 · browser source bindings
+
+The browser audit binds four changed PDF source hashes from `397ef68c`,
+`9c72d014` and `540a6ce4`. The old audit rejected the changed source. The
+updated audit admitted it with the same 1,836 source keys and identical
+non-hash values. All 156 orchestrator, window and runtime provenance tests
+passed. Browser journey results remain a separate runtime check.
