@@ -6,6 +6,20 @@ The public refs were refreshed. `origin/main` still points to `59248889`
 and `origin/upgrade/2026-baseline` to `3024b848`. Successor commits stay on
 local `main` while automatic production deployment is being disabled.
 
+`efcd5c54` collects the actual 2026 medical mileage log for the single
+taxpayer's own eligible care in guided Schedule A. Changes to the original
+log or taxpayer clear the confirmations. A standard deduction preserves the
+draft without claiming mileage. The 407 focused tests, 83 targeted and browser
+orchestrator checks, three type checks, webpack build, lint, inventory and
+8,839 spec references passed. All 37 production Chromium tests passed. The
+two new desktop and mobile cases observed no protected requests and kept the
+private reference out of requests. Public 2026 output remains gated.
+
+Archived `4db383ba` passed all 12 checks. Unit and coverage each passed
+27,640 tests in 1,996 files at 87.77% branch coverage. Managed Chromium
+passed 605 cases with five original hosted-only skips. Its PostgreSQL and
+browser processes closed normally.
+
 `e141bdf5` verifies the disabled final 2026 Schedule C mileage and Part IV
 fields from the documented log and the taxpayer's separate vehicle answers.
 All 444 focused checks passed. A separate strict PDF parser confirmed 15

@@ -4,6 +4,25 @@ Current source, verification and remaining work are summarized in the
 [current continuation](upgrade-2026-current-status.md). Historical results
 below apply to their named revisions.
 
+- November 13: `efcd5c54` records the single taxpayer's 2026 medical mileage
+  in guided deductions. The first mounted test failed before the control
+  existed. The canonical calculation produced $4.40 for 10 miles on each
+  side of the July boundary and explicit zeros. The focused run first omitted
+  the configured pypdf executable and passed all 407 selected checks on retry.
+  Early browser attempts passed the 35 adjacent cases and exposed a spouse in
+  the copied synthetic fixture and incorrect accessible locators. After
+  correcting those controls, both new journeys passed and the production
+  cohort passed 37 cases without skips or retries. No protected requests or
+  outgoing private source identifiers were observed in either new journey.
+  Three type checks, build, scoped lint, 8,839 spec references, inventory and
+  83 targeted checks passed. The 616-case audit retains the five hosted-only
+  skips, 14 fixed diagnostics, eight batches and all request limits.
+
+- November 13: exact archived `4db383ba` passed all 12 local commands. Unit
+  and coverage each passed 27,640 tests in 1,996 files at 87.77% branches.
+  Chromium passed 605 cases with the five original hosted-only skips, and
+  the runner and owned PostgreSQL shut down normally.
+
 - November 13: `e141bdf5` maps documented 2026 Schedule C mileage to line 9
   and Part IV in the disabled final-form candidate. It requires explicit
   answers about both personal vehicle questions and Form 4562 applicability.

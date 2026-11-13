@@ -46,7 +46,13 @@ below retain their original evidence boundaries.
   `ebd57bdf`, with a failed baseline and 5,075 focused checks on the fix.
 - [x] Apply the two 2026 Schedule A medical mileage rates to confirmed
   single-taxpayer trips in `6fbd2b74`. Verify 404 focused checks and the
-  separate Decimal example. Guided intake and qualified output remain open.
+  separate Decimal example. Qualified output remains open.
+- [x] Collect actual dates, mileage, zero amounts and confirmations in guided
+  Schedule A in `efcd5c54`. Pass the 407 focused tests and all 37 production
+  Chromium cases. The 616-case audit preserves the existing limits and skips.
+- [x] Close all 12 archived `4db383ba` checks. Unit and coverage each pass
+  27,640 tests at 87.77% branch coverage. Managed Chromium passes 605 cases
+  with five original hosted-only skips.
 - [x] Project Schedule C lines 9 and 43–47 from actual, whole-mile source
   data and explicit vehicle availability answers in `e141bdf5`. Verify
   15 saved fields and widgets while the candidate stays disabled.
