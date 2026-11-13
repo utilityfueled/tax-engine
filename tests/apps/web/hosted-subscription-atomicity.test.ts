@@ -20,7 +20,7 @@ import type {
 
 // spec/federal/hosted-subscription-atomicity.yaml. Successor uses the
 // real atomic helper with a query-boundary fixture; no SQL proof is claimed here.
-// Original six signed inputs/titles/assertions remain exact. Current active and
+// Original six signed inputs and transaction assertions remain. Current active and
 // subsequent past-due provider sources are separately explicit synthetic facts.
 describe("hosted subscription atomic reconciliation source-first", () => {
   const now = 1_800_000_000;
@@ -48,6 +48,11 @@ describe("hosted subscription atomic reconciliation source-first", () => {
       method: "POST", body, headers: { "content-type": "application/json",
         "stripe-signature": signHostedBillingWebhookPayload(signedBody, secret, Math.floor(Date.now() / 1000)) }
     });
+  }
+  async function expectPrivateRetry(response: Response) {
+    expect(response.status).toBe(503);
+    expect(response.headers.get("cache-control")).toBe("no-store");
+    expect(await response.json()).toEqual({ error: "Hosted billing is temporarily unavailable." });
   }
   function harness(authoritativeStatuses: ("active" | "past-due")[] = ["active"]) {
     let saved: Record | null = null;
@@ -119,7 +124,8 @@ describe("hosted subscription atomic reconciliation source-first", () => {
   it("keeps a pre-write failure retryable without an event receipt", async () => {
     const h = harness();
     h.persistSubscription.mockRejectedValueOnce(new Error("synthetic pre-write failure"));
-    await expect(h.POST(request(payload()))).rejects.toThrow("synthetic pre-write failure");
+    await expectPrivateRetry(await h.POST(request(payload())));
+    expect(h.persistSubscription).toHaveBeenCalledTimes(1);
     expect(h.saved()).toBeNull();
     expect(h.receipts.size).toBe(0);
     expect(h.markEventProcessed).not.toHaveBeenCalled();
@@ -132,7 +138,9 @@ describe("hosted subscription atomic reconciliation source-first", () => {
     const h = harness();
     const original = payload("evt_atomic_crash", now - 20);
     h.markEventProcessed.mockRejectedValueOnce(new Error("synthetic receipt failure"));
-    await expect(h.POST(request(original))).rejects.toThrow("synthetic receipt failure");
+    await expectPrivateRetry(await h.POST(request(original)));
+    expect(h.markEventProcessed).toHaveBeenCalledTimes(1);
+    expect(h.saved()).toBeNull();
     expect(h.receipts.size).toBe(0);
     vi.setSystemTime((now + 10) * 1000);
     expect((await h.POST(request(original))).status).toBe(200);

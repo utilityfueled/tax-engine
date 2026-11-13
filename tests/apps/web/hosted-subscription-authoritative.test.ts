@@ -42,6 +42,11 @@ describe("hosted authoritative subscription reconciliation", () => {
       headers: { "content-type": "application/json", "stripe-signature": signHostedBillingWebhookPayload(original, secret, timestamp) } });
   }
   const post = (raw: string) => createHostedBillingWebhookRouteHandlers({ env }).POST(request(raw));
+  async function expectPrivateRetry(response: Response) {
+    expect(response.status).toBe(503);
+    expect(response.headers.get("cache-control")).toBe("no-store");
+    expect(await response.json()).toEqual({ error: "Hosted billing is temporarily unavailable." });
+  }
   function savedStateWrites() {
     return mocks.query.mock.calls.filter((args) => /INSERT INTO hosted_billing_subscriptions/.test(String(args[0])));
   }
@@ -81,14 +86,16 @@ describe("hosted authoritative subscription reconciliation", () => {
       client.emit("error", new Error("synthetic checked-out connection loss"));
       return subscription();
     });
-    await expect(post(payload())).rejects.toThrow("synthetic checked-out connection loss");
+    await expectPrivateRetry(await post(payload()));
+    expect(mocks.retrieve).toHaveBeenCalledTimes(1);
     expect(savedStateWrites()).toEqual([]);
     expect(mocks.release).toHaveBeenCalledWith(true);
     expect(client.listenerCount("error")).toBe(0);
   });
   it.each(["401", "403", "404", "timeout", "network"])("keeps retrieval failures retryable (%s)", async (fault) => {
     mocks.retrieve.mockRejectedValueOnce(new Error(`synthetic provider ${fault}`));
-    await expect(post(payload())).rejects.toThrow(`synthetic provider ${fault}`);
+    await expectPrivateRetry(await post(payload()));
+    expect(mocks.retrieve).toHaveBeenCalledTimes(1);
     expect(savedStateWrites()).toEqual([]);
     expect(mocks.query).toHaveBeenCalledWith("ROLLBACK"); expect(mocks.release).toHaveBeenCalledTimes(1);
     expect((await post(payload())).status).toBe(200); expect(savedStateWrites()).toHaveLength(1);
@@ -100,7 +107,8 @@ describe("hosted authoritative subscription reconciliation", () => {
     if (field === "owner") current.metadata.hostedOwnerId = "owner-other";
     if (field === "mode") current.livemode = true;
     mocks.retrieve.mockResolvedValue(current);
-    await expect(post(payload())).rejects.toThrow(/identity|mode|subscription|customer|owner/i);
+    await expectPrivateRetry(await post(payload()));
+    expect(mocks.retrieve).toHaveBeenCalledTimes(1);
     expect(savedStateWrites()).toEqual([]); expect(mocks.query).toHaveBeenCalledWith("ROLLBACK");
   });
   it.each(["unknown-price", "conflicting-plan", "missing-owner", "unknown-status", "unknown-cancel", "bad-period"])("rejects unknown authoritative plan metadata (%s)", async (field) => {
@@ -112,7 +120,8 @@ describe("hosted authoritative subscription reconciliation", () => {
     if (field === "unknown-cancel") delete current.cancel_at_period_end;
     if (field === "bad-period") current.items = { data: [{ price: { id: "price_starter" }, current_period_end: -1 }] };
     mocks.retrieve.mockResolvedValue(current);
-    await expect(post(payload())).rejects.toThrow(/invalid|unknown|unsupported|metadata|owner|period/i);
+    await expectPrivateRetry(await post(payload()));
+    expect(mocks.retrieve).toHaveBeenCalledTimes(1);
     expect(savedStateWrites()).toEqual([]); expect(mocks.query).toHaveBeenCalledWith("ROLLBACK");
   });
   it("does not eclipse an active replacement with canceled history", async () => {
@@ -135,9 +144,12 @@ describe("hosted authoritative subscription reconciliation", () => {
     if (guard === "created") raw = raw.replace(`"created":${now}`, '"created":-1');
     if (guard === "future") raw = payload("evt_future", now + 61);
     if (guard === "self-host") facts.TAX_ENGINE_DEPLOYMENT_MODE = "self-host";
-    const outcome = createHostedBillingWebhookRouteHandlers({ env: facts }).POST(request(raw, timestamp, original));
-    if (guard === "missing-key" || guard === "missing-customer") await expect(outcome).rejects.toThrow(/key|customer|configuration/i);
-    else expect((await outcome).status).toBe(guard === "self-host" ? 200 : guard === "key-mode" ? 503 : 400);
+    const response = await createHostedBillingWebhookRouteHandlers({ env: facts }).POST(request(raw, timestamp, original));
+    if (guard === "missing-customer" || guard === "missing-key") await expectPrivateRetry(response);
+    else if (guard === "key-mode") {
+      expect(response.status).toBe(503);
+      expect(await response.json()).toEqual({ error: "Hosted billing is unavailable. Please contact the administrator." });
+    } else expect(response.status).toBe(guard === "self-host" ? 200 : 400);
     expect(mocks.retrieve).not.toHaveBeenCalled(); expect(savedStateWrites()).toEqual([]);
     expect(mocks.query.mock.calls.some((call) => /INSERT INTO hosted_billing_events/.test(String(call[0])))).toBe(false);
   });

@@ -3,9 +3,8 @@ fullName: "Source-first authenticated current-subscription reconciliation plan"
 taxYear: 2026
 reference: "https://docs.stripe.com/webhooks#event-ordering; https://docs.stripe.com/api/subscriptions/retrieve"
 notes: |
-  Future typed-provider-stub tests only. No actual provider call or API-version
-  upgrade. Preserve the pinned Stripe SDK and current finite plan mapping. The
-  current snapshot is read explicitly, never invented from event timestamps.
+  The route tests use typed provider stubs. Preserve the pinned Stripe SDK and
+  current finite plan mapping. The current snapshot comes from an explicit read.
 lines:
   - line: "late-current"
     description: "An old snapshot reconciles to current state"
@@ -21,15 +20,15 @@ lines:
     testRef: "tests/apps/web/hosted-subscription-authoritative.test.ts::does not retrieve a durably processed duplicate"
   - line: "retrieval-error"
     description: "An unavailable provider cannot manufacture entitlement"
-    formula: "Typed retrieval rejects or times out; no successful acknowledgment, durable receipt or state change; later actual-stub recovery succeeds."
+    formula: "Typed retrieval rejects or times out; return a generic no-store HTTP 503 with no provider details. Roll back state and receipt. A later signed retry succeeds."
     testRef: "tests/apps/web/hosted-subscription-authoritative.test.ts::keeps retrieval failures retryable (%s)"
   - line: "identity"
     description: "Contradictory retrieved identities reject"
-    formula: "Independently vary subscription ID, customer, owner and mode from signed/current established source. No cross-owner reassignment or state/receipt commit."
+    formula: "Independently vary subscription ID, customer, owner and mode from the signed source. Return the generic no-store 503 and roll back state and receipt."
     testRef: "tests/apps/web/hosted-subscription-authoritative.test.ts::rejects contradictory retrieved identity (%s)"
   - line: "unknown-plan"
     description: "Current metadata is validated, not inferred"
-    formula: "Unknown/malformed current plan or unsupported price cannot silently reuse a paid plan or grant access; existing finite metadata rules remain enforced."
+    formula: "Unknown or malformed plan metadata or unsupported prices return the generic no-store 503. Roll back state and receipt."
     testRef: "tests/apps/web/hosted-subscription-authoritative.test.ts::rejects unknown authoritative plan metadata (%s)"
   - line: "replacement"
     description: "A canceled old object cannot eclipse the active replacement"
@@ -37,9 +36,9 @@ lines:
     testRef: "tests/apps/web/hosted-subscription-authoritative.test.ts::does not eclipse an active replacement with canceled history"
   - line: "preconditions"
     description: "Authentication and mode gates precede retrieval"
-    formula: "Changed signed bytes, stale signed delivery, mode mismatch, malformed creation time, future guard and self-host rejection retain old behavior with zero provider retrieval."
+    formula: "Changed or stale signatures, mismatched mode, missing key or customer, invalid event time and self-host mode perform zero retrievals and zero receipt writes. Configuration and subscription failures return their fixed public 503 responses."
     testRef: "tests/apps/web/hosted-subscription-authoritative.test.ts::preserves pre-retrieval route guards (%s)"
   - line: "checked-out-client-error"
     description: "A checked-out client retains an error listener during provider I/O"
-    formula: "Actual EventEmitter fixture emits a connection error during the awaited provider read. Reject reconciliation, discard the client, and remove the temporary listener on release; no process-level unhandled error or state commit."
+    formula: "An EventEmitter emits a connection error during the provider read. Return the generic no-store 503, discard the client and remove the temporary listener on release. No state commits."
     testRef: "tests/apps/web/hosted-subscription-authoritative.test.ts::discards a client lost while the provider callback is pending"
