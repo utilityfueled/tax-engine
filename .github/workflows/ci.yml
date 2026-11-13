@@ -49,7 +49,7 @@ jobs:
     timeout-minutes: 60
     services:
       postgres:
-        image: postgres:16-bookworm
+        image: postgres:16.16-bookworm@sha256:a49f7438ba03589f9b1ca062f2da82e899b48ea1dc50d2449fa09a70be83ebca
         env:
           POSTGRES_USER: ai_test
           POSTGRES_DB: postgres
@@ -90,7 +90,7 @@ jobs:
     timeout-minutes: 60
     services:
       postgres:
-        image: postgres:16-bookworm
+        image: postgres:16.16-bookworm@sha256:a49f7438ba03589f9b1ca062f2da82e899b48ea1dc50d2449fa09a70be83ebca
         env:
           POSTGRES_USER: ai_test
           POSTGRES_DB: postgres

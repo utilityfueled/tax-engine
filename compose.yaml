@@ -43,7 +43,7 @@ services:
     restart: unless-stopped
 
   postgres:
-    image: postgres:16-bookworm
+    image: postgres:16.16-bookworm@sha256:a49f7438ba03589f9b1ca062f2da82e899b48ea1dc50d2449fa09a70be83ebca
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-tax_engine}
       POSTGRES_USER: ${POSTGRES_USER:-tax_engine}

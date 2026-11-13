@@ -28,6 +28,13 @@ That setting is not a measured production capacity claim.
 - keeps the current workspace local-first, with return drafts and upload metadata stored in browser storage
 - works without any hosted dependency
 
+The Compose database uses the Docker Official PostgreSQL 16.16 Bookworm image,
+pinned to its multi-platform digest. For an existing 16.x database, retain its
+volume and take a verified database backup before replacing the container. Review
+the release notes for indexes that need repair and any steps for upgrades from
+before 16.15. A PostgreSQL 16.x minor upgrade does not require a dump and reload.
+[PostgreSQL 16.16 release notes](https://www.postgresql.org/docs/release/16.16/).
+
 For deterministic local operation, leave `MODEL_PROVIDER_API_KEY`,
 `OPENAI_API_KEY`, `GEMINI_API_KEY` and `GOOGLE_API_KEY` unset. Keys alone cannot
 enable AI. The task adapter requires an explicitly selected provider and a
@@ -107,7 +114,8 @@ The downloaded PDFs land in `sample-documents/downloads/` and are ignored by git
 ## Isolated release rehearsal
 
 With two locally built images for the same architecture, installed workspace
-dependencies, Playwright Chromium and PostgreSQL 16 client tools, run:
+dependencies, Playwright Chromium and patched PostgreSQL 16 client tools
+(`pg_dump` and `pg_restore` version 16.16 or later in the 16.x series), run:
 
 ```bash
 node --import tsx scripts/rehearse-self-host-release.mjs PREVIOUS_IMAGE CANDIDATE_IMAGE
@@ -116,6 +124,10 @@ node --import tsx scripts/rehearse-self-host-release.mjs PREVIOUS_IMAGE CANDIDAT
 For Podman, set `TAX_ENGINE_CONTAINER_RUNTIME=podman`. If PostgreSQL client tools
 are outside PATH, set `TAX_ENGINE_TEST_POSTGRES_BIN` to their directory. The script
 creates and removes only its own Compose project, volume and browser profile.
+Record the running PostgreSQL server version and both client versions with the
+rehearsal results. CI installs the PostgreSQL Global Development Group client
+package and records the verified recovery utility versions with its runtime
+artifacts. [PostgreSQL Ubuntu package repository](https://www.postgresql.org/download/linux/ubuntu/).
 Podman delegates Compose to an external provider. Select a compatible Docker
 Compose executable with `PODMAN_COMPOSE_PROVIDER=/absolute/path/to/docker-compose`
 and verify `podman compose version` before the rehearsal. The recorded ARM64 run
