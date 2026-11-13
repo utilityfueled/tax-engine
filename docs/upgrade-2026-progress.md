@@ -4,6 +4,18 @@ Current source, verification and remaining work are summarized in the
 [current continuation](upgrade-2026-current-status.md). Historical results
 below apply to their named revisions.
 
+- November 13: `e141bdf5` maps documented 2026 Schedule C mileage to line 9
+  and Part IV in the disabled final-form candidate. It requires explicit
+  answers about both personal vehicle questions and Form 4562 applicability.
+  Two tests failed before the projector was added. The 444 focused tests,
+  three type checks, scoped lint, inventory and 8,838 spec references passed.
+  Separate strict `pypdf` inspection matched all 15 field and widget values
+  and appearances. Both rendered pages were visually checked. Calculations
+  still accept earlier complete logs without Part IV answers. Public review,
+  filing, guided entry and professional review remain open.
+  [Final 2026 Schedule C](https://www.irs.gov/pub/irs-prior/f1040sc--2026.pdf),
+  [draft instructions](https://www.irs.gov/pub/irs-dft/i1040sc--dft.pdf).
+
 - November 13: `9e381f83` checks the local return before parsing an upload
   and again before storing its originals. The archived baseline inserted
   both PDF bytes and metadata after another tab reset the return, for a

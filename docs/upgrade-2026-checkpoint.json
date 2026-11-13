@@ -23830,6 +23830,23 @@
     "diagnosticCases": 14,
     "auditSha256": "33e1aa072e049862556f1d580f37da874773955ab2fff6bca2a5478cbce99699"
   },
+  "nov13ScheduleCMileageCandidate": {
+    "commit": "e141bdf51b9c9648720ed397345e3e611c9f0651",
+    "tree": "0b5f026ab6b3eca5a4a48e96d0217f6677599747",
+    "beforeFixFocusedFailures": 2,
+    "beforeFixSha256": "adacc8a4908fde22bfc3293dbae9721047cc1dfb89b2c6d047bc9b0ffb41479f",
+    "focusedPassed": 444,
+    "focusedSha256": "3461c350247e572ec85eef8461aee67163826804a4860212d949ba35b091ea8b",
+    "specReferences": 8838,
+    "auditSha256": "30ec3731836c8d298346cea947425f189197e360ca4713366108745897958843",
+    "artifactSha256": "275e96e1d28054431daf1b4b2871739d8224bbf0fd9de4d16d4b8ab39c7a61e6",
+    "separatePhysicalInspectionSha256": "3cc686b396f48a225d8369c6ee21e2f4705330b53df4ebd533c52d4a58c3c1b6",
+    "verifiedFields": 15,
+    "visuallyInspectedPages": 2,
+    "humanTaxReviewComplete": false,
+    "reviewExportsEnabled": false,
+    "filingQualified": false
+  },
   "nov12HostedCreditSettlement": {
     "previewReceiptCommit": "d39209dec302d249a5f01fe8baf23cc4ca2130f8",
     "settlementCommit": "8357ed9929766a8e5ed0ac7c45321cdccd44d35a",

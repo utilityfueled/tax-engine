@@ -2,6 +2,14 @@
 
 ## November 13 on `main`
 
+`e141bdf5` verifies the disabled final 2026 Schedule C mileage and Part IV
+fields from the documented log and the taxpayer's separate vehicle answers.
+All 444 focused checks passed. A separate strict PDF parser confirmed 15
+saved field and widget values and appearances, and both pages were rendered
+and inspected. This covers the whole-mile candidate. Guided collection and
+the public export gates remain open for qualification.
+[Final 2026 Schedule C](https://www.irs.gov/pub/irs-prior/f1040sc--2026.pdf).
+
 `9e381f83` refuses local uploads against a return reset before file selection
 or while the browser parses the PDF. The old build stored the new PDF and
 metadata in both cases. The successor keeps both empty after reset and

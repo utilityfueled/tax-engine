@@ -47,8 +47,11 @@ below retain their original evidence boundaries.
 - [x] Apply the two 2026 Schedule A medical mileage rates to confirmed
   single-taxpayer trips in `6fbd2b74`. Verify 404 focused checks and the
   separate Decimal example. Guided intake and qualified output remain open.
+- [x] Project Schedule C lines 9 and 43–47 from actual, whole-mile source
+  data and explicit vehicle availability answers in `e141bdf5`. Verify
+  15 saved fields and widgets while the candidate stays disabled.
 - [ ] Complete guided mileage facts, state and other federal schedule
-  composition, basis tracking, and qualified Schedule C Part IV output.
+  composition, basis tracking, and qualify Schedule C Part IV output.
 - [ ] Finish and review W-2G linkage, mixed or joint professional wagering,
   guided sources and qualified annual physical output.
 - [x] Honor committed original deletion in open tabs in `6a38aadd`. Keep
