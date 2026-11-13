@@ -151,6 +151,10 @@ those external facts.
 The owner directed work onto `main` after merging PR #13 and asked that commits
 stay local while they disable automatic Vercel production deployments. Pushing
 and the resulting remote CI remain on hold.
+The November 13 settings check found Production tracking `main`, automatic
+production-domain assignment enabled and Ignored Build Step set to Automatic.
+[Production environment](https://vercel.com/utility-fueled-llc/tax-engine/settings/environments/production) ·
+[Build and Deployment](https://vercel.com/utility-fueled-llc/tax-engine/settings/build-and-deployment#ignored-build-step).
 
 The earlier isolated Neon branch expired. The proposed replacement rehearsal
 for `db974a65` required passing local checks on that exact source. Its unit run

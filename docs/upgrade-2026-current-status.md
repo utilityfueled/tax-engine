@@ -91,6 +91,23 @@ the pending batch. New local originals have independent IDs, so cleanup cannot
 select a same-named file from an older upload. The 142 focused tests and 23
 Chromium cases passed, including actual file-transaction abort, metadata quota
 failure and retry. IndexedDB and Web Storage remain separate persistence systems.
+The `8080bba3` archive exposed two verification bindings that still needed
+updating. `e7cec93f` makes both test titles visible to the spec checker and
+rebinds the unchanged 14-case diagnostic selection to the 599-case collection.
+All 952 spec and orchestrator checks and 23 Chromium cases passed after the repair.
+
+`06f43988` applies Schedule AI's ordinary $400 self-employment threshold
+before rounding for each owner. It also prints the same amounts the engine
+used in Part II. The 237 affected tests passed. `656fb5f8` adds confirmed
+ordinary qualified-dividend and net-capital-gain periods. It annualizes each
+amount independently and reconciles both amounts exactly to the full-year
+return. The 230 affected tests include the actual 2025 review PDF and isolated
+2026 indexed arithmetic. Special capital methods, final 2026 forms and
+qualified review remain open. [Schedule AI evidence](upgrade-2026-form-2210-schedule-ai-work.md).
+
+Exact `2ad7edea` passed all 12 archived local checks, including 27,606 unit
+and coverage tests at 87.80% branch coverage and 592 Chromium cases with
+five original hosted-only skips. A newer archived run is in progress.
 
 `a6c4fd18` adds IRS-published expected values for 2026 Schedule SE and 8812.
 The 147 affected tests passed. The checks use the worksheet inputs the IRS
@@ -122,6 +139,9 @@ and [GitHub Web](https://github.com/utilityfueled/tax-engine/actions/runs/422928
 The owner directed subsequent commits to local `main` and asked to keep
 them local while automatic Vercel production deployments are disabled.
 Vercel's history records the PR merge as an automatic production deployment.
+The November 13 read-only settings check showed Production still tracking
+`main`, automatic assignment of production domains enabled and Ignored Build
+Step set to Automatic. [Vercel Production settings](https://vercel.com/utility-fueled-llc/tax-engine/settings/environments/production).
 Prepared education review integrity is committed as `397ef68c`. The Node
 26.13.1 security update is committed as `6fe8dcac`. The [progress log](upgrade-2026-progress.md)
 and [external actions](upgrade-2026-external-actions.md) track later local

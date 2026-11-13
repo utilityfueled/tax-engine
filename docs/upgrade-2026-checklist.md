@@ -23,6 +23,12 @@ below retain their original evidence boundaries.
   Verify both with actual local Chromium. Final Compose execution remains open.
 - [x] Prevent false local upload success and verify original-file rollback in
   `75e1faf5`. Run the full affected upload/recovery/browser cohort.
+- [x] Repair the two upload verification bindings from archived `8080bba3` in
+  `e7cec93f`. Preserve all 599 browser cases, five hosted-only skips, 14
+  diagnostics and all request ceilings. Re-run the 23 affected Chromium cases.
+- [x] Apply the exact $400 Schedule AI threshold in `06f43988`. Add the
+  confirmed ordinary preferential-income method in `656fb5f8` and verify the
+  2025 review PDF. Final 2026 and special-method qualification remain open.
 - [x] Match the IRS-published Schedule SE and 8812 worksheet outputs in
   `a6c4fd18`. Retain the independent human and final-form qualification gates.
 - [ ] Finish independent review of the AI credit-issuance and recovery candidate.

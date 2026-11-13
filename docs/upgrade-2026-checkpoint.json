@@ -23511,6 +23511,47 @@
     "humanTaxReviewComplete": false,
     "filingQualified": false
   },
+  "nov13UploadVerificationBindings": {
+    "archivedFailureSource": "8080bba3d007826f39a79433064bfb83986b292f",
+    "archivedFailedAssertions": 2,
+    "archivedChecksSha256": "328f3a0363098a1f65009fb7c35442441cb577ed80524b4114ba65eb2bf7a67d",
+    "repairCommit": "e7cec93f6aa343c543e1f4ffd4126ffc03c27f7a",
+    "focusedPassed": 952,
+    "focusedSha256": "843ecc0475b16fd8a53c60a147d87da47e0f61ac89a43c58e489e0a98f8e5a7f",
+    "chromiumPassed": 23,
+    "chromiumReportSha256": "fb8ab056cf5361a9f9bdac7a1c470f93e24892e665ace1447af03c18e1b23607",
+    "fullCollectionCases": 599,
+    "hostedOnlySkips": 5,
+    "diagnosticCases": 14
+  },
+  "nov13ScheduleAiOrdinaryMethods": {
+    "selfEmploymentThresholdCommit": "06f43988bd0aeb7143b3f6f285ec690720cdf1bb",
+    "thresholdFocusedPassed": 237,
+    "thresholdFocusedSha256": "b57f51f64bfbc642d40a2af070e77988f2f551e134d1e44d9ce8c3b20a6b013b",
+    "ordinaryPreferentialCommit": "656fb5f8778b4c83c3def07d608b852e4e07c1af",
+    "preferentialFocusedPassed": 230,
+    "preferentialFocusedSha256": "d596f490b634978f1c5138f42f4ceeeacb163c6fbcc95950b436ffb1c2bf318b",
+    "specReferences": 8810,
+    "browserSourceAuditSha256": "64df9511f13114f67282d59fdd0f100dde3a3e7153b7d14f21056b6fcf4581d3",
+    "sources": [
+      "https://uscode.house.gov/us/usc/119-118/t26/s1402/",
+      "https://www.irs.gov/instructions/i2210",
+      "https://www.irs.gov/pub/irs-prior/p505--2025.pdf",
+      "https://www.irs.gov/publications/p505"
+    ],
+    "humanTaxReviewComplete": false,
+    "filingQualified": false
+  },
+  "nov13RetirementAndBillingCombined": {
+    "sourceCommit": "2ad7edea",
+    "checksPassed": 12,
+    "unitAndCoverageTestsEach": 27606,
+    "branchCoveragePercent": "87.80",
+    "chromiumPassed": 592,
+    "hostedOnlySkips": 5,
+    "checksSha256": "3d52aaf6a4347da7d9279b575d272c1df8764a24f6ad8b7031d65a013528ba06",
+    "chromiumTranscriptSha256": "6c9b015924174bae5189a4ffbf83a3a5a2a6dbd9f5fecc445c2cda80e99f4bde"
+  },
   "nov12HostedCreditSettlement": {
     "previewReceiptCommit": "d39209dec302d249a5f01fe8baf23cc4ca2130f8",
     "settlementCommit": "8357ed9929766a8e5ed0ac7c45321cdccd44d35a",

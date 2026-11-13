@@ -1,5 +1,36 @@
 # Form 2210 Schedule AI
 
+## November 13 follow-up
+
+`06f43988` applies the ordinary $400 net-earnings minimum before rounding in
+each owner's Part II. At $433.13 profit the exact adjusted amount is
+$399.995555. At $433.14 it is $400.004790. The first amount produces zero
+tax. The second produces $244.80 in column (a) with zero covered wages. The
+2025 PDF uses the audited Part II amounts. Two calculation tests and one
+physical-PDF test reproduced the old result. All 237 affected tests in 18
+files passed after correction. [IRC §1402](https://uscode.house.gov/us/usc/119-118/t26/s1402/) ·
+[Schedule SE](https://www.irs.gov/pub/irs-pdf/f1040sse.pdf).
+
+`656fb5f8` adds the ordinary preferential-income method. Publication 505
+applies the period multiplier independently to actual qualified dividends
+and ordinary net capital gain. Final 2025 Form 2210 instructions send line 14
+to the applicable return worksheet, so the method uses the return's tax-table
+or worksheet calculation. The guided path requires confirmation and clears
+it when period values, source year or method change. Column (d) reconciles
+both components exactly to the return. A 2025 single-filer example prints
+$16,455, $21,035, $28,757 and $32,567 on line 14. The same example using
+isolated 2026 statutory rates yields $16,170, $20,750, $28,424 and $32,234.
+Special-rate gains, QSBS and investment-interest elections remain separate.
+The preferential PDF requires a fresh original-source context. An offsetting
+one-cent change in the two year-end inputs invalidates the prior review.
+All 230 affected tests in 16 files passed, along with three type checks, the
+spec inventory and strict 599-case browser collection. Final 2026 Form 2210,
+final tables and professional review remain open. [Final 2025 instructions](https://www.irs.gov/instructions/i2210) ·
+[2025 Publication 505, Worksheet 2-8](https://www.irs.gov/pub/irs-prior/p505--2025.pdf) ·
+[2026 Publication 505, Worksheet 2-10](https://www.irs.gov/publications/p505).
+
+## Original package
+
 The annualized income method was rejected. It lowers or removes the penalty for taxpayers whose income arrives late in the year, so the regular method overstated their penalty. This package calculates Schedule AI for calendar-year individuals.
 
 ## Rule

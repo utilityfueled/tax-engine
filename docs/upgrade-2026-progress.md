@@ -4464,3 +4464,29 @@ execution and current image qualification require separate evidence.
   Limit Worksheet A figure. Final full-return and human review gates
   remain open. [IRS ATS 12](https://www.irs.gov/pub/irs-efile/ty26-1040-ats-scenario-12.pdf) ·
   [IRS ATS 14](https://www.irs.gov/pub/irs-efile/ty26-1040-ats-scenario-14.pdf).
+- The exact `2ad7edea` archive passed all 12 local commands. Unit and
+  coverage each passed 27,606 tests in 1,994 files with 87.80% branches
+  against 85%. Chromium passed 592 cases with five original hosted-only
+  skips. The checks SHA-256 is
+  `3d52aaf6a4347da7d9279b575d272c1df8764a24f6ad8b7031d65a013528ba06`.
+- The exact `8080bba3` upload archive passed nine static commands but
+  stopped on two verification assertions. The spec checker could not
+  identify generated Playwright test titles and the optional diagnostic
+  selection still used the old audit digest. `e7cec93f` makes both test
+  names literal and binds the same request limits and 14 diagnostic cases
+  to the current 599-case collection. All 952 spec/orchestrator checks and
+  23 focused Chromium cases passed. Chromium report SHA-256
+  `fb8ab056cf5361a9f9bdac7a1c470f93e24892e665ace1447af03c18e1b23607`.
+- `06f43988` corrects the ordinary Schedule AI self-employment threshold
+  and shares its audit with the printed worksheet. Three targeted
+  regressions reproduced the issue, and 237 affected tests passed.
+  `656fb5f8` implements the confirmed ordinary preferential-period method,
+  exact full-year component reconciliation and current-original PDF
+  review. A separate Decimal computation supplied the expected amounts.
+  Three original route checks and one missing-original PDF check failed
+  before correction. All 230 affected tests passed, including physical
+  2025 review and isolated 2026 arithmetic, and all 8,810 spec references
+  resolved. [Schedule AI work and sources](upgrade-2026-form-2210-schedule-ai-work.md).
+- The read-only Vercel settings check still showed Automatic for Ignored
+  Build Step and Production tracking `main`. Commits remain local at the
+  owner's direction. [External actions](upgrade-2026-external-actions.md).
