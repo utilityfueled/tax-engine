@@ -4369,5 +4369,35 @@ execution and current image qualification require separate evidence.
   audit. The strict collection contains 596 cases in eight managed batches
   with the five existing hosted skips and the same 14 diagnostic cases.
   All 58 orchestrator and diagnostic tests passed. The exact combined
-  archive is running. No additional Preview build or ARM64 VM boot has been
-  attempted under the earlier conditional source approvals.
+  archive passed 27,601 unit tests in 1,994 files. Coverage and managed
+  Chromium verification are pending. No additional Preview build or ARM64
+  VM boot has been attempted under the earlier conditional source approvals.
+- Exact `8e4375e3` passed 11 of 12 commands, including 27,596 tests in both
+  the unit and coverage jobs and 87.79% branch coverage against 85%.
+  PostgreSQL stopped normally. Managed Chromium collected all eight batches
+  and stopped before starting the server because the archived checkout did
+  not include the downloaded official sample documents. The current run
+  has all 15 sample files checked against the local source directory. The
+  retained failed combined transcript SHA-256 is
+  `82d98cd9fa9a09ea4ea1573107599876b5cea4b2ebc76322649d8e7313d30899`.
+- `d93621a3` collects confirmed CRP annual rental facts and the owner's
+  benefit status on each receipt date. The same-owner, same-year SSA-1099
+  resolves by local reference after reopening or reordering. The method
+  retains all taxable Schedule F income and excludes only qualifying
+  payments from regular Schedule SE. It requires known zero attributable
+  deductions and the existing federal-only farm scope. Three pre-fix tests
+  failed and 223 affected tests in seven files passed after the change.
+  The final three Chromium cases passed. The new mobile case confirmed a
+  mismatched annual statement blocks calculation, a date edit clears the
+  old evidence after reload, and the downloaded 2025 Schedule SE shows
+  lines 1a/1b of $3,401/$1,000 and lines 12/13 of $339/$170. Both benefit
+  references were absent from the PDF and only the same-origin review
+  request carried the dated reference. The browser fixture preloaded the
+  household and annual originals. The first browser run reached the PDF
+  and failed a page-text selector. Final browser SHA-256
+  `253b63da226f08d3cd5a8296390e53c6faf1115d77e90314e7f8cb7387d72bc4`.
+  The strict 597-case collection preserves the five original hosted skips,
+  the same 14 diagnostic cases, one download per scenario and zero provider
+  actions. Qualified human review and final filing remain open.
+  [Schedule SE instructions](https://www.irs.gov/instructions/i1040sse) ·
+  [26 USC §1402](https://uscode.house.gov/us/usc/119-134/t26/s1402/).

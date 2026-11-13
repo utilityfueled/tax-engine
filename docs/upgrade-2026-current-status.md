@@ -18,15 +18,27 @@ archive. The 85-test compatibility cohort passed with its original expected
 hashes. The 15-case guided cohort and three type checks passed. The combined
 successor `2f836a2b` passed nine static checks and 27,595 unit tests. One
 unit check caught a stale browser diagnostic audit hash. `8e4375e3` updates
-that binding, and all 25 diagnostic tests pass. The archived combined check
-set for `8e4375e3` passed nine static checks and all 27,596 unit tests.
+that binding, and all 25 diagnostic tests pass. The archived `8e4375e3`
+unit and coverage jobs each passed all 27,596 tests, with 87.79% branch
+coverage against 85%. The browser job stopped before server startup because
+its archive lacked the official sample-download directory. That prerequisite
+has been copied and checked for the `9215736d` run.
 `ad616963` shows confirmed USDA Box 7 receipts separately from federal
 withholding in guided review. Two real Chromium cases covered edit,
 reconfirmation, saved-return replay, review download and deletion. The
 browser audit for the successor `9215736d` covers all 596 cases and retains
 the five hosted-only skips and the existing request limits. The exact-source
-combined run for `9215736d` is in progress. Qualified human review and 2026
+combined run for `9215736d` passed all 27,601 unit tests, with coverage and
+the managed browser run still in progress. Qualified human review and 2026
 public output remain open. [Package evidence](upgrade-2026-progress.md).
+
+`d93621a3` collects actual benefit status and dated evidence for each fully
+taxable Conservation Reserve Program annual rental payment. The worksheet
+matches a same-owner, same-year SSA-1099 separately and clears the previous
+evidence when the payment date changes. The 223 affected tests and three
+actual Chromium cases passed, including saved Schedule SE values and private
+reference checks. The finite method remains federal-only. [Schedule SE
+instructions](https://www.irs.gov/instructions/i1040sse).
 
 `0411dab9` binds hosted AI credit fulfillment to the original Checkout issuance.
 `c4998c56` separates test and live accounting with a PostgreSQL storage marker.
