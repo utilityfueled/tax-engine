@@ -9,6 +9,15 @@ The read-only Vercel check still finds the production project linked to
 `main`, with automatic custom-domain assignment and no build-ignore command.
 The isolated rehearsal project has no Git link and protects all deployments.
 
+`976a63bc` applies Ohio's separate $50 earned-income school-district
+senior credit to the confirmed single full-year wage draft. The school credit
+is capped by its own liability and has no state-credit MAGI ceiling. State
+and school withholding and refunds remain separately reconciled. Two new
+cases reproduced the missing calculation. All 384 affected checks, types,
+lint, 8,902 spec references, inventory and the existing browser request audit
+passed. January 1, 1962 age attainment and final state qualification remain
+held. [State sources and evidence](upgrade-2026-state-gaps.md).
+
 `005394da` requires the original Box 7a code and determined taxability
 for non-IRA pensions in the 2026 federal engine. A blank Box 2a or a
 reported unknown amount requires a complete supported worksheet unless

@@ -24399,6 +24399,20 @@
       "https://www.irs.gov/publications/p575"
     ]
   },
+  "nov13OhioEarnedSchoolSeniorCredit": {
+    "commit": "976a63bcd1a4d1eab931c3d5c974a31e0e990c89",
+    "focusedTestsPassed": 384,
+    "initialRed": 2,
+    "specReferencesValidated": 8902,
+    "redSha256": "a953e436aaafb1e36d312d6e5debeedb57ff15ae0aebe10332e19589e151dca0",
+    "greenSha256": "6ac08e380b72ff85c9364ed1d43ccc8b331848bc9231aed20d8bf22248f48fa4",
+    "finalOhioQualified": false,
+    "sources": [
+      "https://codes.ohio.gov/ohio-revised-code/section-5748.06",
+      "https://codes.ohio.gov/ohio-revised-code/section-5747.055",
+      "https://tax.ohio.gov/help-center/faqs/income-retirement-income/income-retirement-income"
+    ]
+  },
   "nov13PaSuccessorVerification": {
     "b7ffd2c1Combined": {
       "source": "b7ffd2c1848521f4e9b3f3a4396b867661df436e",

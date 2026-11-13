@@ -6,6 +6,9 @@ below retain their original evidence boundaries.
 
 ## Active continuation — November 13 Eastern
 
+- [x] Compose the separate Ohio earned-school senior credit in `976a63bc`.
+  Pass 384 focused tests covering the school liability cap, independent
+  state income ceiling and exact withholding reconciliation.
 - [x] Guard 2026 non-IRA pension taxability in `005394da`. Pass 646
   affected cases, including known zero, the official direct-rollover codes
   and complete Simplified Method inputs. Preserve historical calculations.

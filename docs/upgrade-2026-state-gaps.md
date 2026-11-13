@@ -29,6 +29,18 @@ remain held. Five new regressions failed before the implementation. The seven
 affected suites passed 348 tests, including the $100,000 boundary and all three
 residencies. [Ohio R.C. 5747.055](https://codes.ohio.gov/ohio-revised-code/section-5747.055) · [Credit order](https://codes.ohio.gov/ohio-revised-code/section-5747.98).
 
+`976a63bc` extends the internal single, full-year earned-school wage draft
+to confirmed seniors. The separate $50 school credit is capped at school
+liability, including $48.85 raw and $49 reported in the Crestline fixture.
+At $101,900 of Hillsdale wages the state senior credit is zero and the school
+credit reduces $1,274 of reported school tax to $1,224. A one-cent school
+withholding shortfall against raw liability still rejects. Two failing
+regressions preceded the fix and all 384 affected checks passed. Current
+owner-specific state credit history and the Ohio age boundary hold are
+preserved. [School credit](https://codes.ohio.gov/ohio-revised-code/section-5748.06) ·
+[State senior credit](https://codes.ohio.gov/ohio-revised-code/section-5747.055) ·
+[Ohio retirement credit FAQ](https://tax.ohio.gov/help-center/faqs/income-retirement-income/income-retirement-income).
+
 `e414cb0e` restores the finite Pennsylvania wage draft from actual saved
 interview data containing neutral Form 8812 answers. The checked fixture
 computes $1,535 state liability and zero federal EIC dependency from current
