@@ -144,3 +144,35 @@ establish this account's access, capability acceptance, privacy settings or
 measured usage. Secure project selection remains pending; no credential or
 provider run is invented. Actual live evaluation spending remains $0 under the
 approved $5 ceiling. No price registry, route or promotion gate changed.
+
+## November 13 public-source recheck
+
+The standard text rates for the pinned OpenAI model IDs still match the
+registry. GPT-6 Luna input/output/cache read are $0.10/$0.50/$0.01 and GPT-6.1
+Sol are $2/$10/$0.10 per million tokens. Both model pages still document the
+configured reasoning efforts and the 272,000-input-token pricing boundary.
+The pricing page's promotional note names GPT-5.6 Sol, a different model ID.
+[OpenAI pricing](https://developers.openai.com/api/docs/pricing) ·
+[GPT-6 Luna](https://developers.openai.com/api/docs/models/gpt-6-luna) ·
+[GPT-6.1 Sol](https://developers.openai.com/api/docs/models/gpt-6.1-sol).
+
+OpenAI still lists December 11, 2026 for both GPT-5 Mini IDs. The official
+search index and fetched page differ on the suggested successor, so this
+recheck records the shared retirement date and retains the pinned baseline
+and its historical January projection. [OpenAI deprecations](https://developers.openai.com/api/docs/deprecations#2026-06-11-gpt-5-and-o3-model-deprecations).
+
+Google still lists standard paid Flash 3.8 input/output/cache read at
+$0.75/$3.75/$0.075 through December 31 and $1.50/$7.50/$0.15 from January 1.
+The legacy Flash preview rates remain $0.50/$3/$0.05. Both exact model IDs
+remain listed, with no announced shutdown date for either. Public documentation
+describes structured output and thinking. [Google pricing](https://aistudio.google.com/docs/pricing#gemini-3.8-flash) ·
+[Google deprecations](https://aistudio.google.com/docs/deprecations#gemini-3-models) ·
+[Flash 3.8 model](https://aistudio.google.com/docs/models/gemini-3.8-flash) ·
+[Flash preview model](https://aistudio.google.com/docs/models/gemini-3-flash-preview).
+
+The separately recorded OpenAI smoke tests used $0.26282160 in calculated
+usage with $0.022384 still reserved for one timeout. This source recheck made
+no provider request. Google project access, the timeout's authoritative
+settlement and independently reviewed held-out results remain pending. See
+[current status](upgrade-2026-current-status.md) for the later accounting
+evidence. The approved request-policy and price-table digests are preserved.

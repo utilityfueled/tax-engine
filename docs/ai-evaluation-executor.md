@@ -15,7 +15,7 @@ golden values or reviewer criteria.
 
 ## Offline preparation
 
-Use the repository's pinned Node 24 toolchain. No provider key is needed to create
+Use the Node version pinned in `.node-version`. No provider key is needed to create
 a plan. Choose explicit profiles, a short expiry and both a dollar and request
 ceiling. For example, this creates one capability probe plan and an **unapproved**
 approval template; it does not call a provider:
