@@ -23459,6 +23459,17 @@
     "runtimeImageRehearsalPassed": false,
     "pushHeldAtOwnerRequest": true
   },
+  "nov13SelfHostAuthenticatedBackupRehearsal": {
+    "commit": "3b2b3a688562597ee281c1002fa9b818ea01f31f",
+    "beforeFixFailures": 1,
+    "focusedPassed": 45,
+    "focusedFiles": 5,
+    "focusedSha256": "3c2152ec03dc6b32b0eda0694b1607baedbd98d9a0a23feb10c2b942a727412c",
+    "browserTranscriptSha256": "f3efab90e3805e338763e704cbb0ed8a7c6209bd81f50c0936eb04dd6957e9d1",
+    "actualLocalBackupAccepted": true,
+    "wrongPasswordAndExactCentsMismatchRejected": true,
+    "runtimeImageRehearsalPassed": false
+  },
   "nov13IrsAtsWorksheetExamples": {
     "commit": "a6c4fd18f35a50a2ed572540d3ac480c94853ae1",
     "focusedPassed": 147,

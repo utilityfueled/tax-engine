@@ -11,12 +11,18 @@ below retain their original evidence boundaries.
   Ohio local header jurisdictions in the state review copy. Earlier archived
   runs retain 21 failures from the stale expectations.
 - [x] Implement the documented active cash-farm CRP exclusion and the 2025
-  zero-tax Schedule SE review attachment in `85e34a0d`. Engine and review
-  tests pass. Integrated positive Form 1099-G Box 7 routing, guided intake,
-  final forms and qualified human review remain open.
-- [ ] Finish the archived `c94971cd` coverage and browser runs. The nine static
-  checks and 27,558 unit tests passed. The native rehearsal remains conditional
-  on the exact approval, complete run and fresh custody/capacity checks.
+  zero-tax Schedule SE review attachment in `85e34a0d`. Bind positive Form
+  1099-G Box 7 receipts and dated benefit evidence in `948e8d69` and
+  `d93621a3`. Final forms and qualified human review remain open.
+- [x] Finish all 12 archived `c94971cd` local checks. Unit and coverage pass
+  27,558 tests at 87.76% branch coverage. Chromium passes 589 cases with five
+  hosted-only skips. The native rehearsal still needs exact-source authority
+  and fresh custody and capacity checks.
+- [x] Fix cross-tab saved-return recovery in `fe8fcd69` and independently
+  authenticate the self-host rehearsal's downloaded archive in `3b2b3a68`.
+  Verify both with actual local Chromium. Final Compose execution remains open.
+- [x] Match the IRS-published Schedule SE and 8812 worksheet outputs in
+  `a6c4fd18`. Retain the independent human and final-form qualification gates.
 - [ ] Finish independent review of the AI credit-issuance and recovery candidate.
   Rehearse deployed outages, automatic Stripe retry and atomic billing on a
   fresh protected Preview after the old synthetic database expired.

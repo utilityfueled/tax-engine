@@ -4,6 +4,14 @@ Current source, verification and remaining work are summarized in the
 [current continuation](upgrade-2026-current-status.md). Historical results
 below apply to their named revisions.
 
+- November 13: `3b2b3a68` strengthens the self-host release harness with an
+  independent authenticated comparison against the complete pre-backup
+  browser snapshot. The source ordering test failed before the change and
+  passed with 44 other focused checks. Local production Chromium extracted
+  the actual harness snapshot, validated the downloaded archive and rejected
+  an exact-cents mismatch and a wrong password before exercising deletion.
+  This used a local Next.js server. The native Compose image has no new result.
+
 - November 12: `e4025f63` removes legacy Reader rights and detached XFA from
   official templates after the registered hash check. Reopening the real
   standalone Form 1040 and a workspace review packet preserved their notices,

@@ -77,6 +77,13 @@ passed, including a two-tab restore with matching original PDF bytes and guided
 answers. Simultaneous writes in different browser processes still depend on
 Web Storage scheduling. [HTML standard](https://html.spec.whatwg.org/multipage/webstorage.html#introduction-16).
 
+`3b2b3a68` makes the self-host rehearsal independently authenticate its
+downloaded backup and compare the saved workspace, guided answers, local
+preference and original PDF before deleting the synthetic return. The 45
+focused checks passed. Local production Chromium accepted the real download
+and rejected both a one-cent change to the expected answers and a wrong
+password. The final Compose image rehearsal remains open.
+
 `a6c4fd18` adds IRS-published expected values for 2026 Schedule SE and 8812.
 The 147 affected tests passed. The checks use the worksheet inputs the IRS
 supplied. Full-return testing still requires final tables and professional
