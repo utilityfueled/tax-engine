@@ -9,7 +9,7 @@ import {assertScheduleCPassengerResult} from './schedule-c-passenger-first-year-
 
 import Decimal from "decimal.js";
 import {calculateScheduleCSourceFacts} from "./schedule-c-source-facts.js";
-import type { Form8829Input, TaxYearInput, ScheduleCSourceFacts } from "@/models/inputs.js";
+import { ScheduleCProfessionalWageringSchema, type Form8829Input, type TaxYearInput, type ScheduleCSourceFacts, type ScheduleCProfessionalWagering } from "@/models/inputs.js";
 import type { CalculatedLine } from "@/models/outputs.js";
 import { d as legacyAmount, min, roundDollar } from "@/utils/decimal.js";
 import { AuditTrail } from "@/utils/audit.js";
@@ -57,6 +57,7 @@ export interface HomeOfficeDeduction {
 export interface ScheduleCInput {
   accountHolder?: "primary"|"spouse";
   sourceFacts?: ScheduleCSourceFacts;
+  professionalWagering?: ScheduleCProfessionalWagering;
   businessName?: string;
   otherExpenseDescription?: string;
   businessCode?: string; // NAICS code
@@ -97,12 +98,55 @@ const SIMPLIFIED_HOME_OFFICE_RATE = new Decimal(5); // $5/sq ft
 const SIMPLIFIED_HOME_OFFICE_MAX_SQFT = 300;
 const SIMPLIFIED_HOME_OFFICE_MAX = new Decimal(1500);
 
+function calculateProfessionalWagering(
+  input: TaxYearInput,
+  business: ScheduleCInput | undefined,
+  careBenefitAdjustment: Decimal | undefined,
+  audit: AuditTrail,
+) {
+  const packet = business?.professionalWagering;
+  if (packet === undefined && input.scheduleC?.professionalWagering === undefined) return undefined;
+  const parsed = ScheduleCProfessionalWageringSchema.safeParse(packet);
+  if (!parsed.success || input.taxpayer.taxYear !== parsed.data.taxYear || input.taxpayer.filingStatus !== "single"
+    || input.taxpayer.spouse || business?.accountHolder !== "primary" || business.accountingMethod !== "cash") {
+    throw new Error("Schedule C professional wagering requires a complete original ledger for the single 2026 cash-basis proprietor");
+  }
+  const { data: facts } = parsed;
+  if (input.scheduleC !== undefined && input.scheduleC !== business) {
+    const retained = ScheduleCProfessionalWageringSchema.safeParse(input.scheduleC.professionalWagering);
+    if (!retained.success || Object.entries(facts).some(([key, value]) => retained.data[key as keyof ScheduleCProfessionalWagering] !== value)) {
+      throw new Error("Schedule C professional wagering differs from the retained ledger facts");
+    }
+  }
+  const recreationalWagering = [input.scheduleA?.gamblingWinnings, input.scheduleA?.gamblingLosses, input.scheduleA?.gamblingExpenses];
+  const otherBusinessSources = [business.sourceFacts, business.grossReceipts, business.expenses,
+    business.homeOffice, input.form4562, input.form2555, input.dependentCareBenefits, input.cryptoIncome];
+  const otherBusinessAmounts = [business.returnsAndAllowances, business.costOfGoodsSold, business.otherIncome];
+  if (otherBusinessSources.some(source => source !== undefined) || (careBenefitAdjustment && !careBenefitAdjustment.isZero())
+    || [...recreationalWagering, ...otherBusinessAmounts].some(amount => !legacyAmount(amount).isZero())
+    || [input.formW2G, input.form1099Nec, input.form1099Misc, input.form1099K].some(forms => forms?.length)) {
+    throw new Error("Schedule C professional wagering requires separate methods for other receipts, expenses or overlapping activity");
+  }
+  const gains = legacyAmount(facts.grossTaxableWageringGains);
+  const losses = legacyAmount(facts.wageringLosses);
+  const expenses = legacyAmount(facts.otherwiseDeductibleWageringExpenses);
+  const deduction = min(gains, losses.plus(expenses).times("0.90"));
+  audit.record("Schedule C Wagering Worksheet", "165(d)", "Allowed professional wagering deduction", deduction,
+    "Lesser of gross taxable wagering gains or 90% of the combined wagering losses and otherwise deductible expenses", {
+      "Gross taxable wagering gains": gains,
+      "Wagering losses": losses,
+      "Otherwise deductible wagering expenses": expenses,
+    });
+  return { gains, deduction };
+}
+
 export function calculateScheduleC(
   input: TaxYearInput,
-  scheduleCInput?: ScheduleCInput,
+  scheduleCInput: ScheduleCInput | undefined = input.scheduleC?.professionalWagering === undefined ? undefined : input.scheduleC,
   options: { dependentCareBenefitsAdjustment?: Decimal } = {},
 ): ScheduleCResult {
   const audit = new AuditTrail();
+  const wagering = calculateProfessionalWagering(input, scheduleCInput, options.dependentCareBenefitsAdjustment, audit);
   const sources = calculateScheduleCSourceFacts(input, scheduleCInput);
   // Only the admitted documentary passenger path needs the100-character exact
   // projection. Keep historical caller precision/behavior for all other inputs.
@@ -117,10 +161,11 @@ export function calculateScheduleC(
     (acc, f) => acc.plus(d(f.nonemployeeCompensation)),
     d(0)
   );
-  const grossReceipts = scheduleCInput?.grossReceipts
+  const grossReceipts = wagering?.gains ?? (scheduleCInput?.grossReceipts
     ? d(scheduleCInput.grossReceipts)
-    : necTotal;
-  audit.record("Sched C", "1", "Gross receipts or sales", grossReceipts, "Sum of 1099-NEC + other business income");
+    : necTotal);
+  audit.record("Sched C", "1", "Gross receipts or sales", grossReceipts,
+    wagering ? "Gross taxable wagering gains from the confirmed professional ledger" : "Sum of 1099-NEC + other business income");
 
   // Line 2: Returns and allowances
   const returnsAndAllowances = d(scheduleCInput?.returnsAndAllowances);
@@ -202,7 +247,8 @@ export function calculateScheduleC(
 
   totalExpenses = totalExpenses.plus(addExpense("25", "Utilities", expenses.utilities));
   // Classified Part V sources include actual Form4562 amortization, separate from line13.
-  totalExpenses = totalExpenses.plus(addExpense("27b", "Other expenses", d(expenses.otherExpenses).plus(sources?.partV??d(0)).toString()));
+  const otherExpenses = wagering?.deduction ?? d(expenses.otherExpenses).plus(sources?.partV ?? d(0));
+  totalExpenses = totalExpenses.plus(addExpense("27b", "Other expenses", otherExpenses.toString()));
 
   // Line 28: Total expenses
   audit.record("Sched C", "28", "Total expenses", totalExpenses, "Sum of Lines 8-27");

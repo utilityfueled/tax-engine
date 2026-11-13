@@ -258,11 +258,12 @@ export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = fr
   },
   2026: {
     taxYear: 2026,
-    ruleVersion: "2026.223-law-integration-draft",
+    ruleVersion: "2026.224-law-integration-draft",
     calculationStatus: "incomplete",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://uscode.house.gov/us/usc/119-120/t26/s165/", section: "Section 165(d)(1)–(2), professional wagering losses and otherwise deductible expenses", revision: "P.L. 119-21 §70114. A separate single-proprietor 2026 ledger applies the 90% limit to combined costs, capped at actual gains, before Schedule SE. No W-2G, mixed activities, joint allocation, state return, final form, or filing qualification.", retrievedAt: "2026-11-13" },
       { url: "https://www.irs.gov/pub/irs-pdf/i3903.pdf", section: "Qualifying military and nonmilitary intelligence-community assignment relocations, Lines 1–5, Schedule 1 Line 14, Form 1040 Line 1h", revision: "Final 2026 instructions dated September 28, 2026 and P.L. 119-21 §70113. Confirm per-move eligibility and original expense/reimbursement amounts. Separate Form 2555 allocation, prior-year storage and special spouse/dependent methods require further qualification.", retrievedAt: "2026-11-13" },
       { url: "https://www.irs.gov/irb/2026-29_irb", section: "Announcement 2026-11, moving standard mileage date transition", revision: "Notice 2026-10 as modified by Announcement 2026-11. Apply 20.5 or 23.5 cents to deductible transportation expenses according to when paid or incurred. Line 4 accepts confirmed amounts after the separate mileage allowance substantiation rules.", retrievedAt: "2026-11-13" },
       { url: "https://www.ecfr.gov/current/title-26/section-1.197-2", section: "Section1.197-2(f)(1): actual acquired-goodwill basis over180months from the later acquisition/business-start month", revision: "Current regulation; finite actual taxable arm-length cash-acquired post1993 goodwill, current-year start, full calendar year, complete unique originals for one ScheduleC and one consistent business start. Basis times actual months divided by180 before nearest-dollar rounding preserves exact half-dollar boundaries. Unknown eligibility, other codes, prior-start histories, foreign/related-party/anti-churning/self-created/lease/disposition and ambiguous reclassification remain separate methods. Typed/imported sources only; the ordinary guide does not originate Form4562. Agent review does not supply human or filing qualification.", retrievedAt: "2026-11-02" },

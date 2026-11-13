@@ -10823,6 +10823,31 @@
       ]
     },
     {
+      "key": "federal/schedule-c-wagering-2026",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://uscode.house.gov/us/usc/119-120/t26/s165/",
+      "specPath": "spec/federal/schedule-c-wagering-2026.yaml",
+      "enginePath": "src/engine/schedules/schedule-c.ts",
+      "packetPath": null,
+      "implementationTestRefs": [
+        "tests/engine/schedules/schedule-c-wagering-2026.test.ts::requires the exact current original and separate source classifications",
+        "tests/engine/schedules/schedule-c-wagering-2026.test.ts::uses actual professional gains and applies the limitation once to the combined cost pool",
+        "tests/engine/schedules/schedule-c-wagering-2026.test.ts::carries only Schedule C profit into Schedule SE and leaves the full-year gate closed"
+      ],
+      "implementationNote": "Single-owner 2026 professional wagering source calculation and Schedule SE handoff only. No full return, state result, guided intake, packet, e-file validation or human qualification.",
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/schedule-d",
       "jurisdiction": "federal",
       "taxYear": 2025,

@@ -1696,6 +1696,16 @@
       "note": "Links only the pure documentary provider/person identity-source validator and its own-spec source/kind/gate regressions. It returns officialPaperQualified=false and filingEligible=false; optional collection and guided/native tests do not themselves admit a paper packet. The separate original-bound 2025 actual-care review successor has its own inventory entry; no 2026 or filing qualification is claimed."
     },
     {
+      "key": "federal/schedule-c-wagering-2026",
+      "enginePath": "src/engine/schedules/schedule-c.ts",
+      "testRefs": [
+        "tests/engine/schedules/schedule-c-wagering-2026.test.ts::requires the exact current original and separate source classifications",
+        "tests/engine/schedules/schedule-c-wagering-2026.test.ts::uses actual professional gains and applies the limitation once to the combined cost pool",
+        "tests/engine/schedules/schedule-c-wagering-2026.test.ts::carries only Schedule C profit into Schedule SE and leaves the full-year gate closed"
+      ],
+      "note": "Single-owner 2026 professional wagering source calculation and Schedule SE handoff only. No full return, state result, guided intake, packet, e-file validation or human qualification."
+    },
+    {
       "key": "state/pa-source-precision",
       "enginePath": "src/engine/state/pa-residency-sources.ts",
       "testRefs": [

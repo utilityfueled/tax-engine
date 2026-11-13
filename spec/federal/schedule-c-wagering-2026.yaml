@@ -1,0 +1,34 @@
+form: "Schedule C professional wagering sources"
+fullName: "2026 Schedule C sole-proprietor wagering limitation"
+taxYear: 2026
+irsReference: "https://uscode.house.gov/us/usc/119-120/t26/s165/"
+notes: |
+  Source calculation for one owner and one exclusively professional domestic
+  wagering activity. Separate Schedule A activity, Form W-2G or 1099 receipt
+  reconciliation, mixed businesses, joint returns, and physical forms require
+  separate methods. The full 2026 return remains unavailable. Publication 525
+  explains the historical Schedule C and self-employment treatment. The final
+  2026 Schedule C identifies lines 1, 27b, 28 and 31 and Part V; the October 2026
+  draft instructions confirm the changed limitation. No draft qualification or
+  human signoff is implied. Retrieved 2026-11-13.
+lines:
+  - line: "original-sources"
+    description: "Require current, complete and separate facts"
+    formula: "Require an explicitly confirmed complete calendar-year ledger for the primary owner on a single return; separately preserve nonnegative gross taxable wagering gains, wagering losses and otherwise deductible wagering expenses with exact cents. Require original ledger reference and actual zero where applicable. Reject other Schedule C receipts, expenses and schedules that would duplicate or reallocate the same activity, including W-2G and recreational wagering sources. Never derive professional status or gross gains from net profit."
+    irsRef: "IRS Publication 525, Gambling winnings; final 2026 Schedule C lines A, F and G; 26 USC 165(d)(2)"
+    testRef: "tests/engine/schedules/schedule-c-wagering-2026.test.ts::requires the exact current original and separate source classifications"
+  - line: "1"
+    description: "Gross wagering gains"
+    formula: "Use actual gross taxable wagering gains as receipts without deduction of losing wagers or separately allowable expenses; the same amount enters line 7 in this exclusive activity."
+    irsRef: "2026 Schedule C line 1 and draft instructions line 1; IRS Publication 525, Gambling winnings"
+    testRef: "tests/engine/schedules/schedule-c-wagering-2026.test.ts::uses actual professional gains and applies the limitation once to the combined cost pool"
+  - line: "27b"
+    description: "Allowed wagering deduction"
+    formula: "Limit 90 percent of the sum of actual losses and otherwise deductible expenses to actual gross taxable wagering gains. In the bounded method both amounts would otherwise enter Part V. Keep exact amounts through the limitation and net profit; a later physical output applies the supported reporting policy once."
+    irsRef: "26 USC 165(d)(1)-(2), P.L. 119-21 section 70114; draft 2026 Schedule C instructions, What's New and Part V"
+    testRef: "tests/engine/schedules/schedule-c-wagering-2026.test.ts::uses actual professional gains and applies the limitation once to the combined cost pool"
+  - line: "31"
+    description: "Net profit for subsequent calculations"
+    formula: "Subtract the allowed line 27b deduction once. Never create a professional wagering loss, carry disallowed wagering costs, or repeat the gain or deduction as recreational wagering. Schedule SE uses the exact source profit; the federal readiness gate remains in force."
+    irsRef: "26 USC 165(d), 1402; 2026 Schedule C line 31 and Schedule SE line 2"
+    testRef: "tests/engine/schedules/schedule-c-wagering-2026.test.ts::carries only Schedule C profit into Schedule SE and leaves the full-year gate closed"

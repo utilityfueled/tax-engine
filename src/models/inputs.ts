@@ -3366,8 +3366,21 @@ export const ScheduleCSourceFactsSchema = z.object({
 }).strict();
 export type ScheduleCSourceFacts = z.infer<typeof ScheduleCSourceFactsSchema>;
 
+export const ScheduleCProfessionalWageringSchema = z.strictObject({
+  taxYear: z.literal(2026),
+  ledgerReference: z.string().max(250).refine(value => value.trim().length > 0, "Original wagering ledger reference is required"),
+  fullCalendarYearConfirmed: z.literal(true),
+  completeDomesticProfessionalActivityConfirmed: z.literal(true),
+  noOtherActivityOrDuplicatedAmountsConfirmed: z.literal(true),
+  grossTaxableWageringGains: nonnegativeDollarsAndCents,
+  wageringLosses: nonnegativeDollarsAndCents,
+  otherwiseDeductibleWageringExpenses: nonnegativeDollarsAndCents,
+});
+export type ScheduleCProfessionalWagering = z.infer<typeof ScheduleCProfessionalWageringSchema>;
+
 export const ScheduleCInputSchema = z.object({
   sourceFacts:ScheduleCSourceFactsSchema.optional(),
+  professionalWagering: ScheduleCProfessionalWageringSchema.optional(),
   qbiMateriallyParticipated: z.boolean().optional(),
   principalBusinessActivity: z.string().optional(),
   allInvestmentAtRisk: z.boolean().optional(),
