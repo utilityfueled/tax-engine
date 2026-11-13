@@ -5,6 +5,7 @@ import { PDFDocument, PDFName, PDFRawStream, PDFTextField, TextAlignment, decode
 import { describe, expect, it } from "vitest";
 import { assertPdfExportAllowed, markReviewPdf, PDF_MAPPING_PACKS, REVIEW_PDF_NOTICE } from "@/pdf/export-policy.js";
 import { assertReviewTemplateBytes, REVIEW_TEMPLATE_PACKS } from "@/pdf/template-registry.js";
+import { removeTrustedTemplateLegacyFormData } from "@/pdf/trusted-review-template-cleanup.js";
 
 const blank = new URL("../../forms/blank/2026/f1040v.pdf", import.meta.url);
 const sha256 = "7533914c5674c1486e4c60dba1e852d65669aece7b840c3644761bac64e64335";
@@ -33,6 +34,22 @@ async function candidate() {
   const { FORM_1040_V_2026_CANDIDATE } = await import("@/pdf/mappings/2026/form-1040-v-candidate.js");
   return FORM_1040_V_2026_CANDIDATE;
 }
+
+async function loadDiagnosticBlank() {
+  const bytes = await readFile(blank);
+  expect(createHash("sha256").update(bytes).digest("hex")).toBe(sha256);
+  const pdf = await PDFDocument.load(bytes);
+  removeTrustedTemplateLegacyFormData(pdf);
+  return pdf;
+}
+
+const confirmedVoucher = {
+  taxYear: 2026,
+  returnForm: "1040",
+  returnAmountOwed: "1500.00",
+  annualReturnConfirmed: true,
+  payment: { method: "check", amount: "1234.56", singleInstrumentConfirmed: true },
+};
 
 describe("Final 2026 Form 1040-V physical candidate", () => {
   it("pins the official annual source", async () => {
@@ -79,7 +96,7 @@ describe("Final 2026 Form 1040-V physical candidate", () => {
 
   it("reopens all diagnostic values and widget appearances", async () => {
     const { fields } = await candidate();
-    const pdf = await PDFDocument.load(await readFile(blank));
+    const pdf = await loadDiagnosticBlank();
     const form = pdf.getForm();
     const values: Record<keyof typeof fields, string> = {
       primaryTaxpayerId: "REDACTED A", spouseTaxpayerId: "REDACTED B",
@@ -96,6 +113,7 @@ describe("Final 2026 Form 1040-V physical candidate", () => {
     const bytes = await pdf.save();
     const reopened = await PDFDocument.load(bytes);
     expect(reopened.getForm().hasXFA()).toBe(false);
+    expect(reopened.catalog.get(PDFName.of("Perms"))).toBeUndefined();
     expect(reopened.getForm().getFields()).toHaveLength(15);
     const reopenedAnnots = reopened.getPage(0).node.Annots()?.asArray();
     expect(reopenedAnnots).toHaveLength(15);
@@ -121,6 +139,46 @@ describe("Final 2026 Form 1040-V physical candidate", () => {
     }
     const diagnosticOutput = process.env.TAX_FORM_1040_V_DIAGNOSTIC_OUTPUT;
     if (diagnosticOutput) await writeFile(diagnosticOutput, bytes, { flag: "wx", mode: 0o600 });
+  });
+
+  it("projects the confirmed payment cents and leaves identity blank", async () => {
+    const { FORM_1040_V_2026_CANDIDATE: physical, projectForm1040V2026PaperPayment } = await import("@/pdf/mappings/2026/form-1040-v-candidate.js");
+    const amountField = physical.fields.checkOrMoneyOrderAmount;
+    const projection = projectForm1040V2026PaperPayment(confirmedVoucher);
+    expect(projection).toEqual({ [amountField]: "1234.56" });
+    expect(projectForm1040V2026PaperPayment({ ...confirmedVoucher, returnForm: "1040-SR",
+      payment: { ...confirmedVoucher.payment, method: "money-order", amount: "50.4" } })).toEqual({ [amountField]: "50.40" });
+    expect(projectForm1040V2026PaperPayment({ ...confirmedVoucher, returnForm: "1040-NR", returnAmountOwed: "99999999.99",
+      payment: { ...confirmedVoucher.payment, amount: "99999999.99" } })).toEqual({ [amountField]: "99999999.99" });
+    const pdf = await loadDiagnosticBlank();
+    for (const [field, value] of Object.entries(projection)) pdf.getForm().getTextField(field).setText(value);
+    await markReviewPdf(pdf);
+    const bytes = await pdf.save();
+    const reopened = await PDFDocument.load(bytes);
+    for (const name of Object.values(physical.fields)) {
+      expect(reopened.getForm().getTextField(name).getText()).toBe(name === amountField ? "1234.56" : undefined);
+    }
+    expect(reopened.catalog.get(PDFName.of("Perms"))).toBeUndefined();
+    expect(reopened.catalog.getAcroForm()?.dict.get(PDFName.of("SigFlags"))).toBeUndefined();
+    const diagnosticOutput = process.env.TAX_FORM_1040_V_PAYMENT_DIAGNOSTIC_OUTPUT;
+    if (diagnosticOutput) await writeFile(diagnosticOutput, bytes, { flag: "wx", mode: 0o600 });
+  });
+
+  it("refuses missing or incompatible voucher originals", async () => {
+    const { projectForm1040V2026PaperPayment } = await import("@/pdf/mappings/2026/form-1040-v-candidate.js");
+    const sources = confirmedVoucher;
+    for (const invalid of [
+      { taxYear: 2025 }, { taxYear: "2026" }, { returnForm: "1040-X" }, { annualReturnConfirmed: false },
+      { returnAmountOwed: undefined }, { returnAmountOwed: "0.00" }, { returnAmountOwed: "1500.001" },
+      { returnAmountOwed: "99999999.98", payment: { ...sources.payment, amount: "99999999.99" } },
+      { returnAmountOwed: "100000000.00", payment: { ...sources.payment, amount: "100000000.00" } },
+      { payment: undefined }, { payment: { ...sources.payment, singleInstrumentConfirmed: false } },
+      { payment: { ...sources.payment, method: "online" } }, { payment: { ...sources.payment, method: "cash" } },
+      ...[undefined, 1234.56, "", "0", "-0.01", "1234.561", "1500.01", "1e2"].map(amount => ({ payment: { ...sources.payment, amount } })),
+      { primaryTaxpayerId: "TEST IDENTIFIER" }, { payment: { ...sources.payment, sourceReference: "PRIVATE" } },
+    ]) {
+      expect(() => projectForm1040V2026PaperPayment({ ...sources, ...invalid })).toThrow(/Form 1040-V/);
+    }
   });
 
   it("keeps exports filing and payments disabled", async () => {

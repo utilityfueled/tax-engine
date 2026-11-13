@@ -9,7 +9,8 @@ notes: |
   catalog displayed a 2025 revision label for its November 10, 2026 posting.
   Form 1040-V is the optional voucher for a check or money order for the 2026
   balance due on Form 1040, 1040-SR or 1040-NR. The form instructs online payers
-  to leave the voucher uncompleted. This candidate covers physical fields only.
+  to leave the voucher uncompleted. The internal amount projection covers only a
+  confirmed single paper instrument and leaves all identity/address cells blank.
   Page 2 contains printed payment options and mailing information.
 lines:
   - line: "source"
@@ -28,6 +29,14 @@ lines:
     description: "Amount actually paid by check or money order"
     formula: "One right-aligned text widget. Preserve the supplied exact amount and cents. The voucher does not calculate the balance due or initiate a payment."
     testRef: "tests/pdf/form-1040-v-2026-candidate.test.ts::reopens all diagnostic values and widget appearances"
+  - line: "3-confirmed-source"
+    description: "Project the amount from an explicitly confirmed paper payment and current annual return"
+    formula: "Require tax year 2026 and a confirmed Form 1040, 1040-SR or 1040-NR amount owed. Require one confirmed check or money order with an independently entered positive amount no greater than that balance. Match exact cents using Decimal and format two places without rounding. Partial payments are allowed and the voucher never derives an amount from the balance."
+    testRef: "tests/pdf/form-1040-v-2026-candidate.test.ts::projects the confirmed payment cents and leaves identity blank"
+  - line: "3-source-refusal"
+    description: "Decline missing, incompatible or unconfirmed payment sources"
+    formula: "Reject other years or form types, an unknown balance, missing or unconfirmed amounts, electronic/cash methods, fractional cents, zero or negative payment, overpayment, and any single check of $100 million or more. The check limit applies to checks. Unrecognized input fields fail, and no identity/address values reach this projection."
+    testRef: "tests/pdf/form-1040-v-2026-candidate.test.ts::refuses missing or incompatible voucher originals"
   - line: "4"
     description: "Name and address information as shown on the return"
     formula: "Use separate primary and spouse name cells, street, apartment, city, state, ZIP, and three foreign address cells. State MaxLen 2. ZIP MaxLen 10. All 15 widgets for lines 1 through 4 are on page 1."

@@ -1,4 +1,7 @@
-/** Physical field candidate only. Spec: spec/federal/form-1040-v-2026-template.yaml. */
+/** Spec: spec/federal/form-1040-v-2026-template.yaml. */
+import { z } from "zod";
+import { d } from "@/utils/decimal.js";
+
 const voucher = "topmostSubform[0].Page1[0].";
 
 export const FORM_1040_V_2026_CANDIDATE = Object.freeze({
@@ -29,3 +32,31 @@ export const FORM_1040_V_2026_CANDIDATE = Object.freeze({
     foreignPostalCode: `${voucher}f1_16[0]`,
   }),
 });
+
+const centsAmount = z.string().regex(/^\d{1,12}(?:\.\d{1,2})?$/u);
+const paperPaymentSources = z.strictObject({
+  taxYear: z.literal(2026),
+  returnForm: z.enum(["1040", "1040-SR", "1040-NR"]),
+  returnAmountOwed: centsAmount,
+  annualReturnConfirmed: z.literal(true),
+  payment: z.strictObject({
+    method: z.enum(["check", "money-order"]),
+    amount: centsAmount,
+    singleInstrumentConfirmed: z.literal(true),
+  }),
+});
+
+/** Internal redacted field projection. The caller supplies the confirmed paper instrument. */
+export function projectForm1040V2026PaperPayment(sources: unknown): Record<string, string> {
+  const parsed = paperPaymentSources.safeParse(sources);
+  if (!parsed.success) throw new Error("Form 1040-V requires a confirmed annual return and paper payment");
+  const { payment, returnAmountOwed } = parsed.data;
+  const amount = d(payment.amount);
+  if (amount.lte(0) || amount.gt(d(returnAmountOwed))) {
+    throw new Error("Form 1040-V requires a positive payment within the confirmed amount owed");
+  }
+  if (payment.method === "check" && amount.gte(d("100000000"))) {
+    throw new Error("Form 1040-V does not accept a single check of $100 million or more");
+  }
+  return { [FORM_1040_V_2026_CANDIDATE.fields.checkOrMoneyOrderAmount]: amount.toFixed(2) };
+}
