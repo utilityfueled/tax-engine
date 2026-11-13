@@ -1,6 +1,5 @@
 /**
- * Spec: spec/
-        form8960Sources: niitDispositionSources("17500", "7500", "-25000"),federal/form-8824.yaml
+ * Spec: spec/federal/form-8824.yaml
  */
 
 import { access, mkdtemp, readFile, rm } from "fs/promises";
@@ -10,6 +9,7 @@ import { describe, expect, it } from "vitest";
 import { niitDispositionSources } from "../fixtures/niit-sources.js";
 import { calculateFederalTax } from "@/engine/federal.js";
 import { calculateForm8824Aggregate } from "@/engine/forms/form-8824.js";
+import { Form8824Schema } from "@/models/inputs.js";
 import {
   buildForm8824ReferenceSummary,
   FORM_8824_REFERENCE_FILENAME,
@@ -101,6 +101,22 @@ describe("Form 8824 packet reference summary", () => {
         value: "14000",
       },
     ]);
+  });
+
+  it("shows confirmed basis lines in the non-filing review without private appraisal references", () => {
+    const input = Form8824Schema.parse({
+      fmvLikeKindPropertyReceived: "100.00", adjustedBasisLikeKindPropertyGivenUp: "60.20",
+      replacementBasisSources: {
+        factsConfirmed: true, sourceReference: "PRIVATE-APPRAISAL-REF-SYNTHETIC",
+        section1250Fmv: "10.00", section1245Fmv: "20.00", sections1252To1255Fmv: "0",
+        qualifyingIntangibleFmv: "5.00", otherRealPropertyFmv: "65.00",
+      },
+    });
+    const summary = buildForm8824ReferenceSummary(calculateForm8824Aggregate([input]));
+    expect(summary.warningLabel).toBe("REFERENCE SUMMARY ONLY");
+    expect(summary.exchanges[0]?.lines.slice(-3).map(({ line, value }) => [line, value]))
+      .toEqual([["25a", "6.02"], ["25b", "12.04"], ["25c", "3.01"]]);
+    expect(JSON.stringify(summary)).not.toContain("PRIVATE-APPRAISAL-REF-SYNTHETIC");
   });
 
   it("fillReturn includes a Form 8824 reference summary when supported like-kind exchange inputs are present", async () => {

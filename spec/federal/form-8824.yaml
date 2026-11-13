@@ -210,8 +210,40 @@ lines:
       Equivalently: FMV of property received - deferred gain.
       The deferred gain is embedded in this reduced basis and will be
       recognized when the replacement property is eventually sold.
+      When a complete, confirmed replacement-property breakdown is provided,
+      use the positive Line 16 FMV as the allocation denominator. Explicit
+      values for all categories, including other real property, must reconcile
+      exactly to Line 16. Any separately entered recapture replacement FMV must
+      agree with the breakdown. Allocate without early monetary rounding.
+      Legacy records without this breakdown keep the Line 25 total only.
     reference: "Form 8824 Line 25; IRC §1031(d)"
     testRef: "tests/engine/forms/form-8824.test.ts::basis with partial recognition: old basis + recognized - boot"
+
+  - line: "25a"
+    description: Basis allocated to like-kind section 1250 property received
+    formula: "Line 25 × confirmed section 1250 replacement FMV ÷ Line 16"
+    reference: "2025 and 2026 Instructions for Form 8824 Lines 25a, 25b, and 25c; Treas. Reg. §1.1250-3(d)(4)"
+    testRef: "tests/engine/forms/form-8824.test.ts::allocates Finley's replacement basis by confirmed FMV and keeps remaining section 1250 recapture deferred"
+
+  - line: "25b"
+    description: Basis allocated to like-kind section 1245, 1252, 1254, and 1255 property received
+    formula: "Line 25 × confirmed combined replacement FMV of these categories ÷ Line 16"
+    reference: "2025 and 2026 Instructions for Form 8824 Lines 25a, 25b, and 25c; Treas. Reg. §1.1245-5(a)(1)"
+    testRef: "tests/engine/forms/form-8824.test.ts::allocates Finley's replacement basis by confirmed FMV and keeps remaining section 1250 recapture deferred"
+
+  - line: "25c"
+    description: Basis allocated to qualifying like-kind intangible property received
+    formula: "Line 25 × confirmed qualifying intangible replacement FMV ÷ Line 16"
+    notes: "Do not classify ordinary land or other real property as intangible. Confirmed zero produces a zero allocation. An absent breakdown leaves the allocation unavailable."
+    reference: "2025 and 2026 Instructions for Form 8824 Lines 25a, 25b, and 25c"
+    testRef: "tests/engine/forms/form-8824.test.ts::preserves exact cents for intangible and other basis and rejects incomplete replacement facts"
+
+  - line: "25_section_1250_carryover"
+    description: Potential ordinary recapture carried into like-kind section 1250 replacement property
+    formula: "max(confirmed hypothetical-sale section 1250 recapture − Line 21, 0)"
+    notes: "Record this amount for future disposition review only if the confirmed hypothetical-sale amount fits within nonnegative realized gain. A positive amount requires actual section 1250 replacement FMV. It neither increases current tax nor allocates carryover among individual replacement assets."
+    reference: "2025 and 2026 Instructions for Form 8824, Finley example for Lines 25a, 25b, and 25c; IRC §1250(d)(4)(E)"
+    testRef: "tests/engine/forms/form-8824.test.ts::allocates Finley's replacement basis by confirmed FMV and keeps remaining section 1250 recapture deferred"
 
   # ── Related party tracking (Part II) ────────────────────
   - line: "related_party"
@@ -227,10 +259,12 @@ lines:
 
   - line: "packet"
     description: "Draft packet inclusion rule for supported Form 8824 like-kind exchanges"
-    formula: "When one or more supported Form 8824 exchanges are present, include a non-filing reference-summary PDF in the packet that lists each exchange description, recognized-gain routing character, related-party flag, supported Part III Lines 12 through 25, and the resulting Form 4797 and Schedule D carry amounts."
+    formula: "When one or more supported Form 8824 exchanges are present, include a non-filing reference-summary PDF in the packet that lists each exchange description, recognized-gain routing character, related-party flag, supported Part III Lines 12 through 25, any confirmed Lines 25a through 25c, and the resulting Form 4797 and Schedule D carry amounts."
     reference: "2025 Instructions for Form 8824, Introductory Material and Lines 12 through 25"
     notes: "This packet slice intentionally emits a deterministic reference summary instead of attempting to recreate a filed Form 8824, so the draft packet stays honest about the supported Part III calculations while still surfacing the federal line-routing effects produced by the engine."
     testRef: "tests/pdf/fill-form-8824.test.ts::fillReturn includes a Form 8824 reference summary when supported like-kind exchange inputs are present"
+    testRefs:
+      - "tests/pdf/fill-form-8824.test.ts::shows confirmed basis lines in the non-filing review without private appraisal references"
 
 edge_cases:
   - name: No boot exchange

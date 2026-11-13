@@ -31,6 +31,9 @@ const INCLUDED_FORM_8824_LINES = [
   "23",
   "24",
   "25",
+  "25a",
+  "25b",
+  "25c",
 ] as const;
 
 const INCLUDED_FORM_8824_LINE_SET = new Set<string>(INCLUDED_FORM_8824_LINES);

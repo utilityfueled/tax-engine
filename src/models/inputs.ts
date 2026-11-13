@@ -5334,9 +5334,12 @@ export type Form8915FInput = z.infer<typeof Form8915FSchema>;
  *
  * Ref: IRS Form 8824 Instructions (2025); IRC §1031; Pub 544.
  */
-const form8824RecaptureConfirmation = {
+const form8824SourceConfirmation = {
   sourceReference: z.string().trim().min(1).max(240),
   factsConfirmed: z.literal(true),
+};
+const form8824RecaptureConfirmation = {
+  ...form8824SourceConfirmation,
   saleRecapture: nonnegativeDollarsAndCents,
 };
 
@@ -5384,19 +5387,48 @@ export const Form8824Schema = z.object({
       section1250ReplacementFmv: nonnegativeDollarsAndCents,
     }),
   ]).optional(),
+  /** Complete appraisal breakdown for the replacement basis shown on Lines 25a–25c. */
+  replacementBasisSources: z.strictObject({
+    ...form8824SourceConfirmation,
+    section1250Fmv: nonnegativeDollarsAndCents,
+    section1245Fmv: nonnegativeDollarsAndCents,
+    sections1252To1255Fmv: nonnegativeDollarsAndCents,
+    qualifyingIntangibleFmv: nonnegativeDollarsAndCents,
+    otherRealPropertyFmv: nonnegativeDollarsAndCents,
+  }).optional(),
   /** Whether this is a related party exchange (IRC §1031(f)) */
   isRelatedParty: z.boolean().default(false),
 }).superRefine((exchange, context) => {
   const sources = exchange.recaptureSources;
+  const basis = exchange.replacementBasisSources;
+  if (!sources && !basis) return;
+  const total = nonnegativeDollarsAndCents.safeParse(exchange.fmvLikeKindPropertyReceived);
+  if (!total.success) {
+    context.addIssue({ code: "custom", path: ["fmvLikeKindPropertyReceived"], message: "Enter the total like-kind FMV in dollars and cents." });
+  } else if (basis) {
+    const breakdown = [basis.section1250Fmv, basis.section1245Fmv, basis.sections1252To1255Fmv,
+      basis.qualifyingIntangibleFmv, basis.otherRealPropertyFmv];
+    if (breakdown.every(value => nonnegativeDollarsAndCents.safeParse(value).success)) {
+      const summedFmv = breakdown.reduce((sum, value) => sum.plus(d(value)), d(0));
+      if (d(total.data).lte(0) || !summedFmv.eq(d(total.data))) {
+        context.addIssue({ code: "custom", path: ["replacementBasisSources"], message: "The complete replacement FMV breakdown must reconcile to positive total like-kind FMV." });
+      }
+    }
+  }
   if (!sources) return;
   const replacement = sources.kind === "section1245"
     ? sources.nonSection1245ReplacementFmv
     : sources.section1250ReplacementFmv;
-  const total = nonnegativeDollarsAndCents.safeParse(exchange.fmvLikeKindPropertyReceived);
-  if (!total.success) {
-    context.addIssue({ code: "custom", path: ["fmvLikeKindPropertyReceived"], message: "Enter the total like-kind FMV in dollars and cents." });
-  } else if (nonnegativeDollarsAndCents.safeParse(replacement).success && d(replacement).gt(d(total.data))) {
-    context.addIssue({ code: "custom", path: ["recaptureSources"], message: "Replacement class FMV exceeds the total like-kind FMV." });
+  if (total.success && nonnegativeDollarsAndCents.safeParse(replacement).success) {
+    if (d(replacement).gt(d(total.data))) {
+      context.addIssue({ code: "custom", path: ["recaptureSources"], message: "Replacement class FMV exceeds the total like-kind FMV." });
+    }
+    if (basis && nonnegativeDollarsAndCents.safeParse(basis.section1245Fmv).success && nonnegativeDollarsAndCents.safeParse(basis.section1250Fmv).success) {
+      const expected = sources.kind === "section1245" ? d(total.data).minus(d(basis.section1245Fmv)) : d(basis.section1250Fmv);
+      if (!d(replacement).eq(expected)) {
+        context.addIssue({ code: "custom", path: ["recaptureSources"], message: "Replacement class FMV must match the confirmed basis breakdown." });
+      }
+    }
   }
   if (decimal.safeParse(exchange.depreciationRecapture).success && !d(exchange.depreciationRecapture).isZero()) {
     context.addIssue({ code: "custom", path: ["depreciationRecapture"], message: "Use either the class-specific recapture facts or the legacy amount." });

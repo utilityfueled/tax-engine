@@ -336,6 +336,49 @@ describe("Form 8824 — depreciation recapture (Line 21)", () => {
       .map(value => value.toFixed(2))).toEqual(["30000.01", "0.00", "44999.99"]);
   });
 
+  it("allocates Finley's replacement basis by confirmed FMV and keeps remaining section 1250 recapture deferred", () => {
+    const facts = {
+      fmvLikeKindPropertyReceived: "220000", adjustedBasisLikeKindPropertyGivenUp: "175000",
+      liabilitiesRelinquished: "150000", liabilitiesAssumed: "80000", cashPaid: "40000",
+      recaptureSources: { ...confirmation, kind: "section1250", saleRecapture: "35000", section1250ReplacementFmv: "165000" },
+      replacementBasisSources: {
+        ...confirmation, section1250Fmv: "165000", section1245Fmv: "55000",
+        sections1252To1255Fmv: "0", qualifyingIntangibleFmv: "0", otherRealPropertyFmv: "0",
+      },
+    };
+    const result = calculateForm8824(Form8824Schema.parse(facts));
+    expect(result.replacementBasisByClass?.section1250.toFixed(2)).toBe("131250.00");
+    expect(result.replacementBasisByClass?.sections1245To1255.toFixed(2)).toBe("43750.00");
+    expect(result.section1250RecaptureCarryover?.toFixed(2)).toBe("5000.00");
+    expect(result.line23TotalRecognizedGain.toFixed(2)).toBe("30000.00");
+    expect(result.line24DeferredGainLoss.toFixed(2)).toBe("45000.00");
+    expect(Form8824Schema.safeParse({
+      ...facts, recaptureSources: { ...facts.recaptureSources, section1250ReplacementFmv: "164999.99" },
+    }).success).toBe(false);
+  });
+
+  it("preserves exact cents for intangible and other basis and rejects incomplete replacement facts", () => {
+    const basisSources = {
+      ...confirmation, section1250Fmv: "0", section1245Fmv: "10.00",
+      sections1252To1255Fmv: "10.00", qualifyingIntangibleFmv: "5.00", otherRealPropertyFmv: "75.00",
+    };
+    const facts = { fmvLikeKindPropertyReceived: "100.00", adjustedBasisLikeKindPropertyGivenUp: "60.20" };
+    const result = calculateForm8824(Form8824Schema.parse({ ...facts, replacementBasisSources: basisSources }));
+    expect(result.replacementBasisByClass?.section1250.toFixed(2)).toBe("0.00");
+    expect(result.replacementBasisByClass?.sections1245To1255.toFixed(2)).toBe("12.04");
+    expect(result.replacementBasisByClass?.qualifyingIntangible.toFixed(2)).toBe("3.01");
+    expect(result.replacementBasisByClass?.otherRealProperty.toFixed(2)).toBe("45.15");
+    expect(result.section1250RecaptureCarryover).toBeUndefined();
+    expect(calculateForm8824(Form8824Schema.parse(facts)).replacementBasisByClass).toBeUndefined();
+    for (const incomplete of [{ factsConfirmed: false }, { sourceReference: " " }, { otherRealPropertyFmv: undefined },
+      { qualifyingIntangibleFmv: "5.01" }, { sections1252To1255Fmv: "-10.00" }]) {
+      expect(Form8824Schema.safeParse({ ...facts, replacementBasisSources: { ...basisSources, ...incomplete } }).success).toBe(false);
+    }
+    expect(Form8824Schema.safeParse({ ...facts, replacementBasisSources: basisSources,
+      recaptureSources: { ...confirmation, kind: "section1245", saleRecapture: "0", nonSection1245ReplacementFmv: "80.00" },
+    }).success).toBe(false);
+  });
+
   it("preserves confirmed zero and rejects missing or conflicting recapture facts", () => {
     const sources = { ...confirmation, kind: "section1245", saleRecapture: "100.01", nonSection1245ReplacementFmv: "0" };
     const base = { fmvLikeKindPropertyReceived: "1000", adjustedBasisLikeKindPropertyGivenUp: "900" };

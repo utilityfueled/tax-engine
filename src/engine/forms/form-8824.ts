@@ -51,6 +51,15 @@ export interface Form8824Result {
   line24DeferredGainLoss: Decimal;
   /** Line 25: Basis of like-kind property received */
   line25BasisLikeKindPropertyReceived: Decimal;
+  /** Lines 25a–25c and remaining basis, supported by a complete replacement appraisal. */
+  replacementBasisByClass?: {
+    section1250: Decimal;
+    sections1245To1255: Decimal;
+    qualifyingIntangible: Decimal;
+    otherRealProperty: Decimal;
+  };
+  /** Potential ordinary recapture attached to replacement property, outside current income. */
+  section1250RecaptureCarryover?: Decimal;
   /** Federal routing character for the recognized Line 23 gain/loss */
   recognizedGainCharacter: Form8824Input["recognizedGainCharacter"];
   /** Description of the exchange */
@@ -223,6 +232,36 @@ export function calculateForm8824(
       "Boot received (Line 15)": line15,
     });
 
+  const basis = input.replacementBasisSources;
+  let replacementBasisByClass: Form8824Result["replacementBasisByClass"];
+  if (basis) {
+    const allocate = (line: string, description: string, fmv: Decimal) => {
+      const allocated = line25.times(fmv).div(line16);
+      audit.record(label, line, description, allocated, "Line 25 × class FMV ÷ Line 16", {
+        "Total replacement basis (Line 25)": line25,
+        "Replacement class FMV": fmv,
+        "Total like-kind FMV (Line 16)": line16,
+      });
+      return allocated;
+    };
+    replacementBasisByClass = {
+      section1250: allocate("25a", "Section 1250 replacement basis", d(basis.section1250Fmv)),
+      sections1245To1255: allocate("25b", "Sections 1245, 1252, 1254, and 1255 replacement basis", d(basis.section1245Fmv).plus(basis.sections1252To1255Fmv)),
+      qualifyingIntangible: allocate("25c", "Qualifying intangible replacement basis", d(basis.qualifyingIntangibleFmv)),
+      otherRealProperty: line25.times(basis.otherRealPropertyFmv).div(line16),
+    };
+  }
+
+  let section1250RecaptureCarryover: Decimal | undefined;
+  if (sources?.kind === "section1250" && saleRecapture.lte(zeroFloor(line19))) {
+    section1250RecaptureCarryover = zeroFloor(saleRecapture.minus(line21));
+    audit.record(label, "25_section_1250_carryover", "Potential ordinary recapture carried into Section 1250 property", section1250RecaptureCarryover,
+      "Hypothetical-sale ordinary recapture less Line 21, floored at zero", {
+        "Ordinary recapture if sold": saleRecapture,
+        "Current ordinary recapture (Line 21)": line21,
+      });
+  }
+
   return {
     line12FmvOtherPropertyGivenUp: line12,
     line13AdjustedBasisOtherPropertyGivenUp: line13,
@@ -238,6 +277,8 @@ export function calculateForm8824(
     line23TotalRecognizedGain: line23,
     line24DeferredGainLoss: line24,
     line25BasisLikeKindPropertyReceived: line25,
+    replacementBasisByClass,
+    section1250RecaptureCarryover,
     recognizedGainCharacter: input.recognizedGainCharacter,
     description: input.description ?? "Like-kind real property exchange",
     isRelatedParty: input.isRelatedParty ?? false,
