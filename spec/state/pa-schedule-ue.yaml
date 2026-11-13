@@ -126,7 +126,7 @@ lines:
     description: "Actual eligible overnight business meals"
     formula: "Positive amounts require actual eligible meals paid and employer-required overnight business travel both explicitly confirmed."
     notes: "Use actual expenses. Federal per diem, same-day travel and meals while working late do not qualify. A positive amount without either confirmation is unresolved."
-    testRef: "tests/engine/state/pa-schedule-ue.test.ts::PA Schedule UE Part B - positive meals require explicit eligibility"
+    testRef: "tests/engine/state/pa-schedule-ue.test.ts::PA Schedule UE Part B - positive meals require explicit eligibility for $label"
 
   - line: "B3"
     description: "Allowable overnight meals"
@@ -136,7 +136,7 @@ lines:
     edgeCases:
       - "Zero or absent meal amount: $0 without eligibility confirmations"
       - "Odd-cent meals: round to nearest dollar"
-    testRef: "tests/engine/state/pa-schedule-ue.test.ts::PA Schedule UE Part B - allows all qualifying overnight meals"
+    testRef: "tests/engine/state/pa-schedule-ue.test.ts::PA Schedule UE Part B - allows all qualifying overnight meals in %i"
 
   - line: "B4"
     description: "Other travel expenses"
