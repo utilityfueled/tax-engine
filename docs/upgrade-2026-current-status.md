@@ -34,10 +34,29 @@ Exact `320a69fc` passed all 12 local commands with 87.71% branch coverage,
 27,373 unit and coverage tests and 587 managed browser passes. The five
 hosted-only skips remain. The next archived commit `acb776cb` failed the
 unit job. The Ohio audit compatibility and Pennsylvania spec-reference
-repairs passed all 1,030 affected checks. The next archived full run covers
-through `a1349ad8`, including the signed Pennsylvania wage allowance and
-guided Form 3903 intake. The separate disabled final 2026 Form 8606
+repairs passed all 1,030 affected checks. Exact `a1349ad8` then passed all
+12 archived local commands. Unit and coverage each passed 27,434 tests in
+1,978 files, and branch coverage was 87.71%. Managed Chromium passed 587
+cases with the five hosted-only skips. The owned synthetic PostgreSQL
+process stopped normally. The separate disabled final 2026 Form 8606
 physical candidate is `49785e57`. [Local package evidence](upgrade-2026-progress.md).
+
+Subsequent local commits reconcile 2026 W-2 Code P (`61764bcf`), calculate
+an original-bound 2025 Pennsylvania meals per diem excess (`0cae459d`),
+map two more disabled 2026 physical forms (`a182cf85`), and reconcile
+prior-service foreign wages and NIIT (`30e6c254`). Browser source hashes
+were updated in `f78d600e` with the same action and deadline contracts.
+Targeted verification passed for these changes. Exact combined and
+distribution checks for the successor remain separate.
+
+Commit `19948573` pins PostgreSQL 16.16 for Compose and CI. Its 125
+focused tests, types, scoped lint and Compose configuration passed.
+The macOS ARM64 recovery tools were built separately from the 16.16
+source archive. The combined run uses those tools and an owned synthetic
+loopback database. The approved `acb776cb` native attempt remains unused
+because its combined run failed. A later ARM64 rehearsal still needs
+eligible source and execution evidence.
+[PostgreSQL 16.16 release notes](https://www.postgresql.org/docs/release/16.16/).
 
 The current public Git references still point to `59248889` on `main`
 and `3024b848` on the merged upgrade branch. Local successor commits

@@ -23,6 +23,18 @@ below retain their original evidence boundaries.
 - [x] Bind the final 2026 Form 3903 to its exact ten widgets. Two fictional
   specimens pass reopening and render checks. The candidate remains outside
   the review and filing registries. [Evidence](upgrade-2026-form-3903-physical-candidate-work.md).
+- [x] Complete the archived `a1349ad8` local verification. All 12 commands,
+  27,434 unit and coverage tests, 87.71% branch coverage and 587 Chromium
+  cases passed. The five hosted-only skips remain.
+- [x] Verify the finite Code P, Pennsylvania per diem, foreign prior-service
+  and NIIT corrections and the disabled annual Form 2555 and 1040-V maps.
+  The successor browser source audit preserves all request and timing
+  contracts. [Commit and test details](upgrade-2026-progress.md).
+- [x] Pin the PostgreSQL 16.16 Compose/CI image and verify the recovery
+  client version gate in `19948573`. Build isolated ARM64 PostgreSQL
+  16.16 tools for local verification. Native image execution is pending.
+- [ ] Run all 12 commands and repeat runtime qualification after the
+  PostgreSQL 16.16 pin and currently scoped guided intake are verified.
 - [ ] Prove the installed package, complete strict browser and recovery,
   and rescan final runtime images on Linux ARM64 and AMD64. Keep remaining
   advisory dispositions and independent security/privacy review open.

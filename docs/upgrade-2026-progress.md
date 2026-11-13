@@ -4082,3 +4082,76 @@ execution and current image qualification require separate evidence.
   fields and four verified page renders. Final instructions and
   the annual calculation and export gates remain pending.
   [Physical candidate ledger](upgrade-2026-form-8606-physical-candidate-work.md).
+
+### November 12 · Code P, Pennsylvania per diem and foreign prior-service wages
+
+- Exact `a1349ad8` completed all 12 archived local checks. Unit and coverage
+  each passed 27,434 tests in 1,978 files, with 87.71% branch coverage.
+  Managed Chromium passed 587 cases, with the five hosted-only skips.
+  The archive pinned 5,564 tracked files and the owned synthetic PostgreSQL
+  process stopped normally. The checks manifest SHA-256 is
+  `4b98a8a615b15fde163d5876d50da9860677fe4af95a4cfe42567b07cf7a008d` in
+  `nov12-main-guided-3903-checks`. These results apply to that exact commit.
+- `61764bcf` binds 2026 Form 3903 reimbursements to the original same-owner
+  W-2 Code P and a separately confirmed taxable omission from Box 1. It
+  preserves known zero and blocks a mismatch, a duplicate or an unsupported
+  subcent split. The focused suite passed 370 tests and the separate replay
+  passed 77. [2026 Form 3903 instructions](https://www.irs.gov/pub/irs-pdf/i3903.pdf).
+- `0cae459d` applies 2025 Pennsylvania Schedule UE to the documented
+  Philadelphia overnight meals per diem outside Boxes 1 and 16. It binds
+  the signed employer verification to the original policy and remittance,
+  and requires the actual overnight locality. The separate review passed
+  151 tests, including the original printed PA-40 and Schedule UE, and
+  verified the $20 reportable excess from $19.60 of exact reimbursement
+  excess. [Pennsylvania PA-40 instructions](https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40in.pdf) ·
+  [IRS Rev. Proc. 2019-48](https://www.irs.gov/pub/irs-drop/rp-19-48.pdf).
+- `a182cf85` maps all 160 Form 2555 and 15 Form 1040-V widgets. The
+  follow-up check passed 43 tests, candidate spec references, inventory,
+  types and lint. Independent saved-field and appearance checks are
+  recorded in the [Form 2555 ledger](upgrade-2026-form-2555-physical-candidate-work.md)
+  and the [payment voucher ledger](upgrade-2026-form-1040-v-physical-candidate-work.md).
+  Both candidates remain disabled.
+- `30e6c254` carries a separately verified preceding-year wage exclusion
+  through Form 2555 line 45, Schedule 1 and NIIT MAGI. The independent
+  $195,000 wage and $10,000 interest fixture produced $197,000 AGI,
+  $205,000 NIIT MAGI and $190 NIIT with an $8,000 exclusion. It requires
+  the original W-2 and separate eligibility, election and statement
+  evidence, and reconciles exact amounts before rounding. Prior Schedule C
+  expenses, a conflicting revocation or election, and exact-cent allocations
+  that do not reconcile to printed Form 2555 line 44 remain outside this
+  method. The latest combined scoped run passed 220 tests. Separate
+  engineering review passed 119 tests and nine independent checks.
+  Qualified tax review of the receipt-year NIIT interpretation remains open.
+  [2026 Form 2555 instructions](https://www.irs.gov/instructions/i2555) ·
+  [26 USC §1411](https://uscode.house.gov/us/usc/119-124/t26/s1411/) ·
+  [26 CFR §1.911-3](https://www.govinfo.gov/content/pkg/CFR-2025-title26-vol12/pdf/CFR-2025-title26-vol12-sec1-911-3.pdf).
+- `f78d600e` binds 25 changed and six new audited browser sources, bringing
+  the total to 1,848. The prior guard denied the stale audit. All 221 scoped
+  protocol tests passed. Default and strict list-only checks both collected
+  592 cases in 154 files under the same action contracts, request quotas and
+  deadlines. The audit digest is
+  `f2339f48b9e0bcb7996bc63b30029f85b0993e152ecc463cf06842f397d2b0c6`.
+
+### November 12 · PostgreSQL 16.16 recovery and CI
+
+- `19948573` pins Compose and both CI database services to the official
+  multi-platform PostgreSQL 16.16 Bookworm digest
+  `sha256:a49f7438ba03589f9b1ca062f2da82e899b48ea1dc50d2449fa09a70be83ebca`.
+  Both Linux platform configs report `16.16-1.pgdg12+1`. The recovery job
+  installs the signed PGDG client and records the versions of both tools
+  after enforcing at least 16.16 within major 16. The eight baseline source
+  regressions failed as expected. All 125 focused successor tests,
+  TypeScript, scoped lint, Compose config and workflow syntax passed. Full
+  actionlint retains the same three existing shellcheck diagnostics.
+  [PostgreSQL security release](https://www.postgresql.org/about/news/postgresql-187-1712-1616-1520-1425-and-19-rc-2-released-3442/) ·
+  [PGDG Ubuntu packages](https://www.postgresql.org/download/linux/ubuntu/).
+- Built separate macOS ARM64 PostgreSQL 16.16 tools from the release
+  archive with SHA-256
+  `9d5cd8633043b75740d5d59749c6b7365e6aeb53c47098b1a5e80bb18f87881a`.
+  All six tool versions matched, and the running synthetic database
+  confirmed loopback binding, no Unix socket and server version 16.16.
+  An initial sandbox attempt failed at PostgreSQL shared-memory creation
+  before server start and is retained. The full run for `19948573` is
+  separate from native Compose, current-source hosted CI and runtime scans.
+  The approved `acb776cb` VM rehearsal did not start because that commit
+  failed its required local run.

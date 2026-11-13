@@ -23196,5 +23196,21 @@
     "exportsEnabled": false,
     "filingQualified": false,
     "ledger": "docs/upgrade-2026-schedule-8812-physical-candidate-work.md"
+  },
+  "nov12MainLocalVerification": {
+    "sourceCommit": "a1349ad87a003847de301e7f669a0a1671893bc6",
+    "checksPassed": 12,
+    "unitPassed": 27434,
+    "coveragePassed": 27434,
+    "branchCoveragePercent": 87.71,
+    "browserPassed": 587,
+    "originalHostedOnlySkips": 5,
+    "trackedSourcePins": 5564,
+    "ownedPostgresStopped": true,
+    "checksSha256": "4b98a8a615b15fde163d5876d50da9860677fe4af95a4cfe42567b07cf7a008d",
+    "laterPostgresPinCommit": "19948573876cbb2686b27b8426ca0e9423f1d58e",
+    "approvedAcb776cbNativeInvocationCount": 0,
+    "releaseReady": false,
+    "ledger": "docs/upgrade-2026-progress.md"
   }
 }
