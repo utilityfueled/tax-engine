@@ -8,6 +8,7 @@ import type {TaxReturnResult} from '@/models/outputs.js';
 import {resolvePAMarriedReturnReview,type PreparedPAMarriedReturnReview,type PAMarriedOwnedPaper} from '@/pdf/pa-married-return-review-context.js';
 import {fillPACareOfficialReview} from './fill-pa-care-official-review.js';
 import {markReviewPdf} from '@/pdf/export-policy.js';
+import {createPdfFieldBatch} from '@/pdf/pdf-utils.js';
 import {projectPA40DiagnosticFields,PA_40_FIELDS as F} from './fill-pa-40.js';
 
 // Printed rectangles and source appearance IDs independently pinned before products.
@@ -100,13 +101,17 @@ export async function fillPAMarriedOfficialReview(input:TaxYearInput,result:TaxR
  for(const paper of papers){
   const p=paper.projection,hasSP=p.scheduleSP.taxForgivenessCredit.gt(0),doc=await originalTemplate(blankFormsDir,'pa-40.pdf');
   await projectPA40DiagnosticFields(doc,paper.taxpayer,p,{filingStatus:p.filingChoice,...(hasSP?{taxForgivenessCategory:'married' as const}:{}),dependentChildren:paper.children.length,residency:paper.residency,requestedRefund:p.refundDisposition.refund.toFixed(0),nextYearCredit:p.refundDisposition.nextYearCredit.toFixed(0),donations:p.refundDisposition.donations.map(row=>({code:row.code,amount:row.amount.toFixed(0)}))});
-  if(!hasSP)for(const name of [F.line20,F.line21,F.dependents])doc.getForm().getTextField(name).setText('');
+  const form=doc.getForm(),electionFields=createPdfFieldBatch(form);
+  if(!hasSP)for(const name of [F.line20,F.line21,F.dependents])electionFields.setText(name,'');
   // These are explicitly confirmed actual zero elections/overpayments, not missing facts.
-  for(const [name,value]of Object.entries({[F.line29]:p.pa40.netOverpayment.toFixed(0),[F.line30]:p.refundDisposition.refund.toFixed(0),[F.line31]:p.refundDisposition.nextYearCredit.toFixed(0)}))doc.getForm().getTextField(name).setText(value);
+  electionFields.setText(F.line29,p.pa40.netOverpayment.toFixed(0));
+  electionFields.setText(F.line30,p.refundDisposition.refund.toFixed(0));
+  electionFields.setText(F.line31,p.refundDisposition.nextYearCredit.toFixed(0));
+  electionFields.apply();
   if(p.refundDisposition.refund.gt(0)&&p.refundDisposition.refund.lte(1)){
    const font=await doc.embedFont(StandardFonts.Helvetica);doc.getPage(1).drawText('Requested refund only. PA does not issue refunds of $1 or less.',{x:24,y:24,size:8,font,color:rgb(0,0,0)});
   }
-  await doc.getForm().updateFieldAppearances(await doc.embedFont(StandardFonts.Helvetica));flatten(doc);
+  form.updateFieldAppearances(await doc.embedFont(StandardFonts.Helvetica));flatten(doc);
   outputs.push({filename:`pa-${paper.accountHolder}-40-review.pdf`,accountHolder:paper.accountHolder,kind:'pa40',doc:await staticCopy(doc,[0,1],'Pennsylvania 2025 actual owned PA40 review')});
   if(paper.care)outputs.push({filename:`pa-${paper.accountHolder}-dc-review.pdf`,accountHolder:paper.accountHolder,kind:'dc',doc:await fillPACareOfficialReview(input,result,join(blankFormsDir,'pa-schedule-dc.pdf'),{kind:'married',prepared})});
   if(hasSP)outputs.push({filename:`pa-${paper.accountHolder}-sp-review.pdf`,accountHolder:paper.accountHolder,kind:'sp',doc:await spReview(blankFormsDir,paper)});

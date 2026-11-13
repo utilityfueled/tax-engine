@@ -3970,3 +3970,17 @@ source, main recorded three baseline passes and 13 expected failures, then
 software review passed 62 tests. All 13 synthetic health PDFs and 29 pages
 passed the unchanged privacy gate, with 12 exact official-blank coincidences,
 zero excess and pixel equality. See [the appearance ledger](upgrade-2026-empty-combed-review-appearances.md).
+
+### November 12 · Pennsylvania saved mixed-residency review
+
+The merge CI's unit job recorded one failure at the existing five-second
+deadline while saving and inspecting the 18 mixed-residency review PDFs.
+Local baseline completed in 1.99 seconds. PA-40 identity and final election
+writes now use the existing field batch, and each selected status resolves
+its field and widgets once. The new work-bound assertion failed on the
+baseline and passed after the change. The seven affected suites passed all
+105 tests. Independent review reopened the original and updated 18-PDF
+sets. All 36 rendered pages matched at 75 dpi, canonical fields and saved
+object reports agreed, and the independent marker scan found no hits.
+The original deadline and assertions remain in place. Remote performance
+still requires a successor run. See [the failed merge unit job](https://github.com/utilityfueled/tax-engine/actions/runs/42292813045/job/128150342757).

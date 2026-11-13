@@ -162,9 +162,10 @@ export interface PA40DiagnosticRenderFacts {
   donations?:Array<{code:string;amount:string}>;
 }
 
-function prepareOfficialWidget(form: ReturnType<PDFDocument["getForm"]>, name: string): void {
+function prepareOfficialWidget(form: ReturnType<PDFDocument["getForm"]>, name: string) {
   const field = form.getField(name);
-  for (const widget of field.acroField.getWidgets()) {
+  const widgets = field.acroField.getWidgets();
+  for (const widget of widgets) {
     const normal = widget.dict.lookup(PDFName.of("AP"), PDFDict).lookup(PDFName.of("N"), PDFDict);
     // Keep official on-state streams even when the actual selection is unknown.
     // A blank Off stream prevents default save from regenerating the whole group.
@@ -176,12 +177,11 @@ function prepareOfficialWidget(form: ReturnType<PDFDocument["getForm"]>, name: s
     }
   }
   form.markFieldAsClean(field.ref);
+  return { field, widgets };
 }
 
 function selectOfficialWidget(form: ReturnType<PDFDocument["getForm"]>, name: string, value: string): void {
-  prepareOfficialWidget(form, name);
-  const field = form.getField(name);
-  const widgets = field.acroField.getWidgets();
+  const { field, widgets } = prepareOfficialWidget(form, name);
   if (!widgets.some(widget => widget.getOnValue()?.toString() === `/${value}`)) throw new Error(`PA40 official field has no selected appearance: ${name}`);
   // The official group is FT=Btn without the radio flag. check() selects only
   // its first widget. Set the canonical value and exclusive actual appearance.
@@ -335,31 +335,33 @@ function fillPersonalInfo(
   tp: TaxYearInput["taxpayer"],
 ): void {
   const F = PA_40_FIELDS;
+  const fields = createPdfFieldBatch(form);
 
-  setTextField(form, F.primarySSN, tp.primary.ssn.replace(/-/g, ""));
-  setTextField(form, F.primaryFirstName, tp.primary.firstName.toUpperCase());
-  setTextField(form, F.primaryLastName, tp.primary.lastName.toUpperCase());
+  fields.setText(F.primarySSN, tp.primary.ssn.replace(/-/g, ""));
+  fields.setText(F.primaryFirstName, tp.primary.firstName.toUpperCase());
+  fields.setText(F.primaryLastName, tp.primary.lastName.toUpperCase());
 
   if (tp.spouse) {
-    setTextField(form, F.spouseSSN, tp.spouse.ssn.replace(/-/g, ""));
-    setTextField(form, F.spouseFirstName, tp.spouse.firstName.toUpperCase());
+    fields.setText(F.spouseSSN, tp.spouse.ssn.replace(/-/g, ""));
+    fields.setText(F.spouseFirstName, tp.spouse.firstName.toUpperCase());
     if (tp.spouse.lastName !== tp.primary.lastName) {
-      setTextField(form, F.spouseLastName, tp.spouse.lastName.toUpperCase());
+      fields.setText(F.spouseLastName, tp.spouse.lastName.toUpperCase());
     }
   }
 
-  setTextField(form, F.addressLine1, tp.address.street.toUpperCase());
+  fields.setText(F.addressLine1, tp.address.street.toUpperCase());
   if (tp.address.apt) {
-    setTextField(form, F.addressLine2, tp.address.apt.toUpperCase());
+    fields.setText(F.addressLine2, tp.address.apt.toUpperCase());
   }
-  setTextField(form, F.city, tp.address.city.toUpperCase());
-  setTextField(form, F.state, tp.address.state.toUpperCase());
-  setTextField(form, F.zip, tp.address.zip);
+  fields.setText(F.city, tp.address.city.toUpperCase());
+  fields.setText(F.state, tp.address.state.toUpperCase());
+  fields.setText(F.zip, tp.address.zip);
 
-  setTextField(form, F.yourOccupation, tp.primary.occupation ?? "");
+  fields.setText(F.yourOccupation, tp.primary.occupation ?? "");
+  if (tp.spouse) fields.setText(F.spouseOccupation, tp.spouse.occupation ?? "");
+  fields.apply();
   form.getTextField(F.yourOccupation).setFontSize(0);
   if (tp.spouse) {
-    setTextField(form, F.spouseOccupation, tp.spouse.occupation ?? "");
     form.getTextField(F.spouseOccupation).setFontSize(0);
   }
 }
@@ -375,7 +377,6 @@ function fillFilingInfo(
   const filing = facts?.filingStatus ?? (tp.filingStatus === "married_filing_jointly" ? "J" : tp.filingStatus === "married_filing_separately" ? "M" : "S");
   if (!["S", "J", "M", "F"].includes(filing)) throw new Error("PA40 actual filing choice is invalid");
   selectOfficialWidget(form, F.filingStatus, String(["S", "J", "M", "F"].indexOf(filing) + 1));
-  prepareOfficialWidget(form, F.residencyStatus);
   if (facts?.residency) {
     const residency = facts.residency;
     const value = {resident:"1",nonresident:"2",part_year:"3"}[residency.status];
@@ -397,7 +398,7 @@ function fillFilingInfo(
       if (!residency.from || !residency.through || residency.from > residency.through) throw new Error("PA40 actual part-year date interval is invalid");
       setTextField(form,F.partYearFrom,date(residency.from));setTextField(form,F.partYearTo,date(residency.through));
     }
-  }
+  } else prepareOfficialWidget(form, F.residencyStatus);
 
   // Dependents count
   const depCount = facts?.dependentChildren ?? tp.dependents?.length ?? 0;

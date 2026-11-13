@@ -1,9 +1,10 @@
 /** Spec: state/pa-married-mixed-residency-paper.yaml#bounded-money-field-resolution. */
 import {expect,it,vi} from 'vitest';
 import {readFile} from 'node:fs/promises';
-import {PDFDocument} from 'pdf-lib';
+import {PDFDocument, PDFForm, PDFName} from 'pdf-lib';
 import Decimal from 'decimal.js';
 import {projectPA40DiagnosticFields,PA_40_FIELDS as F} from '@/pdf/mappings/2025/fill-pa-40.js';
+import {fillPAMarriedOfficialReview} from '@/pdf/mappings/2025/fill-pa-married-official-review.js';
 import {preparePAMarriedReturnReview,resolvePAMarriedReturnReview} from '@/pdf/pa-married-return-review-context.js';
 import {redactReviewIdentifiers} from '@/pdf/redact-review-identifiers.js';
 import {mixedPaperFixture} from '../fixtures/pa-married-mixed-residency-paper.js';
@@ -37,4 +38,48 @@ it('preserves loss status line25 penalty and refund donation render values',asyn
  await projectPA40DiagnosticFields(doc,paper.taxpayer,projection,{filingStatus:paper.projection.filingChoice,residency:paper.residency,requestedRefund:'8',nextYearCredit:'2',donations:[{code:'A',amount:'2'}]});
  for(const [name,value]of [[F.line4,'2'],[F.line5,'3'],[F.line6,'4'],[F.line25,'17'],[F.line27,'3'],[F.line27Code,'E'],[F.line29,'12'],[F.line30,'8'],[F.line31,'2'],[F.line32Code,'A'],[F.line32,'2']]as const)expect(form.getTextField(name).getText()).toBe(value);
  for(const name of [F.line4Loss,F.line5Loss,F.line6Loss])expect(form.getCheckBox(name).isChecked()).toBe(true);
+});
+
+it('batches PA40 identity and final married elections and resolves each selected status once', async () => {
+  const fixture = mixedPaperFixture('part_year');
+  const prepared = preparePAMarriedReturnReview(fixture.input);
+  const lookups: string[] = [];
+  const originalLookup = PDFForm.prototype.getFieldMaybe;
+  const originalFlatten = PDFForm.prototype.flatten;
+  const snapshots: Array<{ name: string; schoolCode: string; status: string; overpayment: string }> = [];
+  let observing = false;
+  const find = vi.spyOn(PDFForm.prototype, 'getFieldMaybe').mockImplementation(function (this: PDFForm, name) {
+    if (!observing) lookups.push(name);
+    return originalLookup.call(this, name);
+  });
+  const flatten = vi.spyOn(PDFForm.prototype, 'flatten').mockImplementation(function (this: PDFForm, options) {
+    observing = true;
+    try {
+      snapshots.push({
+        name: this.getTextField(F.primaryFirstName).getText() ?? '',
+        schoolCode: this.getTextField(F.schoolCode).getText() ?? '',
+        status: this.getField(F.residencyStatus).acroField.dict.get(PDFName.of('V'))?.toString() ?? '',
+        overpayment: this.getTextField(F.line29).getText() ?? '',
+      });
+    } finally {
+      observing = false;
+    }
+    originalFlatten.call(this, options);
+  });
+  try {
+    const docs = await fillPAMarriedOfficialReview(redactReviewIdentifiers(fixture.input), fixture.result, 'forms/blank/2025', prepared);
+    expect(docs.map(doc => doc.filename)).toEqual(['pa-primary-40-review.pdf', 'pa-spouse-40-review.pdf']);
+  } finally {
+    flatten.mockRestore();
+    find.mockRestore();
+  }
+  expect(snapshots).toEqual([
+    { name: 'AVERY', schoolCode: '02745', status: '/1', overpayment: '0' },
+    { name: 'MORGAN', schoolCode: '02745', status: '/3', overpayment: '0' },
+  ]);
+  const batchedFields = new Set<string>([F.primarySSN, F.primaryFirstName, F.primaryLastName, F.addressLine1, F.city, F.state, F.zip, F.line20, F.line21, F.line29, F.line30, F.line31, F.dependents]);
+  expect(lookups.filter(name => batchedFields.has(name))).toEqual([F.dependents, F.dependents]);
+  expect(lookups.filter(name => name === F.filingStatus || name === F.residencyStatus)).toEqual([
+    F.filingStatus, F.residencyStatus, F.filingStatus, F.residencyStatus,
+  ]);
 });

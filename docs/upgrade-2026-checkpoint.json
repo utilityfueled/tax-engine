@@ -23130,6 +23130,7 @@
     "pushStatus": "owner-requested hold pending automatic production deployment disablement",
     "educationCommit": "397ef68c41af7942e4275aedae6707e0fa07c439",
     "nodeSecurityCommit": "6fe8dcace9270a54606e63ee42925b53968ba7f2",
+    "appearanceCommit": "9c72d014",
     "nodeEvidenceManifestSha256": "0090dada879b9c267329c60e4ea5d5b68645e6489dcae9102ddef1ec981e746c"
   },
   "nov12MappedEmptyCombedReview": {
@@ -23149,5 +23150,18 @@
     "independentManifestSha256": "f040fe39ea57e98c5c74c89cf27dfb66d06f95a696a1dbcb378c39ab65a0d2de",
     "ledger": "docs/upgrade-2026-empty-combed-review-appearances.md",
     "releaseReady": false
+  },
+  "nov12PAMixedSavedPdfWorkBound": {
+    "mergeUnitJobId": 128150342757,
+    "baselineLocalCaseSeconds": "1.99",
+    "newBaselinePassed": 2,
+    "newBaselineExpectedFailures": 1,
+    "affectedPassed": 105,
+    "affectedFiles": 7,
+    "fullSavedReportsAgree": true,
+    "independentPdfsPerVersion": 18,
+    "independentPixelIdenticalPages": 36,
+    "independentReportSha256": "6fb5998bd9b4979054b88d923b79612c9b39be0ce3d6f0911f6a4223746fb80c",
+    "remoteSuccessorRequired": true
   }
 }
