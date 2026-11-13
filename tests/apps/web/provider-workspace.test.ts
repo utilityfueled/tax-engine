@@ -392,7 +392,7 @@ describe("provider workspace request path", () => {
     expect(result.response.readyForRecompute).toBe(false);
   });
 
-  it("includes selected document context in redacted helper requests", () => {
+  it("includes only selected document classifications in redacted helper requests", () => {
     const workspace = createWorkspace({
       documents: [
         createDocument({}),
@@ -421,13 +421,9 @@ describe("provider workspace request path", () => {
       now: "2026-03-12T00:00:00.000Z"
     });
 
-    expect(request.assistantContext?.selectedDocuments).toHaveLength(1);
-    expect(request.assistantContext?.selectedDocuments?.[0]).toMatchObject({
-      label: "2026 Form 1099-INT",
-      kind: "1099-int",
-      matchedFixtureId: "irs-1099-int-2026"
-    });
-    expect(JSON.stringify(request.assistantContext?.selectedDocuments)).not.toContain("Jane Doe");
+    expect(request.assistantContext?.selectedDocuments).toEqual([{ kind: "1099-int", coverage: "supported" }]);
+    expect(request.assistantContext).not.toHaveProperty("currentSectionId");
+    expect(JSON.stringify(request.assistantContext)).not.toMatch(/Jane Doe|taxable-interest|doc-2|details|irs-1099-int-2026/);
   });
 
   it("shares only the task projection and redacts helper question and conversation before transport", async () => {
@@ -478,6 +474,36 @@ describe("provider workspace request path", () => {
     expect(options.body).not.toContain("123-45-6789");
     expect(options.body).not.toContain("workspace-jane-doe");
     expect(options.body).not.toContain("enginePreview");
+  });
+
+  it("projects legacy and crafted workspace bodies before forwarding them to the provider", async () => {
+    const fetchFn = vi.fn().mockResolvedValue(Response.json({ status: "completed", usage: { input_tokens: 120, output_tokens: 48 },
+      output_text: JSON.stringify({ disposition: "answer", summary: "Review the withholding question.", sourceIds: ["workspace:questions"] }) }));
+    const { POST: route } = createProviderWorkspaceRouteHandlers({ execution: { mode: "evaluation", syntheticFixtureId: "workspace-synthetic", apiKey: "fixture-key" }, fetchFn });
+    const request = buildProviderWorkspaceRequest(createWorkspace());
+    const body = {
+      ...request,
+      unsupportedRoutes: [{ id: "opaqueRouteId", title: "Review documents", description: "Check source coverage.",
+        reasons: ["Confirm the uploaded forms."], privateCalculation: "opaqueRouteSecret" }],
+      assistantContext: { mode: "guided", currentSectionLabel: "Investments", currentSectionId: "opaqueSectionSecret", hidden: "opaqueContextSecret",
+        selectedDocuments: [{ kind: "1099-int", coverage: "supported", name: "opaqueFilename", detectedFacts: [{ value: "opaqueRawValue" }] }],
+        conversation: [{ role: "user", text: "Explain the review step.", extra: "opaqueConversationSecret" }],
+      },
+    };
+    const send = (payload: unknown) => route(new Request("http://localhost/api/provider/workspace", { method: "POST",
+      headers: { "content-type": "application/json" }, body: JSON.stringify(payload) }));
+    const response = await send(body);
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({ provider: "openai-responses", sourceIds: ["workspace:questions"] });
+    const [, options] = fetchFn.mock.calls[0];
+    expect(options.body).toContain("Investments");
+    expect(options.body).toContain("Explain the review step.");
+    expect(options.body).toContain("1099-int");
+    expect(options.body).toContain("Confirm the uploaded forms.");
+    expect(options.body).not.toMatch(/opaque|detectedFacts|currentSectionId/);
+    const invalid = await send({ ...body, assistantContext: { mode: "guided", selectedDocuments: [{ kind: "opaqueKind", coverage: "supported" }] } });
+    expect(invalid.status).toBe(400);
+    expect(fetchFn).toHaveBeenCalledTimes(1);
   });
 
   it("uses Gemini only when the trusted evaluation explicitly selects it", async () => {

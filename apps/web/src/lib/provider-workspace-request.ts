@@ -27,12 +27,8 @@ export interface ProviderWorkspaceRequest {
   optedOut?: boolean;
   assistantContext?: {
     mode: "workspace" | "guided";
-    currentSectionId?: string | null;
     currentSectionLabel?: string | null;
-    selectedDocuments?: Array<Pick<
-      WorkspaceDocumentRecord,
-      "id" | "name" | "kind" | "coverage" | "label" | "notes" | "matchedFixtureId" | "seededFactIds" | "detectedFacts"
-    >>;
+    selectedDocuments?: Array<Pick<WorkspaceDocumentRecord, "kind" | "coverage">>;
     conversation?: Array<{
       role: "user" | "assistant";
       text: string;
@@ -113,7 +109,9 @@ export interface BuildProviderWorkspaceRequestOptions {
   question?: string;
   optedOut?: boolean;
   workspaceStorageModeOverride?: ReturnWorkspaceRecord["storageMode"];
-  assistantContext?: ProviderWorkspaceRequest["assistantContext"];
+  assistantContext?: Omit<NonNullable<ProviderWorkspaceRequest["assistantContext"]>, "selectedDocuments"> & {
+    currentSectionId?: string | null;
+  };
   selectedDocumentIds?: string[];
 }
 
@@ -163,22 +161,13 @@ export function buildProviderWorkspaceRequest(
   const requestedAt = options.now ?? new Date().toISOString();
   const selectedDocumentIdSet = new Set(options.selectedDocumentIds ?? []);
   const selectedDocuments = selectedDocumentIdSet.size > 0
-    ? requestWorkspace.documents.flatMap((document, index) => (
-        selectedDocumentIdSet.has(document.id) && payload.workspace.documents[index]
-          ? [payload.workspace.documents[index]]
-          : []
-      ))
+    ? requestWorkspace.documents.filter(document => selectedDocumentIdSet.has(document.id)).map(({ kind, coverage }) => ({ kind, coverage }))
     : [];
   const assistantContext = context || selectedDocuments.length > 0 ? {
     mode: context?.mode ?? "workspace" as const,
-    ...(context?.currentSectionId !== undefined ? { currentSectionId: context.currentSectionId } : {}),
     ...(payload.currentSectionLabel !== undefined ? { currentSectionLabel: payload.currentSectionLabel } : {}),
     ...(payload.conversation ? { conversation: payload.conversation } : {}),
-    ...(selectedDocuments.length ? { selectedDocuments: selectedDocuments.map(document => ({
-      id: document.id, name: document.name, kind: document.kind, coverage: document.coverage,
-      label: document.label, notes: document.notes, matchedFixtureId: document.matchedFixtureId,
-      seededFactIds: document.seededFactIds, detectedFacts: document.detectedFacts,
-    })) } : {}),
+    ...(selectedDocuments.length ? { selectedDocuments } : {}),
   } : undefined;
 
   return {
@@ -238,7 +227,7 @@ export async function requestProviderWorkspaceHelp(
   workspace: ReturnWorkspaceRecord,
   question: string,
   options: RequestProviderWorkspaceOptions & {
-    assistantContext: NonNullable<ProviderWorkspaceRequest["assistantContext"]>;
+    assistantContext: NonNullable<BuildProviderWorkspaceRequestOptions["assistantContext"]>;
   }
 ) {
   return requestProviderWorkspace(workspace, {

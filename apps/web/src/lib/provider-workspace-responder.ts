@@ -147,7 +147,8 @@ export function createProviderWorkspaceResponder(dependencies: ProviderWorkspace
       status: { sourceId: "workspace:status", totalDocuments: fallback.totalDocuments, readyForRecompute: fallback.readyForRecompute },
       questions: { sourceId: "workspace:questions", pendingCount: fallback.pendingQuestionCount,
         prompts: request.workspace.seededReturn.interviewQuestions.filter(question => question.status === "pending").map(question => question.prompt) },
-      unsupportedRoutes: { sourceId: "workspace:routes", routes: request.unsupportedRoutes },
+      unsupportedRoutes: { sourceId: "workspace:routes",
+        routes: request.unsupportedRoutes.map(({ title, description, reasons }) => ({ title, description, reasons })) },
       question: request.question ?? null, assistantContext: request.assistantContext ?? null });
     const schema: z.ZodType<z.infer<typeof summarySchema> | z.infer<typeof helpSchema>> = request.task === "workspace-summary" ? summarySchema : helpSchema;
     const result = await executeAiTask({ task: request.task === "workspace-summary" ? "workspace-summary" : "tax-explanation",

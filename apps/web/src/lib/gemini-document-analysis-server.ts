@@ -17,7 +17,6 @@ import type {
   ScheduleCBankStatementAnalysis,
   SelfEmploymentIncomeDocumentAnalysis,
 } from "@/lib/guided-interview-flow";
-import type { ProviderWorkspaceRequest } from "@/lib/provider-workspace-request";
 
 /** Compatibility name retained for existing routes; no preview model is selected implicitly. */
 export function resolveGeminiAnalysisModelId(env: NodeJS.ProcessEnv = process.env) {
@@ -182,42 +181,6 @@ export async function summarizeGuidedReviewIssuesWithGemini(
     ].join("\n"),
     "guided-review-summary",
     JSON.stringify(issues),
-    executor,
-  );
-
-  if (typeof payload !== "object" || payload === null) {
-    return null;
-  }
-
-  const summary = typeof (payload as { summary?: unknown }).summary === "string"
-    ? (payload as { summary: string }).summary.trim()
-    : "";
-
-  return summary || null;
-}
-
-export async function summarizeProviderWorkspaceWithGemini(
-  request: ProviderWorkspaceRequest,
-  _env: NodeJS.ProcessEnv = process.env,
-  executor: DocumentAiExecutor = productionExecutor,
-): Promise<string | null> {
-  const payload = await callDocumentTask(
-    "workspace-summary",
-    [
-      "Summarize the current tax-return workspace for the filer.",
-      "Use the supplied versioned schema, including explicit disposition, citations and unknown source facts.",
-      "Rules:",
-      "- Write 2 to 4 short sentences in plain English.",
-      "- Mention the readiness state of the return, any remaining blockers, and the clearest next action.",
-      "- Never infer any direct identifier from redaction tokens.",
-      "- Keep the summary concise and practical.",
-    ].join("\n"),
-    "provider-workspace-summary",
-    JSON.stringify({
-      requestId: request.requestId,
-      unsupportedRoutes: request.unsupportedRoutes,
-      workspace: request.workspace,
-    }),
     executor,
   );
 

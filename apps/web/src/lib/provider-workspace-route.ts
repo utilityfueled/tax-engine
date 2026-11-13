@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { supportMatrix } from "@tax-engine/contracts";
 import { z } from "zod";
 import { hostedAiTaskAccounting } from "./hosted-ai-task-accounting";
 import type { AiTaskExecution, VerifiedAiTaxContext } from "./ai-task-adapter";
@@ -36,21 +37,27 @@ import { prepareTransientTaxCalculation, transientTaxCalculationShape } from "./
 import { PRODUCTION_WORKSPACE_AI_EXECUTION } from "./production-ai-config";
 import { cancelledDocumentRequest, privateJson, privateResponse } from "./protected-document-request";
 
-const requestShape = z.object({
+const supportedDocumentKinds = supportMatrix.map(({ kind }) => kind);
+const requestShape: z.ZodType<ProviderWorkspaceRequest> = z.object({
   task: z.enum(["workspace-summary", "workspace-help"]), requestId: z.string().trim().min(1).max(256),
   requestedAt: z.string(), replacementCount: z.number().int().nonnegative(), optedOut: z.boolean().optional(),
-  question: z.string().max(8000).optional(), redactions: z.array(z.object({ token: z.string(), kind: z.string() })),
+  question: z.string().max(8000).optional(), redactions: z.array(z.object({ token: z.string(),
+    kind: z.enum(["person-name", "ssn", "date-of-birth", "email", "phone", "street-address", "postal-code", "other"]),
+  })),
   unsupportedRoutes: z.array(z.object({ id: z.string(), title: z.string(), description: z.string(), reasons: z.array(z.string()) })),
-  workspace: z.object({ storageMode: z.enum(["local-browser", "hosted-postgres"]),
+  workspace: z.object({ id: z.string(), updatedAt: z.string(), storageMode: z.enum(["local-browser", "hosted-postgres"]),
     summary: z.object({ totalDocuments: z.number().int().nonnegative() }),
-    seededReturn: z.object({ interviewQuestions: z.array(z.object({ status: z.string(), prompt: z.string() })) }),
-    returnSummary: z.object({ status: z.string(), targetTaxYear: z.number().int().nullable() }),
+    seededReturn: z.object({ interviewQuestions: z.array(z.object({ status: z.enum(["pending", "answered"]), prompt: z.string() })) }),
+    returnSummary: z.object({ status: z.enum(["empty", "awaiting-interview", "needs-review", "ready-to-recompute"]), targetTaxYear: z.number().int().nullable() }),
   }),
-});
-function isProviderWorkspaceRequest(value: unknown): value is ProviderWorkspaceRequest {
-  const parsed = requestShape.safeParse(value);
-  return parsed.success && (parsed.data.task !== "workspace-help" || typeof parsed.data.question === "string");
-}
+  assistantContext: z.object({
+    mode: z.enum(["workspace", "guided"]), currentSectionLabel: z.string().nullish(),
+    selectedDocuments: z.array(z.object({ kind: z.enum([...supportedDocumentKinds, "unknown"]),
+      coverage: z.enum(["supported", "partially-supported", "needs-review", "planned", "unsupported", "reviewed"]),
+    })).optional(),
+    conversation: z.array(z.object({ role: z.enum(["user", "assistant"]), text: z.string() })).optional(),
+  }).optional(),
+}).refine(request => request.task !== "workspace-help" || typeof request.question === "string");
 
 export interface ProviderWorkspaceRouteDependencies extends ProviderWorkspaceResponderDependencies {
   rateLimitStore?: RateLimitStore;
@@ -170,21 +177,22 @@ export function createProviderWorkspaceRouteHandlers(
       const envelope = options.privateTaxCalculation ? transientTaxCalculationShape.safeParse(parsed.data) : undefined;
       if (envelope && !envelope.success) return NextResponse.json({ error: "Invalid private calculation request." }, { status: 400 });
       const candidate = envelope?.success ? envelope.data.providerRequest : parsed.data;
-      if (!isProviderWorkspaceRequest(candidate)) {
+      const requestProjection = requestShape.safeParse(candidate);
+      if (!requestProjection.success) {
         return NextResponse.json(
           { error: "Invalid provider workspace request." },
           { status: 400 }
         );
       }
 
-      let workspaceRequest = candidate;
       // The private route re-redacts against actual identifiers after authentication.
-      if (!options.privateTaxCalculation && containsUnsafeDirectIdentifier(workspaceRequest)) {
+      if (!options.privateTaxCalculation && containsUnsafeDirectIdentifier(candidate)) {
         return NextResponse.json(
           { error: "Provider workspace request contains unredacted direct identifiers." },
           { status: 400 }
         );
       }
+      let workspaceRequest = requestProjection.data;
 
       const requestHostname = (() => {
         try {
