@@ -26,6 +26,56 @@ it.each(['19539.49','19539.50','19539.99','19540','19540.01'])('PA2026 childless
  if(new Decimal(amount).lt('19540'))expect(()=>calculatePA2026OrdinaryDraft(f.input,f.facts,f.sources)).toThrow(/phaseout/);
  else{const r=calculatePA2026OrdinaryDraft(f.input,f.facts,f.sources);expect(r.pa.pa40.taxLiability.toFixed()).toBe('600');expect(r.dependencyProof.confirmedChildlessCompletedEitcPhaseout?.toFixed()).toBe('19540');expect(r.dependencyProof.reportedWageAgi?.toFixed()).toBe('19540');expect(r.dependencyProof.ordinaryWages.toFixed()).toBe(amount);}
 });
+
+function withConfirmedBirthDate(birth: string) {
+  const f = pa2026ChildlessEicFixture('resident', '15000', '461');
+  f.input.taxpayer.primary.dateOfBirth = birth;
+  rebindPA2026Childless(f);
+  f.sources.eitcChildInventory = native.confirmGuidedPA2026EicChildInventory(
+    f.input, native.captureGuidedPA2026EicChildInventory(f.input, f.sources.eitcChildInventory)
+  );
+  return f;
+}
+
+it('PA2026 uses the confirmed childless age boundary below the EIC phaseout', () => {
+  for (const birth of ['1961-12-31', '2002-01-02']) {
+    const f = withConfirmedBirthDate(birth);
+    const result = calculatePA2026OrdinaryDraft(f.input, f.facts, f.sources);
+    expect(result.dependencyProof.federalEarnedIncomeCredit.toFixed()).toBe('0');
+    expect(result.dependencyProof.childlessAgeIneligible).toBe(true);
+    expect(result.dependencyProof.confirmedChildlessCompletedEitcPhaseout).toBeUndefined();
+    expect(result.dependencyProof.reportedWageAgi?.toFixed()).toBe('15000');
+    expect(result.pa.workingCredit.credit.toFixed()).toBe('0');
+    expect(result.pa.pa40.taxLiability.toFixed()).toBe('461');
+    expect(result.readiness.filingEligible).toBe(false);
+    expect(JSON.stringify(result)).not.toContain(birth);
+  }
+  for (const birth of ['1962-01-01', '2002-01-01']) {
+    const f = withConfirmedBirthDate(birth);
+    expect(() => calculatePA2026OrdinaryDraft(f.input, f.facts, f.sources)).toThrow(/phaseout/);
+  }
+});
+
+it('PA2026 age-based EIC denial requires current complete originals', () => {
+  for (const birth of ['', '1961-02-29', '2027-01-01']) {
+    const f = withConfirmedBirthDate(birth);
+    expect(() => calculatePA2026OrdinaryDraft(f.input, f.facts, f.sources)).toThrow(/birth date/);
+  }
+  const f = withConfirmedBirthDate('1961-12-31');
+  const { eitcChildInventory: _inventory, ...withoutInventory } = f.sources;
+  expect(() => calculatePA2026OrdinaryDraft(f.input, f.facts, withoutInventory)).toThrow(/phaseout/);
+  f.input.taxpayer.primary.dateOfBirth = '2002-01-02';
+  rebindPA2026Childless(f);
+  expect(() => calculatePA2026OrdinaryDraft(f.input, f.facts, f.sources)).toThrow(/stale/);
+
+  const conflict = withConfirmedBirthDate('1961-12-31');
+  conflict.input.standardDeductionFacts = { ...conflict.input.standardDeductionFacts, primaryDeathDate: '2026-12-01' };
+  rebindPA2026Childless(conflict);
+  conflict.sources.eitcChildInventory = native.confirmGuidedPA2026EicChildInventory(
+    conflict.input, native.captureGuidedPA2026EicChildInventory(conflict.input, conflict.sources.eitcChildInventory)
+  );
+  expect(() => calculatePA2026OrdinaryDraft(conflict.input, conflict.facts, conflict.sources)).toThrow(/death date/);
+});
 it('PA2026 childless draft requires complete original child sources',()=>{
  const f=pa2026ChildlessEicFixture();const absent={...f.sources};delete (absent as Partial<typeof absent>).eitcChildInventory;expect(()=>calculatePA2026OrdinaryDraft(f.input,f.facts,absent)).toThrow(/phaseout/);
  const r=calculatePA2026OrdinaryDraft(f.input,f.facts,f.sources);expect(r.dependencyProof.federalEarnedIncomeCredit.toFixed()).toBe('0');

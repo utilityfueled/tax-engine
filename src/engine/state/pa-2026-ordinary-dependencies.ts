@@ -4,6 +4,7 @@ import {snapshotPAOrdinaryReturnOriginals} from './pa-ordinary-return-facts.js';
 import Decimal from 'decimal.js';
 import { z } from 'zod';
 import {roundDollar} from '@/utils/decimal.js';
+import {meetsEicChildlessAgeTest} from '@/utils/eic-age.js';
 import {StandardDeductionFactsSchema,type TaxYearInput} from '@/models/inputs.js';
 import {FEDERAL_2026_INDEXED} from '@/models/federal-2026-indexed.js';
 import {PAResidencySourcesSchema} from '@/models/pa-residency.js';
@@ -14,7 +15,7 @@ import {ordinarySourcePrecision,publicOrdinaryMoney} from './pa-ordinary-source-
 export interface PA2026OrdinaryDependencyProof {
  methodVersion:'pa-2026-ordinary-dependencies-v1';ordinaryWages:Decimal;
  maximumCompletedEitcPhaseout:Decimal;federalEarnedIncomeCredit:Decimal;careCredit:Decimal;
- confirmedChildlessCompletedEitcPhaseout?:Decimal;reportedWageAgi?:Decimal;
+ confirmedChildlessCompletedEitcPhaseout?:Decimal;reportedWageAgi?:Decimal;childlessAgeIneligible?:true;
 }
 const fail=(detail:string):never=>{throw new Error('PA2026 ordinary draft dependency sources: '+detail);};
 const retainedCreditAmount = z.string().regex(/^\d+(?:\.\d+)?$/).optional();
@@ -82,7 +83,28 @@ export function calculatePA2026OrdinaryDependencies(input:TaxYearInput,p:PAOrdin
  const eitc=FEDERAL_2026_INDEXED.eitc;
  const maximum=Money.max(...Object.values(eitc.completedPhaseOutSingleHoH),...Object.values(eitc.completedPhaseOutMFJ));
  const reportedWageAgi=roundDollar(wages),childlessCutoff=new Money(eitc.completedPhaseOutSingleHoH[0]);
- if(child){if(wages.lt(childlessCutoff)||reportedWageAgi.lt(childlessCutoff))fail('actual no-child wage income is below the finite completed EIC phaseout source boundary');}
- else if(!wages.gt(maximum))fail('actual wage income does not prove completed EIC phaseout for every child count and filing table');
- return {methodVersion:'pa-2026-ordinary-dependencies-v1',ordinaryWages:publicOrdinaryMoney(wages),maximumCompletedEitcPhaseout:publicOrdinaryMoney(maximum),federalEarnedIncomeCredit:new Decimal(0),careCredit:new Decimal(0),...(child?{confirmedChildlessCompletedEitcPhaseout:publicOrdinaryMoney(childlessCutoff),reportedWageAgi:publicOrdinaryMoney(reportedWageAgi)}:{})};
+ const proof: PA2026OrdinaryDependencyProof = {
+  methodVersion: 'pa-2026-ordinary-dependencies-v1',
+  ordinaryWages: publicOrdinaryMoney(wages),
+  maximumCompletedEitcPhaseout: publicOrdinaryMoney(maximum),
+  federalEarnedIncomeCredit: new Decimal(0),
+  careCredit: new Decimal(0),
+ };
+ if (!child) {
+  if (!wages.gt(maximum)) fail('actual wage income does not prove completed EIC phaseout for every child count and filing table');
+  return proof;
+ }
+ proof.reportedWageAgi = publicOrdinaryMoney(reportedWageAgi);
+ if (wages.gte(childlessCutoff) && reportedWageAgi.gte(childlessCutoff)) {
+  proof.confirmedChildlessCompletedEitcPhaseout = publicOrdinaryMoney(childlessCutoff);
+  return proof;
+ }
+ if (typeof input.standardDeductionFacts?.primaryDeathDate === 'string') {
+  fail('actual federal death date conflicts with the confirmed living owner');
+ }
+ if (meetsEicChildlessAgeTest(input.taxpayer.primary.dateOfBirth, null, input.taxpayer.taxYear, true, 'primary')) {
+  fail('actual no-child wage income is below the finite completed EIC phaseout source boundary');
+ }
+ proof.childlessAgeIneligible = true;
+ return proof;
 }

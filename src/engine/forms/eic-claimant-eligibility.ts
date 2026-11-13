@@ -3,6 +3,7 @@ import Decimal from "decimal.js";
 import type { TaxYearInput } from "@/models/inputs.js";
 import type { CalculatedLine } from "@/models/outputs.js";
 import { AuditTrail } from "@/utils/audit.js";
+import { meetsEicChildlessAgeTest } from "@/utils/eic-age.js";
 
 type Claimant = Pick<TaxYearInput["taxpayer"]["primary"], "dateOfBirth" | "employmentValidSsnIssuedByDueDate" | "tinIssuedByDueDate">;
 export type EicClaimantInput = Pick<TaxYearInput, "standardDeductionFacts"> & {
@@ -50,26 +51,6 @@ function otherTaxpayerChild(current: boolean | undefined, preserved: boolean | u
   return value;
 }
 
-function date(value: string | undefined, label: string): Date {
-  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) throw new Error(`EIC ${label} needs an actual calendar date`);
-  const parsed = new Date(`${value}T00:00:00Z`);
-  if (!Number.isFinite(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== value) throw new Error(`EIC ${label} needs an actual calendar date`);
-  return parsed;
-}
-
-function meetsAgeTest(birth: string, death: string | null | undefined, year: number, strict: boolean, who: string): boolean {
-  const born = date(birth, `${who} birth date`);
-  const yearEnd = date(`${year}-12-31`, "tax year end");
-  if (born > yearEnd) throw new Error(`EIC ${who} birth date is after the return year`);
-  if (strict && death === undefined) throw new Error(`EIC ${who} death status is unknown; confirm alive at year end or supply the actual death date`);
-  const reference = death == null ? yearEnd : date(death, `${who} death date`);
-  if (reference < born || reference.getUTCFullYear() !== year) throw new Error(`EIC ${who} death date must be within the return year and on or after birth`);
-  const twentyFive = new Date(Date.UTC(born.getUTCFullYear() + 25, born.getUTCMonth(), born.getUTCDate()));
-  twentyFive.setUTCDate(twentyFive.getUTCDate() - 1);
-  const sixtyFive = new Date(Date.UTC(born.getUTCFullYear() + 65, born.getUTCMonth(), born.getUTCDate()));
-  return reference >= twentyFive && reference < sixtyFive;
-}
-
 export function calculateEicClaimantEligibility(input: EicClaimantInput, childless: boolean): EicClaimantEligibilityResult {
   const { taxpayer, standardDeductionFacts: standard } = input;
   const facts = input.eic?.claimantEligibility;
@@ -95,8 +76,8 @@ export function calculateEicClaimantEligibility(input: EicClaimantInput, childle
     } else if (childless && (standard?.primaryCanBeClaimedAsDependent === true || (joint && standard?.spouseCanBeClaimedAsDependent === true))) {
       reason = "A childless claimant can be claimed as a dependent; no actual filing exception has been supplied (Pub596 Rule12)";
     } else if (childless && standard?.primaryDeathDate !== undefined && (!joint || standard.spouseDeathDate !== undefined)) {
-      const primary = meetsAgeTest(taxpayer.primary.dateOfBirth, standard.primaryDeathDate, taxpayer.taxYear, true, "primary");
-      const spouse = joint && taxpayer.spouse ? meetsAgeTest(taxpayer.spouse.dateOfBirth, standard.spouseDeathDate, taxpayer.taxYear, true, "spouse") : false;
+      const primary = meetsEicChildlessAgeTest(taxpayer.primary.dateOfBirth, standard.primaryDeathDate, taxpayer.taxYear, true, "primary");
+      const spouse = joint && taxpayer.spouse ? meetsEicChildlessAgeTest(taxpayer.spouse.dateOfBirth, standard.spouseDeathDate, taxpayer.taxYear, true, "spouse") : false;
       age = primary || spouse;
       if (!age) reason = "Childless claimant age test is not met by either relevant filer (Pub596 Rule11)";
     }
@@ -140,8 +121,8 @@ export function calculateEicClaimantEligibility(input: EicClaimantInput, childle
   let childlessAgeEligible = true;
   if (childless) {
     // Check both actual dates before OR; one spouse passing does not erase a contradictory source.
-    const primary = meetsAgeTest(taxpayer.primary.dateOfBirth, standard?.primaryDeathDate, taxpayer.taxYear, strict, "primary");
-    const spouse = joint && taxpayer.spouse ? meetsAgeTest(taxpayer.spouse.dateOfBirth, standard?.spouseDeathDate, taxpayer.taxYear, strict, "spouse") : false;
+    const primary = meetsEicChildlessAgeTest(taxpayer.primary.dateOfBirth, standard?.primaryDeathDate, taxpayer.taxYear, strict, "primary");
+    const spouse = joint && taxpayer.spouse ? meetsEicChildlessAgeTest(taxpayer.spouse.dateOfBirth, standard?.spouseDeathDate, taxpayer.taxYear, strict, "spouse") : false;
     childlessAgeEligible = primary || spouse;
     // Both filers satisfy Rules12–14. The either-spouse age rule does not
     // substitute for either person's own dependency or main-home facts.

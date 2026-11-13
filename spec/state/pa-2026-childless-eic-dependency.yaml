@@ -25,12 +25,38 @@ lines:
     formula: |
       Sum actual W2 box1 wages with Decimal before a single IRS roundDollar.
       Raw sum AND reported wage AGI must be at least19540 for the complete
-      confirmed no-child packet.19539.49/.50/.99 stay unsupported;19540/19540.01
-      prove zero. Require existing no-adjustment/no-other-income/no-care/benefits,
+      confirmed no-child packet to prove zero by income.19539.49/.50/.99
+      do not meet that proof;19540/19540.01 prove zero. Require existing
+      no-adjustment/no-other-income/no-care/benefits,
       withholding coverage and all FY/PY/NR source guards. No final EIC table is
       guessed. Without this packet preserve the old exact >70244 method.
       Retain known zero PA-source wages; do not infer missing original amounts.
     testRef: "tests/engine/state/pa-2026-childless-eic.test.ts::PA2026 childless draft composes literal FY PY NR taxes"
+  - line: "age-zero-proof"
+    description: "Known age ineligibility establishes zero independently of the income phaseout"
+    formula: |
+      Under IRC32(c)(1)(A)(ii)(II) and IRS Publication 596 Rule 11, the
+      living single 2026 owner's date of birth must be after 1961-12-31
+      and before 2002-01-02 to meet the no-child age test. The lower age
+      is attained the day before the 25th birthday. Age 65 is attained on
+      the birthday. Below the completed phaseout, allow zero only with a
+      current complete no-qualifying-child inventory, valid birth date and
+      confirmed full-year life, without contradictory death facts. Income
+      eligibility within the age range stays unresolved below the cutoff.
+      Report age as the zero-credit reason without exposing the birth date.
+      Retain the PA filing and federal calculation gates. Act 45 of 2025
+      sections 1602-W.2 to 1604-W.2 tie the state credit to federal EIC.
+      Sources checked 2026-11-13: https://www.irs.gov/publications/p596
+      and https://www.palegis.us/statutes/unconsolidated/law-information/view-statute?ActNum=0045.&SessInd=0&SessYr=2025&txtType=PDF
+    testRef: "tests/engine/state/pa-2026-childless-eic.test.ts::PA2026 uses the confirmed childless age boundary below the EIC phaseout"
+  - line: "age-source-currentness"
+    description: "Unknown, changed and conflicting age facts cannot establish the new zero proof"
+    formula: |
+      Reuse the federal calendar validation and require the same confirmed
+      current federal and state snapshots. A malformed or future birth date,
+      stale inventory, conflicting death date or missing inventory cannot
+      establish the independent no-child age restriction.
+    testRef: "tests/engine/state/pa-2026-childless-eic.test.ts::PA2026 age-based EIC denial requires current complete originals"
   - line: "native-currentness"
     description: "Actual native controls capture and explicitly confirm unchanged originals"
     formula: |
