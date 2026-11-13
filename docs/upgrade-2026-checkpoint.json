@@ -23623,6 +23623,36 @@
     "diagnosticCases": 14,
     "auditSha256": "97a8f7795a7a82976be469eab42605ca1323ba395e4228c2cdb361f90779c668"
   },
+  "nov13LocalReturnRemoval": {
+    "commit": "1a44d113f46ec0fba49083600c4a54b140ca9f66",
+    "tree": "83a8de7ac91c7055fca9af1c1df3f212ce8a4583",
+    "beforeFixBrowserFailures": 3,
+    "beforeFixBrowserReportSha256": "957fecb36cbdf0f166b34de6ca5ad5207c139747e7ce2221bc4c39b0be0fa0ee",
+    "focusedPassed": 206,
+    "focusedSha256": "1a1cc9cc956ff39ffb3d51051bc8bc2aea9d838c5f32cc397ac9bf88c4653967",
+    "chromiumPassed": 29,
+    "chromiumSkipped": 0,
+    "chromiumRetries": 0,
+    "chromiumReportSha256": "871e86049d7baade8fbaa8676664b495d98dc69ebf00f9db5ba1f7678379c91b",
+    "buildTranscriptSha256": "2dbfb94612752298e830ea570659bd31f0b5f2a666665b3544e29ffd3ad40509",
+    "specReferences": 8820,
+    "browserCollectionCases": 606,
+    "hostedOnlySkips": 5,
+    "diagnosticCases": 14,
+    "auditSha256": "53a0f62adf3c0c4f40497e9a39c297979fcd55fb4726ab15f795f103d4960fbf"
+  },
+  "nov13ScheduleAiCombined": {
+    "sourceCommit": "656fb5f8778b4c83c3def07d608b852e4e07c1af",
+    "tree": "aebb09baf8e2db8283fd3cbdb0397324649a904b",
+    "checksPassed": 12,
+    "unitAndCoverageTestsEach": 27617,
+    "testFiles": 1994,
+    "branchCoveragePercent": "87.79",
+    "chromiumPassed": 594,
+    "hostedOnlySkips": 5,
+    "checksSha256": "f7105cc49a1ad38f0e078a78019a3c94bd23e28eb5f2cd39e6fc126d4aab6465",
+    "chromiumTranscriptSha256": "adab4cbfe1a75857d5dfbfd6322b3a38e33ffaa9c1aace2b5438f208dd8ca552"
+  },
   "nov12HostedCreditSettlement": {
     "previewReceiptCommit": "d39209dec302d249a5f01fe8baf23cc4ca2130f8",
     "settlementCommit": "8357ed9929766a8e5ed0ac7c45321cdccd44d35a",

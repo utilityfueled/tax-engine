@@ -4,6 +4,21 @@ Current source, verification and remaining work are summarized in the
 [current continuation](upgrade-2026-current-status.md). Historical results
 below apply to their named revisions.
 
+- November 13: `1a44d113` extends failure recovery to local reset and
+  whole-return deletion. Before the fix, a quota failure lost original PDF
+  and guided data, and two other fault tests observed unexpected success.
+  The successor passed all three cases and successful retries, with exact
+  original hashes and unrelated-record preservation. All 206 focused
+  checks, 29 production Chromium cases, Web type checking, 8,820 spec
+  references, inventory and the Web build passed. Scoped lint reported
+  zero errors and six pre-existing warnings. The request audit binds 606
+  cases, five original hosted-only skips and 14 fixed diagnostics.
+
+- November 13: exact `656fb5f8` passed all 12 archived local checks, with
+  27,617 unit and coverage tests in 1,994 files and 87.79% branch coverage.
+  Chromium passed 594 cases and retained the five original hosted-only
+  skips. The runner's PostgreSQL and loopback browser server closed.
+
 - November 13: `bdd31ea1` coordinates local individual document removal
   with the pending IndexedDB transaction. A quota failure leaves both
   originals and metadata in place. A transaction abort restores exact

@@ -117,6 +117,9 @@ five original hosted-only skips. Exact `e31e9745` subsequently passed all 12,
 with 27,610 unit and coverage tests at 87.80% branches. Chromium completed
 597 collected cases, with 592 passing and five original hosted-only skips.
 The runner and its disposable PostgreSQL closed normally.
+Exact `656fb5f8` also passed all 12 checks, including 27,617 unit and
+coverage tests at 87.79% branch coverage. Managed Chromium passed 594
+with five original hosted-only skips.
 
 Two separate PDF extractions agree on 8,248 ordinary-tax and 11,240 EIC cells
 in draft 2026 Publication 1040. Decimal comparison matched every draft cell
@@ -138,6 +141,15 @@ also preserved an unrelated saved return field during a forced abort. The
 full collection now contains 603 cases, with five hosted-only skips, 14
 fixed diagnostics and the same request limits. The two browser stores do
 not share a crash-atomic commit. [IndexedDB transaction lifecycle](https://w3c.github.io/IndexedDB/#transaction-lifetime).
+
+`1a44d113` extends the local rollback to resetting and deleting a return.
+Three production Chromium cases reproduced quota rejection, failure to
+clear guided answers, and a transaction abort on the earlier build. The
+successor preserves the saved return, exact original PDF, scoped guided
+answers, preference and recovery marker after failure. A successful retry
+clears the relevant data. The 206 focused checks and 29 production Chromium
+cases passed. The browser collection retains the five hosted-only skips,
+14 fixed diagnostics and unchanged request limits.
 
 `a6c4fd18` adds IRS-published expected values for 2026 Schedule SE and 8812.
 The 147 affected tests passed. The checks use the worksheet inputs the IRS

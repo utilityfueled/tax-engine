@@ -40,8 +40,12 @@ below retain their original evidence boundaries.
 - [x] Honor committed original deletion in open tabs in `6a38aadd`. Keep
   individually removed originals recoverable on metadata failure in
   `bdd31ea1`. Verify both failures and a successful retry with actual Chromium.
-- [ ] Exercise reset and whole-return deletion under browser-storage failure
-  and confirm the surviving scoped facts and original bytes.
+- [x] Keep saved facts and original bytes recoverable after failed local
+  reset or whole-return deletion in `1a44d113`. Verify exact rollback
+  and successful retries in Chromium.
+- [x] Complete the 12 archived `656fb5f8` checks. Unit and coverage each
+  pass 27,617 tests with 87.79% branch coverage. Chromium passes 594
+  with five original hosted-only skips.
 - [ ] Bind and reverify final federal Tax and EIC Table methods and Form 2210
   upon publication. Obtain qualified human review before enabling 2026.
 - [x] Match the IRS-published Schedule SE and 8812 worksheet outputs in
