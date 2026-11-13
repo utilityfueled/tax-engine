@@ -1,5 +1,5 @@
-/** Actual request constants are shared by planning, framing and transport. */
-export const PROVIDER_EVAL_CONTRACT = Object.freeze({
+/** Keep the historical contract byte-equivalent for existing plan and journal reads. */
+export const LEGACY_PROVIDER_EVAL_CONTRACT = Object.freeze({
   version: "provider-eval-request/2",
   capability: {
     maxInputTokens: 4096, maxOutputTokens: 1024, timeoutMs: 30000,
@@ -17,3 +17,15 @@ export const PROVIDER_EVAL_CONTRACT = Object.freeze({
     mimeType: "application/json", thinkingLevel: "HIGH", includeThoughts: false },
   method: "POST", redirect: "error", automaticRetries: 0, automaticContinuations: 0,
 } as const);
+
+/** Actual request constants are shared by planning, framing and transport. */
+export const PROVIDER_EVAL_CONTRACT = Object.freeze({
+  ...LEGACY_PROVIDER_EVAL_CONTRACT,
+  version: "provider-eval-request/3",
+  openai: {
+    ...LEGACY_PROVIDER_EVAL_CONTRACT.openai,
+    clientTrace: { header: "X-Client-Request-Id", format: "uuid-v4", custody: "private-dispatch-journal" },
+  },
+} as const);
+
+export const providerEvalClientTrace = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/u;

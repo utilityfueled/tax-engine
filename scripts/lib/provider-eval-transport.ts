@@ -2,7 +2,7 @@ import { performance } from "node:perf_hooks";
 import { z } from "zod";
 import { providerModelCandidates } from "../../packages/engine/src/provider-model-eval";
 import { evalUsageSchema, type ProviderEvalRequest, type ProviderEvalTransport, type ProviderEvalTransportResult } from "./provider-eval-runner";
-import { PROVIDER_EVAL_CONTRACT as contract } from "./provider-eval-contract";
+import { PROVIDER_EVAL_CONTRACT as contract, providerEvalClientTrace } from "./provider-eval-contract";
 const token = z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER);
 const openAiEnvelope = z.object({ model: z.string(), id: z.string().optional(), service_tier: z.string().optional(), status: z.string(),
   output_text: z.string().optional(), output: z.array(z.object({ type: z.string(), content: z.array(z.object({ type: z.string(), text: z.string().optional() })).optional() })).optional(),
@@ -33,6 +33,14 @@ export function createLiveProviderEvalTransport(options: { profileIds: string[];
     const signal = outerSignal ? AbortSignal.any([outerSignal, AbortSignal.timeout(request.timeoutMs)]) : AbortSignal.timeout(request.timeoutMs);
     signal.throwIfAborted();
     const started = performance.now(); const openai = request.profile.provider === "openai";
+    const trace = request.clientRequestId;
+    if (trace !== undefined && (!openai || !providerEvalClientTrace.test(trace))) {
+      throw new Error("Invalid provider client trace.");
+    }
+    const headers: Record<string, string> = openai
+      ? { "Content-Type": "application/json", Authorization: `Bearer ${options.apiKeys.openai}` }
+      : { "Content-Type": "application/json", "x-goog-api-key": options.apiKeys.google ?? "" };
+    if (trace) headers[contract.openai.clientTrace.header] = trace;
     const url = openai ? contract.openai.endpoint : `${contract.google.endpoint}${encodeURIComponent(request.profile.model)}${contract.google.methodSuffix}`;
     const instructions = contract.safetyInstructions;
     const body = openai ? { model: request.profile.model, store: contract.openai.store, service_tier: contract.openai.serviceTier, reasoning: { effort: request.profile.effort },
@@ -44,8 +52,7 @@ export function createLiveProviderEvalTransport(options: { profileIds: string[];
           maxOutputTokens: request.maxOutputTokens, thinkingConfig: { thinkingLevel: contract.google.thinkingLevel, includeThoughts: contract.google.includeThoughts } } };
     try {
       const response = await (options.fetchFn ?? fetch)(url, { method: contract.method, redirect: contract.redirect, signal,
-        headers: openai ? { "Content-Type": "application/json", Authorization: `Bearer ${options.apiKeys.openai}` } : { "Content-Type": "application/json", "x-goog-api-key": options.apiKeys.google ?? "" },
-        body: JSON.stringify(body) });
+        headers, body: JSON.stringify(body) });
       if (!response.ok) return { status: [401, 403, 404].includes(response.status) ? "unavailable" : "failed", usage: null,
         elapsedMs: performance.now() - started, reportedModel: null, responseReference: response.headers.get("x-request-id"), payload: null };
       const payload = await readBounded(response);

@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import Decimal from "decimal.js";
 import { z } from "zod";
 import { AI_PRICES, calculateAiCost, maximumAiRequestCost, type AiTokenUsage } from "../../packages/engine/src/ai-pricing";
@@ -8,7 +9,7 @@ import { providerModelCandidates, summarizeProviderModelLiveEvalTemplate,
 import { taxProviderModelEvalFixtures, type ProviderEvalFixture } from "../../packages/engine/src/provider-eval-fixtures";
 import { evaluationRequestContent, providerEvalBindingManifest, validateProviderEvalOutput, prepareProviderEvalCase, PROVIDER_EVAL_BINDING_VERSION } from "./provider-eval-bindings";
 import { AI_APPLICATION_INSTRUCTIONS, applicationSchemaForTask } from "../../packages/engine/src/ai-application-bindings";
-import { PROVIDER_EVAL_CONTRACT } from "./provider-eval-contract";
+import { LEGACY_PROVIDER_EVAL_CONTRACT, PROVIDER_EVAL_CONTRACT, providerEvalClientTrace } from "./provider-eval-contract";
 import { matchesProviderEvalModel, PROVIDER_EVAL_MODEL_IDENTITIES, providerEvalDigest, providerEvalCorpusDigest, providerEvalFixtureDigest } from "../../packages/engine/src/provider-eval-provenance";
 const Money = Decimal.clone({ precision: 80 });
 export { providerEvalDigest } from "../../packages/engine/src/provider-eval-provenance";
@@ -32,6 +33,7 @@ export type ProviderEvalApproval = z.infer<typeof approvalSchema>;
 export type EvalProfile = (typeof providerModelCandidates)[number];
 export interface ProviderEvalRequest {
   attemptId: string; kind: "capability" | "case"; profile: EvalProfile;
+  clientRequestId?: string;
   task: AiTask | null; content: unknown; jsonSchema: Record<string, unknown>;
   maxInputTokens: number; maxOutputTokens: number; timeoutMs: number;
 }
@@ -45,7 +47,7 @@ type Evaluation = ReturnType<typeof validateProviderEvalOutput>;
 export type EvalJournalRecord =
   | { type: "start"; planDigest: string; approvalDigest: string }
   | { type: "preflight"; profileId: string; fixtureId: string; repeat: number; reason: "missing-verified-context" | "invalid-verified-context" | "cancelled"; at: string }
-  | { type: "dispatch"; attemptId: string; kind: "capability" | "case"; profileId: string; fixtureId: string | null; repeat: number; startedAt: string; maximumUsd: string }
+  | { type: "dispatch"; attemptId: string; kind: "capability" | "case"; profileId: string; fixtureId: string | null; repeat: number; startedAt: string; maximumUsd: string; clientRequestId?: string }
   | { type: "result"; attemptId: string; status: ProviderEvalTransportResult["status"]; usage: AiTokenUsage | null;
       elapsedMs: number; reportedModel: string | null; responseReference: string | null; capabilityPassed: boolean; evaluation: Evaluation | null }
   | { type: "reconcile"; attemptId: string; evidenceReference: string; usage: AiTokenUsage; at: string };
@@ -54,9 +56,26 @@ function profile(id: string): EvalProfile {
   if (!item) throw new Error("Unknown evaluation profile.");
   return item;
 }
-export function providerEvalExecutionContract(profileIds: readonly string[]) {
+type RequestVersion = typeof LEGACY_PROVIDER_EVAL_CONTRACT.version | typeof PROVIDER_EVAL_CONTRACT.version;
+
+export function providerEvalExecutionContract(
+  profileIds: readonly string[],
+  version: RequestVersion = PROVIDER_EVAL_CONTRACT.version,
+) {
+  const request = version === LEGACY_PROVIDER_EVAL_CONTRACT.version ? LEGACY_PROVIDER_EVAL_CONTRACT : PROVIDER_EVAL_CONTRACT;
   return z.json().parse({ profiles: profileIds.map(id => ({ ...profile(id) })), taskPolicies: AI_TASKS,
-    request: PROVIDER_EVAL_CONTRACT, modelIdentities: PROVIDER_EVAL_MODEL_IDENTITIES, publicProviderFacts: AI_PROVIDER_DOCUMENTATION, applicationInstructions: AI_APPLICATION_INSTRUCTIONS, responseSchemas: providerEvalBindingManifest });
+    request, modelIdentities: PROVIDER_EVAL_MODEL_IDENTITIES, publicProviderFacts: AI_PROVIDER_DOCUMENTATION, applicationInstructions: AI_APPLICATION_INSTRUCTIONS, responseSchemas: providerEvalBindingManifest });
+}
+
+function requestVersion(plan: ProviderEvalPlan): RequestVersion | undefined {
+  const parsed = z.object({ request: z.object({
+    version: z.enum([LEGACY_PROVIDER_EVAL_CONTRACT.version, PROVIDER_EVAL_CONTRACT.version]),
+  }) }).safeParse(plan.executionContract);
+  return parsed.success ? parsed.data.request.version : undefined;
+}
+
+function requiresClientTrace(version: RequestVersion | undefined, item: EvalProfile) {
+  return version === PROVIDER_EVAL_CONTRACT.version && item.provider === "openai";
 }
 function assertReviewed(fixtures: ProviderEvalFixture[]) {
   const summary = summarizeProviderModelLiveEvalTemplate({ version: 2, entries: [], availability: [] }, fixtures);
@@ -87,8 +106,9 @@ export function validatePlan(value: unknown): ProviderEvalPlan {
   if (plan.profileIds.some(id => publicModelLifecycle(profile(id).model, plan.createdAt).status === "shutdown")) throw new Error("Evaluation model shutdown prevents a new plan; no substitute is selected.");
   if (new Set(plan.profileIds).size !== plan.profileIds.length || new Set(plan.fixtureIds).size !== plan.fixtureIds.length) throw new Error("Duplicate plan profiles or cases.");
   plan.profileIds.forEach(profile);
-  if (plan.executionDigest !== providerEvalDigest(plan.executionContract)
-    || plan.executionDigest !== providerEvalDigest(providerEvalExecutionContract(plan.profileIds))) throw new Error("Evaluation request policy or transport contract changed; create a new approved plan.");
+  const version = requestVersion(plan);
+  if (!version || plan.executionDigest !== providerEvalDigest(plan.executionContract)
+    || plan.executionDigest !== providerEvalDigest(providerEvalExecutionContract(plan.profileIds, version))) throw new Error("Evaluation request policy or transport contract changed; create a new approved plan.");
   if (plan.fixtureIds.some(id => !taxProviderModelEvalFixtures.some(item => item.id === id))) throw new Error("Plan contains an unknown case.");
   if (plan.purpose === "qualification" && plan.fixtureIds.length !== taxProviderModelEvalFixtures.length) throw new Error("Qualification requires every frozen case.");
   if (plan.purpose === "qualification" && providerEvalBindingManifest.some(binding => binding.normalizationStatus !== "bound")) throw new Error("Qualification requires complete actual application bindings.");
@@ -175,6 +195,7 @@ export async function executeProviderEval(input: { plan: unknown; approval: unkn
   append: (record: EvalJournalRecord) => Promise<void>; transport: ProviderEvalTransport;
   now?: () => string; signal?: AbortSignal; reviewedFixtures?: ProviderEvalFixture[] }) {
   const plan = validatePlan(input.plan); const now = input.now ?? (() => new Date().toISOString());
+  const version = requestVersion(plan);
   let approval = approved(plan, input.approval, now());
   validateProviderEvalJournal(plan, input.records);
   if (plan.purpose === "qualification") {
@@ -234,8 +255,10 @@ export async function executeProviderEval(input: { plan: unknown; approval: unkn
       const maximumUsd = maximumProviderAttemptUsd(request, startedAt);
       if (state.dispatchedRequests >= approval.maximumRequests) return finish("request-limit");
       if (new Money(state.knownProviderCostUsd).plus(maximumUsd).gt(approval.maximumProviderUsd)) return finish("budget");
+      if (requiresClientTrace(version, item)) request.clientRequestId = randomUUID();
       await persist({ type: "dispatch", attemptId, kind: request.kind, profileId,
-        fixtureId: fixture?.id ?? null, repeat, startedAt, maximumUsd });
+        fixtureId: fixture?.id ?? null, repeat, startedAt, maximumUsd,
+        ...(request.clientRequestId ? { clientRequestId: request.clientRequestId } : {}) });
       let result: ProviderEvalTransportResult;
       try { result = await input.transport(request, input.signal); }
       catch { result = { status: "failed", usage: null, elapsedMs: 0, reportedModel: null, responseReference: null, payload: null }; }
@@ -274,7 +297,7 @@ const evaluationSchema = z.strictObject({ output: normalized.nullable(), applica
 const recordSchema = z.discriminatedUnion("type", [
   z.strictObject({ type: z.literal("start"), planDigest: z.string(), approvalDigest: z.string() }),
   z.strictObject({ type: z.literal("preflight"), profileId: z.string(), fixtureId: z.string(), repeat: z.number().int().min(1).max(3), reason: z.enum(["missing-verified-context", "invalid-verified-context", "cancelled"]), at: instant }),
-  z.strictObject({ type: z.literal("dispatch"), attemptId: z.string(), kind: z.enum(["capability", "case"]), profileId: z.string(), fixtureId: z.string().nullable(), repeat: z.number().int().min(0).max(3), startedAt: instant, maximumUsd: usd }),
+  z.strictObject({ type: z.literal("dispatch"), attemptId: z.string(), kind: z.enum(["capability", "case"]), profileId: z.string(), fixtureId: z.string().nullable(), repeat: z.number().int().min(0).max(3), startedAt: instant, maximumUsd: usd, clientRequestId: z.string().regex(providerEvalClientTrace, "Invalid OpenAI client trace").optional() }),
   z.strictObject({ type: z.literal("result"), attemptId: z.string(), status: z.enum(["completed", "unavailable", "failed", "incomplete"]), usage: evalUsageSchema.nullable(), elapsedMs: z.number().finite().nonnegative(),
     reportedModel: z.string().nullable(), responseReference: z.string().nullable(), capabilityPassed: z.boolean(), evaluation: evaluationSchema.nullable() }),
   z.strictObject({ type: z.literal("reconcile"), attemptId: z.string(), evidenceReference: z.string().trim().min(1).max(500), usage: evalUsageSchema, at: instant }),
@@ -284,6 +307,8 @@ export function parseEvalJournalRecord(value: unknown): EvalJournalRecord {
 }
 export function validateProviderEvalJournal(plan: ProviderEvalPlan, records: readonly EvalJournalRecord[]) {
   const known = new Set<string>(); const settled = new Set<string>(); const reconciled = new Set<string>(); const preflights = new Set<string>();
+  const clientTraces = new Set<string>();
+  const version = requestVersion(plan);
   records.forEach((raw, index) => {
     const record = parseEvalJournalRecord(raw);
     if (record.type === "start") {
@@ -301,7 +326,13 @@ export function validateProviderEvalJournal(plan: ProviderEvalPlan, records: rea
         if (!plan.profileIds.includes(record.profileId) || (fixture && prepareProviderEvalCase(fixture).kind !== "provider") || (record.kind === "case" && (!fixture || !plan.fixtureIds.includes(fixture.id) || record.repeat === 0))
           || (record.kind === "capability" && (record.fixtureId !== null || record.repeat !== 0))
           || record.attemptId !== `${record.profileId}:${record.fixtureId ?? "capability"}:${record.repeat}` || known.has(record.attemptId)) throw new Error("Journal dispatch does not match the approved plan.");
-        if (record.maximumUsd !== maximumProviderAttemptUsd(requestFor(profile(record.profileId), fixture, record.attemptId), record.startedAt)) throw new Error("Journal maximum does not match the priced request.");
+        const item = profile(record.profileId);
+        const trace = record.clientRequestId;
+        if (requiresClientTrace(version, item) !== (trace !== undefined) || (trace && clientTraces.has(trace))) {
+          throw new Error("Journal client trace does not match the approved request policy.");
+        }
+        if (trace) clientTraces.add(trace);
+        if (record.maximumUsd !== maximumProviderAttemptUsd(requestFor(item, fixture, record.attemptId), record.startedAt)) throw new Error("Journal maximum does not match the priced request.");
         known.add(record.attemptId);
       } else if (!known.has(record.attemptId)) throw new Error("Journal settlement has no prior dispatch.");
       else if (record.type === "result") { if (settled.has(record.attemptId) || reconciled.has(record.attemptId)) throw new Error("Duplicate journal result."); settled.add(record.attemptId); }

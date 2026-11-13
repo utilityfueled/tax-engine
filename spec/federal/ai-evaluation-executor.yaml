@@ -25,6 +25,21 @@ lines:
     description: "Transport ambiguity survives restart without duplicate spend"
     formula: "Persist dispatch before network; missing usage retains maximum, stops and requires referenced reconciliation; never replay the same attempt ID."
     testRef: "tests/engine/provider-eval-runner.test.ts::retains unknown usage and never repeats a dispatched request on resume"
+  - line: "openai-request-trace"
+    description: "Future OpenAI attempts have a private trace before dispatch"
+    formula: >-
+      Bind the trace policy to the approved request contract. For each
+      OpenAI attempt under that contract, generate a random UUID and record
+      it durably before sending it as X-Client-Request-Id. Reject missing,
+      malformed, repeated or out-of-scope traces in the journal. Preserve
+      exact historical request contracts without attaching a retrospective
+      identifier. A trace can help locate a timeout. Only authoritative
+      usage evidence can release a reserve.
+    source: "https://developers.openai.com/api/reference/overview#supplying-your-own-request-id-with-x-client-request-id"
+    testRef: "tests/engine/provider-eval-runner.test.ts::journals an opaque OpenAI trace before each provider dispatch"
+    testRefs:
+      - "tests/engine/provider-eval-runner.test.ts::keeps historical traces absent and rejects a mismatched journal policy"
+      - "tests/engine/provider-eval-transport.test.ts::sends a valid client trace only to OpenAI and retains a timeout as unknown"
   - line: "measurements"
     description: "Account capabilities are observed rather than assumed"
     formula: "Record actual model response, structured-output acceptance, requested effort, dated evidence and reported usage; unknown/unavailable stays nonpassing."

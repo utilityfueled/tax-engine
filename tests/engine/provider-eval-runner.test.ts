@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createProviderEvalPlan, executeProviderEval, providerEvalDigest, reconcileProviderEvalAttempt, validatePlan, type EvalJournalRecord } from "../../scripts/lib/provider-eval-runner";
+import { createProviderEvalPlan, executeProviderEval, providerEvalDigest, providerEvalExecutionContract, reconcileProviderEvalAttempt, validatePlan, validateProviderEvalJournal, type EvalJournalRecord } from "../../scripts/lib/provider-eval-runner";
 import { taxProviderModelEvalFixtures } from "../../packages/engine/src/provider-eval-fixtures";
 import { providerModelCandidates } from "../../packages/engine/src/provider-model-eval";
 import { AI_TASKS } from "../../packages/engine/src/ai-task-registry";
@@ -44,6 +44,43 @@ describe("guarded repeated provider executor", () => {
     expect(second.stoppedReason).toBe("unknown-usage");
     expect(first.unknownMaximumUsd).not.toBe("0");
     expect(JSON.stringify(state.records)).not.toContain("secret raw");
+  });
+  it("journals an opaque OpenAI trace before each provider dispatch", async () => {
+    const state = setup();
+    const traces: string[] = [];
+    const result = await executeProviderEval({ ...state, transport: async request => {
+      const trace = request.clientRequestId;
+      expect(trace).toMatch(/^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/u);
+      expect(state.records.at(-1)).toMatchObject({ type: "dispatch", attemptId: request.attemptId, clientRequestId: trace });
+      traces.push(trace ?? "");
+      return good;
+    } });
+    expect(traces).toHaveLength(4);
+    expect(new Set(traces).size).toBe(4);
+    expect(JSON.stringify(result.template)).not.toContain(traces[0]);
+    validateProviderEvalJournal(state.plan, state.records);
+    const reused = state.records.map(record => record.type === "dispatch" ? { ...record, clientRequestId: traces[0] } : record);
+    expect(() => validateProviderEvalJournal(state.plan, reused)).toThrow(/trace/i);
+    const absent = state.records.map(record => record.type === "dispatch" ? { ...record, clientRequestId: undefined } : record);
+    expect(() => validateProviderEvalJournal(state.plan, absent)).toThrow(/trace/i);
+  });
+  it("keeps historical traces absent and rejects a mismatched journal policy", async () => {
+    const state = setup();
+    const executionContract = providerEvalExecutionContract(state.plan.profileIds, "provider-eval-request/2");
+    const plan = { ...state.plan, executionContract, executionDigest: providerEvalDigest(executionContract) };
+    const approval = { ...state.approval, planDigest: providerEvalDigest(plan) };
+    const traces: (string | undefined)[] = [];
+    const result = await executeProviderEval({ ...state, plan, approval, transport: async request => {
+      traces.push(request.clientRequestId);
+      return { ...good, usage: null };
+    } });
+    expect(result.stoppedReason).toBe("unknown-usage");
+    expect(traces).toEqual([undefined]);
+    expect(state.records.some(record => record.type === "dispatch" && !("clientRequestId" in record))).toBe(true);
+    validateProviderEvalJournal(plan, state.records);
+    const mislabelled = state.records.map(record => record.type === "dispatch"
+      ? { ...record, clientRequestId: "e341945d-1b77-4315-9720-a6761ebd0b11" } : record);
+    expect(() => validateProviderEvalJournal(plan, mislabelled)).toThrow(/trace/i);
   });
   it("keeps expected answers private and derives actual application observations", async () => {
     const state = setup(); const requests: unknown[] = [];

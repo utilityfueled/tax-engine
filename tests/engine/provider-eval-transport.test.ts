@@ -29,6 +29,26 @@ describe("official evaluation transport", () => {
       expect(await transport(request())).toMatchObject({ usage: { inputTokens: 100, outputTokens: 50 }, payload: null });
     }
   });
+  it("sends a valid client trace only to OpenAI and retains a timeout as unknown", async () => {
+    const trace = "e341945d-1b77-4315-9720-a6761ebd0b11";
+    const headers: Headers[] = [];
+    const transport = createLiveProviderEvalTransport({ profileIds: ["luna-high", "gemini-flash-high"],
+      apiKeys: { openai: "synthetic", google: "synthetic" }, fetchFn: async (_url, options) => {
+        headers.push(new Headers(options?.headers));
+        throw new Error("synthetic network timeout");
+      } });
+    expect(await transport({ ...request(), clientRequestId: trace })).toMatchObject({
+      status: "failed", usage: null, responseReference: null,
+    });
+    expect(headers[0]?.get("X-Client-Request-Id")).toBe(trace);
+    await transport(request());
+    expect(headers[1]?.has("X-Client-Request-Id")).toBe(false);
+    await transport(request("gemini-flash-high"));
+    expect(headers[2]?.has("X-Client-Request-Id")).toBe(false);
+    await expect(transport({ ...request(), clientRequestId: "x\r\ninvalid" })).rejects.toThrow(/trace/i);
+    await expect(transport({ ...request("gemini-flash-high"), clientRequestId: trace })).rejects.toThrow(/trace/i);
+    expect(headers).toHaveLength(3);
+  });
   it("records unavailable or unknown usage without echoing raw service errors", async () => {
     for (const [payload, status] of [[{ secret: "sensitive provider error" }, 403], [{ ...openai, service_tier: "priority" }, 200], [{ ...openai, usage: { input_tokens: 10, output_tokens: 10, input_tokens_details: { cache_write_tokens: 5 } } }, 200]] as const) {
       const transport = createLiveProviderEvalTransport({ profileIds: ["luna-high"], apiKeys: { openai: "synthetic" }, fetchFn: async () => response(payload, status) });
