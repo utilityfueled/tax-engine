@@ -2,6 +2,9 @@ form: "PA-Ordinary-Local-W2-Boundary"
 fullName: Source-bound single PA original local W2 row handoff
 taxYear: 2025
 reference: https://www.irs.gov/pub/irs-prior/iw2w3--2025.pdf
+sources:
+  - https://dced.pa.gov/local-government/local-income-tax-information/local-withholding-tax-faqs/
+  - https://dced.pa.gov/download/local-earned-income-tax-regulations-9-1-2018/?wpdmdl=56769
 notes: |
   Current IRS2026 iw2w3 and original2025 instructions distinguish boxes15-20.
   PA2025 PA40 instructions printed21 Line13 uses PA Box17, not local Box19.
@@ -11,7 +14,7 @@ notes: |
 lines:
   - line: "reported-local-rows"
     description: All actual original local rows outside state arithmetic
-    formula: After complete current original owner/year/box/row/scalar validation preserve each printed local row once with original index, primary owner, row position, reviewed jurisdiction index and exact reported wages/withholding. Bind locality name to a separately confirmed jurisdiction, never infer municipality from residence. Source local wages can overlap between reported jurisdictions and are not additional federal or PA income. Local Box19 never enters state credit.
+    formula: After complete current original owner/year/box/row/scalar validation preserve each printed local row once with original index, primary owner, row position, reviewed jurisdiction index and exact reported wages/withholding. Bind locality name to a separately confirmed jurisdiction, including an actual No decision with its own source. Never infer municipality from residence or filing obligation from withholding. Source local wages can overlap between reported jurisdictions and are not additional federal or PA income. Local Box19 never enters state credit.
     testRef: "tests/engine/state/pa-ordinary-local-w2-boundary.test.ts::single PA actual local W2 rows preserve all three residency return calculations"
   - line: "original-proof"
     description: Unknown positive local amounts cannot fall back to legacy scalars

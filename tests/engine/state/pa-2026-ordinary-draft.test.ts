@@ -7,6 +7,7 @@ import {getConstants} from '@/models/constants.js';
 import {preparePAOrdinaryReturnReview} from '@/pdf/pa-ordinary-return-review-context.js';
 import {pa2026OrdinaryDraftFixture,rebindPA2026Draft} from '../../fixtures/pa-2026-ordinary-draft.js';
 import {paOrdinaryReturnFixture} from '../../fixtures/pa-ordinary-return.js';
+import {paOrdinaryLocalW2Fixture} from '../../fixtures/pa-ordinary-local-w2.js';
 import {confirmGuidedPAOrdinaryReturnFacts,buildGuidedPAOrdinaryReturnFacts,updateGuidedPAOrdinaryReturnFacts} from '../../../apps/web/src/lib/guided-pa-ordinary-return-facts.js';
 import {confirmGuidedPAOrdinaryReturnCompletionSources,buildGuidedPAOrdinaryReturnCompletionSources,updateGuidedPAOrdinaryReturnCompletionSources} from '../../../apps/web/src/lib/guided-pa-ordinary-return-completion.js';
 // Spec: spec/state/pa-2026-ordinary-draft.yaml; all literal oracles fixed before implementation.
@@ -37,6 +38,37 @@ it('PA2026 draft preserves actual guided source capture and stale original denia
  const saved=JSON.parse(JSON.stringify({facts,completion}));expect(buildGuidedPAOrdinaryReturnFacts(f.input,saved.facts)).toEqual(facts);expect(buildGuidedPAOrdinaryReturnCompletionSources(f.input,saved.completion,saved.facts)).toEqual(completion);
  f.input.w2s[0].employer.ein='98-7654321';expect(()=>buildGuidedPAOrdinaryReturnFacts(f.input,facts)).toThrow();expect(()=>buildGuidedPAOrdinaryReturnCompletionSources(f.input,completion,facts)).toThrow();
  const unconfirmed=updateGuidedPAOrdinaryReturnFacts(facts,{sourceReference:'Changed actual document reference'});const c=updateGuidedPAOrdinaryReturnCompletionSources(completion,{sourceReference:'Changed actual complete credit reference'});expect(unconfirmed.sourceFactsConfirmed).toBeNull();expect(c.sourceFactsConfirmed).toBeNull();expect(()=>calculatePA2026OrdinaryDraft(f.input,unconfirmed,c)).toThrow();expect(unconfirmed.originalFederalSources).toEqual(facts.originalFederalSources);
+});
+it('PA2026 carries mixed reviewed local obligations from guided capture', () => {
+ const f = pa2026OrdinaryDraftFixture('part_year');
+ const printed = paOrdinaryLocalW2Fixture('part_year', { year: 2026 });
+ const w2 = f.input.w2s[0];
+ Object.assign(w2, { localWages: '50000', localTaxWithheld: '500.25', localityName: printed.rows.localRows[0].localityName });
+ w2.stateLocalSources = {
+  ...printed.rows,
+  originalW2: structuredClone(w2),
+  stateRows: [{ ...printed.rows.stateRows[0], wages: w2.stateWages, withheld: w2.stateTaxWithheld }],
+ };
+ rebindPA2026Draft(f);
+ const [work, residence] = printed.sources.local.jurisdictions;
+ f.sources.local.jurisdictions = [{ ...work, returnRequired: false, sourceReference: 'Private documented work collector decision' }, residence];
+ const facts = confirmGuidedPAOrdinaryReturnFacts(f.input, { ...f.facts, sourceFactsConfirmed: null });
+ const confirm = () => confirmGuidedPAOrdinaryReturnCompletionSources(f.input, { ...f.sources, sourceFactsConfirmed: null }, facts);
+ const confirmed = confirm();
+ const result = calculatePA2026OrdinaryDraft(f.input, facts, buildGuidedPAOrdinaryReturnCompletionSources(f.input, confirmed, facts)).pa;
+ expect(result.localBoundary.status).toBe('separate_return_required');
+ expect(result.localBoundary.jurisdictions.map(row => row.returnRequired)).toEqual([false, true]);
+ expect(result.localBoundary.reportedW2LocalRows?.map(row => [row.jurisdictionIndex, row.withheld.toFixed()])).toEqual([[0, '500.25']]);
+ expect(result.pa40.stateWithholding.toFixed()).toBe('1197');
+ expect(result.pa40.taxLiability.toFixed()).toBe('1197');
+ expect(result.readiness.filingEligible).toBe(false);
+ expect(JSON.stringify(result.lines)).not.toContain('Private documented work collector decision');
+
+ for (const answer of [false, null]) {
+  const incomplete = structuredClone(confirmed);
+  Object.assign(incomplete.local.jurisdictions[1], { returnRequired: answer });
+  expect(() => calculatePA2026OrdinaryDraft(f.input, facts, incomplete)).toThrow(/local/i);
+ }
 });
 it('PA2026 draft retains actual public federal ordinary and PDF gates',()=>{
  const f=pa2026OrdinaryDraftFixture();const r=calculatePA2026OrdinaryDraft(f.input,f.facts,f.sources);expect(r.pa.readiness.filingEligible).toBe(false);expect(r.pa.readiness.formStatus).toBe('draft_2026_review_only');expect(r.readiness.filingEligible).toBe(false);expect(r.readiness.fullFederalCalculated).toBe(false);

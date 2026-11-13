@@ -16,7 +16,7 @@ export function mapPAMarriedLocalW2Boundary(originalIndex:number,accountHolder:'
   const original=source.localRows[index];
   if(!original||original.printedRow!==row.printedRow)throw Error('PA married local W2 boundary: complete actual printed row identity required');
   const jurisdictionIndex=original.localityNameStatus==='reported'?jurisdictions.findIndex(j=>normalized(j.name)===normalized(original.localityName)):-1;
-  if(original.localityNameStatus==='reported'&&(jurisdictionIndex<0||jurisdictions[jurisdictionIndex].separateReturnRequired!==true))throw Error('PA married local W2 boundary: actual reported locality needs its explicitly reviewed separate-return jurisdiction; no alias or obligation is inferred');
+  if(original.localityNameStatus==='reported'&&typeof jurisdictions[jurisdictionIndex]?.separateReturnRequired!=='boolean')throw Error('PA local W2 boundary: actual reported locality needs an explicitly reviewed jurisdiction and filing decision');
   if(original.localityNameStatus==='blank_original'&&(!row.wages.isZero()||!row.withheld.isZero()))throw Error('PA married local W2 boundary: positive original blank-locality amounts require their actual jurisdiction source successor');
   return{originalIndex,accountHolder,printedRow:row.printedRow,jurisdictionIndex:jurisdictionIndex<0?null:jurisdictionIndex,localityNameStatus:row.localityNameStatus,wages:publicOrdinaryMoney(row.wages),withheld:publicOrdinaryMoney(row.withheld)};
  });

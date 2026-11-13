@@ -45,6 +45,17 @@ lines:
       scope and unsupported retained originals deny even when their nominal tax
       result would be zero. No fake completed federal return or trusted client flag.
     testRef: "tests/engine/state/pa-2026-ordinary-draft.test.ts::PA2026 draft preserves actual guided source capture and stale original denial"
+  - line: "local-obligation-inventory"
+    description: "Keep confirmed local filing decisions separate from PA-40"
+    formula: |
+      Require current documentary review of each resident and work jurisdiction,
+      distinct names, individual source references and an explicit Yes or No for
+      each separate return. The admitted separate-return status still requires
+      at least one Yes. Preserve the explicit decisions and their original order.
+      A W-2 locality may link to either reviewed decision; its original Box 19
+      is payroll withholding, never evidence of a filing obligation or state
+      withholding. Keep unknown and all-No inventories outside this method.
+    testRef: "tests/engine/state/pa-2026-ordinary-draft.test.ts::PA2026 carries mixed reviewed local obligations from guided capture"
   - line: "readiness"
     description: "Separately typed state-only draft does not qualify full federal or paper filing"
     formula: |
