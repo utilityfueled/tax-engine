@@ -32,14 +32,37 @@ export function CashFarmBox7Details({ data, onChange }: {
           <TextFact label="Payer TIN on the matching Form 1099-G" value={receipt.payerTin ?? ""} onChange={payerTin => change({ payerTin })} />
           <TextFact label="Matching Form 1099-G statement reference" value={receipt.statementReference ?? ""} onChange={statementReference => change({ statementReference })} />
           <TextFact label="Local reference for this payment record" value={receipt.reference ?? ""} onChange={reference => change({ reference })} />
-          <TextFact label="Actual payment receipt date" type="date" value={receipt.receivedDate ?? ""} onChange={receivedDate => change({ receivedDate })} />
+          <TextFact label="Actual payment receipt date" type="date" value={receipt.receivedDate ?? ""} onChange={receivedDate => change({
+            receivedDate, benefitAtReceipt: undefined, benefitSourceReference: undefined, annualBenefitStatementReference: undefined,
+          })} />
           <CurrencyField label="Actual taxable amount received" value={receipt.amount ?? ""} onChange={amount => change({ amount })} required />
           <label className="guided-field"><span className="guided-field-label">Program on the original receipt</span>
-            <select className="guided-input" value={receipt.program ?? ""} onChange={event => change({ program: event.target.value as typeof receipt.program })}>
+            <select className="guided-input" value={receipt.program ?? ""} onChange={event => change({
+              program: event.target.value as typeof receipt.program, benefitAtReceipt: undefined, benefitSourceReference: undefined,
+              annualBenefitStatementReference: undefined, noAttributableScheduleFDeductionsConfirmed: undefined,
+            })}>
               <option value="">Choose from the original</option><option value="ordinary-taxable-usda">Ordinary, fully taxable USDA subsidy</option>
-              <option value="other">CRP, cost-share, loan, insurance or another program</option>
+              <option value="crp-annual-rental">Fully taxable Conservation Reserve Program annual rental payment</option>
+              <option value="other">Cost-share, loan, insurance or another program</option>
             </select>
           </label>
+          {receipt.program === "crp-annual-rental" && <>
+            <label className="guided-field"><span className="guided-field-label">Actual Social Security status on this payment date</span>
+              <select className="guided-input" value={receipt.benefitAtReceipt ?? ""} onChange={event => change({
+                benefitAtReceipt: event.target.value as typeof receipt.benefitAtReceipt,
+                benefitSourceReference: undefined, annualBenefitStatementReference: undefined,
+              })}>
+                <option value="">Choose from the dated record</option>
+                <option value="ssa-retirement">Receiving Social Security retirement benefits</option>
+                <option value="ssa-disability">Receiving Social Security disability benefits</option>
+                <option value="none">Receiving neither retirement nor disability benefits</option>
+              </select>
+            </label>
+            <TextFact label="Local reference for dated benefit evidence" value={receipt.benefitSourceReference ?? ""} onChange={benefitSourceReference => change({ benefitSourceReference })} />
+            {(receipt.benefitAtReceipt === "ssa-retirement" || receipt.benefitAtReceipt === "ssa-disability") &&
+              <TextFact label="Matching original SSA-1099 statement reference" value={receipt.annualBenefitStatementReference ?? ""} onChange={annualBenefitStatementReference => change({ annualBenefitStatementReference })} />}
+            <BooleanFact label="Do the farm books show zero Schedule F deductions attributable to this CRP payment?" value={receipt.noAttributableScheduleFDeductionsConfirmed} onChange={noAttributableScheduleFDeductionsConfirmed => change({ noAttributableScheduleFDeductionsConfirmed })} />
+          </>}
         </div>
         <button type="button" className="utility-button utility-button-small" onClick={() => update({ receipts: receipts.filter((_, i) => i !== index) })}>Remove USDA receipt {index + 1}</button>
       </fieldset>;

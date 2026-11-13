@@ -5,6 +5,8 @@ irsReference: "https://www.irs.gov/instructions/i1099g"
 sources:
   - "https://www.irs.gov/publications/p525"
   - "https://www.irs.gov/pub/irs-drop/rr-25-04.pdf"
+  - "https://www.irs.gov/instructions/i1040sse"
+  - "https://uscode.house.gov/us/usc/119-134/t26/s1402/"
 notes: |
   Sources refreshed 2026-10-25. This adapter binds actual saved source facts to
   the standalone Form1099-G source calculator; it does not calculate tax itself.
@@ -40,8 +42,17 @@ lines:
     testRef: "tests/guided-interview/guided-cash-farm-box7.test.ts::routes exact ordinary USDA receipts to Schedule F once after saved statements reorder"
   - line: "cash-farm-box7-unknowns"
     description: "Keep incomplete or unsupported original farm facts unavailable"
-    formula: "The finite route requires one domestic sole-proprietor materially participating cash farm, a positive net profit, ordinary taxable USDA receipts and only raised-product sales and the listed ordinary expenses. Require each listed amount including known zero, actual QBI qualified property basis and explicit confirmation of no other farm facts or elections. Unconfirmed, ambiguous, duplicate, unmatched or edited sources, and a state-return election remain blocked."
+    formula: "The finite route requires one domestic sole-proprietor materially participating cash farm, a positive net profit, fully taxable ordinary USDA or documented CRP annual rental receipts and only raised-product sales and the listed ordinary expenses. Require each listed amount including known zero, actual QBI qualified property basis and explicit confirmation of no other farm facts or elections. Unconfirmed, ambiguous, duplicate, unmatched or edited sources, and a state-return election remain blocked."
     testRef: "tests/guided-interview/guided-cash-farm-box7.test.ts::blocks incomplete conflicting out-of-scope and edited farm originals"
+  - line: "cash-farm-crp-benefit-source"
+    description: "Link the actual benefit evidence at each Conservation Reserve Program payment date"
+    formula: "For a fully taxable CRP annual rental receipt, require the actual owner's retirement/disability status at that receipt date, the separate dated benefit evidence reference and confirmation of no attributable Schedule F deductions. Qualifying retirement or disability requires a unique original same-year same-owner SSA-1099 matched by its local reference. Resolve that reference again after saved source reordering. Record source identifiers only for the CRP worksheet context and do not infer eligibility from an annual SSA-1099, age or a current benefit. Confirm the absence of qualifying benefits from actual evidence when the exclusion does not apply. Use the existing Schedule SE line 1b, earned-income and filing gates."
+    reference: "https://www.irs.gov/instructions/i1040sse"
+    testRef: "tests/guided-interview/guided-cash-farm-box7.test.ts::binds CRP benefit evidence per payment date to the actual annual SSA statement"
+    testRefs:
+      - "tests/guided-interview/guided-cash-farm-box7.test.ts::rejects missing contradictory or changed CRP benefit originals"
+      - "tests/apps/web/government-payment-source-interactions.test.tsx::collects CRP receipt-date benefit evidence separately from the annual statement"
+      - "apps/web/tests/guided-cash-farm-box7.spec.ts::requires fresh CRP benefit evidence after a date change and keeps it private in the review PDF"
   - line: "cash-farm-box7-controls"
     description: "Collect the original receipts and reconfirm after edits"
     formula: "Show the local worksheet for a positive original Box 7 or saved draft. Keep unknown source entries blank and explicit zero amounts. Require actual date, original program selection and matched statement identifiers. Changes revoke confirmation before recalculation."

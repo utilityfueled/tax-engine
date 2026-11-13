@@ -2,12 +2,12 @@ import Decimal from "decimal.js";
 import type { GuidedRefundPaymentBasisData, GuidedRefundRecoveriesData } from "./guided-tax-refund-recoveries";
 import { calculateForm1099G } from "@/engine/forms/form-1099-g";
 import { buildGovernmentPaymentSourceRecords } from "./guided-government-payment-inputs";
-import { buildGuidedCashFarm, type GuidedCashFarmData } from "./guided-cash-farm-box7";
+import { buildGuidedCashFarm, buildGuidedCashFarmBenefitOriginals, type GuidedCashFarmData } from "./guided-cash-farm-box7";
 import { parseGuidedCurrency } from "./guided-currency";
 import { amountError, hasEnteredAmount } from "./guided-required-facts";
 import { guidedTaxRefundErrors, type GuidedTaxRefundData, type RefundRecoveryContext } from "./guided-tax-refund";
 import { guidedSourceValuesChanged } from "./guided-source-confirmation";
-import type { FilingStatus, PersonalInfoData, StateReturnData, UnemploymentData } from "./guided-interview-flow";
+import type { FilingStatus, PersonalInfoData, SocialSecurityData, StateReturnData, UnemploymentData } from "./guided-interview-flow";
 
 export interface UnemploymentEntryData {
   sourceTaxYear?: string;
@@ -85,7 +85,7 @@ export function withUnemploymentEntries(data: UnemploymentData, entries: Unemplo
   const started = entries.some(isStartedUnemployment);
   return { ...data, entries, ...(data.refundRecoveries && guidedSourceValuesChanged(data.entries, entries) ? { refundRecoveries: { ...data.refundRecoveries, sourceFactsConfirmed: null } } : {}), ...(data.taxRefund && guidedSourceValuesChanged(data.entries, entries) ? { taxRefund: { ...data.taxRefund, sourceFactsConfirmed: null } } : {}), compensation: started ? governmentSourceTotal(entries, "compensation")?.toFixed() ?? "" : "", federalWithheld: started ? governmentSourceTotal(entries, "federalWithheld")?.toFixed() ?? "" : "" };
 }
-export function unemploymentFactErrors(data: UnemploymentData | undefined, filingStatus?: FilingStatus | null, taxYear?: number | null, personalInfo?: PersonalInfoData, stateData?: StateReturnData, otherRecoveries?: RefundRecoveryContext, stateCode?: string | null): Record<string, string> {
+export function unemploymentFactErrors(data: UnemploymentData | undefined, filingStatus?: FilingStatus | null, taxYear?: number | null, personalInfo?: PersonalInfoData, stateData?: StateReturnData, otherRecoveries?: RefundRecoveryContext, stateCode?: string | null, socialSecurity?: SocialSecurityData): Record<string, string> {
   const errors: Record<string, string> = {};
   const entries = unemploymentEntries(data).filter(isStartedUnemployment);
   const sourceKeys = new Set<string>(), repaymentFigures = new Map<string, string>();
@@ -158,10 +158,12 @@ export function unemploymentFactErrors(data: UnemploymentData | undefined, filin
       const statuses = { single: "single", mfj: "married_filing_jointly", mfs: "married_filing_separately", hoh: "head_of_household", qss: "qualifying_surviving_spouse" } as const;
       const sourceYear = taxYear ?? forms[0]?.taxYear;
       if (sourceYear === undefined) throw new Error("Provide the actual government-payment source year.");
-      const scheduleF = buildGuidedCashFarm(data?.cashFarm, forms, sourceYear, filingStatus, personalInfo, stateCode);
+      const benefitOriginals = buildGuidedCashFarmBenefitOriginals(data?.cashFarm, socialSecurity, sourceYear, filingStatus, personalInfo);
+      const scheduleF = buildGuidedCashFarm(data?.cashFarm, forms, sourceYear, filingStatus, personalInfo, stateCode, benefitOriginals);
       const status = filingStatus ? statuses[filingStatus] : undefined;
       calculateForm1099G(forms, sourceYear, status, scheduleF && status ? {
         taxpayer: { taxYear: sourceYear, filingStatus: status, spouse: personalInfo?.spouse }, scheduleF,
+        formSSA1099: benefitOriginals?.map(original => original.input),
       } : undefined);
     } catch (error) {
       errors["government-source-worksheet"] = error instanceof Error ? error.message : "Complete the actual government-payment source worksheet.";

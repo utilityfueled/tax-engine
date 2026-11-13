@@ -76,6 +76,35 @@ it("collects and reconfirms original cash-farm Box 7 receipts", async () => {
   });
 });
 
+it("collects CRP receipt-date benefit evidence separately from the annual statement", async () => {
+  const entry = { ...completeUnemploymentSource, agriculturePayments: "200.01" };
+  const initial = { compensation: "0", federalWithheld: "0", entries: [entry],
+    cashFarm: { sourceFactsConfirmed: true, receipts: [{ program: "ordinary-taxable-usda" as const }] } };
+  await render(initial, async ({ latest, change }) => {
+    await change("Program on the original receipt", "crp-annual-rental");
+    expect(latest().cashFarm?.receipts?.[0]).toEqual({ program: "crp-annual-rental" });
+    expect(latest().cashFarm?.sourceFactsConfirmed).toBeNull();
+    await change("Actual Social Security status on this payment date", "ssa-retirement");
+    await change("Local reference for dated benefit evidence", "dated benefit record");
+    await change("Matching original SSA-1099 statement reference", "annual source");
+    await change("Do the farm books show zero Schedule F deductions attributable to this CRP payment?", "true");
+    expect(latest().cashFarm?.receipts?.[0]).toMatchObject({ benefitAtReceipt: "ssa-retirement",
+      benefitSourceReference: "dated benefit record", annualBenefitStatementReference: "annual source",
+      noAttributableScheduleFDeductionsConfirmed: true });
+    await change("Actual payment receipt date", "2025-07-01");
+    expect(latest().cashFarm?.receipts?.[0]?.benefitAtReceipt).toBeUndefined();
+    expect(latest().cashFarm?.receipts?.[0]?.benefitSourceReference).toBeUndefined();
+    await change("Actual Social Security status on this payment date", "ssa-retirement");
+    await change("Local reference for dated benefit evidence", "updated dated record");
+    await change("Matching original SSA-1099 statement reference", "annual source");
+    await change("Actual Social Security status on this payment date", "none");
+    expect(latest().cashFarm?.receipts?.[0]?.annualBenefitStatementReference).toBeUndefined();
+    expect(latest().cashFarm?.receipts?.[0]?.benefitSourceReference).toBeUndefined();
+    await change("Program on the original receipt", "ordinary-taxable-usda");
+    expect(latest().cashFarm?.receipts?.[0]).toEqual({ program: "ordinary-taxable-usda", receivedDate: "2025-07-01" });
+  });
+});
+
 it("collects actual government sources from a legacy aggregate without replacing unknown withholding", async () => {
   await render({ compensation: "1000.10", federalWithheld: "" }, async ({ latest, change, click }) => {
     const state = startCompleteInterview({ filingStatus: "single", incomeTypes: ["unemployment"], lifeEvents: [], stateCode: null });

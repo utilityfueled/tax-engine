@@ -136,3 +136,91 @@ for (const viewport of [{ width: 1280, height: 900 }, { width: 390, height: 844 
     });
   });
 }
+
+test("requires fresh CRP benefit evidence after a date change and keeps it private in the review PDF", async ({ page }, testInfo) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  const benefitReference = "private-fictional-SSA-statement";
+  const benefitEvidence = "private-fictional-SSA-benefit-on-payment-date";
+  const privateRequests: URL[] = [];
+  page.on("request", request => {
+    if ([benefitReference, benefitEvidence].some(value => request.postData()?.includes(value))) privateRequests.push(new URL(request.url()));
+  });
+  await page.goto("/returns/new");
+  await expect(page).toHaveURL(/\/returns\/(?!new(?:[/?#]|$))[a-z0-9-]+(?:\?create=1)?$/i);
+  const id = new URL(page.url()).pathname.split("/").at(-1);
+  if (!id) throw new Error("Missing synthetic CRP return ID");
+  const key = `tax-engine.guided-flow-state.v1:${id}`;
+  await expect.poll(() => page.evaluate(id => Boolean(JSON.parse(localStorage.getItem("tax-engine.return-workspaces.v1") ?? "{}").workspaces?.[id]), id)).toBe(true);
+  await page.evaluate(({ id, key, source, taxpayer, statementReference, receiptReference, farmReference, benefitReference }) => {
+    localStorage.setItem(`tax-engine:guided-mode:${id}`, "true");
+    localStorage.setItem(key, JSON.stringify({ factsVersion: 2, phase: "interview", taxYear: 2025, currentSectionIndex: 2,
+      segmentation: { filingStatus: "single", incomeTypes: ["social-security", "unemployment"], lifeEvents: [], stateCode: null },
+      completedSections: ["personal-info", "income-social-security", "deductions", "credits", "payments", "review", "final-review"],
+      sectionData: { "personal-info": taxpayer,
+        "income-social-security": { residentTreatmentConfirmed: true, puertoRicoIncomeExclusion: "0", americanSamoaIncomeExclusion: "0",
+          netBenefits: "4000.00", federalWithheld: "0", sourceFactsConfirmed: true,
+          entries: [{ sourceType: "ssa-1099", sourceTaxYear: "2025", beneficiaryRole: "primary", recipient: "Jane Example",
+            beneficiaryTaxIdLast4: "0001", accountReference: benefitReference, benefitsPaid: "4000.00", benefitsRepaid: "0",
+            netBenefits: "4000.00", federalWithheld: "0", priorYearBenefits: false, sourceFactsConfirmed: true }] },
+        "income-unemployment": { compensation: "0", federalWithheld: "31.27", entries: [source],
+          cashFarm: { owner: "primary", sourceYear: "2025", farmReference, principalActivity: "Market vegetables", scopeConfirmed: true,
+            raisedProductSales: "2500.65", seeds: "100.52", supplies: "0", utilities: "0", fuel: "0", repairs: "0", qualifiedPropertyBasis: "0",
+            receipts: [{ payerTin: source.payerTin, statementReference, reference: receiptReference, receivedDate: "2025-09-14", amount: "1000.41" }] } },
+      },
+    }));
+  }, { id, key, source, taxpayer: taxpayerFacts2025, statementReference, receiptReference, farmReference, benefitReference });
+  await page.reload();
+
+  const farm = page.getByRole("group", { name: "Cash-farm records for USDA Box 7", exact: true });
+  const receipt = farm.getByRole("group", { name: "Original USDA receipt 1", exact: true });
+  const confirmation = farm.getByRole("combobox", { name: /I checked the farm books and every USDA receipt/ });
+  const estimate = page.locator(".guided-ticker-value-hero").first();
+  const date = receipt.getByLabel("Actual payment receipt date", { exact: true });
+  const benefit = receipt.getByRole("combobox", { name: "Actual Social Security status on this payment date", exact: true });
+  const annual = receipt.getByRole("textbox", { name: "Matching original SSA-1099 statement reference", exact: true });
+  await receipt.getByRole("combobox", { name: "Program on the original receipt", exact: true }).selectOption("crp-annual-rental");
+  await receipt.getByRole("combobox", { name: /Do the farm books show zero Schedule F deductions/ }).selectOption("true");
+  const enterBenefit = async (reference: string) => {
+    await benefit.selectOption("ssa-disability");
+    await receipt.getByRole("textbox", { name: "Local reference for dated benefit evidence", exact: true }).fill(benefitEvidence);
+    await annual.fill(reference);
+    await confirmation.selectOption("true");
+  };
+  await enterBenefit("unmatched annual statement");
+  await expect(estimate).toHaveText("Enter more info for an estimate");
+  await annual.fill(benefitReference);
+  await confirmation.selectOption("true");
+  await expect(estimate).toHaveText(/^\$[0-9]/);
+  await date.fill("2025-09-15");
+  await expect(benefit).toHaveValue("");
+  await expect(confirmation).toHaveValue("");
+  await expect(estimate).toHaveText("Enter more info for an estimate");
+  await page.reload();
+  await expect(date).toHaveValue("2025-09-15");
+  await expect(benefit).toHaveValue("");
+  await enterBenefit(benefitReference);
+  await expect(estimate).toHaveText(/^\$[0-9]/);
+  expect(privateRequests).toEqual([]);
+
+  await page.locator(".guided-nav").getByRole("button", { name: "Continue", exact: true }).click();
+  await page.locator(".guided-progress-steps").getByRole("button", { name: "Final Review", exact: true }).click();
+  await page.getByRole("button", { name: "Open Full Return", exact: true }).click();
+  const bundle = page.getByRole("region", { name: "Return Bundle", exact: true });
+  await expect(bundle).toContainText("Filing exports are not yet qualified");
+  const response = page.waitForResponse(response => response.url().endsWith("/api/workspace/filled-return"));
+  const download = page.waitForEvent("download");
+  await bundle.getByRole("button", { name: "Download Review PDF", exact: true }).click();
+  expect((await response).status()).toBe(200);
+  const output = testInfo.outputPath("crp-review.pdf");
+  await (await download).saveAs(output);
+  const pages: string[] = JSON.parse(execFileSync(process.env.TAX_ENGINE_PDF_TEST_PYTHON ?? "python3", ["-c",
+    "from pypdf import PdfReader\nimport json,sys\nprint(json.dumps([p.extract_text() or '' for p in PdfReader(sys.argv[1]).pages]))", output], { encoding: "utf8", timeout: 30_000 }));
+  const scheduleSE = pages.find(text => /^SCHEDULE SE\b[\s\S]*?Self-Employment Tax\b[\s\S]*?Conservation Reserve\s+Program/i.test(text));
+  // Rounded Schedule SE lines 1a/1b and 12/13 from 3400.54, 1000.41 and .9235 × .153.
+  expect(scheduleSE).toMatch(/\b3401\b\s+\b1000\b/);
+  expect(scheduleSE).toMatch(/\b339\b\s+\b170\b/);
+  for (const text of pages) expect(text).toContain("FOR REVIEW ONLY - NOT FOR FILING");
+  expect(pages.join("\n")).not.toContain(benefitEvidence);
+  expect(pages.join("\n")).not.toContain(benefitReference);
+  expect(privateRequests.map(url => [url.origin, url.pathname])).toEqual([[new URL(page.url()).origin, "/api/workspace/filled-return"]]);
+});

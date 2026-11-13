@@ -2,15 +2,20 @@ import Decimal from "decimal.js";
 import { ScheduleFInputSchema, type TaxYearInput } from "@/models/inputs";
 import { parseGuidedCurrency } from "./guided-currency";
 import { amountError, isActualDate } from "./guided-required-facts";
-import type { FilingStatus, PersonalInfoData } from "./guided-interview-flow";
+import { isStartedSocialSecurity, socialSecurityEntries, socialSecurityFactErrors } from "./guided-social-security-facts";
+import type { FilingStatus, PersonalInfoData, SocialSecurityData } from "./guided-interview-flow";
 
 interface GuidedFarmReceipt {
-  program?: "ordinary-taxable-usda" | "other" | "";
+  program?: "ordinary-taxable-usda" | "crp-annual-rental" | "other" | "";
   payerTin?: string;
   statementReference?: string;
   reference?: string;
   receivedDate?: string;
   amount?: string;
+  benefitAtReceipt?: "ssa-retirement" | "ssa-disability" | "none" | "";
+  benefitSourceReference?: string;
+  annualBenefitStatementReference?: string;
+  noAttributableScheduleFDeductionsConfirmed?: boolean | null;
 }
 
 export interface GuidedCashFarmData {
@@ -48,6 +53,30 @@ function actualMoney(value: string | undefined, label: string): Decimal {
 const normalizeTin = (tin?: string) => tin?.trim().replace(/-/g, "");
 const normalizeReference = (reference?: string) => reference?.trim().toLowerCase();
 
+const receivesQualifyingBenefit = (receipt: GuidedFarmReceipt) =>
+  receipt.benefitAtReceipt === "ssa-retirement" || receipt.benefitAtReceipt === "ssa-disability";
+
+/** Include return-local IDs only when an actual CRP receipt must identify an annual original. */
+export function buildGuidedCashFarmBenefitOriginals(
+  farm: GuidedCashFarmData | undefined,
+  data: SocialSecurityData | undefined,
+  taxYear: number,
+  filingStatus?: FilingStatus | null,
+  personalInfo?: PersonalInfoData,
+) {
+  if (!farm?.receipts?.some(row => row.program === "crp-annual-rental" && receivesQualifyingBenefit(row))) return undefined;
+  if (Object.keys(socialSecurityFactErrors(data, filingStatus, taxYear, personalInfo)).length) {
+    throw new Error("Check the actual Social Security benefit originals before reconciling CRP receipts.");
+  }
+  return socialSecurityEntries(data).filter(isStartedSocialSecurity).flatMap(entry => {
+    if (entry.sourceType !== "ssa-1099" || (entry.beneficiaryRole !== "primary" && entry.beneficiaryRole !== "spouse")) return [];
+    return [{ reference: normalizeReference(entry.accountReference), input: {
+      accountHolder: entry.beneficiaryRole, sourceTaxYear: taxYear, recipient: entry.recipient?.trim(),
+      netBenefits: entry.netBenefits.trim().replace(/,/g, ""), federalWithheld: entry.federalWithheld.trim().replace(/,/g, ""),
+    } }];
+  }).map(({ reference, input }, index) => ({ reference, input: { ...input, sourceId: `ssa-source-${index + 1}` } }));
+}
+
 /** Convert the confirmed local receipts using the current, validated statement IDs. */
 export function buildGuidedCashFarm(
   data: GuidedCashFarmData | undefined,
@@ -56,6 +85,7 @@ export function buildGuidedCashFarm(
   filingStatus?: FilingStatus | null,
   personalInfo?: PersonalInfoData,
   stateCode?: string | null,
+  benefitOriginals?: ReturnType<typeof buildGuidedCashFarmBenefitOriginals>,
 ): TaxYearInput["scheduleF"] {
   const statements = forms.filter(form => parseGuidedCurrency(form.agriculturePayments).gt(0));
   if (!data && !statements.length) return undefined;
@@ -69,10 +99,12 @@ export function buildGuidedCashFarm(
     throw new Error("Confirm the actual farm, owner, year-end records and supported federal cash-farm facts.");
   }
   if (data.sourceFactsConfirmed !== true) throw new Error("Check the cash-farm facts against the original records after the last edit.");
-  if (!data.receipts?.length) throw new Error("Enter each actual dated ordinary USDA receipt.");
+  if (!data.receipts?.length) throw new Error("Enter each actual dated USDA receipt.");
 
   const payments = data.receipts.map((receipt, index) => {
-    if (receipt.program !== "ordinary-taxable-usda") throw new Error("Confirm each receipt is an ordinary fully taxable USDA subsidy from the original program record.");
+    if (receipt.program !== "ordinary-taxable-usda" && receipt.program !== "crp-annual-rental") {
+      throw new Error("Confirm each receipt is an ordinary fully taxable USDA subsidy or a fully taxable CRP annual rental payment from the original program record.");
+    }
     const payerTin = normalizeTin(receipt.payerTin);
     const statementReference = normalizeReference(receipt.statementReference);
     const matches = statements.filter(form => normalizeTin(form.payerTin) === payerTin
@@ -85,11 +117,36 @@ export function buildGuidedCashFarm(
       || !receipt.receivedDate.startsWith(`${taxYear}-`)) {
       throw new Error("Enter each actual USDA receipt's local record reference and date in the return year.");
     }
-    return {
-      program: "other" as const, sourceId: `farm-receipt-${index + 1}`, sourceReference: receipt.reference.trim(),
+    const original = {
+      sourceId: `farm-receipt-${index + 1}`, sourceReference: receipt.reference.trim(),
       form1099GSourceId, receivedDate: receipt.receivedDate, accountHolder: owner,
       taxableAmount: actualMoney(receipt.amount, "USDA receipt amount").toFixed(2),
     };
+    if (receipt.program === "ordinary-taxable-usda") {
+      if (receipt.benefitAtReceipt || receipt.benefitSourceReference?.trim() || receipt.annualBenefitStatementReference?.trim()
+        || typeof receipt.noAttributableScheduleFDeductionsConfirmed === "boolean") {
+        throw new Error("Reconcile saved CRP benefit evidence with the original program selection.");
+      }
+      return { ...original, program: "other" as const };
+    }
+    const benefit = receipt.benefitAtReceipt;
+    const evidence = receipt.benefitSourceReference?.trim();
+    if ((benefit !== "none" && benefit !== "ssa-retirement" && benefit !== "ssa-disability") || !evidence
+      || receipt.noAttributableScheduleFDeductionsConfirmed !== true) {
+      throw new Error("Confirm the actual benefit status on the CRP receipt date, its evidence and zero attributable Schedule F deductions.");
+    }
+    const annualReference = normalizeReference(receipt.annualBenefitStatementReference);
+    const crp = { ...original, program: "crp-annual-rental" as const, benefitAtReceipt: benefit,
+      benefitSourceReference: evidence, noAttributableScheduleFDeductionsConfirmed: true as const };
+    if (benefit === "none") {
+      if (annualReference) throw new Error("Reconcile the saved annual SSA-1099 link with the absence of qualifying benefits on that receipt date.");
+      return crp;
+    }
+    const [annual, duplicate] = benefitOriginals?.filter(row => row.input.accountHolder === owner && row.reference === annualReference) ?? [];
+    if (!annualReference || !annual || duplicate) {
+      throw new Error("Match the CRP receipt to its unique actual same-owner annual SSA-1099 statement from this return year.");
+    }
+    return { ...crp, annualBenefitStatementSourceId: annual.input.sourceId };
   });
   const amounts = Object.fromEntries(guidedFarmMoneyFields.map(([key, label]) => [key, actualMoney(data[key], label)])) as
     Record<(typeof guidedFarmMoneyFields)[number][0], Decimal>;

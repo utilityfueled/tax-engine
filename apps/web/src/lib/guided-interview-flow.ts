@@ -1787,7 +1787,10 @@ export function updateSectionData(
   const nextGovernment = sectionId === "income-unemployment" ? data as UnemploymentData : state.sectionData["income-unemployment"];
   const previousGovernment = state.sectionData["income-unemployment"];
   const farmSourcesChanged = nextGovernment?.cashFarm && (
-    (sectionId === "personal-info" && sourceValuesChanged) || (sectionId === "income-unemployment" && (
+    (sectionId === "personal-info" && sourceValuesChanged)
+    || (sectionId === "income-social-security" && sourceValuesChanged
+      && nextGovernment.cashFarm.receipts?.some(row => row.program === "crp-annual-rental"))
+    || (sectionId === "income-unemployment" && (
       guidedSourceValuesChanged(previousGovernment?.entries, nextGovernment.entries)
       || guidedSourceValuesChanged(previousGovernment?.cashFarm, nextGovernment.cashFarm)
     ))
@@ -2309,7 +2312,7 @@ function validateSocialSecuritySection(data: SocialSecurityData | undefined, sta
 
 function validateUnemploymentSection(data: UnemploymentData | undefined, state: GuidedFlowState): SectionValidationResult {
   if (!data?.cashFarm && !unemploymentEntries(data).some(isStartedUnemployment)) return EMPTY_SECTION("government payment info");
-  return validateRequiredFacts({...unemploymentFactErrors(data, state.segmentation.filingStatus, state.taxYear, state.sectionData["personal-info"], state.sectionData["state-return"], state.sectionData.deductions, state.segmentation.stateCode), ...guidedRefundRecoveryDraftErrors(state)});
+  return validateRequiredFacts({...unemploymentFactErrors(data, state.segmentation.filingStatus, state.taxYear, state.sectionData["personal-info"], state.sectionData["state-return"], state.sectionData.deductions, state.segmentation.stateCode, state.sectionData["income-social-security"]), ...guidedRefundRecoveryDraftErrors(state)});
 }
 
 function validateDeductionsSection(data: DeductionData | undefined, taxYear?: number | null, sourceErrors: Record<string, string> = {}, filingStatus?: FilingStatus | null, spouse?: unknown): SectionValidationResult {

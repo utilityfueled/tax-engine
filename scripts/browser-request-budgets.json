@@ -78,7 +78,7 @@
     "apps/web/src/components/guided-interview/business-source-details.tsx": "28af2a91b135675af66c1b664d00bf4611a901f63c99c1dff54d035c5dd96678",
     "apps/web/src/components/guided-interview/care-benefits-details.tsx": "460e39a53b03277714ae44827dfa9b346df2e93059774de02eea10435b765279",
     "apps/web/src/components/guided-interview/care-source-details.tsx": "7841f6d90c234b2b0d45536a0f57b5bace2aae63a4c88f384103c8e901b18fce",
-    "apps/web/src/components/guided-interview/cash-farm-box7-details.tsx": "72097ae7462a5f09fb665064d65a47ff550287ae054f70c9258e5138d5e4a19f",
+    "apps/web/src/components/guided-interview/cash-farm-box7-details.tsx": "6ffd70d64a71a89774273411f2d0f9e7f29645c5487f5969db89ca577af58794",
     "apps/web/src/components/guided-interview/charitable-carryover-details.tsx": "7c38a6ca3c540f0a5769ea79875776b1a5c37a322697563017aaaefbec77c092",
     "apps/web/src/components/guided-interview/charitable-filing-unit-details.tsx": "abd66c16c0eb218b77632feab73d44b5734fb6fbafab6adc206f96c5a234071d",
     "apps/web/src/components/guided-interview/child-election-details.tsx": "0778a77b080ac0911aad38862b1c8dd4d8dd13039c32768f3d8e5481e474ec06",
@@ -252,7 +252,7 @@
     "apps/web/src/lib/guided-adoption-prior-benefits.ts": "c943199cbfa2a07664857fe6b80b68409711a2b203982da2064360b2531f6cb6",
     "apps/web/src/lib/guided-brokerage-withholding.ts": "d08c3870ecd4c016ac3f2ba75da9bd39b5d6d2dc5a9511eb04519835216fce72",
     "apps/web/src/lib/guided-business-facts.ts": "8604cfd349abedb4c8e82d2eef267ad00b441a6f56307c4c7ef657ce434bec66",
-    "apps/web/src/lib/guided-cash-farm-box7.ts": "c5df99845e29b7e4a0d7786428074162c239d9663ea1fbf01f71eadc064d8679",
+    "apps/web/src/lib/guided-cash-farm-box7.ts": "25e89b26b26d748d0794364d92b901999f54260a268d3fc7a6ef462fde945f5a",
     "apps/web/src/lib/guided-charitable-carryover.ts": "7fd4e0849076a1a51f465f8977d2a48e258966d2dc97434522a767e6851953c8",
     "apps/web/src/lib/guided-child-election-facts.ts": "66e8db7a441dfeb3f13f9a42d316d1882e44f0d08a0aa37fa3ec9b054959f422",
     "apps/web/src/lib/guided-cod-attributes.ts": "34cf9cbaf13759a7b3544770937785fd65b6af52edab4719b579ef71e765c4e7",
@@ -286,8 +286,8 @@
     "apps/web/src/lib/guided-health-insurance-facts.ts": "08c785a3a31d07d96932840afba8cb23c914c22a4213abafc2ac6531b811ae4b",
     "apps/web/src/lib/guided-hsa-distribution-facts.ts": "e9ce96eb9f2c2297fca1dd53ca311b2b42545da4a3a2ec257fcf702daac9060f",
     "apps/web/src/lib/guided-hsa-facts.ts": "bad97489b43ff81ed079b9c193f1f77f6fd62950ee159256456a79a6d009654e",
-    "apps/web/src/lib/guided-interview-bridge.ts": "758bb4ebf8e457e8879576bdc666953c42aa73718d30fa155e461b43c22e3c1d",
-    "apps/web/src/lib/guided-interview-flow.ts": "9f21c53ea0cd5b34ee5f288c7abfb2ef7b31efda6191bb9d16be5f2c506cd198",
+    "apps/web/src/lib/guided-interview-bridge.ts": "a59463f2307afd0e5ed121fb9495cf9d46d6fcce4f760d336478adb3743cad15",
+    "apps/web/src/lib/guided-interview-flow.ts": "8227e595fb3d91fad80b03b25724386474592ca084b463e1ac520f9808e93b9d",
     "apps/web/src/lib/guided-investment-facts.ts": "c05786de5c12a4341371294d2a926ec64aae99eeeb8ffcbe5595c6fe9c3727dc",
     "apps/web/src/lib/guided-investment-interest.ts": "3f55441684455777dac810e9122e14345944f6f5e4262e1f2e4447eff1b1118b",
     "apps/web/src/lib/guided-ira-basis.ts": "b6dff39b2a47ff2c56d233b91e9fa52fa35a75443577b2b33754edaa65c18473",
@@ -373,7 +373,7 @@
     "apps/web/src/lib/guided-tax-refund.ts": "4bc7f69ee12187bf4dc4d6b313c5b6d49d7e64355a960f6346951fd07dc9c68a",
     "apps/web/src/lib/guided-taxpayer-facts.ts": "2e1260ea3839da761de5861f01c3c0f11d9e13f78526a2305c5c6fe5dc977bf1",
     "apps/web/src/lib/guided-tip-income-facts.ts": "0106fe6f8b65d0572cd759357fdb18ed43fafcd1230f86aa7fea9a3d22104ca4",
-    "apps/web/src/lib/guided-unemployment-facts.ts": "ea05c4cfe41d7835911712bd15bd5c590ba56ed9dede4f714b8360e2db5ddfe2",
+    "apps/web/src/lib/guided-unemployment-facts.ts": "b8caa2e5279a01f0214cd37387759ef0467a95d70e2a980e629839b3dfa3a4cb",
     "apps/web/src/lib/guided-vehicle-facts.ts": "e02aeec39df405ce3e08f4a0f550fbddbe856e99097be5d0b6ec1c736dee9a57",
     "apps/web/src/lib/guided-vehicle-refinancing.ts": "8217184629120742630441211729794fb6d0c3c9544b8aa1240de69a67f94d33",
     "apps/web/src/lib/guided-w2-facts.ts": "beb65a062d920188e6eec59bb4fbedfc0630c53ae78740dec40385a8e4ff8c20",
@@ -483,7 +483,7 @@
     "apps/web/tests/guided-annual-loan-interest-fixture.ts": "90d97d8dd09dbea2f69aa682125dedf33c8ad3f9ba05e9d1468ec0b68ac53ea7",
     "apps/web/tests/guided-annual-loan-interest.spec.ts": "f9ef74470207022d9b48ce1589990f97be6cea0f3adf729f0bf02988c2da0bd6",
     "apps/web/tests/guided-cash-assistance.spec.ts": "b1c5214ae742a0386b8aee85813ff72741ce67939a4b29cc3950173ade9d5087",
-    "apps/web/tests/guided-cash-farm-box7.spec.ts": "ec44e3591f51dbe20e575ca9ef20b22c0c5af49d367b104eaea21c8c3444d95a",
+    "apps/web/tests/guided-cash-farm-box7.spec.ts": "3f5f058248e7b916957febdaa9026a5458f4b84d202c21cad466996a89f4dc9a",
     "apps/web/tests/guided-chapter-13-and-gift.spec.ts": "a62c4a399e4ec166c070bec268451f09a09dc9fbc9488fc7f97cd212ad224557",
     "apps/web/tests/guided-charitable-carryover.spec.ts": "084a34ad97528407124f4d97133a5ba4ef3a8e332f269f12448444429fa51012",
     "apps/web/tests/guided-child-election.spec.ts": "449cd320a219a189db6875a2275e4d808b67f8ca4b18bd6708dba8562e172f8b",
@@ -2299,7 +2299,7 @@
       "skippedTitles": []
     },
     "guided-cash-farm-box7.spec.ts": {
-      "caseCount": 2,
+      "caseCount": 3,
       "bounds": {
         "filled-return": 1,
         "provider": 0,
@@ -2309,9 +2309,12 @@
       "requestSourceLines": [
         109,
         111,
-        127
+        127,
+        210,
+        212,
+        225
       ],
-      "reviewBasis": "One actual historical review click per viewport; edit, reload, navigation and deletion are browser-local. No AI or other provider request action.",
+      "reviewBasis": "One historical review click per case. Two ordinary cash-farm viewports and one CRP receipt-date replay. Edit, reload, navigation and deletion are browser-local. No provider request action.",
       "skippedTitles": []
     },
     "guided-cash-assistance.spec.ts": {

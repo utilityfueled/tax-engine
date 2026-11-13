@@ -8,7 +8,7 @@ import { FEDERAL_2026_CONSTANTS } from "@/models/federal-2026-indexed";
 import { TaxYearInputSchema } from "@/models/inputs";
 import { buildTaxInputFromGuidedData } from "@/lib/guided-interview-bridge";
 import { updateSectionData, validateSection } from "@/lib/guided-interview-flow";
-import { completeUnemploymentSource, startCompleteInterview } from "./complete-facts";
+import { completeSocialSecuritySource, completeUnemploymentSource, startCompleteInterview } from "./complete-facts";
 
 function originals() {
   const state = startCompleteInterview({ filingStatus: "single", incomeTypes: ["unemployment"], lifeEvents: [], stateCode: null });
@@ -80,6 +80,90 @@ it("blocks incomplete conflicting out-of-scope and edited farm originals", () =>
   state.sectionData["income-unemployment"] = data;
   expect(buildTaxInputFromGuidedData({ ...state, segmentation: { ...state.segmentation, stateCode: "OH" } })).toBeNull();
   const edited = updateSectionData(state, "income-unemployment", { ...data, cashFarm: { ...farm, seeds: "100.53" } });
+  expect(edited.sectionData["income-unemployment"]?.cashFarm?.sourceFactsConfirmed).toBeNull();
+  expect(buildTaxInputFromGuidedData(edited)).toBeNull();
+});
+
+function crpOriginals() {
+  const { state, data, farm } = originals();
+  const [first, second, third] = farm.receipts;
+  if (!first || !second || !third) throw new Error("Missing CRP receipt fixtures");
+  const qualifying = { ...first, program: "crp-annual-rental" as const, benefitAtReceipt: "ssa-disability" as const,
+    benefitSourceReference: "private January benefit record", annualBenefitStatementReference: "original annual disability statement",
+    noAttributableScheduleFDeductionsConfirmed: true };
+  const noBenefit = { ...second, program: "crp-annual-rental" as const, benefitAtReceipt: "none" as const,
+    benefitSourceReference: "private July cessation record", noAttributableScheduleFDeductionsConfirmed: true };
+  const farmWithCrp = { ...farm, receipts: [qualifying, noBenefit, third] };
+  const annual = { ...completeSocialSecuritySource, sourceTaxYear: "2026", accountReference: "Original Annual Disability Statement",
+    benefitsPaid: "4000.00", netBenefits: "4000.00" };
+  const other = { ...annual, accountReference: "another statement", benefitsPaid: "900.00", netBenefits: "900.00" };
+  const benefits = { entries: [other, annual], netBenefits: "4900.00", federalWithheld: "0",
+    puertoRicoIncomeExclusion: "0", americanSamoaIncomeExclusion: "0", residentTreatmentConfirmed: true, sourceFactsConfirmed: true };
+  state.sectionData["income-unemployment"] = { ...data, cashFarm: farmWithCrp };
+  state.sectionData["income-social-security"] = benefits;
+  return { state, data, farmWithCrp, qualifying, noBenefit, third, annual, other, benefits };
+}
+
+it("binds CRP benefit evidence per payment date to the actual annual SSA statement", () => {
+  const { state, data, farmWithCrp, benefits, annual, other } = crpOriginals();
+  expect(validateSection(state, "income-unemployment").fieldErrors).toEqual({});
+  const saved = JSON.parse(JSON.stringify(state)) as typeof state;
+  for (const entries of [[other, annual], [annual, other]]) {
+    saved.sectionData["income-social-security"] = { ...benefits, entries };
+    const canonical = TaxYearInputSchema.parse(buildTaxInputFromGuidedData(saved));
+    const matching = canonical.formSSA1099?.find(row => row.netBenefits === "4000.00");
+    expect(matching).toMatchObject({ accountHolder: "primary", sourceTaxYear: 2026 });
+    expect(matching?.sourceId).toBeTruthy();
+    expect(canonical.scheduleF?.agriculturalPaymentSources?.payments[0]).toMatchObject({
+      program: "crp-annual-rental", benefitAtReceipt: "ssa-disability", annualBenefitStatementSourceId: matching?.sourceId,
+    });
+    expect(canonical.scheduleF?.agriculturalPaymentSources?.payments[1]).toMatchObject({ benefitAtReceipt: "none" });
+    expect(canonical.scheduleF?.agriculturalProgramPayments).toBe("1000.41");
+    expect(calculateScheduleF(canonical.scheduleF).netFarmProfit.toFixed(2)).toBe("3400.54");
+    const se = calculateScheduleSE(canonical, FEDERAL_2026_CONSTANTS);
+    expect(se.totalSETax.toFixed()).toBe("410");
+    expect(se.deductibleHalf.toFixed()).toBe("205");
+    expect(() => calculateFederalTax(canonical)).toThrow(/2026 rule pack.*incomplete/i);
+  }
+
+  saved.taxYear = 2025;
+  saved.sectionData["income-unemployment"] = { ...data,
+    entries: data.entries.map(row => ({ ...row, sourceTaxYear: "2025", sourceFormRevision: "2024-03", familyLeaveBenefits: undefined })),
+    cashFarm: { ...farmWithCrp, sourceYear: "2025", receipts: farmWithCrp.receipts.map(row => ({ ...row, receivedDate: row.receivedDate.replace(/^2026-/, "2025-") })) },
+  };
+  saved.sectionData["income-social-security"] = { ...benefits, entries: [annual, other].map(row => ({ ...row, sourceTaxYear: "2025" })) };
+  const historical = calculateFederalTax(TaxYearInputSchema.parse(buildTaxInputFromGuidedData(saved)));
+  expect(historical.schedule1?.farmIncome.toFixed(2)).toBe("3400.54");
+  expect(historical.scheduleSE?.totalSETax.toFixed()).toBe("410");
+  expect(historical.totalWithholding.toFixed(2)).toBe("31.27");
+});
+
+it("rejects missing contradictory or changed CRP benefit originals", () => {
+  const { state, data, farmWithCrp, qualifying, noBenefit, third, annual, other, benefits } = crpOriginals();
+  for (const wrong of [
+    { ...qualifying, benefitAtReceipt: "" as const }, { ...qualifying, benefitSourceReference: " " },
+    { ...qualifying, noAttributableScheduleFDeductionsConfirmed: false },
+    { ...qualifying, annualBenefitStatementReference: "missing statement" },
+    { ...qualifying, benefitAtReceipt: "none" as const },
+    { ...qualifying, program: "ordinary-taxable-usda" as const },
+  ]) {
+    state.sectionData["income-unemployment"] = { ...data, cashFarm: { ...farmWithCrp, receipts: [wrong, noBenefit, third] } };
+    expect(buildTaxInputFromGuidedData(state)).toBeNull();
+  }
+  state.sectionData["income-unemployment"] = { ...data, cashFarm: farmWithCrp };
+  for (const entries of [
+    [other], [annual, { ...other, accountReference: annual.accountReference }],
+    [other, { ...annual, sourceType: "rrb-1099" as const }],
+    [other, { ...annual, sourceTaxYear: "2025" }],
+    [other, { ...annual, beneficiaryRole: "other" as const }],
+    [other, { ...annual, sourceFactsConfirmed: false }],
+  ]) {
+    state.sectionData["income-social-security"] = { ...benefits, entries, netBenefits: "" };
+    expect(validateSection(state, "income-unemployment").fieldErrors["government-source-worksheet"]).toBeTruthy();
+    expect(buildTaxInputFromGuidedData(state)).toBeNull();
+  }
+  state.sectionData["income-social-security"] = benefits;
+  const edited = updateSectionData(state, "income-social-security", { ...benefits, entries: [other, { ...annual, recipient: "Jordan Updated" }] });
   expect(edited.sectionData["income-unemployment"]?.cashFarm?.sourceFactsConfirmed).toBeNull();
   expect(buildTaxInputFromGuidedData(edited)).toBeNull();
 });
