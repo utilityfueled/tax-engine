@@ -873,16 +873,17 @@ export function ReturnWorkspaceScreen({
     }
 
     try {
+      if (!workspace) throw new Error("Open the return before saving your answer.");
       const nextWorkspace = answerInterviewQuestion(
         requireBrowserStorage(),
-        workspaceId,
+        workspace,
         questionId,
         normalizedAnswer
       );
       setWorkspace(nextWorkspace);
       setStorageMessage(`Answer saved: ${prompt}`);
-    } catch {
-      setStorageMessage("Could not save your answer. Please try again.");
+    } catch (error) {
+      setStorageMessage(resolveUiErrorMessage(error, "Could not save your answer. Please try again."));
     }
   }
 
@@ -908,11 +909,12 @@ export function ReturnWorkspaceScreen({
     }
 
     try {
-      const nextWorkspace = reopenInterviewQuestion(requireBrowserStorage(), workspaceId, questionId);
+      if (!workspace) throw new Error("Open the return before editing your answers.");
+      const nextWorkspace = reopenInterviewQuestion(requireBrowserStorage(), workspace, questionId);
       setWorkspace(nextWorkspace);
       setStorageMessage(`Reopened question: ${prompt}`);
-    } catch {
-      setStorageMessage("Could not update the question. Please try again.");
+    } catch (error) {
+      setStorageMessage(resolveUiErrorMessage(error, "Could not update the question. Please try again."));
     }
   }
 

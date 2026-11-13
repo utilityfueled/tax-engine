@@ -572,6 +572,61 @@ test("answered interview prompts persist across reloads and can be reopened", as
   await expect(auditTrail.getByText(wageAnswer, { exact: true })).toBeVisible();
 });
 
+async function startAdvancedWithWagePrompt(page: Page) {
+  await page.goto("/");
+  await enableAdvancedMode(page);
+  await page.getByRole("button", { name: /start your tax return/i }).click();
+  await expect(page).toHaveURL(/\/returns\/(?!new(?:[/?#]|$))[a-z0-9-]+$/i);
+  const id = new URL(page.url()).pathname.split("/").at(-1);
+  if (!id) throw new Error("Expected the new return ID");
+  await page.locator('input[type="file"]').setInputFiles(path.join(sampleDocsDir, "irs-w2-2025.pdf"));
+  const wagePrompt = page.getByRole("listitem").filter({ hasText: /Confirm whether every W-2 is final/i });
+  await expect(wagePrompt.getByLabel(/your answer/i)).toBeVisible();
+  return { id, wagePrompt };
+}
+
+test("a stale advanced answer cannot recreate a deleted return", async ({ page }) => {
+  const { id, wagePrompt } = await startAdvancedWithWagePrompt(page);
+  await wagePrompt.getByLabel(/your answer/i).fill("Synthetic W-2 is final.");
+  const otherTab = await page.context().newPage();
+  await otherTab.goto("/");
+  const deleteReturn = otherTab.getByRole("button", { name: `Delete tax return ${id}`, exact: true });
+  await deleteReturn.click();
+  await expect(deleteReturn).toHaveCount(0);
+  await wagePrompt.getByRole("button", { name: /save answer/i }).click();
+  expect(await page.evaluate(id => {
+    const data = JSON.parse(localStorage.getItem("tax-engine.return-workspaces.v1") ?? "{}");
+    return Object.hasOwn(data.workspaces ?? {}, id);
+  }, id)).toBe(false);
+  await expect(page.getByRole("status", { name: "Return status" })).toContainText("This return changed in another tab.");
+  await otherTab.reload();
+  await expect(deleteReturn).toHaveCount(0);
+  await otherTab.close();
+});
+
+test("a stale advanced question cannot be reopened after reset", async ({ page }) => {
+  const { id, wagePrompt } = await startAdvancedWithWagePrompt(page);
+  await wagePrompt.getByLabel(/your answer/i).fill("Synthetic W-2 is final.");
+  await wagePrompt.getByRole("button", { name: /save answer/i }).click();
+  await expect(wagePrompt.getByText(/^answered$/i)).toBeVisible();
+  const otherTab = await page.context().newPage();
+  await otherTab.goto(page.url());
+  await otherTab.getByRole("button", { name: "Reset Return", exact: true }).click();
+  await expect(otherTab.getByRole("status", { name: "Return status" })).toHaveText("Return reset.");
+  const stored = () => page.evaluate(id => {
+    const data = JSON.parse(localStorage.getItem("tax-engine.return-workspaces.v1") ?? "{}");
+    return data.workspaces?.[id];
+  }, id);
+  const cleared = await stored();
+  expect(cleared.documents).toEqual([]);
+  await wagePrompt.getByRole("button", { name: /reopen question/i }).click();
+  await expect(page.getByRole("status", { name: "Return status" })).toContainText("This return changed in another tab.", { timeout: 4000 });
+  expect(await stored()).toEqual(cleared);
+  await page.reload();
+  await expect(wagePrompt).toHaveCount(0);
+  await otherTab.close();
+});
+
 test("workspace screen can send a provider-safe summary through the redaction boundary", async ({ page }, testInfo) => {
   await page.goto("/");
   await enableAdvancedMode(page);

@@ -1613,13 +1613,20 @@ function updateInterviewQuestionStateInWorkspace(
 
 function updateInterviewQuestionState(
   storage: Storage,
-  workspaceId: string,
+  workspace: string | ReturnWorkspaceRecord,
   questionId: SeededFactId,
   status: InterviewQuestionRecord["status"],
   answerText?: string
 ) {
-  const data = loadStorage(storage);
-  const current = data.workspaces[workspaceId] ?? createWorkspace(workspaceId);
+  const current = typeof workspace === "string"
+    ? loadStorage(storage).workspaces[workspace]
+    : requireCurrentLocalWorkspace(storage, workspace);
+  if (!current) {
+    throw new Error("This return changed in another tab. Reload before continuing.");
+  }
+  if (typeof workspace !== "string" && !current.seededReturn.interviewQuestions.some(question => question.id === questionId)) {
+    throw new Error("This question changed in another tab. Reload before continuing.");
+  }
   const nextWorkspace = updateInterviewQuestionStateInWorkspace(
     current,
     questionId,
@@ -1627,7 +1634,7 @@ function updateInterviewQuestionState(
     answerText
   );
 
-  saveWorkspaceRecord(storage, workspaceId, nextWorkspace);
+  if (nextWorkspace !== current) saveWorkspaceRecord(storage, current.id, nextWorkspace);
   return nextWorkspace;
 }
 
@@ -1641,11 +1648,11 @@ export function answerWorkspaceInterviewQuestion(
 
 export function answerInterviewQuestion(
   storage: Storage,
-  workspaceId: string,
+  workspace: string | ReturnWorkspaceRecord,
   questionId: SeededFactId,
   answerText: string
 ) {
-  return updateInterviewQuestionState(storage, workspaceId, questionId, "answered", answerText);
+  return updateInterviewQuestionState(storage, workspace, questionId, "answered", answerText);
 }
 
 export function reopenWorkspaceInterviewQuestion(
@@ -1655,8 +1662,8 @@ export function reopenWorkspaceInterviewQuestion(
   return updateInterviewQuestionStateInWorkspace(workspace, questionId, "pending");
 }
 
-export function reopenInterviewQuestion(storage: Storage, workspaceId: string, questionId: SeededFactId) {
-  return updateInterviewQuestionState(storage, workspaceId, questionId, "pending");
+export function reopenInterviewQuestion(storage: Storage, workspace: string | ReturnWorkspaceRecord, questionId: SeededFactId) {
+  return updateInterviewQuestionState(storage, workspace, questionId, "pending");
 }
 
 export function saveWorkspaceSnapshot(storage: Storage, workspace: ReturnWorkspaceRecord) {
