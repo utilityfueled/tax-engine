@@ -2401,6 +2401,21 @@ describe("Simple W-2 single filer", () => {
 });
 
 describe("Form 8824 federal integration", () => {
+  it("routes the corrected net liability boot through Schedule D after parsing cash paid", () => {
+    const exchange = {
+      description: "Investment land exchange",
+      recognizedGainCharacter: "capital" as const,
+      cashPaid: "40000",
+      liabilitiesRelinquished: "150000",
+      liabilitiesAssumed: "80000",
+      fmvLikeKindPropertyReceived: "220000",
+      adjustedBasisLikeKindPropertyGivenUp: "175000",
+    };
+    const result = calculateFederalTax({ ...simpleW2Fixture, form8824: [exchange] });
+    expect(result.allLines.find(line => line.form === "Sched D" && line.line === "15")?.value.toFixed(2)).toBe("30000.00");
+    expect(result.allLines.find(line => line.form === "1040" && line.line === "7")?.value.toFixed(2)).toBe("30000.00");
+  });
+
   it("Form 1040 Line 8 and Schedule 1 - Form 8824 line 21 ordinary recapture flows through Schedule 1 Line 4", () => {
     const result = calculateFederalTax({
       ...simpleW2Fixture,

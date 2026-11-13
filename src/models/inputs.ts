@@ -5349,6 +5349,8 @@ export const Form8824Schema = z.object({
   adjustedBasisOtherPropertyGivenUp: optionalDecimal,
   /** Cash received in the exchange */
   cashReceived: optionalDecimal,
+  /** Cash paid to the other party, when recorded separately from the relinquished basis. */
+  cashPaid: nonnegativeDollarsAndCents.optional(),
   /** FMV of non-like-kind property received */
   fmvOtherPropertyReceived: optionalDecimal,
   /** Liabilities relinquished (mortgage on property given up) */

@@ -10,7 +10,7 @@
  * Boot = cash + FMV of non-like-kind property received + net liability
  * relief − exchange expenses, floored at zero.
  *
- * Ref: IRS Form 8824 Instructions (2025); IRC §1031; Pub 544;
+ * Ref: IRS Form 8824 Instructions (2025 and 2026); IRC §1031; Pub 544;
  *      Treas. Reg. §1.1031(a)-1 through §1.1031(k)-1.
  */
 
@@ -35,7 +35,7 @@ export interface Form8824Result {
   line16FmvLikeKindPropertyReceived: Decimal;
   /** Line 17: Total value received */
   line17TotalValueReceived: Decimal;
-  /** Line 18: Adjusted basis of like-kind property given up */
+  /** Line 18: Adjusted basis, net consideration paid and remaining exchange expenses */
   line18AdjustedBasisLikeKindPropertyGivenUp: Decimal;
   /** Line 19: Realized gain or (loss) */
   line19RealizedGainLoss: Decimal;
@@ -108,14 +108,14 @@ export function calculateForm8824(
     { "FMV other property (Line 12)": line12, "Basis other property (Line 13)": line13 });
 
   // ── Line 15: Boot received ──
-  // cash + FMV non-like-kind received + max(liabilities relinquished - liabilities assumed, 0) - expenses
-  // floored at zero
   const cashReceived = d(input.cashReceived);
+  const cashPaid = d(input.cashPaid);
   const fmvOtherReceived = d(input.fmvOtherPropertyReceived);
   const liabilitiesRelinquished = d(input.liabilitiesRelinquished);
   const liabilitiesAssumed = d(input.liabilitiesAssumed);
   const exchangeExpenses = d(input.exchangeExpenses);
-  const netLiabilityRelief = zeroFloor(liabilitiesRelinquished.minus(liabilitiesAssumed));
+  const considerationPaid = liabilitiesAssumed.plus(cashPaid).plus(line12);
+  const netLiabilityRelief = zeroFloor(liabilitiesRelinquished.minus(considerationPaid));
 
   const grossBoot = cashReceived.plus(fmvOtherReceived).plus(netLiabilityRelief);
   const line15 = zeroFloor(grossBoot.minus(exchangeExpenses));
@@ -126,6 +126,8 @@ export function calculateForm8824(
       "FMV other property received": fmvOtherReceived,
       "Liabilities relinquished": liabilitiesRelinquished,
       "Liabilities assumed": liabilitiesAssumed,
+      "Cash paid to counterparty": cashPaid,
+      "FMV other property given up (Line 12)": line12,
       "Net liability relief": netLiabilityRelief,
       "Exchange expenses": exchangeExpenses,
     });
@@ -140,10 +142,19 @@ export function calculateForm8824(
   audit.record(label, "17", "Total value received", line17,
     `Line 15 (${line15}) + Line 16 (${line16})`);
 
-  // ── Line 18: Adjusted basis of like-kind property given up ──
-  const line18 = d(input.adjustedBasisLikeKindPropertyGivenUp);
-  audit.record(label, "18", "Adjusted basis of like-kind property given up", line18,
-    "Input: adjustedBasisLikeKindPropertyGivenUp");
+  // ── Line 18: Basis, net consideration paid and unused exchange expenses ──
+  const relinquishedBasis = d(input.adjustedBasisLikeKindPropertyGivenUp);
+  const netPaid = zeroFloor(considerationPaid.minus(liabilitiesRelinquished));
+  const remainingExchangeExpenses = zeroFloor(exchangeExpenses.minus(grossBoot));
+  const line18 = relinquishedBasis.plus(netPaid).plus(remainingExchangeExpenses);
+  audit.record(label, "18", "Basis and net consideration paid", line18,
+    `Adjusted basis ${relinquishedBasis} + net consideration paid ${netPaid} + remaining exchange expenses ${remainingExchangeExpenses}`, {
+      "Adjusted basis of like-kind property given up": relinquishedBasis,
+      "Liabilities, cash and FMV of other property paid": considerationPaid,
+      "Liabilities relinquished": liabilitiesRelinquished,
+      "Net consideration paid": netPaid,
+      "Exchange expenses unused on Line 15": remainingExchangeExpenses,
+    });
 
   // ── Line 19: Realized gain or (loss) ──
   const line19 = line17.minus(line18);
@@ -191,7 +202,7 @@ export function calculateForm8824(
   audit.record(label, "25", "Basis of like-kind property received", line25,
     `Line 18 (${line18}) + Line 23 (${line23}) - Line 15 (${line15})`,
     {
-      "Old basis (Line 18)": line18,
+      "Basis and net consideration paid (Line 18)": line18,
       "Recognized exchange gain (Line 23)": line23,
       "Boot received (Line 15)": line15,
     });

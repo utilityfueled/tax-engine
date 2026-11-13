@@ -506,31 +506,33 @@ describe("Form 8824 edge cases", () => {
       // Line 14: Other property gain = 20000 - 15000 = 5000
       expect(result.line14GainLossOtherProperty).toEqual(new Decimal(5000));
 
-      // Boot = 25000 + 10000 + max(200000-150000, 0) - 12000 = 25000 + 10000 + 50000 - 12000 = 73000
-      expect(result.line15BootReceived).toEqual(new Decimal(73000));
+      // The $20,000 other property reduces net liability relief to $30,000.
+      // Boot = 25000 + 10000 + 30000 - 12000 = 53000
+      expect(result.line15BootReceived).toEqual(new Decimal(53000));
 
-      // Total value = 73000 + 750000 = 823000
-      expect(result.line17TotalValueReceived).toEqual(new Decimal(823000));
+      // Total value = 53000 + 750000 = 803000
+      expect(result.line17TotalValueReceived).toEqual(new Decimal(803000));
 
-      // Realized = 823000 - 400000 = 423000
-      expect(result.line19RealizedGainLoss).toEqual(new Decimal(423000));
+      // Line 18 is $400,000 because there is no net payment or unused expense.
+      expect(result.line18AdjustedBasisLikeKindPropertyGivenUp).toEqual(new Decimal(400000));
+      expect(result.line19RealizedGainLoss).toEqual(new Decimal(403000));
 
-      // Recognized = min(73000, 423000) = 73000
-      expect(result.line20RecognizedGain).toEqual(new Decimal(73000));
+      // Recognized = min(53000, 403000) = 53000
+      expect(result.line20RecognizedGain).toEqual(new Decimal(53000));
 
-      // Ordinary recapture = min(40000, 73000) = 40000
+      // Ordinary recapture is $40,000 in this fixture.
       expect(result.line21OrdinaryIncome).toEqual(new Decimal(40000));
 
-      // Capital = 73000 - 40000 = 33000
-      expect(result.line22CapitalGain).toEqual(new Decimal(33000));
+      // Capital = 53000 - 40000 = 13000
+      expect(result.line22CapitalGain).toEqual(new Decimal(13000));
 
-      // Total recognized = 40000 + 33000 = 73000
-      expect(result.line23TotalRecognizedGain).toEqual(new Decimal(73000));
+      // Total recognized = 40000 + 13000 = 53000
+      expect(result.line23TotalRecognizedGain).toEqual(new Decimal(53000));
 
-      // Deferred = 423000 - 73000 = 350000
+      // Deferred = 403000 - 53000 = 350000
       expect(result.line24DeferredGainLoss).toEqual(new Decimal(350000));
 
-      // Basis = 400000 + 73000 - 73000 = 400000
+      // Basis = 400000 + 53000 - 53000 = 400000
       expect(result.line25BasisLikeKindPropertyReceived).toEqual(new Decimal(400000));
     });
   });

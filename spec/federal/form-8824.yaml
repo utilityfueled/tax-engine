@@ -4,7 +4,8 @@ taxYear: 2025
 irsReference: "https://www.irs.gov/instructions/i8824"
 irc_section: "§1031"
 reference:
-  - IRS Form 8824 Instructions (2025)
+  - https://www.irs.gov/pub/irs-prior/i8824--2025.pdf
+  - https://www.irs.gov/pub/irs-pdf/i8824.pdf (final 2026 instructions, retrieved 2026-11-13)
   - IRS Publication 544, Sales and Other Dispositions of Assets
   - IRC §1031 (as amended by TCJA 2017, effective 2018+)
   - Treas. Reg. §1.1031(a)-1 through §1.1031(k)-1
@@ -69,14 +70,19 @@ lines:
     formula: |
       cashReceived
       + fmvOtherPropertyReceived
-      + max(liabilitiesRelinquished - liabilitiesAssumed, 0)
+      + max(liabilitiesRelinquished - liabilitiesAssumed - cashPaid - Line 12, 0)
       - exchangeExpenses
       (floor at 0 — exchange expenses can reduce boot but not below zero)
     notes: |
-      Boot netting: liability relief and liability assumption are netted first.
-      Exchange expenses (QI fees, title, recording) reduce boot dollar-for-dollar.
+      Cash and the FMV of other property paid to the counterparty offset liability
+      relief, separate from the Line 14 gain or loss. Qualified exchange expenses
+      reduce gross boot up to the amount of gross boot.
     reference: "Form 8824 Line 15; IRC §1031(b), §1031(d)"
     testRef: "tests/engine/forms/form-8824.test.ts::Line 15 — combined boot: cash + FMV other received + net liability relief - expenses"
+    testRefs:
+      - "tests/engine/forms/form-8824.test.ts::matches the IRS Finley example with a cash payment against liability relief"
+      - "tests/engine/forms/form-8824.test.ts::offsets liability relief by the fair market value of non-like-kind property given up"
+      - "tests/engine/federal.test.ts::routes the corrected net liability boot through Schedule D after parsing cash paid"
 
   - line: "16"
     description: FMV of like-kind property received
@@ -91,11 +97,20 @@ lines:
     testRef: "tests/engine/forms/form-8824.test.ts::recognized gain equals boot when boot < realized gain"
 
   - line: "18"
-    description: Adjusted basis of like-kind property given up
-    formula: "Input: adjustedBasisLikeKindPropertyGivenUp"
-    notes: "Cost + improvements - accumulated depreciation"
+    description: Basis and net consideration paid
+    formula: |
+      adjustedBasisLikeKindPropertyGivenUp
+      + max(liabilitiesAssumed + cashPaid + Line 12 - liabilitiesRelinquished, 0)
+      + (exchangeExpenses - expenses applied to Line 15)
+    notes: |
+      Use the actual cash paid when supplied. Legacy inputs have no separate
+      cash-paid field, and omit this component. The sum includes only expenses
+      unused on Line 15. This preserves the replacement basis on Line 25.
     reference: "Form 8824 Line 18"
     testRef: "tests/engine/forms/form-8824.test.ts::pure like-kind swap defers entire realized gain"
+    testRefs:
+      - "tests/engine/forms/form-8824.test.ts::matches the IRS Taylor example with additional net liabilities assumed"
+      - "tests/engine/forms/form-8824.test.ts::adds only unused exchange expenses to line 18 and preserves cents in replacement basis"
 
   # ── Realized gain ────────────────────────────────────────
   - line: "19"

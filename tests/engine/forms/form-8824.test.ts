@@ -9,6 +9,7 @@
  * Ref: IRS Form 8824 Instructions (2025); IRC §1031; Pub 544.
  */
 
+import { Decimal } from "decimal.js";
 import { describe, expect, it } from "vitest";
 import { calculateForm8824, calculateForm8824Aggregate } from "@/engine/forms/form-8824.js";
 import type { Form8824Input } from "@/models/inputs.js";
@@ -70,6 +71,62 @@ describe("Form 8824 — other property gain/loss (Line 14)", () => {
 // ═══════════════════════════════════════════════════════════
 
 describe("Form 8824 — boot received (Line 15)", () => {
+  it("matches the IRS Finley example with a cash payment against liability relief", () => {
+    const facts = {
+      ...makeExchange({
+        fmvLikeKindPropertyReceived: "220000",
+        adjustedBasisLikeKindPropertyGivenUp: "175000",
+        liabilitiesRelinquished: "150000",
+        liabilitiesAssumed: "80000",
+      }),
+      cashPaid: "40000",
+    };
+    const result = calculateForm8824(facts);
+    expect(result.line15BootReceived.toFixed(2)).toBe("30000.00");
+    expect(result.line18AdjustedBasisLikeKindPropertyGivenUp.toFixed(2)).toBe("175000.00");
+    expect(result.line19RealizedGainLoss.toFixed(2)).toBe("75000.00");
+    expect(result.line20RecognizedGain.toFixed(2)).toBe("30000.00");
+    expect(result.line25BasisLikeKindPropertyReceived.toFixed(2)).toBe("175000.00");
+  });
+
+  it("matches the IRS Taylor example with additional net liabilities assumed", () => {
+    const result = calculateForm8824(makeExchange({
+      fmvLikeKindPropertyReceived: "250000",
+      adjustedBasisLikeKindPropertyGivenUp: "100000",
+      cashReceived: "40000",
+      liabilitiesRelinquished: "80000",
+      liabilitiesAssumed: "150000",
+    }));
+    expect(result.line15BootReceived.toFixed(2)).toBe("40000.00");
+    expect(result.line18AdjustedBasisLikeKindPropertyGivenUp.toFixed(2)).toBe("170000.00");
+    expect(result.line19RealizedGainLoss.toFixed(2)).toBe("120000.00");
+    expect(result.line20RecognizedGain.toFixed(2)).toBe("40000.00");
+    expect(result.line25BasisLikeKindPropertyReceived.toFixed(2)).toBe("170000.00");
+  });
+
+  it("offsets liability relief by the fair market value of non-like-kind property given up", () => {
+    const result = calculateForm8824(makeExchange({
+      fmvOtherPropertyGivenUp: "6000",
+      adjustedBasisOtherPropertyGivenUp: "2000",
+      liabilitiesRelinquished: "25000",
+      liabilitiesAssumed: "15000",
+    }));
+    expect(result.line14GainLossOtherProperty.toFixed(2)).toBe("4000.00");
+    expect(result.line15BootReceived.toFixed(2)).toBe("4000.00");
+    expect(result.line18AdjustedBasisLikeKindPropertyGivenUp.toFixed(2)).toBe("300000.00");
+  });
+
+  it("adds only unused exchange expenses to line 18 and preserves cents in replacement basis", () => {
+    const result = calculateForm8824(makeExchange({
+      cashReceived: "5000.19",
+      exchangeExpenses: "12000.52",
+    }));
+    expect(result.line15BootReceived.toFixed(2)).toBe("0.00");
+    expect(result.line18AdjustedBasisLikeKindPropertyGivenUp.toFixed(2)).toBe("307000.33");
+    expect(result.line24DeferredGainLoss.toFixed(2)).toBe("192999.67");
+    expect(result.line25BasisLikeKindPropertyReceived.toFixed(2)).toBe("307000.33");
+  });
+
   it("Line 15 — cash boot received", () => {
     const result = calculateForm8824(makeExchange({
       cashReceived: "50000",
@@ -320,10 +377,12 @@ describe("Form 8824 — total recognized gain (Line 23)", () => {
       depreciationRecapture: "5000",
     }));
 
-    // Line 19 realized exchange gain = 200000
-    // Line 23 recognized exchange gain = 30000
-    // Deferred exchange gain = 200000 - 30000 = 170000
-    expect(result.line24DeferredGainLoss.toNumber()).toBe(170000);
+    // The other property's $20,000 FMV is consideration on Line 18.
+    // Its separate $8,000 gain on Line 14 does not enter Line 24.
+    expect(result.line14GainLossOtherProperty).toEqual(new Decimal(8000));
+    expect(result.line19RealizedGainLoss).toEqual(new Decimal(180000));
+    expect(result.line23TotalRecognizedGain).toEqual(new Decimal(30000));
+    expect(result.line24DeferredGainLoss).toEqual(new Decimal(150000));
   });
 });
 
@@ -377,11 +436,13 @@ describe("Form 8824 — basis of like-kind property received (Line 25)", () => {
       depreciationRecapture: "10000",
     }));
     // Other gain = 5000; Total value = 25000 + 475000 = 500000
-    // Realized = 200000; Recognized = min(25000, 200000) = 25000
+    // Line 18 = 300000 + 15000 = 315000; realized = 185000
+    // Recognized = min(25000, 185000) = 25000
     // Recapture = min(10000, 25000) = 10000
     // Line 23 = 10000 + 15000 = 25000
-    // Line 25 = 300000 + 25000 - 25000 = 300000
-    expect(result.line25BasisLikeKindPropertyReceived.toNumber()).toBe(300000);
+    // Line 25 = 315000 + 25000 - 25000 = 315000
+    expect(result.line18AdjustedBasisLikeKindPropertyGivenUp).toEqual(new Decimal(315000));
+    expect(result.line25BasisLikeKindPropertyReceived).toEqual(new Decimal(315000));
   });
 });
 
