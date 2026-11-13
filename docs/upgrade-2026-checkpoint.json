@@ -24385,5 +24385,50 @@
       "fullAuditSha256": "2bd34d50bec6f2f16e90551fcae80e94f898eabc4c169417a21a74f3fdf42d1f"
     },
     "ledger": "docs/upgrade-2026-nov13-release-rehearsals.md"
+  },
+  "nov13PensionTaxability": {
+    "commit": "005394da914b62d23bfb735e40f99583589cd0b9",
+    "focusedTestsPassed": 646,
+    "initialDraftRed": 10,
+    "specReferencesValidated": 8901,
+    "redSha256": "3ecb4ea23b95cd111cbf78645b0e02d08b20753ee89e554acb9b0a0f617b3852",
+    "greenSha256": "3b2e7fdbfd2bd6c202b48b1c4c29b8dce1db901693e62367104fd11317413603",
+    "federal2026ProductionAdmitted": false,
+    "sources": [
+      "https://www.irs.gov/instructions/i1099r",
+      "https://www.irs.gov/publications/p575"
+    ]
+  },
+  "nov13PaSuccessorVerification": {
+    "b7ffd2c1Combined": {
+      "source": "b7ffd2c1848521f4e9b3f3a4396b867661df436e",
+      "checksPassed": 12,
+      "unitAndCoverageTestsEach": 27760,
+      "branchCoveragePercent": 87.87,
+      "chromiumCollected": 621,
+      "chromiumPassed": 616,
+      "chromiumHostedOnlySkipped": 5,
+      "postgresStopped": true,
+      "checksSha256": "696f1be7b024813295260993082372e28da301e191d9ffb51e52bf5e55fad3d6",
+      "browserSummarySha256": "1403a242ab1457f122cd2cc244c80b84a00abfcf027d2a2d6dbe685550add9ab"
+    },
+    "0fb0c9a5Arm64": {
+      "source": "0fb0c9a5afddbe9db4bb3c26a76a51d31ece7dd9",
+      "image": "fd81a0a27f4539fe70c5a39d3b9696ff918212b8fdb8f748c2e3c289e1221b48",
+      "imageArchiveSha256": "caac8493fb5b4c370f1dd380d967ede2276dcd8ef40ff432f64784aca52a910a",
+      "sbomSha256": "deb7dcb2cf6f6643161fe25908a0833afe3c3a1a108f4963dce9b6de962abb6c",
+      "scanSha256": "b01dc05da75b0570d0d84c707ca32c9e8b56c67b5a82b65b3ecb571b6bf39166",
+      "chromiumCollected": 621,
+      "chromiumPassed": 616,
+      "chromiumHostedOnlySkipped": 5,
+      "composeRecoveryPhasesPassed": 6,
+      "advisoryMatches": 197,
+      "uniqueAdvisories": 86,
+      "riskAccepted": false,
+      "cleanupVerified": true,
+      "receiptSha256": "7dbd47b04d633fa0cc56f26ab1034b0485e4e594268ee5ec6d8bcc262bcda0e2",
+      "cleanupSha256": "cd32053478e94fc27e16e991280a6f3de2d3580c6280dd1e44122dc93d318b40"
+    },
+    "ledger": "docs/upgrade-2026-nov13-release-rehearsals.md"
   }
 }

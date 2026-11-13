@@ -6,6 +6,14 @@ below retain their original evidence boundaries.
 
 ## Active continuation — November 13 Eastern
 
+- [x] Guard 2026 non-IRA pension taxability in `005394da`. Pass 646
+  affected cases, including known zero, the official direct-rollover codes
+  and complete Simplified Method inputs. Preserve historical calculations.
+- [x] Close all 12 exact `b7ffd2c1` checks at 87.87% branch coverage and
+  27,760 unit/coverage tests. Pass 616 Chromium cases with five hosted skips.
+- [x] Pass exact `0fb0c9a5` ARM64 image import, smoke, scan, six Compose
+  recovery phases and 616 Chromium cases with five hosted skips. Verify
+  normal stop and socket restoration.
 - [x] Compute the Ohio senior citizen credit for confirmed withholding-only
   wage drafts in `29fb2d29`. Pass 348 affected checks across all three
   residency categories and adjacent specialized methods.

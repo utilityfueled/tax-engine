@@ -131,6 +131,25 @@ with OpenSSL and the same verified release source before the rerun.
 
 ## ARM64 self-host
 
+### Pennsylvania death-date guard archive at `0fb0c9a5`
+
+The runtime passed separate image import, smoke, SBOM and scanning,
+all six Compose recovery phases and 616 Chromium cases out of 621
+collected. The five hosted-only skips remain. The isolated VM stopped
+normally and the user socket route was restored. The Grype scan records
+197 matches across 86 advisories. No risk disposition was recorded.
+
+| ARM64 evidence | SHA-256 |
+| --- | --- |
+| Runtime image ID | `fd81a0a27f4539fe70c5a39d3b9696ff918212b8fdb8f748c2e3c289e1221b48` |
+| Runtime image archive | `caac8493fb5b4c370f1dd380d967ede2276dcd8ef40ff432f64784aca52a910a` |
+| CycloneDX SBOM | `deb7dcb2cf6f6643161fe25908a0833afe3c3a1a108f4963dce9b6de962abb6c` |
+| Grype scan | `b01dc05da75b0570d0d84c707ca32c9e8b56c67b5a82b65b3ecb571b6bf39166` |
+| Compose recovery | `943db2641ad3d1ac3287bd369989b90324046fdc30a919e9dee1abb29c0ed8c1` |
+| Chromium transcript | `384071aba1867a418d4d82acd1da76c9db2b6a8581f9d96e2fe63bdaa00d4d68` |
+| Complete rehearsal receipt | `7dbd47b04d633fa0cc56f26ab1034b0485e4e594268ee5ec6d8bcc262bcda0e2` |
+| Normal stop and socket restoration | `cd32053478e94fc27e16e991280a6f3de2d3580c6280dd1e44122dc93d318b40` |
+
 ### Completed archive at `a445aad7`
 
 The native Linux ARM64 runtime passed separate image-store import and

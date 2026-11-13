@@ -9,6 +9,18 @@ The read-only Vercel check still finds the production project linked to
 `main`, with automatic custom-domain assignment and no build-ignore command.
 The isolated rehearsal project has no Git link and protects all deployments.
 
+`005394da` requires the original Box 7a code and determined taxability
+for non-IRA pensions in the 2026 federal engine. A blank Box 2a or a
+reported unknown amount requires a complete supported worksheet unless
+the actual code and source establish a separately supported exclusion.
+The current-year guard preserves known zero, taxable Code G rollovers
+and the historical fallback. Ten new draft integration cases reproduced
+the defect before the change. The affected suites passed 646 tests, with
+engine types, 8,901 spec references, inventory and the browser audit.
+The production 2026 federal gate remains closed.
+[2026 Form 1099-R instructions](https://www.irs.gov/instructions/i1099r) ·
+[Publication 575](https://www.irs.gov/publications/p575).
+
 `a022a2ec` replaces raw shared Redis identifiers with application-keyed
 pseudonyms. The exact webpack build passed 14 local hosted HTTP checks,
 including cross-process quota and outage/recovery. The protected Preview
@@ -42,7 +54,9 @@ death facts cannot use this proof. Two failing tests preceded the fix.
 All 81 focused checks and 8,899 spec references passed, with types, inventory
 and scoped lint. `b7ffd2c1` binds the reviewed changes to the unchanged browser
 request budget. All 178 orchestration and runtime proof checks passed.
-The full `b7ffd2c1` archive verification is in progress.
+The exact `b7ffd2c1` archive passed all 12 checks. Unit and coverage each
+passed 27,760 tests at 87.87% branch coverage. Chromium passed 616 cases
+with five hosted-only skips. The isolated PostgreSQL cluster stopped.
 [IRS Publication 596 Rule 11](https://www.irs.gov/publications/p596) ·
 [Pennsylvania Act 45 of 2025](https://www.palegis.us/statutes/unconsolidated/law-information/view-statute?ActNum=0045.&SessInd=0&SessYr=2025&txtType=PDF).
 
@@ -55,6 +69,9 @@ residency categories. All 76 focused checks, 8,900 spec references, engine
 and web types, inventory and scoped lint passed. `0fb0c9a5` binds the browser
 audit to that change with unchanged windows and collection. All 179
 orchestration and provenance checks passed.
+The `0fb0c9a5` native ARM64 run passed image import, smoke, SBOM and scan,
+all six Compose recovery phases and 616 Chromium cases with five hosted-only
+skips. Normal stop and socket restoration were verified.
 [Pennsylvania DFO-02](https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/dfo-02.pdf) ·
 [IRS Form 1040 instructions](https://www.irs.gov/instructions/i1040gi).
 
