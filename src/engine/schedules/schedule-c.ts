@@ -21,6 +21,7 @@ import {
 import type { CalculatedLine } from "@/models/outputs.js";
 import { d as legacyAmount, min, roundDollar } from "@/utils/decimal.js";
 import { AuditTrail } from "@/utils/audit.js";
+import { reconcileScheduleCStandardMileage } from "@/utils/schedule-c-standard-mileage.js";
 import type { Form4562Result } from "@/engine/forms/form-4562.js";
 import { calculateForm4562 } from "@/engine/forms/form-4562.js";
 import { calculateForm8829 } from "@/engine/forms/form-8829.js";
@@ -173,22 +174,7 @@ function calculateStandardMileage(input: TaxYearInput, business: ScheduleCInput 
     throw new Error("Schedule C standard mileage requires separate methods for other vehicle expenses, depreciation, interest or foreign use");
   }
 
-  let beforeJuly = new Decimal(0);
-  let fromJuly = new Decimal(0);
-  for (const entry of facts.entries) {
-    if (entry.date < facts.placedInService) {
-      throw new Error("Schedule C standard mileage cannot precede the vehicle's first business-use date");
-    }
-    if (entry.date < "2026-07-01") beforeJuly = beforeJuly.plus(entry.miles);
-    else fromJuly = fromJuly.plus(entry.miles);
-  }
-  const businessMiles = beforeJuly.plus(fromJuly);
-  if (!businessMiles.plus(facts.commutingMiles).plus(facts.otherPersonalMiles).eq(facts.totalMiles)) {
-    throw new Error("Schedule C standard mileage must reconcile to the complete vehicle mileage total");
-  }
-  const parkingAndTolls = legacyAmount(facts.parkingAndTolls);
-  const deduction = beforeJuly.times("0.725").plus(fromJuly.times("0.76")).plus(parkingAndTolls);
-  return { deduction, beforeJuly, fromJuly, parkingAndTolls };
+  return reconcileScheduleCStandardMileage(facts);
 }
 
 export function calculateScheduleC(

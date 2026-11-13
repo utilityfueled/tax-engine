@@ -76,6 +76,7 @@ import { careFactErrors } from "./guided-credit-facts";
 import { buildActualEnergyInput, energyFactErrors } from "./guided-energy-facts";
 import { isStartedW2, w2FactErrors } from "./guided-w2-facts";
 import { businessFactErrors, hasBusinessSourceData, isStartedNec, sumKnownBusinessAmounts, type BusinessSourceData } from "./guided-business-facts";
+import { readGuidedBusinessMileage } from "./guided-business-mileage";
 import { isStartedRental, rentalFactErrors, rentalExpenseFields } from "./guided-rental-facts";
 import { buildGuidedRentalCarryovers } from "./guided-rental-carry-sources";
 import { paRentalAmountFields } from "./guided-pa-rental-facts";
@@ -248,6 +249,7 @@ export function buildScheduleCInput(
   expenses: ScheduleCExpenseData | undefined,
   qbiMateriallyParticipated?: boolean | null,
   businessFacts?: BusinessSourceData,
+  standardMileage?: NonNullable<ReturnType<typeof readGuidedBusinessMileage>>["packet"],
 ) {
   const sources = (necEntries ?? []).filter(isStartedNec);
   if (!sources.length && !hasEnteredAmount(manualGrossReceipts) && !Object.values(expenses ?? {}).some(hasEnteredAmount) && !businessFacts) return undefined;
@@ -258,6 +260,7 @@ export function buildScheduleCInput(
 
   return {
     sourceFacts: businessFacts?.scheduleCSourceFacts,
+    ...(standardMileage ? { standardMileage } : {}),
     grossReceipts: totalGross?.toFixed(),
     accountHolder: businessFacts?.accountHolder === "primary" || businessFacts?.accountHolder === "spouse" ? businessFacts.accountHolder : undefined,
     principalBusinessActivity: businessFacts?.activityDescription?.trim() || undefined,
@@ -283,7 +286,7 @@ export function buildScheduleCInput(
           depreciation: toOptionalDecimalString(businessFacts?.depreciation),
           legalAndProfessional: toOptionalDecimalString(businessFacts?.legalAndProfessional),
           advertising: toOptionalDecimalString(expenses.advertising),
-          carAndTruck: toOptionalDecimalString(expenses.carAndTruck),
+          carAndTruck: standardMileage ? undefined : toOptionalDecimalString(expenses.carAndTruck),
           insurance: toOptionalDecimalString(expenses.insurance),
           officeExpense: toOptionalDecimalString(expenses.officeExpense),
           supplies: toOptionalDecimalString(expenses.supplies),
@@ -784,6 +787,7 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
   const careBenefitSources = guidedCareBenefitSources(w2Data?.entries, seData?.businessFacts, seData?.expenses);
   let loanEducation: StudentLoanEducationSources = [];
   let form3903: ReturnType<typeof buildMovingExpenses>;
+  let standardMileage: ReturnType<typeof readGuidedBusinessMileage>;
   try {
     form3903 = buildMovingExpenses(state);
     assertKnownFacts(royaltySourceFactErrors(state));
@@ -792,7 +796,8 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
     assertKnownFacts(schedule1AFactErrors(state));
     assertKnownFacts(w2FactErrors(w2Data?.entries, segmentation.filingStatus, state.taxYear));
     assertKnownFacts(investmentFactErrors(investData, segmentation.filingStatus, state.taxYear, stateReturnData, segmentation.stateCode, personalInfo));
-    assertKnownFacts(businessFactErrors(seData, segmentation.filingStatus, w2Data?.entries, stateReturnData, state.taxYear));
+    assertKnownFacts(businessFactErrors(seData, segmentation.filingStatus, w2Data?.entries, stateReturnData, state.taxYear, state));
+    standardMileage = readGuidedBusinessMileage(seData, state);
     assertKnownFacts(rentalFactErrors(rentalData?.entries, segmentation.filingStatus, state.taxYear, segmentation.stateCode, personalInfo));
     assertKnownFacts(nonitemizedElectionFactErrors(state));
     assertKnownFacts(deductionFactErrors(deductionData, state.taxYear, segmentation.filingStatus, personalInfo.spouse));
@@ -838,7 +843,7 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
   const stateCode = segmentation.stateCode;
   const w2s = buildW2Inputs(w2Data?.entries);
   const necs = buildNecInputs(seData?.necEntries);
-  const scheduleC = buildScheduleCInput(seData?.necEntries, seData?.manualGrossReceipts, seData?.expenses, seData?.qbiMateriallyParticipated, seData?.businessFacts);
+  const scheduleC = buildScheduleCInput(seData?.necEntries, seData?.manualGrossReceipts, seData?.expenses, seData?.qbiMateriallyParticipated, seData?.businessFacts, standardMileage?.packet);
   let actualMacrs:ReturnType<typeof buildGuidedMacrsAssets>;
   let passengerForm:ReturnType<typeof buildGuidedPassengerForm>;
   try{actualMacrs=buildGuidedMacrsAssets(seData?.businessFacts,state.taxYear,!!rentalData?.entries?.length||!!sectionData["income-royalties"]);passengerForm=buildGuidedPassengerForm(seData?.businessFacts,state.taxYear);}catch{return null;}
@@ -1218,7 +1223,7 @@ export function buildGuidedSyntheticDocuments(
       size: 0,
       uploadedAt: now,
       kind: "1099-nec",
-      coverage: Object.keys(businessFactErrors(seData, state.segmentation.filingStatus, state.sectionData["income-w2"]?.entries, state.sectionData["state-return"], state.taxYear)).length ? "partially-supported" : "supported",
+      coverage: Object.keys(businessFactErrors(seData, state.segmentation.filingStatus, state.sectionData["income-w2"]?.entries, state.sectionData["state-return"], state.taxYear, state)).length ? "partially-supported" : "supported",
       label: "1099-NEC (guided interview)",
       notes: "Entered via guided interview.",
       matchedFixtureId: null,
@@ -1232,7 +1237,7 @@ export function buildGuidedSyntheticDocuments(
       size: 0,
       uploadedAt: now,
       kind: "schedule-c-support",
-      coverage: Object.keys(businessFactErrors(seData, state.segmentation.filingStatus, state.sectionData["income-w2"]?.entries, state.sectionData["state-return"], state.taxYear)).length ? "partially-supported" : "supported",
+      coverage: Object.keys(businessFactErrors(seData, state.segmentation.filingStatus, state.sectionData["income-w2"]?.entries, state.sectionData["state-return"], state.taxYear, state)).length ? "partially-supported" : "supported",
       label: "Schedule C (guided interview)",
       notes: "Manual Schedule C gross receipts and expenses entered via guided interview.",
       matchedFixtureId: null,

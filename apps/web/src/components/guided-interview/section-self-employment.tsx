@@ -1,7 +1,7 @@
 "use client";
 import {guidedPassengerDisplayAmount} from "@/lib/guided-passenger-sources";
 import {captureGuidedPassengerSources} from "@/lib/guided-interview-bridge";
-import type {GuidedFlowState} from "@/lib/guided-interview-flow";
+import { validateSection, type GuidedFlowState } from "@/lib/guided-interview-flow";
 import {guidedMacrsDisplayAmount} from "@/lib/guided-macrs-assets";
 import { formatGuidedDollars, parseGuidedDisplayAmount } from "@/lib/guided-currency";
 
@@ -38,6 +38,8 @@ import { CurrencyField } from "./currency-field";
 import { CompensationReportingFields } from "./compensation-reporting-fields";
 import { BooleanFact, TextFact } from "./fact-fields";
 import { BusinessSourceDetails } from "./business-source-details";
+import { BusinessMileageDetails } from "./business-mileage-details";
+import { supportsBusinessMileage } from "@/lib/guided-business-mileage";
 import { DocumentSourceFacts } from "./document-source-facts";
 import { isStartedNec, sumKnownBusinessAmounts, type BusinessSourceData } from "@/lib/guided-business-facts";
 
@@ -648,6 +650,7 @@ export function SectionSelfEmployment({
   const necIncome = sumKnownBusinessAmounts(currentEntries.filter(isStartedNec).map(entry => entry.nonemployeeCompensation));
   const manualIncome = sumKnownBusinessAmounts([manualGrossReceipts]);
   const totalIncome = necIncome !== null && manualIncome !== null ? necIncome.plus(manualIncome) : null;
+  const hasMileageLog = businessFacts?.standardMileage !== undefined;
   const totalExpenses = sumKnownBusinessAmounts([...Object.values(currentExpenses), businessFacts?.contractLabor, businessFacts?.depreciationMethod==='assets'?guidedMacrsDisplayAmount(businessFacts):businessFacts?.depreciationMethod==='passenger'?guidedPassengerDisplayAmount(businessFacts):businessFacts?.depreciation, businessFacts?.legalAndProfessional, ...(businessFacts?.businessInterest===undefined?[]:[businessFacts.businessInterest]), ...(businessFacts?.scheduleCSourceFacts?.ordinaryExpenses?.rows?.map(row=>row.amount)??[])]);
   const sourceAmount = (value: ReturnType<typeof sumKnownBusinessAmounts>) => value === null ? "Unknown — review source amounts" : `$${formatSuggestedAmount(value.toFixed())}`;
   const suggestedTotals = summarizeBankStatementSuggestionsByCategory(currentAnalyses);
@@ -988,6 +991,9 @@ export function SectionSelfEmployment({
               ordinary and necessary for your business. Enter an actual zero for categories
               you have checked and that do not apply; a blank remains unknown.
             </p>
+            <BusinessMileageDetails data={businessFacts?.standardMileage} available={supportsBusinessMileage(flowState, businessFacts)}
+              error={hasMileageLog && flowState ? validateSection(flowState, "income-self-employment").fieldErrors?.standardMileage : undefined}
+              onChange={standardMileage => commitSection({ businessFacts: { ...latestSection.current.value.businessFacts, standardMileage } })} />
 
             <div className="guided-doc-helper" style={{ marginBottom: "16px" }}>
               <div className="guided-doc-helper-copy">
@@ -1162,7 +1168,7 @@ export function SectionSelfEmployment({
 
         <div className="guided-ticker-grid" style={{ marginTop: "16px" }}>
           <div className="guided-ticker-item"><span className="guided-ticker-label">Entered gross receipts</span><strong className="guided-ticker-value">{sourceAmount(totalIncome)}</strong></div>
-          <div className="guided-ticker-item"><span className="guided-ticker-label">Entered expense amounts before tax limits</span><strong className="guided-ticker-value">{sourceAmount(totalExpenses)}</strong></div>
+          <div className="guided-ticker-item"><span className="guided-ticker-label">Entered expense amounts before tax limits</span><strong className="guided-ticker-value">{hasMileageLog ? "Includes a vehicle log for calculation" : sourceAmount(totalExpenses)}</strong></div>
         </div>
 
       </div>

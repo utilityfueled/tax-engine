@@ -76,6 +76,7 @@ import { energyFactErrors } from "./guided-energy-facts";
 import { isStartedW2, w2FactErrors } from "./guided-w2-facts";
 import { investmentFactErrors, investmentRowsStarted, type InvestmentSourceData, type InvestmentData } from "./guided-investment-facts";
 import { businessFactErrors, hasBusinessSourceData, type BusinessSourceData } from "./guided-business-facts";
+import { businessMileageDraftSchema, businessMileageOriginals, clearBusinessMileageConfirmations } from "./guided-business-mileage";
 import { isStartedRental, rentalFactErrors, type RentalSourceData } from "./guided-rental-facts";
 import { nonW2TaxAllocationErrors } from "./guided-salt-facts";
 import { isStartedUnemployment, unemploymentEntries, unemploymentFactErrors, type UnemploymentSourceData } from "./guided-unemployment-facts";
@@ -1775,7 +1776,15 @@ export function updateSectionData(
   const documentaryValues=(value:unknown)=>sectionId==='additional-deductions'?rrtaDocumentaryValues(value):sectionId==='income-unemployment'?refundDocumentaryValues(value):value;
   const sourceValuesChanged = guidedSourceValuesChanged(documentaryValues(state.sectionData[sectionId as keyof SectionDataMap]),documentaryValues(data));
   const nextBusiness = sectionId === "income-self-employment" ? data as SelfEmploymentSectionData : state.sectionData["income-self-employment"];
-  const scheduleCValues=(value:SelfEmploymentSectionData|undefined)=>value?{...value,businessFacts:value.businessFacts?{...value.businessFacts,incomeReconciled:undefined,expensesReconciled:undefined,passengerSources:value.businessFacts.passengerSources?{...value.businessFacts.passengerSources,sourceFactsConfirmed:undefined,originalInput:undefined,originalDraft:undefined}:undefined,macrsAssets:value.businessFacts.macrsAssets?{...value.businessFacts.macrsAssets,sourceFactsConfirmed:undefined,originalBusiness:undefined,originalCollection:undefined}:undefined}:undefined}:value;
+  const previousBusiness = state.sectionData["income-self-employment"];
+  const mileageDraft = businessMileageDraftSchema.safeParse(nextBusiness?.businessFacts?.standardMileage);
+  const mileageSourcesChanged = mileageDraft.success && (
+    (sectionId === "personal-info" && sourceValuesChanged)
+    || (sectionId === "income-self-employment" && guidedSourceValuesChanged(
+      businessMileageOriginals(previousBusiness?.businessFacts), businessMileageOriginals(nextBusiness?.businessFacts),
+    ))
+  );
+  const scheduleCValues=(value:SelfEmploymentSectionData|undefined)=>value?{...value,businessFacts:value.businessFacts?{...value.businessFacts,incomeReconciled:undefined,expensesReconciled:undefined,standardMileage:undefined,passengerSources:value.businessFacts.passengerSources?{...value.businessFacts.passengerSources,sourceFactsConfirmed:undefined,originalInput:undefined,originalDraft:undefined}:undefined,macrsAssets:value.businessFacts.macrsAssets?{...value.businessFacts.macrsAssets,sourceFactsConfirmed:undefined,originalBusiness:undefined,originalCollection:undefined}:undefined}:undefined}:value;
   const scheduleCValuesChanged=sectionId==='income-self-employment'?guidedSourceValuesChanged(scheduleCValues(state.sectionData['income-self-employment']),scheduleCValues(nextBusiness)):sourceValuesChanged;
   const scheduleCSourcesChanged=scheduleCValuesChanged && ["personal-info","income-self-employment","adjustments","credits"].includes(sectionId) && nextBusiness?.businessFacts?.scheduleCSourceFacts;
   const macrsSourcesChanged=scheduleCValuesChanged && ["personal-info","income-self-employment","income-rental","income-royalties","adjustments","credits"].includes(sectionId) && nextBusiness?.businessFacts?.macrsAssets;
@@ -1937,7 +1946,18 @@ export function updateSectionData(
       [sectionId]: data,
       ...((invalidatedOhioStateReturn ?? invalidatedPAStateReturn) ? { "state-return": invalidatedOhioStateReturn ?? invalidatedPAStateReturn } : {}),
       ...(invalidatedW2 ? { "income-w2": invalidatedW2 } : {}),
-      ...((scheduleCSourcesChanged || macrsSourcesChanged || passengerSourcesChanged) && nextBusiness ? {"income-self-employment":{...nextBusiness,businessFacts:{...nextBusiness.businessFacts,...(scheduleCSourcesChanged?{scheduleCSourceFacts:{...scheduleCSourcesChanged,sourceFactsConfirmed:null}}:{}),...(macrsSourcesChanged?{macrsAssets:{...macrsSourcesChanged,sourceFactsConfirmed:null}}:{}),...(passengerSourcesChanged?{passengerSources:{...passengerSourcesChanged,sourceFactsConfirmed:null}}:{})}}}:{}),
+      ...((scheduleCSourcesChanged || macrsSourcesChanged || passengerSourcesChanged || mileageSourcesChanged) && nextBusiness ? {
+        "income-self-employment": {
+          ...nextBusiness,
+          businessFacts: {
+            ...nextBusiness.businessFacts,
+            ...(scheduleCSourcesChanged ? { scheduleCSourceFacts: { ...scheduleCSourcesChanged, sourceFactsConfirmed: null } } : {}),
+            ...(macrsSourcesChanged ? { macrsAssets: { ...macrsSourcesChanged, sourceFactsConfirmed: null } } : {}),
+            ...(passengerSourcesChanged ? { passengerSources: { ...passengerSourcesChanged, sourceFactsConfirmed: null } } : {}),
+            ...(mileageSourcesChanged ? { standardMileage: clearBusinessMileageConfirmations(mileageDraft.data) } : {}),
+          },
+        },
+      } : {}),
       ...(royaltySourcesChanged ? { "income-royalties": invalidateRoyaltySources(royaltySourcesChanged) } : {}),
       ...((eicClaimantSourcesChanged || eicSeparatedSourcesChanged || eicHistorySourcesChanged || eicCurrentSourcesChanged) && nextPersonal ? { "personal-info": { ...nextPersonal,
         ...(eicClaimantSourcesChanged ? { eicClaimantEligibility: { ...eicClaimantSourcesChanged, sourceFactsConfirmed: null } } : {}),
@@ -2227,9 +2247,10 @@ function validateSelfEmploymentSection(
   w2s?: W2EntryData[],
   stateData?: StateReturnData,
   returnYear?: number | null,
+  flow?: GuidedFlowState,
 ): SectionValidationResult {
   if (!hasBusinessSourceData(data)) return EMPTY_SECTION("self-employment info");
-  const errors = businessFactErrors(data, filingStatus, w2s, stateData, returnYear);
+  const errors = businessFactErrors(data, filingStatus, w2s, stateData, returnYear, flow);
   return Object.keys(errors).length ? { status: "partial", message: "Complete the actual business ownership, source income and qualified expenses.", fieldErrors: errors, allowSkip: true } : VALID_SECTION;
 }
 
@@ -2371,7 +2392,7 @@ export function validateSection(
     case "income-w2":
       return validateW2Section(getSectionData(state, "income-w2"), state.segmentation.filingStatus, state.taxYear, state);
     case "income-self-employment":
-      return validateSelfEmploymentSection(getSectionData(state, "income-self-employment"), state.segmentation.filingStatus, getSectionData(state, "income-w2")?.entries, getSectionData(state, "state-return"), state.taxYear);
+      return validateSelfEmploymentSection(getSectionData(state, "income-self-employment"), state.segmentation.filingStatus, getSectionData(state, "income-w2")?.entries, getSectionData(state, "state-return"), state.taxYear, state);
     case "income-investments":
       return validateInvestmentSection(getSectionData(state, "income-investments"), state.segmentation.filingStatus, state.taxYear, getSectionData(state, "state-return"), state.segmentation.stateCode, getSectionData(state, "personal-info"));
     case "income-royalties":

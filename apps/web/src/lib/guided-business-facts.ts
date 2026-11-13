@@ -2,13 +2,15 @@ import {guidedPassengerDisplayAmount} from "./guided-passenger-sources";
 import {guidedMacrsFactErrors,guidedMacrsDisplayAmount,type GuidedMacrsAssetsDraft} from "./guided-macrs-assets";
 import { actualCompensationSourceYear, compensationReportingErrors } from "./guided-compensation-reporting";
 import Decimal from "decimal.js";
-import type { FilingStatus, NecEntryData, SelfEmploymentSectionData, StateReturnData, W2EntryData } from "./guided-interview-flow";
+import type { FilingStatus, GuidedFlowState, NecEntryData, SelfEmploymentSectionData, StateReturnData, W2EntryData } from "./guided-interview-flow";
+import { readGuidedBusinessMileage, type BusinessMileageDraft } from "./guided-business-mileage";
 import { parseGuidedCurrency, sumGuidedDisplayAmounts } from "./guided-currency";
 import { amountError, hasEnteredAmount } from "./guided-required-facts";
 
 import type {ScheduleCSourceFacts} from "@/models/inputs";
 
 export interface BusinessSourceData {
+  standardMileage?: BusinessMileageDraft;
   depreciationMethod?: "manual" | "assets" | "passenger";
   passengerSources?: import("./guided-passenger-sources").GuidedPassengerDraft;
   macrsAssets?: GuidedMacrsAssetsDraft;
@@ -60,13 +62,16 @@ export function isStartedNec(entry: NecEntryData): boolean {
 }
 
 export function hasBusinessSourceData(data: SelfEmploymentSectionData | undefined): boolean {
-  return !!data && (data.necEntries.some(isStartedNec) || hasEnteredAmount(data.manualGrossReceipts) || Object.values(data.expenses).some(hasEnteredAmount) || Object.values(data.businessFacts ?? {}).some(value => value !== undefined && value !== null && value !== ""));
+  return !!data && (data.businessFacts?.standardMileage !== undefined || data.necEntries.some(isStartedNec) || hasEnteredAmount(data.manualGrossReceipts) || Object.values(data.expenses).some(hasEnteredAmount) || Object.values(data.businessFacts ?? {}).some(value => value !== undefined && value !== null && value !== ""));
 }
 
-export function businessFactErrors(data: SelfEmploymentSectionData | undefined, filingStatus?: FilingStatus | null, _w2s: W2EntryData[] = [], stateData?: StateReturnData, returnYear?: number | null): Record<string, string> {
+export function businessFactErrors(data: SelfEmploymentSectionData | undefined, filingStatus?: FilingStatus | null, _w2s: W2EntryData[] = [], stateData?: StateReturnData, returnYear?: number | null, flow?: GuidedFlowState): Record<string, string> {
   const errors: Record<string, string> = {};
   if (!hasBusinessSourceData(data) || !data) return errors;
   const facts = data.businessFacts ?? {};
+  let mileage: ReturnType<typeof readGuidedBusinessMileage>;
+  try { mileage = readGuidedBusinessMileage(data, flow); }
+  catch (error) { errors.standardMileage = error instanceof Error ? error.message : "Check the business mileage log."; }
   Object.assign(errors,guidedMacrsFactErrors(facts,returnYear));
   if (!["primary", "spouse"].includes(facts.accountHolder ?? "") || (facts.accountHolder === "spouse" && filingStatus !== "mfj")) errors.businessOwner = "Identify the actual owner. Joint ownership requires separate business and self-employment calculations.";
   if (!facts.activityDescription?.trim()) errors.businessActivity = "Describe the actual business activity.";
@@ -79,7 +84,8 @@ export function businessFactErrors(data: SelfEmploymentSectionData | undefined, 
   if(facts.scheduleCSourceFacts?.sourceFactsConfirmed !== true && (facts.scheduleCSourceFacts || (hasEnteredAmount(facts.businessInterest) && parseGuidedCurrency(facts.businessInterest).gt(0)))) errors.scheduleCSourceFacts="Confirm actual Schedule C interest, expense and address source facts.";
   const manualError = amountError(data.manualGrossReceipts, "gross receipts not already included on Forms 1099-NEC"); if (manualError) errors.manualGrossReceipts = manualError;
   if (hasEnteredAmount(data.expenses.employeeBenefitPrograms)) { const error = amountError(data.expenses.employeeBenefitPrograms, "actual employee-benefit program expense"); if (error) errors.employeeBenefitPrograms = error; }
-  for (const field of expenseCategories) { const error = amountError(data.expenses[field], `${field} business expenses`); if (error) errors[`expense-${field}`] = error; }
+  const enteredCategories = expenseCategories.filter(field => field !== "carAndTruck" || facts.standardMileage === undefined);
+  for (const field of enteredCategories) { const error = amountError(data.expenses[field], `${field} business expenses`); if (error) errors[`expense-${field}`] = error; }
   for (const field of ["isSST", "allInvestmentAtRisk", "additionalWorksheetRequired"] as const) if (typeof facts[field] !== "boolean") errors[field] = "Answer this business qualification from the actual facts.";
   if (typeof data.qbiMateriallyParticipated !== "boolean") errors.materialParticipation = "Confirm actual material participation under the section 469 rules.";
   if (facts.additionalWorksheetRequired === true || (!errors.priorYearUnallowedLoss && parseGuidedCurrency(facts.priorYearUnallowedLoss).gt(0))) errors.additionalWorksheets = "Prior-loss or other additional business worksheets require separate support before this guided calculation can proceed.";
@@ -105,10 +111,13 @@ export function businessFactErrors(data: SelfEmploymentSectionData | undefined, 
   const receipts = [data.manualGrossReceipts, ...data.necEntries.filter(isStartedNec).map(entry => entry.nonemployeeCompensation)];
   const businessIncome = [...receipts, facts.otherIncome];
   const incomeReductions = [facts.returnsAndAllowances, facts.costOfGoodsSold];
-  const expenseAmounts = [...expenseCategories.filter(field => field !== "meals").map(field => data.expenses[field]), facts.contractLabor, facts.depreciationMethod==='assets'?guidedMacrsDisplayAmount(facts):facts.depreciationMethod==='passenger'?guidedPassengerDisplayAmount(facts):facts.depreciation, facts.legalAndProfessional, ...(facts.businessInterest===undefined?[]:[facts.businessInterest]), ...(facts.scheduleCSourceFacts?.ordinaryExpenses?.rows?.map(row=>row.amount)??[])];
-  if ([...businessIncome, ...incomeReductions, ...expenseAmounts, data.expenses.meals].every(value => !amountError(value, "business amount"))) {
+  const expenseAmounts = [...enteredCategories.filter(field => field !== "meals").map(field => data.expenses[field]), facts.contractLabor, facts.depreciationMethod==='assets'?guidedMacrsDisplayAmount(facts):facts.depreciationMethod==='passenger'?guidedPassengerDisplayAmount(facts):facts.depreciation, facts.legalAndProfessional, ...(facts.businessInterest===undefined?[]:[facts.businessInterest]), ...(facts.scheduleCSourceFacts?.ordinaryExpenses?.rows?.map(row=>row.amount)??[])];
+  if (mileage && hasEnteredAmount(data.expenses.employeeBenefitPrograms)) expenseAmounts.push(data.expenses.employeeBenefitPrograms);
+  if (!errors.standardMileage && [...businessIncome, ...incomeReductions, ...expenseAmounts, data.expenses.meals].every(value => !amountError(value, "business amount"))) {
     const total = (values: Array<string | undefined>) => values.reduce((sum, value) => sum.plus(parseGuidedCurrency(value)), new Decimal(0));
-    const tentative = total(businessIncome).minus(total(incomeReductions)).minus(total(expenseAmounts)).minus(parseGuidedCurrency(data.expenses.meals).times("0.5").toDecimalPlaces(0, Decimal.ROUND_HALF_UP));
+    const tentative = total(businessIncome).minus(total(incomeReductions)).minus(total(expenseAmounts))
+      .minus(parseGuidedCurrency(data.expenses.meals).times("0.5").toDecimalPlaces(0, Decimal.ROUND_HALF_UP))
+      .minus(mileage?.deduction ?? 0);
     if (tentative.isNegative() && (data.qbiMateriallyParticipated === false || facts.allInvestmentAtRisk === false)) errors.lossLimitation = "This loss needs the actual passive activity or at-risk worksheet; the guided calculation cannot treat it as fully deductible.";
   }
 

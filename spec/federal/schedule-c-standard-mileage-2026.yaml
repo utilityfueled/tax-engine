@@ -66,3 +66,21 @@ lines:
       Schedule SE engine with the actual primary owner. Preserve historical
       precomputed line 9 and existing full-year calculation and output gates.
     testRef: "tests/engine/schedules/schedule-c-standard-mileage-2026.test.ts::routes the deduction through Schedule SE and preserves historical and full year gates"
+  - line: "9, 29, 31, 43-47 (guided)"
+    description: "Collect original standard-mileage records in the guided interview"
+    formula: >
+      For one primary-owner cash business on a single-taxpayer 2026 federal
+      return, retain the private log reference, first business-use date,
+      confirmed standard-mileage eligibility, dated business miles, actual
+      commuting and other personal miles, the independently recorded total
+      and eligible parking and tolls including explicit zeros. Reconcile the
+      original values before computing the split-rate deduction and include
+      that deduction in the guided business loss check. Source edits and
+      changed taxpayer or business identity require renewed confirmation.
+      Part IV availability answers may both be No. If supplied, retain both
+      actual answers and confirmation Form 4562 is unnecessary. An unanswered
+      Part IV is usable for calculation only. A retained incomplete or
+      conflicting log, a state selection, and foreign income requiring
+      separate treatment prevent the guided calculation. Preserve the
+      separate tax-year and paper-output release gates.
+    testRef: "tests/apps/web/guided-business-mileage.test.tsx::reconciles the original Schedule C log through the guided return and clears changed evidence"

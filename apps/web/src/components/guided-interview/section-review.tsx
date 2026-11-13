@@ -137,19 +137,20 @@ function SelfEmploymentSummary({ necEntries, manualGrossReceipts, expenses, busi
   businessFacts: BusinessSourceData | undefined;
 }) {
   const entries = (necEntries ?? []).filter(isStartedNec);
-  if (!entries.length && !hasEnteredAmount(manualGrossReceipts) && !Object.values(expenses ?? {}).some(hasEnteredAmount)) return <p className="guided-review-empty">No self-employment source amounts entered.</p>;
+  const hasMileageLog = businessFacts?.standardMileage !== undefined;
+  if (!hasMileageLog && !entries.length && !hasEnteredAmount(manualGrossReceipts) && !Object.values(expenses ?? {}).some(hasEnteredAmount)) return <p className="guided-review-empty">No self-employment source amounts entered.</p>;
   const rows: Array<[string, Array<string | undefined>]> = [
     ["1099-NEC receipts", entries.map(entry => entry.nonemployeeCompensation)],
     ["Receipts not already reported on 1099-NEC", [manualGrossReceipts]],
     ["Returns and allowances", [businessFacts?.returnsAndAllowances]],
     ["Cost of goods sold", [businessFacts?.costOfGoodsSold]],
     ["Schedule C other income", [businessFacts?.otherIncome]],
-    ["Entered expenses before tax limits", [...Object.values(expenses ?? {}), businessFacts?.contractLabor, businessFacts?.depreciation, businessFacts?.legalAndProfessional]],
   ];
+  if (!hasMileageLog) rows.push(["Entered expenses before tax limits", [...Object.values(expenses ?? {}), businessFacts?.contractLabor, businessFacts?.depreciation, businessFacts?.legalAndProfessional]]);
   return <div className="guided-review-card">{rows.map(([label, values]) => {
     const total = sumKnownBusinessAmounts(values);
     return <div key={label} className="guided-review-row"><span className="guided-review-label">{label}</span><span className="guided-review-value">{total === null ? "Unknown — review source amounts" : formatCurrency(total)}</span></div>;
-  })}</div>;
+  })}{hasMileageLog && <div className="guided-review-row"><span className="guided-review-label">Business mileage</span><span className="guided-review-value">Mileage log entered</span></div>}</div>;
 }
 
 function InvestmentSummary({
