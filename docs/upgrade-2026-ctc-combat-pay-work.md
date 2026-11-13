@@ -18,8 +18,9 @@ The synthetic $2,000 wages and $2,250.50 combat pay produce exact worksheet
 income $4,250.50, excess $1,750.50 and $263 rounded ACTC. AGI stays $2,000.
 A joint control adds $1,200.10 and $1,050.40 exactly once. The saved 2025 PDF
 rounds $27,250.50 and $2,250.50 to $27,251 and $2,251 in separate fields.
-An unknown original leaves line 18b blank. The final 2026 physical specimen
-and required human review remain pending.
+An unknown original leaves line 18b blank. A subsequent bounded
+[2026 wage-only physical specimen](upgrade-2026-schedule-8812-wage-projection-work.md)
+passed separate readback. Full qualification and human review remain pending.
 
 The corrected baseline has eight genuine federal failures and the separate
 guided baseline has one. All 597 targeted tests passed after correction, along

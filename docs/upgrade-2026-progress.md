@@ -4,6 +4,11 @@ Current source, verification and remaining work are summarized in the
 [current continuation](upgrade-2026-current-status.md). Historical results
 below apply to their named revisions.
 
+- November 13 — `5c6633e2` projects the confirmed-wage case on final 2026
+  Schedule 8812. All 78 focused tests, separate saved-PDF readback and visual
+  checks passed. Full qualification remains open.
+  [Projection evidence](upgrade-2026-schedule-8812-wage-projection-work.md).
+
 - November 13: `c699bfde` carries original W-2 Code Q into Schedule 8812
   lines 18a and 18b. The corrected baseline reproduced eight federal and
   one guided failure. All 597 targeted tests passed, including actual

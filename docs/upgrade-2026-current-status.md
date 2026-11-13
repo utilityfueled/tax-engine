@@ -6,12 +6,17 @@ The public refs were refreshed. `origin/main` still points to `59248889`
 and `origin/upgrade/2026-baseline` to `3024b848`. Successor commits stay on
 local `main` while automatic production deployment is being disabled.
 
+`5c6633e2` projects a bounded confirmed-wage case on the final 2026 Schedule
+8812. All 78 focused tests passed. A separate reader verified the saved
+specimen and both pages rendered. Full qualification, companion instructions
+and human review remain open. [Projection evidence](upgrade-2026-schedule-8812-wage-projection-work.md).
+
 `c699bfde` includes the full original W-2 Code Q amount in Schedule 8812
 earned income and records it separately on line 18b for 2025 and 2026.
 The guided interview preserves exact cents and distinguishes an unchecked
 box from confirmed zero. A synthetic $2,250.50 source increased ACTC to $263
 with $2,000 taxable wages. All 597 targeted tests passed, including reopening
-the 2025 review PDF. EIC elections and final 2026 projection are separate work.
+the 2025 review PDF. The EIC election remains separate work.
 [Combat pay evidence](upgrade-2026-ctc-combat-pay-work.md).
 
 `ab47d87f` validates a claimed child's birth date before counting the child

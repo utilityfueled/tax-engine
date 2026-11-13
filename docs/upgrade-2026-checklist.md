@@ -6,10 +6,12 @@ below retain their original evidence boundaries.
 
 ## Active continuation — November 13 Eastern
 
+- [x] Project the bounded confirmed-wage case on final 2026 Schedule 8812 in
+  `5c6633e2`. Pass 78 focused tests, separate PDF readback and visual checks.
+  Full qualification remains open. [Projection evidence](upgrade-2026-schedule-8812-wage-projection-work.md).
 - [x] Include exact original W-2 Code Q amounts on Schedule 8812 lines 18a
   and 18b in `c699bfde`. Pass 597 targeted federal, guide and PDF tests and
-  reopen the 2025 review PDF. Qualify the final 2026 physical projection
-  and review separately. [Combat pay evidence](upgrade-2026-ctc-combat-pay-work.md).
+  reopen the 2025 review PDF. [Combat pay evidence](upgrade-2026-ctc-combat-pay-work.md).
 - [x] Enforce the claimed-child birth-date and age boundary in direct 2026
   federal calculation in `ab47d87f`. Pass 519 targeted federal and PDF tests.
 - [ ] Close all 12 checks on the successor of the privacy and age changes.
