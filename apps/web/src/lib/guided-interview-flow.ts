@@ -46,6 +46,7 @@ import { foreignCreditKnownFacts } from './guided-foreign-tax-direct-credit';
 import { premiumTaxCreditFactErrors, type PremiumTaxCreditData } from "./guided-premium-tax-credit-facts";
 import { schedule1AFactErrors } from "./guided-schedule-1-a-facts";
 import { tipIncomeFactErrors, type AdditionalDeductionsData } from "./guided-tip-income-facts";
+import { invalidateMovingExpenses, movingExpenseFactErrors, type MovingExpensesDraft } from './guided-moving-expenses';
 import { healthInsuranceSourceErrors, invalidateHealthInsuranceSources, type HealthInsuranceData } from "./guided-health-insurance-facts";
 import { hsaFactErrors, type HsaAccountData } from "./guided-hsa-facts";
 import type { StandardDeductionData } from "./guided-standard-deduction-facts";
@@ -142,6 +143,7 @@ export type LifeEvent =
   | "student-loans"
   | "hsa-contributions"
   | "educator-expenses"
+  | "moving-expenses"
   | "self-employed-health-insurance"
   | "additional-deductions"
   | "net-operating-loss"
@@ -165,6 +167,7 @@ export const lifeEventOptions: { value: LifeEvent; label: string; hint: string }
   { value: "student-loans", label: "Paid student loan interest", hint: "Above-the-line deduction up to $2,500" },
   { value: "hsa-contributions", label: "HSA contributions or distributions", hint: "Actual HSA statements and eligibility" },
   { value: "educator-expenses", label: "Paid educator expenses", hint: "Actual school work and paid classroom or professional development costs" },
+  { value: "moving-expenses", label: "Had a qualifying military or intelligence-community move", hint: "Actual 2026 moving orders, expense and reimbursement records" },
   { value: "self-employed-health-insurance", label: "Paid self-employed or shareholder health insurance", hint: "Actual policies, premiums and monthly eligibility" },
 ];
 
@@ -478,7 +481,7 @@ const incomeTypeToSection: Record<IncomeType, InterviewSectionId> = {
   "unemployment": "income-unemployment",
 };
 
-export function buildSectionRoute(segmentation: SegmentationAnswers): InterviewSectionDefinition[] {
+export function buildSectionRoute(segmentation: SegmentationAnswers, hasSavedMovingRecords = false): InterviewSectionDefinition[] {
   const sections: InterviewSectionDefinition[] = [];
 
   // Personal info is always included
@@ -499,6 +502,8 @@ export function buildSectionRoute(segmentation: SegmentationAnswers): InterviewS
     segmentation.lifeEvents.includes("student-loans") ||
     segmentation.lifeEvents.includes("hsa-contributions") ||
     segmentation.lifeEvents.includes("educator-expenses") ||
+    hasSavedMovingRecords ||
+    segmentation.lifeEvents.includes("moving-expenses") ||
     segmentation.lifeEvents.includes("self-employed-health-insurance") ||
     segmentation.lifeEvents.includes("foreign-earned-income") ||
     segmentation.lifeEvents.includes("net-operating-loss") ||
@@ -1025,6 +1030,8 @@ export const emptyDeductionData: DeductionData = {
 // ── Adjustments data ──────────────────────────────────────────────────────
 
 export interface AdjustmentData {
+  movingExpenses?: MovingExpensesDraft;
+  movingExpensesNotApplicable?: true;
   k1LossSources?: K1LossSourcesData;
   codNolSources?: CodNolData;
   currentLossOrigin?: CurrentLossOriginData;
@@ -1511,6 +1518,11 @@ export interface FlowProgress {
   sections: InterviewSectionDefinition[];
 }
 
+export function getGuidedSectionRoute(state: GuidedFlowState): InterviewSectionDefinition[] {
+  const adjustments = state.sectionData.adjustments;
+  return buildSectionRoute(state.segmentation, adjustments?.movingExpenses !== undefined || adjustments?.movingExpensesNotApplicable === true);
+}
+
 export type VisitedSectionStatus = "not-started" | "complete" | "skipped" | "needs-review";
 
 const SKIPPED_WHEN_EMPTY_SECTIONS = new Set<InterviewSectionId>(["personal-info"]);
@@ -1558,7 +1570,7 @@ export interface GuidedRenderAnalysis {
 }
 
 export function analyzeGuidedRender(state: GuidedFlowState): GuidedRenderAnalysis {
-  const sections = buildSectionRoute(state.segmentation);
+  const sections = getGuidedSectionRoute(state);
   const sectionStatuses = new Map(sections.map(section =>
     [section.id, getVisitedSectionStatus(state, section.id)] as const));
   const completion = sections.reduce<FlowCompletionSummary>((summary, section) => {
@@ -1597,12 +1609,12 @@ export function canGoBack(state: GuidedFlowState): boolean {
 }
 
 export function canGoForward(state: GuidedFlowState): boolean {
-  const sections = buildSectionRoute(state.segmentation);
+  const sections = getGuidedSectionRoute(state);
   return state.phase === "interview" && state.currentSectionIndex < sections.length - 1;
 }
 
 export function goToNextSection(state: GuidedFlowState): GuidedFlowState {
-  const sections = buildSectionRoute(state.segmentation);
+  const sections = getGuidedSectionRoute(state);
   const currentSection = sections[state.currentSectionIndex];
   const nextIndex = state.currentSectionIndex + 1;
 
@@ -1803,6 +1815,12 @@ export function updateSectionData(
   const rrtaTipChanged=sectionId==='additional-deductions'&&guidedSourceValuesChanged(state.sectionData['additional-deductions']?.tipIncomeAccounts,nextAdditional?.tipIncomeAccounts)&&nextAdditional?.rrtaPayrollSources;
   const additionalSourcesChanged = sourceValuesChanged && ["personal-info", "income-w2", "income-self-employment", "income-social-security", "adjustments", "credits", "deductions", "additional-deductions"].includes(sectionId) && nextAdditional?.schedule1A;
   const nextAdjustments = sectionId === "adjustments" ? data as AdjustmentData : adjustments;
+  const nextMoving = nextAdjustments?.movingExpenses;
+  const movingValues = (draft?: MovingExpensesDraft) => draft === undefined ? undefined : invalidateMovingExpenses(draft);
+  const movingSourcesChanged = nextMoving && (
+    (sourceValuesChanged && ['personal-info', 'income-w2'].includes(sectionId)) ||
+    (sectionId === 'adjustments' && guidedSourceValuesChanged(movingValues(adjustments?.movingExpenses), movingValues(nextMoving)))
+  );
   const k1LossSourcesChanged = sourceValuesChanged && sectionId !== "final-review" && nextAdjustments?.k1LossSources;
   const codSourcesChanged = sourceValuesChanged && ["personal-info", "income-w2", "income-self-employment", "income-retirement", "income-investments", "income-rental", "income-royalties", "income-social-security", "income-unemployment", "adjustments", "credits", "deductions", "additional-deductions", "other-taxes"].includes(sectionId) && nextAdjustments?.codNolSources;
   const currentLossSourcesChanged = sourceValuesChanged && ["personal-info", "income-w2", "income-self-employment", "income-retirement", "income-investments", "income-rental", "income-royalties", "income-social-security", "income-unemployment", "adjustments", "credits", "deductions", "additional-deductions", "other-taxes", "state-return"].includes(sectionId) && nextAdjustments?.currentLossOrigin;
@@ -1935,7 +1953,8 @@ export function updateSectionData(
           ...(ohioStateReturn.paOrdinaryReturnCompletionSources ? { paOrdinaryReturnCompletionSources: { ...ohioStateReturn.paOrdinaryReturnCompletionSources, sourceFactsConfirmed: null } } : {}),
         } : {}),
       } } : {}),
-      ...((iraSourcesChanged || hsaSourcesChanged || educatorSourcesChanged || studentLoanSourcesChanged || healthSourcesChanged || foreignIncomeSourcesChanged || nolSourcesChanged || currentLossSourcesChanged || codSourcesChanged || k1LossSourcesChanged) && nextAdjustments ? { adjustments: { ...nextAdjustments,
+      ...((movingSourcesChanged || iraSourcesChanged || hsaSourcesChanged || educatorSourcesChanged || studentLoanSourcesChanged || healthSourcesChanged || foreignIncomeSourcesChanged || nolSourcesChanged || currentLossSourcesChanged || codSourcesChanged || k1LossSourcesChanged) && nextAdjustments ? { adjustments: { ...nextAdjustments,
+        ...(movingSourcesChanged ? { movingExpenses: invalidateMovingExpenses(nextMoving) } : {}),
         ...(k1LossSourcesChanged ? { k1LossSources: invalidateK1LossSources(k1LossSourcesChanged) } : {}),
         ...(codSourcesChanged ? { codNolSources: invalidateGuidedCodNol(codSourcesChanged) } : {}),
         ...(currentLossSourcesChanged ? { currentLossOrigin: invalidateCurrentLossOrigin(currentLossSourcesChanged) } : {}),
@@ -1961,7 +1980,7 @@ export function getSectionData<K extends keyof SectionDataMap>(
 }
 
 export function jumpToSection(state: GuidedFlowState, sectionId: InterviewSectionId): GuidedFlowState {
-  const sections = buildSectionRoute(state.segmentation);
+  const sections = getGuidedSectionRoute(state);
   const index = sections.findIndex((s) => s.id === sectionId);
 
   if (index < 0) {
@@ -2291,7 +2310,7 @@ function validateAdjustmentsSection(data: AdjustmentData | undefined, filingStat
   if (!data) return EMPTY_SECTION("adjustments info", true);
   const errors = adjustmentFactErrors(data, filingStatus, taxYear, education);
   if (Object.keys(errors).length) return validateRequiredFacts(errors);
-  if (data.iraContributions || data.hsaAccounts?.length || data.educatorExpenseSources?.length || data.studentLoanFacts || data.healthInsuranceFacts || data.foreignIncome || data.netOperatingLossSources || data.currentLossOrigin || data.codNolSources || data.k1LossSources) return VALID_SECTION;
+  if (data.movingExpenses || data.movingExpensesNotApplicable === true || data.iraContributions || data.hsaAccounts?.length || data.educatorExpenseSources?.length || data.studentLoanFacts || data.healthInsuranceFacts || data.foreignIncome || data.netOperatingLossSources || data.currentLossOrigin || data.codNolSources || data.k1LossSources) return VALID_SECTION;
   const hasAny = Object.values(data).some((v) => typeof v === "string" && hasNumericValue(v));
   if (!hasAny) return EMPTY_SECTION("adjustments info", true);
   return VALID_SECTION;
@@ -2344,6 +2363,7 @@ export function validateSection(
     case "adjustments": {
       const errors = { ...foreignIncomeFactErrors(state), ...healthInsuranceSourceErrors(state), ...hsaFactErrors(getSectionData(state, "adjustments")?.hsaAccounts, state.segmentation.filingStatus, state.taxYear, getSectionData(state, "income-w2")?.entries ?? [], getSectionData(state, "personal-info"), state.segmentation.lifeEvents.includes("hsa-contributions")), ...educatorFactErrors(getSectionData(state, "adjustments"), state.segmentation.filingStatus, state.taxYear, state.segmentation.lifeEvents.includes("educator-expenses")) };
       Object.assign(errors, currentLossOriginNavigationFactErrors(state));
+      Object.assign(errors, movingExpenseFactErrors(state));
       Object.assign(errors, codNolNavigationFactErrors(state));
       Object.assign(errors, k1LossSourceFactErrors(state));
       Object.assign(errors, netOperatingLossNavigationFactErrors(state.sectionData.adjustments?.netOperatingLossSources, state.taxYear, state.segmentation.filingStatus, state.sectionData["personal-info"], state.segmentation.lifeEvents.includes("net-operating-loss"), state.sectionData.deductions, state.sectionData.adjustments?.k1LossSources, state.sectionData.adjustments?.codNolSources?.attributeSources));
@@ -2418,7 +2438,7 @@ export function getVisitedSectionStatus(
 
   if (result.status === "empty") {
     if (SKIPPED_WHEN_EMPTY_SECTIONS.has(sectionId)) {
-      const route = buildSectionRoute(state.segmentation);
+      const route = getGuidedSectionRoute(state);
       const sectionIndex = route.findIndex((section) => section.id === sectionId);
       const movedPastSection = state.phase === "complete" || state.currentSectionIndex > sectionIndex;
 
@@ -2432,7 +2452,7 @@ export function getVisitedSectionStatus(
 }
 
 export function summarizeFlowCompletion(state: GuidedFlowState): FlowCompletionSummary {
-  const sections = buildSectionRoute(state.segmentation);
+  const sections = getGuidedSectionRoute(state);
 
   return sections.reduce<FlowCompletionSummary>((summary, section) => {
     const status = getVisitedSectionStatus(state, section.id);
@@ -2456,7 +2476,7 @@ export function summarizeFlowCompletion(state: GuidedFlowState): FlowCompletionS
 }
 
 export function collectGuidedReviewIssues(state: GuidedFlowState): GuidedReviewIssue[] {
-  const sections = buildSectionRoute(state.segmentation);
+  const sections = getGuidedSectionRoute(state);
 
   return sections.flatMap((section) => {
     const status = getVisitedSectionStatus(state, section.id);
@@ -2487,7 +2507,7 @@ export function collectGuidedReviewIssues(state: GuidedFlowState): GuidedReviewI
 export function shouldPromptBeforeAdvance(
   state: GuidedFlowState,
 ): SectionValidationResult | null {
-  const sections = buildSectionRoute(state.segmentation);
+  const sections = getGuidedSectionRoute(state);
   const currentSection = sections[state.currentSectionIndex];
   if (!currentSection) return null;
 

@@ -18,6 +18,7 @@ import { CurrencyField } from "./currency-field";
 import { HsaSourceDetails } from "./hsa-source-details";
 import { EducatorSourceDetails } from "./educator-source-details";
 import { StudentLoanSourceDetails } from "./student-loan-source-details";
+import { MovingExpenseDetails } from './moving-expense-details';
 import type { EducationDistributionData } from "@/lib/guided-education-distributions";
 import { AdjustmentSourceDetails } from "./adjustment-source-details";
 import type { InvestmentData } from "@/lib/guided-investment-facts";
@@ -34,6 +35,8 @@ export function SectionAdjustments({
   healthInsuranceSources,
   marketplacePolicies,
   hasHealthInsurance,
+  hasMovingExpenses,
+  hasSpouse = false,
   investments,
   onDataChange,
 }: {
@@ -48,6 +51,8 @@ export function SectionAdjustments({
   healthInsuranceSources?: HealthInsuranceSourceOption[];
   marketplacePolicies?: MarketplacePolicyOption[];
   hasHealthInsurance?: boolean;
+  hasMovingExpenses?: boolean;
+  hasSpouse?: boolean;
   investments?: InvestmentData;
   onDataChange: (data: AdjustmentData) => void;
 }) {
@@ -108,6 +113,21 @@ export function SectionAdjustments({
         <CurrentLossOriginDetails data={current.currentLossOrigin} investments={investments} k1Sources={current.k1LossSources?.activities?.map((source, index) => [`scheduleK1:${index}`, `K-1 ${index + 1}: ${source.entityName?.trim() || "Original entity name required"}`])} onChange={currentLossOrigin => onDataChange({ ...(data ?? emptyAdjustmentData), currentLossOrigin })} />
 
         <EducatorSourceDetails sources={current.educatorExpenseSources} taxYear={taxYear} onChange={educatorExpenseSources => onDataChange({ ...current, educatorExpenseSources })} />
+
+        {(hasMovingExpenses || current.movingExpenses !== undefined || current.movingExpensesNotApplicable) && (
+          <MovingExpenseDetails
+            data={current.movingExpenses}
+            removed={current.movingExpensesNotApplicable === true}
+            taxYear={taxYear}
+            filingStatus={filingStatus}
+            hasSpouse={hasSpouse}
+            onChange={movingExpenses => onDataChange({
+              ...current,
+              movingExpenses,
+              movingExpensesNotApplicable: movingExpenses === undefined ? true : undefined,
+            })}
+          />
+        )}
 
         {(hasHsa || current.hsaAccounts?.length || current.hsaDeduction.trim()) && <HsaSourceDetails data={current} filingStatus={filingStatus} taxYear={taxYear} onChange={onDataChange} />}
 

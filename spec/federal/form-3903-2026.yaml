@@ -19,6 +19,28 @@ notes: |
   allowance substantiation and Form 2555 allocations require their own inputs
   and methods. No filing or parent-return route is enabled by this spec.
 lines:
+  - line: "guided-source-intake"
+    description: "Save actual moving records with their original year and confirmation"
+    formula: >-
+      A 2026 guided interview can select the moving-expense source route. Keep
+      actual dates, source tokens, owner, distinct eligibility and travel
+      answers, and the three amounts as entered. Blank and unknown remain
+      distinct from explicit zero. Require confirmation from actual records
+      and use the same strict annual source schema as the typed engine. Moving
+      record, taxpayer and wage-source edits clear the relevant confirmation.
+      Reconcile applicable government reimbursements to the original records
+      and Form W-2 Box 12 code P. Preserve saved data on a year mismatch and
+      reject it as calculation input. An explicit removal of the last move
+      keeps the interview at the same step and passes no moving amounts.
+      The existing year readiness, PDF and filing gates still apply.
+    testRef: "tests/guided-interview/guided-form-3903-2026.test.ts::retains the actual 2026 move across a guided save and restores its exact source amounts"
+  - line: "guided-source-controls"
+    description: "The interview collects and rechecks the selected moving-expense source"
+    formula: >-
+      Show the route for the selected 2026 year. Changing original amounts clears
+      confirmation. Keep saved records reachable even if the selection is absent.
+      An encrypted restore preserves the actual source and the annual readiness gate.
+    testRef: "tests/apps/web/guided-moving-expenses-interactions.test.tsx::collects original moving facts and clears confirmation on edits"
   - line: "eligibility"
     description: "Original facts establish the qualifying assignment for each move"
     formula: >-

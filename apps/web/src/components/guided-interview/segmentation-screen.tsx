@@ -34,10 +34,12 @@ const stepLabels = [
 export function SegmentationScreen({
   onComplete,
   workspace,
+  taxYear,
   onUploadDocuments,
 }: {
   onComplete: (answers: SegmentationAnswers) => void;
   workspace: ReturnWorkspaceRecord;
+  taxYear?: number | null;
   onUploadDocuments?: (files: File[]) => Promise<string>;
 }) {
   const [step, setStep] = useState<SegmentationStep>(0);
@@ -360,7 +362,7 @@ export function SegmentationScreen({
             <p className="guided-prompt">Did any of these happen this year?</p>
             <p className="guided-hint">These events can change your deductions or credits. Select any that apply, or continue to skip.</p>
             <div className="guided-option-list" role="group" aria-label="Life events">
-              {lifeEventOptions.map((option) => (
+              {lifeEventOptions.filter(option => option.value !== 'moving-expenses' || taxYear === 2026).map((option) => (
                 <label
                   key={option.value}
                   className={`guided-option-card ${answers.lifeEvents.includes(option.value) ? "guided-option-card-selected" : ""}`}

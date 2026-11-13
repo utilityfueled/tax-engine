@@ -19,6 +19,7 @@ import { buildGuidedQsbsSources } from "./guided-qsbs-sources";
 import { buildGuidedInvestmentInterestInputs, investmentInterestFactErrors } from "./guided-investment-interest";
 import { buildBrokerageWithholdingSource } from "./guided-brokerage-withholding";
 import { buildForeignIncomeInput, foreignIncomeFactErrors } from "./guided-foreign-income";
+import { buildMovingExpenses } from './guided-moving-expenses';
 import { buildGuidedNetOperatingLoss, netOperatingLossFactErrors } from "./guided-net-operating-loss";
 import { buildCurrentLossOrigin, currentLossOriginFactErrors } from "./guided-current-loss-origin";
 import { k1LossSourceFactErrors } from "./guided-k1-qbi-sources";
@@ -777,7 +778,9 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
 
   const careBenefitSources = guidedCareBenefitSources(w2Data?.entries, seData?.businessFacts, seData?.expenses);
   let loanEducation: StudentLoanEducationSources = [];
+  let form3903: ReturnType<typeof buildMovingExpenses>;
   try {
+    form3903 = buildMovingExpenses(state);
     assertKnownFacts(royaltySourceFactErrors(state));
     if(sectionData['additional-deductions']?.rrtaPayrollSources)buildTipIncomeSourceOriginals(sectionData['additional-deductions']?.tipIncomeAccounts,segmentation.filingStatus,state.taxYear,w2Data?.entries);
     else assertKnownFacts(tipIncomeFactErrors(state));
@@ -928,6 +931,7 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
     w2s,
     form2210: buildEstimatedTaxFacts(paymentData, state.taxYear),
     form2555: buildForeignIncomeInput(adjustmentData?.foreignIncome, state),
+    ...(form3903 === undefined ? {} : { form3903 }),
     netOperatingLoss: buildGuidedNetOperatingLoss(adjustmentData?.netOperatingLossSources, state.taxYear, segmentation.filingStatus, personalInfo, deductionData, adjustmentData?.k1LossSources, adjustmentData?.codNolSources?.attributeSources),
     ...(cryptoDonations !== undefined ? { cryptoIncome: { donations: cryptoDonations } } : {}),
     scheduleK1: buildGuidedCurrentMtcOriginals(codSources?.form982AttributeSources?.currentMinimumTaxCredit?.sourceYearCalculation, k1Sources?.scheduleK1),

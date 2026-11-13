@@ -8,7 +8,7 @@ import {
   type WorkspaceUnsupportedRoute
 } from "@tax-engine/contracts";
 import {
-  buildSectionRoute,
+  getGuidedSectionRoute,
   isSegmentationComplete,
   summarizeFlowCompletion,
   type GuidedFlowState
@@ -170,7 +170,7 @@ export function summarizeGuidedSetupProgress(
     return null;
   }
 
-  const routedSections = buildSectionRoute(guidedFlowState.segmentation);
+  const routedSections = getGuidedSectionRoute(guidedFlowState);
   const currentSection = guidedFlowState.phase === "interview"
     ? routedSections[guidedFlowState.currentSectionIndex] ?? null
     : null;

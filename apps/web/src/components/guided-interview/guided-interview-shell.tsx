@@ -658,6 +658,8 @@ function SectionContent({
           hasStudentLoans={state.segmentation.lifeEvents.includes("student-loans")}
           hasHsa={state.segmentation.lifeEvents.includes("hsa-contributions")}
           hasHealthInsurance={state.segmentation.lifeEvents.includes("self-employed-health-insurance")}
+          hasMovingExpenses={state.segmentation.lifeEvents.includes('moving-expenses')}
+          hasSpouse={!!getSectionData(state, 'personal-info')?.spouse}
           filingStatus={state.segmentation.filingStatus}
           educationDistributions={getSectionData(state, "credits")?.educationDistributions}
           foreignIncomeSources={foreignIncomeSourceOptions(state)}
@@ -1325,6 +1327,7 @@ export function GuidedInterviewShell({
         <SegmentationScreen
           onComplete={handleSegmentationComplete}
           workspace={workspace}
+          taxYear={flowState.taxYear}
           onUploadDocuments={onUploadDocuments}
         />
       )}

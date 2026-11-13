@@ -34,7 +34,7 @@ import {
   type InterestEntryData,
   type DividendEntryData,
   type BrokerageEntryData,
-  buildSectionRoute,
+  getGuidedSectionRoute,
   emptyDeductionData,
   filingStatusOptions,
   getStandardDeductionAmount,
@@ -245,10 +245,11 @@ function AdjustmentsSummary({ data }: { data: AdjustmentData | undefined }) {
     { label: "Alimony paid", value: data.alimonyPaid },
   ].filter((item) => hasValue(item.value));
 
-  if (items.length === 0 && !data.hsaAccounts?.length && !data.educatorExpenseSources?.length && !data.studentLoanFacts && !data.healthInsuranceFacts) return <p className="guided-review-empty">No adjustments entered.</p>;
+  if (items.length === 0 && !data.hsaAccounts?.length && !data.educatorExpenseSources?.length && !data.studentLoanFacts && !data.healthInsuranceFacts && data.movingExpenses === undefined) return <p className="guided-review-empty">No adjustments entered.</p>;
 
   return (
     <div className="guided-review-card">
+      {data.movingExpenses !== undefined && <p className="guided-hint">Moving expense records entered. Review the original expenses and reimbursements in Adjustments to Income.</p>}
       {!!data.hsaAccounts?.length && <p className="guided-hint">{data.hsaAccounts.length} HSA owner worksheet(s). Contributions are source amounts; eligibility and limits determine the deduction.</p>}
       {data.healthInsuranceFacts && <div>
         <p className="guided-hint">{data.healthInsuranceFacts.sourceFactsConfirmed === true ? "Health insurance sources checked" : "Health insurance sources need confirmation"}. Paid premiums below are before monthly eligibility, funding exclusions, age caps and business income limits.</p>
@@ -603,7 +604,7 @@ export function SectionReview({
   preview: GuidedPreviewMetrics | null;
   onJumpToSection: (sectionId: InterviewSectionId) => void;
 }) {
-  const sections = buildSectionRoute(state.segmentation);
+  const sections = getGuidedSectionRoute(state);
   // Exclude the review section itself from the summary
   const reviewableSections = sections.filter((s) => s.id !== "review");
 

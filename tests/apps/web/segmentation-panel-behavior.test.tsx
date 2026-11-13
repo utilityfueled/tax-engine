@@ -102,6 +102,21 @@ it('selects and revises actual interview routes without assuming missing answers
   } finally { await skipped.dispose(); }
 });
 
+it.each([[2026, 2025, true], [2025, 2026, false]])('uses the selected year %i for the moving expense route with workspace year %i', async (taxYear, workspaceYear, visible) => {
+  const workspace = createWorkspaceRecord('synthetic-moving-setup');
+  workspace.returnSummary.targetTaxYear = workspaceYear;
+  const dom = await mountGuidedPanel(<SegmentationScreen workspace={workspace} taxYear={taxYear} onComplete={vi.fn()} />);
+  try {
+    await dom.click('Continue');
+    await choose(dom.container, 'single');
+    await dom.click('Continue');
+    await dom.click('Continue');
+    expect(!!dom.container.querySelector('input[value="moving-expenses"]')).toBe(visible);
+  } finally {
+    await dom.dispose();
+  }
+});
+
 it('handles actual upload outcomes and document summaries before continuing', async () => {
   const workspace = ingestFilesIntoWorkspace(createWorkspaceRecord('synthetic-setup-documents'), [
     {name:'fictional-original.pdf',size:12,detectedDocument:{taxYear:2025,kind:'w2',coverage:'supported',label:'Original W-2',notes:'Original',seededFactIds:['wages']}},
