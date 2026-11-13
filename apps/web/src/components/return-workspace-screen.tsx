@@ -439,7 +439,6 @@ export function ReturnWorkspaceScreen({
   const [guidedFallbackPreview, setGuidedFallbackPreview] = useState<RefundTickerPreviewData | null>(null);
   const [guidedResumeSectionId, setGuidedResumeSectionId] = useState<InterviewSectionId | null>(null);
   const [guidedReviewIssues, setGuidedReviewIssues] = useState<GuidedReviewIssue[]>([]);
-  const [guidedReviewSummary, setGuidedReviewSummary] = useState<string | null>(null);
   const [guidedMode, setGuidedModeRaw] = useState(() => {
     const browserStorage = getBrowserStorage();
     return browserStorage ? readGuidedModePreference(browserStorage, workspaceId) : true;
@@ -575,7 +574,6 @@ export function ReturnWorkspaceScreen({
       setPersistedGuidedFlowState(null);
       setGuidedFallbackPreview(null);
       setGuidedReviewIssues([]);
-      setGuidedReviewSummary(null);
       return;
     }
 
@@ -585,7 +583,6 @@ export function ReturnWorkspaceScreen({
       setPersistedGuidedFlowState(null);
       setGuidedFallbackPreview(null);
       setGuidedReviewIssues([]);
-      setGuidedReviewSummary(null);
       return;
     }
 
@@ -640,38 +637,6 @@ export function ReturnWorkspaceScreen({
         : undefined
     });
   }, [workspace]);
-
-  useEffect(() => {
-    if (guidedReviewIssues.length === 0) {
-      setGuidedReviewSummary(null);
-      return;
-    }
-
-    let cancelled = false;
-    void (async () => {
-      try {
-        const response = await fetch("/api/guided-review-summary", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ issues: guidedReviewIssues }),
-        });
-        const payload = await response.json().catch(() => null) as { summary?: string } | null;
-        if (!cancelled) {
-          setGuidedReviewSummary(payload?.summary?.trim() || null);
-        }
-      } catch {
-        if (!cancelled) {
-          setGuidedReviewSummary(null);
-        }
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [guidedReviewIssues]);
 
   async function uploadFiles(files: File[]) {
     if (files.length === 0) {
@@ -748,7 +713,7 @@ export function ReturnWorkspaceScreen({
   function resetWorkspaceUi() {
     setAnswerDrafts({}); setProviderSummaryRun(null); setProviderSummaryError(null);
     setPersistedGuidedFlowState(null); setGuidedFallbackPreview(null); setGuidedResumeSectionId(null);
-    setGuidedReviewIssues([]); setGuidedReviewSummary(null); setGuidedModeRaw(false);
+    setGuidedReviewIssues([]); setGuidedModeRaw(false);
     setPartnerReviewConsent(defaultPartnerReviewConsent); setPartnerReviewDownloadRun(null);
   }
 
@@ -1652,8 +1617,7 @@ export function ReturnWorkspaceScreen({
       {guidedReviewIssues.length > 0 ? (
         <RetroShell title="Needs Review" eyebrow="NEXT STEP">
           <p className="panel-text">
-            {guidedReviewSummary
-              ?? "Some guided sections still need attention. Open the flagged section below and resolve the highlighted answers before continuing."}
+            Open the flagged sections below and resolve the missing or unconfirmed answers before continuing.
           </p>
           <ul className="stack-list summary-list">
             {guidedReviewIssues.map((issue) => (

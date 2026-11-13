@@ -741,6 +741,43 @@ test("workspace screen can send a provider-safe summary through the redaction bo
   expect(providerRequests).toEqual([]);
 });
 
+test("reopened guided review stays local and retired upload endpoints reject requests", async ({ page, request }) => {
+  const privateName = "SyntheticPrivateReviewName";
+  const requests: { pathname: string; body: string | null }[] = [];
+  page.on("request", req => requests.push({ pathname: new URL(req.url()).pathname, body: req.postData() }));
+  await page.goto("/");
+  await enableAdvancedMode(page);
+  await page.getByRole("button", { name: /start your tax return/i }).click();
+  await expect(page).toHaveURL(/\/returns\/(?!new(?:[/?#]|$))[a-z0-9-]+$/i);
+  const id = new URL(page.url()).pathname.split("/").at(-1);
+  if (!id) throw new Error("Missing synthetic return ID");
+  await page.evaluate(({ id, privateName }) => {
+    localStorage.setItem(`tax-engine:guided-mode:${id}`, "false");
+    localStorage.setItem(`tax-engine.guided-flow-state.v1:${id}`, JSON.stringify({
+      factsVersion: 2,
+      phase: "interview",
+      taxYear: 2026,
+      segmentation: { filingStatus: "single", incomeTypes: ["w2-wages"], lifeEvents: [], stateCode: null },
+      currentSectionIndex: 1,
+      completedSections: ["personal-info"],
+      sectionData: { "personal-info": { firstName: privateName, lastName: "", ssn: "", addressLine1: "" } },
+    }));
+  }, { id, privateName });
+  await page.reload();
+  const review = page.locator("section.panel").filter({ has: page.getByRole("heading", { name: "Needs Review", exact: true }) });
+  await expect(review.getByText("Some required personal info fields are empty.", { exact: false })).toBeVisible();
+  await expect(review.getByRole("button", { name: "Review About You", exact: true })).toBeVisible();
+  expect(requests.filter(({ pathname }) => /^\/api\/(provider\/|guided-review-summary$|document-detection$)/.test(pathname))).toEqual([]);
+  expect(JSON.stringify(requests)).not.toContain(privateName);
+
+  const [summary, detection] = await Promise.all([
+    request.post("/api/guided-review-summary", { data: { issues: [] } }),
+    request.post("/api/document-detection", { multipart: { files: { name: "synthetic.txt", mimeType: "text/plain", buffer: Buffer.from("synthetic original") } } }),
+  ]);
+  expect(summary.status()).toBe(404);
+  expect(detection.status()).toBe(404);
+});
+
 test("confirmed document answers still require explicit taxpayer facts", async ({ page }) => {
   await page.goto("/");
   await enableAdvancedMode(page);

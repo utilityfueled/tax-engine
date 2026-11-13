@@ -1,0 +1,14 @@
+form: "Workspace-Local-Review-And-Upload"
+fullName: "Local guided review and original document processing boundary"
+taxYear: 2026
+reference: "docs/upgrade-2026-execution-brief.md"
+notes: "The advanced workspace already has a deterministic review summary and a browser-only document parser. Retire the former internal guided-summary and multipart document-detection endpoints. The review shows existing validation results and section actions without sending any review payload, including section labels. Keep versioned evaluation candidates and the existing protected redacted-text analysis routes."
+lines:
+  - line: "local-review"
+    description: "A reopened return displays its guided issues and repair actions locally"
+    formula: "Seed an incomplete personal information section with a fictional private value. Reopen the advanced workspace and show the Needs Review guidance, the actual validation message and its section action. Confirm that no guided-summary, raw document detection or provider request is made and that no request carries the fictional value."
+    testRef: "apps/web/tests/workspace-upload.spec.ts::reopened guided review stays local and retired upload endpoints reject requests"
+  - line: "retired-endpoints"
+    description: "Former network entry points cannot accept review details or original document bytes"
+    formula: "Unauthenticated POSTs to the old guided review summary and multipart detection URLs return 404 before request body parsing. Reject both paths at middleware so an unmatched multipart request cannot reach framework Server Action parsing. The production build exposes no route for either URL. Browser document detection and protected redacted-text analysis remain available in their existing paths."
+    testRef: "apps/web/tests/workspace-upload.spec.ts::reopened guided review stays local and retired upload endpoints reject requests"

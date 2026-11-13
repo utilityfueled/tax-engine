@@ -9,6 +9,10 @@ import {
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  // Unmatched multipart POSTs can otherwise reach Next.js Server Action parsing.
+  if (/^\/api\/(?:document-detection|guided-review-summary)\/?$/.test(pathname)) {
+    return new NextResponse(null, { status: 404, headers: { "Cache-Control": "no-store" } });
+  }
   const origin = request.headers.get("origin");
   const decision = evaluateCors(pathname, request.method, origin);
 

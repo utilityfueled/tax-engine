@@ -13,7 +13,6 @@ import {
   normalizeUnsupportedDocumentAiInsight,
 } from "@/lib/business-expense-analysis";
 import type {
-  GuidedReviewIssue,
   ScheduleCBankStatementAnalysis,
   SelfEmploymentIncomeDocumentAnalysis,
 } from "@/lib/guided-interview-flow";
@@ -157,40 +156,4 @@ export async function analyzeSelfEmploymentIncomeDocumentWithGemini(
   );
 
   return normalizeSelfEmploymentIncomeDocumentAnalysis(payload, fileName);
-}
-
-export async function summarizeGuidedReviewIssuesWithGemini(
-  issues: GuidedReviewIssue[],
-  _env: NodeJS.ProcessEnv = process.env,
-  executor: DocumentAiExecutor = productionExecutor,
-): Promise<string | null> {
-  if (issues.length === 0) {
-    return null;
-  }
-
-  const payload = await callDocumentTask(
-    "interview-wording",
-    [
-      "Summarize what a tax filer still needs to review in their guided interview.",
-      "Use the supplied versioned schema, including explicit disposition, citations and unknown source facts.",
-      "Rules:",
-      "- Write 1 to 3 short sentences in plain English.",
-      "- Mention the exact section labels that need attention.",
-      "- Explain what the filer should do next in those sections.",
-      "- Do not invent new issues beyond the provided list.",
-    ].join("\n"),
-    "guided-review-summary",
-    JSON.stringify(issues),
-    executor,
-  );
-
-  if (typeof payload !== "object" || payload === null) {
-    return null;
-  }
-
-  const summary = typeof (payload as { summary?: unknown }).summary === "string"
-    ? (payload as { summary: string }).summary.trim()
-    : "";
-
-  return summary || null;
 }
