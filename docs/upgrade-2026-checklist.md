@@ -65,6 +65,9 @@ below retain their original evidence boundaries.
   Verify all three failures and the 33-case successor cohort in Chromium.
 - [x] Guard stale advanced answer and reopen actions in `aeace85a`, with
   two failed baseline controls and 35 passing successor Chromium cases.
+- [x] Prevent local uploads before or during PDF parsing from restoring
+  data after another tab resets the return. Verify original bytes, metadata
+  and successful retry in `9e381f83` with 37 passing Chromium cases.
 - [x] Close all 12 archived `e4734fb1` checks. Unit and coverage each pass
   27,620 at 87.78% branch coverage. Chromium passes 601 cases with five
   original hosted-only skips.

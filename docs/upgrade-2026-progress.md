@@ -4,6 +4,18 @@ Current source, verification and remaining work are summarized in the
 [current continuation](upgrade-2026-current-status.md). Historical results
 below apply to their named revisions.
 
+- November 13: `9e381f83` checks the local return before parsing an upload
+  and again before storing its originals. The archived baseline inserted
+  both PDF bytes and metadata after another tab reset the return, for a
+  reset before selection and a reset during parsing. Both were refused on
+  the successor. The first successor run hit a test locator error because
+  reset returns reopen in guided mode. After explicitly reopening advanced
+  mode, both retries saved exactly one original and all 37 Chromium cases
+  passed with no skips or retries. The 283 focused checks, Web build and
+  types, inventory and 8,837 spec references passed. Scoped lint retained
+  three existing warnings and zero errors. The browser audit adds both
+  cases to the existing eight batches and keeps all request ceilings.
+
 - November 13: `ebd57bdf` preserves ordinary Schedule C expenses alongside
   the confirmed mileage log when the generic line 9 scalar is zero. The
   regression failed on the previous build. The successor passed all 5,075

@@ -2,6 +2,12 @@
 
 ## November 13 on `main`
 
+`9e381f83` refuses local uploads against a return reset before file selection
+or while the browser parses the PDF. The old build stored the new PDF and
+metadata in both cases. The successor keeps both empty after reset and
+saves one original on a fresh retry. All 37 production Chromium cases and
+283 focused checks passed. The archived 12-command run is in progress.
+
 `ebd57bdf` allows ordinary business expenses alongside the confirmed
 Schedule C mileage log when the generic vehicle expense is zero. The
 previous build failed the parsed-input control. The successor passed
