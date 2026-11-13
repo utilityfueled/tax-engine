@@ -301,3 +301,103 @@ it("keeps annual review and filing exports unavailable", async () => {
   expect(() => assertPdfExportAllowed(2026, 2026)).toThrow(/No qualified/u);
   expect(() => assertPdfExportAllowed(2026, 2026, "filing")).toThrow(/Filing exports are unavailable/u);
 });
+
+const buildingExchange = {
+  relinquishedDescription: "100 Fictional Lane, PA - apartment building",
+  replacementDescription: "200 Fictional Lane, OH - apartment building",
+  acquiredDate: "2024-06-01",
+  transferredDate: "2026-06-15",
+  receivedDate: "2026-06-15",
+  exchangeExpenses: "0",
+  closingBasisAndLiabilitiesConfirmed: true,
+  singleDomesticBusinessPropertyPerSideAndUnrelatedPartiesConfirmed: true,
+  noOtherPropertyOrSpecialTreatmentConfirmed: true,
+};
+const taylorBuilding = {
+  ...buildingExchange,
+  relinquishedBasis: "100000",
+  replacementFmv: "250000",
+  cashReceived: "40000",
+  cashPaid: "0",
+  liabilitiesRelinquished: "80000",
+  liabilitiesAssumed: "150000",
+  recapture: { kind: "section1245", saleRecapture: "35000", sourceReference: "Taylor private recapture worksheet", factsConfirmed: true },
+  replacementAppraisal: { section1250Fmv: "250000", section1245Fmv: "0", sourceReference: "Taylor private appraisal", factsConfirmed: true },
+};
+const finleyBuilding = {
+  ...buildingExchange,
+  relinquishedDescription: buildingExchange.replacementDescription,
+  replacementDescription: buildingExchange.relinquishedDescription,
+  relinquishedBasis: "175000",
+  replacementFmv: "220000",
+  cashReceived: "0",
+  cashPaid: "40000",
+  liabilitiesRelinquished: "150000",
+  liabilitiesAssumed: "80000",
+  recapture: { kind: "section1250", saleRecapture: "35000", sourceReference: "Finley private recapture worksheet", factsConfirmed: true },
+  replacementAppraisal: { section1250Fmv: "165000", section1245Fmv: "55000", sourceReference: "Finley private appraisal", factsConfirmed: true },
+};
+
+it("projects both published simultaneous building exchanges on the final candidate", async () => {
+  const { projectForm88242026SimultaneousBuilding, FORM_8824_2026_CANDIDATE: { fields } } =
+    await import("@/pdf/mappings/2026/form-8824-candidate.js");
+  const lines = ["line15", "line16", "line17", "line18", "line19", "line20", "line21", "line22", "line23", "line24", "line25", "line25a", "line25b"] as const;
+  for (const [name, input, boot, expected] of [
+    ["taylor", taylorBuilding, "Cash", ["40000", "250000", "290000", "170000", "120000", "40000", "35000", "5000", "40000", "80000", "170000", "170000", undefined]],
+    ["finley", finleyBuilding, "Liabilities and cash", ["30000", "220000", "250000", "175000", "75000", "30000", "30000", "0", "30000", "45000", "175000", "131250", "43750"]],
+  ] as const) {
+    const { text, checked } = projectForm88242026SimultaneousBuilding(input);
+    expect(lines.map(line => text[fields[line]])).toEqual(expected);
+    expect(text[fields.line15aDescriptionFirst]).toBe(boot);
+    expect(text[fields.line25c]).toBeUndefined();
+    expect(text[fields.line5IdentifiedDate]).toBe("06/15/2026");
+    expect(text[fields.line6ReceivedDate]).toBe("06/15/2026");
+    expect(Object.values(text).join(" ")).not.toContain("private");
+    expect(checked).toEqual([fields.line7No]);
+
+    const { pdf } = await openDiagnosticTemplate();
+    const form = pdf.getForm();
+    for (const [fieldName, value] of Object.entries(text)) {
+      const field = form.getTextField(fieldName);
+      if ([fields.line3AcquiredDate, fields.line4TransferredDate, fields.line5IdentifiedDate, fields.line6ReceivedDate].includes(fieldName)) {
+        field.acroField.getWidgets()[0].getOrCreateAppearanceCharacteristics().setBackgroundColor([1, 1, 1]);
+      }
+      field.setText(value);
+    }
+    for (const fieldName of checked) form.getCheckBox(fieldName).check();
+    await markReviewPdf(pdf);
+    const bytes = await pdf.save();
+    const reopened = (await PDFDocument.load(bytes)).getForm();
+    for (const field of reopened.getFields()) {
+      if (field instanceof PDFTextField) expect(field.getText()).toBe(text[field.getName()]);
+      if (field instanceof PDFCheckBox) expect(field.isChecked()).toBe(checked.includes(field.getName()));
+    }
+    const evidence = process.env.TAX_ENGINE_FORM8824_CANDIDATE_EVIDENCE_DIR;
+    if (evidence) await writeFile(join(evidence, `form-8824-${name}-building.pdf`), bytes, { mode: 0o600 });
+  }
+  const aboveBoot = projectForm88242026SimultaneousBuilding({ ...taylorBuilding,
+    recapture: { ...taylorBuilding.recapture, saleRecapture: "50000" },
+  }).text;
+  expect([aboveBoot[fields.line21], aboveBoot[fields.line22], aboveBoot[fields.line25a]]).toEqual(["50000", "0", "180000"]);
+});
+
+it("rejects incomplete simultaneous building exchange evidence and conflicting printed basis", async () => {
+  const { projectForm88242026SimultaneousBuilding } = await import("@/pdf/mappings/2026/form-8824-candidate.js");
+  for (const changes of [
+    { closingBasisAndLiabilitiesConfirmed: false },
+    { singleDomesticBusinessPropertyPerSideAndUnrelatedPartiesConfirmed: undefined },
+    { noOtherPropertyOrSpecialTreatmentConfirmed: false },
+    { receivedDate: "2026-06-16" }, { acquiredDate: "2025-06-15" },
+    { cashReceived: "1" }, { liabilitiesAssumed: "-1" }, { unlikeProperty: "1" },
+    { recapture: { ...finleyBuilding.recapture, factsConfirmed: false } },
+    { recapture: { ...finleyBuilding.recapture, kind: "section1252" } },
+    { replacementAppraisal: { ...finleyBuilding.replacementAppraisal, sourceReference: " " } },
+    { replacementAppraisal: { ...finleyBuilding.replacementAppraisal, section1250Fmv: "164999.99" } },
+    { liabilitiesRelinquished: "150000.49", replacementFmv: "220000.49",
+      replacementAppraisal: { ...finleyBuilding.replacementAppraisal, section1250Fmv: "165000.49" } },
+    { recapture: { ...finleyBuilding.recapture, saleRecapture: "75000.01" } },
+  ]) expect(() => projectForm88242026SimultaneousBuilding({ ...finleyBuilding, ...changes })).toThrow(/Form 8824/u);
+  // 175,002 at 75% and 25% gives two half dollars; both rounded up would overstate line 25.
+  expect(() => projectForm88242026SimultaneousBuilding({ ...finleyBuilding, relinquishedBasis: "175002" }))
+    .toThrow(/printed replacement basis/u);
+});

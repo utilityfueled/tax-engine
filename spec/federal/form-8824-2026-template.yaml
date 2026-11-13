@@ -84,3 +84,25 @@ lines:
     description: "Keep annual export unavailable"
     formula: "The final blank and its physical candidate map stay outside the public review and filing paths."
     testRef: "tests/pdf/form-8824-2026-candidate.test.ts::keeps annual review and filing exports unavailable"
+  - line: "I and III simultaneous building exchange"
+    description: "Project one direct simultaneous exchange of domestic business real property"
+    formula: >-
+      Require an unrelated exchange of one long-term domestic business building
+      for one distinct domestic business building in 2026. Confirm original
+      closing, basis, obligations, recapture
+      worksheet and complete replacement appraisal. Use actual cash and liabilities
+      treated as assumed, with cash in only one direction. Exclude unlike property,
+      other recapture methods, mixed relinquished recapture classes, installment,
+      exclusion and special treatments. Require supported sale recapture within
+      the total realized gain. Reconcile the complete replacement FMV to
+      the section 1250 and real-property section 1245 appraisal. Use the actual
+      same-day closing date on lines 4–6. Mark line 7 No. Use the engine's confirmed
+      section 1245 or 1250 treatment for line 21. Project lines 15 through 25 and
+      the applicable basis lines 25a and 25b. Line 15a reflects cash or net liability
+      relief and the cash offset where applicable. Require the rounded printed
+      arithmetic and the fully allocated basis to reconcile. Leave inapplicable
+      fields and private references blank. Preserve all annual export gates.
+    reference: "Final 2026 Instructions for Form 8824, Lines 1 and 2, 5–7, 15–25b and examples"
+    testRef: "tests/pdf/form-8824-2026-candidate.test.ts::projects both published simultaneous building exchanges on the final candidate"
+    testRefs:
+      - "tests/pdf/form-8824-2026-candidate.test.ts::rejects incomplete simultaneous building exchange evidence and conflicting printed basis"
