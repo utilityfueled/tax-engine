@@ -172,6 +172,9 @@ export function calculateForm1099R(
       if (form.qualifiedLumpSumReporting === "form_4972") {
         throw new Error("The Form 4972 election requires a separate qualified lump-sum method");
       }
+      if (form.qualifiedLumpSumReporting === "ordinary_pension" && !getUpperDistributionCode(form).includes("A")) {
+        throw new Error("2026 Form 1099-R ordinary lump-sum reporting decision requires Code A");
+      }
       if (isIraForm1099RDistribution(form)) {
         assert2026IraTaxability(form, options.hasValidatedIraBasisSources === true, options.hasJointSpouse === true);
       } else {
@@ -513,14 +516,19 @@ function assert2026PensionTaxability(form: Form1099R): void {
   if (!/^[1-9ABCDEFGHJKLMNPQRSTUWY]{1,2}$/u.test(code) || (code.length === 2 && code[0] === code[1])) {
     throw new Error("2026 Form 1099-R pension requires the actual Box 7a distribution code");
   }
+  const qualifiedLumpSum = code.includes("A");
   if ((code.includes("6") && !/^(?:6W?|W6)$/u.test(code))
     || (code.includes("H") && !/^(?:H4?|4H)$/u.test(code))
     || (code.includes("P") && !/^(?:P[124B]?|[124B]P)$/u.test(code))
-    || (code.includes("A") && !/^(?:A[47]|[47]A)$/u.test(code))) {
+    || (qualifiedLumpSum && !/^(?:A[47]|[47]A)$/u.test(code))) {
     throw new Error("2026 Form 1099-R pension requires a valid Box 7a code combination");
   }
-  if (code.includes("A") && form.qualifiedLumpSumReporting !== "ordinary_pension") {
-    throw new Error("2026 Form 1099-R Code A requires the actual lump-sum reporting decision");
+  if (qualifiedLumpSum) {
+    if (form.taxYear !== 2026) throw new Error("2026 Form 1099-R Code A requires the actual source year");
+    if (form.iraSepSimple !== false) throw new Error("2026 Form 1099-R Code A requires a confirmed non-IRA source");
+    if (form.qualifiedLumpSumReporting !== "ordinary_pension") {
+      throw new Error("2026 Form 1099-R Code A requires the actual lump-sum reporting decision");
+    }
   }
 
   const gross = d(form.grossDistribution);
@@ -534,12 +542,15 @@ function assert2026PensionTaxability(form: Form1099R): void {
       throw new Error("2026 Form 1099-R requires Box 3 to reconcile to determined Box 2a");
     }
     const gain = d(form.capitalGainIncluded);
-    if (code.includes("A") && (!taxable || form.taxableAmountNotDetermined || gain.gt(taxable))) {
+    if (qualifiedLumpSum && (!taxable || form.taxableAmountNotDetermined || gain.gt(taxable))) {
       throw new Error("2026 Form 1099-R Code A requires Box 3 to reconcile to determined Box 2a");
     }
-    if (!code.includes("A") && !gain.isZero()) {
+    if (!qualifiedLumpSum && !gain.isZero()) {
       throw new Error("2026 Form 1099-R Box 3 on a source other than Code A requires a separate method");
     }
+  }
+  if (qualifiedLumpSum && (taxable === undefined || form.taxableAmountNotDetermined)) {
+    throw new Error("2026 Form 1099-R Code A requires a determined Box 2a for ordinary reporting");
   }
 
   if (isPriorYearTaxableDistribution(form)) return;

@@ -262,13 +262,22 @@ lines:
     description: "Resolve the ordinary reporting decision for original Form 1099-R Code A"
     formula: >-
       Code A with Code 4 or 7 identifies a potentially eligible qualified
-      lump-sum distribution. Require an explicit decision to use ordinary
-      Form 1040 pension reporting before using its determined Box 2a.
+      lump-sum distribution. Bind the explicit ordinary Form 1040 reporting
+      decision to a confirmed 2026 original with the IRA box unchecked and
+      a known Box 2a. An explicit zero is a known amount. A blank Box 2a or
+      an amount marked undetermined needs its separate lump-sum taxability
+      method. The ordinary periodic-payment worksheet cannot supply it.
+      A retained ordinary lump-sum decision on a statement without Code A
+      must be reconciled with the actual source before calculation.
       Missing decisions and actual Form 4972 elections require the separate
       worksheet and cannot silently enter ordinary pension income. Code A
       alone or with an incompatible code is not a valid source combination.
     irsRef: "2026 Instructions for Forms 1099-R and 5498, Box 7a Code A; 2026 Form 4972 Parts I–III; Form 1040 instructions, Lines 5a, 5b and 16"
     testRef: "tests/engine/federal-pension-sources-2026.test.ts::2026 qualified lump-sum reporting decision"
+    testRefs:
+      - "tests/engine/federal-pension-sources-2026.test.ts::requires current-year non-IRA original evidence for the ordinary decision"
+      - "tests/engine/federal-pension-sources-2026.test.ts::holds an unknown lump-sum Box 2a even with periodic pension worksheet inputs"
+      - "tests/engine/federal-pension-sources-2026.test.ts::requires reconciliation of a retained lump-sum choice on a non-Code A statement"
 
   - line: "2026-guided-lump-sum-election"
     description: "Preserve the taxpayer's explicit reporting choice on a 2026 guided pension source"

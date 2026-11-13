@@ -155,6 +155,35 @@ describe("2026 original pension source facts", () => {
   });
 
   describe("2026 qualified lump-sum reporting decision", () => {
+    const ordinaryLumpSum = { distributionCode: "7A", qualifiedLumpSumReporting: "ordinary_pension" as const };
+
+    it("requires current-year non-IRA original evidence for the ordinary decision", () => {
+      const entry = { ...ordinaryLumpSum, taxableAmount: "9000.01" };
+      expect(() => calculate({ ...entry, taxYear: undefined })).toThrow(/Code A.*source year/);
+      expect(() => calculate({ ...entry, iraSepSimple: undefined })).toThrow(/Code A.*non-IRA/);
+      expect(calculate({ ...entry, taxYear: undefined }, 2025).pensionDistributionsTaxable.eq("9000.01")).toBe(true);
+    });
+
+    it("holds an unknown lump-sum Box 2a even with periodic pension worksheet inputs", () => {
+      const worksheet = {
+        simplifiedMethodAnnuityStartingDate: "2026-01-01", simplifiedMethodCostInPlan: "24000",
+        simplifiedMethodExpectedPayments: 240, simplifiedMethodPaymentsReceivedThisYear: 12,
+        simplifiedMethodPriorYearRecovered: "0",
+      };
+      expect(() => calculate({ ...ordinaryLumpSum, ...worksheet })).toThrow(/Code A.*determined Box 2a/);
+      expect(() => calculate({ ...ordinaryLumpSum, ...worksheet, taxableAmount: "0", taxableAmountNotDetermined: true }))
+        .toThrow(/Code A.*determined Box 2a/);
+      expect(() => calculate({ ...ordinaryLumpSum, grossDistribution: "0" })).toThrow(/Code A.*determined Box 2a/);
+      const result = calculate({ ...ordinaryLumpSum, ...worksheet, taxableAmount: "0", taxableAmountNotDetermined: false });
+      expect(result.pensionDistributionsTaxable.isZero()).toBe(true);
+      expect(result.form1099R?.federalWithholding.eq("99.09")).toBe(true);
+    });
+
+    it("requires reconciliation of a retained lump-sum choice on a non-Code A statement", () => {
+      const entry = { ...ordinaryLumpSum, distributionCode: "7", taxableAmount: "9000.01" };
+      expect(() => calculate(entry)).toThrow(/reporting decision.*requires Code A/);
+    });
+
     it("reports included Box 3 only once when the ordinary method is chosen", () => {
       const entry = { distributionCode: "7A", taxableAmount: "9000.01", qualifiedLumpSumReporting: "ordinary_pension" as const,
         capitalGainIncluded: "2000.02", taxableAmountNotDetermined: false };
@@ -165,7 +194,8 @@ describe("2026 original pension source facts", () => {
         { capitalGainIncluded: "invalid" }, { taxableAmount: undefined }, { taxableAmountNotDetermined: true }]) {
         expect(() => calculate({ ...entry, ...change })).toThrow(/Box 3.*Box 2a/u);
       }
-      expect(() => calculate({ ...entry, distributionCode: "F" })).toThrow(/Box 3.*separate method/u);
+      expect(() => calculate({ ...entry, distributionCode: "F", qualifiedLumpSumReporting: undefined }))
+        .toThrow(/Box 3.*separate method/u);
     });
     it.each(["4A", "A4", "7A", "A7"])("requires the reporting decision for Code %s before using Box 2a", (distributionCode) => {
       const entry = { distributionCode, taxableAmount: "9000.01" };
