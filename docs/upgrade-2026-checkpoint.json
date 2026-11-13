@@ -24384,6 +24384,21 @@
       "prodAuditSha256": "802c55f7c0fed74cd44169b476634570a7f531cdf59d8a8688e396513ae3e5ce",
       "fullAuditSha256": "2bd34d50bec6f2f16e90551fcae80e94f898eabc4c169417a21a74f3fdf42d1f"
     },
+    "nativeArm64": {
+      "image": "cd661e83c7becfcc08bae4a75c9bbe63997bdc93de5eb99c15662ff5bc6a2b0c",
+      "imageArchiveSha256": "a9c1e22a411ebefaaae974c38e2e332f20f13e7399d462e576993a9baa1d2ee2",
+      "sbomSha256": "d011edd3582fffaa7a69cb81a10a791f477a2571dd58d31ef0e936ea6290ccfc",
+      "scanSha256": "3503f3ce019c2a6307005b916ac28318bab459107198d4f77f0c38fc9798c41f",
+      "chromiumCollected": 621,
+      "chromiumPassed": 616,
+      "chromiumHostedOnlySkipped": 5,
+      "composeRecoveryPhasesPassed": 6,
+      "advisoryMatches": 197,
+      "highMatches": 60,
+      "riskAccepted": false,
+      "cleanupVerified": true,
+      "receiptSha256": "a4b77174c50b7ab448e08cfc5dd445219619ed460df87256b323a3e704874c44"
+    },
     "ledger": "docs/upgrade-2026-nov13-release-rehearsals.md"
   },
   "nov13PensionTaxability": {
@@ -24411,6 +24426,21 @@
       "https://codes.ohio.gov/ohio-revised-code/section-5748.06",
       "https://codes.ohio.gov/ohio-revised-code/section-5747.055",
       "https://tax.ohio.gov/help-center/faqs/income-retirement-income/income-retirement-income"
+    ]
+  },
+  "nov13OrdinaryIraOwnerFacts": {
+    "commit": "cd5dd249be50e8047c665ac2777c734079e25fc2",
+    "focusedTestsPassed": 677,
+    "initialRed": 16,
+    "initialRedIncludesFixtureMissingW2Owner": true,
+    "specReferencesValidated": 8903,
+    "redSha256": "1ebeb34176754cd4cc411a6f2c1964113025fb33c03adba19dfeca22f790201d",
+    "greenSha256": "d8ae01a3fc12230458650d527a9b75f597d972dc6c206c6e37c0a73abfdba952",
+    "federal2026ProductionAdmitted": false,
+    "sources": [
+      "https://www.irs.gov/instructions/i1099r",
+      "https://www.irs.gov/publications/p590b",
+      "https://www.irs.gov/instructions/i8606"
     ]
   },
   "nov13PaSuccessorVerification": {

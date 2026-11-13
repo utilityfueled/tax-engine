@@ -9,6 +9,17 @@ The read-only Vercel check still finds the production project linked to
 `main`, with automatic custom-domain assignment and no build-ignore command.
 The isolated rehearsal project has no Git link and protects all deployments.
 
+`cd5dd249` requires actual owner evidence for ordinary 2026 traditional IRA
+taxability. The guided zero-basis confirmation now reaches the calculation.
+Alternatively, the engine validates the separate Form 8606 source packet
+before accepting unresolved payer amounts. A known Trump account or nonzero
+Box 7d needs a separate method. The 677 affected tests, engine and web types,
+8,903 spec references, inventory and browser request audit passed. The
+ordinary source guard leaves the production 2026 gate closed.
+[2026 Form 1099-R instructions](https://www.irs.gov/instructions/i1099r) ·
+[Publication 590-B](https://www.irs.gov/publications/p590b) ·
+[Form 8606 instructions](https://www.irs.gov/instructions/i8606).
+
 `976a63bc` applies Ohio's separate $50 earned-income school-district
 senior credit to the confirmed single full-year wage draft. The school credit
 is capped by its own liability and has no state-credit MAGI ceiling. State
@@ -37,8 +48,11 @@ passed both synthetic sign-in and session checks, denied their canceled
 trial entitlements, and stored only two versioned Redis keys. The Preview,
 its four temporary settings and those Redis buckets were removed. Current
 lockfile production and full registry audits reported zero advisories across
-447 and 539 dependencies respectively. Exact combined and ARM64 checks
-continue. [Hosted and recovery evidence](upgrade-2026-nov13-release-rehearsals.md).
+447 and 539 dependencies respectively. The exact ARM64 image passed import,
+smoke, SBOM and scan, six Compose recovery phases and 616 Chromium cases
+with five hosted-only skips. Normal stop and socket restoration passed.
+The combined suite is queued behind the prior archive.
+[Hosted and recovery evidence](upgrade-2026-nov13-release-rehearsals.md).
 
 `29fb2d29` adds Ohio's $50 senior credit to the internal withholding-only
 wage draft across all three residency categories. It binds prior credit

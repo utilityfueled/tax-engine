@@ -6,6 +6,9 @@ below retain their original evidence boundaries.
 
 ## Active continuation — November 13 Eastern
 
+- [x] Require actual 2026 ordinary IRA basis evidence in `cd5dd249`. Pass
+  677 affected tests, including the guided bridge, original Form 8606
+  owner binding and unchanged historical calculation.
 - [x] Compose the separate Ohio earned-school senior credit in `976a63bc`.
   Pass 384 focused tests covering the school liability cap, independent
   state income ceiling and exact withholding reconciliation.
@@ -54,6 +57,9 @@ below retain their original evidence boundaries.
   14 exact local hosted HTTP checks and the protected Preview privacy and
   auth checks. Verify removal of the Preview, temporary settings and both
   pseudonymous buckets. Refresh both registry audits at the current lockfile.
+- [x] Pass the exact `a022a2ec` native ARM64 image import, smoke, scan, six
+  Compose recovery phases and 616 Chromium cases with five hosted-only skips.
+  Verify VM stop and socket restoration. Advisory ownership remains open.
 - [ ] Close the combined and ARM64 successor checks and qualify the final
   source on protected staging and native AMD64. Keep commits local while the
   production push hold is in effect.
