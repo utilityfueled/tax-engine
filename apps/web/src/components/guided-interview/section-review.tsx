@@ -222,6 +222,10 @@ function DeductionsSummary({ data, filingStatus, taxYear }: { data: DeductionDat
         <span className="guided-review-label">Method</span>
         <span className="guided-review-value">Itemized (Schedule A)</span>
       </div>
+      {current.medicalMileage !== undefined && <div className="guided-review-row">
+        <span className="guided-review-label">Medical mileage</span>
+        <span className="guided-review-value">Mileage log entered</span>
+      </div>}
       {items.map((item) => (
         <div key={item.label} className="guided-review-row">
           <span className="guided-review-label">{item.label}</span>

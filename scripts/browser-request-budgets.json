@@ -111,7 +111,7 @@
     "apps/web/src/components/guided-interview/foreign-tax-ordinary-credit-details.tsx": "4d9016a2d83a07dbecde2505de662d02b1aaa11294e65a39d5de3f389e77ff3e",
     "apps/web/src/components/guided-interview/form-8862-details.tsx": "0057e48201a18f32be9a997d88741608335277d75f3df2992f45b22b17494da1",
     "apps/web/src/components/guided-interview/government-payment-source-fields.tsx": "83052020e0ab728ec5ae687f078fbfea8b2609ed9142fe8941a236b1f9e9601b",
-    "apps/web/src/components/guided-interview/guided-interview-shell.tsx": "85f2b21cd8342e76cdb55f13318f274b378525e24fc0a23d4e78386a9f5d5cc2",
+    "apps/web/src/components/guided-interview/guided-interview-shell.tsx": "4f5de7919137475e141eda74ef78a6d6f2a3e48f33984c8576890ffd060c6cae",
     "apps/web/src/components/guided-interview/health-child-relationship-details.tsx": "773a73cbb87bc8de7de236f0cf4c035fb4debe2b9ad9585fa1fa15ca739bd848",
     "apps/web/src/components/guided-interview/health-insurance-source-details.tsx": "39854fab6030309747543412f04c7755f54424399d83a3947c39d17cbbf0c8dc",
     "apps/web/src/components/guided-interview/household-source-details.tsx": "e76b49b2f42894f0ae292afbc1b3ffe1639a2dbd5272ded9e3e3b354eab99fcc",
@@ -131,6 +131,7 @@
     "apps/web/src/components/guided-interview/k1-prior-at-risk-details.tsx": "4a4c023b9015a6db62ae2773fae487f3a808c2bbbf60b49a4243c250dfa7edfd",
     "apps/web/src/components/guided-interview/macrs-asset-details.tsx": "bfbe1d32ea0e239e8d6d70e44ec2c4189d74a29b44496ac3a9eb45ebcff63c72",
     "apps/web/src/components/guided-interview/marriage-policy-source-details.tsx": "a38b096969d16002f3f9c91c8dc3d7e648108519c0a08dd7bb0beccbefbb364e",
+    "apps/web/src/components/guided-interview/medical-mileage-details.tsx": "4dd25cfab7e4cbed9c22ac6b8b08bb06e6a1268ef080d8f354464b4b108c1a8b",
     "apps/web/src/components/guided-interview/minimum-tax-credit-details.tsx": "051e95c6229689741e601115aee457b6fbe28f231e9521a03c3e06f36e59187b",
     "apps/web/src/components/guided-interview/mortgage-balance-source-fields.tsx": "8580707e538b969bd7a80485c50b548bfd78820ea0231a6c195287ea0e933445",
     "apps/web/src/components/guided-interview/mortgage-debt-category-fields.tsx": "8b3ca0ffaf85b4e5517706a3f0fc58b07f8f3672b2dcb336d29d41eecb119090",
@@ -189,14 +190,14 @@
     "apps/web/src/components/guided-interview/section-additional-deductions.tsx": "fa7006dbdcb87d64c293e16438f2d71d0a27e4e3caf8ba643658579599eb6b82",
     "apps/web/src/components/guided-interview/section-adjustments.tsx": "e7ff62f7626b8905517024368506ea7fd48cc7a01dcc45abde7dfba8d32bd369",
     "apps/web/src/components/guided-interview/section-credits.tsx": "58152cf9ea82d523a83ff9b4219f7163ecc5acce420f8c8f764a0540975b1eee",
-    "apps/web/src/components/guided-interview/section-deductions.tsx": "fc7ca3866dcf5050036c60c011ef1d16daef647d812cb4b49d427addfb9ec829",
+    "apps/web/src/components/guided-interview/section-deductions.tsx": "877bd81cd3f8c0377c43cd333f067924c8921e9b385e97d0892b7e786d87e946",
     "apps/web/src/components/guided-interview/section-investment-income.tsx": "e0e98e36072c6c8c2b2e6bdeb68d6abe3982751331c77e169b84b1812098d89f",
     "apps/web/src/components/guided-interview/section-other-taxes.tsx": "8546ddc0f43188ed468ccb61951cae6c4c68e8a1f7b273efc6613363b0dad253",
     "apps/web/src/components/guided-interview/section-payments.tsx": "08f411e89a2e90d71651881ac83351f4f0868816901f2d7c3628a984be08df4e",
     "apps/web/src/components/guided-interview/section-personal-info.tsx": "754ef1b358b44c18973b425704be40b2c4d20d9615d9c369d4a7999eb91ad3c0",
     "apps/web/src/components/guided-interview/section-rental-income.tsx": "ef3e430db8d597f1b80664a3ae5917dc13f47a4981a930d049847181f03d3964",
     "apps/web/src/components/guided-interview/section-retirement-income.tsx": "834a6d8a4ae92a159926152b3dfa6b6d51c6f9d3f5b5fbc2f5aa6bb30b784e9d",
-    "apps/web/src/components/guided-interview/section-review.tsx": "08f9d64d33a27846afadd1c8362eb865ae78cc3f761b9d53d101ef12240e7c19",
+    "apps/web/src/components/guided-interview/section-review.tsx": "5b23f3d3826c661df9518cab31859bb067040579b635ce6c342d32ce2a67fb8b",
     "apps/web/src/components/guided-interview/section-royalty-income.tsx": "ee20c868ced113be82bd998f0f50b61716ff6c5d891fb744b2659ce9d49112aa",
     "apps/web/src/components/guided-interview/section-self-employment.tsx": "e96b9aa92a70a0c9a9c373432d1369b1343c825c6493ac499d5ee93ee52420e8",
     "apps/web/src/components/guided-interview/section-social-security.tsx": "e71707b901168efbfe34b2d23a77eac856f074d8ce7f53fe17ee10d1b513dc2d",
@@ -286,8 +287,8 @@
     "apps/web/src/lib/guided-health-insurance-facts.ts": "08c785a3a31d07d96932840afba8cb23c914c22a4213abafc2ac6531b811ae4b",
     "apps/web/src/lib/guided-hsa-distribution-facts.ts": "e9ce96eb9f2c2297fca1dd53ca311b2b42545da4a3a2ec257fcf702daac9060f",
     "apps/web/src/lib/guided-hsa-facts.ts": "bad97489b43ff81ed079b9c193f1f77f6fd62950ee159256456a79a6d009654e",
-    "apps/web/src/lib/guided-interview-bridge.ts": "a59463f2307afd0e5ed121fb9495cf9d46d6fcce4f760d336478adb3743cad15",
-    "apps/web/src/lib/guided-interview-flow.ts": "642d511a453467acd95c817254746126c61cef8d33604b18d3891f98bdb52097",
+    "apps/web/src/lib/guided-interview-bridge.ts": "909ce7f4bf12d829bd8c4c3038899e145a4cae44b888494c926efe729b72e38e",
+    "apps/web/src/lib/guided-interview-flow.ts": "44101fbfe8c7c38652e0bb5cb64727d755ba01e67102fa191caf7482a2433db8",
     "apps/web/src/lib/guided-investment-facts.ts": "c05786de5c12a4341371294d2a926ec64aae99eeeb8ffcbe5595c6fe9c3727dc",
     "apps/web/src/lib/guided-investment-interest.ts": "3f55441684455777dac810e9122e14345944f6f5e4262e1f2e4447eff1b1118b",
     "apps/web/src/lib/guided-ira-basis.ts": "b6dff39b2a47ff2c56d233b91e9fa52fa35a75443577b2b33754edaa65c18473",
@@ -299,6 +300,7 @@
     "apps/web/src/lib/guided-macrs-assets.ts": "28bf8afd02ec2236eb871287e2a0519ca63e52c158c55f92c363e1e1f2b53813",
     "apps/web/src/lib/guided-marketplace-health-facts.ts": "b2cc9c518d23f2bc4e6eb191fa29861ffa3a0b600f671b0d549fa756b2f422a5",
     "apps/web/src/lib/guided-marriage-policy.ts": "43cb902d88a7cda9023d9427ba57c4269ece12118a7fe5715d1e796c35e6cf6a",
+    "apps/web/src/lib/guided-medical-mileage.ts": "09c4bb1e91ea7a7172f30fc178329e72e4202957e897226c00f5026fb1f372f8",
     "apps/web/src/lib/guided-minimum-tax-credit.ts": "51c928e58b953ed2f191f66994998711622b0ea56519577c76bcdec293c50093",
     "apps/web/src/lib/guided-mortgage-balances.ts": "d00a2011985c594b382fcdff89d9d4641e19e65fd23ac2d0b8f27651d6e820b4",
     "apps/web/src/lib/guided-mortgage-debt-categories.ts": "006d8ba4e23983c993a760f9f9f82f33a79fa403a9861c069dac19d096698d83",
@@ -530,6 +532,7 @@
     "apps/web/tests/guided-marriage-coverage-family.spec.ts": "64e074b9ecc362456eec25ef2d7dbf8f58869aa35502a72b74693e08ea52ff3f",
     "apps/web/tests/guided-marriage-outside-person.spec.ts": "0e9b64078cc0b24f575d0c2ec816e72df8912321c8a146361dc63b1f3d33c4b7",
     "apps/web/tests/guided-marriage-policy.spec.ts": "01b108b98c58729c00ce448cbd8c8dc09deac913fb927b0250f7395479abd14e",
+    "apps/web/tests/guided-medical-mileage.spec.ts": "6fb98762b3cdf0282cabd93f19747c09f1d05f2448dfa7cdfa22dd2cf79db559",
     "apps/web/tests/guided-mixed-tuition.spec.ts": "429470af2e81016fee528c975b03e983e44bb48e002cc17855be963af381a77e",
     "apps/web/tests/guided-mortgage-balances.spec.ts": "a6df03167b1555851c60c5aa04eb4a7d680c0c3408bef92f81dfcee036edf422",
     "apps/web/tests/guided-mortgage-debt-categories.spec.ts": "b61c4facc5156c65ce0ce4ad1599910a089aae35ee9b433876da3731a938d426",
@@ -3999,6 +4002,17 @@
       "requestSourceLines": [],
       "skippedTitles": [],
       "reviewBasis": "Native source entry, saved local navigation and read-only state computation. The test makes no protected requests."
+    },
+    "guided-medical-mileage.spec.ts": {
+      "caseCount": 2,
+      "skippedTitles": [],
+      "bounds": {
+        "filled-return": 0,
+        "provider": 0,
+        "business-expense-analysis": 0,
+        "self-employment-income-analysis": 0
+      },
+      "reviewBasis": "Two local source-entry and reload controls. 2026 export stays unavailable. All four protected scopes are checked for zero and request URLs and bodies are checked for private markers."
     }
   }
 }

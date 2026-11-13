@@ -641,6 +641,7 @@ function SectionContent({
         <SectionDeductions
           taxYear={state.taxYear}
           data={getSectionData(state, "deductions")}
+          hasSpouse={!!getSectionData(state, "personal-info")?.spouse}
           childEntries={getSectionData(state, "income-investments")?.childElections}
           k1Activities={getSectionData(state, "adjustments")?.k1LossSources?.activities}
           filingStatus={state.segmentation.filingStatus}

@@ -18,6 +18,8 @@ import { K1CharitableSourceDetails } from "./k1-charitable-source-details";
 import type { K1LossSourcesData } from "@/lib/guided-qbi-loss-data";
 import type { ChildElectionData } from "@/lib/guided-child-election-facts";
 import { formatGuidedCurrency, parseGuidedDisplayAmount } from "@/lib/guided-currency";
+import { supportsMedicalMileage } from "@/lib/guided-medical-mileage";
+import { MedicalMileageDetails } from "./medical-mileage-details";
 
 const formatUsd = formatGuidedCurrency;
 
@@ -25,6 +27,7 @@ export function SectionDeductions({
   data,
   filingStatus,
   taxYear,
+  hasSpouse,
   childEntries,
   k1Activities,
   onDataChange,
@@ -32,6 +35,7 @@ export function SectionDeductions({
   data: DeductionData | undefined;
   filingStatus: FilingStatus | null;
   taxYear?: number | null;
+  hasSpouse?: boolean;
   childEntries?: ChildElectionData[];
   k1Activities?: K1LossSourcesData['activities'];
   onDataChange: (data: DeductionData) => void;
@@ -39,8 +43,10 @@ export function SectionDeductions({
   const current = data ?? emptyDeductionData;
   const standardAmount = getStandardDeductionAmount(filingStatus, taxYear);
   let comparison: ReturnType<typeof computeDeductionComparison> | null = null;
-  try { comparison = computeDeductionComparison(filingStatus, current, taxYear); }
-  catch { /* Incomplete edits stay visible and are validated before calculation. */ }
+  if (current.medicalMileage === undefined) {
+    try { comparison = computeDeductionComparison(filingStatus, current, taxYear); }
+    catch { /* Incomplete edits stay visible and are validated before calculation. */ }
+  }
 
   function setMethod(method: DeductionMethod) {
     onDataChange({ ...current, method });
@@ -133,10 +139,12 @@ export function SectionDeductions({
 
             <CurrencyField
               label="Medical and dental expenses"
-              hint="Only the amount exceeding 7.5% of your AGI is deductible."
+              hint={current.medicalMileage === undefined ? "Only the amount exceeding 7.5% of your AGI is deductible." : "Move other eligible costs to the mileage log and clear this separate total before claiming mileage."}
               value={current.medicalExpenses}
               onChange={(v) => update("medicalExpenses", v)}
             />
+            <MedicalMileageDetails data={current.medicalMileage} available={supportsMedicalMileage(taxYear, filingStatus, hasSpouse)}
+              onChange={medicalMileage => onDataChange({ ...current, medicalMileage })} />
 
             <div className="guided-form-grid">
               <CurrencyField
@@ -175,7 +183,7 @@ export function SectionDeductions({
               </div>
             </details>
 
-            {!comparison && <p className="guided-hint" role="status">Correct incomplete amounts to compare your expenses.</p>}
+            {!comparison && <p className="guided-hint" role="status">{current.medicalMileage === undefined ? "Correct incomplete amounts to compare your expenses." : "The tax calculation includes confirmed medical mileage in your itemized deduction."}</p>}
             {comparison && parseGuidedDisplayAmount(comparison.itemizedTotal).gt(0) && (
               <div className="guided-deduction-comparison" style={{ marginTop: "16px" }} role="status" aria-live="polite">
                 <div className="guided-ticker-grid">

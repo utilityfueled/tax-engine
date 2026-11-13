@@ -52,3 +52,16 @@ lines:
       Apply the existing 7.5 percent AGI floor once to the combined
       medical expenses. Preserve legacy medical totals and full-year gates.
     testRef: "tests/engine/schedules/schedule-a-medical-mileage-2026.test.ts::keeps known zero distinct and preserves the historical and full year gates"
+  - line: "1-guided"
+    description: "Retain actual medical mileage, known zero and affirmative eligibility"
+    formula: >
+      In the single 2026 itemized interview, capture a private source reference,
+      actual dated mileage, eligible parking and tolls, other eligible medical
+      expenses and explicit confirmation of each eligibility statement. Changes
+      to the amounts, dates or reference require confirmation again. Preserve
+      unknown values and disallow overlapping positive medical aggregates.
+      Switching to the standard deduction retains the saved source and does not
+      claim it. An incompatible year or filing status blocks an itemized claim.
+      Give the canonical Schedule A calculation the original data and leave the
+      year and public export gates closed.
+    testRef: "tests/apps/web/guided-medical-mileage.test.tsx::keeps actual zeros and dates and clears confirmation when a source value changes"

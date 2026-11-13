@@ -65,6 +65,7 @@ import { allowsBlankForm8862ChildIdentifier, type Form8862Data } from "./guided-
 import { buildVehicleCreditInput, vehicleFactErrors } from "./guided-vehicle-facts";
 import { buildAdoptionInput, adoptionFactErrors } from "./guided-adoption-facts";
 import { allPaymentFactErrors, assertKnownFacts, deductionFactErrors, educationFactErrors, hasEnteredAmount, paymentFactErrors, retirementFactErrors } from "./guided-required-facts";
+import { buildGuidedMedicalMileage } from "./guided-medical-mileage";
 import { nonitemizedElectionFactErrors } from "./guided-nonitemized-election";
 import { adjustmentFactErrors, householdFactErrors, isDeductibleAlimony } from "./guided-adjustment-facts";
 import { statePaymentFactErrors, sumAdditionalStateWithholding } from "./guided-state-facts";
@@ -382,9 +383,10 @@ export function buildDependents(
 
 // ── Schedule A (itemized deductions) converter ──────────────────────────────
 
-export function buildScheduleAInput(deductionData: DeductionData | undefined, stateReturnData?: StateReturnData, retirementEntries?:RetirementEntryData[], taxYear?:number, miscContext?:{state:GuidedFlowState;originals:ReadonlyArray<Form1099Misc>}) {
+export function buildScheduleAInput(deductionData: DeductionData | undefined, stateReturnData?: StateReturnData, retirementEntries?:RetirementEntryData[], taxYear?:number, sourceContext?:{state:GuidedFlowState;originals:ReadonlyArray<Form1099Misc>}) {
   if (!deductionData) return undefined;
   assertKnownFacts(deductionFactErrors({ ...deductionData, mortgageInterest: "", mortgageEntries: [], mortgageWorksheet: undefined }));
+  const medicalMileage = buildGuidedMedicalMileage(deductionData, taxYear, sourceContext?.state.segmentation.filingStatus, sourceContext?.state.sectionData['personal-info']?.spouse);
   let matchedRetirement = new Decimal(0);
   if (stateReturnData?.paResidencySources?.retirementSources !== undefined) {
     assertKnownFacts(statePaymentFactErrors(stateReturnData, taxYear, 'PA'));
@@ -412,11 +414,11 @@ export function buildScheduleAInput(deductionData: DeductionData | undefined, st
   let matchedMisc = new Decimal(0);
   const miscClaims = stateReturnData?.additionalStateWithholdingEntries?.filter(row => row.documentType === '1099-MISC') ?? [];
   if (deductionData.method === 'itemized' && stateReturnData?.zeroIncomeMiscSources?.length && miscClaims.length) {
-    if (!miscContext || miscContext.state.sectionData['state-return'] !== stateReturnData) {
+    if (!sourceContext || sourceContext.state.sectionData['state-return'] !== stateReturnData) {
       throw new Error('Actual current MISC original context is required before itemized source reconciliation.');
     }
     matchedMisc = reconcileGuidedZeroIncomeMiscOriginalClaims(
-      miscContext.originals, miscContext.state, miscContext.state.segmentation.stateCode ?? '', miscClaims,
+      sourceContext.originals, sourceContext.state, sourceContext.state.segmentation.stateCode ?? '', miscClaims,
     ).matchedAmount;
   }
   const Money = Decimal.clone({
@@ -438,6 +440,7 @@ export function buildScheduleAInput(deductionData: DeductionData | undefined, st
     } : {}),
   };
   const values = Object.fromEntries(Object.entries(fields).filter(([, value]) => hasEnteredAmount(value)).map(([key, value]) => [key, toDecimalString(value)])) as Partial<Record<keyof typeof fields, string>>;
+  if (medicalMileage) return { ...values, medicalMileage };
   return Object.keys(values).length ? values : undefined;
 }
 
@@ -860,7 +863,10 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
   let royaltyInputs: ReturnType<typeof buildGuidedRoyaltySources>;
   try { royaltyInputs = buildGuidedRoyaltySources(state, "form1099Misc" in mortgageInputs ? mortgageInputs.form1099Misc : undefined); } catch { return null; }
   try { royaltyInputs={...royaltyInputs,form1099Misc:buildGuidedZeroIncomeMiscSources(state,royaltyInputs.form1099Misc)}; } catch { return null; }
-  const scheduleA = buildScheduleAInput(deductionData, stateReturnData, retirementData?.entries, state.taxYear, {state,originals:royaltyInputs.form1099Misc});
+  let scheduleA: ReturnType<typeof buildScheduleAInput>;
+  try {
+    scheduleA = buildScheduleAInput(deductionData, stateReturnData, retirementData?.entries, state.taxYear, { state, originals: royaltyInputs.form1099Misc });
+  } catch { return null; }
   const donations = buildDonationsInput(deductionData, state.taxYear);
   const adjustments = buildAdjustmentsInput(adjustmentData, state.segmentation.filingStatus, state.taxYear, loanEducation);
   const studentLoans = buildStudentLoanInputs(adjustmentData?.studentLoanFacts, segmentation.filingStatus, state.taxYear, loanEducation, adjustmentData?.studentLoanInterest);

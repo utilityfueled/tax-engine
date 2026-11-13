@@ -64,6 +64,7 @@ import { personalFactErrors } from "./guided-taxpayer-facts";
 import type { EicClaimantEligibilityData } from "./guided-eic-eligibility";
 import { eicHistorySourceValuesChanged, invalidateEicHistorySources } from "./guided-eic-disallowance-history";
 import { allPaymentFactErrors, deductionFactErrors, educationFactErrors, retirementFactErrors } from "./guided-required-facts";
+import { clearMedicalMileageConfirmations, guidedMedicalMileageErrors, medicalMileageOriginals, type MedicalMileageDraft } from "./guided-medical-mileage";
 import { nonitemizedElectionFactErrors } from "./guided-nonitemized-election";
 import { adjustmentFactErrors, householdFactErrors } from "./guided-adjustment-facts";
 import { statePaymentFactErrors } from "./guided-state-facts";
@@ -996,6 +997,7 @@ export const emptyDonationEntry: DonationEntryData = { organization: "", type: "
 export interface DeductionData {
   method: DeductionMethod;
   medicalExpenses: string;
+  medicalMileage?: MedicalMileageDraft;
   stateLocalTaxes: string;
   nonW2IncomeTaxesDeductedElsewhere?: string;
   realEstateTaxes: string;
@@ -1847,6 +1849,11 @@ export function updateSectionData(
   const healthSourcesChanged = sourceValuesChanged && ["personal-info", "income-w2", "income-self-employment", "income-retirement", "income-investments", "income-rental", "income-royalties", "credits", "adjustments"].includes(sectionId) && nextAdjustments?.healthInsuranceFacts;
   const mortgageSourcesChanged = sourceValuesChanged && sectionId === "personal-info" && state.sectionData.deductions?.mortgageEntries?.length ? state.sectionData.deductions : undefined;
   const nextDeductions = sectionId === "deductions" ? data as DeductionData : state.sectionData.deductions;
+  const medicalMileage = nextDeductions?.medicalMileage;
+  const medicalMileageChanged = medicalMileage && (
+    (sectionId === "personal-info" && sourceValuesChanged)
+    || (sectionId === "deductions" && guidedSourceValuesChanged(medicalMileageOriginals(state.sectionData.deductions?.medicalMileage), medicalMileageOriginals(medicalMileage)))
+  );
   const cryptoDonationsChanged = nextDeductions?.cryptoDonations && ((sourceValuesChanged && sectionId === "personal-info") || (sectionId === "deductions" && guidedSourceValuesChanged(state.sectionData.deductions?.cryptoDonations, nextDeductions.cryptoDonations)));
   const k1CharitableSourcesChanged = sourceValuesChanged && ["personal-info", "adjustments", "deductions"].includes(sectionId) && nextDeductions?.k1CharitableSources;
   const charitableCarryoverChanged = sourceValuesChanged && ["personal-info", "income-w2", "income-self-employment", "income-retirement", "income-investments", "income-rental", "income-royalties", "income-social-security", "income-unemployment", "adjustments", "credits", "deductions", "additional-deductions", "other-taxes", "state-return"].includes(sectionId) && nextDeductions?.charitableCarryoverSources;
@@ -1949,7 +1956,8 @@ export function updateSectionData(
       ...((childElectionSourcesChanged || qofSourcesChanged || capitalSourcesChanged || qsbsSourcesChanged || digitalAssetHouseholdChanged) && nextInvestments ? { "income-investments": { ...nextInvestments, ...(childElectionSourcesChanged ? { childElections: nextInvestments.childElections?.map(child => ({ ...child, sourceFactsConfirmed: null })) } : {}), ...(qofSourcesChanged ? { qofDispositionFacts: { ...qofSourcesChanged, sourceFactsConfirmed: null, ...(qofSourcesChanged.investments ? { investments: qofSourcesChanged.investments.map(row => ({ ...row, sourceFactsConfirmed: null })) } : {}) } } : {}), ...(capitalSourcesChanged ? { scheduleDSources: { ...capitalSourcesChanged, sourceFactsConfirmed: null } } : {}), ...(qsbsSourcesChanged ? { section1202Sources: { ...qsbsSourcesChanged, sourceFactsConfirmed: null } } : {}), ...(digitalAssetHouseholdChanged ? { digitalAssetEntries: nextInvestments.digitalAssetEntries?.map(entry => ({ ...entry, sourceFactsConfirmed: null })) } : {}) } } : {}),
       ...((niitSourcesChanged || foreignTaxSourcesChanged) && nextOtherTaxes ? { "other-taxes": { ...nextOtherTaxes, ...(niitSourcesChanged ? { niitSources: { ...niitSourcesChanged, sourceFactsConfirmed: null } } : {}), ...(foreignTaxSourcesChanged ? { foreignTaxElection: { ...foreignTaxSourcesChanged, sourceFactsConfirmed: null, ...(foreignTaxSourcesChanged.creditWithoutForm1116 ? { creditWithoutForm1116: { ...foreignTaxSourcesChanged.creditWithoutForm1116, sourceFactsConfirmed: null } } : {}), ...(foreignTaxSourcesChanged.creditWithForm1116 ? { creditWithForm1116: { ...foreignTaxSourcesChanged.creditWithForm1116, sourceFactsConfirmed: null } } : {}) } } : {}) } } : {}),
       ...((tipSourcesChanged || additionalSourcesChanged || rrtaParentChanged || rrtaTipChanged || rrtaFactsChanged || paperFactsChanged) && nextAdditional ? { "additional-deductions": { ...nextAdditional, ...((nextRRTA&&(rrtaParentChanged||rrtaTipChanged||rrtaFactsChanged))?{rrtaPayrollSources:{...nextRRTA,sourceFactsConfirmed:null,...(nextPaper?{paperSources:{...nextPaper,sourceFactsConfirmed:null}}:{})}}:{}), ...((nextPaper&&paperFactsChanged&&!rrtaParentChanged&&!rrtaTipChanged&&!rrtaFactsChanged)?{rrtaPayrollSources:{...nextRRTA,paperSources:{...nextPaper,sourceFactsConfirmed:null}}}:{}), ...(tipSourcesChanged ? { tipIncomeAccounts: nextAdditional.tipIncomeAccounts?.map(account => ({ ...account, sourceFactsConfirmed: null })) } : {}), ...(additionalSourcesChanged ? { schedule1A: { ...additionalSourcesChanged, sourceFactsConfirmed: null } } : {}) } } : {}),
-      ...((mortgageSourcesChanged || investmentInterestSourcesChanged || charitableCarryoverChanged || k1CharitableSourcesChanged || cryptoDonationsChanged) && nextDeductions ? { deductions: { ...nextDeductions,
+      ...((mortgageSourcesChanged || investmentInterestSourcesChanged || charitableCarryoverChanged || k1CharitableSourcesChanged || cryptoDonationsChanged || medicalMileageChanged) && nextDeductions ? { deductions: { ...nextDeductions,
+        ...(medicalMileageChanged && medicalMileage ? { medicalMileage: clearMedicalMileageConfirmations(medicalMileage) } : {}),
         ...(cryptoDonationsChanged ? { cryptoDonations: nextDeductions.cryptoDonations?.map(row => ({ ...row, sourceFactsConfirmed: null })) } : {}),
         ...(k1CharitableSourcesChanged ? { k1CharitableSources: invalidateK1CharitableSources(k1CharitableSourcesChanged) } : {}),
         ...(charitableCarryoverChanged ? { charitableCarryoverSources: { ...charitableCarryoverChanged, sourceFactsConfirmed: null,
@@ -2323,9 +2331,12 @@ function validateUnemploymentSection(data: UnemploymentData | undefined, state: 
 }
 
 function validateDeductionsSection(data: DeductionData | undefined, taxYear?: number | null, sourceErrors: Record<string, string> = {}, filingStatus?: FilingStatus | null, spouse?: unknown): SectionValidationResult {
-  if (Object.keys(sourceErrors).length) return validateRequiredFacts({ ...deductionFactErrors(data, taxYear, filingStatus, spouse), ...sourceErrors });
-  if (!data) return EMPTY_SECTION("deductions info");
-  return validateRequiredFacts(deductionFactErrors(data, taxYear, filingStatus, spouse));
+  if (!data && !Object.keys(sourceErrors).length) return EMPTY_SECTION("deductions info");
+  return validateRequiredFacts({
+    ...deductionFactErrors(data, taxYear, filingStatus, spouse),
+    ...guidedMedicalMileageErrors(data, taxYear, filingStatus, spouse),
+    ...sourceErrors,
+  });
 }
 
 function validateAdjustmentsSection(data: AdjustmentData | undefined, filingStatus?: FilingStatus | null, taxYear?: number | null, education: StudentLoanEducationSources = []): SectionValidationResult {
