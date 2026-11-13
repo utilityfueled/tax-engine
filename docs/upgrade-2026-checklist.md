@@ -23,6 +23,9 @@ below retain their original evidence boundaries.
 - [x] Bind the final 2026 Form 3903 to its exact ten widgets. Two fictional
   specimens pass reopening and render checks. The candidate remains outside
   the review and filing registries. [Evidence](upgrade-2026-form-3903-physical-candidate-work.md).
+- [x] Bind the final 2026 Form 8824 blank and instructions. Verify all 68
+  physical fields and both diagnostic pages independently. Keep the annual
+  candidate outside the review and filing registries.
 - [x] Complete the archived `a1349ad8` local verification. All 12 commands,
   27,434 unit and coverage tests, 87.71% branch coverage and 587 Chromium
   cases passed. The five hosted-only skips remain.

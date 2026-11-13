@@ -4,6 +4,26 @@ Current source, verification and remaining work are summarized in the
 [current continuation](upgrade-2026-current-status.md). Historical results
 below apply to their named revisions.
 
+- November 12: `34d81934` maps the 68 physical fields on the final
+  2026 Form 8824. The final blank and instructions are pinned separately.
+  The PDF and spec suite passed 3,180 tests. Distinct review passed 76
+  checks and reopened both marked diagnostic pages, including exact text
+  appearances, checkbox states and blank identifying fields. The candidate
+  remains outside both export registries. [IRS blank](https://www.irs.gov/pub/irs-prior/f8824--2026.pdf)
+  and [IRS instructions](https://www.irs.gov/pub/irs-prior/i8824--2026.pdf).
+  `cc616864` removes ten detached XFA streams from the diagnostic rewrite.
+  A separate audit reopened every serialized object and confirmed the stale
+  signature and packet streams were absent. Both rendered pages were identical.
+
+- November 12: The actual locked Stripe SDK passed 18 offline transport
+  checks for `34eec376`. It encoded the fixed USD offer and payment controls
+  as expected. The configured Price read timeout applies per request. The SDK
+  can issue a second read after a socket reset. The transport report also
+  records the pending Session ID and immutable issuance-to-payment binding.
+  Report SHA-256 `69ef613302677faf8bd5a5469a24745e41b01af7c0dbd0991d8aa38f121f0fcb`.
+  [Checkout Session object](https://docs.stripe.com/api/checkout/sessions/object)
+  and [Stripe update API](https://docs.stripe.com/api/checkout/sessions/update).
+
 - November 12: `bb9a326f` applies the regular Schedule SE threshold to
   exact net earnings and sums each owner's W-2 and Tier 1 originals before
   rounding. The focused run passed 843 with 12 expected skips. The archived

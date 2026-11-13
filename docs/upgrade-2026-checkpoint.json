@@ -23231,6 +23231,21 @@
     "localRecoveryReceiptSha256": "dd0ef2589a86a4ed70fbf29237ef54429842eca04cac8ca6c089460023c59ccb",
     "releaseReady": false
   },
+  "nov12Form8824PhysicalCandidate": {
+    "commit": "34d81934",
+    "taxYear": 2026,
+    "blankSha256": "7f9da3429cffd9469b8268665c376051abe0ed09be93445b607cf74229df5542",
+    "instructionsSha256": "f4f7efe4cf14ce01282032c5f5b9866f7f3f11367dfa73024e4ff21469cf5685",
+    "widgets": 68,
+    "pages": 2,
+    "independentFocusedPassed": 76,
+    "independentReportSha256": "a2d6a67d2b90c122a88560069cab0e5b152f33a3779b33b5866185704f1d0314",
+    "diagnosticCleanupCommit": "cc616864",
+    "diagnosticSha256": "04d348642841f51ad02924841456c3cfa3cbda654bd1334f295a26e9e497dcf1",
+    "independentSerializedObjectCensusSha256": "89af2cbb4efafe9f8c161d18a81af51b364a2087b2f4c38edd6296444ea0c4ca",
+    "exportsEnabled": false,
+    "filingQualified": false
+  },
   "nov12HostedCreditSettlement": {
     "previewReceiptCommit": "d39209dec302d249a5f01fe8baf23cc4ca2130f8",
     "settlementCommit": "8357ed9929766a8e5ed0ac7c45321cdccd44d35a",
