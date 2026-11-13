@@ -4346,3 +4346,28 @@ execution and current image qualification require separate evidence.
   This covers the npm lockfile. Runtime image advisories, staging and remote
   CI remain open. Pushes to `main` are held at the owner's request while
   automatic production deployment is addressed.
+- `5595f396` binds new Stripe receipts to their original product and, for
+  credit purchases, their original Checkout Session. An old receipt can
+  acknowledge an exact existing purchase without granting credit or filling
+  in missing history. Two pre-fix PostgreSQL regressions were reproduced.
+  The final PostgreSQL 16.16 cohort passed 252 tests in 12 files, including
+  concurrent replay, cross-product collisions and actual restoration of
+  both the eleven-table current and nine-table historical archives. Final
+  transcript SHA-256 `84c3a17a4a2db7ba31f61225958e491f3bc94d1ddc9f926672271519a51768cc`.
+  [Credit issuance and settlement ledger](upgrade-2026-ai-credit-issuance-work.md).
+- `ad616963` shows the original Box 7 amount and confirmation in guided review.
+  Two Chromium cases verified desktop/mobile replay after a one-cent edit,
+  current confirmation, a historical review PDF and browser-local deletion.
+  The 2025 fixture reconciled $1,000.41 in USDA receipts, $31.27 federal
+  withholding, $480 SE tax and $243 EIC to an estimated $206 balance due.
+  An original statement and base household facts were preloaded. The cases
+  cover the original guided cash-farm entry and review lifecycle. The PDF
+  retained its review notice and withheld private source references. Final
+  browser transcript SHA-256 `5bd820fc85b95f4cab440fc0f2b46c60fa6bae6d60a464c5f64c80825d62bc`.
+  [Schedule F instructions](https://www.irs.gov/instructions/i1040sf).
+- `9215736d` covers the new sources and both Chromium cases in the browser
+  audit. The strict collection contains 596 cases in eight managed batches
+  with the five existing hosted skips and the same 14 diagnostic cases.
+  All 58 orchestrator and diagnostic tests passed. The exact combined
+  archive is running. No additional Preview build or ARM64 VM boot has been
+  attempted under the earlier conditional source approvals.

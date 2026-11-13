@@ -19,12 +19,21 @@ hashes. The 15-case guided cohort and three type checks passed. The combined
 successor `2f836a2b` passed nine static checks and 27,595 unit tests. One
 unit check caught a stale browser diagnostic audit hash. `8e4375e3` updates
 that binding, and all 25 diagnostic tests pass. The archived combined check
-set for `8e4375e3` is running. Qualified human review and 2026 public output
-remain open. [Package evidence](upgrade-2026-progress.md).
+set for `8e4375e3` passed nine static checks and all 27,596 unit tests.
+`ad616963` shows confirmed USDA Box 7 receipts separately from federal
+withholding in guided review. Two real Chromium cases covered edit,
+reconfirmation, saved-return replay, review download and deletion. The
+browser audit for the successor `9215736d` covers all 596 cases and retains
+the five hosted-only skips and the existing request limits. The exact-source
+combined run for `9215736d` is in progress. Qualified human review and 2026
+public output remain open. [Package evidence](upgrade-2026-progress.md).
 
 `0411dab9` binds hosted AI credit fulfillment to the original Checkout issuance.
 `c4998c56` separates test and live accounting with a PostgreSQL storage marker.
 The focused PostgreSQL 16.16 cohort passed 247 tests and restored 11 tables.
+`5595f396` also binds the stored receipt to the Checkout Session and product.
+Its PostgreSQL 16.16 cohort passed 252 tests, including backup and restore of
+the current schema and an actual historical archive.
 The `db974a65` production build separately passed 13 local HTTP checks using
 TLS PostgreSQL and a controlled loopback rate-limit transport. The automatic
 Stripe retry needs a new isolated Preview database because the prior branch
