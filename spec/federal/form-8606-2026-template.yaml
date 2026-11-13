@@ -1,0 +1,38 @@
+form: "Form 8606 final 2026 physical candidate"
+fullName: "Final 2026 Form 8606 physical field source contract"
+taxYear: 2026
+reference: "https://www.irs.gov/pub/irs-pdf/f8606.pdf"
+revision: "Created 4/21/26, IRS final index posted 11/10/2026"
+retrievedAt: "2026-11-13T02:27:21Z"
+notes: |
+  This is the physical field contract. Existing Form 8606 line calculations
+  are specified in form-8606.yaml. The English instructions endpoint still
+  served 2025. The 2026 instructions were a draft. Final 2026 instructions,
+  disaster and repayment methods, account exclusions and parent-return
+  transfers require review before any calculation or export route can use
+  this candidate.
+lines:
+  - line: "revision"
+    description: "Pin the official final annual PDF"
+    formula: "Require SHA-256 eeb2c5a11da6903e30c468572da0242c28f19ee135b9853562d7ce9fc037cb56, 92889 bytes, two pages, 2026 title and printed Created 4/21/26."
+    testRef: "tests/pdf/form-8606-2026-candidate.test.ts::pins the exact final annual source"
+  - line: "physical-locations"
+    description: "Match original widgets to the printed annual cells"
+    formula: "Require all 47 unique widgets, including ten page-one header cells, split ratio fields for line 10, and the page-two preparer checkbox and cells. The taxpayer signature/date and preparer signature/date areas have no interactive fields. Verify exact full names, pages, types, rectangles and the native checkbox state."
+    testRef: "tests/pdf/form-8606-2026-candidate.test.ts::maps every leaf to its exact annual physical location"
+  - line: "annual-printed-references"
+    description: "Record printed dates, basis ratio format and transfer destinations"
+    formula: >-
+      Lines 1 and 4 reference the January 1 through April 15, 2027 contribution
+      interval. Line 10 prints a ratio to at least three decimal places, capped
+      at 1.000. Line 15b refers to 2026 Form 8915-F line 18 and line 25b to
+      line 19. Lines 15c, 18 and 25c refer to Form 1040 line 4b.
+    testRef: "tests/pdf/form-8606-2026-candidate.test.ts::records the printed dates and transfer destinations"
+  - line: "saved-diagnostics"
+    description: "Save and reopen fictional physical probes"
+    formula: "Require exact saved values and appearances for the calculation cells, both parts of line 10, a fictional owner label and redacted identifier. Address and standalone filing/preparer controls remain blank. Every page has the review notice."
+    testRef: "tests/pdf/form-8606-2026-candidate.test.ts::retains diagnostic fields and blank standalone controls after save"
+  - line: "closed-exports"
+    description: "Keep the diagnostic source outside the public and filing registries"
+    formula: "Reject the final 2026 source in the historical Form 8606 template slot and leave annual review and filing blocked."
+    testRef: "tests/pdf/form-8606-2026-candidate.test.ts::keeps every export gate closed"

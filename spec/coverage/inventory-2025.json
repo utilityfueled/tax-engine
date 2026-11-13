@@ -4426,6 +4426,26 @@
       ]
     },
     {
+      "key": "federal/form-8606-2026-template",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://www.irs.gov/pub/irs-pdf/f8606.pdf",
+      "specPath": "spec/federal/form-8606-2026-template.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/form-8606-roth-history",
       "jurisdiction": "federal",
       "taxYear": 2025,

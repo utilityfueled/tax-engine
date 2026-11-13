@@ -1,0 +1,520 @@
+{
+  "name": {
+    "name": "topmostSubform[0].Page1[0].f1_1[0]",
+    "page": 1,
+    "rect": [
+      36.0,
+      684.468,
+      459.8,
+      697.969
+    ],
+    "type": "/Tx"
+  },
+  "ssn": {
+    "name": "topmostSubform[0].Page1[0].f1_2[0]",
+    "page": 1,
+    "rect": [
+      461.8,
+      684.468,
+      576.0,
+      697.969
+    ],
+    "type": "/Tx"
+  },
+  "streetAddress": {
+    "name": "topmostSubform[0].Page1[0].f1_3[0]",
+    "page": 1,
+    "rect": [
+      123.4,
+      660.467,
+      495.8,
+      673.968
+    ],
+    "type": "/Tx"
+  },
+  "apartment": {
+    "name": "topmostSubform[0].Page1[0].f1_4[0]",
+    "page": 1,
+    "rect": [
+      497.8,
+      660.467,
+      576.0,
+      673.968
+    ],
+    "type": "/Tx"
+  },
+  "city": {
+    "name": "topmostSubform[0].Page1[0].f1_5[0]",
+    "page": 1,
+    "rect": [
+      123.4,
+      636.466,
+      423.8,
+      649.967
+    ],
+    "type": "/Tx"
+  },
+  "state": {
+    "name": "topmostSubform[0].Page1[0].f1_6[0]",
+    "page": 1,
+    "rect": [
+      425.8,
+      636.466,
+      503.0,
+      649.967
+    ],
+    "type": "/Tx"
+  },
+  "zipCode": {
+    "name": "topmostSubform[0].Page1[0].f1_7[0]",
+    "page": 1,
+    "rect": [
+      505.0,
+      636.466,
+      576.0,
+      649.967
+    ],
+    "type": "/Tx"
+  },
+  "foreignCountry": {
+    "name": "topmostSubform[0].Page1[0].f1_8[0]",
+    "page": 1,
+    "rect": [
+      123.4,
+      612.468,
+      301.4,
+      625.969
+    ],
+    "type": "/Tx"
+  },
+  "foreignProvince": {
+    "name": "topmostSubform[0].Page1[0].f1_9[0]",
+    "page": 1,
+    "rect": [
+      303.4,
+      612.468,
+      459.8,
+      625.969
+    ],
+    "type": "/Tx"
+  },
+  "foreignPostalCode": {
+    "name": "topmostSubform[0].Page1[0].f1_10[0]",
+    "page": 1,
+    "rect": [
+      461.8,
+      612.468,
+      576.0,
+      625.969
+    ],
+    "type": "/Tx"
+  },
+  "line1": {
+    "name": "topmostSubform[0].Page1[0].f1_11[0]",
+    "page": 1,
+    "rect": [
+      505.0,
+      420.469,
+      576.0,
+      431.968
+    ],
+    "type": "/Tx"
+  },
+  "line2": {
+    "name": "topmostSubform[0].Page1[0].f1_12[0]",
+    "page": 1,
+    "rect": [
+      505.0,
+      408.47,
+      576.0,
+      419.469
+    ],
+    "type": "/Tx"
+  },
+  "line3": {
+    "name": "topmostSubform[0].Page1[0].f1_13[0]",
+    "page": 1,
+    "rect": [
+      505.0,
+      396.468,
+      576.0,
+      407.467
+    ],
+    "type": "/Tx"
+  },
+  "line4": {
+    "name": "topmostSubform[0].Page1[0].f1_14[0]",
+    "page": 1,
+    "rect": [
+      505.0,
+      324.468,
+      576.0,
+      335.967
+    ],
+    "type": "/Tx"
+  },
+  "line5": {
+    "name": "topmostSubform[0].Page1[0].f1_15[0]",
+    "page": 1,
+    "rect": [
+      505.0,
+      312.469,
+      576.0,
+      323.468
+    ],
+    "type": "/Tx"
+  },
+  "line6": {
+    "name": "topmostSubform[0].Page1[0].f1_16[0]",
+    "page": 1,
+    "rect": [
+      505.0,
+      276.469,
+      576.0,
+      287.968
+    ],
+    "type": "/Tx"
+  },
+  "line7": {
+    "name": "topmostSubform[0].Page1[0].f1_17[0]",
+    "page": 1,
+    "rect": [
+      505.0,
+      228.47,
+      576.0,
+      239.969
+    ],
+    "type": "/Tx"
+  },
+  "line8": {
+    "name": "topmostSubform[0].Page1[0].f1_18[0]",
+    "page": 1,
+    "rect": [
+      505.0,
+      204.469,
+      576.0,
+      215.968
+    ],
+    "type": "/Tx"
+  },
+  "line9": {
+    "name": "topmostSubform[0].Page1[0].f1_19[0]",
+    "page": 1,
+    "rect": [
+      411.4,
+      192.47,
+      481.4,
+      203.969
+    ],
+    "type": "/Tx"
+  },
+  "line10Integer": {
+    "name": "topmostSubform[0].Page1[0].f1_20[0]",
+    "page": 1,
+    "rect": [
+      433.0,
+      168.469,
+      445.4,
+      179.968
+    ],
+    "type": "/Tx"
+  },
+  "line10Fraction": {
+    "name": "topmostSubform[0].Page1[0].f1_21[0]",
+    "page": 1,
+    "rect": [
+      454.6,
+      168.469,
+      481.4,
+      179.968
+    ],
+    "type": "/Tx"
+  },
+  "line11": {
+    "name": "topmostSubform[0].Page1[0].f1_22[0]",
+    "page": 1,
+    "rect": [
+      411.4,
+      144.468,
+      481.4,
+      155.967
+    ],
+    "type": "/Tx"
+  },
+  "line12": {
+    "name": "topmostSubform[0].Page1[0].f1_23[0]",
+    "page": 1,
+    "rect": [
+      411.4,
+      120.47,
+      481.4,
+      131.969
+    ],
+    "type": "/Tx"
+  },
+  "line13": {
+    "name": "topmostSubform[0].Page1[0].f1_24[0]",
+    "page": 1,
+    "rect": [
+      505.0,
+      108.468,
+      576.0,
+      119.967
+    ],
+    "type": "/Tx"
+  },
+  "line14": {
+    "name": "topmostSubform[0].Page1[0].f1_25[0]",
+    "page": 1,
+    "rect": [
+      505.0,
+      96.469,
+      576.0,
+      107.468
+    ],
+    "type": "/Tx"
+  },
+  "line15a": {
+    "name": "topmostSubform[0].Page2[0].f2_1[0]",
+    "page": 2,
+    "rect": [
+      505.0,
+      720.468,
+      576.0,
+      731.467
+    ],
+    "type": "/Tx"
+  },
+  "line15b": {
+    "name": "topmostSubform[0].Page2[0].f2_2[0]",
+    "page": 2,
+    "rect": [
+      505.0,
+      684.468,
+      576.0,
+      695.967
+    ],
+    "type": "/Tx"
+  },
+  "line15c": {
+    "name": "topmostSubform[0].Page2[0].f2_3[0]",
+    "page": 2,
+    "rect": [
+      505.0,
+      636.469,
+      576.0,
+      647.968
+    ],
+    "type": "/Tx"
+  },
+  "line16": {
+    "name": "topmostSubform[0].Page2[0].f2_4[0]",
+    "page": 2,
+    "rect": [
+      505.0,
+      564.469,
+      576.0,
+      575.968
+    ],
+    "type": "/Tx"
+  },
+  "line17": {
+    "name": "topmostSubform[0].Page2[0].f2_5[0]",
+    "page": 2,
+    "rect": [
+      505.0,
+      540.468,
+      576.0,
+      551.967
+    ],
+    "type": "/Tx"
+  },
+  "line18": {
+    "name": "topmostSubform[0].Page2[0].f2_6[0]",
+    "page": 2,
+    "rect": [
+      505.0,
+      516.47,
+      576.0,
+      527.969
+    ],
+    "type": "/Tx"
+  },
+  "line19": {
+    "name": "topmostSubform[0].Page2[0].f2_7[0]",
+    "page": 2,
+    "rect": [
+      505.0,
+      420.469,
+      576.0,
+      431.968
+    ],
+    "type": "/Tx"
+  },
+  "line20": {
+    "name": "topmostSubform[0].Page2[0].f2_8[0]",
+    "page": 2,
+    "rect": [
+      505.0,
+      396.468,
+      576.0,
+      407.967
+    ],
+    "type": "/Tx"
+  },
+  "line21": {
+    "name": "topmostSubform[0].Page2[0].f2_9[0]",
+    "page": 2,
+    "rect": [
+      505.0,
+      384.469,
+      576.0,
+      395.968
+    ],
+    "type": "/Tx"
+  },
+  "line22": {
+    "name": "topmostSubform[0].Page2[0].f2_10[0]",
+    "page": 2,
+    "rect": [
+      505.0,
+      372.47,
+      576.0,
+      383.969
+    ],
+    "type": "/Tx"
+  },
+  "line23": {
+    "name": "topmostSubform[0].Page2[0].f2_11[0]",
+    "page": 2,
+    "rect": [
+      505.0,
+      348.469,
+      576.0,
+      359.968
+    ],
+    "type": "/Tx"
+  },
+  "line24": {
+    "name": "topmostSubform[0].Page2[0].f2_12[0]",
+    "page": 2,
+    "rect": [
+      505.0,
+      324.468,
+      576.0,
+      335.967
+    ],
+    "type": "/Tx"
+  },
+  "line25a": {
+    "name": "topmostSubform[0].Page2[0].f2_13[0]",
+    "page": 2,
+    "rect": [
+      505.0,
+      312.469,
+      576.0,
+      323.468
+    ],
+    "type": "/Tx"
+  },
+  "line25b": {
+    "name": "topmostSubform[0].Page2[0].f2_14[0]",
+    "page": 2,
+    "rect": [
+      505.0,
+      276.469,
+      576.0,
+      287.968
+    ],
+    "type": "/Tx"
+  },
+  "line25c": {
+    "name": "topmostSubform[0].Page2[0].f2_15[0]",
+    "page": 2,
+    "rect": [
+      505.0,
+      228.47,
+      576.0,
+      239.969
+    ],
+    "type": "/Tx"
+  },
+  "preparerName": {
+    "name": "topmostSubform[0].Page2[0].f2_16[0]",
+    "page": 2,
+    "rect": [
+      94.6,
+      144.468,
+      236.6,
+      157.969
+    ],
+    "type": "/Tx"
+  },
+  "preparerPtin": {
+    "name": "topmostSubform[0].Page2[0].f2_17[0]",
+    "page": 2,
+    "rect": [
+      505.0,
+      144.468,
+      576.0,
+      157.969
+    ],
+    "type": "/Tx"
+  },
+  "preparerFirmName": {
+    "name": "topmostSubform[0].Page2[0].f2_18[0]",
+    "page": 2,
+    "rect": [
+      151.2,
+      131.969,
+      452.6,
+      143.468
+    ],
+    "type": "/Tx"
+  },
+  "preparerFirmAddress": {
+    "name": "topmostSubform[0].Page2[0].f2_19[0]",
+    "page": 2,
+    "rect": [
+      151.2,
+      119.97,
+      452.6,
+      131.469
+    ],
+    "type": "/Tx"
+  },
+  "preparerFirmEin": {
+    "name": "topmostSubform[0].Page2[0].f2_20[0]",
+    "page": 2,
+    "rect": [
+      496.8,
+      131.969,
+      576.0,
+      143.468
+    ],
+    "type": "/Tx"
+  },
+  "preparerFirmPhone": {
+    "name": "topmostSubform[0].Page2[0].f2_21[0]",
+    "page": 2,
+    "rect": [
+      496.8,
+      119.97,
+      576.0,
+      131.469
+    ],
+    "type": "/Tx"
+  },
+  "preparerSelfEmployed": {
+    "name": "topmostSubform[0].Page2[0].c2_1[0]",
+    "page": 2,
+    "rect": [
+      482.199,
+      156.97,
+      490.199,
+      164.97
+    ],
+    "type": "/Btn",
+    "onState": "/1"
+  }
+}
