@@ -1,7 +1,12 @@
 import { z } from 'zod';
 import { Form3903Sources2026Schema } from '@/models/inputs';
+import { assertMovingCodePReconciliation } from '@/engine/moving-code-p-sources';
+import { calculateForm3903 } from '@/engine/forms/form-3903';
+import { actualCompensationSourceYear } from './guided-compensation-reporting';
+import { assertKnownFacts, hasEnteredAmount } from './guided-required-facts';
 import { parseGuidedCurrency } from './guided-currency';
 import type { FilingStatus, GuidedFlowState } from './guided-interview-flow';
+import { enteredCodeP, w2FactErrors } from './guided-w2-facts';
 
 const answer = z.boolean().nullable();
 const mileageEntry = z.strictObject({ date: z.string(), miles: z.string() });
@@ -12,6 +17,7 @@ const moveDraftSchema = z.strictObject({
   employmentStatus: z.enum(['', 'employee', 'new-appointee']), qualifyingElement: answer,
   nonMilitary: answer, assignmentRequiresRelocation: answer,
   transportationAndStorage: z.string(), reimbursementsExcludedFromIncome: z.string(), lineAmountsConfirmed: answer,
+  omittedTaxableExcess: z.string().optional(),
   transportationAndLodging: z.string(), vehicleMethod: z.enum(['', 'none', 'actual', 'mileage']),
   gasAndOil: z.string(), parkingAndTolls: z.string(), mileage: z.array(mileageEntry),
 });
@@ -39,19 +45,30 @@ function sourceAmount(value: string): string {
   return value.trim().replaceAll(',', '');
 }
 
+export function hasMovingW2Source(state: GuidedFlowState): boolean {
+  return (state.sectionData['income-w2']?.entries ?? []).some(entry => {
+    if (!hasEnteredAmount(entry.box12CodeP)) return false;
+    try { return parseGuidedCurrency(entry.box12CodeP).gt(0); }
+    catch { return true; }
+  });
+}
+
 export function buildMovingExpenses(state: GuidedFlowState): z.infer<typeof Form3903Sources2026Schema> | undefined {
   const adjustments = state.sectionData.adjustments;
   const draft = adjustments?.movingExpenses;
+  const hasCodeP = hasMovingW2Source(state);
   if (adjustments?.movingExpensesNotApplicable === true) {
     if (draft !== undefined) throw new Error('Resolve the conflict between saved moving records and their removal.');
+    if (hasCodeP) throw new Error('Reconcile the reported W-2 Code P with the original moving records before removing this claim.');
     return undefined;
   }
-  if (draft === undefined && !state.segmentation.lifeEvents.includes('moving-expenses')) return undefined;
+  if (draft === undefined && !hasCodeP && !state.segmentation.lifeEvents.includes('moving-expenses')) return undefined;
   if (state.taxYear !== 2026) throw new Error('Moving records in this interview require a matching 2026 return.');
   const result = movingExpensesDraftSchema.safeParse(draft);
   if (!result.success || !result.data.moves.length) throw new Error('Enter the complete actual Form 3903 moving records.');
   const moves = result.data.moves;
-  if (moves.some(move => move.accountHolder === 'spouse') && !hasMovingSpouse(state.segmentation.filingStatus, !!state.sectionData['personal-info']?.spouse)) {
+  const jointSpouse = hasMovingSpouse(state.segmentation.filingStatus, !!state.sectionData['personal-info']?.spouse);
+  if (moves.some(move => move.accountHolder === 'spouse') && !jointSpouse) {
     throw new Error('Spouse moving expenses require an actual joint return and spouse.');
   }
   if (state.sectionData.adjustments?.foreignIncome) throw new Error('Moving expenses with foreign earned income require separate allocation from the original records.');
@@ -80,11 +97,23 @@ export function buildMovingExpenses(state: GuidedFlowState): z.infer<typeof Form
       domesticSameYearConfirmed: move.domesticSameYearConfirmed, eligibility,
       transportationAndStorage: sourceAmount(move.transportationAndStorage),
       reimbursementsExcludedFromIncome: sourceAmount(move.reimbursementsExcludedFromIncome),
+      ...(hasEnteredAmount(move.omittedTaxableExcess) && move.omittedTaxableExcess !== undefined
+        ? { omittedTaxableExcess: sourceAmount(move.omittedTaxableExcess) } : {}),
       lineAmountsConfirmed: move.lineAmountsConfirmed,
       travel: { transportationAndLodging: sourceAmount(move.transportationAndLodging), vehicle },
     };
   }) });
   if (!candidate.success) throw new Error('Confirm every actual Form 3903 source, eligibility answer and amount. Enter zero for known zero and use distinct move and mileage records.');
+  if (hasCodeP || moves.some(move => parseGuidedCurrency(move.reimbursementsExcludedFromIncome).gt(0) || hasEnteredAmount(move.omittedTaxableExcess))) {
+    const originals = (state.sectionData['income-w2']?.entries ?? []).filter(entry => hasEnteredAmount(entry.box12CodeP));
+    assertKnownFacts(w2FactErrors(originals, state.segmentation.filingStatus, state.taxYear));
+    const wages = originals.map(entry => ({
+      taxYear: actualCompensationSourceYear(entry.sourceTaxYear),
+      accountHolder: entry.accountHolder || undefined,
+      box12CodeP: enteredCodeP(entry),
+    }));
+    assertMovingCodePReconciliation(wages, state.taxYear, jointSpouse, candidate.data, calculateForm3903(candidate.data), true);
+  }
   return candidate.data;
 }
 

@@ -99,6 +99,7 @@ import { SectionUnemployment } from "./section-unemployment";
 import { SectionAdditionalDeductions } from "./section-additional-deductions";
 import { SectionDeductions } from "./section-deductions";
 import { SectionAdjustments } from "./section-adjustments";
+import { hasMovingW2Source } from "@/lib/guided-moving-expenses";
 import { K1CharitableSourceDetails } from "./k1-charitable-source-details";
 import { SectionCredits } from "./section-credits";
 import { PremiumTaxCreditSourceDetails } from "./premium-tax-credit-source-details";
@@ -514,6 +515,7 @@ function SectionContent({
       return (
         <SectionW2Income
           originalInput={buildGuidedW2SourceContext(state)}
+          taxYear={state.taxYear}
           entries={entries}
           workspace={workspace}
           onUploadDocuments={onUploadDocuments}
@@ -658,7 +660,7 @@ function SectionContent({
           hasStudentLoans={state.segmentation.lifeEvents.includes("student-loans")}
           hasHsa={state.segmentation.lifeEvents.includes("hsa-contributions")}
           hasHealthInsurance={state.segmentation.lifeEvents.includes("self-employed-health-insurance")}
-          hasMovingExpenses={state.segmentation.lifeEvents.includes('moving-expenses')}
+          hasMovingExpenses={state.segmentation.lifeEvents.includes('moving-expenses') || hasMovingW2Source(state)}
           hasSpouse={!!getSectionData(state, 'personal-info')?.spouse}
           filingStatus={state.segmentation.filingStatus}
           educationDistributions={getSectionData(state, "credits")?.educationDistributions}

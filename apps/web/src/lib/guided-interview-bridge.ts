@@ -218,6 +218,7 @@ export function buildW2Inputs(
       medicareWithheld: toOptionalDecimalString(e.medicareWithheld),
       box10DependentCareBenefits: toOptionalDecimalString(e.box10DependentCareBenefits),
       box12CodeW: toOptionalDecimalString(e.box12CodeW),
+      ...(hasEnteredAmount(e.box12CodeP) ? { box12CodeP: toOptionalDecimalString(e.box12CodeP) } : {}),
       box12CodeD: toOptionalDecimalString(e.box12CodeD),
       box12CodeE: toOptionalDecimalString(e.box12CodeE),
       box12CodeF: toOptionalDecimalString(e.box12CodeF),

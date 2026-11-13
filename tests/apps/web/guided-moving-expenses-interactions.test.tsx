@@ -52,6 +52,10 @@ it('collects original moving facts and clears confirmation on edits', async () =
     expect(current.sectionData.adjustments?.movingExpenses?.moves[0]).toMatchObject({
       reimbursementsExcludedFromIncome: '0.01', lineAmountsConfirmed: null,
     });
+    await panel.change('Move 1 taxable reimbursement omitted from W-2 Box 1', '0');
+    expect(current.sectionData.adjustments?.movingExpenses?.moves[0]).toMatchObject({
+      omittedTaxableExcess: '0', lineAmountsConfirmed: null,
+    });
     await panel.change('Move 1 vehicle expense method', 'actual');
     expect(panel.control('Move 1 eligible parking and tolls').value).toBe('0');
     expect(current.sectionData.adjustments?.movingExpenses?.moves[0]?.mileage).toEqual([]);

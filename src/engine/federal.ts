@@ -103,6 +103,7 @@ import type { PassiveActivity } from "./forms/form-8582.js";
 import { calculateForm2441 } from "./forms/form-2441.js";
 import { calculateForm2441Benefits } from "./forms/form-2441-benefits.js";
 import { calculateForm3903 } from "./forms/form-3903.js";
+import { assertMovingCodePReconciliation } from "./moving-code-p-sources.js";
 import { calculateDependentCareBenefitSources } from "./forms/dependent-care-benefit-sources.js";
 import { calculateForm8863 } from "./forms/form-8863.js";
 import type { calculateForm8962 } from "./forms/form-8962.js";
@@ -703,6 +704,8 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     throw new Error("Foreign employment income absent from W2 must be finite and nonnegative");
   }
   const form3903 = input.form3903 ? calculateForm3903(input.form3903, year) : undefined;
+  assertMovingCodePReconciliation(input.w2s, year,
+    filingStatus === "married_filing_jointly" && !!input.taxpayer.spouse, input.form3903, form3903);
   if (form3903 && form3903.totalTaxableReimbursement === undefined) {
     throw new Error("Form 3903 requires confirmed line amounts before reporting excess moving reimbursement.");
   }

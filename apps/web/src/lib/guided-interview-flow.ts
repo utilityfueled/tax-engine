@@ -46,7 +46,7 @@ import { foreignCreditKnownFacts } from './guided-foreign-tax-direct-credit';
 import { premiumTaxCreditFactErrors, type PremiumTaxCreditData } from "./guided-premium-tax-credit-facts";
 import { schedule1AFactErrors } from "./guided-schedule-1-a-facts";
 import { tipIncomeFactErrors, type AdditionalDeductionsData } from "./guided-tip-income-facts";
-import { invalidateMovingExpenses, movingExpenseFactErrors, type MovingExpensesDraft } from './guided-moving-expenses';
+import { hasMovingW2Source, invalidateMovingExpenses, movingExpenseFactErrors, type MovingExpensesDraft } from './guided-moving-expenses';
 import { healthInsuranceSourceErrors, invalidateHealthInsuranceSources, type HealthInsuranceData } from "./guided-health-insurance-facts";
 import { hsaFactErrors, type HsaAccountData } from "./guided-hsa-facts";
 import type { StandardDeductionData } from "./guided-standard-deduction-facts";
@@ -673,6 +673,7 @@ export interface W2EntryData {
   box12CodeTP?: string; box12CodeTT?: string; treasuryTippedOccupationCodes?: string[];
   box12CodeD?: string; box12CodeE?: string; box12CodeF?: string; box12CodeG?: string; box12CodeH?: string; box12CodeS?: string; box12CodeAA?: string; box12CodeBB?: string; box12CodeEE?: string; box12CodeT?: string;
   box12CodeW?: string;
+  box12CodeP?: string;
   box10DependentCareBenefits?: string;
   accountHolder?: "primary" | "spouse" | "";
   stateTaxReporting?: "none" | "single" | "multiple" | "";
@@ -1520,7 +1521,7 @@ export interface FlowProgress {
 
 export function getGuidedSectionRoute(state: GuidedFlowState): InterviewSectionDefinition[] {
   const adjustments = state.sectionData.adjustments;
-  return buildSectionRoute(state.segmentation, adjustments?.movingExpenses !== undefined || adjustments?.movingExpensesNotApplicable === true);
+  return buildSectionRoute(state.segmentation, adjustments?.movingExpenses !== undefined || adjustments?.movingExpensesNotApplicable === true || hasMovingW2Source(state));
 }
 
 export type VisitedSectionStatus = "not-started" | "complete" | "skipped" | "needs-review";

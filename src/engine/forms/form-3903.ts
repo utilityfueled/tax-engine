@@ -95,6 +95,12 @@ export function calculateForm3903(input: Form3903Input, taxYear: number = input.
       mr.line1, "Qualified transportation and storage costs");
 
     const annualMove = annualMoves?.[i];
+    if (annualMove?.omittedTaxableExcess !== undefined && !d(annualMove.omittedTaxableExcess).eq(mr.taxableReimbursement ?? ZERO)) {
+      if ((mr.taxableReimbursement?.decimalPlaces() ?? 0) > 2) {
+        throw new Error("Form 3903 mileage leaves a fraction of a cent. The documented taxable moving excess needs a separate method to reconcile payroll cents.");
+      }
+      throw new Error("The documented taxable moving excess must reconcile to Form 3903 Lines 3 and 4.");
+    }
     if (annualMove) audit.record("Form 3903", `eligibility${label}`, "Confirmed moving eligibility",
       new Decimal(1), annualMove.eligibility.kind, { moveDate: annualMove.date });
     audit.record("Form 3903", `2${label}`,

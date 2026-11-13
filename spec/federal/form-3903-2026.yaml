@@ -93,6 +93,49 @@ lines:
       in W-2 Box 1, government-furnished services and separately exempt allowances.
       Use the actual Line 4 amount after applicable allowance substantiation.
     testRef: "tests/engine/forms/form-3903-2026.test.ts::validates dates, zeros and the exclusive travel methods"
+  - line: "4-code-p-original"
+    description: "Reconcile 2026 Box 12 Code P and amounts outside Box 1 by owner"
+    formula: >-
+      Preserve the actual 2026 W-2 Code P amount as optional dollars and cents.
+      Require the original owner and year for entered amounts. Zero and unknown
+      remain distinct. For the guided positive Line 4 method, require one
+      positively reimbursed move and one positive original W-2 Code P per owner.
+      Match Line 4 to that original plus any separately documented taxable
+      excess omitted from Box 1. Code P cannot exceed the move's eligible
+      expenses in this method. A positive separately documented excess must
+      equal Line 4 minus Line 3 exactly. When standard mileage leaves Line 3
+      with a fraction of a cent and that amount cannot reconcile to the
+      printed payroll cents, hold the claim for a separate source method.
+      No taxable excess already in Box 1
+      enters Line 4. Do not infer omissions, apportion an annual amount across
+      moves, or change the printed Code P amount. Unreported reimbursements
+      and conflicts require a different source method. Reported positive
+      Code P keeps the moving records reachable and cannot be removed from the
+      reconciliation. A confirmed zero-reimbursement move needs no Code P.
+    irsRef: "https://www.irs.gov/instructions/iw2w3, Box 12 Code P; https://www.irs.gov/instructions/i3903, Line 4"
+    testRef: "tests/guided-interview/guided-form-3903-2026.test.ts::reconciles original Code P without duplicating wages or inferring omitted excess"
+  - line: "4-code-p-conflicts"
+    description: "Withhold source projection when the original reimbursement does not reconcile"
+    formula: >-
+      Do not project a guided claim with no applicable original, incomplete
+      W-2 data, incorrect cents, an incorrect year or owner, ambiguous
+      allocations or unresolved excess. On a typed return a positive supplied
+      Code P or an explicit omitted excess must reconcile to the annual move
+      records. Keep the independent attested method for typed inputs with
+      no reported Code P or separate excess.
+    testRef: "tests/guided-interview/guided-form-3903-2026.test.ts::holds incomplete and conflicting originals without inferring an allocation"
+  - line: "4-code-p-controls"
+    description: "Collect Code P only from the original W-2"
+    formula: "Provide a manual W-2 input for 2026. Preserve explicit zero, cents and unknown as distinct values. Validate the entered year and taxpayer or spouse."
+    testRef: "tests/apps/web/w2-source-interactions.test.tsx::collects Code P from a 2026 original without converting a blank to zero"
+  - line: "4-code-p-parent"
+    description: "Keep Code P out of wage income and report documented omitted excess once"
+    formula: >-
+      Preserve Box 1 wages independently from the qualified Code P original.
+      Use Line 4 minus Line 3, if positive, as Form 1040 Line 1h. A separately
+      documented excess must agree with this exact difference. Hold typed
+      annual returns whose positive original and moving records conflict.
+    testRef: "tests/engine/federal-moving-2026.test.ts::binds a supplied Code P original and omitted excess to the typed annual return"
   - line: "5"
     description: "Deduction or excess by move"
     formula: >-

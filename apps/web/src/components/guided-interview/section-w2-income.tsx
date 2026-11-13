@@ -261,6 +261,7 @@ function SuggestedFieldNotice({
 function W2Card({
   index,
   entry,
+  taxYear,
   onUpdate,
   onConfirmField,
   onConfirmAllFields,
@@ -274,6 +275,7 @@ function W2Card({
   originalInput: W2StateLocalSourceContext | null; originalIndex: number; onSourcesChange: (sources: W2EntryData["stateLocalSources"]) => void;
   index: number;
   entry: W2EntryData;
+  taxYear?: number | null;
   onUpdate: (field: keyof W2EntryData, value: string | string[] | undefined) => void;
   onConfirmField: (field: W2SuggestedField) => void;
   onConfirmAllFields: () => void;
@@ -629,6 +631,11 @@ function W2Card({
           <CurrencyField label="Box 12 code W — Employer HSA contributions" hint="Include cafeteria-plan contributions. Enter actual zero if no code W is reported; HSA employer worksheet reconciliation requires this source amount." value={entry.box12CodeW ?? ""} onChange={value => onUpdate("box12CodeW", value)}
             fieldClassName={entry.aiSuggestedFields?.box12CodeW?.status === "pending-confirmation" ? "guided-field-ai-pending" : entry.aiSuggestedFields?.box12CodeW?.status === "confirmed" ? "guided-field-ai-confirmed" : undefined}
             footer={<SuggestedFieldNotice suggestion={entry.aiSuggestedFields?.box12CodeW} availableSuggestions={availableSuggestions} onConfirm={() => onConfirmField("box12CodeW")} />} />
+          {(taxYear === 2026 || entry.box12CodeP) && (
+            <CurrencyField label="Box 12 Code P — Qualified moving expense reimbursements"
+              hint="Use the original 2026 W-2 and confirm its recipient and year. Leave unknown amounts blank."
+              value={entry.box12CodeP ?? ""} onChange={value => onUpdate("box12CodeP", value)} />
+          )}
           <div className="guided-form-grid">
             <label className="guided-field">
               <span className="guided-field-label">State reporting on this W-2</span>
@@ -697,12 +704,14 @@ function W2Card({
 export function SectionW2Income({
   originalInput = null,
   entries,
+  taxYear,
   workspace,
   onUploadDocuments,
   onEntriesChange,
 }: {
   originalInput?: W2StateLocalSourceContext | null;
   entries: W2EntryData[];
+  taxYear?: number | null;
   workspace: ReturnWorkspaceRecord;
   onUploadDocuments?: (files: File[]) => Promise<string>;
   onEntriesChange: (entries: W2EntryData[]) => void;
@@ -996,6 +1005,7 @@ export function SectionW2Income({
               key={index}
               index={index}
               entry={entry}
+              taxYear={taxYear}
               onUpdate={(field, value) => updateEntry(index, field, value)}
               onConfirmField={(field) => confirmField(index, field)}
               onConfirmAllFields={() => confirmAllFields(index)}

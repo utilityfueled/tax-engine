@@ -1,11 +1,12 @@
 /** Spec: federal/form-3903-2026.yaml. */
 import { expect, it } from 'vitest';
-import { buildTaxInputFromGuidedData } from '@/lib/guided-interview-bridge';
+import { buildTaxInputFromGuidedData, buildW2Inputs } from '@/lib/guided-interview-bridge';
 import { computeFlowProgress, emptyAdjustmentData, loadGuidedFlowState, saveGuidedFlowState, updateSectionData, validateSection } from '@/lib/guided-interview-flow';
 import { computeGuidedPreviewOutcome } from '@/lib/guided-preview-compute';
 import { exportWorkspaceRecovery, importWorkspaceRecovery } from '@/lib/workspace-recovery';
 import { ensureWorkspace } from '@/lib/workspace-storage';
-import { startCompleteInterview } from './complete-facts';
+import { W2Schema } from '@/models/inputs';
+import { completeW2Entry, startCompleteInterview } from './complete-facts';
 
 function actualMove() {
   return {
@@ -27,8 +28,80 @@ function interview() {
   return { state, movingExpenses };
 }
 
+function paidMove(reimbursement = '130.01', codeP = '100.00', omittedTaxableExcess = '30.01') {
+  const facts = interview();
+  Object.assign(facts.movingExpenses.moves[0], {
+    transportationAndStorage: '100', vehicleMethod: 'none', mileage: [], parkingAndTolls: '',
+    reimbursementsExcludedFromIncome: reimbursement, omittedTaxableExcess,
+  });
+  const w2 = { ...completeW2Entry, sourceTaxYear: '2026', box12CodeP: codeP };
+  facts.state.segmentation.incomeTypes = ['w2'];
+  facts.state.sectionData['income-w2'] = { entries: [w2] };
+  return { ...facts, w2 };
+}
+
+it('reconciles original Code P without duplicating wages or inferring omitted excess', () => {
+  const omitted = paidMove();
+  const source = buildTaxInputFromGuidedData(omitted.state);
+  expect(source?.w2s).toMatchObject([{ wages: '0', box12CodeP: '100.00', accountHolder: 'primary', taxYear: 2026 }]);
+  expect(source?.form3903).toMatchObject({ moves: [{ reimbursementsExcludedFromIncome: '130.01', omittedTaxableExcess: '30.01' }] });
+
+  const alreadyPaid = paidMove('100.00', '100', '0');
+  alreadyPaid.w2.wages = '30.01';
+  expect(buildTaxInputFromGuidedData(alreadyPaid.state)).toMatchObject({
+    w2s: [{ wages: '30.01', box12CodeP: '100' }],
+    form3903: { moves: [{ reimbursementsExcludedFromIncome: '100.00', omittedTaxableExcess: '0' }] },
+  });
+  const [unknown] = buildW2Inputs([completeW2Entry]);
+  expect(unknown).not.toHaveProperty('box12CodeP');
+  const zero = buildTaxInputFromGuidedData(paidMove('0', '0', '').state);
+  expect(zero?.w2s).toMatchObject([{ box12CodeP: '0' }]);
+  for (const malformed of ['-1', '1.001', '1e2']) {
+    expect(W2Schema.safeParse({ ...unknown, box12CodeP: malformed }).success).toBe(false);
+  }
+});
+
+it('holds incomplete and conflicting originals without inferring an allocation', () => {
+  const cases = [
+    (facts: ReturnType<typeof paidMove>) => { facts.w2.box12CodeP = '99.99'; },
+    (facts: ReturnType<typeof paidMove>) => { facts.w2.box12CodeP = ''; },
+    (facts: ReturnType<typeof paidMove>) => { facts.w2.box12CodeP = '130.01'; },
+    (facts: ReturnType<typeof paidMove>) => { facts.w2.sourceTaxYear = '2025'; },
+    (facts: ReturnType<typeof paidMove>) => { facts.w2.accountHolder = 'spouse'; },
+    (facts: ReturnType<typeof paidMove>) => { facts.w2.wages = ''; },
+    (facts: ReturnType<typeof paidMove>) => { Object.assign(facts.movingExpenses.moves[0], { omittedTaxableExcess: '' }); },
+    (facts: ReturnType<typeof paidMove>) => { Object.assign(facts.movingExpenses.moves[0], { omittedTaxableExcess: '0' }); },
+    (facts: ReturnType<typeof paidMove>) => {
+      facts.movingExpenses.moves.push({ ...facts.movingExpenses.moves[0], moveReference: 'second-move', date: '2026-08-01' });
+    },
+    (facts: ReturnType<typeof paidMove>) => { facts.state.sectionData['income-w2']?.entries.push({ ...facts.w2 }); },
+    (facts: ReturnType<typeof paidMove>) => {
+      facts.w2.box12CodeP = '235.24';
+      Object.assign(facts.movingExpenses.moves[0], {
+        transportationAndStorage: '0', vehicleMethod: 'mileage', parkingAndTolls: '0',
+        mileage: [{ date: '2026-07-01', miles: '1001' }],
+        reimbursementsExcludedFromIncome: '250.00', omittedTaxableExcess: '14.76',
+      });
+    },
+  ];
+  for (const edit of cases) {
+    const facts = paidMove();
+    edit(facts);
+    expect(validateSection(facts.state, 'adjustments').fieldErrors?.movingExpenses).toBeTruthy();
+    expect(buildTaxInputFromGuidedData(facts.state)).toBeNull();
+  }
+  const { state } = paidMove();
+  for (const adjustments of [undefined, { ...emptyAdjustmentData, movingExpensesNotApplicable: true as const }]) {
+    state.sectionData.adjustments = adjustments;
+    expect(computeFlowProgress(state).sections.map(section => section.id)).toContain('adjustments');
+    expect(validateSection(state, 'adjustments').fieldErrors?.movingExpenses).toBeTruthy();
+    expect(buildTaxInputFromGuidedData(state)).toBeNull();
+  }
+});
+
 it('retains the actual 2026 move across a guided save and restores its exact source amounts', async () => {
   const { state, movingExpenses } = interview();
+  state.sectionData['income-w2'] = { entries: [{ ...completeW2Entry, sourceTaxYear: '2026', box12CodeP: '0.00' }] };
   const saved = new Map<string, string>();
   const storage: Storage = {
     get length() { return saved.size; }, key: index => [...saved.keys()][index] ?? null,
@@ -45,6 +118,7 @@ it('retains the actual 2026 move across a guided save and restores its exact sou
   const restored = loadGuidedFlowState(storage, result.workspaceId);
   if (!restored) throw new Error('Missing actual saved synthetic draft');
   expect(restored.sectionData.adjustments).toMatchObject({ movingExpenses });
+  expect(restored.sectionData['income-w2']?.entries[0]).toMatchObject({ sourceTaxYear: '2026', box12CodeP: '0.00' });
   expect(computeFlowProgress(restored).sections.map(section => section.id)).toContain('adjustments');
   expect(validateSection(restored, 'adjustments').status).toBe('complete');
   expect(buildTaxInputFromGuidedData(restored)?.form3903).toEqual({ taxYear: 2026, moves: [{

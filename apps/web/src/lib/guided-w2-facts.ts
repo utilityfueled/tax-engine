@@ -1,3 +1,4 @@
+import { W2Schema } from "@/models/inputs";
 import { W2StateLocalSourcesSchema } from "@/models/w2-state-local";
 import { compensationReportingErrors } from "./guided-compensation-reporting";
 import type { FilingStatus, W2EntryData } from "./guided-interview-flow";
@@ -9,6 +10,12 @@ export const W2_SOURCE_BOX12_FIELDS = ["box12CodeW", "box12CodeD", "box12CodeE",
 
 export function isStartedW2(entry: W2EntryData): boolean {
   return Object.entries(entry).some(([key, value]) => key !== "aiSuggestedFields" && ((typeof value === "string" && value.trim() !== "") || Array.isArray(value) || key === "stateLocalSources" && value !== undefined));
+}
+
+export function enteredCodeP(entry: W2EntryData): string | undefined {
+  if (!hasEnteredAmount(entry.box12CodeP)) return undefined;
+  parseGuidedCurrency(entry.box12CodeP);
+  return W2Schema.shape.box12CodeP.parse(entry.box12CodeP?.trim().replaceAll(",", ""));
 }
 
 export function w2FactErrors(entries: W2EntryData[] | undefined, filingStatus?: FilingStatus | null, returnYear?: number | null, options?: { forSourceConfirmation?: boolean }): Record<string, string> {
@@ -27,6 +34,14 @@ export function w2FactErrors(entries: W2EntryData[] | undefined, filingStatus?: 
     }
     if (hasEnteredAmount(entry.allocatedTips)) { const error = amountError(entry.allocatedTips, "Box 8 allocated tips"); if (error) errors[`${prefix}-allocatedTips`] = error; }
     if (hasEnteredAmount(entry.box12CodeW)) { const error = amountError(entry.box12CodeW, "Box 12 code W"); if (error) errors[`${prefix}-box12CodeW`] = error; }
+    if (hasEnteredAmount(entry.box12CodeP)) {
+      try { enteredCodeP(entry); }
+      catch { errors[`${prefix}-box12CodeP`] = "Enter the actual nonnegative Box 12 Code P in dollars and cents."; }
+      if (returnYear !== 2026 || entry.sourceTaxYear?.trim() !== "2026") errors[`${prefix}-sourceTaxYear`] = "Use the actual matching 2026 W-2 for entered Code P.";
+      if (entry.accountHolder !== "primary" && (entry.accountHolder !== "spouse" || filingStatus !== "mfj")) {
+        errors[`${prefix}-accountHolder`] = "Identify the actual W-2 Code P owner.";
+      }
+    }
     if (entry.stateLocalSources !== undefined) {
       for (const key of [...W2_SOURCE_BOX12_FIELDS, "allocatedTips"] as const) {
         const error = amountError(entry[key], key === "allocatedTips" ? "actual Box 8 allocated tips" : `actual Box 12 code ${key.slice(9)}`);

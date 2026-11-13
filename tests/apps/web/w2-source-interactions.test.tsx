@@ -30,6 +30,34 @@ beforeEach(() => { vi.clearAllMocks(); vi.mocked(hasCachedWorkspaceDocumentFile)
 afterEach(async () => { await act(async () => root.unmount()); container.remove(); });
 
 describe("W-2 source entry interactions", () => {
+  it("collects Code P from a 2026 original without converting a blank to zero", async () => {
+    let latest = [{ ...emptyW2Entry, sourceTaxYear: "2026", wages: "0", federalWithheld: "0" }];
+    const workspace = createWorkspaceRecord("manual-code-p");
+    const label = "Box 12 Code P — Qualified moving expense reimbursements";
+    function Harness({ year }: { year: number }) {
+      const [entries, setEntries] = useState(latest);
+      return <SectionW2Income taxYear={year} workspace={workspace} entries={entries} onEntriesChange={next => {
+        latest = next.map(entry => ({ ...entry, sourceTaxYear: entry.sourceTaxYear ?? "" }));
+        setEntries(latest);
+      }} />;
+    }
+    await act(async () => root.render(<Harness year={2025} />));
+    expect(() => control(label)).toThrow(/Missing/iu);
+    await act(async () => root.render(<Harness year={2026} />));
+    expect(control(label).value).toBe("");
+    expect(buildW2Inputs(latest)[0]).not.toHaveProperty("box12CodeP");
+    await change(label, "0");
+    expect(buildW2Inputs(latest)[0].box12CodeP).toBe("0");
+    await change(label, "24.10");
+    expect(buildW2Inputs(latest)[0].box12CodeP).toBe("24.10");
+    expect(w2FactErrors(latest, "single", 2026)).toHaveProperty("w2-0-accountHolder");
+    await change("W-2 recipient", "primary");
+    expect(w2FactErrors(latest, "single", 2026)).not.toHaveProperty("w2-0-accountHolder");
+    expect(w2FactErrors(latest, "single", 2025)).toHaveProperty("w2-0-sourceTaxYear");
+    await change(label, "");
+    expect(buildW2Inputs(latest)[0]).not.toHaveProperty("box12CodeP");
+  });
+
   it("keeps blank and zero distinct through every payroll field and actual state selection", async () => {
     let latest = [emptyW2Entry]; const workspace = createWorkspaceRecord("manual");
     function Harness() { const [entries, setEntries] = useState(latest); return <SectionW2Income workspace={workspace} entries={entries} onEntriesChange={next => { latest = next; setEntries(next); }} />; }

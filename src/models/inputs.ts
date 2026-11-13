@@ -49,6 +49,7 @@ const decimal = z.string().regex(/^-?\d+(\.\d+)?$/, "Must be a decimal number");
 const optionalDecimal = decimal.optional().default("0");
 const optionalDecimalInput = decimal.optional();
 const reportedTipOrOvertimeAmount = decimal.pipe(z.string().refine(value => d(value).isFinite() && d(value).gte(0), "Reported amount must be finite and nonnegative"));
+const nonnegativeDollarsAndCents = z.string().regex(/^\d{1,12}(?:\.\d{1,2})?$/, "Expected a supported nonnegative amount in dollars and cents");
 const reportedTippedOccupationCodes = z.array(z.string().regex(/^\d{3}$/)).max(2).refine(codes => new Set(codes).size === codes.length, "Duplicate reported occupation code");
 const ROTH_CODE_WITHOUT_COMPANIONS = new Set(["Q", "T"]);
 const CODE_J_ALLOWED_COMPANIONS = new Set(["8", "P", "S"]);
@@ -126,6 +127,7 @@ export const W2Schema = z.object({
   wages: decimal, // Box 1
   federalWithheld: decimal, // Box 2
   box12CodeW: optionalDecimal, // Box 12 code W employer and salary-reduction HSA contributions
+  box12CodeP: nonnegativeDollarsAndCents.optional(), // Actual excludable moving reimbursements; absent stays unknown.
   box12CodeD: optionalDecimal, // Box 12 code D elective deferrals under section 401(k)
   box12CodeE: optionalDecimal, // Box 12 code E elective deferrals under section 403(b)
   box12CodeF: optionalDecimal, // Box 12 code F elective deferrals under section 408(k)(6) salary-reduction SEP
@@ -4312,7 +4314,7 @@ const Form3903HistoricalSchema = z.strictObject({
   moves: z.array(Form3903MoveSchema).min(1),
 });
 
-const form3903Amount = z.string().regex(/^\d{1,12}(?:\.\d{1,2})?$/, "Expected a supported nonnegative amount in dollars and cents");
+const form3903Amount = nonnegativeDollarsAndCents;
 const form3903Miles = z.string().regex(/^\d{1,9}(?:\.\d{1,3})?$/, "Expected a supported nonnegative mileage distance");
 const form3903Date2026 = z.iso.date().refine(date => date.startsWith("2026-"), "Expected an actual 2026 date");
 const Form3903Move2026Schema = z.strictObject({
@@ -4337,6 +4339,8 @@ const Form3903Move2026Schema = z.strictObject({
   ]),
   transportationAndStorage: form3903Amount,
   reimbursementsExcludedFromIncome: form3903Amount,
+  /** Actual taxable excess separately confirmed outside Box 1 for the Code P source method. */
+  omittedTaxableExcess: form3903Amount.optional(),
   /** Actual eligible Lines 1 and 2 exclude costs covered by separately exempt allowances or provided by the government. Line 4 excludes separately exempt allowances and Box 1 amounts. */
   lineAmountsConfirmed: z.literal(true),
   travel: z.strictObject({

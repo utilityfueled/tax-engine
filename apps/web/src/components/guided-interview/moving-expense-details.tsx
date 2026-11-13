@@ -5,6 +5,8 @@ import {
   type MovingExpenseDraft, type MovingExpensesDraft,
 } from '@/lib/guided-moving-expenses';
 import type { FilingStatus } from '@/lib/guided-interview-flow';
+import { hasEnteredAmount } from '@/lib/guided-required-facts';
+import { parseGuidedDisplayAmount } from '@/lib/guided-currency';
 import { BooleanFact, TextFact } from './fact-fields';
 import { CurrencyField } from './currency-field';
 
@@ -92,6 +94,11 @@ export function MovingExpenseDetails({ data, removed, taxYear, filingStatus, has
         </>}
         <p className="guided-hint">For Form 3903 line 4, use government reimbursement records and Form W-2 Box 12 code P. Leave out W-2 Box 1 wages, government-provided services, and dislocation, temporary lodging and move-in housing allowances. Leave costs covered by separately exempt allowances out of the expenses above.</p>
         <CurrencyField label={`${label} eligible government reimbursements`} value={move.reimbursementsExcludedFromIncome} onChange={reimbursementsExcludedFromIncome => update({ reimbursementsExcludedFromIncome })} />
+        {(parseGuidedDisplayAmount(move.reimbursementsExcludedFromIncome).gt(0) || hasEnteredAmount(move.omittedTaxableExcess)) && (
+          <CurrencyField label={`${label} taxable reimbursement omitted from W-2 Box 1`}
+            hint="Use the actual payroll and reimbursement records. Enter 0 when they confirm no taxable excess was omitted."
+            value={move.omittedTaxableExcess ?? ""} onChange={omittedTaxableExcess => update({ omittedTaxableExcess })} />
+        )}
         <BooleanFact label={`${label} expenses and reimbursements reconciled to the original records`} value={move.lineAmountsConfirmed} onChange={lineAmountsConfirmed => update({ lineAmountsConfirmed })} />
         <button type="button" onClick={() => replace(moves.filter((_, position) => position !== index))}>Remove {label}</button>
       </fieldset>;
