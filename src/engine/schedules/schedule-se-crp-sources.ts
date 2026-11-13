@@ -3,7 +3,11 @@ import type Decimal from "decimal.js";
 import type { TaxYearInput } from "@/models/inputs.js";
 import { d } from "@/utils/decimal.js";
 
-export type CashFarmSourceInput = Pick<TaxYearInput, "taxpayer" | "scheduleF" | "formSSA1099" | "form1099G">;
+export type CashFarmSourceInput = Pick<TaxYearInput, "scheduleF" | "formSSA1099" | "form1099G"> & {
+  taxpayer: Pick<TaxYearInput["taxpayer"], "taxYear" | "filingStatus"> & {
+    spouse?: Pick<NonNullable<TaxYearInput["taxpayer"]["spouse"]>, "ssn">;
+  };
+};
 
 export function resolveCashFarmCrp(input: CashFarmSourceInput) {
   const farm = input.scheduleF;

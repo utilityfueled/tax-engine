@@ -2,6 +2,7 @@ import Decimal from "decimal.js";
 import type { GuidedRefundPaymentBasisData, GuidedRefundRecoveriesData } from "./guided-tax-refund-recoveries";
 import { calculateForm1099G } from "@/engine/forms/form-1099-g";
 import { buildGovernmentPaymentSourceRecords } from "./guided-government-payment-inputs";
+import { buildGuidedCashFarm, type GuidedCashFarmData } from "./guided-cash-farm-box7";
 import { parseGuidedCurrency } from "./guided-currency";
 import { amountError, hasEnteredAmount } from "./guided-required-facts";
 import { guidedTaxRefundErrors, type GuidedTaxRefundData, type RefundRecoveryContext } from "./guided-tax-refund";
@@ -55,7 +56,7 @@ export interface UnemploymentEntryData {
   statePayerId?: string;
   stateWithheld?: string;
 }
-export interface UnemploymentSourceData { entries?: UnemploymentEntryData[]; taxRefund?: GuidedTaxRefundData; refundRecoveries?: GuidedRefundRecoveriesData; }
+export interface UnemploymentSourceData { entries?: UnemploymentEntryData[]; taxRefund?: GuidedTaxRefundData; refundRecoveries?: GuidedRefundRecoveriesData; cashFarm?: GuidedCashFarmData; }
 export const emptyUnemploymentEntry: UnemploymentEntryData = { compensation: "", federalWithheld: "" };
 export const governmentOtherAmounts = [
   ["stateOrLocalTaxRefund", "State or local tax refund, credit or offset (Box 2)"],
@@ -84,7 +85,7 @@ export function withUnemploymentEntries(data: UnemploymentData, entries: Unemplo
   const started = entries.some(isStartedUnemployment);
   return { ...data, entries, ...(data.refundRecoveries && guidedSourceValuesChanged(data.entries, entries) ? { refundRecoveries: { ...data.refundRecoveries, sourceFactsConfirmed: null } } : {}), ...(data.taxRefund && guidedSourceValuesChanged(data.entries, entries) ? { taxRefund: { ...data.taxRefund, sourceFactsConfirmed: null } } : {}), compensation: started ? governmentSourceTotal(entries, "compensation")?.toFixed() ?? "" : "", federalWithheld: started ? governmentSourceTotal(entries, "federalWithheld")?.toFixed() ?? "" : "" };
 }
-export function unemploymentFactErrors(data: UnemploymentData | undefined, filingStatus?: FilingStatus | null, taxYear?: number | null, personalInfo?: PersonalInfoData, stateData?: StateReturnData, otherRecoveries?: RefundRecoveryContext): Record<string, string> {
+export function unemploymentFactErrors(data: UnemploymentData | undefined, filingStatus?: FilingStatus | null, taxYear?: number | null, personalInfo?: PersonalInfoData, stateData?: StateReturnData, otherRecoveries?: RefundRecoveryContext, stateCode?: string | null): Record<string, string> {
   const errors: Record<string, string> = {};
   const entries = unemploymentEntries(data).filter(isStartedUnemployment);
   const sourceKeys = new Set<string>(), repaymentFigures = new Map<string, string>();
@@ -107,7 +108,12 @@ export function unemploymentFactErrors(data: UnemploymentData | undefined, filin
     for (const [field, label] of [["compensation", "unemployment compensation in Box 1"], ["federalWithheld", "federal withholding in Box 4"], ...governmentOtherAmounts] as const) {
       const error = amountError(entry[field], label); if (error) fail(field, error);
     }
-    for (const field of ["agriculturePayments", "marketGain"] as const) if (!amountError(entry[field], field) && parseGuidedCurrency(entry[field]).gt(0)) fail(field, "This actual source amount is saved. Complete its separate claim-of-right or farm worksheet before this guided route can calculate.");
+    if (!amountError(entry.marketGain, "Box 9 market gain") && parseGuidedCurrency(entry.marketGain).gt(0)) {
+      fail("marketGain", "This actual Box 9 market gain is saved and needs its separate worksheet.");
+    }
+    if (!data?.cashFarm && !amountError(entry.agriculturePayments, "Box 7 agriculture payments") && parseGuidedCurrency(entry.agriculturePayments).gt(0)) {
+      fail("agriculturePayments", "Complete the cash-farm worksheet with the actual Box 7 receipt records.");
+    }
     if (!amountError(entry.priorYearRepaid, "priorYearRepaid") && parseGuidedCurrency(entry.priorYearRepaid).gt(0)) {
       if (entry.priorRepaymentConfirmed !== true || !entry.priorRepaymentReference?.trim()) fail("prior-repayment", "Confirm the earlier return records for this repayment.");
       if (typeof entry.priorRepaymentSeparateReturn !== "boolean") fail("prior-repayment-separate", "Answer whether this person filed a separate return for that year.");
@@ -146,13 +152,17 @@ export function unemploymentFactErrors(data: UnemploymentData | undefined, filin
   if(data?.refundRecoveries && data.taxRefund) errors["government-refund-method"]="Keep the payment-year collection separate from the legacy single-year worksheet.";
   if(entries.some(entry=>entry.refundPaymentBasis) && !data?.refundRecoveries) errors["government-refund-method"]="Complete the explicit payment-year recovery collection before using dated payment originals.";
   if(!data?.refundRecoveries) Object.assign(errors, guidedTaxRefundErrors(data?.taxRefund, entries, taxYear, filingStatus, personalInfo, otherRecoveries));
-  if (entries.length && Object.keys(errors).length === 0) {
+  if ((entries.length || data?.cashFarm) && Object.keys(errors).length === 0) {
     try {
       const forms = buildGovernmentPaymentSourceRecords(entries);
       const statuses = { single: "single", mfj: "married_filing_jointly", mfs: "married_filing_separately", hoh: "head_of_household", qss: "qualifying_surviving_spouse" } as const;
       const sourceYear = taxYear ?? forms[0]?.taxYear;
       if (sourceYear === undefined) throw new Error("Provide the actual government-payment source year.");
-      calculateForm1099G(forms, sourceYear, filingStatus ? statuses[filingStatus] : undefined);
+      const scheduleF = buildGuidedCashFarm(data?.cashFarm, forms, sourceYear, filingStatus, personalInfo, stateCode);
+      const status = filingStatus ? statuses[filingStatus] : undefined;
+      calculateForm1099G(forms, sourceYear, status, scheduleF && status ? {
+        taxpayer: { taxYear: sourceYear, filingStatus: status, spouse: personalInfo?.spouse }, scheduleF,
+      } : undefined);
     } catch (error) {
       errors["government-source-worksheet"] = error instanceof Error ? error.message : "Complete the actual government-payment source worksheet.";
     }

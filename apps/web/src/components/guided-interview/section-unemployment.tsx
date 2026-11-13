@@ -1,9 +1,12 @@
 "use client";
 
 import { RetroShell } from "@/components/retro-shell";
+import { parseGuidedCurrency } from "@/lib/guided-currency";
+import { amountError } from "@/lib/guided-required-facts";
 import { type GuidedFlowState, type UnemploymentData, emptyUnemploymentData } from "@/lib/guided-interview-flow";
 import { emptyUnemploymentEntry, unemploymentEntries, withUnemploymentEntries, type UnemploymentEntryData } from "@/lib/guided-unemployment-facts";
 import { GovernmentPaymentSourceFields } from "./government-payment-source-fields";
+import { CashFarmBox7Details } from "./cash-farm-box7-details";
 import { TaxRefundRecoveryDetails } from "./tax-refund-recovery-details";
 import { TaxRefundSourceDetails } from "./tax-refund-source-details";
 
@@ -11,6 +14,7 @@ export function SectionUnemployment({ data, state, onDataChange }: { state?: Gui
   const current = data ?? emptyUnemploymentData;
   const savedEntries = unemploymentEntries(current);
   const entries = savedEntries.length ? savedEntries : [{ ...emptyUnemploymentEntry }];
+  const hasBox7 = entries.some(entry => !amountError(entry.agriculturePayments, "Box 7") && parseGuidedCurrency(entry.agriculturePayments).gt(0));
   const updateEntry = (index: number, change: Partial<UnemploymentEntryData>) => onDataChange(withUnemploymentEntries(current, entries.map((entry, position) => position === index ? { ...entry, sourceFactsConfirmed: null, ...change } : entry)));
   return <RetroShell title="Government Payments" eyebrow="INCOME"><div className="guided-question">
     <p className="guided-prompt">Enter each actual unemployment or government-payment statement.</p>
@@ -20,8 +24,11 @@ export function SectionUnemployment({ data, state, onDataChange }: { state?: Gui
       <div className="guided-form-grid"><GovernmentPaymentSourceFields entry={entry} onChange={change => updateEntry(index, "priorYearRepaid" in change ? { ...change, priorRepaymentConfirmed: null } : change)} /></div>
     </div>)}</div>
     <button type="button" className="utility-button" onClick={() => onDataChange(withUnemploymentEntries(current, [...entries, { ...emptyUnemploymentEntry }]))}>Add government statement</button>
+    {(hasBox7 || current.cashFarm) && <CashFarmBox7Details data={current.cashFarm ?? {}}
+      onChange={cashFarm => onDataChange({ ...current, cashFarm })} />}
+    {!hasBox7 && current.cashFarm && <button type="button" className="utility-button" onClick={() => onDataChange({ ...current, cashFarm: undefined })}>Remove saved cash-farm worksheet</button>}
     <TaxRefundRecoveryDetails data={current} state={state} onChange={onDataChange} />
     <TaxRefundSourceDetails data={current.taxRefund} entries={entries} onChange={taxRefund => onDataChange({ ...current, taxRefund })} />
-    <p className="guided-hint">Missing source amounts stay unknown; enter zero only when confirmed. Repayments and contribution balances need matching source records. Income-tax refunds use the historical worksheet. Earlier-year repayments need the earlier return figures. Farm payments, medical leave and private programs need their separate worksheets. State withholding belongs to the source state, which may differ from your address.</p>
+    <p className="guided-hint">Missing source amounts stay unknown; enter zero only when confirmed. Repayments and contribution balances need matching source records. Income-tax refunds use the historical worksheet. Earlier-year repayments need the earlier return figures. Medical leave and private programs need their separate worksheets. State withholding belongs to the source state, which may differ from your address.</p>
   </div></RetroShell>;
 }

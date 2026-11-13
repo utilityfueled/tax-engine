@@ -2619,7 +2619,7 @@
       "implementationTestRefs": [
         "tests/engine/schedules/schedule-se-crp-cash-farm.test.ts::reconciles Box 7 originals to the farm ledger before calculating the return"
       ],
-      "implementationNote": "Actual dated cash-farm receipts reconcile to every original Box 7 and stay in Schedule F. The federal integration preserves separate withholding. Guided entry, final forms and filing remain outside this method.",
+      "implementationNote": "Actual dated cash-farm receipts reconcile to every original Box 7 and stay in Schedule F. The federal integration preserves separate withholding. Final forms and filing remain outside this method.",
       "specExists": true,
       "engineExists": true,
       "packetGenerationExists": false,

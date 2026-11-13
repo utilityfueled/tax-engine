@@ -25,6 +25,36 @@ async function render(initial: UnemploymentData, run: (context: { latest: () => 
 }
 const confirmation = "Have you checked this government-payment source after the last edit?";
 
+it("collects and reconfirms original cash-farm Box 7 receipts", async () => {
+  const statement = { ...completeUnemploymentSource, programType: "other-government" as const, compensation: "0", agriculturePayments: "800.24", federalWithheld: "0" };
+  await render({ compensation: "0", federalWithheld: "0", entries: [statement] }, async ({ latest, change, click }) => {
+    const state = startCompleteInterview({ filingStatus: "single", incomeTypes: ["unemployment"], lifeEvents: [], stateCode: null });
+    const input = () => { state.sectionData["income-unemployment"] = latest(); return buildTaxInputFromGuidedData(state); };
+    const check = "I checked the farm books and every USDA receipt against the original records after the last edit";
+    expect(input()).toBeNull();
+    await click("Add USDA receipt");
+    expect(latest().cashFarm?.receipts).toEqual([{}]);
+    for (const [label, value] of [
+      ["Actual farm owner", "primary"], ["Year of these farm books", "2025"],
+      ["Local reference for the complete year-end farm books", "annual farm books"], ["Principal crop or farm activity", "Market vegetables"],
+      ["Sales of livestock, produce or crops raised by this farm", "2500.65"], ["Seeds and plants", "100.52"],
+      ["Farm supplies", "0"], ["Farm utilities", "0"], ["Farm gasoline, fuel and oil", "0"], ["Farm repairs and maintenance", "0"],
+      ["Unadjusted basis of qualified farm property for QBI", "0"], ["Payer TIN on the matching Form 1099-G", statement.payerTin ?? ""],
+      ["Matching Form 1099-G statement reference", statement.accountReference ?? ""], ["Local reference for this payment record", "deposit original"],
+      ["Actual payment receipt date", "2025-08-11"], ["Actual taxable amount received", "800.24"],
+      ["Program on the original receipt", "ordinary-taxable-usda"],
+      ["The books confirm this is the complete income and expense record for one qualifying cash farm, with no other items or elections", "true"],
+    ] as const) await change(label, value);
+    expect(input()).toBeNull();
+    await change(check, "true");
+    expect(input()?.scheduleF?.agriculturalProgramPayments).toBe("800.24");
+    await change("Actual taxable amount received", "800.25");
+    expect(latest().cashFarm?.sourceFactsConfirmed).toBeNull();
+    await change(check, "true");
+    expect(input()).toBeNull();
+  });
+});
+
 it("collects actual government sources from a legacy aggregate without replacing unknown withholding", async () => {
   await render({ compensation: "1000.10", federalWithheld: "" }, async ({ latest, change, click }) => {
     const state = startCompleteInterview({ filingStatus: "single", incomeTypes: ["unemployment"], lifeEvents: [], stateCode: null });
