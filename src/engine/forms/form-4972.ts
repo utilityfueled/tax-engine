@@ -1,16 +1,13 @@
 import Decimal from "decimal.js";
 import { AuditTrail } from "@/utils/audit.js";
 
-export interface Form4972Input {
+interface Form4972CommonInput {
   taxYear: number;
   distributionCode: string;
   participantBirthDate: string;
   election: "capital_gain" | "ten_year" | "both";
-  ownQualifiedPlan?: boolean;
-  fiveParticipationYearsConfirmed?: boolean;
   entireBalanceConfirmed?: boolean;
   rolloverOccurred?: boolean;
-  priorDisqualifyingElection?: boolean;
   otherDisqualifications?: boolean;
   onlyDistributionAndRecipientConfirmed?: boolean;
   taxableAmountNotDetermined?: boolean;
@@ -20,6 +17,21 @@ export interface Form4972Input {
   netUnrealizedAppreciation: string;
   actuarialValue: string;
 }
+
+export type Form4972Input = Form4972CommonInput & ({
+  sourceKind?: "own_plan";
+  ownQualifiedPlan?: boolean;
+  fiveParticipationYearsConfirmed?: boolean;
+  priorDisqualifyingElection?: boolean;
+} | {
+  sourceKind: "death_beneficiary";
+  qualifiedPlanConfirmed?: boolean;
+  participantDeathDate: string;
+  distributionDate: string;
+  receivedBecauseOfDeath?: boolean;
+  priorBeneficiaryElectionForParticipant?: boolean;
+  federalEstateTax: string;
+});
 
 // Highest threshold first so the first applicable row supplies the printed base tax.
 const rateSchedule = [
@@ -42,17 +54,35 @@ function scheduleTax(amount: Decimal): Decimal {
   return amount.minus(threshold).times(rate).plus(base);
 }
 
-/** Internal 2026 worksheet for one distribution to the qualifying plan participant. */
+function isCalendarDate(value: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const date = new Date(`${value}T00:00:00Z`);
+  return Number.isFinite(date.getTime()) && date.toISOString().slice(0, 10) === value;
+}
+
+/** Internal 2026 worksheet for one qualifying plan distribution to one recipient. */
 export function calculateForm4972(input: Form4972Input) {
-  const birth = new Date(`${input.participantBirthDate}T00:00:00Z`);
-  if (input.taxYear !== 2026 || !/^(?:7A|A7)$/.test(input.distributionCode.trim().toUpperCase())
-    || !/^\d{4}-\d{2}-\d{2}$/.test(input.participantBirthDate) || !Number.isFinite(birth.getTime())
-    || birth.toISOString().slice(0, 10) !== input.participantBirthDate || input.participantBirthDate >= "1936-01-02"
-    || input.ownQualifiedPlan !== true || input.fiveParticipationYearsConfirmed !== true
-    || input.entireBalanceConfirmed !== true || input.rolloverOccurred !== false
-    || input.priorDisqualifyingElection !== false || input.otherDisqualifications !== false
+  const code = input.distributionCode.trim().toUpperCase();
+  if (input.taxYear !== 2026 || !isCalendarDate(input.participantBirthDate) || input.participantBirthDate >= "1936-01-02"
+    || input.entireBalanceConfirmed !== true || input.rolloverOccurred !== false || input.otherDisqualifications !== false
     || input.onlyDistributionAndRecipientConfirmed !== true || input.taxableAmountNotDetermined !== false) {
-    throw new Error("Form 4972 requires confirmed eligibility and one determined distribution from the participant's own plan");
+    throw new Error("Form 4972 requires confirmed eligibility and one determined distribution to one recipient");
+  }
+  if (input.sourceKind === "death_beneficiary") {
+    const { participantDeathDate, distributionDate } = input;
+    if (!/^(?:4A|A4)$/.test(code) || input.qualifiedPlanConfirmed !== true || input.receivedBecauseOfDeath !== true
+      || input.priorBeneficiaryElectionForParticipant !== false || !isCalendarDate(participantDeathDate)
+      || !isCalendarDate(distributionDate) || !distributionDate.startsWith("2026-")
+      || participantDeathDate < "1996-08-21" || participantDeathDate < input.participantBirthDate
+      || participantDeathDate > distributionDate) {
+      throw new Error("Form 4972 requires confirmed death-beneficiary eligibility and matching original dates");
+    }
+    if (!sourceAmount(input.federalEstateTax, "federal estate tax").isZero()) {
+      throw new Error("Form 4972 beneficiary worksheet requires confirmed zero federal estate tax");
+    }
+  } else if (!/^(?:7A|A7)$/.test(code) || input.ownQualifiedPlan !== true
+    || input.fiveParticipationYearsConfirmed !== true || input.priorDisqualifyingElection !== false) {
+    throw new Error("Form 4972 requires confirmed eligibility from the participant's own plan");
   }
 
   const gross = sourceAmount(input.grossDistribution, "Box 1");
@@ -84,7 +114,8 @@ export function calculateForm4972(input: Form4972Input) {
   }
 
   const line8 = record("8", "Amount subject to the ten-year option", remaining, "Box 2a less any amount on line 6");
-  const line9 = record("9", "Death benefit exclusion", zero, "Participant's own plan");
+  const line9 = record("9", "Death benefit exclusion", zero,
+    input.sourceKind === "death_beneficiary" ? "Death on or after August 21, 1996" : "Participant's own plan");
   const line10 = record("10", "Total taxable amount", line8.minus(line9), "Line 8 less line 9");
   const line11 = record("11", "Actuarial value of annuity", actuarialValue, "Form 1099-R Box 8a");
   const line12 = record("12", "Adjusted total taxable amount", line10.plus(line11), "Line 10 plus line 11");
@@ -96,7 +127,8 @@ export function calculateForm4972(input: Form4972Input) {
     line16 = record("16", "Minimum distribution allowance", line13.minus(line15), "Line 13 less line 15");
   }
   const line17 = record("17", "Taxable amount after allowance", line12.minus(line16 ?? zero), "Line 12 less any allowance on line 16");
-  const line18 = record("18", "Estate tax attributable to this distribution", zero, "Participant's own plan");
+  const line18 = record("18", "Estate tax attributable to this distribution", zero,
+    input.sourceKind === "death_beneficiary" ? "Confirmed zero from estate records" : "Participant's own plan");
   const line19 = record("19", "Amount for the ten-year computation", line17.minus(line18), "Line 17 less line 18");
   const line23 = record("23", "One-tenth of the taxable amount", line19.times("0.10"), "Line 19 × 10%");
   const line24 = record("24", "Tax on one-tenth of the taxable amount", scheduleTax(line23), "2026 Form 4972 Tax Rate Schedule");

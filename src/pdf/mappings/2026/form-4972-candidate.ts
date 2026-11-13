@@ -74,6 +74,9 @@ export const FORM_4972_2026_CANDIDATE = Object.freeze({
 });
 
 export function projectForm49722026OwnPlan(source: Form4972Input) {
+  if (source.sourceKind === "death_beneficiary") {
+    throw new Error("The Form 4972 physical candidate requires the participant's own plan");
+  }
   const exact = calculateForm4972(source);
   const rounded = (value: string) => roundDollar(d(value)).toFixed(0);
   const capitalGain = rounded(source.capitalGain);

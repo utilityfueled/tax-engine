@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { calculateForm4972 } from "@/engine/forms/form-4972";
+import { calculateForm4972, type Form4972Input } from "@/engine/forms/form-4972";
 
 const source = {
   taxYear: 2026, distributionCode: "7A", participantBirthDate: "1936-01-01",
@@ -10,6 +10,47 @@ const source = {
   grossDistribution: "100000", taxableAmount: "90000", capitalGain: "20000",
   netUnrealizedAppreciation: "0", actuarialValue: "0",
 };
+
+const beneficiary = {
+  taxYear: 2026, distributionCode: "4A", participantBirthDate: "1936-01-01",
+  sourceKind: "death_beneficiary", participantDeathDate: "1996-08-21", distributionDate: "2026-12-31",
+  qualifiedPlanConfirmed: true, receivedBecauseOfDeath: true, priorBeneficiaryElectionForParticipant: false, federalEstateTax: "0.00",
+  entireBalanceConfirmed: true, rolloverOccurred: false, otherDisqualifications: false,
+  onlyDistributionAndRecipientConfirmed: true, taxableAmountNotDetermined: false,
+  election: "both", grossDistribution: "100000", taxableAmount: "90000", capitalGain: "20000",
+  netUnrealizedAppreciation: "0", actuarialValue: "0",
+} satisfies Form4972Input;
+
+describe("2026 Form 4972 death-beneficiary worksheet", () => {
+  it("computes a beneficiary election on the first day without a death exclusion", () => {
+    const result = calculateForm4972(beneficiary);
+    expect(result.line7?.toFixed()).toBe("4000");
+    expect(result.line29?.toFixed()).toBe("9505");
+    expect(result.separateTax.toFixed()).toBe("13505");
+    expect(result.lines.filter(row => ["9", "18"].includes(row.line)).map(row => row.value.toFixed()))
+      .toEqual(["0", "0"]);
+    const partII = calculateForm4972({ ...beneficiary, distributionCode: "A4", election: "capital_gain" });
+    expect(partII.separateTax.toFixed()).toBe("4000");
+    expect(partII.ordinaryPensionTransfer.toFixed()).toBe("70000");
+    expect(partII.lines.map(row => row.line)).toEqual(["6", "7"]);
+  });
+
+  it("holds a beneficiary election with incomplete or conflicting originals", () => {
+    for (const change of [
+      { distributionCode: "7A" }, { participantBirthDate: "1936-01-02" }, { participantDeathDate: "1996-08-20" },
+      { participantDeathDate: "2006-02-29" }, { participantDeathDate: "2027-01-01" }, { participantDeathDate: undefined },
+      { distributionDate: "2025-12-31" }, { distributionDate: "2026-02-30" }, { distributionDate: undefined },
+      { qualifiedPlanConfirmed: undefined }, { receivedBecauseOfDeath: undefined }, { receivedBecauseOfDeath: false },
+      { priorBeneficiaryElectionForParticipant: undefined }, { priorBeneficiaryElectionForParticipant: true },
+      { federalEstateTax: "0.01" }, { federalEstateTax: "" }, { federalEstateTax: undefined },
+      { entireBalanceConfirmed: undefined }, { rolloverOccurred: true }, { otherDisqualifications: true },
+      { onlyDistributionAndRecipientConfirmed: false }, { taxableAmountNotDetermined: true },
+      { capitalGain: "90000.01" }, { netUnrealizedAppreciation: "0.01" }, { actuarialValue: "0.01" },
+    ]) expect(() => calculateForm4972({ ...beneficiary, ...change } as Form4972Input)).toThrow(/Form 4972/u);
+    expect(() => calculateForm4972({ ...beneficiary, election: "capital_gain", federalEstateTax: "0.01" }))
+      .toThrow(/Form 4972.*estate tax/u);
+  });
+});
 
 describe("2026 Form 4972 own-plan worksheet", () => {
   it("requires actual eligibility and determined source amounts", () => {

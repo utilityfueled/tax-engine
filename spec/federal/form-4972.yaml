@@ -3,10 +3,11 @@ fullName: "Tax on Lump-Sum Distributions"
 taxYear: 2026
 irsReference: "https://www.irs.gov/pub/irs-pdf/f4972.pdf"
 notes: |
-  Internal single-participant, single-recipient worksheet for the participant's
-  own qualified plan. Original Code 7 and A and explicit source confirmations
-  are required. A beneficiary, alternate payee, multiple distributions or
-  recipients, deferred NUA, estate tax, or actuarial annuity value needs separate
+  Internal single-participant, single-recipient worksheet. The participant's
+  own qualified plan and a single qualifying death-beneficiary distribution
+  with confirmed zero federal estate tax have separate original-source rules.
+  Alternate payees, multiple distributions or recipients, earlier deaths,
+  deferred NUA, positive estate tax and actuarial annuity value need separate
   qualification. No current-year return or export registration is implied.
 lines:
   - line: "1-5"
@@ -20,6 +21,27 @@ lines:
       source's determined Box 2a, Box 3, and confirmed zero Boxes 6 and 8a.
       Box 3 cannot exceed Box 2a and Box 2a cannot exceed Box 1.
     testRef: "tests/engine/forms/form-4972.test.ts::requires actual eligibility and determined source amounts"
+  - line: "1-5-beneficiary"
+    description: "Eligibility for a single death-beneficiary distribution without death benefit exclusion or estate tax"
+    formula: >-
+      Require original Code 4 with A and an actual 2026 distribution made to
+      the beneficiary because of the participant's death. Use the participant's
+      own birth date before January 2, 1936, and confirmed death date on or
+      after August 21, 1996, no earlier than birth or later than distribution.
+      The participant's five-year condition in question 4 does not apply to
+      the affirmative beneficiary answer to question 3. Question 5b uses the
+      beneficiary's history for this participant. Require the entire required
+      qualified plan balance, no rollover, no prior disqualifying beneficiary
+      election, no other disqualification, one distribution and one recipient,
+      and the same reconciled Boxes 1, 2a and 3 and confirmed zero Boxes 6 and
+      8a. Require estate records confirming zero attributable federal estate
+      tax. Lines 9 and 18 are zero for this limited route. Apply the same
+      Part II and III formulas. The own-plan physical candidate does not
+      project beneficiary answers.
+    testRef: "tests/engine/forms/form-4972.test.ts::computes a beneficiary election on the first day without a death exclusion"
+    testRefs:
+      - "tests/engine/forms/form-4972.test.ts::holds a beneficiary election with incomplete or conflicting originals"
+      - "tests/pdf/form-4972-2026-candidate.test.ts::holds the beneficiary method outside the own-plan physical map"
   - line: "6-7"
     description: "Twenty-percent capital gain election"
     formula: "Line 6 is Box 3 when Part II is elected and positive; line 7 is line 6 times 0.20."
@@ -28,7 +50,7 @@ lines:
     description: "Adjusted total taxable amount"
     formula: >-
       For Part III, line 8 is Box 2a minus elected Part II Box 3, or all of Box
-      2a without Part II. Lines 9 and 11 are confirmed zero for this cohort.
+      2a without Part II. Lines 9 and 11 are confirmed zero for these cohorts.
       Line 10 equals line 8 and line 12 equals line 10.
     testRef: "tests/engine/forms/form-4972.test.ts::splits the combined election and computes the separate ten-year tax"
   - line: "13-17"

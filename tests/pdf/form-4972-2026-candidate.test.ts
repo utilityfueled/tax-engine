@@ -12,6 +12,7 @@ import { REVIEW_TEMPLATE_PACKS } from "@/pdf/template-registry.js";
 const blank = new URL("../../forms/blank/2026/f4972.pdf", import.meta.url);
 const digest = "2968f25a528882666de3dab99ed9cf48ea8841e0fdbf6f409a71a4b419d4aa99";
 const { fields, instructionFields } = FORM_4972_2026_CANDIDATE;
+
 type Location = [page: number, name: string, kind: "/Tx" | "/Btn", rect: number[], states: string[]];
 
 const election: Form4972Input = {
@@ -22,6 +23,14 @@ const election: Form4972Input = {
   grossDistribution: "30000", taxableAmount: "25000", capitalGain: "5000",
   netUnrealizedAppreciation: "0", actuarialValue: "0",
 };
+
+it("holds the beneficiary method outside the own-plan physical map", () => {
+  expect(() => projectForm49722026OwnPlan({
+    ...election, distributionCode: "4A", sourceKind: "death_beneficiary",
+    participantDeathDate: "1996-08-21", distributionDate: "2026-12-31", qualifiedPlanConfirmed: true,
+    receivedBecauseOfDeath: true, priorBeneficiaryElectionForParticipant: false, federalEstateTax: "0",
+  })).toThrow(/physical.*participant's own plan/u);
+});
 
 it("pins the final form and every original widget", async () => {
   const [bytes, fixture] = await Promise.all([
