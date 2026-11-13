@@ -203,11 +203,11 @@
     "testContainerRemoved": true
   },
   "releaseBlockers": [
-    "Independent human tax review, PA/OH all-three-residency implementation and qualification, and final physical forms remain outstanding. Filing stays disabled and PDFs review-only. Six interpretation questions await a qualified reviewer.",
-    "The AI corpus has zero human reviews and no live results. The owner approved up to5USD total synthetic provider spend, but securely configured provider project access remains missing. Actual spend0; no model is promoted.",
-    "Existing Preview-only Neon/Redis and Zoho SMTP are configured. The authorized test accounts exist; bounded exact-source auth/recovery, tenant/workspace cleanup, scoped read-only database and sandbox billing observations are recorded in their named successor sections. Fresh5996 event/duplicate/cleanup each200; the authorized scoped scalar query completed after owner MFA, with exact successor evidence recorded. A separate synthetic-schema migration/backup/restore/rollback rehearsal is now authorized but has not yet run. Final-artifact hosted security, credit/provider reconciliation, outages, migrations, backup restoration and rollback remain required.",
-    "Latest ARM64 engineering candidate has176 matches/80 OS advisory IDs against November2 scanner database, all owner decisions pending by2026-11-07; zero critical/npm/fixed-version matches. Historical68-ID scan is retained. Final selected-state committed-source ARM64/AMD64 artifacts, human security review and publication authorization remain pending.",
-    "The 2026 federal calculation remains incomplete and unavailable in production. Final 2026 Form 1040/Tax Table and necessary remaining forms are unavailable; final C/R disabled physical candidates exist and are not qualified."
+    "PA and OH are selected for full-year, part-year and nonresident returns. Bounded methods have engineering evidence. Broader coverage, final physical forms and independent qualified tax review remain open for all six combinations. Filing is disabled and PDFs are review-only.",
+    "OpenAI synthetic runs have 0.26282160 USD in computed reported usage and an unresolved 0.022384 USD timeout reserve. Google project access, provider settlement, exact hosted retail-ledger reconciliation and independent human held-out/privacy review remain missing. No model is promoted.",
+    "Earlier protected Preview runs verified bounded account recovery, tenant isolation, signed billing and deduplication, and synthetic backup/restore and migration. The November 13 isolated source verified tenant isolation, two signed receipts and an actual initial 503 during a database outage with verified restoration. Stripe scheduled retry, exact receipt readback, additional provider/rate-limiter outage checks and final-artifact staging qualification are tracked separately.",
+    "Native ARM64 source 2e258445 passed runtime smoke and all six Compose recovery phases. The November 12 scan found 197 Debian matches across 86 open IDs, with zero critical, npm or available-fix matches. All current dispositions remain unaccepted, past the prior November 7 review deadline. Full current-source Chromium, current-source AMD64, human security review and publication authority remain open.",
+    "The 2026 federal calculation remains incomplete and unavailable in production. The final 2026 parent Form 1040, ordinary and EIC tax tables and remaining official packages are still required. Final physical specimens are disabled pending complete scenarios and qualified review."
   ],
   "ongoingExecution": {
     "status": "selected-state-all3-internal-implementation-active-external-qualification-gates-open",
@@ -24160,7 +24160,7 @@
     "focusedFiles": 9,
     "specReferences": 8880,
     "inventoryRows": 966,
-    "combinedStatus": "in progress",
+    "combinedStatus": "11 of 12. Unit and coverage passed 27717 with 87.85 percent branch coverage. Browser rejected four stale request-audit digests before collection.",
     "humanTaxReviewComplete": false,
     "ledger": "docs/upgrade-2026-care-ira-combat-pay-work.md"
   },
@@ -24173,7 +24173,25 @@
     "manualResends": 0,
     "initialResizedNativeGuestFreeBytes": 76500164608,
     "freshNativeGuestFreeBytes": 401849769984,
+    "verifiedNativeImageSource": "2e258445f7388f8bb4d6bc81a4fc07353dad2b68",
+    "nativeComposePhasesPassed": 6,
+    "nativeEncryptedBackupAndRestorePassed": true,
+    "nativeObservedRequests": 399,
+    "nativeAdvisoriesOpen": 86,
+    "nativeAdvisoryRegister": "docs/upgrade-2026-image-advisories-20261113-arm64.json",
+    "nativeProvenanceFix": "93d6b26e",
+    "diagnosticAuditRebind": "115cbb52",
     "actualNativeRuntimeQualified": false,
     "ledger": "docs/upgrade-2026-nov13-release-rehearsals.md"
+  },
+  "nov13Form8824": {
+    "coreCalculation": "6ba7ce71",
+    "calculationFocusedPasses": 535,
+    "internalFinalFormProjection": "f5e5a80c",
+    "projectionFocusedPasses": 88,
+    "independentlyReopenedValues": 19,
+    "widgetCount": 68,
+    "specimenSha256": "1cb35cd1d5494febcbecdb16c458a39dcca74c0ad0dd90b71838ca31b334057e",
+    "filingQualified": false
   }
 }

@@ -16,6 +16,10 @@ still need native package inventory and scan evidence.
 [DSA-6613-1](https://security-tracker.debian.org/tracker/DSA-6613-1) ·
 [Pinned package evidence](upgrade-2026-debian-zlib-security-work.md).
 
-The other 78 historical rows are open and unchanged. Their previous owner
-and review deadline still require a security/platform decision. No new
-image, SBOM, scan, release readiness or risk acceptance is recorded here.
+The other 78 historical rows are open and unchanged. The subsequent native
+ARM64 image at `2e258445` has the fixed zlib package and the three zlib
+advisories no longer appear in its scan. That image has 197 Debian matches
+across 86 IDs. All 86 have open trixie rows in the same primary response.
+The eight newly matched IDs cover glibc, OpenSSL and GCC. The overdue
+security/platform disposition remains open for all 86.
+[ARM64 image and per-advisory register](upgrade-2026-image-advisories-20261113-arm64.json).

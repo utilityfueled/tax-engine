@@ -1,0 +1,2865 @@
+{
+  "sourceCommit": "2e258445f7388f8bb4d6bc81a4fc07353dad2b68",
+  "platform": "linux/arm64",
+  "imageID": "b4f9d4ccd97038f61afed7d7f0ffffd8f156401afb76c35ae401d8e4eb671994",
+  "imageArchiveSha256": "134d0c66999ab8661d0081aa434eea30e791743e6d75d39b22a4ec42dca86c14",
+  "sbomSha256": "7ad46b702890d7a13b85e47cac21054ec858d87030130505112a040e7c0c8d13",
+  "scanSha256": "ec9326ab0357a805ff417a918cd5b6e5075e4c64bd9c48535fd32c3633452680",
+  "grypeDbBuiltAt": "2026-11-12T06:20:58Z",
+  "debianRetrievedAtUtc": "2026-11-13T12:26:27Z",
+  "debianTracker": "https://security-tracker.debian.org/tracker/data/json",
+  "debianTrackerSha256": "40560246edf2cb9374bc1989c92330c7fa17eb9b8137a8e7d99b9e7b279fb360",
+  "severityCounts": {
+    "High": 60,
+    "Negligible": 48,
+    "Medium": 62,
+    "Low": 17,
+    "Unknown": 10
+  },
+  "uniqueAdvisories": 86,
+  "matches": 197,
+  "criticalMatches": 0,
+  "npmMatches": 0,
+  "matchesWithAvailableFix": 0,
+  "newComparedToHistoricalAmd64": [
+    "CVE-2026-100290",
+    "CVE-2026-107496",
+    "CVE-2026-115456",
+    "CVE-2026-115819",
+    "CVE-2026-88822",
+    "CVE-2026-88823",
+    "CVE-2026-95691",
+    "CVE-2026-95692"
+  ],
+  "absentComparedToHistoricalAmd64": [
+    "CVE-2026-27171",
+    "CVE-2026-76844",
+    "CVE-2026-85091"
+  ],
+  "priorReviewDeadline": "2026-11-07",
+  "priorReviewDeadlineStatus": "overdue",
+  "ownerAcceptance": false,
+  "independentHumanReview": false,
+  "releaseReady": false,
+  "advisories": [
+    {
+      "id": "CVE-2005-2541",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": null,
+      "expires": null,
+      "source": "https://security-tracker.debian.org/tracker/CVE-2005-2541",
+      "trixie": {
+        "tar": {
+          "status": "open",
+          "repositories": {
+            "trixie": "1.35+dfsg-3.1"
+          },
+          "urgency": "unimportant"
+        }
+      },
+      "installed": [
+        {
+          "name": "tar",
+          "version": "1.35+dfsg-3.1"
+        }
+      ],
+      "severities": [
+        "Negligible"
+      ],
+      "matches": 1
+    },
+    {
+      "id": "CVE-2007-5686",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": null,
+      "expires": null,
+      "source": "https://security-tracker.debian.org/tracker/CVE-2007-5686",
+      "trixie": {
+        "shadow": {
+          "status": "open",
+          "repositories": {
+            "trixie": "1:4.17.4-2"
+          },
+          "urgency": "unimportant"
+        }
+      },
+      "installed": [
+        {
+          "name": "login.defs",
+          "version": "1:4.17.4-2"
+        },
+        {
+          "name": "passwd",
+          "version": "1:4.17.4-2"
+        }
+      ],
+      "severities": [
+        "Negligible"
+      ],
+      "matches": 2
+    },
+    {
+      "id": "CVE-2010-4756",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": null,
+      "expires": null,
+      "source": "https://security-tracker.debian.org/tracker/CVE-2010-4756",
+      "trixie": {
+        "glibc": {
+          "status": "open",
+          "repositories": {
+            "trixie": "2.41-12+deb13u4"
+          },
+          "urgency": "unimportant"
+        }
+      },
+      "installed": [
+        {
+          "name": "libc-bin",
+          "version": "2.41-12+deb13u4"
+        },
+        {
+          "name": "libc6",
+          "version": "2.41-12+deb13u4"
+        }
+      ],
+      "severities": [
+        "Negligible"
+      ],
+      "matches": 2
+    },
+    {
+      "id": "CVE-2011-4116",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": null,
+      "expires": null,
+      "source": "https://security-tracker.debian.org/tracker/CVE-2011-4116",
+      "trixie": {
+        "perl": {
+          "status": "open",
+          "repositories": {
+            "trixie": "5.40.1-6+deb13u1"
+          },
+          "urgency": "unimportant"
+        }
+      },
+      "installed": [
+        {
+          "name": "perl-base",
+          "version": "5.40.1-6+deb13u1"
+        }
+      ],
+      "severities": [
+        "Negligible"
+      ],
+      "matches": 1
+    },
+    {
+      "id": "CVE-2013-4392",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": null,
+      "expires": null,
+      "source": "https://security-tracker.debian.org/tracker/CVE-2013-4392",
+      "trixie": {
+        "systemd": {
+          "status": "open",
+          "repositories": {
+            "trixie": "257.13-1~deb13u1"
+          },
+          "urgency": "unimportant"
+        }
+      },
+      "installed": [
+        {
+          "name": "libsystemd0",
+          "version": "257.13-1~deb13u1"
+        },
+        {
+          "name": "libudev1",
+          "version": "257.13-1~deb13u1"
+        }
+      ],
+      "severities": [
+        "Negligible"
+      ],
+      "matches": 2
+    },
+    {
+      "id": "CVE-2017-18018",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": null,
+      "expires": null,
+      "source": "https://security-tracker.debian.org/tracker/CVE-2017-18018",
+      "trixie": {
+        "coreutils": {
+          "status": "open",
+          "repositories": {
+            "trixie": "9.7-3"
+          },
+          "urgency": "unimportant"
+        }
+      },
+      "installed": [
+        {
+          "name": "coreutils",
+          "version": "9.7-3"
+        }
+      ],
+      "severities": [
+        "Negligible"
+      ],
+      "matches": 1
+    },
+    {
+      "id": "CVE-2018-20796",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": null,
+      "expires": null,
+      "source": "https://security-tracker.debian.org/tracker/CVE-2018-20796",
+      "trixie": {
+        "glibc": {
+          "status": "open",
+          "repositories": {
+            "trixie": "2.41-12+deb13u4"
+          },
+          "urgency": "unimportant"
+        }
+      },
+      "installed": [
+        {
+          "name": "libc-bin",
+          "version": "2.41-12+deb13u4"
+        },
+        {
+          "name": "libc6",
+          "version": "2.41-12+deb13u4"
+        }
+      ],
+      "severities": [
+        "Negligible"
+      ],
+      "matches": 2
+    },
+    {
+      "id": "CVE-2019-1010022",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": null,
+      "expires": null,
+      "source": "https://security-tracker.debian.org/tracker/CVE-2019-1010022",
+      "trixie": {
+        "glibc": {
+          "status": "open",
+          "repositories": {
+            "trixie": "2.41-12+deb13u4"
+          },
+          "urgency": "unimportant"
+        }
+      },
+      "installed": [
+        {
+          "name": "libc-bin",
+          "version": "2.41-12+deb13u4"
+        },
+        {
+          "name": "libc6",
+          "version": "2.41-12+deb13u4"
+        }
+      ],
+      "severities": [
+        "Negligible"
+      ],
+      "matches": 2
+    },
+    {
+      "id": "CVE-2019-1010023",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": null,
+      "expires": null,
+      "source": "https://security-tracker.debian.org/tracker/CVE-2019-1010023",
+      "trixie": {
+        "glibc": {
+          "status": "open",
+          "repositories": {
+            "trixie": "2.41-12+deb13u4"
+          },
+          "urgency": "unimportant"
+        }
+      },
+      "installed": [
+        {
+          "name": "libc-bin",
+          "version": "2.41-12+deb13u4"
+        },
+        {
+          "name": "libc6",
+          "version": "2.41-12+deb13u4"
+        }
+      ],
+      "severities": [
+        "Negligible"
+      ],
+      "matches": 2
+    },
+    {
+      "id": "CVE-2019-1010024",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": null,
+      "expires": null,
+      "source": "https://security-tracker.debian.org/tracker/CVE-2019-1010024",
+      "trixie": {
+        "glibc": {
+          "status": "open",
+          "repositories": {
+            "trixie": "2.41-12+deb13u4"
+          },
+          "urgency": "unimportant"
+        }
+      },
+      "installed": [
+        {
+          "name": "libc-bin",
+          "version": "2.41-12+deb13u4"
+        },
+        {
+          "name": "libc6",
+          "version": "2.41-12+deb13u4"
+        }
+      ],
+      "severities": [
+        "Negligible"
+      ],
+      "matches": 2
+    },
+    {
+      "id": "CVE-2019-1010025",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": null,
+      "expires": null,
+      "source": "https://security-tracker.debian.org/tracker/CVE-2019-1010025",
+      "trixie": {
+        "glibc": {
+          "status": "open",
+          "repositories": {
+            "trixie": "2.41-12+deb13u4"
+          },
+          "urgency": "unimportant"
+        }
+      },
+      "installed": [
+        {
+          "name": "libc-bin",
+          "version": "2.41-12+deb13u4"
+        },
+        {
+          "name": "libc6",
+          "version": "2.41-12+deb13u4"
+        }
+      ],
+      "severities": [
+        "Negligible"
+      ],
+      "matches": 2
+    },
+    {
+      "id": "CVE-2019-9192",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": null,
+      "expires": null,
+      "source": "https://security-tracker.debian.org/tracker/CVE-2019-9192",
+      "trixie": {
+        "glibc": {
+          "status": "open",
+          "repositories": {
+            "trixie": "2.41-12+deb13u4"
+          },
+          "urgency": "unimportant"
+        }
+      },
+      "installed": [
+        {
+          "name": "libc-bin",
+          "version": "2.41-12+deb13u4"
+        },
+        {
+          "name": "libc6",
+          "version": "2.41-12+deb13u4"
+        }
+      ],
+      "severities": [
+        "Negligible"
+      ],
+      "matches": 2
+    },
+    {
+      "id": "CVE-2021-45346",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": null,
+      "expires": null,
+      "source": "https://security-tracker.debian.org/tracker/CVE-2021-45346",
+      "trixie": {
+        "sqlite3": {
+          "status": "open",
+          "repositories": {
+            "trixie": "3.46.1-7+deb13u2"
+          },
+          "urgency": "unimportant"
+        }
+      },
+      "installed": [
+        {
+          "name": "libsqlite3-0",
+          "version": "3.46.1-7+deb13u2"
+        }
+      ],
+      "severities": [
+        "Negligible"
+      ],
+      "matches": 1
+    },
+    {
+      "id": "CVE-2022-0563",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": null,
+      "expires": null,
+      "source": "https://security-tracker.debian.org/tracker/CVE-2022-0563",
+      "trixie": {
+        "util-linux": {
+          "status": "open",
+          "repositories": {
+            "trixie": "2.41.5-0+deb13u1",
+            "trixie-security": "2.41.5-0+deb13u1"
+          },
+          "urgency": "unimportant"
+        }
+      },
+      "installed": [
+        {
+          "name": "bsdutils",
+          "version": "1:2.41.5-0+deb13u1"
+        },
+        {
+          "name": "libblkid1",
+          "version": "2.41.5-0+deb13u1"
+        },
+        {
+          "name": "liblastlog2-2",
+          "version": "2.41.5-0+deb13u1"
+        },
+        {
+          "name": "libmount1",
+          "version": "2.41.5-0+deb13u1"
+        },
+        {
+          "name": "libsmartcols1",
+          "version": "2.41.5-0+deb13u1"
+        },
+        {
+          "name": "libuuid1",
+          "version": "2.41.5-0+deb13u1"
+        },
+        {
+          "name": "login",
+          "version": "1:4.16.0-2+really2.41.5-0+deb13u1"
+        },
+        {
+          "name": "mount",
+          "version": "2.41.5-0+deb13u1"
+        },
+        {
+          "name": "util-linux",
+          "version": "2.41.5-0+deb13u1"
+        }
+      ],
+      "severities": [
+        "Negligible"
+      ],
+      "matches": 9
+    },
+    {
+      "id": "CVE-2023-31437",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": null,
+      "expires": null,
+      "source": "https://security-tracker.debian.org/tracker/CVE-2023-31437",
+      "trixie": {
+        "systemd": {
+          "status": "open",
+          "repositories": {
+            "trixie": "257.13-1~deb13u1"
+          },
+          "urgency": "unimportant"
+        }
+      },
+      "installed": [
+        {
+          "name": "libsystemd0",
+          "version": "257.13-1~deb13u1"
+        },
+        {
+          "name": "libudev1",
+          "version": "257.13-1~deb13u1"
+        }
+      ],
+      "severities": [
+        "Negligible"
+      ],
+      "matches": 2
+    },
+    {
+      "id": "CVE-2023-31438",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": null,
+      "expires": null,
+      "source": "https://security-tracker.debian.org/tracker/CVE-2023-31438",
+      "trixie": {
+        "systemd": {
+          "status": "open",
+          "repositories": {
+            "trixie": "257.13-1~deb13u1"
+          },
+          "urgency": "unimportant"
+        }
+      },
+      "installed": [
+        {
+          "name": "libsystemd0",
+          "version": "257.13-1~deb13u1"
+        },
+        {
+          "name": "libudev1",
+          "version": "257.13-1~deb13u1"
+        }
+      ],
+      "severities": [
+        "Negligible"
+      ],
+      "matches": 2
+    },
+    {
+      "id": "CVE-2023-31439",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": null,
+      "expires": null,
+      "source": "https://security-tracker.debian.org/tracker/CVE-2023-31439",
+      "trixie": {
+        "systemd": {
+          "status": "open",
+          "repositories": {
+            "trixie": "257.13-1~deb13u1"
+          },
+          "urgency": "unimportant"
+        }
+      },
+      "installed": [
+        {
+          "name": "libsystemd0",
+          "version": "257.13-1~deb13u1"
+        },
+        {
+          "name": "libudev1",
+          "version": "257.13-1~deb13u1"
+        }
+      ],
+      "severities": [
+        "Negligible"
+      ],
+      "matches": 2
+    },
+    {
+      "id": "CVE-2024-56433",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": null,
+      "expires": null,
+      "source": "https://security-tracker.debian.org/tracker/CVE-2024-56433",
+      "trixie": {
+        "shadow": {
+          "status": "open",
+          "repositories": {
+            "trixie": "1:4.17.4-2"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": ""
+        }
+      },
+      "installed": [
+        {
+          "name": "login.defs",
+          "version": "1:4.17.4-2"
+        },
+        {
+          "name": "passwd",
+          "version": "1:4.17.4-2"
+        }
+      ],
+      "severities": [
+        "Low"
+      ],
+      "matches": 2
+    },
+    {
+      "id": "CVE-2025-5278",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": null,
+      "expires": null,
+      "source": "https://security-tracker.debian.org/tracker/CVE-2025-5278",
+      "trixie": {
+        "coreutils": {
+          "status": "open",
+          "repositories": {
+            "trixie": "9.7-3"
+          },
+          "urgency": "unimportant"
+        }
+      },
+      "installed": [
+        {
+          "name": "coreutils",
+          "version": "9.7-3"
+        }
+      ],
+      "severities": [
+        "Negligible"
+      ],
+      "matches": 1
+    },
+    {
+      "id": "CVE-2025-6141",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": null,
+      "expires": null,
+      "source": "https://security-tracker.debian.org/tracker/CVE-2025-6141",
+      "trixie": {
+        "ncurses": {
+          "status": "open",
+          "repositories": {
+            "trixie": "6.5+20250216-2"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": ""
+        }
+      },
+      "installed": [
+        {
+          "name": "libtinfo6",
+          "version": "6.5+20250216-2"
+        },
+        {
+          "name": "ncurses-base",
+          "version": "6.5+20250216-2"
+        },
+        {
+          "name": "ncurses-bin",
+          "version": "6.5+20250216-2"
+        }
+      ],
+      "severities": [
+        "Medium"
+      ],
+      "matches": 3
+    },
+    {
+      "id": "CVE-2025-69720",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": null,
+      "expires": null,
+      "source": "https://security-tracker.debian.org/tracker/CVE-2025-69720",
+      "trixie": {
+        "ncurses": {
+          "status": "open",
+          "repositories": {
+            "trixie": "6.5+20250216-2"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": ""
+        }
+      },
+      "installed": [
+        {
+          "name": "libtinfo6",
+          "version": "6.5+20250216-2"
+        },
+        {
+          "name": "ncurses-base",
+          "version": "6.5+20250216-2"
+        },
+        {
+          "name": "ncurses-bin",
+          "version": "6.5+20250216-2"
+        }
+      ],
+      "severities": [
+        "High"
+      ],
+      "matches": 3
+    },
+    {
+      "id": "CVE-2025-70873",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": null,
+      "expires": null,
+      "source": "https://security-tracker.debian.org/tracker/CVE-2025-70873",
+      "trixie": {
+        "sqlite3": {
+          "status": "open",
+          "repositories": {
+            "trixie": "3.46.1-7+deb13u2"
+          },
+          "urgency": "unimportant"
+        }
+      },
+      "installed": [
+        {
+          "name": "libsqlite3-0",
+          "version": "3.46.1-7+deb13u2"
+        }
+      ],
+      "severities": [
+        "Negligible"
+      ],
+      "matches": 1
+    },
+    {
+      "id": "CVE-2026-100290",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": null,
+      "expires": null,
+      "source": "https://security-tracker.debian.org/tracker/CVE-2026-100290",
+      "trixie": {
+        "glibc": {
+          "status": "open",
+          "repositories": {
+            "trixie": "2.41-12+deb13u4"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": ""
+        }
+      },
+      "installed": [
+        {
+          "name": "libc-bin",
+          "version": "2.41-12+deb13u4"
+        },
+        {
+          "name": "libc6",
+          "version": "2.41-12+deb13u4"
+        }
+      ],
+      "severities": [
+        "Low"
+      ],
+      "matches": 2
+    },
+    {
+      "id": "CVE-2026-102010",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": null,
+      "expires": null,
+      "source": "https://security-tracker.debian.org/tracker/CVE-2026-102010",
+      "trixie": {
+        "gcc-14": {
+          "status": "open",
+          "repositories": {
+            "trixie": "14.2.0-19"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": ""
+        }
+      },
+      "installed": [
+        {
+          "name": "gcc-14-base",
+          "version": "14.2.0-19"
+        },
+        {
+          "name": "libatomic1",
+          "version": "14.2.0-19"
+        },
+        {
+          "name": "libgcc-s1",
+          "version": "14.2.0-19"
+        },
+        {
+          "name": "libstdc++6",
+          "version": "14.2.0-19"
+        }
+      ],
+      "severities": [
+        "High"
+      ],
+      "matches": 4
+    },
+    {
+      "id": "CVE-2026-102473",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": null,
+      "expires": null,
+      "source": "https://security-tracker.debian.org/tracker/CVE-2026-102473",
+      "trixie": {
+        "dash": {
+          "status": "open",
+          "repositories": {
+            "trixie": "0.5.12-12"
+          },
+          "urgency": "unimportant"
+        }
+      },
+      "installed": [
+        {
+          "name": "dash",
+          "version": "0.5.12-12"
+        }
+      ],
+      "severities": [
+        "Negligible"
+      ],
+      "matches": 1
+    },
+    {
+      "id": "CVE-2026-102474",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": null,
+      "expires": null,
+      "source": "https://security-tracker.debian.org/tracker/CVE-2026-102474",
+      "trixie": {
+        "dash": {
+          "status": "open",
+          "repositories": {
+            "trixie": "0.5.12-12"
+          },
+          "urgency": "unimportant"
+        }
+      },
+      "installed": [
+        {
+          "name": "dash",
+          "version": "0.5.12-12"
+        }
+      ],
+      "severities": [
+        "Negligible"
+      ],
+      "matches": 1
+    },
+    {
+      "id": "CVE-2026-107496",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": null,
+      "expires": null,
+      "source": "https://security-tracker.debian.org/tracker/CVE-2026-107496",
+      "trixie": {
+        "openssl": {
+          "status": "open",
+          "repositories": {
+            "trixie": "3.5.7-1~deb13u2",
+            "trixie-security": "3.5.7-1~deb13u3"
+          },
+          "urgency": "not yet assigned"
+        }
+      },
+      "installed": [
+        {
+          "name": "libssl3t64",
+          "version": "3.5.7-1~deb13u3"
+        },
+        {
+          "name": "openssl-provider-legacy",
+          "version": "3.5.7-1~deb13u3"
+        }
+      ],
+      "severities": [
+        "Unknown"
+      ],
+      "matches": 2
+    },
+    {
+      "id": "CVE-2026-114690",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": null,
+      "expires": null,
+      "source": "https://security-tracker.debian.org/tracker/CVE-2026-114690",
+      "trixie": {
+        "gcc-14": {
+          "status": "open",
+          "repositories": {
+            "trixie": "14.2.0-19"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": ""
+        }
+      },
+      "installed": [
+        {
+          "name": "gcc-14-base",
+          "version": "14.2.0-19"
+        },
+        {
+          "name": "libatomic1",
+          "version": "14.2.0-19"
+        },
+        {
+          "name": "libgcc-s1",
+          "version": "14.2.0-19"
+        },
+        {
+          "name": "libstdc++6",
+          "version": "14.2.0-19"
+        }
+      ],
+      "severities": [
+        "Medium"
+      ],
+      "matches": 4
+    },
+    {
+      "id": "CVE-2026-114691",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": null,
+      "expires": null,
+      "source": "https://security-tracker.debian.org/tracker/CVE-2026-114691",
+      "trixie": {
+        "gcc-14": {
+          "status": "open",
+          "repositories": {
+            "trixie": "14.2.0-19"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": ""
+        }
+      },
+      "installed": [
+        {
+          "name": "gcc-14-base",
+          "version": "14.2.0-19"
+        },
+        {
+          "name": "libatomic1",
+          "version": "14.2.0-19"
+        },
+        {
+          "name": "libgcc-s1",
+          "version": "14.2.0-19"
+        },
+        {
+          "name": "libstdc++6",
+          "version": "14.2.0-19"
+        }
+      ],
+      "severities": [
+        "Medium"
+      ],
+      "matches": 4
+    },
+    {
+      "id": "CVE-2026-115455",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": null,
+      "expires": null,
+      "source": "https://security-tracker.debian.org/tracker/CVE-2026-115455",
+      "trixie": {
+        "gcc-14": {
+          "status": "open",
+          "repositories": {
+            "trixie": "14.2.0-19"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": ""
+        }
+      },
+      "installed": [
+        {
+          "name": "gcc-14-base",
+          "version": "14.2.0-19"
+        },
+        {
+          "name": "libatomic1",
+          "version": "14.2.0-19"
+        },
+        {
+          "name": "libgcc-s1",
+          "version": "14.2.0-19"
+        },
+        {
+          "name": "libstdc++6",
+          "version": "14.2.0-19"
+        }
+      ],
+      "severities": [
+        "Negligible"
+      ],
+      "matches": 4
+    },
+    {
+      "id": "CVE-2026-115456",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": null,
+      "expires": null,
+      "source": "https://security-tracker.debian.org/tracker/CVE-2026-115456",
+      "trixie": {
+        "gcc-14": {
+          "status": "open",
+          "repositories": {
+            "trixie": "14.2.0-19"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": ""
+        }
+      },
+      "installed": [
+        {
+          "name": "gcc-14-base",
+          "version": "14.2.0-19"
+        },
+        {
+          "name": "libatomic1",
+          "version": "14.2.0-19"
+        },
+        {
+          "name": "libgcc-s1",
+          "version": "14.2.0-19"
+        },
+        {
+          "name": "libstdc++6",
+          "version": "14.2.0-19"
+        }
+      ],
+      "severities": [
+        "Low"
+      ],
+      "matches": 4
+    },
+    {
+      "id": "CVE-2026-115819",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": null,
+      "expires": null,
+      "source": "https://security-tracker.debian.org/tracker/CVE-2026-115819",
+      "trixie": {
+        "glibc": {
+          "status": "open",
+          "repositories": {
+            "trixie": "2.41-12+deb13u4"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": ""
+        }
+      },
+      "installed": [
+        {
+          "name": "libc-bin",
+          "version": "2.41-12+deb13u4"
+        },
+        {
+          "name": "libc6",
+          "version": "2.41-12+deb13u4"
+        }
+      ],
+      "severities": [
+        "Medium"
+      ],
+      "matches": 2
+    },
+    {
+      "id": "CVE-2026-119371",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": null,
+      "expires": null,
+      "source": "https://security-tracker.debian.org/tracker/CVE-2026-119371",
+      "trixie": {
+        "sqlite3": {
+          "status": "open",
+          "repositories": {
+            "trixie": "3.46.1-7+deb13u2"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": ""
+        }
+      },
+      "installed": [
+        {
+          "name": "libsqlite3-0",
+          "version": "3.46.1-7+deb13u2"
+        }
+      ],
+      "severities": [
+        "Medium"
+      ],
+      "matches": 1
+    },
+    {
+      "id": "CVE-2026-119372",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": null,
+      "expires": null,
+      "source": "https://security-tracker.debian.org/tracker/CVE-2026-119372",
+      "trixie": {
+        "sqlite3": {
+          "status": "open",
+          "repositories": {
+            "trixie": "3.46.1-7+deb13u2"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": ""
+        }
+      },
+      "installed": [
+        {
+          "name": "libsqlite3-0",
+          "version": "3.46.1-7+deb13u2"
+        }
+      ],
+      "severities": [
+        "Medium"
+      ],
+      "matches": 1
+    },
+    {
+      "id": "CVE-2026-119373",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": null,
+      "expires": null,
+      "source": "https://security-tracker.debian.org/tracker/CVE-2026-119373",
+      "trixie": {
+        "sqlite3": {
+          "status": "open",
+          "repositories": {
+            "trixie": "3.46.1-7+deb13u2"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": ""
+        }
+      },
+      "installed": [
+        {
+          "name": "libsqlite3-0",
+          "version": "3.46.1-7+deb13u2"
+        }
+      ],
+      "severities": [
+        "High"
+      ],
+      "matches": 1
+    },
+    {
+      "id": "CVE-2026-119374",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": null,
+      "expires": null,
+      "source": "https://security-tracker.debian.org/tracker/CVE-2026-119374",
+      "trixie": {
+        "sqlite3": {
+          "status": "open",
+          "repositories": {
+            "trixie": "3.46.1-7+deb13u2"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": ""
+        }
+      },
+      "installed": [
+        {
+          "name": "libsqlite3-0",
+          "version": "3.46.1-7+deb13u2"
+        }
+      ],
+      "severities": [
+        "High"
+      ],
+      "matches": 1
+    },
+    {
+      "id": "CVE-2026-119375",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": null,
+      "expires": null,
+      "source": "https://security-tracker.debian.org/tracker/CVE-2026-119375",
+      "trixie": {
+        "sqlite3": {
+          "status": "open",
+          "repositories": {
+            "trixie": "3.46.1-7+deb13u2"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": ""
+        }
+      },
+      "installed": [
+        {
+          "name": "libsqlite3-0",
+          "version": "3.46.1-7+deb13u2"
+        }
+      ],
+      "severities": [
+        "Medium"
+      ],
+      "matches": 1
+    },
+    {
+      "id": "CVE-2026-119376",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": null,
+      "expires": null,
+      "source": "https://security-tracker.debian.org/tracker/CVE-2026-119376",
+      "trixie": {
+        "sqlite3": {
+          "status": "open",
+          "repositories": {
+            "trixie": "3.46.1-7+deb13u2"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": ""
+        }
+      },
+      "installed": [
+        {
+          "name": "libsqlite3-0",
+          "version": "3.46.1-7+deb13u2"
+        }
+      ],
+      "severities": [
+        "Medium"
+      ],
+      "matches": 1
+    },
+    {
+      "id": "CVE-2026-119377",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": null,
+      "expires": null,
+      "source": "https://security-tracker.debian.org/tracker/CVE-2026-119377",
+      "trixie": {
+        "sqlite3": {
+          "status": "open",
+          "repositories": {
+            "trixie": "3.46.1-7+deb13u2"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": ""
+        }
+      },
+      "installed": [
+        {
+          "name": "libsqlite3-0",
+          "version": "3.46.1-7+deb13u2"
+        }
+      ],
+      "severities": [
+        "Low"
+      ],
+      "matches": 1
+    },
+    {
+      "id": "CVE-2026-119378",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": null,
+      "expires": null,
+      "source": "https://security-tracker.debian.org/tracker/CVE-2026-119378",
+      "trixie": {
+        "sqlite3": {
+          "status": "open",
+          "repositories": {
+            "trixie": "3.46.1-7+deb13u2"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": ""
+        }
+      },
+      "installed": [
+        {
+          "name": "libsqlite3-0",
+          "version": "3.46.1-7+deb13u2"
+        }
+      ],
+      "severities": [
+        "Medium"
+      ],
+      "matches": 1
+    },
+    {
+      "id": "CVE-2026-119379",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": null,
+      "expires": null,
+      "source": "https://security-tracker.debian.org/tracker/CVE-2026-119379",
+      "trixie": {
+        "sqlite3": {
+          "status": "open",
+          "repositories": {
+            "trixie": "3.46.1-7+deb13u2"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": ""
+        }
+      },
+      "installed": [
+        {
+          "name": "libsqlite3-0",
+          "version": "3.46.1-7+deb13u2"
+        }
+      ],
+      "severities": [
+        "High"
+      ],
+      "matches": 1
+    },
+    {
+      "id": "CVE-2026-119591",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": null,
+      "expires": null,
+      "source": "https://security-tracker.debian.org/tracker/CVE-2026-119591",
+      "trixie": {
+        "sqlite3": {
+          "status": "open",
+          "repositories": {
+            "trixie": "3.46.1-7+deb13u2"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": ""
+        }
+      },
+      "installed": [
+        {
+          "name": "libsqlite3-0",
+          "version": "3.46.1-7+deb13u2"
+        }
+      ],
+      "severities": [
+        "Medium"
+      ],
+      "matches": 1
+    },
+    {
+      "id": "CVE-2026-15059",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": null,
+      "expires": null,
+      "source": "https://security-tracker.debian.org/tracker/CVE-2026-15059",
+      "trixie": {
+        "systemd": {
+          "status": "open",
+          "repositories": {
+            "trixie": "257.13-1~deb13u1"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": ""
+        }
+      },
+      "installed": [
+        {
+          "name": "libsystemd0",
+          "version": "257.13-1~deb13u1"
+        },
+        {
+          "name": "libudev1",
+          "version": "257.13-1~deb13u1"
+        }
+      ],
+      "severities": [
+        "Medium"
+      ],
+      "matches": 2
+    },
+    {
+      "id": "CVE-2026-15534",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": null,
+      "expires": null,
+      "source": "https://security-tracker.debian.org/tracker/CVE-2026-15534",
+      "trixie": {
+        "perl": {
+          "status": "open",
+          "repositories": {
+            "trixie": "5.40.1-6+deb13u1"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Wait for exposure unstable and coordinate with Perl maintainers",
+          "nodsa_reason": "postponed"
+        }
+      },
+      "installed": [
+        {
+          "name": "perl-base",
+          "version": "5.40.1-6+deb13u1"
+        }
+      ],
+      "severities": [
+        "Medium"
+      ],
+      "matches": 1
+    },
+    {
+      "id": "CVE-2026-16742",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": null,
+      "expires": null,
+      "source": "https://security-tracker.debian.org/tracker/CVE-2026-16742",
+      "trixie": {
+        "systemd": {
+          "status": "open",
+          "repositories": {
+            "trixie": "257.13-1~deb13u1"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": ""
+        }
+      },
+      "installed": [
+        {
+          "name": "libsystemd0",
+          "version": "257.13-1~deb13u1"
+        },
+        {
+          "name": "libudev1",
+          "version": "257.13-1~deb13u1"
+        }
+      ],
+      "severities": [
+        "Medium"
+      ],
+      "matches": 2
+    },
+    {
+      "id": "CVE-2026-18374",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": null,
+      "expires": null,
+      "source": "https://security-tracker.debian.org/tracker/CVE-2026-18374",
+      "trixie": {
+        "glibc": {
+          "status": "open",
+          "repositories": {
+            "trixie": "2.41-12+deb13u4"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": "",
+          "next_point_update": true
+        }
+      },
+      "installed": [
+        {
+          "name": "libc-bin",
+          "version": "2.41-12+deb13u4"
+        },
+        {
+          "name": "libc6",
+          "version": "2.41-12+deb13u4"
+        }
+      ],
+      "severities": [
+        "Medium"
+      ],
+      "matches": 2
+    },
+    {
+      "id": "CVE-2026-18477",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": null,
+      "expires": null,
+      "source": "https://security-tracker.debian.org/tracker/CVE-2026-18477",
+      "trixie": {
+        "tar": {
+          "status": "open",
+          "repositories": {
+            "trixie": "1.35+dfsg-3.1"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": ""
+        }
+      },
+      "installed": [
+        {
+          "name": "tar",
+          "version": "1.35+dfsg-3.1"
+        }
+      ],
+      "severities": [
+        "Medium"
+      ],
+      "matches": 1
+    },
+    {
+      "id": "CVE-2026-18508",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": null,
+      "expires": null,
+      "source": "https://security-tracker.debian.org/tracker/CVE-2026-18508",
+      "trixie": {
+        "tar": {
+          "status": "open",
+          "repositories": {
+            "trixie": "1.35+dfsg-3.1"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": ""
+        }
+      },
+      "installed": [
+        {
+          "name": "tar",
+          "version": "1.35+dfsg-3.1"
+        }
+      ],
+      "severities": [
+        "Medium"
+      ],
+      "matches": 1
+    },
+    {
+      "id": "CVE-2026-19499",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": null,
+      "expires": null,
+      "source": "https://security-tracker.debian.org/tracker/CVE-2026-19499",
+      "trixie": {
+        "glibc": {
+          "status": "open",
+          "repositories": {
+            "trixie": "2.41-12+deb13u4"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": "",
+          "next_point_update": true
+        }
+      },
+      "installed": [
+        {
+          "name": "libc-bin",
+          "version": "2.41-12+deb13u4"
+        },
+        {
+          "name": "libc6",
+          "version": "2.41-12+deb13u4"
+        }
+      ],
+      "severities": [
+        "High"
+      ],
+      "matches": 2
+    },
+    {
+      "id": "CVE-2026-19542",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": null,
+      "expires": null,
+      "source": "https://security-tracker.debian.org/tracker/CVE-2026-19542",
+      "trixie": {
+        "glibc": {
+          "status": "open",
+          "repositories": {
+            "trixie": "2.41-12+deb13u4"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": "",
+          "next_point_update": true
+        }
+      },
+      "installed": [
+        {
+          "name": "libc-bin",
+          "version": "2.41-12+deb13u4"
+        },
+        {
+          "name": "libc6",
+          "version": "2.41-12+deb13u4"
+        }
+      ],
+      "severities": [
+        "Medium"
+      ],
+      "matches": 2
+    },
+    {
+      "id": "CVE-2026-3184",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": null,
+      "expires": null,
+      "source": "https://security-tracker.debian.org/tracker/CVE-2026-3184",
+      "trixie": {
+        "util-linux": {
+          "status": "open",
+          "repositories": {
+            "trixie": "2.41.5-0+deb13u1",
+            "trixie-security": "2.41.5-0+deb13u1"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": ""
+        }
+      },
+      "installed": [
+        {
+          "name": "bsdutils",
+          "version": "1:2.41.5-0+deb13u1"
+        },
+        {
+          "name": "libblkid1",
+          "version": "2.41.5-0+deb13u1"
+        },
+        {
+          "name": "liblastlog2-2",
+          "version": "2.41.5-0+deb13u1"
+        },
+        {
+          "name": "libmount1",
+          "version": "2.41.5-0+deb13u1"
+        },
+        {
+          "name": "libsmartcols1",
+          "version": "2.41.5-0+deb13u1"
+        },
+        {
+          "name": "libuuid1",
+          "version": "2.41.5-0+deb13u1"
+        },
+        {
+          "name": "login",
+          "version": "1:4.16.0-2+really2.41.5-0+deb13u1"
+        },
+        {
+          "name": "mount",
+          "version": "2.41.5-0+deb13u1"
+        },
+        {
+          "name": "util-linux",
+          "version": "2.41.5-0+deb13u1"
+        }
+      ],
+      "severities": [
+        "Medium"
+      ],
+      "matches": 9
+    },
+    {
+      "id": "CVE-2026-40228",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": null,
+      "expires": null,
+      "source": "https://security-tracker.debian.org/tracker/CVE-2026-40228",
+      "trixie": {
+        "systemd": {
+          "status": "open",
+          "repositories": {
+            "trixie": "257.13-1~deb13u1"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": ""
+        }
+      },
+      "installed": [
+        {
+          "name": "libsystemd0",
+          "version": "257.13-1~deb13u1"
+        },
+        {
+          "name": "libudev1",
+          "version": "257.13-1~deb13u1"
+        }
+      ],
+      "severities": [
+        "Low"
+      ],
+      "matches": 2
+    },
+    {
+      "id": "CVE-2026-42250",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": null,
+      "expires": null,
+      "source": "https://security-tracker.debian.org/tracker/CVE-2026-42250",
+      "trixie": {
+        "bzip2": {
+          "status": "open",
+          "repositories": {
+            "trixie": "1.0.8-6"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": ""
+        }
+      },
+      "installed": [
+        {
+          "name": "libbz2-1.0",
+          "version": "1.0.8-6"
+        }
+      ],
+      "severities": [
+        "Medium"
+      ],
+      "matches": 1
+    },
+    {
+      "id": "CVE-2026-50812",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": null,
+      "expires": null,
+      "source": "https://security-tracker.debian.org/tracker/CVE-2026-50812",
+      "trixie": {
+        "sqlite3": {
+          "status": "open",
+          "repositories": {
+            "trixie": "3.46.1-7+deb13u2"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": ""
+        }
+      },
+      "installed": [
+        {
+          "name": "libsqlite3-0",
+          "version": "3.46.1-7+deb13u2"
+        }
+      ],
+      "severities": [
+        "Medium"
+      ],
+      "matches": 1
+    },
+    {
+      "id": "CVE-2026-50813",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": null,
+      "expires": null,
+      "source": "https://security-tracker.debian.org/tracker/CVE-2026-50813",
+      "trixie": {
+        "sqlite3": {
+          "status": "open",
+          "repositories": {
+            "trixie": "3.46.1-7+deb13u2"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": ""
+        }
+      },
+      "installed": [
+        {
+          "name": "libsqlite3-0",
+          "version": "3.46.1-7+deb13u2"
+        }
+      ],
+      "severities": [
+        "Medium"
+      ],
+      "matches": 1
+    },
+    {
+      "id": "CVE-2026-53910",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": null,
+      "expires": null,
+      "source": "https://security-tracker.debian.org/tracker/CVE-2026-53910",
+      "trixie": {
+        "diffutils": {
+          "status": "open",
+          "repositories": {
+            "trixie": "1:3.10-4"
+          },
+          "urgency": "unimportant"
+        }
+      },
+      "installed": [
+        {
+          "name": "diffutils",
+          "version": "1:3.10-4"
+        }
+      ],
+      "severities": [
+        "Negligible"
+      ],
+      "matches": 1
+    },
+    {
+      "id": "CVE-2026-5435",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": null,
+      "expires": null,
+      "source": "https://security-tracker.debian.org/tracker/CVE-2026-5435",
+      "trixie": {
+        "glibc": {
+          "status": "open",
+          "repositories": {
+            "trixie": "2.41-12+deb13u4"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": "",
+          "next_point_update": true
+        }
+      },
+      "installed": [
+        {
+          "name": "libc-bin",
+          "version": "2.41-12+deb13u4"
+        },
+        {
+          "name": "libc6",
+          "version": "2.41-12+deb13u4"
+        }
+      ],
+      "severities": [
+        "High"
+      ],
+      "matches": 2
+    },
+    {
+      "id": "CVE-2026-54369",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": null,
+      "expires": null,
+      "source": "https://security-tracker.debian.org/tracker/CVE-2026-54369",
+      "trixie": {
+        "acl": {
+          "status": "open",
+          "repositories": {
+            "trixie": "2.3.2-2"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Will be fixed first in unstable, then point release update; not to be backported by individual patches",
+          "nodsa_reason": ""
+        }
+      },
+      "installed": [
+        {
+          "name": "libacl1",
+          "version": "2.3.2-2+b1"
+        }
+      ],
+      "severities": [
+        "High"
+      ],
+      "matches": 1
+    },
+    {
+      "id": "CVE-2026-54370",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": null,
+      "expires": null,
+      "source": "https://security-tracker.debian.org/tracker/CVE-2026-54370",
+      "trixie": {
+        "acl": {
+          "status": "open",
+          "repositories": {
+            "trixie": "2.3.2-2"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Will be fixed first in unstable, then point release update; not to be backported by individual patches",
+          "nodsa_reason": ""
+        }
+      },
+      "installed": [
+        {
+          "name": "libacl1",
+          "version": "2.3.2-2+b1"
+        }
+      ],
+      "severities": [
+        "High"
+      ],
+      "matches": 1
+    },
+    {
+      "id": "CVE-2026-54371",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": null,
+      "expires": null,
+      "source": "https://security-tracker.debian.org/tracker/CVE-2026-54371",
+      "trixie": {
+        "attr": {
+          "status": "open",
+          "repositories": {
+            "trixie": "1:2.5.2-3"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Will be fixed first in unstable, then point release update; not to be backported by individual patches",
+          "nodsa_reason": ""
+        }
+      },
+      "installed": [
+        {
+          "name": "libattr1",
+          "version": "1:2.5.2-3"
+        }
+      ],
+      "severities": [
+        "Medium"
+      ],
+      "matches": 1
+    },
+    {
+      "id": "CVE-2026-54411",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": null,
+      "expires": null,
+      "source": "https://security-tracker.debian.org/tracker/CVE-2026-54411",
+      "trixie": {
+        "pam": {
+          "status": "open",
+          "repositories": {
+            "trixie": "1.7.0-5"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": ""
+        }
+      },
+      "installed": [
+        {
+          "name": "libpam-modules",
+          "version": "1.7.0-5"
+        },
+        {
+          "name": "libpam-modules-bin",
+          "version": "1.7.0-5"
+        },
+        {
+          "name": "libpam-runtime",
+          "version": "1.7.0-5"
+        },
+        {
+          "name": "libpam0g",
+          "version": "1.7.0-5"
+        }
+      ],
+      "severities": [
+        "Medium"
+      ],
+      "matches": 4
+    },
+    {
+      "id": "CVE-2026-56391",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": null,
+      "expires": null,
+      "source": "https://security-tracker.debian.org/tracker/CVE-2026-56391",
+      "trixie": {
+        "coreutils": {
+          "status": "open",
+          "repositories": {
+            "trixie": "9.7-3"
+          },
+          "urgency": "unimportant"
+        }
+      },
+      "installed": [
+        {
+          "name": "coreutils",
+          "version": "9.7-3"
+        }
+      ],
+      "severities": [
+        "Negligible"
+      ],
+      "matches": 1
+    },
+    {
+      "id": "CVE-2026-56392",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": null,
+      "expires": null,
+      "source": "https://security-tracker.debian.org/tracker/CVE-2026-56392",
+      "trixie": {
+        "coreutils": {
+          "status": "open",
+          "repositories": {
+            "trixie": "9.7-3"
+          },
+          "urgency": "unimportant"
+        }
+      },
+      "installed": [
+        {
+          "name": "coreutils",
+          "version": "9.7-3"
+        }
+      ],
+      "severities": [
+        "Negligible"
+      ],
+      "matches": 1
+    },
+    {
+      "id": "CVE-2026-5704",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": null,
+      "expires": null,
+      "source": "https://security-tracker.debian.org/tracker/CVE-2026-5704",
+      "trixie": {
+        "tar": {
+          "status": "open",
+          "repositories": {
+            "trixie": "1.35+dfsg-3.1"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": ""
+        }
+      },
+      "installed": [
+        {
+          "name": "tar",
+          "version": "1.35+dfsg-3.1"
+        }
+      ],
+      "severities": [
+        "Medium"
+      ],
+      "matches": 1
+    },
+    {
+      "id": "CVE-2026-6238",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": null,
+      "expires": null,
+      "source": "https://security-tracker.debian.org/tracker/CVE-2026-6238",
+      "trixie": {
+        "glibc": {
+          "status": "open",
+          "repositories": {
+            "trixie": "2.41-12+deb13u4"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": "",
+          "next_point_update": true
+        }
+      },
+      "installed": [
+        {
+          "name": "libc-bin",
+          "version": "2.41-12+deb13u4"
+        },
+        {
+          "name": "libc6",
+          "version": "2.41-12+deb13u4"
+        }
+      ],
+      "severities": [
+        "Medium"
+      ],
+      "matches": 2
+    },
+    {
+      "id": "CVE-2026-6368",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": null,
+      "expires": null,
+      "source": "https://security-tracker.debian.org/tracker/CVE-2026-6368",
+      "trixie": {
+        "glibc": {
+          "status": "open",
+          "repositories": {
+            "trixie": "2.41-12+deb13u4"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": "",
+          "next_point_update": true
+        }
+      },
+      "installed": [
+        {
+          "name": "libc-bin",
+          "version": "2.41-12+deb13u4"
+        },
+        {
+          "name": "libc6",
+          "version": "2.41-12+deb13u4"
+        }
+      ],
+      "severities": [
+        "Low"
+      ],
+      "matches": 2
+    },
+    {
+      "id": "CVE-2026-6791",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": null,
+      "expires": null,
+      "source": "https://security-tracker.debian.org/tracker/CVE-2026-6791",
+      "trixie": {
+        "glibc": {
+          "status": "open",
+          "repositories": {
+            "trixie": "2.41-12+deb13u4"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": "",
+          "next_point_update": true
+        }
+      },
+      "installed": [
+        {
+          "name": "libc-bin",
+          "version": "2.41-12+deb13u4"
+        },
+        {
+          "name": "libc6",
+          "version": "2.41-12+deb13u4"
+        }
+      ],
+      "severities": [
+        "Medium"
+      ],
+      "matches": 2
+    },
+    {
+      "id": "CVE-2026-76642",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": null,
+      "expires": null,
+      "source": "https://security-tracker.debian.org/tracker/CVE-2026-76642",
+      "trixie": {
+        "util-linux": {
+          "status": "open",
+          "repositories": {
+            "trixie": "2.41.5-0+deb13u1",
+            "trixie-security": "2.41.5-0+deb13u1"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": ""
+        }
+      },
+      "installed": [
+        {
+          "name": "bsdutils",
+          "version": "1:2.41.5-0+deb13u1"
+        },
+        {
+          "name": "libblkid1",
+          "version": "2.41.5-0+deb13u1"
+        },
+        {
+          "name": "liblastlog2-2",
+          "version": "2.41.5-0+deb13u1"
+        },
+        {
+          "name": "libmount1",
+          "version": "2.41.5-0+deb13u1"
+        },
+        {
+          "name": "libsmartcols1",
+          "version": "2.41.5-0+deb13u1"
+        },
+        {
+          "name": "libuuid1",
+          "version": "2.41.5-0+deb13u1"
+        },
+        {
+          "name": "login",
+          "version": "1:4.16.0-2+really2.41.5-0+deb13u1"
+        },
+        {
+          "name": "mount",
+          "version": "2.41.5-0+deb13u1"
+        },
+        {
+          "name": "util-linux",
+          "version": "2.41.5-0+deb13u1"
+        }
+      ],
+      "severities": [
+        "High"
+      ],
+      "matches": 9
+    },
+    {
+      "id": "CVE-2026-77117",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": null,
+      "expires": null,
+      "source": "https://security-tracker.debian.org/tracker/CVE-2026-77117",
+      "trixie": {
+        "glibc": {
+          "status": "open",
+          "repositories": {
+            "trixie": "2.41-12+deb13u4"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": "",
+          "next_point_update": true
+        }
+      },
+      "installed": [
+        {
+          "name": "libc-bin",
+          "version": "2.41-12+deb13u4"
+        },
+        {
+          "name": "libc6",
+          "version": "2.41-12+deb13u4"
+        }
+      ],
+      "severities": [
+        "Medium"
+      ],
+      "matches": 2
+    },
+    {
+      "id": "CVE-2026-78408",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": null,
+      "expires": null,
+      "source": "https://security-tracker.debian.org/tracker/CVE-2026-78408",
+      "trixie": {
+        "util-linux": {
+          "status": "open",
+          "repositories": {
+            "trixie": "2.41.5-0+deb13u1",
+            "trixie-security": "2.41.5-0+deb13u1"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": ""
+        }
+      },
+      "installed": [
+        {
+          "name": "bsdutils",
+          "version": "1:2.41.5-0+deb13u1"
+        },
+        {
+          "name": "libblkid1",
+          "version": "2.41.5-0+deb13u1"
+        },
+        {
+          "name": "liblastlog2-2",
+          "version": "2.41.5-0+deb13u1"
+        },
+        {
+          "name": "libmount1",
+          "version": "2.41.5-0+deb13u1"
+        },
+        {
+          "name": "libsmartcols1",
+          "version": "2.41.5-0+deb13u1"
+        },
+        {
+          "name": "libuuid1",
+          "version": "2.41.5-0+deb13u1"
+        },
+        {
+          "name": "login",
+          "version": "1:4.16.0-2+really2.41.5-0+deb13u1"
+        },
+        {
+          "name": "mount",
+          "version": "2.41.5-0+deb13u1"
+        },
+        {
+          "name": "util-linux",
+          "version": "2.41.5-0+deb13u1"
+        }
+      ],
+      "severities": [
+        "High"
+      ],
+      "matches": 9
+    },
+    {
+      "id": "CVE-2026-78409",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": null,
+      "expires": null,
+      "source": "https://security-tracker.debian.org/tracker/CVE-2026-78409",
+      "trixie": {
+        "util-linux": {
+          "status": "open",
+          "repositories": {
+            "trixie": "2.41.5-0+deb13u1",
+            "trixie-security": "2.41.5-0+deb13u1"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": ""
+        }
+      },
+      "installed": [
+        {
+          "name": "bsdutils",
+          "version": "1:2.41.5-0+deb13u1"
+        },
+        {
+          "name": "libblkid1",
+          "version": "2.41.5-0+deb13u1"
+        },
+        {
+          "name": "liblastlog2-2",
+          "version": "2.41.5-0+deb13u1"
+        },
+        {
+          "name": "libmount1",
+          "version": "2.41.5-0+deb13u1"
+        },
+        {
+          "name": "libsmartcols1",
+          "version": "2.41.5-0+deb13u1"
+        },
+        {
+          "name": "libuuid1",
+          "version": "2.41.5-0+deb13u1"
+        },
+        {
+          "name": "login",
+          "version": "1:4.16.0-2+really2.41.5-0+deb13u1"
+        },
+        {
+          "name": "mount",
+          "version": "2.41.5-0+deb13u1"
+        },
+        {
+          "name": "util-linux",
+          "version": "2.41.5-0+deb13u1"
+        }
+      ],
+      "severities": [
+        "High"
+      ],
+      "matches": 9
+    },
+    {
+      "id": "CVE-2026-78410",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": null,
+      "expires": null,
+      "source": "https://security-tracker.debian.org/tracker/CVE-2026-78410",
+      "trixie": {
+        "util-linux": {
+          "status": "open",
+          "repositories": {
+            "trixie": "2.41.5-0+deb13u1",
+            "trixie-security": "2.41.5-0+deb13u1"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": ""
+        }
+      },
+      "installed": [
+        {
+          "name": "bsdutils",
+          "version": "1:2.41.5-0+deb13u1"
+        },
+        {
+          "name": "libblkid1",
+          "version": "2.41.5-0+deb13u1"
+        },
+        {
+          "name": "liblastlog2-2",
+          "version": "2.41.5-0+deb13u1"
+        },
+        {
+          "name": "libmount1",
+          "version": "2.41.5-0+deb13u1"
+        },
+        {
+          "name": "libsmartcols1",
+          "version": "2.41.5-0+deb13u1"
+        },
+        {
+          "name": "libuuid1",
+          "version": "2.41.5-0+deb13u1"
+        },
+        {
+          "name": "login",
+          "version": "1:4.16.0-2+really2.41.5-0+deb13u1"
+        },
+        {
+          "name": "mount",
+          "version": "2.41.5-0+deb13u1"
+        },
+        {
+          "name": "util-linux",
+          "version": "2.41.5-0+deb13u1"
+        }
+      ],
+      "severities": [
+        "High"
+      ],
+      "matches": 9
+    },
+    {
+      "id": "CVE-2026-80489",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": null,
+      "expires": null,
+      "source": "https://security-tracker.debian.org/tracker/CVE-2026-80489",
+      "trixie": {
+        "glibc": {
+          "status": "open",
+          "repositories": {
+            "trixie": "2.41-12+deb13u4"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": "",
+          "next_point_update": true
+        }
+      },
+      "installed": [
+        {
+          "name": "libc-bin",
+          "version": "2.41-12+deb13u4"
+        },
+        {
+          "name": "libc6",
+          "version": "2.41-12+deb13u4"
+        }
+      ],
+      "severities": [
+        "Medium"
+      ],
+      "matches": 2
+    },
+    {
+      "id": "CVE-2026-82560",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": null,
+      "expires": null,
+      "source": "https://security-tracker.debian.org/tracker/CVE-2026-82560",
+      "trixie": {
+        "perl": {
+          "status": "open",
+          "repositories": {
+            "trixie": "5.40.1-6+deb13u1"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": ""
+        }
+      },
+      "installed": [
+        {
+          "name": "perl-base",
+          "version": "5.40.1-6+deb13u1"
+        }
+      ],
+      "severities": [
+        "High"
+      ],
+      "matches": 1
+    },
+    {
+      "id": "CVE-2026-84243",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": null,
+      "expires": null,
+      "source": "https://security-tracker.debian.org/tracker/CVE-2026-84243",
+      "trixie": {
+        "glibc": {
+          "status": "open",
+          "repositories": {
+            "trixie": "2.41-12+deb13u4"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": ""
+        }
+      },
+      "installed": [
+        {
+          "name": "libc-bin",
+          "version": "2.41-12+deb13u4"
+        },
+        {
+          "name": "libc6",
+          "version": "2.41-12+deb13u4"
+        }
+      ],
+      "severities": [
+        "High"
+      ],
+      "matches": 2
+    },
+    {
+      "id": "CVE-2026-8674",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": null,
+      "expires": null,
+      "source": "https://security-tracker.debian.org/tracker/CVE-2026-8674",
+      "trixie": {
+        "glibc": {
+          "status": "open",
+          "repositories": {
+            "trixie": "2.41-12+deb13u4"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": "",
+          "next_point_update": true
+        }
+      },
+      "installed": [
+        {
+          "name": "libc-bin",
+          "version": "2.41-12+deb13u4"
+        },
+        {
+          "name": "libc6",
+          "version": "2.41-12+deb13u4"
+        }
+      ],
+      "severities": [
+        "Medium"
+      ],
+      "matches": 2
+    },
+    {
+      "id": "CVE-2026-86805",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": null,
+      "expires": null,
+      "source": "https://security-tracker.debian.org/tracker/CVE-2026-86805",
+      "trixie": {
+        "glibc": {
+          "status": "open",
+          "repositories": {
+            "trixie": "2.41-12+deb13u4"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": "",
+          "next_point_update": true
+        }
+      },
+      "installed": [
+        {
+          "name": "libc-bin",
+          "version": "2.41-12+deb13u4"
+        },
+        {
+          "name": "libc6",
+          "version": "2.41-12+deb13u4"
+        }
+      ],
+      "severities": [
+        "Medium"
+      ],
+      "matches": 2
+    },
+    {
+      "id": "CVE-2026-88822",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": null,
+      "expires": null,
+      "source": "https://security-tracker.debian.org/tracker/CVE-2026-88822",
+      "trixie": {
+        "openssl": {
+          "status": "open",
+          "repositories": {
+            "trixie": "3.5.7-1~deb13u2",
+            "trixie-security": "3.5.7-1~deb13u3"
+          },
+          "urgency": "not yet assigned"
+        }
+      },
+      "installed": [
+        {
+          "name": "libssl3t64",
+          "version": "3.5.7-1~deb13u3"
+        },
+        {
+          "name": "openssl-provider-legacy",
+          "version": "3.5.7-1~deb13u3"
+        }
+      ],
+      "severities": [
+        "Unknown"
+      ],
+      "matches": 2
+    },
+    {
+      "id": "CVE-2026-88823",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": null,
+      "expires": null,
+      "source": "https://security-tracker.debian.org/tracker/CVE-2026-88823",
+      "trixie": {
+        "openssl": {
+          "status": "open",
+          "repositories": {
+            "trixie": "3.5.7-1~deb13u2",
+            "trixie-security": "3.5.7-1~deb13u3"
+          },
+          "urgency": "not yet assigned"
+        }
+      },
+      "installed": [
+        {
+          "name": "libssl3t64",
+          "version": "3.5.7-1~deb13u3"
+        },
+        {
+          "name": "openssl-provider-legacy",
+          "version": "3.5.7-1~deb13u3"
+        }
+      ],
+      "severities": [
+        "Unknown"
+      ],
+      "matches": 2
+    },
+    {
+      "id": "CVE-2026-89092",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": null,
+      "expires": null,
+      "source": "https://security-tracker.debian.org/tracker/CVE-2026-89092",
+      "trixie": {
+        "glibc": {
+          "status": "open",
+          "repositories": {
+            "trixie": "2.41-12+deb13u4"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": "",
+          "next_point_update": true
+        }
+      },
+      "installed": [
+        {
+          "name": "libc-bin",
+          "version": "2.41-12+deb13u4"
+        },
+        {
+          "name": "libc6",
+          "version": "2.41-12+deb13u4"
+        }
+      ],
+      "severities": [
+        "Medium"
+      ],
+      "matches": 2
+    },
+    {
+      "id": "CVE-2026-9538",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": null,
+      "expires": null,
+      "source": "https://security-tracker.debian.org/tracker/CVE-2026-9538",
+      "trixie": {
+        "perl": {
+          "status": "open",
+          "repositories": {
+            "trixie": "5.40.1-6+deb13u1"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue; wait for regressions upstream sorted out",
+          "nodsa_reason": "postponed"
+        }
+      },
+      "installed": [
+        {
+          "name": "perl-base",
+          "version": "5.40.1-6+deb13u1"
+        }
+      ],
+      "severities": [
+        "High"
+      ],
+      "matches": 1
+    },
+    {
+      "id": "CVE-2026-95619",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": null,
+      "expires": null,
+      "source": "https://security-tracker.debian.org/tracker/CVE-2026-95619",
+      "trixie": {
+        "gcc-14": {
+          "status": "open",
+          "repositories": {
+            "trixie": "14.2.0-19"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": ""
+        }
+      },
+      "installed": [
+        {
+          "name": "gcc-14-base",
+          "version": "14.2.0-19"
+        },
+        {
+          "name": "libatomic1",
+          "version": "14.2.0-19"
+        },
+        {
+          "name": "libgcc-s1",
+          "version": "14.2.0-19"
+        },
+        {
+          "name": "libstdc++6",
+          "version": "14.2.0-19"
+        }
+      ],
+      "severities": [
+        "High"
+      ],
+      "matches": 4
+    },
+    {
+      "id": "CVE-2026-95691",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": null,
+      "expires": null,
+      "source": "https://security-tracker.debian.org/tracker/CVE-2026-95691",
+      "trixie": {
+        "openssl": {
+          "status": "open",
+          "repositories": {
+            "trixie": "3.5.7-1~deb13u2",
+            "trixie-security": "3.5.7-1~deb13u3"
+          },
+          "urgency": "not yet assigned"
+        }
+      },
+      "installed": [
+        {
+          "name": "libssl3t64",
+          "version": "3.5.7-1~deb13u3"
+        },
+        {
+          "name": "openssl-provider-legacy",
+          "version": "3.5.7-1~deb13u3"
+        }
+      ],
+      "severities": [
+        "Unknown"
+      ],
+      "matches": 2
+    },
+    {
+      "id": "CVE-2026-95692",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": null,
+      "expires": null,
+      "source": "https://security-tracker.debian.org/tracker/CVE-2026-95692",
+      "trixie": {
+        "openssl": {
+          "status": "open",
+          "repositories": {
+            "trixie": "3.5.7-1~deb13u2",
+            "trixie-security": "3.5.7-1~deb13u3"
+          },
+          "urgency": "not yet assigned"
+        }
+      },
+      "installed": [
+        {
+          "name": "libssl3t64",
+          "version": "3.5.7-1~deb13u3"
+        },
+        {
+          "name": "openssl-provider-legacy",
+          "version": "3.5.7-1~deb13u3"
+        }
+      ],
+      "severities": [
+        "Unknown"
+      ],
+      "matches": 2
+    },
+    {
+      "id": "CVE-2026-95818",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": null,
+      "expires": null,
+      "source": "https://security-tracker.debian.org/tracker/CVE-2026-95818",
+      "trixie": {
+        "glibc": {
+          "status": "open",
+          "repositories": {
+            "trixie": "2.41-12+deb13u4"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": "",
+          "next_point_update": true
+        }
+      },
+      "installed": [
+        {
+          "name": "libc-bin",
+          "version": "2.41-12+deb13u4"
+        },
+        {
+          "name": "libc6",
+          "version": "2.41-12+deb13u4"
+        }
+      ],
+      "severities": [
+        "Low"
+      ],
+      "matches": 2
+    },
+    {
+      "id": "CVE-2026-97399",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": null,
+      "expires": null,
+      "source": "https://security-tracker.debian.org/tracker/CVE-2026-97399",
+      "trixie": {
+        "glibc": {
+          "status": "open",
+          "repositories": {
+            "trixie": "2.41-12+deb13u4"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": "",
+          "next_point_update": true
+        }
+      },
+      "installed": [
+        {
+          "name": "libc-bin",
+          "version": "2.41-12+deb13u4"
+        },
+        {
+          "name": "libc6",
+          "version": "2.41-12+deb13u4"
+        }
+      ],
+      "severities": [
+        "Low"
+      ],
+      "matches": 2
+    }
+  ]
+}

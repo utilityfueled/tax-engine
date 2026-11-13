@@ -6,12 +6,39 @@ The public refs were refreshed. `origin/main` still points to `59248889`
 and `origin/upgrade/2026-baseline` to `3024b848`. Successor commits stay on
 local `main` while automatic production deployment is being disabled.
 
+`6ba7ce71` corrects Form 8824 lines 15 and 18 for both supported calculation
+years. It accounts for cash paid and expenses applied against cash, other
+property or net liability relief. Five failing regressions preceded the fix.
+All 535 targeted tests passed. `f5e5a80c` adds a disabled 2026 physical
+projection for a confirmed simultaneous exchange of domestic investment
+land. All 88 focused tests passed. A separate reader reopened 18 text values
+and one checkbox across 68 widgets, with blank identity and both review
+watermarks. Both pages were rendered and visually checked. Specialized
+recapture, parent return transfer, broader exchanges and qualified review
+remain open. [Final 2026 Form 8824](https://www.irs.gov/pub/irs-prior/f8824--2026.pdf) ·
+[IRS instructions](https://www.irs.gov/instructions/i8824).
+
 `6cccc932` documents the full W-2 Code Q amount in IRA compensation and the
 separate elections for Form 2441 Parts II and III. Changing W-2 or business
 income sources requires confirming the Part II worksheet again. The original
 answers stay available for review. All 299 focused tests passed. The exact
-successor archive is running the full local suite.
+archive passed 11 of 12 checks, including 27,717 unit and coverage tests and
+87.85% branch coverage. Chromium refused four stale audit digests before
+collection. `8052fac5` rebinds the changed reviewed files. The next combined
+run on `2e258445` passed its first nine checks and failed one unit test because
+the optional diagnostic still pinned the old audit. `115cbb52` rebinds that
+diagnostic and its full 621-case collection. The exact successor is running
+the combined suite and a native ARM64 rehearsal.
 [Care and IRA evidence](upgrade-2026-care-ira-combat-pay-work.md).
+
+The actual ARM64 `2e258445` image passed import, smoke, six Compose phases
+and encrypted browser backup/restore. The security scan found 86 open Debian
+advisories that still need owner disposition. `93d6b26e` verifies the
+observed Podman 6 capability, tmpfs and environment metadata while retaining
+the hardened profile and exact source checks. Final ARM64 Chromium and
+exact-source AMD64 remain open.
+[Self-host evidence](upgrade-2026-nov13-release-rehearsals.md) ·
+[Advisory register](upgrade-2026-image-advisories-20261113-arm64.json).
 
 `439d4c87` implements each filer's separate EIC election for all original
 W-2 Code Q amounts, preserves exact cents and renders elected pay on

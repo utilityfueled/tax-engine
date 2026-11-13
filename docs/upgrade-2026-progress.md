@@ -4940,3 +4940,14 @@ execution and current image qualification require separate evidence.
   worksheet sample points. Production still requires the final 2026
   publication and qualified human review.
   [Source and checksums](upgrade-2026-draft-federal-tables-work.md).
+- November 13 local `main`. `6ba7ce71` corrects Form 8824 consideration
+  and basis, with five genuine failing regressions and 535 focused passes.
+  `f5e5a80c` adds a disabled final 2026 investment-land projection, with
+  two initial failures, 88 focused passes and strict two-page readback.
+  [Current source and verification](upgrade-2026-current-status.md).
+- The actual ARM64 `2e258445` image passed smoke, six Compose phases and
+  encrypted original-document recovery. `93d6b26e` adds the independently
+  checked Podman metadata profile. `115cbb52` pins the unchanged 14 optional
+  diagnostic cases against the reviewed audit and 621-case collection.
+  The exact successor full suite and ARM64 rehearsal are running.
+  [Rehearsal evidence](upgrade-2026-nov13-release-rehearsals.md).
