@@ -24456,6 +24456,18 @@
       "checksSha256": "696f1be7b024813295260993082372e28da301e191d9ffb51e52bf5e55fad3d6",
       "browserSummarySha256": "1403a242ab1457f122cd2cc244c80b84a00abfcf027d2a2d6dbe685550add9ab"
     },
+    "0fb0c9a5Combined": {
+      "source": "0fb0c9a5afddbe9db4bb3c26a76a51d31ece7dd9",
+      "checksPassed": 12,
+      "unitAndCoverageTestsEach": 27761,
+      "branchCoveragePercent": 87.87,
+      "chromiumCollected": 621,
+      "chromiumPassed": 616,
+      "chromiumHostedOnlySkipped": 5,
+      "postgresStopped": true,
+      "checksSha256": "e6e4091a68c80ab1326971e242e68856e370dd88a0d48ff633ab7b09af88f1d7",
+      "browserTranscriptSha256": "cf1d3cbe4a512bf6667afcd39a267ab399dcea6712c188599eba321730b1f779"
+    },
     "0fb0c9a5Arm64": {
       "source": "0fb0c9a5afddbe9db4bb3c26a76a51d31ece7dd9",
       "image": "fd81a0a27f4539fe70c5a39d3b9696ff918212b8fdb8f748c2e3c289e1221b48",

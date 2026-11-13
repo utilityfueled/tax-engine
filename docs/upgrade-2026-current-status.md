@@ -94,7 +94,10 @@ audit to that change with unchanged windows and collection. All 179
 orchestration and provenance checks passed.
 The `0fb0c9a5` native ARM64 run passed image import, smoke, SBOM and scan,
 all six Compose recovery phases and 616 Chromium cases with five hosted-only
-skips. Normal stop and socket restoration were verified.
+skips. Normal stop and socket restoration were verified. All 12 checks
+passed for the separate exact managed archive, with 27,761 unit and coverage
+tests at 87.87% branch coverage, 616 Chromium passes, the same five hosted
+skips and PostgreSQL stopped.
 [Pennsylvania DFO-02](https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/dfo-02.pdf) ·
 [IRS Form 1040 instructions](https://www.irs.gov/instructions/i1040gi).
 

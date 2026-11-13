@@ -20,6 +20,8 @@ below retain their original evidence boundaries.
 - [x] Pass exact `0fb0c9a5` ARM64 image import, smoke, scan, six Compose
   recovery phases and 616 Chromium cases with five hosted skips. Verify
   normal stop and socket restoration.
+- [x] Close all 12 exact `0fb0c9a5` managed checks with 27,761 unit and
+  coverage passes, 87.87% branch coverage and 616 Chromium passes.
 - [x] Compute the Ohio senior citizen credit for confirmed withholding-only
   wage drafts in `29fb2d29`. Pass 348 affected checks across all three
   residency categories and adjacent specialized methods.
