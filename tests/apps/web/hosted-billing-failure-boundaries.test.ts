@@ -64,6 +64,27 @@ beforeEach(() => {
 });
 
 describe("hosted billing failure boundaries (synthetic dependencies, no provider traffic)", () => {
+  it.each([
+    ["TAX_ENGINE_AI_HELPER_TOP_UP_CREDIT_CENTS", "2147483648"],
+    ["TAX_ENGINE_AI_HELPER_TOP_UP_CREDIT_CENTS", "0"],
+    ["TAX_ENGINE_AI_HELPER_TOP_UP_PRICE_CENTS", "0.5"],
+    ["TAX_ENGINE_AI_HELPER_TOP_UP_PRICE_CENTS", "2147483648"],
+  ])("blocks AI credit offers the settlement ledger cannot store (%s)", async (name, value) => {
+    const createCheckoutSession = vi.fn(async () => ({ id: "cs_fictional", url: "https://checkout.stripe.com/synthetic" }));
+    const facts = { ...env, [name]: value };
+    for (const custom of [false, true]) {
+      const handler = createHostedAiCreditCheckoutRouteHandlers({ env: facts, rateLimitStore: createRateLimitStore(),
+        ...(custom ? { createCheckoutSession } : {}),
+      });
+      const response = await handler.POST(request(checkoutBody));
+      expect(response.status).toBe(503);
+      await expect(response.json()).resolves.toEqual({ error: "Hosted AI credit purchases are unavailable." });
+    }
+    expect(createCheckoutSession).not.toHaveBeenCalled();
+    expect(mocks.customer).not.toHaveBeenCalled();
+    expect(mocks.checkout).not.toHaveBeenCalled();
+  });
+
   it.each([null, 0, false, [], {}, "", "a".repeat(129), "../another-user"])("rejects malformed workspace identifier %j before any billing operation", async (workspaceId) => {
     const { POST } = createHostedBillingCheckoutRouteHandlers({ env, rateLimitStore: createRateLimitStore() });
     const response = await POST(request({ ...checkoutBody, workspaceId }));

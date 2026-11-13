@@ -90,6 +90,7 @@ function payload(kind: EventKind, mode: unknown, created = now) {
   return JSON.stringify({ id: "evt_mode_binding", type: "checkout.session.completed", created,
     ...(mode === undefined ? {} : { livemode: mode }), data: { object: {
       object: "checkout.session", id: "cs_mode_binding", customer: "cus_mode_binding", subscription: "sub_mode_binding",
+      ...(kind === "credit" ? { mode: "payment", payment_status: "paid" } : {}),
       amount_total: 1500, currency: "usd", metadata: kind === "credit"
         ? { purchaseKind: "ai-credit-pack", hostedOwnerId: "owner-mode-binding", aiCreditCents: "1000" }
         : { hostedOwnerId: "owner-mode-binding", planId: "starter" },
@@ -253,10 +254,11 @@ describe("hosted Stripe mode binding source-first controls", () => {
     for (const mode of modes) {
       vi.clearAllMocks(); const facts = { ...env(mode), NODE_ENV: "development", STRIPE_SECRET_KEY: undefined, STRIPE_PRICE_ID_STARTER_MONTHLY: undefined, STRIPE_PRICE_ID_PLUS_MONTHLY: undefined };
       expect((await webhook(facts).POST(signed(payload(kind, mode === "live")))).status).toBe(200);
-      expect(mocks.mark).toHaveBeenCalledTimes(1);
+      expect(mocks.mark).toHaveBeenCalledTimes(kind === "credit" ? 0 : 1);
       if (kind === "credit") expect(mocks.credit).toHaveBeenCalledExactlyOnceWith(facts, {
         checkoutSessionId: "cs_mode_binding", ownerId: "owner-mode-binding", stripeCustomerId: "cus_mode_binding",
         amountPaidCents: 1500, creditedBudgetCents: 1000, currency: "usd", createdAt: new Date(now * 1000).toISOString(),
+        eventId: "evt_mode_binding", eventType: "checkout.session.completed",
       });
       else expect(mocks.persist).toHaveBeenCalledWith(facts, expect.objectContaining({ ownerId: "owner-mode-binding", stripeSubscriptionId: "sub_mode_binding", planId: "starter" }));
     }
@@ -319,11 +321,12 @@ describe("fully configured production webhook signed-mode controls", () => {
       expect(response.status).toBe(200);
       expect(await response.json()).toEqual({ acknowledged: true });
       expect(mocks.key).toHaveBeenCalledExactlyOnceWith(`sk_${mode}_fictional`);
-      expect(mocks.mark).toHaveBeenCalledTimes(1);
+      expect(mocks.mark).toHaveBeenCalledTimes(kind === "credit" ? 0 : 1);
       if (kind === "credit") {
         expect(mocks.credit).toHaveBeenCalledExactlyOnceWith(facts, {
           checkoutSessionId: "cs_mode_binding", ownerId: "owner-mode-binding", stripeCustomerId: "cus_mode_binding",
           amountPaidCents: 1500, creditedBudgetCents: 1000, currency: "usd", createdAt: new Date(now * 1000).toISOString(),
+          eventId: "evt_mode_binding", eventType: "checkout.session.completed",
         });
         expect(mocks.persist).not.toHaveBeenCalled();
       } else {

@@ -23,6 +23,8 @@ export interface RecordHostedAiCreditPurchaseInput {
   creditedBudgetCents: number;
   currency: string;
   createdAt: string;
+  eventId: string;
+  eventType: "checkout.session.completed" | "checkout.session.async_payment_succeeded";
 }
 
 function coerceCount(value: unknown) {
@@ -92,33 +94,46 @@ export async function recordHostedAiCreditPurchase(
 ) {
   await ensureHostedAppSchema(env);
   const { pool } = await getHostedServerDatabase(env);
-  const result = await pool.query(
-    `
-      INSERT INTO hosted_ai_credit_purchases (
-        checkout_session_id,
-        owner_id,
-        stripe_customer_id,
-        amount_paid_cents,
-        credited_budget_cents,
-        currency,
-        created_at
-      )
-      VALUES (
-        $1, $2, $3, $4, $5, $6, $7::timestamptz
-      )
-      ON CONFLICT (checkout_session_id) DO NOTHING
-      RETURNING checkout_session_id;
-    `,
-    [
-      input.checkoutSessionId,
-      input.ownerId,
-      input.stripeCustomerId,
-      input.amountPaidCents,
-      input.creditedBudgetCents,
-      input.currency,
-      input.createdAt
-    ]
-  );
-
-  return (result.rowCount ?? 0) > 0;
+  const client = await pool.connect();
+  let discard = false;
+  const onClientError = () => { discard = true; };
+  client.on("error", onClientError);
+  try {
+    await client.query("BEGIN");
+    const receipt = await client.query(`
+      INSERT INTO hosted_billing_events (event_id, event_type, created_at)
+      VALUES ($1, $2, $3::timestamptz)
+      ON CONFLICT (event_id) DO NOTHING RETURNING event_id
+    `, [input.eventId, input.eventType, input.createdAt]);
+    if (receipt.rows.length === 0) {
+      await client.query("COMMIT");
+      return false;
+    }
+    const terms = [input.checkoutSessionId, input.ownerId, input.stripeCustomerId,
+      input.amountPaidCents, input.creditedBudgetCents, input.currency];
+    const inserted = await client.query(`
+      INSERT INTO hosted_ai_credit_purchases (checkout_session_id, owner_id, stripe_customer_id,
+        amount_paid_cents, credited_budget_cents, currency, created_at)
+      VALUES ($1, $2, $3, $4, $5, $6, $7::timestamptz)
+      ON CONFLICT (checkout_session_id) DO NOTHING RETURNING checkout_session_id
+    `, [...terms, input.createdAt]);
+    if (inserted.rows.length === 0) {
+      // This separate read sees a concurrently committed row after the unique
+      // index conflict has finished waiting.
+      const { rows } = await client.query<{ matches: boolean }>(`
+        SELECT owner_id = $2 AND stripe_customer_id IS NOT DISTINCT FROM $3::text
+          AND amount_paid_cents = $4 AND credited_budget_cents = $5 AND currency = $6 AS matches
+        FROM hosted_ai_credit_purchases WHERE checkout_session_id = $1
+      `, terms);
+      if (rows[0]?.matches !== true) throw new Error("Paid Checkout facts conflict with the retained credit purchase.");
+    }
+    if (discard) throw new Error("Credit settlement connection was lost.");
+    await client.query("COMMIT");
+    return inserted.rows.length > 0;
+  } catch (error) {
+    try { await client.query("ROLLBACK"); } catch { discard = true; }
+    throw error;
+  } finally {
+    try { client.release(discard); } finally { client.removeListener("error", onClientError); }
+  }
 }

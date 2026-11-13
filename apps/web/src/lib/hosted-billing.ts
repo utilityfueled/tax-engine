@@ -13,7 +13,8 @@ import type { HostedBillingWebhookStatus } from "./hosted-billing-state";
 import { getHostedServerDatabaseConfig } from "./hosted-server-db";
 import {
   resolveHostedAiTopUpCreditCents,
-  resolveHostedAiTopUpPriceCents
+  resolveHostedAiTopUpPriceCents,
+  hasValidHostedAiTopUpTerms
 } from "./hosted-ai-helper-billing";
 import {
   checkRateLimitForEnvironment,
@@ -694,6 +695,13 @@ export function createHostedAiCreditCheckoutRouteHandlers(
       if (!canPurchaseHostedAiCredits(undefined, env)) {
         return NextResponse.json(
           { error: "AI credit purchases are unavailable while the production helper is awaiting qualification.", code: "ai_qualification_pending" },
+          { status: 503, headers: { "Cache-Control": "no-store, private" } }
+        );
+      }
+
+      if (!hasValidHostedAiTopUpTerms(env)) {
+        return NextResponse.json(
+          { error: "Hosted AI credit purchases are unavailable." },
           { status: 503, headers: { "Cache-Control": "no-store, private" } }
         );
       }

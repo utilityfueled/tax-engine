@@ -9,7 +9,7 @@ import type {
   getHostedSubscriptionBySubscriptionId,
   persistHostedStripeSubscription
 } from "./hosted-billing-db";
-import { markStripeEventProcessed } from "./hosted-billing-db";
+import type { markStripeEventProcessed } from "./hosted-billing-db";
 import {
   reconcileHostedStripeSubscriptionEvent,
   type ReconcileHostedSubscriptionInput,
@@ -17,6 +17,7 @@ import {
   type VerifiedCurrentHostedSubscription
 } from "./hosted-billing-reconciliation";
 import { recordHostedAiCreditPurchase } from "./hosted-ai-usage-db";
+import { isPositiveHostedCreditCents } from "./hosted-ai-helper-billing";
 import { getHostedServerDatabaseConfig } from "./hosted-server-db";
 import {
   hostedBillingSubscriptionStore,
@@ -130,7 +131,8 @@ function isStripeEventShape(event: Stripe.Event): boolean {
     && event.created >= 0
     && typeof event.data === "object"
     && event.data !== null
-    && "object" in event.data;
+    && typeof event.data.object === "object"
+    && event.data.object !== null;
 }
 
 function mapStripeSubscriptionStatus(status: string | null): HostedBillingWebhookStatus {
@@ -154,14 +156,6 @@ const EXPECTED_STRIPE_OBJECT_TYPE: Record<string, string> = {
   "customer.subscription.updated": "subscription",
   "customer.subscription.deleted": "subscription"
 };
-
-function readPositiveIntegerString(value: unknown) {
-  if (typeof value !== "string" || !/^\d+$/.test(value)) {
-    return null;
-  }
-
-  return Number.parseInt(value, 10);
-}
 
 function buildSubscriptionChange(
   customerId: string | null,
@@ -295,7 +289,7 @@ function normalizeSubscriptionChange(
 }
 
 function normalizeAiCreditPurchase(event: Stripe.Event) {
-  if (event.type !== "checkout.session.completed") {
+  if (event.type !== "checkout.session.completed" && event.type !== "checkout.session.async_payment_succeeded") {
     return null;
   }
 
@@ -309,24 +303,24 @@ function normalizeAiCreditPurchase(event: Stripe.Event) {
   const checkoutSessionId = readOptionalString(session.id);
   const ownerId = readOptionalString(metadata.hostedOwnerId ?? metadata.workspaceOwnerId);
   const stripeCustomerId = readOptionalString(session.customer);
-  const creditedBudgetCents = readPositiveIntegerString(metadata.aiCreditCents);
-  const amountPaidCents = typeof session.amount_total === "number" && Number.isFinite(session.amount_total)
-    ? session.amount_total
-    : null;
-  const currency = readOptionalString(session.currency)?.toLowerCase() ?? "usd";
-
-  if (!checkoutSessionId || !ownerId || creditedBudgetCents === null || amountPaidCents === null) {
-    return null;
+  const creditedBudgetCents = typeof metadata.aiCreditCents === "string" && /^\d{1,10}$/.test(metadata.aiCreditCents)
+    ? Number(metadata.aiCreditCents) : null;
+  const amountPaidCents = session.amount_total;
+  if (session.object !== "checkout.session" || session.mode !== "payment" || session.currency !== "usd"
+    || !checkoutSessionId?.startsWith("cs_") || !isValidStripeId(checkoutSessionId)
+    || !stripeCustomerId?.startsWith("cus_") || !isValidStripeId(stripeCustomerId)
+    || !ownerId || !isValidOwnerId(ownerId) || !event.id.startsWith("evt_") || !isValidStripeId(event.id)
+    || !isPositiveHostedCreditCents(creditedBudgetCents) || !isPositiveHostedCreditCents(amountPaidCents)) {
+    return { status: "invalid" } as const;
   }
+  if (session.payment_status === "unpaid" && event.type === "checkout.session.completed") return { status: "pending" } as const;
+  if (session.payment_status !== "paid") return { status: "invalid" } as const;
 
   return {
-    checkoutSessionId,
-    ownerId,
-    stripeCustomerId,
-    creditedBudgetCents,
-    amountPaidCents,
-    currency
-  };
+    status: "paid",
+    purchase: { checkoutSessionId, ownerId, stripeCustomerId, amountPaidCents, creditedBudgetCents,
+      currency: session.currency, eventId: event.id, eventType: event.type }
+  } as const;
 }
 
 export {
@@ -520,29 +514,22 @@ export function createHostedBillingWebhookRouteHandlers(
         );
       }
 
-      const aiCreditPurchase = normalizeAiCreditPurchase(event);
-
-      if (aiCreditPurchase) {
-        await (dependencies.recordAiCreditPurchase ?? recordHostedAiCreditPurchase)(env, {
-          checkoutSessionId: aiCreditPurchase.checkoutSessionId,
-          ownerId: aiCreditPurchase.ownerId,
-          stripeCustomerId: aiCreditPurchase.stripeCustomerId,
-          amountPaidCents: aiCreditPurchase.amountPaidCents,
-          creditedBudgetCents: aiCreditPurchase.creditedBudgetCents,
-          currency: aiCreditPurchase.currency,
-          createdAt: new Date(event.created * 1000).toISOString()
-        });
-
-        const newlyProcessed = await (dependencies.markEventProcessed ?? markStripeEventProcessed)(env, {
-          id: event.id,
-          type: event.type,
-          createdAt: new Date(event.created * 1000).toISOString()
-        });
-
-        if (!newlyProcessed) {
-          return NextResponse.json({ acknowledged: true });
+      const creditPurchase = normalizeAiCreditPurchase(event);
+      if (creditPurchase) {
+        if (creditPurchase.status === "invalid") {
+          return NextResponse.json({ error: "Invalid hosted billing webhook payload." }, { status: 400 });
         }
-
+        if (creditPurchase.status === "paid") {
+          try {
+            await (dependencies.recordAiCreditPurchase ?? recordHostedAiCreditPurchase)(env, {
+              ...creditPurchase.purchase, createdAt: new Date(event.created * 1000).toISOString()
+            });
+          } catch {
+            console.warn("Hosted Stripe credit purchase reconciliation failed.");
+            return NextResponse.json({ error: "Hosted billing is temporarily unavailable." },
+              { status: 503, headers: { "Cache-Control": "no-store" } });
+          }
+        }
         return NextResponse.json({ acknowledged: true });
       }
 

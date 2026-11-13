@@ -19,6 +19,16 @@ const DEFAULT_AI_TOP_UP_CREDIT_CENTS = 1_000;
 const DEFAULT_AI_TOP_UP_PRICE_CENTS = 1_500;
 const DEFAULT_MAX_OUTPUT_TOKENS = AI_TASKS["workspace-summary"].maxOutputTokens;
 
+export function isPositiveHostedCreditCents(value: unknown): value is number {
+  // Both paid and granted cents are stored in PostgreSQL INTEGER columns.
+  return typeof value === "number" && Number.isInteger(value) && value > 0 && value <= 2_147_483_647;
+}
+
+export function hasValidHostedAiTopUpTerms(env: HostedAiBillingEnvironment): boolean {
+  return [env.TAX_ENGINE_AI_HELPER_TOP_UP_CREDIT_CENTS, env.TAX_ENGINE_AI_HELPER_TOP_UP_PRICE_CENTS]
+    .every(value => !value?.trim() || isPositiveHostedCreditCents(readConfiguredNumber(value)));
+}
+
 function readConfiguredNumber(
   rawValue: string | undefined
 ) {

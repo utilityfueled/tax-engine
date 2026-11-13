@@ -798,6 +798,8 @@ describe("hosted billing", () => {
         object: {
           object: "checkout.session",
           id: "cs_ai_credit_pack",
+          mode: "payment",
+          payment_status: "paid",
           customer: "cus_ai_credit_pack",
           amount_total: 1500,
           currency: "usd",
@@ -848,9 +850,11 @@ describe("hosted billing", () => {
         amountPaidCents: 1500,
         creditedBudgetCents: 1000,
         currency: "usd",
-        createdAt: new Date(1_775_000_000 * 1000).toISOString()
+        createdAt: new Date(1_775_000_000 * 1000).toISOString(),
+        eventId: "evt_ai_credit_pack",
+        eventType: "checkout.session.completed"
       }
     ]);
-    expect(processedEvents).toEqual(["evt_ai_credit_pack"]);
+    expect(processedEvents).toEqual([]);
   });
 });

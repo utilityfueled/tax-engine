@@ -77,7 +77,8 @@ describe("hosted Stripe signed delivery recovery", () => {
   it("persists delayed credit deliveries through the existing idempotent checkout ledger", async () => {
     const created = now - 3 * 86400;
     const payload = JSON.stringify({ id: "evt_delivery_credits", livemode: false, type: "checkout.session.completed", created,
-      data: { object: { object: "checkout.session", id: "cs_delivery_credits", customer: "cus_delivery",
+      data: { object: { object: "checkout.session", mode: "payment", payment_status: "paid",
+        id: "cs_delivery_credits", customer: "cus_delivery",
         amount_total: 1500, currency: "usd", metadata: { purchaseKind: "ai-credit-pack",
           hostedOwnerId: "owner-delivery", aiCreditCents: "1000" } } } });
     const recorded = new Map<string, unknown>();
@@ -86,7 +87,7 @@ describe("hosted Stripe signed delivery recovery", () => {
       recorded.set(input.checkoutSessionId, input);
       return true;
     });
-    const markEventProcessed = vi.fn().mockResolvedValueOnce(true).mockResolvedValueOnce(false);
+    const markEventProcessed = vi.fn();
     const { POST } = createHostedBillingWebhookRouteHandlers({ env, recordAiCreditPurchase, markEventProcessed });
     expect((await POST(request(payload))).status).toBe(200);
     vi.setSystemTime((now + 1) * 1000);
@@ -95,8 +96,71 @@ describe("hosted Stripe signed delivery recovery", () => {
     expect(recorded.size).toBe(1);
     expect(recorded.get("cs_delivery_credits")).toEqual({ checkoutSessionId: "cs_delivery_credits",
       ownerId: "owner-delivery", stripeCustomerId: "cus_delivery", amountPaidCents: 1500,
-      creditedBudgetCents: 1000, currency: "usd", createdAt: new Date(created * 1000).toISOString() });
-    expect(markEventProcessed).toHaveBeenCalledTimes(2);
+      creditedBudgetCents: 1000, currency: "usd", createdAt: new Date(created * 1000).toISOString(),
+      eventId: "evt_delivery_credits", eventType: "checkout.session.completed" });
+    expect(markEventProcessed).not.toHaveBeenCalled();
+  });
+
+  function creditPayload(session: Record<string, unknown>, type = "checkout.session.completed") {
+    return JSON.stringify({ id: "evt_credit_payment_facts", type, created: now, livemode: false,
+      data: { object: { object: "checkout.session", mode: "payment", payment_status: "paid",
+        id: "cs_credit_payment_facts", customer: "cus_delivery", amount_total: 1500, currency: "usd",
+        metadata: { purchaseKind: "ai-credit-pack", hostedOwnerId: "owner-delivery", aiCreditCents: "1000" },
+        ...session,
+      } },
+    });
+  }
+
+  it("waits for a paid Stripe Checkout before settling credits", async () => {
+    const recordAiCreditPurchase = vi.fn<typeof recordHostedAiCreditPurchase>(async () => true);
+    const markEventProcessed = vi.fn();
+    const reconcileSubscription = vi.fn();
+    const { POST } = createHostedBillingWebhookRouteHandlers({ env, recordAiCreditPurchase, markEventProcessed, reconcileSubscription });
+    expect((await POST(request(creditPayload({ payment_status: "unpaid" })))).status).toBe(200);
+    expect(recordAiCreditPurchase).not.toHaveBeenCalled();
+    expect(markEventProcessed).not.toHaveBeenCalled();
+    expect(reconcileSubscription).not.toHaveBeenCalled();
+
+    const paid = await POST(request(creditPayload({}, "checkout.session.async_payment_succeeded")));
+    expect(paid.status).toBe(200);
+    expect(recordAiCreditPurchase).toHaveBeenCalledExactlyOnceWith(env, expect.objectContaining({
+      checkoutSessionId: "cs_credit_payment_facts", eventType: "checkout.session.async_payment_succeeded",
+      eventId: "evt_credit_payment_facts", amountPaidCents: 1500, creditedBudgetCents: 1000,
+    }));
+    expect(markEventProcessed).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    { payment_status: "no_payment_required" }, { payment_status: undefined }, { amount_total: 0 }, { amount_total: 1500.5 },
+    { amount_total: 2147483648 }, { currency: undefined }, { currency: "eur" }, { mode: "subscription" },
+    { object: "subscription" }, { id: "sub_wrong" }, { customer: null },
+    { metadata: { purchaseKind: "ai-credit-pack", hostedOwnerId: "owner-delivery", aiCreditCents: "2147483648" } },
+  ])("rejects invalid paid credit originals without a write (%j)", async session => {
+    const recordAiCreditPurchase = vi.fn();
+    const markEventProcessed = vi.fn();
+    const reconcileSubscription = vi.fn();
+    const { POST } = createHostedBillingWebhookRouteHandlers({ env, recordAiCreditPurchase, markEventProcessed, reconcileSubscription });
+    expect((await POST(request(creditPayload(session)))).status).toBe(400);
+    expect(recordAiCreditPurchase).not.toHaveBeenCalled();
+    expect(markEventProcessed).not.toHaveBeenCalled();
+    expect(reconcileSubscription).not.toHaveBeenCalled();
+  });
+
+  it("returns a redacted retry response when a credit settlement fails", async () => {
+    const recordAiCreditPurchase = vi.fn<typeof recordHostedAiCreditPurchase>().mockRejectedValueOnce(new Error("synthetic secret"))
+      .mockResolvedValueOnce(true);
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    try {
+      const { POST } = createHostedBillingWebhookRouteHandlers({ env, recordAiCreditPurchase });
+      const payload = creditPayload({});
+      const failed = await POST(request(payload));
+      expect(failed.status).toBe(503);
+      expect(failed.headers.get("cache-control")).toBe("no-store");
+      await expect(failed.json()).resolves.toEqual({ error: "Hosted billing is temporarily unavailable." });
+      expect(JSON.stringify(warn.mock.calls)).not.toContain("synthetic secret");
+      expect((await POST(request(payload))).status).toBe(200);
+      expect(recordAiCreditPurchase).toHaveBeenCalledTimes(2);
+    } finally { warn.mockRestore(); }
   });
 
   it("rejects a stale signed delivery before persistence", async () => {
