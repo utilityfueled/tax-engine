@@ -4,6 +4,23 @@ The [current continuation on `main`](upgrade-2026-current-status.md) reconciles
 the latest source, checks, active work and external inputs. The dated entries
 below retain their original evidence boundaries.
 
+## Active continuation — November 13 Eastern
+
+- [x] Update the signed Stripe subscription tests to verify sanitized 503
+  responses, transaction rollback and a fresh retry. Verify both documented
+  Ohio local header jurisdictions in the state review copy. Earlier archived
+  runs retain 21 failures from the stale expectations.
+- [x] Implement the documented active cash-farm CRP exclusion and the 2025
+  zero-tax Schedule SE review attachment in `85e34a0d`. Engine and review
+  tests pass. Integrated positive Form 1099-G Box 7 routing, guided intake,
+  final forms and qualified human review remain open.
+- [ ] Finish the archived `c94971cd` coverage and browser runs. The nine static
+  checks and 27,558 unit tests passed. The native rehearsal remains conditional
+  on the exact approval, complete run and fresh custody/capacity checks.
+- [ ] Finish independent review of the AI credit-issuance and recovery candidate.
+  Rehearse deployed outages, automatic Stripe retry and atomic billing on a
+  fresh protected Preview after the old synthetic database expired.
+
 ## Active continuation — November 12 Eastern
 
 - [x] Continue on local `main` after PR #13. Keep pushes on hold while the

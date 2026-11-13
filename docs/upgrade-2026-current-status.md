@@ -1,5 +1,20 @@
 # Current 2026 upgrade continuation
 
+## November 13 on `main`
+
+`be6fc326` verifies sanitized Stripe subscription retry errors and their actual
+database effects. `c94971cd` verifies the two documented Ohio local tax header
+jurisdictions. Both predecessor archives stopped on the same 21 stale test
+expectations. Exact `c94971cd` passed nine static commands and all 27,558 unit
+tests. Its coverage and browser run and its separate conditional native
+rehearsal are pending.
+
+`85e34a0d` adds the original-bound cash-farm CRP exclusion and 2025 review
+attachment, including preflight before any output when the facts changed or
+whole dollars would show a contradictory attachment threshold. Its 1,535
+focused and adjacent tests passed. Positive Form 1099-G Box 7 intake and
+qualified review are still open. See the [package evidence](upgrade-2026-progress.md).
+
 ## November 12 on `main`
 
 PR #13 merged as `59248889`. The merge has the same source tree as

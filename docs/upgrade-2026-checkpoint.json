@@ -23288,6 +23288,29 @@
     "fullUpdatedCollectionQualified": false,
     "filingQualified": false
   },
+  "nov13CashFarmCrp": {
+    "commit": "85e34a0d",
+    "focusedPassed": 1535,
+    "focusedFiles": 15,
+    "specReferencesPassed": 8772,
+    "engineeringReviewPassedBeforeFinalPresentationHold": 17,
+    "matchingRenderedPages": 16,
+    "independentReportSha256": "c175bc18ed42924b627366f472dc35c7d12f67774e3cf446f40b27633584fab8",
+    "guidedBox7IntakeQualified": false,
+    "filingQualified": false,
+    "humanTaxReviewComplete": false
+  },
+  "nov13CombinedRegressionRepair": {
+    "stripeCommit": "be6fc326",
+    "ohioCommit": "c94971cd",
+    "earlierArchivedUnitFailureCountEach": 21,
+    "archived6252ChecksSha256": "9ba9e87f7bb2409405d6bc83e191efac50689db19c369c2ae6cc7cf9c352ba6c",
+    "archivedTrustedPdfChecksSha256": "8fd727aac7a2df68eaa3c24cf10b74388a0c871b3603ee38f5a4b31b34a76fdc",
+    "successorUnitPassed": 27558,
+    "successorUnitFiles": 1988,
+    "successorTrackedSourcePins": 5606,
+    "nativeRuntimeExecuted": false
+  },
   "nov12HostedCreditSettlement": {
     "previewReceiptCommit": "d39209dec302d249a5f01fe8baf23cc4ca2130f8",
     "settlementCommit": "8357ed9929766a8e5ed0ac7c45321cdccd44d35a",

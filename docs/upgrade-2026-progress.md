@@ -4251,3 +4251,36 @@ execution and current image qualification require separate evidence.
   separate from native Compose, current-source hosted CI and runtime scans.
   The approved `acb776cb` VM rehearsal did not start because that commit
   failed its required local run.
+
+### November 13 · Combined regressions and cash-farm CRP
+
+- The exact `f4b09ceb` and `e4025f63` archives passed nine static checks and
+  stopped after 21 unit failures each. Twenty older signed Stripe tests
+  expected private exceptions from the new public retry boundary. One Ohio
+  test still expected Columbus-only copy. `be6fc326` now checks the public
+  uncached 503, the actual failed dependency and the exact effects of rollback
+  and a fresh successful retry. `c94971cd` checks both qualified Ohio header
+  examples, distinct business and school-payroll locations, and the continued
+  filing denial. The successor passed all 27,558 unit tests in 1,988 files.
+  Coverage and browser evidence is recorded separately as it closes.
+- `85e34a0d` requires actual same-owner dated CRP receipts, evidence of Social
+  Security benefit type and timing, a reconciled annual SSA-1099 and confirmation
+  of zero attributable Schedule F deductions. It retains the taxable farm
+  payment, uses the regular-method exclusion for self-employment earnings and
+  verifies downstream Form 7206, QBI, the 2025 EIC table and ACTC. The finite
+  method holds separate passive, partnership and mixed-source allocation cases.
+  The registered 2025 review packet shows the required zero-tax Schedule SE
+  attachment and Schedule 2 zero. Stale amounts and conflicting whole-dollar
+  display at the $400 or $434 thresholds stop before any packet output.
+  The root run passed 1,535 tests in 15 files, three type checks and 8,772 spec
+  references. Independent engineering review passed 17 tests before the final
+  presentation hold, with 16 matching rendered pages and a separate test
+  demonstrating the earlier $433.99 display ambiguity. Its report SHA-256 is
+  `c175bc18ed42924b627366f472dc35c7d12f67774e3cf446f40b27633584fab8`.
+  Positive typed Form 1099-G Box 7 integration, guided intake, final 2026 forms
+  and qualified human tax review remain open.
+  [2026 Schedule SE instructions](https://www.irs.gov/pub/irs-prior/i1040sse--2026.pdf) ·
+  [26 USC §1402](https://uscode.house.gov/us/usc/119-134/t26/s1402/) ·
+  [Publication 225](https://www.irs.gov/publications/p225) ·
+  [Publication 596](https://www.irs.gov/publications/p596) ·
+  [2025 EIC table](https://www.irs.gov/instructions/i1040gi).
