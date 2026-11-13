@@ -1,17 +1,17 @@
 form: "Form 3903 final 2026 physical candidate"
 fullName: "Final 2026 Form 3903 physical field source contract"
 taxYear: 2026
-reference: "https://www.irs.gov/pub/irs-pdf/f3903.pdf"
-instructions: "https://www.irs.gov/pub/irs-pdf/i3903.pdf"
+reference: "https://www.irs.gov/pub/irs-prior/f3903--2026.pdf"
+instructions: "https://www.irs.gov/pub/irs-prior/i3903--2026.pdf"
 revision: "Created 9/17/26, IRS final index posted 11/06/2026"
 retrievedAt: "2026-11-13T01:23:09Z"
 notes: |
-  Physical source only. The engine currently accepts military moving-expense
-  facts and emits a reference summary. The 2026 printed certification includes
+  Disabled physical candidate. The 2026 printed certification includes
   qualifying intelligence-community assignment moves under P.L. 119-21
-  section 70113. Neither additional eligibility nor expense calculations are
-  enabled by this candidate. Review the final parent forms and separately
-  qualify facts, calculations, security and output before use.
+  section 70113. The internal projector reuses the 2026 source calculation
+  for one confirmed domestic move by a single taxpayer. Review the final
+  parent forms and independently qualify facts, calculations, security and
+  output before use.
 lines:
   - line: "revision"
     description: "Pin the final annual PDF"
@@ -40,6 +40,26 @@ lines:
     description: "Check both line 5 branches and checked and unchecked certification after save"
     formula: "Use fictional placements with a redacted identifier and one review notice. Check each widget value and appearance after reopening. Leave the line 5 amount blank on the No probe."
     testRef: "tests/pdf/form-3903-2026-candidate.test.ts::retains the diagnostic values and checkbox states after save"
+  - line: "confirmed annual amounts and branches"
+    description: "Project the canonical amount and certification fields for one domestic move"
+    formula: >-
+      Confirm the complete 2026 move, actual eligibility and federal-only filing
+      unit before projecting. Reconcile positive line 4 to the actual 2026 Code P
+      and explicitly documented omitted excess, and use the calculated amounts
+      without re-entering them. Render lines 1 through 4 in whole dollars, check
+      the certification, and select exactly one line 5 branch. On Yes fill the
+      calculated deduction. On No leave the amount blank. No names, identifiers,
+      move references, dates or payroll originals enter the field output.
+    testRef: "tests/pdf/form-3903-2026-candidate.test.ts::projects complete source amounts and both certified line 5 branches"
+  - line: "annual projection boundaries"
+    description: "Refuse incomplete facts and arithmetic that cannot print consistently"
+    formula: >-
+      Hold legacy, other-year, foreign, Form 2555, multiple-move, state and
+      non-primary-owner packets. Refuse incomplete or inconsistent Code P
+      reconciliation. Round exact lines only after calculation and hold a PDF
+      whose rounded totals, comparison or parent transfer cannot reproduce
+      the canonical results. A true equal amount selects No with blank line 5.
+    testRef: "tests/pdf/form-3903-2026-candidate.test.ts::holds unqualified or inconsistent moving projections"
   - line: "closed-exports"
     description: "Keep public review and filing disabled"
     formula: "The candidate has no route or export registration. The source is unapproved for both historical and 2026 review."

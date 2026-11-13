@@ -1,4 +1,4 @@
-/** Spec: spec/federal/form-3903-2026-template.yaml. Physical source only. */
+/** Spec: spec/federal/form-3903-2026-template.yaml. */
 import { createHash } from "node:crypto";
 import { lstat, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
@@ -6,6 +6,8 @@ import { describe, expect, it } from "vitest";
 import { PDFArray, PDFCheckBox, PDFDict, PDFDocument, PDFName, PDFRawStream, PDFTextField, decodePDFRawStream } from "pdf-lib";
 import { assertPdfExportAllowed, markReviewPdf, PDF_MAPPING_PACKS, REVIEW_PDF_NOTICE } from "@/pdf/export-policy.js";
 import { assertReviewTemplateBytes, REVIEW_TEMPLATE_PACKS } from "@/pdf/template-registry.js";
+import { TaxYearInputSchema } from "@/models/inputs.js";
+import { simpleW2Fixture } from "../fixtures/simple-w2.js";
 
 const blank = new URL("../../forms/blank/2026/f3903.pdf", import.meta.url);
 type SourceContract = {
@@ -29,6 +31,20 @@ function expectNonemptyStream(appearance: unknown) {
   expect(appearance).toBeInstanceOf(PDFRawStream);
   expect(decodePDFRawStream(appearance as PDFRawStream).decode().length).toBeGreaterThan(0);
 }
+
+const eligibility = { kind: "military", activeDuty: true, permanentChangeOfStationOrdered: true } as const;
+const move = {
+  moveReference: "PRIVATE-2026-MOVE", accountHolder: "primary", date: "2026-07-01",
+  domesticSameYearConfirmed: true, eligibility, lineAmountsConfirmed: true,
+  transportationAndStorage: "20.10", reimbursementsExcludedFromIncome: "0",
+  travel: { transportationAndLodging: "1.12", vehicle: { method: "mileage", parkingAndTolls: "1.01", entries: [
+    { date: "2026-06-30", miles: "101.2" }, { date: "2026-07-01", miles: "202.4" },
+  ] } },
+} as const;
+const base = { ...simpleW2Fixture, taxpayer: { ...simpleW2Fixture.taxpayer, taxYear: 2026 } };
+const annualMove = (facts: object = {}) => ({ taxYear: 2026, moves: [{ ...move, ...facts }] });
+const codeP = (amount: string) => [{ ...base.w2s[0], accountHolder: "primary" as const, taxYear: 2026, box12CodeP: amount }];
+const projection = async () => (await import("@/pdf/mappings/2026/form-3903-candidate.js")).projectForm3903CandidateFields;
 
 describe("Final 2026 Form 3903 physical candidate", () => {
   it("pins the exact final annual source", async () => {
@@ -135,6 +151,72 @@ describe("Final 2026 Form 3903 physical candidate", () => {
         await writeFile(join(directory, `form-3903-${deduction ? "yes" : "no"}.pdf`), bytes, { flag: "wx", mode: 0o600 });
       }
     }
+  });
+
+  it("projects complete source amounts and both certified line 5 branches", async () => {
+    const [candidate, project, source] = await Promise.all([mapping(), projection(), readFile(blank)]);
+    const { fields } = candidate;
+    const cases = [
+      { label: "deduction", reimbursement: "0", w2s: base.w2s, omitted: undefined, lines: ["20", "70", "90", "0", "90"], yes: true },
+      { label: "excess", reimbursement: "110", w2s: codeP("90"), omitted: "20", lines: ["20", "70", "90", "110", undefined], yes: false },
+      { label: "equal", reimbursement: "90", w2s: codeP("90"), omitted: "0", lines: ["20", "70", "90", "90", undefined], yes: false },
+    ];
+    for (const item of cases) {
+      const form3903 = annualMove(item.label === "deduction" ? { transportationAndStorage: "19.50" } : {
+        eligibility: { kind: "intelligence-community", employmentStatus: "new-appointee", qualifyingElement: true, nonMilitary: true, assignmentRequiresRelocation: true },
+        transportationAndStorage: "19.56", reimbursementsExcludedFromIncome: item.reimbursement, omittedTaxableExcess: item.omitted,
+      });
+      const input = TaxYearInputSchema.parse({ ...base, w2s: item.w2s, form3903 });
+      const projected = project(input);
+      expect(Object.keys(projected)).toHaveLength(item.yes ? 8 : 7);
+      expect([fields.line1, fields.line2, fields.line3, fields.line4, fields.line5].map(field => projected[field])).toEqual(item.lines);
+      expect([fields.certification, fields.line5Yes, fields.line5No].map(field => projected[field])).toEqual([true, item.yes, !item.yes]);
+      const pdf = await PDFDocument.load(source);
+      const form = pdf.getForm();
+      for (const [name, value] of Object.entries(projected)) {
+        if (typeof value === "string") form.getTextField(name).setText(value);
+        else if (value) form.getCheckBox(name).check();
+        else form.getCheckBox(name).uncheck();
+      }
+      await markReviewPdf(pdf);
+      const bytes = await pdf.save();
+      const saved = (await PDFDocument.load(bytes)).getForm();
+      expect(saved.getTextField(fields.name).getText()).toBeUndefined();
+      expect(saved.getTextField(fields.ssn).getText()).toBeUndefined();
+      expect(saved.getTextField(fields.line5).getText()).toBe(item.lines[4]);
+      for (const [name, value] of Object.entries(projected)) {
+        if (typeof value === "string") expect(saved.getTextField(name).getText()).toBe(value);
+        else expect(saved.getCheckBox(name).isChecked()).toBe(value);
+      }
+      if (process.env.TAX_CANDIDATE_ARTIFACT_DIR) {
+        const directory = process.env.TAX_CANDIDATE_ARTIFACT_DIR;
+        const stat = await lstat(directory);
+        if (!stat.isDirectory() || stat.isSymbolicLink()) throw new Error("Artifact directory must be a real directory");
+        await writeFile(join(directory, `form-3903-project-${item.label}.pdf`), bytes, { flag: "wx", mode: 0o600 });
+      }
+    }
+  });
+
+  it("holds unqualified or inconsistent moving projections", async () => {
+    const project = await projection();
+    const current = TaxYearInputSchema.parse({ ...base, form3903: annualMove() });
+    const rejects = [
+      [{ ...current, form3903: undefined }, /source/i],
+      [{ ...current, taxpayer: { ...current.taxpayer, taxYear: 2025 } }, /2026/i],
+      [{ ...current, form2555: {} }, /federal-only/i],
+      [{ ...current, ohioResidency: {} }, /federal-only/i],
+      [{ ...current, taxpayer: { ...current.taxpayer, filingStatus: "head_of_household" } }, /single/i],
+      [{ ...current, form3903: annualMove({ accountHolder: "spouse" }) }, /primary/i],
+      [{ ...current, form3903: annualMove({ domesticSameYearConfirmed: false }) }, /source/i],
+      [{ ...current, form3903: { taxYear: 2026, moves: [move, { ...move, date: "2026-08-01", moveReference: "OTHER" }] } }, /one/i],
+      [TaxYearInputSchema.parse({ ...base, form3903: annualMove({ reimbursementsExcludedFromIncome: "10" }) }), /Code P/i],
+      [TaxYearInputSchema.parse({ ...base, w2s: codeP("9"), form3903: annualMove({ reimbursementsExcludedFromIncome: "10", omittedTaxableExcess: "0" }) }), /reconcile/i],
+      [current, /rounded/i],
+      [TaxYearInputSchema.parse({ ...base, w2s: codeP("90.10"), form3903: annualMove({
+        transportationAndStorage: "19.69", reimbursementsExcludedFromIncome: "90.10", omittedTaxableExcess: "0",
+      }) }), /rounded/i],
+    ] as const;
+    for (const [value, message] of rejects) expect(() => project(value as Parameters<typeof project>[0])).toThrow(message);
   });
 
   it("keeps every export gate closed", async () => {

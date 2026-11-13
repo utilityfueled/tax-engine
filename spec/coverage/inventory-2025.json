@@ -3922,7 +3922,7 @@
       "key": "federal/form-3903-2026-template",
       "jurisdiction": "federal",
       "taxYear": 2026,
-      "sourceAuthority": "https://www.irs.gov/pub/irs-pdf/f3903.pdf",
+      "sourceAuthority": "https://www.irs.gov/pub/irs-prior/f3903--2026.pdf",
       "specPath": "spec/federal/form-3903-2026-template.yaml",
       "enginePath": null,
       "packetPath": null,
