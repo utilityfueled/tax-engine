@@ -112,8 +112,15 @@ try {
   const removedPackages = beforePackages.filter(([name]) => targets.has(name.split(":")[0]));
   assert.deepEqual(removedPackages.map(([name]) => name.split(":")[0]).sort(), [...targets].sort());
   assert.ok(removedPackages.every(([, , status]) => status === "installed"));
-  assert.deepEqual(afterPackages, beforePackages.filter(([name]) => !targets.has(name.split(":")[0])),
-    "Exactly apt and libapt-pkg7.0 may disappear; every other full package name, version and status must remain unchanged.");
+  const zlibPackages = beforePackages.filter(([name]) => name.split(":")[0] === "zlib1g");
+  assert.equal(zlibPackages.length, 1);
+  const [zlibBefore] = zlibPackages;
+  assert.deepEqual(zlibBefore.slice(1), ["1:1.3.dfsg+really1.3.1-1+b1", "installed"]);
+  const zlibAfter = [zlibBefore[0], "1:1.3.dfsg+really1.3.1-1+deb13u1", "installed"];
+  const expectedPackages = beforePackages.filter(([name]) => !targets.has(name.split(":")[0]))
+    .map(row => row === zlibBefore ? zlibAfter : row);
+  assert.deepEqual(afterPackages, expectedPackages,
+    "Require the exact Debian zlib1g security update and both APT purges while preserving every other package record.");
   const planArguments = ["run", "--rm", "--network", "none", "--user", "0", "--entrypoint", "/usr/bin/dpkg",
     baseline.Id, "--no-act", "--purge", "apt", "libapt-pkg7.0"];
   const removalPlan = spawnSync(runtime, [...connection.args, ...planArguments], { encoding: "utf8", env: connection.env });
@@ -125,7 +132,7 @@ try {
       layers: baseline.RootFS.Layers },
     candidate: { id: candidate.Id, os: candidate.Os, architecture: candidate.Architecture, layers: candidate.RootFS.Layers,
       sourceRevision: candidate.Config?.Labels?.["org.opencontainers.image.revision"] ?? null },
-    beforePackages, afterPackages, removedPackages,
+    beforePackages, afterPackages, removedPackages, updatedPackages: [{ before: zlibBefore, after: zlibAfter }],
     removalPlan: { arguments: planArguments, status: removalPlan.status, stdout: removalPlan.stdout, stderr: removalPlan.stderr },
   };
   assert.equal(processEvidence.providerKeys, false);

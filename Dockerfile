@@ -4,6 +4,8 @@ FROM node:26.13.1-trixie-slim@sha256:e6bedef217677b276c591795e169840edd9096dbf13
 ENV PNPM_HOME="/pnpm"
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV PATH="$PNPM_HOME:$PATH"
+RUN --mount=type=bind,source=scripts/install-debian-zlib.mjs,target=/tmp/install-debian-zlib.mjs,readonly \
+    node /tmp/install-debian-zlib.mjs
 RUN npm pack --ignore-scripts --pack-destination /tmp pnpm@10.34.8 \
     && node -e 'const fs=require("node:fs"); const crypto=require("node:crypto"); if ("sha512-"+crypto.createHash("sha512").update(fs.readFileSync("/tmp/pnpm-10.34.8.tgz")).digest("base64")!=="sha512-9ieo6XE0Ov5J39D2PQKCNCAd+oMdXLWIcz4eX42ya/FpiaMhYatcG02zsf28NzFgYGtbieAC323RmoWt+R/FqA==") throw new Error("pnpm archive integrity mismatch");' \
     && npm install --global --ignore-scripts --no-audit --no-fund /tmp/pnpm-10.34.8.tgz \
@@ -29,6 +31,8 @@ RUN NODE_OPTIONS="--max-old-space-size=${NODE_BUILD_MAX_OLD_SPACE_MB}" pnpm --fi
 
 # Production runner
 FROM node:26.13.1-trixie-slim@sha256:e6bedef217677b276c591795e169840edd9096dbf13f29df8ef8d1856b8820bc AS runner
+RUN --mount=type=bind,source=scripts/install-debian-zlib.mjs,target=/tmp/install-debian-zlib.mjs,readonly \
+    node /tmp/install-debian-zlib.mjs
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV HOSTNAME=0.0.0.0

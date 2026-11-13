@@ -23164,5 +23164,19 @@
     "independentPixelIdenticalPages": 36,
     "independentReportSha256": "6fb5998bd9b4979054b88d923b79612c9b39be0ce3d6f0911f6a4223746fb80c",
     "remoteSuccessorRequired": true
+  },
+  "nov12DebianZlibSecurity": {
+    "sourceBaseline": "6fe8dcace9270a54606e63ee42925b53968ba7f2",
+    "advisory": "DSA-6613-1",
+    "fixedPackage": "1:1.3.dfsg+really1.3.1-1+deb13u1",
+    "cves": ["CVE-2026-27171", "CVE-2026-76844", "CVE-2026-85091"],
+    "baselinePassed": 6,
+    "baselineExpectedFailures": 2,
+    "sourceContractPassed": 8,
+    "verifiedHttpsArchives": 4,
+    "evidenceManifestSha256": "5ea0ee7c4c3895688751e0d7a4ff84fdcd233ecf90b3364ea2e22385c5509603",
+    "ledger": "docs/upgrade-2026-debian-zlib-security-work.md",
+    "actualRuntimeImageRequired": true,
+    "releaseReady": false
   }
 }

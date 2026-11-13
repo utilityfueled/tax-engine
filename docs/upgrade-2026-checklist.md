@@ -4,6 +4,23 @@ The [current continuation on `main`](upgrade-2026-current-status.md) reconciles
 the latest source, checks, active work and external inputs. The dated entries
 below retain their original evidence boundaries.
 
+## Active continuation — November 12 Eastern
+
+- [x] Continue on local `main` after PR #13. Keep pushes on hold while the
+  owner disables automatic Vercel production deployments. The previous merge
+  triggered production, and its strict container browser job failed.
+- [x] Pin Node 26.13.1 in `6fe8dcac` and install the exact fixed Trixie zlib
+  package in both image stages. The zlib source contract passes 8 cases, and
+  all four downloaded package archives match their signed package index.
+  [Zlib security evidence](upgrade-2026-debian-zlib-security-work.md).
+- [ ] Prove the installed package, complete strict browser and recovery,
+  and rescan final runtime images on Linux ARM64 and AMD64. Keep remaining
+  advisory dispositions and independent security/privacy review open.
+- [ ] Complete current-source hosted outage and automatic webhook retry
+  rehearsal with an isolated working database. The previous lease expired.
+- [ ] Finish final official form reconciliation, qualified tax and AI review,
+  and provider and hosted retail-ledger reconciliation before readiness.
+
 ## Active continuation — November 6 UTC
 
 - [x] PA prior-history `7788a750`: 181 focused tests and all relevant package

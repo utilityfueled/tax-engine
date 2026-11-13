@@ -9269,7 +9269,7 @@
       "key": "federal/node26-runtime-source-contract",
       "jurisdiction": "federal",
       "taxYear": 2026,
-      "sourceAuthority": "https://nodejs.org/en/blog/release/v26.13.1; https://nodejs.org/en/blog/vulnerability/november-2026-security-releases; https://raw.githubusercontent.com/nodejs/docker-node/1274f3ee37d4d0e59d308ea25b83d9e21e4db862/26/trixie-slim/Dockerfile; https://registry.npmjs.org/pnpm/10.34.8",
+      "sourceAuthority": "https://nodejs.org/en/blog/release/v26.13.1; https://nodejs.org/en/blog/vulnerability/november-2026-security-releases; https://raw.githubusercontent.com/nodejs/docker-node/1274f3ee37d4d0e59d308ea25b83d9e21e4db862/26/trixie-slim/Dockerfile; https://registry.npmjs.org/pnpm/10.34.8; https://security-tracker.debian.org/tracker/DSA-6613-1",
       "specPath": "spec/federal/node26-runtime-source-contract.yaml",
       "enginePath": null,
       "packetPath": null,

@@ -1,7 +1,7 @@
 form: "Node26-Runtime-Source-Contract"
 fullName: "Node 26 runtime pins and reproducible Linux bootstrap"
 taxYear: 2026
-reference: "https://nodejs.org/en/blog/release/v26.13.1; https://nodejs.org/en/blog/vulnerability/november-2026-security-releases; https://raw.githubusercontent.com/nodejs/docker-node/1274f3ee37d4d0e59d308ea25b83d9e21e4db862/26/trixie-slim/Dockerfile; https://registry.npmjs.org/pnpm/10.34.8"
+reference: "https://nodejs.org/en/blog/release/v26.13.1; https://nodejs.org/en/blog/vulnerability/november-2026-security-releases; https://raw.githubusercontent.com/nodejs/docker-node/1274f3ee37d4d0e59d308ea25b83d9e21e4db862/26/trixie-slim/Dockerfile; https://registry.npmjs.org/pnpm/10.34.8; https://security-tracker.debian.org/tracker/DSA-6613-1"
 notes: |
   Operational source contract, not tax eligibility or a filing/readiness change.
   Node24.22.1/Undici7.30.1 Request(FormData) cancellation produced unhandled
@@ -27,6 +27,10 @@ notes: |
   This source pin is not a qualified build, scanner result or risk acceptance.
   Official trixie recipe installs libatomic1; both actual architectures still
   require native linkage, package/layer proof, recovery and fresh scan evidence.
+  Both image stages start with the older Debian zlib1g package. Apply the
+  exact DSA-6613-1 update before application commands in both stages. The
+  four architecture packages are content-addressed by Debian Snapshot and
+  their sizes and SHA-256 hashes come from the signed security repository.
 lines:
   - line: "package-roots"
     formula: "Root and web engines >=26.13.1 <27; package manager10.34.8 and all application/type pins remain unchanged."
@@ -41,8 +45,11 @@ lines:
     formula: "No corepack-enable assumption; fetch existing10.34.8 tarball, verify published SHA512 before global local-tarball install; ignore lifecycle scripts."
     testRef: "tests/runtime/node26-runtime-source-contract.test.ts::verifies the pinned pnpm archive before installing without lifecycle scripts"
   - line: "runtime-proof"
-    formula: "Actual runner must report exact Node 26.13.1 and Undici 8.12.4, retain libatomic1 and original non-root/layer/full-package/apt-removal proof."
+    formula: "Actual runner must report exact Node 26.13.1 and Undici 8.12.4, retain libatomic1 and original non-root/layer/full-package/apt-removal proof. Only zlib1g may change version, from the observed base version to the exact DSA update."
     testRef: "tests/runtime/node26-runtime-source-contract.test.ts::retains source guards for actual runtime identity and Linux dependency proof"
+  - line: "debian-zlib-update"
+    formula: "Both Docker stages install only zlib1g 1:1.3.dfsg+really1.3.1-1+deb13u1 using exact SHA-256 and size for the base's amd64, arm64, ppc64el and s390x package archives. Install using dpkg and verify the resulting package version and status."
+    testRef: "tests/runtime/node26-runtime-source-contract.test.ts::installs the exact Debian zlib fix in both image stages"
   - line: "frozen-dependencies"
     formula: "Root engine change and web engines addition preserved historical lock; separately reviewed dependency successor1fef5041 supplies the current exact frozen lock. Do not accept arbitrary lock drift."
     testRef: "tests/runtime/node26-runtime-source-contract.test.ts::preserves the reviewed dependency lock exactly"
