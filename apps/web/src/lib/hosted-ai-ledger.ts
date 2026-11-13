@@ -16,6 +16,7 @@ interface ReservationRow {
 interface AttemptRow {
   attempt: number; state: "running" | "unknown" | "accepted" | "rejected";
   model_id: string; started_at: Date; usage: AiTokenUsage | null; provider_cost_usd: string | null;
+  provider_request_id: string | null; reconciliation_reference: string | null;
 }
 export interface AiReservationIdentity { ownerId: string; requestId: string }
 export interface ReserveAiCreditsInput extends AiReservationIdentity {
@@ -109,8 +110,20 @@ export function createHostedAiLedger(pool: Pick<Pool, "connect">, mode: StripeBi
       identity(input);
       return transaction(input.ownerId, async client => {
         await row(client, input);
-        const result = await client.query("UPDATE hosted_ai_attempts SET state='unknown',provider_request_id=$4 WHERE owner_id=$1 AND request_id=$2 AND attempt=$3 AND state='running' RETURNING attempt", [input.ownerId, input.requestId, input.attempt, input.providerRequestId ?? null]);
-        if (result.rowCount) await client.query("UPDATE hosted_ai_reservations SET state='reconciliation-required',updated_at=NOW() WHERE owner_id=$1 AND request_id=$2", [input.ownerId, input.requestId]);
+        const values = [input.ownerId, input.requestId, input.attempt];
+        const result = await client.query<Pick<AttemptRow, "state" | "provider_request_id">>(
+          "SELECT state,provider_request_id FROM hosted_ai_attempts WHERE owner_id=$1 AND request_id=$2 AND attempt=$3", values);
+        const attempt = result.rows[0];
+        if (!attempt || (attempt.state !== "running" && attempt.state !== "unknown")) return;
+        if (input.providerRequestId && attempt.provider_request_id && input.providerRequestId !== attempt.provider_request_id) {
+          throw new Error("Conflicting AI provider request identifier.");
+        }
+        if (attempt.state === "unknown" && (!input.providerRequestId || attempt.provider_request_id)) return;
+        await client.query("UPDATE hosted_ai_attempts SET state='unknown',provider_request_id=$4 WHERE owner_id=$1 AND request_id=$2 AND attempt=$3",
+          [...values, attempt.provider_request_id ?? input.providerRequestId ?? null]);
+        if (attempt.state === "running") {
+          await client.query("UPDATE hosted_ai_reservations SET state='reconciliation-required',updated_at=NOW() WHERE owner_id=$1 AND request_id=$2", [input.ownerId, input.requestId]);
+        }
       });
     },
     async settle(input: AiReservationIdentity & { attempt: 1 | 2; usage: AiTokenUsage; accepted: boolean; final: boolean; reconciliationReference?: string; providerRequestId?: string }) {
@@ -120,8 +133,14 @@ export function createHostedAiLedger(pool: Pick<Pool, "connect">, mode: StripeBi
         const attempts = await client.query<AttemptRow>("SELECT * FROM hosted_ai_attempts WHERE owner_id=$1 AND request_id=$2 ORDER BY attempt", [input.ownerId, input.requestId]);
         const attempt = attempts.rows.find(entry => entry.attempt === input.attempt);
         if (!attempt) throw new Error("AI attempt was not started.");
+        if (input.providerRequestId && attempt.provider_request_id && input.providerRequestId !== attempt.provider_request_id) {
+          throw new Error("Conflicting AI provider request identifier.");
+        }
         const cost = calculateAiCost(attempt.model_id, attempt.started_at.toISOString(), input.usage);
         if (attempt.provider_cost_usd !== null) {
+          if (input.reconciliationReference !== undefined && input.reconciliationReference !== attempt.reconciliation_reference) {
+            throw new Error("Conflicting AI settlement reconciliation reference.");
+          }
           if ((attempt.state === "accepted") !== input.accepted) throw new Error("Conflicting AI settlement replay.");
           if (!new Money(attempt.provider_cost_usd).eq(cost.providerCostUsd) || JSON.stringify(attempt.usage) !== JSON.stringify(input.usage)) {
             // JSONB key order is not stable; compare by canonical sorted keys below.
@@ -135,7 +154,7 @@ export function createHostedAiLedger(pool: Pick<Pool, "connect">, mode: StripeBi
         if (attempt.provider_cost_usd === null) await client.query(`UPDATE hosted_ai_attempts SET state=$4,usage=$5::jsonb,provider_cost_usd=$6,pricing_effective_from=$7,
           provider_request_id=$8,reconciliation_reference=$9,completed_at=NOW() WHERE owner_id=$1 AND request_id=$2 AND attempt=$3`,
         [input.ownerId, input.requestId, input.attempt, input.accepted ? "accepted" : "rejected", JSON.stringify(input.usage), cost.providerCostUsd,
-          cost.pricingEffectiveFrom, input.providerRequestId ?? null, input.reconciliationReference ?? null]);
+          cost.pricingEffectiveFrom, attempt.provider_request_id ?? input.providerRequestId ?? null, input.reconciliationReference ?? null]);
         if (!input.final) {
           await client.query("UPDATE hosted_ai_reservations SET state='reserved',updated_at=NOW() WHERE owner_id=$1 AND request_id=$2", [input.ownerId, input.requestId]);
           return view({ ...reservation, state: "reserved" });
