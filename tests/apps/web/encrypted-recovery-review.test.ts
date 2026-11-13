@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createCipheriv, createHash, pbkdf2Sync } from 'node:crypto';
-import { assertEncryptedRecoveryOriginals } from '../../../apps/web/tests/helpers/encrypted-recovery-review';
+import { assertEncryptedRecoveryOriginals, expectedRecoveryFileTimestamp } from '../../../apps/web/tests/helpers/encrypted-recovery-review';
 import { exportWorkspaceRecovery, importWorkspaceRecovery } from '../../../apps/web/src/lib/workspace-recovery';
 import { WORKSPACE_STORAGE_KEY } from '../../../apps/web/src/lib/workspace-storage';
 import { getGuidedFlowStorageKey, initialFlowState } from '../../../apps/web/src/lib/guided-interview-flow';
@@ -25,6 +25,14 @@ function rejected(archive: string, candidatePassword = password, originals = exp
 }
 
 describe('spec encrypted-recovery-browser-evidence', () => {
+  it('uses the recorded upload time only for a legacy file without modification time', () => {
+    const uploadedAt = '2026-11-13T14:30:00.000Z';
+    expect(expectedRecoveryFileTimestamp(undefined, uploadedAt)).toBe(1794580200000);
+    expect(expectedRecoveryFileTimestamp(0, uploadedAt)).toBe(0);
+    expect(expectedRecoveryFileTimestamp(123456, 'unknown')).toBe(123456);
+    expect(() => expectedRecoveryFileTimestamp(undefined, 'unknown')).toThrow(/timestamp/u);
+    expect(() => expectedRecoveryFileTimestamp(-1, uploadedAt)).toThrow(/timestamp/u);
+  });
   it('accepts authenticated ciphertext with a deterministic short-marker coincidence', () => {
     const archive = encrypt();
     expect(JSON.parse(archive).ciphertext.includes(workspace.privateExtension.firstName)).toBe(true);

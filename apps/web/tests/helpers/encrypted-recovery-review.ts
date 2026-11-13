@@ -8,6 +8,17 @@ export interface RecoveryOriginals {
   guidedMode: string | null;
   files: ReadonlyArray<{ documentId: string; fileName: string; type: string; lastModified: number; bytes: Buffer }>;
 }
+
+/** Older self-host images kept the recorded upload time as their only file timestamp. */
+export function expectedRecoveryFileTimestamp(lastModified: unknown, uploadedAt: unknown): number {
+  const timestamp = lastModified === undefined && typeof uploadedAt === 'string'
+    ? Date.parse(uploadedAt) : lastModified;
+  if (typeof timestamp !== 'number' || !Number.isSafeInteger(timestamp) || timestamp < 0) {
+    throw new Error('The stored recovery file timestamp is invalid');
+  }
+  return timestamp;
+}
+
 const format = 'tax-engine-encrypted-recovery';
 function need(value: unknown): asserts value { if (!value) throw new Error('Invalid recovery evidence'); }
 function record(value: unknown): Record<string, unknown> {

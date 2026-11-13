@@ -12,7 +12,7 @@ import { setTimeout as delay } from "node:timers/promises";
 import { promisify } from "node:util";
 import { PDFDocument, StandardFonts } from "pdf-lib";
 import { ensureHostedAppSchema, getHostedServerDatabase } from "../apps/web/src/lib/hosted-server-db.ts";
-import { assertEncryptedRecoveryOriginals } from "../apps/web/tests/helpers/encrypted-recovery-review.ts";
+import { assertEncryptedRecoveryOriginals, expectedRecoveryFileTimestamp } from "../apps/web/tests/helpers/encrypted-recovery-review.ts";
 import { resolveLocalContainerRuntime } from "./local-container-runtime.mjs";
 import { collectRehearsalPageState, createRehearsalBrowserDiagnostics } from "./rehearsal-browser-diagnostics.mjs";
 
@@ -118,7 +118,8 @@ async function documentSources(page, id) {
       if (id === null) return records.length;
       return Promise.all(records.filter(record => record.workspaceId === id).map(async record => ({
         documentId: record.documentId, fileName: record.fileName, type: record.mediaType,
-        lastModified: record.lastModified, bytes: [...new Uint8Array(await record.file.arrayBuffer())],
+        lastModified: record.lastModified, uploadedAt: record.uploadedAt,
+        bytes: [...new Uint8Array(await record.file.arrayBuffer())],
       })));
     } finally { db.close(); }
   }, id);
@@ -137,9 +138,9 @@ async function captureRecoveryOriginals(page, id, originalFlow, originalBytes) {
   const sources = await documentSources(page, id);
   assert.ok(snapshot.workspace?.id === id && snapshot.guidedFlowRaw === originalFlow, "Saved recovery originals are incomplete.");
   assert.equal(sources.length, 1, "The synthetic return must have exactly one original PDF.");
-  const { bytes, ...metadata } = sources[0];
+  const { bytes, uploadedAt, lastModified, ...metadata } = sources[0];
   assert.ok(Buffer.from(bytes).equals(originalBytes), "Cached PDF differs from the original upload.");
-  return { ...snapshot, files: [{ ...metadata, bytes: originalBytes }] };
+  return { ...snapshot, files: [{ ...metadata, lastModified: expectedRecoveryFileTimestamp(lastModified, uploadedAt), bytes: originalBytes }] };
 }
 
 try {
@@ -313,7 +314,13 @@ try {
   await link.click();
   await page.reload();
   assert.equal(await page.evaluate(id => globalThis.localStorage.getItem(`tax-engine.guided-flow-state.v1:${id}`), recoveredId), originalFlow);
-  assert.deepEqual(Buffer.from(await documentBytes(page, recoveredId)), originalBytes);
+  const recoveredSources = await documentSources(page, recoveredId);
+  assert.equal(recoveredSources.length, 1);
+  const recoveredSource = recoveredSources[0];
+  assert.ok(recoveredSource.documentId === originals.files[0].documentId
+    && recoveredSource.fileName === originals.files[0].fileName && recoveredSource.type === originals.files[0].type
+    && recoveredSource.lastModified === originals.files[0].lastModified
+    && Buffer.from(recoveredSource.bytes).equals(originalBytes), "Restored original metadata or bytes differ from the backup.");
   browserDiagnostics.navigationResponse(await page.goto("/"));
   await page.getByRole("button", { name: `Delete tax return ${recoveredId}`, exact: true }).click();
   await expect(page.getByRole("listitem").filter({ hasText: `Tax Return ${recoveredId}` })).toHaveCount(0);
