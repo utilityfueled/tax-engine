@@ -1,5 +1,17 @@
 # Current 2026 upgrade continuation
 
+## November 14 protected Preview integrated originals
+
+Exact `aea453ec` passes both actual Coverdell bank-original journeys at 1280
+and 390 pixels, plus six FEI/farming server-admission checks. Separate saved
+artifact review confirms source custody, privacy and cleanup. All 617 counted
+operations remain within 1,310; provider calls and real charges are zero.
+Numeric comparisons use the local exact-source engine, while the deployed
+FEI/farming probes establish acceptance/rejection only.
+[Runtime evidence and limits](upgrade-2026-preview-integrated-aea453ec-20261114.md).
+The later current-loss and EIC packages are excluded from this runtime source.
+No production, human tax, filing or model qualification is inferred.
+
 ## November 14 actual unassessed EIC petition history
 
 The six-file finite EIC history method now binds actual notice, petition,

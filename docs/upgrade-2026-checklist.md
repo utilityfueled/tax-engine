@@ -3206,3 +3206,8 @@ packages keep full source copies, patches, hashes, genuine failures and receipts
 
 - [x] Adopt six reviewed files after genuine predecessor RED, focused checks, separate controls and full unit pass. [Ledger](upgrade-2026-eic-unassessed-petition-20261114.md).
 - [ ] Refresh combined inventory/browser binding and exact-source full checks. Other assessed denials, contested final bans and qualified human review remain separate.
+
+## November 14 AEA protected Preview actual
+
+- [x] Two typed Coverdell journeys and six FEI/farm admission probes pass with distinct review; all owned cleanup verified, 617/1,310 operations and zero paid calls. [Ledger](upgrade-2026-preview-integrated-aea453ec-20261114.md).
+- [ ] Later source packages require successor qualification; qualified human and production gates remain open.

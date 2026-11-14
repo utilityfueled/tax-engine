@@ -1,4 +1,18 @@
 {
+  "nov14AeaProtectedPreviewActual": {
+    "source": "aea453eca1d4a0e92cdfbe9a22f2f129fb247a03",
+    "actual": "2 typed Coverdell1280/390;6 canonical ingress statuses200/400/400/200/400/400",
+    "numericBoundary": "Coverdell100/400/30 and FEI92301/9294 and farm-75000/80000 are local exact-source oracles, not remotely returned numeric results",
+    "overallPassed": true,
+    "operations": "74direct+487browser+6cleanup+50CLIreserve=617/1310",
+    "cleanup": "2trial cancel/2customer delete/2session revoke; signed403;7ownedRediskeys;webhook/Preview/env baseline restored",
+    "remainingResource": "Free ephemeral cache autoexpires; database/resource deletion not claimed",
+    "independentActualReview": "294ad80bf25aa950d91bac9b09673155080e00b6fe55f85d50d86877ab487738",
+    "paidProviderCalls": 0,
+    "laterTaxCandidatesExcluded": true,
+    "mainPushHold": true,
+    "ledger": "docs/upgrade-2026-preview-integrated-aea453ec-20261114.md"
+  },
   "nov14EicUnassessedPetitionAdoption": {
     "freeze": "d9322f336438c46caf750d1900c2c43b78cf96bb2c2a21379a96bfadfe13b16d",
     "files": 6,
