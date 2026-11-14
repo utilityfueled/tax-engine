@@ -1,0 +1,23 @@
+form: "AI-Rollout-Evidence"
+fullName: "Independent reviewer metadata for hosted AI rollout"
+taxYear: 2026
+reference: "docs/upgrade-2026-execution-brief.md"
+notes: |
+  Production routes require separately reviewed measurements and explicit owner
+  approval. Validating supplied metadata establishes neither reviewer identity
+  nor live provider results.
+lines:
+  - line: "reviewer-independence"
+    description: "A spelling variant of the author cannot act as independent reviewer"
+    formula: >-
+      Normalize author and reviewer with Unicode NFKC, trim surrounding
+      whitespace and compare case-insensitively. Both identities must remain
+      nonempty and differ. Apply the same gate to current and rollback routes.
+    testRef: "tests/apps/web/ai-rollout.test.ts::rejects a normalized self-review in current and rollback evidence"
+  - line: "qualification-window"
+    description: "Actual ISO instants determine whether the evidence is usable"
+    formula: >-
+      Require real ISO timestamps with a timezone for the route check,
+      qualification and expiration. Admit only at or after qualification and
+      strictly before expiration. Data rejected here cannot advance a rollout.
+    testRef: "tests/apps/web/ai-rollout.test.ts::rejects malformed review instants and preserves the valid qualification boundary"

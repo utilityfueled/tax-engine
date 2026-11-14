@@ -1,6 +1,7 @@
 import "server-only";
 import { createHmac } from "node:crypto";
 import { AI_PROFILES, AI_TASKS, type AiProfileId, type AiTask } from "@tax-engine/engine/src/ai-task-registry";
+import { z } from "zod";
 
 export interface AiQualificationEvidence {
   task: AiTask; profileId: AiProfileId; model: string; promptVersion: string; schemaVersion: string;
@@ -17,16 +18,21 @@ export interface AiRolloutState {
 
 // No production route has been approved. Adding evidence requires a separate reviewed change.
 export const PRODUCTION_AI_ROLLOUTS: readonly AiRolloutState[] = Object.freeze([]);
+const qualificationInstant = z.iso.datetime({ offset: true });
+
 export function qualifiedAiEvidence(evidence: AiQualificationEvidence | null, task: AiTask, at: string): evidence is AiQualificationEvidence {
   if (!evidence || evidence.task !== task) return false;
   const profile = AI_PROFILES[evidence.profileId];
   const policy = AI_TASKS[task];
+  const author = evidence.author.normalize("NFKC").trim().toLowerCase();
+  const reviewer = evidence.independentReviewer.normalize("NFKC").trim().toLowerCase();
+  if (![at, evidence.qualifiedAt, evidence.expiresAt].every(value => qualificationInstant.safeParse(value).success)) return false;
   const time = Date.parse(at);
   return !!profile && !!policy && profile.model === evidence.model
     && evidence.promptVersion === policy.promptVersion && evidence.schemaVersion === policy.schemaVersion
     && /^[a-f0-9]{64}$/.test(evidence.reportSha256) && /^[a-f0-9]{64}$/.test(evidence.corpusSha256)
     && !!evidence.accountCapabilityReference.trim() && !!evidence.approvalReference.trim() && !!evidence.approvedBy.trim()
-    && !!evidence.independentReviewer.trim() && evidence.independentReviewer !== evidence.author && !!evidence.author.trim()
+    && !!reviewer && !!author && reviewer !== author
     && Number.isFinite(time) && Date.parse(evidence.qualifiedAt) <= time && Date.parse(evidence.expiresAt) > time
     && evidence.measuredGates.eligibleForPromotionReview && evidence.measuredGates.blockers.length === 0
     && evidence.measuredGates.reviewedCases >= 200 && evidence.measuredGates.repeatedHeldOut && evidence.measuredGates.januaryPricingIncluded;

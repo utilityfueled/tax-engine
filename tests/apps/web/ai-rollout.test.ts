@@ -18,6 +18,20 @@ describe("reversible qualified AI rollout", () => {
   it.each([{ author: "fixture-reviewer" }, { model: "other" }, { promptVersion: "old" }, { schemaVersion: "old" }, { accountCapabilityReference: "" }, { approvalReference: "" }, { expiresAt: at }, { reportSha256: "unknown" }])("fails qualification for stale or incomplete evidence %j", fields => {
     expect(qualifiedAiEvidence({ ...evidence, ...fields }, "workspace-summary", at)).toBe(false);
   });
+  it("rejects a normalized self-review in current and rollback evidence", () => {
+    const selfReviewed = { ...evidence, independentReviewer: "  ＦＩＸＴＵＲＥ－ＡＵＴＨＯＲ \u00a0" };
+    expect(qualifiedAiEvidence(selfReviewed, "workspace-summary", at)).toBe(false);
+    expect(selectQualifiedAiRoute({ ...context, states: [{ ...initial, stage: 100, current: selfReviewed }] })).toBeNull();
+    expect(selectQualifiedAiRoute({ ...context, states: [{ ...initial, previous: selfReviewed }] })).toBeNull();
+    expect(() => changeAiRollout({ ...initial, current: selfReviewed }, { stage: 5, expectedRevision: 0, reference: "synthetic", at })).toThrow(/qualification/i);
+  });
+  it("rejects malformed review instants and preserves the valid qualification boundary", () => {
+    expect(qualifiedAiEvidence({ ...evidence, qualifiedAt: "2026-09-31T00:00:00Z" }, "workspace-summary", at)).toBe(false);
+    expect(qualifiedAiEvidence({ ...evidence, expiresAt: "2026-11-31T00:00:00Z" }, "workspace-summary", at)).toBe(false);
+    expect(qualifiedAiEvidence(evidence, "workspace-summary", "2026-10-25")).toBe(false);
+    expect(qualifiedAiEvidence({ ...evidence, qualifiedAt: "2026-10-24T20:00:00-04:00" }, "workspace-summary", at)).toBe(true);
+    expect(qualifiedAiEvidence({ ...evidence, qualifiedAt: "2026-10-25T00:00:00.001Z" }, "workspace-summary", at)).toBe(false);
+  });
   it.each([{ reviewedCases: 199 }, { januaryPricingIncluded: false }, { repeatedHeldOut: false }, { blockers: ["pii"] }, { eligibleForPromotionReview: false }])("preserves measured gates %j", fields => {
     expect(qualifiedAiEvidence({ ...evidence, measuredGates: { ...evidence.measuredGates, ...fields } }, "workspace-summary", at)).toBe(false);
   });
