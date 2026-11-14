@@ -1098,6 +1098,7 @@ export const emptyAdjustmentData: AdjustmentData = {
 export interface EstimatedPaymentEntry {
   date: string;
   amount: string;
+  application?: { taxYear: string; confirmed: boolean | null };
 }
 
 export const emptyEstimatedPayment: EstimatedPaymentEntry = {

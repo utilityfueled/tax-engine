@@ -9,7 +9,49 @@ import {
   emptyPaymentData,
 } from "@/lib/guided-interview-flow";
 import { CurrencyField } from "./currency-field";
+import { BooleanFact } from "./fact-fields";
 import { formatGuidedCurrency, sumGuidedDisplayAmounts } from "@/lib/guided-currency";
+import { federalPaymentDateNeedsApplication } from "@/lib/guided-required-facts";
+
+function editPayment(entry: EstimatedPaymentEntry, field: "date" | "amount", value: string): EstimatedPaymentEntry {
+  // CurrencyField adds grouping commas on blur without changing the reported amount.
+  const unchanged = field === "amount"
+    ? entry.amount.replaceAll(",", "") === value.replaceAll(",", "")
+    : entry.date === value;
+  return {
+    ...entry,
+    [field]: value,
+    ...(entry.application && !unchanged ? { application: { ...entry.application, confirmed: null } } : {}),
+  };
+}
+
+function PaymentApplicationFields({ label, entry, taxYear, onChange }: {
+  label: string;
+  entry: EstimatedPaymentEntry;
+  taxYear?: number | null;
+  onChange: (application: NonNullable<EstimatedPaymentEntry["application"]>) => void;
+}) {
+  if (entry.application === undefined && !federalPaymentDateNeedsApplication(entry.date, taxYear)) return null;
+  const application = entry.application ?? { taxYear: "", confirmed: null };
+  return <>
+    <label className="guided-field">
+      <span className="guided-field-label">{label} IRS application tax year</span>
+      <input
+        className="guided-input guided-input-narrow"
+        inputMode="numeric"
+        maxLength={4}
+        value={application.taxYear}
+        onChange={(event) => {
+          const taxYear = event.target.value;
+          if (taxYear !== application.taxYear) onChange({ taxYear, confirmed: null });
+        }}
+      />
+      <span className="guided-field-hint">Use the tax year on the IRS payment confirmation or account record.</span>
+    </label>
+    <BooleanFact label={`${label} applies to this return`} value={application.confirmed}
+      onChange={confirmed => onChange({ ...application, confirmed })} />
+  </>;
+}
 
 function EstimatedPaymentCard({
   index,
@@ -17,12 +59,14 @@ function EstimatedPaymentCard({
   onUpdate,
   onRemove,
   removable,
+  taxYear,
 }: {
   index: number;
   entry: EstimatedPaymentEntry;
-  onUpdate: (field: keyof EstimatedPaymentEntry, value: string) => void;
+  onUpdate: (entry: EstimatedPaymentEntry) => void;
   onRemove: () => void;
   removable: boolean;
+  taxYear?: number | null;
 }) {
   return (
     <div className="guided-w2-card" style={{ padding: "12px" }}>
@@ -47,7 +91,7 @@ function EstimatedPaymentCard({
             type="date"
             className="guided-input guided-input-narrow"
             value={entry.date}
-            onChange={(e) => onUpdate("date", e.target.value)}
+            onChange={(e) => onUpdate(editPayment(entry, "date", e.target.value))}
             aria-describedby={`est-payment-${index}-date-hint`}
             aria-required="true"
           />
@@ -58,9 +102,11 @@ function EstimatedPaymentCard({
         <CurrencyField
           label="Amount paid"
           value={entry.amount}
-          onChange={(v) => onUpdate("amount", v)}
+          onChange={(value) => onUpdate(editPayment(entry, "amount", value))}
           required
         />
+        <PaymentApplicationFields label={`Estimated payment #${index + 1}`} entry={entry} taxYear={taxYear}
+          onChange={application => onUpdate({ ...entry, application })} />
       </div>
     </div>
   );
@@ -80,11 +126,9 @@ export function SectionPayments({
   const extensions = current.extensionPayments ?? [];
   const appliedRefunds = current.priorYearAppliedCredits ?? [];
 
-  function updatePayment(index: number, field: keyof EstimatedPaymentEntry, value: string) {
-    const next = payments.map((entry, i) =>
-      i === index ? { ...entry, [field]: value } : entry
-    );
-    onDataChange({ ...current, estimatedPayments: next });
+  function updatePayment(category: "estimatedPayments" | "extensionPayments", index: number, updated: EstimatedPaymentEntry) {
+    const rows = current[category] ?? [];
+    onDataChange({ ...current, [category]: rows.map((entry, i) => i === index ? updated : entry) });
   }
 
   function addPayment() {
@@ -124,9 +168,10 @@ export function SectionPayments({
                 key={index}
                 index={index}
                 entry={entry}
-                onUpdate={(field, value) => updatePayment(index, field, value)}
+                onUpdate={updated => updatePayment("estimatedPayments", index, updated)}
                 onRemove={() => removePayment(index)}
                 removable={true}
+                taxYear={taxYear}
               />
             ))}
           </div>
@@ -147,8 +192,10 @@ export function SectionPayments({
             {current.otherPayments.trim() && <CurrencyField label="Saved other-payment total to classify" hint="Reconcile this saved total with the actual extension and applied-refund entries below. Excess Social Security withholding is computed from your W-2s." value={current.otherPayments} onChange={(otherPayments) => onDataChange({ ...current, otherPayments })} />}
             <h4>Federal extension payments</h4>
             {extensions.map((entry, index) => <div key={index} className="guided-w2-card">
-              <label className="guided-field"><span className="guided-field-label">Extension payment #{index + 1} date</span><input className="guided-input" type="date" value={entry.date} onChange={(event) => onDataChange({ ...current, extensionPayments: extensions.map((item, i) => i === index ? { ...item, date: event.target.value } : item) })} /></label>
-              <CurrencyField label={`Extension payment #${index + 1} amount`} value={entry.amount} onChange={(amount) => onDataChange({ ...current, extensionPayments: extensions.map((item, i) => i === index ? { ...item, amount } : item) })} required />
+              <label className="guided-field"><span className="guided-field-label">Extension payment #{index + 1} date</span><input className="guided-input" type="date" value={entry.date} onChange={(event) => updatePayment("extensionPayments", index, editPayment(entry, "date", event.target.value))} /></label>
+              <CurrencyField label={`Extension payment #${index + 1} amount`} value={entry.amount} onChange={amount => updatePayment("extensionPayments", index, editPayment(entry, "amount", amount))} required />
+              <PaymentApplicationFields label={`Extension payment #${index + 1}`} entry={entry} taxYear={taxYear}
+                onChange={application => updatePayment("extensionPayments", index, { ...entry, application })} />
               <button type="button" className="utility-button" onClick={() => onDataChange({ ...current, extensionPayments: extensions.filter((_, i) => i !== index) })}>Remove extension payment #{index + 1}</button>
             </div>)}
             <button type="button" className="utility-button" onClick={() => onDataChange({ ...current, extensionPayments: [...extensions, { ...emptyEstimatedPayment }] })}>Add extension payment</button>

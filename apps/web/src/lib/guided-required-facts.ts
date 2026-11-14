@@ -85,12 +85,26 @@ export function deductionFactErrors(data: DeductionData | undefined, taxYear?: n
   return errors;
 }
 
+export function federalPaymentDateNeedsApplication(date: string, taxYear?: number | null): boolean {
+  if (taxYear == null || !isActualDate(date) || date.startsWith("0000-")) return false;
+  const paidYear = Number(date.slice(0, 4));
+  return paidYear !== taxYear && paidYear !== taxYear + 1;
+}
+
 export function paymentFactErrors(entries: EstimatedPaymentEntry[] | undefined, taxYear?: number | null): Record<string, string> {
   const errors: Record<string, string> = {};
   (entries ?? []).forEach((entry, index) => {
     const amount = amountError(entry.amount, "payment amount");
     if (amount) errors[`payment-${index}-amount`] = amount;
-    if (!isActualDate(entry.date) || (taxYear != null && ![taxYear, taxYear + 1].some((year) => entry.date.startsWith(`${year}-`)))) errors[`payment-${index}-date`] = "Enter the actual payment date in the tax year or following year.";
+    if (!isActualDate(entry.date) || entry.date.startsWith("0000-")) errors[`payment-${index}-date`] = "Enter the actual payment date from the federal record.";
+    if (entry.application !== undefined || federalPaymentDateNeedsApplication(entry.date, taxYear)) {
+      if (taxYear == null || entry.application?.taxYear !== String(taxYear)) {
+        errors[`payment-${index}-application-year`] = "Enter this return's tax year as shown on the IRS payment confirmation or account record.";
+      }
+      if (entry.application?.confirmed !== true) {
+        errors[`payment-${index}-application-confirmation`] = "Confirm that this federal payment was applied to the selected return year.";
+      }
+    }
   });
   return errors;
 }

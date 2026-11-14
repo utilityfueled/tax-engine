@@ -519,15 +519,21 @@ export function buildAdjustmentsInput(adjustmentData: AdjustmentData | undefined
 
 // ── Estimated payments converter ────────────────────────────────────────────
 
-export function buildEstimatedPaymentsInput(paymentData: PaymentData | undefined) {
+function federalPaymentInput(entry: PaymentData["estimatedPayments"][number]) {
+  return {
+    date: entry.date,
+    amount: toDecimalString(entry.amount),
+    type: "federal" as const,
+    ...(entry.application?.confirmed === true ? {
+      application: { taxYear: Number(entry.application.taxYear), confirmed: true as const },
+    } : {}),
+  };
+}
+
+export function buildEstimatedPaymentsInput(paymentData: PaymentData | undefined, taxYear?: number | null) {
   if (!paymentData) return [];
-  assertKnownFacts(paymentFactErrors(paymentData.estimatedPayments));
-  return paymentData.estimatedPayments
-    .map((entry) => ({
-      date: entry.date,
-      amount: toDecimalString(entry.amount),
-      type: "federal" as const,
-    }));
+  assertKnownFacts(paymentFactErrors(paymentData.estimatedPayments, taxYear));
+  return paymentData.estimatedPayments.map(federalPaymentInput);
 }
 
 // ── Retirement income (1099-R) converter ──────────────────────────────────
@@ -908,10 +914,10 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
   const energyCredits = buildEnergyCreditsInput(creditsData, state.taxYear, segmentation.filingStatus);
   const scheduleH = buildScheduleHInput(otherTaxesData);
   const estimatedPayments = [
-    ...buildEstimatedPaymentsInput(paymentData),
+    ...buildEstimatedPaymentsInput(paymentData, state.taxYear),
     ...(stateReturnData?.stateEstimatedPayments ?? []).map((entry) => ({ date: entry.date, amount: toDecimalString(entry.amount), type: "state" as const, state: entry.state })),
   ];
-  const extensionPayments = (paymentData?.extensionPayments ?? []).map((entry) => ({ date: entry.date, amount: toDecimalString(entry.amount), type: "federal" as const }));
+  const extensionPayments = (paymentData?.extensionPayments ?? []).map(federalPaymentInput);
   const priorYearAppliedCredits = (paymentData?.priorYearAppliedCredits ?? []).map((entry) => ({ sourceTaxYear: Number(entry.sourceTaxYear), amount: toDecimalString(entry.amount), type: "federal" as const }));
   const paymentAdjustments = { estimatedTaxPayments: estimatedPayments, extensionPayments, priorYearAppliedCredits };
   const form172 = buildCurrentLossOrigin(adjustmentData?.currentLossOrigin, state);
