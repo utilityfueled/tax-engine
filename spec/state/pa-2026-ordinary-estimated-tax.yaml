@@ -1,0 +1,55 @@
+form: "Pennsylvania REV-414(I) 2026 original pre-April estimate"
+fullName: "Pennsylvania original calendar-year estimated income tax worksheet and first declaration schedule"
+taxYear: 2026
+reference: "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2026/2026_rev-414i.pdf"
+sources:
+  - "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2026/2026_rev-413i.pdf"
+  - "https://www.legis.state.pa.us/WU01/LI/LI/US/HTM/1971/0/0002..HTM#19710002u325s"
+  - "https://www.legis.state.pa.us/WU01/LI/LI/US/HTM/1971/0/0002..HTM#19710002u326s"
+  - "https://www.pacodeandbulletin.gov/secure/pacode/data/061/chapter115/s115.9.html"
+revision: "Final 2026 REV-414(I) EX 04-25 and REV-413(I) IN 04-25, verified November 14 UTC, 2026"
+notes: |
+  Source SHA-256, REV-414(I): 17f412d6f529edb2c71cc4418b0ce085813a2697e08e6f158d493524092cc118.
+  Source SHA-256, REV-413(I): 910d2bb8e039455c6b63c3d176a1fba951f2c16ad735a2e2c604f939cc6b492d.
+
+  Planning estimate for a single individual with an original non-farmer
+  calendar-year determination before April 1. The caller confirms all positive
+  PA-taxable income classes under PA law. The caller separately confirms no PA
+  withholding, no credits, no prior-year overpayment carryover and no estimated
+  payments already made. The worksheet omits the prior-year safe harbor when
+  no 2025 return was filed or the taxpayer filed as a PA part-year resident.
+  Wrong-year, incomplete, inapplicable or unsupported estimates throw before
+  returning any tax or dates.
+
+  Section 325(a)(1) uses income expected to exceed $14,000 without PA tax
+  withholding. REV-413(I) also describes at least $14,000 and $430, and applies
+  the $430 test to REV-414(I) line 17. This positive-only estimate admits income
+  greater than $14,000 and an exact line 17 of at least $430.50. The latter is
+  a conservative admission boundary for this implementation, allowing half a
+  dollar of margin above the agency threshold. It sets no legal rounding or
+  no-payment rule, and readies no remittance amount.
+
+  Section 325(d) and 61 Pa. Code §115.9 put April 1, June 1 and September 1 in
+  earlier rows than REV-413(I). Outside those dates the two middle bands also
+  differ: §326(a)(2)–(3) and §115.9 specify equal installments; the worksheet
+  instructions present make-up percentages. This estimate uses only the first
+  row agreed by statute, regulation and instructions. Section 352 penalty
+  computations, later and amended determinations, farmer cases, returns,
+  withholding, credit awards and filing remain outside scope.
+lines:
+  - line: "1"
+    description: "Estimated current-year taxable income from explicitly reviewed positive PA classes"
+    formula: "Use the nonnegative dollar-and-cent amount supplied for all PA-taxable classes, already classified without cross-class loss offsets. Require the complete current individual facts, known absence of withheld income and credits, valid civil determination date in January through March 2026 and a 2025 prior return status of either not filed or part-year PA resident."
+    testRef: "tests/engine/state/pa-2026-ordinary-estimated-tax.test.ts::rejects missing confirmations, unsupported prior returns and malformed source amounts"
+  - line: "9"
+    description: "Ninety percent of current-year estimated tax net of credits"
+    formula: "Line 2 = line 1 × 0.0307. Lines 3–7 = known zero. Line 8 = line 2 − line 7. Line 9 = line 8 × 0.90. Preserve exact Decimal products."
+    testRef: "tests/engine/state/pa-2026-ordinary-estimated-tax.test.ts::derives exact current-year lines and both timing options without filing amounts"
+  - line: "17"
+    description: "Exact supported positive estimated tax"
+    formula: "Skip lines 10–14 under the REV-414(I) note. Line 15 = line 9. Line 16 = known zero. Line 17 = line 15 − line 16. Require line 1 > $14,000 and exact line 17 >= $430.50 for this bounded method. Reject other cases without inferring their payment obligation."
+    testRef: "tests/engine/state/pa-2026-ordinary-estimated-tax.test.ts::preserves the unresolved threshold and fractional-cent planning boundaries"
+  - line: "first-declaration"
+    description: "Scheduled date and exact planning shares for the first ordinary declaration band"
+    formula: "The declaration is due by April 15, 2026. The exact planning options are full payment with the first declaration or four equal Decimal shares due April 15, June 15, September 15, and January 15, 2027. April 15 is the first installment deadline; payment accompanies an earlier declaration. Carry no exact planning fraction to a payment submission or rounded worksheet."
+    testRef: "tests/engine/state/pa-2026-ordinary-estimated-tax.test.ts::admits only valid first-band determination dates"
