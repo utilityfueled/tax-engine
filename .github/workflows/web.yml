@@ -203,6 +203,13 @@ jobs:
           name: browser-cpu-diagnostics
           path: artifacts/browser-cpu-diagnostics/
           if-no-files-found: warn
+      - name: Verify Docker archive in an independent native image store
+        id: archive
+        if: ${{ !cancelled() && steps.candidate.outcome == 'success' }}
+        timeout-minutes: 5
+        env:
+          CANDIDATE_IMAGE_ID: ${{ steps.candidate.outputs.image_id }}
+        run: bash scripts/verify-container-archive.sh
       - uses: anchore/sbom-action/download-syft@v0
         id: syft
         if: ${{ !cancelled() && steps.candidate.outcome == 'success' }}
@@ -280,11 +287,12 @@ jobs:
       - name: Verify scan source against the immutable candidate
         if: ${{ !cancelled() && steps.scan.outcome != 'skipped' && steps.source_binding.outcome == 'success' }}
         env:
+          ARCHIVE_OUTCOME: ${{ steps.archive.outcome }}
           CANDIDATE_IMAGE_ID: ${{ steps.candidate.outputs.image_id }}
           REQUIRE_SCAN: "true"
         run: |
           python3 - <<'PY'
-          import base64, hashlib, json, os
+          import base64, hashlib, json, os, re
           from pathlib import Path
           expected = json.loads(Path("container-candidate.json").read_text())
           assert len(expected) == 1
@@ -317,8 +325,20 @@ jobs:
           paths = ["container-candidate.json", "container.syft.json"]
           if os.environ["REQUIRE_SCAN"] == "true":
               paths += ["container.cdx.json", "container-vulnerabilities.json"]
+          archive_verified = os.environ["ARCHIVE_OUTCOME"] == "success"
+          if archive_verified:
+              archive_path = "container-archive-verification.json"
+              archive = json.loads(Path(archive_path).read_text())
+              assert archive["version"] == 1 and archive["stage"] == "verified"
+              assert archive["archiveImportVerified"] is True and archive["scratchRemoved"] is True
+              assert archive["platform"] == "linux/amd64" and archive["imageId"] == image_id
+              assert archive["source"] == os.environ["GITHUB_SHA"]
+              assert re.fullmatch(r"[0-9a-f]{64}", archive["archiveSha256"])
+              assert 0 < archive["archiveBytes"] <= 1024 ** 3
+              paths.append(archive_path)
           receipt = {"imageId": image_id, "source": os.environ["GITHUB_SHA"], "platform": "linux/amd64",
                      "rootfs": expected["RootFS"]["Layers"], "scanVerified": os.environ["REQUIRE_SCAN"] == "true",
+                     "archiveImportVerified": archive_verified,
                      "sha256": {p: hashlib.sha256(Path(p).read_bytes()).hexdigest() for p in paths}}
           Path("container-source-binding.json").write_text(json.dumps(receipt, indent=2) + "\n")
           PY
@@ -331,6 +351,7 @@ jobs:
             container.syft.json
             container-syft-tool.txt
             container-source-binding.json
+            container-archive-verification.json
             container-candidate.json
             container-previous.json
             container-browser.json
