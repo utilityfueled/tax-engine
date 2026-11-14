@@ -1,4 +1,4 @@
-/** Determined floor with original prior use. Specs: charitable-determined-floor.yaml, charitable-prior-floor-no-excess.yaml. */
+/** Determined floor with original prior use. Specs: charitable-determined-floor.yaml, charitable-prior-floor-no-excess.yaml, charitable-full-prior-floor.yaml. */
 import Decimal from 'decimal.js';
 import type { TaxYearInput } from '@/models/inputs.js';
 import type { CharitableCategory, CharitableContributionWorksheetInput } from './charitable-contribution-worksheet.js';
@@ -14,7 +14,7 @@ import { d, sum } from '@/utils/decimal.js';
 import type { CharitableNolOriginLimit } from '@/utils/charitable-nol-origins.js';
 
 export interface CharitableDeterminedFloorResult extends CharitableCarryoverResult, CharitableCategoryUseResult {
-  method: '2026_determined_current_category_floor' | '2026_single_prior_floor_no_excess';
+  method: '2026_determined_current_category_floor' | '2026_single_prior_floor_no_excess' | '2026_full_prior_category_floor_no_excess';
   sourceDigest: string;
   currentBeforeFloor: Record<CharitableCategory, Decimal>;
   currentFloorByCategory: Record<CharitableCategory, Decimal>;
@@ -33,6 +33,7 @@ export function calculateCharitableDeterminedFloor(input: TaxYearInput, context:
   const currentFloorByCategory = { cash_60:zero, noncash_50:zero, other_30:zero, capital_gain_30:zero, capital_gain_20:zero };
   const detail = use.detail.map(row => ({ ...row, amountUsed:row.treatedAsPaid }));
   let priorFloorDisallowed = zero;
+  let fullPriorCategoryFloor = false;
   let remainingFloor = use.contributionBase.times('0.005');
   const audit = new AuditTrail(); audit.merge(use.lines);
   for (const category of ['capital_gain_20','capital_gain_30','other_30','noncash_50','cash_60'] as const) {
@@ -40,22 +41,30 @@ export function calculateCharitableDeterminedFloor(input: TaxYearInput, context:
     const prior = sum(...priorRows.map(row => row.treatedAsPaid));
     const hit = Decimal.min(remainingFloor, currentBeforeFloor[category].plus(prior));
     if (hit.gt(0) && prior.gt(0)) {
-      const source = priorRows[0];
+      const wholeCategory = priorRows.length > 1 && hit.eq(prior)
+        && new Set(priorRows.map(source => source.medium)).size === 1;
       if (context.nolOriginLimit || !currentBeforeFloor[category].isZero() || use.carryforwards.length !== 0
-        || priorRows.length !== 1 || !source || source.filingUnitSources
-        || !source.amountAvailable.eq(source.treatedAsPaid) || !source.amountRemaining.isZero() || !source.amountExpired.isZero()) {
+        || (priorRows.length !== 1 && !wholeCategory)
+        || priorRows.some(source => source.filingUnitSources || !source.amountAvailable.eq(source.treatedAsPaid)
+          || !source.amountRemaining.isZero() || !source.amountExpired.isZero())) {
         throw new Error('Charitable floor reaching an allowed prior contribution requires its separate original-vintage attribution method');
       }
       // No competing origin and no percentage excess can carry. Consumption
-      // remains the original treated-paid amount; the floor only reduces its
-      // deduction. It neither restores the old balance nor creates a new year.
-      source.amountUsed = source.treatedAsPaid.minus(hit);
+      // remains the original treated-paid amount. Multiple originals are
+      // admitted only when the entire category is disallowed, so every source
+      // deduction is zero without assigning a partial floor among vintages.
+      for (const source of priorRows) {
+        const sourceFloor = wholeCategory ? source.treatedAsPaid : hit;
+        source.amountUsed = source.treatedAsPaid.minus(sourceFloor);
+        audit.record('Charitable Determined Floor',category,'Prior contribution after the noncarryable floor',source.amountUsed,
+          wholeCategory ? 'Entire prior category absorbed; each fully treated original has zero deduction, without a partial vintage allocation'
+            : 'Sole fully treated original in this category, no current allowance or surviving percentage excess; no new vintage',
+          { 'Original source':source.sourceId, 'Contribution year':String(source.taxYear),
+            'Prior treated as paid':source.treatedAsPaid, 'Prior floor disallowed':sourceFloor });
+      }
+      fullPriorCategoryFloor ||= wholeCategory;
       priorFloorDisallowed = priorFloorDisallowed.plus(hit);
       remainingFloor = remainingFloor.minus(hit);
-      audit.record('Charitable Determined Floor',category,'Prior contribution after the noncarryable floor',source.amountUsed,
-        'Sole fully treated original in this category, no current allowance or surviving percentage excess; no new vintage',
-        { 'Original source':source.sourceId, 'Contribution year':String(source.taxYear),
-          'Prior treated as paid':source.treatedAsPaid, 'Prior floor disallowed':hit });
       continue;
     }
     currentFloorByCategory[category] = hit;
@@ -100,7 +109,8 @@ export function calculateCharitableDeterminedFloor(input: TaxYearInput, context:
     'Original surviving balances plus current percentage excess and eligible determined current-year floor');
   audit.record('Charitable Determined Floor','nonitemized-carry','Nonitemized charitable carry candidate',sum(...nonitemizedCarryforwards.map(row => row.amount)),
     'Same otherwise-allowable original balances, current percentage excess and eligible current floor; no standard entitlement is inferred');
-  return { ...use, method:priorFloorDisallowed.gt(0) ? '2026_single_prior_floor_no_excess' : '2026_determined_current_category_floor', sourceDigest:charitableSourceDigest(input),
+  return { ...use, method:fullPriorCategoryFloor ? '2026_full_prior_category_floor_no_excess'
+    : priorFloorDisallowed.gt(0) ? '2026_single_prior_floor_no_excess' : '2026_determined_current_category_floor', sourceDigest:charitableSourceDigest(input),
     currentBeforeFloor, currentFloorByCategory, floorDisallowed, currentCash, currentNoncash,
     priorDeduction, priorCashDeduction, priorNoncashDeduction, priorTreatedAsPaid:use.priorTreatedAsPaid,
     totalDeduction:sum(currentCash,currentNoncash,priorDeduction), detail, carryforwards, nonitemizedCarryforwards,

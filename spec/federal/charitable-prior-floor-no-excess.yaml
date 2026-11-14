@@ -22,9 +22,12 @@ notes: |
   current or prior excess and no NOL-origin-limit context. No entered allocation,
   treated-paid amount, current deductible amount, or new contribution year is
   accepted. No original clock is restarted. Other original expiry is preserved.
-  Competing current/prior contributions in the hit category, multiple positive
-  prior vintages there, partial prior consumption, surviving percentage excess,
+  Competing current/prior contributions in the hit category, partially floor-hit
+  multiple prior vintages there, partial prior consumption, surviving percentage excess,
   pooled ownership and NOL-linked floor attribution retain existing rejection.
+  The separate charitable-full-prior-floor.yaml endpoint admits multiple fully
+  treated same-medium originals only when the floor absorbs their entire category without
+  surviving percentage excess; every such source deduction is zero.
   This does not resolve which old/new vintage could retain floor where excess
   survives. Treating the prior floor as permanently exempt, or carrying it solely
   because it reduces the deduction, are contrary alternatives for this finite

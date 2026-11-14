@@ -1,0 +1,73 @@
+form: "Charitable Full Prior Category Floor"
+fullName: "Multiple original prior vintages wholly absorbed by the 2026 category floor without surviving percentage excess"
+taxYear: 2026
+irsReference: "https://uscode.house.gov/us/usc/119-124/t26/s170/"
+retrievedAt: "2026-11-14"
+reviewStatus: "agent-source-and-software-review-pending-human-review-unassigned"
+notes: |
+  Finite source-derived endpoint, not a published numerical example. Actual
+  IRC170(b)(1)(I) applies the floor by D,C,B,E,A,G category, not by original
+  vintage. IRC170(d)(1)(C) permits additional floor carry only when an excess
+  carries under a listed percentage rule. Regulation1.170A-10(b)(2),(c)(2)
+  reduces original excess by the amount treated as paid, independently of the
+  allowed deduction. Final2025 Pub526 Carryovers retains original category,
+  current-before-prior and oldest-original-year use; it is not final2026 guidance.
+  https://www.ecfr.gov/current/title-26/section-1.170A-10
+  https://www.irs.gov/publications/p526 ; PL119-21 section70425.
+  Extend the existing no-excess prior endpoint only when a category has multiple
+  positive prior rows of the same actual medium, no allowed current contribution in that category, and
+  the remaining floor absorbs the entire category's prior treated-paid amount.
+  Each positive prior row must be fully treated as paid, with zero remaining or
+  expired amount, no filing-unit source pool and no NOL-origin-limit context.
+  The complete percentage ledger must have no surviving current or prior excess.
+  Every such prior row has deduction zero; no priority, pro-rata share, media
+  allocation or old/new-vintage assignment is inferred. The original rows are
+  consumed in their actual original years; no floor carry or2026 renewal exists.
+  Exact equality is admitted; one cent above the remaining floor rejects the
+  multiple-row partial class. Existing sole-prior partial-floor behavior remains
+  separate and unchanged. Actual current gifts in other categories use the
+  existing ordered floor method, but same-category current/prior composition,
+  partial consumption, mixed prior cash/noncash media, surviving excess, changed filing units and NOL-linked
+  attribution remain guarded. Source identity, complete history, original expiry
+  and category validation remain mandatory. Other already-supported zero-floor
+  and fully current-category paths are unchanged. Canonical selection requires
+  exact source-bound proof and preserves original treated-paid use for every
+  deduction election. Actual2026 constants, PDF and filing gates remain closed;
+  no human tax qualification or approval is supplied.
+lines:
+  - line: "full-absorption"
+    description: "Consume multiple fully treated old vintages without assigning a partial floor"
+    formula: "Actual2024C200 plus2025C300, base100000 and no current gifts: treated200+300, floor500, each deduction0, total0, carry0, original years2024/2025 retained."
+    testRef: "tests/engine/forms/charitable-full-prior-floor.test.ts::absorbs the entire multi-vintage category without assigning or renewing a vintage"
+  - line: "exact-floor-boundary"
+    description: "Admit only whole-category absorption at exact Decimal boundaries"
+    formula: "2024C200 plus2025C299.99/300/300.01 at floor500:499.99 and500 wholly absorbed;500.01 rejects partial multi-vintage attribution. No intermediate rounding."
+    testRef: "tests/engine/forms/charitable-full-prior-floor.test.ts::distinguishes exact whole-category absorption from a partial multi-vintage floor"
+  - line: "source-age-conservation"
+    description: "Keep filed annual use, expiration, source ordering and actual ownership distinct"
+    formula: "Original2021C250, actual2022use50, actual2023-25zero leaves200 in final2026 year;2025C300 fully consumed; separate2020A70 expires. Original2021/2025 consumed,2020expired70, no2026carry. Reverse source array preserves monetary results."
+    testRef: "tests/engine/forms/charitable-full-prior-floor.test.ts::conserves actual history and expiry without a new contribution clock"
+  - line: "existing-category-order"
+    description: "Use the remaining ordered floor and preserve unrelated source methods"
+    formula: "CurrentD100 then priorC200+200 at base100000 consumes currentD100 and priorC400; currentG10000 remains allowed, carry0. CurrentD100.01 leaves399.99 and rejects C400 partial attribution; same-category currentC, surviving percentage excess, NOL and pooled ownership remain rejected."
+    testRef: "tests/engine/forms/charitable-full-prior-floor.test.ts::uses only a wholly absorbed prior category and retains unresolved composition guards"
+  - line: "source-completeness"
+    description: "Reject invented, duplicate, unknown or unreconciled original history"
+    formula: "Missing/false actual history, absent or unknown category/amount/reference, duplicate ID or year/category/medium, stale owner/year and changed membership without proof reject; original source order cannot change the allowed category result."
+    testRef: "tests/engine/forms/charitable-full-prior-floor.test.ts::requires unique actual original sources and complete annual history"
+  - line: "retained-media-boundary"
+    description: "Keep the existing separate prior cash/noncash method guarded"
+    formula: "Prior Bcash100 and Bnoncash200 are not the same-medium endpoint even when the entire300 fits within the500 floor. Existing mixed-media rejection and zero-capacity carry preservation remain unchanged."
+    testRef: "tests/engine/forms/nonitemized-charitable-categories.test.ts::preserves actual media and rejects only unsupported partial attribution"
+  - line: "canonical-selection"
+    description: "Preserve actual source consumption under every valid deduction election"
+    formula: "Base100000/currentG10000/priorC200+300: itemized current charity10000 and prior deduction0; automatic/standard current170p1000 and prior deduction0; explicit nonitemized actual MFS spouse-itemizes facts retains current170p1000. All consume prior500, no closing carry."
+    testRef: "tests/engine/federal-charitable-full-prior-floor.test.ts::selects whole-category prior consumption without reviving disallowed old contributions"
+  - line: "changed-unit-boundary"
+    description: "Keep verified original filing-unit history separate from this no-pool endpoint"
+    formula: "Joint original1000 with original separate excess400/600 and joint intervening use500 allocates200 to the current individual; actual later individual original300 makes priorC500. Both fully treated with no percentage carry, but their actual filing-unit sources still reject floor attribution."
+    testRef: "tests/engine/forms/charitable-full-prior-floor.test.ts::rejects otherwise complete changed-unit sources at the prior floor boundary"
+  - line: "canonical-proof"
+    description: "Require the same original source ledger through selected treatment"
+    formula: "Reclassifying full-prior proof as current-category-only, changed source digest, row identity/year/treated amount/deductible amount/floor or invented current carry rejects; actual production2026 constants remain unavailable."
+    testRef: "tests/engine/federal-charitable-full-prior-floor.test.ts::rejects altered full-prior proof while keeping production2026 closed"

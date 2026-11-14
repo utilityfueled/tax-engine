@@ -1,0 +1,15 @@
+form: "Independent fractional-floor prior-vintage boundary"
+fullName: "Exact unrounded 2026 floor with fully absorbed original vintages"
+taxYear: 2026
+irsReference: "https://uscode.house.gov/us/usc/119-124/t26/s170/"
+notes: |
+  IRC170(b)(1)(I) and(d)(1)(C), retrieved2026-11-14. This is an independent
+  engineering calculation from fictional component inputs, not an IRS numerical
+  example, a qualified human worksheet or a production2026 eligibility claim.
+  The two actual prior C originals are200 and300; no current gift, remaining
+  percentage excess, changed filing unit or NOL context is supplied.
+lines:
+  - line: "fractional-floor"
+    description: "Do not round a fractional-cent floor into an invented full absorption"
+    formula: "Base100000.20 gives floor500.001 and wholly absorbs prior500, each deduction0 and carry0. Base99999.80 gives floor499.999: prior500 exceeds it by0.001, so the unresolved partial-vintage method rejects. Rounding either floor to500 would erase the source boundary."
+    testRef: "tests/engine/forms/charitable-full-prior-floor-independent.test.ts::preserves the fractional-cent floor boundary without assigning a partial vintage"

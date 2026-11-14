@@ -25,10 +25,16 @@ export function calculateSelectedCharitableCarryover(input: {
   const separatePriorFloor = input.taxYear === 2026 && priorCashProperty?.method === "2026_prior_cash_current_property";
   const determinedFloor = input.scheduleA.determinedCharitableFloor;
   const separateDeterminedFloor = input.taxYear === 2026 && (determinedFloor?.method === "2026_determined_current_category_floor"
-    || determinedFloor?.method === "2026_single_prior_floor_no_excess")
+    || determinedFloor?.method === "2026_single_prior_floor_no_excess"
+    || determinedFloor?.method === "2026_full_prior_category_floor_no_excess")
     && determinedFloor.sourceDigest === input.scheduleA.charitableSourceDigest;
   if (determinedFloor && !separateDeterminedFloor) throw new Error("Selected determined charitable floor requires its actual original source proof");
-  const priorFloor = separateDeterminedFloor && determinedFloor.method === "2026_single_prior_floor_no_excess" ? determinedFloor : undefined;
+  if (separateDeterminedFloor && determinedFloor.method === "2026_determined_current_category_floor"
+    && determinedFloor.detail.some(row => !Decimal.isDecimal(row.amountUsed) || !row.amountUsed.eq(row.treatedAsPaid))) {
+    throw new Error("Selected current-category floor proof cannot discard actual prior floor attribution");
+  }
+  const priorFloor = separateDeterminedFloor && (determinedFloor.method === "2026_single_prior_floor_no_excess"
+    || determinedFloor.method === "2026_full_prior_category_floor_no_excess") ? determinedFloor : undefined;
   if (priorFloor && (priorFloor.carryforwards.length !== 0 || priorFloor.nonitemizedCarryforwards.length !== 0
     || input.scheduleA.charitableCarryforwardByYear.length !== 0 || priorFloor.detail.length !== input.scheduleA.charitableCarryforwardDetail.length)) {
     throw new Error("Selected prior charitable floor requires its complete no-excess source reconciliation");

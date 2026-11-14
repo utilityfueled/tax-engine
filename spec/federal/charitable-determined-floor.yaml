@@ -22,7 +22,11 @@ notes: |
   admits a sole fully treated prior source in a hit category with no current
   allowance, no surviving percentage excess and no NOL context. It preserves
   original treated-paid consumption and deducts only the post-floor portion;
-  no current or old carry is created. All other prior attribution remains guarded.
+  no current or old carry is created. The charitable-full-prior-floor.yaml
+  endpoint also admits multiple fully treated same-medium originals when their whole category
+  is absorbed by the remaining floor, without surviving percentage excess, NOL
+  or pooled ownership. Each source has zero deduction; no partial original-vintage
+  assignment is inferred. All other prior attribution remains guarded.
   A zero floor needs no vintage allocation. For B, the existing exact medium
   method must determine both the current allowance and carry; partial mixed
   cash/noncash attribution remains guarded. The prior-C treated-paid versus
