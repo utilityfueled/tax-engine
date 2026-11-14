@@ -1,5 +1,16 @@
 # Current 2026 upgrade continuation
 
+## November 14 actual Stripe automatic retry
+
+The isolated protected Preview successor passed actual database denial, initial
+503, independent restoration and Stripe's same-event automatic 200 at 17:57:38
+UTC. Exactly one receipt, the other actor unchanged, zero scoped AI effects and
+all trial/session/webhook/Preview/environment/Redis cleanup pass. No manual
+resend occurred. Independent review and root artifact checks pass; the terminal
+controller records 97 explicit operations. This closes that bounded staging
+retry requirement, while broader security and hosted release gates remain false.
+[Actual attempts, cleanup and hashes](upgrade-2026-stripe-scheduled-retry-20261114.md).
+
 ## November 14 current Preview account recovery
 
 A fresh protected Preview of `9b6202e7` passes actual Zoho delivery to the
@@ -13,8 +24,7 @@ The first attempt's whole-second Gmail timestamp conflicted with a millisecond
 marker. That exit-130 run and verified cleanup remain retained. A distinct
 successor records the actual timestamps unchanged and uses their stated
 whole-second precision. No SMTP secret was copied or changed. This qualifies
-the bounded recovery path; the separate actual Stripe scheduled retry is still
-pending. [Results, failed control and hashes](upgrade-2026-preview-recovery-20261114.md).
+the bounded recovery path; the separate actual Stripe scheduled retry now passes as recorded above. [Results, failed control and hashes](upgrade-2026-preview-recovery-20261114.md).
 
 ## November 14 actual provider and PostgreSQL billing
 

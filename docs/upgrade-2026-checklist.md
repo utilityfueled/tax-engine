@@ -6,6 +6,14 @@ below retain their original evidence boundaries.
 
 ## Active continuation — November 14
 
+- [ ] Finish the spec-first guided qualified K-3 portfolio source route, its
+  independent regression review, desktop/mobile original-entry journeys and
+  full frozen-source checks. Preserve existing direct-credit and basis gates.
+- [ ] Rehearse the current eleven-table schema on the existing isolated Neon
+  branch in one new synthetic schema, including UUID revisions, issuance and
+  cancellation records, complete backup/restore and RESTRICT-only cleanup.
+  Source review is in progress; no remote execution is claimed.
+
 - [x] Pass all twelve exact `a370431d` archived checks: 28,244 unit/coverage
   tests, 88.02% branches and 618 browser passes/five original hosted skips;
   preserve the initial sandbox failures and verify owned database shutdown.
@@ -19,8 +27,9 @@ below retain their original evidence boundaries.
 - [x] Pass actual current Preview recovery email/reset/session/token checks and
   independent saved-artifact review; verify session/deployment cleanup and
   preserve the prior timestamp failure. [Recovery ledger](upgrade-2026-preview-recovery-20261114.md).
-- [ ] Complete the current actual scheduled Stripe retry and scoped cleanup;
-  preserve prior failures and exact artifact boundaries.
+- [x] Pass the actual same-event scheduled Stripe retry after database
+  restoration, with one receipt, zero scoped AI effects and complete cleanup.
+  Preserve earlier failures. [Retry ledger](upgrade-2026-stripe-scheduled-retry-20261114.md).
 - [x] Preserve the complete Go notice in `9c2ff98d`; pass 60 focused controls,
   independent review and all 80 native successor stages with cleanup verified.
   [Native candidate evidence](upgrade-2026-postgres-gosu-native-20261114.md).

@@ -1,5 +1,10 @@
 # 2026 upgrade implementation evidence
 
+November 14: actual isolated Stripe outage/restoration/scheduled retry passes
+with one receipt and complete scoped cleanup; 97 recorded operations, no manual
+resends or production changes. Independent and root reviews pass.
+[Retry evidence](upgrade-2026-stripe-scheduled-retry-20261114.md).
+
 Current source, verification and remaining work are summarized in the
 [current continuation](upgrade-2026-current-status.md). Historical results
 below apply to their named revisions.

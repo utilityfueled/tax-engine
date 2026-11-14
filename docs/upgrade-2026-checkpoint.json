@@ -25960,6 +25960,26 @@
       "cleanupReceiptSha256": "0ac8018d866d71b4ad97ecd7cd0fb0a3cea331dfcfa30c4f5492f15dfbcc39bc",
       "independentActualReviewSha256": "b14e3ed1bdf25009e0daf037bb1bc01a51d65f15c84e728a33aecc864248e16f",
       "rootTerminalReviewSha256": "cf0589dd2d48472cbb99fc7c4fe2b51eac74dba86082b00c8441c905dd5b7162"
+    },
+    "actualScheduledStripeRetry": {
+      "source": "9b6202e7b2b309d5adc62ddf7d405ad7067fb8ac",
+      "passed": true,
+      "initial503At": "2026-11-14T16:57:20Z",
+      "automatic503At": "2026-11-14T16:57:36Z",
+      "roleRestoredAt": "2026-11-14T16:57:55Z",
+      "automatic200At": "2026-11-14T17:57:38Z",
+      "manualResends": 0,
+      "eventReceiptCount": 1,
+      "otherActorUnchanged": true,
+      "zeroScopedAiEffects": true,
+      "priorRowsAndDeletionReceiptsUnchanged": true,
+      "knownExplicitOperations": 97,
+      "cleanupVerified": true,
+      "wholeHostedQualified": false,
+      "ledger": "docs/upgrade-2026-stripe-scheduled-retry-20261114.md",
+      "receiptSha256": "20991d6bdcfb0959483d42735f675d9471611ea17b87c4e678a6ba37e87b3387",
+      "independentReviewSha256": "ea21cb7112a99b1c75f553d4b1f57091f8f78cabe337c618c9a774032221ea49",
+      "rootReviewSha256": "3ec8ba0dda3c0be3a1c33bde156177356bee871a4008524fda1e99b914075d50"
     }
   }
 }
