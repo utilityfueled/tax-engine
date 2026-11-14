@@ -37,6 +37,11 @@ unresolved. Default Compose is unchanged and retains its separate nine Critical
 matches. If an experimental candidate is selected, its full application image
 admission must be qualified separately. [libxml2 evidence](upgrade-2026-postgres-libxml2-native-20261114.md) · [gosu evidence](upgrade-2026-postgres-gosu-native-20261114.md).
 
+The [18:31 UTC official endpoint refresh](upgrade-2026-official-annual-afternoon-20261114.md)
+retrieved twenty responses: current annual controls still print 2025, actual IRS
+2026 drafts remain drafts, and the ten paired final 2026 paths returned non-PDF
+404s. This bounded check does not prove absence from every possible source.
+
 Independent qualified human tax, AI-case and security/privacy reviewers remain
 unassigned. Final 2026 federal/state forms and artifact qualification remain
 required. The prior aggregate export reconciles all 174 known results exactly. Two later

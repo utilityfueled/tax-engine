@@ -25430,6 +25430,19 @@
     }
   },
   "nov14ReleaseContinuation": {
+    "officialAnnualAfternoonRefresh": {
+      "checkedAt": "2026-11-14T18:31:29.796287Z",
+      "officialGets": 20,
+      "pdfs": 7,
+      "allPdfDigestsEqualMorning": true,
+      "currentAnnualControlsYear": 2025,
+      "actualIrs2026DraftsStillDraft": true,
+      "pairedFinal2026NonPdf404s": 10,
+      "finalPublicationProvenAbsentEverywhere": false,
+      "finalFormsQualified": false,
+      "manifestSha256": "b270a2d4e008f11a9b8bf301b168e66a1b58ba236deefa2b0d05a663a9951644",
+      "independentSavedSourceReviewSha256": "a1607c600bb6388ad5922270a4121bd3145d4ef19e51f3726d85f58342d03753"
+    },
     "guidedQualifiedK3Originals": {
       "applicationSource": "33f8f7845be607a7de07d38cddf6de099377dcc5",
       "staticUnitCoverageSource": "a396d2c2148de4846272d3993a52afdecc20454a",

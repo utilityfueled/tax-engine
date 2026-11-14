@@ -6,6 +6,10 @@ below retain their original evidence boundaries.
 
 ## Active continuation — November 14
 
+- [x] Refresh final annual federal/PA/Ohio endpoints at 18:31 UTC: 20 official
+  responses and seven unchanged actual PDFs; final 2026 annual qualification
+  remains unavailable. [Sources and limits](upgrade-2026-official-annual-afternoon-20261114.md).
+
 - [x] Finish the spec-first guided qualified K-3 portfolio source route,
   independent regression review and typed desktop/mobile journeys. All twelve
   mapped local checks pass: 28,322 tests, 88.02% branches, 620 browser passes/five
