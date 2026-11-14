@@ -1,0 +1,12 @@
+form: "Hosted production origin"
+fullName: "Require an HTTPS application origin in the hosted production configuration"
+reference: "docs/upgrade-2026-execution-brief.md#remaining-implementation"
+lines:
+  - line: "production-origin"
+    description: "Fail closed on an unsafe configured production origin"
+    formula: "A hosted production app URL is an absolute HTTPS origin, with no userinfo, path prefix, query or fragment. Allow the optional root slash. Invalid settings cannot establish a trusted app origin or a usable auth or billing configuration. Hosted Preview keeps its platform-owned origin. Configured development and self-host URL support is unchanged."
+    testRef: "tests/apps/web/hosted-production-origin.test.ts::rejects unsafe hosted origins across auth billing and CORS"
+  - line: "redact-invalid-origin"
+    description: "Keep invalid configuration bytes out of diagnostics"
+    formula: "Warnings about an invalid app URL contain the setting name and the fallback, without the rejected value."
+    testRef: "tests/apps/web/hosted-production-origin.test.ts::does not expose the invalid configured value in development diagnostics"

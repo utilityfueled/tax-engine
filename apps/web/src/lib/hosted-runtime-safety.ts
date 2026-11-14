@@ -25,9 +25,13 @@ export function isHostedVercelPreviewEnvironment(env: HostedRuntimeEnvironment) 
   return resolveDeploymentMode(env) === "hosted" && env.VERCEL_ENV === "preview";
 }
 
-function isValidAppUrl(value: string) {
+function isValidAppUrl(value: string, hostedProduction: boolean) {
   try {
     const parsed = new URL(value);
+    if (hostedProduction) {
+      // URL normalizes path segments and strips some invalid characters.
+      return parsed.protocol === "https:" && /^https:\/\/[^/@?\\#\s\p{Cc}]+\/?$/iu.test(value);
+    }
     return parsed.protocol === "https:" || parsed.protocol === "http:";
   } catch {
     return false;
@@ -69,7 +73,7 @@ export function resolveHostedAppBaseUrl(
   const configuredUrl = env.TAX_ENGINE_APP_URL?.trim();
   const hostedProduction = isHostedProduction(env);
 
-  if (configuredUrl && isValidAppUrl(configuredUrl)) {
+  if (configuredUrl && isValidAppUrl(configuredUrl, hostedProduction)) {
     return {
       appBaseUrl: configuredUrl,
       blocked: false,
@@ -95,7 +99,7 @@ export function resolveHostedAppBaseUrl(
 
   if (configuredUrl) {
     console.warn(
-      `[security] Ignoring invalid TAX_ENGINE_APP_URL value: "${configuredUrl}". ` +
+      "[security] Ignoring invalid TAX_ENGINE_APP_URL. " +
       `Using ${localhostAppUrl} until a valid app URL is configured.`
     );
   }

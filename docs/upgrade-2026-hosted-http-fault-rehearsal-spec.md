@@ -12,6 +12,10 @@ policies are the objects under test.
 ## Resource boundary
 
 - Use the existing production bundle and two distinct owned loopback ports.
+- Front each production Next process with a separate loopback HTTPS listener
+  using the rehearsal certificate. The client verifies the IP SAN and CA;
+  the proxy sets the HTTPS forwarding information. Record secure session
+  cookies and close both proxies during cleanup.
 - Create a private temporary PostgreSQL cluster on another loopback port,
   using an ephemeral certificate with a matching IP SAN. Require verified TLS
   using its explicit CA; never disable certificate or hostname verification.

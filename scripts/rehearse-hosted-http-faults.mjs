@@ -3,8 +3,10 @@
 import assert from "node:assert/strict";
 import { createHash, randomUUID } from "node:crypto";
 import { spawn, execFile } from "node:child_process";
-import { createServer } from "node:http";
+import { createServer, request as httpRequest } from "node:http";
+import { createServer as createHttpsServer } from "node:https";
 import net from "node:net";
+import tls from "node:tls";
 import { mkdtemp, readFile, writeFile, mkdir, rm } from "node:fs/promises";
 import { createWriteStream } from "node:fs";
 import { tmpdir } from "node:os";
@@ -37,7 +39,7 @@ env.CI = "true"; env.NEXT_TELEMETRY_DISABLED = "1";
 const hash = x => createHash("sha256").update(x).digest("hex");
 const receipt = { kind: "local-synthetic-hosted-production-http", checks: [], failures: [],
   actualUpstashNeonStripeSmtpProviderQualification: false, startedAt: new Date().toISOString() };
-const children = [], logs = [];
+const children = [], logs = [], proxies = [];
 let dbStarted = false, transport, restPort;
 const data = path.join(work, "data"), cert = path.join(work, "server.crt"), key = path.join(work, "server.key");
 async function command(name, bin, args) {
@@ -55,8 +57,9 @@ async function port() {
   const p = s.address().port; await new Promise(resolve => s.close(resolve)); return p;
 }
 const dbPort = await port(), ports = [await port(), await port()];
-assert.equal(new Set([dbPort, ...ports]).size, 3);
-const origins = ports.map(p => `http://127.0.0.1:${p}`);
+const httpsPorts = [await port(), await port()];
+assert.equal(new Set([dbPort, ...ports, ...httpsPorts]).size, 5);
+const origins = httpsPorts.map(p => `https://127.0.0.1:${p}`);
 const database = new URL(`postgresql://ai_test@127.0.0.1:${dbPort}/postgres`);
 database.searchParams.set("sslmode", "verify-full"); database.searchParams.set("sslrootcert", cert);
 async function sql(query) {
@@ -89,6 +92,9 @@ try {
   receipt.runnerSha256 = hash(await readFile(import.meta.filename));
   await command("certificate", "openssl", ["req", "-x509", "-newkey", "rsa:2048", "-nodes", "-days", "1", "-subj", "/CN=127.0.0.1",
     "-addext", "subjectAltName=IP:127.0.0.1", "-keyout", key, "-out", cert]);
+  const certificate = await readFile(cert, "utf8");
+  // This process only connects to the disposable loopback HTTPS listeners.
+  tls.setDefaultCACertificates([certificate]);
   await command("initdb", path.join(pg, "initdb"), ["-D", data, "-U", "ai_test", "-A", "trust", "--no-locale", "-E", "UTF8"]);
   await writeFile(path.join(data, "pg_hba.conf"), "local all all trust\nhostssl all all 127.0.0.1/32 trust\nhostnossl all all 127.0.0.1/32 reject\n");
   await writeFile(path.join(data, "postgresql.auto.conf"), `ssl=on\nssl_cert_file='${cert}'\nssl_key_file='${key}'\n`);
@@ -138,6 +144,24 @@ try {
     child.on("error", error => { entry.spawnError = error.code || "spawn-error"; });
     children.push(entry);
   }
+  const privateKey = await readFile(key);
+  for (const [index, upstreamPort] of ports.entries()) {
+    const proxy = createHttpsServer({ cert: certificate, key: privateKey }, (incoming, outgoing) => {
+      const host = `127.0.0.1:${httpsPorts[index]}`;
+      const upstream = httpRequest({ hostname: "127.0.0.1", port: upstreamPort,
+        path: incoming.url, method: incoming.method,
+        headers: { ...incoming.headers, host, "x-forwarded-host": host, "x-forwarded-proto": "https",
+          "x-forwarded-port": String(httpsPorts[index]) } }, response => {
+        outgoing.writeHead(response.statusCode, response.headers);
+        response.pipe(outgoing);
+      });
+      upstream.on("error", () => { if (!outgoing.destroyed) outgoing.destroy(); });
+      outgoing.on("close", () => upstream.destroy());
+      incoming.pipe(upstream);
+    });
+    proxies.push(proxy);
+    await new Promise((resolve, reject) => { proxy.once("error", reject); proxy.listen(httpsPorts[index], "127.0.0.1", resolve); });
+  }
   for (let n = 0; n < 2; n++) {
     let ready = false;
     for (let tries = 0; tries < 60; tries++) {
@@ -157,7 +181,9 @@ try {
   for (let n = 0; n < 2; n++) {
     const r = await request(n, "/api/auth/sign-up/email", { method: "POST", body: JSON.stringify({ email: `synthetic-${randomUUID()}@example.invalid`, password: "local-only-" + randomUUID(), name: "Synthetic HTTP " + n, acceptedTerms: true }) });
     assert.equal(r.status, 200, "Synthetic real auth signup failed"); privateResponse(r);
-    const body = await r.json(), cookie = r.headers.getSetCookie().map(s => s.split(";")[0]).join("; ");
+    const setCookies = r.headers.getSetCookie();
+    assert.ok(setCookies.some(value => /;\s*Secure\b/i.test(value) && /;\s*HttpOnly\b/i.test(value)), "HTTPS signup must set a secure HTTP-only cookie");
+    const body = await r.json(), cookie = setCookies.map(s => s.split(";")[0]).join("; ");
     assert.ok(body.user?.id && cookie); accounts.push({ id: body.user.id, cookie });
     await sql(`INSERT INTO hosted_billing_subscriptions (stripe_subscription_id,owner_id,plan_id,status,last_event_id,last_event_created_at) VALUES ('synthetic-${n}','${body.user.id.replaceAll("'", "''")}','starter','active','synthetic-http-only',NOW())`);
   }
@@ -278,9 +304,9 @@ try {
     assert.equal(recovery.status, 503); privateResponse(recovery);
   });
   await check("interrupted body preserves stored shell", async () => {
-    const socket = net.connect(ports[0], "127.0.0.1");
-    await new Promise((resolve, reject) => { socket.once("connect", resolve); socket.once("error", reject); });
-    socket.write(`POST ${route} HTTP/1.1\r\nHost: 127.0.0.1:${ports[0]}\r\nOrigin: ${origins[0]}\r\nCookie: ${accounts[0].cookie}\r\nX-Real-IP: 198.51.100.98\r\nContent-Type: application/json\r\nContent-Length: 4000\r\n\r\n{"workspace":`);
+    const socket = tls.connect({ host: "127.0.0.1", port: httpsPorts[0], ca: certificate });
+    await new Promise((resolve, reject) => { socket.once("secureConnect", resolve); socket.once("error", reject); });
+    socket.write(`POST ${route} HTTP/1.1\r\nHost: 127.0.0.1:${httpsPorts[0]}\r\nOrigin: ${origins[0]}\r\nCookie: ${accounts[0].cookie}\r\nX-Real-IP: 198.51.100.98\r\nContent-Type: application/json\r\nContent-Length: 4000\r\n\r\n{"workspace":`);
     await delay(100); socket.destroy(); await delay(250); assert.equal(await snapshot(), before);
   });
   await check("owner delete persists across both production processes", async () => {
@@ -298,6 +324,9 @@ try {
 } catch (error) { receipt.failures.push({ name: "prerequisite or setup", message: String(error.message) }); }
 finally {
   const cleanup = [];
+  for (const proxy of proxies) {
+    if (proxy.listening) await new Promise(resolve => { proxy.close(resolve); proxy.closeAllConnections(); });
+  }
   for (const { child, stream, spawnError } of children) {
     if (child.exitCode === null && child.signalCode === null && !spawnError) {
       child.kill("SIGTERM");
@@ -311,7 +340,7 @@ finally {
   let ownedPidFile = false;
   try { await readFile(path.join(data, "postmaster.pid")); ownedPidFile = true; } catch { /* no owned pid */ }
   if (dbStarted || ownedPidFile) try { await dbStop(); } catch { cleanup.push({ kind: "owned PostgreSQL", stopped: false }); }
-  for (const p of [dbPort, ...ports, ...(restPort ? [restPort] : [])]) {
+  for (const p of [dbPort, ...ports, ...httpsPorts, ...(restPort ? [restPort] : [])]) {
     const closed = await new Promise(resolve => { const s = net.connect(p, "127.0.0.1"); s.once("connect", () => { s.destroy(); resolve(false); }); s.once("error", () => { s.destroy(); resolve(true); }); });
     cleanup.push({ kind: "owned port", port: p, closed });
   }
