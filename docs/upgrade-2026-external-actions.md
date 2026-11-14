@@ -154,10 +154,16 @@ those external facts.
 The owner directed work onto `main` after merging PR #13 and asked that commits
 stay local while they disable automatic Vercel production deployments. Pushing
 and the resulting remote CI remain on hold.
-The November 13 settings check found Production tracking `main`, automatic
-production-domain assignment enabled and Ignored Build Step set to Automatic.
+The November 14 03:29 UTC readback found Production tracking `main`, automatic
+production-domain assignment enabled, and no ignore command or deployment policy.
 [Production environment](https://vercel.com/utility-fueled-llc/tax-engine/settings/environments/production) ·
 [Build and Deployment](https://vercel.com/utility-fueled-llc/tax-engine/settings/build-and-deployment#ignored-build-step).
+
+The [current human tax assignment](upgrade-2026-nov14-human-tax-review.md)
+provides separate original-bound synthetic worksheets for all six selected
+state/residency pairs and three unresolved federal decisions. It records
+scope and authority without exposing expected engine results to the first
+independent calculation. No qualified reviewer has accepted a worksheet.
 
 The November 13 Debian refresh checks all 81 historical AMD64 tracker rows.
 Three zlib rows now have the exact trixie security fix pinned in the current

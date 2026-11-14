@@ -25428,5 +25428,47 @@
       "httpReceiptsSha256": "da91b1b88a60de4bfdf2b64e91c2e9853a62a2fe5b98293200ab0b5029a092f7",
       "supplementSha256": "608c0aad129b43a950c4e3f37ea66ecd927d17792b6fa37f0b879eba7e95c1da"
     }
+  },
+  "nov14ReleaseContinuation": {
+    "productionPushHold": {
+      "checkedAt": "2026-11-14T03:29:51Z",
+      "originMain": "5924888957445a1e3791b34eb7116a9ae62d8e38",
+      "productionBranch": "main",
+      "automaticDomainAssignment": true,
+      "ignoreCommandPresent": false,
+      "deploymentPolicyPresent": false,
+      "readbackSha256": "279bea220e407b25ac2d809fe0fa8522d91abb099ffe68e43909221f17be2e04"
+    },
+    "localHttpsOrigin": {
+      "source": "d6fed7fcc68fac138a80bae3fc0362c8974f8cfd",
+      "focusedPassed": 277,
+      "localHostedHttpPassed": 15,
+      "loopbackPortsClosed": 6,
+      "hostedReceiptSha256": "727fe58a44d9bf12450bb576f608dd6d934f24c1ae50227e3c62954dd37c836b",
+      "protectedPreviewQualified": false
+    },
+    "privateExplanationOrigin": {
+      "source": "dcb9e7aa9c9b8df8e2c55fcbbc6a2ea9bd57a3cf",
+      "regressionsFailedFirst": 6,
+      "focusedPassed": 103,
+      "actualProviderCalls": 0
+    },
+    "reviewerAssignment": {
+      "source": "02e553cf88b3d22ddaf72caf1acce4c5ae7adafc",
+      "assignmentCommit": "afb369d049f3454dc5b76c276fced94f8069e9dd",
+      "officialReceiptSha256": "ec3887b71c5ef35214654b88479eae3bf1bd497e928f40a09b0a141af79937ac",
+      "manifestSha256": "2251aba663d89e260847677d3b019be495cadf0102f51eb73063da331834c7e0",
+      "stateResidencyCases": 6,
+      "federalCases": 3,
+      "humanDecisionsReceived": 0
+    },
+    "packageAudit": {
+      "lockfileBlob": "480e817af821dfba68c25ed276bb3b173ef24948",
+      "productionRecords": 447,
+      "allRecords": 539,
+      "knownFindings": 0,
+      "productionSha256": "802c55f7c0fed74cd44169b476634570a7f531cdf59d8a8688e396513ae3e5ce",
+      "allSha256": "2bd34d50bec6f2f16e90551fcae80e94f898eabc4c169417a21a74f3fdf42d1f"
+    }
   }
 }

@@ -144,3 +144,23 @@ own upgrade, recovery and rollback evidence. The PostgreSQL service
 remains open for security qualification, including the unresolved High
 findings, accountable disposition and independent human review.
 [Official image tags](https://hub.docker.com/_/postgres/tags?name=16) · [PostgreSQL collation guidance](https://www.postgresql.org/docs/16/sql-altercollation.html).
+
+### Bookworm libxml2 backport check
+
+The November 14 check verified Debian's signed Bookworm source index and
+all three archive inputs for `2.9.14+dfsg-1.3~deb12u6`. Reconstructing the
+source applied all 39 Debian patches without fuzz. A dry run of the
+upstream fix for CVE-2026-6653 reported ten conflicts across the parser,
+SAX code and entity implementation and header. Its public parser-input
+and entity structure sizes also differ from Bookworm's. The same shared
+library name alone would not establish binary compatibility. The local
+compatibility receipt SHA-256 is
+`35a23f383226214102e96cecb9a3758a48902d4601b86e1cbac01bd60e8ea578`.
+
+An installable backport would require maintained source, ABI and SQL/XML verification on
+both native architectures, plus upgrade and rollback rehearsal. Debian's
+current Bookworm row stays open. Compose still pins the Bookworm image,
+and the security disposition is pending.
+[Debian source package](https://sources.debian.org/src/libxml2/2.9.14%2Bdfsg-1.3~deb12u6/) ·
+[Debian CVE status](https://security-tracker.debian.org/tracker/CVE-2026-6653) ·
+[Upstream fix](https://gitlab.gnome.org/GNOME/libxml2/-/commit/463bbeeca1805b5c4828f50d0fefc4eebaf620df).

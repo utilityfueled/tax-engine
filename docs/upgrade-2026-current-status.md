@@ -5,8 +5,9 @@
 The public refs were refreshed. `origin/main` still points to `59248889`
 and `origin/upgrade/2026-baseline` to `3024b848`. Successor commits stay on
 local `main` while automatic production deployment is being disabled.
-The read-only Vercel check still finds the production project linked to
-`main`, with automatic custom-domain assignment and no build-ignore command.
+The November 14 03:29 UTC read-only Vercel check still finds the production
+project linked to `main`, with automatic custom-domain assignment and no
+build-ignore command or deployment policy.
 The isolated rehearsal project has no Git link and protects all deployments.
 The team is on Pro, whose Sandbox credits are shared and can incur overage.
 No Sandbox was started. [Vercel Sandbox pricing](https://vercel.com/docs/sandbox/pricing).
@@ -20,6 +21,34 @@ admitted two concurrent creations at 199 returns. `86cf13d5` adds that
 request sequence to the production HTTP rehearsal. The fixed build passed
 all 15 local checks with exactly one successful creation and verified cleanup.
 [Rehearsal evidence](upgrade-2026-nov13-release-rehearsals.md).
+
+`d6fed7fc` requires an HTTPS origin without credentials, path, query or
+fragment for hosted production auth and billing. Invalid configuration
+values stay out of diagnostics. The 277 focused tests passed. The local
+production build passed all 15 HTTP checks via two certificate-verified
+loopback HTTPS proxies, including real secure sessions and cleanup of all
+six ports. `dcb9e7aa` applies the same production and Preview origin rules
+to transient AI tax explanations before auth, rate limiting or provider
+work. Six regressions failed first and all 103 affected tests passed.
+[Hosted rehearsal contract](upgrade-2026-hosted-http-fault-rehearsal-spec.md).
+
+The fresh official checks at 03:16 UTC on November 14 still show no final
+2026 parent Form 1040, IRS tax and EIC tables or annual PA/OH forms in the
+checked endpoints. Final 2026 Schedule 8812 has draft instructions. Ohio's
+November 13 announcement is for draft instructions. `afb369d0` binds nine
+fictional fact sets to actual authority and source digests, with separate
+ordinary wage cases for every selected state/residency pair. All qualified
+human decisions remain pending. [Independent review assignment](upgrade-2026-nov14-human-tax-review.md).
+
+A fresh public npm audit on the current lockfile (`480e817a`) reported zero
+known findings across 447 production and 539 total dependency records.
+The publisher's Next.js advisory list still showed November 3 as the most
+recent batch observed. The OpenAI and Google public catalogs reconfirmed the
+documented rates and publication of the candidate profiles. No provider
+request or project-access test followed this refresh.
+[Next.js advisories](https://github.com/vercel/next.js/security/advisories) ·
+[OpenAI pricing](https://developers.openai.com/api/docs/pricing) ·
+[Gemini pricing](https://aistudio.google.com/docs/pricing#gemini-3.8-flash).
 
 `3c7ff065` validates actual federal estimate and extension payment dates even
 when withholding removes the Form 2210 calculation. Legacy dates in the

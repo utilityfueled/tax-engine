@@ -11,6 +11,17 @@ below retain their original evidence boundaries.
   `c339c6e9` passed 231 tests. `86cf13d5` adds the independent two-server
   HTTP rehearsal that reproduced duplicate admission on the predecessor
   and passed all 15 checks on the fixed build.
+- [x] Require valid HTTPS hosted production origin configuration in
+  `d6fed7fc`. Pass 277 focused tests, verify both actual synthetic sessions
+  use secure cookies, and pass all 15 local checks with both proxies closed.
+- [x] Apply the authoritative hosted origin to the private AI explanation
+  route in `dcb9e7aa`. Reproduce six denied/accepted origin mismatches, then
+  pass 103 focused tests without provider calls.
+- [x] Recheck annual federal, Pennsylvania and Ohio final-form endpoints and
+  prepare exact independent worksheets for six state residency cohorts and
+  three federal questions. [Review assignment](upgrade-2026-nov14-human-tax-review.md).
+- [ ] Obtain completed and signed independent human worksheets. The review
+  packet has no assigned reviewer or accepted results.
 - [x] Validate actual federal estimate and extension dates before penalty
   exceptions in `3c7ff065`. Pass 526 tests, preserve the following-year
   January installment and require explicit confirmation for an out-of-window
