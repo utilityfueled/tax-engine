@@ -105,8 +105,9 @@
     "apps/web/src/components/guided-interview/foreign-income-details.tsx": "e8445b24b8c82756d3afae4635cb38db7c1ad12e1007cdfe4e1607e85a544844",
     "apps/web/src/components/guided-interview/foreign-tax-carryover-details.tsx": "f180bcb693b02d344023f4c0aef67c20512ec379b30dd0103e041f621e2d6989",
     "apps/web/src/components/guided-interview/foreign-tax-direct-credit-details.tsx": "63e797711312eae561eaf9d6ab4738b3c1b91cfa6938c58e022a548e86cf92cf",
-    "apps/web/src/components/guided-interview/foreign-tax-election-details.tsx": "b35451d8848688b0543a8634f7f6b77248de91097da037cea4fe0b5e4786a996",
+    "apps/web/src/components/guided-interview/foreign-tax-election-details.tsx": "c6f0d8c0ccc353212c7f16d83832ec1d08e3ca4d0b77c0b35f29dd25c352c74d",
     "apps/web/src/components/guided-interview/foreign-tax-itemized-allocation-details.tsx": "9151d947a029f516a27eb39399f65913183127246c0df843406528cd3f9f2bdf",
+    "apps/web/src/components/guided-interview/foreign-tax-k3-details.tsx": "7987497522f8971600d1940b5a4ba2f2fcd580625aa464a8bfb48f3e5adfa610",
     "apps/web/src/components/guided-interview/foreign-tax-ordinary-credit-details.tsx": "4d9016a2d83a07dbecde2505de662d02b1aaa11294e65a39d5de3f389e77ff3e",
     "apps/web/src/components/guided-interview/form-8862-details.tsx": "0057e48201a18f32be9a997d88741608335277d75f3df2992f45b22b17494da1",
     "apps/web/src/components/guided-interview/government-payment-source-fields.tsx": "83052020e0ab728ec5ae687f078fbfea8b2609ed9142fe8941a236b1f9e9601b",
@@ -280,7 +281,8 @@
     "apps/web/src/lib/guided-foreign-income.ts": "36f30870e01a475a8a523e6456eea39e7c9571a0f5ed85062917cc995363087e",
     "apps/web/src/lib/guided-foreign-tax-carryover.ts": "bcacfabf0f1258e58f4b42d10519a8ffdf4f5278294acb45b490b43cb8664603",
     "apps/web/src/lib/guided-foreign-tax-direct-credit.ts": "884993fd0c9387eb514a1383e705fa3b47eac8c339ff612fcf779114628c4c0b",
-    "apps/web/src/lib/guided-foreign-tax-election.ts": "a5459fcee9693d97ebd7d9dde6099974dd07c500647cfe898fcdc28594141b24",
+    "apps/web/src/lib/guided-foreign-tax-election.ts": "2cc8f8378a03ab26aa4350f208c08c061f99566a7811d2357b62455598eaf8e0",
+    "apps/web/src/lib/guided-foreign-tax-k3.ts": "f0ae6f87972ad25cdeab3e5f5fc3882f6339127c998aa93f2f0441cc5d82e609",
     "apps/web/src/lib/guided-foreign-tax-ordinary-credit.ts": "ce12fbc415c59128af5cf5676e8ec75652c6dba5930da76262e1f4b1244eec58",
     "apps/web/src/lib/guided-form-8862.ts": "7af0cb92bf7d8a40e49dcef3871ebbbbc0685ae82b5e6a657ee3dfe6d2cc4402",
     "apps/web/src/lib/guided-government-payment-inputs.ts": "3b1f6625a50d914e3874e4a38d9897aafca8aee353c829da7007c732a9d63d2f",
@@ -288,8 +290,8 @@
     "apps/web/src/lib/guided-health-insurance-facts.ts": "08c785a3a31d07d96932840afba8cb23c914c22a4213abafc2ac6531b811ae4b",
     "apps/web/src/lib/guided-hsa-distribution-facts.ts": "e9ce96eb9f2c2297fca1dd53ca311b2b42545da4a3a2ec257fcf702daac9060f",
     "apps/web/src/lib/guided-hsa-facts.ts": "bad97489b43ff81ed079b9c193f1f77f6fd62950ee159256456a79a6d009654e",
-    "apps/web/src/lib/guided-interview-bridge.ts": "c9fd89e42265a166323fdd14bdb6a036eb4f7d02c90925a273a9129daf4f6798",
-    "apps/web/src/lib/guided-interview-flow.ts": "d30305e2e6af4a6e543c526bf163a8e63968d00f9fc3d15d19288703cd877cbf",
+    "apps/web/src/lib/guided-interview-bridge.ts": "63561d3fc5e42a1bc90aacb707c0f8d8159ab2bf448612cdaf19469888c33e18",
+    "apps/web/src/lib/guided-interview-flow.ts": "be4692c875cf1d8aad1d8b5cec84b91c71a97debbb5a64bd32ba94d7d0140e92",
     "apps/web/src/lib/guided-investment-facts.ts": "c05786de5c12a4341371294d2a926ec64aae99eeeb8ffcbe5595c6fe9c3727dc",
     "apps/web/src/lib/guided-investment-interest.ts": "3f55441684455777dac810e9122e14345944f6f5e4262e1f2e4447eff1b1118b",
     "apps/web/src/lib/guided-ira-basis.ts": "b6dff39b2a47ff2c56d233b91e9fa52fa35a75443577b2b33754edaa65c18473",
@@ -514,6 +516,7 @@
     "apps/web/tests/guided-eic-separated-spouse.spec.ts": "9fcfed0b66706e03bfdd3c77d58494fd1b3a3dd8863c540d1d7ba9b0e5b3123e",
     "apps/web/tests/guided-fact-boundaries.spec.ts": "0908da5a5a6186c3600d45f05d0fbd1ca87dd1c98456b6a0388e62ec195eddcc",
     "apps/web/tests/guided-fixtures.ts": "7c946253d8a9759f13260d1b5c6db56c8ee1c28aca9ff4b959d4724575c85e21",
+    "apps/web/tests/guided-foreign-tax-k3.spec.ts": "c29c1ca05ec7463bf49bc908104a57bc673f1f7f4ae6987751cfd38dca09bf8e",
     "apps/web/tests/guided-form-8862-deceased.spec.ts": "c1110d9eaf1c338e7b4a544cea19d361e9a96021118859cdce4d1b0c6cd7eed3",
     "apps/web/tests/guided-form-8862.spec.ts": "7f10d27dd94a2a2b67a94b570082a100cbc9e2610f38fc40121c4b3c99d4d303",
     "apps/web/tests/guided-health-separate-owners.spec.ts": "5c9a0551af8c8d5936c6e5cfe762ce9e992562cdf8d73c4e39a37220d2530c58",
@@ -1609,6 +1612,7 @@
     "tests/fixtures/guided-eic-history.ts": "bc083aec6f3a0cc2b7c8955a41447297c688e97c89249c34b2a05080bf72a672",
     "tests/fixtures/guided-eic-separated-review.ts": "d0a95fc9ddf8f0b664ebd6265d8dae136506935d4d0730a235d68affed730704",
     "tests/fixtures/guided-foreign-tax-carryover.ts": "7206840178551af4d6e34b679d872cca1ea7592eb73aa21d96c743d768b7b7ca",
+    "tests/fixtures/guided-foreign-tax-k3.ts": "032fcca50ebe310cc2e823f27e249b724de4c1130353e83daf7bbe8a105f4808",
     "tests/fixtures/guided-foreign-tax-ordinary.ts": "1be8c4f83fe1a3381b9a0c61cc13477f458fc319956e8ed572e53c16b7868027",
     "tests/fixtures/guided-form-172-charitable-carried-composition.ts": "78438ef0259204365f8abd66f57ade678723da44793b882d3376158a4e46b774",
     "tests/fixtures/guided-form-172-charitable-closure-sources.ts": "8b49d3e3e9cf10b88381c3b0e7c941515a33435cd0393f5f8b66fb9b1cfd9919",
@@ -4068,6 +4072,18 @@
       },
       "requestSourceLines": [],
       "reviewBasis": "Both local viewport journeys verify reload, explicit input, opt-out and zero protected requests. The mobile journey also verifies original W-2G linkage, persistence, change invalidation and source privacy."
+    },
+    "guided-foreign-tax-k3.spec.ts": {
+      "caseCount": 2,
+      "bounds": {
+        "filled-return": 0,
+        "provider": 0,
+        "business-expense-analysis": 0,
+        "self-employment-income-analysis": 0
+      },
+      "requestSourceLines": [],
+      "reviewBasis": "Desktop/mobile type original K1/K3 facts locally, reload and edit confirmations. Explicit protected API request observation asserts zero; no filled-return, provider or analysis action/helper.",
+      "skippedTitles": []
     }
   }
 }

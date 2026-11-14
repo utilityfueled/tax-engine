@@ -5,10 +5,10 @@ irsReference: "https://www.irs.gov/instructions/i1116"
 sources:
   - url: "https://uscode.house.gov/us/usc/119-118/t26/s904/"
     section: "904(j): qualified passive income, qualified payee statements, 300/600 joint limit, no election-year carry use"
-    retrieved: "2026-10-25"
+    retrieved: "2026-11-14"
   - url: "https://www.irs.gov/instructions/i1116"
     section: "Final2025 election without Form1116; creditability; lines10,12,20"
-    retrieved: "2026-10-25"
+    retrieved: "2026-11-14"
   - url: "https://www.irs.gov/instructions/i6251"
     section: "Final2025 lines8 and10: elected regular credit also AMT credit, PartI regular-tax comparison"
     retrieved: "2026-10-25"
@@ -18,6 +18,9 @@ sources:
   - url: "https://www.irs.gov/pub/irs-pdf/f8801.pdf"
     section: "Final2025 lines22-24: actual regular tax after credits less current6251line9"
     retrieved: "2026-10-25"
+  - url: "https://uscode.house.gov/us/usc/119-118/t26/s469/"
+    section: "469(e)(1): portfolio interest/dividends outside ordinary business are excluded from passive-activity income; distinct from FTC passive category"
+    retrieved: "2026-11-14"
 reviewStatus: "Agent source review required; independent human review and final2026 qualification pending"
 notes: |
   Applies to2025 correction and the isolated2026 candidate. No filing gate or
@@ -30,7 +33,7 @@ notes: |
   holding-period answers are actual source facts, never inferred from a1099.
   This branch requires fully creditable legal tax with no refund, subsidy,
   related payment, sanctioned-country or line12 reduction. Amended returns,
-  resident elections, accrual history, pass-through or territory sources and
+  resident elections, accrual history, unsupported pass-through or territory sources and
   partial-creditability/reduction methods require separate implementation.
   Keep those source facts and reject unsupported combinations.
   Preserve actual regular and AMT carryover ledgers without absorption or use.
@@ -90,7 +93,24 @@ lines:
     testRef: "tests/pdf/form-6251-direct-credit.test.ts::prints audited elected AMT credit and accurate limitations in a saved review form"
   - line: "pass-through-statements"
     description: "Accept passive foreign tax reported on a qualified pass-through statement"
-    formula: "Instructions for Form1116, election without Form1116, name Schedule K-1 (Form1041) and Schedule K-3 (Forms1065 and1120-S) as qualified payee statements. A row scheduleK1:i or scheduleK1Form1041:i binds owner, name and EIN, the statement kind must match the source, and a partnership K-1 row must be passive category. Its tax joins the 300 or 600 limit, and foreign income with no tax still needs its row. The Form1116 route and deductions keep rejecting pass-through tax. A Form1041 row needs its beneficiary on a joint return. The entity pays the tax, so a pass-through row needs no dated payments, and a statement label on a 1099 row rejects. The statement cannot prove what is passive: a K-1 carries a category and foreign income only in its foreign fields, and a Form1041 statement carries neither, so the election's passive and qualified-statement confirmations carry that fact, and the single country on a row is entered by the filer. The guide cannot reach this route, because guided K-1 basis and at-risk sources require zero foreign tax."
+    formula: "Instructions for Form1116, election without Form1116, name Schedule K-1 (Form1041) and Schedule K-3 (Forms1065 and1120-S) as qualified payee statements. A row scheduleK1:i or scheduleK1Form1041:i binds owner, name and EIN, the statement kind must match the source, and a partnership K-1 row must be passive category. Its tax joins the 300 or 600 limit, and foreign income with no tax still needs its row. The Form1116 route and deductions keep rejecting pass-through tax. A Form1041 row needs its beneficiary on a joint return. The entity pays the tax, so a pass-through row needs no dated payments, and a statement label on a 1099 row rejects. The statement cannot prove what is passive: a K-1 carries a category and foreign income only in its foreign fields, and a Form1041 statement carries neither, so the election's passive and qualified-statement confirmations carry that fact, and the single country on a row is entered by the filer. The guided portfolio-only partnership K-3 successor below does not relax the separate qualified-loss or charitable K-1 guards."
     irsRef: "Instructions for Form1116 Election To Claim the Foreign Tax Credit Without Filing Form1116, retrieved2026-11-01; IRC904(j)"
     testRef: "tests/engine/forms/foreign-tax-direct-credit.test.ts::accepts passive tax on a qualified pass-through statement"
+  - line: "guided-portfolio-k3"
+    description: "Actual original portfolio-only partnership K-1 and qualified K-3 reach the existing direct credit"
+    formula: "Original2025 or2026 domestic continuing non-PTP partnership sources require exact source year, entity name/EIN, current return owner/name/identifier suffix, actual qualified ScheduleK3(Form1065) and source reference, one actual foreign country, explicit passive portfolio-only confirmation, original interest/ordinary dividends/qualified-dividend subset, foreign gross income equal to the portfolio total, actual foreign tax and opening outside basis. Explicit zero-other-boxes, no other basis changes and zero prior suspensions establish the finite source cohort; absent is not zero. Existing partner basis calculation must allow every cent of current foreign tax with no suspension. No simultaneous guided qualified-loss or charitable K1 packet, bare K1, S corporation, capital/loss/ordinary/SE/rental/QBI histories, mixed foreign-income allocation, Form1116 or deduction is admitted. The same validated original list must feed navigation, annual source reconciliation and canonical input. Actual qualified-payee row binds index/owner/name/EIN/country/tax; no account or entity payment date is invented. Existing direct-credit exact aggregate300/600 ceiling and annual eligibility/creditability/carry-history controls remain authoritative."
+    irsRef: "Final2025 i1116 Election To Claim the Foreign Tax Credit Without Filing Form1116, refreshed2026-11-14; IRC904(j); existing partner-basis foreign-tax method. Independent human and final2026 filing qualification remain pending."
+    testRef: "tests/guided-interview/guided-foreign-tax-k3.test.ts::routes actual portfolio K3 sources through navigation and canonical direct credit"
+  - line: "guided-portfolio-k3-continuity"
+    description: "Original source and household changes require renewed confirmation"
+    formula: "Preserve original known zero, exact cents, source references and existing statement IDs through JSON replay. Reordered/removed/replaced sources, foreign-year or owner/identity mismatch, a basis shortfall, a foreign income mismatch, missing or false eligibility and unknown fields reject. Editing original K3 sources or actual household/year/status invalidates annual and direct-election confirmations; confirmed source IDs never silently retarget another statement."
+    testRef: "tests/guided-interview/guided-foreign-tax-k3.test.ts::rejects incomplete stale or unsupported qualified K3 sources and preserves replay"
 
+  - line: "guided-portfolio-k3-independent"
+    description: "Independent real-entry source, exact-cent, original continuity and privacy controls"
+    formula: "No missing original source, unrelated owner, bare statement, unconfirmed zero/history or unsupported saved amount can reach the supported direct credit. Valid originals preserve qualified dividend subset, full basis allowance, exact aggregate ceilings, known-zero tax and source-private projections. No-K3 current minimum-tax-credit source behavior remains unchanged."
+    testRef: "tests/guided-interview/guided-foreign-tax-k3-independent.test.ts::binds actual portfolio amounts and qualified tax once in %i"
+  - line: "guided-portfolio-k3-browser"
+    description: "Desktop/mobile original K3 entry retains actual zero, missing facts and renewed review"
+    formula: "Type the new original K1/K3 facts through visible controls, select its qualified annual source, preserve exact cents on reload, omit invented account/payment dates, revoke original and election confirmations after edits, preserve known zero separately from blank and keep private original references and identifiers out of observed request bodies. Existing browser cases and budgets remain unchanged."
+    testRef: "apps/web/tests/guided-foreign-tax-k3.spec.ts::types original portfolio K3 facts and preserves unknowns and source review after reload"

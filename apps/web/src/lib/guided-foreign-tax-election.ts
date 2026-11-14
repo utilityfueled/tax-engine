@@ -1,3 +1,5 @@
+import { buildGuidedForeignTaxK3Sources, type GuidedForeignTaxK3StatementData } from './guided-foreign-tax-k3';
+import type { GuidedFlowState } from './guided-interview-flow';
 import { buildGuidedForeignTaxOrdinaryCredit, type ForeignOrdinaryCreditData } from './guided-foreign-tax-ordinary-credit';
 import { buildGuidedForeignTaxCarryover, type ForeignCarryoverData } from "./guided-foreign-tax-carryover";
 import { buildGuidedForeignTaxDirectCredit, type ForeignDirectCreditData, type ForeignCreditKnownResidency } from './guided-foreign-tax-direct-credit';
@@ -10,7 +12,7 @@ import { parseGuidedCurrency } from './guided-currency';
 
 type EngineElection = NonNullable<TaxYearInput['foreignTaxElection']>;
 export type ForeignTaxSourceData = NonNullable<EngineElection['sources']>[number];
-export type ForeignTaxElectionData = Omit<EngineElection,'taxYear'|'sourceFactsConfirmed'|'deductionYearCarryover'|'creditWithoutForm1116'|'creditWithForm1116'> & {taxYear?:string;sourceFactsConfirmed?:boolean|null;deductionYearCarryover?:ForeignCarryoverData;creditWithoutForm1116?:ForeignDirectCreditData;creditWithForm1116?:ForeignOrdinaryCreditData};
+export type ForeignTaxElectionData = Omit<EngineElection,'taxYear'|'sourceFactsConfirmed'|'deductionYearCarryover'|'creditWithoutForm1116'|'creditWithForm1116'> & {taxYear?:string;sourceFactsConfirmed?:boolean|null;deductionYearCarryover?:ForeignCarryoverData;creditWithoutForm1116?:ForeignDirectCreditData;creditWithForm1116?:ForeignOrdinaryCreditData;qualifiedK3Statements?:GuidedForeignTaxK3StatementData[]};
 const statusMap:Record<FilingStatus,EngineFilingStatus>={single:'single',mfj:'married_filing_jointly',mfs:'married_filing_separately',hoh:'head_of_household',qss:'qualifying_surviving_spouse'};
 function amount(value:string|undefined,label:string) {
   if(value===undefined||!value.trim())throw new Error(`Enter the actual ${label}, including zero when established by the source.`);
@@ -21,16 +23,21 @@ export function snapshotForeignTaxSource(entry:InterestEntryData|DividendEntryDa
     owner:entry.accountHolder==='primary'||entry.accountHolder==='spouse'?entry.accountHolder:undefined,
     foreignCountry:entry.foreignCountry,reportedTaxAmount:entry.foreignTaxPaid};
 }
-export function buildGuidedForeignTaxElection(data:ForeignTaxElectionData|undefined,investment:InvestmentData|undefined,year?:number|null,status?:FilingStatus|null,knownResidency?:ForeignCreditKnownResidency):TaxYearInput['foreignTaxElection'] {
+export function buildGuidedForeignTaxElection(data:ForeignTaxElectionData|undefined,investment:InvestmentData|undefined,year?:number|null,status?:FilingStatus|null,knownResidency?:ForeignCreditKnownResidency,state?:GuidedFlowState):TaxYearInput['foreignTaxElection'] {
   if(!data)return undefined;
   if((year!==2025&&year!==2026)||data.taxYear!==String(year)||!status)throw new Error('Match the actual annual foreign-tax election year to this return.');
   if(data.sourceFactsConfirmed!==true)throw new Error('Confirm the actual foreign-tax election and its sources after the last edit.');
+  if (data.qualifiedK3Statements !== undefined && !Array.isArray(data.qualifiedK3Statements)) throw new Error('Record the actual qualified K3 original statement list.');
+  if (data.qualifiedK3Statements?.length && !state) throw new Error('Qualified K3 sources require the actual guided household and original statements.');
+  if (state && (state.taxYear !== year || state.segmentation.filingStatus !== status)) throw new Error('Reconcile qualified K3 source context with the actual return year and filing status.');
+  const scheduleK1 = state ? buildGuidedForeignTaxK3Sources(state, data) : [];
   const sources=data.sources?.map(source=>({...source,
     reportedTaxAmount:amount(source.reportedTaxAmount,'statement foreign tax'),taxOnExcludedIncome:amount(source.taxOnExcludedIncome,'tax on excluded income'),
     taxDeductedElsewhere:amount(source.taxDeductedElsewhere,'tax already deducted elsewhere'),investmentAllocableAmount:amount(source.investmentAllocableAmount,'foreign investment tax allocation'),
     payments:source.payments?.map(payment=>({...payment,amountUsd:amount(payment.amountUsd,'dated USD tax payment')})),
   }));
-  const actual=ForeignTaxElectionSchema.parse({...data,taxYear:year,sources,deductionYearCarryover:buildGuidedForeignTaxCarryover(data.deductionYearCarryover,investment,year,status),creditWithoutForm1116:buildGuidedForeignTaxDirectCredit(data.creditWithoutForm1116,knownResidency),creditWithForm1116:buildGuidedForeignTaxOrdinaryCredit(data.creditWithForm1116,year,knownResidency)});
+  const annualData = Object.fromEntries(Object.entries(data).filter(([key]) => key !== "qualifiedK3Statements"));
+  const actual=ForeignTaxElectionSchema.parse({...annualData,taxYear:year,sources,deductionYearCarryover:buildGuidedForeignTaxCarryover(data.deductionYearCarryover,investment,year,status),creditWithoutForm1116:buildGuidedForeignTaxDirectCredit(data.creditWithoutForm1116,knownResidency),creditWithForm1116:buildGuidedForeignTaxOrdinaryCredit(data.creditWithForm1116,year,knownResidency)});
   const form1099Int=(investment?.interestEntries??[]).filter(isStartedInvestment).map(entry=>Form1099IntSchema.parse({
     payer:entry.payer,payerTin:entry.payerTin,accountReference:entry.accountReference?.trim()||undefined,accountHolder:entry.accountHolder||undefined,
     interestIncome:amount(entry.interestIncome,'statement interest'),foreignTaxPaid:amount(entry.foreignTaxPaid,'statement foreign tax'),foreignCountry:entry.foreignCountry,
@@ -41,9 +48,9 @@ export function buildGuidedForeignTaxElection(data:ForeignTaxElectionData|undefi
   }));
   // Annual history is explicitly confirmed in this worksheet. Canonical return
   // validation also checks any saved carryovers and pass-through tax records.
-  resolveForeignTaxElection({taxpayer:{taxYear:year,filingStatus:statusMap[status]},foreignTaxElection:actual,form1099Int,form1099Div,scheduleK1:[],scheduleK1Form1041:[]});
+  resolveForeignTaxElection({taxpayer:{taxYear:year,filingStatus:statusMap[status]},foreignTaxElection:actual,form1099Int,form1099Div,scheduleK1,scheduleK1Form1041:[]});
   return actual;
 }
-export function guidedForeignTaxFactErrors(data:ForeignTaxElectionData|undefined,investment:InvestmentData|undefined,year?:number|null,status?:FilingStatus|null,knownResidency?:ForeignCreditKnownResidency):Record<string,string> {
-  try{buildGuidedForeignTaxElection(data,investment,year,status,knownResidency);return{};}catch(error){return{foreignTaxElection:error instanceof Error?error.message:'Complete the actual annual foreign-tax election and sources.'};}
+export function guidedForeignTaxFactErrors(data:ForeignTaxElectionData|undefined,investment:InvestmentData|undefined,year?:number|null,status?:FilingStatus|null,knownResidency?:ForeignCreditKnownResidency,state?:GuidedFlowState):Record<string,string> {
+  try{buildGuidedForeignTaxElection(data,investment,year,status,knownResidency,state);return{};}catch(error){return{foreignTaxElection:error instanceof Error?error.message:'Complete the actual annual foreign-tax election and sources.'};}
 }

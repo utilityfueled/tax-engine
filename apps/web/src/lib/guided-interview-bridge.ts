@@ -1,3 +1,4 @@
+import { buildGuidedForeignTaxK3Sources } from './guided-foreign-tax-k3';
 import {captureGuidedRRTA,bindGuidedRRTA,rrtaParentValues,type GuidedRRTADraft} from './guided-rrta-payroll-sources';
 import {buildTipIncomeSourceOriginals} from './guided-tip-income-facts';
 import {buildGuidedPassengerForm,bindGuidedPassengerInput,type GuidedPassengerDraft} from './guided-passenger-sources';
@@ -844,7 +845,7 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
     assertKnownFacts(hsaFactErrors(adjustmentData?.hsaAccounts, segmentation.filingStatus, state.taxYear, w2Data?.entries ?? [], personalInfo, segmentation.lifeEvents.includes("hsa-contributions")));
     assertKnownFacts(householdFactErrors(otherTaxesData, state.taxYear));
     assertKnownFacts(guidedNiitFactErrors(otherTaxesData?.niitSources, retirementData?.entries, state.taxYear, segmentation.filingStatus));
-    assertKnownFacts(guidedForeignTaxFactErrors(otherTaxesData?.foreignTaxElection, investData, state.taxYear, segmentation.filingStatus, foreignCreditKnownFacts(state)));
+    assertKnownFacts(guidedForeignTaxFactErrors(otherTaxesData?.foreignTaxElection, investData, state.taxYear, segmentation.filingStatus, foreignCreditKnownFacts(state), state));
     assertKnownFacts(statePaymentFactErrors(stateReturnData, state.taxYear, segmentation.stateCode));
     assertKnownFacts(careBenefitsFactErrors(creditsData?.dependentCareBenefits, state.taxYear, segmentation.filingStatus, careBenefitSources));
     assertKnownFacts(careFactErrors(creditsData?.dependentCare, segmentation.filingStatus, { data: creditsData?.dependentCareBenefits, year: state.taxYear, sources: careBenefitSources }));
@@ -963,7 +964,7 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
     ...(form3903 === undefined ? {} : { form3903 }),
     netOperatingLoss: buildGuidedNetOperatingLoss(adjustmentData?.netOperatingLossSources, state.taxYear, segmentation.filingStatus, personalInfo, deductionData, adjustmentData?.k1LossSources, adjustmentData?.codNolSources?.attributeSources),
     ...(cryptoDonations !== undefined ? { cryptoIncome: { donations: cryptoDonations } } : {}),
-    scheduleK1: buildGuidedCurrentMtcOriginals(codSources?.form982AttributeSources?.currentMinimumTaxCredit?.sourceYearCalculation, k1Sources?.scheduleK1),
+    scheduleK1: buildGuidedCurrentMtcOriginals(codSources?.form982AttributeSources?.currentMinimumTaxCredit?.sourceYearCalculation, k1Sources?.scheduleK1 ?? (otherTaxesData?.foreignTaxElection?.qualifiedK3Statements?.length ? buildGuidedForeignTaxK3Sources(state) : undefined)),
     qbiLossSources: k1Sources?.qbiLossSources,
     k1CharitableSources: k1Sources?.k1CharitableSources,
     form172,
@@ -996,7 +997,7 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
     form1099R,
     iraBasisSources,
     form8960Sources: buildGuidedNiitSources(otherTaxesData?.niitSources, retirementData?.entries, state.taxYear, segmentation.filingStatus),
-    foreignTaxElection: buildGuidedForeignTaxElection(otherTaxesData?.foreignTaxElection, investData, state.taxYear, segmentation.filingStatus, foreignCreditKnownFacts(state)),
+    foreignTaxElection: buildGuidedForeignTaxElection(otherTaxesData?.foreignTaxElection, investData, state.taxYear, segmentation.filingStatus, foreignCreditKnownFacts(state), state),
     formSSA1099,
     formRRB1099,
     socialSecurityFacts: formSSA1099.length + formRRB1099.length ? { puertoRicoIncomeExclusion: toDecimalString(socialSecurityData?.puertoRicoIncomeExclusion), americanSamoaIncomeExclusion: toDecimalString(socialSecurityData?.americanSamoaIncomeExclusion), sourceFactsConfirmed: socialSecurityData?.sourceFactsConfirmed ?? undefined } : undefined,

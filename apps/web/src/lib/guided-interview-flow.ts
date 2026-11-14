@@ -1678,12 +1678,15 @@ export function setInterviewTaxYear(state: GuidedFlowState, taxYear: number | nu
     [education.aocBanInEffect, education.form8862Required, education.form8862Completed,
       education.refundableAocFacts, education.refundableAocEligible].some(answer => answer !== undefined));
   const royalties = state.sectionData["income-royalties"];
+  const otherTaxes = state.sectionData["other-taxes"];
+  const k3Election = otherTaxes?.foreignTaxElection;
   return {
     ...state,
     taxYear,
     sectionData: {
       ...state.sectionData,
       ...(royalties ? { "income-royalties": invalidateRoyaltySources(royalties) } : {}),
+      ...(otherTaxes && k3Election?.qualifiedK3Statements?.length ? { "other-taxes": { ...otherTaxes, foreignTaxElection: { ...k3Election, sourceFactsConfirmed: null, qualifiedK3Statements: k3Election.qualifiedK3Statements.map(row => ({ ...row, sourceFactsConfirmed: null })), ...(k3Election.creditWithoutForm1116 ? { creditWithoutForm1116: { ...k3Election.creditWithoutForm1116, sourceFactsConfirmed: null } } : {}) } } } : {}),
       ...(credits && education && aotcSourcesEntered ? { credits: { ...credits, education: {
         ...education,
         aocStudents: education.aocStudents.map(requireAotcSourceReview),
@@ -1922,7 +1925,8 @@ export function updateSectionData(
   const nextOtherTaxes = sectionId === "other-taxes" ? data as OtherTaxesData : niitOtherTaxes;
   const foreignElectionChanged = sectionId === "other-taxes" && guidedSourceValuesChanged(niitOtherTaxes?.foreignTaxElection, nextOtherTaxes?.foreignTaxElection);
   const niitSourcesChanged = (foreignElectionChanged || (sourceValuesChanged && ["personal-info", "income-w2", "income-self-employment", "income-retirement", "income-investments", "income-rental", "income-royalties", "income-social-security", "income-unemployment", "adjustments", "credits", "deductions", "payments", "state-return", "additional-deductions"].includes(sectionId))) && nextOtherTaxes?.niitSources;
-  const foreignTaxSourcesChanged = sourceValuesChanged && ["personal-info", "income-investments", "income-self-employment", "adjustments", "credits"].includes(sectionId) && nextOtherTaxes?.foreignTaxElection;
+  const qualifiedK3SourcesChanged = sectionId === "other-taxes" && guidedSourceValuesChanged(niitOtherTaxes?.foreignTaxElection?.qualifiedK3Statements, nextOtherTaxes?.foreignTaxElection?.qualifiedK3Statements);
+  const foreignTaxSourcesChanged = (qualifiedK3SourcesChanged || sourceValuesChanged && ["personal-info", "income-investments", "income-self-employment", "adjustments", "credits", "deductions"].includes(sectionId)) && nextOtherTaxes?.foreignTaxElection;
   const tipSourcesChanged = sourceValuesChanged && ["personal-info", "income-w2"].includes(sectionId) && state.sectionData["additional-deductions"];
   const nextAdditional = sectionId === "additional-deductions" ? data as AdditionalDeductionsData : state.sectionData["additional-deductions"];
   const rrtaParentChanged=sourceValuesChanged&&sectionId!=='additional-deductions'&&nextAdditional?.rrtaPayrollSources;
@@ -2074,7 +2078,7 @@ export function updateSectionData(
       ...(rentalCarrySourcesChanged && nextRentals ? { "income-rental": { ...nextRentals, entries: nextRentals.entries.map(entry => entry.priorLossSources ? { ...entry, priorLossSources: { ...entry.priorLossSources, sourceFactsConfirmed: null } } : entry) } } : {}),
       ...(estimatedTaxSourcesChanged && nextPayments ? { payments: { ...nextPayments, estimatedTaxFacts: { ...estimatedTaxSourcesChanged, sourceFactsConfirmed: null, ...(ordinaryPeriodsChanged ? { ordinaryPreferentialPeriodsConfirmed: null } : {}) } } } : {}),
       ...((childElectionSourcesChanged || qofSourcesChanged || capitalSourcesChanged || qsbsSourcesChanged || digitalAssetHouseholdChanged) && nextInvestments ? { "income-investments": { ...nextInvestments, ...(childElectionSourcesChanged ? { childElections: nextInvestments.childElections?.map(child => ({ ...child, sourceFactsConfirmed: null })) } : {}), ...(qofSourcesChanged ? { qofDispositionFacts: { ...qofSourcesChanged, sourceFactsConfirmed: null, ...(qofSourcesChanged.investments ? { investments: qofSourcesChanged.investments.map(row => ({ ...row, sourceFactsConfirmed: null })) } : {}) } } : {}), ...(capitalSourcesChanged ? { scheduleDSources: { ...capitalSourcesChanged, sourceFactsConfirmed: null } } : {}), ...(qsbsSourcesChanged ? { section1202Sources: { ...qsbsSourcesChanged, sourceFactsConfirmed: null } } : {}), ...(digitalAssetHouseholdChanged ? { digitalAssetEntries: nextInvestments.digitalAssetEntries?.map(entry => ({ ...entry, sourceFactsConfirmed: null })) } : {}) } } : {}),
-      ...((niitSourcesChanged || foreignTaxSourcesChanged) && nextOtherTaxes ? { "other-taxes": { ...nextOtherTaxes, ...(niitSourcesChanged ? { niitSources: { ...niitSourcesChanged, sourceFactsConfirmed: null } } : {}), ...(foreignTaxSourcesChanged ? { foreignTaxElection: { ...foreignTaxSourcesChanged, sourceFactsConfirmed: null, ...(foreignTaxSourcesChanged.creditWithoutForm1116 ? { creditWithoutForm1116: { ...foreignTaxSourcesChanged.creditWithoutForm1116, sourceFactsConfirmed: null } } : {}), ...(foreignTaxSourcesChanged.creditWithForm1116 ? { creditWithForm1116: { ...foreignTaxSourcesChanged.creditWithForm1116, sourceFactsConfirmed: null } } : {}) } } : {}) } } : {}),
+      ...((niitSourcesChanged || foreignTaxSourcesChanged) && nextOtherTaxes ? { "other-taxes": { ...nextOtherTaxes, ...(niitSourcesChanged ? { niitSources: { ...niitSourcesChanged, sourceFactsConfirmed: null } } : {}), ...(foreignTaxSourcesChanged ? { foreignTaxElection: { ...foreignTaxSourcesChanged, sourceFactsConfirmed: null, ...((qualifiedK3SourcesChanged || sectionId === "personal-info") && foreignTaxSourcesChanged.qualifiedK3Statements ? { qualifiedK3Statements: foreignTaxSourcesChanged.qualifiedK3Statements.map(row => ({ ...row, sourceFactsConfirmed: null })) } : {}), ...(foreignTaxSourcesChanged.creditWithoutForm1116 ? { creditWithoutForm1116: { ...foreignTaxSourcesChanged.creditWithoutForm1116, sourceFactsConfirmed: null } } : {}), ...(foreignTaxSourcesChanged.creditWithForm1116 ? { creditWithForm1116: { ...foreignTaxSourcesChanged.creditWithForm1116, sourceFactsConfirmed: null } } : {}) } } : {}) } } : {}),
       ...((tipSourcesChanged || additionalSourcesChanged || rrtaParentChanged || rrtaTipChanged || rrtaFactsChanged || paperFactsChanged) && nextAdditional ? { "additional-deductions": { ...nextAdditional, ...((nextRRTA&&(rrtaParentChanged||rrtaTipChanged||rrtaFactsChanged))?{rrtaPayrollSources:{...nextRRTA,sourceFactsConfirmed:null,...(nextPaper?{paperSources:{...nextPaper,sourceFactsConfirmed:null}}:{})}}:{}), ...((nextPaper&&paperFactsChanged&&!rrtaParentChanged&&!rrtaTipChanged&&!rrtaFactsChanged)?{rrtaPayrollSources:{...nextRRTA,paperSources:{...nextPaper,sourceFactsConfirmed:null}}}:{}), ...(tipSourcesChanged ? { tipIncomeAccounts: nextAdditional.tipIncomeAccounts?.map(account => ({ ...account, sourceFactsConfirmed: null })) } : {}), ...(additionalSourcesChanged ? { schedule1A: { ...additionalSourcesChanged, sourceFactsConfirmed: null } } : {}) } } : {}),
       ...((mortgageSourcesChanged || investmentInterestSourcesChanged || charitableCarryoverChanged || k1CharitableSourcesChanged || cryptoDonationsChanged || medicalMileageChanged) && nextDeductions ? { deductions: { ...nextDeductions,
         ...(medicalMileageChanged && medicalMileage ? { medicalMileage: clearMedicalMileageConfirmations(medicalMileage) } : {}),
@@ -2558,7 +2562,7 @@ export function validateSection(
     case "other-taxes":
       return validateRequiredFacts({ ...householdFactErrors(getSectionData(state, "other-taxes"), state.taxYear),
         ...guidedNiitFactErrors(getSectionData(state, "other-taxes")?.niitSources, getSectionData(state, "income-retirement")?.entries, state.taxYear, state.segmentation.filingStatus),
-        ...guidedForeignTaxFactErrors(getSectionData(state, "other-taxes")?.foreignTaxElection, getSectionData(state, "income-investments"), state.taxYear, state.segmentation.filingStatus, foreignCreditKnownFacts(state)) });
+        ...guidedForeignTaxFactErrors(getSectionData(state, "other-taxes")?.foreignTaxElection, getSectionData(state, "income-investments"), state.taxYear, state.segmentation.filingStatus, foreignCreditKnownFacts(state), state) });
     case "payments":
       return validatePaymentsSection(getSectionData(state, "payments"), state.taxYear);
     case "review":
