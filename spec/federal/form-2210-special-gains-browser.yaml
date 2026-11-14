@@ -1,0 +1,27 @@
+form: "Schedule AI special-rate original period browser journey"
+fullName: "Collect every actual special-rate period amount through the guided interview"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i2210"
+notes: |
+  Final2025 Form2210 ScheduleAI line14 and ScheduleD tax worksheet; source
+  contracts are form-2210-schedule-ai and guided-schedule-d-sources. Fictional
+  adult MFJ household, wages226800, ordinary/qualified dividends1200, capital
+  distributions12000 including collectibles2000 and unrecaptured1250 gain4000.
+  Actual complete W2 payroll and DIV boxes, both household identities, no loss
+  carryovers, trades, other property dispositions, business or special taxes.
+  AGI240000 is below MFJ NIIT and AdditionalMedicare thresholds250000. The
+  employer did withhold241.20 AdditionalMedicare over its200000 threshold;
+  Box6 includes that amount rather than silently assuming zero withholding.
+  Cumulative period AGI60000/100000/160000/240000; qualified dividends300/500/
+  800/1200; capital3000/5000/8000/12000; actual signed28 totals0/0/800/2000;
+  actual1250 beforeloss1000/1250/2000/4000. No negative period loss is invented
+  for these distribution-only originals. The full-year standard31500 leaves
+  ordinary195300, tax32794. Annualized special totals4000/3000/4200/6000 at22%
+  and remaining preferential9200/10200/9000/7200 at15% give line14 taxes
+  35054/34984/35068/35194. These are manual synthetic vectors, not IRS examples
+  or qualified-human approval. No filing/model/readiness gate is changed.
+lines:
+  - line: "visible-originals"
+    description: "Desktop and mobile collect eight actual original amounts"
+    formula: "Seed only complete existing ordinary/prior-return/capital originals. Visible Add actual special-rate period worksheets starts all eight amounts blank and confirmation unknown. Continue denies incomplete sources. Type all eight amounts, confirm period and overall originals, then canonical input reconciles to full return and independently derived four line14 taxes. Reload preserves originals. Review PDF is visibly review-only. Editing one source clears both confirmations and readiness."
+    testRef: "apps/web/tests/estimated-tax-special-gains.spec.ts::collects all special-rate period originals and rejects stale review"
