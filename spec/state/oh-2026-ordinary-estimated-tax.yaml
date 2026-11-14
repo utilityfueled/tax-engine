@@ -1,0 +1,68 @@
+form: "Ohio 2026 ordinary declaration of estimated tax"
+fullName: "Ohio original individual calendar-year estimated income tax planning targets"
+taxYear: 2026
+reference: "https://codes.ohio.gov/ohio-revised-code/section-5747.09"
+sources:
+  - "https://dam.assets.ohio.gov/image/upload/v1735926006/tax.ohio.gov/forms/ohio_individual/individual/2026/ites-instructions-fi.pdf"
+  - "https://codes.ohio.gov/ohio-revised-code/section-5747.02"
+  - "https://codes.ohio.gov/ohio-administrative-code/rule-5703-7-04"
+  - "https://tax.ohio.gov/individual/resources/estimated-payments"
+revision: "Ohio Revised Code §5747.09 effective September 30, 2025 (HB 96), confirmed November 14, 2026 UTC"
+notes: |
+  Official statute HTML SHA-256: 7be0a0bba2d66aad2968a814390f41d978e9de99aa7b4f891e92e55b2de70983.
+  Official 2026 IT 1040 ES worksheet linked by the universal payment coupon,
+  SHA-256 0d0766a81a91ce1c41e62e20e8721333ed9e289a354ef1fae522153fd2cbf65c,
+  confirms the four dates, strict $500 threshold and estimate lines 8–14.
+  Its line 6 bracket table repeats the 2025 amounts, which differ from enacted
+  2026 §5747.02(A)(3)(c). This method requires a separately established current
+  estimate of line 8 and does not use the worksheet bracket or exemption tables.
+  The department's indexed estimate page corroborates the dates and threshold;
+  the direct page returned 404 to this verification client.
+
+  This original 2026 planning method applies to an ordinary single individual
+  with full-year Ohio residency who was already subject to Ohio income tax at
+  the start of the year. Require a valid original determination dated from
+  January 1 through April 15, 2026. The taxpayer confirms a complete estimate
+  of Ohio individual income tax and the absence of credits, school district
+  tax liability, Ohio compensation withholding, prior return, prior refund
+  applied and estimated payments already made. Require explicit confirmation
+  that farming and fishing special rules do not apply. A missing or unknown
+  confirmation cannot establish zero. This method does not infer any income,
+  credit, tax, residency, school district or filing facts.
+
+  Section 5747.09(A)(1) includes school district income tax in the combined
+  amount, (A)(2) reduces tax by credits before payments or withholding and
+  (B) subtracts only expected compensation withholding for the declaration
+  test. The caller's complete input and the confirmed absence of those other
+  amounts let the same Ohio individual estimate represent both quantities in
+  this cohort. Section (A)(4)(b) depends on a filed preceding 12-month return;
+  the no-return confirmation deliberately bounds the current-year method.
+  Section (C) supplies ordinary cumulative 22.5%, 45%, 67.5% and 90% targets.
+  Worksheet line 8 is the confirmed estimated Ohio tax. When a declaration
+  is required, preserve worksheet lines 10 (90%), 11 (same because line 9 is
+  unavailable), 12 (confirmed zero), 13 (same after subtracting line 12) and
+  14 (25% of line 13) in the audit trail. Return exact Decimal targets and
+  exact incremental shares for planning.
+  Physical coupon rounding and payment execution are outside this method.
+
+  Joint and other filing statuses, school district amounts, withholding,
+  credits, prior-year methods, annualization, late or amended declarations,
+  estimated payment receipts, penalty, annual returns and filing remain
+  outside this method. There is no annual form export or payment routing.
+lines:
+  - line: "A(1)-(2)"
+    description: "Combined estimated liability for the admitted original return"
+    formula: "Use the exact nonnegative estimated Ohio individual income tax supplied in dollars and cents after validating every applicability and zero-source confirmation; combined school district and credits are confirmed zero. Only confirmed original preparations from 2026-01-01 through 2026-04-15 are supported."
+    testRef: "tests/engine/state/oh-2026-ordinary-estimated-tax.test.ts::rejects unknown, unsupported, foreign and malformed source facts"
+  - line: "B"
+    description: "Determine whether the ordinary original estimate requires a declaration"
+    formula: "Compare estimated liability minus known zero compensation withholding to $500 using Decimal. Report no declaration required, with no payment dates, at $500 or less; require a declaration by April 15, 2026, above $500."
+    testRef: "tests/engine/state/oh-2026-ordinary-estimated-tax.test.ts::uses the strict exact $500 declaration boundary"
+  - line: "C(1)-(4)"
+    description: "Exact current-year cumulative targets and installment shares"
+    formula: "Compute exact cumulative 0.225/0.45/0.675/0.90 portions of estimated liability by 2026-04-15, 2026-06-15, 2026-09-15 and 2027-01-15 respectively. Each incremental share is exactly 0.225 of estimated liability in the admitted cohort. Do not round source or targets to payment amounts."
+    testRef: "tests/engine/state/oh-2026-ordinary-estimated-tax.test.ts::derives independently calculated exact shares and cumulative targets"
+  - line: "original-declaration-date"
+    description: "Admit exact-year original early determination dates only"
+    formula: "Parse an actual ISO calendar date without rollover. Admit January 1 and April 15, 2026, inclusive. No amended, late, first-time subject, prior-year or other schedule may be inferred from an unsupported determination."
+    testRef: "tests/engine/state/oh-2026-ordinary-estimated-tax.test.ts::admits only valid original determination dates inside the bounded window"
