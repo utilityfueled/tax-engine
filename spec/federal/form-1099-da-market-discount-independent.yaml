@@ -1,0 +1,22 @@
+form: "Independent tokenized corporate debt allocation"
+fullName: "Separate literal ordinary-interest and capital boundary oracles"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i8949"
+notes: |
+  Independently authored engineering examples, not IRS examples or human review.
+  Actual taxable corporate full-sale originals, no current inclusion election,
+  previously included discount, expenses or basis corrections. Form8949 accrued
+  market discount worksheet line5 is min(max(proceeds-adjustedbasis,0),Box1h).
+  The same exact amount goes to ScheduleB and negative CodeD adjustment once.
+  PA classification is not inferred from this federal allocation.
+lines:
+  - line: "interest-capital-boundaries"
+    description: "Split literal profit, limited profit, no profit and loss"
+    formula: "For basis1000 and actual discount200: proceeds1500 gives interest200/capital300;1100 gives100/0;1000 gives0/0;900 gives0/-100. No stated discount is manufactured into interest on a loss."
+    irsRef: "IRC1276(a); Form8949 Accrued Market Discount Worksheet lines1-5 and codeD"
+    testRef: "tests/engine/forms/form-1099-da-market-discount-independent.test.ts::allocates four literal gains and losses without manufacturing interest"
+  - line: "verified-context-privacy"
+    description: "Use actual allocation in server audit without disclosing original debt records"
+    formula: "Actual85000 wages plus200.02 disposition income gives85200.02 AGI; verified context contains only allowed1040 lines and excludes original references/accounts/security and taxpayer identifiers."
+    irsRef: "Unchanged verified AI context allowlist; Form8949 worksheet line5 and Form1040 line11"
+    testRef: "tests/apps/web/market-discount-verified-context.test.ts::keeps original debt proof out of the genuine verified AI context"

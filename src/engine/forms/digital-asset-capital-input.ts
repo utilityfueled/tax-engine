@@ -4,7 +4,7 @@ import type { CapitalTransaction, TaxYearInput } from '@/models/inputs.js';
 import { calculateForm1099DASources } from './form-1099-da-sources.js';
 import { addQofInclusionRows } from './qof-inclusion.js';
 
-export type DigitalAssetCapitalInput = Pick<TaxYearInput, 'form1099B' | 'form1099DA'> & Partial<Pick<TaxYearInput, 'qofDispositionFacts'>> & {
+export type DigitalAssetCapitalInput = Pick<TaxYearInput, 'form1099B' | 'form1099DA'> & Partial<Pick<TaxYearInput, 'qofDispositionFacts' | 'form1099Int' | 'form1099OID'>> & {
   taxpayer: Parameters<typeof calculateForm1099DASources>[0]['taxpayer'];
 };
 

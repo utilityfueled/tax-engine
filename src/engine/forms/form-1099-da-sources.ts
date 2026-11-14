@@ -3,8 +3,9 @@ import Decimal from 'decimal.js';
 import type { Form1099B, Form1099DA, TaxYearInput } from '@/models/inputs.js';
 import { AuditTrail } from '@/utils/audit.js';
 import { d } from '@/utils/decimal.js';
+import { calculateForm1099DAMarketDiscount } from './form-1099-da-market-discount.js';
 
-type DigitalSourceInput = Pick<TaxYearInput, 'form1099DA'> & Partial<Pick<TaxYearInput, 'cryptoIncome'>> & {
+type DigitalSourceInput = Pick<TaxYearInput, 'form1099DA'> & Partial<Pick<TaxYearInput, 'cryptoIncome' | 'form1099Int' | 'form1099OID'>> & {
   form1099B: Array<Pick<Form1099B, 'sourceId'>>;
   taxpayer: Pick<TaxYearInput['taxpayer'], 'taxYear' | 'filingStatus'> & {
     spouse?: Pick<NonNullable<TaxYearInput['taxpayer']['spouse']>, 'firstName' | 'lastName'>;
@@ -56,7 +57,7 @@ function isActualSource(form: Form1099DA, year: number): boolean {
   const transactionFields = ['sourceId', 'digitalAssetCode', 'reportedDateAcquired', 'reportedCostBasis', 'basisSource', 'basisSourceReference', 'basisFactsConfirmed', 'basisCorrectionConfirmed', 'sellingCostsNotInProceedsConfirmed', 'originIncomeIncludedConfirmed', 'inheritedBasisConfirmed', 'giftSource',
     'proceedsType', 'sellingExpenses', 'marketDiscount', 'qof', 'lossNotAllowed', 'ordinaryIncome', 'onlyCashProceeds', 'customerProvidedAcquisitionInformation',
     'noncoveredSecurity', 'optionalReportingMethod', 'assetOrigin', 'capitalAssetConfirmed', 'nftOrCollectible',
-    'paCostBasis', 'paBasisSourceReference', 'paBasisFactsConfirmed', 'paTransactionForProfitConfirmed'] as const;
+    'paCostBasis', 'paBasisSourceReference', 'paBasisFactsConfirmed', 'paTransactionForProfitConfirmed', 'securityIdentifier', 'marketDiscountSource'] as const;
   return year >= 2026 || statementFields.some(key => form[key] !== undefined)
     || form.transactions.some(row => transactionFields.some(key => row[key] !== undefined));
 }
@@ -65,6 +66,8 @@ function isActualSource(form: Form1099DA, year: number): boolean {
 export function calculateForm1099DASources(input: DigitalSourceInput, options: { resolvedLegacyBasis?: ResolvedBasis } = {}) {
   const audit = new AuditTrail();
   const capitalForms: Form1099B[] = [];
+  const marketDiscountSources: Array<{ statementIndex: number; transactionIndex: number; owner: 'primary' | 'spouse'; interest: Decimal }> = [];
+  const marketDiscountDispositions = new Set<string>();
   const identifiers = new Set<string>(), receiptUnits = new Map<object, Decimal>();
   const existing = new Set(input.form1099B.flatMap(form => form.sourceId?.trim() ? [form.sourceId.trim()] : []));
   let federalWithheld = d(0);
@@ -154,13 +157,21 @@ export function calculateForm1099DASources(input: DigitalSourceInput, options: {
         // Spec: form-1099-da-sources.yaml income-origin. Income-origin basis is the amount
         // already included in income, so the taxpayer must confirm it was reported.
         const transferOrigin = row.assetOrigin === 'gift' || (inherited && row.inheritedBasisConfirmed === true);
+        const marketDiscount = calculateForm1099DAMarketDiscount(form, row, input, input.taxpayer.taxYear);
+        if (marketDiscount) {
+          if (marketDiscountDispositions.has(marketDiscount.originalDispositionKey)) throw new Error('Duplicate original Form1099DA market discount disposition; report it once.');
+          marketDiscountDispositions.add(marketDiscount.originalDispositionKey);
+          marketDiscountSources.push({ statementIndex: formIndex, transactionIndex, owner: form.accountHolder as 'primary' | 'spouse', interest: marketDiscount.interest });
+          audit.record('Form1099DA', `market-discount:${formIndex}:${transactionIndex}`, 'Accrued Market Discount interest', marketDiscount.interest,
+            'Form8949 worksheet line5=min(max(original proceeds-actual basis,0),actual Box1h); same exact amount is negative column(g) codeD and ScheduleB interest');
+        }
         if (row.capitalAssetConfirmed !== true || !(row.assetOrigin === 'purchase' || transferOrigin || (incomeOrigin && row.originIncomeIncludedConfirmed === true)) || row.nftOrCollectible !== false
-          || row.qof !== false || row.lossNotAllowed !== false || row.ordinaryIncome !== false || row.optionalReportingMethod !== 'none'
+          || row.qof !== false || row.lossNotAllowed !== false || (row.ordinaryIncome !== false && !marketDiscount) || row.optionalReportingMethod !== 'none'
           || !['sale', 'exchange', 'payment'].includes(row.transactionType)) throw new Error('Form1099DA special disposition or original acquisition requires a separate supported source method.');
         const sellingExpenses = amount(row.sellingExpenses, 'selling expenses');
         if (sellingExpenses.gt(0) && row.sellingCostsNotInProceedsConfirmed !== true) throw new Error('Form1099DA costs need confirmation that Box 1f does not already reflect them.');
         if (!['gross', 'net'].includes(row.proceedsType ?? '')
-          || !amount(row.marketDiscount, 'market discount').isZero() || !amount(row.adjustments, 'other adjustments').isZero()) throw new Error('Form1099DA market discount or other adjustments require a separate source method.');
+          || (!amount(row.marketDiscount, 'market discount').isZero() && !marketDiscount) || !amount(row.adjustments, 'other adjustments').isZero()) throw new Error('Form1099DA market discount or other adjustments require a separate source method.');
         if (!row.washSale && !amount(row.washSaleDisallowed, 'Box1i wash-sale loss').isZero()) throw new Error('Form1099DA wash-sale amount conflicts with its actual applicability.');
         const wash = amount(row.washSaleDisallowed, 'Box1i wash-sale loss');
         if (wash.gt(Decimal.max(0, basis.minus(proceeds)))) throw new Error('Form1099DA disallowed wash loss exceeds its actual original loss.');
@@ -168,8 +179,8 @@ export function calculateForm1099DASources(input: DigitalSourceInput, options: {
         // basis in column e only when the box reports it to the IRS; column g corrects it.
         const reportedColumn = basisCorrected && row.basisReportedToIRS ? reportedBasis : undefined;
         if (reportedColumn) costBasis = reportedColumn.toFixed();
-        rowAdjustment = (reportedColumn?.minus(basis) ?? new Decimal(0)).minus(sellingExpenses).toFixed();
-        adjustmentCodes = `${basisCorrected ? 'B' : ''}${sellingExpenses.gt(0) ? 'E' : ''}` || undefined;
+        rowAdjustment = (reportedColumn?.minus(basis) ?? new Decimal(0)).minus(sellingExpenses).minus(marketDiscount?.interest ?? 0).toFixed();
+        adjustmentCodes = `${basisCorrected ? 'B' : ''}${sellingExpenses.gt(0) ? 'E' : ''}${marketDiscount?.interest.gt(0) ? 'D' : ''}` || undefined;
         if (row.gainOrLoss !== undefined && !d(row.gainOrLoss).eq(proceeds.minus(reportedBasis ?? basis).plus(wash))) throw new Error('Form1099DA statement gain conflicts with its actual proceeds, basis and wash adjustment.');
       } else {
         const matched = options.resolvedLegacyBasis?.get(`${description} via ${form.brokerName}|${row.dateSold}`);
@@ -192,5 +203,6 @@ export function calculateForm1099DASources(input: DigitalSourceInput, options: {
   }
   if (input.form1099DA?.length) audit.record('Form1099DA', 'Box4-total', 'Digital-asset withholding to Form1040 line25b', federalWithheld,
     'Sum actual original statement Box4 once; original cents retained', { allSourcesVerified: String(sourceFactsComplete) });
-  return { capitalForms, federalWithheld, stateWithholding, sourceFactsComplete, lines: audit.getLines() };
+  return { capitalForms, federalWithheld, stateWithholding, sourceFactsComplete, marketDiscountSources,
+    marketDiscountInterest: marketDiscountSources.reduce((sum, source) => sum.plus(source.interest), d(0)), lines: audit.getLines() };
 }

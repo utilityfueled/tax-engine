@@ -21,6 +21,9 @@ export function calculateDigitalAssetStateSources<T extends DigitalAssetCapitalI
     const selectedById = new Map(selectedForms.map(form => [form.sourceId, form]));
     return { ...normalized, form1099B: normalized.form1099B.map(form => selectedById.get(form.sourceId) ?? form) };
   }
+  if (actual.marketDiscountSources.some(source => !d(input.form1099DA[source.statementIndex].transactions[source.transactionIndex].marketDiscount).isZero())) {
+    throw new Error('Pennsylvania positive digital debt market discount requires direct PA secondary-market discount classification authority; its imputed-interest rule does not establish this allocation.');
+  }
   const capitalForms = selectedForms.map((form, formIndex) => ({ ...form, transactions: form.transactions.map((row, rowIndex) => {
     const original = input.form1099DA[formIndex].transactions[rowIndex];
     if (original.paCostBasis === undefined || !original.paCostBasis.trim() || !d(original.paCostBasis).isFinite() || d(original.paCostBasis).lt(0)

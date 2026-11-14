@@ -1,4 +1,5 @@
 import { RRTAPayrollSourcesSchema } from "./rrta-payroll-sources.js";
+import { Form1099DAMarketDiscountSourceSchema } from './form-1099-da-market-discount.js';
 import { MortgageInsurancePrepaidSourcesSchema } from "./mortgage-insurance-prepaid-sources.js";
 import {PassengerAutoParentSourcesSchema} from './passenger-auto-parent-sources.js';
 import {calculateScheduleCPassengerSources} from '@/engine/schedules/schedule-c-passenger-first-year-sources.js';
@@ -325,6 +326,7 @@ export const Form1099DATransactionSchema = z.preprocess((value) => {
   sourceId: z.string().optional(),
   sourceFactsComplete: z.boolean().optional(),
   digitalAssetCode: z.string().optional(), // Original Box1a DTIF code.
+  securityIdentifier: z.string().optional(), // Original CUSIP or applicable tokenized-security identifier.
   digitalAssetName: z.string(), // Box1b.
   ticker: z.string().optional(), // Optional statement abbreviation, not a numbered box.
   quantity: decimal.optional(), // Box1c.
@@ -354,6 +356,7 @@ export const Form1099DATransactionSchema = z.preprocess((value) => {
   proceedsType: z.enum(["gross", "net"]).optional(), // Box3a.
   sellingExpenses: decimal.optional(),
   marketDiscount: decimal.optional(), // Box1h.
+  marketDiscountSource: Form1099DAMarketDiscountSourceSchema.optional(),
   qof: z.boolean().optional(), // Box3b.
   lossNotAllowed: z.boolean().optional(), // Box5.
   ordinaryIncome: z.boolean().optional(), // Box6 ordinary indicator.

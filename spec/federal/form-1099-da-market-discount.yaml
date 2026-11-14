@@ -1,0 +1,86 @@
+form: "Form1099DA source-qualified accrued market discount"
+taxYear: "2025 and 2026 original-source arithmetic; filing qualification unchanged"
+irsReference: "https://www.irs.gov/instructions/i8949"
+sources:
+  - url: "https://www.irs.gov/pub/irs-prior/i1099da--2025.pdf"
+    retrieved: "2026-11-14"
+    section: "Final2025 instructions, voluntary original boxes1h/6, Box2 and noncovered securities"
+  - url: "https://www.irs.gov/instructions/i1099da"
+    retrieved: "2026-11-14"
+    section: "Final2026 tokenized securities, Box1h and Box6 Ordinary checkbox"
+  - url: "https://www.irs.gov/instructions/i8949"
+    retrieved: "2026-11-14"
+    section: "Final2025 CodeD and Worksheet for Accrued Market Discount Adjustment in Column(g), lines1-5"
+  - url: "https://www.irs.gov/publications/p550"
+    retrieved: "2026-11-14"
+    section: "Final2025 Market Discount Bonds; Discounted Debt Instruments; ScheduleB line1"
+  - url: "https://uscode.house.gov/us/usc/119-120/t26/s1276/"
+    retrieved: "2026-11-14"
+    section: "1276(a)(1),(3),(4), disposition inclusion and prior partial principal"
+  - url: "https://uscode.house.gov/us/usc/119-120/t26/s1278/"
+    retrieved: "2026-11-14"
+    section: "1278(b), actual current-inclusion election and increased basis"
+  - url: "https://codes.ohio.gov/ohio-revised-code/section-5747.01"
+    retrieved: "2026-11-14"
+    section: "Ohio federal adjusted gross income starting point and specified obligation adjustments"
+  - url: "https://codes.ohio.gov/ohio-revised-code/section-5748.01"
+    retrieved: "2026-11-14"
+    section: "School district traditional MAGI and earned-income definitions; no annual rate qualification"
+notes: |
+  This is a finite original-statement allocation, not an accrued-discount calculator
+  or an election maker. A source-confirmed full USD-cash sale of tokenized
+  taxable corporate debt has actual Box1h and an actual Ordinary checkbox. The
+  only ordinary-income cause admitted is market discount. Actual identity/year,
+  CUSIP or applicable security identifier, issue/maturity dates, full disposition,
+  actual taxpayer adjusted basis and reconciliation to original basis are required.
+  Original covered/noncovered status remains actual, not inferred from complete
+  boxes. Final2025 instructions permit voluntarily completed basis and ordinary
+  boxes for noncovered assets; acquisitions before2026 cannot be covered.
+  Current-inclusion/all-interest-OID elections, previous inclusion or partial
+  principal, OID/premium, short-term/stripped/contingent debt, installment obligations,
+  transferred-basis/reorganization debt, borrowing, foreign
+  currency, other ordinary causes, corrections/expenses/wash adjustments and
+  unqualified source facts remain separate methods. Never clear a true Ordinary
+  box or fabricate a 1099INT to route this amount.
+  Exact derived interest and the negative Form8949 D adjustment are one economic
+  amount, computed before rounding. Original statements and withholding remain
+  once-only. A separate actual original INT/OID reconciliation must establish
+  that the same discount is not already included; payer/amount matching is not proof.
+  Ohio begins with actual federal AGI under RC5747.01(A), and this corporate
+  cohort creates no government-interest deduction. Pennsylvania secondary-market
+  discount classification is NOT established merely by its unstated/imputed-interest
+  rule: current61PaCode103.13/103.16 and final2025 PA40A do not expressly resolve
+  this issue in the sources inspected. PA admission awaits direct controlling
+  classification evidence; do not invent a PA split or exemption. Annual2026
+  forms, independent human review and filing/export gates remain unchanged.
+lines:
+  - line: "source-qualified-disposition"
+    description: "Preserve actual Ordinary=true and bind qualified original debt sources"
+    formula: "Require all finite cohort facts; unqualified positive Box1h remains rejected"
+    irsRef: "Final2026 i1099DA Box1h and Box6; IRC1276/1278"
+    testRef: "tests/engine/forms/form-1099-da-market-discount.test.ts::admits actual ordinary-checked market discount without rewriting its original"
+  - line: "worksheet-lines1-5"
+    description: "Allocate actual disposition gain to ordinary interest"
+    formula: "interest=min(max(original proceeds-actual adjusted basis,0),actual Box1h); columnG=-interest; capital=proceeds-basis-interest"
+    irsRef: "Final2025 i8949 accrued market discount worksheet lines1-5"
+    testRef: "tests/engine/forms/form-1099-da-market-discount.test.ts::caps ordinary interest at actual gain and retains a disposition loss"
+  - line: "schedule-b-once"
+    description: "Route the exact derived amount once through ScheduleB"
+    formula: "One Accrued Market Discount payer entry per actual source; no synthetic INT and no duplicate gain inclusion"
+    irsRef: "Final2025 Pub550 Discounted Debt Instruments and reporting market discount bonds"
+    testRef: "tests/engine/forms/form-1099-da-market-discount.test.ts::routes exact market discount once into canonical interest and capital classes"
+  - line: "source-history-and-replay"
+    description: "Reject unknown or stale elections, history, original amounts and duplicate disposition confirmations"
+    formula: "Strict source confirmation plus exact owner/year/account/security and original disposition; actual complete INT/OID snapshots bind once-only inclusion"
+    irsRef: "IRC1276(a)(3),1278(a)(1),(b); final2025 Pub550 market discount elections"
+    testRef: "tests/engine/forms/form-1099-da-market-discount.test.ts::requires explicit debt, election, history and once-only source facts"
+  - line: "ohio-source-classification"
+    description: "Preserve original corporate interest and net capital once in Ohio federal AGI"
+    formula: "Ohio federalAGI=canonical federalAGI; no corporate-debt government-interest exemption; portfolio gain/interest do not become wages or business income"
+    irsRef: "OhioRC5747.01(A); unchanged actual2025 SD100 traditional and earned-income bases"
+    testRef: "tests/engine/forms/form-1099-da-market-discount.test.ts::carries actual corporate interest and capital once into Ohio federal AGI without a government exemption"
+  - line: "pa-unresolved-classification"
+    description: "Retain positive market discount state admission guard until direct PA classification is established"
+    formula: "Positive actual Box1h under this method rejects PA source conversion; do not infer secondary-market discount treatment from imputed-interest language"
+    irsRef: "61PaCode103.13/103.16; final2025 PA40A; unresolved direct secondary-market discount classification"
+    testRef: "tests/engine/forms/form-1099-da-market-discount.test.ts::retains the precise Pennsylvania positive market-discount classification guard"

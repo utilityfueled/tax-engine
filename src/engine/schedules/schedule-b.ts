@@ -8,6 +8,7 @@
 
 import Decimal from "decimal.js";
 import { calculateForm1099OID } from "../forms/form-1099-oid.js";
+import { calculateForm1099DASources } from '../forms/form-1099-da-sources.js';
 import type { TaxYearInput } from "@/models/inputs.js";
 import type { CalculatedLine } from "@/models/outputs.js";
 import { d, zeroFloor } from "@/utils/decimal.js";
@@ -58,6 +59,18 @@ export function calculateScheduleB(input: TaxYearInput, savingsBondExclusionOver
   // ── Part I: Interest ──────────────────────────────────
 
   const interestPayers: InterestPayer[] = [];
+
+  // Spec: form-1099-da-market-discount.yaml. Keep original statements intact;
+  // this is the same exact amount removed from Form8949 capital gain, once.
+  if (input.form1099DA?.some(form => form.transactions.some(row => row.marketDiscountSource !== undefined
+    || row.ordinaryIncome === true || (row.marketDiscount !== undefined && (!row.marketDiscount.trim() || !d(row.marketDiscount).isZero()))))) {
+    for (const source of calculateForm1099DASources(input).marketDiscountSources) {
+      if (source.interest.isZero()) continue;
+      interestPayers.push({ name: 'Accrued Market Discount', amount: source.interest });
+      audit.record('Sched B', '1', 'Accrued Market Discount', source.interest,
+        'Source-qualified original Form1099DA disposition; Form8949 worksheet line5, once', { 'Statement index': String(source.statementIndex), 'Transaction index': String(source.transactionIndex) });
+    }
+  }
 
   // 1099-INT sources
   for (const form of input.form1099Int) {
