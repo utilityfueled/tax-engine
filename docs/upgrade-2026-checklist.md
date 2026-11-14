@@ -6,6 +6,12 @@ below retain their original evidence boundaries.
 
 ## Active continuation — November 14
 
+- [x] Implement finite actual Schedule AI investment-election originals with
+  residual-first rounding, household/annual/itemized reconciliation and numeric
+  audit entries. Separate reviews and full 28,514 tests (nine private root
+  controls) pass; combined/runtime/human/final2026 gates remain separate.
+  [Source method](upgrade-2026-schedule-ai-investment-election-20261114.md).
+
 - [x] Pass all twelve exact `6f6f82a2` checks: 28,493 unit/coverage tests,
   88.08% branches and 630 actual browser passes/five original skips; independent
   raw-report/source audit and normal database/server cleanup. Later candidates

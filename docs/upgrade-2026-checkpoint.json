@@ -1,4 +1,20 @@
 {
+  "nov14ScheduleAiInvestmentElectionSources": {
+    "freeze": "ee85bdc073dffddc12791de619ad0d683d09427916f061a8257e1efdb9e23e46",
+    "sourceBase": "6f6f82a2864f65edb66a41dcf36a73356bfaba94",
+    "files": 8,
+    "scope": "2025singleprimary4actual4952periodoriginals;wholeDollar/noCarry/fullyDeductible;annualIdentityItemizedBinding;residualFirst",
+    "actualFullUnit": "28514PASS2075filesincluding9privateRootControls",
+    "rootReview": "029bf9a4cd1383258b58330e5bc4f5a9c3a4392b3e91e663ea99822b162bc2fe",
+    "independentSourceReview": "3cb612f9ef9e1b907f289a6925814403fd37ab92042a62984608cede90b007d2",
+    "independentAuditReview": "cb8a1b35bdbaec48430e59a405029ba0795d7706ad14608b3e643ec48a113de0",
+    "originalFailuresAndProvisionalTypecheck2Preserved": true,
+    "ownedPgNormallyStoppedAndPrivateFilesRemoved": true,
+    "combinedAndRuntimeSuccessorChecksPending": true,
+    "qualifiedHumanReview": false,
+    "mainPushHold": true,
+    "ledger": "docs/upgrade-2026-schedule-ai-investment-election-20261114.md"
+  },
   "nov14CombinedLossEicActualChecks": {
     "source": "6f6f82a2864f65edb66a41dcf36a73356bfaba94",
     "all12ActualPassed": true,

@@ -1,0 +1,62 @@
+form: "Form 2210 Schedule AI ordinary investment-interest election"
+fullName: "Source-bound residual-first preferential period calculation"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i2210"
+notes: |
+  Final2025 Form2210 line14, final2025 Form4952 and Publication505 Worksheet2-8
+  footnote1; refreshed2026-11-14. Current2026 Publication505 Worksheet2-10
+  retains the formula but no final2026 calculation/table gate is opened.
+  Finite single-primary ordinary cohort only. All four original period Form4952
+  worksheets must be source-complete, actual year/reference/cutoff/owner bound,
+  prior carry0, investment expenses0, whole-dollar inputs, fully deductible
+  current interest. No optimized allocation or inferred quarter is permitted.
+  Original gross qualified dividends stay on the return. Annual printed election
+  allocation and original gross preferential components reconcile independently.
+  Eligible period income is gross minus actual election before annualization.
+  Utility QDCG-shaped ordinary algebra is equivalent to the applicable ordinary
+  annualized preferential worksheet; no claim annual physical ScheduleD executes.
+lines:
+  - line: "source-and-itemized"
+    description: "Four actual election and allowable interest source worksheets"
+    formula: "Calculate each actual period Form4952 independently. Interest deduction plus explicit other-itemized equals original period itemized total. Full-year interest independently equals annual Form4952line8 and full-year other-itemized plus interest equals canonical itemized total. All electedQD/electedNCG and source income/expense components reconcile separately; unknown never becomes zero."
+    testRef: "tests/engine/forms/form-2210-investment-election.test.ts::binds actual period originals and independent annual components"
+  - line: "residual-first"
+    description: "Annualize only income still eligible for preferential rates"
+    formula: "eligibleQD=(periodQD-periodElectedQD)*factor; eligibleNCG=(periodNCG-periodElectedNCG)*factor. Round resulting worksheet entries once, not each gross/election separately. Full taxable income is unchanged. QD1002 minus election1 at factor2.4 yields rounded2402, not2403; taxable200001 produces40655."
+    testRef: "tests/engine/forms/form-2210-investment-election.test.ts::excludes the actual election before annualization and line rounding"
+  - line: "ordinary-equivalence"
+    description: "Independent published-rate ordinary worksheet boundary vectors"
+    formula: "With zero ordinary base, the2025 single0rate ceiling48350 and15rate ceiling533400 produce literal taxes0 at48350,2 at48360,72758 at533400 and72760 at533410. All-elected income retains the ordinary tax. No special rates or foreign excess admitted."
+    testRef: "tests/engine/forms/form-2210-investment-election.test.ts::matches independent ordinary preferential worksheet boundary arithmetic"
+  - line: "closed-methods"
+    description: "Preserve unsupported methods and source privacy"
+    formula: "No regular-method packet, unknown original, nonsingle claimant, foreign-earned-income exclusion/housing tax method (Form2555), special rates or1202 or unverified annual election; no original-reference propagation. All existing final2026 gates persist."
+    testRef: "tests/engine/forms/form-2210-investment-election.test.ts::preserves closed methods and private source boundaries"
+  - line: "explicit-allocation"
+    description: "Actual alternative capital gain and dividend election allocation"
+    formula: "Annual actual election1000 split500capital/500dividends with qualified40000 and gain10000 retains49000 preferential, taxable180000 less49000 ordinary131000 gives24287 ordinary plus7350 preferential=31637. Moving1 between full-year components rejects even when election total stays1000."
+    testRef: "tests/engine/forms/form-2210-investment-election.test.ts::independently reconciles both actual election allocations without optimizing"
+  - line: "all-elected"
+    description: "No preferential income left after actual full election"
+    formula: "Actual qualified1000 and actual election1000 leave zero preferential. Single taxable180000 ordinary tax17651+76650*.24=36047."
+    testRef: "tests/engine/forms/form-2210-investment-election.test.ts::retains ordinary tax when the entire original preferential amount is elected"
+  - line: "originals-complete"
+    description: "No source absence replaced by historical defaults"
+    formula: "Every actual monetary/source/identity field and all four distinct original cutoff references are required; missing election component cannot invoke a default allocation."
+    testRef: "tests/engine/forms/form-2210-investment-election.test.ts::rejects every missing actual worksheet amount and top-level original fact"
+  - line: "verified-ai-privacy"
+    description: "Actual verified server calculation excludes new private original facts"
+    formula: "Recompute the canonical tax from actual source input; forward only existing permitted1040 lines, never new owner names,last4 or original references. No live provider dispatch."
+    testRef: "tests/engine/forms/form-2210-investment-election.test.ts::computes a genuine verified AI audit without forwarding new original identities"
+  - line: "physical-and-shell"
+    description: "Source-recomputed physical review and metadata-only hosted shell"
+    formula: "Existing original-bound Form2210 review must show actual columnb40655 and reject missing current original facts before template I/O. Hosted shell projection drops the entire new original packet. No release, filing or cloud operation is authorized by a local review PDF."
+    testRef: "tests/engine/forms/form-2210-investment-election.test.ts::recomputes the actual physical review and strips all new hosted original metadata"
+  - line: "original-owner-identity"
+    description: "Actual nonblank owner names and complete canonical identifier"
+    formula: "Both original and canonical normalized names must be nonblank and equal; original last4 is exactly four digits. Canonical SSN is exactly nine digits or the complete digit-only hyphenated3-2-4format before suffix equality; empty, short, overlong and arbitrary-letter identifiers never establish identity."
+    testRef: "tests/engine/forms/form-2210-investment-election.test.ts::requires actual complete canonical and original owner identity"
+  - line: "source-election-audit"
+    description: "Separate numeric original gross and actual election records"
+    formula: "For each cumulative column record original qualified dividends, original net capital gain, actual elected qualified dividends and actual elected gain. Preserve existing annualized gross and eligible records. Numeric entries contain no private owner/source references and do not change any tax or rounding."
+    testRef: "tests/engine/forms/form-2210-investment-election.test.ts::retains separate numeric original gross and actual election audit entries"

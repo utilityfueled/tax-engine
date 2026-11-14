@@ -1,3 +1,4 @@
+import type { Form2210InvestmentElectionContext } from './form-2210-investment-election.js';
 import type { Form2210OwnerSourceContext } from './form-2210-owner-source.js';
 /** Form 2210 Schedule AI. Spec: spec/federal/form-2210-schedule-ai.yaml. */
 import Decimal from 'decimal.js';
@@ -80,6 +81,7 @@ export interface Form2210ScheduleAiReturn {
   standardDeduction: Decimal; agi: Decimal; taxableIncome: Decimal; itemizedDeductions?: Decimal; preferentialIncome: boolean;
   ordinaryPreferentialIncome?: { qualifiedDividends: Decimal; netCapitalGain: Decimal };
   specialRatePreferentialIncome?: { qualifiedDividends: Decimal; netCapitalGain: Decimal; rate28GainLoss: Decimal; unrecaptured1250BeforeLosses: Decimal };
+  investmentElection?: Form2210InvestmentElectionContext;
   distributionOnlyCapitalBounds?: Form2210DistributionOnlyBounds;
   selfEmployedOwners: number; specialTaxMethod: boolean; schedule1ADeduction?: Decimal; ownerSources?: Form2210OwnerSourceContext;
 }
@@ -102,6 +104,7 @@ function periodEarningsSubjectToSelfEmploymentTax(profit: Decimal, earningsMulti
 export function calculateForm2210ScheduleAi(input: Form2210ScheduleAiInput): Form2210ScheduleAiResult {
   const { taxYear, filingStatus, facts, returnContext } = input, periods = facts.annualizedIncomePeriods;
   if (periods?.length !== 4) throw new Error('Form 2210 Schedule AI requires all four actual cumulative periods');
+  if ((facts.investmentElectionSources !== undefined) !== (returnContext.investmentElection !== undefined)) throw new Error('Form2210 investment-election sources need actual canonical reconciliation');
   const specialRatePreferentialIncome = facts.specialRatePeriodsConfirmed === true ? returnContext.specialRatePreferentialIncome : undefined;
   const specialSourcesPresent = periods.some(period => period.rate28GainLoss !== undefined || period.unrecaptured1250BeforeLosses !== undefined);
   if ((facts.specialRatePeriodsConfirmed === true || specialSourcesPresent) && !specialRatePreferentialIncome) throw new Error('Form 2210 Schedule AI requires confirmed special period worksheet sources and the actual completed source worksheets');
@@ -177,7 +180,25 @@ export function calculateForm2210ScheduleAi(input: Form2210ScheduleAiInput): For
     if (adjustment.gt(schedule1A)) throw new Error('Form 2210 Schedule AI period Schedule 1-A adjustment cannot exceed the deduction on the return');
     if (index === 3 && !adjustment.eq(schedule1A)) throw new Error('Form 2210 Schedule AI column (d) Schedule 1-A adjustment must equal the deduction on the return');
     const taxable = Decimal.max(0, line13.minus(adjustment));
-    const annualizedDividends = qualifiedDividends.times(multiplier), annualizedGain = netCapitalGain.times(multiplier);
+    const election = returnContext.investmentElection?.periods[index];
+    if (returnContext.investmentElection && (!election || specialRatePreferentialIncome || !ordinaryPreferentialIncome
+      || !election.electedQualifiedDividends.isFinite() || !election.electedNetCapitalGain.isFinite()
+      || election.electedQualifiedDividends.lt(0) || election.electedQualifiedDividends.gt(qualifiedDividends)
+      || election.electedNetCapitalGain.lt(0) || election.electedNetCapitalGain.gt(netCapitalGain))) throw new Error('Form2210 investment-election actual period allocation is invalid');
+    // Pub505 annualized worksheet footnote1 excludes election from each eligible
+    // entry BEFORE annualization/rounding. Do not independently round gross/election.
+    const annualizedDividends = qualifiedDividends.minus(election?.electedQualifiedDividends ?? 0).times(multiplier);
+    const annualizedGain = netCapitalGain.minus(election?.electedNetCapitalGain ?? 0).times(multiplier);
+    if (election) {
+      for (const [id, label, value] of [
+        ['source-qualified-dividends', 'Original cumulative qualified dividends', qualifiedDividends],
+        ['source-net-capital-gain', 'Original cumulative net capital gain', netCapitalGain],
+        ['elected-qualified-dividends', 'Actual cumulative elected qualified dividends', election.electedQualifiedDividends],
+        ['elected-net-capital-gain', 'Actual cumulative elected net capital gain', election.electedNetCapitalGain],
+      ] as const) audit.record(FORM, `14-${id}-${column}`, label, value, 'Actual source period amount before annualization; no private identity or source reference');
+      audit.record(FORM, `14-eligible-qualified-dividends-${column}`, 'Annualized eligible qualified dividends', annualizedDividends, 'Actual period QD minus electedQD, then annualize; round resulting worksheet entry once');
+      audit.record(FORM, `14-eligible-net-capital-gain-${column}`, 'Annualized eligible net capital gain', annualizedGain, 'Actual period net capital gain minus elected gain, then annualize; round resulting worksheet entry once');
+    }
     let specialOptions: { collectiblesGain: Decimal; section1250Gain: Decimal } | undefined;
     if (specialRatePreferentialIncome) {
       const signed28 = amount(period.rate28GainLoss, 'period signed 28 percent worksheet sum of lines 1 through 6', true);
@@ -191,8 +212,8 @@ export function calculateForm2210ScheduleAi(input: Form2210ScheduleAiInput): For
       ? calculateCapitalGainsTax(taxable, annualizedDividends, annualizedGain, filingStatus, constants, specialOptions).tax
       : calculateRegularIncomeTax(taxable, filingStatus, constants);
     if (preferentialContext) {
-      audit.record(FORM, `14-qualified-dividends-${column}`, 'Annualized qualified dividends', annualizedDividends, 'Actual cumulative qualified dividends times the annualization factor');
-      audit.record(FORM, `14-net-capital-gain-${column}`, 'Annualized net capital gain', annualizedGain, 'Actual cumulative net capital gain times the annualization factor');
+      audit.record(FORM, `14-qualified-dividends-${column}`, 'Annualized qualified dividends', qualifiedDividends.times(multiplier), 'Actual cumulative qualified dividends times the annualization factor');
+      audit.record(FORM, `14-net-capital-gain-${column}`, 'Annualized net capital gain', netCapitalGain.times(multiplier), 'Actual cumulative net capital gain times the annualization factor');
     }
     const profit = amount(period.netProfitFromSelfEmployment, 'period self-employment profit', true);
     const line28 = periodEarningsSubjectToSelfEmploymentTax(profit, constants.selfEmploymentTax.earningsMultiplier);

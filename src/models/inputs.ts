@@ -3757,6 +3757,14 @@ const Form2210SelfEmploymentOwnerSchema = z.object({
   periods: z.array(z.object({ netProfitFromSelfEmployment: z.string().optional(), socialSecurityWages: z.string().optional() }).strict()).optional(),
 }).strict();
 export const Form2210Schema = z.object({
+  /** Actual four cumulative original worksheets; no inferred election allocation. */
+  investmentElectionSources: z.object({
+    sourceTaxYear: z.number().int().optional(), sourceReference: z.string().optional(), sourceFactsConfirmed: z.boolean().optional(),
+    allPeriodsCompleteConfirmed: z.boolean().optional(), electionValidConfirmed: z.boolean().optional(), otherInvestmentIncomePresent: z.boolean().optional(),
+    accountHolder: z.enum(["primary", "spouse"]).optional(), taxpayerFirstName: z.string().optional(), taxpayerLastName: z.string().optional(), taxpayerSsnLast4: z.string().optional(),
+    annualForm4952SourceReference: z.string().optional(),
+    periods: z.array(z.object({periodEnd: z.string().optional(), form4952: z.lazy(() => Form4952InputSchema).optional(), otherItemizedDeductions: z.string().optional()}).strict()).optional(),
+  }).strict().optional(),
   selfEmploymentOwnerPeriods: z.array(Form2210SelfEmploymentOwnerSchema).optional(),
   annualizedIncomePeriods: z.array(Form2210AnnualizedPeriodSchema).optional(),
   ordinaryPreferentialPeriodsConfirmed: z.boolean().optional(),

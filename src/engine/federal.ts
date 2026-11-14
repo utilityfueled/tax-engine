@@ -1,3 +1,4 @@
+import { calculateForm2210InvestmentElectionSources } from './forms/form-2210-investment-election.js';
 import { assertW2StateLocalSources } from "./forms/w2-state-local.js";
 import { buildForm2210OwnerSourceContext } from './forms/form-2210-owner-source.js';
 import { calculateMarketplaceActualPaidRepayment, type MarketplaceActualPaidAdjustment } from "./forms/marketplace-actual-paid-repayment.js";
@@ -4560,9 +4561,15 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     form5329?.line4 ?? d("0"), form5329?.line8 ?? d("0"), form1099Q?.netPenalty ?? d("0"),
     additionalMedicareTax,niitTax,sched1.hsaAdditionalTax,sched1.hsaRecaptureTax));
   const estimatedTaxRefundableCredits = sum(educationRefundable,refundableAdoptionCredit,netPremiumTaxCredit,form8812.actc,eic,sched3.section1341Credit);
+  const scheduleAiInvestmentElection = calculateForm2210InvestmentElectionSources(input, form4952, {
+    qualifiedDividends, netCapitalGain: netLTCG, grossInvestmentIncome: totalTaxableInterest.plus(totalDividends),
+    itemizedDeductions: deductionUsed === "itemized" ? deductionAmount : undefined,
+    ordinaryCohort: section1250Gain.isZero() && collectiblesGain.isZero() && !input.section1202Sources && schedD.section1202Exclusion.isZero()
+      && !input.form1099Div.some(statement => d(statement.section1202Gain).gt(0)) && !input.form8615 && !input.scheduleJ && !input.form2555,
+  });
   const scheduleAiOrdinaryPreferentialIncome = input.form2210?.calculationMethod === "annualized"
     && input.form2210.ordinaryPreferentialPeriodsConfirmed === true
-    && section1250Gain.isZero() && collectiblesGain.isZero() && investmentIncomeElection.isZero()
+    && section1250Gain.isZero() && collectiblesGain.isZero() && (investmentIncomeElection.isZero() || scheduleAiInvestmentElection !== undefined)
     && !input.section1202Sources && schedD.section1202Exclusion.isZero()
     && !input.form1099Div.some(statement => d(statement.section1202Gain).gt(0))
     ? { qualifiedDividends, netCapitalGain: netLTCG } : undefined;
@@ -4585,6 +4592,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     scheduleAiReturn:{standardDeduction,agi,taxableIncome,itemizedDeductions:deductionUsed === "itemized" ? deductionAmount : undefined,
       preferentialIncome:qualifiedDividends.gt(0) || netLTCG.gt(0),selfEmployedOwners:schedSE.perTaxpayer.filter(row => row.netSEEarnings.gt(0)).length,
       ...(scheduleAiOrdinaryPreferentialIncome ? { ordinaryPreferentialIncome: scheduleAiOrdinaryPreferentialIncome } : {}),
+      ...(scheduleAiInvestmentElection ? { investmentElection: scheduleAiInvestmentElection } : {}),
       ...(scheduleAiSpecialPreferentialIncome ? { specialRatePreferentialIncome: scheduleAiSpecialPreferentialIncome,
         distributionOnlyCapitalBounds: getForm2210DistributionOnlyBounds(input) } : {}),
       specialTaxMethod:Boolean(input.form8615 || input.scheduleJ || input.form2555),schedule1ADeduction:schedule1A?.totalDeduction,

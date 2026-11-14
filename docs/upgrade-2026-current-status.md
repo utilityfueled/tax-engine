@@ -1,5 +1,19 @@
 # Current 2026 upgrade continuation
 
+## November 14 actual Schedule AI investment elections
+
+The finite 2025 single-primary route now binds four actual Form 4952 period
+originals, annual election components, household identity and itemized totals.
+Residual-first Decimal arithmetic preserves the independent 40655 rounding
+example; numeric audit entries show gross, elected and eligible amounts without
+private identities. Separate reviews and 28,514 immutable full-suite tests pass,
+including seven tax examples frozen before code review and two independent
+canonical controls.
+[Authority, retained failures and limits](upgrade-2026-schedule-ai-investment-election-20261114.md).
+Combined successor checks remain pending; broader households, carry/partial
+methods, guided intake and final 2026 qualification remain separate. Main stays
+local under the production push hold.
+
 ## November 14 completed combined loss/EIC checks
 
 Exact `6f6f82a2` passes all twelve managed checks: 28,493 unit and coverage
