@@ -1,5 +1,15 @@
 # 2026 upgrade implementation evidence
 
+November 14: `11040d35` closes bare COD exclusion admission through the public
+calculator, HTTP and genuine verified AI audit. `8b77d15a` adds original corporate
+debt market discount with exact federal/Ohio interest-capital conservation and
+independent manual/privacy controls. Separate research retains the unresolved PA
+classification; guided intake remains work. On frozen earlier `61ca18f7`, static,
+28,352 unit and 28,352 coverage tests pass (88.03% branches); 622 browser cases
+pass with five original skips/zero retries, and all owned processes close normally.
+[Exact combined evidence](upgrade-2026-three-method-combined-checks-20261114.md). Three subsequent source
+and browser packages run in parallel. These are local commits under the push hold.
+
 November 14: locally committed `29393f5a` adds actual special-rate Schedule AI
 period worksheets (234 independently reviewed regression tests); `63dccc04`
 adds same-medium full-category prior charitable floor treatment (257 charitable

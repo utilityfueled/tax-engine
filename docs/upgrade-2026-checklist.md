@@ -12,10 +12,22 @@ below retain their original evidence boundaries.
 - [x] Commit actual Chapter 12 personal borrowing and complete Chapter 12/13
   history (`c00d937d`): 1,064 focused tests, separate archived-baseline history
   controls and six actual desktop/mobile browsers pass with normal cleanup.
-- [ ] Run all twelve checks on the combined current source. Earlier artifacts
-  remain bound to their older source.
-- [ ] Complete the next determinate methods after source research: tokenized-debt
-  market discount and any reproduced legacy bankruptcy completeness bypass.
+- [ ] Run all twelve checks on the combined current source. Exact `61ca18f7`
+  static, 28,352 unit and 28,352 coverage tests pass (88.03% branches); both owned
+  databases stopped normally; 622 browser passes/five original skips and zero
+  retries complete all twelve checks on that exact source. These results do not
+  cover subsequent packages. [Evidence](upgrade-2026-three-method-combined-checks-20261114.md).
+- [x] Close the reproduced public/HTTP/verified-audit COD exclusion admission
+  bypass (`11040d35`), retaining complete-source controls and independent review.
+- [x] Allocate original corporate tokenized-debt market discount exactly once
+  for federal and Ohio (`8b77d15a`), with separate manual and genuine verified
+  context privacy tests. Retain the precise PA classification guard.
+- [ ] Implement actual retained-residence COD source admission and basis-only
+  reduction, including the source-proven 2026 written-arrangement exception.
+- [ ] Finish actual typed special-rate Schedule AI desktop/mobile review tests
+  and reject contradictory interim amounts in the proven distribution-only cohort.
+- [ ] Complete guided original market-discount intake and resolve the direct
+  Pennsylvania secondary-market discount classification question.
 
 - [x] Refresh official provider prices/capabilities and record the deprecated
   GPT-5 Mini baseline without promotion or new paid calls.

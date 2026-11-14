@@ -1,4 +1,32 @@
 {
+  "nov14AdditionalAdmissionAndDebtAllocation": {
+    "branch": "main",
+    "localCommits": {
+      "codAdmission": "11040d35",
+      "digitalMarketDiscount": "8b77d15a"
+    },
+    "combinedChecks": {
+      "exactSource": "61ca18f7",
+      "static": "PASS",
+      "unitTests": 28352,
+      "coverageTests": 28352,
+      "branchCoverage": "88.03",
+      "branchThreshold": "85",
+      "ownedPostgresStopped": true,
+      "browser": "622PASS/5originalSkips/0retries;627collected;serverClosed",
+      "rootReviewSha256": "fb67765eade280851c6241d9a1db77f1607f92a65c1ea70202839d04ded1cee9",
+      "laterPackagesCovered": false
+    },
+    "activeParallel": [
+      "retained-residenceCODsources",
+      "distributionOnlyScheduleAIinterimAdmission",
+      "actualSpecialRateBrowser"
+    ],
+    "paMarketDiscount": "direct classification unresolved in bounded primary sources; guard retained",
+    "guidedMarketDiscount": "remaining engineering",
+    "qualifiedHumanReview": false,
+    "pushHold": true
+  },
   "schemaVersion": 1,
   "assessedDate": "2026-10-31",
   "baseCommit": "f1f79ec5c38a770cc1f4989e67a12d6ac44f3fda",

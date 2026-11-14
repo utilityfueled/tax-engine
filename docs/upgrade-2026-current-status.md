@@ -1,5 +1,28 @@
 # Current 2026 upgrade continuation
 
+## November 14 additional admission and debt allocation
+
+`11040d35` rejects bare canceled-debt exclusion claims before public calculation,
+HTTP or verified AI audit admission. Actual complete original eligibility and
+attribute sources are required; ordinary taxable controls and source-qualified
+Chapter 12/13 returns remain intact. `8b77d15a` allocates source-qualified
+corporate tokenized-debt market discount once between interest and capital,
+including Ohio AGI. Pennsylvania classification and guided intake remain open.
+Both packages have separate author/root review and retained predecessor failures.
+[COD source guard](upgrade-2026-cod-source-admission-20261114.md) ·
+[Market discount](upgrade-2026-digital-market-discount-20261114.md).
+
+Parallel exact `61ca18f7` checks passed static checks, 28,352 unit tests and
+28,352 coverage tests, with 88.03% branches against the unchanged 85% gate.
+Both owned PostgreSQL instances and the browser server stopped normally. All
+627 cases reconcile: 622 pass, five original hosted skips, zero failures/retries.
+[Exact combined evidence](upgrade-2026-three-method-combined-checks-20261114.md).
+These checks do not cover the later admission/market-discount changes.
+Three agents are implementing retained-residence actual COD sources, reviewing
+distribution-only interim Schedule AI source bounds, and exercising the new
+special-rate fields in real desktop/mobile browsers. Qualified human reviews,
+final forms and the main push hold remain unchanged.
+
 ## Active parallel source methods
 
 Two independently reviewed packages are committed locally: `29393f5a` supplies
