@@ -1,4 +1,30 @@
 {
+  "nov14MortgageGuideAndCurrentOriginFreeze": {
+    "localMainCommits": {
+      "education": "3545a64d",
+      "originalMortgageGuide": "997a45c8",
+      "currentOriginGuide": "682e902b",
+      "humanSourceAssignment": "cfdfe27b"
+    },
+    "originalMortgageGuide": "29focused;2actualdesktopMobilePASS;0retry;normalcleanup;independentb502b5c2",
+    "currentOriginGuide": "29focused;webTypesPASS;independent17tests14probes;reviewbf6f2e35",
+    "sourceBinding": {
+      "exactCommittedSource": "682e902bf3466e9fdfaebc110651b9911bf6e36b",
+      "actualBrowserCases": 633,
+      "originalDiagnosticIdentities": 14,
+      "diagnosticTests": 25,
+      "newBudget": "twoQPRcases;allfourprotectedactionszero",
+      "priorBudgetPoliciesPreserved": true
+    },
+    "nextCombinedRun": "fourisolatedexact-source lanes;unit8workers;coverage8workers;browserconfig2unchanged",
+    "nativePreparation": "temporarytestVM8CPU16GiBwrapperunderreview;noVMmutationyet;actualinvocationconditionalonfourlanesPASS",
+    "hostedPreparation": "isolatedprotectedPreview;actualmortgageoriginaljourneys;noexternalrunyet",
+    "aiPreparation": "nonheldoutcontrolledSolHighescalationandlocalledger;noadditionalpaidcallsyet",
+    "humanDecisionRows": "nineblank;notapproved",
+    "mainPushHold": true,
+    "filingEnabled": false,
+    "modelPromotion": false
+  },
   "nov14EducationAndCompletedParallelBrowser": {
     "educationCommit": "3545a64d",
     "affectedTests": 353,

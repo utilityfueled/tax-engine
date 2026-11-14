@@ -1,5 +1,13 @@
 # 2026 upgrade implementation evidence
 
+November 14: original mortgage interview `997a45c8` passes both actual viewport
+journeys and separate saved-artifact review. Current-loss entry composition
+`682e902b` passes 29 focused tests plus independent seventeen-test/fourteen-probe
+review. Pure source binding now verifies 633 cases, unchanged original fourteen
+diagnostics and the new two-case zero-action budget. Fresh combined lanes and
+separate protected Preview/native preparation proceed in parallel.
+[Current continuation](upgrade-2026-current-status.md).
+
 November 14: education original-bank-interest package `3545a64d` passes 353
 affected tests and independent twelve-test/fifty-negative source review. The
 frozen `8e7fd9a2` browser lane completes 629 actual cases: 624 passes, five

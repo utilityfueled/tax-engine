@@ -1,5 +1,27 @@
 # Current 2026 upgrade continuation
 
+## November 14 complete mortgage interview and current-loss entry parity
+
+`997a45c8` collects actual retained-home mortgage originals. Twenty-nine focused
+tests and both real desktop/mobile journeys pass; independent artifact review
+replays both saved states and inspects their actual screenshots. `682e902b`
+connects that collector to complete current-loss originals, preserving separate
+regular/AMT carry histories and explicit canceled-debt classification. Its
+twenty-nine focused tests, web typecheck and separate seventeen-test/fourteen-
+probe review pass. [Original interview](upgrade-2026-guided-mortgage-originals-20261114.md)
+· [Current-loss composition](upgrade-2026-guided-current-loss-mortgage-20261114.md).
+
+Pure committed-source binding at `682e902b` collects 633 actual browser cases,
+preserves the fourteen original diagnostics and validates the inventory and
+twenty-five diagnostic tests. Its only new request entry covers the two
+mortgage cases with zero for every protected action. Fresh combined unit,
+coverage, static and browser lanes follow this freeze in parallel. Protected
+Preview and native execution are separately prepared against the forthcoming
+bound source; earlier runtime results remain tied to their actual commits.
+The [new source-method assignment supplement](upgrade-2026-human-tax-source-supplement-3545a64d.md)
+contains sixty-one detached source files and nine blank human decisions; it
+does not supply a human review. Main remains local under the push hold.
+
 ## November 14 completed browser lane and source-bound education interest
 
 `3545a64d` reconciles separately reported original bank interest after a
