@@ -62,6 +62,10 @@ below retain their original evidence boundaries.
 - [x] Bind the existing human tax assignments to the later same-column estimate,
   four state estimate/interest methods and AOTC source changes without supplying
   new human decisions. [Fixed source index](upgrade-2026-human-tax-review-delta-9b6202e7.md).
+- [x] Deliver a detached exact thirteen-file guided K-3 human source delta and
+  blank year-specific decisions; independently verify bytes and correct the
+  obsolete blanket unsupported-guide entry.
+  [Unassigned review scope](upgrade-2026-human-tax-review-delta-33f8f784.md).
 - [ ] Obtain the independent human reviews and final official forms; preserve
   filing/model gates and the local-main push hold.
 

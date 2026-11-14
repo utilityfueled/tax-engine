@@ -5454,3 +5454,12 @@ and preserved user/root/default routes pass; independent final artifact audit
 passes. Latest same-image metadata retains56High; no advisory acceptance,
 nativeAMD64, remoteCI, human or final2026 qualification is inferred.
 [Exact image, source, cleanup and receipts](upgrade-2026-current-arm64-rehearsal-20261114.md).
+
+### November 14: current K-3 human source assignment
+
+A separate detached thirteen-file source index binds33f8 without relabeling
+the earlier9b review packet. Independent byte/index review passes, all human
+identity/worksheet/decision fields remain blank, and109 affected support/export/
+K-3/model-gate controls pass. The unsupported-method register now describes the
+delivered narrow guide correctly while retaining all broader source gates.
+[Unassigned original-source handoff](upgrade-2026-human-tax-review-delta-33f8f784.md).

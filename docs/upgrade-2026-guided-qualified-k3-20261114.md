@@ -90,3 +90,9 @@ category and section 469 portfolio income. Reviewer identity, credentials,
 independent results, supporting authority and acceptance are all **pending**.
 The existing human packet's fixed `9b6202e7` index does not cover this later
 source addition; this handoff is an explicit delta, with no inferred signature.
+
+The [separate human source delta](upgrade-2026-human-tax-review-delta-33f8f784.md)
+now delivers all thirteen exact committed files and blank 2025/2026 decisions,
+without relabeling the earlier 9b packet or supplying expected human results.
+The stale unsupported-method register now distinguishes this delivered narrow
+route from guarded Form 1116, deduction, mixed and suspended methods.

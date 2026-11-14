@@ -22,7 +22,7 @@ A rejection here is not an external blocker unless its class says so. Year guard
 
 | Family | Examples | Rejection location |
 | --- | --- | --- |
-| Foreign tax credit | Pass-through sources on Form 1116 or as deductions, pass-through tax in the guide (guided K-1 basis and at-risk sources require zero foreign tax), territories, overall foreign loss accounts, accrued-credit history, part-year residency | `foreign-tax-*.ts` |
+| Foreign tax credit | Pass-through sources on Form 1116 or as deductions; broader guided K1 composition outside the delivered portfolio-only qualified K3 route, including separate qualified-loss, charitable and current-minimum-tax-credit original packets; territories, overall foreign loss accounts, accrued-credit history and part-year residency | `foreign-tax-*.ts`, `guided-foreign-tax-k3.ts` |
 | Form 172 origins | Farming, estate, cancelled-debt, other classified income and deductions | `form-172-*.ts` |
 | K-1 histories | Basis, foreign tax left suspended by basis (the year and amount of a later allowance are unsettled), at-risk, passive recharacterization, decreased-value gifts, remaining foreign/loss/passive-business-capital/other-business Form 461 classification | `k1-*.ts` |
 | Charitable with loss histories | Multi-vintage attribution, prior carry with the 2026 floor, recurrent joint attribution | `charitable-*.ts` |
@@ -54,3 +54,10 @@ Profitable ordinary domestic ScheduleC/partnership classification with zero resu
 ## November2 C/R capability boundaries
 
 ScheduleR published worksheet/source corrections are delivered in13a5d28e. Actual current-cash C interest/ordinary expense/address source qualification and full C replay are delivered in75f78914. Neither opens2026 exports or substitutes for human review. Shared bare PA pension/depletion/startup/IDC/bad-debt amounts are not enabled federal eligibility contracts; positive federal use rejects explicitly. The existing top-level4562 path already supports179. The concrete positively represented4562line44→C27b acquired-goodwill source bridge is delivered in97698bc0. It requires actual typed/imported current-start Section197originals; the ordinary guide has no4562origination, its4562output remains reference-only, and automatic PA composition rejects without an actual independent PA basis method. Legacy no-proof C addresses and the new source-qualified cohort must not be conflated.
+
+
+## November 14 guided qualified K3 boundary
+
+`33f8f784` delivers actual original domestic continuing non-PTP partnership portfolio K1/K3 sources in the guide for the existing §904(j) election without Form 1116. It requires matching owner, year, entity and qualified-statement/country references; complete actual portfolio amounts and annual eligibility; exact full current foreign-tax basis allowance; and explicitly zero other boxes, basis changes and prior basis/at-risk/passive suspensions. The combined existing 1099/K3 tax limit is tested before rounding. Bare K1s, unknown sources, basis shortages, mixed-source allocations and the separately listed unsupported compositions remain rejected. The distinct guided loss/basis/at-risk packet's zero-foreign-tax boundary is preserved; this delivery does not relax it.
+
+See the [specification](../spec/federal/foreign-tax-direct-credit.yaml), [collector](../apps/web/src/lib/guided-foreign-tax-k3.ts), [independent boundary tests](../tests/guided-interview/guided-foreign-tax-k3-independent.test.ts), [final 2025 Form 1116 instructions](https://www.irs.gov/instructions/i1116) and [§904(j)](https://uscode.house.gov/us/usc/119-118/t26/s904/). The [33f8 human-review delta](upgrade-2026-human-tax-review-delta-33f8f784.md) is an unassigned source index, not a qualified decision. This finite delivery and its engineering/runtime tests do not approve final 2026 forms, filing or model promotion.
