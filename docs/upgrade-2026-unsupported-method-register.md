@@ -16,7 +16,7 @@ A rejection here is not an external blocker unless its class says so. Year guard
 
 | Method | Rejection location | Who it affects |
 | --- | --- | --- |
-| Schedule AI with preferential income or Schedule J | `form-2210-schedule-ai.ts` | Depends on a ruling on annualizing qualified dividends and gains; Schedule J needs a period method |
+| Schedule AI with special-rate gains or a special tax method | `form-2210-schedule-ai.ts` | Ordinary qualified dividends and ordinary net capital gain are implemented by `656fb5f8`, with explicitly confirmed period inputs and exact full-year reconciliation. Special-rate gains, section1202, an investment-interest election, Schedule J, Form8615 and Form2555 retain their separate source/method gates. See [the current implementation and boundaries](upgrade-2026-form-2210-schedule-ai-work.md), [line14 spec](../spec/federal/form-2210-schedule-ai.yaml), [final2025 instructions](https://www.irs.gov/instructions/i2210) and [2026 Publication505](https://www.irs.gov/publications/p505). Final2026 Form2210 instructions, tables and qualified human review remain pending. |
 
 ## Specialist
 
@@ -35,7 +35,7 @@ A rejection here is not an external blocker unless its class says so. Year guard
 
 ## Ruling
 
-The six questions in [external actions](upgrade-2026-external-actions.md), plus the Schedule AI preferential-income question above and the final 2026 row layout for a QOF inclusion with no sale. These retain precise unresolved source interpretations or final-form dependencies. Further authoritative research and qualified tax review must establish a controlling treatment before implementation; no arbitrary allocation or election is inferred.
+The questions in [external actions](upgrade-2026-external-actions.md), including actual-year Schedule AI instruction and deduction-period treatment, plus the final 2026 row layout for a QOF inclusion with no sale. The ordinary preferential-income method described above no longer belongs to this unresolved list. A remaining special-method engineering rejection does not itself establish a ruling blocker. These remaining questions retain precise unresolved source interpretations or final-form dependencies. Further authoritative research and qualified tax review must establish a controlling treatment before implementation; no arbitrary allocation or election is inferred.
 
 - EIC tiebreaker on a joint return or at equal AGI: IRC 152(c)(4) and Pubs 596 and 501 give the order, but none of those sources says how to compare a joint return's AGI or who wins at equal AGI. A nonparent's competing claim in those two cases rejects.
 - Canceled debt on a joint or community-property return: every married couple filing jointly with a canceled debt is rejected on the source route, so this reaches ordinary filers. Pub 4681 covers joint debt only for spouses filing separately, and neither it nor the Form 982 instructions say how to allocate insolvency or attribute reduction on a joint return. The search covered those two sources, not the regulations. A reviewer should confirm the method.
