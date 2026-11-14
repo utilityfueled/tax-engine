@@ -79,3 +79,68 @@ backport must keep that set consistent and pass fresh package, image, and
 recovery checks on both architectures. The remaining advisory dispositions,
 including an accountable owner and expiry for any accepted finding, and the
 independent human review are open. [Upstream util-linux release](https://github.com/util-linux/util-linux/releases/tag/v2.41.6) · [Debian package versions](https://security-tracker.debian.org/tracker/source-package/util-linux).
+
+## PostgreSQL service images in Compose
+
+On November 14 UTC, anonymous Docker Registry reads verified the pinned
+`postgres:16.16-bookworm` OCI index
+`sha256:a49f7438ba03589f9b1ca062f2da82e899b48ea1dc50d2449fa09a70be83ebca`,
+the selected child descriptors, image configurations, compressed layer
+digests and all 14 uncompressed layer identifiers on each platform. Syft
+1.57.1 inventoried each platform's merged filesystem, and Grype 0.121.3
+used the same database built November 12 at 06:20:58 UTC. The exact package
+database matched all 155 Debian packages reported by Syft on each platform.
+Both scans exited 2 with the High threshold and found the same 565 package
+matches across 231 advisory IDs, including 138 High and nine Critical
+matches across six IDs. This offline inspection executed no image code.
+[Compose pin](../compose.yaml) · [Docker Official Image](https://hub.docker.com/_/postgres) · [Pinned Dockerfile](https://github.com/docker-library/postgres/blob/168a848e5905af32aaa5fd6fad4f30906c80af95/16/bookworm/Dockerfile).
+
+| Evidence | Linux ARM64 v8 | Linux AMD64 |
+| --- | --- | --- |
+| Registry child digest | `586813eb2f2d5491a992541f7f0b91bf837e7ae43ec1c42af5a9639483e068c7` | `f45d631d050c2fe068f384ed6c4faac506e9cd7f4da605ce703648e4b0985848` |
+| CycloneDX SBOM SHA-256 | `e984663460c82970d0c6206c10ae954d5aa5e453640cc418e448fddc293a348b` | `b0815604f212f694511214bfd836eec6e97da9a6eb7eb56b3c820611787ff31a` |
+| Grype JSON SHA-256 | `b043c1ee9b54e4e690148347d060a25dfe32a0ec1106adbf5e5e8f107323469f` | `a4d45a82496eec961db36c8a65043eda3720bb58a423f715538e6f6d42251f5e` |
+| Filesystem, package and ELF review SHA-256 | `4b05a63d283c3d8b57a4e90e53417b73a62cfec635c5cc43707b5e51bbe01a77` | `af7e154e976519f9b4fe8d5b00056475603252872506b810c0484f05f6d1a6d5` |
+
+The 16.16 server and client are PGDG `16.16-1.pgdg12+1`. The shared
+client library `libpq5` is from PostgreSQL 18 at `18.7-1.pgdg12+2` and is
+linked by `psql` and the packaged `dblink` extension. The PGDG common
+packages are `294.pgdg12+2`. Grype emitted zero matches on those five
+packages in the Debian 12 namespace. The upstream version-specific
+bulletins document fixes through 16.16 and 18.7, and the PGDG package
+archive confirms the version and vendor. The 16.16 notes require checking
+existing indexes for affected unconstrained `bpchar` btrees, GIN and
+prior concurrent TOAST reindexing, and rebuilding separately installed C
+extensions as applicable. The checked application schema defines no
+`bpchar` or GIN index and creates no C extension. Operator schemas and
+extensions still require inspection before an in-place upgrade.
+[PGDG package archive](https://apt.postgresql.org/pub/repos/apt/pool/main/p/postgresql-16/) · [PostgreSQL 16 security](https://www.postgresql.org/support/security/16/) · [PostgreSQL 18 security](https://www.postgresql.org/support/security/18/) · [PostgreSQL 16.16 migration notes](https://www.postgresql.org/docs/release/16.16/).
+
+| Critical scanner matches per platform | Exact artifact observations |
+| --- | --- |
+| glibc CVE-2026-5450 · 4 | Bookworm `2.36-9+deb12u14` is vulnerable in Debian's tracker. Both server binaries import glibc `fscanf` and `sscanf`. The fault requires a format with a width over 1024 for `%mc`. The checked server and client binaries had no such literal. The transitive call path remains unverified. [Debian glibc advisory](https://security-tracker.debian.org/tracker/CVE-2026-5450) |
+| libxml2 CVE-2026-6653 · 1 | The server declares a direct dependency on `libxml2.so.2` and imports the parser. PostgreSQL applies internal DTD defaults and supplies a loader that prevents external entity fetches. The official source and binary imports establish an authenticated SQL/XML parsing path. Triggering this specific internal-subset use-after-free through that path remains unverified. Debian lists the shipped Bookworm and current Trixie versions as vulnerable. [Debian libxml2 advisory](https://security-tracker.debian.org/tracker/CVE-2026-6653) · [PostgreSQL XML implementation](https://github.com/postgres/postgres/blob/REL_16_16/src/backend/utils/adt/xml.c#L1685-L1707) |
+| SQLite CVE-2025-7458 · 1 | Bookworm's SQLite library is present. The server, `psql` and `dblink` have no direct SQLite dependency, and the SQLite CLI is absent. The reported conditions require arbitrary SQLite SQL with a crafted `ORDER BY`. [Debian SQLite advisory](https://security-tracker.debian.org/tracker/CVE-2025-7458) |
+| Go GO-2026-4337, GO-2026-6612 and GO-2026-6604 · 3 | All three matches arise from `gosu` 1.19's embedded Go 1.24.6. The exact binaries hash-match the upstream Linux releases and contain no TLS handshake, HTTP server or Windows implementation markers. The entrypoint uses the binary to drop to the PostgreSQL OS user. The TLS-resumption, HTTP/2-server and Windows-junction preconditions are absent from this use. The separate Medium `moby/sys/user` finding does cover the account-file parser used by `gosu`. It requires a malicious user or group file, and Compose mounts neither file. [Upstream gosu release](https://github.com/tianon/gosu/releases/tag/1.19) · [TLS](https://pkg.go.dev/vuln/GO-2026-4337) · [HTTP/2](https://pkg.go.dev/vuln/GO-2026-6612) · [Windows](https://pkg.go.dev/vuln/GO-2026-6604) · [Moby account-file advisory](https://github.com/moby/sys/security/advisories/GHSA-mjcv-p78q-w5fw) |
+
+The pinned Bookworm image already uses `debian:bookworm-slim`. The
+official Registry returned 404 for 16.17, 16.17-bookworm, and the 16.16
+`-slim` variants. Both current alternative tags, `16.16-trixie` and
+`16.16-alpine3.24`, still declare `gosu` 1.19. The offline Trixie ARM64
+comparison at child digest
+`sha256:15364b278fab4a982ae09243c788e4df96a31a5b4bed50e6dab2d83420690653`
+returned 501 matches across 214 IDs, including 149 High and four Critical
+matches. It removed the Bookworm glibc and SQLite Critical matches and
+retained libxml2 CVE-2026-6653 and the same three Go Critical matches.
+The Trixie scan SHA-256 is
+`999af08a7701c5f0d16c633aa2fe5a71f27b7859ca1dc18a2c56c7cea1324dd1`.
+Moving an existing volume from Bookworm to either alternative changes the
+libc and locale environment. The Trixie archive ships ICU 76, and the
+pinned Bookworm image links ICU 72. PostgreSQL requires rebuilding affected
+indexes before refreshing collation versions. Removing libxml2 breaks a
+declared server dependency.
+A replacement requires patched packages for the affected paths and its
+own upgrade, recovery and rollback evidence. The PostgreSQL service
+remains open for security qualification, including the unresolved High
+findings, accountable disposition and independent human review.
+[Official image tags](https://hub.docker.com/_/postgres/tags?name=16) · [PostgreSQL collation guidance](https://www.postgresql.org/docs/16/sql-altercollation.html).
