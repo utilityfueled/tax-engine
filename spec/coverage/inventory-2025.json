@@ -16527,6 +16527,25 @@
       ]
     },
     {
+      "key": "state/pa-2026-farmer-estimated-tax",
+      "jurisdiction": "state",
+      "taxYear": 2026,
+      "sourceAuthority": "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2026/2026_rev-413i.pdf",
+      "specPath": "spec/state/pa-2026-farmer-estimated-tax.yaml",
+      "enginePath": "src/engine/state/pa-2026-farmer-estimated-tax.ts",
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "state/pa-2026-ordinary-dependencies",
       "jurisdiction": "state",
       "taxYear": null,

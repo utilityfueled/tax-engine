@@ -1,0 +1,42 @@
+form: "Pennsylvania 2026 farmer estimated tax timing"
+fullName: "Pennsylvania state personal income tax farmer declaration and payment options"
+taxYear: 2026
+reference: "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2026/2026_rev-413i.pdf"
+sources:
+  - "https://www.legis.state.pa.us/WU01/LI/LI/US/HTM/1971/0/0002..HTM#19710002u325s"
+  - "https://www.legis.state.pa.us/WU01/LI/LI/US/HTM/1971/0/0002..HTM#19710002u326s"
+  - "https://www.legis.state.pa.us/WU01/LI/LI/US/HTM/1971/0/0002.003.000.052.000..HTM"
+  - "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_rev-1630a.pdf"
+revision: "Final 2026 REV-413(I), p. 2, Farmers, read with Pennsylvania Tax Reform Code §§ 325(e) and 326(b), retrieved 2026-11-13"
+notes: |
+  Planning only for one individual's calendar-year 2026 Pennsylvania state
+  personal income tax. The result describes options if an estimated declaration
+  would otherwise be required. It makes no determination about whether or how
+  much to pay. Gross income is supplied under Pennsylvania's farmer definition
+  for this individual. No classification, joint or pass-through aggregation,
+  residency, allocation or netting is inferred. The prior-year REV-1630A
+  instructions demonstrate why positive gross income from all sources is distinct
+  from federal AGI, PA taxable income, gross farm receipts or net farm profit.
+  This estimate does not apply the prior-year worksheet to this taxable year.
+
+  Ordinary declaration and penalty questions are separate. Section 325(a)(1)
+  uses the amount expected to exceed $14,000 without PA tax withheld, while the
+  Department's 2026 instructions also refer to at least $14,000 and a $430
+  estimated-tax worksheet threshold. The § 325(d) trigger dates April 1, June 1
+  and September 1 fall in earlier rows than those in the REV-413(I) table. This
+  method does not choose any ordinary installment row or resolve these issues.
+  Section 352(d)(1) separately references two-thirds of actual tax when computing
+  farmer underpayment. The 2025 REV-1630A worksheet prints 0.6667 and inconsistent
+  equality wording. No 2026 REV-1630A was verified. This timing estimate does
+  not infer any payment, filing, extension, penalty, safe harbor, prior-year
+  treatment, credit or refund, and does not feed any return or filing output.
+  All test facts are synthetic.
+lines:
+  - line: "farmer-income-test"
+    description: "Determine whether the confirmed estimate meets the farmer gross-income test"
+    formula: "Require an expressly confirmed calendar 2026 individual estimate of qualifying gross farm income and total gross income from all sources, with no income-classification inference. Accept nonnegative currency strings with up to 12 whole digits and two fractional digits, and require farm gross to be no more than total gross. Where total is positive, test farm gross × 3 >= total gross × 2 using Decimal without rounding. A confirmed zero total yields no timing options. Missing or invalid facts are errors."
+    testRef: "tests/engine/state/pa-2026-farmer-estimated-tax.test.ts::compares exact current-year gross amounts at and immediately around two-thirds"
+  - line: "farmer-declaration-options"
+    description: "Report the two published farmer deadline options when the income test is met"
+    formula: "Return January 15, 2027 to submit the declaration and pay the full estimated tax, and March 1, 2027 to file the final 2026 PA return and pay the entire tax due instead of estimated payments. Payment accompanies the declaration when using the later declaration option under § 326(b). March 1 is the deadline for the optional final-return path, with no change to the ordinary return due date. Do not assess adherence or choose a path. Return no farmer options when the income test fails."
+    testRef: "tests/engine/state/pa-2026-farmer-estimated-tax.test.ts::returns both exact farmer deadline options without selecting or settling either one"
