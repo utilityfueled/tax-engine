@@ -5318,3 +5318,18 @@ execution and current image qualification require separate evidence.
   audit controls pass. Real production Chromium fails through gzip on the prior
   source and passes save/upload after correction. All four full archived lanes
   are running concurrently. Remote GUI and automatic retry remain open.
+
+- Exact `9b6202e7` static, unit and coverage lanes pass. Unit and coverage each
+  run 28,197 tests in 2,034 files, retaining 88.02% branch coverage and the 85%
+  gate. Both PostgreSQL instances close normally. Managed Chromium continues in
+  parallel with the separately reviewed current-source ARM64 image rehearsal.
+
+- Exact `9b6202e7` completes all 12 archived commands, including 618 Chromium
+  passes with five original hosted-only skips and no retries. Actual protected
+  Vercel desktop/mobile workflows pass original-document upload, the $885 sample
+  estimate, review download, reopen, encrypted backup, deletion and local
+  restore. Three scoped database checkpoints verify strict owner/revision
+  controls and zero AI ledger changes. The outage attempt stops safely before
+  role suspension because idle connections remain. All runtime cleanup passes;
+  the free synthetic branch remains for a focused successor. No scheduled retry
+  result is claimed. [Receipts and scope](upgrade-2026-current-status.md).

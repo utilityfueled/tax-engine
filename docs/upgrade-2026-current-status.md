@@ -50,9 +50,39 @@ local production Chromium session reproduced the failure through gzip before
 the fix and passed save and upload afterward. The identity-encoded control
 passed separately. All local app, proxy and database processes closed normally.
 The unchanged browser cases and budgets passed 202 audit controls. Four fresh
-archived full-check lanes are running on exact `9b6202e7` with four unit and
-coverage workers and the existing two browser workers. Actual Vercel compression
-and the complete hosted GUI workflow still require the successor rehearsal.
+archived full-check lanes use exact `9b6202e7` with four unit and coverage
+workers and the existing two browser workers. All nine static checks pass. Unit
+and coverage each pass 28,197 tests in 2,034 files; branch coverage is 88.02%
+against the unchanged 85% threshold. Both isolated databases stopped normally.
+Managed Chromium passes 618 executable cases with the five original hosted-only
+skips, zero failures and zero retries. All 12 archived commands pass. Combined
+receipt SHA-256 is
+`f74ddf3cb3a4790aefeb3e52f33164898f95fee41efd0ee21ffaf839c5053847`.
+The separately admitted current-source ARM64 browser rehearsal is running.
+
+Actual protected Vercel responses independently reproduce strong identity ETags
+becoming weak under gzip while the canonical JSON revision survives. Both
+1280px desktop and 375px mobile workflows pass upload, explicit synthetic facts,
+the $885 sample estimate, gated review download, reopening, encrypted backup,
+wrong-password rejection, hosted deletion and restore as a new local return.
+Original document hashes agree after reload and decrypted recovery. The network
+observer records zero provider requests and zero raw/base64 sample-prefix matches;
+this bounded observation is not a general proof that no personal data can leak.
+Three scoped database checkpoints verify owner isolation, strict conditional
+writes and cleanup, with all five scoped AI-ledger counts unchanged at zero.
+
+The same run stopped before suspending the database role or creating an outage
+event because idle connections did not drain. It supplies no initial 503 or
+automatic-retry evidence. All temporary Preview settings/deployment, Stripe
+trials/customers, sessions and owned Redis keys were restored or removed. The
+free branch retains only the synthetic test-account rows for a focused outage
+successor; branch deletion is not claimed. The terminal run records 541 counted
+operations. Its receipt SHA-256 is
+`af9f1f3d94af00e4a94002e0dec7dc83e5ce0613c821b70a0f390c0fae58caa8`;
+GUI receipt SHA-256 is
+`7b1316ec16ca8fad9055a74ca7e961d616f5659df681cad3ed92d28ca509e106`.
+Independent terminal review SHA-256 is
+`5cc4c974f8d6051796b26dcd2d4250359745fe09bdaecbf4102829af43f0773f`.
 
 Private regression report SHA-256:
 `b2e66e2d3087c72edf07b1564a9d2a7351cc8654b883929828c31ab5b1c50375`.
@@ -67,8 +97,10 @@ runtime artifact hashes and normal VM/socket cleanup. The actual candidate scan
 retains 9 Critical and 138 High findings. The public struct ABI difference,
 authored CVE reproduction, native AMD64 execution and security-owner decisions
 remain open. Candidate release qualification and risk acceptance remain false;
-the default Compose pin is unchanged. The opt-in source builder is under
-independent review. [Sources, checks and artifact hashes](upgrade-2026-postgres-libxml2-native-20261114.md).
+the default Compose pin is unchanged. Independently reviewed `61054e71` adds an
+opt-in, pinned source builder with 29 focused controls passing. Its entrypoint
+still needs actual native execution; earlier recipe/runtime evidence remains
+separate. [Sources, checks and artifact hashes](upgrade-2026-postgres-libxml2-native-20261114.md).
 
 ## November 14 combined runtime verification
 
