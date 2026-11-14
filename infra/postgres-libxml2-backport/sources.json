@@ -1,0 +1,85 @@
+{
+  "schemaVersion": 1,
+  "baselineVersion": "2.9.14+dfsg-1.3~deb12u6",
+  "privateCandidateVersion": "2.9.14+dfsg-1.3~deb12u6+vivalatax11",
+  "signedDebianSourcesIndexSha256": "92d11a035571df011f06f28c61cb9825130ef1d92abb2f2e0525e8674dc44af8",
+  "postgres": {
+    "repository": "docker.io/library/postgres:16.16-bookworm",
+    "index": "sha256:a49f7438ba03589f9b1ca062f2da82e899b48ea1dc50d2449fa09a70be83ebca",
+    "platforms": {
+      "arm64": {
+        "digest": "sha256:586813eb2f2d5491a992541f7f0b91bf837e7ae43ec1c42af5a9639483e068c7",
+        "multiarch": "aarch64-linux-gnu"
+      },
+      "amd64": {
+        "digest": "sha256:f45d631d050c2fe068f384ed6c4faac506e9cd7f4da605ce703648e4b0985848",
+        "multiarch": "x86_64-linux-gnu"
+      }
+    }
+  },
+  "sources": [
+    {
+      "name": "libxml2_2.9.14+dfsg-1.3~deb12u6.dsc",
+      "sha256": "d86ce3efb1b75d2781f72f5cdd187474c148a915d610295c85162681bb070a65",
+      "bytes": 2974,
+      "url": "https://deb.debian.org/debian/pool/main/libx/libxml2/libxml2_2.9.14+dfsg-1.3~deb12u6.dsc"
+    },
+    {
+      "name": "libxml2_2.9.14+dfsg.orig.tar.xz",
+      "sha256": "4fe913dec8b1ab89d13b489b419a8203176ea39e931eaa0d25b17eafb9c279e9",
+      "bytes": 2351200,
+      "url": "https://deb.debian.org/debian/pool/main/libx/libxml2/libxml2_2.9.14+dfsg.orig.tar.xz"
+    },
+    {
+      "name": "libxml2_2.9.14+dfsg-1.3~deb12u6.debian.tar.xz",
+      "sha256": "f33a99a0018cbb94aadc3bf26661e401cb90dff856aa170faf7239151ee9b9ac",
+      "bytes": 56668,
+      "url": "https://deb.debian.org/debian/pool/main/libx/libxml2/libxml2_2.9.14+dfsg-1.3~deb12u6.debian.tar.xz"
+    },
+    {
+      "name": "upstream-fixtures.tar.xz",
+      "bytes": 3129968,
+      "sha256": "60d74a257d1ccec0475e749cba2f21559e48139efba6ff28224357c7c798dfee",
+      "url": "https://download.gnome.org/sources/libxml2/2.9/libxml2-2.9.14.tar.xz",
+      "checksumUrl": "https://download.gnome.org/sources/libxml2/2.9/libxml2-2.9.14.sha256sum",
+      "purpose": "Restore only missing upstream test/result fixtures excluded by Debian DFSG repacking."
+    }
+  ],
+  "maintainedPatch": {
+    "sourceVersion": "2.9.14+dfsg-1.3ubuntu3.10",
+    "sourcePath": "debian/patches/CVE-2026-6653.patch",
+    "authority": "https://ubuntu.com/security/CVE-2026-6653",
+    "upstreamCommit": "https://github.com/GNOME/libxml2/commit/463bbeeca1805b5c4828f50d0fefc4eebaf620df"
+  },
+  "recipeFiles": {
+    "CVE-2026-6653.patch": {
+      "bytes": 30319,
+      "sha256": "6c2b8a7b6fa470efcb1854e5c73bd7e1ae1663d8b111e27ce9232bbc1fe44f54"
+    },
+    "Dockerfile": {
+      "bytes": 695,
+      "sha256": "a433c4d3e5b33f95bc3d6ba94a0186975743af1afea93477702ebba80fca5c0f"
+    },
+    "Dockerfile.packages": {
+      "bytes": 214,
+      "sha256": "5b2231f484724a91b10351f113854f488960de7f9eede2e50c2062744b23b431"
+    },
+    "Dockerfile.toolchain": {
+      "bytes": 885,
+      "sha256": "223a2e86b02d361bd34df57f580ae1f796db8ccfd9a0d267a617af036c3982a5"
+    },
+    "build-packages.sh": {
+      "bytes": 5896,
+      "sha256": "76f04f6b57540377ac3a94926e199fbb3b5e2a07ee70e277ad5d2a2cfaa9cf80"
+    },
+    "exslt.c": {
+      "bytes": 1506,
+      "sha256": "7dad5478e322fec362a5e1573babf175caaae767de33a1ca5d1ee3ed0247200e"
+    }
+  },
+  "candidateReleaseQualified": false,
+  "genericAbiApproval": false,
+  "riskAccepted": false,
+  "bitwiseReproducibilityProved": false,
+  "qualificationLedger": "docs/upgrade-2026-postgres-libxml2-native-20261114.md"
+}

@@ -1,0 +1,17 @@
+ARG BASE
+FROM ${BASE}
+USER root
+ARG EXPECTED_ARCH
+ENV DEBIAN_FRONTEND=noninteractive
+RUN test "$(dpkg --print-architecture)" = "$EXPECTED_ARCH"
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential debhelper dh-python libicu-dev liblzma-dev \
+    libpython3-all-dev pkg-config python3-all-dev rename zlib1g-dev \
+    devscripts libreadline-dev autoconf automake libtool abigail-tools \
+    libxslt1-dev binutils ca-certificates xz-utils && \
+    mkdir /qualification-toolchain && \
+    dpkg-query -W -f='${binary:Package}\t${Version}\t${Architecture}\n' > /qualification-toolchain/packages.tsv && \
+    cp -a /var/lib/apt/lists /qualification-toolchain/apt-lists && \
+    cc --version > /qualification-toolchain/compiler.txt && \
+    ld --version > /qualification-toolchain/linker.txt && \
+    dpkg-buildflags > /qualification-toolchain/buildflags.txt
