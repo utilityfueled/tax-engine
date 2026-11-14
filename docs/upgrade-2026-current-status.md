@@ -1,5 +1,26 @@
 # Current 2026 upgrade continuation
 
+## November 14 strict spec-reference correction before the final combined run
+
+The actual `72da7763` unit and coverage successors each finish with 28,448
+passes and one strict spec-reference failure; both owned databases stop
+normally. The validator reads test source as TSX, so an otherwise valid `<T>`
+generic arrow hides nine later literal test titles. Adding the disambiguating
+comma `<T,>` changes no title, assertion, spec, validator or emitted JavaScript.
+The retained focused predecessor is 925 passes/one failure; the successor passes
+all 926 strict-reference tests plus twelve education tests, engine typecheck
+and lint without warnings. Final correction receipt SHA-256:
+`618526e1a04bf1006f168bc4079811ed2c723645c3f4c81e05569d17443f97a9`.
+
+Corrected `efeede51` static checks all pass. Its first browser attempt overlaps
+the superseded server and fails readiness; the original cleanup-false record is
+retained, followed by read-only proof that its owned server is absent. Root
+gracefully cancels only the verified old browser orchestrator through its own
+handler; the old server records normal cleanup and port 3099 is verified free.
+No foreign process is signaled. A fresh final-source four-lane run follows with
+the required local permissions and a single browser-port owner. No partial,
+failed or canceled run establishes current qualification.
+
 ## November 14 full-lint correction and preserved runtime attempts
 
 Frozen `72da7763` passes types, specs, inventory, both builds and model-config

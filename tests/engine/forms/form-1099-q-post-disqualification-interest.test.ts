@@ -28,7 +28,7 @@ it('requires actual canonical originals and reports ordinary interest exactly on
   expect(JSON.stringify(input)).toBe(before);
 });
 
-const first = <T>(rows: T[]): T => { const value=rows[0]; if (!value) throw Error('Required explicit synthetic source'); return value; };
+const first = <T,>(rows: T[]): T => { const value=rows[0]; if (!value) throw Error('Required explicit synthetic source'); return value; };
 function proof(input: ReturnType<typeof source>) {
   const value=first(input.form1099Q).postDisqualificationInterestSources;
   if (!value) throw Error('Required explicit synthetic conversion packet');

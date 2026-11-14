@@ -1,5 +1,13 @@
 # 2026 upgrade implementation evidence
 
+November 14: actual `72da7763` unit/coverage each record 28,448 passes and one
+strict spec-reference failure. A test-only generic-arrow comma preserves every
+assertion and emitted JavaScript while making nine literal titles discoverable;
+926 strict-reference plus twelve education tests pass. `efeede51` passes every
+static check. Canceled/failed browser attempts and actual cleanup observations
+remain retained before the sole-port final-source successor.
+[Current continuation](upgrade-2026-current-status.md).
+
 November 14: full `72da7763` static validation finds one unused type import after
 all type/build/spec checks pass. Type-only correction `4df6d159` passes focused
 lint and separate review, with identical TypeScript-emitted JavaScript. Original

@@ -1,4 +1,19 @@
 {
+  "nov14StrictReferenceAndRuntimeCleanupCorrection": {
+    "actualUnitAndCoverageSource": "72da7763",
+    "eachActualResult": "28448PASS1strictSpecReferenceFAIL;ownedDBstopped;terminal1acknowledged",
+    "cause": "TSXparserambiguityinexistinggenericarrowtesthelper;9literaltitleshidden",
+    "correction": "only<T>to<T,>;nospec/parser/title/assertion/productchange",
+    "focusedPredecessor": "925PASS1FAIL",
+    "focusedSuccessor": "926strictRefs+12Education=938PASS;types/lintPASS;emittedJSidentical",
+    "sourceFreezeSha256": "618526e1a04bf1006f168bc4079811ed2c723645c3f4c81e05569d17443f97a9",
+    "efeedeStatic": "all9PASS;terminal0acknowledged",
+    "superseded72Browser": "gracefulowned93223TERM;95723serverclosedtrue;terminal1acknowledged;partialnotqualified",
+    "efeedeBrowserFirst": "portcollisionreadinessFAIL;cleanupfalsepreserved;own2495absentand3099freeverifiedreadonly",
+    "next": "freshsamefinalsourcefourlanes;requiredlocalpermissions;singlebrowserportowner",
+    "runtimeAssertionsAndThresholdsWeakened": false,
+    "mainPushHold": true
+  },
   "nov14FullLintTypeOnlyCorrection": {
     "failedStaticSource": "72da7763",
     "precedingStaticChecks": "alltypes/spec/inventory/engineBuild/webBuild/evalConfigPASS",
