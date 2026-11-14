@@ -11,14 +11,37 @@ The isolated rehearsal project has no Git link and protects all deployments.
 The team is on Pro, whose Sandbox credits are shared and can incur overage.
 No Sandbox was started. [Vercel Sandbox pricing](https://vercel.com/docs/sandbox/pricing).
 
+`3d6a8e3a` pins Nodemailer 10.4.1, the publisher's first release with
+both November 10 recipient-domain fixes. Offline JSON transport on
+Node 22.12.0 reproduced both old envelope mismatches and verified both
+patched envelopes. The app already requires bare ASCII recovery addresses.
+The frozen install, 21 focused tests and web types passed on Node 26.13.1.
+The npm production audit returned zero even before the patch, and both
+production and full audits returned zero afterward.
+[Domain parser advisory](https://github.com/nodemailer/nodemailer/security/advisories/GHSA-3q53-mvfw-q9v8) ·
+[Internationalized domain advisory](https://github.com/nodemailer/nodemailer/security/advisories/GHSA-2g53-87p2-4qq8).
+
+`dc7546f9` restores browser source admission for the reviewed tax
+worksheets, disabled Form 4972 review candidate and mail dependency patch.
+The audit differs only in eight file digests and its dependent diagnostic
+digest. The test inventory, rate limits, skips, deadlines and retries
+are identical. All 153 focused tests passed. Its fresh managed run
+uses one unit and coverage worker with the original test deadlines,
+coverage thresholds and two Chromium workers.
+
 `52eec581` removes the optional Debian `mount` package from the
 self-host runner using unforced package removal. The smoke test requires
 the complete package inventory, an immutable-base removal dry run and
 absence of `mount` and `umount`. The package was present in the earlier
 ARM64 image and accounted for six scan matches, four high. The affected
-local checks passed 148 tests with one PostgreSQL-only skip. The new
-image must still pass the actual build, scan and recovery on each
-architecture. Shared util-linux libraries and their findings remain.
+local checks passed 148 tests with one PostgreSQL-only skip. Exact
+`3ade5abe` passed ARM64 independent image import, smoke, SBOM, scan and
+six Compose recovery phases. The scan delta is exactly six matches
+from the removed package, with 191 remaining, including 56 High and
+zero Critical. The browser guard stopped before collecting tests
+because six source digests were stale. The VM and socket cleanup
+passed. Shared util-linux findings and final-source qualification on
+both architectures remain open.
 [Debian CVE-2026-76642](https://security-tracker.debian.org/tracker/CVE-2026-76642).
 
 `52246eb5` and `50c72a04` calculate the 2026 Form 1062 payment deferral
@@ -38,6 +61,13 @@ while line 24c shows $21,715. The sum of the printed amounts is $21,714.
 Final guidance, original intake and qualified review remain open.
 The worksheets have no live or export path. [IRS instructions](https://www.irs.gov/instructions/i1062) ·
 [IRS ATS scenario 13](https://www.irs.gov/pub/irs-efile/ty26-1040-ats-scenario-13.pdf).
+`75296bb1` also binds shareholder allocations to the separate Section
+1062 statement accompanying domestic Form 1120-S K-1 box 17 code ZZ.
+It requires reconciliation to the reported gain and leaves Schedule A
+lines 9–12 blank. One regression failed first. All 468 affected tests,
+types, strict lint, inventory and 8,957 spec references passed. Verified
+attachment intake and the final annual transfer still need qualification.
+[Form 1120-S instructions](https://www.irs.gov/instructions/i1120s).
 
 `7924a91d` verifies the 2026 draft Schedule 3-A arithmetic in an isolated
 worksheet for Forms 1040 and 1040-SR. It aggregates the four covered
@@ -127,7 +157,11 @@ Both managed PostgreSQL instances stopped. The subsequent exact `52246eb5`
 run passed 10 of 12 checks, including 27,935 unit tests. Coverage reached
 27,915 passes before 12 case timeouts and a worker timeout. It emitted no
 coverage percentage and the browser gate did not run. Its owned database
-stopped. The refreshed `ceaa6582` managed run is separate.
+stopped. Exact `ceaa6582` subsequently passed nine checks and 27,940
+unit cases before two Pennsylvania PDF cases timed out at 5 seconds.
+The two affected suites passed all 34 cases on a separate targeted run
+with the same deadlines. Coverage and browser did not run on
+`ceaa6582`. Its owned PostgreSQL stopped.
 [Rehearsal evidence](upgrade-2026-nov13-release-rehearsals.md).
 
 Exact `7924a91d` passed 14 local hosted HTTP checks using two webpack-built

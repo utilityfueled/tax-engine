@@ -194,6 +194,56 @@ pins stayed exact.
 | `3d8f674a` managed checks | `cdbf77a9e5c4b7e5d298833b0823a247b08ef68f843b0408f973cec3e196c2c8` |
 | `3d8f674a` managed browser build transcript | `1d039cc775dfd4f314e5edca027472adaecd8a70f68520cfc15eec86a3fc8ed8` |
 
+### ARM64 runner after removing Debian mount at `3ade5abe`
+
+The archive authenticated 5,697 tracked blobs and 15 public example PDFs.
+The ARM64 image built, imported in an independent store and passed smoke,
+including the complete package manifest, immutable-base package removal
+dry run, absence of the mount executables, and zero set-ID regular files.
+All six Compose recovery phases passed. The runtime browser provenance
+preflight also passed. The browser runner then rejected six mismatched
+source digests before collecting Chromium cases. An offline comparison
+identified exactly those six files. The successor `dc7546f9` rebinds them
+and the two mail dependency files while preserving the original request
+contract. The VM stopped normally, both socket routes and default
+connection were verified, and no VM remained active.
+
+Grype reported 191 matches across 86 advisory IDs, including 56 High and
+zero Critical. Against the preceding exact ARM64 result the only changes
+were removal of six matches attributed to the optional `mount` package,
+four of them High. The same advisory IDs still match shared packages.
+Advisory disposition and final-source native qualification remain open.
+
+| Evidence | SHA-256 |
+| --- | --- |
+| Staged Git tree and supporting files | `6d9bf2850681b1a6a3ce2f740699c4c32fb46625440a9cadb66f941d14b72d6d` |
+| Runtime image archive | `07a41bf6243b10839d4bcd48df0d2e0767befc64fa2478e29635f78d305c06ba` |
+| Smoke | `53f57eca9d2e1e178ba7e664d13f6b51f18fef2d56ca5ab2ac95482bf6c6b63e` |
+| SBOM | `61dedb3fddcc2faa1402ed53d8048d85921c96d40cb850320b956fabb4d35992` |
+| Scan | `7394e4bd55781c5bb9881e82972fa8522eb2a99c36eaf8b4c08a73bb63f19e40` |
+| Scan delta | `b9ae86c4f0543abac843f14340220fd70e25ead83e0bd8eb23897c74c0c7cbf0` |
+| Compose recovery | `eea1e6aebcd2050c560786263be443c86f1b7dc0f22c22e9a381b15599e081c5` |
+| Browser failure | `0e7f731f9f8856458099f061cab98f7d526d85a7951975dbda5e63941bbcbb7a` |
+| Terminal receipt | `78229eb4fcb6ab98071e9762ce2c0a6778d048c036fa2912ada45c0c39f32462` |
+| Runtime cleanup | `cd32053478e94fc27e16e991280a6f3de2d3580c6280dd1e44122dc93d318b40` |
+
+### Managed verification through `ceaa6582`
+
+The exact tracked archive passed nine managed checks. The unit command
+recorded 27,940 passes and two Pennsylvania PDF timeouts at 5 seconds.
+The cases were the mixed-residency readback and the married separate-filing
+shared Schedule SP dispatch. The two unchanged suites passed all 34 cases
+in a separate targeted run at the same deadlines. The exact managed run
+did not reach coverage or Chromium. Its owned PostgreSQL stopped.
+
+| Evidence | SHA-256 |
+| --- | --- |
+| Managed results | `d386facd598c2462de07ee330490131e535140ea602085a526452671ca0cdda1` |
+| Unit output | `2965deb185b67ac5e0a319e92255fcb19df6ede68fe200f5c19e7298b4e8a35d` |
+| Unit failures | `359eace36a9d37da1b99e51f784d46b6c6f30603dfd3363435755618ef4c4664` |
+| Targeted 34 passes | `0b629e541b18b5b84a71358717e2b0ca05b53c348145da1df35c497794bdd80c` |
+| Managed cleanup | `fceb5e3c3ee51d75c8b724e5e0b8090539dc718540e264b3f12f06a39717d115` |
+
 ### Form 4972 estate-allocation archive at `e3c90730`
 
 The first preflight stopped before boot. The private archive extraction

@@ -4,6 +4,29 @@ Current source, verification and remaining work are summarized in the
 [current continuation](upgrade-2026-current-status.md). Historical results
 below apply to their named revisions.
 
+- November 13 — `3d6a8e3a` pins the first Nodemailer version that fixes
+  both November 10 recipient-domain advisories. Two old envelopes failed
+  their intended recipient checks and both patched envelopes passed
+  offline. All 21 focused tests passed, along with web types and frozen
+  install. Both npm audits report zero.
+  [Address parser](https://github.com/nodemailer/nodemailer/security/advisories/GHSA-3q53-mvfw-q9v8) ·
+  [Internationalized domains](https://github.com/nodemailer/nodemailer/security/advisories/GHSA-2g53-87p2-4qq8).
+- November 13 — `dc7546f9` updates eight reviewed source pins plus the
+  diagnostic digest after the exact `3ade5abe` native browser admission
+  failure. The full original request contract and all 153 targeted
+  controls passed. The prior native ARM64 import, smoke, scan and all six
+  Compose recovery phases passed, and VM/socket cleanup succeeded.
+  [Rehearsal evidence](upgrade-2026-nov13-release-rehearsals.md).
+- November 13 — `75296bb1` reconciles the separate Form 1120-S K-1
+  box 17 Section 1062 statement with recognized gain and the associated
+  entity records. The new positive test failed before implementation.
+  All 468 affected tests, types, strict lint and 8,957 spec checks passed.
+  [Shareholder instructions](https://www.irs.gov/instructions/i1120ssk).
+- November 13 — Exact `ceaa6582` passed nine checks and 27,940 unit cases
+  with two 5-second Pennsylvania PDF timeouts. The isolated rerun
+  passed all 34 cases in the same two suites under the same deadlines.
+  Coverage and Chromium did not run on `ceaa6582`. PostgreSQL stopped.
+  [Rehearsal evidence](upgrade-2026-nov13-release-rehearsals.md).
 - November 13 — `3ade5abe` calculates the positive estate-tax allocation
   for a single Form 4972 death-beneficiary Part II-only election. Three
   engine and two PDF regressions failed first. The 531 affected tests passed.
@@ -17,8 +40,9 @@ below apply to their named revisions.
 - November 13 — `52eec581` purges Debian's optional `mount` package
   from the self-host runner and adds executable absence to the existing
   exact package checks. Two source checks failed first. The focused run
-  passed 148 tests with one PostgreSQL-only skip. Both native image checks
-  remain open. [Debian CVE-2026-76642](https://security-tracker.debian.org/tracker/CVE-2026-76642).
+  passed 148 tests with one PostgreSQL-only skip. The succeeding exact
+  ARM64 image and recovery evidence is above.
+  [Debian CVE-2026-76642](https://security-tracker.debian.org/tracker/CVE-2026-76642).
 - November 13 — Exact `e3c90730` and `3d8f674a` passed 11 of 12 managed
   checks and 87.92% branch coverage. The former has six browser failures.
   The latter terminated its browser build before running tests. Both owned

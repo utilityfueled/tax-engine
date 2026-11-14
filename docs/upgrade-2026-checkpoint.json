@@ -25092,5 +25092,63 @@
       "cleanupSha256": "cd32053478e94fc27e16e991280a6f3de2d3580c6280dd1e44122dc93d318b40"
     },
     "ledger": "docs/upgrade-2026-nov13-release-rehearsals.md"
+  },
+  "nov13MountMailAndSuccessorAudit": {
+    "arm64MountRemoval": {
+      "source": "3ade5abe82c6498b3d45435eab711961b26f4c05",
+      "image": "f3769838347c077ad8f29a8865135fe106c2efd5daaf17d33187b71cd00bbaad",
+      "imageArchiveSha256": "07a41bf6243b10839d4bcd48df0d2e0767befc64fa2478e29635f78d305c06ba",
+      "sbomSha256": "61dedb3fddcc2faa1402ed53d8048d85921c96d40cb850320b956fabb4d35992",
+      "scanSha256": "7394e4bd55781c5bb9881e82972fa8522eb2a99c36eaf8b4c08a73bb63f19e40",
+      "scanDeltaSha256": "b9ae86c4f0543abac843f14340220fd70e25ead83e0bd8eb23897c74c0c7cbf0",
+      "advisoryMatches": 191,
+      "highAdvisoryMatches": 56,
+      "criticalAdvisoryMatches": 0,
+      "uniqueAdvisories": 86,
+      "riskAccepted": false,
+      "composeRecoveryPhasesPassed": 6,
+      "browserCollected": false,
+      "browserAdmission": "stale source digests",
+      "cleanupVerified": true,
+      "receiptSha256": "78229eb4fcb6ab98071e9762ce2c0a6778d048c036fa2912ada45c0c39f32462"
+    },
+    "managed": {
+      "source": "ceaa65829cdc8518c9207da8ddef799d24f6b11c",
+      "checksPassed": 9,
+      "unitPassed": 27940,
+      "unitTimeouts": 2,
+      "targetedPassCurrentTests": 34,
+      "coverageRan": false,
+      "browserRan": false,
+      "postgresStopped": true,
+      "checksSha256": "d386facd598c2462de07ee330490131e535140ea602085a526452671ca0cdda1"
+    },
+    "form1062Shareholder": {
+      "source": "75296bb1e9ca6623f19c017c74e51d5ff34c7526",
+      "testsPassed": 468,
+      "specReferences": 8957,
+      "liveTransfer": false,
+      "sourceAuthority": "https://www.irs.gov/instructions/i1120s",
+      "implementationTestSha256": "e4b5d25d1fd0c33296b78bb91316b5722f20a2a9c6721a66ae50f31feddf0d54"
+    },
+    "nodemailer": {
+      "source": "3d6a8e3a47747a54d187f0ea9c9f08ea7b204da3",
+      "version": "10.4.1",
+      "advisories": [
+        "GHSA-3q53-mvfw-q9v8",
+        "GHSA-2g53-87p2-4qq8"
+      ],
+      "focusedPassed": 21,
+      "dependencyAuditsReportedFindings": 0,
+      "baselineProdAuditReportedFindings": 0,
+      "envelopeProbeSha256": "bf9213d17c13c5dc735a1791cea3667071e08e839afb2ccc94cdd6fad3a15ce4"
+    },
+    "browserAudit": {
+      "source": "dc7546f94f441374a5cbdaf28bb06f9c1c65bc05",
+      "changedSourceDigests": 8,
+      "focusedPassed": 153,
+      "requestContractChanged": false,
+      "auditSha256": "2570f45d1753e2f2ba4343e65af10bbb9d26f7489f7ebc278c70a1bc56497083"
+    }
   }
 }

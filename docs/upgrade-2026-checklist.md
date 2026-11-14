@@ -8,12 +8,24 @@ below retain their original evidence boundaries.
 
 - [x] Remove the optional Debian `mount` package in `52eec581` and add
   exact immutable-base, full-package and executable absence checks.
+- [x] Verify the exact `3ade5abe` ARM64 image import, smoke, SBOM, scan,
+  six recovery phases and normal VM cleanup. The scan has exactly six
+  fewer package matches, four High. Retain the browser admission failure
+  before collection and rerun on the successor with reviewed source digests.
+- [x] Patch Nodemailer 10.4.1 in `3d6a8e3a` and reproduce both
+  publisher advisories offline. Pass 21 focused tests, web types and
+  full and production npm audits.
+- [x] Verify the eight browser source digests and dependent diagnostic
+  digest in `dc7546f9`. The unchanged request contract passed 153
+  focused controls.
 - [ ] Build, independently import and scan the exact new self-host runner
   on both native architectures. Rehearse Compose recovery and the browser
   lifecycle. Reconcile remaining util-linux package matches against Debian.
 - [ ] Rerun the managed browser checks in isolation. Preserve exact
   `e3c90730` six failures, `3d8f674a` build stop and `52246eb5` coverage
-  timeouts as separate results.
+  timeouts as separate results. `ceaa6582` recorded two 5-second PA PDF
+  unit timeouts before coverage and browser. The same suites passed
+  a targeted 34-test rerun with unchanged deadlines.
 - [x] Verify the Form 1062 and Schedule A direct-sale worksheets in
   `52246eb5` and `50c72a04`. Pass 521 affected checks with exact cents
   and confirmed sale originals. Correct the fixture attribution to
@@ -21,7 +33,10 @@ below retain their original evidence boundaries.
 - [x] Verify the Form 1062 partnership allocation and installment
   arithmetic in `1db55dc0` against IRS ATS scenario 13. Pass 523 affected
   tests and preserve blank Schedule A lines 9–12 for the partner.
-- [ ] Qualify Form 1062 partnership originals, the required attachments
+- [x] Bind Form 1062 shareholder allocations to confirmed 1120-S K-1 box 17
+  Section 1062 statements and require exact recognized-gain reconciliation.
+  Pass 468 affected tests in `75296bb1`.
+- [ ] Qualify Form 1062 pass-through originals, the required attachments
   and final 2026 annual transfer. Obtain qualified review of the $1
   discrepancy on draft Form 1040 line 24c before enabling live use.
 - [x] Complete exact `e3c90730` ARM64 image import, SBOM/scan, six Compose
