@@ -5,6 +5,7 @@ import type { GuidedFlowState } from './guided-interview-flow';
 import { buildGuidedNetOperatingLoss, buildGuidedNetOperatingLossForNavigation } from './guided-net-operating-loss';
 import { parseGuidedCurrency } from './guided-currency';
 import { guidedSourceValuesChanged } from './guided-source-confirmation';
+import { codPrincipalResidenceNavigationFactErrors } from './guided-cod-principal-residence';
 import { buildGuidedCodAttributes, invalidateGuidedCodAttributes, type CodAttributeData } from './guided-cod-attributes';
 
 type Editable<T> = { [K in keyof T]: T[K] extends boolean | undefined ? boolean | null | undefined
@@ -46,6 +47,7 @@ export function buildGuidedCodNolForNavigation(data: CodNolData | undefined, sta
 }
 function collectGuidedCodNol(buildPrior: typeof buildGuidedNetOperatingLoss, data: CodNolData | undefined, state: GuidedFlowState) {
   if (!data) return undefined;
+  if (state.sectionData.adjustments?.codPrincipalResidenceSources) throw new Error('Choose one actual cancellation method; remove the other mortgage or personal-debt packet.');
   const { taxYear, segmentation, sectionData } = state, personal = sectionData['personal-info'];
   if ((taxYear !== 2025 && taxYear !== 2026) || !segmentation.filingStatus || !personal) {
     throw new Error('Confirm the actual year, filing status and household before entering cancellation sources.');
@@ -120,6 +122,7 @@ export function codNolNavigationFactErrors(state: GuidedFlowState): Record<strin
 }
 function validateGuidedCodNol(build: typeof buildGuidedCodNol, state: GuidedFlowState): Record<string, string> {
   try {
+    if (state.sectionData.adjustments?.codPrincipalResidenceSources) return codPrincipalResidenceNavigationFactErrors(state);
     const data = state.sectionData.adjustments?.codNolSources;
     if (!data && state.segmentation.lifeEvents.includes('cancelled-debt')) throw new Error('Enter the actual canceled-debt and insolvency records, or remove that event if it does not apply.');
     build(data, state); return {};

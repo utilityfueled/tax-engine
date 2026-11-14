@@ -1,3 +1,4 @@
+import { codPrincipalResidenceNavigationFactErrors, invalidateGuidedCodPrincipalResidence, type CodPrincipalResidenceData } from './guided-cod-principal-residence';
 import { invalidateMarketDiscount } from './guided-market-discount-sources';
 import {rrtaDraftValues,rrtaPaperDraftValues} from './guided-rrta-payroll-sources';
 import { guidedRefundRecoveryDraftErrors } from "./guided-tax-refund-recoveries";
@@ -1043,6 +1044,7 @@ export interface AdjustmentData {
   movingExpensesNotApplicable?: true;
   k1LossSources?: K1LossSourcesData;
   codNolSources?: CodNolData;
+  codPrincipalResidenceSources?: CodPrincipalResidenceData;
   currentLossOrigin?: CurrentLossOriginData;
   netOperatingLossSources?: NetOperatingLossData;
   foreignIncome?: ForeignIncomeData;
@@ -1687,6 +1689,7 @@ export function setInterviewTaxYear(state: GuidedFlowState, taxYear: number | nu
     sectionData: {
       ...state.sectionData,
       ...(state.sectionData["income-investments"]?.digitalAssetEntries?.some(entry => entry.transactions?.some(row => row.marketDiscountFacts)) ? { "income-investments": { ...state.sectionData["income-investments"]!, digitalAssetEntries: state.sectionData["income-investments"]!.digitalAssetEntries?.map(entry => ({ ...entry, sourceFactsConfirmed: null, transactions: entry.transactions?.map(row => ({ ...row, marketDiscountFacts: invalidateMarketDiscount(row.marketDiscountFacts) })) })) } } : {}),
+      ...(state.sectionData.adjustments?.codPrincipalResidenceSources ? { adjustments: { ...state.sectionData.adjustments, codPrincipalResidenceSources: invalidateGuidedCodPrincipalResidence(state.sectionData.adjustments.codPrincipalResidenceSources) } } : {}),
       ...(royalties ? { "income-royalties": invalidateRoyaltySources(royalties) } : {}),
       ...(otherTaxes && k3Election?.qualifiedK3Statements?.length ? { "other-taxes": { ...otherTaxes, foreignTaxElection: { ...k3Election, sourceFactsConfirmed: null, qualifiedK3Statements: k3Election.qualifiedK3Statements.map(row => ({ ...row, sourceFactsConfirmed: null })), ...(k3Election.creditWithoutForm1116 ? { creditWithoutForm1116: { ...k3Election.creditWithoutForm1116, sourceFactsConfirmed: null } } : {}) } } } : {}),
       ...(credits && education && aotcSourcesEntered ? { credits: { ...credits, education: {
@@ -1953,6 +1956,10 @@ export function updateSectionData(
     (sectionId === 'adjustments' && guidedSourceValuesChanged(movingValues(adjustments?.movingExpenses), movingValues(nextMoving)))
   );
   const k1LossSourcesChanged = sourceValuesChanged && sectionId !== "final-review" && nextAdjustments?.k1LossSources;
+  const principalResidenceCodChanged = nextAdjustments?.codPrincipalResidenceSources && (
+    (sectionId === "personal-info" && sourceValuesChanged)
+    || (sectionId === "adjustments" && guidedSourceValuesChanged(state.sectionData.adjustments?.codPrincipalResidenceSources, nextAdjustments.codPrincipalResidenceSources))
+  );
   const codSourcesChanged = sourceValuesChanged && ["personal-info", "income-w2", "income-self-employment", "income-retirement", "income-investments", "income-rental", "income-royalties", "income-social-security", "income-unemployment", "adjustments", "credits", "deductions", "additional-deductions", "other-taxes"].includes(sectionId) && nextAdjustments?.codNolSources;
   const currentLossSourcesChanged = sourceValuesChanged && ["personal-info", "income-w2", "income-self-employment", "income-retirement", "income-investments", "income-rental", "income-royalties", "income-social-security", "income-unemployment", "adjustments", "credits", "deductions", "additional-deductions", "other-taxes", "state-return"].includes(sectionId) && nextAdjustments?.currentLossOrigin;
   const nolSourcesChanged = sourceValuesChanged && ["personal-info", "income-w2", "income-self-employment", "income-retirement", "income-investments", "income-rental", "income-royalties", "income-social-security", "income-unemployment", "adjustments", "credits", "deductions", "additional-deductions", "other-taxes"].includes(sectionId) && nextAdjustments?.netOperatingLossSources;
@@ -2116,9 +2123,10 @@ export function updateSectionData(
           ...(ohioStateReturn.paOrdinaryReturnCompletionSources ? { paOrdinaryReturnCompletionSources: { ...ohioStateReturn.paOrdinaryReturnCompletionSources, sourceFactsConfirmed: null } } : {}),
         } : {}),
       } } : {}),
-      ...((movingSourcesChanged || iraSourcesChanged || hsaSourcesChanged || educatorSourcesChanged || studentLoanSourcesChanged || healthSourcesChanged || foreignIncomeSourcesChanged || nolSourcesChanged || currentLossSourcesChanged || codSourcesChanged || k1LossSourcesChanged) && nextAdjustments ? { adjustments: { ...nextAdjustments,
+      ...((movingSourcesChanged || iraSourcesChanged || hsaSourcesChanged || educatorSourcesChanged || studentLoanSourcesChanged || healthSourcesChanged || foreignIncomeSourcesChanged || nolSourcesChanged || currentLossSourcesChanged || codSourcesChanged || principalResidenceCodChanged || k1LossSourcesChanged) && nextAdjustments ? { adjustments: { ...nextAdjustments,
         ...(movingSourcesChanged ? { movingExpenses: invalidateMovingExpenses(nextMoving) } : {}),
         ...(k1LossSourcesChanged ? { k1LossSources: invalidateK1LossSources(k1LossSourcesChanged) } : {}),
+        ...(principalResidenceCodChanged ? { codPrincipalResidenceSources: invalidateGuidedCodPrincipalResidence(nextAdjustments.codPrincipalResidenceSources!) } : {}),
         ...(codSourcesChanged ? { codNolSources: invalidateGuidedCodNol(codSourcesChanged) } : {}),
         ...(currentLossSourcesChanged ? { currentLossOrigin: invalidateCurrentLossOrigin(currentLossSourcesChanged) } : {}),
         ...(nolSourcesChanged ? { netOperatingLossSources: invalidateNetOperatingLossSources(nolSourcesChanged) } : {}),
@@ -2478,7 +2486,7 @@ function validateAdjustmentsSection(data: AdjustmentData | undefined, filingStat
   if (!data) return EMPTY_SECTION("adjustments info", true);
   const errors = adjustmentFactErrors(data, filingStatus, taxYear, education);
   if (Object.keys(errors).length) return validateRequiredFacts(errors);
-  if (data.movingExpenses || data.movingExpensesNotApplicable === true || data.iraContributions || data.hsaAccounts?.length || data.educatorExpenseSources?.length || data.studentLoanFacts || data.healthInsuranceFacts || data.foreignIncome || data.netOperatingLossSources || data.currentLossOrigin || data.codNolSources || data.k1LossSources) return VALID_SECTION;
+  if (data.movingExpenses || data.movingExpensesNotApplicable === true || data.iraContributions || data.hsaAccounts?.length || data.educatorExpenseSources?.length || data.studentLoanFacts || data.healthInsuranceFacts || data.foreignIncome || data.netOperatingLossSources || data.currentLossOrigin || data.codNolSources || data.codPrincipalResidenceSources || data.k1LossSources) return VALID_SECTION;
   const hasAny = Object.values(data).some((v) => typeof v === "string" && hasNumericValue(v));
   if (!hasAny) return EMPTY_SECTION("adjustments info", true);
   return VALID_SECTION;
@@ -2533,6 +2541,7 @@ export function validateSection(
       Object.assign(errors, currentLossOriginNavigationFactErrors(state));
       Object.assign(errors, movingExpenseFactErrors(state));
       Object.assign(errors, codNolNavigationFactErrors(state));
+      Object.assign(errors, codPrincipalResidenceNavigationFactErrors(state));
       Object.assign(errors, k1LossSourceFactErrors(state));
       Object.assign(errors, netOperatingLossNavigationFactErrors(state.sectionData.adjustments?.netOperatingLossSources, state.taxYear, state.segmentation.filingStatus, state.sectionData["personal-info"], state.segmentation.lifeEvents.includes("net-operating-loss"), state.sectionData.deductions, state.sectionData.adjustments?.k1LossSources, state.sectionData.adjustments?.codNolSources?.attributeSources));
       let loanEducation: StudentLoanEducationSources = [];

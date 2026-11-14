@@ -1,0 +1,58 @@
+form: "Guided retained main-home canceled debt original records"
+fullName: "Entry parity for the original-acquisition principal residence source method"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i982"
+retrievedAt: "2026-11-14"
+notes: |
+  Entry parity only: cod-principal-residence-sources.yaml and its pure source
+  validator own IRC108(a)(1)(E),(h) exclusion and basis formulas. This collector
+  creates no eligibility, dates, source references, creditor/statement identity,
+  interest zero, ownership, prior NOL records or exclusion amounts. It records
+  actual supplied original facts and reuses the canonical source validator.
+  The internal form1099C:0 alias maps the sole actual statement, not an invented
+  original statement ID. User supplied statement/account/reference fields remain
+  mandatory. The mortgage and personal insolvency packets are exclusive; absent
+  both, a canceled-debt event still blocks. Unknown amounts remain unknown, even
+  when the supported narrow method requires actual zero discharged interest.
+  A source edit, owner/address edit or year change invalidates every implicated
+  confirmation. Reconfirming the packet alone cannot restore missing originals.
+  Actual2026 pre2026 writing is entered as original dates/references, persists
+  through reload and validates source-only, while the full2026 year/export gates
+  remain unchanged. Actual independent prior NOL sources may coexist through the
+  basis-only canonical route; no attribute waterfall is fabricated. Current
+  Form172 origin plus this mortgage source method remains explicitly denied
+  pending its separate source admission. Original records remain private
+  interview data, not shell facts.
+lines:
+  - line: "entry-parity"
+    description: "Expose the complete supported original mortgage method"
+    formula: "An actual complete original800000 loan/100000 discharge guide packet builds the same canonical debt and source records, taxableCOD50000 and retained basis250000, without invented prior loss histories. Adjustments navigation accepts it."
+    testRef: "tests/guided-interview/guided-cod-principal-residence.test.ts::builds the supported mortgage sources without fictional personal debt histories"
+  - line: "exclusive-method"
+    description: "Preserve personal method and missing-method denial"
+    formula: "Both mortgage and personal packets reject; neither with canceled-debt event blocks. Existing complete personal packet remains unchanged."
+    testRef: "tests/guided-interview/guided-cod-principal-residence.test.ts::keeps cancellation methods exclusive and absent sources unknown"
+  - line: "continuity"
+    description: "Revoke actual source review after implicated facts change"
+    formula: "Owner/address, original amount or year edits revoke top and original-group confirmations; unknown and stale data cannot build. Unrelated source confirmation-only updates do not fabricate a new review."
+    testRef: "tests/guided-interview/guided-cod-principal-residence.test.ts::invalidates implicated mortgage originals after edits and year changes"
+  - line: "unknown-zero-and-transition"
+    description: "Preserve real unknown/zero and actual2026 transition facts"
+    formula: "Blank debt interest, basis component or date rejects; actual known0 is preserved. Actual2026 pre2026 entry/writing sources are collected verbatim and source-validated, but complete2026 calculation remains unavailable."
+    testRef: "tests/guided-interview/guided-cod-principal-residence.test.ts::keeps missing originals unknown and records the actual2026 arrangement"
+  - line: "independent-prior-loss"
+    description: "Preserve independent prior loss sources without inventing current origin admission"
+    formula: "Actual regular and independent AMT prior NOL histories retain their canonical deduction/carry results under the basis-only method. Current Form172 plus the mortgage method remains explicit denial; neither false nor true canceledDebtIncluded may silently omit the actual mortgage debt."
+    testRef: "tests/guided-interview/guided-cod-principal-residence.test.ts::preserves prior loss sources and the current origin admission boundary"
+  - line: "private-reload"
+    description: "Retain actual private mortgage facts through a lossless interview reload"
+    formula: "JSON private interview reload preserves the original records and canonical amounts. Actual source edits revoke all implicated reviews, while confirmation-only edits retain unchanged values. The metadata-only hosted shell receives no new mortgage values."
+    testRef: "tests/guided-interview/guided-cod-principal-residence.test.ts::preserves private reload and revokes actual original edits"
+  - line: "browser-originals"
+    description: "Type original retained-home mortgage facts in desktop and mobile Chromium"
+    formula: "Start without any mortgage answers. Blank amounts/choices block; enter actual original statement, acquisition, reason and basis through visible controls; confirm last and compare saved canonical COD50000/basis250000. Reload retains originals; an actual amount edit revokes group reviews and estimate. Actual2026 prewriting dates/reference can be captured without opening full-year gates. No provider receives original values."
+    testRef: "apps/web/tests/guided-cod-principal-residence.spec.ts::types retained-home originals, replays canonical basis and preserves closed2026 sources"
+  - line: "actual-panel-confirmation"
+    description: "Keep review metadata independent from original-value edits"
+    formula: "The real adjustments panel and shared reducer retain each unchanged original group's explicit review after all source values are entered. No synthetic empty source groups appear while confirming another original group. An actual amount edit revokes all implicated reviews."
+    testRef: "tests/apps/web/guided-cod-principal-residence-interactions.test.tsx::retains actual panel reviews until an original fact changes"

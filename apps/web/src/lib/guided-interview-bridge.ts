@@ -1,3 +1,4 @@
+import { buildGuidedCodPrincipalResidence, codPrincipalResidenceFactErrors } from './guided-cod-principal-residence';
 import { buildInterestInputs } from './guided-interest-originals';
 export { buildInterestInputs } from './guided-interest-originals';
 import { buildGuidedForeignTaxK3Sources } from './guided-foreign-tax-k3';
@@ -826,6 +827,7 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
     assertKnownFacts(cryptoDonationFactErrors(deductionData?.cryptoDonations, state.taxYear));
     assertKnownFacts(currentLossOriginFactErrors(state));
     assertKnownFacts(codNolFactErrors(state));
+    assertKnownFacts(codPrincipalResidenceFactErrors(state));
     assertKnownFacts(premiumTaxCreditFactErrors(state));
     assertKnownFacts(adjustmentFactErrors(adjustmentData, segmentation.filingStatus, state.taxYear, loanEducation));
     assertKnownFacts(educatorFactErrors(adjustmentData, segmentation.filingStatus, state.taxYear, segmentation.lifeEvents.includes("educator-expenses")));
@@ -911,6 +913,7 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
   const paymentAdjustments = { estimatedTaxPayments: estimatedPayments, extensionPayments, priorYearAppliedCredits };
   const form172 = buildCurrentLossOrigin(adjustmentData?.currentLossOrigin, state);
   const codSources = buildGuidedCodNol(adjustmentData?.codNolSources, state);
+  const residenceCodSources = buildGuidedCodPrincipalResidence(adjustmentData?.codPrincipalResidenceSources, state);
   const k1Sources = buildGuidedK1CharitableSources(state);
   const cryptoDonations = buildGuidedCryptoDonations(deductionData?.cryptoDonations, state.taxYear);
   const currentCapitalCarry = form172?.capitalSources?.priorCapitalLosses;
@@ -957,6 +960,7 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
     k1CharitableSources: k1Sources?.k1CharitableSources,
     form172,
     ...codSources,
+    ...residenceCodSources,
     section1202Sources: buildGuidedQsbsSources(investData, state.taxYear, segmentation.filingStatus, personalInfo),
     form8801: buildMinimumTaxCreditInput(creditsData?.minimumTaxCredit, state.taxYear, segmentation.filingStatus, personalInfo),
     schedule1A: buildSchedule1AInput(sectionData["additional-deductions"]?.schedule1A, state),
