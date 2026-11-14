@@ -1,5 +1,24 @@
 # Current 2026 upgrade continuation
 
+## November 14 current combined failure and separately completed successors
+
+Frozen `8e7fd9a2` passes all static checks. Its eight-worker unit and coverage
+runs each finish with 28,409 passes and two old bare-exclusion readiness fixture
+failures; both owned databases stop normally. The original failures remain
+retained. Their separately reviewed test-only successor preserves every readiness
+assertion and adds explicit positive/zero bare-claim rejection; current full unit
+and coverage still need a successor run. [Failure and correction](upgrade-2026-readiness-source-fixtures-20261114.md).
+
+`58be02ed` independently composes actual personal mortgage debt with current
+regular and AMT loss origins (76 isolated tests and six separate source controls).
+`6729c9a0` completes original market-discount guided intake with 45 focused tests
+and two real desktop/mobile browser passes, private reload and edit invalidation.
+[Current loss source](upgrade-2026-current-loss-mortgage-20261114.md) ·
+[Market-discount interview](upgrade-2026-guided-market-discount-20261114.md).
+Mortgage guided browser and the education successor continue independently.
+Native preparation is source-only until its exact combined checks pass. No
+earlier runtime, human, final-form or main push gate is relabeled.
+
 ## November 14 original mortgage sources and cumulative admission
 
 `f877c0fa` derives retained-residence debt cancellation from complete original
