@@ -4,6 +4,16 @@ Current source, verification and remaining work are summarized in the
 [current continuation](upgrade-2026-current-status.md). Historical results
 below apply to their named revisions.
 
+- November 13 — `3ade5abe` calculates the positive estate-tax allocation
+  for a single Form 4972 death-beneficiary Part II-only election. Three
+  engine and two PDF regressions failed first. The 531 affected tests passed.
+  The saved candidate displays lines 6–7 and worksheet A–C, with Part III
+  blank. The allocated ordinary share remains available for annual review.
+  [Final 2026 Form 4972](https://www.irs.gov/pub/irs-pdf/f4972.pdf).
+- November 13 — Exact `52246eb5` passed 27,935 unit tests and 10 of the 12
+  managed checks. Coverage recorded 27,915 passes and 12 case timeouts
+  plus a worker timeout, with no coverage rate. Browser did not run and
+  the owned database stopped.
 - November 13 — `52eec581` purges Debian's optional `mount` package
   from the self-host runner and adds executable absence to the existing
   exact package checks. Two source checks failed first. The focused run

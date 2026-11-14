@@ -12,7 +12,8 @@ below retain their original evidence boundaries.
   on both native architectures. Rehearse Compose recovery and the browser
   lifecycle. Reconcile remaining util-linux package matches against Debian.
 - [ ] Rerun the managed browser checks in isolation. Preserve exact
-  `e3c90730` six failures and `3d8f674a` build stop as separate results.
+  `e3c90730` six failures, `3d8f674a` build stop and `52246eb5` coverage
+  timeouts as separate results.
 - [x] Verify the Form 1062 and Schedule A direct-sale worksheets in
   `52246eb5` and `50c72a04`. Pass 521 affected checks with exact cents
   and confirmed sale originals. Correct the fixture attribution to
@@ -41,8 +42,12 @@ below retain their original evidence boundaries.
 - [x] Allocate confirmed beneficiary estate tax between Parts II and III
   in `cd4b3e29` and map the disabled paper candidate in `9758b773`. Pass
   4,565 affected engine/PDF tests, then 2,355 PDF and Form 4972 tests.
-  Verify strict readback and render all four review pages. Hold Part II-only
-  positive estate tax, annual transfer and export qualification.
+  Verify strict readback and render all four review pages.
+- [x] Calculate the elected Part II-only beneficiary estate allocation in
+  `3ade5abe` and preserve the remainder for review. Pass 531 focused tests
+  and reopen the disabled physical candidate with all Part III cells blank.
+- [ ] Obtain qualified review of the annual Form 4972 transfer, treatment
+  of the unused estate tax and complete export qualification.
 - [x] Close all 12 managed checks and six native ARM64 Compose recovery
   phases on `e6a34ac3`. Both Chromium runs passed 616 cases with five
   hosted-only skips. Verify normal VM stop and socket restoration.

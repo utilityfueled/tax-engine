@@ -90,8 +90,9 @@ decision, with the original competing calculations and any source search limits.
 ## November 13 companion for qualified lump-sum distributions
 
 Use the final 2026 Form 4972. Check the later, local `cd4b3e29` calculation
-and `9758b773` physical review mapping separately from the fixed November 4
-packet. The finite worksheet covers one qualifying participant, one
+and `9758b773` physical review mapping, and the `3ade5abe` Part II-only
+successor, separately from the fixed November 4 packet. The finite worksheet
+covers one qualifying participant, one
 distribution and one confirmed recipient. For the beneficiary estate-tax
 case, the participant died on or after August 21, 1996. The administrator's
 original record must establish the attributable amount.
@@ -105,6 +106,10 @@ separate deduction on Schedule A under section 691(c). Verify that
 the same dollar of estate tax cannot reduce line 6 and also enter an
 itemized deduction. Include one itemizing return, one standard-deduction
 return and a return subject to the 2026 limitation on itemized deductions.
+The isolated Part II-only candidate keeps $15,000 of ordinary pension
+income and carries the $1,500 ordinary estate-tax share as an unused amount.
+Confirm whether and how much of that share the beneficiary can claim in
+each annual scenario using the original estate valuation and income records.
 [26 U.S.C. § 691](https://uscode.house.gov/us/usc/119-124/t26/s691/) ·
 [IRS Publication 559](https://www.irs.gov/publications/p559) ·
 [Schedule A instructions](https://www.irs.gov/instructions/i1040sca).
@@ -142,7 +147,9 @@ installment and acceleration boundaries. In IRS ATS scenario 13 the
 partnership allocation supplies $56,516, the partner's Schedule A lines 9–12
 are blank, and draft Form 1062 reports $13,621 on line 14 and $3,405 on
 line 15. Verify the required partnership originals and return transfers
-independently. Verify why the draft Form 1040 reports $21,715 on line 24c
+independently. Confirm specifically whether $1,413 from Schedule 2 belongs
+in the regular-tax determinations under section 26(b), as shown on Form
+1062 lines 2 and 10 in the example. Verify why the draft Form 1040 reports $21,715 on line 24c
 while printed lines 24a and 24b sum to $21,714. Confirm the cent calculation,
 the final form instructions and any IRS correction before adopting the
 transfer. The published partnership example also supplies identical $1,413

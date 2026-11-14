@@ -65,7 +65,16 @@ beneficiary electing both Parts II and III of Form 4972. The worksheet
 subtracts the capital share on line 6 and the remainder on line 18. Line 8
 uses the original capital gain. Three regressions failed first and 4,565
 affected engine and PDF tests passed. The Part II-only case with positive
-estate tax still needs its own treatment. [Final 2026 Form 4972](https://www.irs.gov/pub/irs-pdf/f4972.pdf).
+estate tax now has an isolated calculation and disabled physical candidate
+in `3ade5abe`. For $20,000 in Box 2a, $5,000 in Box 3 and $2,000.25 in
+attributable estate tax, the worksheet retains $15,000 of ordinary income
+and $1,500.1875 of estate tax for separate annual review. It does not
+populate Schedule A. Three engine and two PDF regressions failed first.
+The combined affected suite passed 531 tests. The saved review PDF reopened
+with six text fields, six selected answers, blank identity and Part III,
+and a review notice on all four pages. All pages rendered, with pages 1
+and 3 inspected. [Final 2026 Form 4972](https://www.irs.gov/pub/irs-pdf/f4972.pdf) ·
+[IRS Publication 559](https://www.irs.gov/publications/p559).
 
 `9758b773` maps the same worksheet to the disabled physical candidate and
 requires the printed whole-dollar amounts to reconcile. The second reader
@@ -114,7 +123,11 @@ run passed unit and coverage at 27,918 tests apiece and 87.92% branches.
 It failed six browser cases with 610 passes and five hosted-only skips.
 Exact `3d8f674a` passed unit and coverage with 27,921 tests apiece and
 87.92% branches, but its managed browser build stopped before tests.
-Both managed PostgreSQL instances stopped.
+Both managed PostgreSQL instances stopped. The subsequent exact `52246eb5`
+run passed 10 of 12 checks, including 27,935 unit tests. Coverage reached
+27,915 passes before 12 case timeouts and a worker timeout. It emitted no
+coverage percentage and the browser gate did not run. Its owned database
+stopped. The refreshed `ceaa6582` managed run is separate.
 [Rehearsal evidence](upgrade-2026-nov13-release-rehearsals.md).
 
 Exact `7924a91d` passed 14 local hosted HTTP checks using two webpack-built

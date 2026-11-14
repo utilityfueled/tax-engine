@@ -24554,6 +24554,38 @@
       "postgresStopped": true
     }
   },
+  "nov13ManagedCoverageTimeout": {
+    "source": "52246eb560b893adf7d8bb51b781970802791ab8",
+    "checksPassed": 10,
+    "checksRequired": 12,
+    "unitTestsPassed": 27935,
+    "coverageTestsPassed": 27915,
+    "coverageCaseTimeouts": 12,
+    "coverageWorkerTimeout": true,
+    "branchCoveragePercent": null,
+    "browserRan": false,
+    "checksSha256": "a09ab14f11958a66f8c795e5de500239ec0ff88533b8e6adc708fff7b0c78daf",
+    "coverageOutSha256": "e431f168ca04bef41b1d68e745a929ee028bc079db2add5c852a8305283f65d9",
+    "coverageErrSha256": "8cc236cc8abc3df84e7f9e3b1343b4623a1014d067a82bf42ec1fd03ab3e09e7",
+    "postgresStopped": true
+  },
+  "nov13Form4972PartIIEstateTax": {
+    "source": "3ade5abe82c6498b3d45435eab711961b26f4c05",
+    "focusedTestsPassed": 531,
+    "engineFailuresBeforeImplementation": 3,
+    "pdfFailuresBeforeImplementation": 2,
+    "specReferencesValidated": 8956,
+    "specimenSha256": "0fcc3ec4c9e29651516a10595d0c15ec809122ee05be1fdd85b4e27df8339090",
+    "specimenPagesRendered": 4,
+    "visuallyInspectedPages": [1, 3],
+    "partIIOnlyEstateTaxRemainderTransferredToAnnualReturn": false,
+    "qualifiedReviewReceived": false,
+    "sources": [
+      "https://www.irs.gov/pub/irs-pdf/f4972.pdf",
+      "https://www.irs.gov/publications/p559",
+      "https://uscode.house.gov/us/usc/119-124/t26/s691/"
+    ]
+  },
   "nov13EstateAllocationRehearsals": {
     "arm64": {
       "source": "e3c9073083558706a3a9aad5d67767271e3251db",
