@@ -74,6 +74,73 @@ it('permits only one sibling write even when both snapshots have the same client
   expect(f.reconcile).toHaveBeenCalledTimes(1);
 });
 
+it('preserves the application revision when compression weakens GET and POST entity validators', async () => {
+  const f = app();
+  await f.open(true);
+  const browserStorage = storageFixture();
+  const preconditions: (string | null)[] = [];
+  const fetchFn: typeof fetch = async (input, init) => {
+    if (init?.method === 'POST') preconditions.push(new Headers(init.headers).get('If-Match'));
+    const response = await f.fetchFn(input, init);
+    const headers = new Headers(response.headers);
+    const etag = headers.get('ETag');
+    if (etag) headers.set('ETag', `W/${etag}`);
+    return new Response(response.body, { status: response.status, headers });
+  };
+  const options = { deploymentMode: 'hosted' as const, browserStorage, fetchFn, workspaceId: context.workspaceId };
+  const opened = await loadPersistedWorkspace(options);
+  expect(opened.workspaceRevision).toMatch(etagPattern);
+  const next = ingestFilesIntoWorkspace(required(opened.workspace), [syntheticDocument]);
+  const saved = await savePersistedWorkspace({ ...options, workspace: next, workspaceRevision: opened.workspaceRevision });
+  expect(saved.workspaceRevision).toMatch(etagPattern);
+  expect(saved.workspaceRevision).not.toBe(opened.workspaceRevision);
+  expect(preconditions).toEqual([opened.workspaceRevision]);
+  const reopened = await loadPersistedWorkspace(options);
+  expect(reopened.localMirrorMatched).toBe(true);
+  expect(reopened.workspace?.documents[0]?.name).toBe(syntheticDocument.name);
+  expect(reopened.workspaceRevision).toBe(saved.workspaceRevision);
+  await expect(savePersistedWorkspace({ ...options, workspace: next, workspaceRevision: opened.workspaceRevision }))
+    .rejects.toBeInstanceOf(HostedWorkspaceWriteRejectedError);
+});
+
+it.each([null, 1, {}, 'not-a-revision', 'W/"12345678-1234-1234-1234-123456789abc"', '"12345678-1234-1234-1234-123456789ABC"'])(
+  'rejects malformed application revisions instead of falling back to a valid entity validator: %j', async workspaceRevision => {
+    const f = app();
+    await f.open(true);
+    const fetchFn: typeof fetch = async (input, init) => {
+      const response = await f.fetchFn(input, init);
+      return Response.json({ ...await response.json(), workspaceRevision }, { status: response.status, headers: response.headers });
+    };
+    await expect(loadPersistedWorkspace({ deploymentMode: 'hosted', fetchFn, workspaceId: context.workspaceId }))
+      .rejects.toThrow('The server did not confirm a valid return revision.');
+  }
+);
+
+it.each(['strong', 'weak'] as const)('uses only a strong legacy entity validator without an application revision: %s', async kind => {
+  const f = app();
+  await f.open(true);
+  const fetchFn: typeof fetch = async (input, init) => {
+    const response = await f.fetchFn(input, init);
+    const payload = await response.json();
+    delete payload.workspaceRevision;
+    const headers = new Headers(response.headers);
+    const etag = headers.get('ETag');
+    if (kind === 'weak' && etag) headers.set('ETag', `W/${etag}`);
+    return Response.json(payload, { status: response.status, headers });
+  };
+  const options = { deploymentMode: 'hosted' as const, fetchFn, workspaceId: context.workspaceId };
+  const opened = await loadPersistedWorkspace(options);
+  if (kind === 'strong') {
+    expect(opened.workspaceRevision).toMatch(etagPattern);
+    const saved = await savePersistedWorkspace({ ...options, workspace: required(opened.workspace), workspaceRevision: opened.workspaceRevision });
+    expect(saved.workspaceRevision).toMatch(etagPattern);
+  } else {
+    expect(opened.workspaceRevision).toBeNull();
+    await expect(savePersistedWorkspace({ ...options, workspace: required(opened.workspace), workspaceRevision: opened.workspaceRevision }))
+      .rejects.toBeInstanceOf(HostedWorkspaceWriteRejectedError);
+  }
+});
+
 it('requires explicit creation and never revives a deleted workspace from a stale save', async () => {
   const f = app();
   const { workspace, revision } = await f.open(true);
@@ -192,8 +259,8 @@ it.each(['different snapshot', 'missing revision', 'wrong owner', 'same revision
       if (problem === 'different snapshot') result.workspace.updatedAt = '2026-11-15T01:00:00.000Z';
       if (problem === 'wrong owner') result.ownerScope.scopeKey = 'hosted-owner:wrong-owner';
       const headers = new Headers(response.headers);
-      if (problem === 'missing revision') headers.delete('etag');
-      if (problem === 'same revision') headers.set('etag', required(revision));
+      if (problem === 'missing revision') { headers.delete('etag'); delete result.workspaceRevision; }
+      if (problem === 'same revision') { headers.set('etag', required(revision)); result.workspaceRevision = revision; }
       return Response.json(result, { status: response.status, headers });
     };
     await expect(savePersistedWorkspace({ deploymentMode: 'hosted', fetchFn, browserStorage, workspace: base,

@@ -13,9 +13,12 @@ export type HostedWorkspaceWritePrecondition =
   | { kind: "create" }
   | { kind: "update"; revision: string };
 
+export function parseHostedWorkspaceRevision(value: unknown) {
+  return typeof value === "string" && revisionPattern.test(value) ? value.slice(1, -1) : null;
+}
+
 export function readHostedWorkspaceRevision(headers: Headers, header: "ETag" | "If-Match") {
-  const value = headers.get(header);
-  return value && revisionPattern.test(value) ? value.slice(1, -1) : null;
+  return parseHostedWorkspaceRevision(headers.get(header));
 }
 
 /** This app explicitly declined the write before persisting the snapshot. */

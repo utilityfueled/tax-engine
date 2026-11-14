@@ -685,6 +685,7 @@ export function createHostedWorkspaceRouteHandlers(
           availability: result.adapter.availability,
           ownerScope: result.adapter.ownerScope,
           workspace: stored?.workspace ?? null,
+          workspaceRevision: stored ? `"${stored.revision}"` : null,
           workspaces: []
         }, stored ? { headers: { ETag: `"${stored.revision}"` } } : undefined);
       } catch (error) {
@@ -751,6 +752,7 @@ export function createHostedWorkspaceRouteHandlers(
           availability: result.adapter.availability,
           ownerScope: result.adapter.ownerScope,
           workspace,
+          workspaceRevision: `"${revision}"`,
           workspaces: []
         }, { headers: { ETag: `"${revision}"` } });
       } catch (error) {

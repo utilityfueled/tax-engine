@@ -12,7 +12,7 @@ import { sanitizeWorkspaceForHostedStorage } from "./hosted-privacy";
 import { clearHostedWorkspaceBrowserState, hostedDocumentCacheId } from "./hosted-workspace-browser-state";
 import {
   hostedWorkspaceConflictCode, hostedWorkspacePreconditionCode, HostedWorkspaceWriteRejectedError,
-  readHostedWorkspaceRevision, type HostedWorkspaceWritePrecondition, type VersionedHostedWorkspace,
+  parseHostedWorkspaceRevision, readHostedWorkspaceRevision, type HostedWorkspaceWritePrecondition, type VersionedHostedWorkspace,
 } from "./hosted-workspace-revision";
 
 export { HostedWorkspaceWriteRejectedError } from "./hosted-workspace-revision";
@@ -577,6 +577,7 @@ interface HostedWorkspacePersistenceResponse {
   ownerScope: WorkspaceOwnerScope | null;
   workspace: ReturnWorkspaceRecord | null;
   workspaces: ReturnWorkspaceRecord[];
+  workspaceRevision?: string | null;
 }
 
 interface HostedDocumentBlobPersistenceResponse {
@@ -855,7 +856,17 @@ async function requestHostedWorkspacePersistence(
     );
   }
 
-  const revision = readHostedWorkspaceRevision(response.headers, "ETag");
+  const workspacePayload = payload as HostedWorkspacePersistenceResponse;
+  const hasApplicationRevision = payload !== null && typeof payload === "object" && Object.hasOwn(payload, "workspaceRevision");
+  const applicationRevision = hasApplicationRevision ? parseHostedWorkspaceRevision(workspacePayload.workspaceRevision) : null;
+  if (hasApplicationRevision && !applicationRevision
+    && !(workspacePayload.workspaceRevision === null && workspacePayload.workspace === null)) {
+    throw new Error("The server did not confirm a valid return revision. Reopen the return before saving again.");
+  }
+  // Compression may legitimately weaken or replace the HTTP entity validator.
+  // The separately validated JSON token binds the application's stored snapshot.
+  // Older responses may use a strong ETag; never promote a weak one to If-Match.
+  const revision = hasApplicationRevision ? applicationRevision : readHostedWorkspaceRevision(response.headers, "ETag");
   return { ...(payload as HostedWorkspacePersistenceResponse), workspaceRevision: revision ? `"${revision}"` : null };
 }
 
