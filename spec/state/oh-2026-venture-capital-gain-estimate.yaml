@@ -1,0 +1,46 @@
+form: "Ohio 2026 venture capital gain deduction estimate"
+fullName: "R.C. 5747.01(A)(35) deduction from one certified realized venture capital gain"
+taxYear: 2026
+reference: "https://codes.ohio.gov/assets/laws/revised-code/authenticated/57/5747/5747.01/3-5-2026/5747.01-3-5-2026.pdf"
+sources:
+  - "https://codes.ohio.gov/ohio-revised-code/section-5747.01/9-30-2025"
+  - "https://codes.ohio.gov/ohio-revised-code/section-122.851"
+  - "https://codes.ohio.gov/ohio-revised-code/section-5747.80"
+  - "https://tax.ohio.gov/individual/resources/individualincome"
+  - "https://development.ohio.gov/business/state-incentives/ovcocp"
+revision: "Enacted Ohio Revised Code 5747.01(A)(35), effective for taxable years beginning in or after 2026; authenticated March 5, 2026 revision, pp. 11–12; retrieved 2026-11-13"
+notes: |
+  The existing refundable venture capital credit under R.C. 5747.80 and the
+  R.C. 5747.01(A)(34) capital-gains/payroll deduction are separate provisions.
+  This estimate uses one direct individual cash investor, one qualifying interest
+  and one already realized, certified, nonbusiness gain. It starts in calendar
+  2026. The exact inputs rely on documents that will normally be available in
+  2027 after the company reports its prior-year gains under R.C. 122.851(D)(1)
+  and the Director issues a certificate under (D)(2). The company's general
+  OVCOC certification alone cannot establish an investor's amounts. Actual
+  Director certificate and recognition facts are required to use this method.
+  R.C. 122.851(E) requires retaining the certificate for four years from
+  the later of the final filing date and the actual filing date.
+  Distributions of securities, mixed gains, indirect interests, capital-loss
+  netting and carryovers, partial exclusions, recapture, business-income
+  deduction ordering, taxpayer residency, allocation and apportionment require
+  separate methods. R.C. 5747.01(A)(35)(b) requires recapture upon a Director
+  certification of unmet requirements. Division (A)(35)(d) places this deduction
+  before the business-income deduction for business income. No other Ohio or
+  federal amount or output is changed. No claim or filing is authorized.
+  Ohio's alert archive lists the November 13 draft instructions and November 6
+  draft forms. The actual November 13 booklet was not retrieved or hashed. This
+  estimate uses enacted law and does not assign or qualify an annual form line.
+lines:
+  - line: "certificate"
+    description: "Require an issued, current and matching gain certificate"
+    formula: "Require calendar 2026, a valid as-of date, an issued Director certificate under R.C. 122.851(D)(2) for the 2026 realized gain, its unique reference, and actual status confirmation. Its issue date must follow the gain year and be no later than as-of. Require same exact owner, original holding and certificate identity for the independent gain recognition record. The company's verified certification interval must cover the documented cash acquisition, underlying company investment and disposal. All dates must be valid and actual; both acquisitions precede or coincide with disposal, and disposal and investor recognition must coincide in 2026 in this slice. Refuse known or unresolved revocation or recapture. Do not emit original references or identifying information."
+    testRef: "tests/engine/state/oh-2026-venture-capital-gain-estimate.test.ts::requires an issued same-owner certification and valid acquisition and disposal dates"
+  - line: "eligible-gain"
+    description: "Reconcile the one recognized amount and its certified Ohio share"
+    formula: "Independently recognized federal gain must equal the positive, certified investor-attributable total. Require explicit confirmation that the whole amount is included in federal AGI, is nonbusiness income, was not otherwise excluded or deducted in federal or Ohio AGI, and is unaffected by capital-loss netting or carryovers. For this one underlying disposal accept the certified Ohio share only at zero or the whole amount. Ohio investee classification must be established by the certified source, with no assumptions based on the investor's location. R.C. 122.851(A)(3) requires Ohio headquarters and more than half of all full-time equivalent employees employed in Ohio under its specific withholding definition in the applicable year."
+    testRef: "tests/engine/state/oh-2026-venture-capital-gain-estimate.test.ts::rejects unknown or conflicting source eligibility and exact capital-gain facts"
+  - line: "A35"
+    description: "Compute the isolated enacted Ohio pretax income deduction"
+    formula: "The estimate deducts 100% of the certified Ohio investor gain and 50% of the certified gain from other businesses. Keep exact Decimal precision through the calculation, including a resulting half cent. This is an Ohio AGI deduction and is not a credit or a combined tax estimate. Fixtures are independently derived from statutory percentages."
+    testRef: "tests/engine/state/oh-2026-venture-capital-gain-estimate.test.ts::calculates the statutory rate on certified Ohio and other gains without rounding"

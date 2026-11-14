@@ -14918,6 +14918,25 @@
       ]
     },
     {
+      "key": "state/oh-2026-venture-capital-gain-estimate",
+      "jurisdiction": "state",
+      "taxYear": 2026,
+      "sourceAuthority": "https://codes.ohio.gov/assets/laws/revised-code/authenticated/57/5747/5747.01/3-5-2026/5747.01-3-5-2026.pdf",
+      "specPath": "spec/state/oh-2026-venture-capital-gain-estimate.yaml",
+      "enginePath": "src/engine/state/oh-2026-venture-capital-gain-estimate.ts",
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "state/oh-business-native-browser",
       "jurisdiction": "state",
       "taxYear": 2025,
