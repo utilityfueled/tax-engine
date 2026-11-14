@@ -1,4 +1,15 @@
 {
+  "nov14MetadataCensusWordingCorrection": {
+    "exactSource": "5f7cd736",
+    "totalGitEntries": 5930,
+    "nonMetadataEntries": 5927,
+    "generatedMetadataEntries": 3,
+    "frozen17FilesOverlapNonMetadata": true,
+    "rootIndependentlyVerifiedAllEntriesAndModes": true,
+    "originalReceiptRetained": true,
+    "noProductOrCheckChange": true,
+    "amendmentSha256": "059aab99afaa2b7058540b4f4debe2ae2f03a7e373b67d84d5a18e69c137641d"
+  },
   "nov14LossEicCombinedSourceBinding": {
     "committedProductBase": "5f7cd736c74380dcac2b97457038b3810a5581ab",
     "frozenFilesVerified": 17,

@@ -2,8 +2,11 @@
 
 The separately committed all-foreign current-loss and unassessed EIC petition
 methods now share reviewed integration metadata. All seventeen frozen files
-match committed `5f7cd736`; 5,927 other Git entries and six literal symlink
-targets were checked in the author's detached archive. Later documentation
+match committed `5f7cd736`. Its total 5,930 Git entries comprise 5,927
+unchanged non-metadata entries and three intentionally regenerated metadata
+files. The seventeen frozen files are a subset of those 5,927, not additional
+entries. Root independently verified every unchanged blob/mode, all six literal
+symlinks and the three exact generated hashes in the detached archive. Later documentation
 commits change none of those executable inputs.
 
 The inventory adds exactly two partial entries, preserving all 1,018 existing
@@ -40,3 +43,10 @@ model promotion and production push remain gated.
 
 Private roots are `nov14-loss-eic-integrated-metadata` and
 `nov14-loss-eic-metadata-root-review` under `.local/upgrade-evidence/`.
+
+The original metadata receipt's `otherGitEntriesVerified` label was ambiguous;
+the initial ledger repeated it as a disjoint count. That wording was incorrect.
+The frozen receipt remains retained. Separate census amendment
+`059aab99afaa2b7058540b4f4debe2ae2f03a7e373b67d84d5a18e69c137641d`
+records the overlap explicitly. Source hashes, generated metadata and all actual
+check outcomes are unchanged.
