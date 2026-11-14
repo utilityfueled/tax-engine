@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { createHostedWorkspaceRouteHandlers } from "../../../apps/web/src/lib/hosted-workspace-route";
 import {
   createInMemoryHostedDocumentBlobStore,
@@ -49,7 +49,7 @@ describe("security: IDOR isolation — workspace data scoped by owner", () => {
     await handlersA.save(
       fakeRequest("https://tax.example/api/hosted/workspaces/ws-alice-private", {
         method: "POST",
-        headers: { "content-type": "application/json" },
+        headers: { "content-type": "application/json", "if-none-match": "*" },
         body: JSON.stringify({ workspace })
       }),
       { workspaceId: "ws-alice-private" }
@@ -88,7 +88,7 @@ describe("security: IDOR isolation — workspace data scoped by owner", () => {
     await handlersA.save(
       fakeRequest("https://tax.example/api/hosted/workspaces/ws-alice-secret", {
         method: "POST",
-        headers: { "content-type": "application/json" },
+        headers: { "content-type": "application/json", "if-none-match": "*" },
         body: JSON.stringify({ workspace })
       }),
       { workspaceId: "ws-alice-secret" }
@@ -120,7 +120,7 @@ describe("security: IDOR isolation — workspace data scoped by owner", () => {
     await handlersA.save(
       fakeRequest("https://tax.example/api/hosted/workspaces/ws-alice-keep", {
         method: "POST",
-        headers: { "content-type": "application/json" },
+        headers: { "content-type": "application/json", "if-none-match": "*" },
         body: JSON.stringify({ workspace })
       }),
       { workspaceId: "ws-alice-keep" }
@@ -161,7 +161,7 @@ describe("security: IDOR isolation — workspace data scoped by owner", () => {
     await handlersA.save(
       fakeRequest("https://tax.example/api/hosted/workspaces/ws-shared-id", {
         method: "POST",
-        headers: { "content-type": "application/json" },
+        headers: { "content-type": "application/json", "if-none-match": "*" },
         body: JSON.stringify({ workspace: aliceWorkspace })
       }),
       { workspaceId: "ws-shared-id" }
@@ -177,7 +177,7 @@ describe("security: IDOR isolation — workspace data scoped by owner", () => {
     await handlersB.save(
       fakeRequest("https://tax.example/api/hosted/workspaces/ws-shared-id", {
         method: "POST",
-        headers: { "content-type": "application/json" },
+        headers: { "content-type": "application/json", "if-none-match": "*" },
         body: JSON.stringify({ workspace: bobWorkspace })
       }),
       { workspaceId: "ws-shared-id" }
@@ -219,7 +219,7 @@ describe("security: IDOR isolation — workspace data scoped by owner", () => {
     await handlersA.save(
       fakeRequest("https://tax.example/api/hosted/workspaces/ws-alice-docs", {
         method: "POST",
-        headers: { "content-type": "application/json" },
+        headers: { "content-type": "application/json", "if-none-match": "*" },
         body: JSON.stringify({ workspace })
       }),
       { workspaceId: "ws-alice-docs" }
@@ -292,12 +292,8 @@ describe("security: IDOR isolation — workspace data scoped by owner", () => {
 
 describe("security: persistence error sanitization — no internal details leak", () => {
   it("list returns 503 with safe message when persistence store throws", async () => {
-    const throwingStore = {
-      get() { throw new Error("FATAL: connection to server at 10.0.1.5:5432 failed: SCRAM authentication failed for user 'taxengine'"); },
-      listByOwner() { throw new Error("FATAL: connection to server at 10.0.1.5:5432 failed"); },
-      save() { throw new Error("relation \"workspaces\" does not exist"); },
-      delete() { throw new Error("relation \"workspaces\" does not exist"); }
-    };
+    const throwingStore = createInMemoryHostedWorkspaceStore();
+    vi.spyOn(throwingStore, "listByOwner").mockRejectedValue(new Error("FATAL: connection to server at 10.0.1.5:5432 failed"));
 
     const handlers = createHostedWorkspaceRouteHandlers({
       env: {
@@ -322,12 +318,8 @@ describe("security: persistence error sanitization — no internal details leak"
   });
 
   it("get returns 503 with safe message when persistence store throws", async () => {
-    const throwingStore = {
-      get() { throw new Error("SELECT * FROM workspaces WHERE owner_id=$1 — column \"owner_id\" does not exist"); },
-      listByOwner() { return []; },
-      save() { throw new Error("database error"); },
-      delete() { return []; }
-    };
+    const throwingStore = createInMemoryHostedWorkspaceStore();
+    vi.spyOn(throwingStore, "getVersioned").mockRejectedValue(new Error("SELECT * FROM workspaces WHERE owner_id=$1 — column \"owner_id\" does not exist"));
 
     const handlers = createHostedWorkspaceRouteHandlers({
       env: {
@@ -352,12 +344,8 @@ describe("security: persistence error sanitization — no internal details leak"
   });
 
   it("save returns 503 with safe message when persistence store throws", async () => {
-    const throwingStore = {
-      get() { return null; },
-      listByOwner() { return []; },
-      save() { throw new Error("duplicate key value violates unique constraint \"workspaces_pkey\""); },
-      delete() { return []; }
-    };
+    const throwingStore = createInMemoryHostedWorkspaceStore();
+    vi.spyOn(throwingStore, "writeVersioned").mockRejectedValue(new Error("duplicate key value violates unique constraint \"workspaces_pkey\""));
 
     const handlers = createHostedWorkspaceRouteHandlers({
       env: {
@@ -377,7 +365,7 @@ describe("security: persistence error sanitization — no internal details leak"
     const response = await handlers.save(
       new Request("https://tax.example/api/hosted/workspaces/ws-1", {
         method: "POST",
-        headers: { "content-type": "application/json" },
+        headers: { "content-type": "application/json", "if-none-match": "*" },
         body: JSON.stringify({ workspace })
       }),
       { workspaceId: "ws-1" }
@@ -391,12 +379,8 @@ describe("security: persistence error sanitization — no internal details leak"
   });
 
   it("delete returns 503 with safe message when persistence store throws", async () => {
-    const throwingStore = {
-      get() { return null; },
-      listByOwner() { return []; },
-      save() { throw new Error("database error"); },
-      delete() { throw new Error("could not serialize access due to concurrent update on table \"workspaces\""); }
-    };
+    const throwingStore = createInMemoryHostedWorkspaceStore();
+    vi.spyOn(throwingStore, "delete").mockRejectedValue(new Error("could not serialize access due to concurrent update on table \"workspaces\""));
 
     const handlers = createHostedWorkspaceRouteHandlers({
       env: {

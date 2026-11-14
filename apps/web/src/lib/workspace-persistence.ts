@@ -8,6 +8,13 @@ import { isHostedProductionEnvironment } from "./hosted-runtime-safety";
 import { deleteCachedWorkspaceDocumentFiles } from "./workspace-document-file-cache";
 import { isLocalRecoveryWorkspace } from "./workspace-local-recovery";
 import { sanitizeWorkspaceForHostedStorage } from "./hosted-privacy";
+import { clearHostedWorkspaceBrowserState, hostedDocumentCacheId } from "./hosted-workspace-browser-state";
+import {
+  hostedWorkspaceConflictCode, hostedWorkspacePreconditionCode, HostedWorkspaceWriteRejectedError,
+  readHostedWorkspaceRevision, type HostedWorkspaceWritePrecondition, type VersionedHostedWorkspace,
+} from "./hosted-workspace-revision";
+
+export { HostedWorkspaceWriteRejectedError } from "./hosted-workspace-revision";
 
 type PersistenceEnvironment = Record<string, string | undefined>;
 type PersistenceFetch = typeof fetch;
@@ -71,7 +78,9 @@ export interface HostedWorkspaceStore {
   listByOwner(ownerId: string): Promise<ReturnWorkspaceRecord[]>;
   /** Atomically check capacity for inserts. Existing workspace IDs can still be updated at capacity. */
   save(ownerId: string, workspace: ReturnWorkspaceRecord): Promise<ReturnWorkspaceRecord>;
-  delete(ownerId: string, workspaceId: string): Promise<ReturnWorkspaceRecord[]>;
+  getVersioned(ownerId: string, workspaceId: string): Promise<VersionedHostedWorkspace | null>;
+  writeVersioned(ownerId: string, workspace: ReturnWorkspaceRecord, precondition: HostedWorkspaceWritePrecondition): Promise<VersionedHostedWorkspace>;
+  delete(ownerId: string, workspaceId: string, expectedRevision?: string): Promise<ReturnWorkspaceRecord[]>;
 }
 
 export type HostedWorkspaceStoreFactory = (
@@ -132,7 +141,9 @@ export interface WorkspacePersistenceAdapter {
   getWorkspace(workspaceId: string): Promise<ReturnWorkspaceRecord | null>;
   listWorkspaces(): Promise<ReturnWorkspaceRecord[]>;
   saveWorkspace(workspace: ReturnWorkspaceRecord): Promise<ReturnWorkspaceRecord>;
-  deleteWorkspace(workspaceId: string): Promise<ReturnWorkspaceRecord[]>;
+  getVersionedWorkspace?(workspaceId: string): Promise<VersionedHostedWorkspace | null>;
+  writeVersionedWorkspace?(workspace: ReturnWorkspaceRecord, precondition: HostedWorkspaceWritePrecondition): Promise<VersionedHostedWorkspace>;
+  deleteWorkspace(workspaceId: string, expectedRevision?: string): Promise<ReturnWorkspaceRecord[]>;
 }
 
 function sortByUpdatedAtDescending(workspaces: ReturnWorkspaceRecord[]) {
@@ -157,7 +168,7 @@ function normalizeHostedWorkspace(workspace: ReturnWorkspaceRecord): ReturnWorks
 }
 
 class InMemoryHostedWorkspaceStore implements HostedWorkspaceStore {
-  readonly #workspacesByOwner = new Map<string, Map<string, ReturnWorkspaceRecord>>();
+  readonly #workspacesByOwner = new Map<string, Map<string, VersionedHostedWorkspace>>();
 
   constructor(initialRecords: HostedWorkspaceStoreSeedRecord[] = []) {
     for (const record of initialRecords) {
@@ -166,33 +177,49 @@ class InMemoryHostedWorkspaceStore implements HostedWorkspaceStore {
   }
 
   async get(ownerId: string, workspaceId: string) {
+    return (await this.getVersioned(ownerId, workspaceId))?.workspace ?? null;
+  }
+
+  async getVersioned(ownerId: string, workspaceId: string) {
     return this.#workspacesByOwner.get(ownerId)?.get(workspaceId) ?? null;
   }
 
   async listByOwner(ownerId: string) {
     return sortByUpdatedAtDescending(
-      Array.from(this.#workspacesByOwner.get(ownerId)?.values() ?? [])
+      Array.from(this.#workspacesByOwner.get(ownerId)?.values() ?? [], record => record.workspace)
     );
   }
 
   async save(ownerId: string, workspace: ReturnWorkspaceRecord) {
-    return this.#save(ownerId, workspace, true);
+    return this.#save(ownerId, workspace, true).workspace;
   }
 
-  #save(ownerId: string, workspace: ReturnWorkspaceRecord, enforceLimit: boolean) {
-    const normalizedWorkspace = normalizeHostedWorkspace(workspace);
-    const ownerMap = this.#workspacesByOwner.get(ownerId) ?? new Map<string, ReturnWorkspaceRecord>();
+  async writeVersioned(ownerId: string, workspace: ReturnWorkspaceRecord, precondition: HostedWorkspaceWritePrecondition) {
+    return this.#save(ownerId, workspace, true, precondition);
+  }
 
-    if (enforceLimit && !ownerMap.has(normalizedWorkspace.id) && ownerMap.size >= MAX_WORKSPACES_PER_USER) {
+  #save(ownerId: string, workspace: ReturnWorkspaceRecord, enforceLimit: boolean, precondition?: HostedWorkspaceWritePrecondition) {
+    const normalizedWorkspace = normalizeHostedWorkspace(workspace);
+    const ownerMap = this.#workspacesByOwner.get(ownerId) ?? new Map<string, VersionedHostedWorkspace>();
+    const prior = ownerMap.get(normalizedWorkspace.id);
+
+    if (precondition && (precondition.kind === "create" ? prior : prior?.revision !== precondition.revision)) {
+      throw new HostedWorkspaceWriteRejectedError();
+    }
+    if (enforceLimit && !prior && ownerMap.size >= MAX_WORKSPACES_PER_USER) {
       throw new HostedWorkspaceLimitError();
     }
-    ownerMap.set(normalizedWorkspace.id, normalizedWorkspace);
+    const stored = { workspace: normalizedWorkspace, revision: crypto.randomUUID() };
+    ownerMap.set(normalizedWorkspace.id, stored);
     this.#workspacesByOwner.set(ownerId, ownerMap);
-    return normalizedWorkspace;
+    return stored;
   }
 
-  async delete(ownerId: string, workspaceId: string) {
+  async delete(ownerId: string, workspaceId: string, expectedRevision?: string) {
     const ownerMap = this.#workspacesByOwner.get(ownerId);
+    if (expectedRevision && ownerMap?.get(workspaceId)?.revision !== expectedRevision) {
+      throw new HostedWorkspaceWriteRejectedError();
+    }
 
     if (!ownerMap) {
       return [];
@@ -206,7 +233,7 @@ class InMemoryHostedWorkspaceStore implements HostedWorkspaceStore {
     }
 
     this.#workspacesByOwner.set(ownerId, ownerMap);
-    return sortByUpdatedAtDescending(Array.from(ownerMap.values()));
+    return sortByUpdatedAtDescending(Array.from(ownerMap.values(), record => record.workspace));
   }
 }
 
@@ -535,10 +562,13 @@ interface LoadPersistedWorkspaceOptions extends WorkspacePersistenceRequestOptio
 
 interface DeletePersistedWorkspaceOptions extends WorkspacePersistenceRequestOptions {
   workspaceId: string;
+  ownerScopeKey?: string;
 }
 
 interface SavePersistedWorkspaceOptions extends WorkspacePersistenceRequestOptions {
   workspace: ReturnWorkspaceRecord;
+  workspaceRevision?: string | null;
+  ownerScopeKey?: string | null;
 }
 
 interface HostedWorkspacePersistenceResponse {
@@ -556,6 +586,7 @@ interface HostedDocumentBlobPersistenceResponse {
 
 interface HostedPersistenceErrorResponse {
   error?: string;
+  code?: string;
 }
 
 function getHostedPersistenceErrorMessage(payload: unknown) {
@@ -727,8 +758,14 @@ export async function createWorkspacePersistenceAdapter(
     async saveWorkspace(workspace) {
       return hostedStore.save(ownerScope.ownerId, workspace);
     },
-    async deleteWorkspace(workspaceId) {
-      return hostedStore.delete(ownerScope.ownerId, workspaceId);
+    async getVersionedWorkspace(workspaceId) {
+      return hostedStore.getVersioned(ownerScope.ownerId, workspaceId);
+    },
+    async writeVersionedWorkspace(workspace, precondition) {
+      return hostedStore.writeVersioned(ownerScope.ownerId, workspace, precondition);
+    },
+    async deleteWorkspace(workspaceId, expectedRevision) {
+      return hostedStore.delete(ownerScope.ownerId, workspaceId, expectedRevision);
     }
   };
 }
@@ -806,13 +843,19 @@ async function requestHostedWorkspacePersistence(
   const payload = await response.json() as HostedWorkspacePersistenceResponse | HostedPersistenceErrorResponse;
 
   if (!response.ok && !(response.status === 401 && (init.method ?? "GET") === "GET")) {
+    const error = payload as HostedPersistenceErrorResponse | null;
+    if (((init.method === "POST" || init.method === "DELETE") && response.status === 412 && error?.code === hostedWorkspaceConflictCode)
+      || (init.method === "POST" && response.status === 428 && error?.code === hostedWorkspacePreconditionCode)) {
+      throw new HostedWorkspaceWriteRejectedError();
+    }
     throw new Error(
       getHostedPersistenceErrorMessage(payload)
         ?? `Could not connect to the server (error ${response.status}). Please try again later.`
     );
   }
 
-  return payload as HostedWorkspacePersistenceResponse;
+  const revision = readHostedWorkspaceRevision(response.headers, "ETag");
+  return { ...(payload as HostedWorkspacePersistenceResponse), workspaceRevision: revision ? `"${revision}"` : null };
 }
 
 async function requestHostedDocumentBlobPersistence(
@@ -838,11 +881,32 @@ async function requestHostedDocumentBlobPersistence(
   return payload as HostedDocumentBlobPersistenceResponse;
 }
 
+function hostedLocalMirrorKey(owner: WorkspaceOwnerScope, workspaceId: string, revision: string) {
+  return `tax-engine:hosted-workspace:v1:${JSON.stringify([owner.scopeKey, workspaceId, revision])}`;
+}
+
+function canonicalShell(workspace: ReturnWorkspaceRecord) {
+  return JSON.stringify(sanitizeWorkspaceForHostedStorage(workspace), (_key, value: unknown) => {
+    if (value === null || typeof value !== "object" || Array.isArray(value)) return value;
+    const entries = Object.entries(value).sort(([left], [right]) => {
+      if (left === right) return 0;
+      return left < right ? -1 : 1;
+    });
+    return Object.fromEntries(entries);
+  });
+}
+
+function hostedShellsMatch(local: ReturnWorkspaceRecord, hosted: ReturnWorkspaceRecord) {
+  return canonicalShell(local) === canonicalShell(hosted);
+}
+
 export async function loadPersistedWorkspace(
   options: LoadPersistedWorkspaceOptions
 ): Promise<{
   adapter: WorkspacePersistenceAdapter;
   workspace: ReturnWorkspaceRecord | null;
+  workspaceRevision: string | null;
+  localMirrorMatched: boolean;
 }> {
   if (options.deploymentMode === "hosted") {
     const payload = await requestHostedWorkspacePersistence(
@@ -858,22 +922,24 @@ export async function loadPersistedWorkspace(
 
     const browserStorage = options.browserStorage;
     let workspace = payload.workspace;
+    let localMirrorMatched = false;
 
-    if (browserStorage && payload.availability === "ready") {
-      const { getWorkspace: getLocalWorkspace } = await import("./workspace-storage");
-      const localWorkspace = getLocalWorkspace(browserStorage, options.workspaceId);
-
-      if (
-        localWorkspace
-        && (!workspace || new Date(localWorkspace.updatedAt).getTime() >= new Date(workspace.updatedAt).getTime())
-      ) {
-        workspace = localWorkspace;
-      }
+    if (browserStorage && payload.availability === "ready" && workspace && payload.ownerScope && payload.workspaceRevision) {
+      try {
+        const stored = browserStorage.getItem(hostedLocalMirrorKey(payload.ownerScope, workspace.id, payload.workspaceRevision));
+        const localMirror = stored ? JSON.parse(stored) as ReturnWorkspaceRecord : null;
+        if (localMirror && hostedShellsMatch(localMirror, workspace)) {
+          workspace = localMirror;
+          localMirrorMatched = true;
+        }
+      } catch { /* When a private mirror cannot be verified, use the hosted snapshot. */ }
     }
 
     return {
       adapter: createHostedTransportAdapter(payload),
-      workspace
+      workspace,
+      workspaceRevision: workspace ? payload.workspaceRevision : null,
+      localMirrorMatched,
     };
   }
 
@@ -884,13 +950,17 @@ export async function loadPersistedWorkspace(
 
     return {
       adapter,
-      workspace: ensureWorkspace(requireBrowserStorage(options.browserStorage), options.workspaceId)
+      workspace: ensureWorkspace(requireBrowserStorage(options.browserStorage), options.workspaceId),
+      workspaceRevision: null,
+      localMirrorMatched: false,
     };
   }
 
   return {
     adapter,
-    workspace: await adapter.getWorkspace(options.workspaceId)
+    workspace: await adapter.getWorkspace(options.workspaceId),
+    workspaceRevision: null,
+    localMirrorMatched: false,
   };
 }
 
@@ -940,28 +1010,59 @@ export async function deletePersistedWorkspace(
   workspaces: ReturnWorkspaceRecord[];
 }> {
   if (options.deploymentMode === "hosted") {
-    if (options.browserStorage && isLocalRecoveryWorkspace(options.browserStorage, options.workspaceId)) {
+    if (!options.ownerScopeKey && options.browserStorage && isLocalRecoveryWorkspace(options.browserStorage, options.workspaceId)) {
       const deleted = await deletePersistedWorkspace({ ...options, deploymentMode: "self-host" });
       try { return await listPersistedWorkspaces(options); }
       catch { return { adapter: deleted.adapter, workspaces: await listLocalRecoveries(options.browserStorage) }; }
+    }
+    let beforeDeletion: Awaited<ReturnType<typeof loadPersistedWorkspace>> | undefined;
+    if (options.browserStorage || options.ownerScopeKey) {
+      try { beforeDeletion = await loadPersistedWorkspace({ ...options, createIfMissing: false }); }
+      catch (error) {
+        if (options.ownerScopeKey) throw error;
+        // The older path can still delete the hosted row, with no original cleanup.
+      }
+      if (options.ownerScopeKey && (beforeDeletion?.adapter.ownerScope?.scopeKey !== options.ownerScopeKey
+        || (beforeDeletion.workspace && !beforeDeletion.workspaceRevision))) {
+        throw new Error("Could not verify this return for the current account. Reopen your returns before deleting.");
+      }
+      if (beforeDeletion?.adapter.ownerScope && !beforeDeletion.workspace) {
+        return listPersistedWorkspaces(options);
+      }
     }
     const payload = await requestHostedWorkspacePersistence(
       buildHostedWorkspaceEndpoint(options, options.workspaceId),
       {
         method: "DELETE",
         headers: {
-          "content-type": "application/json"
+          "content-type": "application/json",
+          ...(beforeDeletion?.workspaceRevision ? { "If-Match": beforeDeletion.workspaceRevision } : {})
         }
       },
       options.fetchFn ?? fetch
     );
 
-    if (payload.availability !== "ready") throw new Error("Please sign in before deleting this return. The local copy has been preserved.");
+    if (payload.availability !== "ready" || (options.ownerScopeKey && payload.ownerScope?.scopeKey !== options.ownerScopeKey)) {
+      throw new Error("Please sign in before deleting this return. The local copy has been preserved.");
+    }
 
-    if (options.browserStorage) {
-      await deleteCachedWorkspaceDocumentFiles(options.workspaceId);
-      const { deleteWorkspace: deleteLocalWorkspace } = await import("./workspace-storage");
-      deleteLocalWorkspace(options.browserStorage, options.workspaceId);
+    if (options.browserStorage && payload.ownerScope) {
+      if (beforeDeletion?.localMirrorMatched
+        && beforeDeletion.adapter.ownerScope?.scopeKey === payload.ownerScope.scopeKey) {
+        const documentIds = beforeDeletion.workspace?.documents.map(document => document.id) ?? [];
+        if (documentIds.length) {
+          const cacheId = hostedDocumentCacheId(payload.ownerScope.scopeKey, options.workspaceId);
+          await deleteCachedWorkspaceDocumentFiles(cacheId, documentIds);
+        }
+      }
+      const removedRevision = beforeDeletion?.adapter.ownerScope?.scopeKey === payload.ownerScope.scopeKey
+        ? beforeDeletion.workspaceRevision : null;
+      if (removedRevision) {
+        options.browserStorage.removeItem(hostedLocalMirrorKey(payload.ownerScope, options.workspaceId, removedRevision));
+      }
+      clearHostedWorkspaceBrowserState(options.browserStorage, payload.ownerScope.scopeKey, options.workspaceId, removedRevision);
+      // The unowned legacy mirror is kept for explicit local recovery. An
+      // authenticated deletion cannot establish who owned that old copy.
     }
 
     return {
@@ -983,6 +1084,8 @@ export async function savePersistedWorkspace(
 ): Promise<{
   adapter: WorkspacePersistenceAdapter;
   workspace: ReturnWorkspaceRecord;
+  workspaceRevision: string | null;
+  localMirrorSaved: boolean;
 }> {
   if (options.deploymentMode === "hosted") {
     const payload = await requestHostedWorkspacePersistence(
@@ -990,7 +1093,8 @@ export async function savePersistedWorkspace(
       {
         method: "POST",
         headers: {
-          "content-type": "application/json"
+          "content-type": "application/json",
+          ...(options.workspaceRevision ? { "If-Match": options.workspaceRevision } : {}),
         },
         body: JSON.stringify({
           workspace: sanitizeWorkspaceForHostedStorage(options.workspace)
@@ -1000,15 +1104,35 @@ export async function savePersistedWorkspace(
     );
 
     if (payload.availability !== "ready" || !payload.workspace) throw new Error("Could not save your return. Please sign in and try again.");
+    const { ownerScope, workspaceRevision } = payload;
+    let matches = false;
+    try { matches = hostedShellsMatch(options.workspace, payload.workspace); }
+    catch { /* The purported acknowledgment cannot authorize use of this base. */ }
 
+    if (!ownerScope?.scopeKey || !workspaceRevision || workspaceRevision === options.workspaceRevision
+      || (options.ownerScopeKey !== undefined && options.ownerScopeKey !== ownerScope.scopeKey) || !matches) {
+      throw new Error("The server did not confirm the exact return that was saved. Reopen the return before saving again.");
+    }
+
+    let localMirrorSaved = true;
     if (options.browserStorage) {
-      const { saveWorkspaceSnapshot } = await import("./workspace-storage");
-      saveWorkspaceSnapshot(options.browserStorage, options.workspace);
+      try {
+        options.browserStorage.setItem(hostedLocalMirrorKey(ownerScope, options.workspace.id, workspaceRevision), JSON.stringify(options.workspace));
+      } catch {
+        // The shell committed. Preserve its revision even if this device could not save the private mirror.
+        localMirrorSaved = false;
+      }
+      if (localMirrorSaved && options.workspaceRevision) {
+        try { options.browserStorage.removeItem(hostedLocalMirrorKey(ownerScope, options.workspace.id, options.workspaceRevision)); }
+        catch { /* A stale private mirror is never reattached to a new revision. */ }
+      }
     }
 
     return {
       adapter: createHostedTransportAdapter(payload),
-      workspace: options.workspace
+      workspace: options.workspace,
+      workspaceRevision,
+      localMirrorSaved,
     };
   }
 
@@ -1016,7 +1140,9 @@ export async function savePersistedWorkspace(
 
   return {
     adapter,
-    workspace: await adapter.saveWorkspace(options.workspace)
+    workspace: await adapter.saveWorkspace(options.workspace),
+    workspaceRevision: null,
+    localMirrorSaved: true,
   };
 }
 

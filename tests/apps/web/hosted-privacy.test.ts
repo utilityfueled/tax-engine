@@ -93,7 +93,8 @@ describe("hosted workspace shell privacy", () => {
       expect(serialized).not.toContain("Casey Sample");
       expect(serialized).not.toContain("98765.43");
       expect(serialized).not.toContain("123-45-6789");
-      return Response.json({ availability: "ready", ownerScope: { ownerId: "owner-42", ownerLabel: null, scopeKey: "hosted-owner:owner-42" }, workspace: JSON.parse(serialized).workspace, workspaces: [] });
+      return Response.json({ availability: "ready", ownerScope: { ownerId: "owner-42", ownerLabel: null, scopeKey: "hosted-owner:owner-42" }, workspace: JSON.parse(serialized).workspace, workspaces: [] },
+        { headers: { etag: '"e25a0128-e053-426a-9df4-05587acc61d3"' } });
     });
     const result = await savePersistedWorkspace({ deploymentMode: "hosted", workspace, fetchFn });
     expect(result.workspace).toBe(workspace);

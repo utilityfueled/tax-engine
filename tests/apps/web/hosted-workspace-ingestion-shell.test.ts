@@ -3,6 +3,7 @@ import type { ReturnWorkspaceRecord } from "@tax-engine/contracts";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { initialFlowState } from "../../../apps/web/src/lib/guided-interview-flow";
 import { sanitizeWorkspaceForHostedStorage } from "../../../apps/web/src/lib/hosted-privacy";
+import { HostedWorkspaceWriteRejectedError } from "../../../apps/web/src/lib/hosted-workspace-revision";
 import { savePersistedWorkspace } from "../../../apps/web/src/lib/workspace-persistence";
 import { reconcileWorkspaceGuidedState } from "../../../apps/web/src/lib/workspace-guided-state";
 import { createWorkspaceRecord, getFutureYearSampleUploadMessage, ingestFilesIntoWorkspace, ingestHostedDocumentFiles } from "../../../apps/web/src/lib/workspace-storage";
@@ -11,6 +12,7 @@ import { createWorkspaceRecord, getFutureYearSampleUploadMessage, ingestFilesInt
 const wagesPrompt = "Confirm whether every W-2 is final and whether any boxes require follow-up questions.";
 const withholdingPrompt = "Confirm federal and state withholding amounts from each wage statement.";
 const privateText = "PRIVATE Casey Sample SSN 123-45-6789 wages98765.43";
+const browserCacheScope = "fictional-browser-cache-scope";
 function first<T>(items: T[]): T {
   const item = items[0];
   if (item === undefined) throw new Error("Expected fixture entry");
@@ -27,17 +29,36 @@ function ingested(workspace = empty()) {
 function fetchShell() {
   return vi.fn<typeof fetch>().mockImplementation(async (_url, init) => {
     const payload = JSON.parse(String(init?.body)) as { workspace: ReturnWorkspaceRecord };
-    return Response.json({ availability: "ready", ownerScope: { ownerId: "synthetic-owner-42", ownerLabel: null, scopeKey: "hosted-owner:synthetic-owner-42" }, workspace: payload.workspace, workspaces: [] });
+    return Response.json({ availability: "ready", ownerScope: { ownerId: "synthetic-owner-42", ownerLabel: null, scopeKey: "hosted-owner:synthetic-owner-42" }, workspace: payload.workspace, workspaces: [] }, {
+      headers: { ETag: '"e25a0128-e053-426a-9df4-05587acc61d3"' },
+    });
   });
 }
 
 afterEach(() => vi.unstubAllGlobals());
 
 function stubDurableOriginals() {
-  const durable: { documentId: string; file: File }[] = [];
+  const durable: { key: string; documentId: string; file: File }[] = [];
   const open = { onsuccess: () => {}, result: { close() {}, transaction() {
-    const pending = { oncomplete: () => {}, objectStore: () => ({ add(record: (typeof durable)[number]) { durable.push(record); } }) };
-    queueMicrotask(() => pending.oncomplete());
+    let cursorStarted = false;
+    const pending = { oncomplete: () => {}, objectStore: () => ({
+      add(record: (typeof durable)[number]) { durable.push(record); },
+      delete(key: string) { durable.splice(durable.findIndex(record => record.key === key), 1); },
+      openCursor() {
+        cursorStarted = true;
+        const records = [...durable];
+        const request = { result: null as { value: (typeof durable)[number]; primaryKey: string; continue(): void } | null, onsuccess: () => {} };
+        function advance() {
+          const value = records.shift();
+          request.result = value ? { value, primaryKey: value.key, continue: () => queueMicrotask(advance) } : null;
+          request.onsuccess();
+          if (!value) pending.oncomplete();
+        }
+        queueMicrotask(advance);
+        return request;
+      },
+    }) };
+    queueMicrotask(() => { if (!cursorStarted) pending.oncomplete(); });
     return pending;
   } } };
   vi.stubGlobal("indexedDB", { open() { queueMicrotask(() => open.onsuccess()); return open; } });
@@ -91,7 +112,7 @@ describe("actual hosted ingestion shell compatibility", () => {
     const workspace = empty();
     const file = new File(["synthetic original bytes"], "Local IRS Form.pdf", { type: "application/pdf" });
     const persist = vi.fn(async (next: ReturnWorkspaceRecord) => next);
-    await expect(ingestHostedDocumentFiles(workspace, [file], [file], persist)).rejects.toThrow(/save the original documents/u);
+    await expect(ingestHostedDocumentFiles(workspace, [file], [file], browserCacheScope, persist)).rejects.toThrow(/save the original documents/u);
     expect(persist).not.toHaveBeenCalled();
     expect(workspace.documents).toEqual([]);
   });
@@ -106,7 +127,7 @@ describe("actual hosted ingestion shell compatibility", () => {
       expect(durable).toHaveLength(1);
       throw new Error("Synthetic response lost after save");
     });
-    await expect(ingestHostedDocumentFiles(workspace, [file], [file], async next => (
+    await expect(ingestHostedDocumentFiles(workspace, [file], [file], browserCacheScope, async next => (
       await savePersistedWorkspace({ deploymentMode: "hosted", workspace: next, fetchFn })
     ).workspace)).rejects.toThrow(/response lost/u);
     const persisted = first(durable);
@@ -119,13 +140,29 @@ describe("actual hosted ingestion shell compatibility", () => {
     expect(workspace.documents).toEqual([]);
   });
 
+  it("removes only new originals on a confirmed hosted write conflict", async () => {
+    const durable = stubDurableOriginals();
+    const workspace = empty();
+    const initialFile = new File(["previous synthetic original"], "previous.pdf");
+    const nextFile = new File(["new synthetic original"], "new.pdf");
+    const initial = await ingestHostedDocumentFiles(workspace, [initialFile], [initialFile], browserCacheScope, async record => record);
+    const priorId = first(initial.documents).id;
+    const conflict = new HostedWorkspaceWriteRejectedError();
+    await expect(ingestHostedDocumentFiles(initial, [nextFile], [nextFile], browserCacheScope, async () => {
+      expect(durable).toHaveLength(2);
+      throw conflict;
+    })).rejects.toBe(conflict);
+    expect(durable.map(record => record.documentId)).toEqual([priorId]);
+    expect(await first(durable).file.text()).toBe("previous synthetic original");
+  });
+
   it("keeps the same safe hosted identity when a random ID resembles a direct identifier", async () => {
     const durable = stubDurableOriginals();
     const randomId = "e171bcbf-898a-49d2-a5a5-abc123456789";
     vi.stubGlobal("crypto", { randomUUID: () => randomId });
     const workspace = empty();
     const file = new File(["synthetic original bytes"], "Local IRS Form.pdf", { type: "application/pdf" });
-    const persisted = await ingestHostedDocumentFiles(workspace, [file], [file], async (next) => {
+    const persisted = await ingestHostedDocumentFiles(workspace, [file], [file], browserCacheScope, async (next) => {
       return (await savePersistedWorkspace({ deploymentMode: "hosted", workspace: next, fetchFn: fetchShell() })).workspace;
     });
     const documentId = first(persisted.documents).id;

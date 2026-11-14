@@ -57,7 +57,8 @@ function shellFetch(shell?: ReturnWorkspaceRecord) {
   return vi.fn<typeof fetch>().mockImplementation(async (_url, init) => {
     const sent = init?.body ? (JSON.parse(String(init.body)) as { workspace: ReturnWorkspaceRecord }).workspace : shell;
     return Response.json({ availability: "ready", ownerScope: { ownerId: "synthetic-owner", ownerLabel: null,
-      scopeKey: "hosted-owner:synthetic-owner" }, workspace: sent, workspaces: sent ? [sent] : [] });
+      scopeKey: "hosted-owner:synthetic-owner" }, workspace: sent, workspaces: sent ? [sent] : [] },
+    { headers: { etag: '"e25a0128-e053-426a-9df4-05587acc61d3"' } });
   });
 }
 function deny(workspace: ReturnWorkspaceRecord) {
@@ -246,9 +247,12 @@ describe("hosted document opaque identities", () => {
     const sent = String(required(first(fetchFn.mock.calls)[1]).body);
     expect(sent).not.toContain(privateName); expect(sent).not.toContain(firstFact.answerText);
     expect(sent).toContain(expected.filename); expect(result.workspace).toBe(workspace); expect(JSON.stringify(workspace)).toBe(before);
-    const stored = JSON.parse(required(local.getItem(WORKSPACE_STORAGE_KEY))) as { workspaces: Record<string, ReturnWorkspaceRecord> };
-    expect(first(required(stored.workspaces[wid]).documents).id).toBe(rawId);
-    expect(required(stored.workspaces[wid]).seededReturn.facts).toEqual(workspace.seededReturn.facts);
+    expect(local.getItem(WORKSPACE_STORAGE_KEY)).toBeNull();
+    const reloaded = await loadPersistedWorkspace({ deploymentMode: "hosted", browserStorage: local, workspaceId: wid,
+      fetchFn: shellFetch(sanitizeWorkspaceForHostedStorage(workspace)) });
+    expect(reloaded.localMirrorMatched).toBe(true);
+    expect(first(required(reloaded.workspace).documents).id).toBe(rawId);
+    expect(required(reloaded.workspace).seededReturn.facts).toEqual(workspace.seededReturn.facts);
   });
   it("P13 bare SSN document id still rejects with generic non-echoing error", () => { const workspace = rawWorkspace(); first(workspace.documents).id = "123-45-6789"; deny(workspace); });
   it("P14 invalid non-factory ID characters still reject", () => { const workspace = rawWorkspace(); first(workspace.documents).id = "unmatched private/name.pdf"; deny(workspace); });
@@ -399,12 +403,14 @@ describe("hosted document opaque identities", () => {
     expect(first(required(result.workspace).documents).id).toBe(expected.filename);
     await assertFile(await cache.getCachedWorkspaceDocumentFile(wid, first(required(result.workspace).documents).id));
     expect(local.getItem(WORKSPACE_STORAGE_KEY)).toBeNull(); });
-  it("C13 local workspace present/newer continues to win and retain all original IDs", async () => { const workspace = rawWorkspace(); const local = localStorageFixture();
+  it("C13 unbound legacy workspace remains local while hosted reads keep the owner-scoped shell", async () => { const workspace = rawWorkspace(); const local = localStorageFixture();
     const localBaseline = saveWorkspaceSnapshot(local, workspace); const beforeLoad = local.getItem(WORKSPACE_STORAGE_KEY);
     expect(first(localBaseline.documents)).toMatchObject({ id: rawId, name: privateName, size: 100, blobStorageKey: null });
     const shell = sanitizeWorkspaceForHostedStorage(workspace);
     const result = await loadPersistedWorkspace({ deploymentMode: "hosted", workspaceId: wid, browserStorage: local, fetchFn: shellFetch(shell) });
-    expect(first(required(result.workspace).documents).id).toBe(rawId); expect(getWorkspace(local, wid)?.documents).toEqual(localBaseline.documents);
+    expect(first(required(result.workspace).documents).id).toBe(expected.filename);
+    expect(result.localMirrorMatched).toBe(false);
+    expect(getWorkspace(local, wid)?.documents).toEqual(localBaseline.documents);
     expect(local.getItem(WORKSPACE_STORAGE_KEY)).toBe(beforeLoad); });
   it("C14 recovery original metadata/raw-ID cache roundtrip remains compatible; no migration/recapture", async () => { const workspace = rawWorkspace();
     const local = localStorageFixture(); saveWorkspaceSnapshot(local, workspace);

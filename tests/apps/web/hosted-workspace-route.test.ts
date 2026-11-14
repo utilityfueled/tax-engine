@@ -213,7 +213,7 @@ describe("hosted workspace route", () => {
         handlers.get(new Request("https://tax.example/api/hosted/workspaces/with-get?create=1"), { workspaceId: "with-get" }),
         handlers.save(new Request("https://tax.example/api/hosted/workspaces/with-post", {
           method: "POST",
-          headers: { "content-type": "application/json" },
+          headers: { "content-type": "application/json", "if-none-match": "*" },
           body: JSON.stringify({ workspace: workspace("with-post") })
         }), { workspaceId: "with-post" })
       ]);
@@ -243,7 +243,8 @@ describe("hosted workspace route", () => {
       new Request("https://tax.example/api/hosted/workspaces/saved-workspace", {
         method: "POST",
         headers: {
-          "content-type": "application/json"
+          "content-type": "application/json",
+          "if-none-match": "*"
         },
         body: JSON.stringify({
           workspace: {

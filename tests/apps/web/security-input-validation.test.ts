@@ -21,6 +21,13 @@ function jsonRequest(url: string, body: unknown, contentType = "application/json
   });
 }
 
+function workspaceSaveRequest(url: string, body: unknown, revision?: string) {
+  const request = jsonRequest(url, body);
+  if (revision === undefined) request.headers.set("if-none-match", "*");
+  else request.headers.set("if-match", JSON.stringify(revision));
+  return request;
+}
+
 function rawRequest(url: string, body: string, contentType?: string) {
   const headers: Record<string, string> = {};
   if (contentType) {
@@ -830,7 +837,6 @@ describe("security: body read timeout (slow loris protection)", () => {
     });
 
     // Override .text() to return a promise that never settles (within our short timeout)
-    const originalText = neverResolves.text.bind(neverResolves);
     Object.defineProperty(neverResolves, "text", {
       value: () => new Promise<string>(() => {
         // Intentionally never resolves
@@ -915,7 +921,7 @@ describe("security: document count limit per workspace", () => {
     }));
 
     const response = await handlers.save(
-      jsonRequest("http://localhost/api/hosted/workspaces/ws-1", {
+      workspaceSaveRequest("http://localhost/api/hosted/workspaces/ws-1", {
         workspace: {
           id: "ws-1",
           documents,
@@ -934,7 +940,7 @@ describe("security: document count limit per workspace", () => {
     const handlers = createHandlers();
 
     const response = await handlers.save(
-      jsonRequest("http://localhost/api/hosted/workspaces/ws-1", {
+      workspaceSaveRequest("http://localhost/api/hosted/workspaces/ws-1", {
         workspace: {
           id: "ws-1",
           documents: [],
@@ -978,7 +984,7 @@ describe("security: workspace count limit per user", () => {
 
     // Try to create workspace #201
     const response = await handlers.save(
-      jsonRequest("http://localhost/api/hosted/workspaces/ws-new-201", {
+      workspaceSaveRequest("http://localhost/api/hosted/workspaces/ws-new-201", {
         workspace: {
           id: "ws-new-201",
           documents: [],
@@ -1018,8 +1024,10 @@ describe("security: workspace count limit per user", () => {
     });
 
     // Updating an existing workspace should still work
+    const before = await store.getVersioned("actor-limit", "ws-existing-0");
+    if (!before) throw new Error("Expected existing synthetic return at owner capacity.");
     const response = await handlers.save(
-      jsonRequest("http://localhost/api/hosted/workspaces/ws-existing-0", {
+      workspaceSaveRequest("http://localhost/api/hosted/workspaces/ws-existing-0", {
         workspace: {
           id: "ws-existing-0",
           documents: [],
@@ -1027,7 +1035,7 @@ describe("security: workspace count limit per user", () => {
           updatedAt: NOW,
           storageMode: "hosted-postgres"
         }
-      }),
+      }, before.revision),
       { workspaceId: "ws-existing-0" }
     );
 

@@ -2695,8 +2695,10 @@ export function getNextSegmentationStep(answers: SegmentationAnswers): Segmentat
 
 export const LEGACY_GUIDED_FLOW_STORAGE_KEY = "tax-engine.guided-flow-state.v1";
 
-export function getGuidedFlowStorageKey(workspaceId: string): string {
-  return `${LEGACY_GUIDED_FLOW_STORAGE_KEY}:${workspaceId}`;
+export type GuidedFlowStorageTarget = string | { storageKey: string };
+
+export function getGuidedFlowStorageKey(target: GuidedFlowStorageTarget): string {
+  return typeof target === "string" ? `${LEGACY_GUIDED_FLOW_STORAGE_KEY}:${target}` : target.storageKey;
 }
 
 function clearLegacyGuidedFlowState(storage: Storage): void {
@@ -2707,18 +2709,18 @@ function clearLegacyGuidedFlowState(storage: Storage): void {
   }
 }
 
-export function saveGuidedFlowState(storage: Storage, workspaceId: string, state: GuidedFlowState): void {
+export function saveGuidedFlowState(storage: Storage, target: GuidedFlowStorageTarget, state: GuidedFlowState): void {
   try {
-    storage.setItem(getGuidedFlowStorageKey(workspaceId), JSON.stringify(state));
-    clearLegacyGuidedFlowState(storage);
+    storage.setItem(getGuidedFlowStorageKey(target), JSON.stringify(state));
+    if (typeof target === "string") clearLegacyGuidedFlowState(storage);
   } catch {
     // Storage full or unavailable — silently ignore
   }
 }
 
-export function loadGuidedFlowState(storage: Storage, workspaceId: string): GuidedFlowState | null {
+export function loadGuidedFlowState(storage: Storage, target: GuidedFlowStorageTarget): GuidedFlowState | null {
   try {
-    const raw = storage.getItem(getGuidedFlowStorageKey(workspaceId));
+    const raw = storage.getItem(getGuidedFlowStorageKey(target));
     if (!raw) return null;
 
     const parsed = JSON.parse(raw) as GuidedFlowState;
@@ -2766,10 +2768,10 @@ export function loadGuidedFlowState(storage: Storage, workspaceId: string): Guid
   }
 }
 
-export function clearGuidedFlowState(storage: Storage, workspaceId: string): void {
+export function clearGuidedFlowState(storage: Storage, target: GuidedFlowStorageTarget): void {
   try {
-    storage.removeItem(getGuidedFlowStorageKey(workspaceId));
-    clearLegacyGuidedFlowState(storage);
+    storage.removeItem(getGuidedFlowStorageKey(target));
+    if (typeof target === "string") clearLegacyGuidedFlowState(storage);
   } catch {
     // Silently ignore
   }

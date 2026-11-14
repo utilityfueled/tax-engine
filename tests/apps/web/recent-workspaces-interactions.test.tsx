@@ -66,7 +66,7 @@ describe("saved-return lifecycle", () => {
     mocks.list.mockRejectedValue(error); await render(mode); expect(container.textContent).toContain(message);
   });
   it("deletes only the selected return and keeps the remaining local links", async () => {
-    const keep = saved("keep", true); mocks.list.mockResolvedValue(listing([saved("remove"), keep])); mocks.delete.mockResolvedValue({ workspaces: [keep] });
+    const keep = saved("keep", true); mocks.list.mockResolvedValue(listing([saved("remove"), keep])); mocks.delete.mockResolvedValue(listing([keep]));
     await render("self-host"); await click("Delete tax return remove");
     expect(mocks.delete).toHaveBeenCalledWith({ deploymentMode: "self-host", browserStorage: localStorage, workspaceId: "remove" });
     expect(container.textContent).not.toContain("Tax Return remove"); expect(container.textContent).toContain("Tax Return keep"); expect(container.textContent).toContain("Deleted return remove");
@@ -80,9 +80,9 @@ describe("saved-return lifecycle", () => {
     expect(container.textContent).toContain("Tax Return current"); expect(container.textContent).not.toContain("stale-hosted");
   });
   it("blocks overlapping delete clicks until the current deletion settles", async () => {
-    const pending = deferred<{ workspaces: ReturnWorkspaceRecord[] }>(); mocks.list.mockResolvedValue(listing([saved("first"), saved("second")])); mocks.delete.mockReturnValue(pending.promise);
+    const pending = deferred<ReturnType<typeof listing>>(); mocks.list.mockResolvedValue(listing([saved("first"), saved("second")])); mocks.delete.mockReturnValue(pending.promise);
     await render(); await click("Delete tax return first"); expect(button("Delete tax return second").disabled).toBe(true);
     await click("Delete tax return second"); expect(mocks.delete).toHaveBeenCalledOnce();
-    await act(async () => pending.resolve({ workspaces: [saved("second")] })); expect(button("Delete tax return second").disabled).toBe(false);
+    await act(async () => pending.resolve(listing([saved("second")]))); expect(button("Delete tax return second").disabled).toBe(false);
   });
 });

@@ -27,9 +27,9 @@ function uploadForm(type='image/png'){
  f.set('file',new File([new Uint8Array([0x89,0x50,0x4e,0x47,0x0d,0x0a,0x1a,0x0a])],'synthetic.png',{type}));
  return f;
 }
-function request(method:Method){
+function request(method:Method,revision?:string){
  const url=origin+'/api/hosted/workspaces'+(method==='list'?'':'/'+id)+(method==='uploadDocument'?'/documents':'');
- if(method==='save')return new Request(url,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({workspace:workspace()})});
+ if(method==='save')return new Request(url,{method:'POST',headers:{'content-type':'application/json',...(revision?{'if-match':revision}:{'if-none-match':'*'})},body:JSON.stringify({workspace:workspace()})});
  if(method==='uploadDocument')return new Request(url,{method:'POST',body:uploadForm()});
  return new Request(url,{method:method==='delete'?'DELETE':'GET'});
 }
@@ -44,21 +44,22 @@ beforeEach(()=>{
 });
 describe('hosted workspace returned response cache policy (existing APIs, synthetic dependencies)',()=>{
  it.each(methods)('contains auth dependency failure for %s before persistence',async method=>{
-  const f=fixture();const save=vi.spyOn(f.store,'save');const upload=vi.spyOn(f.blobs,'save');
+  const f=fixture();const save=vi.spyOn(f.store,'writeVersioned');const upload=vi.spyOn(f.blobs,'save');
   mocks.actor.mockRejectedValue(new Error('PRIVATE_AUTH_DATABASE_DETAIL'));
   const response=await invoke(f.handlers,method);expect(response.status).toBe(503);
   expect(await response.json()).toEqual(unavailableBody);cache(response);
   expect(mocks.entitlement).not.toHaveBeenCalled();expect(save).not.toHaveBeenCalled();expect(upload).not.toHaveBeenCalled();
  });
  it.each(methods)('contains entitlement dependency failure for %s before persistence',async method=>{
-  const f=fixture();const save=vi.spyOn(f.store,'save');const upload=vi.spyOn(f.blobs,'save');
+  const f=fixture();const save=vi.spyOn(f.store,'writeVersioned');const upload=vi.spyOn(f.blobs,'save');
   mocks.entitlement.mockRejectedValue(new Error('PRIVATE_ENTITLEMENT_DATABASE_DETAIL'));
   const response=await invoke(f.handlers,method);expect(response.status).toBe(503);
   expect(await response.json()).toEqual(unavailableBody);cache(response);
   expect(save).not.toHaveBeenCalled();expect(upload).not.toHaveBeenCalled();
  });
  it.each(methods)('keeps successful %s responses private and uncached',async method=>{
-  const f=fixture();const response=await invoke(f.handlers,method);expect(response.status).toBe(200);
+  const f=fixture();const stored=await f.store.getVersioned(owner.ownerId,id);
+  const response=await invoke(f.handlers,method,request(method,stored ? JSON.stringify(stored.revision) : undefined));expect(response.status).toBe(200);
   const body=await response.json();expect(body.ownerScope).toEqual(owner);expect(body.availability).toBe('ready');
   if(method==='list')expect(body.workspaces).toMatchObject([{id}]);
   else if(method==='delete')expect(body).toMatchObject({workspace:null,workspaces:[]});
@@ -85,7 +86,7 @@ describe('hosted workspace returned response cache policy (existing APIs, synthe
   expect(response.headers.get('retry-after')).toBe('retry' in d?d.retry:null);cache(response);
  });
  it.each(methods.filter(method=>method!=='list'))('keeps %s invalid identifier private without persistence',async method=>{
-  const f=fixture();const get=vi.spyOn(f.store,'get');const response=await invoke(f.handlers,method,request(method),{workspaceId:'../not-a-workspace'});
+  const f=fixture();const get=vi.spyOn(f.store,'getVersioned');const response=await invoke(f.handlers,method,request(method),{workspaceId:'../not-a-workspace'});
   expect(response.status).toBe(400);expect(await response.json()).toEqual({error:'Invalid workspace identifier.'});expect(get).not.toHaveBeenCalled();cache(response);
  });
  const payloads=['save-malformed-json','save-id-mismatch','save-missing-content-type','save-declared-overlimit','save-cancelled','upload-missing-file','upload-unsupported-media','upload-declared-overlimit'] as const;
@@ -110,7 +111,7 @@ describe('hosted workspace returned response cache policy (existing APIs, synthe
  });
  it.each(['list','get','save','delete','uploadDocument'] as const)('keeps %s store failure private and generic',async method=>{
   const f=fixture();if(method==='uploadDocument')vi.spyOn(f.blobs,'save').mockImplementation(()=>{throw new Error('SYNTHETIC_PRIVATE_STORE_DETAIL');});
-  else vi.spyOn(f.store,method==='list'?'listByOwner':method).mockRejectedValue(new Error('SYNTHETIC_PRIVATE_STORE_DETAIL'));
+  else vi.spyOn(f.store,method==='list'?'listByOwner':method==='get'?'getVersioned':method==='save'?'writeVersioned':method).mockRejectedValue(new Error('SYNTHETIC_PRIVATE_STORE_DETAIL'));
   const response=await invoke(f.handlers,method);expect(response.status).toBe(503);expect(await response.json()).toEqual(unavailableBody);cache(response);
  });
 });

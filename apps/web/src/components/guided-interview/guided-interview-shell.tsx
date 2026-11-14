@@ -482,6 +482,7 @@ function SectionContent({
   analysis,
   state,
   workspace,
+  documentCacheWorkspaceId,
   onUploadDocuments,
   onStateChange,
   guidedPreview,
@@ -492,6 +493,7 @@ function SectionContent({
   analysis: GuidedRenderAnalysis;
   state: GuidedFlowState;
   workspace: ReturnWorkspaceRecord;
+  documentCacheWorkspaceId?: string | null;
   onUploadDocuments?: (files: File[]) => Promise<string>;
   onStateChange: (next: GuidedFlowState) => void;
   guidedPreview: GuidedPreviewMetrics | null;
@@ -518,6 +520,7 @@ function SectionContent({
           taxYear={state.taxYear}
           entries={entries}
           workspace={workspace}
+          documentCacheWorkspaceId={documentCacheWorkspaceId}
           onUploadDocuments={onUploadDocuments}
           combatPayElection={w2Data?.combatPayElection}
           onCombatPayElectionChange={combatPayElection =>
@@ -539,6 +542,7 @@ function SectionContent({
       return (
         <SectionSelfEmployment
           workspace={workspace}
+          documentCacheWorkspaceId={documentCacheWorkspaceId}
           flowState={state}
           necEntries={necEntries}
           manualGrossReceipts={manualGrossReceipts}
@@ -763,7 +767,7 @@ function SectionContent({
       } catch { /* Actual incomplete federal sources stay unavailable for confirmation. */ }
       return (
         <SectionStateReturn
-          currentWorkspaceId={workspace.id}
+          currentWorkspaceId={workspace.storageMode === "local-browser" ? workspace.id : undefined}
           stateCode={state.segmentation.stateCode as SupportedStateCode}
           originalInput={originalInput}
           ordinaryOriginalInput={buildGuidedPAOrdinarySourceInput(state)}
@@ -804,6 +808,7 @@ function InterviewPhase({
   guidedPreviewBlockedBy,
   onStateChange,
   workspace,
+  documentCacheWorkspaceId,
   onUploadDocuments,
   onFinish,
 }: {
@@ -813,6 +818,7 @@ function InterviewPhase({
   guidedPreviewBlockedBy: string | null;
   onStateChange: (next: GuidedFlowState) => void;
   workspace: ReturnWorkspaceRecord;
+  documentCacheWorkspaceId?: string | null;
   onUploadDocuments?: (files: File[]) => Promise<string>;
   onFinish: () => void;
 }) {
@@ -946,6 +952,7 @@ function InterviewPhase({
             sectionId={currentSection.id as InterviewSectionId}
             state={state}
             workspace={workspace}
+            documentCacheWorkspaceId={documentCacheWorkspaceId}
             onUploadDocuments={onUploadDocuments}
             onStateChange={onStateChange}
             guidedPreview={guidedPreview}
@@ -1220,6 +1227,8 @@ export function GuidedInterviewShell({
   onSyncToWorkspace,
   beforeGuidedWrite,
   resumeSectionId,
+  guidedDraft,
+  documentCacheWorkspaceId,
 }: {
   workspace: ReturnWorkspaceRecord;
   onExitGuided: () => void;
@@ -1229,20 +1238,25 @@ export function GuidedInterviewShell({
     syntheticDocuments: ReturnType<typeof buildGuidedSyntheticDocuments>,
     factAnswers: ReturnType<typeof buildGuidedFactAnswers>,
     flowState: GuidedFlowState
-  ) => void;
+  ) => void | Promise<void>;
   beforeGuidedWrite?: () => void;
   resumeSectionId?: InterviewSectionId | null;
+  guidedDraft?: import("@/lib/guided-interview-flow").GuidedFlowStorageTarget | null;
+  documentCacheWorkspaceId?: string | null;
 }) {
   const [saveError, setSaveError] = useState<string | null>(null);
+  const draftTarget = guidedDraft === undefined ? workspace.id : guidedDraft;
   const [flowState, setFlowState] = useState<GuidedFlowState>(() => {
     const browserStorage = getBrowserStorage();
-    return browserStorage ? loadGuidedFlowState(browserStorage, workspace.id) ?? { ...initialFlowState, taxYear: workspace.returnSummary.targetTaxYear } : { ...initialFlowState, taxYear: workspace.returnSummary.targetTaxYear };
+    const stored = browserStorage && draftTarget ? loadGuidedFlowState(browserStorage, draftTarget) : null;
+    return stored ?? { ...initialFlowState, taxYear: workspace.returnSummary.targetTaxYear };
   });
 
   useEffect(() => {
     const browserStorage = getBrowserStorage();
-    setFlowState(browserStorage ? loadGuidedFlowState(browserStorage, workspace.id) ?? { ...initialFlowState, taxYear: workspace.returnSummary.targetTaxYear } : { ...initialFlowState, taxYear: workspace.returnSummary.targetTaxYear });
-  }, [workspace.id, workspace.returnSummary.targetTaxYear]);
+    const stored = browserStorage && draftTarget ? loadGuidedFlowState(browserStorage, draftTarget) : null;
+    setFlowState(stored ?? { ...initialFlowState, taxYear: workspace.returnSummary.targetTaxYear });
+  }, [draftTarget, workspace.returnSummary.targetTaxYear]);
 
   useEffect(() => {
     if (!resumeSectionId) {
@@ -1264,11 +1278,11 @@ export function GuidedInterviewShell({
     setFlowState(next);
     const browserStorage = getBrowserStorage();
 
-    if (browserStorage) {
-      saveGuidedFlowState(browserStorage, workspace.id, next);
+    if (browserStorage && draftTarget) {
+      saveGuidedFlowState(browserStorage, draftTarget, next);
     }
     return true;
-  }, [beforeGuidedWrite, workspace.id]);
+  }, [beforeGuidedWrite, draftTarget]);
 
   // Compute live preview from the guided interview data. This runs the
   // tax engine on every state change so the refund ticker updates in
@@ -1297,19 +1311,19 @@ export function GuidedInterviewShell({
     setSaveError(null);
     const browserStorage = getBrowserStorage();
 
-    if (browserStorage) {
-      clearGuidedFlowState(browserStorage, workspace.id);
+    if (browserStorage && draftTarget) {
+      clearGuidedFlowState(browserStorage, draftTarget);
     }
     setFlowState({ ...initialFlowState, taxYear: workspace.returnSummary.targetTaxYear });
   }
 
-  const syncAndExit = useCallback((nextFlowState: GuidedFlowState) => {
+  const syncAndExit = useCallback(async (nextFlowState: GuidedFlowState) => {
     if (nextFlowState !== flowState && !handleFlowStateChange(nextFlowState)) return;
     try {
       if (onSyncToWorkspace) {
         const syntheticDocs = buildGuidedSyntheticDocuments(nextFlowState);
         const factAnswers = buildGuidedFactAnswers(nextFlowState);
-        onSyncToWorkspace(syntheticDocs, factAnswers, nextFlowState);
+        await onSyncToWorkspace(syntheticDocs, factAnswers, nextFlowState);
       } else {
         onExitGuided();
       }
@@ -1371,6 +1385,7 @@ export function GuidedInterviewShell({
           guidedPreviewBlockedBy={guidedPreviewBlockedBy}
           onStateChange={handleFlowStateChange}
           workspace={workspace}
+          documentCacheWorkspaceId={documentCacheWorkspaceId}
           onUploadDocuments={onUploadDocuments}
           onFinish={handleFinishReview}
         />

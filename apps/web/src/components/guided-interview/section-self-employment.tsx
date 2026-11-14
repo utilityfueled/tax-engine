@@ -222,6 +222,7 @@ function isActionableBusinessSuggestion(
 
 export function SectionSelfEmployment({
   workspace,
+  documentCacheWorkspaceId,
   flowState,
   necEntries,
   manualGrossReceipts,
@@ -233,6 +234,7 @@ export function SectionSelfEmployment({
   onSectionChange,
 }: {
   workspace: ReturnWorkspaceRecord;
+  documentCacheWorkspaceId?: string | null;
   flowState?:GuidedFlowState;
   necEntries: NecEntryData[];
   manualGrossReceipts: string;
@@ -251,6 +253,9 @@ export function SectionSelfEmployment({
     businessFacts?: BusinessSourceData;
   }) => void;
 }) {
+  const cacheWorkspaceId = documentCacheWorkspaceId === undefined
+    ? (workspace.storageMode === "local-browser" ? workspace.id : null)
+    : documentCacheWorkspaceId;
   const currentEntries = necEntries.length > 0 ? necEntries : [emptyNecEntry];
   const currentExpenses = expenses ?? emptyScheduleCExpenses;
   const currentAnalyses = bankStatementAnalyses ?? [];
@@ -262,12 +267,18 @@ export function SectionSelfEmployment({
   const [analysisMessage, setAnalysisMessage] = useState<string | null>(null);
   const [incomeAnalysisPending, setIncomeAnalysisPending] = useState(false);
   const [incomeAnalysisMessage, setIncomeAnalysisMessage] = useState<string | null>(null);
-  const [aiReviewAllowed, setAiReviewAllowed] = useState(false);
-  const canReviewBusinessDocuments = aiReviewAllowed && !hasWageringLedger;
-  const reviewJobs = useRef<Partial<Record<"income" | "expense", { controller: AbortController; workspaceId: string }>>>({});
-  const latestSection = useRef({ workspaceId: workspace.id, aiReviewAllowed: canReviewBusinessDocuments, onSectionChange, value: { necEntries: currentEntries, manualGrossReceipts, expenses: currentExpenses, bankStatementAnalyses: currentAnalyses, incomeDocumentAnalyses: currentIncomeAnalyses, qbiMateriallyParticipated, businessFacts } });
-  latestSection.current = { workspaceId: workspace.id, aiReviewAllowed: canReviewBusinessDocuments, onSectionChange, value: { necEntries: currentEntries, manualGrossReceipts, expenses: currentExpenses, bankStatementAnalyses: currentAnalyses, incomeDocumentAnalyses: currentIncomeAnalyses, qbiMateriallyParticipated, businessFacts } };
-  const [cachedAttachedIncomeDocumentIds, setCachedAttachedIncomeDocumentIds] = useState<Set<string>>(new Set());
+  const [aiReviewScope, setAiReviewScope] = useState<{ workspaceId: string; cacheWorkspaceId: string | null } | null>(null);
+  const matchesReviewScope = aiReviewScope?.workspaceId === workspace.id && aiReviewScope.cacheWorkspaceId === cacheWorkspaceId;
+  const canReviewBusinessDocuments = matchesReviewScope && !hasWageringLedger;
+  type ReviewJob = { controller: AbortController; workspaceId: string; cacheWorkspaceId: string | null };
+  const reviewJobs = useRef<Partial<Record<"income" | "expense", ReviewJob>>>({});
+  const currentSection = {
+    workspaceId: workspace.id, cacheWorkspaceId, aiReviewAllowed: canReviewBusinessDocuments, onSectionChange,
+    value: { necEntries: currentEntries, manualGrossReceipts, expenses: currentExpenses, bankStatementAnalyses: currentAnalyses, incomeDocumentAnalyses: currentIncomeAnalyses, qbiMateriallyParticipated, businessFacts },
+  };
+  const latestSection = useRef(currentSection);
+  latestSection.current = currentSection;
+  const [cachedIncomeDocuments, setCachedIncomeDocuments] = useState<{ cacheWorkspaceId: string; ids: Set<string> }>();
   const [selectedAttachedIncomeDocumentIds, setSelectedAttachedIncomeDocumentIds] = useState<string[]>(
     [],
   );
@@ -282,12 +293,14 @@ export function SectionSelfEmployment({
     [workspace.documents],
   );
   const attachedIncomeReviewDocuments = useMemo(
-    () => filterAttachedIncomeReviewDocuments(workspace.documents, cachedAttachedIncomeDocumentIds),
-    [workspace.documents, cachedAttachedIncomeDocumentIds],
+    () => cachedIncomeDocuments?.cacheWorkspaceId === cacheWorkspaceId
+      ? filterAttachedIncomeReviewDocuments(workspace.documents, cachedIncomeDocuments.ids)
+      : [],
+    [workspace.documents, cacheWorkspaceId, cachedIncomeDocuments],
   );
 
   useEffect(() => {
-    setAiReviewAllowed(false);
+    setAiReviewScope(null);
     setAnalysisPending(false);
     setIncomeAnalysisPending(false);
     setAnalysisMessage(null);
@@ -299,7 +312,7 @@ export function SectionSelfEmployment({
       reviewJobs.current.expense?.controller.abort();
       reviewJobs.current = {};
     };
-  }, [workspace.id]);
+  }, [cacheWorkspaceId, workspace.id]);
 
   function cancelReview(kind: "income" | "expense") {
     reviewJobs.current[kind]?.controller.abort();
@@ -310,35 +323,39 @@ export function SectionSelfEmployment({
   function startReview(kind: "income" | "expense") {
     if (!latestSection.current.aiReviewAllowed) return undefined;
     reviewJobs.current[kind]?.controller.abort();
-    const job = { controller: new AbortController(), workspaceId: workspace.id };
+    const job = { controller: new AbortController(), workspaceId: workspace.id, cacheWorkspaceId };
     reviewJobs.current[kind] = job;
     return job;
   }
-  function ownsReview(kind: "income" | "expense", job: { controller: AbortController; workspaceId: string }) {
-    return !job.controller.signal.aborted && reviewJobs.current[kind] === job && latestSection.current.workspaceId === job.workspaceId && latestSection.current.aiReviewAllowed;
+  function ownsReview(kind: "income" | "expense", job: ReviewJob) {
+    const current = latestSection.current;
+    return !job.controller.signal.aborted && reviewJobs.current[kind] === job
+      && current.workspaceId === job.workspaceId && current.cacheWorkspaceId === job.cacheWorkspaceId
+      && current.aiReviewAllowed;
   }
 
   useEffect(() => {
+    if (cacheWorkspaceId === null) return;
     let cancelled = false;
 
     (async () => {
       const nextIds = new Set<string>();
 
       await Promise.all(attachedIncomeReviewCandidates.map(async (document) => {
-        if (await hasCachedWorkspaceDocumentFile(workspace.id, document.id)) {
+        if (await hasCachedWorkspaceDocumentFile(cacheWorkspaceId, document.id)) {
           nextIds.add(document.id);
         }
       }));
 
       if (!cancelled) {
-        setCachedAttachedIncomeDocumentIds(nextIds);
+        setCachedIncomeDocuments({ cacheWorkspaceId, ids: nextIds });
       }
     })();
 
     return () => {
       cancelled = true;
     };
-  }, [attachedIncomeReviewCandidates, workspace.id]);
+  }, [attachedIncomeReviewCandidates, cacheWorkspaceId]);
 
   useEffect(() => {
     setSelectedAttachedIncomeDocumentIds((currentIds) => {
@@ -507,7 +524,7 @@ export function SectionSelfEmployment({
   }
 
   async function reviewSelectedAttachedIncomeDocuments() {
-    if (!latestSection.current.aiReviewAllowed) return;
+    if (cacheWorkspaceId === null || !latestSection.current.aiReviewAllowed) return;
     const selectedDocuments = attachedIncomeReviewDocuments.filter((document) =>
       selectedAttachedIncomeDocumentIds.includes(document.id),
     );
@@ -528,7 +545,7 @@ export function SectionSelfEmployment({
       const missingDocumentLabels: string[] = [];
 
       for (const document of selectedDocuments) {
-        const file = await getCachedWorkspaceDocumentFile(workspace.id, document.id);
+        const file = await getCachedWorkspaceDocumentFile(cacheWorkspaceId, document.id);
         if (!ownsReview("income", job)) return;
         if (file) {
           files.push(file);
@@ -698,7 +715,7 @@ export function SectionSelfEmployment({
         <label className="guided-field">
           <span><input type="checkbox" aria-label="Allow AI review of selected business documents" checked={canReviewBusinessDocuments} disabled={hasWageringLedger} onChange={(event) => {
             const allowed = event.target.checked;
-            setAiReviewAllowed(allowed);
+            setAiReviewScope(allowed ? { workspaceId: workspace.id, cacheWorkspaceId } : null);
             latestSection.current.aiReviewAllowed = allowed;
             if (!allowed) { cancelReview("income"); cancelReview("expense"); }
           }} /> Allow AI review of selected business documents</span>
@@ -989,7 +1006,7 @@ export function SectionSelfEmployment({
           error={hasWageringLedger && flowState ? validateSection(flowState, "income-self-employment").fieldErrors?.professionalWagering : undefined}
           onChange={professionalWagering => {
             if (professionalWagering && !hasWageringLedger) {
-              setAiReviewAllowed(false);
+              setAiReviewScope(null);
               latestSection.current.aiReviewAllowed = false;
               cancelReview("income");
               cancelReview("expense");

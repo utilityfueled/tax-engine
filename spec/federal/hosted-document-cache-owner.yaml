@@ -1,0 +1,22 @@
+form: "Hosted browser document originals"
+fullName: "Owner-scoped browser access to hosted document originals"
+taxYear: 2026
+notes: |
+  Store new hosted originals under a browser cache namespace derived from the
+  authenticated owner and workspace. The hosted reconciliation alias is still
+  derived independently from the public workspace ID and the original document
+  ID. Raw file bytes and the private cache namespace remain in the browser.
+  Historical workspace-only originals have no verified owner. Hosted review
+  does not read, migrate or delete those old rows. Re-attaching a document in
+  the verified hosted workspace makes its new original available there. The
+  existing local and self-hosted review path retains its workspace namespace.
+lines:
+  - line: "owner-isolated-w2-original"
+    formula: "W-2 attachment inventory and original reads use only the authenticated owner's browser cache namespace. An omitted or disabled hosted cache does not read a workspace-only row."
+    testRef: "tests/apps/web/hosted-guided-document-cache.test.tsx::isolates W-2 originals between hosted owners while preserving explicit local review"
+  - line: "owner-isolated-business-original"
+    formula: "The attached business-document inventory and review use only the active owner's namespace. An omitted or disabled hosted cache skips reads. Changing the owner invalidates pending work before a late original lookup can dispatch to the analysis provider."
+    testRef: "tests/apps/web/hosted-guided-document-cache.test.tsx::drops an in-flight business original when the hosted owner changes"
+  - line: "owner-and-alias-independence"
+    formula: "Encode the owner and workspace as distinct tuple components. Preserve the reconciliation alias across browser cache namespaces."
+    testRef: "tests/apps/web/hosted-guided-document-cache.test.tsx::keeps owner and workspace keys distinct from hosted document aliases"

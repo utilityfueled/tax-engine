@@ -2,10 +2,11 @@ import { randomUUID } from "node:crypto";
 import { createRequire } from "node:module";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { ReturnWorkspaceRecord } from "../../../packages/contracts/src/index";
+import { createHostedWorkspaceRouteHandlers } from "../../../apps/web/src/lib/hosted-workspace-route";
 import { createHostedPostgresWorkspaceStoreFactory } from "../../../apps/web/src/lib/hosted-postgres-workspace-store";
 import { ensureHostedAppSchema, getHostedServerDatabase } from "../../../apps/web/src/lib/hosted-server-db";
-import { createWorkspaceRecord } from "../../../apps/web/src/lib/workspace-storage";
-import { getHostedPersistenceRuntimeConfig } from "../../../apps/web/src/lib/workspace-persistence";
+import { createWorkspaceRecord, ingestFilesIntoWorkspace } from "../../../apps/web/src/lib/workspace-storage";
+import { createInMemoryHostedDocumentBlobStore, getHostedPersistenceRuntimeConfig, loadPersistedWorkspace, savePersistedWorkspace } from "../../../apps/web/src/lib/workspace-persistence";
 
 // Never reuse DATABASE_URL. A separate schema isolates this suite from the
 // concurrently running ledger tests in the explicitly disposable database.
@@ -69,6 +70,61 @@ describe.skipIf(!testDatabaseUrl)("workspace privacy and isolation against dispo
     await store.delete(owner.ownerId, "shared-id");
     expect(await store.get(owner.ownerId, "shared-id")).toBeNull();
     expect((await store.get("synthetic-owner-b", "shared-id"))?.updatedAt).toBe(other.updatedAt);
+  });
+
+  it("serializes same-revision sibling updates and rejects deleted and foreign revisions in actual PostgreSQL", async () => {
+    const workspaceId = "versioned-cross-tab";
+    const original = await store.writeVersioned(owner.ownerId, workspace(workspaceId), { kind: "create" });
+    const other = await store.writeVersioned("other-owner", workspace(workspaceId), { kind: "create" });
+    const first = { ...workspace(workspaceId), documents: [] };
+    const second = { ...workspace(workspaceId), returnSummary: { ...first.returnSummary, targetTaxYear: 2026 } };
+    const expected = { kind: "update", revision: original.revision } as const;
+    const results = await Promise.allSettled([
+      store.writeVersioned(owner.ownerId, first, expected),
+      store.writeVersioned(owner.ownerId, second, expected)
+    ]);
+    const winner = results.find(result => result.status === "fulfilled");
+    const stale = results.find(result => result.status === "rejected");
+    expect(winner?.value.revision).not.toBe(original.revision);
+    expect(stale?.reason).toHaveProperty("name", "HostedWorkspaceWriteRejectedError");
+    expect(await store.getVersioned(owner.ownerId, workspaceId)).toEqual(winner?.value);
+    await expect(store.writeVersioned(owner.ownerId, first, { kind: "update", revision: other.revision })).rejects.toMatchObject({ name: "HostedWorkspaceWriteRejectedError" });
+    await expect(store.delete(owner.ownerId, workspaceId, original.revision)).rejects.toMatchObject({ name: "HostedWorkspaceWriteRejectedError" });
+    const current = await store.getVersioned(owner.ownerId, workspaceId);
+    if (!current) throw new Error("Missing expected revision in synthetic test");
+    await store.delete(owner.ownerId, workspaceId, current.revision);
+    await expect(store.writeVersioned(owner.ownerId, first, { kind: "update", revision: current.revision })).rejects.toMatchObject({ name: "HostedWorkspaceWriteRejectedError" });
+    expect(await store.getVersioned(owner.ownerId, workspaceId)).toBeNull();
+    expect(await store.getVersioned("other-owner", workspaceId)).toEqual(other);
+  });
+
+  it("reopens the authenticated browser original across an actual JSONB read", async () => {
+    const routeEnv = { ...env, NODE_ENV: "development", TAX_ENGINE_HOSTED_PREVIEW_ACTOR_ID: owner.ownerId };
+    const workspaceId = "private-mirror-jsonb";
+    const context = { workspaceId };
+    const handlers = createHostedWorkspaceRouteHandlers({ env: routeEnv, hostedStore: store,
+      hostedDocumentBlobStore: createInMemoryHostedDocumentBlobStore() });
+    const fetchFn: typeof fetch = (input, init) => {
+      const request = new Request(new URL(String(input), "https://tax.example"), init);
+      return request.method === "POST" ? handlers.save(request, context) : handlers.get(request, context);
+    };
+    const values = new Map<string, string>();
+    const browserStorage: Storage = { length: 0, getItem: key => values.get(key) ?? null,
+      setItem: (key, value) => { values.set(key, value); }, removeItem: key => { values.delete(key); },
+      key: index => [...values.keys()][index] ?? null, clear: () => values.clear() };
+    const options = { deploymentMode: "hosted" as const, fetchFn, browserStorage, workspaceId };
+    const initial = await loadPersistedWorkspace({ ...options, createIfMissing: true });
+    if (!initial.workspace || !initial.workspaceRevision) throw new Error("Expected a newly created hosted row");
+    const label = "Private Synthetic JSONB.pdf";
+    const local = ingestFilesIntoWorkspace(initial.workspace, [{ name: label, size: 12 }]);
+    const saved = await savePersistedWorkspace({ ...options, workspace: local, workspaceRevision: initial.workspaceRevision, ownerScopeKey: owner.scopeKey });
+    const direct = await loadPersistedWorkspace({ ...options, browserStorage: undefined });
+    expect(direct.workspace?.documents[0]?.name).toBe("Document 1");
+    const reopened = await loadPersistedWorkspace(options);
+    expect(saved.localMirrorSaved).toBe(true);
+    expect(reopened.localMirrorMatched).toBe(true);
+    expect(reopened.workspaceRevision).toBe(saved.workspaceRevision);
+    expect(reopened.workspace?.documents[0]?.name).toBe(label);
   });
 
   it("enforces the hard owner quota across independent connections and preserves updates at capacity", async () => {

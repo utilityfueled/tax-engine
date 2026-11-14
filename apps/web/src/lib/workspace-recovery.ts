@@ -1,5 +1,6 @@
 import { z } from "zod";
-import { getGuidedFlowStorageKey } from "./guided-interview-flow";
+import type { ReturnWorkspaceRecord } from "@tax-engine/contracts";
+import { getGuidedFlowStorageKey, type GuidedFlowStorageTarget } from "./guided-interview-flow";
 import { WORKSPACE_STORAGE_KEY, invalidateWorkspaceStorageCache } from "./workspace-storage";
 import { getLocalRecoveryStorageKey } from "./workspace-local-recovery";
 import {
@@ -52,6 +53,12 @@ const browserDocuments: RecoveryDocumentStore = {
   remove: deleteCachedWorkspaceDocumentFiles,
 };
 type RecoveryOptions = { signal?: AbortSignal; documents?: RecoveryDocumentStore };
+type HostedRecoverySnapshot = {
+  workspace: ReturnWorkspaceRecord;
+  draftId: GuidedFlowStorageTarget;
+  guidedMode: string | null;
+  documentCacheWorkspaceId: string;
+};
 
 function aborted(signal?: AbortSignal) { signal?.throwIfAborted(); }
 function assertPassword(password: string) {
@@ -99,18 +106,23 @@ function validateGuided(raw: string | null) {
 function guidedModeKey(id: string) { return `tax-engine:guided-mode:${id}`; }
 
 export async function exportWorkspaceRecovery(
-  storage: Storage, workspaceId: string, password: string, options: RecoveryOptions = {},
+  storage: Storage, workspaceId: string, password: string,
+  options: RecoveryOptions & { hostedSnapshot?: HostedRecoverySnapshot } = {},
 ): Promise<Blob> {
   assertPassword(password);
   aborted(options.signal);
-  const workspace = workspaceSchema.parse(readStorage(storage).workspaces[workspaceId]);
+  const hosted = options.hostedSnapshot;
+  const workspace = workspaceSchema.parse(hosted ? hosted.workspace : readStorage(storage).workspaces[workspaceId]);
   if (workspace.id !== workspaceId) throw new Error("The stored return identity does not match.");
-  const guidedFlowRaw = storage.getItem(getGuidedFlowStorageKey(workspaceId));
+  const guidedFlowRaw = storage.getItem(getGuidedFlowStorageKey(hosted ? hosted.draftId : workspaceId));
   validateGuided(guidedFlowRaw);
-  if (guidedFlowRaw === null && storage.getItem("tax-engine.guided-flow-state.v1") !== null) {
+  if (hosted && guidedFlowRaw === null && (workspace.guidedCompletion != null || workspace.documents.some(document => document.id.startsWith("guided:")))) {
+    throw new Error("The private guided answers are missing on this browser. Use the device where you entered them to make a complete backup.");
+  }
+  if (!hosted && guidedFlowRaw === null && storage.getItem("tax-engine.guided-flow-state.v1") !== null) {
     throw new Error("Legacy guided answers are not linked to this return. Resolve them before creating a complete backup.");
   }
-  const guidedMode = z.enum(["true", "false"]).nullable().parse(storage.getItem(guidedModeKey(workspaceId)));
+  const guidedMode = z.enum(["true", "false"]).nullable().parse(hosted ? hosted.guidedMode : storage.getItem(guidedModeKey(workspaceId)));
   const documents = options.documents ?? browserDocuments;
   const files: z.infer<typeof payloadSchema>["files"] = [];
   const seen = new Set<string>();
@@ -120,7 +132,7 @@ export async function exportWorkspaceRecovery(
     seen.add(document.id);
     // Guided records describe answers. They are not uploaded original files.
     if (document.id.startsWith("guided:")) continue;
-    const file = await documents.read(workspaceId, document.id);
+    const file = await documents.read(hosted?.documentCacheWorkspaceId ?? workspaceId, document.id);
     aborted(options.signal);
     if (!file) throw new Error(`Original file is missing: ${document.name}. Reattach it before making a complete backup.`);
     if (file.size !== document.size) throw new Error(`Original file size does not match: ${document.name}.`);

@@ -29,6 +29,10 @@ import {
 } from "./workspace-persistence";
 import { createHostedPostgresWorkspaceStoreFactory } from "./hosted-postgres-workspace-store";
 import { createWorkspaceRecord } from "./workspace-storage";
+import {
+  HostedWorkspaceWriteRejectedError, hostedWorkspaceConflictCode, hostedWorkspacePreconditionCode,
+  readHostedWorkspaceRevision, type HostedWorkspaceWritePrecondition,
+} from "./hosted-workspace-revision";
 
 type HostedWorkspaceRouteEnvironment = Record<string, string | undefined>;
 
@@ -119,6 +123,25 @@ function buildBadRequestResponse(message: string) {
   }, {
     status: 400
   });
+}
+
+function buildWriteRejectedResponse(status: 412 | 428) {
+  return NextResponse.json({
+    error: new HostedWorkspaceWriteRejectedError().message,
+    code: status === 412 ? hostedWorkspaceConflictCode : hostedWorkspacePreconditionCode,
+  }, { status });
+}
+
+function readWritePrecondition(request: Request): HostedWorkspaceWritePrecondition | Response {
+  const match = request.headers.has("If-Match");
+  const noneMatch = request.headers.has("If-None-Match");
+  if (!match && !noneMatch) return buildWriteRejectedResponse(428);
+  if (match && !noneMatch) {
+    const revision = readHostedWorkspaceRevision(request.headers, "If-Match");
+    if (revision) return { kind: "update", revision };
+  }
+  if (!match && request.headers.get("If-None-Match") === "*") return { kind: "create" };
+  return buildBadRequestResponse("Use a valid workspace revision for a snapshot update or an explicit create precondition.");
 }
 
 const SAFE_PERSISTENCE_ERROR_PREFIXES = [
@@ -642,24 +665,28 @@ export function createHostedWorkspaceRouteHandlers(
 
       try {
         const requestUrl = new URL(request.url);
-        let workspace = await result.adapter.getWorkspace(context.workspaceId);
+        const { getVersionedWorkspace, writeVersionedWorkspace } = result.adapter;
+        if (!getVersionedWorkspace || !writeVersionedWorkspace) throw new Error("Hosted workspace revision support is unavailable.");
+        let stored = await getVersionedWorkspace(context.workspaceId);
 
-        if (!workspace && requestUrl.searchParams.get("create") === "1") {
-          workspace = await result.adapter.saveWorkspace(
-            createWorkspaceRecord(context.workspaceId, {
-              now: dependencies.now?.() ?? new Date().toISOString(),
-              storageMode: "hosted-postgres",
-              createdMessage: "Return created."
-            })
-          );
+        if (!stored && requestUrl.searchParams.get("create") === "1") {
+          try {
+            stored = await writeVersionedWorkspace(createWorkspaceRecord(context.workspaceId, {
+              now: dependencies.now?.() ?? new Date().toISOString(), storageMode: "hosted-postgres", createdMessage: "Return created."
+            }), { kind: "create" });
+          } catch (error) {
+            if (!(error instanceof HostedWorkspaceWriteRejectedError)) throw error;
+            stored = await getVersionedWorkspace(context.workspaceId);
+            if (!stored) return buildWriteRejectedResponse(412);
+          }
         }
 
         return NextResponse.json({
           availability: result.adapter.availability,
           ownerScope: result.adapter.ownerScope,
-          workspace,
+          workspace: stored?.workspace ?? null,
           workspaces: []
-        });
+        }, stored ? { headers: { ETag: `"${stored.revision}"` } } : undefined);
       } catch (error) {
         if (error instanceof HostedWorkspaceLimitError) return buildBadRequestResponse(error.message);
         return buildPersistenceUnavailableResponse(error);
@@ -693,10 +720,23 @@ export function createHostedWorkspaceRouteHandlers(
         return payload.response;
       }
 
+      const precondition = readWritePrecondition(request);
+      if (precondition instanceof Response) return precondition;
+
       try {
         const ownerScope = requireOwnerScope(result.adapter.ownerScope);
         const documentStore = result.resolveHostedDocumentBlobStore();
-        const workspace = await result.adapter.saveWorkspace(payload.workspace);
+        const { writeVersionedWorkspace } = result.adapter;
+        if (!writeVersionedWorkspace) throw new Error("Hosted workspace revision support is unavailable.");
+        let stored;
+        try {
+          stored = await writeVersionedWorkspace(payload.workspace, precondition);
+        } catch (error) {
+          if (error instanceof HostedWorkspaceWriteRejectedError) return buildWriteRejectedResponse(412);
+          if (error instanceof HostedWorkspaceLimitError) return buildBadRequestResponse(error.message);
+          throw error;
+        }
+        const { workspace, revision } = stored;
         documentStore.reconcileWorkspace(
           ownerScope.ownerId,
           context.workspaceId,
@@ -712,9 +752,8 @@ export function createHostedWorkspaceRouteHandlers(
           ownerScope: result.adapter.ownerScope,
           workspace,
           workspaces: []
-        });
+        }, { headers: { ETag: `"${revision}"` } });
       } catch (error) {
-        if (error instanceof HostedWorkspaceLimitError) return buildBadRequestResponse(error.message);
         return buildPersistenceUnavailableResponse(error);
       }
     },
@@ -738,9 +777,22 @@ export function createHostedWorkspaceRouteHandlers(
         return result.response;
       }
 
+      const expectedRevision = readHostedWorkspaceRevision(request.headers, "If-Match");
+      if ((request.headers.has("If-Match") && !expectedRevision) || request.headers.has("If-None-Match")) {
+        return buildBadRequestResponse("Invalid workspace revision precondition.");
+      }
+
       try {
         const ownerScope = requireOwnerScope(result.adapter.ownerScope);
-        result.resolveHostedDocumentBlobStore().deleteWorkspace(
+        const documentStore = result.resolveHostedDocumentBlobStore();
+        let workspaces;
+        try {
+          workspaces = await result.adapter.deleteWorkspace(context.workspaceId, expectedRevision ?? undefined);
+        } catch (error) {
+          if (error instanceof HostedWorkspaceWriteRejectedError) return buildWriteRejectedResponse(412);
+          throw error;
+        }
+        documentStore.deleteWorkspace(
           ownerScope.ownerId,
           context.workspaceId
         );
@@ -749,7 +801,7 @@ export function createHostedWorkspaceRouteHandlers(
           availability: result.adapter.availability,
           ownerScope: result.adapter.ownerScope,
           workspace: null,
-          workspaces: await result.adapter.deleteWorkspace(context.workspaceId)
+          workspaces
         });
       } catch (error) {
         return buildPersistenceUnavailableResponse(error);

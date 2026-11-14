@@ -33,6 +33,7 @@ import {
   type GuidedFlowState
 } from "./guided-interview-flow";
 import { toHostedDocumentId } from "./hosted-document-identity";
+import { HostedWorkspaceWriteRejectedError } from "./hosted-workspace-revision";
 import { reconcileWorkspaceGuidedState } from "./workspace-guided-state";
 import { getLocalRecoveryStorageKey } from "./workspace-local-recovery";
 import { deleteCachedWorkspaceDocumentFiles, storeNewWorkspaceDocumentFiles } from "./workspace-document-file-cache";
@@ -1362,7 +1363,7 @@ export function ingestFiles(storage: Storage, workspaceId: string, files: Upload
 }
 
 async function storeWorkspaceUploadOriginals(workspace: ReturnWorkspaceRecord, prepared: UploadableFile[], files: File[],
-  originalMode: "self-host" | "hosted") {
+  originalMode: "self-host" | "hosted", cacheWorkspaceId: string) {
   const failure = "Could not save the uploaded document. Please try again.";
   if (prepared.length !== files.length || files.length === 0 || files.some((file, index) => (
     file.name !== prepared[index]?.name || file.size !== prepared[index]?.size
@@ -1373,16 +1374,26 @@ async function storeWorkspaceUploadOriginals(workspace: ReturnWorkspaceRecord, p
     if (!file) throw new Error(failure);
     return { documentId: document.id, uploadedAt: document.uploadedAt, file };
   });
-  await storeNewWorkspaceDocumentFiles(workspace.id, uploads);
+  await storeNewWorkspaceDocumentFiles(cacheWorkspaceId, uploads);
   return { nextWorkspace, newDocumentIds: uploads.map(({ documentId }) => documentId) };
 }
 
 /** Hosted shells reference browser-owned originals. Wait for the durable transaction before publishing the shell. */
 export async function ingestHostedDocumentFiles(workspace: ReturnWorkspaceRecord, prepared: UploadableFile[], files: File[],
-  persist: (workspace: ReturnWorkspaceRecord) => Promise<ReturnWorkspaceRecord>) {
-  const { nextWorkspace } = await storeWorkspaceUploadOriginals(workspace, prepared, files, "hosted");
-  // A lost response may follow a committed shell. Preserve its originals when a save cannot be confirmed.
-  return persist(nextWorkspace);
+  cacheWorkspaceId: string, persist: (workspace: ReturnWorkspaceRecord) => Promise<ReturnWorkspaceRecord>) {
+  const { nextWorkspace, newDocumentIds } = await storeWorkspaceUploadOriginals(workspace, prepared, files, "hosted", cacheWorkspaceId);
+  try {
+    return await persist(nextWorkspace);
+  } catch (error) {
+    // A lost response may follow a committed shell. Delete the batch only after a confirmed no-write response.
+    if (error instanceof HostedWorkspaceWriteRejectedError) {
+      try { await deleteCachedWorkspaceDocumentFiles(cacheWorkspaceId, newDocumentIds); }
+      catch {
+        throw new Error("Could not clean up the rejected upload in this browser. Reopen the return before retrying.", { cause: error });
+      }
+    }
+    throw error;
+  }
 }
 
 /** Save originals before adding metadata to an existing local return. */
@@ -1393,7 +1404,7 @@ export async function ingestLocalDocumentFiles(storage: Storage, expected: Retur
   const initial = parseStorage(storage.getItem(STORAGE_KEY)).workspaces[workspaceId];
   if (!initial) throw new Error(changed);
   const current = requireCurrentLocalWorkspace(storage, expected);
-  const { nextWorkspace, newDocumentIds } = await storeWorkspaceUploadOriginals(current, prepared, files, "self-host");
+  const { nextWorkspace, newDocumentIds } = await storeWorkspaceUploadOriginals(current, prepared, files, "self-host", workspaceId);
 
   let failureMessage = failure;
   try {

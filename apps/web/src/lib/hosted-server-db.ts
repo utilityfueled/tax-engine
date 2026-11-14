@@ -324,9 +324,12 @@ async function createHostedAppTables(pool: Pool) {
       created_at TIMESTAMPTZ NOT NULL,
       updated_at TIMESTAMPTZ NOT NULL,
       workspace JSONB NOT NULL,
+      revision UUID NOT NULL DEFAULT gen_random_uuid(),
       PRIMARY KEY (owner_id, workspace_id)
     );
   `);
+
+  await ensureHostedWorkspaceRevisionSchema(pool);
 
   await pool.query(`
     CREATE INDEX IF NOT EXISTS hosted_workspace_shells_owner_updated_idx
@@ -430,6 +433,14 @@ async function createHostedAppTables(pool: Pool) {
   await ensureHostedAiLedgerSchema(pool);
   await ensureHostedAiCreditIssuanceSchema(pool);
   await ensureHostedAiStorageModeSchema(pool);
+}
+
+/** Add the snapshot precondition to restored pre-revision schemas as well. */
+export async function ensureHostedWorkspaceRevisionSchema(pool: Pool) {
+  await pool.query(`
+    ALTER TABLE hosted_workspace_shells
+      ADD COLUMN IF NOT EXISTS revision UUID NOT NULL DEFAULT gen_random_uuid();
+  `);
 }
 
 export async function ensureHostedAppSchema(

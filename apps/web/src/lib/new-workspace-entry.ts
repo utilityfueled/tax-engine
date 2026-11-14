@@ -82,12 +82,14 @@ export async function resolveNewWorkspaceEntry({
             hostedStoreFactory
           });
 
-          await adapter.saveWorkspace(
+          if (!adapter.writeVersionedWorkspace) throw new Error("Hosted workspace revision support is unavailable.");
+          await adapter.writeVersionedWorkspace(
             createWorkspaceRecord(workspaceId, {
               now: new Date().toISOString(),
               storageMode: "hosted-postgres",
               createdMessage: "Return created."
-            })
+            }),
+            { kind: "create" }
           );
         } catch (error) {
           if (error instanceof HostedWorkspaceLimitError) {

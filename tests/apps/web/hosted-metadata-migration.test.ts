@@ -19,7 +19,7 @@ describe.skipIf(!url)("atomic legacy metadata cleanup against disposable Postgre
     if (!url || !/^postgres(?:ql)?:\/\/(?:ai_test@)?(?:127\.0\.0\.1|localhost):/.test(url)) throw new Error("Use an explicitly disposable loopback PostgreSQL database.");
     await admin.query(`CREATE SCHEMA ${schema}`);
     created = true;
-    await pool.query("CREATE TABLE hosted_workspace_shells (owner_id text NOT NULL, workspace_id text NOT NULL, created_at timestamptz NOT NULL, updated_at timestamptz NOT NULL, workspace jsonb NOT NULL, PRIMARY KEY(owner_id,workspace_id))");
+    await pool.query("CREATE TABLE hosted_workspace_shells (owner_id text NOT NULL, workspace_id text NOT NULL, created_at timestamptz NOT NULL, updated_at timestamptz NOT NULL, workspace jsonb NOT NULL, revision uuid NOT NULL DEFAULT gen_random_uuid(), PRIMARY KEY(owner_id,workspace_id))");
   });
   beforeEach(async () => { await pool.query("TRUNCATE hosted_workspace_shells"); });
   afterAll(async () => {
@@ -35,7 +35,10 @@ describe.skipIf(!url)("atomic legacy metadata cleanup against disposable Postgre
   async function insert(owner: string, record: ReturnType<typeof legacy>, id = record.id) {
     await pool.query("INSERT INTO hosted_workspace_shells VALUES ($1,$2,$3,$4,$5::jsonb)", [owner, id, record.createdAt, record.updatedAt, JSON.stringify(record)]);
   }
-  async function dump() { return (await pool.query("SELECT owner_id,workspace_id,created_at::text,updated_at::text,workspace FROM hosted_workspace_shells ORDER BY owner_id,workspace_id")).rows; }
+  async function dump() { return (await pool.query("SELECT owner_id,workspace_id,created_at::text,updated_at::text,workspace,revision FROM hosted_workspace_shells ORDER BY owner_id,workspace_id")).rows; }
+  function payload(rows: Awaited<ReturnType<typeof dump>>) {
+    return rows.map(({ revision: _revision, ...row }) => row);
+  }
 
   it("defaults to a nonmutating dry run with counts and no private metadata", async () => {
     await insert("owner_a", legacy());
@@ -49,13 +52,15 @@ describe.skipIf(!url)("atomic legacy metadata cleanup against disposable Postgre
     const before = await dump();
     expect(await migrateHostedWorkspaceMetadata(pool, { apply: true })).toEqual({ mode: "apply", examined: 2, changed: 2, unchanged: 0 });
     const after = await dump();
-    expect(after.map(({ workspace: _workspace, ...identity }) => identity)).toEqual(before.map(({ workspace: _workspace, ...identity }) => identity));
+    expect(payload(after).map(({ workspace: _workspace, ...identity }) => identity)).toEqual(payload(before).map(({ workspace: _workspace, ...identity }) => identity));
+    expect(after.every((row, index) => row.revision !== before[index].revision)).toBe(true);
     for (const row of after) {
       expect(row.workspace).toEqual(sanitizeWorkspaceForHostedStorage(legacy()));
       expect(row.workspace.returnSummary.targetTaxYear).toBeNull();
     }
     expect(JSON.stringify(after)).not.toContain("123-45-6789");
     expect(await migrateHostedWorkspaceMetadata(pool, { apply: true })).toEqual({ mode: "apply", examined: 2, changed: 0, unchanged: 2 });
+    expect(await dump()).toEqual(after);
   });
   it.each(["invalid shape", "identity mismatch"])("rolls back earlier changed rows after %s", async (problem) => {
     await insert("owner_a", legacy("first"));
@@ -85,10 +90,13 @@ describe.skipIf(!url)("atomic legacy metadata cleanup against disposable Postgre
     const clean = await dump();
     // Synthetic logical restoration of the old row. An actual pg_dump/restore
     // rehearsal is separate evidence; restoring an old backup reintroduces PII.
-    await pool.query("UPDATE hosted_workspace_shells SET workspace=$1::jsonb", [JSON.stringify(original[0].workspace)]);
+    await pool.query("UPDATE hosted_workspace_shells SET workspace=$1::jsonb, revision=$2::uuid", [JSON.stringify(original[0].workspace), original[0].revision]);
     expect(await dump()).toEqual(original);
     await migrateHostedWorkspaceMetadata(pool, { apply: true });
-    expect(await dump()).toEqual(clean);
+    const cleanedAgain = await dump();
+    expect(payload(cleanedAgain)).toEqual(payload(clean));
+    expect(cleanedAgain[0].revision).not.toBe(original[0].revision);
+    expect(cleanedAgain[0].revision).not.toBe(clean[0].revision);
   });
 });
 

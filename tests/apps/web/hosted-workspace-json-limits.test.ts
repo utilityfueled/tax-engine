@@ -22,7 +22,7 @@ function fixture() {
 function setup(vercel?: string) {
   const store = createInMemoryHostedWorkspaceStore();
   const blobs = createInMemoryHostedDocumentBlobStore();
-  const save = vi.spyOn(store, "save");
+  const save = vi.spyOn(store, "writeVersioned");
   const reconcile = vi.spyOn(blobs, "reconcileWorkspace");
   const handlers = createHostedWorkspaceRouteHandlers({
     env: {
@@ -51,7 +51,7 @@ function bodyOfSize(bytes: number, multibyte = false) {
 function request(body: string) {
   return new Request(url, {
     method: "POST",
-    headers: { "content-type": "application/json" },
+    headers: { "content-type": "application/json", "if-none-match": "*" },
     body
   });
 }

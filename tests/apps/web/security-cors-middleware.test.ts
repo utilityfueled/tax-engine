@@ -492,6 +492,23 @@ describe("security: CORS Vary header prevents cache poisoning", () => {
     expect(response.headers.get("Vary")).toBe("Origin");
   });
 
+  it("limits workspace snapshot revision CORS headers to trusted requests on the item route", () => {
+    const trustedOrigin = "http://localhost:3000";
+    const itemPath = "/api/hosted/workspaces/ws-1";
+    const preflight = buildNextRequest(itemPath, "OPTIONS", trustedOrigin);
+    preflight.headers.set("Access-Control-Request-Method", "POST");
+    preflight.headers.set("Access-Control-Request-Headers", "content-type, if-match, if-none-match");
+    const allowed = middleware(preflight);
+    expect(allowed.status).toBe(204);
+    expect(allowed.headers.get("Access-Control-Allow-Headers")).toContain("If-Match, If-None-Match");
+    expect(middleware(buildNextRequest(itemPath, "GET", trustedOrigin)).headers.get("Access-Control-Expose-Headers")).toBe("ETag");
+    expect(middleware(buildNextRequest(itemPath, "GET", "https://evil.example")).headers.get("Access-Control-Expose-Headers")).toBeNull();
+    for (const otherPath of ["/api/hosted/workspaces", itemPath + "/documents", "/api/provider/interview"]) {
+      expect(middleware(buildNextRequest(otherPath, "OPTIONS", trustedOrigin)).headers.get("Access-Control-Allow-Headers")).not.toContain("If-Match");
+      expect(middleware(buildNextRequest(otherPath, "GET", trustedOrigin)).headers.get("Access-Control-Expose-Headers")).toBeNull();
+    }
+  });
+
   it("sets Vary: Origin on preflight-deny responses to prevent cache poisoning", () => {
     const request = buildNextRequest(
       "/api/hosted/workspaces",
@@ -524,4 +541,3 @@ describe("security: CORS Vary header prevents cache poisoning", () => {
     expect(response.headers.get("Vary")).toBe("Origin");
   });
 });
-declare const require: (id: string) => { NextRequest: typeof import("next/server").NextRequest };

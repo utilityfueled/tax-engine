@@ -45,7 +45,7 @@ export async function migrateHostedWorkspaceMetadata(
       }
       const parameters = [row.owner_id, row.workspace_id, JSON.stringify(sanitized)];
       const result = apply
-        ? await client.query("UPDATE hosted_workspace_shells SET workspace=$3::jsonb WHERE owner_id=$1 AND workspace_id=$2 AND workspace IS DISTINCT FROM $3::jsonb RETURNING workspace_id", parameters)
+        ? await client.query("UPDATE hosted_workspace_shells SET workspace=$3::jsonb, revision=gen_random_uuid() WHERE owner_id=$1 AND workspace_id=$2 AND workspace IS DISTINCT FROM $3::jsonb RETURNING workspace_id", parameters)
         : await client.query("SELECT workspace_id FROM hosted_workspace_shells WHERE owner_id=$1 AND workspace_id=$2 AND workspace IS DISTINCT FROM $3::jsonb", parameters);
       report.examined++;
       if (result.rowCount === 1) report.changed++;

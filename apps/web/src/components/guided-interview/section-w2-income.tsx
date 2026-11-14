@@ -710,6 +710,7 @@ export function SectionW2Income({
   entries,
   taxYear,
   workspace,
+  documentCacheWorkspaceId,
   onUploadDocuments,
   onEntriesChange,
   combatPayElection,
@@ -719,33 +720,41 @@ export function SectionW2Income({
   entries: W2EntryData[];
   taxYear?: number | null;
   workspace: ReturnWorkspaceRecord;
+  documentCacheWorkspaceId?: string | null;
   onUploadDocuments?: (files: File[]) => Promise<string>;
   onEntriesChange: (entries: W2EntryData[]) => void;
   combatPayElection?: EicCombatPayElection;
   onCombatPayElectionChange?: (election: EicCombatPayElection) => void;
 }) {
+  const cacheWorkspaceId = documentCacheWorkspaceId === undefined
+    ? (workspace.storageMode === "local-browser" ? workspace.id : null)
+    : documentCacheWorkspaceId;
   const current = entries.length > 0 ? entries : [emptyW2Entry];
   const workspaceSuggestions = useMemo(
     () => collectW2Suggestions(workspace.documents, workspace.structuredFacts),
     [workspace.documents, workspace.structuredFacts]
   );
   const [attachedSuggestionCandidates, setAttachedSuggestionCandidates] = useState<W2DocumentSuggestion[]>([]);
-  const attachedSuggestionWorkspaceId = useRef(workspace.id);
   const attachedReviewToken = useRef(0);
-  const activeWorkspaceId = useRef(workspace.id);
-  activeWorkspaceId.current = workspace.id;
-  const [cachedAttachedDocumentIds, setCachedAttachedDocumentIds] = useState<Set<string>>(new Set());
+  const activeReviewScope = useRef({ workspaceId: workspace.id, cacheWorkspaceId });
+  activeReviewScope.current = { workspaceId: workspace.id, cacheWorkspaceId };
+  const [cachedAttachedDocuments, setCachedAttachedDocuments] = useState<{ cacheWorkspaceId: string; ids: Set<string> }>();
   const [selectedAttachedDocumentIds, setSelectedAttachedDocumentIds] = useState<string[]>([]);
-  const [attachedReviewPending, setAttachedReviewPending] = useState(false);
-  const [attachedReviewMessage, setAttachedReviewMessage] = useState<string | null>(null);
+  const [pending, setAttachedReviewPending] = useState(false);
+  const [message, setAttachedReviewMessage] = useState<string | null>(null);
+  const attachedReviewScope = useRef<typeof activeReviewScope.current | null>(null);
+  const isAttachedReviewVisible = attachedReviewScope.current?.workspaceId === workspace.id
+    && attachedReviewScope.current.cacheWorkspaceId === cacheWorkspaceId;
+  const attachedReviewPending = isAttachedReviewVisible && pending;
+  const attachedReviewMessage = isAttachedReviewVisible ? message : null;
   const attachedReviewDocuments = useMemo(
-    () => workspace.documents
+    () => cachedAttachedDocuments?.cacheWorkspaceId === cacheWorkspaceId ? workspace.documents
       .filter((document) => (
         !document.matchedFixtureId
         && !isGuidedSyntheticDocument(document)
         && /\.pdf$/i.test(document.name)
         && !workspaceSuggestions.some((suggestion) => suggestion.documentId === document.id)
-        && cachedAttachedDocumentIds.has(document.id)
+        && cachedAttachedDocuments.ids.has(document.id)
       ))
       .sort((left, right) => {
         const scoreDifference = scoreAttachedDocumentForW2Review(left) - scoreAttachedDocumentForW2Review(right);
@@ -754,8 +763,8 @@ export function SectionW2Income({
         }
 
         return resolveAttachedDocumentTitle(left).localeCompare(resolveAttachedDocumentTitle(right));
-      }),
-    [cachedAttachedDocumentIds, workspace.documents, workspaceSuggestions],
+      }) : [],
+    [cacheWorkspaceId, cachedAttachedDocuments, workspace.documents, workspaceSuggestions],
   );
   const suggestions = useMemo(() => {
     const suggestionsByDocumentId = new Map<string, W2DocumentSuggestion>();
@@ -764,40 +773,42 @@ export function SectionW2Income({
       suggestionsByDocumentId.set(suggestion.documentId, suggestion);
     }
 
-    if (attachedSuggestionWorkspaceId.current === workspace.id) for (const suggestion of attachedSuggestionCandidates) suggestionsByDocumentId.set(suggestion.documentId, suggestion);
+    if (isAttachedReviewVisible) for (const suggestion of attachedSuggestionCandidates) suggestionsByDocumentId.set(suggestion.documentId, suggestion);
 
     return Array.from(suggestionsByDocumentId.values());
-  }, [attachedSuggestionCandidates, workspaceSuggestions, workspace.id]);
+  }, [attachedSuggestionCandidates, isAttachedReviewVisible, workspaceSuggestions]);
 
   useEffect(() => {
     attachedReviewToken.current += 1;
+    attachedReviewScope.current = null;
     setAttachedSuggestionCandidates([]);
     setAttachedReviewMessage(null);
     setAttachedReviewPending(false);
     return () => { attachedReviewToken.current += 1; };
-  }, [workspace.id]);
+  }, [cacheWorkspaceId, workspace.id]);
 
   useEffect(() => {
+    if (cacheWorkspaceId === null) return;
     let cancelled = false;
 
     (async () => {
       const nextIds = new Set<string>();
 
       await Promise.all(workspace.documents.map(async (document) => {
-        if (await hasCachedWorkspaceDocumentFile(workspace.id, document.id)) {
+        if (await hasCachedWorkspaceDocumentFile(cacheWorkspaceId, document.id)) {
           nextIds.add(document.id);
         }
       }));
 
       if (!cancelled) {
-        setCachedAttachedDocumentIds(nextIds);
+        setCachedAttachedDocuments({ cacheWorkspaceId, ids: nextIds });
       }
     })();
 
     return () => {
       cancelled = true;
     };
-  }, [workspace.documents, workspace.id]);
+  }, [cacheWorkspaceId, workspace.documents]);
 
   useEffect(() => {
     setSelectedAttachedDocumentIds((currentIds) => {
@@ -846,10 +857,13 @@ export function SectionW2Income({
   }
 
   async function reviewSelectedAttachedDocuments() {
+    if (cacheWorkspaceId === null) return;
     const selectedDocuments = attachedReviewDocuments.filter((document) =>
       selectedAttachedDocumentIds.includes(document.id),
     );
 
+    const sourceWorkspaceId = workspace.id;
+    attachedReviewScope.current = { workspaceId: sourceWorkspaceId, cacheWorkspaceId };
     if (selectedDocuments.length === 0) {
       setAttachedReviewMessage("Select at least one attached PDF first.");
       return;
@@ -858,8 +872,9 @@ export function SectionW2Income({
     setAttachedReviewPending(true);
     setAttachedReviewMessage(null);
     const token = ++attachedReviewToken.current;
-    const sourceWorkspaceId = workspace.id;
-    const isCurrent = () => attachedReviewToken.current === token && activeWorkspaceId.current === sourceWorkspaceId;
+    const isCurrent = () => attachedReviewToken.current === token
+      && activeReviewScope.current.workspaceId === sourceWorkspaceId
+      && activeReviewScope.current.cacheWorkspaceId === cacheWorkspaceId;
 
     try {
       const nextSuggestions: W2DocumentSuggestion[] = [];
@@ -867,7 +882,7 @@ export function SectionW2Income({
       const unparsedDocumentLabels: string[] = [];
 
       for (const document of selectedDocuments) {
-        const file = await getCachedWorkspaceDocumentFile(workspace.id, document.id);
+        const file = await getCachedWorkspaceDocumentFile(cacheWorkspaceId, document.id);
         if (!isCurrent()) return;
 
         if (!file) {
@@ -886,7 +901,6 @@ export function SectionW2Income({
         }
       }
 
-      attachedSuggestionWorkspaceId.current = sourceWorkspaceId;
       setAttachedSuggestionCandidates((currentSuggestions) => {
         const suggestionsByDocumentId = new Map(
           currentSuggestions.map((suggestion) => [suggestion.documentId, suggestion]),

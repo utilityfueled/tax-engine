@@ -3,9 +3,16 @@
 import { useEffect, useId, useRef, useState } from "react";
 import Link from "next/link";
 import { requireBrowserStorage } from "@/lib/browser-storage";
+import { hostedDocumentCacheId, hostedGuidedDraftId, hostedGuidedModeKey } from "@/lib/hosted-workspace-browser-state";
+import type { ReturnWorkspaceRecord } from "@tax-engine/contracts";
+
+type HostedBackupSource = {
+  ownerScopeKey: string;
+  current?: { workspace: ReturnWorkspaceRecord; revision: string };
+};
 
 /** Passwords and decrypted contents stay in memory and are never sent to a server. */
-export function WorkspaceRecoveryControls({ workspaceId }: { workspaceId?: string }) {
+export function WorkspaceRecoveryControls({ workspaceId, hosted }: { workspaceId?: string; hosted?: HostedBackupSource }) {
   const id = useId();
   const [password, setPassword] = useState("");
   const [file, setFile] = useState<File | null>(null);
@@ -18,7 +25,7 @@ export function WorkspaceRecoveryControls({ workspaceId }: { workspaceId?: strin
     setPassword(""); setFile(null); setBusy(false); setMessage(null); setRestoredId(null);
     if (fileInput.current) fileInput.current.value = "";
     return () => { controller.current?.abort(); controller.current = null; };
-  }, [workspaceId]);
+  }, [hosted?.ownerScopeKey, workspaceId]);
 
   async function run() {
     const abort = new AbortController();
@@ -29,7 +36,23 @@ export function WorkspaceRecoveryControls({ workspaceId }: { workspaceId?: strin
       const { exportWorkspaceRecovery, importWorkspaceRecovery } = await import("@/lib/workspace-recovery");
       abort.signal.throwIfAborted();
       if (workspaceId) {
-        const archive = await exportWorkspaceRecovery(storage, workspaceId, password, { signal: abort.signal });
+        let hostedSnapshot;
+        if (hosted) {
+          const { loadPersistedWorkspace } = await import("@/lib/workspace-persistence");
+          const loaded = await loadPersistedWorkspace({ deploymentMode: "hosted", workspaceId, browserStorage: storage });
+          if (loaded.adapter.ownerScope?.scopeKey !== hosted.ownerScopeKey || !loaded.workspace || !loaded.workspaceRevision) {
+            throw new Error("Sign in to the account that owns this return before making a backup.");
+          }
+          const current = hosted.current?.revision === loaded.workspaceRevision ? hosted.current : null;
+          if (!current && !loaded.localMirrorMatched) {
+            throw new Error("This browser has no verified private copy of the saved return. Use the device where you entered the facts and uploaded the documents.");
+          }
+          hostedSnapshot = { workspace: current?.workspace ?? loaded.workspace,
+            draftId: hostedGuidedDraftId(hosted.ownerScopeKey, workspaceId, loaded.workspaceRevision),
+            guidedMode: storage.getItem(hostedGuidedModeKey(hosted.ownerScopeKey, workspaceId)),
+            documentCacheWorkspaceId: hostedDocumentCacheId(hosted.ownerScopeKey, workspaceId) };
+        }
+        const archive = await exportWorkspaceRecovery(storage, workspaceId, password, { signal: abort.signal, hostedSnapshot });
         abort.signal.throwIfAborted();
         const url = URL.createObjectURL(archive);
         const anchor = document.createElement("a");

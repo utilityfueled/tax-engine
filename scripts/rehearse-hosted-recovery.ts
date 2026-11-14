@@ -6,7 +6,7 @@ import { pathToFileURL } from "node:url";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
-import { ensureHostedAppSchema, getHostedServerDatabase } from "../apps/web/src/lib/hosted-server-db";
+import { ensureHostedAppSchema, ensureHostedWorkspaceRevisionSchema, getHostedServerDatabase } from "../apps/web/src/lib/hosted-server-db";
 import { createHostedAiCreditIssuance, bindHostedAiCreditIssuance } from "../apps/web/src/lib/hosted-ai-credit-issuance";
 import { ensureHostedAiCreditIssuanceSchema } from "../apps/web/src/lib/hosted-ai-credit-issuance-schema";
 import { ensureHostedAiStorageModeSchema } from "../apps/web/src/lib/hosted-ai-storage-mode";
@@ -14,6 +14,8 @@ import { ensureHostedBillingEventBindingSchema } from "../apps/web/src/lib/hoste
 import { getHostedAiBudgetSnapshot, recordHostedAiCreditPurchase } from "../apps/web/src/lib/hosted-ai-usage-db";
 import { migrateHostedWorkspaceMetadata } from "../apps/web/src/lib/hosted-workspace-metadata-migration";
 import { createWorkspaceRecord } from "../apps/web/src/lib/workspace-storage";
+import { createHostedPostgresWorkspaceStoreFactory } from "../apps/web/src/lib/hosted-postgres-workspace-store";
+import { getHostedPersistenceRuntimeConfig } from "../apps/web/src/lib/workspace-persistence";
 
 /** Close the raw Pool as well when Kysely's lazy driver was never initialized. */
 export async function closeRecoveryRuntime(runtime: Awaited<ReturnType<typeof getHostedServerDatabase>>) {
@@ -97,6 +99,28 @@ async function main() {
       }
       return result;
     }
+    function payloadWithoutRevisions(rows: string[]) {
+      return rows.map(row => {
+        const { revision: _revision, ...payload } = JSON.parse(row);
+        return JSON.stringify(payload);
+      }).sort();
+    }
+    function assertFreshWorkspaceRevisions(older: string[], newer: string[]) {
+      const oldRevisions = new Set(older.map(row => JSON.parse(row).revision));
+      const nextRevisions = newer.map(row => JSON.parse(row).revision);
+      assert.equal(new Set(nextRevisions).size, newer.length);
+      for (const revision of nextRevisions) {
+        assert.match(revision, /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/u);
+        assert.ok(!oldRevisions.has(revision));
+      }
+    }
+    function assertSamePayloadWithFreshRevisions(prior: Record<string, string[]>, next: Record<string, string[]>) {
+      for (const table of tables) {
+        if (table !== "hosted_workspace_shells") assert.deepEqual(next[table], prior[table]);
+      }
+      assert.deepEqual(payloadWithoutRevisions(next.hosted_workspace_shells), payloadWithoutRevisions(prior.hosted_workspace_shells));
+      assertFreshWorkspaceRevisions(prior.hosted_workspace_shells, next.hosted_workspace_shells);
+    }
     const before = await snapshot();
     const dry = await migrateHostedWorkspaceMetadata(pool);
     assert.deepEqual(dry, { mode: "dry-run", examined: 2, changed: 2, unchanged: 0 });
@@ -106,6 +130,7 @@ async function main() {
     assert.equal((await migrateHostedWorkspaceMetadata(pool, { apply: true })).changed, 2);
     const after = await snapshot();
     assert.ok(!JSON.stringify(after.hosted_workspace_shells).includes("123-45-6789"));
+    assertFreshWorkspaceRevisions(before.hosted_workspace_shells, after.hosted_workspace_shells);
     for (const table of tables.filter(name => name !== "hosted_workspace_shells")) assert.deepEqual(after[table], before[table]);
     assert.equal((await pool.query("SELECT provider_cost_usd::text AS cost FROM hosted_ai_attempts")).rows[0].cost, "0.0000006");
     // Drop only the uniquely created synthetic schema, then restore its actual
@@ -114,12 +139,14 @@ async function main() {
     runPg("pg_restore", ["--dbname", rawUrl, "--no-owner", "--no-privileges", "--exit-on-error", "--single-transaction", backup]);
     assert.deepEqual(await snapshot(), before);
     assert.equal((await migrateHostedWorkspaceMetadata(pool, { apply: true })).changed, 2);
-    assert.deepEqual(await snapshot(), after);
+    const cleanedAfterRestore = await snapshot();
+    assertSamePayloadWithFreshRevisions(after, cleanedAfterRestore);
+    assertFreshWorkspaceRevisions(before.hosted_workspace_shells, cleanedAfterRestore.hosted_workspace_shells);
     assert.equal((await migrateHostedWorkspaceMetadata(pool, { apply: true })).changed, 0);
     assert.equal(await recordHostedAiCreditPurchase(env, paid), false);
     const { rows: [restoredReceipt] } = await pool.query("SELECT event_product, credit_checkout_session_id FROM hosted_billing_events WHERE event_id=$1", [paid.eventId]);
     assert.deepEqual(restoredReceipt, { event_product: "ai-credit", credit_checkout_session_id: issuedSession.id });
-    assert.deepEqual(await snapshot(), after);
+    assert.deepEqual(await snapshot(), cleanedAfterRestore);
     assert.equal((await getHostedAiBudgetSnapshot(env, budgetInput)).purchasedRemainingCents, 600);
     await assert.rejects(getHostedAiBudgetSnapshot(liveEnv, budgetInput), /database mode/i);
     await assert.rejects(pool.query("UPDATE hosted_ai_credit_issuances SET credited_budget_cents=1"), /immutable/);
@@ -130,6 +157,7 @@ async function main() {
     await pool.query("DROP TABLE hosted_ai_storage_mode");
     await pool.query("DROP FUNCTION hosted_ai_storage_mode_immutable()");
     await pool.query("ALTER TABLE hosted_billing_events DROP COLUMN event_product, DROP COLUMN credit_checkout_session_id");
+    await pool.query("ALTER TABLE hosted_workspace_shells DROP COLUMN revision");
     const legacyBackup=path.join(directory,"legacy.dump");
     runPg("pg_dump",["--dbname",rawUrl,"--schema",schema,"--format=custom","--no-owner","--no-privileges","--file",legacyBackup]);
     await chmod(legacyBackup,0o600);
@@ -138,13 +166,19 @@ async function main() {
     await ensureHostedAiCreditIssuanceSchema(pool);await ensureHostedAiCreditIssuanceSchema(pool);
     await ensureHostedAiStorageModeSchema(pool);await ensureHostedAiStorageModeSchema(pool);
     await ensureHostedBillingEventBindingSchema(pool);await ensureHostedBillingEventBindingSchema(pool);
+    await ensureHostedWorkspaceRevisionSchema(pool);await ensureHostedWorkspaceRevisionSchema(pool);
     const upgraded=await snapshot();
     const addedTables = new Set(["hosted_ai_credit_issuances", "hosted_ai_storage_mode"]);
     for (const table of tables) {
       const expected = table === "hosted_billing_events"
         ? after[table].map(row => JSON.stringify({ ...JSON.parse(row), event_product: null, credit_checkout_session_id: null })).sort()
         : addedTables.has(table) ? [] : after[table];
-      assert.deepEqual(upgraded[table], expected);
+      if (table === "hosted_workspace_shells") {
+        assert.deepEqual(payloadWithoutRevisions(upgraded[table]), payloadWithoutRevisions(expected));
+        assertFreshWorkspaceRevisions(cleanedAfterRestore[table], upgraded[table]);
+      } else {
+        assert.deepEqual(upgraded[table], expected);
+      }
     }
     for (const deployment of [env, liveEnv]) await assert.rejects(getHostedAiBudgetSnapshot(deployment, budgetInput), /historical AI accounting/i);
     // Restore the full source-bound archive again so the final checksum includes
@@ -152,9 +186,22 @@ async function main() {
     await admin.query(`DROP SCHEMA ${schema} CASCADE`);
     runPg("pg_restore",["--dbname",rawUrl,"--no-owner","--no-privileges","--exit-on-error","--single-transaction",backup]);
     await migrateHostedWorkspaceMetadata(pool,{apply:true});
-    assert.deepEqual(await snapshot(),after);
-    const digest = createHash("sha256").update(JSON.stringify(after)).digest("hex");
-    console.log(JSON.stringify({ result: "passed", evidence: "local-synthetic-postgresql-dump-restore", tables: tables.length, issuanceRestored: true, issuanceReplayIdempotent: true, receiptBindingRestored: true, oldReceiptBindingUnknown: true, modeRestored: true, oldSchemaUpgradePreserved: true, tenantWorkspaces: 2, exactCostRestored: true, metadataCleanupReapplied: true, metadataCleanupIdempotent: true, checksum: digest }));
+    const afterFinalRestore = await snapshot();
+    assertSamePayloadWithFreshRevisions(after, afterFinalRestore);
+    assert.equal((await migrateHostedWorkspaceMetadata(pool, { apply: true })).changed, 0);
+    const rotated = await pool.query("UPDATE hosted_workspace_shells SET revision = gen_random_uuid()");
+    assert.equal(rotated.rowCount, 2);
+    const beforeOpeningWriters = await snapshot();
+    assertSamePayloadWithFreshRevisions(afterFinalRestore, beforeOpeningWriters);
+    const restoredRow = JSON.parse(afterFinalRestore.hosted_workspace_shells[0]);
+    const ownerScope = { ownerId: restoredRow.owner_id, ownerLabel: null, scopeKey: `hosted-owner:${restoredRow.owner_id}` };
+    const store = createHostedPostgresWorkspaceStoreFactory(env)(ownerScope, getHostedPersistenceRuntimeConfig(env));
+    await assert.rejects(store.writeVersioned(ownerScope.ownerId, restoredRow.workspace, { kind: "update", revision: restoredRow.revision }), {
+      name: "HostedWorkspaceWriteRejectedError"
+    });
+    assert.deepEqual(await snapshot(), beforeOpeningWriters);
+    const digest = createHash("sha256").update(JSON.stringify(beforeOpeningWriters)).digest("hex");
+    console.log(JSON.stringify({ result: "passed", evidence: "local-synthetic-postgresql-dump-restore", tables: tables.length, issuanceRestored: true, issuanceReplayIdempotent: true, receiptBindingRestored: true, oldReceiptBindingUnknown: true, modeRestored: true, oldSchemaUpgradePreserved: true, tenantWorkspaces: 2, exactCostRestored: true, metadataCleanupReapplied: true, metadataCleanupIdempotent: true, workspaceRevisionsRenewed: true, checksum: digest }));
   } finally {
     if (runtime) await closeRecoveryRuntime(runtime);
     if (created) await admin.query(`DROP SCHEMA IF EXISTS ${schema} CASCADE`);

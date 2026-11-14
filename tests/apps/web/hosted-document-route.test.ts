@@ -113,7 +113,8 @@ describe("hosted document route", () => {
       new Request("https://tax.example/api/hosted/workspaces/blobbed", {
         method: "POST",
         headers: {
-          "content-type": "application/json"
+          "content-type": "application/json",
+          "if-none-match": "*"
         },
         body: JSON.stringify({
           workspace: emptyWorkspaceSnapshot

@@ -6,6 +6,7 @@ through the new store hides those fields but does not erase them from storage.
 
 The explicit migration removes unapproved fields from `hosted_workspace_shells`.
 It preserves owner/workspace identity, database timestamps and unknown tax years.
+It replaces the write revision only for a row whose metadata was rewritten.
 It defaults to a dry run, commits all selected rows atomically, and aborts on
 invalid metadata or identity mismatch. It refuses more than 1,000 rows by default
 (operator-selected maximum 10,000) or more than 64 MiB of JSON. Larger datasets
@@ -15,7 +16,11 @@ need a separately reviewed batched procedure. Reports contain counts only.
 
 Use a staging clone first. Production execution requires the service owner's
 authorization and approved backup/retention handling; this development rehearsal
-does not grant either. Stop legacy writers and restrict access during restoration.
+does not grant either. Quiesce workspace writers and restrict access during
+restoration. Drain all instances running the old write protocol before
+initializing the revision-aware application. An old instance can still write
+without a revision precondition. Apply the same quiescence rule to rollback
+across application versions.
 
 1. Record the application commit, database version and approved maintenance
    scope. Back up the database with the operator's normal encrypted, access-limited
@@ -23,7 +28,9 @@ does not grant either. Stop legacy writers and restrict access during restoratio
 2. Supply `TAX_ENGINE_METADATA_MIGRATION_DATABASE_URL` through the secret manager.
    The command deliberately does not consume ordinary `DATABASE_URL`. Do not put
    credentials in command arguments or copied logs.
-3. From the repository with Node 26 and the frozen dependencies installed, run:
+3. Initialize the current application schema while writers are paused, so the
+   workspace table has its additive revision column. From the repository with
+   Node 26 and the frozen dependencies installed, run:
 
    ```sh
    pnpm exec tsx --tsconfig apps/web/tsconfig.json scripts/migrate-hosted-metadata.ts
@@ -47,6 +54,21 @@ does not grant either. Stop legacy writers and restrict access during restoratio
 
 Rollback restores the verified backup in isolation. An old backup reintroduces
 legacy private fields, so reapply this cleanup before enabling user traffic.
+While writers are paused, assign fresh revisions to every restored workspace,
+including rows that the metadata cleanup left unchanged. This expires any
+browser token associated with a pre-restore snapshot. After current schema
+initialization, use the reviewed maintenance transaction on the restored
+database:
+
+```sql
+BEGIN;
+UPDATE hosted_workspace_shells SET revision = gen_random_uuid();
+COMMIT;
+```
+
+Compare row counts and verify an old token fails a conditional write before
+opening traffic. The SQL changes only revision values. Old browser mirrors and
+drafts remain on their original browser for explicit private recovery.
 Restore billing events, purchases, reservations and attempts together; mixing
 ledger generations can duplicate spending or erase reconciliation state.
 Server backup restoration cannot restore browser-only tax facts or original

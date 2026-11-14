@@ -449,7 +449,8 @@ describe("workspace persistence", () => {
       }), {
         status: 200,
         headers: {
-          "content-type": "application/json"
+          "content-type": "application/json",
+          etag: '"e25a0128-e053-426a-9df4-05587acc61d3"'
         }
       });
     });

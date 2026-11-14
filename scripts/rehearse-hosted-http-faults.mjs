@@ -196,6 +196,8 @@ try {
     let r;
     for (let n = 0; n < 2; n++) {
       r = await request(n, route + "?create=1", { cookie: accounts[n].cookie }); assert.equal(r.status, 200); privateResponse(r);
+      const revision = r.headers.get("etag");
+      assert.match(revision ?? "", /^"[0-9a-f-]{36}"$/u);
       const own = (await r.json()).workspace; assert.equal(own.id, id);
       own.futurePrivateFact = privateMarker;
       own.documents = [{ id: "synthetic-document", name: privateMarker + ".pdf", taxYear: 2026, size: 42,
@@ -203,8 +205,14 @@ try {
         matchedFixtureId: null, seededFactIds: ["wages"], blobStorageKey: privateMarker }];
       own.summary.totalDocuments = 1;
       own.updatedAt = `2026-11-04T0${n}:00:00.000Z`;
-      r = await request(1 - n, route, { cookie: accounts[n].cookie, method: "POST", body: JSON.stringify({ workspace: own }) }); assert.equal(r.status, 200); privateResponse(r);
+      const update = { cookie: accounts[n].cookie, method: "POST", headers: { "if-match": revision }, body: JSON.stringify({ workspace: own }) };
+      r = await request(1 - n, route, update); assert.equal(r.status, 200); privateResponse(r);
+      assert.match(r.headers.get("etag") ?? "", /^"[0-9a-f-]{36}"$/u);
+      assert.notEqual(r.headers.get("etag"), revision);
       savedByOwner.push((await r.json()).workspace);
+      const stale = await request(n, route, update);
+      assert.equal(stale.status, 412); privateResponse(stale);
+      assert.equal((await stale.json()).code, "HOSTED_WORKSPACE_REVISION_CONFLICT");
       assert.ok(!JSON.stringify(savedByOwner[n]).includes(privateMarker));
       r = await request(1 - n, "/api/hosted/workspaces", { cookie: accounts[n].cookie }); assert.equal(r.status, 200); privateResponse(r);
       assert.deepEqual((await r.json()).workspaces, [savedByOwner[n]]);
@@ -248,9 +256,12 @@ try {
       }
       assert.equal(await count(), 200);
       assert.equal(await sql(`SELECT count(*) FROM hosted_workspace_shells WHERE owner_id<>'${owner}'`), "0");
+      const revision = responses[accepted].headers.get("etag");
+      assert.match(revision ?? "", /^"[0-9a-f-]{36}"$/u);
       const workspace = (await responses[accepted].json()).workspace;
       const updated = await request(1 - accepted % 2, quotaPath(accepted), {
-        ...requestOptions, method: "POST", body: JSON.stringify({ workspace: { ...workspace, updatedAt: "2026-11-13T22:00:00.000Z" } })
+        ...requestOptions, method: "POST", headers: { "if-match": revision },
+        body: JSON.stringify({ workspace: { ...workspace, updatedAt: "2026-11-13T22:00:00.000Z" } })
       });
       assert.equal(updated.status, 200); privateResponse(updated);
       assert.equal((await updated.json()).workspace.updatedAt, "2026-11-13T22:00:00.000Z");

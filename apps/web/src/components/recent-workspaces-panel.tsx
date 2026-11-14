@@ -63,26 +63,30 @@ interface DisplayedWorkspace {
   workspace: ReturnWorkspaceRecord;
   guidedSetupProgress: ReturnType<typeof summarizeGuidedSetupProgress>;
   localRecovery: boolean;
+  ownerScopeKey: string | null;
 }
 
 function buildDisplayedWorkspaces(
   workspaces: ReturnWorkspaceRecord[],
-  browserStorage: Storage
+  browserStorage: Storage,
+  ownerScopeKey: string | null,
 ): DisplayedWorkspace[] {
   return workspaces.flatMap((workspace) => {
-    const guidedSetupProgress = workspace.summary.totalDocuments === 0
+    const hosted = workspace.storageMode === "hosted-postgres";
+    const guidedSetupProgress = !hosted && workspace.summary.totalDocuments === 0
       && workspace.seededReturn.status === "empty"
       ? summarizeGuidedSetupProgress(loadGuidedFlowState(browserStorage, workspace.id))
       : null;
 
-    if (isUntouchedWorkspaceShell(workspace) && guidedSetupProgress === null) {
+    if (!hosted && isUntouchedWorkspaceShell(workspace) && guidedSetupProgress === null) {
       return [];
     }
 
     return [{
       workspace,
       guidedSetupProgress,
-      localRecovery: isLocalRecoveryWorkspace(browserStorage, workspace.id),
+      localRecovery: !hosted && isLocalRecoveryWorkspace(browserStorage, workspace.id),
+      ownerScopeKey: hosted ? ownerScopeKey : null,
     }];
   });
 }
@@ -126,7 +130,7 @@ export function RecentWorkspacesPanel({
         });
         if (revision !== activeRevision.current) return;
 
-        const displayedWorkspaces = buildDisplayedWorkspaces(nextWorkspaces, browserStorage);
+        const displayedWorkspaces = buildDisplayedWorkspaces(nextWorkspaces, browserStorage, adapter.ownerScope?.scopeKey ?? null);
 
         setWorkspaces(displayedWorkspaces);
         setShowAllWorkspaces((current) => current && displayedWorkspaces.length > MAX_VISIBLE_WORKSPACES);
@@ -152,7 +156,7 @@ export function RecentWorkspacesPanel({
     };
   }, [deploymentMode]);
 
-  function removeWorkspace(workspaceId: string) {
+  function removeWorkspace(workspaceId: string, ownerScopeKey: string | null) {
     if (deleting.current) return;
     deleting.current = true;
     setDeletionPending(true);
@@ -160,14 +164,15 @@ export function RecentWorkspacesPanel({
     void (async () => {
       try {
         const browserStorage = requireBrowserStorage();
-        const { workspaces: nextWorkspaces } = await deletePersistedWorkspace({
+        const { workspaces: nextWorkspaces, adapter } = await deletePersistedWorkspace({
           deploymentMode,
           browserStorage,
-          workspaceId
+          workspaceId,
+          ...(ownerScopeKey ? { ownerScopeKey } : {}),
         });
         if (revision !== activeRevision.current) return;
 
-        const displayedWorkspaces = buildDisplayedWorkspaces(nextWorkspaces, browserStorage);
+        const displayedWorkspaces = buildDisplayedWorkspaces(nextWorkspaces, browserStorage, adapter.ownerScope?.scopeKey ?? null);
 
         setWorkspaces(displayedWorkspaces);
         setShowAllWorkspaces((current) => current && displayedWorkspaces.length > MAX_VISIBLE_WORKSPACES);
@@ -215,7 +220,7 @@ export function RecentWorkspacesPanel({
             </p>
           ) : null}
           <ul className="workspace-list" role="list">
-            {visibleWorkspaces.map(({ workspace, guidedSetupProgress, localRecovery }) => {
+            {visibleWorkspaces.map(({ workspace, guidedSetupProgress, localRecovery, ownerScopeKey }) => {
               const unsupportedTaxYear = hasUnsupportedTaxYear(workspace.returnSummary);
               const unsupportedTaxYearNotice = formatUnsupportedTaxYearNotice(workspace.returnSummary);
               const guidedCompletionStatus = summarizeWorkspaceGuidedCompletion(workspace.guidedCompletion);
@@ -289,14 +294,16 @@ export function RecentWorkspacesPanel({
                       type="button"
                       disabled={deletionPending}
                       onClick={() => {
-                        removeWorkspace(workspace.id);
+                        removeWorkspace(workspace.id, ownerScopeKey);
                       }}
                       aria-label={`Delete tax return ${workspace.id}`}
                     >
                       Delete
                     </button>
                   </div>
-                  <WorkspaceRecoveryControls workspaceId={workspace.id} />
+                  {workspace.storageMode === "local-browser" || ownerScopeKey ? (
+                    <WorkspaceRecoveryControls workspaceId={workspace.id} hosted={ownerScopeKey ? { ownerScopeKey } : undefined} />
+                  ) : null}
                 </li>
               );
             })}

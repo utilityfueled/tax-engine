@@ -1,7 +1,7 @@
 "use client";
 import {isSeparateStatePreview} from '@/lib/guided-interview-bridge';
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import type {
   ProviderFacingPayloadRedaction,
@@ -16,6 +16,7 @@ import { ReturnHelpDock } from "@/components/return-help-dock";
 import { RefundTicker } from "@/components/refund-ticker";
 import type { RefundTickerPreviewData } from "@/components/refund-ticker";
 import { RetroShell } from "@/components/retro-shell";
+import { WorkspaceRecoveryControls } from "@/components/workspace-recovery-controls";
 import { buildDeploymentModeViewModel } from "@/lib/deployment-mode";
 import {
   formatFixtureDocumentCount,
@@ -63,7 +64,6 @@ import {
   answerInterviewQuestion,
   answerWorkspaceInterviewQuestion,
   clearWorkspaceRecord,
-  clearWorkspaceGuidedData,
   confirmLocalDocumentTaxYear,
   confirmWorkspaceDocumentTaxYear,
   getFutureYearSampleUploadMessage,
@@ -87,6 +87,9 @@ import {
 } from "@/lib/workspace-persistence";
 import { getBrowserStorage, requireBrowserStorage } from "@/lib/browser-storage";
 import { isLoopbackHostname } from "@/lib/hosted-runtime-safety";
+import {
+  advanceHostedGuidedDraft, clearHostedWorkspaceBrowserState, hostedDocumentCacheId, hostedGuidedDraftId, hostedGuidedModeKey,
+} from "@/lib/hosted-workspace-browser-state";
 
 function formatDocumentTrace(
   documentIds: string[],
@@ -414,11 +417,17 @@ export function ReturnWorkspaceScreen({
   createIfMissing?: boolean;
   deploymentMode: WorkspaceDeploymentMode;
 }) {
-  const [workspace, setWorkspace] = useState<ReturnWorkspaceRecord | null>(null);
+  const [{ workspace, workspaceRevision, ownerScopeKey, hasPrivateSnapshot }, setWorkspaceSnapshot] = useState<{
+    workspace: ReturnWorkspaceRecord | null;
+    workspaceRevision: string | null;
+    ownerScopeKey: string | null;
+    hasPrivateSnapshot: boolean;
+  }>({ workspace: null, workspaceRevision: null, ownerScopeKey: null, hasPrivateSnapshot: false });
   const [workspaceLookupComplete, setWorkspaceLookupComplete] = useState(false);
   const [workspaceAvailability, setWorkspaceAvailability] = useState<"ready" | "owner-required">("ready");
   const [effectiveDeploymentMode, setEffectiveDeploymentMode] = useState<WorkspaceDeploymentMode>(deploymentMode);
   const [storageMessage, setStorageMessage] = useState<string | null>(null);
+  const [hostedLocalSaveFailed, setHostedLocalSaveFailed] = useState(false);
   const [answerDrafts, setAnswerDrafts] = useState<Record<string, string>>({});
   const [providerSummaryRun, setProviderSummaryRun] = useState<ProviderSummaryRun | null>(null);
   const [providerSummaryPending, setProviderSummaryPending] = useState(false);
@@ -441,7 +450,7 @@ export function ReturnWorkspaceScreen({
   const [guidedReviewIssues, setGuidedReviewIssues] = useState<GuidedReviewIssue[]>([]);
   const [guidedMode, setGuidedModeRaw] = useState(() => {
     const browserStorage = getBrowserStorage();
-    return browserStorage ? readGuidedModePreference(browserStorage, workspaceId) : true;
+    return deploymentMode === "self-host" && browserStorage ? readGuidedModePreference(browserStorage, workspaceId) : true;
   });
   function setGuidedMode(value: boolean) {
     const browserStorage = getBrowserStorage();
@@ -455,11 +464,21 @@ export function ReturnWorkspaceScreen({
           return;
         }
       }
-      browserStorage.setItem(getWorkspaceGuidedModeStorageKey(workspaceId), String(value));
+      if (localWorkspaceEditingEnabled) browserStorage.setItem(getWorkspaceGuidedModeStorageKey(workspaceId), String(value));
+      else if (ownerScopeKey) browserStorage.setItem(hostedGuidedModeKey(ownerScopeKey, workspaceId), String(value));
     }
     setGuidedModeRaw(value);
   }
   const localWorkspaceEditingEnabled = effectiveDeploymentMode === "self-host";
+  const documentCacheWorkspaceId = localWorkspaceEditingEnabled ? workspaceId
+    : ownerScopeKey ? hostedDocumentCacheId(ownerScopeKey, workspaceId) : null;
+  const guidedDraft = useMemo(() => localWorkspaceEditingEnabled ? workspaceId
+    : ownerScopeKey && workspaceRevision ? hostedGuidedDraftId(ownerScopeKey, workspaceId, workspaceRevision) : null,
+  [localWorkspaceEditingEnabled, ownerScopeKey, workspaceId, workspaceRevision]);
+
+  function setWorkspace(localWorkspace: ReturnWorkspaceRecord) {
+    setWorkspaceSnapshot({ workspace: localWorkspace, workspaceRevision: null, ownerScopeKey: null, hasPrivateSnapshot: false });
+  }
 
   useEffect(() => {
     setEffectiveDeploymentMode(deploymentMode);
@@ -467,20 +486,38 @@ export function ReturnWorkspaceScreen({
 
   useEffect(() => {
     const browserStorage = getBrowserStorage();
-    setGuidedModeRaw(browserStorage ? readGuidedModePreference(browserStorage, workspaceId) : true);
-  }, [workspaceId]);
+    if (!browserStorage) return;
+    if (localWorkspaceEditingEnabled) setGuidedModeRaw(readGuidedModePreference(browserStorage, workspaceId));
+    else if (ownerScopeKey) setGuidedModeRaw(browserStorage.getItem(hostedGuidedModeKey(ownerScopeKey, workspaceId)) !== "false");
+  }, [localWorkspaceEditingEnabled, ownerScopeKey, workspaceId]);
 
 
-  async function persistHostedWorkspace(nextWorkspace: ReturnWorkspaceRecord) {
+  async function persistHostedWorkspace(nextWorkspace: ReturnWorkspaceRecord, resetGuided = false) {
     const browserStorage = requireBrowserStorage();
-    const { adapter, workspace: savedWorkspace } = await savePersistedWorkspace({
+    const { adapter, workspace: savedWorkspace, workspaceRevision: savedRevision, localMirrorSaved } = await savePersistedWorkspace({
       deploymentMode: effectiveDeploymentMode,
       workspace: nextWorkspace,
+      workspaceRevision,
+      ownerScopeKey,
       browserStorage
     });
 
+    let draftSaved = true;
+    if (ownerScopeKey && workspaceRevision && savedRevision) {
+      try {
+        if (resetGuided) {
+          clearHostedWorkspaceBrowserState(browserStorage, ownerScopeKey, workspaceId, workspaceRevision);
+        } else {
+          advanceHostedGuidedDraft(browserStorage, ownerScopeKey, workspaceId, workspaceRevision, savedRevision);
+        }
+      } catch {
+        draftSaved = false;
+      }
+    }
     setWorkspaceAvailability(adapter.availability);
-    setWorkspace(savedWorkspace);
+    setWorkspaceSnapshot({ workspace: savedWorkspace, workspaceRevision: savedRevision,
+      ownerScopeKey: adapter.ownerScope?.scopeKey ?? null, hasPrivateSnapshot: true });
+    setHostedLocalSaveFailed(!localMirrorSaved || !draftSaved);
     return savedWorkspace;
   }
 
@@ -512,7 +549,7 @@ export function ReturnWorkspaceScreen({
           }
         }
 
-        const { adapter, workspace: nextWorkspace } = await loadPersistedWorkspace({
+        const { adapter, workspace: nextWorkspace, workspaceRevision: nextRevision, localMirrorMatched } = await loadPersistedWorkspace({
           deploymentMode,
           browserStorage,
           workspaceId,
@@ -521,7 +558,15 @@ export function ReturnWorkspaceScreen({
 
         setEffectiveDeploymentMode(deploymentMode);
         setWorkspaceAvailability(adapter.availability);
-        setWorkspace(nextWorkspace ? reconcileWorkspaceGuidedState(nextWorkspace, loadGuidedFlowState(browserStorage, workspaceId)) : null);
+        const nextOwnerScopeKey = adapter.ownerScope?.scopeKey ?? null;
+        const draft = deploymentMode === "self-host" ? workspaceId : nextOwnerScopeKey && nextRevision
+          ? hostedGuidedDraftId(nextOwnerScopeKey, workspaceId, nextRevision) : null;
+        setWorkspaceSnapshot({
+          workspace: nextWorkspace ? reconcileWorkspaceGuidedState(nextWorkspace, draft ? loadGuidedFlowState(browserStorage, draft) : null) : null,
+          workspaceRevision: nextRevision,
+          ownerScopeKey: nextOwnerScopeKey,
+          hasPrivateSnapshot: localMirrorMatched,
+        });
         setWorkspaceLookupComplete(true);
         setStorageMessage(
           adapter.availability === "owner-required"
@@ -586,7 +631,7 @@ export function ReturnWorkspaceScreen({
       return;
     }
 
-    const nextGuidedFlowState = loadGuidedFlowState(browserStorage, workspace.id);
+    const nextGuidedFlowState = guidedDraft ? loadGuidedFlowState(browserStorage, guidedDraft) : null;
     setPersistedGuidedFlowState(nextGuidedFlowState);
     setGuidedReviewIssues(nextGuidedFlowState ? collectGuidedReviewIssues(nextGuidedFlowState) : []);
 
@@ -636,7 +681,7 @@ export function ReturnWorkspaceScreen({
           }
         : undefined
     });
-  }, [workspace]);
+  }, [guidedDraft, workspace]);
 
   async function uploadFiles(files: File[]) {
     if (files.length === 0) {
@@ -652,10 +697,10 @@ export function ReturnWorkspaceScreen({
       if (futureYearSampleUploadMessage) throw new Error(futureYearSampleUploadMessage);
 
       if (!browserStorage) {
-        const savedWorkspace = await ingestHostedDocumentFiles(workspace, preparedFiles, files, persistHostedWorkspace);
+        if (!documentCacheWorkspaceId || !workspaceRevision) throw new Error("Reopen your saved return before uploading documents.");
+        const savedWorkspace = await ingestHostedDocumentFiles(workspace, preparedFiles, files, documentCacheWorkspaceId, persistHostedWorkspace);
         const message = `${savedWorkspace.summary.totalDocuments} documents processed. Raw files stay local and are not stored in durable hosted storage.`;
 
-        setWorkspace(savedWorkspace);
         setStorageMessage(message);
         return message;
       }
@@ -711,9 +756,9 @@ export function ReturnWorkspaceScreen({
 
       void (async () => {
         try {
-          await persistHostedWorkspace(clearWorkspaceRecord(workspace));
-          await deleteCachedWorkspaceDocumentFiles(workspaceId);
-          clearWorkspaceGuidedData(requireBrowserStorage(), workspaceId);
+          if (!documentCacheWorkspaceId || !workspaceRevision) throw new Error("Reopen your saved return before resetting it.");
+          await persistHostedWorkspace(clearWorkspaceRecord(workspace), true);
+          await deleteCachedWorkspaceDocumentFiles(documentCacheWorkspaceId, workspace.documents.map(document => document.id));
           resetWorkspaceUi();
           setStorageMessage("Return reset.");
         } catch (error) {
@@ -744,8 +789,9 @@ export function ReturnWorkspaceScreen({
 
       void (async () => {
         try {
+          if (!documentCacheWorkspaceId || !workspaceRevision) throw new Error("Reopen your saved return before removing documents.");
           await persistHostedWorkspace(removeDocumentFromWorkspace(workspace, documentId));
-          await deleteCachedWorkspaceDocumentFiles(workspaceId, [documentId]);
+          await deleteCachedWorkspaceDocumentFiles(documentCacheWorkspaceId, [documentId]);
           setStorageMessage(`Removed ${documentLabel}.`);
         } catch (error) {
           setStorageMessage(resolveUiErrorMessage(error, "Could not remove the document. Please try again."));
@@ -1092,6 +1138,12 @@ export function ReturnWorkspaceScreen({
     : canDownloadFilledReturnPdf
       ? "You can download a review PDF after completing the required taxpayer facts. It is not a filing copy. Save the workspace summary and audit notes as JSON."
       : "Your return is not filing-ready yet. Download a local draft return bundle with the current forms data, checklist, and review notes.";
+  const hostedLocalSaveWarning = hostedLocalSaveFailed ? (
+    <p role="alert">The account copy was saved. This browser could not save the private local copy. Keep this page open until you have backed up your work.</p>
+  ) : null;
+  const hostedBackup = ownerScopeKey && workspaceRevision && hasPrivateSnapshot ? (
+    <WorkspaceRecoveryControls workspaceId={workspaceId} hosted={{ ownerScopeKey, current: { workspace, revision: workspaceRevision } }} />
+  ) : null;
   const filingPackButtonLabel = canPresentCompletedBundle ? "Download Return Bundle (.json)" : "Download Draft Return Bundle (.json)";
   const missingItemsMemoIncluded = filingPackDownload?.filingPack.files.some(
     (file) => file.path === "05-missing-items-memo.txt"
@@ -1504,8 +1556,12 @@ export function ReturnWorkspaceScreen({
   if (guidedMode) {
     return (
       <div className="workspace-grid">
+        {hostedLocalSaveWarning}
+        {hostedBackup}
         <GuidedInterviewShell
           workspace={workspace}
+          guidedDraft={guidedDraft}
+          documentCacheWorkspaceId={documentCacheWorkspaceId}
           beforeGuidedWrite={localWorkspaceEditingEnabled ? () => {
             requireCurrentLocalWorkspace(requireBrowserStorage(), workspace);
           } : undefined}
@@ -1515,13 +1571,12 @@ export function ReturnWorkspaceScreen({
           }}
           onUploadDocuments={handleGuidedUpload}
           resumeSectionId={guidedResumeSectionId}
-          onSyncToWorkspace={(syntheticDocuments, factAnswers, guidedFlowState) => {
+          onSyncToWorkspace={async (syntheticDocuments, factAnswers, guidedFlowState) => {
             if (localWorkspaceEditingEnabled) {
               setWorkspace(syncLocalGuidedFlowToWorkspace(requireBrowserStorage(), workspace, syntheticDocuments, factAnswers, guidedFlowState));
             } else {
               const synced = syncGuidedFlowToWorkspace(workspace, syntheticDocuments, factAnswers, guidedFlowState);
-              setWorkspace(synced);
-              void persistHostedWorkspace(synced);
+              await persistHostedWorkspace(synced);
             }
             setGuidedMode(false);
             setGuidedResumeSectionId(null);
@@ -1533,6 +1588,8 @@ export function ReturnWorkspaceScreen({
 
   return (
     <div className="workspace-grid">
+      {hostedLocalSaveWarning}
+      {hostedBackup}
       <div className="guided-mode-toggle" style={{ justifyContent: "flex-start" }}>
         <button
           className="utility-button utility-button-small"
