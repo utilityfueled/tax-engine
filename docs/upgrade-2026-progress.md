@@ -4,6 +4,16 @@ Current source, verification and remaining work are summarized in the
 [current continuation](upgrade-2026-current-status.md). Historical results
 below apply to their named revisions.
 
+- November 14 UTC — `09d3247c` passes 3,552 web tests against PostgreSQL
+  16.16, all 15 production HTTP fault checks, and all seven real Chromium
+  concurrent-write, account-isolation and encrypted-backup checks.
+  `6f46c43d` passes that complete browser sequence plus four guided-document
+  account-switch checks. `6dae481d` blocks backups missing private interview
+  answers. `f6f71abf` disables implicit Sentry build, session and outcome
+  telemetry while preserving sanitized exceptions. The local commits remain
+  unpublished while automatic production deployment is being disabled.
+  [Current continuation](upgrade-2026-current-status.md).
+
 - November 13 — `7c09766d` pins the two current final Form 1062 PDFs and
   verifies 53 field widgets against redacted direct and pass-through
   specimens. Twenty focused checks and 8,977 spec references passed.

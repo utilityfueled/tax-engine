@@ -25592,6 +25592,25 @@
       "backupCompletenessCommit": "6dae481d8a6f7d6cf1e88e235ad7033a46a48fb7",
       "backupCompletenessFocusedPassed": 20
     },
+    "hostedDocumentAccountBinding": {
+      "commit": "6f46c43d0909f4872ea402358b7f134e57e56bec",
+      "focusedPassed": 165,
+      "chromiumDocumentChecksPassed": 4,
+      "chromiumConcurrencyChecksPassed": 7,
+      "predecessorReceiptSha256": "99ef3bc3b2875e8aedab41358bbb45a5257c65ea3057b31654210f6b5b5150f8",
+      "successorReceiptSha256": "273a8fcfa6acf1555c041a2740a7ec4c3caa21f56b3ab9f6dd85f0d454354695",
+      "ownedResourcesClosed": true,
+      "providerCalls": 0
+    },
+    "minimalDiagnosticEnvelopes": {
+      "commit": "f6f71abfc1c2a060456bd118e73841faace096ae",
+      "focusedPassed": 7,
+      "installedBrowserSdkUsed": true,
+      "implicitBuildAnalyticsDisabled": true,
+      "browserSessionAndClientReportsDisabled": true,
+      "sanitizedExceptionPreserved": true,
+      "externalTelemetrySent": false
+    },
     "illinoisHistoricalReviewPrivacy": {
       "commit": "39582414",
       "focusedPassed": 261,

@@ -133,6 +133,22 @@ database and bound ports closed. Deployed Preview remains unqualified.
 private interview answers. Its 20 focused recovery tests and strict spec
 validation passed.
 
+`6f46c43d` binds guided income and expense document analysis to the account
+captured when the return opened. A separate Chromium predecessor run
+confirmed that an untouched tab could submit its redacted statement after
+the browser signed in to another account. The fixed exact production build
+passed all four browser checks, rejecting stale and missing owner scopes
+before parsing while preserving same-owner analysis and signed-out denial.
+It also passed the complete seven-check concurrent-workspace and encrypted
+recovery rehearsal. All resources closed. No model or live service charge
+was involved. The 165 focused route and client checks passed.
+
+`f6f71abf` disables implicit Sentry build analytics, browser session tracking
+and client outcome reports. An offline test through the installed browser
+SDK reproduced session and client-report envelopes on the predecessor.
+The fixed SDK path emitted only the sanitized exception. All seven focused
+tests passed, preserving the optional authenticated source-map upload gate.
+
 `39582414` excludes full and masked bank details from Illinois historical
 review exports. The separate strict PDF check inspected the form and its
 two flattened pages, kept the exact refund and found none of the test bank
