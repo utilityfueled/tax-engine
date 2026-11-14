@@ -22,6 +22,33 @@ request sequence to the production HTTP rehearsal. The fixed build passed
 all 15 local checks with exactly one successful creation and verified cleanup.
 [Rehearsal evidence](upgrade-2026-nov13-release-rehearsals.md).
 
+`2529e382` applies the same HTTPS validation to the additional browser
+origins trusted by Better Auth and CORS. It keeps malformed environment
+values out of logs and blocks supplementary origins when the primary
+hosted origin cannot be established. Two checks failed on the predecessor.
+The corrected implementation passed 1,262 focused tests.
+
+`6125f136` adds a Pennsylvania ordinary estimated-tax planning worksheet.
+An explicitly complete $16,000 source yields an exact $442.08 estimate or
+four $110.52 installments. The scope is the pre-April non-farmer date band
+and the current-year method without withholding, credits, previous payments
+or a prior-year safe harbor. The exact thresholds, later date bands and
+competing statutory and published makeup payment schedules require review.
+[Pennsylvania worksheet](../spec/state/pa-2026-ordinary-estimated-tax.yaml).
+
+The managed `02e553cf` run passed all nine static, build, and spec checks.
+Unit tests reported 28,016 passes and eight fixture-version failures, then
+its isolated PostgreSQL database stopped normally. Chromium reported 617
+passes, one missing AOTC accessible label, and five original hosted-only
+skips. The failures are retained. `0091fbb6` reconnects the visible label and
+requires confirmation of current student and claimant facts after a student
+or return-year change. `24530094`
+completes the last generated fixture and a single exact digest change.
+All 2,680 focused guided, strict spec-ref, and current K-1 tests passed.
+The combined managed, hosted and ARM64 checks are running on frozen
+`24530094` with the same 623 Chromium cases, five hosted-only skips,
+request limits and zero retries.
+
 `d6fed7fc` requires an HTTPS origin without credentials, path, query or
 fragment for hosted production auth and billing. Invalid configuration
 values stay out of diagnostics. The 277 focused tests passed. The local

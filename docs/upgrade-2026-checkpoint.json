@@ -25469,6 +25469,31 @@
       "knownFindings": 0,
       "productionSha256": "802c55f7c0fed74cd44169b476634570a7f531cdf59d8a8688e396513ae3e5ce",
       "allSha256": "2bd34d50bec6f2f16e90551fcae80e94f898eabc4c169417a21a74f3fdf42d1f"
+    },
+    "frozenParallelRecheck": {
+      "predecessor": "02e553cf88b3d22ddaf72caf1acce4c5ae7adafc",
+      "predecessorStaticPassed": 9,
+      "predecessorUnitPassed": 28016,
+      "predecessorUnitFailed": 8,
+      "predecessorUnitResultSha256": "ec80d0283a3970d56166e324df6dd1bcc52adf51dc48fe0ffd69084be2f8692b",
+      "predecessorBrowserPassed": 617,
+      "predecessorBrowserFailed": 1,
+      "predecessorBrowserResultSha256": "1a70a7e1e6df8c4636748df909b3b69e1bb4fc274201bece1761cae1acdf1c13",
+      "source": "24530094d3de0dc629fa30b5e8f3eb297d50ea36",
+      "managedSourceArchiveSha256": "59b7d3713c3992443e31eb1ec5cdebfeec94bb30f38ae1db1f71bba2ddd6da58",
+      "browserAuditSha256": "e7be5ae486e7756cdb5b126301e2eeba71b2bc3e2b5bbe9156a7c34276bd50af",
+      "chromiumCases": 623,
+      "historicalHostedSkips": 5,
+      "focusedGuidedAndSpecPassed": 2680,
+      "focusedGuidedAndSpecSha256": "107ebae6e6715e1fac8eea7c8f72d3b6c1caf330d46ca8fb0c3ee9738950e99b",
+      "sourceBindingTestsPassed": 258,
+      "status": "running"
+    },
+    "supplementalHostedOrigin": {
+      "commit": "2529e382f9b6878eab12a627a9572877df3d39d4",
+      "regressionsFailedFirst": 2,
+      "focusedPassed": 1262,
+      "focusedSha256": "96a87eaf4d34423b9a63c675a5e5be25b0d88cb0703974aabb965d95bd37d61b"
     }
   }
 }

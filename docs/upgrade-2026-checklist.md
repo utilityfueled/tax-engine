@@ -17,6 +17,14 @@ below retain their original evidence boundaries.
 - [x] Apply the authoritative hosted origin to the private AI explanation
   route in `dcb9e7aa`. Reproduce six denied/accepted origin mismatches, then
   pass 103 focused tests without provider calls.
+- [x] Require valid explicit HTTPS origins for hosted auth and CORS in
+  `2529e382`. Two controls failed first, then 1,262 affected tests passed.
+- [x] Reconfirm saved AOTC student and claimant facts on return-year changes,
+  and preserve the separate student-source review after identity changes.
+  `0091fbb6` and `24530094` preserve current generated fixture versioning,
+  including the K-1 original. Independent student-only and omitted-review
+  regressions passed. Browser case counts, request limits, and retries match
+  the previous source.
 - [x] Recheck annual federal, Pennsylvania and Ohio final-form endpoints and
   prepare exact independent worksheets for six state residency cohorts and
   three federal questions. [Review assignment](upgrade-2026-nov14-human-tax-review.md).
@@ -83,8 +91,12 @@ below retain their original evidence boundaries.
 - [x] Distinguish an unsent AI evaluation attempt from ambiguous usage.
   `df106681` retains a hashed request reference for body failures and holds
   the full maximum when a cancellation receipt cannot be persisted.
-- [ ] Review the Pennsylvania estimated-tax thresholds, installment-date
-  boundaries and farmer underpayment worksheet before annual integration.
+- [x] Add the `6125f136` Pennsylvania non-farmer pre-April planning estimate
+  with a conservative positive boundary and exact fractional cents. The
+  102 focused and adjacent tests pass. [Worksheet spec](../spec/state/pa-2026-ordinary-estimated-tax.yaml).
+- [ ] Review the Pennsylvania exact thresholds, later installment date and
+  allocation discrepancies, and the farmer/dated underpayment worksheet
+  before annual integration.
 - [x] Add the AMD64 CI archive import, verification and cleanup in
   `845b3e9e`. Run 158 focused checks and 17 mock controls.
 - [x] Verify and scan the two pinned PostgreSQL Compose platform images.
