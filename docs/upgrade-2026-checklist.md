@@ -6,6 +6,18 @@ below retain their original evidence boundaries.
 
 ## Active continuation — November 13 Eastern
 
+- [x] Verify the Form 1062 and Schedule A direct-sale worksheets in
+  `52246eb5` and `50c72a04`. Pass 521 affected checks with exact cents
+  and confirmed sale originals. Correct the fixture attribution to
+  distinguish the synthetic direct sale from IRS ATS scenario 13.
+- [ ] Verify the separate Form 1062 partnership allocation, final 2026
+  annual transfers and required attachments, and obtain qualified review
+  before any live calculation or export path is enabled.
+- [x] Complete exact `e3c90730` ARM64 image import, SBOM/scan, six Compose
+  recovery phases and 616 Chromium cases with five hosted-only skips.
+  Verify normal stop, restored socket route and unchanged default.
+- [x] Pass 14 exact `7924a91d` local hosted HTTP checks with TLS
+  PostgreSQL and two Next servers. Verify shutdown and loopback cleanup.
 - [x] Verify the 2026 draft Schedule 3-A worksheet in `7924a91d` against
   Treasury's published examples and cent boundaries. Pass 1,388 affected
   tests and keep live calculation, intake, filing and export disconnected.

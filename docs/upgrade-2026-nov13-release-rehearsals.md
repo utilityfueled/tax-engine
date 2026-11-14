@@ -1,5 +1,20 @@
 # November 13 isolated release rehearsals
 
+## Local hosted HTTP on `7924a91d`
+
+The exact source passed a frozen offline install, a production webpack
+build and 14 HTTP checks across two Next processes using PostgreSQL 16.16
+with certificate verification and a synthetic Redis REST transport.
+The checks covered cross-tenant access, deletion, request limits,
+interruption and fail-closed database and Redis behavior. Both servers
+stopped and all four loopback ports closed. No real provider, SMTP,
+Stripe or Preview was used.
+
+| Evidence | SHA-256 |
+| --- | --- |
+| HTTP result | `b8f7c69819abb890914137288371be3967ffcfad389493822a2496514e7049ae` |
+| Build and controller result | `2df93d831b83338b0879f585102dcc0391129766d209803a1d03e55b51629d81` |
+
 ## Hosted Preview
 
 ### Healthy isolated Preview and Redis privacy on `a022a2ec`
@@ -159,6 +174,30 @@ with OpenSSL and the same verified release source before the rerun.
 | Local production HTTP and TLS cleanup | `1392d150f40f9cba76fd4bc54485352adcbb400404ec9bf5e8808ebceef8dd2a` |
 
 ## ARM64 self-host
+
+### Form 4972 estate-allocation archive at `e3c90730`
+
+The first preflight stopped before boot. The private archive extraction
+gave the tracked public sample registry mode 0600. The retry preserved
+the tracked bytes and staged that public fixture at 0644 inside the
+private root. The exact ARM64 image built and imported into a separate
+container store. Smoke, zero set-ID regular files, the SBOM, Grype scan
+and six Compose recovery phases passed. Chromium passed 616 tests with
+five hosted-only skips. The controller removed its browser container,
+stopped the VM normally and verified its user socket was restored and
+the root socket and default connection were unchanged. No VM remained
+active. Grype reported 197 matches, including 60 high and zero critical.
+Advisory disposition remains open.
+
+| Evidence | SHA-256 |
+| --- | --- |
+| Image archive | `1c636879ab79ccbf68bff5b173cf0f1923d4b19c2bf20a0e2a2cb048e1097275` |
+| SBOM | `181d007d2f531905c011dd2035f7f560a89d32e221913493defe354014d7c011` |
+| Scan | `041538c71ac10d833ba1c6620600a4126cad725936268990740c37c77d97f4fe` |
+| Compose recovery | `4a967531b0106b64dd8f2813225884df54bce652750f829658e90cc5557bf9d6` |
+| Chromium | `a0a288f64631d7b381931e67799faffcc8e952d5a7d6c71d2dbf2f3e32dc2213` |
+| Terminal receipt | `f4d95bcec4a731c385e7c2f9eed034502e744868a16f5e7597fe10a69e039a2f` |
+| Cleanup | `cd32053478e94fc27e16e991280a6f3de2d3580c6280dd1e44122dc93d318b40` |
 
 ### App and annuity archive at `e6a34ac3`
 

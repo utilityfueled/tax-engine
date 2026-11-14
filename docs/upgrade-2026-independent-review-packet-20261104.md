@@ -132,6 +132,32 @@ Record the exact final revisions when they become available.
 [Pennsylvania forms](https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax) ·
 [Ohio forms](https://tax.ohio.gov/home/forms).
 
+## November 13 farmland and refundable credit questions
+
+For Form 1062, derive the sale gain and both tax determinations separately
+from the synthetic direct-sale originals in `50c72a04`. Confirm which
+regular-tax additions and credit subparts to recompute. Check installment
+rounding, the sale-year estimated payment exclusion and the later
+installment and acceleration boundaries. In IRS ATS scenario 13 the
+partnership K-1 supplies $56,516, the partner's Schedule A lines 9–12
+are blank, and draft Form 1062 reports $13,621 on line 14 and $3,405 on
+line 15. Verify the required partnership originals and return transfers
+independently. [IRS instructions](https://www.irs.gov/instructions/i1062) ·
+[IRS ATS scenario 13](https://www.irs.gov/pub/irs-efile/ty26-1040-ats-scenario-13.pdf) ·
+[Notice 2026-3](https://www.irs.gov/pub/irs-drop/n-26-03.pdf).
+
+For Schedule 3-A, confirm which amount controls Pennsylvania's Working
+Pennsylvanians Tax Credit and Ohio's earned income credit if the final
+federal treatment leaves a positive amount on Form 1040 line 27a but
+adjusts aggregate refundable payments. Pennsylvania's statute refers to
+the federal credit received and separately requires claiming it. Ohio's
+statute refers to the federal credit allowed. Check a return with EIC
+alone and a return with EIC and a second refundable credit. Verify the
+effective date and state agency transfer instructions before relying on
+either interpretation. [PA Act 45 of 2025, section 15](https://www.palegis.us/statutes/unconsolidated/law-information/view-statute?ActNum=0045.&SessInd=0&SessYr=2025&txtType=PDF) ·
+[Ohio Revised Code §5747.71](https://codes.ohio.gov/ohio-revised-code/section-5747.71) ·
+[IRS draft Schedule 3-A](https://www.irs.gov/pub/irs-dft/f1040s3a--dft.pdf).
+
 ## How to record your result
 
 For every method actually examined, record:

@@ -11,6 +11,19 @@ The isolated rehearsal project has no Git link and protects all deployments.
 The team is on Pro, whose Sandbox credits are shared and can incur overage.
 No Sandbox was started. [Vercel Sandbox pricing](https://vercel.com/docs/sandbox/pricing).
 
+`52246eb5` and `50c72a04` calculate the 2026 Form 1062 payment deferral
+for one confirmed direct farmland sale and replay its Schedule A originals.
+The tests require an exact gain reconciliation, calculate the four equal
+shares in Decimal, and preserve the potentially excludable 75% separately
+from current estimated payments. The 521 focused tests, types, strict lint,
+971-entry inventory and 8,953 spec references passed. The first commit
+misattributed a synthetic case to IRS ATS scenario 13. The second corrects
+that label. The IRS case is a partnership allocation, with $56,516 on
+Schedule A line 13, blank lines 9–12, and $13,621 on Form 1062 line 14.
+Partnership sources and annual return transfer are open. The worksheet has
+no live or export path. [IRS instructions](https://www.irs.gov/instructions/i1062) ·
+[IRS ATS scenario 13](https://www.irs.gov/pub/irs-efile/ty26-1040-ats-scenario-13.pdf).
+
 `7924a91d` verifies the 2026 draft Schedule 3-A arithmetic in an isolated
 worksheet for Forms 1040 and 1040-SR. It aggregates the four covered
 refundable credits, preserves other payments, and leaves an unknown election
@@ -76,11 +89,19 @@ in both unit and coverage, 87.91% branch coverage, and 616 Chromium passes
 with five hosted-only skips. Its owned PostgreSQL stopped. Exact `021b2881`
 passed 11 managed checks with 27,913 tests in both unit and coverage and
 87.92% branches. Its browser guard rejected stale source digests before
-runtime and the owned database stopped. The `e3c90730` managed unit suite passed
-27,918 tests and its exact ARM64 smoke, scan and Compose recovery passed.
-The browser suite is running on that image. The first ARM64 preflight
-stopped before boot because the staged public sample registry had mode
-0600. Its bytes matched Git and the retry restored the required mode.
+runtime and the owned database stopped. Exact `e3c90730` ARM64 passed
+independent image import, smoke, SBOM and scan, six Compose recovery phases,
+and 616 Chromium cases with five hosted-only skips. Normal VM stop and
+socket restoration passed. The first preflight stopped before boot because
+the staged public registry had mode 0600. Its bytes matched Git and the
+successful retry restored the required mode. The managed macOS browser
+run is separate. [Rehearsal evidence](upgrade-2026-nov13-release-rehearsals.md).
+
+Exact `7924a91d` passed 14 local hosted HTTP checks using two webpack-built
+Next processes, TLS PostgreSQL 16.16 and a synthetic Redis REST transport.
+This run verified shared limits, tenant isolation, deletion, and dependency
+fault responses and recovery. Both servers stopped and four loopback
+ports closed. [Rehearsal evidence](upgrade-2026-nov13-release-rehearsals.md).
 
 `3a5c8375` preserves the provider's request identifier through a retry of
 unknown-usage recording and through later settlement. It rejects contradictory

@@ -24468,6 +24468,60 @@
       "https://www.irs.gov/instructions/i1099r"
     ]
   },
+  "nov13Form1062DirectSale": {
+    "worksheetCommit": "52246eb560b893adf7d8bb51b781970802791ab8",
+    "confirmedOriginalsCommit": "50c72a0417c5d83ca3ae293b405a4611444c766f",
+    "initialMissingImplementationSuites": 2,
+    "initialFocusedTestsPassed": 518,
+    "successorFocusedTestsPassed": 521,
+    "specReferencesValidated": 8953,
+    "inventoryEntries": 971,
+    "worksheetRedSha256": "406489772f718a7ebb70ee067eab3c6dd66b9cd449587df4c51718518b946758",
+    "worksheetGreenSha256": "5cb2ab8c5757c2d1623a5f0a90a2fbc25ce0d7a7dd8710c8de1e8429cfa8b676",
+    "scheduleARedSha256": "06c1779d7b3a5ab16bdbee44e37919c1be4b96760b14a76bf85d5d435d7715b5",
+    "scheduleAGreenSha256": "c215d47f0248e16f027c60d1d56381301ca10a64ab7951fcc50e078294ee0d4f",
+    "syntheticDirectSale": true,
+    "atsScenario13PartnershipAllocationAdmitted": false,
+    "productionCalculationOrExportEnabled": false,
+    "sources": [
+      "https://uscode.house.gov/us/usc/119-120/t26/s1062/",
+      "https://www.irs.gov/instructions/i1062",
+      "https://www.irs.gov/pub/irs-dft/f1062--dft.pdf",
+      "https://www.irs.gov/pub/irs-dft/f1062sa--dft.pdf",
+      "https://www.irs.gov/pub/irs-efile/ty26-1040-ats-scenario-13.pdf",
+      "https://www.irs.gov/pub/irs-drop/n-26-03.pdf"
+    ]
+  },
+  "nov13EstateAllocationRehearsals": {
+    "arm64": {
+      "source": "e3c9073083558706a3a9aad5d67767271e3251db",
+      "image": "7792a92cd9c319a78ca6fcbed17e66de1deca9d9070d6abda44bf8d017020390",
+      "imageArchiveSha256": "1c636879ab79ccbf68bff5b173cf0f1923d4b19c2bf20a0e2a2cb048e1097275",
+      "sbomSha256": "181d007d2f531905c011dd2035f7f560a89d32e221913493defe354014d7c011",
+      "scanSha256": "041538c71ac10d833ba1c6620600a4126cad725936268990740c37c77d97f4fe",
+      "composeRecoverySha256": "4a967531b0106b64dd8f2813225884df54bce652750f829658e90cc5557bf9d6",
+      "chromiumSha256": "a0a288f64631d7b381931e67799faffcc8e952d5a7d6c71d2dbf2f3e32dc2213",
+      "receiptSha256": "f4d95bcec4a731c385e7c2f9eed034502e744868a16f5e7597fe10a69e039a2f",
+      "cleanupSha256": "cd32053478e94fc27e16e991280a6f3de2d3580c6280dd1e44122dc93d318b40",
+      "composeRecoveryPhasesPassed": 6,
+      "chromiumPassed": 616,
+      "chromiumHostedOnlySkipped": 5,
+      "advisoryMatches": 197,
+      "highAdvisoryMatches": 60,
+      "criticalAdvisoryMatches": 0,
+      "riskAccepted": false,
+      "cleanupVerified": true
+    },
+    "localHosted": {
+      "source": "7924a91d3b19a1429e8fa9813d03c3e14c8beb0c",
+      "httpChecksPassed": 14,
+      "httpReceiptSha256": "b8f7c69819abb890914137288371be3967ffcfad389493822a2496514e7049ae",
+      "controllerReceiptSha256": "2df93d831b83338b0879f585102dcc0391129766d209803a1d03e55b51629d81",
+      "protectedStaging": false,
+      "cleanupVerified": true
+    },
+    "ledger": "docs/upgrade-2026-nov13-release-rehearsals.md"
+  },
   "nov13DraftSchedule3A": {
     "commit": "7924a91d3b19a1429e8fa9813d03c3e14c8beb0c",
     "initialMissingImplementationSuite": true,

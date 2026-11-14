@@ -4,6 +4,19 @@ Current source, verification and remaining work are summarized in the
 [current continuation](upgrade-2026-current-status.md). Historical results
 below apply to their named revisions.
 
+- November 13 — `52246eb5` and `50c72a04` add the separate Form 1062 and
+  Schedule A direct-sale worksheets. Two missing-implementation failures
+  preceded 518 and 521 focused passes. Strict lint, types, inventory and
+  8,953 spec references passed for the successor. The synthetic fixture
+  shares the reported gain from IRS ATS scenario 13, whose actual source
+  is a partnership. No live calculation or export is enabled.
+  [IRS instructions](https://www.irs.gov/instructions/i1062).
+- November 13 — Exact `e3c90730` passed ARM64 image import, smoke, SBOM
+  and scan, six Compose recovery phases, and 616 Chromium cases with
+  five hosted-only skips. Normal stop and socket restoration passed.
+  Exact `7924a91d` passed 14 two-process hosted HTTP checks locally with
+  TLS PostgreSQL and synthetic Redis transport.
+  [Rehearsal evidence](upgrade-2026-nov13-release-rehearsals.md).
 - November 13 — `7924a91d` adds the isolated 2026 draft Schedule 3-A
   worksheet. The new suite failed before implementation and all 1,388
   affected tests passed, along with types, strict lint, inventory and
