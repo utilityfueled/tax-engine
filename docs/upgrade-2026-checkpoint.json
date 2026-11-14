@@ -25430,6 +25430,44 @@
     }
   },
   "nov14ReleaseContinuation": {
+    "currentHostedK3Path": {
+      "source": "33f8f7845be607a7de07d38cddf6de099377dcc5",
+      "overallPassed": true,
+      "actualDesktopMobileCasesPassed": 2,
+      "widths": [
+        1280,
+        375
+      ],
+      "directHttpOperations": 66,
+      "browserRequests": 417,
+      "browserCleanupRequests": 6,
+      "newModelRequests": 0,
+      "privacyFailures": 0,
+      "observedRetries": 0,
+      "typedOriginalsPrivateReload": true,
+      "canonicalExactTax": "250.25",
+      "canonicalRoundedCredit": "250",
+      "tickerComparedToSameFrozenEngine": true,
+      "sanitizedCloudShell": true,
+      "staleWriteStatus": 412,
+      "otherTenantReturnAbsent": true,
+      "signedCancellationStatuses": [
+        403,
+        403
+      ],
+      "trialsCanceled": 2,
+      "syntheticCustomersDeleted": 2,
+      "sessionsRevoked": 2,
+      "ownedShellsAbsent": true,
+      "previewAndEnvironmentCleanupVerified": true,
+      "ownRedisKeysDeleted": 7,
+      "webhookRestored": true,
+      "independentActualReviewSha256": "1022481a6678b63cbd6c016edf0c83cc268aa4be8cc7d63124fdc2279f4a63de",
+      "priorFailedRunHttpOperations": 65,
+      "priorModeAbortHttpOperations": 0,
+      "bothFailuresRetained": true,
+      "wholeHostedServiceQualified": false
+    },
     "officialAnnualAfternoonRefresh": {
       "checkedAt": "2026-11-14T18:31:29.796287Z",
       "officialGets": 20,

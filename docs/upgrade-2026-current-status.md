@@ -1,5 +1,25 @@
 # Current 2026 upgrade continuation
 
+## November 14 current protected K-3 delivery
+
+The exact `33f8` protected Preview passes typed desktop/mobile K-1/K-3
+journeys, private reload, $250.25 exact foreign tax, $250 credit and the
+same-engine ticker comparison. Actual cloud metadata excludes private originals;
+revisions rotate, stale writes return 412 and the other tenant sees no return.
+Signed no-card Sandbox trials grant access and cancellation returns 403. Both
+trial customers and sessions, owned returns, temporary Preview/settings and
+seven versioned cache keys are cleaned up. Independent actual review passes.
+The initial wrong-locator failure and zero-side-effect file-mode abort remain
+retained. No model call, filing enablement or production action occurred.
+[Actual source, failures, cleanup and hashes](upgrade-2026-hosted-k3-20261114.md).
+
+The latest [provider refresh](upgrade-2026-provider-refresh-20261114.md) retains
+candidate prices and records GPT-5 Mini as Deprecated. The latest
+[advisory refresh](upgrade-2026-advisory-refresh-20261114.md) retains zero public
+registry advisories, 56 High application findings and nine Critical stock
+PostgreSQL findings; one new Unknown dpkg match remains unsuppressed. Human
+reviews, security disposition and final 2026 forms remain open.
+
 ## November 14 qualified K-3 originals and current local checks
 
 `33f8f784` supplies actual original partnership K-1/K-3 identity, year, passive

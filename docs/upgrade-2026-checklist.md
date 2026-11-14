@@ -6,6 +6,13 @@ below retain their original evidence boundaries.
 
 ## Active continuation — November 14
 
+- [x] Refresh official provider prices/capabilities and record the deprecated
+  GPT-5 Mini baseline without promotion or new paid calls.
+  [Provider evidence](upgrade-2026-provider-refresh-20261114.md).
+- [x] Refresh registry and runtime image advisories using the November 14
+  database; preserve the original stock High threshold and all findings.
+  [Advisory evidence](upgrade-2026-advisory-refresh-20261114.md).
+
 - [x] Refresh final annual federal/PA/Ohio endpoints at 18:31 UTC: 20 official
   responses and seven unchanged actual PDFs; final 2026 annual qualification
   remains unavailable. [Sources and limits](upgrade-2026-official-annual-afternoon-20261114.md).
@@ -15,8 +22,12 @@ below retain their original evidence boundaries.
   mapped local checks pass: 28,322 tests, 88.02% branches, 620 browser passes/five
   original hosted skips. Preserve existing credit/basis/privacy gates and the
   earlier diagnostic-pin failure. [Source and checks](upgrade-2026-guided-qualified-k3-20261114.md).
-- [ ] Complete current protected hosted K-3 and native ARM64 artifact rehearsals,
-  verify cleanup and independently review their actual saved evidence.
+- [x] Pass both actual protected hosted K-3 journeys with owner/revision
+  isolation, exact credit, private originals and sanitized cloud metadata;
+  verify trials/session/return/Preview/environment/cache cleanup and retain
+  both failed predecessors. [Hosted evidence](upgrade-2026-hosted-k3-20261114.md).
+- [ ] Complete the current native ARM64 artifact rehearsal, normal cleanup and
+  independent saved-artifact review.
 - [x] Rehearse the current eleven-table schema on the isolated Neon branch:
   UUID revisions, exact issuance/cancellation accounting, full native
   backup/restore and RESTRICT-only cleanup pass. Preserve the earlier archive

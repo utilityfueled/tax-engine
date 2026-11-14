@@ -5432,3 +5432,14 @@ fix `a396` changes no runtime input. All twelve mapped commands then pass with
 Both owned databases stop normally and independent source/result audit passes.
 Current hosted/native artifact runs continue; human and final 2026 gates remain.
 [Source, exact mapping and receipts](upgrade-2026-guided-qualified-k3-20261114.md).
+
+### November 14: protected K-3 delivery and cleanup pass
+
+Exact33f8 passes both actual desktop/mobile original K-1/K-3 journeys, private
+reload, canonical250.25/250 credit, sanitized cloud metadata, rotating revisions,
+stale-write412 and tenant isolation. Signed no-card Sandbox trials grant access;
+cancellation revokes both actors. Both trials/customers/sessions, owned shells,
+temporary Preview/settings and seven cache keys are cleaned up. Independent
+source and actual reviews pass. The wrong ticker locator and strict file-mode
+abort remain retained. No model call or production change occurred.
+[Exact artifacts, limits and failures](upgrade-2026-hosted-k3-20261114.md).

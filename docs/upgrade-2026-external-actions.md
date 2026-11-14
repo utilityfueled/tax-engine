@@ -2,6 +2,15 @@
 
 ## November 14 current boundaries
 
+The current guided K-3 source package passes all twelve mapped local checks
+(28,322 tests, 88.02% branches, 620 browser passes/five original hosted skips)
+and both actual protected desktop/mobile journeys, with independent artifact
+review and verified scoped cleanup. The latest provider and image-advisory
+refreshes retain the model and security gates. These are bounded engineering
+results, not human approval or whole-service qualification.
+[Hosted K-3 evidence](upgrade-2026-hosted-k3-20261114.md) ·
+[Current advisory findings](upgrade-2026-advisory-refresh-20261114.md).
+
 The owner authorizes ordinary bounded isolated rehearsal reruns and cleanup;
 source changes and historical boot/build/operation counters do not require new
 permission by themselves. Historical source-specific allowances below describe
