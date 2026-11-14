@@ -1,5 +1,22 @@
 # Current 2026 upgrade continuation
 
+## November 14 completed browser lane and source-bound education interest
+
+`3545a64d` reconciles separately reported original bank interest after a
+custodian-documented January 1 Coverdell cash conversion. The complete source
+packet passes 353 affected tests and separate twelve-test/fifty-negative review.
+Original Schedule B interest is counted once; ambiguous duplicate originals,
+missing domestic classification and other activity remain rejected.
+[Source and review evidence](upgrade-2026-coverdell-bank-interest-20261114.md).
+
+The frozen `8e7fd9a2` browser lane is now complete: 629 actual cases reconcile to
+624 passes and five original hosted skips, with zero failures/retries and normal
+server cleanup. Independent review checks all eight actual reports, immutable
+build observations and source hashes. Unit and coverage failures below remain
+retained and require a fresh combined successor. Mortgage guided browser work
+and current-loss composition continue independently; no current runtime or human
+qualification is inferred.
+
 ## November 14 current combined failure and separately completed successors
 
 Frozen `8e7fd9a2` passes all static checks. Its eight-worker unit and coverage

@@ -1,4 +1,28 @@
 {
+  "nov14EducationAndCompletedParallelBrowser": {
+    "educationCommit": "3545a64d",
+    "affectedTests": 353,
+    "independentTests": 12,
+    "independentNegativeProbes": 50,
+    "independentEducationReviewSha256": "7de35fed1a15b332f656a80f9a578f03a4bf0a40761cdfcfc7d1c471540069bf",
+    "browserSource": "8e7fd9a2",
+    "actualBrowserCases": 629,
+    "actualBrowserPasses": 624,
+    "originalHostedSkips": 5,
+    "failures": 0,
+    "retries": 0,
+    "normalCleanup": true,
+    "browserSession20221TerminalZeroAcknowledged": true,
+    "independentBrowserReviewSha256": "187271f83c778569762abc6c258803e0133d9e811dea866298e2a136db5ef8f2",
+    "unitAndCoverageSameFrozenSource": "Each28409PASS2oldReadinessFixtureFAIL;retained;ownedDBstopped",
+    "readinessTestSuccessor": "3777cb84",
+    "currentCombinedSuccessorRequired": true,
+    "activeParallel": ["guidedMortgageActualBrowser", "currentLossMortgageGuideComposition", "independentSourceAndArtifactReviews", "humanReviewPacketSupplement"],
+    "mainPushHold": true,
+    "humanReview": false,
+    "filingEnabled": false,
+    "modelPromotion": false
+  },
   "nov14ParallelSuccessorsAndReadinessFixtures": {
     "branch": "main",
     "localCommits": {

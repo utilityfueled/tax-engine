@@ -1,5 +1,12 @@
 # 2026 upgrade implementation evidence
 
+November 14: education original-bank-interest package `3545a64d` passes 353
+affected tests and independent twelve-test/fifty-negative source review. The
+frozen `8e7fd9a2` browser lane completes 629 actual cases: 624 passes, five
+original skips, zero failures/retries and normal cleanup. The separate failed
+unit/coverage runs remain retained pending a current combined successor.
+[Current continuation](upgrade-2026-current-status.md).
+
 November 14: current-loss mortgage composition `58be02ed` and guided market
 discount `6729c9a0` pass their separate source, manual and actual browser checks.
 Frozen `8e7fd9a2` passes static checks; unit and coverage each record 28,409
