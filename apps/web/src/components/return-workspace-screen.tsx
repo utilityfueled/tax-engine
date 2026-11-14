@@ -1562,6 +1562,7 @@ export function ReturnWorkspaceScreen({
           workspace={workspace}
           guidedDraft={guidedDraft}
           documentCacheWorkspaceId={documentCacheWorkspaceId}
+          documentAnalysisOwnerScopeKey={localWorkspaceEditingEnabled ? undefined : ownerScopeKey}
           beforeGuidedWrite={localWorkspaceEditingEnabled ? () => {
             requireCurrentLocalWorkspace(requireBrowserStorage(), workspace);
           } : undefined}

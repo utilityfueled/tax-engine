@@ -483,6 +483,7 @@ function SectionContent({
   state,
   workspace,
   documentCacheWorkspaceId,
+  documentAnalysisOwnerScopeKey,
   onUploadDocuments,
   onStateChange,
   guidedPreview,
@@ -494,6 +495,7 @@ function SectionContent({
   state: GuidedFlowState;
   workspace: ReturnWorkspaceRecord;
   documentCacheWorkspaceId?: string | null;
+  documentAnalysisOwnerScopeKey?: string | null;
   onUploadDocuments?: (files: File[]) => Promise<string>;
   onStateChange: (next: GuidedFlowState) => void;
   guidedPreview: GuidedPreviewMetrics | null;
@@ -543,6 +545,7 @@ function SectionContent({
         <SectionSelfEmployment
           workspace={workspace}
           documentCacheWorkspaceId={documentCacheWorkspaceId}
+          documentAnalysisOwnerScopeKey={documentAnalysisOwnerScopeKey}
           flowState={state}
           necEntries={necEntries}
           manualGrossReceipts={manualGrossReceipts}
@@ -809,6 +812,7 @@ function InterviewPhase({
   onStateChange,
   workspace,
   documentCacheWorkspaceId,
+  documentAnalysisOwnerScopeKey,
   onUploadDocuments,
   onFinish,
 }: {
@@ -819,6 +823,7 @@ function InterviewPhase({
   onStateChange: (next: GuidedFlowState) => void;
   workspace: ReturnWorkspaceRecord;
   documentCacheWorkspaceId?: string | null;
+  documentAnalysisOwnerScopeKey?: string | null;
   onUploadDocuments?: (files: File[]) => Promise<string>;
   onFinish: () => void;
 }) {
@@ -953,6 +958,7 @@ function InterviewPhase({
             state={state}
             workspace={workspace}
             documentCacheWorkspaceId={documentCacheWorkspaceId}
+            documentAnalysisOwnerScopeKey={documentAnalysisOwnerScopeKey}
             onUploadDocuments={onUploadDocuments}
             onStateChange={onStateChange}
             guidedPreview={guidedPreview}
@@ -1229,6 +1235,7 @@ export function GuidedInterviewShell({
   resumeSectionId,
   guidedDraft,
   documentCacheWorkspaceId,
+  documentAnalysisOwnerScopeKey,
 }: {
   workspace: ReturnWorkspaceRecord;
   onExitGuided: () => void;
@@ -1243,6 +1250,7 @@ export function GuidedInterviewShell({
   resumeSectionId?: InterviewSectionId | null;
   guidedDraft?: import("@/lib/guided-interview-flow").GuidedFlowStorageTarget | null;
   documentCacheWorkspaceId?: string | null;
+  documentAnalysisOwnerScopeKey?: string | null;
 }) {
   const [saveError, setSaveError] = useState<string | null>(null);
   const draftTarget = guidedDraft === undefined ? workspace.id : guidedDraft;
@@ -1386,6 +1394,7 @@ export function GuidedInterviewShell({
           onStateChange={handleFlowStateChange}
           workspace={workspace}
           documentCacheWorkspaceId={documentCacheWorkspaceId}
+          documentAnalysisOwnerScopeKey={documentAnalysisOwnerScopeKey}
           onUploadDocuments={onUploadDocuments}
           onFinish={handleFinishReview}
         />

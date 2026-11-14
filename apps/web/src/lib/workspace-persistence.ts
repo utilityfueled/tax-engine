@@ -4,6 +4,7 @@ import type {
   WorkspaceStorageMode
 } from "@tax-engine/contracts";
 import { resolveDeploymentMode } from "./deployment-mode";
+import { hostedWorkspaceOwnerScopeKey } from "./hosted-document-analysis-owner";
 import { isHostedProductionEnvironment } from "./hosted-runtime-safety";
 import { deleteCachedWorkspaceDocumentFiles } from "./workspace-document-file-cache";
 import { isLocalRecoveryWorkspace } from "./workspace-local-recovery";
@@ -497,7 +498,7 @@ export function resolveWorkspaceOwnerScope(
   return {
     ownerId,
     ownerLabel,
-    scopeKey: `hosted-owner:${ownerId}`
+    scopeKey: hostedWorkspaceOwnerScopeKey(ownerId)
   };
 }
 

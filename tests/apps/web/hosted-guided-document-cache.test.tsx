@@ -117,15 +117,15 @@ describe("hosted guided document cache", () => {
     vi.mocked(getCachedWorkspaceDocumentFile).mockReturnValueOnce(new Promise((resolve) => { finishOriginal = resolve; }));
     const props = { workspace: { ...workspace, storageMode: "hosted-postgres" as const }, necEntries: [], manualGrossReceipts: "", expenses: emptyScheduleCExpenses,
       bankStatementAnalyses: [], incomeDocumentAnalyses: [], onSectionChange: vi.fn() };
-    const render = (cacheId?: string | null) => act(async () => root.render(
-      <SectionSelfEmployment {...props} documentCacheWorkspaceId={cacheId} />,
+    const render = (cacheId?: string | null, ownerScopeKey?: string | null) => act(async () => root.render(
+      <SectionSelfEmployment {...props} documentCacheWorkspaceId={cacheId} documentAnalysisOwnerScopeKey={ownerScopeKey} />,
     ));
     const consent = () => container.querySelector<HTMLInputElement>('input[aria-label="Allow AI review of selected business documents"]');
 
-    await render(firstKey);
+    await render(firstKey, "hosted-owner:owner-a");
     await act(async () => consent()?.click());
     await press("Review selected attached docs");
-    await render(secondKey);
+    await render(secondKey, "hosted-owner:owner-b");
     await act(async () => finishOriginal(new File(["A"], "first-owner.pdf")));
     expect(analyzeSelfEmploymentIncomeDocuments).not.toHaveBeenCalled();
     expect(props.onSectionChange).not.toHaveBeenCalled();
@@ -136,10 +136,11 @@ describe("hosted guided document cache", () => {
     await press("Review selected attached docs");
     expect(getCachedWorkspaceDocumentFile).toHaveBeenLastCalledWith(secondKey, documentId);
     expect(vi.mocked(analyzeSelfEmploymentIncomeDocuments).mock.lastCall?.[0][0].name).toBe("second-owner.pdf");
+    expect(vi.mocked(analyzeSelfEmploymentIncomeDocuments).mock.lastCall?.[1]?.expectedHostedOwnerScopeKey).toBe("hosted-owner:owner-b");
 
     await render(null);
     expect(findButton("Review selected attached docs")).toBeUndefined();
-    expect(findButton("Upload paystubs or invoices")).toBeDefined();
+    expect(findButton("Upload paystubs or invoices")?.disabled).toBe(true);
     await render();
     expect(findButton("Review selected attached docs")).toBeUndefined();
   });

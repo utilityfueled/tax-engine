@@ -34,6 +34,7 @@ import {
   hasCachedWorkspaceDocumentFile,
 } from "@/lib/workspace-document-file-cache";
 import { isGuidedSyntheticDocument } from "@/lib/workspace-status-copy";
+import { hostedDocumentAnalysisOwnerRequired } from "@/lib/hosted-document-analysis-owner";
 import { CurrencyField } from "./currency-field";
 import { CompensationReportingFields } from "./compensation-reporting-fields";
 import { BooleanFact, TextFact } from "./fact-fields";
@@ -223,6 +224,7 @@ function isActionableBusinessSuggestion(
 export function SectionSelfEmployment({
   workspace,
   documentCacheWorkspaceId,
+  documentAnalysisOwnerScopeKey,
   flowState,
   necEntries,
   manualGrossReceipts,
@@ -235,6 +237,7 @@ export function SectionSelfEmployment({
 }: {
   workspace: ReturnWorkspaceRecord;
   documentCacheWorkspaceId?: string | null;
+  documentAnalysisOwnerScopeKey?: string | null;
   flowState?:GuidedFlowState;
   necEntries: NecEntryData[];
   manualGrossReceipts: string;
@@ -256,6 +259,9 @@ export function SectionSelfEmployment({
   const cacheWorkspaceId = documentCacheWorkspaceId === undefined
     ? (workspace.storageMode === "local-browser" ? workspace.id : null)
     : documentCacheWorkspaceId;
+  const expectedHostedOwnerScopeKey = documentAnalysisOwnerScopeKey ?? (
+    documentAnalysisOwnerScopeKey === null || workspace.storageMode === "hosted-postgres" ? null : undefined
+  );
   const currentEntries = necEntries.length > 0 ? necEntries : [emptyNecEntry];
   const currentExpenses = expenses ?? emptyScheduleCExpenses;
   const currentAnalyses = bankStatementAnalyses ?? [];
@@ -267,13 +273,15 @@ export function SectionSelfEmployment({
   const [analysisMessage, setAnalysisMessage] = useState<string | null>(null);
   const [incomeAnalysisPending, setIncomeAnalysisPending] = useState(false);
   const [incomeAnalysisMessage, setIncomeAnalysisMessage] = useState<string | null>(null);
-  const [aiReviewScope, setAiReviewScope] = useState<{ workspaceId: string; cacheWorkspaceId: string | null } | null>(null);
-  const matchesReviewScope = aiReviewScope?.workspaceId === workspace.id && aiReviewScope.cacheWorkspaceId === cacheWorkspaceId;
-  const canReviewBusinessDocuments = matchesReviewScope && !hasWageringLedger;
-  type ReviewJob = { controller: AbortController; workspaceId: string; cacheWorkspaceId: string | null };
+  type ReviewScope = { workspaceId: string; cacheWorkspaceId: string | null; expectedHostedOwnerScopeKey?: string | null };
+  const [aiReviewScope, setAiReviewScope] = useState<ReviewScope | null>(null);
+  const matchesReviewScope = aiReviewScope?.workspaceId === workspace.id && aiReviewScope.cacheWorkspaceId === cacheWorkspaceId
+    && aiReviewScope.expectedHostedOwnerScopeKey === expectedHostedOwnerScopeKey;
+  const canReviewBusinessDocuments = matchesReviewScope && !hasWageringLedger && expectedHostedOwnerScopeKey !== null;
+  type ReviewJob = { controller: AbortController } & ReviewScope;
   const reviewJobs = useRef<Partial<Record<"income" | "expense", ReviewJob>>>({});
   const currentSection = {
-    workspaceId: workspace.id, cacheWorkspaceId, aiReviewAllowed: canReviewBusinessDocuments, onSectionChange,
+    workspaceId: workspace.id, cacheWorkspaceId, expectedHostedOwnerScopeKey, aiReviewAllowed: canReviewBusinessDocuments, onSectionChange,
     value: { necEntries: currentEntries, manualGrossReceipts, expenses: currentExpenses, bankStatementAnalyses: currentAnalyses, incomeDocumentAnalyses: currentIncomeAnalyses, qbiMateriallyParticipated, businessFacts },
   };
   const latestSection = useRef(currentSection);
@@ -312,7 +320,7 @@ export function SectionSelfEmployment({
       reviewJobs.current.expense?.controller.abort();
       reviewJobs.current = {};
     };
-  }, [cacheWorkspaceId, workspace.id]);
+  }, [cacheWorkspaceId, expectedHostedOwnerScopeKey, workspace.id]);
 
   function cancelReview(kind: "income" | "expense") {
     reviewJobs.current[kind]?.controller.abort();
@@ -323,7 +331,7 @@ export function SectionSelfEmployment({
   function startReview(kind: "income" | "expense") {
     if (!latestSection.current.aiReviewAllowed) return undefined;
     reviewJobs.current[kind]?.controller.abort();
-    const job = { controller: new AbortController(), workspaceId: workspace.id, cacheWorkspaceId };
+    const job = { controller: new AbortController(), workspaceId: workspace.id, cacheWorkspaceId, expectedHostedOwnerScopeKey };
     reviewJobs.current[kind] = job;
     return job;
   }
@@ -331,6 +339,7 @@ export function SectionSelfEmployment({
     const current = latestSection.current;
     return !job.controller.signal.aborted && reviewJobs.current[kind] === job
       && current.workspaceId === job.workspaceId && current.cacheWorkspaceId === job.cacheWorkspaceId
+      && current.expectedHostedOwnerScopeKey === job.expectedHostedOwnerScopeKey
       && current.aiReviewAllowed;
   }
 
@@ -563,7 +572,9 @@ export function SectionSelfEmployment({
         return;
       }
 
-      const analyses = await analyzeSelfEmploymentIncomeDocuments(files, { signal: job.controller.signal });
+      const analyses = await analyzeSelfEmploymentIncomeDocuments(files, {
+        signal: job.controller.signal, expectedHostedOwnerScopeKey: job.expectedHostedOwnerScopeKey,
+      });
       if (!ownsReview("income", job)) return;
       commitSection({
         incomeDocumentAnalyses: [
@@ -606,7 +617,9 @@ export function SectionSelfEmployment({
     setIncomeAnalysisMessage(null);
 
     try {
-      const analyses = await analyzeSelfEmploymentIncomeDocuments(files, { signal: job.controller.signal });
+      const analyses = await analyzeSelfEmploymentIncomeDocuments(files, {
+        signal: job.controller.signal, expectedHostedOwnerScopeKey: job.expectedHostedOwnerScopeKey,
+      });
       if (!ownsReview("income", job)) return;
       commitSection({
         incomeDocumentAnalyses: [
@@ -644,7 +657,9 @@ export function SectionSelfEmployment({
     setAnalysisMessage(null);
 
     try {
-      const analyses = await analyzeBusinessExpenseStatements(files, { signal: job.controller.signal });
+      const analyses = await analyzeBusinessExpenseStatements(files, {
+        signal: job.controller.signal, expectedHostedOwnerScopeKey: job.expectedHostedOwnerScopeKey,
+      });
       if (!ownsReview("expense", job)) return;
       commitSection({
         bankStatementAnalyses: [
@@ -713,13 +728,13 @@ export function SectionSelfEmployment({
           The difference is your net self-employment income.
         </p>
         <label className="guided-field">
-          <span><input type="checkbox" aria-label="Allow AI review of selected business documents" checked={canReviewBusinessDocuments} disabled={hasWageringLedger} onChange={(event) => {
-            const allowed = event.target.checked;
-            setAiReviewScope(allowed ? { workspaceId: workspace.id, cacheWorkspaceId } : null);
+          <span><input type="checkbox" aria-label="Allow AI review of selected business documents" checked={canReviewBusinessDocuments} disabled={hasWageringLedger || expectedHostedOwnerScopeKey === null} onChange={(event) => {
+            const allowed = event.target.checked && expectedHostedOwnerScopeKey !== null && !hasWageringLedger;
+            setAiReviewScope(allowed ? { workspaceId: workspace.id, cacheWorkspaceId, expectedHostedOwnerScopeKey } : null);
             latestSection.current.aiReviewAllowed = allowed;
             if (!allowed) { cancelReview("income"); cancelReview("expense"); }
           }} /> Allow AI review of selected business documents</span>
-          <span className="guided-field-hint">{hasWageringLedger ? "Review your professional wagering ledger from your own records." : "When you request a review, locally redacted document text is sent for AI analysis. Suggestions require your acceptance. This permission resets when you leave this section or change returns."}</span>
+          <span className="guided-field-hint">{hasWageringLedger ? "Review your professional wagering ledger from your own records." : expectedHostedOwnerScopeKey === null ? hostedDocumentAnalysisOwnerRequired : "When you request a review, locally redacted document text is sent for AI analysis. Suggestions require your acceptance. This permission resets when you leave this section or change returns."}</span>
         </label>
 
         <div className="guided-w2-card">

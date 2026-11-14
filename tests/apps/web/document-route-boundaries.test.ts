@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({ guard: vi.fn(), expense: vi.fn(), income: vi.fn(), rate: vi.fn(), actor: vi.fn(), pdf: vi.fn() }));
 vi.mock("server-only", () => ({}));
-vi.mock("../../../apps/web/src/lib/hosted-ai-route", () => ({ reserveHostedAiBudget: mocks.guard }));
+vi.mock("../../../apps/web/src/lib/hosted-ai-route", () => ({ authorizeHostedDocumentAnalysis: mocks.guard }));
 vi.mock("../../../apps/web/src/lib/gemini-document-analysis-server", () => ({ analyzeBusinessExpenseStatementWithGemini: mocks.expense, analyzeSelfEmploymentIncomeDocumentWithGemini: mocks.income }));
 vi.mock("../../../apps/web/src/lib/hosted-auth", () => ({ resolveHostedWorkspaceActor: mocks.actor }));
 vi.mock("../../../apps/web/src/lib/workspace-filled-return", () => ({ buildWorkspaceFilledReturnDownload: mocks.pdf }));
@@ -18,7 +18,7 @@ const workspace = { id: "synthetic", documents: [], returnSummary: {}, seededRet
 
 beforeEach(() => {
   vi.resetAllMocks(); vi.stubEnv("TAX_ENGINE_DEPLOYMENT_MODE", "self-host");
-  mocks.guard.mockResolvedValue({ response: null, reservation: null });
+  mocks.guard.mockResolvedValue(null);
   mocks.rate.mockResolvedValue({ allowed: true, retryAfterMs: null, remaining: 10 });
   mocks.actor.mockResolvedValue({ id: "synthetic-owner" });
   mocks.expense.mockResolvedValue({ fileName: document.fileName, suggestions: [] });
@@ -44,7 +44,10 @@ describe.each([{ name: "expense", post: expense, analyze: mocks.expense }, { nam
     expect(response.status).toBe(400); expect(mocks.guard).not.toHaveBeenCalled();
   });
   it.each(["guard", "analysis", "limiter"])("contains %s failures without private error text", async source => {
-    if (source === "guard") mocks.guard.mockRejectedValue(privateError);
+    if (source === "guard") {
+      vi.stubEnv("TAX_ENGINE_DEPLOYMENT_MODE", "hosted");
+      mocks.guard.mockRejectedValue(privateError);
+    }
     if (source === "analysis") analyze.mockRejectedValue(privateError);
     if (source === "limiter") mocks.rate.mockRejectedValue(privateError);
     const response = await post(request({ documents: [document] }));
@@ -59,11 +62,14 @@ describe.each([{ name: "expense", post: expense, analyze: mocks.expense }, { nam
     expect(response.status).toBe(429); expect(response.headers.get("retry-after")).toBe("3");
     expect(analyze).not.toHaveBeenCalled();
   });
-  it("preserves hosted denial and never bills deterministic analysis", async () => {
-    mocks.guard.mockResolvedValue({ response: Response.json({ error: "Authentication required" }, { status: 401 }), reservation: null });
-    const response = await post(request({ documents: [document] }));
+  it("preserves hosted denial before body reading and deterministic analysis", async () => {
+    vi.stubEnv("TAX_ENGINE_DEPLOYMENT_MODE", "hosted");
+    mocks.guard.mockResolvedValue(Response.json({ error: "Authentication required" }, { status: 401 }));
+    const denied = request({ documents: [document] });
+    const response = await post(denied);
     expect(response.status).toBe(401); expect(response.headers.get("cache-control")).toContain("no-store");
-    expect(mocks.guard.mock.lastCall?.[2]).toBeNull(); expect(analyze).not.toHaveBeenCalled();
+    expect(mocks.guard).toHaveBeenCalledExactlyOnceWith(denied); expect(denied.bodyUsed).toBe(false);
+    expect(analyze).not.toHaveBeenCalled();
   });
   it("returns deterministic no-store output without promoting candidates", async () => {
     const response = await post(request({ documents: [document] }));

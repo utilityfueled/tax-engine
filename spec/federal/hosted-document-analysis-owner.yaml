@@ -1,0 +1,27 @@
+form: "Hosted document analysis owner"
+fullName: "Bind guided document analysis to the signed-in workspace owner"
+taxYear: 2026
+notes: |
+  The browser sends the owner scope that it captured when opening the hosted
+  workspace with each explicit income or expense document review. A stale tab
+  can hold originals across a same-origin sign-in to a different account.
+  Each hosted analysis request checks the supplied scope against the actor
+  derived from that request's own session before reading the redacted text.
+  A missing or mismatched scope requires reopening the hosted return. The
+  scope is sent only as a same-origin request header. The existing cookie,
+  entitlement, rate-limit, privacy, cancellation and deterministic analysis
+  controls still apply. A self-hosted deployment needs neither an account nor
+  an owner header. An unavailable hosted owner disables client submission.
+lines:
+  - line: "reject-stale-owner-before-body"
+    formula: "Authenticated hosted analysis with a stale or absent expected owner returns private 409 before reading the request body, checking entitlement or running analysis."
+    testRef: "tests/apps/web/hosted-document-analysis-owner.test.ts::rejects a stale owner before reading its document text or checking entitlement"
+  - line: "admit-current-owner"
+    formula: "Use one authenticated actor for scope comparison and entitlement. Honor existing session and plan denials. A rightful hosted request remains deterministic and private."
+    testRef: "tests/apps/web/hosted-document-analysis-owner.test.ts::allows the active owner and checks the same actor for entitlement"
+  - line: "standalone-compatible"
+    formula: "Self-hosted analysis accepts the existing contract without a hosted owner or cookie."
+    testRef: "tests/apps/web/hosted-document-analysis-owner.test.ts::keeps local analysis available without a hosted scope or session"
+  - line: "browser-transport"
+    formula: "Attach only the captured opaque owner key as a same-origin header and preserve redacted document payload. Fail before local PDF extraction or fetch if a hosted owner is unavailable."
+    testRef: "tests/apps/web/business-document-transport.test.ts::sends the captured hosted owner only as a same-origin header"

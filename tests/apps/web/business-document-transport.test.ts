@@ -35,6 +35,29 @@ describe.each([
     expect(fetchFn).not.toHaveBeenCalled();
   });
 
+  it("sends the captured hosted owner only as a same-origin header", async () => {
+    vi.mocked(extractPdfTextFromFile).mockResolvedValue("2026-01-15 COFFEE SHOP $12.34");
+    const fetchFn = vi.fn<typeof fetch>().mockResolvedValue(Response.json({ analyses: [] }));
+    vi.stubGlobal("fetch", fetchFn);
+    await analyze([new File(["synthetic"], "source.pdf")], { expectedHostedOwnerScopeKey: "hosted-owner:owner-a" });
+    expect(fetchFn).toHaveBeenCalledOnce();
+    const [url, init] = fetchFn.mock.calls[0];
+    expect(url).toBe(endpoint);
+    expect(new Headers(init?.headers).get("X-Tax-Engine-Workspace-Owner")).toBe("hosted-owner:owner-a");
+    expect(init?.credentials).toBe("same-origin");
+    expect(init?.mode).toBe("same-origin");
+    expect(init?.redirect).toBe("error");
+    expect(String(init?.body)).not.toContain("hosted-owner");
+  });
+
+  it("does not extract or send a source when its hosted owner is unavailable", async () => {
+    const fetchFn = vi.fn();
+    vi.stubGlobal("fetch", fetchFn);
+    await expect(analyze([new File(["synthetic"], "source.pdf")], { expectedHostedOwnerScopeKey: null })).rejects.toThrow(/Reopen/);
+    expect(extractPdfTextFromFile).not.toHaveBeenCalled();
+    expect(fetchFn).not.toHaveBeenCalled();
+  });
+
   it("cancels before local parsing and performs no network request", async () => {
     const controller = new AbortController(); controller.abort();
     const fetchFn = vi.fn(); vi.stubGlobal("fetch", fetchFn);

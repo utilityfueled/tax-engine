@@ -1,6 +1,9 @@
 import { resolveDeploymentMode } from "./deployment-mode";
 import { resolveHostedWorkspaceActor } from "./hosted-auth";
 import { getHostedEntitlementByOwnerId } from "./hosted-billing-db";
+import {
+  hostedDocumentAnalysisOwnerHeader, hostedDocumentAnalysisOwnerRequired, hostedWorkspaceOwnerScopeKey,
+} from "./hosted-document-analysis-owner";
 // Provider work must use hostedAiTaskAccounting, which reserves atomically before dispatch.
 interface HostedAiRouteReservation { readonly legacy: never }
 
@@ -32,51 +35,44 @@ function buildPaidPlanRequiredResponse() {
   );
 }
 
-export async function reserveHostedAiBudget(
-  request: Request,
-  _requestPayload: unknown,
-  modelId: string | null,
-  env: Record<string, string | undefined> = process.env,
-): Promise<HostedAiBudgetGuardResult> {
-  if (resolveDeploymentMode(env) !== "hosted") {
-    return {
-      response: null,
-      reservation: null,
-    };
-  }
-
+async function authorizeHostedAiRoute(
+  request: Request, env: Record<string, string | undefined>, requireExpectedOwner: boolean,
+): Promise<Response | null> {
   const previewBypassActive = Boolean(env.TAX_ENGINE_HOSTED_PREVIEW_ACTOR_ID?.trim());
   const actor = await resolveHostedWorkspaceActor({
     env,
     requestHeaders: request.headers,
   });
 
-  if (!actor) {
-    return {
-      response: buildAuthRequiredResponse(),
-      reservation: null,
-    };
+  if (!actor) return buildAuthRequiredResponse();
+
+  if (requireExpectedOwner && request.headers.get(hostedDocumentAnalysisOwnerHeader) !== hostedWorkspaceOwnerScopeKey(actor.id)) {
+    return Response.json({ error: hostedDocumentAnalysisOwnerRequired, code: "workspace_owner_changed" }, { status: 409 });
   }
 
-  if (previewBypassActive) {
-    return {
-      response: null,
-      reservation: null,
-    };
-  }
-
+  if (previewBypassActive) return null;
   const { entitlement } = await getHostedEntitlementByOwnerId(env, actor.id);
+  return entitlement.workspaceAccess ? null : buildPaidPlanRequiredResponse();
+}
 
-  if (!entitlement.workspaceAccess) {
-    return {
-      response: buildPaidPlanRequiredResponse(),
-      reservation: null,
-    };
-  }
+export function authorizeHostedDocumentAnalysis(request: Request): Promise<Response | null> {
+  return authorizeHostedAiRoute(request, process.env, true);
+}
+
+export async function reserveHostedAiBudget(
+  request: Request,
+  _requestPayload: unknown,
+  modelId: string | null,
+  env: Record<string, string | undefined> = process.env,
+): Promise<HostedAiBudgetGuardResult> {
+  if (resolveDeploymentMode(env) !== "hosted") return { response: null, reservation: null };
+  const response = await authorizeHostedAiRoute(request, env, false);
 
   // A deterministic task has no provider spend. Preserve hosted access checks,
   // but do not reserve credits or apply the minimum retail AI charge.
-  if (modelId === null) return { response: null, reservation: null };
+  if (response || modelId === null || env.TAX_ENGINE_HOSTED_PREVIEW_ACTOR_ID?.trim()) {
+    return { response, reservation: null };
+  }
 
   throw new Error("Provider calls require atomic task accounting; legacy estimated reservation is disabled.");
 }

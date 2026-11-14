@@ -1,4 +1,5 @@
-import { reserveHostedAiBudget } from "./hosted-ai-route";
+import { authorizeHostedDocumentAnalysis } from "./hosted-ai-route";
+import { resolveDeploymentMode } from "./deployment-mode";
 import { containsUnsafeDirectIdentifier } from "./provider-request-privacy";
 import {
   cancelledDocumentRequest, createDocumentRequestProtection, privateJson, privateResponse,
@@ -25,6 +26,11 @@ export function createDocumentAnalysisRoute<T>(
     const protectedResponse = await protect(request);
     if (protectedResponse) return protectedResponse;
     try {
+      if (resolveDeploymentMode() === "hosted") {
+        const denial = await authorizeHostedDocumentAnalysis(request);
+        if (request.signal.aborted) return cancelledDocumentRequest();
+        if (denial) return privateResponse(denial);
+      }
       const parsed = await safeParseJsonBody(request, 2 * 1024 * 1024);
       if (request.signal.aborted) return cancelledDocumentRequest();
       if (!parsed.ok) return privateJson({ error: parsed.error }, parsed.status);
@@ -46,9 +52,6 @@ export function createDocumentAnalysisRoute<T>(
         return privateJson({ error: "Document analysis was blocked because redaction left direct identifiers in the request." }, 400);
       }
       // Candidate profiles remain evaluation-only. Deterministic analysis has no model charge.
-      const guard = await reserveHostedAiBudget(request, { task, documents }, null);
-      if (request.signal.aborted) return cancelledDocumentRequest();
-      if (guard.response) return privateResponse(guard.response);
       const analyses: T[] = [];
       // Bound concurrent work and check cancellation before each document and before publishing.
       for (const document of documents) {

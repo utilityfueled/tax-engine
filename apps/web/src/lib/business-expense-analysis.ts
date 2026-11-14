@@ -2,6 +2,7 @@ import { redactTextForAiAnalysis } from "@/lib/ai-document-redaction";
 import { containsUnsafeDirectIdentifier } from "@/lib/provider-request-privacy";
 import Decimal from "decimal.js";
 import { normalizeDocumentSourceFacts } from "./document-source-facts";
+import { hostedDocumentAnalysisOwnerHeader, hostedDocumentAnalysisOwnerRequired } from "./hosted-document-analysis-owner";
 import { parseGuidedCurrency } from "./guided-currency";
 import type {
   ScheduleCBankStatementAnalysis,
@@ -647,7 +648,10 @@ export function summarizeBankStatementSuggestionsByCategory(
 }
 
 /** Keep the original filename on the device, including when it contains a name or SSN. */
-export interface DocumentAnalysisOptions { signal?: AbortSignal }
+export interface DocumentAnalysisOptions {
+  signal?: AbortSignal;
+  expectedHostedOwnerScopeKey?: string | null;
+}
 
 /** Release the caller immediately on cancellation; consume a late parser result
  * without publishing it. PDF parsing itself remains bounded by upload limits. */
@@ -676,6 +680,10 @@ async function analyzeRedactedDocumentUploads<T extends { fileName: string; labe
   const signal = options?.signal;
   signal?.throwIfAborted();
   if (files.length === 0) return [];
+  const ownerScopeKey = options?.expectedHostedOwnerScopeKey;
+  if (ownerScopeKey === null) throw new Error(hostedDocumentAnalysisOwnerRequired);
+  const headers = new Headers({ "Content-Type": "application/json" });
+  if (ownerScopeKey !== undefined) headers.set(hostedDocumentAnalysisOwnerHeader, ownerScopeKey);
   const originals = new Map<string, File>();
   const documents = await Promise.all(files.map(async (file) => {
     const looksLikePdf = /\.pdf$/i.test(file.name) || /pdf/i.test(file.type || "");
@@ -695,7 +703,7 @@ async function analyzeRedactedDocumentUploads<T extends { fileName: string; labe
   }));
   signal?.throwIfAborted();
   const response = await fetch(endpoint, {
-    method: "POST", headers: { "Content-Type": "application/json" },
+    method: "POST", headers, credentials: "same-origin", mode: "same-origin", redirect: "error",
     body: JSON.stringify({ documents }),
     signal,
   });
