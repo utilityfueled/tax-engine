@@ -1,0 +1,43 @@
+form: "Form 1062 and Schedule A, December 2025 final physical candidates"
+fullName: "Final Form 1062 and Schedule A widget and field projection for 2026 diagnostics"
+taxYear: 2026
+reference: "https://www.irs.gov/pub/irs-pdf/f1062.pdf"
+instructions: "https://www.irs.gov/instructions/i1062"
+sources:
+  - "https://www.irs.gov/pub/irs-pdf/f1062sa.pdf"
+  - "https://www.irs.gov/forms-pubs/about-form-1062"
+  - "https://www.irs.gov/pub/irs-dft/f1062--dft.pdf"
+  - "https://www.irs.gov/pub/irs-dft/f1062sa--dft.pdf"
+revision: "Current final December 2025 revision, posted 2026-04-15, applicable to tax years beginning after July 4, 2025. Final Form 1062 created 12/12/25 and final Schedule A created 9/22/25. The December 2026 successors are drafts and are excluded."
+notes: |
+  Internal redacted placement diagnostics. The existing worksheets supply the
+  confirmed tax and sale amounts. The mapped 2025 revision is used only for
+  calendar 2026 diagnostics. No route, filing qualification, return transfer,
+  IRS transmission, public export, separate tax calculation or covenant handling
+  is provided. No independent tax or physical sign-off is implied. Fields for
+  names, identifiers, property descriptions and line B entity identity remain
+  empty. Line 3 uses a validated closing date. A line 8 Yes demonstrates the
+  confirmed input fact, and these diagnostics contain no actual covenant.
+  A December 2026 draft cannot update this map, even where names match. The
+  draft Schedule A adds a Form 1041 choice absent from the December 2025 final.
+lines:
+  - line: "final source"
+    description: "Pin the two final one-page templates and reject changed or swapped bytes"
+    formula: "Form 1062 is 66,887 bytes, SHA-256 4ff34ba9f4f25a995557c49c0ed001f41e0efd75c3e79ec1a9513e7e8a912ade. Schedule A is 88,431 bytes, SHA-256 dc50ba9b52db27a01492962b7349b71070812956c56feff376928dcd17a4953d. Both contain XFA and a one-page AcroForm. Only use the verified AcroForm widgets for this diagnostic."
+    testRef: "tests/pdf/form-1062-2026-candidate.test.ts::pins the final files and rejects changed or swapped source bytes"
+  - line: "physical locations"
+    description: "Map all 53 widget leaves to their names, printed locations and states"
+    formula: "Form 1062 has 26 text widgets. Schedule A has 11 text and 16 checkbox widgets. Check the one-page coordinates and each checkbox's own on-state. The two field ancestry groups are not widgets."
+    testRef: "tests/pdf/form-1062-2026-candidate.test.ts::matches both pages and every physical field including checkbox appearances"
+  - line: "Form 1062 count and lines 1–15"
+    description: "Project confirmed election count and canonical worksheet amounts"
+    formula: "Reuse the 2026 Form 1062 result. Project the count plus lines 1, 2, 3, 4a, 4b, 4c, 4d, 4z, 5, 6, 7, 8, 9, 10, 11, 12a, 12b, 12c, 12d, 12z, 13, 14, 15 to their exact leaves. One schedule per elected sale. Keep exact decimal strings with at least two fractional digits to diagnose cents and sub-cent installment math. No filing display rule or parent transfer is decided."
+    testRef: "tests/pdf/form-1062-2026-candidate.test.ts::projects canonical amounts and distinct Schedule A pages for one confirmed election"
+  - line: "Schedule A lines A–B and 1–13"
+    description: "Project the kind, date, confirmed answers and applicable sale amounts for each schedule"
+    formula: "Select one Form 1065 or 1120-S box for that allocation and none for a direct sale. Always leave unsupported Form 8865 blank and entity identity withheld. Check sale only for line 2. Render line 3 as MM/DD/YYYY. Select Yes and unselect No for lines 4–8 only after the worksheet accepts all source qualifications. Project lines 9–13 for a direct sale and only line 13 for an allocated gain. Hold other dispositions, years, unqualified transactions and an unconfirmed election."
+    testRef: "tests/pdf/form-1062-2026-candidate.test.ts::holds invalid eligibility dates and elections"
+  - line: "saved diagnostic"
+    description: "Retain exact projected values and selections across PDF save and reopen"
+    formula: "Use fictional confirmations, preserve blank withheld fields, and verify the stored values and each updated widget's appearance. The date appearance masks the printed date hint under the widget. Add the repo's visible review-only notice. No output qualifies for review export or filing."
+    testRef: "tests/pdf/form-1062-2026-candidate.test.ts::retains projected values and widget states after save while export gates stay closed"
