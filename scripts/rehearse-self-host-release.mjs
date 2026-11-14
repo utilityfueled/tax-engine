@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { Buffer } from "node:buffer";
 import { URL } from "node:url";
-import { createHash, randomUUID } from "node:crypto";
+import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { execFile } from "node:child_process";
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { createRequire } from "node:module";
@@ -30,8 +30,10 @@ const root = path.resolve(import.meta.dirname, "..");
 const project = `tax-rehearsal-${randomUUID().slice(0, 8)}`;
 const work = await mkdtemp(path.join(tmpdir(), `${project}-`));
 const override = path.join(work, "compose.override.json");
+const passfile = path.join(work, "pgpass");
 const require = createRequire(new URL("../apps/web/package.json", import.meta.url));
 const { chromium, expect } = require("@playwright/test");
+const { Client } = require("pg");
 const exec = promisify(execFile);
 const hash = value => createHash("sha256").update(value).digest("hex");
 const evidence = { kind: "local-synthetic-compose-release-rehearsal", project, phases: [] };
@@ -65,10 +67,22 @@ const origin = `http://127.0.0.1:${webPort}`;
 const browserDiagnostics = createRehearsalBrowserDiagnostics(origin, { isMainFrame: frame => Boolean(page) && frame === page.mainFrame() });
 browserDiagnostics.setPhase(phase);
 const databaseUrl = `postgresql://ai_test@127.0.0.1:${pgPort}/postgres`;
+const databasePassword = randomBytes(32).toString("hex");
+const authenticatedDatabaseUrl = new URL(databaseUrl);
+authenticatedDatabaseUrl.password = databasePassword;
+const recoveryEnv = Object.fromEntries(Object.entries(process.env).filter(([name]) => !name.startsWith("PG")));
 const composeEnv = { ...process.env, WEB_PORT: `127.0.0.1:${webPort}`, POSTGRES_PORT: String(pgPort) };
 const composeArgs = ["compose", "--project-name", project, "--env-file", path.join(root, ".env.docker.example"),
   "--file", path.join(root, "compose.yaml"), "--file", override];
-const compose = (...args) => command([...composeArgs, ...args], runtime, composeEnv);
+async function compose(...args) {
+  try {
+    return await command([...composeArgs, ...args], runtime, composeEnv);
+  } catch (error) {
+    const status = Number.isInteger(error.code) ? ` (exit ${error.code})` : "";
+    // eslint-disable-next-line preserve-caught-error -- Compose diagnostics may contain the rehearsal credential.
+    throw new Error(`Compose ${args[0]} failed${status}.`);
+  }
+}
 
 async function configure(image, architecture) {
   await writeFile(override, JSON.stringify({ services: {
@@ -76,7 +90,7 @@ async function configure(image, architecture) {
       // Security controls must come from the actual shipped Compose file.
       image, platform: `linux/${architecture}`, restart: "no",
       environment: {
-        DATABASE_URL: "postgresql://ai_test@postgres:5432/postgres", TAX_ENGINE_DEPLOYMENT_MODE: "self-host",
+        DATABASE_URL: "", TAX_ENGINE_DEPLOYMENT_MODE: "self-host",
         TAX_ENGINE_HOSTED_PERSISTENCE_BACKEND: "preview-memory", TAX_ENGINE_BILLING_MODE: "test",
         TAX_ENGINE_APP_URL: origin, MODEL_PROVIDER_API_KEY: "", OPENAI_API_KEY: "", GEMINI_API_KEY: "", GOOGLE_API_KEY: "",
         MODEL_PROVIDER_BASE_URL: "https://api.openai.com/v1", BETTER_AUTH_SECRET: "", BETTER_AUTH_TRUSTED_ORIGINS: "",
@@ -86,9 +100,30 @@ async function configure(image, architecture) {
     },
     postgres: {
       platform: `linux/${architecture}`, restart: "no",
-      environment: { POSTGRES_USER: "ai_test", POSTGRES_DB: "postgres", POSTGRES_PASSWORD: "synthetic_rehearsal_only", POSTGRES_HOST_AUTH_METHOD: "trust" },
+      environment: {
+        POSTGRES_USER: "ai_test", POSTGRES_DB: "postgres", POSTGRES_PASSWORD: databasePassword,
+        POSTGRES_HOST_AUTH_METHOD: "scram-sha-256", POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256",
+      },
     },
-  } }, null, 2));
+  } }, null, 2), { mode: 0o600 });
+}
+
+async function verifyDatabaseAuthentication() {
+  async function probe(password) {
+    const client = new Client({ host: "127.0.0.1", port: pgPort, database: "postgres", user: "ai_test",
+      ssl: false, connectionTimeoutMillis: 5_000,
+      // An explicit callback prevents pg from looking at a host password file.
+      password: () => password });
+    try {
+      await client.connect();
+    } finally {
+      await client.end();
+    }
+  }
+  await probe(databasePassword);
+  await assert.rejects(probe(undefined), error => error?.message ===
+    "SASL: SCRAM-SERVER-FIRST-MESSAGE: client password must be a string");
+  await assert.rejects(probe("wrong-rehearsal-password"), error => error?.code === "28P01");
 }
 async function ready() {
   for (let attempt = 0; attempt < 90; attempt++) {
@@ -151,6 +186,7 @@ try {
   evidence.platform = `linux/${candidate.Architecture}`;
   evidence.previousDigest = previous.Id;
   evidence.candidateDigest = candidate.Id;
+  await writeFile(passfile, `127.0.0.1:${pgPort}:postgres:ai_test:${databasePassword}\n`, { mode: 0o600, flag: "wx" });
   await configure(previousImage, candidate.Architecture);
   phase = "start-previous";
   browserDiagnostics.setPhase(phase);
@@ -158,7 +194,8 @@ try {
   console.log(`${project}: start previous image and isolated database`);
   await compose("up", "--detach", "--no-build", "--wait", "--wait-timeout", "120");
   await ready();
-  const dbEnv = { TAX_ENGINE_DEPLOYMENT_MODE: "hosted", NODE_ENV: "test", DATABASE_URL: databaseUrl };
+  const dbEnv = { TAX_ENGINE_DEPLOYMENT_MODE: "hosted", NODE_ENV: "test", DATABASE_URL: authenticatedDatabaseUrl.toString() };
+  await verifyDatabaseAuthentication();
   await ensureHostedAppSchema(dbEnv);
   db = await getHostedServerDatabase(dbEnv);
   // Restarting the disposable server closes idle connections; later assertions
@@ -240,13 +277,17 @@ try {
   await compose("stop", "postgres");
   await assert.rejects(databaseSnapshot());
   await compose("up", "--detach", "--no-build", "--wait", "--wait-timeout", "120", "postgres");
+  await verifyDatabaseAuthentication();
   await verify("database-restart", candidate.Id);
+  evidence.databaseAuthentication = { method: "scram-sha-256", missingPasswordRejected: true,
+    wrongPasswordRejected: true, recheckedAfterRestart: true };
   phase = "restore-database";
   browserDiagnostics.setPhase(phase);
   // Exercise actual application migration/dump/restore in another unique schema
   // on this disposable Compose database, leaving the persistent sentinel intact.
   const restoreOutput = await command(["--import", "tsx", "scripts/rehearse-hosted-recovery.ts"], process.execPath,
-    { ...process.env, TSX_TSCONFIG_PATH: path.join(root, "apps/web/tsconfig.json"), TAX_ENGINE_TEST_AI_LEDGER_DATABASE_URL: databaseUrl });
+    { ...recoveryEnv, TSX_TSCONFIG_PATH: path.join(root, "apps/web/tsconfig.json"),
+      TAX_ENGINE_TEST_AI_LEDGER_DATABASE_URL: databaseUrl, PGPASSFILE: passfile });
   evidence.databaseRecovery = JSON.parse(restoreOutput.split("\n").at(-1));
   assert.equal(evidence.databaseRecovery.result, "passed");
   await verify("database-dump-restore", candidate.Id);

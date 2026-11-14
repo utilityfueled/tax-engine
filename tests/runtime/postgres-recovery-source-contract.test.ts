@@ -48,6 +48,30 @@ describe("PostgreSQL 16.16 self-host recovery", () => {
     expect(deletion).toBeGreaterThan(verification);
   });
 
+  it("requires per-run SCRAM credentials before creating rehearsal data", () => {
+    const source = readFileSync("scripts/rehearse-self-host-release.mjs", "utf8");
+    expect(source).toContain('const databasePassword = randomBytes(32).toString("hex")');
+    expect(source).toContain('POSTGRES_HOST_AUTH_METHOD: "scram-sha-256"');
+    expect(source).toContain('POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256"');
+    expect(source).not.toContain('POSTGRES_HOST_AUTH_METHOD: "trust"');
+    expect(source).toContain('await assert.rejects(probe(undefined),');
+    expect(source).toContain('await assert.rejects(probe("wrong-rehearsal-password"),');
+    expect(source).toContain('error?.code === "28P01"');
+    expect(source).toContain('await verifyDatabaseAuthentication();\n  await ensureHostedAppSchema(dbEnv);');
+    expect(source).toContain('await verifyDatabaseAuthentication();\n  await verify("database-restart"');
+  });
+
+  it("keeps rehearsal credentials off command arguments, web configuration and evidence", () => {
+    const source = readFileSync("scripts/rehearse-self-host-release.mjs", "utf8");
+    expect(source).toContain('const passfile = path.join(work, "pgpass");');
+    expect(source).toContain('{ mode: 0o600, flag: "wx" }');
+    expect(source).toContain('}, null, 2), { mode: 0o600 });');
+    expect(source).toContain('PGPASSFILE: passfile');
+    expect(source).toContain('TAX_ENGINE_TEST_AI_LEDGER_DATABASE_URL: databaseUrl');
+    expect(source).not.toContain('DATABASE_URL: "postgresql://ai_test@postgres');
+    expect(source).not.toMatch(/(?:console\.[a-z]+|evidence\.[a-z]+)[^\n]*databasePassword/iu);
+  });
+
   it.each([
     { dump: "16.16", restore: "16.16", passes: true },
     { dump: "16.17", restore: "16.20", passes: true },
