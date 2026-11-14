@@ -3211,3 +3211,9 @@ packages keep full source copies, patches, hashes, genuine failures and receipts
 
 - [x] Two typed Coverdell journeys and six FEI/farm admission probes pass with distinct review; all owned cleanup verified, 617/1,310 operations and zero paid calls. [Ledger](upgrade-2026-preview-integrated-aea453ec-20261114.md).
 - [ ] Later source packages require successor qualification; qualified human and production gates remain open.
+
+## November 14 human packet and external-action reconciliation
+
+- [x] Publish the reviewed 44-blob, seven-decision four-method source index with all human assignments blank. [Packet](upgrade-2026-human-tax-four-method-supplement-73713a4f.md).
+- [x] Reconcile current provider cost, actual recovery/retry, completed Preview evidence and production push hold in the [external actions](upgrade-2026-external-actions.md). Dated earlier evidence retains its original scope.
+- [ ] Qualified humans must supply independent tax/AI/security decisions; agent reviews do not fill these fields.

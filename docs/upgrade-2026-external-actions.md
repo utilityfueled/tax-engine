@@ -1,13 +1,35 @@
 # External actions needed to finish the 2026 upgrade
 
+## November 14 latest integrated evidence
+
+All twelve local checks pass on `aea453ec`: 28,479 tests, 88.07% branch
+coverage, and 630 browser passes with five original hosted skips. Its protected
+Preview passes both actual desktop/mobile Coverdell journeys and six FEI/farm
+canonical-admission probes, with separate artifact review and verified cleanup.
+Its ARM64 successor is running; no terminal native result is claimed here.
+The later current-loss (`af111e7a`) and EIC-petition (`5f7cd736`) source packages
+have separate full-unit and review evidence; their combined successor checks
+remain pending. [Local checks](upgrade-2026-combined-aea453ec-checks-20261114.md) ·
+[Protected Preview](upgrade-2026-preview-integrated-aea453ec-20261114.md).
+
+The [unassigned four-method human supplement](upgrade-2026-human-tax-four-method-supplement-73713a4f.md)
+indexes 44 selected committed blobs and seven blank year-specific decisions.
+It supplies no human approval and excludes the two later source packages.
+The latest exact AEA image's separate November 14 database rescan retains
+zero Critical and 56 unaccepted High findings. No security acceptance is
+inferred. The production push hold and all human/annual-form gates remain.
+
 ## November 14 current boundaries
 
-The current exact `a396` native ARM64 artifact now also passes build/import,
-smoke, six recovery phases, 620 browser cases/five original skips and normal
-VM/socket/default cleanup, with independent final artifact review. The latest
-same-image scan retains 56 unaccepted High findings. This closes the bounded
-ARM64 mechanical rehearsal; native AMD64 and security acceptance remain open.
-[Current ARM64 evidence](upgrade-2026-current-arm64-rehearsal-20261114.md).
+The latest completed exact `26f5bd5b` native ARM64 artifact passes all24
+stages, four workloads, six recovery phases and633 browser cases:628 pass
+and five original hosted cases remain skipped. Normal VM/socket/default cleanup
+and original two-CPU/8,192-MiB resource restoration pass, with separate actual
+artifact review. Its November14 same-image scan retains zero Critical and56
+unaccepted High findings. Native AMD64 and accountable security acceptance
+remain open. This artifact does not cover the later PTC, guided Coverdell,
+mixed-capital foreign service or farming-waiver source packages.
+[Completed ARM64 evidence](upgrade-2026-arm64-26f5bd5b-20261114.md).
 
 The current guided K-3 source package passes all twelve mapped local checks
 (28,322 tests, 88.02% branches, 620 browser passes/five original hosted skips)
@@ -34,9 +56,10 @@ with 28,244 tests and the same browser and coverage gates. The isolated
 automatic Stripe retry now passes: actual503, independent database restoration,
 same-event automatic200, one receipt and complete cleanup, without a manual
 resend. [Actual retry ledger](upgrade-2026-stripe-scheduled-retry-20261114.md).
-A November 14 17:05 UTC project metadata
-readback still shows main as the production branch and deployment creation
-enabled; no setting was changed. The local-main push hold remains active.
+A November14 22:35UTC settings-page refresh still shows Ignored Build Step
+set to Automatic and no deployment checks; no setting was changed. The
+connector does not expose enough fields to prove automatic production builds
+disabled. The local-main push hold remains active.
 [Current recovery evidence](upgrade-2026-preview-recovery-20261114.md).
 
 The original isolated Neon branch has expired and is confirmed deleted. A fresh
@@ -60,10 +83,13 @@ retrieved twenty responses: current annual controls still print 2025, actual IRS
 
 Independent qualified human tax, AI-case and security/privacy reviewers remain
 unassigned. Final 2026 federal/state forms and artifact qualification remain
-required. The prior aggregate export reconciles all 174 known results exactly. Two later
-actual local-ledger calls add $0.00047760: known cost is now $0.26329920 plus
-the unchanged $0.022384 timeout hold, for $0.28568320 accounted exposure.
-[Actual ledger evidence](upgrade-2026-ai-local-ledger-20261114.md) preserves
+required. The prior aggregate export reconciles all174 then-known results exactly.
+Separately evidenced local-ledger calls bring the current known count to179
+and known cost to$0.27185270. The unchanged historical timeout hold is$0.022384,
+for$0.29423670 accounted exposure. The later calls are local development
+evidence; they do not expand the earlier aggregate export scope.
+[Actual local-ledger evidence](upgrade-2026-ai-local-ledger-20261114.md) and
+[the later Sol High calls](upgrade-2026-ai-sol-high-ledger-20261114.md) preserve
 the separate one-cent retail effects and local-only qualification boundary. Current `main` commits remain local while the
 owner disables automatic production deployments. Remote CI and native AMD64
 execution therefore remain open. [Current work and evidence](upgrade-2026-current-status.md).
@@ -108,13 +134,13 @@ engineering cannot substitute for that review.
 
 | Needed action | Concrete input or evidence | Completion criteria affected |
 | --- | --- | --- |
-| Assign independent human tax reviewers | Reviewer identity and relevant qualifications; reviewed commit, rules/scenarios, official authority, independently checked expected outputs, findings and disposition. The current specs and package ledgers are the review material; the [9b source delta](upgrade-2026-human-tax-review-delta-9b6202e7.md) separately indexes later estimate/interest and AOTC methods. The [guided K-3 source delta](upgrade-2026-human-tax-review-delta-33f8f784.md) separately binds all thirteen later files and blank year-specific decisions. Passing tests and agent reviews are not human approval. | Complete federal rules, actual facts, historical corrections and qualified scenarios. |
+| Assign independent human tax reviewers | Reviewer identity and relevant qualifications; reviewed commit, rules/scenarios, official authority, independently checked expected outputs, findings and disposition. The current specs and package ledgers are the review material; the [9b source delta](upgrade-2026-human-tax-review-delta-9b6202e7.md) separately indexes later estimate/interest and AOTC methods. The [guided K-3 source delta](upgrade-2026-human-tax-review-delta-33f8f784.md) separately binds all thirteen later files and blank year-specific decisions. The [four-method supplement](upgrade-2026-human-tax-four-method-supplement-73713a4f.md) adds 44 selected blobs and seven unassigned decisions, with no implied approval. Passing tests and agent reviews are not human approval. | Complete federal rules, actual facts, historical corrections and qualified scenarios. |
 | Launch selection received; state work continues internally | The owner selected Pennsylvania and Ohio, each for full-year resident, part-year resident and nonresident returns. The [state gap analysis](upgrade-2026-state-gaps.md) records the decision and existing implementation gaps. | Selection is resolved. Actual facts, law, local-tax/source methods, forms and six state/residency qualifications still require implementation and evidence; no support or filing activation is inferred. |
 | Rehearse the final protected Preview artifact | Earlier exact Preview runs verified recovery email, session revocation, token replay denial, Stripe Sandbox checkout and duplicate delivery, and isolated workspace persistence/deletion. The November 13 rehearsal verified two-tenant isolation, the same Stripe event's automatic retry after database access was restored, one receipt, zero scoped AI effects, and fail-closed behavior during an actual Upstash credential rejection. See the [November 13 rehearsal](upgrade-2026-nov13-release-rehearsals.md) and [earlier checkout](upgrade-2026-staging-sandbox-billing-work.md). The legacy exposed bypass was revoked. Its authorized replacement remains private. | Exact final-source hosted auth and recovery, tenant/workspace lifecycle, telemetry and limits, outages, credit-pack/provider reconciliation, migration, restore and rollback. |
-| Provider access received; qualification continues | The supplied testing credential worked in actual November5 synthetic runs. The later authorization permits testing strictly below140USD. Current known cost is0.26329920USD plus0.022384USD held for one unresolved usage record, totaling0.28568320USD; the November14 two-call addition is separately evidenced above; the [latest SSA development smoke](upgrade-2026-ssa-v3-live-smoke-work.md) preserves metadata and human-qualification limits. The [actual local ledger rehearsal](upgrade-2026-ai-live-local-ledger-work.md) verifies three provider attempts and two one-cent logical charges, including an engineered rejection and explicit escalation. No key is needed from the owner for these continuing OpenAI tests. The owner sign-in and [minute activity export](upgrade-2026-ai-minute-usage-reconciliation-work.md) are complete. The November 6 [closed-day cost reconciliation](upgrade-2026-ai-closed-day-cost-work.md) exactly matches 174 known calls at 0.26282160 USD, with zero as-of residual, matching API-key identity and the same organization scope; raw project, user and line-item fields are blank. The November 14 [itemized provider reconciliation](upgrade-2026-provider-cost-reconciliation-20261114.md) matches every known quantity and charge across 13 categories in the observed all-projects/key/model/source scope. Current unexplained reported cost is zero. The 0.022384 USD timeout hold stays in current0.28568320 USD accounted exposure because its usage remains unknown. A final invoice is unnecessary for current aggregate reconciliation. See [the live classification ledger](upgrade-2026-classification-live-smoke-work.md). | Representative independently human-reviewed cases, repeated held-out evaluation, natural failure/escalation quality, hosted retail-ledger reconciliation, Google access and final qualification remain open. The development smoke is not model promotion. |
+| Provider access received; qualification continues | The supplied testing credential worked in actual November5 synthetic runs. The later authorization permits testing strictly below140USD. Current known cost for179calls is0.27185270USD plus0.022384USD held for one unresolved usage record, totaling0.29423670USD; the November14 local-ledger additions are separately evidenced above; the [latest SSA development smoke](upgrade-2026-ssa-v3-live-smoke-work.md) preserves metadata and human-qualification limits. The [actual local ledger rehearsal](upgrade-2026-ai-live-local-ledger-work.md) verifies three provider attempts and two one-cent logical charges, including an engineered rejection and explicit escalation. No key is needed from the owner for these continuing OpenAI tests. The owner sign-in and [minute activity export](upgrade-2026-ai-minute-usage-reconciliation-work.md) are complete. The November 6 [closed-day cost reconciliation](upgrade-2026-ai-closed-day-cost-work.md) exactly matches 174 known calls at 0.26282160 USD, with zero as-of residual, matching API-key identity and the same organization scope; raw project, user and line-item fields are blank. The November 14 [itemized provider reconciliation](upgrade-2026-provider-cost-reconciliation-20261114.md) matches every known quantity and charge across 13 categories in the observed all-projects/key/model/source scope. Current unexplained reported cost is zero. The 0.022384 USD timeout hold stays in current0.29423670 USD accounted exposure because its usage remains unknown. A final invoice is unnecessary for current aggregate reconciliation. See [the live classification ledger](upgrade-2026-classification-live-smoke-work.md). | Representative independently human-reviewed cases, repeated held-out evaluation, natural failure/escalation quality, hosted retail-ledger reconciliation, Google access and final qualification remain open. The development smoke is not model promotion. |
 | Assign independent human AI-case reviewers | Review the 240 draft cases, original synthetic inputs, expected monetary/date fields, answerability and safety labels; preserve the held-out partition and record reviewer provenance. Revise or remove unsuitable cases without counting generated variants as independent review. | Representative 200–300-case corpus and qualification metrics. The [executor guide](ai-evaluation-executor.md) describes the evidence and approval boundaries. |
-| Assign an independent security/privacy reviewer and an advisory owner | Review the exact runtime artifacts and staging evidence. Record findings, accountable owners and fixes or evidence-backed acceptance with expiry. The `dc7546f9` ARM64 application reported 191 matches and 56 High after removing `mount`, with no Critical. Both pinned PostgreSQL Bookworm architecture scans independently reported 138 High and nine Critical matches each. [Current image analysis](upgrade-2026-debian-advisory-refresh-20261113.md) · [Historical AMD64 register](upgrade-2026-image-advisories-20261106.json). | Independent security/privacy review, disposition of application and PostgreSQL advisories, and exact final-source ARM64 and AMD64 scan and rehearsal evidence. |
-| Qualify final official forms as they become available | Verify each enabled scenario against the final year/revision PDF, its pinned hash and a reviewed line and field map. The November 13 official Form 1040 and Tax/EIC table endpoints still supply 2025. Available final 2026 schedules have disabled physical candidates while the parent packet and scenario approvals are incomplete. See the [source refresh](upgrade-2026-refresh-20261112.md). | Final physical maps, independent signoff and complete-data filing exports for enabled scenarios. |
+| Assign an independent security/privacy reviewer and an advisory owner | Review the exact runtime artifacts and staging evidence. Record findings, accountable owners and fixes or evidence-backed acceptance with expiry. The exact `26f5bd5b` November14 ARM64 application scan reports192matches, zero Critical and56unaccepted High. Both pinned PostgreSQL Bookworm architecture scans independently reported 138 High and nine Critical matches each. [Current image analysis](upgrade-2026-debian-advisory-refresh-20261113.md) · [Historical AMD64 register](upgrade-2026-image-advisories-20261106.json). | Independent security/privacy review, disposition of application and PostgreSQL advisories, and exact final-source ARM64 and AMD64 scan and rehearsal evidence. |
+| Qualify final official forms as they become available | Verify each enabled scenario against the final year/revision PDF, its pinned hash and a reviewed line and field map. The November14 18:31UTC bounded official endpoint refresh still retrieves2025 annual controls and ten non-PDF404 final2026 paths; this is not proof of global absence, and available final2026Form2555instructions remain recorded separately. Available final 2026 schedules have disabled physical candidates while the parent packet and scenario approvals are incomplete. See the [source refresh](upgrade-2026-refresh-20261112.md). | Final physical maps, independent signoff and complete-data filing exports for enabled scenarios. |
 
 ## Tax interpretation handoff
 

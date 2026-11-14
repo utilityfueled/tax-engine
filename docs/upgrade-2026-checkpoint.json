@@ -1,4 +1,14 @@
 {
+  "nov14UnassignedHumanFourMethodSupplement": {
+    "source": "73713a4fbd3a5b38eb0c17dca16a1960aa6084a0",
+    "selectedCommittedBlobs": 44,
+    "blankDecisions": 7,
+    "humanIdentityQualificationsIndependenceAndDecisions": "null/unassigned; no outreach",
+    "sourceIndexSha256": "0df0976cefbcbcc625f505b869ad0bdadfbd770e3ea3dfa4f5c651b58b31d465",
+    "separateAgentReview": "104c09ddb3eb05cb0a4631b3bd482cb0ef369ab02016bb683a87b7c114d530fd",
+    "laterLossEicExcluded": true,
+    "ledger": "docs/upgrade-2026-human-tax-four-method-supplement-73713a4f.md"
+  },
   "nov14AeaProtectedPreviewActual": {
     "source": "aea453eca1d4a0e92cdfbe9a22f2f129fb247a03",
     "actual": "2 typed Coverdell1280/390;6 canonical ingress statuses200/400/400/200/400/400",
