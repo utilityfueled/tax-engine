@@ -114,9 +114,34 @@ upload metadata, retains originals after an ambiguous response, and uses
 the same opaque alias for the cached file and server metadata. A UUID with
 a nine-digit substring reproduced the predecessor's rejection. All 103
 focused tests passed. The independent route reproduction also confirms a
-separate concurrent-write problem where the latest full snapshot drops an
-earlier upload or restores metadata after reset or deletion. Atomic
-conditional writes and browser integration are pending.
+concurrent-write problem where the latest full snapshot drops an earlier
+upload or restores metadata after reset or deletion.
+
+`09d3247c` fixes those races with owner-scoped server revisions. Private
+browser mirrors and guided drafts must match the owner and revision.
+Uploaded originals use an owner-scoped browser cache. On the predecessor,
+two Chromium tabs both received success but one upload disappeared. A
+second account using that browser also inherited the first account's
+guided year. The fixed version passed all seven isolated production-mode
+Chromium checks, including a single 200 and 412, reset and deletion without
+resurrection, separate decryptable backups with exact source bytes, and
+rejection of a stale revision's backup. It also passed all 15 separate HTTP
+fault checks, all 3,552 web tests against PostgreSQL 16.16, and a disposable
+PostgreSQL dump and restore with stale-token invalidation. The applications,
+database and bound ports closed. Deployed Preview remains unqualified.
+`6dae481d` adds an explicit completeness check for hosted backups missing
+private interview answers. Its 20 focused recovery tests and strict spec
+validation passed.
+
+`39582414` excludes full and masked bank details from Illinois historical
+review exports. The separate strict PDF check inspected the form and its
+two flattened pages, kept the exact refund and found none of the test bank
+identifiers. All 261 focused tests passed. The Illinois bundle stays
+review-only. `f98b3d6a` records the signed libxml2 backport ABI findings:
+the existing field offsets agree on both architectures, and two public
+structures increase in size. Five direct binary consumers and both native
+architectures still need runtime testing before any PostgreSQL base-image
+change.
 
 `8410a5a8` calculates Pennsylvania planning interest for one confirmed
 late first installment with three timely cleared installments. The sample

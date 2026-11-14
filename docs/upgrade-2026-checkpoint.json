@@ -25574,7 +25574,38 @@
       "atomicBrowserOriginalCommit": true,
       "originalRetainedAfterAmbiguousResponse": true,
       "opaqueAliasUsedInBrowserAndShell": true,
-      "separateConditionalWritePending": true
+      "separateConditionalWritePending": false
+    },
+    "hostedSnapshotConcurrency": {
+      "commit": "09d3247cc1d656122fca0ae4a229c4af428d13dc",
+      "postgres1616WebPassed": 3552,
+      "postgres1616DumpRestorePassed": true,
+      "chromiumPassed": 7,
+      "chromiumReceiptSha256": "c45dc1a32c05126ff85ef3c0c7a942d708e9d5e9aa13a0936ada8291155ae3d3",
+      "predecessorRaceReceiptSha256": "02bd917290d2e9d381f48223639047aaa1413a3b8ec5028dc75d950e028c4653",
+      "predecessorActorReceiptSha256": "589f5bc37626a5326df658f1ae5de23fa3f686832e7bcec37279248bc1fc7370",
+      "httpsFaultChecksPassed": 15,
+      "httpsNativeTls13Sessions": 7,
+      "httpsReceiptSha256": "cc2304ece3b36604d075c18e65bccc3d2fdf1041859d70605e5236b231102a49",
+      "ownedResourcesClosed": true,
+      "deployedPreviewQualified": false,
+      "backupCompletenessCommit": "6dae481d8a6f7d6cf1e88e235ad7033a46a48fb7",
+      "backupCompletenessFocusedPassed": 20
+    },
+    "illinoisHistoricalReviewPrivacy": {
+      "commit": "39582414",
+      "focusedPassed": 261,
+      "flattenedPhysicalPages": 2,
+      "physicalReceiptSha256": "e6418e72a7d8d2903efb42df779d70ac347977027b8f1efb1eeb805423994ca1",
+      "filingEnabled": false
+    },
+    "postgresLibxml2BackportQualification": {
+      "commit": "f98b3d6a",
+      "directRuntimeConsumers": 5,
+      "publicStructureSizeChanges": 2,
+      "nativeArm64BackportProven": false,
+      "nativeAmd64BackportProven": false,
+      "defaultImageChanged": false
     },
     "stateEstimateContinuation": {
       "paLateFirstInstallmentCommit": "8410a5a8",
