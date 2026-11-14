@@ -24,6 +24,7 @@ import {
 import {
   isLoopbackAppUrl,
   isLoopbackHostname,
+  resolveBrowserTrustedOrigins,
   resolveHostedAppBaseUrl
 } from "./hosted-runtime-safety";
 import type { HostedWorkspaceActor } from "./workspace-persistence";
@@ -145,47 +146,6 @@ export function shouldAllowLocalWorkspaceDraftBypass({
   return requestHostname ? isLoopbackHostname(requestHostname) : false;
 }
 
-function normalizeOrigin(value: string): string | null {
-  try {
-    return new URL(value).origin;
-  } catch {
-    return null;
-  }
-}
-
-function resolveTrustedOrigins(
-  baseURL: string | null,
-  env: AuthEnvironment
-): string[] {
-  const trustedOrigins = new Set<string>();
-  const baseOrigin = baseURL ? normalizeOrigin(baseURL) : null;
-
-  if (baseOrigin) {
-    trustedOrigins.add(baseOrigin);
-  }
-
-  const configuredOrigins = env.BETTER_AUTH_TRUSTED_ORIGINS
-    ?.split(",")
-    .map((origin) => origin.trim())
-    .filter(Boolean)
-    ?? [];
-
-  for (const origin of configuredOrigins) {
-    const normalizedOrigin = normalizeOrigin(origin);
-
-    if (normalizedOrigin) {
-      trustedOrigins.add(normalizedOrigin);
-    } else {
-      console.warn(
-        `[security] Ignoring invalid BETTER_AUTH_TRUSTED_ORIGINS entry: "${origin}". ` +
-        "Each entry must be a valid URL (e.g. https://example.com)."
-      );
-    }
-  }
-
-  return Array.from(trustedOrigins);
-}
-
 function resolveHostedAuthSecret(env: AuthEnvironment): {
   secret: string;
   secretSource: HostedAuthSecretSource;
@@ -256,6 +216,10 @@ export function getHostedAuthConfig(
   const appBaseUrl = resolveHostedAppBaseUrl(env);
   const baseURL = appBaseUrl.appBaseUrl;
   const hostedDb = getHostedServerDatabaseConfig(env);
+  const { origins, hasInvalidExplicitOrigin } = resolveBrowserTrustedOrigins(env, appBaseUrl);
+  if (hasInvalidExplicitOrigin) {
+    console.warn("[security] Ignoring invalid BETTER_AUTH_TRUSTED_ORIGINS entries. Use public HTTPS origins for hosted deployments.");
+  }
 
   return {
     deploymentMode,
@@ -269,10 +233,7 @@ export function getHostedAuthConfig(
     baseURL,
     basePath: hostedAuthBasePath,
     sessionPath: hostedAuthSessionPath,
-    trustedOrigins: resolveTrustedOrigins(
-      appBaseUrl.hasValidConfiguredUrl ? baseURL : null,
-      env
-    ),
+    trustedOrigins: [...origins],
     secret,
     secretSource,
     authUiPath: hostedAuthUiPath,

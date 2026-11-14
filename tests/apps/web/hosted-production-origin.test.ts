@@ -55,4 +55,42 @@ describe('hosted production origin', () => {
       warn.mockRestore();
     }
   });
+
+  it('validates supplemental hosted browser origins without logging rejected entries', () => {
+    const output = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    try {
+      const rejected = [
+        'file:///synthetic-private', 'http://unsafe.example',
+        'https://synthetic:secret@invalid.example', 'https://invalid.example/private',
+        'synthetic-private-invalid-setting',
+      ];
+      const env = { ...hostedProduction, TAX_ENGINE_APP_URL: 'https://tax.example',
+        BETTER_AUTH_TRUSTED_ORIGINS: [...rejected, 'https://other.tax.example/'].join(',') };
+      const expected = ['https://tax.example', 'https://other.tax.example'];
+      expect.soft(getHostedAuthConfig(env).trustedOrigins).toEqual(expected);
+      expect.soft([...getAllowedOrigins(env)]).toEqual(expected);
+      for (const value of rejected) expect.soft(JSON.stringify(output.mock.calls)).not.toContain(value);
+      const preview = { ...env, VERCEL_ENV: 'preview', VERCEL_URL: 'one-preview.vercel.app' };
+      const previewOrigins = ['https://one-preview.vercel.app', 'https://other.tax.example'];
+      expect.soft(getHostedAuthConfig(preview).trustedOrigins).toEqual(previewOrigins);
+      expect.soft([...getAllowedOrigins(preview)]).toEqual(previewOrigins);
+    } finally {
+      output.mockRestore();
+    }
+  });
+
+  it('does not trust supplemental origins when the primary hosted origin is blocked', () => {
+    const output = vi.spyOn(console, 'error').mockImplementation(() => {});
+    try {
+      const env = { ...hostedProduction, TAX_ENGINE_APP_URL: 'http://tax.example',
+        BETTER_AUTH_TRUSTED_ORIGINS: 'https://valid.tax.example' };
+      expect.soft(getHostedAuthConfig(env)).toMatchObject({ blocked: true, trustedOrigins: [] });
+      expect.soft([...getAllowedOrigins(env)]).toEqual([]);
+      const preview = { ...env, VERCEL_ENV: 'preview', VERCEL_URL: 'https://invalid.vercel.app' };
+      expect.soft(getHostedAuthConfig(preview)).toMatchObject({ blocked: true, trustedOrigins: [] });
+      expect.soft([...getAllowedOrigins(preview)]).toEqual([]);
+    } finally {
+      output.mockRestore();
+    }
+  });
 });

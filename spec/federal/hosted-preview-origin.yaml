@@ -27,7 +27,7 @@ lines:
   - line: "trust-propagation"
     description: Auth and CORS trust only the selected deployment origin
     formula: |
-      Existing explicitly configured extra trusted origins retain their existing
+      Additional explicitly configured origins follow the hosted HTTPS origin
       policy. Selection itself adds only the exact deployment HTTPS origin.
       Another project's origin and shared production URL are not inferred trust.
       Search indexing and local resume remain disabled in hosted previews.

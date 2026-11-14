@@ -9,7 +9,7 @@ import {
   isHostedProductionEnvironment,
   isHostedVercelPreviewEnvironment,
   isLoopbackHostname,
-  resolveHostedAppBaseUrl
+  resolveBrowserTrustedOrigins
 } from "./hosted-runtime-safety";
 
 type CorsEnvironment = Record<string, string | undefined>;
@@ -46,26 +46,7 @@ export function isCorsExemptPath(pathname: string): boolean {
 }
 
 export function getAllowedOrigins(env: CorsEnvironment = process.env): Set<string> {
-  const origins = new Set<string>();
-  const appBaseUrl = resolveHostedAppBaseUrl(env);
-
-  if (appBaseUrl.hasValidConfiguredUrl) {
-    origins.add(new URL(appBaseUrl.appBaseUrl).origin);
-  }
-
-  const trusted =
-    env.BETTER_AUTH_TRUSTED_ORIGINS?.split(",")
-      .map((o) => o.trim())
-      .filter(Boolean) ?? [];
-
-  for (const entry of trusted) {
-    try {
-      origins.add(new URL(entry).origin);
-    } catch {
-      // Invalid URL — skip (hosted-auth.ts already logs a warning).
-    }
-  }
-
+  const { origins } = resolveBrowserTrustedOrigins(env);
   if (origins.size === 0 && !isHostedProductionEnvironment(env) && !isHostedVercelPreviewEnvironment(env)) {
     origins.add("http://localhost:3000");
   }

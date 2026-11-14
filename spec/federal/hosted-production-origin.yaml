@@ -10,3 +10,7 @@ lines:
     description: "Keep invalid configuration bytes out of diagnostics"
     formula: "Warnings about an invalid app URL contain the setting name and the fallback, without the rejected value."
     testRef: "tests/apps/web/hosted-production-origin.test.ts::does not expose the invalid configured value in development diagnostics"
+  - line: "explicit-trusted-origins"
+    description: "Apply the hosted origin policy to explicitly trusted browser origins"
+    formula: "An explicit trusted origin in hosted production or protected Preview must itself be an absolute HTTPS origin. Invalid settings must never trust an opaque Origin header or log the rejected value. If the primary hosted origin is invalid, the supplemental allowlist cannot establish trust on its own."
+    testRef: "tests/apps/web/hosted-production-origin.test.ts::validates supplemental hosted browser origins without logging rejected entries"

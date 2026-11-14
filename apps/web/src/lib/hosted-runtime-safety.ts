@@ -111,6 +111,25 @@ export function resolveHostedAppBaseUrl(
   };
 }
 
+export function resolveBrowserTrustedOrigins(
+  env: HostedRuntimeEnvironment,
+  app: HostedAppUrlResolution = resolveHostedAppBaseUrl(env)
+): { origins: Set<string>; hasInvalidExplicitOrigin: boolean } {
+  const origins = new Set<string>();
+  let hasInvalidExplicitOrigin = false;
+  if (app.blocked) return { origins, hasInvalidExplicitOrigin };
+
+  if (app.hasValidConfiguredUrl) origins.add(new URL(app.appBaseUrl).origin);
+  const requireHttpsOrigin = isHostedProduction(env) || isHostedVercelPreviewEnvironment(env);
+  for (const entry of env.BETTER_AUTH_TRUSTED_ORIGINS?.split(",") ?? []) {
+    const value = entry.trim();
+    if (!value) continue;
+    if (isValidAppUrl(value, requireHttpsOrigin)) origins.add(new URL(value).origin);
+    else hasInvalidExplicitOrigin = true;
+  }
+  return { origins, hasInvalidExplicitOrigin };
+}
+
 export function isHostedProductionEnvironment(
   env: HostedRuntimeEnvironment = process.env
 ) {
