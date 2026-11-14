@@ -63,6 +63,10 @@ try {
       aptBinaries: ['apt', 'apt-cache', 'apt-cdrom', 'apt-config', 'apt-get', 'apt-mark'].filter(name => fs.existsSync('/usr/bin/' + name)),
       aptLibraries: fs.readdirSync('/usr/lib', { recursive: true }).filter(name => /^libapt.*[.]so(?:[.]|$)/u.test(name.split('/').at(-1))),
       mountBinaries: ['mount', 'umount'].filter(name => fs.existsSync('/usr/bin/' + name)),
+      infocmpPresent: Boolean(fs.lstatSync('/usr/bin/infocmp', { throwIfNoEntry: false })),
+      infocmpDpkgFilter: fs.readFileSync('/etc/dpkg/dpkg.cfg.d/99tax-engine-infocmp', 'utf8'),
+      terminalPackagesInstalled: ['ncurses-bin', 'ncurses-base', 'libtinfo6'].every(name => installedPackages.has(name)),
+      xtermColors: execFileSync('/usr/bin/tput', ['-T', 'xterm', 'colors'], { encoding: 'utf8' }).trim(),
       dpkgAudit: execFileSync('/usr/bin/dpkg', ['--audit'], { encoding: 'utf8' }).trim(),
       corePackagesInstalled: ['dpkg', 'libc6', 'libstdc++6', 'libgcc-s1'].every(name => installedPackages.has(name)),
       libatomicInstalled: installedPackages.has("libatomic1"),
@@ -83,6 +87,10 @@ try {
   assert.deepEqual(processEvidence.aptBinaries, [], "The runner must not retain APT executables.");
   assert.deepEqual(processEvidence.aptLibraries, [], "The runner must not retain libapt shared libraries.");
   assert.deepEqual(processEvidence.mountBinaries, [], "The runner must not retain mount or umount.");
+  assert.equal(processEvidence.infocmpPresent, false, "The runner must not retain infocmp.");
+  assert.equal(processEvidence.infocmpDpkgFilter, "path-exclude=/usr/bin/infocmp\n");
+  assert.equal(processEvidence.terminalPackagesInstalled, true, "Keep ncurses binaries and terminfo packages.");
+  assert.equal(processEvidence.xtermColors, "8", "Retained tput must read the scripted xterm terminfo entry.");
   assert.equal(processEvidence.dpkgAudit, "", "The retained dpkg database must pass its consistency audit.");
   assert.equal(processEvidence.corePackagesInstalled, true, "Keep package metadata for dpkg and Node's core runtime libraries.");
 

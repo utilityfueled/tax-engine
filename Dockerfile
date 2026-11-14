@@ -42,11 +42,15 @@ ENV NODE_OPTIONS="--max-old-space-size=384"
 WORKDIR /app
 
 # Remove APT and the unused mount executables through dpkg. Retain its package database.
+# Exclude the unused infocmp utility (CVE-2025-69720) while retaining ncurses and terminfo.
 # Run as non-root for security
 RUN groupadd --gid 1001 appgroup && useradd --uid 1001 --gid appgroup --shell /bin/false appuser \
     && dpkg --purge apt libapt-pkg7.0 mount \
     && test -z "$(dpkg --audit)" \
     && test ! -e /usr/bin/mount && test ! -e /usr/bin/umount \
+    && printf '%s\n' 'path-exclude=/usr/bin/infocmp' > /etc/dpkg/dpkg.cfg.d/99tax-engine-infocmp \
+    && rm -f /usr/bin/infocmp \
+    && test ! -e /usr/bin/infocmp && test ! -L /usr/bin/infocmp \
     && rm -rf /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/corepack /opt/yarn-* \
     && rm -f /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack /usr/local/bin/yarn /usr/local/bin/yarnpkg
 

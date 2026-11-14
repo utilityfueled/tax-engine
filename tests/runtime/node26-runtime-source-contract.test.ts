@@ -98,6 +98,28 @@ describe("Node 26 runtime source contract", () => {
     expect(smoke).toContain("assert.deepEqual(processEvidence.mountBinaries, []");
     expect(smoke).toContain("assert.deepEqual(afterPackages, expectedPackages");
   });
+  it("excludes only infocmp while retaining terminal metadata and tools", () => {
+    const [builder, runner] = read("Dockerfile").split(`FROM ${base} AS runner`);
+    const exclusion = "path-exclude=/usr/bin/infocmp";
+    expect(builder).not.toContain(exclusion);
+    expect(builder).not.toContain("rm -f /usr/bin/infocmp");
+    expect(runner.match(/path-exclude=[^'\s]+/g)).toEqual([exclusion]);
+    expect(runner).toContain("/etc/dpkg/dpkg.cfg.d/99tax-engine-infocmp");
+    expect(runner).toContain("rm -f /usr/bin/infocmp");
+    expect(runner).toContain("test ! -e /usr/bin/infocmp && test ! -L /usr/bin/infocmp");
+    expect(runner.indexOf("rm -f /usr/bin/infocmp")).toBeLessThan(runner.indexOf("USER appuser"));
+    expect(runner).not.toMatch(/dpkg[^\n]*(?:purge|remove)[^\n]*(?:ncurses|libtinfo)/u);
+
+    const smoke = read("scripts/smoke-container.mjs");
+    expect(smoke).toContain("fs.lstatSync('/usr/bin/infocmp', { throwIfNoEntry: false })");
+    expect(smoke).toContain(`"${exclusion}\\n"`);
+    expect(smoke).toContain("['ncurses-bin', 'ncurses-base', 'libtinfo6'].every");
+    expect(smoke).toContain("execFileSync('/usr/bin/tput', ['-T', 'xterm', 'colors']");
+    expect(smoke).toContain("assert.equal(processEvidence.infocmpPresent, false");
+    expect(smoke).toContain("assert.equal(processEvidence.terminalPackagesInstalled, true");
+    expect(smoke).toContain('assert.equal(processEvidence.xtermColors, "8"');
+    expect(smoke).toContain("assert.deepEqual(afterPackages, expectedPackages");
+  });
   it("preserves the reviewed dependency lock exactly", () => {
     expect(createHash("sha256").update(read("pnpm-lock.yaml")).digest("hex")).toBe("2553ee4f90ed1ec557e633f9b10e588198f8a5c49b833fa0f6b3ad0133345393");
   });
