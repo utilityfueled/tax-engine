@@ -13,8 +13,10 @@ notes: |
   Publication 505 describes separately annualizing the ordinary preferential
   inputs. Final 2025 Form 2210 instructions direct line 14 to the applicable
   return worksheet. This path requires confirmed ordinary period sources and
-  canonical full-year agreement on each component. Special gains and elections
-  retain their separate method boundary.
+  canonical full-year agreement on each component. The separately confirmed
+  special-rate source method retains signed28 worksheet totals and pre-loss1250
+  sources before invoking the existing ScheduleD Tax Worksheet. Section1202 and
+  investment-interest elections retain their separate method boundary.
   Column (d) covers the full year, so its AGI, taxable income, itemized deductions and
   tax after credits must reconcile to the completed return, in whole dollars and within
   $2 for tax after credits because the return rounds Schedule SE parts separately. A mismatch rejects, which also stops Schedule 1-A and other deductions with
@@ -54,7 +56,7 @@ lines:
     testRef: "tests/engine/forms/form-2210-schedule-ai.test.ts::annualizes actual ordinary preferential inputs and reconciles both full-year components"
   - line: "ordinary-preferential-boundary"
     description: "Require actual ordinary preferential sources before using period rates"
-    formula: "Positive QD or net capital gain in any column or on the return requires affirmative confirmation of ordinary eligible period amounts and independently derived canonical return inputs. The separate-method gate remains for positive special-rate capital components, section1202 or a Form4952 investment election, Schedule J, Form8615 and Form2555. An exact offsetting reclassification of the final inputs rejects."
+    formula: "Positive QD or net capital gain in any column or on the return requires affirmative confirmation of ordinary eligible period amounts and independently derived canonical return inputs. Without the separately confirmed special source method, the gate remains for positive special-rate capital components; section1202 or a Form4952 investment election, Schedule J, Form8615 and Form2555. An exact offsetting reclassification of the final inputs rejects."
     irsRef: "Form2210 Schedule AI line14, applicable return worksheet; Pub505 annualized worksheet inputs"
     testRef: "tests/engine/federal-form-2210-schedule-ai.test.ts::binds ordinary period dividends and gains to the federal return and rejects special methods"
   - line: "ordinary-preferential-2026-preview"
@@ -187,3 +189,18 @@ lines:
     formula: "See form-2210-schedule-ai-physical-review.yaml for source-pinned fields, skips, distinct owner PartII worksheets and current-original required review dispatch. No calculation, filing or2026 qualification changes."
     irsRef: "Final2025 Form2210page3 and i2210boxC"
     testRef: "tests/pdf/form-2210-schedule-ai-physical-review.test.ts::AI physical canonical preconditions match independent originals"
+
+  - line: "special-rate-period-sources"
+    description: "Compute each actual cumulative special-rate worksheet before annualized tax"
+    formula: "Require separately confirmed actual four-period signed sum of 28 percent worksheet lines1-6 (including net short-term loss and long-term carryover) and unrecaptured1250 worksheet line13 before its capital-loss offset. Annualize each component by4/2.4/1.5/1. Derive ScheduleD18=max(0,signed28) and19=max(0,1250BeforeLosses+min(0,signed28)); use the existing actual-year ScheduleD Tax Worksheet, never flat25/28percent. Full-year qualified dividends, netcapitalgain and both original components reconcile independently to completed canonical worksheets. Unknown is not zero; section1202/Form4952/ScheduleJ/8615/2555 retain their gates. The ordinary confirmed method remains byte-equivalent."
+    irsRef: "Final2025 i2210 ScheduleAI14; final2025 i1040sd28percentworksheet1-7 and1250worksheet13-18; Pub5052025 Worksheet2-8 and2026 Worksheet2-10 annualization note, retrieved2026-11-14"
+    testRef: "tests/engine/forms/form-2210-schedule-ai-special-gains.test.ts::annualizes actual signed special sources and binds every full-year component"
+  - line: "special-rate-original-guide"
+    description: "Collect original special-rate period worksheets without replacing ordinary records"
+    formula: "Four explicitly entered signed28 totals and pre-loss1250 totals require fresh special-method confirmation. Source year/reference, period edits, method changes and underlying return edits revoke it while amounts survive; a payment-only change preserves it. Ordinary existing periods need no new zero defaults. Current original review recomputes complete source and result before template I/O."
+    irsRef: "Original-source contract; ScheduleAI14 applicable return worksheet; 28percent and unrecaptured1250 source worksheets"
+    testRef: "tests/guided-interview/guided-estimated-tax-special-gains.test.ts::keeps special period originals unknown and invalidates changed source confirmation"
+  - line: "special-rate-dom"
+    description: "Retain four original special-rate rows while editing revokes confirmation"
+    formula: "Add blank actual-source fields explicitly; edit signed amount or known zero while all four rows remain available. Confirmation and full packet confirmation revoke, amounts survive method changes and deliberate removal affects only the supplemental fields. No amount is defaulted."
+    testRef: "tests/apps/web/estimated-tax-special-gains-interactions.test.tsx::retains every special original field after confirmation is revoked by edits"

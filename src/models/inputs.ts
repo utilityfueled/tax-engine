@@ -3734,6 +3734,7 @@ const Form2210DateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/).refine((value
 }, "Must be an actual calendar date");
 const Form2210PaymentSchema = z.object({ date: Form2210DateSchema, amount: decimal });
 const Form2210AnnualizedPeriodSchema = z.object({
+  rate28GainLoss: z.string().optional(), unrecaptured1250BeforeLosses: z.string().optional(),
   adjustedGrossIncome: z.string().optional(), itemizedDeductions: z.string().optional(), qbiDeduction: z.string().optional(),
   qualifiedDividends: z.string().optional(), netCapitalGain: z.string().optional(), netProfitFromSelfEmployment: z.string().optional(),
   socialSecurityWages: z.string().optional(), otherTaxes: z.string().optional(), credits: z.string().optional(), schedule1AAdjustment: z.string().optional(),
@@ -3748,6 +3749,7 @@ export const Form2210Schema = z.object({
   selfEmploymentOwnerPeriods: z.array(Form2210SelfEmploymentOwnerSchema).optional(),
   annualizedIncomePeriods: z.array(Form2210AnnualizedPeriodSchema).optional(),
   ordinaryPreferentialPeriodsConfirmed: z.boolean().optional(),
+  specialRatePeriodsConfirmed: z.boolean().optional(),
   farmingIncomeTwoThirdsConfirmed: z.boolean().optional(),
   waiverKind: z.enum(["full", "partial"]).optional(),
   waiverAmount: z.string().optional(),

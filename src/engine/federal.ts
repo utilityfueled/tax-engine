@@ -4540,6 +4540,15 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     && !input.section1202Sources && schedD.section1202Exclusion.isZero()
     && !input.form1099Div.some(statement => d(statement.section1202Gain).gt(0))
     ? { qualifiedDividends, netCapitalGain: netLTCG } : undefined;
+  const scheduleAiSpecialLines = schedD.specialGainWorksheets?.lines;
+  const scheduleAi1250BeforeLosses = scheduleAiSpecialLines?.find(row => row.form === "Unrecaptured Section1250 Gain Worksheet" && row.line === "13")?.value;
+  const scheduleAiSpecialPreferentialIncome = input.form2210?.calculationMethod === "annualized"
+    && input.form2210.specialRatePeriodsConfirmed === true && scheduleAiSpecialLines && scheduleAi1250BeforeLosses !== undefined
+    && investmentIncomeElection.isZero() && !input.section1202Sources && schedD.section1202Exclusion.isZero()
+    && !input.form1099Div.some(statement => d(statement.section1202Gain).gt(0))
+    ? { qualifiedDividends, netCapitalGain: netLTCG,
+      rate28GainLoss: sum(...scheduleAiSpecialLines.filter(row => row.form === "28% Rate Gain Worksheet" && /^[1-6]$/.test(row.line)).map(row => row.value)),
+      unrecaptured1250BeforeLosses: scheduleAi1250BeforeLosses } : undefined;
   const estimatedTaxInput = {
     taxYear:year,incomeTaxAfterCredits:taxAfterCredits,currentYearTax:estimatedTaxBase,
     withholding:federalWithholding.plus(excessSSWithholding),estimatedPayments,
@@ -4550,6 +4559,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     scheduleAiReturn:{standardDeduction,agi,taxableIncome,itemizedDeductions:deductionUsed === "itemized" ? deductionAmount : undefined,
       preferentialIncome:qualifiedDividends.gt(0) || netLTCG.gt(0),selfEmployedOwners:schedSE.perTaxpayer.filter(row => row.netSEEarnings.gt(0)).length,
       ...(scheduleAiOrdinaryPreferentialIncome ? { ordinaryPreferentialIncome: scheduleAiOrdinaryPreferentialIncome } : {}),
+      ...(scheduleAiSpecialPreferentialIncome ? { specialRatePreferentialIncome: scheduleAiSpecialPreferentialIncome } : {}),
       specialTaxMethod:Boolean(input.form8615 || input.scheduleJ || input.form2555),schedule1ADeduction:schedule1A?.totalDeduction,
       ownerSources:buildForm2210OwnerSourceContext(input,schedSE,
         estimatedTaxBase.minus(taxAfterCredits).minus(selfEmploymentTax).plus(amt).plus(partIAdditions),

@@ -1,6 +1,6 @@
 "use client";
 
-import { ANNUALIZED_PERIOD_FIELDS, emptyAnnualizedPeriods, emptyAnnualizedOwner, emptyEstimatedTaxFacts, hasOrdinaryPreferentialPeriodAmounts, type EstimatedTaxFactsData, type AnnualizedOwnerData } from "@/lib/guided-estimated-tax-facts";
+import { ANNUALIZED_PERIOD_FIELDS, SPECIAL_RATE_PERIOD_FIELDS, emptyAnnualizedPeriods, emptyAnnualizedOwner, emptyEstimatedTaxFacts, hasOrdinaryPreferentialPeriodAmounts, type EstimatedTaxFactsData, type AnnualizedOwnerData } from "@/lib/guided-estimated-tax-facts";
 import type { EstimatedPaymentEntry, PaymentData } from "@/lib/guided-interview-flow";
 import { BooleanFact, TextFact } from "./fact-fields";
 import { CurrencyField } from "./currency-field";
@@ -17,6 +17,7 @@ export function EstimatedTaxSourceDetails({ data, appliedCredits = [], taxYear, 
     if (changedMethod) next.selfEmploymentOwnerPeriods = data.selfEmploymentOwnerPeriods?.map(row => ({ ...row, sourceFactsConfirmed: null }));
     if (changedMethod || patch.sourceTaxYear !== undefined || patch.sourceReference !== undefined || patch.annualizedIncomePeriods !== undefined) {
       next.ordinaryPreferentialPeriodsConfirmed = null;
+      next.specialRatePeriodsConfirmed = null;
     }
     if (Object.keys(patch).some(key => key !== "sourceFactsConfirmed")) next.sourceFactsConfirmed = null;
     onChange(next);
@@ -84,15 +85,19 @@ export function EstimatedTaxSourceDetails({ data, appliedCredits = [], taxYear, 
 const ANNUALIZED_LABELS = ["January 1 to March 31", "January 1 to May 31", "January 1 to August 31", "January 1 to December 31"];
 function AnnualizedPeriods({ data, update }: { data: EstimatedTaxFactsData; update: (patch: Partial<EstimatedTaxFactsData>) => void }) {
   const periods = data.annualizedIncomePeriods ?? emptyAnnualizedPeriods();
+  const specialVisible = periods.some(period => SPECIAL_RATE_PERIOD_FIELDS.some(([key]) => period[key] !== undefined));
   return <fieldset style={{ minWidth: 0 }}><legend>Schedule AI cumulative income by period</legend>
     <p className="guided-hint">Enter income, deductions and wages as actual totals from January 1 through each period end, including 0 where that is the amount. Figure lines 9, 16 and 18 as the Schedule AI instructions describe. The full-year column must match your return. Use the same Schedule AI method for all four dates.</p>
     <BooleanFact label="Both spouses had self-employment earnings" value={data.bothSpousesSelfEmployed ?? null} onChange={bothSpousesSelfEmployed => update({ bothSpousesSelfEmployed })} />
+    {specialVisible ? <><BooleanFact label="All four special-rate original period worksheets checked after the last edit" value={data.specialRatePeriodsConfirmed ?? null} onChange={specialRatePeriodsConfirmed => update({ specialRatePeriodsConfirmed })} /><button type="button" onClick={() => update({ specialRatePeriodsConfirmed: null, annualizedIncomePeriods: periods.map(({ rate28GainLoss: _rate28, unrecaptured1250BeforeLosses: _section1250, ...row }) => row) })}>Remove special-rate period worksheets</button></> : <button type="button" onClick={() => update({ annualizedIncomePeriods: periods.map(row => ({ ...row, rate28GainLoss: "", unrecaptured1250BeforeLosses: "" })) })}>Add actual special-rate period worksheets</button>}
+    <p className="guided-hint">For special-rate gains, enter each original cumulative 28% worksheet signed total after its short-term loss and long-term carryover, and section 1250 worksheet line 13 before that loss offset. Confirm all four originals after editing. Qualified small-business stock and investment-interest elections retain their separate methods.</p>
     {periods.map((period, index) => <fieldset key={ANNUALIZED_LABELS[index]} style={{ minWidth: 0 }}><legend>{ANNUALIZED_LABELS[index]}</legend><div className="guided-form-grid">
       {ANNUALIZED_PERIOD_FIELDS.map(([key, label, signed]) => <CurrencyField key={key} label={`Period ${index + 1}: ${label}`} allowNegative={signed} value={period[key]}
         onChange={value => update({ annualizedIncomePeriods: periods.map((row, at) => at === index ? { ...row, [key]: value } : row) })} />)}
+      {specialVisible && SPECIAL_RATE_PERIOD_FIELDS.map(([key,label,signed]) => <CurrencyField key={key} label={`Period ${index + 1}: ${label}`} allowNegative={signed} value={period[key] ?? ""} onChange={value => update({annualizedIncomePeriods:periods.map((row,at)=>at===index?{...row,[key]:value}:row)})} />)}
     </div></fieldset>)}
     {hasOrdinaryPreferentialPeriodAmounts(periods) && <>
-      <p className="guided-hint">Enter qualified dividends and eligible net capital gain before annualizing. Net capital gain is the positive net long-term gain after any net short-term loss. Collectibles, unrecaptured section 1250 gain, qualified small-business stock and investment-interest elections require a separate method.</p>
+      <p className="guided-hint">Enter qualified dividends and eligible net capital gain before annualizing. Net capital gain is the positive net long-term gain after any net short-term loss. Use the special-rate originals above for collectibles and unrecaptured section 1250 gain. Qualified small-business stock and investment-interest elections require a separate method.</p>
       <BooleanFact label="All four periods use the ordinary qualified dividend and capital gain worksheet"
         value={data.ordinaryPreferentialPeriodsConfirmed ?? null}
         onChange={ordinaryPreferentialPeriodsConfirmed => update({ ordinaryPreferentialPeriodsConfirmed })} />

@@ -1,0 +1,21 @@
+form: "Schedule AI special-rate independent worksheet vectors"
+fullName: "Independent 2025 high-bracket period tax and signed loss netting"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i1040sd"
+notes: |
+  Final2025 ScheduleD tax worksheet and Form2210 line14, retrieved2026-11-14.
+  Fictional independently derived examples, not IRS worked examples or human
+  approval. All annualized taxable amounts exceed100000; the ordinary base is
+  above197300 and all normal preferential income remains in the15percent band.
+  Single ordinary tax211050:1192.50+4386+12072.50+22548+4400=44599.
+  Negative signed28 totals reduce unrecaptured1250 before applying its maximum
+  rate. Actual full-year source components must each reconcile independently.
+lines:
+  - line: "four-taxes"
+    description: "Independent annualized special-rate column taxes"
+    formula: "AnnualizedAGI240000 less standard15750 gives224250. Capital12000 plus qualified dividends1200 leaves ordinary211050. Columns a,b,c,d completed28/1250 pairs are0/2000,0/3000,1200/3000,2000/4000. Tax44599 plus ordinary preferential at15percent,1250at25percent and28gainat28percent gives46779,46879,47035,47239."
+    testRef: "tests/engine/forms/form-2210-special-gains-independent.test.ts::matches independently derived 2025 period tax rather than its own engine oracle"
+  - line: "signed-netting"
+    description: "Preserve negative28 offsets and independent component reconciliation"
+    formula: "Columna signed28=-2000 and1250beforeloss4000 produce completed28zero and12502000. A full-year+1 transfer between the signed28 input and1250beforeloss input cannot pass merely because their sum is unchanged."
+    testRef: "tests/engine/forms/form-2210-special-gains-independent.test.ts::binds signed special components separately and preserves unknown versus zero"

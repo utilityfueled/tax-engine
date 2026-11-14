@@ -18,6 +18,7 @@ const MONEY = /^\d+(\.\d+)?$/, SIGNED = /^-?\d+(\.\d+)?$/;
 export interface Form2210ScheduleAiReturn {
   standardDeduction: Decimal; agi: Decimal; taxableIncome: Decimal; itemizedDeductions?: Decimal; preferentialIncome: boolean;
   ordinaryPreferentialIncome?: { qualifiedDividends: Decimal; netCapitalGain: Decimal };
+  specialRatePreferentialIncome?: { qualifiedDividends: Decimal; netCapitalGain: Decimal; rate28GainLoss: Decimal; unrecaptured1250BeforeLosses: Decimal };
   selfEmployedOwners: number; specialTaxMethod: boolean; schedule1ADeduction?: Decimal; ownerSources?: Form2210OwnerSourceContext;
 }
 export interface Form2210ScheduleAiInput {
@@ -39,10 +40,13 @@ function periodEarningsSubjectToSelfEmploymentTax(profit: Decimal, earningsMulti
 export function calculateForm2210ScheduleAi(input: Form2210ScheduleAiInput): Form2210ScheduleAiResult {
   const { taxYear, filingStatus, facts, returnContext } = input, periods = facts.annualizedIncomePeriods;
   if (periods?.length !== 4) throw new Error('Form 2210 Schedule AI requires all four actual cumulative periods');
+  const specialRatePreferentialIncome = facts.specialRatePeriodsConfirmed === true ? returnContext.specialRatePreferentialIncome : undefined;
+  const specialSourcesPresent = periods.some(period => period.rate28GainLoss !== undefined || period.unrecaptured1250BeforeLosses !== undefined);
+  if ((facts.specialRatePeriodsConfirmed === true || specialSourcesPresent) && !specialRatePreferentialIncome) throw new Error('Form 2210 Schedule AI requires confirmed special period worksheet sources and the actual completed source worksheets');
   const ordinaryPreferentialIncome = facts.ordinaryPreferentialPeriodsConfirmed === true
     ? returnContext.ordinaryPreferentialIncome : undefined;
   const preferentialError = 'Form 2210 Schedule AI with qualified dividends or net capital gain needs its separate period worksheet method or confirmed ordinary period worksheet sources';
-  if ((returnContext.preferentialIncome || facts.ordinaryPreferentialPeriodsConfirmed === true) && !ordinaryPreferentialIncome) {
+  if ((returnContext.preferentialIncome || facts.ordinaryPreferentialPeriodsConfirmed === true) && !ordinaryPreferentialIncome && !specialRatePreferentialIncome) {
     throw new Error(preferentialError);
   }
   if (returnContext.specialTaxMethod) throw new Error('Form 2210 Schedule AI with Schedule J, Form 8615 or foreign earned income needs its separate tax method');
@@ -68,10 +72,11 @@ export function calculateForm2210ScheduleAi(input: Form2210ScheduleAiInput): For
     const column = COLUMNS[index]!, multiplier = MULTIPLIERS[index]!;
     const qualifiedDividends = amount(period.qualifiedDividends, 'period qualified dividends');
     const netCapitalGain = amount(period.netCapitalGain, 'period net capital gain');
-    if (!ordinaryPreferentialIncome && (qualifiedDividends.gt(0) || netCapitalGain.gt(0))) throw new Error(preferentialError);
-    if (index === 3 && ordinaryPreferentialIncome
-      && (!qualifiedDividends.eq(ordinaryPreferentialIncome.qualifiedDividends)
-        || !netCapitalGain.eq(ordinaryPreferentialIncome.netCapitalGain))) {
+    if (!ordinaryPreferentialIncome && !specialRatePreferentialIncome && (qualifiedDividends.gt(0) || netCapitalGain.gt(0))) throw new Error(preferentialError);
+    const preferentialContext = specialRatePreferentialIncome ?? ordinaryPreferentialIncome;
+    if (index === 3 && preferentialContext
+      && (!qualifiedDividends.eq(preferentialContext.qualifiedDividends)
+        || !netCapitalGain.eq(preferentialContext.netCapitalGain))) {
       throw new Error('Form 2210 Schedule AI column (d) qualified dividends and net capital gain must each reconcile to the completed return');
     }
     const annualized = amount(period.adjustedGrossIncome, 'period adjusted gross income', true).times(multiplier);
@@ -86,10 +91,19 @@ export function calculateForm2210ScheduleAi(input: Form2210ScheduleAiInput): For
     if (index === 3 && !adjustment.eq(schedule1A)) throw new Error('Form 2210 Schedule AI column (d) Schedule 1-A adjustment must equal the deduction on the return');
     const taxable = Decimal.max(0, line13.minus(adjustment));
     const annualizedDividends = qualifiedDividends.times(multiplier), annualizedGain = netCapitalGain.times(multiplier);
+    let specialOptions: { collectiblesGain: Decimal; section1250Gain: Decimal } | undefined;
+    if (specialRatePreferentialIncome) {
+      const signed28 = amount(period.rate28GainLoss, 'period signed 28 percent worksheet sum of lines 1 through 6', true);
+      const beforeLosses = amount(period.unrecaptured1250BeforeLosses, 'period unrecaptured1250 worksheet line13 before losses');
+      if (index === 3 && (!signed28.eq(specialRatePreferentialIncome.rate28GainLoss) || !beforeLosses.eq(specialRatePreferentialIncome.unrecaptured1250BeforeLosses))) throw new Error('Form 2210 Schedule AI column (d) special source components must each reconcile to the completed return');
+      const annualized28 = signed28.times(multiplier), annualizedBefore = beforeLosses.times(multiplier);
+      specialOptions = { collectiblesGain: Decimal.max(0, annualized28), section1250Gain: Decimal.max(0, annualizedBefore.plus(Decimal.min(0, annualized28))) };
+      for (const [id, value, label] of [['rate28-gain-loss',annualized28,'Annualized signed 28 percent worksheet total'],['unrecaptured1250-before-losses',annualizedBefore,'Annualized1250 worksheet line13 before losses'],['collectibles-gain',specialOptions.collectiblesGain,'Annualized completed ScheduleD18'],['section1250-gain',specialOptions.section1250Gain,'Annualized completed ScheduleD19']] as const) audit.record(FORM, `14-${id}-${column}`, label, value, 'Actual period worksheet sources; 28percent sum1-6 and1250 lines13-18');
+    }
     const tax = qualifiedDividends.gt(0) || netCapitalGain.gt(0)
-      ? calculateCapitalGainsTax(taxable, annualizedDividends, annualizedGain, filingStatus, constants).tax
+      ? calculateCapitalGainsTax(taxable, annualizedDividends, annualizedGain, filingStatus, constants, specialOptions).tax
       : calculateRegularIncomeTax(taxable, filingStatus, constants);
-    if (ordinaryPreferentialIncome) {
+    if (preferentialContext) {
       audit.record(FORM, `14-qualified-dividends-${column}`, 'Annualized qualified dividends', annualizedDividends, 'Actual cumulative qualified dividends times the annualization factor');
       audit.record(FORM, `14-net-capital-gain-${column}`, 'Annualized net capital gain', annualizedGain, 'Actual cumulative net capital gain times the annualization factor');
     }
