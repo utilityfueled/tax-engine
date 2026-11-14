@@ -23,15 +23,15 @@ A rejection here is not an external blocker unless its class says so. Year guard
 | Family | Examples | Rejection location |
 | --- | --- | --- |
 | Foreign tax credit | Pass-through sources on Form 1116 or as deductions; broader guided K1 composition outside the delivered portfolio-only qualified K3 route, including separate qualified-loss, charitable and current-minimum-tax-credit original packets; territories, overall foreign loss accounts, accrued-credit history and part-year residency | `foreign-tax-*.ts`, `guided-foreign-tax-k3.ts` |
-| Form 172 origins | Farming, estate, cancelled-debt, other classified income and deductions | `form-172-*.ts` |
+| Form 172 origins | Farming, estate, other classified income and deductions; the finite personal canceled-debt source composition and separate regular/AMT current-loss originals are delivered in `58be02ed`, with guided composition in `682e902b` | `form-172-*.ts` |
 | K-1 histories | Basis, foreign tax left suspended by basis (the year and amount of a later allowance are unsettled), at-risk, passive recharacterization, decreased-value gifts, remaining foreign/loss/passive-business-capital/other-business Form 461 classification | `k1-*.ts` |
 | Charitable with loss histories | Partial multi-vintage attribution, prior floor with surviving excess, mixed-media and recurrent joint attribution. The same-medium fully absorbed original category is implemented in `63dccc04`; no vintage is restored or invented | `charitable-*.ts` |
-| COD | Chapter 7/11 estate ownership and conversions, Chapter 12 business/farm debt, modified-loss exhaustion, current EBL origin. Original continuing-individual Chapter 12 personal borrowing and complete Chapter 12/13 history are delivered in `c00d937d` | `cod-nol-reductions.ts` |
+| COD | Chapter 7/11 estate ownership and conversions, Chapter 12 business/farm debt, modified-loss exhaustion, current EBL origin. Original continuing-individual Chapter 12 personal borrowing and complete Chapter 12/13 history are delivered in `c00d937d`; actual retained-residence loan/basis originals and the written-arrangement exception in `f877c0fa`, with guided/current-loss composition in `997a45c8`/`682e902b` | `cod-nol-reductions.ts` |
 | Premium tax credit | Separate-return allocation with a third tax family | `form-8962-*.ts` |
-| Education | Partial in-kind allocation, Coverdell disqualification with later activity | `form-1099-q.ts` |
+| Education | Partial in-kind allocation and broader Coverdell later activity. The finite January 1 whole-account disqualification followed only by separately sourced domestic primary-beneficiary bank interest is delivered canonically in `3545a64d`; its guided original-source parity remains in progress | `form-1099-q.ts` |
 | Foreign earned income | Mixed U.S. and foreign Schedule C income where capital is a material factor, business or partnership net loss, prior partnership services, prior non-W2 income, other mappings | `form-2555-source-binding.ts` |
 | EIC | Active appeal | `eic-*.ts` |
-| Digital assets | Multiple-state pairs outside the admitted original PA/OH pair, PA nonresident/part-year two-state source composition, broader debt/election/history and derived crypto dispositions. Original corporate tokenized-debt full-sale market discount is delivered for federal/Ohio in `8b77d15a`; guided intake and direct PA secondary-market classification remain open | `form-1099-da-sources.ts` |
+| Digital assets | Multiple-state pairs outside the admitted original PA/OH pair, PA nonresident/part-year two-state source composition, broader debt/election/history and derived crypto dispositions. Original corporate tokenized-debt full-sale market discount is delivered for federal/Ohio in `8b77d15a`, with guided intake in `6729c9a0`; direct PA secondary-market classification and independent PA basis remain open | `form-1099-da-sources.ts` |
 
 ## Ruling
 

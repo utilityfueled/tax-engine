@@ -12,22 +12,33 @@ below retain their original evidence boundaries.
 - [x] Commit actual Chapter 12 personal borrowing and complete Chapter 12/13
   history (`c00d937d`): 1,064 focused tests, separate archived-baseline history
   controls and six actual desktop/mobile browsers pass with normal cleanup.
-- [ ] Run all twelve checks on the combined current source. Exact `61ca18f7`
-  static, 28,352 unit and 28,352 coverage tests pass (88.03% branches); both owned
-  databases stopped normally; 622 browser passes/five original skips and zero
-  retries complete all twelve checks on that exact source. These results do not
-  cover subsequent packages. [Evidence](upgrade-2026-three-method-combined-checks-20261114.md).
+- [x] Run all twelve checks on exact combined `26f5bd5b`: 28,449 unit and coverage
+  passes, 88.03% branches, 628 browser passes/five unchanged hosted skips, zero
+  retries and normal owned database/server cleanup. Independent browser audit
+  passes. These results retain that exact revision and exclude later work.
+  [Evidence](upgrade-2026-combined-26f5bd5b-checks-20261114.md).
 - [x] Close the reproduced public/HTTP/verified-audit COD exclusion admission
   bypass (`11040d35`), retaining complete-source controls and independent review.
 - [x] Allocate original corporate tokenized-debt market discount exactly once
   for federal and Ohio (`8b77d15a`), with separate manual and genuine verified
   context privacy tests. Retain the precise PA classification guard.
-- [ ] Implement actual retained-residence COD source admission and basis-only
-  reduction, including the source-proven 2026 written-arrangement exception.
-- [ ] Finish actual typed special-rate Schedule AI desktop/mobile review tests
-  and reject contradictory interim amounts in the proven distribution-only cohort.
-- [ ] Complete guided original market-discount intake and resolve the direct
-  Pennsylvania secondary-market discount classification question.
+- [x] Implement actual retained-residence COD source admission and basis-only
+  reduction (`f877c0fa`), current-loss composition (`58be02ed`), original guided
+  intake (`997a45c8`) and guided current-loss composition (`682e902b`). Preserve
+  the actual pre-2026 written-arrangement requirement and separate filing gates.
+- [x] Finish actual typed special-rate Schedule AI desktop/mobile review tests
+  (`2071fd25`) and reject contradictory interim amounts in the proven
+  distribution-only cohort (`086d8a8e`), retaining signed general-source methods.
+- [x] Complete guided original market-discount intake (`6729c9a0`) with actual
+  desktop/mobile journeys and unknown/zero/source-invalidation controls.
+- [ ] Resolve the direct Pennsylvania secondary-market discount classification
+  and independent PA basis question from controlling official sources; preserve
+  the positive-discount rejection until that treatment is established.
+- [x] Implement the finite original-bound Coverdell January 1 disqualification
+  followed by separately sourced domestic bank interest (`3545a64d`), without
+  inventing an interest statement or admitting broader later activity.
+- [ ] Collect that finite Coverdell bank-interest packet through the guide with
+  actual originals, reconfirmation and desktop/mobile lifecycle evidence.
 
 - [x] Refresh official provider prices/capabilities and record the deprecated
   GPT-5 Mini baseline without promotion or new paid calls.
@@ -70,6 +81,12 @@ below retain their original evidence boundaries.
   replay, pool closure and normal database stop. New provider cost $0.00047760;
   cumulative known plus original timeout hold $0.28568320.
   [Evidence and limits](upgrade-2026-ai-local-ledger-20261114.md).
+- [x] Pass separately reviewed same-request actual Luna→explicit Sol High
+  escalation and exact local settlement: `$0.00819750` provider cost, one
+  synthetic included cent once, duplicate/third/replay denial and normal owned
+  database shutdown. Preserve the distinct predecessor HOLD. Cumulative known
+  cost plus unchanged historical reserve is `$0.29423670`.
+  [Actual evidence](upgrade-2026-ai-sol-high-ledger-20261114.md).
 - [x] Pass actual current Preview recovery email/reset/session/token checks and
   independent saved-artifact review; verify session/deployment cleanup and
   preserve the prior timestamp failure. [Recovery ledger](upgrade-2026-preview-recovery-20261114.md).

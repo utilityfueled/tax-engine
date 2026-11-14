@@ -1,4 +1,19 @@
 {
+  "nov14CompletedCombined26f5Checks": {
+    "source": "26f5bd5b1d99df1655aa89cbd88e59d7333161de",
+    "allTwelveRequiredLocalChecks": "PASS;allTerminalSessionsAcknowledged",
+    "unitAndCoverageEach": "28449PASS2066files;8workers;ownedSCRAMdatabaseNormallyStopped",
+    "branchCoveragePercent": "88.03",
+    "browser": "633actualCases628PASS5originalHostedSkips;0failureRetryFlaky;8batches;ownedServerNormallyClosed",
+    "browserPolicy": "2workers0retries30sDefault;8unchangedRuntimeOverridesBoundToPredecessor",
+    "independentActualBrowserReviewSha256": "38079cb695f7421050b37c5f736fff4f11362ddde45fc7818093d685720a5b58",
+    "ledger": "docs/upgrade-2026-combined-26f5bd5b-checks-20261114.md",
+    "runtimeSuccessors": "protectedPreviewActive;nativeSourceOnlyRegistryModeSuccessorPrepared;noNativeBootYet",
+    "nativePreflightFailures": "exactDiskByteStringTypeThenRegistry0664;bothRetained;secondCPUandRAMRestored",
+    "remainingImplementation": "guidedCoverdellBankInterestParity;determinateSpecialistSourceMethods;precisePAsecondaryMarketClassificationResearch",
+    "mainPushHold": true,
+    "completionClaim": false
+  },
   "nov14ActualSolHighSameRequestAccounting": {
     "applicationSource": "26f5bd5b1d99df1655aa89cbd88e59d7333161de",
     "actualResult": "PASS;terminal0rootAcknowledged;independentActualReviewPASS",
@@ -398,12 +413,13 @@
   },
   "releaseBlockers": [
     "PA and OH are selected for full-year, part-year and nonresident returns. Bounded methods have engineering evidence. Broader coverage, final physical forms and independent qualified tax review remain open for all six combinations. Filing is disabled and PDFs are review-only.",
-    "OpenAI synthetic runs have 0.26282160 USD in computed reported usage and an unresolved 0.022384 USD timeout reserve. Google project access, provider settlement, exact hosted retail-ledger reconciliation and independent human held-out/privacy review remain missing. No model is promoted.",
-    "Earlier protected Preview runs verified bounded account recovery, tenant isolation, signed billing and deduplication, and synthetic backup/restore and migration. The November 13 isolated source verified tenant isolation, two signed receipts and an actual initial 503 during a database outage with verified restoration. Stripe scheduled retry, exact receipt readback, additional provider/rate-limiter outage checks and final-artifact staging qualification are tracked separately.",
-    "Native ARM64 source 2e258445 passed runtime smoke and all six Compose recovery phases. The November 12 scan found 197 Debian matches across 86 open IDs, with zero critical, npm or available-fix matches. All current dispositions remain unaccepted, past the prior November 7 review deadline. Full current-source Chromium, current-source AMD64, human security review and publication authority remain open.",
+    "OpenAI synthetic known usage is179calls/0.27185270USD plus the unchanged0.022384USD unresolved timeout reserve, exposure0.29423670USD. Actual current local NUMERIC/bigint same-request SolHigh settlement passes; protected hosted receipts retain their own exact-source boundaries. Google access, independent human held-out/privacy review and qualified route promotion remain open; invoice reconciliation is not established. No model is promoted.",
+    "November14 source-specific protected Preview evidence passes recovery email/reset/session/token checks, tenant isolation/private originals, scheduled same-event Stripe retry with exact receipt readback, and eleven-table synthetic migration/backup/restore. Current26f5bd5b protected mortgage-original rehearsal is prepared pending actual local gates; older successes are not relabeled as final current-artifact qualification. See the dated recovery/retry/schema/K3 ledgers.",
+    "November14 nativeARM64a396d2c2 passes runtime, six recovery phases and620browserpasses/fiveoriginalskips with normalVM/socket cleanup; exact26f5bd5b successor is prepared pending actual local gates. Refreshed app scan retains192matches/0Critical/56unacceptedHigh; stockPostgreSQL retains9Critical/138High. Engineering recheck is dueNovember15 18:30UTC or beforequalification; an accountable advisory decision owner and human security/privacy review remain unassigned. NativeAMD64 and publication qualification remain open.",
     "The 2026 federal calculation remains incomplete and unavailable in production. The final 2026 parent Form 1040, ordinary and EIC tax tables and remaining official packages are still required. Final physical specimens are disabled pending complete scenarios and qualified review."
   ],
   "ongoingExecution": {
+    "historicalSnapshotNotice": "This nested execution snapshot and its dated source-specific subrecords are retained history; current state is in top-level nov14 entries, releaseBlockers and docs/upgrade-2026-current-status.md. Historical credential and provider-availability gaps below are not current blockers.",
     "status": "selected-state-all3-internal-implementation-active-external-qualification-gates-open",
     "lastRecordedCommit": "a3e43a9fb49ee616025786e22ffadf10376f131c",
     "checklist": "docs/upgrade-2026-checklist.md",

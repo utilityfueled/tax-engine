@@ -1,5 +1,12 @@
 # 2026 upgrade implementation evidence
 
+November 14: all twelve exact `26f5bd5b` checks pass: 28,449 unit/coverage tests,
+88.03% branches, 628 browser passes/five original skips, zero retries, normal
+owned cleanup and separate actual artifact review. Protected Preview execution
+and corrected native preparation proceed in parallel; retained preflight failures
+establish no runtime qualification. Guided Coverdell parity and remaining
+determinate source methods continue. [Exact checks](upgrade-2026-combined-26f5bd5b-checks-20261114.md).
+
 November 14: independently reviewed actual Luna→explicit Sol High accounting
 passes against source `26f5bd5b`. Two calls cost `$0.00819750` and settle one
 synthetic included cent once; duplicate/third/replay controls and normal owned

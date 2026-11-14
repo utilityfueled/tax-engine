@@ -1,5 +1,18 @@
 # Current 2026 upgrade continuation
 
+## November 14 twelve passing checks and parallel runtime successors
+
+Immutable `26f5bd5b` passes all twelve required checks: 28,449 unit/coverage
+tests, 88.03% branches and 628 actual browser passes/five original skips. Separate
+artifact review verifies all 633 cases, zero retries, unchanged source/builds and
+normal owned cleanup. [Exact evidence](upgrade-2026-combined-26f5bd5b-checks-20261114.md).
+Its protected Preview rehearsal runs separately. Native preflights expose two
+staging issues before any boot: Podman reports list disk bytes as a string, and
+the specimen registry requires mode 0644. Original failures remain retained;
+CPU/RAM restore after the second attempt is verified. Corrected preparation
+preserves all bytes, controller checks and cleanup rules. Current guided
+Coverdell parity and determinate specialist methods continue independently.
+
 ## November 14 actual Sol High escalation and exact local settlement
 
 The separate actual two-attempt rehearsal passes: genuinely grounded Luna is
