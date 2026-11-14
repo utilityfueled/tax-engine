@@ -38,6 +38,7 @@ export function educationFactErrors(data: CreditsData | undefined, taxYear?: num
     if (!student.name.trim()) errors[`${key}-name`] = "Enter the actual student name.";
     if (!validAmount(student.qualifiedExpenses)) errors[`${key}-amount`] = "Enter actual qualified education expenses, including zero.";
     if (!/^[0-4]$/.test(student.priorYearsClaimed) || student.requiresPriorYearsConfirmation) errors[`${key}-history`] = "Confirm actual prior AOTC claim history (0–4); older prefilled zero requires reconfirmation.";
+    if (student.sourceFactsConfirmed !== undefined && student.sourceFactsConfirmed !== true) errors[`${key}-source-review`] = "Review and confirm the actual AOTC education records for this student and tax year.";
     studentFacts(student, key);
     for (const field of ["completedFirstFourYearsBeforeYear", "enrolledAtLeastHalfTime", "pursuingDegreeOrCredential", "felonyDrugConviction"] as const) if (typeof student[field] !== "boolean") errors[`${key}-${field}`] = "Confirm all actual AOTC eligibility facts.";
     if (!/^\d{9}$/.test(cleanId(student.institutionEin)) || !student.institutions?.some(institution => cleanId(institution.ein) === cleanId(student.institutionEin))) errors[`${key}-ein`] = "Enter the actual AOTC institution EIN and matching institution record.";

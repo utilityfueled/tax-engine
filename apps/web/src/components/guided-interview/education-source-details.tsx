@@ -43,17 +43,24 @@ export function EducationSourceDetails({ data, onChange, taxYear, filingStatus }
         <label className="guided-field">
           <span className="guided-field-label">Prior years AOTC was claimed</span>
           <select className="guided-input" value={student.requiresPriorYearsConfirmation ? "" : student.priorYearsClaimed}
+            aria-describedby={`guided-aotc-history-${index}`}
             onChange={event => change({ priorYearsClaimed: event.target.value, requiresPriorYearsConfirmation: false })}>
             <option value="">Confirm actual claim history</option>
             {[0, 1, 2, 3, 4].map(year => <option key={year} value={String(year)}>{year === 4 ? "4 or more" : year}</option>)}
           </select>
-          <span className="guided-field-hint">Count each prior tax year anyone claimed the credit for this student.</span>
-          {student.requiresPriorYearsConfirmation && <span className="guided-field-hint">
-            Confirm the prior claim count for this student. The saved answer was {student.priorYearsClaimed === "4" ? "4 or more" : student.priorYearsClaimed}.
-          </span>}
         </label>
+        <p className="guided-field-hint" id={`guided-aotc-history-${index}`}>
+          Count each prior tax year anyone claimed the credit for this student.
+          {student.requiresPriorYearsConfirmation && <> Confirm the prior claim count for this student. The saved answer was {student.priorYearsClaimed === "4" ? "4 or more" : student.priorYearsClaimed}.</>}
+        </p>
         {([ ["completedFirstFourYearsBeforeYear", "Completed the first four years of postsecondary education before this tax year"], ["enrolledAtLeastHalfTime", "Enrolled at least half-time for at least one academic period"], ["pursuingDegreeOrCredential", "Pursuing a degree or recognized education credential"], ["felonyDrugConviction", "Had a felony drug conviction by the end of the tax year"] ] as const).map(([field, label]) => <BooleanFact key={field} label={label} value={student[field]} onChange={value => change({ [field]: value })} />)}
         <TextFact label="AOTC institution EIN from the actual institution record" value={student.institutionEin ?? ""} onChange={institutionEin => change({ institutionEin })} />
+        {student.sourceFactsConfirmed !== undefined && <>
+          <p className="guided-field-hint" id={`guided-aotc-source-review-${index}`}>Check the saved expenses, institution and Form 1098-T records, enrollment, identification, education completed and conviction answers against this student's records for the selected year.</p>
+          <BooleanFact label="Have you checked the actual records for this AOTC student and tax year?"
+            describedBy={`guided-aotc-source-review-${index}`} value={student.sourceFactsConfirmed}
+            onChange={sourceFactsConfirmed => change({ sourceFactsConfirmed })} />
+        </>}
         <button type="button" className="utility-button" onClick={() => update({ aocStudents: data.aocStudents.filter((_, itemIndex) => itemIndex !== index) })}>Remove AOTC student {index + 1}</button>
       </fieldset>;
     })}

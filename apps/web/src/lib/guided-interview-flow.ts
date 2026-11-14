@@ -1178,6 +1178,7 @@ export interface EducationStudentData extends EducationStudentSourceData {
   studentSsnEligible?: boolean | null;
   institutionEin?: string;
   requiresPriorYearsConfirmation?: boolean;
+  sourceFactsConfirmed?: boolean | null;
 }
 
 export const emptyEducationStudent: EducationStudentData = {
@@ -1669,6 +1670,33 @@ export function startInterview(segmentation: SegmentationAnswers, taxYear: numbe
   };
 }
 
+export function setInterviewTaxYear(state: GuidedFlowState, taxYear: number | null): GuidedFlowState {
+  if ((state.taxYear ?? null) === taxYear) return state;
+  const credits = state.sectionData.credits;
+  const education = credits?.education;
+  const aotcSourcesEntered = education && (education.aocStudents.length > 0 ||
+    [education.aocBanInEffect, education.form8862Required, education.form8862Completed,
+      education.refundableAocFacts, education.refundableAocEligible].some(answer => answer !== undefined));
+  const royalties = state.sectionData["income-royalties"];
+  return {
+    ...state,
+    taxYear,
+    sectionData: {
+      ...state.sectionData,
+      ...(royalties ? { "income-royalties": invalidateRoyaltySources(royalties) } : {}),
+      ...(credits && education && aotcSourcesEntered ? { credits: { ...credits, education: {
+        ...education,
+        aocStudents: education.aocStudents.map(requireAotcSourceReview),
+        aocBanInEffect: undefined,
+        form8862Required: undefined,
+        form8862Completed: undefined,
+        refundableAocFacts: undefined,
+        refundableAocEligible: undefined,
+      } } } : {}),
+    },
+  };
+}
+
 /** Current source-only originals for explicit PA ordinary confirmation.
  * Residency controls use separate federal-only originals, avoiding a confirmation
  * cycle. This reads/replays existing proof; it never confirms either ordinary packet. */
@@ -1763,20 +1791,46 @@ function w2OriginalFields(entry: W2EntryData | undefined) {
   return original;
 }
 
-function retainAotcHistory(previous: CreditsData | undefined, next: CreditsData | undefined): CreditsData | undefined {
+function aotcStudentSources(student: EducationStudentData) {
+  const { name: _name, studentTaxId: _tin, priorYearsClaimed: _history,
+    requiresPriorYearsConfirmation: _historyPending, qualifiedExpenses, ...sources } = student;
+  return { ...sources, qualifiedExpenses: qualifiedExpenses.trim().replaceAll(",", "") };
+}
+
+function requireAotcSourceReview(student: EducationStudentData): EducationStudentData {
+  const requiresPriorYearsConfirmation = Boolean(student.priorYearsClaimed) || student.requiresPriorYearsConfirmation;
+  const hasRetainedSources = student.sourceFactsConfirmed !== undefined || guidedSourceValuesChanged(
+    aotcStudentSources(student), aotcStudentSources(emptyEducationStudent),
+  );
+  return {
+    ...student,
+    ...(requiresPriorYearsConfirmation ? { requiresPriorYearsConfirmation: true } : {}),
+    ...(requiresPriorYearsConfirmation || hasRetainedSources ? { sourceFactsConfirmed: null } : {}),
+  };
+}
+
+function retainAotcSources(previous: CreditsData | undefined, next: CreditsData | undefined): CreditsData | undefined {
   const previousStudents = previous?.education?.aocStudents;
   if (!previousStudents?.length || !next?.education?.aocStudents.length) return next;
   const studentTin = (entry: EducationStudentData) => (entry.studentTaxId ?? "").trim().replaceAll("-", "");
   const students = next.education.aocStudents.map((student, index) => {
     const former = previousStudents[index];
     const tin = studentTin(student);
-    if (!former || !student.priorYearsClaimed || studentTin(former) === tin) return student;
+    if (!former) return student;
+    if (studentTin(former) === tin) {
+      const confirmation = student.sourceFactsConfirmed === undefined ? former.sourceFactsConfirmed : student.sourceFactsConfirmed;
+      if (confirmation === undefined) return student;
+      const changed = guidedSourceValuesChanged(aotcStudentSources(former), aotcStudentSources(student));
+      return { ...student, sourceFactsConfirmed: changed ? null : confirmation };
+    }
     // Removing a student can shift a different, unchanged student's row.
-    const retained = /^\d{9}$/.test(tin) && previousStudents.some(row =>
-      studentTin(row) === tin && row.priorYearsClaimed === student.priorYearsClaimed &&
-      Boolean(row.requiresPriorYearsConfirmation) === Boolean(student.requiresPriorYearsConfirmation),
-    );
-    return retained ? student : { ...student, requiresPriorYearsConfirmation: true };
+    const retained = /^\d{9}$/.test(tin) && previousStudents.find(row => studentTin(row) === tin &&
+      row.priorYearsClaimed === student.priorYearsClaimed &&
+      Boolean(row.requiresPriorYearsConfirmation) === Boolean(student.requiresPriorYearsConfirmation) &&
+      (student.sourceFactsConfirmed === undefined || row.sourceFactsConfirmed === student.sourceFactsConfirmed) &&
+      !guidedSourceValuesChanged(aotcStudentSources(row), aotcStudentSources(student)));
+    if (!retained) return requireAotcSourceReview(student);
+    return retained.sourceFactsConfirmed === undefined ? student : { ...student, sourceFactsConfirmed: retained.sourceFactsConfirmed };
   });
   return { ...next, education: { ...next.education, aocStudents: students } };
 }
@@ -1905,7 +1959,7 @@ export function updateSectionData(
   const educatorSourcesChanged = sourceValuesChanged && ["income-w2", "personal-info", "credits", "income-investments"].includes(sectionId) && adjustments?.educatorExpenseSources;
   const studentLoanSourcesChanged = sourceValuesChanged && ["income-w2", "personal-info", "credits"].includes(sectionId) && adjustments?.studentLoanFacts;
   const benefitSourcesChanged = (sectionId === "income-w2" || sectionId === "income-self-employment") && credits?.dependentCareBenefits;
-  const nextCredits = sectionId === "credits" ? retainAotcHistory(credits, data as CreditsData | undefined) : credits;
+  const nextCredits = sectionId === "credits" ? retainAotcSources(credits, data as CreditsData | undefined) : credits;
   const adoptionHistoryChanged = sourceValuesChanged && ["personal-info", "income-w2", "income-self-employment", "income-retirement", "income-investments", "income-rental", "income-royalties", "income-social-security", "income-unemployment", "adjustments", "credits", "deductions", "additional-deductions", "other-taxes"].includes(sectionId)
     && nextCredits?.adoption?.children.some(child => child.priorYearForeignBenefitHistory) ? nextCredits?.adoption : undefined;
   const minimumTaxCreditSourcesChanged = sourceValuesChanged && ["personal-info", "credits"].includes(sectionId) && nextCredits?.minimumTaxCredit;
@@ -2690,9 +2744,16 @@ export function loadGuidedFlowState(storage: Storage, workspaceId: string): Guid
       if (sectionData["income-retirement"]) {
         sectionData["income-retirement"] = { ...sectionData["income-retirement"], entries: sectionData["income-retirement"].entries.map((entry) => ({ ...entry, requiresCodeConfirmation: entry.distributionCode === "7" || entry.requiresCodeConfirmation })) };
       }
-      if (sectionData.credits) {
-        sectionData.credits = { ...sectionData.credits, education: { ...sectionData.credits.education, aocStudents: sectionData.credits.education.aocStudents.map((entry) => ({ ...entry, requiresPriorYearsConfirmation: entry.priorYearsClaimed === "0" || entry.requiresPriorYearsConfirmation })) } };
-      }
+    }
+    const credits = sectionData.credits;
+    if (credits?.education.aocStudents.length) {
+      const students = credits.education.aocStudents.map(student => {
+        const legacyDefault = parsed.factsVersion !== 2 && student.priorYearsClaimed === "0";
+        if (legacyDefault) return requireAotcSourceReview(student);
+        return student.requiresPriorYearsConfirmation && student.sourceFactsConfirmed === undefined
+          ? { ...student, sourceFactsConfirmed: null } : student;
+      });
+      sectionData.credits = { ...credits, education: { ...credits.education, aocStudents: students } };
     }
     return {
       ...parsed,

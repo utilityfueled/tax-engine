@@ -3,7 +3,6 @@ import {isSeparateStatePreview} from '@/lib/guided-interview-bridge';
 import {PASeparateReturnPreview} from '@/components/pa-separate-return-preview';
 import { buildGuidedW2SourceContext } from "@/lib/guided-interview-bridge";
 
-import { invalidateRoyaltySources } from "@/lib/guided-royalty-sources";
 import { SectionRoyaltyIncome } from "./section-royalty-income";
 import { foreignIncomeSourceOptions } from "@/lib/guided-foreign-income";
 import { marketplacePolicyOptions } from "@/lib/guided-marketplace-health-facts";
@@ -83,6 +82,7 @@ import {
   loadGuidedFlowState,
   resumeInterviewAtSection,
   saveGuidedFlowState,
+  setInterviewTaxYear,
   startInterview,
   updateSectionData,
 } from "@/lib/guided-interview-flow";
@@ -1332,7 +1332,8 @@ export function GuidedInterviewShell({
 
       <label className="guided-field">
         <span className="guided-field-label">Tax year for this interview</span>
-        <select className="guided-input" value={flowState.taxYear ?? ""} onChange={(event) => { const taxYear = event.target.value ? Number(event.target.value) : null; const sources = flowState.sectionData["income-royalties"]; handleFlowStateChange({ ...flowState, taxYear, ...(taxYear !== flowState.taxYear && sources ? { sectionData: { ...flowState.sectionData, "income-royalties": invalidateRoyaltySources(sources) } } : {}) }); }}>
+        <select className="guided-input" value={flowState.taxYear ?? ""}
+          onChange={event => handleFlowStateChange(setInterviewTaxYear(flowState, event.target.value ? Number(event.target.value) : null))}>
           <option value="">Confirm the tax year</option>
           <option value="2025">2025 — filed in 2026</option>
           <option value="2026">2026 — calculation not yet available</option>
