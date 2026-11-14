@@ -124,8 +124,9 @@ function projectElectionAmounts(source: Form4972Input) {
     const capitalEstateTax = roundDollar(d(source.federalEstateTax).times(exactGain).dividedBy(exactTaxable));
     const shownEstateTax = d(estateTax ?? "0");
     shownCapital = d(capitalGain);
+    const remainingEstateTax = line18 ?? roundDollar(exact.unusedOrdinaryEstateTax ?? d(0));
     if (!printed.deathBenefitWorksheet || !shownCapital.minus(capitalEstateTax).eq(line6)
-      || !shownEstateTax.minus(capitalEstateTax).eq(line18)) throw new Error(reconciliationError);
+      || !shownEstateTax.minus(capitalEstateTax).eq(remainingEstateTax)) throw new Error(reconciliationError);
     const [whole, fraction] = displayedRatio(shownCapital.dividedBy(taxableAmount), shownEstateTax, capitalEstateTax);
     estateWorksheetValues = [capitalGain, taxableAmount, whole, fraction];
   }

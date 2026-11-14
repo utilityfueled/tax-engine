@@ -7,8 +7,9 @@ notes: |
   own qualified plan and a single qualifying death-beneficiary distribution
   have separate original-source rules for attributable federal estate tax.
   Alternate payees, multiple distributions or recipients, earlier deaths,
-  securities dispositions after NUA deferral, positive estate tax with Part II alone and a
-  beneficiary's actuarial annuity value need separate qualification. No current-year return or export
+  securities dispositions after NUA deferral, a beneficiary's actuarial annuity
+  value, and annual treatment of the unused estate tax following a Part II-only
+  election need separate qualification. No current-year return or export
   registration is implied.
 lines:
   - line: "1-5"
@@ -42,9 +43,9 @@ lines:
       election, no other disqualification, one distribution and one recipient,
       and the same reconciled Boxes 1, 2a and 3 and confirmed zero Boxes 6 and
       8a. Require the administrator's confirmed attributable federal estate
-      tax from estate records. A positive amount requires Part III, and the
-      amount allocated to Part III cannot exceed line 17. Line 9 is zero for
-      this cohort. The own-plan physical candidate does not project beneficiary answers.
+      tax from estate records. The amount allocated to elected Part III
+      cannot exceed line 17. Line 9 is zero for this cohort. The own-plan
+      physical candidate does not project beneficiary answers.
     testRef: "tests/engine/forms/form-4972.test.ts::computes a beneficiary election on the first day without a death exclusion"
     testRefs:
       - "tests/engine/forms/form-4972.test.ts::holds a beneficiary election with incomplete or conflicting originals"
@@ -54,7 +55,7 @@ lines:
     formula: >-
       Line 6 is positive Box 3 when Part II is elected. Add NUA Worksheet E
       if the taxpayer elected to include a positive Box 6 in the distribution
-      year. For a single beneficiary electing both parts with positive estate
+      year. For a single beneficiary electing Part II with positive estate
       tax, record Death Benefit Worksheet A–C as Box 3, Box 2a, and their
       ratio. Multiply the confirmed attributable estate tax by C and subtract
       that amount from Box 3 for line 6. Reject a reduction exceeding Box 3.
@@ -63,6 +64,7 @@ lines:
     testRefs:
       - "tests/engine/forms/form-4972.test.ts::allocates estate tax across both elected parts without increasing ordinary income"
       - "tests/engine/forms/form-4972.test.ts::retains cents when the estate allocation ratio recurs"
+      - "tests/engine/forms/form-4972.test.ts::allocates Part II estate tax and retains the ordinary share for annual review"
   - line: "NUA A-G"
     description: "Allocate included own-plan net unrealized appreciation when Part II applies"
     formula: >-
@@ -125,14 +127,20 @@ lines:
       - "tests/engine/forms/form-4972.test.ts::keeps actuarial value out of the Part II pension transfer"
       - "tests/engine/forms/form-4972.test.ts::requires an actual qualified lump-sum annuity value in Box 8a"
       - "tests/engine/forms/form-4972.test.ts::subtracts the confirmed estate tax for a beneficiary electing only Part III"
-      - "tests/engine/forms/form-4972.test.ts::holds Part II alone with positive estate tax and a deduction exceeding either base"
+      - "tests/engine/forms/form-4972.test.ts::holds an estate tax deduction exceeding the applicable base"
   - line: "30"
     description: "Separate tax and proposed federal transfer"
     formula: >-
       When Part III is elected line 30 sums lines 7 and 29, treating absent
       Part II as zero. Part II alone transfers line 7 to Form 1040 line 16 and
-      Box 2a plus included Box 6 less line 6 to ordinary pension income. Either Part III election
-      excludes this source from Form 1040 lines 5a and 5b. Keep the proposed
-      transfer separate from the current federal calculator and exports until
-      their source eligibility and interaction checks are qualified.
+      Box 2a plus included Box 6 less the entire pre-estate-tax capital
+      amount to ordinary pension income. For a beneficiary, retain the share
+      of confirmed estate tax attributable to that ordinary amount separately
+      for annual review under 26 USC 691(c) and Pub. 559. Do not decrease the
+      ordinary pension amount or populate line 18 or Schedule A with it.
+      Either Part III election excludes this source from Form 1040 lines 5a
+      and 5b. Keep the proposed transfer separate from the current federal
+      calculator and exports until eligibility and interactions are qualified.
     testRef: "tests/engine/forms/form-4972.test.ts::splits the combined election and computes the separate ten-year tax"
+    testRefs:
+      - "tests/engine/forms/form-4972.test.ts::keeps the Part II estate split exact when there is no ordinary income"

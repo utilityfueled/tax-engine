@@ -205,8 +205,18 @@ it("projects both beneficiary elections and the estate tax allocation worksheet"
   expect(instructionFields.filter(name => Object.hasOwn(text, name)).map(name => text[name]))
     .toEqual(["5000", "20000", "0", "250"]);
   expect(annotations).toEqual([]);
-  expect(() => form4972Candidate.projectForm49722026DeathBeneficiary({ ...combinedEstateTax, election: "capital_gain" }, beneficiaryAnswers))
-    .toThrow(/estate tax.*Part II/u);
+});
+
+it("projects Part II estate tax without populating Part III", () => {
+  const project = form4972Candidate.projectForm49722026DeathBeneficiary;
+  const input = { ...combinedEstateTax, election: "capital_gain" as const };
+  const { text, annotations } = project(input, beneficiaryAnswers);
+  expect(text).toMatchObject({ [fields.line6]: "4500", [fields.line7]: "900" });
+  expect(instructionFields.filter(name => Object.hasOwn(text, name)).map(name => text[name]))
+    .toEqual(["5000", "20000", "0", "250"]);
+  expect(Object.keys(text)).toHaveLength(6);
+  expect(annotations).toEqual([]);
+  expect(() => project({ ...input, federalEstateTax: "2000.50" }, beneficiaryAnswers)).toThrow(/reconcile/u);
 });
 
 it("uses a longer estate allocation ratio only when required by the printed amounts", () => {
@@ -293,6 +303,11 @@ it("reopens the marked beneficiary specimen", async () => {
 it("reopens the marked beneficiary estate allocation specimen", async () => {
   const projection = form4972Candidate.projectForm49722026DeathBeneficiary(combinedEstateTax, beneficiaryAnswers);
   await verifySavedSpecimen(projection, "form-4972-beneficiary-estate-allocation-review.pdf");
+});
+
+it("reopens the marked Part II-only beneficiary estate allocation specimen", async () => {
+  const projection = form4972Candidate.projectForm49722026DeathBeneficiary({ ...combinedEstateTax, election: "capital_gain" }, beneficiaryAnswers);
+  await verifySavedSpecimen(projection, "form-4972-beneficiary-estate-capital-only-review.pdf");
 });
 
 it("reopens the marked own-plan annuity specimen", async () => {

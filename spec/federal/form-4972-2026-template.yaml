@@ -70,18 +70,23 @@ lines:
       Leave 9 blank because the death-benefit exclusion is unavailable to
       this cohort. For Part III alone, show the confirmed attributable estate
       tax on line 18 and zero on line 11. For both parts, use the original
-      Box 3 to reconcile line 8. Show Death Benefit Worksheet A–C on page 3.
+      Box 3 to reconcile line 8. For either election with Part II and positive
+      estate tax, show Death Benefit Worksheet A–C on page 3.
       Use the shortest displayed ratio from three through six fractional places
       that preserves the capital share of the rounded attributable estate tax.
-      Require line 6 and the remainder on line 18 to reconcile to that allocation.
-      Hold positive estate tax with Part II alone and any printed arithmetic
-      mismatch. Leave identity and unused instruction fields blank.
+      Require line 6 and the remainder to reconcile to that allocation.
+      Show the remainder on line 18 only if Part III is elected. Leave Part
+      III blank for Part II alone. Keep the unused ordinary share out of this
+      physical projection. Hold printed arithmetic mismatches. Leave identity
+      and unused instruction fields blank.
     testRef: "tests/pdf/form-4972-2026-candidate.test.ts::projects the confirmed beneficiary and separate own-plan answers"
     testRefs:
       - "tests/pdf/form-4972-2026-candidate.test.ts::holds beneficiary projection with incomplete physical answers"
       - "tests/pdf/form-4972-2026-candidate.test.ts::reopens the marked beneficiary specimen"
       - "tests/pdf/form-4972-2026-candidate.test.ts::projects the confirmed beneficiary estate tax on a Part III only election"
       - "tests/pdf/form-4972-2026-candidate.test.ts::projects both beneficiary elections and the estate tax allocation worksheet"
+      - "tests/pdf/form-4972-2026-candidate.test.ts::projects Part II estate tax without populating Part III"
+      - "tests/pdf/form-4972-2026-candidate.test.ts::reopens the marked Part II-only beneficiary estate allocation specimen"
       - "tests/pdf/form-4972-2026-candidate.test.ts::uses a longer estate allocation ratio only when required by the printed amounts"
       - "tests/pdf/form-4972-2026-candidate.test.ts::reopens the marked beneficiary estate allocation specimen"
   - line: "diagnostic"

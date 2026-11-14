@@ -93,8 +93,6 @@ describe("2026 Form 4972 death-beneficiary worksheet", () => {
       { onlyDistributionAndRecipientConfirmed: false }, { taxableAmountNotDetermined: true },
       { capitalGain: "90000.01" }, { netUnrealizedAppreciation: "0.01" }, { actuarialValue: "0.01" },
     ]) expect(() => calculateForm4972({ ...beneficiary, ...change } as Form4972Input)).toThrow(/Form 4972/u);
-    expect(() => calculateForm4972({ ...beneficiary, election: "capital_gain", federalEstateTax: "0.01" }))
-      .toThrow(/Form 4972.*estate tax/u);
   });
 
   it("subtracts the confirmed estate tax for a beneficiary electing only Part III", () => {
@@ -125,9 +123,28 @@ describe("2026 Form 4972 death-beneficiary worksheet", () => {
       .map(row => row.value.toFixed(4))).toEqual(["19555.5556", "3911.1111", "70000.0000", "1555.5556", "9256.1111", "13167.2222"]);
   });
 
-  it("holds Part II alone with positive estate tax and a deduction exceeding either base", () => {
-    expect(() => calculateForm4972({ ...beneficiary, election: "capital_gain", federalEstateTax: "0.01" }))
-      .toThrow(/estate tax.*Part II/u);
+  it("allocates Part II estate tax and retains the ordinary share for annual review", () => {
+    const result = calculateForm4972({ ...beneficiary, election: "capital_gain", taxableAmount: "20000",
+      capitalGain: "5000", federalEstateTax: "2000.25" });
+    expect(result.deathBenefitWorksheet?.map(row => [row.line, row.value.toFixed()]))
+      .toEqual([["A", "5000"], ["B", "20000"], ["C", "0.25"]]);
+    expect(result.lines.map(row => [row.line, row.value.toFixed()])).toEqual([["6", "4499.9375"], ["7", "899.9875"]]);
+    expect(result.separateTax.toFixed()).toBe("899.9875");
+    expect(result.ordinaryPensionTransfer.toFixed()).toBe("15000");
+    expect(result.unusedOrdinaryEstateTax?.toFixed()).toBe("1500.1875");
+  });
+
+  it("keeps the Part II estate split exact when there is no ordinary income", () => {
+    const result = calculateForm4972({ ...beneficiary, election: "capital_gain", taxableAmount: "5000",
+      capitalGain: "5000", federalEstateTax: "5000" });
+    expect(result.separateTax.toFixed()).toBe("0");
+    expect(result.ordinaryPensionTransfer.toFixed()).toBe("0");
+    expect(result.unusedOrdinaryEstateTax?.toFixed()).toBe("0");
+  });
+
+  it("holds an estate tax deduction exceeding the applicable base", () => {
+    expect(() => calculateForm4972({ ...beneficiary, election: "capital_gain", federalEstateTax: "90000.01" }))
+      .toThrow(/estate tax.*Box 3/u);
     expect(() => calculateForm4972({ ...beneficiary, taxableAmount: "20000", capitalGain: "5000", federalEstateTax: "20000.01" }))
       .toThrow(/estate tax.*Box 3/u);
     expect(() => calculateForm4972({ ...beneficiary, taxableAmount: "20000", capitalGain: "5000", federalEstateTax: "10000.01" }))

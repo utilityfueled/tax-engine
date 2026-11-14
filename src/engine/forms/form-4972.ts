@@ -82,9 +82,6 @@ export function calculateForm4972(input: Form4972Input) {
       throw new Error("Form 4972 requires confirmed death-beneficiary eligibility and matching original dates");
     }
     federalEstateTax = sourceAmount(input.federalEstateTax, "federal estate tax");
-    if (federalEstateTax.gt(0) && input.election === "capital_gain") {
-      throw new Error("Form 4972 positive federal estate tax with Part II alone requires separate ordinary-income treatment");
-    }
   } else if (!/^(?:7A|A7)$/.test(code) || input.ownQualifiedPlan !== true
     || input.fiveParticipationYearsConfirmed !== true || input.priorDisqualifyingElection !== false) {
     throw new Error("Form 4972 requires confirmed eligibility from the participant's own plan");
@@ -156,9 +153,13 @@ export function calculateForm4972(input: Form4972Input) {
       : nuaWorksheet ? "NUA Worksheet G" : "Form 1099-R Box 3") : undefined;
   const line7 = line6 ? record("7", "Capital gain election tax", line6.times("0.20"), "Line 6 × 20%") : undefined;
   const partIIResult = { line6, line7, nuaWorksheet, deathBenefitWorksheet, deferredNua: includeNua ? zero : nua };
+  const ordinaryEstateTax = federalEstateTax.minus(capitalEstateTax);
 
   if (!partIII) {
-    return { ...partIIResult, separateTax: line7 ?? zero, ordinaryPensionTransfer: ordinaryBeforeEstateTax, lines: audit.getLines() };
+    return {
+      ...partIIResult, unusedOrdinaryEstateTax: ordinaryEstateTax, separateTax: line7 ?? zero,
+      ordinaryPensionTransfer: ordinaryBeforeEstateTax, lines: audit.getLines(),
+    };
   }
 
   const line8 = record("8", "Amount subject to the ten-year option", ordinaryBeforeEstateTax,
@@ -177,7 +178,6 @@ export function calculateForm4972(input: Form4972Input) {
     line16 = record("16", "Minimum distribution allowance", line13.minus(line15), "Line 13 less line 15");
   }
   const line17 = record("17", "Taxable amount after allowance", line12.minus(line16 ?? zero), "Line 12 less any allowance on line 16");
-  const ordinaryEstateTax = federalEstateTax.minus(capitalEstateTax);
   if (ordinaryEstateTax.gt(line17)) {
     throw new Error("Form 4972 federal estate tax exceeds the supported line 17 amount");
   }
@@ -205,6 +205,6 @@ export function calculateForm4972(input: Form4972Input) {
 
   return {
     ...partIIResult, line8, line16, line17, line24, line29, line30,
-    separateTax: line30, ordinaryPensionTransfer: zero, lines: audit.getLines(),
+    unusedOrdinaryEstateTax: undefined, separateTax: line30, ordinaryPensionTransfer: zero, lines: audit.getLines(),
   };
 }
