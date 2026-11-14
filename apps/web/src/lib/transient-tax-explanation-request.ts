@@ -4,6 +4,7 @@ import { collectProviderDirectIdentifiersFromTaxInput } from "@tax-engine/engine
 import { buildLocalProviderWorkspaceResponse } from "./provider-workspace-local";
 import { buildProviderWorkspaceRequest, ProviderWorkspaceRequestError,
   type ProviderWorkspaceErrorResponse, type ProviderWorkspaceResponse, type RequestProviderWorkspaceOptions } from "./provider-workspace-request";
+import { providerWorkspaceAiPreferenceId, providerWorkspaceRequestHeaders } from "./provider-workspace-request";
 import { readWorkspaceAiOptOut } from "./workspace-ai-preferences";
 
 /** Explicitly confirmed facts go only to this same-origin private calculation route. */
@@ -11,7 +12,7 @@ export async function requestTaxCalculationExplanation(workspace: ReturnWorkspac
   taxInput: TaxYearInput, options: Omit<RequestProviderWorkspaceOptions, "endpoint"> & { confirmed: true }) {
   const request = buildProviderWorkspaceRequest(workspace, { ...options, task: "workspace-help", question,
     directIdentifiers: [...(options.directIdentifiers ?? []), ...collectProviderDirectIdentifiersFromTaxInput(taxInput)],
-    optedOut: options.optedOut === true || readWorkspaceAiOptOut(workspace.id) });
+    optedOut: options.optedOut === true || readWorkspaceAiOptOut(providerWorkspaceAiPreferenceId(workspace, options)) });
   if (request.optedOut) return { request, response: buildLocalProviderWorkspaceResponse(request) };
   const noDocumentYear = workspace.returnSummary.targetTaxYear === null && workspace.documents.length === 0;
   if (options.confirmed !== true || (!noDocumentYear && taxInput.taxpayer.taxYear !== workspace.returnSummary.targetTaxYear)) {
@@ -24,7 +25,8 @@ export async function requestTaxCalculationExplanation(workspace: ReturnWorkspac
   // removes it from provider prompts. No full facts are added to the AI packet.
   request.workspace.id = workspace.id;
   const response = await (options.fetchFn ?? fetch)("/api/workspace/tax-explanation", {
-    method: "POST", headers: { "content-type": "application/json" }, signal: options.signal,
+    method: "POST", headers: providerWorkspaceRequestHeaders(request.workspace.storageMode, options.expectedHostedOwnerScopeKey), signal: options.signal,
+    credentials: "same-origin", mode: "same-origin", redirect: "error",
     body: JSON.stringify({ version: 1, confirmed: true, workspaceId: workspace.id,
       workspaceRevision: workspace.updatedAt, taxYear: taxInput.taxpayer.taxYear, taxInput, providerRequest: request }),
   });

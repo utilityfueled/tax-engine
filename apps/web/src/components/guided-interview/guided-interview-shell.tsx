@@ -1371,6 +1371,7 @@ export function GuidedInterviewShell({
         workspace={workspace}
         mode="guided"
         deploymentMode={workspace.storageMode === "hosted-postgres" ? "hosted" : "self-host"}
+        expectedHostedOwnerScopeKey={documentAnalysisOwnerScopeKey}
         currentSectionId={currentSection?.id ?? null}
         currentSectionLabel={currentSection?.label ?? (flowState.phase === "segmentation" ? "guided setup" : null)}
         onUploadDocuments={onUploadDocuments}

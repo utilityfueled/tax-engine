@@ -8,7 +8,8 @@ import type {
 import { collectProviderDirectIdentifiersFromWorkspace } from "@tax-engine/engine/src/provider-direct-identifiers";
 import { redactProviderPayload } from "@tax-engine/engine/src/provider-payload-redactor";
 import { buildWorkspaceUnsupportedRoutes } from "@tax-engine/engine/src/workspace-unsupported-routes";
-import { readWorkspaceAiOptOut } from "./workspace-ai-preferences";
+import { readWorkspaceAiOptOut, workspaceAiPreferenceId } from "./workspace-ai-preferences";
+import { hostedDocumentAnalysisOwnerHeader, hostedDocumentAnalysisOwnerRequired } from "./hosted-document-analysis-owner";
 import { buildLocalProviderWorkspaceResponse } from "./provider-workspace-local";
 
 export interface ProviderWorkspaceRequest {
@@ -119,6 +120,22 @@ export interface RequestProviderWorkspaceOptions extends BuildProviderWorkspaceR
   endpoint?: string;
   fetchFn?: typeof fetch;
   signal?: AbortSignal;
+  expectedHostedOwnerScopeKey?: string | null;
+}
+
+export function providerWorkspaceRequestHeaders(storageMode: ReturnWorkspaceRecord["storageMode"], ownerScopeKey?: string | null): Headers {
+  const headers = new Headers({ "content-type": "application/json" });
+  if (ownerScopeKey === null || (storageMode === "hosted-postgres" && ownerScopeKey === undefined)) {
+    throw new Error(hostedDocumentAnalysisOwnerRequired);
+  }
+  headers.set(hostedDocumentAnalysisOwnerHeader, ownerScopeKey ?? "local-browser");
+  return headers;
+}
+
+export function providerWorkspaceAiPreferenceId(workspace: ReturnWorkspaceRecord, options: RequestProviderWorkspaceOptions): string | null {
+  const mode = options.workspaceStorageModeOverride ?? workspace.storageMode;
+  return workspaceAiPreferenceId(workspace.id,
+    mode === "hosted-postgres" ? options.expectedHostedOwnerScopeKey ?? null : options.expectedHostedOwnerScopeKey);
 }
 
 function adaptUnsupportedRoutesForProviderRequest(
@@ -193,16 +210,16 @@ export async function requestProviderWorkspace(
   workspace: ReturnWorkspaceRecord,
   options: RequestProviderWorkspaceOptions = {}
 ) {
-  const request = buildProviderWorkspaceRequest(workspace, { ...options, optedOut: options.optedOut ?? readWorkspaceAiOptOut(workspace.id) });
+  const request = buildProviderWorkspaceRequest(workspace, { ...options,
+    optedOut: options.optedOut ?? readWorkspaceAiOptOut(providerWorkspaceAiPreferenceId(workspace, options)) });
   if (request.optedOut) return { request, response: buildLocalProviderWorkspaceResponse(request) };
   const fetchFn = options.fetchFn ?? fetch;
   const response = await fetchFn(options.endpoint ?? "/api/provider/workspace", {
     method: "POST",
-    headers: {
-      "content-type": "application/json"
-    },
+    headers: providerWorkspaceRequestHeaders(request.workspace.storageMode, options.expectedHostedOwnerScopeKey),
     body: JSON.stringify(request),
-    signal: options.signal
+    signal: options.signal,
+    credentials: "same-origin", mode: "same-origin", redirect: "error",
   });
 
   if (!response.ok) {

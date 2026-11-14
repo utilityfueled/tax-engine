@@ -1,0 +1,33 @@
+form: "Hosted workspace helper owner"
+fullName: "Capture the actual account for workspace help and private calculation requests"
+taxYear: 2026
+notes: |
+  The private hosted workspace helper binds each request to the authenticated
+  owner captured by the browser. Authenticate and compare that scope before
+  reading even an invalid request body, so stale tabs do not submit one owner's
+  tax facts under another owner's account. The header is a consistency check
+  and the cookie authenticates the actor. Summary, help and the separate raw
+  transient calculation route share this boundary. Keep the existing private
+  origin, rate, body, redaction, calculation and exact billing controls.
+  Self-hosted callers retain offline service access. An explicit local-browser
+  header marker can admit the existing hosted-development loopback fallback
+  only when the server's existing loopback gate passes and the validated body
+  actually declares local-browser storage. Preview and public hosting cannot
+  use that marker to bypass authentication. Local opt-out still returns the
+  local answer without requiring a scope or performing any network request.
+lines:
+  - line: "body-admission"
+    formula: "Reject a stale or missing expected hosted owner with private409 before reading body, calculation, accounting or provider dispatch. Authenticate once and bind accepted work to that same actor."
+    testRef: "tests/apps/web/hosted-workspace-helper-owner.test.ts::rejects stale and absent hosted scopes before consuming taxpayer facts"
+  - line: "local-marker"
+    formula: "Allow the explicit local-browser marker only under the existing hosted-development-loopback gate; require actual local-browser storage after validation."
+    testRef: "tests/apps/web/hosted-workspace-helper-owner.test.ts::admits an explicit development loopback local workspace without resolving an actor"
+  - line: "transport-and-optout"
+    formula: "Send captured scope in a same-origin header and keep it out of provider prompts. Missing hosted scope fails before transmission. Local opt-out answers without fetch."
+    testRef: "tests/apps/web/hosted-workspace-helper-owner.test.ts::keeps explicit opt-out local even when its hosted owner is unavailable"
+  - line: "owner-consent"
+    formula: "Persist hosted AI opt-in by owner and workspace, with no local or prior-owner fallback. An unavailable owner always reads as local-only."
+    testRef: "tests/apps/web/workspace-ai-preferences.test.ts::never inherits a local or other hosted owner's opt-in for the same workspace"
+  - line: "owner-change-ui"
+    formula: "Changing the captured owner cancels pending help, removes the previous conversation from display, and requires the new owner's own external-processing preference. Forward that exact captured owner to summary, help and confirmed calculation requests."
+    testRef: "tests/apps/web/return-help-dock-interactions.test.tsx::forwards the hosted owner and resets opt-in and pending help on owner change"

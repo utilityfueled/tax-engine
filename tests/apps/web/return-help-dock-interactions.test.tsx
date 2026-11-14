@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ReturnWorkspaceRecord } from "@tax-engine/contracts";
 import { ReturnHelpDock } from "@/components/return-help-dock";
 import { createWorkspaceRecord } from "@/lib/workspace-storage";
-import { writeWorkspaceAiOptOut } from "@/lib/workspace-ai-preferences";
+import { workspaceAiPreferenceId, writeWorkspaceAiOptOut } from "@/lib/workspace-ai-preferences";
 import { requestTaxCalculationExplanation } from "@/lib/transient-tax-explanation-request";
 import { simpleW2Fixture } from "../../fixtures/simple-w2";
 import { ProviderWorkspaceRequestError, requestProviderWorkspaceHelp } from "@/lib/provider-workspace-request";
@@ -85,6 +85,27 @@ afterEach(async () => {
 });
 
 describe("return helper privacy and user interactions", () => {
+  it("forwards the hosted owner and resets opt-in and pending help on owner change", async () => {
+    const waiting = deferred<Awaited<ReturnType<typeof requestProviderWorkspaceHelp>>>();
+    provider.mockReturnValue(waiting.promise);
+    await render({ deploymentMode: "hosted", expectedHostedOwnerScopeKey: "hosted-owner:alice" });
+    await click(button("Need help?"));
+    await click(query<HTMLInputElement>('input[type="checkbox"]'));
+    await ask("Check my private question.");
+    expect(provider).toHaveBeenCalledWith(workspace, "Check my private question.", expect.objectContaining({
+      expectedHostedOwnerScopeKey: "hosted-owner:alice", optedOut: false,
+    }));
+    const signal = required(provider.mock.calls[0]?.[2]?.signal);
+    await render({ expectedHostedOwnerScopeKey: "hosted-owner:bob" });
+    expect(signal.aborted).toBe(true);
+    expect(query<HTMLInputElement>('input[type="checkbox"]').checked).toBe(true);
+    await act(async () => { waiting.resolve(answer("ALICE PRIVATE REPLY")); });
+    expect(text()).not.toContain("ALICE PRIVATE REPLY");
+    expect(text()).not.toContain("Check my private question.");
+    await ask("Use local help for Bob.");
+    expect(provider).toHaveBeenCalledOnce();
+  });
+
   it("requires a separate confirmation before uploading complete calculation facts", async () => {
     const getTaxExplanationInput = vi.fn().mockReturnValue(simpleW2Fixture);
     await render({ getTaxExplanationInput }); await click(button("Need help?"));
@@ -204,9 +225,10 @@ describe("return helper privacy and user interactions", () => {
     ["paid_plan_required", "View plans", "/billing"],
     ["ai_budget_exhausted", "Open billing", "/billing"],
   ])("offers a relevant recovery action for %s", async (code, label, href) => {
-    writeWorkspaceAiOptOut(workspace.id, false);
+    const ownerScopeKey = "hosted-owner:fixture";
+    writeWorkspaceAiOptOut(workspaceAiPreferenceId(workspace.id, ownerScopeKey), false);
     provider.mockRejectedValue(new ProviderWorkspaceRequestError(403, { error: "synthetic", code }));
-    await render({ deploymentMode: "hosted" });
+    await render({ deploymentMode: "hosted", expectedHostedOwnerScopeKey: ownerScopeKey });
     await click(button("Need help?"));
     await ask("Help with my return.");
     const link = query<HTMLAnchorElement>("a");

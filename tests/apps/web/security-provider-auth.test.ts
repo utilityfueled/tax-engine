@@ -134,7 +134,7 @@ describe("security: provider workspace route requires auth in hosted mode", () =
 
     const response = await POST(new Request("http://localhost/api/provider/workspace", {
       method: "POST",
-      headers: { "content-type": "application/json" },
+      headers: { "content-type": "application/json", "X-Tax-Engine-Workspace-Owner": "hosted-owner:provider-test-user" },
       body: JSON.stringify(buildMinimalWorkspaceRequestBody())
     }));
 
@@ -189,7 +189,7 @@ describe("security: provider workspace route requires auth in hosted mode", () =
 
     const response = await POST(new Request("https://tax.example/api/provider/workspace", {
       method: "POST",
-      headers: { "content-type": "application/json" },
+      headers: { "content-type": "application/json", "X-Tax-Engine-Workspace-Owner": "hosted-owner:provider-paid-gate" },
       body: JSON.stringify(buildMinimalWorkspaceHelpRequestBody())
     }));
 
@@ -236,7 +236,7 @@ describe("security: provider workspace route requires auth in hosted mode", () =
 
       const response = await POST(new Request("http://localhost/api/provider/workspace", {
         method: "POST",
-        headers: { "content-type": "application/json" },
+        headers: { "content-type": "application/json", "X-Tax-Engine-Workspace-Owner": "local-browser" },
         body: JSON.stringify(buildMinimalWorkspaceHelpRequestBody())
       }));
 
@@ -297,7 +297,7 @@ describe("security: provider workspace route requires auth in hosted mode", () =
 
     const response = await POST(new Request("https://tax.example/api/provider/workspace", {
       method: "POST",
-      headers: { "content-type": "application/json" },
+      headers: { "content-type": "application/json", "X-Tax-Engine-Workspace-Owner": "hosted-owner:provider-budget-cap" },
       body: JSON.stringify(buildMinimalWorkspaceHelpRequestBody())
     }));
 
@@ -354,7 +354,7 @@ describe("security: provider workspace route requires auth in hosted mode", () =
 
     const response = await POST(new Request("https://tax.example/api/provider/workspace", {
       method: "POST",
-      headers: { "content-type": "application/json" },
+      headers: { "content-type": "application/json", "X-Tax-Engine-Workspace-Owner": "hosted-owner:provider-no-model" },
       body: JSON.stringify(buildMinimalWorkspaceHelpRequestBody())
     }));
 

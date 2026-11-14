@@ -15,7 +15,7 @@ import {
   requestProviderWorkspaceHelp
 } from "@/lib/provider-workspace-request";
 import { isGuidedSyntheticDocument } from "@/lib/workspace-status-copy";
-import { readWorkspaceAiOptOut, writeWorkspaceAiOptOut } from "@/lib/workspace-ai-preferences";
+import { readWorkspaceAiOptOut, writeWorkspaceAiOptOut, workspaceAiPreferenceId } from "@/lib/workspace-ai-preferences";
 
 interface AssistantMessage {
   role: "user" | "assistant";
@@ -55,6 +55,7 @@ export function ReturnHelpDock({
   onOpenGuided,
   onUploadDocuments,
   deploymentMode,
+  expectedHostedOwnerScopeKey,
   getTaxExplanationInput,
 }: {
   workspace: ReturnWorkspaceRecord;
@@ -64,8 +65,11 @@ export function ReturnHelpDock({
   onOpenGuided?: () => void;
   onUploadDocuments?: (files: File[]) => Promise<string>;
   deploymentMode: WorkspaceDeploymentMode;
+  expectedHostedOwnerScopeKey?: string | null;
   getTaxExplanationInput?: () => TaxYearInput | null;
 }) {
+  const aiPreferenceId = workspaceAiPreferenceId(workspace.id,
+    deploymentMode === "self-host" ? undefined : expectedHostedOwnerScopeKey ?? null);
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState("");
   const [messages, setMessages] = useState<AssistantMessage[]>([]);
@@ -109,18 +113,18 @@ export function ReturnHelpDock({
   const selectedDocumentSummary = formatSelectedDocumentCount(selectedDocumentIds.length);
 
   useEffect(() => {
-    setLocalHelpOnly(readWorkspaceAiOptOut(workspace.id));
+    setLocalHelpOnly(readWorkspaceAiOptOut(aiPreferenceId));
     setMessages([]);
     setDraft("");
     setSelectedDocumentIds([]);
     previousDocumentIdsRef.current = [];
     return () => { requestController.current?.abort(); };
-  }, [workspace.id]);
+  }, [aiPreferenceId, workspace.id]);
 
   useEffect(() => {
     setExplainConfirmedCalculation(false);
     requestController.current?.abort();
-  }, [workspace.id, workspace.updatedAt, getTaxExplanationInput]);
+  }, [aiPreferenceId, workspace.id, workspace.updatedAt, getTaxExplanationInput]);
 
   useEffect(() => {
     const currentIds = helperDocuments.map((document) => document.id);
@@ -157,7 +161,7 @@ export function ReturnHelpDock({
     ]);
     setDraft("");
     setOpen(true);
-    if (localHelpOnly || readWorkspaceAiOptOut(workspace.id)) {
+    if (localHelpOnly || readWorkspaceAiOptOut(aiPreferenceId)) {
       const reply = buildReturnAssistantReply(workspace, context, trimmed);
       setMessages(current => [...current, { role: "assistant", text: reply.summary, reply, provider: "mock-local" }]);
       return;
@@ -171,6 +175,7 @@ export function ReturnHelpDock({
       const options = {
         optedOut: false,
         signal: controller.signal,
+        expectedHostedOwnerScopeKey: deploymentMode === "self-host" ? undefined : expectedHostedOwnerScopeKey ?? null,
         selectedDocumentIds,
         ...(deploymentMode === "self-host"
           ? { workspaceStorageModeOverride: "local-browser" as const }
@@ -478,7 +483,7 @@ export function ReturnHelpDock({
               setLocalHelpOnly(true);
               setExplainConfirmedCalculation(false);
               try {
-                writeWorkspaceAiOptOut(workspace.id, optedOut);
+                writeWorkspaceAiOptOut(aiPreferenceId, optedOut);
                 setLocalHelpOnly(optedOut);
                 setDocumentMessage(null);
               } catch {

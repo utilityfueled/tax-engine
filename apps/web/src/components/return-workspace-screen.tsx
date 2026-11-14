@@ -909,7 +909,7 @@ export function ReturnWorkspaceScreen({
     try {
       const result = await requestProviderWorkspace(workspace, localWorkspaceEditingEnabled
         ? { workspaceStorageModeOverride: "local-browser" }
-        : {});
+        : { expectedHostedOwnerScopeKey: ownerScopeKey });
       setProviderSummaryRun({
         requestId: result.request.requestId,
         response: result.response,
@@ -1606,6 +1606,7 @@ export function ReturnWorkspaceScreen({
         mode="workspace"
         onUploadDocuments={handleGuidedUpload}
         deploymentMode={effectiveDeploymentMode}
+        expectedHostedOwnerScopeKey={localWorkspaceEditingEnabled ? undefined : ownerScopeKey}
         getTaxExplanationInput={persistedGuidedFlowState?.phase === "complete" && persistedGuidedFlowState.taxYear === 2025 ? getTaxExplanationInput : undefined}
         onOpenGuided={() => setGuidedMode(true)}
       />

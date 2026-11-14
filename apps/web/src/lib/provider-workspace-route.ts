@@ -38,6 +38,9 @@ import { safeParseJsonBody } from "./safe-body-parser";
 import { prepareTransientTaxCalculation, transientTaxCalculationShape } from "./transient-tax-calculation";
 import { PRODUCTION_WORKSPACE_AI_EXECUTION } from "./production-ai-config";
 import { cancelledDocumentRequest, privateJson, privateResponse } from "./protected-document-request";
+import {
+  hostedDocumentAnalysisOwnerHeader, hostedDocumentAnalysisOwnerRequired, hostedWorkspaceOwnerScopeKey,
+} from "./hosted-document-analysis-owner";
 
 const supportedDocumentKinds = supportMatrix.map(({ kind }) => kind);
 const requestShape: z.ZodType<ProviderWorkspaceRequest> = z.object({
@@ -169,6 +172,19 @@ export function createProviderWorkspaceRouteHandlers(
         );
       }
 
+      const expectedOwner = request.headers.get(hostedDocumentAnalysisOwnerHeader);
+      const localAdmission = browserWorkspaceMode === "hosted" && expectedOwner === "local-browser"
+        && shouldAllowLoopbackLocalAiAccess(env, new URL(request.url).hostname, "local-browser");
+      const effectiveWorkspaceMode = localAdmission ? "self-host" : browserWorkspaceMode;
+      if (effectiveWorkspaceMode === "hosted") {
+        actor = await (dependencies.resolveActor ?? resolveHostedWorkspaceActor)({ env, requestHeaders: request.headers });
+        request.signal.throwIfAborted();
+        if (!actor) return buildAuthRequiredResponse();
+        if (expectedOwner !== hostedWorkspaceOwnerScopeKey(actor.id)) {
+          return NextResponse.json({ error: hostedDocumentAnalysisOwnerRequired, code: "workspace_owner_changed" }, { status: 409 });
+        }
+      }
+
       const parsed = await safeParseJsonBody(request);
       request.signal.throwIfAborted();
 
@@ -198,37 +214,8 @@ export function createProviderWorkspaceRouteHandlers(
         );
       }
       let workspaceRequest = requestProjection.data;
-
-      const requestHostname = (() => {
-        try {
-          return new URL(request.url).hostname;
-        } catch {
-          return null;
-        }
-      })();
-      const effectiveWorkspaceMode = shouldAllowLoopbackLocalAiAccess(
-        env,
-        requestHostname,
-        workspaceRequest.workspace.storageMode
-      )
-        ? "self-host"
-        : browserWorkspaceMode;
-
-      if (effectiveWorkspaceMode === "hosted") {
-        actor = dependencies.resolveActor
-          ? await dependencies.resolveActor({
-              env,
-              requestHeaders: request.headers
-            })
-          : await resolveHostedWorkspaceActor({
-              env,
-              requestHeaders: request.headers
-            });
-        request.signal.throwIfAborted();
-
-        if (!actor) {
-          return buildAuthRequiredResponse();
-        }
+      if (localAdmission && workspaceRequest.workspace.storageMode !== "local-browser") {
+        return NextResponse.json({ error: hostedDocumentAnalysisOwnerRequired, code: "workspace_owner_changed" }, { status: 409 });
       }
 
       try {

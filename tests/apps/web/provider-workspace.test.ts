@@ -183,6 +183,7 @@ describe("provider workspace request path", () => {
   });
   afterEach(() => {
     vi.unstubAllGlobals();
+    vi.unstubAllEnvs();
   });
 
   it("derives local direct identifiers automatically before sending the provider request", async () => {
@@ -538,6 +539,7 @@ describe("provider workspace request path", () => {
 
     await expect(requestProviderWorkspaceHelp(workspace, "What should I do next?", {
       optedOut: false,
+      expectedHostedOwnerScopeKey: "hosted-owner:synthetic-owner",
       endpoint: "http://localhost/api/provider/workspace",
       fetchFn: async () => new Response(JSON.stringify({
         error: "AI helper access requires an active Starter or Plus plan.",

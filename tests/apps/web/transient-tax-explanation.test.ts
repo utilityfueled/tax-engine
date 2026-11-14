@@ -17,7 +17,7 @@ function envelope() {
     taxYear: 2025, taxInput: structuredClone(simpleW2Fixture), providerRequest };
 }
 function request(value: unknown = envelope(), headers: Record<string,string> = {}, signal?: AbortSignal) {
-  return new Request("https://tax.example/api/workspace/tax-explanation", { method: "POST", headers: { "content-type": "application/json", origin: "https://tax.example", ...headers }, body: JSON.stringify(value), signal });
+  return new Request("https://tax.example/api/workspace/tax-explanation", { method: "POST", headers: { "content-type": "application/json", origin: "https://tax.example", "X-Tax-Engine-Workspace-Owner": `hosted-owner:${owner.id}`, ...headers }, body: JSON.stringify(value), signal });
 }
 function setup(hosted = false) {
   const fetchFn = vi.fn().mockResolvedValue(Response.json({ status: "completed", output: [{ type: "message", content: [{ type: "output_text", text: JSON.stringify({ disposition: "answer", answer: "Adjusted gross income is $85,000.", sourceIds: ["spec:2025:1040:11", "audit:2025:1040:11"], engineValues: [{ id: "audit:2025:1040:11", value: "85000" }] }) }] }], usage: { input_tokens: 100, output_tokens: 100 } }));
@@ -111,7 +111,7 @@ describe("private transient AI calculation contract", () => {
       env: { TAX_ENGINE_DEPLOYMENT_MODE: "hosted", NODE_ENV: "production", TAX_ENGINE_APP_URL: configured } });
     const proxied = new Request("http://localhost:3000/api/workspace/tax-explanation", {
       method: "POST", body: JSON.stringify(envelope()),
-      headers: { "content-type": "application/json", ...(origin ? { origin } : {}), host: "attacker.example", "x-forwarded-host": "attacker.example" },
+      headers: { "content-type": "application/json", "X-Tax-Engine-Workspace-Owner": `hosted-owner:${owner.id}`, ...(origin ? { origin } : {}), host: "attacker.example", "x-forwarded-host": "attacker.example" },
     });
     const response = await handler.POST(proxied);
     expect(response.status).toBe(allowed ? 200 : 403);
@@ -131,7 +131,7 @@ describe("private transient AI calculation contract", () => {
     } });
     const response = await handler.POST(new Request('http://localhost:3000/api/workspace/tax-explanation', {
       method: 'POST', body: JSON.stringify(envelope()),
-      headers: { 'content-type': 'application/json', ...(origin ? { origin } : {}), 'x-forwarded-host': 'fallback.example' },
+      headers: { 'content-type': 'application/json', 'X-Tax-Engine-Workspace-Owner': `hosted-owner:${owner.id}`, ...(origin ? { origin } : {}), 'x-forwarded-host': 'fallback.example' },
     }));
     expect(response.status).toBe(allowed ? 200 : 403);
     expect(s.fetchFn).toHaveBeenCalledTimes(allowed ? 1 : 0);
@@ -170,7 +170,7 @@ describe("private transient AI calculation contract", () => {
     value.taxInput.w2s[0].wages = "86000";
     await s.handler.POST(request(value));
     s.resolveActor.mockResolvedValue({ ...owner, id: "different-owner" });
-    await s.handler.POST(request(value));
+    await s.handler.POST(request(value, { "X-Tax-Engine-Workspace-Owner": "hosted-owner:different-owner" }));
     const digests = s.accounting.mock.calls.map(([input]) => input.requestPayload.calculationDigest);
     expect(new Set(digests).size).toBe(3);
   });

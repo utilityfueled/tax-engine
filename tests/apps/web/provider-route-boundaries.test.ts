@@ -8,7 +8,7 @@ import { createProviderWorkspaceRouteHandlers } from "../../../apps/web/src/lib/
 
 const privateError = new Error("postgresql://private:secret@internal/private; SSN 111-22-3333");
 const body = { task: "workspace-summary", requestId: "synthetic-request", requestedAt: "2026-10-25T00:00:00Z", replacementCount: 0, redactions: [], unsupportedRoutes: [], workspace: { id: "synthetic-return", updatedAt: "2026-10-25T00:00:00Z", storageMode: "hosted-postgres", summary: { totalDocuments: 0 }, seededReturn: { interviewQuestions: [] }, returnSummary: { status: "needs-review", targetTaxYear: 2026 } } };
-function request(value: unknown = body, signal?: AbortSignal) { return new Request("https://tax.example/api/provider/workspace", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(value), signal }); }
+function request(value: unknown = body, signal?: AbortSignal) { return new Request("https://tax.example/api/provider/workspace", { method: "POST", headers: { "content-type": "application/json", "X-Tax-Engine-Workspace-Owner": "hosted-owner:synthetic-owner" }, body: JSON.stringify(value), signal }); }
 function handlers() { return createProviderWorkspaceRouteHandlers({ env: { TAX_ENGINE_DEPLOYMENT_MODE: "hosted" }, rateLimitStore: new Map(), resolveActor: mocks.actor, getEntitlementByOwnerId: mocks.entitlement, getBudgetSnapshot: mocks.budget, accounting: mocks.accounting }); }
 
 beforeEach(() => {
