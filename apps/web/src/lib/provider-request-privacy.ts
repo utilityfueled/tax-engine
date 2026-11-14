@@ -1,10 +1,10 @@
 const personNameContextPatterns = [
-  /(?:Uploaded by|Call|Contact|Reach|Verify)\s+([A-Z][a-z]+(?: [A-Z][a-z]+)+)\b/g,
-  /Mail(?: [^.\n]*?)? to\s+([A-Z][a-z]+(?: [A-Z][a-z]+)+)\b/g,
-  /\b([A-Z][a-z]+(?: [A-Z][a-z]+)+)\s+(?:confirmed|answered|matches|uses)\b/g,
-  /\bdependent\s+([A-Z][a-z]+(?: [A-Z][a-z]+)+)\b/gi,
-  /\b(?:account holder|card member|recipient name|taxpayer name|spouse name|prepared for)(?:[\t ]+|[\t ]*:[\t ]*|\r?\n)([\p{L}][\p{L}\p{M}'.,-]*(?:[\t ]+[\p{L}][\p{L}\p{M}'.,-]*)*)/giu
+  /(?:Uploaded by|Call|Contact|Reach|Verify)\s+[A-Z][a-z]+ [A-Z][a-z]+\b/,
+  /\b[A-Z][a-z]+ [A-Z][a-z]+\s+(?:confirmed|answered|matches|uses)\b/,
+  /\bdependent\s+[A-Z][a-z]+ [A-Z][a-z]+\b/i,
+  /\b(?:account holder|card member|recipient name|taxpayer name|spouse name|prepared for)(?:[\t ]+|[\t ]*:[\t ]*|\r?\n)\p{L}/iu
 ] as const;
+const mailContextTokens = /Mail(?= )| to(?=\s+[A-Z][a-z]+ [A-Z][a-z]+\b)|[.\n]/g;
 const workspaceSlugPattern = /(?:^|[^a-z0-9])(?:workspace|return)[-_]([a-z]+(?:[._-][a-z]+)+)(?=$|[^a-z0-9])/gi;
 const ssnPattern = /(?<!\d)(?:\d{3}[-_.\s]?\d{2}[-_.\s]?\d{4})(?!\d)/;
 const einPattern = /(?<!\d)\d{2}[-_.\s]?\d{7}(?!\d)/;
@@ -74,7 +74,9 @@ const unsafeDirectIdentifierPatterns = [
   /(?:\brouting\b|\bABA\b|\bRTN\b)[\s#:]*(?<!\d)\d{9}(?!\d)/i,
   /(?:\baccount\b|\bacct\b)[\s#:]*(?<!\d)\d{6,17}(?!\d)/i
 ];
-const emailPattern = /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/i;
+const emailLocalTokens = /[A-Z0-9._%+-]+|@/gi;
+const emailDomainPattern = /[A-Z0-9.-]+\.[A-Z]{2,}\b/iy;
+const asciiWord = /\w/;
 
 function isLikelyPersonNameSlug(value: string) {
   const tokens = value
@@ -87,6 +89,38 @@ function isLikelyPersonNameSlug(value: string) {
     && tokens.every((token) => /^[a-z]{2,}$/.test(token) && !ignoredNameTokens.has(token));
 }
 
+function containsMailRecipient(value: string) {
+  if (!value.includes("Mail ")) return false;
+  let mailInSentence = false;
+  // Replacing the unbounded optional text between "Mail" and " to" with
+  // a forward scan preserves its period/LF boundary and permits later cues.
+  for (const [token] of value.matchAll(mailContextTokens)) {
+    if (token === "Mail") mailInSentence = true;
+    else if (token === " to") {
+      if (mailInSentence) return true;
+    } else mailInSentence = false;
+  }
+  return false;
+}
+
+function containsEmail(value: string) {
+  if (!value.includes("@")) return false;
+  let localEnd = -1;
+  for (const match of value.matchAll(emailLocalTokens)) {
+    const [token] = match;
+    if (token === "@") {
+      if (localEnd !== match.index) continue;
+      emailDomainPattern.lastIndex = match.index + 1;
+      if (emailDomainPattern.test(value)) return true;
+    } else if (asciiWord.test(token)) {
+      // A maximal local token with an ASCII word character contains the
+      // original word boundary, even when preceded by allowed punctuation.
+      localEnd = match.index + token.length;
+    }
+  }
+  return false;
+}
+
 function containsUnsafePersonName(value: string) {
   workspaceSlugPattern.lastIndex = 0;
 
@@ -96,19 +130,11 @@ function containsUnsafePersonName(value: string) {
     }
   }
 
-  for (const pattern of personNameContextPatterns) {
-    pattern.lastIndex = 0;
-
-    if (pattern.test(value)) {
-      return true;
-    }
-  }
-
-  return false;
+  return personNameContextPatterns.some(pattern => pattern.test(value)) || containsMailRecipient(value);
 }
 
 function containsUnsafeText(value: string) {
-  return (value.includes("@") && emailPattern.test(value))
+  return containsEmail(value)
     || unsafeDirectIdentifierPatterns.some(pattern => pattern.test(value))
     || containsCreditCardNumber(value)
     || containsUnsafePersonName(value);

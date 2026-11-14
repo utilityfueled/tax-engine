@@ -63,4 +63,34 @@ describe("provider request privacy guard", () => {
       ]
     })).toBe(true);
   });
+
+  it("preserves contextual name and email detection across generated text", () => {
+    const contexts = ["Uploaded by", "Call", "Contact", "Reach", "Verify", "dependent", "Mail to",
+      "Mail the original packet to", "Mail  to", "Mail \r to", "Mail to\n", "Mail Attachments. Mail to"];
+    const names = ["Casey Sample", "Anne Marie Sample", "Al Be", "Fifth Person"];
+    const suffixes = ["", ".", " ", " additional tax text", "-worker"];
+    for (const context of contexts) for (const name of names) for (const suffix of suffixes) {
+      expect(containsUnsafeDirectIdentifier(`${context} ${name}${suffix}`)).toBe(true);
+    }
+    for (const name of names) for (const verb of ["confirmed", "answered", "matches", "uses"]) {
+      expect(containsUnsafeDirectIdentifier(`${name} ${verb} the document.`)).toBe(true);
+    }
+    for (const text of ["Mail. to Casey Sample", "Mail\n to Casey Sample", "Mail\r to Casey Sample", "Mail to Casey", "Mail to CASEY SAMPLE",
+      "Casey Sample is reviewing", "Contact Form 1040", "Income was confirmed", "Only Pay With No Action",
+      "...@example.com", "example.@domain", "1 @example.com", "example@invalid.c"]) {
+      expect(containsUnsafeDirectIdentifier(text)).toBe(false);
+    }
+    for (const email of ["...a@example.com", "name...@example.com", "-_%-.@example.com", "name@example.com.",
+      "name@before.invalid-then.com", "X user+tag@example.test", "a@.domain.test"]) {
+      expect(containsUnsafeDirectIdentifier(email)).toBe(true);
+    }
+  });
+
+  it("continues through repeated safe text to later identifiers", () => {
+    for (const prefix of ["Ab ".repeat(6_000), "Mail ".repeat(6_000), "ab.".repeat(6_000) + "@"]) {
+      expect(containsUnsafeDirectIdentifier(prefix)).toBe(false);
+      expect(containsUnsafeDirectIdentifier(`${prefix} Contact Casey Sample.`)).toBe(true);
+      expect(containsUnsafeDirectIdentifier(`${prefix} synthetic@example.test`)).toBe(true);
+    }
+  });
 });

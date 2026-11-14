@@ -1,0 +1,17 @@
+form: "Provider-Request-Privacy-Text-Complexity"
+fullName: Bound matching work for repeated provider request text
+taxYear: 2026
+reference: "docs/upgrade-2026-execution-brief.md, AI routing and billing"
+lines:
+  - line: "contextual-name-parity"
+    formula: |
+      Contextual name, email, and tax-safe text outcomes retain the existing
+      boolean detection semantics. Matching should not revisit overlapping
+      unbounded name, mail-context or email-local text prefixes.
+    testRef: "tests/apps/web/provider-request-privacy.test.ts::preserves contextual name and email detection across generated text"
+  - line: "repeated-clean-prefix"
+    formula: |
+      Long repeated clean name-like words, mail cues or local-email text
+      prefixes remain clear. Scanning continues through those prefixes and
+      still catches a full identifier at the end of the string.
+    testRef: "tests/apps/web/provider-request-privacy.test.ts::continues through repeated safe text to later identifiers"
