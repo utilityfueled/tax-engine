@@ -1,0 +1,8 @@
+ARG BASE
+FROM ${BASE}
+USER root
+ARG EXPECTED_ARCH
+COPY inputs/ /qualification-inputs/
+COPY build-gosu.sh /qualification-build.sh
+RUN test "$(dpkg --print-architecture)" = "$EXPECTED_ARCH"
+RUN /bin/bash /qualification-build.sh "$EXPECTED_ARCH"

@@ -1,0 +1,85 @@
+{
+  "schemaVersion": 1,
+  "candidateReleaseQualified": false,
+  "riskAccepted": false,
+  "gosu": {
+    "version": "1.20",
+    "commit": "29b939aa5bd4dc588af765b8248f6e39150d2565",
+    "repository": "https://github.com/tianon/gosu"
+  },
+  "toolchain": {
+    "version": "go1.27.4",
+    "platforms": {
+      "amd64": {
+        "name": "go1.27.4.linux-amd64.tar.gz",
+        "url": "https://go.dev/dl/go1.27.4.linux-amd64.tar.gz",
+        "bytes": 70680823,
+        "sha256": "7226736c2339719cda28fbf3a54d71aa63bcefe376e98cef00034268dab24840"
+      },
+      "arm64": {
+        "name": "go1.27.4.linux-arm64.tar.gz",
+        "url": "https://go.dev/dl/go1.27.4.linux-arm64.tar.gz",
+        "bytes": 67129258,
+        "sha256": "3392582988a273a87ab5043ee1b2c9c17a2c3c00580bf9326c47a2e0aaaeac92"
+      }
+    }
+  },
+  "sources": [
+    {
+      "name": "gosu-1.20.tar.gz",
+      "url": "https://codeload.github.com/tianon/gosu/tar.gz/29b939aa5bd4dc588af765b8248f6e39150d2565",
+      "bytes": 18160,
+      "sha256": "2b70da8a5480fafedc16bb1fc91b572f064d03df736cbd91a616af2f1b66ab51"
+    },
+    {
+      "name": "moby-user.mod",
+      "url": "https://proxy.golang.org/github.com/moby/sys/user/@v/v0.4.1.mod",
+      "bytes": 266,
+      "sha256": "b32137c4588ee86da690b1cbdd5d6d086fb2254625893b6cb590fb2c02672cb6"
+    },
+    {
+      "name": "moby-user.zip",
+      "url": "https://proxy.golang.org/github.com/moby/sys/user/@v/v0.4.1.zip",
+      "bytes": 22548,
+      "sha256": "acfdb68bda18ee112adacf55e0b20752a1f5633c55fb020f2a10a9b2eeaec46a"
+    },
+    {
+      "name": "moby-user.info",
+      "url": "https://proxy.golang.org/github.com/moby/sys/user/@v/v0.4.1.info",
+      "bytes": 205,
+      "sha256": "fba02d3057df0ed2f80e3133e50e957c17465e287653245af3deb523ca1046dd"
+    },
+    {
+      "name": "xsys.mod",
+      "url": "https://proxy.golang.org/golang.org/x/sys/@v/v0.1.0.mod",
+      "bytes": 33,
+      "sha256": "f033333096fe198f3151deed93f2deba74e50bbfe7739134045bc3b7ce4a5024"
+    },
+    {
+      "name": "xsys.zip",
+      "url": "https://proxy.golang.org/golang.org/x/sys/@v/v0.1.0.zip",
+      "bytes": 1861264,
+      "sha256": "e7cbe58ed3745ba63d482fe82603119bd635f9a5dd914ed95a4c1826fdcf54a7"
+    },
+    {
+      "name": "xsys.info",
+      "url": "https://proxy.golang.org/golang.org/x/sys/@v/v0.1.0.info",
+      "bytes": 188,
+      "sha256": "e93abfc8737fa1e3f7e88ab6c26cf9e8cea4c2cc5378b829664d9f7948616235"
+    }
+  ],
+  "recipeFiles": {
+    "Dockerfile": {
+      "bytes": 917,
+      "sha256": "b1c6fe02b6db074fb9253cc57e3c36472826a6fba07bc8d08f7c84d1ebfadddc"
+    },
+    "Dockerfile.build": {
+      "bytes": 243,
+      "sha256": "3a8a8661cbff59fb7506396f8f4a90f9a7e956b87022c8a45cb227f0de92f821"
+    },
+    "build-gosu.sh": {
+      "bytes": 4162,
+      "sha256": "c9921aaad483b16f7448aed4e15b24be10f853aadbd827a211f5b2ee9b8c87ac"
+    }
+  }
+}
