@@ -55,6 +55,14 @@ policies are the objects under test.
 8. Actual application logs and response bodies do not contain the supplied
    private markers or credentials. This finite observation is not a general
    privacy proof. Report every failed gate and the exact source/bundle identity.
+9. Seed one synthetic owner with 199 returns. With the same actual session,
+   make concurrent GET/create calls for distinct IDs through both servers.
+   Exactly one creates the 200th return. Every other request returns the
+   existing quota response with private/no-store caching. The other owner's
+   usage is unchanged. Update the admitted return at capacity. Delete it and
+   use the freed slot exactly once. Clean up only the quota fixtures before
+   continuing the existing outage and tenant checks. Preserve a bounded result
+   with counts and HTTP statuses, without account or workspace identifiers.
 
 Implement the runner against this contract, then execute without loosening it.
 If a real HTTP defect appears, retain its failing evidence before changing the

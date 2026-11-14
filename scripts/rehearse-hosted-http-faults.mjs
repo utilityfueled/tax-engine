@@ -195,6 +195,53 @@ try {
     assert.ok(!(await sql("SELECT workspace::text FROM hosted_workspace_shells")).includes(privateMarker));
     const foreign = await request(0, route + "?ownerId=" + a.id, { cookie: b.cookie }); assert.equal((await foreign.json()).workspace, null);
   });
+  await check("atomic per-owner capacity across production processes", async () => {
+    const owner = accounts[0].id.replaceAll("'", "''");
+    const count = async () => Number(await sql(`SELECT count(*) FROM hosted_workspace_shells WHERE owner_id='${owner}'`));
+    const quotaPath = index => `/api/hosted/workspaces/synthetic-quota-new-${index}`;
+    const requestOptions = { cookie: accounts[0].cookie, client: "198.51.100.99" };
+    async function create(index) {
+      const response = await request(index % 2, quotaPath(index) + "?create=1", requestOptions);
+      privateResponse(response);
+      return response;
+    }
+    assert.equal(await count(), 1);
+    try {
+      await sql(`INSERT INTO hosted_workspace_shells (owner_id,workspace_id,created_at,updated_at,workspace)
+        SELECT shell.owner_id, 'synthetic-quota-seed-' || slot, shell.created_at, shell.updated_at,
+          jsonb_set(shell.workspace, '{id}', to_jsonb('synthetic-quota-seed-' || slot))
+        FROM hosted_workspace_shells AS shell CROSS JOIN generate_series(1,198) AS slot
+        WHERE shell.owner_id='${owner}' AND shell.workspace_id='${id}'`);
+      assert.equal(await count(), 199);
+      const responses = await Promise.all([0, 1, 2, 3, 4, 5].map(create));
+      const accepted = responses.findIndex(r => r.status === 200);
+      const statuses = responses.map(r => r.status).sort();
+      assert.deepEqual(statuses, [200, 400, 400, 400, 400, 400]);
+      for (const rejection of responses.filter(r => r.status === 400)) {
+        assert.match(await rejection.text(), /maximum number of returns \(200\)/u);
+      }
+      assert.equal(await count(), 200);
+      assert.equal(await sql(`SELECT count(*) FROM hosted_workspace_shells WHERE owner_id<>'${owner}'`), "0");
+      const workspace = (await responses[accepted].json()).workspace;
+      const updated = await request(1 - accepted % 2, quotaPath(accepted), {
+        ...requestOptions, method: "POST", body: JSON.stringify({ workspace: { ...workspace, updatedAt: "2026-11-13T22:00:00.000Z" } })
+      });
+      assert.equal(updated.status, 200); privateResponse(updated);
+      assert.equal((await updated.json()).workspace.updatedAt, "2026-11-13T22:00:00.000Z");
+      assert.equal(await count(), 200);
+      const removed = await request(accepted % 2, quotaPath(accepted), { ...requestOptions, method: "DELETE" });
+      assert.equal(removed.status, 200); privateResponse(removed);
+      assert.equal(await count(), 199);
+      assert.equal((await create(6)).status, 200);
+      assert.equal((await create(7)).status, 400);
+      assert.equal(await count(), 200);
+      return { seedCount: 199, statuses, finalCount: 200, updateAndReplacementPassed: true };
+    } finally {
+      await sql(`DELETE FROM hosted_workspace_shells WHERE owner_id='${owner}'
+        AND (workspace_id LIKE 'synthetic-quota-seed-%' OR workspace_id LIKE 'synthetic-quota-new-%')`);
+      assert.equal(await count(), 1);
+    }
+  });
   await check("actual PostgreSQL TLS sessions", async () => {
     const rows = JSON.parse(await sql("SELECT COALESCE(json_agg(json_build_object('ssl',s.ssl,'version',s.version)), '[]') FROM pg_stat_ssl s JOIN pg_stat_activity a USING(pid) WHERE a.usename='ai_test' AND a.backend_type='client backend'"));
     assert.ok(rows.length >= 3 && rows.every(r => r.ssl === true)); return rows;
