@@ -19,8 +19,9 @@ notes: |
   The engine has no months-apart or spouse data on such a return, so the filer confirms them.
   The instructions say no corrected Form 1095-A is needed, so an own benchmark above
   the reported figure needs a named source and is not rejected.
-  Limits: a third tax family on
-  the policy (Pub974 Worksheets E and F), a month with only one family covered, a
+  Limits of this two-family packet: a third tax family without the separately
+  validated WorksheetE originals in form-8962-married-third-family.yaml,
+  a month with only one family covered, a
   second policy in an allocated month, and self-employed health coordination all reject.
 lines:
   - line: "exception"

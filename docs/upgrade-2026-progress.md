@@ -1,5 +1,13 @@
 # 2026 upgrade implementation evidence
 
+November 14: source-first Publication 974 Worksheet E now supports the finite
+one-policy married-separate/no-exception third-family method. The published
+printed fraction gives monthly APTC34 and annual408 with no PTC; no family or
+allocation is inferred. Three positive baseline failures precede 158 affected
+passes, separate source/manual/privacy review and root20 regressions. Broader
+working-tree/private prerequisite failures remain retained; full successor is
+separate. [Original-source method](upgrade-2026-form-8962-married-third-family-20261114.md).
+
 November 14: seven refreshed official PA sources and separate sixteen-test
 regression review preserve the precise secondary-market debt discount guard.
 PA disposition/basis and OID/imputed-interest rules do not establish the direct

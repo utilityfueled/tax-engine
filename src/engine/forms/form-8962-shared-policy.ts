@@ -4,6 +4,7 @@ import type { TaxYearInput } from '@/models/inputs.js';
 import type { CalculatedLine } from '@/models/outputs.js';
 import { AuditTrail } from '@/utils/audit.js';
 import { calculateMarketplaceCoverageFamilySources } from './marketplace-coverage-family-sources.js';
+import { calculateForm8962MarriedThirdFamily } from './form-8962-married-third-family.js';
 import { d, sum } from '@/utils/decimal.js';
 
 type HouseholdPerson = Pick<TaxYearInput['taxpayer']['primary'], 'firstName' | 'lastName' | 'ssn'>;
@@ -287,6 +288,7 @@ function householdMonths(rows: Form8962AllocationMonth[], originals: Map<number,
  * boolean validation context can replace actual household and policy source facts. */
 export function calculateForm8962SharedPolicy(input: Form8962AllocationInput): Form8962SharedPolicyResult {
   const year = input.taxpayer.taxYear, facts = input.form8962, packet = facts?.sharedPolicyAllocations;
+  if (packet?.marriedThirdFamily !== undefined) return calculateForm8962MarriedThirdFamily(input);
   if (![2025, 2026].includes(year) || !packet || facts?.allocationRequired !== true) throw new Error('Form8962 allocation needs the actual shared-policy source packet and allocation answer');
   if (packet.sourceTaxYear !== year || packet.sourceFactsConfirmed !== true || packet.allSharedPoliciesIncluded !== true) throw new Error('Form8962 allocation source year and complete confirmation are required');
   text(packet.sourceReference, 'allocation worksheet reference');

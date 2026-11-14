@@ -1,0 +1,50 @@
+form: "Publication 974 Worksheet E — one additional tax family"
+fullName: "Original married-separate policy allocation without a PTC exception"
+taxYear: 2025
+irsReference: "https://www.irs.gov/publications/p974"
+retrievedAt: "2026-11-14"
+reviewStatus: "agent-source-reviewed-human-qualification-pending"
+notes: |
+  Pub974 final2025, Allocation Among Taxpayers Who Are Married But Not Filing
+  a Joint Return and One or More Other Taxpayers, Worksheet E and Pat/Jamie/Andy
+  example. This finite source method admits exactly one original policy, two
+  actual married-separate filers without a PTC exception, and one additional
+  tax family. It requires complete original policy and three tax-family return
+  identities; actual parental coverage-family assignments and both monthly
+  benchmark sources; and both spouses' independently documented agreed shares
+  with the third family. The return's primary and spouse each have no dependents.
+  There is no default allocation, exception, other policy, health coordination,
+  QSEHRA, lawful-presence coordination, divorce or marriage alternative method.
+  WorksheetE line4 is a two-place printed fraction: Pat's (1-.67)/2=.165 is
+  printed .17 in the official example, which multiplies original APTC200 to34.
+  This is not Situation3's unrounded benchmark ratio. Columns e/f are blank for
+  this no-exception separate return, column g uses line4, and premium/benchmark
+  are not claimed. No third-family PTC or other person's return is calculated.
+  The method applies to2025 and isolated2026 estimates; final annual2026 form,
+  independent tax review and filing readiness are not established here.
+lines:
+  - line: "worksheet-e-1-4"
+    description: "Derive the printed remaining spouse fraction from the actual agreement"
+    formula: "1=1;2=actual primary-to-third agreed fraction;3=1-line2;4=roundHalfUp(line3/2,2). Original APTC200 and .67 agreement give .17 and34, with premium0 and benchmark0."
+    irsRef: "Pub974 WorksheetE lines1–4 and Pat example"
+    testRef: "tests/engine/forms/form-8962-married-third-family.test.ts::uses the published Worksheet E printed fraction and actual advance credit"
+  - line: "annual-reconciliation"
+    description: "Reconcile the source-derived allocation without creating a PTC"
+    formula: "Twelve original months of200 with .67 agreement yield408 APTC; PTC0; repayment subject only to existing actual-year Form8962 rules. No input mutation."
+    irsRef: "Pub974 Step4 columns e–g; i8962 lines24–29"
+    testRef: "tests/engine/forms/form-8962-married-third-family.test.ts::reconciles original monthly advance credit once without a premium tax credit"
+  - line: "complete-originals"
+    description: "Every actual original and tax-family identity is independently bound"
+    formula: "Missing or changed year, reference, identity, covered member, assignment, benchmark, agreement or completeness confirmation rejects; overlapping or omitted families cannot substitute booleans for originals."
+    irsRef: "Pub974 three-or-more taxpayer allocation source prerequisites and WorksheetE Steps1–2"
+    testRef: "tests/engine/forms/form-8962-married-third-family.test.ts::rejects incomplete or conflicting original family and agreement sources"
+  - line: "scope-and-replay"
+    description: "Preserve exact known zero and reject other methods or stale packets"
+    formula: "Actual shares0 and1 give .50 and0; each original month must be covered once. JSON/schema replay retains packet. Exceptions, other policies, supplied output fractions and unknown facts reject."
+    irsRef: "Pub974 WorksheetE Steps1–4; no other necessary allocation prerequisite"
+    testRef: "tests/engine/forms/form-8962-married-third-family.test.ts::preserves known zero and complete replay while rejecting other methods"
+  - line: "private-originals"
+    description: "Keep original families and agreements outside derived public context"
+    formula: "Actual verified explanation audit and server context, hosted metadata and provider workspace projection contain no third-family SSN, source reference, original monthly packet or identity. Derived verified amounts remain available."
+    irsRef: "Repository complete-facts/privacy boundary; Pub974 source identities do not authorize provider disclosure"
+    testRef: "tests/engine/forms/form-8962-married-third-family.test.ts::keeps third-family originals outside actual verified explanation and hosted metadata"

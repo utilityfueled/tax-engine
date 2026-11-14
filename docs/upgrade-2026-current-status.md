@@ -1,5 +1,18 @@
 # Current 2026 upgrade continuation
 
+## November 14 original three-family Marketplace allocation
+
+The finite Publication 974 Worksheet E route now binds all three actual family
+returns, the original policy/snapshot, parental coverage assignments and monthly
+benchmarks/agreements. The IRS's printed `.17 × 200 = 34` example yields 408
+annual APTC, zero PTC and the existing repayment calculation. Genuine prior
+failures precede 158 affected passes, separate seven-case manual/source review,
+actual verified-AI/hosted privacy controls and root twenty-test regression.
+The eight-file source freeze is retained alongside unrelated in-progress-spec
+and private-runner prerequisite failures. [Finite method](upgrade-2026-form-8962-married-third-family-20261114.md).
+This source package does not relabel the earlier `26f5bd5b` global/runtime checks;
+its combined successor follows integration. Human and annual-form gates remain.
+
 ## November 14 actual protected mortgage-original journeys
 
 Both `26f5bd5b` protected Preview desktop/mobile journeys pass, with actual typed

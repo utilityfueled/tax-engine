@@ -1,4 +1,20 @@
 {
+  "nov14OriginalThreeFamilyMarketplaceAllocation": {
+    "method": "Pub974WorksheetE;oneOriginalPolicy;MFSnoException;actualSpouseAndOneAdditionalFamily;noThirdFamilyCredit",
+    "sourceBase": "58b6659d4433e132b59baf57c0a69ac81cf5d007",
+    "eightFileSourceFreezeSha256": "308edad9304c876b93e1c1c615b6e474dec36a374e6f05acf35f8a991e3cd9e9",
+    "baseline": "3positiveFAIL1negativePASSatExistingTwoFamilyGuard",
+    "successor": "16productFiles158PASS;17CLIrefs2strictOwnedRefs;typesPASS;ownedLint0warnings",
+    "manualOfficialGolden": "printedShare0.17timesOriginalAPTC200equals34;annual408;PTC0;existingRepayment408",
+    "independentReview": "7privateTests34negativeMutations/manual102partialYear376changedMonth600reciprocal;4configuredFiles22PASS;actualVerifiedAIAndHostedPrivacy",
+    "independentReviewSha256": "8ae26fa8d25c33e557791342c03d93ab9e8b78118d1f7c6fe206bcb6ec0eab24",
+    "rootRegression": "4files20PASS;allEightFrozenPinsUnchanged;priorVenvSymlinkPrerequisiteFailureRetained",
+    "preservedOtherFailures": "broad1085PASS1inProgressCoverdellSpecRefFAIL;privateMergedConfigDiscoveryFailuresRetained",
+    "ledger": "docs/upgrade-2026-form-8962-married-third-family-20261114.md",
+    "globalCurrentSourceSuccessorRequired": true,
+    "humanOrFinal2026FormQualification": false,
+    "mainPushHold": true
+  },
   "nov14PaSecondaryMarketDiscountResearch": {
     "result": "DirectPAclassAllocationUnresolvedInSevenOfficialSources;positiveDiscountGuardPreserved",
     "officialArtifacts": 7,

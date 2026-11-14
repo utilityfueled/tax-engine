@@ -39,6 +39,12 @@ below retain their original evidence boundaries.
   inventing an interest statement or admitting broader later activity.
 - [ ] Collect that finite Coverdell bank-interest packet through the guide with
   actual originals, reconfirmation and desktop/mobile lifecycle evidence.
+- [x] Implement original Publication 974 Worksheet E allocation for one actual
+  married-separate no-exception filer, spouse and one additional tax family.
+  Genuine baseline failures precede the finite method; 158 affected tests,
+  separate manual/source/privacy review and root twenty-test regression pass.
+  Preserve other policy/exception/default-allocation and final-form gates.
+  [Source method](upgrade-2026-form-8962-married-third-family-20261114.md).
 
 - [x] Refresh official provider prices/capabilities and record the deprecated
   GPT-5 Mini baseline without promotion or new paid calls.

@@ -13,10 +13,29 @@ export const MarketplaceOriginalPolicySchema = z.object({
   monthlyPremiums: z.array(z.object({ month: z.number().int().optional(),
     enrolleePremium: amount, slcsp: amount.nullable(), advancePremiumTaxCredit: amount })).optional(),
 });
+/** Pub974 WorksheetE originals; no computed allocation or assumed family defaults. */
+export const Form8962MarriedThirdFamilySchema = z.object({
+  sourceTaxYear: z.number().int().optional(), sourceReference: z.string().optional(), sourceFactsConfirmed: z.boolean().optional(),
+  noOtherAllocationsRequiredConfirmed: z.boolean().optional(), allAgreementsAndCoverageMonthsIncludedConfirmed: z.boolean().optional(),
+  families: z.array(z.object({
+    role: z.enum(['primary', 'spouse', 'third']).optional(), sourceTaxYear: z.number().int().optional(), sourceReference: z.string().optional(),
+    filingStatus: z.enum(['married_filing_separately', 'single', 'head_of_household']).optional(),
+    taxpayerName: z.string().optional(), taxpayerSsn: z.string().optional(), allTaxFamilyMembersIncludedConfirmed: z.boolean().optional(),
+    dependents: z.array(z.object({ name: z.string().optional(), ssn: z.string().optional() }).strict()).optional(),
+  }).strict()).optional(),
+  coverageFamilyAssignments: z.array(z.object({ ssn: z.string().optional(), family: z.enum(['primary', 'spouse']).optional() }).strict()).optional(),
+  monthlySources: z.array(z.object({ month: z.number().int().optional(), primaryBenchmark: amount, spouseBenchmark: amount,
+    primaryBenchmarkSourceReference: z.string().optional(), spouseBenchmarkSourceReference: z.string().optional(),
+    primaryAgreementFraction: z.string().optional(), spouseAgreementFraction: z.string().optional(),
+    primaryAgreementSourceReference: z.string().optional(), spouseAgreementSourceReference: z.string().optional(),
+    primaryAgreementConfirmed: z.boolean().optional(), spouseAgreementConfirmed: z.boolean().optional(),
+  }).strict()).optional(),
+}).strict();
 export const Form8962SharedPolicySchema = z.object({
   sourceTaxYear: z.number().int().optional(), sourceReference: z.string().optional(),
   sourceFactsConfirmed: z.boolean().optional(), allSharedPoliciesIncluded: z.boolean().optional(),
   primaryName: z.string().optional(), primarySsn: z.string().optional(), spouseName: z.string().optional(), spouseSsn: z.string().optional(),
+  marriedThirdFamily: Form8962MarriedThirdFamilySchema.optional(),
   noAdvanceCoverageFamilies: z.object({
     sourceTaxYear: z.number().int().optional(), sourceReference: z.string().optional(), sourceFactsConfirmed: z.boolean().optional(),
     allBenchmarkMonthsIncluded: z.boolean().optional(),
