@@ -44,3 +44,16 @@ lines:
     description: "The actual responding model must match the final attempted profile"
     formula: "Use one explicit documented alias/snapshot allowlist in dispatch and scoring; reject missing, other-model or guessed-suffix identity, including incorrect identity after Sol High escalation. Preserve known billed attempt costs without qualifying the result."
     testRef: "tests/engine/provider-eval-application.test.ts::requires the final attempted model identity while retaining incurred costs"
+  - line: "comparison-evidence-coherence"
+    description: "Require a coherent qualification comparison with distinct private response references"
+    formula: >-
+      For each candidate and both baseline comparisons, all qualification
+      model and deterministic preflight rows for that task must share one
+      exact plan digest. Each claimed completed provider measurement must
+      carry a distinct opaque SHA-256 reference to the provider response;
+      duplicate references anywhere in the supplied qualification report
+      cannot count toward a candidate's eligibility. Report cost and
+      diagnostics for incomplete or conflicting evidence. Digests correlate
+      records. Authorization, authentic provider history and independent
+      human review require external evidence.
+    testRef: "tests/engine/provider-model-eval.test.ts::blocks mixed plans and missing or reused provider responses without dropping spend"

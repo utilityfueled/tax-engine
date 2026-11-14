@@ -9,7 +9,7 @@ import {
 import { AI_TASKS } from "../../packages/engine/src/ai-task-registry";
 import { PROVIDER_EVAL_BINDING_VERSION, validateProviderEvalOutput } from "../../packages/engine/src/provider-eval-application";
 import type { ProviderEvalFixture } from "../../packages/engine/src/provider-eval-fixtures";
-import { providerEvalCorpusDigest, providerEvalFixtureDigest } from "../../packages/engine/src/provider-eval-provenance";
+import { providerEvalCorpusDigest, providerEvalDigest, providerEvalFixtureDigest } from "../../packages/engine/src/provider-eval-provenance";
 
 // Every synthetic entry uses this same unmodified corpus. Hash it once when
 // preparing the test fixtures; the production report still validates provenance.
@@ -29,7 +29,8 @@ function run(fixture: ProviderEvalFixture, profileId = "luna-high", repeat = 1):
     applicationSchemaValid: validated.applicationSchemaValid, output: validated.output,
     measurement: { runPurpose: "qualification", planDigest: "0".repeat(64), corpusDigest: syntheticCorpusDigest, fixtureDigest: providerEvalFixtureDigest(fixture), bindingVersion: PROVIDER_EVAL_BINDING_VERSION,
       promptVersion: AI_TASKS[fixture.task].promptVersion, schemaVersion: AI_TASKS[fixture.task].schemaVersion,
-      normalizationStatus: validated.normalizationStatus, applicationOutput, privacyFailure: false, responseReference: "test-only", reportedModel: profile.model },
+      normalizationStatus: validated.normalizationStatus, applicationOutput, privacyFailure: false,
+      responseReference: providerEvalDigest(["unit-test-only", profileId, fixture.id, repeat]), reportedModel: profile.model },
     independentReview: { method: "human", reviewer: "independent-test-reviewer", grounded: true, qualityAccepted: true, piiLeak: false },
     attempts: [{ profileId, startedAt: "2026-10-24T12:00:00Z", usage: { inputTokens: 1000, outputTokens: 1000 } }],
   };
@@ -142,6 +143,28 @@ describe("measured task model evaluation", () => {
     changePayload(entries[0]!, payload => { const amount = payload.facts[0]; if (!amount) throw new Error("Missing amount."); amount.value = "999"; });
     const rejected = summarizeProviderModelLiveEvalTemplate({ version: 2, entries, availability }, fixtures);
     expect(rejected.groups.find(group => group.profileId === "luna-high" && group.task === "income-extraction")!.blockers).toContain("critical-field-regression");
+  });
+  it("blocks mixed plans and missing or reused provider responses without dropping spend", () => {
+    const fixtures = reviewedFixtures("2026-10-24");
+    const cases = fixtures.filter(fixture => fixture.task === "income-extraction");
+    const measurements = ["luna-high", "baseline-gpt-5-mini", "baseline-gemini-3-flash-preview"]
+      .flatMap(profile => cases.flatMap(fixture => [1, 2, 3].map(repeat => run(fixture, profile, repeat))));
+    const group = (entries: ProviderModelLiveEvalEntry[]) => summarizeProviderModelLiveEvalTemplate({ version: 2, entries, availability }, fixtures, reportAt)
+      .groups.find(item => item.profileId === "luna-high" && item.task === "income-extraction");
+    const control = group(measurements);
+    expect(control?.eligibleForPromotionReview).toBe(true);
+    const conflicted = structuredClone(measurements);
+    const [first, second, third] = conflicted;
+    const baseline = conflicted.find(entry => entry.profileId === "baseline-gpt-5-mini");
+    if (!first?.measurement || !second?.measurement || !third?.measurement || !baseline?.measurement) throw new Error("Missing synthetic response measurement.");
+    baseline.measurement.planDigest = providerEvalDigest("other test plan");
+    first.measurement.responseReference = null;
+    second.measurement.responseReference = third.measurement.responseReference;
+    expect(group(conflicted)).toMatchObject({
+      eligibleForPromotionReview: false,
+      providerCostUsd: control?.providerCostUsd,
+      blockers: expect.arrayContaining(["qualification-comparison-mixed-plans", "provider-response-evidence-missing-or-reused"]),
+    });
   });
   it("rejects altered authors and does not count disguised self-review or future review", () => {
     const template = buildProviderModelLiveEvalTemplate();

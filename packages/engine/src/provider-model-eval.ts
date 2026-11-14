@@ -242,6 +242,15 @@ export function summarizeProviderModelLiveEvalTemplate(template: ProviderModelLi
   if (fixtures.length !== taxProviderModelEvalFixtures.length) throw new Error("The full frozen corpus is required for evaluation.");
   const reviewedCount = reviewTimes.size;
   const currentCorpusDigest = providerEvalCorpusDigest();
+  const providerReferences = new Map<string, number>();
+  for (const entry of validated.entries) {
+    const measurement = entry.measurement;
+    if (measurement?.runPurpose === "qualification" && measurement.responseReference) {
+      const reference = measurement.responseReference;
+      providerReferences.set(reference, (providerReferences.get(reference) ?? 0) + 1);
+    }
+  }
+  const groupPlans = new Map<string, Set<string>>();
   // These computations depend on this call's already checked fixture/entry
   // objects, not the profile being summarized. Keep reuse local to this report
   // so changed payloads, review evidence and source contexts are always checked
@@ -275,6 +284,8 @@ export function summarizeProviderModelLiveEvalTemplate(template: ProviderModelLi
     const costKnown = scored.length > 0 && scored.every(item => item.result.actualCostUsd !== null);
     const preflightCases = cases.filter(fixture => preparedCases.get(fixture.id)?.kind === "preflight");
     const preflightEntries = (validated.preflightEntries ?? []).filter(entry => entry.profileId === profile.id && preflightCases.some(fixture => fixture.id === entry.fixtureId));
+    const evidence = [...entries.map(entry => entry.measurement), ...preflightEntries];
+    groupPlans.set(`${profile.id}:${task}`, new Set(evidence.flatMap(item => item?.runPurpose === "qualification" ? [item.planDigest] : [])));
     const preflightPassed = preflightEntries.filter(entry => { const fixture = preflightCases.find(item => item.id === entry.fixtureId);
       return entry.runPurpose === "qualification" && entry.bindingVersion === PROVIDER_EVAL_BINDING_VERSION && fixture?.expected.disposition === "abstain" && hasCurrentProviderEvalProvenance(entry, fixture, currentCorpusDigest) && Object.keys(fixture.expected.fields).length === 0
         && Object.keys(fixture.expected.engineValues).length === 0 && fixture.expected.category === null; }).length;
@@ -297,6 +308,10 @@ export function summarizeProviderModelLiveEvalTemplate(template: ProviderModelLi
     if (entries.some(entry => entry.measurement?.normalizationStatus !== "bound")) blockers.push("application-normalization-unverified");
     if (scored.some(item => item.entry.measurement?.runPurpose !== "qualification" || !item.result.provenanceMatches)
       || preflightEntries.some(entry => { const fixture = preflightCases.find(item => item.id === entry.fixtureId); return !fixture || !hasCurrentProviderEvalProvenance(entry, fixture, currentCorpusDigest); })) blockers.push("qualification-run-provenance-missing");
+    if (complete.some(({ entry }) => {
+      const reference = entry.measurement?.responseReference;
+      return !reference || !/^[a-f0-9]{64}$/u.test(reference) || providerReferences.get(reference) !== 1;
+    })) blockers.push("provider-response-evidence-missing-or-reused");
     const reviewInTime = (fixtureId: string, at: string) => {
       const reviewedAt = reviewTimes.get(fixtureId);
       return reviewedAt !== undefined && reviewedAt <= Date.parse(at);
@@ -324,6 +339,8 @@ export function summarizeProviderModelLiveEvalTemplate(template: ProviderModelLi
   }));
   for (const group of groups.filter(item => candidate(item.profileId).role === "candidate")) {
     const baselines = groups.filter(item => item.task === group.task && candidate(item.profileId).role === "baseline");
+    const comparisonPlans = new Set([group, ...baselines].flatMap(item => [...(groupPlans.get(`${item.profileId}:${item.task}`) ?? [])]));
+    if (comparisonPlans.size > 1) group.blockers.push("qualification-comparison-mixed-plans");
     if (baselines.some(item => item.completedRuns !== item.expectedRuns || item.blockers.length)) group.blockers.push("baseline-comparison-incomplete");
     const candidateEntries = validated.entries.filter(entry => entry.profileId === group.profileId && fixtures.find(fixture => fixture.id === entry.fixtureId)?.task === group.task);
     for (const entry of candidateEntries) {
