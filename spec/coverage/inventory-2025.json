@@ -7681,6 +7681,26 @@
       ]
     },
     {
+      "key": "federal/hosted-production-origin",
+      "jurisdiction": "federal",
+      "taxYear": null,
+      "sourceAuthority": "docs/upgrade-2026-execution-brief.md#remaining-implementation",
+      "specPath": "spec/federal/hosted-production-origin.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/hosted-recovery-pool-lifecycle",
       "jurisdiction": "federal",
       "taxYear": 2026,
@@ -16660,6 +16680,25 @@
         "tests/engine/state/pa-2026-ordinary-draft.test.ts::PA2026 draft retains actual public federal ordinary and PDF gates"
       ],
       "implementationNote": "The exported calculatePA2026OrdinaryDraft in this shared composer invokes the source-bound dependency helper and existing PA arithmetic. This finite FY/PY/NR state-only draft does not establish full federal admission, final2026 physical output, filing or human review.",
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "state/pa-2026-ordinary-estimated-tax",
+      "jurisdiction": "state",
+      "taxYear": 2026,
+      "sourceAuthority": "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2026/2026_rev-414i.pdf",
+      "specPath": "spec/state/pa-2026-ordinary-estimated-tax.yaml",
+      "enginePath": "src/engine/state/pa-2026-ordinary-estimated-tax.ts",
+      "packetPath": null,
       "specExists": true,
       "engineExists": true,
       "packetGenerationExists": false,
