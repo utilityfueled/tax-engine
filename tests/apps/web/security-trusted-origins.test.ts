@@ -1,28 +1,26 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { getHostedAuthConfig } from "../../../apps/web/src/lib/hosted-auth";
 
 describe("security: trusted origins validation", () => {
-  it("warns when BETTER_AUTH_TRUSTED_ORIGINS contains an invalid entry", () => {
+  afterEach(() => vi.restoreAllMocks());
+
+  it("warns for malformed trusted origins without logging their values", () => {
     const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const invalid = "https://private-user:private-token@invalid.example";
 
     const config = getHostedAuthConfig({
       TAX_ENGINE_DEPLOYMENT_MODE: "hosted",
+      NODE_ENV: "production",
       TAX_ENGINE_APP_URL: "https://tax.example",
-      BETTER_AUTH_SECRET: "test-secret-1234567890",
-      BETTER_AUTH_TRUSTED_ORIGINS: "https://valid.example, not-a-url, https://also-valid.example"
+      BETTER_AUTH_SECRET: "synthetic-test-secret-1234567890-0987654321",
+      BETTER_AUTH_TRUSTED_ORIGINS: `https://valid.example, ${invalid}, not-a-url, https://also-valid.example`
     });
 
-    expect(warnSpy).toHaveBeenCalledWith(
-      expect.stringContaining("Ignoring invalid BETTER_AUTH_TRUSTED_ORIGINS entry")
+    expect(warnSpy).toHaveBeenCalledExactlyOnceWith(
+      "[security] Ignoring invalid BETTER_AUTH_TRUSTED_ORIGINS entries. Use public HTTPS origins for hosted deployments."
     );
-    expect(warnSpy).toHaveBeenCalledWith(
-      expect.stringContaining("not-a-url")
-    );
-    expect(config.trustedOrigins).toContain("https://valid.example");
-    expect(config.trustedOrigins).toContain("https://also-valid.example");
-    expect(config.trustedOrigins).not.toContain("not-a-url");
-
-    warnSpy.mockRestore();
+    expect(JSON.stringify(warnSpy.mock.calls)).not.toMatch(/private-user|private-token|invalid\.example|not-a-url/u);
+    expect(config.trustedOrigins).toEqual(["https://tax.example", "https://valid.example", "https://also-valid.example"]);
   });
 
   it("does not warn when all trusted origins are valid", () => {
@@ -30,8 +28,9 @@ describe("security: trusted origins validation", () => {
 
     getHostedAuthConfig({
       TAX_ENGINE_DEPLOYMENT_MODE: "hosted",
+      NODE_ENV: "production",
       TAX_ENGINE_APP_URL: "https://tax.example",
-      BETTER_AUTH_SECRET: "test-secret-1234567890",
+      BETTER_AUTH_SECRET: "synthetic-test-secret-1234567890-0987654321",
       BETTER_AUTH_TRUSTED_ORIGINS: "https://preview.tax.example"
     });
 
@@ -39,8 +38,6 @@ describe("security: trusted origins validation", () => {
       (call) => typeof call[0] === "string" && call[0].includes("BETTER_AUTH_TRUSTED_ORIGINS")
     );
     expect(originWarnings).toHaveLength(0);
-
-    warnSpy.mockRestore();
   });
 
   it("always includes the app base URL as a trusted origin", () => {
