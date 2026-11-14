@@ -1,5 +1,29 @@
 # Current 2026 upgrade continuation
 
+## November 14 original mortgage sources and cumulative admission
+
+`f877c0fa` derives retained-residence debt cancellation from complete original
+loan, use, agreement and basis facts. Independent adjacent-cap/subcent examples
+and source-identity controls pass without inventing attribute histories.
+`2071fd25` exercises actual special-rate period entry in both desktop and mobile
+browsers: two cases pass, with physical numeric PDF audits, private reload and
+edit invalidation. `086d8a8e` rejects impossible cumulative fund-distribution
+components while preserving the general signed capital worksheet method.
+All are local commits under the main push hold.
+
+[Mortgage source evidence](upgrade-2026-principal-residence-cod-20261114.md) ·
+[Actual special-rate browser evidence](upgrade-2026-special-rate-browser-20261114.md) ·
+[Distribution admission and review](upgrade-2026-distribution-period-admission-20261114.md).
+
+The new source binding was generated from pure committed `086d8a8e`, excluding
+concurrent guided work. Actual collection remains 629 cases; the original 14
+diagnostic identities and all action budgets remain unchanged. A fresh four-lane
+combined check follows, using eight workers each for unit and coverage and the
+unchanged browser concurrency. Mortgage and market-discount guided intake are
+being implemented separately in parallel. Earlier full checks below retain their
+exact revision; professional review, final forms, security disposition, native
+AMD64 qualification and the main push hold remain open.
+
 ## November 14 additional admission and debt allocation
 
 `11040d35` rejects bare canceled-debt exclusion claims before public calculation,

@@ -1,5 +1,15 @@
 # 2026 upgrade implementation evidence
 
+November 14: `f877c0fa` supplies actual retained-residence loan/basis sources,
+with independent adjacent-cap and original-identity controls. `2071fd25` passes
+two actual typed special-rate desktop/mobile journeys, including physical PDF
+numeric audits and edit invalidation. `086d8a8e` closes impossible cumulative
+distribution-source admission; 69 author tests and 38 independently isolated
+tests pass. A pure committed-source binding retains 629 collected cases and all
+14 diagnostic identities. Fresh combined lanes and the two guided source intakes
+continue in parallel; local main remains under the push hold.
+[Current continuation](upgrade-2026-current-status.md).
+
 November 14: `11040d35` closes bare COD exclusion admission through the public
 calculator, HTTP and genuine verified AI audit. `8b77d15a` adds original corporate
 debt market discount with exact federal/Ohio interest-capital conservation and

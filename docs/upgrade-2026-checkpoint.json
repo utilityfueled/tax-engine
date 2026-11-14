@@ -1,4 +1,35 @@
 {
+  "nov14OriginalMortgageAndCumulativeSources": {
+    "branch": "main",
+    "localCommits": {
+      "principalResidence": "f877c0fa",
+      "specialRateBrowser": "2071fd25",
+      "distributionAdmission": "086d8a8e"
+    },
+    "principalResidence": "8 isolated public/HTTP/manual tests plus separate original-source review PASS",
+    "specialRateBrowser": "2 actual PASS/0retry/0skip; physical numeric PDFs and stale-confirmation checks",
+    "distributionAdmission": {
+      "authorTests": 69,
+      "rootIsolatedTests": 38,
+      "types": "PASS",
+      "specRefs": 7,
+      "generalSignedMethodPreserved": true
+    },
+    "committedSourceBinding": {
+      "source": "086d8a8e",
+      "actualCases": 629,
+      "originalDiagnosticIdentities": 14,
+      "budgetsRelaxed": false
+    },
+    "next": [
+      "four parallel combined lanes",
+      "guided mortgage sources",
+      "guided market-discount sources",
+      "Education finite-source research"
+    ],
+    "qualifiedHumanReview": false,
+    "pushHold": true
+  },
   "nov14AdditionalAdmissionAndDebtAllocation": {
     "branch": "main",
     "localCommits": {
