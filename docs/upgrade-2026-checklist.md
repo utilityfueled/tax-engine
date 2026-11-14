@@ -3188,3 +3188,11 @@ with complete16 copies in `nov02-parent-state-integration-recovery/current-state
 It merges the W2 dependency and retains explicit unverified status; historical
 state04's12 passing tests are not a claim for this newer source. All new private
 packages keep full source copies, patches, hashes, genuine failures and receipts.
+
+
+## November 14 completed integrated AEA verification
+
+- [x] Exact `aea453ec`: all twelve checks pass; 28,479 unit/coverage tests and 88.07% branch coverage; 635 browser cases, 630 passes and five original skips. All original timeout, retry and threshold policies remain. Separate actual browser review `69c35c24` verifies source/build identity and cleanup. [Ledger](upgrade-2026-combined-aea453ec-checks-20261114.md).
+- [x] Same-source protected Preview passes with separate artifact review `294ad80b`; detailed runtime ledger follows.
+- [ ] Same-source ARM64 rehearsal is running; record only actual terminal evidence. Later private candidates require separate integration checks.
+- [ ] Main push hold, native AMD64, final annual forms and qualified human tax/AI/security review remain open; no production or model promotion.

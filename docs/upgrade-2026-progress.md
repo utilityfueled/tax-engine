@@ -1,5 +1,19 @@
 # 2026 upgrade implementation evidence
 
+## November 14 completed integrated checks on AEA
+
+All twelve required local checks pass on exact `aea453ec`: 28,479 unit and
+coverage tests in 2,071 files, 88.07% branch coverage, and 635 browser cases with
+630 passes and five original hosted skips. Separate artifact review verifies
+source/build identity, all eight original runtime timeout overrides, and normal
+server closure. Both owned databases stop normally. The earlier `73713` disclosure
+failure and partial browser abort remain retained.
+[Exact checks and limits](upgrade-2026-combined-aea453ec-checks-20261114.md).
+The protected Preview successor has passed with separate artifact review; the
+same-source ARM64 rehearsal is running. Their detailed runtime results belong to
+separate ledgers. Later private loss/EIC candidates are excluded. Main remains
+local; all external qualification gates remain.
+
 ## November 14 retained integrated failure and disclosure successor
 
 The exact `73713a4f` static lane passes all nine checks. Both actual unit and
