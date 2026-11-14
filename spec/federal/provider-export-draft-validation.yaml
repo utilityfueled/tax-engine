@@ -1,0 +1,40 @@
+form: "Provider-Export-Draft-Validation"
+fullName: Validate and isolate the local provider export-draft summary
+taxYear: 2026
+reference: "docs/upgrade-2026-execution-brief.md, AI routing and billing and hosting and recovery"
+notes: |
+  This endpoint summarizes a redacted client-supplied draft. It never generates
+  a tax calculation, PDF or filing export. Keep the existing shared provider
+  rate limit and hosted actor boundary.
+lines:
+  - line: "nested-summary-input"
+    formula: |
+      Require a checklist with canonical records and explicit null or a
+      structurally valid, supported-year engine preview. Malformed checklist
+      records, unsupported preview years and missing or malformed preview input
+      yield a generic private 400 without a readiness claim or echoed data.
+    testRef: "tests/apps/web/provider-export-draft.test.ts::rejects malformed nested summary input: %s"
+  - line: "summary-and-private-response"
+    formula: |
+      Keep the local summary available with an explicit null preview, count
+      only canonical non-ready checklist items, and label preview presence as
+      a property of the supplied draft. All endpoint responses are private and
+      no-store, including success, malformed JSON and provider throttling.
+    testRef: "tests/apps/web/provider-export-draft.test.ts::summarizes an explicit null preview with private responses"
+  - line: "retain-privacy-scan"
+    formula: |
+      Scan the whole original request for direct identifiers before a summary
+      is returned, including fields not used in the summary. Report a fixed
+      private error when identifiers are detected without echoing the input.
+    testRef: "tests/apps/web/provider-export-draft.test.ts::rejects direct identifiers in unused envelope fields"
+  - line: "unscannable-input"
+    formula: |
+      A byte-bounded request whose original fields cannot be scanned safely
+      fails with a private generic 400 before local summary generation.
+    testRef: "tests/apps/web/provider-export-draft.test.ts::rejects an envelope the privacy scan cannot inspect"
+  - line: "hosted-fail-closed"
+    formula: |
+      Hosted requests require an actor. Hosted production also requires shared
+      request protection. Authentication and request protection failures keep
+      their distinct statuses and private no-store responses.
+    testRef: "tests/apps/web/provider-export-draft.test.ts::preserves private hosted auth and shared-protection failures"

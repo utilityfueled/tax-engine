@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import type {
   ProviderDirectIdentifier,
   ReturnWorkspaceRecord,
@@ -192,6 +192,14 @@ function createDirectIdentifiers(): ProviderDirectIdentifier[] {
   ];
 }
 
+function postSyntheticDraft(data: unknown, clientId: string, raw = false) {
+  return POST(new Request("http://localhost/api/provider/export-draft", {
+    method: "POST",
+    headers: { "content-type": "application/json", "x-real-ip": clientId },
+    body: raw ? String(data) : JSON.stringify(data)
+  }));
+}
+
 describe("provider export-draft request path", () => {
   it("derives local direct identifiers automatically before sending the provider request", async () => {
     const workspace = createWorkspace();
@@ -347,5 +355,100 @@ describe("provider export-draft request path", () => {
     await expect(response.json()).resolves.toEqual({
       error: "Provider export draft request contains unredacted direct identifiers."
     });
+  });
+
+  const draftRequest = buildProviderExportDraftRequest(createWorkspace(), { now: "2026-03-12T00:00:00.000Z" });
+  const draft = draftRequest.exportDraft;
+  const preview = draft.enginePreview;
+  if (!preview) throw new Error("The export draft fixture must include a preview.");
+  it.each([
+    ["missing checklist", { enginePreview: null }],
+    ["object instead of array", { checklist: {}, enginePreview: null }],
+    ["null checklist record", { checklist: [null], enginePreview: null }],
+    ["noncanonical checklist status", { checklist: [{ id: "test", label: "Test", status: "pending" }], enginePreview: null }],
+    ["missing preview", { checklist: [] }],
+    ["truthy primitive preview", { checklist: [], enginePreview: true }],
+    ["empty preview object", { checklist: [], enginePreview: {} }],
+    ["unsupported preview year", { ...draft, enginePreview: { ...preview, taxYear: 2026 } }],
+    ["invalid preview metric", { ...draft, enginePreview: { ...preview, metrics: { ...preview.metrics, totalTax: false } } }],
+    ["invalid preview line", { ...draft, enginePreview: { ...preview, highlightedLines: [{}] } }]
+  ])("rejects malformed nested summary input: %s", async (_label, exportDraft) => {
+    const response = await postSyntheticDraft({ ...draftRequest, exportDraft }, "192.0.2.15");
+
+    expect(response.status).toBe(400);
+    expect(response.headers.get("cache-control")).toBe("no-store, private");
+    await expect(response.json()).resolves.toEqual({ error: "Invalid provider export draft request." });
+  });
+
+  it("summarizes an explicit null preview with private responses", async () => {
+    const response = await postSyntheticDraft({
+      ...draftRequest,
+      exportDraft: { checklist: draft.checklist, enginePreview: null }
+    }, "192.0.2.16");
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("cache-control")).toBe("no-store, private");
+    await expect(response.json()).resolves.toMatchObject({
+      provider: "mock-local", previewIncluded: false, remainingChecklistCount: 1,
+      summary: "The supplied draft has no preview and 1 checklist item(s) still need attention."
+    });
+
+    const malformed = await postSyntheticDraft("{", "192.0.2.16", true);
+    expect(malformed.status).toBe(400);
+    expect(malformed.headers.get("cache-control")).toBe("no-store, private");
+
+    for (let index = 0; index < 20; index += 1) {
+      const allowed = await postSyntheticDraft(draftRequest, "192.0.2.17");
+      expect(allowed.status).toBe(200);
+    }
+    const throttled = await postSyntheticDraft(draftRequest, "192.0.2.17");
+    expect(throttled.status).toBe(429);
+    expect(throttled.headers.get("retry-after")).toMatch(/^\d+$/u);
+    expect(throttled.headers.get("cache-control")).toBe("no-store, private");
+  });
+
+  it("rejects direct identifiers in unused envelope fields", async () => {
+    const response = await postSyntheticDraft({
+      ...draftRequest, unknown: { contact: "synthetic@example.com" }
+    }, "192.0.2.18");
+
+    expect(response.status).toBe(400);
+    expect(response.headers.get("cache-control")).toBe("no-store, private");
+    await expect(response.json()).resolves.toEqual({
+      error: "Provider export draft request contains unredacted direct identifiers."
+    });
+  });
+
+  it("rejects an envelope the privacy scan cannot inspect", async () => {
+    const serialized = JSON.stringify(draftRequest).slice(0, -1);
+    const depth = 8_000;
+    const body = `${serialized},"unknown":${"[".repeat(depth)}null${"]".repeat(depth)}}`;
+    const response = await postSyntheticDraft(body, "192.0.2.19", true);
+
+    expect(response.status).toBe(400);
+    expect(response.headers.get("cache-control")).toBe("no-store, private");
+    await expect(response.json()).resolves.toEqual({ error: "Invalid provider export draft request." });
+  });
+
+  it("preserves private hosted auth and shared-protection failures", async () => {
+    vi.stubEnv("TAX_ENGINE_DEPLOYMENT_MODE", "hosted");
+    vi.stubEnv("TAX_ENGINE_HOSTED_PREVIEW_ACTOR_ID", undefined);
+    vi.stubEnv("BETTER_AUTH_SECRET", undefined);
+    vi.stubEnv("UPSTASH_REDIS_REST_URL", undefined);
+    vi.stubEnv("UPSTASH_REDIS_REST_TOKEN", undefined);
+    vi.stubEnv("KV_REST_API_URL", undefined);
+    vi.stubEnv("KV_REST_API_TOKEN", undefined);
+    try {
+      const anonymous = await postSyntheticDraft(draftRequest, "192.0.2.20");
+      expect(anonymous.status).toBe(401);
+      expect(anonymous.headers.get("cache-control")).toBe("no-store, private");
+      vi.stubEnv("NODE_ENV", "production");
+      const unavailable = await postSyntheticDraft(draftRequest, "192.0.2.20");
+      expect(unavailable.status).toBe(503);
+      expect(unavailable.headers.get("cache-control")).toBe("no-store, private");
+      expect(unavailable.headers.get("retry-after")).toBe("5");
+    } finally {
+      vi.unstubAllEnvs();
+    }
   });
 });
