@@ -45,6 +45,13 @@ function changePayload(entry: ProviderModelLiveEvalEntry, change: (payload: { di
   entry.measurement.normalizationStatus = validated.normalizationStatus;
 }
 const extraction = taxProviderModelEvalFixtures.find(fixture => fixture.id === "case-income-large-ledger-precision")!;
+const reportAt = "2026-10-25T00:00:00Z";
+
+function reviewedFixtures(reviewedAt: string) {
+  return taxProviderModelEvalFixtures.map(fixture => ({ ...fixture, review: { ...fixture.review,
+    status: "reviewed" as const, reviewer: "different-reviewer", reviewedAt } }));
+}
+
 // Explicitly synthetic evidence for exercising gates; these records are never written to qualification artifacts.
 const availability: ProviderModelLiveEvalTemplate["availability"] = providerModelCandidates.map(profile => ({
   profileId: profile.id, status: "available", checkedAt: "2026-10-24T00:00:00Z", expiresAt: "2026-10-25T00:00:00Z",
@@ -125,7 +132,7 @@ describe("measured task model evaluation", () => {
     expect(() => parseProviderModelLiveEvalTemplate({ version: 2, entries: [invalid] })).toThrow();
   });
   it("requires reviewed repeated comparisons and a measured benefit, then only permits human promotion review", () => {
-    const fixtures = taxProviderModelEvalFixtures.map(fixture => ({ ...fixture, review: { author: "author", status: "reviewed" as const, reviewer: "different-reviewer", reviewedAt: "2026-10-24" } }));
+    const fixtures = reviewedFixtures("2026-10-24");
     const cases = fixtures.filter(fixture => fixture.task === "income-extraction");
     const entries = ["luna-high", "baseline-gpt-5-mini", "baseline-gemini-3-flash-preview"].flatMap(profile => cases.flatMap(fixture => [1, 2, 3].map(repeat => run(fixture, profile, repeat))));
     const summary = summarizeProviderModelLiveEvalTemplate({ version: 2, entries, availability }, fixtures);
@@ -135,6 +142,39 @@ describe("measured task model evaluation", () => {
     changePayload(entries[0]!, payload => { const amount = payload.facts[0]; if (!amount) throw new Error("Missing amount."); amount.value = "999"; });
     const rejected = summarizeProviderModelLiveEvalTemplate({ version: 2, entries, availability }, fixtures);
     expect(rejected.groups.find(group => group.profileId === "luna-high" && group.task === "income-extraction")!.blockers).toContain("critical-field-regression");
+  });
+  it("rejects altered authors and does not count disguised self-review or future review", () => {
+    const template = buildProviderModelLiveEvalTemplate();
+    const withAlteredAuthor = reviewedFixtures("2026-10-24");
+    const first = withAlteredAuthor[0];
+    if (!first) throw new Error("Missing first reviewed fixture.");
+    first.review.author = "replacement-author";
+    expect(() => summarizeProviderModelLiveEvalTemplate(template, withAlteredAuthor, reportAt)).toThrow(/frozen.*author/i);
+
+    const selfReviewed = reviewedFixtures("2026-10-24");
+    for (const fixture of selfReviewed) {
+      const fullWidthUppercase = fixture.review.author.toUpperCase().replace(/[!-~]/g, char => String.fromCharCode(char.charCodeAt(0) + 0xFEE0));
+      fixture.review.reviewer = ` ${fullWidthUppercase} `;
+    }
+    expect(summarizeProviderModelLiveEvalTemplate(template, selfReviewed, reportAt).independentlyReviewedCases).toBe(0);
+    expect(summarizeProviderModelLiveEvalTemplate(template, reviewedFixtures("2099-01-01T00:00:00Z"), reportAt).independentlyReviewedCases).toBe(0);
+    expect(summarizeProviderModelLiveEvalTemplate(template, reviewedFixtures("2026-09-31"), reportAt).independentlyReviewedCases).toBe(0);
+    expect(summarizeProviderModelLiveEvalTemplate(template, reviewedFixtures(reportAt), reportAt).independentlyReviewedCases).toBe(240);
+  });
+  it("rejects output reviews by a spelling variant of the frozen author", () => {
+    const entry = run(extraction);
+    if (!entry.independentReview) throw new Error("Missing test-only response review.");
+    entry.independentReview.reviewer = ` ${extraction.review.author.toUpperCase()} `;
+    expect(scoreProviderEvalEntry(entry, extraction)).toMatchObject({ accepted: false, complete: false });
+  });
+  it("does not qualify measurements predating their case reviews", () => {
+    const fixtures = reviewedFixtures("2026-10-24T13:00:00Z");
+    const cases = fixtures.filter(fixture => fixture.task === "income-extraction");
+    const entries = ["luna-high", "baseline-gpt-5-mini", "baseline-gemini-3-flash-preview"].flatMap(profile => cases.flatMap(fixture => [1, 2, 3].map(repeat => run(fixture, profile, repeat))));
+    const summary = summarizeProviderModelLiveEvalTemplate({ version: 2, entries, availability }, fixtures, reportAt);
+    expect(summary.independentlyReviewedCases).toBe(240);
+    const group = summary.groups.find(group => group.profileId === "luna-high" && group.task === "income-extraction");
+    expect(group).toMatchObject({ eligibleForPromotionReview: false, blockers: expect.arrayContaining(["independent-fixture-review-incomplete"]) });
   });
   it.each(["unavailable", "failed"] as const)("records %s account checks without treating them as passing runs", status => {
     const evidence = availability!.map(item => ({ ...item, status }));

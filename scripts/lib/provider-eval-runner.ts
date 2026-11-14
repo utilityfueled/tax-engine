@@ -80,8 +80,8 @@ function requestVersion(plan: ProviderEvalPlan): RequestVersion | undefined {
 function requiresClientTrace(version: RequestVersion | undefined, item: EvalProfile) {
   return version === PROVIDER_EVAL_CONTRACT.version && item.provider === "openai";
 }
-function assertReviewed(fixtures: ProviderEvalFixture[]) {
-  const summary = summarizeProviderModelLiveEvalTemplate({ version: 2, entries: [], availability: [] }, fixtures);
+function assertReviewed(fixtures: ProviderEvalFixture[], planCreatedAt: string) {
+  const summary = summarizeProviderModelLiveEvalTemplate({ version: 2, entries: [], availability: [] }, fixtures, planCreatedAt);
   if (summary.independentlyReviewedCases !== taxProviderModelEvalFixtures.length || summary.independentlyReviewedCases < 200) {
     throw new Error("Qualification execution requires real independent human review of the full frozen corpus.");
   }
@@ -92,7 +92,7 @@ export function createProviderEvalPlan(input: {
 }, reviewedFixtures?: ProviderEvalFixture[]): ProviderEvalPlan {
   if (input.purpose === "qualification") {
     if (!reviewedFixtures) throw new Error("Qualification execution requires a reviewed corpus.");
-    assertReviewed(reviewedFixtures);
+    assertReviewed(reviewedFixtures, input.createdAt);
   }
   const executionContract = providerEvalExecutionContract(input.profileIds);
   const plan = planSchema.parse({ ...input, version: 1, repeats: 3,
@@ -210,7 +210,7 @@ export async function executeProviderEval(input: { plan: unknown; approval: unkn
   validateProviderEvalJournal(plan, input.records);
   if (plan.purpose === "qualification") {
     if (!input.reviewedFixtures || plan.reviewedCorpusDigest !== providerEvalDigest(input.reviewedFixtures)) throw new Error("Approved reviewed corpus is missing or changed.");
-    assertReviewed(input.reviewedFixtures);
+    assertReviewed(input.reviewedFixtures, plan.createdAt);
   }
   const start = input.records.filter(item => item.type === "start");
   if (start.length > 1 || (start[0] && (start[0].planDigest !== providerEvalDigest(plan) || start[0].approvalDigest !== providerEvalDigest(approval)))) throw new Error("Journal is bound to another plan or approval.");

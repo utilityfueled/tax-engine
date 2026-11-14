@@ -18,6 +18,22 @@ lines:
     description: "Draft source-bound expected values remain separate from provider input"
     formula: "Literal monetary/date/text oracles, named source IDs and case-specific human review criteria; expected outputs never establish application-schema validation or independent review."
     testRef: "tests/engine/provider-eval-corpus.test.ts::preserves distinct source boundaries and review criteria across every task"
+  - line: "review-admission"
+    description: "Preserve frozen authors and reject invalid independence or timing"
+    formula: >-
+      An imported corpus must preserve the canonical author of every frozen
+      case. Review names must differ after Unicode normalization, whitespace
+      trimming and case folding. Require an actual ISO calendar date or ISO
+      timestamp no later than the report or qualification plan cutoff. For a
+      measured report a case review must predate its first provider attempt or
+      deterministic preflight. Model output reviewers must also differ from
+      the canonical case author after the same normalization. These checks
+      validate supplied metadata; a real independent human must still review
+      the corpus and outputs.
+    testRef: "tests/engine/provider-model-eval.test.ts::rejects altered authors and does not count disguised self-review or future review"
+    testRefs:
+      - "tests/engine/provider-model-eval.test.ts::rejects output reviews by a spelling variant of the frozen author"
+      - "tests/engine/provider-model-eval.test.ts::does not qualify measurements predating their case reviews"
   - line: "safety-coverage"
     description: "The corpus exercises uncertainty and untrusted source content"
     formula: "Missing facts, conflicts, source corrections, duplicate identities, privacy attacks, readiness claims, unsupported scope and exact audit values are represented by distinct cases."

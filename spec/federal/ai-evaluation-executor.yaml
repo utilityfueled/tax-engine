@@ -80,6 +80,13 @@ lines:
     description: "A paid qualification plan requires an implemented application binding"
     formula: "Human-reviewed fixtures alone cannot authorize a qualifying run against missing production schemas or unsupported normalization; finish and freeze those contracts first."
     testRef: "tests/engine/provider-eval-runner.test.ts::requires full independent corpus review even with complete application bindings"
+  - line: "qualification-review-timing"
+    description: "Freeze the independent corpus review before planning or dispatch"
+    formula: >-
+      Require the canonical authors and valid independent review metadata for
+      all frozen cases by plan creation. Reapply that same cutoff when opening
+      an approved qualification run or resuming its held-out dispatches.
+    testRef: "tests/engine/provider-eval-runner.test.ts::rejects qualification review after plan creation even with a matching approval digest"
   - line: "artifact-path-identity"
     description: "Reports cannot replace an input, journal or journal lock through an alias"
     formula: "Before any write, reject canonical symlink-parent/target, inode and conservative case-fold aliases among all artifacts and the reserved journal lock."

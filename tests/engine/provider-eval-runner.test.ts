@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { createProviderEvalPlan, executeProviderEval, providerEvalDigest, providerEvalExecutionContract, reconcileProviderEvalAttempt, validatePlan, validateProviderEvalJournal, type EvalJournalRecord } from "../../scripts/lib/provider-eval-runner";
 import { taxProviderModelEvalFixtures } from "../../packages/engine/src/provider-eval-fixtures";
 import { providerModelCandidates } from "../../packages/engine/src/provider-model-eval";
@@ -238,6 +238,25 @@ describe("guarded repeated provider executor", () => {
     const input = { runId: "qualification", purpose: "qualification" as const, profileIds: ["luna-high"], maximumProviderUsd: "1", maximumRequests: 1000, createdAt: at, expiresAt: "2026-10-25T13:00:00.000Z" };
     expect(createProviderEvalPlan(input, reviewed).fixtureIds).toHaveLength(240);
     expect(() => createProviderEvalPlan(input, taxProviderModelEvalFixtures)).toThrow(/review/i);
+  });
+  it("rejects qualification review after plan creation even with a matching approval digest", async () => {
+    const reviewed = taxProviderModelEvalFixtures.map(fixture => ({ ...fixture, review: { ...fixture.review,
+      status: "reviewed" as const, reviewer: "synthetic-independent-reviewer", reviewedAt: at } }));
+    const input = { runId: "qualification-review-by-cutoff", purpose: "qualification" as const, profileIds: ["luna-high"],
+      maximumProviderUsd: "1", maximumRequests: 1000, createdAt: at, expiresAt: "2026-10-25T13:00:00.000Z" };
+    const pastPlan = createProviderEvalPlan(input, reviewed);
+    const later = "2026-10-25T12:05:00.000Z";
+    const reviewedLater = reviewed.map(fixture => ({ ...fixture, review: { ...fixture.review, reviewedAt: later } }));
+    expect(() => createProviderEvalPlan(input, reviewedLater)).toThrow(/independent human review/i);
+
+    const plan = { ...pastPlan, reviewedCorpusDigest: providerEvalDigest(reviewedLater) };
+    const transport = vi.fn(async () => good);
+    const state = setup();
+    await expect(executeProviderEval({ ...state, plan, approval: { ...state.approval, planDigest: providerEvalDigest(plan),
+      maximumRequests: 1, maximumProviderUsd: "1" }, reviewedFixtures: reviewedLater, transport, now: () => later,
+    })).rejects.toThrow(/independent human review/i);
+    expect(transport).not.toHaveBeenCalled();
+    expect(state.records).toEqual([]);
   });
   it("rejects same-ID model and request policy changes after planning", () => {
     const { plan } = setup(); const selected = providerModelCandidates.find(item => item.id === "luna-high");

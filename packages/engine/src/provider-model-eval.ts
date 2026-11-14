@@ -71,10 +71,24 @@ function candidate(id: string) {
   if (!result) throw new Error(`Unknown evaluation profile: ${id}`);
   return result;
 }
-function independentlyReviewed(fixture: ProviderEvalFixture) {
-  return fixture.review.status === "reviewed" && !!fixture.review.reviewer?.trim()
-    && fixture.review.reviewer !== fixture.review.author && !!fixture.review.reviewedAt
-    && Number.isFinite(Date.parse(fixture.review.reviewedAt));
+function reviewerIdentity(value: unknown) {
+  return typeof value === "string" ? value.normalize("NFKC").trim().toLowerCase() : "";
+}
+
+function isIndependentReviewer(reviewer: unknown, author: unknown) {
+  const candidate = reviewerIdentity(reviewer);
+  const origin = reviewerIdentity(author);
+  return candidate !== "" && origin !== "" && candidate !== origin;
+}
+
+const reviewDate = z.union([z.iso.date(), z.iso.datetime({ offset: true })]);
+
+function independentReviewTime(fixture: ProviderEvalFixture, cutoff: number) {
+  if (fixture.review.status !== "reviewed" || !isIndependentReviewer(fixture.review.reviewer, fixture.review.author)) return null;
+  const date = reviewDate.safeParse(fixture.review.reviewedAt);
+  if (!date.success) return null;
+  const time = Date.parse(date.data);
+  return Number.isFinite(time) && time <= cutoff ? time : null;
 }
 function percentile(values: number[], percentileValue: number) {
   if (!values.length) return null;
@@ -125,8 +139,9 @@ function scoreForCorpus(entry: ProviderModelLiveEvalEntry, fixture: ProviderEval
   const inventedField = Object.keys(output?.fields ?? {}).some(key => !(key in fixture.expected.fields));
   const grounding = provenanceMatches && qualifiedModel && validated.normalizationStatus === "bound" && entry.independentReview?.grounded === true;
   const safetyFailure = validated.privacyFailure || output?.filingReady === true || engineOverride || entry.independentReview?.piiLeak === true || entry.measurement?.privacyFailure === true;
+  const canonicalAuthor = taxProviderModelEvalFixtures.find(item => item.id === fixture.id)?.review.author;
   const complete = provenanceMatches && qualifiedModel && versionMatches && observationsConsistent && entry.measurement?.runPurpose === "qualification" && entry.measurement.normalizationStatus === "bound" && entry.elapsedMs !== null && entry.applicationSchemaValid !== null && entry.independentReview !== null
-    && entry.independentReview.reviewer !== fixture.review.author
+    && isIndependentReviewer(entry.independentReview.reviewer, canonicalAuthor)
     && entry.attempts.length > 0 && entry.attempts.every(attempt => attempt.usage !== null);
   const accepted = complete && schemaValid && !!output && !safetyFailure
     && !inventedField && engineValuesComplete && grounding && entry.independentReview?.qualityAccepted === true
@@ -207,9 +222,11 @@ export function buildProviderModelLiveEvalTemplate(): ProviderModelLiveEvalTempl
 }
 
 export function summarizeProviderModelLiveEvalTemplate(template: ProviderModelLiveEvalTemplate,
-  fixtures: ProviderEvalFixture[] = taxProviderModelEvalFixtures) {
+  fixtures: ProviderEvalFixture[] = taxProviderModelEvalFixtures, reportAt = new Date().toISOString()) {
   const validated = parseProviderModelLiveEvalTemplate(template);
+  const reportCutoff = Date.parse(z.iso.datetime({ offset: true }).parse(reportAt));
   const fixtureIds = new Set<string>();
+  const reviewTimes = new Map<string, number>();
   for (const fixture of fixtures) {
     const canonical = taxProviderModelEvalFixtures.find(item => item.id === fixture.id);
     const { review: _review, ...content } = fixture;
@@ -217,10 +234,13 @@ export function summarizeProviderModelLiveEvalTemplate(template: ProviderModelLi
     if (!canonical || fixtureIds.has(fixture.id) || JSON.stringify(content) !== JSON.stringify(canonicalContent)) {
       throw new Error("Reviewed fixtures must preserve the frozen case content and unique IDs.");
     }
+    if (fixture.review?.author !== canonical.review.author) throw new Error("Reviewed fixtures must preserve the frozen case author.");
+    const time = independentReviewTime(fixture, reportCutoff);
+    if (time !== null) reviewTimes.set(fixture.id, time);
     fixtureIds.add(fixture.id);
   }
   if (fixtures.length !== taxProviderModelEvalFixtures.length) throw new Error("The full frozen corpus is required for evaluation.");
-  const reviewedCount = fixtures.filter(independentlyReviewed).length;
+  const reviewedCount = reviewTimes.size;
   const currentCorpusDigest = providerEvalCorpusDigest();
   // These computations depend on this call's already checked fixture/entry
   // objects, not the profile being summarized. Keep reuse local to this report
@@ -277,7 +297,13 @@ export function summarizeProviderModelLiveEvalTemplate(template: ProviderModelLi
     if (entries.some(entry => entry.measurement?.normalizationStatus !== "bound")) blockers.push("application-normalization-unverified");
     if (scored.some(item => item.entry.measurement?.runPurpose !== "qualification" || !item.result.provenanceMatches)
       || preflightEntries.some(entry => { const fixture = preflightCases.find(item => item.id === entry.fixtureId); return !fixture || !hasCurrentProviderEvalProvenance(entry, fixture, currentCorpusDigest); })) blockers.push("qualification-run-provenance-missing");
-    if (reviewedCount < evaluationGates.minimumReviewedCases || cases.some(fixture => !independentlyReviewed(fixture))) blockers.push("independent-fixture-review-incomplete");
+    const reviewInTime = (fixtureId: string, at: string) => {
+      const reviewedAt = reviewTimes.get(fixtureId);
+      return reviewedAt !== undefined && reviewedAt <= Date.parse(at);
+    };
+    if (reviewedCount < evaluationGates.minimumReviewedCases || cases.some(fixture => !reviewTimes.has(fixture.id))
+      || entries.some(entry => entry.attempts.some(attempt => !reviewInTime(entry.fixtureId, attempt.startedAt)))
+      || preflightEntries.some(entry => !reviewInTime(entry.fixtureId, entry.at))) blockers.push("independent-fixture-review-incomplete");
     if (preflightPassed !== expectedPreflightRuns) blockers.push("deterministic-preflight-coverage-incomplete");
     if (complete.length !== expectedRuns || !cases.some(fixture => fixture.split === "held-out")) blockers.push("held-out-repeat-coverage-incomplete");
     if (schemaRate === null || schemaRate < evaluationGates.schemaValidity) blockers.push("schema-validity");
