@@ -6,7 +6,8 @@ revision: "Final instructions Rev. December 2025; draft Schedule A Rev. December
 notes: |
   26 USC 1062 applies to taxable years beginning after July 4, 2025. This
   worksheet covers one whole-property sale with all recognized gain in 2026,
-  owned directly or allocated by one domestic Form 1065 partnership.
+  owned directly or allocated by one domestic Form 1065 partnership or
+  Form 1120-S corporation.
   Confirm farm use, active farming and covenant enforceability separately
   from the applicant's source records. Exchanges, installment sales, tiered
   allocations, other entities, partially qualifying property, mixed use, or
@@ -22,14 +23,18 @@ sources:
   - "https://www.irs.gov/pub/irs-efile/ty26-1040-ats-scenario-13.pdf"
   - "https://www.irs.gov/instructions/i1065"
   - "https://www.irs.gov/instructions/i1065sk1"
+  - "https://www.irs.gov/instructions/i1120s"
+  - "https://www.irs.gov/instructions/i1120ssk"
 lines:
   - line: "A-B"
     description: "Pass-through entity identification"
-    formula: "For one domestic partnership allocation, require a confirmed Form 1065 K-1 box 20 code ZZ Section 1062 statement, matched to the taxpayer and entity Schedule A with covenant. Do not put the entity name or EIN in the calculation trace."
+    formula: "Require a confirmed Section 1062 statement from the issuing Schedule K-1: Form 1065 box 20 code ZZ for a partner, or Form 1120-S box 17 code ZZ for a shareholder. Match the issued statement to the taxpayer and the entity Schedule A and covenant. Do not put the entity name or EIN in the calculation trace."
     testRef: "tests/engine/forms/form-1062-schedule-a.test.ts::rejects missing or incompatible partnership source records"
+    testRefs:
+      - "tests/engine/forms/form-1062-schedule-a.test.ts::rejects mismatched shareholder statements and entity amounts"
   - line: "1-3"
     description: "Property description, transaction type and date"
-    formula: "Require a direct sale and a confirmed calendar-valid 2026 closing date. No property description, owner identity or covenant text enters the monetary worksheet."
+    formula: "Require a sale and a confirmed calendar-valid 2026 closing date. For an allocation, confirm the sale date on the entity Schedule A. No property description, owner identity or covenant text enters the monetary worksheet."
     testRef: "tests/engine/forms/form-1062-schedule-a.test.ts::rejects incomplete qualifications and incompatible sale originals"
   - line: "4-8"
     description: "Separate confirmed statutory facts"
@@ -51,3 +56,7 @@ lines:
     description: "One partner's recognized qualified farmland gain"
     formula: "Leave the partner's lines 9–12 blank. Line 13 is the positive elected share from the confirmed box 20 statement, equal to the separately confirmed recognized qualifying gain included in the taxpayer's 2026 return. Reject any entity sale amounts in the partner input, a generic ZZ entry without a section 1062 statement, an unbound owner/entity/year, or any discrepancy."
     testRef: "tests/engine/forms/form-1062-schedule-a.test.ts::transfers the IRS ATS scenario 13 partnership gain with lines 9 through 12 blank"
+  - line: "9-13-s-corporation"
+    description: "One shareholder's recognized qualified farmland gain"
+    formula: "Leave lines 9–12 blank. Line 13 is the positive elected distributable share from the separate Section 1062 statement to box 17, equal to the recognized gain included in the shareholder's 2026 tax determination. A generic code ZZ item or a second item with unconfirmed gain does not establish this source."
+    testRef: "tests/engine/forms/form-1062-schedule-a.test.ts::transfers a confirmed shareholder statement to line 13 alone"

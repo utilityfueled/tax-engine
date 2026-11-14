@@ -26,9 +26,56 @@ const atsPartnershipAllocation = {
     allocatedGain: "56516",
   },
   independentlyReportedGain: "56516",
-} as const;
+} as const satisfies Form1062ScheduleAInput;
+
+const shareholderAllocation = {
+  ...atsPartnershipAllocation,
+  transactionType: "s_corporation_sale",
+  partnerAllocation: undefined,
+  shareholderAllocation: {
+    ...atsPartnershipAllocation.partnerAllocation,
+    sourceForm: "1120-S",
+    sourceBox: "17",
+    allocatedGain: "25000.25",
+  },
+  independentlyReportedGain: "25000.25",
+} as const satisfies Form1062ScheduleAInput;
 
 describe("Schedule A (Form 1062)", () => {
+  it("transfers a confirmed shareholder statement to line 13 alone", () => {
+    const sale = shareholderAllocation;
+    const schedule = calculateForm1062ScheduleA(sale);
+    expect(schedule.lines.map(row => [row.line, row.value.toFixed(), row.inputs])).toEqual([["13", "25000.25", {}]]);
+    expect(schedule.lines[0].formula).toMatch(/Form 1120-S K-1 box 17/u);
+    const credits = { foreignTax: "0", nonrefundablePersonal: "0", generalBusiness: "0", otherApplicable: "0" };
+    const form = calculateForm1062({ taxYear: 2026, sale, electionConfirmed: true, taxableIncome: "40000.50",
+      withGain: { regularIncomeTax: "5000", additions: "0", credits },
+      withoutGain: { taxableIncome: "15000.25", regularIncomeTax: "1500", additions: "0", credits } });
+    expect(form.lines.find(row => row.line === "7")?.value.toFixed()).toBe("25000.25");
+    expect(form.firstInstallmentWholeDollars.toFixed()).toBe("875");
+  });
+
+  it("rejects mismatched shareholder statements and entity amounts", () => {
+    const original = shareholderAllocation.shareholderAllocation;
+    for (const unsupported of [
+      { shareholderAllocation: undefined },
+      { shareholderAllocation: { ...original, sourceForm: "1065" } },
+      { shareholderAllocation: { ...original, sourceBox: "20" } },
+      { shareholderAllocation: { ...original, sourceCode: "AA" } },
+      { shareholderAllocation: { ...original, sourceTaxYear: 2025 } },
+      { shareholderAllocation: { ...original, section1062StatementConfirmed: false } },
+      { shareholderAllocation: { ...original, taxpayerAndEntityMatched: undefined } },
+      { shareholderAllocation: { ...original, entityScheduleAMatched: false } },
+      { shareholderAllocation: { ...original, allocatedGain: "25000.24" } },
+      { partnerAllocation: atsPartnershipAllocation.partnerAllocation },
+      { grossProceeds: "300000" }, { adjustedBasis: "100000" }, { sellingExpenses: "0" },
+      { unadjustedBasis: "100000" }, { covenantIncluded: false },
+    ]) {
+      expect(() => calculateForm1062ScheduleA({ ...shareholderAllocation, ...unsupported } as unknown as Form1062ScheduleAInput))
+        .toThrow(/Form 1062.*(?:matched Form 1120-S|reconciles|every qualification)/u);
+    }
+  });
+
   it("transfers the IRS ATS scenario 13 partnership gain with lines 9 through 12 blank", () => {
     // IRS ATS scenario 13, pages 30–31. The source confirmations are synthetic.
     const schedule = calculateForm1062ScheduleA(atsPartnershipAllocation);
@@ -73,6 +120,9 @@ describe("Schedule A (Form 1062)", () => {
     expect(() => calculateForm1062ScheduleA({
       ...qualifiedFarmlandSale, partnerAllocation: original,
     } as unknown as Form1062ScheduleAInput)).toThrow(/Form 1062/u);
+    expect(() => calculateForm1062ScheduleA({
+      ...atsPartnershipAllocation, shareholderAllocation: shareholderAllocation.shareholderAllocation,
+    } as unknown as Form1062ScheduleAInput)).toThrow(/matched Form 1065/u);
   });
 
   it("transfers only the reconciled direct-sale gain to Form 1062", () => {

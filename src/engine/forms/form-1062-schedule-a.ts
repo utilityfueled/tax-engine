@@ -22,27 +22,34 @@ interface DirectSale {
   unadjustedBasis: string;
   adjustedBasis: string;
   partnerAllocation?: never;
+  shareholderAllocation?: never;
 }
 
-interface PartnershipSale {
-  transactionType: "partnership_sale";
-  partnerAllocation: {
-    sourceForm: "1065";
-    sourceBox: "20";
-    sourceCode: "ZZ";
-    sourceTaxYear: 2026;
-    section1062StatementConfirmed: true;
-    entityScheduleAMatched: true;
-    taxpayerAndEntityMatched: true;
-    allocatedGain: string;
-  };
+interface AllocationConfirmation {
+  sourceCode: "ZZ";
+  sourceTaxYear: 2026;
+  section1062StatementConfirmed: true;
+  entityScheduleAMatched: true;
+  taxpayerAndEntityMatched: true;
+  allocatedGain: string;
+}
+
+type PassThroughSale = {
   grossProceeds?: never;
   sellingExpenses?: never;
   unadjustedBasis?: never;
   adjustedBasis?: never;
-}
+} & ({
+  transactionType: "partnership_sale";
+  partnerAllocation: AllocationConfirmation & { sourceForm: "1065"; sourceBox: "20" };
+  shareholderAllocation?: never;
+} | {
+  transactionType: "s_corporation_sale";
+  partnerAllocation?: never;
+  shareholderAllocation: AllocationConfirmation & { sourceForm: "1120-S"; sourceBox: "17" };
+});
 
-export type Form1062ScheduleAInput = ConfirmedSale & (DirectSale | PartnershipSale);
+export type Form1062ScheduleAInput = ConfirmedSale & (DirectSale | PassThroughSale);
 
 function amount(value: string | undefined, field: string): Decimal {
   if (typeof value !== "string" || !/^\d{1,12}(?:\.\d{1,2})?$/u.test(value)) {
@@ -53,7 +60,8 @@ function amount(value: string | undefined, field: string): Decimal {
 
 /** Worksheet for one fully qualifying 2026 sale. See spec/federal/form-1062-schedule-a.yaml. */
 export function calculateForm1062ScheduleA(input: Form1062ScheduleAInput) {
-  if (input.taxYear !== 2026 || (input.transactionType !== "direct_sale" && input.transactionType !== "partnership_sale")
+  if (input.taxYear !== 2026 || (input.transactionType !== "direct_sale"
+    && input.transactionType !== "partnership_sale" && input.transactionType !== "s_corporation_sale")
     || input.qualifyingFarmUseConfirmed !== true || input.unitedStatesRealPropertyConfirmed !== true
     || input.activeFarmerBuyerConfirmed !== true || input.enforceableTenYearCovenantConfirmed !== true
     || input.covenantIncluded !== true || input.wholePropertyQualifies !== true
@@ -72,19 +80,26 @@ export function calculateForm1062ScheduleA(input: Form1062ScheduleAInput) {
     audit.record("Schedule A (Form 1062)", line, description, value, formula);
   let gain: Decimal;
   let formula: string;
-  if (input.transactionType === "partnership_sale") {
-    const source = input.partnerAllocation;
+  if (input.transactionType !== "direct_sale") {
+    const partnership = input.transactionType === "partnership_sale";
+    const source = partnership ? input.partnerAllocation : input.shareholderAllocation;
+    const incompatibleSource = partnership ? input.shareholderAllocation : input.partnerAllocation;
+    const expectedForm = partnership ? "1065" : "1120-S";
+    const expectedBox = partnership ? "20" : "17";
     if (input.grossProceeds !== undefined || input.sellingExpenses !== undefined
       || input.unadjustedBasis !== undefined || input.adjustedBasis !== undefined
-      || source?.sourceForm !== "1065" || source.sourceBox !== "20" || source.sourceCode !== "ZZ"
+      || incompatibleSource !== undefined || source?.sourceForm !== expectedForm
+      || source.sourceBox !== expectedBox || source.sourceCode !== "ZZ"
       || source.sourceTaxYear !== input.taxYear || source.section1062StatementConfirmed !== true
       || source.entityScheduleAMatched !== true || source.taxpayerAndEntityMatched !== true) {
-      throw new Error("Form 1062 Schedule A requires a matched Form 1065 section 1062 statement and blank lines 9 through 12");
+      throw new Error(`Form 1062 Schedule A requires a matched Form ${expectedForm} section 1062 statement and blank lines 9 through 12`);
     }
-    gain = amount(source.allocatedGain, "the partner's allocated gain");
-    formula = "Confirmed Form 1065 K-1 box 20 section 1062 statement";
+    gain = amount(source.allocatedGain, "the taxpayer's allocated gain");
+    formula = `Confirmed Form ${expectedForm} K-1 box ${expectedBox} section 1062 statement`;
   } else {
-    if (input.partnerAllocation !== undefined) throw new Error("Form 1062 Schedule A direct sale cannot include a K-1 allocation");
+    if (input.partnerAllocation !== undefined || input.shareholderAllocation !== undefined) {
+      throw new Error("Form 1062 Schedule A direct sale cannot include a K-1 allocation");
+    }
     const grossProceeds = record("9", "Gross sales price", amount(input.grossProceeds, "line 9"), "Confirmed gross proceeds");
     const netProceeds = grossProceeds.minus(amount(input.sellingExpenses, "selling expenses"));
     if (netProceeds.lt(0)) throw new Error("Form 1062 Schedule A selling expenses exceed gross proceeds");
