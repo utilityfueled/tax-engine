@@ -164,3 +164,17 @@ and the security disposition is pending.
 [Debian source package](https://sources.debian.org/src/libxml2/2.9.14%2Bdfsg-1.3~deb12u6/) ·
 [Debian CVE status](https://security-tracker.debian.org/tracker/CVE-2026-6653) ·
 [Upstream fix](https://gitlab.gnome.org/GNOME/libxml2/-/commit/463bbeeca1805b5c4828f50d0fefc4eebaf620df).
+
+Canonical also published a fix on the same libxml2 2.9.14 base. The signed
+Noble security source index binds `2.9.14+dfsg-1.3ubuntu3.10` to the same
+pristine source archive as Bookworm. Its maintained patch
+`6c2b8a7b6fa470efcb1854e5c73bd7e1ae1663d8b111e27ce9232bbc1fe44f54`
+applies to all seven files of the exact Debian-patched tree without
+fuzz or offset. It appends fields to both public structs. This dry run
+supplies a source input for a custom Debian backport. Native ABI checks,
+SQL/XML and recovery tests, image scans and the other findings still need
+disposition. Debian's Bookworm package status is unchanged. The signed
+comparison receipt SHA-256 is
+`6c050e8a1bf2b7621ce51e572e34dc63a0d1adb97da5c99a917f1fcdb3af46bd`.
+[Canonical CVE status](https://ubuntu.com/security/CVE-2026-6653) ·
+[Noble source package](https://launchpad.net/ubuntu/+source/libxml2/2.9.14+dfsg-1.3ubuntu3.10).
