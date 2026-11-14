@@ -1,5 +1,5 @@
 form: "Publication 505 (2026) section 1062 estimated tax adjustment"
-fullName: "One confirmed farmland election adjustment to Worksheets 2-1 and 2-9"
+fullName: "Confirmed farmland election adjustment to Worksheets 2-1 and 2-9"
 taxYear: 2026
 reference: "https://www.irs.gov/forms-pubs/clarification-for-calculation-of-estimated-tax-payments-when-making-an-election-under-section-1062a"
 sources:
@@ -7,12 +7,13 @@ sources:
   - "https://www.irs.gov/pub/irs-drop/n-26-03.pdf"
   - "https://www.irs.gov/instructions/i1062"
   - "https://www.irs.gov/pub/irs-efile/ty26-1040-ats-scenario-13.pdf"
-revision: "IRS correction to Publication 505 (2026) and Notice 2026-3 section 4.02, retrieved 2026-11-13"
+  - "https://uscode.house.gov/us/usc/119-124/t26/s1062/"
+revision: "IRS correction to Publication 505 (2026), Form 1062 instructions and Notice 2026-3 section 4.02, checked 2026-11-14 UTC"
 notes: |
   The IRS correction supplements the printed 2026 worksheets. Publication 505
   itself will not be republished for this clarification. This adapter computes
-  only their section 1062 additions for one confirmed calendar-year 2026
-  individual election and one elected sale. Use the existing Form 1062 and
+  only their section 1062 additions for a confirmed calendar-year 2026
+  individual election. Use the existing Form 1062 and
   Schedule A calculation with the supported direct-sale, domestic partnership
   or S corporation facts. The caller confirms the properly made election and
   full-year determinations. This method does not compute estimated payments,
@@ -23,7 +24,7 @@ notes: |
 lines:
   - line: "source"
     description: "Recompute the full-year Form 1062 for one confirmed elected sale"
-    formula: "Require a confirmed 2026 calendar year, one Form 1062 sale input and a single original sale identity. Replay Form 1062 and confirm the sale and annual tax determinations through its validators. Bind the period tax-income record to the same original sale identity and calendar year. Do not emit original identities, attachments or statement references in the result. Reject multiple elected sales and elections or recognition records from other years."
+    formula: "For the one-sale entry require a confirmed 2026 calendar year, a single Form 1062 sale and its original sale identity. Replay Form 1062 and confirm the sale and annual tax determinations through its validators. Bind the period tax-income record to the same original sale identity and calendar year. Do not emit original identities, attachments or statement references in the result. Reject extra sales on this entry and elections or recognition records from other years."
     testRef: "tests/engine/forms/publication-505-form-1062-estimated-tax.test.ts::requires one validated 2026 election and the same sale's income record"
   - line: "2-1 11b"
     description: "Add the deferred share alongside the otherwise allowable line 11b items"
@@ -37,3 +38,13 @@ lines:
     description: "Apply the same full-year reduction to each included income period"
     formula: "For each applicable column return the same positive addition to line 20 as for Worksheet 2-1 line 11b. Return zero in columns without the sale income. Worksheet 2-9 line 21 subtracts its complete line 20 from line 19 with a zero floor. Do not annualize, apportion, cap against a period's tax, apply the applicable percentage, or calculate a payment in this adjustment. IRS TY2026 ATS Scenario 13 (PDF pp. 30-31) supplies Form 1062 line 14 of $13,621; $10,215.75 and the explicitly confirmed period flags are derived and synthetic respectively. The ATS example does not provide either Publication 505 worksheet."
     testRef: "tests/engine/forms/publication-505-form-1062-estimated-tax.test.ts::reuses the exact ATS-based reduction in every confirmed period without annualizing"
+  - line: "same-column multiple sales"
+    description: "Use one aggregate Form 1062 when every elected gain has the same inclusion pattern"
+    formula: "The Form 1062 instructions combine all elected Schedule A line 13 gains in a single annual redetermination. Bind one separately confirmed cumulative income record to each distinct elected original and validate each against its sale date and tax year. Require a nonnegative exact amount for each column equal to zero or the sale's full Schedule A line 13. When the all-or-none inclusion pattern is identical for all elected sales, use 75% of the single full-year Form 1062 line 14 once on Worksheet 2-1 and in each all-inclusive column of Worksheet 2-9. Preserve zero and fractional cents. Keep the aggregate adjustment outside payment and filing."
+    testRef: "tests/engine/forms/publication-505-form-1062-estimated-tax.test.ts::uses the aggregate annual liability once when all elected sales enter the same column"
+  - line: "multiple sale boundaries"
+    description: "Reject staggered and incomplete multiple-sale sources"
+    formula: "Every elected sale requires exactly one record. Reject an unbound, duplicate, missing, extra or wrong-year record, false confirmation or false date order. Reject a partial amount, an amount above the full gain, a Boolean in place of an amount, or a mixture of included and excluded elected gains within one cumulative column. The IRS sources do not supply a rule here for assigning the aggregate annual tax difference to staggered or partially recognized gains."
+    testRefs:
+      - "tests/engine/forms/publication-505-form-1062-estimated-tax.test.ts::rejects staggered recognition and incomplete or unbound original records"
+      - "tests/engine/forms/publication-505-form-1062-estimated-tax.test.ts::rejects a partial amount even when both sales are partly recognized in the same column"

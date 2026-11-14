@@ -28,9 +28,26 @@ function inclusion(march: boolean, may: boolean, august: boolean, december: bool
   return { "2026-03-31": march, "2026-05-31": may, "2026-08-31": august, "2026-12-31": december };
 }
 
+function income(march: string, may: string, august: string, december: string) {
+  return { "2026-03-31": march, "2026-05-31": may, "2026-08-31": august, "2026-12-31": december };
+}
+
 function columnAdjustments(result: ReturnType<typeof calculatePublication505Form1062Adjustment>) {
   return result.worksheet29Line20Additions.map(({ amount }) => amount.toFixed());
 }
+
+const { sale: oneSale, ...annualFacts } = source.form1062;
+const aggregateSource = {
+  calendarYearConfirmed: true,
+  form1062: { ...annualFacts, taxableIncome: "143032", sales: [
+    { sourceId: "confirmed-farmland-a", scheduleA: { ...oneSale, saleDate: "2026-04-01" } },
+    { sourceId: "confirmed-farmland-b", scheduleA: { ...oneSale, saleDate: "2026-05-31" } },
+  ], independentlyReportedElectedGain: "113032" },
+  incomeRecognitionBySale: [
+    { taxYear: 2026, sourceFactsConfirmed: true, saleSourceId: "confirmed-farmland-b", cumulativeRecognizedGain: income("0", "56516.00", "56516.00", "56516.00") },
+    { taxYear: 2026, sourceFactsConfirmed: true, saleSourceId: "confirmed-farmland-a", cumulativeRecognizedGain: income("0.00", "56516", "56516", "56516") },
+  ],
+} as const satisfies AdjustmentInput;
 
 describe("2026 Publication 505 section 1062 adjustment", () => {
   it("adds exactly 75 percent of full-year liability to Worksheet 2-1 line 11b", () => {
@@ -126,6 +143,49 @@ describe("2026 Publication 505 section 1062 adjustment", () => {
     ]) {
       expect(() => calculatePublication505Form1062Adjustment({ ...source, ...change } as unknown as AdjustmentInput))
         .toThrow(/(?:Publication 505|Form 1062)/u);
+    }
+  });
+
+  it("uses the aggregate annual liability once when all elected sales enter the same column", () => {
+    // Form 1062 instructions lines 7 and 14: $56,516 + $56,516, with one annual
+    // tax difference of $9,886 + $268 − $3,104, so line 11b adds $5,287.50 once.
+    const result = calculatePublication505Form1062Adjustment(aggregateSource);
+    expect(result.worksheet21Line11bAddition.toFixed()).toBe("5287.5");
+    expect(columnAdjustments(result)).toEqual(["0", "5287.5", "5287.5", "5287.5"]);
+    expect(JSON.stringify(result)).not.toContain("confirmed-farmland");
+    const cent = calculatePublication505Form1062Adjustment({ ...aggregateSource, form1062: {
+      ...aggregateSource.form1062, withGain: { ...aggregateSource.form1062.withGain, regularIncomeTax: "2836.01" },
+    } });
+    expect(columnAdjustments(cent)).toEqual(["0", "0.0075", "0.0075", "0.0075"]);
+  });
+
+  it("rejects staggered recognition and incomplete or unbound original records", () => {
+    const [first, second] = aggregateSource.incomeRecognitionBySale;
+    const staggered = { ...second, cumulativeRecognizedGain: income("0", "0", "56516", "56516") };
+    const staggeredSource = { ...aggregateSource, incomeRecognitionBySale: [first, staggered] };
+    expect(() => calculatePublication505Form1062Adjustment(staggeredSource))
+      .toThrow(/same cumulative income columns/u);
+
+    for (const incomeRecognitionBySale of [
+      [first], [first, first], [first, second, second], [first, { ...second, saleSourceId: "unbound" }],
+      [first, { ...second, sourceFactsConfirmed: false }], [first, { ...second, taxYear: 2025 }],
+      [first, { ...second, cumulativeRecognizedGain: income("56516", "56516", "56516", "56516") }],
+    ]) {
+      const invalidSource = { ...aggregateSource, incomeRecognitionBySale };
+      expect(() => calculatePublication505Form1062Adjustment(invalidSource))
+        .toThrow(/(?:same original sale|all four cumulative periods|each elected sale)/u);
+    }
+    const conflicting = { ...aggregateSource, incomeRecognition: source.incomeRecognition, saleSourceId: source.saleSourceId };
+    expect(() => calculatePublication505Form1062Adjustment(conflicting as unknown as AdjustmentInput))
+      .toThrow(/either one original or records for all elected sales/u);
+  });
+
+  it("rejects a partial amount even when both sales are partly recognized in the same column", () => {
+    for (const invalidMay of ["0.01", "56515.99", "56516.01", "56516.000", "-1", "56516\n", true, 56516, undefined]) {
+      const changed = { ...aggregateSource, incomeRecognitionBySale: aggregateSource.incomeRecognitionBySale.map(record => ({
+        ...record, cumulativeRecognizedGain: { ...record.cumulativeRecognizedGain, "2026-05-31": invalidMay },
+      })) };
+      expect(() => calculatePublication505Form1062Adjustment(changed as unknown as AdjustmentInput)).toThrow(/zero or full recognized gain/u);
     }
   });
 });
