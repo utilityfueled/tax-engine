@@ -18,6 +18,7 @@ import {
 } from "./rate-limit";
 import { safeParseJsonBody, safeReadBinaryBody } from "./safe-body-parser";
 import {
+  HostedWorkspaceLimitError,
   createWorkspacePersistenceAdapter,
   resolveHostedDocumentBlobStore,
   type HostedDocumentBlobStore,
@@ -40,13 +41,6 @@ const WORKSPACE_ID_PATTERN = /^[a-zA-Z0-9_-]+$/;
  * document references that would bloat database rows and slow queries.
  */
 const MAX_DOCUMENTS_PER_WORKSPACE = 500;
-
-/**
- * Maximum number of workspaces a single user can own.
- * Prevents resource exhaustion from an attacker creating unbounded
- * workspaces to fill storage and degrade list performance.
- */
-const MAX_WORKSPACES_PER_USER = 200;
 
 function isValidWorkspaceId(workspaceId: string): boolean {
   return workspaceId.length > 0
@@ -651,14 +645,6 @@ export function createHostedWorkspaceRouteHandlers(
         let workspace = await result.adapter.getWorkspace(context.workspaceId);
 
         if (!workspace && requestUrl.searchParams.get("create") === "1") {
-          const existingWorkspaces = await result.adapter.listWorkspaces();
-
-          if (existingWorkspaces.length >= MAX_WORKSPACES_PER_USER) {
-            return buildBadRequestResponse(
-              `You have reached the maximum number of returns (${MAX_WORKSPACES_PER_USER}). Please delete an existing return before creating a new one.`
-            );
-          }
-
           workspace = await result.adapter.saveWorkspace(
             createWorkspaceRecord(context.workspaceId, {
               now: dependencies.now?.() ?? new Date().toISOString(),
@@ -675,6 +661,7 @@ export function createHostedWorkspaceRouteHandlers(
           workspaces: []
         });
       } catch (error) {
+        if (error instanceof HostedWorkspaceLimitError) return buildBadRequestResponse(error.message);
         return buildPersistenceUnavailableResponse(error);
       }
     },
@@ -708,21 +695,9 @@ export function createHostedWorkspaceRouteHandlers(
 
       try {
         const ownerScope = requireOwnerScope(result.adapter.ownerScope);
-
-        // Enforce workspace count limit for new workspaces (not updates)
-        const existingWorkspace = await result.adapter.getWorkspace(context.workspaceId);
-
-        if (!existingWorkspace) {
-          const existingWorkspaces = await result.adapter.listWorkspaces();
-
-          if (existingWorkspaces.length >= MAX_WORKSPACES_PER_USER) {
-            return buildBadRequestResponse(
-              `You have reached the maximum number of returns (${MAX_WORKSPACES_PER_USER}). Please delete an existing return before creating a new one.`
-            );
-          }
-        }
-
-        result.resolveHostedDocumentBlobStore().reconcileWorkspace(
+        const documentStore = result.resolveHostedDocumentBlobStore();
+        const workspace = await result.adapter.saveWorkspace(payload.workspace);
+        documentStore.reconcileWorkspace(
           ownerScope.ownerId,
           context.workspaceId,
           payload.workspace.documents.flatMap((document) =>
@@ -735,10 +710,11 @@ export function createHostedWorkspaceRouteHandlers(
         return NextResponse.json({
           availability: result.adapter.availability,
           ownerScope: result.adapter.ownerScope,
-          workspace: await result.adapter.saveWorkspace(payload.workspace),
+          workspace,
           workspaces: []
         });
       } catch (error) {
+        if (error instanceof HostedWorkspaceLimitError) return buildBadRequestResponse(error.message);
         return buildPersistenceUnavailableResponse(error);
       }
     },

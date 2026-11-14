@@ -6,7 +6,7 @@ import {
   shouldAllowLocalWorkspaceDraftBypass
 } from "@/lib/hosted-auth";
 import { resolveDeploymentMode } from "@/lib/deployment-mode";
-import { createWorkspacePersistenceAdapter } from "@/lib/workspace-persistence";
+import { createWorkspacePersistenceAdapter, HostedWorkspaceLimitError } from "@/lib/workspace-persistence";
 import { createWorkspaceRecord } from "@/lib/workspace-storage";
 import { createHostedPostgresWorkspaceStoreFactory } from "@/lib/hosted-postgres-workspace-store";
 
@@ -89,7 +89,20 @@ export async function resolveNewWorkspaceEntry({
               createdMessage: "Return created."
             })
           );
-        } catch {
+        } catch (error) {
+          if (error instanceof HostedWorkspaceLimitError) {
+            return {
+              kind: "gate",
+              gate: {
+                ...gate,
+                canCreateWorkspace: false,
+                title: "Hosted return limit reached",
+                summary: error.message,
+                primaryActionHref: "/",
+                primaryActionLabel: "Manage returns"
+              }
+            };
+          }
           return {
             kind: "gate",
             gate: {

@@ -1,7 +1,8 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { registerHostedWorkspaceStoreFactory } from "../../../apps/web/src/lib/hosted-persistence-registry";
 import { createHostedWorkspaceRouteHandlers } from "../../../apps/web/src/lib/hosted-workspace-route";
-import { createInMemoryHostedWorkspaceStore } from "../../../apps/web/src/lib/workspace-persistence";
+import { createInMemoryHostedDocumentBlobStore, createInMemoryHostedWorkspaceStore } from "../../../apps/web/src/lib/workspace-persistence";
+import { createWorkspaceRecord } from "../../../apps/web/src/lib/workspace-storage";
 
 describe("hosted workspace route", () => {
   afterEach(() => {
@@ -178,6 +179,52 @@ describe("hosted workspace route", () => {
     }, expect.objectContaining({
       hostedBackend: "postgres-s3"
     }));
+  });
+
+  it("admits only one concurrent GET creation or POST save into the last return slot", async () => {
+    const ownerId = "owner-concurrent-limit";
+    const now = "2026-03-12T07:42:00.000Z";
+    const workspace = (id: string) => createWorkspaceRecord(id, { now, storageMode: "hosted-postgres" });
+    const store = createInMemoryHostedWorkspaceStore(Array.from({ length: 199 }, (_, index) => ({
+      ownerId, workspace: workspace(`existing-${index}`)
+    })));
+    const listByOwner = store.listByOwner.bind(store);
+    const bothReads = Promise.withResolvers<void>();
+    let reads = 0;
+    // Both former preflight checks must use the same snapshot to reproduce the race.
+    const countSpy = vi.spyOn(store, "listByOwner").mockImplementation(async (id) => {
+      const snapshot = await listByOwner(id);
+      reads += 1;
+      if (reads === 2) bothReads.resolve();
+      await bothReads.promise;
+      return snapshot;
+    });
+    const blobs = createInMemoryHostedDocumentBlobStore();
+    const reconcile = vi.spyOn(blobs, "reconcileWorkspace");
+    const handlers = createHostedWorkspaceRouteHandlers({
+      env: { TAX_ENGINE_DEPLOYMENT_MODE: "hosted", TAX_ENGINE_HOSTED_PREVIEW_ACTOR_ID: ownerId },
+      hostedStore: store,
+      hostedDocumentBlobStore: blobs,
+      now: () => now
+    });
+
+    try {
+      const responses = await Promise.all([
+        handlers.get(new Request("https://tax.example/api/hosted/workspaces/with-get?create=1"), { workspaceId: "with-get" }),
+        handlers.save(new Request("https://tax.example/api/hosted/workspaces/with-post", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ workspace: workspace("with-post") })
+        }), { workspaceId: "with-post" })
+      ]);
+      expect(responses.map((response) => response.status).sort()).toEqual([200, 400]);
+      const rejected = responses.find((response) => response.status === 400);
+      await expect(rejected?.json()).resolves.toMatchObject({ error: expect.stringContaining("maximum number of returns (200)") });
+      expect(await listByOwner(ownerId)).toHaveLength(200);
+      expect(reconcile).toHaveBeenCalledTimes(responses[1]?.status === 200 ? 1 : 0);
+    } finally {
+      countSpy.mockRestore();
+    }
   });
 
   it("saves hosted workspace snapshots inside the authenticated owner scope", async () => {

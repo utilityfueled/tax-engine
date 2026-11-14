@@ -29,7 +29,10 @@ const rawId = "w2:Casey-Sample-W2.pdf:100";
 const db = vi.hoisted(() => ({ rows: new Map<string, ReturnWorkspaceRecord>(), query: vi.fn() }));
 vi.mock("../../../apps/web/src/lib/hosted-server-db", () => ({
   ensureHostedAppSchema: vi.fn(async () => undefined),
-  getHostedServerDatabase: vi.fn(async () => ({ pool: { query: db.query } })),
+  getHostedServerDatabase: vi.fn(async () => ({ pool: {
+    query: db.query,
+    connect: async () => ({ query: db.query, release: vi.fn(), on: vi.fn(), removeListener: vi.fn() })
+  } })),
 }));
 function required<T>(value: T | undefined | null): T {
   if (value === undefined || value === null) throw new Error("Required synthetic fixture missing");
@@ -140,9 +143,11 @@ beforeEach(() => {
   vi.unstubAllGlobals(); db.rows.clear(); db.query.mockReset();
   db.query.mockImplementation(async (sql: string, parameters: unknown[] = []) => {
     const owner = String(parameters[0]);
-    if (sql.includes("INSERT INTO")) {
+    if (sql.includes("INSERT INTO") || sql.includes("UPDATE hosted_workspace_shells")) {
       const workspace = JSON.parse(String(parameters[4])) as ReturnWorkspaceRecord;
-      db.rows.set(JSON.stringify([owner, workspace.id]), structuredClone(workspace));
+      const key = JSON.stringify([owner, workspace.id]);
+      if (sql.includes("UPDATE hosted_workspace_shells") && !db.rows.has(key)) return { rowCount: 0, rows: [] };
+      db.rows.set(key, structuredClone(workspace));
       return { rowCount: 1, rows: [{ workspace: structuredClone(workspace) }] };
     }
     const matching = [...db.rows.entries()].filter(([key]) => {

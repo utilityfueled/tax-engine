@@ -4,6 +4,8 @@ import {
   resolveNewWorkspaceEntry
 } from "../../../apps/web/src/lib/new-workspace-entry";
 import { HostedWorkspaceEntryScreen } from "../../../apps/web/src/components/hosted-workspace-entry-screen";
+import { getPreviewHostedWorkspaceStore } from "../../../apps/web/src/lib/workspace-persistence";
+import { createWorkspaceRecord } from "../../../apps/web/src/lib/workspace-storage";
 
 interface ElementLike {
   props?: {
@@ -143,6 +145,28 @@ describe("new workspace entry", () => {
       kind: "redirect",
       location: "/returns/hosted123?create=1"
     });
+  });
+
+  it("shows the return limit without creating a workspace through the hosted entry page", async () => {
+    const ownerId = "preview-entry-at-capacity";
+    const store = getPreviewHostedWorkspaceStore();
+    const ids = Array.from({ length: 200 }, (_, index) => `existing-${index}`);
+    for (const id of ids) await store.save(ownerId, createWorkspaceRecord(id));
+
+    try {
+      const outcome = await resolveNewWorkspaceEntry({
+        env: { TAX_ENGINE_DEPLOYMENT_MODE: "hosted", TAX_ENGINE_HOSTED_PREVIEW_ACTOR_ID: ownerId },
+        requestHeaders: new Headers({ host: "tax.example" }),
+        createWorkspaceId: () => "over-limit"
+      });
+      expect(outcome).toMatchObject({ kind: "gate", gate: {
+        canCreateWorkspace: false,
+        summary: expect.stringContaining("maximum number of returns (200)")
+      } });
+      expect(await store.get(ownerId, "over-limit")).toBeNull();
+    } finally {
+      for (const id of [...ids, "over-limit"]) await store.delete(ownerId, id);
+    }
   });
 
   it("surfaces fallback-secret preview mode when hosted auth env is incomplete", async () => {

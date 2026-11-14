@@ -58,9 +58,18 @@ export interface HostedWorkspaceStoreSeedRecord {
   workspace: ReturnWorkspaceRecord;
 }
 
+export const MAX_WORKSPACES_PER_USER = 200;
+
+export class HostedWorkspaceLimitError extends Error {
+  constructor() {
+    super(`You have reached the maximum number of returns (${MAX_WORKSPACES_PER_USER}). Please delete an existing return before creating a new one.`);
+  }
+}
+
 export interface HostedWorkspaceStore {
   get(ownerId: string, workspaceId: string): Promise<ReturnWorkspaceRecord | null>;
   listByOwner(ownerId: string): Promise<ReturnWorkspaceRecord[]>;
+  /** Atomically check capacity for inserts. Existing workspace IDs can still be updated at capacity. */
   save(ownerId: string, workspace: ReturnWorkspaceRecord): Promise<ReturnWorkspaceRecord>;
   delete(ownerId: string, workspaceId: string): Promise<ReturnWorkspaceRecord[]>;
 }
@@ -152,7 +161,7 @@ class InMemoryHostedWorkspaceStore implements HostedWorkspaceStore {
 
   constructor(initialRecords: HostedWorkspaceStoreSeedRecord[] = []) {
     for (const record of initialRecords) {
-      this.save(record.ownerId, record.workspace);
+      this.#save(record.ownerId, record.workspace, false);
     }
   }
 
@@ -167,9 +176,16 @@ class InMemoryHostedWorkspaceStore implements HostedWorkspaceStore {
   }
 
   async save(ownerId: string, workspace: ReturnWorkspaceRecord) {
+    return this.#save(ownerId, workspace, true);
+  }
+
+  #save(ownerId: string, workspace: ReturnWorkspaceRecord, enforceLimit: boolean) {
     const normalizedWorkspace = normalizeHostedWorkspace(workspace);
     const ownerMap = this.#workspacesByOwner.get(ownerId) ?? new Map<string, ReturnWorkspaceRecord>();
 
+    if (enforceLimit && !ownerMap.has(normalizedWorkspace.id) && ownerMap.size >= MAX_WORKSPACES_PER_USER) {
+      throw new HostedWorkspaceLimitError();
+    }
     ownerMap.set(normalizedWorkspace.id, normalizedWorkspace);
     this.#workspacesByOwner.set(ownerId, ownerMap);
     return normalizedWorkspace;
