@@ -233,44 +233,91 @@ jobs:
         env:
           CANDIDATE_IMAGE_ID: ${{ steps.candidate.outputs.image_id }}
           REQUIRE_SCAN: "false"
-        run: |
-          python3 - <<'PY'
-          import base64, hashlib, json, os
+        run: &verify_container_scanner_binding |
+          python3 -E - <<'PY'
+          import base64, hashlib, json, os, re
           from pathlib import Path
-          expected = json.loads(Path("container-candidate.json").read_text())
-          assert len(expected) == 1
-          expected = expected[0]
+
+          def unique_keys(pairs):
+              result = dict(pairs)
+              if len(result) != len(pairs):
+                  raise ValueError("Container evidence contains a duplicate JSON key")
+              return result
+
+          hashes = {}
+
+          def read_evidence(path):
+              data = Path(path).read_bytes()
+              hashes[path] = hashlib.sha256(data).hexdigest()
+              return json.loads(data, object_pairs_hook=unique_keys)
+
+          [expected] = read_evidence("container-candidate.json")
           image_id = os.environ["CANDIDATE_IMAGE_ID"]
-          assert expected["Id"] == image_id and image_id.startswith("sha256:") and len(image_id) == 71
+          revision = os.environ["GITHUB_SHA"]
+          revision_label = "org.opencontainers.image.revision"
+          assert expected["Id"] == image_id and re.fullmatch(r"sha256:[0-9a-f]{64}", image_id)
           assert expected["Os"] == "linux" and expected["Architecture"] == "amd64"
-          assert expected["Config"]["Labels"]["org.opencontainers.image.revision"] == os.environ["GITHUB_SHA"]
-          sbom = json.loads(Path("container.syft.json").read_text())
-          assert sbom["source"]["type"] == "image"
-          metadata = sbom["source"]["metadata"]
-          def verify(metadata):
-              assert metadata["imageID"] == image_id
-              assert metadata["os"] == "linux" and metadata["architecture"] == "amd64"
-              assert metadata["labels"]["org.opencontainers.image.revision"] == os.environ["GITHUB_SHA"]
-              raw = base64.b64decode(metadata["config"], validate=True)
-              assert "sha256:" + hashlib.sha256(raw).hexdigest() == image_id
-              config = json.loads(raw)
-              assert config["rootfs"]["diff_ids"] == expected["RootFS"]["Layers"]
-              assert config["os"] == "linux" and config["architecture"] == "amd64"
-              assert config["config"]["Labels"]["org.opencontainers.image.revision"] == os.environ["GITHUB_SHA"]
-          verify(metadata)
-          if Path("container-vulnerabilities.json").exists():
-              scan = json.loads(Path("container-vulnerabilities.json").read_text())
-              assert scan["source"]["type"] == "image"
-              verify(scan["source"]["target"])
+          assert expected["Config"]["Labels"][revision_label] == revision
+
+          sbom = read_evidence("container.syft.json")
+          assert sbom["descriptor"]["name"] == "syft" and sbom["descriptor"]["version"] == "1.57.1"
+          source = sbom["source"]
+          assert source["type"] == "image"
+          syft_metadata = source["metadata"]
+          assert syft_metadata["imageID"] == syft_metadata["userInput"] == image_id
+          assert syft_metadata["os"] == "linux" and syft_metadata["architecture"] == "amd64"
+          assert syft_metadata["labels"][revision_label] == revision
+          raw_config = base64.b64decode(syft_metadata["config"], validate=True)
+          assert "sha256:" + hashlib.sha256(raw_config).hexdigest() == image_id
+          config = json.loads(raw_config, object_pairs_hook=unique_keys)
+          assert config["rootfs"]["diff_ids"] == expected["RootFS"]["Layers"]
+          assert config["os"] == "linux" and config["architecture"] == "amd64"
+          assert config["config"]["Labels"][revision_label] == revision
+
+          cdx = read_evidence("container.cdx.json")
+          assert cdx["bomFormat"] == "CycloneDX"
+          cdx_metadata = cdx["metadata"]
+          component = cdx_metadata["component"]
+          assert component["type"] == "container"
+          # Syft splits a Docker config ID at the colon in CycloneDX.
+          assert (component["name"], component["version"]) == tuple(image_id.split(":", 1))
+          revisions = [entry["value"] for entry in cdx_metadata["properties"]
+                       if entry["name"] == "syft:image:labels:" + revision_label]
+          assert revisions == [revision], "CycloneDX must identify exactly one matching revision"
+          syft_versions = [tool["version"] for tool in cdx_metadata["tools"]["components"] if tool["name"] == "syft"]
+          assert syft_versions == ["1.57.1"]
+
+          receipt_path = Path("container-source-binding.json")
+          receipt = {"imageId": image_id, "source": revision, "platform": "linux/amd64",
+                     "rootfs": expected["RootFS"]["Layers"], "scanVerified": False, "sha256": hashes}
+          if os.environ["REQUIRE_SCAN"] == "true":
+              prior_bytes = receipt_path.read_bytes()
+              assert hashlib.sha256(prior_bytes).hexdigest() == os.environ["PRIOR_BINDING_SHA256"]
+              prior = json.loads(prior_bytes, object_pairs_hook=unique_keys)
+              assert prior == receipt, "The verified candidate or SBOM bytes changed during scanning"
+              scan = read_evidence("container-vulnerabilities.json")
+              assert scan["descriptor"]["version"] == "0.121.3"
+              assert scan["descriptor"]["name"] == "grype" and isinstance(scan["matches"], list)
+              assert scan["source"]["type"] == "image" and scan["source"]["target"] == syft_metadata
+              archive_verified = os.environ["ARCHIVE_OUTCOME"] == "success"
+              if archive_verified:
+                  archive = read_evidence("container-archive-verification.json")
+                  assert archive["version"] == 1 and archive["stage"] == "verified"
+                  assert archive["archiveImportVerified"] is True and archive["scratchRemoved"] is True
+                  assert archive["platform"] == "linux/amd64" and archive["imageId"] == image_id
+                  assert archive["source"] == revision
+                  assert re.fullmatch(r"[0-9a-f]{64}", archive["archiveSha256"])
+                  assert 0 < archive["archiveBytes"] <= 1024 ** 3
+              receipt.update(scanVerified=True, archiveImportVerified=archive_verified)
           else:
               assert os.environ["REQUIRE_SCAN"] == "false"
-          paths = ["container-candidate.json", "container.syft.json"]
-          if os.environ["REQUIRE_SCAN"] == "true":
-              paths += ["container.cdx.json", "container-vulnerabilities.json"]
-          receipt = {"imageId": image_id, "source": os.environ["GITHUB_SHA"], "platform": "linux/amd64",
-                     "rootfs": expected["RootFS"]["Layers"], "scanVerified": os.environ["REQUIRE_SCAN"] == "true",
-                     "sha256": {p: hashlib.sha256(Path(p).read_bytes()).hexdigest() for p in paths}}
-          Path("container-source-binding.json").write_text(json.dumps(receipt, indent=2) + "\n")
+              assert not Path("container-vulnerabilities.json").exists(), "Unexpected scan output before running Grype"
+          receipt_bytes = (json.dumps(receipt, indent=2) + "\n").encode()
+          receipt_path.write_bytes(receipt_bytes)
+          if not receipt["scanVerified"]:
+              # The scan step cannot replace the earlier step's output value.
+              with Path(os.environ["GITHUB_OUTPUT"]).open("a") as output:
+                  output.write(f"receipt_sha256={hashlib.sha256(receipt_bytes).hexdigest()}\n")
           PY
       - uses: anchore/scan-action@v7
         id: scan
@@ -290,58 +337,8 @@ jobs:
           ARCHIVE_OUTCOME: ${{ steps.archive.outcome }}
           CANDIDATE_IMAGE_ID: ${{ steps.candidate.outputs.image_id }}
           REQUIRE_SCAN: "true"
-        run: |
-          python3 - <<'PY'
-          import base64, hashlib, json, os, re
-          from pathlib import Path
-          expected = json.loads(Path("container-candidate.json").read_text())
-          assert len(expected) == 1
-          expected = expected[0]
-          image_id = os.environ["CANDIDATE_IMAGE_ID"]
-          assert expected["Id"] == image_id and image_id.startswith("sha256:") and len(image_id) == 71
-          assert expected["Os"] == "linux" and expected["Architecture"] == "amd64"
-          assert expected["Config"]["Labels"]["org.opencontainers.image.revision"] == os.environ["GITHUB_SHA"]
-          sbom = json.loads(Path("container.syft.json").read_text())
-          assert sbom["source"]["type"] == "image"
-          metadata = sbom["source"]["metadata"]
-          def verify(metadata):
-              assert metadata["imageID"] == image_id
-              assert metadata["os"] == "linux" and metadata["architecture"] == "amd64"
-              assert metadata["labels"]["org.opencontainers.image.revision"] == os.environ["GITHUB_SHA"]
-              raw = base64.b64decode(metadata["config"], validate=True)
-              assert "sha256:" + hashlib.sha256(raw).hexdigest() == image_id
-              config = json.loads(raw)
-              assert config["rootfs"]["diff_ids"] == expected["RootFS"]["Layers"]
-              assert config["os"] == "linux" and config["architecture"] == "amd64"
-              assert config["config"]["Labels"]["org.opencontainers.image.revision"] == os.environ["GITHUB_SHA"]
-          verify(metadata)
-          if Path("container-vulnerabilities.json").exists():
-              scan = json.loads(Path("container-vulnerabilities.json").read_text())
-              assert scan["descriptor"]["version"] == "0.121.3"
-              assert scan["source"]["type"] == "image"
-              verify(scan["source"]["target"])
-          else:
-              assert os.environ["REQUIRE_SCAN"] == "false"
-          paths = ["container-candidate.json", "container.syft.json"]
-          if os.environ["REQUIRE_SCAN"] == "true":
-              paths += ["container.cdx.json", "container-vulnerabilities.json"]
-          archive_verified = os.environ["ARCHIVE_OUTCOME"] == "success"
-          if archive_verified:
-              archive_path = "container-archive-verification.json"
-              archive = json.loads(Path(archive_path).read_text())
-              assert archive["version"] == 1 and archive["stage"] == "verified"
-              assert archive["archiveImportVerified"] is True and archive["scratchRemoved"] is True
-              assert archive["platform"] == "linux/amd64" and archive["imageId"] == image_id
-              assert archive["source"] == os.environ["GITHUB_SHA"]
-              assert re.fullmatch(r"[0-9a-f]{64}", archive["archiveSha256"])
-              assert 0 < archive["archiveBytes"] <= 1024 ** 3
-              paths.append(archive_path)
-          receipt = {"imageId": image_id, "source": os.environ["GITHUB_SHA"], "platform": "linux/amd64",
-                     "rootfs": expected["RootFS"]["Layers"], "scanVerified": os.environ["REQUIRE_SCAN"] == "true",
-                     "archiveImportVerified": archive_verified,
-                     "sha256": {p: hashlib.sha256(Path(p).read_bytes()).hexdigest() for p in paths}}
-          Path("container-source-binding.json").write_text(json.dumps(receipt, indent=2) + "\n")
-          PY
+          PRIOR_BINDING_SHA256: ${{ steps.source_binding.outputs.receipt_sha256 }}
+        run: *verify_container_scanner_binding
       - uses: actions/upload-artifact@v4
         if: always()
         with:

@@ -12,5 +12,5 @@ lines:
     formula: "The container job explicitly pins Syft v1.57.1 and Grype v0.121.3 and verifies the actual tool versions recorded in the evidence."
     testRef: "tests/runtime/runtime-scanner-source-contract.test.ts::pins and checks the exact patched Syft and Grype versions"
   - line: "scanner-source-and-threshold"
-    formula: "Produce both SBOM formats from the immutable candidate and preserve its source verification. Use the same Syft SBOM for Grype, retain every reported match, and continue failing on critical findings."
+    formula: "Produce both SBOM formats from the immutable candidate. Bind the CycloneDX container identity and revision to the checked image config, bind the Grype source to the verified Syft source, and require the same verified input and inventory bytes after scanning. Reject ambiguous metadata, retain every reported match, and continue failing on critical findings."
     testRef: "tests/runtime/runtime-scanner-source-contract.test.ts::retains the immutable image binding and critical vulnerability policy"
