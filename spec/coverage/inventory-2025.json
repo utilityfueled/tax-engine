@@ -2517,6 +2517,25 @@
       ]
     },
     {
+      "key": "federal/form-1062-schedule-a",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://www.irs.gov/instructions/i1062",
+      "specPath": "spec/federal/form-1062-schedule-a.yaml",
+      "enginePath": "src/engine/forms/form-1062-schedule-a.ts",
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/form-1098-e",
       "jurisdiction": "federal",
       "taxYear": 2025,

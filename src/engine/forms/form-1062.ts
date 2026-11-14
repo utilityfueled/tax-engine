@@ -1,6 +1,7 @@
 import type Decimal from "decimal.js";
 import { AuditTrail } from "@/utils/audit.js";
 import { d, min, roundDollar, sum, zeroFloor } from "@/utils/decimal.js";
+import { calculateForm1062ScheduleA, type Form1062ScheduleAInput } from "./form-1062-schedule-a.js";
 
 interface TaxDetermination {
   regularIncomeTax: string;
@@ -15,11 +16,8 @@ interface TaxDetermination {
 
 export interface Form1062Input {
   taxYear: 2026;
-  transactionType: "direct_sale";
-  qualifiedSaleConfirmed: true;
-  covenantIncluded: true;
+  sale: Form1062ScheduleAInput;
   electionConfirmed: true;
-  scheduleALine13: string;
   taxableIncome: string;
   withGain: TaxDetermination;
   withoutGain: TaxDetermination & { taxableIncome: string };
@@ -34,13 +32,11 @@ function amount(value: string | undefined, line: string): Decimal {
 
 /** Worksheet for one confirmed 2026 direct sale. See spec/federal/form-1062.yaml. */
 export function calculateForm1062(input: Form1062Input) {
-  if (input.taxYear !== 2026 || input.transactionType !== "direct_sale" || input.qualifiedSaleConfirmed !== true
-    || input.covenantIncluded !== true || input.electionConfirmed !== true) {
+  if (input.taxYear !== 2026 || !input.sale || input.electionConfirmed !== true) {
     throw new Error("Form 1062 requires a confirmed 2026 qualified direct sale, covenant and election");
   }
   const income = amount(input.taxableIncome, "6");
-  const gain = amount(input.scheduleALine13, "7");
-  if (!gain.gt(0)) throw new Error("Form 1062 requires a positive elected Schedule A gain");
+  const { recognizedGain: gain } = calculateForm1062ScheduleA(input.sale);
   const comparisonIncome = zeroFloor(income.minus(gain));
   if (!comparisonIncome.eq(amount(input.withoutGain?.taxableIncome, "8"))) {
     throw new Error("Form 1062 requires the redetermined tax to use the reconciled line 8 income");

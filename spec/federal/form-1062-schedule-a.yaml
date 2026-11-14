@@ -1,0 +1,47 @@
+form: "Schedule A (Form 1062)"
+fullName: "Section 1062 Gain From the Sale or Exchange of Qualified Farmland Property to a Qualified Farmer"
+taxYear: 2026
+reference: "https://www.irs.gov/instructions/i1062"
+revision: "Final instructions Rev. December 2025; draft Schedule A Rev. December 2026, created 7/21/26"
+notes: |
+  26 USC 1062 applies to taxable years beginning after July 4, 2025. This
+  worksheet covers one whole-property, direct sale with all recognized gain
+  in 2026. It does not decide whether a buyer is actively farming, whether
+  the historical farm use meets the statutory test, or whether the covenant
+  is enforceable. Each requires a separately confirmed source. Exchanges,
+  installment sales, pass-throughs, partially qualifying property, mixed
+  use, or sales with excluded or deferred gain require other methods.
+  The worksheet has no production intake, filing, PDF, or identity output.
+  IRS ATS scenario 13 reports a partnership allocation and leaves lines
+  9 through 12 blank. The synthetic direct sale uses the same line 13
+  amount to verify the transfer.
+sources:
+  - "https://uscode.house.gov/us/usc/119-120/t26/s1062/"
+  - "https://www.irs.gov/pub/irs-pdf/f1062sa.pdf"
+  - "https://www.irs.gov/pub/irs-dft/f1062sa--dft.pdf"
+  - "https://www.irs.gov/pub/irs-efile/ty26-1040-ats-scenario-13.pdf"
+lines:
+  - line: "A-B"
+    description: "Pass-through entity identification"
+    formula: "This method accepts only a direct sale and neither a Schedule K-1 allocation nor an entity identifier."
+    testRef: "tests/engine/forms/form-1062-schedule-a.test.ts::rejects incomplete qualifications and incompatible sale originals"
+  - line: "1-3"
+    description: "Property description, transaction type and date"
+    formula: "Require a direct sale and a confirmed calendar-valid 2026 closing date. No property description, owner identity or covenant text enters the monetary worksheet."
+    testRef: "tests/engine/forms/form-1062-schedule-a.test.ts::rejects incomplete qualifications and incompatible sale originals"
+  - line: "4-8"
+    description: "Separate confirmed statutory facts"
+    formula: "All five must be confirmed true: qualifying use or lease during substantially all of the preceding ten years, US real property, buyer actively engaged in farming, legally enforceable farm-use covenant for the ten years after sale, and inclusion of the covenant. Unknown and negative answers stop the calculation. Confirm a whole-property sale and all gain recognized in 2026 separately."
+    testRef: "tests/engine/forms/form-1062-schedule-a.test.ts::rejects incomplete qualifications and incompatible sale originals"
+  - line: "9-10"
+    description: "Gross and net sales price"
+    formula: "Use the confirmed total gross proceeds and deduct the confirmed selling expenses once. Reject expenses exceeding proceeds."
+    testRef: "tests/engine/forms/form-1062-schedule-a.test.ts::deducts actual selling expenses and preserves the supplied basis amounts"
+  - line: "11-12"
+    description: "Unadjusted and adjusted basis"
+    formula: "Require the actual separately supplied original and adjusted basis. Zero requires explicit input. Do not assume equal bases or subtract basis adjustments twice."
+    testRef: "tests/engine/forms/form-1062-schedule-a.test.ts::deducts actual selling expenses and preserves the supplied basis amounts"
+  - line: "13"
+    description: "Recognized gain for one qualified sale"
+    formula: "Line 10 minus line 12. Require strictly positive gain and equality to the independently reported 2026 gain. Do not send a loss to Form 1062 line 7. Use exact Decimal cents."
+    testRef: "tests/engine/forms/form-1062-schedule-a.test.ts::transfers only the reconciled direct-sale gain to Form 1062"

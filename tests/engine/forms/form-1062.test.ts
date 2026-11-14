@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { calculateForm1062, type Form1062Input } from "@/engine/forms/form-1062.js";
+import { qualifiedFarmlandSale } from "../../fixtures/form-1062-direct-sale.js";
 
-// See spec/federal/form-1062.yaml. Values come from IRS TY2026 Form 1040 ATS scenario 13.
+// See spec/federal/form-1062.yaml. Tax determinations are synthetic.
 const noCredits = { foreignTax: "0", nonrefundablePersonal: "0", generalBusiness: "0", otherApplicable: "0" };
 const source = {
-  taxYear: 2026, transactionType: "direct_sale", qualifiedSaleConfirmed: true,
-  covenantIncluded: true, electionConfirmed: true, scheduleALine13: "56516", taxableIncome: "86516",
+  taxYear: 2026, sale: qualifiedFarmlandSale, electionConfirmed: true, taxableIncome: "86516",
   withGain: { regularIncomeTax: "9886", additions: "268", credits: noCredits },
   withoutGain: { taxableIncome: "30000", regularIncomeTax: "3104", additions: "0", credits: noCredits },
 } satisfies Form1062Input;
@@ -16,7 +16,7 @@ function lineValues(input: Form1062Input, lines: string[]) {
 }
 
 describe("2026 Form 1062 worksheet", () => {
-  it("reproduces the Form 1062 lines in IRS ATS scenario 13", () => {
+  it("calculates every numeric line for a synthetic qualified direct sale", () => {
     const result = calculateForm1062(source);
     expect(result.lines.map(row => [row.line, row.value.toFixed()])).toEqual([
       ["1", "9886"], ["2", "268"], ["3", "10154"], ["4a", "0"], ["4b", "0"], ["4c", "0"],
@@ -60,8 +60,9 @@ describe("2026 Form 1062 worksheet", () => {
 
   it("rejects an incomplete or unreconciled election and tax determination", () => {
     for (const change of [
-      { taxYear: 2025 }, { transactionType: "exchange" }, { qualifiedSaleConfirmed: undefined },
-      { covenantIncluded: false }, { electionConfirmed: false }, { scheduleALine13: "0" },
+      { taxYear: 2025 }, { sale: undefined }, { sale: { ...qualifiedFarmlandSale, transactionType: "exchange" } },
+      { sale: { ...qualifiedFarmlandSale, covenantIncluded: false } }, { electionConfirmed: false },
+      { sale: { ...qualifiedFarmlandSale, independentlyReportedGain: "0" } },
       { taxableIncome: "" }, { taxableIncome: "1000000000000" },
       { withoutGain: { ...source.withoutGain, taxableIncome: "29999.99" } },
       { withoutGain: { ...source.withoutGain, additions: "-0.01" } },
