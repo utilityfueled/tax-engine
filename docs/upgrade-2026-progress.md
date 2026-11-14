@@ -1,5 +1,13 @@
 # 2026 upgrade implementation evidence
 
+November 14: full `72da7763` static validation finds one unused type import after
+all type/build/spec checks pass. Type-only correction `4df6d159` passes focused
+lint and separate review, with identical TypeScript-emitted JavaScript. Original
+failures and same-source runtime attempts remain retained; corrected-source
+combined checks will use unchanged policies. The human packet now includes the
+omitted actual browser source, sixty-two files and nine blank decisions.
+[Current continuation](upgrade-2026-current-status.md).
+
 November 14: original mortgage interview `997a45c8` passes both actual viewport
 journeys and separate saved-artifact review. Current-loss entry composition
 `682e902b` passes 29 focused tests plus independent seventeen-test/fourteen-probe

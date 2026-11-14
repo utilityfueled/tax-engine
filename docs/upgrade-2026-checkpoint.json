@@ -1,4 +1,20 @@
 {
+  "nov14FullLintTypeOnlyCorrection": {
+    "failedStaticSource": "72da7763",
+    "precedingStaticChecks": "alltypes/spec/inventory/engineBuild/webBuild/evalConfigPASS",
+    "fullLint": "oneUnusedInterestEntryDataTypeImportError;original12017warningsretained",
+    "correctionCommit": "4df6d159",
+    "correction": "oneunusedtypeimportdeletion;noexecutablechange",
+    "focusedLint": "PASS",
+    "independentReviewSha256": "d1088173b796c86144fcfaabc1a68e354ff312637048b15c456c63411c2acdf0",
+    "typeScript593EmittedJavaScriptIdentical": true,
+    "firstRuntimeAttempts": "sandboxshmget/bindprerequisitesfailedbeforetests;retained;norunningDB",
+    "sameSourceRuntimeSuccessor": "72da-runtime-retry1;running;neverrelabeledascorrectedsource",
+    "correctedSourceCombinedSuccessorRequired": true,
+    "humanSourceSupplement": "62exactdetachedfiles;original61indexretained;9blankdecisions;independent55a89fb6",
+    "nativeAndPreview": "preparedonly;mustbindcorrectedsourceandactualgates",
+    "mainPushHold": true
+  },
   "nov14MortgageGuideAndCurrentOriginFreeze": {
     "localMainCommits": {
       "education": "3545a64d",

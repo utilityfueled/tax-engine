@@ -8,8 +8,8 @@ The exact target is commit `3545a64d08eed9ca61fca253bb61bdc4cf00f27d`, tree `1b8
 
 Private folder: `.local/upgrade-evidence/nov14-human-tax-source-supplement-3545a64d/`.
 
-- `source-index.json`, SHA-256 `c3a4373f7052c1ef94f5763941333e3a29ba46eb19112065ed02acc9d6cf5840`, records 61 exact Git blobs, modes, lengths and SHA-256 values. Matching bytes are detached under `sources/`.
-- `blank-decisions.json`, SHA-256 `5e6a8e84e42bc10a27d77318ea6ba0b7c318b2045dd63ef6dc6523ff7f129521`, has nine blank method/year decisions. Reviewer identity, credentials, independence, accepted scope, authority revisions, accepted-fact digest, independent worksheet/results, conclusions, limitations, date and signature remain empty.
+- `source-index.json`, SHA-256 `0afa4e386b1a02d148189b5b48dbd1a766fccd9ef9537d91eec8a43085844f57`, records 62 exact Git blobs, modes, lengths and SHA-256 values. Matching bytes are detached under `sources/`.
+- `blank-decisions.json`, SHA-256 `e6718dc46fc66443a46a7c08d74c93e288fb3163c86fee3b01ba39f89c0e2b72`, has nine blank method/year decisions. Reviewer identity, credentials, independence, accepted scope, authority revisions, accepted-fact digest, independent worksheet/results, conclusions, limitations, date and signature remain empty.
 
 The source selection is the union of spec, model, engine, guided application, test/fixture and package-ledger paths changed by the seven commits below, captured at the fixed target. It is a selected method index, not a full application or dependency review. Shared files contain other methods; their inclusion supplies context and does not imply acceptance of those methods.
 

@@ -1,5 +1,26 @@
 # Current 2026 upgrade continuation
 
+## November 14 full-lint correction and preserved runtime attempts
+
+Frozen `72da7763` passes types, specs, inventory, both builds and model-config
+checks, then full lint finds one stale unused type import from the earlier
+interest-source extraction. `4df6d159` removes only that import. Focused lint and
+separate review pass; TypeScript 5.9.3 emits identical JavaScript before and
+after. The original lint failure is retained. A fresh bound-source static run
+and runtime runs follow; no failing result is relabeled.
+
+The first `72da7763` runtime attempts stopped before tests at local sandbox
+shared-memory/bind prerequisites. Their logs remain, with no running databases.
+The same-source runtime successors use the required local permissions and keep
+all assertions, eight-worker unit/coverage settings and browser policy. Their
+actual results retain the `72da7763` source identity. Native/Preview preparation
+will bind the corrected source and its actual successor gates before execution.
+
+The source-method review supplement also corrects a selected-path omission by
+including the actual original market-discount browser source: sixty-two detached
+files, with the previous sixty-one-file index retained. All nine human decisions
+remain blank; separate review verifies the exact seven-commit selected union.
+
 ## November 14 complete mortgage interview and current-loss entry parity
 
 `997a45c8` collects actual retained-home mortgage originals. Twenty-nine focused
@@ -19,7 +40,7 @@ coverage, static and browser lanes follow this freeze in parallel. Protected
 Preview and native execution are separately prepared against the forthcoming
 bound source; earlier runtime results remain tied to their actual commits.
 The [new source-method assignment supplement](upgrade-2026-human-tax-source-supplement-3545a64d.md)
-contains sixty-one detached source files and nine blank human decisions; it
+contains sixty-two detached source files and nine blank human decisions; it
 does not supply a human review. Main remains local under the push hold.
 
 ## November 14 completed browser lane and source-bound education interest
