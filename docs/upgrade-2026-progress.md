@@ -5234,3 +5234,26 @@ execution and current image qualification require separate evidence.
   diagnostic cases against the reviewed audit and 621-case collection.
   The later `3b5b2ca6` ARM64 rehearsal completed as recorded above.
   [Rehearsal evidence](upgrade-2026-nov13-release-rehearsals.md).
+- `c339c6e9` prevents overlapping hosted requests from exceeding the workspace
+  quota. All 231 focused controls passed, and `86cf13d5` passed all 15 local
+  two-server HTTP checks after the predecessor admitted two concurrent
+  creations with one remaining slot. `3c7ff065` passes 526 affected federal
+  estimate and extension date checks. `80899776` closes the foreign SBOM and
+  scan-input substitution regressions in the native AMD64 workflow.
+- `ee55baae`, `935f458f` and `7f8908c3` enforce the frozen reviewer author,
+  real review dates, one plan per comparison and distinct private response
+  references. The 94 evaluation, 65 rollout and 65 report checks passed.
+  No provider call or promotion followed. The new PA and Ohio official
+  checks verified 2025 controls and Pennsylvania's separate 2026 estimate
+  documents. Final 2026 annual state forms remain open.
+  [Current continuation](upgrade-2026-current-status.md).
+- `f22c1560` passed native ARM64 image import, scan, six authenticated
+  recovery phases and 616 Chromium cases with five hosted-only skips. The
+  controller stopped the VM normally and verified socket restoration.
+  `f830807f` fixes the SCRAM password scope for the TCP outage proxy and
+  passes seven real SCRAM cases. `c99109c4` removes the unused `infocmp`
+  utility while keeping the package inventory and a terminfo smoke check.
+  `46103461` binds guided AOTC history to the student with 540 affected
+  passes. `02e553cf` passes all 25 payment browser cases and retains the
+  fixed request limits in the 623-case inventory.
+  [Rehearsal evidence](upgrade-2026-nov13-release-rehearsals.md).

@@ -6,6 +6,35 @@ below retain their original evidence boundaries.
 
 ## Active continuation — November 13 Eastern
 
+- [x] Verify atomic hosted quota admission on real PostgreSQL including
+  concurrent creates, edits at capacity, and same-ID delete and update.
+  `c339c6e9` passed 231 tests. `86cf13d5` adds the independent two-server
+  HTTP rehearsal that reproduced duplicate admission on the predecessor
+  and passed all 15 checks on the fixed build.
+- [x] Validate actual federal estimate and extension dates before penalty
+  exceptions in `3c7ff065`. Pass 526 tests, preserve the following-year
+  January installment and require explicit confirmation for an out-of-window
+  application without changing Form 2210 timing scope.
+- [x] Collect and preserve the guided payment application in `9b4a6ae5`.
+  Pass 352 affected tests including state replay, mismatches and revocation.
+- [x] Replay actual guided payments on desktop and mobile in `02e553cf`.
+  Pass the full 25-case payment browser suite after both new cases failed
+  on the predecessor. Retain all request limits and five hosted-only skips.
+- [x] Bind guided AOTC prior claims to the actual student in `46103461`.
+  Reproduce both regression failures first, then pass 540 affected tests.
+- [x] Restore the exact SCRAM outage simulation in `f830807f`. Reproduce
+  all three authentication failures first, then pass seven actual SCRAM
+  controls and all three proxied trust-only controls without changing deadlines.
+- [x] Preserve the `6ef4e05e` managed harness failure and stop its private
+  database. Use a passwordless URL and separate restricted PostgreSQL passfile
+  in the successor harness. Preserve `f22c1560`'s remaining three proxy
+  authentication failures alongside 27,980 passes. [Checks and receipts](upgrade-2026-nov13-release-rehearsals.md).
+- [x] Reject altered authors, disguised self-review and late fixture reviews
+  in `ee55baae`, use the same runtime identity and time guards in `935f458f`,
+  and reject conflicting plan/response evidence in `7f8908c3` without
+  discarding billed costs. The reviewer and provider evidence gates stay open.
+- [x] Bind native AMD64 SBOM, scan input and archive result in `80899776`.
+  Verify 41 runtime controls and reject a real foreign ARM64 SBOM offline.
 - [x] Remove the optional Debian `mount` package in `52eec581` and add
   exact immutable-base, full-package and executable absence checks.
 - [x] Verify the exact `3ade5abe` ARM64 image import, smoke, SBOM, scan,
@@ -31,6 +60,12 @@ below retain their original evidence boundaries.
 - [x] Require per-run SCRAM in the isolated Compose recovery harness in
   `c5955541`. Verify authenticated native PostgreSQL 16.16 restart and
   exact dump and restore, including rejection of missing and wrong passwords.
+- [x] Pass native `f22c1560` ARM64 import, scan, six SCRAM recovery phases,
+  616 Chromium cases and five original hosted skips. Verify normal stop
+  and restored socket route. [Rehearsal evidence](upgrade-2026-nov13-release-rehearsals.md).
+- [x] Remove the unused `infocmp` utility in `c99109c4` and preserve the
+  ncurses package inventory and functional terminfo check. Pass 42 focused
+  runtime cases. Actual successor artifacts and advisory review remain open.
 - [x] Deliver the isolated certified venture capital estimate in `be41c0e3`,
   Pennsylvania farmer timing in `ecd0ff80`, and the reviewed two-file
   browser source binding in `f22c1560`.

@@ -1,5 +1,70 @@
 # November 13 isolated release rehearsals
 
+## Managed runner corrections on `6ef4e05e`
+
+Nine checks passed before the unit runner recorded 27,899 passes, 12 failures
+and 55 skips. This invocation embedded the disposable SCRAM credential in the
+private database URL. The integration guards require a passwordless loopback
+URL. Coverage and Chromium did not run. The isolated PostgreSQL stopped
+normally after its data directory was authenticated. The successor harness
+uses the same passwordless loopback URL with a separate mode-0600 PostgreSQL
+passfile and removes both from the browser environment.
+
+| Evidence | SHA-256 |
+| --- | --- |
+| Exact check sequence | `74154c2c7a168cd3f640ab9d9f1abd408bbf34c244aee539698111636aacfb74` |
+| Unit output | `90b0c0928dd1037ce675d62da145e90907916412ff799219ab5f1e85dc0fa7fe` |
+| Unit diagnostics | `42a9bcad866814fa0a9882fe19a57862bd5e106a4fcb4a71fc60a8bad5a42e5c` |
+| PostgreSQL shutdown result | `fceb5e3c3ee51d75c8b724e5e0b8090539dc718540e264b3f12f06a39717d115` |
+
+## Managed checks on `f22c1560`
+
+The corrected credential setup passed nine prerequisite checks and 27,980
+unit tests with zero skips. Three tests failed before simulating an outage.
+Their TCP proxy listens on a different loopback port, so the PostgreSQL
+driver could not use the source port's password-file entry for the proxy
+connection. The other real-database suites passed. The private cluster
+stopped normally. This run did not reach coverage or managed Chromium.
+`f830807f` uses the driver's direct credential resolution for the synthetic
+upstream before testing through the proxy. It passed all seven outage cases
+with real PostgreSQL 16.16 SCRAM and the three proxied outage cases on a
+separate trust-only local cluster. The tests keep the real connector, fault
+injection and existing deadlines. All three reproduction databases stopped.
+
+| Evidence | SHA-256 |
+| --- | --- |
+| Exact check sequence | `74e8644f36a5c2239eed4d055d4b097285eb318e99ee8fb02af9d83813a96bfb` |
+| Unit output | `8c4e085abb63b8b4ed4a3d5e17a8f53bef4dfa1573a67f71a56de5e187450342` |
+| Unit diagnostics | `bb80ee9fc32e8975b907ef167752c68907fb6c4a51a2ebaee7a3f8ffde30180e` |
+| PostgreSQL shutdown result | `fceb5e3c3ee51d75c8b724e5e0b8090539dc718540e264b3f12f06a39717d115` |
+
+## Hosted capacity regression on `f22c1560`
+
+The exact predecessor production build and the same six concurrent signed
+requests across two Next processes created two additional returns for an
+owner who started with 199. Four requests returned 400. The new assertion
+expected one successful creation, and all 14 existing checks and cleanup
+passed. The disposable local PostgreSQL 16.16 used certificate-verified TLS.
+The signed sessions, accounts and returns were synthetic. Redis REST was
+emulated locally. The retained receipt SHA-256 is
+`3faaccbccdb269fa595a4fc9c50597dd69db6888e42c7daedb95ff5ba71caef4`.
+
+## Local hosted HTTP on `86cf13d5`
+
+The exact production build passed all 15 checks. The quota check observed
+one HTTP 200 and five private, noncacheable HTTP 400 responses from six
+concurrent requests. The admitted workspace remained editable at 200. Its
+deletion freed one slot, the following request reused it, and the next
+request was denied. The other owner's count remained zero. Cleanup stopped
+both Next processes and closed all four loopback ports. The first execution
+stopped before binding a loopback listener with `EPERM`. The replay used the
+same tracked source and built artifact with loopback permitted.
+
+| Evidence | SHA-256 |
+| --- | --- |
+| HTTP and cleanup result | `6174ebbbe6c09c5a9be56c90e09f1d6f6afd8d29966eb705a5dbd34149c43355` |
+| Exact build loopback replay | `1a6c0a1a8e2fc36b84cf9685f75992fdfc4105b73a633eb3e6a89466afe2f1aa` |
+
 ## Managed checks on `dc7546f9`
 
 Nine prerequisite checks passed. The full unit run passed 27,947 tests
@@ -38,6 +103,50 @@ new SCRAM rehearsal and provides no security disposition or AMD64 evidence.
 | Compose recovery | `0329415f69bc336b338fa03c404a54d878e1ac98a83c713d905a257daf012d3f` |
 | Native Chromium | `96a2e6814240611fa82b5f88481084d30b506469a9e20afdf1f9cfe3b0e915e5` |
 | Controller result | `db3d1144633048377ccaf09a7c45a434d40752c4bdd79770a6a1ee1d3655af21` |
+| Runtime cleanup | `cd32053478e94fc27e16e991280a6f3de2d3580c6280dd1e44122dc93d318b40` |
+
+## Guided payment browser regression on `02e553cf`
+
+Both new Chromium cases failed on `f830807f` because the actual guided flow
+omitted the IRS application-year input for an out-of-window payment.
+The updated flow passed in the 1280 and 390 pixel viewports, with zero
+retries, a 30-second per-case deadline and zero API requests from either
+case. All 25 payment cases passed with no skips. The 623-case collection
+adds exactly two to the previous 621 and preserves the original 14
+diagnostic cases, five hosted-only skips and four protected request limits.
+
+| Evidence | SHA-256 |
+| --- | --- |
+| Predecessor browser report | `95713d29527ca271b93a86e60532d33383b1056f8e10113468f7b869513dd04b` |
+| Focused payment suite report | `9500ef76d4e61284ecb9726a3be50f7e3677628436c33005a3e2c167a62667d2` |
+| Request audit | `959d48c886aa0467c0de6ea2482c56ae7ee959880ac762714ce1d032eb064c7b` |
+| Canonical Chromium collection | `c8ae753226b48877fb72ab0f98ca147a8389d06858ed6ad8f1b125cc621e331c` |
+
+## Native ARM64 on `f22c1560`
+
+The exact ARM64 archive passed independent image import, runtime smoke,
+CycloneDX SBOM, application scan, all six Compose recovery phases and 616
+of 621 Chromium cases, with five original hosted skips and zero failures.
+SCRAM rejected both missing and incorrect credentials before and after
+restart. Authenticated dump and restore reconciled 11 tables, exact issuer
+and provider cost values, original local document bytes, and rollback and
+re-upgrade. The VM stopped normally and both socket routes and the default
+connection were verified. The initial public sample registry mode stopped
+the first invocation before a VM operation. The corrected staging retained
+the tracked registry bytes and used the required public-file mode inside
+the private directory. The app scan still found 191 matches, including 56
+High and zero Critical, with no risk acceptance.
+
+| Evidence | SHA-256 |
+| --- | --- |
+| Tracked and verified public sample archive | `4677923759747e63e0a98ce932bcffcffdd796acc2386678d64c0959400fd56a` |
+| Runtime image ID | `e62ff457c3341c25f58c9734c911185dc31614e2e9aec60f10a4b83e0121c16b` |
+| Runtime image archive | `af270f54361caf6bbe23a5d81ce14094f80a0eb0c37cbb4c678a3112fa2537cb` |
+| CycloneDX SBOM | `332b2f80d23ff2fabf189e731dd86523393522cd6c718289bcbeef25d9228a73` |
+| Grype scan | `489d085471959a87de96db7b0dd7f4fbd2f76ab954af286959d2bc6932eb80dc` |
+| Compose recovery | `683384d320db695eecbfb7199fac750e639bc1aefa7a366f651e25ed205c6519` |
+| Native Chromium | `ca9a85dd118a2700a267acc882a63060f68b0d6b4ca797a5c832501a1bcb9105` |
+| Controller result | `96e8277ad2fef999a8b93dee89d7b42acc7cf61634a0208649e223cce7476dcf` |
 | Runtime cleanup | `cd32053478e94fc27e16e991280a6f3de2d3580c6280dd1e44122dc93d318b40` |
 
 ## Local hosted HTTP on `dc7546f9`

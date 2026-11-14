@@ -11,6 +11,59 @@ The isolated rehearsal project has no Git link and protects all deployments.
 The team is on Pro, whose Sandbox credits are shared and can incur overage.
 No Sandbox was started. [Vercel Sandbox pricing](https://vercel.com/docs/sandbox/pricing).
 
+`c339c6e9` enforces the hosted workspace limit atomically per owner in
+PostgreSQL. Existing returns stay editable at capacity, and rejecting a new
+workspace leaves its documents untouched. All 231 affected tests passed,
+including real PostgreSQL concurrency, updates to older over-capacity data,
+and the delete/update race. The independent two-process predecessor build
+admitted two concurrent creations at 199 returns. `86cf13d5` adds that
+request sequence to the production HTTP rehearsal. The fixed build passed
+all 15 local checks with exactly one successful creation and verified cleanup.
+[Rehearsal evidence](upgrade-2026-nov13-release-rehearsals.md).
+
+`3c7ff065` validates actual federal estimate and extension payment dates even
+when withholding removes the Form 2210 calculation. Legacy dates in the
+return year or following year keep their original association. An out-of-window
+date requires a confirmed application to the selected tax year. Confirmed
+zeroes and exact cents are preserved. All 526 affected tests passed, including
+2025 and isolated 2026 constants. The Form 2210 timing rules stay separately
+scoped. `9b4a6ae5` collects the exact-year application in the guided estimate
+and extension entries, preserves it through saved replay, and revokes the
+affected confirmation when its underlying facts change. All 352 affected
+tests passed. [Form 1040 instructions](https://www.irs.gov/instructions/i1040gi) ·
+[Publication 505](https://www.irs.gov/publications/p505) ·
+[IRS Direct Pay](https://www.irs.gov/payments/direct-pay-help).
+
+`02e553cf` verifies the guided payment path in desktop and mobile Chromium,
+including explicit zero, confirmation revocation, and reopening the return.
+Both new cases failed on the predecessor and all 25 payment browser cases
+passed on the updated build. Neither new case requested an API route. The
+623-case audit retains the five hosted-only skips, all previous cases and
+limits, and the 14 diagnostic cases.
+
+`46103461` requires confirmation of the replacement student's actual AOTC
+claim history before calculation. The same student's answer survives tax-ID
+formatting and saved replay. Unversioned, prefilled zeroes still require
+confirmation. Both regressions failed before the fix. All 540 affected
+tests passed. [Form 8863 instructions](https://www.irs.gov/instructions/i8863).
+
+`ee55baae` rejects altered fixture authors, disguised self-review and
+reviews dated after the plan or measurement. `935f458f` applies the same
+identity and date validation to current and rollback eligibility.
+`7f8908c3` blocks mixed test plans and missing or reused provider references
+while retaining reported exact costs. On the predecessor, 270 offline
+synthetic rows across three profiles and ten held-out cases produced a
+passing candidate group without a single provider request. The new checks
+passed 94, 65 and 65 tests respectively. These controls validate the
+supplied records. Genuine independent review, provider evidence and owner
+authorization are still required. The production registry remains empty.
+
+`80899776` binds AMD64 CycloneDX identity, revision, and Grype source to the
+verified candidate and checks that the scanned bytes match the prior step's
+receipt. The runtime suite passed 41 tests with one pre-existing skip. An
+offline replay rejected the real foreign ARM64 SBOM. Current native AMD64
+evidence still requires a runner with access to the held source.
+
 `3d6a8e3a` pins Nodemailer 10.4.1, the publisher's first release with
 both November 10 recipient-domain fixes. Offline JSON transport on
 Node 22.12.0 reproduced both old envelope mismatches and verified both
@@ -43,8 +96,19 @@ has 191 matches, including 56 High, and no risk acceptance.
 `c5955541` adds per-run SCRAM authentication to the Compose rehearsal.
 Actual local PostgreSQL 16.16 rejected missing and wrong credentials,
 restarted and restored the exact amount through authenticated dump and
-restore. A native run of that update is separate evidence.
+restore.
 [Rehearsal evidence](upgrade-2026-nov13-release-rehearsals.md).
+
+The exact `f22c1560` ARM64 successor passed independent image import, smoke,
+scan, all six SCRAM Compose recovery phases and 616 Chromium cases with
+five hosted-only skips and no failures. The test database rejected a missing
+and a wrong password both before and after restart. Exact authenticated
+recovery, rollback and normal VM cleanup passed. `c99109c4` later removes
+the unused `infocmp` utility from the app runner and requires a working
+`tput` terminfo query in smoke. All 42 focused runtime tests passed with one
+existing skip. The successor native image and package disposition remain
+open. [Rehearsal evidence](upgrade-2026-nov13-release-rehearsals.md) ·
+[Debian advisory](https://security-tracker.debian.org/tracker/CVE-2025-69720).
 
 `be41c0e3` adds the isolated Ohio venture capital gain estimate. A matching
 issued Director certificate and confirmed cash acquisition and recognition
@@ -154,8 +218,15 @@ identity, property and covenant originals unfilled. Annual Form 1040
 transfer, independently reviewed output and filing are still gated.
 The final Form 1040 and tables endpoints still return 2025 materials.
 The actual 2026 draft tables and final Form 4972 match prior pins.
-Ohio's indexed November 13 alert announces drafts, with actual PDF bytes
-still unavailable. Pennsylvania's annual listing still points to 2025.
+At 22:00 Eastern the Pennsylvania PIT page still linked the 2025 return.
+The 2026 PA-40, instructions and NRH paths returned 404. The 2026 PA-40 ES
+and REV-413(I) estimate PDFs returned 200. The Ohio forms index returned
+HTTP 404 with an access-error page. Direct 2025 IT 1040 and IT NRC links
+returned actual PDFs, while the corresponding direct 2026 paths returned
+404. This leaves PA and Ohio final annual form qualification open.
+[Pennsylvania PIT](https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax) ·
+[Ohio 2025 IT 1040 bundle](https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/forms/ohio_individual/individual/2025/1040-bundle.pdf) ·
+[Ohio 2025 IT NRC](https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/forms/ohio_individual/individual/2025/itnrc.pdf).
 [Current Form 1062](https://www.irs.gov/pub/irs-pdf/f1062.pdf) ·
 [Current Schedule A](https://www.irs.gov/pub/irs-pdf/f1062sa.pdf) ·
 [Final Form 1040](https://www.irs.gov/pub/irs-pdf/f1040.pdf).

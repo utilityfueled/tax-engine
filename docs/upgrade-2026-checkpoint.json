@@ -25291,5 +25291,142 @@
       "composePinChanged": false,
       "qualified": false
     }
+  },
+  "nov13ParallelVerificationWork": {
+    "hostedWorkspaceCapacity": {
+      "source": "c339c6e9014e1a28bef98705f578ef96f0f2ce4d",
+      "httpSource": "86cf13d57f68d44121646fbec98d77de5ea7ea48",
+      "focusedPassed": 231,
+      "httpChecksPassed": 15,
+      "predecessorStatuses": [
+        200,
+        200,
+        400,
+        400,
+        400,
+        400
+      ],
+      "fixedStatuses": [
+        200,
+        400,
+        400,
+        400,
+        400,
+        400
+      ],
+      "localOnly": true,
+      "cleanupPassed": true,
+      "predecessorReceiptSha256": "3faaccbccdb269fa595a4fc9c50597dd69db6888e42c7daedb95ff5ba71caef4",
+      "httpReceiptSha256": "6174ebbbe6c09c5a9be56c90e09f1d6f6afd8d29966eb705a5dbd34149c43355"
+    },
+    "federalPaymentDates": {
+      "source": "3c7ff065b57877e162cc16fd89d9b677d996a769",
+      "focusedPassed": 526,
+      "regressionsFailedFirst": 3,
+      "sourceAuthority": "https://www.irs.gov/instructions/i1040gi",
+      "extendedScope": "Actual payment attribution, without changing installment penalty timing or readiness"
+    },
+    "independentAiAdmission": {
+      "corpusSource": "ee55baae0c40290f43dc8fa2d152773fc973bb8e",
+      "corpusFocusedPassed": 94,
+      "rolloutSource": "935f458fd7ed34d2ed8944e88eb7ec7c9d130206",
+      "rolloutFocusedPassed": 65,
+      "comparisonSource": "7f8908c39e694c6324dfc735ebd0608932c9a8b9",
+      "comparisonFocusedPassed": 65,
+      "actualProviderCalls": 0,
+      "actualIndependentHumanReviews": 0,
+      "productionPromotion": false,
+      "comparisonProbeSha256": "3ad0b9d5707f323528697333badee3376d13301de9561c67255e688860b1a042"
+    },
+    "amd64ScannerBinding": {
+      "source": "808997764318e60a535d143a6631433b4a6bfd91",
+      "workflowSha256": "c211799e5a72a751b2788ce374fc24d1e1434420c4cd834a6eb1cb9ad0d40bfe",
+      "runtimeChecksPassed": 41,
+      "existingSkips": 1,
+      "foreignArm64SbomRejected": true,
+      "actualNativeAmd64Qualification": false
+    },
+    "managed6ef4e05e": {
+      "prerequisitesPassed": 9,
+      "unitPassed": 27899,
+      "unitFailed": 12,
+      "unitSkipped": 55,
+      "harnessFailure": "SCRAM password embedded in URL excluded by disposable database guards",
+      "coverageRan": false,
+      "browserRan": false,
+      "postgresStopped": true,
+      "checksSha256": "74154c2c7a168cd3f640ab9d9f1abd408bbf34c244aee539698111636aacfb74"
+    },
+    "managedF22c1560": {
+      "prerequisitesPassed": 9,
+      "unitPassed": 27980,
+      "unitFailed": 3,
+      "unitSkipped": 0,
+      "harnessFailure": "SCRAM direct-port passfile did not match the TCP outage proxy port",
+      "coverageRan": false,
+      "browserRan": false,
+      "postgresStopped": true,
+      "checksSha256": "74e8644f36a5c2239eed4d055d4b097285eb318e99ee8fb02af9d83813a96bfb"
+    },
+    "nativeArm64F22c1560": {
+      "source": "f22c1560984ae97b295144d50749fc0df954e3bc",
+      "platform": "linux/arm64",
+      "imageId": "e62ff457c3341c25f58c9734c911185dc31614e2e9aec60f10a4b83e0121c16b",
+      "archiveSha256": "af270f54361caf6bbe23a5d81ce14094f80a0eb0c37cbb4c678a3112fa2537cb",
+      "sbomSha256": "332b2f80d23ff2fabf189e731dd86523393522cd6c718289bcbeef25d9228a73",
+      "scanSha256": "489d085471959a87de96db7b0dd7f4fbd2f76ab954af286959d2bc6932eb80dc",
+      "matches": 191,
+      "high": 56,
+      "critical": 0,
+      "composePhasesPassed": 6,
+      "authenticatedRecoveryReceiptSha256": "71117093f8307e43de19afb5a88d78bf8a182527c14ec99624ac2619774a0691",
+      "chromiumPassed": 616,
+      "hostedOnlySkips": 5,
+      "chromiumReceiptSha256": "ca9a85dd118a2700a267acc882a63060f68b0d6b4ca797a5c832501a1bcb9105",
+      "cleanupPassed": true,
+      "cleanupSha256": "cd32053478e94fc27e16e991280a6f3de2d3580c6280dd1e44122dc93d318b40",
+      "securityAcceptance": false
+    },
+    "scramOutageProxy": {
+      "source": "f830807f2241ca122c238a966dae91ca9de3d238",
+      "postgresVersion": "16.16",
+      "scramTestsPassed": 7,
+      "trustTestsPassed": 3,
+      "originalAuthenticationFailures": 3,
+      "databaseCleanupPassed": true
+    },
+    "runnerNcurses": {
+      "source": "c99109c4cf0b9e58cd6dea835e24c9c30b552476",
+      "runtimeTestsPassed": 42,
+      "existingSkips": 1,
+      "successorNativeImageQualified": false
+    },
+    "guidedAotcStudentHistory": {
+      "source": "461034613a4e60d455998f8606283ba78f654125",
+      "sourceAuthority": "https://www.irs.gov/instructions/i8863",
+      "regressionsFailedFirst": 2,
+      "focusedPassed": 540
+    },
+    "guidedFederalPaymentBrowser": {
+      "source": "02e553cf88b3d22ddaf72caf1acce4c5ae7adafc",
+      "guidedSource": "9b4a6ae558b127556e1a20f8ceceffcb991d93d2",
+      "guidedFocusedPassed": 352,
+      "browserCasesPassed": 25,
+      "browserRegressionsFailedFirst": 2,
+      "requestsDuringNewCases": 0,
+      "auditedCollectionCases": 623,
+      "collectionSha256": "c8ae753226b48877fb72ab0f98ca147a8389d06858ed6ad8f1b125cc621e331c",
+      "auditSha256": "959d48c886aa0467c0de6ea2482c56ae7ee959880ac762714ce1d032eb064c7b"
+    },
+    "lateStateSourceRefresh": {
+      "checkedAt": "2026-11-14T03:00:24Z",
+      "paAnnualObservedYear": 2025,
+      "ohioAnnualObservedYear": 2025,
+      "pa2026EstimatePdfVerified": true,
+      "finalAnnualSourcesQualified": false,
+      "statePortalAccessBounded": true,
+      "httpReceiptsSha256": "da91b1b88a60de4bfdf2b64e91c2e9853a62a2fe5b98293200ab0b5029a092f7",
+      "supplementSha256": "608c0aad129b43a950c4e3f37ea66ecd927d17792b6fa37f0b879eba7e95c1da"
+    }
   }
 }
