@@ -35,6 +35,30 @@ Both isolated PostgreSQL databases stopped normally. Chromium passed 618 executa
 skips and zero failures or retries, using the original two workers. All 12 archived verification commands passed. The four-worker unit run took 423 seconds. The
 prior single-worker run took 1,654 seconds on its separately recorded source.
 
+## November 14 compressed hosted responses
+
+`9b6202e7` fixes a confirmed fresh-return save failure. HTTP gzip compression
+legitimately weakened the response ETag, so the browser lost its snapshot
+revision and the next save returned 428. Authenticated JSON now carries the
+validated application revision independently. Existing strong ETag fallback
+remains; weak-only and malformed revisions still fail closed. Owner-scoped
+compare-and-swap and all readiness gates remain strict.
+
+Seven regressions failed before the correction. All 133 affected tests, 909
+spec-reference controls and an independent 24-test revision run passed. A real
+local production Chromium session reproduced the failure through gzip before
+the fix and passed save and upload afterward. The identity-encoded control
+passed separately. All local app, proxy and database processes closed normally.
+The unchanged browser cases and budgets passed 202 audit controls. Four fresh
+archived full-check lanes are running on exact `9b6202e7` with four unit and
+coverage workers and the existing two browser workers. Actual Vercel compression
+and the complete hosted GUI workflow still require the successor rehearsal.
+
+Private regression report SHA-256:
+`b2e66e2d3087c72edf07b1564a9d2a7351cc8654b883929828c31ab5b1c50375`.
+Audit refresh receipt SHA-256:
+`22da1bb93e31928f27d9f4fb73e81a75a1985f3ee30775e5d89cd9c4e955bcb1`.
+
 ## November 14 combined runtime verification
 
 Frozen `67557637` passed all nine static, build, lint and specification checks.

@@ -5311,3 +5311,10 @@ execution and current image qualification require separate evidence.
   single-editor return and remains under diagnosis. Its two failed attempts
   retained evidence and verified synthetic-resource cleanup. This hosted issue
   remains open despite the green managed suite.
+
+- November 14 `9b6202e7` preserves the owner-scoped application revision across
+  compressed hosted responses. Seven new regressions first failed; 133 affected
+  tests, an independent 24-test run, 909 spec-reference and 202 unchanged-budget
+  audit controls pass. Real production Chromium fails through gzip on the prior
+  source and passes save/upload after correction. All four full archived lanes
+  are running concurrently. Remote GUI and automatic retry remain open.

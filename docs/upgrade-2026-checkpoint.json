@@ -25717,6 +25717,23 @@
         "appBrowserEquivalence": "93588d86acd64125458b8708652f12afc5d6c053a13a3d72673add8fb76cea6f"
       }
     },
+    "compressedHostedRevision": {
+      "commit": "9b6202e7b2b309d5adc62ddf7d405ad7067fb8ac",
+      "regressionsFailedBeforeFix": 7,
+      "affectedTestsPassed": 133,
+      "independentRevisionTestsPassed": 24,
+      "specReferenceControlsPassed": 909,
+      "auditControlsPassed": 202,
+      "localProductionGzipFailureReproduced": true,
+      "localProductionGzipSaveAndUploadPassedAfterFix": true,
+      "strictOwnerScopedCasPreserved": true,
+      "weakOnlyRevisionAccepted": false,
+      "allLocalProcessesClosed": true,
+      "fullArchivedChecksStatus": "running in four parallel isolated lanes",
+      "remoteGuiQualification": "pending",
+      "reportSha256": "b2e66e2d3087c72edf07b1564a9d2a7351cc8654b883929828c31ab5b1c50375",
+      "auditReceiptSha256": "22da1bb93e31928f27d9f4fb73e81a75a1985f3ee30775e5d89cd9c4e955bcb1"
+    },
     "hostedRehearsalAdmission": {
       "commit": "9851cecc",
       "focusedPassed": 915,
