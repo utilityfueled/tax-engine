@@ -23,3 +23,59 @@ across 86 IDs. All 86 have open trixie rows in the same primary response.
 The eight newly matched IDs cover glibc, OpenSSL and GCC. The overdue
 security/platform disposition remains open for all 86.
 [ARM64 image and per-advisory register](upgrade-2026-image-advisories-20261113-arm64.json).
+
+## ARM64 candidate after removal of the `mount` package
+
+The independently imported image at `3ade5abe` has 191 Debian binary-package
+matches across 86 advisory IDs, including 56 High matches across 17 IDs
+and zero Critical matches. The exact comparison to the `e3c90730` scan
+removed six matches attributed to `mount`, four of them High. The matches
+against the other util-linux binaries and libraries remain. The latest
+tracker retrieval at 2026-11-14 02:06:51 UTC matched all 86 source-package
+rows from the earlier ARM64 register. Every row remains open with the
+same literal trixie status. [Debian Security Tracker](https://security-tracker.debian.org/tracker/data/json).
+
+Comparing the exact image's 55 installed Debian source package names
+against the live tracker also found five open trixie rows absent from the
+Grype report. Four are temporary Debian issue IDs classified as unimportant.
+The fifth is CVE-2026-91094 for a directory traversal issue during
+`dpkg-source` extraction. The trixie row specifies a future point update,
+and the image contains neither `dpkg-dev` nor `dpkg-source`. The five
+rows are preserved in the reconciliation evidence alongside the Grype
+matches. [Debian dpkg advisory](https://security-tracker.debian.org/tracker/CVE-2026-91094) · [Debian dpkg-dev](https://packages.debian.org/trixie/dpkg-dev).
+
+| Evidence | SHA-256 |
+| --- | --- |
+| ARM64 archive | `07a41bf6243b10839d4bcd48df0d2e0767befc64fa2478e29635f78d305c06ba` |
+| SBOM | `61dedb3fddcc2faa1402ed53d8048d85921c96d40cb850320b956fabb4d35992` |
+| Grype scan | `7394e4bd55781c5bb9881e82972fa8522eb2a99c36eaf8b4c08a73bb63f19e40` |
+| Current Debian tracker JSON | `7f001712ce15a2ad2c4b49a20750a238df920c2d8308d9025333a2332e6d5b29` |
+| Reconciled per-advisory observations | `ea0068baac24f5928977b49e28d25abbc037c893a17054d81fb0d051f36f5937` |
+| Layered filesystem, dpkg and ELF observations | `ad0cc5bf4fdbf778e34f7171c9a5e53f8c9d2b711e74a96f5324a27a30318d45` |
+
+The package counts below come from source-package matches. An offline
+inspection of the exact archive accounted for layer whiteouts and read
+the final package database and ELF imports. It executed no candidate
+programs and does not establish a complete dynamic call graph. The native
+smoke verified UID 1001 and zero set-ID regular files. The checked-in
+Compose definition also drops all web capabilities, sets
+`no-new-privileges`, and uses a read-only root filesystem.
+
+| Source and High matches | Exact artifact observation and remaining exposure |
+| --- | --- |
+| util-linux · 32 | `mount` and `umount` are absent. The Debian `libmount` library remains, as does `nsenter` in the Essential `util-linux` package. The documented `nsenter` case needs a privileged operator to invoke `--join-cgroup` on an attacker-controlled target. All four High rows still apply to Debian's source release. [Debian util-linux](https://security-tracker.debian.org/tracker/source-package/util-linux) · [Upstream nsenter advisory](https://github.com/util-linux/util-linux/security/advisories/GHSA-55fx-f4gg-cfhj) |
+| gcc-14 · 8 | The shipped Node and libvips binaries both declare `libstdc++.so.6` and import aligned array allocation. Whether request data can drive an allocation to the overflow conditions remains unverified. The other High advisory requires a call to the specific binary-heap `erase_if` operation. [GCC aligned allocation](https://security-tracker.debian.org/tracker/CVE-2026-95619) · [GCC heap erase](https://security-tracker.debian.org/tracker/CVE-2026-102010) |
+| glibc · 6 | Node and the bundled Sharp binaries depend on glibc. The libvips binary imports `dcgettext` and `dcngettext`. The catalog issue additionally requires control of the process locale environment and access to a crafted catalog. The inspected binaries show no direct imports of the named monetary formatter or deprecated DNS printers. Transitive calls and environment changes remain outside this inspection. [Locale catalog](https://security-tracker.debian.org/tracker/CVE-2026-84243) · [Monetary formatter](https://security-tracker.debian.org/tracker/CVE-2026-19499) · [DNS printers](https://security-tracker.debian.org/tracker/CVE-2026-5435) |
+| SQLite · 3 | The system shared library exports the changeset API. The installed Essential util-linux package needs `liblastlog2-2`, whose binary imports the SQLite open and query APIs. The Node and two application-native files have no `DT_NEEDED` entry for system SQLite. Node 26.13.1 separately embeds SQLite 3.54.1. The three High system SQLite cases require a crafted changeset or specific FTS5 operations. [Debian SQLite](https://security-tracker.debian.org/tracker/source-package/sqlite3) · [Node 26.13.1 release](https://nodejs.org/en/blog/release/v26.13.1) |
+| ncurses · 3 | The affected `infocmp` executable is present in Essential `ncurses-bin`. The documented overflow occurs in that CLI. The package-level scanner result also names the terminal data and shared library. [Debian ncurses issue](https://security-tracker.debian.org/tracker/CVE-2025-69720) |
+| Perl · 2 | The exact filesystem contains Essential `perl-base`. Neither `Pod/Text.pm` nor `Archive/Tar.pm` is present. The two reported input parsers are absent from this image. [Perl POD formatter](https://security-tracker.debian.org/tracker/CVE-2026-82560) · [Perl tar reader](https://security-tracker.debian.org/tracker/CVE-2026-9538) |
+| ACL · 2 | `libacl1` remains. The `getfacl`, `setfacl`, and `chacl` commands are absent. The pathname API issue still requires assessment for privileged callers over attacker-controlled paths. Debian defers the trixie fix to a point update because it needs a new ABI. [Debian ACL issues](https://security-tracker.debian.org/tracker/source-package/acl) |
+
+No release-specific package upgrade for these findings was available in
+the checked trixie records. Upstream util-linux has fixes, while Debian
+currently lists a later package only in forky and sid. The installed
+Essential package has exact-version library dependencies. Any trixie
+backport must keep that set consistent and pass fresh package, image, and
+recovery checks on both architectures. The remaining advisory dispositions,
+including an accountable owner and expiry for any accepted finding, and the
+independent human review are open. [Upstream util-linux release](https://github.com/util-linux/util-linux/releases/tag/v2.41.6) · [Debian package versions](https://security-tracker.debian.org/tracker/source-package/util-linux).
