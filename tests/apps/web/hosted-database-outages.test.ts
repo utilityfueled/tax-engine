@@ -68,6 +68,7 @@ describe.skipIf(!testDatabaseUrl)("hosted database runtime outage boundaries", (
 
   for (const operation of ["pool", "kysely", "transaction"] as const) it(`bounds ${operation} queries when established return packets stop arriving`, async () => {
     const target = new URL(disposableDatabaseUrl());
+    const admin = new Pool({ connectionString: target.toString(), max: 1 });
     const sockets = new Set<Socket>();
     let upstream: Socket | undefined;
     const proxy = createServer(downstream => {
@@ -79,14 +80,30 @@ describe.skipIf(!testDatabaseUrl)("hosted database runtime outage boundaries", (
       connection.on("close", () => { sockets.delete(connection); downstream.destroy(); });
       downstream.pipe(connection).pipe(downstream);
     });
-    await new Promise<void>(resolve => proxy.listen(0, "127.0.0.1", resolve));
-    const address = proxy.address(); if (!address || typeof address === "string") throw new Error("Missing synthetic proxy port");
-    const proxied = new URL(disposableDatabaseUrl()); proxied.hostname = "127.0.0.1"; proxied.port = String(address.port);
-    const { pool, db } = await runtime(proxied.toString());
-    const admin = new Pool({ connectionString: disposableDatabaseUrl(), max: 1 });
     const table = `outage_${randomUUID().replaceAll("-", "")}`;
     let created = false;
     try {
+      await new Promise<void>((resolve, reject) => {
+        proxy.once("error", reject);
+        proxy.listen(0, "127.0.0.1", resolve);
+      });
+      const address = proxy.address();
+      if (!address || typeof address === "string") throw new Error("Missing synthetic proxy port");
+      const proxied = new URL(target);
+      proxied.hostname = "127.0.0.1";
+      proxied.port = String(address.port);
+      if (!target.password) {
+        // Let pg resolve the original tuple against the synthetic passfile.
+        // The proxy forwards that server's SCRAM challenge unchanged, but its
+        // listener port cannot match an exact passfile entry for the upstream.
+        const direct = await admin.connect();
+        try {
+          if (direct.password) proxied.password = encodeURIComponent(direct.password);
+        } finally {
+          direct.release();
+        }
+      }
+      const { pool, db } = await runtime(proxied.toString());
       await pool.query("SELECT 1");
       if (!upstream) throw new Error("Synthetic proxy did not connect");
       // The real database continues receiving the query; only its response is
@@ -113,9 +130,12 @@ describe.skipIf(!testDatabaseUrl)("hosted database runtime outage boundaries", (
       expect((await sql<{ recovered: number }>`SELECT 1 AS recovered`.execute(db)).rows[0].recovered).toBe(1);
     } finally {
       for (const socket of sockets) socket.destroy();
-      await new Promise<void>(resolve => proxy.close(() => resolve()));
-      if (created) await admin.query(`DROP TABLE ${table}`);
-      await admin.end();
+      if (proxy.listening) await new Promise<void>(resolve => proxy.close(() => resolve()));
+      try {
+        if (created) await admin.query(`DROP TABLE ${table}`);
+      } finally {
+        await admin.end();
+      }
     }
   }, 20_000);
 
