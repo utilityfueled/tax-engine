@@ -1,5 +1,14 @@
 # 2026 upgrade implementation evidence
 
+November 14: current-loss mortgage composition `58be02ed` and guided market
+discount `6729c9a0` pass their separate source, manual and actual browser checks.
+Frozen `8e7fd9a2` passes static checks; unit and coverage each record 28,409
+passes/two old readiness fixture failures. The test-only correction `3777cb84`
+retains all readiness assertions and explicit original-source rejection. Pure
+committed-source binding verifies 631 actual cases and 14 original diagnostics;
+the successor combined run remains required. Guided mortgage and education work
+continue in parallel. [Current continuation](upgrade-2026-current-status.md).
+
 November 14: `f877c0fa` supplies actual retained-residence loan/basis sources,
 with independent adjacent-cap and original-identity controls. `2071fd25` passes
 two actual typed special-rate desktop/mobile journeys, including physical PDF

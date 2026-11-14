@@ -3866,6 +3866,26 @@
       ]
     },
     {
+      "key": "federal/form-172-principal-residence",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.irs.gov/instructions/i172",
+      "specPath": "spec/federal/form-172-principal-residence.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/form-172-return",
       "jurisdiction": "federal",
       "taxYear": 2025,
@@ -6811,6 +6831,26 @@
       "taxYear": 2025,
       "sourceAuthority": "https://www.irs.gov/instructions/i1065sk1",
       "specPath": "spec/federal/guided-k1-qbi-sources.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "federal/guided-market-discount-sources",
+      "jurisdiction": "federal",
+      "taxYear": null,
+      "sourceAuthority": "https://www.irs.gov/instructions/i8949",
+      "specPath": "spec/federal/guided-market-discount-sources.yaml",
       "enginePath": null,
       "packetPath": null,
       "specExists": true,

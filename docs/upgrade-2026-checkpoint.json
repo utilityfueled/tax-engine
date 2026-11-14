@@ -1,4 +1,36 @@
 {
+  "nov14ParallelSuccessorsAndReadinessFixtures": {
+    "branch": "main",
+    "localCommits": {
+      "currentLossMortgage": "58be02ed",
+      "guidedMarketDiscount": "6729c9a0",
+      "readinessFixtures": "3777cb84"
+    },
+    "frozenCombinedSource": "8e7fd9a2",
+    "static": "all9PASS",
+    "unit": "28409PASS2FAIL oldreadinessfixtures;ownedDBstopped",
+    "coverage": "28409PASS2FAIL samefixtures;notqualified;ownedDBstopped",
+    "browser": "629case actual run pending at this checkpoint",
+    "testOnlyCorrection": "12affectedPASS;independent3PASS35specRefs;allreadinessassertionsretained",
+    "guidedMarketDiscount": "45focused2actualbrowserPASS;normalcleanup;originalsourceprivacyandstaleguards",
+    "sourceBinding": {
+      "exactCommittedSource": "3777cb84",
+      "actualCaseCount": 631,
+      "originalDiagnostics": 14,
+      "strictGuardVerified": true,
+      "newBrowserRequestBudget": "2 marketdiscountcases each0 allfourprotectedroutes",
+      "pendingSourceExcluded": true
+    },
+    "activeParallel": [
+      "guidedQPRactualbrowser",
+      "currentLossQPRguidecomposition",
+      "Coverdellactualpostconversioninterest",
+      "independentreviews"
+    ],
+    "humanReview": false,
+    "final2026Qualified": false,
+    "pushHold": true
+  },
   "nov14OriginalMortgageAndCumulativeSources": {
     "branch": "main",
     "localCommits": {
