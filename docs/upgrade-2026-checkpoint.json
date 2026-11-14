@@ -25429,6 +25429,21 @@
       "supplementSha256": "608c0aad129b43a950c4e3f37ea66ecd927d17792b6fa37f0b879eba7e95c1da"
     }
   },
+  "nov14ParallelTaxSourceMethods": {
+    "scheduleAiCommit": "29393f5a",
+    "charitableCommit": "63dccc04",
+    "scheduleAiIndependentTests": 234,
+    "charitableEngineTests": 257,
+    "charitableIndependentProbes": 18,
+    "chapter12FocusedTests": 1064,
+    "chapter12Commit": "c00d937d",
+    "chapter12ActualBrowser": { "passed": 6, "failed": 0, "skipped": 0, "retries": 0, "ownedServerClosed": true },
+    "combinedCurrentSourceChecks": "pending",
+    "sourceBoundary": "Earlier hosted/native artifacts remain bound to their named revisions, not these new patches.",
+    "qualifiedHumanReview": false,
+    "releaseReady": false,
+    "pushHold": true
+  },
   "nov14ReleaseContinuation": {
     "currentNativeArm64Rehearsal": {
       "source": "a396d2c2148de4846272d3993a52afdecc20454a",

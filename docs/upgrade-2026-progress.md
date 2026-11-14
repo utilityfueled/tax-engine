@@ -1,5 +1,16 @@
 # 2026 upgrade implementation evidence
 
+November 14: locally committed `29393f5a` adds actual special-rate Schedule AI
+period worksheets (234 independently reviewed regression tests); `63dccc04`
+adds same-medium full-category prior charitable floor treatment (257 charitable
+tests plus 18 independent probes). Separate archived-baseline RED/manual-oracle
+controls pass on both patches. These source packages do not relabel the earlier
+hosted/ARM64 artifacts or qualify final forms. `c00d937d` adds Chapter 12 personal borrowing and mandatory Chapter 12/13 case
+history: 1,064 focused tests and six actual browser cases pass. Combined checks
+and the next source packages continue in parallel; the main push hold remains.
+[Schedule AI](upgrade-2026-schedule-ai-special-gains-20261114.md) ·
+[Charitable floor](upgrade-2026-charitable-full-prior-floor-20261114.md).
+
 November 14: actual isolated Stripe outage/restoration/scheduled retry passes
 with one receipt and complete scoped cleanup; 97 recorded operations, no manual
 resends or production changes. Independent and root reviews pass.

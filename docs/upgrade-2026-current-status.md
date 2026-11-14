@@ -1,5 +1,22 @@
 # Current 2026 upgrade continuation
 
+## Active parallel source methods
+
+Two independently reviewed packages are committed locally: `29393f5a` supplies
+actual special-rate Schedule AI period worksheets; `63dccc04` reconciles an
+entire prior charitable category absorbed by the floor without arbitrary vintage
+allocation. Separate manual/subcent oracles fail on the archived baseline and
+pass on the patches. Chapter 12 personal borrowing and complete Chapter 12/13
+bankruptcy history are committed as `c00d937d`: 1,064 focused tests and all six
+actual isolated browser cases pass, with no retries/skips and normal cleanup. These later source changes need fresh combined checks and
+runtime evidence; the earlier artifact results below retain their exact source.
+
+[Schedule AI source and review](upgrade-2026-schedule-ai-special-gains-20261114.md) ·
+[Charitable source and review](upgrade-2026-charitable-full-prior-floor-20261114.md).
+Further source research is running independently on tokenized-debt market
+discount and legacy bankruptcy input completeness. No qualified human review,
+final form, filing or model-promotion gate is inferred from these changes.
+
 ## November 14 current ARM64 artifact and recovery
 
 Exact `a396d2c2` passes all four native runtime workloads, independent archive

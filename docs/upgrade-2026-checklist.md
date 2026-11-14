@@ -6,6 +6,17 @@ below retain their original evidence boundaries.
 
 ## Active continuation — November 14
 
+- [x] Implement and independently review actual special-rate Schedule AI
+  worksheets (`29393f5a`) and the fully absorbed same-medium original charitable
+  category (`63dccc04`). Preserve separate partial/allocation and filing gates.
+- [x] Commit actual Chapter 12 personal borrowing and complete Chapter 12/13
+  history (`c00d937d`): 1,064 focused tests, separate archived-baseline history
+  controls and six actual desktop/mobile browsers pass with normal cleanup.
+- [ ] Run all twelve checks on the combined current source. Earlier artifacts
+  remain bound to their older source.
+- [ ] Complete the next determinate methods after source research: tokenized-debt
+  market discount and any reproduced legacy bankruptcy completeness bypass.
+
 - [x] Refresh official provider prices/capabilities and record the deprecated
   GPT-5 Mini baseline without promotion or new paid calls.
   [Provider evidence](upgrade-2026-provider-refresh-20261114.md).
