@@ -19,3 +19,5 @@ node scripts/build-postgres-gosu-backport.mjs \
 ```
 
 The output directory must be new. The 45-minute total includes a five-minute cleanup reserve. Inspect `build-receipt.json` and every artifact/check status; a zero exit does not supply the separate runtime, archive or security evidence above.
+
+The exported third-party notice bundle must reproduce the complete, exact Go SDK LICENSE for the statically linked standard library. Verify the SDK notice against the maintained pinned GO-LICENSE and reject exported bundles that omit or truncate it, even when artifact hashes otherwise match.

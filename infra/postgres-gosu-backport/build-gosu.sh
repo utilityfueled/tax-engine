@@ -8,6 +8,7 @@ mkdir /qualification-source /qualification-go /qualification-proxy /qualificatio
 # Only fixed, hash-verified source and SDK archives enter this build.
 tar -xzf gosu-1.20.tar.gz --strip-components=1 -C /qualification-source
 tar -xzf "go1.27.4.linux-$arch.tar.gz" --strip-components=1 -C /qualification-go
+cmp /qualification-go/LICENSE /qualification-expected-go-LICENSE
 for prefix in moby-user xsys; do
   case "$prefix" in moby-user) dest=github.com/moby/sys/user; version=v0.4.1 ;; xsys) dest=golang.org/x/sys; version=v0.1.0 ;; esac
   mkdir -p "/qualification-proxy/$dest/@v"
@@ -72,7 +73,8 @@ set +e
 functional_checks; functionalCheckExit=$?
 set -e; test "$functionalCheckExit" = 0
 cp LICENSE "$out/LICENSE"
-{ printf '%s\n' 'github.com/moby/sys/user v0.4.1'; cat "$GOMODCACHE/github.com/moby/sys/user@v0.4.1/LICENSE";
+{ printf '%s\n' 'Go 1.27.4 standard library'; cat /qualification-go/LICENSE;
+  printf '\n%s\n' 'github.com/moby/sys/user v0.4.1'; cat "$GOMODCACHE/github.com/moby/sys/user@v0.4.1/LICENSE";
   printf '\n%s\n' 'golang.org/x/sys v0.1.0'; cat "$GOMODCACHE/golang.org/x/sys@v0.1.0/LICENSE";
 } > "$out/THIRD-PARTY-LICENSES.txt"
 finish

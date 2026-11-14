@@ -74,12 +74,16 @@
       "sha256": "b1c6fe02b6db074fb9253cc57e3c36472826a6fba07bc8d08f7c84d1ebfadddc"
     },
     "Dockerfile.build": {
-      "bytes": 243,
-      "sha256": "3a8a8661cbff59fb7506396f8f4a90f9a7e956b87022c8a45cb227f0de92f821"
+      "bytes": 294,
+      "sha256": "f24b772c9db58d700abc153b92de3263b9fa0a79b90d27b4f1594f886a810dfc"
     },
     "build-gosu.sh": {
-      "bytes": 4162,
-      "sha256": "c9921aaad483b16f7448aed4e15b24be10f853aadbd827a211f5b2ee9b8c87ac"
+      "bytes": 4306,
+      "sha256": "314c38ad9b0b8022a347cf92562217967cad18e8adfaadde6875e0e1797f4d0f"
+    },
+    "GO-LICENSE": {
+      "bytes": 1453,
+      "sha256": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad"
     }
   }
 }

@@ -24,7 +24,7 @@ function syntheticElf() {
 }
 async function fixtureArtifacts(overrides: Record<string, string | Buffer> = {}) {
   const directory = await mkdtemp(join(tmpdir(), "tax-gosu-artifacts-")); directories.push(directory);
-  const files = { gosu: syntheticElf(), LICENSE: "synthetic license", "THIRD-PARTY-LICENSES.txt": "synthetic third party licenses", "go-metadata.txt": metadata, "status.json": JSON.stringify(status), ...overrides };
+  const files = { gosu: syntheticElf(), LICENSE: "synthetic license", "THIRD-PARTY-LICENSES.txt": "synthetic module notices\n" + await readFile(resolve("infra/postgres-gosu-backport/GO-LICENSE"), "utf8"), "go-metadata.txt": metadata, "status.json": JSON.stringify(status), ...overrides };
   for (const [name, data] of Object.entries(files)) await writeFile(join(directory, name), data);
   await writeFile(join(directory, "ARTIFACTS.sha256"), Object.entries(files).map(([name, data]) => `${createHash("sha256").update(data).digest("hex")}  ${name}\n`).join(""));
   return directory;
@@ -98,6 +98,13 @@ describe("candidate-only PostgreSQL gosu build admission", () => {
     const directory = await fixtureArtifacts(); const original = await readFile(join(directory, "ARTIFACTS.sha256"), "utf8");
     await writeFile(join(directory, "ARTIFACTS.sha256"), original.split("\n").slice(0, 3).join("\n"));
     await expect(verifyGosuArtifacts(directory, "arm64")).rejects.toThrow(/Missing/);
+  });
+
+  it("rejects accurately hashed notices that omit or truncate the Go standard-library license", async () => {
+    const license = await readFile(resolve("infra/postgres-gosu-backport/GO-LICENSE"), "utf8");
+    for (const notice of ["module notices only", license.slice(0, -20), license.replace("Copyright 2009 The Go Authors.", "Copyright omitted")]) {
+      await expect(verifyGosuArtifacts(await fixtureArtifacts({ "THIRD-PARTY-LICENSES.txt": notice }), "arm64")).rejects.toThrow(/Go.*license/i);
+    }
   });
 
 });

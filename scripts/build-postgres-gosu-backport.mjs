@@ -82,6 +82,9 @@ export async function verifyGosuArtifacts(path, architecture) {
   const binary = await readFile(join(path, "gosu"));
   assertStaticGosuElf(binary, architecture);
   assertGosuMetadata(await readFile(join(path, "go-metadata.txt"), "utf8"), architecture);
+  const goLicense = await readFile(join(directory, "GO-LICENSE"));
+  const thirdPartyNotices = await readFile(join(path, "THIRD-PARTY-LICENSES.txt"));
+  assert.ok(thirdPartyNotices.includes(goLicense), "Go standard-library license is missing or altered.");
   const status = JSON.parse(await readFile(join(path, "status.json"), "utf8"));
   assertGosuChecksPassed(status);
   return { binarySha256: hash(binary), manifestSha256: hash(manifest), status };
