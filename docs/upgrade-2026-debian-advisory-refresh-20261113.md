@@ -178,3 +178,23 @@ comparison receipt SHA-256 is
 `6c050e8a1bf2b7621ce51e572e34dc63a0d1adb97da5c99a917f1fcdb3af46bd`.
 [Canonical CVE status](https://ubuntu.com/security/CVE-2026-6653) ·
 [Noble source package](https://launchpad.net/ubuntu/+source/libxml2/2.9.14+dfsg-1.3ubuntu3.10).
+
+The follow-up Clang target-layout probe preserved every old field offset
+and alignment on `aarch64-linux-gnu` and `x86_64-linux-gnu`.
+`_xmlEntity` grew from 136 to 152 bytes and `_xmlParserInput` from 104 to
+120 bytes. PostgreSQL 16.16 core uses the library-owned parser-input
+pointer, but the pinned images also link `pgxml.so`, libxslt, libexslt
+and LLVM directly against libxml2. LLVM is also reached through the
+shipped JIT module. This establishes a real compatibility boundary for
+the shipped dependency graph. The layout and reverse-consumer receipts
+are `40d76ef8f5dbba570c7596f365d9332713dce7bcd9a21e99464b917ff57bf3fd`
+and `3a16b46eb538b0f07d92166f80bf782d6da13c202df6b6e7322424c348e949c6`.
+
+The source-reviewed native qualification plan covers SQL/XML, the XML2
+extension, XSLT/EXSLT, active JIT, exact `NUMERIC` and XML round-trips,
+fresh restore and rollback, and architecture-specific artifact scans.
+Its SHA-256 is `c0439868b4824ed5973011b006b5158a5ac2cf196c21d5ac17de8b5e9290a364`.
+No patched database image has been built or run. The original disclosed
+reproducer is still required for a paired sanitizer check. This backport
+targets one finding. Eight other Critical matches and 138 High matches
+still require separate disposition on each pinned database image.
