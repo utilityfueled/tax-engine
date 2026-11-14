@@ -1,5 +1,18 @@
 # Current 2026 upgrade continuation
 
+## November 14 completed 26f5bd5b native ARM64 successor
+
+The exact `26f5bd5b` native successor passes all 24 stages, four workloads,
+six stock-Compose recovery phases and 633 browser cases (628 passes/five
+unchanged hosted skips). Normal VM stop, socket/default preservation and original
+two-CPU/8,192-MiB resource restoration are verified. Separate artifact review
+rehashes the actual image/archive/SBOM, source and browser evidence. The same-image
+November 14 scan retains zero Critical and 56 unaccepted High findings.
+[Actual runtime and cleanup](upgrade-2026-arm64-26f5bd5b-20261114.md).
+Both no-boot preflight failures remain retained. This run excludes the later
+PTC, guided Coverdell and in-progress farming/foreign-income packages; final
+forms, human/security/AI reviews, native AMD64 and the main push hold remain.
+
 ## November 14 original three-family Marketplace allocation
 
 The finite Publication 974 Worksheet E route now binds all three actual family
@@ -23,8 +36,8 @@ reserve use 617 of 1,310 bounded operations. Root separately reviews the actual
 artifacts and screenshots. The empty disposable free cache expires November 17;
 its data is removed, without claiming resource deletion. No provider or real
 charge occurs. [Actual hosted evidence](upgrade-2026-preview-mortgage-originals-20261114.md).
-The corrected native rehearsal has booted, built and smoke-tested the image and
-is running its actual browser/recovery workloads; final cleanup remains pending.
+The separate exact-source native run has completed and its cleanup passes;
+see the newer native successor entry above.
 
 ## November 14 twelve passing checks and parallel runtime successors
 

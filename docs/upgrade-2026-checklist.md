@@ -6,6 +6,12 @@ below retain their original evidence boundaries.
 
 ## Active continuation — November 14
 
+- [x] Complete the exact `26f5bd5b` native ARM64 successor: 24 passing stages,
+  four workloads, six recovery phases, 628 browser passes/five original skips,
+  independent artifact audit and normal VM/socket/default/resource restoration.
+  Preserve both no-boot preflights, all advisories and the later-package boundary.
+  [Actual successor](upgrade-2026-arm64-26f5bd5b-20261114.md).
+
 - [x] Implement and independently review actual special-rate Schedule AI
   worksheets (`29393f5a`) and the fully absorbed same-medium original charitable
   category (`63dccc04`). Preserve separate partial/allocation and filing gates.

@@ -1,5 +1,18 @@
 # 2026 upgrade implementation evidence
 
+## November 14 completed 26f5bd5b native ARM64 successor
+
+The exact `26f5bd5b` native successor passes all 24 stages, four workloads,
+six stock-Compose recovery phases and 633 browser cases (628 passes/five
+unchanged hosted skips). Normal VM stop, socket/default preservation and original
+two-CPU/8,192-MiB resource restoration are verified. Separate artifact review
+rehashes the actual image/archive/SBOM, source and browser evidence. The same-image
+November 14 scan retains zero Critical and 56 unaccepted High findings.
+[Actual runtime and cleanup](upgrade-2026-arm64-26f5bd5b-20261114.md).
+Both no-boot preflight failures remain retained. This run excludes the later
+PTC, guided Coverdell and in-progress farming/foreign-income packages; final
+forms, human/security/AI reviews, native AMD64 and the main push hold remain.
+
 November 14: source-first Publication 974 Worksheet E now supports the finite
 one-policy married-separate/no-exception third-family method. The published
 printed fraction gives monthly APTC34 and annual408 with no PTC; no family or

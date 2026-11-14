@@ -1,4 +1,16 @@
 {
+  "nov14Native26f5bd5bActualSuccessor": {
+    "source": "26f5bd5b1d99df1655aa89cbd88e59d7333161de",
+    "actual": "24stagesZero;fourWorkloadsPASS;sixComposeRecoveryPhases;633browser628PASS5originalSkips0retry",
+    "cleanup": "normalVMstop;allVMstopped;socketRootDefaultPreserved;original2CPU8192MiBrestored;noForcedVMstop",
+    "controllerReceiptSha256": "5fae3c721ac12b473d384a7242fc6c5313c3f0aa82ec6fb8fac97adf76aee37b",
+    "independentActualReviewSha256": "84e45e620450ddcab7b3bcc55b59276b20515983f77ffa092479702cdc721508",
+    "sameImageCurrentScan": "192matches;zeroCritical;56HighUnaccepted;unchangedCriticalGate;addedUnknownCVE2026-91094dpkg",
+    "ledger": "docs/upgrade-2026-arm64-26f5bd5b-20261114.md",
+    "laterTaxPackagesIncluded": false,
+    "releaseQualified": false,
+    "mainPushHold": true
+  },
   "nov14OriginalThreeFamilyMarketplaceAllocation": {
     "method": "Pub974WorksheetE;oneOriginalPolicy;MFSnoException;actualSpouseAndOneAdditionalFamily;noThirdFamilyCredit",
     "sourceBase": "58b6659d4433e132b59baf57c0a69ac81cf5d007",
