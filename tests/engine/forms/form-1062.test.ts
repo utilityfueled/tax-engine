@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { calculateForm1062, type Form1062Input } from "@/engine/forms/form-1062.js";
+import type { Form1062ScheduleAInput } from "@/engine/forms/form-1062-schedule-a.js";
 import { qualifiedFarmlandSale } from "../../fixtures/form-1062-direct-sale.js";
 
 // See spec/federal/form-1062.yaml. Tax determinations are synthetic.
@@ -8,6 +9,25 @@ const source = {
   taxYear: 2026, sale: qualifiedFarmlandSale, electionConfirmed: true, taxableIncome: "86516",
   withGain: { regularIncomeTax: "9886", additions: "268", credits: noCredits },
   withoutGain: { taxableIncome: "30000", regularIncomeTax: "3104", additions: "0", credits: noCredits },
+} as const satisfies Form1062Input;
+
+const { sale: firstSale, ...multipleSaleFacts } = source;
+const secondSale = {
+  ...firstSale,
+  transactionType: "s_corporation_sale",
+  grossProceeds: undefined, sellingExpenses: undefined, unadjustedBasis: undefined, adjustedBasis: undefined,
+  independentlyReportedGain: "20000.02",
+  shareholderAllocation: {
+    sourceForm: "1120-S", sourceBox: "17", sourceCode: "ZZ", sourceTaxYear: 2026,
+    section1062StatementConfirmed: true, entityScheduleAMatched: true, taxpayerAndEntityMatched: true,
+    allocatedGain: "20000.02",
+  },
+} satisfies Form1062ScheduleAInput;
+const multipleSales = {
+  ...multipleSaleFacts,
+  taxableIncome: "106516.02",
+  sales: [{ sourceId: "synthetic-farmland-01", scheduleA: firstSale }, { sourceId: "synthetic-farmland-02", scheduleA: secondSale }],
+  independentlyReportedElectedGain: "76516.02",
 } satisfies Form1062Input;
 
 function lineValues(input: Form1062Input, lines: string[]) {
@@ -27,6 +47,40 @@ describe("2026 Form 1062 worksheet", () => {
     expect(result.applicableNetTaxLiability.toFixed()).toBe("7050");
     expect(result.firstInstallmentWholeDollars.toFixed()).toBe("1763");
     expect(result.deferredTax.toFixed()).toBe("5287.5");
+    expect(result.scheduleACount).toBe(1);
+  });
+
+  it("counts separate elected sales and aggregates their exact gains before one tax comparison", () => {
+    const result = calculateForm1062(multipleSales);
+    expect(result.scheduleACount).toBe(2);
+    expect(lineValues(multipleSales, ["6", "7", "8", "14", "15"]))
+      .toEqual(["106516.02", "76516.02", "30000", "7050", "1762.5"]);
+    expect(JSON.stringify(result.lines)).not.toContain("synthetic-farmland-");
+    expect(result.lines.filter(row => row.line === "7")).toHaveLength(1);
+  });
+
+  it("keeps same-date and same-gain originals separate and rejects a repeated original", () => {
+    const twoSameGain = {
+      ...multipleSales,
+      sales: [multipleSales.sales[0], { sourceId: "synthetic-farmland-03", scheduleA: { ...firstSale } }],
+      taxableIncome: "143032", independentlyReportedElectedGain: "113032",
+    };
+    expect(lineValues(twoSameGain, ["7", "8"])).toEqual(["113032", "30000"]);
+    expect(() => calculateForm1062({ ...twoSameGain, sales: [multipleSales.sales[0], { ...multipleSales.sales[1], sourceId: multipleSales.sales[0].sourceId }] }))
+      .toThrow(/duplicate original sale/u);
+  });
+
+  it("rejects an incomplete, contradictory, or unreconciled set of elected sales", () => {
+    for (const change of [
+      { sales: [] }, { sales: [multipleSales.sales[0]] }, { sales: null }, { sale: firstSale }, { independentlyReportedElectedGain: undefined },
+      { independentlyReportedElectedGain: "76516.01" },
+      { withoutGain: { ...source.withoutGain, taxableIncome: "30000.01" } },
+      { sales: [multipleSales.sales[0], { ...multipleSales.sales[1], sourceId: " " }] },
+      { sales: [multipleSales.sales[0], { ...multipleSales.sales[1], sourceId: `${multipleSales.sales[0].sourceId}\n` }] },
+      { sales: [multipleSales.sales[0], { ...multipleSales.sales[1], scheduleA: undefined }] },
+      { sales: [multipleSales.sales[0], { ...multipleSales.sales[1], scheduleA: { ...secondSale, covenantIncluded: false } }] },
+      { sales: [multipleSales.sales[0], { ...multipleSales.sales[1], scheduleA: { ...secondSale, wholePropertyQualifies: false } }] },
+    ]) expect(() => calculateForm1062({ ...multipleSales, ...change } as unknown as Form1062Input)).toThrow(/Form 1062/u);
   });
 
   it("replays each credit group and limits the redetermined credit total", () => {

@@ -5,26 +5,36 @@ reference: "https://www.irs.gov/instructions/i1062"
 revision: "Final instructions Rev. December 2025; draft form Rev. December 2026, created 7/16/26"
 notes: |
   26 USC 1062 applies to taxable years beginning after July 4, 2025. The
-  isolated 2026 Form 1040 worksheet covers one already qualified
-  sale, held directly or through one domestic partnership, and already
-  redetermined tax and credit inputs. The caller supplies
-  actual Schedule A sale facts and a confirmed election. The worksheet
-  recalculates the single sale's line 13. Eligibility, preferential rates,
+  isolated 2026 Form 1040 worksheet covers already qualified whole-property
+  sales held directly or through a domestic partnership or S corporation,
+  with independently redetermined tax and credit inputs. The caller supplies
+  the actual Schedule A facts for each elected sale and a confirmed election.
+  The worksheet recalculates each Schedule A line 13. Eligibility, preferential rates,
   additional taxes and credits come from the caller's confirmed originals
   and tax determinations.
-  Other sales, exchanges, partial-property allocations, installment sales,
+  Exchanges, partial-property allocations, installment sales,
   other pass-throughs, estates, later installments and acceleration require separate
   qualification. No live federal, filing, estimated payment or PDF transfer.
   Research checked on 2026-11-13. December 2026 form still marked draft.
   IRS ATS scenario 13 is a partnership allocation. Its printed amounts
   serve as an arithmetic oracle for that source path.
+  REG-117095-25 is proposed. Its preamble permits early reliance only when
+  applied in its entirety and consistently. This worksheet makes no finding
+  about taxpayer eligibility for reliance or covenant enforceability.
 sources:
   - "https://uscode.house.gov/us/usc/119-120/t26/s1062/"
   - "https://www.irs.gov/pub/irs-pdf/f1062.pdf"
   - "https://www.irs.gov/pub/irs-dft/f1062--dft.pdf"
   - "https://www.irs.gov/pub/irs-efile/ty26-1040-ats-scenario-13.pdf"
   - "https://www.irs.gov/pub/irs-drop/n-26-03.pdf"
+  - "https://www.irs.gov/irb/2026-44_irb"
 lines:
+  - line: "schedule-a-count"
+    description: "Number of Schedules A included with the election"
+    formula: "Count one Schedule A per confirmed elected sale. For multiple sales, require a distinct opaque identifier from each original disposition record. Never print identifiers or covenant contents in the numeric audit."
+    testRef: "tests/engine/forms/form-1062.test.ts::counts separate elected sales and aggregates their exact gains before one tax comparison"
+    testRefs:
+      - "tests/engine/forms/form-1062.test.ts::keeps same-date and same-gain originals separate and rejects a repeated original"
   - line: "1-3"
     description: "Regular tax liability including the elected gain"
     formula: "Line 1 is supplied regular income tax; line 2 is supplied applicable additions under section 26(b)(2); line 3 adds both."
@@ -35,8 +45,11 @@ lines:
     testRef: "tests/engine/forms/form-1062.test.ts::replays each credit group and limits the redetermined credit total"
   - line: "6-8"
     description: "Taxable income for the comparison"
-    formula: "Line 6 is the supplied taxable income; line 7 is the one confirmed elected Schedule A line 13 gain; line 8 floors line 6 minus line 7 at zero. Both tax determinations use the same return year and election."
+    formula: "Line 6 is the supplied taxable income; line 7 sums exact gains from all elected Schedules A line 13; line 8 floors line 6 minus line 7 at zero. Reconcile the multi-sale sum to the independently supplied recognized elected gain. Both tax determinations use the same return year and election."
     testRef: "tests/engine/forms/form-1062.test.ts::floors comparison taxable income and applicable liability separately"
+    testRefs:
+      - "tests/engine/forms/form-1062.test.ts::counts separate elected sales and aggregates their exact gains before one tax comparison"
+      - "tests/engine/forms/form-1062.test.ts::rejects an incomplete, contradictory, or unreconciled set of elected sales"
   - line: "9-11"
     description: "Regular tax liability recomputed without the elected gain"
     formula: "Require the caller's redetermination to have used the exact line 8 taxable income. Record the recomputed regular income tax and additions from that redetermination on lines 9 and 10, and add both for line 11."
@@ -59,7 +72,7 @@ lines:
     testRef: "tests/engine/forms/form-1062.test.ts::conserves the exact first installment and potential estimate exclusion"
   - line: "scope"
     description: "Confirmed sale source boundary"
-    formula: "Require tax year 2026, confirmed election and one complete source passing the separate Schedule A direct-sale or single-partnership method. Require explicit nonnegative dollar and cent inputs including zero. Use at most 12 whole-dollar digits and never log covenant contents or owner identity."
+    formula: "Require tax year 2026, confirmed election and every complete source passing the separate Schedule A direct-sale, domestic partnership or S corporation method. The single-sale input and multiple-sale input are mutually exclusive. Require explicit nonnegative dollar and cent inputs including zero. Use at most 12 whole-dollar digits and never log covenant contents or owner identity."
     testRef: "tests/engine/forms/form-1062.test.ts::rejects an incomplete or unreconciled election and tax determination"
   - line: "ats-13"
     description: "IRS 2026 ATS scenario 13 arithmetic"

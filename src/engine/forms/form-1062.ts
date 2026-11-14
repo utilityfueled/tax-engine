@@ -14,14 +14,28 @@ interface TaxDetermination {
   };
 }
 
-export interface Form1062Input {
+interface ElectedSale {
+  sourceId: string;
+  scheduleA: Form1062ScheduleAInput;
+}
+
+interface Form1062Facts {
   taxYear: 2026;
-  sale: Form1062ScheduleAInput;
   electionConfirmed: true;
   taxableIncome: string;
   withGain: TaxDetermination;
   withoutGain: TaxDetermination & { taxableIncome: string };
 }
+
+export type Form1062Input = Form1062Facts & ({
+  sale: Form1062ScheduleAInput;
+  sales?: never;
+  independentlyReportedElectedGain?: never;
+} | {
+  sale?: never;
+  sales: readonly ElectedSale[];
+  independentlyReportedElectedGain: string;
+});
 
 function amount(value: string | undefined, line: string): Decimal {
   if (typeof value !== "string" || !/^\d{1,12}(?:\.\d{1,2})?$/u.test(value)) {
@@ -30,13 +44,42 @@ function amount(value: string | undefined, line: string): Decimal {
   return d(value);
 }
 
-/** Worksheet for one confirmed 2026 sale. See spec/federal/form-1062.yaml. */
+function electedGain(input: Form1062Input): { gain: Decimal; count: number } {
+  if (input.sale !== undefined) {
+    if (!input.sale || input.sales !== undefined || input.independentlyReportedElectedGain !== undefined) {
+      throw new Error("Form 1062 requires either one qualified sale or a separate set of elected sales");
+    }
+    return { gain: calculateForm1062ScheduleA(input.sale).recognizedGain, count: 1 };
+  }
+
+  const sales = input.sales;
+  if (!Array.isArray(sales) || sales.length < 2) {
+    throw new Error("Form 1062 requires two or more confirmed sales for the multiple-sale election worksheet");
+  }
+  const sourceIds = new Set<string>();
+  let gain = d(0);
+  for (const sale of sales) {
+    if (typeof sale?.sourceId !== "string" || !/^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$/u.test(sale.sourceId)
+      || sale.sourceId.trim() !== sale.sourceId || !sale.scheduleA) {
+      throw new Error("Form 1062 requires each elected sale's original identifier and Schedule A facts");
+    }
+    if (sourceIds.has(sale.sourceId)) throw new Error("Form 1062 cannot include a duplicate original sale");
+    sourceIds.add(sale.sourceId);
+    gain = gain.plus(calculateForm1062ScheduleA(sale.scheduleA).recognizedGain);
+  }
+  if (!gain.eq(amount(input.independentlyReportedElectedGain, "7"))) {
+    throw new Error("Form 1062 requires the combined Schedule A gains to reconcile to the independently reported elected gain");
+  }
+  return { gain, count: sales.length };
+}
+
+/** Worksheet for confirmed 2026 elected sales. See spec/federal/form-1062.yaml. */
 export function calculateForm1062(input: Form1062Input) {
-  if (input.taxYear !== 2026 || !input.sale || input.electionConfirmed !== true) {
+  if (input.taxYear !== 2026 || input.electionConfirmed !== true) {
     throw new Error("Form 1062 requires a confirmed 2026 qualified sale, covenant and election");
   }
   const income = amount(input.taxableIncome, "6");
-  const { recognizedGain: gain } = calculateForm1062ScheduleA(input.sale);
+  const { gain, count } = electedGain(input);
   const comparisonIncome = zeroFloor(income.minus(gain));
   if (!comparisonIncome.eq(amount(input.withoutGain?.taxableIncome, "8"))) {
     throw new Error("Form 1062 requires the redetermined tax to use the reconciled line 8 income");
@@ -65,12 +108,13 @@ export function calculateForm1062(input: Form1062Input) {
 
   const withGain = netIncomeTax(input.withGain, 1, false);
   record("6", "Taxable income", income, "Confirmed taxable income including elected gain");
-  record("7", "Elected section 1062 gain", gain, "Schedule A line 13");
+  record("7", "Elected section 1062 gain", gain, count === 1 ? "Schedule A line 13" : "Sum of elected Schedules A line 13");
   record("8", "Taxable income excluding elected gain", comparisonIncome, "Greater of zero or line 6 minus line 7");
   const withoutGain = netIncomeTax(input.withoutGain, 9, true);
   const applicableNetTaxLiability = record("14", "Applicable net tax liability", zeroFloor(withGain.minus(withoutGain)), "Greater of zero or line 5 minus line 13");
   const firstInstallment = record("15", "First installment", applicableNetTaxLiability.times("0.25"), "25% of line 14");
   return {
+    scheduleACount: count,
     applicableNetTaxLiability,
     firstInstallment,
     firstInstallmentWholeDollars: roundDollar(firstInstallment),
