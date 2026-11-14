@@ -6,6 +6,11 @@ below retain their original evidence boundaries.
 
 ## Active continuation — November 14
 
+- [x] Bind finite actual current farm-loss originals and already-filed waiver,
+  including separate AMT and one-time EBL carry: 84 focused, 958 spec and eleven
+  independent manual/mutation passes. Preserve broader methods and filing gates.
+  [Source method](upgrade-2026-form172-farming-waiver-20261114.md).
+
 - [x] Bind actual mixed domestic/foreign capital-material service originals,
   aggregate service cap and domestic QBI; reproduce and close zero-profit
   wages/UBIA admission. 1,069 author and twelve independent passes; broader

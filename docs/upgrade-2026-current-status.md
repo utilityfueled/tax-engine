@@ -1,5 +1,16 @@
 # Current 2026 upgrade continuation
 
+## November 14 actual farm-loss originals and filed waiver
+
+The finite active cash-farm method now reconciles complete regular and AMT
+original ledgers, qualified current seed expense, actual Form 461 and an already
+filed timely whole-period carryback waiver. Farm-only losses are capped by each
+complete origin; current excess business loss is carried once. Eighty-four
+focused tests, 958 spec checks and eleven independent manual/mutation tests
+pass. [Sources, limits and retained failures](upgrade-2026-form172-farming-waiver-20261114.md).
+This supports the specified actual 2025 origin, preserving broader farm methods,
+unknown facts, historical elections and all human/annual qualification gates.
+
 ## November 14 actual mixed-capital foreign service originals
 
 A finite location-separated Schedule C service business now binds actual foreign

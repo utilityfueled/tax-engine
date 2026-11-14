@@ -1,3 +1,4 @@
+import { Form172FarmingSourcesSchema } from "./form-172-farming-sources.js";
 import { CoverdellPostDisqualificationInterestSchema } from "./coverdell-post-disqualification-interest.js";
 import { Form2555MixedCapitalServicesSchema } from "./form-2555-mixed-capital-services.js";
 import { RRTAPayrollSourcesSchema } from "./rrta-payroll-sources.js";
@@ -2764,6 +2765,7 @@ export const NetOperatingLossSourcesSchema = z.object({
 
 /** Current origin facts, separate from filed prior loss vintages. No calculated income overrides. */
 export const Form172OriginSourcesSchema = z.object({
+  farmingSources: Form172FarmingSourcesSchema.optional(),
   sourceTaxYear: z.number().int().optional(), sourceReference: z.string().optional(), sourceFactsConfirmed: z.boolean().optional(),
   allCurrentYearSourcesIncluded: z.boolean().optional(), farmingLossIncluded: z.boolean().optional(),
   cancelledDebtIncluded: z.boolean().optional(), estateOrTrustLossIncluded: z.boolean().optional(),

@@ -1,0 +1,45 @@
+form: "Form 172 actual cash-farm loss and filed carryback waiver"
+fullName: "Current original farm-only regular and alternative NOL origins with actual timely entire-period waiver"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i172"
+notes: |
+  Official sources refreshed2026-11-14: i172 Rev12/2024, final2025 Pub225
+  LossesFromOperatingaFarm, final2025 i6251 line2f, and current IRC172(b)(1)(B),
+  (b)(3), (c), (d). https://www.irs.gov/publications/p225
+  https://www.irs.gov/instructions/i6251
+  https://uscode.house.gov/us/usc/119-120/t26/s172/
+  Farm portion is the smaller of actual total NOL or the NOL computed considering
+  only farming income/deductions, after actual461 limitation. The remainder and
+  separate current EBL carry retain their character. Without an actual timely
+  irrevocable entire-period waiver, farm losses normally carry back2years and
+  must not silently become complete forward carries. This finite method admits
+  only actual2025 single-owner cash raised-product farms, known empty independent
+  regular/AMT prior NOL histories, no other business, and actual complete Form461.
+  Actual original return filed2026-01-01 through2026-04-15 with attached actual
+  election executed no later than filing is required; no extension, amended
+  relief, planned election, carryback utilization, or historical farm method.
+  Regular waiver also applies to AMT; original AMT cash income/expense records
+  remain independent and must prove same basis and known absence of adjustments.
+  No Form172 line override, guessed election, omitted-source-as-zero, or source
+  identifier in output is permitted. Actual2026 annual readiness remains closed.
+lines:
+  - line: "source-admission"
+    description: "Actual original cash receipts, expense boxes and independent AMT originals"
+    formula: "Require every supported ScheduleF cash/accrual receipt and expense original including known zeros; bind owner, tax year, activity/code/EIN and actual canonical cash source. Only raised-product receipts and current paid-and-used seeds expense are admitted; actual no prepayment, section464 limitation, tax shelter, required263A capitalization, capital/preproductive cost or accounting/basis election is confirmed and seed deduction is after all applicable farm limits; every other method is explicitly known zero. Require for-profit, full-at-risk/nonpassive and complete known-empty original histories."
+    testRef: "tests/engine/forms/form-172-farming-waiver.test.ts::rejects missing contradictory and unsupported original farm facts"
+  - line: "filed-waiver"
+    description: "Never infer an election or the use of its carryback period"
+    formula: "Actual section172(b)(3) attached original statement, executed on/before original filing, filed by actual ordinary2025 due date2026-04-15, entire carryback period and irrevocable choice confirmed; no extension/amended/planned claim. One actual regular election binds AMT."
+    testRef: "tests/engine/forms/form-172-farming-waiver.test.ts::requires the actual timely original entire-period waiver and preserves the annual gate"
+  - line: "farm-only-origin"
+    description: "Run actual regular and independent AMT farm-only PartI then cap by each full origin"
+    formula: "10000raised receipts minus110000seeds=-100000farmnet;20000wages+5000interest gives AGI=-75000. Full regular NOL80000; full AMT NOL75000. Each independently computed farm-only NOL100000 is capped at its full origin80000/75000. Waived carryback used0; new forward carries80000/75000; investment loss0."
+    testRef: "tests/engine/forms/form-172-farming-waiver.test.ts::computes independent actual farm and full return origins without electing for the taxpayer"
+  - line: "ebl-before-farm-portion"
+    description: "Apply actual reconciled Form461 before farm-only attribution and add current EBL once"
+    formula: "10000receipts minus510000seeds=-500000farmnet; actual2025single461 threshold313000 =>EBL187000. AGI=-288000; full PartI regular293000/AMT288000; each farm-only313000 caps to293000/288000. New carry regular480000/AMT475000 includes separate EBL187000 once."
+    testRef: "tests/engine/forms/form-172-farming-waiver.test.ts::applies actual excess business loss before attribution and preserves its separate carry once"
+  - line: "privacy-and-exactness"
+    description: "Keep actual source cents until reported rounding; export derived values only"
+    formula: "No original source references, taxpayer source identity, return/election dates or farm EIN enter result/audit. Exact source cents remain in sourcePartI; no floating-point money. Actual canonical and independent AMT original values reconcile; mutations cannot alter input."
+    testRef: "tests/engine/forms/form-172-farming-waiver.test.ts::retains source cents and keeps original election and ledger records out of public results"

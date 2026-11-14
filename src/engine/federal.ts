@@ -4711,7 +4711,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     agi, totalIncome, totalWages, taxableInterest: totalTaxableInterest, ordinaryDividends: totalDividends,
     iraTaxable, pensionTaxable, taxableSocialSecurity: socialSecurityBenefitsTaxable, capitalGainLoss, scheduleD: schedD,
     deductionUsed, deductionAmount, qbiDeduction, additionalDeductions, nonitemizerCharitableDeduction,
-    schedule1: sched1, scheduleA: schedA, currentExcessBusinessLoss: excessBusinessLossAddback,
+    schedule1: sched1, scheduleA: schedA, scheduleF: schedF, currentExcessBusinessLoss: excessBusinessLossAddback,
     alternativeTaxIncome: form6251.amti,
     alternativeTaxPrivateActivityInterest: form6251BondSources.privateActivityBondInterest.plus(form8814AmtSources.privateActivityBondInterest),
     investmentIncome: sum(totalTaxableInterest, totalDividends, niitOrdinarySources.annuityIncome),

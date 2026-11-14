@@ -4,6 +4,8 @@ import type { TaxYearInput } from "@/models/inputs.js";
 import type { CalculatedLine } from "@/models/outputs.js";
 import type { Schedule1Result } from "@/engine/schedules/schedule-1.js";
 import type { ScheduleAResult } from "@/engine/schedules/schedule-a.js";
+import type { ScheduleFResult } from "@/engine/schedules/schedule-f.js";
+import { validateForm172FarmingSources, calculateForm172FarmingSources, type Form172FarmingResult } from "./form-172-farming-sources.js";
 import type { ScheduleDResult } from "@/engine/schedules/schedule-d.js";
 import { AuditTrail } from "@/utils/audit.js";
 import { d, roundDollar, sum } from "@/utils/decimal.js";
@@ -34,6 +36,7 @@ export interface Form172ReturnContext {
   nonitemizerCharitableDeduction: Decimal;
   schedule1: Schedule1Result;
   scheduleA?: ScheduleAResult;
+  scheduleF?: ScheduleFResult;
   currentExcessBusinessLoss: Decimal;
   alternativeTaxIncome: Decimal;
   alternativeTaxPrivateActivityInterest: Decimal;
@@ -57,6 +60,7 @@ export interface Form172ReturnResult {
   regularClosingCarryforward: Decimal;
   alternativeClosingCarryforward: Decimal;
   k1Sources?: Form172K1SourcesResult;
+  farmingSources?: Form172FarmingResult;
   charitableSources?: Form172CharitableSourcesResult & {
     regularCurrentDeduction: Decimal;
     alternativeCurrentDeduction: Decimal;
@@ -81,7 +85,8 @@ export function calculateForm172Return(input: TaxYearInput, context?: Form172Ret
     || facts.sourceFactsConfirmed !== true || facts.allCurrentYearSourcesIncluded !== true
     || !Array.isArray(facts.businessSources)) throw new Error("Form172 requires complete actual current origin year, source reference and confirmations");
   if (!input.netOperatingLoss) throw new Error("Form172 requires the complete actual prior regular and separate AMT carry packet, including known empty histories");
-  if (facts.farmingLossIncluded !== false || facts.estateOrTrustLossIncluded !== false) {
+  const farming = validateForm172FarmingSources(input, context?.scheduleF);
+  if ((!farming && facts.farmingLossIncluded !== false) || facts.estateOrTrustLossIncluded !== false) {
     throw new Error("Form172 farming, cancelled-debt and estate origin methods require their actual separate source worksheets");
   }
   // Spec: form-172-principal-residence.yaml. Personal residence exclusion
@@ -127,6 +132,7 @@ export function calculateForm172Return(input: TaxYearInput, context?: Form172Ret
     "form1099Q", "formW2G", "form1099K", "form1099OID", "form4797", "form4684", "form8824", "homeSales", "cryptoIncome",
     "form2555", "form8814", "form8839", "form6252", "form6781", "form8915F"] as const) {
     const value = input[key];
+    if (key === "scheduleF" && farming) continue;
     if (key === "scheduleK1" && k1Sources) continue;
     if ((key === "scheduleK1" || key === "cryptoIncome")
       && (charitableSources?.sourceKind === "current" || charitableSources?.sourceKind === "complete_histories")) continue;
@@ -171,17 +177,20 @@ export function calculateForm172Return(input: TaxYearInput, context?: Form172Ret
     throw new Error("Form172 requires completed separate actual prior regular and alternative carry results");
   }
   const sched1 = context.schedule1;
+  if (farming && (!context.scheduleF || !sched1.farmIncome.eq(farming.regularFarmNet))) {
+    throw new Error("Form172 actual farming sources must reconcile to completed canonical ScheduleF and Schedule1");
+  }
   if (principalResidence && !sched1.cancelledDebtIncome.eq(personalMortgageIncome)) {
     throw new Error("Form172 actual personal mortgage income must reconcile to final Schedule1 cancelled debt");
   }
   const k1BusinessIncome = k1Sources?.ordinaryBusinessIncome ?? d("0");
   if (!sched1.supplementalIncome.eq(k1BusinessIncome)) throw new Error("Form172 ordinary K1 sources must reconcile to actual final Schedule1 supplemental income");
-  const expectedAdditionalIncome = sum(sched1.businessIncome, k1BusinessIncome, sched1.unemploymentCompensation, sched1.alimonyReceived,
+  const expectedAdditionalIncome = sum(sched1.businessIncome, k1BusinessIncome, sched1.farmIncome, sched1.unemploymentCompensation, sched1.alimonyReceived,
     context.currentExcessBusinessLoss, personalMortgageIncome).minus(prior.deduction);
   if (!sched1.totalAdditionalIncome.eq(expectedAdditionalIncome)) throw new Error("Form172 has unclassified actual additional income or losses");
   const nonbusinessIncome = sum(context.taxableInterest, context.ordinaryDividends, context.iraTaxable,
     context.pensionTaxable, context.taxableSocialSecurity, sched1.alimonyReceived, personalMortgageIncome);
-  const businessIncome = sum(context.totalWages, sched1.businessIncome, k1BusinessIncome, sched1.unemploymentCompensation);
+  const businessIncome = sum(context.totalWages, sched1.businessIncome, k1BusinessIncome, sched1.farmIncome, sched1.unemploymentCompensation);
   if (!sum(businessIncome, nonbusinessIncome, capital.capitalGainLoss, context.currentExcessBusinessLoss).minus(prior.deduction).eq(context.totalIncome)) {
     throw new Error("Form172 actual business and nonbusiness income must conserve final return income");
   }
@@ -231,6 +240,7 @@ export function calculateForm172Return(input: TaxYearInput, context?: Form172Ret
     investmentDeductions, context.investmentIncome, zero);
   const section1411OriginalLoss = Decimal.min(regular.netOperatingLoss, investment.netOperatingLoss);
   const currentExcessBusinessLoss = roundDollar(context.currentExcessBusinessLoss);
+  const farmingSources = farming ? calculateForm172FarmingSources(input, farming, regular, alternativeTax, currentExcessBusinessLoss) : undefined;
   const newRegularCarryforward = regular.netOperatingLoss.plus(currentExcessBusinessLoss);
   const newAlternativeCarryforward = alternativeTax.netOperatingLoss.plus(currentExcessBusinessLoss);
   const regularClosingCarryforward = prior.carryforward.plus(newRegularCarryforward);
@@ -238,6 +248,12 @@ export function calculateForm172Return(input: TaxYearInput, context?: Form172Ret
   const audit = new AuditTrail();
   if (principalResidence) audit.record("Current Form172 source reconciliation", "personal-mortgage-income", "Actual taxable personal mortgage cancellation", personalMortgageIncome,
     "Source-proven retained personal home; taxable remainder is nonbusiness ordinary income in regular and alternative origins; excluded amount reduces only residence basis");
+  if (farmingSources) {
+    audit.record("Current Form172 farming sources", "regular-farm-portion", "Regular farming loss after actual Form461 and full-origin cap", farmingSources.regularFarmingLoss,
+      "Smaller of independently calculated farm-only and full regular NOL; actual timely original entire-period waiver verified; no carryback used");
+    audit.record("Current Form172 farming sources", "alternative-farm-portion", "Alternative farming loss after actual Form461 and full-origin cap", farmingSources.alternativeFarmingLoss,
+      "Independent original alternative cash-farm computation; same actual regular waiver applies; current EBL remains separately carried once");
+  }
   if (k1Sources) audit.merge(k1Sources.lines);
   let charitable: Form172ReturnResult["charitableSources"];
   if (charitableSources) {
@@ -286,6 +302,7 @@ export function calculateForm172Return(input: TaxYearInput, context?: Form172Ret
     currentExcessBusinessLoss, alternativeExcessBusinessLoss: currentExcessBusinessLoss, newRegularCarryforward, newAlternativeCarryforward,
     regularClosingCarryforward, alternativeClosingCarryforward, charitableSources: charitable,
     ...(k1Sources ? { k1Sources } : {}),
+    ...(farmingSources ? { farmingSources } : {}),
     lines: [...regular.lines, ...alternativeTax.lines.map(line => ({ ...line, form: "Alternative172 Part I" })),
       ...investment.lines.map(line => ({ ...line, form: "Section1411 origin172" })), ...(itemized?.lines ?? []), ...capital.lines, ...audit.getLines()] };
 }

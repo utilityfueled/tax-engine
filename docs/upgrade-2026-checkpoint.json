@@ -1,4 +1,15 @@
 {
+  "nov14ActualFarmingWaiverOrigin": {
+    "sourceFreezeSha256": "7539f9d6e72662b8e54884cbd572a994e3fcbd480cd3f3ba050bcc9f2f58c5d0",
+    "focused": "84PASS;958specPASS;typesLintPASS",
+    "independent": "11PASS;manualRegularAMTFullCaps;EBLOnce;waiverUnknownDenied;privacy",
+    "independentReviewSha256": "2566b64dcfde19ce4c8ab2b50a0e8b79141b972c3af8bc188bf65e00003ce4bc",
+    "rootReviewSha256": "2459d18357b5e1f2241d6efa7b7f0299850e1cdd6536245e1abe4c44a8079bcf",
+    "ledger": "docs/upgrade-2026-form172-farming-waiver-20261114.md",
+    "combinedSuccessorRequired": true,
+    "humanOr2026AnnualQualification": false,
+    "mainPushHold": true
+  },
   "nov14MixedCapitalForeignServices": {
     "freezeSha256": "e9d3fd123f15480d01e42db2b85b19cb59d5f0243f1a6c0d94c4134bc060f2d4",
     "author": "9files1069PASS;typesLintSpec7PASS",
