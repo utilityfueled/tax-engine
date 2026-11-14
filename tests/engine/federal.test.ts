@@ -9,6 +9,10 @@ import { calculateFederalTax } from "@/engine/federal.js";
 import { Form8824Schema, type TaxYearInput } from "@/models/inputs.js";
 import { simpleW2Fixture, complexMFJFixture } from "../fixtures/simple-w2.js";
 import { actualPartialPersonalCodInput } from "../fixtures/cod-partial-personal.js";
+import { qualifiedPersonalBankruptcyInput } from "../fixtures/cod-bankruptcy.js";
+import { calculateForm1099C } from "@/engine/forms/form-1099-c.js";
+import { calculateForm982 } from "@/engine/forms/form-982.js";
+import { getConstants } from "@/models/constants.js";
 import { partialPersonalLegacyNolZeroPoolInput } from "../fixtures/cod-zero-minimum-tax-credit-bound.js";
 
 const d = (n: number | string) => new Decimal(n);
@@ -12184,7 +12188,7 @@ describe("Form 1099-C cancellation of debt through federal pipeline", () => {
   });
 
   it("Bankruptcy exclusion eliminates all taxable COD income", () => {
-    const result = calculateFederalTax({
+    const incompleteOriginal = {
       ...simpleW2Fixture,
       form1099C: [
         { creditor: "Creditor", amountDischarged: "50000", personallyLiable: true },
@@ -12192,7 +12196,11 @@ describe("Form 1099-C cancellation of debt through federal pipeline", () => {
       codExclusion: {
         bankruptcy: true,
       },
-    });
+    };
+    // Spec: cod-bankruptcy-source-admission.yaml. Retain the incomplete original
+    // as rejection evidence, then preserve its outcome with actual source facts.
+    expect(() => calculateFederalTax(incompleteOriginal)).toThrow(/COD.*complete|COD.*actual/i);
+    const result = calculateFederalTax(qualifiedPersonalBankruptcyInput('13', { creditor: 'Creditor' }));
 
     expect(result.schedule1!.cancelledDebtIncome.toNumber()).toBe(0);
   });
@@ -12783,7 +12791,7 @@ describe("Form 982 federal integration", () => {
   });
 
   it("Form 982 Part II - bankruptcy exclusion with no carryforwards leaves carryforwards unchanged", () => {
-    const result = calculateFederalTax({
+    const incompleteOriginal = {
       ...simpleW2Fixture,
       form1099C: [
         {
@@ -12795,7 +12803,11 @@ describe("Form 982 federal integration", () => {
       codExclusion: {
         bankruptcy: true,
       },
-    });
+    };
+    // Spec: cod-bankruptcy-source-admission.yaml. Unknown attribute facts are
+    // not zeros; the complete successor supplies both actual empty ledgers.
+    expect(() => calculateFederalTax(incompleteOriginal)).toThrow(/COD.*complete|COD.*actual/i);
+    const result = calculateFederalTax(qualifiedPersonalBankruptcyInput('13', { creditor: 'Medical Center' }));
 
     // Bankruptcy excludes all $50K → taxable COD = 0
     expect(result.schedule1!.cancelledDebtIncome.toNumber()).toBe(0);
@@ -12805,7 +12817,7 @@ describe("Form 982 federal integration", () => {
   });
 
   it("Form 982 Part II - qualified principal residence exclusion reduces only residence basis (not engine carryforwards)", () => {
-    const result = calculateFederalTax({
+    const incompleteOriginal = {
       ...simpleW2Fixture,
       form1099C: [
         {
@@ -12824,14 +12836,31 @@ describe("Form 982 federal integration", () => {
         nolCarryforward: "10000",
         excessBusinessLossNOL: "10000",
       },
+    };
+    // Spec: cod-bankruptcy-source-admission.yaml. The original amount and basis
+    // do not establish qualified acquisition debt, the discharge/retention facts
+    // or actual loss histories; full-return residence eligibility stays guarded.
+    expect(() => calculateFederalTax(incompleteOriginal)).toThrow(/COD.*complete|COD.*actual/i);
+    // Preserve this explicitly lower-level basis-only arithmetic contract;
+    // these supplied eligibility/attribute amounts are not a qualified return.
+    const exclusion = calculateForm1099C(incompleteOriginal.form1099C,
+      { bankruptcy: false, electBasisReductionFirst: false, ...incompleteOriginal.codExclusion }, 'single', getConstants(2025));
+    const reduction = calculateForm982({
+      bankruptcyExclusion: d('0'), insolvencyExclusion: d('0'),
+      qualifiedPrincipalResidenceExclusion: exclusion.qualifiedPrincipalResidenceExclusion,
+      qualifiedFarmExclusion: d('0'), qualifiedRealPropertyBusinessExclusion: d('0'), electBasisReductionFirst: false,
+      attributes: { nolCarryforward: d('10000'), generalBusinessCreditCarryforward: d('0'), minimumTaxCreditCarryforward: d('0'),
+        capitalLossCarryforward: d('0'), aggregateBasisOfProperty: d('0'), passiveActivityLossCarryforward: d('0'),
+        foreignTaxCreditCarryforward: d('0'), basisOfDepreciableProperty: d('0'), basisOfPrincipalResidence: d('300000'), basisOfDepreciableRealProperty: d('0') },
     });
 
     // All $100K excluded for QPR → taxable COD = 0
-    expect(result.schedule1!.cancelledDebtIncome.toNumber()).toBe(0);
-    // QPR reduces ONLY residence basis, NOT NOL — NOL should be unchanged
-    // (minus any NOL deduction applied to current-year income)
-    // The NOL carryforward should reflect only the 80% deduction, not Form 982 reduction
-    expect(result.carryforwards.nolCarryforward.greaterThanOrEqualTo(0)).toBe(true);
+    expect(exclusion.taxableCodIncome.toNumber()).toBe(0);
+    // Supplied QPR eligibility reduces only residence basis. No annual-return
+    // NOL use is inferred by this lower-level attribute arithmetic test.
+    expect(reduction.reducedAttributes.nolCarryforward.greaterThanOrEqualTo(0)).toBe(true);
+    expect(reduction.reducedAttributes.nolCarryforward.toFixed()).toBe('10000');
+    expect(reduction.reducedAttributes.basisOfPrincipalResidence.toFixed()).toBe('200000');
   });
 });
 

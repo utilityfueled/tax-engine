@@ -257,6 +257,15 @@ function calculateFederalTaxForSources(input: TaxYearInput): TaxReturnResult {
   validateQofDispositionFacts(input.qofDispositionFacts, input.taxpayer.taxYear);
   assertNoDerivedCapitalFields(input);
   calculateQofInclusion(input);
+  // Spec: cod-bankruptcy-source-admission.yaml. Legacy exclusion amounts and
+  // elections do not prove eligibility, attribute ownership or complete history.
+  const codClaim = input.codExclusion;
+  if (!input.form982NolSources && codClaim && (codClaim.bankruptcy || codClaim.electBasisReductionFirst
+    || (codClaim.insolvency && d(codClaim.insolvency.totalLiabilities).gt(d(codClaim.insolvency.totalAssets)))
+    || !d(codClaim.qualifiedPrincipalResidence?.dischargedAmount).isZero()
+    || !d(codClaim.qualifiedFarmExclusion).isZero() || !d(codClaim.qualifiedRealPropertyBusinessExclusion).isZero())) {
+    throw new Error("COD exclusions require actual complete original debt, eligibility, case history and vintage attribute source records");
+  }
   if (input.form982AttributeSources && !input.form982NolSources) throw new Error("COD later attributes require actual complete original debt and NOL sources");
   if (input.form982NolSources) calculateCodNolReduction(input);
   const marketplace = input.form7206?.plans?.some(plan => plan.marketplaceCoverage === true && plan.premiumTaxCreditInvolved === true);

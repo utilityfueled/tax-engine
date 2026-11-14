@@ -1,0 +1,61 @@
+form: "Canceled-debt exclusion source admission for complete federal returns"
+fullName: "Require actual original records before canonical exclusion or server-verified audit"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i982"
+retrievedAt: "2026-11-14"
+notes: |
+  This is enforcement of the existing cod-title-11-chapter-13 and
+  cod-title-11-chapter-12-personal source contracts, not a new exclusion formula.
+  Form982 instructions (12/2021), Definitions, require actual court jurisdiction
+  and a court discharge or approved plan; PartII requires actual attributes and
+  property basis. Pub908 (2025), Individuals in Chapter12 or13 and conversion,
+  distinguishes the separate chapter7/11 estate from non-estate cases.
+  https://www.irs.gov/publications/p908 ; IRC108(d)(2),1398(a),1399.
+  An affirmative legacy codExclusion.bankruptcy flag is an exclusion claim, not
+  proof of a chapter, court order, case history, owner, or zero tax attributes.
+  Full-return orchestration must require the actual form982NolSources packet
+  before any Schedule1 exclusion or legacy Form982 reduction. Its existing
+  validator continues to require complete regular/AMT NOL and attribute sources,
+  original debt statements, court facts and no chapter7/11 estate history.
+  This applies to parsed public inputs and server-owned transient calculation;
+  schema validity and user confirmation alone cannot establish eligibility.
+  No debt or a known-zero statement does not make an affirmative unknown
+  bankruptcy claim verified. With no bankruptcy claim, ordinary taxable COD
+  remains unchanged. The same boundary applies to an affirmative basis-first
+  election, a positive represented insolvency balance, or any nonzero claimed
+  principal-residence, farm or real-property-business exclusion amount. Negative
+  claimed amounts cannot manufacture negative exclusions and increase income.
+  Explicit zero numeric claims and false election flags alone do not require
+  invented records: they preserve ordinary taxable COD. Positive farm/residence/
+  business claims retain explicit rejection by the existing source validator;
+  their missing full-return eligibility method is not supplied by this guard.
+  Standalone calculateForm1099C remains arithmetic on
+  supplied eligibility; its lower-level tests are not full-return eligibility.
+  Keep incomplete original integration fixtures as rejection evidence; complete
+  qualified12/13 successors retain their original zero-COD/zero-carry outcomes.
+  No final2026, estate, farming/business, filing or model-promotion gate changes.
+lines:
+  - line: "public-source-required"
+    description: "Reject a legacy bankruptcy flag without actual records"
+    formula: "Public parseInput accepts syntax, but calculateFederalTax rejects bankruptcy=true without form982NolSources for codeA, codeG or absent event code, including zero/no statements. The50000 source formerly excluded silently; no chapter/court/history may be invented."
+    testRef: "tests/engine/federal-cod-bankruptcy-source-admission.test.ts::requires complete original sources for every affirmative public bankruptcy claim"
+  - line: "complete-successor"
+    description: "Retain actual supported chapter12/13 results"
+    formula: "Actual personal50000 discharge, full court/history and regular/AMT attribute sources, both chapter12 and13: taxableCOD0, reported exclusion50000, original no-loss/capital carry remains0. Removing source packet or actual case history rejects."
+    testRef: "tests/engine/federal-cod-bankruptcy-source-admission.test.ts::preserves fully sourced non-estate bankruptcy results and rejects source removal"
+  - line: "other-claimed-exclusions"
+    description: "Apply the same real-source boundary to adjacent exclusion claims"
+    formula: "Without actual source records, positive residence/farm/real-property amounts and insolvency+basis-first each formerly excluded50000 with inferred zero attributes; reject them. Nonzero negative amounts formerly increased taxableCOD to50001; reject them as unsupported claims too. Existing complete source validator still rejects unsupported special debt/election methods."
+    testRef: "tests/engine/federal-cod-bankruptcy-source-admission.test.ts::requires actual sources for other claimed exclusions and basis-first elections"
+  - line: "ordinary-and-low-level"
+    description: "Preserve taxable full-return and low-level arithmetic contracts"
+    formula: "Without a claim the actual50000 recourse discharge is taxable50000. False flags and explicit zero farm/real-property/residence amounts remain taxable. Standalone1099C arithmetic supplied true bankruptcy still excludes50000, without claiming return eligibility."
+    testRef: "tests/engine/federal-cod-bankruptcy-source-admission.test.ts::keeps ordinary taxable debt and explicit low-level arithmetic unchanged"
+  - line: "server-audit"
+    description: "Deny source-incomplete calculation receipts"
+    formula: "Server calculateVerifiedAiAudit must not create an available1040AGI0/tax0 receipt from the legacy flag-only50000 discharge."
+    testRef: "tests/apps/web/cod-bankruptcy-source-admission.test.ts::rejects an incomplete bankruptcy claim before a server-verified audit exists"
+  - line: "enabled-http"
+    description: "Reject through the actual private calculation POST"
+    formula: "Same-origin valid private envelope with complete taxpayer syntax but flag-only bankruptcy, basis-first or special nonzero exclusion claim returns400 private/no-store before provider/accounting; ordinary verified2025 W2 calculation still returns200 deterministic fallback with no model calls."
+    testRef: "tests/apps/web/cod-bankruptcy-source-admission.test.ts::rejects source-incomplete bankruptcy through actual calculation POST before provider or accounting"
