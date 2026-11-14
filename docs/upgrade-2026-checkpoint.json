@@ -25489,7 +25489,38 @@
       "focusedGuidedAndSpecPassed": 2680,
       "focusedGuidedAndSpecSha256": "107ebae6e6715e1fac8eea7c8f72d3b6c1caf330d46ca8fb0c3ee9738950e99b",
       "sourceBindingTestsPassed": 258,
-      "status": "running"
+      "managedStaticPassed": 9,
+      "managedStaticResultSha256": "43a6f0f0a05014ee7e8c4b47f610650ec0e6217d2656bc5d8abbfb882c04dbd9",
+      "managedUnitPassed": 28057,
+      "managedUnitFailed": 2,
+      "managedUnitResultSha256": "370b97ab29eb95a5e1900511ea56d87ef5b6d4daf6529ba8b61e316de7903bf8",
+      "managedCoveragePassed": 28057,
+      "managedCoverageFailed": 2,
+      "managedCoverageResultSha256": "7f918984c52ae7bdc57161bf19eb531abb5928e8276157a8172fa653c479f085",
+      "managedBrowserPassed": 618,
+      "managedBrowserFailed": 0,
+      "managedBrowserResultSha256": "9f7a52bdba9f200d1464ce18068214a3d7e245197e4226d682b03b3741a1deca",
+      "redactionAssertionFixCommit": "681a88ae",
+      "redactionAssertionFixFocusedPassed": 62,
+      "status": "static-and-browser-passed-unit-and-coverage-red"
+    },
+    "exactArm64Rehearsal": {
+      "source": "24530094d3de0dc629fa30b5e8f3eb297d50ea36",
+      "candidateArchiveSha256": "c064e2627d31d5c091e5db8b7246a902b9f2d0109c7120f7968667f4a098b94e",
+      "imageConfigSha256": "14980290a38f17a094e22a40f36b671c21a7796b4a179ee717bc8c713fbea2fe",
+      "controllerReceiptSha256": "fc95b21114bf4b9d3c91c72ff0ab3cf48f562b2c945634ab7c076d49d7ad68e3",
+      "imageResultSha256": "9729e34b8fa4e99e54e5320321a525e59975cb888302ab82423dbc74965253d1",
+      "cleanupResultSha256": "cd32053478e94fc27e16e991280a6f3de2d3580c6280dd1e44122dc93d318b40",
+      "successfulSteps": 19,
+      "browserPassed": 618,
+      "browserSkipped": 5,
+      "browserFailed": 0,
+      "scanFindings": 191,
+      "scanCritical": 0,
+      "scanAvailableFixes": 0,
+      "recoveryAndRollbackPassed": true,
+      "normalStopAndSocketRestorationPassed": true,
+      "qualificationBoundToSource": true
     },
     "supplementalHostedOrigin": {
       "commit": "2529e382f9b6878eab12a627a9572877df3d39d4",
@@ -25524,6 +25555,32 @@
       "routeAndAdjacentPassed": 231,
       "allResponsesPrivateNoStore": true,
       "filingEnabled": false
+    },
+    "aiBillingAndPrivacy": {
+      "undispatchedCommit": "8a88c3a5",
+      "postgresPassed": 75,
+      "postgresResultSha256": "c046299b69fd95e430f4d9b4a6da51808827ba5e101cfe33289edb4e4f12f930",
+      "iterativeScannerCommit": "ae5ee90a",
+      "textScannerCommit": "c0eaaaf4b035ded7373fd8544c7dd955cc910d00",
+      "textFocusedPassed": 426,
+      "configurationDependentSkips": 7,
+      "syntheticScannerComparisons": 175000,
+      "syntheticScannerMismatches": 0,
+      "liveProviderCalls": 0
+    },
+    "hostedOriginalDurability": {
+      "commit": "b775aa5aecda7ed92404cefb985fe51061f92582",
+      "focusedPassed": 103,
+      "atomicBrowserOriginalCommit": true,
+      "originalRetainedAfterAmbiguousResponse": true,
+      "opaqueAliasUsedInBrowserAndShell": true,
+      "separateConditionalWritePending": true
+    },
+    "stateEstimateContinuation": {
+      "paLateFirstInstallmentCommit": "8410a5a8",
+      "ohFarmerFisherCommit": "c47a487db21ce3b31b0d5c0c3f306c6dce80195a",
+      "finalAnnualSourcesQualified": false,
+      "independentHumanReviewReceived": false
     }
   }
 }

@@ -69,9 +69,24 @@ requires confirmation of current student and claimant facts after a student
 or return-year change. `24530094`
 completes the last generated fixture and a single exact digest change.
 All 2,680 focused guided, strict spec-ref, and current K-1 tests passed.
-The combined managed, hosted and ARM64 checks are running on frozen
-`24530094` with the same 623 Chromium cases, five hosted-only skips,
-request limits and zero retries.
+On frozen `24530094`, managed static checks passed all nine commands.
+Chromium passed 618 cases with five existing hosted-only skips and zero
+retries. Both unit and coverage runs passed 28,057 tests and failed two assertions that
+expected misconfigured origin values in diagnostic output. `681a88ae`
+corrects the log test to assert redaction and restores logging spies even
+after a failed assertion. Its 62 focused tests passed. Both disposable
+databases stopped normally. Full coverage qualification requires a green run.
+
+The exact `24530094` native ARM64 controller passed all 19 steps. It
+verified the imported candidate digest, scanned its runtime (191 findings,
+zero Critical or available fixes in that scan), checked PostgreSQL SCRAM,
+exercised encrypted backup and restore with exact cents and unknown year,
+and rehearsed rollback to the previous image. Chromium passed 618 cases
+with the same five hosted-only skips. The VM then stopped normally and
+the user socket route was restored. The initial invocation's socket-path
+failure is retained. The follow-up used the same image and source. These
+results qualify that rehearsal on `24530094`; successor ARM64, PostgreSQL
+image remediation and native AMD64 evidence are open.
 
 The `24530094` production-mode loopback HTTPS build passed all 15 hosted
 fault checks plus eight supplemental origin checks. Those checks verified
@@ -82,6 +97,36 @@ limit. All owned ports closed and the disposable cluster was removed.
 Deployed Preview remains unqualified. `561617bd` validates checklist and
 preview fields at the export-summary route and applies private no-store
 headers to success and failure responses. It passes 231 adjacent tests.
+
+`8a88c3a5` releases an exact AI credit hold when cancellation precedes
+transport, preserving any earlier billed attempt. Uncertain usage after
+transport starts still requires reconciliation. All 75 disposable
+PostgreSQL tests passed, including migration and exact billing. No live
+provider request was made. `ae5ee90a` traverses private provider payloads
+iteratively, rejecting cyclic, oversized or inaccessible content before
+dispatch. `c0eaaaf4` bounds the work of matching repeated contextual names
+and emails. A synthetic differential check compared 175,000 strings with
+zero classification differences, and 426 affected tests passed with seven
+existing database-configuration skips.
+
+`b775aa5a` commits the browser's original bytes before publishing hosted
+upload metadata, retains originals after an ambiguous response, and uses
+the same opaque alias for the cached file and server metadata. A UUID with
+a nine-digit substring reproduced the predecessor's rejection. All 103
+focused tests passed. The independent route reproduction also confirms a
+separate concurrent-write problem where the latest full snapshot drops an
+earlier upload or restores metadata after reset or deletion. Atomic
+conditional writes and browser integration are pending.
+
+`8410a5a8` calculates Pennsylvania planning interest for one confirmed
+late first installment with three timely cleared installments. The sample
+uses $225, 30 days and the official daily rate of 0.000192 for $1.296
+before rounding. `c47a487d` adds Ohio's confirmed farmer or fisher estimate
+timetable for the admitted 2026 planning cases, including applicable school
+district estimates. Filed forms and independent human review remain open.
+[Pennsylvania statute](https://www.legis.state.pa.us/WU01/LI/LI/US/HTM/1971/0/0002.003.000.052.000..HTM) ·
+[Pennsylvania interest rates](https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/otherforms/documents/rev-1611.pdf) ·
+[Ohio estimate statute](https://codes.ohio.gov/ohio-revised-code/section-5747.09).
 
 `d6fed7fc` requires an HTTPS origin without credentials, path, query or
 fragment for hosted production auth and billing. Invalid configuration
