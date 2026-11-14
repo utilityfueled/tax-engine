@@ -59,6 +59,17 @@ Private regression report SHA-256:
 Audit refresh receipt SHA-256:
 `22da1bb93e31928f27d9f4fb73e81a75a1985f3ee30775e5d89cd9c4e955bcb1`.
 
+## November 14 PostgreSQL dependency experiment
+
+The independently reviewed native ARM64 package and runtime experiment passed
+18 package stages and 99 consumer/recovery stages. Root verified all eleven
+runtime artifact hashes and normal VM/socket cleanup. The actual candidate scan
+retains 9 Critical and 138 High findings. The public struct ABI difference,
+authored CVE reproduction, native AMD64 execution and security-owner decisions
+remain open. Candidate release qualification and risk acceptance remain false;
+the default Compose pin is unchanged. The opt-in source builder is under
+independent review. [Sources, checks and artifact hashes](upgrade-2026-postgres-libxml2-native-20261114.md).
+
 ## November 14 combined runtime verification
 
 Frozen `67557637` passed all nine static, build, lint and specification checks.

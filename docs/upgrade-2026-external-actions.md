@@ -1,5 +1,38 @@
 # External actions needed to finish the 2026 upgrade
 
+## November 14 current boundaries
+
+The owner authorizes ordinary bounded isolated rehearsal reruns and cleanup;
+source changes and historical boot/build/operation counters do not require new
+permission by themselves. Historical source-specific allowances below describe
+those earlier executions. They do not block the current authorized work.
+Spending limits, privacy protections and the production push hold still apply.
+
+`9b6202e7` repairs a confirmed compression-related hosted save failure while
+preserving strict owner-scoped revisions. Its static checks and all 28,197 unit
+tests pass; full successor coverage, browser and current-artifact rehearsals are
+running. A fresh November 14 16:26 UTC settings readback still shows Automatic
+for Ignored Build Step; no setting was changed. The previous exact `9851cecc` completed all twelve local commands with
+88.02% branch coverage and 618 browser passes plus five hosted-only skips.
+
+The original isolated Neon branch has expired and is confirmed deleted. A fresh
+free schema-only branch was created November 14 for the consolidated rehearsal,
+with a November 15 16:19:29 UTC expiry. Its credentials and synthetic actors stay
+private. No production database or deployment is part of that rehearsal.
+
+The ARM64 PostgreSQL backport completed 99 compatibility/recovery stages and
+verified cleanup. Its actual scan retains 9 Critical and 138 High findings;
+public-record ABI growth, native AMD64 evidence and accountable security
+acceptance remain unresolved. The default Compose image remains unchanged.
+[Exact security evidence](upgrade-2026-postgres-libxml2-native-20261114.md).
+
+Independent qualified human tax, AI-case and security/privacy reviewers remain
+unassigned. Final 2026 federal/state forms and artifact qualification remain
+required. The known provider cost reconciles exactly; only the original unknown
+usage retains its reservation. Current `main` commits remain local while the
+owner disables automatic production deployments. Remote CI and native AMD64
+execution therefore remain open. [Current work and evidence](upgrade-2026-current-status.md).
+
 ## November 13 update
 
 The owner merged PR #13, directed subsequent commits to `main`, and asked
