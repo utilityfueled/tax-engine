@@ -1,0 +1,19 @@
+form: "Guided AOTC student claim history"
+fullName: "American Opportunity Tax Credit prior claims by student"
+reference: "https://www.irs.gov/instructions/i8863"
+notes: |
+  Form 8863, Student qualifications requirement 2 and Part III line 23, counts
+  the student's distinct prior tax years claimed by anyone. The published
+  Sharon and Wilbert examples show that a change of claimant does not reset
+  the student's history. The 2026 draft instructions repeat this rule at
+  https://www.irs.gov/pub/irs-dft/i8863--dft.pdf. This spec governs guided
+  history provenance only.
+lines:
+  - line: "student-identity"
+    description: "Reconfirm prior AOTC claim history when the student changes"
+    formula: "Bind the existing prior-claim answer to the actual normalized student TIN. If a guided edit replaces the student or assigns an already answered history to a newly identified student, retain the saved answer for review and require an explicit selection before calculation. A rejected or unconfirmed answer cannot supply a zero to Form 8863."
+    testRef: "tests/guided-interview/guided-aotc-student-history.test.ts::blocks reuse of a different student's zero before federal calculation"
+  - line: "saved-replay"
+    description: "Preserve applicable and pending student history"
+    formula: "Preserve the same student's answer across TIN formatting, unrelated edits, remaining-row shifts and saved-interview replay. Mark new interviews with the current facts version. Keep reconfirmation pending after replay; retain the existing unversioned legacy prefilled-zero reconfirmation. Explicitly reselecting the count for the identified student restores the ordinary Form 8863 path."
+    testRef: "tests/guided-interview/guided-aotc-student-history.test.ts::preserves unchanged student facts and pending confirmations through saved replay"

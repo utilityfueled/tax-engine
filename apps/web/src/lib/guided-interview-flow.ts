@@ -1659,6 +1659,7 @@ export function goToPreviousSection(state: GuidedFlowState): GuidedFlowState {
 
 export function startInterview(segmentation: SegmentationAnswers, taxYear: number | null = null): GuidedFlowState {
   return {
+    factsVersion: initialFlowState.factsVersion,
     phase: "interview",
     taxYear,
     segmentation,
@@ -1760,6 +1761,24 @@ function w2OriginalFields(entry: W2EntryData | undefined) {
   if (!entry) return undefined;
   const { stateLocalSources: _source, aiSuggestedFields: _suggestions, ...original } = entry;
   return original;
+}
+
+function retainAotcHistory(previous: CreditsData | undefined, next: CreditsData | undefined): CreditsData | undefined {
+  const previousStudents = previous?.education?.aocStudents;
+  if (!previousStudents?.length || !next?.education?.aocStudents.length) return next;
+  const studentTin = (entry: EducationStudentData) => (entry.studentTaxId ?? "").trim().replaceAll("-", "");
+  const students = next.education.aocStudents.map((student, index) => {
+    const former = previousStudents[index];
+    const tin = studentTin(student);
+    if (!former || !student.priorYearsClaimed || studentTin(former) === tin) return student;
+    // Removing a student can shift a different, unchanged student's row.
+    const retained = /^\d{9}$/.test(tin) && previousStudents.some(row =>
+      studentTin(row) === tin && row.priorYearsClaimed === student.priorYearsClaimed &&
+      Boolean(row.requiresPriorYearsConfirmation) === Boolean(student.requiresPriorYearsConfirmation),
+    );
+    return retained ? student : { ...student, requiresPriorYearsConfirmation: true };
+  });
+  return { ...next, education: { ...next.education, aocStudents: students } };
 }
 
 export function updateSectionData(
@@ -1886,7 +1905,7 @@ export function updateSectionData(
   const educatorSourcesChanged = sourceValuesChanged && ["income-w2", "personal-info", "credits", "income-investments"].includes(sectionId) && adjustments?.educatorExpenseSources;
   const studentLoanSourcesChanged = sourceValuesChanged && ["income-w2", "personal-info", "credits"].includes(sectionId) && adjustments?.studentLoanFacts;
   const benefitSourcesChanged = (sectionId === "income-w2" || sectionId === "income-self-employment") && credits?.dependentCareBenefits;
-  const nextCredits = sectionId === "credits" ? data as CreditsData : credits;
+  const nextCredits = sectionId === "credits" ? retainAotcHistory(credits, data as CreditsData | undefined) : credits;
   const adoptionHistoryChanged = sourceValuesChanged && ["personal-info", "income-w2", "income-self-employment", "income-retirement", "income-investments", "income-rental", "income-royalties", "income-social-security", "income-unemployment", "adjustments", "credits", "deductions", "additional-deductions", "other-taxes"].includes(sectionId)
     && nextCredits?.adoption?.children.some(child => child.priorYearForeignBenefitHistory) ? nextCredits?.adoption : undefined;
   const minimumTaxCreditSourcesChanged = sourceValuesChanged && ["personal-info", "credits"].includes(sectionId) && nextCredits?.minimumTaxCredit;
@@ -1969,7 +1988,7 @@ export function updateSectionData(
     ...state,
     sectionData: {
       ...state.sectionData,
-      [sectionId]: data,
+      [sectionId]: sectionId === "credits" ? nextCredits : data,
       ...((invalidatedOhioStateReturn ?? invalidatedPAStateReturn) ? { "state-return": invalidatedOhioStateReturn ?? invalidatedPAStateReturn } : {}),
       ...(invalidatedW2 ? { "income-w2": invalidatedW2 } : {}),
       ...((scheduleCSourcesChanged || macrsSourcesChanged || passengerSourcesChanged || mileageSourcesChanged || wageringSourcesChanged) && nextBusiness ? {
