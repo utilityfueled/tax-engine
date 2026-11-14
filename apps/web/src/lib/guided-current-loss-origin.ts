@@ -5,6 +5,7 @@ import { hasBusinessSourceData } from './guided-business-facts';
 import { buildGuidedNetOperatingLoss, buildGuidedNetOperatingLossForNavigation } from './guided-net-operating-loss';
 import { guidedSourceValuesChanged } from './guided-source-confirmation';
 import { buildGuidedCodNol, buildGuidedCodNolForNavigation } from './guided-cod-nol';
+import { buildGuidedCodPrincipalResidence } from './guided-cod-principal-residence';
 import { buildCurrentCapitalSources, invalidateCurrentCapitalSources, type CurrentCapitalSourceData } from './guided-current-capital-origin';
 
 export interface CurrentLossBusinessData {
@@ -55,8 +56,9 @@ function collectCurrentLossOrigin(forNavigation: boolean, data: CurrentLossOrigi
     throw new Error('Confirm the actual farming and estate facts. Those positive origin methods require separate source calculations.');
   }
   const cod = (forNavigation ? buildGuidedCodNolForNavigation : buildGuidedCodNol)(sectionData.adjustments?.codNolSources, state);
-  if (data.cancelledDebtIncluded !== Boolean(cod)) {
-    throw new Error('The current canceled-debt classification must match the actual validated cancellation and insolvency source packet.');
+  const residenceCod = buildGuidedCodPrincipalResidence(sectionData.adjustments?.codPrincipalResidenceSources, state);
+  if (data.cancelledDebtIncluded !== Boolean(cod || residenceCod)) {
+    throw new Error('The current canceled-debt classification must match the actual validated original cancellation source packet.');
   }
   const se = sectionData['income-self-employment'];
   const hasBusiness = hasBusinessSourceData(se);

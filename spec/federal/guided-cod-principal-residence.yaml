@@ -20,9 +20,10 @@ notes: |
   through reload and validates source-only, while the full2026 year/export gates
   remain unchanged. Actual independent prior NOL sources may coexist through the
   basis-only canonical route; no attribute waterfall is fabricated. Current
-  Form172 origin plus this mortgage source method remains explicitly denied
-  pending its separate source admission. Original records remain private
-  interview data, not shell facts.
+  Form172 composition additionally requires its complete actual business,
+  independent prior carry and AMT sources and a true canceled-debt classification
+  as specified in guided-cod-principal-residence-current-origin.yaml. Original
+  records remain private interview data, not shell facts.
 lines:
   - line: "entry-parity"
     description: "Expose the complete supported original mortgage method"
@@ -42,7 +43,7 @@ lines:
     testRef: "tests/guided-interview/guided-cod-principal-residence.test.ts::keeps missing originals unknown and records the actual2026 arrangement"
   - line: "independent-prior-loss"
     description: "Preserve independent prior loss sources without inventing current origin admission"
-    formula: "Actual regular and independent AMT prior NOL histories retain their canonical deduction/carry results under the basis-only method. Current Form172 plus the mortgage method remains explicit denial; neither false nor true canceledDebtIncluded may silently omit the actual mortgage debt."
+    formula: "Actual regular and independent AMT prior NOL histories retain their canonical deduction/carry results under the basis-only method. Those histories alone do not invent current origin facts; false or unknown canceledDebtIncluded cannot silently omit the actual mortgage debt. Complete actual current origin records are separately required for composition."
     testRef: "tests/guided-interview/guided-cod-principal-residence.test.ts::preserves prior loss sources and the current origin admission boundary"
   - line: "private-reload"
     description: "Retain actual private mortgage facts through a lossless interview reload"

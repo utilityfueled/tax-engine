@@ -1,0 +1,24 @@
+form: "Guided retained-home cancellation with actual current loss origin"
+fullName: "Entry parity for the source-backed Form172 and principal residence composition"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i982"
+retrievedAt: "2026-11-14"
+notes: |
+  Entry parity only. The committed form-172-principal-residence.yaml and
+  cod-principal-residence-sources.yaml own the actual formulas and original
+  statement admission. The guide records complete original business activity,
+  prior regular and independent AMT carry histories (explicit empty only when
+  actually known), current independent AMT comparison and actual mortgage facts.
+  No current loss, NOL deduction, nonbusiness income or attribute waterfall is
+  guessed. Both personal and residence packets remain exclusive. Mortgage
+  taxable COD is nonbusiness ordinary income; excluded debt affects only retained
+  home basis, with no NOL attribute reduction. Full2026 gates remain closed.
+lines:
+  - line: "actual-current-origin"
+    description: "Compose separately validated original mortgage and current loss records"
+    formula: "Actual active ScheduleC100000 loss with actual mortgage taxableCOD50000 yields regularNOL65750 and independentAMTNOL50000, using explicit empty prior carry histories, consistent with the separately reviewed canonical origin method. Retained residence basis250000 and both closing carries survive."
+    testRef: "tests/guided-interview/guided-cod-principal-residence-current-origin.test.ts::composes actual mortgage and current loss originals without fictional attributes"
+  - line: "complete-classification"
+    description: "Require true canceled-debt inclusion and independent original histories"
+    formula: "False/unknown canceledDebtIncluded, absent current/prior/AMT packet, incomplete original mortgage or mixed personal/residence methods reject navigation and canonical construction. Explicit absent prior histories are not replaced with fabricated zero lists."
+    testRef: "tests/guided-interview/guided-cod-principal-residence-current-origin.test.ts::rejects unknown or contradictory current cancellation and carry sources"

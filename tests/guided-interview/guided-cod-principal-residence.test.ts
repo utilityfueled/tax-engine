@@ -59,13 +59,13 @@ it('preserves prior loss sources and the current origin admission boundary', () 
   const control=calculateFederalTax(ordinary);
   expect(result.netOperatingLoss?.deduction.toFixed()).toBe(control.netOperatingLoss?.deduction.toFixed());
   expect(result.carryforwards.nolCarryforward.toFixed()).toBe(control.carryforwards.nolCarryforward.toFixed());
-  for(const included of [false,true]) {
+  for(const included of [false,null]) {
     const origin={...actualCurrentLossOrigin,businessSources:[],cancelledDebtIncluded:included};
     // No public method may hide the mortgage debt by declaring false, or invent
     // personal insolvency/NOL attribute facts to make a true answer pass.
     const current={...withPrior,sectionData:{...withPrior.sectionData,adjustments:{...withPrior.sectionData.adjustments,currentLossOrigin:origin}}};
     expect(buildTaxInputFromGuidedData(current)).toBeNull();
-    if(included)expect(()=>buildCurrentLossOrigin(origin,current)).toThrow();
+    expect(()=>buildCurrentLossOrigin(origin,current)).toThrow();
   }
 });
 it('preserves private reload and revokes actual original edits', () => {

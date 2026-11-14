@@ -28,7 +28,6 @@ function original(value:unknown):unknown {
 export function buildGuidedCodPrincipalResidence(data:CodPrincipalResidenceData|undefined,state:GuidedFlowState) {
   if(!data)return undefined;
   if(state.sectionData.adjustments?.codNolSources) throw Error('Choose one actual cancellation method; remove the other mortgage or personal-debt packet.');
-  if(state.sectionData.adjustments?.currentLossOrigin) throw Error('Current Form 172 loss origin with retained-home cancellation needs its separate source method. Prior loss carry records may still be entered independently.');
   const personal=state.sectionData['personal-info'],status=state.segmentation.filingStatus;
   if(!personal || !status || (state.taxYear!==2025&&state.taxYear!==2026)) throw Error('Confirm the actual year, filing status and household before entering original mortgage records.');
   const debt=data.debt,acquisition=data.acquisition,basis=data.basis;
