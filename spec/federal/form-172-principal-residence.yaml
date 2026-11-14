@@ -1,0 +1,32 @@
+form: "Form 172 retained principal residence cancellation sources"
+fullName: "Actual personal residence debt classification in current regular and alternative NOL origins"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i172"
+notes: |
+  Refreshed2026-11-14: Form172 PartI line7 includes ordinary income not
+  attributable to a trade or business. Pub4681 QualifiedPrincipalResidence
+  Indebtedness reports its taxable remainder on Schedule1 line8c and reduces
+  only residence basis for the excluded amount, not NOL attributes.
+  https://www.irs.gov/publications/p4681
+  Reuse complete original QPR validator proving sole personal use, no transfer,
+  no business/rental use, same regular/AMT exclusion and no competing exclusions.
+  No fabricated attribute packet, current loss or old carry reduction follows.
+  Existing independent regular/AMT/1411 origins and prior carry histories remain.
+  This finite composition neither qualifies annual2026 nor resolves other COD.
+lines:
+  - line: "current-personal-income"
+    description: "Conserve original taxable personal mortgage debt exactly once"
+    formula: "Actual100000businessloss, no other income, original800000loan and100000cancel produce50000taxableCOD. AGI=-50000; regular line1=-65750,line7=50000,line9=0,NOL=65750; AMT no standard deduction,NOL=50000; investment-origin loss=0."
+    testRef: "tests/engine/federal-form-172-principal-residence.test.ts::classifies actual taxable mortgage cancellation as nonbusiness income in each origin"
+  - line: "basis-only-exclusion"
+    description: "Do not reduce new loss attributes by the excluded personal mortgage debt"
+    formula: "Actual750000loan and100000cancel are fully excluded. Current regular/AMT NOL=100000 each; original300000residencebasis becomes200000; noCODNOLattribute packet is invented."
+    testRef: "tests/engine/federal-form-172-principal-residence.test.ts::preserves current loss attributes when original residence debt is fully excluded"
+  - line: "source-admission"
+    description: "Require original personal eligibility and retained cancelled-debt classification"
+    formula: "Missing actualQPR packet, false/unknown cancelledDebtIncluded, unknown business-use proof, contradictory summary or competing waterfall remains rejected. Revalidate originals before source-only admission and final reconciliation."
+    testRef: "tests/engine/federal-form-172-principal-residence.test.ts::rejects incomplete or contradictory current mortgage origin classification"
+  - line: "nonbusiness-limit-boundary"
+    description: "Retain exact personal income before reported-dollar rounding"
+    formula: "With100000activebusinessloss and15750standarddeduction, taxablepersonalCOD1000 yields regularNOL100000 andAMT99000; taxableCOD15750.01 yields exactregular99999.99 andreported100000, exactAMT84249.99 andreported84250."
+    testRef: "tests/engine/federal-form-172-principal-residence.test.ts::keeps source cents through the nonbusiness deduction boundary"

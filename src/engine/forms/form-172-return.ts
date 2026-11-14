@@ -9,6 +9,7 @@ import { AuditTrail } from "@/utils/audit.js";
 import { d, roundDollar, sum } from "@/utils/decimal.js";
 import { calculateForm172Origin, type Form172OriginInput, type Form172OriginResult } from "./form-172-origin.js";
 import { calculateCodNolReduction } from "./cod-nol-reductions.js";
+import { calculateCodPrincipalResidenceReduction } from "./cod-principal-residence.js";
 import type { NetOperatingLossReturnResult } from "./net-operating-loss-return.js";
 import { calculateForm172ItemizedSources } from "./form-172-itemized-sources.js";
 import { calculateForm172CapitalSources } from "./form-172-capital-sources.js";
@@ -83,7 +84,13 @@ export function calculateForm172Return(input: TaxYearInput, context?: Form172Ret
   if (facts.farmingLossIncluded !== false || facts.estateOrTrustLossIncluded !== false) {
     throw new Error("Form172 farming, cancelled-debt and estate origin methods require their actual separate source worksheets");
   }
-  if (input.form982NolSources) {
+  // Spec: form-172-principal-residence.yaml. Personal residence exclusion
+  // reduces only its basis; do not invent an insolvency/NOL waterfall packet.
+  const principalResidence = calculateCodPrincipalResidenceReduction(input);
+  const personalMortgageIncome = principalResidence?.taxable ?? d("0");
+  if (principalResidence) {
+    if (facts.cancelledDebtIncluded !== true) throw new Error("Form172 must retain the actual cancelled-debt source classification");
+  } else if (input.form982NolSources) {
     if (facts.cancelledDebtIncluded !== true) throw new Error("Form172 must retain the actual cancelled-debt source classification");
     calculateCodNolReduction(input);
   } else if (facts.cancelledDebtIncluded !== false || input.form1099C.length || input.codExclusion !== undefined) {
@@ -164,13 +171,16 @@ export function calculateForm172Return(input: TaxYearInput, context?: Form172Ret
     throw new Error("Form172 requires completed separate actual prior regular and alternative carry results");
   }
   const sched1 = context.schedule1;
+  if (principalResidence && !sched1.cancelledDebtIncome.eq(personalMortgageIncome)) {
+    throw new Error("Form172 actual personal mortgage income must reconcile to final Schedule1 cancelled debt");
+  }
   const k1BusinessIncome = k1Sources?.ordinaryBusinessIncome ?? d("0");
   if (!sched1.supplementalIncome.eq(k1BusinessIncome)) throw new Error("Form172 ordinary K1 sources must reconcile to actual final Schedule1 supplemental income");
   const expectedAdditionalIncome = sum(sched1.businessIncome, k1BusinessIncome, sched1.unemploymentCompensation, sched1.alimonyReceived,
-    context.currentExcessBusinessLoss).minus(prior.deduction);
+    context.currentExcessBusinessLoss, personalMortgageIncome).minus(prior.deduction);
   if (!sched1.totalAdditionalIncome.eq(expectedAdditionalIncome)) throw new Error("Form172 has unclassified actual additional income or losses");
   const nonbusinessIncome = sum(context.taxableInterest, context.ordinaryDividends, context.iraTaxable,
-    context.pensionTaxable, context.taxableSocialSecurity, sched1.alimonyReceived);
+    context.pensionTaxable, context.taxableSocialSecurity, sched1.alimonyReceived, personalMortgageIncome);
   const businessIncome = sum(context.totalWages, sched1.businessIncome, k1BusinessIncome, sched1.unemploymentCompensation);
   if (!sum(businessIncome, nonbusinessIncome, capital.capitalGainLoss, context.currentExcessBusinessLoss).minus(prior.deduction).eq(context.totalIncome)) {
     throw new Error("Form172 actual business and nonbusiness income must conserve final return income");
@@ -226,6 +236,8 @@ export function calculateForm172Return(input: TaxYearInput, context?: Form172Ret
   const regularClosingCarryforward = prior.carryforward.plus(newRegularCarryforward);
   const alternativeClosingCarryforward = prior.alternativeTax.carryforward.plus(newAlternativeCarryforward);
   const audit = new AuditTrail();
+  if (principalResidence) audit.record("Current Form172 source reconciliation", "personal-mortgage-income", "Actual taxable personal mortgage cancellation", personalMortgageIncome,
+    "Source-proven retained personal home; taxable remainder is nonbusiness ordinary income in regular and alternative origins; excluded amount reduces only residence basis");
   if (k1Sources) audit.merge(k1Sources.lines);
   let charitable: Form172ReturnResult["charitableSources"];
   if (charitableSources) {
