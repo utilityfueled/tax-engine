@@ -13,10 +13,11 @@ import { resolveLocalContainerRuntime } from "./local-container-runtime.mjs";
 const recipeDirectory = fileURLToPath(new URL("../infra/postgres-libxml2-backport/", import.meta.url));
 const operationLabel = "io.vivalatax.qualification.operation";
 const cleanupReserveMs = 15 * 60_000;
-const usage = "node scripts/build-postgres-libxml2-backport.mjs --runtime docker|podman --architecture arm64|amd64 --source-cache PATH --output NEW_PATH";
+const commandCloseGraceMs = 2_000;
+const usage = "node scripts/build-postgres-libxml2-backport.mjs --runtime docker|podman --architecture arm64|amd64 --source-cache PATH --output NEW_PATH [--time-limit-minutes 30..150]";
 const hash = bytes => createHash("sha256").update(bytes).digest("hex");
 
-export function runBoundedCommand(executable, arguments_, { env, timeoutMs, closeGraceMs = 2_000 }) {
+export function runBoundedCommand(executable, arguments_, { env, timeoutMs, closeGraceMs = commandCloseGraceMs }) {
   assert.ok(timeoutMs > 0 && closeGraceMs > 0, "Command time bounds must be positive.");
   return new Promise((resolveCommand, rejectCommand) => {
     const child = spawn(executable, arguments_, { env, stdio: ["ignore", "pipe", "pipe"] });
@@ -71,18 +72,30 @@ export function runBoundedCommand(executable, arguments_, { env, timeoutMs, clos
   });
 }
 
+function assertTimeLimit(minutes) {
+  assert.ok(Number.isInteger(minutes) && minutes >= 30 && minutes <= 150, "Time limit must be an integer from 30 to 150 minutes.");
+}
+
+export function commandTimeoutMs(deadline, requestedMs, cleanup, now = performance.now()) {
+  const remaining = deadline - now - (cleanup ? 0 : cleanupReserveMs);
+  assert.ok(remaining > commandCloseGraceMs + 1_000, "Builder deadline exhausted.");
+  return Math.min(requestedMs, remaining - commandCloseGraceMs);
+}
+
 export function parseBuilderArguments(arguments_) {
   const values = {};
   for (let index = 0; index < arguments_.length; index += 2) {
     const flag = arguments_[index];
-    if (!["--runtime", "--architecture", "--source-cache", "--output"].includes(flag)) throw new Error(`Unknown builder option. Usage ${usage}`);
+    if (!["--runtime", "--architecture", "--source-cache", "--output", "--time-limit-minutes"].includes(flag)) throw new Error(`Unknown builder option. Usage ${usage}`);
     if (!arguments_[index + 1] || values[flag]) throw new Error(`Missing or repeated builder option. Usage ${usage}`);
     values[flag] = arguments_[index + 1];
   }
   if (!values["--architecture"] || !values["--source-cache"] || !values["--output"]) throw new Error(`Specify architecture, source-cache and output. Usage ${usage}`);
   if (!["docker", "podman"].includes(values["--runtime"])) throw new Error("Choose docker or podman explicitly.");
   if (!["arm64", "amd64"].includes(values["--architecture"])) throw new Error("Choose arm64 or amd64 explicitly.");
-  return { runtime: values["--runtime"], architecture: values["--architecture"], sourceCache: resolve(values["--source-cache"]), output: resolve(values["--output"]) };
+  const timeLimitMinutes = Number(values["--time-limit-minutes"] ?? 150);
+  assertTimeLimit(timeLimitMinutes);
+  return { runtime: values["--runtime"], architecture: values["--architecture"], sourceCache: resolve(values["--source-cache"]), output: resolve(values["--output"]), timeLimitMinutes };
 }
 
 export function assertNativeArchitecture(info, architecture) {
@@ -143,6 +156,8 @@ async function verifyExportedArtifacts(directory) {
 }
 
 export async function buildCandidate(options) {
+  const timeLimitMinutes = options.timeLimitMinutes ?? 150;
+  assertTimeLimit(timeLimitMinutes);
   const manifestPath = join(recipeDirectory, "sources.json");
   const manifestBytes = await readFile(manifestPath);
   const manifest = JSON.parse(manifestBytes);
@@ -175,23 +190,22 @@ export async function buildCandidate(options) {
   await writeFile(join(inputs, "SHA256SUMS"), checksums.join(""), { flag: "wx", mode: 0o600 });
   await writeFile(join(options.output, "source-manifest.json"), manifestBytes, { flag: "wx", mode: 0o600 });
   let connection;
-  const deadline = performance.now() + 150 * 60_000;
-  const receipt = { operation, runtime: options.runtime, architecture: options.architecture, sourceManifestSha256: hash(manifestBytes), postgresBase: `${manifest.postgres.repository}@${platform.digest}`, checks: [], cleanupErrors: [], physicalHostProvenanceVerified: false, candidateReleaseQualified: false, genericAbiApproval: false, riskAccepted: false, bitwiseReproducibilityProved: false };
+  const deadline = performance.now() + timeLimitMinutes * 60_000;
+  const receipt = { operation, runtime: options.runtime, architecture: options.architecture, timeLimitMinutes, cleanupReserveSeconds: cleanupReserveMs / 1_000, sourceManifestSha256: hash(manifestBytes), postgresBase: `${manifest.postgres.repository}@${platform.digest}`, checks: [], cleanupErrors: [], physicalHostProvenanceVerified: false, candidateReleaseQualified: false, genericAbiApproval: false, riskAccepted: false, bitwiseReproducibilityProved: false };
   const images = [];
   let exporter;
   let candidateTag;
   let success = false;
   let failure;
-  await writeFile(join(options.output, "build-admission.json"), JSON.stringify({ operation, architecture: options.architecture, sourceManifestSha256: receipt.sourceManifestSha256, postgresBase: receipt.postgresBase, candidateReleaseQualified: false }, null, 2) + "\n", { flag: "wx", mode: 0o600 });
+  await writeFile(join(options.output, "build-admission.json"), JSON.stringify({ operation, architecture: options.architecture, timeLimitMinutes, cleanupReserveSeconds: receipt.cleanupReserveSeconds, sourceManifestSha256: receipt.sourceManifestSha256, postgresBase: receipt.postgresBase, candidateReleaseQualified: false }, null, 2) + "\n", { flag: "wx", mode: 0o600 });
 
   async function command(label, arguments_, timeoutMs = 60_000, cleanup = false, scope = connection) {
-    const remaining = deadline - performance.now() - (cleanup ? 0 : cleanupReserveMs);
-    assert.ok(remaining > 3_000, "Builder deadline exhausted.");
+    const boundedTimeout = commandTimeoutMs(deadline, timeoutMs, cleanup);
     let stdout = "";
     let stderr = "";
     let code = 0;
     try {
-      const result = await runBoundedCommand(options.runtime, [...scope.args, ...arguments_], { env: scope.env, timeoutMs: Math.min(timeoutMs, remaining - 2_000) });
+      const result = await runBoundedCommand(options.runtime, [...scope.args, ...arguments_], { env: scope.env, timeoutMs: boundedTimeout });
       stdout = result.stdout;
       stderr = result.stderr;
     } catch (error) {

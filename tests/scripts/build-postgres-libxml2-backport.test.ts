@@ -9,6 +9,7 @@ import {
   assertNativeArchitecture,
   assertPackageChecksPassed,
   buildCandidate,
+  commandTimeoutMs,
   parseBuilderArguments,
   runBoundedCommand,
   verifyPinnedFile,
@@ -36,10 +37,33 @@ describe("private PostgreSQL libxml2 source build admission", () => {
     const result = parseBuilderArguments([
       "--runtime", "podman", "--architecture", "arm64", "--source-cache", "cache", "--output", "evidence",
     ]);
-    expect(result).toEqual({ runtime: "podman", architecture: "arm64", sourceCache: resolve("cache"), output: resolve("evidence") });
+    expect(result).toEqual({ runtime: "podman", architecture: "arm64", sourceCache: resolve("cache"), output: resolve("evidence"), timeLimitMinutes: 150 });
     expect(() => parseBuilderArguments(["--runtime", "podman"])).toThrow(/architecture|source-cache|output/);
     expect(() => parseBuilderArguments(["--runtime", "remote", "--architecture", "arm64", "--source-cache", "cache", "--output", "evidence"])).toThrow(/docker or podman/);
     expect(() => parseBuilderArguments(["--unexpected", "value"])).toThrow(/Unknown/);
+  });
+
+  it.each(["29", "151", "30.5", "NaN", "Infinity", "0", "-1"])("rejects invalid explicit time limit %s", value => {
+    expect(() => parseBuilderArguments([
+      "--runtime", "podman", "--architecture", "arm64", "--source-cache", "cache", "--output", "evidence", "--time-limit-minutes", value,
+    ])).toThrow(/integer from 30 to 150/);
+  });
+
+  it.each([30, 120, 150])("accepts a bounded explicit %s-minute window", value => {
+    expect(parseBuilderArguments([
+      "--runtime", "podman", "--architecture", "arm64", "--source-cache", "cache", "--output", "evidence", "--time-limit-minutes", String(value),
+    ]).timeLimitMinutes).toBe(value);
+  });
+
+  it("reserves cleanup and finite TERM grace within the selected monotonic window", () => {
+    const minute = 60_000;
+    const started = 1_000;
+    const now = started + 25 * minute;
+    expect(commandTimeoutMs(started + 150 * minute, 90 * minute, false, now)).toBe(90 * minute);
+    expect(commandTimeoutMs(started + 120 * minute, 90 * minute, false, now)).toBe(80 * minute - 2_000);
+    expect(() => commandTimeoutMs(started + 120 * minute, minute, false, started + 119 * minute)).toThrow(/deadline/);
+    expect(commandTimeoutMs(started + 120 * minute, 2 * minute, true, started + 119 * minute)).toBe(minute - 2_000);
+    expect(() => commandTimeoutMs(started + 120 * minute, minute, true, started + 120 * minute)).toThrow(/deadline/);
   });
 
   it("rejects emulation, unknown daemon architecture and a non-Linux daemon before building", () => {
