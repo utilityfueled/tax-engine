@@ -1,4 +1,15 @@
 {
+  "nov14MixedCapitalForeignServices": {
+    "freezeSha256": "e9d3fd123f15480d01e42db2b85b19cb59d5f0243f1a6c0d94c4134bc060f2d4",
+    "author": "9files1069PASS;typesLintSpec7PASS",
+    "independent": "12PASS;manualCap27880.50;alteredLocation880Exclusion;zeroProfitWageUbiaDenial",
+    "independentReviewSha256": "2be85e98c48ffbe9f75650d6e40f3ace58e5433d61b3277cb0331956c9e5b6f9",
+    "rootReviewSha256": "ccc4e188f744472bb63dafb6382431a7908b00bc5270ac7d85be07f3e585651b",
+    "ledger": "docs/upgrade-2026-form2555-mixed-capital-services-20261114.md",
+    "combinedSuccessorRequired": true,
+    "humanOrAnnualQualification": false,
+    "mainPushHold": true
+  },
   "nov14GuidedCoverdellOriginals": {
     "sourceFreezeSha256": "3a6fced1b4d737b44851d36931466781183dd2875c13f4759cca39824da6f844",
     "focused": "8files51PASS;rootAndWebTypesPASS;ownedSpec4PASS;lint0errors",

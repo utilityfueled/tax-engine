@@ -1722,6 +1722,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   const actualForeignBusinessExpenses = new Map<typeof foreignIncomeSources.scheduleCForeignShare[number], Decimal>();
   for (const share of foreignIncomeSources.scheduleCForeignShare) {
     const totalExpenses = share.grossIncome.minus(schedC.netProfit);
+    if (share.mixedCapitalTotalExpenses && !share.mixedCapitalTotalExpenses.eq(totalExpenses)) throw new Error("Form2555 mixed capital actual domestic and foreign expenses must reconcile to canonical total expenses");
     const allForeign = share.foreign.eq(share.grossIncome);
     if (totalExpenses.lt(0)) throw new Error("Form2555 canonical business expenses must be nonnegative");
     const expenses = share.foreignBusinessExpenses ?? (allForeign ? totalExpenses : totalExpenses.isZero() ? d("0") : undefined);

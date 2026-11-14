@@ -1,0 +1,59 @@
+form: "Form 2555 — location-separated capital-material service business"
+fullName: "Confirmed domestic and foreign original service-fee sources"
+taxYear: 2026
+irsReference: "https://www.irs.gov/instructions/i2555"
+retrievedAt: "2026-11-14"
+reviewStatus: "agent-source-reviewed-human-qualification-pending"
+notes: |
+  The final2026 instructions were already published and documented; this is
+  not a new annual release. IRC911(b)(1)(A),(d)(2)(B), Reg1.911-3(a),(b)(2),
+  Reg1.911-6(a),(d)Example2, Reg1.861-4(b)(2)(i), Reg1.199A-3(b)(2)(i)(A)
+  and IRC864(c)(3),(4) support this finite current-year service-fee method.
+  Every original service contract is wholly performed in a documented U.S.
+  or foreign location. No inferred time/receipts ratio, inventory/sales,
+  rents/royalties, financing or other gross income, unallocated/common
+  expenses, prior services, loss, foreign-ECI or source-recharacterization
+  method is admitted. Actual reasonable service allowances for BOTH places
+  must sum to at most the existing business-wide30% post-SE-deduction cap;
+  exceeding that cap requires a separate geographic allocation method.
+  The instructions subtract the employer-equivalent SE deduction whereas
+  Pub54(12/2025)Example3 uses30% of net54147 without it. Preserve the existing
+  stricter instruction-based cap and this qualified-review question.
+  Current2025 calculation and2026 source validation do not establish annual export,
+  qualified tax review, election validity or filing readiness.
+lines:
+  - line: "original-location-sources"
+    description: "Bind the actual business and complete location-separated source packet"
+    formula: "Require actual year/owner/name/EIN, a matching original business-income source reference, full contract/location/expense and taxpayer-service confirmations. Original gross receipts, returns, COGS and other-income row snapshots still reconcile to the canonical business; COGS and other income are known zero. Actual foreign and domestic service-fee gross amounts sum exactly to actual ScheduleC gross income. Foreign allowance equals the actual current source-row earned amount; prior-year receipts remain known zero. No caller profit or supplied allocation ratio."
+    irsRef: "IRC911(b)(1)(A); Reg1.911-3(a); Reg1.861-4(b)(2)(i)"
+    testRef: "tests/engine/forms/form-2555-mixed-capital-services.test.ts::binds original location separated capital service receipts"
+  - line: "whole-business-cap"
+    description: "Apply the existing business-wide cap to both actual service allowances"
+    formula: "CapitalMaterialEarned is actual foreign allowance plus actual domestic allowance, not just the foreign portion. The existing canonical federal cap is30% of business net profit after its employer-equivalent SE deduction. Foreign10000+domestic10000=20000 fits actual100000 profit; foreign10000+domestic20000=30000 fails even though foreign10000 alone fits. No apportionment of an exceeded cap. Exact27880.50 is admitted and27880.51 rejects for the synthetic100000-profit/7065-deduction cohort."
+    irsRef: "IRC911(d)(2)(B); Reg1.911-3(b)(2); final2026 i2555 line20"
+    testRef: "tests/engine/forms/form-2555-mixed-capital-services.test.ts::caps the aggregate domestic and foreign allowance without allocation"
+  - line: "actual-expenses-domestic-qbi"
+    description: "Preserve actual domestic profit and exclusion-related deductions"
+    formula: "Foreign gross120000 plus domestic80000=200000. Actual foreign expenses70000 plus domestic30000=canonical100000 expenses. Foreign net50000 leaves QBI, while domestic net50000 retains its ordinary existing deduction attribution. Only foreign allowance10000 is foreign earned income. Existing line44 foreign business expense component is70000*10000/120000, plus the actual foreign share of the SE deduction, with the existing combined whole-dollar rule. The helper returns a derived expense sum for a canonical comparison, never a caller net-profit override."
+    irsRef: "Reg1.911-6(a),(d)Example2; Pub54Example3; Reg1.199A-3(b)(2)(i)(A); IRC864(c)(3),(4)"
+    testRef: "tests/engine/forms/form-2555-mixed-capital-services.test.ts::preserves actual foreign expenses domestic profit and income once"
+  - line: "unknown-and-scope"
+    description: "Reject incomplete originals and retain separate methods"
+    formula: "Known zero is distinct from missing. Reject absent/false flags, blank references, malformed/negative/nonfinite amounts, mismatched year/owner/business, unknown fields, changed original sources, incomplete expense conservation, duplicate source rows, prior services, positive COGS/other income, foreign/domestic losses, and foreign allowances above actual foreign gross. The old all-foreign method and noncapital method remain separate; a mixed packet cannot silently attach to either. Actual original business W2 wages and UBIA must each be supplied as zero and reconcile to canonical business fields, including when foreign net profit is zero; schema-default zero alone is not source evidence. Eligibility/election/annual gates remain."
+    irsRef: "Reg1.911-3; Reg1.911-6; existing Form2555 original-source and eligibility rules"
+    testRef: "tests/engine/forms/form-2555-mixed-capital-services.test.ts::rejects unknown changed and excluded mixed business sources"
+  - line: "privacy-and-handoff"
+    description: "Preserve private original sources and current annual gates"
+    formula: "An actual2025 source packet calculates without changing inputs; the same source validator accepts actual2026 records while the incomplete2026 rule pack and annual export remain closed. New source references/business identity/location proof remain absent from the verified AI context, public audit and hosted sanitized shell. Existing independent human-review gates remain unchanged."
+    irsRef: "Form2555 PartI/IV/VIII and original supporting records; repository privacy contract"
+    testRef: "tests/engine/forms/form-2555-mixed-capital-services.test.ts::preserves source privacy and annual readiness boundaries"
+  - line: "explicit-zero"
+    description: "Preserve actual zero allowance and expense records"
+    formula: "An actual foreign service allowance0 does not remove foreign business profit from the QBI source check. Separately documented zero foreign and domestic expenses reconcile to actual zero total expenses; no missing amount becomes zero. Actual200000 profit with no wages gives ScheduleSE line12=27192, half13596 and actual foreign profit share .6, so line44=round8157.6=8158 and10000FEIE produces1842 net exclusion."
+    irsRef: "ScheduleSE lines10–13; Form2555 line44; Reg1.911-6"
+    testRef: "tests/engine/forms/form-2555-mixed-capital-services.test.ts::preserves explicit zero allowance and expense sources"
+  - line: "zero-profit-wage-property-sources"
+    description: "Keep wage and property allocation closed even with zero foreign profit"
+    formula: "Foreign gross120000 and actual expenses120000 leave foreign net0; domestic gross80000 and expenses0 leave domestic net80000. FEIE10000 and foreign expense disallowance10000 yield net exclusion0. Positive canonical W2 wages or UBIA still need a separate location-allocation method and reject; both new original amounts must be present and exactly zero, rather than inferred from canonical defaults."
+    irsRef: "IRC199A(b); Reg1.199A-3(b)(2)(i)(A); original location-allocation scope"
+    testRef: "tests/engine/forms/form-2555-mixed-capital-services.test.ts::rejects wage and property allocation when foreign business profit is zero"

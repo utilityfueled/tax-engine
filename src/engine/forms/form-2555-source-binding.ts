@@ -2,13 +2,14 @@
 import Decimal from "decimal.js";
 import type { TaxYearInput } from "@/models/inputs.js";
 import { AuditTrail } from "@/utils/audit.js";
+import { resolveForm2555MixedCapitalServices } from "./form-2555-mixed-capital-services.js";
 
 /** Only actual consumed source fields; callers need not manufacture taxpayer IDs. */
 export interface Form2555SourceContext {
   taxpayer: Pick<TaxYearInput["taxpayer"], "taxYear" | "filingStatus"> & { spouse?: object };
   form2555?: TaxYearInput["form2555"];
   w2s: { employer: { name: string; ein: string }; accountHolder?: string; taxYear?: number; wages?: string }[];
-  scheduleC?: { accountHolder?: string; businessName?: string; ein?: string; grossReceipts?: string; returnsAndAllowances?: string; costOfGoodsSold?: string; otherIncome?: string };
+  scheduleC?: { accountHolder?: string; businessName?: string; ein?: string; grossReceipts?: string; returnsAndAllowances?: string; costOfGoodsSold?: string; otherIncome?: string; w2WagesPaid?: string; ubiaQualifiedProperty?: string };
   form1099Nec: { accountHolder?: string; nonemployeeCompensation?: string }[];
   scheduleK1?: { accountHolder?: string; taxYear?: number; partnershipName?: string; partnershipEIN?: string; selfEmploymentEarnings?: string; section199AQBI?: string; section199AW2Wages?: string; section199AUBIA?: string }[];
 }
@@ -26,7 +27,7 @@ export function resolveForm2555Sources(input: Form2555SourceContext) {
   const audit = new AuditTrail();
   const facts = input.form2555;
   const qbiForeignProfit: { sourceId: string; amount: Decimal; receipts: Decimal; capitalMaterial: boolean }[] = [];
-  const scheduleCForeignShare: { foreign: Decimal; grossIncome: Decimal; capitalMaterialEarned?: Decimal; earned: Decimal; foreignBusinessExpenses?: Decimal }[] = [];
+  const scheduleCForeignShare: { foreign: Decimal; grossIncome: Decimal; capitalMaterialEarned?: Decimal; earned: Decimal; foreignBusinessExpenses?: Decimal; mixedCapitalTotalExpenses?: Decimal }[] = [];
   const empty = { sourceFactsVerified: false, currentForeignIncome: new Decimal(0), priorYearIncomeReceived: new Decimal(0), qbiForeignProfit, scheduleCForeignShare, lines: audit.getLines() };
   if (!facts) return empty;
   const year = input.taxpayer.taxYear;
@@ -60,6 +61,7 @@ export function resolveForm2555Sources(input: Form2555SourceContext) {
   const seen = new Set<string>();
   const nonW2References = new Set<string>();
   for (const row of source.rows) {
+    if (row.mixedCapitalServices !== undefined && row.sourceId !== "scheduleC") throw new Error("Form2555 mixed capital originals require their actual ScheduleC source");
     if (seen.has(row.sourceId)) throw new Error("Form2555 duplicate original income source");
     seen.add(row.sourceId);
     if (row.accountHolder !== owner) throw new Error("Form2555 source owner does not match its taxpayer");
@@ -107,13 +109,24 @@ export function resolveForm2555Sources(input: Form2555SourceContext) {
       if (foreignBusinessExpenses !== undefined && (row.foreignBusinessExpensesConfirmed !== true || !row.foreignBusinessExpenseSourceReference?.trim())) throw new Error("Form2555 actual foreign business expenses need their confirmed original source");
       if (!capital && foreignBusinessExpenses?.gt(combined)) throw new Error("Form2555 actual foreign business expenses exceed foreign receipts; a foreign business loss needs its separate method");
       // Spec: business-capital-limit. The 30 percent limit runs in federal.ts, where the deduction exists.
-      if (capital && row.allBusinessIncomeForeignConfirmed !== true) throw new Error("Form2555 a mixed U.S. and foreign business with capital as a material factor needs a separate method");
+      if (row.mixedCapitalServices !== undefined && (!capital || row.allBusinessIncomeForeignConfirmed !== false)) throw new Error("Form2555 mixed capital sources require the actual mixed capital business classification");
+      if (capital && row.allBusinessIncomeForeignConfirmed !== true && row.mixedCapitalServices === undefined) throw new Error("Form2555 a mixed U.S. and foreign business with capital as a material factor needs a separate method");
       if (capital && (row.reasonableAllowanceConfirmed !== true || row.reasonableServicesAllowance === undefined
         || combined.gt(amount(row.reasonableServicesAllowance, "reasonable allowance for services")))) throw new Error("Form2555 business receipts need a confirmed reasonable allowance for the services");
       if (capital && priorReceived.gt(0)) throw new Error("Form2555 prior business services with capital as a material factor require their separate method");
       // With capital material, receipts are only the earned part, and all the foreign profit is outside QBI.
       if (capital && grossIncome.lte(0)) throw new Error("Form2555 a business with no gross income where capital is material needs a separate method");
-      if (capital || combined.gt(0)) scheduleCForeignShare.push(capital ? { foreign: grossIncome, grossIncome, capitalMaterialEarned: combined, earned: current, foreignBusinessExpenses } : { foreign: combined, grossIncome, earned: current, foreignBusinessExpenses });
+      const mixed = row.mixedCapitalServices === undefined ? undefined : resolveForm2555MixedCapitalServices({
+        taxYear: year, accountHolder: owner, businessName: business.businessName ?? "", businessEin: business.ein,
+        source: row.mixedCapitalServices, grossIncome, costOfGoodsSold: cogs, otherIncome: other,
+        businessIncomeSourceReference: row.sourceReference,
+        businessW2WagesPaid: business.w2WagesPaid, businessUbiaQualifiedProperty: business.ubiaQualifiedProperty,
+        currentForeignEarned: current, priorServicesReceived: priorReceived, foreignBusinessExpenses,
+        foreignExpenseSourceReference: row.foreignBusinessExpenseSourceReference, reasonableForeignAllowance: row.reasonableServicesAllowance,
+      });
+      if (capital || combined.gt(0)) scheduleCForeignShare.push(mixed ? { ...mixed, grossIncome, earned: current }
+        : capital ? { foreign: grossIncome, grossIncome, capitalMaterialEarned: combined, earned: current, foreignBusinessExpenses }
+        : { foreign: combined, grossIncome, earned: current, foreignBusinessExpenses });
       key = "foreignBusinessIncomeAlreadyReported";
     } else if (/^scheduleK1:(0|[1-9]\d*)$/.test(row.sourceId)) {
       // Spec: partnership-services. Box14 code A exists only for active service.

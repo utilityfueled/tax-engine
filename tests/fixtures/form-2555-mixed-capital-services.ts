@@ -1,0 +1,53 @@
+import { simpleW2Fixture } from './simple-w2.js';
+
+/** Fictional complete service contracts/books; not a published IRS example. */
+export function mixedCapitalServicesFixture(taxYear = 2025) {
+  return {
+    ...structuredClone(simpleW2Fixture),
+    taxpayer: { ...structuredClone(simpleW2Fixture.taxpayer), taxYear }, w2s: [],
+    scheduleC: { accountHolder: 'primary', businessName: 'Fictional Location Services', ein: '12-3456789',
+      grossReceipts: '200000', returnsAndAllowances: '0', costOfGoodsSold: '0', otherIncome: '0',
+      w2WagesPaid: '0', ubiaQualifiedProperty: '0',
+      expenses: { supplies: '100000' }, materialParticipation: true, qbiMateriallyParticipated: true },
+    form2555: {
+      taxYear, accountHolder: 'primary', foreignEarnedIncome: '10000', qualifyingDays: 365, totalDaysInYear: 365,
+      qualifiedHousingExpenses: '0', isSelfEmployed: true, sourceFactsConfirmed: true, eligibilityConfirmed: true,
+      electionsValidConfirmed: true, claimForeignEarnedIncomeExclusion: true, claimHousingExclusionOrDeduction: false,
+      housingExpensesQualificationConfirmed: true, employerProvidedForeignEarnedIncome: '0',
+      deductionsAllocableToExcludedIncome: '9366', foreignEarnedIncomeTaxWorksheetDisallowedDeductions: '0',
+      priorYearHousingDeductionCarryover: '0', priorYearIncomeExclusion: '0', incomeSourceMappingConfirmed: true,
+      partIV: { wages: '0', businessPersonalServices: '10000', partnershipPersonalServices: '0', noncashLodging: '0',
+        noncashMeals: '0', noncashCar: '0', noncashOther: '0', allowanceCostOfLiving: '0', allowanceFamily: '0',
+        allowanceEducation: '0', allowanceHomeLeave: '0', allowanceQuarters: '0', allowanceOther: '0',
+        otherEarnedIncome: '0', section119MealsAndLodging: '0' },
+      incomeSources: { foreignEmploymentIncomeIncludedOnW2: '0', foreignEmploymentIncomeNotOnW2: '0',
+        foreignBusinessIncomeAlreadyReported: '10000', foreignPartnershipIncomeAlreadyReported: '0', otherForeignIncomeAlreadyReported: '0' },
+      sourceMapping: { sourceReference: 'Fictional complete current-year business originals', sourceFactsConfirmed: true,
+        allSourcesIncluded: true, oneOwnerOnlyConfirmed: true, rows: [{ sourceId: 'scheduleC', sourceTaxYear: taxYear,
+          accountHolder: 'primary', sourceReference: 'Fictional original business income statement',
+          payerName: 'Fictional Location Services', payerEin: '12-3456789', foreignEarnedIncome: '10000', priorYearIncomeReceived: '0',
+          businessGrossReceipts: '200000', businessReturnsAndAllowances: '0', businessCostOfGoodsSold: '0', businessOtherIncome: '0',
+          capitalMaterialIncomeFactor: true, allBusinessIncomeForeignConfirmed: false,
+          foreignBusinessExpenses: '70000', foreignBusinessExpenseSourceReference: 'Fictional original foreign expense book',
+          foreignBusinessExpensesConfirmed: true, reasonableServicesAllowance: '10000', reasonableAllowanceConfirmed: true,
+          mixedCapitalServices: {
+            taxYear, accountHolder: 'primary', businessName: 'Fictional Location Services', businessEin: '12-3456789',
+            sourceReference: 'Fictional complete source-location and allowance statement', sourceFactsConfirmed: true,
+            businessIncomeSourceReference: 'Fictional original business income statement',
+            allCurrentBusinessSourcesIncluded: true, locationSeparatedServiceFeesOnlyConfirmed: true,
+            taxpayerForeignServicesInQualifyingPeriodConfirmed: true, noForeignEciOrRecharacterizationConfirmed: true,
+            noPriorServicesOrExpenseHistoryConfirmed: true, allExpensesDirectlyAttributedConfirmed: true,
+            foreignServiceSourceReference: 'Fictional Spain-only service contracts and work logs',
+            domesticServiceSourceReference: 'Fictional U.S.-only service contracts and work logs',
+            foreignGrossIncome: '120000', domesticGrossIncome: '80000',
+            businessW2WagesPaid: '0', businessUbiaQualifiedProperty: '0',
+            foreignBusinessExpenses: '70000', domesticBusinessExpenses: '30000', unallocatedBusinessExpenses: '0',
+            foreignExpenseSourceReference: 'Fictional original foreign expense book',
+            domesticExpenseSourceReference: 'Fictional original domestic expense book',
+            foreignReasonableServicesAllowance: '10000', domesticReasonableServicesAllowance: '10000',
+            reasonableAllowancesConfirmed: true, allowanceSourceReference: 'Fictional current-year reasonable service allowance originals',
+          },
+        }] },
+    },
+  };
+}

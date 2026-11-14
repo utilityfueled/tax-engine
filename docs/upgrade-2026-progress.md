@@ -1,5 +1,16 @@
 # 2026 upgrade implementation evidence
 
+## November 14 actual mixed-capital foreign service originals
+
+A finite location-separated Schedule C service business now binds actual foreign
+and domestic receipts, expenses and reasonable service allowances. The combined
+allowances face the whole-business cap, and only domestic profit remains in QBI.
+Explicit original zero wages/property must reconcile to the business, including
+zero foreign profit. Genuine failures precede 1,069 author passes and twelve
+independent manual/mutation/privacy passes. [Method and source boundaries](upgrade-2026-form2555-mixed-capital-services-20261114.md).
+The broader loss, history, allocation, human and annual-form gates remain; the
+integrated successor follows the separately reviewed farm package.
+
 ## November 14 guided Coverdell bank originals
 
 The finite January 1 whole-account bank conversion now has guided original

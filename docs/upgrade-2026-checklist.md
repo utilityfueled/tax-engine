@@ -6,6 +6,11 @@ below retain their original evidence boundaries.
 
 ## Active continuation — November 14
 
+- [x] Bind actual mixed domestic/foreign capital-material service originals,
+  aggregate service cap and domestic QBI; reproduce and close zero-profit
+  wages/UBIA admission. 1,069 author and twelve independent passes; broader
+  methods remain gated. [Method](upgrade-2026-form2555-mixed-capital-services-20261114.md).
+
 - [x] Complete the exact `26f5bd5b` native ARM64 successor: 24 passing stages,
   four workloads, six recovery phases, 628 browser passes/five original skips,
   independent artifact audit and normal VM/socket/default/resource restoration.
