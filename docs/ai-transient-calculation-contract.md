@@ -14,13 +14,14 @@ It requires version 1, confirmation, workspace ID/revision and matching tax year
 When a guided-only workspace has no document-derived year, the confirmed input
 supplies the private request's year. An existing conflicting document year is
 rejected; no workspace year or original facts are overwritten.
-Browser cross-origin requests are rejected. A configured `TAX_ENGINE_APP_URL`
-is the authoritative origin behind a reverse proxy. Without that configuration,
+Browser cross-origin requests are rejected. Hosted Preview uses the exact
+validated platform deployment origin. Hosted production requires its configured
+HTTPS origin without credentials, a path, query or fragment. Elsewhere a
+configured `TAX_ENGINE_APP_URL` is authoritative behind a reverse proxy. Without it,
 only the request URL's origin is accepted, except that a self-host loopback
 request may use the exact browser Host header with the same protocol and port.
 This accommodates Next's internal localhost normalization without trusting
-forwarded headers, other local ports or arbitrary hostnames. Hosted production
-requires its configured public origin. Hosted requests authenticate and
+forwarded headers, other local ports or arbitrary hostnames. Hosted requests authenticate and
 check the paid entitlement before calculating or creating accounting hooks.
 Shared rate limits, cancellation, private no-store responses and generic errors
 apply on success and every failure. No private facts are persisted or logged.

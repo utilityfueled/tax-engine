@@ -99,6 +99,8 @@ describe("private transient AI calculation contract", () => {
     { label: "configured host suffix attack", configured: "https://tax.example", origin: "https://tax.example.attacker.example", allowed: false },
     { label: "invalid configured protocol", configured: "ftp://tax.example", origin: "http://localhost:3000", allowed: false },
     { label: "credentials in configured URL", configured: "https://user:secret@tax.example", origin: "https://tax.example", allowed: false },
+    { label: "cleartext origin", configured: "http://tax.example", origin: "http://tax.example", allowed: false },
+    { label: "non-root path", configured: "https://tax.example/private", origin: "https://tax.example", allowed: false },
     { label: "missing hosted production origin", configured: undefined, origin: "http://localhost:3000", allowed: false },
     { label: "originless request without hosted configuration", configured: undefined, origin: undefined, allowed: false },
     { label: "originless request with invalid hosted configuration", configured: "ftp://tax.example", origin: undefined, allowed: false },
@@ -112,6 +114,25 @@ describe("private transient AI calculation contract", () => {
       headers: { "content-type": "application/json", ...(origin ? { origin } : {}), host: "attacker.example", "x-forwarded-host": "attacker.example" },
     });
     const response = await handler.POST(proxied);
+    expect(response.status).toBe(allowed ? 200 : 403);
+    expect(s.fetchFn).toHaveBeenCalledTimes(allowed ? 1 : 0);
+    if (!allowed) { expect(s.accounting).not.toHaveBeenCalled(); expect(s.resolveActor).not.toHaveBeenCalled(); }
+  });
+  it.each([
+    { configured: "https://fallback.example", hostname: "tax-synthetic.vercel.app", origin: "https://tax-synthetic.vercel.app", allowed: true },
+    { configured: undefined, hostname: "tax-synthetic.vercel.app", origin: "https://tax-synthetic.vercel.app", allowed: true },
+    { configured: "https://fallback.example", hostname: "tax-synthetic.vercel.app", origin: "https://fallback.example", allowed: false },
+    { configured: "https://fallback.example", hostname: "tax-synthetic.vercel.app", origin: "https://another.vercel.app", allowed: false },
+    { configured: "https://fallback.example", hostname: "tax-synthetic.vercel.app/path", origin: undefined, allowed: false },
+  ])('uses only the admitted Preview origin $hostname/$origin', async ({ configured, hostname, origin, allowed }) => {
+    const s = setup(true);
+    const handler = createTaxExplanationRouteHandlers({ ...s.dependencies, env: {
+      TAX_ENGINE_DEPLOYMENT_MODE: 'hosted', NODE_ENV: 'production', VERCEL_ENV: 'preview', VERCEL_URL: hostname, TAX_ENGINE_APP_URL: configured,
+    } });
+    const response = await handler.POST(new Request('http://localhost:3000/api/workspace/tax-explanation', {
+      method: 'POST', body: JSON.stringify(envelope()),
+      headers: { 'content-type': 'application/json', ...(origin ? { origin } : {}), 'x-forwarded-host': 'fallback.example' },
+    }));
     expect(response.status).toBe(allowed ? 200 : 403);
     expect(s.fetchFn).toHaveBeenCalledTimes(allowed ? 1 : 0);
     if (!allowed) { expect(s.accounting).not.toHaveBeenCalled(); expect(s.resolveActor).not.toHaveBeenCalled(); }

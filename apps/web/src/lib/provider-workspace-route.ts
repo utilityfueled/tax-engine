@@ -12,8 +12,10 @@ import {
 import { getHostedEntitlementByOwnerId } from "./hosted-billing-db";
 import {
   isHostedProductionEnvironment,
+  isHostedVercelPreviewEnvironment,
   isLoopbackHostname,
   resolveBrowserWorkspaceDeploymentMode,
+  resolveHostedAppBaseUrl,
   shouldAllowLoopbackLocalAiAccess
 } from "./hosted-runtime-safety";
 import { buildLocalProviderWorkspaceResponse } from "./provider-workspace-local";
@@ -95,12 +97,15 @@ function isPrivateCalculationOriginAllowed(request: Request, env: Record<string,
   const origin = request.headers.get("origin");
   const configured = env.TAX_ENGINE_APP_URL?.trim();
   try {
+    if (isHostedVercelPreviewEnvironment(env) || isHostedProductionEnvironment(env)) {
+      const app = resolveHostedAppBaseUrl(env);
+      return app.hasValidConfiguredUrl && !app.blocked && (origin === null || origin === new URL(app.appBaseUrl).origin);
+    }
     if (configured) {
       const publicUrl = new URL(configured);
       return ["http:", "https:"].includes(publicUrl.protocol) && !publicUrl.username && !publicUrl.password
         && (origin === null || origin === publicUrl.origin);
     }
-    if (isHostedProductionEnvironment(env)) return false;
     if (origin === null) return true;
     const internalUrl = new URL(request.url);
     if (origin === internalUrl.origin) return true;
