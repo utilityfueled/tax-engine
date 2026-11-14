@@ -1618,7 +1618,7 @@
     "tests/fixtures/guided-k1-charitable-first-admission.ts": "fa14359b1b1fbdb89cb3d346f05794276ca17903185cf193544e0c87405198c8",
     "tests/fixtures/guided-k1-charitable-sources.ts": "8d18dc0cfd3f00633c0c6539c8bf4f235b3799b6400c56bda3d561d516ae0b08",
     "tests/fixtures/guided-k1-passive-capital-browser.json": "d139dc788d07b6723f2374f06e003b65286a39ed348085d8e5c08cc4ccca92a6",
-    "tests/fixtures/guided-k1-passive-capital-prior-qbi-browser.json": "774ec976f6a5b6a4daa5ad12236b8ae7feaf83a89a63258673071be7f43ea509",
+    "tests/fixtures/guided-k1-passive-capital-prior-qbi-browser.json": "d6e7b6cd043e051ee765641afa2020d2ec63dde31381b741ca1e315cd9f742f1",
     "tests/fixtures/guided-k1-passive-capital.ts": "bfa797c79738cd62427f71e2efe4d92c5463b398f6331732b54ed39bce3bc9e6",
     "tests/fixtures/guided-k1-passive-distribution.ts": "4c6ac723775d693cf343fd6d1ee968ffe3076fa73be3384dbd6f9818b332ce8c",
     "tests/fixtures/guided-k1-prior-charitable-at-risk.ts": "39a43f71d571fe96f45e166d1e5a78d777b72e1393ef4b26a7218997f50ec2a1",
