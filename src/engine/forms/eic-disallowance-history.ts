@@ -4,6 +4,7 @@ import type { TaxYearInput } from '@/models/inputs.js';
 import type { EicDisallowanceSources } from '@/models/eic-disallowance-sources.js';
 import type { CalculatedLine } from '@/models/outputs.js';
 import { AuditTrail } from '@/utils/audit.js';
+import { validateEicUnassessedPetition } from './eic-unassessed-petition.js';
 
 type Identity = Pick<TaxYearInput['taxpayer']['primary'], 'firstName' | 'lastName' | 'ssn'>;
 export interface EicDisallowanceInput {
@@ -88,9 +89,10 @@ function banRange(source: Denial, taxYear: number, originalFiled: string, final:
   if (!ordinary) throw new Error('EIC late or out-of-order ban chronology requires its actual controlling notice; no ban start is inferred');
   return { first, last: first + duration - 1 };
 }
-function denialRecords(filer: Filer, through: string): Map<string, ValidDenial> {
+function denialRecords(filer: Filer, through: string, claim: string, currentTaxYear: number): Map<string, ValidDenial> {
   if (filer.denials === undefined || filer.laterAllowances === undefined || filer.allHistoryIncluded !== true) throw new Error('EIC complete actual denial and allowance history is required, including known empty lists');
   const records = new Map<string, ValidDenial>();
+  const petitionDockets = new Set<string>();
   for (const source of filer.denials) {
     const id = text(source.sourceId, 'denial ID'); text(source.sourceReference, 'denial reference');
     if (records.has(id)) throw new Error('EIC duplicate denial source ID');
@@ -106,7 +108,14 @@ function denialRecords(filer: Filer, through: string): Map<string, ValidDenial> 
     if (math !== (source.procedure === 'math_or_clerical')) throw new Error('EIC denial procedure conflicts with the actual reason');
     if (!['none', 'reckless', 'fraud'].includes(source.conduct ?? '')) throw new Error('EIC actual final conduct determination is unknown');
     if (typeof source.appealPending !== 'boolean') throw new Error('EIC actual pending appeal answer is unknown');
-    if (source.appealPending) throw new Error('EIC active appeal method requires separate actual contested-determination sources');
+    if (source.unassessedTaxCourtPetition !== undefined) {
+      const docket = validateEicUnassessedPetition(source.unassessedTaxCourtPetition, {
+        source, owner: filer.owner, originalTaxpayerSsn: filer.originalTaxpayer?.ssn,
+        currentTaxYear, claimDate: claim, reviewedThroughDate: through,
+      });
+      if (petitionDockets.has(docket)) throw new Error('EIC duplicate actual petition docket requires separate source resolution');
+      petitionDockets.add(docket);
+    } else if (source.appealPending) throw new Error('EIC active appeal method requires separate actual contested-determination sources');
     if (math && source.conduct !== 'none') throw new Error('EIC math correction cannot establish a statutory conduct ban');
     if (source.conduct === 'none' && source.banNotice !== undefined) throw new Error('EIC actual ban notice conflicts with the no-conduct-ban determination');
     if (source.banNotice !== undefined && final === null) throw new Error('EIC actual ban notice requires its actual final determination date');
@@ -163,7 +172,7 @@ export function calculateEicDisallowanceHistory(input: EicDisallowanceInput): Ei
     if (identities.has(actualId)) throw new Error('EIC duplicate actual filer identity'); identities.add(actualId);
     text(filer.sourceReference, 'filer history reference');
     if (filer.sourceFactsConfirmed !== true) throw new Error('EIC each filer history requires actual source confirmation');
-    const records = denialRecords(filer, through);
+    const records = denialRecords(filer, through, claim, input.taxpayer.taxYear);
     const cleared = new Map<string, string>();
     const allowanceIds = new Set<string>();
     for (const allowance of filer.laterAllowances ?? []) {

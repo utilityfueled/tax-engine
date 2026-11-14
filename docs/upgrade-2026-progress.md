@@ -1,5 +1,16 @@
 # 2026 upgrade implementation evidence
 
+## November 14 actual unassessed EIC petition history
+
+The six-file finite EIC history method now binds actual notice, petition,
+docket and complete account/court originals. A pending appeal alone remains
+insufficient; actual assessed denials and final bans retain their guards.
+Focused checks pass 977 tests, two separate review runs pass fifteen and
+eleven, and the immutable full unit candidate passes 28,491 tests with normal
+owned-database cleanup. [Authority, checks and limits](upgrade-2026-eic-unassessed-petition-20261114.md).
+Combined successor checks remain pending. No human, annual filing or export
+qualification is inferred from this source-history method.
+
 ## November 14 all-foreign current-loss originals
 
 The finite printed-percentage Form 2555 current-loss method is now adopted from

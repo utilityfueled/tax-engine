@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { EicUnassessedPetitionSchema } from '@/models/eic-unassessed-petition.js';
 
 // Persist drafts without manufacturing a no-history, no-ban or completed-form answer.
 const identity = z.object({ firstName: z.string().optional(), lastName: z.string().optional(), ssn: z.string().optional() });
@@ -10,6 +11,7 @@ const denial = z.object({
   procedure: z.enum(['math_or_clerical', 'deficiency']).optional(),
   conduct: z.enum(['none', 'reckless', 'fraud']).optional(), appealPending: z.boolean().optional(),
   underlyingDenialSourceId: z.string().optional(),
+  unassessedTaxCourtPetition: EicUnassessedPetitionSchema.optional(),
   interveningReturnHistoryCompleteConfirmed: z.boolean().optional(),
   interveningOriginalReturns: z.array(z.object({ taxYear: z.number().int().optional(), filedDate: z.string().optional(), sourceReference: z.string().optional() })).optional(),
   banNotice: z.object({ sourceReference: z.string().optional(), noticeDate: z.string().optional(), firstEligibleTaxYear: z.number().int().optional() }).optional(),

@@ -1,4 +1,18 @@
 {
+  "nov14EicUnassessedPetitionAdoption": {
+    "freeze": "d9322f336438c46caf750d1900c2c43b78cf96bb2c2a21379a96bfadfe13b16d",
+    "files": 6,
+    "actualRed": "5FAIL1PASS on predecessor",
+    "focused": "977PASS;15separate;11root incl5new; types/lint/6strictSpecRefs",
+    "fullUnit": "28491PASS2073files; ownedPGnormalstop; no source change",
+    "scope": "Actual timely printed-deadline petition; complete unassessed/nonfinal history only; no inferred credit or8862completion",
+    "independentReview": "8097f1fa51fa14c70587e57582003d4de34be1ac7d1bc865080239defb56271e",
+    "laterCombinedChecksRequired": true,
+    "qualifiedHumanReview": false,
+    "filingOrModelPromotion": false,
+    "mainPushHold": true,
+    "ledger": "docs/upgrade-2026-eic-unassessed-petition-20261114.md"
+  },
   "nov14AllForeignCapitalLossAdoption": {
     "sourceFreezeSha256": "160347c6851ab5aa6a554279607156cb1a36c3798dfea7cdc840d78f71820c90",
     "source": "11 frozen reviewed files adopted over AEA; separate tax commit",

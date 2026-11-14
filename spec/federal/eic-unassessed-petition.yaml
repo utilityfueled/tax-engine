@@ -1,0 +1,62 @@
+form: "EIC unassessed Tax Court petition"
+fullName: "Original-source unassessed and nonfinal deficiency petition prerequisite"
+taxYear: 2026
+irsReference: "https://www.irs.gov/instructions/i8862"
+notes: |
+  Official sources refreshed 2026-11-14: current substantive 26CFR1.32-3(b)
+  at https://www.ecfr.gov/current/title-26/section-1.32-3 (title26 displayed
+  current2026-10-09), published2025 CFR and IRC6213(a),(b),(d),(f),
+  https://uscode.house.gov/us/usc/119-118/t26/s6213/ (through PL119-120),
+  plus final December2025 i8862. Direct eCFR byte retrieval was access-gated;
+  its HTTP200 access page is not substantive regulatory evidence.
+  Reg1.32-3(b) defines deficiency denial by actual assessment. This method
+  proves one prior-year statutory deficiency notice actually petitioned in
+  Tax Court by the last petition date stated in that notice. IRC6213(a)
+  expressly treats filing by that printed date as timely; no90/150day,
+  holiday, address, jurisdiction or tolling inference is made. Complete actual
+  notice, docket, account and event records through the same claim/review
+  dates affirmatively establish both assessment and final determination null.
+  Petition status alone does not establish those facts. Actual decision,
+  dismissal, settlement, assessment waiver, payment assessment, bankruptcy,
+  termination/jeopardy or another assessment exception remains unsupported.
+  Each original notice/denial, denied year, filed return, owner and SSN binds
+  to existing full separate-filer history. Every other actual assessed denial
+  and final statutory ban is still evaluated independently. The output is
+  only the existing required8862 restriction, never an allowed credit,
+  refund, successful contest, filing approval or completed8862.
+  Draft proof can persist missing/false fields; calculation requires every
+  actual source. A supplied proof with appealPending=false is contradictory,
+  not silently ignored. No guided intake, exports, annual2026 qualification
+  or model promotion is enabled. All test records are synthetic, not an IRS
+  published numerical example or qualified human determination.
+lines:
+  - line: "unassessed"
+    description: "Actual unassessed nonfinal petition is not an assessed deficiency denial"
+    formula: "Validate complete original petition evidence; retain assessment=null and final=null; let existing all-history resolver evaluate every other source"
+    irsRef: "26CFR1.32-3(a),(b),(c),(e); IRC6213(a)"
+    testRef: "tests/engine/forms/eic-unassessed-petition.test.ts::admits actual unassessed petitions without completing recertification or inventing a claim"
+  - line: "sourceBinding"
+    description: "Original petitioner, notice, denial and current-year chronology cannot be substituted"
+    formula: "Match current and denied years, original filing, owner and SSN, denial ID/reference, original notice date/reference, claim and review dates"
+    irsRef: "26CFR1.32-3(c),(e); IRC6213(a); actual original-source contract"
+    testRef: "tests/engine/forms/eic-unassessed-petition.test.ts::rejects missing false substituted or stale original petition facts"
+  - line: "chronology"
+    description: "Use the actual notice deadline and explicit null event history"
+    formula: "notice<=petitionFiled<=noticeLastPetitionDate and petitionFiled<=claim<=review; every assessment/finality/decision/exception event explicitly null through review"
+    irsRef: "IRC6213(a),(b),(d),(f); 26CFR1.32-3(b)"
+    testRef: "tests/engine/forms/eic-unassessed-petition.test.ts::enforces actual notice deadline and explicit unassessed nonfinal chronology"
+  - line: "otherHistory"
+    description: "A pending source never clears another assessed denial or an actual final ban"
+    formula: "Preserve each other original deficiency and either filers final ban; no contested final-ban allowed-refund method"
+    irsRef: "IRC32(k); 26CFR1.32-3(e); i8862 Exceptions and How to appeal"
+    testRef: "tests/engine/forms/eic-unassessed-petition.test.ts::retains other assessed deficiencies and separate final bans"
+  - line: "replay"
+    description: "Canonical replay preserves source facts and rejects unknown additional meaning"
+    formula: "Strict dedicated object; no missing source inferred; do not allow a detached proof or reused docket to bypass chronology"
+    irsRef: "Actual source conservation; 26CFR1.32-3(c)"
+    testRef: "tests/engine/forms/eic-unassessed-petition.test.ts::preserves source proof on replay and rejects detached or duplicate petitions"
+  - line: "privacy"
+    description: "Verified explanation and hosted projections do not transmit original court history"
+    formula: "Actual canonical EIC source prerequisites remain private; return restriction audit includes only aggregate statuses and no docket notice SSN or original references"
+    irsRef: "Repository privacy boundary; no new disclosure or readiness claim"
+    testRef: "tests/engine/forms/eic-unassessed-petition.test.ts::preserves actual canonical privacy and annual readiness boundaries"
