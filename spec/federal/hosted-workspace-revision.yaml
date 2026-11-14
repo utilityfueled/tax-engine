@@ -57,3 +57,6 @@ lines:
   - line: "private-hosted-recovery"
     formula: "Read a full hosted backup from its verified private workspace snapshot and matching owner-scoped guided draft, using the existing encrypted recovery format. Ignore generic local workspace answers on this path."
     testRef: "tests/apps/web/hosted-workspace-browser-state.test.ts::restores the selected hosted snapshot and its actual guided answers without unowned data"
+  - line: "missing-private-interview-recovery"
+    formula: "A later hosted shell update cannot restore omitted private answers. Refuse a complete backup when any answered interview question or fact is missing its answer text."
+    testRef: "tests/apps/web/hosted-workspace-browser-state.test.ts::rejects a complete backup of a shell missing an answered private interview item"

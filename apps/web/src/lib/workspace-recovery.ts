@@ -116,6 +116,10 @@ export async function exportWorkspaceRecovery(
   if (workspace.id !== workspaceId) throw new Error("The stored return identity does not match.");
   const guidedFlowRaw = storage.getItem(getGuidedFlowStorageKey(hosted ? hosted.draftId : workspaceId));
   validateGuided(guidedFlowRaw);
+  if (hosted && [...workspace.seededReturn.interviewQuestions, ...workspace.seededReturn.facts]
+    .some(item => item.status === "answered" && !item.answerText?.trim())) {
+    throw new Error("The private interview answers are missing on this browser. Use the device where you entered them to make a complete backup.");
+  }
   if (hosted && guidedFlowRaw === null && (workspace.guidedCompletion != null || workspace.documents.some(document => document.id.startsWith("guided:")))) {
     throw new Error("The private guided answers are missing on this browser. Use the device where you entered them to make a complete backup.");
   }

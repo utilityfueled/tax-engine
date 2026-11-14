@@ -2,6 +2,7 @@ import { expect, it, vi } from "vitest";
 import type { ReturnWorkspaceRecord } from "@tax-engine/contracts";
 import { getGuidedFlowStorageKey, initialFlowState, loadGuidedFlowState, saveGuidedFlowState } from "../../../apps/web/src/lib/guided-interview-flow";
 import { advanceHostedGuidedDraft, clearHostedWorkspaceBrowserState, hostedDocumentCacheId, hostedGuidedDraftId } from "../../../apps/web/src/lib/hosted-workspace-browser-state";
+import { sanitizeWorkspaceForHostedStorage } from "../../../apps/web/src/lib/hosted-privacy";
 import { createWorkspaceRecord, ingestFilesIntoWorkspace } from "../../../apps/web/src/lib/workspace-storage";
 import { exportWorkspaceRecovery, importWorkspaceRecovery } from "../../../apps/web/src/lib/workspace-recovery";
 
@@ -34,6 +35,23 @@ it("isolates guided facts by owner and revision and advances only matching priva
   expect(loadGuidedFlowState(local, draft(alice, thirdRevision))?.taxYear).toBe(2026);
   expect(loadGuidedFlowState(local, draft(alice, secondRevision))?.taxYear).toBe(2025);
   expect(loadGuidedFlowState(local, workspaceId)?.taxYear).toBe(2024);
+});
+
+it("rejects a complete backup of a shell missing an answered private interview item", async () => {
+  const local = browserStorage();
+  const workspace = createWorkspaceRecord(workspaceId, { storageMode: "hosted-postgres" });
+  const question = { id: "wages", factId: "wages", prompt: "What were the wages?",
+    status: "answered", answeredAt: workspace.updatedAt, answerText: "240.18", sourceDocumentIds: [] } as const;
+  workspace.seededReturn.interviewQuestions = [{ ...question, sourceDocumentIds: [] }];
+  const hostedSnapshot = { workspace: sanitizeWorkspaceForHostedStorage(workspace),
+    draftId: hostedGuidedDraftId(alice, workspaceId, firstRevision), guidedMode: null,
+    documentCacheWorkspaceId: hostedDocumentCacheId(alice, workspaceId) };
+  const password = "fictional hosted backup passphrase";
+
+  await expect(exportWorkspaceRecovery(local, workspaceId, password, { hostedSnapshot }))
+    .rejects.toThrow("The private interview answers are missing on this browser.");
+  await expect(exportWorkspaceRecovery(local, workspaceId, password, { hostedSnapshot: { ...hostedSnapshot, workspace } }))
+    .resolves.toBeInstanceOf(Blob);
 });
 
 it("clears only the confirmed account and revision", () => {
