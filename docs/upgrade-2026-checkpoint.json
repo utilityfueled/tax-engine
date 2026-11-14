@@ -1,4 +1,14 @@
 {
+  "nov14PaSecondaryMarketDiscountResearch": {
+    "result": "DirectPAclassAllocationUnresolvedInSevenOfficialSources;positiveDiscountGuardPreserved",
+    "officialArtifacts": 7,
+    "existingGuardTests": "3files16PASS;separateIndependent16PASS",
+    "productOrAdmissionChanges": false,
+    "preciseQuestion": "DoesFederal1276secondaryMarketDiscountRemainPAdispositionGainOrMoveToInterestAndByWhichPairedAdjustmentAuthority",
+    "independentReviewSha256": "9a1baa6515d483a9344817ce4d620509a492f1309d4439ee34b4747e7dbefc96",
+    "ledger": "docs/upgrade-2026-pa-market-discount-20261114.md",
+    "externalContactOrQualifiedHumanDecision": false
+  },
   "nov14ActualProtectedMortgageOriginals": {
     "source": "26f5bd5b1d99df1655aa89cbd88e59d7333161de",
     "actualCases": "2PASS1280and390;2025fictionalOriginals;0retryProviderPrivacyFailures",

@@ -42,6 +42,13 @@ The questions in [external actions](upgrade-2026-external-actions.md), including
 - Suspended K-1 foreign tax: IRC 704(d)(3)(A) and Form 7203 line 46 limit it by basis, but no source reviewed says which year a suspended tax counts as paid when later allowed, or how the allowed part maps to Form 1116 or the election. Any basis shortfall on a K-1 with foreign tax rejects, even a small one. A reviewer should confirm whether the allowed part can be claimed in the current year.
 - Below-poverty year of marriage: the alternative calculation rejects when joint household income is under 100 percent of the poverty line. Neither the Form 8962 instructions nor Pub 974 address that case, and Pub 974 Worksheet I describes no special handling of a half-income percentage below 100. A reviewer should confirm whether Part V applies.
 - Form 1099-G business refund: the Form 1099-G instructions define Box 8 but give the recipient no reporting rule, and the Schedule C line 6 instructions do not cover it. A reviewer should confirm the destination and tax-benefit treatment.
+- PA secondary-market corporate-debt discount: the seven-source November 14
+  recheck establishes PA disposition/basis rules and express OID/imputed-interest
+  rules, but does not establish the PA class or paired adjustment for federal
+  §1276 discount. Positive original market discount remains rejected for PA.
+  [Exact unresolved question and official bytes](upgrade-2026-pa-market-discount-20261114.md).
+  Further authoritative research and a qualified PA interpretation are needed;
+  general bond-sale language is not treated as the missing classification.
 
 ## How this list was made
 

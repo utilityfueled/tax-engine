@@ -1,5 +1,12 @@
 # 2026 upgrade implementation evidence
 
+November 14: seven refreshed official PA sources and separate sixteen-test
+regression review preserve the precise secondary-market debt discount guard.
+PA disposition/basis and OID/imputed-interest rules do not establish the direct
+§1276 class allocation in the reviewed sources. The exact question is recorded
+for further authority/qualified interpretation; no tax rule or fact is invented.
+[Research ledger](upgrade-2026-pa-market-discount-20261114.md).
+
 November 14: exact `26f5bd5b` protected mortgage-original journeys pass on desktop
 and mobile with canonical/tenant/revision/unknown-zero controls and verified
 signed Sandbox/session/Preview/environment/data cleanup. Separate root artifact
