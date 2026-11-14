@@ -58,7 +58,7 @@ import {
 } from "@/lib/provider-workspace-request";
 import { prepareUploadableFiles } from "@/lib/uploaded-document-detection";
 import { DocumentTaxYearField } from "./document-tax-year-field";
-import { cacheWorkspaceDocumentFiles, deleteCachedWorkspaceDocumentFiles } from "@/lib/workspace-document-file-cache";
+import { deleteCachedWorkspaceDocumentFiles } from "@/lib/workspace-document-file-cache";
 import {
   answerInterviewQuestion,
   answerWorkspaceInterviewQuestion,
@@ -67,7 +67,7 @@ import {
   confirmLocalDocumentTaxYear,
   confirmWorkspaceDocumentTaxYear,
   getFutureYearSampleUploadMessage,
-  ingestFilesIntoWorkspace,
+  ingestHostedDocumentFiles,
   ingestLocalDocumentFiles,
   removeDocumentFromWorkspace,
   removeLocalDocumentFile,
@@ -652,22 +652,7 @@ export function ReturnWorkspaceScreen({
       if (futureYearSampleUploadMessage) throw new Error(futureYearSampleUploadMessage);
 
       if (!browserStorage) {
-        const nextWorkspace = ingestFilesIntoWorkspace(workspace, preparedFiles);
-        const appendedDocuments = nextWorkspace.documents.slice(-files.length);
-        await cacheWorkspaceDocumentFiles(workspaceId, appendedDocuments.map((document, index) => {
-          const file = files[index];
-
-          if (!file) {
-            throw new Error("Upload state lost track of a selected file.");
-          }
-
-          return {
-            documentId: document.id,
-            uploadedAt: document.uploadedAt,
-            file,
-          };
-        }));
-        const savedWorkspace = await persistHostedWorkspace(nextWorkspace);
+        const savedWorkspace = await ingestHostedDocumentFiles(workspace, preparedFiles, files, persistHostedWorkspace);
         const message = `${savedWorkspace.summary.totalDocuments} documents processed. Raw files stay local and are not stored in durable hosted storage.`;
 
         setWorkspace(savedWorkspace);

@@ -1,11 +1,11 @@
 import { seededFactDefinitions } from "@tax-engine/contracts";
 import type { ReturnWorkspaceRecord } from "@tax-engine/contracts";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { initialFlowState } from "../../../apps/web/src/lib/guided-interview-flow";
 import { sanitizeWorkspaceForHostedStorage } from "../../../apps/web/src/lib/hosted-privacy";
 import { savePersistedWorkspace } from "../../../apps/web/src/lib/workspace-persistence";
 import { reconcileWorkspaceGuidedState } from "../../../apps/web/src/lib/workspace-guided-state";
-import { createWorkspaceRecord, getFutureYearSampleUploadMessage, ingestFilesIntoWorkspace } from "../../../apps/web/src/lib/workspace-storage";
+import { createWorkspaceRecord, getFutureYearSampleUploadMessage, ingestFilesIntoWorkspace, ingestHostedDocumentFiles } from "../../../apps/web/src/lib/workspace-storage";
 
 // spec: spec/federal/hosted-workspace-ingestion-shell.yaml
 const wagesPrompt = "Confirm whether every W-2 is final and whether any boxes require follow-up questions.";
@@ -29,6 +29,19 @@ function fetchShell() {
     const payload = JSON.parse(String(init?.body)) as { workspace: ReturnWorkspaceRecord };
     return Response.json({ availability: "ready", ownerScope: { ownerId: "synthetic-owner-42", ownerLabel: null, scopeKey: "hosted-owner:synthetic-owner-42" }, workspace: payload.workspace, workspaces: [] });
   });
+}
+
+afterEach(() => vi.unstubAllGlobals());
+
+function stubDurableOriginals() {
+  const durable: { documentId: string; file: File }[] = [];
+  const open = { onsuccess: () => {}, result: { close() {}, transaction() {
+    const pending = { oncomplete: () => {}, objectStore: () => ({ add(record: (typeof durable)[number]) { durable.push(record); } }) };
+    queueMicrotask(() => pending.oncomplete());
+    return pending;
+  } } };
+  vi.stubGlobal("indexedDB", { open() { queueMicrotask(() => open.onsuccess()); return open; } });
+  return durable;
 }
 
 describe("actual hosted ingestion shell compatibility", () => {
@@ -71,6 +84,54 @@ describe("actual hosted ingestion shell compatibility", () => {
     expect(first(sent.workspace.seededReturn.interviewQuestions).sourceDocumentIds).toEqual([]);
     expect(result.workspace).toBe(workspace);
     expect(JSON.stringify(workspace)).toBe(before);
+  });
+
+  it("does not publish hosted metadata when browser original storage is unavailable", async () => {
+    vi.stubGlobal("indexedDB", undefined);
+    const workspace = empty();
+    const file = new File(["synthetic original bytes"], "Local IRS Form.pdf", { type: "application/pdf" });
+    const persist = vi.fn(async (next: ReturnWorkspaceRecord) => next);
+    await expect(ingestHostedDocumentFiles(workspace, [file], [file], persist)).rejects.toThrow(/save the original documents/u);
+    expect(persist).not.toHaveBeenCalled();
+    expect(workspace.documents).toEqual([]);
+  });
+
+  it("keeps committed originals when the hosted shell response is lost", async () => {
+    const durable = stubDurableOriginals();
+    const workspace = empty();
+    const file = new File(["synthetic original bytes"], "Local IRS Form.pdf", { type: "application/pdf", lastModified: 321 });
+    let sent: ReturnWorkspaceRecord | undefined;
+    const fetchFn = vi.fn<typeof fetch>().mockImplementation(async (_url, init) => {
+      sent = (JSON.parse(String(init?.body)) as { workspace: ReturnWorkspaceRecord }).workspace;
+      expect(durable).toHaveLength(1);
+      throw new Error("Synthetic response lost after save");
+    });
+    await expect(ingestHostedDocumentFiles(workspace, [file], [file], async next => (
+      await savePersistedWorkspace({ deploymentMode: "hosted", workspace: next, fetchFn })
+    ).workspace)).rejects.toThrow(/response lost/u);
+    const persisted = first(durable);
+    expect(persisted.documentId).toMatch(/^hdoc:v1:/u);
+    expect(await persisted.file.text()).toBe("synthetic original bytes");
+    expect(persisted.file.lastModified).toBe(321);
+    expect(JSON.stringify(sent)).not.toMatch(/Local IRS Form|synthetic original bytes/u);
+    expect(sent?.documents).toHaveLength(1);
+    expect(first(sent?.documents ?? []).id).toBe(persisted.documentId);
+    expect(workspace.documents).toEqual([]);
+  });
+
+  it("keeps the same safe hosted identity when a random ID resembles a direct identifier", async () => {
+    const durable = stubDurableOriginals();
+    const randomId = "e171bcbf-898a-49d2-a5a5-abc123456789";
+    vi.stubGlobal("crypto", { randomUUID: () => randomId });
+    const workspace = empty();
+    const file = new File(["synthetic original bytes"], "Local IRS Form.pdf", { type: "application/pdf" });
+    const persisted = await ingestHostedDocumentFiles(workspace, [file], [file], async (next) => {
+      return (await savePersistedWorkspace({ deploymentMode: "hosted", workspace: next, fetchFn: fetchShell() })).workspace;
+    });
+    const documentId = first(persisted.documents).id;
+    expect(documentId).toMatch(/^hdoc:v1:(?:[0-9a-f]{2}:){31}[0-9a-f]{2}$/u);
+    expect(documentId).toBe(first(durable).documentId);
+    expect(JSON.stringify(persisted)).not.toContain(randomId);
   });
 
   it("accepts every fixed canonical prompt without accepting supplied private text", () => {

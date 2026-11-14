@@ -32,6 +32,7 @@ import {
   summarizeFlowCompletion,
   type GuidedFlowState
 } from "./guided-interview-flow";
+import { toHostedDocumentId } from "./hosted-document-identity";
 import { reconcileWorkspaceGuidedState } from "./workspace-guided-state";
 import { getLocalRecoveryStorageKey } from "./workspace-local-recovery";
 import { deleteCachedWorkspaceDocumentFiles, storeNewWorkspaceDocumentFiles } from "./workspace-document-file-cache";
@@ -1312,14 +1313,16 @@ export function listWorkspaces(storage: Storage) {
 export function ingestFilesIntoWorkspace(
   workspace: ReturnWorkspaceRecord,
   files: UploadableFile[],
-  options?: { newLocalOriginals: true },
+  originalMode?: "self-host" | "hosted",
 ) {
   const usedIds = new Set(workspace.documents.map((document) => document.id));
   const appendedDocuments = files.map((file) => {
     const document = classifyUploadedDocument(file, usedIds);
     // A new upload needs an identity independent of the file's name/size and
     // any uncommitted batch in another tab. Preserve older source identities.
-    return options?.newLocalOriginals ? { ...document, id: crypto.randomUUID() } : document;
+    if (!originalMode) return document;
+    const randomId = crypto.randomUUID();
+    return { ...document, id: originalMode === "hosted" ? toHostedDocumentId(workspace.id, randomId) : randomId };
   });
   const nextDocuments = [
     ...workspace.documents,
@@ -1358,6 +1361,30 @@ export function ingestFiles(storage: Storage, workspaceId: string, files: Upload
   return nextWorkspace;
 }
 
+async function storeWorkspaceUploadOriginals(workspace: ReturnWorkspaceRecord, prepared: UploadableFile[], files: File[],
+  originalMode: "self-host" | "hosted") {
+  const failure = "Could not save the uploaded document. Please try again.";
+  if (prepared.length !== files.length || files.length === 0 || files.some((file, index) => (
+    file.name !== prepared[index]?.name || file.size !== prepared[index]?.size
+  ))) throw new Error(failure);
+  const nextWorkspace = ingestFilesIntoWorkspace(workspace, prepared, originalMode);
+  const uploads = nextWorkspace.documents.slice(-files.length).map((document, index) => {
+    const file = files[index];
+    if (!file) throw new Error(failure);
+    return { documentId: document.id, uploadedAt: document.uploadedAt, file };
+  });
+  await storeNewWorkspaceDocumentFiles(workspace.id, uploads);
+  return { nextWorkspace, newDocumentIds: uploads.map(({ documentId }) => documentId) };
+}
+
+/** Hosted shells reference browser-owned originals. Wait for the durable transaction before publishing the shell. */
+export async function ingestHostedDocumentFiles(workspace: ReturnWorkspaceRecord, prepared: UploadableFile[], files: File[],
+  persist: (workspace: ReturnWorkspaceRecord) => Promise<ReturnWorkspaceRecord>) {
+  const { nextWorkspace } = await storeWorkspaceUploadOriginals(workspace, prepared, files, "hosted");
+  // A lost response may follow a committed shell. Preserve its originals when a save cannot be confirmed.
+  return persist(nextWorkspace);
+}
+
 /** Save originals before adding metadata to an existing local return. */
 export async function ingestLocalDocumentFiles(storage: Storage, expected: ReturnWorkspaceRecord, prepared: UploadableFile[], files: File[]) {
   const failure = "Could not save the uploaded document. Please try again.";
@@ -1366,16 +1393,7 @@ export async function ingestLocalDocumentFiles(storage: Storage, expected: Retur
   const initial = parseStorage(storage.getItem(STORAGE_KEY)).workspaces[workspaceId];
   if (!initial) throw new Error(changed);
   const current = requireCurrentLocalWorkspace(storage, expected);
-  if (prepared.length !== files.length || files.length === 0 || files.some((file, index) => (
-    file.name !== prepared[index]?.name || file.size !== prepared[index]?.size
-  ))) throw new Error(failure);
-  const nextWorkspace = ingestFilesIntoWorkspace(current, prepared, { newLocalOriginals: true });
-  const uploads = nextWorkspace.documents.slice(-files.length).map((document, index) => {
-    const file = files[index];
-    if (!file) throw new Error(failure);
-    return { documentId: document.id, uploadedAt: document.uploadedAt, file };
-  });
-  await storeNewWorkspaceDocumentFiles(workspaceId, uploads);
+  const { nextWorkspace, newDocumentIds } = await storeWorkspaceUploadOriginals(current, prepared, files, "self-host");
 
   let failureMessage = failure;
   try {
@@ -1386,7 +1404,7 @@ export async function ingestLocalDocumentFiles(storage: Storage, expected: Retur
     }
     saveWorkspaceRecord(storage, workspaceId, nextWorkspace);
   } catch (error) {
-    try { await deleteCachedWorkspaceDocumentFiles(workspaceId, uploads.map(({ documentId }) => documentId)); }
+    try { await deleteCachedWorkspaceDocumentFiles(workspaceId, newDocumentIds); }
     catch {
       throw new Error("Could not finish saving or clean up the uploaded originals. Reopen this return before retrying.", { cause: error });
     }
