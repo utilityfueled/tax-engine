@@ -13,6 +13,25 @@ runs with cumulative reservation accounting. Qualified human cases, held-out
 runs, Google access and current deployed retail accounting remain open.
 [Sources, scope and hashes](upgrade-2026-provider-cost-reconciliation-20261114.md).
 
+## November 14 hosted rehearsal admission
+
+`9851cecc` requires explicit hosted/test mode, a sandbox Stripe key and an
+exact nonsecret isolated app/database descriptor before either external-service
+client is constructed. The installed PostgreSQL driver confirmed that URL SSL
+options can override an explicit TLS object. Remote non-verifying modes are
+rejected, and accepted legacy aliases become `verify-full` before Pool setup.
+All 915 admission/spec-reference checks passed twice, including a separate agent
+run. Independent source review found no confirmed issue. The descriptor records
+operator acknowledgement. Actual remote ownership and isolation still require
+the rehearsal's separate custody checks.
+
+All five hosted browser scenarios and their assertions remain unchanged. The
+source audit adds the helper and updates the suite hash, with every request
+budget, timeout and retry preserved. All 202 audit/inventory checks passed. Four
+isolated full verification lanes are running on the committed archive, with four
+workers each for unit and coverage and the original two for Chromium. Results
+will be recorded when complete.
+
 ## November 14 combined runtime verification
 
 Frozen `67557637` passed all nine static, build, lint and specification checks.

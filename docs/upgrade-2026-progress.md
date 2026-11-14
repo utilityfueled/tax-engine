@@ -5292,3 +5292,10 @@ execution and current image qualification require separate evidence.
   deployment/settings and five Redis keys were restored or removed. Independent
   review passed. The executed controller snapshot is retained separately from a
   late read-only preflight edit. [Exact scope and boundaries](upgrade-2026-current-status.md).
+
+- November 14 `9851cecc` admits mutation-capable hosted browser rehearsals only
+  after explicit sandbox mode and exact isolated-target acknowledgement. Actual
+  installed-driver tests reproduce TLS URL precedence and verify the correction.
+  All 915 affected checks and 202 audit/inventory controls pass, with independent
+  source review. Existing five scenarios, deadlines and request budgets remain
+  unchanged. Four isolated full verification lanes are running concurrently.

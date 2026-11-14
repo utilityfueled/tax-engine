@@ -25716,6 +25716,21 @@
         "pdfTransport": "4cbaf80e9997519f75d3107c73d48271b2b279475a80f2f4c691702291b19c1e",
         "appBrowserEquivalence": "93588d86acd64125458b8708652f12afc5d6c053a13a3d72673add8fb76cea6f"
       }
+    },
+    "hostedRehearsalAdmission": {
+      "commit": "9851cecc",
+      "focusedPassed": 915,
+      "independentExecutionPassed": 915,
+      "auditInventoryPassed": 202,
+      "existingHostedScenariosUnchanged": 5,
+      "requestBudgetsUnchanged": true,
+      "actualInstalledPgUrlPrecedenceReproduced": true,
+      "separateExternalCustodyRequired": true,
+      "fullVerificationStatus": "running",
+      "fullVerificationSource": "9851cecc",
+      "unitWorkers": 4,
+      "coverageWorkers": 4,
+      "browserWorkers": 2
     }
   }
 }
