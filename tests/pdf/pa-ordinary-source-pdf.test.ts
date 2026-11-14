@@ -3,7 +3,7 @@ import {expect,it} from 'vitest';
 import Decimal from 'decimal.js';
 import {calculatePAOrdinaryReturn} from '@/engine/state/pa-ordinary-return.js';
 import {join} from 'node:path';
-import {execFileSync}from 'node:child_process';
+import {execFileSync}from '../helpers/file-stdin-exec';
 import {mkdtemp,readFile} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {PDFDocument,PDFName,StandardFonts} from 'pdf-lib';

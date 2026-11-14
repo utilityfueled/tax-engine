@@ -3,7 +3,7 @@ import {expect,it} from 'vitest';
 import {join} from 'node:path';
 import {mkdir,writeFile,mkdtemp,rm} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
-import {execFileSync} from 'node:child_process';
+import {execFileSync} from '../helpers/file-stdin-exec';
 import {PDFName,PDFDocument} from 'pdf-lib';
 import type {TaxYearInput} from '@/models/inputs.js';
 import {PAOrdinaryReturnFactsSchema} from '@/models/pa-ordinary-return-facts.js';

@@ -4,7 +4,7 @@ import {calculateFederalTax}from '@/engine/federal.js';
 import {calculatePAOrdinaryReturn}from '@/engine/state/pa-ordinary-return.js';
 import {PAOrdinaryReturnFactsSchema}from '@/models/pa-ordinary-return-facts.js';
 import {PAOrdinaryReturnCompletionSourcesSchema}from '@/models/pa-ordinary-return-completion.js';
-import {refreshDigitalFixtureOriginals}from '../fixtures/pa-ordinary-digital-sources.js';import {join}from 'node:path';import {mkdtemp,mkdir,readFile,writeFile,rm}from 'node:fs/promises';import {tmpdir}from 'node:os';import {execFileSync}from 'node:child_process';
+import {refreshDigitalFixtureOriginals}from '../fixtures/pa-ordinary-digital-sources.js';import {join}from 'node:path';import {mkdtemp,mkdir,readFile,writeFile,rm}from 'node:fs/promises';import {tmpdir}from 'node:os';import {execFileSync}from '../helpers/file-stdin-exec';
 import {PDFDocument,PDFName}from 'pdf-lib';
 import {fillPAOrdinaryScheduleD,PA_ORDINARY_D_FIELDS as F}from '@/pdf/mappings/2025/fill-pa-ordinary-schedule-d.js';
 import {preparePAOrdinaryReturnReview}from '@/pdf/pa-ordinary-return-review-context.js';

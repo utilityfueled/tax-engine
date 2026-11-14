@@ -3,7 +3,7 @@ import {expect,it,afterEach} from 'vitest';
 import {join} from 'node:path';
 import {mkdir,writeFile,readFile,mkdtemp,rm} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
-import {execFileSync} from 'node:child_process';
+import {execFileSync} from '../helpers/file-stdin-exec';
 import {PDFDocument,PDFName} from 'pdf-lib';
 import {fillPAOrdinaryScheduleGL} from '@/pdf/mappings/2025/fill-pa-ordinary-schedule-gl.js';
 import {fillReturn} from '@/pdf/fill-return.js';

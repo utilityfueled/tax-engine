@@ -3,7 +3,7 @@ import {expect,it} from 'vitest';
 import {join} from 'node:path';
 import {mkdtemp,mkdir,readFile,writeFile,rm} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
-import {execFileSync} from 'node:child_process';
+import {execFileSync} from '../helpers/file-stdin-exec';
 import {PDFDocument,PDFTextField} from 'pdf-lib';
 import {fillReturn} from '@/pdf/fill-return';
 import {preparePAOrdinaryReturnReview} from '@/pdf/pa-ordinary-return-review-context';
