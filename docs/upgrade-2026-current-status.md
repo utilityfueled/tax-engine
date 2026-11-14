@@ -101,6 +101,17 @@ three gosu metadata matches. A safe in-place replacement has not been
 qualified, and the dependency findings still require disposition.
 [PostgreSQL image review](upgrade-2026-debian-advisory-refresh-20261113.md#postgresql-service-images-in-compose).
 
+`19aebd59` verifies the signed Debian package archives and compares both
+official PostgreSQL 16.16 Alpine images. Each yields 32 High and three
+Critical matches, all in the Go module embedded in `gosu`. The three
+Bookworm Critical advisory IDs disappear from that scan. The official
+Alpine recipe omits several later upstream libxml2 fixes from its patch
+list, so a zero scanner count for that library needs separate review.
+The candidate also changes the operating-system user and ICU version.
+The Compose pin stays on Bookworm pending a maintained patch or a
+qualified migration, rollback and advisory disposition.
+[Exact image comparison](upgrade-2026-postgres-alpine-comparison-20261113.md).
+
 `52246eb5` and `50c72a04` calculate the 2026 Form 1062 payment deferral
 for one confirmed direct farmland sale and replay its Schedule A originals.
 The tests require an exact gain reconciliation, calculate the four equal
@@ -132,6 +143,22 @@ checks passed after three regressions failed on the prior implementation.
 The implementation rejects duplicate source originals and a mismatch in the
 independently confirmed gain total. It does not allocate tax among sales
 or activate any return transfer. [IRS instructions](https://www.irs.gov/instructions/i1062).
+
+`7c09766d` maps all 53 actual widgets on the current final Form 1062 and
+Schedule A. The IRS posted both December 2025 revisions on April 15, 2026,
+and the instructions cover calendar 2026. The different December 2026
+drafts remain excluded. Twenty focused checks and four rendered synthetic
+diagnostics verified redacted election amounts, direct and pass-through
+dates and checkboxes, and exact PDF round-tripping. The mapping leaves
+identity, property and covenant originals unfilled. Annual Form 1040
+transfer, independently reviewed output and filing are still gated.
+The final Form 1040 and tables endpoints still return 2025 materials.
+The actual 2026 draft tables and final Form 4972 match prior pins.
+Ohio's indexed November 13 alert announces drafts, with actual PDF bytes
+still unavailable. Pennsylvania's annual listing still points to 2025.
+[Current Form 1062](https://www.irs.gov/pub/irs-pdf/f1062.pdf) ·
+[Current Schedule A](https://www.irs.gov/pub/irs-pdf/f1062sa.pdf) ·
+[Final Form 1040](https://www.irs.gov/pub/irs-pdf/f1040.pdf).
 
 `6cd57a42` computes the 2026 Schedule SE farm optional earnings estimate
 for a confirmed cash-method sole proprietor who elects it. The estimate

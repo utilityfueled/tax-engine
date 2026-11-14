@@ -4,6 +4,13 @@ Current source, verification and remaining work are summarized in the
 [current continuation](upgrade-2026-current-status.md). Historical results
 below apply to their named revisions.
 
+- November 13 — `7c09766d` pins the two current final Form 1062 PDFs and
+  verifies 53 field widgets against redacted direct and pass-through
+  specimens. Twenty focused checks and 8,977 spec references passed.
+  The annual transfer and filing remain gated. `19aebd59` compares both
+  official Alpine images against signed Bookworm packages and records
+  the remaining risk and migration checks before a pin change.
+  [PostgreSQL comparison](upgrade-2026-postgres-alpine-comparison-20261113.md).
 - November 13 — Exact `dc7546f9` ARM64 passed independent import, image
   smoke, scan, six Compose phases and 616 Chromium cases with five
   hosted-only skips. Normal shutdown restored the socket route. The scan

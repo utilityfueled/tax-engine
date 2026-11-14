@@ -59,6 +59,12 @@ below retain their original evidence boundaries.
   `52246eb5` and `50c72a04`. Pass 521 affected checks with exact cents
   and confirmed sale originals. Correct the fixture attribution to
   distinguish the synthetic direct sale from IRS ATS scenario 13.
+- [x] Map both currently final December 2025 Form 1062 source PDFs in
+  `7c09766d`. Verify all 53 widgets, exact values, dates, checked states
+  and visible review-only output on four synthetic specimens.
+- [x] Compare both PostgreSQL Alpine builds against Bookworm in `19aebd59`.
+  Verify signed Debian archive availability and both immutable Alpine
+  inventories. Preserve remaining vulnerabilities and migration gates.
 - [x] Verify the Form 1062 partnership allocation and installment
   arithmetic in `1db55dc0` against IRS ATS scenario 13. Pass 523 affected
   tests and preserve blank Schedule A lines 9–12 for the partner.

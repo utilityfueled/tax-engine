@@ -25267,6 +25267,29 @@
       "focusedPassed": 206,
       "changedSourceDigests": 2,
       "auditSha256": "2d39e34a5da37f48377691ff27cad0576f93fbb4777c72bba04c815a5608d7db"
+    },
+    "finalForm1062PhysicalCandidate": {
+      "source": "7c09766d9cc75dd31e931a780ffb5aa48633517f",
+      "revision": "December 2025",
+      "sourcePosted": "2026-04-15",
+      "officialSourceReceiptSha256": "0d8cd275c48e385a903994f87444a7161a61d2eca45b1b003c48f4e14979ef62",
+      "form1062Sha256": "4ff34ba9f4f25a995557c49c0ed001f41e0efd75c3e79ec1a9513e7e8a912ade",
+      "scheduleASha256": "dc50ba9b52db27a01492962b7349b71070812956c56feff376928dcd17a4953d",
+      "actualWidgets": 53,
+      "specReferences": 8977,
+      "focusedPassed": 20,
+      "renderedSyntheticPdfs": 4,
+      "filingQualified": false
+    },
+    "postgresqlAlpineComparison": {
+      "source": "19aebd59bf1be81961b65ef4b6417bbf6c3a352b",
+      "platforms": ["linux/arm64", "linux/amd64"],
+      "matchesPerPlatform": 65,
+      "highMatchesPerPlatform": 32,
+      "criticalMatchesPerPlatform": 3,
+      "comparisonSha256": "343a4598d1fe8679e5e2b021923dd075908c59863a36473b93107c567e7ddf8d",
+      "composePinChanged": false,
+      "qualified": false
     }
   }
 }
