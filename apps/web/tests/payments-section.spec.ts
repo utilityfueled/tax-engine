@@ -1,5 +1,6 @@
 import { reachFilingStatus } from "./guided-fixtures";
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
+import type { GuidedFlowState } from "../src/lib/guided-interview-flow";
 
 /**
  * Payments section tests in the guided interview.
@@ -365,6 +366,129 @@ test.describe("Payments section — data persistence", () => {
     await expect(restoredAmount).toHaveValue("6,000");
   });
 });
+
+async function savedPayments(page: Page, workspaceId: string) {
+  return page.evaluate(id => {
+    const raw = localStorage.getItem(`tax-engine.guided-flow-state.v1:${id}`);
+    return raw ? (JSON.parse(raw) as GuidedFlowState).sectionData.payments : null;
+  }, workspaceId);
+}
+
+async function expectApplicationBlocked(page: Page, expected: { year: boolean; confirmation: boolean }) {
+  await page.getByRole("button", { name: "Continue", exact: true }).click();
+  const prompt = page.locator(".guided-skip-prompt");
+  await expect(prompt).toBeVisible();
+  await expect(prompt.getByRole("listitem").filter({ hasText: /tax year as shown on the IRS payment confirmation/ })).toHaveCount(Number(expected.year));
+  await expect(prompt.getByRole("listitem").filter({ hasText: /Confirm that this federal payment was applied/ })).toHaveCount(Number(expected.confirmation));
+  await expect(prompt.getByRole("button", { name: "Skip this section" })).toHaveCount(0);
+  await prompt.getByRole("button", { name: "Review highlighted values" }).click();
+}
+
+for (const [device, viewport] of [
+  ["desktop", { width: 1280, height: 900 }],
+  ["mobile", { width: 390, height: 844 }]
+] as const) {
+  test.describe(`Federal payment application on ${device}`, () => {
+    test("requires and preserves actual federal payment application through reopen", async ({ page }, info) => {
+      await page.setViewportSize(viewport);
+      const apiRequests: string[] = [];
+      const errors: string[] = [];
+      page.on("request", request => {
+        const path = new URL(request.url()).pathname;
+        if (path.startsWith("/api/")) apiRequests.push(path);
+      });
+      page.on("pageerror", error => errors.push(error.message));
+
+      await createReturn(page);
+      const returnPath = new URL(page.url()).pathname;
+      const workspaceId = returnPath.split("/").at(-1);
+      if (!workspaceId) throw new Error("Missing workspace ID for browser proof.");
+      await completeSegmentation(page);
+      await page.getByRole("combobox", { name: "Tax year for this interview", exact: true }).selectOption("2026");
+      await navigateToPayments(page);
+
+      await page.getByRole("button", { name: "Add another estimated tax payment" }).click();
+      const estimated = page.locator(".guided-w2-card").filter({ has: page.getByRole("heading", { name: "Payment #1", exact: true }) });
+      const estimatedDate = estimated.locator('input[type="date"]');
+      const estimatedAmount = estimated.getByRole("textbox", { name: /^Amount paid/ });
+      const estimatedYear = estimated.getByRole("textbox", { name: /^Estimated payment #1 IRS application tax year/ });
+      const estimatedConfirmation = estimated.getByRole("combobox", { name: "Estimated payment #1 applies to this return", exact: true });
+      await expect(estimatedYear).toHaveCount(0);
+      await estimatedDate.fill("2028-02-29");
+      await estimatedAmount.fill("1234.56");
+      await estimatedAmount.blur();
+      await expect(estimatedYear).toHaveValue("");
+      await expect(estimatedConfirmation).toHaveValue("");
+      await expectApplicationBlocked(page, { year: true, confirmation: true });
+
+      await estimatedYear.fill("2025");
+      await estimatedConfirmation.selectOption("true");
+      await expectApplicationBlocked(page, { year: true, confirmation: false });
+      await estimatedYear.fill("2026");
+      await expect(estimatedConfirmation).toHaveValue("");
+      await estimatedConfirmation.selectOption("false");
+      await expect.poll(async () => (await savedPayments(page, workspaceId))?.estimatedPayments[0]?.application)
+        .toEqual({ taxYear: "2026", confirmed: false });
+      await expectApplicationBlocked(page, { year: false, confirmation: true });
+      await estimatedConfirmation.selectOption("true");
+
+      const others = page.locator("summary").filter({ hasText: "Other payments" });
+      await others.click();
+      await page.getByRole("button", { name: "Add extension payment", exact: true }).click();
+      const extensionDate = page.getByLabel("Extension payment #1 date", { exact: true });
+      const extensionAmount = page.getByRole("textbox", { name: /^Extension payment #1 amount/ });
+      const extensionYear = page.getByRole("textbox", { name: /^Extension payment #1 IRS application tax year/ });
+      const extensionConfirmation = page.getByRole("combobox", { name: "Extension payment #1 applies to this return", exact: true });
+      await extensionDate.fill("2028-04-15");
+      await extensionAmount.fill("15.01");
+      await expect(extensionYear).toHaveValue("");
+      await extensionYear.fill("2026");
+      await extensionConfirmation.selectOption("true");
+
+      await estimatedAmount.focus();
+      await estimatedAmount.blur();
+      await expect(estimatedAmount).toHaveValue("1,234.56");
+      await expect(estimatedConfirmation).toHaveValue("true");
+      await estimatedDate.fill("2028-03-01");
+      await expect(estimatedConfirmation).toHaveValue("");
+      await expect(extensionConfirmation).toHaveValue("true");
+      await expectApplicationBlocked(page, { year: false, confirmation: true });
+      await estimatedConfirmation.selectOption("true");
+
+      await extensionAmount.fill("0");
+      await extensionAmount.blur();
+      await expect(extensionConfirmation).toHaveValue("");
+      await expect(estimatedConfirmation).toHaveValue("true");
+      await expectApplicationBlocked(page, { year: false, confirmation: true });
+      await extensionConfirmation.selectOption("true");
+
+      const expected = {
+        estimatedPayments: [{ date: "2028-03-01", amount: "1,234.56", application: { taxYear: "2026", confirmed: true } }],
+        extensionPayments: [{ date: "2028-04-15", amount: "0", application: { taxYear: "2026", confirmed: true } }]
+      };
+      await expect.poll(() => savedPayments(page, workspaceId)).toMatchObject(expected);
+      await page.goto("/");
+      await page.goto(returnPath);
+      await expect(page.getByRole("heading", { name: "Payments & Withholding", exact: true })).toBeVisible();
+      await expect(estimatedYear).toHaveValue("2026");
+      await expect(estimatedConfirmation).toHaveValue("true");
+      await others.click();
+      await expect(extensionYear).toHaveValue("2026");
+      await expect(extensionConfirmation).toHaveValue("true");
+      await expect(extensionAmount).toHaveValue("0");
+      expect(await savedPayments(page, workspaceId)).toMatchObject(expected);
+
+      await page.getByRole("button", { name: "Continue", exact: true }).click();
+      await expect(page.getByText(/here's everything at a glance/i)).toBeVisible();
+      expect(apiRequests).toEqual([]);
+      expect(errors).toEqual([]);
+      await info.attach("payment-application-browser-receipt.json", {
+        body: JSON.stringify({ viewport, savedBothAppliedPayments: true, enteredZeroExtensionAmount: true, apiRequests: apiRequests.length }),
+        contentType: "application/json"
+      });
+    });
+  });
+}
 
 test.describe("Payments section — skip behavior", () => {
   test("continuing with no payments skips without a prompt", async ({ page }) => {

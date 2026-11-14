@@ -5906,6 +5906,26 @@
       ]
     },
     {
+      "key": "federal/guided-aotc-student-history",
+      "jurisdiction": "federal",
+      "taxYear": null,
+      "sourceAuthority": "https://www.irs.gov/instructions/i8863",
+      "specPath": "spec/federal/guided-aotc-student-history.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/guided-charitable-carryover",
       "jurisdiction": "federal",
       "taxYear": 2026,
