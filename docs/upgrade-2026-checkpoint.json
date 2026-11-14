@@ -24516,6 +24516,44 @@
       "https://www.irs.gov/pub/irs-dft/f1040s3--dft.pdf"
     ]
   },
+  "nov13MountExecutableRemoval": {
+    "commit": "52eec5814b5026c41d8e15b8e29e4777976d3968",
+    "initialRed": 2,
+    "focusedTestsPassed": 148,
+    "focusedPostgresOnlySkipped": 1,
+    "specReferencesValidated": 8956,
+    "redSha256": "f42897337ec31a7679a69c678b67801a5361ef84f0ae0b76205400023319f0ef",
+    "greenSha256": "df94241db319d4545373e18e3e367a7d17fb11ab8b2e46204369d3fbe4df190e",
+    "priorImageMountPackageMatches": 6,
+    "priorImageMountPackageHighMatches": 4,
+    "nativeSourceRehearsalVerified": false,
+    "advisoryRiskAccepted": false,
+    "source": "https://security-tracker.debian.org/tracker/CVE-2026-76642"
+  },
+  "nov13ManagedBrowserFailures": {
+    "e3c90730": {
+      "source": "e3c9073083558706a3a9aad5d67767271e3251db",
+      "checksPassed": 11,
+      "unitAndCoverageTestsEach": 27918,
+      "branchCoveragePercent": 87.92,
+      "chromiumPassed": 610,
+      "chromiumFailed": 6,
+      "chromiumHostedOnlySkipped": 5,
+      "checksSha256": "6f9e31a8870db4a1bbecae1ef22d226475077451954206fcb0cdee910cd61127",
+      "browserSha256": "a771f39b2d06f411ebc0028a64a05c4f0e95d6116ea9d5ec5d313bcf58d71eb6",
+      "postgresStopped": true
+    },
+    "3d8f674a": {
+      "source": "3d8f674a3fc58c4c85a074d2c092ac21f6166a74",
+      "checksPassed": 11,
+      "unitAndCoverageTestsEach": 27921,
+      "branchCoveragePercent": 87.92,
+      "browserBuildStoppedBeforeTests": true,
+      "checksSha256": "cdbf77a9e5c4b7e5d298833b0823a247b08ef68f843b0408f973cec3e196c2c8",
+      "browserSha256": "1d039cc775dfd4f314e5edca027472adaecd8a70f68520cfc15eec86a3fc8ed8",
+      "postgresStopped": true
+    }
+  },
   "nov13EstateAllocationRehearsals": {
     "arm64": {
       "source": "e3c9073083558706a3a9aad5d67767271e3251db",

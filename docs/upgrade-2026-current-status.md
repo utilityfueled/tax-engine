@@ -11,6 +11,16 @@ The isolated rehearsal project has no Git link and protects all deployments.
 The team is on Pro, whose Sandbox credits are shared and can incur overage.
 No Sandbox was started. [Vercel Sandbox pricing](https://vercel.com/docs/sandbox/pricing).
 
+`52eec581` removes the optional Debian `mount` package from the
+self-host runner using unforced package removal. The smoke test requires
+the complete package inventory, an immutable-base removal dry run and
+absence of `mount` and `umount`. The package was present in the earlier
+ARM64 image and accounted for six scan matches, four high. The affected
+local checks passed 148 tests with one PostgreSQL-only skip. The new
+image must still pass the actual build, scan and recovery on each
+architecture. Shared util-linux libraries and their findings remain.
+[Debian CVE-2026-76642](https://security-tracker.debian.org/tracker/CVE-2026-76642).
+
 `52246eb5` and `50c72a04` calculate the 2026 Form 1062 payment deferral
 for one confirmed direct farmland sale and replay its Schedule A originals.
 The tests require an exact gain reconciliation, calculate the four equal
@@ -99,8 +109,13 @@ independent image import, smoke, SBOM and scan, six Compose recovery phases,
 and 616 Chromium cases with five hosted-only skips. Normal VM stop and
 socket restoration passed. The first preflight stopped before boot because
 the staged public registry had mode 0600. Its bytes matched Git and the
-successful retry restored the required mode. The managed macOS browser
-run is separate. [Rehearsal evidence](upgrade-2026-nov13-release-rehearsals.md).
+successful retry restored the required mode. The separate managed macOS
+run passed unit and coverage at 27,918 tests apiece and 87.92% branches.
+It failed six browser cases with 610 passes and five hosted-only skips.
+Exact `3d8f674a` passed unit and coverage with 27,921 tests apiece and
+87.92% branches, but its managed browser build stopped before tests.
+Both managed PostgreSQL instances stopped.
+[Rehearsal evidence](upgrade-2026-nov13-release-rehearsals.md).
 
 Exact `7924a91d` passed 14 local hosted HTTP checks using two webpack-built
 Next processes, TLS PostgreSQL 16.16 and a synthetic Redis REST transport.

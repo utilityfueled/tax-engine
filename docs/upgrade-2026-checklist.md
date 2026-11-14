@@ -6,6 +6,13 @@ below retain their original evidence boundaries.
 
 ## Active continuation — November 13 Eastern
 
+- [x] Remove the optional Debian `mount` package in `52eec581` and add
+  exact immutable-base, full-package and executable absence checks.
+- [ ] Build, independently import and scan the exact new self-host runner
+  on both native architectures. Rehearse Compose recovery and the browser
+  lifecycle. Reconcile remaining util-linux package matches against Debian.
+- [ ] Rerun the managed browser checks in isolation. Preserve exact
+  `e3c90730` six failures and `3d8f674a` build stop as separate results.
 - [x] Verify the Form 1062 and Schedule A direct-sale worksheets in
   `52246eb5` and `50c72a04`. Pass 521 affected checks with exact cents
   and confirmed sale originals. Correct the fixture attribution to

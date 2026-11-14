@@ -4,6 +4,15 @@ Current source, verification and remaining work are summarized in the
 [current continuation](upgrade-2026-current-status.md). Historical results
 below apply to their named revisions.
 
+- November 13 — `52eec581` purges Debian's optional `mount` package
+  from the self-host runner and adds executable absence to the existing
+  exact package checks. Two source checks failed first. The focused run
+  passed 148 tests with one PostgreSQL-only skip. Both native image checks
+  remain open. [Debian CVE-2026-76642](https://security-tracker.debian.org/tracker/CVE-2026-76642).
+- November 13 — Exact `e3c90730` and `3d8f674a` passed 11 of 12 managed
+  checks and 87.92% branch coverage. The former has six browser failures.
+  The latter terminated its browser build before running tests. Both owned
+  PostgreSQL instances stopped. [Rehearsal evidence](upgrade-2026-nov13-release-rehearsals.md).
 - November 13 — `1db55dc0` adds the separate single-partnership Form 1062
   worksheet and checks IRS ATS scenario 13. Two regressions failed first
   and 523 affected tests, types, strict lint, inventory and 8,955 spec

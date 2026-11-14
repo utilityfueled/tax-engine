@@ -175,6 +175,25 @@ with OpenSSL and the same verified release source before the rerun.
 
 ## ARM64 self-host
 
+The separate managed macOS `e3c90730` archive passed 11 checks with
+27,918 tests in unit and coverage and 87.92% branches. Chromium reported
+610 passes, six failures and five hosted-only skips. The failures were
+in married Pennsylvania originals and payments, passenger originals,
+payment UI, official workspace upload and part-year Ohio school sources. The separate
+`3d8f674a` archive also passed 11 checks with 27,921 tests in unit and
+coverage and 87.92% branches. Its managed browser command stopped in the
+Next build before Chromium. Build output printed a TypeScript runtime
+inconsistent with the measured controller duration. The cause remains
+unverified. Both managed PostgreSQL instances stopped and tracked source
+pins stayed exact.
+
+| Evidence | SHA-256 |
+| --- | --- |
+| `e3c90730` managed checks | `6f9e31a8870db4a1bbecae1ef22d226475077451954206fcb0cdee910cd61127` |
+| `e3c90730` managed browser transcript | `a771f39b2d06f411ebc0028a64a05c4f0e95d6116ea9d5ec5d313bcf58d71eb6` |
+| `3d8f674a` managed checks | `cdbf77a9e5c4b7e5d298833b0823a247b08ef68f843b0408f973cec3e196c2c8` |
+| `3d8f674a` managed browser build transcript | `1d039cc775dfd4f314e5edca027472adaecd8a70f68520cfc15eec86a3fc8ed8` |
+
 ### Form 4972 estate-allocation archive at `e3c90730`
 
 The first preflight stopped before boot. The private archive extraction
