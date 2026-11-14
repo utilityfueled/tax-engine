@@ -16,6 +16,9 @@ below retain their original evidence boundaries.
   preserve each prior failed control and exact artifact boundaries.
 - [ ] Complete candidate dependency correction and cleanup verification without
   changing the default PostgreSQL image or accepting remaining advisories.
+- [x] Bind the existing human tax assignments to the later same-column estimate,
+  four state estimate/interest methods and AOTC source changes without supplying
+  new human decisions. [Fixed source index](upgrade-2026-human-tax-review-delta-9b6202e7.md).
 - [ ] Obtain the independent human reviews and final official forms; preserve
   filing/model gates and the local-main push hold.
 

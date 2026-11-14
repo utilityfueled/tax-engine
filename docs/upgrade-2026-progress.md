@@ -5355,3 +5355,13 @@ Known usage is now $0.26329920 plus the retained $0.022384 historical timeout
 hold, giving $0.28568320 accounted exposure under the $140 cap. No deployed
 retail, natural model-failure, human corpus or promotion qualification follows.
 [Exact ledger and hashes](upgrade-2026-ai-local-ledger-20261114.md).
+
+### November 14: fixed human tax-review source delta
+
+The [9b6202e7 source index](upgrade-2026-human-tax-review-delta-9b6202e7.md)
+links the existing November 4 and November 14 assignments to six later
+review scopes. It records 471 selected paths, rechecks 1,519 original delivery
+hashes and preserves the nine detached November 14 facts and authority packet.
+Root independently checks the index digest and six named specification hashes.
+No new expected tax output, reviewer, signed decision or qualification is
+invented. Qualified human review and final annual forms remain pending.
