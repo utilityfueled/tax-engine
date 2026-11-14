@@ -7521,6 +7521,66 @@
       ]
     },
     {
+      "key": "federal/hosted-diagnostic-telemetry",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": null,
+      "specPath": "spec/federal/hosted-diagnostic-telemetry.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "federal/hosted-document-analysis-owner",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": null,
+      "specPath": "spec/federal/hosted-document-analysis-owner.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "federal/hosted-document-cache-owner",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": null,
+      "specPath": "spec/federal/hosted-document-cache-owner.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/hosted-document-opaque-ids",
       "jurisdiction": "federal",
       "taxYear": 2026,
@@ -7901,6 +7961,26 @@
       ]
     },
     {
+      "key": "federal/hosted-workspace-helper-owner",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": null,
+      "specPath": "spec/federal/hosted-workspace-helper-owner.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/hosted-workspace-ingestion-shell",
       "jurisdiction": "federal",
       "taxYear": 2026,
@@ -7926,6 +8006,26 @@
       "taxYear": 2026,
       "sourceAuthority": "https://vercel.com/docs/functions/limitations#request-body-size",
       "specPath": "spec/federal/hosted-workspace-json-limits.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "federal/hosted-workspace-revision",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": null,
+      "specPath": "spec/federal/hosted-workspace-revision.yaml",
       "enginePath": null,
       "packetPath": null,
       "specExists": true,
@@ -10093,6 +10193,66 @@
       "efileBusinessRuleCoverageExists": false,
       "status": "partial",
       "knownGaps": [
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "federal/provider-export-draft-validation",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "docs/upgrade-2026-execution-brief.md, AI routing and billing and hosting and recovery",
+      "specPath": "spec/federal/provider-export-draft-validation.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "federal/provider-request-privacy-text-complexity",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "docs/upgrade-2026-execution-brief.md, AI routing and billing",
+      "specPath": "spec/federal/provider-request-privacy-text-complexity.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "federal/provider-request-privacy-traversal",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "docs/upgrade-2026-execution-brief.md, AI routing and billing",
+      "specPath": "spec/federal/provider-request-privacy-traversal.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
         "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
@@ -13521,6 +13681,26 @@
       ]
     },
     {
+      "key": "state/il-review-bank-privacy",
+      "jurisdiction": "state",
+      "taxYear": 2025,
+      "sourceAuthority": "forms/blank/2025/il-1040.pdf, Line 39, and the 2026 execution brief review-export separation",
+      "specPath": "spec/state/il-review-bank-privacy.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "state/il-schedule-1299-c",
       "jurisdiction": "state",
       "taxYear": 2025,
@@ -14715,6 +14895,25 @@
       "sourceAuthority": "https://codes.ohio.gov/ohio-revised-code/section-5748.01/1-1-2026",
       "specPath": "spec/state/oh-2026-earned-school-draft.yaml",
       "enginePath": "src/engine/state/oh-2026-earned-school-draft.ts",
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "state/oh-2026-farmer-fisher-estimated-tax",
+      "jurisdiction": "state",
+      "taxYear": 2026,
+      "sourceAuthority": "https://codes.ohio.gov/ohio-administrative-code/rule-5703-7-04",
+      "specPath": "spec/state/oh-2026-farmer-fisher-estimated-tax.yaml",
+      "enginePath": "src/engine/state/oh-2026-farmer-fisher-estimated-tax.ts",
       "packetPath": null,
       "specExists": true,
       "engineExists": true,
@@ -16717,6 +16916,25 @@
       "sourceAuthority": "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2026/2026_rev-414i.pdf",
       "specPath": "spec/state/pa-2026-ordinary-estimated-tax.yaml",
       "enginePath": "src/engine/state/pa-2026-ordinary-estimated-tax.ts",
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "state/pa-2026-single-late-estimate-interest",
+      "jurisdiction": "state",
+      "taxYear": 2026,
+      "sourceAuthority": "https://www.legis.state.pa.us/WU01/LI/LI/US/HTM/1971/0/0002.003.000.052.000..HTM",
+      "specPath": "spec/state/pa-2026-single-late-estimate-interest.yaml",
+      "enginePath": "src/engine/state/pa-2026-single-late-estimate-interest.ts",
       "packetPath": null,
       "specExists": true,
       "engineExists": true,
