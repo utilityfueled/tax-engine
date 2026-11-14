@@ -1,4 +1,20 @@
 {
+  "nov14CombinedLossEicActualChecks": {
+    "source": "6f6f82a2864f65edb66a41dcf36a73356bfaba94",
+    "all12ActualPassed": true,
+    "unitAndCoverage": "28493PASS2073files",
+    "branchCoveragePercent": "88.08",
+    "browser": "635actual630PASS5originalskips;0fail/retry/flaky;unchangedpolicies",
+    "fourLaneGitEntriesVerifiedEach": 5933,
+    "all4RootAudit": "fd29bb7cc53f004228d4cb1549340b1e8729064449d6a0aeef01ef8b41cc11c4",
+    "rootBrowserAudit": "f9e321f5f5247ec7a03d29f83533aca63d4fe6414f668822bcf1d41967c7d69b",
+    "independentBrowserAudit": "e5520b125aaff53df22da0999f9ee0d8a8c7b9e064cad356330aae1d6754e1ce",
+    "ownedServicesClosedAndPrivatePgFilesRemoved": true,
+    "laterPrivateCandidatesExcluded": true,
+    "sameSourcePreviewNativePreparedOnly": true,
+    "mainPushHold": true,
+    "ledger": "docs/upgrade-2026-combined-6f6f82a2-checks-20261114.md"
+  },
   "nov14AeaNativeArm64Actual": {
     "source": "aea453eca1d4a0e92cdfbe9a22f2f129fb247a03",
     "actual": "24stages/fourworkloads/6Composephases/11tablePGrestorePASS;635browser630PASS5originalSkips;0retry",

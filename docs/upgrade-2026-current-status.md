@@ -1,5 +1,17 @@
 # Current 2026 upgrade continuation
 
+## November 14 completed combined loss/EIC checks
+
+Exact `6f6f82a2` passes all twelve managed checks: 28,493 unit and coverage
+tests, 88.08% branch coverage, and 635 browser cases with 630 passes and five
+unchanged hosted skips. Root verifies all 5,933 Git entries in each archived
+lane; a separate reviewer audits all eight actual browser reports, unchanged
+policies and normal server cleanup. Both owned databases stop normally and
+private connection files are removed. [Checks and limits](upgrade-2026-combined-6f6f82a2-checks-20261114.md).
+Later private Schedule AI/HOH candidates are excluded. This revision's prepared
+Preview/native packets have not run; earlier AEA runtime evidence keeps its
+source scope. Main remains local under the production push hold.
+
 ## November 14 completed AEA ARM64 rehearsal
 
 Exact `aea453ec` passes all 24 stages, four runtime workloads and six Compose

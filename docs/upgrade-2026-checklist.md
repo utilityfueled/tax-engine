@@ -6,6 +6,12 @@ below retain their original evidence boundaries.
 
 ## Active continuation — November 14
 
+- [x] Pass all twelve exact `6f6f82a2` checks: 28,493 unit/coverage tests,
+  88.08% branches and 630 actual browser passes/five original skips; independent
+  raw-report/source audit and normal database/server cleanup. Later candidates
+  and this revision’s hosted/native qualification remain separate.
+  [Exact-source evidence](upgrade-2026-combined-6f6f82a2-checks-20261114.md).
+
 - [x] Bind finite actual current farm-loss originals and already-filed waiver,
   including separate AMT and one-time EBL carry: 84 focused, 958 spec and eleven
   independent manual/mutation passes. Preserve broader methods and filing gates.
