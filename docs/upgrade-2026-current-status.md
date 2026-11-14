@@ -13,6 +13,53 @@ runs with cumulative reservation accounting. Qualified human cases, held-out
 runs, Google access and current deployed retail accounting remain open.
 [Sources, scope and hashes](upgrade-2026-provider-cost-reconciliation-20261114.md).
 
+## November 14 combined runtime verification
+
+Frozen `67557637` passed all nine static, build, lint and specification checks.
+All 9,054 spec lines have valid test references. Lint reports zero errors and
+11,877 existing warnings. Managed Chromium passed 618 cases, with five existing
+hosted-only skips and no failures. The exact ARM64 candidate passed all 24
+controller stages, including independent archive import, smoke, scan, encrypted
+application and database recovery, rollback, and the same 618 browser cases.
+The VM stopped normally and its user socket route was restored. The runtime scan
+retains 191 findings, including 56 High and zero Critical. Risk acceptance remains
+false. One existing relay pending-task warning is retained with the controller logs.
+
+Coverage on `67557637` passed 28,180 tests and failed one PDF test after its
+synchronous Python reader stalled waiting for piped-input EOF. The owned child
+received one TERM after over 23 minutes, allowing Vitest to record the failure
+and close its isolated database. `99d0b74f` routes the six remaining PA readers
+through the existing file-backed input helper. All 43 affected tests and scoped
+lint passed. Only imports changed. PDF assertions, money, formulas and explicit
+timeouts are identical. A fresh complete coverage run remains required. The
+separate frozen unit suite passed all 28,181 tests across 2,033 files, then
+stopped its isolated database normally.
+
+The protected isolated Preview build of `67557637` passed 54 direct operations.
+Two existing synthetic actors signed in with secure HttpOnly cookies. All four
+document/help/explanation routes rejected missing or stale owner scope with 409
+before body parsing, and rejected the current canceled plan with 403. Sign-out
+revoked both new sessions. The deployment and temporary Preview variables were
+removed, and all five pseudonymous Redis keys were deleted. This verifies the
+canceled-plan paths. Entitled workspace concurrency and complete final deployed
+integration remain separate work.
+
+`8ff2c951` also binds helper consent, requests and transient explanations to the
+captured account. All 136 focused checks passed. The actual local production
+Chromium combination passed seven concurrency/recovery cases, four document
+owner cases and three helper-consent cases. Its application bytes are identical
+to `67557637`. No paid model request was made in these rehearsals.
+
+The nine-case human assignment retains its original facts and expected assertions.
+A fresh source-scope manifest verifies nine cases, 38 authority captures and 24 Git
+sources. Only the Form 1062/Publication 505 assignment now has additional multi-sale
+source scope for separate human assessment. No qualified human decision was received.
+
+Private result hashes remain in the `nov14ReleaseContinuation` checkpoint section.
+Current native AMD64, PostgreSQL image remediation/disposition, remote CI, final
+year forms and independent human qualification remain open. Commits stay local
+under the production push hold.
+
 ## November 13 on `main`
 
 The public refs were refreshed. `origin/main` still points to `59248889`

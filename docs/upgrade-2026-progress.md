@@ -5274,3 +5274,12 @@ execution and current image qualification require separate evidence.
   accounted exposure. The earlier final-invoice condition is superseded by the
   actual complete-scope export. Human/held-out/provider-profile and deployed
   retail qualification remain open. [Evidence](upgrade-2026-provider-cost-reconciliation-20261114.md).
+
+- November 14 `67557637` passes managed static and 618 Chromium cases, plus all
+  24 ARM64 import, runtime, recovery, rollback, browser and cleanup stages.
+  Its protected Preview passes two-actor auth and all four owner-guard denials,
+  with both sessions revoked and resources cleaned. Coverage retains 28,180
+  passes and one stalled PDF-reader failure. `99d0b74f` changes six reader
+  imports to the established file-input helper, preserving all assertions,
+  with 43 affected checks green. Complete successor coverage remains required.
+  [Current evidence and boundaries](upgrade-2026-current-status.md).
