@@ -64,8 +64,13 @@ Root source-equivalence receipt SHA-256 is
 `b519870b0927420c1337d6d78659523633dccec889477da91cf9ac16303ab19c`;
 the independent mapped-result audit is
 `afde11fc5bee2c30ba53292235fabd33b6d2ad22a54cab59b8b8b4ed44dd2b53`.
-The protected hosted `33f8` bundle and native ARM64 `a396` artifact rehearsals are now
-running separately; their completion is not inferred from these local checks.
+Separate actual executions now pass: the protected hosted `33f8` bundle passes
+both typed desktop/mobile journeys with cleanup; native ARM64 `a396` passes
+all four workloads, six recovery phases and 620 browser cases/five original
+skips with normal VM cleanup. Independent saved-evidence reviews pass.
+[Hosted evidence](upgrade-2026-hosted-k3-20261114.md) and
+[native evidence](upgrade-2026-current-arm64-rehearsal-20261114.md) retain their
+exact source, failures and remaining qualification limits.
 
 The private frozen author receipt has SHA-256
 `19268e829bee80bb3b2290626899bfb3a97f46bcd41cfda2c7716860fe60e413`;

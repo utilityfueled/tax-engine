@@ -5430,7 +5430,8 @@ coverage each retain 28,321 passes/one strict diagnostic-audit failure; metadata
 fix `a396` changes no runtime input. All twelve mapped commands then pass with
 28,322 tests/2,039 files, 88.02% branches and 620 browser passes/five hosted skips.
 Both owned databases stop normally and independent source/result audit passes.
-Current hosted/native artifact runs continue; human and final 2026 gates remain.
+Current hosted/native artifact runs subsequently pass as recorded below; human
+and final 2026 gates remain.
 [Source, exact mapping and receipts](upgrade-2026-guided-qualified-k3-20261114.md).
 
 ### November 14: protected K-3 delivery and cleanup pass
@@ -5443,3 +5444,13 @@ temporary Preview/settings and seven cache keys are cleaned up. Independent
 source and actual reviews pass. The wrong ticker locator and strict file-mode
 abort remain retained. No model call or production change occurred.
 [Exact artifacts, limits and failures](upgrade-2026-hosted-k3-20261114.md).
+
+### November 14: current ARM64 artifact completes all runtime checks
+
+Exacta396 builds/imports the immutable ARM64 Docker image and passes all four
+workloads, six stock-Compose recovery phases and all eight browser batches:
+620PASS/five original skips/zero actual retries. Normal VM stop, zero active VMs
+and preserved user/root/default routes pass; independent final artifact audit
+passes. Latest same-image metadata retains56High; no advisory acceptance,
+nativeAMD64, remoteCI, human or final2026 qualification is inferred.
+[Exact image, source, cleanup and receipts](upgrade-2026-current-arm64-rehearsal-20261114.md).

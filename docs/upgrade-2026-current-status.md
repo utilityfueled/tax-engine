@@ -1,5 +1,16 @@
 # Current 2026 upgrade continuation
 
+## November 14 current ARM64 artifact and recovery
+
+Exact `a396d2c2` passes all four native runtime workloads, independent archive
+import, six stock-Compose recovery phases and 620 browser cases with five
+original skips and zero actual retries. The test VM stops normally; all socket
+routes and the default connection are preserved, with zero active VMs. Root
+acknowledges terminal exit 0 and the independent final artifact audit passes.
+The latest same-image scan retains 56 unaccepted High findings. Native AMD64,
+remote CI, human reviews, final forms and the local-main push hold remain open.
+[Image, browser, recovery and cleanup evidence](upgrade-2026-current-arm64-rehearsal-20261114.md).
+
 ## November 14 current protected K-3 delivery
 
 The exact `33f8` protected Preview passes typed desktop/mobile K-1/K-3
@@ -30,7 +41,8 @@ pass on runtime-identical `33f8`/`a396` sources: 28,322 tests, 88.02% branches a
 620 browser cases/five original hosted skips, with both owned databases stopped.
 The original strict diagnostic-pin failure is retained; only its three metadata
 fields changed before rerunning unit/coverage. Current protected hosted and
-ARM64 artifact runs remain in progress, with independent human review pending.
+ARM64 artifact runs now pass their bounded checks recorded above; independent
+human review remains pending.
 [Source, source mapping and exact review hashes](upgrade-2026-guided-qualified-k3-20261114.md).
 
 ## November 14 current eleven-table schema recovery

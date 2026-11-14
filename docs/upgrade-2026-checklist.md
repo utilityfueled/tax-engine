@@ -26,8 +26,11 @@ below retain their original evidence boundaries.
   isolation, exact credit, private originals and sanitized cloud metadata;
   verify trials/session/return/Preview/environment/cache cleanup and retain
   both failed predecessors. [Hosted evidence](upgrade-2026-hosted-k3-20261114.md).
-- [ ] Complete the current native ARM64 artifact rehearsal, normal cleanup and
-  independent saved-artifact review.
+- [x] Complete the current native ARM64 artifact rehearsal: all four workloads,
+  six recovery phases, 620 browser passes/five original skips, normal VM stop
+  and preserved socket/default routes. Independent actual audit passes; security
+  and native AMD64 qualification remain open.
+  [Current ARM64 ledger](upgrade-2026-current-arm64-rehearsal-20261114.md).
 - [x] Rehearse the current eleven-table schema on the isolated Neon branch:
   UUID revisions, exact issuance/cancellation accounting, full native
   backup/restore and RESTRICT-only cleanup pass. Preserve the earlier archive

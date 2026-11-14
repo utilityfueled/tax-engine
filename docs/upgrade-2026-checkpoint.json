@@ -25430,6 +25430,29 @@
     }
   },
   "nov14ReleaseContinuation": {
+    "currentNativeArm64Rehearsal": {
+      "source": "a396d2c2148de4846272d3993a52afdecc20454a",
+      "terminalExit": 0,
+      "allFourWorkloadsPassed": true,
+      "nativeBrowserCollected": 625,
+      "nativeBrowserPassed": 620,
+      "originalHostedSkips": 5,
+      "observedRetries": 0,
+      "composeRecoveryPhasesPassed": 6,
+      "normalVmStop": true,
+      "restoredUserRoute": true,
+      "rootRouteUnchanged": true,
+      "defaultUnchanged": true,
+      "activeVmCount": 0,
+      "imageSha256": "040bf8e3dfab0deac57929b45c0fbdd5e3d6789bdf2223769f2ef04ff500ada3",
+      "archiveSha256": "da0db9cbd7d55f97c6168469012ae3133c62636458aa276b06258c8aa52bbe45",
+      "independentFinalReviewSha256": "d33eb77a688cedea49d9521d9752bab5a4b6853de9f83fc965423afca6ee6327",
+      "freshScanCritical": 0,
+      "freshScanHigh": 56,
+      "riskAccepted": false,
+      "nativeAmd64Qualified": false,
+      "wholeReleaseQualified": false
+    },
     "currentHostedK3Path": {
       "source": "33f8f7845be607a7de07d38cddf6de099377dcc5",
       "overallPassed": true,

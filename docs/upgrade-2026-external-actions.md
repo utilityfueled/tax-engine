@@ -2,6 +2,13 @@
 
 ## November 14 current boundaries
 
+The current exact `a396` native ARM64 artifact now also passes build/import,
+smoke, six recovery phases, 620 browser cases/five original skips and normal
+VM/socket/default cleanup, with independent final artifact review. The latest
+same-image scan retains 56 unaccepted High findings. This closes the bounded
+ARM64 mechanical rehearsal; native AMD64 and security acceptance remain open.
+[Current ARM64 evidence](upgrade-2026-current-arm64-rehearsal-20261114.md).
+
 The current guided K-3 source package passes all twelve mapped local checks
 (28,322 tests, 88.02% branches, 620 browser passes/five original hosted skips)
 and both actual protected desktop/mobile journeys, with independent artifact
