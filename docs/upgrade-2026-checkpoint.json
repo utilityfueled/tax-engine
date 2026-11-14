@@ -25898,6 +25898,35 @@
         }
       },
       "combinedReceiptSha256": "96e886744fbd38548b70ee878cad44cbaf5a1f1186e0541b721b89e694fbc577"
+    },
+    "currentPreviewRecovery": {
+      "source": "9b6202e7b2b309d5adc62ddf7d405ad7067fb8ac",
+      "passed": true,
+      "finishedAt": "2026-11-14T17:24:37.665452+00:00",
+      "actualMailDelivery": true,
+      "exactPreviewFragmentVerified": true,
+      "resetStatus": 200,
+      "oldSessionRevoked": true,
+      "tokenReplayStatus": 400,
+      "oldPasswordStatus": 401,
+      "newPasswordStatus": 200,
+      "finalSessionRevoked": true,
+      "previewDeleted": true,
+      "environmentMetadataUnchanged": true,
+      "smtpSecretCopied": false,
+      "productionMutations": 0,
+      "directRequests": 24,
+      "cliExecutions": 1,
+      "mailConnectorOperations": 2,
+      "firstFailureExit": 130,
+      "firstFailureCleanupVerified": true,
+      "actualTimestampUnchanged": true,
+      "freshnessPrecision": "whole-second lower bound; preceding second and future rejected",
+      "receiptSha256": "d9cf5aa2a14beec2520c4383332ce213c6eb9fdc72a3ac35cb0079f969ce9aee",
+      "mailReceiptSha256": "1021b49b1486c17d2ebe4fb9ad47851a661bde911135d01dda1b1d4f948ad68a",
+      "independentReviewSha256": "2da6b9a2642be7b581b953547e8d137f137e5d01ad76e82e21c0e47076d750f4",
+      "wholeHostedQualified": false,
+      "ledger": "docs/upgrade-2026-preview-recovery-20261114.md"
     }
   }
 }

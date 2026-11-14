@@ -16,8 +16,11 @@ below retain their original evidence boundaries.
   replay, pool closure and normal database stop. New provider cost $0.00047760;
   cumulative known plus original timeout hold $0.28568320.
   [Evidence and limits](upgrade-2026-ai-local-ledger-20261114.md).
-- [ ] Complete current protected Preview recovery and scheduled Stripe retry;
-  preserve each prior failed control and exact artifact boundaries.
+- [x] Pass actual current Preview recovery email/reset/session/token checks and
+  independent saved-artifact review; verify session/deployment cleanup and
+  preserve the prior timestamp failure. [Recovery ledger](upgrade-2026-preview-recovery-20261114.md).
+- [ ] Complete the current actual scheduled Stripe retry and scoped cleanup;
+  preserve prior failures and exact artifact boundaries.
 - [ ] Complete candidate dependency correction and cleanup verification without
   changing the default PostgreSQL image or accepting remaining advisories.
 - [x] Bind the existing human tax assignments to the later same-column estimate,

@@ -1,5 +1,21 @@
 # Current 2026 upgrade continuation
 
+## November 14 current Preview account recovery
+
+A fresh protected Preview of `9b6202e7` passes actual Zoho delivery to the
+existing test mailbox, exact generated-origin link verification, password reset,
+old-session revocation, consumed-token rejection, old-password rejection and
+new-password sign-in. Final sign-out and temporary Preview deletion pass; project
+environment metadata is unchanged. Independent saved-artifact review confirms
+private credential/intent consistency and all ten status checks.
+
+The first attempt's whole-second Gmail timestamp conflicted with a millisecond
+marker. That exit-130 run and verified cleanup remain retained. A distinct
+successor records the actual timestamps unchanged and uses their stated
+whole-second precision. No SMTP secret was copied or changed. This qualifies
+the bounded recovery path; the separate actual Stripe scheduled retry is still
+pending. [Results, failed control and hashes](upgrade-2026-preview-recovery-20261114.md).
+
 ## November 14 actual provider and PostgreSQL billing
 
 Two real Luna High requests passed through the actual accounting hooks and a

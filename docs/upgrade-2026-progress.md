@@ -5378,3 +5378,15 @@ successor changes only local-runtime access. Combined receipt SHA-256:
 Native gosu runtime/scan execute, but final already-absent base cleanup and a
 confirmed missing Go license notice require a separately reviewed correction.
 No candidate promotion, risk acceptance or release qualification follows.
+
+### November 14: actual current Preview recovery and revocation
+
+Exact `9b6202e7` passes actual Zoho recovery delivery with the correct protected
+Preview origin, reset200, old-session revocation, token replay400, old-password
+401 and new-password200. Final signout, Preview removal and unchanged project
+environment metadata pass; independent saved-artifact review confirms all ten
+controls and private credential consistency. The first timestamp-precision
+failure exits130 with cleanup verified and remains retained. Actual successful
+receipt SHA-256 `d9cf5aa2a14beec2520c4383332ce213c6eb9fdc72a3ac35cb0079f969ce9aee`.
+[Bounded recovery evidence](upgrade-2026-preview-recovery-20261114.md) does not
+qualify the separate scheduled Stripe retry or the entire hosted service.

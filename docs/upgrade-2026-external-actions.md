@@ -9,11 +9,16 @@ those earlier executions. They do not block the current authorized work.
 Spending limits, privacy protections and the production push hold still apply.
 
 `9b6202e7` repairs a confirmed compression-related hosted save failure while
-preserving strict owner-scoped revisions. Its static checks and all 28,197 unit
-tests pass; full successor coverage, browser and current-artifact rehearsals are
-running. A fresh November 14 16:26 UTC settings readback still shows Automatic
-for Ignored Build Step; no setting was changed. The previous exact `9851cecc` completed all twelve local commands with
-88.02% branch coverage and 618 browser passes plus five hosted-only skips.
+preserving strict owner-scoped revisions. All twelve local commands pass,
+including 28,197 unit and coverage tests, 88.02% branch coverage and 618 browser
+passes with five original hosted skips. Its ARM64 runtime, desktop/mobile hosted
+backup/recovery journeys and actual Preview account recovery pass their bounded
+checks. Later builder source `a370431d` also passes all twelve local commands
+with 28,244 tests and the same browser and coverage gates. The current isolated
+automatic Stripe retry remains pending. A November 14 17:05 UTC project metadata
+readback still shows main as the production branch and deployment creation
+enabled; no setting was changed. The local-main push hold remains active.
+[Current recovery evidence](upgrade-2026-preview-recovery-20261114.md).
 
 The original isolated Neon branch has expired and is confirmed deleted. A fresh
 free schema-only branch was created November 14 for the consolidated rehearsal,
