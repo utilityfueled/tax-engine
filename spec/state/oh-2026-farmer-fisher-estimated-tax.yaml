@@ -1,0 +1,55 @@
+form: "Ohio 2026 farmer or fisherman estimated-tax timing"
+fullName: "Ohio individual and applicable school district alternative estimated-tax deadlines"
+taxYear: 2026
+reference: "https://codes.ohio.gov/ohio-administrative-code/rule-5703-7-04"
+sources:
+  - "https://codes.ohio.gov/ohio-revised-code/section-5747.08"
+  - "https://codes.ohio.gov/ohio-revised-code/section-5747.09"
+  - "https://codes.ohio.gov/ohio-revised-code/section-5701.11"
+  - "https://www.govinfo.gov/content/pkg/CFR-2025-title26-vol15/pdf/CFR-2025-title26-vol15-sec1-6073-1.pdf"
+  - "https://tax.ohio.gov/individual/resources/estimated-payments"
+  - "https://tax.ohio.gov/individual/who-must-file/filing-season-tip"
+  - "https://www.irs.gov/faqs/estimated-tax/farming-fishing-income/farming-fishing-income"
+revision: "Ohio Adm.Code 5703-7-04 effective 2024-11-28 and R.C. 5747.08 and 5747.09 effective 2025-09-30, checked 2026-11-13"
+notes: |
+  Planning only for one calendar 2026 Ohio individual for whom an ordinary
+  declaration under R.C. 5747.09(B) is independently confirmed to be required.
+  That ordinary obligation uses combined estimated Ohio individual and school
+  district tax liability after applicable credits and Ohio withholding, with
+  the statutory amount exceeding $500. This helper replaces the timing of that
+  obligation under the alternative rule; it does not test the threshold by
+  reconstructing taxable income or treating estimated gross receipts as tax.
+  Confirm applicability of school district tax explicitly. No district identity,
+  residence, estimate, withholding, credits or liability is inferred.
+
+  Require current gross estimates from all sources for the taxpayer, with the
+  two gross categories separately classified under the applicable definitions
+  in 26 CFR 1.6073-1(b)(2) and (3). Scope is limited to a single positive category.
+  A positive farm and a positive fishing amount, including possible overlap,
+  requires separate support. Prior-year income and the resulting federal-only
+  eligibility may not substitute for Ohio's current estimated gross-income test.
+  For a qualifying category, match the independently confirmed 2026 federal
+  method actually used by the same individual; a proposed choice, no federal
+  estimated-tax method, or unsupported relief cannot establish matching. The
+  dates are unextended. Ohio DOR publishes its January 15, 2027 estimate
+  date and April 15, 2027 individual and school district filing deadline.
+  No amounts to remit, payments received, dates met or
+  filing status are inferred. No interest, safe harbor, liability, worksheet
+  transfer, official PDF or filing is produced. Cases are synthetic.
+lines:
+  - line: "A and B(1)"
+    description: "Validate the single-category current estimated gross-income test"
+    formula: "Require nonnegative exact dollars and cents and current confirmed classified gross estimates. A single category may be positive and cannot exceed total gross. Return no timetable when total or both categories are zero or where category × 3 < total gross × 2. Both positive source categories are unsupported."
+    testRef: "tests/engine/state/oh-2026-farmer-fisher-estimated-tax.test.ts::uses the exact current two-thirds floor separately for farming and fishing"
+  - line: "B(2) and C(2)"
+    description: "Match the confirmed federal January full-estimate method"
+    formula: "For a qualifying single category, full applicable Ohio and school district estimated amounts are due January 15, 2027, and each applicable unextended annual return and remaining balance are due April 15, 2027 under R.C. 5747.08(G). Dates only."
+    testRef: "tests/engine/state/oh-2026-farmer-fisher-estimated-tax.test.ts::uses January and April dates for the confirmed federal full-estimate method"
+  - line: "B(2) and C(1)"
+    description: "Match the confirmed federal March full-tax method"
+    formula: "For a qualifying single category, use March 1, 2027 to file the Ohio annual return and applicable school district return and pay all tax reflected on each in lieu of separate estimated payments. Dates only."
+    testRef: "tests/engine/state/oh-2026-farmer-fisher-estimated-tax.test.ts::uses March 1 for each required return and full tax under the confirmed federal early-return method"
+  - line: "source limits"
+    description: "Require current estimates, matching actual federal method and ordinary obligation"
+    formula: "Require explicit independent same-year federal method confirmation and confirmed current ordinary declaration obligation; unknown withholding, liability, relief, method, year, school district applicability or classified gross source must never be used to infer a timetable."
+    testRef: "tests/engine/state/oh-2026-farmer-fisher-estimated-tax.test.ts::rejects ambiguous categories, sources and federal method claims"
