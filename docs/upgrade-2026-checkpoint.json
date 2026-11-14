@@ -25730,7 +25730,21 @@
       "fullVerificationSource": "9851cecc",
       "unitWorkers": 4,
       "coverageWorkers": 4,
-      "browserWorkers": 2
+      "browserWorkers": 2,
+      "staticChecksPassed": 9,
+      "unitPassed": 28188,
+      "unitFilesPassed": 2034,
+      "coveragePassed": 28188,
+      "coverageFilesPassed": 2034,
+      "branchCoveragePercent": 88.02,
+      "branchCoverageThresholdPercent": 85,
+      "isolatedDatabasesStopped": true,
+      "browserStatus": "running",
+      "resultSha256": {
+        "unit": "14d6a91b4a8e062680606050a8462920c626bf87f7c0a151bfb26a659f66a0c3",
+        "coverage": "7aeb9fa4b1865fd65fe8b29309c2fde98962232c369ac7e60322ffc795a69569",
+        "static": "a7ee353f8bed3ce65fbb4bd57bb69987b518dd4e23079132757c369bfcbf5417"
+      }
     }
   }
 }

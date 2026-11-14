@@ -5299,3 +5299,8 @@ execution and current image qualification require separate evidence.
   All 915 affected checks and 202 audit/inventory controls pass, with independent
   source review. Existing five scenarios, deadlines and request budgets remain
   unchanged. Four isolated full verification lanes are running concurrently.
+
+- Exact archived `9851cecc` unit and coverage each pass 28,188 tests in 2,034
+  files. Branch coverage is 88.02% against the unchanged 85% gate. All nine
+  static checks pass. The independently isolated databases stopped normally.
+  Chromium continues with its audited two-worker configuration.

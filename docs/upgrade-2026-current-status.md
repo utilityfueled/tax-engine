@@ -28,9 +28,12 @@ the rehearsal's separate custody checks.
 All five hosted browser scenarios and their assertions remain unchanged. The
 source audit adds the helper and updates the suite hash, with every request
 budget, timeout and retry preserved. All 202 audit/inventory checks passed. Four
-isolated full verification lanes are running on the committed archive, with four
-workers each for unit and coverage and the original two for Chromium. Results
-will be recorded when complete.
+isolated full verification lanes use the committed archive. All nine static
+checks passed. Unit and coverage each passed 28,188 tests across 2,034 files,
+using four workers. Branch coverage is 88.02%, above the unchanged 85% gate.
+Both isolated PostgreSQL databases stopped normally. Chromium is still running
+with the original two workers. The four-worker unit run took 423 seconds. The
+prior single-worker run took 1,654 seconds on its separately recorded source.
 
 ## November 14 combined runtime verification
 
