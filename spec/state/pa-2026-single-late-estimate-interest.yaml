@@ -1,0 +1,89 @@
+form: "Pennsylvania 2026 dated estimated-tax interest for one fully cleared first installment"
+fullName: "Pennsylvania original calendar-year first-quarter statutory estimated underpayment interest"
+taxYear: 2026
+reference: "https://www.legis.state.pa.us/WU01/LI/LI/US/HTM/1971/0/0002.003.000.052.000..HTM"
+sources:
+  - "https://www.legis.state.pa.us/WU01/LI/LI/US/HTM/1971/0/0002..HTM#19710002u302s"
+  - "https://www.legis.state.pa.us/WU01/LI/LI/US/HTM/1971/0/0002..HTM#19710002u325s"
+  - "https://www.legis.state.pa.us/WU01/LI/LI/US/HTM/1971/0/0002..HTM#19710002u326s"
+  - "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2026/2026_rev-413i.pdf"
+  - "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2026/2026_rev-414i.pdf"
+  - "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40in.pdf"
+  - "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_rev-1630.pdf"
+  - "https://www.pacodeandbulletin.gov/secure/pacode/data/061/chapter119/s119.23.html"
+  - "https://www.pa.gov/agencies/revenue/forms-and-publications/pa-personal-income-tax-guide/income-subject-withholding-estimated-payments-penalties-interest-other-additions"
+  - "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/otherforms/documents/rev-1611.pdf"
+revision: "Act 2 §352(d), final 2026 REV-413(I), historical final 2025 REV-1630 instructions and current REV-1611 (AD+ 11-25)"
+notes: |
+  Statutory interest estimate only. The taxpayer confirms original ordinary
+  calendar 2026 full-year PA resident circumstances, living throughout the
+  tax year, no filing or payment relief, and all 2026 return, declaration,
+  quarterly income, withholding, credit and payment originals reviewed.
+  Require known no withholding, credits, prior carryforward, offsets, other
+  credits to the PA estimated payment account, or reversals. In particular the
+  estimate never applies to farmer, an amended declaration, a later first
+  required period, separate ownership or account, partial clearing, installment
+  overpayment or payment from an unsupported source. Require actual payment
+  and account credit dates to agree and one original for each installment.
+  The source packet is necessarily retrospective and has an actual as-of date
+  on or after the last payment; no future payment is treated as timely.
+
+  Prove the ordinary pre-April declaration and payment duty without using the
+  inconsistent $14,000 boundary or administrative half-dollar rule. Require an
+  original, unamended declaration based on circumstances known in
+  January–March. Actual filing coincides with the first late installment
+  payment, consistent with the department's instructions. Section 326(a)(1)
+  governs the installments and (a)(5) preserves the missed first payment and
+  the three remaining deadlines when the declaration was required earlier.
+  The declaration accompanies the first payment. Its exact reported estimated
+  tax must equal 90% of final separately established PA income tax with no
+  withholding or credits. Any other consequence of late declaration is separate. Require a positive whole-dollar quarterly
+  amount and current annual tax $1,000 or more as conservative scope limits.
+  Do not infer the PA-40 tax or convert fractional payments to reported dollars.
+
+  §352(d)(2)(A) and (B) are alternatives. A matched original PA-40 for a filed
+  full-year resident calendar 2025 with taxable income over $11,000, no PA Tax
+  Forgiveness and confirmed 2025 estimate obligation supplies a strictly
+  positive prior-income threshold under §352(d)(2)(A) and excludes the special
+  prior no-obligation branch. The 2025 PA-40 instructions require reporting
+  whole dollars for both prior-return amounts. Use prior-year facts and law
+  with the current 3.07% tax rate for the statutory comparison. Separately,
+  require unrounded 2025 reported taxable income times the current rate to
+  equal or exceed 90% of current tax so that the original declaration agrees
+  with the lesser annual amount used in REV-414(I). Current actual
+  January–March PA taxable income over $14,000, no credit and positive current
+  tax establishes that 90% of actual
+  tax on that period's income is also positive. A complete confirmed account
+  has exactly zero on-time Q1 payments and credits, so it satisfies neither
+  comparator. No exact statutory exception value is needed. The original
+  2025 PA-40 is evidence for prior-year facts only.
+
+  Only a complete exact Q1 installment credited after April 15 and strictly
+  before June 15 is admitted. No other credit or receipt occurs in that gap.
+  Q2–Q4 are independently documented exactly on their due dates in final
+  2026 REV-413(I). Section 352 calculates interest for the underpayment period.
+  The historical instructions and 61 Pa. Code §119.23(b) both exclude the
+  initial due day and include the late clearing/payment date. Use current
+  §352(d) and REV-1611 for the calculation, since §119.23 retains superseded
+  percentages and rates. The current REV-1611 daily rate is
+  0.000192 through 2026-12-31. Expose the exact raw amount, with no rounded
+  REV-1630 field or subsequent year rate. Final 2026 REV-1630 was unavailable at
+  the tested official endpoint; the same method asserts no penalty past the
+  actual single clearing event and no qualification for annual use or export.
+lines:
+  - line: "2026 requirement and exception sources"
+    description: "Verify positive required installment and positive exception comparators"
+    formula: "Require an original valid pre-April determination, actual original 2026 declaration matching the first late receipt and exact 90% annual estimate no greater than the prior-income method, positive whole-dollar installment and actual complete no-withholding/no-credit receipts. Require actual matching prior-year positive-income return with no forgiveness and prior estimate obligation and current actual January–March PA taxable income over $14,000. No inferred source, date, taxable income or rounded value."
+    testRef: "tests/engine/state/pa-2026-single-late-estimate-interest.test.ts::rejects unknown, exempt, incompatible or contradictory source facts"
+  - line: "dated payment period"
+    description: "Admit one exact late Q1 payoff and three independently timely installments"
+    formula: "Validate tax year, intent, identity, civil dates and original paid and credit date equality and the as-of date. Apply zero Q1 credits by April 15, require exactly that installment after April 15 and before June 15 and exactly one equal independently designated receipt on each other deadline. Exclude due day and include clearing date."
+    testRef: "tests/engine/state/pa-2026-single-late-estimate-interest.test.ts::rejects ambiguous, partial, future or mistimed receipts"
+  - line: "prior-return source and declaration comparison"
+    description: "Use whole-dollar originals and preserve the exact declaration boundary"
+    formula: "Validate prior PA-40 line 11 and tax forgiveness as whole dollars without rounding. Multiply reported prior taxable income by the current 3.07% rate and require at least 90% of confirmed current annual income tax for the declaration comparison. Use the prior source independently to prove the §352(d)(2)(A) exception threshold is positive."
+    testRef: "tests/engine/state/pa-2026-single-late-estimate-interest.test.ts::uses whole-dollar PA-40 originals and the exact current-rate declaration comparison"
+  - line: "statutory interest in 2026"
+    description: "Exact principal, elapsed days and published 2026 daily rate"
+    formula: "Required Q1 amount is confirmed full annual liability times 0.90 divided by 4. Because all on-time receipts and credits for Q1 are zero, this is the exact Q1 principal. Raw interest is that principal times elapsed whole calendar days times 0.000192. No subsequent-year rate, remittance, or annual worksheet amount."
+    testRef: "tests/engine/state/pa-2026-single-late-estimate-interest.test.ts::computes a single fully cleared first-quarter interest span exactly"
