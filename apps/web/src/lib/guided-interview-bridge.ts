@@ -108,7 +108,6 @@ import type {
   DividendEntryData,
   FilingStatus,
   GuidedFlowState,
-  InterestEntryData,
   NecEntryData,
   OtherTaxesData,
   PaymentData,
