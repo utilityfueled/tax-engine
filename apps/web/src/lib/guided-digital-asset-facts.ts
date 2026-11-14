@@ -1,3 +1,4 @@
+import { buildGuidedMarketDiscountSource, invalidateMarketDiscount, marketDiscountInterestOriginals, type MarketDiscountContext, type MarketDiscountDraft } from './guided-market-discount-sources';
 // Spec: spec/federal/guided-digital-asset-sources.yaml.
 import { Form1099DASchema, type Form1099DA, type Form1099B } from '@/models/inputs.js';
 import { calculateForm1099DASources } from '@/engine/forms/form-1099-da-sources.js';
@@ -18,8 +19,9 @@ export const digitalBooleanFields = [
   ['noncoveredSecurity', 'Box 9 noncovered security'], ['washSale', 'Wash-sale treatment applies to this actual disposition'],
   ['capitalAssetConfirmed', 'Actual asset was held as capital property'], ['nftOrCollectible', 'Actual asset is an NFT or collectible'],
 ] as const;
-export type DigitalAssetTransactionData = Partial<Record<typeof digitalAmountFields[number][0] | 'sourceId' | 'digitalAssetCode' | 'digitalAssetName' | 'ticker' | 'quantity' | 'dateAcquired' | 'dateSold' | 'reportedDateAcquired' | 'reportedCostBasis' | 'basisSourceReference' | 'gainOrLoss' | 'paCostBasis' | 'paBasisSourceReference', string>>
+export type DigitalAssetTransactionData = Partial<Record<typeof digitalAmountFields[number][0] | 'sourceId' | 'securityIdentifier' | 'digitalAssetCode' | 'digitalAssetName' | 'ticker' | 'quantity' | 'dateAcquired' | 'dateSold' | 'reportedDateAcquired' | 'reportedCostBasis' | 'basisSourceReference' | 'gainOrLoss' | 'paCostBasis' | 'paBasisSourceReference', string>>
   & Partial<Record<typeof digitalBooleanFields[number][0] | 'reportedDateAcquiredBlank' | 'reportedCostBasisBlank' | 'basisFactsConfirmed' | 'basisCorrectionConfirmed' | 'sellingCostsNotInProceedsConfirmed' | 'originIncomeIncludedConfirmed' | 'inheritedBasisConfirmed' | 'giftSourceConfirmed' | 'giftHoldingDocumented' | 'giftFromSpouse' | 'paBasisFactsConfirmed' | 'paTransactionForProfitConfirmed', boolean | null>> & {
+    marketDiscountFacts?: MarketDiscountDraft;
     giftDonorBasis?: string; giftFairMarketValue?: string; giftDate?: string;
     holdingPeriod?: 'short' | 'long' | ''; transactionType?: 'sale' | 'exchange' | 'payment' | 'other' | '';
     basisSource?: 'broker_statement' | 'taxpayer_records' | ''; proceedsType?: 'gross' | 'net' | '';
@@ -52,7 +54,7 @@ function originalBlank(blank: boolean | null | undefined, value: string | undefi
   if (blank) { if (value?.trim()) throw new Error(`Reconcile the saved ${label} with the actual original blank answer.`); return null; }
   return monetary ? amount(value, label) : actual(value, label);
 }
-function toSource(entry: DigitalAssetEntryData): Form1099DA {
+function toSource(entry: DigitalAssetEntryData, context: MarketDiscountContext): Form1099DA {
   if (!/^\d{4}$/.test(entry.taxYear ?? '')) throw new Error('Enter the actual original digital-asset statement year.');
   if (!entry.transactions?.length) throw new Error('Include every actual individual digital-asset disposition.');
   const parsed = Form1099DASchema.safeParse({
@@ -68,6 +70,7 @@ function toSource(entry: DigitalAssetEntryData): Form1099DA {
     transactions: entry.transactions.map(row => ({
       ...Object.fromEntries(digitalAmountFields.map(([key, label]) => [key, amount(row[key], label)])),
       ...Object.fromEntries(digitalBooleanFields.map(([key]) => [key, row[key] ?? undefined])),
+      securityIdentifier: row.securityIdentifier?.trim() || undefined, marketDiscountSource: buildGuidedMarketDiscountSource(entry, row, context),
       sourceId: actual(row.sourceId, 'original disposition ID'), digitalAssetCode: actual(row.digitalAssetCode, 'Box 1a code'), digitalAssetName: actual(row.digitalAssetName, 'Box 1b name'), ticker: row.ticker?.trim() || undefined,
       quantity: amount(row.quantity, 'Box 1c units'), dateAcquired: actual(row.dateAcquired, 'completed acquisition date'), dateSold: actual(row.dateSold, 'Box 1e sale date'),
       reportedDateAcquired: originalBlank(row.reportedDateAcquiredBlank, row.reportedDateAcquired, 'Box 1d acquisition date'),
@@ -87,17 +90,19 @@ function toSource(entry: DigitalAssetEntryData): Form1099DA {
   return parsed.data;
 }
 const statuses = { single: 'single', mfj: 'married_filing_jointly', mfs: 'married_filing_separately', hoh: 'head_of_household', qss: 'qualifying_surviving_spouse' } as const;
-export function buildDigitalAssetInputs(entries: DigitalAssetEntryData[] | undefined, filingStatus?: FilingStatus | null, taxYear?: number | null, personal?: PersonalInfoData, originalB: Array<Pick<Form1099B, 'sourceId'>> = []): Form1099DA[] {
+export function buildDigitalAssetInputs(entries: DigitalAssetEntryData[] | undefined, filingStatus?: FilingStatus | null, taxYear?: number | null, personal?: PersonalInfoData, originalB: Array<Pick<Form1099B, 'sourceId'>> = [], context: MarketDiscountContext = {}): Form1099DA[] {
   const started = (entries ?? []).filter(isStartedDigitalAsset); if (!started.length) return [];
   if (!filingStatus || (taxYear !== 2025 && taxYear !== 2026) || !personal?.firstName.trim() || !personal.lastName.trim()) throw new Error('Complete the actual digital-asset return year and household.');
-  const sources = started.map(toSource);
+  const sources = started.map(entry => toSource(entry, context));
+  const facts = started.flatMap(entry => entry.transactions ?? []).find(row => row.marketDiscountFacts)?.marketDiscountFacts;
+  const originals = facts ? marketDiscountInterestOriginals(context, facts) : {};
   const spouse = personal.spouse?.firstName.trim() && personal.spouse.lastName.trim() ? { firstName: personal.spouse.firstName, lastName: personal.spouse.lastName } : undefined;
-  calculateForm1099DASources({ taxpayer: { taxYear, filingStatus: statuses[filingStatus], spouse }, form1099B: originalB, form1099DA: sources });
+  calculateForm1099DASources({ taxpayer: { taxYear, filingStatus: statuses[filingStatus], spouse }, form1099B: originalB, form1099DA: sources, ...originals });
   return sources;
 }
-export function digitalAssetFactErrors(entries: DigitalAssetEntryData[] | undefined, filingStatus?: FilingStatus | null, taxYear?: number | null, personal?: PersonalInfoData, originalB: Array<Pick<Form1099B, 'sourceId'>> = [], stateData?: StateReturnData, stateCode?: string | null): Record<string, string> {
+export function digitalAssetFactErrors(entries: DigitalAssetEntryData[] | undefined, filingStatus?: FilingStatus | null, taxYear?: number | null, personal?: PersonalInfoData, originalB: Array<Pick<Form1099B, 'sourceId'>> = [], stateData?: StateReturnData, stateCode?: string | null, context: MarketDiscountContext = {}): Record<string, string> {
   try {
-    const sources = buildDigitalAssetInputs(entries, filingStatus, taxYear, personal, originalB);
+    const sources = buildDigitalAssetInputs(entries, filingStatus, taxYear, personal, originalB, context);
     if (sources.length && stateCode === 'PA' && filingStatus && taxYear) {
       const spouse = personal?.spouse?.firstName.trim() && personal.spouse.lastName.trim() ? { firstName: personal.spouse.firstName, lastName: personal.spouse.lastName } : undefined;
       // Validate the supplied DA-only state view. Original B identity collisions were checked above.
@@ -111,11 +116,14 @@ export function updateDigitalAssetTransaction(row: DigitalAssetTransactionData, 
   const next = { ...row, ...patch }, origin = ['originIncomeIncludedConfirmed', 'inheritedBasisConfirmed', 'giftSourceConfirmed', 'giftHoldingDocumented'];
   const keys = Object.keys(patch);
   if (keys.every(key => key === 'basisFactsConfirmed' || key === 'paBasisFactsConfirmed')) return next;
+  if (keys.length === 1 && keys[0] === 'marketDiscountFacts') return { ...next, basisFactsConfirmed: null, paBasisFactsConfirmed: null };
   const edited = keys.some(key => !origin.includes(key));
-  return { ...next, basisFactsConfirmed: null, paBasisFactsConfirmed: null, ...(edited ? { originIncomeIncludedConfirmed: null, inheritedBasisConfirmed: null, giftSourceConfirmed: null, giftHoldingDocumented: null } : {}) };
+  return { ...next, marketDiscountFacts: invalidateMarketDiscount(next.marketDiscountFacts), basisFactsConfirmed: null, paBasisFactsConfirmed: null, ...(edited ? { originIncomeIncludedConfirmed: null, inheritedBasisConfirmed: null, giftSourceConfirmed: null, giftHoldingDocumented: null } : {}) };
 }
 export function updateDigitalAssetEntry(entry: DigitalAssetEntryData, patch: Partial<DigitalAssetEntryData>): DigitalAssetEntryData {
   const next = { ...entry, ...patch };
   const actualValues = (value: DigitalAssetEntryData) => ({ ...value, transactions: value.transactions?.map(row => ({ ...row, basisFactsConfirmed: undefined, paBasisFactsConfirmed: undefined })) });
-  return guidedSourceValuesChanged(actualValues(entry), actualValues(next)) ? { ...next, sourceFactsConfirmed: null } : next;
+  if (!guidedSourceValuesChanged(actualValues(entry), actualValues(next))) return next;
+  const statementEdited = Object.keys(patch).some(key => key !== "transactions" && key !== "sourceFactsConfirmed");
+  return { ...next, sourceFactsConfirmed: null, ...(statementEdited ? { transactions: next.transactions?.map(row => ({ ...row, marketDiscountFacts: invalidateMarketDiscount(row.marketDiscountFacts) })) } : {}) };
 }

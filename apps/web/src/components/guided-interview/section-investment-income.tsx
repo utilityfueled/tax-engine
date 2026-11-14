@@ -1,4 +1,6 @@
 "use client";
+import type { MarketDiscountContext } from "@/lib/guided-market-discount-sources";
+import type { FilingStatus } from "@/lib/guided-interview-flow";
 import { QofDispositionDetails } from "./qof-disposition-details";
 import { BrokerageWithholdingDetails } from "./brokerage-withholding-details";
 import { ScheduleDSourceDetails } from "./schedule-d-source-details";
@@ -406,6 +408,9 @@ export function SectionInvestmentIncome({
   onDividendEntriesChange,
   onBrokerageEntriesChange,
   oidEntries,
+  marketDiscountContext,
+  filingStatus,
+  taxYear,
   stateCode,
   onOidEntriesChange,
   digitalAssetEntries,
@@ -425,6 +430,9 @@ export function SectionInvestmentIncome({
   onInterestEntriesChange: (entries: InterestEntryData[]) => void;
   onDividendEntriesChange: (entries: DividendEntryData[]) => void;
   onBrokerageEntriesChange: (entries: BrokerageEntryData[]) => void;
+  marketDiscountContext?: MarketDiscountContext;
+  filingStatus?: FilingStatus | null;
+  taxYear?: number | null;
   oidEntries?: OidEntryData[];
   stateCode?: string | null;
   onOidEntriesChange?: (entries: OidEntryData[]) => void;
@@ -513,7 +521,7 @@ export function SectionInvestmentIncome({
         </button>
 
         {onOidEntriesChange && <OidSourceCards entries={oidEntries} stateCode={stateCode} onChange={onOidEntriesChange} />}
-        {onDigitalAssetEntriesChange && <DigitalAssetSourceCards entries={digitalAssetEntries} stateCode={stateCode} onChange={onDigitalAssetEntriesChange} />}
+        {onDigitalAssetEntriesChange && <DigitalAssetSourceCards entries={digitalAssetEntries} stateCode={stateCode} context={marketDiscountContext ?? { interestEntries, oidEntries, filingStatus, taxYear, stateCode }} onChange={onDigitalAssetEntriesChange} />}
         {onChildElectionsChange && <ChildElectionCards entries={childElections} onChange={onChildElectionsChange} />}
         {onQofDispositionFactsChange && <QofDispositionDetails data={qofDispositionFacts} onChange={onQofDispositionFactsChange} />}
         {onScheduleDSourcesChange && <ScheduleDSourceDetails data={scheduleDSources} investments={{ brokerageEntries, dividendEntries, digitalAssetEntries }} onChange={onScheduleDSourcesChange} />}

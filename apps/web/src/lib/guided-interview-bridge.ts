@@ -1,3 +1,5 @@
+import { buildInterestInputs } from './guided-interest-originals';
+export { buildInterestInputs } from './guided-interest-originals';
 import { buildGuidedForeignTaxK3Sources } from './guided-foreign-tax-k3';
 import {captureGuidedRRTA,bindGuidedRRTA,rrtaParentValues,type GuidedRRTADraft} from './guided-rrta-payroll-sources';
 import {buildTipIncomeSourceOriginals} from './guided-tip-income-facts';
@@ -311,20 +313,6 @@ function investmentSourceInput(entry: InvestmentSourceData) {
   return { taxYear: year && /^\d{4}$/.test(year) ? Number(year) : undefined, payerTin: entry.payerTin?.trim() || undefined, accountReference: entry.accountReference?.trim() || undefined, accountHolder: entry.accountHolder === "primary" || entry.accountHolder === "spouse" ? entry.accountHolder : undefined, state: entry.state?.trim().toUpperCase() || undefined, stateWithheld: entry.stateTaxReporting === "none" ? "0" : toOptionalDecimalString(entry.stateWithheld) };
 }
 
-export function buildInterestInputs(entries: InterestEntryData[] | undefined, taxYear?: number | null) {
-  return (entries ?? []).filter(isStartedInvestment).map(entry => ({
-    ...investmentSourceInput(entry), payer: entry.payer.trim(),
-    interestIncome: toOptionalDecimalString(entry.interestIncome),
-    federalWithheld: toOptionalDecimalString(entry.federalWithheld),
-    earlyWithdrawalPenalty: toOptionalDecimalString(entry.earlyWithdrawalPenalty),
-    usSavingsBondInterest: toOptionalDecimalString(entry.usSavingsBondInterest),
-    foreignTaxPaid: toOptionalDecimalString(entry.foreignTaxPaid),
-    foreignCountry: entry.foreignCountry?.trim() || undefined,
-    taxExemptInterest: toOptionalDecimalString(entry.taxExemptInterest),
-    privateActivityBondInterest: toOptionalDecimalString(entry.privateActivityBondInterest),
-    privateActivityBondFacts: buildGuidedPrivateActivityFacts(entry, entry.privateActivityBondInterest, taxYear),
-  }));
-}
 
 export function buildDividendInputs(entries: DividendEntryData[] | undefined, taxYear?: number | null) {
   return (entries ?? []).filter(isStartedInvestment).map(entry => ({
@@ -867,7 +855,7 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
   const form1099OID = buildOidInputs(investData?.oidEntries, segmentation.filingStatus, state.taxYear, stateCode);
   const form1099Div = buildDividendInputs(investData?.dividendEntries, state.taxYear);
   const form1099B = buildBrokerageInputs(investData?.brokerageEntries);
-  const form1099DA = buildDigitalAssetInputs(investData?.digitalAssetEntries, segmentation.filingStatus, state.taxYear, personalInfo, form1099B);
+  const form1099DA = buildDigitalAssetInputs(investData?.digitalAssetEntries, segmentation.filingStatus, state.taxYear, personalInfo, form1099B, { interestEntries: investData?.interestEntries, oidEntries: investData?.oidEntries, filingStatus: segmentation.filingStatus, taxYear: state.taxYear, stateCode });
   const form1099R = buildRetirementInputs(retirementData?.entries, segmentation.filingStatus, state.taxYear, stateReturnData, { data: retirementData?.basisSources, personal: personalInfo, adjustments: adjustmentData });
   const iraBasisSources = buildGuidedIraBasisSources(retirementData?.basisSources, retirementData?.entries, state.taxYear, segmentation.filingStatus, personalInfo, adjustmentData);
   const rentalProperties = buildRentalPropertyInputs(rentalData?.entries);
@@ -1280,7 +1268,7 @@ export function buildGuidedSyntheticDocuments(
 
   if (investData?.digitalAssetEntries?.some(isStartedDigitalAsset)) {
     docs.push({ id: "guided:1099-da", name: "Guided Interview — 1099-DA", size: 0, uploadedAt: now,
-      kind: "1099-da", coverage: Object.keys(digitalAssetFactErrors(investData.digitalAssetEntries, state.segmentation.filingStatus, state.taxYear, state.sectionData["personal-info"], investData.brokerageEntries, state.sectionData["state-return"], state.segmentation.stateCode)).length ? "partially-supported" : "supported",
+      kind: "1099-da", coverage: Object.keys(digitalAssetFactErrors(investData.digitalAssetEntries, state.segmentation.filingStatus, state.taxYear, state.sectionData["personal-info"], investData.brokerageEntries, state.sectionData["state-return"], state.segmentation.stateCode, { interestEntries: investData.interestEntries, oidEntries: investData.oidEntries, filingStatus: state.segmentation.filingStatus, taxYear: state.taxYear, stateCode: state.segmentation.stateCode })).length ? "partially-supported" : "supported",
       label: "1099-DA (guided interview)", notes: "Actual original digital-asset statements and independent acquisition/basis records entered via guided interview.", matchedFixtureId: null, seededFactIds: ["broker-proceeds", "cost-basis-review"] });
   }
 

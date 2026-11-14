@@ -1,0 +1,39 @@
+form: "Guided original Form1099DA market-discount source intake"
+taxYear: "2025 and2026 original sources; filing qualification unchanged"
+irsReference: "https://www.irs.gov/instructions/i8949"
+sources:
+  - url: "https://www.irs.gov/instructions/i8949"
+    retrieved: "2026-11-14"
+    section: "Final2025 accrued market discount worksheet lines1-5 and codeD"
+  - url: "https://www.irs.gov/publications/p550"
+    retrieved: "2026-11-14"
+    section: "Final2025 Market Discount Bonds; actual elections and ScheduleB reporting"
+notes: |
+  Intake for the already specified finite taxable-corporate full cash sale method;
+  no new election or calculation. Copy actual original Ordinary=true, noncovered
+  status, security, issue/maturity, full-disposition and original-reference facts.
+  Preserve unknown answers; absence of INT/OID arrays is not known absence.
+  Explicit known-no-original statements may establish an empty collection only
+  after the user checks actual records. Complete current originals and explicit
+  same-discount-not-elsewhere confirmation bind the once-only method.
+  Canonical snapshots are generated only after the explicit source confirmation;
+  changed row, statement, debt, election, history or INT/OID originals invalidate
+  that confirmation. Original capital/basis/statement confirmations still apply.
+  PA positive market-discount guard, final forms, human review, hosted privacy and
+  annual filing gates remain unchanged.
+lines:
+  - line: "original-source-roundtrip"
+    description: "Derive the qualified canonical original from explicit guided facts"
+    formula: "Actual Ordinary remains true; exact originals feed unchanged canonical market-discount method once"
+    irsRef: "Final2025 i8949 codeD/worksheet; final2025 Pub550 market-discount bonds"
+    testRef: "tests/guided-interview/guided-market-discount-sources.test.ts::binds complete guided debt sources to unchanged canonical interest and capital"
+  - line: "unknown-reconciliation"
+    description: "Missing debt, election, history or interest originals remain unknown"
+    formula: "No source snapshot or admission without explicit confirmation and actual complete originals or explicit known-none answers"
+    irsRef: "IRC1276/1278; final2025 Pub550 elections and reporting"
+    testRef: "tests/guided-interview/guided-market-discount-sources.test.ts::rejects missing and stale source confirmations without inventing originals"
+  - line: "visible-source-controls"
+    description: "Collect actual facts through visible fields without defaults"
+    formula: "All original facts editable; confirmation unknown initially and after source edits; no network dispatch"
+    irsRef: "Final2025 i1099DA boxes1h/6; unchanged canonical source contract"
+    testRef: "tests/apps/web/guided-market-discount-interactions.test.tsx::collects explicit debt facts and invalidates edited originals"

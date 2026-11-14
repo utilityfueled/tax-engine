@@ -63,7 +63,7 @@ export function investmentFactErrors(data: InvestmentData | undefined, filingSta
   if (!data) return errors;
   Object.assign(errors, qofDispositionFactErrors(data.qofDispositionFacts, taxYear, investmentRowsStarted(data)));
   Object.assign(errors, oidFactErrors(data.oidEntries, filingStatus, taxYear, stateCode, stateData));
-  Object.assign(errors, digitalAssetFactErrors(data.digitalAssetEntries, filingStatus, taxYear, personal, data.brokerageEntries, stateData, stateCode));
+  Object.assign(errors, digitalAssetFactErrors(data.digitalAssetEntries, filingStatus, taxYear, personal, data.brokerageEntries, stateData, stateCode, { interestEntries: data.interestEntries, oidEntries: data.oidEntries, filingStatus, taxYear, stateCode }));
   Object.assign(errors, childElectionFactErrors(data.childElections, taxYear));
   Object.assign(errors, scheduleDSourceFactErrors(data, taxYear, filingStatus, personal));
   Object.assign(errors, qsbsSourceFactErrors(data, taxYear, filingStatus, personal));

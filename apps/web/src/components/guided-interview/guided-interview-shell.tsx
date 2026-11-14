@@ -566,13 +566,15 @@ function SectionContent({
       const interestEntries = investData?.interestEntries ?? [emptyInterestEntry];
       const dividendEntries = investData?.dividendEntries ?? [emptyDividendEntry];
       const brokerageEntries = investData?.brokerageEntries ?? [emptyBrokerageEntry];
-      const oidEntries = investData?.oidEntries ?? [];
       return (
         <SectionInvestmentIncome
           interestEntries={interestEntries}
           dividendEntries={dividendEntries}
           brokerageEntries={brokerageEntries}
-          oidEntries={oidEntries}
+          oidEntries={investData?.oidEntries}
+          filingStatus={state.segmentation.filingStatus}
+          taxYear={state.taxYear}
+          marketDiscountContext={{ interestEntries: investData?.interestEntries, oidEntries: investData?.oidEntries, filingStatus: state.segmentation.filingStatus, taxYear: state.taxYear, stateCode: state.segmentation.stateCode }}
           digitalAssetEntries={investData?.digitalAssetEntries}
           onDigitalAssetEntriesChange={digitalAssetEntries => onStateChange(updateSectionData(state, "income-investments", { ...savedSources, digitalAssetEntries }))}
           childElections={investData?.childElections}

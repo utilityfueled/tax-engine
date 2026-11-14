@@ -1,4 +1,6 @@
 "use client";
+import { MarketDiscountSourceDetails } from "./market-discount-source-details";
+import { marketDiscountConfirmationCurrent, type MarketDiscountContext } from "@/lib/guided-market-discount-sources";
 import { digitalAmountFields, digitalBooleanFields, updateDigitalAssetEntry, updateDigitalAssetTransaction, type DigitalAssetEntryData, type DigitalAssetTransactionData } from '@/lib/guided-digital-asset-facts';
 import { BooleanFact, TextFact } from './fact-fields';
 import { CurrencyField } from './currency-field';
@@ -6,7 +8,7 @@ import { CurrencyField } from './currency-field';
 function Choice({ label, value, options, onChange }: { label: string; value: string | undefined; options: ReadonlyArray<readonly [string, string]>; onChange: (value: string) => void }) {
   return <label className="guided-field"><span className="guided-field-label">{label}</span><select className="guided-input" value={value ?? ''} onChange={event => onChange(event.target.value)}><option value="">Confirm from actual records</option>{options.map(([key, text]) => <option key={key} value={key}>{text}</option>)}</select></label>;
 }
-function Disposition({ row, prefix, stateCode, onChange, onRemove }: { row: DigitalAssetTransactionData; prefix: string; stateCode?: string | null; onChange: (patch: Partial<DigitalAssetTransactionData>) => void; onRemove: () => void }) {
+function Disposition({ entry, context, row, prefix, stateCode, onChange, onRemove }: { entry: DigitalAssetEntryData; context: MarketDiscountContext; row: DigitalAssetTransactionData; prefix: string; stateCode?: string | null; onChange: (patch: Partial<DigitalAssetTransactionData>) => void; onRemove: () => void }) {
   return <fieldset className="guided-w2-card"><legend>{prefix} — original disposition</legend>
     <p className="guided-hint">Copy the original boxes first. If the broker left acquisition or basis blank, preserve that answer and enter the separate taxpayer records below. Enter known zeros after checking the source.</p>
     <div className="guided-form-grid">
@@ -42,7 +44,8 @@ function Disposition({ row, prefix, stateCode, onChange, onRemove }: { row: Digi
     <details className="guided-expand"><summary className="guided-expand-trigger">{prefix} — source classifications</summary><div className="guided-expand-body guided-form-grid">
       {digitalBooleanFields.map(([key, label]) => <BooleanFact key={key} label={`${prefix} — ${label}`} value={row[key]} onChange={value => onChange({ [key]: value })} />)}
     </div></details>
-    {(row.assetOrigin && row.assetOrigin !== 'purchase' && !(['mining', 'staking', 'airdrop'].includes(row.assetOrigin) && row.originIncomeIncludedConfirmed === true) && !(row.assetOrigin === 'inheritance' && row.inheritedBasisConfirmed === true) && !(row.assetOrigin === 'gift' && row.giftSourceConfirmed === true) || row.nftOrCollectible || row.qof || row.ordinaryIncome || row.lossNotAllowed || row.optionalReportingMethod && row.optionalReportingMethod !== 'none') && <p role="status" className="guided-hint">These actual answers are saved. This source needs its separate acquisition, special-tax or aggregate reporting method before a preview is available.</p>}
+    {(row.assetOrigin && row.assetOrigin !== 'purchase' && !(['mining', 'staking', 'airdrop'].includes(row.assetOrigin) && row.originIncomeIncludedConfirmed === true) && !(row.assetOrigin === 'inheritance' && row.inheritedBasisConfirmed === true) && !(row.assetOrigin === 'gift' && row.giftSourceConfirmed === true) || row.nftOrCollectible || row.qof || (row.ordinaryIncome && !marketDiscountConfirmationCurrent(entry, row, context)) || row.lossNotAllowed || row.optionalReportingMethod && row.optionalReportingMethod !== 'none') && <p role="status" className="guided-hint">These actual answers are saved. This source needs its separate acquisition, special-tax or aggregate reporting method before a preview is available.</p>}
+    <MarketDiscountSourceDetails entry={entry} row={row} context={context} prefix={prefix} onChange={onChange} />
     {stateCode === 'PA' && <fieldset className="guided-w2-card"><legend>{prefix} — Pennsylvania source records</legend>
       <p className="guided-hint">Enter the adjusted basis from the actual Pennsylvania records. It can differ from federal basis. An unanswered amount or confirmation stays unknown.</p>
       <div className="guided-form-grid">
@@ -56,7 +59,7 @@ function Disposition({ row, prefix, stateCode, onChange, onRemove }: { row: Digi
     <button type="button" className="utility-button utility-button-small" onClick={onRemove}>Remove {prefix}</button>
   </fieldset>;
 }
-function Statement({ entry, index, stateCode, onChange, onRemove }: { entry: DigitalAssetEntryData; index: number; stateCode?: string | null; onChange: (patch: Partial<DigitalAssetEntryData>) => void; onRemove: () => void }) {
+function Statement({ entry, index, stateCode, context, onChange, onRemove }: { context: MarketDiscountContext; entry: DigitalAssetEntryData; index: number; stateCode?: string | null; onChange: (patch: Partial<DigitalAssetEntryData>) => void; onRemove: () => void }) {
   const prefix = `DA statement ${index + 1}`, rows = entry.transactions ?? [];
   return <div className="guided-w2-card"><div className="guided-w2-card-header"><strong className="guided-w2-card-title">{prefix}{entry.brokerName ? ` — ${entry.brokerName}` : ''}</strong><button type="button" className="utility-button utility-button-small" onClick={onRemove}>Remove {prefix}</button></div>
     <div className="guided-form-grid">
@@ -86,16 +89,16 @@ function Statement({ entry, index, stateCode, onChange, onRemove }: { entry: Dig
         </div>;
       })}
     </fieldset>}
-    {rows.map((row, rowIndex) => <Disposition key={rowIndex} row={row} stateCode={stateCode} prefix={`DA ${index + 1} sale ${rowIndex + 1}`} onChange={patch => onChange({ transactions: rows.map((value, i) => i === rowIndex ? updateDigitalAssetTransaction(value, patch) : value) })} onRemove={() => onChange({ transactions: rows.filter((_, i) => i !== rowIndex) })} />)}
+    {rows.map((row, rowIndex) => <Disposition key={rowIndex} entry={entry} context={context} row={row} stateCode={stateCode} prefix={`DA ${index + 1} sale ${rowIndex + 1}`} onChange={patch => onChange({ transactions: rows.map((value, i) => i === rowIndex ? updateDigitalAssetTransaction(value, patch) : value) })} onRemove={() => onChange({ transactions: rows.filter((_, i) => i !== rowIndex) })} />)}
     <button type="button" className="utility-button" onClick={() => onChange({ transactions: [...rows, {}] })}>Add individual disposition to {prefix}</button>
     <BooleanFact label={`${prefix} — Every original disposition is included`} value={entry.allTransactionsIncluded} onChange={allTransactionsIncluded => onChange({ allTransactionsIncluded })} />
     <BooleanFact label={`${prefix} — Sources checked after the last edit`} value={entry.sourceFactsConfirmed} onChange={sourceFactsConfirmed => onChange({ sourceFactsConfirmed })} />
   </div>;
 }
-export function DigitalAssetSourceCards({ entries = [], stateCode, onChange }: { entries?: DigitalAssetEntryData[]; stateCode?: string | null; onChange: (entries: DigitalAssetEntryData[]) => void }) {
+export function DigitalAssetSourceCards({ entries = [], stateCode, context = {}, onChange }: { context?: MarketDiscountContext; entries?: DigitalAssetEntryData[]; stateCode?: string | null; onChange: (entries: DigitalAssetEntryData[]) => void }) {
   return <details className="guided-expand"><summary className="guided-expand-trigger">Original digital assets (1099-DA)</summary><div className="guided-expand-body">
     <p className="guided-hint">Use actual 1099-DA statements here. Enter actual 1099-B statements in Brokerage Sales. Dispositions with no information statement need a separate source entry method. These review controls do not establish filing readiness.</p>
-    <div className="guided-w2-stack">{entries.map((entry, index) => <Statement key={index} entry={entry} index={index} stateCode={stateCode} onChange={patch => onChange(entries.map((value, i) => i === index ? updateDigitalAssetEntry(value, patch) : value))} onRemove={() => onChange(entries.filter((_, i) => i !== index))} />)}</div>
+    <div className="guided-w2-stack">{entries.map((entry, index) => <Statement key={index} context={context} entry={entry} index={index} stateCode={stateCode} onChange={patch => onChange(entries.map((value, i) => i === index ? updateDigitalAssetEntry(value, patch) : value))} onRemove={() => onChange(entries.filter((_, i) => i !== index))} />)}</div>
     <button type="button" className="utility-button" onClick={() => onChange([...entries, {}])}>Add actual 1099-DA statement</button>
   </div></details>;
 }
