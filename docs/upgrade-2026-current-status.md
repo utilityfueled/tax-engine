@@ -31,8 +31,8 @@ budget, timeout and retry preserved. All 202 audit/inventory checks passed. Four
 isolated full verification lanes use the committed archive. All nine static
 checks passed. Unit and coverage each passed 28,188 tests across 2,034 files,
 using four workers. Branch coverage is 88.02%, above the unchanged 85% gate.
-Both isolated PostgreSQL databases stopped normally. Chromium is still running
-with the original two workers. The four-worker unit run took 423 seconds. The
+Both isolated PostgreSQL databases stopped normally. Chromium passed 618 executable cases, with the five original hosted-only
+skips and zero failures or retries, using the original two workers. All 12 archived verification commands passed. The four-worker unit run took 423 seconds. The
 prior single-worker run took 1,654 seconds on its separately recorded source.
 
 ## November 14 combined runtime verification

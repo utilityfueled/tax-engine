@@ -5304,3 +5304,10 @@ execution and current image qualification require separate evidence.
   files. Branch coverage is 88.02% against the unchanged 85% gate. All nine
   static checks pass. The independently isolated databases stopped normally.
   Chromium continues with its audited two-worker configuration.
+
+- Exact `9851cecc` completes all 12 archived commands. Chromium passes 618
+  executable cases with five original hosted-only skips, zero failures and zero
+  retries. The separate actual Preview GUI exposed a save conflict in a fresh
+  single-editor return and remains under diagnosis. Its two failed attempts
+  retained evidence and verified synthetic-resource cleanup. This hosted issue
+  remains open despite the green managed suite.
