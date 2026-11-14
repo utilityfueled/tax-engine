@@ -10,9 +10,12 @@ below retain their original evidence boundaries.
   `52246eb5` and `50c72a04`. Pass 521 affected checks with exact cents
   and confirmed sale originals. Correct the fixture attribution to
   distinguish the synthetic direct sale from IRS ATS scenario 13.
-- [ ] Verify the separate Form 1062 partnership allocation, final 2026
-  annual transfers and required attachments, and obtain qualified review
-  before any live calculation or export path is enabled.
+- [x] Verify the Form 1062 partnership allocation and installment
+  arithmetic in `1db55dc0` against IRS ATS scenario 13. Pass 523 affected
+  tests and preserve blank Schedule A lines 9–12 for the partner.
+- [ ] Qualify Form 1062 partnership originals, the required attachments
+  and final 2026 annual transfer. Obtain qualified review of the $1
+  discrepancy on draft Form 1040 line 24c before enabling live use.
 - [x] Complete exact `e3c90730` ARM64 image import, SBOM/scan, six Compose
   recovery phases and 616 Chromium cases with five hosted-only skips.
   Verify normal stop, restored socket route and unchanged default.

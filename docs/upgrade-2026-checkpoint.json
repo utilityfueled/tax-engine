@@ -24492,6 +24492,30 @@
       "https://www.irs.gov/pub/irs-drop/n-26-03.pdf"
     ]
   },
+  "nov13Form1062Partnership": {
+    "commit": "1db55dc00be873bc5ddb04393abc3da0307dcfde",
+    "initialRed": 2,
+    "affectedTestsPassed": 523,
+    "specReferencesValidated": 8955,
+    "redSha256": "95d5a73d65798bd3c0c8a7a5659fcfb7dab385e44adb83cc6b38a12fc2577453",
+    "greenSha256": "b7de42f01d20ef483635c0675a01edece41b949c8c003e24ba14a37075d83850",
+    "atsScenario13SourceSha256": "880c3c6d0e5aa2a56cd5cf3cd754ee0e0bc72c12d47377cfc215ff21bf22dda0",
+    "missingSourceConfirmationsSynthetic": true,
+    "publishedScheduleALine13": "56516",
+    "publishedForm1062Line14": "13621",
+    "calculatedExactFirstInstallment": "3405.25",
+    "publishedForm1062Line15": "3405",
+    "publishedForm1040Line24c": "21715",
+    "sumOfPrintedForm1040Lines24aAnd24b": "21714",
+    "productionCalculationOrExportEnabled": false,
+    "sources": [
+      "https://www.irs.gov/instructions/i1062",
+      "https://www.irs.gov/instructions/i1065",
+      "https://www.irs.gov/pub/irs-efile/ty26-1040-ats-scenario-13.pdf",
+      "https://www.irs.gov/pub/irs-dft/f1040--dft.pdf",
+      "https://www.irs.gov/pub/irs-dft/f1040s3--dft.pdf"
+    ]
+  },
   "nov13EstateAllocationRehearsals": {
     "arm64": {
       "source": "e3c9073083558706a3a9aad5d67767271e3251db",

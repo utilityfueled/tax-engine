@@ -139,10 +139,16 @@ from the synthetic direct-sale originals in `50c72a04`. Confirm which
 regular-tax additions and credit subparts to recompute. Check installment
 rounding, the sale-year estimated payment exclusion and the later
 installment and acceleration boundaries. In IRS ATS scenario 13 the
-partnership K-1 supplies $56,516, the partner's Schedule A lines 9–12
+partnership allocation supplies $56,516, the partner's Schedule A lines 9–12
 are blank, and draft Form 1062 reports $13,621 on line 14 and $3,405 on
 line 15. Verify the required partnership originals and return transfers
-independently. [IRS instructions](https://www.irs.gov/instructions/i1062) ·
+independently. Verify why the draft Form 1040 reports $21,715 on line 24c
+while printed lines 24a and 24b sum to $21,714. Confirm the cent calculation,
+the final form instructions and any IRS correction before adopting the
+transfer. The published partnership example also supplies identical $1,413
+additions on both sides. Confirm the controlling applicability of each
+addition rather than inferring eligibility from that scalar example.
+[IRS instructions](https://www.irs.gov/instructions/i1062) ·
 [IRS ATS scenario 13](https://www.irs.gov/pub/irs-efile/ty26-1040-ats-scenario-13.pdf) ·
 [Notice 2026-3](https://www.irs.gov/pub/irs-drop/n-26-03.pdf).
 

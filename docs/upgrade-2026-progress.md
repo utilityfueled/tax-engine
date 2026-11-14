@@ -4,6 +4,12 @@ Current source, verification and remaining work are summarized in the
 [current continuation](upgrade-2026-current-status.md). Historical results
 below apply to their named revisions.
 
+- November 13 — `1db55dc0` adds the separate single-partnership Form 1062
+  worksheet and checks IRS ATS scenario 13. Two regressions failed first
+  and 523 affected tests, types, strict lint, inventory and 8,955 spec
+  references passed. Source confirmations outside the packet are synthetic.
+  The $1 annual-transfer discrepancy in the draft example remains open.
+  [IRS ATS scenario 13](https://www.irs.gov/pub/irs-efile/ty26-1040-ats-scenario-13.pdf).
 - November 13 — `52246eb5` and `50c72a04` add the separate Form 1062 and
   Schedule A direct-sale worksheets. Two missing-implementation failures
   preceded 518 and 521 focused passes. Strict lint, types, inventory and

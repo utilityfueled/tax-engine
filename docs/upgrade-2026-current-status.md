@@ -20,8 +20,13 @@ from current estimated payments. The 521 focused tests, types, strict lint,
 misattributed a synthetic case to IRS ATS scenario 13. The second corrects
 that label. The IRS case is a partnership allocation, with $56,516 on
 Schedule A line 13, blank lines 9–12, and $13,621 on Form 1062 line 14.
-Partnership sources and annual return transfer are open. The worksheet has
-no live or export path. [IRS instructions](https://www.irs.gov/instructions/i1062) ·
+`1db55dc0` reproduces those printed amounts using synthetic confirmations
+of the partner's originals. It passes 523 affected tests and 8,955 spec
+references. The draft annual transfer has a $1 inconsistency in the
+published example. The printed lines 24a and 24b show $18,309 and $3,405,
+while line 24c shows $21,715. The sum of the printed amounts is $21,714.
+Final guidance, original intake and qualified review remain open.
+The worksheets have no live or export path. [IRS instructions](https://www.irs.gov/instructions/i1062) ·
 [IRS ATS scenario 13](https://www.irs.gov/pub/irs-efile/ty26-1040-ats-scenario-13.pdf).
 
 `7924a91d` verifies the 2026 draft Schedule 3-A arithmetic in an isolated
