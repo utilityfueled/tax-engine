@@ -1,5 +1,18 @@
 # Current 2026 upgrade continuation
 
+## November 14 integrated source and metadata successor
+
+Local commits `6bacf762` (three-family Marketplace), `02f1b2a9` (guided
+Coverdell), `14deed5f` (mixed-capital foreign services) and `c3e0d22a` (farm
+waiver originals) are separately reviewed. Exact committed `c3e0d22a` inventory
+and browser collection generation pass. Independent audit verifies 635 cases,
+five original skips, fourteen unchanged diagnostic targets and all prior request
+budgets/timeouts; only the two reviewed zero-action education cases are added.
+The unchanged strict spec-reference parser and eight negative CLI controls pass.
+The refreshed metadata will be followed by isolated static, unit, coverage and
+browser lanes; no old full-suite/runtime result is attributed to this successor.
+Main remains local under the production push hold.
+
 ## November 14 actual farm-loss originals and filed waiver
 
 The finite active cash-farm method now reconciles complete regular and AMT

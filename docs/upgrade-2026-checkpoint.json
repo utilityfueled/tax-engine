@@ -1,4 +1,22 @@
 {
+  "nov14IntegratedSourceBinding": {
+    "source": "c3e0d22aa4959f16b03aa5812f4192ba0cf7a04b",
+    "taxCommits": [
+      "6bacf762",
+      "02f1b2a9",
+      "14deed5f",
+      "c3e0d22a"
+    ],
+    "metadata": {
+      "scripts/browser-request-budgets.json": "691ef4811d3a96f52375740eee5f9ddad3c35d1ab6fe5b882484573ec93c8911",
+      "scripts/browser-cpu-diagnostics/cases.json": "79064f076781936149a897418cd8a9f5d1093ea03d04370a3630a7a59094f96a",
+      "spec/coverage/inventory-2025.json": "bdd84041ef2f8d99f7d047223e64664f1fca6ebabc2305bc80cff65c09b2b236"
+    },
+    "independentReviewSha256": "6e70b9d061c50dfa482f6cf1f8f6032df76b934b6612cb98bfd39d29917e25ae",
+    "browserCollection": "635cases5originalSkips;14unchangedDiagnostics;priorPoliciesUnchanged",
+    "globalSuccessor": "pendingFourIsolatedLanes",
+    "mainPushHold": true
+  },
   "nov14ActualFarmingWaiverOrigin": {
     "sourceFreezeSha256": "7539f9d6e72662b8e54884cbd572a994e3fcbd480cd3f3ba050bcc9f2f58c5d0",
     "focused": "84PASS;958specPASS;typesLintPASS",
