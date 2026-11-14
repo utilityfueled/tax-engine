@@ -5283,3 +5283,12 @@ execution and current image qualification require separate evidence.
   imports to the established file-input helper, preserving all assertions,
   with 43 affected checks green. Complete successor coverage remains required.
   [Current evidence and boundaries](upgrade-2026-current-status.md).
+
+- November 14 entitled protected Preview verifies empty-shell owner isolation,
+  strong revision preconditions, deletion and explicit recovery with two existing
+  synthetic actors. All 80 direct HTTP operations and three restricted database
+  queries passed. Actual signed zero-invoice trial and cancellation webhooks
+  supplied then removed entitlement. The webhook settings, sessions, temporary
+  deployment/settings and five Redis keys were restored or removed. Independent
+  review passed. The executed controller snapshot is retained separately from a
+  late read-only preflight edit. [Exact scope and boundaries](upgrade-2026-current-status.md).

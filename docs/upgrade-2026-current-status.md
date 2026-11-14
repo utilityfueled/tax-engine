@@ -40,9 +40,28 @@ Two existing synthetic actors signed in with secure HttpOnly cookies. All four
 document/help/explanation routes rejected missing or stale owner scope with 409
 before body parsing, and rejected the current canceled plan with 403. Sign-out
 revoked both new sessions. The deployment and temporary Preview variables were
-removed, and all five pseudonymous Redis keys were deleted. This verifies the
-canceled-plan paths. Entitled workspace concurrency and complete final deployed
-integration remain separate work.
+removed, and all five pseudonymous Redis keys were deleted.
+
+The subsequent entitled Preview rehearsal passed 80 direct HTTP operations
+and three restricted read-only database queries. Two existing customers received
+zero-invoice no-card sandbox trials through actual signed webhooks. The same
+workspace ID retained two owner-scoped rows and distinct UUID revisions. Missing
+preconditions returned 428, stale or foreign revisions returned 412, deletion
+preserved the other tenant, and explicit recovery issued a fresh revision.
+Database snapshots showed zero, two distinct, then zero synthetic shells, with
+all five scoped AI-ledger counts unchanged at zero. These snapshots preceded
+trial cancellation. Actual signed deletion events then returned both accounts
+to 403. Both new sessions were revoked, the existing webhook URL/status/event
+set was restored, and deployment, temporary variables and Redis data were cleaned.
+A separate agent verified the receipts and scopes. This covers empty-shell API
+concurrency and recovery. Original document bytes, browser recovery, full checkout
+and outages retain their separately attributed evidence.
+
+The controller's announced file received a late read-only preflight guard while
+its earlier loaded version was running. The executed snapshot is preserved at
+its original hash. Independent inspection of the private endpoint snapshot
+confirmed the same isolated host and path. The execution and current-file hashes
+remain distinct in the coordination record. No live controller was restarted.
 
 `8ff2c951` also binds helper consent, requests and transient explanations to the
 captured account. All 136 focused checks passed. The actual local production
