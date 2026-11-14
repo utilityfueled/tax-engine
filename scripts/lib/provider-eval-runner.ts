@@ -16,6 +16,7 @@ export { providerEvalDigest } from "../../packages/engine/src/provider-eval-prov
 const instant = z.iso.datetime();
 const usd = z.string().regex(/^(?:0|[1-9]\d*)(?:\.\d+)?$/).refine(value => new Money(value).isFinite() && new Money(value).lte("10000"));
 const count = z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER);
+export const evalHttpStatusSchema = z.number().int().min(100).max(599);
 export const evalUsageSchema = z.strictObject({ inputTokens: count, outputTokens: count, cachedInputTokens: count.optional(),
   cacheWrite30mTokens: count.optional(), cacheWrite12hTokens: count.optional(), cachedTokenHours: z.string().optional(), regionalProcessing: z.boolean().optional() });
 const planSchema = z.strictObject({ version: z.literal(1), runId: z.string().regex(/^[a-zA-Z0-9][a-zA-Z0-9_-]{0,79}$/),
@@ -39,6 +40,7 @@ export interface ProviderEvalRequest {
 }
 export interface ProviderEvalTransportResult {
   status: "completed" | "unavailable" | "failed" | "incomplete";
+  httpStatus?: number;
   usage: AiTokenUsage | null; elapsedMs: number; reportedModel: string | null;
   responseReference: string | null; payload: unknown;
 }
@@ -48,8 +50,9 @@ export type EvalJournalRecord =
   | { type: "start"; planDigest: string; approvalDigest: string }
   | { type: "preflight"; profileId: string; fixtureId: string; repeat: number; reason: "missing-verified-context" | "invalid-verified-context" | "cancelled"; at: string }
   | { type: "dispatch"; attemptId: string; kind: "capability" | "case"; profileId: string; fixtureId: string | null; repeat: number; startedAt: string; maximumUsd: string; clientRequestId?: string }
-  | { type: "result"; attemptId: string; status: ProviderEvalTransportResult["status"]; usage: AiTokenUsage | null;
+  | { type: "result"; attemptId: string; status: ProviderEvalTransportResult["status"]; httpStatus?: number; usage: AiTokenUsage | null;
       elapsedMs: number; reportedModel: string | null; responseReference: string | null; capabilityPassed: boolean; evaluation: Evaluation | null }
+  | { type: "not-sent"; attemptId: string; reason: "cancelled-before-send" }
   | { type: "reconcile"; attemptId: string; evidenceReference: string; usage: AiTokenUsage; at: string };
 function profile(id: string): EvalProfile {
   const item = providerModelCandidates.find(item => item.id === id);
@@ -157,12 +160,19 @@ export function summarizeProviderEvalJournal(plan: ProviderEvalPlan, records: re
   }) };
   const dispatches = records.filter((item): item is Extract<EvalJournalRecord, { type: "dispatch" }> => item.type === "dispatch");
   if (new Set(dispatches.map(item => item.attemptId)).size !== dispatches.length) throw new Error("Duplicate durable dispatch identity.");
+  const notSent = new Set(records.flatMap(item => item.type === "not-sent" ? [item.attemptId] : []));
+  let dispatchedRequests = 0;
   let known = new Money(0); let held = new Money(0); let overrun = false;
   const bindingBlockers = new Set<string>();
   for (const dispatch of dispatches) {
     const results = records.filter((item): item is Extract<EvalJournalRecord, { type: "result" }> => item.type === "result" && item.attemptId === dispatch.attemptId);
     const reconciliations = records.filter((item): item is Extract<EvalJournalRecord, { type: "reconcile" }> => item.type === "reconcile" && item.attemptId === dispatch.attemptId);
     if (results.length > 1 || reconciliations.length > 1 || (results[0]?.usage && reconciliations.length)) throw new Error("Duplicate or incompatible settlement.");
+    if (notSent.has(dispatch.attemptId)) {
+      if (results.length || reconciliations.length) throw new Error("Unsent attempt cannot have a provider settlement.");
+      continue;
+    }
+    dispatchedRequests++;
     const result = results[0]; const usage = reconciliations[0]?.usage ?? result?.usage ?? null;
     if (usage) { const cost = calculateAiCost(profile(dispatch.profileId).model, dispatch.startedAt, evalUsageSchema.parse(usage)).providerCostUsd;
       known = known.plus(cost); overrun ||= new Money(cost).gt(dispatch.maximumUsd); }
@@ -188,7 +198,7 @@ export function summarizeProviderEvalJournal(plan: ProviderEvalPlan, records: re
           responseReference: result?.responseReference ?? null, reportedModel: result?.reportedModel ?? null } });
     }
   }
-  return { template, knownProviderCostUsd: known.toFixed(), unknownMaximumUsd: held.toFixed(), dispatchedRequests: dispatches.length,
+  return { template, knownProviderCostUsd: known.toFixed(), unknownMaximumUsd: held.toFixed(), dispatchedRequests, notSentRequests: notSent.size,
     bindingBlockers: [...bindingBlockers], overrun, productionPromotion: false as const };
 }
 export async function executeProviderEval(input: { plan: unknown; approval: unknown; records: EvalJournalRecord[];
@@ -259,6 +269,12 @@ export async function executeProviderEval(input: { plan: unknown; approval: unkn
       await persist({ type: "dispatch", attemptId, kind: request.kind, profileId,
         fixtureId: fixture?.id ?? null, repeat, startedAt, maximumUsd,
         ...(request.clientRequestId ? { clientRequestId: request.clientRequestId } : {}) });
+      if (input.signal?.aborted) {
+        // Only the executor that has yet to call transport can establish this.
+        // A crash with a bare dispatch still leaves an ambiguous, reserved attempt.
+        await persist({ type: "not-sent", attemptId, reason: "cancelled-before-send" });
+        return finish("cancelled");
+      }
       let result: ProviderEvalTransportResult;
       try { result = await input.transport(request, input.signal); }
       catch { result = { status: "failed", usage: null, elapsedMs: 0, reportedModel: null, responseReference: null, payload: null }; }
@@ -269,7 +285,9 @@ export async function executeProviderEval(input: { plan: unknown; approval: unkn
       const capabilityPassed = !fixture && result.status === "completed" && withinBudget && modelMatches
         && z.strictObject({ probe: z.literal("ok") }).safeParse(result.payload).success;
       const evaluation = fixture && result.status === "completed" && withinBudget && modelMatches ? validateProviderEvalOutput(fixture, result.payload) : null;
+      const httpStatus = evalHttpStatusSchema.safeParse(result.httpStatus);
       await persist({ type: "result", attemptId, status: result.status, usage,
+        ...(httpStatus.success ? { httpStatus: httpStatus.data } : {}),
         elapsedMs: Number.isFinite(result.elapsedMs) && result.elapsedMs >= 0 ? result.elapsedMs : 0,
         reportedModel: modelMatches ? result.reportedModel : null,
         responseReference: result.responseReference ? providerEvalDigest(result.responseReference) : null, capabilityPassed, evaluation });
@@ -284,7 +302,8 @@ export function reconcileProviderEvalAttempt(plan: ProviderEvalPlan, records: re
   validatePlan(plan);
   validateProviderEvalJournal(plan, records);
   const dispatch = records.find(item => item.type === "dispatch" && item.attemptId === input.attemptId);
-  if (!dispatch || dispatch.type !== "dispatch" || records.some(item => (item.type === "result" && item.attemptId === input.attemptId && item.usage !== null) || (item.type === "reconcile" && item.attemptId === input.attemptId))) throw new Error("Only an unresolved dispatched attempt may be reconciled once.");
+  if (!dispatch || dispatch.type !== "dispatch" || records.some(item => (item.type === "result" && item.attemptId === input.attemptId && item.usage !== null)
+    || ((item.type === "reconcile" || item.type === "not-sent") && item.attemptId === input.attemptId))) throw new Error("Only an unresolved dispatched attempt may be reconciled once.");
   if (!input.evidenceReference.trim() || input.evidenceReference.length > 500 || !Number.isFinite(Date.parse(input.at))) throw new Error("Authoritative reconciliation reference and time are required.");
   const usage = evalUsageSchema.parse(input.usage); calculateAiCost(profile(dispatch.profileId).model, dispatch.startedAt, usage);
   return { type: "reconcile", ...input, usage };
@@ -298,8 +317,10 @@ const recordSchema = z.discriminatedUnion("type", [
   z.strictObject({ type: z.literal("start"), planDigest: z.string(), approvalDigest: z.string() }),
   z.strictObject({ type: z.literal("preflight"), profileId: z.string(), fixtureId: z.string(), repeat: z.number().int().min(1).max(3), reason: z.enum(["missing-verified-context", "invalid-verified-context", "cancelled"]), at: instant }),
   z.strictObject({ type: z.literal("dispatch"), attemptId: z.string(), kind: z.enum(["capability", "case"]), profileId: z.string(), fixtureId: z.string().nullable(), repeat: z.number().int().min(0).max(3), startedAt: instant, maximumUsd: usd, clientRequestId: z.string().regex(providerEvalClientTrace, "Invalid OpenAI client trace").optional() }),
-  z.strictObject({ type: z.literal("result"), attemptId: z.string(), status: z.enum(["completed", "unavailable", "failed", "incomplete"]), usage: evalUsageSchema.nullable(), elapsedMs: z.number().finite().nonnegative(),
-    reportedModel: z.string().nullable(), responseReference: z.string().nullable(), capabilityPassed: z.boolean(), evaluation: evaluationSchema.nullable() }),
+  z.strictObject({ type: z.literal("result"), attemptId: z.string(), status: z.enum(["completed", "unavailable", "failed", "incomplete"]),
+    httpStatus: evalHttpStatusSchema.optional(), usage: evalUsageSchema.nullable(), elapsedMs: z.number().finite().nonnegative(), reportedModel: z.string().nullable(),
+    responseReference: z.string().nullable(), capabilityPassed: z.boolean(), evaluation: evaluationSchema.nullable() }),
+  z.strictObject({ type: z.literal("not-sent"), attemptId: z.string(), reason: z.literal("cancelled-before-send") }),
   z.strictObject({ type: z.literal("reconcile"), attemptId: z.string(), evidenceReference: z.string().trim().min(1).max(500), usage: evalUsageSchema, at: instant }),
 ]);
 export function parseEvalJournalRecord(value: unknown): EvalJournalRecord {
@@ -307,6 +328,7 @@ export function parseEvalJournalRecord(value: unknown): EvalJournalRecord {
 }
 export function validateProviderEvalJournal(plan: ProviderEvalPlan, records: readonly EvalJournalRecord[]) {
   const known = new Set<string>(); const settled = new Set<string>(); const reconciled = new Set<string>(); const preflights = new Set<string>();
+  const notSent = new Set<string>();
   const clientTraces = new Set<string>();
   const version = requestVersion(plan);
   records.forEach((raw, index) => {
@@ -335,7 +357,14 @@ export function validateProviderEvalJournal(plan: ProviderEvalPlan, records: rea
         if (record.maximumUsd !== maximumProviderAttemptUsd(requestFor(item, fixture, record.attemptId), record.startedAt)) throw new Error("Journal maximum does not match the priced request.");
         known.add(record.attemptId);
       } else if (!known.has(record.attemptId)) throw new Error("Journal settlement has no prior dispatch.");
+      else if (notSent.has(record.attemptId)) throw new Error("Unsent attempt cannot have another terminal record.");
       else if (record.type === "result") { if (settled.has(record.attemptId) || reconciled.has(record.attemptId)) throw new Error("Duplicate journal result."); settled.add(record.attemptId); }
+      else if (record.type === "not-sent") {
+        if (settled.has(record.attemptId) || reconciled.has(record.attemptId)) throw new Error("Provider settlement cannot become an unsent attempt.");
+        const previous = records[index - 1];
+        if (previous.type !== "dispatch" || previous.attemptId !== record.attemptId) throw new Error("Unsent attempt must immediately follow its dispatch.");
+        notSent.add(record.attemptId);
+      }
       else { if (reconciled.has(record.attemptId)) throw new Error("Duplicate journal reconciliation."); reconciled.add(record.attemptId); }
     }
   });

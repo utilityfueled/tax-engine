@@ -141,6 +141,77 @@ describe("guarded repeated provider executor", () => {
     const result = await executeProviderEval({ ...state, plan, approval, now: () => time, transport: async () => { calls++; time = "2026-10-26T12:00:00.000Z"; return good; } });
     expect(calls).toBe(1); expect(result.stoppedReason).toBe("capability-expired");
   });
+  it("records cancellation during dispatch persistence without sending or reserving provider usage", async () => {
+    const state = setup();
+    const controller = new AbortController();
+    let transportCalls = 0;
+    const cancelled = await executeProviderEval({ ...state, signal: controller.signal,
+      append: async record => {
+        await state.append(record);
+        if (record.type === "dispatch") controller.abort();
+      },
+      transport: async (_request, signal) => {
+        transportCalls++;
+        signal?.throwIfAborted();
+        return good;
+      } });
+    expect(cancelled).toMatchObject({ stoppedReason: "cancelled", knownProviderCostUsd: "0",
+      unknownMaximumUsd: "0", dispatchedRequests: 0, notSentRequests: 1 });
+    expect(transportCalls).toBe(0);
+    expect(cancelled.template).toMatchObject({ entries: [], availability: [] });
+    const marker = state.records.at(-1);
+    expect(marker).toEqual({ type: "not-sent", attemptId: "luna-high:capability:0", reason: "cancelled-before-send" });
+    if (!marker) throw new Error("Missing cancellation marker");
+    validateProviderEvalJournal(state.plan, state.records);
+    expect(() => validateProviderEvalJournal(state.plan, [...state.records, marker])).toThrow(/unsent/i);
+    expect(() => reconcileProviderEvalAttempt(state.plan, state.records, {
+      attemptId: "luna-high:capability:0", evidenceReference: "test-only", usage: good.usage, at,
+    })).toThrow(/unresolved/);
+    const resumed = await executeProviderEval({ ...state, transport: async () => { transportCalls++; return good; } });
+    expect(resumed).toMatchObject({ dispatchedRequests: 0, notSentRequests: 1, unknownMaximumUsd: "0" });
+    expect(transportCalls).toBe(0);
+  });
+  it("holds durable dispatch when cancellation could not be persisted", async () => {
+    const state = setup();
+    const controller = new AbortController();
+    const transport = async () => { throw new Error("should not reach transport"); };
+    await expect(executeProviderEval({ ...state, signal: controller.signal, transport,
+      append: async record => {
+        if (record.type === "not-sent") throw new Error("synthetic fsync failure");
+        await state.append(record);
+        if (record.type === "dispatch") controller.abort();
+      } })).rejects.toThrow("synthetic fsync failure");
+    const resumed = await executeProviderEval({ ...state, transport });
+    expect(resumed).toMatchObject({ stoppedReason: "unknown-usage", knownProviderCostUsd: "0",
+      unknownMaximumUsd: "0.0016896", dispatchedRequests: 1, notSentRequests: 0 });
+  });
+  it("leaves unsent case repetitions out of the scorer", async () => {
+    const state = setup();
+    const controller = new AbortController();
+    const attempts: string[] = [];
+    const transport = async (request: { attemptId: string }) => { attempts.push(request.attemptId); return good; };
+    const cancelled = await executeProviderEval({ ...state, signal: controller.signal, transport,
+      append: async record => {
+        await state.append(record);
+        if (record.type === "dispatch" && record.kind === "case") controller.abort();
+      } });
+    expect(cancelled).toMatchObject({ dispatchedRequests: 1, notSentRequests: 1, knownProviderCostUsd: "0.00006", unknownMaximumUsd: "0" });
+    expect(cancelled.template.entries).toEqual([]);
+    const resumed = await executeProviderEval({ ...state, transport });
+    expect(resumed.template.entries.map(entry => entry.repeat)).toEqual([2, 3]);
+    expect(attempts).toEqual(["luna-high:capability:0", "luna-high:case-income-w2-zero-withholding:2", "luna-high:case-income-w2-zero-withholding:3"]);
+  });
+  it("retains status and hashes an observed request identifier while holding unknown usage", async () => {
+    const state = setup();
+    const reference = "req_syntheticrequest";
+    const result = await executeProviderEval({ ...state, transport: async () => ({ ...good,
+      status: "failed", httpStatus: 202, usage: null, responseReference: reference, payload: null }) });
+    expect(result).toMatchObject({ stoppedReason: "unknown-usage", knownProviderCostUsd: "0", dispatchedRequests: 1 });
+    expect(state.records.at(-1)).toMatchObject({ type: "result", attemptId: "luna-high:capability:0",
+      status: "failed", httpStatus: 202, usage: null, responseReference: providerEvalDigest(reference) });
+    expect(JSON.stringify(state.records)).not.toContain(reference);
+    validateProviderEvalJournal(state.plan, state.records);
+  });
   it("preserves overrun costs and stops cancellation and request ceilings", async () => {
     const overrun = await executeProviderEval({ ...setup(), transport: async () => ({ ...good, usage: { inputTokens: 100000, outputTokens: 100000 } }) });
     expect(overrun.knownProviderCostUsd).toBe("0.06"); expect(overrun.stoppedReason).toBe("provider-overrun");

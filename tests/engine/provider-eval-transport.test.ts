@@ -37,9 +37,11 @@ describe("official evaluation transport", () => {
         headers.push(new Headers(options?.headers));
         throw new Error("synthetic network timeout");
       } });
-    expect(await transport({ ...request(), clientRequestId: trace })).toMatchObject({
+    const timeout = await transport({ ...request(), clientRequestId: trace });
+    expect(timeout).toMatchObject({
       status: "failed", usage: null, responseReference: null,
     });
+    expect(timeout.httpStatus).toBeUndefined();
     expect(headers[0]?.get("X-Client-Request-Id")).toBe(trace);
     await transport(request());
     expect(headers[1]?.has("X-Client-Request-Id")).toBe(false);
@@ -48,6 +50,22 @@ describe("official evaluation transport", () => {
     await expect(transport({ ...request(), clientRequestId: "x\r\ninvalid" })).rejects.toThrow(/trace/i);
     await expect(transport({ ...request("gemini-flash-high"), clientRequestId: trace })).rejects.toThrow(/trace/i);
     expect(headers).toHaveLength(3);
+  });
+  it("preserves the OpenAI request identifier when the response body fails after headers", async () => {
+    const responseReference = "req_synthetic_body_failure";
+    const headers = { "x-request-id": responseReference };
+    const failedBodies = [
+      new Response(new ReadableStream({ start: stream => stream.error(new DOMException("private body timeout", "AbortError")) }), { status: 202, headers }),
+      new Response(JSON.stringify({ secret: "private invalid envelope" }), { headers }),
+      new Response("{}", { headers: { ...headers, "content-length": "1048577" } }),
+    ];
+    for (const failedBody of failedBodies) {
+      const transport = createLiveProviderEvalTransport({ profileIds: ["luna-high"], apiKeys: { openai: "synthetic" },
+        fetchFn: async () => failedBody });
+      const result = await transport(request());
+      expect(result).toMatchObject({ status: "failed", httpStatus: failedBody.status, usage: null, responseReference, reportedModel: null, payload: null });
+      expect(JSON.stringify(result)).not.toContain("private");
+    }
   });
   it("records unavailable or unknown usage without echoing raw service errors", async () => {
     for (const [payload, status] of [[{ secret: "sensitive provider error" }, 403], [{ ...openai, service_tier: "priority" }, 200], [{ ...openai, usage: { input_tokens: 10, output_tokens: 10, input_tokens_details: { cache_write_tokens: 5 } } }, 200]] as const) {

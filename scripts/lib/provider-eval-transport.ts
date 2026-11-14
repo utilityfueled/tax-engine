@@ -1,7 +1,7 @@
 import { performance } from "node:perf_hooks";
 import { z } from "zod";
 import { providerModelCandidates } from "../../packages/engine/src/provider-model-eval";
-import { evalUsageSchema, type ProviderEvalRequest, type ProviderEvalTransport, type ProviderEvalTransportResult } from "./provider-eval-runner";
+import { evalHttpStatusSchema, evalUsageSchema, type ProviderEvalRequest, type ProviderEvalTransport, type ProviderEvalTransportResult } from "./provider-eval-runner";
 import { PROVIDER_EVAL_CONTRACT as contract, providerEvalClientTrace } from "./provider-eval-contract";
 const token = z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER);
 const openAiEnvelope = z.object({ model: z.string(), id: z.string().optional(), service_tier: z.string().optional(), status: z.string(),
@@ -50,15 +50,20 @@ export function createLiveProviderEvalTransport(options: { profileIds: string[];
       : { systemInstruction: { parts: [{ text: instructions }] }, contents: [{ role: "user", parts: [{ text: JSON.stringify(request.content) }] }],
         generationConfig: { responseMimeType: contract.google.mimeType, responseJsonSchema: request.jsonSchema,
           maxOutputTokens: request.maxOutputTokens, thinkingConfig: { thinkingLevel: contract.google.thinkingLevel, includeThoughts: contract.google.includeThoughts } } };
+    let responseReference: string | null = null;
+    let httpStatus: number | undefined;
     try {
       const response = await (options.fetchFn ?? fetch)(url, { method: contract.method, redirect: contract.redirect, signal,
         headers, body: JSON.stringify(body) });
-      if (!response.ok) return { status: [401, 403, 404].includes(response.status) ? "unavailable" : "failed", usage: null,
-        elapsedMs: performance.now() - started, reportedModel: null, responseReference: response.headers.get("x-request-id"), payload: null };
+      httpStatus = evalHttpStatusSchema.safeParse(response.status).data;
+      responseReference = response.headers.get("x-request-id");
+      if (!response.ok) return { status: [401, 403, 404].includes(response.status) ? "unavailable" : "failed", httpStatus, usage: null,
+        elapsedMs: performance.now() - started, reportedModel: null, responseReference, payload: null };
       const payload = await readBounded(response);
-      let outputText: string; let usage; let complete: boolean; let reportedModel: string; let responseReference: string | null;
+      let outputText: string; let usage; let complete: boolean; let reportedModel: string;
       if (openai) {
         const envelope = openAiEnvelope.parse(payload);
+        responseReference ??= envelope.id ?? null;
         if (envelope.service_tier && envelope.service_tier !== "default") throw new Error("Unpriced tier.");
         const details = envelope.usage.input_tokens_details; const writes = details?.cache_write_tokens_details;
         if ((details?.cache_write_tokens ?? 0) !== (writes?.ttl_30m_tokens ?? 0) + (writes?.ttl_12h_tokens ?? 0)) throw new Error("Unpriced cache duration.");
@@ -66,21 +71,21 @@ export function createLiveProviderEvalTransport(options: { profileIds: string[];
           cachedInputTokens: details?.cached_tokens ?? 0, cacheWrite30mTokens: writes?.ttl_30m_tokens ?? 0, cacheWrite12hTokens: writes?.ttl_12h_tokens ?? 0 });
         complete = envelope.status === "completed" && !envelope.output?.some(item => item.content?.some(part => part.type === "refusal"));
         outputText = envelope.output_text ?? envelope.output?.flatMap(item => item.type === "message" ? item.content?.filter(part => part.type === "output_text").map(part => part.text ?? "") ?? [] : []).join("") ?? "";
-        reportedModel = envelope.model; responseReference = response.headers.get("x-request-id") ?? envelope.id ?? null;
+        reportedModel = envelope.model;
       } else {
         const envelope = googleEnvelope.parse(payload); const candidate = envelope.candidates[0];
         usage = evalUsageSchema.parse({ inputTokens: envelope.usageMetadata.promptTokenCount,
           outputTokens: envelope.usageMetadata.candidatesTokenCount + (envelope.usageMetadata.thoughtsTokenCount ?? 0), cachedInputTokens: envelope.usageMetadata.cachedContentTokenCount ?? 0 });
         complete = candidate?.finishReason === "STOP";
         outputText = candidate?.content?.parts.filter(part => !part.thought).map(part => part.text ?? "").join("") ?? "";
-        reportedModel = envelope.modelVersion; responseReference = envelope.responseId ?? null;
+        reportedModel = envelope.modelVersion; responseReference = envelope.responseId ?? responseReference;
       }
       let parsedOutput: unknown = null;
       try { parsedOutput = JSON.parse(outputText); } catch { /* Known usage remains billable even when output is invalid. */ }
-      return { status: complete ? "completed" : "incomplete", usage, elapsedMs: performance.now() - started, reportedModel, responseReference, payload: parsedOutput };
+      return { status: complete ? "completed" : "incomplete", httpStatus, usage, elapsedMs: performance.now() - started, reportedModel, responseReference, payload: parsedOutput };
     } catch {
       // Never echo provider bodies, keys, transport errors or partial private-looking output.
-      return { status: "failed", usage: null, elapsedMs: performance.now() - started, reportedModel: null, responseReference: null, payload: null };
+      return { status: "failed", httpStatus, usage: null, elapsedMs: performance.now() - started, reportedModel: null, responseReference, payload: null };
     }
   };
 }
