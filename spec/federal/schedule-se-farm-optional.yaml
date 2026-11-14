@@ -1,0 +1,49 @@
+form: "Schedule SE 2026 farm optional method estimator"
+fullName: "One cash-method sole proprietor's 2026 Schedule SE farm optional earnings"
+taxYear: 2026
+reference: "https://www.irs.gov/pub/irs-prior/f1040sse--2026.pdf"
+sources:
+  - "https://www.irs.gov/pub/irs-prior/i1040sse--2026.pdf"
+  - "https://uscode.house.gov/us/usc/119-134/t26/s1402/"
+  - "https://www.ssa.gov/oact/cola/QC.html"
+  - "https://www.irs.gov/irm/part3/irm_03-011-003r"
+  - "https://www.irs.gov/publications/p225"
+revision: "Final 2026 Schedule SE Part II and instructions posted 2026-11-03, retrieved 2026-11-13"
+notes: |
+  IRC 1402(a) and (l), and final 2026 Schedule SE Part II. This standalone
+  estimate covers one owner's confirmed domestic, sole-proprietor cash-method
+  Schedule F for the full 2026 calendar year. Partnerships, accrual, short or
+  fiscal years, CRP, other self-employment activities, church employee income,
+  and SE tax exemptions require separate source methods. The farm election
+  has no limit on number of years used.
+  The optional election can increase or decrease self-employment tax and change
+  Social Security coverage, adjusted gross income, earned income credit, the
+  additional child tax credit, the child and dependent care credit, and the
+  self-employed health insurance deduction. A full comparison also needs the
+  deduction and credit consequences of the regular method and optional method
+  for the actual return. This estimate does not make or recommend an election,
+  compute tax or credits, fill a form, or qualify filing or export.
+  The eligibility boundary uses the final form's $8,186 net-profit test.
+  Before filing qualification, review exact-cent cases where the otherwise
+  adjusted earnings test in IRC 1402(a) could differ from the printed test.
+lines:
+  - line: "source"
+    description: "Require an affirmative owner election and confirmed complete original amounts"
+    formula: "Require the 2026 return and source years and confirmation of a full calendar-year, sole-proprietor domestic cash farm. The major portion of services would be agricultural labor under IRC 3121(g) if performed by employees. The source identifies the electing owner and an original Schedule F reference. Require explicit confirmation of complete actual amounts and explicit absence of CRP, other Schedule SE activities, church income and SE tax exemptions. Both signed source amounts must be finite decimal strings in dollars and cents, including explicit zero; require net profit no greater than gross income in this ordinary nonnegative-expense slice. No election is inferred and original references are not copied to the result."
+    testRef: "tests/engine/schedules/schedule-se-farm-optional.test.ts::requires the election and actual same-owner 2026 Schedule F facts"
+  - line: "eligibility"
+    description: "Check the two exact alternatives"
+    formula: "Use Schedule F line 9 gross income and line 34 net profit, with no Schedule SE line 1b adjustment in this slice. The exact gross amount must be at most $11,340 or the exact net profit must be strictly below $8,186. Refuse an ineligible election. Use unrounded amounts in both comparisons."
+    testRef: "tests/engine/schedules/schedule-se-farm-optional.test.ts::checks the inclusive gross and exclusive net limits at exact cents"
+  - line: "14"
+    description: "Supply the fixed 2026 maximum as a cap"
+    formula: "Use the $7,560 printed maximum for a supported election. IRC 1402(l) sets the lower limit to four quarters at the published $1,890 per quarter for 2026 and sets the upper limit to 150% of that maximum ($11,340). This is the fixed cap used in the calculation, not an entry into a blank return field."
+    testRef: "tests/engine/schedules/schedule-se-farm-optional.test.ts::caps a high-gross farm made eligible by net profit"
+  - line: "15"
+    description: "Compute exact farm optional net earnings"
+    formula: "Use min($7,560, max(0, Schedule F line 9) × 2 ÷ 3). Do not apply the line 4a earnings adjustment. Keep Decimal precision without rounding the result to cents or whole dollars in this estimator; printed rounding is a downstream decision. Actual zero and negative gross have zero optional earnings."
+    testRef: "tests/engine/schedules/schedule-se-farm-optional.test.ts::keeps nonterminating cents and floors a negative gross amount"
+  - line: "4b"
+    description: "Compute the farm-only contribution to line 4b"
+    formula: "Carry the full line 15 estimate once. With the farm optional method the actual Schedule SE skips lines 1a and 1b. Leave other Part I and II calculations, the $400 tax threshold and all full-return transfers to their respective methods. The 2026 IRS processing illustration (IRM Figure 3.11.3-100) shows $6,920 on both lines 15 and 4b. Its gross and net source amounts are not printed, so the fixture uses independently derived $10,380 gross and a synthetic $4,000 net profit. The $540 gross and $460 net example is a separately labeled replay from the 2025 Publication 225 Farmer's Tax Guide. Other boundary cases are synthetic 2026 fixtures."
+    testRef: "tests/engine/schedules/schedule-se-farm-optional.test.ts::reconciles optional lines 15 and 4b to the 2026 IRS processing illustration"

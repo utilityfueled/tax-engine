@@ -11456,6 +11456,25 @@
       ]
     },
     {
+      "key": "federal/schedule-se-farm-optional",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://www.irs.gov/pub/irs-prior/f1040sse--2026.pdf",
+      "specPath": "spec/federal/schedule-se-farm-optional.yaml",
+      "enginePath": "src/engine/schedules/schedule-se-farm-optional.ts",
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/schedule-se-review-selection",
       "jurisdiction": "federal",
       "taxYear": 2025,
