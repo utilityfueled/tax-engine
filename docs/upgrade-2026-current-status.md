@@ -1,5 +1,17 @@
 # Current 2026 upgrade continuation
 
+## November 14 current eleven-table schema recovery
+
+The isolated PostgreSQL18 successor passes native backup/restore, metadata
+migration and rollback across all eleven current tables and nineteen synthetic
+records. Exact issuance/cancellation accounting, all116catalog constraints and
+fresh UUID revisions survive restore. Outside relation identities are unchanged;
+the marked schema, own sessions and generated credentials are gone. Independent
+source and saved-artifact reviews pass. The earlier archive-count failure and
+its verified cleanup remain retained. Client TLS/SCRAM are verified; provider
+proxy-to-compute encryption remains unqualified.
+[Actual results and retained failures](upgrade-2026-preview-schema-recovery-20261114.md).
+
 ## November 14 actual Stripe automatic retry
 
 The isolated protected Preview successor passed actual database denial, initial

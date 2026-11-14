@@ -25430,6 +25430,24 @@
     }
   },
   "nov14ReleaseContinuation": {
+    "currentElevenTableSchemaRecovery": {
+      "source": "9b6202e7b2b309d5adc62ddf7d405ad7067fb8ac",
+      "status": "PASS_SCHEMA_MECHANISM_CLIENT_TLS_ONLY",
+      "tables": 11,
+      "syntheticRows": 19,
+      "catalogConstraints": 116,
+      "separateTocConstraints": 13,
+      "inlineConstraints": 103,
+      "actualReceiptSha256": "72bc390278b13c37759fcac4efbd140017055b4ac7dca2d675510225564b29ff",
+      "independentPostflightSha256": "e8a84ca38742409349e65b91a6347844a29b96ed95ff3c1dcd593a3e76198fa0",
+      "priorFailedReceiptSha256": "2b744cbfae339a4af19c090e621b84cc48a7a6241903182e2d062bc7018b374b",
+      "ownedSchemaAndSessionsAbsent": true,
+      "poolsEnded": true,
+      "generatedCredentialsRemoved": true,
+      "clientTlsAndScramVerified": true,
+      "providerInternalHopQualified": false,
+      "releaseQualified": false
+    },
     "productionPushHold": {
       "checkedAt": "2026-11-14T03:29:51Z",
       "originMain": "5924888957445a1e3791b34eb7116a9ae62d8e38",

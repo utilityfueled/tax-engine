@@ -9,10 +9,11 @@ below retain their original evidence boundaries.
 - [ ] Finish the spec-first guided qualified K-3 portfolio source route, its
   independent regression review, desktop/mobile original-entry journeys and
   full frozen-source checks. Preserve existing direct-credit and basis gates.
-- [ ] Rehearse the current eleven-table schema on the existing isolated Neon
-  branch in one new synthetic schema, including UUID revisions, issuance and
-  cancellation records, complete backup/restore and RESTRICT-only cleanup.
-  Source review is in progress; no remote execution is claimed.
+- [x] Rehearse the current eleven-table schema on the isolated Neon branch:
+  UUID revisions, exact issuance/cancellation accounting, full native
+  backup/restore and RESTRICT-only cleanup pass. Preserve the earlier archive
+  failure and the provider internal-hop transport limit.
+  [Current schema ledger](upgrade-2026-preview-schema-recovery-20261114.md).
 
 - [x] Pass all twelve exact `a370431d` archived checks: 28,244 unit/coverage
   tests, 88.02% branches and 618 browser passes/five original hosted skips;

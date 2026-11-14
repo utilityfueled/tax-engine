@@ -5407,3 +5407,16 @@ The original failed cleanup and missing notice remain retained. The new raw scan
 retains6Critical/106High; no suppressions, default Compose changes, risk
 acceptance or release qualification. [Exact native ledger](upgrade-2026-postgres-gosu-native-20261114.md).
 Full application integration on this candidate and native AMD64 remain distinct.
+
+### November 14: actual eleven-table isolated schema recovery
+
+Current source9b passes the native PostgreSQL18 backup/restore and metadata
+migration/rollback mechanism on eleven tables and nineteen synthetic records.
+The corrected TOC validator requires thirteen separate constraints while full
+catalog equality retains all116, including103inline CHECK/NOTNULL definitions.
+Actual local dropped-constraint controls precede the successful remote run.
+Exact accounting, revisions, outside relation identities and scoped cleanup pass;
+root and independent artifact reviews pass. Earlier unexecuted deadline finding
+and actual archive-admission failure remain retained. ClientTLS-only evidence
+does not qualify provider internal transport or release security.
+[Exact source, receipts and limits](upgrade-2026-preview-schema-recovery-20261114.md).
