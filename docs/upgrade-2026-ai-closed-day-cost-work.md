@@ -1,5 +1,11 @@
 # OpenAI closed-day cost reconciliation — November 6, 2026
 
+The November 14 [itemized reconciliation](upgrade-2026-provider-cost-reconciliation-20261114.md)
+supersedes the financial-evidence requirement below. Actual complete-scope
+provider Cost data now matches every known token quantity and charge. A final
+invoice or no-late-charge guarantee is unnecessary for the current aggregate
+match. The original timeout reservation stays held.
+
 The November 6 export reports **$0.26282160** for November 5, 2026, 00:00 UTC through November 6, 00:00 UTC (exclusive). It exactly matches all **174 known successful calls**, the earlier cost export and the independently reconstructed minute activity. Both fresh-minus-known and fresh-minus-earlier cost are **zero as of this export**.
 
 | Retained successful activity | Calls | USD |

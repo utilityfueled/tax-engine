@@ -5267,3 +5267,10 @@ execution and current image qualification require separate evidence.
   passes. `02e553cf` passes all 25 payment browser cases and retains the
   fixed request limits in the 623-case inventory.
   [Rehearsal evidence](upgrade-2026-nov13-release-rehearsals.md).
+
+- November 14 itemized provider Cost data matches all 174 known usages and 13
+  model/token categories exactly at $0.26282160. Independent journal and Decimal
+  reconciliation passes. The $0.022384 timeout hold stays in the $0.28520560
+  accounted exposure. The earlier final-invoice condition is superseded by the
+  actual complete-scope export. Human/held-out/provider-profile and deployed
+  retail qualification remain open. [Evidence](upgrade-2026-provider-cost-reconciliation-20261114.md).

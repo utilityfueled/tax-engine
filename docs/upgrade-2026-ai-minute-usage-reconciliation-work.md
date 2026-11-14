@@ -31,7 +31,7 @@ Independent saved review verifies the 217-record journal chain, 108 closed
 attempts (107 successful and one failed), exact aggregate/minute correspondence
 and 12 negative controls. ROOT reads the report and verifies all eight frozen
 members. No original journal or evaluation result is rewritten; no model is
-promoted. Representative human-reviewed evaluation, invoice and hosted retail
+promoted. Representative human-reviewed evaluation and hosted retail
 reconciliation remain required.
 
 Private evidence: `nov05-openai-minute-usage-reconciliation` and

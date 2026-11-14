@@ -25631,6 +25631,27 @@
       "ohFarmerFisherCommit": "c47a487db21ce3b31b0d5c0c3f306c6dce80195a",
       "finalAnnualSourcesQualified": false,
       "independentHumanReviewReceived": false
+    },
+    "providerCostReconciliation": {
+      "checkedDate": "2026-11-14",
+      "knownUsageResults": 174,
+      "verifiedJournalHashChains": 5,
+      "itemizedCategoriesMatched": 13,
+      "allProjectsKeysModelsAndSourcesObserved": true,
+      "knownProviderCostUsd": "0.26282160",
+      "currentUnexplainedReportedCostUsd": "0",
+      "originalUnknownUsageHoldUsd": "0.022384",
+      "accountedExposureUsd": "0.28520560",
+      "remainingBelowUserCeilingUsd": "139.71479440",
+      "itemizedCsvSha256": "0a1322f50f5af02968d5bc34e722a7142d504b2c5702a64182bbe5d445fdc7b7",
+      "independentManifestSha256": "b152215813466bf94eff6dc845ac8d71e02c64f63234feee49aa59ee866b609d",
+      "originalHoldReleased": false,
+      "newPaidRequests": 0,
+      "readOnlyModelCatalogStatus": 200,
+      "candidateAndBaselineModelsListed": true,
+      "modelCatalogReceiptSha256": "d0cc6c099b2ddeef2f5d0b333a1d447094f843e96e6acd782702c112d831e7ee",
+      "qualifiedHumanCorpusReviewed": false,
+      "modelPromotionEnabled": false
     }
   }
 }
