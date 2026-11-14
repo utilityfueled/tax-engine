@@ -1,5 +1,12 @@
 # 2026 upgrade implementation evidence
 
+November 14: exact `26f5bd5b` protected mortgage-original journeys pass on desktop
+and mobile with canonical/tenant/revision/unknown-zero controls and verified
+signed Sandbox/session/Preview/environment/data cleanup. Separate root artifact
+review passes; 617/1,310 operations, zero paid provider calls or real charges.
+The empty free cache expires November 17. Native actual runtime remains active.
+[Hosted ledger](upgrade-2026-preview-mortgage-originals-20261114.md).
+
 November 14: all twelve exact `26f5bd5b` checks pass: 28,449 unit/coverage tests,
 88.03% branches, 628 browser passes/five original skips, zero retries, normal
 owned cleanup and separate actual artifact review. Protected Preview execution

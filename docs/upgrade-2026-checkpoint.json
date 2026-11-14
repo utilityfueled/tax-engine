@@ -1,4 +1,21 @@
 {
+  "nov14ActualProtectedMortgageOriginals": {
+    "source": "26f5bd5b1d99df1655aa89cbd88e59d7333161de",
+    "actualCases": "2PASS1280and390;2025fictionalOriginals;0retryProviderPrivacyFailures",
+    "canonicalReadback": "taxableCanceledDebt50000;closingBasis250000;noInventedNOLpacket",
+    "continuity": "privateReload;confirmationInvalidation;knownZeroUnknown;CAS412;crossOwnerAbsent",
+    "signedSandbox": "twoNoCardTrialsGrantedEntitlementThenCanceled;403BeforeAndAfter;0realCharges",
+    "cleanup": "2shellsAbsent;2sessionsRevoked;2freshCustomersDeleted;webhookRestored;ownPreviewAnd4envRemoved;5ownedRedisKeysRemovedEmptyReadback",
+    "freeCacheAutomaticExpiry": "2026-11-17;resourceNotClaimedDeleted",
+    "actualCountWithFullCliReserve": 617,
+    "countLimit": 1310,
+    "elapsedSeconds": "218.592",
+    "parentReceiptSha256": "adcd8baf7daab485fc6a3ca85e05ba985e2e455193312981a2294aa109e79618",
+    "rootIndependentActualReviewSha256": "18462d432ae8da8cbb0e5d2d5efd8ffadb7e6341b08725e638976978c8f4c6eb",
+    "ledger": "docs/upgrade-2026-preview-mortgage-originals-20261114.md",
+    "productionHumanFinalFormsOrPromotionClaim": false,
+    "mainPushHold": true
+  },
   "nov14CompletedCombined26f5Checks": {
     "source": "26f5bd5b1d99df1655aa89cbd88e59d7333161de",
     "allTwelveRequiredLocalChecks": "PASS;allTerminalSessionsAcknowledged",
@@ -414,7 +431,7 @@
   "releaseBlockers": [
     "PA and OH are selected for full-year, part-year and nonresident returns. Bounded methods have engineering evidence. Broader coverage, final physical forms and independent qualified tax review remain open for all six combinations. Filing is disabled and PDFs are review-only.",
     "OpenAI synthetic known usage is179calls/0.27185270USD plus the unchanged0.022384USD unresolved timeout reserve, exposure0.29423670USD. Actual current local NUMERIC/bigint same-request SolHigh settlement passes; protected hosted receipts retain their own exact-source boundaries. Google access, independent human held-out/privacy review and qualified route promotion remain open; invoice reconciliation is not established. No model is promoted.",
-    "November14 source-specific protected Preview evidence passes recovery email/reset/session/token checks, tenant isolation/private originals, scheduled same-event Stripe retry with exact receipt readback, and eleven-table synthetic migration/backup/restore. Current26f5bd5b protected mortgage-original rehearsal is prepared pending actual local gates; older successes are not relabeled as final current-artifact qualification. See the dated recovery/retry/schema/K3 ledgers.",
+    "November14 source-specific protected Preview evidence passes recovery email/reset/session/token checks, tenant isolation/private originals, scheduled same-event Stripe retry with exact receipt readback, and eleven-table synthetic migration/backup/restore. Current26f5bd5b protected mortgage-original desktop/mobile rehearsal and bounded owned cleanup pass with separate root artifact review; its finite2025original cohort is not a broader2026filing claim. See the dated recovery/retry/schema/K3 ledgers.",
     "November14 nativeARM64a396d2c2 passes runtime, six recovery phases and620browserpasses/fiveoriginalskips with normalVM/socket cleanup; exact26f5bd5b successor is prepared pending actual local gates. Refreshed app scan retains192matches/0Critical/56unacceptedHigh; stockPostgreSQL retains9Critical/138High. Engineering recheck is dueNovember15 18:30UTC or beforequalification; an accountable advisory decision owner and human security/privacy review remain unassigned. NativeAMD64 and publication qualification remain open.",
     "The 2026 federal calculation remains incomplete and unavailable in production. The final 2026 parent Form 1040, ordinary and EIC tax tables and remaining official packages are still required. Final physical specimens are disabled pending complete scenarios and qualified review."
   ],

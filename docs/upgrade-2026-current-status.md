@@ -1,5 +1,18 @@
 # Current 2026 upgrade continuation
 
+## November 14 actual protected mortgage-original journeys
+
+Both `26f5bd5b` protected Preview desktop/mobile journeys pass, with actual typed
+originals, canonical readback, private reload, stale-write rejection, tenant
+isolation and known-zero/unknown distinctions. Two genuine signed Sandbox trial
+lifecycles and owned cleanup pass. Parent/browser/cleanup plus the full CLI
+reserve use 617 of 1,310 bounded operations. Root separately reviews the actual
+artifacts and screenshots. The empty disposable free cache expires November 17;
+its data is removed, without claiming resource deletion. No provider or real
+charge occurs. [Actual hosted evidence](upgrade-2026-preview-mortgage-originals-20261114.md).
+The corrected native rehearsal has booted, built and smoke-tested the image and
+is running its actual browser/recovery workloads; final cleanup remains pending.
+
 ## November 14 twelve passing checks and parallel runtime successors
 
 Immutable `26f5bd5b` passes all twelve required checks: 28,449 unit/coverage

@@ -60,6 +60,11 @@ below retain their original evidence boundaries.
   isolation, exact credit, private originals and sanitized cloud metadata;
   verify trials/session/return/Preview/environment/cache cleanup and retain
   both failed predecessors. [Hosted evidence](upgrade-2026-hosted-k3-20261114.md).
+- [x] Pass both exact `26f5bd5b` protected mortgage-original desktop/mobile
+  journeys, canonical original readback, tenant/revision privacy and verified
+  Sandbox/Preview/session/environment/data cleanup; separate root artifact
+  review passes. The empty free cache expires November 17, rather than being
+  claimed deleted. [Actual evidence](upgrade-2026-preview-mortgage-originals-20261114.md).
 - [x] Complete the current native ARM64 artifact rehearsal: all four workloads,
   six recovery phases, 620 browser passes/five original skips, normal VM stop
   and preserved socket/default routes. Independent actual audit passes; security
