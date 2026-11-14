@@ -3196,3 +3196,8 @@ packages keep full source copies, patches, hashes, genuine failures and receipts
 - [x] Same-source protected Preview passes with separate artifact review `294ad80b`; detailed runtime ledger follows.
 - [ ] Same-source ARM64 rehearsal is running; record only actual terminal evidence. Later private candidates require separate integration checks.
 - [ ] Main push hold, native AMD64, final annual forms and qualified human tax/AI/security review remain open; no production or model promotion.
+
+## November 14 finite all-foreign current loss
+
+- [x] Adopt eleven reviewed files; genuine predecessor failures, focused checks, independent controls and full unit pass retained. [Ledger](upgrade-2026-form2555-all-foreign-capital-loss-20261114.md).
+- [ ] Refresh combined inventory/browser binding and exact-source full checks; state treatment and broader current-loss/NOL composition remain separate.

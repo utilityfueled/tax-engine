@@ -1,4 +1,17 @@
 {
+  "nov14AllForeignCapitalLossAdoption": {
+    "sourceFreezeSha256": "160347c6851ab5aa6a554279607156cb1a36c3798dfea7cdc840d78f71820c90",
+    "source": "11 frozen reviewed files adopted over AEA; separate tax commit",
+    "actualFocused": "1010PASS; project types/lint/5 strict spec references",
+    "independentRoot": "11PASS incl5new controls; full28491PASS2073files; ownedPGstopped normally",
+    "scope": "Actual Pub54 printed percentage all-foreign current service-fee loss only; noNOLorigin/carry",
+    "stateProofs": "Any supplied proof blocked at actualPA/OH public TaxYearInput adapters",
+    "privacy": "Original proof excluded from hosted/provider/verifiedAI public projection",
+    "annualOrFilingPromotion": false,
+    "laterIntegrationRequired": true,
+    "mainPushHold": true,
+    "ledger": "docs/upgrade-2026-form2555-all-foreign-capital-loss-20261114.md"
+  },
   "nov14IntegratedAeaActualChecks": {
     "source": "aea453eca1d4a0e92cdfbe9a22f2f129fb247a03",
     "all12Passed": true,

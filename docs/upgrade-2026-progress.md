@@ -1,5 +1,17 @@
 # 2026 upgrade implementation evidence
 
+## November 14 all-foreign current-loss originals
+
+The finite printed-percentage Form 2555 current-loss method is now adopted from
+its eleven frozen, reviewed files. Focused checks pass 1,010 tests; separate
+root controls pass eleven, and its immutable full unit candidate passes 28,491
+tests with normal owned-database cleanup. Actual original facts and signed
+foreign QBI are preserved. All supplied new proofs remain blocked at PA/OH
+adapters pending separate state treatment. No NOL origin/carry, annual filing,
+export or human qualification is inferred. [Sources, checks and boundaries](upgrade-2026-form2555-all-foreign-capital-loss-20261114.md).
+Current combined source inventory, browser binding and runtime qualification
+still require successor checks. Earlier AEA results keep their original scope.
+
 ## November 14 completed integrated checks on AEA
 
 All twelve required local checks pass on exact `aea453ec`: 28,479 unit and

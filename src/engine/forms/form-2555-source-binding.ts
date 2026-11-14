@@ -3,6 +3,7 @@ import Decimal from "decimal.js";
 import type { TaxYearInput } from "@/models/inputs.js";
 import { AuditTrail } from "@/utils/audit.js";
 import { resolveForm2555MixedCapitalServices } from "./form-2555-mixed-capital-services.js";
+import type { Form2555AllForeignCapitalLoss } from "@/models/form-2555-all-foreign-capital-loss.js";
 
 /** Only actual consumed source fields; callers need not manufacture taxpayer IDs. */
 export interface Form2555SourceContext {
@@ -27,7 +28,7 @@ export function resolveForm2555Sources(input: Form2555SourceContext) {
   const audit = new AuditTrail();
   const facts = input.form2555;
   const qbiForeignProfit: { sourceId: string; amount: Decimal; receipts: Decimal; capitalMaterial: boolean }[] = [];
-  const scheduleCForeignShare: { foreign: Decimal; grossIncome: Decimal; capitalMaterialEarned?: Decimal; earned: Decimal; foreignBusinessExpenses?: Decimal; mixedCapitalTotalExpenses?: Decimal }[] = [];
+  const scheduleCForeignShare: { foreign: Decimal; grossIncome: Decimal; capitalMaterialEarned?: Decimal; earned: Decimal; foreignBusinessExpenses?: Decimal; mixedCapitalTotalExpenses?: Decimal; allForeignCapitalLoss?: Form2555AllForeignCapitalLoss }[] = [];
   const empty = { sourceFactsVerified: false, currentForeignIncome: new Decimal(0), priorYearIncomeReceived: new Decimal(0), qbiForeignProfit, scheduleCForeignShare, lines: audit.getLines() };
   if (!facts) return empty;
   const year = input.taxpayer.taxYear;
@@ -61,6 +62,7 @@ export function resolveForm2555Sources(input: Form2555SourceContext) {
   const seen = new Set<string>();
   const nonW2References = new Set<string>();
   for (const row of source.rows) {
+    if (row.allForeignCapitalLoss !== undefined && row.sourceId !== "scheduleC") throw new Error("Form2555 all-foreign capital loss originals require their actual ScheduleC source");
     if (row.mixedCapitalServices !== undefined && row.sourceId !== "scheduleC") throw new Error("Form2555 mixed capital originals require their actual ScheduleC source");
     if (seen.has(row.sourceId)) throw new Error("Form2555 duplicate original income source");
     seen.add(row.sourceId);
@@ -109,6 +111,7 @@ export function resolveForm2555Sources(input: Form2555SourceContext) {
       if (foreignBusinessExpenses !== undefined && (row.foreignBusinessExpensesConfirmed !== true || !row.foreignBusinessExpenseSourceReference?.trim())) throw new Error("Form2555 actual foreign business expenses need their confirmed original source");
       if (!capital && foreignBusinessExpenses?.gt(combined)) throw new Error("Form2555 actual foreign business expenses exceed foreign receipts; a foreign business loss needs its separate method");
       // Spec: business-capital-limit. The 30 percent limit runs in federal.ts, where the deduction exists.
+      if (row.allForeignCapitalLoss !== undefined && (!capital || row.allBusinessIncomeForeignConfirmed !== true || row.mixedCapitalServices !== undefined)) throw new Error("Form2555 all-foreign capital loss source classification does not reconcile");
       if (row.mixedCapitalServices !== undefined && (!capital || row.allBusinessIncomeForeignConfirmed !== false)) throw new Error("Form2555 mixed capital sources require the actual mixed capital business classification");
       if (capital && row.allBusinessIncomeForeignConfirmed !== true && row.mixedCapitalServices === undefined) throw new Error("Form2555 a mixed U.S. and foreign business with capital as a material factor needs a separate method");
       if (capital && (row.reasonableAllowanceConfirmed !== true || row.reasonableServicesAllowance === undefined
@@ -125,7 +128,7 @@ export function resolveForm2555Sources(input: Form2555SourceContext) {
         foreignExpenseSourceReference: row.foreignBusinessExpenseSourceReference, reasonableForeignAllowance: row.reasonableServicesAllowance,
       });
       if (capital || combined.gt(0)) scheduleCForeignShare.push(mixed ? { ...mixed, grossIncome, earned: current }
-        : capital ? { foreign: grossIncome, grossIncome, capitalMaterialEarned: combined, earned: current, foreignBusinessExpenses }
+        : capital ? { foreign: grossIncome, grossIncome, capitalMaterialEarned: combined, earned: current, foreignBusinessExpenses, allForeignCapitalLoss: row.allForeignCapitalLoss }
         : { foreign: combined, grossIncome, earned: current, foreignBusinessExpenses });
       key = "foreignBusinessIncomeAlreadyReported";
     } else if (/^scheduleK1:(0|[1-9]\d*)$/.test(row.sourceId)) {

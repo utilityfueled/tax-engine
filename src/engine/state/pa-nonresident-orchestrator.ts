@@ -587,6 +587,8 @@ export function calculatePANonresidentReturn(
   input: TaxYearInput,
   overrides: PANonresidentOrchestratorOverrides = {},
 ): PANonresidentOrchestratorResult {
+  // Spec: form-2555-all-foreign-capital-loss.yaml state-composition.
+  if (input.form2555?.sourceMapping?.rows.some(row => row.allForeignCapitalLoss !== undefined)) throw new Error("Pennsylvania all-foreign capital loss requires its separate state source method");
   // Spec: form-1099-da-state-rows unsupported-residency. No gain sourcing is inferred.
   if (input.form1099DA?.some(form => form.stateTaxReporting === 'multiple' || form.stateWithholding !== undefined)) {
     throw new Error('Pennsylvania two-state digital-asset nonresident or part-year residency requires its separate actual source method');

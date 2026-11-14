@@ -49,6 +49,7 @@ import { sumSourceMoney } from "@/utils/sum-source-money.js";
 import { sumSourceMoneyRatios } from "@/utils/sum-source-money-ratios.js";
 import { AuditTrail } from "@/utils/audit.js";
 import { resolveForm2555Sources } from "./forms/form-2555-source-binding.js";
+import { resolveForm2555AllForeignCapitalLoss } from "./forms/form-2555-all-foreign-capital-loss.js";
 import {
   calculateCapitalGainsTax,
   calculateRegularIncomeTax,
@@ -1720,6 +1721,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   const foreignQbiProfit = new Map(foreignIncomeSources.qbiForeignProfit.map((row) => [row.sourceId, row.amount]));
   // Actual expense location determines foreign profit; a gross-receipts ratio cannot invent it.
   const actualForeignBusinessExpenses = new Map<typeof foreignIncomeSources.scheduleCForeignShare[number], Decimal>();
+  const validatedForeignCapitalLoss = new Set<typeof foreignIncomeSources.scheduleCForeignShare[number]>();
   for (const share of foreignIncomeSources.scheduleCForeignShare) {
     const totalExpenses = share.grossIncome.minus(schedC.netProfit);
     if (share.mixedCapitalTotalExpenses && !share.mixedCapitalTotalExpenses.eq(totalExpenses)) throw new Error("Form2555 mixed capital actual domestic and foreign expenses must reconcile to canonical total expenses");
@@ -1727,7 +1729,14 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     if (totalExpenses.lt(0)) throw new Error("Form2555 canonical business expenses must be nonnegative");
     const expenses = share.foreignBusinessExpenses ?? (allForeign ? totalExpenses : totalExpenses.isZero() ? d("0") : undefined);
     if (expenses === undefined) throw new Error("Form2555 mixed business requires actual foreign business expenses and their confirmed original source");
-    if (expenses.gt(totalExpenses) || expenses.gt(share.foreign) || (allForeign && !expenses.eq(totalExpenses))) throw new Error("Form2555 actual foreign business expenses contradict the canonical business or need a foreign loss method");
+    if (share.allForeignCapitalLoss !== undefined) {
+      resolveForm2555AllForeignCapitalLoss({ input, source: share.allForeignCapitalLoss, grossIncome: share.grossIncome,
+        netProfit: schedC.netProfit, foreignGrossIncome: share.foreign, foreignBusinessExpenses: expenses,
+        currentForeignEarned: share.earned, actualExcludedIncome: form2555?.foreignEarnedIncomeExclusion ?? d("0"),
+        actualSeDeduction: schedSE.deductibleHalf, materialLossBoundary: constants.excessBusinessLoss.threshold.single.div(2) });
+      validatedForeignCapitalLoss.add(share);
+    }
+    if (expenses.gt(totalExpenses) || (expenses.gt(share.foreign) && !validatedForeignCapitalLoss.has(share)) || (allForeign && !expenses.eq(totalExpenses))) throw new Error("Form2555 actual foreign business expenses contradict the canonical business or need a foreign loss method");
     actualForeignBusinessExpenses.set(share, expenses);
     foreignQbiProfit.set("scheduleC", share.foreign.minus(expenses));
   }
@@ -1760,7 +1769,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   }
   // Spec: business-capital-limit.
   for (const share of foreignIncomeSources.scheduleCForeignShare) {
-    if (!share.capitalMaterialEarned) continue;
+    if (!share.capitalMaterialEarned || validatedForeignCapitalLoss.has(share)) continue;
     const profit = zeroFloor(schedC.netProfit);
     if (profit.isZero()) throw new Error("Form2555 a business with no net profit where capital is material needs a separate method");
     const limit = zeroFloor(profit.minus(foreignSeShare(profit))).times("0.3");

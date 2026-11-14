@@ -1,0 +1,43 @@
+form: "Form 2555 — finite all-foreign capital-material current business loss"
+fullName: "Actual original printed-percentage current loss allocation"
+taxYear: 2026
+irsReference: "https://www.irs.gov/publications/p54"
+retrievedAt: "2026-11-14"
+reviewStatus: "agent-source-reviewed-human-qualification-pending"
+notes: >-
+  Current original-source worksheet method only, applicable to actual2025/2026
+  sources while the full2026 annual calculation/export gates remain separate.
+  Pub54(12/2025) Example4 expressly allows a reasonable service allowance on a
+  net loss and prints a two-decimal percentage expense allocation. This finite
+  method requires that actual original worksheet, not a choice of rounding
+  policy. All foreign non-ECI service-fee gross and actual current cash supplies
+  are proved for one active all-at-risk ScheduleC, with no other activity,
+  withholding, retirement or prior loss/expense/election ambiguity. No current
+  Form172 origin or NOL carry claim is opened. Qualified human review remains
+  pending; no election, filing or model approval is inferred.
+lines:
+  - line: "originals"
+    description: "Bind the complete foreign current loss and actual worksheet"
+    formula: "Require strict original year/owner/business identity, matching row and source references, actual current foreign services, cash supplies paid and used, valid actual election and no foreign ECI. Gross, positive current allowance and expenses bind to canonical ScheduleC and Form2555; the entire actual allowance must be excluded by the existing eligibility/day/cap method. Actual net profit must be strictly negative and the entire loss must be foreign; no mixed, zero-profit or unverified bypass. Prior services, loss/carry history, wages/UBIA, withholding and retirement are actual known zero. Unknown, false, duplicate or edited originals reject."
+    irsRef: "Pub54 Example4; final2026 i2555 lines20 and44; Reg1.911-3(a),(b)(2); Reg1.911-6(a)"
+    testRef: "tests/engine/forms/form-2555-all-foreign-capital-loss.test.ts::rejects absent false changed and excluded loss originals"
+  - line: "44-printed-percentage"
+    description: "Conserve the actual printed-percentage allocation"
+    formula: "Require allocationMethod=pub54_two_decimal_percentage and original percentage=ROUND_HALF_UP(actual excluded allowance/actual gross*100,2). Original disallowance and actual reported44 must both equal roundDollar(actual supplies*percentage/100). Pub54 Example4:146000gross,172000supplies,77000allowance,52.74percent yields90713,43=77000,45=-13713 and net current income=-12287. The exact unrounded ratio yields90712, which is a distinct existing method and is not silently substituted here."
+    irsRef: "Pub54 How To Report Deductions Example4; IRC911(d)(6); final2026 i2555 line44"
+    testRef: "tests/engine/forms/form-2555-all-foreign-capital-loss.test.ts::matches the actual printed Publication54 loss worksheet"
+  - line: "current-only"
+    description: "Apply the current loss once without a QBI loss or carry"
+    formula: "Keep full ScheduleC current loss, restore the separately bound line44 through signed Form2555 line45 once, apply no30percent net-profit cap only on this validated strictly negative profit, and remove the same signed foreign loss from QBI. Reg1.199A-3(b)(2)(i)(A) excludes non-ECI deductions/losses too. 100000gross,125000expenses,10000allowance:44=12500,45=-2500,currentincome=-22500,QBI0,SE0. No Form172 origin, EBL material-loss method, prior loss, foreign tax or retirement composition."
+    irsRef: "Pub54 Example4; Reg1.199A-3(b)(2)(i)(A); Form461 source boundaries"
+    testRef: "tests/engine/forms/form-2555-all-foreign-capital-loss.test.ts::preserves current signed loss and zero foreign QBI once"
+  - line: "privacy-and-gates"
+    description: "Keep original proofs private and annual gates closed"
+    formula: "Original business identity, references, proof amounts, history and source worksheet never enter actual hosted metadata, provider projection or public verified-AI audit text. Preserve the immutable original. Source-year validation does not enable incomplete2026 full calculation/export, guided collection or human acceptance."
+    irsRef: "Repository privacy and annual readiness contracts; final2026 source is not a completed annual rule pack"
+    testRef: "tests/engine/forms/form-2555-all-foreign-capital-loss.test.ts::keeps loss originals private and annual export gates closed"
+  - line: "state-composition"
+    description: "Preserve distinct PA and Ohio classifications"
+    formula: "The federal source method does not determine PA income class, nonresident sourcing or Ohio adjustments. calculatePAReturn, calculatePANonresidentReturn and buildOhioResidentReturnInput reject any supplied allForeignCapitalLoss proof, including malformed or unvalidated proofs, with an explicit named separate-state-method error. Older returns without this new proof remain unchanged. Raw amount-only state primitives receive no fabricated source context."
+    irsRef: "Separate PA and Ohio source/classification contracts; no state-law treatment inferred from section911"
+    testRef: "tests/engine/forms/form-2555-all-foreign-capital-loss.test.ts::denies unqualified state composition at real public adapters"

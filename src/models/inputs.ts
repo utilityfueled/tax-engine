@@ -1,6 +1,7 @@
 import { Form172FarmingSourcesSchema } from "./form-172-farming-sources.js";
 import { CoverdellPostDisqualificationInterestSchema } from "./coverdell-post-disqualification-interest.js";
 import { Form2555MixedCapitalServicesSchema } from "./form-2555-mixed-capital-services.js";
+import { Form2555AllForeignCapitalLossSchema } from "./form-2555-all-foreign-capital-loss.js";
 import { RRTAPayrollSourcesSchema } from "./rrta-payroll-sources.js";
 import { Form1099DAMarketDiscountSourceSchema } from './form-1099-da-market-discount.js';
 import { MortgageInsurancePrepaidSourcesSchema } from "./mortgage-insurance-prepaid-sources.js";
@@ -5158,6 +5159,7 @@ export const Form2555Schema = z.preprocess(value => {
       partnerPerformedServicesConfirmed: z.boolean().optional(), capitalMaterialIncomeFactor: z.boolean().optional(),
       allBusinessIncomeForeignConfirmed: z.boolean().optional(),
       mixedCapitalServices: Form2555MixedCapitalServicesSchema.optional(),
+    allForeignCapitalLoss: Form2555AllForeignCapitalLossSchema.optional(),
       foreignBusinessExpenses: decimal.optional(), foreignBusinessExpenseSourceReference: z.string().optional(), foreignBusinessExpensesConfirmed: z.boolean().optional(),
       qbiForeignProfit: decimal.optional(), // Net profit from these services inside the K-1's QBI.
       k1QbiExcludesForeignConfirmed: z.boolean().optional(),

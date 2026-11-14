@@ -750,6 +750,8 @@ export function buildOhioResidentReturnInput(
   federalResult: TaxReturnResult,
   overlay: OhioOverlayInput = {},
 ): OhioResidentReturnInput {
+  // Spec: form-2555-all-foreign-capital-loss.yaml state-composition.
+  if (taxInput.form2555?.sourceMapping?.rows.some(row => row.allForeignCapitalLoss !== undefined)) throw new Error("Ohio all-foreign capital loss requires its separate state source method");
   if (taxInput.scheduleC?.professionalWagering) {
     throw new Error("Ohio professional wagering requires its separate state source method");
   }

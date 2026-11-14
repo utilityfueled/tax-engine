@@ -1500,6 +1500,8 @@ export function calculatePAReturn(
   input: TaxYearInput,
   overrides: PAOrchestratorOverrides = {},
 ): PAOrchestratorResult | PAMarriedOrdinaryReturnResult {
+  // Spec: form-2555-all-foreign-capital-loss.yaml state-composition.
+  if (input.form2555?.sourceMapping?.rows.some(row => row.allForeignCapitalLoss !== undefined)) throw new Error("Pennsylvania all-foreign capital loss requires its separate state source method");
   // Canonical household sources are resolved before any legacy scalar fallback.
   if(input.paMarriedOrdinarySources!==undefined){
     if(Object.keys(overrides).length)throw new Error('Actual married PA household sources cannot be overridden by legacy scalars.');
