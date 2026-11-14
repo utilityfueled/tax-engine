@@ -25,9 +25,51 @@ production and full audits returned zero afterward.
 worksheets, disabled Form 4972 review candidate and mail dependency patch.
 The audit differs only in eight file digests and its dependent diagnostic
 digest. The test inventory, rate limits, skips, deadlines and retries
-are identical. All 153 focused tests passed. Its fresh managed run
-uses one unit and coverage worker with the original test deadlines,
-coverage thresholds and two Chromium workers.
+are identical. All 153 focused tests passed. Its managed run passed
+27,947 unit tests with one exact lockfile assertion still on the prior
+Nodemailer hash. Both previous Pennsylvania PDF timeout suites and all
+five real local SMTP/PostgreSQL cases passed. The run stopped the owned
+database before coverage and Chromium. `c8d15fb2` binds the same strict
+check to the reviewed current lock. `6ef4e05e` refreshes three browser
+source digests after the farmland changes. The 245 browser and runtime
+controls passed with the same request contract, deadlines and retries.
+[Rehearsal evidence](upgrade-2026-nov13-release-rehearsals.md).
+
+The exact `dc7546f9` native ARM64 run independently imported and smoked
+the image, generated its SBOM and scan, passed six Compose recovery
+phases and passed 616 of 621 Chromium cases with five hosted-only skips.
+It stopped normally and restored the user socket route. The app scan still
+has 191 matches, including 56 High, and no risk acceptance.
+`c5955541` adds per-run SCRAM authentication to the Compose rehearsal.
+Actual local PostgreSQL 16.16 rejected missing and wrong credentials,
+restarted and restored the exact amount through authenticated dump and
+restore. A native run of that update is separate evidence.
+[Rehearsal evidence](upgrade-2026-nov13-release-rehearsals.md).
+
+`be41c0e3` adds the isolated Ohio venture capital gain estimate. A matching
+issued Director certificate and confirmed cash acquisition and recognition
+support the one-gain 100% or 50% deduction with exact cents. `ecd0ff80`
+checks Pennsylvania's inclusive two-thirds gross-income test and reports
+the two 2027 farmer dates with no annual return or payment integration.
+The ordinary $14,000 wording, the $430 worksheet threshold, three
+installment-date boundary differences and the farmer penalty worksheet
+still need a reviewed treatment. `f22c1560` binds the browser audit to
+these two sources with 206 focused controls passing.
+[Ohio statute](https://codes.ohio.gov/assets/laws/revised-code/authenticated/57/5747/5747.01/3-5-2026/5747.01-3-5-2026.pdf) ·
+[Pennsylvania instructions](https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2026/2026_rev-413i.pdf).
+
+`df106681` records durable cancellation before transport without usage or a
+score. If that record cannot be persisted, the full reserve stays held.
+Once transport observes headers, a body failure retains the status and a
+hashed provider request reference. All 67 focused tests passed and no paid
+calls ran. The prior $0.022384 reserve still needs authoritative settlement.
+
+Exact `dc7546f9` also passed all 14 local hosted HTTP checks across two
+production Next processes. Real TLS PostgreSQL, a synthetic Redis REST
+transport and synthetic users proved the local tenant and outage behavior.
+Both Next processes stopped and all four loopback ports closed. The
+current protected Preview remains a separate gate.
+[Rehearsal evidence](upgrade-2026-nov13-release-rehearsals.md).
 
 `52eec581` removes the optional Debian `mount` package from the
 self-host runner using unforced package removal. The smoke test requires
@@ -43,6 +85,21 @@ because six source digests were stale. The VM and socket cleanup
 passed. Shared util-linux findings and final-source qualification on
 both architectures remain open.
 [Debian CVE-2026-76642](https://security-tracker.debian.org/tracker/CVE-2026-76642).
+
+`845b3e9e` adds an AMD64 archive import check to the native GitHub Actions
+container job. It exports the immutable build ID, imports the archive in a
+fresh local Podman store, verifies image identity, configuration and layers,
+and retains a sanitized receipt. The 158 focused checks, 17 mock archive and
+binding controls, actionlint and standalone ShellCheck passed. The actual
+AMD64 workflow awaits an authorized runner and the current source.
+
+`c9ca587d` records the separate scans of the exact PostgreSQL dependency
+for both architectures. Each official Bookworm image had 565 matches,
+including 138 High and nine Critical matches across six advisory IDs.
+The alternative Trixie ARM64 image retained the libxml2 parser match and
+three gosu metadata matches. A safe in-place replacement has not been
+qualified, and the dependency findings still require disposition.
+[PostgreSQL image review](upgrade-2026-debian-advisory-refresh-20261113.md#postgresql-service-images-in-compose).
 
 `52246eb5` and `50c72a04` calculate the 2026 Form 1062 payment deferral
 for one confirmed direct farmland sale and replay its Schedule A originals.
@@ -68,6 +125,38 @@ lines 9–12 blank. One regression failed first. All 468 affected tests,
 types, strict lint, inventory and 8,957 spec references passed. Verified
 attachment intake and the final annual transfer still need qualification.
 [Form 1120-S instructions](https://www.irs.gov/instructions/i1120s).
+
+`22b255c3` reconciles distinct elected sales to their combined recognized
+gain before recomputing Form 1062 tax once for the return. The 254 focused
+checks passed after three regressions failed on the prior implementation.
+The implementation rejects duplicate source originals and a mismatch in the
+independently confirmed gain total. It does not allocate tax among sales
+or activate any return transfer. [IRS instructions](https://www.irs.gov/instructions/i1062).
+
+`6cd57a42` computes the 2026 Schedule SE farm optional earnings estimate
+for a confirmed cash-method sole proprietor who elects it. The estimate
+uses the printed gross and net limits and carries the Decimal result from
+line 15 to line 4b. All 172 affected checks, types, strict lint and 8,963
+spec references passed. The inventory identifies the remaining packet and
+filing gaps. A qualified reviewer still needs to reconcile cent amounts
+near the printed $8,186 net-profit limit with the statutory adjusted
+earnings rule before a full-return transfer is enabled.
+[Final Schedule SE](https://www.irs.gov/pub/irs-prior/f1040sse--2026.pdf) ·
+[Instructions](https://www.irs.gov/instructions/i1040sse) ·
+[26 U.S.C. § 1402](https://uscode.house.gov/us/usc/119-134/t26/s1402/).
+
+`43192f66` applies the IRS Publication 505 correction for one confirmed
+2026 Form 1062 election. It carries 75% of the full-year applicable net
+tax liability to Worksheet 2-1 line 11b and each applicable cumulative
+Worksheet 2-9 line 20. Income inclusion is confirmed for each period,
+and the adapter rejects inclusion before the sale. The published
+$13,621 annual liability yields $10,215.75 in each confirmed period.
+The implementation had an initial missing-module regression and a later
+pre-sale-period regression. The 108 adjacent tests passed and a final
+29-test run included the stricter boundary and lockfile successor.
+There is no payment, penalty, export or filing integration. Multiple
+sales with staggered recognition need a separate allocation method.
+[IRS correction](https://www.irs.gov/forms-pubs/clarification-for-calculation-of-estimated-tax-payments-when-making-an-election-under-section-1062a).
 
 `7924a91d` verifies the 2026 draft Schedule 3-A arithmetic in an isolated
 worksheet for Forms 1040 and 1040-SR. It aggregates the four covered

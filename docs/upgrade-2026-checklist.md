@@ -18,6 +18,35 @@ below retain their original evidence boundaries.
 - [x] Verify the eight browser source digests and dependent diagnostic
   digest in `dc7546f9`. The unchanged request contract passed 153
   focused controls.
+- [x] Pass all 14 exact `dc7546f9` local hosted HTTP checks with
+  certificate-verified PostgreSQL, two Next processes and a synthetic Redis
+  transport. Verify both processes and all four ports closed.
+- [x] Correct the one stale dependency-lock assertion from the 27,947-pass
+  `dc7546f9` unit run. Keep exact hash verification in `c8d15fb2`.
+- [x] Refresh only three audited source digests in `6ef4e05e`. Run all
+  245 focused browser and runtime controls without changing the limits.
+- [x] Finish the exact `dc7546f9` ARM64 run. Verify independent import,
+  image scan, six Compose phases, 616 Chromium passes and five hosted-only
+  skips, normal stop and restored socket route.
+- [x] Require per-run SCRAM in the isolated Compose recovery harness in
+  `c5955541`. Verify authenticated native PostgreSQL 16.16 restart and
+  exact dump and restore, including rejection of missing and wrong passwords.
+- [x] Deliver the isolated certified venture capital estimate in `be41c0e3`,
+  Pennsylvania farmer timing in `ecd0ff80`, and the reviewed two-file
+  browser source binding in `f22c1560`.
+- [x] Distinguish an unsent AI evaluation attempt from ambiguous usage.
+  `df106681` retains a hashed request reference for body failures and holds
+  the full maximum when a cancellation receipt cannot be persisted.
+- [ ] Review the Pennsylvania estimated-tax thresholds, installment-date
+  boundaries and farmer underpayment worksheet before annual integration.
+- [x] Add the AMD64 CI archive import, verification and cleanup in
+  `845b3e9e`. Run 158 focused checks and 17 mock controls.
+- [x] Verify and scan the two pinned PostgreSQL Compose platform images.
+  `c9ca587d` records 138 High and nine Critical matches per architecture,
+  and the ARM64 Trixie compatibility and scan comparison.
+- [ ] Obtain independent security disposition of PostgreSQL and application
+  image advisories. Rehearse recovery and rollback on each platform if the
+  database base image changes.
 - [ ] Build, independently import and scan the exact new self-host runner
   on both native architectures. Rehearse Compose recovery and the browser
   lifecycle. Reconcile remaining util-linux package matches against Debian.
@@ -36,6 +65,17 @@ below retain their original evidence boundaries.
 - [x] Bind Form 1062 shareholder allocations to confirmed 1120-S K-1 box 17
   Section 1062 statements and require exact recognized-gain reconciliation.
   Pass 468 affected tests in `75296bb1`.
+- [x] Verify aggregate Form 1062 treatment of multiple distinct elected
+  sales. `22b255c3` passes 254 focused checks with one annual recomputation.
+- [x] Add the isolated Schedule SE farm optional estimator in `6cd57a42`.
+  Verify the final 2026 limits, the explicit election and the exact line 4b carry.
+- [x] Verify the 2026 Publication 505 adjustment for a single confirmed
+  election in `43192f66`. Confirm 75% exact arithmetic, actual cumulative
+  income inclusion and rejection of a claimed period before the sale.
+- [ ] Establish the method for Publication 505 with staggered elected
+  sales, and qualify payment and penalty integration separately.
+- [ ] Obtain a qualified interpretation of exact-cent Schedule SE eligibility
+  near the printed $8,186 net-profit test before full-return integration.
 - [ ] Qualify Form 1062 pass-through originals, the required attachments
   and final 2026 annual transfer. Obtain qualified review of the $1
   discrepancy on draft Form 1040 line 24c before enabling live use.

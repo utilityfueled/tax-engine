@@ -25149,6 +25149,124 @@
       "focusedPassed": 153,
       "requestContractChanged": false,
       "auditSha256": "2570f45d1753e2f2ba4343e65af10bbb9d26f7489f7ebc278c70a1bc56497083"
+    },
+    "form1062MultipleDirectSales": {
+      "source": "22b255c3d0bae698d8a3ea8a13bdba1ab608aee6",
+      "regressionsFailedFirst": 3,
+      "focusedPassed": 254,
+      "specReferences": 8958,
+      "liveTransfer": false,
+      "sourceAuthority": "https://www.irs.gov/instructions/i1062",
+      "focusedReceiptSha256": "3ea417e73a3b002972ff1f85ece7aee79bcc30a13b6a9ab0f4d35f5c9ee94e9e"
+    },
+    "scheduleSeFarmOptional": {
+      "source": "6cd57a4237c965e0560340f46ea53af630cf1d13",
+      "focusedPassed": 172,
+      "specReferences": 8963,
+      "liveTransfer": false,
+      "printedNetProfitLimitReviewOpen": true,
+      "sourceAuthority": "https://www.irs.gov/pub/irs-prior/f1040sse--2026.pdf"
+    },
+    "amd64ArchiveCi": {
+      "source": "845b3e9e2942ebafd2d20e435a9d0ef3dfde4d4a",
+      "focusedPassed": 158,
+      "mockControlsPassed": 17,
+      "actualNativeImportVerified": false
+    },
+    "postgresqlComposeScans": {
+      "source": "c9ca587de773485a7df7799c74bd848228c52961",
+      "platforms": ["linux/arm64", "linux/amd64"],
+      "matchesPerPlatform": 565,
+      "highMatchesPerPlatform": 138,
+      "criticalMatchesPerPlatform": 9,
+      "qualified": false,
+      "evidence": "docs/upgrade-2026-debian-advisory-refresh-20261113.md"
+    },
+    "localHostedHttpDc7546f9": {
+      "source": "dc7546f94f441374a5cbdaf28bb06f9c1c65bc05",
+      "checksPassed": 14,
+      "cleanupPassed": true,
+      "protectedPreview": false,
+      "httpReceiptSha256": "d6dd10f6e3f939e27dbc6e78f44a2ecf7b66dc216b48f3bfe4254b5eeeb2f3a6",
+      "controllerReceiptSha256": "9882164fe5781bf7cf4729d528cae4bcbf74711679238e539f70e918c8c24737"
+    },
+    "managedDc7546f9": {
+      "source": "dc7546f94f441374a5cbdaf28bb06f9c1c65bc05",
+      "prerequisitesPassed": 9,
+      "unitPassed": 27947,
+      "unitFailed": 1,
+      "failure": "runtime dependency guard expected the previous Nodemailer lock",
+      "coverageRan": false,
+      "browserRan": false,
+      "postgresStopped": true,
+      "checksSha256": "0bde7066714beec22136318eb4ddf65e6ff8a903c6e5415a93378d6a632bfc40",
+      "shutdownSha256": "fceb5e3c3ee51d75c8b724e5e0b8090539dc718540e264b3f12f06a39717d115"
+    },
+    "arm64Dc7546f9": {
+      "source": "dc7546f94f441374a5cbdaf28bb06f9c1c65bc05",
+      "image": "c9f733d9d6e908fa722f197f5d09e8bd45ac2a22976e7aef181cf37b817d1cc4",
+      "imageArchiveSha256": "f81e2dd445117c7450f29c0c60792b287381d12e44a419ff131a39e94022010a",
+      "sbomSha256": "752f6b6095c09c011caaed46eba1ff5c426ee4a79c047e958f943e7c4d60b3eb",
+      "scanSha256": "5532f1b0cf0af5fe36103b73588d741ac48c04ceac7d549dd36713f0f0058982",
+      "browserTranscriptSha256": "96a2e6814240611fa82b5f88481084d30b506469a9e20afdf1f9cfe3b0e915e5",
+      "composeRecoverySha256": "0329415f69bc336b338fa03c404a54d878e1ac98a83c713d905a257daf012d3f",
+      "chromiumCollected": 621,
+      "chromiumPassed": 616,
+      "chromiumHostedOnlySkipped": 5,
+      "composeRecoveryPhasesPassed": 6,
+      "advisoryMatches": 191,
+      "highAdvisoryMatches": 56,
+      "criticalAdvisoryMatches": 0,
+      "riskAccepted": false,
+      "receiptSha256": "db3d1144633048377ccaf09a7c45a434d40752c4bdd79770a6a1ee1d3655af21",
+      "cleanupSha256": "cd32053478e94fc27e16e991280a6f3de2d3580c6280dd1e44122dc93d318b40"
+    },
+    "exactMailLockGuard": {
+      "source": "c8d15fb28fbac6a9783d375c4c52eb755afdb605",
+      "lockSha256": "2553ee4f90ed1ec557e633f9b10e588198f8a5c49b833fa0f6b3ad0133345393"
+    },
+    "farmlandPublication505Adjustment": {
+      "source": "43192f6695f69a8be3d6164df14ee85e21de10b6",
+      "liveTransfer": false,
+      "multipleSalePeriodAllocationReviewed": false,
+      "sourceAuthority": "https://www.irs.gov/forms-pubs/clarification-for-calculation-of-estimated-tax-payments-when-making-an-election-under-section-1062a"
+    },
+    "farmlandAuditRefresh": {
+      "source": "6ef4e05e1d0762391547dc9eccb2e57373686c1f",
+      "focusedPassed": 245,
+      "changedSourceDigests": 3,
+      "auditSha256": "b0a7b05c894804ed8d47a1ed026e9ff95660fbeddbcb613032ad487989fd7603"
+    },
+    "ohioCertifiedVentureGain": {
+      "source": "be41c0e3535d5aca466597480bdcf798eea4f941",
+      "focusedPassed": 58,
+      "liveTransfer": false,
+      "sourceAuthority": "https://codes.ohio.gov/assets/laws/revised-code/authenticated/57/5747/5747.01/3-5-2026/5747.01-3-5-2026.pdf"
+    },
+    "pennsylvaniaFarmerTiming": {
+      "source": "ecd0ff80110aabe9d01374dfdd7355df911a8dd8",
+      "focusedPassed": 67,
+      "ordinaryEstimatedTaxMethodChanged": false,
+      "liveTransfer": false,
+      "sourceAuthority": "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2026/2026_rev-413i.pdf"
+    },
+    "rehearsalDatabaseScram": {
+      "source": "c595554193cb403b0df0a4157b64b6e58648ecc2",
+      "focusedPassed": 11,
+      "localPostgresRestartAndRestorePassed": true,
+      "localPostgresReceiptSha256": "cc8b24c4e4a3ff07be3fdff99125e041d35a981078de656944130e9e1a1cb4fe"
+    },
+    "providerEvalCancellationAndHeaders": {
+      "source": "df106681fa2eb9163157e4ca63777b300fdafdd9",
+      "focusedPassed": 67,
+      "paidCalls": 0,
+      "historicalHoldUsd": "0.022384"
+    },
+    "stateAuditRefresh": {
+      "source": "f22c1560984ae97b295144d50749fc0df954e3bc",
+      "focusedPassed": 206,
+      "changedSourceDigests": 2,
+      "auditSha256": "2d39e34a5da37f48377691ff27cad0576f93fbb4777c72bba04c815a5608d7db"
     }
   }
 }

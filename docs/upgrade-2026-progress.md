@@ -4,6 +4,57 @@ Current source, verification and remaining work are summarized in the
 [current continuation](upgrade-2026-current-status.md). Historical results
 below apply to their named revisions.
 
+- November 13 — Exact `dc7546f9` ARM64 passed independent import, image
+  smoke, scan, six Compose phases and 616 Chromium cases with five
+  hosted-only skips. Normal shutdown restored the socket route. The scan
+  found 191 matches including 56 High. `c5955541` subsequently requires
+  a new per-run SCRAM password in the recovery harness. Its local native
+  PostgreSQL 16.16 probe verified wrong and missing credential denial,
+  restart and authenticated dump and restore with exact monetary values.
+  [Rehearsal evidence](upgrade-2026-nov13-release-rehearsals.md).
+- November 13 — `be41c0e3` adds the isolated Ohio certified venture gain
+  deduction with 58 focused checks. `ecd0ff80` checks exact Pennsylvania
+  farmer estimated income eligibility and both reported dates. Its 67
+  focused checks preserve ordinary and penalty treatment. `f22c1560` adds
+  only the two reviewed browser source digests and passes 206 controls.
+- November 13 — `df106681` distinguishes durable pre-transport cancellation
+  from a potentially charged attempt and preserves a hashed request reference
+  and status if body reads fail after headers. The 67 offline checks passed.
+  Prior unknown usage remains reserved, and no paid requests ran.
+- November 13 — `43192f66` implements the 2026 Publication 505 correction
+  for one confirmed Form 1062 election. It applies 75% of the full-year
+  liability to each relevant worksheet entry with confirmed inclusion.
+  A pre-sale inclusion regression failed first and passed on the final
+  focused run. All 8,967 spec references passed.
+  [IRS correction](https://www.irs.gov/forms-pubs/clarification-for-calculation-of-estimated-tax-payments-when-making-an-election-under-section-1062a).
+- November 13 — Exact `dc7546f9` had 27,947 unit passes and one stale
+  lockfile hash assertion. `c8d15fb2` restores the exact frozen-lock
+  binding to the reviewed Nodemailer package. `6ef4e05e` refreshes only
+  three browser file digests and the dependent diagnostic digest.
+  All 245 browser and runtime controls passed.
+  [Rehearsal evidence](upgrade-2026-nov13-release-rehearsals.md).
+
+- November 13 — `22b255c3` reconciles multiple distinct elected farmland
+  sales to one combined gain and Form 1062 recomputation. Three regression
+  tests failed first and 254 focused checks passed. Annual intake and
+  approved filing remain open. [IRS instructions](https://www.irs.gov/instructions/i1062).
+- November 13 — `6cd57a42` adds the isolated Schedule SE farm optional
+  estimator. The final 2026 form limits and exact-cent boundaries passed
+  172 affected checks, types, strict lint, inventory and 8,963 spec references.
+  [Final Schedule SE](https://www.irs.gov/pub/irs-prior/f1040sse--2026.pdf).
+- November 13 — `845b3e9e` adds a separately imported AMD64 archive and
+  sanitized evidence binding to the native GitHub Actions workflow.
+  The static checks, 158 focused tests and 17 mock controls passed.
+  Native execution still needs a runner that can receive the current source.
+- November 13 — `c9ca587d` records matched scans of both exact PostgreSQL
+  platform images. Each has 565 findings, including 138 High and nine
+  Critical. The alternative ARM64 Trixie image still has four Critical
+  matches and changes collation libraries. [PostgreSQL image review](upgrade-2026-debian-advisory-refresh-20261113.md#postgresql-service-images-in-compose).
+- November 13 — The exact `dc7546f9` local hosted build passed all 14
+  HTTP checks with certificate-verified PostgreSQL and synthetic Redis.
+  Both Next processes stopped and all owned ports closed.
+  [Rehearsal evidence](upgrade-2026-nov13-release-rehearsals.md).
+
 - November 13 — `3d6a8e3a` pins the first Nodemailer version that fixes
   both November 10 recipient-domain advisories. Two old envelopes failed
   their intended recipient checks and both patched envelopes passed

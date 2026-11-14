@@ -1,5 +1,61 @@
 # November 13 isolated release rehearsals
 
+## Managed checks on `dc7546f9`
+
+Nine prerequisite checks passed. The full unit run passed 27,947 tests
+with one exact lockfile-integrity assertion still bound to the prior
+Nodemailer 10.2.1 lock. Both previous Pennsylvania PDF timeout suites and
+the five live local SMTP/PostgreSQL tests passed during this run. Coverage
+and managed Chromium did not run. The owned PostgreSQL stopped normally.
+`c8d15fb2` retains the exact hash assertion with the verified 10.4.1
+dependency lock. The current and predecessor hashes were independently
+recomputed directly from Git and the diff changes no other packages.
+
+| Evidence | SHA-256 |
+| --- | --- |
+| Exact check sequence | `0bde7066714beec22136318eb4ddf65e6ff8a903c6e5415a93378d6a632bfc40` |
+| Unit output | `8c53c6a53f2db6018a91f0321e9266bfee9fd17e57ab8fdcab7086eda5aaeb0e` |
+| Unit diagnostics | `a3220ed1d0e31dfe68bb10f68567a99ac5ff886dbc55f2f80630b0a6eecb2e` |
+| PostgreSQL shutdown result | `fceb5e3c3ee51d75c8b724e5e0b8090539dc718540e264b3f12f06a39717d115` |
+
+## Native ARM64 on `dc7546f9`
+
+Independent image import, smoke, SBOM and scan passed. The shipped
+Compose stack passed six recovery phases. Chromium collected 621 cases,
+passed 616 and retained five hosted-only skips with zero failures. The
+test VM stopped normally and the original user socket, root socket and
+default connection were verified. The application scan reported 191
+advisory matches, 56 High and zero Critical. This artifact predates the
+new SCRAM rehearsal and provides no security disposition or AMD64 evidence.
+
+| Evidence | SHA-256 |
+| --- | --- |
+| Tracked and verified public sample archive | `56479ac018795cb129dc468d2d2e172af53a357cb2811e5e9259cce6cb9daa4b` |
+| Runtime image ID | `c9f733d9d6e908fa722f197f5d09e8bd45ac2a22976e7aef181cf37b817d1cc4` |
+| Runtime image archive | `f81e2dd445117c7450f29c0c60792b287381d12e44a419ff131a39e94022010a` |
+| CycloneDX SBOM | `752f6b6095c09c011caaed46eba1ff5c426ee4a79c047e958f943e7c4d60b3eb` |
+| Grype scan | `5532f1b0cf0af5fe36103b73588d741ac48c04ceac7d549dd36713f0f0058982` |
+| Compose recovery | `0329415f69bc336b338fa03c404a54d878e1ac98a83c713d905a257daf012d3f` |
+| Native Chromium | `96a2e6814240611fa82b5f88481084d30b506469a9e20afdf1f9cfe3b0e915e5` |
+| Controller result | `db3d1144633048377ccaf09a7c45a434d40752c4bdd79770a6a1ee1d3655af21` |
+| Runtime cleanup | `cd32053478e94fc27e16e991280a6f3de2d3580c6280dd1e44122dc93d318b40` |
+
+## Local hosted HTTP on `dc7546f9`
+
+The tracked source passed a frozen install, production webpack build and
+all 14 HTTP checks across two Next processes and actual certificate-verified
+PostgreSQL 16.16. The synthetic Redis transport confirmed the shared limit,
+pseudonymous keys and fail-closed disconnect, error and delay cases. The same
+run confirmed synthetic two-owner isolation and deletion, database outage and
+recovery, interrupted and oversized uploads, and finite application logs. Both
+owned Next processes stopped and all four loopback ports closed. This run used
+no Preview, Stripe, SMTP or model provider.
+
+| Evidence | SHA-256 |
+| --- | --- |
+| HTTP and cleanup result | `d6dd10f6e3f939e27dbc6e78f44a2ecf7b66dc216b48f3bfe4254b5eeeb2f3a6` |
+| Exact build and controller result | `9882164fe5781bf7cf4729d528cae4bcbf74711679238e539f70e918c8c24737` |
+
 ## Local hosted HTTP on `7924a91d`
 
 The exact source passed a frozen offline install, a production webpack
