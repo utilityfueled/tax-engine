@@ -33,6 +33,7 @@ export function sanitizeTelemetryError(event: ErrorEvent, hint: EventHint): Erro
 /** Transactions, spans, breadcrumbs and logs can carry document or return details. */
 export const PRIVATE_TELEMETRY_OPTIONS = {
   sendDefaultPii: false,
+  sendClientReports: false,
   enableLogs: false,
   tracesSampleRate: 0,
   tracePropagationTargets: [] as string[],

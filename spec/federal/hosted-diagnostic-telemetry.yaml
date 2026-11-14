@@ -1,0 +1,17 @@
+form: "Hosted diagnostic telemetry"
+fullName: "Sentry build analytics and runtime diagnostic privacy"
+taxYear: 2026
+notes: |
+  The pinned SDK may emit distinct envelopes outside the exception sanitizer.
+  Disable the build plugin's own analytics, browser release session tracking,
+  and client outcome reports. Keep the opt-in sanitized exception transport and
+  the separately configured authenticated source-map upload.
+  Sources: https://docs.sentry.io/platforms/javascript/guides/nextjs/configuration/build/
+  and https://docs.sentry.io/platforms/javascript/guides/nextjs/configuration/integrations/browsersession/
+lines:
+  - line: "bundler-analytics"
+    formula: "Explicitly set the installed build plugin's telemetry option to false; do not infer opt-out from missing upload credentials."
+    testRef: "tests/apps/web/sentry-build-telemetry.test.ts::disables Sentry build analytics without changing the source map credential gate"
+  - line: "runtime-envelope"
+    formula: "An opted-in browser with a release emits only sanitized exception envelopes, including after initial and subsequent navigation and when flushing dropped events."
+    testRef: "tests/apps/web/sentry-browser-telemetry.test.ts::keeps only sanitized errors through the installed browser SDK"
