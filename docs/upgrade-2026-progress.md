@@ -5342,3 +5342,16 @@ execution and current image qualification require separate evidence.
   opt-in dependency builder's inner/outer deadlines; 40 focused controls pass.
   `a370431d` adds the separately reviewed, pinned offline gosu candidate builder
   with 59 focused checks. Its actual native runtime/scan evidence is pending.
+
+### November 14: real provider usage through the current PostgreSQL ledger
+
+Application source `d711b5b4` passes one two-request Luna High rehearsal through
+the actual accounting hooks and a fresh local SCRAM PostgreSQL 16.16 cluster.
+Actual costs are $0.0002418 and $0.0002358, with separate one-cent logical
+charges. Duplicate and exhausted-budget admission deny dispatch; identical
+settlement replay has no second effect. Both pools close and normal owned
+database shutdown passes. Independent source/artifact/Decimal review passes.
+Known usage is now $0.26329920 plus the retained $0.022384 historical timeout
+hold, giving $0.28568320 accounted exposure under the $140 cap. No deployed
+retail, natural model-failure, human corpus or promotion qualification follows.
+[Exact ledger and hashes](upgrade-2026-ai-local-ledger-20261114.md).

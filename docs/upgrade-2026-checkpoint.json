@@ -25825,6 +25825,39 @@
         "coverage": "7aeb9fa4b1865fd65fe8b29309c2fde98962232c369ac7e60322ffc795a69569",
         "static": "a7ee353f8bed3ce65fbb4bd57bb69987b518dd4e23079132757c369bfcbf5417"
       }
+    },
+    "actualProviderLocalLedger": {
+      "source": "d711b5b43d99f5f3a17d868d6bab3cffe08cb432",
+      "providerCalls": 2,
+      "providerStatuses": [
+        200,
+        200
+      ],
+      "providerCostUsd": "0.00047760",
+      "logicalRetailChargeCents": [
+        1,
+        1
+      ],
+      "duplicateDeniedBeforeDispatch": true,
+      "exhaustedBudgetDeniedBeforeDispatch": true,
+      "identicalSettlementReplayUnchanged": true,
+      "actualNumericAndBigintColumns": true,
+      "deliberatePostGroundingRejection": true,
+      "poolsClosed": true,
+      "ownedDatabaseStopped": true,
+      "cleanupErrors": [],
+      "knownUsageResultsAfterRun": 176,
+      "knownProviderCostUsd": "0.26329920",
+      "historicalUnknownUsageHoldUsd": "0.022384",
+      "accountedExposureUsd": "0.28568320",
+      "humanReviewComplete": false,
+      "deployedRetailQualified": false,
+      "modelPromotionEnabled": false,
+      "ledger": "docs/upgrade-2026-ai-local-ledger-20261114.md",
+      "manifestSha256": "c5931c3f5f415506f52910dd0635cb34b1695897d868814eced68d0614610733",
+      "actualReceiptSha256": "bc2c898e5564aef4dc5846ae119f3e02bb3f9a6333dcfcbb74fb3896bdaa0834",
+      "controllerReceiptSha256": "b593b2e2b12f2abc9153a1056fa3feafba848116d94d2a66a10a98f6a3d80db7",
+      "independentReviewSha256": "8251733c047045dc3aeda1de3f1e1f80000f466cb26cf93d629f26e63cf118f5"
     }
   }
 }

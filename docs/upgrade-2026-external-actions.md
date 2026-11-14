@@ -28,8 +28,11 @@ acceptance remain unresolved. The default Compose image remains unchanged.
 
 Independent qualified human tax, AI-case and security/privacy reviewers remain
 unassigned. Final 2026 federal/state forms and artifact qualification remain
-required. The known provider cost reconciles exactly; only the original unknown
-usage retains its reservation. Current `main` commits remain local while the
+required. The prior aggregate export reconciles all 174 known results exactly. Two later
+actual local-ledger calls add $0.00047760: known cost is now $0.26329920 plus
+the unchanged $0.022384 timeout hold, for $0.28568320 accounted exposure.
+[Actual ledger evidence](upgrade-2026-ai-local-ledger-20261114.md) preserves
+the separate one-cent retail effects and local-only qualification boundary. Current `main` commits remain local while the
 owner disables automatic production deployments. Remote CI and native AMD64
 execution therefore remain open. [Current work and evidence](upgrade-2026-current-status.md).
 

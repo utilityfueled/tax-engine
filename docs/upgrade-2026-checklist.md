@@ -4,6 +4,21 @@ The [current continuation on `main`](upgrade-2026-current-status.md) reconciles
 the latest source, checks, active work and external inputs. The dated entries
 below retain their original evidence boundaries.
 
+## Active continuation — November 14
+
+- [x] Run two actual Luna High requests through current accounting hooks and a
+  fresh local PostgreSQL ledger; independently verify exact NUMERIC provider
+  costs, separate one-cent debits, duplicate/exhausted admission, settlement
+  replay, pool closure and normal database stop. New provider cost $0.00047760;
+  cumulative known plus original timeout hold $0.28568320.
+  [Evidence and limits](upgrade-2026-ai-local-ledger-20261114.md).
+- [ ] Complete current protected Preview recovery and scheduled Stripe retry;
+  preserve each prior failed control and exact artifact boundaries.
+- [ ] Complete candidate dependency correction and cleanup verification without
+  changing the default PostgreSQL image or accepting remaining advisories.
+- [ ] Obtain the independent human reviews and final official forms; preserve
+  filing/model gates and the local-main push hold.
+
 ## Active continuation — November 13 Eastern
 
 - [x] Verify atomic hosted quota admission on real PostgreSQL including

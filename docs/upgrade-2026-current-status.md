@@ -1,14 +1,30 @@
 # Current 2026 upgrade continuation
 
+## November 14 actual provider and PostgreSQL billing
+
+Two real Luna High requests passed through the actual accounting hooks and a
+new local SCRAM PostgreSQL 16.16 ledger. The accepted request cost $0.0002418;
+the deliberately rejected, genuinely parsed request cost $0.0002358. Each
+settled with one cent of retail credit, separately from exact provider cost.
+Duplicate and exhausted-budget requests were denied before dispatch, and
+identical settlement replay left the rows unchanged. Both pools closed and the
+owned database stopped normally. Independent artifact and Decimal review passed.
+
+Known usage cost is now **$0.26329920**. The original unknown-usage hold remains
+**$0.022384**, giving **$0.28568320** accounted exposure under the $140 ceiling.
+These two calls are later than the aggregate export below. They supply local
+integration evidence, without deployed retail or independently reviewed model
+quality qualification. [Exact results and hashes](upgrade-2026-ai-local-ledger-20261114.md).
+
 ## November 14 provider cost reconciliation
 
 Fresh organization-wide itemized exports match all 174 known usage results
-and all 13 token/cost categories exactly at **$0.26282160**. Current unexplained
-reported cost is **$0**. The original timeout still lacks usage attribution,
+and all 13 token/cost categories exactly at **$0.26282160**. At that export, unexplained
+reported cost was **$0**. The original timeout still lacks usage attribution,
 and its **$0.022384** hold remains, giving **$0.28520560** accounted exposure.
 A final invoice is unnecessary for this current aggregate reconciliation.
-Independent review verified the journals and Decimal arithmetic. The remaining
-**$139.71479440** under the user's ceiling can accommodate separately authorized
+Independent review verified the journals and Decimal arithmetic. Before the two later calls above, the remaining
+**$139.71479440** under the user's ceiling could accommodate separately authorized
 runs with cumulative reservation accounting. Qualified human cases, held-out
 runs, Google access and current deployed retail accounting remain open.
 [Sources, scope and hashes](upgrade-2026-provider-cost-reconciliation-20261114.md).
