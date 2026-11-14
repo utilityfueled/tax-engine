@@ -1,5 +1,19 @@
 # Current 2026 upgrade continuation
 
+## November 14 completed AEA ARM64 rehearsal
+
+Exact `aea453ec` passes all 24 stages, four runtime workloads and six Compose
+recovery phases, including the 11-table PostgreSQL restore. All 635 native
+browser cases complete: 630 pass and five original hosted cases remain skipped.
+Separate root artifact review verifies source/image custody, all executed
+browser policies against the managed run, normal VM stop, socket/default
+restoration and the original two-CPU/8,192-MiB resources.
+[Artifact, scan and recovery evidence](upgrade-2026-arm64-aea453ec-20261114.md).
+The fresh November 14 scanner database retains zero Critical and 56 unaccepted
+High findings. Later current-loss/EIC packages are excluded from this image;
+their combined successor checks are running. Native AMD64, qualified human
+reviews, final annual forms and the production push hold remain open.
+
 ## November 14 protected Preview integrated originals
 
 Exact `aea453ec` passes both actual Coverdell bank-original journeys at 1280

@@ -6,7 +6,10 @@ All twelve local checks pass on `aea453ec`: 28,479 tests, 88.07% branch
 coverage, and 630 browser passes with five original hosted skips. Its protected
 Preview passes both actual desktop/mobile Coverdell journeys and six FEI/farm
 canonical-admission probes, with separate artifact review and verified cleanup.
-Its ARM64 successor is running; no terminal native result is claimed here.
+Its ARM64 successor passes all 24 stages, four workloads, six recovery phases
+and 630 browser passes/five original hosted skips. Separate root review
+verifies normal cleanup, source custody and original resource restoration.
+[Exact ARM64 evidence](upgrade-2026-arm64-aea453ec-20261114.md).
 The later current-loss (`af111e7a`) and EIC-petition (`5f7cd736`) source packages
 have separate full-unit and review evidence; their combined successor checks
 remain pending. [Local checks](upgrade-2026-combined-aea453ec-checks-20261114.md) ·
@@ -21,7 +24,7 @@ inferred. The production push hold and all human/annual-form gates remain.
 
 ## November 14 current boundaries
 
-The latest completed exact `26f5bd5b` native ARM64 artifact passes all24
+The earlier completed exact `26f5bd5b` native ARM64 artifact passes all24
 stages, four workloads, six recovery phases and633 browser cases:628 pass
 and five original hosted cases remain skipped. Normal VM/socket/default cleanup
 and original two-CPU/8,192-MiB resource restoration pass, with separate actual

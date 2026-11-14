@@ -3222,3 +3222,9 @@ packages keep full source copies, patches, hashes, genuine failures and receipts
 
 - [x] Exact seventeen-file integration and three-file metadata diff reviewed; 1,007 strict tests, 76 runner controls, types and 9,179 spec references pass. Existing policies and all 635 collected cases remain unchanged. [Ledger](upgrade-2026-loss-eic-source-binding-20261114.md).
 - [ ] Run all twelve integrated checks on a fresh committed successor; list-only collection does not establish browser execution.
+
+## November 14 completed AEA ARM64 actual
+
+- [x] All 24 stages/four workloads, six recovery phases and 630 browser passes/five original skips; separate root review, normal stop and original resources/routes restored. [Ledger](upgrade-2026-arm64-aea453ec-20261114.md).
+- [x] Same-image fresh database scan: zero Critical, 56 unaccepted High; scanner/database hashes independently verified, original scan retained.
+- [ ] Later source packages, native AMD64, accountable advisory disposition and qualified human/final-form qualification remain open.

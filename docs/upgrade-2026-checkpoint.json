@@ -1,4 +1,19 @@
 {
+  "nov14AeaNativeArm64Actual": {
+    "source": "aea453eca1d4a0e92cdfbe9a22f2f129fb247a03",
+    "actual": "24stages/fourworkloads/6Composephases/11tablePGrestorePASS;635browser630PASS5originalSkips;0retry",
+    "image": "d3519f78058b223af69e502fdfbc00c4b748e2e68484625972f1006ff8639d0c",
+    "rootSeparateActualReview": "10744c53916114c66cf9b924a9061cc938457d7d80b9deb8a5a96fc5fffacd3a",
+    "ownerAudit": "d0442acd5c17c4a1f97901f38b552262d93799d561883c6915f1373d5e92f7b9",
+    "managedAndNativeAll635ExecutedPoliciesEqual": true,
+    "cleanup": "normalVMstop;activeVM0;user/root/default routespreserved;original2CPU8192MiBrestored",
+    "freshScan": "192matches0Critical56unacceptedHigh;newUnknownCVE2026-91094dpkg;no removals",
+    "freshScanDbSha256": "822674a9d4f3cbeff8db3f8f1795f8ce8684e6ef2a3636a1cf4cba130e8fc96e",
+    "laterSourcePackagesExcluded": true,
+    "nativeAmd64AndHumanSecurityAnnualGatesRemain": true,
+    "mainPushHold": true,
+    "ledger": "docs/upgrade-2026-arm64-aea453ec-20261114.md"
+  },
   "nov14MetadataCensusWordingCorrection": {
     "exactSource": "5f7cd736",
     "totalGitEntries": 5930,
