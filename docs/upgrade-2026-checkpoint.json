@@ -1,4 +1,16 @@
 {
+  "nov14LossEicCombinedSourceBinding": {
+    "committedProductBase": "5f7cd736c74380dcac2b97457038b3810a5581ab",
+    "frozenFilesVerified": 17,
+    "inventory": "1018unchanged+2partial",
+    "browserClosure": "1950hashes;5added/8updated;allbudgets/policiesunchanged",
+    "actualCollection": "635listOnly;5originalSkips;2workers/retry0/14targets/8existingtimeoutsunchanged",
+    "actualChecks": "1007strict+76runner;9179strictSpecRefs;typesPASS",
+    "independentRoot": "2ed1e8f05c90db048838e2645a4606f0338bfc4bd22135c744c432e0209e73c4",
+    "fullIntegratedSuccessorRequired": true,
+    "ledger": "docs/upgrade-2026-loss-eic-source-binding-20261114.md",
+    "mainPushHold": true
+  },
   "nov14UnassignedHumanFourMethodSupplement": {
     "source": "73713a4fbd3a5b38eb0c17dca16a1960aa6084a0",
     "selectedCommittedBlobs": 44,

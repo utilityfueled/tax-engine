@@ -2246,6 +2246,25 @@
       ]
     },
     {
+      "key": "federal/eic-unassessed-petition",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://www.irs.gov/instructions/i8862",
+      "specPath": "spec/federal/eic-unassessed-petition.yaml",
+      "enginePath": "src/engine/forms/eic-unassessed-petition.ts",
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/empty-nol-foreign-sources",
       "jurisdiction": "federal",
       "taxYear": null,
@@ -4258,6 +4277,25 @@
       "status": "unsupported",
       "knownGaps": [
         "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "federal/form-2555-all-foreign-capital-loss",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://www.irs.gov/publications/p54",
+      "specPath": "spec/federal/form-2555-all-foreign-capital-loss.yaml",
+      "enginePath": "src/engine/forms/form-2555-all-foreign-capital-loss.ts",
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
         "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]

@@ -3217,3 +3217,8 @@ packages keep full source copies, patches, hashes, genuine failures and receipts
 - [x] Publish the reviewed 44-blob, seven-decision four-method source index with all human assignments blank. [Packet](upgrade-2026-human-tax-four-method-supplement-73713a4f.md).
 - [x] Reconcile current provider cost, actual recovery/retry, completed Preview evidence and production push hold in the [external actions](upgrade-2026-external-actions.md). Dated earlier evidence retains its original scope.
 - [ ] Qualified humans must supply independent tax/AI/security decisions; agent reviews do not fill these fields.
+
+## November 14 combined loss/EIC source binding
+
+- [x] Exact seventeen-file integration and three-file metadata diff reviewed; 1,007 strict tests, 76 runner controls, types and 9,179 spec references pass. Existing policies and all 635 collected cases remain unchanged. [Ledger](upgrade-2026-loss-eic-source-binding-20261114.md).
+- [ ] Run all twelve integrated checks on a fresh committed successor; list-only collection does not establish browser execution.
