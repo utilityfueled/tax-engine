@@ -62,6 +62,7 @@ try {
       aptPackageRecords: packageRows.map(([name]) => name).filter(name => /^(?:apt|libapt-pkg7[.]0)(?::|$)/u.test(name)),
       aptBinaries: ['apt', 'apt-cache', 'apt-cdrom', 'apt-config', 'apt-get', 'apt-mark'].filter(name => fs.existsSync('/usr/bin/' + name)),
       aptLibraries: fs.readdirSync('/usr/lib', { recursive: true }).filter(name => /^libapt.*[.]so(?:[.]|$)/u.test(name.split('/').at(-1))),
+      mountBinaries: ['mount', 'umount'].filter(name => fs.existsSync('/usr/bin/' + name)),
       dpkgAudit: execFileSync('/usr/bin/dpkg', ['--audit'], { encoding: 'utf8' }).trim(),
       corePackagesInstalled: ['dpkg', 'libc6', 'libstdc++6', 'libgcc-s1'].every(name => installedPackages.has(name)),
       libatomicInstalled: installedPackages.has("libatomic1"),
@@ -81,6 +82,7 @@ try {
   assert.deepEqual(processEvidence.aptPackageRecords, [], "APT packages must be purged through dpkg, with no installed or residual records.");
   assert.deepEqual(processEvidence.aptBinaries, [], "The runner must not retain APT executables.");
   assert.deepEqual(processEvidence.aptLibraries, [], "The runner must not retain libapt shared libraries.");
+  assert.deepEqual(processEvidence.mountBinaries, [], "The runner must not retain mount or umount.");
   assert.equal(processEvidence.dpkgAudit, "", "The retained dpkg database must pass its consistency audit.");
   assert.equal(processEvidence.corePackagesInstalled, true, "Keep package metadata for dpkg and Node's core runtime libraries.");
 
@@ -113,7 +115,7 @@ try {
   };
   const beforePackages = orderedRows(baselineRows);
   const afterPackages = orderedRows(processEvidence.debianPackages);
-  const targets = new Set(["apt", "libapt-pkg7.0"]);
+  const targets = new Set(["apt", "libapt-pkg7.0", "mount"]);
   const removedPackages = beforePackages.filter(([name]) => targets.has(name.split(":")[0]));
   assert.deepEqual(removedPackages.map(([name]) => name.split(":")[0]).sort(), [...targets].sort());
   assert.ok(removedPackages.every(([, , status]) => status === "installed"));
@@ -125,12 +127,12 @@ try {
   const expectedPackages = beforePackages.filter(([name]) => !targets.has(name.split(":")[0]))
     .map(row => row === zlibBefore ? zlibAfter : row);
   assert.deepEqual(afterPackages, expectedPackages,
-    "Require the exact Debian zlib1g security update and both APT purges while preserving every other package record.");
+    "Require the exact Debian zlib1g security update and the APT and mount purges while preserving every other package record.");
   const planArguments = ["run", "--rm", "--network", "none", "--user", "0", "--entrypoint", "/usr/bin/dpkg",
-    baseline.Id, "--no-act", "--purge", "apt", "libapt-pkg7.0"];
+    baseline.Id, "--no-act", "--purge", ...targets];
   const removalPlan = spawnSync(runtime, [...connection.args, ...planArguments], { encoding: "utf8", env: connection.env });
   if (removalPlan.error) throw removalPlan.error;
-  assert.equal(removalPlan.status, 0, "The actual immutable runner base must accept the unforced two-package removal dry run.");
+  assert.equal(removalPlan.status, 0, "The actual immutable runner base must accept the unforced removal dry run.");
   const runnerPackageProof = {
     runnerBaseReference, binding: "observed same-architecture fixed runner-base filesystem-layer prefix; tag alone is not build provenance",
     baseline: { id: baseline.Id, os: baseline.Os, architecture: baseline.Architecture, repoDigests: baseline.RepoDigests,

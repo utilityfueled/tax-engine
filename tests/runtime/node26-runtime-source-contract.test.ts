@@ -77,13 +77,26 @@ describe("Node 26 runtime source contract", () => {
     expect(smoke).toContain('assert.equal(processEvidence.undici, "8.12.4")');
     expect(smoke).toContain('"libatomic1"');
     expect(smoke).toContain(`assert.equal(runnerBaseReference, "${base}"`);
-    expect(smoke).toContain('const targets = new Set(["apt", "libapt-pkg7.0"])');
+    expect(smoke).toContain('const targets = new Set(["apt", "libapt-pkg7.0", "mount"])');
     expect(smoke).toContain("beforePackages.filter");
     expect(smoke).toContain(`assert.deepEqual(zlibBefore.slice(1), ["${oldZlib}", "installed"])`);
     expect(smoke).toContain(`const zlibAfter = [zlibBefore[0], "${fixedZlib}", "installed"]`);
     expect(smoke).toContain(".map(row => row === zlibBefore ? zlibAfter : row)");
     expect(smoke).toContain('assert.equal(processEvidence.uid, 1001)');
     expect(smoke).toContain('assert.equal(processEvidence.packageTools, false)');
+  });
+  it("removes the unused mount executables without weakening package proof", () => {
+    const docker = read("Dockerfile");
+    const [builder, runner] = docker.split(`FROM ${base} AS runner`);
+    expect(builder).not.toMatch(/dpkg --purge/u);
+    expect(runner).toContain("dpkg --purge apt libapt-pkg7.0 mount");
+    expect(runner).not.toMatch(/dpkg[^\n]*--force/u);
+
+    const smoke = read("scripts/smoke-container.mjs");
+    expect(smoke).toContain(`baseline.Id, "--no-act", "--purge", ...targets`);
+    expect(smoke).toContain(`mountBinaries: ['mount', 'umount']`);
+    expect(smoke).toContain("assert.deepEqual(processEvidence.mountBinaries, []");
+    expect(smoke).toContain("assert.deepEqual(afterPackages, expectedPackages");
   });
   it("preserves the reviewed dependency lock exactly", () => {
     expect(createHash("sha256").update(read("pnpm-lock.yaml")).digest("hex")).toBe("64cccb8d87c0bfb6422210ecf5b4c12e6a1ef468976d7d68a466e5e5a744c4a2");
