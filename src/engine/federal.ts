@@ -122,6 +122,7 @@ import { calculateSchedule1 } from "./schedules/schedule-1.js";
 import { finalizeSchedule1 } from "./forms/schedule-1-return.js";
 import { calculateSchedule2 } from "./schedules/schedule-2.js";
 import { calculateForm2210 } from "./forms/form-2210.js";
+import { getForm2210DistributionOnlyBounds } from "./forms/form-2210-schedule-ai.js";
 import { calculateForm3800 } from "./forms/form-3800.js";
 import { calculateForm5695 } from "./forms/form-5695.js";
 import { calculateForm8815, type Form8815Result } from "./forms/form-8815.js";
@@ -4573,7 +4574,8 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     scheduleAiReturn:{standardDeduction,agi,taxableIncome,itemizedDeductions:deductionUsed === "itemized" ? deductionAmount : undefined,
       preferentialIncome:qualifiedDividends.gt(0) || netLTCG.gt(0),selfEmployedOwners:schedSE.perTaxpayer.filter(row => row.netSEEarnings.gt(0)).length,
       ...(scheduleAiOrdinaryPreferentialIncome ? { ordinaryPreferentialIncome: scheduleAiOrdinaryPreferentialIncome } : {}),
-      ...(scheduleAiSpecialPreferentialIncome ? { specialRatePreferentialIncome: scheduleAiSpecialPreferentialIncome } : {}),
+      ...(scheduleAiSpecialPreferentialIncome ? { specialRatePreferentialIncome: scheduleAiSpecialPreferentialIncome,
+        distributionOnlyCapitalBounds: getForm2210DistributionOnlyBounds(input) } : {}),
       specialTaxMethod:Boolean(input.form8615 || input.scheduleJ || input.form2555),schedule1ADeduction:schedule1A?.totalDeduction,
       ownerSources:buildForm2210OwnerSourceContext(input,schedSE,
         estimatedTaxBase.minus(taxAfterCredits).minus(selfEmploymentTax).plus(amt).plus(partIAdditions),

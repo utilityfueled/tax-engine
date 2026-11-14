@@ -1,0 +1,47 @@
+form: "Form 2210 Schedule AI distribution-only period source feasibility"
+fullName: "Actual cumulative fund distributions with no capital-loss or other disposition sources"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i2210"
+notes: |
+  Official final2025 Form2210 instructions, ScheduleAI cumulative-period note
+  and line14, refreshed2026-11-14; ScheduleD instructions28percent worksheet
+  lines1-6 and unrecaptured1250 worksheet line13:
+  https://www.irs.gov/instructions/i1040sd.
+  Each cumulative period includes previous periods. This source-feasibility
+  check applies only after actual complete annual sources establish exclusively
+  nonnegative Form1099DIV distributions, explicit zero ST/LT loss history and
+  no trades, K1, child election, property, other-form gain, QSBS or investment
+  income election. Existing source binding verifies original household, year,
+  payer, owner and each reported component. Missing or different sources do not
+  establish this finite cohort. General signed gains/losses remain unrestricted
+  by these distribution-only inequalities. No dates, receipts, losses, period
+  allocation, annual2026 filing qualification or human approval are inferred.
+lines:
+  - line: "negative-distribution"
+    description: "Reject signed loss unsupported by complete distribution-only originals"
+    formula: "With annual collectible distributions2000 and all loss/trade/history sources absent, cumulative signed28=-1 cannot be a true sum of actual worksheet components."
+    testRef: "tests/engine/forms/form-2210-distribution-only-periods.test.ts::rejects a negative interim collectible amount against actual distribution-only originals"
+  - line: "excess-distribution"
+    description: "Reject cumulative components exceeding their actual annual distribution"
+    formula: "With actual annual collectible distributions2000 and no offsetting loss sources, cumulative collectible2500 exceeds the entire annual source and must reject before tax."
+    testRef: "tests/engine/forms/form-2210-distribution-only-periods.test.ts::rejects an interim collectible amount exceeding actual distribution-only originals"
+  - line: "cumulative-components"
+    description: "Exact nonnegative component and residual cumulative conservation"
+    formula: "For each actual cumulative period, qualified dividends, raw28, raw1250 and residual capital distribution(netcapital minus raw28 minus raw1250) are nonnegative, nondecreasing and no greater than their separately source-bound annual amounts. Use Decimal before annualization or dollar rounding. Preserve existing separate final-column reconciliation."
+    testRef: "tests/engine/forms/form-2210-distribution-only-periods.test.ts::preserves feasible cumulative periods and independently derived taxes"
+  - line: "narrow-source-cohort"
+    description: "Do not apply distribution-only bounds to general signed capital worksheets"
+    formula: "Only the validated original-source classifier supplies finite bounds. Unknown carry/history, trades, K1, child/property/other-form sources and elections never establish distribution-only eligibility. General validated signed worksheets retain their existing calculation."
+    testRef: "tests/engine/forms/form-2210-distribution-only-periods.test.ts::does not classify other capital sources or unknown history as distribution only"
+  - line: "source-bound-year"
+    description: "Existing actual source year cannot be disabled by an absent optional duplicate year"
+    formula: "The complete source-bound reportedGain sourceTaxYear establishes the annual original year; absent optional Form1099DIV.taxYear must not disable distribution-only admission. An explicitly conflicting original year rejects rather than falling back to a general method."
+    testRef: "tests/engine/forms/form-2210-distribution-only-periods.test.ts::retains source-bound year proof when the optional duplicate original year is absent"
+  - line: "conflicting-original-year"
+    description: "Reject an explicit original year conflict"
+    formula: "Original Form1099DIV year2026 conflicts with actual bound year2025 even when all money components match; no source year is overwritten or inferred."
+    testRef: "tests/engine/forms/form-2210-distribution-only-periods.test.ts::rejects an explicitly conflicting original year before general-method fallback"
+  - line: "inert-capital-forms"
+    description: "An explicit zero or empty duplicate form is not an escape to a general capital method"
+    formula: "Complete actual no-election Form4952, explicit zero Form4797 net1231/history with no property rows, and empty ordinary broker statements cannot disable distribution-only bounds. Unknown ancillary amounts reject precisely; a conflicting unused legacy carry summary rejects rather than overriding explicit zero ST/LT history."
+    testRef: "tests/engine/forms/form-2210-distribution-only-periods.test.ts::does not disable source feasibility for actual inert ancillary forms: %s"

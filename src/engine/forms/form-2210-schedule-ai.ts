@@ -7,6 +7,9 @@ import type { CalculatedLine } from '@/models/outputs.js';
 import { AuditTrail } from '@/utils/audit.js';
 import { roundDollar } from '@/utils/decimal.js';
 import { calculateCapitalGainsTax, calculateRegularIncomeTax } from '@/utils/tax-math.js';
+import { calculateForm4797 } from './form-4797.js';
+import { calculateForm4952 } from './form-4952.js';
+import { calculateScheduleDSourceBinding } from '../schedules/schedule-d-source-binding.js';
 
 const FORM = 'Form 2210 Schedule AI', COLUMNS = ['a', 'b', 'c', 'd'] as const;
 const MULTIPLIERS = ['4', '2.4', '1.5', '1'], PERCENTS = ['0.225', '0.45', '0.675', '0.9'];
@@ -14,11 +17,70 @@ const WAGE_LIMIT_TWELFTHS = [3, 5, 8, 12];
 const SOCIAL_SECURITY = ['0.496', '0.2976', '0.186', '0.124'], MEDICARE = ['0.116', '0.0696', '0.0435', '0.029'];
 const MONEY = /^\d+(\.\d+)?$/, SIGNED = /^-?\d+(\.\d+)?$/;
 
+/** Finite source cohort, not a bound on general signed capital-gain worksheets. */
+export interface Form2210DistributionOnlyBounds {
+  kind: 'complete-div-distributions'; taxYear: number;
+  qualifiedDividends: Decimal; netCapitalGain: Decimal;
+  rate28GainLoss: Decimal; unrecaptured1250BeforeLosses: Decimal;
+}
+
+/** Spec: form-2210-distribution-only-periods.yaml. Never infer absent history as zero. */
+export function getForm2210DistributionOnlyBounds(input: TaxYearInput): Form2210DistributionOnlyBounds | undefined {
+  const source = input.scheduleDSpecialGainSources;
+  const exactZero = (value: string | undefined) => value !== undefined && SIGNED.test(value) && new Decimal(value).isZero();
+  const nonnegative = (value: string | undefined) => value !== undefined && SIGNED.test(value) && new Decimal(value).gte(0);
+  if (!source || source.taxYear !== input.taxpayer.taxYear || source.sourceFactsConfirmed !== true || source.allSourcesIncluded !== true
+    || !exactZero(source.priorShortTermCapitalLoss) || !exactZero(source.priorLongTermCapitalLoss) || !exactZero(source.section1231Lookback)
+    || source.form2439Present !== false || source.partnershipInterestDispositionPresent !== false || source.other1250DispositionPresent !== false
+    || source.longTermAssets.length !== 0 || input.form1099Div.length === 0
+    || input.form1099B.some(form => form.transactions.length !== 0) || input.form1099DA.length !== 0 || input.scheduleK1.length !== 0
+    || input.scheduleK1Form1041.length !== 0 || input.form8814.length !== 0 || input.homeSales.length !== 0
+    || input.form6252.length !== 0 || input.form8824.length !== 0 || input.form6781 !== undefined
+    || input.form4684 !== undefined || input.form2555 !== undefined || input.cryptoIncome !== undefined
+    || input.section1202Sources !== undefined
+    || input.qofDispositionFacts?.disposedOfQofInvestment === true || input.qofDispositionFacts?.deferredGainHeldAtYearEnd === true
+    || (input.qofDispositionFacts?.investments?.length ?? 0) !== 0) return undefined;
+  if (input.priorYear?.capitalLossCarryforward !== undefined && !exactZero(input.priorYear.capitalLossCarryforward)) {
+    throw new Error('Form 2210 Schedule AI distribution-only legacy capital-loss summary conflicts with actual zero source history');
+  }
+  if (input.form4797) {
+    if (input.form4797.propertySales.length !== 0) return undefined;
+    if (input.form4797.netSection1231GainOrLoss === undefined || input.form4797.nonrecapturedNetSection1231Losses === undefined) {
+      throw new Error('Form 2210 Schedule AI distribution-only Form4797 requires known actual net gain and lookback amounts');
+    }
+    if (!exactZero(input.form4797.netSection1231GainOrLoss)) return undefined;
+  }
+  if (input.form4952) {
+    if (input.form4952.sourceFactsConfirmed !== true || input.form4952.sourceFactsComplete !== true) {
+      throw new Error('Form 2210 Schedule AI distribution-only Form4952 requires actual complete confirmed source amounts');
+    }
+    if (!calculateForm4952(input.form4952, input.taxpayer.taxYear).line4g.isZero()) return undefined;
+  }
+  // Existing binding enforces original year/household/owner/payer/component
+  // reconciliation, rejects unknown originals, duplicate IDs and extra rows.
+  const zero = new Decimal(0);
+  const bound = calculateScheduleDSourceBinding(input, { form4797: calculateForm4797(input), netShortTerm: zero,
+    longTermLossCarryover: zero, childCollectiblesGain: zero, childUnrecapturedSection1250Gain: zero });
+  if (!bound) return undefined;
+  let qualifiedDividends = new Decimal(0), netCapitalGain = new Decimal(0);
+  for (const row of input.form1099Div) {
+    if (row.taxYear !== undefined && row.taxYear !== input.taxpayer.taxYear) throw new Error('Form 2210 Schedule AI distribution-only original year conflicts with actual bound source year');
+    if (!nonnegative(row.qualifiedDividends)) throw new Error('Form 2210 Schedule AI distribution-only requires actual nonnegative qualified dividends');
+    qualifiedDividends = qualifiedDividends.plus(row.qualifiedDividends);
+  }
+  // The complete bound packet supplies each original amount, including an
+  // explicit zero where the optional duplicate statement box was not reported.
+  for (const row of source.reportedGains) netCapitalGain = netCapitalGain.plus(row.netLongTermCapitalGain);
+  return { kind: 'complete-div-distributions', taxYear: input.taxpayer.taxYear, qualifiedDividends, netCapitalGain,
+    rate28GainLoss: bound.collectiblesGain, unrecaptured1250BeforeLosses: bound.unrecapturedSection1250Gain };
+}
+
 /** Completed return facts. Column (d) covers the full year, so it must reconcile. */
 export interface Form2210ScheduleAiReturn {
   standardDeduction: Decimal; agi: Decimal; taxableIncome: Decimal; itemizedDeductions?: Decimal; preferentialIncome: boolean;
   ordinaryPreferentialIncome?: { qualifiedDividends: Decimal; netCapitalGain: Decimal };
   specialRatePreferentialIncome?: { qualifiedDividends: Decimal; netCapitalGain: Decimal; rate28GainLoss: Decimal; unrecaptured1250BeforeLosses: Decimal };
+  distributionOnlyCapitalBounds?: Form2210DistributionOnlyBounds;
   selfEmployedOwners: number; specialTaxMethod: boolean; schedule1ADeduction?: Decimal; ownerSources?: Form2210OwnerSourceContext;
 }
 export interface Form2210ScheduleAiInput {
@@ -43,6 +105,31 @@ export function calculateForm2210ScheduleAi(input: Form2210ScheduleAiInput): For
   const specialRatePreferentialIncome = facts.specialRatePeriodsConfirmed === true ? returnContext.specialRatePreferentialIncome : undefined;
   const specialSourcesPresent = periods.some(period => period.rate28GainLoss !== undefined || period.unrecaptured1250BeforeLosses !== undefined);
   if ((facts.specialRatePeriodsConfirmed === true || specialSourcesPresent) && !specialRatePreferentialIncome) throw new Error('Form 2210 Schedule AI requires confirmed special period worksheet sources and the actual completed source worksheets');
+  const distributionBounds = returnContext.distributionOnlyCapitalBounds;
+  if (distributionBounds && specialRatePreferentialIncome) {
+    if (distributionBounds.kind !== 'complete-div-distributions' || distributionBounds.taxYear !== taxYear
+      || (['qualifiedDividends', 'netCapitalGain', 'rate28GainLoss', 'unrecaptured1250BeforeLosses'] as const)
+        .some(key => !(distributionBounds[key] instanceof Decimal) || !distributionBounds[key].isFinite()
+          || distributionBounds[key].lt(0) || !distributionBounds[key].eq(specialRatePreferentialIncome[key]))) {
+      throw new Error('Form 2210 Schedule AI distribution-only cumulative bounds must reconcile to actual annual sources');
+    }
+    const annual = [distributionBounds.qualifiedDividends, distributionBounds.rate28GainLoss, distributionBounds.unrecaptured1250BeforeLosses,
+      distributionBounds.netCapitalGain.minus(distributionBounds.rate28GainLoss).minus(distributionBounds.unrecaptured1250BeforeLosses)];
+    let previous = annual.map(() => new Decimal(0));
+    for (const period of periods) {
+      const raw28 = amount(period.rate28GainLoss, 'period signed 28 percent worksheet sum of lines 1 through 6', true);
+      const raw1250 = amount(period.unrecaptured1250BeforeLosses, 'period unrecaptured1250 worksheet line13 before losses');
+      const components = [amount(period.qualifiedDividends, 'period qualified dividends'), raw28, raw1250,
+        amount(period.netCapitalGain, 'period net capital gain').minus(raw28).minus(raw1250)];
+      if (components.some((value, index) => {
+        const prior = previous[index], limit = annual[index];
+        return prior === undefined || limit === undefined || value.lt(0) || value.lt(prior) || value.gt(limit);
+      })) {
+        throw new Error('Form 2210 Schedule AI distribution-only cumulative components must fit the actual nonnegative annual distributions');
+      }
+      previous = components;
+    }
+  }
   const ordinaryPreferentialIncome = facts.ordinaryPreferentialPeriodsConfirmed === true
     ? returnContext.ordinaryPreferentialIncome : undefined;
   const preferentialError = 'Form 2210 Schedule AI with qualified dividends or net capital gain needs its separate period worksheet method or confirmed ordinary period worksheet sources';
