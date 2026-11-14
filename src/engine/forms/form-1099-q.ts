@@ -118,7 +118,7 @@ export interface Form1099QOptions {
   /** Actual originals already reported by ScheduleB; never synthesized here. */
   originalInterestStatements?: Form1099Int[];
   /** Actual return identities are required to reconcile canonical in-kind income ownership. */
-  taxpayer?: Taxpayer;
+  taxpayer?: Pick<Taxpayer, 'taxYear' | 'filingStatus'> & { primary: Pick<Taxpayer['primary'], 'ssn'>; spouse?: Pick<NonNullable<Taxpayer['spouse']>, 'ssn'> };
   /** Pass explicit empty education inputs when the return claims no education credit. */
   educationExpenses?: EducationExpenses;
 }

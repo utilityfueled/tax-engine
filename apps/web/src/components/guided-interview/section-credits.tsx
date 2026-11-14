@@ -7,6 +7,7 @@ import {
   type DependentCareData,
   type FilingStatus,
   type PersonalInfoData,
+  type InterestEntryData,
   emptyCreditsData,
 } from "@/lib/guided-interview-flow";
 import { CurrencyField } from "./currency-field";
@@ -89,6 +90,7 @@ function DependentCareSection({
 }
 
 export function SectionCredits({
+  interestEntries,
   data,
   hasDependents,
   filingStatus,
@@ -101,6 +103,7 @@ export function SectionCredits({
   healthInsurance?: HealthInsuranceData;
   personalData?: PersonalInfoData;
   careBenefitSources?: CareBenefitSource[];
+  interestEntries?: InterestEntryData[];
   data: CreditsData | undefined;
   hasDependents: boolean;
   taxYear?: number | null;
@@ -141,7 +144,7 @@ export function SectionCredits({
             onChange={(next) => onDataChange({ ...current, education: next })}
           />
 
-          <EducationDistributionDetails data={current.educationDistributions} onChange={educationDistributions => onDataChange({ ...current, educationDistributions })} />
+          <EducationDistributionDetails taxYear={taxYear} filingStatus={filingStatus} originalContext={{ interestEntries, primarySsn: personalData?.ssn, spouseSsn: personalData?.spouse?.ssn }} data={current.educationDistributions} onChange={educationDistributions => onDataChange({ ...current, educationDistributions })} />
           <PremiumTaxCreditSourceDetails healthInsurance={healthInsurance} personal={personalData} filingStatus={filingStatus} taxYear={taxYear} data={current.premiumTaxCredit} onChange={premiumTaxCredit => onDataChange({ ...current, premiumTaxCredit })} />
           <SavingsBondSourceDetails data={current.savingsBondEducation} onChange={savingsBondEducation => onDataChange({ ...current, savingsBondEducation })} />
           <MinimumTaxCreditDetails data={current.minimumTaxCredit} onChange={minimumTaxCredit => onDataChange({ ...current, minimumTaxCredit })} />

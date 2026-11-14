@@ -36,7 +36,7 @@ notes: |
   uses the existing verified-no-activity method, not this positive-interest packet.
   Current Pub970 is titled2025 and contains no identified worked example of this
   exact account conversion. Cases below are independently derived synthetic facts.
-  No UI, state classification, annual export or human approval is enabled.
+  The finite guided original-source route is delivered separately; state classification, annual export and human approval remain gated.
 lines:
   - line: "deemed-distribution"
     description: "Separate actual original deemed earnings from later bank interest"

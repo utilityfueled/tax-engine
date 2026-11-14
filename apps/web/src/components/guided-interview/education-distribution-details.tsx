@@ -9,6 +9,9 @@ import {
   type EducationSourceField,
   type EducationSourceRecord,
 } from "@/lib/guided-education-distributions";
+import { CoverdellBankInterestDetails } from "./coverdell-bank-interest-details";
+import { invalidateCoverdellBankInterest, type EducationOriginalContext } from "@/lib/guided-coverdell-bank-interest";
+import type { FilingStatus } from "@/lib/guided-interview-flow";
 import { BooleanFact, TextFact } from "./fact-fields";
 import { CurrencyField } from "./currency-field";
 
@@ -61,7 +64,8 @@ function SourceFields({ fields, record, data, onChange }: {
   });
 }
 
-export function EducationDistributionDetails({ data, onChange }: {
+export function EducationDistributionDetails({ data, onChange, originalContext, taxYear, filingStatus }: {
+  originalContext?: EducationOriginalContext; taxYear?: number | null; filingStatus?: FilingStatus | null;
   data?: EducationDistributionData;
   onChange: (next: EducationDistributionData | undefined) => void;
 }) {
@@ -75,6 +79,7 @@ export function EducationDistributionDetails({ data, onChange }: {
   const statement = (index: number, group: "fields" | "transfer", key: string, value: string | boolean | null) => update({
     forms: data.forms?.map((entry, row) => row === index ? {
       ...entry,
+      ...(entry.bankInterestConversion && key !== "sourceFactsConfirmed" ? { bankInterestConversion: invalidateCoverdellBankInterest(entry.bankInterestConversion) } : {}),
       [group]: { ...entry[group], [key]: value },
       fields: { ...entry.fields, ...(group === "fields" ? { [key]: value } : {}), sourceFactsConfirmed: group === "fields" && key === "sourceFactsConfirmed" ? value : null },
     } : entry),
@@ -88,9 +93,10 @@ export function EducationDistributionDetails({ data, onChange }: {
     {collections.filter(collection => collection.key === "beneficiaries").map(collection => renderCollection(collection))}
     <fieldset className="guided-fieldset"><legend>Distribution statements</legend>
       {(data.forms ?? []).map((entry, index) => <fieldset className="guided-fieldset" key={stringValue(entry.fields.sourceId) || index}><legend>Statement {index + 1}</legend>
-        {entry.fields.distributionCode === "6" && <p className="guided-hint">A whole-account disqualification can be calculated here only with actual January 1 value and basis, zero qualified education expenses including eligible 529 contributions, and no later income, gains or losses. Pledged portions, education expenses, losses or later account activity require a separate calculation. You can keep their actual source records here.</p>}
+        {entry.fields.distributionCode === "6" && <p className="guided-hint">A whole-account disqualification can be calculated here only with actual January 1 value and basis, zero qualified education expenses including eligible 529 contributions, and verified full-year activity. Use either confirmed no later income, gains or losses, or the separately sourced January 1 domestic bank conversion below. Pledged portions, education expenses, losses and other later activity require a separate calculation. You can keep their actual source records here.</p>}
         <SourceFields fields={educationStatementFields} record={entry.fields} data={data} onChange={(key, value) => statement(index, "fields", key, value)} />
         <SourceFields fields={educationTransferFields} record={entry.transfer} data={data} onChange={(key, value) => statement(index, "transfer", key, value)} />
+        {entry.fields.accountType === "coverdell_esa" && entry.fields.distributionCode === "6" && entry.fields.prohibitedTransactionKind === "account_disqualification" && <CoverdellBankInterestDetails statement={entry} originalContext={originalContext} taxYear={taxYear} filingStatus={filingStatus} onChange={bankInterestConversion => update({ forms: data.forms?.map((row, position) => position === index ? { ...row, bankInterestConversion } : row) })} />}
         <button type="button" className="utility-button" onClick={() => update({ forms: data.forms?.filter((_, row) => row !== index) })}>Remove statement {index + 1}</button>
       </fieldset>)}
       {data.forms?.length === 0 && <p className="guided-hint">No distribution statements entered.</p>}

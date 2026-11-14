@@ -1,4 +1,14 @@
 {
+  "nov14GuidedCoverdellOriginals": {
+    "sourceFreezeSha256": "3a6fced1b4d737b44851d36931466781183dd2875c13f4759cca39824da6f844",
+    "focused": "8files51PASS;rootAndWebTypesPASS;ownedSpec4PASS;lint0errors",
+    "independentSourceReview": "be4204a7872c4406a8844e9c004d88ce5b2df14e7667baebcc70323d87460e4c",
+    "actualBrowser": "2PASS;0skips;0retries;30secondTimeout;settledBalance30;fourProtectedScopesZero;ownedServerClosed",
+    "rootActualReview": "23dfe5cf8565b16027ad97c3937b70a87f7c6fab265255761d2ca55ffaf80fe9",
+    "ledger": "docs/upgrade-2026-guided-coverdell-bank-interest-20261114.md",
+    "combinedSuccessorRequired": true,
+    "mainPushHold": true
+  },
   "nov14Native26f5bd5bActualSuccessor": {
     "source": "26f5bd5b1d99df1655aa89cbd88e59d7333161de",
     "actual": "24stagesZero;fourWorkloadsPASS;sixComposeRecoveryPhases;633browser628PASS5originalSkips0retry",

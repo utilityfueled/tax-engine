@@ -43,8 +43,10 @@ below retain their original evidence boundaries.
 - [x] Implement the finite original-bound Coverdell January 1 disqualification
   followed by separately sourced domestic bank interest (`3545a64d`), without
   inventing an interest statement or admitting broader later activity.
-- [ ] Collect that finite Coverdell bank-interest packet through the guide with
-  actual originals, reconfirmation and desktop/mobile lifecycle evidence.
+- [x] Collect that finite Coverdell bank-interest packet through the guide: 51
+  focused passes, separate source/render review and two actual desktop/mobile
+  passes with settled balance, reload, edit invalidation and zero protected
+  requests. [Actual evidence](upgrade-2026-guided-coverdell-bank-interest-20261114.md).
 - [x] Implement original Publication 974 Worksheet E allocation for one actual
   married-separate no-exception filer, spouse and one additional tax family.
   Genuine baseline failures precede the finite method; 158 affected tests,

@@ -91,7 +91,8 @@ import type { GuidedIraBasisData, GuidedIraBasisContext } from "./guided-ira-bas
 import { vehicleFactErrors, type VehicleCreditData } from "./guided-vehicle-facts";
 import { adoptionFactErrors, type AdoptionCreditData } from "./guided-adoption-facts";
 import { invalidateAdoptionHistories } from "./guided-adoption-prior-benefits";
-import { educationDistributionFactErrors, invalidateEducationPeriodSources, type EducationDistributionData } from "./guided-education-distributions";
+import { educationOriginalValues } from "./guided-coverdell-bank-interest";
+import { educationDistributionSourcesChanged, educationDistributionFactErrors, invalidateEducationPeriodSources, type EducationDistributionData } from "./guided-education-distributions";
 import { savingsBondFactErrors, type SavingsBondEducationData } from "./guided-savings-bond-facts";
 import { invalidateSavingsBondSources, savingsBondSourceValuesChanged } from "./guided-savings-bond-reissues";
 import { buildActualEducationInput } from "./guided-education-facts";
@@ -880,6 +881,7 @@ export interface InterestEntryData extends InvestmentSourceData {
   foreignCountry?: string;
   taxExemptInterest?: string;
   privateActivityBondInterest?: string;
+  paDirectObligationInterest?: string;
   marketDiscount?: string;
   bondPremium?: string;
   treasuryBondPremium?: string;
@@ -1692,15 +1694,14 @@ export function setInterviewTaxYear(state: GuidedFlowState, taxYear: number | nu
       ...(state.sectionData.adjustments?.codPrincipalResidenceSources ? { adjustments: { ...state.sectionData.adjustments, codPrincipalResidenceSources: invalidateGuidedCodPrincipalResidence(state.sectionData.adjustments.codPrincipalResidenceSources) } } : {}),
       ...(royalties ? { "income-royalties": invalidateRoyaltySources(royalties) } : {}),
       ...(otherTaxes && k3Election?.qualifiedK3Statements?.length ? { "other-taxes": { ...otherTaxes, foreignTaxElection: { ...k3Election, sourceFactsConfirmed: null, qualifiedK3Statements: k3Election.qualifiedK3Statements.map(row => ({ ...row, sourceFactsConfirmed: null })), ...(k3Election.creditWithoutForm1116 ? { creditWithoutForm1116: { ...k3Election.creditWithoutForm1116, sourceFactsConfirmed: null } } : {}) } } } : {}),
-      ...(credits && education && aotcSourcesEntered ? { credits: { ...credits, education: {
-        ...education,
-        aocStudents: education.aocStudents.map(requireAotcSourceReview),
-        aocBanInEffect: undefined,
-        form8862Required: undefined,
-        form8862Completed: undefined,
-        refundableAocFacts: undefined,
-        refundableAocEligible: undefined,
-      } } } : {}),
+      ...(credits && ((education && aotcSourcesEntered) || credits.educationDistributions?.forms?.some(row => row.bankInterestConversion)) ? { credits: { ...credits,
+        ...(education && aotcSourcesEntered ? { education: {
+          ...education, aocStudents: education.aocStudents.map(requireAotcSourceReview),
+          aocBanInEffect: undefined, form8862Required: undefined, form8862Completed: undefined,
+          refundableAocFacts: undefined, refundableAocEligible: undefined,
+        } } : {}),
+        ...(credits.educationDistributions?.forms?.some(row => row.bankInterestConversion) ? { educationDistributions: invalidateEducationPeriodSources(credits.educationDistributions) } : {}),
+      } } : {}),
     },
   };
 }
@@ -1859,7 +1860,10 @@ export function updateSectionData(
   // The existing generic comparison ignores only confirmation fields; every
   // entered refund/payment/history fact remains included here.
   const refundDocumentaryValues=(value:unknown)=>{if(!value||typeof value!=='object'||!('refundRecoveries' in value))return value;const section=value as UnemploymentData;return {...section,refundRecoveries:section.refundRecoveries?{...section.refundRecoveries,originalSources:undefined,originalDraft:undefined}:undefined};};
-  const documentaryValues=(value:unknown)=>sectionId==='additional-deductions'?rrtaDocumentaryValues(value):sectionId==='income-unemployment'?refundDocumentaryValues(value):value;
+  // Retaining the reviewed bank-original snapshot is custody metadata, not new income.
+  const educationDocumentaryValues = (value: unknown) => value && typeof value === 'object' && 'educationDistributions' in value
+    ? { ...value, educationDistributions: educationOriginalValues(value.educationDistributions) } : value;
+  const documentaryValues=(value:unknown)=>sectionId==='additional-deductions'?rrtaDocumentaryValues(value):sectionId==='income-unemployment'?refundDocumentaryValues(value):sectionId==='credits'?educationDocumentaryValues(value):value;
   const sourceValuesChanged = guidedSourceValuesChanged(documentaryValues(state.sectionData[sectionId as keyof SectionDataMap]),documentaryValues(data));
   const nextBusiness = sectionId === "income-self-employment" ? data as SelfEmploymentSectionData : state.sectionData["income-self-employment"];
   const previousBusiness = state.sectionData["income-self-employment"];
@@ -1986,12 +1990,13 @@ export function updateSectionData(
   const premiumTaxCreditSourcesChanged = sourceValuesChanged && ["personal-info", "income-w2", "income-self-employment", "income-retirement", "income-investments", "income-rental", "income-royalties", "income-social-security", "income-unemployment", "adjustments", "credits", "additional-deductions"].includes(sectionId) && nextCredits?.premiumTaxCredit;
   const educationSourcesChanged = !!nextCredits?.educationDistributions && (
     ((sectionId === "personal-info" || sectionId === "adjustments") && guidedSourceValuesChanged(state.sectionData[sectionId], data)) ||
+    (sectionId === "income-investments" && nextCredits.educationDistributions?.forms?.some(row => row.bankInterestConversion) && sourceValuesChanged) ||
     (sectionId === "credits" && (guidedSourceValuesChanged(credits?.education, nextCredits.education) || guidedSourceValuesChanged(credits?.savingsBondEducation, nextCredits.savingsBondEducation)
-      || guidedSourceValuesChanged(credits?.educationDistributions, nextCredits.educationDistributions)))
+      || educationDistributionSourcesChanged(credits?.educationDistributions, nextCredits.educationDistributions)))
   );
   const bondSourcesChanged = !!nextCredits?.savingsBondEducation && (
     (["personal-info", "income-investments", "adjustments"].includes(sectionId) && sourceValuesChanged) ||
-    (sectionId === "credits" && (guidedSourceValuesChanged(credits?.education, nextCredits.education) || guidedSourceValuesChanged(credits?.educationDistributions, nextCredits.educationDistributions)
+    (sectionId === "credits" && (guidedSourceValuesChanged(credits?.education, nextCredits.education) || educationDistributionSourcesChanged(credits?.educationDistributions, nextCredits.educationDistributions)
       || (nextCredits.savingsBondEducation?.reissueSources !== undefined && savingsBondSourceValuesChanged(credits?.savingsBondEducation, nextCredits.savingsBondEducation))))
   );
   const nextW2 = sectionId === "income-w2" ? data as SectionDataMap["income-w2"] : state.sectionData["income-w2"];
@@ -2546,7 +2551,7 @@ export function validateSection(
       Object.assign(errors, netOperatingLossNavigationFactErrors(state.sectionData.adjustments?.netOperatingLossSources, state.taxYear, state.segmentation.filingStatus, state.sectionData["personal-info"], state.segmentation.lifeEvents.includes("net-operating-loss"), state.sectionData.deductions, state.sectionData.adjustments?.k1LossSources, state.sectionData.adjustments?.codNolSources?.attributeSources));
       let loanEducation: StudentLoanEducationSources = [];
       try {
-        if (state.sectionData.adjustments?.studentLoanFacts || state.sectionData.credits?.educationDistributions?.expenses?.some(expense => expense.category === "student_loan")) loanEducation = studentLoanEducationSources(state.sectionData.credits, state.segmentation.filingStatus, state.taxYear, state.sectionData["personal-info"], state.sectionData.adjustments?.studentLoanFacts);
+        if (state.sectionData.adjustments?.studentLoanFacts || state.sectionData.credits?.educationDistributions?.expenses?.some(expense => expense.category === "student_loan")) loanEducation = studentLoanEducationSources(state.sectionData.credits, state.segmentation.filingStatus, state.taxYear, state.sectionData["personal-info"], state.sectionData.adjustments?.studentLoanFacts, { interestEntries: state.sectionData["income-investments"]?.interestEntries, primarySsn: state.sectionData["personal-info"]?.ssn, spouseSsn: state.sectionData["personal-info"]?.spouse?.ssn });
       } catch (error) { errors.studentLoanSources = error instanceof Error ? error.message : "Reconcile the actual education sources linked to student-loan interest."; }
       Object.assign(errors, studentLoanFactErrors(state.sectionData.adjustments, state.segmentation.filingStatus, state.taxYear, loanEducation, state.segmentation.lifeEvents.includes("student-loans")));
       return Object.keys(errors).length ? validateRequiredFacts(errors) : validateAdjustmentsSection(getSectionData(state, "adjustments"), state.segmentation.filingStatus, state.taxYear, loanEducation);
@@ -2558,7 +2563,7 @@ export function validateSection(
       let distributionErrors: Record<string, string> = {};
       try {
         const actualEducation = Object.keys(educationErrors).length ? undefined : buildActualEducationInput(credits, state.taxYear, state.segmentation.filingStatus, personal);
-        distributionErrors = educationDistributionFactErrors(credits?.educationDistributions, state.taxYear, state.segmentation.filingStatus, actualEducation);
+        distributionErrors = educationDistributionFactErrors(credits?.educationDistributions, state.taxYear, state.segmentation.filingStatus, actualEducation, { interestEntries: getSectionData(state, "income-investments")?.interestEntries, primarySsn: personal?.ssn, spouseSsn: personal?.spouse?.ssn });
       } catch {
         distributionErrors.educationDistributions = "Complete the actual education credit facts before confirming distribution allocations.";
       }

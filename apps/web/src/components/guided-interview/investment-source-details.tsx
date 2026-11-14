@@ -19,6 +19,7 @@ export function InterestSourceDetails({ data, onChange }: { data: InterestEntryD
   return <details className="guided-expand"><summary className="guided-expand-trigger">Remaining actual 1099-INT boxes</summary><div className="guided-expand-body">
     <TextFact label="Actual 1099-INT calendar year" value={data.sourceTaxYear ?? ""} onChange={value => onChange("sourceTaxYear", value)} />
     <p className="guided-hint">Check every box and enter 0 only when your actual form confirms no amount. Unknown stays unanswered. Complete the preference worksheet for positive Box 9. Bond premiums and market discount still need separate recipient worksheets.</p>
+    <CurrencyField label="Actual PA direct-obligation interest allocation" hint="Use the actual allocation, including 0 when established. Leave unknown amounts blank." value={data.paDirectObligationInterest ?? ""} onChange={value => onChange("paDirectObligationInterest", value)} />
     {interestSourceAmounts.filter(([field]) => field !== "interestIncome" && field !== "federalWithheld").map(([field, label]) => <CurrencyField key={field} label={label} value={data[field] ?? ""} onChange={value => onChange(field, value)} />)}
     <TextFact label="Box 7 foreign country or territory" value={data.foreignCountry ?? ""} onChange={value => onChange("foreignCountry", value)} />
     <PrivateActivitySourceDetails data={data} onChange={onChange} />

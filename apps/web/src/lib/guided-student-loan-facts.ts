@@ -5,6 +5,7 @@ import { calculateForm1099Q, type Form1099QResult } from "@/engine/forms/form-10
 import type { AdjustmentData, CreditsData, FilingStatus, PersonalInfoData } from "./guided-interview-flow";
 import { buildActualEducationInput } from "./guided-education-facts";
 import { buildEducationDistributionInputs } from "./guided-education-distributions";
+import { educationOriginalOptions, type EducationOriginalContext } from "./guided-coverdell-bank-interest";
 import { parseGuidedCurrency } from "./guided-currency";
 import { amountError, hasEnteredAmount } from "./guided-required-facts";
 
@@ -80,15 +81,15 @@ export function buildStudentLoanInputs(data: StudentLoanData | undefined, filing
   return { studentLoanInterestFacts: facts, form1098E };
 }
 
-export function studentLoanEducationSources(credits: CreditsData | undefined, filingStatus?: FilingStatus | null, taxYear?: number | null, personal?: PersonalInfoData, loanFacts?: StudentLoanData): StudentLoanEducationSources {
+export function studentLoanEducationSources(credits: CreditsData | undefined, filingStatus?: FilingStatus | null, taxYear?: number | null, personal?: PersonalInfoData, loanFacts?: StudentLoanData, originalContext?: EducationOriginalContext): StudentLoanEducationSources {
   const educationClaimed = credits?.education.claimedAsDependent;
   if (typeof educationClaimed === "boolean" && typeof loanFacts?.primaryClaimedAsDependent === "boolean" && educationClaimed !== loanFacts.primaryClaimedAsDependent) throw new Error("Reconcile the actual claimed-dependent answer in the education and student-loan worksheets.");
   if (loanFacts?.primaryClaimedAsDependent === true && personal?.standardDeductionFacts?.primaryCanBeClaimedAsDependent === false) throw new Error("Reconcile actual claimed dependency with the taxpayer's household eligibility answer.");
   if (filingStatus === "mfj" && loanFacts?.spouseClaimedAsDependent === true && personal?.standardDeductionFacts?.spouseCanBeClaimedAsDependent === false) throw new Error("Reconcile actual spouse claimed dependency with the household eligibility answer.");
   if (!credits?.educationDistributions) return [];
   const education = buildActualEducationInput(credits, taxYear, filingStatus, personal);
-  const inputs = buildEducationDistributionInputs(credits.educationDistributions, taxYear, filingStatus, education);
-  return calculateForm1099Q(inputs.form1099Q ?? [], inputs.qualifiedEducationExpenses, { taxYear: taxYear ?? undefined, educationExpenses: education }).loanInterestSourceAdjustments;
+  const inputs = buildEducationDistributionInputs(credits.educationDistributions, taxYear, filingStatus, education, originalContext);
+  return calculateForm1099Q(inputs.form1099Q ?? [], inputs.qualifiedEducationExpenses, { taxYear: taxYear ?? undefined, educationExpenses: education, ...(credits.educationDistributions.forms?.some(row => row.bankInterestConversion) ? educationOriginalOptions(originalContext, taxYear, filingStatus) : {}) }).loanInterestSourceAdjustments;
 }
 
 export function studentLoanFactErrors(data: AdjustmentData | undefined, filingStatus?: FilingStatus | null, taxYear?: number | null, education: StudentLoanEducationSources = [], required = false): Record<string, string> {

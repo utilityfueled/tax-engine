@@ -815,8 +815,9 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
     assertKnownFacts(savingsBondFactErrors(creditsData?.savingsBondEducation, state.taxYear, segmentation.filingStatus, investData?.interestEntries, personalInfo));
     assertKnownFacts(educationFactErrors(creditsData, state.taxYear, segmentation.filingStatus, personalInfo));
     assertKnownFacts(educationDistributionFactErrors(creditsData?.educationDistributions, state.taxYear, segmentation.filingStatus,
-      buildActualEducationInput(creditsData, state.taxYear, segmentation.filingStatus, personalInfo)));
-    if (adjustmentData?.studentLoanFacts || creditsData?.educationDistributions?.expenses?.some(expense => expense.category === "student_loan")) loanEducation = studentLoanEducationSources(creditsData, segmentation.filingStatus, state.taxYear, personalInfo, adjustmentData?.studentLoanFacts);
+      buildActualEducationInput(creditsData, state.taxYear, segmentation.filingStatus, personalInfo),
+      { interestEntries: investData?.interestEntries, primarySsn: personalInfo?.ssn, spouseSsn: personalInfo?.spouse?.ssn }));
+    if (adjustmentData?.studentLoanFacts || creditsData?.educationDistributions?.expenses?.some(expense => expense.category === "student_loan")) loanEducation = studentLoanEducationSources(creditsData, segmentation.filingStatus, state.taxYear, personalInfo, adjustmentData?.studentLoanFacts, { interestEntries: investData?.interestEntries, primarySsn: personalInfo?.ssn, spouseSsn: personalInfo?.spouse?.ssn });
     assertKnownFacts(studentLoanFactErrors(adjustmentData, segmentation.filingStatus, state.taxYear, loanEducation, segmentation.lifeEvents.includes("student-loans")));
     assertKnownFacts(healthInsuranceSourceErrors(state));
     assertKnownFacts(foreignIncomeFactErrors(state));
@@ -900,7 +901,7 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
   const dependentCareBenefits = buildCareBenefitsInput(creditsData?.dependentCareBenefits, state.taxYear, segmentation.filingStatus, careBenefitSources);
   const educationExpenses = buildActualEducationInput(creditsData, state.taxYear, segmentation.filingStatus, personalInfo);
   const savingsBondInputs = buildSavingsBondInputs(creditsData?.savingsBondEducation, state.taxYear, segmentation.filingStatus, investData?.interestEntries, personalInfo);
-  const educationDistributions = buildEducationDistributionInputs(creditsData?.educationDistributions, state.taxYear, segmentation.filingStatus, educationExpenses);
+  const educationDistributions = buildEducationDistributionInputs(creditsData?.educationDistributions, state.taxYear, segmentation.filingStatus, educationExpenses, { interestEntries: investData?.interestEntries, primarySsn: personalInfo?.ssn, spouseSsn: personalInfo?.spouse?.ssn });
   const energyCredits = buildEnergyCreditsInput(creditsData, state.taxYear, segmentation.filingStatus);
   const scheduleH = buildScheduleHInput(otherTaxesData);
   const estimatedPayments = [

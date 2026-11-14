@@ -1,5 +1,17 @@
 # 2026 upgrade implementation evidence
 
+## November 14 guided Coverdell bank originals
+
+The finite January 1 whole-account bank conversion now has guided original
+intake, explicit known-zero fields, confirmation invalidation and interest-once
+calculation. Fifty-one focused tests and separate source/render review pass.
+Both actual desktop/mobile journeys pass with settled $30 balance, reload and
+edit checks; root rehashes the original artifacts and views both screenshots.
+All four protected request scopes remain zero; original failed attempts and
+normal owned cleanup are retained. [Source and actual evidence](upgrade-2026-guided-coverdell-bank-interest-20261114.md).
+This package awaits the integrated successor; broader later activity, human
+review, annual forms and the main push hold remain separate gates.
+
 ## November 14 completed 26f5bd5b native ARM64 successor
 
 The exact `26f5bd5b` native successor passes all 24 stages, four workloads,

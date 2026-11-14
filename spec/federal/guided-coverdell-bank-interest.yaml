@@ -1,0 +1,32 @@
+form: "Guided original Coverdell January1 domestic bank conversion"
+taxYear: "2025 and2026 original capture; annual2026 output remains closed"
+irsReference: "https://www.irs.gov/instructions/i1099q"
+sources:
+  - url: "https://www.irs.gov/instructions/i1099q"
+    retrieved: "2026-11-14"
+    section: "04/2025 continuous-use instructions; code6"
+notes: |
+  UI parity only with form-1099-q-post-disqualification-interest.yaml. No new
+  exclusion, attribution or calculation. Require actual January1 cash conversion,
+  primary beneficiary domestic deposit ownership, no retained trust, complete
+  cash ledger and actual original INT. Positive interest stays on ScheduleB once.
+  Blank originals/context/amounts remain unknown; explicit zero is not inferred.
+  Review binds original statements, actual owner/year and all conversion facts;
+  edits invalidate review. Existing known-no-activity method stays available.
+lines:
+  - line: "guided-once"
+    description: "Canonicalize actual guide originals without duplicate interest"
+    formula: "1000 cash minus700 basis=300 deemed earnings; original bank interest100 yields AGI400 and additional education tax30"
+    testRef: "tests/guided-interview/guided-coverdell-bank-interest.test.ts::preserves actual original bank interest exactly once"
+  - line: "explicit-pa-zero"
+    description: "Preserve actual original PA allocation without supplying an unknown zero"
+    formula: "Explicit allocation0 remains0; missing allocation remains undefined"
+    testRef: "tests/guided-interview/guided-coverdell-bank-interest.test.ts::preserves explicit original PA allocation without inventing zero"
+  - line: "review-boundary"
+    description: "Original, owner and amount edits require renewed review"
+    formula: "Unknown, stale, duplicate or foreign sources reject; full2026 readiness unchanged"
+    testRef: "tests/guided-interview/guided-coverdell-bank-interest.test.ts::denies unknown changed and unsupported conversion originals"
+  - line: "visible-originals"
+    description: "Actual desktop and mobile source controls"
+    formula: "Type actual new conversion sources and explicit PA allocation; blanks deny, canonical/reload preserves interest100 plus earnings300, edit requires renewed review; no protected route requests"
+    testRef: "apps/web/tests/guided-coverdell-bank-interest.spec.ts::types actual bank conversion originals, reports interest once and invalidates edits"

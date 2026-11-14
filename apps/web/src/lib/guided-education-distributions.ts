@@ -2,10 +2,12 @@ import { z } from "zod";
 import { Form1099QSchema, QualifiedEducationExpenseSummarySchema, type EducationExpenses, type TaxYearInput } from "@/models/inputs.js";
 import { calculateForm1099Q } from "@/engine/forms/form-1099-q.js";
 import type { FilingStatus } from "./guided-interview-flow";
+import { buildCoverdellBankInterest, educationOriginalOptions, educationOriginalValues, invalidateCoverdellBankInterest, type CoverdellBankInterestData, type EducationOriginalContext } from "./guided-coverdell-bank-interest";
+import { guidedSourceValuesChanged } from "./guided-source-confirmation";
 import { parseGuidedCurrency } from "./guided-currency";
 
 export type EducationSourceRecord = Record<string, string | boolean | null | undefined>;
-export interface EducationStatementDraft { fields: EducationSourceRecord; transfer: EducationSourceRecord }
+export interface EducationStatementDraft { fields: EducationSourceRecord; transfer: EducationSourceRecord; bankInterestConversion?: CoverdellBankInterestData }
 export interface EducationDistributionData {
   taxYear?: string;
   sourceFactsConfirmed?: boolean | null;
@@ -152,39 +154,44 @@ function normalized(record: EducationSourceRecord): Record<string, unknown> {
   }
   return result;
 }
-function collect(data: EducationDistributionData, year?: number | null, status?: FilingStatus | null, educationExpenses?: EducationExpenses): Pick<TaxYearInput, "form1099Q" | "qualifiedEducationExpenses"> {
+function collect(data: EducationDistributionData, year?: number | null, status?: FilingStatus | null, educationExpenses?: EducationExpenses, originalContext?: EducationOriginalContext): Pick<TaxYearInput, "form1099Q" | "qualifiedEducationExpenses"> {
   if ((year !== 2025 && year !== 2026) || !status || data.taxYear !== String(year)) throw new Error("Choose the actual return year and filing status, and match the education source year.");
   if (!Array.isArray(data.forms)) throw new Error("Add the actual distribution statements or explicitly confirm none.");
-  const forms = data.forms.map(entry => Form1099QSchema.parse({ ...normalized(entry.fields), transfer: normalized(entry.transfer) }));
+  const forms = data.forms.map(entry => Form1099QSchema.parse({ ...normalized(entry.fields), transfer: normalized(entry.transfer), ...(entry.bankInterestConversion ? { postDisqualificationInterestSources: buildCoverdellBankInterest(entry, originalContext, year, status) } : {}) }));
   if (status !== "mfj" && forms.some(form => form.recipientOwner === "spouse")) throw new Error("A spouse's education-distribution income requires that spouse's own return or a joint return.");
   const facts = Object.fromEntries((Object.keys(educationCollectionFields) as EducationSourceCollection[]).map(key => [key, data[key]?.map(normalized)]));
   const summary = QualifiedEducationExpenseSummarySchema.parse({ sourceFacts: { ...facts, taxYear: year, sourceFactsConfirmed: data.sourceFactsConfirmed ?? undefined,
     allDistributionsReconciled: data.allDistributionsReconciled ?? undefined, exceptionsDistinctFromCreditConfirmed: data.exceptionsDistinctFromCreditConfirmed ?? undefined } });
   if (!educationExpenses && summary.sourceFacts?.expenses?.some(expense => parseGuidedCurrency(expense.educationCreditAmount).gt(0))) throw new Error("Link each credit allocation to one actual education-credit student before calculating.");
-  calculateForm1099Q(forms, summary, { taxYear: year, educationExpenses });
+  calculateForm1099Q(forms, summary, { taxYear: year, educationExpenses, ...(data.forms.some(entry => entry.bankInterestConversion) ? educationOriginalOptions(originalContext, year, status) : {}) });
   return { form1099Q: forms, qualifiedEducationExpenses: summary };
 }
-export function educationDistributionFactErrors(data?: EducationDistributionData, year?: number | null, status?: FilingStatus | null, educationExpenses?: EducationExpenses): Record<string, string> {
+export function educationDistributionFactErrors(data?: EducationDistributionData, year?: number | null, status?: FilingStatus | null, educationExpenses?: EducationExpenses, originalContext?: EducationOriginalContext): Record<string, string> {
   if (!data) return {};
-  try { collect(data, year, status, educationExpenses); return {}; }
+  try { collect(data, year, status, educationExpenses, originalContext); return {}; }
   catch (error) {
     return { educationDistributions: error instanceof z.ZodError ? "Complete the statement amounts, account and recipient choices, and linked source records. Leave a value blank only when the actual statement does not report it."
       : error instanceof Error ? error.message : "Complete the actual education distribution sources before calculating." };
   }
 }
-export function buildEducationDistributionInputs(data?: EducationDistributionData, year?: number | null, status?: FilingStatus | null, educationExpenses?: EducationExpenses): Partial<Pick<TaxYearInput, "form1099Q" | "qualifiedEducationExpenses">> {
+export function buildEducationDistributionInputs(data?: EducationDistributionData, year?: number | null, status?: FilingStatus | null, educationExpenses?: EducationExpenses, originalContext?: EducationOriginalContext): Partial<Pick<TaxYearInput, "form1099Q" | "qualifiedEducationExpenses">> {
   if (!data) return {};
-  return collect(data, year, status, educationExpenses);
+  return collect(data, year, status, educationExpenses, originalContext);
 }
 
 /** Period and linked receipt checks must be renewed after an original source edit. */
 export function invalidateEducationPeriodSources(data?: EducationDistributionData): EducationDistributionData | undefined {
   if (!data) return data;
   return { ...data, sourceFactsConfirmed: null,
+    ...(data.forms ? { forms: data.forms.map(row => ({ ...row, ...(row.bankInterestConversion ? { bankInterestConversion: invalidateCoverdellBankInterest(row.bankInterestConversion) } : {}) })) } : {}),
     ...(data.expenseRefunds !== undefined ? { expenseRefunds: data.expenseRefunds.map(row => ({ ...row, sourceFactsConfirmed: null })) } : {}),
     ...(data.roomBoardPeriods !== undefined ? { roomBoardPeriods: data.roomBoardPeriods.map(row => ({ ...row, sourceFactsConfirmed: null })) } : {}),
     ...(data.roomBoardPeriodExpenses !== undefined ? { roomBoardPeriodExpenses: data.roomBoardPeriodExpenses.map(row => ({ ...row, sourceFactsConfirmed: null })) } : {}),
     ...(data.roomBoardPriorUses !== undefined ? { roomBoardPriorUses: data.roomBoardPriorUses.map(row => ({ ...row, sourceFactsConfirmed: null })) } : {}),
     ...(data.roomBoardPriorUseExpenses !== undefined ? { roomBoardPriorUseExpenses: data.roomBoardPriorUseExpenses.map(row => ({ ...row, sourceFactsConfirmed: null })) } : {}),
   };
+}
+
+export function educationDistributionSourcesChanged(previous: unknown, next: unknown): boolean {
+  return guidedSourceValuesChanged(educationOriginalValues(previous), educationOriginalValues(next));
 }

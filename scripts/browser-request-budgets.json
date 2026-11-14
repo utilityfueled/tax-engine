@@ -4001,7 +4001,7 @@
         107,
         109
       ],
-      "reviewBasis": "Exact frozen V2: one awaited review click/400 refusal per case at95–96; exact all-scope census107 and request privacy109; backup/recovery is local. No provider or analysis action.",
+      "reviewBasis": "Exact frozen V2: one awaited review click/400 refusal per case at95\u201396; exact all-scope census107 and request privacy109; backup/recovery is local. No provider or analysis action.",
       "skippedTitles": []
     },
     "guided-refund-payment-years.spec.ts": {
@@ -4162,6 +4162,18 @@
       "requestSourceLines": [],
       "reviewBasis": "Root reviewed full source: two viewport cases type actual mortgage originals, calculate locally, reload and test transition/invalidations; no protected route or download action.",
       "skippedTitles": []
+    },
+    "guided-coverdell-bank-interest.spec.ts": {
+      "caseCount": 2,
+      "skippedTitles": [],
+      "bounds": {
+        "filled-return": 0,
+        "provider": 0,
+        "business-expense-analysis": 0,
+        "self-employment-income-analysis": 0
+      },
+      "requestSourceLines": [],
+      "reviewBasis": "Root reviewed both viewport journeys: actual typed bank and custody originals, canonical local interest-once calculation, local reload, edit invalidation and explicit unknown denial. All four protected scopes assert zero; raw/decoded URL and body privacy, no downloads, and no browser errors are asserted. No provider, PDF, business or self-employment action."
     }
   }
 }

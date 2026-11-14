@@ -19,7 +19,7 @@ function originalIdentity(form: Partial<Form1099Int>): string {
 }
 /** Validate separate already-reported interest; never create an original or add income. */
 export function calculateCoverdellPostDisqualificationInterest(form: Form1099Q, options: {
-  taxYear: number; taxpayer?: Taxpayer; beneficiaryTaxId?: string;
+  taxYear: number; taxpayer?: Pick<Taxpayer, 'taxYear'> & { primary: Pick<Taxpayer['primary'], 'ssn'> }; beneficiaryTaxId?: string;
   originalInterestStatements?: Form1099Int[]; allDistributionStatements: Form1099Q[];
 }): { interest: Decimal; originalIntIndex: number } {
   const parsed = CoverdellPostDisqualificationInterestSchema.safeParse(form.postDisqualificationInterestSources);

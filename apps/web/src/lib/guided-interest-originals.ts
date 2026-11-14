@@ -8,9 +8,13 @@ function optionalAmount(value: string | undefined): string | undefined {
   parseGuidedCurrency(value);
   return (value ?? '').trim().replace(/,/g, '') || '0';
 }
+/** Stable canonical index selection without parsing partially typed originals. */
+export function enteredInterestSources(entries: InterestEntryData[] | undefined): InterestEntryData[] {
+  return (entries ?? []).filter(entry => Object.values(entry).some(value => typeof value === 'string' && value.trim() !== ''));
+}
 /** The original bridge converter, shared without importing the whole bridge/flow. */
 export function buildInterestInputs(entries: InterestEntryData[] | undefined, taxYear?: number | null) {
-  return (entries ?? []).filter(entry => Object.values(entry).some(value => typeof value === 'string' && value.trim() !== '')).map(entry => {
+  return enteredInterestSources(entries).map(entry => {
     const year = entry.sourceTaxYear?.trim();
     return {
       taxYear: year && /^\d{4}$/.test(year) ? Number(year) : undefined,
@@ -20,7 +24,7 @@ export function buildInterestInputs(entries: InterestEntryData[] | undefined, ta
       payer: entry.payer.trim(), interestIncome: optionalAmount(entry.interestIncome), federalWithheld: optionalAmount(entry.federalWithheld),
       earlyWithdrawalPenalty: optionalAmount(entry.earlyWithdrawalPenalty), usSavingsBondInterest: optionalAmount(entry.usSavingsBondInterest),
       foreignTaxPaid: optionalAmount(entry.foreignTaxPaid), foreignCountry: entry.foreignCountry?.trim() || undefined,
-      taxExemptInterest: optionalAmount(entry.taxExemptInterest), privateActivityBondInterest: optionalAmount(entry.privateActivityBondInterest),
+      taxExemptInterest: optionalAmount(entry.taxExemptInterest), paDirectObligationInterest: optionalAmount(entry.paDirectObligationInterest), privateActivityBondInterest: optionalAmount(entry.privateActivityBondInterest),
       privateActivityBondFacts: buildGuidedPrivateActivityFacts(entry, entry.privateActivityBondInterest, taxYear),
     };
   });
