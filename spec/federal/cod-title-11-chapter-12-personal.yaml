@@ -1,0 +1,59 @@
+form: "Chapter 12 personal-debt cancellation"
+fullName: "Actual chapter 12 nonbusiness personal discharge without a separate taxable estate"
+taxYear: 2026
+irsReference: "https://www.irs.gov/publications/p908"
+notes: |
+  Retrieved 2026-11-14. IRC108(a)(1)(A),(a)(2)(A),(b),(d)(2);
+  IRC1398(a),(g),(i),1399; IRC1017(b)(2),(c)(1); final2025 Pub908
+  Individuals in Chapter12 or13, conversion or dismissal of chapter11 cases,
+  and Debt Cancellation; final2025 Pub4681 Bankruptcy; Form982 instructions
+  (12/2021) Definitions and line10a. Chapter12 is not a separate taxable entity
+  under1399. The ordinary individual excludes the complete actual title11
+  discharge and reduces attributes after current tax through the existing
+  original-source regular/AMT method. This does not implement farm-business COD,
+  section1232 farm property tax claims, foreclosures, property dispositions,
+  or estate/debtor succession under1398. Each title11 source route for12 or13
+  now needs the actual case history affirming that the case was never under
+  chapter7 or11: a conversion can terminate a separate taxable estate and
+  return attributes, which the existing continuing-individual route cannot infer.
+  Missing historical affirmation is not migrated to true. Final annual forms,
+  qualified human review and filing remain separate gates.
+  The2026 full-return test injects indexed constants solely inside that test's
+  module, as existing statutory integration tests do; production2026 stays
+  unavailable. The ordinary2025 route uses its unchanged actual constants.
+lines:
+  - line: "personal-exclusion"
+    description: "Exclude complete chapter12 original personal borrowing in both supported years"
+    formula: "For actual debt18000 with assets80000 and liabilities90000, exclude18000 and taxableCOD0, though insolvency is10000. Solvent assets200000 also exclude18000. Exact personal debt18000.49 with nondeductible included interest1200.25 excludes18000.49 and reports aggregate18000 once; the interest is not added or deducted. Same rule applies in2025 and2026."
+    irsRef: "IRC108(a)(1)(A),(a)(2)(A),(d)(2); IRC1399; Pub908 Individuals in Chapter12 or13; Pub4681 Bankruptcy"
+    testRef: "tests/engine/federal-cod-chapter-12-personal.test.ts::excludes complete original chapter12 personal debt in2025 and2026"
+  - line: "case-history"
+    description: "Require actual court and non-estate case history before using continuing-individual attributes"
+    formula: "Chapter12 or13 needs caseNeverChapter7Or11Confirmed true with confirmed referenced court jurisdiction and actual discharge/approved plan. Missing, false and null histories reject;7,11 and unknown chapter remain rejected. No chapter12 positive source is inferred from existing chapter13 data."
+    irsRef: "IRC1398(a),(g),(i),1399; Pub908 conversion or dismissal and Individuals in Chapter12 or13; Form982 Definitions"
+    testRef: "tests/engine/federal-cod-chapter-12-personal.test.ts::requires original non-estate case history and court facts"
+  - line: "later-attributes"
+    description: "Preserve full-exclusion after-tax reductions and exempt-property protection"
+    formula: "With debt18000, remaining liabilities72000 and retained personal basis75000, reduce nonexempt basis3000 and retain unreduced exclusion15000. If that property is exempt under522, reduction0, remainingbasis75000 and unreduced exclusion18000. Both regular and AMT ledgers reconcile and Form982 reference summary uses1a/2, never1b."
+    irsRef: "IRC108(b); IRC1017(b)(2),(c)(1); Form982 line10a; Pub4681 Bankruptcy"
+    testRef: "tests/engine/federal-cod-chapter-12-personal.test.ts::preserves ordinary reductions exempt property and line1a review"
+  - line: "separate-methods"
+    description: "Do not open farm or business debt and property methods"
+    formula: "Business, investment or mixed proceeds, deductible interest, secured/nonpersonal debt, property transfer, positive original property FMV, non-A event code and positive qualified-farm legacy exclusion remain rejected. Case history does not override any actual debt or attribute proof."
+    irsRef: "IRC108(a)(2)(A),(e)(2),(g); IRC1398; original personal-debt source contracts"
+    testRef: "tests/engine/federal-cod-chapter-12-personal.test.ts::retains original nonbusiness debt and property exclusions"
+  - line: "guided-originals"
+    description: "Carry and invalidate actual chapter12 source answers"
+    formula: "The guide transports actual chapter12, court and no7/11 case-history answers without defaults; both navigation and strict collection reject missing/false history. Editing the case history invalidates confirmation. Neither an old chapter13 packet nor an unknown history acquires an opt-in by migration."
+    irsRef: "IRC1398(a),(g),(i),1399; Pub908 Individuals in Chapter12 or13 and conversion"
+    testRef: "tests/guided-interview/guided-cod-chapter-12-personal.test.ts::carries actual chapter12 case history and rejects unknown or converted histories"
+  - line: "visible-facts"
+    description: "Collect the actual non-estate history visibly for chapter12 and13"
+    formula: "Both admitted chapter choices expose a blank original-history question; true is persisted, editing it clears source confirmation, and no unknown answer becomes false or true automatically. Chapter12 is described as personal borrowing only."
+    irsRef: "Pub908 Individuals in Chapter12 or13 and conversion; IRC1398/1399"
+    testRef: "tests/apps/web/cod-chapter-12-personal-interactions.test.tsx::collects actual history for chapters12 and13 without defaulting it"
+  - line: "browser-originals"
+    description: "Collect chapter12 court and history originals in desktop and mobile browsers"
+    formula: "Seed only previously tested ordinary personal debt prerequisites, then type actual chapter12, court, history, event and exempt-property answers in the guide. Unknown history blocks progression. Confirmed records survive reload, canonical return sync and a partial review PDF showing3000 basis reduction and15000 unreduced exclusion. Editing history to false invalidates confirmations and blocks readiness; no opt-in migration occurs."
+    irsRef: "IRC108(a)(1)(A),(b); IRC1398/1399; Pub908 Individuals in Chapter12 or13"
+    testRef: "apps/web/tests/cod-chapter-12-personal.spec.ts::collects original chapter12 history and preserves canonical review while edits block readiness"

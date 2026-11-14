@@ -91,7 +91,8 @@ function collectGuidedCodNol(buildPrior: typeof buildGuidedNetOperatingLoss, dat
     communityPropertyApplies: boolean(data.communityPropertyApplies), regularAndAlternativeExclusionSameConfirmed: boolean(data.regularAndAlternativeExclusionSameConfirmed),
     title11Chapter: data.title11Case && data.title11Chapter ? data.title11Chapter : undefined,
     title11Source: data.title11Case ? { sourceReference: data.title11Source?.sourceReference, sourceFactsConfirmed: boolean(data.title11Source?.sourceFactsConfirmed),
-      debtorUnderCourtJurisdictionConfirmed: boolean(data.title11Source?.debtorUnderCourtJurisdictionConfirmed), dischargeByCourtOrApprovedPlanConfirmed: boolean(data.title11Source?.dischargeByCourtOrApprovedPlanConfirmed) } : undefined,
+      debtorUnderCourtJurisdictionConfirmed: boolean(data.title11Source?.debtorUnderCourtJurisdictionConfirmed), dischargeByCourtOrApprovedPlanConfirmed: boolean(data.title11Source?.dischargeByCourtOrApprovedPlanConfirmed),
+      caseNeverChapter7Or11Confirmed: boolean(data.title11Source?.caseNeverChapter7Or11Confirmed) } : undefined,
     debts, insolvency: { ...data.insolvency, sourceFactsConfirmed: boolean(data.insolvency.sourceFactsConfirmed),
       immediatelyBeforeDischargeConfirmed: boolean(data.insolvency.immediatelyBeforeDischargeConfirmed), allAssetsIncluded: boolean(data.insolvency.allAssetsIncluded),
       exemptAndRetirementAssetsIncluded: boolean(data.insolvency.exemptAndRetirementAssetsIncluded), allLiabilitiesIncluded: boolean(data.insolvency.allLiabilitiesIncluded), assets, liabilities } });

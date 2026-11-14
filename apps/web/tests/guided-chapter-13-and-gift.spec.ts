@@ -36,6 +36,9 @@ for (const viewport of [{ width: 1280, height: 900 }, { width: 390, height: 844 
       await expect(chapter).toHaveCount(0);
       await page.getByRole('combobox', { name: 'Debt was discharged in a title 11 bankruptcy case', exact: true }).selectOption('true');
       await chapter.selectOption('13');
+      const history = page.getByRole('combobox', { name: 'The case was never under Chapter 7 or Chapter 11', exact: true });
+      await expect(history).toHaveValue('');
+      await history.selectOption('true');
       const reference = page.getByRole('textbox', { name: 'Bankruptcy discharge order or plan reference', exact: true });
       await reference.fill('Fictional discharge order');
       await page.getByRole('combobox', { name: "You were a debtor under the court's jurisdiction", exact: true }).selectOption('true');
@@ -43,6 +46,7 @@ for (const viewport of [{ width: 1280, height: 900 }, { width: 390, height: 844 
       await expect(page.getByText('still needed to limit basis reduction', { exact: false })).toBeVisible();
       await page.reload(); await open();
       await expect(chapter).toHaveValue('13');
+      await expect(history).toHaveValue('true');
       await expect(reference).toHaveValue('Fictional discharge order');
       await reference.fill('Corrected order');
       await expect(page.getByRole('combobox', { name: 'Bankruptcy records checked', exact: true })).toHaveValue('');

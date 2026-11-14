@@ -3,7 +3,7 @@ import { expect, it } from 'vitest';
 import { buildGuidedCodNol, invalidateGuidedCodNol } from '@/lib/guided-cod-nol';
 import { guidedCodPartialPersonalState } from '../fixtures/guided-cod-partial-personal';
 
-const court = { sourceReference: 'Fictional discharge order', sourceFactsConfirmed: true, debtorUnderCourtJurisdictionConfirmed: true, dischargeByCourtOrApprovedPlanConfirmed: true };
+const court = { sourceReference: 'Fictional original chapter13 petition through discharge, never chapter7 or11', sourceFactsConfirmed: true, debtorUnderCourtJurisdictionConfirmed: true, dischargeByCourtOrApprovedPlanConfirmed: true, caseNeverChapter7Or11Confirmed: true };
 function setup(patch = {}) {
   const state = guidedCodPartialPersonalState(), data = state.sectionData.adjustments!.codNolSources!;
   const answered = (ledger: NonNullable<typeof data.attributeSources>['regular']) => ledger && { ...ledger, property: { ...ledger.property, followingYear: { ...ledger.property?.followingYear, properties: ledger.property?.followingYear?.properties?.map(row => ({ ...row, exemptUnderSection522: false })) } } };

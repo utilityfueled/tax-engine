@@ -27,8 +27,9 @@ it('shows and collects the chapter 13 facts only after a bankruptcy answer', asy
   await change('Bankruptcy discharge order or plan reference', 'Fictional order');
   await change("You were a debtor under the court's jurisdiction", 'true');
   await change('The court granted the discharge, or it follows a plan the court approved', 'true');
+  await change('The case was never under Chapter 7 or Chapter 11', 'true');
   await change('Bankruptcy records checked', 'true');
-  expect(latest).toMatchObject({ title11Case: true, title11Chapter: '13', title11Source: { sourceReference: 'Fictional order', debtorUnderCourtJurisdictionConfirmed: true, dischargeByCourtOrApprovedPlanConfirmed: true, sourceFactsConfirmed: true } });
+  expect(latest).toMatchObject({ title11Case: true, title11Chapter: '13', title11Source: { sourceReference: 'Fictional order', debtorUnderCourtJurisdictionConfirmed: true, dischargeByCourtOrApprovedPlanConfirmed: true, caseNeverChapter7Or11Confirmed: true, sourceFactsConfirmed: true } });
   await change('Bankruptcy discharge order or plan reference', 'Corrected order');
   expect(latest?.title11Source).toMatchObject({ sourceReference: 'Corrected order', sourceFactsConfirmed: null, debtorUnderCourtJurisdictionConfirmed: true });
   await act(async () => root.unmount()); container.remove();

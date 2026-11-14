@@ -102,13 +102,16 @@ export function calculateCodNolReduction(input: CodNolSourceInput, context?: {
   if (joint || facts.communityPropertyApplies !== false) throw new Error('COD joint or community ownership needs its separate actual attribute allocation method');
   if (typeof facts.title11Case !== 'boolean' || facts.electBasisReductionFirst !== false || facts.otherExclusionsOrExceptionsApply !== false
     || facts.regularAndAlternativeExclusionSameConfirmed !== true) throw new Error('COD title11, unknown exclusions, basis-first or different AMT exclusions require their separate source method');
-  // Spec: cod-title-11-chapter-13. IRC1398 gives chapter 7 and 11 attributes to a separate estate.
+  // Specs: cod-title-11-chapter-13 and cod-title-11-chapter-12-personal.
+  // IRC1398 gives chapter7/11 attributes to a separate estate, even when a
+  // conversion later ends that estate. IRC1399 admits only confirmed non-estate histories here.
   const title11 = facts.title11Case;
   if (title11) {
-    if (facts.title11Chapter !== '13') throw new Error('COD title11 chapter 7 or 11 needs its separate bankruptcy estate method; chapter 12 or an unknown chapter needs its own');
+    if (facts.title11Chapter !== '12' && facts.title11Chapter !== '13') throw new Error('COD title11 chapter 7 or 11 needs its separate bankruptcy estate method; an unknown chapter needs its own');
     const source = facts.title11Source;
     if (source?.sourceFactsConfirmed !== true || !source.sourceReference?.trim() || source.debtorUnderCourtJurisdictionConfirmed !== true
       || source.dischargeByCourtOrApprovedPlanConfirmed !== true) throw new Error('COD title11 requires the actual court record of the discharge');
+    if (source.caseNeverChapter7Or11Confirmed !== true) throw new Error('COD title11 requires actual case history with no chapter7 or11 taxable estate; converted or unknown histories need their separate estate method');
   }
   const exclusion = input.codExclusion;
   if (!exclusion?.insolvency || Boolean(exclusion.bankruptcy) !== title11 || exclusion.electBasisReductionFirst || exclusion.qualifiedPrincipalResidence

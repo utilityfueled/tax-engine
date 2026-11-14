@@ -1,0 +1,26 @@
+form: "Continuing-individual bankruptcy court-history sources"
+fullName: "Independent source boundary for title 11 chapter 12 and 13 personal debt"
+taxYear: 2025
+irsReference: "https://www.irs.gov/publications/p908"
+notes: |
+  Official Publication908 (2025), Individuals in Chapter12 or13 and Notice
+  required in converted and dismissed cases, retrieved2026-11-14. IRC1398(a)
+  creates a separate taxable estate for individual chapter7/11 cases; IRC1399
+  does not do so for other chapters. A chapter11 conversion can terminate an
+  estate and transfer tax attributes. The narrow continuing-individual method
+  requires actual court history, not an inference from the current chapter.
+  This does not implement estate succession, farm/business debt, a property
+  disposition, a joint/community allocation, final2026 forms or filing approval.
+lines:
+  - line: "history"
+    description: "Reject unknown or prior separate-estate history"
+    formula: "For either current chapter12 or13, require the original court history to confirm caseNeverChapter7Or11Confirmed true. Missing and false reject, including false on the previously admitted chapter13 route."
+    testRef: "tests/engine/federal-cod-title-11-history-independent.test.ts::rejects unknown or separate-estate history for both continuing-individual chapters"
+  - line: "full-exclusion"
+    description: "Exclude the actual personal discharge independently of solvency"
+    formula: "The original unsecured personal debt18000 is wholly excluded under IRC108(a)(1)(A) for an actual court-ordered chapter12 discharge, whether assets80000 or200000 against liabilities90000. Taxable cancellation is0; do not substitute the10000 insolvency limit."
+    testRef: "tests/engine/federal-cod-title-11-history-independent.test.ts::uses the full chapter12 court discharge for both insolvent and solvent originals"
+  - line: "estate-boundary"
+    description: "Keep chapter7 and11 outside this method"
+    formula: "A no-prior-estate checkbox cannot admit a current chapter7 or11 case; each requires its separate estate method. A known chapter13 original with confirmed continuing-individual history retains the18000 exclusion."
+    testRef: "tests/engine/federal-cod-title-11-history-independent.test.ts::preserves the explicit separate-estate gate and confirmed chapter13 control"

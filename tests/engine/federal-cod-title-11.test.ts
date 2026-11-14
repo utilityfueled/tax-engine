@@ -5,7 +5,7 @@ import { buildForm982ReferenceSummary } from '@/pdf/mappings/2025/fill-form-982.
 import { actualPartialPersonalCodInput, partialPersonalBasisInput } from '../fixtures/cod-partial-personal.js';
 import { codPropertyRecord } from '../fixtures/cod-ordinary-attributes.js';
 
-const court = { sourceReference: 'Fictional chapter 13 discharge order', sourceFactsConfirmed: true, debtorUnderCourtJurisdictionConfirmed: true, dischargeByCourtOrApprovedPlanConfirmed: true };
+const court = { sourceReference: 'Fictional original chapter13 petition through discharge, never chapter7 or11', sourceFactsConfirmed: true, debtorUnderCourtJurisdictionConfirmed: true, dischargeByCourtOrApprovedPlanConfirmed: true, caseNeverChapter7Or11Confirmed: true };
 function title11(options: Parameters<typeof actualPartialPersonalCodInput>[0] = {}, patch: Record<string, unknown> = {}) {
   const input = actualPartialPersonalCodInput({ debt: '18000', interest: '0', liabilities: '90000', assets: '80000', eventCode: 'A', ...options });
   Object.assign(input.form982NolSources!, { title11Case: true, title11Chapter: '13', title11Source: court, ...patch });
@@ -36,7 +36,7 @@ it('excludes the complete chapter 13 discharge', () => {
 });
 
 it('requires the chapter, court and code facts', () => {
-  for (const title11Chapter of ['7', '11', '12', undefined]) expect(() => calculateFederalTax(title11({}, { title11Chapter })), String(title11Chapter)).toThrow(/separate bankruptcy estate method/);
+  for (const title11Chapter of ['7', '11', undefined]) expect(() => calculateFederalTax(title11({}, { title11Chapter })), String(title11Chapter)).toThrow(/separate bankruptcy estate method/);
   for (const patch of [{ sourceReference: ' ' }, { sourceFactsConfirmed: false }, { debtorUnderCourtJurisdictionConfirmed: undefined }, { dischargeByCourtOrApprovedPlanConfirmed: false }]) {
     expect(() => calculateFederalTax(title11({}, { title11Source: { ...court, ...patch } })), JSON.stringify(patch)).toThrow(/court record/);
   }

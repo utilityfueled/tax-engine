@@ -11,7 +11,9 @@ export const Form982NolSourcesSchema = z.object({
   allDischargesIncluded: z.boolean().optional(), title11Case: z.boolean().optional(), communityPropertyApplies: z.boolean().optional(),
   title11Chapter: z.enum(['7', '11', '12', '13']).optional(),
   title11Source: z.object({ sourceReference: z.string().optional(), sourceFactsConfirmed: z.boolean().optional(),
-    debtorUnderCourtJurisdictionConfirmed: z.boolean().optional(), dischargeByCourtOrApprovedPlanConfirmed: z.boolean().optional() }).optional(),
+    debtorUnderCourtJurisdictionConfirmed: z.boolean().optional(), dischargeByCourtOrApprovedPlanConfirmed: z.boolean().optional(),
+    /** Complete case history, including conversions; never inferred from the discharge chapter. */
+    caseNeverChapter7Or11Confirmed: z.boolean().optional() }).optional(),
   electBasisReductionFirst: z.boolean().optional(), otherExclusionsOrExceptionsApply: z.boolean().optional(),
   regularAndAlternativeExclusionSameConfirmed: z.boolean().optional(),
   debts: z.array(z.object({
