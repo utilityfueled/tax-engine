@@ -486,9 +486,27 @@ lines:
 
   - line: "26"
     description: "Estimated tax payments"
-    formula: "Sum of federal estimated tax payments"
+    formula: "Sum actual federal estimated payments applied to the selected tax year and prior-return overpayments elected for that year. A federal estimate or extension row requires a valid ISO civil payment date and a nonnegative amount even when withholding establishes an exception to Form 2210. A supplied payment application must be explicitly confirmed from the actual payment record and match the selected return's tax year. A legacy row dated in the selected calendar year or the following year retains its entered return association. For a date outside those two calendar years, require a confirmed payment application to that return before crediting the payment. Never choose a tax year from a payment date."
     irsRef: "Form 1040 Instructions, Line 26"
     testRef: "tests/engine/federal.test.ts::Form 1040 Line 26 - estimated tax payments"
+    testRefs:
+      - "tests/engine/federal-payment-date-sources.test.ts::holds undocumented estimates and extension payments even with no installment penalty"
+      - "tests/engine/federal-payment-date-sources.test.ts::keeps the actual paid date distinct from the historical tax year application"
+      - "tests/engine/federal-payment-date-sources.test.ts::preserves following-year estimates and extensions and a confirmed zero"
+    notes: |
+      Final 2025 Form 1040 instructions (https://www.irs.gov/instructions/i1040gi),
+      Line 26 and Schedule 3 line 10, distinguish estimates from payments made
+      with the extension request. The Form 2210 example (https://www.irs.gov/instructions/i2210)
+      uses January 15, 2026 for the 2025 liability. Publication 505 (2026),
+      chapter 2 (https://www.irs.gov/publications/p505), uses January 15, 2027
+      for the fourth 2026 installment. Its early-return waiver changes the
+      installment obligation, and does not reclassify a balance payment as a
+      credit on line 26. Direct Pay identifies payment reason and tax year
+      (https://www.irs.gov/payments/direct-pay-help). A submission confirmation
+      alone does not prove that a payment succeeded and was applied. A civil date
+      and a year application do not establish timely payment, an extension or
+      eligibility for late relief. The Form 2210 timing method retains its
+      separate scope and reconciliations. No federal filing or export gate is changed.
 
   - line: "31"
     description: "Schedule 3 refundable credits and other payments"

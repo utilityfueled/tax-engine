@@ -3824,26 +3824,21 @@ export const EducatorExpenseSourceSchema = z.object({
   nontaxableCoverdellEarnings: optionalDecimalInput,
 });
 
+const TaxPaymentEntrySchema = z.object({
+  date: z.string(),
+  amount: decimal,
+  type: z.enum(["federal", "state"]),
+  state: z.string().optional(),
+  /** Actual federal payment record confirms the return that received this payment. */
+  application: z.strictObject({ taxYear: z.number().int(), confirmed: z.literal(true) }).optional(),
+});
+
 export const AdjustmentsSchema = z.object({
   estimatedTaxPayments: z
-    .array(
-      z.object({
-        date: z.string(),
-        amount: decimal,
-        type: z.enum(["federal", "state"]),
-        state: z.string().optional(),
-      })
-    )
+    .array(TaxPaymentEntrySchema)
     .default([]),
   extensionPayments: z
-    .array(
-      z.object({
-        date: z.string(),
-        amount: decimal,
-        type: z.enum(["federal", "state"]),
-        state: z.string().optional(),
-      })
-    )
+    .array(TaxPaymentEntrySchema)
     .default([]),
   priorYearAppliedCredits: z
     .array(

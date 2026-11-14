@@ -43,6 +43,7 @@ import type {
 } from "@/models/inputs.js";
 import type { TaxReturnResult } from "@/models/outputs.js";
 import { getConstants, type FilingStatus } from "@/models/constants.js";
+import { assertFederalPaymentDates } from "./forms/federal-payment-date-sources.js";
 import { d, sum, zeroFloor, min, roundDollar } from "@/utils/decimal.js";
 import { sumSourceMoney } from "@/utils/sum-source-money.js";
 import { sumSourceMoneyRatios } from "@/utils/sum-source-money-ratios.js";
@@ -221,6 +222,7 @@ import type { ILScheduleWITRecord } from "./state/il-schedule-il-wit.js";
 
 /** Spec: claim-of-right.yaml. Pub525 compares each method's tax for the year of repayment. */
 export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
+  assertFederalPaymentDates(input);
   // Validate retained actual row packets even when Schedule A is not selected.
   input.w2s.forEach((w2, index) => {
     const packet = (w2 as typeof w2 & { stateLocalSources?: unknown }).stateLocalSources;
