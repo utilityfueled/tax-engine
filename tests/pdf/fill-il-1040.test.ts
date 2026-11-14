@@ -4,9 +4,14 @@
  */
 
 import { describe, it, expect, beforeAll } from "vitest";
+import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { PDFDocument, PDFTextField, PDFCheckBox } from "pdf-lib";
 import { calculateFederalTax } from "@/engine/federal.js";
+import { REVIEW_PDF_NOTICE } from "@/pdf/export-policy.js";
 import { fillIL1040, IL_1040_FIELDS } from "@/pdf/fill-il-1040.js";
+import { fillReturn } from "@/pdf/fill-return.js";
 import { formatCurrency } from "@/pdf/pdf-utils.js";
 import type { TaxYearInput } from "@/models/inputs.js";
 import type { TaxReturnResult } from "@/models/outputs.js";
@@ -421,5 +426,41 @@ describe("IL-1040 PDF fill — error handling", () => {
     await expect(
       fillIL1040(ilSingleFiler, result, BLANK_PDF),
     ).rejects.toThrow("No Illinois state return result available");
+  });
+
+  it("keeps line 39 blank in saved review output even with actual bank fields", async () => {
+    const directDeposit = { accountType: "checking" as const, routingNumber: "019998877", accountNumber: "09988776655443321" };
+    const input: TaxYearInput = {
+      ...ilSingleFiler,
+      w2s: ilSingleFiler.w2s.map(w2 => ({ ...w2, stateTaxWithheld: "5000" })),
+      stateReturns: { illinois: { claimedAsDependent: false, age65OrOlderCount: 0, blindCount: 0, hasChildUnder12: false,
+        refundMethod: "direct_deposit", directDeposit } },
+    };
+    const result = calculateFederalTax(input);
+    const original = JSON.stringify({ input, result });
+    const illinois = result.stateReturns?.illinois;
+    if (!illinois) throw new Error("The test fixture requires an Illinois return.");
+    expect(illinois.directDeposit).toMatchObject(directDeposit);
+    expect(illinois.refund.gt(0)).toBe(true);
+
+    const checkSavedForm = (saved: PDFDocument) => {
+      expect(getFieldText(saved, IL_1040_FIELDS.routingNumber) ?? "").toBe("");
+      expect(getFieldText(saved, IL_1040_FIELDS.accountNumber) ?? "").toBe("");
+      expect(isChecked(saved, IL_1040_FIELDS.accountType)).toBe(false);
+      expect(getFieldText(saved, IL_1040_FIELDS.line38Refund)).toBe(formatCurrency(illinois.refund));
+      expect(saved.getSubject()).toBe(REVIEW_PDF_NOTICE);
+    };
+    const outputDir = await mkdtemp(join(tmpdir(), "tax-engine-il-review-banking-"));
+    try {
+      const { filledForms } = await fillReturn(input, result, { blankFormsDir: "forms/blank/2025", outputDir });
+      const savedPath = join(outputDir, "il-1040-filled.pdf");
+      expect(filledForms).toContain(savedPath);
+      checkSavedForm(await PDFDocument.load(await readFile(savedPath)));
+      const standalone = await fillIL1040(input, result, BLANK_PDF);
+      checkSavedForm(await PDFDocument.load(await standalone.save()));
+      expect(JSON.stringify({ input, result })).toBe(original);
+    } finally {
+      await rm(outputDir, { recursive: true, force: true });
+    }
   });
 });

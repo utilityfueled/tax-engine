@@ -1,0 +1,21 @@
+form: "IL-1040 review bank privacy"
+fullName: Omit Illinois direct-deposit bank details from historical review copies
+taxYear: 2025
+reference: "forms/blank/2025/il-1040.pdf, Line 39, and the 2026 execution brief review-export separation"
+notes: |
+  The calculator and original inputs retain exact values. The historical
+  official-template mapper is review-only, including when called directly.
+lines:
+  - line: "render-only-direct-deposit-identifiers"
+    formula: |
+      Remove full routing and account numbers and their masked audit values from
+      the render-only structured input/result copy. Preserve exact monetary
+      values, eligibility and account-type facts, and never change the source.
+    testRef: "tests/pdf/review-identifier-redaction.test.ts::clears full and masked bank identifiers from the render copy only"
+  - line: "saved-review-line-39"
+    formula: |
+      Interactive direct mapping and saved complete review output leave line 39
+      blank even with complete, unredacted direct-deposit originals. The exact
+      source refund continues to print at line 38. Keep the review notice and
+      existing year and filing gates.
+    testRef: "tests/pdf/fill-il-1040.test.ts::keeps line 39 blank in saved review output even with actual bank fields"

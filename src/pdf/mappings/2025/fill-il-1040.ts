@@ -233,13 +233,7 @@ export async function fillIL1040(
   setCurrencyField(form, F.line37OverpaymentAmount, ilResult.overpayment);
   setCurrencyField(form, F.line38Refund, ilResult.refund);
 
-  // ── Direct Deposit (Line 39) ──
-  if (ilResult.directDeposit) {
-    setTextField(form, F.routingNumber, ilResult.directDeposit.routingNumber);
-    setTextField(form, F.accountNumber, ilResult.directDeposit.accountNumber);
-    // account_type checkbox: checking vs savings
-    setCheckBox(form, F.accountType, ilResult.directDeposit.accountType === "checking");
-  }
+  // Leave Line 39 blank in every review copy, including direct mapper calls.
 
   setCurrencyField(form, F.line40CreditForward, ilResult.creditCarryforward);
   setCurrencyField(form, F.line41AmountOwed, ilResult.taxDue);

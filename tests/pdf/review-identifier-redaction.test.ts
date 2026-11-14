@@ -49,6 +49,23 @@ describe("review-copy identifiers", () => {
     expect(JSON.stringify(source)).toBe(original);
     expect(review.absent).toBeUndefined(); expect(review.empty).toBeNull();
   });
+  it("clears full and masked bank identifiers from the render copy only", () => {
+    const source = {
+      input: { stateReturns: { illinois: { directDeposit: {
+        routingNumber: "019998877", accountNumber: "09988776655443321", accountType: "checking"
+      } } } },
+      result: { refund: new Decimal("1024.35"), audit: { directDepositRoutingNumber: "*****8877",
+        directDepositAccountNumber: "*************3321", otherRefund: "0.00" } }
+    };
+    const original = JSON.stringify(source);
+    const review = redactReviewIdentifiers(source);
+    expect(review.input.stateReturns.illinois.directDeposit).toEqual({
+      routingNumber: "", accountNumber: "", accountType: "checking"
+    });
+    expect(review.result.audit).toEqual({ directDepositRoutingNumber: "", directDepositAccountNumber: "", otherRefund: "0.00" });
+    expect(review.result.refund.toFixed()).toBe("1024.35");
+    expect(JSON.stringify(source)).toBe(original);
+  });
   it("preserves exact Decimal audits, money strings, actual zero and explicit institution EINs", () => {
     const amount = new Decimal("0.0000006");
     const source = { value: amount, inputs: { wages: "9007199254740993.01", zero: "0" }, institutions: [{ ein: "12-3456789" }] };
