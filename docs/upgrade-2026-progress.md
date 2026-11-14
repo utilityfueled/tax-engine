@@ -5333,3 +5333,12 @@ execution and current image qualification require separate evidence.
   role suspension because idle connections remain. All runtime cleanup passes;
   the free synthetic branch remains for a focused successor. No scheduled retry
   result is claimed. [Receipts and scope](upgrade-2026-current-status.md).
+
+- The exact `9b6202e7` ARM64 archive passes all 24 runtime/controller stages,
+  including encrypted recovery/rollback and 618 Chromium cases with five original
+  hosted-only skips. Normal stop and socket/default restoration pass. The app
+  scan retains 191 findings, 56 High and zero Critical; the separate PostgreSQL
+  scan remains at nine Critical. Risk acceptance is false. `341573d2` aligns the
+  opt-in dependency builder's inner/outer deadlines; 40 focused controls pass.
+  `a370431d` adds the separately reviewed, pinned offline gosu candidate builder
+  with 59 focused checks. Its actual native runtime/scan evidence is pending.

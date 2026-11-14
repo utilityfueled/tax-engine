@@ -25622,9 +25622,19 @@
       "commit": "f98b3d6a",
       "directRuntimeConsumers": 5,
       "publicStructureSizeChanges": 2,
-      "nativeArm64BackportProven": false,
+      "nativeArm64BackportProven": true,
       "nativeAmd64BackportProven": false,
-      "defaultImageChanged": false
+      "defaultImageChanged": false,
+      "trackedBuilderCommit": "341573d2cde299d4b3adb8250af6240441353336",
+      "nativeArm64TrackedEntryExecuted": true,
+      "trackedBuilderChecksPassed": 22,
+      "trackedWrapperStagesPassed": 10,
+      "trackedPackageAndSanitizerCommandsExecutedFresh": true,
+      "trackedProviderMatchesPriorQualifiedBytes": true,
+      "trackedEntryCleanupVerified": true,
+      "trackedEntryReviewSha256": "c3fb8dafdfd91da9ec1b82c3aa7e0f8d813d6fe67a55dd49228a86af6c07d832",
+      "riskAccepted": false,
+      "candidateReleaseQualified": false
     },
     "stateEstimateContinuation": {
       "paLateFirstInstallmentCommit": "8410a5a8",
@@ -25737,7 +25747,7 @@
       "branchCoveragePercent": 88.02,
       "branchCoverageThresholdPercent": 85,
       "isolatedDatabasesStopped": true,
-      "currentSourceArm64Status": "image import, smoke, scan and recovery passed; native browser running",
+      "currentSourceArm64Status": "all 24 stages passed;618 browser passes and5 original hosted skips;normal VM stop and socket restoration verified",
       "actualPreviewCompressionProof": "passed: identity strong ETag becomes weak with gzip; canonical JSON revision survives",
       "actualPreviewCompressionReceiptSha256": "e72020d1c5a877e0381439bfa526f501951637c11405d81d80a45267c1ea88b0",
       "actualPreviewTwoActorCasDatabaseCheckpointsPassed": 3,
@@ -25773,7 +25783,14 @@
       "actualPreviewBranchDeleted": false,
       "actualPreviewOperations": 541,
       "actualPreviewOutageStatus": "stopped before NOLOGIN and event creation: idle pool connections did not drain",
-      "actualPreviewScheduledRetryQualified": false
+      "actualPreviewScheduledRetryQualified": false,
+      "currentSourceArm64ReceiptSha256": "f3e9691d9d661a247d6c7e10c33ee7f9eb5e20fefccf6098a576179903ab40d4",
+      "currentSourceArm64CleanupSha256": "cd32053478e94fc27e16e991280a6f3de2d3580c6280dd1e44122dc93d318b40",
+      "currentSourceArm64IndependentRootReviewSha256": "ab14f2c3e45f0bd6b33c54841fbe12e5441093dd7156294fbf6e53bcf6f06aad",
+      "currentSourceArm64AppScanCritical": 0,
+      "currentSourceArm64AppScanHigh": 56,
+      "separateDefaultPostgresCriticalFindings": 9,
+      "riskAccepted": false
     },
     "hostedRehearsalAdmission": {
       "commit": "9851cecc",

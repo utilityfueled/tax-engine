@@ -110,3 +110,29 @@ These historical receipts remain separate from successful package and runtime re
 A later offline review found that the initial guest admission in controller `1745eba7ad57d629e3e4d4628f36cb7272eafce56a6fbb2a035084f6af586a46` combines some `test` commands with `&&` under `set -e`. POSIX exempts a failed first command of that compound list from automatic exit. The reviewer reproduced continuation after a failed mount query and after a nonempty container query. Initial guest inventory-query success is therefore unverified by that guard. The source review's original PASS is retained with this correction.
 
 The separately checked package/consumer/recovery assertions and exact completed receipts retain their recorded outcomes. Final container inventory is independently parsed from the checked command's JSON output. Final zero-volume verification uses a checked standalone assignment followed by a standalone emptiness test, and the final normal VM stop and socket restoration have their own receipts. Successor admissions require separate standalone checks for platform, mount-query status/output and each container/volume query, with negative offline controls recorded against the successor source. Those controls belong to the successor's evidence.
+
+
+## Tracked builder execution
+
+The opt-in builder committed at `341573d2cde299d4b3adb8250af6240441353336` subsequently completed an actual native ARM64 execution. Its private wrapper admitted all 23 pinned inputs, ten exact committed Git blobs and four previously verified public source archives. The wrapper uses standalone guest custody checks and the corrected negative controls described above. Admission observed 803,262,906,368 available host bytes against the unchanged 512 GiB floor. The inner builder allowed 120 minutes, its outer command 125 minutes and the complete VM window 150 minutes, including a 15-minute cleanup reserve.
+
+Operation `cedb2056c47bd5f5ae75bb0df0840684` completed all ten wrapper stages and 22 builder checks with exit zero. Both baseline and candidate Debian package builds, explicit optimized checks and paired ASan/UBSan checks returned zero. Each sanitizer parser runner reports 3,360 cases without errors and each recursion runner nine without errors. The ABI diagnostic remains exit 4; authored CVE reproduction, generic ABI approval, release qualification and risk acceptance remain false.
+
+Cache evidence is retained separately from test status. The four pinned public source files were deliberately reused. Neither the toolchain-build nor package-build log reports a cached layer: the toolchain emits actual package installation output and the package RUN emits input checksum validation and fresh source extraction, with fresh package/check/sanitizer logs exported in the new 88-entry artifact manifest. The candidate-image build reused only its `USER root` and `ARG EXPECTED_ARCH` metadata layers; its package installation RUN executed. This run therefore exercised the tracked package and sanitizer commands, rather than merely re-reading the earlier recipe's cached result.
+
+The newly built Debian package and complete candidate image have different hashes from the earlier experiment. The libxml2 provider itself has the same SHA-256 as the earlier admitted provider, independently checked inside the running new image. This establishes the exact tested provider bytes; it does not establish bitwise package/image reproducibility or repeat the earlier five-consumer, recovery, rollback, archive-admission or scan experiment on the new image. The earlier nine-Critical scan remains evidence for its own distinct candidate. No fresh scan or changed vulnerability disposition is inferred here.
+
+The wrapper removed only operation-labelled build resources. Checked final container JSON is empty, the standalone final volume check passed, the VM stopped normally and zero active VMs, both socket-route conditions and the unchanged default connection were verified. Both controller and builder receipts have empty cleanup-error lists and no deadline overrun. The new candidate image was removed after its provider proof; private build artifacts remain retained.
+
+Private evidence is `.local/upgrade-evidence/nov14-pg-libxml2-tracked-builder/execution-cedb2056/`. Independent actual review rechecked all 23 pins, ten committed blobs, all 88 artifact hashes, all required status fields and the loaded provider/package hashes.
+
+| Tracked-entry artifact | SHA-256 |
+| --- | --- |
+| Wrapper source | `2a097b235bb15c0c8b0ad3d3a9fddd12a8c99617af8cb4c34f06c9cac6c4492d` |
+| Execution input pins | `a89169d04eb80684fe603680061d5c6ca93bb0d0413583be32d1d60999b6808b` |
+| Build receipt | `3edf7f021b1ab6d4b2120166a1bf8eb173ea41f70b239e998cdcf79ded54b02a` |
+| Exported artifact manifest, 88 entries | `3b91b832681f2555bd815f1149d88f763f6ec37e9bd1089455a28f03a122bb97` |
+| Newly built runtime Debian package | `39d4bee60ba4bd765cb9e514b99b69a8610d4a20a1ab6afac5906f44898220e0` |
+| New candidate image ID | `43ee8fd968f0ca07f07b1fd5592dbe99a41b49f79038a9b630cd45c43dff2a9d` |
+| Loaded libxml2 provider | `af1bde0a68f9454df32e838e763f500251495e21a6556dc9c959aa61f6f99b23` |
+| Independent actual tracked-entry review | `c3fb8dafdfd91da9ec1b82c3aa7e0f8d813d6fe67a55dd49228a86af6c07d832` |

@@ -58,7 +58,14 @@ Managed Chromium passes 618 executable cases with the five original hosted-only
 skips, zero failures and zero retries. All 12 archived commands pass. Combined
 receipt SHA-256 is
 `f74ddf3cb3a4790aefeb3e52f33164898f95fee41efd0ee21ffaf839c5053847`.
-The separately admitted current-source ARM64 browser rehearsal is running.
+The same source's ARM64 rehearsal passes all 24 stages, including independent
+archive import, smoke, encrypted recovery/rollback and 618 browser cases with
+five original hosted-only skips. The VM stops normally and the user socket and
+default connection are restored. App-image scanning retains 191 findings,
+including 56 High and zero Critical; the separate default PostgreSQL image still
+has nine Critical matches. Neither image has risk acceptance. Root terminal
+review SHA-256 is
+`ab14f2c3e45f0bd6b33c54841fbe12e5441093dd7156294fbf6e53bcf6f06aad`.
 
 Actual protected Vercel responses independently reproduce strong identity ETags
 becoming weak under gzip while the canonical JSON revision survives. Both
@@ -97,10 +104,22 @@ runtime artifact hashes and normal VM/socket cleanup. The actual candidate scan
 retains 9 Critical and 138 High findings. The public struct ABI difference,
 authored CVE reproduction, native AMD64 execution and security-owner decisions
 remain open. Candidate release qualification and risk acceptance remain false;
-the default Compose pin is unchanged. Independently reviewed `61054e71` adds an
-opt-in, pinned source builder with 29 focused controls passing. Its entrypoint
-still needs actual native execution; earlier recipe/runtime evidence remains
-separate. [Sources, checks and artifact hashes](upgrade-2026-postgres-libxml2-native-20261114.md).
+the default Compose pin is unchanged. The opt-in pinned builder and deadline
+correction at `341573d2` pass 40 focused controls and actual native ARM64 execution:
+22 builder checks, ten wrapper stages and all 88 exported artifact hashes pass.
+Package and paired sanitizer commands execute afresh. The new package/image
+hashes differ, while its actual provider matches the earlier tested bytes.
+Normal VM stop, socket/default restoration and resource cleanup pass. This
+tracked-entry test supplies no new candidate scan or full consumer/recovery run.
+Independent actual review SHA-256 is
+`c3fb8dafdfd91da9ec1b82c3aa7e0f8d813d6fe67a55dd49228a86af6c07d832`.
+[Sources, checks and artifact hashes](upgrade-2026-postgres-libxml2-native-20261114.md).
+
+`a370431d` separately adds an offline gosu rebuild candidate using pinned
+upstream 1.20 source, supported Go 1.27.4 and exact module archives. Source review,
+59 focused controls, lint and shell syntax pass. Actual native build, runtime,
+archive admission and scan remain pending. Four fresh archived verification
+lanes are running on that commit. No dependency candidate is promoted.
 
 ## November 14 combined runtime verification
 
