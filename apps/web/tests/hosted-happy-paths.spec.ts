@@ -1,3 +1,4 @@
+import { admitHostedHappyPathTests, normalizeHostedHappyPathDatabaseUrl } from "./hosted-happy-path-admission";
 import { fillRequiredTaxpayerFacts } from "./guided-fixtures";
 import { randomUUID } from "node:crypto";
 import { Pool } from "pg";
@@ -7,21 +8,14 @@ import { expect, test } from "@playwright/test";
 const stripeSecretKey = process.env.STRIPE_SECRET_KEY?.trim() ?? "";
 const stripeWebhookSecret = process.env.STRIPE_WEBHOOK_SECRET?.trim() ?? "";
 const databaseUrl = process.env.DATABASE_URL?.trim() ?? "";
-const starterPriceId = process.env.STRIPE_PRICE_ID_STARTER_MONTHLY?.trim() ?? "";
-const plusPriceId = process.env.STRIPE_PRICE_ID_PLUS_MONTHLY?.trim() ?? "";
 const aiTopUpPriceId = process.env.STRIPE_PRICE_ID_AI_HELPER_TOP_UP?.trim() ?? "";
 const runRealStripeWebhookSmoke = process.env.TAX_ENGINE_REAL_STRIPE_WEBHOOK_SMOKE === "true";
 
-const hasHostedE2eConfig = Boolean(
-  stripeSecretKey
-  && stripeWebhookSecret
-  && databaseUrl
-  && starterPriceId
-  && plusPriceId
-);
+const hasHostedE2eConfig = admitHostedHappyPathTests(process.env);
+
 const hasHostedAiTopUpE2eConfig = hasHostedE2eConfig && Boolean(aiTopUpPriceId);
 
-const normalizedDatabaseUrl = normalizeDatabaseUrl(databaseUrl);
+const normalizedDatabaseUrl = normalizeHostedHappyPathDatabaseUrl(databaseUrl);
 const stripe = hasHostedE2eConfig
   ? new Stripe(stripeSecretKey, {
       apiVersion: "2026-09-30.endive"
@@ -790,24 +784,6 @@ function getWorkspaceIdFromUrl(url: string) {
 
 function createStripeLikeId(prefix: string) {
   return `${prefix}_${randomUUID().replace(/-/g, "").slice(0, 24)}`;
-}
-
-function normalizeDatabaseUrl(connectionString: string) {
-  if (!connectionString) {
-    return connectionString;
-  }
-
-  try {
-    const parsed = new URL(connectionString);
-
-    if (parsed.searchParams.get("sslrootcert") === "system") {
-      parsed.searchParams.delete("sslrootcert");
-    }
-
-    return parsed.toString();
-  } catch {
-    return connectionString;
-  }
 }
 
 function resolvePoolSsl(connectionString: string) {

@@ -1,0 +1,40 @@
+form: "Hosted-E2E-Admission"
+fullName: "Isolated hosted browser rehearsal admission"
+taxYear: 2026
+reference: "docs/upgrade-2026-execution-brief.md"
+notes: |
+  Test harness boundary only. Supplied target acknowledgement is not independent
+  proof of external isolation or permission to mutate production. Stripe price IDs
+  have no test-specific prefix; test secret namespace and exact target custody are
+  checked before creating either client. Never include secrets in error output.
+lines:
+  - line: "test-namespace"
+    description: "Only sandbox Stripe configuration can enable mutation-capable browser tests"
+    formula: "Incomplete settings remain disabled; complete settings require explicit TAX_ENGINE_DEPLOYMENT_MODE=hosted and TAX_ENGINE_BILLING_MODE=test and a test secret/restricted key, webhook and price namespaces before clients are created."
+    testRef: "tests/apps/web/hosted-happy-path-admission.test.ts::rejects live and unknown Stripe namespaces before client setup"
+  - line: "isolated-target"
+    description: "A separately acknowledged app and database identity must match the effective test target"
+    formula: >-
+      Require TAX_ENGINE_HOSTED_E2E_TARGET JSON with kind isolated-synthetic,
+      appOrigin, databaseHost, databasePort, databaseName, databaseUser and a
+      nonempty authorizationReference. Match canonical app origin and parsed
+      database identity; permit cleartext only on loopback app origins. Reject
+      credential-bearing app URLs and database query connection overrides.
+      This descriptor is nonsecret and cannot contain passwords or unknown fields.
+    testRef: "tests/apps/web/hosted-happy-path-admission.test.ts::admits an explicitly acknowledged isolated sandbox target"
+    testRefs:
+      - "tests/apps/web/hosted-happy-path-admission.test.ts::rejects absent or mismatched target custody"
+      - "tests/apps/web/hosted-happy-path-admission.test.ts::rejects query overrides and unsafe app origins without logging inputs"
+  - line: "setup-order"
+    description: "Unsafe fully configured tests stop before either remote-service client"
+    formula: "Evaluate the admission boundary before Stripe or Pool construction. Empty settings remain skipped; preserve all five browser tests, retries and runtime budgets."
+    testRef: "tests/apps/web/hosted-happy-path-admission.test.ts::checks admission before creating either mutation-capable client"
+  - line: "effective-database-tls"
+    description: "Connection URL options cannot disable the effective remote driver verification"
+    formula: >-
+      Reject non-verifying SSL modes even on implicit .psdb.cloud TLS targets.
+      Normalize admitted require and verify-ca aliases to explicit verify-full
+      before Pool construction, preserving channel_binding. Verify the actual
+      installed pg Client connectionParameters without opening a connection;
+      URL precedence must never produce ssl=false or rejectUnauthorized=false.
+    testRef: "tests/apps/web/hosted-happy-path-admission.test.ts::preserves verifying effective pg TLS despite connection URL precedence"

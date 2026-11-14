@@ -7601,6 +7601,26 @@
       ]
     },
     {
+      "key": "federal/hosted-e2e-admission",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "docs/upgrade-2026-execution-brief.md",
+      "specPath": "spec/federal/hosted-e2e-admission.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/hosted-homepage-request-boundary",
       "jurisdiction": "federal",
       "taxYear": 2026,
