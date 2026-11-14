@@ -104,3 +104,9 @@ Private evidence roots are `.local/upgrade-evidence/nov14-pg-libxml2-native-qual
 - A first runtime file-only admission encountered sandbox denial on Podman's inventory lock file. An authorized read-only admission then verified source/artifacts and deliberately stopped before any VM start. Actual runtime used the reviewed frozen controller.
 
 These historical receipts remain separate from successful package and runtime receipts.
+
+## Subsequent admission review correction
+
+A later offline review found that the initial guest admission in controller `1745eba7ad57d629e3e4d4628f36cb7272eafce56a6fbb2a035084f6af586a46` combines some `test` commands with `&&` under `set -e`. POSIX exempts a failed first command of that compound list from automatic exit. The reviewer reproduced continuation after a failed mount query and after a nonempty container query. Initial guest inventory-query success is therefore unverified by that guard. The source review's original PASS is retained with this correction.
+
+The separately checked package/consumer/recovery assertions and exact completed receipts retain their recorded outcomes. Final container inventory is independently parsed from the checked command's JSON output. Final zero-volume verification uses a checked standalone assignment followed by a standalone emptiness test, and the final normal VM stop and socket restoration have their own receipts. Successor admissions require separate standalone checks for platform, mount-query status/output and each container/volume query, with negative offline controls recorded against the successor source. Those controls belong to the successor's evidence.
