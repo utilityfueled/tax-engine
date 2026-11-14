@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { hostedAiTaskAccounting } from "../../../apps/web/src/lib/hosted-ai-task-accounting";
-const mocks = vi.hoisted(() => ({ ensure: vi.fn(), reserve: vi.fn(), start: vi.fn(), cancel: vi.fn(), settle: vi.fn(), unknown: vi.fn() }));
+const mocks = vi.hoisted(() => ({ ensure: vi.fn(), reserve: vi.fn(), start: vi.fn(), cancel: vi.fn(), cancelUndispatched: vi.fn(), settle: vi.fn(), unknown: vi.fn() }));
 vi.mock("../../../apps/web/src/lib/hosted-server-db", () => ({ ensureHostedAppSchema: mocks.ensure, getHostedServerDatabase: async () => ({ pool: {} }) }));
 vi.mock("../../../apps/web/src/lib/hosted-ai-ledger", () => ({ createHostedAiLedger: () => mocks }));
 const input = { ownerId: "authenticated-owner", requestId: "synthetic-request", cycleKey: "cycle", includedBudgetCents: 100, requestPayload: { safe: "redacted" } };
@@ -47,5 +47,10 @@ describe("authenticated provider task accounting", () => {
     await hostedAiTaskAccounting(input, {}).recordUnknownAttempt!(attempt, {});
     expect(mocks.unknown).toHaveBeenCalledWith({ ownerId: input.ownerId, requestId: input.requestId, attempt: 1 });
     expect(mocks.cancel).not.toHaveBeenCalled();
+  });
+  it("binds a never-dispatched cancellation to the same owner and attempt", async () => {
+    await hostedAiTaskAccounting(input, {}).recordUndispatchedAttempt(attempt);
+    expect(mocks.cancelUndispatched).toHaveBeenCalledExactlyOnceWith({ ownerId: input.ownerId, requestId: input.requestId, attempt: 1 });
+    expect(mocks.unknown).not.toHaveBeenCalled();
   });
 });

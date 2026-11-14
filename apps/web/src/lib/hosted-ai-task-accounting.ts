@@ -12,7 +12,8 @@ export function hostedAiTaskAccounting(input: {
   ownerId: string; requestId: string; cycleKey: string; includedBudgetCents: number; requestPayload: unknown;
   /** Explicit server-side decision; never inferred from a model refusal or HTTP retry. */
   escalationApprovalReference?: string;
-}, env: Record<string, string | undefined>): Pick<AiTaskExecution, "beforeAttempt" | "recordAttempt" | "recordUnknownAttempt"> {
+}, env: Record<string, string | undefined>): Required<Pick<AiTaskExecution,
+  "beforeAttempt" | "recordAttempt" | "recordUnknownAttempt" | "recordUndispatchedAttempt">> {
   const identity = { ownerId: input.ownerId, requestId: input.requestId };
   async function ledger() {
     await ensureHostedAppSchema(env);
@@ -40,6 +41,9 @@ export function hostedAiTaskAccounting(input: {
     async recordAttempt(attempt, outcome) {
       await (await ledger()).settle({ ...identity, attempt: attempt.attempt, ...outcome,
         final: outcome.accepted || attempt.attempt === 2 || !input.escalationApprovalReference?.trim() });
+    },
+    async recordUndispatchedAttempt(attempt) {
+      await (await ledger()).cancelUndispatched({ ...identity, attempt: attempt.attempt });
     },
     async recordUnknownAttempt(attempt, outcome) {
       await (await ledger()).unknown({ ...identity, attempt: attempt.attempt, ...outcome });

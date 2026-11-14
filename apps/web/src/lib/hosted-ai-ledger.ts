@@ -17,6 +17,7 @@ interface AttemptRow {
   attempt: number; state: "running" | "unknown" | "accepted" | "rejected";
   model_id: string; started_at: Date; usage: AiTokenUsage | null; provider_cost_usd: string | null;
   provider_request_id: string | null; reconciliation_reference: string | null;
+  undispatched_at: Date | null;
 }
 export interface AiReservationIdentity { ownerId: string; requestId: string }
 export interface ReserveAiCreditsInput extends AiReservationIdentity {
@@ -52,6 +53,24 @@ export function createHostedAiLedger(pool: Pick<Pool, "connect">, mode: StripeBi
       "SELECT * FROM hosted_ai_reservations WHERE owner_id = $1 AND request_id = $2 FOR UPDATE", [input.ownerId, input.requestId]);
     if (!result.rows[0]) throw new Error("AI reservation not found for this owner.");
     return result.rows[0];
+  }
+  async function attemptsFor(client: PoolClient, input: AiReservationIdentity) {
+    const result = await client.query<AttemptRow>(
+      "SELECT * FROM hosted_ai_attempts WHERE owner_id=$1 AND request_id=$2 ORDER BY attempt", [input.ownerId, input.requestId]);
+    return result.rows;
+  }
+  async function finalize(client: PoolClient, reservation: ReservationRow, totalCost: Decimal) {
+    const retail = Money.max(1, totalCost.times(100).ceil());
+    const reserved = new Money(reservation.included_reserved_cents).plus(reservation.purchased_reserved_cents);
+    // Provider overruns are retained exactly. Never debit more than the authorized hold.
+    const charge = Money.min(reserved, retail);
+    const includedCharge = Money.min(reservation.included_reserved_cents, charge);
+    const purchasedCharge = charge.minus(includedCharge);
+    const result = await client.query<ReservationRow>(`UPDATE hosted_ai_reservations SET
+      state=$3,included_reserved_cents=0,purchased_reserved_cents=0,included_charge_cents=$4,purchased_charge_cents=$5,updated_at=NOW()
+      WHERE owner_id=$1 AND request_id=$2 RETURNING *`, [reservation.owner_id, reservation.request_id,
+      retail.gt(reserved) ? "reconciliation-required" : "settled", includedCharge.toFixed(), purchasedCharge.toFixed()]);
+    return view(result.rows[0]);
   }
   async function balance(client: PoolClient, ownerId: string, cycleKey: string, includedBudgetCents: number) {
     const result = await client.query<{ purchased: string; included_used: string; purchased_used: string }>(`
@@ -95,10 +114,10 @@ export function createHostedAiLedger(pool: Pick<Pool, "connect">, mode: StripeBi
       if (!profile || !AI_TASKS[input.task] || !Number.isFinite(Date.parse(input.startedAt))) throw new Error("Invalid AI attempt.");
       return transaction(input.ownerId, async client => {
         const reservation = await row(client, input);
-        const previous = await client.query<AttemptRow>("SELECT * FROM hosted_ai_attempts WHERE owner_id=$1 AND request_id=$2 ORDER BY attempt", [input.ownerId, input.requestId]);
-        if (previous.rows.some(entry => entry.attempt === input.attempt)) return false;
-        if (reservation.state !== "reserved" || previous.rows.length !== input.attempt - 1) throw new Error("AI reservation is not ready for this attempt.");
-        if (input.attempt === 2 && (input.profileId !== "sol-high" || previous.rows[0]?.state !== "rejected")) throw new Error("Only one explicit Sol High escalation after known rejection is allowed.");
+        const previous = await attemptsFor(client, input);
+        if (previous.some(entry => entry.attempt === input.attempt)) return false;
+        if (reservation.state !== "reserved" || previous.length !== input.attempt - 1) throw new Error("AI reservation is not ready for this attempt.");
+        if (input.attempt === 2 && (input.profileId !== "sol-high" || previous[0]?.state !== "rejected")) throw new Error("Only one explicit Sol High escalation after known rejection is allowed.");
         await client.query(`INSERT INTO hosted_ai_attempts (owner_id, request_id, attempt, task, profile_id, model_id, state, started_at)
           VALUES ($1,$2,$3,$4,$5,$6,'running',$7::timestamptz)`, [input.ownerId, input.requestId, input.attempt, input.task, input.profileId, profile.model, input.startedAt]);
         await client.query("UPDATE hosted_ai_reservations SET state='running',updated_at=NOW() WHERE owner_id=$1 AND request_id=$2", [input.ownerId, input.requestId]);
@@ -130,9 +149,10 @@ export function createHostedAiLedger(pool: Pick<Pool, "connect">, mode: StripeBi
       identity(input);
       return transaction(input.ownerId, async client => {
         const reservation = await row(client, input);
-        const attempts = await client.query<AttemptRow>("SELECT * FROM hosted_ai_attempts WHERE owner_id=$1 AND request_id=$2 ORDER BY attempt", [input.ownerId, input.requestId]);
-        const attempt = attempts.rows.find(entry => entry.attempt === input.attempt);
+        const attempts = await attemptsFor(client, input);
+        const attempt = attempts.find(entry => entry.attempt === input.attempt);
         if (!attempt) throw new Error("AI attempt was not started.");
+        if (attempt.undispatched_at) throw new Error("AI attempt was never dispatched.");
         if (input.providerRequestId && attempt.provider_request_id && input.providerRequestId !== attempt.provider_request_id) {
           throw new Error("Conflicting AI provider request identifier.");
         }
@@ -159,16 +179,33 @@ export function createHostedAiLedger(pool: Pick<Pool, "connect">, mode: StripeBi
           await client.query("UPDATE hosted_ai_reservations SET state='reserved',updated_at=NOW() WHERE owner_id=$1 AND request_id=$2", [input.ownerId, input.requestId]);
           return view({ ...reservation, state: "reserved" });
         }
-        const totalCost = attempts.rows.reduce((sum, entry) => sum.plus(entry.attempt === input.attempt ? cost.providerCostUsd : entry.provider_cost_usd ?? "0"), new Money(0));
-        const retail = Money.max(1, totalCost.times(100).ceil());
-        const reserved = new Money(reservation.included_reserved_cents).plus(reservation.purchased_reserved_cents);
-        // Provider overruns are retained exactly. Never debit more than the authorized hold.
-        const charge = Money.min(reserved, retail);
-        const includedCharge = Money.min(reservation.included_reserved_cents, charge);
-        const purchasedCharge = charge.minus(includedCharge);
-        const result = await client.query<ReservationRow>(`UPDATE hosted_ai_reservations SET
-          state=$3,included_reserved_cents=0,purchased_reserved_cents=0,included_charge_cents=$4,purchased_charge_cents=$5,updated_at=NOW()
-          WHERE owner_id=$1 AND request_id=$2 RETURNING *`, [input.ownerId, input.requestId, retail.gt(reserved) ? "reconciliation-required" : "settled", includedCharge.toFixed(), purchasedCharge.toFixed()]);
+        const totalCost = attempts.reduce((sum, entry) => sum.plus(entry.attempt === input.attempt ? cost.providerCostUsd : entry.provider_cost_usd ?? "0"), new Money(0));
+        return finalize(client, reservation, totalCost);
+      });
+    },
+    /** Only the live dispatch call site can attest that the provider transport was never invoked. */
+    async cancelUndispatched(input: AiReservationIdentity & { attempt: 1 | 2 }) {
+      identity(input);
+      return transaction(input.ownerId, async client => {
+        const reservation = await row(client, input);
+        const attempts = await attemptsFor(client, input);
+        const attempt = attempts.find(entry => entry.attempt === input.attempt);
+        if (attempt?.undispatched_at) return view(reservation);
+        if (reservation.state !== "running" || attempt?.state !== "running" || attempt.provider_request_id
+          || attempt.provider_cost_usd !== null || attempts.length !== input.attempt) {
+          throw new Error("Potential provider usage must be settled or reconciled before release.");
+        }
+        const previous = input.attempt === 2 ? attempts[0] : undefined;
+        if (input.attempt === 2 && (previous?.state !== "rejected" || previous.undispatched_at
+          || previous.provider_cost_usd === null || previous.usage === null)) {
+          throw new Error("The first AI attempt requires authoritative usage before release.");
+        }
+        await client.query(`UPDATE hosted_ai_attempts SET state='rejected',undispatched_at=NOW(),completed_at=NOW(),
+          provider_cost_usd=0 WHERE owner_id=$1 AND request_id=$2 AND attempt=$3`, [input.ownerId, input.requestId, input.attempt]);
+        if (previous?.provider_cost_usd != null) return finalize(client, reservation, new Money(previous.provider_cost_usd));
+        const result = await client.query<ReservationRow>(`UPDATE hosted_ai_reservations SET state='cancelled',
+          included_reserved_cents=0,purchased_reserved_cents=0,updated_at=NOW()
+          WHERE owner_id=$1 AND request_id=$2 RETURNING *`, [input.ownerId, input.requestId]);
         return view(result.rows[0]);
       });
     },
@@ -198,8 +235,8 @@ export function createHostedAiLedger(pool: Pick<Pool, "connect">, mode: StripeBi
           || !new Money(reservation.included_reserved_cents).plus(reservation.purchased_reserved_cents).isZero()) {
           throw new Error("Only a final known-usage overrun can be closed.");
         }
-        const attempts = await client.query<AttemptRow>("SELECT * FROM hosted_ai_attempts WHERE owner_id=$1 AND request_id=$2 ORDER BY attempt", [input.ownerId, input.requestId]);
-        if (!attempts.rows.length || attempts.rows.some(attempt => !["accepted", "rejected"].includes(attempt.state)
+        const dispatched = (await attemptsFor(client, input)).filter(attempt => !attempt.undispatched_at);
+        if (!dispatched.length || dispatched.some(attempt => !["accepted", "rejected"].includes(attempt.state)
           || attempt.provider_cost_usd === null || attempt.usage === null)) throw new Error("All provider attempts require final authoritative usage.");
         const result = await client.query<ReservationRow>("UPDATE hosted_ai_reservations SET state='settled',reconciliation_reference=$3,updated_at=NOW() WHERE owner_id=$1 AND request_id=$2 RETURNING *", [input.ownerId, input.requestId, input.reference]);
         return view(result.rows[0]);

@@ -109,6 +109,34 @@ describe("task-based candidate AI adapter", () => {
     await expect(executeAiTask(request({ signal: controller.signal }), deps)).rejects.toThrow();
     expect(deps.fetchFn).not.toHaveBeenCalled();
   });
+  it("records an undispatched cancellation after reservation without invoking transport", async () => {
+    const deps = execution();
+    const controller = new AbortController();
+    const recordUndispatchedAttempt = vi.fn();
+    const recordUnknownAttempt = vi.fn();
+    await expect(executeAiTask(request({ signal: controller.signal }), { ...deps, recordUndispatchedAttempt,
+      recordUnknownAttempt, beforeAttempt: async () => controller.abort(),
+    })).rejects.toMatchObject({ name: "AbortError" });
+    expect(deps.fetchFn).not.toHaveBeenCalled();
+    expect(recordUndispatchedAttempt).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ attempt: 1 }));
+    expect(recordUnknownAttempt).not.toHaveBeenCalled();
+  });
+  it("keeps cancellation after transport invocation on the unknown-usage path", async () => {
+    const deps = execution();
+    const controller = new AbortController();
+    const recordUndispatchedAttempt = vi.fn();
+    const recordUnknownAttempt = vi.fn();
+    deps.fetchFn.mockImplementationOnce(async () => {
+      controller.abort();
+      controller.signal.throwIfAborted();
+    });
+    await expect(executeAiTask(request({ signal: controller.signal }), { ...deps, recordUndispatchedAttempt,
+      recordUnknownAttempt,
+    })).rejects.toThrow(/usage requires reconciliation/u);
+    expect(deps.fetchFn).toHaveBeenCalledOnce();
+    expect(recordUnknownAttempt).toHaveBeenCalledOnce();
+    expect(recordUndispatchedAttempt).not.toHaveBeenCalled();
+  });
   it("reserves before dispatch and settles provider usage even when grounding fails", async () => {
     const order: string[] = [];
     const deps = execution();

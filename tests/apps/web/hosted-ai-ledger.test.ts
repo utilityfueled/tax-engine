@@ -134,6 +134,62 @@ describe.skipIf(!databaseUrl)("AI credits against isolated PostgreSQL", () => {
     const result = await ledger.settle({ ...first, usage, accepted: false, final: true });
     expect(result).toMatchObject({ state: "settled", chargedCents: 1, reservedCents: 0 });
   });
+  it("releases an undispatched hold while preserving any exact first attempt cost", async () => {
+    await ledger.reserve(base); await start();
+    const cancelled = await ledger.cancelUndispatched(first);
+    expect(cancelled).toMatchObject({ state: "cancelled", reservedCents: 0, chargedCents: 0 });
+    expect(await ledger.cancelUndispatched(first)).toEqual(cancelled);
+    await expect(ledger.settle({ ...first, usage, accepted: false, final: true })).rejects.toThrow(/never dispatched/u);
+    const next = { ...base, requestId: "second-request", maximumChargeCents: 3 };
+    expect((await ledger.reserve(next)).created).toBe(true);
+    await start(next);
+    await ledger.settle({ ...first, requestId: next.requestId, usage, accepted: false, final: false });
+    await start({ ...next, attempt: 2, task: "complex-reconciliation", profileId: "sol-high" });
+    const second = { ...first, requestId: next.requestId, attempt: 2 as const };
+    const settled = await ledger.cancelUndispatched(second);
+    expect(settled).toMatchObject({ state: "settled", reservedCents: 0, chargedCents: 1 });
+    expect(await ledger.cancelUndispatched(second)).toEqual(settled);
+    const result = await pool.query(`SELECT request_id, attempt, undispatched_at IS NOT NULL AS undispatched,
+      provider_cost_usd::text AS exact_cost FROM hosted_ai_attempts ORDER BY request_id, attempt`);
+    expect(result.rows).toEqual([
+      { request_id: first.requestId, attempt: 1, undispatched: true, exact_cost: "0" },
+      { request_id: next.requestId, attempt: 1, undispatched: false, exact_cost: "0.000582" },
+      { request_id: next.requestId, attempt: 2, undispatched: true, exact_cost: "0" },
+    ]);
+  });
+  it("keeps potentially dispatched usage held after an undispatched cancellation claim", async () => {
+    await ledger.reserve(base); await start();
+    await ledger.unknown({ ...first, providerRequestId: "req_synthetic" });
+    await expect(ledger.cancelUndispatched(first)).rejects.toThrow(/provider usage/u);
+    expect((await ledger.reserve({ ...base, requestId: "held" })).accepted).toBe(false);
+  });
+  it("keeps a known first attempt overrun reconcilable after refusing the second dispatch", async () => {
+    await ledger.reserve(base); await start();
+    await ledger.settle({ ...first, usage: { inputTokens: 1000, outputTokens: 100000 }, accepted: false, final: false });
+    await start({ attempt: 2, task: "complex-reconciliation", profileId: "sol-high" });
+    expect(await ledger.cancelUndispatched({ ...first, attempt: 2 })).toMatchObject({
+      state: "reconciliation-required", chargedCents: 2, reservedCents: 0,
+    });
+    expect(await ledger.reconcileOverrun({ ...first, reference: "synthetic-operator:prior-attempt" })).toMatchObject({
+      state: "settled", chargedCents: 2, reservedCents: 0,
+    });
+    const costs = await pool.query("SELECT provider_cost_usd::text AS cost FROM hosted_ai_attempts ORDER BY attempt");
+    expect(costs.rows).toEqual([{ cost: "0.0501" }, { cost: "0" }]);
+  });
+  it("adds the undispatched marker without changing historical settled attempts", async () => {
+    await ledger.reserve(base); await start();
+    await ledger.settle({ ...first, usage, accepted: true, final: true });
+    await pool.query("ALTER TABLE hosted_ai_attempts DROP COLUMN undispatched_at");
+    try {
+      await ensureHostedAiLedgerSchema(pool);
+      await ensureHostedAiLedgerSchema(pool);
+      const result = await pool.query("SELECT state, provider_cost_usd::text AS cost, usage, undispatched_at FROM hosted_ai_attempts");
+      expect(result.rows).toEqual([{ state: "accepted", cost: "0.000582", usage, undispatched_at: null }]);
+      await expect(pool.query("UPDATE hosted_ai_attempts SET undispatched_at=NOW()")).rejects.toMatchObject({ code: "23514" });
+    } finally {
+      await ensureHostedAiLedgerSchema(pool);
+    }
+  });
   it("closes an investigated known overrun without another debit and permits its refund", async () => {
     await ledger.reserve(base); await start();
     await ledger.settle({ ...first, usage: { inputTokens: 1000, outputTokens: 100000 }, accepted: false, final: true });

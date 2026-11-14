@@ -44,5 +44,9 @@ export async function ensureHostedAiLedgerSchema(pool: Pick<Pool, "query">) {
       FOREIGN KEY (owner_id, request_id) REFERENCES hosted_ai_reservations (owner_id, request_id),
       CHECK (provider_cost_usd IS NULL OR provider_cost_usd >= 0)
     );
+    ALTER TABLE hosted_ai_attempts ADD COLUMN IF NOT EXISTS undispatched_at TIMESTAMPTZ
+      CHECK (undispatched_at IS NULL OR (state = 'rejected' AND completed_at IS NOT NULL
+        AND provider_cost_usd IS NOT DISTINCT FROM 0::numeric AND usage IS NULL
+        AND pricing_effective_from IS NULL AND provider_request_id IS NULL AND reconciliation_reference IS NULL));
   `);
 }
