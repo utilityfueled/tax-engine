@@ -119,17 +119,24 @@ after a code or price refresh.
 Fixed official Responses/GenerateContent endpoints use one request, no redirect,
 automatic retry, continuation, tools or persisted conversation. OpenAI requests
 set `store:false`; that flag is not proof of account retention configuration.
-Cancellation/timeout may occur after a provider has billed a request. Missing or
-unpriceable usage therefore retains the entire reserved maximum and stops all
-further requests. The runner also stops for an expired approval/capability,
-request ceiling, budget limit or observed overrun. Capabilities expire after
-24 hours and record actual model/strict-probe/usage evidence; successful API
-acceptance alone does not prove quality or retention settings.
+If cancellation occurs during the durable dispatch write, the executor has
+still to call transport. It records the attempt as unsent and gives it no score
+or provider charge. Resuming the journal skips that attempt ID. A dispatch
+without a durable terminal record still holds the full maximum. After transport
+starts, missing or unpriceable usage also holds the full maximum and stops more
+requests. If headers arrive before a body error, the journal retains the HTTP
+status and a hash of the provider's request reference. Those fields can help
+review the attempt and do not establish authoritative usage. The runner also
+stops for an expired approval or capability, request ceiling, budget limit or
+observed overrun. Capabilities expire after 24 hours and record actual model,
+strict-probe and usage evidence. API acceptance alone cannot establish quality
+or retention settings.
 
-Every attempt, including probes and failed/invalid/refused responses, counts
-toward the same Decimal budget. Maximum reservations conservatively cover the
-bounded input/output and supported cache/regional rates. Actual authoritative
-usage settles at its dispatch date. Output includes reasoning tokens once.
+Every dispatched attempt, including probes and failed, invalid or refused
+responses, counts toward the same Decimal budget. Maximum reservations
+conservatively cover the bounded input and output and supported cache and
+regional rates. Actual authoritative usage settles at its dispatch date.
+Output includes reasoning tokens once.
 Unpriced service tiers/cache durations, unknown usage and unexpected model
 responses do not become passing results. A known overrun is retained exactly and
 blocks more spending; no automatic extra authorization is assumed.
