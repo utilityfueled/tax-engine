@@ -1,5 +1,18 @@
 # Current 2026 upgrade continuation
 
+## November 14 actual Sol High escalation and exact local settlement
+
+The separate actual two-attempt rehearsal passes: genuinely grounded Luna is
+deliberately rejected, then explicitly selected Sol High passes actual grounding
+and W-2 validation. Exact provider cost is `$0.00819750`; one logical reservation
+settles once for one synthetic included cent. Duplicate and third attempts are
+denied before dispatch, replay is unchanged and the owned PostgreSQL cluster
+stops normally. Independent actual review passes. The predecessor remains HOLD
+with its own reservation; it is neither replayed nor relabeled. Cumulative known
+usage is 179 calls / `$0.27185270`, plus the unchanged `$0.022384` historical
+timeout reserve. [Actual accounting evidence](upgrade-2026-ai-sol-high-ledger-20261114.md).
+Human quality labels, invoice reconciliation and model promotion remain gated.
+
 ## November 14 strict spec-reference correction before the final combined run
 
 The actual `72da7763` unit and coverage successors each finish with 28,448

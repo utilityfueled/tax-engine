@@ -1,4 +1,26 @@
 {
+  "nov14ActualSolHighSameRequestAccounting": {
+    "applicationSource": "26f5bd5b1d99df1655aa89cbd88e59d7333161de",
+    "actualResult": "PASS;terminal0rootAcknowledged;independentActualReviewPASS",
+    "actualAttempts": 2,
+    "first": "LunaHigh;1640input247output0cached;actualGroundedW2;injectedEngineeringRejection",
+    "second": "explicitSolHigh;sameRequest;1640input463output0cached;actualGroundedW2accepted",
+    "newProviderCostUsd": "0.00819750",
+    "actualOnceOnlySyntheticIncludedChargeCents": 1,
+    "duplicateFirstSecondAndThirdDeniedBeforeDispatch": true,
+    "identicalSettlementReplayUnchanged": true,
+    "ownedDatabase": "PostgreSQL16.16loopbackSCRAM;NUMERICandbigint;normalStop;noChildUncertainty",
+    "predecessor": "separateHOLDpreserved;known0.000356;33syntheticCentsReserved;noSol;causeUnestablished",
+    "cumulativeKnownCalls": 179,
+    "cumulativeKnownCostUsd": "0.27185270",
+    "historicalUnresolvedHoldUsd": "0.022384",
+    "accountedExposureUsd": "0.29423670",
+    "newUnknownUsageHolds": 0,
+    "actualReviewSha256": "5f35ca7a57652bcc6d1fd7fac2b4bd382508b88bf826918f56aebb74bbaad97c",
+    "ledger": "docs/upgrade-2026-ai-sol-high-ledger-20261114.md",
+    "humanLabelsInvoiceReconciliationOrModelPromotion": false,
+    "mainPushHold": true
+  },
   "nov14StrictReferenceAndRuntimeCleanupCorrection": {
     "actualUnitAndCoverageSource": "72da7763",
     "eachActualResult": "28448PASS1strictSpecReferenceFAIL;ownedDBstopped;terminal1acknowledged",

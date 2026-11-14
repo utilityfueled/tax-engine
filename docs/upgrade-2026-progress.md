@@ -1,5 +1,13 @@
 # 2026 upgrade implementation evidence
 
+November 14: independently reviewed actual Luna→explicit Sol High accounting
+passes against source `26f5bd5b`. Two calls cost `$0.00819750` and settle one
+synthetic included cent once; duplicate/third/replay controls and normal owned
+PostgreSQL shutdown pass. The separate predecessor's HOLD is preserved. Known
+usage is now 179 calls / `$0.27185270`, with unchanged `$0.022384` timeout reserve
+and `$0.29423670` exposure. No model promotion or human quality qualification.
+[Actual ledger](upgrade-2026-ai-sol-high-ledger-20261114.md).
+
 November 14: actual `72da7763` unit/coverage each record 28,448 passes and one
 strict spec-reference failure. A test-only generic-arrow comma preserves every
 assertion and emitted JavaScript while making nine literal titles discoverable;
