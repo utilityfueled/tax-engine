@@ -16,7 +16,7 @@
  */
 
 import Decimal from "decimal.js";
-import type { Form1099Q, QualifiedEducationExpenseSummary, EducationExpenses, Taxpayer } from "@/models/inputs.js";
+import type { Form1099Q, Form1099Int, QualifiedEducationExpenseSummary, EducationExpenses, Taxpayer } from "@/models/inputs.js";
 import type { CalculatedLine } from "@/models/outputs.js";
 import { d, sum, zeroFloor, roundDollar } from "@/utils/decimal.js";
 import { AuditTrail } from "@/utils/audit.js";
@@ -29,6 +29,8 @@ import { isOrdinaryEducationExpense, readOrdinaryEducationExpense, validateOrdin
 import { readAnnualEducationCategorySources } from "@/utils/education-annual-category-sources.js";
 import { readInKindK12PlanSource } from "@/utils/in-kind-k12-plan-source.js";
 import { isExpandedEducationDistributionAllowed } from "@/utils/education-distribution-date.js";
+
+import { calculateCoverdellPostDisqualificationInterest } from "./coverdell-post-disqualification-interest.js";
 
 const ZERO = new Decimal(0);
 const PENALTY_RATE = new Decimal("0.10");
@@ -113,6 +115,8 @@ export interface EducationRecipientResult {
 }
 export interface Form1099QOptions {
   taxYear?: number;
+  /** Actual originals already reported by ScheduleB; never synthesized here. */
+  originalInterestStatements?: Form1099Int[];
   /** Actual return identities are required to reconcile canonical in-kind income ownership. */
   taxpayer?: Taxpayer;
   /** Pass explicit empty education inputs when the return claims no education credit. */
@@ -534,8 +538,10 @@ function actualReturnedContribution(form: SourceForm, audit: AuditTrail): Return
     recipientOwner: form.recipientOwner, recipientId: form.recipientOwner === "other" ? (form.recipientId ?? "") : form.recipientOwner,
     returnedPrincipal, netIncome, taxableEarnings, previouslyReportedEarnings, incomeAdjustment };
 }
-function recordSourceDistribution(row: EducationDistributionResult, audit: AuditTrail): EducationDistributionResult {
-  const formula = row.treatment === "account_disqualification" ? "Actual January1 whole-account value and basis under IRC530(e),408(e)(2); verified zero qualified expenses and no later income/gain/loss"
+function recordSourceDistribution(row: EducationDistributionResult, audit: AuditTrail, separateBankInterestReported = false): EducationDistributionResult {
+  const formula = row.treatment === "account_disqualification" ? (separateBankInterestReported
+    ? "Actual January1 whole-account value and basis under IRC530(e),408(e)(2); zero qualified expenses; original bank interest reported separately on ScheduleB, no other activity and no second income inclusion"
+    : "Actual January1 whole-account value and basis under IRC530(e),408(e)(2); verified zero qualified expenses and no later income/gain/loss")
     : row.treatment === "returned_contribution" ? "Actual returned contribution and attributable net income under IRC530(b)(4) and(d)(4)(C)"
     : row.annualCashReporting ? "Exact annual cash source contribution; sum calculated ratios before rounding recipient and return reporting lines"
     : "Actual linked source allocation, income year and Pub970 distribution calculation";
@@ -543,7 +549,7 @@ function recordSourceDistribution(row: EducationDistributionResult, audit: Audit
   return row;
 }
 
-function actualDisqualification(form: Form1099Q, taxYear: number): { earnings: Decimal; basis: Decimal } {
+function actualDisqualification(form: Form1099Q, taxYear: number, hasSeparateBankInterest: boolean): { earnings: Decimal; basis: Decimal } {
   if (form.accountType !== "coverdell_esa") throw new Error("Form1099Q code6 requires an actual Coverdell source");
   const kind = form.prohibitedTransactionKind;
   if (kind !== "account_disqualification" && kind !== "pledged_portion") throw new Error("Form1099Q code6 source reconciliation requires the actual prohibited transaction type");
@@ -560,7 +566,7 @@ function actualDisqualification(form: Form1099Q, taxYear: number): { earnings: D
   if (basis.gt(deemedAmount)) throw new Error("Form1099Q disqualification basis exceeds January1 value; loss treatment remains unresolved");
   const qualifiedExpenses = actualAmount(form.prohibitedTransactionQualifiedEducationExpenses, "beneficiary total qualified education expenses including QTP contributions");
   if (!qualifiedExpenses.isZero()) throw new Error("Form1099Q disqualification requires actual zero qualified education expenses including QTP contributions; education-exclusion treatment remains unresolved");
-  if (form.prohibitedTransactionNoPostDisqualificationActivityConfirmed !== true) throw new Error("Form1099Q disqualification requires verified absence of subsequent income, gain and loss; later activity requires separate source routing");
+  if (!hasSeparateBankInterest && form.prohibitedTransactionNoPostDisqualificationActivityConfirmed !== true) throw new Error("Form1099Q disqualification requires verified absence of subsequent income, gain and loss; later activity requires separate source routing");
   if (!form.prohibitedTransactionPostDisqualificationSourceReference?.trim()) throw new Error("Form1099Q disqualification subsequent-activity source reference is required");
   const earnings = deemedAmount.minus(basis);
   if ((form.earnings === undefined) !== (form.basis === undefined)) throw new Error("Form1099Q disqualification reported basis and earnings must be jointly reconciled");
@@ -592,6 +598,7 @@ function calculateSourceDistributions(forms: Form1099Q[], summary: QualifiedEduc
   uniqueBy(exceptions, item => item.id, "exception source");
   const sources = uniqueBy(forms, item => item.sourceId ?? "", "distribution source");
   const verifiedForms = forms.map((item): SourceForm => {
+    if (item.postDisqualificationInterestSources !== undefined && (item.distributionCode !== "6" || item.accountType !== "coverdell_esa")) throw new Error("Converted bank interest source requires actual Coverdell account disqualification");
     if (!item.transfer) throw new Error("Form1099Q actual transfer facts are required, including an explicit none");
     if (item.sourceFactsComplete === false || item.sourceFactsConfirmed !== true || !item.sourceId || !item.accountId || !item.beneficiaryId || !item.recipientOwner) throw new Error(item.distributionCode === "6" ? "Form1099Q code6 actual source reconciliation is incomplete" : "Form1099Q actual statement source facts are incomplete");
     const nextYearCorrection = isReturnedContribution(item) && item.distributionCode === "3" && item.taxYear === options.taxYear + 1 && item.returnedContributionTaxYear === options.taxYear;
@@ -659,7 +666,13 @@ function calculateSourceDistributions(forms: Form1099Q[], summary: QualifiedEduc
   }
   const disqualifiedBySource = new Map<string, { earnings: Decimal; basis: Decimal }>();
   for (const form of verifiedForms.filter(item => item.distributionCode === "6")) {
-    const amounts = actualDisqualification(form, options.taxYear);
+    const separateBankInterest = form.postDisqualificationInterestSources !== undefined ? calculateCoverdellPostDisqualificationInterest(form, {
+      taxYear: options.taxYear, taxpayer: options.taxpayer, beneficiaryTaxId: beneficiaries.get(form.beneficiaryId)?.studentTaxId,
+      originalInterestStatements: options.originalInterestStatements, allDistributionStatements: verifiedForms,
+    }) : undefined;
+    const amounts = actualDisqualification(form, options.taxYear, separateBankInterest !== undefined);
+    if (separateBankInterest) audit.record("Coverdell disqualification", `${form.sourceId}:separate-bank-interest`, "Actual ordinary bank interest already reported separately", separateBankInterest.interest,
+      "Original ScheduleB interest only; not added again to deemed earnings or education additional-tax base", { "Original INT index": String(separateBankInterest.originalIntIndex) });
     if (verifiedForms.some(item => item.accountId === form.accountId && item.sourceId !== form.sourceId)) throw new Error("Form1099Q terminated account has another statement; subsequent source reconciliation is required");
     if (coverdellFacts.has(form.accountId)) throw new Error("Form1099Q disqualification cannot use conflicting ordinary year-end account history");
     const beneficiary = beneficiaries.get(form.beneficiaryId);
@@ -963,11 +976,13 @@ function calculateSourceDistributions(forms: Form1099Q[], summary: QualifiedEduc
       const taxable = roundDollar(disqualified.earnings);
       audit.record("Coverdell disqualification", `${form.sourceId}:deemed-distribution`, "Actual January1 whole-account deemed distribution", gross,
         "IRC530(e),408(e)(2) and Reg1.408-4(d)(1): January1 account value", { "Deemed distribution date": `${options.taxYear}-01-01`, "Actual transaction date": form.prohibitedTransactionDate ?? "" });
-      for (const [line, description, value] of [["basis", "Actual January1 investment recovered", disqualified.basis], ["earnings", "Exact deemed-distribution earnings", disqualified.earnings], ["taxable-earnings", "Whole-dollar earnings included in income", taxable], ["qualified-expenses", "Actual total qualified education expenses including QTP contributions", ZERO]] as const) audit.record("Coverdell disqualification", `${form.sourceId}:${line}`, description, value, "Actual whole-account value less basis; zero qualified expenses and no subsequent income/gain/loss source facts verified");
+      for (const [line, description, value] of [["basis", "Actual January1 investment recovered", disqualified.basis], ["earnings", "Exact deemed-distribution earnings", disqualified.earnings], ["taxable-earnings", "Whole-dollar earnings included in income", taxable], ["qualified-expenses", "Actual total qualified education expenses including QTP contributions", ZERO]] as const) audit.record("Coverdell disqualification", `${form.sourceId}:${line}`, description, value, form.postDisqualificationInterestSources !== undefined
+        ? "Actual whole-account value less basis; zero qualified expenses; original bank interest reported separately on ScheduleB, no other activity and no second income inclusion"
+        : "Actual whole-account value less basis; zero qualified expenses and no subsequent income/gain/loss source facts verified");
       return recordSourceDistribution({ sourceId: form.sourceId, accountId: form.accountId, accountType: form.accountType, distributionMedium: form.distributionMedium, beneficiaryId: form.beneficiaryId,
         recipientOwner: form.recipientOwner, recipientId: form.recipientOwner === "other" ? (form.recipientId ?? "") : form.recipientOwner, sourceTaxYear: options.taxYear, incomeTaxYear: options.taxYear, treatment: "account_disqualification",
         grossDistribution: gross, earnings: disqualified.earnings, basis: disqualified.basis, validTransfers: ZERO, adjustedQEE: ZERO,
-        taxableEarnings: taxable, taxFreeEarnings: ZERO, educationExpenseExcludedEarnings: ZERO, transferExcludedEarnings: ZERO, creditException: ZERO, penaltyException: ZERO }, audit);
+        taxableEarnings: taxable, taxFreeEarnings: ZERO, educationExpenseExcludedEarnings: ZERO, transferExcludedEarnings: ZERO, creditException: ZERO, penaltyException: ZERO }, audit, form.postDisqualificationInterestSources !== undefined);
     }
     const correction = returnedBySource.get(form.sourceId);
     if (correction) {

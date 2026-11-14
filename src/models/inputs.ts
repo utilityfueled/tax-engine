@@ -1,3 +1,4 @@
+import { CoverdellPostDisqualificationInterestSchema } from "./coverdell-post-disqualification-interest.js";
 import { RRTAPayrollSourcesSchema } from "./rrta-payroll-sources.js";
 import { Form1099DAMarketDiscountSourceSchema } from './form-1099-da-market-discount.js';
 import { MortgageInsurancePrepaidSourcesSchema } from "./mortgage-insurance-prepaid-sources.js";
@@ -941,6 +942,8 @@ export const Form1099QSchema = z.preprocess((value) => {
   /** Full-year source review, covering interest, dividends and realized gains/losses after January1. */
   prohibitedTransactionNoPostDisqualificationActivityConfirmed: z.boolean().optional(),
   prohibitedTransactionPostDisqualificationSourceReference: z.string().optional(),
+  /** Actual January1 conversion with separately reported bank interest; no attribution inference. */
+  postDisqualificationInterestSources: CoverdellPostDisqualificationInterestSchema.optional(),
 }));
 
 const EducationDistributionExpenseSchema = z.object({

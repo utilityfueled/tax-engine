@@ -2004,6 +2004,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     ? calculateForm1099Q(form1099QForms, input.qualifiedEducationExpenses, {
       taxYear: year,
       taxpayer: input.taxpayer,
+      originalInterestStatements: input.form1099Int,
       educationExpenses: input.educationExpenses ?? {aocStudents:[],llcExpenses:"0"},
     })
     : undefined;
