@@ -1,0 +1,27 @@
+form: "Provider-Request-Privacy-Traversal"
+fullName: Inspect provider request property names and values without recursive stack failure
+taxYear: 2026
+reference: "docs/upgrade-2026-execution-brief.md, AI routing and billing"
+notes: |
+  This is a defensive scan for known direct identifier patterns. Existing
+  structured redaction, request body limits, authorization, and model controls
+  still apply.
+lines:
+  - line: "own-keys-and-values"
+    formula: |
+      Scan own enumerable object keys and string values, including optional
+      request fields. Keep existing patterns and generic field names, redaction
+      markers and tax references functional. Ignore inherited properties.
+    testRef: "tests/apps/web/security-pii-detection.test.ts::scans dynamic keys without misclassifying standard field names"
+  - line: "bounded-complete-traversal"
+    formula: |
+      Inspect valid deep JSON without relying on call-stack depth. Track visited
+      objects so cyclic or shared references terminate. If the scan exhausts its
+      work allowance or encounters an accessor, treat the input as unsafe.
+    testRef: "tests/apps/web/security-pii-detection.test.ts::scans deep or shared structures and rejects uninspectable input"
+  - line: "real-interview-ingress"
+    formula: |
+      Throughout the accepted request envelope, block detectable identifiers
+      in unknown keys or values without returning them. A clean, deeply nested,
+      byte-bounded payload with otherwise valid interview fields can proceed.
+    testRef: "tests/apps/web/security-pii-detection.test.ts::scans deep and dynamic fields at actual interview ingress"

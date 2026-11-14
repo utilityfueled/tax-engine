@@ -29,9 +29,10 @@ lines:
     testRef: "tests/apps/web/provider-export-draft.test.ts::rejects direct identifiers in unused envelope fields"
   - line: "unscannable-input"
     formula: |
-      A byte-bounded request whose original fields cannot be scanned safely
-      fails with a private generic 400 before local summary generation.
-    testRef: "tests/apps/web/provider-export-draft.test.ts::rejects an envelope the privacy scan cannot inspect"
+      A deeply nested clean request within the existing byte limit is scanned
+      completely. Identifiers in the original nested fields or property names
+      still fail with a fixed private 400.
+    testRef: "tests/apps/web/provider-export-draft.test.ts::scans deeply nested envelope fields and their property names"
   - line: "hosted-fail-closed"
     formula: |
       Hosted requests require an actor. Hosted production also requires shared

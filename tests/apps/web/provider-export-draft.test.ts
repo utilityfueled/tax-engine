@@ -419,15 +419,20 @@ describe("provider export-draft request path", () => {
     });
   });
 
-  it("rejects an envelope the privacy scan cannot inspect", async () => {
+  it("scans deeply nested envelope fields and their property names", async () => {
     const serialized = JSON.stringify(draftRequest).slice(0, -1);
     const depth = 8_000;
-    const body = `${serialized},"unknown":${"[".repeat(depth)}null${"]".repeat(depth)}}`;
-    const response = await postSyntheticDraft(body, "192.0.2.19", true);
-
-    expect(response.status).toBe(400);
-    expect(response.headers.get("cache-control")).toBe("no-store, private");
-    await expect(response.json()).resolves.toEqual({ error: "Invalid provider export draft request." });
+    for (const [leaf, status] of [["null", 200], ['{"synthetic@example.com":null}', 400]] as const) {
+      const body = `${serialized},"unknown":${"[".repeat(depth)}${leaf}${"]".repeat(depth)}}`;
+      const response = await postSyntheticDraft(body, "192.0.2.19", true);
+      expect(response.status).toBe(status);
+      expect(response.headers.get("cache-control")).toBe("no-store, private");
+      if (status === 400) {
+        await expect(response.json()).resolves.toEqual({
+          error: "Provider export draft request contains unredacted direct identifiers."
+        });
+      }
+    }
   });
 
   it("preserves private hosted auth and shared-protection failures", async () => {

@@ -371,6 +371,36 @@ describe("security: PII detection — deep nested object traversal", () => {
     expect(containsUnsafeDirectIdentifier([])).toBe(false);
     expect(containsUnsafeDirectIdentifier({ items: [] })).toBe(false);
   });
+
+  it("scans dynamic keys without misclassifying standard field names", () => {
+    expect(containsUnsafeDirectIdentifier({
+      personName: "[person-name-1]", ssnLast4: "[REDACTED-SSN]", linkedAccountReference: "masked",
+      "Form 1040 line 7": "0.00", previewByDocument: { "document-2025-1": "ready" }
+    })).toBe(false);
+    const inherited = Object.create({ "synthetic@example.com": "ignored" });
+    expect(containsUnsafeDirectIdentifier(inherited)).toBe(false);
+    for (const key of ["synthetic@example.com", "999-88-7777", "123 Main Street", "workspace-jane-doe"]) {
+      expect(containsUnsafeDirectIdentifier({ optional: { [key]: null } })).toBe(true);
+    }
+    expect(containsUnsafeDirectIdentifier(Object.assign([], { "synthetic@example.com": null }))).toBe(true);
+  });
+
+  it("scans deep or shared structures and rejects uninspectable input", () => {
+    const shared: Record<string, unknown> = { contents: "safe" };
+    shared.self = shared;
+    const depth = 8_000;
+    let root: unknown = shared;
+    for (let index = 0; index < depth; index += 1) root = [root];
+    expect(containsUnsafeDirectIdentifier({ root, shared })).toBe(false);
+    shared.contents = "synthetic@example.com";
+    expect(containsUnsafeDirectIdentifier({ root, shared })).toBe(true);
+    const getter = Object.defineProperty({}, "hidden", {
+      enumerable: true,
+      get() { throw new Error("A privacy scan must not call an accessor."); }
+    });
+    expect(containsUnsafeDirectIdentifier(getter)).toBe(true);
+    expect(containsUnsafeDirectIdentifier(" ".repeat(1024 * 1024 + 1))).toBe(true);
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -493,6 +523,33 @@ describe("security: PII detection — false positive resistance", () => {
 // ---------------------------------------------------------------------------
 
 describe("security: PII detection — interview route rejects unredacted PII", () => {
+  it("scans deep and dynamic fields at actual interview ingress", async () => {
+    const { POST } = await import("../../../apps/web/src/app/api/provider/interview/route");
+    const envelope = JSON.stringify({
+      task: "interview-assist", requestId: "depth-probe:ws-1", requestedAt: "2026-11-14T00:00:00.000Z",
+      replacementCount: 0, redactions: [], interview: { questions: [] }
+    }).slice(0, -1);
+    const depth = 8_000;
+    const cases = [
+      { extra: `"unknown":${"[".repeat(depth)}null${"]".repeat(depth)}`, status: 200 },
+      { extra: `"unknown":${"[".repeat(depth)}"synthetic@example.com"${"]".repeat(depth)}`, status: 400 },
+      { extra: '"unknown":{"synthetic@example.com":null}', status: 400 },
+    ];
+    for (const { extra, status } of cases) {
+      const response = await POST(new Request("http://localhost/api/provider/interview", {
+        method: "POST",
+        headers: { "content-type": "application/json", "x-real-ip": "192.0.2.25" },
+        body: `${envelope},${extra}}`
+      }));
+      expect(response.status).toBe(status);
+      if (status === 400) {
+        await expect(response.json()).resolves.toEqual({
+          error: "Provider interview request contains unredacted direct identifiers."
+        });
+      }
+    }
+  });
+
   it("interview route rejects request containing SSN in questions", async () => {
     const originalDeploymentMode = process.env.TAX_ENGINE_DEPLOYMENT_MODE;
     process.env.TAX_ENGINE_DEPLOYMENT_MODE = "self-host";

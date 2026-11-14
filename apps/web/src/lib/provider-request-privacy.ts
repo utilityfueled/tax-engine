@@ -67,7 +67,6 @@ function containsCreditCardNumber(value: string): boolean {
 const unsafeDirectIdentifierPatterns = [
   ssnPattern,
   einPattern,
-  /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/i,
   /(?<!\d)(?:\+?1[-.\s]?)?(?:\(?\d{3}\)?[-.\s]?)\d{3}[-.\s]?\d{4}(?!\d)/,
   /\b\d{1,6}\s+(?:[A-Z0-9.'#-]+\s){0,5}(?:Street|St|Road|Rd|Avenue|Ave|Boulevard|Blvd|Lane|Ln|Drive|Dr|Court|Ct|Circle|Cir|Way|Place|Pl|Plaza|Pkwy|Parkway|Terrace|Ter)\b(?:\s+(?:Apt|Apartment|Unit|Suite|Ste)\.?\s*[A-Z0-9-]+)?/i,
   /(?:\b[A-Z]{2}\s+|\bZIP[:\s]+)\d{5}(?:-\d{4})?\b/,
@@ -75,28 +74,7 @@ const unsafeDirectIdentifierPatterns = [
   /(?:\brouting\b|\bABA\b|\bRTN\b)[\s#:]*(?<!\d)\d{9}(?!\d)/i,
   /(?:\baccount\b|\bacct\b)[\s#:]*(?<!\d)\d{6,17}(?!\d)/i
 ];
-
-function collectStringValues(value: unknown, seen = new Set<object>()): string[] {
-  if (typeof value === "string") {
-    return [value];
-  }
-
-  if (!value || typeof value !== "object") {
-    return [];
-  }
-
-  if (seen.has(value)) {
-    return [];
-  }
-
-  seen.add(value);
-
-  if (Array.isArray(value)) {
-    return value.flatMap((entry) => collectStringValues(entry, seen));
-  }
-
-  return Object.values(value).flatMap((entry) => collectStringValues(entry, seen));
-}
+const emailPattern = /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/i;
 
 function isLikelyPersonNameSlug(value: string) {
   const tokens = value
@@ -129,20 +107,57 @@ function containsUnsafePersonName(value: string) {
   return false;
 }
 
-export function containsUnsafeDirectIdentifier(value: unknown) {
-  return collectStringValues(value).some((entry) => {
-    for (const pattern of unsafeDirectIdentifierPatterns) {
-      pattern.lastIndex = 0;
+function containsUnsafeText(value: string) {
+  return (value.includes("@") && emailPattern.test(value))
+    || unsafeDirectIdentifierPatterns.some(pattern => pattern.test(value))
+    || containsCreditCardNumber(value)
+    || containsUnsafePersonName(value);
+}
 
-      if (pattern.test(entry)) {
-        return true;
+// A byte-bounded JSON caller cannot exceed either allowance. Keep independent
+// protection for in-process callers, which can pass arbitrary object graphs.
+const maxScanSize = 1024 * 1024;
+
+export function containsUnsafeDirectIdentifier(value: unknown) {
+  const pending: unknown[] = [value];
+  const seen = new WeakSet<object>();
+  let remainingEntries = maxScanSize;
+  let remainingText = maxScanSize;
+
+  function scanText(text: string) {
+    remainingText -= text.length;
+    return remainingText < 0 || containsUnsafeText(text);
+  }
+
+  try {
+    while (pending.length > 0) {
+      const current = pending.pop();
+      if (typeof current === "string") {
+        if (scanText(current)) return true;
+        continue;
+      }
+      if (current === null || typeof current !== "object" || seen.has(current)) continue;
+      seen.add(current);
+
+      const keys = Object.keys(current);
+      remainingEntries -= keys.length;
+      if (remainingEntries < 0) return true;
+      const arrayLength = Array.isArray(current) ? current.length : 0;
+      for (const key of keys) {
+        // Array indices are storage positions rather than input text.
+        const arrayIndex = Number(key);
+        const isArrayIndex = arrayIndex >= 0 && arrayIndex < arrayLength
+          && Number.isInteger(arrayIndex) && String(arrayIndex) === key;
+        if (!isArrayIndex && scanText(key)) return true;
+        const property = Object.getOwnPropertyDescriptor(current, key);
+        if (!property || !Object.hasOwn(property, "value")) return true;
+        pending.push(property.value);
       }
     }
-
-    if (containsCreditCardNumber(entry)) {
-      return true;
-    }
-
-    return containsUnsafePersonName(entry);
-  });
+    return false;
+  } catch {
+    // Accessors, proxies and unsupported objects must never grant admission via
+    // a partially inspected payload.
+    return true;
+  }
 }
