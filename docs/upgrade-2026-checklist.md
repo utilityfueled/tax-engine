@@ -6,6 +6,10 @@ below retain their original evidence boundaries.
 
 ## Active continuation — November 14
 
+- [x] Pass all twelve exact `a370431d` archived checks: 28,244 unit/coverage
+  tests, 88.02% branches and 618 browser passes/five original hosted skips;
+  preserve the initial sandbox failures and verify owned database shutdown.
+
 - [x] Run two actual Luna High requests through current accounting hooks and a
   fresh local PostgreSQL ledger; independently verify exact NUMERIC provider
   costs, separate one-cent debits, duplicate/exhausted admission, settlement

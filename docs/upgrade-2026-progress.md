@@ -5365,3 +5365,16 @@ hashes and preserves the nine detached November 14 facts and authority packet.
 Root independently checks the index digest and six named specification hashes.
 No new expected tax output, reviewer, signed decision or qualification is
 invented. Qualified human review and final annual forms remain pending.
+
+### November 14: all twelve archived a370 checks pass
+
+Exact `a370431d` passes static9, unit28,244/2,036files, coverage28,244/88.02%
+branches and managed Chromium618PASS/five original hosted skips/zero retries.
+Both isolated PostgreSQL clusters stop normally. Four-worker unit/coverage and
+two-worker browser lanes retain all assertions and budgets. First sandbox
+shared-memory/bind failures stopped before tests and remain retained; the fresh
+successor changes only local-runtime access. Combined receipt SHA-256:
+`96e886744fbd38548b70ee878cad44cbaf5a1f1186e0541b721b89e694fbc577`.
+Native gosu runtime/scan execute, but final already-absent base cleanup and a
+confirmed missing Go license notice require a separately reviewed correction.
+No candidate promotion, risk acceptance or release qualification follows.

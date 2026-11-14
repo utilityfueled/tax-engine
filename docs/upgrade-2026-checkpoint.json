@@ -25858,6 +25858,46 @@
       "actualReceiptSha256": "bc2c898e5564aef4dc5846ae119f3e02bb3f9a6333dcfcbb74fb3896bdaa0834",
       "controllerReceiptSha256": "b593b2e2b12f2abc9153a1056fa3feafba848116d94d2a66a10a98f6a3d80db7",
       "independentReviewSha256": "8251733c047045dc3aeda1de3f1e1f80000f466cb26cf93d629f26e63cf118f5"
+    },
+    "exactA370CombinedRuntime": {
+      "source": "a370431d51cb9b71ff07d202021254c00aba5ebe",
+      "passed": true,
+      "commandsPassed": 12,
+      "unitTestsPassed": 28244,
+      "coverageTestsPassed": 28244,
+      "testFilesPassed": 2036,
+      "branchCoveragePercent": "88.02",
+      "branchCoverageThresholdPercent": "85",
+      "browserPassed": 618,
+      "browserOriginalHostedSkips": 5,
+      "browserFailed": 0,
+      "browserRetries": 0,
+      "unitWorkers": 4,
+      "coverageWorkers": 4,
+      "browserWorkers": 2,
+      "databasesStopped": true,
+      "sourcePinsUnchanged": true,
+      "initialSandboxFailuresPreserved": true,
+      "retryReason": "Original runtime lanes stopped before tests because sandbox denied shared memory and bind; corrected local-runtime access only, no source/test/gate changes.",
+      "results": {
+        "static": {
+          "path": ".local/upgrade-evidence/nov14-main-parallel-a370431d/static/result.json",
+          "sha256": "472ea87dbfd715abb92eb05791d750ac5ad559c1edb078d78ea012a24142aeb9"
+        },
+        "unit": {
+          "path": ".local/upgrade-evidence/nov14-main-parallel-a370431d-runtime-retry1/unit/result.json",
+          "sha256": "944efbbbdf37a803cc12d6aa699ff261d9e6ae46dee0abe69e74e3d92f621fe0"
+        },
+        "coverage": {
+          "path": ".local/upgrade-evidence/nov14-main-parallel-a370431d-runtime-retry1/coverage/result.json",
+          "sha256": "fb85e2a2753464667ae110d9d29c3b7e49be3855ef105c3d810612bba2c584cb"
+        },
+        "browser": {
+          "path": ".local/upgrade-evidence/nov14-main-parallel-a370431d-runtime-retry1/browser/result.json",
+          "sha256": "93ed5d47e18803bb49d6c10ed79079e50ba62a8c9dcafb40ba3fe30d9d24ddff"
+        }
+      },
+      "combinedReceiptSha256": "96e886744fbd38548b70ee878cad44cbaf5a1f1186e0541b721b89e694fbc577"
     }
   }
 }

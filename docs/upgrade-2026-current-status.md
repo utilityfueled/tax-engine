@@ -133,9 +133,21 @@ Independent actual review SHA-256 is
 
 `a370431d` separately adds an offline gosu rebuild candidate using pinned
 upstream 1.20 source, supported Go 1.27.4 and exact module archives. Source review,
-59 focused controls, lint and shell syntax pass. Actual native build, runtime,
-archive admission and scan remain pending. Four fresh archived verification
-lanes are running on that commit. No dependency candidate is promoted.
+59 focused controls, lint and shell syntax pass. All twelve archived local
+commands now pass on that source: 28,244 unit and coverage tests in 2,036 files,
+88.02% branches against the unchanged 85% threshold, and 618 Chromium passes
+with five original hosted-only skips and no failures or retries. Unit and
+coverage used four workers each; browser used its existing two. Both owned
+databases stopped normally. The first runtime attempt stopped before tests
+because the sandbox denied shared memory and socket binding. Its failures are
+retained; only local-runtime access changed for the successful retry. Combined
+receipt SHA-256 is
+`96e886744fbd38548b70ee878cad44cbaf5a1f1186e0541b721b89e694fbc577`.
+The native candidate also executed its build, runtime, recovery, independent
+import and scan checks; its final base-image cleanup check failed because that
+image was already absent. The VM stopped normally with routes restored. A
+confirmed missing Go license notice and that cleanup check require a separately
+recorded correction. No dependency candidate is promoted.
 
 ## November 14 combined runtime verification
 
