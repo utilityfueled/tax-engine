@@ -1,0 +1,14 @@
+form: "Independent retained-residence cap allocation"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i982"
+notes: |
+  Independently authored engineering literals, not an IRS example or qualified
+  human tax review. Original wholly primary-owned retained-home acquisition debt,
+  actual cancellation50.01 and actual opening basis300000. No other exclusions.
+  Section108(h)(4) cancels the nonqualified acquisition balance first; subsection(h)(1)
+  reduces only the actual retained residence basis. Source precision is retained.
+lines:
+  - line: "adjacent-cap"
+    description: "Compare actual loan at and one dollar above the debt cap"
+    formula: "Loan750001/cancellation50.01 gives nonqualified1/excluded49.01/taxable1/basis299950.99; loan750000 gives excluded50.01/taxable0/basis299949.99."
+    testRef: "tests/engine/forms/cod-principal-residence-independent.test.ts::preserves adjacent cap allocations through the public return"

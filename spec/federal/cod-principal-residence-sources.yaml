@@ -1,0 +1,59 @@
+form: "Form982 original retained principal residence sources"
+fullName: "Source-derived qualified principal residence exclusion and basis-only reduction"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i982"
+retrievedAt: "2026-11-14"
+notes: |
+  IRC108(a)(1)(E),(a)(2),(h), current through PL119-124, and final2025
+  Publication4681 Qualified Principal Residence Indebtedness control this
+  original-source method. https://uscode.house.gov/us/usc/119-124/t26/s108/
+  https://www.irs.gov/publications/p4681 . Instructions982 revision12/2021
+  lines1e,2,10b expressly retain the pre2026 written-arrangement exception.
+  Narrow first method: one wholly primary-owned retained main home, one original
+  secured acquisition loan, all proceeds acquisition use, complete actual debt
+  and basis records. No refinancing, transfer, business/rental use, joint or
+  community ownership, title11, insolvency-in-lieu, other exclusions, deductible
+  interest or unknown interest. These require their separate actual methods.
+  Dollar amounts use Decimal and preserve source precision. Derive qualification
+  from the immediately-before acquisition loan, capped750000 (MFS375000), not
+  merely the amount canceled. Cancel nonqualified debt first, including excess
+  acquisition balance above the statutory cap. Section108(h) reduces only the
+  retained residence basis, never the NOL/credit/capital/passive waterfall.
+  Prior original carry sources may coexist and retain their independently
+  calculated balances; no fictional empty histories are required for QPR alone.
+  Actual2026 discharges require an arrangement entered into AND evidenced in
+  writing before2026, actual dates/references and this discharge subject to it.
+  Generic legacy flags, a Box6 code, schema validity and known dates alone do
+  not establish those facts. Exact debt/account/owner/year/date/amount and basis
+  confirmations are mandatory; unknown is not zero. Summary fields, if present,
+  must equal source-derived exclusion/basis and contain no competing claim.
+  This is canonical source admission, not final2026 filing or human qualification.
+lines:
+  - line: "retained-original"
+    description: "Admit actual retained-home records without invented loss histories"
+    formula: "One actual100000 cancellation on original800000 acquisition balance: qualified750000, nonqualified50000, excluded50000, taxable50000; actual basis300000 reduces50000 to250000. Complete packet with no NOL history is admissible. Input is not mutated."
+    testRef: "tests/engine/forms/cod-principal-residence.test.ts::derives the nonqualified-first retained-home exclusion from actual sources"
+  - line: "transition"
+    description: "Require real pre2026 writing for actual2026 discharge"
+    formula: "2025 actual discharge requires no invented arrangement; actual2026 discharge admits only entered and evidenced dates before2026 with original reference and subject-to confirmation. Missing, later, invalid or conflicting dates reject."
+    testRef: "tests/engine/forms/cod-principal-residence.test.ts::binds actual2026 discharge to a pre2026 written arrangement"
+  - line: "source-required"
+    description: "Reject missing or conflicting actual eligibility and source facts"
+    formula: "Required records/confirmations/known-zero interest, actual nine-digit primary SSN and four-digit debtor suffix, primary identity and original statement amounts match exactly. Unsupported title11/refinance/disposal/joint/community/mixed interest and unsourced summary claims reject."
+    testRef: "tests/engine/forms/cod-principal-residence.test.ts::rejects missing or contradictory retained-home source facts"
+  - line: "cap-basis"
+    description: "Apply filing-status debt caps and actual residence basis floor"
+    formula: "Loan and cancellation cap boundaries, MFS375000 cap, original debt zero vs missing and adjusted basis below exclusion use exact source amounts. Basis=min(excluded,actual opening adjusted basis); remaining basis cannot be negative and no excess reduces unrelated attributes."
+    testRef: "tests/engine/forms/cod-principal-residence.test.ts::preserves source precision at debt caps and the residence basis floor"
+  - line: "carry-preservation"
+    description: "Preserve independently calculated original carries"
+    formula: "QPR basis-only exclusion leaves canonical capital loss and actual current/prior loss carries unchanged; actual complete residence record does not require the personal insolvency attribute-waterfall packet."
+    testRef: "tests/engine/forms/cod-principal-residence.test.ts::preserves independently calculated carries under the basis-only method"
+  - line: "private-canonical-http"
+    description: "Require original sources through enabled private calculation"
+    formula: "Actual complete canonical2025 input produces private deterministic200 without provider/accounting calls; omitted actual basis confirmation rejects400. Server-owned audit contains computed source amounts but no creditor, account, debtor or original-reference fields."
+    testRef: "tests/apps/web/cod-principal-residence-sources.test.ts::enforces retained-home original sources through the actual private POST"
+  - line: "audit-privacy"
+    description: "Keep private original identifiers out of computed AI audit"
+    formula: "The server-owned available receipt derives AGI50000 and tax3875, but serialized audit must not include the original source reference, account reference or creditor identity. It contains no raw source packet."
+    testRef: "tests/apps/web/cod-principal-residence-sources.test.ts::keeps original residence records out of a computed AI audit"

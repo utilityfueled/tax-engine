@@ -180,6 +180,7 @@ import { calculateForm1099K } from "./forms/form-1099-k.js";
 import { calculateForm1099C } from "./forms/form-1099-c.js";
 import { calculateForm982 } from "./forms/form-982.js";
 import { calculateCodNolReduction } from "./forms/cod-nol-reductions.js";
+import { calculateCodPrincipalResidenceReduction } from "./forms/cod-principal-residence.js";
 import { hasCompleteEmptyForeignNolSources } from "./forms/empty-nol-foreign-sources.js";
 import { calculateCodAttributeReturn } from "./forms/cod-attribute-return.js";
 import { calculateSEHealthInsuranceWorksheet, type SEHealthInsuranceWorksheetResult } from "./forms/se-health-insurance-worksheet.js";
@@ -259,8 +260,10 @@ function calculateFederalTaxForSources(input: TaxYearInput): TaxReturnResult {
   calculateQofInclusion(input);
   // Spec: cod-bankruptcy-source-admission.yaml. Legacy exclusion amounts and
   // elections do not prove eligibility, attribute ownership or complete history.
+  const principalResidence = calculateCodPrincipalResidenceReduction(input);
+  if (principalResidence) input = { ...input, codExclusion: principalResidence.codExclusion };
   const codClaim = input.codExclusion;
-  if (!input.form982NolSources && codClaim && (codClaim.bankruptcy || codClaim.electBasisReductionFirst
+  if (!input.form982NolSources && !principalResidence && codClaim && (codClaim.bankruptcy || codClaim.electBasisReductionFirst
     || (codClaim.insolvency && d(codClaim.insolvency.totalLiabilities).gt(d(codClaim.insolvency.totalAssets)))
     || !d(codClaim.qualifiedPrincipalResidence?.dischargedAmount).isZero()
     || !d(codClaim.qualifiedFarmExclusion).isZero() || !d(codClaim.qualifiedRealPropertyBusinessExclusion).isZero())) {
@@ -471,6 +474,8 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   }
   const filingStatus = input.taxpayer.filingStatus as FilingStatus;
   const audit = new AuditTrail();
+  const principalResidence = calculateCodPrincipalResidenceReduction(input);
+  if (principalResidence) audit.merge(principalResidence.lines);
   if (nol?.stage === "final") audit.merge(nol.worksheet.lines);
 
   // ═══════════════════════════════════════════════════════════
@@ -4798,6 +4803,14 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
         throw new Error("COD complete original discharge, included interest, exclusion and current taxable income must reconcile");
       }
 
+      if (principalResidence && (!form1099CResult
+        || !form1099CResult.totalCancelledDebt.eq(principalResidence.canceled)
+        || !form1099CResult.totalInterestIncluded.isZero()
+        || !form1099CResult.totalExclusions.eq(principalResidence.excluded)
+        || !form1099CResult.taxableCodIncome.eq(principalResidence.taxable))) {
+        throw new Error("QPR original principal, known-zero interest and derived exclusion must reconcile exactly");
+      }
+
       // Pre-reduction carryforward values
       // Preserve the same selected prior source used for the deduction, including
       // estate carry. Form461's aggregate also contains its prior EBL alias;
@@ -4901,7 +4914,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
             }
           }
         } else {
-          if (nol) throw new Error("Actual NOL carry with current debt cancellation requires its regular and AMT vintage attribute-reduction worksheets");
+          if (nol && !principalResidence) throw new Error("Actual NOL carry with current debt cancellation requires its regular and AMT vintage attribute-reduction worksheets");
           if (form1099CResult.insolvencyExclusion.gt(0) && !codExclusion.bankruptcy && !codExclusion.electBasisReductionFirst
             && form1099CResult.qualifiedPrincipalResidenceExclusion.isZero() && form1099CResult.qualifiedFarmExclusion.isZero()
             && form1099CResult.qualifiedRealPropertyBusinessExclusion.isZero()) {
