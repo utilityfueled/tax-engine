@@ -23,7 +23,8 @@ it("retains prohibited source facts and explains the unresolved calculation", as
   }
   try {
     await act(async () => root.render(<Harness />));
-    expect(container.textContent).toContain("Pledged portions, education expenses, losses or later account activity require a separate calculation");
+    expect(container.textContent).toContain("Pledged portions, education expenses, losses and other later activity require a separate calculation");
+    expect(container.textContent).toContain("Use either confirmed no later income, gains or losses, or the separately sourced January 1 domestic bank conversion below.");
     await change("Actual prohibited transaction type", "account_disqualification");
     await change("Account value on January 1 of the transaction year", "9007199254740993.03");
     await change("Actual basis associated with the deemed distribution", "0");
@@ -36,6 +37,7 @@ it("retains prohibited source facts and explains the unresolved calculation", as
     await change("Actual prohibited transaction date", "2026-06-01");
     expect(latest?.sourceFactsConfirmed).toBeNull();
     expect(latest?.forms?.[0]?.fields.sourceFactsConfirmed).toBeNull();
-    expect(container.textContent).toContain("Pledged portions, education expenses, losses or later account activity require a separate calculation");
+    expect(container.textContent).toContain("Pledged portions, education expenses, losses and other later activity require a separate calculation");
+    expect(container.textContent).toContain("Use either confirmed no later income, gains or losses, or the separately sourced January 1 domestic bank conversion below.");
   } finally { await act(async () => root.unmount()); container.remove(); }
 });

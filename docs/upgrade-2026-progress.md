@@ -1,5 +1,21 @@
 # 2026 upgrade implementation evidence
 
+## November 14 retained integrated failure and disclosure successor
+
+The exact `73713a4f` static lane passes all nine checks. Both actual unit and
+coverage lanes record 28,478 passes and one identical stale education-disclosure
+assertion, with their owned databases stopped. Root retires the source's partial
+browser run through one verified owned-runner TERM: two completed batches/139
+cases have zero failures, but the aborted summary is FAIL and normal server
+cleanup is verified. No complete browser pass or runtime qualification is claimed.
+
+The test-only correction preserves every Decimal, unknown/zero, original-source
+and edit-invalidation assertion. It requires the current precise unsupported
+disclosure and explicitly asserts both supported no-later-activity and original
+bank-conversion routes. One genuine focused RED precedes 26 affected passes,
+zero lint errors/warnings and separate diff review. No product or tax formula
+changes; all four immutable successor lanes will run with unchanged policies.
+
 ## November 14 integrated source and metadata successor
 
 Local commits `6bacf762` (three-family Marketplace), `02f1b2a9` (guided

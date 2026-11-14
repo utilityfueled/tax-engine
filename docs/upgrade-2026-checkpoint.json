@@ -1,4 +1,15 @@
 {
+  "nov14IntegratedDisclosureSuccessor": {
+    "predecessor": "73713a4fbd3a5b38eb0c17dca16a1960aa6084a0",
+    "priorActual": "static9PASS;unitAndCoverageEach28478PASS1sameDisclosureFAIL;bothDBstopped;browser139cases0failuresButAbortedFAIL;ownedServerClosed",
+    "testOnly": "twoObsoleteStringsCorrected;twoExplicitSupportedRouteAssertionsAdded;allMoneyUnknownSourceEditAssertionsRetained",
+    "focused": "genuine1REDthen26PASS;lint0warnings0errors",
+    "sourceSha256": "1d44c39c772ee3618da6790b6a96080523a798499ee15b538cda19ecb20f3105",
+    "independentReviewSha256": "c1f518e822fcb7a9126325720f5e795307177d555bef082de0f12c0166ac083c",
+    "fourLaneSuccessorRequired": true,
+    "priorNativeAndHostedTargetsNotInvoked": true,
+    "mainPushHold": true
+  },
   "nov14IntegratedSourceBinding": {
     "source": "c3e0d22aa4959f16b03aa5812f4192ba0cf7a04b",
     "taxCommits": [
