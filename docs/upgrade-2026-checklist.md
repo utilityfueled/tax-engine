@@ -21,8 +21,12 @@ below retain their original evidence boundaries.
   preserve the prior timestamp failure. [Recovery ledger](upgrade-2026-preview-recovery-20261114.md).
 - [ ] Complete the current actual scheduled Stripe retry and scoped cleanup;
   preserve prior failures and exact artifact boundaries.
-- [ ] Complete candidate dependency correction and cleanup verification without
-  changing the default PostgreSQL image or accepting remaining advisories.
+- [x] Preserve the complete Go notice in `9c2ff98d`; pass 60 focused controls,
+  independent review and all 80 native successor stages with cleanup verified.
+  [Native candidate evidence](upgrade-2026-postgres-gosu-native-20261114.md).
+- [ ] Obtain security dispositions and native AMD64 evidence. If the experimental
+  database image is selected, first admit and qualify that image in the full
+  application harness; the unchanged stock-Compose proof does not cover it.
 - [x] Bind the existing human tax assignments to the later same-column estimate,
   four state estimate/interest methods and AOTC source changes without supplying
   new human decisions. [Fixed source index](upgrade-2026-human-tax-review-delta-9b6202e7.md).

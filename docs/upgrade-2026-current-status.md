@@ -159,11 +159,21 @@ because the sandbox denied shared memory and socket binding. Its failures are
 retained; only local-runtime access changed for the successful retry. Combined
 receipt SHA-256 is
 `96e886744fbd38548b70ee878cad44cbaf5a1f1186e0541b721b89e694fbc577`.
-The native candidate also executed its build, runtime, recovery, independent
-import and scan checks; its final base-image cleanup check failed because that
-image was already absent. The VM stopped normally with routes restored. A
-confirmed missing Go license notice and that cleanup check require a separately
-recorded correction. No dependency candidate is promoted.
+The first native candidate executed its build, runtime, recovery, independent
+import and scan checks, but final cleanup failed on an already-absent base and
+the Go standard-library notice was missing. Both failures remain retained.
+`9c2ff98d` preserves the exact pinned SDK notice and rejects altered or omitted
+notices. Its 60 focused checks and independent source review pass. The distinct
+native successor passes all 80 wrapper stages and 15 builder checks, including
+installed full-notice verification, PostgreSQL restart/dump/restore/rollback,
+independent archive load, scoped cleanup and normal VM/socket restoration.
+The gosu executable is unchanged from the first experiment. The raw scan has
+6 Critical and 106 High matches, with none suppressed. Default Compose still
+has its separately recorded nine Critical matches; neither image has risk
+acceptance. Native AMD64 and security/maintenance review remain open. Any
+selection of this experimental database image also requires separately admitted
+application integration; the existing stock-image harness cannot qualify it. [Exact source, artifacts and limits](upgrade-2026-postgres-gosu-native-20261114.md).
+No dependency candidate is promoted.
 
 ## November 14 combined runtime verification
 

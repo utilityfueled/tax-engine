@@ -5390,3 +5390,15 @@ failure exits130 with cleanup verified and remains retained. Actual successful
 receipt SHA-256 `d9cf5aa2a14beec2520c4383332ce213c6eb9fdc72a3ac35cb0079f969ce9aee`.
 [Bounded recovery evidence](upgrade-2026-preview-recovery-20261114.md) does not
 qualify the separate scheduled Stripe retry or the entire hosted service.
+
+### November 14: native gosu successor with complete license and cleanup
+
+`9c2ff98d` preserves the pinned Go1.27.4 SDK notice and rejects incomplete
+exported notices; 60 focused controls and independent source review pass.
+The actual native ARM64 successor passes80wrapper/15builder stages, including
+installed-notice identity, unchanged six PostgreSQL/XML consumers, PID1/TERM,
+SCRAM/restart/dump/restore/rollback, independent archive import and all cleanup.
+The original failed cleanup and missing notice remain retained. The new raw scan
+retains6Critical/106High; no suppressions, default Compose changes, risk
+acceptance or release qualification. [Exact native ledger](upgrade-2026-postgres-gosu-native-20261114.md).
+Full application integration on this candidate and native AMD64 remain distinct.

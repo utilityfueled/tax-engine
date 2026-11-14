@@ -25,11 +25,14 @@ free schema-only branch was created November 14 for the consolidated rehearsal,
 with a November 15 16:19:29 UTC expiry. Its credentials and synthetic actors stay
 private. No production database or deployment is part of that rehearsal.
 
-The ARM64 PostgreSQL backport completed 99 compatibility/recovery stages and
-verified cleanup. Its actual scan retains 9 Critical and 138 High findings;
-public-record ABI growth, native AMD64 evidence and accountable security
-acceptance remain unresolved. The default Compose image remains unchanged.
-[Exact security evidence](upgrade-2026-postgres-libxml2-native-20261114.md).
+The ARM64 PostgreSQL libxml2 backport completed 99 compatibility/recovery stages
+and verified cleanup. Its original scan retains 9 Critical and 138 High findings.
+The later gosu rebuild with complete SDK notices passes 80 native stages and
+reduces its candidate scan to 6 Critical and 106 High matches. Public-record ABI
+growth, native AMD64 evidence and accountable security acceptance remain
+unresolved. Default Compose is unchanged and retains its separate nine Critical
+matches. If an experimental candidate is selected, its full application image
+admission must be qualified separately. [libxml2 evidence](upgrade-2026-postgres-libxml2-native-20261114.md) · [gosu evidence](upgrade-2026-postgres-gosu-native-20261114.md).
 
 Independent qualified human tax, AI-case and security/privacy reviewers remain
 unassigned. Final 2026 federal/state forms and artifact qualification remain
