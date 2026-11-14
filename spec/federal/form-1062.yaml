@@ -5,19 +5,19 @@ reference: "https://www.irs.gov/instructions/i1062"
 revision: "Final instructions Rev. December 2025; draft form Rev. December 2026, created 7/16/26"
 notes: |
   26 USC 1062 applies to taxable years beginning after July 4, 2025. The
-  isolated 2026 Form 1040 worksheet covers one already qualified, direct
-  sale and already redetermined tax and credit inputs. The caller supplies
+  isolated 2026 Form 1040 worksheet covers one already qualified
+  sale, held directly or through one domestic partnership, and already
+  redetermined tax and credit inputs. The caller supplies
   actual Schedule A sale facts and a confirmed election. The worksheet
   recalculates the single sale's line 13. Eligibility, preferential rates,
   additional taxes and credits come from the caller's confirmed originals
   and tax determinations.
   Other sales, exchanges, partial-property allocations, installment sales,
-  pass-throughs, estates, later installments and acceleration require separate
+  other pass-throughs, estates, later installments and acceleration require separate
   qualification. No live federal, filing, estimated payment or PDF transfer.
   Research checked on 2026-11-13. December 2026 form still marked draft.
-  IRS ATS scenario 13 is a partnership allocation and is outside this
-  direct-sale worksheet. Its reported gain is used as a numeric comparison
-  in a synthetic direct-sale example.
+  IRS ATS scenario 13 is a partnership allocation. Its printed amounts
+  serve as an arithmetic oracle for that source path.
 sources:
   - "https://uscode.house.gov/us/usc/119-120/t26/s1062/"
   - "https://www.irs.gov/pub/irs-pdf/f1062.pdf"
@@ -58,6 +58,10 @@ lines:
     formula: "For a proper election, Notice 2026-3 section 4.02 permits excluding the deferred 75% from the required annual payment calculation in the sale year. Preserve the exact three-quarter amount; this worksheet does not alter Form 2210, Form 2210-F, or a required payment."
     testRef: "tests/engine/forms/form-1062.test.ts::conserves the exact first installment and potential estimate exclusion"
   - line: "scope"
-    description: "Confirmed direct-sale source boundary"
-    formula: "Require tax year 2026, confirmed election and one complete source passing the separate Schedule A direct-sale method. Require explicit nonnegative dollar and cent inputs including zero. Use at most 12 whole-dollar digits and never log covenant contents or owner identity."
+    description: "Confirmed sale source boundary"
+    formula: "Require tax year 2026, confirmed election and one complete source passing the separate Schedule A direct-sale or single-partnership method. Require explicit nonnegative dollar and cent inputs including zero. Use at most 12 whole-dollar digits and never log covenant contents or owner identity."
     testRef: "tests/engine/forms/form-1062.test.ts::rejects an incomplete or unreconciled election and tax determination"
+  - line: "ats-13"
+    description: "IRS 2026 ATS scenario 13 arithmetic"
+    formula: "Transfer the partner's 56516 gain on line 7 and use the two published tax determinations. Line 14 is 18309 minus 4688, or 13621; exact line 15 is 3405.25, reported as 3405."
+    testRef: "tests/engine/forms/form-1062-schedule-a.test.ts::transfers the IRS ATS scenario 13 partnership gain with lines 9 through 12 blank"

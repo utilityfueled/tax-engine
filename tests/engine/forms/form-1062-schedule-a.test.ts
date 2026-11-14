@@ -4,7 +4,77 @@ import { calculateForm1062ScheduleA, type Form1062ScheduleAInput } from "@/engin
 import { qualifiedFarmlandSale } from "../../fixtures/form-1062-direct-sale.js";
 
 // See spec/federal/form-1062-schedule-a.yaml.
-describe("Schedule A (Form 1062) direct sale", () => {
+const atsPartnershipAllocation = {
+  taxYear: 2026,
+  transactionType: "partnership_sale",
+  saleDate: "2026-10-01",
+  qualifyingFarmUseConfirmed: true,
+  unitedStatesRealPropertyConfirmed: true,
+  activeFarmerBuyerConfirmed: true,
+  enforceableTenYearCovenantConfirmed: true,
+  covenantIncluded: true,
+  wholePropertyQualifies: true,
+  allGainRecognizedThisYear: true,
+  partnerAllocation: {
+    sourceForm: "1065",
+    sourceBox: "20",
+    sourceCode: "ZZ",
+    sourceTaxYear: 2026,
+    section1062StatementConfirmed: true,
+    entityScheduleAMatched: true,
+    taxpayerAndEntityMatched: true,
+    allocatedGain: "56516",
+  },
+  independentlyReportedGain: "56516",
+} as const;
+
+describe("Schedule A (Form 1062)", () => {
+  it("transfers the IRS ATS scenario 13 partnership gain with lines 9 through 12 blank", () => {
+    // IRS ATS scenario 13, pages 30–31. The source confirmations are synthetic.
+    const schedule = calculateForm1062ScheduleA(atsPartnershipAllocation);
+    expect(schedule.lines.map(row => [row.line, row.value.toFixed()])).toEqual([["13", "56516"]]);
+    const credits = { foreignTax: "0", nonrefundablePersonal: "0", generalBusiness: "0", otherApplicable: "0" };
+    const result = calculateForm1062({
+      taxYear: 2026, sale: atsPartnershipAllocation, electionConfirmed: true, taxableIncome: "144468",
+      withGain: { regularIncomeTax: "16896", additions: "1413", credits },
+      withoutGain: { taxableIncome: "87952", regularIncomeTax: "3275", additions: "1413", credits },
+    });
+    const values = new Map(result.lines.map(row => [row.line, row.value.toFixed()]));
+    expect(["5", "7", "8", "13", "14", "15"].map(line => values.get(line)))
+      .toEqual(["18309", "56516", "87952", "4688", "13621", "3405.25"]);
+    expect(result.firstInstallmentWholeDollars.toFixed()).toBe("3405");
+    expect(result.deferredTax.toFixed()).toBe("10215.75");
+    expect(schedule.lines.every(row => Object.keys(row.inputs).length === 0)).toBe(true);
+  });
+
+  it("rejects missing or incompatible partnership source records", () => {
+    const original = atsPartnershipAllocation.partnerAllocation;
+    for (const partnerAllocation of [
+      undefined,
+      { ...original, sourceForm: "1120-S" },
+      { ...original, sourceBox: "17" },
+      { ...original, sourceCode: "Other" },
+      { ...original, sourceTaxYear: 2025 },
+      { ...original, section1062StatementConfirmed: false },
+      { ...original, entityScheduleAMatched: undefined },
+      { ...original, taxpayerAndEntityMatched: false },
+      { ...original, allocatedGain: "56516.01" },
+    ]) {
+      expect(() => calculateForm1062ScheduleA({ ...atsPartnershipAllocation, partnerAllocation } as Form1062ScheduleAInput))
+        .toThrow(/Form 1062/u);
+    }
+    for (const changes of [
+      { grossProceeds: "500000" }, { sellingExpenses: "0" }, { unadjustedBasis: "443484" }, { adjustedBasis: "443484" },
+      { independentlyReportedGain: "56515.99" }, { covenantIncluded: false }, { wholePropertyQualifies: false },
+    ]) {
+      expect(() => calculateForm1062ScheduleA({ ...atsPartnershipAllocation, ...changes } as Form1062ScheduleAInput))
+        .toThrow(/Form 1062/u);
+    }
+    expect(() => calculateForm1062ScheduleA({
+      ...qualifiedFarmlandSale, partnerAllocation: original,
+    } as unknown as Form1062ScheduleAInput)).toThrow(/Form 1062/u);
+  });
+
   it("transfers only the reconciled direct-sale gain to Form 1062", () => {
     const result = calculateForm1062ScheduleA(qualifiedFarmlandSale);
     expect(result.lines.map(row => [row.line, row.value.toFixed()])).toEqual([

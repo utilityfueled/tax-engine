@@ -30,10 +30,10 @@ function amount(value: string | undefined, line: string): Decimal {
   return d(value);
 }
 
-/** Worksheet for one confirmed 2026 direct sale. See spec/federal/form-1062.yaml. */
+/** Worksheet for one confirmed 2026 sale. See spec/federal/form-1062.yaml. */
 export function calculateForm1062(input: Form1062Input) {
   if (input.taxYear !== 2026 || !input.sale || input.electionConfirmed !== true) {
-    throw new Error("Form 1062 requires a confirmed 2026 qualified direct sale, covenant and election");
+    throw new Error("Form 1062 requires a confirmed 2026 qualified sale, covenant and election");
   }
   const income = amount(input.taxableIncome, "6");
   const { recognizedGain: gain } = calculateForm1062ScheduleA(input.sale);
