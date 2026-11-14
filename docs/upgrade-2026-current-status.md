@@ -1,5 +1,18 @@
 # Current 2026 upgrade continuation
 
+## November 14 qualified K-3 originals and current local checks
+
+`33f8f784` supplies actual original partnership K-1/K-3 identity, year, passive
+portfolio income, country, tax and basis to the existing narrow direct-credit
+method. All 144 focused controls and both typed browser journeys pass; existing
+credit, source, basis and privacy guards remain. The full mapped local checks
+pass on runtime-identical `33f8`/`a396` sources: 28,322 tests, 88.02% branches and
+620 browser cases/five original hosted skips, with both owned databases stopped.
+The original strict diagnostic-pin failure is retained; only its three metadata
+fields changed before rerunning unit/coverage. Current protected hosted and
+ARM64 artifact runs remain in progress, with independent human review pending.
+[Source, source mapping and exact review hashes](upgrade-2026-guided-qualified-k3-20261114.md).
+
 ## November 14 current eleven-table schema recovery
 
 The isolated PostgreSQL18 successor passes native backup/restore, metadata

@@ -6,9 +6,13 @@ below retain their original evidence boundaries.
 
 ## Active continuation — November 14
 
-- [ ] Finish the spec-first guided qualified K-3 portfolio source route, its
-  independent regression review, desktop/mobile original-entry journeys and
-  full frozen-source checks. Preserve existing direct-credit and basis gates.
+- [x] Finish the spec-first guided qualified K-3 portfolio source route,
+  independent regression review and typed desktop/mobile journeys. All twelve
+  mapped local checks pass: 28,322 tests, 88.02% branches, 620 browser passes/five
+  original hosted skips. Preserve existing credit/basis/privacy gates and the
+  earlier diagnostic-pin failure. [Source and checks](upgrade-2026-guided-qualified-k3-20261114.md).
+- [ ] Complete current protected hosted K-3 and native ARM64 artifact rehearsals,
+  verify cleanup and independently review their actual saved evidence.
 - [x] Rehearse the current eleven-table schema on the isolated Neon branch:
   UUID revisions, exact issuance/cancellation accounting, full native
   backup/restore and RESTRICT-only cleanup pass. Preserve the earlier archive

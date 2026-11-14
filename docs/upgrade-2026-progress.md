@@ -5420,3 +5420,15 @@ root and independent artifact reviews pass. Earlier unexecuted deadline finding
 and actual archive-admission failure remain retained. ClientTLS-only evidence
 does not qualify provider internal transport or release security.
 [Exact source, receipts and limits](upgrade-2026-preview-schema-recovery-20261114.md).
+
+### November 14: original guided K-3 sources and complete mapped checks
+
+Spec-first `33f8` collects actual qualified partnership K-1/K-3 originals for the
+existing passive portfolio direct-credit path. Author/independent 144 controls
+and two actual typed desktop/mobile journeys pass. Original full unit and
+coverage each retain 28,321 passes/one strict diagnostic-audit failure; metadata
+fix `a396` changes no runtime input. All twelve mapped commands then pass with
+28,322 tests/2,039 files, 88.02% branches and 620 browser passes/five hosted skips.
+Both owned databases stop normally and independent source/result audit passes.
+Current hosted/native artifact runs continue; human and final 2026 gates remain.
+[Source, exact mapping and receipts](upgrade-2026-guided-qualified-k3-20261114.md).

@@ -25430,6 +25430,31 @@
     }
   },
   "nov14ReleaseContinuation": {
+    "guidedQualifiedK3Originals": {
+      "applicationSource": "33f8f7845be607a7de07d38cddf6de099377dcc5",
+      "staticUnitCoverageSource": "a396d2c2148de4846272d3993a52afdecc20454a",
+      "browserSource": "33f8f7845be607a7de07d38cddf6de099377dcc5",
+      "focusedTestsPassed": 144,
+      "independentTestsPassed": 73,
+      "typedOriginalBrowserCasesPassed": 2,
+      "allTwelveMappedLocalChecksPassed": true,
+      "unitAndCoverageTestsPassed": 28322,
+      "testFiles": 2039,
+      "branchesPercent": "88.02",
+      "branchThresholdPercent": "85",
+      "browserPassed": 620,
+      "originalHostedSkips": 5,
+      "observedBrowserRetries": 0,
+      "existingConfiguredRetries": 1,
+      "ownedDatabasesStoppedNormally": true,
+      "independentMappedAuditSha256": "afde11fc5bee2c30ba53292235fabd33b6d2ad22a54cab59b8b8b4ed44dd2b53",
+      "sourceEquivalenceSha256": "b519870b0927420c1337d6d78659523633dccec889477da91cf9ac16303ab19c",
+      "earlierUnitAndCoverageOneAuditPinFailureRetained": true,
+      "currentHostedArtifactQualified": false,
+      "currentNativeArtifactQualified": false,
+      "humanReviewReceived": false,
+      "filingEnabled": false
+    },
     "currentElevenTableSchemaRecovery": {
       "source": "9b6202e7b2b309d5adc62ddf7d405ad7067fb8ac",
       "status": "PASS_SCHEMA_MECHANISM_CLIENT_TLS_ONLY",
