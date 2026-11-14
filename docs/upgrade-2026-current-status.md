@@ -36,10 +36,34 @@ or a prior-year safe harbor. The exact thresholds, later date bands and
 competing statutory and published makeup payment schedules require review.
 [Pennsylvania worksheet](../spec/state/pa-2026-ordinary-estimated-tax.yaml).
 
+`417db86a` calculates Ohio's four ordinary 2026 estimated-tax planning
+targets from a confirmed estimate under enacted 2026 law. Exactly $500
+does not trigger the declaration, and $500.01 yields four exact $112.50225
+planning shares. The published worksheet's line 6 nonbusiness table
+repeats the 2025 brackets. The calculation takes a separately determined
+line 8 and applies the unaffected timing and percentage rules for the
+admitted full-year resident case. The 2027 interest certification shows
+7%, while the final 2026 IT/SD 2210 factors and annual forms remain open.
+[Ohio worksheet](../spec/state/oh-2026-ordinary-estimated-tax.yaml) ·
+[2026 enacted rates](https://codes.ohio.gov/ohio-revised-code/section-5747.02) ·
+[2027 interest certification](https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/individual/2027_Interest_Rates.pdf).
+
+`a3f7078f` extends the Publication 505 adjustment to multiple separately
+confirmed Form 1062 sales when every sale's full Schedule A gain first
+enters the same cumulative column. One annual aggregate redetermination
+gives one exact adjustment. The synthetic case gives $5,287.50 and the
+one-cent liability boundary preserves $0.0075. Partial gains and staggered
+columns fail closed. All 982 focused checks passed. `85e3009c` verifies
+the two estimate-source hashes without changing any of the 623 Chromium
+cases, five hosted skips or 14 diagnostic cases.
+[IRS estimated-payment clarification](https://www.irs.gov/forms-pubs/clarification-for-calculation-of-estimated-tax-payments-when-making-an-election-under-section-1062a) ·
+[Form 1062 instructions](https://www.irs.gov/instructions/i1062).
+
 The managed `02e553cf` run passed all nine static, build, and spec checks.
 Unit tests reported 28,016 passes and eight fixture-version failures, then
-its isolated PostgreSQL database stopped normally. Chromium reported 617
-passes, one missing AOTC accessible label, and five original hosted-only
+its isolated PostgreSQL database stopped normally. Coverage reported the
+same eight failures. Its isolated database also stopped normally. Chromium
+reported 617 passes, one missing AOTC accessible label, and five hosted-only
 skips. The failures are retained. `0091fbb6` reconnects the visible label and
 requires confirmation of current student and claimant facts after a student
 or return-year change. `24530094`
@@ -48,6 +72,16 @@ All 2,680 focused guided, strict spec-ref, and current K-1 tests passed.
 The combined managed, hosted and ARM64 checks are running on frozen
 `24530094` with the same 623 Chromium cases, five hosted-only skips,
 request limits and zero retries.
+
+The `24530094` production-mode loopback HTTPS build passed all 15 hosted
+fault checks plus eight supplemental origin checks. Those checks verified
+opaque and cleartext origin rejection, exact primary and secondary HTTPS
+origin echo and `Vary: Origin` on the supported workspace route, seven
+native PostgreSQL 16.16 TLS 1.3 sessions and the atomic 199-to-200 workspace
+limit. All owned ports closed and the disposable cluster was removed.
+Deployed Preview remains unqualified. `561617bd` validates checklist and
+preview fields at the export-summary route and applies private no-store
+headers to success and failure responses. It passes 231 adjacent tests.
 
 `d6fed7fc` requires an HTTPS origin without credentials, path, query or
 fragment for hosted production auth and billing. Invalid configuration

@@ -25476,6 +25476,8 @@
       "predecessorUnitPassed": 28016,
       "predecessorUnitFailed": 8,
       "predecessorUnitResultSha256": "ec80d0283a3970d56166e324df6dd1bcc52adf51dc48fe0ffd69084be2f8692b",
+      "predecessorCoverageFailed": 8,
+      "predecessorCoverageResultSha256": "a386a8b1b9057fea0b5088fe0c2d4cf50f1760ccbc1430ebc3e1877df9a08cfb",
       "predecessorBrowserPassed": 617,
       "predecessorBrowserFailed": 1,
       "predecessorBrowserResultSha256": "1a70a7e1e6df8c4636748df909b3b69e1bb4fc274201bece1761cae1acdf1c13",
@@ -25494,6 +25496,34 @@
       "regressionsFailedFirst": 2,
       "focusedPassed": 1262,
       "focusedSha256": "96a87eaf4d34423b9a63c675a5e5be25b0d88cb0703974aabb965d95bd37d61b"
+    },
+    "qualifiedPlanningScope": {
+      "ohioEstimateCommit": "417db86a",
+      "ohioOfficialWorksheetSha256": "0d0766a81a91ce1c41e62e20e8721333ed9e289a354ef1fae522153fd2cbf65c",
+      "ohioAdjacentPassed": 200,
+      "form1062Commit": "a3f7078f6c1d549c63cd7a01829a2e3f0245cc08",
+      "form1062FocusedPassed": 982,
+      "annualFilingQualified": false,
+      "staggeredRecognitionQualified": false,
+      "estimateSpecAndBrowserBindingCommit": "85e3009cbbd6c3a67a7c9da81fe2343ce414a59a",
+      "browserAuditSha256": "d7f85533c080407d3cdfaa949832529d397816e8242e886cff225195c5cb5688"
+    },
+    "exactHostedHttpsRehearsal": {
+      "source": "24530094d3de0dc629fa30b5e8f3eb297d50ea36",
+      "faultChecksPassed": 15,
+      "originChecksPassed": 8,
+      "nativeTls13Sessions": 7,
+      "syntheticRedisRestOperations": 139,
+      "ownedResourcesClosed": true,
+      "summarySha256": "ce7b513881cd149dd92145a208466e31d7bd9a4a01f385d0ffd52caec90b42de",
+      "protectedPreviewQualified": false
+    },
+    "exportSummaryIngress": {
+      "commit": "561617bd328088c7df4f46363c15ba8875faac61",
+      "failedBeforeFix": 13,
+      "routeAndAdjacentPassed": 231,
+      "allResponsesPrivateNoStore": true,
+      "filingEnabled": false
     }
   }
 }

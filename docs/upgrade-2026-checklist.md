@@ -94,6 +94,11 @@ below retain their original evidence boundaries.
 - [x] Add the `6125f136` Pennsylvania non-farmer pre-April planning estimate
   with a conservative positive boundary and exact fractional cents. The
   102 focused and adjacent tests pass. [Worksheet spec](../spec/state/pa-2026-ordinary-estimated-tax.yaml).
+- [x] Add the `417db86a` Ohio ordinary 2026 estimate from confirmed tax derived
+  under enacted law. Preserve the exact greater-than-$500 limit and four
+  planning installments. The official worksheet's 2025 bracket table is
+  excluded. Pass 200 adjacent and 977 integrated checks.
+  [Worksheet spec](../spec/state/oh-2026-ordinary-estimated-tax.yaml).
 - [ ] Review the Pennsylvania exact thresholds, later installment date and
   allocation discrepancies, and the farmer/dated underpayment worksheet
   before annual integration.
@@ -136,6 +141,9 @@ below retain their original evidence boundaries.
 - [x] Verify the 2026 Publication 505 adjustment for a single confirmed
   election in `43192f66`. Confirm 75% exact arithmetic, actual cumulative
   income inclusion and rejection of a claimed period before the sale.
+- [x] Add the `a3f7078f` same-column multi-sale adjustment using one annual
+  Form 1062 redetermination. Reject partial or staggered recognition, pass
+  982 focused checks, and bind both boundary tests to the spec in `85e3009c`.
 - [ ] Establish the method for Publication 505 with staggered elected
   sales, and qualify payment and penalty integration separately.
 - [ ] Obtain a qualified interpretation of exact-cent Schedule SE eligibility
@@ -439,6 +447,12 @@ below retain their original evidence boundaries.
   upon publication. Obtain qualified human review before enabling 2026.
 - [x] Match the IRS-published Schedule SE and 8812 worksheet outputs in
   `a6c4fd18`. Retain the independent human and final-form qualification gates.
+- [x] Rehearse exact `24530094` locally with two HTTPS app instances, native
+  SCRAM PostgreSQL 16.16 over TLS 1.3 and a synthetic Redis REST transport.
+  Pass 15 fault and eight origin checks. Close every owned listener.
+- [x] Validate malformed provider draft summaries at the private route in
+  `561617bd`. Pass 231 route and adjacent tests and keep all response paths
+  no-store. The endpoint summarizes supplied review data.
 - [ ] Finish independent review of the AI credit-issuance and recovery candidate.
   Rehearse deployed outages, automatic Stripe retry and atomic billing on a
   fresh protected Preview after the old synthetic database expired.
