@@ -14748,6 +14748,25 @@
       ]
     },
     {
+      "key": "state/oh-2026-ordinary-estimated-tax",
+      "jurisdiction": "state",
+      "taxYear": 2026,
+      "sourceAuthority": "https://codes.ohio.gov/ohio-revised-code/section-5747.09",
+      "specPath": "spec/state/oh-2026-ordinary-estimated-tax.yaml",
+      "enginePath": "src/engine/state/oh-2026-ordinary-estimated-tax.ts",
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "state/oh-2026-ordinary-source",
       "jurisdiction": "state",
       "taxYear": null,

@@ -44,7 +44,9 @@ lines:
     testRef: "tests/engine/forms/publication-505-form-1062-estimated-tax.test.ts::uses the aggregate annual liability once when all elected sales enter the same column"
   - line: "multiple sale boundaries"
     description: "Reject staggered and incomplete multiple-sale sources"
-    formula: "Every elected sale requires exactly one record. Reject an unbound, duplicate, missing, extra or wrong-year record, false confirmation or false date order. Reject a partial amount, an amount above the full gain, a Boolean in place of an amount, or a mixture of included and excluded elected gains within one cumulative column. The IRS sources do not supply a rule here for assigning the aggregate annual tax difference to staggered or partially recognized gains."
-    testRefs:
-      - "tests/engine/forms/publication-505-form-1062-estimated-tax.test.ts::rejects staggered recognition and incomplete or unbound original records"
-      - "tests/engine/forms/publication-505-form-1062-estimated-tax.test.ts::rejects a partial amount even when both sales are partly recognized in the same column"
+    formula: "Every elected sale requires exactly one record. Reject an unbound, duplicate, missing, extra or wrong-year record, false confirmation, false date order or a mixture of included and excluded elected gains within one cumulative column. The published sources do not allocate the annual aggregate tax difference across staggered recognition periods."
+    testRef: "tests/engine/forms/publication-505-form-1062-estimated-tax.test.ts::rejects staggered recognition and incomplete or unbound original records"
+  - line: "partial gain boundary"
+    description: "Admit only exact zero or full gain in each cumulative record"
+    formula: "Reject a partial amount, an amount above the full gain, a Boolean in place of an amount or a value outside the exact money format. A column where both sales are partly recognized still lacks authority for using the full aggregate tax reduction."
+    testRef: "tests/engine/forms/publication-505-form-1062-estimated-tax.test.ts::rejects a partial amount even when both sales are partly recognized in the same column"
