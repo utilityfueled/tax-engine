@@ -1,5 +1,13 @@
 # Current 2026 upgrade continuation
 
+## November 15 additional human source-review packet
+
+The five later source methods now have 42 selected committed blobs and eight
+blank year-specific decisions detached from exact `46a95320`. Independent
+engineering custody review rehashes every selected blob and confirms all human
+fields remain unassigned. [Review packet](upgrade-2026-human-tax-five-method-supplement-46a95320.md).
+This creates review material, not human approval or a complete dependency audit.
+
 ## November 15 actual child-credit household contradictions
 
 Known duplicate household identities, adult/future CTC birth dates and conflicting

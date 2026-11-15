@@ -1,4 +1,15 @@
 {
+  "nov15FiveMethodHumanPacket": {
+    "source": "46a953203d8a278d5c4857b9007422482865a511",
+    "selectedCommittedBlobs": 42,
+    "blankYearSpecificDecisions": 8,
+    "humanAssignedOrApproved": false,
+    "completeTransitiveClosure": false,
+    "sourceIndexSha256": "34d0117444126afe8bf30683792462eb776721962b6ae7bc0b4dfd97e1d5c295",
+    "blankDecisionsSha256": "d6481787b444c2c77be3847ccfb365c3068238fe9592006c74d857deaab720bb",
+    "independentCustodyReview": "b8331c736a7741ed41a2ebfae57bd3e5aaf478b36dc4b1cddb186c739f4db73c",
+    "ledger": "docs/upgrade-2026-human-tax-five-method-supplement-46a95320.md"
+  },
   "nov15ChildCreditHouseholdAdmission": {
     "sourceBase": "d9026aea6f266c21f99fef2bf7aa39034909a5de",
     "adoptedOnto": "8ecac234",

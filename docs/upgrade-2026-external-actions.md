@@ -1,26 +1,29 @@
 # External actions needed to finish the 2026 upgrade
 
-## November 14 latest integrated evidence
+## November 15 current source and human handoff
 
-All twelve local checks pass on `aea453ec`: 28,479 tests, 88.07% branch
-coverage, and 630 browser passes with five original hosted skips. Its protected
-Preview passes both actual desktop/mobile Coverdell journeys and six FEI/farm
-canonical-admission probes, with separate artifact review and verified cleanup.
-Its ARM64 successor passes all 24 stages, four workloads, six recovery phases
-and 630 browser passes/five original hosted skips. Separate root review
-verifies normal cleanup, source custody and original resource restoration.
-[Exact ARM64 evidence](upgrade-2026-arm64-aea453ec-20261114.md).
-The later current-loss (`af111e7a`) and EIC-petition (`5f7cd736`) source packages
-have separate full-unit and review evidence; their combined successor checks
-remain pending. [Local checks](upgrade-2026-combined-aea453ec-checks-20261114.md) ·
-[Protected Preview](upgrade-2026-preview-integrated-aea453ec-20261114.md).
+Local `d9026aea`, `8ecac234` and `46a95320` separately deliver actual
+Schedule AI election sources, HOH own-care mileage originals and rejection of
+known child-credit household contradictions. Their immutable package full-unit
+checks and independent engineering reviews pass. The AI source-admission
+candidate remains under separate implementation/review. Consolidated inventory,
+all twelve checks and hosted/native successor artifacts still need the final
+combined revision; no earlier runtime result is attributed to later source.
 
-The [unassigned four-method human supplement](upgrade-2026-human-tax-four-method-supplement-73713a4f.md)
-indexes 44 selected committed blobs and seven blank year-specific decisions.
-It supplies no human approval and excludes the two later source packages.
-The latest exact AEA image's separate November 14 database rescan retains
-zero Critical and 56 unaccepted High findings. No security acceptance is
-inferred. The production push hold and all human/annual-form gates remain.
+The latest complete combined managed source remains `6f6f82a2`: all twelve
+checks pass, 28,493 unit/coverage tests, 88.08% branches and 630 actual browser
+passes/five original hosted skips. [Exact checks](upgrade-2026-combined-6f6f82a2-checks-20261114.md).
+The earlier `aea453ec` actual protected Preview and ARM64 runs retain their
+source boundaries and verified cleanup; its fresh scan retains zero Critical
+and 56 unaccepted High findings.
+
+The [new unassigned five-method human supplement](upgrade-2026-human-tax-five-method-supplement-46a95320.md)
+indexes 42 selected committed blobs and eight blank year-specific decisions for
+loss, EIC petition, Schedule AI election, HOH mileage and known child-credit
+contradictions. The [earlier four-method supplement](upgrade-2026-human-tax-four-method-supplement-73713a4f.md)
+retains its separate 44-blob/seven-decision scope. Neither supplies human approval.
+Independent qualified tax, AI-case and security reviewers remain unassigned.
+The production push hold, annual forms, remote CI and native AMD64 gates remain.
 
 ## November 14 current boundaries
 
