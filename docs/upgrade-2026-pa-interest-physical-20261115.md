@@ -26,8 +26,8 @@ rendered first pages.
 The spec preceded the genuine missing-attachment failure. Author checks pass
 973 tests; separate engineering review passes 39, including three independently
 authored tamper/source/projection controls. Main adoption passes 976 tests in
-four suites, types, all 9,247 spec references and scoped lint. The three-test
-increase reflects newly adopted Ohio spec entries. An initial root command used
+four suites, types, all 9,247 spec references and scoped lint. The adoption run
+includes the additional current spec-reference checks. An initial root command used
 incorrect file filters; its broader result is retained separately and is not
 claimed as the affected-suite check.
 

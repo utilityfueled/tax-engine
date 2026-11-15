@@ -1,5 +1,9 @@
 # Remaining 2026 upgrade execution checklist
 
+- [x] Replace discarded guided W-2 result/digest with equivalent assertion replay;
+  949 adoption tests and five independent review tests pass.
+  [Final performance/runtime qualification remains separate](upgrade-2026-guided-w2-validation-20261115.md).
+
 - [x] Preserve bounded sanitized fresh-store diagnostics and fail closed before
   final verification; 964 adoption and twelve independent offline tests pass.
   [Actual archive qualification remains open](upgrade-2026-archive-diagnostics-20261115.md).

@@ -74,7 +74,12 @@ lines:
       and owner after actual individual facts are entered. Any source edit
       retains raw rows and invalidates the global confirmation. Build replays
       against actual current source rather than rebinding old proof silently.
-    testRef: "tests/apps/web/guided-w2-state-local-facts.test.ts::W2 state local guide - confirms actual originals and invalidates edits"
+      During guided canonical validation, replay the same assertion helper
+      prepare/finish checks without computing an unused public source digest.
+      Keep the calculated digest on actual result-producing engine paths.
+    testRef: "tests/apps/web/guided-w2-validation-digest.test.ts::guided W2 validation preserves exact sources without calculating a discarded digest"
+    testRefs:
+      - "tests/apps/web/guided-w2-state-local-facts.test.ts::W2 state local guide - confirms actual originals and invalidates edits"
   - line: "guide-controls"
     description: "Recoverable actual state and local source controls"
     formula: |

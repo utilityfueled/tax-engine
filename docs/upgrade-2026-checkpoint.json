@@ -1,4 +1,16 @@
 {
+  "nov15GuidedW2Validation": {
+    "sourceFreeze": "e0de517bfbda48189e743bc3224891b777a4d2f4273d188296b23dcddd35f4fd",
+    "peerReview": "062535d3597282e0efefeb0f34e02b93337da5202dbb875a2e403ff152bf316e",
+    "rootAdoption": "0a74fa22ad60fbd369b91f67597d55878b80da0febdd85e6e54b643f9fe498c0",
+    "mainTests": 949,
+    "independentReviewTests": 5,
+    "extraIndependentNegativeControls": 6,
+    "engineDigestRetained": true,
+    "measuredSpeedupClaimed": false,
+    "finalCombinedPending": true,
+    "evidence": "upgrade-2026-guided-w2-validation-20261115.md"
+  },
   "nov15ArchiveDiagnostics": {
     "sourceFreeze": "919756f2445672448a31c44a73b20d6ffa3228ea25a3c55bad2e1c7872e97b3c",
     "rootReview": "0bc852bf76770109513768d1f893617b5ff8638647da52d753cc2d5d83e3f630",

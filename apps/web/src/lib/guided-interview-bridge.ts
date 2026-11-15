@@ -8,7 +8,7 @@ import {buildGuidedPassengerForm,bindGuidedPassengerInput,type GuidedPassengerDr
 import {buildGuidedMacrsAssets} from "./guided-macrs-assets";
 import {reconcileGuidedRetirementWithholding}from "./guided-retirement-withholding-reconciliation";
 import { W2Schema } from "@/models/inputs";
-import { calculateW2StateLocalSources, type W2StateLocalSourceContext } from "@/engine/forms/w2-state-local";
+import { assertW2StateLocalSources, type W2StateLocalSourceContext } from "@/engine/forms/w2-state-local";
 import {calculateScheduleCSourceFacts} from "../../../../src/engine/schedules/schedule-c-source-facts.js";
 import {buildNecInputs} from './guided-business-facts';
 export {buildNecInputs} from './guided-business-facts';
@@ -1041,7 +1041,7 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
     try {
       const context = buildGuidedW2SourceContext(state);
       if (!context) return null;
-      context.w2s.forEach((entry, index) => { if (entry.stateLocalSources !== undefined) calculateW2StateLocalSources(context, index, entry.stateLocalSources); });
+      context.w2s.forEach((entry, index) => { if (entry.stateLocalSources !== undefined) assertW2StateLocalSources(context, index, entry.stateLocalSources); });
     } catch { return null; }
   }
   // Both exact-original proofs must observe the same canonical key inventory.

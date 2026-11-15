@@ -1,5 +1,11 @@
 # 2026 upgrade implementation evidence
 
+## November 15 guided W-2 validation cost
+
+Removed a discarded digest using the existing equivalent assertion wrapper.
+Main 949 tests, five separate review tests and types/spec/lint pass. No measured
+speedup or full AMD64 failure cause is claimed. [Evidence](upgrade-2026-guided-w2-validation-20261115.md).
+
 ## November 15 archive diagnostics
 
 The independent AMD64 verifier now retains bounded sanitized owned-command
