@@ -107,7 +107,8 @@
     "apps/web/src/components/guided-interview/estimated-investment-household-details.tsx": "7f77de2da53a879528a26f5017168c83a591010a04d48ad82ef5c682a8e32fb6",
     "apps/web/src/components/guided-interview/estimated-tax-source-details.tsx": "b40b180ea9baee179619ec2427a1dba57768678a37edd11ba75de96f208b1df9",
     "apps/web/src/components/guided-interview/fact-fields.tsx": "aa4fcda63a24a39ea368bb7282b2df1487ba2f27ecd3710c6bad16f90a22dc1f",
-    "apps/web/src/components/guided-interview/foreign-income-details.tsx": "e8445b24b8c82756d3afae4635cb38db7c1ad12e1007cdfe4e1607e85a544844",
+    "apps/web/src/components/guided-interview/foreign-capital-originals-details.tsx": "5920e48b1e772d01c5687ea3064112727e62e98aef7152a8dbb563f6194fe784",
+    "apps/web/src/components/guided-interview/foreign-income-details.tsx": "077e8e7b7ca236d8d250bed8322e44e4f3b68d2c09a3b074e975b28b745e8428",
     "apps/web/src/components/guided-interview/foreign-tax-carryover-details.tsx": "f180bcb693b02d344023f4c0aef67c20512ec379b30dd0103e041f621e2d6989",
     "apps/web/src/components/guided-interview/foreign-tax-direct-credit-details.tsx": "63e797711312eae561eaf9d6ab4738b3c1b91cfa6938c58e022a548e86cf92cf",
     "apps/web/src/components/guided-interview/foreign-tax-election-details.tsx": "c6f0d8c0ccc353212c7f16d83832ec1d08e3ca4d0b77c0b35f29dd25c352c74d",
@@ -292,7 +293,8 @@
     "apps/web/src/lib/guided-estimated-investment-election.ts": "045b6d1ebd783932fb0253b224046392b2208d179a20f5753ea9e0c8ab820d2d",
     "apps/web/src/lib/guided-estimated-investment-household.ts": "885ce315880b0c83e4c473fb10dd6285ca81d14c703c6fd396c5ddce4cac07d5",
     "apps/web/src/lib/guided-estimated-tax-facts.ts": "8964df84f4b1c6be5658b8b658cdee9e1d157ae98a37497e5b16a7d8652f3b18",
-    "apps/web/src/lib/guided-foreign-income.ts": "36f30870e01a475a8a523e6456eea39e7c9571a0f5ed85062917cc995363087e",
+    "apps/web/src/lib/guided-foreign-capital-originals.ts": "d58a1a8ed75064fc0340f157795aaeb80fda25f3a9f77c3b5b69d4ef03adac8a",
+    "apps/web/src/lib/guided-foreign-income.ts": "6d5fca585eaa5a9a5b3de3788493f2fdae0161aff1a8e7735677b12eddd3fb08",
     "apps/web/src/lib/guided-foreign-tax-carryover.ts": "bcacfabf0f1258e58f4b42d10519a8ffdf4f5278294acb45b490b43cb8664603",
     "apps/web/src/lib/guided-foreign-tax-direct-credit.ts": "884993fd0c9387eb514a1383e705fa3b47eac8c339ff612fcf779114628c4c0b",
     "apps/web/src/lib/guided-foreign-tax-election.ts": "2cc8f8378a03ab26aa4350f208c08c061f99566a7811d2357b62455598eaf8e0",
@@ -306,7 +308,7 @@
     "apps/web/src/lib/guided-hsa-distribution-facts.ts": "e9ce96eb9f2c2297fca1dd53ca311b2b42545da4a3a2ec257fcf702daac9060f",
     "apps/web/src/lib/guided-hsa-facts.ts": "bad97489b43ff81ed079b9c193f1f77f6fd62950ee159256456a79a6d009654e",
     "apps/web/src/lib/guided-interest-originals.ts": "105f06ec3c31e2405ea430e9e1e614aee8b3ef443ce3e88ebf92471d9108420b",
-    "apps/web/src/lib/guided-interview-bridge.ts": "4b0f016b00e44a3433d8b4f89814c310229166063078e15758f7fecf553a118a",
+    "apps/web/src/lib/guided-interview-bridge.ts": "ad7360b39f66e3efe69fc130274b691f3c43ecab07d36445348119320b5a5f31",
     "apps/web/src/lib/guided-interview-flow.ts": "85a95bfff4baeab068ce31639abe60a7f43c5922eec908535cca8ee0cf71b08e",
     "apps/web/src/lib/guided-investment-facts.ts": "ebe7613a7677d1a2f892dab42244f67be10b07f4ad9907517534e9658753cc3e",
     "apps/web/src/lib/guided-investment-interest.ts": "3f55441684455777dac810e9122e14345944f6f5e4262e1f2e4447eff1b1118b",
@@ -508,6 +510,7 @@
     "apps/web/tests/form-172-operating-k1.spec.ts": "d18bd9df7990b884271f4e01489e0fadb74d6bf5ec898ac1a0d563e81ebcc3c6",
     "apps/web/tests/future-year-sample-upload.spec.ts": "fe98c38bacdf4b6d3c55c63013b72e8157c2e53aa97ef77464dc1684e48c1011",
     "apps/web/tests/guided-adoption-prior-benefits.spec.ts": "1ad82e40593e790431b59eb8fd3fe8a321088965f7c339b96aa2b4d9eed797bd",
+    "apps/web/tests/guided-all-foreign-capital-loss.spec.ts": "5bdd9e64d6b03b9c573490ce717bfc6c9a2c426efc8baa5adb9e4c028327c733",
     "apps/web/tests/guided-annual-cash-fixture.ts": "fe16a20bad3fdbc4f17d975ce27b9d65506d4974588d74f1344c4b343ebe744e",
     "apps/web/tests/guided-annual-cash-qtp.spec.ts": "640d0a280f22e4a498377276b7e4323d1c73fff0f4e38136d6671534c59b59e0",
     "apps/web/tests/guided-annual-category-fixture.ts": "385c9804d013400bb2efdc14b20faf1e4d3bfa8d7a52de2a8dfbc264161d2e1b",
@@ -571,6 +574,7 @@
     "apps/web/tests/guided-married-third-family.spec.ts": "a1a88154c040e31b3843639bd2ea247b78e36be294c7011e5c97b7f474de72e7",
     "apps/web/tests/guided-medical-mileage-hoh.spec.ts": "b6035924de4c28f1944ef0cc75d1017841619afe439482f06efe5896da541440",
     "apps/web/tests/guided-medical-mileage.spec.ts": "6fb98762b3cdf0282cabd93f19747c09f1d05f2448dfa7cdfa22dd2cf79db559",
+    "apps/web/tests/guided-mixed-capital-services.spec.ts": "af68ee1d83170047c7716f372be2382201fe084e9abfc6df9d30e423c3d63902",
     "apps/web/tests/guided-mixed-tuition.spec.ts": "429470af2e81016fee528c975b03e983e44bb48e002cc17855be963af381a77e",
     "apps/web/tests/guided-mortgage-balances.spec.ts": "a6df03167b1555851c60c5aa04eb4a7d680c0c3408bef92f81dfcee036edf422",
     "apps/web/tests/guided-mortgage-debt-categories.spec.ts": "b61c4facc5156c65ce0ce4ad1599910a089aae35ee9b433876da3731a938d426",
@@ -1681,6 +1685,7 @@
     "tests/fixtures/guided-eic-separated-review.ts": "d0a95fc9ddf8f0b664ebd6265d8dae136506935d4d0730a235d68affed730704",
     "tests/fixtures/guided-eic-unassessed-petition.ts": "71eee0802252e00dfb2976b0d44680df85e829e8b3e0e89355a7fddea3d4f2d2",
     "tests/fixtures/guided-estimated-tax-special-gains.ts": "3e80d1fc2445ae39e967594ab11efc2afe8d48ff25b7bf1b6f459b6a8228f60d",
+    "tests/fixtures/guided-foreign-capital-originals.ts": "d935858c946c7cb36b3a7405d4aa63f05ab8bdc513be3637d59db624612820cf",
     "tests/fixtures/guided-foreign-tax-carryover.ts": "7206840178551af4d6e34b679d872cca1ea7592eb73aa21d96c743d768b7b7ca",
     "tests/fixtures/guided-foreign-tax-k3.ts": "032fcca50ebe310cc2e823f27e249b724de4c1130353e83daf7bbe8a105f4808",
     "tests/fixtures/guided-foreign-tax-ordinary.ts": "1be8c4f83fe1a3381b9a0c61cc13477f458fc319956e8ed572e53c16b7868027",
@@ -4311,6 +4316,30 @@
       },
       "requestSourceLines": [],
       "reviewBasis": "Visible original Worksheet E three-family facts and local canonical/visible-estimate checks only. All protected endpoints asserted absent; unrelated household/current W2 scaffold omits the PTC policy and all Worksheet E originals. Default30s/2workers/0retry; actual combined runtime pending.",
+      "skippedTitles": []
+    },
+    "guided-mixed-capital-services.spec.ts": {
+      "caseCount": 2,
+      "bounds": {
+        "filled-return": 0,
+        "provider": 0,
+        "business-expense-analysis": 0,
+        "self-employment-income-analysis": 0
+      },
+      "requestSourceLines": [],
+      "reviewBasis": "Visibly entered original fields for the existing finite Form2555 capital-and-services method; no tax calculation added. Existing unrelated household/business/foreign qualification scaffold omits every new method original. Canonical and exact visible monetary checks, unknown/zero/stale/reopen/privacy/2026 gates. Original30s/2configuredworkers/0retry; actual combined runtime pending.",
+      "skippedTitles": []
+    },
+    "guided-all-foreign-capital-loss.spec.ts": {
+      "caseCount": 2,
+      "bounds": {
+        "filled-return": 0,
+        "provider": 0,
+        "business-expense-analysis": 0,
+        "self-employment-income-analysis": 0
+      },
+      "requestSourceLines": [],
+      "reviewBasis": "Visibly entered original fields for the existing finite Form2555 capital-and-services method; no tax calculation added. Existing unrelated household/business/foreign qualification scaffold omits every new method original. Canonical and exact visible monetary checks, unknown/zero/stale/reopen/privacy/2026 gates. Original30s/2configuredworkers/0retry; actual combined runtime pending.",
       "skippedTitles": []
     }
   }

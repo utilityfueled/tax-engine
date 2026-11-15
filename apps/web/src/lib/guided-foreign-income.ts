@@ -1,3 +1,4 @@
+import {convertForeignCapitalOriginals,type MixedCapitalOriginals,type AllForeignCapitalLossOriginals} from "./guided-foreign-capital-originals";
 import Decimal from "decimal.js";
 import { Form2555Schema, type Form2555Input } from "@/models/inputs";
 import { calculateForm2555 } from "@/engine/forms/form-2555";
@@ -17,6 +18,7 @@ export interface ForeignIncomeSourceData {
   sourceId: string; sourceTaxYear: string; accountHolder: "" | Owner; sourceReference: string; payerName: string; payerEin: string;
   foreignEarnedIncome: string; priorYearIncomeReceived: string; notIncludedInW2Confirmed: boolean | null;
   partnerPerformedServicesConfirmed?: boolean | null; capitalMaterialIncomeFactor?: boolean | null; allBusinessIncomeForeignConfirmed?: boolean | null; foreignBusinessExpenses?: string; foreignBusinessExpenseSourceReference?: string; foreignBusinessExpensesConfirmed?: boolean | null; qbiForeignProfit?: string; k1QbiExcludesForeignConfirmed?: boolean | null;
+  mixedCapitalServices?: MixedCapitalOriginals; allForeignCapitalLoss?: AllForeignCapitalLossOriginals;
   reasonableServicesAllowance?: string; reasonableAllowanceConfirmed?: boolean | null;
   businessGrossReceipts: string; businessReturnsAndAllowances: string; businessCostOfGoodsSold: string; businessOtherIncome: string;
 }
@@ -95,6 +97,8 @@ function sourceContext(state: GuidedFlowState): Form2555SourceContext {
     scheduleC: facts ? { accountHolder: facts.accountHolder || undefined, businessName: facts.businessName?.trim(), ein: facts.ein?.trim(), grossReceipts: gross?.toFixed(),
       returnsAndAllowances: hasEnteredAmount(facts.returnsAndAllowances) ? money(facts.returnsAndAllowances, "business returns") : undefined,
       costOfGoodsSold: hasEnteredAmount(facts.costOfGoodsSold) ? money(facts.costOfGoodsSold, "business cost of goods sold") : undefined,
+      w2WagesPaid: hasEnteredAmount(facts.w2WagesPaid) ? money(facts.w2WagesPaid,"actual business W2 wages") : undefined,
+      ubiaQualifiedProperty: hasEnteredAmount(facts.ubiaQualifiedProperty) ? money(facts.ubiaQualifiedProperty,"actual business qualified property") : undefined,
       otherIncome: hasEnteredAmount(facts.otherIncome) ? money(facts.otherIncome, "business other income") : undefined } : undefined,
     scheduleK1: guidedK1Originals(state, state.sectionData.adjustments?.foreignIncome?.sources?.some(row => row.sourceId.startsWith("scheduleK1:"))).map(k1 => ({ accountHolder: k1.accountHolder, taxYear: k1.taxYear, partnershipName: k1.partnershipName, partnershipEIN: k1.partnershipEIN, selfEmploymentEarnings: k1.selfEmploymentEarnings, section199AQBI: k1.section199AQBI, section199AW2Wages: k1.section199AW2Wages, section199AUBIA: k1.section199AUBIA })),
     form1099Nec: necs.map(entry => ({ accountHolder: entry.accountHolder || undefined, nonemployeeCompensation: hasEnteredAmount(entry.nonemployeeCompensation) ? money(entry.nonemployeeCompensation, "original NEC compensation") : undefined })),
@@ -183,7 +187,8 @@ export function buildForeignIncomeInput(data: ForeignIncomeData | undefined, sta
     if (business?.businessFacts?.singleBusinessConfirmed !== true || business.businessFacts.incomeReconciled !== true) throw new Error("Confirm the complete single-business income ledger before binding foreign receipts.");
     if (context.form1099Nec.some(source => source.accountHolder !== owner)) throw new Error("Every included original NEC must have the actual foreign business owner.");
   }
-  const rows = data.sources.map(row => ({ sourceId: row.sourceId, sourceTaxYear: integer(row.sourceTaxYear, "original income source year", year, year), accountHolder: row.accountHolder,
+  const rows = data.sources.map((row,index) => ({
+    mixedCapitalServices:convertForeignCapitalOriginals(data,index,"mixedCapitalServices"),allForeignCapitalLoss:convertForeignCapitalOriginals(data,index,"allForeignCapitalLoss"), sourceId: row.sourceId, sourceTaxYear: integer(row.sourceTaxYear, "original income source year", year, year), accountHolder: row.accountHolder,
     sourceReference: row.sourceReference, payerName: row.payerName, payerEin: row.payerEin.trim() || undefined,
     foreignEarnedIncome: money(row.foreignEarnedIncome, "current foreign source receipts"), priorYearIncomeReceived: money(row.priorYearIncomeReceived, "prior-year services received this year"),
     notIncludedInW2Confirmed: row.notIncludedInW2Confirmed ?? undefined,

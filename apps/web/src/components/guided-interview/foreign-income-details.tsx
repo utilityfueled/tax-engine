@@ -1,6 +1,8 @@
 "use client";
 
 import { emptyForeignIncome, emptyForeignIncomeSource, foreignIncomePartIVKeys, type ForeignIncomeData, type ForeignIncomeSourceData } from "@/lib/guided-foreign-income";
+import {ForeignCapitalOriginalsDetails} from "./foreign-capital-originals-details";
+import {confirmForeignCapitalOriginals,foreignCapitalOriginalsChanged,invalidateForeignCapitalOriginals,type ForeignCapitalMethod} from "@/lib/guided-foreign-capital-originals";
 import { FORM2555_HOUSING_LIMITS } from "@/engine/forms/form-2555-housing-limits";
 import { BooleanFact, TextFact } from "./fact-fields";
 import { CurrencyField } from "./currency-field";
@@ -17,14 +19,14 @@ function Choice({ label, value, options, onChange }: { label: string; value: str
 }
 export function ForeignIncomeDetails({ data, sources = [], onChange }: { data?: ForeignIncomeData; sources?: { sourceId: string; label: string }[]; onChange: (data: ForeignIncomeData | undefined) => void }) {
   if (!data) return <section><h3>Foreign earned income</h3><p className="guided-hint">Use original pay, travel, tax-home and election records for Form 2555. Foreign income is still reported before an exclusion is calculated.</p><button type="button" onClick={() => onChange(structuredClone(emptyForeignIncome))}>Add foreign-income worksheet</button></section>;
-  const update = (patch: Partial<ForeignIncomeData>) => onChange({ ...data, ...patch, ...(Object.keys(patch).every(key => key === "sourceFactsConfirmed") ? {} : { sourceFactsConfirmed: null }) });
+  const update = (patch: Partial<ForeignIncomeData>) => { const next={...data,...patch};onChange(foreignCapitalOriginalsChanged(data,next)?{...invalidateForeignCapitalOriginals(next),sourceFactsConfirmed:null}:next); };
   const sourceUpdate = (index: number, patch: Partial<ForeignIncomeSourceData>) => update({ sources: data.sources.map((row, i) => i === index ? { ...row, ...patch } : row) });
   const boolean = (key: { [K in keyof ForeignIncomeData]-?: ForeignIncomeData[K] extends boolean | null | undefined ? K : never }[keyof ForeignIncomeData], label: string) => <BooleanFact key={key} label={label} value={data[key]} onChange={value => update({ [key]: value })} />;
   const text = (key: { [K in keyof ForeignIncomeData]-?: ForeignIncomeData[K] extends string ? K : never }[keyof ForeignIncomeData], label: string, type: "text" | "date" = "text") => <TextFact key={key} label={label} value={data[key]} type={type} onChange={value => update({ [key]: value })} />;
   const money = (key: keyof Pick<ForeignIncomeData, "qualifiedHousingExpenses" | "nontaxableGovernmentHousingAllowance" | "deductionsAllocableToExcludedIncome" | "foreignEarnedIncomeTaxWorksheetDisallowedDeductions" | "priorYearHousingDeductionCarryover" | "priorYearIncomeExclusion" | "priorYearUnusedExclusion">, label: string) => <CurrencyField key={key} label={label} value={data[key]} required onChange={value => update({ [key]: value })} />;
   return <section>
     <h3>Foreign earned income</h3>
-    <p className="guided-hint">Use the <a href="https://www.irs.gov/instructions/i2555" target="_blank" rel="noreferrer">Form 2555 instructions</a> and completed original worksheets. This entry supports one taxpayer&apos;s actual W-2, separate employment or personal-service Schedule C sources. Both spouses&apos; claims need separate forms. Leave unknown facts unanswered; enter zero only when the source establishes zero.</p>
+    <p className="guided-hint">Use the <a href="https://www.irs.gov/instructions/i2555" target="_blank" rel="noreferrer">Form 2555 instructions</a> and completed original worksheets. This entry supports one taxpayer&apos;s actual W-2, separate employment or personal-service Schedule C sources and the two documented capital-and-services source methods. Both spouses&apos; claims need separate forms. Leave unknown facts unanswered; enter zero only when the source establishes zero.</p>
     <div className="guided-form-grid">
       {text("sourceTaxYear", "Foreign-income worksheet year")}{text("sourceReference", "Foreign-income source reference")}
       <Choice label="Foreign-income taxpayer" value={data.accountHolder} options={[["primary", "Primary taxpayer"], ["spouse", "Spouse on joint return"]]} onChange={value => update({ accountHolder: value as ForeignIncomeData["accountHolder"] })} />
@@ -104,6 +106,7 @@ export function ForeignIncomeDetails({ data, sources = [], onChange }: { data?: 
           <BooleanFact label={`Records confirm those actual foreign expenses ${index + 1}`} value={row.foreignBusinessExpensesConfirmed ?? null} onChange={foreignBusinessExpensesConfirmed => sourceUpdate(index, { foreignBusinessExpensesConfirmed })} />
         </>}
         {(row.sourceId === "scheduleC" || [row.businessGrossReceipts, row.businessReturnsAndAllowances, row.businessCostOfGoodsSold, row.businessOtherIncome].some(value => value.trim())) && (["businessGrossReceipts", "businessReturnsAndAllowances", "businessCostOfGoodsSold", "businessOtherIncome"] as const).map((key, i) => <CurrencyField key={key} label={`${["Original business gross receipts", "Original business returns and allowances", "Original business cost of goods sold", "Original business other income"][i]} ${index + 1}`} value={row[key]} required onChange={value => sourceUpdate(index, { [key]: value })} />)}
+        {(row.sourceId==='scheduleC'||row.mixedCapitalServices!==undefined||row.allForeignCapitalLoss!==undefined)&&(['mixedCapitalServices','allForeignCapitalLoss']as const).map((method:ForeignCapitalMethod)=>{const originals=row[method];return originals!==undefined?<ForeignCapitalOriginalsDetails key={method} method={method} index={index} value={originals} onChange={value=>sourceUpdate(index,{[method]:value})} onConfirm={()=>sourceUpdate(index,{[method]:confirmForeignCapitalOriginals(data,index,method)})} onRemove={()=>sourceUpdate(index,{[method]:undefined})}/>:<button key={method} type="button" onClick={()=>sourceUpdate(index,{[method]:{}})}>Add {method==='mixedCapitalServices'?'mixed-location capital service':'all-foreign capital-loss'} originals {index+1}</button>;})}
       </div><button type="button" onClick={() => update({ sources: data.sources.filter((_, n) => n !== index) })}>Remove foreign-income source {index + 1}</button></fieldset>)}
       <button type="button" onClick={() => update({ sources: [...data.sources, structuredClone(emptyForeignIncomeSource)] })}>Add original foreign-income source</button>
     </fieldset>

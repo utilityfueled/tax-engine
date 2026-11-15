@@ -1,0 +1,35 @@
+form: "Guided Form2555 capital-and-services originals"
+taxYear: 2025
+status: "experimental-source-intake"
+reference: "spec/federal/form-2555-mixed-capital-services.yaml; spec/federal/form-2555-all-foreign-capital-loss.yaml; IRS Pub54(12/2025) chapter4 Examples3/4; Form2555 instructions"
+notes: |
+  Intake parity for two already-admitted finite canonical methods only. No new
+  calculation, inferred allocation, election, history answer or filing entitlement.
+  Source location, current paid expenses, actual allowances and explicit known-zero
+  histories must come from complete originals. Keep foreign/domestic receipts and
+  allowances separate. The unchanged canonical engine validates every source again.
+  Pub54 Example4 uses printed52.74% rather than the unrounded fraction: line44=90713,
+  line45=-13713, resulting AGI=-12287. The guide must not manufacture these amounts.
+  Full2026 calculation/export and existing state-method gates remain closed.
+lines:
+  - line: "source-parity"
+    formula: "Preserve exact complete mixedCapitalServices and allForeignCapitalLoss originals through typed guide conversion, with strict canonical shape and independent actual business/household binding. Existing fictional mixed vector foreign120000/domestic80000 and expenses70000/30000 retains canonical foreign allowance10000; published loss vector146000/172000/77000 retains printed52.74% and90713 disallowed deductions."
+    testRef: "tests/guided-interview/guided-foreign-capital-originals.test.ts::preserves both existing canonical source methods through guided originals"
+  - line: "confirmation-and-unknown"
+    formula: "Require explicit current confirmation, source years/owners/references, every known-zero history, no other activity and each method's original facts. Reject missing/null/false/extra/conflicting/stale source meaning; deep-clone original snapshots and results, with no caller proof or cache replacing canonical validation."
+    testRef: "tests/guided-interview/guided-foreign-capital-originals.test.ts::rejects incomplete extra and stale capital originals without mutation"
+  - line: "visible-originals"
+    formula: "Collect every method field visibly with blank/unknown defaults, explicit zero and literal method selection, independent confirmation and source-edit invalidation. No UI arithmetic or inferred answers."
+    testRef: "tests/apps/web/guided-foreign-capital-originals.test.tsx::originates both finite capital source methods and revokes edited confirmations"
+  - line: "default-only-bridge"
+    formula: "Only a successfully converted allForeignCapitalLoss source may normalize the empty-source standard choice (whether default or explicitly selected) and default zero/false child-credit object when there are explicit no dependents, no entered deduction sources and no other child-credit meaning. Preserve competing built inputs and prevent normalization for unknown/null or extra raw meaning so the unchanged canonical full-composition guard still rejects it; mixed and all other routes remain byte-equivalent. No canonical exemption."
+    testRef: "tests/guided-interview/guided-foreign-capital-originals.test.ts::preserves every entered competing full-boundary fact"
+  - line: "privacy-and-gates"
+    formula: "Keep private proof, references and identity out of real hosted/provider/AI projections; preserve independent full federal and state validation and isolated2026 versus full2026 calculation/export separation."
+    testRef: "tests/guided-interview/guided-foreign-capital-originals.test.ts::preserves canonical privacy annual and state gates"
+  - line: "mixed-browser"
+    formula: "At1280/390 visibly enter finite mixed capital originals and assert exact visible $24,914 Estimated Balance Due from standalone canonical full result (including its existing estimated-tax penalty), initial/reloaded/reconfirmed, complete calculation and saved/reopened sources and fail-closed edits with original30s,2workers,0retry and zero protected requests."
+    testRef: "apps/web/tests/guided-mixed-capital-services.spec.ts::originates private mixed capital originals and preserves source gates"
+  - line: "loss-browser"
+    formula: "At1280/390 visibly enter finite all-foreign capital-loss originals including explicit zero histories and printed allocation worksheet; assert exact visible $0 Estimated Result initial/reloaded/reconfirmed from standalone canonical full result; preserve original30s,2workers,0retry and zero protected requests."
+    testRef: "apps/web/tests/guided-all-foreign-capital-loss.spec.ts::originates private all-foreign capital-loss originals and preserves source gates"

@@ -6826,6 +6826,26 @@
       ]
     },
     {
+      "key": "federal/guided-foreign-capital-originals",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "spec/federal/form-2555-mixed-capital-services.yaml; spec/federal/form-2555-all-foreign-capital-loss.yaml; IRS Pub54(12/2025) chapter4 Examples3/4; Form2555 instructions",
+      "specPath": "spec/federal/guided-foreign-capital-originals.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/guided-foreign-income",
       "jurisdiction": "federal",
       "taxYear": 2026,

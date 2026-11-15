@@ -925,6 +925,7 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
 
   const healthInsurance = buildHealthInsuranceInput(adjustmentData?.healthInsuranceFacts, segmentation.filingStatus, state.taxYear, adjustmentData?.selfEmployedHealthInsurance);
   const eic = buildGuidedEicClaimantEligibility(personalInfo, segmentation.filingStatus, state.taxYear);
+  let builtForeignIncome: ReturnType<typeof buildForeignIncomeInput>;
   let input: GuidedTaxInputSources = {
     taxpayer: {
       taxYear: state.taxYear,
@@ -956,7 +957,7 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
     },
     w2s,
     form2210: buildEstimatedTaxFacts(paymentData, state.taxYear),
-    form2555: buildForeignIncomeInput(adjustmentData?.foreignIncome, state),
+    form2555: builtForeignIncome = buildForeignIncomeInput(adjustmentData?.foreignIncome, state),
     ...(form3903 === undefined ? {} : { form3903 }),
     netOperatingLoss: buildGuidedNetOperatingLoss(adjustmentData?.netOperatingLossSources, state.taxYear, segmentation.filingStatus, personalInfo, deductionData, adjustmentData?.k1LossSources, adjustmentData?.codNolSources?.attributeSources),
     ...(cryptoDonations !== undefined ? { cryptoIncome: { donations: cryptoDonations } } : {}),
@@ -1039,6 +1040,24 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
         ? paymentAdjustments
         : undefined,
   };
+  // This finite canonical method rejects any additional activity composition.
+  // Normalize only the empty-source standard choice (default or explicitly
+  // selected; the raw shape is identical) and the known no-child false/zero
+  // object. Other entered/unknown meaning keeps the full-input guard closed.
+  if (builtForeignIncome?.sourceMapping?.rows?.some(row => row.allForeignCapitalLoss !== undefined)) {
+    const child = personalInfo.childTaxCredit;
+    const childKeys = new Set(["bonaFidePuertoRicoResident", "puertoRicoExcludedIncome", "form4563ExcludedIncome", "possessionIncomeExclusion"]);
+    const zeroOriginal = (value: unknown) => typeof value === "string" && /^\d+(?:\.\d+)?$/.test(value) && new Decimal(value).isZero();
+    const noDependents = personalInfo.dependentCount === "0" && personalInfo.dependents?.length === 0;
+    const defaultChild = child !== undefined && child !== null
+      && Object.keys(child).every(key => childKeys.has(key)) && child.bonaFidePuertoRicoResident === false
+      && zeroOriginal(child.puertoRicoExcludedIncome) && zeroOriginal(child.form4563ExcludedIncome)
+      && (child.possessionIncomeExclusion === undefined || zeroOriginal(child.possessionIncomeExclusion));
+    if (noDependents && defaultChild) input.childTaxCredit = undefined;
+    const defaultDeductionKeys = new Set(["method", "medicalExpenses", "stateLocalTaxes", "realEstateTaxes", "mortgageInterest", "charitableContributions", "casualtyLosses", "otherItemized"]);
+    if (noDependents && (child === undefined || defaultChild) && input.deductionElection === "standard" && deductionData?.method === "standard"
+      && Object.entries(deductionData).every(([key, value]) => defaultDeductionKeys.has(key) && (key === "method" ? value === "standard" : value === ""))) input.deductionElection = undefined;
+  }
   if(seData?.businessFacts?.depreciationMethod==='passenger'||seData?.businessFacts?.passengerSources){try{const bound=bindGuidedPassengerInput(input,seData.businessFacts,capturePassenger);if(!bound)return null;Object.assign(input,bound.input);}catch(error){if(capturePassenger)throw error;return null;}}
   if(input.scheduleC?.sourceFacts || input.scheduleC?.expenses?.businessInterest){try{calculateScheduleCSourceFacts(input as Parameters<typeof calculateScheduleCSourceFacts>[0],input.scheduleC);}catch{return null;}}
   if (input.w2s.some(entry => entry.stateLocalSources !== undefined)) {
