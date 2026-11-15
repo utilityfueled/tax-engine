@@ -1,3 +1,4 @@
+import {computeGuidedPreviewEvaluation} from './guided-preview-compute';
 import { codPrincipalResidenceNavigationFactErrors, invalidateGuidedCodPrincipalResidence, type CodPrincipalResidenceData } from './guided-cod-principal-residence';
 import { invalidateMarketDiscount } from './guided-market-discount-sources';
 import {rrtaDraftValues,rrtaPaperDraftValues} from './guided-rrta-payroll-sources';
@@ -1585,9 +1586,13 @@ export interface GuidedRenderAnalysis {
 }
 
 export function analyzeGuidedRender(state: GuidedFlowState): GuidedRenderAnalysis {
+  return analyzeGuidedRenderUsing(state, section => getVisitedSectionStatus(state, section));
+}
+
+function analyzeGuidedRenderUsing(state: GuidedFlowState, statusFor: (section: InterviewSectionId) => VisitedSectionStatus): GuidedRenderAnalysis {
   const sections = getGuidedSectionRoute(state);
   const sectionStatuses = new Map(sections.map(section =>
-    [section.id, getVisitedSectionStatus(state, section.id)] as const));
+    [section.id, statusFor(section.id)] as const));
   const completion = sections.reduce<FlowCompletionSummary>((summary, section) => {
     const status = sectionStatuses.get(section.id);
     if (status === "complete") summary.completedSections += 1;
@@ -1710,21 +1715,28 @@ export function setInterviewTaxYear(state: GuidedFlowState, taxYear: number | nu
  * Residency controls use separate federal-only originals, avoiding a confirmation
  * cycle. This reads/replays existing proof; it never confirms either ordinary packet. */
 export function buildGuidedPAOrdinarySourceInput(state: GuidedFlowState): TaxYearInput | null {
+  return buildPAOrdinarySourceInputUsing(state, () => {
+    const raw = buildTaxInputFromGuidedData(state);
+    const parsed = raw ? TaxYearInputSchema.safeParse(raw) : undefined;
+    return parsed?.success ? parsed.data : null;
+  });
+}
+
+function buildPAOrdinarySourceInputUsing(state: GuidedFlowState, currentInput: () => TaxYearInput | null): TaxYearInput | null {
   if (state.segmentation.stateCode !== "PA") return null;
   const data = state.sectionData["state-return"];
   if(state.segmentation.filingStatus==='mfj'||data?.paMarriedOrdinarySources){
-    try{const raw=buildTaxInputFromGuidedData(state);const parsed=raw?TaxYearInputSchema.safeParse(raw):undefined;return parsed?.success?parsed.data:null;}catch{return null;}
+    try{return currentInput();}catch{return null;}
   }
   if (!data?.paResidencySources) return null;
   try {
-    const raw = buildTaxInputFromGuidedData(state);
-    const parsed = raw ? TaxYearInputSchema.safeParse(raw) : undefined;
-    if (!parsed?.success) return null;
+    const input = currentInput();
+    if (!input) return null;
     if (data.paReciprocitySources) {
-      const bound = buildGuidedPAReciprocitySources(parsed.data, data.paResidencySources, data.paReciprocitySources);
-      return { ...parsed.data, paResidencySources: bound.residencySources, paReciprocitySources: bound.reciprocitySources };
+      const bound = buildGuidedPAReciprocitySources(input, data.paResidencySources, data.paReciprocitySources);
+      return { ...input, paResidencySources: bound.residencySources, paReciprocitySources: bound.reciprocitySources };
     }
-    return { ...parsed.data, paResidencySources: buildGuidedPAResidencySources(parsed.data, data.paResidencySources) };
+    return { ...input, paResidencySources: buildGuidedPAResidencySources(input, data.paResidencySources) };
   } catch { return null; }
 }
 
@@ -2509,10 +2521,14 @@ function validatePaymentsSection(data: PaymentData | undefined, taxYear?: number
  * Validate the current section data, returning status and any field errors.
  * Pure function — no side effects.
  */
-export function validateSection(
-  state: GuidedFlowState,
-  sectionId: InterviewSectionId,
-): SectionValidationResult {
+export function validateSection(state: GuidedFlowState, sectionId: InterviewSectionId): SectionValidationResult {
+  return validateSectionUsing(state, sectionId);
+}
+
+// Constructed and consumed only inside evaluateGuidedRenderState below. Public
+// validation never accepts a projection supplied by its caller.
+interface CurrentRenderProjection { stateSourcesValidated: boolean }
+function validateSectionUsing(state: GuidedFlowState, sectionId: InterviewSectionId, projection?: CurrentRenderProjection): SectionValidationResult {
   switch (sectionId) {
     case "personal-info":
       return validatePersonalInfo(getSectionData(state, "personal-info"), state.segmentation.filingStatus, state.taxYear);
@@ -2593,8 +2609,8 @@ export function validateSection(
     case "state-return":
       return validateRequiredFacts({
         ...zeroIncomeMiscSourceFactErrors(state),
-        ...guidedPAOrdinaryReturnSourceErrors(state),
-        ...guidedOhioActualSourceErrors(state),
+        ...(projection?.stateSourcesValidated && state.segmentation.stateCode === "PA" ? {} : guidedPAOrdinaryReturnSourceErrors(state)),
+        ...(projection?.stateSourcesValidated && state.segmentation.stateCode === "OH" ? {} : guidedOhioActualSourceErrors(state)),
         ...statePaymentFactErrors(getSectionData(state, "state-return"), state.taxYear, state.segmentation.stateCode),
         ...guidedOhioInterestFactErrors(state),
       });
@@ -2605,15 +2621,15 @@ export function validateSection(
   }
 }
 
-export function getVisitedSectionStatus(
-  state: GuidedFlowState,
-  sectionId: InterviewSectionId,
-): VisitedSectionStatus {
+export function getVisitedSectionStatus(state: GuidedFlowState, sectionId: InterviewSectionId): VisitedSectionStatus {
+  return getVisitedSectionStatusUsing(state, sectionId, () => validateSection(state, sectionId));
+}
+function getVisitedSectionStatusUsing(state: GuidedFlowState, sectionId: InterviewSectionId, validate: () => SectionValidationResult): VisitedSectionStatus {
   if (!state.completedSections.includes(sectionId)) {
     return "not-started";
   }
 
-  const result = validateSection(state, sectionId);
+  const result = validate();
   if (result.status === "complete") {
     return "complete";
   }
@@ -2802,4 +2818,28 @@ export function clearGuidedFlowState(storage: Storage, target: GuidedFlowStorage
   } catch {
     // Silently ignore
   }
+}
+
+/** One synchronous read of the actual current state. No context survives this call. */
+export function evaluateGuidedRenderState(actual: GuidedFlowState) {
+  const state = structuredClone(actual);
+  const fresh = computeGuidedPreviewEvaluation(state);
+  const input = fresh.input;
+  const data = state.sectionData["state-return"];
+  // Retained canonical state fields and reciprocal/married compositions continue
+  // through the original independent validators; this finite optimization does not
+  // widen their proof contracts.
+  const ordinary = input !== null && input.ohioResidency === undefined
+    && input.ohioPayments === undefined && input.ohioSchoolDistrict === undefined
+    && input.ohioReturnHeaderSources === undefined && input.paResidencySources === undefined
+    && input.paOrdinaryReturnFacts === undefined && input.paOrdinaryReturnCompletionSources === undefined
+    && input.paMarriedOrdinarySources === undefined && !data?.ohioReciprocalWages
+    && !data?.paMarriedOrdinarySources && state.segmentation.filingStatus !== 'mfj';
+  const paInput = buildPAOrdinarySourceInputUsing(state, () => input);
+  const projection: CurrentRenderProjection = {stateSourcesValidated: ordinary && fresh.sourceReplaySucceeded};
+  const analysis = state.phase === "segmentation" ? null : analyzeGuidedRenderUsing(state, section => getVisitedSectionStatusUsing(state, section,
+    () => validateSectionUsing(state, section, projection)));
+  return { preview: fresh.preview, analysis: analysis === null ? null : structuredClone(analysis),
+    originalInput: input === null ? null : structuredClone(input),
+    ordinaryOriginalInput: paInput === null ? null : structuredClone(paInput) };
 }

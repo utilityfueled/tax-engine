@@ -6128,3 +6128,14 @@ passes41 bounded commands, preserves all31 initial images and normally restores
 the stopped VM/resources/routes. Independent source and actual restoration reviews
 pass. External W3C comparison and qualified security acceptance remain pending.
 [Exact failure and cleanup](upgrade-2026-postgres-libxml2-native-20261114.md).
+
+### November 15: share only fresh same-render guided source work
+
+Preview/navigation/state projections now share one fresh actual-state evaluation,
+with no retained cache or caller proof. Fully entered OH/PA fixtures reduce bridge
+builds3/4→1 and federal calls24→12/6→4 with exact money/output parity. Original
+public validation and fallback paths remain. Author1052 tests, root10 new controls/
+web types/9316 references and independent7311 parity cases/1899 replay controls/
+nine PA reciprocal cases pass. Inventory is regenerated with unsupported filing
+status preserved. Browser/runtime results remain pending.
+[Exact scope and review](upgrade-2026-guided-render-evaluation-20261115.md).

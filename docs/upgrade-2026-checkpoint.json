@@ -1,4 +1,21 @@
 {
+  "nov15GuidedRenderEvaluation": {
+    "base": "43243494",
+    "manifest": "722fc66720e9eb26ce2851770fb0ab18ca5a1c2ca01a69ee285d147d21279b25",
+    "independentPeer": "755301bf87e56a74f26ae08c8071677a8edceb3a7b20e2c8142455ed2a6aea38",
+    "authorFocusedPassed": 1052,
+    "rootNewControlsPassed": 10,
+    "independentDistinctParityCases": 7311,
+    "independentReplayControls": 1899,
+    "independentPaReciprocalCases": 9,
+    "webTypesPassed": true,
+    "specReferencesPassed": 9316,
+    "inventoryRegenerated": true,
+    "perInvocationOnly": true,
+    "publicValidatorsRemainIndependent": true,
+    "browserAndRuntimePending": true,
+    "releaseReady": false
+  },
   "nov15W3cCompileFailureAndRecovery": {
     "operation": "f113493259b120d66d0c44cf",
     "compileExit": 2,

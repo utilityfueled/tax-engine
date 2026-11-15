@@ -165,7 +165,19 @@ export function computeGuidedPreviewOutcome(state: GuidedFlowState | null | unde
   return { metrics, blockedBy };
 }
 
-function runGuidedPreview(state: GuidedFlowState | null | undefined, onBlocked: (message: string) => void): GuidedPreviewMetrics | null {
+/** A fresh producer: accepts actual state only, never a caller-prepared input or proof.
+ * Returned originals are private source data, not an export or confirmation action. */
+export function computeGuidedPreviewEvaluation(state: GuidedFlowState): {preview: ReturnType<typeof computeGuidedPreviewOutcome>; input: TaxYearInput | null; sourceReplaySucceeded: boolean} {
+  let input: TaxYearInput | null = null;
+  let sourceReplaySucceeded = false;
+  let blockedBy: string | null = null;
+  const metrics = runGuidedPreview(state, message => { blockedBy = message; },
+    current => { input = current; }, () => { sourceReplaySucceeded = true; });
+  return { preview: {metrics, blockedBy}, input, sourceReplaySucceeded };
+}
+
+function runGuidedPreview(state: GuidedFlowState | null | undefined, onBlocked: (message: string) => void,
+  onInput?: (input: TaxYearInput) => void, onSourceReplay?: () => void): GuidedPreviewMetrics | null {
   if (!state || typeof state !== "object" || state.segmentation == null || state.sectionData == null) {
     return null;
   }
@@ -174,6 +186,7 @@ function runGuidedPreview(state: GuidedFlowState | null | undefined, onBlocked: 
     const rawInput = buildTaxInputFromGuidedData(state);
     if (!rawInput) return null;
     const taxInput = TaxYearInputSchema.parse(rawInput);
+    onInput?.(taxInput);
     let result: ReturnType<typeof calculateFederalTax>;
     try {
       result = calculateFederalTax(taxInput);
@@ -230,6 +243,7 @@ function runGuidedPreview(state: GuidedFlowState | null | undefined, onBlocked: 
       }
     }
 
+    if (stateResult || separateMetrics) onSourceReplay?.();
     const metrics=extractMetricsFromResult(result,stateResult);
     return separateMetrics?{...metrics,state:separateMetrics}:metrics;
   } catch {

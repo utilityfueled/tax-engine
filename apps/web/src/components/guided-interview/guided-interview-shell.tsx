@@ -10,7 +10,6 @@ import { marketplacePolicyOptions } from "@/lib/guided-marketplace-health-facts"
 import { healthInsuranceSourceOptions } from "@/lib/guided-health-insurance-facts";
 import { guidedCareBenefitSources } from "@/lib/guided-dependent-care-benefits";
 import Decimal from "decimal.js";
-import { TaxYearInputSchema, type TaxYearInput } from "@/models/inputs";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ReturnWorkspaceRecord } from "@tax-engine/contracts";
 import {
@@ -27,12 +26,11 @@ import {
 import { RetroShell } from "@/components/retro-shell";
 import {
   type GuidedPreviewMetrics,
-  buildTaxInputFromGuidedData,
   mapFilingStatus,
   buildGuidedFactAnswers,
   buildGuidedSyntheticDocuments,
 } from "@/lib/guided-interview-bridge";
-import { computeGuidedPreviewOutcome } from "@/lib/guided-preview-compute";
+import { evaluateGuidedRender } from "@/lib/guided-render-evaluation";
 import { collectW2Suggestions } from "@/lib/workspace-assistant";
 import {
   type AdjustmentData,
@@ -58,7 +56,6 @@ import {
   canGoBack,
   canGoForward,
   clearGuidedFlowState,
-  analyzeGuidedRender,
   type GuidedRenderAnalysis,
   type FlowProgress,
   shouldPromptBeforeAdvance,
@@ -73,7 +70,6 @@ import {
   emptyScheduleCExpenses,
   emptyW2Entry,
   getSectionData,
-  buildGuidedPAOrdinarySourceInput,
   getVisitedSectionStatus,
   goToNextSection,
   goToPreviousSection,
@@ -480,6 +476,7 @@ function RefundTicker({
 function SectionContent({
   sectionId,
   analysis,
+  stateProjection,
   state,
   workspace,
   documentCacheWorkspaceId,
@@ -492,6 +489,7 @@ function SectionContent({
 }: {
   sectionId: InterviewSectionId;
   analysis: GuidedRenderAnalysis;
+  stateProjection: Pick<ReturnType<typeof evaluateGuidedRender>, "originalInput" | "ordinaryOriginalInput">;
   state: GuidedFlowState;
   workspace: ReturnWorkspaceRecord;
   documentCacheWorkspaceId?: string | null;
@@ -765,18 +763,13 @@ function SectionContent({
         />
       );
     case "state-return": {
-      let originalInput: TaxYearInput | null = null;
-      try {
-        const raw = buildTaxInputFromGuidedData(state);
-        const parsed = raw ? TaxYearInputSchema.safeParse(raw) : undefined;
-        if (parsed?.success) originalInput = parsed.data;
-      } catch { /* Actual incomplete federal sources stay unavailable for confirmation. */ }
+      const originalInput = stateProjection.originalInput;
       return (
         <SectionStateReturn
           currentWorkspaceId={workspace.storageMode === "local-browser" ? workspace.id : undefined}
           stateCode={state.segmentation.stateCode as SupportedStateCode}
           originalInput={originalInput}
-          ordinaryOriginalInput={buildGuidedPAOrdinarySourceInput(state)}
+          ordinaryOriginalInput={stateProjection.ordinaryOriginalInput}
           taxYear={state.taxYear}
           filingStatus={state.segmentation.filingStatus ? mapFilingStatus(state.segmentation.filingStatus) : null}
           data={getSectionData(state, "state-return")}
@@ -810,6 +803,7 @@ function SectionContent({
 function InterviewPhase({
   state,
   analysis,
+  stateProjection,
   guidedPreview,
   guidedPreviewBlockedBy,
   onStateChange,
@@ -821,6 +815,7 @@ function InterviewPhase({
 }: {
   state: GuidedFlowState;
   analysis: GuidedRenderAnalysis;
+  stateProjection: Pick<ReturnType<typeof evaluateGuidedRender>, "originalInput" | "ordinaryOriginalInput">;
   guidedPreview: GuidedPreviewMetrics | null;
   guidedPreviewBlockedBy: string | null;
   onStateChange: (next: GuidedFlowState) => void;
@@ -956,6 +951,7 @@ function InterviewPhase({
       <div key={currentSection?.id} className="guided-section-transition">
         {currentSection ? (
           <SectionContent
+            stateProjection={stateProjection}
             analysis={analysis}
             sectionId={currentSection.id as InterviewSectionId}
             state={state}
@@ -1295,15 +1291,12 @@ export function GuidedInterviewShell({
     return true;
   }, [beforeGuidedWrite, draftTarget]);
 
-  // Compute live preview from the guided interview data. This runs the
-  // tax engine on every state change so the refund ticker updates in
-  // real time as the user enters data.
-  const { metrics: guidedPreview, blockedBy: guidedPreviewBlockedBy } = useMemo(
-    () => workspace.returnSummary.targetTaxYear != null && flowState.taxYear !== workspace.returnSummary.targetTaxYear ? { metrics: null, blockedBy: null } : computeGuidedPreviewOutcome(flowState),
-    [flowState, workspace.returnSummary.targetTaxYear],
-  );
-  // Recompute from the entire actual state on every render; never retain a source-result cache.
-  const renderAnalysis = flowState.phase === "segmentation" ? null : analyzeGuidedRender(flowState);
+  // Fresh whole-state evaluation for this render; never retain a prepared source context.
+  const currentEvaluation = evaluateGuidedRender(flowState);
+  const { metrics: guidedPreview, blockedBy: guidedPreviewBlockedBy } =
+    workspace.returnSummary.targetTaxYear != null && flowState.taxYear !== workspace.returnSummary.targetTaxYear
+      ? { metrics: null, blockedBy: null } : currentEvaluation.preview;
+  const renderAnalysis = flowState.phase === "segmentation" ? null : currentEvaluation.analysis;
   const currentSection = flowState.phase === "interview"
     ? renderAnalysis?.progress.currentSection ?? null
     : null;
@@ -1391,6 +1384,7 @@ export function GuidedInterviewShell({
 
       {flowState.phase === "interview" && renderAnalysis && (
         <InterviewPhase
+          stateProjection={currentEvaluation}
           analysis={renderAnalysis}
           state={flowState}
           guidedPreview={guidedPreview}

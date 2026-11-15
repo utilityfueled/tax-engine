@@ -1,0 +1,18 @@
+form: Guided single-invocation render evaluation
+year: 2025
+source: Existing validated guided source contracts; no tax formula change
+notes:
+  - One call reads the complete actual state afresh. No cached state or caller-supplied proof is accepted.
+  - Only successful equivalent source replay can supply a same-invocation navigation projection. Unknown, invalid and unsupported compositions retain original replay and errors.
+  - Original public helper entry points continue validating independently; outputs and source arrays remain isolated from mutations.
+  - No change to deadlines, workers, retries, requests, export or filing qualification.
+lines:
+  - line: "single-current-evaluation"
+    formula: 'Reuse fresh parsed originals and successful finite source replay for preview, navigation and state projection within one call only, without repeated bridge building or navigation federal calculation.'
+    testRef: "tests/guided-interview/guided-render-evaluation.test.ts::shares only one actual current source evaluation %s"
+  - line: "parity-and-edits"
+    formula: 'Preserve complete old helper output and literal actual money, and revalidate owner, year, unknown confirmations, retained children and changed source records on each invocation.'
+    testRef: "tests/guided-interview/guided-render-evaluation.test.ts::preserves original behavior after actual source edits %s"
+  - line: "output-isolation"
+    formula: 'Caller state and independent returned projection arrays remain unmodified and unaliased; editing an earlier result does not change a subsequent evaluation.'
+    testRef: "tests/guided-interview/guided-render-evaluation.test.ts::isolates returned source projections and subsequent evaluations %s"

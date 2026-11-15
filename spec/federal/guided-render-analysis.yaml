@@ -4,7 +4,7 @@ source: Existing complete guided source validation and native review contracts; 
 notes:
   - Analyze the actual entire current GuidedFlowState once for each root render and pass only derived display analysis to children.
   - No cross-render or cross-owner cache; no narrowed tax input or omitted navigation/confirmation/source metadata.
-  - Preserve separate fresh preview, original-source collector, explicit action, export and persistence validation.
+  - The shell may compose fresh preview/navigation/source projections within one current-state invocation; independent public helpers, explicit actions, exports and persistence retain fresh validation.
   - Existing 5s unit deadlines, managed 90s/image 30s, worker/retry/assertion controls remain unchanged.
 lines:
   - line: "one-current-render"
