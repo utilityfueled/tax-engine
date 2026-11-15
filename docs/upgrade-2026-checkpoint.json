@@ -1,4 +1,29 @@
 {
+  "nov15CombinedE719Local": {
+    "head": "e719e3fec0fd251d06fe0b8f8b450f088772acbe",
+    "checksPassed": 12,
+    "unitAndCoverageTests": 28538,
+    "files": 2078,
+    "branchCoveragePercent": "88.10",
+    "browserCases": 637,
+    "browserPassed": 632,
+    "originalHostedSkipped": 5,
+    "allOriginalPoliciesPreserved": true,
+    "rootArtifactReview": "e8e17b17943cd1cac810bc28a73c4f32760f924261f7fe000ba1d875a3bb8abe",
+    "laneResults": {
+      "static": "dee9010ab8321637dc829adf6df5c733075bb22dec826b606675f8711010877f",
+      "unit": "646e62cb07e4cdbddb96687d9f96426062a9fd9cb2716c599d8f437f1bdf7c89",
+      "coverage": "22ab9871e3250da2b570a0622578c39eea545b6ffdbf2ba074dc6f7a27e60335",
+      "browser": "f968d62a5a3a7a20f1cd17cdb9287ee0ffe5a59605b3e79942e3e76484938226"
+    },
+    "allTerminalSessionsAcknowledged": true,
+    "ownedPostgresAndBrowserClosedNormally": true,
+    "laterYearAndPartialInterestCandidatesExcluded": true,
+    "preparedPreviewAndArm64Unused": true,
+    "remoteBackupBranch": "codex/2026-upgrade-backup-20261114",
+    "mainPushed": false,
+    "ledger": "docs/upgrade-2026-combined-e719e3fe-checks-20261115.md"
+  },
   "nov15ConsolidatedMetadata": {
     "baseHead": "22b8f0b8d6559fc0eeb727badc25fc983ae40d27",
     "sourceFreeze": "caa55ff93f963933c346c4a1e0f0aaa23bcf2a0b3c1126a6aba8a741d7abfe68",

@@ -1,5 +1,15 @@
 # 2026 upgrade implementation evidence
 
+## November 15 completed consolidated local checks
+
+Exact `e719e3fe` passes all twelve checks: 28,538 unit/coverage tests,
+88.10% branches, and 637 browser cases with 632 passes and five unchanged
+hosted skips. Root verifies each archived source, saved report and normal
+owned cleanup. [Actual evidence and limits](upgrade-2026-combined-e719e3fe-checks-20261115.md).
+The later direct-original-year and partial-interest candidates are excluded;
+e719's prepared runtime packets remain unused while those fixes are integrated.
+Remote main and production remain unchanged; the remote backup contains this revision.
+
 ## November 15 consolidated test inventory
 
 Final source metadata now lists 637 browser cases and 1,024 spec entries. Root

@@ -1,5 +1,7 @@
 # Remaining 2026 upgrade execution checklist
 
+- [x] Exact `e719e3fe`: all twelve local checks, 28,538 tests, 88.10% branches and 632 browser passes/five original skips; root verifies all four saved source/build/cleanup artifacts. [Evidence](upgrade-2026-combined-e719e3fe-checks-20261115.md). Later year/partial-interest candidates and runtime qualification remain separate.
+
 The [current continuation on `main`](upgrade-2026-current-status.md) reconciles
 the latest source, checks, active work and external inputs. The dated entries
 below retain their original evidence boundaries.
