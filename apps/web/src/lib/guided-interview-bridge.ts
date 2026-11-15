@@ -31,6 +31,7 @@ import { buildGuidedK1CharitableSources, k1CharitableSourceFactErrors } from "./
 import { buildGuidedCodNol, codNolFactErrors } from "./guided-cod-nol";
 import { buildGuidedCharitableCarryover, charitableCarryoverFactErrors } from "./guided-charitable-carryover";
 import { buildEstimatedTaxFacts, estimatedTaxFactErrors } from "./guided-estimated-tax-facts";
+import { buildEstimatedInvestmentAmtCapitalGains } from "./guided-estimated-investment-election";
 import { buildMinimumTaxCreditInput, minimumTaxCreditFactErrors } from "./guided-minimum-tax-credit";
 import { buildGuidedForeignTaxElection, guidedForeignTaxFactErrors } from "./guided-foreign-tax-election";
 import { foreignCreditKnownFacts } from './guided-foreign-tax-direct-credit';
@@ -1014,6 +1015,7 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
     standardDeductionFacts: buildStandardDeductionFacts(personalInfo?.standardDeductionFacts, segmentation.filingStatus, state.taxYear, personalInfo),
     deductionElection: deductionData?.method ?? "automatic",
     ...buildGuidedInvestmentInterestInputs(deductionData, investData?.childElections, state.taxYear),
+    amtCapitalGains: buildEstimatedInvestmentAmtCapitalGains(paymentData?.estimatedTaxFacts?.investmentElectionSources, state.taxYear),
     educationExpenses,
     ...educationDistributions,
     ...savingsBondInputs,

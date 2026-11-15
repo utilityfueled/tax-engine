@@ -1,0 +1,33 @@
+form: "Guided ordinary Schedule AI investment-interest originals"
+fullName: "Four actual cumulative Form 4952 originals through guided payments"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i2210"
+notes: |
+  Entry parity only: existing form-2210-investment-election and Form4952 calculations
+  remain authoritative. Final2025 Form2210 line14 and Publication505 Worksheet2-8
+  footnote1 exclude the actual election before annualization. No new calculation,
+  election optimization, inferred original, quarter allocation or final2026 gate.
+  Finite single-primary ordinary cohort, actual whole-dollar sources, priorcarry0,
+  investmentexpenses0. Partial current-interest deduction remains permitted under
+  existing Form4952 income limits; unused interest is not deducted.
+lines:
+  - line: "actual-period-entry"
+    description: "Forward four original election worksheets without inferred amounts"
+    formula: "Require actual year, owner/name/last4, overall and annual references, explicit all-period/election/no-other-income answers, four distinct actual cutoff originals and all nine monetary fields including explicit elected gain. Existing canonical source calculator proves full-year identity/income/election/itemized reconciliation; collector independently computes allowed period interest plus actual other-itemized equals original period itemized totals. Missing or malformed facts never become0."
+    testRef: "tests/guided-interview/guided-schedule-ai-investment-election.test.ts::forwards actual period originals through the guided bridge and existing canonical calculation"
+  - line: "unknown-and-cohort"
+    description: "Retain unknowns and existing method boundaries"
+    formula: "Absent packet leaves existing paths unchanged. Present incomplete, regular-method, special-rate or non2025 packet fails closed; bad original identity/annual binding rejects canonical calculation. No guesses, copying annual source to periods or full deduction assumption."
+    testRef: "tests/guided-interview/guided-schedule-ai-investment-election.test.ts::rejects unknown originals and preserves qualified method boundaries"
+  - line: "edit-reopen-privacy"
+    description: "Preserve private saved originals while revoking stale confirmation"
+    formula: "Any source or underlying return edit clears existing estimated-tax confirmation. Confirmation-only edits may reconfirm. Saved local private interview retains original fields and unknown blanks on reopen; hosted metadata/provider projection never receives packet, names, last4 or references."
+    testRef: "tests/guided-interview/guided-schedule-ai-investment-election.test.ts::revokes stale confirmation and keeps originals private across saved replay"
+  - line: "annual-amt-source"
+    description: "Separately sourced annual AMT capital gain originals"
+    formula: "Annual regular and AMT Form4952 remain separately entered. Require actual annual AMT year/reference/confirmation and qualified-dividend/net-gain/1250/collectibles amounts; no copy from regular or period sources. AMT owner is the same explicit single-primary packet. Existing annual canonical calculation retains AMT reconciliation. Missing or changed sources cannot certify a preview."
+    testRef: "tests/guided-interview/guided-schedule-ai-investment-election.test.ts::requires separately entered annual AMT capital gain originals"
+  - line: "actual-browser"
+    description: "Desktop/mobile real entry and reopen"
+    formula: "Actual controlled form entry of all four period originals on desktop/mobile, blank gate, canonical source calculation, reload retention and amount-edit reconfirmation. No external provider or protected action."
+    testRef: "apps/web/tests/guided-schedule-ai-investment-election.spec.ts::enters actual period election originals and revokes stale confirmation"

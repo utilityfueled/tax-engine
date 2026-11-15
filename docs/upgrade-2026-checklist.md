@@ -1,5 +1,9 @@
 # Remaining 2026 upgrade execution checklist
 
+- [x] Collect actual four-period investment-election and independent annual AMT
+  sources in guided payments;1,028 adoption tests and two real browser cases
+  pass with zero protected actions. [Evidence](upgrade-2026-guided-investment-originals-20261115.md).
+
 - [x] Distinguish final2025 SD100 current-original cash settlement from printed
   payments;450 author/450 adoption tests plus separate root controls pass.
   [Evidence](upgrade-2026-oh-school-balance-20261115.md). Guided, final2026 and filing gates remain separate.

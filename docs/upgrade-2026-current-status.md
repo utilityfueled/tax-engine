@@ -1,5 +1,12 @@
 # Current 2026 upgrade continuation
 
+## November15 actual guided investment originals
+
+Guided payments now collect all four actual period investment-election originals
+and a separate annual AMT source.1,028 main tests, types/lint and two actual
+desktop/mobile cases pass. [Evidence and limitations](upgrade-2026-guided-investment-originals-20261115.md).
+Final combined checks and human/2026/filing qualification remain separate.
+
 ## November15 Ohio school balance originals
 
 The existing finite2025 SD100 source route now distinguishes unpaid, planned

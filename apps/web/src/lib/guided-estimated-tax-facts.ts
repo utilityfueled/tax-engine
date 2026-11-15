@@ -1,4 +1,5 @@
 import Decimal from "decimal.js";
+import { buildEstimatedInvestmentElection, type EstimatedInvestmentElectionData } from "./guided-estimated-investment-election";
 import { Form2210Schema, type TaxYearInput } from "@/models/inputs";
 import type { EstimatedPaymentEntry, PaymentData } from "./guided-interview-flow";
 import { amountError, isActualDate } from "./guided-required-facts";
@@ -11,6 +12,7 @@ export interface EstimatedTaxFactsData {
   annualizedIncomePeriods?: AnnualizedPeriodData[]; bothSpousesSelfEmployed?: boolean | null; selfEmploymentOwnerPeriods?: AnnualizedOwnerData[];
   ordinaryPreferentialPeriodsConfirmed?: boolean | null;
   specialRatePeriodsConfirmed?: boolean | null;
+  investmentElectionSources?: EstimatedInvestmentElectionData;
   farmingIncomeTwoThirdsConfirmed?: boolean | null; waiverKind?: "" | "full" | "partial"; waiverAmount?: string;
   waiverReason?: "" | "retirement_or_disability" | "casualty_disaster_or_unusual_circumstance"; waiverStatementReference?: string;
   priorYearTaxStatus: "" | "return-filed" | "no-return" | "no-tax-liability";
@@ -147,6 +149,7 @@ export function buildEstimatedTaxFacts(data: PaymentData | undefined, taxYear?: 
   return Form2210Schema.parse({
     calendarYearTaxpayer: facts.calendarYearTaxpayer, residentReturn: facts.residentReturn, farmerOrFisher: facts.farmerOrFisher,
     disasterReliefClaimed: facts.disasterReliefClaimed, waiverRequested: facts.waiverRequested, calculationMethod: facts.calculationMethod, withholdingMethod: facts.withholdingMethod,
+    investmentElectionSources: buildEstimatedInvestmentElection(facts.investmentElectionSources, year, facts.calculationMethod, annualizedIncomePeriods, facts.specialRatePeriodsConfirmed),
     annualizedIncomePeriods, selfEmploymentOwnerPeriods:buildOwnerPeriods(facts,year), bothSpousesSelfEmployed: facts.bothSpousesSelfEmployed ?? undefined,
     ordinaryPreferentialPeriodsConfirmed: annualizedIncomePeriods ? facts.ordinaryPreferentialPeriodsConfirmed ?? undefined : undefined,
     specialRatePeriodsConfirmed: annualizedIncomePeriods ? facts.specialRatePeriodsConfirmed ?? undefined : undefined,

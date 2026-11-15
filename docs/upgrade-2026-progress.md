@@ -1,5 +1,11 @@
 # 2026 upgrade implementation evidence
 
+## November15 actual guided investment originals
+
+Adopted the nine-file finite source-entry route after genuine RED,995 author
+tests, root independent controls and two actual browser cases. Main1,028
+selected tests/types/lint pass. [Evidence](upgrade-2026-guided-investment-originals-20261115.md).
+
 ## November15 Ohio school balance originals
 
 Adopted the six-file source method plus equivalent arithmetic-free replay

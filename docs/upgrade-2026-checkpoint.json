@@ -1,4 +1,23 @@
 {
+  "nov15GuidedInvestmentOriginals": {
+    "sourceFreeze": "4158bc0755ba190d173f55c1ee0f8f4295b0e24e9407915eb30fa9353ac4cc15",
+    "authorTests": 995,
+    "mainTests": 1028,
+    "actualBrowserPassed": 2,
+    "rootAndWebTypesPassed": true,
+    "lintErrors": 0,
+    "lintWarnings": 0,
+    "protectedActions": 0,
+    "retries": 0,
+    "ownedServerClosed": true,
+    "independentHumanReview": false,
+    "filingQualified": false,
+    "evidence": "upgrade-2026-guided-investment-originals-20261115.md",
+    "priorCommittedPackages": {
+      "paAttachment": "159a37cf",
+      "ohioBalance": "6b9556b8"
+    }
+  },
   "nov15OhioCurrentOriginalBalance": {
     "sourceFreeze": "38113a98910786224efaa849f7e1038acd02d342171b4726b9d124c6f10dc040",
     "authorTests": 450,
