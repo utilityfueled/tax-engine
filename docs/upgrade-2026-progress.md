@@ -6197,3 +6197,15 @@ disk-use cause remains unproved. All18 independently reviewed normal-recovery
 commands pass, restoring the stopped VM/resources/routes with no guest deletion.
 The corrected file-size limit and external comparison remain unexecuted.
 [Admission and recovery evidence](upgrade-2026-postgres-libxml2-native-20261114.md).
+
+
+### November 15: actual protected Preview matches the verified 8c source
+
+All105 actual API cases pass (46accepted mock-local/59rejected); four typed
+Coverdell/HOH desktop/mobile journeys pass with unknown/zero, stale-source,
+cloud-shell and tenant guards. Conservative operations927/1310 include the full
+CLI reserve. Two trials/customers, two sessions, seven owned Redis keys and
+Preview/environment/webhook state close or restore correctly. Root and two
+independent artifact reviews pass. Exact remote tax numbers, live ledger queries,
+human approval and whole hosted qualification are not inferred.
+[Actual evidence and limits](upgrade-2026-integrated-runtime-8c1bd108-20261115.md).

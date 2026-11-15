@@ -45,9 +45,52 @@ relabeled as passing runs.
 | Root all-twelve review | `46370283985dadada4bf295f45662cae37f3637dec86c2b09b12be6d87cdbb5b` |
 | Independent artifact review | `cba5db849e2ce286ca9d48bc3ca8b189400302f5bf084804d417998c0cfe7d80` |
 
-Protected Preview, native ARM64 and current remote verification remain separate
-evidence. The later AMD64 controller correction has its own tests and review;
-this report does not imply a native success for that correction. Qualified human
+The protected Preview rehearsal also passes for that exact 8c source archive.
+Independent saved-artifact review rehashes all 71 preparation pins, eighteen
+runtime pins, 6,049 tracked entries, six literal symlinks and fifteen official
+samples, and checks the four actual managed-gate receipts against the one-use
+launch review. The isolated project and two existing fictional actors remain
+unchanged.
+
+All 105 authenticated API probes complete with their expected outcomes: 46
+HTTP 200 mock-fallback responses and 59 HTTP 400 denials before mock dispatch.
+Every probe checks private, no-store handling. These are deployed calculation-ingress and admission
+checks; the response does not provide an independent remote numeric tax oracle.
+Exact numeric comparisons remain local canonical calculations, including the
+canonical calculation performed in the deployed browser.
+
+Four actual UI journeys pass at 1,280- and 390-pixel widths: two source-year-2025
+Coverdell bank-original journeys and two source-year-2026 HOH own-care-original
+journeys. They retain typed originals, reload and unknown-versus-zero checks.
+The Coverdell journeys additionally verify revision rotation, stale-write HTTP
+412, other-owner shell absence and confirmation invalidation. The HOH journeys
+retain the closed annual-2026 calculation and export gates. Saved browser
+receipts record zero provider requests, privacy failures, external requests,
+page errors, downloads and retries.
+
+The observed total is 877 HTTP operations: 172 direct requests including
+cleanup, 699 browser work requests and six browser cleanup requests. Including
+the entire fifty-operation CLI reserve gives 927 against the unchanged 1,310
+limit. Two fresh no-card Sandbox trials are canceled and their synthetic
+customers deleted; both signed cancellation checks return 403. Both sessions
+are revoked, seven owned Redis keys are removed, the Preview and its temporary
+environment are removed, and the existing webhook is restored. The saved
+receipt records complete cleanup, no ambiguous creation and no owned-child
+uncertainty. Independent review makes no additional cloud or accounting query.
+
+| Protected Preview evidence | SHA-256 |
+| --- | --- |
+| Final controller receipt | `2dce583d5b421e1e49430f6813fc37ac4942013a0ab787cd7242b0b8c2f08eed` |
+| Four-journey browser receipt | `37442d2ef2877a94e425d7a3443654fd63510fb2acea86b1a1271aa298de99bd` |
+| Source preparation manifest | `c7a7404d4c2929b51402a0a54732562ff75f2cb4f07d4819b13711723e7344c4` |
+| One-use actual-gate launch review | `e77b34e13ebff8c1f80e66dc04b1e81cf0603a88c6727796e93433382916ef94` |
+| Root actual review | `bd3f1c749208abb7cd90a355260abff2bba1dad09b15897710eaf0f5244388b6` |
+| Independent actual review | `7aa35adb0a673cbcee3f8edbdbeac1c0c25c9f45b535fe161d9502f35da11ce9` |
+| Second independent actual review | `7dad6072dd0ae11dc45f5f017e303baa5bcd9a2100846a3a657832afc4526ae7` |
+
+Native ARM64 and current remote verification remain separate evidence. The later
+AMD64 controller correction has its own tests and review; this report does not
+imply a native success for that correction. Qualified human
 tax/spec/expected-result review, final annual forms, security/privacy acceptance,
 advisory ownership and independent AI evaluation remain required. Filing, model
 promotion, production deployment and release qualification remain disabled.

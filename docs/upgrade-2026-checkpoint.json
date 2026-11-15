@@ -1,4 +1,33 @@
 {
+  "nov15Integrated8cActualProtectedPreview": {
+    "source": "8c1bd108bbad1a8c68c4273c25e8023ad314b231",
+    "passed": true,
+    "actualApiCases": 105,
+    "acceptedMock200": 46,
+    "rejected400": 59,
+    "exactRemoteNumericOracleClaim": false,
+    "actualBrowserJourneys": 4,
+    "viewports": [
+      1280,
+      390
+    ],
+    "directHttpOperations": 172,
+    "browserWorkOperations": 699,
+    "browserCleanupOperations": 6,
+    "fullCliReserve": 50,
+    "conservativeOperations": 927,
+    "operationLimit": 1310,
+    "newActors": 0,
+    "paidProviderCalls": 0,
+    "cleanupVerified": true,
+    "childUncertainty": false,
+    "receiptSha256": "2dce583d5b421e1e49430f6813fc37ac4942013a0ab787cd7242b0b8c2f08eed",
+    "rootActualReviewSha256": "bd3f1c749208abb7cd90a355260abff2bba1dad09b15897710eaf0f5244388b6",
+    "independentActualReviewSha256": "7aa35adb0a673cbcee3f8edbdbeac1c0c25c9f45b535fe161d9502f35da11ce9",
+    "secondIndependentActualReviewSha256": "7dad6072dd0ae11dc45f5f017e303baa5bcd9a2100846a3a657832afc4526ae7",
+    "wholeHostedQualified": false,
+    "ledger": "docs/upgrade-2026-integrated-runtime-8c1bd108-20261115.md"
+  },
   "nov15W3cCapacityAdmissionAndNormalRecovery": {
     "operation": "b99133aea3b2bea0577813a3",
     "payloadStarted": false,
