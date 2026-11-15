@@ -6,6 +6,11 @@ below retain their original evidence boundaries.
 
 ## Active continuation — November 14
 
+- [x] Refresh exact final metadata: 637 collected browser cases, 1,024 spec entries,
+  83 focused tests and independent review, preserving all existing policies.
+  [Scope](upgrade-2026-consolidated-metadata-20261115.md).
+- [ ] Execute all twelve checks and hosted/native rehearsals on the consolidated head.
+
 - [x] Bind confirmed explanations to complete selected mortgage and applicable
   retirement originals, including official2025 code combinations. Root1,110
   focused tests and separate review pass; original failures retained. Final

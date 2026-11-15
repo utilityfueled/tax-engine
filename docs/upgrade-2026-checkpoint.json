@@ -1,4 +1,16 @@
 {
+  "nov15ConsolidatedMetadata": {
+    "baseHead": "22b8f0b8d6559fc0eeb727badc25fc983ae40d27",
+    "sourceFreeze": "caa55ff93f963933c346c4a1e0f0aaa23bcf2a0b3c1126a6aba8a741d7abfe68",
+    "browserCollected": 637,
+    "browserRuntimeExecuted": false,
+    "inventoryEntries": 1024,
+    "focusedTests": 83,
+    "sourceClosure": 1959,
+    "independentReview": "98129813dadc593e6aa3093b0d974fe344752f9b328c7bcea8fedb77a9121ff3",
+    "allPriorPoliciesPreserved": true,
+    "combinedAndRuntimePending": true
+  },
   "nov15VerifiedAiSourceAdmission": {
     "adoptedOnto": "f9dd388c",
     "files": 6,

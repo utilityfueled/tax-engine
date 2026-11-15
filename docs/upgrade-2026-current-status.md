@@ -1,5 +1,12 @@
 # Current 2026 upgrade continuation
 
+## November 15 consolidated test inventory
+
+Final source metadata now lists 637 browser cases and 1,024 spec entries. Root
+comparison and independent review preserve all prior budgets, skips, overrides and
+diagnostic targets; 83 focused tests pass. [Evidence and limits](upgrade-2026-consolidated-metadata-20261115.md).
+Full combined checks and exact-source runtime qualification remain pending.
+
 ## November 15 source-resolved confirmed explanations
 
 Confirmed AI explanations now reject incomplete selected mortgage sources and

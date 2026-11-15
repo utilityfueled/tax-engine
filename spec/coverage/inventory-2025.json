@@ -834,6 +834,26 @@
       ]
     },
     {
+      "key": "federal/child-credit-household-admission",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": null,
+      "specPath": "spec/federal/child-credit-household-admission.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/claim-of-right",
       "jurisdiction": "federal",
       "taxYear": 2025,
@@ -4076,6 +4096,25 @@
         "tests/engine/forms/form-2210-f.test.ts::figures the required payment and underpayment"
       ],
       "implementationNote": "The named method is exercised through this shared engine module by this specification's own regression references. The linked historical review output does not qualify any 2026 form. This association neither changes scenario exclusions nor establishes independent human review.",
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "federal/form-2210-investment-election",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.irs.gov/instructions/i2210",
+      "specPath": "spec/federal/form-2210-investment-election.yaml",
+      "enginePath": "src/engine/forms/form-2210-investment-election.ts",
+      "packetPath": null,
       "specExists": true,
       "engineExists": true,
       "packetGenerationExists": false,
@@ -11667,6 +11706,25 @@
       ]
     },
     {
+      "key": "federal/schedule-a-medical-mileage-hoh",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://uscode.house.gov/us/usc/119-120/t26/s213/",
+      "specPath": "spec/federal/schedule-a-medical-mileage-hoh.yaml",
+      "enginePath": "src/engine/schedules/schedule-a-medical-mileage-hoh.ts",
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/schedule-a-review-election",
       "jurisdiction": "federal",
       "taxYear": 2025,
@@ -12884,6 +12942,26 @@
       "efileBusinessRuleCoverageExists": false,
       "status": "partial",
       "knownGaps": [
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "federal/verified-ai-legacy-source-admission",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.irs.gov/pub/irs-prior/i1099r--2025.pdf",
+      "specPath": "spec/federal/verified-ai-legacy-source-admission.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
         "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
