@@ -6338,3 +6338,15 @@ Both SCRAM databases and the browser close normally. The later RRTA/Ohio metadat
 preserves every existing policy row and adds one unsupported inventory entry;
 83 relevant controls pass. Fresh final-source checks and distribution rehearsals
 follow. [Evidence and remaining gates](upgrade-2026-integrated-runtime-611ad215-20261115.md).
+
+### November 15: final integrated source passes all twelve local checks
+
+Exact `1360b9cb` passes 28,809 unit and coverage tests in 2,106 files, 88.14%
+branches and the entire 645-case browser union: 640 passes and five original skips.
+Root and independent artifact reviews verify exact source, all original policies
+and normal closure. The earlier `02926be4` work-count failure and partial normally
+superseded browser run remain recorded. The protected Preview is running and ARM64 preparation follows;
+remote CI/Web, final artifacts and external qualification are not inferred.
+[Exact evidence](upgrade-2026-integrated-runtime-1360b9cb-20261115.md).
+The [goodwill/PA human handoff](upgrade-2026-human-goodwill-pa-supplement-1360b9cb.md)
+retains two blank independent decisions and no human approval.

@@ -1,6 +1,34 @@
 # Current 2026 upgrade continuation
 
-## Active work — November 15, 13:20 UTC
+## Active work — November 15, 14:45 UTC
+
+All committed work through `1360b9cb` is pushed to `main` and the remote backup.
+The saved Vercel guard cancels its production-target build; production remains
+unchanged. Exact-source root and independent artifact reviews pass all twelve
+local checks: 28,809 tests in each unit/coverage lane, 88.14% branch coverage,
+and 640 browser passes with five original hosted skips. Both SCRAM databases and
+the owned browser close normally. All existing budgets, deadlines and skips remain.
+[Current evidence](upgrade-2026-integrated-runtime-1360b9cb-20261115.md).
+
+The RRTA operand-dispatch and Ohio same-invocation school-projection changes are
+separate commits. The prior aggregate's stale work-count assertion failed both
+unit and coverage; its normally superseded browser run remains partial evidence.
+The corrected assertion checks nine federal calls and three school projections
+for three complete adapter evaluations; no calculation or budget was changed.
+
+The protected Preview rehearsal is running against the reviewed archive, and
+ARM64 source staging has completed without starting a VM. Runtime and cleanup
+results remain pending. Exact-source remote Docker passes; CI and Web are still
+running at this timestamp. Earlier strict-container failures remain evidence.
+
+The [goodwill/PA human supplement](upgrade-2026-human-goodwill-pa-supplement-1360b9cb.md)
+is ready for an independent qualified reviewer; every decision remains blank.
+Human tax and AI-label reviews, final annual 2026 forms, accountable advisory
+and security/privacy dispositions and final distribution qualification remain
+open. Filing and model promotion remain closed. Dated entries below retain
+their original source and execution boundaries.
+
+## Historical execution — November 15, 13:20 UTC
 
 All committed work through `f368372d` is pushed to `main` and the remote backup.
 Fresh scoped Vercel inspection confirms the saved production-build guard; its

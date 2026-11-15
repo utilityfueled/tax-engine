@@ -2,7 +2,7 @@
 
 ## Current continuation — November 15
 
-- [x] Push all accumulated commits through `f30723f9` to `main` and the backup;
+- [x] Push all accumulated commits through `1360b9cb` to `main` and the backup;
   verify that Vercel cancels its production build under the saved guard.
 - [x] Pass all twelve exact `8c1bd108` local checks and independent artifact review.
 - [x] Pass its protected Preview's 105 admission cases/four actual UI journeys,
@@ -30,9 +30,14 @@
   preserve all images and other roots and pass unchanged capacity observations.
 - [x] Implement and independently review guided acquired-goodwill source parity
   and finite PA part-year dividend paper/nonresident applicability; retain the
-  independently reproduced rounding fallback. Actual new browser cases await runtime.
-- [ ] Bind their integrated source metadata and pass current aggregate checks,
-  then finish current-source protected Preview and ARM64 qualification.
+  independently reproduced rounding fallback. Both new goodwill browser cases pass in the complete 645-case local run.
+- [x] Bind final metadata without changing any existing browser policy; pass all
+  twelve exact `1360b9cb` checks and independent saved-artifact review: 28,809
+  tests, 88.14% branches and 640 browser passes/five original skips.
+  [Evidence](upgrade-2026-integrated-runtime-1360b9cb-20261115.md).
+- [x] Publish the unassigned [goodwill/PA human supplement](upgrade-2026-human-goodwill-pa-supplement-1360b9cb.md), preserving blank independent decisions.
+- [ ] Finish current-source protected Preview and ARM64 qualification, including
+  actual artifact reviews and normal resource cleanup.
 - [ ] Finish strict container browser qualification and current remote artifact
   review; fix any confirmed defects.
 - [ ] Obtain qualified independent human reviews, final annual forms, accountable
