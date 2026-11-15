@@ -6926,6 +6926,26 @@
       ]
     },
     {
+      "key": "federal/guided-goodwill-amortization",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": null,
+      "specPath": "spec/federal/guided-goodwill-amortization.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/guided-government-payment-worksheets",
       "jurisdiction": "federal",
       "taxYear": 2026,
@@ -19673,6 +19693,26 @@
       "taxYear": 2025,
       "sourceAuthority": null,
       "specPath": "spec/state/pa-ordinary-schedule-a-paper.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "state/pa-ordinary-schedule-b-residency-paper",
+      "jurisdiction": "state",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40b.pdf",
+      "specPath": "spec/state/pa-ordinary-schedule-b-residency-paper.yaml",
       "enginePath": null,
       "packetPath": null,
       "specExists": true,

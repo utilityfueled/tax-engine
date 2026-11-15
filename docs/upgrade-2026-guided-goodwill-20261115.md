@@ -59,3 +59,21 @@ Independent review: `6505e175deff87d550ea681d0529a68f7298d96104d024fac7944e3fa78
 Root checks also pass all 947 strict spec-reference tests. Private evidence:
 `nov15-guided-goodwill-browser-source`, `nov15-goodwill-browser-amd64-peer` and
 `nov15-goodwill-browser-root-adoption`. No browser runtime pass is claimed.
+
+
+The integrated f368 metadata package derives 645 cases from actual collection:
+all 643 prior identities, statuses and timeout policies plus the two reviewed
+goodwill cases. All 170 original budget rows remain byte-preserved; one new row
+has zero protected actions. Five skips, eight body overrides, fourteen diagnostic
+targets, two workers, zero retries and the strict 30-second default remain.
+All 1,035 prior inventory entries are unchanged; two mechanically generated guide
+and paper entries are added without supported-status promotion. Thirteen reviewed
+source-hash changes produce a 1,981-entry closure. The exact archive verifies
+6,075 Git entries (6,069 regular and six literal links), plus fifteen separate
+pinned samples. Author and root each pass 83 checks; root rehashes all 54 pins and
+the actual checkout closure. Only three generated metadata files change. The
+initial stale-inventory refusal and hand-format binder refusal remain retained;
+the successor preserves old row bytes and checks exact parsed equality.
+Private freeze: `1d879cb85b57133572f6929cf11a4bd07aa3ecffa3ebf3efc6077c253b175fd7`;
+packet `nov15-goodwill-papy-final-metadata-workflow`. Actual integrated browser,
+aggregate and distribution runs remain separate required evidence.
