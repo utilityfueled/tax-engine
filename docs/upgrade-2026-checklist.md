@@ -1,5 +1,12 @@
 # Remaining 2026 upgrade execution checklist
 
+- [x] Preserve and correct the actual full-browser Ohio status-message failure;
+  one original-policy mobile production case and twenty source rejections pass.
+  [Evidence](upgrade-2026-oh-blank-status-geometry-20261115.md).
+- [x] Bind both corrected source hashes without changing any 641-case policy;
+  83 author, separate-review and main checks pass.
+- [ ] Pass the corrected-source twelve checks and hosted/native qualification.
+
 - [x] Fix conditional PA Schedule A flattening after real aggregate failures;
   preserve merge/filing guards and reconcile the two stale assertions.
   [Focused evidence](upgrade-2026-pa-interest-merge-20261115.md).

@@ -1,5 +1,17 @@
 # 2026 upgrade implementation evidence
 
+## November 15 corrected aggregate source preparation
+
+The full bf3 browser run preserves 635 passes, one stale blank-status assertion
+failure and five original skips, with normal cleanup. The precise diagnostic
+repair `b17b61ec` passes an actual 390-pixel production case and twenty separate
+source-rejection controls. [Evidence](upgrade-2026-oh-blank-status-geometry-20261115.md).
+Final metadata preserves all 641 cases/policies; author, separate review and main
+each pass 83 checks. The final twelve checks and actual runtime qualification
+remain pending. [Bound source](upgrade-2026-final-finite-metadata-20261115.md).
+[Official provider sources](upgrade-2026-provider-refresh-20261115.md) refreshed
+without paid calls or material configuration drift.
+
 ## November 15 PA attachment merge correction
 
 Preserved bf3 unit/coverage failures (four each, 28,613 passes, normal PostgreSQL cleanup). Spec-first integration RED exposed the omitted conditional flatten; 972 affected and eight aggregate assertion checks now pass. No monetary calculation, guard or readiness gate was weakened. [Evidence](upgrade-2026-pa-interest-merge-20261115.md).

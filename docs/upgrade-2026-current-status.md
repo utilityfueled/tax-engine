@@ -1,5 +1,13 @@
 # Current 2026 upgrade continuation
 
+## November 15 corrected-source verification
+
+PA merge correction `cfac15ea`, Ohio diagnostic repair `b17b61ec` and provider
+refresh `f32db9af` are pushed to `main` and the backup. The corrected mobile
+case passes with original policy; metadata changes only two source hashes and
+the dependent audit hash. All 641 cases and policies remain intact.
+Corrected-source combined checks and final runtime qualification follow.
+
 ## November 15 PA aggregate correction
 
 The bf3 aggregate unit/coverage runs each found four failures. A confined conditional flatten fixes two real part-year exports; two aggregate assertions now reflect the official attachment rule and 47 pinned templates. Focused 972 plus eight tests, types/spec/lint pass. Final combined and runtime checks must use the corrected source. [Evidence](upgrade-2026-pa-interest-merge-20261115.md).
