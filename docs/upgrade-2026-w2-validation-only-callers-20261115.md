@@ -41,3 +41,17 @@ Private evidence: `nov15-w2-validation-only-callers` and
 `nov15-w2-validation-only-farmland-review` under `.local/upgrade-evidence/`.
 Source-audit metadata, all twelve combined checks and runtime successors follow
 this commit; earlier source passes do not qualify it.
+
+The follow-up metadata package binds the ten changed PA/W-2 source hashes and
+the new physical renderer/fixture without changing the 170 budget rows, 643
+collected cases, five original skips, eight body overrides or fourteen diagnostic
+targets. The 60-second/20-request window, two workers, zero retries and ordinary
+30-second timeout remain unchanged. The generated inventory adds only the new
+software-preservation spec; all 1033 previous entries remain identical. Author,
+independent reviewer and root each pass the same 83 metadata tests. This is
+collection/metadata evidence; no browser case or runtime server was executed.
+
+Metadata freeze: `6dec411e365672d480f339b0fb2f5c44e8837f46a8ffe1099ba207679ceee816`;
+independent review: `6f6e236f0f254b38e345aa038592712c743f0be6f9613a63e15138aa940adc56`.
+The first private metadata attempt rejected the legitimate new inventory key;
+that failure is retained. Its successor permits precisely that addition.

@@ -1,5 +1,12 @@
 # 2026 upgrade implementation evidence
 
+## November 15 PA/W-2 source metadata
+
+The source audit and generated inventory now bind the reviewed PA renderer and
+two W-2 caller changes. Three separate 83-test runs pass; browser policy, case
+identities and readiness gates are unchanged. Exact-source runtime checks follow.
+[Evidence](upgrade-2026-w2-validation-only-callers-20261115.md).
+
 ## November 15 two remaining discarded W-2 commitments
 
 The guided-section and Ohio-payment guards now use the existing assertion

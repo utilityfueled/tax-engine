@@ -1,4 +1,14 @@
 {
+  "nov15PaW2Metadata": {
+    "sourceHead": "82a51facf6cb7c300216fbfb46bf034d33f65347",
+    "frozenPins": 38,
+    "metadataFiles": 3,
+    "eachAuthorPeerRootFocusedTests": 83,
+    "actualBrowserCasesExecuted": 0,
+    "policiesUnchanged": true,
+    "independentReviewSha256": "6f6e236f0f254b38e345aa038592712c743f0be6f9613a63e15138aa940adc56",
+    "runtimePending": true
+  },
   "nov15W2ValidationOnlyCallers": {
     "paths": [
       "apps/web/src/lib/guided-interview-flow.ts",
