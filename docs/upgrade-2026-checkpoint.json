@@ -1,4 +1,15 @@
 {
+  "nov15RemoteBackup": {
+    "source": "d9ead6be052b7823de5e0e80bb7f463b68d706b2",
+    "commitsSaved": 390,
+    "branch": "codex/2026-upgrade-backup-20261114",
+    "pushExit": 0,
+    "exactRemoteHeadVerified": true,
+    "mainUpdated": false,
+    "productionChanged": false,
+    "mainAutomaticBuildDecisionPending": true,
+    "ledger": "docs/upgrade-2026-remote-backup-20261115.md"
+  },
   "nov15FiveMethodHumanPacket": {
     "source": "46a953203d8a278d5c4857b9007422482865a511",
     "selectedCommittedBlobs": 42,

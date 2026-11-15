@@ -1,5 +1,13 @@
 # 2026 upgrade implementation evidence
 
+## November 15 remote backup of all local commits
+
+All 390 local upgrade commits through `d9ead6be` are now saved on the public
+[backup branch](https://github.com/utilityfueled/tax-engine/tree/codex/2026-upgrade-backup-20261114),
+with exact remote-head verification. Main and production remain unchanged while
+the automatic production-build decision is pending. [Action and limits](upgrade-2026-remote-backup-20261115.md).
+Implementation and verification continue; this is storage evidence, not readiness.
+
 ## November 15 additional human source-review packet
 
 The five later source methods now have 42 selected committed blobs and eight

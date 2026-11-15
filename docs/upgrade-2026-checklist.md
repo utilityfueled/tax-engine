@@ -6,6 +6,10 @@ below retain their original evidence boundaries.
 
 ## Active continuation — November 14
 
+- [x] Save all 390 local commits through `d9ead6be` to the public backup branch;
+  verify exact remote head while preserving main/production.
+  [Backup evidence](upgrade-2026-remote-backup-20261115.md).
+
 - [x] Reject actual child-credit household identity, known-age and dual-credit
   contradictions. Separate review and full 28,511 tests pass; original strict-spec
   failure retained. [Source package](upgrade-2026-child-credit-household-20261115.md).
