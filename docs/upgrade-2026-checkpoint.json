@@ -1,4 +1,18 @@
 {
+  "nov15HohOwnCareOriginals": {
+    "sourceBase": "d9026aea6f266c21f99fef2bf7aa39034909a5de",
+    "authorBase": "1e98244b",
+    "adoptedSourceFiles": 17,
+    "freeze": "0e2d2e486c3a3e111429b26b1bcef06384023d4ea95c5c2b455cbc8f18ec61d9",
+    "actualFullUnit": "28515PASS2076files;no private root tests",
+    "actualBrowser": "2PASS1280/390;30s0retry;normalserverclose",
+    "rootReview": "969e379de460e4b105c5fd0d7bd7fbb4695f48cb70bc12e6aafa45921a2aedc5",
+    "independentBrowserReview": "68dcb11653b738a9702c4383221abb8d8dbe22350b1daa6490abb6efbbf84d57",
+    "finalAnnualAndHumanQualified": false,
+    "combinedSuccessorPending": true,
+    "mainPushHold": true,
+    "ledger": "docs/upgrade-2026-medical-mileage-hoh-20261115.md"
+  },
   "nov14ScheduleAiInvestmentElectionSources": {
     "freeze": "ee85bdc073dffddc12791de619ad0d683d09427916f061a8257e1efdb9e23e46",
     "sourceBase": "6f6f82a2864f65edb66a41dcf36a73356bfaba94",

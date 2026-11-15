@@ -382,7 +382,7 @@ export function buildDependents(
 export function buildScheduleAInput(deductionData: DeductionData | undefined, stateReturnData?: StateReturnData, retirementEntries?:RetirementEntryData[], taxYear?:number, sourceContext?:{state:GuidedFlowState;originals:ReadonlyArray<Form1099Misc>}) {
   if (!deductionData) return undefined;
   assertKnownFacts(deductionFactErrors({ ...deductionData, mortgageInterest: "", mortgageEntries: [], mortgageWorksheet: undefined }));
-  const medicalMileage = buildGuidedMedicalMileage(deductionData, taxYear, sourceContext?.state.segmentation.filingStatus, sourceContext?.state.sectionData['personal-info']?.spouse);
+  const medicalMileage = buildGuidedMedicalMileage(deductionData, taxYear, sourceContext?.state.segmentation.filingStatus, sourceContext?.state.sectionData['personal-info']?.spouse, sourceContext?.state.sectionData['personal-info']);
   let matchedRetirement = new Decimal(0);
   if (stateReturnData?.paResidencySources?.retirementSources !== undefined) {
     assertKnownFacts(statePaymentFactErrors(stateReturnData, taxYear, 'PA'));

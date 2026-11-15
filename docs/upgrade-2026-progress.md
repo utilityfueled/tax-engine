@@ -1,5 +1,15 @@
 # 2026 upgrade implementation evidence
 
+## November 15 actual HOH own-care mileage originals
+
+The finite 2026 own-care mileage route now collects and reconciles actual
+head-of-household identity, qualifying-child, home and own-funds upkeep originals.
+Separate engineering review, 950 focused checks and 28,515 immutable full-suite
+tests pass. Both actual desktop/mobile source-entry journeys pass, with normal
+owned database/server cleanup and retained failures. [Sources and limits](upgrade-2026-medical-mileage-hoh-20261115.md).
+Full 2026 calculation/export, human approval and consolidated successor checks
+remain separate; main stays local under the production push hold.
+
 ## November 14 actual Schedule AI investment elections
 
 The finite 2025 single-primary route now binds four actual Form 4952 period

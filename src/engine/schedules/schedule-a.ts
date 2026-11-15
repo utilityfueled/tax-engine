@@ -1,3 +1,4 @@
+import { validateMedicalMileageHohSource } from './schedule-a-medical-mileage-hoh.js';
 import { calculateMortgageInsurancePrepaid } from "../forms/mortgage-insurance-prepaid.js";
 /**
  * Schedule A — Itemized Deductions
@@ -155,11 +156,13 @@ function calculateMedicalExpenses(
   }
   const parsed = ScheduleAMedicalMileageSchema.safeParse(source);
   if (!parsed.success || input.taxpayer.taxYear !== 2026 || constants.taxYear !== 2026
-    || filingStatus !== "single" || input.taxpayer.filingStatus !== filingStatus || input.taxpayer.spouse
+    || !["single", "head_of_household"].includes(filingStatus) || input.taxpayer.filingStatus !== filingStatus || input.taxpayer.spouse
     || !d(input.scheduleA?.medicalExpenses).isZero() || (legacyExpenses && !legacyExpenses.isZero())) {
-    throw new Error("Schedule A medical mileage requires complete current single-taxpayer sources and no overlapping medical amount");
+    throw new Error("Schedule A medical mileage requires complete current own-care sources and no overlapping medical amount");
   }
   const facts = parsed.data;
+  if (filingStatus === "head_of_household") validateMedicalMileageHohSource(facts.headOfHouseholdSources, input);
+  else if (facts.headOfHouseholdSources !== undefined) throw new Error("A single medical mileage return cannot carry an unconsumed HOH source packet");
   let beforeJuly = new Decimal(0);
   let fromJuly = new Decimal(0);
   for (const entry of facts.entries) {

@@ -2478,11 +2478,11 @@ function validateUnemploymentSection(data: UnemploymentData | undefined, state: 
   return validateRequiredFacts({...unemploymentFactErrors(data, state.segmentation.filingStatus, state.taxYear, state.sectionData["personal-info"], state.sectionData["state-return"], state.sectionData.deductions, state.segmentation.stateCode, state.sectionData["income-social-security"]), ...guidedRefundRecoveryDraftErrors(state)});
 }
 
-function validateDeductionsSection(data: DeductionData | undefined, taxYear?: number | null, sourceErrors: Record<string, string> = {}, filingStatus?: FilingStatus | null, spouse?: unknown): SectionValidationResult {
+function validateDeductionsSection(data: DeductionData | undefined, taxYear?: number | null, sourceErrors: Record<string, string> = {}, filingStatus?: FilingStatus | null, spouse?: unknown, personal?: PersonalInfoData): SectionValidationResult {
   if (!data && !Object.keys(sourceErrors).length) return EMPTY_SECTION("deductions info");
   return validateRequiredFacts({
     ...deductionFactErrors(data, taxYear, filingStatus, spouse),
-    ...guidedMedicalMileageErrors(data, taxYear, filingStatus, spouse),
+    ...guidedMedicalMileageErrors(data, taxYear, filingStatus, spouse, personal),
     ...sourceErrors,
   });
 }
@@ -2539,7 +2539,7 @@ export function validateSection(
       // Adjustments must not confirm it, while completion here binds both originals.
       const charitableNolErrors = state.sectionData.adjustments?.netOperatingLossSources?.alternativeTax?.charitableCarryoverHistory?.alternativeCarryoverSources
         ? netOperatingLossFactErrors(state.sectionData.adjustments.netOperatingLossSources, state.taxYear, state.segmentation.filingStatus, state.sectionData["personal-info"], false, state.sectionData.deductions, state.sectionData.adjustments.k1LossSources, state.sectionData.adjustments.codNolSources?.attributeSources) : {};
-      return validateDeductionsSection(getSectionData(state, "deductions"), state.taxYear, { ...charitableNolErrors, ...nonitemizedElectionFactErrors(state), ...nonW2TaxAllocationErrors(state), ...investmentInterestFactErrors(state.sectionData.deductions, state.sectionData["income-investments"]?.childElections, state.taxYear), ...charitableCarryoverFactErrors(state.sectionData.deductions?.charitableCarryoverSources, state.taxYear, state.segmentation.filingStatus, state.sectionData["personal-info"]), ...k1CharitableSourceFactErrors(state), ...cryptoDonationFactErrors(state.sectionData.deductions?.cryptoDonations, state.taxYear) }, state.segmentation.filingStatus, state.sectionData["personal-info"]?.spouse);
+      return validateDeductionsSection(getSectionData(state, "deductions"), state.taxYear, { ...charitableNolErrors, ...nonitemizedElectionFactErrors(state), ...nonW2TaxAllocationErrors(state), ...investmentInterestFactErrors(state.sectionData.deductions, state.sectionData["income-investments"]?.childElections, state.taxYear), ...charitableCarryoverFactErrors(state.sectionData.deductions?.charitableCarryoverSources, state.taxYear, state.segmentation.filingStatus, state.sectionData["personal-info"]), ...k1CharitableSourceFactErrors(state), ...cryptoDonationFactErrors(state.sectionData.deductions?.cryptoDonations, state.taxYear) }, state.segmentation.filingStatus, state.sectionData["personal-info"]?.spouse, state.sectionData["personal-info"]);
     }
     case "adjustments": {
       const errors = { ...foreignIncomeFactErrors(state), ...healthInsuranceSourceErrors(state), ...hsaFactErrors(getSectionData(state, "adjustments")?.hsaAccounts, state.segmentation.filingStatus, state.taxYear, getSectionData(state, "income-w2")?.entries ?? [], getSectionData(state, "personal-info"), state.segmentation.lifeEvents.includes("hsa-contributions")), ...educatorFactErrors(getSectionData(state, "adjustments"), state.segmentation.filingStatus, state.taxYear, state.segmentation.lifeEvents.includes("educator-expenses")) };

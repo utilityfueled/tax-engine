@@ -1,5 +1,7 @@
 'use client';
 
+import {MedicalMileageHohDetails} from './medical-mileage-hoh-details';
+
 import {
   medicalMileageConfirmations, medicalMileageDraftSchema, newMedicalMileageDraft,
   type MedicalMileageDraft,
@@ -9,9 +11,10 @@ import { BooleanFact, TextFact } from './fact-fields';
 
 const confirmationFields = Object.keys(medicalMileageConfirmations) as (keyof typeof medicalMileageConfirmations)[];
 
-export function MedicalMileageDetails({ data, available, onChange }: {
+export function MedicalMileageDetails({ data, available, headOfHousehold = false, onChange }: {
   data?: MedicalMileageDraft;
   available: boolean;
+  headOfHousehold?: boolean;
   onChange: (next: MedicalMileageDraft | undefined) => void;
 }) {
   if (data === undefined) {
@@ -21,7 +24,7 @@ export function MedicalMileageDetails({ data, available, onChange }: {
   const remove = <button type="button" onClick={() => onChange(undefined)}>Remove medical mileage log</button>;
   if (!available || !saved.success) {
     return <section aria-label="Medical mileage">
-      <p role="alert">The saved medical mileage needs a supported 2026 single-taxpayer record.</p>
+      <p role="alert">The saved medical mileage needs a supported 2026 own-care record.</p>
       {remove}
     </section>;
   }
@@ -46,7 +49,8 @@ export function MedicalMileageDetails({ data, available, onChange }: {
     })}
     <button type="button" disabled={log.entries.length >= 365} onClick={() => edit({ entries: [...log.entries, { date: '', miles: '' }] })}>Add medical mileage date</button>
     <div className="guided-form-grid">
-      {confirmationFields.map(field => <BooleanFact key={field} label={medicalMileageConfirmations[field]} value={log[field]} onChange={value => onChange({ ...log, [field]: value })} />)}
+      {headOfHousehold && <MedicalMileageHohDetails data={log.headOfHouseholdSources} onChange={headOfHouseholdSources => onChange({...log,headOfHouseholdSources})}/>}
+    {confirmationFields.map(field => <BooleanFact key={field} label={medicalMileageConfirmations[field]} value={log[field]} onChange={value => onChange({ ...log, [field]: value })} />)}
     </div>
     {remove}
   </section>;

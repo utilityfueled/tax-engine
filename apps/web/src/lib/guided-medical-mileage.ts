@@ -1,7 +1,8 @@
+import {buildGuidedMedicalMileageHoh,clearMedicalMileageHohConfirmations,medicalMileageHohDraftSchema} from './guided-medical-mileage-hoh';
 import { z } from 'zod';
 import { ScheduleAMedicalMileageSchema } from '@/models/inputs';
 import { parseGuidedCurrency } from './guided-currency';
-import type { DeductionData, FilingStatus } from './guided-interview-flow';
+import type { DeductionData, FilingStatus, PersonalInfoData } from './guided-interview-flow';
 
 export const medicalMileageConfirmations = {
   taxpayerOwnEssentialQualifiedCareConfirmed: 'Trips were essential to my own qualified medical care',
@@ -19,6 +20,7 @@ const unansweredConfirmations = {
 
 const answer = z.boolean().nullable();
 export const medicalMileageDraftSchema = ScheduleAMedicalMileageSchema.extend({
+  headOfHouseholdSources: medicalMileageHohDraftSchema.optional(),
   logReference: z.string(),
   taxpayerOwnEssentialQualifiedCareConfirmed: answer,
   singleVehicleMileageAndEligibleParkingTollsConfirmed: answer,
@@ -38,7 +40,7 @@ export function newMedicalMileageDraft(): MedicalMileageDraft {
 }
 
 export function clearMedicalMileageConfirmations(draft: MedicalMileageDraft): MedicalMileageDraft {
-  return { ...draft, ...unansweredConfirmations };
+  return { ...draft, ...unansweredConfirmations, ...(draft.headOfHouseholdSources ? {headOfHouseholdSources:clearMedicalMileageHohConfirmations(draft.headOfHouseholdSources)} : {}) };
 }
 
 export function medicalMileageOriginals(draft: MedicalMileageDraft | undefined) {
@@ -47,13 +49,13 @@ export function medicalMileageOriginals(draft: MedicalMileageDraft | undefined) 
 }
 
 export function supportsMedicalMileage(taxYear?: number | null, filingStatus?: FilingStatus | null, spouse?: unknown) {
-  return taxYear === 2026 && filingStatus === 'single' && !spouse;
+  return taxYear === 2026 && (filingStatus === 'single' || filingStatus === 'hoh') && !spouse;
 }
 
-export function buildGuidedMedicalMileage(data: DeductionData | undefined, taxYear?: number | null, filingStatus?: FilingStatus | null, spouse?: unknown) {
+export function buildGuidedMedicalMileage(data: DeductionData | undefined, taxYear?: number | null, filingStatus?: FilingStatus | null, spouse?: unknown, personal?: PersonalInfoData) {
   if (data?.method !== 'itemized' || data.medicalMileage === undefined) return undefined;
   if (!supportsMedicalMileage(taxYear, filingStatus, spouse)) {
-    throw new Error('Medical mileage needs a matching 2026 single-taxpayer return.');
+    throw new Error('Medical mileage needs a matching 2026 single or source-qualified head-of-household own-care return.');
   }
   if (!parseGuidedCurrency(data.medicalExpenses).isZero()) {
     throw new Error('Reconcile the saved medical total with the mileage log. Enter other eligible costs in the log and clear the separate total.');
@@ -61,8 +63,10 @@ export function buildGuidedMedicalMileage(data: DeductionData | undefined, taxYe
   const draft = medicalMileageDraftSchema.safeParse(data.medicalMileage);
   if (!draft.success) throw new Error('Replace the saved medical mileage log with a supported source record.');
   const knownAmount = (value: string) => value.trim().replace(/^(\d{1,3}(?:,\d{3})+)(\.\d{1,2})?$/, text => text.replaceAll(',', ''));
+  if (filingStatus !== 'hoh' && draft.data.headOfHouseholdSources !== undefined) throw new Error('A single medical mileage return cannot carry head-of-household originals');
+  const headOfHouseholdSources = filingStatus === 'hoh' ? buildGuidedMedicalMileageHoh(draft.data.headOfHouseholdSources, personal) : undefined;
   const result = ScheduleAMedicalMileageSchema.safeParse({
-    ...draft.data,
+    ...draft.data, headOfHouseholdSources,
     otherEligibleUnreimbursedMedicalExpenses: knownAmount(draft.data.otherEligibleUnreimbursedMedicalExpenses),
     parkingAndTolls: knownAmount(draft.data.parkingAndTolls),
     entries: draft.data.entries.map(row => ({ date: row.date, miles: row.miles.trim() })),

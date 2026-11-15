@@ -1,3 +1,4 @@
+import { MedicalMileageHohSchema } from './medical-mileage-hoh.js';
 import { Form172FarmingSourcesSchema } from "./form-172-farming-sources.js";
 import { CoverdellPostDisqualificationInterestSchema } from "./coverdell-post-disqualification-interest.js";
 import { Form2555MixedCapitalServicesSchema } from "./form-2555-mixed-capital-services.js";
@@ -3892,6 +3893,7 @@ export const AdjustmentsSchema = z.object({
 });
 
 export const ScheduleAMedicalMileageSchema = z.strictObject({
+  headOfHouseholdSources: MedicalMileageHohSchema.optional(),
   taxYear: z.literal(2026),
   logReference: z.string().trim().min(1).max(250),
   taxpayerOwnEssentialQualifiedCareConfirmed: z.literal(true),

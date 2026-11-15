@@ -1,0 +1,76 @@
+form: "Schedule A"
+fullName: "2026 primary own-care medical mileage for a source-qualified ordinary head of household"
+taxYear: 2026
+irsReference: "https://uscode.house.gov/us/usc/119-120/t26/s213/"
+sources:
+  - url: "https://uscode.house.gov/us/usc/119-120/t26/s213/"
+    revision: "Current through Public Law 119-120; sections 213(a) and (d)(1)(B)"
+    retrieved: "2026-11-14"
+  - url: "https://uscode.house.gov/us/usc/119-120/t26/s2/"
+    revision: "Current through Public Law 119-120; section 2(b)(1)(A)(i), maintenance and limitations"
+    retrieved: "2026-11-14"
+  - url: "https://uscode.house.gov/us/usc/119-120/t26/s152/"
+    revision: "Current through Public Law 119-120; sections 152(b), (c)(1)-(4)"
+    retrieved: "2026-11-14"
+  - url: "https://www.irs.gov/publications/p501"
+    revision: "2025 final; Head of Household, Worksheet 1, Table 4 and qualifying child tests; no 2026 publication inferred"
+    retrieved: "2026-11-14"
+  - url: "https://www.irs.gov/publications/p502"
+    revision: "2025 final; whose medical expenses, transportation and car expenses; not the 2026 mileage-rate authority"
+    retrieved: "2026-11-14"
+  - url: "https://www.irs.gov/pub/irs-drop/n-26-10.pdf"
+    revision: "2026 Notice 2026-10 section 3, 20.5 cents before July 1"
+    retrieved: "2026-11-14"
+  - url: "https://www.irs.gov/irb/2026-29_irb"
+    revision: "Announcement 2026-11, 23.5 cents from July 1, 2026"
+    retrieved: "2026-11-14"
+reviewStatus: "independent human tax review and annual filing qualification pending"
+notes:
+  - "This validates only the new mileage source cohort, not general HOH eligibility for every older calculation."
+  - "No spouse, parent-away, married-considered-unmarried, competing claimant, custody/release, temporary absence, born/died, adoption/foster, disability/student-age exception or other patient method."
+  - "All examples are synthetic independently derivable cases; no published HOH medical example is claimed."
+lines:
+  - line: "1-HOH-originals"
+    description: "Bind the ordinary qualifying-child household and actual eligible home-upkeep worksheet"
+    formula: >
+      Require the complete actual 2026 original source with exact primary, canonical home address and indexed canonical
+      dependent names, taxpayer IDs, dates of birth and child relationship. Require explicit
+      unmarried/not-surviving-spouse and full-year resident/not-dependent facts; a biological,
+      unmarried qualifying child under 19 at year end, younger than the primary taxpayer,
+      actual home nights greater than 182 and canonical residence months greater than six;
+      no other qualifying claimant or special qualification rule. The qualifying-child original confirmation means unmarried all year, no joint return filed or joint-return exception needed, U.S. citizen/resident/national, and no more than half of the child’s own support provided by the child. Require actual complete
+      eligible home-upkeep costs and actual primary-paid amount from primary own funds, with explicit confirmation no public-benefit, child-benefit, shared-fund or third-party funding allocation is needed; both known dollars and
+      cents. Admit only primary-paid times two strictly greater than total, not more than
+      total. Do not infer eligibility from a dependent credit checkbox or from medical care.
+    testRef: "tests/engine/schedules/schedule-a-medical-mileage-hoh.test.ts::admits matching actual HOH own-care sources with exact upkeep and mileage arithmetic"
+  - line: "1-HOH-rejection"
+    description: "Preserve unknowns, source identity and existing status boundaries"
+    formula: >
+      Reject absent, false, malformed, duplicate, changed, reordered or cross-year original
+      facts; malformed taxpayer IDs (allow only nine digits or exact 3-2-4 hyphen groups), a missing/wrong dependent index, mismatched canonical identity, known contradictory EIC claimant dependency or residency, unknown residence
+      or other disqualifying original. A single return cannot carry an unconsumed HOH packet.
+      Keep joint, separate and surviving-spouse mileage methods closed. Require actual
+      known nonresident, dual-status, short-year, dependent and death-status facts for this
+      new route; no global eligibility facts or other household allocations are fabricated.
+    testRef: "tests/engine/schedules/schedule-a-medical-mileage-hoh.test.ts::rejects incomplete contradictory and mismatched HOH originals without inferring zero"
+  - line: "4-HOH"
+    description: "Reuse the existing primary own-care medical amount and 7.5 percent floor"
+    formula: >
+      After the HOH original proof, use the unchanged Decimal medical mileage calculation:
+      actual first-period miles times 0.205 plus second-period miles times 0.235, eligible
+      parking/tolls and known other eligible unreimbursed medical amounts, once. Preserve
+      the existing rounded 7.5 percent AGI floor and year/readiness/export gates. Do not
+      include the child's medical care merely because the child qualifies the household.
+    testRef: "tests/engine/schedules/schedule-a-medical-mileage-hoh.test.ts::preserves the original single method and annual gates and omits private household details from audit"
+  - line: "1-HOH-guided"
+    description: "Collect actual private originals, revoke confirmations on change and bind the same canonical household"
+    formula: >
+      Offer the own-care log for a 2026 HOH return with no spouse only with the distinct
+      original household source. Capture actual identity, dates, indexed child, nights,
+      source reference and home worksheet amounts. Preserve blank versus zero and false
+      versus unknown. The completion validator and bridge consume identical actual
+      household context. Editing the source, identity or household revokes confirmations;
+      retain original values on JSON replay, do not silently bind another dependent.
+      No medical destinations or private source identities enter public audit/provider or
+      hosted metadata. Existing older source and unknown-person guards remain unchanged.
+    testRef: "tests/apps/web/guided-medical-mileage-hoh.test.tsx::collects actual HOH own-care originals and invalidates edited or replayed household evidence"

@@ -65,7 +65,7 @@ it('keeps actual zeros and dates and clears confirmation when a source value cha
     expect(buildTaxInputFromGuidedData(changedOwner)).toBeNull();
     expect(buildTaxInputFromGuidedData(updateSectionData(current, 'deductions', { ...source, medicalExpenses: '1' }))).toBeNull();
     expect(validateSection({ ...current, taxYear: 2025 }, 'deductions').fieldErrors?.medicalMileage).toMatch(/2026/);
-    expect(validateSection({ ...current, segmentation: { ...current.segmentation, filingStatus: 'hoh' } }, 'deductions').fieldErrors?.medicalMileage).toMatch(/single/i);
+    expect(validateSection({ ...current, segmentation: { ...current.segmentation, filingStatus: 'hoh' } }, 'deductions').fieldErrors?.medicalMileage).toMatch(/household/i);
     const standard = updateSectionData(current, 'deductions', { ...source, method: 'standard' });
     expect(standard.sectionData.deductions?.medicalMileage).toEqual(source.medicalMileage);
     const standardInput = buildTaxInputFromGuidedData(standard);

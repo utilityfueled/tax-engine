@@ -6,6 +6,10 @@ below retain their original evidence boundaries.
 
 ## Active continuation — November 14
 
+- [x] Collect finite actual HOH own-care mileage sources; separate reviews,
+  950 focused and 28,515 full-suite passes; two actual desktop/mobile journeys
+  and normal cleanup. [Method and remaining gates](upgrade-2026-medical-mileage-hoh-20261115.md).
+
 - [x] Implement finite actual Schedule AI investment-election originals with
   residual-first rounding, household/annual/itemized reconciliation and numeric
   audit entries. Separate reviews and full 28,514 tests (nine private root

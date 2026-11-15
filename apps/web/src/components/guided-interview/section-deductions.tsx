@@ -143,7 +143,7 @@ export function SectionDeductions({
               value={current.medicalExpenses}
               onChange={(v) => update("medicalExpenses", v)}
             />
-            <MedicalMileageDetails data={current.medicalMileage} available={supportsMedicalMileage(taxYear, filingStatus, hasSpouse)}
+            <MedicalMileageDetails data={current.medicalMileage} headOfHousehold={filingStatus === 'hoh'} available={supportsMedicalMileage(taxYear, filingStatus, hasSpouse)}
               onChange={medicalMileage => onDataChange({ ...current, medicalMileage })} />
 
             <div className="guided-form-grid">
