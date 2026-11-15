@@ -128,5 +128,43 @@ the frozen packet. A reviewer schema assumption, wrong-peer-hash expectation
 and local fontconfig setup warning are retained separately and corrected;
 none was an application failure or justified changing a runtime assertion.
 All 133 frozen inputs rehash unchanged. This saved-artifact review makes no new
-live account-inventory claim. ARM64 and strict remote-container outcomes remain
-pending; required human, final-form, advisory and AI qualification remain open.
+live account-inventory claim. Required human, final-form, advisory and AI
+qualification remain open.
+
+## Completed native and remote outcomes
+
+The exact-source [ARM64 rehearsal](upgrade-2026-arm64-1360b9cb-20261115.md)
+passes all 24 stages, four workloads, six Compose recovery phases and all 645
+browser cases (640 passes and five original skips). Root and independent
+completed-artifact readers pass. The VM stops normally and its original
+resources and socket routing are restored. The configured image scan retains
+191 findings, including 56 High and zero Critical; successful execution does
+not accept those findings.
+
+[CI 43723636212](https://github.com/utilityfueled/tax-engine/actions/runs/43723636212)
+finishes successfully: both unit and coverage report 28,809 tests in 2,106
+files, with the same 92.02/88.14/91.02/95.28 coverage percentages. The separate
+Docker workflow also succeeds. In
+[Web 43723636182](https://github.com/utilityfueled/tax-engine/actions/runs/43723636182),
+the ordinary self-host browser job passes all 640 answerable cases with five
+original skips. That job uses its existing ordinary 90-second default and
+retained per-file overrides; it does not qualify the strict deadline.
+All tracked source hashes agree with `1360b9cb`. Fourteen retained public sample
+hashes also agree; the freshly downloaded Publication 4491 sample has a different
+hash. Its actual PDF bytes are absent from the artifact, so no content-equivalence
+claim is made for that sample.
+
+The strict-container job finishes with **623 passes, 17 failures and five
+original skips**, accounting for all 645 cases in all eight batches. Each
+failure reports the existing 30-second overall deadline. Stops occur during
+native-control entry, confirmation, saved-state inspection and download paths;
+these locations do not establish a missing control, incorrect tax result or
+CPU cause. Archive/import, SBOM, scan and owned-container cleanup steps all
+succeed. Detailed trace investigation remains active, with deadlines, retries,
+case coverage and readiness gates unchanged. The strict job remains failed.
+
+The two successor commits through `1a7e21e0` change only seven documentation
+files relative to `1360b9cb`; application, tests, specs, workflows, dependencies
+and build inputs are unchanged. This source comparison does not relabel the
+qualified commit or claim identical full Git trees. Both remote branches have
+the documentation commits, and Vercel cancels the production-target build.

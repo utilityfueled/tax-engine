@@ -1,4 +1,20 @@
 {
+  "nov15Integrated1360TerminalHistory": {
+    "source": "1360b9cb4128901dcc8dfa8805393dbbfc203992",
+    "previousDynamicStatus": {
+      "remoteCI": "coverage-passed-unit-active",
+      "remoteWeb": "ordinary-selfhost-passed-strict-container-active",
+      "arm64": "actual-browser-active"
+    },
+    "previousReleaseBlockers": [
+      "PA and OH are selected for full-year, part-year and nonresident returns. Bounded methods have engineering evidence. Broader coverage, final physical forms and independent qualified tax review remain open for all six combinations. Filing is disabled and PDFs are review-only.",
+      "OpenAI synthetic known usage is179calls/0.27185270USD plus the unchanged0.022384USD unresolved timeout reserve, exposure0.29423670USD. Actual current local NUMERIC/bigint same-request SolHigh settlement passes; protected hosted receipts retain their own exact-source boundaries. Google access, independent human held-out/privacy review and qualified route promotion remain open; invoice reconciliation is not established. No model is promoted.",
+      "November14 source-specific protected Preview evidence passes recovery email/reset/session/token checks, tenant isolation/private originals, scheduled same-event Stripe retry with exact receipt readback, and eleven-table synthetic migration/backup/restore. Current26f5bd5b protected mortgage-original desktop/mobile rehearsal and bounded owned cleanup pass with separate root artifact review; its finite2025original cohort is not a broader2026filing claim. See the dated recovery/retry/schema/K3 ledgers.",
+      "November14 nativeARM64a396d2c2 passes runtime, six recovery phases and620browserpasses/fiveoriginalskips with normalVM/socket cleanup; exact26f5bd5b successor is prepared pending actual local gates. Refreshed app scan retains192matches/0Critical/56unacceptedHigh; stockPostgreSQL retains9Critical/138High. Engineering recheck is dueNovember15 18:30UTC or beforequalification; an accountable advisory decision owner and human security/privacy review remain unassigned. NativeAMD64 and publication qualification remain open.",
+      "The 2026 federal calculation remains incomplete and unavailable in production. The final 2026 parent Form 1040, ordinary and EIC tax tables and remaining official packages are still required. Final physical specimens are disabled pending complete scenarios and qualified review."
+    ],
+    "historicalEntriesOtherwiseUnchanged": true
+  },
   "nov15Integrated1360AllTwelve": {
     "source": "1360b9cb4128901dcc8dfa8805393dbbfc203992",
     "branch": "main",
@@ -29,10 +45,10 @@
     "independentReviewSha256": "193f102423688af1aa7cb553a984af1206795faec15948a565c0c03d536e1582",
     "normalPostgresAndBrowserClosure": true,
     "remoteDocker": "passed",
-    "remoteCI": "coverage-passed-unit-active",
-    "remoteWeb": "ordinary-selfhost-passed-strict-container-active",
+    "remoteCI": "passed-unit-and-coverage",
+    "remoteWeb": "ordinary-selfhost-passed-strict-container-failed-17-deadlines",
     "protectedPreview": "passed-with-root-and-independent-artifact-review",
-    "arm64": "actual-browser-active",
+    "arm64": "passed-with-root-and-independent-completed-artifact-review",
     "releaseQualified": false,
     "ledger": "docs/upgrade-2026-integrated-runtime-1360b9cb-20261115.md",
     "humanSupplement": "docs/upgrade-2026-human-goodwill-pa-supplement-1360b9cb.md",
@@ -41,7 +57,27 @@
     "previewIndependentReviewSha256": "b73dd1aa2e6457b3c6c5ba1e1f18f40d22c1d318a0ea50956951d0337b558115",
     "previewOperationsIncluding50CLIReserve": 1150,
     "previewOperationLimit": 1310,
-    "previewAllScopedCleanupPassed": true
+    "previewAllScopedCleanupPassed": true,
+    "arm64Ledger": "docs/upgrade-2026-arm64-1360b9cb-20261115.md",
+    "arm64RootReviewSha256": "a975a3651e8a24e4336be10cd6341c5df31f62837f4a1fc8cc1d2626ec324dc7",
+    "arm64IndependentReviewSha256": "ffdc5471e3516997c35c61d3f6e76fee94407ee1a481cf78ae551f1a2f5d83d5",
+    "arm64Stages": 24,
+    "arm64Workloads": 4,
+    "arm64ComposePhases": 6,
+    "arm64BrowserPassed": 640,
+    "arm64OriginalSkips": 5,
+    "arm64NormalResourceAndRouteRestoration": true,
+    "strictContainer": {
+      "passed": 623,
+      "failed": 17,
+      "skipped": 5,
+      "selected": 645,
+      "completedBatches": 8,
+      "retries": 0,
+      "ordinaryTimeoutMs": 30000,
+      "timeoutCauseEstablished": false
+    },
+    "documentationHeadAtReconciliation": "1a7e21e0c3b17457582b607a801f69d4b3d6eeaf"
   },
   "nov15GoodwillAndPAResidency": {
     "goodwillCoreCommit": "71d25b2d",
@@ -1957,11 +1993,11 @@
     "testContainerRemoved": true
   },
   "releaseBlockers": [
-    "PA and OH are selected for full-year, part-year and nonresident returns. Bounded methods have engineering evidence. Broader coverage, final physical forms and independent qualified tax review remain open for all six combinations. Filing is disabled and PDFs are review-only.",
-    "OpenAI synthetic known usage is179calls/0.27185270USD plus the unchanged0.022384USD unresolved timeout reserve, exposure0.29423670USD. Actual current local NUMERIC/bigint same-request SolHigh settlement passes; protected hosted receipts retain their own exact-source boundaries. Google access, independent human held-out/privacy review and qualified route promotion remain open; invoice reconciliation is not established. No model is promoted.",
-    "November14 source-specific protected Preview evidence passes recovery email/reset/session/token checks, tenant isolation/private originals, scheduled same-event Stripe retry with exact receipt readback, and eleven-table synthetic migration/backup/restore. Current26f5bd5b protected mortgage-original desktop/mobile rehearsal and bounded owned cleanup pass with separate root artifact review; its finite2025original cohort is not a broader2026filing claim. See the dated recovery/retry/schema/K3 ledgers.",
-    "November14 nativeARM64a396d2c2 passes runtime, six recovery phases and620browserpasses/fiveoriginalskips with normalVM/socket cleanup; exact26f5bd5b successor is prepared pending actual local gates. Refreshed app scan retains192matches/0Critical/56unacceptedHigh; stockPostgreSQL retains9Critical/138High. Engineering recheck is dueNovember15 18:30UTC or beforequalification; an accountable advisory decision owner and human security/privacy review remain unassigned. NativeAMD64 and publication qualification remain open.",
-    "The 2026 federal calculation remains incomplete and unavailable in production. The final 2026 parent Form 1040, ordinary and EIC tax tables and remaining official packages are still required. Final physical specimens are disabled pending complete scenarios and qualified review."
+    "Exact 1360b9cb passes all twelve local checks, protected Preview 118 API/six UI and the bounded ARM64 rehearsal with completed-artifact review. Remote CI/Docker and ordinary self-host browser pass. Strict-container qualification remains failed with 623 passes/17 deadlines/5 original skips; cause investigation and any confirmed remedy remain open without policy changes.",
+    "PA/OH finite full-year, part-year and nonresident methods retain individual source/form boundaries. Qualified independent tax/spec/expected-result review and remaining applicable final 2026 forms remain open. Filing remains disabled and exports are review-only.",
+    "Qualified human AI-label/held-out/privacy review and route qualification remain open. Google access is unavailable for the explicitly optional Gemini alternate; record candidate unavailability without treating it as a requirement to enable a deterministic or separately qualified OpenAI-only route. Known 179 provider calls cost 0.27185270 USD plus the unchanged 0.022384 USD unresolved reserve; exposure is 0.29423670 USD. No model promotion or invoice reconciliation is inferred.",
+    "Current configured ARM64 app scan retains 191 matches: 0 Critical/56 High/61 Medium/17 Low/47 Negligible/10 Unknown; ignored 0. The separate strict AMD64 app scan retains 192 matches, also with 56 High; the earlier stock PostgreSQL scan retains 9 Critical/138 High. These remain unaccepted. Accountable advisory/security/privacy dispositions and final distribution qualification remain open. The engineering recheck is due November 15 at 18:30 UTC or before qualification; accountable advisory and human security/privacy review owners remain unassigned. Configured scan execution does not establish unfiltered findings, risk acceptance, ABI or release qualification.",
+    "The complete 2026 federal return remains unavailable in production pending final parent Form 1040, ordinary/EIC tables and other applicable official annual packages, complete scenarios and qualified review. Production is unchanged; no overall completion or release claim is established."
   ],
   "ongoingExecution": {
     "historicalSnapshotNotice": "This nested execution snapshot and its dated source-specific subrecords are retained history; current state is in top-level nov14 entries, releaseBlockers and docs/upgrade-2026-current-status.md. Historical credential and provider-availability gaps below are not current blockers.",

@@ -1,6 +1,6 @@
 # Current 2026 upgrade continuation
 
-## Active work — November 15, completed Preview review
+## Active work — November 15, completed native and remote review
 
 All committed work through `1360b9cb` is pushed to `main` and the remote backup.
 The saved Vercel guard cancels its production-target build; production remains
@@ -19,11 +19,23 @@ for three complete adapter evaluations; no calculation or budget was changed.
 The protected Preview passes all 118 API cases and six actual desktop/mobile
 journeys, with separate root and independent artifact/PDF/visual reviews.
 Operations total 1,150/1,310 including the declared CLI reserve; scoped cleanup
-passes without child uncertainty. The ARM64 rehearsal is running its complete
-browser suite after successful build, SBOM, scan execution and Compose recovery.
-Exact-source remote Docker, coverage and ordinary self-host browser jobs pass;
-unit and strict-container jobs remain active. Scan execution supplies no finding
-acceptance. Earlier strict-container failures remain evidence.
+passes without child uncertainty. The exact-source ARM64 rehearsal also passes
+all 24 stages, four workloads, six Compose phases and 640 browser cases with five
+original skips. Completed root and independent artifact reviews pass, and normal
+VM stop restores its original resources and routes.
+[ARM64 evidence](upgrade-2026-arm64-1360b9cb-20261115.md).
+
+Exact-source remote CI and Docker pass. The ordinary self-host browser job passes
+640 cases with five original skips under its existing 90-second default. The
+strict-container job fails: 623 passes, seventeen 30-second deadlines and five
+original skips account for all 645 cases in eight batches. Trace and source
+investigation continues; no timeout cause is established and no deadline, retry,
+case or readiness policy is changed. Configured scans retain 191 ARM64 app findings
+and 192 strict AMD64 app findings, each with 56 High. Findings remain unaccepted;
+earlier failures remain evidence.
+
+The verified application source remains `1360b9cb`; the documentation head
+`1a7e21e0` has seven documentation-only changes and is a different Git tree.
 
 The [goodwill/PA human supplement](upgrade-2026-human-goodwill-pa-supplement-1360b9cb.md)
 is ready for an independent qualified reviewer; every decision remains blank.

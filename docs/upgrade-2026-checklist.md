@@ -39,10 +39,15 @@
 - [x] Pass and independently review exact-source protected Preview: 118 API cases,
   six actual desktop/mobile journeys, five saved PDFs and normal scoped cleanup;
   1,150/1,310 counted operations. [Evidence](upgrade-2026-integrated-runtime-1360b9cb-20261115.md).
-- [ ] Finish current-source ARM64 qualification, including actual artifact review
-  and normal resource cleanup.
-- [ ] Finish strict container browser qualification and current remote artifact
-  review; fix any confirmed defects.
+- [x] Pass exact `1360b9cb` ARM64 rehearsal and completed root/independent artifact
+  review: 24 stages, four workloads, six Compose phases, 640 browser passes/five
+  original skips, and normal resource/route restoration.
+  [Evidence](upgrade-2026-arm64-1360b9cb-20261115.md).
+- [x] Retain terminal current-source CI/Docker success and ordinary self-host
+  browser success (640 passes/five skips); reconcile strict-container failure
+  separately (623 passes/seventeen deadlines/five skips in all eight batches).
+- [ ] Pass strict container browser qualification. Investigate retained traces and
+  repeated render validation without assuming a timeout cause or changing policy.
 - [ ] Obtain qualified independent human reviews, final annual forms, accountable
   advisory disposition and all remaining AI/hosting/release evidence from the
   execution brief. No completion, filing or model promotion is inferred.

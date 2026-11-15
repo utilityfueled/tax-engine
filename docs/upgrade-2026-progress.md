@@ -1,5 +1,27 @@
 # 2026 upgrade implementation evidence
 
+## November 15 completed 1360 native and remote outcomes
+
+Exact application source `1360b9cb` passes all twelve local checks and the
+protected Preview's 118 API cases/six UI journeys, including all five saved PDF
+checks and scoped cleanup (1,150/1,310 operations). The ARM64 rehearsal passes
+24 stages, four workloads, six Compose phases and 640 browser cases/five original
+skips; root and independent completed-artifact readers verify normal VM/resource
+and route restoration. The configured scan retains 191 unaccepted findings.
+
+Remote CI and Docker pass. The ordinary self-host browser passes 640 cases/five
+skips under its existing 90-second default. Strict-container qualification fails:
+623 passes, seventeen 30-second deadlines and five original skips across all
+645 cases/eight batches. Investigation retains the failures and original policies;
+repeated validation is source-proven, but its contribution to timeouts is unproven.
+The documentation head `1a7e21e0` does not replace the verified application source.
+[Integrated evidence](upgrade-2026-integrated-runtime-1360b9cb-20261115.md) and
+[completed ARM64 evidence](upgrade-2026-arm64-1360b9cb-20261115.md).
+
+The earlier dated package entries below retain their original pending statuses.
+Human review, final annual forms, accountable finding dispositions, filing and
+release qualification remain open.
+
 ## November 15 guided goodwill and PA residency paper
 
 The actual acquired-goodwill collector passes author 1,056, independent 1,060
