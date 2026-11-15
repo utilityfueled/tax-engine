@@ -1,4 +1,37 @@
 {
+  "nov15ResidentFreshFederalMaterialComparison": {
+    "baseApplication": "8cc5b0ec",
+    "canonicalImplementationExpressionsChanged": 1,
+    "freshFederalCalculationRetained": true,
+    "smallerIdentityAndDurableHashesUnchanged": true,
+    "rootRed": {
+      "failed": 1,
+      "passed": 5
+    },
+    "rootGreen": {
+      "tests": 203,
+      "files": 6
+    },
+    "actualWorkFixture": {
+      "freshFederalCalls": 1,
+      "fullFederalHashCalls": 0,
+      "otherShaCalls": 21
+    },
+    "rootOriginalPrivateCandidateTests": 204,
+    "completePredecessorOutputCohorts": 5,
+    "independentTrackedAdoptionReviewSha256": "a9b139db33e85340b1ba41152c5da5902316350a81fdc1efcf3de2fc35aaa339",
+    "independentOriginalSourceReviewSha256": "a95bd97de5cd0f82c6617d3a8ce5d6166c155d823b4d979e836660eac84d29a3",
+    "rootTypes": "passed",
+    "scopedLint": "passed",
+    "validSpecReferences": 9385,
+    "metadataTests": 91,
+    "inventoryEntries": 1043,
+    "localAbbaMedianImprovementPercent": "17.338",
+    "linuxTimeoutCauseOrFixClaimed": false,
+    "browserPoliciesAndAuditMembersUnchanged": true,
+    "fullCombinedSourceQualification": "pending",
+    "releaseQualified": false
+  },
   "nov15TrainingGuideReturnYears": {
     "baseApplication": "8cc5b0ec",
     "documentaryBase": "b5f6e2d4",

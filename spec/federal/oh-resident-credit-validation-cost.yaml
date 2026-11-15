@@ -9,6 +9,10 @@ notes: |
   exact stable Decimal conversion, omitted undefined object children, ordered
   arrays, JSON escaping, byte lengths and byte equality. Do not introduce a
   global cache, caller-supplied proof, tax formula or timing policy change.
+  A source build also compares the complete fresh federal result with the caller's
+  supplied federal result using these same normalized UTF-8 bytes; only that
+  throwaway two-hash comparison changes. Keep the independent fresh federal
+  calculation in the same error position and keep smaller identity hashes.
   The stored facts digest check, source commitment, semantic receipt identities,
   residency commitment, payment commitment and public result remain unchanged.
 lines:
@@ -24,3 +28,9 @@ lines:
   - line: "complete-output"
     formula: 'Preserve full federal, adapted, Ohio and payment public output fingerprints and all stored/private context commitment behavior for source-complete ordinary and cents/transaction accounts.'
     testRef: "tests/engine/state/oh-resident-credit-validation-cost.test.ts::resident complete results and commitments retain predecessor byte fingerprints"
+  - line: "fresh-federal-comparison"
+    formula: 'A complete resident-credit source build performs exactly one fresh canonical federal calculation and zero throwaway full-federal SHA operations. Keep all21other actual SHA calls, context/source/payment commitments and stored-facts validation.'
+    testRef: "tests/engine/state/oh-resident-credit-federal-work.test.ts::resident source compares full fresh federal material without throwaway hashes"
+  - line: "fresh-federal-material-parity"
+    formula: 'Whole-result key reordering, omitted undefined children and Decimal line values preserve normalized admission; actual extra/null/nested/Unicode material and stale totals reject at the original fresh-federal boundary. Earlier year/owner errors retain priority. Existing four preservation tests retain complete output/context fingerprints and UTF-8 projection/immutability controls.'
+    testRef: "tests/engine/state/oh-resident-credit-federal-work.test.ts::resident fresh federal comparison preserves full material and first errors"

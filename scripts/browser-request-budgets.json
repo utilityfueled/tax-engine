@@ -1084,7 +1084,7 @@
     "src/engine/state/oh-payment-source.ts": "c2a43238a1f9640e78325e4aa03bf12ba75c2aeefcfb68dea65623f99154369e",
     "src/engine/state/oh-reciprocal-wage-source.ts": "75195cfba7d54dc37fc83143f3a6fc9d474e664e82773fd6ef3c4b0c5b33d94f",
     "src/engine/state/oh-residency-source.ts": "1dc16f974b11e83aabf78d30bb8b44fa7fa4588db3639a8cbc45f6f12859284c",
-    "src/engine/state/oh-resident-credit-source.ts": "7bf20a4fe60ce17d3dce88999eb2c2fbeab2a884db082263cbc0761337404979",
+    "src/engine/state/oh-resident-credit-source.ts": "6dd6a5a5e4e4c57d144d65b5c36451c4fbb7a3e0f5beebf479b143e64fbbd7af",
     "src/engine/state/oh-resident-credit.ts": "2b4a4991e0327d0e34ee0f87479312a0c523a5bb0255420fd6327f303f7a145a",
     "src/engine/state/oh-return-header-source.ts": "cc9352e0721d6fb2409db79962cc912d6e184724b49e9b16cff2f349e13180e3",
     "src/engine/state/oh-return.ts": "2fe37419c01e630daf3d38e914ea5794b1fea34aa438cd768dbc54e2e16c6fd7",

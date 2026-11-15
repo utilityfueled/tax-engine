@@ -1,5 +1,44 @@
 # Preserve resident-credit validation without temporary hashes
 
+## Subsequent complete federal-result comparison
+
+The source builder also uses the existing normalized UTF-8 equality helper for
+its immediate comparison of the freshly calculated federal result with the
+supplied result. This changes one expression. Fresh federal recalculation stays
+in the same validation position; every smaller identity hash and every stored,
+audit, source, facts and payment commitment remains byte-for-byte unchanged.
+
+The extended spec and two permanent tests precede implementation. Root reproduces
+one failing work regression/five passing preservation tests before applying the
+expression. Root then passes all 203 tests in six affected files, including the
+original four preservation tests and complete output/context fingerprints. On
+the complete fixture, the actual SHA observer records zero full-result hashes,
+21 other hashes and exactly one fresh federal calculation. Key/undefined/Decimal
+normalization, complete audit material, Unicode, stale values, original first
+errors and input immutability remain covered. No duplicate baseline engine or
+large generated oracle is added to the repository.
+
+Independent tracked-adoption review reproduces its own failure and passes the
+same 203 checks; the earlier complete candidate also passes root's 204 checks
+and five full predecessor-output cohorts. A bounded local three-round ABBA
+observation reports median 6.0502 ms before/5.0012 ms after (17.338%). This local
+observation does not establish Linux CPU attribution or fix the strict browser
+deadline failures. The fresh calculation is retained, with no cache or supplied
+proof replacing it.
+
+Root types, scoped lint, all 9,385 spec references and 91 browser metadata controls
+pass. Inventory regeneration remains at 1,043 entries. Only the source hash and
+dependent diagnostic audit digest change; all 175 request-budget rows, 1,993
+finite audit members, fourteen diagnostic targets and existing timeouts, workers
+and retry policies stay unchanged. Full combined-source and distribution checks
+follow this package. No tax formula, filing gate or model promotion changes.
+
+Private independent reviews: full candidate `a95bd97d…`, tracked spec/tests
+`a9b139db…`; tracked-adoption freeze `087e6f84…`. Earlier projection-reader
+evidence follows with its original scope and dates.
+
+## Earlier projection-reader comparison
+
 A current resident-credit projection read now compares the same normalized,
 JSON-serialized UTF-8 bytes directly instead of creating two temporary hashes for
 each of 22 expected fields. A complete read retains its one stored-facts hash,

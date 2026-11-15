@@ -1,5 +1,16 @@
 # 2026 upgrade implementation evidence
 
+## November 15 resident complete-federal comparison work
+
+A separately reviewed one-expression change replaces the temporary full-federal
+hash pair with existing exact encoded-material equality. Fresh recalculation,
+all smaller identity hashes and durable commitments stay. Root genuine RED
+reproduces one failure/five passes; the affected six files then pass 203 tests,
+with types, lint, spec references and 91 metadata controls passing. Local measured
+work savings do not establish a Linux deadline fix. Full combined-source and
+runtime qualification follow.
+[Resident-credit evidence](upgrade-2026-oh-resident-credit-validation-cost-20261115.md).
+
 ## November 15 training-guide return-year correction
 
 The sample registry preserves its fifteen IDs and retained 2025 guide bytes using
