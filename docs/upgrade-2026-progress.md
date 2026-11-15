@@ -1,5 +1,12 @@
 # 2026 upgrade implementation evidence
 
+## November 15 resident-credit temporary hash comparisons
+
+The same source bytes now compare directly while stored commitments remain
+hashed. Author275, independent275+3/484vectors and root950 tests pass. Combined
+and runtime qualification follow; no timeout-cause claim is made.
+[Evidence](upgrade-2026-oh-resident-credit-validation-cost-20261115.md).
+
 ## November 15 complete remote browser artifacts
 
 The strict aa4 container gate retains 30 failures and d192 retains twelve;

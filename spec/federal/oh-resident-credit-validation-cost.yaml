@@ -1,0 +1,26 @@
+form: "OH-Resident-Credit-Validation-Cost"
+taxYear: 2025
+version: '2026-11-15'
+source: 'Software preservation of state/oh-resident-credit-sources.yaml; no new tax interpretation'
+notes: |
+  The current unforgeable resident-credit context compares every expected
+  projection field by hashing both normalized serialized values solely for
+  equality. Compare their same TextEncoder UTF-8 bytes instead. Preserve the
+  exact stable Decimal conversion, omitted undefined object children, ordered
+  arrays, JSON escaping, byte lengths and byte equality. Do not introduce a
+  global cache, caller-supplied proof, tax formula or timing policy change.
+  The stored facts digest check, source commitment, semantic receipt identities,
+  residency commitment, payment commitment and public result remain unchanged.
+lines:
+  - line: "transient-comparison"
+    formula: 'A valid complete projection read retains its one stored-facts SHA validation and performs no pairwise temporary SHA operations; only the existing encoded field equality changes.'
+    testRef: "tests/engine/state/oh-resident-credit-validation-cost.test.ts::resident projection comparison retains only its stored facts digest"
+  - line: "normalization"
+    formula: 'Exact UTF-8 normalized material parity includes Decimal/string normalization, key order, undefined object omission, ordered arrays, null, lone surrogates and distinct Unicode; never infer a missing amount or owner.'
+    testRef: "tests/engine/state/oh-resident-credit-validation-cost.test.ts::resident encoded field comparisons preserve original normalization and refusals"
+  - line: "ordering-and-mutation"
+    formula: 'Preserve facts/context rejection before projection checks, first expected-key error order, unchanged independent source validation and input immutability. Returned amount rows remain independently copied.'
+    testRef: "tests/engine/state/oh-resident-credit-validation-cost.test.ts::resident encoded comparison preserves first errors and immutable originals"
+  - line: "complete-output"
+    formula: 'Preserve full federal, adapted, Ohio and payment public output fingerprints and all stored/private context commitment behavior for source-complete ordinary and cents/transaction accounts.'
+    testRef: "tests/engine/state/oh-resident-credit-validation-cost.test.ts::resident complete results and commitments retain predecessor byte fingerprints"

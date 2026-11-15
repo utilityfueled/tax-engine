@@ -17,6 +17,16 @@ function stable(v:unknown):unknown {
  if(v&&typeof v==='object')return Object.fromEntries(Object.entries(v).filter(([,child])=>child!==undefined).sort(([a],[b])=>a.localeCompare(b)).map(([k,child])=>[k,stable(child)]));return v;
 }
 const digest=(v:unknown)=>bytesToHex(sha256(new TextEncoder().encode(JSON.stringify(stable(v)))));
+/** Spec: federal/oh-resident-credit-validation-cost.yaml#transient-comparison.
+ * Compare precisely the prior digest input bytes; stored commitments stay hashed.
+ */
+function sameEncodedSourceMaterial(left:unknown,right:unknown):boolean {
+ const leftBytes=new TextEncoder().encode(JSON.stringify(stable(left)));
+ const rightBytes=new TextEncoder().encode(JSON.stringify(stable(right)));
+ if(leftBytes.length!==rightBytes.length)return false;
+ for(let index=0;index<leftBytes.length;index++)if(leftBytes[index]!==rightBytes[index])return false;
+ return true;
+}
 function fail(message:string):never{throw new Error(`Ohio actual resident-credit sources: ${message}`);}
 function date(value:string):number {const n=Date.parse(value+'T00:00:00Z');if(!Number.isFinite(n)||new Date(n).toISOString().slice(0,10)!==value)fail('valid original source date required');return n;}
 const normalize=(v:string)=>v.replace(/\s+/g,'').toUpperCase();
@@ -28,7 +38,7 @@ const contexts=new WeakMap<OhioResidentCreditSourceContext,Stored>();
 export function readOhioResidentCreditSource(context:OhioResidentCreditSourceContext,facts:OhioResidencyFacts,projection?:OhioResidentReturnInput){
  const stored=contexts.get(context);if(!stored||digest(facts)!==stored.factsDigest||context.sourceCommitment!==stored.sourceCommitment)fail('actual current original context is missing stale or fabricated');
  if(projection){
-  for(const [key,expected] of Object.entries(stored.expected))if(digest(Reflect.get(projection,key))!==digest(expected))fail(`current source-derived ${key} projection changed`);
+  for(const [key,expected] of Object.entries(stored.expected))if(!sameEncodedSourceMaterial(Reflect.get(projection,key),expected))fail(`current source-derived ${key} projection changed`);
   for(const [key,value] of Object.entries(projection)){
    if(key in stored.expected||key==='residencyResidentCreditSource'||value===undefined)continue;
    // This finite source inventory establishes no other adjustment/credit/cash.

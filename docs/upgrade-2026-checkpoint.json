@@ -1,4 +1,16 @@
 {
+  "nov15ResidentCreditValidationCost": {
+    "shaCallsPerCompleteReadBefore": 45,
+    "shaCallsAfter": 1,
+    "persistedCommitmentsUnchanged": true,
+    "authorBehaviorTests": 275,
+    "independentBehaviorTests": 275,
+    "independentExtraTests": 3,
+    "independentComparisonVectors": 484,
+    "rootFocusedAndStrictTests": 950,
+    "independentReviewSha256": "38adfcef6cd02e7d1b7d0ad79b6ff58398a6f4e8d00dc5898cba8b5aecd96120",
+    "runtimePending": true
+  },
   "nov15RemoteStrictBrowserTerminal": {
     "aa4": {
       "run": 43704582177,
