@@ -79,3 +79,15 @@ lines:
       Counts are admission hints only: all content, operand, raw, graph, encoded marker
       and page-text checks still execute. Keep four seconds, 64 KiB and two browser workers.
     testRef: "tests/pdf/rrta-saved-review-privacy-efficiency.test.ts::avoids speculative copies for exact one-off array constructor bytes"
+
+  - line: "saved-pdf-operand-exact-type-dispatch"
+    description: "Preserve operand privacy checks while avoiding discarded numeric type probes"
+    formula: >
+      Dispatch exact NumberObject and FloatObject operands directly to the historical
+      ignored-numeric result, and exact list/ArrayObject containers to their original
+      ordered recursive traversal. Every subclass, string/name/byte-string, dictionary,
+      indirect reference and unknown type retains the original fallback and first-error
+      order. Do not expand tuple traversal or cache verdicts. Preserve all full-graph,
+      resource, marker, parser, encoded-string and final page-text checks, per-inspection
+      cache limits, input immutability, exact eight-field output and 4000ms/64KiB limits.
+    testRef: "tests/pdf/rrta-saved-review-operand-dispatch.test.ts::avoids redundant numeric operand type probes without bypassing fallback checks"

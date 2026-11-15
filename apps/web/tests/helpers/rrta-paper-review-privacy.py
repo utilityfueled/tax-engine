@@ -203,6 +203,13 @@ def inspect(raw,markers):
   if not isinstance(contents,(ArrayObject,list)):contents=[contents]
   content_group(contents,page.get('/Resources'))
  def argscan(a):
+  # Exact parser numeric leaves were already ignored. Preserve subclasses and
+  # every other value on the historical checks, including first-error order.
+  kind=type(a)
+  if kind is NumberObject or kind is FloatObject:return
+  if kind is list or kind is ArrayObject:
+   for x in a:argscan(x)
+   return
   if isinstance(a,(TextStringObject,ByteStringObject,NameObject)):scan_string(a)
   elif isinstance(a,DictionaryObject):
    for n,x in a.items():scan_string(n);argscan(x)
