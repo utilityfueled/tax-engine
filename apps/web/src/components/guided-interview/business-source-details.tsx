@@ -3,15 +3,19 @@ import { businessSourceAmounts, type BusinessSourceData } from "@/lib/guided-bus
 import { BooleanFact, TextFact } from "./fact-fields";
 import {PassengerSourceDetails} from "./passenger-source-details";
 import type {GuidedPassengerDraft} from "@/lib/guided-passenger-sources";
+import {GoodwillAmortizationDetails} from "./goodwill-amortization-details";
 import { MacrsAssetDetails } from "./macrs-asset-details";
 import { CurrencyField } from "./currency-field";
 import { guidedSourceValuesChanged } from "@/lib/guided-source-confirmation";
 
 export function BusinessSourceDetails({ data = {}, onChange, onCapturePassenger }: { data?: BusinessSourceData; onChange: (data: BusinessSourceData) => void; onCapturePassenger?:(facts:BusinessSourceData)=>GuidedPassengerDraft }) {
   const patch = (next: Partial<BusinessSourceData>) => {
-    const values = (facts: BusinessSourceData) => ({ ...facts, incomeReconciled: undefined, expensesReconciled: undefined, passengerSources:facts.passengerSources?{...facts.passengerSources,sourceFactsConfirmed:undefined,originalInput:undefined,originalDraft:undefined}:undefined });
+    const values = (facts: BusinessSourceData) => ({ ...facts, incomeReconciled: undefined, expensesReconciled: undefined, goodwillAmortization:facts.goodwillAmortization?{...facts.goodwillAmortization,sourceFactsConfirmed:undefined,originalCollection:undefined}:undefined, passengerSources:facts.passengerSources?{...facts.passengerSources,sourceFactsConfirmed:undefined,originalInput:undefined,originalDraft:undefined}:undefined });
     const changed = guidedSourceValuesChanged(values(data), values({ ...data, ...next }));
+    const goodwillValues=(facts:BusinessSourceData)=>({...values(facts),scheduleCSourceFacts:facts.scheduleCSourceFacts?{...facts.scheduleCSourceFacts,sourceFactsConfirmed:undefined}:undefined});
+    const goodwillChanged=guidedSourceValuesChanged(goodwillValues(data),goodwillValues({...data,...next}));
     onChange({ ...data, ...next,
+      ...(goodwillChanged && data.goodwillAmortization && !('goodwillAmortization' in next) ? {goodwillAmortization:{...data.goodwillAmortization,sourceFactsConfirmed:null}} : {}),
       ...(changed && data.passengerSources && !('passengerSources' in next) ? {passengerSources:{...data.passengerSources,sourceFactsConfirmed:null}} : {}),
       ...(changed && data.macrsAssets && !('macrsAssets' in next) ? { macrsAssets: { ...data.macrsAssets, sourceFactsConfirmed: null } } : {}),
       ...(changed && data.scheduleCSourceFacts && !('scheduleCSourceFacts' in next) ? { scheduleCSourceFacts: { ...data.scheduleCSourceFacts, sourceFactsConfirmed: null } } : {}),
@@ -34,6 +38,7 @@ export function BusinessSourceDetails({ data = {}, onChange, onCapturePassenger 
     <TextFact label="Business EIN, if issued" value={data.ein ?? ""} onChange={ein => patch({ ein })} />
     <label className="guided-field"><span className="guided-field-label">Actual accounting method</span><select className="guided-input" value={data.accountingMethod ?? ""} onChange={event => patch({ accountingMethod: event.target.value as BusinessSourceData["accountingMethod"] })}><option value="">Not answered</option><option value="cash">Cash</option><option value="accrual">Accrual</option></select></label>
     <BooleanFact label="Do all amounts in this section belong to this one business and owner?" value={data.singleBusinessConfirmed} onChange={singleBusinessConfirmed => patch({ singleBusinessConfirmed })} />
+    {data.goodwillAmortization?<><GoodwillAmortizationDetails facts={data} onChange={goodwillAmortization=>patch({goodwillAmortization,expensesReconciled:null})}/><button type="button" onClick={()=>patch({goodwillAmortization:undefined,expensesReconciled:null})}>Remove acquired-goodwill originals</button></>:<button type="button" onClick={()=>patch({goodwillAmortization:{},expensesReconciled:null})}>Add acquired-goodwill originals</button>}
     <label className="guided-field"><span className="guided-field-label">Depreciation source method</span><select className="guided-input" value={data.depreciationMethod??''} onChange={e=>patch({depreciationMethod:e.target.value as BusinessSourceData['depreciationMethod'],expensesReconciled:null})}><option value="">Not answered</option><option value="manual">Completed manual worksheet</option><option value="assets">Ordinary first-year asset records</option><option value="passenger">One documented 2026 passenger car</option></select></label>
     {data.depreciationMethod==='assets'?<button type="button" onClick={()=>patch({depreciationMethod:'manual',expensesReconciled:null})}>Use completed manual depreciation worksheet</button>:<button type="button" onClick={()=>patch({depreciationMethod:'assets',macrsAssets:{...data.macrsAssets,sourceFactsConfirmed:null},expensesReconciled:null})}>Use actual first-year asset records</button>}
     {data.depreciationMethod==='assets'?<MacrsAssetDetails facts={data} onChange={macrsAssets=>patch({macrsAssets,expensesReconciled:null})}/>:null}

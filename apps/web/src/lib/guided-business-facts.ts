@@ -1,3 +1,4 @@
+import {buildGuidedGoodwill,guidedGoodwillErrors,type GuidedGoodwillDraft} from "./guided-goodwill-amortization";
 import {guidedPassengerDisplayAmount} from "./guided-passenger-sources";
 import {guidedMacrsFactErrors,guidedMacrsDisplayAmount,type GuidedMacrsAssetsDraft} from "./guided-macrs-assets";
 import { actualCompensationSourceYear, compensationReportingErrors, isStartedNec } from "./guided-compensation-reporting";
@@ -11,6 +12,7 @@ import { amountError, hasEnteredAmount } from "./guided-required-facts";
 import type {ScheduleCSourceFacts} from "@/models/inputs";
 
 export interface BusinessSourceData {
+  goodwillAmortization?: GuidedGoodwillDraft;
   standardMileage?: BusinessMileageDraft;
   professionalWagering?: ProfessionalWageringDraft;
   depreciationMethod?: "manual" | "assets" | "passenger";
@@ -75,7 +77,7 @@ export function businessFactErrors(data: SelfEmploymentSectionData | undefined, 
   let mileage: ReturnType<typeof readGuidedBusinessMileage>;
   try { mileage = readGuidedBusinessMileage(data, flow); }
   catch (error) { errors.standardMileage = error instanceof Error ? error.message : "Check the business mileage log."; }
-  Object.assign(errors,guidedMacrsFactErrors(facts,returnYear));
+  Object.assign(errors,guidedMacrsFactErrors(facts,returnYear),guidedGoodwillErrors(facts,returnYear,data.expenses.otherExpenses));
   if (!["primary", "spouse"].includes(facts.accountHolder ?? "") || (facts.accountHolder === "spouse" && filingStatus !== "mfj")) errors.businessOwner = "Identify the actual owner. Joint ownership requires separate business and self-employment calculations.";
   if (!facts.activityDescription?.trim()) errors.businessActivity = "Describe the actual business activity.";
   if (!/^\d{6}$/.test(facts.businessCode ?? "")) errors.businessCode = "Enter the actual six-digit principal business activity code.";
@@ -119,6 +121,7 @@ export function businessFactErrors(data: SelfEmploymentSectionData | undefined, 
   const businessIncome = [...receipts, facts.otherIncome];
   const incomeReductions = [facts.returnsAndAllowances, facts.costOfGoodsSold];
   const expenseAmounts = [...enteredCategories.filter(field => field !== "meals").map(field => data.expenses[field]), facts.contractLabor, facts.depreciationMethod==='assets'?guidedMacrsDisplayAmount(facts):facts.depreciationMethod==='passenger'?guidedPassengerDisplayAmount(facts):facts.depreciation, facts.legalAndProfessional, ...(facts.businessInterest===undefined?[]:[facts.businessInterest]), ...(facts.scheduleCSourceFacts?.ordinaryExpenses?.rows?.map(row=>row.amount)??[])];
+  if(facts.goodwillAmortization && !errors.goodwillAmortization){const goodwill=buildGuidedGoodwill(facts,returnYear,data.expenses.otherExpenses);if(goodwill)expenseAmounts.push(goodwill.total.toFixed());}
   if (mileage && hasEnteredAmount(data.expenses.employeeBenefitPrograms)) expenseAmounts.push(data.expenses.employeeBenefitPrograms);
   if (!wageringStarted && !errors.standardMileage && [...businessIncome, ...incomeReductions, ...expenseAmounts, data.expenses.meals].every(value => !amountError(value, "business amount"))) {
     const total = (values: Array<string | undefined>) => values.reduce((sum, value) => sum.plus(parseGuidedCurrency(value)), new Decimal(0));

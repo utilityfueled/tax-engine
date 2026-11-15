@@ -1,0 +1,9 @@
+/** Explicit fictional originals, never application defaults. */
+import {completeBusinessSection,startCompleteInterview} from '../guided-interview/complete-facts';
+import {scheduleCSourceFacts} from './schedule-c-source-facts';
+import {confirmGuidedGoodwill,goodwillCollectionQuestions,goodwillRowQuestions,type GuidedGoodwillDraft} from '@/lib/guided-goodwill-amortization';
+import {ScheduleCSourceFactsSchema} from '@/models/inputs';
+import type {BusinessSourceData} from '@/lib/guided-business-facts';
+export function goodwillDraft():GuidedGoodwillDraft{return {sourceTaxYear:'2025',sourceReference:'PRIVATE-GOODWILL-INVENTORY',remainingOtherExpenses:'500',remainingOtherExpenseSourceReference:'PRIVATE-GOODWILL-REMAINDER',...Object.fromEntries(Object.keys(goodwillCollectionQuestions).map(k=>[k,true])),rows:[{sourceReference:'PRIVATE-GOODWILL-PURCHASE',description:'PRIVATE-GOODWILL-ASSET',basis:'18000',acquisitionDate:'2025-07-15',businessStartDate:'2025-01-01',startMonth:'2025-07',...Object.fromEntries(Object.keys(goodwillRowQuestions).map(k=>[k,true]))}]};}
+export function goodwillFacts():BusinessSourceData{const source=ScheduleCSourceFactsSchema.parse(structuredClone(scheduleCSourceFacts));source.ownerName='Jordan Example';return {...structuredClone(completeBusinessSection.businessFacts),businessName:'Sample Source Works',ein:'23-4567890',businessInterest:'1000',depreciationMethod:'manual',scheduleCSourceFacts:source};}
+export function guidedGoodwillState(){const state=startCompleteInterview({filingStatus:'single',incomeTypes:['self-employment'],lifeEvents:[],stateCode:null}),facts=goodwillFacts();facts.goodwillAmortization=confirmGuidedGoodwill(goodwillDraft(),facts);state.sectionData['income-self-employment']={...structuredClone(completeBusinessSection),manualGrossReceipts:'40000',expenses:{...completeBusinessSection.expenses,otherExpenses:'500'},businessFacts:facts};return state;}

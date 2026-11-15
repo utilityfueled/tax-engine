@@ -1,3 +1,4 @@
+import {buildGuidedGoodwill} from "./guided-goodwill-amortization";
 import { buildGuidedCodPrincipalResidence, codPrincipalResidenceFactErrors } from './guided-cod-principal-residence';
 import { buildInterestInputs } from './guided-interest-originals';
 export { buildInterestInputs } from './guided-interest-originals';
@@ -849,10 +850,13 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
   const w2s = buildW2Inputs(w2Data?.entries);
   const necs = buildNecInputs(seData?.necEntries);
   const scheduleC = buildScheduleCInput(seData?.necEntries, seData?.manualGrossReceipts, seData?.expenses, seData?.qbiMateriallyParticipated, seData?.businessFacts, standardMileage?.packet, professionalWagering?.ledger);
+  let actualGoodwill:ReturnType<typeof buildGuidedGoodwill>;
   let actualMacrs:ReturnType<typeof buildGuidedMacrsAssets>;
   let passengerForm:ReturnType<typeof buildGuidedPassengerForm>;
-  try{actualMacrs=buildGuidedMacrsAssets(seData?.businessFacts,state.taxYear,!!rentalData?.entries?.length||!!sectionData["income-royalties"]);passengerForm=buildGuidedPassengerForm(seData?.businessFacts,state.taxYear);}catch{return null;}
+  try{actualGoodwill=buildGuidedGoodwill(seData?.businessFacts,state.taxYear,seData?.expenses.otherExpenses,!!rentalData?.entries?.length||!!sectionData["income-royalties"]);actualMacrs=buildGuidedMacrsAssets(seData?.businessFacts,state.taxYear,!!rentalData?.entries?.length||!!sectionData["income-royalties"]);passengerForm=buildGuidedPassengerForm(seData?.businessFacts,state.taxYear);}catch{return null;}
   if(actualMacrs&&scheduleC){scheduleC.sourceFacts={...scheduleC.sourceFacts,depreciation:actualMacrs.depreciation};}
+
+  if(actualGoodwill&&scheduleC){scheduleC.sourceFacts={...scheduleC.sourceFacts,amortization:actualGoodwill.amortization};}
 
   const form1099Int = buildInterestInputs(investData?.interestEntries, state.taxYear);
   const form1099OID = buildOidInputs(investData?.oidEntries, segmentation.filingStatus, state.taxYear, stateCode);
@@ -971,7 +975,7 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
     form1099Nec: necs,
     ...(professionalWagering?.forms ? { formW2G: professionalWagering.forms } : {}),
     scheduleC: scheduleC ?? undefined,
-    form4562:actualMacrs?.form4562 ?? passengerForm,
+    form4562:actualGoodwill?.form4562 ?? actualMacrs?.form4562 ?? passengerForm,
     form1099Int,
     form8814: buildGuidedChildElections(investData?.childElections, state.taxYear),
     qofDispositionFacts: buildGuidedQofFacts(investData?.qofDispositionFacts, state.taxYear),

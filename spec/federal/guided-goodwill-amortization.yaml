@@ -1,0 +1,25 @@
+form: "Guided acquired-goodwill originals"
+taxYear: 2025
+version: '2026-11-15'
+source: '2025 IRS i4562 PartVI Section197 and44; 26CFR1.197-2(f)(1); existing schedule-c.yaml27b-amortization-source'
+notes: |
+  Finite whole-calendar current2025 one-owner cash-purchase acquired-goodwill
+  origination, no new formula. Complete actual inventory, basis, dates, owner,
+  business, current-year and existing eligibility/exclusion facts are required.
+  No other depreciation/amortization, reclassification or foreign allocation.
+  Unknown is not zero. Preserve original snapshots, independent PA basis guard,
+  private-source projections and all2026/fullreturn/export/filing gates.
+lines:
+  - line: "source-origination"
+    formula: 'Visibly originate actual originals and pass typed Form4562 and C attribution to the existing Decimal engine without UI tax arithmetic; 18000/180months times6 produces600 and once-only C PartV transfer.'
+    irsRef: '2025 i4562 PartVI Section197 and44; 26CFR1.197-2(f)(1)'
+    testRef: "tests/guided-interview/guided-goodwill-amortization.test.ts::originates actual goodwill originals through the complete guided bridge"
+  - line: "source-binding"
+    formula: 'Require exact captured business, owner, year and complete unique actual asset inventory, valid dates, known amounts and explicit exclusions; edits, reorder, duplicates, mixed methods and unknowns require source review.'
+    testRef: "tests/guided-interview/guided-goodwill-amortization.test.ts::rejects unknown stale duplicate mixed or contradictory goodwill originals"
+  - line: "visible-entry"
+    formula: 'Originate each goodwill source through visible controls; preserve CurrencyField formatted exact amounts and blanks/zero; capture only by explicit action and invalidate actual edits.'
+    testRef: "tests/apps/web/guided-goodwill-amortization.test.tsx::captures typed currency originals and invalidates edits without monetary math"
+  - line: "transfer-privacy"
+    formula: 'Canonical calculation, original-bound reopened PDF and private/no-store authenticated route use existing amounts; no raw source identifiers enter verified AI or hosted shell, no provider transport, no PA basis inference.'
+    testRef: "tests/guided-interview/guided-goodwill-amortization.test.ts::preserves canonical amounts privacy and state boundaries"
