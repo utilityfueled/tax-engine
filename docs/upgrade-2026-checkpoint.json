@@ -1,4 +1,26 @@
 {
+  "nov15PartialInvestmentInterest": {
+    "sourceFreeze": "e452910ab973f24a024f8e247e1bdf44c213e554042c9f1504b92898c5a47021",
+    "independentReview": "8fadcc192b54d98dfd08e4fc2c9b24019e2a799ab95a1bf2d6a86394595df0eb",
+    "independentActualReturnOracle": "7d87728ced6aae848e4a3430df40089cde076e517ab119ed1bcdcbd333bbe031",
+    "rootReview": "6b87900b09f60b515924dba0733a99ef594013debde9c5beadde160bc51e97b9",
+    "changedFiles": 4,
+    "focusedTests": 16,
+    "separateReviewTests": 24,
+    "broaderPredecessorTests": 217,
+    "actualFourLine14": [
+      "21180",
+      "26471",
+      "24463",
+      "21180"
+    ],
+    "introducedLintWarnings": 0,
+    "baselineLintWarnings": 58,
+    "wrongProjectedRateOraclePreserved": true,
+    "taxFormulaOrToleranceChanged": false,
+    "combinedRuntimePending": true,
+    "ledger": "docs/upgrade-2026-schedule-ai-partial-interest-20261115.md"
+  },
   "nov15ConfirmedOriginalYears": {
     "sourceFreeze": "1c8345bab7fc3bd4bfb5719e380df782a84911d1645aea0854d30faaacfaecda",
     "independentReview": "85460ee96a1ab45beabdc076c2818156eac3c6c7b4feb63a279e913d34c0f1c8",

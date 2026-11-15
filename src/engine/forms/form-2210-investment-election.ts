@@ -16,7 +16,7 @@ function original(source:Form4952Input|undefined,year:number):{source:Form4952In
   for(const key of SOURCE_AMOUNTS)if(!value(source[key]).isInteger())return fail();
   if(!value(source.priorYearDisallowed).isZero()||!value(source.investmentExpenses).isZero())return fail();
   const result=calculateForm4952(source,year);
-  if(!result.sourceFactsVerified||!result.line7.isZero()||!result.line8.eq(result.line1)||!result.line4d.eq(result.line4e)||result.line4a.lt(result.line4b))return fail();
+  if(!result.sourceFactsVerified||!result.line8.plus(result.line7).eq(result.line3)||!result.line4d.eq(result.line4e)||result.line4a.lt(result.line4b))return fail();
   return {source,result};
 }
 /** Does not mutate original sources or return their private names/references. */
@@ -42,10 +42,16 @@ export function calculateForm2210InvestmentElectionSources(input:TaxYearInput,an
   if(packet.annualForm4952SourceReference?.trim()!==full.source.sourceReference?.trim()||!full.result.line8.eq(annual.line8)||!full.result.electedNetCapitalGain.eq(annual.electedNetCapitalGain)||!full.result.electedQualifiedDividends.eq(annual.electedQualifiedDividends)
     ||!value(full.source.qualifiedDividendsIncluded).eq(context.qualifiedDividends)||!value(full.source.netCapitalGainFromInvestmentProperty).eq(context.netCapitalGain)||!value(full.source.grossInvestmentIncome).eq(context.grossInvestmentIncome))return fail();
   const references=new Set<string>();
+  const annualCurrentInterest=value(full.source.investmentInterestExpense);
+  let previousCurrentInterest=new Decimal(0);
   const periods=packet.periods.map((row,index)=>{
     if(row.periodEnd!==ENDS[index])return fail();
     const period=facts.annualizedIncomePeriods![index];if(!period)return fail();
     const current=original(row.form4952,year),ref=current.source.sourceReference!.trim();
+    // This finite current-paid method has no refunded/reclassified expense path.
+    const currentInterest=value(current.source.investmentInterestExpense);
+    if(currentInterest.lt(previousCurrentInterest)||currentInterest.gt(annualCurrentInterest))return fail();
+    previousCurrentInterest=currentInterest;
     if(references.has(ref)||ref===full.source.sourceReference!.trim())return fail();references.add(ref);
     const qd=value(period.qualifiedDividends),gain=value(period.netCapitalGain);
     if(!value(current.source.qualifiedDividendsIncluded).eq(qd)||!value(current.source.netCapitalGainFromInvestmentProperty).eq(gain)||current.result.electedQualifiedDividends.gt(qd)||current.result.electedNetCapitalGain.gt(gain)

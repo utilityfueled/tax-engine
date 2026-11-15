@@ -8,8 +8,8 @@ notes: |
   retains the formula but no final2026 calculation/table gate is opened.
   Finite single-primary ordinary cohort only. All four original period Form4952
   worksheets must be source-complete, actual year/reference/cutoff/owner bound,
-  prior carry0, investment expenses0, whole-dollar inputs, fully deductible
-  current interest. No optimized allocation or inferred quarter is permitted.
+  prior carry0, investment expenses0, whole-dollar inputs, actual allowed current
+  interest; any current disallowance stays carryout and never becomes deduction. No optimized allocation or inferred quarter is permitted.
   Original gross qualified dividends stay on the return. Annual printed election
   allocation and original gross preferential components reconcile independently.
   Eligible period income is gross minus actual election before annualization.
@@ -60,3 +60,24 @@ lines:
     description: "Separate numeric original gross and actual election records"
     formula: "For each cumulative column record original qualified dividends, original net capital gain, actual elected qualified dividends and actual elected gain. Preserve existing annualized gross and eligible records. Numeric entries contain no private owner/source references and do not change any tax or rounding."
     testRef: "tests/engine/forms/form-2210-investment-election.test.ts::retains separate numeric original gross and actual election audit entries"
+
+  - line: "partial-current-interest"
+    description: "Use actual limited current-year interest without inventing full deductibility"
+    formula: "Retain priorcarry0 and otherinvestmentexpenses0. Each original Form4952line8=min(line3,line6), line7=max(0,line3-line6); line8+line7=line3. Actual allowed line8 plus explicit other-itemized reconciles each period and annual itemized deductions. Original current interest can exceed allowed interest; carryout is not deducted. Independent single AGI160000/192000/180000/160000 annualized gives line14[21180,26471,24463,21180] using applicable ScheduleD TaxWorksheet line44 TaxTable below100000 ordinary income, TaxComputationWorksheet otherwise, no NIIT implied or separately counted."
+    testRef: "tests/engine/forms/form-2210-partial-investment-interest.test.ts::uses only actual allowed current interest in every period and annual calculation"
+  - line: "partial-paid-source-bounds"
+    description: "Confine cumulative paid interest to its actual current-year original"
+    formula: "All four original current interest expense totals are nondecreasing and no greater than actual annual current interest; periodd equals annual in every source amount. Decreased/refunded/reclassified or future-year-paid methods remain outside this finite packet. Missing original/current carry/expense/allocation never becomes zero."
+    testRef: "tests/engine/forms/form-2210-partial-investment-interest.test.ts::rejects cumulative current-paid contradictions while preserving actual source denials"
+  - line: "coherent-previous-partial-denial"
+    description: "Explicitly admit the newly supported historical partial-interest example"
+    formula: "Original annual current interest1000, actual periods[0,2,500,1000], periodb income limit1 and actual deduction1 are coherent; new partial-interest support preserves line14b40655 and annual32537. This changes the former fully-deductible-only admission contract, not the underlying Form4952 arithmetic."
+    testRef: "tests/engine/forms/form-2210-partial-investment-interest.test.ts::admits the coherent previously excluded period without changing its actual deduction"
+  - line: "partial-http-privacy"
+    description: "Recompute actual private canonical admission without provider dispatch"
+    formula: "Actual authenticated same-origin POST recomputes complete partial-interest input; incomplete/current-paid contradictions reject before provider or accounting. Only existing permitted1040 numeric entries are projected; original identities/references never travel to provider or hosted shell."
+    testRef: "tests/engine/forms/form-2210-partial-investment-interest.test.ts::recomputes partial-interest sources at authenticated POST with private responses"
+  - line: "partial-physical-review"
+    description: "Recompute each current physical ScheduleAI column"
+    formula: "Actual2025 reviewPDFline14a-d equals independent actual-return worksheet[21180,26471,24463,21180]. Missing or stale period originals reject before template I/O. No2026output, NIIT, penalty or launch approval is asserted by this line14 review."
+    testRef: "tests/engine/forms/form-2210-partial-investment-interest.test.ts::recomputes four actual physical review columns and denies stale originals"

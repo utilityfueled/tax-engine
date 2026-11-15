@@ -38,7 +38,7 @@ it('binds actual period originals and independent annual components',()=>{
     (x: ReturnType<typeof investmentElectionFixture>)=>{x.form2210.investmentElectionSources.periods[1].form4952.electedPreferentialIncome='-1';},
     (x: ReturnType<typeof investmentElectionFixture>)=>{x.form2210.investmentElectionSources.periods[1].form4952.electedPreferentialIncome='1.49';},
     (x: ReturnType<typeof investmentElectionFixture>)=>{x.form2210.investmentElectionSources.periods[1].form4952.priorYearDisallowed='1';},
-    (x: ReturnType<typeof investmentElectionFixture>)=>{x.form2210.investmentElectionSources.periods[1].form4952.investmentInterestExpense='2';},
+    (x: ReturnType<typeof investmentElectionFixture>)=>{x.form2210.investmentElectionSources.periods[1].form4952.investmentInterestExpense='1001';},
     (x: ReturnType<typeof investmentElectionFixture>)=>{x.form2210.investmentElectionSources.periods[1].form4952.investmentExpenses='1';},
     (x: ReturnType<typeof investmentElectionFixture>)=>{x.form2210.investmentElectionSources.annualForm4952SourceReference='another';},
     (x: ReturnType<typeof investmentElectionFixture>)=>{x.form2210.investmentElectionSources.taxpayerSsnLast4='6788';},

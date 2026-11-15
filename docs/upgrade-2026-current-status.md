@@ -1,5 +1,16 @@
 # Current 2026 upgrade continuation
 
+## November 15 actual partial investment interest
+
+The finite single-primary 2025 Schedule AI route now uses actual allowed
+current interest when source costs exceed the deduction. It reconciles all four
+cumulative originals to the annual source and preserves explicit carry/expense,
+chronology, privacy and year boundaries. Sixteen author and 24 separate-review
+tests pass, including actual POST and reopened PDF checks.
+[Sources, corrected oracle and limits](upgrade-2026-schedule-ai-partial-interest-20261115.md).
+The aggregate checks and hosted/native artifacts follow separately; no human
+or annual qualification is inferred.
+
 ## November 15 confirmed original-year contradictions
 
 Known contradictory years on W-2, interest, dividend and retirement originals
