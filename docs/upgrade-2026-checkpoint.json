@@ -1,4 +1,29 @@
 {
+  "nov15FinalFiniteMetadata": {
+    "applicationSource": "e014f390c246b8420a5918daa02aff9e9a989e7a",
+    "rootAdoption": "b16cb55882e94a55988d4941d63562733940f6b89928553b2896f945c587f8a7",
+    "actualCollectedCases": 641,
+    "priorCasesUnchanged": 637,
+    "originalHostedSkips": 5,
+    "sourceOverrides": 8,
+    "diagnosticTargets": 14,
+    "sourceClosureHashes": 1967,
+    "inventory": 1028,
+    "unchangedOriginalInventory": 1024,
+    "authorPeerMainTestsEach": 83,
+    "fullChecksAndRuntimePending": true,
+    "evidence": "upgrade-2026-final-finite-metadata-20261115.md"
+  },
+  "nov15StateGuideHumanHandoff": {
+    "source": "e014f390c246b8420a5918daa02aff9e9a989e7a",
+    "selectedBlobs": 35,
+    "blankDecisions": 5,
+    "independentHumanApproval": false,
+    "custodyReview": "05527e927a483207e5566e4f7428a8b89da57e277b6507f71f5484ecfa8ccca3",
+    "sourceIndex": "a7adfe1fe43976364ccc9ec34770d7cb00dba045fe9db9ef00e8f79103339f45",
+    "blankDecisionsSha256": "8691ab3eae660e918d7f4638899b4944ec3b2a1a7ab6769e76ed4c583efcd2e6",
+    "evidence": "upgrade-2026-human-state-guide-supplement-e014f390.md"
+  },
   "nov15GuidedW2Validation": {
     "sourceFreeze": "e0de517bfbda48189e743bc3224891b777a4d2f4273d188296b23dcddd35f4fd",
     "peerReview": "062535d3597282e0efefeb0f34e02b93337da5202dbb875a2e403ff152bf316e",

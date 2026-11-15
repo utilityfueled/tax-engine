@@ -1,5 +1,12 @@
 # Current 2026 upgrade continuation
 
+## November 15 final finite aggregate preparation
+
+All current finite packages are committed through `e014f390`. Metadata now binds
+641 browser cases and 1,028 inventory rows, preserving all original policies.
+Author, separate review and main each pass 83 focused checks.
+[Evidence](upgrade-2026-final-finite-metadata-20261115.md). Final twelve checks and runtimes follow.
+
 ## November 15 guided W-2 validation cost
 
 Removed a discarded digest using the existing equivalent assertion wrapper.

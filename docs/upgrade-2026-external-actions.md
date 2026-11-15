@@ -1,5 +1,13 @@
 # External actions needed to finish the 2026 upgrade
 
+## November 15 state and guided-original human handoff
+
+A [35-file/five-decision supplement](upgrade-2026-human-state-guide-supplement-e014f390.md)
+indexes the current PA attachment/physical review, Ohio original balance/guide
+and federal investment-election intake. All human decisions remain unassigned;
+independent engineering custody review supplies no approval. Earlier federal,
+AI-label and security-review requirements remain open.
+
 ## November 15 official annual recheck
 
 All seven PDF controls/drafts remain byte-identical; the same ten checked final

@@ -7723,6 +7723,26 @@
       ]
     },
     {
+      "key": "federal/guided-schedule-ai-investment-election",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.irs.gov/instructions/i2210",
+      "specPath": "spec/federal/guided-schedule-ai-investment-election.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/guided-schedule-d-sources",
       "jurisdiction": "federal",
       "taxYear": 2026,
@@ -17260,11 +17280,51 @@
       ]
     },
     {
+      "key": "state/oh-sd-100-guided-remaining-balance",
+      "jurisdiction": "state",
+      "taxYear": 2025,
+      "sourceAuthority": "https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/forms/ohio_individual/individual/2025/it1040-booklet.pdf",
+      "specPath": "spec/state/oh-sd-100-guided-remaining-balance.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "state/oh-sd-100-independent",
       "jurisdiction": "state",
       "taxYear": 2025,
       "sourceAuthority": "https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/forms/ohio_individual/individual/2025/it1040-booklet.pdf",
       "specPath": "spec/state/oh-sd-100-independent.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "state/oh-sd-100-remaining-balance",
+      "jurisdiction": "state",
+      "taxYear": 2025,
+      "sourceAuthority": "https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/forms/ohio_individual/individual/2025/it1040-booklet.pdf",
+      "specPath": "spec/state/oh-sd-100-remaining-balance.yaml",
       "enginePath": null,
       "packetPath": null,
       "specExists": true,
@@ -19457,6 +19517,26 @@
       "efileBusinessRuleCoverageExists": false,
       "status": "partial",
       "knownGaps": [
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "state/pa-ordinary-schedule-a-paper",
+      "jurisdiction": "state",
+      "taxYear": 2025,
+      "sourceAuthority": null,
+      "specPath": "spec/state/pa-ordinary-schedule-a-paper.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
         "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]

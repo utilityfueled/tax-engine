@@ -1,5 +1,10 @@
 # Remaining 2026 upgrade execution checklist
 
+- [x] Bind final finite source metadata: actual 641 cases, four zero-action
+  additions, all prior policies and 1,024 inventory rows unchanged; 83 author,
+  separate-review and adoption checks pass. [Evidence](upgrade-2026-final-finite-metadata-20261115.md).
+- [ ] Pass final exact-source twelve checks and hosted/native qualification.
+
 - [x] Replace discarded guided W-2 result/digest with equivalent assertion replay;
   949 adoption tests and five independent review tests pass.
   [Final performance/runtime qualification remains separate](upgrade-2026-guided-w2-validation-20261115.md).
