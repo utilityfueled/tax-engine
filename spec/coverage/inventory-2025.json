@@ -6786,6 +6786,26 @@
       ]
     },
     {
+      "key": "federal/guided-eic-unassessed-petition",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "spec/federal/eic-unassessed-petition.yaml; published 2025 26 CFR 1.32-3(b); IRC 6213(a)",
+      "specPath": "spec/federal/guided-eic-unassessed-petition.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/guided-estimated-tax",
       "jurisdiction": "federal",
       "taxYear": 2026,

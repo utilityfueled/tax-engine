@@ -9,6 +9,7 @@ type Editable<T> = T extends boolean ? boolean | null : T extends number ? strin
 export type EicDisallowanceHistoryData = Editable<EicDisallowanceSources>;
 export type EicHistoryFilerData = NonNullable<EicDisallowanceHistoryData['filers']>[number];
 export type EicHistoryDenialData = NonNullable<EicHistoryFilerData['denials']>[number];
+export type EicHistoryPetitionData = NonNullable<EicHistoryDenialData['unassessedTaxCourtPetition']>;
 export type EicHistoryAllowanceData = NonNullable<EicHistoryFilerData['laterAllowances']>[number];
 const statuses = { single: 'single', mfj: 'married_filing_jointly', mfs: 'married_filing_separately', hoh: 'head_of_household', qss: 'qualifying_surviving_spouse' } as const;
 const bool = (value: boolean | null | undefined) => typeof value === 'boolean' ? value : undefined;
@@ -27,7 +28,11 @@ function sameIdentity(a: EicHistoryFilerData['originalTaxpayer'], b: EicHistoryF
 }
 export function invalidateEicHistorySources(data: EicDisallowanceHistoryData): EicDisallowanceHistoryData {
   return { ...data, sourceFactsConfirmed: null,
-    filers: data.filers?.map(filer => ({ ...filer, sourceFactsConfirmed: null })) };
+    filers: data.filers?.map(filer => ({ ...filer, sourceFactsConfirmed: null,
+      ...(filer.denials === undefined ? {} : { denials: filer.denials.map(row => ({ ...row,
+        ...(row.unassessedTaxCourtPetition === undefined ? {} : { unassessedTaxCourtPetition: { ...row.unassessedTaxCourtPetition, sourceFactsConfirmed: null } }),
+      })) }),
+    })) };
 }
 export function updateEicHistorySources(data: EicDisallowanceHistoryData, patch: Partial<EicDisallowanceHistoryData>): EicDisallowanceHistoryData {
   const next = { ...data, ...patch };
@@ -52,10 +57,10 @@ export function eicHistorySourceValuesChanged(previous: PersonalInfoData | undef
 export function copyEicHistoryHousehold(personal: PersonalInfoData, status: FilingStatus | null, data: EicDisallowanceHistoryData): EicDisallowanceHistoryData {
   const original = (owner: 'primary' | 'spouse', identity: NonNullable<EicHistoryFilerData['originalTaxpayer']>): EicHistoryFilerData => {
     const matches = data.filers?.filter(filer => filer.owner === owner && sameIdentity(filer.originalTaxpayer, identity)) ?? [];
-    return { ...(matches.length === 1 ? matches[0] : {}), owner, originalTaxpayer: identity, sourceFactsConfirmed: null };
+    return { ...(matches.length === 1 ? structuredClone(matches[0]) : {}), owner, originalTaxpayer: identity, sourceFactsConfirmed: null };
   };
-  return { ...data, sourceFactsConfirmed: null, filers: [original('primary', primaryIdentity(personal)),
-    ...(status === 'mfj' && personal.spouse ? [original('spouse', { firstName: personal.spouse.firstName, lastName: personal.spouse.lastName, ssn: personal.spouse.ssn })] : [])] };
+  return invalidateEicHistorySources({ ...data, sourceFactsConfirmed: null, filers: [original('primary', primaryIdentity(personal)),
+    ...(status === 'mfj' && personal.spouse ? [original('spouse', { firstName: personal.spouse.firstName, lastName: personal.spouse.lastName, ssn: personal.spouse.ssn })] : [])] });
 }
 
 export function convertGuidedEicDisallowanceHistory(personal: PersonalInfoData | undefined, status: FilingStatus | null, taxYear: number | null | undefined) {
@@ -75,6 +80,18 @@ export function convertGuidedEicDisallowanceHistory(personal: PersonalInfoData |
         assessmentDate: row.assessmentDate, finalDeterminationDate: row.finalDeterminationDate,
         reason: row.reason, procedure: row.procedure, conduct: row.conduct, appealPending: bool(row.appealPending),
         underlyingDenialSourceId: row.underlyingDenialSourceId,
+        ...(row.unassessedTaxCourtPetition === undefined ? {} : { unassessedTaxCourtPetition: {
+          // Preserve unknown extra keys so the canonical strict schema rejects them.
+          // Own this nested packet; returned canonical proof never aliases draft originals.
+          ...structuredClone(row.unassessedTaxCourtPetition),
+          sourceTaxYear: year(row.unassessedTaxCourtPetition.sourceTaxYear),
+          deniedTaxYear: year(row.unassessedTaxCourtPetition.deniedTaxYear),
+          sourceFactsConfirmed: bool(row.unassessedTaxCourtPetition.sourceFactsConfirmed),
+          noticeDeadlineConfirmed: bool(row.unassessedTaxCourtPetition.noticeDeadlineConfirmed),
+          actualTaxCourtDeficiencyPetitionConfirmed: bool(row.unassessedTaxCourtPetition.actualTaxCourtDeficiencyPetitionConfirmed),
+          actualTimelyPetitionConfirmed: bool(row.unassessedTaxCourtPetition.actualTimelyPetitionConfirmed),
+          completeCourtAndAccountHistoryConfirmed: bool(row.unassessedTaxCourtPetition.completeCourtAndAccountHistoryConfirmed),
+        } }),
         interveningReturnHistoryCompleteConfirmed: bool(row.interveningReturnHistoryCompleteConfirmed),
         interveningOriginalReturns: row.interveningOriginalReturns?.map(filing => ({ taxYear: year(filing.taxYear), filedDate: filing.filedDate, sourceReference: filing.sourceReference })),
         banNotice: row.banNotice === undefined ? undefined : { ...row.banNotice, firstEligibleTaxYear: year(row.banNotice.firstEligibleTaxYear) },

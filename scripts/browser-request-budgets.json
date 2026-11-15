@@ -99,8 +99,9 @@
     "apps/web/src/components/guided-interview/education-source-details.tsx": "d46ddace4de13a3c405b1972aca277f97c15b2c0a9b0e641bbcdb612fd3ddbb6",
     "apps/web/src/components/guided-interview/educator-source-details.tsx": "b2d77884044111283e22e71061771f9b5393c21f0c0052cba923cba9f9735aa6",
     "apps/web/src/components/guided-interview/eic-claimant-source-details.tsx": "beb515a6b02352d22086683eb5ebbbc6ed925f569fa576486d55f6d00c36ddb8",
-    "apps/web/src/components/guided-interview/eic-disallowance-history-details.tsx": "396ffeaf5cc03610a07fd2cf99d37f8a86cecfe2e395b54f8b968f6a0a41ffce",
+    "apps/web/src/components/guided-interview/eic-disallowance-history-details.tsx": "9556fe4619a5c072f6b9a1469a58224c23c994b59d21dd27a59cedeb0bf12f7c",
     "apps/web/src/components/guided-interview/eic-separated-spouse-details.tsx": "f99f9fb9f8b22163dd1eeaf0f95d4f478756c2ba52bd08ba60a3eb5a1af7ace6",
+    "apps/web/src/components/guided-interview/eic-unassessed-petition-details.tsx": "7f6abdc2213a90452e740b4091a104edd2b6378c7399e02fdb9005610cbc0fff",
     "apps/web/src/components/guided-interview/energy-source-details.tsx": "83176550278e3b7cc799fe08bbc61e376fafedb26af4704cefa6edf2176288df",
     "apps/web/src/components/guided-interview/estimated-investment-election-details.tsx": "13d8a8595109244714d7f9028f48e05389073b0a6037f7850d51b130afbb81af",
     "apps/web/src/components/guided-interview/estimated-investment-household-details.tsx": "7f77de2da53a879528a26f5017168c83a591010a04d48ad82ef5c682a8e32fb6",
@@ -283,7 +284,7 @@
     "apps/web/src/lib/guided-education-distributions.ts": "7b2d7fb6f058fa07b528f34f6f28c99b48fdc8e9b07963e948de2e8266800e2d",
     "apps/web/src/lib/guided-education-facts.ts": "7b473c53c6a60bc6439e406bcd7c1dff37eeb0a8ab2cb24e9dec04c40555993a",
     "apps/web/src/lib/guided-educator-facts.ts": "029de5c6475be3eae74bddadf058caf9d19453bfaf12b991b7b8e52fd993771d",
-    "apps/web/src/lib/guided-eic-disallowance-history.ts": "0f52073e60c4f20bbd4e87622516018f5d4de97a57a46ba9faeb97807dfffc01",
+    "apps/web/src/lib/guided-eic-disallowance-history.ts": "8d3455fe60e4ea02def7c21539ccaddfda3c4bf22a3facb13b915c628d0e401c",
     "apps/web/src/lib/guided-eic-eligibility.ts": "f06fa1c2b003e95a67e26ba1144cbcd51b8f71117688a4da87ef50926a5433a1",
     "apps/web/src/lib/guided-eic-separated-spouse.ts": "aed8d7a3428e0c34d5b00ca642a781363f1df9eb1a631395e656af369ae1d643",
     "apps/web/src/lib/guided-energy-facts.ts": "d9f8b3741eb72318b1dc07836c3606705bc17113c1b674af33bcecce415d0dd2",
@@ -536,6 +537,7 @@
     "apps/web/tests/guided-eic-eligibility.spec.ts": "570e88879d32397d6a8e4109786c53c5429905d2cde3a8300d48a86c80c994bd",
     "apps/web/tests/guided-eic-home-sources.spec.ts": "653dd7ac9bc52846e434433fba8fa7312d8dba4a52a654ecfa53b18705b3b7c5",
     "apps/web/tests/guided-eic-separated-spouse.spec.ts": "9fcfed0b66706e03bfdd3c77d58494fd1b3a3dd8863c540d1d7ba9b0e5b3123e",
+    "apps/web/tests/guided-eic-unassessed-petition.spec.ts": "4e88f6ce4834e64bd6f4a9c4e1dbf3879db327c1a8fa4d38f17d88328e53e477",
     "apps/web/tests/guided-fact-boundaries.spec.ts": "0908da5a5a6186c3600d45f05d0fbd1ca87dd1c98456b6a0388e62ec195eddcc",
     "apps/web/tests/guided-fixtures.ts": "7c946253d8a9759f13260d1b5c6db56c8ee1c28aca9ff4b959d4724575c85e21",
     "apps/web/tests/guided-foreign-tax-k3.spec.ts": "c29c1ca05ec7463bf49bc908104a57bc673f1f7f4ae6987751cfd38dca09bf8e",
@@ -1674,6 +1676,7 @@
     "tests/fixtures/guided-educator-bond.ts": "52b0e426ada89c6c431b16318dd39c5b05b3ee824b15438f784259e084568f7d",
     "tests/fixtures/guided-eic-history.ts": "bc083aec6f3a0cc2b7c8955a41447297c688e97c89249c34b2a05080bf72a672",
     "tests/fixtures/guided-eic-separated-review.ts": "d0a95fc9ddf8f0b664ebd6265d8dae136506935d4d0730a235d68affed730704",
+    "tests/fixtures/guided-eic-unassessed-petition.ts": "71eee0802252e00dfb2976b0d44680df85e829e8b3e0e89355a7fddea3d4f2d2",
     "tests/fixtures/guided-estimated-tax-special-gains.ts": "3e80d1fc2445ae39e967594ab11efc2afe8d48ff25b7bf1b6f459b6a8228f60d",
     "tests/fixtures/guided-foreign-tax-carryover.ts": "7206840178551af4d6e34b679d872cca1ea7592eb73aa21d96c743d768b7b7ca",
     "tests/fixtures/guided-foreign-tax-k3.ts": "032fcca50ebe310cc2e823f27e249b724de4c1130353e83daf7bbe8a105f4808",
@@ -4049,7 +4052,7 @@
         107,
         109
       ],
-      "reviewBasis": "Exact frozen V2: one awaited review click/400 refusal per case at95\u201396; exact all-scope census107 and request privacy109; backup/recovery is local. No provider or analysis action.",
+      "reviewBasis": "Exact frozen V2: one awaited review click/400 refusal per case at95–96; exact all-scope census107 and request privacy109; backup/recovery is local. No provider or analysis action.",
       "skippedTitles": []
     },
     "guided-refund-payment-years.spec.ts": {
@@ -4280,6 +4283,18 @@
       },
       "requestSourceLines": [],
       "reviewBasis": "Visible source-entry/local canonical oracle only; protected endpoints asserted absent, source imports no provider/filled-return action. Initial personal/business scaffold contains no goodwill proof. Actual combined runtime pending.",
+      "skippedTitles": []
+    },
+    "guided-eic-unassessed-petition.spec.ts": {
+      "caseCount": 2,
+      "bounds": {
+        "filled-return": 0,
+        "provider": 0,
+        "business-expense-analysis": 0,
+        "self-employment-income-analysis": 0
+      },
+      "requestSourceLines": [],
+      "reviewBasis": "Visible original petition facts and local canonical/visible-estimate checks only. All protected endpoints asserted absent; unrelated household/current W2 scaffold omits every petition/history original. Default30s/2workers/0retry; actual combined runtime pending.",
       "skippedTitles": []
     }
   }

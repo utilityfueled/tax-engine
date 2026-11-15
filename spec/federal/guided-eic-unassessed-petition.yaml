@@ -1,0 +1,35 @@
+form: "Guided EIC unassessed petition originals"
+taxYear: 2025
+status: "experimental-source-intake"
+reference: "spec/federal/eic-unassessed-petition.yaml; published 2025 26 CFR 1.32-3(b); IRC 6213(a)"
+notes: |
+  Guide parity only for the existing finite original-source canonical method.
+  No tax calculation, assessment-date inference, automatic EIC allowance,
+  contested final-ban method or Form 8862 completion is introduced. Each original
+  notice, docket, petition and account/court event record remains required.
+  Preserve unknown versus explicitly absent event dates and actual true/false
+  answers. No proof is copied from an appeal boolean or guessed from open case
+  status. All earlier assessed denials and other filers' final bans remain binding.
+  Complete facts remain local/private; hosted/provider/public projections keep
+  original SSNs, references and chronology out. Full 2026/filing gates remain.
+lines:
+  - line: "original-packet"
+    description: "Pass every visibly collected original through to existing canonical validation"
+    formula: "Convert actual four-digit sourceTaxYear and deniedTaxYear strings to numbers; retain original event-date nulls and actual false answers; convert null confirmation answers to undefined unknown without a default fact; preserve all other original values and unknown extra keys; canonical validator establishes ownership, notice, docket, claim/review chronology and assessment/finality absence."
+    testRef: "tests/guided-interview/guided-eic-unassessed-petition.test.ts::retains the complete actual petition through guided conversion and canonical validation"
+  - line: "unknown-and-binding"
+    description: "Unknown or contradictory original records cannot establish the finite exception"
+    formula: "Preserve draft unknowns; reject incomplete, false, substituted, duplicate, stale or assessed proof at the existing canonical boundary; no mutation of original drafts."
+    testRef: "tests/guided-interview/guided-eic-unassessed-petition.test.ts::preserves unknown and false original facts and rejects contradictory proof"
+  - line: "visible-confirmation"
+    description: "Originate actual original fields visibly and invalidate edited confirmations"
+    formula: "Each proof field is entered as actual original data. Optional event dates require an explicit unknown/no-event/actual-date choice. Any documentary edit revokes proof and existing enclosing history confirmations; removing proof does not change appeal status."
+    testRef: "tests/apps/web/guided-eic-unassessed-petition.test.tsx::collects visible originals without defaults and revokes confirmation after edits"
+  - line: "private-and-year"
+    description: "Keep existing private projections and annual readiness"
+    formula: "A complete 2025 guided record reaches the same canonical EIC method and private audit; raw proof does not enter hosted/provider/public shells. Saving 2026 facts does not enable a full return or filing."
+    testRef: "tests/guided-interview/guided-eic-unassessed-petition.test.ts::preserves guided lifecycle privacy and annual readiness"
+  - line: "visible-browser"
+    description: "Desktop and mobile actual source entry without original injection"
+    formula: "At1280/390 visibly enter notice, docket, filed-petition, original taxpayer and complete court/account chronology; explicitly select every no-event finding; preserve reload/unknown/false/stale-original/privacy and final2026 gates under default30s,2workers,0retry and zero protected action budgets. Actual execution remains separately qualified."
+    testRef: "apps/web/tests/guided-eic-unassessed-petition.spec.ts::originates original petition facts and preserves private source gates"

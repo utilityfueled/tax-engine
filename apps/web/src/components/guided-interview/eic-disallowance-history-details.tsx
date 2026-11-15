@@ -1,7 +1,9 @@
 "use client";
 import type { FilingStatus, PersonalInfoData } from '@/lib/guided-interview-flow';
 import { copyEicHistoryHousehold, updateEicHistorySources, type EicDisallowanceHistoryData, type EicHistoryFilerData, type EicHistoryDenialData, type EicHistoryAllowanceData } from '@/lib/guided-eic-disallowance-history';
+import { guidedSourceValuesChanged } from '@/lib/guided-source-confirmation';
 import { BooleanFact, TextFact } from './fact-fields';
+import { EicUnassessedPetitionDetails } from './eic-unassessed-petition-details';
 
 function Choice<T extends string>({ label, value, options, onChange }: { label: string; value: T | undefined; options: readonly (readonly [T, string])[]; onChange: (value: T | undefined) => void }) {
   return <label className="guided-field" style={{ minWidth: 0 }}><span className="guided-field-label">{label}</span><select className="guided-input" value={value ?? ''} onChange={event => onChange(options.find(([key]) => key === event.target.value)?.[0])}>
@@ -40,7 +42,10 @@ function DenialRecord({ data, prefix, onChange, onRemove }: { data: EicHistoryDe
       <BooleanFact label={`${prefix}: pending appeal`} value={data.appealPending} onChange={appealPending => update({ appealPending })} />
       {(data.reason === 'omitted_required_8862' || data.underlyingDenialSourceId !== undefined) && <TextFact label={`${prefix}: underlying original denial ID`} value={data.underlyingDenialSourceId ?? ''} onChange={underlyingDenialSourceId => update({ underlyingDenialSourceId })} />}
     </div>
-    <p className="guided-hint">Use the actual notice, assessment and final-determination records. A notice date is not automatically the assessment or final date. Pending appeals require their separate contested-determination method.</p>
+    <p className="guided-hint">Use the actual notice, assessment and final-determination records. A notice date is not automatically the assessment or final date. An unassessed, nonfinal Tax Court deficiency petition can use the separate original-source record below. Other appeals and contested final bans require their own method.</p>
+    {data.unassessedTaxCourtPetition === undefined
+      ? <button type="button" className="utility-button utility-button-small" onClick={() => update({ unassessedTaxCourtPetition: {} })}>{prefix}: add original unassessed Tax Court petition</button>
+      : <EicUnassessedPetitionDetails data={data.unassessedTaxCourtPetition} prefix={`${prefix} petition`} onChange={unassessedTaxCourtPetition => update({ unassessedTaxCourtPetition })} onRemove={() => update({ unassessedTaxCourtPetition: undefined })} />}
     {(data.conduct === 'reckless' || data.conduct === 'fraud' || data.interveningOriginalReturns !== undefined || data.interveningReturnHistoryCompleteConfirmed != null) && <>
       <p className="guided-hint">Record original returns for later tax years filed after this original return and before the final determination. These filing dates can change the ban years. Do not derive them from the tax year alone.</p>
       {data.interveningOriginalReturns === undefined ? <button type="button" className="utility-button utility-button-small" onClick={() => update({ interveningOriginalReturns: [], interveningReturnHistoryCompleteConfirmed: null })}>{prefix}: record no intervening original returns</button> : data.interveningOriginalReturns.length === 0 ? <p className="guided-hint">Actual record: no intervening original returns.</p> : null}
@@ -88,7 +93,7 @@ function AllowanceRecord({ data, prefix, onChange, onRemove }: { data: EicHistor
 function FilerHistory({ data, index, onChange }: { data: EicHistoryFilerData; index: number; onChange: (data: EicHistoryFilerData) => void }) {
   const prefix = data.owner === 'primary' ? 'Primary filer' : data.owner === 'spouse' ? 'Spouse' : `Filer ${index + 1}`;
   const update = (patch: Partial<EicHistoryFilerData>) => onChange({ ...data, ...patch,
-    ...('denials' in patch || 'laterAllowances' in patch ? { allHistoryIncluded: null } : {}) });
+    ...((('denials' in patch && guidedSourceValuesChanged(data.denials, patch.denials)) || ('laterAllowances' in patch && guidedSourceValuesChanged(data.laterAllowances, patch.laterAllowances))) ? { allHistoryIncluded: null } : {}) });
   return <fieldset className="guided-card"><legend>{prefix} EIC history</legend>
     <p className="guided-hint">Copied original: {data.originalTaxpayer?.firstName || 'unknown'} {data.originalTaxpayer?.lastName || ''}. Identifier retained locally. Include this filer’s own history before the marriage as well.</p>
     <TextFact label={`${prefix}: history source reference`} value={data.sourceReference ?? ''} onChange={sourceReference => update({ sourceReference })} />
