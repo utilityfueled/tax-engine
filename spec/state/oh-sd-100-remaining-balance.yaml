@@ -1,0 +1,55 @@
+form: "Ohio SD100 timely remaining-balance originals"
+fullName: "Finite 2025 independently sourced original-return payment reconciliation"
+taxYear: 2025
+reference: "https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/forms/ohio_individual/individual/2025/it1040-booklet.pdf"
+notes: |
+  Official final2025 booklet printed page58, SHA256
+  931b21e7484ba96e561cf2346d8a7d2a8005bd990724b5903c9a90acede5f50e;
+  R.C.5747.08(G),(H), current effective September30,2025. Payment is due
+  April15,2026. A filing extension does not extend payment; interest begins
+  after the unextended due date. This method adds no late-interest calculation.
+  Existing original2025 ordinary Hillsdale0302 source/identity/residence/W2,
+  separate IT1040 account, quarterly estimates and zero2210 checks remain.
+  No2026 annual, form, export, filing, guided or human qualification follows.
+  Complete account.currentOriginalReturnPaymentCredited is optional only for
+  historical no_remaining_tax records. Every new remaining-balance status must
+  explicitly supply its exact credited amount, including known zero. A supplied
+  contradictory value never becomes an unused field. No requested refund,
+  expected payment or IT1040 cash becomes SD100 credited cash.
+  New positive balance statuses require a whole-dollar amount due greater than1;
+  statutory de minimis, cents/rounding and partial settlement are not expanded.
+  Printed line16 remains max(line10-line15,0); line17 remains0 within this
+  strictly timely method; line18 remains line16. An actual payment remitted
+  WITH THIS original return settles its cash balance but is not a PREVIOUS
+  original/amended return payment to be credited again on line12. This source
+  contract excludes earlier-return payments, partial/overpaid settlement,
+  amendments, late balances, extension/relief and new quarter allocation.
+  Actual settlement requires the current filed original date equal its receipt
+  date, full principal amount, correct2025 SD100/0302 owner/account and unique
+  confirmation. Its separately complete as-of account must show that exact
+  current-original payment credited. Unpaid/expected statuses require actual
+  account credited0 and as-of no later than April15; an expected date is a
+  plan, not a receipt, and must be no earlier than as-of and no later than due.
+  Return-level replay must reconcile newly computed principal and interest
+  against the source projection, preserving rejection of stale scalar edits.
+lines:
+  - line: "timely-source-contract"
+    description: "Represent actual unpaid, expected and current-original full settlement separately"
+    formula: "1000 school tax minus900 original withholding =100 line16 and line18; unpaid/expected cash outstanding100; actual current-original receipt100 cash outstanding0; no second line12 credit"
+    testRef: "tests/engine/state/oh-sd-100-remaining-balance.test.ts::reports the same100 return balance for unpaid expected and actually settled sources"
+  - line: "binding"
+    description: "Source completeness owner year type district date and exact receipt/account conservation"
+    formula: "Require all new originals and known account amounts; reject unknown, mismatched, partial or late evidence without synthesizing zero or a payment"
+    testRef: "tests/engine/state/oh-sd-100-remaining-balance.test.ts::rejects incomplete contradictory or late balance originals"
+  - line: "separate-cash"
+    description: "One actual cash payment cannot satisfy two distinct accounts or estimates"
+    formula: "SD balance confirmation must differ from all IT1040/SD estimate and IT remaining-payment confirmations"
+    testRef: "tests/engine/state/oh-sd-100-remaining-balance.test.ts::rejects reuse of an IT1040 or SD estimated-payment confirmation"
+  - line: "fresh-replay"
+    description: "Original payment proof cannot support changed return amounts"
+    formula: "Compare current line16/17/18 with independently validated payment projection; no remaining balance source may release ordinary or annual gates"
+    testRef: "tests/engine/state/oh-sd-100-remaining-balance.test.ts::preserves source replay quarter penalty and year gates"
+  - line: "privacy"
+    description: "Payment source is private and remains immutable"
+    formula: "Public audit records commitment only, not receipt confirmation/account identifiers/reference; calculation never updates original facts"
+    testRef: "tests/engine/state/oh-sd-100-remaining-balance.test.ts::keeps originals private immutable and independent from IT1040 tax"

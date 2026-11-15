@@ -1,4 +1,17 @@
 {
+  "nov15OhioCurrentOriginalBalance": {
+    "sourceFreeze": "38113a98910786224efaa849f7e1038acd02d342171b4726b9d124c6f10dc040",
+    "authorTests": 450,
+    "mainTests": 450,
+    "independentOwnControlsAcrossTwoPackages": 11,
+    "independentSelectedTests": 21,
+    "typecheckPassed": true,
+    "specReferences": 9228,
+    "lintErrors": 0,
+    "lintWarnings": 0,
+    "filingQualified": false,
+    "evidence": "upgrade-2026-oh-school-balance-20261115.md"
+  },
   "nov15PaAttachmentCorrection": {
     "sourceFreeze": "a462e842d58c816ac7b81f08996ff8ad853f348bc96fd2a473dd6a84cee0c5bc",
     "adoptedFiles": 7,

@@ -59,8 +59,15 @@ function exactArithmetic(input: unknown): typeof Decimal {
   return Decimal.clone({ precision: integerDigits + scale + String(count + 1).length + 32, rounding: Decimal.ROUND_HALF_UP });
 }
 export interface OhioSchoolDistrictSourceProjection {
-  readonly methodVersion: 'oh-2025-sd100-ordinary-sources-v1' | 'oh-2025-sd100-part-year-payroll-sources-v1';
+  readonly methodVersion: 'oh-2025-sd100-ordinary-sources-v1' | 'oh-2025-sd100-part-year-payroll-sources-v1' | 'oh-2025-sd100-timely-balance-sources-v1';
   readonly sourceDigest: string;
+  /** Same-original remittance is settlement evidence, never another line12 credit. */
+  readonly remainingTaxPayment?: {
+    readonly status: 'no_remaining_tax' | 'unpaid' | 'expected_payment' | 'actual_payment';
+    readonly balanceOnReturn: Decimal;
+    readonly actualPaymentApplied: Decimal;
+    readonly outstandingTaxBalance: Decimal;
+  };
   readonly district: SchoolDistrictEntry;
   readonly residentIncome: OhioSDResidentIncomeResult;
   readonly sdWithholding: Decimal;
@@ -350,7 +357,42 @@ export function buildOhioSchoolDistrictSource(input: TaxYearInput, federal: TaxR
     priorYearTaxLiability: priorLiability, priorYearTimelyFiled: timely,
   });
   if (!penalty.line17_totalPenalty.isZero()) fail('separate SD100 penalty/combined2210 allocation requires its successor method');
-  if (!sd.line16_taxDue.isZero()) fail('actual remaining SD tax requires its separate payment/timing source method');
+  // Spec: state/oh-sd-100-remaining-balance.yaml. This original return's
+  // remittance is not a payment with a PREVIOUS original/amended return (line12).
+  const payoff = p.remainingTaxPayment;
+  const balance = new Exact(sd.line16_taxDue.toString());
+  const accountSettlement = account.currentOriginalReturnPaymentCredited === undefined ? undefined
+    : money(account.currentOriginalReturnPaymentCredited, 'current original SD balance credited', true);
+  let settled = new Exact(0);
+  if (payoff.status === 'no_remaining_tax') {
+    if (!balance.isZero()) fail('actual remaining SD tax requires its separate payment/timing source method');
+    if (accountSettlement && !accountSettlement.isZero()) fail('current original SD payment contradicts no remaining tax');
+  } else {
+    if (!balance.gt(1) || !sd.line18_totalAmountDue.eq(balance)) fail('actual positive remaining SD amount due needs its separate source method');
+    if (accountSettlement === undefined) fail('actual current original SD payment credited is unknown, not zero');
+    if (payoff.status === 'actual_payment') {
+      const paidOn = actualDate(payoff.date), receipt = payoff.original;
+      if (timing.kind !== 'filed' || paidOn !== valued || paidOn > asOf || paidOn > '2026-04-15'
+          || actualDate(receipt.date) !== paidOn || receipt.taxYear !== 2025 || receipt.districtCode !== lookup.districtCode
+          || normalized(receipt.accountName) !== normalized(`${person.firstName} ${person.lastName}`)
+          || actualSsn(receipt.accountSsn) !== actualSsn(person.ssn)) fail('actual current-original SD payment owner/year/district/date contradicts sources');
+      settled = money(payoff.amountAppliedToTax, 'actual remaining SD tax paid', true);
+      if (!settled.eq(balance) || !money(receipt.amount, 'actual SD balance receipt', true).eq(settled)
+          || !accountSettlement.eq(settled)) fail('actual current-original SD receipt/account must settle the exact full remaining tax');
+      const key = confirmationKey(receipt.accountSsn, receipt.taxYear, receipt.confirmationNumber);
+      if (confirmations.has(key)) fail('actual current-original SD payment confirmation was reused across accounts or estimates');
+      confirmations.add(key);
+    } else {
+      if (asOf > '2026-04-15' || !accountSettlement.isZero()) fail('unpaid/expected SD balance needs known zero credited and a timely as-of date');
+      if (payoff.status === 'expected_payment') {
+        const expectedOn = actualDate(payoff.date);
+        if (expectedOn < '2026-01-01' || expectedOn < asOf || expectedOn > '2026-04-15'
+            || !money(payoff.amountAppliedToTax, 'expected remaining SD tax payment', true).eq(balance)) fail('expected SD balance payment must match the exact timely remaining tax');
+      }
+    }
+  }
+  const remainingTaxPayment = { status: payoff.status, balanceOnReturn: new Decimal(balance.toString()),
+    actualPaymentApplied: new Decimal(settled.toString()), outstandingTaxBalance: new Decimal(balance.minus(settled).toString()) };
   const outgoing = money(p.refundDisposition.outgoingCarryforward, 'actual outgoing election', true);
   if (outgoing.gt(sd.line19_overpayment)) fail('actual outgoing election exceeds the actual overpayment');
   const exactPaid = schoolWithholding.plus(estimates);
@@ -360,11 +402,12 @@ export function buildOhioSchoolDistrictSource(input: TaxYearInput, federal: TaxR
   if (!sd.line13_totalPayments.eq(exactPaid) || !sd.line15_netPayments.eq(exactPaid)
       || !sd.line19_overpayment.eq(exactOverpayment) || !sd.line21_refund.eq(exactRefund)) fail('existing printed payment arithmetic requires its separately exact source method');
   const sourceDigest = digest({ original, residency: resident, payments: paymentSources.facts, schoolDistrict: facts });
-  const methodVersion = partYear ? 'oh-2025-sd100-part-year-payroll-sources-v1' : 'oh-2025-sd100-ordinary-sources-v1';
+  const methodVersion = payoff.status !== 'no_remaining_tax' ? 'oh-2025-sd100-timely-balance-sources-v1'
+    : partYear ? 'oh-2025-sd100-part-year-payroll-sources-v1' : 'oh-2025-sd100-ordinary-sources-v1';
   const audit = new AuditTrail();
   audit.record('OH-SD-100', 'actual-school-source-commitment', 'Actual independently reconciled school-district sources', new Decimal(0),
     'Current private originals; commitment only, never private source references', { 'Original source commitment': sourceDigest, 'State method version': methodVersion, 'Tax year': '2025' });
-  return { methodVersion, sourceDigest, district, residentIncome,
+  return { methodVersion, sourceDigest, ...(payoff.status !== 'no_remaining_tax' ? { remainingTaxPayment } : {}), district, residentIncome,
     sdWithholding: new Decimal(schoolWithholding.toString()), estimatedPayments: new Decimal(estimates.toString()),
     estimatedPaymentSchedule: schedule, priorYearTaxLiability: priorLiability, priorYearTimelyFiled: timely,
     creditCarryforward: new Decimal(outgoing.toString()), lines: audit.getLines(),

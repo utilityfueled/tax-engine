@@ -1,5 +1,11 @@
 # 2026 upgrade implementation evidence
 
+## November15 Ohio school balance originals
+
+Adopted the six-file source method plus equivalent arithmetic-free replay
+check.450 main tests, types,9,228 spec references and lint pass.
+[Evidence and limitations](upgrade-2026-oh-school-balance-20261115.md).
+
 ## November 15 PA interest attachment correction
 
 Adopted the separately reviewed seven-file final2025 adjustment-only trigger;

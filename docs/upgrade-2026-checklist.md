@@ -1,5 +1,9 @@
 # Remaining 2026 upgrade execution checklist
 
+- [x] Distinguish final2025 SD100 current-original cash settlement from printed
+  payments;450 author/450 adoption tests plus separate root controls pass.
+  [Evidence](upgrade-2026-oh-school-balance-20261115.md). Guided, final2026 and filing gates remain separate.
+
 - [x] Correct final2025 PA Schedule A attachment predicate and shared readiness;
   50 author/55 separate-review/43 adoption tests, types/spec/lint pass.
   [Evidence](upgrade-2026-pa-interest-attachment-20261115.md). Physical mapping and annual qualification remain separate.

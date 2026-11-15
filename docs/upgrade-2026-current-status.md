@@ -1,5 +1,12 @@
 # Current 2026 upgrade continuation
 
+## November15 Ohio school balance originals
+
+The existing finite2025 SD100 source route now distinguishes unpaid, planned
+and actual current-original full payment without double-crediting line12.
+Author and main each pass450 tests; separate root controls also pass.
+[Sources, checks and closed gates](upgrade-2026-oh-school-balance-20261115.md). Guided collection follows separately.
+
 ## November 15 PA interest attachment correction
 
 Final2025 ordinary interest alone no longer creates an unnecessary Schedule A

@@ -61,6 +61,7 @@ export const OhioSchoolDistrictFactsSchema = z.object({
     }).strict()),
     account: z.object({ sourceReference: reference, accountName: reference, accountSsn: reference, taxYear: z.number().int(), returnType: z.literal('sd100'),
       asOfDate: date, completeAccountConfirmed: z.literal(true), estimatedPaymentsCredited: money, priorCreditApplied: money,
+      currentOriginalReturnPaymentCredited: money.optional(),
     }).strict(),
     priorReturn: prior,
     priorCreditCarryforward: z.discriminatedUnion('status', [
@@ -69,7 +70,16 @@ export const OhioSchoolDistrictFactsSchema = z.object({
         electedAmount: money, availableForThisReturn: money, appliedToThisReturnConfirmed: z.literal(true),
       }).strict(),
     ]),
-    remainingTaxPayment: z.object({ status: z.literal('no_remaining_tax'), sourceReference: reference, sourceFactsConfirmed: z.literal(true) }).strict(),
+    remainingTaxPayment: z.discriminatedUnion('status', [
+      z.object({ status: z.literal('no_remaining_tax'), sourceReference: reference, sourceFactsConfirmed: z.literal(true) }).strict(),
+      z.object({ status: z.literal('unpaid'), sourceReference: reference, sourceFactsConfirmed: z.literal(true) }).strict(),
+      z.object({ status: z.literal('expected_payment'), sourceReference: reference, sourceFactsConfirmed: z.literal(true), date, amountAppliedToTax: money }).strict(),
+      z.object({ status: z.literal('actual_payment'), sourceReference: reference, sourceFactsConfirmed: z.literal(true), date, amountAppliedToTax: money,
+        currentOriginalReturnConfirmed: z.literal(true),
+        original: z.object({accountName: reference, accountSsn: reference, taxYear: z.number().int(), returnType: z.literal('sd100'),
+          districtCode: district, kind: z.literal('balance'), date, amount: money, confirmationNumber: reference}).strict(),
+      }).strict(),
+    ]),
     currentTiming: z.discriminatedUnion('kind', [
       z.object({ kind: z.literal('expected'), expectedDate: date, asOfDate: date }).strict(),
       z.object({ kind: z.literal('filed'), filedDate: date, asOfDate: date }).strict(),

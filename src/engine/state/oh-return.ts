@@ -647,7 +647,14 @@ export function calculateOhioResidentReturn(
 
   if(input.schoolDistrictSource){
     if(!itsd2210?.line17_totalPenalty.isZero()||!sdItsd2210?.line17_totalPenalty.isZero())throw new Error('Ohio actual school district sources: separate positive/combined2210 penalty method required');
-    if(!sd100||!sd100.line16_taxDue.isZero()||d(input.sdCreditCarryforward).gt(sd100.line19_overpayment))throw new Error('Ohio actual school district sources: remaining-tax coverage or outgoing election contradicts actual return');
+    const balance = input.schoolDistrictSource.remainingTaxPayment;
+    if(!sd100 || (balance ? !sd100.line16_taxDue.eq(balance.balanceOnReturn)
+      || !balance.actualPaymentApplied.eq(balance.status === 'actual_payment' ? balance.balanceOnReturn : 0)
+      || !balance.outstandingTaxBalance.eq(balance.status === 'actual_payment' ? 0 : balance.balanceOnReturn)
+      || balance.status === 'no_remaining_tax' && !balance.balanceOnReturn.isZero()
+      : !sd100.line16_taxDue.isZero())
+      || !sd100.line17_latePaymentInterest.isZero()
+      || d(input.sdCreditCarryforward).gt(sd100.line19_overpayment))throw new Error('Ohio actual school district sources: remaining-tax coverage or outgoing election contradicts actual return');
   }
   // Combine audit trails: Adjustments → Resident Credit → Credits → IT/SD 2210 → IT 1040 → SD 100
   const lines = [
