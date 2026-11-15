@@ -10,6 +10,11 @@ notes: |
   alone inadequate; direct actual element rectangles and alert text scrollwidth
   must fit. Full pre-repair validation message is independently retained from the
   immutable previous trace; no truncation/hidden overflow or field/default changes.
+  November15 diagnostic successor: remaining-payment validation is now a status
+  discriminated union. An unknown blank status reports that discriminator alone;
+  every selected valid status still requires the original reference and true
+  source confirmation. Preserve those blank draft fields and every geometry,
+  exact full-message, unknown, privacy and readiness assertion.
 lines:
   - line: "actual-blank-validation-geometry"
     description: "Actual blank native sources remain readable before and after validation"
