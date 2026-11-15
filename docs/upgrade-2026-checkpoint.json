@@ -1,4 +1,15 @@
 {
+  "nov15ArchiveDiagnostics": {
+    "sourceFreeze": "919756f2445672448a31c44a73b20d6ffa3228ea25a3c55bad2e1c7872e97b3c",
+    "rootReview": "0bc852bf76770109513768d1f893617b5ff8638647da52d753cc2d5d83e3f630",
+    "mainTests": 964,
+    "independentTests": 12,
+    "maximumStderrPrefixBytes": 8192,
+    "typesLintBashSyntaxPassed": true,
+    "actualImportQualificationPending": true,
+    "remote125CauseUnknown": true,
+    "evidence": "upgrade-2026-archive-diagnostics-20261115.md"
+  },
   "nov15OfficialAnnualRefresh": {
     "status": "PASS",
     "httpRequests": 20,

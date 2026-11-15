@@ -1,5 +1,9 @@
 # Remaining 2026 upgrade execution checklist
 
+- [x] Preserve bounded sanitized fresh-store diagnostics and fail closed before
+  final verification; 964 adoption and twelve independent offline tests pass.
+  [Actual archive qualification remains open](upgrade-2026-archive-diagnostics-20261115.md).
+
 - [x] Render the original-bound finite 2025 PA interest adjustment review on the
   official form; 976 adoption tests, 39 separate review tests and two physical
   examples pass. [Evidence and limitations](upgrade-2026-pa-interest-physical-20261115.md).

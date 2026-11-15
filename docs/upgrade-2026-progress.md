@@ -1,5 +1,12 @@
 # 2026 upgrade implementation evidence
 
+## November 15 archive diagnostics
+
+The independent AMD64 verifier now retains bounded sanitized owned-command
+failure evidence and rejects an early zero status before final verification.
+Main 964 tests and twelve independent offline tests pass. [Evidence and limits](upgrade-2026-archive-diagnostics-20261115.md).
+Actual fresh-store import qualification remains open.
+
 ## November 15 physical PA interest review copy
 
 The finite 2025 single-primary adjustment route now renders all sixteen fields

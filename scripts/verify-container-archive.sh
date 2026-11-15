@@ -14,6 +14,7 @@ receipt=container-archive-verification.json
 stage=preflight
 archive_sha=
 archive_bytes=0
+store_info_diagnostics=null
 cleanup() {
   local result=$? removed=true verified=false
   trap - EXIT HUP INT TERM
@@ -21,13 +22,15 @@ cleanup() {
     removed=false
     result=1
   fi
+  if [[ $result == 0 && $stage != verified ]]; then result=1; fi
   if [[ $result == 0 ]]; then verified=true; fi
   jq -n --arg source "$revision" --arg imageId "$image_id" --arg stage "$stage" \
     --arg archiveSha256 "$archive_sha" --argjson archiveBytes "$archive_bytes" \
     --argjson verified "$verified" --argjson removed "$removed" \
+    --argjson diagnostics "$store_info_diagnostics" \
     '{version: 1, $source, $imageId, platform: "linux/amd64", $stage,
       $archiveSha256, $archiveBytes, importStore: "fresh local Podman vfs",
-      archiveImportVerified: $verified, scratchRemoved: $removed}' > "$receipt"
+      archiveImportVerified: $verified, scratchRemoved: $removed, storeInfoDiagnostics: $diagnostics}' > "$receipt"
   if [[ $result != 0 ]]; then
     printf 'Archive verification stopped at %s. See the sanitized receipt.\n' "$stage" >&2
   fi
@@ -82,7 +85,34 @@ archive_sha=${archive_sha%% *}
 chmod 0400 "$archive"
 
 stage=verify-empty-store
-store=$("${podman[@]}" info --format json 2>/dev/null)
+# Keep a bounded prefix from this fixed, directly owned local command. Drain
+# the rest so the diagnostic reader cannot change the command's exit via SIGPIPE.
+mkfifo "$scratch/podman-info.pipe"
+{ head -c 8193 > "$scratch/podman-info.stderr"; cat > /dev/null; } < "$scratch/podman-info.pipe" &
+collector_pid=$!
+info_exit=0
+"${podman[@]}" info --format json > "$scratch/podman-info.stdout" \
+  2> "$scratch/podman-info.pipe" || info_exit=$?
+collector_exit=0
+wait "$collector_pid" || collector_exit=$?
+stderr_bytes=$(wc -c < "$scratch/podman-info.stderr" | tr -d '[:space:]')
+[[ $stderr_bytes =~ ^[0-9]+$ && $stderr_bytes -le 8193 ]] || exit 1
+stderr_truncated=false
+if (( stderr_bytes > 8192 )); then stderr_truncated=true; fi
+head -c 8192 "$scratch/podman-info.stderr" > "$scratch/podman-info-bounded.stderr"
+store_info_diagnostics=$(jq -n --argjson exitCode "$info_exit" \
+  --argjson truncated "$stderr_truncated" --argjson captured "$([[ $collector_exit == 0 ]] && printf true || printf false)" \
+  --arg scratch "$scratch" --arg runnerTmp "$RUNNER_TEMP" --arg home "${HOME:-}" \
+  --rawfile stderr "$scratch/podman-info-bounded.stderr" '
+  def redact($path; $replacement): if ($path | length) > 0 then split($path) | join($replacement) else . end;
+  {command: "podman-info", $exitCode, $truncated, captureComplete: $captured,
+   stderr: ($stderr | redact($scratch; "<owned-scratch>") | redact($runnerTmp; "<runner-temp>") | redact($home; "<home>")
+     | gsub("/[A-Za-z0-9_.~+:/@%=-]+"; "<path>")
+     | gsub("[A-Fa-f0-9]{32,}"; "<identifier>"))}')
+# A failed info command or incomplete capture never reaches the load operation.
+if (( info_exit != 0 )); then exit "$info_exit"; fi
+(( collector_exit == 0 )) || exit 1
+store=$(cat "$scratch/podman-info.stdout")
 jq -e --arg root "$scratch/storage" --arg run "$scratch/run" \
   '.host.os == "linux" and .host.arch == "amd64" and .host.serviceIsRemote == false
    and (.store | .graphRoot == $root and .runRoot == $run and .graphDriverName == "vfs"

@@ -14,3 +14,6 @@ lines:
   - line: "scanner-source-and-threshold"
     formula: "Produce both SBOM formats from the immutable candidate. Bind the CycloneDX container identity and revision to the checked image config, bind the Grype source to the verified Syft source, and require the same verified input and inventory bytes after scanning. Reject ambiguous metadata, retain every reported match, and continue failing on critical findings."
     testRef: "tests/runtime/runtime-scanner-source-contract.test.ts::retains the immutable image binding and critical vulnerability policy"
+  - line: "archive-info-diagnostics"
+    formula: "An owned native fresh-store info failure remains unverified and preserves its actual nonzero status before any image load. Retain only the first 8192 stderr bytes with explicit truncation and a generated-scratch placeholder; drain excess without retaining it. Capture successful info warnings too, but reject malformed or nonempty store metadata with all original immutable-image, native, capacity, import and cleanup gates unchanged."
+    testRef: "tests/runtime/container-archive-diagnostics.test.ts::retains bounded owned info failure diagnostics without loading the archive"
