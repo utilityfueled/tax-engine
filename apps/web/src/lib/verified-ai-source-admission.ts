@@ -90,14 +90,19 @@ function applicableIraWorksheet(input:TaxYearInput,result:TaxReturnResult,source
 /** Verifies software source admission, never real-world truth or filing readiness. */
 export function assertVerifiedAiSourceAdmission(input:TaxYearInput,result:TaxReturnResult,originalInput:unknown):void {
   // These are actual calendar-year originals, not prior-year carry or worksheet histories.
-  const directOriginals=[...input.w2s,...input.form1099Int,...input.form1099Div,...(input.form1099R??[]),...input.form1099Misc,...input.form1099Nec,...input.form1099OID,...input.form1099K,...input.form1098E,...input.form1095A,...input.formW2G];
+  const directOriginals=[...input.w2s,...input.form1099Int,...input.form1099Div,...(input.form1099R??[]),...input.form1099Misc,...input.form1099Nec,...input.form1099OID,...input.form1099K,...input.form1098E,...input.form1095A,...input.formW2G,...(input.formRRB1099??[])];
   if(directOriginals.some(form=>form.taxYear!==undefined && form.taxYear!==input.taxpayer.taxYear)
     || (input.formSSA1099??[]).some(form=>form.sourceTaxYear!==undefined && form.sourceTaxYear!==input.taxpayer.taxYear)){
     throw new Error('A confirmed explanation requires matching-year direct income originals.');
   }
   // A prior header may be a fiscal year ending in this return; a future header cannot be.
-  if(input.scheduleK1.some(form=>form.taxYear!==undefined && form.taxYear>input.taxpayer.taxYear)){
+  if([...input.scheduleK1,...input.scheduleK1Form1041].some(form=>form.taxYear!==undefined && form.taxYear>input.taxpayer.taxYear)){
     throw new Error('A confirmed explanation cannot use a future-year K1 original.');
+  }
+  // Reporting headers need not equal income-recognition years for these forms.
+  // Keep cross-year compositions closed until their separate actual-event treatment is reconciled.
+  if([...input.form1099C,...(input.form1099SA??[])].some(form=>form.taxYear!==undefined && form.taxYear!==input.taxpayer.taxYear)){
+    throw new Error('A confirmed explanation requires source-reconciled cross-year COD or HSA treatment.');
   }
   if(result.deductionUsed==='itemized'){
     const mortgage=calculateHomeMortgageInterest(input);

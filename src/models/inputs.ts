@@ -856,6 +856,8 @@ export const Form1099KSchema = z.object({
 });
 
 export const Form1099CSchema = z.object({
+  /** Actual calendar header of this statement, not the actual-discharge year or form revision. */
+  taxYear: z.number().int().optional(),
   creditor: z.string(),
   amountDischarged: decimal, // Box 2
   interestIncluded: optionalDecimal, // Box 3 — interest portion included in Box 2
@@ -1516,6 +1518,8 @@ function getNormalizedDistributionCodes(code?: string): string[] {
 }
 
 export const Form1099SASchema = z.object({
+  /** Actual distribution-statement calendar header, not an inferred death or contribution year. */
+  taxYear: z.number().int().optional(),
   payer: z.string(),
   grossDistribution: decimal, // Box 1
   earningsOnExcessContributions: optionalDecimalInput, // Box 2; unknown is distinct from actual zero.
@@ -1652,6 +1656,8 @@ export const SocialSecurityFactsSchema = z.object({
 });
 
 export const FormRRB1099Schema = z.object({
+  /** Actual calendar year of payments/repayments/withholding shown on this RRB statement. */
+  taxYear: z.number().int().optional(),
   recipient: z.string().optional(),
   netSocialSecurityEquivalentBenefitPortion: decimal, // Box 5
   federalWithheld: optionalDecimal, // Box 10
@@ -2457,6 +2463,8 @@ export const ScheduleK1Schema = z.object({
  * Ref: IRS Schedule K-1 (Form 1041) Instructions; IRC §§652, 662, 691(c), 642(h).
  */
 export const ScheduleK1Form1041Schema = z.object({
+  /** Actual original calendar or fiscal header year, not the printed annual form revision; omission stays unknown. */
+  taxYear: z.number().int().optional(),
   /** Actual federal tax withheld shown on Schedule K-1; not state withholding. */
   federalIncomeTaxWithheld: optionalDecimalInput,
   /** Name of the estate or trust */

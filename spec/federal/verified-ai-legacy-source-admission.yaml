@@ -3,6 +3,13 @@ fullName: "Keep historical source assumptions out of a confirmed calculation exp
 taxYear: 2025
 irsReference: "https://www.irs.gov/pub/irs-prior/i1099r--2025.pdf"
 sources:
+  - "https://www.irs.gov/pub/irs-pdf/f1099c.pdf"
+  - "https://www.irs.gov/instructions/i1099ac"
+  - "https://www.irs.gov/pub/irs-pdf/f1099sa.pdf"
+  - "https://rrb.gov/Benefits/IncomeTax/TXL-1099"
+  - "https://www.irs.gov/publications/p915"
+  - "https://www.irs.gov/pub/irs-prior/f1041sk1--2025.pdf"
+  - "https://www.irs.gov/publications/p559"
   - "https://www.irs.gov/pub/irs-prior/f1065sk1--2024.pdf"
   - "https://www.irs.gov/pub/irs-prior/f1120ssk--2024.pdf"
   - "https://www.irs.gov/instructions/i1065sk1"
@@ -169,3 +176,38 @@ lines:
     description: "Future source denial cannot enable unsupported2026 annual facts or alter unknown-year parsing"
     formula: "Retain the integer optional original-year schema and existing historical calculation methods. Current2026 source years still encounter unchanged annual qualification gates. No Form1041 source-year inference, source repair, new taxes or filing activation."
     testRef: "tests/apps/web/verified-ai-k1-future-year.test.ts::preserves known-year schema and unavailable 2026 qualification"
+
+  - line: "four-actual-header-presence"
+    description: "Retain supplied actual source headers independently of publication or return year"
+    formula: "Four actual optional integer taxYear fields cover1099C/1099SA/RRB1099/1041K1. Preserve absence as unknown; never derive a year from death/benefit entitlement/discharge date or form revision. This is source retention, not general source qualification."
+    testRef: "tests/apps/web/verified-ai-four-original-headers.test.ts::retains four supplied actual headers without manufacturing absent years"
+
+  - line: "rrb-header-calendar"
+    description: "The RRB statement reports actual payment-year benefits and withholding"
+    formula: "A known top-level RRB1099 taxYear must equal the selected return year at confirmed ingress even for zero or withholding-only rows. Earlier entitlement-year payments can belong to a current statement; do not recursively compare benefit histories."
+    testRef: "tests/apps/web/verified-ai-four-original-headers.test.ts::denies known RRB calendar contradictions before provider or accounting"
+
+  - line: "trust-header-future-only"
+    description: "Prior estate or trust headers may be fiscal; future headers require a separately qualified source composition"
+    formula: "For the ordinary beneficiary ending-year method, hold actual top-level1041K1 taxYear greater than selected return year at confirmed ingress. This is not a blanket tax-law impossibility: Pub559 Death of individual beneficiary can place predeath distributions on the beneficiary final return even when the estate year ends later. That death/fiscal source composition is not qualified by this input contract and remains unreconciled, not inferred invalid. Preserve earlier/current/unknown headers without inferring fiscal end dates or eligibility; no recursive history scan. Actual header is not printed annual revision."
+    testRef: "tests/apps/web/verified-ai-four-original-headers.test.ts::denies only future estate trust originals while preserving fiscal compatibility"
+
+  - line: "cod-sa-crossyear-unreconciled"
+    description: "Cross-year debt cancellation and HSA originals require a separately source-reconciled composition"
+    formula: "Known1099C or1099SA header mismatch is conservatively held only at confirmed explanation ingress as unsupported source-unreconciled cross-year composition. It is NOT a categorical tax-law contradiction:1099C identifiable-event reporting year may differ from actual discharge year; nonspouse inheritedHSA FMV may be taxable in death year despite later distribution. No new event/year inference, no new cross-year method; preserve canonical calculations and existing current/missing-year methods."
+    testRef: "tests/apps/web/verified-ai-four-original-headers.test.ts::holds known cross year COD and HSA compositions without rewriting canonical income"
+
+  - line: "four-headers-duplicates"
+    description: "A matching duplicate cannot erase a known unsupported original year"
+    formula: "Inspect every actual top-level original in both orders. Preserve amounts, source identity and canonical calculations; no deduping, coercion or unrelated history recursion."
+    testRef: "tests/apps/web/verified-ai-four-original-headers.test.ts::denies duplicate conflicting originals in either order"
+
+  - line: "four-headers-preservation"
+    description: "Matching and absent source years preserve existing supported arithmetic and inference gates"
+    formula: "Missing remains unknown. Matching or absent headers retain income/payment calculations, actual source proofs, HSA death/code safeguards and fiscal compatibility. Confirmed route stays private no-store, with no provider or reservation on denial and no original identity leakage."
+    testRef: "tests/apps/web/verified-ai-four-original-headers.test.ts::preserves current missing and ordinary source economics privately"
+
+  - line: "four-headers-qualification"
+    description: "Original-year retention never authorizes unavailable annual methods or repairs malformed facts"
+    formula: "Reject noninteger or string years; preserve existing HSA code/Box4 guards and unavailable2026 full-return qualification. Complete current original facts do not qualify an annual2026 return."
+    testRef: "tests/apps/web/verified-ai-four-original-headers.test.ts::preserves malformed original strict source and 2026 annual gates"

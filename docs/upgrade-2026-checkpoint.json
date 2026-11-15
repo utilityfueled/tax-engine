@@ -1,4 +1,19 @@
 {
+  "nov15FourOriginalSourceHeaders": {
+    "base": "9ce3b97e",
+    "freeze": "48bd353008b17995d124f91f53713ec90d96ba0b84c7fafd69bb287e28136a67",
+    "peerReview": "51fdfa6d6e3cc1a323a493868c5fb7daf5bd71ddecafe5347d7dd036a4a5fe21",
+    "mainTests": 167,
+    "mainFiles": 7,
+    "specRefs": 44,
+    "authorPost": 61,
+    "peerPost": 58,
+    "inventoryUnchanged": 1030,
+    "mainReceipt": "934cb98d3dfc3e84455c015ea4a868bf37e9f7149ff83fc01fc0c7a782968af8",
+    "timingCaveats": "C/SA/1041exceptionsareunsupportedunreconciledcompositions,notcategoricallyinvalidtaxfacts",
+    "remaining": "KnowninheritedHSAtimingfix/currentcombined+runtimes/externalgates",
+    "evidence": "docs/upgrade-2026-confirmed-four-source-headers-20261115.md"
+  },
   "nov15OhioHeaderSingleReplay": {
     "base": "27364f66",
     "freeze": "48790645a2c68a2f496e116045eeb308518143a6c653261c15593fb7942938f9",

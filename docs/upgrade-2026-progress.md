@@ -1,5 +1,12 @@
 # 2026 upgrade implementation evidence
 
+## November 15 four original source headers
+
+COD, HSA, RRB and estate/trust K1 headers now survive parsing. Confirmed
+explanations hold contradictions or unreconciled timing compositions while
+canonical arithmetic remains unchanged. Main 167 tests and separate 58-POST
+review pass. [Evidence and HSA follow-up](upgrade-2026-confirmed-four-source-headers-20261115.md).
+
 ## November 15 Ohio header single replay
 
 Current parent originals validate once within the qualified header invocation,

@@ -457,7 +457,7 @@
     "apps/web/src/lib/transient-tax-explanation-route.ts": "c4f790b5c2a51c7b1aba671e957b4e8ee084d5939c407d0ed46c0ba46daf5c67",
     "apps/web/src/lib/transient-tax-identifiers.ts": "d4a38457b0c7fecb93a3d49d29a4a474c440b231c7f036e625dfa73d0a4535db",
     "apps/web/src/lib/uploaded-document-detection.ts": "2f67b296095770ac6cc5dbe3d01212fe39e0241a65179f8acdd394a4e2be10bf",
-    "apps/web/src/lib/verified-ai-source-admission.ts": "8f848aef2874a6ceb52ea6554e925b9ddef2b13c76f199b33c35821ebdeaa7c7",
+    "apps/web/src/lib/verified-ai-source-admission.ts": "5bdbf8450b39298a72648905c499e2580dca793bc28b102e938d09b65acd4f9a",
     "apps/web/src/lib/workspace-ai-preferences.ts": "2ef711ca5c09289c82a3a54068870cdee40c14fd6f84113fd35e32243376e08d",
     "apps/web/src/lib/workspace-assistant.ts": "f2eaf60fc3bf8d2ab5dff56a4e30187184c8a94cefa74f064e9f01bc5a787381",
     "apps/web/src/lib/workspace-document-file-cache.ts": "c754cfdc8706841881f196679e050ae58fd719c50d7dd4736188b5c57f72dbd7",
@@ -1172,7 +1172,7 @@
     "src/models/form-8862-sources.ts": "0de60e9c45f119d09730e60ea91214c51a8a26423cfe3cc7a9e9bdde0e871e84",
     "src/models/form-8962-marriage.ts": "01084c180611dfdbbf8fcb85e8590fec63761dd2873cd8b3d7511cfecec9bdaa",
     "src/models/form-8962-shared-policy.ts": "b5c9e25a3ee377ee67ad6ffc352a6ac0ad094c735aae50154c67edc17201acee",
-    "src/models/inputs.ts": "7869ab01caeb009b0e457b2582517cf17fbe0af4d14d9b262c6d5e384550a3a8",
+    "src/models/inputs.ts": "027680f32df06e0e9acd63e201ccef93a7ae242ccf8cf6f49265c5d715e4c6e0",
     "src/models/ira-basis-sources.ts": "e7a2d0a45b401dcc0a55c9d328a695c06e3457c624ded91d986e5698c663c62f",
     "src/models/k1-capital-character-sources.ts": "964b418e51c10b2c617f14afd3ded23e8a73611c2673c3189232237a58adc8a4",
     "src/models/k1-cash-distribution-sources.ts": "18e3e38e56fb1e1992fa16d69da257dcafa48563e53cb61d116656f6aa48024a",
@@ -4041,7 +4041,7 @@
         107,
         109
       ],
-      "reviewBasis": "Exact frozen V2: one awaited review click/400 refusal per case at95–96; exact all-scope census107 and request privacy109; backup/recovery is local. No provider or analysis action.",
+      "reviewBasis": "Exact frozen V2: one awaited review click/400 refusal per case at95\u201396; exact all-scope census107 and request privacy109; backup/recovery is local. No provider or analysis action.",
       "skippedTitles": []
     },
     "guided-refund-payment-years.spec.ts": {
