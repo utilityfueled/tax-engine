@@ -1,4 +1,21 @@
 {
+  "nov15ActualA32PreviewRemote": {
+    "source": "a32a3b10796656d881d0bff042512cdb620710fc",
+    "actualPreviewSession": 53313,
+    "terminalZeroAcknowledged": true,
+    "rootArtifactReview": "ab6d95af96d0b0e88269cb0277fa8bccb05f503eb5da77bb06cb5b1e86034f67",
+    "actualUiCasesPassed": 4,
+    "canonicalAdmissionCasesPassed": 48,
+    "remoteNumericQualificationClaimed": false,
+    "cleanupVerified": true,
+    "remoteCiPassed": true,
+    "amd64BrowserFailures": 11,
+    "amd64ArchiveInfoExit": 125,
+    "amd64FailureCauseUnknown": true,
+    "advisoryRiskAccepted": false,
+    "laterPackagesExcluded": true,
+    "evidence": "upgrade-2026-preview-remote-a32a3b10-20261115.md"
+  },
   "nov15OhioGuidedOriginalBalance": {
     "sourceFreeze": "f015d835d086fe772d05b7d648f4c330b938234067b0435a381a81516391d08f",
     "rootAdoption": "82c69af9d163b09fed919d6d462f109d2eabfa0b7a6d62d319a62aaf381bf325",

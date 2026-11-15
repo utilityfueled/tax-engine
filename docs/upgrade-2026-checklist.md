@@ -1,5 +1,9 @@
 # Remaining 2026 upgrade execution checklist
 
+- [x] Complete exact a32 isolated Preview: four browser journeys, all 48 canonical
+  admission checks and verified cleanup. Remote CI also passes.
+  [Evidence and open AMD64 failures](upgrade-2026-preview-remote-a32a3b10-20261115.md).
+
 - [x] Collect the finite 2025 Ohio school-district remaining-balance originals;
   81 main tests, ten independent tests and two desktop/mobile cases pass.
   [Evidence and unchanged qualification gates](upgrade-2026-oh-guided-balance-20261115.md).

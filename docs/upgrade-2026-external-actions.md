@@ -1,5 +1,12 @@
 # External actions needed to finish the 2026 upgrade
 
+## November 15 actual Preview and remote runtime results
+
+The exact a32 isolated Preview passed four browser journeys and all 48 canonical
+admission checks; cleanup was verified. Remote CI passed all six jobs. AMD64
+native qualification failed eleven browser cases and fresh-store archive
+verification; both failures remain open. [Evidence and precise limits](upgrade-2026-preview-remote-a32a3b10-20261115.md).
+
 ## November 15 main push resolved
 
 The owner authorized disabling automatic production builds, then pushing main.
