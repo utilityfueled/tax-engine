@@ -39,3 +39,13 @@ Private frozen source manifest:
 `722fc66720e9eb26ce2851770fb0ab18ca5a1c2ca01a69ee285d147d21279b25`;
 independent review:
 `755301bf87e56a74f26ae08c8071677a8edceb3a7b20e2c8142455ed2a6aea38`.
+
+The first integrated `21dfc258` browser invocation fails strict source-hash
+admission before collection, build or server startup. Its reviewed render and
+PDF-helper changes need the existing action-count inventory refreshed. A separate
+review establishes no new outbound action, then changes only five source-hash
+entries and the dependent diagnostic audit digest. All 170 budget rows, 643 cases,
+five original skips, eight overrides and fourteen diagnostic targets stay intact.
+Root's 178 focused controls and exported strict audit verification pass; the
+original failed preflight remains retained. Independent metadata review:
+`6ac6019a504c15efe27fe4bae54da9edd6e85d55b2383d1b5e275e316d2474da`.

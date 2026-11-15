@@ -6139,3 +6139,22 @@ web types/9316 references and independent7311 parity cases/1899 replay controls/
 nine PA reciprocal cases pass. Inventory is regenerated with unsupported filing
 status preserved. Browser/runtime results remain pending.
 [Exact scope and review](upgrade-2026-guided-render-evaluation-20261115.md).
+
+### November 15: refresh reviewed browser source inventory without relaxing policy
+
+The first21df browser preflight correctly rejects changed source hashes before
+starting any runtime. A separately reviewed metadata-only refresh binds the four
+render-source files and PDF helper, plus the dependent diagnostic digest. All170
+budgets/643 cases/five skips/eight overrides/fourteen diagnostic targets remain;
+root178 focused controls and strict audit verification pass. Exact21df static nine
+checks and28,728 unit tests pass separately; full successor verification remains
+pending. [Review and retained preflight](upgrade-2026-guided-render-evaluation-20261115.md).
+
+The earlier dbb190ff remote baseline is fully retained: CI unit/coverage each28,711
+pass with88.12% branches, but stale inventory fails CI. Web self-host636PASS/two
+strict4s PDF failures/five skips; native627PASS/eleven overall30s failures/five skips.
+Six Compose phases, archive import and bound scans pass;56High remain unaccepted.
+Both artifact digests and included5,154 source blobs are independently checked.
+Independent terminal artifact review:
+`9e9aac803a88fbd8e831cf4a53eb20e8f78258140edb457f9b69769be6667f75`.
+No newer-source runtime qualification or CPU cause is inferred.

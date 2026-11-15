@@ -1,4 +1,24 @@
 {
+  "nov15BrowserAuditMetadataRefresh": {
+    "base": "21dfc25874bdf0813d252568bffde3183b63d73a",
+    "earlyBrowserPreflightFailed": true,
+    "collectionBuildOrServerStarted": false,
+    "changedSourceHashEntries": 5,
+    "dependentDigestRefreshed": true,
+    "sourceEntries": 1974,
+    "budgetRows": 170,
+    "cases": 643,
+    "originalSkips": 5,
+    "originalBodyOverrides": 8,
+    "diagnosticTargets": 14,
+    "rootFocusedPassed": 178,
+    "strictAuditPassed": true,
+    "independentPeer": "6ac6019a504c15efe27fe4bae54da9edd6e85d55b2383d1b5e275e316d2474da",
+    "priorStaticChecksPassed": 9,
+    "priorUnitTestsPassed": 28728,
+    "fullSuccessorVerificationPending": true,
+    "releaseReady": false
+  },
   "nov15GuidedRenderEvaluation": {
     "base": "43243494",
     "manifest": "722fc66720e9eb26ce2851770fb0ab18ca5a1c2ca01a69ee285d147d21279b25",
