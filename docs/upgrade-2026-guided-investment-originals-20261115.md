@@ -27,7 +27,9 @@ Root final adoption receipt:
 `f6b1f814d4b8f4bdd32215417c664fda37d7ed016fa76a02fab029721949ea04`.
 
 Two actual desktop/mobile browser cases passed with original30s deadlines,
-zero retries/skips and zero protected provider/export actions. Both recomputed
+zero retries/skips. Their original request assertions covered legacy aliases;
+they do not retrospectively prove zero calls to the current workspace export
+and explanation endpoints. Both recomputed
 tax32,537 and Schedule AI14b40,655, then entered/reopened current interest2,
 reconfirmed and denied missing originals. The owned server closed normally.
 Actual browser artifact review:
@@ -36,6 +38,12 @@ Root verified25 artifact hashes and viewed both captured field groups. The
 mobile tall-group image includes a sticky-header overlay; actual field/reopen
 assertions provide the retained-state evidence. The earlier successful run's
 entrance-animation screenshots remain preserved as limited visual evidence.
+
+A subsequent test-only guard now covers both actual workspace endpoints and
+legacy aliases, preserves the four zero request bounds and saves numeric
+per-category counts. Independent source classifier controls pass; actual
+qualification of those strengthened counters awaits the final combined run.
+No product or tax formula changed.
 
 Final combined inventory/checks and hosted/native source matching follow
 separately. Human tax approval, final2026 qualification, filing and model

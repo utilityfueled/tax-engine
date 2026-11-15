@@ -80,8 +80,10 @@ for (const viewport of [{width:1280,height:900},{width:390,height:844}]) {
    expect(buildTaxInputFromGuidedData(await saved())).toBeNull();
    await page.getByRole('button',{name:'Continue',exact:true}).click();await expect(page.getByRole('heading',{name:'Payments & Withholding',exact:true})).toBeVisible();
    expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);
-   const protectedPatterns=[/\/api\/filled-return(?:[/?]|$)/,/\/api\/provider(?:[/?]|$)/,/\/api\/business-expense-analysis(?:[/?]|$)/,/\/api\/self-employment-income-analysis(?:[/?]|$)/];
-   for(const pattern of protectedPatterns)expect(requests.filter(row=>pattern.test(new URL(row.url).pathname))).toHaveLength(0);
+   const protectedPatterns=[/\/api\/(?:workspace\/)?filled-return(?:[/?]|$)/,/\/api\/(?:workspace\/tax-explanation|provider)(?:[/?]|$)/,/\/api\/business-expense-analysis(?:[/?]|$)/,/\/api\/self-employment-income-analysis(?:[/?]|$)/];
+   const protectedRequestCounts=protectedPatterns.map(pattern=>requests.filter(row=>pattern.test(new URL(row.url).pathname)).length);
+   for(const count of protectedRequestCounts)expect(count).toBe(0);
+   writeFileSync(testInfo.outputPath(`investment-election-private-route-counts-${viewport.width}.json`),JSON.stringify({scopes:['filled-return','provider','business-expense-analysis','self-employment-income-analysis'],counts:protectedRequestCounts},null,2)+'\n');
    for(const request of requests){const wire=request.url+'\n'+request.body;let decoded=wire;try{decoded=decodeURIComponent(wire);}catch{/* Retain the raw wire for non-percent-encoded requests. */}for(const secret of [packet.sourceReference,packet.annualForm4952SourceReference,packet.annualAmtCapitalGains.sourceReference,'123-45-6789']){expect(wire).not.toContain(secret);expect(decoded).not.toContain(secret);}}
   });
  });

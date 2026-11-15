@@ -1,4 +1,19 @@
 {
+  "nov15GuidedActualRouteCounters": {
+    "sourceFreeze": "ee09053d4f4fd186d700283f3bbe62964a21f43f615d758654371a641089e9e4",
+    "browserSource": "9f219935539b0a4a73cdf5eb6eca2c09880e609e5f564ed0331381f617d3507b",
+    "actualWorkspaceRoutesCovered": true,
+    "previousActualRunsCannotProveCurrentEndpointCounts": true,
+    "fixedNumericCountersAdded": true,
+    "priorFunctionalTwoCasePassesPreserved": true,
+    "actualStrengthenedRunPending": true,
+    "boundsUnchanged": [
+      0,
+      0,
+      0,
+      0
+    ]
+  },
   "nov15GuidedInvestmentOriginals": {
     "sourceFreeze": "4158bc0755ba190d173f55c1ee0f8f4295b0e24e9407915eb30fa9353ac4cc15",
     "authorTests": 995,
