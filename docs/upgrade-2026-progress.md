@@ -6167,3 +6167,13 @@ file-size-limit error; no retry or conformance claim follows. All57 outer comman
 and independently reviewed normal VM/resource/route cleanup pass. Original failed
 evidence remains retained; a separate units correction is under review.
 [Actual failure and cleanup](upgrade-2026-postgres-libxml2-native-20261114.md).
+
+### November 15: close only admitted new AMD64 build intermediates
+
+The second native run preserves its imported base but fails its explicit removal.
+A separately reviewed correction records prebuild image IDs and admits only the
+new exact parent chain, rechecks references and removes child-first without
+pruning foreign ancestors. Root2RED/14PASS precedes adoption;64 related controls,
+all9,316 spec references, types/inventory/lint and ten independent controls pass.
+Actual native correction and scan qualification remain pending.
+[Failure limits and source review](upgrade-2026-amd64-backports-workflow-20261115.md).

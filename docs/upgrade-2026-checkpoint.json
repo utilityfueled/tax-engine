@@ -1,4 +1,22 @@
 {
+  "nov15Amd64ExplicitIntermediateCleanup": {
+    "actualRun": "43699867290",
+    "source": "21dfc258",
+    "runtimeWorkloadsPassed": true,
+    "importedInspectPassed": true,
+    "importedRemoveExit": 1,
+    "independentImportSkipped": true,
+    "completeActualParentChainAvailable": false,
+    "successorParentNodeLimit": 64,
+    "predecessorRootFailed": 2,
+    "rootRelatedPassed": 64,
+    "ancestryScenarios": 29,
+    "independentAdditionalControls": 10,
+    "sourceManifest": "a8d253c309c1fb30d88f1c8bc46c98e7782bf3d860fa59539a4efbb5d863f5ed",
+    "peer": "33253a8df2c3f9242f65d86b75756ac2826a1b8b9d67e796068f3fa1e56d5c3a",
+    "actualCorrectionRunPending": true,
+    "releaseReady": false
+  },
   "nov15W3cFreshCompileAndCaseLaunchFailure": {
     "operation": "7b7fe62ed3e0dc11a4fa8b7f",
     "controllerCommands": 57,

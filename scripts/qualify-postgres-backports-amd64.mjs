@@ -316,6 +316,8 @@ export class Controller {
   async runtimeBuild() {
     const base = await this.loadInput("package"); const { cache } = await this.sources("gosu");
     const output = join(this.private, "gosu-build");
+    this.preBuildImageIds = new Set((await this.docker("before-gosu-build-images", ["image", "ls", "--all", "--quiet", "--no-trunc"])).split("\n").filter(Boolean).map(imageId));
+    assert.ok(this.preBuildImageIds.has(base.image), "Imported base disappeared before build.");
     assert.ok(this.deadline - performance.now() - this.cleanupReserve > 50 * 60_000, "Insufficient remaining window for gosu and runtime checks.");
     await this.builder("gosu-builder", output, [join(REPO, "scripts/build-postgres-gosu-backport.mjs"), "--runtime", "docker", "--architecture", "amd64", "--source-cache", cache, "--output", output, "--base-image", "sha256:" + base.image], 46 * 60_000);
     assertAmdGosu(await readFile(join(output, "artifacts/gosu")), await readFile(join(output, "artifacts/go-metadata.txt"), "utf8"));
@@ -425,6 +427,29 @@ export class Controller {
     const result = assertScanBinding(cdx, scan, binding, archive);
     await exclusive(join(this.public, "scan-binding.json"), { ...binding, ...result, sbomSha256: (await regular(sbom)).sha256, rawScanSha256: sha256(output), database: listing });
   }
+  async imageAncestors(command) {
+    assert.ok(this.preBuildImageIds instanceof Set && this.preBuildImageIds.has(this.imported), "Prebuild image custody unavailable.");
+    const ancestors = []; const seen = new Set(); let id = this.candidate;
+    while (id !== this.imported) {
+      assert.ok(seen.size < 64 && !seen.has(id) && !this.preBuildImageIds.has(id), "Ambiguous, repeated or preexisting image ancestry."); seen.add(id);
+      const [value] = JSON.parse(await command("lineage-inspect", ["image", "inspect", "sha256:" + id]));
+      assert.equal(imageId(value.Id), id); assert.equal(value.Os, "linux"); assert.equal(value.Architecture, "amd64");
+      assert.match(value.Parent, /^sha256:[a-f0-9]{64}$/); const parent = imageId(value.Parent);
+      const operation = value.Config.Labels?.[LABEL];
+      if (id === this.candidate) assert.equal(operation, this.builderOperation);
+      else {
+        // A CLI label is appended after recipe instructions by the legacy builder.
+        // Intermediate custody is the fresh exact Parent chain, not assumed CLI labels.
+        assert.ok(operation === undefined || operation === this.builderOperation || operation === this.importedOperation, "Foreign intermediate operation label.");
+        assert.deepEqual(value.RepoTags, []); assert.deepEqual(value.RepoDigests, []);
+        const users = await command("lineage-containers", ["ps", "--all", "--quiet", "--filter", "ancestor=sha256:" + id]);
+        assert.equal(users.trim(), "", "Intermediate image still has a container reference.");
+        ancestors.push({ id, parent, operation });
+      }
+      id = parent;
+    }
+    return ancestors;
+  }
   async cleanup() {
     if (!this.connection || !this.commandEnv) return;
     if (this.unconfirmedChild) { this.cleanupErrors.push("unconfirmed-owned-child"); return; }
@@ -446,8 +471,24 @@ export class Controller {
       try { const [v] = JSON.parse(await command("volume-inspect", ["volume", "inspect", volume])); assert.equal(v.Labels[LABEL], this.operation); await command("volume-remove", ["volume", "rm", volume]); } catch { this.cleanupErrors.push("owned-volume-cleanup"); }
     }
     // Candidate images are removed only after all own containers close normally.
+    let ancestors = [];
+    if (!this.cleanupErrors.length && this.mode === "runtime" && this.candidate && this.builderOperation && this.imported) {
+      try { ancestors = await this.imageAncestors(command); } catch { this.cleanupErrors.push("owned-image-lineage-cleanup"); }
+    }
     if (!this.cleanupErrors.length && this.candidate && this.builderOperation) {
       try { const [v] = JSON.parse(await command("candidate-inspect", ["image", "inspect", "sha256:" + this.candidate])); assert.equal(v.Config.Labels[LABEL], this.builderOperation); await command("candidate-remove", ["image", "rm", "--no-prune", "sha256:" + this.candidate]); } catch { this.cleanupErrors.push("owned-image-cleanup"); }
+    }
+    for (const ancestor of ancestors) {
+      if (this.cleanupErrors.length) break;
+      try {
+        const [value] = JSON.parse(await command("intermediate-inspect", ["image", "inspect", "sha256:" + ancestor.id]));
+        assert.equal(imageId(value.Id), ancestor.id); assert.equal(value.Parent, "sha256:" + ancestor.parent);
+        assert.equal(value.Os, "linux"); assert.equal(value.Architecture, "amd64");
+        assert.equal(value.Config.Labels?.[LABEL], ancestor.operation); assert.deepEqual(value.RepoTags, []); assert.deepEqual(value.RepoDigests, []);
+        const users = await command("intermediate-containers", ["ps", "--all", "--quiet", "--filter", "ancestor=sha256:" + ancestor.id]);
+        assert.equal(users.trim(), "", "Intermediate image gained a container reference.");
+        await command("intermediate-remove", ["image", "rm", "--no-prune", "sha256:" + ancestor.id]);
+      } catch { this.cleanupErrors.push("owned-intermediate-image-cleanup"); }
     }
     if (!this.cleanupErrors.length && this.imported) {
       try { const [v] = JSON.parse(await command("import-inspect", ["image", "inspect", "sha256:" + this.imported])); assert.equal(imageId(v.Id), this.imported); assert.equal(v.Config.Labels[LABEL], this.importedOperation); await command("import-remove", ["image", "rm", "--no-prune", "sha256:" + this.imported]); } catch { this.cleanupErrors.push("imported-image-cleanup"); }

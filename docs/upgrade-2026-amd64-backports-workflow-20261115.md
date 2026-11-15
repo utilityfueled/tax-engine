@@ -69,3 +69,38 @@ manifest: `721bd6f99dd4d1048ddc16c55e455fd2179a34cd99a9132492a090c56722be9f`;
 independent review: `7b3c377055cdef14bbe2c8ede9a1a724c9335ba63d33e666fdf868a541a837bd`.
 The failed runtime artifact is retained with verified digest
 `c36aeef7b3141b9b0ea35da58718f7ae64ee9f66645727f4101daa9fe788bef9`.
+
+The second actual run,
+[43699867290](https://github.com/utilityfueled/tax-engine/actions/runs/43699867290),
+uses `21dfc258`. Package construction and runtime workloads pass. The imported
+base now survives candidate removal and its identity/ownership inspection passes,
+but explicit base removal exits one. Independent import/scan remains skipped.
+The retained runtime archive matches GitHub's digest
+`32fe8dab70c8df04f95f2a4fe9cf3f60b4226768c8e2f900cc0179dbaa5afc57`.
+
+The candidate's immutable configuration records an intermediate image reference.
+[Docker's versioned deletion implementation](https://github.com/moby/moby/blob/v28.0.4/daemon/images/image_delete.go)
+rejects images with dependent child images. This supports a distinct legacy
+intermediate-image conflict after `--no-prune`; private daemon stderr and the
+complete actual parent chain are unavailable, so the exact conflict is unproved.
+
+The source-first successor records all image IDs after the admitted base import
+and immediately before the gosu build. Cleanup admits a chain of at most 64 exact
+new parent nodes terminating at that base. Intermediate images must be Linux
+AMD64, untagged, without digest/container references, and have no foreign operation
+label. Their exact ancestry supplies custody when the final CLI label is absent.
+Metadata and container references are checked again before child-first explicit
+`--no-prune` removal. Preexisting, cyclic, missing, referenced, changed or uncertain
+nodes stop cleanup. Base ancestors remain untouched; force, blanket pruning and
+missing-image exceptions remain prohibited. Builders, recipes, time limits,
+publication allowlist and normal container-closure gates remain unchanged.
+
+Root's actual predecessor run fails two controls and passes fourteen. The
+correction passes all 64 related tests, including 29 ancestry/admission scenarios,
+plus engine types, spec references, inventory and focused lint. Independent
+review repeats 64 tests and adds ten adversarial controls. This is source/model
+evidence; a successful native correction run is still required. Retained source
+manifest:
+`a8d253c309c1fb30d88f1c8bc46c98e7782bf3d860fa59539a4efbb5d863f5ed`;
+independent review:
+`33253a8df2c3f9242f65d86b75756ac2826a1b8b9d67e796068f3fa1e56d5c3a`.

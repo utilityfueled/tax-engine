@@ -1,3 +1,4 @@
+import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { execFile } from "node:child_process";
 import { mkdtemp, readFile, symlink, writeFile, mkdir, rm } from "node:fs/promises";
@@ -87,7 +88,7 @@ describe("native AMD PostgreSQL infrastructure spec", () => {
     const candidate = "c".repeat(64), imported = "d".repeat(64), foreign = "f".repeat(64);
     for (const mode of ["runtime", "package", "independent", "missing-import", "daemon-error", "foreign-import", "remove-conflict"]) {
       const c = new Controller(mode === "package" ? "package" : mode === "independent" ? "independent" : "runtime", await temp(), undefined, env);
-      c.connection = { args: [] }; c.commandEnv = {}; c.candidate = candidate;
+      c.connection = { args: [] }; c.commandEnv = {}; c.candidate = candidate; c.preBuildImageIds = new Set([imported, foreign]);
       c.builderOperation = mode === "independent" ? undefined : "builder";
       if (mode !== "package") { c.imported = mode === "independent" ? candidate : imported; c.importedOperation = "import"; }
       const nodes = new Map<string, { parent: string | null; operation: string }>([
@@ -104,7 +105,7 @@ describe("native AMD PostgreSQL infrastructure spec", () => {
         if (args[1] === "inspect") {
           if (id === imported && mode === "daemon-error") throw Object.assign(new Error("Cannot connect to daemon"), { code: 1 });
           const node = nodes.get(id); if (!node) throw Object.assign(new Error("No such image: sha256:" + id), { code: 1 });
-          return JSON.stringify([{ Id: "sha256:" + id, Config: { Labels: { [label]: id === imported && mode === "foreign-import" ? "foreign" : node.operation } } }]);
+          return JSON.stringify([{ Id: "sha256:" + id, Parent: node.parent ? "sha256:" + node.parent : "", Os: "linux", Architecture: "amd64", RepoTags: [], RepoDigests: [], Config: { Labels: { [label]: id === imported && mode === "foreign-import" ? "foreign" : node.operation } } }]);
         }
         expect(args[1]).toBe("rm"); expect(args).not.toContain("--force"); expect(args).not.toContain("-f");
         if (mode === "remove-conflict") throw Object.assign(new Error("image is being used by running container"), { code: 1 });
@@ -122,12 +123,50 @@ describe("native AMD PostgreSQL infrastructure spec", () => {
       if (["runtime", "package", "independent"].includes(mode)) {
         expect(c.cleanupErrors, mode).toEqual([]);
         expect(explicit, mode).toEqual(mode === "runtime" ? [candidate, imported] : [candidate]);
-        expect(events, mode).toEqual((mode === "runtime" ? [candidate, imported] : [candidate]).flatMap(id => ["inspect:" + id, "rm:" + id]));
+        expect(events, mode).toEqual([...(mode === "runtime" ? ["inspect:" + candidate] : []), ...(mode === "runtime" ? [candidate, imported] : [candidate]).flatMap(id => ["inspect:" + id, "rm:" + id])]);
       } else {
         expect(c.cleanupErrors, mode).toEqual([mode === "remove-conflict" ? "owned-image-cleanup" : "imported-image-cleanup"]);
         expect(explicit, mode).toEqual(mode === "remove-conflict" ? [] : [candidate]);
       }
     }
+  });
+  it("closes new legacy intermediate chains without touching foreign ancestors", async () => {
+    const label='io.vivalatax.qualification.operation';const ids={foreign:'a'.repeat(64),base:'b'.repeat(64),middle:'c'.repeat(64),candidate:'d'.repeat(64),other:'e'.repeat(64)};
+    const scenarios=['normal','absent-inherited-label','current-operation-middle','direct-parent','foreign-label','preexisting-middle','cycle','empty-parent','malformed-parent','missing-middle','wrong-id','arm64','linux-mismatch','tagged-middle','digest-reference','container-reference','new-container-reference','foreign-dependent-child','changed-parent-on-reinspect','changed-label-on-reinspect','new-tag-on-reinspect','remove-conflict','uncertain-inspect','uncertain-remove','missing-prebuild','prebuild-base-absent','over64'];const result=[];
+    for(const scenario of scenarios){
+     const c=new Controller('runtime','/private/tmp/never-created-amd-second-cleanup',undefined,{});c.connection={args:[]};c.commandEnv={};c.builderOperation='builder';c.candidate=ids.candidate;c.imported=ids.base;c.importedOperation='import';c.preBuildImageIds=new Set([ids.foreign,ids.base]);
+     const nodes=new Map<string, { parent: string | null; operation: string | undefined }>([[ids.foreign,{parent:null,operation:'foreign'}],[ids.base,{parent:ids.foreign,operation:'import'}],[ids.middle,{parent:ids.base,operation:scenario==='absent-inherited-label'?undefined:scenario==='current-operation-middle'?'builder':'import'}],[ids.candidate,{parent:scenario==='direct-parent'?ids.base:ids.middle,operation:'builder'}]]);
+     if(scenario==='direct-parent')nodes.delete(ids.middle);
+     if(scenario==='foreign-label')nodes.get(ids.middle)!.operation='foreign';if(scenario==='preexisting-middle')c.preBuildImageIds.add(ids.middle);if(scenario==='cycle')nodes.get(ids.middle)!.parent=ids.candidate;if(scenario==='empty-parent')nodes.get(ids.middle)!.parent=null;if(scenario==='malformed-parent')nodes.get(ids.middle)!.parent='bad';if(scenario==='missing-middle')nodes.delete(ids.middle);if(scenario==='foreign-dependent-child')nodes.set(ids.other,{parent:ids.middle,operation:'foreign'});if(scenario==='missing-prebuild')delete c.preBuildImageIds;if(scenario==='prebuild-base-absent')c.preBuildImageIds.delete(ids.base);
+     if(scenario==='over64'){let child=ids.candidate;for(let i=1;i<66;i++){const id=i.toString(16).padStart(64,'0');nodes.set(id,{parent:ids.base,operation:'import'});nodes.get(child)!.parent=id;child=id;}}
+     const events: string[][]=[],removed: string[]=[];let inspectMiddle=0;
+     c.docker=async(step: string,args: string[])=>{
+      assert.ok(!c.unconfirmedChild,'global unknown guard');events.push([step,...args]);
+      if(args[0]==='ps')return (step.includes('lineage-containers')&&scenario==='container-reference'||step.includes('intermediate-containers')&&scenario==='new-container-reference')?'foreign-container\n':'';
+      assert.equal(args[0],'image');const id=args.at(-1).replace(/^sha256:/,'');const n=nodes.get(id);assert.ok(n,'missingimage');
+      if(args[1]==='inspect'){
+       if(id===ids.middle)inspectMiddle++;
+       if(id===ids.middle&&scenario==='uncertain-inspect'){c.unconfirmedChild=true;throw new Error('uncertain');}
+       return JSON.stringify([{Id:'sha256:'+(id===ids.middle&&scenario==='wrong-id'?ids.other:id),Parent:n.parent?'sha256:'+(id===ids.middle&&inspectMiddle>1&&scenario==='changed-parent-on-reinspect'?ids.foreign:n.parent):'',Os:id===ids.middle&&scenario==='linux-mismatch'?'other':'linux',Architecture:id===ids.middle&&scenario==='arm64'?'arm64':'amd64',RepoTags:id===ids.middle&&(scenario==='tagged-middle'||inspectMiddle>1&&scenario==='new-tag-on-reinspect')?['foreign:tag']:[],RepoDigests:id===ids.middle&&scenario==='digest-reference'?['foreign@sha256:'+ids.other]:[],Config:{Labels:{[label]:id===ids.middle&&inspectMiddle>1&&scenario==='changed-label-on-reinspect'?'foreign':n.operation}}}]);
+      }
+      assert.equal(args[1],'rm');assert.ok(args.includes('--no-prune'));assert.ok(!args.includes('--force'));
+      if(id===ids.middle&&scenario==='uncertain-remove'){c.unconfirmedChild=true;throw new Error('uncertain');}
+      if(id===ids.middle&&['remove-conflict','new-container-reference'].includes(scenario))throw new Error('container conflict');
+      if([...nodes.values()].some(x=>x.parent===id))throw new Error('dependent child hardconflict');nodes.delete(id);removed.push(id);return '';
+     };
+     await c.cleanup();assert.ok(nodes.has(ids.foreign),'foreign ancestor preserved');if(scenario==='new-container-reference'){assert.equal(events.filter(x=>x[0].includes('intermediate-containers')).length,1);assert.equal(events.filter(x=>x[0].includes('intermediate-remove')).length,0);}
+     const positive=['normal','absent-inherited-label','current-operation-middle','direct-parent'].includes(scenario);
+     if(positive){assert.deepEqual(c.cleanupErrors,[]);assert.deepEqual(removed,scenario==='direct-parent'?[ids.candidate,ids.base]:[ids.candidate,ids.middle,ids.base]);}
+     else{assert.ok(c.cleanupErrors.length>0);assert.ok(nodes.has(ids.base),'base retained after ambiguity');if(scenario.includes('uncertain')){const i=events.findIndex(x=>x[0].includes(scenario==='uncertain-inspect'?'lineage-inspect':'intermediate-remove')&&x.at(-1)==='sha256:'+ids.middle);assert.ok(i>=0);assert.deepEqual(events.slice(i+1),[]);}}
+     result.push({scenario,passed:true,cleanupErrors:c.cleanupErrors,removed});
+    }
+    for (const hasBase of [true,false]) {
+     const c=new Controller('runtime','/private/tmp/never-created-amd-snapshot',undefined,{});c.connection={args:[]};c.commandEnv={};c.loadInput=async()=>({image:ids.base});c.sources=async()=>({cache:'/private/tmp/never-read'});let builds=0;const calls: string[][]=[];
+     c.docker=async(step: string,args: string[])=>{calls.push([step,...args]);assert.equal(step,'before-gosu-build-images');return (hasBase?[ids.foreign,ids.base]:[ids.foreign]).map(x=>'sha256:'+x).join('\n')+'\n';};
+     c.builder=async()=>{builds++;throw new Error('probe-stops-before-build');};
+     await assert.rejects(c.runtimeBuild(),hasBase?/probe-stops-before-build/:/Imported base disappeared/);assert.equal(builds,hasBase?1:0);assert.deepEqual([...c.preBuildImageIds],hasBase?[ids.foreign,ids.base]:[ids.foreign]);assert.deepEqual(calls[0],['before-gosu-build-images','image','ls','--all','--quiet','--no-trunc']);result.push({scenario:hasBase?'actual-runtime-prebuild-snapshot':'prebuild-snapshot-missing-base',passed:true});
+    }
+    expect(result).toHaveLength(29);
   });
   it("stops all later daemon commands when closure becomes uncertain during cleanup", async () => {
     const c = new Controller("runtime", await temp(), undefined, env); c.connection = { args: [] }; c.commandEnv = {}; c.volumes = ["own-volume"];
