@@ -179,3 +179,44 @@ it('preserves matching and missing direct-original years',()=>{
   expect(calculateVerifiedAiAudit(scope,taxInput).entries.find(x=>x.line==='11')?.value).toBe('94000');
  }
 });
+
+function miscNecYearFixture(kind:'misc-income'|'misc-withholding'|'nec-withholding',taxYear?:number){
+ const input=structuredClone(simpleW2Fixture);
+ if(kind==='nec-withholding')input.form1099Nec=[{taxYear,payer:'Fictional calendar contractor',nonemployeeCompensation:'0',federalWithheld:'1000'}];
+ else input.form1099Misc=[{taxYear,payer:'Fictional calendar payer',otherIncome:kind==='misc-income'?'1000':'0',federalWithheld:kind==='misc-withholding'?'1000':'0'}];
+ return input;
+}
+async function confirmedMiscNecYearRequest(taxInput:typeof simpleW2Fixture){
+ const actor={id:'synthetic-misc-nec-owner',label:'Synthetic',email:'calendar-fixture@example.test'},workspace=createWorkspaceRecord('misc-nec-calendar-source');workspace.returnSummary.targetTaxYear=taxInput.taxpayer.taxYear;
+ const providerRequest=buildProviderWorkspaceRequest(workspace,{task:'workspace-help',question:'Explain tax payments.',now:'2026-11-15T05:00:00Z'}),fetchFn=vi.fn(()=>{throw Error('No external transport');}),accounting=vi.fn();
+ const handler=createTaxExplanationRouteHandlers({env:{TAX_ENGINE_DEPLOYMENT_MODE:'hosted',NODE_ENV:'production',TAX_ENGINE_APP_URL:'https://tax.example'},resolveActor:vi.fn().mockResolvedValue(actor),getEntitlementByOwnerId:vi.fn().mockResolvedValue({subscription:{planId:'starter'},entitlement:{workspaceAccess:true}}),rateLimitStore:new Map(),fetchFn,accounting});
+ const response=await handler.POST(new Request('https://tax.example/api/workspace/tax-explanation',{method:'POST',headers:{'content-type':'application/json',origin:'https://tax.example','X-Tax-Engine-Workspace-Owner':'hosted-owner:'+actor.id,'X-Real-IP':'192.0.2.44'},body:JSON.stringify({version:1,confirmed:true,workspaceId:workspace.id,workspaceRevision:workspace.updatedAt,taxYear:taxInput.taxpayer.taxYear,taxInput,providerRequest})}));
+ return {response,fetchFn,accounting};
+}
+it.each([
+ ['misc-income-past','misc-income',2024],['misc-income-future','misc-income',2026],
+ ['misc-withholding-past','misc-withholding',2024],['misc-withholding-future','misc-withholding',2026],
+ ['nec-withholding-past','nec-withholding',2024],['nec-withholding-future','nec-withholding',2026],
+] as const)('denies a known mismatched MISC or withholding-only NEC original %s before confirmed accounting',async(_label,kind,taxYear)=>{
+ const input=miscNecYearFixture(kind,taxYear),preview=calculateFederalTax(TaxYearInputSchema.parse(input));
+ expect(preview.agi.toFixed()).toBe(kind==='misc-income'?'86000':'85000');
+ expect(()=>calculateVerifiedAiAudit(scope,input)).toThrow('matching-year direct income originals');
+ const {response,fetchFn,accounting}=await confirmedMiscNecYearRequest(input);
+ expect(response.status).toBe(400);expect(response.headers.get('cache-control')).toContain('no-store');
+ const text=await response.text();expect(JSON.parse(text)).toEqual({error:'Complete and confirm matching-year taxpayer facts before requesting a calculation explanation.'});
+ for(const privateValue of [input.taxpayer.primary.ssn,'Fictional calendar payer','Fictional calendar contractor'])expect(text).not.toContain(privateValue);
+ expect(fetchFn).not.toHaveBeenCalled();expect(accounting).not.toHaveBeenCalled();
+});
+it('preserves matched and missing MISC and withholding-only NEC years without opening2026',async()=>{
+ for(const kind of ['misc-income','misc-withholding','nec-withholding'] as const){
+  for(const taxYear of [undefined,2025]){
+   const input=miscNecYearFixture(kind,taxYear),before=structuredClone(input);
+   expect(calculateVerifiedAiAudit(scope,input).entries.find(entry=>entry.line==='11')?.value).toBe(kind==='misc-income'?'86000':'85000');
+   const {response,fetchFn}=await confirmedMiscNecYearRequest(input);expect(response.status).toBe(200);expect(response.headers.get('cache-control')).toContain('no-store');expect(fetchFn).not.toHaveBeenCalled();expect(input).toEqual(before);
+   if(taxYear===undefined)expect((kind==='nec-withholding'?input.form1099Nec[0]:input.form1099Misc[0]).taxYear).toBeUndefined();
+  }
+ }
+ const incomplete=miscNecYearFixture('misc-income',2026);incomplete.taxpayer.taxYear=2026;incomplete.w2s=incomplete.w2s.map(row=>({...row,taxYear:2026}));
+ expect(()=>calculateVerifiedAiAudit(scope,incomplete)).toThrow('Year-specific federal calculation is unavailable');
+ const {response,fetchFn,accounting}=await confirmedMiscNecYearRequest(incomplete);expect(response.status).toBe(400);expect(response.headers.get('cache-control')).toContain('no-store');expect(fetchFn).not.toHaveBeenCalled();expect(accounting).not.toHaveBeenCalled();
+});

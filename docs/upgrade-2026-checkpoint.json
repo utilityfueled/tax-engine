@@ -1,4 +1,19 @@
 {
+  "nov15ConfirmedMiscNecYears": {
+    "base": "a80f4a71",
+    "freeze": "2c7e3597d47e52bf91f59e0f432a6a5b0b028621800914c2cbb50380b67c6e12",
+    "mainTests": 87,
+    "mainFiles": 3,
+    "peerTests": 39,
+    "peerActualPostCases": 15,
+    "peer": "5f86567dc3bc13b6f2842640dc78042df727962787d6a47b9fc6451bf0eda205",
+    "mainReceipt": "53a38217cd2769ee5beb6b2bc9ae96cc725fa7c54b95aa8dd57811d47fb01fc4",
+    "specReferences": 21,
+    "inventoryUnchanged": 1030,
+    "effectsOnRejectedRequests": "0provider/0accounting;private/no-store",
+    "remaining": "OID/Kknown-source-yearauditandcurrentcombined/runtimes/human/final2026",
+    "evidence": "docs/upgrade-2026-confirmed-misc-nec-years-20261115.md"
+  },
   "nov15GuidedMfjHousehold": {
     "canonicalCommit": "d79ce1df",
     "sourceFreeze": "beee6725cd6dfb22a33e9c0d20e86809421c462a78a49ba2e46c29ca091003ed",
