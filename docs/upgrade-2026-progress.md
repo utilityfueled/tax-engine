@@ -1,5 +1,12 @@
 # 2026 upgrade implementation evidence
 
+## November 15 complete remote browser artifacts
+
+The strict aa4 container gate retains 30 failures and d192 retains twelve;
+all643 cases and eight batches are reconciled independently and by root.
+Separate 90-second self-host passes do not qualify the strict30-second gate.
+[Terminal evidence and sampling limits](upgrade-2026-remote-browser-terminal-20261115.md).
+
 ## November 15 post-corpus disk hold
 
 Proven-owned image cleanup passes all 65 commands and normal restoration, but

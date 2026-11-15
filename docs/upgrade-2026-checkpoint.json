@@ -1,4 +1,26 @@
 {
+  "nov15RemoteStrictBrowserTerminal": {
+    "aa4": {
+      "run": 43704582177,
+      "passed": 608,
+      "timedOut": 10,
+      "otherFailures": 20,
+      "skipped": 5
+    },
+    "d192": {
+      "run": 43705439474,
+      "passed": 626,
+      "timedOut": 5,
+      "otherFailures": 7,
+      "skipped": 5
+    },
+    "strictQualificationPassed": false,
+    "eachSelectedCases": 643,
+    "eachCompletedBatches": 8,
+    "rootArtifactReviewSha256": "2fec8b6766c06900bb63da9b61411736fd81d545e03faeab3dbebd9e4a4002ea",
+    "independentCompleteReviewSha256": "e1a1ba738b14fdf1aef415614e36197d930f6a1c8b1d91c9b4b4120fbcf686e5",
+    "ledger": "upgrade-2026-remote-browser-terminal-20261115.md"
+  },
   "nov15PostCorpusOwnedCache": {
     "commands": 65,
     "removedOwnedImages": 5,
