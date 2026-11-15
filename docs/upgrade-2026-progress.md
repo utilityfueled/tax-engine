@@ -6056,3 +6056,13 @@ identity/worksheet/decision fields remain blank, and109 affected support/export/
 K-3/model-gate controls pass. The unsupported-method register now describes the
 delivered narrow guide correctly while retaining all broader source gates.
 [Unassigned original-source handoff](upgrade-2026-human-tax-review-delta-33f8f784.md).
+
+### November 15: opt-in native AMD64 candidate workflow
+
+The manual public-runner workflow binds three fresh native AMD64 jobs to one
+exact source and immutable candidate handoffs. Capacity/time reserves, scoped
+normal cleanup, fixed publication allowlists and raw scan evidence fail closed.
+Author 70PASS/one real-database skip, 13 spec references and independent source
+review pass; root focused AMD64/recovery checks pass16/one database skip. Actual
+runner capacity and qualification remain pending; default images and readiness
+are unchanged. [Scope and retained review](upgrade-2026-amd64-backports-workflow-20261115.md).

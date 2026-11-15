@@ -1,4 +1,17 @@
 {
+  "nov15Amd64CandidateWorkflow": {
+    "status": "implemented-source-reviewed-actual-dispatch-pending",
+    "document": "docs/upgrade-2026-amd64-backports-workflow-20261115.md",
+    "implementationManifest": "b488412656441c9e4efa6467a000076623814e1fb3e0e6c8d2107839b4d45fd1",
+    "independentReview": "cf921d95eeb3279886b4ff5460eece8d59653cdbb551690c0bf24289c599f645",
+    "rootFocusedTests": {
+      "passed": 16,
+      "realDatabaseSkipped": 1
+    },
+    "defaultImageChanged": false,
+    "riskAccepted": false,
+    "releaseQualified": false
+  },
   "nov15HsaIntegrationExpectations": {
     "base": "835e8972",
     "actualFullUnit": "23FAIL28673PASS2096files",

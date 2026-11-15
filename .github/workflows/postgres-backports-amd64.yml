@@ -1,0 +1,97 @@
+name: Native AMD64 PostgreSQL backports (opt-in)
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_sha:
+        description: Exact full default-branch commit SHA selected for this dispatch
+        type: string
+        required: true
+
+concurrency:
+  group: postgres-backports-amd64-${{ github.run_id }}
+  cancel-in-progress: false
+
+jobs:
+  package:
+    if: github.event.repository.private == false && github.event.repository.fork == false && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 165
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version-file: .node-version
+      - name: Build paired native packages and immutable private candidate
+        run: node scripts/qualify-postgres-backports-amd64.mjs package "$RUNNER_TEMP/amd64-package"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: amd64-package-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/amd64-package/public/
+          if-no-files-found: error
+          retention-days: 3
+          compression-level: 0
+  runtime:
+    needs: package
+    if: github.event.repository.private == false && github.event.repository.fork == false && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version-file: .node-version
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: amd64-package-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/amd64-package-input/
+      - name: Build native gosu and exercise bounded PostgreSQL recovery
+        run: node scripts/qualify-postgres-backports-amd64.mjs runtime "$RUNNER_TEMP/amd64-runtime" "$RUNNER_TEMP/amd64-package-input"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: amd64-runtime-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/amd64-runtime/public/
+          if-no-files-found: error
+          retention-days: 3
+          compression-level: 0
+  independent:
+    needs: runtime
+    if: github.event.repository.private == false && github.event.repository.fork == false && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version-file: .node-version
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: amd64-runtime-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/amd64-runtime-input/
+      - name: Independently import candidate and retain archive-bound unfiltered scan
+        run: node scripts/qualify-postgres-backports-amd64.mjs independent "$RUNNER_TEMP/amd64-independent" "$RUNNER_TEMP/amd64-runtime-input"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: amd64-independent-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/amd64-independent/public/
+          if-no-files-found: error
+          retention-days: 3
+          compression-level: 0
