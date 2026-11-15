@@ -30,10 +30,23 @@ this does not turn the failed gate into a pass. The configured scan retains
 Its actual default suppression configuration is retained; no unfiltered scan or
 risk acceptance is claimed.
 
-A separate optional Linux CPU diagnostic retained its first PGDG key-download
-failure before image/browser/profile execution. Only that failed job was rerun
-once after the entire workflow was terminal. Its final diagnostic outcome is
-pending in this dated record; it cannot replace the required strict gate.
+A separate [optional Linux attempt-2 run](https://github.com/utilityfueled/tax-engine/actions/runs/43753753112)
+retains the first PGDG key-download failure before image/browser/profile execution.
+Only that failed job was rerun once after the workflow was terminal. Its strict
+run records 640 passes, eight explicit 30-second deadline failures and five
+original skips across all 653 cases, with the original two workers, zero retries,
+eight overrides and eight natural windows. This does not replace the preceding
+required strict gate's fourteen failures. Source/image/SBOM/archive and all six
+Compose phases reconcile; configured findings remain unaccepted.
+
+The separate fourteen nonqualifying diagnostic reruns all fail. Ten sanitized
+profiles pass numeric/privacy validation; four are unavailable. Captured sampling
+intervals total 90.734385 seconds across partial main-isolate lifetimes, not
+process CPU time or full-test coverage. Exact local public bytes match 44 of 63
+metadata entries, representing 17 of 31 distinct chunk hashes; original asset
+paths/source maps are unavailable. Hash-work samples and caller observations do
+not establish deadline cause or a Linux performance fix. Root artifact review
+`5e43a65f…` and independent `81c6787a…` preserve both sets of failures.
 
 Fourteen of fifteen downloaded remote sample hashes match the retained samples.
 The changed rolling [Publication 4491](https://www.irs.gov/pub/irs-pdf/p4491.pdf)
@@ -84,11 +97,24 @@ schema while restoring the original role membership and database privileges.
 It then stops during sandbox card Checkout: 74 SQL operations, six Stripe
 operations, 158 browser requests and **zero provider calls**. Owned child processes
 and pools close normally. The original unknown-payment receipt is retained;
-schema and owned sandbox resources remain. A separately reviewed two-GET Stripe
-observation confirms the exact owned Checkout is open and unpaid, with no payment
-intent. This does not prove the database issuance row or authorize cleanup; the
-failed receipt remains unchanged. No payment replay, successful cloud settlement,
-model run or cleanup is inferred.
+schema and owned sandbox resources initially remain. A separately reviewed
+two-GET Stripe observation first confirms the owned Checkout is open and unpaid,
+with no payment intent; that observation alone does not prove database issuance
+or authorize cleanup. The original HOLD/unknown receipt `e2af6e79…` is unchanged.
+
+A later, separately authorized read-only reconciliation uses 40 SQL queries and
+two Stripe GETs to verify the exact unused issuance, expired unpaid Checkout and
+absence of a payment intent. A subsequent owned-resource cleanup uses 109 SQL
+queries and ten Stripe requests. It verifies committed absence of the isolated
+schema, inactivates the owned price/product and deletes the owned customer.
+Both phases close their connections and owned processes normally, with zero
+payment actions and zero provider calls. Root read-only/cleanup reviews
+`32375181…`/`4453cd3f…` and independent `cc51fb57…` bind those later observations.
+The original foreign snapshot was lost and is not reconstructed: later fresh
+schema/table names and row counts, role memberships and database ACL parity do
+not establish historical foreign-content integrity. The original financial
+unknown evidence remains; no successful paid-credit settlement, model run or
+public Checkout qualification is inferred from reconciliation or cleanup.
 Known provider exposure remains $0.29423670, including the existing $0.022384
 unreconciled reserve. Public credit purchasing remains unavailable.
 
@@ -99,5 +125,7 @@ These identify private retained reports, not publicly downloadable artifacts.
 
 Qualified human tax/spec/expected-output review, independent human AI labels,
 final annual 2026 forms, accountable advisory owners/expiry and independent
-security/privacy review remain required. The strict Linux failures and cloud
-credit reconciliation also remain open. No readiness threshold is weakened.
+security/privacy review remain required. The strict Linux failures and successful
+paid-credit qualification remain open; later scoped cleanup is complete without
+recovering the historical foreign baseline. Current `79792ec7` combined checks
+are separate and pending. No readiness threshold is weakened.

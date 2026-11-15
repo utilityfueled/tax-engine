@@ -1,4 +1,72 @@
 {
+  "nov15Optional8ccAttempt2AndSeparateCloudCleanup": {
+    "applicationSource": "8cc5b0ec0b1507e0203a8ce1bc5f3a72de1b5f09",
+    "optionalStrict": {
+      "selected": 653,
+      "passed": 640,
+      "deadlineFailures": 8,
+      "originalSkips": 5,
+      "workers": 2,
+      "retries": 0,
+      "defaultMs": 30000,
+      "existingOverrides": 8,
+      "windows": 8,
+      "originalRequiredFailurePreserved": true
+    },
+    "separateNonqualifyingDiagnostic": {
+      "cases": 14,
+      "failed": 14,
+      "validProfiles": 10,
+      "unavailableProfiles": 4,
+      "sampledWallIntervalUs": 90734385,
+      "matchingPublicMetadataEntries": 44,
+      "allPublicMetadataEntries": 63,
+      "matchingDistinctChunkHashes": 17,
+      "allDistinctChunkHashes": 31,
+      "sourceMapsUsed": false,
+      "cpuTimeOrDeadlineCauseClaimed": false
+    },
+    "originalCloud": {
+      "receiptStatus": "HOLD",
+      "originalUnknownUnchanged": true,
+      "sqlQueries": 74,
+      "stripeRequests": 6,
+      "browserRequests": 158,
+      "providerCalls": 0
+    },
+    "laterReadOnlyReconciliation": {
+      "sqlQueries": 40,
+      "stripeGETs": 2,
+      "normalClosure": true,
+      "paymentActions": 0,
+      "providerCalls": 0
+    },
+    "laterOwnedCleanup": {
+      "sqlQueries": 109,
+      "stripeRequests": 10,
+      "schemaRemoved": true,
+      "ownedPriceProductInactive": true,
+      "ownedCustomerDeleted": true,
+      "normalClosure": true,
+      "paymentActions": 0,
+      "providerCalls": 0,
+      "historicalForeignSnapshotRecovered": false,
+      "historicalForeignContentIntegrityClaimed": false
+    },
+    "receiptSha256": {
+      "optional8ccRoot": "5e43a65fca2fa50b7b1de41bc3375dc9fe477f337f924f7e9dd22c7616e8f529",
+      "optional8ccIndependent": "81c6787a35bd5119f6c7f1bd2b683478d0002072c4d2aa2cf4dde0f354628f03",
+      "optional8ccCPU": "9756c50fd79ebd49f77d067bbb64febe092ec079b54889fd01b7e27eee135c79",
+      "optional8ccContainer": "ffc395a1089f1ec81cdcfdee655f8c4083a29679e798a08121d1a6f0c3687cbb",
+      "originalCloudHold": "e2af6e7914af706b14042a5fcac2d8e92a1e64dcb131a2821efbfbdce3abb102",
+      "cloudReadOnlyRoot": "323751815443b1a2e3fc35c2a3a38ee59979866598ea8eee988d19c763f6b4ce",
+      "cloudCleanupRoot": "4453cd3f602ebe398f8e5e4dd06f33598c670b07caf585ed9f0ef9d47697353f",
+      "cloudIndependent": "cc51fb57a928250efa6b3d7c549897234c539eccb6c6c070a8aef0f65e30d8cc"
+    },
+    "current79792ec7CombinedQualification": "pending separate actual all-twelve review",
+    "paidCreditQualified": false,
+    "releaseQualified": false
+  },
   "nov15TrainingGuideSpecReferenceFormat": {
     "sourceWithFullUnitFailure": "23494de5",
     "fullUnitPassed": 28855,

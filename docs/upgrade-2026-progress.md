@@ -1,5 +1,26 @@
 # 2026 upgrade implementation evidence
 
+## November 15 optional 8cc diagnostic and separate cloud cleanup
+
+The optional Linux attempt-2 strict run retains 640 passes, eight 30-second
+deadline failures and five original skips across all 653 cases. Its separate
+fourteen diagnostic reruns all fail; ten sanitized profiles validate and four
+are unavailable. Exact local bytes match 44 public metadata entries representing
+17 distinct chunk hashes. Partial sampled intervals do not establish CPU time
+or deadline cause, and neither this run nor diagnostics replace the original
+failed strict gate.
+
+The original cloud Checkout receipt remains HOLD/unknown. Later, separately
+reviewed read-only reconciliation uses 40 SQL queries and two Stripe GETs;
+owned expired-unpaid resource cleanup uses 109 SQL queries and ten Stripe
+requests. Both close normally with zero payment actions and provider calls.
+The isolated schema is removed, owned price/product made inactive and customer
+deleted. The lost original foreign snapshot is not recovered: fresh count and
+role/ACL parity do not prove historical foreign-content integrity. Paid-credit
+and release qualification remain open. Current `79792ec7` all-twelve checks
+remain a separate pending qualification.
+[Retained combined evidence](upgrade-2026-integrated-runtime-8cc5b0ec-20261115.md).
+
 ## November 15 full-suite spec-reference correction
 
 The pushed `23494de5` unit and coverage runs each find one spec-format discovery
