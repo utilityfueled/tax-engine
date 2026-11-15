@@ -1780,7 +1780,8 @@ describe("workspace engine preview", () => {
     ]));
   });
 
-  it("applies confirmed decedent medical expenses before recomputing a beneficiary HSA death-distribution preview", () => {
+  // Spec: federal/form-1099-sa.yaml death-year-workspace-preview.
+  it("keeps confirmed prior-death-year medical expenses out of the later-year HSA preview", () => {
     const documents = [
       createDocument({
         id: "doc-1099sa-decedent-medical-expenses",
@@ -1842,20 +1843,17 @@ describe("workspace engine preview", () => {
 
     expect(preview).not.toBeNull();
     expect(preview?.sourceFixtureIds).toEqual(["irs-1099-sa-2025"]);
-    expect(preview?.metrics.totalIncome).toBe("4100");
+    expect(preview?.metrics.totalIncome).toBe("300");
     expect(preview?.metrics.totalTax).toBe("0");
     expect(preview?.metrics.amountOwed).toBe("0");
     expect(preview?.assumptions).toEqual(["This preview uses the supplied complete, reviewed return facts. Each selected original document record is reconciled to its actual calculation source; abbreviated summaries do not supply missing eligibility, identity, dates or amounts."]);
     expect(preview?.highlightedLines).toEqual(expect.arrayContaining([
       expect.objectContaining({
-        id: "Sched 1:8f",
-        value: "3800"
-      }),
-      expect.objectContaining({
         id: "1040:8",
-        value: "4100"
+        value: "300"
       })
     ]));
+    expect(preview?.highlightedLines.some((line) => line.id === "Sched 1:8f")).toBe(false);
     expect(preview?.highlightedLines.some((line) => line.id === "Sched 2:17c")).toBe(false);
   });
 

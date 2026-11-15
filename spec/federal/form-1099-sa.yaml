@@ -149,3 +149,10 @@ lines:
     formula: "Retain actual reported Box 4 per actual owner even with zero current inclusion and earnings; reject spouse-owned sources when no actual spouse context exists. Do not reassign historical amounts or invent current income."
     irsRef: "Final2025 i8889 Death of Account Beneficiary; existing actual-owner contract"
     testRef: "tests/engine/forms/form-1099-sa-death-timing.test.ts::retains actual owner checks even when all prior FMV has no current earnings"
+
+  - line: "death-year-workspace-preview"
+    description: "Confirmed later-year HSA workspace preview preserves only current earnings"
+    formula: "For actual code6 gross5300 and death FMV5000, current total income and Form1040 line8 are300. The actual1200 prior death-year medical amount creates no current Form8889 taxable distribution, deduction or additional tax. The zero HSA distribution line is absent from highlighted nonzero lines, while earnings remain visible."
+    irsRef: "Final2025 i1099sa Box3 code6; final2025 i8889 Death of Account Beneficiary; same death-year-routing authority"
+    notes: "Integration-oracle correction only after the retained fullsuite and isolated original test reproduce the obsolete4100 expectation. All original machine facts, source reconciliation and zero-tax assertions stay intact."
+    testRef: "tests/engine/workspace-engine-preview.test.ts::keeps confirmed prior-death-year medical expenses out of the later-year HSA preview"

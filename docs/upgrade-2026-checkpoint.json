@@ -1,4 +1,20 @@
 {
+  "nov15HsaIntegrationExpectations": {
+    "base": "835e8972",
+    "actualFullUnit": "23FAIL28673PASS2096files",
+    "ohFreeze": "27b78167fa4bec14deb6578398455db6e36d186dca4074091e75bb95b2b46149",
+    "hsaPeer": "c92878fb97f8ae0c980c1c4ad0ff443e9d1cab97d791e94747031f1377569fec",
+    "rootReview": "6bd692688fd1f522b1162f9ecd10bb7764be5a386def65ca22cf28e2e813a936",
+    "mainTests": 559,
+    "mainFiles": 6,
+    "ohFullHashesPreserved": 22,
+    "ohOriginalTestsPreserved": 74,
+    "rootExactMetadataLeafDifferences": 264,
+    "financialOrSourceCommitmentDifferences": 0,
+    "productChanges": 0,
+    "remaining": "Successorall12/currentruntimes/externalgates",
+    "evidence": "docs/upgrade-2026-hsa-integration-oracles-20261115.md"
+  },
   "nov15InheritedHsaTiming": {
     "base": "1768448b",
     "freeze": "e3f3738cd2e0b63dc705004a8de940cedead4e178fa2cc84b7b6f5e2ec4c97c1",

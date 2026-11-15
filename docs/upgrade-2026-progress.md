@@ -1,5 +1,12 @@
 # 2026 upgrade implementation evidence
 
+## November 15 HSA integration expectation reconciliation
+
+The full835 unit run retains23 failures. One obsolete workspace amount and22
+complete Ohio audit fingerprints are reconciled with independent numeric and
+full-output parity evidence. Main559 composed tests pass without product,
+browser-policy or gate changes. [Evidence](upgrade-2026-hsa-integration-oracles-20261115.md).
+
 ## November 15 inherited HSA timing
 
 Historical death-date balances remain traceable but no longer enter later-year
