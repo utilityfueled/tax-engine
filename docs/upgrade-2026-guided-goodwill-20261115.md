@@ -41,3 +41,21 @@ Core freeze: `327d0e0ceedfdcf8f458240db9154df524371e56770e7f4a8ce9ccb5b493abf1`.
 Independent review: `53b4063989422d8a0b13cfe61b8ab426c8ea66ea6e3ba35cdf52faf4a19e4771`.
 Private packets: `nov15-guided-goodwill-amortization`,
 `nov15-goodwill-amd64-independent-review` and `nov15-goodwill-root-adoption`.
+
+## Separate visible browser source
+
+Two additional source cases collect at 1280 and 390 pixels. They visibly enter
+all goodwill originals, capture and reconcile business confirmation, save and
+reload, preserve exact formatted basis through blur, distinguish blank from
+zero, invalidate a changed original and keep 2026 export controls closed. They
+assert no protected API request or private-source network transfer. They add no
+deletion journey. Independent and root collection checks both find two cases
+at the unchanged 30-second default, two workers and zero retries; all four
+proposed protected-action budgets are zero. Actual browser execution and the
+integrated audit-metadata update remain pending.
+
+Browser freeze: `1bc448cf3397db71d9d3df4205ddc24ff6f6929b10ba61a88ceaaa532207cbad`.
+Independent review: `6505e175deff87d550ea681d0529a68f7298d96104d024fac7944e3fa785b842`.
+Root checks also pass all 947 strict spec-reference tests. Private evidence:
+`nov15-guided-goodwill-browser-source`, `nov15-goodwill-browser-amd64-peer` and
+`nov15-goodwill-browser-root-adoption`. No browser runtime pass is claimed.

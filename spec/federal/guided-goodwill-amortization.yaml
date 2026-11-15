@@ -23,3 +23,6 @@ lines:
   - line: "transfer-privacy"
     formula: 'Canonical calculation, original-bound reopened PDF and private/no-store authenticated route use existing amounts; no raw source identifiers enter verified AI or hosted shell, no provider transport, no PA basis inference.'
     testRef: "tests/guided-interview/guided-goodwill-amortization.test.ts::preserves canonical amounts privacy and state boundaries"
+  - line: "visible-browser"
+    formula: "At1280/390px type every goodwill original visibly; preserve confirmation, blank/zero, reload, edited original invalidation and geometry; protected action bounds all zero and final2026 remains closed. Source collection precedes actual runtime qualification."
+    testRef: "apps/web/tests/guided-goodwill-amortization.spec.ts::originates private acquired-goodwill originals and preserves source gates"
