@@ -356,3 +356,34 @@ application rehearsal.
 | Retained mismatch/missing inventory | `d6ccd6f8dcfceeb8f3f01a43651d4b43bf5fb27ab77061af44cebfef82d34d48` |
 
 Private execution root: `.local/upgrade-evidence/nov15-w3c-v13-native-successor-prepared/execution-b6980a2dec599769fe2c3e2e/`.
+
+
+## November 15: post-corpus owned-image cleanup and capacity hold
+
+A separate provenance-bound maintenance run completes all 65 commands and removes
+only the five admitted V13 toolchain intermediates, child first with `--no-prune`.
+Full inventories and signatures preserve the other 36 images. No global prune,
+force, resize, container, volume or guest-file deletion occurs. Root and separate
+actual reviews verify normal stop, all owned-process closure, original resources,
+default connection and both socket routes.
+
+Available disk rises from 267,393,867,776 to 267,861,614,592 bytes, a measured gain
+of 467,746,816 bytes. It remains **573,841,408 bytes below** the unchanged
+268,435,456,000-byte workload floor. Memory passes; disk does not. Successful
+maintenance therefore does not admit an application rehearsal. A bounded
+read-only diagnostic follows; the remaining disk-use cause is not established.
+
+The root saved-file observer first assumed empty guest-check stdout and raw-ID
+removal stdout. Actual sentinels and `Deleted: FULLID` output disproved those
+observer assumptions; corrected observers pass without changing execution. Both
+failed observer attempts remain retained.
+
+| Evidence | SHA-256 |
+| --- | --- |
+| Actual maintenance receipt | `9d83cb976e253565155c55dcb95184a38e46963ed079335f20b63ff8aaebbe97` |
+| Root actual review | `c715f8bf6a4b01b7b588d744cc105715d47a6f401c28f28af9d660fd6ab01446` |
+| Independent actual review | `3ff3960d33bf0925fa500bdbfaa995fc685a5d6b33b7c0912f81913fe334884e` |
+
+Private execution packet: `nov15-w3c-v13-owned-cache-maintenance-prepared`.
+All conformance, current-application qualification and risk-acceptance gates
+remain unchanged.

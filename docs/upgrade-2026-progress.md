@@ -1,5 +1,12 @@
 # 2026 upgrade implementation evidence
 
+## November 15 post-corpus disk hold
+
+Proven-owned image cleanup passes all 65 commands and normal restoration, but
+guest disk remains 573,841,408 bytes short of the unchanged workload floor.
+The application rehearsal stays blocked while read-only diagnosis proceeds.
+[Actual evidence](upgrade-2026-postgres-libxml2-native-20261114.md).
+
 ## November 15 PA/W-2 source metadata
 
 The source audit and generated inventory now bind the reviewed PA renderer and

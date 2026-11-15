@@ -1,4 +1,17 @@
 {
+  "nov15PostCorpusOwnedCache": {
+    "commands": 65,
+    "removedOwnedImages": 5,
+    "preservedImages": 36,
+    "normalStopResourcesRoutesRestored": true,
+    "availableBytes": 267861614592,
+    "requiredBytes": 268435456000,
+    "shortfallBytes": 573841408,
+    "workloadFloorPassed": false,
+    "applicationRehearsalAdmitted": false,
+    "receiptSha256": "9d83cb976e253565155c55dcb95184a38e46963ed079335f20b63ff8aaebbe97",
+    "independentActualReviewSha256": "3ff3960d33bf0925fa500bdbfaa995fc685a5d6b33b7c0912f81913fe334884e"
+  },
   "nov15PaW2Metadata": {
     "sourceHead": "82a51facf6cb7c300216fbfb46bf034d33f65347",
     "frozenPins": 38,
