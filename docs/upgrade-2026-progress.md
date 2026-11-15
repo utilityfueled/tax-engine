@@ -1,5 +1,12 @@
 # 2026 upgrade implementation evidence
 
+## November 15 future K1 source years
+
+Future original K1 years now reject before confirmed effects while prior fiscal
+headers remain compatible. Main 134 tests and 37 spec references pass; separate
+review verifies twelve POSTs and the exact composed calendar guards.
+[Evidence](upgrade-2026-confirmed-k1-future-years-20261115.md).
+
 ## November 15 retained W-2G calendar originals
 
 Actually supplied legacy gambling years now survive parsing and conflicting

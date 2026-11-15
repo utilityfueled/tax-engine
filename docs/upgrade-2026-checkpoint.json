@@ -1,4 +1,21 @@
 {
+  "nov15ConfirmedK1FutureYears": {
+    "base": "5a06251b",
+    "freeze": "0e4d1a9ec191ff345a0bf9f2ca050c7d3a00bed9ae0a9366535d25fe6df12bbc",
+    "mainTests": 134,
+    "mainFiles": 7,
+    "peerReview": "dcfa8fb74c4214ab8f129d983d638772bd1c4aaf58740ee0c054f9b6cb743387",
+    "peerTests": 106,
+    "peerActualPosts": 12,
+    "peerComposedTests": 116,
+    "exactMainComposedSuccessor": "59e156676920792b3b4895f2746541e1d9114ed36a42263c086e57ffe9f1610b",
+    "specReferences": 37,
+    "inventoryUnchanged": 1030,
+    "mainReceipt": "a8bd98c7cde1592015a68ab1e1e1d5204365c9eb3a3a786a8cc326c224c79b86",
+    "semantics": "Onlyknownfuturetop-levelK1year;priorfiscalheadermaybelongcurrent;noinferredperiod/equality/formulachange",
+    "remaining": "OHreplayperf/currentcombined+runtimes/externalhuman/final2026",
+    "evidence": "docs/upgrade-2026-confirmed-k1-future-years-20261115.md"
+  },
   "nov15ConfirmedW2GYears": {
     "base": "7c9d8968",
     "freeze": "70db97f021e4ca16b3bb8ca1149879bb41bd5dc7f3763b1c29cd2f9b78135924",

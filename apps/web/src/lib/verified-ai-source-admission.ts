@@ -95,6 +95,10 @@ export function assertVerifiedAiSourceAdmission(input:TaxYearInput,result:TaxRet
     || (input.formSSA1099??[]).some(form=>form.sourceTaxYear!==undefined && form.sourceTaxYear!==input.taxpayer.taxYear)){
     throw new Error('A confirmed explanation requires matching-year direct income originals.');
   }
+  // A prior header may be a fiscal year ending in this return; a future header cannot be.
+  if(input.scheduleK1.some(form=>form.taxYear!==undefined && form.taxYear>input.taxpayer.taxYear)){
+    throw new Error('A confirmed explanation cannot use a future-year K1 original.');
+  }
   if(result.deductionUsed==='itemized'){
     const mortgage=calculateHomeMortgageInterest(input);
     if(!mortgage.sourceFactsVerified && sum(mortgage.line8a,mortgage.line8b,mortgage.line8c).gt(0)){
