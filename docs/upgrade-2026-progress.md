@@ -6076,3 +6076,15 @@ Independent source review passes. All three actual local tests pass without a
 skip, including eleven-table dump/restore and migration, followed by normal owned
 PostgreSQL stop and private credential cleanup. Remote coverage remains pending.
 [Exact change, checks and limitations](upgrade-2026-recovery-cold-import-20261115.md).
+
+### November 15: exact 9b2d integrated local, ARM and Preview results
+
+All twelve mapped local checks pass: unit/coverage each28,696 tests in2,096files,
+88.12% branch coverage above the unchanged85% floor, and638 browser passes/five
+original skips. Exact ARM image/Compose/recovery/browser work and normal cleanup
+pass, with independent artifact review. Protected Preview105 HTTP/four UI cases
+pass with bounded counters and cleanup. Remote CI still fails the4,500ms recovery
+child; remote browser suites retain strict4,000ms PDF failures and28 cumulative
+30-second case failures. The fresh same-image scan retains56High, unaccepted.
+These are separate observed results, not release qualification.
+[Exact sources, receipts and remaining gates](upgrade-2026-integrated-runtime-9b2d6cbb-20261115.md).

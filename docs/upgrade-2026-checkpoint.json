@@ -1,4 +1,49 @@
 {
+  "nov15Integrated9b2dActual": {
+    "source": "9b2d6cbb1868aa93d2f624251215eac182db04c7",
+    "document": "docs/upgrade-2026-integrated-runtime-9b2d6cbb-20261115.md",
+    "localMappedChecksPassed": 12,
+    "unitAndCoverageEach": {
+      "tests": 28696,
+      "files": 2096
+    },
+    "branchCoveragePercent": "88.12",
+    "localAndArmBrowserEach": {
+      "passed": 638,
+      "originalSkipped": 5,
+      "retries": 0
+    },
+    "armAll24StagesPassed": true,
+    "preview": {
+      "httpPassed": 105,
+      "actualUiPassed": 4,
+      "countedOperations": 925,
+      "ceiling": 1310,
+      "cleanupVerified": true
+    },
+    "remoteCi": "unit-pass-coverage-recovery-child-deadline-failure",
+    "remoteNativeBrowser": {
+      "passed": 608,
+      "failed": 30,
+      "originalSkipped": 5
+    },
+    "remoteSelfHostBrowser": {
+      "passed": 636,
+      "failed": 2,
+      "originalSkipped": 5
+    },
+    "freshArmScan": {
+      "critical": 0,
+      "high": 56,
+      "totalMatches": 192,
+      "ignoredMatches": 0,
+      "riskAccepted": false
+    },
+    "separateXmlStartup": "group-closure-hold-before-any-corpus-case;normal-restoration-pass",
+    "qualifiedHumanReviewsReceived": false,
+    "final2026FormsQualified": false,
+    "releaseReady": false
+  },
   "nov15RecoveryColdImport": {
     "status": "source-reviewed-local-actual-postgres-pass-remote-pending",
     "base": "dbb190ff",
