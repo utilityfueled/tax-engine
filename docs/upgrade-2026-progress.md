@@ -6108,3 +6108,13 @@ pass. Sixteen isolated normal observations measure18.4% lower mean local time;
 strict parsing/text-call counts remain unchanged. Four seconds/64KiB/two workers/
 zero retries remain. The remote failures are retained and new runtime qualification
 is pending. [Exact change and review](upgrade-2026-rrta-text-copy-admission-20261115.md).
+
+### November 15: preserve image ancestors during explicit AMD64 cleanup
+
+First manual AMD64 package and runtime workloads pass, but final imported-image
+cleanup fails; independent import/scan is skipped. The correction adds only two
+`--no-prune` flags and preserves strict ownership, closure and failure checks.
+Root15 focused tests, related63 tests, eight independent lifecycle controls and
+12 spec references pass. The failed artifact is retained; ancestor pruning is a
+supported explanation, not a proven raw-error diagnosis. Actual successor
+qualification remains pending. [Run and review](upgrade-2026-amd64-backports-workflow-20261115.md).

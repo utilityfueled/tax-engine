@@ -1,4 +1,22 @@
 {
+  "nov15Amd64ExplicitImageCleanup": {
+    "base": "63017fc3",
+    "firstActualRun": 43695617103,
+    "actualSource": "dbb190ff",
+    "actualQualificationPassed": false,
+    "packagePassed": true,
+    "runtimeWorkloadsPassed": true,
+    "finalImageCleanupPassed": false,
+    "independentScanSkipped": true,
+    "diagnosis": "ancestor-pruning-supported-not-proven",
+    "correction": "two-explicit-no-prune-flags",
+    "rootFocusedPassed": 15,
+    "relatedPassed": 63,
+    "independentAdditionalControls": 8,
+    "independentPeer": "7b3c377055cdef14bbe2c8ede9a1a724c9335ba63d33e666fdf868a541a837bd",
+    "successorPending": true,
+    "releaseReady": false
+  },
   "nov15RrtaTextCopyAdmission": {
     "base": "026c663c",
     "document": "docs/upgrade-2026-rrta-text-copy-admission-20261115.md",

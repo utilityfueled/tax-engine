@@ -80,6 +80,55 @@ describe("native AMD PostgreSQL infrastructure spec", () => {
     }
     removed.length = 0; await expect(cleanupOwned({ ...io, inspect: async (id: string) => ({ id, operation: "op", running: false, exitCode: 42, oomKilled: false }) }, "op")).resolves.toEqual([]); expect(removed).toEqual(["stop:mine", "remove:mine"]);
   });
+  it("removes owned images explicitly while preserving imported bases and foreign ancestors", async () => {
+    // Model Docker's documented default: removing an image also prunes unused,
+    // untagged ancestors unless --no-prune is passed. No daemon is contacted.
+    const label = "io.vivalatax.qualification.operation";
+    const candidate = "c".repeat(64), imported = "d".repeat(64), foreign = "f".repeat(64);
+    for (const mode of ["runtime", "package", "independent", "missing-import", "daemon-error", "foreign-import", "remove-conflict"]) {
+      const c = new Controller(mode === "package" ? "package" : mode === "independent" ? "independent" : "runtime", await temp(), undefined, env);
+      c.connection = { args: [] }; c.commandEnv = {}; c.candidate = candidate;
+      c.builderOperation = mode === "independent" ? undefined : "builder";
+      if (mode !== "package") { c.imported = mode === "independent" ? candidate : imported; c.importedOperation = "import"; }
+      const nodes = new Map<string, { parent: string | null; operation: string }>([
+        [foreign, { parent: null, operation: "foreign" }],
+        [imported, { parent: foreign, operation: "import" }],
+        [candidate, { parent: imported, operation: mode === "independent" ? "import" : "builder" }],
+      ]);
+      if (mode === "missing-import") nodes.delete(imported);
+      const explicit: string[] = [], implicit: string[] = [], events: string[] = [];
+      c.docker = async (_step: string, args: string[]) => {
+        if (args[0] === "ps") return "";
+        expect(args[0]).toBe("image"); const rawId = args.at(-1); if (!rawId) throw new Error("Missing image argument"); const id = rawId.replace(/^sha256:/, "");
+        events.push(args[1] + ":" + id);
+        if (args[1] === "inspect") {
+          if (id === imported && mode === "daemon-error") throw Object.assign(new Error("Cannot connect to daemon"), { code: 1 });
+          const node = nodes.get(id); if (!node) throw Object.assign(new Error("No such image: sha256:" + id), { code: 1 });
+          return JSON.stringify([{ Id: "sha256:" + id, Config: { Labels: { [label]: id === imported && mode === "foreign-import" ? "foreign" : node.operation } } }]);
+        }
+        expect(args[1]).toBe("rm"); expect(args).not.toContain("--force"); expect(args).not.toContain("-f");
+        if (mode === "remove-conflict") throw Object.assign(new Error("image is being used by running container"), { code: 1 });
+        const node = nodes.get(id); if (!node) throw new Error("Missing removal target");
+        let parent = node.parent; nodes.delete(id); explicit.push(id);
+        if (!args.includes("--no-prune")) while (parent && nodes.has(parent)) {
+          const ancestor = nodes.get(parent); if (!ancestor) throw new Error("Missing ancestor");
+          const next = ancestor.parent; implicit.push(parent); nodes.delete(parent); parent = next;
+        }
+        if (id === candidate && mode === "runtime") expect(nodes.has(imported)).toBe(true);
+        return "Deleted: sha256:" + id + "\n";
+      };
+      await c.cleanup();
+      expect(implicit, mode).toEqual([]); expect(nodes.has(foreign), mode).toBe(true);
+      if (["runtime", "package", "independent"].includes(mode)) {
+        expect(c.cleanupErrors, mode).toEqual([]);
+        expect(explicit, mode).toEqual(mode === "runtime" ? [candidate, imported] : [candidate]);
+        expect(events, mode).toEqual((mode === "runtime" ? [candidate, imported] : [candidate]).flatMap(id => ["inspect:" + id, "rm:" + id]));
+      } else {
+        expect(c.cleanupErrors, mode).toEqual([mode === "remove-conflict" ? "owned-image-cleanup" : "imported-image-cleanup"]);
+        expect(explicit, mode).toEqual(mode === "remove-conflict" ? [] : [candidate]);
+      }
+    }
+  });
   it("stops all later daemon commands when closure becomes uncertain during cleanup", async () => {
     const c = new Controller("runtime", await temp(), undefined, env); c.connection = { args: [] }; c.commandEnv = {}; c.volumes = ["own-volume"];
     const steps: string[] = [];
@@ -169,7 +218,7 @@ describe("native AMD PostgreSQL infrastructure spec", () => {
     expect(opaqueResult.critical).toBe(1);
   });
   it("binds every spec line and keeps workflow opt-in and public only", async () => {
-    const spec = parse(await readFile(resolve("spec/federal/postgres-backports-amd64.yaml"), "utf8")); expect(spec.lines.length).toBe(11);
+    const spec = parse(await readFile(resolve("spec/federal/postgres-backports-amd64.yaml"), "utf8")); expect(spec.lines.length).toBe(12);
     type Job = { "runs-on": string; "timeout-minutes": number; if: string; permissions: Record<string, string>; steps: { uses?: string }[] };
     const workflow = parse(await readFile(resolve(".github/workflows/postgres-backports-amd64.yml"), "utf8")) as { on: Record<string, unknown>; jobs: Record<string, Job> }; expect(Object.keys(workflow.on)).toEqual(["workflow_dispatch"]);
     expect(Object.values(workflow.jobs).reduce((a: number, j: Job) => a + j["timeout-minutes"], 0)).toBeLessThanOrEqual(270);

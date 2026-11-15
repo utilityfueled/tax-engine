@@ -46,3 +46,26 @@ independent review
 Earlier failed controls and review corrections are retained. No claim of generic
 ABI compatibility, bitwise reproducibility, physical-host provenance or advisory
 remediation follows from this preparation.
+
+The first actual manual run, [43695617103](https://github.com/utilityfueled/tax-engine/actions/runs/43695617103),
+uses `dbb190ff`. Package construction and every runtime workload pass, including
+normal container/volume cleanup. Final image cleanup fails: candidate removal
+returns zero, then inspection of the imported base returns one. The independent
+import/scan job is skipped. This is a failed qualification run.
+
+Docker normally removes untagged ancestors when removing an image. The observed
+sequence supports that explanation, but the public artifact excludes the raw
+cleanup error, so the exact cause is unproven. The correction adds `--no-prune`
+to both explicit, ownership-checked image removals. Missing images, wrong identity,
+foreign labels, daemon errors, conflicts and operation uncertainty still fail.
+Foreign ancestors are preserved. See [Docker's removal option](https://docs.docker.com/reference/cli/docker/image/rm/)
+and the [versioned CLI implementation](https://github.com/docker/cli/blob/v28.0.4/cli/command/image/remove.go).
+
+The spec-first regression reproduces implicit parent removal before the fix.
+Author and independent related checks pass 63 tests; root's focused AMD64 suite
+passes 15 tests. Eight additional independent lifecycle controls and all 12 spec
+references pass. No new actual runner qualification is claimed. Retained source
+manifest: `721bd6f99dd4d1048ddc16c55e455fd2179a34cd99a9132492a090c56722be9f`;
+independent review: `7b3c377055cdef14bbe2c8ede9a1a724c9335ba63d33e666fdf868a541a837bd`.
+The failed runtime artifact is retained with verified digest
+`c36aeef7b3141b9b0ea35da58718f7ae64ee9f66645727f4101daa9fe788bef9`.

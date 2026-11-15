@@ -447,10 +447,10 @@ export class Controller {
     }
     // Candidate images are removed only after all own containers close normally.
     if (!this.cleanupErrors.length && this.candidate && this.builderOperation) {
-      try { const [v] = JSON.parse(await command("candidate-inspect", ["image", "inspect", "sha256:" + this.candidate])); assert.equal(v.Config.Labels[LABEL], this.builderOperation); await command("candidate-remove", ["image", "rm", "sha256:" + this.candidate]); } catch { this.cleanupErrors.push("owned-image-cleanup"); }
+      try { const [v] = JSON.parse(await command("candidate-inspect", ["image", "inspect", "sha256:" + this.candidate])); assert.equal(v.Config.Labels[LABEL], this.builderOperation); await command("candidate-remove", ["image", "rm", "--no-prune", "sha256:" + this.candidate]); } catch { this.cleanupErrors.push("owned-image-cleanup"); }
     }
     if (!this.cleanupErrors.length && this.imported) {
-      try { const [v] = JSON.parse(await command("import-inspect", ["image", "inspect", "sha256:" + this.imported])); assert.equal(imageId(v.Id), this.imported); assert.equal(v.Config.Labels[LABEL], this.importedOperation); await command("import-remove", ["image", "rm", "sha256:" + this.imported]); } catch { this.cleanupErrors.push("imported-image-cleanup"); }
+      try { const [v] = JSON.parse(await command("import-inspect", ["image", "inspect", "sha256:" + this.imported])); assert.equal(imageId(v.Id), this.imported); assert.equal(v.Config.Labels[LABEL], this.importedOperation); await command("import-remove", ["image", "rm", "--no-prune", "sha256:" + this.imported]); } catch { this.cleanupErrors.push("imported-image-cleanup"); }
     }
   }
   async run() {
