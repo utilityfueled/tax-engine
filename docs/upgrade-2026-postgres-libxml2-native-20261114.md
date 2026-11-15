@@ -302,3 +302,57 @@ root actual inventory/normal-restoration review:
 `56678638d567fc075a235296d6e016c4a0c2270bd55a385ead284a7a5afdb55f`;
 independent actual inventory/normal-restoration review:
 `0132788e6f06ff255f5b0cc81b02293acc97d2893e4610c372ff48455d5093a8`.
+
+
+## November 15: actual paired external XML corpus observations
+
+Distinct operation `b6980a2dec599769fe2c3e2e` completes all 57 outer commands
+in 762.55 seconds after fresh, uncached toolchain installation and native harness
+compilation. Both harnesses and providers are admitted by their exact hashes.
+The restored source retains all 2,585 original catalog entries, with nine
+separately marked local resolution supplements. None replaces an original entry
+or purports to be official errata.
+
+| Observation | Baseline | Candidate |
+| --- | --- | --- |
+| PASS | 2,264 | 2,264 |
+| Original upstream exclusion | 303 | 303 |
+| MISMATCH | 18 | 18 |
+| Original target missing | 9 | 9 |
+
+All 2,594 pairs have identical classifications, test counts, errors and leaks.
+The eighteen mismatches include fifteen original entries and three separately
+marked resolution supplements. Each actually executed case runs one test; every
+mismatch records one error and zero leaks. Matching classifications establish
+finite comparison evidence, not XML standard conformance. The missing inputs,
+upstream exclusions and mismatches remain visible and unresolved.
+
+Root and independent saved-artifact reviews reconcile all 5,188 rows. The
+independent review also inventories 65,356 archive members, including 46,418
+regular files and eight literal links. All 4,564 actual case executions have
+same-harness-process loader traces for the exact selected provider, scoped
+container removal and exited/OOM-false/PID-zero inspection. Read-only ordinary-user
+case containers retain network isolation, dropped capabilities, no-new-privileges,
+finite CPU/memory/process/output bounds and the corrected 524,288-byte file limit.
+No case timeout, uncertain operation or cleanup error remains.
+
+Fresh empty-guest checks, normal VM stop, owned-process closure, original
+2-CPU/8192-MiB resources, unchanged 384-GiB disk, default connection and both socket
+routes pass. The earlier file-limit, capacity and supervisor failures remain
+retained above. The receipt's `passed` field means execution and closure passed;
+`conformanceObservationsPassed`, `xmlStandardConformanceCertified`,
+`candidateReleaseQualified` and `riskAccepted` are all false. This library-source
+experiment is not current application artifact qualification. Fresh toolchain
+intermediates require a distinct provenance-bound cleanup before the next native
+application rehearsal.
+
+| Actual artifact | SHA-256 |
+| --- | --- |
+| Frozen 636-input manifest | `f84c65314bc2c1aaaadc43fbb2e2f4996d0ac840cc6be9462e7107c161bfe597` |
+| Controller receipt | `a682b06b1802c1967534174d0fa0376645bd5eb5dbcbd289594e0b04815edcb5` |
+| Guest evidence archive | `5fa813181154c8ac7fa85a66eddc9e190a0dc2500e2edf06fa6167ef53599a05` |
+| Root actual review | `063ac4e805b0d8feba9ff099fa0c7eeee55a653635b4c71e9fdb89f28e9b8614` |
+| Independent actual review | `ae6654f12dad746b44de8c63243953c0e2d20d961f2e99e7ba3d20fc02de6c63` |
+| Retained mismatch/missing inventory | `d6ccd6f8dcfceeb8f3f01a43651d4b43bf5fb27ab77061af44cebfef82d34d48` |
+
+Private execution root: `.local/upgrade-evidence/nov15-w3c-v13-native-successor-prepared/execution-b6980a2dec599769fe2c3e2e/`.

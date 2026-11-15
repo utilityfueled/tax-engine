@@ -18,8 +18,11 @@
   rehearsal. Its scan findings remain unaccepted. [Evidence](upgrade-2026-amd64-backports-workflow-20261115.md).
 - [x] Review and execute only proven-owned cache cleanup; preserve all other
   images, pass unchanged capacity floors and normally restore the VM/routes.
-- [ ] Finish the corrected XML comparison and actual exact-source ARM64
-  qualification sequentially.
+- [x] Execute and independently review the corrected XML comparison; retain all
+  eighteen matching mismatches, 303 upstream exclusions and nine missing inputs
+  per variant. Conformance/release/risk acceptance remain false.
+- [ ] Clean only proven-owned fresh toolchain intermediates, then finish actual
+  current-source ARM64 qualification sequentially.
 - [ ] Finish strict container browser qualification and current remote artifact
   review; fix any confirmed defects.
 - [ ] Obtain qualified independent human reviews, final annual forms, accountable

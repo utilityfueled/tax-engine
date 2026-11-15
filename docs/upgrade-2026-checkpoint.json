@@ -1,4 +1,30 @@
 {
+  "nov15ExternalXmlPairedActual": {
+    "operation": "b6980a2dec599769fe2c3e2e",
+    "executionComplete": true,
+    "outerCommands": 57,
+    "allOuterCommandsExit0": true,
+    "pairs": 2594,
+    "differingClassifications": 0,
+    "countsPerVariant": {
+      "PASS": 2264,
+      "UPSTREAM_SKIP": 303,
+      "MISMATCH": 18,
+      "INPUT_MISSING": 9
+    },
+    "originalCatalogEntries": 2585,
+    "markedResolutionSupplements": 9,
+    "samePidProviderProofs": 4564,
+    "normalStopAndOriginalResourcesRoutesRestored": true,
+    "childOrOperationUncertain": false,
+    "conformanceObservationsPassed": false,
+    "candidateReleaseQualified": false,
+    "riskAccepted": false,
+    "controllerReceiptSha256": "a682b06b1802c1967534174d0fa0376645bd5eb5dbcbd289594e0b04815edcb5",
+    "rootActualReviewSha256": "063ac4e805b0d8feba9ff099fa0c7eeee55a653635b4c71e9fdb89f28e9b8614",
+    "independentActualReviewSha256": "ae6654f12dad746b44de8c63243953c0e2d20d961f2e99e7ba3d20fc02de6c63",
+    "ledger": "docs/upgrade-2026-postgres-libxml2-native-20261114.md"
+  },
   "nov15OwnedCacheActualPass": {
     "passed": true,
     "commands": 65,

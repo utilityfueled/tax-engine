@@ -1,5 +1,12 @@
 # 2026 upgrade implementation evidence
 
+## November 15 actual external XML comparison
+
+Both providers record identical classifications for all 2,594 pairs, including
+eighteen retained mismatches. All 57 outer commands and normal restoration pass;
+root and independent actual artifact reviews pass. Conformance, release and risk
+acceptance remain false. [Exact results and limits](upgrade-2026-postgres-libxml2-native-20261114.md).
+
 ## November 15 HSA integration expectation reconciliation
 
 The full835 unit run retains23 failures. One obsolete workspace amount and22
@@ -6163,7 +6170,7 @@ No newer-source runtime qualification or CPU cause is inferred.
 
 The fresh toolchain, both harnesses and all3,697 corpus members pass admission.
 The first case container exits126 before its loader/XML work with a runtime
-file-size-limit error; no retry or conformance claim follows. All57 outer commands
+file-size-limit error; no retry or conformance claim follows. All 57 outer commands
 and independently reviewed normal VM/resource/route cleanup pass. Original failed
 evidence remains retained; a separate units correction is under review.
 [Actual failure and cleanup](upgrade-2026-postgres-libxml2-native-20261114.md).
