@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+import {PDFDocument,PDFDict,PDFName} from "pdf-lib";
 import { mkdir, rm, writeFile } from "fs/promises";
 import { execFileSync } from "node:child_process";
 import { join } from "path";
@@ -471,12 +472,11 @@ describe("Pennsylvania workspace packet disclosure", () => {
     expect(pdfText).toContain("E-file and business-rule validation: not-validated.");
   });
 
-  it("buildWorkspaceFilledReturnDownload includes the Pennsylvania Schedule B reference summary and marks the packet partial", async () => {
+  it("buildWorkspaceFilledReturnDownload includes original-bound official Pennsylvania Schedule B review and keeps the packet partial", async () => {
     const renderer=vi.spyOn(rendering,"fillReturn");
-    const download = await buildWorkspaceFilledReturnDownload(
-      createWorkspace(),
-      completeLegacyPAInvestmentPacket(createGuidedFlowStateWithPennsylvaniaScheduleBDividends(), "dividends"),
-    );
+    const state=completeLegacyPAInvestmentPacket(createGuidedFlowStateWithPennsylvaniaScheduleBDividends(), "dividends"),before=structuredClone(state);
+    const download = await buildWorkspaceFilledReturnDownload(createWorkspace(),state);
+    expect(state).toEqual(before);
     const pdfText = await extractPdfText(download.contents);
     const actual=renderer.mock.calls.at(-1)?.[1].stateReturns?.pennsylvania;
     expect(actual).toMatchObject({methodVersion:"pa-ordinary-return-v1",residencyStatus:"resident"});
@@ -484,10 +484,13 @@ describe("Pennsylvania workspace packet disclosure", () => {
     expect(pdfText).not.toContain("111-22-3333");
 
     expect(download.includedForms).toContain("pa-40-filled.pdf");
-    expect(download.includedForms).toContain("pa-schedule-b-reference.pdf");
+    expect(download.includedForms).toContain("pa-schedule-b-review.pdf");
+    expect(download.includedForms).not.toContain("pa-schedule-b-reference.pdf");
+    const saved=await PDFDocument.load(download.contents);expect(saved.getForm().getFields()).toHaveLength(0);
+    for(const page of saved.getPages())for(const ref of page.node.Annots()?.asArray()??[]){const annotation=saved.context.lookup(ref);expect(annotation instanceof PDFDict&&annotation.get(PDFName.of('Subtype'))===PDFName.of('Widget')).toBe(false);}
     expect(pdfText).toContain("Packet completeness status: partial.");
     expect(pdfText).toContain(
-      "Pennsylvania Schedule B is included as a reference summary, not an official PA-40 Schedule B filing copy.",
+      "Pennsylvania Schedule B is included as an original-bound official form review copy, not a filing-qualified return.",
     );
   });
 

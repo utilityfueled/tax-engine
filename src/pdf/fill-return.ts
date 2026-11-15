@@ -1,3 +1,4 @@
+import {fillPAOrdinaryScheduleB} from './mappings/2025/fill-pa-ordinary-schedule-b.js';
 import {fillPAOrdinaryScheduleA} from './mappings/2025/fill-pa-ordinary-schedule-a.js';
 import {requiresRRTAPayrollReview,rrtaPayrollReviewOriginalInput,type PreparedRRTAPayrollReview} from './rrta-payroll-review-context.js';
 export {prepareRRTAPayrollReview} from './rrta-payroll-review-context.js';
@@ -1414,11 +1415,17 @@ export async function fillReturn(
       hasPAScheduleB(result.stateReturns.pennsylvania)
       && shouldIncludePAScheduleBReferenceSummary(result.stateReturns.pennsylvania.scheduleB)
     ) {
-      const outputPathPAScheduleB = await fillPAScheduleBReference(
-        result.stateReturns.pennsylvania.scheduleB,
-        outputDir,
-      );
-      filledForms.push(outputPathPAScheduleB);
+      const physical = isPAOrdinaryReturnResult(result.stateReturns.pennsylvania)
+        ? await fillPAOrdinaryScheduleB(input,result,join(blankFormsDir,"pa-schedule-b.pdf"),options.paOrdinaryReview) : undefined;
+      if (physical) {
+        if (flatten) await flattenForm(physical.getForm());
+        const outputPathPAScheduleB = join(outputDir,"pa-schedule-b-review.pdf");
+        await savePacketPdf(physical,outputPathPAScheduleB);
+        filledForms.push(outputPathPAScheduleB);
+      } else {
+        const outputPathPAScheduleB = await fillPAScheduleBReference(result.stateReturns.pennsylvania.scheduleB,outputDir);
+        filledForms.push(outputPathPAScheduleB);
+      }
     }
 
     if (

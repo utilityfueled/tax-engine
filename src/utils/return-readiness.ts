@@ -1,4 +1,4 @@
-import {isPAOrdinaryReturnResult} from '@/pdf/pa-ordinary-return-review-context.js';
+import {isPAOrdinaryReturnResult,hasPAOrdinaryScheduleBReviewAuthority,type PreparedPAOrdinaryReturnReview} from '@/pdf/pa-ordinary-return-review-context.js';
 import { shouldIncludePAScheduleAReferenceSummary } from "@/pdf/fill-pa-schedule-a.js";
 import {hasSavedForm2210Review,type SavedForm2210Review} from '@/pdf/form-2210-review-context.js';
 import {isPAMarriedOrdinaryReturnResult} from '@/engine/state/pa-return-result.js';
@@ -32,6 +32,7 @@ export interface AssessReturnReadinessInput {
   federalResult: TaxReturnResult;
   includedForms: string[];
   form2210ReviewArtifact?:SavedForm2210Review;
+  paOrdinaryReview?:PreparedPAOrdinaryReturnReview;
   stateCode?: string | null;
 }
 
@@ -426,9 +427,14 @@ export function assessReturnReadiness(
 
     packetCompleteness = "partial";
     findings.push(
-      hasPAScheduleBReference
-        ? "Pennsylvania Schedule B is included as a reference summary, not an official PA-40 Schedule B filing copy."
-        : "Pennsylvania Schedule B applies, but no Schedule B packet artifact was generated.",
+      hasPAOrdinaryScheduleBReviewAuthority(input.taxInput,input.federalResult,input.paOrdinaryReview)
+        && hasIncludedForm(input.includedForms,/^pa-schedule-b-review\.pdf$/i)
+        ? "Pennsylvania Schedule B is included as an original-bound official form review copy, not a filing-qualified return."
+        : hasPAScheduleBReference
+          ? "Pennsylvania Schedule B is included as a reference summary, not an official PA-40 Schedule B filing copy."
+          : hasIncludedForm(input.includedForms,/^pa-schedule-b-review\.pdf$/i)
+            ? "Pennsylvania Schedule B review artifact is present, but its original-bound resident paper source authority could not be verified."
+            : "Pennsylvania Schedule B applies, but no Schedule B packet artifact was generated.",
     );
   }
 

@@ -18,10 +18,11 @@ describe("physically versioned review template packs", () => {
 
   it("pins every historical blank to exact bytes and rejects an unreviewed revision", async () => {
     const pack = REVIEW_TEMPLATE_PACKS[2025];
-    expect(Object.keys(pack.templates)).toHaveLength(47);
+    expect(Object.keys(pack.templates)).toHaveLength(48);
     expect(pack.templates["pa-schedule-a.pdf"].sha256).toBe("dd32da96a856d033725e772c9a7dc4339131b4abe776e4caa4e7de722c0cbfce");
     expect(pack.templates["pa-schedule-g-l.pdf"].sha256).toBe("b30072eb0bacf5c2cb4cd15344f1a6b9fabc01de99820c5508381c8004c3cd68");
     expect(pack.templates["pa-schedule-d.pdf"].sha256).toBe("154a86698c3c7e81d2487ce518c767a8253781a7aa2b8fcd9974d8bb5ce4b30e");
+    expect(pack.templates["pa-schedule-b.pdf"].sha256).toBe("c6d8f5cdd63045e1e40b6deeced2c80b23006b7700befe3b8f0c430f2b40a0d4");
     expect(pack.templates).toHaveProperty("f8862.pdf");
     for (const [filename, template] of Object.entries(pack.templates)) {
       const bytes = await readFile(`forms/blank/2025/${filename}`);

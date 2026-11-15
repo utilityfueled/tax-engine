@@ -785,6 +785,7 @@ export async function buildWorkspaceFilledReturnDownload(
       federalResult: result,
       includedForms,
       form2210ReviewArtifact:fillResult.form2210ReviewArtifact,
+      paOrdinaryReview,
       stateCode,
     });
     packetSummary.compiledBullets.push(

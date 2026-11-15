@@ -1,4 +1,18 @@
 {
+  "nov15PaDividendOfficialReview": {
+    "authorSourceFiles": 14,
+    "authorTests": 1044,
+    "independentControls": 22,
+    "independentReplayedTests": 37,
+    "rootFocusedTests": 118,
+    "officialTemplateSha256": "c6d8f5cdd63045e1e40b6deeced2c80b23006b7700befe3b8f0c430f2b40a0d4",
+    "rootReviewSha256": "d59ff5f9499bcafacede0b6bfeb1c96699e61afb56fa713be4e7788790b1eda4",
+    "independentReviewSha256": "d10d7f08ca52797f0995a0811c37723afef8e5da7f58aa7f3b2fe7c2e9226657",
+    "exactSourceAll12AndRuntimePending": true,
+    "filingQualified": false,
+    "final2026FormQualified": false,
+    "ledger": "upgrade-2026-pa-dividend-official-review-20261115.md"
+  },
   "nov15ExternalXmlPairedActual": {
     "operation": "b6980a2dec599769fe2c3e2e",
     "executionComplete": true,

@@ -1,5 +1,12 @@
 # 2026 upgrade implementation evidence
 
+## November 15 original-bound Pennsylvania dividend paper
+
+The finite 2025 single-primary resident packet now includes the pinned official
+Schedule B review form. Source, federal transfer, cents, privacy and fallback
+checks pass with independent review; all filing/2026 gates remain closed.
+[Scope, retained failures and evidence](upgrade-2026-pa-dividend-official-review-20261115.md).
+
 ## November 15 actual external XML comparison
 
 Both providers record identical classifications for all 2,594 pairs, including

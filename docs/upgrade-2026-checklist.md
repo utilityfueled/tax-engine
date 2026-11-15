@@ -21,6 +21,10 @@
 - [x] Execute and independently review the corrected XML comparison; retain all
   eighteen matching mismatches, 303 upstream exclusions and nine missing inputs
   per variant. Conformance/release/risk acceptance remain false.
+- [x] Implement and independently review finite original-bound 2025 PA Schedule B
+  physical review output; preserve reference fallbacks and all filing/year gates.
+- [ ] Pass all twelve exact-source checks and runtime successors after this PA
+  package and its source-audit metadata refresh.
 - [ ] Clean only proven-owned fresh toolchain intermediates, then finish actual
   current-source ARM64 qualification sequentially.
 - [ ] Finish strict container browser qualification and current remote artifact
