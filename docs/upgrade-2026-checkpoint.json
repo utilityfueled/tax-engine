@@ -1,4 +1,21 @@
 {
+  "nov15ActualA32Arm64": {
+    "source": "a32a3b10796656d881d0bff042512cdb620710fc",
+    "actualSession": 73762,
+    "terminalZeroRootAcknowledged": true,
+    "rootReview": "50edaba45ed5cfb458735704fbaed8a6618eee9cf2a1767d1c7d8ee991734e94",
+    "browserCases": 637,
+    "passed": 632,
+    "originalHostedSkips": 5,
+    "retries": 0,
+    "normalStopAndResourcesRestored": true,
+    "advisoryRiskAccepted": false,
+    "highFindings": 56,
+    "laterCommitsExcluded": true,
+    "remoteCiSixJobsPassed": true,
+    "remoteAmd64BrowserFailedUnderDiagnosis": true,
+    "evidence": "upgrade-2026-arm64-a32a3b10-20261115.md"
+  },
   "nov15GuidedActualRouteCounters": {
     "sourceFreeze": "ee09053d4f4fd186d700283f3bbe62964a21f43f615d758654371a641089e9e4",
     "browserSource": "9f219935539b0a4a73cdf5eb6eca2c09880e609e5f564ed0331381f617d3507b",

@@ -1,5 +1,11 @@
 # 2026 upgrade implementation evidence
 
+## November15 actual ARM64 consolidated run
+
+Completed exacta32 runtime session73762 with normal cleanup.632 passes/five
+original hosted skips; root artifact/source verification50edaba4.
+[Image, recovery, advisory and remote limits](upgrade-2026-arm64-a32a3b10-20261115.md).
+
 ## November15 actual guided investment originals
 
 Adopted the nine-file finite source-entry route after genuine RED,995 author

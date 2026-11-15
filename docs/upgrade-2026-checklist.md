@@ -1,5 +1,10 @@
 # Remaining 2026 upgrade execution checklist
 
+- [x] Complete exacta32 ARM64 build, recovery, runtime637-case browser and
+  artifact/source review; normal resource restoration verified. [Evidence](upgrade-2026-arm64-a32a3b10-20261115.md).
+- [ ] Resolve separate AMD64 browser failure; qualify later aggregate source and
+  obtain advisory ownership/expiry and required external reviews.
+
 - [x] Collect actual four-period investment-election and independent annual AMT
   sources in guided payments;1,028 adoption tests and two real browser cases
   pass. Current workspace-endpoint counters are strengthened; actual final-run

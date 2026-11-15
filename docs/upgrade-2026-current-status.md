@@ -1,5 +1,12 @@
 # Current 2026 upgrade continuation
 
+## November15 actual ARM64 consolidated run
+
+Exacta32 ARM64 build/smoke/recovery/SBOM/scan and637 browser cases passed
+with normal VM/socket/resource restoration. Root reverified source and all
+saved artifacts.56High findings remain unaccepted. Remote CI passed; separate
+AMD64 browser failure is being diagnosed. [Evidence and limits](upgrade-2026-arm64-a32a3b10-20261115.md).
+
 ## November15 actual guided investment originals
 
 Guided payments now collect all four actual period investment-election originals
