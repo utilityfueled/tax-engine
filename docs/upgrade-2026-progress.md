@@ -6186,3 +6186,14 @@ Two actual SCRAM clusters and the owned browser server close normally. Root and
 independent saved-artifact review pass; original budgets/deadlines/skips remain.
 Protected Preview/native/current remote and human/forms/security/AI qualification
 are separate and pending. [Checks and receipt hashes](upgrade-2026-integrated-runtime-8c1bd108-20261115.md).
+
+
+### November 15: preserve disk admission and normally restore the test VM
+
+The corrected XML successor stops before payload work: actual free disk is
+394,485,760 bytes below the unchanged 250 GiB floor. A bounded read-only
+observation proves the operation path absent and containers/volumes empty;
+disk-use cause remains unproved. All18 independently reviewed normal-recovery
+commands pass, restoring the stopped VM/resources/routes with no guest deletion.
+The corrected file-size limit and external comparison remain unexecuted.
+[Admission and recovery evidence](upgrade-2026-postgres-libxml2-native-20261114.md).

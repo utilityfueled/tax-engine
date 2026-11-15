@@ -204,3 +204,33 @@ Independent actual failure and cleanup review:
 The failed run, preparation failures and successful cleanup remain distinct.
 The file-size limit needs a separately reviewed correction before another run.
 Conformance, candidate release and security acceptance remain false.
+
+
+## November 15: corrected limit admitted; capacity stops before payload
+
+A separate reviewed successor corrects the case container's file-size limit from
+512 bytes to 524,288 bytes, preserving the existing 512 KiB output bound. Its
+internal payload digest was corrected separately after source review rejected a
+stale entry. The original failures remain retained. Actual operation
+`b99133aea3b2bea0577813a3` stops at guest admission before creating its operation
+path or loading any payload: available disk is 268,040,970,240 bytes, below the
+unchanged 268,435,456,000-byte floor by 394,485,760 bytes. A bounded read-only
+diagnostic confirms the shortfall, absent operation path and empty containers
+and volumes; it does not establish the cause of disk use.
+
+A separately reviewed normal recovery repeats exact host-process, disk, socket
+and guest absence checks. All 18 commands pass. It normally stops the isolated
+VM, verifies owned daemons gone and all VMs stopped, restores 2 CPUs/8192 MiB and
+the original socket routes, and preserves the 384 GiB disk. No guest files or
+images are deleted, no floor is lowered, and no unresolved child operation
+remains. The corrected case limit has not yet been exercised by an XML case.
+
+Private actual recovery receipt:
+`78699a98a7264aeb5cbc20ebb4c08d64df757c5171b8aac1e261f01a16baa9cc`;
+root actual review:
+`4226ad1f020c5e8cb3b16c61ab71a29e31f9cda6d228fa1efef2c4ab5d3afc67`;
+independent source review:
+`7908a43a959a0c098cca2481aefe9526a9bb13efff63486466eb536fcb7e98a0`;
+independent actual restoration review:
+`4805b4630b3d9960891b054cf6b2eb28edc257fdca0f814b15be8f2702bbc45e`.
+External conformance, candidate release and security acceptance remain pending.

@@ -1,4 +1,20 @@
 {
+  "nov15W3cCapacityAdmissionAndNormalRecovery": {
+    "operation": "b99133aea3b2bea0577813a3",
+    "payloadStarted": false,
+    "guestAvailableBytes": 268040970240,
+    "unchangedRequiredBytes": 268435456000,
+    "shortfallBytes": 394485760,
+    "causeEstablished": false,
+    "normalRecoveryCommandsPassed": 18,
+    "normalStopAndResourcesRoutesRestored": true,
+    "guestDeletion": false,
+    "uncertainChild": false,
+    "receiptSha256": "78699a98a7264aeb5cbc20ebb4c08d64df757c5171b8aac1e261f01a16baa9cc",
+    "independentActualReviewSha256": "4805b4630b3d9960891b054cf6b2eb28edc257fdca0f814b15be8f2702bbc45e",
+    "externalConformanceQualified": false,
+    "ledger": "docs/upgrade-2026-postgres-libxml2-native-20261114.md"
+  },
   "nov15Integrated8cAllTwelve": {
     "source": "8c1bd108bbad1a8c68c4273c25e8023ad314b231",
     "all12Passed": true,
