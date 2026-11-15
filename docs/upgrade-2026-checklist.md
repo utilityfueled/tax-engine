@@ -1,5 +1,26 @@
 # Remaining 2026 upgrade execution checklist
 
+## Latest exact-source continuation — November 15, 79792ec7
+
+- [x] Retain all twelve exact-source local checks and independent artifact review:
+  28,856 tests per unit/coverage lane, 88.18% branches, 648 browser passes/five skips.
+- [x] Preserve the zero-case port-conflict failure and independently review the
+  separately restaged, normally closed browser successor; retain all policies.
+- [x] Retain CI/Docker/ordinary self-host success and separately classify strict
+  container failure: 644 passes, four deadline-related failures, five skips.
+- [x] Complete protected Preview: 118 API cases, fourteen visible journeys, five
+  strict PDFs, 2,081/2,310 counted operations and normal scoped cleanup.
+- [x] Preserve the ARM guest-capacity admission failure before transfer/build;
+  normally stop and restore resources/routes without weakening the floor.
+- [ ] Pass current-source strict Linux container browser qualification.
+- [ ] Re-establish unchanged ARM capacity admission and pass current-source native
+  workloads; historical native successes are not attributed to this source.
+- [ ] Complete qualified human/final-form/security and remaining paid-credit and
+  distribution gates; filing, model promotion and production release stay closed.
+
+[Exact receipts and limits](upgrade-2026-integrated-runtime-79792ec7-20261115.md).
+Dated entries below preserve their own original source and outcomes.
+
 ## Current continuation — November 15
 
 - [x] Push all accumulated commits through `1360b9cb` to `main` and the backup;

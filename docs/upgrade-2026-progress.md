@@ -1,5 +1,23 @@
 # 2026 upgrade implementation evidence
 
+## November 15 completed 797 local and Preview evidence; strict and ARM remain open
+
+Exact `79792ec7` passes all twelve local checks: 28,856 tests in each unit/coverage
+lane, 88.18% branches and 648 browser passes/five original skips. The initial
+zero-case browser port conflict and its reviewed single-lane successor remain
+separate. Remote CI, Docker and ordinary self-host pass; strict container fails
+four 30-second deadline-related cases, with 644 passes/five original skips.
+Automatic-push optional diagnostics are skipped; no cause finding is inferred.
+
+Protected Preview passes 118 API cases, fourteen visible desktop/mobile journeys
+and five strict PDF reopenings with normal scoped cleanup, 2,081/2,310 operations
+and zero paid-provider calls. Root and independent artifact reviews pass. The new
+ARM64 attempt fails the unchanged guest-capacity floor before source/build and
+normally restores resources/routes; it is not current-source native qualification.
+Application source remains `79792ec7`, distinct from pushed documentation head
+`76f68d7c`. Human/final-form/security, paid-credit and release gates remain open.
+[Bound evidence](upgrade-2026-integrated-runtime-79792ec7-20261115.md).
+
 ## November 15 optional 8cc diagnostic and separate cloud cleanup
 
 The optional Linux attempt-2 strict run retains 640 passes, eight 30-second

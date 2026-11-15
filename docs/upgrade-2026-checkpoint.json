@@ -1,4 +1,80 @@
 {
+  "nov15Completed797LocalPreviewRemoteAndArmAdmission": {
+    "applicationSource": "79792ec7d5390616a9fd505825e21a9d857e513d",
+    "documentationHead": "76f68d7c",
+    "localAll12Passed": true,
+    "unitAndCoverageTests": 28856,
+    "testFiles": 2116,
+    "branchCoveragePercent": "88.18",
+    "localBrowser": {
+      "selected": 653,
+      "passed": 648,
+      "originalSkips": 5,
+      "workers": 2,
+      "retries": 0,
+      "defaultMs": 30000,
+      "existingBodyOverrides": 8,
+      "windows": 8,
+      "initialZeroCasePortConflictPreserved": true
+    },
+    "remote": {
+      "ci": "PASS",
+      "docker": "PASS",
+      "ordinary": {
+        "passed": 648,
+        "originalSkips": 5,
+        "defaultMs": 90000
+      },
+      "strict": {
+        "passed": 644,
+        "deadlineRelatedFailures": 4,
+        "originalSkips": 5,
+        "timedOutStatuses": 3,
+        "failedStatuses": 1,
+        "defaultMs": 30000,
+        "cpuDiagnosticSteps": "SKIPPED_AUTOMATIC_PUSH",
+        "causeClaimed": false
+      }
+    },
+    "protectedPreview": {
+      "passed": true,
+      "apiCases": 118,
+      "visibleUiJourneys": 14,
+      "savedPdfStrictReopenings": 5,
+      "countedOperations": 2081,
+      "combinedCap": 2310,
+      "legacyOperations": 1159,
+      "legacyCap": 1310,
+      "newIntakeOperations": 922,
+      "newIntakeCap": 1000,
+      "normalScopedCleanup": true,
+      "paidProviderCalls": 0,
+      "freshActorAbsenceQueriesSeparate": 2,
+      "syntheticAccountRowsRetainedForParentBranchCleanup": 2
+    },
+    "arm": {
+      "qualified": false,
+      "status": "HOLD_FAILED_GUEST_CAPACITY_BEFORE_SOURCE_OR_BUILD",
+      "actualFreeBytes": 265489317888,
+      "requiredFreeBytes": 268435456000,
+      "normalStopResourcesAndRoutesRestored": true
+    },
+    "receipts": {
+      "Local root": "2255169f839b0af233ba8760d904f9a1559d3aecf605251e01c85177b4f8e4f8",
+      "Local independent": "2c7faf52f7d46225ff19dc5207e190f473a98f95fab09527fd773ba06e8bde47",
+      "Browser failure/retry preservation": "a5a382bb6c2850a3e5311c5c968242a999810444d1f8b8a4de97b714936390e0",
+      "Remote complete artifact review": "d238cac3c2c00a3f3d8074225c3f4d1236db7346a07a42837715c53f71722241",
+      "Preview root saved review": "80325e21bc8a82736b94d82b39485afe30c991ea0e14f9c15d52e118c21c0233",
+      "Remote root summary": "3ca451fc478acd16fe8161e9fbfeb55cedd5e08287ad15197a4f2fcb624cff68",
+      "Preview actual receipt": "9d9684f036e9feb1f636e034f99e4a7eb1142a3b1601adf1a32d8023de08d114",
+      "Preview independent saved review": "adfd0a4f3217534acae02b0752eb0004ee00cef47f449ef46c5602a2053617cd",
+      "Preview root visual review": "c37409dccc91e28ce74bfc08399f3c1f796fef413ce13aca76ea87162771d8f6",
+      "ARM failed admission/root terminal": "52de4d3958d8053ef21ceae0dd9c3428f21a80568677e83301730e324aa0848c"
+    },
+    "humanQualified": false,
+    "filingQualified": false,
+    "releaseQualified": false
+  },
   "nov15Optional8ccAttempt2AndSeparateCloudCleanup": {
     "applicationSource": "8cc5b0ec0b1507e0203a8ce1bc5f3a72de1b5f09",
     "optionalStrict": {

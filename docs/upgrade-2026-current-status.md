@@ -1,5 +1,31 @@
 # Current 2026 upgrade continuation
 
+## Current continuation — November 15, completed 797 evidence
+
+Application source `79792ec7` and documentation-only head `76f68d7c` are pushed to
+main and the existing backup; the saved production-build guard remains in effect.
+All twelve exact-source local checks and independent artifact review pass:
+28,856 unit/coverage tests, 88.18% branches and 648 browser passes/five original
+skips. The initial zero-case port-conflict attempt remains preserved separately
+from its reviewed, normally closed single-lane successor.
+
+Remote CI, Docker and ordinary self-host pass. Strict Linux AMD64 remains failed:
+644 passes, four deadline-related failures and five original skips across all
+653 cases. No case, deadline, retry or gate is changed. This automatic push has
+no optional CPU profiles, and no timeout cause is inferred.
+
+Protected Preview passes 118 API cases, fourteen visible journeys and five strict
+saved-PDF reopenings, with root and independent artifact review; 2,081/2,310
+counted operations and normal scoped cleanup. The new ARM64 attempt stops before
+source transfer/build at the unchanged guest free-space floor, then normally stops
+and restores resources/routes. Current-source ARM qualification remains pending.
+[Exact evidence](upgrade-2026-integrated-runtime-79792ec7-20261115.md).
+
+Human tax/AI/security review, final annual 2026 forms, accountable advisory
+disposition and remaining paid-credit/distribution qualification remain open.
+Filing, model promotion and production release remain closed. Historical entries
+below keep their original source and failure boundaries.
+
 ## Active work — November 15, 17:25 UTC
 
 Reviewed commits through `5e018159` are pushed to main and the existing backup.
