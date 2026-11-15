@@ -1,3 +1,4 @@
+import { Form2210InvestmentHouseholdSchema } from './form-2210-investment-household.js';
 import { MedicalMileageHohSchema } from './medical-mileage-hoh.js';
 import { Form172FarmingSourcesSchema } from "./form-172-farming-sources.js";
 import { CoverdellPostDisqualificationInterestSchema } from "./coverdell-post-disqualification-interest.js";
@@ -3760,6 +3761,7 @@ const Form2210SelfEmploymentOwnerSchema = z.object({
 export const Form2210Schema = z.object({
   /** Actual four cumulative original worksheets; no inferred election allocation. */
   investmentElectionSources: z.object({
+    household: Form2210InvestmentHouseholdSchema.optional(),
     sourceTaxYear: z.number().int().optional(), sourceReference: z.string().optional(), sourceFactsConfirmed: z.boolean().optional(),
     allPeriodsCompleteConfirmed: z.boolean().optional(), electionValidConfirmed: z.boolean().optional(), otherInvestmentIncomePresent: z.boolean().optional(),
     accountHolder: z.enum(["primary", "spouse"]).optional(), taxpayerFirstName: z.string().optional(), taxpayerLastName: z.string().optional(), taxpayerSsnLast4: z.string().optional(),

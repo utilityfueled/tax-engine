@@ -4127,6 +4127,29 @@
       ]
     },
     {
+      "key": "federal/form-2210-investment-household",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.irs.gov/pub/irs-prior/f4952--2025.pdf",
+      "specPath": "spec/federal/form-2210-investment-household.yaml",
+      "enginePath": "src/engine/forms/form-2210-investment-election.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-2210.ts",
+      "implementationTestRefs": [
+        "tests/engine/forms/form-2210-investment-household.test.ts::admits source-complete joint current-paid originals with independent taxes",
+        "tests/engine/forms/form-2210-investment-household.test.ts::preserves private originals and physical source revalidation"
+      ],
+      "implementationNote": "Finite historical2025 MFJ actual primary-owned current-paid DIV originals, spouse known-zero investments and both actual all-year MA domicile/ownership history. Shared helper preserves four-period conservation and private proof; source-recomputed physical review is not filing, final2026 or qualified-human approval.",
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": true,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/form-2210-owner-source",
       "jurisdiction": "federal",
       "taxYear": null,

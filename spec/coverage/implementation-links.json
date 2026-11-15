@@ -1744,6 +1744,16 @@
         "tests/engine/state/pa-source-precision.test.ts::ordinary PA source precision preserves global Decimal configuration and original facts"
       ],
       "note": "Local Decimal source aggregation and printed-tax rounding in the existing ordinary PA residency method. Independently exercised finite sources up to60 digits; no packet qualification, e-file business rules or current2026 filing readiness."
+    },
+    {
+      "key": "federal/form-2210-investment-household",
+      "enginePath": "src/engine/forms/form-2210-investment-election.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-2210.ts",
+      "testRefs": [
+        "tests/engine/forms/form-2210-investment-household.test.ts::admits source-complete joint current-paid originals with independent taxes",
+        "tests/engine/forms/form-2210-investment-household.test.ts::preserves private originals and physical source revalidation"
+      ],
+      "note": "Finite historical2025 MFJ actual primary-owned current-paid DIV originals, spouse known-zero investments and both actual all-year MA domicile/ownership history. Shared helper preserves four-period conservation and private proof; source-recomputed physical review is not filing, final2026 or qualified-human approval."
     }
   ]
 }

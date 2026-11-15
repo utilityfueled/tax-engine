@@ -1,0 +1,45 @@
+form: "Form 2210 Schedule AI finite joint investment-election originals"
+fullName: "2025 MFJ wholly primary-owned current-paid ordinary dividend sources"
+taxYear: 2025
+irsReference: "https://www.irs.gov/pub/irs-prior/f4952--2025.pdf"
+notes: |
+  Source refresh2026-11-15: final2025 Form4952 lines1,2,4g,7,8 and election instructions;
+  final2025 i2210 ScheduleAI lines4,6,14; final2025 i1040 MFJ/TaxComputationWorksheet;
+  IRC6013(a),(d)(3) aggregate joint income,6654(d)(2) annualized installment.
+  Pub555 domicile/community-property limits. No single-only statutory restriction is inferred.
+  Finite actual married-at-year-end2025, both spouses alive/resident, actual all-year
+  Massachusetts domicile records and primary separate-property history from acquisition through the tax year only.
+  Separate-property ownership history has its actual original reference; no marital
+  or mailing-address fact supplies ownership, domicile or a spouse zero.
+  Primary DIV ordinary=qualified, zero other DIV boxes; actual wholly primary-owned
+  accounts, both spouses' complete original identities, actual spouse investment income,
+  current interest, prior carry and other expenses independently known zero.
+  No spouse/joint investments, community-property history, other investment sources,
+  prior carry, other expenses, refunds/reclassification, special rates or foreign method.
+  Existing exact four-period+annual originals, actual election and itemized conservation,
+  AMT/NIIT/current-law source gates remain. No 2026, filing or human approval enabled.
+lines:
+  - line: "joint-source-admission"
+    description: "Admit actual fully reconciled joint household originals"
+    formula: "Both source identities bind exact canonical names and valid complete SSNs; actual original MFJ/married-year-end and both MA domicile records cover Jan1-Dec31. Every canonical DIV is individually indexed/year/payer/account/owner/actual-recipient-identity/amount bound; spouse amounts are explicit0, never defaults. Single legacy route unchanged."
+    testRef: "tests/engine/forms/form-2210-investment-household.test.ts::admits source-complete joint current-paid originals with independent taxes"
+  - line: "household-unknown-conflict"
+    description: "Reject unknown and conflicting household sources"
+    formula: "Missing/false household confirmations, positive/absent spouse amounts, malformed or stale identities, other domicile or year/status, source ownership and original amounts reject. No source disappearance or schema stripping makes zero."
+    testRef: "tests/engine/forms/form-2210-investment-household.test.ts::rejects unknown contradictory and cross-spouse household originals"
+  - line: "current-cost-conservation"
+    description: "Preserve actual original cumulative and annual current interest"
+    formula: "No prior carry/other expense; source monetary fields remain integer dollars. Actual period costs nondecreasing<=annual, final matches exactly, original allowed deduction+other itemized=period itemized. Fractional original cost .01 never rounds into admission."
+    testRef: "tests/engine/forms/form-2210-investment-household.test.ts::preserves cumulative cents and annual conservation guards"
+  - line: "independent-line14"
+    description: "Independent joint tax arithmetic without claiming penalty qualification"
+    formula: "Annualized taxable bases[160000,201600,140250,159000], eligibleQD[2000,2400,29250,39000], ordinary bases[158000,199200,111000,120000]. MFJ TaxComputationWorksheet sectionB ordinary*.22-10172; all ordinary>100000 use TaxComputationWorksheet. Preferential15percent gives[24888,34012,18635.50,22078], rounded[24888,34012,18636,22078]. AnnualAGI200000/itemized41000/taxable159000/ordinary120000 yields22078; annualNIIT/AMT0 from actual existing calculation, not line14 alone."
+    testRef: "tests/engine/forms/form-2210-investment-household.test.ts::admits source-complete joint current-paid originals with independent taxes"
+  - line: "actual-source-lifecycle"
+    description: "Bind original order identity and changed sources"
+    formula: "Distinct real primary accounts accepted with complete snapshots; reordering requires matching final indices, duplicate payer/account originals deny, changed originals require matching source and independent totals. A consistent renamed identity is permitted; stale names are not."
+    testRef: "tests/engine/forms/form-2210-investment-household.test.ts::binds distinct accounts reordered originals and actual identity edits"
+  - line: "privacy-and-physical"
+    description: "Keep original household evidence private across existing review seams"
+    formula: "Verified AI context, shared audit, hosted sanitized shell expose only permitted tax numbers, never household SSNs/names/domicile/account/source references. Actual source-recomputed physical Form2210 preserves lawful return headers and exact line14 numeric fields, with no new private source references. Stale-source physical transfer rejects before PDF template I/O."
+    testRef: "tests/engine/forms/form-2210-investment-household.test.ts::preserves private originals and physical source revalidation"

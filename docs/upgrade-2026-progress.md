@@ -1,5 +1,13 @@
 # 2026 upgrade implementation evidence
 
+## November 15 joint investment household originals
+
+Finite historical 2025 MFJ originals now reconcile both actual spouses, explicit
+zeros, domicile, ownership and indexed dividends without inferred facts. All
+28,631 main tests pass with real local PostgreSQL and no skips; 27 separate
+review controls and source/privacy/physical checks pass.
+[Evidence and remaining gates](upgrade-2026-mfj-investment-household-20261115.md).
+
 ## November 15 household evidence layout
 
 A real desktop-browser regression exposed a stretched medical confirmation select.

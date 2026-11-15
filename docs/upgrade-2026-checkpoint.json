@@ -1,4 +1,29 @@
 {
+  "nov15MfjInvestmentHousehold": {
+    "base": "e2d6280cc812239a2a2bbc26654b5d55006d19a5",
+    "scope": "Finite2025MFJprimary-ownedDIV/full-yearMA/actualspouseknownzero;no2026orfilingqualification",
+    "sourceFreeze": "462657ab44735890ce69fb410b50cf8b133c034f4183df023460f0a2ad1d8c77",
+    "independentEngineeringReview": "0be35a4c585fe24a4d63ab07c76c3b4a927764d1ac221112c5209c6094c569d7",
+    "separateReviewTests": 27,
+    "mainUnitTests": 28631,
+    "mainUnitFiles": 2089,
+    "mainUnitSkips": 0,
+    "mainUnitWorkers": 4,
+    "postgres": "OwnedSCRAMloopback16.16;normalstop/privateURLremoved/sourceunchanged",
+    "mainUnitReceipt": "525e3aab0b37077fa797c9d5b8f7e6a97aac9cd4ac5846bef52db88d820a8ac8",
+    "line14": [
+      "24888",
+      "34012",
+      "18636",
+      "22078"
+    ],
+    "annualTax": "22078",
+    "inventoryRows": 1029,
+    "prior1028RowsUnchanged": true,
+    "browserPoliciesUnchanged": true,
+    "evidence": "docs/upgrade-2026-mfj-investment-household-20261115.md",
+    "remaining": "Guideintegration/combinedcurrentchecks+runtimes/human/final2026/securitygatesremain"
+  },
   "nov15HohGridLayout": {
     "base": "19a6134b7c72cbd2b6cbacf7579d8a171596c2ee",
     "scope": "One household section spans full guided grid row; no tax/facts/privacy/readiness change",
