@@ -36,7 +36,8 @@ journeys pass. Counters total 925 of the 1,310-operation ceiling. No paid provid
 calls occur. Existing fictional actors, no-card Sandbox trials, sessions,
 workspace shells, temporary deployment/settings and owned cache entries are
 cleaned up; signed cancellation revokes both subscriptions' access. The Preview
-is deleted and its webhook/settings restored. This establishes only the observed
+is deleted and its webhook/settings restored. A separate saved-artifact review
+verifies the complete source, counters, case statuses and cleanup. This establishes only the observed
 synthetic routes. It does not qualify annual 2026 calculations or filing exports.
 
 ## Remote failures retained
@@ -79,6 +80,7 @@ its actual receipts without publishing test credentials or raw runtime logs.
 | Independent ARM artifact review | `e7166ae423f73bb472beb5beac5dc6c6a63e5044709efc25660f2b3370d63cbf` |
 | Root ARM artifact review | `5039b8b7fbabe6fab09843aac871692345d6d605badf20af43f0f1bbb5a57812` |
 | Preview parent receipt | `63e76d21c2388ac17ee74332cea23d9be99843d9b44f3156a54bb428e9936b47` |
+| Independent Preview artifact review | `b496a40b29c1ba0d1020346c3d22bfc151063685b27e3073412057a12f4c4c34` |
 | Root Preview artifact review | `4279cbf73bedafdcc78ce52e8733f5d3958ff63789aa626cd5a4bfba866cb318` |
 | Current raw ARM scan | `4638fb29de0ce2b391c8a173838be7e5824cae8e003b9227cfaf1d4d038e2cef` |
 | Separate normal VM restoration | `1612b32a4502cb043a904494a31ea185ae4f398556abab6aeeea6c15f02938e1` |

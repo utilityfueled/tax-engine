@@ -1,4 +1,17 @@
 {
+  "nov15InfrastructureInventoryAndArtifactPeers": {
+    "commits": [
+      "dbb190ff",
+      "ea213d11",
+      "258a3ee8"
+    ],
+    "inventory": "initial-stale-failure-retained-regenerated-check-passes",
+    "specReferencesPassed": 9311,
+    "webTypesPassed": true,
+    "previewSavedArtifactPeer": "b496a40b29c1ba0d1020346c3d22bfc151063685b27e3073412057a12f4c4c34",
+    "recoveryActualPeer": "524e56fb319f364628c1357d0e02575c65c360e4d3b434e4f9c46c2275819b0a",
+    "releaseReady": false
+  },
   "nov15Integrated9b2dActual": {
     "source": "9b2d6cbb1868aa93d2f624251215eac182db04c7",
     "document": "docs/upgrade-2026-integrated-runtime-9b2d6cbb-20261115.md",

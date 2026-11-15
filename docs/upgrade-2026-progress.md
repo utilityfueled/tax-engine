@@ -6088,3 +6088,12 @@ child; remote browser suites retain strict4,000ms PDF failures and28 cumulative
 30-second case failures. The fresh same-image scan retains56High, unaccepted.
 These are separate observed results, not release qualification.
 [Exact sources, receipts and remaining gates](upgrade-2026-integrated-runtime-9b2d6cbb-20261115.md).
+
+### November 15: infrastructure inventory and separate artifact audits
+
+Generated coverage inventory now includes the two new infrastructure specs with
+unsupported filing status preserved. The first inventory check failed as stale;
+regeneration and the repeated check pass. All9,311 spec references and web types
+pass. Separate saved-artifact audits verify the final105 Preview source/statuses/
+925-operation count/cleanup and the real three-test PostgreSQL recovery result.
+Neither review substitutes for a qualified human tax or security sign-off.

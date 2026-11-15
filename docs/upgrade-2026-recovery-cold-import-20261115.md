@@ -23,7 +23,10 @@ loopback-only PostgreSQL 16.16 cluster with SCRAM and no Unix socket, executes a
 three tests without skips, then stops that owned cluster normally and removes
 its private URL/password files. The original real recovery child passes in
 329 ms; the complete focused Vitest command takes 2.82 seconds. These are local
-results. A new successful remote coverage run is still required.
+results. A separate saved-artifact review verifies the same source, actual
+three-test result, normal stop and absence of the private credential files. Its
+receipt is `524e56fb319f364628c1357d0e02575c65c360e4d3b434e4f9c46c2275819b0a`.
+A new successful remote coverage run is still required.
 
 Retained private source manifest:
 `2b20de2c8ad3d037f37edbe207c4ec89fc67b6ff9adbd4b31f979b02f06cbb45`.
