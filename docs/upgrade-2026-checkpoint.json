@@ -1,4 +1,19 @@
 {
+  "nov15W3cFreshCompileAndCaseLaunchFailure": {
+    "operation": "7b7fe62ed3e0dc11a4fa8b7f",
+    "controllerCommands": 57,
+    "freshToolchainAndCompilePassed": true,
+    "originalMembersAdmitted": 3697,
+    "caseContainerLaunches": 1,
+    "completedXmlCases": 0,
+    "caseLaunchExit": 126,
+    "pairedComparisonComplete": false,
+    "normalCleanupAndResourcesRoutesRestored": true,
+    "actualPeer": "b43119103e53c109d83f4027b1cb9b0de93a628e56b6935a30fcace485453dd6",
+    "guestArchiveSha256": "304a6d37dfd148c27e8b41511fa82919ea338c9552482e75994d6fdf217e26c9",
+    "next": "Separately review file-size limit units before successor",
+    "releaseReady": false
+  },
   "nov15BrowserAuditMetadataRefresh": {
     "base": "21dfc25874bdf0813d252568bffde3183b63d73a",
     "earlyBrowserPreflightFailed": true,

@@ -6158,3 +6158,12 @@ Both artifact digests and included5,154 source blobs are independently checked.
 Independent terminal artifact review:
 `9e9aac803a88fbd8e831cf4a53eb20e8f78258140edb457f9b69769be6667f75`.
 No newer-source runtime qualification or CPU cause is inferred.
+
+### November 15: fresh external XML compile and first-launch failure
+
+The fresh toolchain, both harnesses and all3,697 corpus members pass admission.
+The first case container exits126 before its loader/XML work with a runtime
+file-size-limit error; no retry or conformance claim follows. All57 outer commands
+and independently reviewed normal VM/resource/route cleanup pass. Original failed
+evidence remains retained; a separate units correction is under review.
+[Actual failure and cleanup](upgrade-2026-postgres-libxml2-native-20261114.md).

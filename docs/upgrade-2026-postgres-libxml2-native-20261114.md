@@ -168,3 +168,39 @@ independent source review:
 independent actual restoration review:
 `256de500a0efd5f1d6b3fde926aefe478f32b3bf66ba7cb95d6365f79ebc959f`.
 All prior failure receipts remain retained and separate from successful cleanup.
+
+## November 15: fresh W3C compilation passes; first case cannot launch
+
+The separate V10 successor explicitly bypasses toolchain layer caching and uses
+scoped bind relabeling with exact corpus permissions. All 165 input pins and 83
+offline controls pass root and independent source review. Actual operation
+`7b7fe62ed3e0dc11a4fa8b7f` builds a fresh toolchain, compiles both harnesses and
+admits all 3,697 original corpus members and both exact provider hashes.
+
+The first baseline container exits 126 before its loader or XML harness runs:
+`crun: write to status file: File too large`. The shared-mount initialization
+guard stops immediately without retry. One container launch is recorded; zero
+XML cases complete and the paired comparison remains incomplete. This failure
+does not establish parser behavior or conformance.
+
+All 57 outer commands finish normally, with the separately proved normal-boot
+daemon reconciliation retained. The exact case container is inspected, removed
+and verified absent. Container/volume checks, owned image/directory cleanup,
+normal VM stop, original CPU/memory and both routes/default restoration pass.
+Cleanup has no errors or unresolved child operations. The retained archive has
+226 members, including eight ordinary package symlinks; review reads fixed
+regular members without extracting those links.
+
+Private controller receipt:
+`9c94c5382056a68abadca8fb9bd49921bd63620ebdc6fb04227df984fa430cc1`;
+normal-cleanup receipt:
+`226570e03da5e0db8387bb51a105295cba2161a19e4180d9bcb72292855fb364`;
+guest-evidence archive:
+`304a6d37dfd148c27e8b41511fa82919ea338c9552482e75994d6fdf217e26c9`;
+root actual review:
+`fadeeb2ef9c4d604910628eb6b8986f8a269d69978a75baf08a2c25f58c57f74`.
+Independent actual failure and cleanup review:
+`b43119103e53c109d83f4027b1cb9b0de93a628e56b6935a30fcace485453dd6`.
+The failed run, preparation failures and successful cleanup remain distinct.
+The file-size limit needs a separately reviewed correction before another run.
+Conformance, candidate release and security acceptance remain false.
