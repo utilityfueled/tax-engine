@@ -7,7 +7,10 @@ notes: |
   year, readiness, or filing admission changes. Existing stable serialization
   converts Decimal to its exact decimal string, preserves array order and null,
   omits undefined object children, and sorts object keys with existing localeCompare.
-  Three transient comparisons may compare that same complete JSON material directly.
+  Existing transient comparisons and the three canonical-business comparisons may
+  compare that same complete JSON material directly. The latter compare the complete
+  federal-original snapshot, freshly recomputed federal result, and original C.
+  The canonical-business work bound removes only their temporary SHA256 pairs.
   Every digest actually returned, audited, or stored in prepared original contexts
   retains its existing SHA256 implementation and bytes. Current federal recomputation
   and full redacted result comparison remain mandatory. No cache or shared replay.
@@ -36,3 +39,19 @@ lines:
     description: "Original private context commitments are unchanged"
     formula: "Raw/redacted complete current context succeeds; forged, stale source and changed full federal result fail; inputs and captured originals remain immutable"
     testRef: "tests/engine/state/oh-source-material-equality.test.ts::preserves prepared raw and redacted context integrity"
+  - line: "canonical-business-work-bound"
+    description: "No temporary full-original or full-result hashes during canonical-business admission"
+    formula: "Fresh federal computation and complete stable material comparison remain; returned sourceCommitment and stored factsDigest retain SHA256"
+    testRef: "tests/engine/state/oh-business-source-material-work.test.ts::compares complete canonical business material without temporary full-source SHA256 work"
+  - line: "canonical-business-normalization"
+    description: "Canonical-business comparison keeps existing complete material semantics"
+    formula: "Object order, undefined object children, Decimal strings and array undefined/null retain existing serialization; unchanged originals retain complete commitments"
+    testRef: "tests/engine/state/oh-business-source-material-work.test.ts::preserves canonical business normalization for %s"
+  - line: "canonical-business-tamper"
+    description: "Same-money source changes and nested federal audit changes remain contradictions"
+    formula: "Preserve first-error order and reject distinct Unicode, array order, present null, changed original C and changed complete federal output"
+    testRef: "tests/engine/state/oh-business-source-material-work.test.ts::rejects changed canonical business material in original error order for %s"
+  - line: "canonical-business-context"
+    description: "Prepared canonical-business contexts remain opaque and bound to all current source facts"
+    formula: "Unchanged or reordered complete facts reread unchanged worksheets; forged contexts and later source changes fail; returned worksheet mutations cannot alter stored projection"
+    testRef: "tests/engine/state/oh-business-source-material-work.test.ts::retains opaque canonical business commitments and isolated stored projections"

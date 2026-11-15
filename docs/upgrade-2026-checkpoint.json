@@ -1,4 +1,30 @@
 {
+  "nov15CanonicalBusinessTransientComparison": {
+    "base": "09acb4d7c6a91a886e09570e041d6703085ffa26",
+    "scope": "three complete stable material comparisons; all durable SHA256/fresh federal/error/readiness semantics retained",
+    "specFirstRed": {
+      "failed": 1,
+      "passed": 13,
+      "fullFederalHashes": 2,
+      "fullOriginalHashes": 2
+    },
+    "relevantGreen": {
+      "tests": 1055,
+      "files": 4,
+      "completeOutputFingerprintsUnchanged": 14
+    },
+    "rootTypes": 0,
+    "webTypes": 0,
+    "scopedLint": 0,
+    "rootBrowserPolicyControls": 179,
+    "localAbbaMedianImprovementPercent": "31.4",
+    "allFourBenchmarkOwnersTerminalZero": true,
+    "independentSourceReview": "974b37345be4b8e93ca5bdb2d0c96659a5ab2ff1df7785268fcb23e64686d8ca",
+    "mainAdoptionReceipt": "42d3d2463a29c6e1136d311d3d6e4b116bb6df5e32baac3d8ab6afeec1ed2d04",
+    "strictRemoteTimeoutFixClaimed": false,
+    "integratedAndDistributionSuccessorPending": true,
+    "releaseQualified": false
+  },
   "nov15A137TerminalAndWorksheetIntake": {
     "recordedUtc": "2026-11-15T17:25:41.246772+00:00",
     "pushedMainAndBackup": "5e018159eaa892aafa65a10efce95ccedcb58cc0",

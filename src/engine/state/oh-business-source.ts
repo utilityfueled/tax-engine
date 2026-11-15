@@ -19,6 +19,10 @@ function stable(value: unknown): unknown {
   return value;
 }
 const digest = (v: unknown) => bytesToHex(sha256(new TextEncoder().encode(JSON.stringify(stable(v)))));
+/** Complete transient equality; durable and prepared-context commitments retain SHA256. */
+function sameSourceMaterial(left: unknown, right: unknown): boolean {
+  return JSON.stringify(stable(left)) === JSON.stringify(stable(right));
+}
 const identity = (v: string) => v.replace(/\s+/g, '').toLowerCase();
 function fail(message: string): never { throw new Error(`Ohio actual canonical business sources: ${message}`); }
 function actualDate(value: string, year: number): string {
@@ -44,7 +48,7 @@ export function calculateOhioCanonicalBusinessSource(args: { taxInput: TaxYearIn
   const facts = OhioResidencyFactsSchema.parse(args.residencyFacts);
   // The separately validated factual header is state evidence, not a federal original.
   const { ohioResidency: _residency, ohioPayments: _payments, ohioReturnHeaderSources: _header, ...actualFederalOriginals } = input;
-  if (!facts.originalFederalSources || digest(facts.originalFederalSources) !== digest(actualFederalOriginals)) fail('current private federal original source snapshot is missing or changed');
+  if (!facts.originalFederalSources || !sameSourceMaterial(facts.originalFederalSources, actualFederalOriginals)) fail('current private federal original source snapshot is missing or changed');
   const source = OhioCanonicalBusinessSourcesSchema.parse(facts.businessSources);
   const year = input.taxpayer.taxYear;
   if (input.taxpayer.filingStatus !== 'single' || input.taxpayer.spouse || facts.owners.length !== 1) fail('only actual single primary owner is admitted');
@@ -76,7 +80,7 @@ export function calculateOhioCanonicalBusinessSource(args: { taxInput: TaxYearIn
     const result = args.federalResult;
     if (year !== 2025 || !result || result.taxYear !== year || result.filingStatus !== 'single' || !result.scheduleC || !result.scheduleSE) fail('actual current2025 federal C and SE computation required');
     const fresh = calculateFederalTax(input);
-    if (digest(fresh) !== digest(result)) fail('current federal computation differs from source result');
+    if (!sameSourceMaterial(fresh, result)) fail('current federal computation differs from source result');
     cResult = result.scheduleC; seResult = result.scheduleSE; federalAgi = result.agi;
     if (!result.otherIncome.eq(cResult.netProfit) || !result.totalIncome.eq(cResult.netProfit) || !result.adjustmentsToIncome.eq(seResult.deductibleHalf)
       || !federalAgi.eq(cResult.netProfit.minus(seResult.deductibleHalf))) fail('actual C and halfSE must reconcile every current federal income and adjustment');
@@ -86,7 +90,7 @@ export function calculateOhioCanonicalBusinessSource(args: { taxInput: TaxYearIn
   if (cResult.netProfit.isNegative()) fail('signed loss federal limitation and deduction timing need their separate canonical method');
   if (source.facts.businesses.length !== 1) fail('complete unique current C coverage required');
   const b = source.facts.businesses[0];
-  if (!b || b.accountHolder !== 'primary' || b.ownerResidencyStatus !== owner.status || digest(b.originalBusiness) !== digest(c)) fail('current actual C original owner or residency does not reconcile');
+  if (!b || b.accountHolder !== 'primary' || b.ownerResidencyStatus !== owner.status || !sameSourceMaterial(b.originalBusiness, c)) fail('current actual C original owner or residency does not reconcile');
   const seenReceipts = new Set<string>(); const seenDocuments = new Set<string>();
   if (source.receiptOriginals.length !== b.sales.rows.length) fail('every actual invoice original must be covered once');
   for (const row of source.receiptOriginals) {

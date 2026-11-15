@@ -1069,7 +1069,7 @@
     "src/engine/state/oh-2026-school-catalog.ts": "7be7acb7a4a1921fe42412fdf375f227da2f533460c328069823002f41c118b8",
     "src/engine/state/oh-2026-school-source.ts": "c664a284d3a54e6d63b0d8ea570c6f48bb19ff8e839ecc1151c47012da3619e6",
     "src/engine/state/oh-2026-venture-capital-gain-estimate.ts": "7467d2035e9323b72c4c1dc1f8d71cbf3a155b66cbe4f1641a12adacfa50b038",
-    "src/engine/state/oh-business-source.ts": "689acd9a683b2faacc971e07fd9cc8f05dee867b32652d0c1b78afb1b7d52c32",
+    "src/engine/state/oh-business-source.ts": "374be646f4bcfb7c1e68e29ac7ee6009bec24bfa1e6c212346a61e129ebda24a",
     "src/engine/state/oh-engine.ts": "6cb0f5f7701e6786407d833022571e9deb833e4089220ef83a99993ecf6eaad0",
     "src/engine/state/oh-input-adapter.ts": "7a0586bdabffa81929622e00b45c438e2885ce48e57b1359b968ff2207a964f0",
     "src/engine/state/oh-it-1040.ts": "4e7ec9acf6cb27ef94e4e5987def84222d51662820289222e5870967f48095d8",

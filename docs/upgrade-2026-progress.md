@@ -6418,3 +6418,14 @@ is verified. Actual traffic plus the CLI reserve totals 1,150/1,310 operations.
 ARM64 and strict remote-container results remain pending; no human, filing,
 security-risk or model qualification follows from this bounded staging run.
 [Actual evidence](upgrade-2026-integrated-runtime-1360b9cb-20261115.md).
+
+
+### November 15: avoid temporary canonical-business source hashes
+
+Three complete-material comparisons now avoid temporary SHA256 pairs while every
+durable commitment and fresh federal/source check remains unchanged. Genuine main
+RED precedes 1,055 relevant passing tests, types and lint; fourteen full-output
+fingerprints remain identical. Independent normalization/tamper/context review
+passes. The fully observed local ABBA benchmark improves its median by31.4%;
+this does not resolve strict-container deadlines or qualify tax law.
+[Scope and retained evidence](upgrade-2026-ohio-business-material-work-20261115.md).
