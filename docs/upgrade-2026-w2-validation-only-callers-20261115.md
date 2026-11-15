@@ -55,3 +55,10 @@ Metadata freeze: `6dec411e365672d480f339b0fb2f5c44e8837f46a8ffe1099ba207679ceee8
 independent review: `6f6e236f0f254b38e345aa038592712c743f0be6f9613a63e15138aa940adc56`.
 The first private metadata attempt rejected the legitimate new inventory key;
 that failure is retained. Its successor permits precisely that addition.
+
+The subsequent global strict unit parser exposed a format-only issue: this
+software spec used YAML-valid plain/single-quoted identifiers, whereas the
+existing strict reference test recognizes double-quoted line/testRef values.
+The four values now use the established double-quoted form. No parser, test or
+reference content changed. Root then passes all 948 tests in the strict-reference
+and W-2 caller files; the original failing global run remains retained.

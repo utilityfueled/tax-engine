@@ -10,9 +10,9 @@ notes: |
   Actual row result consumers and the Ohio payment source digest stay unchanged.
   No cache, skipped check, timing allowance or browser policy is introduced.
 lines:
-  - line: guided-section
+  - line: "guided-section"
     formula: 'The actual complete guided W2 section uses assertion only. Preserve exact complete/partial/error output and input immutability against the old calculated guard for valid, stale owner/year/row/confirmation originals.'
-    testRef: 'tests/apps/web/w2-validation-only-callers.test.ts::guided section validates original rows without a discarded commitment'
-  - line: ohio-payment
+    testRef: "tests/apps/web/w2-validation-only-callers.test.ts::guided section validates original rows without a discarded commitment"
+  - line: "ohio-payment"
     formula: 'The actual Ohio payment W2 evidence guard uses assertion only. Its complete public projection including the existing sourceDigest and property order matches the calculated predecessor. Preserve exact original source refusals, zero withholding and unknown facts.'
-    testRef: 'tests/apps/web/w2-validation-only-callers.test.ts::Ohio payment evidence retains its own exact digest without discarded W2 commitments'
+    testRef: "tests/apps/web/w2-validation-only-callers.test.ts::Ohio payment evidence retains its own exact digest without discarded W2 commitments"
