@@ -1,5 +1,9 @@
 # Remaining 2026 upgrade execution checklist
 
+- [x] Render the original-bound finite 2025 PA interest adjustment review on the
+  official form; 976 adoption tests, 39 separate review tests and two physical
+  examples pass. [Evidence and limitations](upgrade-2026-pa-interest-physical-20261115.md).
+
 - [x] Complete exact a32 isolated Preview: four browser journeys, all 48 canonical
   admission checks and verified cleanup. Remote CI also passes.
   [Evidence and open AMD64 failures](upgrade-2026-preview-remote-a32a3b10-20261115.md).

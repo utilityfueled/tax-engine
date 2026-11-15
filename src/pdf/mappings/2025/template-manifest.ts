@@ -180,6 +180,10 @@ export const REVIEW_TEMPLATES_2025 = {
     "sha256": "fcd7648601f3ce5a7a258be49c54aa1c604e1c61c1fe9175351451ac6087d8b3",
     "revisionQualification": "unreviewed-legacy-snapshot"
   },
+  "pa-schedule-a.pdf": {
+    "sha256": "dd32da96a856d033725e772c9a7dc4339131b4abe776e4caa4e7de722c0cbfce",
+    "revisionQualification": "source-inspected-review-only"
+  },
   "pa-schedule-d.pdf": {
     "sha256": "154a86698c3c7e81d2487ce518c767a8253781a7aa2b8fcd9974d8bb5ce4b30e",
     "revisionQualification": "source-inspected-review-only"

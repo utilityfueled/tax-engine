@@ -1,0 +1,59 @@
+form: "PA Ordinary Official Schedule A Paper Review"
+fullName: "Original-bound single-primary 2025 interest attachment"
+taxYear: 2025
+status: "review-only-not-for-filing"
+sources:
+  - url: "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40a.pdf"
+    section: "Form page1 and instructions page3; resident/PY adjustment trigger; NR excluded; separate owner schedules; whole-dollar rounding"
+    retrieved: "2026-11-15"
+    sha256: "dd32da96a856d033725e772c9a7dc4339131b4abe776e4caa4e7de722c0cbfce"
+notes: |
+  Limited to existing source-admitted single primary-owner actual2025 ordinary
+  returns. Opaque prepared authority and fresh replay precede rendering. Unknown
+  or joint owners have no inferred split. Existing ScheduleA amounts are projected,
+  never recalculated. Only bank residency adjustments and admitted Treasury OID
+  reductions are mapped; unsupported routes retain their reference summary.
+  Printed whole-dollar sums and PA40line2 must agree. Name redacted, SSN blank,
+  no private references. Five pinned official pages remain review-stamped.
+  Filing and final2026 exports stay closed; no human tax approval is inferred.
+lines:
+  - line: "1-16"
+    description: "Project sixteen original-derived amounts without overrides"
+    formula: "1=federal interest;2=exempt interest;3=additions;4=1+2+3;5=K1;6=PA obligations;7=US obligations;8=other reductions;9=5+6+7+8;10=4-9;11=annuity;12=charitable annuity;13=529;14=HSA/MSA;15=PA pass-through;16=10+11+12+13+14+15. Display existing half-up whole dollars only if printed sums and PA40interest agree."
+    testRef: "tests/pdf/pa-ordinary-interest-official-pdf.test.ts::renders the adjustment-triggered original part-year Schedule A as an official review copy"
+  - line: "attachment"
+    description: "Retain real adjustment attachment boundary"
+    formula: "Actual resident/PY adjustments trigger; ordinary bank interest alone does not; no2500threshold."
+    testRef: "tests/pdf/pa-ordinary-interest-official-pdf.test.ts::does not attach Schedule A for ordinary resident interest without an adjustment"
+  - line: "NR"
+    description: "Nonresident suppression"
+    formula: "Actual nonresident ordinary sources do not require this attachment."
+    testRef: "tests/pdf/pa-ordinary-interest-official-pdf.test.ts::does not attach Schedule A for the complete ordinary nonresident source route"
+  - line: "physical-fields"
+    description: "Saved field-tree and normal-appearance values match each independent original vector"
+    formula: "Part-year lines=[120,0,0,120,0,0,0,80,80,40,0,0,0,0,0,40]; resident Treasury=[1120,0,0,1120,0,0,1000,0,1000,120,0,0,0,0,0,120]. First owner widget only; readable size>=7; no SSN; five review-stamped pages."
+    testRef: "tests/pdf/pa-ordinary-interest-official-pdf.test.ts::fills all sixteen official fields with saved appearances and readable geometry: %s"
+  - line: "authority"
+    description: "Reject fabricated or stale original authority before template IO"
+    formula: "Opaque token identity, complete original digest, expected complete state result and fresh replay must agree; equal-money altered sources do not qualify."
+    testRef: "tests/pdf/pa-ordinary-interest-official-pdf.test.ts::retains original-only authority and rejects stale sources results and forged tokens before template IO"
+  - line: "authority-copy"
+    description: "Defensive projections cannot mutate prepared authority"
+    formula: "Return a detached lines array; caller mutations never modify retained original projection."
+    testRef: "tests/pdf/pa-ordinary-interest-official-pdf.test.ts::returned paper projections cannot mutate opaque original authority"
+  - line: "privacy"
+    description: "No source claimant identity or private original account/reference values in saved output"
+    formula: "Claimant REDACTED; SSN blank; source references/payers/IDs absent from all fields and extracted text; input originals unchanged."
+    testRef: "tests/pdf/pa-ordinary-interest-official-pdf.test.ts::keeps names identifiers original references and payer data out of saved field trees and page text"
+  - line: "template-year"
+    description: "Pinned actual2025 source template only"
+    formula: "Any template byte change rejects; final2026 fails before template IO."
+    testRef: "tests/pdf/pa-ordinary-interest-official-pdf.test.ts::rejects unavailable2026 and altered official template bytes"
+  - line: "readiness"
+    description: "Official review presence remains distinct from reference and never qualifies filing"
+    formula: "Only exact ordinary-method pa-schedule-a-review.pdf basename is official review presence; reference remains reference; forged suffix absent. Every route retains filingQualifiedfalse."
+    testRef: "tests/pdf/pa-ordinary-interest-official-pdf.test.ts::recognizes only the actual official review basename and keeps reference and filing boundaries"
+  - line: "unsupported-reference"
+    description: "No silent expansion of source classes by introducing a physical renderer"
+    formula: "A source-admitted taxable corporate OID part-year adjustment remains a reference summary until its separate physical method is reviewed; actual original values and filing gates do not change."
+    testRef: "tests/pdf/pa-ordinary-interest-official-pdf.test.ts::retains the existing reference for actual ordinary taxable OID outside the finite physical cohort"

@@ -1,3 +1,4 @@
+import {isPAOrdinaryReturnResult} from '@/pdf/pa-ordinary-return-review-context.js';
 import { shouldIncludePAScheduleAReferenceSummary } from "@/pdf/fill-pa-schedule-a.js";
 import {hasSavedForm2210Review,type SavedForm2210Review} from '@/pdf/form-2210-review-context.js';
 import {isPAMarriedOrdinaryReturnResult} from '@/engine/state/pa-return-result.js';
@@ -400,11 +401,15 @@ export function assessReturnReadiness(
     );
 
     if (shouldIncludePAScheduleAReference(input.federalResult.stateReturns.pennsylvania)) {
+      const hasOfficialReview = isPAOrdinaryReturnResult(input.federalResult.stateReturns.pennsylvania)
+        && hasIncludedForm(input.includedForms,/^pa-schedule-a-review\.pdf$/i);
       packetCompleteness = "partial";
       findings.push(
-        hasPAScheduleAReference
-          ? "Pennsylvania Schedule A is included as a reference summary, not an official PA-40 Schedule A filing copy."
-          : "Pennsylvania Schedule A applies, but no Schedule A packet artifact was generated.",
+        hasOfficialReview
+          ? "Pennsylvania Schedule A is included as an original-bound official form review copy, not a filing-qualified return."
+          : hasPAScheduleAReference
+            ? "Pennsylvania Schedule A is included as a reference summary, not an official PA-40 Schedule A filing copy."
+            : "Pennsylvania Schedule A applies, but no Schedule A packet artifact was generated.",
       );
     }
   }

@@ -1,3 +1,4 @@
+import {fillPAOrdinaryScheduleA} from './mappings/2025/fill-pa-ordinary-schedule-a.js';
 import {requiresRRTAPayrollReview,rrtaPayrollReviewOriginalInput,type PreparedRRTAPayrollReview} from './rrta-payroll-review-context.js';
 export {prepareRRTAPayrollReview} from './rrta-payroll-review-context.js';
 import {isDeepStrictEqual} from 'node:util';
@@ -1396,11 +1397,16 @@ export async function fillReturn(
           ? result.stateReturns.pennsylvania.residencyStatus : undefined,
       )
     ) {
-      const outputPathPAScheduleA = await fillPAScheduleAReference(
-        result.stateReturns.pennsylvania.scheduleA,
-        outputDir,
-      );
-      filledForms.push(outputPathPAScheduleA);
+      const physical = isPAOrdinaryReturnResult(result.stateReturns.pennsylvania)
+        ? await fillPAOrdinaryScheduleA(input,result,join(blankFormsDir,"pa-schedule-a.pdf"),options.paOrdinaryReview) : undefined;
+      if (physical) {
+        const outputPathPAScheduleA = join(outputDir,"pa-schedule-a-review.pdf");
+        await savePacketPdf(physical,outputPathPAScheduleA);
+        filledForms.push(outputPathPAScheduleA);
+      } else {
+        const outputPathPAScheduleA = await fillPAScheduleAReference(result.stateReturns.pennsylvania.scheduleA,outputDir);
+        filledForms.push(outputPathPAScheduleA);
+      }
     }
 
     if (

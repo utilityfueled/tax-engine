@@ -1,5 +1,11 @@
 # Current 2026 upgrade continuation
 
+## November 15 physical PA interest review copy
+
+The finite 2025 single-primary adjustment route now renders all sixteen fields
+of the pinned official Schedule A. Main 976 tests, separate review 39 tests,
+types/spec/lint and both physical examples pass. [Evidence and closed gates](upgrade-2026-pa-interest-physical-20261115.md).
+
 ## November 15 actual Preview and remote runtime results
 
 The exact a32 isolated Preview passed four browser journeys and all 48 canonical

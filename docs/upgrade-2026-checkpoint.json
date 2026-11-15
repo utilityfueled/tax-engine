@@ -1,4 +1,16 @@
 {
+  "nov15PaOrdinaryInterestPhysical": {
+    "sourceFreeze": "dba3ead67fc6d1a8eee62f2a36ebb531f631b26401d68fdbe8e38c8c237534cf",
+    "rootAdoption": "55e0daf60782324edd5e1c775e775791cf04e71b7c429ede237b92c66e238911",
+    "separateReviewTests": 39,
+    "mainTests": 976,
+    "officialFields": 16,
+    "officialPages": 5,
+    "mainTypesSpecLintPassed": true,
+    "filingAnd2026Closed": true,
+    "laterAggregatePending": true,
+    "evidence": "upgrade-2026-pa-interest-physical-20261115.md"
+  },
   "nov15ActualA32PreviewRemote": {
     "source": "a32a3b10796656d881d0bff042512cdb620710fc",
     "actualPreviewSession": 53313,
