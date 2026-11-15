@@ -1,5 +1,13 @@
 # 2026 upgrade implementation evidence
 
+## November 15 final resident source audit binding
+
+The single resident-credit hash and new software-spec inventory key are bound
+without changing any browser case or policy. Three separate83-test checks pass.
+The prior442 Web failure is reconciled as a stale-audit preflight refusal with
+zero executed cases. Exact committed-source combined checks now follow.
+[Metadata evidence](upgrade-2026-oh-resident-credit-validation-cost-20261115.md).
+
 ## November 15 resident-credit temporary hash comparisons
 
 The same source bytes now compare directly while stored commitments remain

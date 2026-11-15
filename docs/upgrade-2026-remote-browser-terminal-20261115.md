@@ -43,3 +43,17 @@ Private evidence is under `nov15-aa4-remote-terminal-review`,
 `nov15-remote-aa4-d192-complete-farmland-review` in `.local/upgrade-evidence/`.
 Later source commits require their own combined and runtime evidence. These
 failures remain visible while targeted implementation and qualification continue.
+
+## Later PA integration preflight refusal
+
+[Web run 43710607738](https://github.com/utilityfueled/tax-engine/actions/runs/43710607738),
+source `442bfd81b725ee1a74ab1a21a38b6b538e4549c8`, fails both browser jobs
+before case execution. The committed audit had six stale PA hashes and omitted
+the new renderer/fixture, moving the source closure from 1974 to1976 entries.
+A fresh archive reproduces `Changed/new source requires action-count review`.
+The complete 788,772-byte container artifact has sixteen image/recovery/SBOM
+files and no browser collection, batch or trace results. Its SHA-256 is
+`bb71652ac90180432968ed5c047b91a26f2e12da8b178b6793f1d92a722386c0`.
+This is a source-audit refusal with zero executed cases, not another count of
+the previous timeouts. The separately reviewed metadata commits address the
+refusal; actual current-source runtime qualification remains required.

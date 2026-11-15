@@ -35,3 +35,12 @@ Private packets are `nov15-oh-resident-credit-validation-cost`,
 path supports investigating this candidate; no measured CPU saving or browser
 timeout cause is claimed. Exact-source metadata, combined and runtime checks
 follow this implementation commit.
+
+The follow-up metadata binds precisely the changed resident-credit source hash
+and dependent diagnostic audit digest, plus the new generated software-spec key.
+All 1034 previous inventory entries remain identical. Author, independent peer
+and root each pass 83 metadata tests. Independent actual collection retains all
+643 cases, five original skips, eight overrides, fourteen diagnostic targets and
+all request/deadline/worker/retry policies. No browser body or server was run by
+this metadata package. Freeze: `c241cff8ec640d719899f101aac3d8a5b84ebabc2d18d96ade903a579543b332`;
+peer: `f6c5950c5a0b8db72e98074bdfece046ea7606c5cfc65223f62e0eba05cec1ae`.

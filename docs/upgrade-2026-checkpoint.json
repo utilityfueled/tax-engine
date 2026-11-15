@@ -1,4 +1,16 @@
 {
+  "nov15ResidentMetadata": {
+    "sourceHead": "566586f087a49c0fc53422ef9543d5911e0beddc",
+    "metadataFiles": 3,
+    "eachAuthorPeerRootTests": 83,
+    "inventoryEntries": 1035,
+    "previousEntriesUnchanged": 1034,
+    "browserCollected": 643,
+    "policiesUnchanged": true,
+    "browserBodiesExecuted": 0,
+    "peerSha256": "f6c5950c5a0b8db72e98074bdfece046ea7606c5cfc65223f62e0eba05cec1ae",
+    "all12AndRuntimePending": true
+  },
   "nov15ResidentCreditValidationCost": {
     "shaCallsPerCompleteReadBefore": 45,
     "shaCallsAfter": 1,
