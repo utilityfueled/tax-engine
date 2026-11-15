@@ -16,8 +16,10 @@
   the missing supervisor PID contract with actual benign processes.
 - [x] Pass and independently review the third native AMD64 functional/cleanup
   rehearsal. Its scan findings remain unaccepted. [Evidence](upgrade-2026-amd64-backports-workflow-20261115.md).
-- [ ] Review and execute only proven-owned cache cleanup; finish the corrected
-  XML comparison and actual exact-source ARM64 qualification sequentially.
+- [x] Review and execute only proven-owned cache cleanup; preserve all other
+  images, pass unchanged capacity floors and normally restore the VM/routes.
+- [ ] Finish the corrected XML comparison and actual exact-source ARM64
+  qualification sequentially.
 - [ ] Finish strict container browser qualification and current remote artifact
   review; fix any confirmed defects.
 - [ ] Obtain qualified independent human reviews, final annual forms, accountable

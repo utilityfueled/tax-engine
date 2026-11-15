@@ -273,3 +273,32 @@ independent recovery source review:
 `0af9125383966f5e4433684404d30410f2a08efb41f5c921eff27b42e07db833`;
 independent actual restoration review:
 `b15dc3454b33570a0f9972a30d0d7214ed2518a7861aa7dbb07ab49fa175edeb`.
+
+## November 15: exact owned-cache maintenance succeeds
+
+The distinct corrected packet passes all 65 actual commands. Its full inventory
+contains 41 images. Saved full-parent, five unique build-step prefixes, creation
+times, exact history/layer prefixes and current reference checks admit exactly
+five V10 toolchain intermediates. Each explicit child-first removal uses
+`--no-prune`; fresh before/after inventories preserve all 36 other images and
+their content/reference metadata. No container, volume or guest file is removed.
+
+Available guest disk rises from 268,041,056,256 to 268,508,549,120 bytes, a measured
+gain of 467,492,864 bytes. The unchanged floor is 268,435,456,000 bytes; afterward
+the observed disk and memory floors pass. This establishes the measured cleanup
+effect, without attributing all earlier disk use to these images. Fresh empty
+guest checks, normal stop, all-owned-process closure and original resources,
+configuration, disk and socket routes pass. No force, global prune, resize,
+unknown operation or deadline overrun occurs. XML conformance and release/security
+acceptance remain separate unfinished gates.
+
+Frozen manifest:
+`d835a1cae66525b65c6de6830edc3d5c5fefafcda87e7c33bbb26a8242af5911`;
+independent source review (330 inputs, 86 replayed and 207 separate controls):
+`d225d29a441212653209b00703d517bcd8a13980f5d318d3fd60c63e728a35b1`;
+actual maintenance receipt:
+`2465475da1e24fa13bd18ed2794dd12eb6b6226263fcba5e06455b2788f074fa`;
+root actual inventory/normal-restoration review:
+`56678638d567fc075a235296d6e016c4a0c2270bd55a385ead284a7a5afdb55f`;
+independent actual inventory/normal-restoration review:
+`0132788e6f06ff255f5b0cc81b02293acc97d2893e4610c372ff48455d5093a8`.

@@ -6240,3 +6240,12 @@ pass, restoring the stopped VM/resources/routes without guest deletion.
 Actual benign-process RED/GREEN controls cover the missing producer field;
 root and separate source review each pass46 controls. Corrected maintenance and
 XML/native qualification remain pending. [Failure and recovery evidence](upgrade-2026-postgres-libxml2-native-20261114.md).
+
+### November 15: reclaim only the admitted toolchain intermediates
+
+The corrected distinct maintenance packet passes65 actual commands and removes
+exactly five proven-owned images, preserving all36 others through every checked
+inventory. Available disk gains467,492,864 bytes and passes the unchanged250GiB
+floor. Normal VM/resource/route closure passes with no force, guest-file deletion
+or uncertainty. XML comparison and exact-source ARM64 qualification follow;
+no security/release acceptance is inferred. [Actual scope and receipts](upgrade-2026-postgres-libxml2-native-20261114.md).

@@ -32,8 +32,11 @@ existing production site is not redeployed.
   action because its supervisor omits the PID expected by the boot guard.
   Separate normal recovery passes all eighteen commands and restores the stopped
   VM/routes; real-process regression covers the producer/consumer interface.
-  Only demonstrably owned cache cleanup is being prepared; no global pruning,
-  floor reduction or unproved cause attribution. [Evidence](upgrade-2026-postgres-libxml2-native-20261114.md).
+  Corrected maintenance then passes65 commands: exactly five proven-owned images
+  removed, all36 others preserved, and normal closure verified. Measured disk
+  gains467,492,864 bytes and passes the unchanged floor. The corrected XML
+  comparison follows; no global pruning, floor reduction or unproved cause
+  attribution. [Evidence](upgrade-2026-postgres-libxml2-native-20261114.md).
 - The exact `8c1bd108` ARM64 packet passes file-only admission and independent
   source review. Its actual rehearsal waits for sequential VM work and capacity.
 

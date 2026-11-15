@@ -1,4 +1,27 @@
 {
+  "nov15OwnedCacheActualPass": {
+    "passed": true,
+    "commands": 65,
+    "initialImages": 41,
+    "removedProvenOwnedImages": 5,
+    "preservedImages": 36,
+    "availableBeforeBytes": 268041056256,
+    "availableAfterBytes": 268508549120,
+    "bytesGained": 467492864,
+    "unchangedFloorBytes": 268435456000,
+    "afterFloorPassed": true,
+    "normalStop": true,
+    "resourcesAndRoutesRestored": true,
+    "childOrOperationUncertain": false,
+    "deadlineExceeded": false,
+    "forceOrPruneOrResize": false,
+    "guestFilesDeleted": false,
+    "receiptSha256": "2465475da1e24fa13bd18ed2794dd12eb6b6226263fcba5e06455b2788f074fa",
+    "rootActualReviewSha256": "56678638d567fc075a235296d6e016c4a0c2270bd55a385ead284a7a5afdb55f",
+    "independentActualReviewSha256": "0132788e6f06ff255f5b0cc81b02293acc97d2893e4610c372ff48455d5093a8",
+    "qualificationOrRiskAccepted": false,
+    "ledger": "docs/upgrade-2026-postgres-libxml2-native-20261114.md"
+  },
   "nov15CacheSupervisorFailureAndNormalRecovery": {
     "failedMaintenanceReceiptSha256": "f46b87411d2da41c178b5cd351e1aa0ea88d30ff1199d8ef54cb44fb32243007",
     "failure": "KeyError:'childPid'",
