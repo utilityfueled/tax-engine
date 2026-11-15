@@ -2,7 +2,7 @@
   "nov15Integrated1360AllTwelve": {
     "source": "1360b9cb4128901dcc8dfa8805393dbbfc203992",
     "branch": "main",
-    "recordedUtc": "2026-11-15T14:45:00Z",
+    "recordedUtc": "2026-11-15T15:06:16.122756+00:00",
     "allTwelveLocalChecksPassed": true,
     "unitAndCoverageEach": {
       "tests": 28809,
@@ -29,13 +29,19 @@
     "independentReviewSha256": "193f102423688af1aa7cb553a984af1206795faec15948a565c0c03d536e1582",
     "normalPostgresAndBrowserClosure": true,
     "remoteDocker": "passed",
-    "remoteCI": "pending",
-    "remoteWeb": "pending",
-    "protectedPreview": "running",
-    "arm64": "staged-not-launched",
+    "remoteCI": "coverage-passed-unit-active",
+    "remoteWeb": "ordinary-selfhost-passed-strict-container-active",
+    "protectedPreview": "passed-with-root-and-independent-artifact-review",
+    "arm64": "actual-browser-active",
     "releaseQualified": false,
     "ledger": "docs/upgrade-2026-integrated-runtime-1360b9cb-20261115.md",
-    "humanSupplement": "docs/upgrade-2026-human-goodwill-pa-supplement-1360b9cb.md"
+    "humanSupplement": "docs/upgrade-2026-human-goodwill-pa-supplement-1360b9cb.md",
+    "previewReceiptSha256": "ec40453ec57b52a3b129315f3ae77dffb524b083b591e8a44c9a5abaa595ea74",
+    "previewRootReviewSha256": "3801ec1a6017048063460391b522f3d8ad45db7721f2b673e1fb2f4d616a873e",
+    "previewIndependentReviewSha256": "b73dd1aa2e6457b3c6c5ba1e1f18f40d22c1d318a0ea50956951d0337b558115",
+    "previewOperationsIncluding50CLIReserve": 1150,
+    "previewOperationLimit": 1310,
+    "previewAllScopedCleanupPassed": true
   },
   "nov15GoodwillAndPAResidency": {
     "goodwillCoreCommit": "71d25b2d",

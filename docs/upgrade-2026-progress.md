@@ -6350,3 +6350,14 @@ remote CI/Web, final artifacts and external qualification are not inferred.
 [Exact evidence](upgrade-2026-integrated-runtime-1360b9cb-20261115.md).
 The [goodwill/PA human handoff](upgrade-2026-human-goodwill-pa-supplement-1360b9cb.md)
 retains two blank independent decisions and no human approval.
+
+### November 15: current protected Preview passes its full bounded rehearsal
+
+Exact `1360b9cb` passes all 118 API cases and six visible desktop/mobile journeys.
+Five saved PDFs pass strict independent reopening, including complete ordered
+PA attachments and reference/nonattachment guards. Root and independent artifact
+and visual reviews pass; scoped trial/session/deployment/environment/Redis cleanup
+is verified. Actual traffic plus the CLI reserve totals 1,150/1,310 operations.
+ARM64 and strict remote-container results remain pending; no human, filing,
+security-risk or model qualification follows from this bounded staging run.
+[Actual evidence](upgrade-2026-integrated-runtime-1360b9cb-20261115.md).

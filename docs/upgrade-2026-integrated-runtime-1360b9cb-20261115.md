@@ -85,3 +85,48 @@ The [unassigned human supplement](upgrade-2026-human-goodwill-pa-supplement-1360
 records two decisions still requiring qualified independent review. Final annual
 forms, filing, release readiness, security acceptance and model promotion remain
 separate open gates.
+
+## Completed protected Preview
+
+The exact-source isolated Preview rehearsal completes in 724.829 seconds with
+all 118 API cases and six visible desktop/mobile journeys passing. API outcomes
+match every literal contract: 109 explanation probes and nine PDF probes, with
+52 accepted and 66 denied responses. Accepted explanations use only the local
+mock fallback; remote exact tax numbers and paid model quality are not inferred.
+Both cache-header guards execute: the shared wrapper requires `no-store` before
+returning, and the explanation loop additionally requires `private`.
+
+Five accepted saved PDFs reopen independently under the unchanged four-second
+limit. The three official PA copies contain complete ordered five-page
+attachments and all fourteen expected physical values. The negative printed
+case remains reference-only; the source-qualified nonresident case omits both
+attachments. Root reopenings take 0.36–0.48 seconds and the independent reader
+0.33–0.45 seconds. All six screenshots and five selected rendered PDF pages are
+reviewed; this does not claim visual inspection of every page or arbitrary text
+anonymization. Structured identifiers are absent from extracted text, and the
+PA attachment-specific names/proof contract passes.
+
+Counted operations are 187 direct HTTP, 907 browser work, six browser cleanup
+and fifty reserved CLI operations: **1,150 / 1,310**. This is actual traffic plus
+the declared CLI reserve, distinct from the earlier estimate. The two fresh
+trial customers are canceled/deleted, both sessions revoked, the owned Preview
+removed, original environment and webhook state restored, and six owned Redis
+keys deleted. All cleanup receipts pass and child uncertainty is null. No new
+actors, provider calls, real charges or production changes are recorded.
+
+| Completed artifact | SHA-256 |
+| --- | --- |
+| Actual rehearsal receipt | `ec40453ec57b52a3b129315f3ae77dffb524b083b591e8a44c9a5abaa595ea74` |
+| Root artifact review | `3801ec1a6017048063460391b522f3d8ad45db7721f2b673e1fb2f4d616a873e` |
+| Root six-screenshot review | `ef87f3d452b6237b1e34022cdf4475839e2cb5adf4e9ed3910664cdef9305faa` |
+| Independent artifact review | `b73dd1aa2e6457b3c6c5ba1e1f18f40d22c1d318a0ea50956951d0337b558115` |
+| Independent visual supplement | `ea32c51c43a7980d9c2bb59fbb2e86ba640c9026dc4cbb36988987f30e945e04` |
+
+Private actual evidence is in
+`nov15-preview-1360b9cb-goodwill-pa118-pages-successor`; reviewers write outside
+the frozen packet. A reviewer schema assumption, wrong-peer-hash expectation
+and local fontconfig setup warning are retained separately and corrected;
+none was an application failure or justified changing a runtime assertion.
+All 133 frozen inputs rehash unchanged. This saved-artifact review makes no new
+live account-inventory claim. ARM64 and strict remote-container outcomes remain
+pending; required human, final-form, advisory and AI qualification remain open.

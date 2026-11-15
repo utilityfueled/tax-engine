@@ -36,8 +36,11 @@
   tests, 88.14% branches and 640 browser passes/five original skips.
   [Evidence](upgrade-2026-integrated-runtime-1360b9cb-20261115.md).
 - [x] Publish the unassigned [goodwill/PA human supplement](upgrade-2026-human-goodwill-pa-supplement-1360b9cb.md), preserving blank independent decisions.
-- [ ] Finish current-source protected Preview and ARM64 qualification, including
-  actual artifact reviews and normal resource cleanup.
+- [x] Pass and independently review exact-source protected Preview: 118 API cases,
+  six actual desktop/mobile journeys, five saved PDFs and normal scoped cleanup;
+  1,150/1,310 counted operations. [Evidence](upgrade-2026-integrated-runtime-1360b9cb-20261115.md).
+- [ ] Finish current-source ARM64 qualification, including actual artifact review
+  and normal resource cleanup.
 - [ ] Finish strict container browser qualification and current remote artifact
   review; fix any confirmed defects.
 - [ ] Obtain qualified independent human reviews, final annual forms, accountable

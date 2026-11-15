@@ -1,6 +1,6 @@
 # Current 2026 upgrade continuation
 
-## Active work — November 15, 14:45 UTC
+## Active work — November 15, completed Preview review
 
 All committed work through `1360b9cb` is pushed to `main` and the remote backup.
 The saved Vercel guard cancels its production-target build; production remains
@@ -16,10 +16,14 @@ unit and coverage; its normally superseded browser run remains partial evidence.
 The corrected assertion checks nine federal calls and three school projections
 for three complete adapter evaluations; no calculation or budget was changed.
 
-The protected Preview rehearsal is running against the reviewed archive, and
-ARM64 source staging has completed without starting a VM. Runtime and cleanup
-results remain pending. Exact-source remote Docker passes; CI and Web are still
-running at this timestamp. Earlier strict-container failures remain evidence.
+The protected Preview passes all 118 API cases and six actual desktop/mobile
+journeys, with separate root and independent artifact/PDF/visual reviews.
+Operations total 1,150/1,310 including the declared CLI reserve; scoped cleanup
+passes without child uncertainty. The ARM64 rehearsal is running its complete
+browser suite after successful build, SBOM, scan execution and Compose recovery.
+Exact-source remote Docker, coverage and ordinary self-host browser jobs pass;
+unit and strict-container jobs remain active. Scan execution supplies no finding
+acceptance. Earlier strict-container failures remain evidence.
 
 The [goodwill/PA human supplement](upgrade-2026-human-goodwill-pa-supplement-1360b9cb.md)
 is ready for an independent qualified reviewer; every decision remains blank.
