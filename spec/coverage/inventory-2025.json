@@ -11261,6 +11261,26 @@
       ]
     },
     {
+      "key": "federal/qualification-trace-policy",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "Installed Playwright 1.64.1 public TestOptions.trace declaration and CLI/config merge implementation",
+      "specPath": "spec/browser/qualification-trace-policy.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/rehearsal-navigation-observation",
       "jurisdiction": "federal",
       "taxYear": 2025,

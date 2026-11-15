@@ -49,7 +49,13 @@ export default defineConfig({
   retries: 1,
   use: {
     baseURL: playwrightBaseUrl,
-    trace: "on-first-retry"
+    trace: {
+      mode: "on-first-retry",
+      snapshots: false,
+      screenshots: true,
+      sources: true,
+      attachments: true
+    }
   },
   projects: [
     {

@@ -1,0 +1,21 @@
+form: "Qualification-Trace-Policy"
+taxYear: 2025
+status: "verification-contract"
+reference: "Installed Playwright 1.64.1 public TestOptions.trace declaration and CLI/config merge implementation"
+notes: |
+  Trace instrumentation only. Preserve every test body, live DOM assertion,
+  request/privacy predicate, PDF inspector, readiness gate, protected-action
+  budget, case identity, skip, deadline, worker count and retry count.
+  Failure traces retain action timelines, screenshots, source and attachments,
+  but omit DOM snapshots and trace HAR/network resources. They are not a
+  forensic equivalent of the original full traces. Preserve the original17
+  strict failures and full traces. No elapsed runtime benefit is inferred.
+lines:
+  - line: "public-feature-policy"
+    description: "Use supported trace features without changing mode semantics"
+    formula: "The public trace object defaults to on-first-retry with snapshots false and screenshots, sources and attachments true. Installed Playwright configuration merging preserves those features for no CLI override and the existing off/on/retain-on-failure/on-first-retry CLI modes. No production private API or environment translation is introduced."
+    testRef: "tests/scripts/qualification-trace-policy.test.ts::retains trace features across every supported CLI mode"
+  - line: "qualification-bounds"
+    description: "Keep the existing runtime command and qualification limits"
+    formula: "Keep the exact retain-on-failure CLI argument and existing runner enforcement of two workers, zero retries and the selected30000ms deadline. Trace mode selection does not alter actions, assertions or reconciliation. Full DOM snapshots may be enabled for a separately scoped diagnostic through the supported public trace object; diagnostic results do not replace a failed qualification."
+    testRef: "tests/scripts/qualification-trace-policy.test.ts::preserves exact CLI forwarding and selected qualification limits"

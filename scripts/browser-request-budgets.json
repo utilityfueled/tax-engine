@@ -19,7 +19,7 @@
   ],
   "sourceHashes": {
     "apps/web/package.json": "a18adaf1144a244d50168a5ae3737aa50c1a2e973c2c1be906174b506ca3f830",
-    "apps/web/playwright.config.ts": "e837ce163d0df2933a43867951e28e863203af80ce776af029a7c1c6e317eefb",
+    "apps/web/playwright.config.ts": "a4c5bc1388f6fc57da25ca8a411565757c95f6775951ff9dce11f3e1c5941772",
     "apps/web/src/app/account/page.tsx": "1fd829442392977fbbcb53584a97e97fc2f150beb039e6909142461123917ebb",
     "apps/web/src/app/account/recover/page.tsx": "8cea50fa3c613484bd32b01bc1752433923b9ec21c29ad24880f5d45c75c198b",
     "apps/web/src/app/api/auth/[...all]/route.ts": "508254c9b682dde2ea40827f548cd8b9dde5fb7cb6da253920da8f30e6bb87e0",
