@@ -6220,3 +6220,13 @@ logged timeouts before push cancellation. All failures remain evidence. The650MB
 artifact matches its API digest; trace durations do not establish a CPU cause.
 A separately bounded optional profiling workflow runs on the backup branch.
 [Source, sample difference and cleanup limits](upgrade-2026-integrated-runtime-8c1bd108-20261115.md).
+
+
+### November 15: third native AMD64 run passes functional and cleanup checks
+
+Exactaa4df8c2 manual run43704599960 passes package/runtime/independent jobs.
+The admitted intermediate chain and imported base remove normally; all recorded
+checks exit zero and cleanup errors are empty. Root and independent archive,
+source/image/SBOM/scan reviews pass. Raw509 visible matches include6Critical/
+110High, plus one ignoredCritical retained separately; no risk/ABI/release
+acceptance is inferred. [Actual evidence](upgrade-2026-amd64-backports-workflow-20261115.md).

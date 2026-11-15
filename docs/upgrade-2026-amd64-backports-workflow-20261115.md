@@ -104,3 +104,39 @@ manifest:
 `a8d253c309c1fb30d88f1c8bc46c98e7782bf3d860fa59539a4efbb5d863f5ed`;
 independent review:
 `33253a8df2c3f9242f65d86b75756ac2826a1b8b9d67e796068f3fa1e56d5c3a`.
+
+
+The third actual run,
+[43704599960](https://github.com/utilityfueled/tax-engine/actions/runs/43704599960),
+uses exact `aa4df8c226713480117350c32fe8c1a14fcdbbd1`. All three jobs succeed.
+Package construction records fourteen controller checks and 23 builder checks;
+runtime records 145 controller checks and sixteen gosu-builder checks; the
+independent fresh-store import/scan records 37 checks. Every recorded command
+exits zero, cleanup-error lists are empty and no deadline is exceeded. The final
+explicit imported-base removal now succeeds after the admitted intermediate
+chain is removed. The two prior failed runs remain failed evidence.
+
+The final runtime image is
+`1b452ca1bc1d61f34352d06d9f617d45ac9f5eb4519163795629f28a6cb17320`;
+its archived bytes have SHA-256
+`f943929bcb8ba7f383417576bc11d62174daf0d5b3899946ac4810ac030e8a61`.
+All three downloaded outer artifacts match GitHub's size and digest. Independent
+saved-artifact review binds exact source/tree/recipes, inner archives, image
+configuration and labels, selected handoff files, SBOM and the raw scan. Root
+separately verifies all outer digests, recorded command statuses, cleanup and
+raw severity counts.
+
+The scan completes with 509 visible matches, including six Critical and 110 High,
+and retains one additional ignored Critical in the raw `ignoredMatches` output.
+That ignored finding remains disclosed and unaccepted. Package `abidiff` exits
+four; no generic ABI approval follows. Functional and cleanup success does not
+establish security acceptance, arbitrary compatibility, reproducibility, final
+application qualification or permission to publish/promote this candidate.
+
+| Retained actual evidence | SHA-256 |
+| --- | --- |
+| Package artifact | `85bd45a6ff086c65d96404803da484534867b3ac2e87fd3c67c0ed0deb02858c` |
+| Runtime artifact | `7ef4491fcc52f8cddb8b1a3b61c5502ab348c18d485dfcbd3a78da773d02fd30` |
+| Independent artifact | `b0a251849552d1d51b6a7188d9ee765a5955691d039c27dba00b80597f4bec55` |
+| Independent actual review | `91b006825cadb4c5d7a81ede73d503e4c541800915824d2bdfb0f2c99e5a00ea` |
+| Root actual review | `7f018c6d698035abeff2e62977888993b27a8cd40ef84defa9dbdbef3cb5d4e6` |

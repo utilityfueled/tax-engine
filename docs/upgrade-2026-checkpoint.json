@@ -1,4 +1,28 @@
 {
+  "nov15Amd64ThirdActualFunctionalPass": {
+    "source": "aa4df8c226713480117350c32fe8c1a14fcdbbd1",
+    "run": 43704599960,
+    "allThreeJobsSuccess": true,
+    "packageChecks": 14,
+    "packageBuilderChecks": 23,
+    "runtimeChecks": 145,
+    "gosuBuilderChecks": 16,
+    "independentChecks": 37,
+    "cleanupErrors": [],
+    "deadlineExceeded": false,
+    "runtimeImage": "1b452ca1bc1d61f34352d06d9f617d45ac9f5eb4519163795629f28a6cb17320",
+    "runtimeArchiveSha256": "f943929bcb8ba7f383417576bc11d62174daf0d5b3899946ac4810ac030e8a61",
+    "scanVisibleMatches": 509,
+    "scanVisibleCritical": 6,
+    "scanVisibleHigh": 110,
+    "scanIgnoredCritical": 1,
+    "rootReviewSha256": "7f018c6d698035abeff2e62977888993b27a8cd40ef84defa9dbdbef3cb5d4e6",
+    "independentReviewSha256": "91b006825cadb4c5d7a81ede73d503e4c541800915824d2bdfb0f2c99e5a00ea",
+    "genericAbiApproval": false,
+    "riskAccepted": false,
+    "candidateReleaseQualified": false,
+    "ledger": "docs/upgrade-2026-amd64-backports-workflow-20261115.md"
+  },
   "nov15Integrated8cRemoteArtifacts": {
     "source": "8c1bd108bbad1a8c68c4273c25e8023ad314b231",
     "ciRun": 43700644697,
