@@ -272,3 +272,68 @@ it('denies zero-impact OID and K year contradictions and conflicting duplicate y
   }
  }
 });
+
+type BenefitsCalendarKind='ssa-benefits'|'ssa-withholding'|'student-interest'|'marketplace-aptc';
+function benefitsCalendarFixture(kind:BenefitsCalendarKind,year?:number,amount='1000'){
+ const input=structuredClone(simpleW2Fixture);
+ if(kind==='ssa-benefits'||kind==='ssa-withholding')input.formSSA1099=[{sourceTaxYear:year,recipient:'Fictional calendar beneficiary',netBenefits:kind==='ssa-benefits'?amount:'0',federalWithheld:kind==='ssa-withholding'?amount:'0'}];
+ else if(kind==='student-interest')input.form1098E=[{taxYear:year,lender:'Fictional calendar loan servicer',studentLoanInterestReceived:amount}];
+ else input.form1095A=[{taxYear:year,marketplace:'Fictional calendar marketplace',policyNumber:'private-calendar-policy',monthlyPremiums:[{month:1,enrolleePremium:amount,slcsp:amount,advancePremiumTaxCredit:amount}]}];
+ return input;
+}
+it.each([
+ ['ssa-benefits-past','ssa-benefits',2024],['ssa-benefits-future','ssa-benefits',2026],
+ ['ssa-withholding-past','ssa-withholding',2024],['ssa-withholding-future','ssa-withholding',2026],
+ ['student-interest-past','student-interest',2024],['student-interest-future','student-interest',2026],
+ ['marketplace-aptc-past','marketplace-aptc',2024],['marketplace-aptc-future','marketplace-aptc',2026],
+] as const)('denies a known mismatched benefits education or Marketplace original %s before confirmed accounting',async(_label,kind,year)=>{
+ const input=benefitsCalendarFixture(kind,year),before=structuredClone(input),preview=calculateFederalTax(TaxYearInputSchema.parse(input)),baseline=calculateFederalTax(TaxYearInputSchema.parse(simpleW2Fixture));
+ expect(preview.agi.minus(baseline.agi).toFixed()).toBe(kind==='ssa-benefits'?'850':kind==='student-interest'?'-1000':'0');
+ expect(preview.totalWithholding.minus(baseline.totalWithholding).toFixed()).toBe(kind==='ssa-withholding'?'1000':'0');
+ if(kind==='marketplace-aptc')expect(preview.totalTax.minus(baseline.totalTax).toFixed()).toBe('602');
+ const {response,fetchFn,accounting}=await confirmedMiscNecYearRequest(input);
+ expect(response.status).toBe(400);expect(response.headers.get('cache-control')).toContain('private');expect(response.headers.get('cache-control')).toContain('no-store');
+ const text=await response.text();expect(JSON.parse(text)).toEqual({error:'Complete and confirm matching-year taxpayer facts before requesting a calculation explanation.'});
+ for(const value of [input.taxpayer.primary.ssn,'Fictional calendar beneficiary','Fictional calendar loan servicer','private-calendar-policy'])expect(text).not.toContain(value);
+ expect(fetchFn).not.toHaveBeenCalled();expect(accounting).not.toHaveBeenCalled();expect(input).toEqual(before);
+ expect(()=>calculateVerifiedAiAudit(scope,input)).toThrow('matching-year direct income originals');
+});
+it('preserves matched and missing benefits education and Marketplace years with amount conservation',async()=>{
+ const baseline=calculateFederalTax(TaxYearInputSchema.parse(simpleW2Fixture));
+ for(const kind of ['ssa-benefits','ssa-withholding','student-interest','marketplace-aptc'] as const)for(const year of [undefined,2025]){
+  const input=benefitsCalendarFixture(kind,year),before=structuredClone(input),parsed=TaxYearInputSchema.parse(input),preview=calculateFederalTax(parsed);
+  const retainedYear=kind.startsWith('ssa')?parsed.formSSA1099?.[0]?.sourceTaxYear:kind==='student-interest'?parsed.form1098E[0]?.taxYear:parsed.form1095A[0]?.taxYear;
+  expect(retainedYear).toBe(year);
+  expect(preview.agi.minus(baseline.agi).toFixed()).toBe(kind==='ssa-benefits'?'850':kind==='student-interest'?'-1000':'0');
+  expect(preview.totalWithholding.minus(baseline.totalWithholding).toFixed()).toBe(kind==='ssa-withholding'?'1000':'0');
+  if(kind==='marketplace-aptc')expect(preview.totalTax.minus(baseline.totalTax).toFixed()).toBe('602');
+  expect(calculateVerifiedAiAudit(scope,input).entries.find(entry=>entry.line==='11')?.value).toBe(preview.agi.toFixed());
+  const {response,fetchFn,accounting}=await confirmedMiscNecYearRequest(input);expect(response.status).toBe(200);expect(response.headers.get('cache-control')).toContain('private');expect(response.headers.get('cache-control')).toContain('no-store');expect(fetchFn).not.toHaveBeenCalled();expect(accounting).toHaveBeenCalledTimes(1);expect(input).toEqual(before);
+ }
+ for(const kind of ['ssa-benefits','student-interest','marketplace-aptc'] as const){
+  const input=benefitsCalendarFixture(kind,2026);input.taxpayer.taxYear=2026;input.w2s=input.w2s.map(row=>({...row,taxYear:2026}));
+  expect(()=>calculateVerifiedAiAudit(scope,input)).toThrow('Year-specific federal calculation is unavailable');
+  const {response,fetchFn,accounting}=await confirmedMiscNecYearRequest(input);expect(response.status).toBe(400);expect(fetchFn).not.toHaveBeenCalled();expect(accounting).not.toHaveBeenCalled();
+ }
+});
+it('denies zero-impact conflicting and malformed benefits education and Marketplace source years',async()=>{
+ for(const kind of ['ssa-benefits','student-interest','marketplace-aptc'] as const){
+  for(const year of [2024,2026]){
+   const zero=benefitsCalendarFixture(kind,year,'0'),preview=calculateFederalTax(TaxYearInputSchema.parse(zero)),baseline=calculateFederalTax(TaxYearInputSchema.parse(simpleW2Fixture));
+   expect(preview.agi.eq(baseline.agi)).toBe(true);expect(preview.totalWithholding.eq(baseline.totalWithholding)).toBe(true);expect(preview.totalTax.eq(baseline.totalTax)).toBe(true);
+   const {response,fetchFn,accounting}=await confirmedMiscNecYearRequest(zero);expect(response.status).toBe(400);expect(fetchFn).not.toHaveBeenCalled();expect(accounting).not.toHaveBeenCalled();
+  }
+  for(const reversed of [false,true]){
+   const input=benefitsCalendarFixture(kind,2025),foreign=benefitsCalendarFixture(kind,2024);
+   if(kind==='ssa-benefits')input.formSSA1099=reversed?[...(foreign.formSSA1099??[]),...(input.formSSA1099??[])]:[...(input.formSSA1099??[]),...(foreign.formSSA1099??[])];
+   else if(kind==='student-interest')input.form1098E=reversed?[...foreign.form1098E,...input.form1098E]:[...input.form1098E,...foreign.form1098E];
+   else input.form1095A=reversed?[...foreign.form1095A,...input.form1095A]:[...input.form1095A,...foreign.form1095A];
+   const {response,fetchFn,accounting}=await confirmedMiscNecYearRequest(input);expect(response.status).toBe(400);expect(fetchFn).not.toHaveBeenCalled();expect(accounting).not.toHaveBeenCalled();
+  }
+  for(const malformed of ['2025',2025.5]){
+   const input=benefitsCalendarFixture(kind,2025),row=kind==='ssa-benefits'?input.formSSA1099?.[0]:kind==='student-interest'?input.form1098E[0]:input.form1095A[0];
+   if(!row)throw Error('Required original fixture missing');Reflect.set(row,kind==='ssa-benefits'?'sourceTaxYear':'taxYear',malformed);
+   expect(()=>TaxYearInputSchema.parse(input)).toThrow();const {response,fetchFn,accounting}=await confirmedMiscNecYearRequest(input);expect(response.status).toBe(400);expect(fetchFn).not.toHaveBeenCalled();expect(accounting).not.toHaveBeenCalled();
+  }
+ }
+});

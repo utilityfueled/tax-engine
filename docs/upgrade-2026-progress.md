@@ -1,5 +1,12 @@
 # 2026 upgrade implementation evidence
 
+## November 15 confirmed benefit, education and Marketplace years
+
+Known contradictory original years now reject before explanation/accounting,
+with actual earlier benefit histories preserved. Main 107 tests, 27 spec
+references and separate 62-test/seventeen-POST review pass.
+[Evidence](upgrade-2026-confirmed-benefits-education-marketplace-years-20261115.md).
+
 ## November 15 public package advisory recheck
 
 Both public npm audits pass on the unchanged lockfile: 447 production and 539

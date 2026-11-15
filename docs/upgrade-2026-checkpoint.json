@@ -1,4 +1,19 @@
 {
+  "nov15ConfirmedBenefitsEducationMarketplaceYears": {
+    "base": "25b9a953",
+    "freeze": "e47afc2b26e1e42d88f5bbae28151462710e22b4eb6d8cb42b2fd2438ab7efbd",
+    "mainTests": 107,
+    "mainFiles": 3,
+    "peerReview": "ed6e6f7b8a87a7bbd4ae4867a4cd344ddaea9634884bd43d1685f49d1c3f7f70",
+    "peerTests": 62,
+    "peerActualPosts": 17,
+    "specReferences": 27,
+    "inventoryUnchanged": 1030,
+    "mainReceipt": "8978bb1772b393b1b5e82ee9d2991db1fb93b47f4301923420ce3a0511b6469c",
+    "sourceMeaning": "Actualdeclaredstatementyearsonly;noinferenceorrecursivehistorycomparison;noformulachange",
+    "remaining": "W2G/futureK1/currentcombined+runtimes;externalhuman/final2026",
+    "evidence": "docs/upgrade-2026-confirmed-benefits-education-marketplace-years-20261115.md"
+  },
   "nov15PackageRegistryRecheck": {
     "source": "3bffc873750aaa43fc2b5d319ff06df93e1d3709",
     "checkedAt": "2026-11-15T06:13:22.377346+00:00",
