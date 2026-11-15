@@ -24,24 +24,24 @@ notes: |
   subtotal, and floors the final Line 12 at zero.
 
 packetRules:
-  packetBehavior: "original-bound-resident-review-or-reference-summary"
+  packetBehavior: "original-bound-resident-or-part-year-review-or-reference-summary"
   includeWhen:
-    - "A Pennsylvania resident return packet is being assembled and the resident orchestrator computes Schedule B"
+    - "A Pennsylvania resident or part-year return packet has a source-qualified Schedule B, or another route retains its existing reference behavior"
     - "The official 2025 Pennsylvania dividend-income filing trigger is met: at least one amount appears on Schedule B Lines 2 through 11, excluding Line 6"
   suppressWhen:
-    - "No Pennsylvania resident return packet is being assembled"
+    - "Complete opaque original authority proves the finite nonresident ordinary-dividend method; naked residency flags do not suppress unknown reference paths"
     - "Schedule B exists only as a simple resident dividend computation with no amounts on Lines 2 through 11 except the derived Line 6 subtotal"
   notes: |
     The 2025 PA-40 Schedule B filing instructions on the official form say the
     schedule is not required when the taxpayer's PA-taxable dividend and
     capital gains distributions income matches the federal-return amount and
     there are no amounts on Lines 2 through 11 other than the Line 6 subtotal.
-    The finite actual2025 single-primary resident ordinary-source route may emit
+    The finite actual2025 single-primary resident or part-year ordinary-source route may emit
     `pa-schedule-b-review.pdf` using the pinned official form. Complete opaque
     original authority, source replay, all fourteen numeric fields (including
     9a/9b/9c), printed reconciliation to PA40line3, redacted name and blank SSN
     are required before template IO. No inferred spouse/joint allocation or new
-    adjustment method is admitted. Other routes retain the reference summary.
+    adjustment method is admitted. Part-year Line4 permits only the existing canonical dated-source nonresident-period reduction; signed Line6 and annual Line10 are retained, but a negative sum of printed final addends keeps reference fallback rather than certifying a zero-floored physical total. Complete opaque finite nonresident authority suppresses the attachment. Other routes retain the reference summary.
     All such outputs remain review-only, partial and not filing-qualified;
     final2026 exports remain unavailable. Primary source PDF SHA256 is
     c6d8f5cdd63045e1e40b6deeced2c80b23006b7700befe3b8f0c430f2b40a0d4
@@ -49,7 +49,7 @@ packetRules:
 
 businessRuleValidation:
   - rule: "pa-schedule-b-reference-packet"
-    description: "Inventory support counts the Pennsylvania Schedule B packet path as validated only when fillReturn emits `pa-schedule-b-reference.pdf` whenever the official 2025 Schedule B filing trigger is met."
+    description: "Legacy sources without finite original-bound paper or nonresident authority retain `pa-schedule-b-reference.pdf` when the official 2025 filing trigger is met. This test preserves that fallback; source-qualified ordinary paper is covered separately."
     testRef: "tests/pdf/fill-pa-schedule-b.test.ts::fillReturn includes the Pennsylvania Schedule B reference summary when the official filing trigger is met"
   - rule: "pa-schedule-b-reference-suppression"
     description: "Inventory support counts the Pennsylvania Schedule B suppression rule as validated only when regression coverage proves fillReturn omits the reference summary for resident returns that have no Schedule B filing trigger amounts on Lines 2 through 11 except the derived Line 6 subtotal."
@@ -192,7 +192,7 @@ lines:
     testRef: "tests/pdf/pa-ordinary-dividend-official-pdf.test.ts::routes actual resident dividend originals to official review paper"
   - line: "physical-fields-cents"
     description: "Whole-dollar source cents remain exact and every numeric slot is mapped"
-    formula: "Existing canonical half-up amounts2000.49 and500.50 print2000 and501, total2501; all14 fields, appearances and primary oval match. Signed Line6 arithmetic remains unchanged outside this narrow no-adjustment physical cohort."
+    formula: "Existing canonical half-up amounts2000.49 and500.50 print2000 and501, total2501; all14 fields, appearances and primary oval match. Signed Line6 remains legal in the source-qualified part-year extension; no new arithmetic method."
     testRef: "tests/pdf/pa-ordinary-dividend-official-pdf.test.ts::fills fourteen official fields with exact cents rounding and readable appearances"
   - line: "physical-authority"
     description: "Fresh original source and result proof precedes file IO"
@@ -200,7 +200,7 @@ lines:
     testRef: "tests/pdf/pa-ordinary-dividend-official-pdf.test.ts::rejects forged stale missing and contradictory source authority before template IO"
   - line: "physical-suppression"
     description: "Preserve trigger and narrow cohort boundaries"
-    formula: "Line6 alone does not trigger attachment; nonresident/PY/legacy and negative reduction adjustments do not gain physical authority; existing reference and signed arithmetic remain unchanged."
+    formula: "Line6 alone does not trigger attachment; complete finite nonresident sources suppress attachment; source-qualified PY gains official paper, including a negative Line6; unsupported/legacy sources retain reference behavior."
     testRef: "tests/pdf/pa-ordinary-dividend-official-pdf.test.ts::preserves real attachment suppression and reference fallbacks"
   - line: "physical-privacy-flatten"
     description: "Interactive and explicitly flattened paper retain private review boundaries"
@@ -212,7 +212,7 @@ lines:
     testRef: "tests/pdf/pa-ordinary-dividend-official-pdf.test.ts::pins the template and keeps year filing and disclosure gates closed"
   - line: "physical-readiness-authority"
     description: "A basename alone cannot certify an unimplemented or unproved paper cohort"
-    formula: "Only a known opaque prepared context with its original/redacted input digest, exact original state result and retained resident B projection may certify the exact review basename. Missing/forged/PY/stale proof does not certify paper. Readiness uses the immutable prepared proof without another tax replay. Workspace forwards its existing opaque context."
+    formula: "Only a known opaque prepared context with its original/redacted input digest, exact original state result and retained resident or part-year B projection may certify the exact review basename. Missing/forged/stale proof does not certify paper. Readiness uses the immutable prepared proof without another tax replay. Workspace forwards its existing opaque context."
     testRef: "tests/pdf/pa-ordinary-dividend-official-pdf.test.ts::does not certify physical B from a basename without exact finite original authority"
   - line: "physical-federal-transfer"
     description: "Original-bound paper Line1 matches the actual federal Line3b result"

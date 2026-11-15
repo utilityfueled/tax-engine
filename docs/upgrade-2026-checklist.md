@@ -28,8 +28,9 @@
   [Baseline evidence](upgrade-2026-integrated-runtime-f30723f9-20261115.md).
 - [x] Remove only three proven archived guest copies with retained local copies;
   preserve all images and other roots and pass unchanged capacity observations.
-- [ ] Finish guided acquired-goodwill source parity and finite PA part-year
-  dividend paper/nonresident applicability, including independent review.
+- [x] Implement and independently review guided acquired-goodwill source parity
+  and finite PA part-year dividend paper/nonresident applicability; retain the
+  independently reproduced rounding fallback. Actual new browser cases await runtime.
 - [ ] Bind their integrated source metadata and pass current aggregate checks,
   then finish current-source protected Preview and ARM64 qualification.
 - [ ] Finish strict container browser qualification and current remote artifact

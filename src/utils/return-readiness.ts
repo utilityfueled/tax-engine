@@ -1,4 +1,4 @@
-import {isPAOrdinaryReturnResult,hasPAOrdinaryScheduleBReviewAuthority,type PreparedPAOrdinaryReturnReview} from '@/pdf/pa-ordinary-return-review-context.js';
+import {isPAOrdinaryReturnResult,hasPAOrdinaryScheduleBReviewAuthority,hasPAOrdinaryScheduleBNonresidentSuppressionAuthority,type PreparedPAOrdinaryReturnReview} from '@/pdf/pa-ordinary-return-review-context.js';
 import { shouldIncludePAScheduleAReferenceSummary } from "@/pdf/fill-pa-schedule-a.js";
 import {hasSavedForm2210Review,type SavedForm2210Review} from '@/pdf/form-2210-review-context.js';
 import {isPAMarriedOrdinaryReturnResult} from '@/engine/state/pa-return-result.js';
@@ -427,13 +427,15 @@ export function assessReturnReadiness(
 
     packetCompleteness = "partial";
     findings.push(
-      hasPAOrdinaryScheduleBReviewAuthority(input.taxInput,input.federalResult,input.paOrdinaryReview)
+      hasPAOrdinaryScheduleBNonresidentSuppressionAuthority(input.taxInput,input.federalResult,input.paOrdinaryReview)
+        ? "Pennsylvania Schedule B is not required for this complete original-bound nonresident ordinary-dividend method; no Schedule B attachment is needed."
+        : hasPAOrdinaryScheduleBReviewAuthority(input.taxInput,input.federalResult,input.paOrdinaryReview)
         && hasIncludedForm(input.includedForms,/^pa-schedule-b-review\.pdf$/i)
         ? "Pennsylvania Schedule B is included as an original-bound official form review copy, not a filing-qualified return."
         : hasPAScheduleBReference
           ? "Pennsylvania Schedule B is included as a reference summary, not an official PA-40 Schedule B filing copy."
           : hasIncludedForm(input.includedForms,/^pa-schedule-b-review\.pdf$/i)
-            ? "Pennsylvania Schedule B review artifact is present, but its original-bound resident paper source authority could not be verified."
+            ? "Pennsylvania Schedule B review artifact is present, but its original-bound resident or part-year paper source authority could not be verified."
             : "Pennsylvania Schedule B applies, but no Schedule B packet artifact was generated.",
     );
   }

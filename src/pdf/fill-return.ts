@@ -473,7 +473,7 @@ export async function fillReturn(
   if(form2210Review)form2210ReviewOriginalInput(input,result,form2210Review);
   let form2210ReviewArtifact:SavedForm2210Review|undefined;
   const paMarriedReview=options.paMarriedReview;
-  let paOrdinaryCareOfficial=false;
+  let paOrdinaryCareOfficial=false,paOrdinaryScheduleBNotRequired=false;
   const marriedRequested=input.paMarriedOrdinarySources!==undefined||isPAMarriedOrdinaryReturnResult(result.stateReturns?.pennsylvania)||paMarriedReview!==undefined;
   if(marriedRequested){
     if(!input.paMarriedOrdinarySources||!isPAMarriedOrdinaryReturnResult(result.stateReturns?.pennsylvania)||!paMarriedReview)throw Error('Actual married PA originals, owned result and original prepared review context are required.');
@@ -496,7 +496,8 @@ export async function fillReturn(
   if (!paMarriedReview && result.stateReturns?.pennsylvania){
     if(isPAOrdinaryReturnResult(result.stateReturns.pennsylvania)||input.paOrdinaryReturnFacts!==undefined||input.paOrdinaryReturnCompletionSources!==undefined||options.paOrdinaryReview!==undefined){
       if(options.paWorkingCreditReview!==undefined)throw new Error("PA ordinary result requires its actual ordinary prepared context");
-      paOrdinaryCareOfficial=assertPAOrdinaryReturnReview(input,result,options.paOrdinaryReview).care!==undefined;
+      const ordinaryPaper=assertPAOrdinaryReturnReview(input,result,options.paOrdinaryReview);
+      paOrdinaryCareOfficial=ordinaryPaper.care!==undefined;paOrdinaryScheduleBNotRequired=ordinaryPaper.scheduleBNotRequired===true;
     }else{
       if(options.paOrdinaryReview!==undefined)throw new Error("PA ordinary prepared context cannot qualify a legacy result");
       assertPAWorkingCreditReview(input,result,options.paWorkingCreditReview);
@@ -1413,6 +1414,7 @@ export async function fillReturn(
 
     if (
       hasPAScheduleB(result.stateReturns.pennsylvania)
+      && !paOrdinaryScheduleBNotRequired
       && shouldIncludePAScheduleBReferenceSummary(result.stateReturns.pennsylvania.scheduleB)
     ) {
       const physical = isPAOrdinaryReturnResult(result.stateReturns.pennsylvania)

@@ -61,10 +61,10 @@ it('rejects forged stale missing and contradictory source authority before templ
 });
 it('preserves real attachment suppression and reference fallbacks',async()=>{
  const no=fixture('no-adjustment');expect(api.shouldIncludePAScheduleBReferenceSummary(no.ordinary.scheduleB)).toBe(false);expect(await renderer()(no.input,no.result,'/absent/b.pdf',preparePAOrdinaryReturnReview(no.input))).toBeUndefined();
- const py=fixture('ordinary','part_year');expect(await renderer()(py.input,py.result,'/absent/b.pdf',preparePAOrdinaryReturnReview(py.input))).toBeUndefined();
+ const py=fixture('ordinary','part_year');expect(await renderer()(py.input,py.result,blank,preparePAOrdinaryReturnReview(py.input))).toBeDefined();
  const nr=fixture('ordinary','nonresident');expect(await renderer()(nr.input,nr.result,'/absent/b.pdf',preparePAOrdinaryReturnReview(nr.input))).toBeUndefined();
  const legacy=calculatePAScheduleB({taxYear:2025,federalDividendIncome:new Decimal(100),reductionAdjustments:[{description:'Actual adjustment outside physical cohort',amount:new Decimal(200)}],capitalGainDistributions:new Decimal(300)});expect(legacy.line6.toFixed()).toBe('-100');expect(legacy.line12.toFixed()).toBe('200');expect(api.shouldIncludePAScheduleBReferenceSummary(legacy)).toBe(true);
- const dir=await mkdtemp(join(tmpdir(),'pa-dividend-reference-'));try{const p=await fillReturn(redactReviewIdentifiers(py.input),py.result,{blankFormsDir:join(process.cwd(),'forms/blank/2025'),outputDir:dir,paOrdinaryReview:preparePAOrdinaryReturnReview(py.input)});expect(p.filledForms.some(p=>p.endsWith('pa-schedule-b-reference.pdf'))).toBe(true);expect(p.filledForms.some(p=>p.endsWith('pa-schedule-b-review.pdf'))).toBe(false);}finally{await rm(dir,{recursive:true,force:true});}
+ const dir=await mkdtemp(join(tmpdir(),'pa-dividend-reference-'));try{const p=await fillReturn(redactReviewIdentifiers(py.input),py.result,{blankFormsDir:join(process.cwd(),'forms/blank/2025'),outputDir:dir,paOrdinaryReview:preparePAOrdinaryReturnReview(py.input)});expect(p.filledForms.some(p=>p.endsWith('pa-schedule-b-reference.pdf'))).toBe(false);expect(p.filledForms.some(p=>p.endsWith('pa-schedule-b-review.pdf'))).toBe(true);}finally{await rm(dir,{recursive:true,force:true});}
 });
 it('keeps private sources out of interactive and flattened official review copies',async()=>{
  const f=await render(),F=fields(),bytes=await f.doc.save(),doc=await PDFDocument.load(bytes);expect(doc.getForm().getTextField(F.name).getText()).toBe('[REDACTED]');expect(doc.getForm().getTextField(F.ssn).getText()??'').toBe('');
@@ -81,7 +81,7 @@ it('does not certify physical B from a basename without exact finite original au
  const check=(f:ReturnType<typeof fixture>,proof:unknown)=>Reflect.apply(assessReturnReadiness,undefined,[{taxInput:redactReviewIdentifiers(f.input),federalResult:f.result,includedForms:['pa-schedule-b-review.pdf'],stateCode:'PA',paOrdinaryReview:proof}]);
  const valid=fixture(),token=preparePAOrdinaryReturnReview(valid.input);expect(check(valid,token).findings.join(' ')).toContain(official);
  for(const proof of [undefined,Object.freeze({})])expect(check(valid,proof).findings.join(' ')).not.toContain(official);
- const py=fixture('ordinary','part_year');expect(check(py,preparePAOrdinaryReturnReview(py.input)).findings.join(' ')).not.toContain(official);
+ const py=fixture('ordinary','part_year');expect(check(py,preparePAOrdinaryReturnReview(py.input)).findings.join(' ')).toContain(official);
  const stale=fixture(),staleToken=preparePAOrdinaryReturnReview(stale.input);stale.input.form1099Div[0].payer='Edited equal-dollar actual payer';expect(check(stale,staleToken).findings.join(' ')).not.toContain(official);
  const changed=fixture(),changedToken=preparePAOrdinaryReturnReview(changed.input);changed.result.stateReturns={pennsylvania:{...changed.ordinary,pa40:{...changed.ordinary.pa40,dividends:changed.ordinary.pa40.dividends.plus(1)}}};expect(check(changed,changedToken).findings.join(' ')).not.toContain(official);
 });

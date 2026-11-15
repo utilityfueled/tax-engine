@@ -1,6 +1,6 @@
 # Current 2026 upgrade continuation
 
-## Active work — November 15, 13:00 UTC
+## Active work — November 15, 13:20 UTC
 
 All committed work through `f30723f9` is pushed to `main` and the remote backup.
 Fresh scoped Vercel inspection confirms the saved production-build guard; its
@@ -16,10 +16,16 @@ does not establish completed staging qualification.
   restoration pass. Both unchanged capacity observation floors now pass. This
   does not qualify an application workload.
   [Evidence](upgrade-2026-postgres-libxml2-native-20261114.md).
-- Guided acquired-goodwill source parity and finite source-qualified PA part-year
-  dividend paper/nonresident applicability are being implemented privately in
-  parallel. Their review, integration and actual runtime evidence remain pending.
-  Current-source ARM and protected Preview successors follow that integration.
+- Guided acquired-goodwill source parity passes independent 1,060 and root 989
+  focused tests. Its separately reviewed two browser cases await actual runtime.
+  Finite PA part-year dividend paper and source-qualified nonresident attachment
+  applicability pass independent 175+13 and root 1,047 checks. A reproduced
+  printed-rounding mismatch remains reference-only, with canonical tax unchanged.
+  [Goodwill evidence](upgrade-2026-guided-goodwill-20261115.md) and
+  [PA evidence](upgrade-2026-pa-dividend-residency-paper-20261115.md).
+- Current integrated metadata, all twelve checks, ARM and protected Preview
+  qualification follow these reviewed source packages. New commits are saved
+  to the backup branch while the exact-f307 main CI and Web runs finish.
 - Earlier strict remote browser failures remain retained. The current Docker
   workflow passes; CI and Web are still running at the saved snapshot. Their
   terminal artifacts require review before any current remote pass is claimed.

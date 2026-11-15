@@ -15,7 +15,7 @@ import {shouldIncludePAScheduleAReferenceSummary} from './fill-pa-schedule-a.js'
 import {shouldIncludePAScheduleBReferenceSummary} from './mappings/2025/fill-pa-schedule-b.js';
 const brand=Symbol('actual prepared PA ordinary return review');
 export interface PreparedPAOrdinaryReturnReview {readonly [brand]:true}
-interface Context {original:TaxYearInput;originalDigest:string;redactedDigest:string;expected:PAOrdinaryReturnResult;care?:PACareOwnedPaper;federal?:TaxReturnResult;residentCredit?:PAOrdinaryResidentCreditRenderFacts;scheduleD?:PAOrdinaryScheduleDRenderFacts;scheduleA?:PAOrdinaryScheduleARenderFacts;scheduleB?:PAOrdinaryScheduleBRenderFacts;dividendFederal3b?:string}
+interface Context {original:TaxYearInput;originalDigest:string;redactedDigest:string;expected:PAOrdinaryReturnResult;care?:PACareOwnedPaper;federal?:TaxReturnResult;residentCredit?:PAOrdinaryResidentCreditRenderFacts;scheduleD?:PAOrdinaryScheduleDRenderFacts;scheduleA?:PAOrdinaryScheduleARenderFacts;scheduleB?:PAOrdinaryScheduleBRenderFacts;scheduleBNotRequired?:true;dividendFederal3b?:string}
 const contexts=new WeakMap<PreparedPAOrdinaryReturnReview,Context>();
 const digest=(value:unknown)=>createHash('sha256').update(JSON.stringify(value)).digest('hex');
 const fail=(detail:string):never=>{throw new Error('PA ordinary PDF source review: '+detail);};
@@ -114,27 +114,48 @@ function actualInterestPaper(original:TaxYearInput,expected:PAOrdinaryReturnResu
 }
 
 /** All amounts are existing canonical source results, not another dividend calculator. */
-export interface PAOrdinaryScheduleBRenderFacts{claimantName:string;lines:string[]}
-function actualDividendPaper(original:TaxYearInput,expected:PAOrdinaryReturnResult):PAOrdinaryScheduleBRenderFacts|undefined{
+export interface PAOrdinaryScheduleBRenderFacts{claimantName:string;lines:string[];reductionDescription:string}
+type PAOrdinaryDividendReview={kind:'paper';paper:PAOrdinaryScheduleBRenderFacts}|{kind:'not-required-nonresident'};
+const residencyDividendAdjustment='Non-Residency Period Ordinary and Capital Gain Distributions';
+const publicResidencyDividendDescription='Nonresident-period dividends and capital gain distributions';
+function actualDividendReview(original:TaxYearInput,expected:PAOrdinaryReturnResult):PAOrdinaryDividendReview|undefined{
  const schedule=expected.scheduleB;
- if(original.taxpayer.taxYear!==2025||original.taxpayer.filingStatus!=='single'||original.taxpayer.spouse||expected.filingChoice!=='S'||expected.residencyStatus!=='resident'||!shouldIncludePAScheduleBReferenceSummary(schedule))return;
- // The current ordinary source method already proves complete original boxes,
- // receipt chronology and classification. Do not invent joint-owner allocations.
+ if(original.taxpayer.taxYear!==2025||original.taxpayer.filingStatus!=='single'||original.taxpayer.spouse||expected.filingChoice!=='S')return;
+ // The complete canonical ordinary replay has already validated every original,
+ // known box, owner, dated distribution and confirmed residency boundary.
  if(!original.form1099Div.length||original.form1099Div.some(row=>row.accountHolder!=='primary'))return;
- if([schedule.line2,schedule.line3,schedule.line4,schedule.line5,schedule.line7,schedule.line8,schedule.line9a,schedule.line9b,schedule.line9c,schedule.line11].some(value=>!value.isZero()))return;
+ if([schedule.line2,schedule.line3,schedule.line7,schedule.line8,schedule.line9a,schedule.line9b,schedule.line9c,schedule.line11].some(value=>!value.isZero()))return;
+ // Admit only the canonical residency adjustment, never a manual/special method.
+ if(schedule.additionAdjustments.length||schedule.reductionAdjustments.length>1||schedule.line4.lt(0)||!schedule.line5.eq(schedule.line4))return;
+ const adjustment=schedule.reductionAdjustments[0];
+ if(adjustment&&(adjustment.description!==residencyDividendAdjustment||!adjustment.amount.eq(schedule.line4)))return;
+ if(!adjustment&&!schedule.line4.isZero())return;
+ if(expected.residencyStatus==='resident'&&(adjustment||!schedule.line4.isZero()))return;
+ if(!['resident','part_year','nonresident'].includes(expected.residencyStatus))return;
  const values=[schedule.line1,schedule.line2,schedule.line3,schedule.line4,schedule.line5,schedule.line6,schedule.line7,schedule.line8,schedule.line9a,schedule.line9b,schedule.line9c,schedule.line10,schedule.line11,schedule.line12];
  const lines=values.map(value=>{const rounded=new PaperMoney(value).toDecimalPlaces(0,Decimal.ROUND_HALF_UP);return rounded.isZero()?'0':rounded.toFixed(0);});
  const money=(index:number)=>new PaperMoney(lines[index]),sum=(indices:number[])=>indices.reduce((total,index)=>total.plus(money(index)),new PaperMoney(0));
  if(!sum([1,2,3]).eq(money(4))||!money(0).minus(money(4)).eq(money(5))||!PaperMoney.max(0,sum([5,6,7,10,11,12])).eq(money(13))||!money(13).eq(expected.pa40.dividends))return;
- return {claimantName:'[REDACTED]',lines};
+ // Official2025 instructions exempt nonresidents. This disposition exists only
+ // inside a complete validated source context, never from a caller residency flag.
+ if(expected.residencyStatus==='nonresident')return schedule.line12.isZero()&&expected.pa40.dividends.isZero()?{kind:'not-required-nonresident'}:undefined;
+ // Unlike the canonical zero-floor, physical Line12 must equal its printed addends.
+ if(sum([5,6,7,10,11,12]).lt(0)||!shouldIncludePAScheduleBReferenceSummary(schedule))return;
+ return {kind:'paper',paper:{claimantName:'[REDACTED]',lines,reductionDescription:schedule.line4.gt(0)?publicResidencyDividendDescription:''}};
 }
 
-/** Readiness can inspect already validated authority without replaying tax or trusting a basename. */
-export function hasPAOrdinaryScheduleBReviewAuthority(input:TaxYearInput,result:TaxReturnResult,token?:PreparedPAOrdinaryReturnReview):boolean{
- if(input.taxpayer.taxYear!==2025||result.taxYear!==2025||!token)return false;
- const context=contexts.get(token);if(!context?.scheduleB||context.dividendFederal3b===undefined||!new PaperMoney(result.totalDividends).eq(context.dividendFederal3b))return false;
+/** Inspect retained authority without replaying tax or trusting a basename. */
+function dividendContext(input:TaxYearInput,result:TaxReturnResult,token?:PreparedPAOrdinaryReturnReview):Context|undefined{
+ if(input.taxpayer.taxYear!==2025||result.taxYear!==2025||!token)return;
+ const context=contexts.get(token);if(!context||context.dividendFederal3b===undefined||!new PaperMoney(result.totalDividends).eq(context.dividendFederal3b))return;
  const actual=digest(input);
- return (actual===context.originalDigest||actual===context.redactedDigest)&&isDeepStrictEqual(result.stateReturns?.pennsylvania,context.expected);
+ return (actual===context.originalDigest||actual===context.redactedDigest)&&isDeepStrictEqual(result.stateReturns?.pennsylvania,context.expected)?context:undefined;
+}
+export function hasPAOrdinaryScheduleBReviewAuthority(input:TaxYearInput,result:TaxReturnResult,token?:PreparedPAOrdinaryReturnReview):boolean{
+ return dividendContext(input,result,token)?.scheduleB!==undefined;
+}
+export function hasPAOrdinaryScheduleBNonresidentSuppressionAuthority(input:TaxYearInput,result:TaxReturnResult,token?:PreparedPAOrdinaryReturnReview):boolean{
+ return dividendContext(input,result,token)?.scheduleBNotRequired===true;
 }
 
 /** Structural routing only; source qualification always requires fresh original replay. */
@@ -145,18 +166,18 @@ export function preparePAOrdinaryReturnReview(input:TaxYearInput):PreparedPAOrdi
  if(!input.paOrdinaryReturnFacts||!input.paOrdinaryReturnCompletionSources||!input.paResidencySources)return fail('complete actual ordinary completion and residency originals are required');
  const original=structuredClone(input),expected=calculatePAOrdinaryReturn(original,original.paOrdinaryReturnFacts,original.paOrdinaryReturnCompletionSources);
  if(expected.refundDisposition.donations.length>5)return fail('more than five original donation elections require their physical continuation method');
- const residentCredit=actualResidentCreditPaper(original,expected),scheduleD=actualDigitalPaper(original,expected),scheduleA=actualInterestPaper(original,expected),scheduleB=actualDividendPaper(original,expected);
+ const residentCredit=actualResidentCreditPaper(original,expected),scheduleD=actualDigitalPaper(original,expected),scheduleA=actualInterestPaper(original,expected),dividendReview=actualDividendReview(original,expected),scheduleB=dividendReview?.kind==='paper'?dividendReview.paper:undefined,scheduleBNotRequired=dividendReview?.kind==='not-required-nonresident';
  const source=original.paOrdinaryReturnCompletionSources?.care.careSources;
- const calculatedFederal=expected.scheduleDC||scheduleB?calculateFederalTax(original):undefined;
+ const calculatedFederal=expected.scheduleDC||dividendReview?calculateFederalTax(original):undefined;
  const federal=expected.scheduleDC?calculatedFederal:undefined;
- const dividendFederal3b=scheduleB?calculatedFederal?.totalDividends.toFixed():undefined;
- if(scheduleB&&(dividendFederal3b===undefined||!new PaperMoney(dividendFederal3b).toDecimalPlaces(0,Decimal.ROUND_HALF_UP).eq(scheduleB.lines[0])))return fail('actual original federal dividend Line3b does not reconcile with printed BLine1');
+ const dividendFederal3b=dividendReview?calculatedFederal?.totalDividends.toFixed():undefined;
+ if(dividendReview&&(dividendFederal3b===undefined||!new PaperMoney(dividendFederal3b).toDecimalPlaces(0,Decimal.ROUND_HALF_UP).eq(expected.scheduleB.line1)))return fail('actual original federal dividend Line3b does not reconcile with printed BLine1');
  const care=source&&source.paperIdentitySources&&federal&&expected.scheduleDC?projectPACareOwnedPaper(original,source,expected.scheduleDC,federal):undefined;
  if(source?.paperIdentitySources&&!care)fail('actual care paper requires supported complete care source credit');
- const token:PreparedPAOrdinaryReturnReview=Object.freeze({[brand]:true as const});contexts.set(token,{original,expected,...(care?{care}:{}),...(federal?{federal}:{}),...(residentCredit?{residentCredit}:{}),...(scheduleD?{scheduleD}:{}),...(scheduleA?{scheduleA}:{}),...(scheduleB?{scheduleB,dividendFederal3b}:{}),originalDigest:digest(original),redactedDigest:digest(redactReviewIdentifiers(original))});return token;
+ const token:PreparedPAOrdinaryReturnReview=Object.freeze({[brand]:true as const});contexts.set(token,{original,expected,...(care?{care}:{}),...(federal?{federal}:{}),...(residentCredit?{residentCredit}:{}),...(scheduleD?{scheduleD}:{}),...(scheduleA?{scheduleA}:{}),...(scheduleB?{scheduleB}:{}),...(scheduleBNotRequired?{scheduleBNotRequired:true as const}:{}),...(dividendReview?{dividendFederal3b}:{}),originalDigest:digest(original),redactedDigest:digest(redactReviewIdentifiers(original))});return token;
 }
 export interface PAOrdinaryReviewRenderFacts{
- care?:PACareOwnedPaper;filingStatus:'S'|'F';finalReturnReason:string;dependentChildren:number;residentCredit?:PAOrdinaryResidentCreditRenderFacts;scheduleD?:PAOrdinaryScheduleDRenderFacts;scheduleA?:PAOrdinaryScheduleARenderFacts;scheduleB?:PAOrdinaryScheduleBRenderFacts;
+ care?:PACareOwnedPaper;filingStatus:'S'|'F';finalReturnReason:string;dependentChildren:number;residentCredit?:PAOrdinaryResidentCreditRenderFacts;scheduleD?:PAOrdinaryScheduleDRenderFacts;scheduleA?:PAOrdinaryScheduleARenderFacts;scheduleB?:PAOrdinaryScheduleBRenderFacts;scheduleBNotRequired?:true;
  residency:{status:'resident'|'part_year'|'nonresident';schoolCode:string;schoolDistrictName:string;from?:string;through?:string};
  requestedRefund:string;nextYearCredit:string;donations:Array<{code:string;amount:string}>;
 }
@@ -166,7 +187,7 @@ export function assertPAOrdinaryReturnReview(input:TaxYearInput,result:TaxReturn
  const prepared=token??preparePAOrdinaryReturnReview(input),context=contexts.get(prepared);if(!context)return fail('an original prepared context is required; fabricated or wrong tokens are invalid');
  const actual=digest(input);if(actual!==context.originalDigest&&actual!==context.redactedDigest)return fail('actual original sources changed after preparation');
  if(!isDeepStrictEqual(saved,context.expected))return fail('retained actual result does not reconcile with the complete original source calculation');
- if(context.scheduleB&&(context.dividendFederal3b===undefined||!new PaperMoney(result.totalDividends).eq(context.dividendFederal3b)))return fail('actual federal dividend Line3b differs from complete original sources');
+ if((context.scheduleB||context.scheduleBNotRequired)&&(context.dividendFederal3b===undefined||!new PaperMoney(result.totalDividends).eq(context.dividendFederal3b)))return fail('actual federal dividend Line3b differs from complete original sources');
  const original=context.original,facts=PAOrdinaryReturnFactsSchema.parse(original.paOrdinaryReturnFacts),residency=PAResidencySourcesSchema.parse(original.paResidencySources),expected=context.expected;
  let care:PACareOwnedPaper|undefined;
  if(context.federal){
@@ -178,10 +199,10 @@ export function assertPAOrdinaryReturnReview(input:TaxYearInput,result:TaxReturn
   if(source.paperIdentitySources)care=projectPACareOwnedPaper(original,source,fresh.scheduleDC,freshFederal);
  }
  if(context.scheduleA){const fresh=calculatePAOrdinaryReturn(original,original.paOrdinaryReturnFacts,original.paOrdinaryReturnCompletionSources);if(!isDeepStrictEqual(fresh,expected)||!isDeepStrictEqual(actualInterestPaper(original,fresh),context.scheduleA))return fail('retained original interest paper replay differs');}
- if(context.scheduleB){const fresh=calculatePAOrdinaryReturn(original,original.paOrdinaryReturnFacts,original.paOrdinaryReturnCompletionSources);if(!isDeepStrictEqual(fresh,expected)||!isDeepStrictEqual(actualDividendPaper(original,fresh),context.scheduleB))return fail('retained original dividend paper replay differs');}
+ if(context.scheduleB||context.scheduleBNotRequired){const fresh=calculatePAOrdinaryReturn(original,original.paOrdinaryReturnFacts,original.paOrdinaryReturnCompletionSources),review=actualDividendReview(original,fresh);if(!isDeepStrictEqual(fresh,expected)||!isDeepStrictEqual(review,context.scheduleB?{kind:'paper',paper:context.scheduleB}:{kind:'not-required-nonresident'}))return fail('retained original dividend source replay differs');}
  const redactSourceText=privateSourceTextRedactor(original);
  const period=expected.residencyStatus==='part_year'?residency.residency.domicilePeriods.find(p=>p.state==='PA'):undefined;
- return {...(care?{care}:{}),...(context.residentCredit?{residentCredit:structuredClone(context.residentCredit)}:{}),...(context.scheduleD?{scheduleD:structuredClone(context.scheduleD)}:{}),...(context.scheduleA?{scheduleA:structuredClone(context.scheduleA)}:{}),...(context.scheduleB?{scheduleB:structuredClone(context.scheduleB)}:{}),filingStatus:expected.filingChoice,finalReturnReason:redactSourceText(facts.filing.finalReturnReason),dependentChildren:expected.dependentChildren,
+ return {...(care?{care}:{}),...(context.residentCredit?{residentCredit:structuredClone(context.residentCredit)}:{}),...(context.scheduleD?{scheduleD:structuredClone(context.scheduleD)}:{}),...(context.scheduleA?{scheduleA:structuredClone(context.scheduleA)}:{}),...(context.scheduleB?{scheduleB:structuredClone(context.scheduleB)}:{}),...(context.scheduleBNotRequired?{scheduleBNotRequired:true as const}:{}),filingStatus:expected.filingChoice,finalReturnReason:redactSourceText(facts.filing.finalReturnReason),dependentChildren:expected.dependentChildren,
  residency:{status:expected.residencyStatus,schoolCode:expected.schoolDistrictCode,schoolDistrictName:redactSourceText(residency.residency.schoolDistrictName),...(period?{from:period.from,through:period.through}:{})},
  requestedRefund:expected.refundDisposition.refund.toFixed(0),nextYearCredit:expected.refundDisposition.nextYearCredit.toFixed(0),donations:expected.refundDisposition.donations.map(row=>({code:row.code,amount:row.amount.toFixed(0)}))};
 }

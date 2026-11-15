@@ -42,6 +42,6 @@ export async function fillPAOrdinaryScheduleB(input:TaxYearInput,result:TaxRetur
  put(fields.name,schedule.claimantName);put(fields.ssn,'');form.getCheckBox(fields.owner).check();
  if(schedule.lines.length!==14)throw Error('Actual PA dividend paper requires all fourteen original-derived lines');
  fields.lines.forEach((name,index)=>put(name,schedule.lines[index]));
- put('4. Description','');put('8. Description','');
+ put('4. Description',schedule.reductionDescription);put('8. Description','');
  form.updateFieldAppearances(font);await markReviewPdf(doc);return doc;
 }

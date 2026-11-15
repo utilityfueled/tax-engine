@@ -1,0 +1,65 @@
+form: "PA-Schedule-B-ordinary-residency-paper"
+fullName: "Pennsylvania ordinary part-year Schedule B review paper and finite nonresident attachment rule"
+taxYear: 2025
+reference: "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40b.pdf"
+notes: |
+  This projection adds no tax calculation. Complete single-primary actual ordinary
+  originals, confirmed residency dates and dated distribution ledgers remain the
+  existing canonical source method. Official2025 PA40B instructions pages3–5
+  require whole-dollar entries, allow a negative Line6 and require a description
+  of a Line4 reduction. The PA PIT Guide Dividends footnote2 places both ordinary
+  dividends and capital distributions credited during the nonresident period on
+  Line4. Annual capital distributions stay on Line10. No calendar ratio is used.
+  Guide: https://www.pa.gov/agencies/revenue/forms-and-publications/pa-personal-income-tax-guide/dividends
+  This finite extension permits only the canonical residency adjustment, never
+  manual adjustments, joint/spouse ownership or unsupported source methods.
+  A proven complete nonresident ordinary method with zero PA dividends needs no
+  ScheduleB attachment under official instructions page3. An untrusted residency
+  flag or filename cannot suppress an unknown/reference path or certify paper.
+  Every output is review-only; filingQualified stays false, packet partial and
+  final2026 export unavailable. No human or independent tax-oracle approval.
+lines:
+  - line: "part-year-14-fields"
+    description: "Project all canonical annual and residency-adjusted fields"
+    formula: "[1,2,3,4,5,6,7,8,9a,9b,9c,10,11,12] = [2000,0,0,1200,1200,800,0,0,0,0,0,500,0,1300]; exact original federal3b retained; fixed public Line4 description; PA40line3=1300."
+    testRef: "tests/pdf/pa-ordinary-dividend-residency-paper.test.ts::projects the exact part-year source allocation into fourteen official fields"
+  - line: "signed-line6"
+    description: "Annual capital credited outside resident period may make Line6 negative"
+    formula: "[0,0,0,500,500,-500,0,0,0,0,0,500,0,0]; preserve signed subtotal and zero final total, without reducing annual Line10."
+    testRef: "tests/pdf/pa-ordinary-dividend-residency-paper.test.ts::preserves signed Line6 when only outside-period capital distributions exist"
+  - line: "cents-and-boundary"
+    description: "Retain canonical line rounding and exact credited-date boundary"
+    formula: "Annual ordinary0.98/capital0.98, outside0.49+0.49 => [1,0,0,1,1,0,0,0,0,0,0,1,0,1]; Jun30 outside versus Jul1 inside changes the existing source allocation."
+    testRef: "tests/pdf/pa-ordinary-dividend-residency-paper.test.ts::preserves actual cents rounding and the confirmed residency date boundary"
+  - line: "nonresident-proof"
+    description: "Suppress only a complete known opaque finite nonresident source method"
+    formula: "Canonical zero PA dividends plus complete originals/known token/input digest/exact state/federal3b binding means no B attachment. Missing, forged, stale, wrong-year or naked residency flags never suppress or certify."
+    testRef: "tests/pdf/pa-ordinary-dividend-residency-paper.test.ts::suppresses the finite nonresident attachment only with exact original context"
+  - line: "privacy-and-flatten"
+    description: "Public generic description and readable appearances preserve strict review privacy"
+    formula: "All14 fields readable at >=7pt, signed values and description fit; no payer/TIN/account/source reference/date ledger/name/SSN leaks; strict pypdf/widget values and flattened visible text agree, no fields/widgets after flatten."
+    testRef: "tests/pdf/pa-ordinary-dividend-residency-paper.test.ts::keeps private part-year sources out of strict interactive and flattened paper"
+  - line: "strict-authority"
+    description: "No new unsupported source or year authority"
+    formula: "Reject original/result/federal edits before template IO; unsupported source boxes/owner/unknown/missing/malformed dates cannot prepare; detached paper projection cannot mutate authority; altered template and2026 reject."
+    testRef: "tests/pdf/pa-ordinary-dividend-residency-paper.test.ts::rejects stale unknown unsupported and contradictory part-year source proof"
+  - line: "trigger-and-fallback"
+    description: "Preserve real attachment trigger and unknown reference fallback"
+    formula: "Resident/PY Line6 alone never attaches; ordinary nonzero Lines2–11 except6 attach; legacy unknown sources retain references and cannot gain official or nonresident suppression authority."
+    testRef: "tests/pdf/pa-ordinary-dividend-residency-paper.test.ts::preserves attachment suppression and unknown reference fallback"
+  - line: "readiness"
+    description: "Readiness uses exact known authority without another tax calculation"
+    formula: "Known PY official paper is truthfully disclosed; known finite NR says attachment not required. Missing/forged/stale proof keeps fallback; no basename authority or new filing/year support."
+    testRef: "tests/pdf/pa-ordinary-dividend-residency-paper.test.ts::reports part-year paper and nonresident nonapplicability only from known source authority"
+  - line: "workspace-part-year"
+    description: "Actual guided source packet carries official PY paper and truthful partial disclosure"
+    formula: "Confirmed original guided credits/residency produce literal1300PA dividends; merged review contains official B/source-bound description and no reference; no identity/source leakage or widget fields; no filing promotion."
+    testRef: "tests/apps/web/pa-state-packet.test.ts::buildWorkspaceFilledReturnDownload includes source-qualified part-year Schedule B and truthful partial disclosure"
+  - line: "workspace-nonresident"
+    description: "Actual complete guided nonresident sources suppress unnecessary B attachment"
+    formula: "Canonical zero PA dividends; no B review/reference artifact; merged disclosure says not required from the retained original context; source unchanged and filing gates stay closed."
+    testRef: "tests/apps/web/pa-state-packet.test.ts::buildWorkspaceFilledReturnDownload suppresses the complete finite nonresident Schedule B attachment"
+  - line: "negative-printed-total-fallback"
+    description: "Do not certify paper when rounded addends imply a negative final total"
+    formula: "PY annual ordinary0.49/capital0.49 all outside prints canonical [0,0,0,1,1,-1,0,0,0,0,0,0,0,0]. Canonical engine zero-floor remains unchanged; printed addends sum-1 cannot substantiate physicalLine12 zero, so reference fallback only. No invented penny allocation. NR has no physical attachment and remains separately source-qualified."
+    testRef: "tests/pdf/pa-ordinary-dividend-residency-paper.test.ts::keeps a negative printed final sum reference-only without inventing penny allocation"

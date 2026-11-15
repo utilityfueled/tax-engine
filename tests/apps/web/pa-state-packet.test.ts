@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {PDFDocument,PDFDict,PDFName} from "pdf-lib";
 import { mkdir, rm, writeFile } from "fs/promises";
 import { execFileSync } from "node:child_process";
+import {execFileSync as execWithStdin} from "../../helpers/file-stdin-exec";
 import { join } from "path";
 import { tmpdir } from "os";
 import type {
@@ -13,6 +14,7 @@ import type {
 import { buildWorkspaceStructuredFacts } from "@tax-engine/engine";
 import { buildWorkspaceFilledReturnDownload } from "../../../apps/web/src/lib/workspace-filled-return";
 import * as rendering from "@/pdf/fill-return";
+import {paOrdinaryScheduleBResidencyGuidedFixture} from '../../fixtures/pa-ordinary-schedule-b-residency-paper';
 import {completeLegacyPAInvestmentPacket} from "../../fixtures/pa-ordinary-investment-sources";
 import {completeLegacyPABusinessPacket} from "../../fixtures/pa-ordinary-business-sources";
 import type { GuidedFlowState } from "../../../apps/web/src/lib/guided-interview-flow";
@@ -514,4 +516,14 @@ describe("Pennsylvania workspace packet disclosure", () => {
       "Pennsylvania Schedule C is included as a reference summary, not an official PA-40 Schedule C filing copy.",
     );
   });
+  it("buildWorkspaceFilledReturnDownload includes source-qualified part-year Schedule B and truthful partial disclosure",async()=>{
+    const render=vi.spyOn(rendering,'fillReturn'),f=paOrdinaryScheduleBResidencyGuidedFixture('part_year'),before=structuredClone(f.state),download=await buildWorkspaceFilledReturnDownload(createWorkspace(),f.state),text=await extractPdfText(download.contents);
+    expect(f.state).toEqual(before);expect(render.mock.calls.at(-1)?.[1].stateReturns?.pennsylvania?.pa40.dividends.toFixed()).toBe('1300');expect(download.includedForms).toContain('pa-schedule-b-review.pdf');expect(download.includedForms).not.toContain('pa-schedule-b-reference.pdf');expect(text).toContain('Nonresident-period dividends and capital gain distributions');expect(text).toContain('Schedule B is included as an original-bound official');expect(text).toContain('Packet completeness status: partial.');expect(text).toContain('NOT FOR FILING');expect(text).not.toContain('900-70-0311');const paPages=JSON.parse(execWithStdin(process.env.TAX_ENGINE_PDF_TEST_PYTHON??'python3',['-c',"import io,json,sys;from pypdf import PdfReader;r=PdfReader(io.BytesIO(sys.stdin.buffer.read()),strict=True);print(json.dumps([p.extract_text() or '' for p in r.pages]))"],{input:download.contents,encoding:'utf8',timeout:4000,killSignal:'SIGKILL'})) as string[];const paper=paPages.filter(page=>page.includes('Nonresident-period dividends and capital gain distributions'));expect(paper).toHaveLength(1);expect(paper[0]).not.toContain('Fictional ordinary regulated investment fund');
+    const pdf=await PDFDocument.load(download.contents);expect(pdf.getForm().getFields()).toHaveLength(0);for(const page of pdf.getPages())for(const ref of page.node.Annots()?.asArray()??[]){const annotation=pdf.context.lookup(ref);expect(annotation instanceof PDFDict&&annotation.get(PDFName.of('Subtype'))===PDFName.of('Widget')).toBe(false);}
+  });
+  it("buildWorkspaceFilledReturnDownload suppresses the complete finite nonresident Schedule B attachment",async()=>{
+    const render=vi.spyOn(rendering,'fillReturn'),f=paOrdinaryScheduleBResidencyGuidedFixture('nonresident'),before=structuredClone(f.state),download=await buildWorkspaceFilledReturnDownload(createWorkspace(),f.state),text=await extractPdfText(download.contents);
+    expect(f.state).toEqual(before);expect(render.mock.calls.at(-1)?.[1].stateReturns?.pennsylvania?.pa40.dividends.toFixed()).toBe('0');expect(download.includedForms.some(name=>/^pa-schedule-b-/.test(name))).toBe(false);expect(text).toContain('Schedule B is not required');expect(text).not.toContain('Schedule B applies');expect(text).toContain('Packet completeness status: partial.');expect(text).toContain('NOT FOR FILING');expect(text).not.toContain('900-70-0311');
+  });
+
 });

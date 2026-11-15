@@ -1,5 +1,16 @@
 # 2026 upgrade implementation evidence
 
+## November 15 guided goodwill and PA residency paper
+
+The actual acquired-goodwill collector passes author 1,056, independent 1,060
+and root 989 focused tests; two separately reviewed browser source cases are
+collected with original policy and await actual runtime. The finite PA part-year
+Schedule B and source-bound nonresident attachment rule pass independent 175+13
+and root 1,047 checks. A reproduced printed-rounding mismatch stays reference-only.
+Current integrated metadata, aggregate checks and runtimes follow.
+[Goodwill evidence](upgrade-2026-guided-goodwill-20261115.md) and
+[PA source, physical and fallback evidence](upgrade-2026-pa-dividend-residency-paper-20261115.md).
+
 ## November 15 all-12 local baseline and capacity recovery
 
 Exact `f30723f9` passes all 12 checks: 28,746 tests in each unit/coverage lane, 88.13% branches,

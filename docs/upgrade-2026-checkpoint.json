@@ -1,4 +1,23 @@
 {
+  "nov15GoodwillAndPAResidency": {
+    "goodwillCoreCommit": "71d25b2d",
+    "goodwillBrowserSourceCommit": "0e88c1a5",
+    "goodwillRootTests": 989,
+    "goodwillIndependentTests": 1060,
+    "browserAddedCollected": 2,
+    "newBrowserRuntimeExecuted": 0,
+    "paAuthorTests": 175,
+    "paIndependentReplayedTests": 175,
+    "paIndependentAdditionalControls": 13,
+    "paRootTests": 1047,
+    "paRootIndependentCentsVectors": 3,
+    "negativePrintedFinalSumReferenceOnly": true,
+    "canonicalEngineUnchanged": true,
+    "paV2Freeze": "4c1f81559cdbfd75b205227585d48e0c0472e6e41fdf628c55f9dc6af0ffa890",
+    "paPeer": "a06241152bdc8408bac01a8b87fbc636d155275590a710ed6a02d15177cc2fa9",
+    "integratedMetadataAll12AndRuntimesPending": true,
+    "filingQualified": false
+  },
   "nov15F307LocalBaseline": {
     "source": "f30723f9c531d8e0eae1fa15f5efabcc435d61b4",
     "all12Passed": true,
