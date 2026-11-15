@@ -1,48 +1,40 @@
 # Current 2026 upgrade continuation
 
-## Active work — November 15, 11:54 UTC
+## Active work — November 15, 13:00 UTC
 
-All committed work through `442bfd81` is pushed to `main` and the remote backup.
-Fresh scoped Vercel inspection confirms the saved production-build guard; the
-actual production-target build for this push is `CANCELED`. The existing site
-is not redeployed. The PA dividend physical-review package is included in that
-push. The two discarded W-2 commitment callsites are the next reviewed package.
+All committed work through `f30723f9` is pushed to `main` and the remote backup.
+Fresh scoped Vercel inspection confirms the saved production-build guard; its
+actual production-target build is canceled. The backup Preview is ready, which
+does not establish completed staging qualification.
 
-- Exact `8c1bd108` passes all twelve local checks, actual protected Preview and
-  independent artifact review. Its strict remote container browser lane retains
-  real failures and cancellation; its source boundary remains explicit.
-  [Evidence](upgrade-2026-integrated-runtime-8c1bd108-20261115.md).
-- Remote `aa4df8c2` CI passes all six jobs, including 28,729 unit and coverage tests
-  with 88.13% branches. Docker passes. Its self-host browser lane passes 638 with
-  five original skips at the workflow's original 90-second default; the separate
-  strict 30-second container lane finishes with failure. The d192 diagnostic is
-  separately nonqualifying. Their complete saved artifacts are under review;
-  no cause or current-source pass is inferred.
-- The native AMD64 backport rehearsal passes all three actual jobs and both
-  saved-artifact reviews. Six visible Critical findings and one separate ignored
-  Critical remain unaccepted. [Evidence](upgrade-2026-amd64-backports-workflow-20261115.md).
-- The corrected external XML comparison completes 57 outer commands with normal
-  VM/resources/routes restoration. All2,594 pairs match classification, retaining
-  eighteen mismatches, 303 exclusions and nine missing inputs per variant.
-  Root and independent reviews pass; XML conformance, release and risk acceptance
-  remain false. A distinct cleanup removes only proven-owned fresh toolchain
-  intermediates before the next native application run.
+- Exact `f30723f9` passes all twelve local checks: 28,746 tests in each unit and
+  coverage lane, 88.13% branch coverage, and 638 browser passes with five original
+  skips. Independent full-artifact review passes. Browser and coverage policies
+  are unchanged. [Evidence](upgrade-2026-integrated-runtime-f30723f9-20261115.md).
+- All 42 commands in the exact-three-archive guest cleanup pass. Local archive
+  copies, all 36 images and the other 30 roots remain; normal resource and socket
+  restoration pass. Both unchanged capacity observation floors now pass. This
+  does not qualify an application workload.
   [Evidence](upgrade-2026-postgres-libxml2-native-20261114.md).
-- Finite original-bound 2025 single-primary resident PA Schedule B physical review
-  passes author 1044, independent 22+37 and root 118 focused tests. Actual interactive
-  and flattened PDFs pass physical/privacy checks. Other cohorts retain references;
-  filing and final 2026 gates remain closed. [Evidence](upgrade-2026-pa-dividend-official-review-20261115.md).
-- The two W-2 validation-only callers pass 105 focused and six independent tests.
-  Actual consumed commitments, all original checks and strict browser policies
-  remain unchanged. Source-audit metadata and fresh exact-source all-twelve,
-  Preview and ARM64 application qualification follow these product commits.
-  [Evidence](upgrade-2026-w2-validation-only-callers-20261115.md).
+- Guided acquired-goodwill source parity and finite source-qualified PA part-year
+  dividend paper/nonresident applicability are being implemented privately in
+  parallel. Their review, integration and actual runtime evidence remain pending.
+  Current-source ARM and protected Preview successors follow that integration.
+- Earlier strict remote browser failures remain retained. The current Docker
+  workflow passes; CI and Web are still running at the saved snapshot. Their
+  terminal artifacts require review before any current remote pass is claimed.
+  [Earlier terminal evidence](upgrade-2026-remote-browser-terminal-20261115.md).
+- The corrected XML comparison retains eighteen mismatches, 303 exclusions and
+  nine missing inputs per variant, despite identical paired classifications.
+  The native AMD64 backport rehearsal passes its three functional jobs; visible
+  and ignored security findings remain unaccepted. Neither establishes release
+  acceptance. [AMD64 evidence](upgrade-2026-amd64-backports-workflow-20261115.md).
 
-Qualified human tax/spec/expected-result and AI-case review, final annual 2026
-forms, advisory disposition by an accountable owner, security/privacy acceptance
-and final distribution evidence remain open. The unresolved provider-timeout
-reserve stays accounted. Filing and model promotion remain closed. Dated entries
-below retain historical package/source boundaries rather than current readiness.
+Qualified human tax/spec/expected-result and AI-case review, applicable final
+annual 2026 forms, advisory disposition by an accountable owner, security/privacy
+acceptance and final distribution evidence remain open. The unresolved provider
+timeout reserve stays accounted. Filing and model promotion remain closed.
+Dated entries below retain their historical package/source boundaries.
 
 ## November 15 native archive path correction
 

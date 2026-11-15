@@ -1,5 +1,16 @@
 # 2026 upgrade implementation evidence
 
+## November 15 all-12 local baseline and capacity recovery
+
+Exact `f30723f9` passes all 12 checks: 28,746 tests in each unit/coverage lane, 88.13% branches,
+and 638 browser passes/five original skips with unchanged policies. Root and
+independent full-artifact reviews pass. Three duplicate guest archives are
+removed with local copies retained; unchanged disk/memory floors now pass.
+Guided acquired-goodwill and finite PY dividend paper remain internal packages
+in progress, followed by their own integration/runtime qualification.
+[Baseline evidence](upgrade-2026-integrated-runtime-f30723f9-20261115.md) and
+[capacity evidence](upgrade-2026-postgres-libxml2-native-20261114.md).
+
 ## November 15 final resident source audit binding
 
 The single resident-credit hash and new software-spec inventory key are bound

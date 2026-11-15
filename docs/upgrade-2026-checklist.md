@@ -2,7 +2,7 @@
 
 ## Current continuation — November 15
 
-- [x] Push all accumulated commits through `aa4df8c2` to `main` and the backup;
+- [x] Push all accumulated commits through `f30723f9` to `main` and the backup;
   verify that Vercel cancels its production build under the saved guard.
 - [x] Pass all twelve exact `8c1bd108` local checks and independent artifact review.
 - [x] Pass its protected Preview's 105 admission cases/four actual UI journeys,
@@ -23,10 +23,15 @@
   per variant. Conformance/release/risk acceptance remain false.
 - [x] Implement and independently review finite original-bound 2025 PA Schedule B
   physical review output; preserve reference fallbacks and all filing/year gates.
-- [ ] Pass all twelve exact-source checks and runtime successors after this PA
-  package and its source-audit metadata refresh.
-- [ ] Clean only proven-owned fresh toolchain intermediates, then finish actual
-  current-source ARM64 qualification sequentially.
+- [x] Pass all twelve exact `f30723f9` local checks and independent artifact
+  review, including 28,746 tests and 88.13% branch coverage.
+  [Baseline evidence](upgrade-2026-integrated-runtime-f30723f9-20261115.md).
+- [x] Remove only three proven archived guest copies with retained local copies;
+  preserve all images and other roots and pass unchanged capacity observations.
+- [ ] Finish guided acquired-goodwill source parity and finite PA part-year
+  dividend paper/nonresident applicability, including independent review.
+- [ ] Bind their integrated source metadata and pass current aggregate checks,
+  then finish current-source protected Preview and ARM64 qualification.
 - [ ] Finish strict container browser qualification and current remote artifact
   review; fix any confirmed defects.
 - [ ] Obtain qualified independent human reviews, final annual forms, accountable

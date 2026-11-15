@@ -387,3 +387,49 @@ failed observer attempts remain retained.
 Private execution packet: `nov15-w3c-v13-owned-cache-maintenance-prepared`.
 All conformance, current-application qualification and risk-acceptance gates
 remain unchanged.
+
+## November 15: read-only diagnosis and exact archived-file cleanup
+
+The first diagnostic stops before boot on a stale saved `LastUp` value. The
+successor's first admission also stops before launch because root output reused
+a frozen stderr path; that failure is retained externally and exact original
+bytes are restored. The admitted successor then encounters a nonzero directory `du`
+exit and completes normal restoration. Its suppressed stderr does not establish
+the cause. A distinct correction records
+status 1 as partial visibility while still rejecting other errors. It completes
+all 39 commands, preserves all 36 image signatures and restores normal resources
+and routes. Of 31 old rehearsal roots, 28 totals have partial visibility; no full
+usage total or exclusive cause is inferred. The observed disk and memory floors
+remain false after this diagnostic.
+
+Source and receipt provenance identify one completed, transfer-only historical
+rehearsal root with exactly three archive files. Their original transfers,
+current hashes/sizes/modes/owners and complete local retained copies are checked.
+Two original local files are hardlinks; independent byte copies preserve the
+strict single-link retention requirement. The initial controls detecting those
+links remain retained; neither original local copy is deleted.
+
+The separately reviewed cleanup completes all 42 commands. It removes only those
+three guest archive files using plain `rm`, then their empty directory with
+`rmdir`. There is no recursion, force, prune, unshare, resize or image removal.
+All36 image signatures, the other 30 root names and the locally retained archives
+remain. Fresh empty-guest checks, owned-process closure, normal stop, original
+2 CPU / 8192 MiB / 384 GiB configuration and both socket routes pass.
+
+Available disk rises from 267,860,914,176 to 268,573,331,456 bytes: 712,417,280 bytes
+reclaimed. Memory afterward is 7,165,672 KiB. Both unchanged observation floors
+(268,435,456,000 bytes and 6,291,456 KiB) now pass. This clears the measured capacity
+hold; it does not qualify an application workload or accept security findings.
+
+| Evidence | SHA-256 |
+| --- | --- |
+| Retained failed V2 diagnostic receipt | `e89aefab9fcacaed4effc28bdaaf4cbcc4f42b7a4583ba25ec9676978e54b2b0` |
+| Completed V3 diagnostic actual receipt | `a329017126e2f5831ad8af25d56e61c9ad1e93294063303e57c577a3a8eabba5` |
+| Completed diagnostic independent actual review | `f918c52c1a34e4c1346ebc8aef181776f9ffd0cac759970cc8b62345d7f8c0a3` |
+| Exact-three-file cleanup manifest | `229f8db01e1f3e117702bd16694e00d457ef2f115df3249f359b9a8245ff3cd6` |
+| Cleanup actual receipt | `9b2934b1a6e19dc505c6abd9161961522a9088e69da18bf24aab0162e8f594af` |
+| Root cleanup actual review | `5006b4a309076dd11a40f4a8975a48a503763d3ef8d4099cb33ada2dcf1cffea` |
+| Independent cleanup actual review | `54d3029a5f8b3b96550d6253dfe9d438948a66eaf7b161591dece9698688c54f` |
+
+Private packets: `nov15-native-storage-diagnostic-prepared-v3` and
+`nov15-native-archive-cleanup-prepared`. All earlier failure evidence is retained.

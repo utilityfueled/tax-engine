@@ -1,4 +1,37 @@
 {
+  "nov15F307LocalBaseline": {
+    "source": "f30723f9c531d8e0eae1fa15f5efabcc435d61b4",
+    "all12Passed": true,
+    "unitAndCoverageTestsEach": 28746,
+    "testFilesEach": 2101,
+    "branchCoverage": 88.13,
+    "browserPassed": 638,
+    "originalBrowserSkips": 5,
+    "browserFailures": 0,
+    "policiesUnchanged": true,
+    "rootReviewSha256": "e477a93e6d3ec5e645015b52ad59b8a466184a3888c7034e1a32ff1bf284f241",
+    "independentReviewSha256": "e90ecf6bd42db6c7555133500e991297ee06782d530d675e6d6318768cc017a3",
+    "pendingNewInternalPackages": [
+      "guided acquired goodwill source parity",
+      "finite source-qualified PA part-year dividend paper and nonresident applicability"
+    ],
+    "goalComplete": false
+  },
+  "nov15ExactArchiveCleanup": {
+    "terminalExit": 0,
+    "commands": 42,
+    "removedGuestArchiveFiles": 3,
+    "localArchiveCopiesRetained": true,
+    "imagesPreserved": 36,
+    "otherRootsPreserved": 30,
+    "normalStopResourcesRoutesRestored": true,
+    "availableAfterBytes": 268573331456,
+    "memoryAfterKiB": 7165672,
+    "unchangedFloorObservationPassed": true,
+    "workloadQualified": false,
+    "receiptSha256": "9b2934b1a6e19dc505c6abd9161961522a9088e69da18bf24aab0162e8f594af",
+    "independentActualReviewSha256": "54d3029a5f8b3b96550d6253dfe9d438948a66eaf7b161591dece9698688c54f"
+  },
   "nov15ResidentMetadata": {
     "sourceHead": "566586f087a49c0fc53422ef9543d5911e0beddc",
     "metadataFiles": 3,
