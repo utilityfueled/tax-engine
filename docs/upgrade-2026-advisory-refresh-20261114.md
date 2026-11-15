@@ -84,3 +84,20 @@ and independent reviews. Raw JSON reports retain every match and actual exit.
 | Three PostgreSQL metadata rescans | `c471b8a151362d5c87f2754fa817613ea26d6d843632a4617aa5523556d387e1` |
 | Original stock High threshold preserved | `d900d5624de283e53099169ed3ccdc8491a538994cdb5c7c277eaee21a814122` |
 | Current app source-unpacking tool presence | `747931c3c81550ffb45915091ef06bdbe73d32f762f057109ae510e467514560` |
+
+## November 15 package registry recheck
+
+The 06:13 UTC public npm registry recheck passes for the unchanged lockfile:
+447 production and 539 total dependency records, with zero reported advisories
+in either response. Both audit commands exit 0 using a separate empty
+configuration and excluding inherited credential configuration; no package is
+installed or changed. The retained JSON responses match the preceding refresh
+byte for byte. Source is `3bffc873750aaa43fc2b5d319ff06df93e1d3709`;
+lockfile SHA-256 is
+`2553ee4f90ed1ec557e633f9b10e588198f8a5c49b833fa0f6b3ad0133345393`.
+
+Evidence is ignored `nov15-root-package-audit/receipt.json`, SHA-256
+`f46f92a2e5fa84ca8ffd79beaa5e805f5eafb417db7c060f3c37c58e512a4a2b`. This registry result does not resolve the separate runtime-image
+findings or supply their missing accountable security decision owner, human
+review or acceptance. The existing November 15 18:30 UTC recheck boundary and
+qualification gates remain unchanged.

@@ -1,5 +1,11 @@
 # 2026 upgrade implementation evidence
 
+## November 15 public package advisory recheck
+
+Both public npm audits pass on the unchanged lockfile: 447 production and 539
+total records, zero reported advisories. Separate image findings and required
+security decisions remain open. [Evidence](upgrade-2026-advisory-refresh-20261114.md).
+
 ## November 15 confirmed OID/payment-settlement source years
 
 Known conflicting OID/K calendar originals now reject before confirmed effects,

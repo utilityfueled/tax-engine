@@ -1,4 +1,19 @@
 {
+  "nov15PackageRegistryRecheck": {
+    "source": "3bffc873750aaa43fc2b5d319ff06df93e1d3709",
+    "checkedAt": "2026-11-15T06:13:22.377346+00:00",
+    "lockUnchanged": true,
+    "productionRecords": 447,
+    "allRecords": 539,
+    "reportedVulnerabilities": 0,
+    "exits": [
+      0,
+      0
+    ],
+    "receiptSha256": "f46f92a2e5fa84ca8ffd79beaa5e805f5eafb417db7c060f3c37c58e512a4a2b",
+    "remaining": "Image advisories/accountableowner/humanreview unchanged;18:30UTC orbeforequalification boundary retained",
+    "evidence": "docs/upgrade-2026-advisory-refresh-20261114.md"
+  },
   "nov15ConfirmedOidKYears": {
     "base": "10820a1f",
     "freeze": "e31bd5f7552d6f7274677daaa44e1a80ffbe585257e4fb24ebcf05ed97961a55",
