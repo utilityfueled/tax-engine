@@ -1,5 +1,8 @@
 # Remaining 2026 upgrade execution checklist
 
+- [x] Exact `a32a3b10`: all twelve local checks, 28,555 tests, 88.10% branches and 632 browser passes/five original skips; normal owned-service cleanup. Owner-approved Vercel production-build restriction saved; all 398 commits pushed and remote `main`/backup verified. [Evidence](upgrade-2026-combined-a32a3b10-checks-20261115.md).
+- [ ] Finish exact-source Preview/ARM64 and remote runtime artifact reviews; separately implement and review remaining finite Ohio, guided election and PA attachment source work.
+
 - [x] Bind the reviewed year/partial-interest source hashes, preserving637 browser identities/all policies and1,024 byte-identical inventory entries;83 author/83 separate-review checks pass. [Evidence](upgrade-2026-year-partial-metadata-20261115.md). Final combined/runtime checks follow.
 
 - [x] Prepare21 selected exact8a31source blobs/four blank2025 human decisions with separate custody review; no reviewer or approval invented. [Packet](upgrade-2026-human-ai-partial-supplement-8a31d8ae.md).

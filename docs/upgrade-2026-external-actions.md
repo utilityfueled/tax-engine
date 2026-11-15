@@ -1,5 +1,13 @@
 # External actions needed to finish the 2026 upgrade
 
+## November 15 main push resolved
+
+The owner authorized disabling automatic production builds, then pushing main.
+Vercel's saved/reloaded behavior is Only build pre-production; the actual push
+and independent remote read verify `a32a3b10` on main and the backup branch.
+All 398 commits are saved remotely. Production was not deployed. Later dated
+entries below retain their original authority and evidence boundaries.
+
 ## November 15 current execution and remaining external evidence
 
 All 396 local commits through `8a31d8ae` are saved on the public

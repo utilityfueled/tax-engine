@@ -1,4 +1,26 @@
 {
+  "nov15CombinedA32AndMainPush": {
+    "sourceHead": "a32a3b10796656d881d0bff042512cdb620710fc",
+    "all12LocalChecksPassed": true,
+    "unitTests": 28555,
+    "testFiles": 2079,
+    "branchCoverage": 88.1,
+    "browserCases": 637,
+    "browserPassed": 632,
+    "originalHostedSkips": 5,
+    "retries": 0,
+    "rootArtifactReceipt": "d6e6ecffb56e58855b88bc99207a1767cdce964bd67337c8ee150098f3a495b0",
+    "bothOwnedPostgresNormallyStopped": true,
+    "temporaryPgCredentialsRemoved": true,
+    "ownerApprovedProductionBuildRestriction": true,
+    "savedVercelBehavior": "Only build pre-production",
+    "mainFastForwardPushed": true,
+    "commitsPushed": 398,
+    "remoteMainAndBackupVerified": "a32a3b10796656d881d0bff042512cdb620710fc",
+    "runtimeRehearsals": "started; no completion claim",
+    "followupCandidates": "Ohio remaining balance, guided election with actual AMT sources, PA2025 attachment trigger and physical review",
+    "filingAndAnnual2026Qualification": false
+  },
   "nov15YearPartialMetadata": {
     "sourceHead": "8a31d8ae754fc1651b5aa0408850ec956beb0f6f",
     "sourceFreeze": "849c949851539ee4a866c63845e4b8a39845a6c33abf6cbba16795b98f9a4f81",

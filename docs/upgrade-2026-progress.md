@@ -1,5 +1,17 @@
 # 2026 upgrade implementation evidence
 
+## November 15 consolidated checks and main push
+
+Exact `a32a3b10` passes all twelve local checks: 28,555 unit/coverage tests,
+88.10% branches, and 632 browser passes with five original hosted skips.
+Root verified exact source, reports and normal service cleanup. The owner
+approved disabling production builds; the saved Vercel setting is now
+“Only build pre-production.” All 398 local commits were then pushed to `main`
+and verified remotely, with the backup branch retained.
+[Checks, push and remaining gates](upgrade-2026-combined-a32a3b10-checks-20261115.md).
+Exact-source Preview/ARM64 and remote CI checks continue in parallel with
+private Ohio, guided investment-election and PA attachment follow-up work.
+
 ## November 15 combined source metadata
 
 The year-guard and partial-interest source hashes are bound without changing
