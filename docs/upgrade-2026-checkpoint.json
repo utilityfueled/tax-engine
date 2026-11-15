@@ -1,4 +1,80 @@
 {
+  "nov15Exact8ccCompletedLocalPreviewArm": {
+    "source": "8cc5b0ec0b1507e0203a8ce1bc5f3a72de1b5f09",
+    "pushedMainAndBackup": true,
+    "automaticProductionBuildsDisabled": true,
+    "allTwelveLocalPassed": true,
+    "unitCoverageTestsEach": 28848,
+    "filesEach": 2114,
+    "coveragePercent": {
+      "statements": "92.02",
+      "branches": "88.16",
+      "functions": "91.04",
+      "lines": "95.29"
+    },
+    "browser": {
+      "selected": 653,
+      "passed": 648,
+      "originalSkips": 5,
+      "workers": 2,
+      "retries": 0,
+      "defaultMs": 30000
+    },
+    "protectedPreview": {
+      "apiCases": 118,
+      "uiJourneys": 14,
+      "savedPdfs": 5,
+      "operations": 2075,
+      "operationCap": 2310,
+      "rootAndIndependentCompletedReviews": true,
+      "syntheticAccountRowsRetainedForParentBranchCleanup": 2
+    },
+    "arm64": {
+      "stages": 24,
+      "workloads": 4,
+      "composePhases": 6,
+      "browserSelected": 653,
+      "normalStoppedAndResourcesRestored": true,
+      "rootAndIndependentCompletedReviews": true,
+      "configuredUnacceptedFindings": 191
+    },
+    "remote": {
+      "ci": "passed",
+      "docker": "passed",
+      "ordinary": "648passed5originalSkips",
+      "strict": {
+        "passed": 634,
+        "failed": 14,
+        "originalSkips": 5,
+        "overall30sDeadlineErrors": 12,
+        "inspector4sFailures": 2,
+        "configuredUnacceptedFindings": 192
+      },
+      "optionalCpuDiagnostic": "one failed-job rerun active; original PGDG download failure retained"
+    },
+    "cloudCredit": {
+      "state": "HOLD real-test-card-checkout; independent read-only observation open_unpaid/no payment intent",
+      "sqlOperations": 74,
+      "stripeOperations": 6,
+      "browserRequests": 158,
+      "providerCalls": 0,
+      "additionalReadOnlyStripeGETs": 2,
+      "schemaMembershipRestored": true,
+      "ownedProcessesClosed": true,
+      "schemaAndSandboxResourcesRetained": true,
+      "knownProviderExposureUSD": "0.29423670",
+      "unreconciledReserveUSD": "0.022384",
+      "publicPurchasingEnabled": false
+    },
+    "rollingPublication4491": "official current PDF now 2026 RETURNS; exact retained2025 accessible PDF identified; correction separate",
+    "rootReviewSha256": {
+      "allTwelve": "cb017e06a5aa33ad550f60121967732951152fa812d8616efe3b7e66de238a68",
+      "arm": "d835d7d9b9566f2c337fb9e7503226c834c3145c4754de9a1c27365b3a65d1eb",
+      "preview": "e99f053deeca8475409bd7ec17ea6c3f61643ead9fac828f77da26a5950bb734"
+    },
+    "humanFinalFormSecurityGatesRemainOpen": true,
+    "releaseQualified": false
+  },
   "nov15CanonicalBusinessTransientComparison": {
     "base": "09acb4d7c6a91a886e09570e041d6703085ffa26",
     "scope": "three complete stable material comparisons; all durable SHA256/fresh federal/error/readiness semantics retained",

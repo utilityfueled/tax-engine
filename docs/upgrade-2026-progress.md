@@ -1,5 +1,23 @@
 # 2026 upgrade implementation evidence
 
+## November 15 exact 8cc local, Preview and ARM completion
+
+All reviewed commits through `8cc5b0ec` are pushed to main and the backup with
+automatic production builds disabled. All twelve local checks pass: 28,848 tests
+in each unit/coverage lane, 88.16% branches and 648 browser passes/five original
+skips. Protected Preview passes 118 API cases, fourteen UI journeys and five
+saved PDFs; ARM64 passes 24 stages/four workloads/six Compose phases with normal
+resource and route restoration. Root and independent artifact reviews pass.
+
+Remote CI, Docker and ordinary self-host pass; the strict container retains
+fourteen deadline failures. Configured image findings remain unaccepted. The
+cloud credit run stops at sandbox Checkout with zero provider calls; a separate
+read-only observation finds it open and unpaid with no payment intent. Cleanup
+and cloud settlement remain pending. The rolling IRS training guide now serves
+2026; its sample-year correction is a separate package. Human tax/AI review,
+final forms and independent security/privacy qualification remain open.
+[Current combined evidence](upgrade-2026-integrated-runtime-8cc5b0ec-20261115.md).
+
 ## November 15 completed a137 remote audit and pushed Worksheet E intake
 
 All reviewed commits through `5e018159` are pushed to main and the backup after
