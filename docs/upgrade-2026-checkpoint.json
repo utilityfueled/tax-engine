@@ -1,4 +1,39 @@
 {
+  "nov15A137LocalAndEicIntake": {
+    "source": "a137b172b328684c04bac3a770ff20d63ea96334",
+    "allTwelveLocalPassed": true,
+    "unitCoverageTestsEach": 28811,
+    "filesEach": 2107,
+    "branchCoverage": "88.14",
+    "browser": {
+      "selected": 645,
+      "passed": 640,
+      "originalSkips": 5,
+      "failed": 0,
+      "workers": 2,
+      "retries": 0,
+      "defaultMs": 30000
+    },
+    "rootReviewSha256": "4ef9c562d29b59c7ae3d2381b1466bd5cc8f3aca005e1e2fd519f3b5a647ce52",
+    "independentIndexSha256": "9212f6f535da5920838e906746476650c487b6824a11b56296e58513f9d47ee3",
+    "remote": {
+      "ci": "passed6jobs",
+      "docker": "passed",
+      "ordinarySelfHost": "passed",
+      "strictContainer": "active-pending-terminal-and-artifact-review"
+    },
+    "laterEicCommit": "5ad7cc79b4ccf0e9cccb7cca725f672b04d24892",
+    "eicFocusedRootTests": 981,
+    "eicMetadataRootTests": 96,
+    "eicIndependentSourceReviewSha256": "73abd9e8a74d1dae38061061fd1cd34a56236b2590a467fd943117dfc80c2dc4",
+    "eicMetadataPeerSha256": "d8d4d0f71f65f5fcb30945aca0409896a2eb0d9106482276e345f00f47a54e3f",
+    "eicActualBrowserQualification": "two-targeted-passes-root-reviewed-original-policy-normal-cleanup",
+    "combinedSourceQualification": "pending",
+    "nextInternalPackage": "guided Worksheet E original facts; canonical method unchanged",
+    "advisorySourceRefresh": "docs/upgrade-2026-source-advisory-refresh-afternoon-20261115.md",
+    "productionGuardReadbackUtc": "2026-11-15T16:54:58.463644+00:00",
+    "releaseQualified": false
+  },
   "nov15Integrated1360TerminalHistory": {
     "source": "1360b9cb4128901dcc8dfa8805393dbbfc203992",
     "previousDynamicStatus": {

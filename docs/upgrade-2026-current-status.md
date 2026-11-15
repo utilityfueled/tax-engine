@@ -1,5 +1,26 @@
 # Current 2026 upgrade continuation
 
+## Active work — November 15, a137 checks and EIC intake
+
+The latest complete local aggregate is `a137b172`: all twelve checks pass,
+including 28,811 unit/coverage tests, 88.14% branches and 640 browser passes/five
+original skips. Root and independent completed-lane reviews pass. Remote CI and
+Docker pass; ordinary self-host passes, with strict runtime-image qualification
+still active at this observation. [Exact evidence](upgrade-2026-integrated-runtime-a137b172-20261115.md).
+
+New main commit `5ad7cc79` adds original EIC petition intake after focused and
+independent review. It needs its own combined runtime qualification; earlier
+results are not attributed to it. The next finite Worksheet E source collector
+is in parallel implementation/review. The saved production-build guard was
+read back again at 16:54 UTC. Main pushes wait only for the active strict run's
+terminal result to avoid canceling it; backup saves continue. Routine rehearsals
+remain authorized. [Fresh sources](upgrade-2026-source-advisory-refresh-afternoon-20261115.md).
+
+All human review, final annual material and accountable security dispositions
+remain required. Filing, model promotion and production release remain closed.
+
+## Earlier November 15 observations
+
 ## Active work — November 15, completed native and remote review
 
 All committed work through `1360b9cb` is pushed to `main` and the remote backup.

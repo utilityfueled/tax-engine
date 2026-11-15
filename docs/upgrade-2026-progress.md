@@ -1,5 +1,23 @@
 # 2026 upgrade implementation evidence
 
+## November 15 a137 local completion and original EIC intake
+
+Exact `a137b172` passes all twelve local checks with separate completed-lane
+reviews: 28,811 unit/coverage tests, 88.14% branches and 640 browser passes/five
+original skips. Remote CI and Docker pass; ordinary self-host passes and strict
+container remains active at this recorded observation. [Evidence](upgrade-2026-integrated-runtime-a137b172-20261115.md).
+
+The separate `5ad7cc79` EIC intake package preserves original petition facts,
+unknown/explicit absence and stale-source invalidation. Root 981 focused plus
+96 metadata tests, types/spec/inventory and independent reviews pass. Its two
+new desktop/mobile production browser cases pass with original policy and normal
+owned cleanup; final combined-source qualification follows.
+[Source package](upgrade-2026-guided-eic-unassessed-petition-20261115.md).
+[Afternoon source refresh](upgrade-2026-source-advisory-refresh-afternoon-20261115.md)
+and [closed build-cache recovery](upgrade-2026-closed-build-cache-recovery-20261115.md)
+retain their bounded evidence. Human review, final forms and security acceptance
+remain open; no filing, model promotion or production release occurred.
+
 ## November 15 completed 1360 native and remote outcomes
 
 Exact application source `1360b9cb` passes all twelve local checks and the

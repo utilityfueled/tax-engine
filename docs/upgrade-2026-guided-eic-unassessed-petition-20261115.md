@@ -13,3 +13,16 @@ The retained first regression loses the complete original proof against the unch
 The new browser source contains exactly two cases,1280px and390px. It types the new source fields visibly, tests reload, unknown/false/stale facts and geometry, and keeps all protected action bounds at zero. Only unrelated existing household/current W2 scaffolding is inserted. Collection is evidence of test source; an actual browser qualification run remains required after integration. No new browser services were started by this package.
 
 This engineering package is not qualified human review, an EIC award, Form8862 completion, support for other pending appeals or contested final bans, 2026 full-return qualification, or filing release authorization.
+
+## Actual targeted production browser check
+
+Exact commit `5ad7cc79` now passes both desktop/mobile journeys in a clean
+managed production build: two passes, no skips, zero retries and the original
+30-second deadline/two workers. Visible estimates, source edits, reload, explicit
+absence, stale confirmation, 2026 denial and private-network assertions pass.
+All four protected action bounds stay zero. Three build observations retain
+immutable files, and the owned server closes normally with its PID absent.
+Root reviews the exact collection/source bindings and both screenshots. This
+is targeted evidence; final combined-source and distribution checks remain.
+Private completed root receipt: `nov15-guided-eic-root-review/actual-browser/ROOT-REVIEW.json`,
+SHA-256 `62953860040adb5cd177faa477f08b36af0756fa9fae3a35775cea4973a16804`.
