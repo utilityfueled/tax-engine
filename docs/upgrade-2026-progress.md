@@ -1,5 +1,11 @@
 # 2026 upgrade implementation evidence
 
+## November 15 PA interest attachment correction
+
+Adopted the separately reviewed seven-file final2025 adjustment-only trigger;
+43 main tests, types,9,223 valid spec references and scoped lint pass.
+[Evidence and unchanged gates](upgrade-2026-pa-interest-attachment-20261115.md).
+
 ## November 15 consolidated checks and main push
 
 Exact `a32a3b10` passes all twelve local checks: 28,555 unit/coverage tests,

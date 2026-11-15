@@ -1,5 +1,9 @@
 # Remaining 2026 upgrade execution checklist
 
+- [x] Correct final2025 PA Schedule A attachment predicate and shared readiness;
+  50 author/55 separate-review/43 adoption tests, types/spec/lint pass.
+  [Evidence](upgrade-2026-pa-interest-attachment-20261115.md). Physical mapping and annual qualification remain separate.
+
 - [x] Exact `a32a3b10`: all twelve local checks, 28,555 tests, 88.10% branches and 632 browser passes/five original skips; normal owned-service cleanup. Owner-approved Vercel production-build restriction saved; all 398 commits pushed and remote `main`/backup verified. [Evidence](upgrade-2026-combined-a32a3b10-checks-20261115.md).
 - [ ] Finish exact-source Preview/ARM64 and remote runtime artifact reviews; separately implement and review remaining finite Ohio, guided election and PA attachment source work.
 

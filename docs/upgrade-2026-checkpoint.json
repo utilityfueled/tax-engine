@@ -1,4 +1,19 @@
 {
+  "nov15PaAttachmentCorrection": {
+    "sourceFreeze": "a462e842d58c816ac7b81f08996ff8ad853f348bc96fd2a473dd6a84cee0c5bc",
+    "adoptedFiles": 7,
+    "authorTests": 50,
+    "independentTests": 55,
+    "mainTests": 43,
+    "typecheckPassed": true,
+    "specReferences": 9223,
+    "lintErrors": 0,
+    "unchangedLintWarnings": 3,
+    "physicalMappingQualified": false,
+    "humanReview": false,
+    "filingQualified": false,
+    "evidence": "upgrade-2026-pa-interest-attachment-20261115.md"
+  },
   "nov15CombinedA32AndMainPush": {
     "sourceHead": "a32a3b10796656d881d0bff042512cdb620710fc",
     "all12LocalChecksPassed": true,

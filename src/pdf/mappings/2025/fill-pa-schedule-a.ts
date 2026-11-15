@@ -1,6 +1,5 @@
 import { mkdir, writeFile } from "fs/promises";
 import { join } from "path";
-import Decimal from "decimal.js";
 import {
   PDFDocument,
   StandardFonts,
@@ -16,7 +15,6 @@ const PAGE_MARGIN = 40;
 const BODY_FONT_SIZE = 10;
 const HEADER_COLOR = rgb(0.16, 0.16, 0.16);
 const WARNING_COLOR = rgb(0.62, 0.19, 0.14);
-const PA_SCHEDULE_A_INTEREST_TRIGGER = new Decimal(2500);
 
 export const PA_SCHEDULE_A_REFERENCE_FILENAME = "pa-schedule-a-reference.pdf";
 
@@ -93,9 +91,12 @@ function formatWholeDollar(value: string) {
   return `$${value}`;
 }
 
-export function shouldIncludePAScheduleAReferenceSummary(result: PAScheduleAResult) {
-  return result.line1.gt(PA_SCHEDULE_A_INTEREST_TRIGGER)
-    || [
+export function shouldIncludePAScheduleAReferenceSummary(
+  result: PAScheduleAResult,
+  residencyStatus?: "resident" | "part_year" | "nonresident",
+) {
+  if (residencyStatus === "nonresident") return false;
+  return [
       result.line2,
       result.line3,
       result.line5,
@@ -117,7 +118,7 @@ export function buildPAScheduleAReferenceSummary(
     title: "Pennsylvania Schedule A Interest Income Reference Summary",
     warningLabel: "REFERENCE SUMMARY ONLY",
     introduction: "This page summarizes the supported Pennsylvania Schedule A interest-income computation. It is not an official PA-40 Schedule A filing copy.",
-    filingTrigger: "Attach when federal taxable interest exceeds $2,500 or when any Pennsylvania Schedule A adjustment line applies.",
+    filingTrigger: "Attach for a resident or part-year resident when any Pennsylvania Schedule A adjustment line applies. Ordinary interest alone does not require this attachment under the final 2025 instructions.",
     totals: [
       { label: "Line 1 federal taxable interest income", value: result.line1.toString() },
       { label: "Line 2 tax-exempt interest included federally", value: result.line2.toString() },

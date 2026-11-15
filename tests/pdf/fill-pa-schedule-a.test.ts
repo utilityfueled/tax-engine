@@ -89,6 +89,9 @@ describe("Pennsylvania Schedule A packet reference summary", () => {
 
     try {
       const taxInput = makePennsylvaniaResidentReturn("3000");
+      const original = taxInput.form1099Int[0];
+      if (!original) throw new Error("Actual interest original missing");
+      original.earlyWithdrawalPenalty = "125";
       const federalResult = calculateFederalTax(taxInput);
       const result = {
         ...federalResult,

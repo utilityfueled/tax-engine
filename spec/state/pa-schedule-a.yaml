@@ -28,25 +28,31 @@ packetRules:
   packetBehavior: "reference-summary-pdf"
   includeWhen:
     - "A Pennsylvania resident return packet is being assembled and the resident orchestrator computes Schedule A"
-    - "The official Pennsylvania interest-income filing trigger is met: taxable interest exceeds $2,500 or any amount appears on Schedule A Lines 2, 3, 5, 6, 7, 8, 11, 12, 13, 14, or 15"
+    - "The official Pennsylvania interest-income filing trigger is met: any nonzero amount appears on Schedule A Lines 2, 3, 5, 6, 7, 8, 11, 12, 13, 14, or 15"
   suppressWhen:
     - "No Pennsylvania resident return packet is being assembled"
-    - "Schedule A exists only as a zero-adjustment resident computation with taxable interest of $2,500 or less"
+    - "Schedule A exists only as a zero-adjustment resident computation, regardless of the interest amount"
   notes: |
-    The Pennsylvania Personal Income Tax Guide says PA-40 Schedule A is
-    required when taxable interest income is more than $2,500 or when any
-    adjustment amount appears on Lines 2, 3, 5, 6, 7, 8, 11, 12, 13, 14, or
-    15. Until an official PA-40 Schedule A PDF filler exists, the packet path
+    The final 2025 PA-40 Schedule A printed form and instructions (PDF pages
+    1 and 3) require the attachment when any adjustment amount appears on
+    Lines 2, 3, 5, 6, 7, 8, 11, 12, 13, 14, or 15. Ordinary interest alone
+    has no $2,500 attachment threshold in these year-specific instructions.
+    Resident and part-year residents follow this rule; nonresidents do not
+    submit Schedule A. Separate spouse schedules and joint ownership rules
+    must be respected before any future physical packet qualification. Until an official PA-40 Schedule A PDF filler exists, the packet path
     emits `pa-schedule-a-reference.pdf` as a reference summary only. Packet
     disclosures must therefore keep Pennsylvania packet completeness partial
     whenever this reference summary is attached.
 
 businessRuleValidation:
+  - rule: "pa-schedule-a-2025-adjustment-only-trigger"
+    description: "The final2025 attachment rule has no ordinary-interest threshold. Every actual adjustment line independently triggers the reference attachment, including a nonzero negative adjustment; subtotal-only values do not. Nonresident status suppresses the attachment, including when federal-to-PA nonresident adjustments exist. Rendering and readiness share the same predicate."
+    testRef: "tests/pdf/pa-schedule-a-2025-trigger.test.ts::final2025 adjustment-only attachment rule"
   - rule: "pa-schedule-a-reference-packet"
     description: "Inventory support counts the Pennsylvania Schedule A packet path as validated only when fillReturn emits `pa-schedule-a-reference.pdf` whenever the official Schedule A filing trigger is met."
     testRef: "tests/pdf/fill-pa-schedule-a.test.ts::fillReturn includes the Pennsylvania Schedule A reference summary when the resident return meets the official filing trigger"
   - rule: "pa-schedule-a-reference-suppression"
-    description: "Inventory support counts the Pennsylvania Schedule A suppression rule as validated only when regression coverage proves fillReturn omits the reference summary for resident returns with taxable interest of $2,500 or less and no Schedule A adjustments."
+    description: "Inventory support counts the Pennsylvania Schedule A suppression rule as validated only when regression coverage proves fillReturn omits the reference summary for resident returns with no Schedule A adjustments, regardless of ordinary interest amount."
     testRef: "tests/pdf/fill-pa-schedule-a.test.ts::fillReturn suppresses the Pennsylvania Schedule A reference summary when the official filing trigger is not met"
   - rule: "pa-schedule-a-reference-disclosure"
     description: "Inventory support counts the Pennsylvania Schedule A packet disclosure as validated only when readiness regression coverage keeps packet completeness partial while only the Schedule A reference summary is available beyond PA-40."

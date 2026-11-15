@@ -251,7 +251,7 @@ describe("assessReturnReadiness", () => {
           payer: "Keystone Bank",
           interestIncome: "3000",
           federalWithheld: "0",
-          earlyWithdrawalPenalty: "0",
+          earlyWithdrawalPenalty: "125",
           usSavingsBondInterest: "0",
           taxExemptInterest: "0",
         },

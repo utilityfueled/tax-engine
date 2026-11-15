@@ -1390,7 +1390,11 @@ export async function fillReturn(
 
     if (
       hasPAScheduleA(result.stateReturns.pennsylvania)
-      && shouldIncludePAScheduleAReferenceSummary(result.stateReturns.pennsylvania.scheduleA)
+      && shouldIncludePAScheduleAReferenceSummary(
+        result.stateReturns.pennsylvania.scheduleA,
+        "residencyStatus" in result.stateReturns.pennsylvania
+          ? result.stateReturns.pennsylvania.residencyStatus : undefined,
+      )
     ) {
       const outputPathPAScheduleA = await fillPAScheduleAReference(
         result.stateReturns.pennsylvania.scheduleA,

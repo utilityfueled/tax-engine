@@ -1,3 +1,4 @@
+import { shouldIncludePAScheduleAReferenceSummary } from "@/pdf/fill-pa-schedule-a.js";
 import {hasSavedForm2210Review,type SavedForm2210Review} from '@/pdf/form-2210-review-context.js';
 import {isPAMarriedOrdinaryReturnResult} from '@/engine/state/pa-return-result.js';
 import type { TaxYearInput } from "@/models/inputs.js";
@@ -214,20 +215,10 @@ function shouldIncludePAScheduleAReference(
     { scheduleA?: unknown }
   >["scheduleA"]> },
 ) {
-  return pennsylvaniaReturn.scheduleA.line1.gt(2500)
-    || [
-      pennsylvaniaReturn.scheduleA.line2,
-      pennsylvaniaReturn.scheduleA.line3,
-      pennsylvaniaReturn.scheduleA.line5,
-      pennsylvaniaReturn.scheduleA.line6,
-      pennsylvaniaReturn.scheduleA.line7,
-      pennsylvaniaReturn.scheduleA.line8,
-      pennsylvaniaReturn.scheduleA.line11,
-      pennsylvaniaReturn.scheduleA.line12,
-      pennsylvaniaReturn.scheduleA.line13,
-      pennsylvaniaReturn.scheduleA.line14,
-      pennsylvaniaReturn.scheduleA.line15,
-    ].some((line) => !line.isZero());
+  return shouldIncludePAScheduleAReferenceSummary(
+    pennsylvaniaReturn.scheduleA,
+    "residencyStatus" in pennsylvaniaReturn ? pennsylvaniaReturn.residencyStatus : undefined,
+  );
 }
 
 function shouldIncludePAScheduleBReference(

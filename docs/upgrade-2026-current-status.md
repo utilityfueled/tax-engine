@@ -1,5 +1,13 @@
 # Current 2026 upgrade continuation
 
+## November 15 PA interest attachment correction
+
+Final2025 ordinary interest alone no longer creates an unnecessary Schedule A
+attachment. Resident/part-year adjustments and nonresident suppression now agree
+between rendering and readiness. Separate engineering review passed55 tests;
+main adoption passed43 plus types/spec/lint. [Source and limits](upgrade-2026-pa-interest-attachment-20261115.md).
+Physical mapping, human/2026/filing gates remain separate.
+
 ## November 15 consolidated checks and main push
 
 Exact `a32a3b10` passes all twelve local checks: 28,555 unit/coverage tests,
