@@ -1,5 +1,12 @@
 # 2026 upgrade implementation evidence
 
+## November 15 compatible image-fix refresh
+
+Official image pins remain current; fourteen primary Debian package tables
+provide no new compatible same-suite fix for the saved High/Critical findings.
+Custom remediation still needs engineering and qualification; findings remain
+unaccepted. [Evidence](upgrade-2026-advisory-refresh-20261114.md).
+
 ## November 15 future K1 source years
 
 Future original K1 years now reject before confirmed effects while prior fiscal

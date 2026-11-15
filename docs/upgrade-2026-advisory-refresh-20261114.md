@@ -101,3 +101,28 @@ Evidence is ignored `nov15-root-package-audit/receipt.json`, SHA-256
 findings or supply their missing accountable security decision owner, human
 review or acceptance. The existing November 15 18:30 UTC recheck boundary and
 qualification gates remain unchanged.
+
+## November 15 compatible image-fix refresh
+
+At 06:31–06:34 UTC, the official Node 26.13.1 Trixie and PostgreSQL
+16.16 Bookworm indexes remain identical to the checked pins. PostgreSQL 16
+still resolves to 16.16. Fourteen live Debian source-package tables retain
+vulnerable status for all saved application High Debian rows (56 matches,
+17 IDs) and stock PostgreSQL High/Critical Debian rows (112 matches, 39 IDs
+per architecture). This is a read-only comparison against saved scans, not a
+new current-source image build or a refresh of every lower-severity status.
+
+No new compatible same-suite fix was identified. Existing zlib and infocmp
+mitigations are delivered. Previously studied Trixie and Alpine alternatives
+remain comparisons. A custom libxml2 backport and rebuilt gosu still need
+native AMD64 qualification, specific vulnerability reproducer, XML consumer
+conformance and a named maintenance owner; that work is engineering as well
+as a security decision. No image, package, threshold or acceptance changed.
+The November 15 18:30 UTC recheck boundary remains unchanged.
+
+Ignored `nov15-image-remediation-refresh/REVIEW.json` SHA-256 is
+`b4c4ed1d2b4c8da1d5dd6c58f040c981d7a076691448db0133cab7664e6008a0`;
+its manifest retains exact official registry responses, primary package pages
+and saved-scan bindings. Root verified every manifest pin. Primary sources:
+[Debian security tracker](https://security-tracker.debian.org/tracker/) and
+[official PostgreSQL image versions](https://github.com/docker-library/postgres/blob/master/versions.json).

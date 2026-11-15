@@ -1,4 +1,16 @@
 {
+  "nov15CompatibleImageFixRefresh": {
+    "base": "55f4bcc7",
+    "review": "b4c4ed1d2b4c8da1d5dd6c58f040c981d7a076691448db0133cab7664e6008a0",
+    "primaryPackages": 14,
+    "appHighRows": 56,
+    "stockPgDebianHighCriticalRowsPerArchitecture": 112,
+    "newCompatibleSameSuiteFix": false,
+    "riskAccepted": false,
+    "engineeringRemaining": "Customlibxml2/gosuAMD64/reproducer/XMLconformance/maintenance;currentfinalimagequalification",
+    "recheckByUtc": "2026-11-15T18:30:00Z",
+    "evidence": "docs/upgrade-2026-advisory-refresh-20261114.md"
+  },
   "nov15ConfirmedK1FutureYears": {
     "base": "5a06251b",
     "freeze": "0e4d1a9ec191ff345a0bf9f2ca050c7d3a00bed9ae0a9366535d25fe6df12bbc",
