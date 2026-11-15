@@ -1,4 +1,22 @@
 {
+  "nov15TrainingGuideSpecReferenceFormat": {
+    "sourceWithFullUnitFailure": "23494de5",
+    "fullUnitPassed": 28855,
+    "fullUnitFailed": 1,
+    "fullCoveragePassed": 28855,
+    "fullCoverageFailed": 1,
+    "independentQuoteReviewSha256": "1404d993e3295b61a0e9218f64373437a2bb327eaec960d2629b10854a575eb2",
+    "failure": "existing spec-reference validator quote-format discovery",
+    "ownedDatabaseStoppedNormally": true,
+    "quoteOnlyScalarChanges": 11,
+    "parsedYamlValuesPreserved": true,
+    "applicationAndTestsAndValidatorUnchanged": true,
+    "rootFocusedTests": 957,
+    "rootSpecReferences": 9385,
+    "inventoryCheck": "passed unchanged",
+    "combinedSourceQualification": "pending fresh run",
+    "releaseQualified": false
+  },
   "nov15ResidentFreshFederalMaterialComparison": {
     "baseApplication": "8cc5b0ec",
     "canonicalImplementationExpressionsChanged": 1,

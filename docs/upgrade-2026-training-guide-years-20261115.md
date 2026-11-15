@@ -53,3 +53,21 @@ No services, provider calls or VM operations occur in this source package.
 Full combined-source and distribution checks follow; earlier runtime evidence
 remains bound to its named application commit. Qualified human review, final
 annual forms, strict Linux failures and security/release acceptance remain open.
+
+## Full-suite spec-reference correction
+
+The exact `23494de5` full unit and coverage runs each retained 28,855 passes
+and one failure:
+`validate-testrefs.test.ts` could not discover this spec's references because its
+existing parser requires double-quoted line and testRef scalars. The earlier
+YAML-aware spec command accepted the same values. The failed run and its normal
+owned PostgreSQL shutdowns remain recorded; neither is an all-twelve pass.
+
+The correction changes only eleven scalar quote styles in the spec, preserving
+all parsed values, source authority, formulas and five test references. The
+existing validator and every application/test implementation remain unchanged.
+Root then passes 957 tests across the reference-validator and training-guide
+files, all 9,385 spec references and the unchanged inventory check. Independent
+parsed-value/reference review passes (`1404d993…`); it also verifies
+the unchanged validator and all five actual target names. A fresh combined-source
+run follows.

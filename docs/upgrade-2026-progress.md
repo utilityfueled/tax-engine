@@ -1,5 +1,16 @@
 # 2026 upgrade implementation evidence
 
+## November 15 full-suite spec-reference correction
+
+The pushed `23494de5` unit and coverage runs each find one spec-format discovery
+failure alongside 28,855 passes; normal owned database shutdowns are verified.
+The correction quotes the new training-guide spec's eleven scalars in the existing validator's format,
+with parsed YAML values and all tests/validators unchanged. Root passes 957
+focused tests, 9,385 references and the inventory check; independent review
+verifies exact parsed-value equality and all five references. Other original lanes
+retain their own outcomes; fresh combined-source qualification follows.
+[Training-guide evidence](upgrade-2026-training-guide-years-20261115.md).
+
 ## November 15 resident complete-federal comparison work
 
 A separately reviewed one-expression change replaces the temporary full-federal
