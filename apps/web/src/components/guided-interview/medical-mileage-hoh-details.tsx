@@ -10,7 +10,7 @@ export function MedicalMileageHohDetails({ data, onChange }: {
         return <button type="button" onClick={() => onChange(newMedicalMileageHohDraft())}>Add head-of-household originals</button>;
     const edit = (patch: Partial<MedicalMileageHohDraft>) => onChange({ ...data, ...patch });
     const person = (owner: 'primary' | 'child') => <>{(['firstName', 'lastName', 'ssn', 'dateOfBirth'] as const).map(field => <TextFact key={field} type={field === 'dateOfBirth' ? 'date' : 'text'} label={`Original ${owner} ${{ firstName: 'first name', lastName: 'last name', ssn: 'taxpayer ID', dateOfBirth: 'birth date' }[field]}`} value={data[owner][field]} onChange={value => edit({ [owner]: { ...data[owner], [field]: value } })}/>)}</>;
-    return <section aria-label="Original head-of-household evidence">
+    return <section aria-label="Original head-of-household evidence" style={{ gridColumn: '1 / -1' }}>
   <h5>Original head-of-household evidence</h5><p>For this route only: your unmarried biological child under 19 lived in the same home for more than half the year. This does not add the child’s medical costs. Use your original household worksheet; omit medical details from its reference.</p>
   <TextFact label="Household source tax year" value={data.taxYear} onChange={taxYear => edit({ taxYear })}/>
   <TextFact label="Private household source reference" value={data.sourceReference} onChange={sourceReference => edit({ sourceReference })}/>

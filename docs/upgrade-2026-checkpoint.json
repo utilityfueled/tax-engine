@@ -1,4 +1,17 @@
 {
+  "nov15HohGridLayout": {
+    "base": "19a6134b7c72cbd2b6cbacf7579d8a171596c2ee",
+    "scope": "One household section spans full guided grid row; no tax/facts/privacy/readiness change",
+    "actualProductionRED": "1desktopfailure/1mobilepass",
+    "actualProductionGREEN": "2pass;46pxselectbothviewports;keyboardTabpass;normalcleanup",
+    "affectedModelEngineTests": 9,
+    "guidedSpecReferenceChecks": 941,
+    "candidateFreeze": "2e00695efa8ddef33e7f11b19ca55a04032ce1d87f58323c471ebc8958bafde1",
+    "rootEngineeringReview": "72c665a08cd2a1e6a150d0e906474c102db10a7e2fbd33b439f122116336d26a",
+    "browserPolicies": "30s/0retry/alloriginalbudgetsandskipsunchanged;twochangedsourcehashesanddiagnosticbindingonly",
+    "evidence": "docs/upgrade-2026-hoh-grid-layout-20261115.md",
+    "remaining": "Combined/current-runtimequalificationandhuman/final2026gatesremain"
+  },
   "nov15NativeArchiveShortRoot": {
     "actualFailureSource": "8ab7ff49f8ad2f9ec18bda1f8105e162e66e88df",
     "actualPodmanInfoExit": 125,

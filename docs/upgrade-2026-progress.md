@@ -1,5 +1,13 @@
 # 2026 upgrade implementation evidence
 
+## November 15 household evidence layout
+
+A real desktop-browser regression exposed a stretched medical confirmation select.
+A full-row household section now passes both existing desktop/mobile cases,
+including keyboard checks; nine affected tests and 941 guided/spec references
+pass. Facts, calculations and original browser policies are unchanged.
+[Evidence](upgrade-2026-hoh-grid-layout-20261115.md).
+
 ## November 15 native archive path correction
 
 Actual retained AMD64 diagnostics identify Podman's 50-character runroot limit.

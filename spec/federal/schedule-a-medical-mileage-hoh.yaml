@@ -29,6 +29,7 @@ notes:
   - "This validates only the new mileage source cohort, not general HOH eligibility for every older calculation."
   - "No spouse, parent-away, married-considered-unmarried, competing claimant, custody/release, temporary absence, born/died, adoption/foster, disability/student-age exception or other patient method."
   - "All examples are synthetic independently derivable cases; no published HOH medical example is claimed."
+  - "Guided household evidence occupies the full parent grid row, keeping adjacent confirmation selects at normal height and keyboard accessible at desktop and mobile widths. The two existing guided-medical-mileage-hoh browser cases exercise this layout without changing original facts, privacy, annual gates or calculations."
 lines:
   - line: "1-HOH-originals"
     description: "Bind the ordinary qualifying-child household and actual eligible home-upkeep worksheet"
