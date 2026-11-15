@@ -1,4 +1,18 @@
 {
+  "nov15W3cCompileFailureAndRecovery": {
+    "operation": "f113493259b120d66d0c44cf",
+    "compileExit": 2,
+    "corpusCasesExecuted": 0,
+    "compileSuccessGate": 0,
+    "recoveryCommandsPassed": 41,
+    "normalStopAndResourcesAndRoutesRestored": true,
+    "initialImagesPreserved": 31,
+    "receipt": "8f78cc79f05dc44669c1377b9df5cb5ff0ced2a36a218f0f410eadba144402ba",
+    "independentActualPeer": "256de500a0efd5f1d6b3fde926aefe478f32b3bf66ba7cb95d6365f79ebc959f",
+    "selinuxCauseProven": false,
+    "successorSourceReviewPending": true,
+    "releaseReady": false
+  },
   "nov15Amd64ExplicitImageCleanup": {
     "base": "63017fc3",
     "firstActualRun": 43695617103,

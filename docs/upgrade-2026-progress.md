@@ -6118,3 +6118,13 @@ Root15 focused tests, related63 tests, eight independent lifecycle controls and
 12 spec references pass. The failed artifact is retained; ancestor pruning is a
 supported explanation, not a proven raw-error diagnosis. Actual successor
 qualification remains pending. [Run and review](upgrade-2026-amd64-backports-workflow-20261115.md).
+
+### November 15: retain failed W3C compile and restore isolated VM
+
+Fresh external-conformance toolchain construction passes; harness compilation
+exits2 before any corpus case. Strict compile-success and cleanup gates retain
+the failure. A separately reviewed exact recovery preserves private forensics,
+passes41 bounded commands, preserves all31 initial images and normally restores
+the stopped VM/resources/routes. Independent source and actual restoration reviews
+pass. External W3C comparison and qualified security acceptance remain pending.
+[Exact failure and cleanup](upgrade-2026-postgres-libxml2-native-20261114.md).

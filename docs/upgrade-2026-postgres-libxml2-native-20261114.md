@@ -136,3 +136,35 @@ Private evidence is `.local/upgrade-evidence/nov14-pg-libxml2-tracked-builder/ex
 | New candidate image ID | `43ee8fd968f0ca07f07b1fd5592dbe99a41b49f79038a9b630cd45c43dff2a9d` |
 | Loaded libxml2 provider | `af1bde0a68f9454df32e838e763f500251495e21a6556dc9c959aa61f6f99b23` |
 | Independent actual tracked-entry review | `c3fb8dafdfd91da9ec1b82c3aa7e0f8d813d6fe67a55dd49228a86af6c07d832` |
+
+## November 15: external W3C harness remains unexecuted
+
+The bounded external W3C comparison is still pending. Earlier attempts stopped
+at boot-daemon custody checks before guest work. A reviewed successor correctly
+recognizes the exact persistent boot daemons while preserving process ownership,
+argument values and uncertainty checks. Its actual operation
+`f113493259b120d66d0c44cf` boots normally and builds the fresh toolchain, then the
+harness compile container exits 2: `/bin/sh: 0: cannot open /build.sh: Permission denied`.
+No corpus case runs. The compile-success gate still requires exit zero. The
+original cleanup refuses this unexpected compile status and leaves a recorded
+recovery requirement rather than silently accepting it.
+
+A separately reviewed 600-second recovery admits only that exact stopped,
+non-OOM exit-2 container. All 41 commands complete normally. It retains private
+container and compiler/package evidence before removing the one stopped
+container, two newly imported/built images and exact owned guest directory.
+All 31 initial images remain; normal VM stop, original CPU/memory, default
+connection and socket routes are restored without force. Actual observations
+show enforcing SELinux with `user_home_t` labels on the three bind sources. These
+observations support investigating container bind-label access; they do not
+prove the precise denial mechanism. Unprivileged case-file permissions also need
+source review before a successor. There is no W3C conformance or security
+acceptance claim.
+
+Private recovery receipt:
+`8f78cc79f05dc44669c1377b9df5cb5ff0ced2a36a218f0f410eadba144402ba`;
+independent source review:
+`b1a218fbe1a8f295cd743f98c47dffc5a18f488cc0828d2381c63465fd67782d`;
+independent actual restoration review:
+`256de500a0efd5f1d6b3fde926aefe478f32b3bf66ba7cb95d6365f79ebc959f`.
+All prior failure receipts remain retained and separate from successful cleanup.
