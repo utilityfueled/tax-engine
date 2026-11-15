@@ -1,5 +1,14 @@
 # 2026 upgrade implementation evidence
 
+## November 15 exact 19a runtime results and remaining failures
+
+All twelve exact-source local checks, protected Preview and ARM64 recovery/browser
+rehearsals pass with verified cleanup. Remote CI and Docker pass; native AMD64
+archive import now passes, while its browser lane retains 29 failures. Detailed
+source/artifact boundaries, unaccepted advisories and original failures are
+[recorded together](upgrade-2026-combined-19a6134b-20261115.md). Later source
+packages require their own combined qualification.
+
 ## November 15 RRTA text parser efficiency
 
 The saved-PDF privacy scanner reuses exact same-reader parses within one inspection

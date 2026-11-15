@@ -1,5 +1,39 @@
 # External actions needed to finish the 2026 upgrade
 
+## Current external inputs — November 15
+
+| Input still needed | Specific review material and deliverable |
+| --- | --- |
+| Qualified independent tax reviewers | Derive and record independent worksheets, authority, findings and dated decisions for the [original nine-case assignment](upgrade-2026-nov14-human-tax-review.md), [five-method supplement](upgrade-2026-human-tax-five-method-supplement-46a95320.md), [AI/partial-interest source supplement](upgrade-2026-human-ai-partial-supplement-8a31d8ae.md) and [state/guide supplement](upgrade-2026-human-state-guide-supplement-e014f390.md), including their linked earlier packets. All human assignments remain unfilled. |
+| Independent AI case and output reviewers | Review the 240 draft cases and their source, monetary/date, answerability, grounding and safety labels; preserve the 160/80 partition and provenance. Then run the separately required repeated qualification described in the [executor guide](ai-evaluation-executor.md). |
+| Independent security/privacy reviewer and accountable advisory owner | Review exact artifacts and staging evidence; record findings, remediation or evidence-backed acceptance, owner and expiry against the [advisory ledger](upgrade-2026-advisory-refresh-20261114.md). Earlier scan counts and agent reviews supply no acceptance. |
+| Google project/model access | Establish authorized project access for the selected Gemini profile and available baseline through a secure configuration path. [Public pricing/catalog observations](upgrade-2026-provider-refresh-20261115.md) do not establish Google entitlement or generation qualification. |
+| Applicable final 2026 annual material | Obtain each required published revision, then pin and qualify the maps, transfers and enabled scenarios. The [bounded official recheck](upgrade-2026-official-annual-20261115.md) does not establish global absence or qualify drafts. |
+
+These inputs do not replace unfinished engineering. Final-source managed,
+hosted/native and scenario checks, remaining source-settled methods and later
+qualified AI execution continue under their existing boundaries. Routine bounded
+isolated rehearsals are authorized; no repeated setup approval follows from this
+table. Filing, model promotion and production release remain closed.
+
+OpenAI access and aggregate cost reconciliation are already evidenced. Keep the
+unknown $0.022384 reservation in the $0.29423670 known-plus-held exposure; a
+final invoice is not required for the [current aggregate reconciliation](upgrade-2026-provider-cost-reconciliation-20261114.md).
+The hold does not itself exhaust the authorized budget. The main push hold was
+resolved as recorded below. Dated entries retain their historical source and
+authority boundaries; they do not reimpose resolved access, invoice or push gates.
+
+## November 15 exact 19a consolidated results
+
+All twelve local checks, four actual protected Preview journeys plus 48 canonical
+probes, and the ARM64 archive/recovery/browser rehearsal pass with verified
+cleanup. Remote CI and Docker pass. AMD64 native fresh-store archive import now
+passes; its browser lane retains 29 failures, including two four-second saved-PDF
+scanner deadlines. The separate source fixes and performance investigation
+continue. [Exact evidence and limits](upgrade-2026-combined-19a6134b-20261115.md).
+The latest application rescan retains 56 unaccepted High findings. None of this
+supplies qualified tax, independent AI-label or human security approval.
+
 ## November 15 state and guided-original human handoff
 
 A [35-file/five-decision supplement](upgrade-2026-human-state-guide-supplement-e014f390.md)
@@ -29,14 +63,14 @@ and independent remote read verify `a32a3b10` on main and the backup branch.
 All 398 commits are saved remotely. Production was not deployed. Later dated
 entries below retain their original authority and evidence boundaries.
 
-## November 15 current execution and remaining external evidence
+## Historical November 15 execution before the main push
 
-All 396 local commits through `8a31d8ae` are saved on the public
-[backup branch](https://github.com/utilityfueled/tax-engine/tree/codex/2026-upgrade-backup-20261114).
-Remote main remains at the PR13 merge; automatic production builds are still
-configured and the owner's production push hold remains. The pending proposal
-to disable those builds has not been approved or executed. No production action
-is inferred from backup pushes or isolated rehearsals.
+At this historical checkpoint, all 396 local commits through `8a31d8ae` were
+saved on the public [backup branch](https://github.com/utilityfueled/tax-engine/tree/codex/2026-upgrade-backup-20261114).
+Remote main was still at the PR13 merge, with automatic production builds
+configured and the owner's push hold active. The proposal to disable those builds
+was then pending. The later main-push entry above supersedes that authority
+status; no production action is inferred from either backup or main pushes.
 
 Exact `e719e3fe` passes all twelve local checks: 28,538 unit/coverage tests,
 88.10% branches and 632 browser passes/five unchanged hosted skips. Its remote
@@ -227,7 +261,7 @@ the linked ledgers; the owner is not being asked to choose a preferred answer.
 | Reduced deduction containing both employee and business tips | [Tip attribution decision](upgrade-2026-mixed-tips-method-decision.md) records the shared cap/MAGI question and the downstream QBI effect. Supply the allocation and rounding method for the final reduced deduction; no employee-first, business-first or proportional convention has been invented. |
 | Reduced joint education-bond exclusion attributable to two educators | [Education decisions](upgrade-2026-education-method-decisions.md) distinguish actual interest ownership from attribution of a reduced joint exclusion. Supply the owner-specific reduction method and rounding authority. |
 | Equal partition of an actual community savings bond into separate successor bonds | [Community bond investigation](upgrade-2026-community-bond-method-decision.md) records the actual ownership/payment contract, current official sources and unresolved section 454 treatment. Establish recognition, successor basis and operative state-law conditions; do not infer zero recognition from unchanged wealth or invent two purchase payments. |
-| Broader Coverdell account disqualification events | The same [education decisions](upgrade-2026-education-method-decisions.md) identify partial pledge, positive expenses and later account activity. Resolve each specific event/basis/expense interaction before its source routing is implemented. The existing whole-account, zero-expense case does not answer those questions. |
+| Broader Coverdell account disqualification events | The [education decisions](upgrade-2026-education-method-decisions.md) retain partial pledge, positive expenses and broader activity questions. The finite January 1 whole-account conversion to a domestic primary-beneficiary bank account with separately sourced interest is delivered [canonically](upgrade-2026-coverdell-bank-interest-20261114.md) and in [guided intake](upgrade-2026-guided-coverdell-bank-interest-20261114.md). Other event/basis/expense interactions still need their specific source treatment and implementation; the finite delivery does not resolve them. |
 | Two-owner health deduction when a joint 2025 advance-credit repayment cap binds | [Owner-income source ledger](upgrade-2026-marketplace-owner-income-work.md) retains the two different owner-limit results from the same joint repayment. Supply the rule assigning capped repayment to the owners before their separate earned-income limits. |
 
 The narrower rows also require a distinction between an unfinished method and
@@ -236,7 +270,7 @@ implemented behavior awaiting tax review. The current source audit confirms:
 | Current status | Exact treatment needing qualification or implementation |
 | --- | --- |
 | Delivered route with residual source-proof question | The Form 8962 living-apart HOH route is implemented. Its policy/counterparty identity is bound, but a separate taxpayer spouse object is checked only when present. The stronger HOH spouse-proof requirement remains a qualification question. |
-| Guarded source methods | Situation 2 months covering only one family; K-1 foreign tax with a basis shortfall and later release/payment-year treatment; joint/community insolvency and attribute allocation; compared joint or equal-AGI EIC filers and a nonclaiming parent at or above the filer's AGI; and Schedule AI special capital methods, including special rates, §1202 and Form 4952 elections. Confirmed ordinary Schedule AI dividends and net capital gains are implemented and awaiting human review. |
+| Guarded source methods and finite deliveries | Situation 2 months covering only one family; K-1 foreign tax with a basis shortfall and later release/payment-year treatment; joint/community insolvency and attribute allocation; and compared joint or equal-AGI EIC filers and a nonclaiming parent at or above the filer's AGI retain their specific source-method boundaries. Schedule AI ordinary preferential income, finite [28%/section 1250 sources](upgrade-2026-schedule-ai-special-gains-20261114.md), [four-original Form 4952 elections](upgrade-2026-schedule-ai-investment-election-20261114.md) [current-paid partial interest](upgrade-2026-schedule-ai-partial-interest-20261115.md), and the finite [primary-owned joint household](upgrade-2026-mfj-investment-household-20261115.md) with [actual guided originals](upgrade-2026-guided-mfj-household-20261115.md) are delivered within their stated cohorts and await qualified human review. Broader carry, refund/reclassification, other-expense and household methods, §1202 and other special methods remain separately gated. A software rejection is engineering backlog unless its specific controlling source treatment is genuinely unresolved; it is not automatically a ruling or credential blocker. |
 | Qualified-statement condition already implemented | A partnership route without Form 1116 requires an actual Schedule K-3 qualified statement. A bare Form 1065 K-1 does not qualify; the old question must not imply it is accepted. |
 | Implemented foreign-income conventions requiring review | The 30-percent Form 2555 calculation remains after allocated half-SE and includes guaranteed payments. The separate expense/FEIE attribution and signed line 45 defects were corrected in `5293f451`. Foreign-plan health/retirement deductions passed to QBI still need the stated full-versus-foreign-share interpretation review. The domestic-F-only health method in `80ee9cc2` conserves signed C income and proves F-specific foreign zero. The interview now originates a narrow ordinary federal-only Box 7 cash farm in `b8247aaa`. The full Form 7206 and other farm scenarios still require their matching actual records. |
 | Other implemented conventions requiring review | A higher-AGI nonparent claiming no child benefit does not displace the filer. Earlier Schedule AI periods use actual cumulative Schedule 1-A deduction amounts without annualizing that adjustment. The section 1341 claim-of-right comparison uses refund minus amount owed after credits/payments. Schedule AI's $400 test uses net earnings. These are existing calculations, not missing credentials or absent collectors. |
@@ -265,8 +299,9 @@ actual result or a review reference; leave missing reviews explicitly pending.
 Do not populate approval fields merely to make a readiness check pass.
 
 The owner authorizes bounded isolated Preview and native rehearsals and their
-ordinary reruns and cleanup. The public repository's local `main` commits stay
-local while automatic production deployments are enabled. Versioned artifact
+ordinary reruns and cleanup. The earlier main-push hold was resolved by the
+owner-authorized production-build setting change and subsequent push recorded
+above; historical entries below retain their original scope. Versioned artifact
 publication, filing enablement and model promotion still require qualification
 and applicable explicit authorization. The approved live provider testing limit
 and the isolated Redis limits continue to apply.
@@ -307,13 +342,14 @@ stopped-state custody and host/guest capacity before its persistent 80→384 GiB
 growth and single fourth boot/normal-stop pair, sharing 270 minutes including
 cleanup. Permission to stop the default VM does not supply a repeated test boot.
 
-The independent human tax, AI-case and security/privacy reviewers remain
-unassigned. Final provider settlement or authoritative cost-status for the
-0.022384 USD AI reserve, complete final 2026 forms, advisory ownership/acceptance
-and artifact-specific hosted/native qualification remain open. The source
-research and review packets are prepared; no owner tax-math choice or new
-provider key is requested. Passing agent reviews or local checks cannot supply
-those external facts.
+This historical November 6 checkpoint recorded independent human tax, AI-case
+and security/privacy reviews as unassigned, together with a provider-settlement
+condition for the 0.022384 USD reserve, final 2026 forms, advisory ownership and
+artifact-specific qualification. The later [itemized aggregate reconciliation](upgrade-2026-provider-cost-reconciliation-20261114.md)
+supersedes that invoice/settlement condition: current aggregate reconciliation
+passes, while the unknown attempt remains reserved until exact attribution is
+available. Human reviews, final forms and artifact/advisory qualification retain
+their separate requirements. No owner tax-math choice or new OpenAI key is needed.
 
 ### November 13 on local `main`
 

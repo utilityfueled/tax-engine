@@ -1,4 +1,35 @@
 {
+  "nov15Combined19aActual": {
+    "source": "19a6134b7c72cbd2b6cbacf7579d8a171596c2ee",
+    "all12LocalChecks": "PASS;28624unit+coverage/2088files;88.09branches;636browserPASS5originalSKIP0retry",
+    "localRootAdoption": "96978e41c46cbb58b0c3502231f69c34e092c058f47259c01df2e472186fcd65",
+    "protectedPreview": "4UI48canonicalPASS;cleanupPASS;866conservativebound/1310",
+    "previewRootReview": "71e3528379f0944787853005e6d77a2d877a217b3595d1ab5bfa338e4f627e3c",
+    "arm64": "24stages6Composephases641cases=636PASS5originalSKIP;independentarchive;normalstop/routes/resourcesrestored",
+    "armRootAdoption": "a20d3ceb9fc70c0a43160ace1b310b5c4451c300a0abeada63b6f57e6a6ea9f9",
+    "remoteCI": 43675599297,
+    "remoteCISixJobs": "SUCCESS",
+    "remoteDocker": 43675599351,
+    "remoteDockerStatus": "SUCCESS",
+    "remoteWeb": 43675599323,
+    "remoteWebStatus": "FAILURE",
+    "remoteSelfhost": "634PASS2RRTA4sFAIL5SKIP;default90s",
+    "remoteNative": "607PASS29FAIL5SKIP;27overall30s+2RRTA4s",
+    "remoteNativeArchiveRecoveryCleanup": "PASS",
+    "remoteTerminalReceipt": "0a05a08721bc0b3fd700e99feca759ed86a10e7efab894359203f7f097b5dd84",
+    "freshSameSbomFindings": {
+      "Critical": 0,
+      "High": 56,
+      "Medium": 61,
+      "Low": 17,
+      "Negligible": 47,
+      "Unknown": 11
+    },
+    "advisoryAcceptance": false,
+    "automaticProductionBuilds": "Disabled;exact19aCANCELEDbyignored-build;noProductionrelease",
+    "evidence": "docs/upgrade-2026-combined-19a6134b-20261115.md",
+    "remaining": "Latercurrentcombined+runtimes/nativeperformance;human/AIlabels/securitydisposition/Google/final2026"
+  },
   "nov15RrtaTextParserEfficiency": {
     "base": "8e861572",
     "freeze": "1696e7a1ca22ffc257d937e04533ca7284d1ab4b50567dee82fc46b20e407a82",
