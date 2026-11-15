@@ -78,3 +78,25 @@ and173 budget rows unchanged; four new cases give653 cases/175 rows and a
 1,993-file finite source closure. All14 diagnostic targets remain unchanged.
 Actual new browser execution and combined-source qualification are pending.
 The source-only tests and reviews do not replace a qualified human tax review.
+
+The exact `ffc2bf23` integration passes all nine static/build checks and28,834
+tests in each unit/coverage lane across2,113 files. Coverage is92.02% statements,
+88.16% branches,91.04% functions and95.29% lines; both owned SCRAM PostgreSQL
+instances stop normally. The first browser attempt holds before server creation
+on local port binding. The actual permitted attempt then fails all four cases
+at a post-reload exact-label lookup: the tests used sentence capitalization
+while the visible shared formatter uses title capitalization. Fixed amount/label
+assertions before and after reload pass before that lookup. All four failures,
+normal owned server closure and three unchanged315-file build observations remain.
+
+A separate spec-first correction replaces only14 locator-label expressions with
+the existing exact schema-key formatter. Inverse substitution restores both
+predecessor browser files byte for byte; actions, source edits, fixed monetary
+oracles, privacy assertions, identities, deadlines, workers and retries remain.
+The frozen correction (`05fa3ed4`) passes independent review (`2c0f4554`), two
+source controls, fresh identical four-case collection and zero-finding lint.
+Root verifies all30 pins, all653 collection identities, all175 budgets,1,993
+source hashes and14 diagnostic targets; only the two browser source hashes and
+the diagnostic audit binding change. All110 metadata checks and9,374 spec
+references pass. Corrected actual browser and combined qualification follow;
+these source-only checks do not turn the failed browser attempt into a pass.
