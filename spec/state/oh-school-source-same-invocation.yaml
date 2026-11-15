@@ -1,0 +1,42 @@
+form: "Ohio school-source same-invocation projection reuse"
+fullName: "Reuse only the first freshly validated school projection inside one synchronous adapter call"
+taxYear: 2025
+reference: "spec/state/oh-sd-100-sources.yaml"
+notes: |
+  An implementation-equivalence optimization, with no tax formula or legal cohort change.
+  Keep the first complete school-source calculation at the existing residency-validation
+  position, and retain all subsequent residency and independent payment validation.
+  Only a successfully completed current call may return that fresh projection through
+  the local residency result to its adapter caller. The adapter uses it at its existing
+  school-assignment position, rejecting an impossible missing projection. No caller can
+  supply a prepared projection. No global/identity cache, cross-call state, durable
+  commitment change, timeout extension or retry is introduced. Standalone validators
+  always validate freshly. The complete first IT return is never reused: its audit
+  commitment metadata differs from the final adapted return. Compatibility hashes are
+  exact unchanged-source oracles and not independent tax-law expectations. Existing
+  fictional monetary line oracles remain in their original specs.
+lines:
+  - line: "one-fresh-school-pass"
+    description: "One complete school-source pass per successful source-bound adapter invocation"
+    formula: "Retain the first actual school projection after all existing validators succeed; do not recalculate it at assignment"
+    testRef: "tests/engine/state/oh-school-source-same-invocation.test.ts::reuses only one current school projection for %s"
+  - line: "complete-output-parity"
+    description: "Exact original inputs, federal/state outputs, all audits and durable source commitments"
+    formula: "Complete predecessor JSON SHA256 remains identical, including independent final IT and SD results"
+    testRef: "tests/engine/state/oh-school-source-same-invocation.test.ts::preserves complete predecessor bytes for %s"
+  - line: "error-order"
+    description: "Every original school, residency, payment, overlay and stale-federal guard retains priority"
+    formula: "Exact predecessor first-error message and school-entry count for single and competing faults"
+    testRef: "tests/engine/state/oh-school-source-same-invocation.test.ts::preserves predecessor first-error order for %s"
+  - line: "no-cross-call-reuse"
+    description: "Every later invocation reads and validates its own current sources"
+    formula: "Repeated or edited originals produce separate fresh projections; invalid current edits fail; input and federal objects stay unchanged"
+    testRef: "tests/engine/state/oh-school-source-same-invocation.test.ts::never reuses a projection across invocations or source edits"
+  - line: "standalone-freshness"
+    description: "Standalone school and residency entry points cannot consume caller proof"
+    formula: "Each standalone invocation freshly computes and validates current school sources, with no accepted prepared argument"
+    testRef: "tests/engine/state/oh-school-source-same-invocation.test.ts::keeps standalone source validation fresh"
+  - line: "missing-current-projection"
+    description: "Fail closed if a purported successful residency result lacks the required current school projection"
+    formula: "No second school fallback and no externally supplied projection can bypass the required first validation"
+    testRef: "tests/engine/state/oh-school-source-same-invocation.test.ts::rejects a missing current projection without recalculating or accepting caller proof"

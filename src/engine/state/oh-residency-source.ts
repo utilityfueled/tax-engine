@@ -1,5 +1,5 @@
 import { buildOhioResidentCreditSource, type OhioResidentCreditSourceContext } from './oh-resident-credit-source.js';
-import { buildOhioSchoolDistrictSource } from './oh-sd-100-sources.js';
+import { buildOhioSchoolDistrictSource, type OhioSchoolDistrictSourceProjection } from './oh-sd-100-sources.js';
 /** Spec: state/oh-input-adapter.yaml#actual-owner-residency-nrc-source. */
 import Decimal from 'decimal.js';
 import { calculateOhioReciprocalWageSource, type OhioReciprocalWageContext } from './oh-reciprocal-wage-source.js';
@@ -84,6 +84,8 @@ export function buildOhioResidencySource(input: TaxYearInput, result: TaxReturnR
     canonicalQualifyingBusinessIncome?: Decimal;
     reciprocalWageSource?: OhioReciprocalWageContext;
     residentCreditSource?: OhioResidentCreditSourceContext;
+    /** Fresh local result only; no caller-provided or cross-invocation projection. */
+    schoolDistrictSource?: OhioSchoolDistrictSourceProjection;
 } {
     const parsed = OhioResidencyFactsSchema.safeParse(raw);
     if (!parsed.success)
@@ -97,8 +99,10 @@ export function buildOhioResidencySource(input: TaxYearInput, result: TaxReturnR
     const fresh = calculateFederalTax(input);
     if (!sameSourceMaterial(redactReviewIdentifiers(fresh), redactReviewIdentifiers(result)))
         fail('saved federal result is stale');
+    // Spec: state/oh-school-source-same-invocation.yaml. Keep this first validation in order.
+    let schoolDistrictSource: OhioSchoolDistrictSourceProjection | undefined;
     if (input.ohioSchoolDistrict) {
-        buildOhioSchoolDistrictSource(input, result, ohio);
+        schoolDistrictSource = buildOhioSchoolDistrictSource(input, result, ohio);
     } else if (facts.schoolDistrictStatus !== 'no_ohio_taxing_district_residency')
         fail('actual school district residency sources require their separate method');
     if (!input.ohioSchoolDistrict && ((input.w2s ?? []).some(w => d(w.localTaxWithheld).gt(0)) || (ohio.schoolDistricts?.length ?? 0)))
@@ -107,7 +111,7 @@ export function buildOhioResidencySource(input: TaxYearInput, result: TaxReturnR
         if (ohio.otherStateTaxes !== undefined || ohio.residentCredit !== undefined)
             fail('actual resident-credit sources reject caller credit or other-state tax rows');
         const residentCreditSource = buildOhioResidentCreditSource(input, result, facts);
-        return { facts, sourceDigest: digest({ input: withoutFacts(input), facts }), residentCreditSource };
+        return { facts, sourceDigest: digest({ input: withoutFacts(input), facts }), residentCreditSource, ...(schoolDistrictSource ? {schoolDistrictSource} : {}) };
     }
     if ((ohio.otherStateTaxes?.length ?? 0) || ohio.residentCredit !== undefined) {
         fail('resident-period same-income credit linkage requires actual separate sources');
@@ -118,7 +122,7 @@ export function buildOhioResidencySource(input: TaxYearInput, result: TaxReturnR
         if (!adjustments.line14_totalAdditions.isZero() || !adjustments.line47_totalDeductions.isZero())
             fail('reciprocal wages cannot override or suppress other actual state adjustments');
         const reciprocalWageSource = calculateOhioReciprocalWageSource(input, result, facts);
-        return {facts, sourceDigest:digest({input:withoutFacts(input),facts}), reciprocalWageSource};
+        return {facts, sourceDigest:digest({input:withoutFacts(input),facts}), reciprocalWageSource, ...(schoolDistrictSource ? {schoolDistrictSource} : {})};
     }
     const businessSource = facts.businessSources ? calculateOhioCanonicalBusinessSource({taxInput:input,federalResult:result,residencyFacts:facts}) : undefined;
     const business = businessSource ? readOhioCanonicalBusinessSource(businessSource,facts,result.agi) : undefined;
@@ -172,5 +176,5 @@ export function buildOhioResidencySource(input: TaxYearInput, result: TaxReturnR
     }
     // Also validate every full-resident timeline, without fabricating NRC amounts.
     calculateOhioITNRC({ taxYear: ohio.taxYear, filingStatus: ohio.filingStatus, federalAgi: ohio.federalAgi, ohioAgi: business?.ohioAgi ?? ohio.federalAgi, taxRemainingBeforeResidencyCredits: '0', residencyFacts: facts, businessSource });
-    return { facts, sourceDigest: digest({ input: withoutFacts(input), facts }), ...(businessSource && business ? {businessSource,canonicalQualifyingBusinessIncome:business.worksheet.businessIncomeBeforeDeductionCap} : {}) };
+    return { facts, sourceDigest: digest({ input: withoutFacts(input), facts }), ...(schoolDistrictSource ? {schoolDistrictSource} : {}), ...(businessSource && business ? {businessSource,canonicalQualifyingBusinessIncome:business.worksheet.businessIncomeBeforeDeductionCap} : {}) };
 }

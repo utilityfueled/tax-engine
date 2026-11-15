@@ -1,5 +1,5 @@
 import { readOhioResidentCreditSource } from './oh-resident-credit-source.js';
-import { buildOhioSchoolDistrictSource } from './oh-sd-100-sources.js';
+import type { OhioSchoolDistrictSourceProjection } from './oh-sd-100-sources.js';
 import { readOhioReciprocalWageSource } from './oh-reciprocal-wage-source.js';
 import {roundDollar} from '@/utils/decimal.js';
 import {buildOhioPaymentSource} from './oh-payment-source.js';
@@ -1091,9 +1091,12 @@ export function buildOhioResidentReturnInput(
     sdLatePaymentInterest: overlay.sdLatePaymentInterest,
     sdCreditCarryforward: overlay.sdCreditCarryforward,
   };
+  // Spec: state/oh-school-source-same-invocation.yaml. Only this synchronous invocation owns this value.
+  let currentSchoolProjection: OhioSchoolDistrictSourceProjection | undefined;
   if(residency){
     if(overlay.schoolDistricts===undefined)adapted.schoolDistricts=[];
     const verified=buildOhioResidencySource(taxInput,federalResult,adapted,residency);
+    currentSchoolProjection=verified.schoolDistrictSource;
     adapted.residency=verified.facts;adapted.residencySourceDigest=verified.sourceDigest;
     if(verified.residentCreditSource){
       adapted.residencyResidentCreditSource=verified.residentCreditSource;
@@ -1115,7 +1118,8 @@ export function buildOhioResidentReturnInput(
     adapted.useTax=roundDollar(source.useTax);adapted.creditCarryforward=roundDollar(source.creditCarryforward);adapted.donations=roundDollar(source.donations);adapted.latePaymentInterest=source.latePaymentInterest;adapted.computeUnderpaymentPenalty=true;
   }
   if(schoolDistrictFacts){
-    const source=buildOhioSchoolDistrictSource(taxInput,federalResult,adapted);
+    const source=currentSchoolProjection;
+    if(!source)throw new Error('Ohio actual school district sources: current invocation school projection is missing');
     adapted.schoolDistrictSource=source;adapted.schoolDistricts=[source.district];
     adapted.sdWithholding=source.sdWithholding;adapted.sdEstimatedPayments=source.estimatedPayments;
     adapted.sdEstimatedPaymentSchedule=source.estimatedPaymentSchedule;
