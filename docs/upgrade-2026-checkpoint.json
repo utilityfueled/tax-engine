@@ -1,4 +1,18 @@
 {
+  "nov15ChildCreditHouseholdAdmission": {
+    "sourceBase": "d9026aea6f266c21f99fef2bf7aa39034909a5de",
+    "adoptedOnto": "8ecac234",
+    "files": 3,
+    "successorFreeze": "09d572beb1c78e111a041cb17253cff58ab1b645144c1ccc31f9756ddd9f205c",
+    "actualFullUnit": "28511PASS2075files",
+    "originalFailureRetained": "28510PASS1FAILspecRefquotes",
+    "testsParserAndGuardUnchangedByQuotationSuccessor": true,
+    "rootReview": "ba49a75e16e690344bc2ae3f79163656296fb4effc6b34cc3405c89f7efee58f",
+    "ownedPgNormalStoppedPrivateFilesRemoved": true,
+    "combinedRuntimeHumanAnnualGatesRemain": true,
+    "mainPushHold": true,
+    "ledger": "docs/upgrade-2026-child-credit-household-20261115.md"
+  },
   "nov15HohOwnCareOriginals": {
     "sourceBase": "d9026aea6f266c21f99fef2bf7aa39034909a5de",
     "authorBase": "1e98244b",

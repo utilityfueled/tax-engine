@@ -1,0 +1,32 @@
+form: Child-credit household admission
+taxYear: 2025
+sources:
+  - url: https://www.irs.gov/instructions/i1040s8
+    title: Final 2025 Schedule 8812 instructions, Credits for Qualifying Children and Lines 4 and 6
+    retrieved: 2026-11-14
+lines:
+  - line: "household-identity"
+    description: Actual supplied household identifiers cannot represent different household members when a CTC or ODC claim exists.
+    formula: Reject dependent/dependent and dependent/primary or dependent/spouse TIN collisions. Compare only exact nine digits or the three-two-four hyphenated representation; do not strip arbitrary text or infer missing identity.
+    irsRef: Schedule 8812 instructions, Credits for Qualifying Children and Line 4; IRC section 24
+    testRef: "tests/engine/forms/child-credit-household-admission.test.ts::rejects actual repeated household TINs before counting child credits"
+  - line: "known-age"
+    description: Actual valid DOB must agree with the claimed under-17 child.
+    formula: Reject valid actual DOB after return year or on/before December 31 of taxYear minus 17; retain strict 2026 missing and invalid DOB requirements.
+    irsRef: Schedule 8812 instructions, Credits for Qualifying Children and example 1
+    testRef: "tests/engine/forms/child-credit-household-admission.test.ts::rejects known actual birth dates contradicting a CTC claim"
+  - line: "disjoint-credit"
+    description: A dependent cannot be counted for CTC and ODC together.
+    formula: Reject one dependent with both qualifiesForCTC and qualifiesForODC for supported years. No credit arithmetic is changed.
+    irsRef: Schedule 8812 instructions, Line 4 and Line 6
+    testRef: "tests/engine/forms/child-credit-household-admission.test.ts::rejects one dependent claimed for both CTC and ODC"
+  - line: "confirmed-boundary"
+    description: Server-confirmed explanation rejects contradictory actual household sources before producing a verified receipt.
+    formula: Actual POST with duplicate dependent identity or contradictory DOB or both credits returns 400 private no-store before provider or accounting dispatch.
+    irsRef: Schedule 8812 instructions, Credits for Qualifying Children
+    testRef: "tests/engine/forms/child-credit-household-admission.test.ts::rejects contradictory household facts at the actual confirmed explanation POST"
+  - line: "compatibility"
+    description: Distinct actual household facts and existing historical unknown facts retain their behavior.
+    formula: One actual child receives one credit and two distinct children receive two. No claim skips credit admission; malformed text is never normalized into another TIN. Strict 2026 missing guards remain.
+    irsRef: Schedule 8812 instructions, Line 4 and Line 6
+    testRef: "tests/engine/forms/child-credit-household-admission.test.ts::preserves distinct children and existing historical unknown and strict-year behavior"

@@ -6,6 +6,10 @@ below retain their original evidence boundaries.
 
 ## Active continuation — November 14
 
+- [x] Reject actual child-credit household identity, known-age and dual-credit
+  contradictions. Separate review and full 28,511 tests pass; original strict-spec
+  failure retained. [Source package](upgrade-2026-child-credit-household-20261115.md).
+
 - [x] Collect finite actual HOH own-care mileage sources; separate reviews,
   950 focused and 28,515 full-suite passes; two actual desktop/mobile journeys
   and normal cleanup. [Method and remaining gates](upgrade-2026-medical-mileage-hoh-20261115.md).

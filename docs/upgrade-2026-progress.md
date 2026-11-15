@@ -1,5 +1,15 @@
 # 2026 upgrade implementation evidence
 
+## November 15 actual child-credit household contradictions
+
+Known duplicate household identities, adult/future CTC birth dates and conflicting
+CTC/ODC claims now reject in shared calculation and the actual confirmed explanation
+endpoint. Separate review and 28,511 immutable full-suite tests pass; the original
+spec-format failure is retained and corrected without changing tests or parser.
+[Sources, checks and limits](upgrade-2026-child-credit-household-20261115.md).
+Historical unknown previews retain their existing behavior; consolidated checks,
+human review and annual filing qualification remain separate. Main stays local.
+
 ## November 15 actual HOH own-care mileage originals
 
 The finite 2026 own-care mileage route now collects and reconciles actual
