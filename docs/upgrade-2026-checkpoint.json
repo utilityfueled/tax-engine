@@ -1,4 +1,21 @@
 {
+  "nov15YearPartialMetadata": {
+    "sourceHead": "8a31d8ae754fc1651b5aa0408850ec956beb0f6f",
+    "sourceFreeze": "849c949851539ee4a866c63845e4b8a39845a6c33abf6cbba16795b98f9a4f81",
+    "independentReview": "1c66ae13ab18761789ad661163c6bf0d987b40832d9424cbbbed5ca833fe53ec",
+    "rootReview": "a83cb7f77eeba5ae0afa61ecc7ead28de6ca3b6e40bc1adf275d6ec49a188c5d",
+    "sourceClosure": 1959,
+    "changedSourceHashEntries": 2,
+    "changedMetadataFiles": 2,
+    "collectedCases": 637,
+    "runtimeCasesExecuted": 0,
+    "inventoryEntries": 1024,
+    "inventoryByteIdentical": true,
+    "focusedTestsEachAuthorAndIndependent": 83,
+    "allPriorPoliciesPreserved": true,
+    "finalCombinedRuntimePending": true,
+    "ledger": "docs/upgrade-2026-year-partial-metadata-20261115.md"
+  },
   "nov15HumanAiPartialSupplement": {
     "sourceHead": "8a31d8ae754fc1651b5aa0408850ec956beb0f6f",
     "selectedBlobs": 21,

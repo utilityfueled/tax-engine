@@ -1,5 +1,7 @@
 # Remaining 2026 upgrade execution checklist
 
+- [x] Bind the reviewed year/partial-interest source hashes, preserving637 browser identities/all policies and1,024 byte-identical inventory entries;83 author/83 separate-review checks pass. [Evidence](upgrade-2026-year-partial-metadata-20261115.md). Final combined/runtime checks follow.
+
 - [x] Prepare21 selected exact8a31source blobs/four blank2025 human decisions with separate custody review; no reviewer or approval invented. [Packet](upgrade-2026-human-ai-partial-supplement-8a31d8ae.md).
 
 - [x] Reconcile actual partial current interest on the finite2025 Schedule AI route; genuine RED,16 focused/24 independent passes, independent TaxTable oracle and actual PDF/API/privacy controls. [Evidence](upgrade-2026-schedule-ai-partial-interest-20261115.md). Combined/runtime/human gates remain.

@@ -1,5 +1,14 @@
 # Current 2026 upgrade continuation
 
+## November 15 combined source metadata
+
+The year-guard and partial-interest source hashes are bound without changing
+any of the 637 browser identities, budgets or runtime policies. All 1,024
+inventory entries remain byte-identical; author and separate reviewer each
+pass 83 focused checks. [Source and collection evidence](upgrade-2026-year-partial-metadata-20261115.md).
+The final aggregate now proceeds through all twelve managed checks and its
+separately bounded hosted/native rehearsals.
+
 ## November 15 additional unassigned human source packet
 
 The confirmed-explanation and partial-interest changes now have 21 detached
