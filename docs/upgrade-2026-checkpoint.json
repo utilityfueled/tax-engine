@@ -1,4 +1,16 @@
 {
+  "nov15OfficialAnnualRefresh": {
+    "status": "PASS",
+    "httpRequests": 20,
+    "actualPdfBodies": 7,
+    "allSevenPdfDigestsUnchanged": true,
+    "pairedFinal2026NonPdf404Paths": 10,
+    "globalAbsenceClaimed": false,
+    "bodyHashesIndependentlyVerified": true,
+    "receiptsSha256": "0023fa7096659b042e3a1b8ed3f0e60e5015939440577f64d960719365952869",
+    "rootReviewSha256": "4e3abeca812d674f8738d171fd509c8f4535e41fb0861714f923b48c5d4231ed",
+    "evidence": "upgrade-2026-official-annual-20261115.md"
+  },
   "nov15PaOrdinaryInterestPhysical": {
     "sourceFreeze": "dba3ead67fc6d1a8eee62f2a36ebb531f631b26401d68fdbe8e38c8c237534cf",
     "rootAdoption": "55e0daf60782324edd5e1c775e775791cf04e71b7c429ede237b92c66e238911",

@@ -1,5 +1,11 @@
 # External actions needed to finish the 2026 upgrade
 
+## November 15 official annual recheck
+
+All seven PDF controls/drafts remain byte-identical; the same ten checked final
+2026 paths returned non-PDF 404 responses. Final forms and qualification remain
+required. [Bounded observations](upgrade-2026-official-annual-20261115.md).
+
 ## November 15 actual Preview and remote runtime results
 
 The exact a32 isolated Preview passed four browser journeys and all 48 canonical
