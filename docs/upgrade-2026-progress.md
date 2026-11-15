@@ -1,5 +1,17 @@
 # 2026 upgrade implementation evidence
 
+## November 15 training-guide return-year correction
+
+The sample registry preserves its fifteen IDs and retained 2025 guide bytes using
+the exact official accessible endpoint. Actual guide covers establish only
+documentary return-year metadata; generic filenames and revision dates do not.
+Misleading filenames cannot seed taxpayer facts, and saved explicit years remain.
+Root genuine RED reproduces four failures, then 176 focused tests, four actual
+official-cover checks, 91 metadata controls, contracts/web types, lint and spec
+validation pass. Independent source review passes 186 checks. Full combined-source
+and distribution qualification follow.
+[Training-guide evidence](upgrade-2026-training-guide-years-20261115.md).
+
 ## November 15 exact 8cc local, Preview and ARM completion
 
 All reviewed commits through `8cc5b0ec` are pushed to main and the backup with

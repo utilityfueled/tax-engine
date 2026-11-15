@@ -548,6 +548,27 @@ export function parseUploadedDocumentText(text: string, fileName = ""): ParsedUp
   const normalizedText = normalizeParsingText(text);
   const signalText = `${fileName}\n${normalizedText}`;
 
+  // A guide contains example tax forms: classify its actual cover before those
+  // parsers. The printed RETURNS year is metadata, not a taxpayer source fact.
+  const cover = normalizedText.slice(0, 4000);
+  if (/\bPublication\s+4491(?:\s*-\s*X)?\b/i.test(cover)
+    && /VITA\/TCE\s+Training\s+(?:Guide|Supplement)/i.test(cover)) {
+    const years = new Set<number>();
+    // PDF reading order may put RETURNS immediately before its printed year.
+    for (const pattern of [/\b(20\d{2})\s+RETURNS\b/gi, /\bRETURNS\s+(20\d{2})\b/gi]) {
+      for (const match of cover.matchAll(pattern)) years.add(Number(match[1]));
+    }
+    return {
+      kind: "training-scenario",
+      coverage: "planned",
+      taxYear: years.size === 1 ? [...years][0] : null,
+      label: "Publication 4491 training material",
+      notes: "The printed return year identifies training material only. Review actual taxpayer documents separately; no financial facts are imported from guide examples.",
+      seededFactIds: [],
+      detectedFacts: [],
+    };
+  }
+
   const parsed = parseUploadedW2Text(normalizedText, fileName)
     ?? parseUploadedComposite1099Text(normalizedText, fileName)
     ?? parseUploaded1099IntText(normalizedText, fileName)

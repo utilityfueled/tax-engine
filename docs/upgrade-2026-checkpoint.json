@@ -1,4 +1,36 @@
 {
+  "nov15TrainingGuideReturnYears": {
+    "baseApplication": "8cc5b0ec",
+    "documentaryBase": "b5f6e2d4",
+    "sampleCount": 15,
+    "legacyIdsPreserved": true,
+    "genericRollingFilenameYearInferenceRemoved": true,
+    "supplementRevision2026ReturnYear": 2025,
+    "guideCoverMetadataOnly": true,
+    "explicitSavedYearsPreserved": true,
+    "taxpayerFactsSeeded": 0,
+    "rootRed": {
+      "failed": 4,
+      "passed": 121
+    },
+    "rootFocused": {
+      "tests": 176,
+      "files": 6
+    },
+    "rootOfficialCoverChecks": 4,
+    "rootMetadataControls": 91,
+    "independentChecks": 186,
+    "independentReviewSha256": "c2458ea6fca934e5aba3d23f0ea123a13eec9ef48a103889106a5055ad75a1e7",
+    "contractsTypes": "passed",
+    "webTypes": "passed",
+    "scopedLint": "passed",
+    "specValidation": "passed",
+    "inventoryEntries": 1043,
+    "newSpecReferences": 5,
+    "browserPoliciesAndAuditMembersUnchanged": true,
+    "fullCombinedSourceQualification": "pending",
+    "releaseQualified": false
+  },
   "nov15Exact8ccCompletedLocalPreviewArm": {
     "source": "8cc5b0ec0b1507e0203a8ce1bc5f3a72de1b5f09",
     "pushedMainAndBackup": true,

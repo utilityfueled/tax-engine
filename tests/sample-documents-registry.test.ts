@@ -50,7 +50,9 @@ describe("sample tax document registry", () => {
       expect(fixture?.taxYearHint).toBe(entry.taxYearHint);
       expect(fixture?.aliases).toContain(entry.id);
       // The IRS current fw2.pdf URL changes years; its basename cannot establish a tax year.
-      if (entry.id === "irs-w2-2026") {
+      if (entry.kind === "training-scenario") {
+        expect(fixture?.aliases).not.toContain(downloadBasename);
+      } else if (entry.id === "irs-w2-2026") {
         expect(fixture?.aliases).not.toContain(downloadBasename);
         expect(fixture?.aliases).toContain("fw2--2026");
       } else {

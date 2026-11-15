@@ -1148,7 +1148,13 @@ function matchFixture(fileName: string): FixtureMatch | null {
 
 function getFutureYearSampleUploads(files: UploadableFile[]): FutureYearSampleUpload[] {
   return files.flatMap((file) => {
-    const fixture = matchFixture(file.name);
+    const matched = matchFixture(file.name);
+    const training = file.detectedDocument?.kind === "training-scenario" ? file.detectedDocument : null;
+    // Actual cover metadata overrides a historical filename, including unknown.
+    const fixture = training ? {
+      id: matched?.id ?? "uploaded-training-guide", label: training.label,
+      kind: "training-scenario" as const, aliases: [], taxYearHint: training.taxYear ?? null,
+    } : matched;
 
     if (!fixture || fixture.taxYearHint === null || fixture.taxYearHint <= latestEngineTargetYear) {
       return [];
@@ -1178,7 +1184,10 @@ export function getFutureYearSampleUploadMessage(files: UploadableFile[]) {
 }
 
 function classifyUploadedDocument(file: UploadableFile, usedIds: Set<string>): WorkspaceDocumentRecord {
-  const matchedFixture = matchFixture(file.name);
+  const filenameFixture = matchFixture(file.name);
+  // A real guide cover cannot become a taxpayer form through its filename.
+  const matchedFixture = file.detectedDocument?.kind === "training-scenario" && filenameFixture?.kind !== "training-scenario"
+    ? null : filenameFixture;
 
   if (matchedFixture) {
     const supportEntry = supportByKind.get(matchedFixture.kind);
@@ -1190,7 +1199,8 @@ function classifyUploadedDocument(file: UploadableFile, usedIds: Set<string>): W
 
     return {
       id: buildUniqueDocumentId(baseId, usedIds),
-      taxYear: matchedFixture.taxYearHint,
+      taxYear: matchedFixture.kind === "training-scenario" && file.detectedDocument?.kind === "training-scenario"
+        ? file.detectedDocument.taxYear ?? null : matchedFixture.taxYearHint,
       name: file.name,
       size: file.size,
       uploadedAt: new Date().toISOString(),

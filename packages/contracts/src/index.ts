@@ -323,15 +323,16 @@ export const officialSampleDocumentFixtures: OfficialSampleDocumentFixture[] = [
     id: "irs-publication-4491-2025",
     kind: "training-scenario",
     title: "Publication 4491, VITA/TCE Training Guide",
-    aliases: ["irs-publication-4491-2025", "p4491"],
+    aliases: ["irs-publication-4491-2025"],
     taxYearHint: 2025
   },
   {
     id: "irs-publication-4491x-2026",
     kind: "training-scenario",
     title: "Publication 4491-X (Rev. 1-2026)",
-    aliases: ["irs-publication-4491x-2026", "p4491x"],
-    taxYearHint: 2026
+    // Legacy ID names the January2026 revision; the cover says2025 RETURNS.
+    aliases: ["irs-publication-4491x-2026"],
+    taxYearHint: 2025
   }
 ];
 

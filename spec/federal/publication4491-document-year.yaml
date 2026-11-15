@@ -1,0 +1,27 @@
+form: Official-Training-Publication-Year
+version: '2026-11-15'
+source:
+  - 'https://www.irs.gov/pub/irs-access/p4491_accessible.pdf — cover2025 RETURNS; Rev10-2025; SHA13b6ef6372f32e70d0fbb1e0d71078bc056b119c9da07ddf75d20f101e04891a'
+  - 'https://www.irs.gov/pub/irs-pdf/p4491.pdf — actual cover2026 RETURNS; Rev10-2026; SHA85d627de33310ee10e5cc0fc1ea855cfcaf6559c4f085b77854db45c3c5c49fa'
+  - 'https://www.irs.gov/pub/irs-pdf/p4491x.pdf — retained cover2025 RETURNS; Rev1-2026; SHAd3cd3b8287be84b39faaf9085f34f5dfd1c0f34cd56b64be64414f5ab6187c0b'
+notes: |
+  Return year on a training publication is documentary metadata only, never an
+  actual taxpayer fact, qualified final form, completed return or readiness.
+  Revision year is not return year. Keep15sample IDs and all current gates/caps.
+  Preserve explicitly saved historical document/workspace years without migration.
+lines:
+  - line: catalog
+    formula: 'Retain4491legacy2025ID at exact accessible2025body; X revision2026ID has2025hint. Generic rolling filenames establish no year.'
+    testRef: 'tests/apps/web/publication4491-year.test.ts::catalog keeps fifteen historical sample IDs and separates revision from return year'
+  - line: cover
+    formula: 'Actual Publication4491/-X cover detected before sample form parsers; single unique YYYY RETURNS in bounded cover prefix establishes metadata. Missing/conflicting staysnull; no financial facts seeded.'
+    testRef: 'tests/apps/web/publication4491-year.test.ts::actual official covers and conflicting or missing cover years remain documentary only'
+  - line: upload
+    formula: 'Actual local PDF extraction preserves training cover kind/year over any filename hint; generic name alone unknown. Existing unsupported-year/manual-review gates remain.'
+    testRef: 'tests/apps/web/publication4491-year.test.ts::real PDF uploads propagate cover metadata without filename promotion or facts'
+  - line: history
+    formula: 'Explicit saved historical source/workspace years remain unchanged on reload.'
+    testRef: 'tests/apps/web/publication4491-year.test.ts::reload preserves explicit historical document and workspace years'
+  - line: origin
+    formula: 'Additionally admit only exact https://www.irs.gov/pub/irs-access/p4491_accessible.pdf; existing origin paths/caps/custody unchanged.'
+    testRef: 'tests/scripts/native-browser-runtime-provenance.test.ts::admits only the exact accessible training-guide endpoint'

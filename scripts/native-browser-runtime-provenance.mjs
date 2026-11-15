@@ -208,7 +208,7 @@ export async function createNativeInspector({root: sourceRoot, env, signal}, io 
         need(Array.isArray(registry) && registry.length > 0 && registry.length <= 32 && registry.length === extra.files.length, 'Incomplete native supplemental inventory');
         const rows = new Map();
         for (const row of registry) {
-            need(row && typeof row.id === 'string' && /^[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(row.id) && row.id.length <= 100 && !rows.has(row.id) && typeof row.downloadUrl === 'string' && /^https:\/\/www\.irs\.gov\/pub\/irs-(?:pdf|prior)\/[a-z0-9-]+\.pdf$/u.test(row.downloadUrl), 'Unsupported native fixture registry entry');
+            need(row && typeof row.id === 'string' && /^[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(row.id) && row.id.length <= 100 && !rows.has(row.id) && typeof row.downloadUrl === 'string' && (/^https:\/\/www\.irs\.gov\/pub\/irs-(?:pdf|prior)\/[a-z0-9-]+\.pdf$/u.test(row.downloadUrl) || row.downloadUrl === 'https://www.irs.gov/pub/irs-access/p4491_accessible.pdf'), 'Unsupported native fixture registry entry');
             rows.set(row.id,row.downloadUrl);
         }
         let total = 0, previousId = '';

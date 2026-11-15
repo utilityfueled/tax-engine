@@ -314,6 +314,17 @@ describe('native provenance — spec registered-supplemental-fixtures',()=>{
 
 
 describe('native registered fixture boundaries',()=>{
+  it('admits only the exact accessible training-guide endpoint',async()=>{
+    const url='https://www.irs.gov/pub/irs-access/p4491_accessible.pdf';
+    const {f}=supplementalFixture([{id:'irs-publication-4491-2025',downloadUrl:url}]);
+    const inspect=await createNativeInspector(f.args,f.io);expect(await inspect()).toMatchObject({tree:f.p.tree});
+    for(const bad of [url+'?x=1',url+'#fragment',url.replace('www.irs.gov','evil.invalid'),url.replace('https:','http:'),url.replace('p4491_accessible.pdf','p4491.pdf'),url.replace('p4491_accessible.pdf','f1040_accessible.pdf'),url.replace('irs-access/','irs-access/../irs-pdf/'),url.replace('www.irs.gov','www.irs.gov.evil.invalid')]){
+      const {f:denied}=supplementalFixture([{id:'irs-publication-4491-2025',downloadUrl:bad}]);
+      await expect(createNativeInspector(denied.args,denied.io)).rejects.toThrow('Unsupported native fixture registry entry');
+      expect(denied.calls).toEqual([]);
+    }
+  });
+
   it('supports every actual tracked registry ID with exact separately bound synthetic fixture bytes',async()=>{
     const registry=JSON.parse(readFileSync('sample-documents/registry.json','utf8')) as Array<{id:string;downloadUrl:string}>;
     expect(registry).toHaveLength(15);const {f}=supplementalFixture(registry);const inspect=await createNativeInspector(f.args,f.io);expect(await inspect()).toMatchObject({tree:f.p.tree});

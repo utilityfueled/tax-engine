@@ -122,16 +122,16 @@
     "title": "Publication 4491, VITA/TCE Training Guide",
     "taxYearHint": 2025,
     "sourcePage": "https://www.irs.gov/forms-pubs/irs-section-508-compliant-pdf-publications",
-    "downloadUrl": "https://www.irs.gov/pub/irs-pdf/p4491.pdf",
-    "notes": "Official IRS training guide with realistic volunteer-prep scenarios and document references."
+    "downloadUrl": "https://www.irs.gov/pub/irs-access/p4491_accessible.pdf",
+    "notes": "Official accessible IRS training guide; cover2025 RETURNS, Rev.10-2025. Rolling p4491.pdf now serves a different return year. Documentary training material only."
   },
   {
     "id": "irs-publication-4491x-2026",
     "kind": "training-scenario",
     "title": "Publication 4491-X (Rev. 1-2026)",
-    "taxYearHint": 2026,
+    "taxYearHint": 2025,
     "sourcePage": "https://www.irs.gov/pub/irs-pdf/p4491x.pdf",
     "downloadUrl": "https://www.irs.gov/pub/irs-pdf/p4491x.pdf",
-    "notes": "Official IRS supplement with current-year scenario updates and sample-return references."
+    "notes": "Official IRS supplement: cover2025 RETURNS, Rev.1-2026. Legacy ID suffix identifies the revision year, not the return year. Documentary training material only."
   }
 ]
