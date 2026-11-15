@@ -1,6 +1,7 @@
 import "server-only";
 import { calculateFederalTax } from "@/engine/federal";
 import { TaxYearInputSchema } from "@/models/inputs";
+import { assertVerifiedAiSourceAdmission } from "./verified-ai-source-admission";
 import { getRulePack } from "@/models/rule-pack-metadata";
 import type { VerifiedAiTaxContext } from "./ai-task-adapter";
 
@@ -40,6 +41,7 @@ export function calculateVerifiedAiAudit(scope: AuditScope, confirmedTaxInput: u
   const catalog = AI_TAX_SOURCE_CATALOG[input.taxpayer.taxYear as keyof typeof AI_TAX_SOURCE_CATALOG];
   if (!catalog || Object.keys(catalog.lines).length === 0) throw new Error("Year-specific AI tax excerpts are unavailable.");
   const result = calculateFederalTax(input);
+  assertVerifiedAiSourceAdmission(input, result, confirmedTaxInput);
   const entries = result.allLines.filter(line => line.form === "1040" && line.line in catalog.lines).map(line => Object.freeze({
     id: `audit:${result.taxYear}:1040:${line.line}`, taxYear: result.taxYear, line: line.line,
     value: line.value.toFixed(), explanation: line.description,

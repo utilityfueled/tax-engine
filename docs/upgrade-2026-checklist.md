@@ -6,6 +6,12 @@ below retain their original evidence boundaries.
 
 ## Active continuation — November 14
 
+- [x] Bind confirmed explanations to complete selected mortgage and applicable
+  retirement originals, including official2025 code combinations. Root1,110
+  focused tests and separate review pass; original failures retained. Final
+  all12/runtime qualification remains separate.
+  [AI source admission](upgrade-2026-verified-ai-source-admission-20261115.md).
+
 - [x] Save all 390 local commits through `d9ead6be` to the public backup branch;
   verify exact remote head while preserving main/production.
   [Backup evidence](upgrade-2026-remote-backup-20261115.md).

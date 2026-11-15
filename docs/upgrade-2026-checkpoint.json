@@ -1,4 +1,23 @@
 {
+  "nov15VerifiedAiSourceAdmission": {
+    "adoptedOnto": "f9dd388c",
+    "files": 6,
+    "sourceFreeze": "79591228409415baae12984edcdb465fface1036eb966e31a1fae1f0bbaef9a2",
+    "rootFocusedTests": 1110,
+    "rootFocusedFiles": 9,
+    "authorFocusedTests": 1147,
+    "authorFocusedFiles": 6,
+    "originalCandidateFullUnit": 28534,
+    "originalFullUnitDoesNotQualifySuccessor": true,
+    "sourceSyntaxPairsAndSingles": 930,
+    "independentReview": "b221f180711b8399effb1e168529d777e97e23aa0d0f3a643ded2c4b3b6069fa",
+    "rootReview": "0094c3ad9ff85d7894313ab7beed2d8f57436dbe6ad85f96477fb3b01febb43a",
+    "numeric15ReturnsAndBranchOrderUnchanged": true,
+    "genuineFailuresRetained": true,
+    "combinedRuntimeHumanAnnualGatesRemain": true,
+    "paidCalls": 0,
+    "ledger": "docs/upgrade-2026-verified-ai-source-admission-20261115.md"
+  },
   "nov15RemoteBackup": {
     "source": "d9ead6be052b7823de5e0e80bb7f463b68d706b2",
     "commitsSaved": 390,

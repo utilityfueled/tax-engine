@@ -574,67 +574,90 @@ function assert2026PensionTaxability(form: Form1099R): void {
   throw new Error("2026 Form 1099-R pension requires a determined Box 2a or a complete supported Simplified Method worksheet");
 }
 
+type RetirementTaxabilitySource = "determined-box2a" | "supported-method" | "historical-preview";
+type ResolverSource = RetirementTaxabilitySource | "code-method";
+interface RetirementTaxabilityResolution { amount: Decimal; source: ResolverSource }
+
+/** Provenance from the same resolver branch; never a second tax-method allowlist. */
+export function getForm1099RTaxabilitySource(form: Form1099R): {
+  source: RetirementTaxabilitySource; recognizedDistributionCode: boolean; currentYear: boolean;
+  iraKind?: "traditional" | "roth"; iraConversionAmount: Decimal;
+} {
+  const code = getUpperDistributionCode(form).replace(/\s+/g, "");
+  const recognizedDistributionCode = /^[1-9ABCDEFGHJKLMNPQRSTUWY]{1,2}$/u.test(code)
+    && !(code.length === 2 && code[0] === code[1]);
+  const resolved = resolveTaxableAmountBeforeQcdSource(form).source;
+  const source = resolved === "code-method"
+    ? (recognizedDistributionCode ? "supported-method" : "historical-preview") : resolved;
+  return { source, recognizedDistributionCode, currentYear: !isPriorYearTaxableDistribution(form), iraConversionAmount: resolveRothConversionAmount(form),
+    iraKind: isIraForm1099RDistribution(form) ? (isRothIraDistributionRequiringGrossReporting(form) ? "roth" : "traditional") : undefined };
+}
+
 function resolveTaxableAmountBeforeQcd(form: Form1099R): Decimal {
+  return resolveTaxableAmountBeforeQcdSource(form).amount;
+}
+
+function resolveTaxableAmountBeforeQcdSource(form: Form1099R): RetirementTaxabilityResolution {
   if (isPriorYearTaxableDistribution(form)) {
-    return new Decimal(0);
+    return { amount: new Decimal(0), source: "code-method" };
   }
 
   if (isRecharacterizedIraContribution(form)) {
-    return new Decimal(0);
+    return { amount: new Decimal(0), source: "code-method" };
   }
 
   if (isQualifiedRothIraDistribution(form)) {
-    return new Decimal(0);
+    return { amount: new Decimal(0), source: "code-method" };
   }
 
   if (isQualifiedDesignatedRothAccountDistribution(form)) {
-    return new Decimal(0);
+    return { amount: new Decimal(0), source: "code-method" };
   }
 
   if (isDesignatedRothDirectRolloverToRothIra(form)) {
-    return new Decimal(0);
+    return { amount: new Decimal(0), source: "code-method" };
   }
 
   if (resolveQualifiedRothDistributionAmount(form).greaterThan(0)) {
-    return new Decimal(0);
+    return { amount: new Decimal(0), source: "code-method" };
   }
 
   if (isCodeTSafeHarborDistribution(form)) {
-    return new Decimal(0);
+    return { amount: new Decimal(0), source: "code-method" };
   }
 
   if (usesSimplifiedMethodForTaxableAmount(form)) {
-    return Decimal.max(
+    return { amount: Decimal.max(
       new Decimal(0),
       d(form.grossDistribution).minus(resolveSimplifiedMethodCurrentYearExcludableAmount(form))
-    );
+    ), source: "supported-method" };
   }
 
   if (form.taxableAmount !== undefined) {
-    return Decimal.max(new Decimal(0), d(form.taxableAmount));
+    return { amount: Decimal.max(new Decimal(0), d(form.taxableAmount)), source: form.taxableAmountNotDetermined ? "historical-preview" : "determined-box2a" };
   }
 
   if (isSection1035ExchangeWithBlankBox2a(form)) {
-    return new Decimal(0);
+    return { amount: new Decimal(0), source: "code-method" };
   }
 
   if (hasDirectRolloverCode(form.distributionCode)) {
-    return new Decimal(0);
+    return { amount: new Decimal(0), source: "code-method" };
   }
 
   if (isReturnedContributionByDueDate(form)) {
-    return new Decimal(0);
+    return { amount: new Decimal(0), source: "supported-method" };
   }
 
   if (isNontaxableExcessContributionReturn(form)) {
-    return new Decimal(0);
+    return { amount: new Decimal(0), source: "supported-method" };
   }
 
   if (!isIraForm1099RDistribution(form) && d(form.employeeContributions).greaterThan(0)) {
-    return Decimal.max(new Decimal(0), d(form.grossDistribution).minus(d(form.employeeContributions)));
+    return { amount: Decimal.max(new Decimal(0), d(form.grossDistribution).minus(d(form.employeeContributions))), source: "historical-preview" };
   }
 
-  return Decimal.max(new Decimal(0), d(form.grossDistribution));
+  return { amount: Decimal.max(new Decimal(0), d(form.grossDistribution)), source: "historical-preview" };
 }
 
 function isNontaxableExcessContributionReturn(form: Form1099R): boolean {

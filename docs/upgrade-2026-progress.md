@@ -1,5 +1,17 @@
 # 2026 upgrade implementation evidence
 
+## November 15 source-resolved confirmed explanations
+
+Confirmed AI explanations now reject incomplete selected mortgage sources and
+unresolved or contradictory retirement originals, including owner/method IRA
+worksheet mismatches and invalid original code combinations. Historical tax
+previews and their Decimal arithmetic remain unchanged. Root1,110 focused tests,
+author1,147, official-table syntax controls and separate source reviews pass.
+[Sources, retained failures and scope](upgrade-2026-verified-ai-source-admission-20261115.md).
+The earlier28,534-test full run belongs to the preceding candidate; final combined
+checks and hosted/native/human/annual qualification remain separate. No paid call
+or model promotion occurred.
+
 ## November 15 remote backup of all local commits
 
 All 390 local upgrade commits through `d9ead6be` are now saved on the public

@@ -26,7 +26,7 @@ export function prepareTransientTaxCalculation(envelope: TransientTaxCalculation
   const taxInput = TaxYearInputSchema.parse(envelope.taxInput);
   if (taxInput.taxpayer.taxYear !== envelope.taxYear) throw new Error("Calculation year mismatch.");
   const scope = { ownerScope, workspaceId: envelope.workspaceId, workspaceRevision: envelope.workspaceRevision };
-  const audit = calculateVerifiedAiAudit(scope, taxInput);
+  const audit = calculateVerifiedAiAudit(scope, envelope.taxInput);
   const resolved = resolveServerAiTaxContext({ ...scope, taxYear: envelope.taxYear, audit });
   if (resolved.status !== "available") throw new Error("Matching calculation sources are unavailable.");
   // Project only fields consumed by the explanation. Uploaded documents, browser
