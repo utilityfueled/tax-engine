@@ -42,3 +42,31 @@ Private packets: `nov15-oh-school-same-invocation-candidate`,
 `nov15-oh-school-invocation-amd64-peer` and
 `nov15-oh-school-invocation-root-adoption`. Final integrated metadata, aggregate
 checks, current distributions and required external reviews remain pending.
+
+## Aggregate call-count assertion correction
+
+The exact `02926be4` full unit and coverage runs each retain one failure and
+28,808 passes across
+2,106 files. Its original guided-render work-count assertion still expected
+12 federal calculations; the reviewed school reuse correctly performs nine.
+The focused unchanged test independently reproduces one failure/nine passes.
+No tax-value or complete-output assertion failed in that test.
+
+A separate pre/post trace verifies the same three adapter evaluations, with
+school projections decreasing from six to three and federal calculations from
+twelve to nine. The three initial/header and three residency freshness calls
+remain. The spec now records this exact finite work contract. The test expects
+nine federal calls and additionally requires exactly three school builds; PA
+royalty remains four federal calls and zero school builds. Every original
+monetary, full-output, source-edit, alias, immutability and hash-bound assertion
+remains. No product code, browser policy, deadline or readiness gate changes.
+
+All 1,000 focused render/school/spec-reference tests pass; scoped lint and all
+9,354 spec references pass. Private evidence is retained in
+`nov15-guided-oh-school-work-count-correction` and the independent trace packet.
+The original full-run failure is retained, and fresh aggregate checks must pass
+on the committed correction before final runtime qualification.
+
+Independent exact-patch review additionally passes 51 render/school cases;
+separate predecessor/current trace cohorts pass 11/52 cases. Its SHA-256 is
+`e442ae680b847ebbaee71ddb161e992632e99f600e89af8cced00bb9871d689c`.
